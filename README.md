@@ -7,6 +7,8 @@
   Java foundation classlib implemention is CLDC1.1 ,Tested success.  
   No verify class file version ,support java8 and lower.  
   Compiled and tested in 32bit mingw and 64bit cygwin.   
+  Little-endian and big-endian are designed, but not test yet.   
+  java garbage collection supported ,simple implemention.  
   java instruct supported.  
   java Thread supported ,need ld flag -lpthread .  
   java native method supported.  
