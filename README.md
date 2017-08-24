@@ -1,8 +1,8 @@
-#mini_jvm
+# mini_jvm
 
   A java virtual machine implemention by c , small footprint, startup quikly, support amost all java instruct , support thread ,native method, garbage collection and more.
   
-  ##Feature:  
+## Feature:  
 
   Java classlib implemention is CLDC1.1 ,Tested sucess.  
   No verify class file version ,support java8 and lower.  
@@ -16,7 +16,7 @@
   The mini_jvm designed for resource limited device, iOS, Android, or other arm device.  
   for this work reference by ntu-android/simple_vm ,zhangkari/jvm ,CppArchMasters/lightweight-java-vm and more in github.   
 
-##License
+## License
 License:	GPL 3.0
 
 
