@@ -1,0 +1,1 @@
+A java virtual machine implemention by c , small footprint, startup quikly, support amost all java instruct , support thread ,native method, garbage collect and more.
