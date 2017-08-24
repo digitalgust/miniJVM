@@ -4,17 +4,17 @@
   
 ## Feature:  
 
-  Java classlib implemention is CLDC1.1 ,Tested sucess.  
+  Java foundation classlib implemention is CLDC1.1 ,Tested success.  
   No verify class file version ,support java8 and lower.  
   Compiled and tested in 32bit mingw and 64bit cygwin.   
   java instruct supported.  
   java Thread supported ,need ld flag -lpthread .  
   java native method supported.  
-  java file/network io not supported yet.  
+  java file/network io not supported yet, need native method.  
   mini_jvm/jvm develop ide that Clion, MinGW 5.0 or Cygwin 2.8.2.  
   mini_jvm/java develop ide that Netbeans 8.0 ,jdk 1.8 , User class compile *must be with this foundation classlib*.  
   The mini_jvm designed for resource limited device, iOS, Android, or other arm device.  
-  for this work reference by ntu-android/simple_vm ,zhangkari/jvm ,CppArchMasters/lightweight-java-vm and more in github.   
+  for this work reference : ntu-android/simple_vm ,zhangkari/jvm ,CppArchMasters/lightweight-java-vm and more in github.   
 
 ## License
 License:	GPL 3.0
