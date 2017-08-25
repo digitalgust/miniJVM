@@ -1,6 +1,6 @@
 # mini_jvm
 
-  A java virtual machine implemention by c , small footprint, startup quikly, support amost all java instruct , support thread ,native method, garbage collection and more.
+  A java virtual machine implementation by c , small footprint, startup quikly, support amost all java instruct , support thread ,native method, garbage collection and more.
   
 ## Feature:  
 
@@ -8,7 +8,7 @@
   No verify class file version ,support java8 and lower.  
   Compiled and tested in 32bit mingw and 64bit cygwin.   
   Little-endian and big-endian are designed, but big-endian not test yet.   
-  java garbage collection supported ,simple implemention.  
+  java garbage collection supported ,simple implementation.  
   jvm instructions supported.  
   java Thread supported ,need ld flag -lpthread .  
   java native method supported.  
