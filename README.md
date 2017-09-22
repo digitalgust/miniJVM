@@ -5,9 +5,10 @@
 ## Feature:  
 
   Java foundation classlib ported from CLDC1.1 ,Tested success.  
-  No verify class file version ,support java8 and lower.  
+  support java8 and lower.  
   Little-endian and big-endian are designed, but big-endian not test yet.   
-  java garbage collection supported , spreat thread collect.  
+  java garbage collection supported , spreat thread collect.   
+  java remote debug supported, transport by JDWP .  
   jvm instructions supported.  
   java Thread supported ,need ld flag -lpthread .  
   java native method supported.  
