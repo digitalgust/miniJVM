@@ -1,3 +1,4 @@
 /mini_jvm/java/build/
 /mini_jvm/java/dist/
+/mini_jvm/cmake-build-debug/
 /mini_jvm/cmake-build-debug/*
