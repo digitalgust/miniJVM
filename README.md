@@ -23,7 +23,7 @@
 ## Directories:  
   mini_jvm/mini_jvm/java/----------------java foundation class  
   mini_jvm/mini_jvm/jvm/-----------------mini jvm c source ,jvm   
-  mini_jvm/mini_jvm/cmem/----------------mini jvm c source ,memory leak detect tool, utils/d_type.h : #define __MEM_LEAK_DETECT     
+  mini_jvm/mini_jvm/cmem/----------------mini jvm c source ,memory leak detect, utils/d_type.h:#define __MEM_LEAK_DETECT     
   mini_jvm/mini_jvm/utils/---------------mini jvm c source ,type def and containers.    
   mini_jvm/mini_jvm/iostest/-------------ios swift test project.      
   
