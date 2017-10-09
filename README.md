@@ -21,11 +21,11 @@
   for this work reference : sun cldc, ntu-android/simple_vm ,zhangkari/jvm ,CppArchMasters/lightweight-java-vm and more in github.   
   
 ## Directories:  
-  mini_jvm/mini_jvm/java/                              	java foundation class  
-  mini_jvm/mini_jvm/jvm/                               	mini jvm c source ,jvm   
-  mini_jvm/mini_jvm/cmem/                              	mini jvm c source ,memory leak detect tool, utils/d_type.h : #define __MEM_LEAK_DETECT     
-  mini_jvm/mini_jvm/utils/                             	mini jvm c source ,type def and containers.    
-  mini_jvm/mini_jvm/iostest/                           	ios swift test project.      
+  mini_jvm/mini_jvm/java/----------------java foundation class  
+  mini_jvm/mini_jvm/jvm/-----------------mini jvm c source ,jvm   
+  mini_jvm/mini_jvm/cmem/----------------mini jvm c source ,memory leak detect tool, utils/d_type.h : #define __MEM_LEAK_DETECT     
+  mini_jvm/mini_jvm/utils/---------------mini jvm c source ,type def and containers.    
+  mini_jvm/mini_jvm/iostest/-------------ios swift test project.      
   
   
   
