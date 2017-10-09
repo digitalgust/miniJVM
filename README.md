@@ -19,7 +19,30 @@
   Java code: (mini_jvm/java) develop by Netbeans 8.0 ,jdk 1.8 , User class compile *must be with this foundation classlib*.  
   The mini_jvm designed for resource limited device, iOS, Android, or other arm device.  
   for this work reference : sun cldc, ntu-android/simple_vm ,zhangkari/jvm ,CppArchMasters/lightweight-java-vm and more in github.   
-
+  
+## Directories:  
+  mini_jvm/mini_jvm/java/                              java foundation class  
+  mini_jvm/mini_jvm/jvm/                               mini jvm c source ,jvm   
+  mini_jvm/mini_jvm/cmem/                              mini jvm c source ,memory leak detect tool, utils/d_type.h : #define __MEM_LEAK_DETECT     
+  mini_jvm/mini_jvm/utils/                             mini jvm c source ,type def and containers.    
+  mini_jvm/mini_jvm/iostest/                           ios swift test project.      
+  
+  
+  
+## Deploy:  
+  Download github project.  
+  Compile java classes to  mini_jvm/mini_jvm/java/build/classes/ , or you can use Netbeans open the project mini_jvm/mini_jvm/java/ ,then build .  
+  Open JetBrains Clion project mini_jvm/mini_jvm/ ,setup mingw or cygwin or xcode env, build and run .  
+  
+  
+## Remote debug:  
+  Ensure that mini_jvm is running .  
+  Open intelli idea ,open the java project mini_jvm/mini_jvm/java/ , menu Run -> Edit Configurations , + remote , Transport : socket , Debugger mode : attach , host is your mini_jvm running at host ip, port : 8000 .  
+  If you are using Netbeans , open project mini_jvm/mini_jvm/java/ ,  menu Debug -> connect to Debugger, Connector : SocketAttach , host is your mini_jvm running at the host, port : 8000 , Timeout: 10000 .  
+  Then you can set breakpoint or pause mini_jvm and watch variable value .  
+  
+  
+  
 ## License
 License:	LGPL
 
