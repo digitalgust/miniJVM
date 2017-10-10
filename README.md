@@ -38,6 +38,7 @@
 ## Remote debug:  
   Ensure that mini_jvm is running .  
   Open intelli idea ,open the java project mini_jvm/mini_jvm/java/ , menu Run -> Edit Configurations , + remote , Transport : socket , Debugger mode : attach , host is your mini_jvm running at host ip, port : 8000 .  
+  Eclipse's configuration  like as Clion .  
   If you are using Netbeans , open project mini_jvm/mini_jvm/java/ ,  menu Debug -> connect to Debugger, Connector : SocketAttach , host is your mini_jvm running at the host, port : 8000 , Timeout: 10000 .  
   Then you can set breakpoint or pause mini_jvm and watch variable value .  
   
