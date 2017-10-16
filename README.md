@@ -1,6 +1,6 @@
 # mini_jvm
 
-  Mini jvm for iOS, Android. A java virtual machine implementation by C , small footprint, startup quikly, support thread ,native method, garbage collection ,debug and more.
+  Mini jvm for iOS, Android. A java virtual machine implementation by C , small mem footprint, startup quikly, support thread ,native method, garbage collection ,debug and more.
   
 ## Feature:  
 
@@ -45,7 +45,7 @@
   
   
 ## License
-License:	LGPL
+License:	BSD
 
 
 Gust , zhangpeng@egls.cn , Technology and production manage in EGLS ltd. EGLS is a game develop company in China .
