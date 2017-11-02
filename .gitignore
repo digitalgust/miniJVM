@@ -1,3 +1,13 @@
 /mini_jvm/java/dist/
 /mini_jvm/cmake-build-debug/
 /mini_jvm/cmake-build-debug/CMakeFiles/
+javalib/build/built-jar.properties
+javalib/dist/mini_jvm_java.jar
+javalib_test/build/built-jar.properties
+javalib_test/dist/minijvm_javatest.jar
+javalib_test/dist/README.TXT
+javalib_test/dist/minijvm_javatest.jar
+javalib/dist/mini_jvm_java.jar
+javalib/dist/README.TXT
+javalib/dist/mini_jvm_java.jar
+javalib/build/built-jar.properties
