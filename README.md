@@ -1,13 +1,13 @@
 # mini_jvm
 
-  Mini jvm for iOS, Android. A java virtual machine implementation in C , small mem footprint, startup quikly, support thread ,native method, no delay garbage collection ,java debug and more.
+  Mini jvm for iOS, Android. A java virtual machine implementation in C , small mem footprint, startup quikly, support thread ,native method, garbage collection ,java debug and more.
   
 ## Feature:  
 
   Java foundation classlib ported from CLDC1.1 ,Tested success.  
   Support java5/6/7/8 class version .  
   Little.endian and big.endian were supported.   
-  Java garbage collection supported , perfect no delay gc.   
+  Java garbage collection supported .   
   Java remote debug supported, transport by JDWP .  
   Java Thread supported ,need ld flag -lpthread .  
   Java native method supported.  
