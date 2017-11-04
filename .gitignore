@@ -6,7 +6,7 @@ mini_jvm/cmake-build-debug/
 mini_jvm/cmake-build-debug/CMakeFiles/
 javalib/build/built-jar.properties
 javalib_test/build/built-jar.properties
-
-
-
+javalib/nbproject/private/private.properties
+javalib_test/nbproject/genfiles.properties
+javalib_test/nbproject/private/private.properties
 
