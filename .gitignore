@@ -4,6 +4,7 @@ javalib_test/dist/
 javalib_test/ibuild/
 mini_jvm/cmake-build-debug/
 mini_jvm/cmake-build-debug/CMakeFiles/
+mini_jvm/cmake-build-release/
 javalib/build/built-jar.properties
 javalib_test/build/built-jar.properties
 javalib/nbproject/private/private.properties
