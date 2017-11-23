@@ -1,6 +1,6 @@
 # mini_jvm
 
-  Mini jvm is a java vm (java virtual machine) for iOS, Android. A java virtual machine implementation in C , small mem footprint, startup quikly, support thread ,native method, garbage collection ,java debug and more.
+  Mini jvm is a java vm (java virtual machine) for iOS, Android. implementated in C , small mem footprint, startup quikly, support thread ,native method, garbage collection ,java debug and more.
   
 ## Feature:  
 
