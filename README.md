@@ -1,10 +1,10 @@
 # mini_jvm
 
-  Mini jvm is a java vm (java virtual machine) for iOS, Android. implementated in C , small mem footprint, startup quikly, support thread ,native method, garbage collection ,java debug and more.
+  Mini jvm is a java vm (java virtual machine) for iOS, Android. implemented in C , small mem footprint, startup quikly, support thread ,native method, garbage collection ,java debug and more.
   
 ## Feature:  
 
-  Java foundation classlib ported from CLDC1.1 .  
+  Java runtime classlib ported from CLDC1.1 .  
   Support java5/6/7/8 class file version .  
   Little.endian and big.endian supported.   
   Java garbage collection supported .   
@@ -13,12 +13,6 @@
   Java native method supported.  
   Java network supported ,Socket/ServerSocket/Http etc .  
   Java file supported.  
-  Compiled and tested in 32bit mingw / 64bit cygwin / MacOS /iOS/Linux CentOS64 .   
-  C code: (mini_jvm/jvm; mini_jvm/utils) develop by JetBrains CLion, MinGW 5.0 or Cygwin 2.8.2.  ,c99 evn.
-  Swift code: (mini_jvm/iostests) develop by XCode , LLVM 9 .  
-  Java code: (javalib; javalib_test) develop by Netbeans 8.0 ,jdk 1.8 , User class compile must be with these foundation classes.  
-  The mini_jvm designed for resource limited device, iOS, Android, or other embedded device.  
-  for this work reference : sun cldc, ntu.android/simple_vm ,zhangkari/jvm ,CppArchMasters/lightweight.java.vm and more in github.   
   
 ## Directories:  
   mini_jvm/javalib/------------------ java foundation class  
@@ -28,6 +22,12 @@
   mini_jvm/mini_jvm/utils/cmem/------ c ,memory leak detect, change: utils/d_type.h: #define __MEM_LEAK_DETECT     
   mini_jvm/mini_jvm/iostest/--------- ios swift test project.      
   
+  Compiled and tested in 32bit mingw / 64bit cygwin / MacOS /iOS/Linux CentOS64 .   
+  C code: (mini_jvm/jvm; mini_jvm/utils) develop by JetBrains CLion, MinGW 5.0 or Cygwin 2.8.2.  ,c99 evn.
+  Swift code: (mini_jvm/iostests) develop by XCode , LLVM 9 .  
+  Java code: (javalib; javalib_test) develop by Netbeans 8.0 ,jdk 1.8 , User class compile must be with these foundation classes.  
+  The mini_jvm designed for resource limited device, iOS, Android, or other embedded device.  
+  for this work reference : sun cldc, ntu.android/simple_vm ,zhangkari/jvm ,CppArchMasters/lightweight.java.vm and more in github.   
   
   
 ## Deploy:  
