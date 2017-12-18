@@ -1,7 +1,5 @@
-javalib/dist/
-javalib/ibuild/
-javalib_test/dist/
-javalib_test/ibuild/
+javalib/build/
+javalib_test/build/
 mini_jvm/cmake-build-debug/
 mini_jvm/cmake-build-debug/CMakeFiles/
 mini_jvm/cmake-build-release/
