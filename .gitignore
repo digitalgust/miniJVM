@@ -1,5 +1,6 @@
 javalib/build/
 javalib_test/build/
+mini_jvm/wintest/
 mini_jvm/cmake-build-debug/
 mini_jvm/cmake-build-debug/CMakeFiles/
 mini_jvm/cmake-build-release/
