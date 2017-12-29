@@ -1,26 +1,25 @@
 # mini_jvm
 
-  Mini jvm is a java vm (java virtual machine) for iOS, Android. implemented in C , small mem footprint, startup quikly, support thread ,native method, garbage collection ,java debug and more.
+  Mini jvm is a java virtual machine for iOS, Android. implemented in C , small mem footprint, startup quikly, support thread ,native method, garbage collection ,java debug and more.
   
 ## Feature:  
 
-  Java runtime classlib ported from CLDC1.1 .  
-  Support java5/6/7/8 class file version .  
-  Little.endian and big.endian supported.   
-  Java garbage collection supported .   
-  Java remote debug supported, transport by JDWP .  
-  Java Thread supported ,need ld flag -lpthread .  
-  Java native method supported.  
-  Java network supported ,Socket/ServerSocket/Http etc .  
-  Java file supported.  
+  * No other dependence .  
+  * Java runtime classlib ported from CLDC1.1 .  
+  * Support java5/6/7/8 class file version .  
+  * Java garbage collection supported .   
+  * Java remote debug supported, transport by JDWP .  
+  * Java Thread supported ,need ld flag -lpthread .  
+  * Java native method supported.  
+  * Java network supported ,Socket/ServerSocket/Http etc .  
+  * Java file supported.  
   
 ## Directories:  
-  mini_jvm/javalib/------------------ java foundation class  
-  mini_jvm/javalib_test/------------- java foundation class for test ,few class java.lang.*  
-  mini_jvm/mini_jvm/jvm/------------- mini jvm c source ,jvm   
-  mini_jvm/mini_jvm/utils/----------- c ,type def and containers.    
-  mini_jvm/mini_jvm/utils/cmem/------ c ,memory leak detect, change: utils/d_type.h: #define __MEM_LEAK_DETECT     
-  mini_jvm/mini_jvm/iostest/--------- ios swift test project.      
+  * javalib/------------------ java foundation class lib 
+  * javalib_test/------------- java test case  
+  * jni_test/----------------- jni example.    
+  * mini_jvm/----------------- mini jvm c source ,jvm ,utils, minizip  
+  * mini_jvm/iostest/--------- ios swift test project.      
   
   Compiled and tested in 32bit mingw / 64bit cygwin / MacOS /iOS/Linux CentOS64 .   
   C code: (mini_jvm/jvm; mini_jvm/utils) develop by JetBrains CLion, MinGW 5.0 or Cygwin 2.8.2.  ,c99 evn.
@@ -31,8 +30,8 @@
   
   
 ## Deploy:  
-  Download github project.  
-  Compile java classes to  mini_jvm/javalib/build/classes/ , or you can open the project mini_jvm/javalib/  in Netbeans,then build .  
+  Download or clone github project.  
+  Compile java classes and package it to  mini_jvm/javalib/dist/ , or you can open the project mini_jvm/javalib/  in Netbeans,then build .  
   Open JetBrains Clion project (cmake) mini_jvm/mini_jvm/ ,setup mingw /cygwin /linux /mac xcode env, build and run .  
   
   
