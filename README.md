@@ -4,6 +4,7 @@
   
 ## Feature:  
 
+  * Support 32bit mingw(tdm) /64bit mingww64 / cygwin / MacOS / iOS / Linux /Android .   
   * No other dependence .  
   * Java runtime classlib ported from CLDC1.1 .  
   * Support java5/6/7/8 class file version .  
@@ -21,7 +22,6 @@
   * mini_jvm/----------------- mini jvm c source ,jvm ,utils, minizip  
   * mini_jvm/iostest/--------- ios swift test project.      
   
-  Compiled and tested in 32bit mingw / 64bit cygwin / MacOS /iOS/Linux CentOS64 .   
   C code: (mini_jvm/jvm; mini_jvm/utils) develop by JetBrains CLion, MinGW 5.0 or Cygwin 2.8.2.  ,c99 evn.
   Swift code: (mini_jvm/iostests) develop by XCode , LLVM 9 .  
   Java code: (javalib; javalib_test) develop by Netbeans 8.0 ,jdk 1.8 , User class compile must be with these foundation classes.  
