@@ -2,7 +2,6 @@ javalib/build/
 javalib_test/build/
 mini_jvm/wintest/
 mini_jvm/cmake-build-debug/
-mini_jvm/cmake-build-debug/CMakeFiles/
 mini_jvm/cmake-build-release/
 javalib/build/built-jar.properties
 javalib_test/build/built-jar.properties
@@ -11,3 +10,6 @@ javalib_test/nbproject/genfiles.properties
 javalib_test/nbproject/private/private.properties
 .svn
 win_gui/
+jni_test/cmake-build-debug/
+jni_test/cmake-build-release/
+
