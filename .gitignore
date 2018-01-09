@@ -12,4 +12,4 @@ javalib_test/nbproject/private/private.properties
 win_gui/
 jni_test/cmake-build-debug/
 jni_test/cmake-build-release/
-
+jni_test/java/build/
