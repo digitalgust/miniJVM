@@ -13,3 +13,4 @@ win_gui/
 jni_test/cmake-build-debug/
 jni_test/cmake-build-release/
 jni_test/java/build/
+jni_gui/
