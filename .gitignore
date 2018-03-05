@@ -19,3 +19,4 @@ jni_gui/java/build
 jni_gui/java/output.c
 jni_gui/java/gljni.c
 jni_gui/java/nkjni.c
+*.properties
