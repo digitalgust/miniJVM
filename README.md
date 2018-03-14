@@ -44,8 +44,11 @@
   
   
 ## Screen shot
+  Windows mini_jvm gui
 ![Windows shot](https://github.com/digitalgust/mini_jvm/raw/master/screenshot/win.png)
+  Macos mini_jvm gui
 ![Macos shot](https://github.com/digitalgust/mini_jvm/raw/master/screenshot/mac.png)
+  Linux mini_jvm gui
 ![Linux shot](https://github.com/digitalgust/mini_jvm/raw/master/screenshot/centos.png)
   
 ## License
