@@ -16,11 +16,14 @@
   * Java file supported.  
   
 ## Directories:  
-  * javalib/------------------ java foundation class lib 
-  * javalib_test/------------- java test case  
-  * jni_test/----------------- jni example.    
-  * mini_jvm/----------------- mini jvm c source ,jvm ,utils, minizip  
-  * mini_jvm/iostest/--------- ios swift test project.      
+  * binary/------------ minijvm binary (win/mac/linux)  
+  * javalib/----------- java foundation class lib 
+  * javalib_test/------ java test case  
+  * jni_gui/----------- native gui jni module, openGL2    
+  * jni_test/---------- jni example    
+  * jvm_ios/----------- ios swift test project.      
+  * jvm_macos/--------- macosX test project.      
+  * mini_jvm/---------- mini jvm c source ,jvm ,utils, minizip  
   
   C code: (mini_jvm/jvm; mini_jvm/utils) develop by JetBrains CLion, MinGW 5.0 or Cygwin 2.8.2.  ,c99 evn.
   Swift code: (mini_jvm/iostests) develop by XCode , LLVM 9 .  
@@ -44,11 +47,16 @@
   
   
 ## Screen shot    
-  Windows mini_jvm gui    
+  MINI_JVM gui module depend on openGL2 , 
+Window system build with  [GLFW](https://github.com/glfw/glfw), 
+GUI build on [nanovg](https://github.com/memononen/nanovg).   
+
+
+  * Windows mini_jvm gui    
 ![Windows shot](https://github.com/digitalgust/mini_jvm/raw/master/screenshot/win.png)
-  Macos mini_jvm gui    
+  * Macos mini_jvm gui    
 ![Macos shot](https://github.com/digitalgust/mini_jvm/raw/master/screenshot/mac.png)
-  Linux mini_jvm gui    
+  * Linux mini_jvm gui    
 ![Linux shot](https://github.com/digitalgust/mini_jvm/raw/master/screenshot/centos.png)
   
 ## License
