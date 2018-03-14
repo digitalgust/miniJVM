@@ -43,6 +43,10 @@
   Then you can set breakpoint or pause mini_jvm and watch variable value .  
   
   
+## Screen shot
+![Windows shot](https://github.com/digitalgust/mini_jvm/raw/master/screenshot/win.png)
+![Macos shot](https://github.com/digitalgust/mini_jvm/raw/master/screenshot/mac.png)
+![Linux shot](https://github.com/digitalgust/mini_jvm/raw/master/screenshot/centos.png)
   
 ## License
 License:	BSD
