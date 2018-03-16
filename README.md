@@ -60,7 +60,7 @@ GUI build on [nanovg](https://github.com/memononen/nanovg).
 ![Linux shot](https://github.com/digitalgust/mini_jvm/raw/master/screenshot/centos.png)
   
 ## License
-License:	BSD
+License:	FREE
 
 
 Gust , zhangpeng@egls.cn , Technology and production manage in EGLS ltd. EGLS is a game develop company in China .
