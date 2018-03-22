@@ -1,5 +1,7 @@
 javalib/build/
+javalib/dist/
 javalib_test/build/
+javalib_test/dist/
 mini_jvm/wintest/
 mini_jvm/cmake-build-debug/
 mini_jvm/cmake-build-release/
@@ -13,6 +15,7 @@ win_gui/
 jni_test/cmake-build-debug/
 jni_test/cmake-build-release/
 jni_test/java/build/
+jni_test/java/dist/
 jni_gui/cmake-build-debug/
 jni_gui/cmake-build-release/
 jni_gui/java/build
