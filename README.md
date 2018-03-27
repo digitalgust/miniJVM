@@ -4,7 +4,7 @@
   
 ## Feature:  
 
-  * Support 32bit mingw(tdm) /64bit mingww64 / cygwin / MacOS / iOS / Linux /Android .   
+  * Support 32bit mingw(tdm) /64bit mingww64 / MSVC / cygwin / MacOS / iOS / Linux /Android .   
   * No other dependence .  
   * Java runtime classlib ported from CLDC1.1 .  
   * Support java5/6/7/8 class file version .  
