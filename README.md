@@ -17,18 +17,20 @@
   
 ## Directories: 
 > /   
->> binary/------------ minijvm binary (win/mac/linux)  
->> mini_jvm/---------- mini jvm c source   
->> javalib/----------- jvm class lib   
+>> binary/-------- minijvm binary (win32/win64/mac/linux)  
+>> mini_jvm/------ mini jvm c source   
+>> javalib/------- jvm class lib   
+
 >> ex_lib/   
->>> jni_gui/----------- native gui jni module, openGL2    
->>> luaj/-----------  lua java    
+>>> jni_gui/------ native gui jni module, openGL2    
+>>> luaj/--------- lua java    
+
 >> test/   
->>> javalib_test/------ java test case  
->>> jni_test/---------- jni example    
->>> jvm_ios/----------- ios swift test project.      
->>> jvm_macos/--------- macosX test project.      
->>> jvm_vs/--------- macosX test project.      
+>>> javalib_test/- java class test case  
+>>> jni_test/----- jni example    
+>>> jvm_ios/------ ios swift test project.      
+>>> jvm_macos/---- macosX test project.      
+>>> jvm_vs/------- virtual studio test project.      
   
   C code: (mini_jvm/jvm; mini_jvm/utils) develop by JetBrains CLion, MinGW 5.0 or Cygwin 2.8.2.  ,c99 evn.
   Swift code: (mini_jvm/iostests) develop by XCode , LLVM 9 .  
