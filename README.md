@@ -18,12 +18,14 @@
 ## Directories: 
 > /   
 >> binary/------------ minijvm binary (win/mac/linux)  
->> mini_jvm/---------- mini jvm c source ,jvm ,utils, minizip  
->> javalib/----------- java foundation class lib   
->> ex_lib  
+>> mini_jvm/---------- mini jvm c source   
+>> javalib/----------- jvm class lib   
+
+>> ex_lib/   
 >>> jni_gui/----------- native gui jni module, openGL2    
 >>> luaj/-----------  lua java    
->> test  
+
+>> test/   
 >>> javalib_test/------ java test case  
 >>> jni_test/---------- jni example    
 >>> jvm_ios/----------- ios swift test project.      
