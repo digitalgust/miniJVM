@@ -20,11 +20,9 @@
 >> binary/------------ minijvm binary (win/mac/linux)  
 >> mini_jvm/---------- mini jvm c source   
 >> javalib/----------- jvm class lib   
-
 >> ex_lib/   
 >>> jni_gui/----------- native gui jni module, openGL2    
 >>> luaj/-----------  lua java    
-
 >> test/   
 >>> javalib_test/------ java test case  
 >>> jni_test/---------- jni example    
