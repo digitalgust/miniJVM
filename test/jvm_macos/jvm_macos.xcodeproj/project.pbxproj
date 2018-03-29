@@ -1,0 +1,478 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 48;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		45516814206A62340026A296 /* tinycthread.c in Sources */ = {isa = PBXBuildFile; fileRef = 45516812206A62340026A296 /* tinycthread.c */; };
+		45516819206A627F0026A296 /* miniz_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 45516817206A627E0026A296 /* miniz_wrapper.c */; };
+		457248E22020AAC600349683 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 457248E12020AAC600349683 /* main.swift */; };
+		457248EB2020ABE200349683 /* invoke.c in Sources */ = {isa = PBXBuildFile; fileRef = 457248EA2020ABE200349683 /* invoke.c */; };
+		457249032020AD7300349683 /* global.c in Sources */ = {isa = PBXBuildFile; fileRef = 457248F02020AD7100349683 /* global.c */; };
+		457249042020AD7300349683 /* java_native_std.c in Sources */ = {isa = PBXBuildFile; fileRef = 457248F12020AD7200349683 /* java_native_std.c */; };
+		457249052020AD7300349683 /* garbage.c in Sources */ = {isa = PBXBuildFile; fileRef = 457248F22020AD7200349683 /* garbage.c */; };
+		457249062020AD7300349683 /* runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = 457248F52020AD7200349683 /* runtime.c */; };
+		457249072020AD7300349683 /* java_native_reflect.c in Sources */ = {isa = PBXBuildFile; fileRef = 457248F62020AD7200349683 /* java_native_reflect.c */; };
+		457249082020AD7300349683 /* java_native_io.c in Sources */ = {isa = PBXBuildFile; fileRef = 457248F72020AD7200349683 /* java_native_io.c */; };
+		457249092020AD7300349683 /* class_load.c in Sources */ = {isa = PBXBuildFile; fileRef = 457248F82020AD7200349683 /* class_load.c */; };
+		4572490A2020AD7300349683 /* class.c in Sources */ = {isa = PBXBuildFile; fileRef = 457248F92020AD7200349683 /* class.c */; };
+		4572490B2020AD7300349683 /* jvm.c in Sources */ = {isa = PBXBuildFile; fileRef = 457248FB2020AD7200349683 /* jvm.c */; };
+		4572490C2020AD7300349683 /* jvm_util.c in Sources */ = {isa = PBXBuildFile; fileRef = 457248FF2020AD7200349683 /* jvm_util.c */; };
+		4572490D2020AD7300349683 /* jdwp.c in Sources */ = {isa = PBXBuildFile; fileRef = 457249002020AD7300349683 /* jdwp.c */; };
+		4572490E2020AD7300349683 /* interpreter.c in Sources */ = {isa = PBXBuildFile; fileRef = 457249022020AD7300349683 /* interpreter.c */; };
+		457249232020AD9900349683 /* pairlist.c in Sources */ = {isa = PBXBuildFile; fileRef = 457249102020AD9800349683 /* pairlist.c */; };
+		457249242020AD9900349683 /* linkedlist.c in Sources */ = {isa = PBXBuildFile; fileRef = 457249112020AD9800349683 /* linkedlist.c */; };
+		457249252020AD9900349683 /* utf8_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 457249132020AD9800349683 /* utf8_string.c */; };
+		457249262020AD9900349683 /* hashset.c in Sources */ = {isa = PBXBuildFile; fileRef = 457249162020AD9800349683 /* hashset.c */; };
+		457249272020AD9900349683 /* arraylist.c in Sources */ = {isa = PBXBuildFile; fileRef = 457249172020AD9800349683 /* arraylist.c */; };
+		457249282020AD9900349683 /* d_utils.c in Sources */ = {isa = PBXBuildFile; fileRef = 4572491B2020AD9800349683 /* d_utils.c */; };
+		457249292020AD9900349683 /* bytebuf.c in Sources */ = {isa = PBXBuildFile; fileRef = 4572491C2020AD9800349683 /* bytebuf.c */; };
+		4572492A2020AD9900349683 /* spinlock.c in Sources */ = {isa = PBXBuildFile; fileRef = 4572491D2020AD9800349683 /* spinlock.c */; };
+		4572492B2020AD9900349683 /* hashtable.c in Sources */ = {isa = PBXBuildFile; fileRef = 4572491F2020AD9900349683 /* hashtable.c */; };
+		457249342020AFAA00349683 /* libc.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 457249332020AFAA00349683 /* libc.tbd */; };
+		457249362020AFB400349683 /* libpthread.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 457249352020AFB400349683 /* libpthread.tbd */; };
+		45E457BC205FB06F0057F2C6 /* libgui.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45E457BB205FB06F0057F2C6 /* libgui.dylib */; };
+		45E457D5205FB4A50057F2C6 /* lib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45E457D4205FB4720057F2C6 /* lib */; };
+		45E457D7205FB5030057F2C6 /* res in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45E457D6205FB4F00057F2C6 /* res */; };
+		45E457DA205FB7170057F2C6 /* gui.cfg in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45E457D9205FB6950057F2C6 /* gui.cfg */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		457248DC2020AAC600349683 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 12;
+			dstPath = "";
+			dstSubfolderSpec = 16;
+			files = (
+				45E457DA205FB7170057F2C6 /* gui.cfg in CopyFiles */,
+				45E457D7205FB5030057F2C6 /* res in CopyFiles */,
+				45E457D5205FB4A50057F2C6 /* lib in CopyFiles */,
+				45E457BC205FB06F0057F2C6 /* libgui.dylib in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		45516812206A62340026A296 /* tinycthread.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tinycthread.c; path = ../mini_jvm/utils/tinycthread.c; sourceTree = "<group>"; };
+		45516813206A62340026A296 /* tinycthread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tinycthread.h; path = ../mini_jvm/utils/tinycthread.h; sourceTree = "<group>"; };
+		45516817206A627E0026A296 /* miniz_wrapper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = miniz_wrapper.c; path = ../mini_jvm/utils/miniz/miniz_wrapper.c; sourceTree = "<group>"; };
+		45516818206A627E0026A296 /* miniz_wrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = miniz_wrapper.h; path = ../mini_jvm/utils/miniz/miniz_wrapper.h; sourceTree = "<group>"; };
+		457248DE2020AAC600349683 /* jvm_macos */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = jvm_macos; sourceTree = BUILT_PRODUCTS_DIR; };
+		457248E12020AAC600349683 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		457248E82020ABE100349683 /* jvm_macos-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "jvm_macos-Bridging-Header.h"; sourceTree = "<group>"; };
+		457248EA2020ABE200349683 /* invoke.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = invoke.c; sourceTree = "<group>"; };
+		457248F02020AD7100349683 /* global.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = global.c; path = ../mini_jvm/jvm/global.c; sourceTree = "<group>"; };
+		457248F12020AD7200349683 /* java_native_std.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = java_native_std.c; path = ../mini_jvm/jvm/java_native_std.c; sourceTree = "<group>"; };
+		457248F22020AD7200349683 /* garbage.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = garbage.c; path = ../mini_jvm/jvm/garbage.c; sourceTree = "<group>"; };
+		457248F32020AD7200349683 /* jvm_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = jvm_util.h; path = ../mini_jvm/jvm/jvm_util.h; sourceTree = "<group>"; };
+		457248F42020AD7200349683 /* jvm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = jvm.h; path = ../mini_jvm/jvm/jvm.h; sourceTree = "<group>"; };
+		457248F52020AD7200349683 /* runtime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = runtime.c; path = ../mini_jvm/jvm/runtime.c; sourceTree = "<group>"; };
+		457248F62020AD7200349683 /* java_native_reflect.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = java_native_reflect.c; path = ../mini_jvm/jvm/java_native_reflect.c; sourceTree = "<group>"; };
+		457248F72020AD7200349683 /* java_native_io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = java_native_io.c; path = ../mini_jvm/jvm/java_native_io.c; sourceTree = "<group>"; };
+		457248F82020AD7200349683 /* class_load.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = class_load.c; path = ../mini_jvm/jvm/class_load.c; sourceTree = "<group>"; };
+		457248F92020AD7200349683 /* class.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = class.c; path = ../mini_jvm/jvm/class.c; sourceTree = "<group>"; };
+		457248FA2020AD7200349683 /* garbage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = garbage.h; path = ../mini_jvm/jvm/garbage.h; sourceTree = "<group>"; };
+		457248FB2020AD7200349683 /* jvm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = jvm.c; path = ../mini_jvm/jvm/jvm.c; sourceTree = "<group>"; };
+		457248FC2020AD7200349683 /* java_native_std.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = java_native_std.h; path = ../mini_jvm/jvm/java_native_std.h; sourceTree = "<group>"; };
+		457248FD2020AD7200349683 /* java_native_io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = java_native_io.h; path = ../mini_jvm/jvm/java_native_io.h; sourceTree = "<group>"; };
+		457248FE2020AD7200349683 /* jdwp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = jdwp.h; path = ../mini_jvm/jvm/jdwp.h; sourceTree = "<group>"; };
+		457248FF2020AD7200349683 /* jvm_util.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = jvm_util.c; path = ../mini_jvm/jvm/jvm_util.c; sourceTree = "<group>"; };
+		457249002020AD7300349683 /* jdwp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = jdwp.c; path = ../mini_jvm/jvm/jdwp.c; sourceTree = "<group>"; };
+		457249012020AD7300349683 /* java_native_reflect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = java_native_reflect.h; path = ../mini_jvm/jvm/java_native_reflect.h; sourceTree = "<group>"; };
+		457249022020AD7300349683 /* interpreter.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = interpreter.c; path = ../mini_jvm/jvm/interpreter.c; sourceTree = "<group>"; };
+		457249102020AD9800349683 /* pairlist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pairlist.c; path = ../mini_jvm/utils/pairlist.c; sourceTree = "<group>"; };
+		457249112020AD9800349683 /* linkedlist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = linkedlist.c; path = ../mini_jvm/utils/linkedlist.c; sourceTree = "<group>"; };
+		457249122020AD9800349683 /* spinlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = spinlock.h; path = ../mini_jvm/utils/spinlock.h; sourceTree = "<group>"; };
+		457249132020AD9800349683 /* utf8_string.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = utf8_string.c; path = ../mini_jvm/utils/utf8_string.c; sourceTree = "<group>"; };
+		457249142020AD9800349683 /* hashset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hashset.h; path = ../mini_jvm/utils/hashset.h; sourceTree = "<group>"; };
+		457249152020AD9800349683 /* pairlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pairlist.h; path = ../mini_jvm/utils/pairlist.h; sourceTree = "<group>"; };
+		457249162020AD9800349683 /* hashset.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = hashset.c; path = ../mini_jvm/utils/hashset.c; sourceTree = "<group>"; };
+		457249172020AD9800349683 /* arraylist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = arraylist.c; path = ../mini_jvm/utils/arraylist.c; sourceTree = "<group>"; };
+		457249182020AD9800349683 /* hashtable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hashtable.h; path = ../mini_jvm/utils/hashtable.h; sourceTree = "<group>"; };
+		457249192020AD9800349683 /* bytebuf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bytebuf.h; path = ../mini_jvm/utils/bytebuf.h; sourceTree = "<group>"; };
+		4572491A2020AD9800349683 /* d_type.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = d_type.h; path = ../mini_jvm/utils/d_type.h; sourceTree = "<group>"; };
+		4572491B2020AD9800349683 /* d_utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = d_utils.c; path = ../mini_jvm/utils/d_utils.c; sourceTree = "<group>"; };
+		4572491C2020AD9800349683 /* bytebuf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bytebuf.c; path = ../mini_jvm/utils/bytebuf.c; sourceTree = "<group>"; };
+		4572491D2020AD9800349683 /* spinlock.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = spinlock.c; path = ../mini_jvm/utils/spinlock.c; sourceTree = "<group>"; };
+		4572491E2020AD9800349683 /* utf8_string.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utf8_string.h; path = ../mini_jvm/utils/utf8_string.h; sourceTree = "<group>"; };
+		4572491F2020AD9900349683 /* hashtable.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = hashtable.c; path = ../mini_jvm/utils/hashtable.c; sourceTree = "<group>"; };
+		457249212020AD9900349683 /* linkedlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = linkedlist.h; path = ../mini_jvm/utils/linkedlist.h; sourceTree = "<group>"; };
+		457249222020AD9900349683 /* arraylist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = arraylist.h; path = ../mini_jvm/utils/arraylist.h; sourceTree = "<group>"; };
+		457249332020AFAA00349683 /* libc.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libc.tbd; path = usr/lib/libc.tbd; sourceTree = SDKROOT; };
+		457249352020AFB400349683 /* libpthread.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libpthread.tbd; path = usr/lib/libpthread.tbd; sourceTree = SDKROOT; };
+		457249962020B71500349683 /* libgui.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgui.dylib; path = "../jni_gui/cmake-build-debug/libgui.dylib"; sourceTree = "<group>"; };
+		45E457BB205FB06F0057F2C6 /* libgui.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgui.dylib; path = ../binary/macos/libgui.dylib; sourceTree = "<group>"; };
+		45E457D4205FB4720057F2C6 /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = ../binary/lib; sourceTree = "<group>"; };
+		45E457D6205FB4F00057F2C6 /* res */ = {isa = PBXFileReference; lastKnownFileType = folder; name = res; path = ../binary/res; sourceTree = "<group>"; };
+		45E457D9205FB6950057F2C6 /* gui.cfg */ = {isa = PBXFileReference; lastKnownFileType = text; path = gui.cfg; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		457248DB2020AAC600349683 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				457249362020AFB400349683 /* libpthread.tbd in Frameworks */,
+				457249342020AFAA00349683 /* libc.tbd in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		45516816206A62610026A296 /* miniz */ = {
+			isa = PBXGroup;
+			children = (
+				45516817206A627E0026A296 /* miniz_wrapper.c */,
+				45516818206A627E0026A296 /* miniz_wrapper.h */,
+			);
+			name = miniz;
+			sourceTree = "<group>";
+		};
+		457248D52020AAC600349683 = {
+			isa = PBXGroup;
+			children = (
+				45E457D9205FB6950057F2C6 /* gui.cfg */,
+				45E457D6205FB4F00057F2C6 /* res */,
+				45E457D4205FB4720057F2C6 /* lib */,
+				45E457BB205FB06F0057F2C6 /* libgui.dylib */,
+				4572490F2020AD8000349683 /* utils */,
+				457248EF2020AD5300349683 /* jvm */,
+				457248E02020AAC600349683 /* jvm_macos */,
+				457248DF2020AAC600349683 /* Products */,
+				457249322020AFAA00349683 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		457248DF2020AAC600349683 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				457248DE2020AAC600349683 /* jvm_macos */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		457248E02020AAC600349683 /* jvm_macos */ = {
+			isa = PBXGroup;
+			children = (
+				457248E12020AAC600349683 /* main.swift */,
+				457248EA2020ABE200349683 /* invoke.c */,
+				457248E82020ABE100349683 /* jvm_macos-Bridging-Header.h */,
+			);
+			path = jvm_macos;
+			sourceTree = "<group>";
+		};
+		457248EF2020AD5300349683 /* jvm */ = {
+			isa = PBXGroup;
+			children = (
+				457248F82020AD7200349683 /* class_load.c */,
+				457248F92020AD7200349683 /* class.c */,
+				457248F22020AD7200349683 /* garbage.c */,
+				457248FA2020AD7200349683 /* garbage.h */,
+				457248F02020AD7100349683 /* global.c */,
+				457249022020AD7300349683 /* interpreter.c */,
+				457248F72020AD7200349683 /* java_native_io.c */,
+				457248FD2020AD7200349683 /* java_native_io.h */,
+				457248F62020AD7200349683 /* java_native_reflect.c */,
+				457249012020AD7300349683 /* java_native_reflect.h */,
+				457248F12020AD7200349683 /* java_native_std.c */,
+				457248FC2020AD7200349683 /* java_native_std.h */,
+				457249002020AD7300349683 /* jdwp.c */,
+				457248FE2020AD7200349683 /* jdwp.h */,
+				457248FF2020AD7200349683 /* jvm_util.c */,
+				457248F32020AD7200349683 /* jvm_util.h */,
+				457248FB2020AD7200349683 /* jvm.c */,
+				457248F42020AD7200349683 /* jvm.h */,
+				457248F52020AD7200349683 /* runtime.c */,
+			);
+			name = jvm;
+			sourceTree = "<group>";
+		};
+		4572490F2020AD8000349683 /* utils */ = {
+			isa = PBXGroup;
+			children = (
+				45516816206A62610026A296 /* miniz */,
+				45516812206A62340026A296 /* tinycthread.c */,
+				45516813206A62340026A296 /* tinycthread.h */,
+				457249172020AD9800349683 /* arraylist.c */,
+				457249222020AD9900349683 /* arraylist.h */,
+				4572491C2020AD9800349683 /* bytebuf.c */,
+				457249192020AD9800349683 /* bytebuf.h */,
+				4572491A2020AD9800349683 /* d_type.h */,
+				4572491B2020AD9800349683 /* d_utils.c */,
+				457249162020AD9800349683 /* hashset.c */,
+				457249142020AD9800349683 /* hashset.h */,
+				4572491F2020AD9900349683 /* hashtable.c */,
+				457249182020AD9800349683 /* hashtable.h */,
+				457249112020AD9800349683 /* linkedlist.c */,
+				457249212020AD9900349683 /* linkedlist.h */,
+				457249102020AD9800349683 /* pairlist.c */,
+				457249152020AD9800349683 /* pairlist.h */,
+				4572491D2020AD9800349683 /* spinlock.c */,
+				457249122020AD9800349683 /* spinlock.h */,
+				457249132020AD9800349683 /* utf8_string.c */,
+				4572491E2020AD9800349683 /* utf8_string.h */,
+			);
+			name = utils;
+			sourceTree = "<group>";
+		};
+		457249322020AFAA00349683 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				457249962020B71500349683 /* libgui.dylib */,
+				457249352020AFB400349683 /* libpthread.tbd */,
+				457249332020AFAA00349683 /* libc.tbd */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		457248DD2020AAC600349683 /* jvm_macos */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 457248E52020AAC600349683 /* Build configuration list for PBXNativeTarget "jvm_macos" */;
+			buildPhases = (
+				457248DA2020AAC600349683 /* Sources */,
+				457248DB2020AAC600349683 /* Frameworks */,
+				457248DC2020AAC600349683 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = jvm_macos;
+			productName = jvm_macos;
+			productReference = 457248DE2020AAC600349683 /* jvm_macos */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		457248D62020AAC600349683 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 0920;
+				LastUpgradeCheck = 0920;
+				ORGANIZATIONNAME = Gust;
+				TargetAttributes = {
+					457248DD2020AAC600349683 = {
+						CreatedOnToolsVersion = 9.2;
+						LastSwiftMigration = 0920;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 457248D92020AAC600349683 /* Build configuration list for PBXProject "jvm_macos" */;
+			compatibilityVersion = "Xcode 8.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 457248D52020AAC600349683;
+			productRefGroup = 457248DF2020AAC600349683 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				457248DD2020AAC600349683 /* jvm_macos */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		457248DA2020AAC600349683 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				457249242020AD9900349683 /* linkedlist.c in Sources */,
+				4572490D2020AD7300349683 /* jdwp.c in Sources */,
+				4572492B2020AD9900349683 /* hashtable.c in Sources */,
+				4572490B2020AD7300349683 /* jvm.c in Sources */,
+				4572490A2020AD7300349683 /* class.c in Sources */,
+				457249082020AD7300349683 /* java_native_io.c in Sources */,
+				457249272020AD9900349683 /* arraylist.c in Sources */,
+				457249062020AD7300349683 /* runtime.c in Sources */,
+				45516814206A62340026A296 /* tinycthread.c in Sources */,
+				457249252020AD9900349683 /* utf8_string.c in Sources */,
+				457249042020AD7300349683 /* java_native_std.c in Sources */,
+				457249262020AD9900349683 /* hashset.c in Sources */,
+				457249282020AD9900349683 /* d_utils.c in Sources */,
+				457249032020AD7300349683 /* global.c in Sources */,
+				45516819206A627F0026A296 /* miniz_wrapper.c in Sources */,
+				457248E22020AAC600349683 /* main.swift in Sources */,
+				457249092020AD7300349683 /* class_load.c in Sources */,
+				4572492A2020AD9900349683 /* spinlock.c in Sources */,
+				457249292020AD9900349683 /* bytebuf.c in Sources */,
+				457248EB2020ABE200349683 /* invoke.c in Sources */,
+				457249232020AD9900349683 /* pairlist.c in Sources */,
+				4572490E2020AD7300349683 /* interpreter.c in Sources */,
+				4572490C2020AD7300349683 /* jvm_util.c in Sources */,
+				457249072020AD7300349683 /* java_native_reflect.c in Sources */,
+				457249052020AD7300349683 /* garbage.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		457248E32020AAC600349683 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		457248E42020AAC600349683 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+			};
+			name = Release;
+		};
+		457248E62020AAC600349683 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "jvm_macos/jvm_macos-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 4.0;
+			};
+			name = Debug;
+		};
+		457248E72020AAC600349683 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "jvm_macos/jvm_macos-Bridging-Header.h";
+				SWIFT_VERSION = 4.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		457248D92020AAC600349683 /* Build configuration list for PBXProject "jvm_macos" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				457248E32020AAC600349683 /* Debug */,
+				457248E42020AAC600349683 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		457248E52020AAC600349683 /* Build configuration list for PBXNativeTarget "jvm_macos" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				457248E62020AAC600349683 /* Debug */,
+				457248E72020AAC600349683 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 457248D62020AAC600349683 /* Project object */;
+}

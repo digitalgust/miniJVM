@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "jarray_destory:jvm_util.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "arr-&gt;mb.clazz-&gt;name-&gt;data">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "find_fieldInfo_by_fieldref:class.c">
+      </ContextState>
+      <ContextState
+         contextName = "execute_jvm:jvm.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "sys_classloader">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "memoryblock_destory:jvm_util.c">
+      </ContextState>
+      <ContextState
+         contextName = "_op_putfield_impl:interpreter.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "ins-&gt;mb.clazz-&gt;name-&gt;data">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "class_clinit:class.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "clazz-&gt;name-&gt;data">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "execute_method:interpreter.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "clazz-&gt;name-&gt;data">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "_instance_mark_refer:garbage.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "ins-&gt;mb.clazz-&gt;name-&gt;data">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "classes_load_get:jvm_util.c">
+      </ContextState>
+      <ContextState
+         contextName = "_garbage_mark_object:garbage.c">
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>

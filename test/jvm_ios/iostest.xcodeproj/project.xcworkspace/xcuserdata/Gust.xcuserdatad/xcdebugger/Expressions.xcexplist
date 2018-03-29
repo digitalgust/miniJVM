@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "jarray_mark_refer:garbage.c">
+      </ContextState>
+      <ContextState
+         contextName = "instance_mark_refer:garbage.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "(MethodInfo*)(__refer)(long)getFieldRefer(getFieldPtr_byName_c(ins,&quot;javax/mini/reflect/Method&quot;,&quot;methodId&quot;,&quot;J&quot;))">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "pop_entry:runtime.c">
+      </ContextState>
+      <ContextState
+         contextName = "stack2localvar:interpreter.c">
+      </ContextState>
+      <ContextState
+         contextName = "garbage_mark_object:garbage.c">
+      </ContextState>
+      <ContextState
+         contextName = "op_astore:interpreter.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "(Instance*)value">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "execute_method:interpreter.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "method-&gt;_this_class-&gt;name-&gt;data">
+            </PersistentString>
+            <PersistentString
+               value = "method-&gt;name-&gt;data">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "jthread_resume:jvm_util.c">
+      </ContextState>
+      <ContextState
+         contextName = "getStaticFieldPtr:jvm_util.c">
+      </ContextState>
+      <ContextState
+         contextName = "classloader_class_release:jvm.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "clazz-&gt;name-&gt;data">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>
