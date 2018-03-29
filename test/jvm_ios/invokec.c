@@ -6,8 +6,8 @@
 //  Copyright © 2017年 Gust. All rights reserved.
 //
 
-#include "../mini_jvm/jvm/jvm.h"
-#include "../mini_jvm/utils/arraylist.h"
+#include "../../mini_jvm/jvm/jvm.h"
+#include "../../mini_jvm/utils/arraylist.h"
 #include "iostestTests-Bridging-Header.h"
 
 int call_jvm(char* app_path) {
