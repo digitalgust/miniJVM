@@ -26,6 +26,7 @@ ex_lib/luaj/build
 ex_lib/luaj/dist
 
 ex_lib/java_sql
+ex_lib/java_net
 ex_lib/mysql_connector
 
 .svn

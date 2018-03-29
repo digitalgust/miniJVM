@@ -5,8 +5,9 @@
  */
 package test;
 
+
 import javax.mini.reflect.Method;
-import javax.mini.reflect.Reference;
+import javax.mini.reflect.ReflectClass;
 import javax.mini.reflect.vm.RefNative;
 
 /**
@@ -25,7 +26,7 @@ public class ReflectTest {
     void t1() {
 
         Class cla = "".getClass();
-        Reference ref = new Reference(RefNative.obj2id(cla));
+        ReflectClass ref = new ReflectClass(RefNative.obj2id(cla));
         System.out.println("ref.name=" + ref.className);
         try {
             System.out.println(new Long(0).getClass().toString());
@@ -53,8 +54,8 @@ public class ReflectTest {
 
     void t2() {
         long lastms = System.currentTimeMillis();
-        Reference r = new Reference(RefNative.obj2id(java.lang.String.class));
-        Reference r2 = new Reference(RefNative.obj2id(java.lang.Long.class));
+        ReflectClass r = new ReflectClass(RefNative.obj2id(java.lang.String.class));
+        ReflectClass r2 = new ReflectClass(RefNative.obj2id(java.lang.Long.class));
         for (int i = 0; i < 1; i++) {
             try {
                 //System.out.print(" " + (System.currentTimeMillis() - lastms));
@@ -74,9 +75,9 @@ public class ReflectTest {
                     Object[] objs = RefNative.getGarbageReferedObjs();
                     for (int n = 0; n < objs.length; n++) {
                         Object o = objs[n];
-                        if (o != null && o instanceof Reference) {
-                            Method[] mds = ((Reference) objs[n]).getMethods();
-                            System.out.println("Reference[" + Long.toString(RefNative.obj2id(objs[n]), 10) + "]:");
+                        if (o != null && o instanceof ReflectClass) {
+                            Method[] mds = ((ReflectClass) objs[n]).getMethods();
+                            System.out.println("ReflectClass[" + Long.toString(RefNative.obj2id(objs[n]), 10) + "]:");
                             for (int j = 0; j < mds.length; j++) {
                                 Method md = mds[j];
 
