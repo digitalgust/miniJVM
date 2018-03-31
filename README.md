@@ -23,11 +23,11 @@
 >> binary/-------- minijvm binary (win32/win64/mac/linux)  
 >> mini_jvm/------ mini jvm c source   
 >> javalib/------- jvm class lib   
-
+>>
 >> ex_lib/   
 >>> jni_gui/------ native gui jni module, openGL2    
 >>> luaj/--------- lua java    
-
+>>
 >> test/   
 >>> javalib_test/- java class test case  
 >>> jni_test/----- jni example    
@@ -37,7 +37,7 @@
   
   C code:  Developed by JetBrains CLion ,Xcode ,Virtual studio .  
   Swift code:  Developed by XCode , LLVM 9 .  
-  Java code:  Developed by Netbeans 8.0 ,jdk 1.8 , User class compile must be with these foundation classes.  
+  Java code:  Developed by Netbeans 8.0 ,jdk 1.8 .  
    
   The goal of mini_jvm is designed for resource limited device, iOS, Android, or other embedded device.  
   Referenced project : sun cldc, ntu.android/simple_vm ,zhangkari/jvm ,CppArchMasters/lightweight.java.vm and more in github.   
