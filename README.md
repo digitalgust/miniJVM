@@ -1,3 +1,5 @@
+
+[Macos shot](https://github.com/digitalgust/mini_jvm/raw/master/mini_jvm_128.png)  
 # mini_jvm
 
   Mini jvm is a java virtual machine for iOS, Android. implemented in C , small mem footprint, startup quikly, support thread ,native method, garbage collection ,java debug and more.
