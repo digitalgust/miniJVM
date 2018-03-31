@@ -63,11 +63,11 @@ GUI build on [nanovg](https://github.com/memononen/nanovg).
 
 
   * Windows mini_jvm gui    
-![Windows shot](https://github.com/digitalgust/mini_jvm/raw/master/screenshot/win.png)    
+![Windows shot](/screenshot/win.png)    
   * Macos mini_jvm gui    
-![Macos shot](https://github.com/digitalgust/mini_jvm/raw/master/screenshot/mac.png)    
+![Macos shot](/screenshot/mac.png)    
   * Linux mini_jvm gui    
-![Linux shot](https://github.com/digitalgust/mini_jvm/raw/master/screenshot/centos.png)    
+![Linux shot](/screenshot/centos.png)    
   
 ## License
 License:	FREE
