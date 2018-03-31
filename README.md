@@ -2,21 +2,21 @@
 ![](/mini_jvm_64.png)  
 # mini_jvm
 
-  Mini jvm is a java virtual machine for iOS, Android. implemented in C , small mem footprint, startup quikly, support thread ,native method, garbage collection ,java debug and more.
+  Mini jvm is a java virtual machine for iOS, Android. implemented in C , small mem footprint, startup fast, support thread ,native method, garbage collection ,java debug and more.
   
 ## Feature:  
 
-  * Compiled pass: mingw(tdm) 32bit /mingww64 32/64bit / cygwin / MSVC 32/64bit / MacOS / iOS / Linux /Android .   
-  * No dependence .  
+  * Build pass: mingww64 32|64bit / cygwin / MSVC 32|64bit / MacOS / iOS / Linux /Android .   
+  * No dependence Library .  
   * No jit but good performance .   
-  * Java runtime classlib ported from CLDC1.1 (Enhanced) .  
+  * Jvm runtime classlib ported from CLDC1.1 (Enhanced) .  
   * Support java5/6/7/8 class file version (but not all feature ex. lamdba) .  
-  * Java garbage collection supported .   
-  * Java remote debug supported, transport by JDWP .  
   * Thread supported .  
-  * Java native method supported (none jni standard) .  
-  * Network supported ,Socket/ServerSocket/Http etc .  
+  * Network supported .  
   * File io supported .  
+  * Java native method supported (None jni Spec) .  
+  * Java garbage collection supported .   
+  * Java remote debug supported, JDWP Spec .  
   
 ## Directories: 
 > /   
@@ -35,33 +35,34 @@
 >>> jvm_macos/---- macosX test project.      
 >>> jvm_vs/------- virtual studio test project.      
   
-  C code:  develop by JetBrains CLion, mingww64 or Cygwin 2.8.2.  ,c99 evn.
-  Swift code:  develop by XCode , LLVM 9 .  
-  Java code:  develop by Netbeans 8.0 ,jdk 1.8 , User class compile must be with these foundation classes.  
-  The mini_jvm designed for resource limited device, iOS, Android, or other embedded device.  
-  for this work , referenced : sun cldc, ntu.android/simple_vm ,zhangkari/jvm ,CppArchMasters/lightweight.java.vm and more in github.   
+  C code:  Developed by JetBrains CLion ,Xcode ,Virtual studio .  
+  Swift code:  Developed by XCode , LLVM 9 .  
+  Java code:  Developed by Netbeans 8.0 ,jdk 1.8 , User class compile must be with these foundation classes.  
+   
+  The goal of mini_jvm is designed for resource limited device, iOS, Android, or other embedded device.  
+  Referenced project : sun cldc, ntu.android/simple_vm ,zhangkari/jvm ,CppArchMasters/lightweight.java.vm and more in github.   
   
   
 ## Deploy:  
   Download or clone github project.  
-  Compile java classes and package it to  javalib/dist/ , or you can open the project mini_jvm/javalib/  in Netbeans,then build .  
-  Open JetBrains Clion project (cmake) mini_jvm/ ,setup mingw /cygwin /linux /mac xcode /vs env, build and run .  
-  
+  Build jvm runtime library "/javalib" in Netbeans ,copy minijvm_rt.jar to /binary/lib/.  
+  Open JetBrains Clion project (cmake) "/mini_jvm" , build and run , add args "-cp ../../binary/minijvm_rt.jar;" .  
+  If create new java source file, must import the "minijvm_rt.jar" library ,because this lib diffirent with sun jdk .   
   
 ## Remote debug:  
-  Ensure that mini_jvm is running , and opened with flag: -Xdebug.  
-  Open intelli idea ,open the java project , menu Run .> Edit Configurations , + remote , Transport : socket , Debugger mode : attach , host is your mini_jvm running at host ip and port ,ex. "localhost:8000" .  
-  Eclipse's configuration  like as idea .  
-  If you are using Netbeans , open java project ,  menu Debug .> connect to Debugger, Connector : SocketAttach , host is your mini_jvm running at the host and port, ex. "localhost:8000" , Timeout: 10000 .  
+  Run mini_jvm with flag: -Xdebug for debug mode .  
+   * Intelli idea : open the java project , menu Run .> Edit Configurations , + remote , Transport : socket , Debugger mode : attach , host is your mini_jvm running at host ip and port ,ex. "localhost:8000" .  
+   * Eclipse : configuration  like as idea .  
+   * Netbeans : open java project ,  menu Debug .> connect to Debugger, Connector : SocketAttach , host is your mini_jvm running at the host and port, ex. "localhost:8000" , Timeout: 10000 .  
   Then you can setup breakpoint or pause mini_jvm and watch variable's value .  
   
   
-## Screen shot    
-  MINI_JVM gui module depend on openGL2 ,    
-Window system build with  [GLFW](https://github.com/glfw/glfw),     
-GUI build on [nanovg](https://github.com/memononen/nanovg).       
+ 
+##   jni_gui module is a extend lib for build gui application, it depend on openGL2 or openGLES     
+   * Window system build with  [GLFW](https://github.com/glfw/glfw),     
+   * GUI build on  [nanovg](https://github.com/memononen/nanovg).       
 
-
+  Screen shot   :   
   * Windows mini_jvm gui    
 ![Windows shot](/screenshot/win.png)    
   * Macos mini_jvm gui    
