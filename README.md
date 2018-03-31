@@ -1,5 +1,5 @@
 
-[](https://github.com/digitalgust/mini_jvm/blob/master/mini_jvm_64.png)  
+![](/mini_jvm_64.png)  
 # mini_jvm
 
   Mini jvm is a java virtual machine for iOS, Android. implemented in C , small mem footprint, startup quikly, support thread ,native method, garbage collection ,java debug and more.
