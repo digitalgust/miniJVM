@@ -141,13 +141,22 @@ public class TestFile {
             ex.printStackTrace();
         }
     }
+    void t18() {
+        try {
+            File f=File.createTempFile(null, null);
+            System.out.println("tmp file:"+f.getAbsolutePath());
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
 
     public static void main(String[] args) {
         try {
             TestFile tf = new TestFile();
 //            tf.t15();
 //            tf.t16();
-            tf.t17();
+//            tf.t17();
+            tf.t18();
         } catch (Exception e) {
             e.printStackTrace();
         }
