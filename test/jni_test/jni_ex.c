@@ -3,7 +3,7 @@
 //
 
 #include <stdio.h>
-#include "../../mini_jvm/jvm/jvm.h"
+#include "jvm.h"
 
 int test_JniTest_getValue(Runtime *runtime, Class *clazz) {
     JniEnv *env = runtime->jnienv;

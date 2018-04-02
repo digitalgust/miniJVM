@@ -3,6 +3,9 @@ project(jnitest)
 
 set(CMAKE_CXX_STANDARD 11)
 
+include_directories(../../mini_jvm/jvm )
+
+
 set(SOURCE_FILES
         jni_ex.c)
 
