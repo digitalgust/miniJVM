@@ -387,6 +387,37 @@ public class Foo1 {
         System.out.println("a:" + a + "   b:" + b);
     }
 
+    void t25() {
+        class T25 {
+
+            ThreadLocal<StringBuilder> var=new ThreadLocal(){
+                @Override
+                protected Object initialValue(){
+                    return new StringBuilder();
+                } 
+            };
+        };
+        
+        T25 t25 = new T25();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Thread.currentThread().setName("Thread 1");
+                t25.var.get().append(Thread.currentThread().getName());
+                System.out.println(Thread.currentThread() + ":" + t25.var.get());
+            }
+        }).start();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Thread.currentThread().setName("Thread 2");
+                t25.var.get().append(Thread.currentThread().getName());
+                System.out.println(Thread.currentThread() + ":" + t25.var.get());
+            }
+        }).start();
+    }
+
     public static void exec() {
         Foo1 f = new Foo1();
         for (int i = 0; i < 1; i++) {
@@ -396,7 +427,7 @@ public class Foo1 {
 //            f.t4();
 //            f.t5();
 //            f.t6();
-            f.t7();
+//            f.t7();
 //            f.t8();
 //            f.t9();
 //            f.t10();
@@ -410,6 +441,7 @@ public class Foo1 {
 //            f.t21();
 //            f.t23();
 //            f.t24();
+            f.t25();
         }
     }
 
