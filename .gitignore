@@ -30,4 +30,4 @@ ex_lib/java_net
 ex_lib/mysql_connector
 
 .svn
-*.properties
+test/javalib_test/src/test/Foo1.java
