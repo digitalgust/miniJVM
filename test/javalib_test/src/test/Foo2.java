@@ -263,6 +263,13 @@ class Foo2 {
         }
     }
 
+    void t15() {
+        System.out.println("SB.sb1=" + SB.sb1);
+        System.out.println("SB.sb2=" + SB.sb2);
+        System.out.println("SA.sa1=" + SA.sa1);
+        System.out.println("SA.sa2=" + SA.sa2);
+    }
+
     public static void main(String args[]) {
         Foo2 obj = new Foo2();
 //        obj.t1();
@@ -278,6 +285,19 @@ class Foo2 {
 //        obj.t11();
 //        obj.t12();
 //        obj.t13();
-        obj.t14();
+//        obj.t14();
+        obj.t15();
     }
+}
+
+class SA {
+
+    static int sa1 = 5;
+    static int sa2 = SB.sb2;
+}
+
+class SB {
+
+    static int sb1 = SA.sa2;
+    static int sb2 = 9;
 }
