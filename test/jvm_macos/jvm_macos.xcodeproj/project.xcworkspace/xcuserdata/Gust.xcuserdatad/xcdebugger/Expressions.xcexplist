@@ -3,10 +3,18 @@
    version = "1.0">
    <ContextStates>
       <ContextState
-         contextName = "jarray_destory:jvm_util.c">
+         contextName = "GLOBAL">
          <PersistentStrings>
             <PersistentString
-               value = "arr-&gt;mb.clazz-&gt;name-&gt;data">
+               value = "(struct _ClassType*)ins-&gt;mb.clazz">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "execute_jvm:jvm.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "sys_classloader">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -14,10 +22,10 @@
          contextName = "find_fieldInfo_by_fieldref:class.c">
       </ContextState>
       <ContextState
-         contextName = "execute_jvm:jvm.c">
+         contextName = "jarray_destory:jvm_util.c">
          <PersistentStrings>
             <PersistentString
-               value = "sys_classloader">
+               value = "arr-&gt;mb.clazz-&gt;name-&gt;data">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
