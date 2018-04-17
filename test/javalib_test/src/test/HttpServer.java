@@ -42,7 +42,7 @@ public class HttpServer {
                         @Override
                         public void run() {
                             try {
-                                int MAX = 5;
+                                int MAX = 50;
                                 for (int i = 0; i < MAX; i++) {
                                     System.out.println("server would close at " + (MAX - i) + " second later.");
                                     Thread.sleep(1000);
