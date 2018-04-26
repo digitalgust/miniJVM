@@ -40,8 +40,7 @@
   Java code:  Developed by Netbeans 8.0 ,jdk 1.8 .  
    
   The goal of mini_jvm is designed for resource limited device, iOS, Android, or other embedded device.  
-  Referenced project : sun cldc, ntu.android/simple_vm ,zhangkari/jvm ,CppArchMasters/lightweight.java.vm and more in github.   
-  
+
   
 ## Deploy:  
   Download or clone github project.  
@@ -56,11 +55,23 @@
    * Netbeans : open java project ,  menu Debug .> connect to Debugger, Connector : SocketAttach , host is your mini_jvm running at the host and port, ex. "localhost:8000" , Timeout: 10000 .  
   Then you can setup breakpoint or pause mini_jvm and watch variable's value .  
   
-  
+
+## Referenced project and technology:   
+   [Sun cldc](http://www.oracle.com/technetwork/java/cldc-141990.html)  :reference    
+   [Miniz](https://github.com/richgel999/miniz) :for read jar files    
+   [GLFM](https://github.com/brackeen/glfm) :for cross platform (android/ios) GUI   
+   [nanovg](https://github.com/memononen/nanovg)  :for GUI   
+   [Stb](https://github.com/nothings/stb) :for GUI   
+   [GLFW](https://github.com/glfw/glfw)  :for pc cross platform GUI   
+   [Dirent](https://github.com/tronkko/dirent)  :for win vc file and directory access    
+   [Tinycthread](https://github.com/tinycthread/tinycthread)  :for cross platform thread   
+
+
+
  
 ##   jni_gui module is a extend lib for build gui application, it depend on openGL2 or openGLES     
-   * Window system build with  [GLFW](https://github.com/glfw/glfw),     
-   * GUI build on  [nanovg](https://github.com/memononen/nanovg).       
+   * Window system build with  GLFW         
+   * GUI build on nanovg          
 
   Screen shot   :   
   * Windows mini_jvm gui    
