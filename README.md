@@ -2,14 +2,14 @@
 ![](/mini_jvm_64.png)  
 # mini_jvm
 
-  Develop Application in Java for iOS,Android,Win,Linux,Mac platform. implemented in C , small mem footprint, startup fast, support native method, garbage collection ,java debug and more.
+  Develop application in Java for iOS,Android,Win,Linux,Mac platform. implemented in C , small mem footprint, startup fast, support native method, garbage collection ,java debug and more.
   
 ## Feature:  
 
   * Build pass: mingww64 32|64bit / cygwin / MSVC 32|64bit / MacOS / iOS / Linux / Android .   
   * No dependence Library .  
-  * No jit but good performance .   
-  * Jvm runtime classlib ported from CLDC1.1 (Enhanced) .  
+  * No jit but good performance, about 1/3 - 1/5 jit.   
+  * Jvm runtime classlib ported from CLDC1.1 (Extended) .  
   * Support java5/6/7/8 class file version (but not all feature ex. lamdba) .  
   * Thread supported .  
   * Network supported .  
@@ -57,11 +57,12 @@
   
 
 ## Referenced project and technology:   
-   [Sun cldc](http://www.oracle.com/technetwork/java/cldc-141990.html)  :reference    
+   [Sun CLDC](http://www.oracle.com/technetwork/java/cldc-141990.html)  :reference    
    [Miniz](https://github.com/richgel999/miniz) :for read jar files    
    [GLFM](https://github.com/brackeen/glfm) :for cross platform (android/ios) GUI   
-   [nanovg](https://github.com/memononen/nanovg)  :for GUI   
-   [Stb](https://github.com/nothings/stb) :for GUI   
+   [Nanovg](https://github.com/memononen/nanovg)  :for GUI paint function   
+   [Stb](https://github.com/nothings/stb) :for GUI truetype font and image  
+   [Glad](https://github.com/Dav1dde/glad)  :for replace openGL/GLES head file   
    [GLFW](https://github.com/glfw/glfw)  :for pc cross platform GUI   
    [Dirent](https://github.com/tronkko/dirent)  :for win vc file and directory access    
    [Tinycthread](https://github.com/tinycthread/tinycthread)  :for cross platform thread   
@@ -82,7 +83,7 @@
 ![Linux shot](/screenshot/centos.png)    
   
 ## License
-License:	FREE
+License:	unlicense
 
 
 Gust , zhangpeng@egls.cn , Technology and production manage in EGLS ltd. EGLS is a game develop company in China .
