@@ -2,11 +2,11 @@
 ![](/mini_jvm_64.png)  
 # mini_jvm
 
-  Mini jvm is a java virtual machine for iOS, Android. implemented in C , small mem footprint, startup fast, support thread ,native method, garbage collection ,java debug and more.
+  Develop Application in Java for iOS,Android,Win,Linux,Mac platform. implemented in C , small mem footprint, startup fast, support native method, garbage collection ,java debug and more.
   
 ## Feature:  
 
-  * Build pass: mingww64 32|64bit / cygwin / MSVC 32|64bit / MacOS / iOS / Linux /Android .   
+  * Build pass: mingww64 32|64bit / cygwin / MSVC 32|64bit / MacOS / iOS / Linux / Android .   
   * No dependence Library .  
   * No jit but good performance .   
   * Jvm runtime classlib ported from CLDC1.1 (Enhanced) .  
