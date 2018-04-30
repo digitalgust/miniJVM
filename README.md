@@ -71,10 +71,10 @@
 
 
  
-##   jni_gui module is a extend lib for build gui application, it depend on openGL2 or openGLES     
-   * Window system build with GLFW         
-   * iOS/Android system build with GLFM         
-   * GUI build on nanovg          
+## Build GUI application, depend on openGL2 or openGLES     
+   * iOS/Android system build with GLFM  (/ex_lib/glfm/build/ios/)       
+   * Window system build with GLFW   (/ex_lib/gui_jni/)      
+   * GUI build on Nanovg          
 
   Screen shot   :   
     * iOS mini_jvm gui    
