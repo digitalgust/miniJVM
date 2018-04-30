@@ -25,6 +25,7 @@
 >> javalib/------- jvm class lib   
 >>
 >> ex_lib/   
+>>> glfm/--------- iOS/Android App gui module, openGLES2    
 >>> jni_gui/------ native gui jni module, openGL2    
 >>> luaj/--------- lua java    
 >>
