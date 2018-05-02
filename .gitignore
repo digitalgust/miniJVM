@@ -31,3 +31,4 @@ ex_lib/mysql_connector
 
 .svn
 test/javalib_test/src/test/Foo1.java
+*.c___jb_old___
