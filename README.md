@@ -20,12 +20,12 @@
   
 ## Directories: 
 > /   
->> binary/-------- minijvm binary (win32/win64/mac/linux)  
+>> binary/-------- minijvm binary for pc (win32/win64/mac/linux)  
 >> mini_jvm/------ mini jvm c source   
->> javalib/------- jvm class lib   
+>> javalib/------- mini jvm class lib   
 >>
 >> ex_lib/   
->>> jni_gui/------ native gui jni module, openGL2  for pc  
+>>> jni_gui/------ pc native gui jni module, openGL2   
 >>> luaj/--------- lua java    
 >>
 >> mobile/        
@@ -36,11 +36,11 @@
 >>> resfiles/------ java app resource, font files, jar files ,pic etc.  
 >>
 >> test/   
->>> javalib_test/- java class test case  
->>> jni_test/----- jni example    
->>> jvm_ios/------ ios swift test project.      
->>> jvm_macos/---- macosX test project.      
->>> jvm_vs/------- virtual studio test project.      
+>>> javalib_test/- test **/javalib** classes.   
+>>> jni_test/----- jni example     
+>>> jvm_ios/------ ios swift test project ,only test the minijvm.      
+>>> jvm_macos/---- macosX test project, only test minijvm.      
+>>> jvm_vs/------- virtual studio test project, only test minijvm.      
   
   C code:   JetBrains CLion ,Xcode ,Virtual studio .  
   Swift code/Object c:    XCode , LLVM 9 .  
@@ -56,8 +56,8 @@
    Open ExApp project in NetBeans , it dependent on project **/javalib** and **/mobile/java/guilib**  
    **/javalib** is the minijvm base runtime class library, ex java.lang , java.util ,and extended classes org.mini , this project generate minijvm_rt.jar , put it into **/mobile/resfiles**    
    **/mobile/java/guilib** is gui library ,it dependent on native gui library ,that include openGLES glad, glfm, nanovg, stb lib  , this project generate glfm_gui.jar , put it into **/mobile/resfiles** too     
-   Write your classes like example **/mobile/java/ExApp/src/test/App1.java**   
-   Change **/mobile/java/ExApp/src/app/GlfmApp.java** Change App1 to your class   
+   Write your code like example **/mobile/java/ExApp/src/test/App1.java**   
+   Change **/mobile/java/ExApp/src/app/GlfmMain.java** Change App1 to your class   
    Build **/mobile/java/ExApp** generate ExApp.jar ,MUST NOT change the jar name  
    Copy ExApp.jar to **/mobile/resfiles/**  
    Open project **/mobile/iosapp** in Xcode, need not change anything  
