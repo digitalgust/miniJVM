@@ -25,9 +25,15 @@
 >> javalib/------- jvm class lib   
 >>
 >> ex_lib/   
->>> glfm/--------- iOS/Android App gui module, openGLES2    
->>> jni_gui/------ native gui jni module, openGL2    
+>>> jni_gui/------ native gui jni module, openGL2  for pc  
 >>> luaj/--------- lua java    
+>>
+>> mobile/--------- iOS/Android App gui module, openGLES2    
+>>> c/------------- java native lib, glfm framework, gui jni, glfmapp    
+>>> java/guilib---- mobile app java class gui library    
+>>> java/ExApp----- java app entry point    
+>>> iosapp/-------- iOS app     
+>>> resfiles/------ java app resource, font files, jar files ,pic etc.  
 >>
 >> test/   
 >>> javalib_test/- java class test case  
@@ -80,20 +86,58 @@
     * iOS mini_jvm gui    
 ![iOS shot](/screenshot/ios.png)   
 
-
+There are two class demo how develop java app for iOS and Android, one is App main class, the other is an GuiApp
 ```
 package app;
 
-import java.util.Random;
-import javax.cldc.io.Connector;
-import javax.mini.net.Socket;
-import org.mini.gl.warp.GLFrameBuffer;
-import org.mini.gl.warp.GLFrameBufferPainter;
 import org.mini.glfm.Glfm;
 import static org.mini.glfm.Glfm.GLFMDepthFormat16;
 import static org.mini.glfm.Glfm.GLFMMultisampleNone;
 import static org.mini.glfm.Glfm.GLFMRenderingAPIOpenGLES2;
 import static org.mini.glfm.Glfm.GLFMStencilFormat8;
+import org.mini.gui.GuiCallBack;
+import test.App1;
+
+/**
+ *
+ * This class MUST be app.GlfmMain 
+ * 
+ * And this jar MUST be resfiles/ExApp.jar
+ * 
+ * it used in c source glfmapp/main.c
+ * 
+ * @author gust
+ */
+public class GlfmMain {
+
+
+
+    public static void main(String[] args) {
+    }
+
+
+    static public void glinit(long display) {
+
+        Glfm.glfmSetDisplayConfig(display,
+                GLFMRenderingAPIOpenGLES2,
+                Glfm.GLFMColorFormatRGBA8888,
+                GLFMDepthFormat16,
+                GLFMStencilFormat8,
+                GLFMMultisampleNone);
+        App1 app = new App1();
+        GuiCallBack ccb = new GuiCallBack(display, app);
+        Glfm.glfmSetCallBack(display, ccb);
+
+    }
+
+}
+
+
+package test;
+
+import java.util.Random;
+import org.mini.gl.warp.GLFrameBuffer;
+import org.mini.gl.warp.GLFrameBufferPainter;
 import org.mini.gui.GButton;
 import org.mini.gui.GCanvas;
 import org.mini.gui.GCheckBox;
@@ -121,42 +165,19 @@ import org.mini.gui.GLanguage;
  *
  * @author gust
  */
-public class GlfmMain implements GApplication {
+public class App1 implements GApplication {
 
-    private static GlfmMain app;
+    private static App1 app;
 
     GForm form;
     GMenu menu;
 
-    public static void main(String[] args) {
-    }
-
-    static public GlfmMain getInstance() {
+    static public App1 getInstance() {
         if (app == null) {
-            app = new GlfmMain();
+            app = new App1();
         }
         return app;
     }
-
-    static public void glinit(long display) {// program entrypoint ,like main method 
-
-        Glfm.glfmSetDisplayConfig(display,
-                GLFMRenderingAPIOpenGLES2,
-                Glfm.GLFMColorFormatRGBA8888,
-                GLFMDepthFormat16,
-                GLFMStencilFormat8,
-                GLFMMultisampleNone);
-        app = new GlfmMain();
-        GuiCallBack ccb = new GuiCallBack(display, app);//setup app
-        Glfm.glfmSetCallBack(display, ccb);
-
-        System.out.println("res path :" + Glfm.glfmGetResRoot());
-        System.out.println("save path :" + Glfm.glfmGetSaveRoot());
-
-        Glfm.glfmSetClipBoardContent("this is a clipboard test");
-        System.out.println("clipBoard:" + Glfm.glfmGetClipBoardContent());
-    }
-
 
 
     @Override
@@ -260,7 +281,7 @@ public class GlfmMain implements GApplication {
             @Override
             public void action(GObject gobj) {
                 System.out.println("switch app");
-                //ccb.setApplication(GlfmApp2.getInstance());  //can switch to the other application
+                ccb.setApplication(App2.getInstance());
             }
         });
     }
@@ -333,6 +354,7 @@ public class GlfmMain implements GApplication {
         }
     }
 }
+
 ```
 
   * Windows mini_jvm gui    

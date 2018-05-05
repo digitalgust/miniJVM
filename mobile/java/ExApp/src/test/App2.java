@@ -5,7 +5,6 @@
  */
 package test;
 
-import app.GlfmMain;
 import java.io.File;
 import org.mini.glfm.Glfm;
 import org.mini.gui.GApplication;

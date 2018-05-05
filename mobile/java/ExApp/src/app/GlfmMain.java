@@ -43,11 +43,6 @@ public class GlfmMain {
         GuiCallBack ccb = new GuiCallBack(display, app);
         Glfm.glfmSetCallBack(display, ccb);
 
-        System.out.println("res path :" + Glfm.glfmGetResRoot());
-        System.out.println("save path :" + Glfm.glfmGetSaveRoot());
-
-        Glfm.glfmSetClipBoardContent("this is a clipboard test");
-        System.out.println("clipBoard:" + Glfm.glfmGetClipBoardContent());
     }
 
 }

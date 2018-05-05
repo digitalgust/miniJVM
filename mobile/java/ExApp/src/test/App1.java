@@ -5,17 +5,9 @@
  */
 package test;
 
-import test.App2;
 import java.util.Random;
-import javax.cldc.io.Connector;
-import javax.mini.net.Socket;
 import org.mini.gl.warp.GLFrameBuffer;
 import org.mini.gl.warp.GLFrameBufferPainter;
-import org.mini.glfm.Glfm;
-import static org.mini.glfm.Glfm.GLFMDepthFormat16;
-import static org.mini.glfm.Glfm.GLFMMultisampleNone;
-import static org.mini.glfm.Glfm.GLFMRenderingAPIOpenGLES2;
-import static org.mini.glfm.Glfm.GLFMStencilFormat8;
 import org.mini.gui.GButton;
 import org.mini.gui.GCanvas;
 import org.mini.gui.GCheckBox;
@@ -57,25 +49,6 @@ public class App1 implements GApplication {
         return app;
     }
 
-    static void t13() {
-        try {
-            Socket conn = (Socket) Connector.open("socket://baidu.com:80");
-            conn.setOption(Socket.OP_TYPE_NON_BLOCK, Socket.OP_VAL_NON_BLOCK);
-            String request = "GET / HTTP/1.1\r\n\r\n";
-            conn.write(request.getBytes(), 0, request.length());
-            byte[] rcvbuf = new byte[256];
-            int len = 0;
-            while (len != -1) {
-                len = conn.read(rcvbuf, 0, 256);
-                for (int i = 0; i < len; i++) {
-                    System.out.print((char) rcvbuf[i]);
-                }
-                System.out.print("\n");
-            };
-        } catch (Exception e) {
-
-        }
-    }
 
     @Override
     public GForm createdForm(GuiCallBack ccb) {
