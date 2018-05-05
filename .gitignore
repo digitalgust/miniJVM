@@ -32,3 +32,8 @@ ex_lib/mysql_connector
 .svn
 test/javalib_test/src/test/Foo1.java
 *.c___jb_old___
+/ex_lib/mobile/java/guilib/nbproject/private/
+/mobile/java/guilib/nbproject/private/
+/mobile/java/ExApp/nbproject/private/
+/mobile/java/ExApp/build/
+/mobile/java/ExApp/dist/
