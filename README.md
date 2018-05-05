@@ -28,7 +28,7 @@
 >>> jni_gui/------ native gui jni module, openGL2  for pc  
 >>> luaj/--------- lua java    
 >>
->> mobile/--------- iOS/Android App gui module, openGLES2    
+>> mobile/        
 >>> c/------------- java native lib, glfm framework, gui jni, glfmapp    
 >>> java/guilib---- mobile app java class gui library    
 >>> java/ExApp----- java app entry point    
@@ -42,18 +42,30 @@
 >>> jvm_macos/---- macosX test project.      
 >>> jvm_vs/------- virtual studio test project.      
   
-  C code:  Developed by JetBrains CLion ,Xcode ,Virtual studio .  
-  Swift code:  Developed by XCode , LLVM 9 .  
-  Java code:  Developed by Netbeans 8.0 ,jdk 1.8 .  
+  C code:   JetBrains CLion ,Xcode ,Virtual studio .  
+  Swift code/Object c:    XCode , LLVM 9 .  
+  Java code:    Netbeans 8.0 ,jdk 1.8 .  
+  android project:  Android Studio ,Android SDK 
    
   The goal of mini_jvm is designed for resource limited device, iOS, Android, or other embedded device.  
 
+
+## How to develop iOS/Android app in java:   
+   Write one java code for both iOS and Android.  
+   The java app demo project: **/mobile/java/ExApp**  
+   Open ExApp project in NetBeans , it dependent on project **/javalib** and **/mobile/java/guilib**  
+   **/javalib** is the minijvm base runtime class library, ex java.lang , java.util ,and extended classes org.mini , this project generate minijvm_rt.jar , put it into **/mobile/resfiles**    
+   **/mobile/java/guilib** is gui library ,it dependent on native gui library ,that include openGLES glad, glfm, nanovg, stb lib  , this project generate glfm_gui.jar , put it into **/mobile/resfiles** too     
+   Write your classes like example **/mobile/java/ExApp/src/test/App1.java**   
+   Change **/mobile/java/ExApp/src/app/GlfmApp.java** Change App1 to your class   
+   Build **/mobile/java/ExApp** generate ExApp.jar ,MUST NOT change the jar name  
+   Copy ExApp.jar to **/mobile/resfiles/**  
+   Open project **/mobile/iosapp** in Xcode, need not change anything  
+   Compile and run, can be simulator or device, your app has lanched   
+   Open project **mobile/androidapp** in Android studio, need not change anything  
+   Compile and run, it would be startup  
+   good luck  
   
-## Deploy:  
-  Download or clone github project.  
-  Build jvm runtime library "/javalib" in Netbeans ,copy minijvm_rt.jar to /binary/lib/.  
-  Open JetBrains Clion project (cmake) "/mini_jvm" , build and run , add args "-cp ../../binary/minijvm_rt.jar;" .  
-  If create new java source file, must import the "minijvm_rt.jar" library ,because this lib diffirent with sun jdk .   
   
 ## Remote debug:  
   Run mini_jvm with flag: -Xdebug for debug mode .  
@@ -73,8 +85,6 @@
    [GLFW](https://github.com/glfw/glfw)  :for pc cross platform GUI   
    [Dirent](https://github.com/tronkko/dirent)  :for win vc file and directory access    
    [Tinycthread](https://github.com/tinycthread/tinycthread)  :for cross platform thread   
-
-
 
  
 ## Build GUI application, depend on openGL2 or openGLES     
