@@ -50,7 +50,8 @@
    
   The goal of mini_jvm is designed for resource limited device, iOS, Android, or other embedded device.  
 
-  ![](/screenshot/arch.png)  
+ 
+  <div align=center><img width="480" height="386" src="/screenshot/arch.png"/></div>
 
 ## How to develop iOS/Android app in java:   
    Write java code once running both iOS and Android.  
@@ -96,7 +97,8 @@
 
   Screen shot   :   
     * iOS mini_jvm gui    
-![iOS shot](/screenshot/ios.png)   
+  
+<div align=center><img width="620" height="730" src="/screenshot/ios.png"/></div>
 
 There are two class demo how develop java app for iOS and Android, one is App main class, the other is an GuiApp
 ```
