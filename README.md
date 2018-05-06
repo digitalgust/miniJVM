@@ -32,7 +32,8 @@
 >>> c/------------- java native lib, glfm framework, gui jni, glfmapp    
 >>> java/guilib---- mobile app java class gui library    
 >>> java/ExApp----- java app entry point    
->>> iosapp/-------- iOS app     
+>>> iosapp/-------- iOS launcher     
+>>> androidapp/---- Android launcher     
 >>> resfiles/------ java app resource, font files, jar files ,pic etc.  
 >>
 >> test/   
@@ -49,9 +50,10 @@
    
   The goal of mini_jvm is designed for resource limited device, iOS, Android, or other embedded device.  
 
+  ![](/screenshot/arch.png)  
 
 ## How to develop iOS/Android app in java:   
-   Write one java code for both iOS and Android.  
+   Write java code once running both iOS and Android.  
    The java app demo project: **/mobile/java/ExApp**  
    Open ExApp project in NetBeans , it dependent on project **/javalib** and **/mobile/java/guilib**  
    **/javalib** is the minijvm base runtime class library, ex java.lang , java.util ,and extended classes org.mini , this project generate minijvm_rt.jar , put it into **/mobile/resfiles**    
@@ -60,9 +62,9 @@
    Change **/mobile/java/ExApp/src/app/GlfmMain.java** Change App1 to your class   
    Build **/mobile/java/ExApp** generate ExApp.jar ,MUST NOT change the jar name  
    Copy ExApp.jar to **/mobile/resfiles/**  
-   Open project **/mobile/iosapp** in Xcode, need not change anything  
-   Compile and run, can be simulator or device, your app has lanched   
-   Open project **mobile/androidapp** in Android studio, need not change anything  
+   Open project **/mobile/iosapp** in Xcode, need not change anything, this project contains minijvm, glfm platform bridge, openGLES native function and jni interface, Nanovg paint module, Other include resource files like jvm runtime jar **minijvm_rt.jar** ,**glfm_gui.jar** ,**ExApp.jar** and font files.  
+   Compile and run, can be simulator or device, your app has launched   
+   Open project **mobile/androidapp** in Android studio, need not change anything  ,same as iosapp  
    Compile and run, it would be startup  
    good luck  
   
