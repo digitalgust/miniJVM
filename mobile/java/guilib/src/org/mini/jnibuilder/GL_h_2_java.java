@@ -27,7 +27,7 @@ public class GL_h_2_java {
         gt.buildC();
     }
     String[] input_path = {
-        "../gui/glad/glad.h",};
+        "../../c/gui/glad/glad.h",};
     String[] output_path = {"src/org/mini/gl/GL.java"};
 
     String CLASS_TEMPLATE

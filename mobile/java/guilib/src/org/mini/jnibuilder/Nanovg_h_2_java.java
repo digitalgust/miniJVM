@@ -29,9 +29,9 @@ public class Nanovg_h_2_java {
     }
 
     String[] input_path = {
-        "../gui/jni_gui.h",
-        "../gui/jni_stb_assist.h",
-        "../gui/jni_nanovg_assist.h",};
+        "../../c/gui/jni_gui.h",
+        "../../c/gui/jni_stb_assist.h",
+        "../../c/gui/jni_nanovg_assist.h",};
     String[] output_path = {"src/org/mini/nanovg/Nanovg.java"};
 
     String CLASS_TEMPLATE
