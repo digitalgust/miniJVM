@@ -402,7 +402,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "jarfile=\"./../java/guilib/dist/glfm_gui.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../resfiles/\nfi\n\njarfile=\"./../java/ExApp/dist/ExApp.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../resfiles/\nfi\n\njarfile=\"./../../javalib/dist/minijvm_rt.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../resfiles/\nfi\n";
+			shellScript = "jarfile=\"./../java/guilib/dist/glfm_gui.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n\njarfile=\"./../java/ExApp/dist/ExApp.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n\njarfile=\"./../../javalib/dist/minijvm_rt.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
