@@ -18,7 +18,6 @@
 		45D78F6D209D4330003B9317 /* nanovg.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F62209D4330003B9317 /* nanovg.c */; };
 		45D78F6E209D4330003B9317 /* jni_gui.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F63209D4330003B9317 /* jni_gui.c */; };
 		45D78F6F209D4330003B9317 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F65209D4330003B9317 /* main.c */; };
-		45D79000209D4B72003B9317 /* resfiles in Resources */ = {isa = PBXBuildFile; fileRef = 45D78FFF209D4B72003B9317 /* resfiles */; };
 		45D7902F209D8662003B9317 /* garbage.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D79002209D8662003B9317 /* garbage.c */; };
 		45D79030209D8662003B9317 /* runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D79003209D8662003B9317 /* runtime.c */; };
 		45D79031209D8662003B9317 /* jvm.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D79004209D8662003B9317 /* jvm.c */; };
@@ -42,6 +41,7 @@
 		45D79044209D8662003B9317 /* hashtable.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D79027209D8662003B9317 /* hashtable.c */; };
 		45D79045209D8662003B9317 /* bytebuf.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D79028209D8662003B9317 /* bytebuf.c */; };
 		45D79046209D8662003B9317 /* linkedlist.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D7902E209D8662003B9317 /* linkedlist.c */; };
+		45D7904B20A002C4003B9317 /* resfiles in Resources */ = {isa = PBXBuildFile; fileRef = 45D7904A20A002C4003B9317 /* resfiles */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -74,7 +74,6 @@
 		45D78F62209D4330003B9317 /* nanovg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nanovg.c; sourceTree = "<group>"; };
 		45D78F63209D4330003B9317 /* jni_gui.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jni_gui.c; sourceTree = "<group>"; };
 		45D78F65209D4330003B9317 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
-		45D78FFF209D4B72003B9317 /* resfiles */ = {isa = PBXFileReference; lastKnownFileType = folder; name = resfiles; path = ../resfiles; sourceTree = "<group>"; };
 		45D79002209D8662003B9317 /* garbage.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = garbage.c; sourceTree = "<group>"; };
 		45D79003209D8662003B9317 /* runtime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = runtime.c; sourceTree = "<group>"; };
 		45D79004209D8662003B9317 /* jvm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jvm.c; sourceTree = "<group>"; };
@@ -117,6 +116,7 @@
 		45D7902C209D8662003B9317 /* tinycthread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinycthread.h; sourceTree = "<group>"; };
 		45D7902D209D8662003B9317 /* d_type.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = d_type.h; sourceTree = "<group>"; };
 		45D7902E209D8662003B9317 /* linkedlist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = linkedlist.c; sourceTree = "<group>"; };
+		45D7904A20A002C4003B9317 /* resfiles */ = {isa = PBXFileReference; lastKnownFileType = folder; name = resfiles; path = ../assets/resfiles; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -133,7 +133,7 @@
 		45D78F16209D3E61003B9317 = {
 			isa = PBXGroup;
 			children = (
-				45D78FFF209D4B72003B9317 /* resfiles */,
+				45D7904A20A002C4003B9317 /* resfiles */,
 				45D78F21209D3E61003B9317 /* iosapp */,
 				45D78F20209D3E61003B9317 /* Products */,
 			);
@@ -383,8 +383,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				45D79000209D4B72003B9317 /* resfiles in Resources */,
 				45D78F2C209D3E62003B9317 /* Assets.xcassets in Resources */,
+				45D7904B20A002C4003B9317 /* resfiles in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -565,6 +565,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = M978JH97JT;
 				"HEADER_SEARCH_PATHS[arch=*]" = (
 					../c/glfm/,
 					../c/gui/,
@@ -587,6 +588,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = M978JH97JT;
 				"HEADER_SEARCH_PATHS[arch=*]" = (
 					../c/glfm/,
 					../c/gui/,
