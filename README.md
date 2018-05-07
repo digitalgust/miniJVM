@@ -34,7 +34,7 @@
 >>> java/ExApp----- java app entry point    
 >>> iosapp/-------- iOS launcher     
 >>> androidapp/---- Android launcher     
->>> resfiles/------ java app resource, font files, jar files ,pic etc.  
+>>> assets/resfiles/- java app resource, font files, jar files ,pic etc.  
 >>
 >> test/   
 >>> javalib_test/- test **/javalib** classes.   
