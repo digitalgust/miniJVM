@@ -1,6 +1,6 @@
 
 ![](/screenshot/mini_jvm_64.png)  
-# mini_jvm
+# miniJVM
 
   Develop iOS Android app in java.
   
