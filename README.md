@@ -1,5 +1,6 @@
 
 ![](/screenshot/mini_jvm_64.png)  
+[![Build Status](https://travis-ci.org/digitalgust/miniJVM.svg?branch=master)](https://travis-ci.org/digitalgust/miniJVM)
 # miniJVM
 
   Develop iOS Android app in java.
