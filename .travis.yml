@@ -8,4 +8,4 @@ before_script:
     
 
 script:
- - mkdir build && cd build && cmake -DCOVERALLS=ON -DCMAKE_BUILD_TYPE=Debug ../mini_jvm && cmake --build . && cmake --build . --target minijvm
+ - mkdir build && cd build && cmake -DCOVERALLS=ON -DCMAKE_BUILD_TYPE=Debug ../mini_jvm && cmake --build . && cmake --build . --target mini_jvm
