@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cp guilib/dist/*.jar ../resfiles/
+cp guilib/dist/*.jar ../assets/resfiles/
 
-cp ExApp/dist/*.jar ../resfiles/
+cp ExApp/dist/*.jar ../assets/resfiles/
 
