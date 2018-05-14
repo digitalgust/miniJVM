@@ -105,7 +105,7 @@
   Screen shot   :   
     * iOS mini_jvm gui    
   
-<div align=center><img width="620" height="730" src="/screenshot/ios.png"/></div>
+<div align=center><img  src="/screenshot/ios.png"/></div>
 
 There are two class demo how develop java app for iOS and Android, one is App main class, the other is an GuiApp
 ```
