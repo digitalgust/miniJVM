@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/digitalgust/miniJVM.svg?branch=master)](https://travis-ci.org/digitalgust/miniJVM)
 # miniJVM
 
-  Develop iOS Android app in java.
+  Develop iOS Android app in java. Jvm in ios/android.
   
 ## Feature:  
 
