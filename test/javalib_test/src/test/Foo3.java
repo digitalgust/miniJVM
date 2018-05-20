@@ -6,8 +6,7 @@ class Foo3 {
 //        Object o = null;
 //        o.toString();
 
-        t6();
-
+        //t6();
         t7();
     }
 
@@ -29,16 +28,25 @@ class Foo3 {
 //        t.start();
 
         //
+        String[] strs=new String[MAX];
         String c = null;
         for (int i = 0; i < MAX; i++) {
             String a = "abc";
             String b = "def";
-            c = a + b;
-            if (i % PRINT_COUNT == 0) {
-                System.out.println("main i=" + i);
-            }
+            c = a + b + i;
+            strs[i]=c;
+//            if (i % PRINT_COUNT == 0) {
+//                System.out.println("main i=" + i);
+//            }
         }
         System.out.println("main c=\"" + c + "\"");
+        String a="abc";
+        System.out.println("a="+a);
+        String b="abc";
+        System.out.println("b="+b);
+        a=a.substring(1);
+        System.out.println("a="+a);
+        System.out.println("b="+b);
 
     }
 
