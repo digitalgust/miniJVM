@@ -98,7 +98,7 @@
 
  
 ## Build GUI application, depend on openGL2 or openGLES     
-   * iOS/Android system build with GLFM  (/ex_lib/glfm/build/ios/)       
+   * iOS/Android system build with GLFM  (/mobile/iosapp/  ,  /mobile/androidapp/)       
    * Window system build with GLFW   (/ex_lib/gui_jni/)      
    * GUI build on Nanovg          
 
