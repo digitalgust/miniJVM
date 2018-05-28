@@ -7,7 +7,7 @@
 
 int test_JniTest_getValue(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
-    int v = env->localvar_getInt(runtime, 0);
+    int v = env->localvar_getInt(runtime->localvar, 0);
     printf("native test_JniTest_getValue(I)I invoked: v = %d\n", v);
     env->push_int(runtime->stack, v + 1);
     return 0;
