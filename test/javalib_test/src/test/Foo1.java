@@ -81,7 +81,8 @@ public class Foo1 {
     }
 
     void t3() {
-
+        Object o = new Double(-5.737373f);
+        String s=o.toString();
     }
 
     void t4() {
@@ -168,8 +169,9 @@ public class Foo1 {
         int MAX = 500000;
         int PRINT_COUNT = 10000;
         Thread t = new Thread(new Runnable() {
-            List<String> list = new ArrayList();
+            List<String> list = new ArrayList(MAX);
             Set<String> set = new HashSet();
+            String[] arr = new String[MAX];
 
             @Override
             public void run() {
@@ -189,7 +191,8 @@ public class Foo1 {
                     String b = "def";
                     c = a + b;
                     list.add(c);
-                    set.add(c);
+                    //set.add(c);
+//                    arr[i] = c;
                     if (i % PRINT_COUNT == 0) {
                         System.out.println("thread i=" + i);
                     }
@@ -390,14 +393,14 @@ public class Foo1 {
     void t25() {
         class T25 {
 
-            ThreadLocal<StringBuilder> var=new ThreadLocal(){
+            ThreadLocal<StringBuilder> var = new ThreadLocal() {
                 @Override
-                protected Object initialValue(){
+                protected Object initialValue() {
                     return new StringBuilder();
-                } 
+                }
             };
         };
-        
+
         T25 t25 = new T25();
 
         new Thread(new Runnable() {
@@ -435,7 +438,6 @@ public class Foo1 {
 //            f.t12();
 //            f.t13();
 //            f.t14();
-//            f.t18();
 //            f.t19();
 //            f.t20();
 //            f.t21();

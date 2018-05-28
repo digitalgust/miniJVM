@@ -7,7 +7,7 @@ class Foo3 {
 //        o.toString();
 
         //t6();
-        t7();
+        t8();
     }
 
     static void t6() {
@@ -28,25 +28,25 @@ class Foo3 {
 //        t.start();
 
         //
-        String[] strs=new String[MAX];
+        String[] strs = new String[MAX];
         String c = null;
         for (int i = 0; i < MAX; i++) {
             String a = "abc";
             String b = "def";
             c = a + b + i;
-            strs[i]=c;
+            strs[i] = c;
 //            if (i % PRINT_COUNT == 0) {
 //                System.out.println("main i=" + i);
 //            }
         }
         System.out.println("main c=\"" + c + "\"");
-        String a="abc";
-        System.out.println("a="+a);
-        String b="abc";
-        System.out.println("b="+b);
-        a=a.substring(1);
-        System.out.println("a="+a);
-        System.out.println("b="+b);
+        String a = "abc";
+        System.out.println("a=" + a);
+        String b = "abc";
+        System.out.println("b=" + b);
+        a = a.substring(1);
+        System.out.println("a=" + a);
+        System.out.println("b=" + b);
 
     }
 
@@ -72,5 +72,22 @@ class Foo3 {
         public void finalize() {
             System.out.println("destory thine later");
         }
+    }
+
+    static int f2(int a, int b) {
+        return a + b;
+    }
+
+    static void t8() {
+
+        long x = 10;
+
+        for (int i = 1; i < 1000000; i++) {
+            x += f2(i, i);
+        }
+
+        System.out.println(x);
+        System.out.println("over");
+
     }
 }
