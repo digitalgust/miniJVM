@@ -31,13 +31,13 @@ int org_mini_nanovg_Nanovg_stbtt_InitFont(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pinfo = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Instance *pdata2 = env->localvar_getRefer(runtime, pos++);
+    intptr_t pinfo = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Instance *pdata2 = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pdata2 = NULL;
     if(pdata2){
         ptr_pdata2 = pdata2->arr_body;
     }
-    s32 pfontstart = env->localvar_getInt(runtime, pos++);
+    s32 pfontstart = env->localvar_getInt(runtime->localvar, pos++);
 
     int _re_val = stbtt_InitFont((stbtt_fontinfo*/*ptr*/)(pinfo), (const unsigned char*)(ptr_pdata2), (int)pfontstart);
     s32 ret_value = (s32)_re_val;env->push_int(runtime->stack, ret_value);
@@ -49,8 +49,8 @@ int org_mini_nanovg_Nanovg_stbtt_ScaleForPixelHeight(Runtime *runtime, JClass *c
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pinfo = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float ppixels;ppixels.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pinfo = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float ppixels;ppixels.i = env->localvar_getInt(runtime->localvar, pos++);
 
     f32 ret_value = (f32)stbtt_ScaleForPixelHeight((const stbtt_fontinfo*/*ptr*/)(pinfo), (float)ppixels.f);
     env->push_float(runtime->stack, ret_value);
@@ -62,18 +62,18 @@ int org_mini_nanovg_Nanovg_stbtt_GetFontVMetrics(Runtime *runtime, JClass *clazz
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pinfo = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Instance *pascent = env->localvar_getRefer(runtime, pos++);
+    intptr_t pinfo = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Instance *pascent = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pascent = NULL;
     if(pascent){
         ptr_pascent = pascent->arr_body;
     }
-    Instance *pdescent = env->localvar_getRefer(runtime, pos++);
+    Instance *pdescent = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pdescent = NULL;
     if(pdescent){
         ptr_pdescent = pdescent->arr_body;
     }
-    Instance *plineGap = env->localvar_getRefer(runtime, pos++);
+    Instance *plineGap = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_plineGap = NULL;
     if(plineGap){
         ptr_plineGap = plineGap->arr_body;
@@ -89,26 +89,26 @@ int org_mini_nanovg_Nanovg_stbtt_GetCodepointBitmapBox(Runtime *runtime, JClass 
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pfont = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pcodepoint = env->localvar_getInt(runtime, pos++);
-    Int2Float pscale_x;pscale_x.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pscale_y;pscale_y.i = env->localvar_getInt(runtime, pos++);
-    Instance *pix0 = env->localvar_getRefer(runtime, pos++);
+    intptr_t pfont = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pcodepoint = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pscale_x;pscale_x.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pscale_y;pscale_y.i = env->localvar_getInt(runtime->localvar, pos++);
+    Instance *pix0 = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pix0 = NULL;
     if(pix0){
         ptr_pix0 = pix0->arr_body;
     }
-    Instance *piy0 = env->localvar_getRefer(runtime, pos++);
+    Instance *piy0 = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_piy0 = NULL;
     if(piy0){
         ptr_piy0 = piy0->arr_body;
     }
-    Instance *pix1 = env->localvar_getRefer(runtime, pos++);
+    Instance *pix1 = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pix1 = NULL;
     if(pix1){
         ptr_pix1 = pix1->arr_body;
     }
-    Instance *piy1 = env->localvar_getRefer(runtime, pos++);
+    Instance *piy1 = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_piy1 = NULL;
     if(piy1){
         ptr_piy1 = piy1->arr_body;
@@ -124,19 +124,19 @@ int org_mini_nanovg_Nanovg_stbtt_MakeCodepointBitmapOffset(Runtime *runtime, JCl
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pinfo = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Instance *poutput = env->localvar_getRefer(runtime, pos++);
+    intptr_t pinfo = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Instance *poutput = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_poutput = NULL;
     if(poutput){
         ptr_poutput = poutput->arr_body;
     }
-    s32 poutput_offset = env->localvar_getInt(runtime, pos++);
-    s32 pout_w = env->localvar_getInt(runtime, pos++);
-    s32 pout_h = env->localvar_getInt(runtime, pos++);
-    s32 pout_stride = env->localvar_getInt(runtime, pos++);
-    Int2Float pscale_x;pscale_x.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pscale_y;pscale_y.i = env->localvar_getInt(runtime, pos++);
-    s32 pcodepoint = env->localvar_getInt(runtime, pos++);
+    s32 poutput_offset = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pout_w = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pout_h = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pout_stride = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pscale_x;pscale_x.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pscale_y;pscale_y.i = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pcodepoint = env->localvar_getInt(runtime->localvar, pos++);
 
     stbtt_MakeCodepointBitmapOffset((const stbtt_fontinfo*/*ptr*/)(pinfo), (unsigned char*)(ptr_poutput), (int)poutput_offset, (int)pout_w, (int)pout_h, (int)pout_stride, (float)pscale_x.f, (float)pscale_y.f, (int)pcodepoint);
     
@@ -148,14 +148,14 @@ int org_mini_nanovg_Nanovg_stbtt_GetCodepointHMetrics(Runtime *runtime, JClass *
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pinfo = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pcodepoint = env->localvar_getInt(runtime, pos++);
-    Instance *padvanceWidth = env->localvar_getRefer(runtime, pos++);
+    intptr_t pinfo = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pcodepoint = env->localvar_getInt(runtime->localvar, pos++);
+    Instance *padvanceWidth = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_padvanceWidth = NULL;
     if(padvanceWidth){
         ptr_padvanceWidth = padvanceWidth->arr_body;
     }
-    Instance *pleftSideBearing = env->localvar_getRefer(runtime, pos++);
+    Instance *pleftSideBearing = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pleftSideBearing = NULL;
     if(pleftSideBearing){
         ptr_pleftSideBearing = pleftSideBearing->arr_body;
@@ -171,9 +171,9 @@ int org_mini_nanovg_Nanovg_stbtt_GetCodepointKernAdvance(Runtime *runtime, JClas
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pinfo = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pch1 = env->localvar_getInt(runtime, pos++);
-    s32 pch2 = env->localvar_getInt(runtime, pos++);
+    intptr_t pinfo = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pch1 = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pch2 = env->localvar_getInt(runtime->localvar, pos++);
 
     int _re_val = stbtt_GetCodepointKernAdvance((const stbtt_fontinfo*/*ptr*/)(pinfo), (int)pch1, (int)pch2);
     s32 ret_value = (s32)_re_val;env->push_int(runtime->stack, ret_value);
@@ -205,16 +205,16 @@ int org_mini_nanovg_Nanovg_stbi_write_png(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Instance *pfilename = env->localvar_getRefer(runtime, pos++);
+    Instance *pfilename = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pfilename = NULL;
     if(pfilename){
         ptr_pfilename = pfilename->arr_body;
     }
-    s32 pw = env->localvar_getInt(runtime, pos++);
-    s32 ph = env->localvar_getInt(runtime, pos++);
-    s32 pcomp = env->localvar_getInt(runtime, pos++);
-    intptr_t pdata = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pstride_in_bytes = env->localvar_getInt(runtime, pos++);
+    s32 pw = env->localvar_getInt(runtime->localvar, pos++);
+    s32 ph = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pcomp = env->localvar_getInt(runtime->localvar, pos++);
+    intptr_t pdata = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pstride_in_bytes = env->localvar_getInt(runtime->localvar, pos++);
 
     int _re_val = stbi_write_png((char const*)(ptr_pfilename), (int)pw, (int)ph, (int)pcomp, (const void*/*ptr*/)(pdata), (int)pstride_in_bytes);
     s32 ret_value = (s32)_re_val;env->push_int(runtime->stack, ret_value);
@@ -226,15 +226,15 @@ int org_mini_nanovg_Nanovg_stbi_write_bmp(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Instance *pfilename = env->localvar_getRefer(runtime, pos++);
+    Instance *pfilename = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pfilename = NULL;
     if(pfilename){
         ptr_pfilename = pfilename->arr_body;
     }
-    s32 pw = env->localvar_getInt(runtime, pos++);
-    s32 ph = env->localvar_getInt(runtime, pos++);
-    s32 pcomp = env->localvar_getInt(runtime, pos++);
-    intptr_t pdata = env->localvar_getLong_2slot(runtime, pos);pos += 2;
+    s32 pw = env->localvar_getInt(runtime->localvar, pos++);
+    s32 ph = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pcomp = env->localvar_getInt(runtime->localvar, pos++);
+    intptr_t pdata = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
 
     int _re_val = stbi_write_bmp((char const*)(ptr_pfilename), (int)pw, (int)ph, (int)pcomp, (const void*/*ptr*/)(pdata));
     s32 ret_value = (s32)_re_val;env->push_int(runtime->stack, ret_value);
@@ -246,15 +246,15 @@ int org_mini_nanovg_Nanovg_stbi_write_tga(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Instance *pfilename = env->localvar_getRefer(runtime, pos++);
+    Instance *pfilename = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pfilename = NULL;
     if(pfilename){
         ptr_pfilename = pfilename->arr_body;
     }
-    s32 pw = env->localvar_getInt(runtime, pos++);
-    s32 ph = env->localvar_getInt(runtime, pos++);
-    s32 pcomp = env->localvar_getInt(runtime, pos++);
-    intptr_t pdata = env->localvar_getLong_2slot(runtime, pos);pos += 2;
+    s32 pw = env->localvar_getInt(runtime->localvar, pos++);
+    s32 ph = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pcomp = env->localvar_getInt(runtime->localvar, pos++);
+    intptr_t pdata = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
 
     int _re_val = stbi_write_tga((char const*)(ptr_pfilename), (int)pw, (int)ph, (int)pcomp, (const void*/*ptr*/)(pdata));
     s32 ret_value = (s32)_re_val;env->push_int(runtime->stack, ret_value);
@@ -266,27 +266,27 @@ int org_mini_nanovg_Nanovg_stbi_load(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Instance *pfilename = env->localvar_getRefer(runtime, pos++);
+    Instance *pfilename = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pfilename = NULL;
     if(pfilename){
         ptr_pfilename = pfilename->arr_body;
     }
-    Instance *px = env->localvar_getRefer(runtime, pos++);
+    Instance *px = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_px = NULL;
     if(px){
         ptr_px = px->arr_body;
     }
-    Instance *py = env->localvar_getRefer(runtime, pos++);
+    Instance *py = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_py = NULL;
     if(py){
         ptr_py = py->arr_body;
     }
-    Instance *pcomp = env->localvar_getRefer(runtime, pos++);
+    Instance *pcomp = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pcomp = NULL;
     if(pcomp){
         ptr_pcomp = pcomp->arr_body;
     }
-    s32 preq_comp = env->localvar_getInt(runtime, pos++);
+    s32 preq_comp = env->localvar_getInt(runtime->localvar, pos++);
 
     stbi_uc*/*ptr*/ _re_val = stbi_load((char const*)(ptr_pfilename), (int*)(ptr_px), (int*)(ptr_py), (int*)(ptr_pcomp), (int)preq_comp);
     s64 ret_value = (s64)(intptr_t)_re_val;env->push_long(runtime->stack, ret_value);
@@ -298,24 +298,24 @@ int org_mini_nanovg_Nanovg_stbi_load_from_memory(Runtime *runtime, JClass *clazz
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pbuffer = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 plen = env->localvar_getInt(runtime, pos++);
-    Instance *px = env->localvar_getRefer(runtime, pos++);
+    intptr_t pbuffer = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 plen = env->localvar_getInt(runtime->localvar, pos++);
+    Instance *px = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_px = NULL;
     if(px){
         ptr_px = px->arr_body;
     }
-    Instance *py = env->localvar_getRefer(runtime, pos++);
+    Instance *py = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_py = NULL;
     if(py){
         ptr_py = py->arr_body;
     }
-    Instance *pcomp = env->localvar_getRefer(runtime, pos++);
+    Instance *pcomp = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pcomp = NULL;
     if(pcomp){
         ptr_pcomp = pcomp->arr_body;
     }
-    s32 preq_comp = env->localvar_getInt(runtime, pos++);
+    s32 preq_comp = env->localvar_getInt(runtime->localvar, pos++);
 
     stbi_uc*/*ptr*/ _re_val = stbi_load_from_memory((stbi_uc const*/*ptr*/)(pbuffer), (int)plen, (int*)(ptr_px), (int*)(ptr_py), (int*)(ptr_pcomp), (int)preq_comp);
     s64 ret_value = (s64)(intptr_t)_re_val;env->push_long(runtime->stack, ret_value);
@@ -327,7 +327,7 @@ int org_mini_nanovg_Nanovg_stbi_image_free(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pretval_from_stbi_load = env->localvar_getLong_2slot(runtime, pos);pos += 2;
+    intptr_t pretval_from_stbi_load = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
 
     stbi_image_free((void*/*ptr*/)(pretval_from_stbi_load));
     
@@ -339,10 +339,10 @@ int org_mini_nanovg_Nanovg_nvgBeginFrame(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pwindowWidth = env->localvar_getInt(runtime, pos++);
-    s32 pwindowHeight = env->localvar_getInt(runtime, pos++);
-    Int2Float pdevicePixelRatio;pdevicePixelRatio.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pwindowWidth = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pwindowHeight = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pdevicePixelRatio;pdevicePixelRatio.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgBeginFrame((NVGcontext*/*ptr*/)(pctx), (int)pwindowWidth, (int)pwindowHeight, (float)pdevicePixelRatio.f);
     
@@ -354,7 +354,7 @@ int org_mini_nanovg_Nanovg_nvgCancelFrame(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
 
     nvgCancelFrame((NVGcontext*/*ptr*/)(pctx));
     
@@ -366,7 +366,7 @@ int org_mini_nanovg_Nanovg_nvgEndFrame(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
 
     nvgEndFrame((NVGcontext*/*ptr*/)(pctx));
     
@@ -378,8 +378,8 @@ int org_mini_nanovg_Nanovg_nvgGlobalCompositeOperation(Runtime *runtime, JClass 
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pop = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pop = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgGlobalCompositeOperation((NVGcontext*/*ptr*/)(pctx), (int)pop);
     
@@ -391,9 +391,9 @@ int org_mini_nanovg_Nanovg_nvgGlobalCompositeBlendFunc(Runtime *runtime, JClass 
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 psfactor = env->localvar_getInt(runtime, pos++);
-    s32 pdfactor = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 psfactor = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pdfactor = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgGlobalCompositeBlendFunc((NVGcontext*/*ptr*/)(pctx), (int)psfactor, (int)pdfactor);
     
@@ -405,11 +405,11 @@ int org_mini_nanovg_Nanovg_nvgGlobalCompositeBlendFuncSeparate(Runtime *runtime,
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 psrcRGB = env->localvar_getInt(runtime, pos++);
-    s32 pdstRGB = env->localvar_getInt(runtime, pos++);
-    s32 psrcAlpha = env->localvar_getInt(runtime, pos++);
-    s32 pdstAlpha = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 psrcRGB = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pdstRGB = env->localvar_getInt(runtime->localvar, pos++);
+    s32 psrcAlpha = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pdstAlpha = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgGlobalCompositeBlendFuncSeparate((NVGcontext*/*ptr*/)(pctx), (int)psrcRGB, (int)pdstRGB, (int)psrcAlpha, (int)pdstAlpha);
     
@@ -421,9 +421,9 @@ int org_mini_nanovg_Nanovg_nvgRGB(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    s32 pr = env->localvar_getInt(runtime, pos++);
-    s32 pg = env->localvar_getInt(runtime, pos++);
-    s32 pb = env->localvar_getInt(runtime, pos++);
+    s32 pr = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pg = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pb = env->localvar_getInt(runtime->localvar, pos++);
 
     NVGcolor/*none_ptr*/ _re_val = nvgRGB((unsigned char)pr, (unsigned char)pg, (unsigned char)pb);
     f32* _ptr_re_val = (f32*)&_re_val;
@@ -444,9 +444,9 @@ int org_mini_nanovg_Nanovg_nvgRGBf(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Int2Float pr;pr.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pg;pg.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pb;pb.i = env->localvar_getInt(runtime, pos++);
+    Int2Float pr;pr.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pg;pg.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pb;pb.i = env->localvar_getInt(runtime->localvar, pos++);
 
     NVGcolor/*none_ptr*/ _re_val = nvgRGBf((float)pr.f, (float)pg.f, (float)pb.f);
     f32* _ptr_re_val = (f32*)&_re_val;
@@ -467,10 +467,10 @@ int org_mini_nanovg_Nanovg_nvgRGBA(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    s32 pr = env->localvar_getInt(runtime, pos++);
-    s32 pg = env->localvar_getInt(runtime, pos++);
-    s32 pb = env->localvar_getInt(runtime, pos++);
-    s32 pa = env->localvar_getInt(runtime, pos++);
+    s32 pr = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pg = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pb = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pa = env->localvar_getInt(runtime->localvar, pos++);
 
     NVGcolor/*none_ptr*/ _re_val = nvgRGBA((unsigned char)pr, (unsigned char)pg, (unsigned char)pb, (unsigned char)pa);
     f32* _ptr_re_val = (f32*)&_re_val;
@@ -491,10 +491,10 @@ int org_mini_nanovg_Nanovg_nvgRGBAf(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Int2Float pr;pr.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pg;pg.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pb;pb.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pa;pa.i = env->localvar_getInt(runtime, pos++);
+    Int2Float pr;pr.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pg;pg.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pb;pb.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pa;pa.i = env->localvar_getInt(runtime->localvar, pos++);
 
     NVGcolor/*none_ptr*/ _re_val = nvgRGBAf((float)pr.f, (float)pg.f, (float)pb.f, (float)pa.f);
     f32* _ptr_re_val = (f32*)&_re_val;
@@ -515,17 +515,17 @@ int org_mini_nanovg_Nanovg_nvgLerpRGBA(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Instance *pc0 = env->localvar_getRefer(runtime, pos++);
+    Instance *pc0 = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pc0 = NULL;
     if(pc0){
         ptr_pc0 = pc0->arr_body;
     }
-    Instance *pc1 = env->localvar_getRefer(runtime, pos++);
+    Instance *pc1 = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pc1 = NULL;
     if(pc1){
         ptr_pc1 = pc1->arr_body;
     }
-    Int2Float pu;pu.i = env->localvar_getInt(runtime, pos++);
+    Int2Float pu;pu.i = env->localvar_getInt(runtime->localvar, pos++);
 
     NVGcolor/*none_ptr*/ _re_val = nvgLerpRGBA(*(NVGcolor/*none_ptr*/*)(ptr_pc0), *(NVGcolor/*none_ptr*/*)(ptr_pc1), (float)pu.f);
     f32* _ptr_re_val = (f32*)&_re_val;
@@ -546,12 +546,12 @@ int org_mini_nanovg_Nanovg_nvgTransRGBA(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Instance *pc0 = env->localvar_getRefer(runtime, pos++);
+    Instance *pc0 = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pc0 = NULL;
     if(pc0){
         ptr_pc0 = pc0->arr_body;
     }
-    s32 pa = env->localvar_getInt(runtime, pos++);
+    s32 pa = env->localvar_getInt(runtime->localvar, pos++);
 
     NVGcolor/*none_ptr*/ _re_val = nvgTransRGBA(*(NVGcolor/*none_ptr*/*)(ptr_pc0), (unsigned char)pa);
     f32* _ptr_re_val = (f32*)&_re_val;
@@ -572,12 +572,12 @@ int org_mini_nanovg_Nanovg_nvgTransRGBAf(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Instance *pc0 = env->localvar_getRefer(runtime, pos++);
+    Instance *pc0 = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pc0 = NULL;
     if(pc0){
         ptr_pc0 = pc0->arr_body;
     }
-    Int2Float pa;pa.i = env->localvar_getInt(runtime, pos++);
+    Int2Float pa;pa.i = env->localvar_getInt(runtime->localvar, pos++);
 
     NVGcolor/*none_ptr*/ _re_val = nvgTransRGBAf(*(NVGcolor/*none_ptr*/*)(ptr_pc0), (float)pa.f);
     f32* _ptr_re_val = (f32*)&_re_val;
@@ -598,9 +598,9 @@ int org_mini_nanovg_Nanovg_nvgHSL(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Int2Float ph;ph.i = env->localvar_getInt(runtime, pos++);
-    Int2Float ps;ps.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pl;pl.i = env->localvar_getInt(runtime, pos++);
+    Int2Float ph;ph.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float ps;ps.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pl;pl.i = env->localvar_getInt(runtime->localvar, pos++);
 
     NVGcolor/*none_ptr*/ _re_val = nvgHSL((float)ph.f, (float)ps.f, (float)pl.f);
     f32* _ptr_re_val = (f32*)&_re_val;
@@ -621,10 +621,10 @@ int org_mini_nanovg_Nanovg_nvgHSLA(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Int2Float ph;ph.i = env->localvar_getInt(runtime, pos++);
-    Int2Float ps;ps.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pl;pl.i = env->localvar_getInt(runtime, pos++);
-    s32 pa = env->localvar_getInt(runtime, pos++);
+    Int2Float ph;ph.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float ps;ps.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pl;pl.i = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pa = env->localvar_getInt(runtime->localvar, pos++);
 
     NVGcolor/*none_ptr*/ _re_val = nvgHSLA((float)ph.f, (float)ps.f, (float)pl.f, (unsigned char)pa);
     f32* _ptr_re_val = (f32*)&_re_val;
@@ -645,7 +645,7 @@ int org_mini_nanovg_Nanovg_nvgSave(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
 
     nvgSave((NVGcontext*/*ptr*/)(pctx));
     
@@ -657,7 +657,7 @@ int org_mini_nanovg_Nanovg_nvgRestore(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
 
     nvgRestore((NVGcontext*/*ptr*/)(pctx));
     
@@ -669,7 +669,7 @@ int org_mini_nanovg_Nanovg_nvgReset(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
 
     nvgReset((NVGcontext*/*ptr*/)(pctx));
     
@@ -681,8 +681,8 @@ int org_mini_nanovg_Nanovg_nvgShapeAntiAlias(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 penabled = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 penabled = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgShapeAntiAlias((NVGcontext*/*ptr*/)(pctx), (int)penabled);
     
@@ -694,8 +694,8 @@ int org_mini_nanovg_Nanovg_nvgStrokeColor(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Instance *pcolor = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Instance *pcolor = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pcolor = NULL;
     if(pcolor){
         ptr_pcolor = pcolor->arr_body;
@@ -711,8 +711,8 @@ int org_mini_nanovg_Nanovg_nvgStrokePaint(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Instance *ppaint = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Instance *ppaint = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_ppaint = NULL;
     if(ppaint){
         ptr_ppaint = ppaint->arr_body;
@@ -728,8 +728,8 @@ int org_mini_nanovg_Nanovg_nvgFillColor(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Instance *pcolor = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Instance *pcolor = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pcolor = NULL;
     if(pcolor){
         ptr_pcolor = pcolor->arr_body;
@@ -745,8 +745,8 @@ int org_mini_nanovg_Nanovg_nvgFillPaint(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Instance *ppaint = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Instance *ppaint = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_ppaint = NULL;
     if(ppaint){
         ptr_ppaint = ppaint->arr_body;
@@ -762,8 +762,8 @@ int org_mini_nanovg_Nanovg_nvgMiterLimit(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float plimit;plimit.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float plimit;plimit.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgMiterLimit((NVGcontext*/*ptr*/)(pctx), (float)plimit.f);
     
@@ -775,8 +775,8 @@ int org_mini_nanovg_Nanovg_nvgStrokeWidth(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float psize;psize.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float psize;psize.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgStrokeWidth((NVGcontext*/*ptr*/)(pctx), (float)psize.f);
     
@@ -788,8 +788,8 @@ int org_mini_nanovg_Nanovg_nvgLineCap(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pcap = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pcap = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgLineCap((NVGcontext*/*ptr*/)(pctx), (int)pcap);
     
@@ -801,8 +801,8 @@ int org_mini_nanovg_Nanovg_nvgLineJoin(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pjoin = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pjoin = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgLineJoin((NVGcontext*/*ptr*/)(pctx), (int)pjoin);
     
@@ -814,8 +814,8 @@ int org_mini_nanovg_Nanovg_nvgGlobalAlpha(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float palpha;palpha.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float palpha;palpha.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgGlobalAlpha((NVGcontext*/*ptr*/)(pctx), (float)palpha.f);
     
@@ -827,7 +827,7 @@ int org_mini_nanovg_Nanovg_nvgResetTransform(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
 
     nvgResetTransform((NVGcontext*/*ptr*/)(pctx));
     
@@ -839,13 +839,13 @@ int org_mini_nanovg_Nanovg_nvgTransform(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float pa;pa.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pb;pb.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pc;pc.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pd;pd.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pe;pe.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pf;pf.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float pa;pa.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pb;pb.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pc;pc.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pd;pd.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pe;pe.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pf;pf.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgTransform((NVGcontext*/*ptr*/)(pctx), (float)pa.f, (float)pb.f, (float)pc.f, (float)pd.f, (float)pe.f, (float)pf.f);
     
@@ -857,9 +857,9 @@ int org_mini_nanovg_Nanovg_nvgTranslate(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float px;px.i = env->localvar_getInt(runtime, pos++);
-    Int2Float py;py.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float px;px.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float py;py.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgTranslate((NVGcontext*/*ptr*/)(pctx), (float)px.f, (float)py.f);
     
@@ -871,8 +871,8 @@ int org_mini_nanovg_Nanovg_nvgRotate(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float pangle;pangle.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float pangle;pangle.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgRotate((NVGcontext*/*ptr*/)(pctx), (float)pangle.f);
     
@@ -884,8 +884,8 @@ int org_mini_nanovg_Nanovg_nvgSkewX(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float pangle;pangle.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float pangle;pangle.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgSkewX((NVGcontext*/*ptr*/)(pctx), (float)pangle.f);
     
@@ -897,8 +897,8 @@ int org_mini_nanovg_Nanovg_nvgSkewY(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float pangle;pangle.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float pangle;pangle.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgSkewY((NVGcontext*/*ptr*/)(pctx), (float)pangle.f);
     
@@ -910,9 +910,9 @@ int org_mini_nanovg_Nanovg_nvgScale(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float px;px.i = env->localvar_getInt(runtime, pos++);
-    Int2Float py;py.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float px;px.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float py;py.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgScale((NVGcontext*/*ptr*/)(pctx), (float)px.f, (float)py.f);
     
@@ -924,8 +924,8 @@ int org_mini_nanovg_Nanovg_nvgCurrentTransform(Runtime *runtime, JClass *clazz) 
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Instance *pxform = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Instance *pxform = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pxform = NULL;
     if(pxform){
         ptr_pxform = pxform->arr_body;
@@ -941,7 +941,7 @@ int org_mini_nanovg_Nanovg_nvgTransformIdentity(Runtime *runtime, JClass *clazz)
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Instance *pdst = env->localvar_getRefer(runtime, pos++);
+    Instance *pdst = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pdst = NULL;
     if(pdst){
         ptr_pdst = pdst->arr_body;
@@ -957,13 +957,13 @@ int org_mini_nanovg_Nanovg_nvgTransformTranslate(Runtime *runtime, JClass *clazz
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Instance *pdst = env->localvar_getRefer(runtime, pos++);
+    Instance *pdst = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pdst = NULL;
     if(pdst){
         ptr_pdst = pdst->arr_body;
     }
-    Int2Float ptx;ptx.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pty;pty.i = env->localvar_getInt(runtime, pos++);
+    Int2Float ptx;ptx.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pty;pty.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgTransformTranslate((float*)(ptr_pdst), (float)ptx.f, (float)pty.f);
     
@@ -975,13 +975,13 @@ int org_mini_nanovg_Nanovg_nvgTransformScale(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Instance *pdst = env->localvar_getRefer(runtime, pos++);
+    Instance *pdst = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pdst = NULL;
     if(pdst){
         ptr_pdst = pdst->arr_body;
     }
-    Int2Float psx;psx.i = env->localvar_getInt(runtime, pos++);
-    Int2Float psy;psy.i = env->localvar_getInt(runtime, pos++);
+    Int2Float psx;psx.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float psy;psy.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgTransformScale((float*)(ptr_pdst), (float)psx.f, (float)psy.f);
     
@@ -993,12 +993,12 @@ int org_mini_nanovg_Nanovg_nvgTransformRotate(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Instance *pdst = env->localvar_getRefer(runtime, pos++);
+    Instance *pdst = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pdst = NULL;
     if(pdst){
         ptr_pdst = pdst->arr_body;
     }
-    Int2Float pa;pa.i = env->localvar_getInt(runtime, pos++);
+    Int2Float pa;pa.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgTransformRotate((float*)(ptr_pdst), (float)pa.f);
     
@@ -1010,12 +1010,12 @@ int org_mini_nanovg_Nanovg_nvgTransformSkewX(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Instance *pdst = env->localvar_getRefer(runtime, pos++);
+    Instance *pdst = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pdst = NULL;
     if(pdst){
         ptr_pdst = pdst->arr_body;
     }
-    Int2Float pa;pa.i = env->localvar_getInt(runtime, pos++);
+    Int2Float pa;pa.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgTransformSkewX((float*)(ptr_pdst), (float)pa.f);
     
@@ -1027,12 +1027,12 @@ int org_mini_nanovg_Nanovg_nvgTransformSkewY(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Instance *pdst = env->localvar_getRefer(runtime, pos++);
+    Instance *pdst = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pdst = NULL;
     if(pdst){
         ptr_pdst = pdst->arr_body;
     }
-    Int2Float pa;pa.i = env->localvar_getInt(runtime, pos++);
+    Int2Float pa;pa.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgTransformSkewY((float*)(ptr_pdst), (float)pa.f);
     
@@ -1044,12 +1044,12 @@ int org_mini_nanovg_Nanovg_nvgTransformMultiply(Runtime *runtime, JClass *clazz)
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Instance *pdst = env->localvar_getRefer(runtime, pos++);
+    Instance *pdst = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pdst = NULL;
     if(pdst){
         ptr_pdst = pdst->arr_body;
     }
-    Instance *psrc = env->localvar_getRefer(runtime, pos++);
+    Instance *psrc = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_psrc = NULL;
     if(psrc){
         ptr_psrc = psrc->arr_body;
@@ -1065,12 +1065,12 @@ int org_mini_nanovg_Nanovg_nvgTransformPremultiply(Runtime *runtime, JClass *cla
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Instance *pdst = env->localvar_getRefer(runtime, pos++);
+    Instance *pdst = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pdst = NULL;
     if(pdst){
         ptr_pdst = pdst->arr_body;
     }
-    Instance *psrc = env->localvar_getRefer(runtime, pos++);
+    Instance *psrc = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_psrc = NULL;
     if(psrc){
         ptr_psrc = psrc->arr_body;
@@ -1086,12 +1086,12 @@ int org_mini_nanovg_Nanovg_nvgTransformInverse(Runtime *runtime, JClass *clazz) 
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Instance *pdst = env->localvar_getRefer(runtime, pos++);
+    Instance *pdst = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pdst = NULL;
     if(pdst){
         ptr_pdst = pdst->arr_body;
     }
-    Instance *psrc = env->localvar_getRefer(runtime, pos++);
+    Instance *psrc = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_psrc = NULL;
     if(psrc){
         ptr_psrc = psrc->arr_body;
@@ -1107,23 +1107,23 @@ int org_mini_nanovg_Nanovg_nvgTransformPoint(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Instance *pdstx = env->localvar_getRefer(runtime, pos++);
+    Instance *pdstx = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pdstx = NULL;
     if(pdstx){
         ptr_pdstx = pdstx->arr_body;
     }
-    Instance *pdsty = env->localvar_getRefer(runtime, pos++);
+    Instance *pdsty = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pdsty = NULL;
     if(pdsty){
         ptr_pdsty = pdsty->arr_body;
     }
-    Instance *pxform = env->localvar_getRefer(runtime, pos++);
+    Instance *pxform = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pxform = NULL;
     if(pxform){
         ptr_pxform = pxform->arr_body;
     }
-    Int2Float psrcx;psrcx.i = env->localvar_getInt(runtime, pos++);
-    Int2Float psrcy;psrcy.i = env->localvar_getInt(runtime, pos++);
+    Int2Float psrcx;psrcx.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float psrcy;psrcy.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgTransformPoint((float*)(ptr_pdstx), (float*)(ptr_pdsty), (const float*)(ptr_pxform), (float)psrcx.f, (float)psrcy.f);
     
@@ -1135,7 +1135,7 @@ int org_mini_nanovg_Nanovg_nvgDegToRad(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Int2Float pdeg;pdeg.i = env->localvar_getInt(runtime, pos++);
+    Int2Float pdeg;pdeg.i = env->localvar_getInt(runtime->localvar, pos++);
 
     f32 ret_value = (f32)nvgDegToRad((float)pdeg.f);
     env->push_float(runtime->stack, ret_value);
@@ -1147,7 +1147,7 @@ int org_mini_nanovg_Nanovg_nvgRadToDeg(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    Int2Float prad;prad.i = env->localvar_getInt(runtime, pos++);
+    Int2Float prad;prad.i = env->localvar_getInt(runtime->localvar, pos++);
 
     f32 ret_value = (f32)nvgRadToDeg((float)prad.f);
     env->push_float(runtime->stack, ret_value);
@@ -1159,13 +1159,13 @@ int org_mini_nanovg_Nanovg_nvgCreateImage(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Instance *pfilename = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Instance *pfilename = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pfilename = NULL;
     if(pfilename){
         ptr_pfilename = pfilename->arr_body;
     }
-    s32 pimageFlags = env->localvar_getInt(runtime, pos++);
+    s32 pimageFlags = env->localvar_getInt(runtime->localvar, pos++);
 
     int _re_val = nvgCreateImage((NVGcontext*/*ptr*/)(pctx), (const char*)(ptr_pfilename), (int)pimageFlags);
     s32 ret_value = (s32)_re_val;env->push_int(runtime->stack, ret_value);
@@ -1177,14 +1177,14 @@ int org_mini_nanovg_Nanovg_nvgCreateImageMem(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pimageFlags = env->localvar_getInt(runtime, pos++);
-    Instance *pdata = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pimageFlags = env->localvar_getInt(runtime->localvar, pos++);
+    Instance *pdata = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pdata = NULL;
     if(pdata){
         ptr_pdata = pdata->arr_body;
     }
-    s32 pndata = env->localvar_getInt(runtime, pos++);
+    s32 pndata = env->localvar_getInt(runtime->localvar, pos++);
 
     int _re_val = nvgCreateImageMem((NVGcontext*/*ptr*/)(pctx), (int)pimageFlags, (unsigned char*)(ptr_pdata), (int)pndata);
     s32 ret_value = (s32)_re_val;env->push_int(runtime->stack, ret_value);
@@ -1196,11 +1196,11 @@ int org_mini_nanovg_Nanovg_nvgCreateImageRGBA(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pw = env->localvar_getInt(runtime, pos++);
-    s32 ph = env->localvar_getInt(runtime, pos++);
-    s32 pimageFlags = env->localvar_getInt(runtime, pos++);
-    Instance *pdata = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pw = env->localvar_getInt(runtime->localvar, pos++);
+    s32 ph = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pimageFlags = env->localvar_getInt(runtime->localvar, pos++);
+    Instance *pdata = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pdata = NULL;
     if(pdata){
         ptr_pdata = pdata->arr_body;
@@ -1216,9 +1216,9 @@ int org_mini_nanovg_Nanovg_nvgUpdateImage(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pimage = env->localvar_getInt(runtime, pos++);
-    Instance *pdata = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pimage = env->localvar_getInt(runtime->localvar, pos++);
+    Instance *pdata = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pdata = NULL;
     if(pdata){
         ptr_pdata = pdata->arr_body;
@@ -1234,14 +1234,14 @@ int org_mini_nanovg_Nanovg_nvgImageSize(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pimage = env->localvar_getInt(runtime, pos++);
-    Instance *pw = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pimage = env->localvar_getInt(runtime->localvar, pos++);
+    Instance *pw = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pw = NULL;
     if(pw){
         ptr_pw = pw->arr_body;
     }
-    Instance *ph = env->localvar_getRefer(runtime, pos++);
+    Instance *ph = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_ph = NULL;
     if(ph){
         ptr_ph = ph->arr_body;
@@ -1257,8 +1257,8 @@ int org_mini_nanovg_Nanovg_nvgDeleteImage(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pimage = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pimage = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgDeleteImage((NVGcontext*/*ptr*/)(pctx), (int)pimage);
     
@@ -1270,17 +1270,17 @@ int org_mini_nanovg_Nanovg_nvgLinearGradient(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float psx;psx.i = env->localvar_getInt(runtime, pos++);
-    Int2Float psy;psy.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pex;pex.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pey;pey.i = env->localvar_getInt(runtime, pos++);
-    Instance *picol = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float psx;psx.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float psy;psy.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pex;pex.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pey;pey.i = env->localvar_getInt(runtime->localvar, pos++);
+    Instance *picol = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_picol = NULL;
     if(picol){
         ptr_picol = picol->arr_body;
     }
-    Instance *pocol = env->localvar_getRefer(runtime, pos++);
+    Instance *pocol = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pocol = NULL;
     if(pocol){
         ptr_pocol = pocol->arr_body;
@@ -1305,19 +1305,19 @@ int org_mini_nanovg_Nanovg_nvgBoxGradient(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float px;px.i = env->localvar_getInt(runtime, pos++);
-    Int2Float py;py.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pw;pw.i = env->localvar_getInt(runtime, pos++);
-    Int2Float ph;ph.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pr;pr.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pf;pf.i = env->localvar_getInt(runtime, pos++);
-    Instance *picol = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float px;px.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float py;py.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pw;pw.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float ph;ph.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pr;pr.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pf;pf.i = env->localvar_getInt(runtime->localvar, pos++);
+    Instance *picol = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_picol = NULL;
     if(picol){
         ptr_picol = picol->arr_body;
     }
-    Instance *pocol = env->localvar_getRefer(runtime, pos++);
+    Instance *pocol = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pocol = NULL;
     if(pocol){
         ptr_pocol = pocol->arr_body;
@@ -1342,17 +1342,17 @@ int org_mini_nanovg_Nanovg_nvgRadialGradient(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float pcx;pcx.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pcy;pcy.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pinr;pinr.i = env->localvar_getInt(runtime, pos++);
-    Int2Float poutr;poutr.i = env->localvar_getInt(runtime, pos++);
-    Instance *picol = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float pcx;pcx.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pcy;pcy.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pinr;pinr.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float poutr;poutr.i = env->localvar_getInt(runtime->localvar, pos++);
+    Instance *picol = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_picol = NULL;
     if(picol){
         ptr_picol = picol->arr_body;
     }
-    Instance *pocol = env->localvar_getRefer(runtime, pos++);
+    Instance *pocol = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pocol = NULL;
     if(pocol){
         ptr_pocol = pocol->arr_body;
@@ -1377,14 +1377,14 @@ int org_mini_nanovg_Nanovg_nvgImagePattern(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float pox;pox.i = env->localvar_getInt(runtime, pos++);
-    Int2Float poy;poy.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pex;pex.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pey;pey.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pangle;pangle.i = env->localvar_getInt(runtime, pos++);
-    s32 pimage = env->localvar_getInt(runtime, pos++);
-    Int2Float palpha;palpha.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float pox;pox.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float poy;poy.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pex;pex.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pey;pey.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pangle;pangle.i = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pimage = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float palpha;palpha.i = env->localvar_getInt(runtime->localvar, pos++);
 
     NVGpaint/*none_ptr*/ _re_val = nvgImagePattern((NVGcontext*/*ptr*/)(pctx), (float)pox.f, (float)poy.f, (float)pex.f, (float)pey.f, (float)pangle.f, (int)pimage, (float)palpha.f);
     c8* _ptr_re_val = (c8*)&_re_val;
@@ -1405,11 +1405,11 @@ int org_mini_nanovg_Nanovg_nvgScissor(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float px;px.i = env->localvar_getInt(runtime, pos++);
-    Int2Float py;py.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pw;pw.i = env->localvar_getInt(runtime, pos++);
-    Int2Float ph;ph.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float px;px.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float py;py.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pw;pw.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float ph;ph.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgScissor((NVGcontext*/*ptr*/)(pctx), (float)px.f, (float)py.f, (float)pw.f, (float)ph.f);
     
@@ -1421,11 +1421,11 @@ int org_mini_nanovg_Nanovg_nvgIntersectScissor(Runtime *runtime, JClass *clazz) 
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float px;px.i = env->localvar_getInt(runtime, pos++);
-    Int2Float py;py.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pw;pw.i = env->localvar_getInt(runtime, pos++);
-    Int2Float ph;ph.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float px;px.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float py;py.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pw;pw.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float ph;ph.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgIntersectScissor((NVGcontext*/*ptr*/)(pctx), (float)px.f, (float)py.f, (float)pw.f, (float)ph.f);
     
@@ -1437,7 +1437,7 @@ int org_mini_nanovg_Nanovg_nvgResetScissor(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
 
     nvgResetScissor((NVGcontext*/*ptr*/)(pctx));
     
@@ -1449,7 +1449,7 @@ int org_mini_nanovg_Nanovg_nvgBeginPath(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
 
     nvgBeginPath((NVGcontext*/*ptr*/)(pctx));
     
@@ -1461,9 +1461,9 @@ int org_mini_nanovg_Nanovg_nvgMoveTo(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float px;px.i = env->localvar_getInt(runtime, pos++);
-    Int2Float py;py.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float px;px.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float py;py.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgMoveTo((NVGcontext*/*ptr*/)(pctx), (float)px.f, (float)py.f);
     
@@ -1475,9 +1475,9 @@ int org_mini_nanovg_Nanovg_nvgLineTo(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float px;px.i = env->localvar_getInt(runtime, pos++);
-    Int2Float py;py.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float px;px.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float py;py.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgLineTo((NVGcontext*/*ptr*/)(pctx), (float)px.f, (float)py.f);
     
@@ -1489,13 +1489,13 @@ int org_mini_nanovg_Nanovg_nvgBezierTo(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float pc1x;pc1x.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pc1y;pc1y.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pc2x;pc2x.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pc2y;pc2y.i = env->localvar_getInt(runtime, pos++);
-    Int2Float px;px.i = env->localvar_getInt(runtime, pos++);
-    Int2Float py;py.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float pc1x;pc1x.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pc1y;pc1y.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pc2x;pc2x.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pc2y;pc2y.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float px;px.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float py;py.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgBezierTo((NVGcontext*/*ptr*/)(pctx), (float)pc1x.f, (float)pc1y.f, (float)pc2x.f, (float)pc2y.f, (float)px.f, (float)py.f);
     
@@ -1507,11 +1507,11 @@ int org_mini_nanovg_Nanovg_nvgQuadTo(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float pcx;pcx.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pcy;pcy.i = env->localvar_getInt(runtime, pos++);
-    Int2Float px;px.i = env->localvar_getInt(runtime, pos++);
-    Int2Float py;py.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float pcx;pcx.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pcy;pcy.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float px;px.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float py;py.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgQuadTo((NVGcontext*/*ptr*/)(pctx), (float)pcx.f, (float)pcy.f, (float)px.f, (float)py.f);
     
@@ -1523,12 +1523,12 @@ int org_mini_nanovg_Nanovg_nvgArcTo(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float px1;px1.i = env->localvar_getInt(runtime, pos++);
-    Int2Float py1;py1.i = env->localvar_getInt(runtime, pos++);
-    Int2Float px2;px2.i = env->localvar_getInt(runtime, pos++);
-    Int2Float py2;py2.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pradius;pradius.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float px1;px1.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float py1;py1.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float px2;px2.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float py2;py2.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pradius;pradius.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgArcTo((NVGcontext*/*ptr*/)(pctx), (float)px1.f, (float)py1.f, (float)px2.f, (float)py2.f, (float)pradius.f);
     
@@ -1540,7 +1540,7 @@ int org_mini_nanovg_Nanovg_nvgClosePath(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
 
     nvgClosePath((NVGcontext*/*ptr*/)(pctx));
     
@@ -1552,8 +1552,8 @@ int org_mini_nanovg_Nanovg_nvgPathWinding(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pdir = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pdir = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgPathWinding((NVGcontext*/*ptr*/)(pctx), (int)pdir);
     
@@ -1565,13 +1565,13 @@ int org_mini_nanovg_Nanovg_nvgArc(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float pcx;pcx.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pcy;pcy.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pr;pr.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pa0;pa0.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pa1;pa1.i = env->localvar_getInt(runtime, pos++);
-    s32 pdir = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float pcx;pcx.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pcy;pcy.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pr;pr.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pa0;pa0.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pa1;pa1.i = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pdir = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgArc((NVGcontext*/*ptr*/)(pctx), (float)pcx.f, (float)pcy.f, (float)pr.f, (float)pa0.f, (float)pa1.f, (int)pdir);
     
@@ -1583,11 +1583,11 @@ int org_mini_nanovg_Nanovg_nvgRect(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float px;px.i = env->localvar_getInt(runtime, pos++);
-    Int2Float py;py.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pw;pw.i = env->localvar_getInt(runtime, pos++);
-    Int2Float ph;ph.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float px;px.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float py;py.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pw;pw.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float ph;ph.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgRect((NVGcontext*/*ptr*/)(pctx), (float)px.f, (float)py.f, (float)pw.f, (float)ph.f);
     
@@ -1599,12 +1599,12 @@ int org_mini_nanovg_Nanovg_nvgRoundedRect(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float px;px.i = env->localvar_getInt(runtime, pos++);
-    Int2Float py;py.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pw;pw.i = env->localvar_getInt(runtime, pos++);
-    Int2Float ph;ph.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pr;pr.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float px;px.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float py;py.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pw;pw.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float ph;ph.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pr;pr.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgRoundedRect((NVGcontext*/*ptr*/)(pctx), (float)px.f, (float)py.f, (float)pw.f, (float)ph.f, (float)pr.f);
     
@@ -1616,15 +1616,15 @@ int org_mini_nanovg_Nanovg_nvgRoundedRectVarying(Runtime *runtime, JClass *clazz
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float px;px.i = env->localvar_getInt(runtime, pos++);
-    Int2Float py;py.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pw;pw.i = env->localvar_getInt(runtime, pos++);
-    Int2Float ph;ph.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pradTopLeft;pradTopLeft.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pradTopRight;pradTopRight.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pradBottomRight;pradBottomRight.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pradBottomLeft;pradBottomLeft.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float px;px.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float py;py.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pw;pw.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float ph;ph.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pradTopLeft;pradTopLeft.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pradTopRight;pradTopRight.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pradBottomRight;pradBottomRight.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pradBottomLeft;pradBottomLeft.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgRoundedRectVarying((NVGcontext*/*ptr*/)(pctx), (float)px.f, (float)py.f, (float)pw.f, (float)ph.f, (float)pradTopLeft.f, (float)pradTopRight.f, (float)pradBottomRight.f, (float)pradBottomLeft.f);
     
@@ -1636,11 +1636,11 @@ int org_mini_nanovg_Nanovg_nvgEllipse(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float pcx;pcx.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pcy;pcy.i = env->localvar_getInt(runtime, pos++);
-    Int2Float prx;prx.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pry;pry.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float pcx;pcx.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pcy;pcy.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float prx;prx.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pry;pry.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgEllipse((NVGcontext*/*ptr*/)(pctx), (float)pcx.f, (float)pcy.f, (float)prx.f, (float)pry.f);
     
@@ -1652,10 +1652,10 @@ int org_mini_nanovg_Nanovg_nvgCircle(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float pcx;pcx.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pcy;pcy.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pr;pr.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float pcx;pcx.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pcy;pcy.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pr;pr.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgCircle((NVGcontext*/*ptr*/)(pctx), (float)pcx.f, (float)pcy.f, (float)pr.f);
     
@@ -1667,7 +1667,7 @@ int org_mini_nanovg_Nanovg_nvgFill(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
 
     nvgFill((NVGcontext*/*ptr*/)(pctx));
     
@@ -1679,7 +1679,7 @@ int org_mini_nanovg_Nanovg_nvgStroke(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
 
     nvgStroke((NVGcontext*/*ptr*/)(pctx));
     
@@ -1691,13 +1691,13 @@ int org_mini_nanovg_Nanovg_nvgCreateFont(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Instance *pname = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Instance *pname = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pname = NULL;
     if(pname){
         ptr_pname = pname->arr_body;
     }
-    Instance *pfilename = env->localvar_getRefer(runtime, pos++);
+    Instance *pfilename = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pfilename = NULL;
     if(pfilename){
         ptr_pfilename = pfilename->arr_body;
@@ -1713,19 +1713,19 @@ int org_mini_nanovg_Nanovg_nvgCreateFontMem(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Instance *pname = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Instance *pname = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pname = NULL;
     if(pname){
         ptr_pname = pname->arr_body;
     }
-    Instance *pdata = env->localvar_getRefer(runtime, pos++);
+    Instance *pdata = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pdata = NULL;
     if(pdata){
         ptr_pdata = pdata->arr_body;
     }
-    s32 pndata = env->localvar_getInt(runtime, pos++);
-    s32 pfreeData = env->localvar_getInt(runtime, pos++);
+    s32 pndata = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pfreeData = env->localvar_getInt(runtime->localvar, pos++);
 
     int _re_val = nvgCreateFontMem((NVGcontext*/*ptr*/)(pctx), (const char*)(ptr_pname), (unsigned char*)(ptr_pdata), (int)pndata, (int)pfreeData);
     s32 ret_value = (s32)_re_val;env->push_int(runtime->stack, ret_value);
@@ -1737,8 +1737,8 @@ int org_mini_nanovg_Nanovg_nvgFindFont(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Instance *pname = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Instance *pname = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pname = NULL;
     if(pname){
         ptr_pname = pname->arr_body;
@@ -1754,9 +1754,9 @@ int org_mini_nanovg_Nanovg_nvgAddFallbackFontId(Runtime *runtime, JClass *clazz)
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pbaseFont = env->localvar_getInt(runtime, pos++);
-    s32 pfallbackFont = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pbaseFont = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pfallbackFont = env->localvar_getInt(runtime->localvar, pos++);
 
     int _re_val = nvgAddFallbackFontId((NVGcontext*/*ptr*/)(pctx), (int)pbaseFont, (int)pfallbackFont);
     s32 ret_value = (s32)_re_val;env->push_int(runtime->stack, ret_value);
@@ -1768,13 +1768,13 @@ int org_mini_nanovg_Nanovg_nvgAddFallbackFont(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Instance *pbaseFont = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Instance *pbaseFont = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pbaseFont = NULL;
     if(pbaseFont){
         ptr_pbaseFont = pbaseFont->arr_body;
     }
-    Instance *pfallbackFont = env->localvar_getRefer(runtime, pos++);
+    Instance *pfallbackFont = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pfallbackFont = NULL;
     if(pfallbackFont){
         ptr_pfallbackFont = pfallbackFont->arr_body;
@@ -1790,8 +1790,8 @@ int org_mini_nanovg_Nanovg_nvgFontSize(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float psize;psize.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float psize;psize.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgFontSize((NVGcontext*/*ptr*/)(pctx), (float)psize.f);
     
@@ -1803,8 +1803,8 @@ int org_mini_nanovg_Nanovg_nvgFontBlur(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float pblur;pblur.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float pblur;pblur.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgFontBlur((NVGcontext*/*ptr*/)(pctx), (float)pblur.f);
     
@@ -1816,8 +1816,8 @@ int org_mini_nanovg_Nanovg_nvgTextLetterSpacing(Runtime *runtime, JClass *clazz)
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float pspacing;pspacing.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float pspacing;pspacing.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgTextLetterSpacing((NVGcontext*/*ptr*/)(pctx), (float)pspacing.f);
     
@@ -1829,8 +1829,8 @@ int org_mini_nanovg_Nanovg_nvgTextLineHeight(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float plineHeight;plineHeight.i = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float plineHeight;plineHeight.i = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgTextLineHeight((NVGcontext*/*ptr*/)(pctx), (float)plineHeight.f);
     
@@ -1842,8 +1842,8 @@ int org_mini_nanovg_Nanovg_nvgTextAlign(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 palign = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 palign = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgTextAlign((NVGcontext*/*ptr*/)(pctx), (int)palign);
     
@@ -1855,8 +1855,8 @@ int org_mini_nanovg_Nanovg_nvgFontFaceId(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pfont = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pfont = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgFontFaceId((NVGcontext*/*ptr*/)(pctx), (int)pfont);
     
@@ -1868,8 +1868,8 @@ int org_mini_nanovg_Nanovg_nvgFontFace(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Instance *pfont = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Instance *pfont = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pfont = NULL;
     if(pfont){
         ptr_pfont = pfont->arr_body;
@@ -1885,18 +1885,18 @@ int org_mini_nanovg_Nanovg_nvgTextMetrics(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Instance *pascender = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Instance *pascender = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pascender = NULL;
     if(pascender){
         ptr_pascender = pascender->arr_body;
     }
-    Instance *pdescender = env->localvar_getRefer(runtime, pos++);
+    Instance *pdescender = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pdescender = NULL;
     if(pdescender){
         ptr_pdescender = pdescender->arr_body;
     }
-    Instance *plineh = env->localvar_getRefer(runtime, pos++);
+    Instance *plineh = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_plineh = NULL;
     if(plineh){
         ptr_plineh = plineh->arr_body;
@@ -1912,7 +1912,7 @@ int org_mini_nanovg_Nanovg_nvgCreateGLES2(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    s32 pflags = env->localvar_getInt(runtime, pos++);
+    s32 pflags = env->localvar_getInt(runtime->localvar, pos++);
 
     NVGcontext*/*ptr*/ _re_val = nvgCreateGLES2((int)pflags);
     s64 ret_value = (s64)(intptr_t)_re_val;env->push_long(runtime->stack, ret_value);
@@ -1924,7 +1924,7 @@ int org_mini_nanovg_Nanovg_nvgDeleteGLES2(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
 
     nvgDeleteGLES2((NVGcontext*/*ptr*/)(pctx));
     
@@ -1936,11 +1936,11 @@ int org_mini_nanovg_Nanovg_nvglCreateImageFromHandleGLES2(Runtime *runtime, JCla
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 ptextureId = env->localvar_getInt(runtime, pos++);
-    s32 pw = env->localvar_getInt(runtime, pos++);
-    s32 ph = env->localvar_getInt(runtime, pos++);
-    s32 pflags = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 ptextureId = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pw = env->localvar_getInt(runtime->localvar, pos++);
+    s32 ph = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pflags = env->localvar_getInt(runtime->localvar, pos++);
 
     int _re_val = nvglCreateImageFromHandleGLES2((NVGcontext*/*ptr*/)(pctx), (GLuint)ptextureId, (int)pw, (int)ph, (int)pflags);
     s32 ret_value = (s32)_re_val;env->push_int(runtime->stack, ret_value);
@@ -1952,8 +1952,8 @@ int org_mini_nanovg_Nanovg_nvglImageHandleGLES2(Runtime *runtime, JClass *clazz)
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pimage = env->localvar_getInt(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pimage = env->localvar_getInt(runtime->localvar, pos++);
 
     GLuint _re_val = nvglImageHandleGLES2((NVGcontext*/*ptr*/)(pctx), (int)pimage);
     s32 ret_value = (s32)_re_val;env->push_int(runtime->stack, ret_value);
@@ -1965,7 +1965,7 @@ int org_mini_nanovg_Nanovg_nvgCreateNVGtextRow(Runtime *runtime, JClass *clazz) 
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    s32 pcount = env->localvar_getInt(runtime, pos++);
+    s32 pcount = env->localvar_getInt(runtime->localvar, pos++);
 
     struct NVGtextRow*/*ptr*/ _re_val = nvgCreateNVGtextRow((int)pcount);
     s64 ret_value = (s64)(intptr_t)_re_val;env->push_long(runtime->stack, ret_value);
@@ -1977,7 +1977,7 @@ int org_mini_nanovg_Nanovg_nvgDeleteNVGtextRow(Runtime *runtime, JClass *clazz) 
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pval = env->localvar_getLong_2slot(runtime, pos);pos += 2;
+    intptr_t pval = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
 
     nvgDeleteNVGtextRow((struct NVGtextRow*/*ptr*/)(pval));
     
@@ -1989,8 +1989,8 @@ int org_mini_nanovg_Nanovg_nvgNVGtextRow_width(Runtime *runtime, JClass *clazz) 
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pptr = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pindex = env->localvar_getInt(runtime, pos++);
+    intptr_t pptr = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pindex = env->localvar_getInt(runtime->localvar, pos++);
 
     f32 ret_value = (f32)nvgNVGtextRow_width((struct NVGtextRow*/*ptr*/)(pptr), (int)pindex);
     env->push_float(runtime->stack, ret_value);
@@ -2002,8 +2002,8 @@ int org_mini_nanovg_Nanovg_nvgNVGtextRow_start(Runtime *runtime, JClass *clazz) 
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pptr = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pindex = env->localvar_getInt(runtime, pos++);
+    intptr_t pptr = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pindex = env->localvar_getInt(runtime->localvar, pos++);
 
     void*/*ptr*/ _re_val = nvgNVGtextRow_start((struct NVGtextRow*/*ptr*/)(pptr), (int)pindex);
     s64 ret_value = (s64)(intptr_t)_re_val;env->push_long(runtime->stack, ret_value);
@@ -2015,8 +2015,8 @@ int org_mini_nanovg_Nanovg_nvgNVGtextRow_end(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pptr = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pindex = env->localvar_getInt(runtime, pos++);
+    intptr_t pptr = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pindex = env->localvar_getInt(runtime->localvar, pos++);
 
     void*/*ptr*/ _re_val = nvgNVGtextRow_end((struct NVGtextRow*/*ptr*/)(pptr), (int)pindex);
     s64 ret_value = (s64)(intptr_t)_re_val;env->push_long(runtime->stack, ret_value);
@@ -2028,8 +2028,8 @@ int org_mini_nanovg_Nanovg_nvgNVGtextRow_next(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pptr = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pindex = env->localvar_getInt(runtime, pos++);
+    intptr_t pptr = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pindex = env->localvar_getInt(runtime->localvar, pos++);
 
     void*/*ptr*/ _re_val = nvgNVGtextRow_next((struct NVGtextRow*/*ptr*/)(pptr), (int)pindex);
     s64 ret_value = (s64)(intptr_t)_re_val;env->push_long(runtime->stack, ret_value);
@@ -2041,7 +2041,7 @@ int org_mini_nanovg_Nanovg_nvgCreateNVGglyphPosition(Runtime *runtime, JClass *c
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    s32 pcount = env->localvar_getInt(runtime, pos++);
+    s32 pcount = env->localvar_getInt(runtime->localvar, pos++);
 
     struct NVGglyphPosition*/*ptr*/ _re_val = nvgCreateNVGglyphPosition((int)pcount);
     s64 ret_value = (s64)(intptr_t)_re_val;env->push_long(runtime->stack, ret_value);
@@ -2053,7 +2053,7 @@ int org_mini_nanovg_Nanovg_nvgDeleteNVGglyphPosition(Runtime *runtime, JClass *c
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pval = env->localvar_getLong_2slot(runtime, pos);pos += 2;
+    intptr_t pval = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
 
     nvgDeleteNVGglyphPosition((struct NVGglyphPosition*/*ptr*/)(pval));
     
@@ -2065,8 +2065,8 @@ int org_mini_nanovg_Nanovg_nvgNVGglyphPosition_x(Runtime *runtime, JClass *clazz
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pptr = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pcount = env->localvar_getInt(runtime, pos++);
+    intptr_t pptr = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pcount = env->localvar_getInt(runtime->localvar, pos++);
 
     f32 ret_value = (f32)nvgNVGglyphPosition_x((struct NVGglyphPosition*/*ptr*/)(pptr), (int)pcount);
     env->push_float(runtime->stack, ret_value);
@@ -2078,16 +2078,16 @@ int org_mini_nanovg_Nanovg_nvgTextJni(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float px;px.i = env->localvar_getInt(runtime, pos++);
-    Int2Float py;py.i = env->localvar_getInt(runtime, pos++);
-    Instance *pstring = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float px;px.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float py;py.i = env->localvar_getInt(runtime->localvar, pos++);
+    Instance *pstring = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pstring = NULL;
     if(pstring){
         ptr_pstring = pstring->arr_body;
     }
-    s32 pstart = env->localvar_getInt(runtime, pos++);
-    s32 pend = env->localvar_getInt(runtime, pos++);
+    s32 pstart = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pend = env->localvar_getInt(runtime->localvar, pos++);
 
     f32 ret_value = (f32)nvgTextJni((NVGcontext*/*ptr*/)(pctx), (float)px.f, (float)py.f, (const char*)(ptr_pstring), (int)pstart, (int)pend);
     env->push_float(runtime->stack, ret_value);
@@ -2099,17 +2099,17 @@ int org_mini_nanovg_Nanovg_nvgTextBoxJni(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float px;px.i = env->localvar_getInt(runtime, pos++);
-    Int2Float py;py.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pbreakRowWidth;pbreakRowWidth.i = env->localvar_getInt(runtime, pos++);
-    Instance *pstring = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float px;px.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float py;py.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pbreakRowWidth;pbreakRowWidth.i = env->localvar_getInt(runtime->localvar, pos++);
+    Instance *pstring = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pstring = NULL;
     if(pstring){
         ptr_pstring = pstring->arr_body;
     }
-    s32 pstart = env->localvar_getInt(runtime, pos++);
-    s32 pend = env->localvar_getInt(runtime, pos++);
+    s32 pstart = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pend = env->localvar_getInt(runtime->localvar, pos++);
 
     nvgTextBoxJni((NVGcontext*/*ptr*/)(pctx), (float)px.f, (float)py.f, (float)pbreakRowWidth.f, (const char*)(ptr_pstring), (int)pstart, (int)pend);
     
@@ -2121,17 +2121,17 @@ int org_mini_nanovg_Nanovg_nvgTextBoundsJni(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float px;px.i = env->localvar_getInt(runtime, pos++);
-    Int2Float py;py.i = env->localvar_getInt(runtime, pos++);
-    Instance *pstring = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float px;px.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float py;py.i = env->localvar_getInt(runtime->localvar, pos++);
+    Instance *pstring = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pstring = NULL;
     if(pstring){
         ptr_pstring = pstring->arr_body;
     }
-    s32 pstart = env->localvar_getInt(runtime, pos++);
-    s32 pend = env->localvar_getInt(runtime, pos++);
-    Instance *pbounds = env->localvar_getRefer(runtime, pos++);
+    s32 pstart = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pend = env->localvar_getInt(runtime->localvar, pos++);
+    Instance *pbounds = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pbounds = NULL;
     if(pbounds){
         ptr_pbounds = pbounds->arr_body;
@@ -2147,18 +2147,18 @@ int org_mini_nanovg_Nanovg_nvgTextBoxBoundsJni(Runtime *runtime, JClass *clazz) 
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float px;px.i = env->localvar_getInt(runtime, pos++);
-    Int2Float py;py.i = env->localvar_getInt(runtime, pos++);
-    Int2Float pbreakRowWidth;pbreakRowWidth.i = env->localvar_getInt(runtime, pos++);
-    Instance *pstring = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float px;px.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float py;py.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pbreakRowWidth;pbreakRowWidth.i = env->localvar_getInt(runtime->localvar, pos++);
+    Instance *pstring = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pstring = NULL;
     if(pstring){
         ptr_pstring = pstring->arr_body;
     }
-    s32 pstart = env->localvar_getInt(runtime, pos++);
-    s32 pend = env->localvar_getInt(runtime, pos++);
-    Instance *pbounds = env->localvar_getRefer(runtime, pos++);
+    s32 pstart = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pend = env->localvar_getInt(runtime->localvar, pos++);
+    Instance *pbounds = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pbounds = NULL;
     if(pbounds){
         ptr_pbounds = pbounds->arr_body;
@@ -2174,17 +2174,17 @@ int org_mini_nanovg_Nanovg_nvgTextBreakLinesJni(Runtime *runtime, JClass *clazz)
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Instance *pstring = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Instance *pstring = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pstring = NULL;
     if(pstring){
         ptr_pstring = pstring->arr_body;
     }
-    s32 pstart = env->localvar_getInt(runtime, pos++);
-    s32 pend = env->localvar_getInt(runtime, pos++);
-    Int2Float pbreakRowWidth;pbreakRowWidth.i = env->localvar_getInt(runtime, pos++);
-    intptr_t prows = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pmaxRows = env->localvar_getInt(runtime, pos++);
+    s32 pstart = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pend = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float pbreakRowWidth;pbreakRowWidth.i = env->localvar_getInt(runtime->localvar, pos++);
+    intptr_t prows = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pmaxRows = env->localvar_getInt(runtime->localvar, pos++);
 
     int _re_val = nvgTextBreakLinesJni((NVGcontext*/*ptr*/)(pctx), (const char*)(ptr_pstring), (int)pstart, (int)pend, (float)pbreakRowWidth.f, (NVGtextRow*/*ptr*/)(prows), (int)pmaxRows);
     s32 ret_value = (s32)_re_val;env->push_int(runtime->stack, ret_value);
@@ -2196,18 +2196,18 @@ int org_mini_nanovg_Nanovg_nvgTextGlyphPositionsJni(Runtime *runtime, JClass *cl
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
-    intptr_t pctx = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    Int2Float px;px.i = env->localvar_getInt(runtime, pos++);
-    Int2Float py;py.i = env->localvar_getInt(runtime, pos++);
-    Instance *pstring = env->localvar_getRefer(runtime, pos++);
+    intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    Int2Float px;px.i = env->localvar_getInt(runtime->localvar, pos++);
+    Int2Float py;py.i = env->localvar_getInt(runtime->localvar, pos++);
+    Instance *pstring = env->localvar_getRefer(runtime->localvar, pos++);
     __refer ptr_pstring = NULL;
     if(pstring){
         ptr_pstring = pstring->arr_body;
     }
-    s32 pstart = env->localvar_getInt(runtime, pos++);
-    s32 pend = env->localvar_getInt(runtime, pos++);
-    intptr_t ppositions = env->localvar_getLong_2slot(runtime, pos);pos += 2;
-    s32 pmaxPositions = env->localvar_getInt(runtime, pos++);
+    s32 pstart = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pend = env->localvar_getInt(runtime->localvar, pos++);
+    intptr_t ppositions = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+    s32 pmaxPositions = env->localvar_getInt(runtime->localvar, pos++);
 
     int _re_val = nvgTextGlyphPositionsJni((NVGcontext*/*ptr*/)(pctx), (float)px.f, (float)py.f, (const char*)(ptr_pstring), (int)pstart, (int)pend, (NVGglyphPosition*/*ptr*/)(ppositions), (int)pmaxPositions);
     s32 ret_value = (s32)_re_val;env->push_int(runtime->stack, ret_value);
