@@ -82,7 +82,7 @@ public class Foo1 {
 
     void t3() {
         Object o = new Double(-5.737373f);
-        String s=o.toString();
+        String s = o.toString();
     }
 
     void t4() {
@@ -170,8 +170,6 @@ public class Foo1 {
         int PRINT_COUNT = 10000;
         Thread t = new Thread(new Runnable() {
             List<String> list = new ArrayList(MAX);
-            Set<String> set = new HashSet();
-            String[] arr = new String[MAX];
 
             @Override
             public void run() {
@@ -191,30 +189,63 @@ public class Foo1 {
                     String b = "def";
                     c = a + b;
                     list.add(c);
-                    //set.add(c);
-//                    arr[i] = c;
                     if (i % PRINT_COUNT == 0) {
-                        System.out.println("thread i=" + i);
+                        System.out.println(this + " thread i=" + i);
                     }
                 }
-                System.out.println("list.size():" + list.size() + "  ,set.size():" + set.size());
-                System.out.println(" thread c=\"" + c + "\"");
-                System.out.println(" thread cost: " + (System.currentTimeMillis() - start));
+                System.out.println(this + " list.size():" + list.size());
+                System.out.println(this + " thread cost: " + (System.currentTimeMillis() - start));
             }
         });
         t.start();
 
         //
+        Thread t1 = new Thread(new Runnable() {
+            List<String> list = new ArrayList();
+
+            @Override
+            public void run() {
+                try {
+                    System.out.println("total mem:" + Runtime.getRuntime().totalMemory()
+                            + "   free: " + Runtime.getRuntime().freeMemory());
+
+                } catch (Exception ex) {
+                }
+
+                long start = System.currentTimeMillis();
+                System.out.println("thread here.");
+                int j = 0;
+                String c = null;
+                for (int i = 0; i < MAX; i++) {
+                    String a = "abc";
+                    String b = "def";
+                    c = a + b;
+                    list.add(c);
+                    if (i % PRINT_COUNT == 0) {
+                        System.out.println(this + " thread i=" + i);
+                    }
+                }
+                System.out.println(this + " list.size():" + list.size());
+                System.out.println(this + " thread cost: " + (System.currentTimeMillis() - start));
+            }
+        });
+        t1.start();
+
+        //
+        List<String> list = new ArrayList();
+        long start = System.currentTimeMillis();
         String c = null;
         for (int i = 0; i < MAX; i++) {
             String a = "abc";
             String b = "def";
             c = a + b;
+            list.add(c);
             if (i % PRINT_COUNT == 0) {
                 System.out.println("main i=" + i);
             }
         }
-        System.out.println("main c=\"" + c + "\"");
+        System.out.println("main list.size():" + list.size());
+        System.out.println("main thread cost: " + (System.currentTimeMillis() - start));
     }
 
     long t81(long l) {
