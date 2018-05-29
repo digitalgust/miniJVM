@@ -228,7 +228,7 @@ public class Nanovg_java_2_c {
                             }
                             pushCode += "    if (_ptr_re_val) {\n"
                                     + "        s32 _j_t_bytes = sizeof(" + cType + ");\n"
-                                    + "        Instance *_arr = env->jarray_create(_struct_bytes / _j_t_bytes, " + jvmType + ", NULL);\n"
+                                    + "        Instance *_arr = env->jarray_create_by_type_index(runtime, _struct_bytes / _j_t_bytes, " + jvmType + ");\n"
                                     + "        memcpy(_arr->arr_body, _ptr_re_val,_struct_bytes);\n"
                                     + "        env->push_ref(runtime->stack, _arr);\n"
                                     + "    } else {\n"

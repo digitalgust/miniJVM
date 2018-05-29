@@ -25,7 +25,7 @@ int call_jvm(char* app_path) {
     printf("classpath: %s\n",path);
     java_debug=0;
     ArrayList * java_para=arraylist_create(0);
-    ret= execute_jvm(path, "test/Foo3", java_para);
+    ret= execute_jvm(path, "test/Foo1", java_para);
 //    ret= execute_jvm(path, "test/GuiTest", java_para);
 //    ret= execute_jvm(path, "test/Light", java_para);
 //    ret= execute_jvm(path, "Sample", java_para);

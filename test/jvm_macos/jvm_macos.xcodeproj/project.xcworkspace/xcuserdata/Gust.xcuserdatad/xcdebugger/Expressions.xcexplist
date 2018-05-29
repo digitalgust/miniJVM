@@ -3,23 +3,18 @@
    version = "1.0">
    <ContextStates>
       <ContextState
+         contextName = "_garbage_mark_object:garbage.c">
+      </ContextState>
+      <ContextState
          contextName = "GLOBAL">
          <PersistentStrings>
             <PersistentString
                value = "(struct _ClassType*)ins-&gt;mb.clazz">
             </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "execute_jvm:jvm.c">
-         <PersistentStrings>
             <PersistentString
-               value = "sys_classloader">
+               value = "sizeof(Instance)">
             </PersistentString>
          </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "find_fieldInfo_by_fieldref:class.c">
       </ContextState>
       <ContextState
          contextName = "jarray_destory:jvm_util.c">
@@ -28,9 +23,6 @@
                value = "arr-&gt;mb.clazz-&gt;name-&gt;data">
             </PersistentString>
          </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "memoryblock_destory:jvm_util.c">
       </ContextState>
       <ContextState
          contextName = "_op_putfield_impl:interpreter.c">
@@ -49,12 +41,29 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "jthread_get_daemon_value:jvm_util.c">
+      </ContextState>
+      <ContextState
          contextName = "execute_method:interpreter.c">
          <PersistentStrings>
             <PersistentString
                value = "clazz-&gt;name-&gt;data">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "memoryblock_destory:jvm_util.c">
+      </ContextState>
+      <ContextState
+         contextName = "execute_jvm:jvm.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "sys_classloader">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "find_fieldInfo_by_fieldref:class.c">
       </ContextState>
       <ContextState
          contextName = "_instance_mark_refer:garbage.c">
@@ -68,7 +77,7 @@
          contextName = "classes_load_get:jvm_util.c">
       </ContextState>
       <ContextState
-         contextName = "_garbage_mark_object:garbage.c">
+         contextName = "threadlist_count_none_daemon:jvm_util.c">
       </ContextState>
    </ContextStates>
 </VariablesViewState>

@@ -191,7 +191,7 @@ int org_mini_nanovg_Nanovg_stbtt_MakeFontInfo(Runtime *runtime, JClass *clazz) {
     s32 _struct_bytes = sizeof(_re_val);
     if (_ptr_re_val) {
         s32 _j_t_bytes = sizeof(c8);
-        Instance *_arr = env->jarray_create(_struct_bytes / _j_t_bytes, DATATYPE_BYTE, NULL);
+        Instance *_arr = env->jarray_create_by_type_index(runtime, _struct_bytes / _j_t_bytes, DATATYPE_BYTE);
         memcpy(_arr->arr_body, _ptr_re_val,_struct_bytes);
         env->push_ref(runtime->stack, _arr);
     } else {
@@ -430,7 +430,7 @@ int org_mini_nanovg_Nanovg_nvgRGB(Runtime *runtime, JClass *clazz) {
     s32 _struct_bytes = sizeof(_re_val);
     if (_ptr_re_val) {
         s32 _j_t_bytes = sizeof(f32);
-        Instance *_arr = env->jarray_create(_struct_bytes / _j_t_bytes, DATATYPE_FLOAT, NULL);
+        Instance *_arr = env->jarray_create_by_type_index(runtime, _struct_bytes / _j_t_bytes, DATATYPE_FLOAT);
         memcpy(_arr->arr_body, _ptr_re_val,_struct_bytes);
         env->push_ref(runtime->stack, _arr);
     } else {
@@ -453,7 +453,7 @@ int org_mini_nanovg_Nanovg_nvgRGBf(Runtime *runtime, JClass *clazz) {
     s32 _struct_bytes = sizeof(_re_val);
     if (_ptr_re_val) {
         s32 _j_t_bytes = sizeof(f32);
-        Instance *_arr = env->jarray_create(_struct_bytes / _j_t_bytes, DATATYPE_FLOAT, NULL);
+        Instance *_arr = env->jarray_create_by_type_index(runtime, _struct_bytes / _j_t_bytes, DATATYPE_FLOAT);
         memcpy(_arr->arr_body, _ptr_re_val,_struct_bytes);
         env->push_ref(runtime->stack, _arr);
     } else {
@@ -477,7 +477,7 @@ int org_mini_nanovg_Nanovg_nvgRGBA(Runtime *runtime, JClass *clazz) {
     s32 _struct_bytes = sizeof(_re_val);
     if (_ptr_re_val) {
         s32 _j_t_bytes = sizeof(f32);
-        Instance *_arr = env->jarray_create(_struct_bytes / _j_t_bytes, DATATYPE_FLOAT, NULL);
+        Instance *_arr = env->jarray_create_by_type_index(runtime, _struct_bytes / _j_t_bytes, DATATYPE_FLOAT);
         memcpy(_arr->arr_body, _ptr_re_val,_struct_bytes);
         env->push_ref(runtime->stack, _arr);
     } else {
@@ -501,7 +501,7 @@ int org_mini_nanovg_Nanovg_nvgRGBAf(Runtime *runtime, JClass *clazz) {
     s32 _struct_bytes = sizeof(_re_val);
     if (_ptr_re_val) {
         s32 _j_t_bytes = sizeof(f32);
-        Instance *_arr = env->jarray_create(_struct_bytes / _j_t_bytes, DATATYPE_FLOAT, NULL);
+        Instance *_arr = env->jarray_create_by_type_index(runtime, _struct_bytes / _j_t_bytes, DATATYPE_FLOAT);
         memcpy(_arr->arr_body, _ptr_re_val,_struct_bytes);
         env->push_ref(runtime->stack, _arr);
     } else {
@@ -532,7 +532,7 @@ int org_mini_nanovg_Nanovg_nvgLerpRGBA(Runtime *runtime, JClass *clazz) {
     s32 _struct_bytes = sizeof(_re_val);
     if (_ptr_re_val) {
         s32 _j_t_bytes = sizeof(f32);
-        Instance *_arr = env->jarray_create(_struct_bytes / _j_t_bytes, DATATYPE_FLOAT, NULL);
+        Instance *_arr = env->jarray_create_by_type_index(runtime, _struct_bytes / _j_t_bytes, DATATYPE_FLOAT);
         memcpy(_arr->arr_body, _ptr_re_val,_struct_bytes);
         env->push_ref(runtime->stack, _arr);
     } else {
@@ -558,7 +558,7 @@ int org_mini_nanovg_Nanovg_nvgTransRGBA(Runtime *runtime, JClass *clazz) {
     s32 _struct_bytes = sizeof(_re_val);
     if (_ptr_re_val) {
         s32 _j_t_bytes = sizeof(f32);
-        Instance *_arr = env->jarray_create(_struct_bytes / _j_t_bytes, DATATYPE_FLOAT, NULL);
+        Instance *_arr = env->jarray_create_by_type_index(runtime, _struct_bytes / _j_t_bytes, DATATYPE_FLOAT);
         memcpy(_arr->arr_body, _ptr_re_val,_struct_bytes);
         env->push_ref(runtime->stack, _arr);
     } else {
@@ -584,7 +584,7 @@ int org_mini_nanovg_Nanovg_nvgTransRGBAf(Runtime *runtime, JClass *clazz) {
     s32 _struct_bytes = sizeof(_re_val);
     if (_ptr_re_val) {
         s32 _j_t_bytes = sizeof(f32);
-        Instance *_arr = env->jarray_create(_struct_bytes / _j_t_bytes, DATATYPE_FLOAT, NULL);
+        Instance *_arr = env->jarray_create_by_type_index(runtime, _struct_bytes / _j_t_bytes, DATATYPE_FLOAT);
         memcpy(_arr->arr_body, _ptr_re_val,_struct_bytes);
         env->push_ref(runtime->stack, _arr);
     } else {
@@ -607,7 +607,7 @@ int org_mini_nanovg_Nanovg_nvgHSL(Runtime *runtime, JClass *clazz) {
     s32 _struct_bytes = sizeof(_re_val);
     if (_ptr_re_val) {
         s32 _j_t_bytes = sizeof(f32);
-        Instance *_arr = env->jarray_create(_struct_bytes / _j_t_bytes, DATATYPE_FLOAT, NULL);
+        Instance *_arr = env->jarray_create_by_type_index(runtime, _struct_bytes / _j_t_bytes, DATATYPE_FLOAT);
         memcpy(_arr->arr_body, _ptr_re_val,_struct_bytes);
         env->push_ref(runtime->stack, _arr);
     } else {
@@ -631,7 +631,7 @@ int org_mini_nanovg_Nanovg_nvgHSLA(Runtime *runtime, JClass *clazz) {
     s32 _struct_bytes = sizeof(_re_val);
     if (_ptr_re_val) {
         s32 _j_t_bytes = sizeof(f32);
-        Instance *_arr = env->jarray_create(_struct_bytes / _j_t_bytes, DATATYPE_FLOAT, NULL);
+        Instance *_arr = env->jarray_create_by_type_index(runtime, _struct_bytes / _j_t_bytes, DATATYPE_FLOAT);
         memcpy(_arr->arr_body, _ptr_re_val,_struct_bytes);
         env->push_ref(runtime->stack, _arr);
     } else {
@@ -1291,7 +1291,7 @@ int org_mini_nanovg_Nanovg_nvgLinearGradient(Runtime *runtime, JClass *clazz) {
     s32 _struct_bytes = sizeof(_re_val);
     if (_ptr_re_val) {
         s32 _j_t_bytes = sizeof(c8);
-        Instance *_arr = env->jarray_create(_struct_bytes / _j_t_bytes, DATATYPE_BYTE, NULL);
+        Instance *_arr = env->jarray_create_by_type_index(runtime, _struct_bytes / _j_t_bytes, DATATYPE_BYTE);
         memcpy(_arr->arr_body, _ptr_re_val,_struct_bytes);
         env->push_ref(runtime->stack, _arr);
     } else {
@@ -1328,7 +1328,7 @@ int org_mini_nanovg_Nanovg_nvgBoxGradient(Runtime *runtime, JClass *clazz) {
     s32 _struct_bytes = sizeof(_re_val);
     if (_ptr_re_val) {
         s32 _j_t_bytes = sizeof(c8);
-        Instance *_arr = env->jarray_create(_struct_bytes / _j_t_bytes, DATATYPE_BYTE, NULL);
+        Instance *_arr = env->jarray_create_by_type_index(runtime, _struct_bytes / _j_t_bytes, DATATYPE_BYTE);
         memcpy(_arr->arr_body, _ptr_re_val,_struct_bytes);
         env->push_ref(runtime->stack, _arr);
     } else {
@@ -1363,7 +1363,7 @@ int org_mini_nanovg_Nanovg_nvgRadialGradient(Runtime *runtime, JClass *clazz) {
     s32 _struct_bytes = sizeof(_re_val);
     if (_ptr_re_val) {
         s32 _j_t_bytes = sizeof(c8);
-        Instance *_arr = env->jarray_create(_struct_bytes / _j_t_bytes, DATATYPE_BYTE, NULL);
+        Instance *_arr = env->jarray_create_by_type_index(runtime, _struct_bytes / _j_t_bytes, DATATYPE_BYTE);
         memcpy(_arr->arr_body, _ptr_re_val,_struct_bytes);
         env->push_ref(runtime->stack, _arr);
     } else {
@@ -1391,7 +1391,7 @@ int org_mini_nanovg_Nanovg_nvgImagePattern(Runtime *runtime, JClass *clazz) {
     s32 _struct_bytes = sizeof(_re_val);
     if (_ptr_re_val) {
         s32 _j_t_bytes = sizeof(c8);
-        Instance *_arr = env->jarray_create(_struct_bytes / _j_t_bytes, DATATYPE_BYTE, NULL);
+        Instance *_arr = env->jarray_create_by_type_index(runtime, _struct_bytes / _j_t_bytes, DATATYPE_BYTE);
         memcpy(_arr->arr_body, _ptr_re_val,_struct_bytes);
         env->push_ref(runtime->stack, _arr);
     } else {
