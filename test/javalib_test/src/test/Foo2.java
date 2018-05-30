@@ -251,15 +251,16 @@ class Foo2 {
     void t13() {
         File f = new File("./");
         System.out.println("path:" + f.getAbsolutePath());
+        System.out.println(System.getProperty("file.separator"));
     }
 
     void t14() {
         try {
-            System.out.println(System.getProperty("file.separator"));
-            int a = System.in.read();
-            int b = System.in.read();
-            System.out.println(Integer.toHexString(a) + "," + Integer.toHexString(b));
-        } catch (IOException ex) {
+//            System.out.println("Waiting for input something:");
+//            int a = System.in.read();
+//            int b = System.in.read();
+//            System.out.println(Integer.toHexString(a) + "," + Integer.toHexString(b));
+        } catch (Exception ex) {
         }
     }
 
@@ -272,20 +273,20 @@ class Foo2 {
 
     public static void main(String args[]) {
         Foo2 obj = new Foo2();
-//        obj.t1();
-//        obj.t2();
-//        obj.t3();
-//        obj.t4();
-//        obj.t5();
-//        obj.t6();
-//        obj.t7();
-//        obj.t8();
-//        obj.t9();
-//        obj.t10();
-//        obj.t11();
-//        obj.t12();
-//        obj.t13();
-//        obj.t14();
+        obj.t1();
+        obj.t2();
+        obj.t3();
+        obj.t4();
+        obj.t5();
+        obj.t6();
+        obj.t7();
+        obj.t8();
+        obj.t9();
+        obj.t10();
+        obj.t11();
+        obj.t12();
+        obj.t13();
+        obj.t14();
         obj.t15();
     }
 }

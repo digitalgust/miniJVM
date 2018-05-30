@@ -25,9 +25,6 @@ class Foo3 {
     public static int PRINT_COUNT = 10000;
 
     static void t7() {
-//        MyThread t = new MyThread();
-//        t.start();
-
         //
         String[] strs = new String[MAX];
         String c = null;
@@ -36,9 +33,6 @@ class Foo3 {
             String b = "def";
             c = a + b + i;
             strs[i] = c;
-//            if (i % PRINT_COUNT == 0) {
-//                System.out.println("main i=" + i);
-//            }
         }
         System.out.println("main c=\"" + c + "\"");
         String a = "abc";

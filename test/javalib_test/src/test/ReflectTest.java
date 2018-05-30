@@ -102,7 +102,7 @@ public class ReflectTest {
                 m = r2.getMethod("longValue", new Class[]{});
                 if (m != null) {
                     Object result = m.invoke(lo, new Object[]{});
-                    //System.out.println("reflect invoke result:" + Long.toString((Long) result, 16));
+                    System.out.println("reflect invoke result:" + Long.toString((Long) result, 16));
                 }
             } catch (Exception ex) {
             }
