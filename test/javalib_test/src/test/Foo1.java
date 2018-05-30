@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
+
 /**
  *
  * @author gust
@@ -297,6 +298,21 @@ public class Foo1 {
     }
 
     void t12() {
+        class B{}
+        try {
+            B[][] b = new B[3][3];
+            B[] b1 = new B[8];
+            double[][][] a = new double[4][][];
+            a[0] = new double[2][2];
+            a[0][0] = new double[1];
+            a[0][0][0] = 5.0;
+            Thread.sleep(3000);
+            System.out.println("a:" + a);
+            System.out.println("a[0]:" + a[0]);
+            System.out.println("a[0][0]:" + a[0][0]);
+            System.out.println("a[0][0][0]:" + a[0][0][0]);
+        } catch (InterruptedException ex) {
+        }
     }
 
     void t13() {
@@ -461,12 +477,12 @@ public class Foo1 {
 //            f.t4();
 //            f.t5();
 //            f.t6();
-            f.t7();
+//            f.t7();
 //            f.t8();
 //            f.t9();
 //            f.t10();
 //            f.t11();
-//            f.t12();
+            f.t12();
 //            f.t13();
 //            f.t14();
 //            f.t19();

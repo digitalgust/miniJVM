@@ -27,7 +27,7 @@ int call_jvm(char* app_path) {
     ArrayList * java_para=arraylist_create(0);
     ret= execute_jvm(path, "test/Foo1", java_para);
 //    ret= execute_jvm(path, "test/GuiTest", java_para);
-//    ret= execute_jvm(path, "test/Light", java_para);
+//    ret= execute_jvm(path, "test/BpDeepTest", java_para);
 //    ret= execute_jvm(path, "Sample", java_para);
     arraylist_destory(java_para);
     return ret;

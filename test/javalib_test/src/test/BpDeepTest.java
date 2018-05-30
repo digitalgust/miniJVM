@@ -13,6 +13,7 @@ public class BpDeepTest {
     }
 
     public static void main(String[] args) {
+        long start = System.currentTimeMillis();
         //初始化神经网络的基本配置
         //第一个参数是一个整型数组，表示神经网络的层数和每层节点数，比如{3,10,10,10,10,2}表示输入层是3个节点，输出层是2个节点，中间有4层隐含层，每层10个节点
         //第二个参数是学习步长，第三个参数是动量系数
@@ -40,10 +41,14 @@ public class BpDeepTest {
         double[] x = new double[]{3, 1};
         double[] result = bp.computeOut(x);
         System.out.println(arr2str(x) + ":" + arr2str(result));
+
+        System.out.println("cost :" + (System.currentTimeMillis() - start));
     }
 }
+
 /**
  * http://blog.csdn.net/u011922760/article/details/52785383
+ *
  * @author Gust
  */
 class BpDeep {

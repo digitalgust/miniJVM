@@ -6,7 +6,8 @@ class Foo3 {
 //        Object o = null;
 //        o.toString();
 
-        //t6();
+        t6();
+        t7();
         t8();
     }
 
