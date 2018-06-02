@@ -417,6 +417,7 @@ public class Foo1 {
 
     void t23() {
         System.out.println(2);
+        long start = System.currentTimeMillis();
         for (int i = 3; i < 100000; i += 2) {
             boolean isPrime = true;
             for (int j = 3; j < i / 2; j += 2) {
@@ -429,6 +430,7 @@ public class Foo1 {
                 //System.out.println(i);
             }
         }
+        System.out.println(" t23 cost: " + (System.currentTimeMillis() - start));
     }
 
     void t24() {
