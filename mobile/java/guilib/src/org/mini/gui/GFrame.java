@@ -53,7 +53,7 @@ public class GFrame extends GContainer {
     float[] title_boundle = new float[4];
     long vg;
     int frameMode;
-    boolean closable;
+    boolean closable = true;
 
     public GFrame(String title, int left, int top, int width, int height) {
         setTitle(title);
@@ -121,6 +121,10 @@ public class GFrame extends GContainer {
     }
 
     public void align(int align_mod) {
+        if (getForm() == null) {
+            System.out.println("warning: added to form can be set align");
+            return;
+        }
         if ((align_mod & GGraphics.LEFT) != 0) {
             boundle[LEFT] = 0;
         } else if ((align_mod & GGraphics.RIGHT) != 0) {

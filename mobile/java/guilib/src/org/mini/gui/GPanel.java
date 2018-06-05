@@ -18,8 +18,10 @@ public class GPanel extends GContainer {
     public void scrollEvent(double scrollX, double scrollY, int x, int y) {
         if (focus != null) {
             focus.scrollEvent(scrollX, scrollY, x, y);
-        } else if (boundle[WIDTH] > parent.getW() || boundle[HEIGHT] > parent.getH()) {
+        } else if (parent != null) {
+            if (boundle[WIDTH] > parent.getW() || boundle[HEIGHT] > parent.getH()) {
 
+            }
         }
     }
 }

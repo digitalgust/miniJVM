@@ -560,6 +560,9 @@ public class GTextBox extends GTextObject {
                             char_count = nvgTextGlyphPositionsJni(vg, dx, dy, text_arr, byte_starti, byte_endi, glyphsHandle, posCount);
                             int curRow = row_index - topShowRow;
 
+                            if (curRow < 0 || curRow >= area_detail.length) {
+                                break;
+                            }
                             //把这些信息存下来，用于在点击的时候找到点击了文本的哪个位置
                             //前面存固定信息
                             area_detail[curRow] = new short[AREA_DETAIL_ADD + char_count];
