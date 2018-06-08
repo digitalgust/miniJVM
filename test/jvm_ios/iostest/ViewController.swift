@@ -54,6 +54,7 @@ class ViewController: UIViewController {
     }
     
     @objc func show_output()    {
+        fflush(stderr)
         self.tv.text = self.readFromDocumentsFile(fileName: "console.txt")
     }
     
