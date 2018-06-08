@@ -317,12 +317,7 @@ public class Foo1 {
     }
 
     void t13() {
-        byte[] b = javax.mini.zip.Zip.getEntry("../lib/minijvm_rt.jar", "sys.properties");
-        for (int i = 0; i < b.length; i++) {
-            System.out.print((char) b[i]);
-        }
 
-        Zip.putEntry("../tmp.zip", "bbb/sys.properties", b);
     }
 
     void t14() {

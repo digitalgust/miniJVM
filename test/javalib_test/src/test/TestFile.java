@@ -16,6 +16,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import javax.mini.zip.Zip;
 
 /**
  *
@@ -42,6 +43,16 @@ public class TestFile {
         }
     }
 
+    void t13() {
+        byte[] b = javax.mini.zip.Zip.getEntry("../lib/minijvm_rt.jar", "sys.properties");
+        for (int i = 0; i < b.length; i++) {
+            System.out.print((char) b[i]);
+        }
+
+        Zip.putEntry("../tmp.zip", "aaa/sys.properties", b);
+        Zip.putEntry("../tmp.zip", "bbb/sys.properties", b);
+    }
+
     void t15() {
 
         try {
@@ -49,8 +60,8 @@ public class TestFile {
             printBytes(s);
             printString(s);
             File test = new File("./\\/./a.txt");
-            System.out.println("path:"+test.getPath());
-            System.out.println("parent:"+test.getParent());
+            System.out.println("path:" + test.getPath());
+            System.out.println("parent:" + test.getParent());
 //            File test = new File("/cygdrive/d/githome/mini_jvm/mini_jvm/cmake-build-debug/./a.txt");
             System.out.println("full path:" + test.getAbsolutePath());
             System.out.println("file exists:" + test.exists());
@@ -141,10 +152,11 @@ public class TestFile {
             ex.printStackTrace();
         }
     }
+
     void t18() {
         try {
-            File f=File.createTempFile(null, null);
-            System.out.println("tmp file:"+f.getAbsolutePath());
+            File f = File.createTempFile(null, null);
+            System.out.println("tmp file:" + f.getAbsolutePath());
         } catch (IOException ex) {
             ex.printStackTrace();
         }
