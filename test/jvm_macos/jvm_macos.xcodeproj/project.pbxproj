@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4523723B20C94B8B00156C58 /* res in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4523723A20C8ECA500156C58 /* res */; };
+		4523723C20C94B9300156C58 /* lib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4523723920C8EC8C00156C58 /* lib */; };
+		4523723E20CA4D8300156C58 /* ltalloc.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4523723D20CA4D8300156C58 /* ltalloc.cc */; };
 		457248E22020AAC600349683 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 457248E12020AAC600349683 /* main.swift */; };
 		457248EB2020ABE200349683 /* invoke.c in Sources */ = {isa = PBXBuildFile; fileRef = 457248EA2020ABE200349683 /* invoke.c */; };
 		457249342020AFAA00349683 /* libc.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 457249332020AFAA00349683 /* libc.tbd */; };
@@ -37,8 +40,6 @@
 		45ECB7A2206D01C200CF9E7F /* gui.cfg in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45ECB7A1206D01B000CF9E7F /* gui.cfg */; };
 		45ECB7A3206D01C700CF9E7F /* libjnitest.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45ECB79C206D017900CF9E7F /* libjnitest.dylib */; };
 		45ECB7A4206D01CC00CF9E7F /* libgui.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45ECB79E206D017A00CF9E7F /* libgui.dylib */; };
-		45ECB7A5206D01D000CF9E7F /* lib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45ECB79B206D015700CF9E7F /* lib */; };
-		45ECB7A6206D01D400CF9E7F /* res in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45ECB79A206D014400CF9E7F /* res */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -48,8 +49,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 16;
 			files = (
-				45ECB7A6206D01D400CF9E7F /* res in CopyFiles */,
-				45ECB7A5206D01D000CF9E7F /* lib in CopyFiles */,
+				4523723C20C94B9300156C58 /* lib in CopyFiles */,
+				4523723B20C94B8B00156C58 /* res in CopyFiles */,
 				45ECB7A4206D01CC00CF9E7F /* libgui.dylib in CopyFiles */,
 				45ECB7A3206D01C700CF9E7F /* libjnitest.dylib in CopyFiles */,
 				45ECB7A2206D01C200CF9E7F /* gui.cfg in CopyFiles */,
@@ -59,6 +60,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4523723920C8EC8C00156C58 /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = ../../binary/lib; sourceTree = "<group>"; };
+		4523723A20C8ECA500156C58 /* res */ = {isa = PBXFileReference; lastKnownFileType = folder; name = res; path = ../../binary/res; sourceTree = "<group>"; };
+		4523723D20CA4D8300156C58 /* ltalloc.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ltalloc.cc; path = ../../mini_jvm/utils/ltalloc.cc; sourceTree = "<group>"; };
 		457248DE2020AAC600349683 /* jvm_macos */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = jvm_macos; sourceTree = BUILT_PRODUCTS_DIR; };
 		457248E12020AAC600349683 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		457248E82020ABE100349683 /* jvm_macos-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "jvm_macos-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -108,8 +112,6 @@
 		45ECB78A206D00F900CF9E7F /* java_native_io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = java_native_io.c; path = ../../mini_jvm/jvm/java_native_io.c; sourceTree = "<group>"; };
 		45ECB797206D011300CF9E7F /* miniz_wrapper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = miniz_wrapper.c; path = ../../mini_jvm/utils/miniz/miniz_wrapper.c; sourceTree = "<group>"; };
 		45ECB798206D011300CF9E7F /* miniz_wrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = miniz_wrapper.h; path = ../../mini_jvm/utils/miniz/miniz_wrapper.h; sourceTree = "<group>"; };
-		45ECB79A206D014400CF9E7F /* res */ = {isa = PBXFileReference; lastKnownFileType = folder; name = res; path = ../../binary/res; sourceTree = "<group>"; };
-		45ECB79B206D015700CF9E7F /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = ../../binary/lib; sourceTree = "<group>"; };
 		45ECB79C206D017900CF9E7F /* libjnitest.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libjnitest.dylib; path = ../../binary/macos/libjnitest.dylib; sourceTree = "<group>"; };
 		45ECB79E206D017A00CF9E7F /* libgui.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgui.dylib; path = ../../binary/macos/libgui.dylib; sourceTree = "<group>"; };
 		45ECB7A1206D01B000CF9E7F /* gui.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gui.cfg; sourceTree = "<group>"; };
@@ -140,11 +142,11 @@
 		457248D52020AAC600349683 = {
 			isa = PBXGroup;
 			children = (
+				4523723A20C8ECA500156C58 /* res */,
+				4523723920C8EC8C00156C58 /* lib */,
 				45ECB7A1206D01B000CF9E7F /* gui.cfg */,
 				45ECB79E206D017A00CF9E7F /* libgui.dylib */,
 				45ECB79C206D017900CF9E7F /* libjnitest.dylib */,
-				45ECB79B206D015700CF9E7F /* lib */,
-				45ECB79A206D014400CF9E7F /* res */,
 				4572490F2020AD8000349683 /* utils */,
 				457248EF2020AD5300349683 /* jvm */,
 				457248E02020AAC600349683 /* jvm_macos */,
@@ -200,6 +202,7 @@
 		4572490F2020AD8000349683 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				4523723D20CA4D8300156C58 /* ltalloc.cc */,
 				45ECB75A206D00D100CF9E7F /* arraylist.c */,
 				45ECB76D206D00D300CF9E7F /* arraylist.h */,
 				45ECB75B206D00D100CF9E7F /* bytebuf.c */,
@@ -310,6 +313,7 @@
 				45ECB791206D00F900CF9E7F /* interpreter.c in Sources */,
 				457248E22020AAC600349683 /* main.swift in Sources */,
 				45ECB799206D011300CF9E7F /* miniz_wrapper.c in Sources */,
+				4523723E20CA4D8300156C58 /* ltalloc.cc in Sources */,
 				457248EB2020ABE200349683 /* invoke.c in Sources */,
 				45ECB772206D00D300CF9E7F /* spinlock.c in Sources */,
 				45ECB78F206D00F900CF9E7F /* runtime.c in Sources */,
