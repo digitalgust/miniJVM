@@ -116,6 +116,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>C4819</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -160,6 +161,7 @@
     <ClCompile Include="..\..\mini_jvm\utils\hashset.c" />
     <ClCompile Include="..\..\mini_jvm\utils\hashtable.c" />
     <ClCompile Include="..\..\mini_jvm\utils\linkedlist.c" />
+    <ClCompile Include="..\..\mini_jvm\utils\ltalloc.c" />
     <ClCompile Include="..\..\mini_jvm\utils\miniz\miniz_wrapper.c" />
     <ClCompile Include="..\..\mini_jvm\utils\pairlist.c" />
     <ClCompile Include="..\..\mini_jvm\utils\spinlock.c" />
