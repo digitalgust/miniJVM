@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4523724420CAA77C00156C58 /* ltalloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4523724220CAA77B00156C58 /* ltalloc.c */; };
 		45D78F2C209D3E62003B9317 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 45D78F2B209D3E62003B9317 /* Assets.xcassets */; };
 		45D78F66209D4330003B9317 /* glfm_platform_emscripten.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F45209D4330003B9317 /* glfm_platform_emscripten.c */; };
 		45D78F67209D4330003B9317 /* glfm_platform_android.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F46209D4330003B9317 /* glfm_platform_android.c */; };
@@ -45,6 +46,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4523724220CAA77B00156C58 /* ltalloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ltalloc.c; sourceTree = "<group>"; };
+		4523724320CAA77C00156C58 /* ltalloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ltalloc.h; sourceTree = "<group>"; };
 		45D78F1F209D3E61003B9317 /* iosapp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosapp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		45D78F2B209D3E62003B9317 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		45D78F30209D3E62003B9317 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -289,6 +292,8 @@
 		45D79015209D8662003B9317 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				4523724220CAA77B00156C58 /* ltalloc.c */,
+				4523724320CAA77C00156C58 /* ltalloc.h */,
 				45D79016209D8662003B9317 /* dirent_win.h */,
 				45D79017209D8662003B9317 /* spinlock.h */,
 				45D79018209D8662003B9317 /* bytebuf.h */,
@@ -426,6 +431,7 @@
 				45D7903D209D8662003B9317 /* pairlist.c in Sources */,
 				45D7902F209D8662003B9317 /* garbage.c in Sources */,
 				45D79031209D8662003B9317 /* jvm.c in Sources */,
+				4523724420CAA77C00156C58 /* ltalloc.c in Sources */,
 				45D7903F209D8662003B9317 /* utf8_string.c in Sources */,
 				45D79039209D8662003B9317 /* global.c in Sources */,
 				45D79043209D8662003B9317 /* spinlock.c in Sources */,
