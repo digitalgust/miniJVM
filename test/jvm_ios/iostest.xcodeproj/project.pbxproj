@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		454C4AEF1FB6B89D008B9C1D /* invokec.c in Sources */ = {isa = PBXBuildFile; fileRef = 45C1245D1F872A9200BF3925 /* invokec.c */; };
+		45719A2520CABD14009652A7 /* ltalloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 45719A2320CABD14009652A7 /* ltalloc.c */; };
 		45C1242F1F87232100BF3925 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C1242E1F87232100BF3925 /* AppDelegate.swift */; };
 		45C124311F87232100BF3925 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C124301F87232100BF3925 /* ViewController.swift */; };
 		45C124341F87232100BF3925 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 45C124321F87232100BF3925 /* Main.storyboard */; };
@@ -61,6 +62,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		45719A2320CABD14009652A7 /* ltalloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ltalloc.c; path = ../../mini_jvm/utils/ltalloc.c; sourceTree = "<group>"; };
+		45719A2420CABD14009652A7 /* ltalloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ltalloc.h; path = ../../mini_jvm/utils/ltalloc.h; sourceTree = "<group>"; };
 		45C1242B1F87232100BF3925 /* iostest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iostest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		45C1242E1F87232100BF3925 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		45C124301F87232100BF3925 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -245,6 +248,8 @@
 		45ECB7CA206D03B700CF9E7F /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				45719A2320CABD14009652A7 /* ltalloc.c */,
+				45719A2420CABD14009652A7 /* ltalloc.h */,
 				45ECB7EC206D03EF00CF9E7F /* arraylist.c */,
 				45ECB7FF206D03F200CF9E7F /* arraylist.h */,
 				45ECB7ED206D03EF00CF9E7F /* bytebuf.c */,
@@ -429,6 +434,7 @@
 				45ECB803206D03F200CF9E7F /* d_utils.c in Sources */,
 				45ECB800206D03F200CF9E7F /* arraylist.c in Sources */,
 				45C1242F1F87232100BF3925 /* AppDelegate.swift in Sources */,
+				45719A2520CABD14009652A7 /* ltalloc.c in Sources */,
 				45ECB801206D03F200CF9E7F /* bytebuf.c in Sources */,
 				45ECB7DE206D03CE00CF9E7F /* global.c in Sources */,
 				45ECB806206D03F200CF9E7F /* tinycthread.c in Sources */,
