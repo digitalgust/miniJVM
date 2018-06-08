@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
-
+import javax.mini.zip.Zip;
 
 /**
  *
@@ -298,7 +298,8 @@ public class Foo1 {
     }
 
     void t12() {
-        class B{}
+        class B {
+        }
         try {
             B[][] b = new B[3][3];
             B[] b1 = new B[8];
@@ -316,6 +317,12 @@ public class Foo1 {
     }
 
     void t13() {
+        byte[] b = javax.mini.zip.Zip.getEntry("../lib/minijvm_rt.jar", "sys.properties");
+        for (int i = 0; i < b.length; i++) {
+            System.out.print((char) b[i]);
+        }
+
+        Zip.putEntry("../tmp.zip", "bbb/sys.properties", b);
     }
 
     void t14() {
@@ -473,26 +480,26 @@ public class Foo1 {
     public static void exec() {
         Foo1 f = new Foo1();
         for (int i = 0; i < 1; i++) {
-            f.t1();
-            f.t2();
-            f.t3();
-            f.t4();
-            f.t5();
-            f.t6();
-            f.t7();
-            f.t8();
-            f.t9();
-            f.t10();
-            f.t11();
-            f.t12();
+//            f.t1();
+//            f.t2();
+//            f.t3();
+//            f.t4();
+//            f.t5();
+//            f.t6();
+//            f.t7();
+//            f.t8();
+//            f.t9();
+//            f.t10();
+//            f.t11();
+//            f.t12();
             f.t13();
-            f.t14();
-            f.t19();
-            f.t20();
-            f.t21();
-            f.t23();
-            f.t24();
-            f.t25();
+//            f.t14();
+//            f.t19();
+//            f.t20();
+//            f.t21();
+//            f.t23();
+//            f.t24();
+//            f.t25();
         }
     }
 
