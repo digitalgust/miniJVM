@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		4523723B20C94B8B00156C58 /* res in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4523723A20C8ECA500156C58 /* res */; };
 		4523723C20C94B9300156C58 /* lib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4523723920C8EC8C00156C58 /* lib */; };
-		4523723E20CA4D8300156C58 /* ltalloc.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4523723D20CA4D8300156C58 /* ltalloc.cc */; };
+		4523724120CAA6B400156C58 /* ltalloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4523723F20CAA6B400156C58 /* ltalloc.c */; };
 		457248E22020AAC600349683 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 457248E12020AAC600349683 /* main.swift */; };
 		457248EB2020ABE200349683 /* invoke.c in Sources */ = {isa = PBXBuildFile; fileRef = 457248EA2020ABE200349683 /* invoke.c */; };
 		457249342020AFAA00349683 /* libc.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 457249332020AFAA00349683 /* libc.tbd */; };
@@ -62,7 +62,8 @@
 /* Begin PBXFileReference section */
 		4523723920C8EC8C00156C58 /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = ../../binary/lib; sourceTree = "<group>"; };
 		4523723A20C8ECA500156C58 /* res */ = {isa = PBXFileReference; lastKnownFileType = folder; name = res; path = ../../binary/res; sourceTree = "<group>"; };
-		4523723D20CA4D8300156C58 /* ltalloc.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ltalloc.cc; path = ../../mini_jvm/utils/ltalloc.cc; sourceTree = "<group>"; };
+		4523723F20CAA6B400156C58 /* ltalloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ltalloc.c; path = ../../mini_jvm/utils/ltalloc.c; sourceTree = "<group>"; };
+		4523724020CAA6B400156C58 /* ltalloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ltalloc.h; path = ../../mini_jvm/utils/ltalloc.h; sourceTree = "<group>"; };
 		457248DE2020AAC600349683 /* jvm_macos */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = jvm_macos; sourceTree = BUILT_PRODUCTS_DIR; };
 		457248E12020AAC600349683 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		457248E82020ABE100349683 /* jvm_macos-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "jvm_macos-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -202,7 +203,8 @@
 		4572490F2020AD8000349683 /* utils */ = {
 			isa = PBXGroup;
 			children = (
-				4523723D20CA4D8300156C58 /* ltalloc.cc */,
+				4523723F20CAA6B400156C58 /* ltalloc.c */,
+				4523724020CAA6B400156C58 /* ltalloc.h */,
 				45ECB75A206D00D100CF9E7F /* arraylist.c */,
 				45ECB76D206D00D300CF9E7F /* arraylist.h */,
 				45ECB75B206D00D100CF9E7F /* bytebuf.c */,
@@ -299,6 +301,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				45ECB78E206D00F900CF9E7F /* jvm.c in Sources */,
+				4523724120CAA6B400156C58 /* ltalloc.c in Sources */,
 				45ECB777206D00D300CF9E7F /* hashtable.c in Sources */,
 				45ECB76E206D00D300CF9E7F /* arraylist.c in Sources */,
 				45ECB775206D00D300CF9E7F /* utf8_string.c in Sources */,
@@ -313,7 +316,6 @@
 				45ECB791206D00F900CF9E7F /* interpreter.c in Sources */,
 				457248E22020AAC600349683 /* main.swift in Sources */,
 				45ECB799206D011300CF9E7F /* miniz_wrapper.c in Sources */,
-				4523723E20CA4D8300156C58 /* ltalloc.cc in Sources */,
 				457248EB2020ABE200349683 /* invoke.c in Sources */,
 				45ECB772206D00D300CF9E7F /* spinlock.c in Sources */,
 				45ECB78F206D00F900CF9E7F /* runtime.c in Sources */,
