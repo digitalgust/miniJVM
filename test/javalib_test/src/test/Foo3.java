@@ -6,10 +6,18 @@ import java.util.List;
 class Foo3 {
 
     public static void main(String args[]) {
-
+//        t5();
 //        t6();
         t7();
 //        t8();
+    }
+    
+    static char ch='\u9F08';
+    
+    static void t5(){
+        System.out.println(""+ch);
+        ch='\u9F09';
+        System.out.println(""+(int)ch);
     }
 
     static void t6() {
