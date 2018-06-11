@@ -37,6 +37,8 @@ set(GUI_SOURCE_FILES
 )
 
 set(MINI_JVM_SOURCE_FILES
+        ../../../mini_jvm/utils/ltalloc.h
+        ../../../mini_jvm/utils/ltalloc.c
         ../../../mini_jvm/utils/d_type.h
         ../../../mini_jvm/utils/d_utils.c
         ../../../mini_jvm/utils/arraylist.c
