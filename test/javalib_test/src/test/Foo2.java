@@ -270,24 +270,34 @@ class Foo2 {
         System.out.println("SA.sa1=" + SA.sa1);
         System.out.println("SA.sa2=" + SA.sa2);
     }
+    
+    void t16(){
+        int SIZE = 16 * 1024 * 1024;
+        int[] array=new int[SIZE];
+        int x=0;
+        for(int i=0;i<SIZE;i++){
+            x+=array[i];
+        }
+    }
 
     public static void main(String args[]) {
         Foo2 obj = new Foo2();
-        obj.t1();
-        obj.t2();
-        obj.t3();
-        obj.t4();
-        obj.t5();
-        obj.t6();
-        obj.t7();
-        obj.t8();
-        obj.t9();
-        obj.t10();
-        obj.t11();
-        obj.t12();
-        obj.t13();
-        obj.t14();
-        obj.t15();
+//        obj.t1();
+//        obj.t2();
+//        obj.t3();
+//        obj.t4();
+//        obj.t5();
+//        obj.t6();
+//        obj.t7();
+//        obj.t8();
+//        obj.t9();
+//        obj.t10();
+//        obj.t11();
+//        obj.t12();
+//        obj.t13();
+//        obj.t14();
+//        obj.t15();
+        obj.t16();
     }
 }
 
