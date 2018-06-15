@@ -270,14 +270,56 @@ class Foo2 {
         System.out.println("SA.sa1=" + SA.sa1);
         System.out.println("SA.sa2=" + SA.sa2);
     }
-    
-    void t16(){
+
+    void t16() {
         int SIZE = 16 * 1024 * 1024;
-        int[] array=new int[SIZE];
-        int x=0;
-        for(int i=0;i<SIZE;i++){
-            x+=array[i];
+        int[] array = new int[SIZE];
+        int x = 0;
+        for (int i = 0; i < SIZE; i++) {
+            x += array[i];
         }
+    }
+
+    void t17_sub(int n) {
+
+        int[] x = new int[n];
+        int[] y = new int[n];
+
+        for (int i = 0; i < n; i++) {
+            x[i] = i + 1;
+        }
+        for (int k = 0; k < 1000; k++) {
+            for (int i = n - 1; i >= 0; --i) {
+                y[i] += x[i];
+            }
+        }
+
+        System.out.println(y[0] + " " + y[n - 1]);
+    }
+
+    void t17() {
+        int n;
+        long start;
+        start = System.currentTimeMillis();
+        n = 1000;
+        t17_sub(1000);
+        System.out.println("n = " + n + " ," + (System.currentTimeMillis() - start));
+
+        start = System.currentTimeMillis();
+        n = 3000;
+        t17_sub(n);
+        System.out.println("n = " + n + " ," + (System.currentTimeMillis() - start));
+
+        start = System.currentTimeMillis();
+        n = 5000;
+        t17_sub(n);
+        System.out.println("n = " + n + " ," + (System.currentTimeMillis() - start));
+
+        start = System.currentTimeMillis();
+        n = 7000;
+        t17_sub(n);
+        System.out.println("n = " + n + " ," + (System.currentTimeMillis() - start));
+
     }
 
     public static void main(String args[]) {
@@ -297,7 +339,8 @@ class Foo2 {
 //        obj.t13();
 //        obj.t14();
 //        obj.t15();
-        obj.t16();
+//        obj.t16();
+        obj.t17();
     }
 }
 
