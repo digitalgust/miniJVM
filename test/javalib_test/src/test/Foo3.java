@@ -104,7 +104,7 @@ class Foo3 {
             String a = "abc";
             String b = "def";
             c = a + b;
-            //list.add(c);
+            list.add(c);
             if (i % PRINT_COUNT == 0) {
                 System.out.println("main i=" + i);
             }
