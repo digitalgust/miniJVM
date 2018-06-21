@@ -1,5 +1,4 @@
-mini_jvm/cmake-build-debug/
-mini_jvm/cmake-build-release/
+mini_jvm/cmake*
 
 javalib/build/
 javalib/dist/
