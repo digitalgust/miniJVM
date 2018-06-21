@@ -9,7 +9,7 @@
 
   * Jvm Build pass: iOS / Android / mingww64 32 64bit / cygwin / MSVC 32 64bit / MacOS /  Linux  .   
   * No dependence Library .  
-  * No jit but good performance, about 1/3 - 1/5 jit.   
+  * No jit but good performance, the fastest interpreter.   
   * Jvm runtime classlib ported from CLDC1.1 (Extended) .  
   * Support java5/6/7/8 class file version (but not support lamdba annotation ) .  
   * Thread supported .  
