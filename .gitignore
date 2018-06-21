@@ -1,3 +1,5 @@
+.idea
+cmake*
 mini_jvm/cmake*
 
 javalib/build/
