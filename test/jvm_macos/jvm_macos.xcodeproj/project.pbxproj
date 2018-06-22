@@ -14,11 +14,10 @@
 		457248EB2020ABE200349683 /* invoke.c in Sources */ = {isa = PBXBuildFile; fileRef = 457248EA2020ABE200349683 /* invoke.c */; };
 		457249342020AFAA00349683 /* libc.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 457249332020AFAA00349683 /* libc.tbd */; };
 		457249362020AFB400349683 /* libpthread.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 457249352020AFB400349683 /* libpthread.tbd */; };
+		45EAB02020DC9DE200896201 /* d_type.c in Sources */ = {isa = PBXBuildFile; fileRef = 45EAB01D20DC9DE100896201 /* d_type.c */; };
+		45EAB02120DC9DE200896201 /* miniz_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 45EAB01E20DC9DE200896201 /* miniz_wrapper.c */; };
 		45ECB76E206D00D300CF9E7F /* arraylist.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB75A206D00D100CF9E7F /* arraylist.c */; };
 		45ECB76F206D00D300CF9E7F /* bytebuf.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB75B206D00D100CF9E7F /* bytebuf.c */; };
-		45ECB770206D00D300CF9E7F /* pairlist.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB75E206D00D200CF9E7F /* pairlist.c */; };
-		45ECB771206D00D300CF9E7F /* d_utils.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB75F206D00D200CF9E7F /* d_utils.c */; };
-		45ECB772206D00D300CF9E7F /* spinlock.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB760206D00D200CF9E7F /* spinlock.c */; };
 		45ECB773206D00D300CF9E7F /* hashset.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB762206D00D200CF9E7F /* hashset.c */; };
 		45ECB774206D00D300CF9E7F /* tinycthread.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB763206D00D200CF9E7F /* tinycthread.c */; };
 		45ECB775206D00D300CF9E7F /* utf8_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB765206D00D300CF9E7F /* utf8_string.c */; };
@@ -36,7 +35,6 @@
 		45ECB794206D00FA00CF9E7F /* java_native_reflect.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB787206D00F900CF9E7F /* java_native_reflect.c */; };
 		45ECB795206D00FA00CF9E7F /* class.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB788206D00F900CF9E7F /* class.c */; };
 		45ECB796206D00FA00CF9E7F /* java_native_io.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB78A206D00F900CF9E7F /* java_native_io.c */; };
-		45ECB799206D011300CF9E7F /* miniz_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB797206D011300CF9E7F /* miniz_wrapper.c */; };
 		45ECB7A2206D01C200CF9E7F /* gui.cfg in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45ECB7A1206D01B000CF9E7F /* gui.cfg */; };
 		45ECB7A3206D01C700CF9E7F /* libjnitest.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45ECB79C206D017900CF9E7F /* libjnitest.dylib */; };
 		45ECB7A4206D01CC00CF9E7F /* libgui.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45ECB79E206D017A00CF9E7F /* libgui.dylib */; };
@@ -71,14 +69,14 @@
 		457249332020AFAA00349683 /* libc.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libc.tbd; path = usr/lib/libc.tbd; sourceTree = SDKROOT; };
 		457249352020AFB400349683 /* libpthread.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libpthread.tbd; path = usr/lib/libpthread.tbd; sourceTree = SDKROOT; };
 		457249962020B71500349683 /* libgui.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgui.dylib; path = "../jni_gui/cmake-build-debug/libgui.dylib"; sourceTree = "<group>"; };
+		45EAB01D20DC9DE100896201 /* d_type.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = d_type.c; path = ../../mini_jvm/utils/d_type.c; sourceTree = "<group>"; };
+		45EAB01E20DC9DE200896201 /* miniz_wrapper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = miniz_wrapper.c; path = ../../mini_jvm/utils/miniz_wrapper.c; sourceTree = "<group>"; };
+		45EAB01F20DC9DE200896201 /* miniz_wrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = miniz_wrapper.h; path = ../../mini_jvm/utils/miniz_wrapper.h; sourceTree = "<group>"; };
 		45ECB759206D00D100CF9E7F /* pairlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pairlist.h; path = ../../mini_jvm/utils/pairlist.h; sourceTree = "<group>"; };
 		45ECB75A206D00D100CF9E7F /* arraylist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = arraylist.c; path = ../../mini_jvm/utils/arraylist.c; sourceTree = "<group>"; };
 		45ECB75B206D00D100CF9E7F /* bytebuf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bytebuf.c; path = ../../mini_jvm/utils/bytebuf.c; sourceTree = "<group>"; };
 		45ECB75C206D00D200CF9E7F /* d_type.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = d_type.h; path = ../../mini_jvm/utils/d_type.h; sourceTree = "<group>"; };
 		45ECB75D206D00D200CF9E7F /* linkedlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = linkedlist.h; path = ../../mini_jvm/utils/linkedlist.h; sourceTree = "<group>"; };
-		45ECB75E206D00D200CF9E7F /* pairlist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pairlist.c; path = ../../mini_jvm/utils/pairlist.c; sourceTree = "<group>"; };
-		45ECB75F206D00D200CF9E7F /* d_utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = d_utils.c; path = ../../mini_jvm/utils/d_utils.c; sourceTree = "<group>"; };
-		45ECB760206D00D200CF9E7F /* spinlock.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = spinlock.c; path = ../../mini_jvm/utils/spinlock.c; sourceTree = "<group>"; };
 		45ECB761206D00D200CF9E7F /* hashset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hashset.h; path = ../../mini_jvm/utils/hashset.h; sourceTree = "<group>"; };
 		45ECB762206D00D200CF9E7F /* hashset.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = hashset.c; path = ../../mini_jvm/utils/hashset.c; sourceTree = "<group>"; };
 		45ECB763206D00D200CF9E7F /* tinycthread.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tinycthread.c; path = ../../mini_jvm/utils/tinycthread.c; sourceTree = "<group>"; };
@@ -111,8 +109,6 @@
 		45ECB788206D00F900CF9E7F /* class.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = class.c; path = ../../mini_jvm/jvm/class.c; sourceTree = "<group>"; };
 		45ECB789206D00F900CF9E7F /* jdwp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = jdwp.h; path = ../../mini_jvm/jvm/jdwp.h; sourceTree = "<group>"; };
 		45ECB78A206D00F900CF9E7F /* java_native_io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = java_native_io.c; path = ../../mini_jvm/jvm/java_native_io.c; sourceTree = "<group>"; };
-		45ECB797206D011300CF9E7F /* miniz_wrapper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = miniz_wrapper.c; path = ../../mini_jvm/utils/miniz/miniz_wrapper.c; sourceTree = "<group>"; };
-		45ECB798206D011300CF9E7F /* miniz_wrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = miniz_wrapper.h; path = ../../mini_jvm/utils/miniz/miniz_wrapper.h; sourceTree = "<group>"; };
 		45ECB79C206D017900CF9E7F /* libjnitest.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libjnitest.dylib; path = ../../binary/macos/libjnitest.dylib; sourceTree = "<group>"; };
 		45ECB79E206D017A00CF9E7F /* libgui.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgui.dylib; path = ../../binary/macos/libgui.dylib; sourceTree = "<group>"; };
 		45ECB7A1206D01B000CF9E7F /* gui.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gui.cfg; sourceTree = "<group>"; };
@@ -131,15 +127,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		45516816206A62610026A296 /* miniz */ = {
-			isa = PBXGroup;
-			children = (
-				45ECB797206D011300CF9E7F /* miniz_wrapper.c */,
-				45ECB798206D011300CF9E7F /* miniz_wrapper.h */,
-			);
-			name = miniz;
-			sourceTree = "<group>";
-		};
 		457248D52020AAC600349683 = {
 			isa = PBXGroup;
 			children = (
@@ -203,6 +190,9 @@
 		4572490F2020AD8000349683 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				45EAB01D20DC9DE100896201 /* d_type.c */,
+				45EAB01E20DC9DE200896201 /* miniz_wrapper.c */,
+				45EAB01F20DC9DE200896201 /* miniz_wrapper.h */,
 				4523723F20CAA6B400156C58 /* ltalloc.c */,
 				4523724020CAA6B400156C58 /* ltalloc.h */,
 				45ECB75A206D00D100CF9E7F /* arraylist.c */,
@@ -210,7 +200,6 @@
 				45ECB75B206D00D100CF9E7F /* bytebuf.c */,
 				45ECB768206D00D300CF9E7F /* bytebuf.h */,
 				45ECB75C206D00D200CF9E7F /* d_type.h */,
-				45ECB75F206D00D200CF9E7F /* d_utils.c */,
 				45ECB769206D00D300CF9E7F /* dirent_win.h */,
 				45ECB762206D00D200CF9E7F /* hashset.c */,
 				45ECB761206D00D200CF9E7F /* hashset.h */,
@@ -218,15 +207,12 @@
 				45ECB766206D00D300CF9E7F /* hashtable.h */,
 				45ECB767206D00D300CF9E7F /* linkedlist.c */,
 				45ECB75D206D00D200CF9E7F /* linkedlist.h */,
-				45ECB75E206D00D200CF9E7F /* pairlist.c */,
 				45ECB759206D00D100CF9E7F /* pairlist.h */,
-				45ECB760206D00D200CF9E7F /* spinlock.c */,
 				45ECB76B206D00D300CF9E7F /* spinlock.h */,
 				45ECB763206D00D200CF9E7F /* tinycthread.c */,
 				45ECB764206D00D200CF9E7F /* tinycthread.h */,
 				45ECB765206D00D300CF9E7F /* utf8_string.c */,
 				45ECB76A206D00D300CF9E7F /* utf8_string.h */,
-				45516816206A62610026A296 /* miniz */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -308,16 +294,13 @@
 				45ECB792206D00F900CF9E7F /* garbage.c in Sources */,
 				45ECB793206D00FA00CF9E7F /* jvm_util.c in Sources */,
 				45ECB795206D00FA00CF9E7F /* class.c in Sources */,
-				45ECB770206D00D300CF9E7F /* pairlist.c in Sources */,
 				45ECB76F206D00D300CF9E7F /* bytebuf.c in Sources */,
-				45ECB771206D00D300CF9E7F /* d_utils.c in Sources */,
 				45ECB78C206D00F900CF9E7F /* java_native_std.c in Sources */,
 				45ECB790206D00F900CF9E7F /* class_load.c in Sources */,
 				45ECB791206D00F900CF9E7F /* interpreter.c in Sources */,
 				457248E22020AAC600349683 /* main.swift in Sources */,
-				45ECB799206D011300CF9E7F /* miniz_wrapper.c in Sources */,
+				45EAB02120DC9DE200896201 /* miniz_wrapper.c in Sources */,
 				457248EB2020ABE200349683 /* invoke.c in Sources */,
-				45ECB772206D00D300CF9E7F /* spinlock.c in Sources */,
 				45ECB78F206D00F900CF9E7F /* runtime.c in Sources */,
 				45ECB774206D00D300CF9E7F /* tinycthread.c in Sources */,
 				45ECB78D206D00F900CF9E7F /* jdwp.c in Sources */,
@@ -325,6 +308,7 @@
 				45ECB773206D00D300CF9E7F /* hashset.c in Sources */,
 				45ECB78B206D00F900CF9E7F /* global.c in Sources */,
 				45ECB776206D00D300CF9E7F /* linkedlist.c in Sources */,
+				45EAB02020DC9DE200896201 /* d_type.c in Sources */,
 				45ECB796206D00FA00CF9E7F /* java_native_io.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

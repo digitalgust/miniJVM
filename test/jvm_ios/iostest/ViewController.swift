@@ -33,7 +33,7 @@ class ViewController: UIViewController {
         //设置按钮位置和大小
         button.frame = CGRect(x:0, y:screenSize.height-50, width:screenSize.width, height:50)
         //设置按钮文字
-        button.setTitle("show log", for:.normal)
+        button.setTitle("Restart", for:.normal)
         self.view.addSubview(button)
         button.addTarget(self, action:#selector(tapped(_:)), for:.touchUpInside)
         
@@ -60,8 +60,9 @@ class ViewController: UIViewController {
     
     @objc func tapped(_ button:UIButton){
         print(button.title(for: .normal))
-        //tv.text = "start..."
-        show_output()
+        
+        tv.text = "start..."
+        execjvm()
     }
     
     @objc func execjvm()    {
@@ -69,6 +70,7 @@ class ViewController: UIViewController {
         let mainBundle = Bundle.main.bundlePath
         let app_path=mainBundle.cString(using: String.Encoding.utf8)
         call_jvm(UnsafeMutablePointer<Int8>(mutating: app_path));
+        show_output();
     }
 
     

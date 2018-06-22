@@ -40,7 +40,7 @@ set(MINI_JVM_SOURCE_FILES
         ../../../mini_jvm/utils/ltalloc.h
         ../../../mini_jvm/utils/ltalloc.c
         ../../../mini_jvm/utils/d_type.h
-        ../../../mini_jvm/utils/d_utils.c
+        ../../../mini_jvm/utils/d_type.c
         ../../../mini_jvm/utils/arraylist.c
         ../../../mini_jvm/utils/arraylist.h
         ../../../mini_jvm/utils/hashtable.c
@@ -78,8 +78,8 @@ set(MINI_JVM_SOURCE_FILES
         ../../../mini_jvm/utils/spinlock.h
         ../../../mini_jvm/utils/bytebuf.c
         ../../../mini_jvm/utils/bytebuf.h
-        ../../../mini_jvm/utils/miniz/miniz_wrapper.c
-        ../../../mini_jvm/utils/miniz/miniz_wrapper.h
+        ../../../mini_jvm/utils/miniz_wrapper.c
+        ../../../mini_jvm/utils/miniz_wrapper.h
         ../../../mini_jvm/utils/dirent_win.h)
 
 
