@@ -4,4 +4,5 @@
 
 #include "../../../mini_jvm/jvm/jvm.h"
 
+void print_stack();
 int call_jvm(char* app_path) ;

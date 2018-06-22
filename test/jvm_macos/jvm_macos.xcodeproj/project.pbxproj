@@ -16,6 +16,7 @@
 		457249362020AFB400349683 /* libpthread.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 457249352020AFB400349683 /* libpthread.tbd */; };
 		45EAB02020DC9DE200896201 /* d_type.c in Sources */ = {isa = PBXBuildFile; fileRef = 45EAB01D20DC9DE100896201 /* d_type.c */; };
 		45EAB02120DC9DE200896201 /* miniz_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 45EAB01E20DC9DE200896201 /* miniz_wrapper.c */; };
+		45EAB02820DCDC2300896201 /* pcallstack.m in Sources */ = {isa = PBXBuildFile; fileRef = 45EAB02720DCDC2300896201 /* pcallstack.m */; };
 		45ECB76E206D00D300CF9E7F /* arraylist.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB75A206D00D100CF9E7F /* arraylist.c */; };
 		45ECB76F206D00D300CF9E7F /* bytebuf.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB75B206D00D100CF9E7F /* bytebuf.c */; };
 		45ECB773206D00D300CF9E7F /* hashset.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB762206D00D200CF9E7F /* hashset.c */; };
@@ -72,6 +73,7 @@
 		45EAB01D20DC9DE100896201 /* d_type.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = d_type.c; path = ../../mini_jvm/utils/d_type.c; sourceTree = "<group>"; };
 		45EAB01E20DC9DE200896201 /* miniz_wrapper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = miniz_wrapper.c; path = ../../mini_jvm/utils/miniz_wrapper.c; sourceTree = "<group>"; };
 		45EAB01F20DC9DE200896201 /* miniz_wrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = miniz_wrapper.h; path = ../../mini_jvm/utils/miniz_wrapper.h; sourceTree = "<group>"; };
+		45EAB02720DCDC2300896201 /* pcallstack.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = pcallstack.m; sourceTree = "<group>"; };
 		45ECB759206D00D100CF9E7F /* pairlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pairlist.h; path = ../../mini_jvm/utils/pairlist.h; sourceTree = "<group>"; };
 		45ECB75A206D00D100CF9E7F /* arraylist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = arraylist.c; path = ../../mini_jvm/utils/arraylist.c; sourceTree = "<group>"; };
 		45ECB75B206D00D100CF9E7F /* bytebuf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bytebuf.c; path = ../../mini_jvm/utils/bytebuf.c; sourceTree = "<group>"; };
@@ -157,6 +159,7 @@
 				457248E12020AAC600349683 /* main.swift */,
 				457248EA2020ABE200349683 /* invoke.c */,
 				457248E82020ABE100349683 /* jvm_macos-Bridging-Header.h */,
+				45EAB02720DCDC2300896201 /* pcallstack.m */,
 			);
 			path = jvm_macos;
 			sourceTree = "<group>";
@@ -306,6 +309,7 @@
 				45ECB78D206D00F900CF9E7F /* jdwp.c in Sources */,
 				45ECB794206D00FA00CF9E7F /* java_native_reflect.c in Sources */,
 				45ECB773206D00D300CF9E7F /* hashset.c in Sources */,
+				45EAB02820DCDC2300896201 /* pcallstack.m in Sources */,
 				45ECB78B206D00F900CF9E7F /* global.c in Sources */,
 				45ECB776206D00D300CF9E7F /* linkedlist.c in Sources */,
 				45EAB02020DC9DE200896201 /* d_type.c in Sources */,

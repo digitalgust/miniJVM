@@ -5,8 +5,8 @@
  */
 package org.mini.gui;
 
-import javax.mini.reflect.Array;
-import javax.mini.reflect.vm.RefNative;
+import org.mini.reflect.Array;
+import org.mini.reflect.vm.RefNative;
 import org.mini.nanovg.Gutil;
 
 /**

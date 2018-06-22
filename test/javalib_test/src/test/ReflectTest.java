@@ -6,9 +6,9 @@
 package test;
 
 
-import javax.mini.reflect.Method;
-import javax.mini.reflect.ReflectClass;
-import javax.mini.reflect.vm.RefNative;
+import org.mini.reflect.Method;
+import org.mini.reflect.ReflectClass;
+import org.mini.reflect.vm.RefNative;
 
 /**
  *

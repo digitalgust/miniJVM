@@ -6,7 +6,7 @@
 package org.mini.nanovg;
 
 import java.io.UnsupportedEncodingException;
-import javax.mini.reflect.MemAccess;
+import org.mini.reflect.MemAccess;
 import org.mini.gl.GL;
 import static org.mini.gl.GL.GL_CLAMP_TO_EDGE;
 import static org.mini.gl.GL.GL_LINEAR_MIPMAP_NEAREST;

@@ -6,8 +6,8 @@
 package org.mini.gui;
 
 import java.util.Hashtable;
-import javax.mini.reflect.Array;
-import javax.mini.reflect.vm.RefNative;
+import org.mini.reflect.Array;
+import org.mini.reflect.vm.RefNative;
 import org.mini.glfm.Glfm;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
