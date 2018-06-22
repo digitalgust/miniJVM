@@ -60,9 +60,6 @@
     <ClCompile Include="..\..\mini_jvm\utils\bytebuf.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\mini_jvm\utils\d_utils.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\mini_jvm\utils\hashset.c">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -72,15 +69,6 @@
     <ClCompile Include="..\..\mini_jvm\utils\linkedlist.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\mini_jvm\utils\miniz\miniz_wrapper.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\mini_jvm\utils\pairlist.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\mini_jvm\utils\spinlock.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\mini_jvm\utils\tinycthread.c">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -88,6 +76,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\mini_jvm\utils\ltalloc.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\mini_jvm\utils\d_type.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\mini_jvm\utils\miniz_wrapper.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -134,9 +128,6 @@
     <ClInclude Include="..\..\mini_jvm\utils\linkedlist.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\mini_jvm\utils\miniz\miniz_wrapper.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\mini_jvm\utils\pairlist.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -150,6 +141,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\mini_jvm\utils\utf8_string.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\mini_jvm\utils\miniz_wrapper.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -48,7 +48,6 @@ set(MINI_JVM_SOURCE_FILES
         ../../../mini_jvm/utils/utf8_string.c
         ../../../mini_jvm/utils/utf8_string.h
         ../../../mini_jvm/utils/pairlist.h
-        ../../../mini_jvm/utils/pairlist.c
         ../../../mini_jvm/utils/hashset.c
         ../../../mini_jvm/utils/hashset.h
         ../../../mini_jvm/jvm/jvm.h
@@ -74,7 +73,6 @@ set(MINI_JVM_SOURCE_FILES
         ../../../mini_jvm/utils/tinycthread.c
         ../../../mini_jvm/utils/linkedlist.c
         ../../../mini_jvm/utils/linkedlist.h
-        ../../../mini_jvm/utils/spinlock.c
         ../../../mini_jvm/utils/spinlock.h
         ../../../mini_jvm/utils/bytebuf.c
         ../../../mini_jvm/utils/bytebuf.h

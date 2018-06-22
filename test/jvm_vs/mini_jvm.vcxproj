@@ -160,14 +160,12 @@
     <ClCompile Include="..\..\mini_jvm\main.c" />
     <ClCompile Include="..\..\mini_jvm\utils\arraylist.c" />
     <ClCompile Include="..\..\mini_jvm\utils\bytebuf.c" />
-    <ClCompile Include="..\..\mini_jvm\utils\d_utils.c" />
+    <ClCompile Include="..\..\mini_jvm\utils\d_type.c" />
     <ClCompile Include="..\..\mini_jvm\utils\hashset.c" />
     <ClCompile Include="..\..\mini_jvm\utils\hashtable.c" />
     <ClCompile Include="..\..\mini_jvm\utils\linkedlist.c" />
     <ClCompile Include="..\..\mini_jvm\utils\ltalloc.c" />
-    <ClCompile Include="..\..\mini_jvm\utils\miniz\miniz_wrapper.c" />
-    <ClCompile Include="..\..\mini_jvm\utils\pairlist.c" />
-    <ClCompile Include="..\..\mini_jvm\utils\spinlock.c" />
+    <ClCompile Include="..\..\mini_jvm\utils\miniz_wrapper.c" />
     <ClCompile Include="..\..\mini_jvm\utils\tinycthread.c" />
     <ClCompile Include="..\..\mini_jvm\utils\utf8_string.c" />
   </ItemGroup>
@@ -186,7 +184,7 @@
     <ClInclude Include="..\..\mini_jvm\utils\hashset.h" />
     <ClInclude Include="..\..\mini_jvm\utils\hashtable.h" />
     <ClInclude Include="..\..\mini_jvm\utils\linkedlist.h" />
-    <ClInclude Include="..\..\mini_jvm\utils\miniz\miniz_wrapper.h" />
+    <ClInclude Include="..\..\mini_jvm\utils\miniz_wrapper.h" />
     <ClInclude Include="..\..\mini_jvm\utils\pairlist.h" />
     <ClInclude Include="..\..\mini_jvm\utils\spinlock.h" />
     <ClInclude Include="..\..\mini_jvm\utils\thread.h" />
