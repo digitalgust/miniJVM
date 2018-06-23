@@ -5,6 +5,7 @@
  */
 package test;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import org.mini.reflect.vm.RefNative;
 
@@ -22,17 +23,36 @@ public class ReflectTest {
     }
 
     void t1() {
-
-        Class ref = "".getClass();
-        System.out.println("ref.name=" + ref.getName());
         try {
+            System.out.println(int.class == Integer.TYPE);
+            System.out.println(int.class.equals(Integer.TYPE));
+            System.out.println(Integer.class.equals(Integer.TYPE));
+            
+            int[] arr = new int[5];
+            System.out.println("arr.name:" + arr.getClass().getName());
+            System.out.println("type:" + arr.getClass().isArray());
+
+            Class ref = "".getClass();
+            System.out.println("ref.name=" + ref.getName());
+
+            Constructor<String> con = ref.getConstructor(String.class);
+            String cs = con.newInstance("testpara constructor");
+            System.out.println("cs=" + cs);
+            
+            Method method = String.class.getMethod("getChars", Integer.TYPE,Integer.TYPE,char[].class,Integer.TYPE);
+            Class[] para = method.getParameterTypes();
+            for (Class p : para) {
+                System.out.println("para:" + p);
+            }
+            System.out.println("return:" + method.getReturnType());
+
             System.out.println(new Long(0).getClass().toString());
             String s = (String) ref.newInstance();
             System.out.println(s);
             s += "abcd";
-            Method m = ref.getMethod("indexOf", new Class[]{java.lang.String.class, java.lang.Integer.class});
+            Method m = ref.getMethod("indexOf", new Class[]{java.lang.String.class, java.lang.Integer.TYPE});
             if (m != null) {
-                Object result = m.invoke(s, new Object[]{"cd", new Integer(1)});
+                Object result = m.invoke(s, new Object[]{"cd", 1});
                 System.out.println("reflect invoke result:" + result);
             } else {
                 System.out.println("method not found.");
