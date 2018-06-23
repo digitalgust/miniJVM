@@ -5,6 +5,7 @@
  */
 package test;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import org.mini.reflect.vm.RefNative;
@@ -27,7 +28,19 @@ public class ReflectTest {
             System.out.println(int.class == Integer.TYPE);
             System.out.println(int.class.equals(Integer.TYPE));
             System.out.println(Integer.class.equals(Integer.TYPE));
+
+            int[][][][] refarr = (int[][][][])Array.newInstance(int[].class, new int[]{2, 2, 2});
+            refarr[1][1][1]=new int[1];
+            refarr[1][1][1][0]=9;
+            System.out.println("refarr[1][1][1][0]="+refarr[1][1][1][0]);
             
+            System.out.println("refarr=" + refarr);
+
+            String[][] refarr1 = (String[][])Array.newInstance(String.class, new int[]{2, 2});
+            System.out.println("refarr1=" + refarr1);
+            refarr1[1][1]="here you are";
+            System.out.println("refarr1[1][1]="+refarr1[1][1]);
+
             int[] arr = new int[5];
             System.out.println("arr.name:" + arr.getClass().getName());
             System.out.println("type:" + arr.getClass().isArray());
@@ -38,8 +51,8 @@ public class ReflectTest {
             Constructor<String> con = ref.getConstructor(String.class);
             String cs = con.newInstance("testpara constructor");
             System.out.println("cs=" + cs);
-            
-            Method method = String.class.getMethod("getChars", Integer.TYPE,Integer.TYPE,char[].class,Integer.TYPE);
+
+            Method method = String.class.getMethod("getChars", Integer.TYPE, Integer.TYPE, char[].class, Integer.TYPE);
             Class[] para = method.getParameterTypes();
             for (Class p : para) {
                 System.out.println("para:" + p);
