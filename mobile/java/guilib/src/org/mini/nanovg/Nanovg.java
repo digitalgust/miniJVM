@@ -71,6 +71,7 @@ public class Nanovg {
     public static native void stbtt_GetCodepointHMetrics(long pinfo, int pcodepoint, int[] padvanceWidth, int[] pleftSideBearing); //const stbtt_fontinfo*/*ptr*/,int,int*,int*, //void
     public static native int stbtt_GetCodepointKernAdvance(long pinfo, int pch1, int pch2); //const stbtt_fontinfo*/*ptr*/,int,int, //int
     public static native byte[]  stbtt_MakeFontInfo(); // //struct stbtt_fontinfo/*none_ptr*/ 
+    public static native byte access_mem(long pptr); //stbi_uc*/*ptr*/, //stbi_uc
     public static native int stbi_write_png(byte[] pfilename, int pw, int ph, int pcomp, long pdata, int pstride_in_bytes); //char const*,int,int,int,const void*/*ptr*/,int, //int
     public static native int stbi_write_bmp(byte[] pfilename, int pw, int ph, int pcomp, long pdata); //char const*,int,int,int,const void*/*ptr*/, //int
     public static native int stbi_write_tga(byte[] pfilename, int pw, int ph, int pcomp, long pdata); //char const*,int,int,int,const void*/*ptr*/, //int

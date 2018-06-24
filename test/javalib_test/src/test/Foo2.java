@@ -322,6 +322,24 @@ class Foo2 {
 
     }
 
+    static int ca;
+    int ia;
+
+    void t18() {
+        int b;
+        for (int i = 0; i < 100000000; i++) {
+            ca = i;
+            ia = ca;
+            b = ia;
+        }
+    }
+
+    void t19() {
+        Class c = int.class;
+        System.out.println("name = " + c.getName());
+        System.out.println("name=" + Integer.class);
+    }
+
     public static void main(String args[]) {
         Foo2 obj = new Foo2();
 //        obj.t1();
@@ -340,7 +358,9 @@ class Foo2 {
 //        obj.t14();
 //        obj.t15();
 //        obj.t16();
-        obj.t17();
+//        obj.t17();
+//        obj.t18();
+        obj.t19();
     }
 }
 

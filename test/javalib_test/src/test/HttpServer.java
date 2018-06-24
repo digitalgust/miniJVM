@@ -173,7 +173,7 @@ public class HttpServer {
     }
 
     void t18() {
-        String url = "http://baidu.com/";
+        String url = "http://360.cn/";
         System.out.println("Connect to :" + url);
         try {
             byte[] data = getViaContentConnection(url);

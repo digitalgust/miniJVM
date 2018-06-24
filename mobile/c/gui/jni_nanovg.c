@@ -201,6 +201,18 @@ int org_mini_nanovg_Nanovg_stbtt_MakeFontInfo(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+int org_mini_nanovg_Nanovg_access_mem(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    
+    intptr_t pptr = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
+
+    s8 ret_value = (s8)access_mem((stbi_uc*/*ptr*/)(pptr));
+    env->push_int(runtime->stack, ret_value);
+    
+    return 0;
+}
+
 int org_mini_nanovg_Nanovg_stbi_write_png(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
@@ -2228,6 +2240,7 @@ static java_native_method method_nanovg_table[] = {
 {"org/mini/nanovg/Nanovg",  "stbtt_GetCodepointHMetrics",  "(JI[I[I)V",  org_mini_nanovg_Nanovg_stbtt_GetCodepointHMetrics},
 {"org/mini/nanovg/Nanovg",  "stbtt_GetCodepointKernAdvance",  "(JII)I",  org_mini_nanovg_Nanovg_stbtt_GetCodepointKernAdvance},
 {"org/mini/nanovg/Nanovg",  "stbtt_MakeFontInfo",  "()[B",  org_mini_nanovg_Nanovg_stbtt_MakeFontInfo},
+{"org/mini/nanovg/Nanovg",  "access_mem",  "(J)B",  org_mini_nanovg_Nanovg_access_mem},
 {"org/mini/nanovg/Nanovg",  "stbi_write_png",  "([BIIIJI)I",  org_mini_nanovg_Nanovg_stbi_write_png},
 {"org/mini/nanovg/Nanovg",  "stbi_write_bmp",  "([BIIIJ)I",  org_mini_nanovg_Nanovg_stbi_write_bmp},
 {"org/mini/nanovg/Nanovg",  "stbi_write_tga",  "([BIIIJ)I",  org_mini_nanovg_Nanovg_stbi_write_tga},

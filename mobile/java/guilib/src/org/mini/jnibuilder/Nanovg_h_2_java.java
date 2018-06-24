@@ -65,7 +65,7 @@ public class Nanovg_h_2_java {
     static public String[] ARR_INT_TYPE = {"int*", "const int*", "nk_size*", "nk_flags*", "enum nk_collapse_states*", "nk_uint*", "const nk_uint*", "nk_scroll*", "unsigned int*", "const int*", "const struct nk_color*", "struct nk_color*", "struct nk_scroll*",};
     static public String[] SHORT_TYPE = {"short", "nk_short", "short", "nk_ushort", "unsigned short"};
     static public String[] ARR_SHORT_TYPE = {"short*", "nk_vec2i*", "nk_recti*",};
-    static public String[] BYTE_TYPE = {"nk_byte", "char", "nk_char", "unsigned char",};
+    static public String[] BYTE_TYPE = {"nk_byte", "char", "nk_char", "unsigned char", "stbi_uc"};
     static public String[] ARR_BYTE_TYPE = {"nk_byte*", "const nk_byte*", ""};
     static public String[] STRING_TYPE = {"char*", "char*", "const char*", "const char*", "char const*", "char const*", "unsigned char*", "const unsigned char*", "NK_PRINTF_FORMAT_STRING const char*", "",};
     static public String[] ARR_STRING_TYPE = {"char**", "char**", "const char**", "const char**", "char const**", "char const**",};
@@ -278,7 +278,9 @@ public class Nanovg_h_2_java {
                     //
                     mtype = mtype.replace(" *", "*");
                     String nativeReturnCode = mtype;
-                    if (Util.isTypes(INT_TYPE, mtype)) {
+                    if (Util.isTypes(BYTE_TYPE, mtype)) {
+                        javaReturnCode = "byte";
+                    } else if (Util.isTypes(INT_TYPE, mtype)) {
                         javaReturnCode = "int";
                     } else if (Util.isTypes(ARR_INT_TYPE, mtype)) {
                         javaReturnCode = "int[]";

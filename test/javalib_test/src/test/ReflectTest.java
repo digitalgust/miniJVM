@@ -52,7 +52,7 @@ public class ReflectTest {
             String cs = con.newInstance("testpara constructor");
             System.out.println("cs=" + cs);
 
-            Method method = String.class.getMethod("getChars", Integer.TYPE, Integer.TYPE, char[].class, Integer.TYPE);
+            Method method = String.class.getMethod("getChars", int.class, int.class, char[].class, int.class);
             Class[] para = method.getParameterTypes();
             for (Class p : para) {
                 System.out.println("para:" + p);
@@ -63,7 +63,7 @@ public class ReflectTest {
             String s = (String) ref.newInstance();
             System.out.println(s);
             s += "abcd";
-            Method m = ref.getMethod("indexOf", new Class[]{java.lang.String.class, java.lang.Integer.TYPE});
+            Method m = ref.getMethod("indexOf", new Class[]{java.lang.String.class, int.class});
             if (m != null) {
                 Object result = m.invoke(s, new Object[]{"cd", 1});
                 System.out.println("reflect invoke result:" + result);

@@ -22,6 +22,8 @@ NUTIL_API int  stbtt_GetCodepointKernAdvance(const stbtt_fontinfo *info, int ch1
 
 NUTIL_API struct stbtt_fontinfo stbtt_MakeFontInfo();
 
+NUTIL_API stbi_uc access_mem(stbi_uc *ptr);
+
 NUTIL_API int stbi_write_png(char const *filename, int w, int h, int comp, const void *data, int stride_in_bytes);
 
 NUTIL_API int stbi_write_bmp(char const *filename, int w, int h, int comp, const void *data);
@@ -47,6 +49,10 @@ stbtt_MakeCodepointBitmapOffset(const stbtt_fontinfo *info, unsigned char *outpu
                                 int out_h, int out_stride, float scale_x, float scale_y, int codepoint) {
     stbtt_MakeCodepointBitmap(info, output + output_offset, out_w, out_h, out_stride, scale_x, scale_y,
                               codepoint);
+}
+
+NUTIL_API stbi_uc access_mem(stbi_uc *ptr){
+    return *ptr;
 }
 
 
