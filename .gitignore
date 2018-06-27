@@ -1,6 +1,7 @@
 .idea
 cmake*
 mini_jvm/cmake*
+jvm_rt
 
 javalib/build/
 javalib/dist/
