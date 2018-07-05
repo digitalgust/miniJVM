@@ -15,7 +15,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.util.Enumeration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import javax.mini.zip.Zip;
 
 /**
@@ -51,6 +57,25 @@ public class TestFile {
 
         Zip.putEntry("../tmp.zip", "aaa/sys.properties", b);
         Zip.putEntry("../tmp.zip", "bbb/sys.properties", b);
+
+    }
+
+    void t14() {
+        try {
+            ZipFile zipFile = new ZipFile("../lib/minijvm_rt.jar");
+            Enumeration e = zipFile.entries();
+            for (; e.hasMoreElements();) {
+                ZipEntry ze = (ZipEntry) e.nextElement();
+                System.out.println("entry:" + ze.getName());
+            }
+            ZipEntry ze = zipFile.getEntry("sys.properties");
+            InputStream is = zipFile.getInputStream(ze);
+            int ch;
+            while ((ch = is.read()) != -1) {
+                System.out.print((char) ch);
+            }
+        } catch (IOException ex) {
+        }
     }
 
     void t15() {
@@ -165,10 +190,11 @@ public class TestFile {
     public static void main(String[] args) {
         try {
             TestFile tf = new TestFile();
+            tf.t14();
 //            tf.t15();
 //            tf.t16();
 //            tf.t17();
-            tf.t18();
+//            tf.t18();
         } catch (Exception e) {
             e.printStackTrace();
         }

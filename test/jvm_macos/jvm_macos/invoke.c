@@ -11,6 +11,7 @@
 #include "jvm_macos-Bridging-Header.h"
 
 int call_jvm(char* app_path) {
+    
     s32 ret ;
     char path[512];
     memset(&path,0,512);
@@ -25,11 +26,14 @@ int call_jvm(char* app_path) {
     printf("classpath: %s\n",path);
     java_debug=0;
     ArrayList * java_para=arraylist_create(0);
-    ret= execute_jvm(path, "test/Foo1", java_para);
+//    ret= execute_jvm(path, "test/Foo1", java_para);
 //    ret= execute_jvm(path, "test/GuiTest", java_para);
 //    ret= execute_jvm(path, "test/BpDeepTest", java_para);
 //    ret= execute_jvm(path, "Sample", java_para);
+//    ret= execute_jvm(path, "test/ReflectTest", java_para);
+    ret= execute_jvm(path, "test/LambdaTest", java_para);
     arraylist_destory(java_para);
     return ret;
 }
+
 

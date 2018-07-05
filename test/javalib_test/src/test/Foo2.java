@@ -340,6 +340,31 @@ class Foo2 {
         System.out.println("name=" + Integer.class);
     }
 
+    void t20() {
+        //以空格分割
+        String str1 = "1 2 3          4 54       5 6";
+        String[] numbers = str1.split(" +");
+        for (String temp : numbers) {
+            System.out.println(temp);
+        }
+
+        // 替换，替换所有的数字为*
+        String str2 = "abd123:adad46587:asdadasadsfgi#%^^9090";
+        System.out.println(str2.replaceAll("[0-9]", "*"));
+        System.out.println(str2.replaceAll("\\d", "*"));
+
+        // 匹配匹配邮箱
+        String mail1 = "ababc@asa.com";
+        String mail2 = "ababc@asa.com.cn";
+        String mail3 = "ababc@asa";
+        //        String mainRegex = "[0-9a-zA-Z_]+@[0-9a-zA-Z_]++(\\.[0-9a-zA-Z_]+{2,4})+";
+        String mainRegex = "\\w+@\\w+(\\.\\w{2,4})+";
+
+        System.out.println(mail1.matches(mainRegex));//true
+        System.out.println(mail2.matches(mainRegex));//true
+        System.out.println(mail3.matches(mainRegex));//false
+    }
+
     public static void main(String args[]) {
         Foo2 obj = new Foo2();
 //        obj.t1();
@@ -360,7 +385,8 @@ class Foo2 {
 //        obj.t16();
 //        obj.t17();
 //        obj.t18();
-        obj.t19();
+//        obj.t19();
+        obj.t20();
     }
 }
 
