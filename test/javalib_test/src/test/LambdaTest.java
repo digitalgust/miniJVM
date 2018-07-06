@@ -5,7 +5,9 @@
  */
 package test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  *
@@ -15,10 +17,13 @@ public class LambdaTest {
 
     void t1() {
         String[] ss = new String[]{"one", "two", "three"};
-        int a = 9;
+        int a = 4;
         String ls = "local string";
         Arrays.asList(ss).forEach(s -> System.out.println(this + ":" + ls + a + ":" + s));
-        Arrays.asList(ss).forEach(s -> System.out.println(this + ":" + ls + a + ":" + s));
+        List<String> list = new ArrayList();
+        list.addAll(Arrays.asList(ss));
+        list.removeIf(s -> s.length() < a);
+        list.forEach(s -> System.out.println(":" + s));
     }
 
     public static void main(String args[]) {
