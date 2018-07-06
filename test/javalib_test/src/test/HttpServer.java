@@ -11,8 +11,8 @@ import java.io.IOException;
 import java.util.Calendar;
 import javax.cldc.io.Connector;
 import javax.cldc.io.ContentConnection;
-import java.net.ServerSocket;
-import java.net.Socket;
+import javax.mini.net.ServerSocket;
+import javax.mini.net.Socket;
 
 /**
  *

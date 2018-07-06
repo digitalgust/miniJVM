@@ -96,7 +96,7 @@ public class ReflectTest {
                 String s = "abcd";
                 s.indexOf("cd", 1);
                 Method m;
-                m = r.getMethod("indexOf", new Class[]{java.lang.String.class, java.lang.Integer.class});
+                m = r.getMethod("indexOf", new Class[]{java.lang.String.class, int.class});
                 if (m != null) {
                     Object result = m.invoke(s, new Object[]{"cd", 1});
                     System.out.println("reflect invoke result:" + result);
@@ -135,6 +135,7 @@ public class ReflectTest {
                     System.out.println("reflect invoke result:" + Long.toString((Long) result, 16));
                 }
             } catch (Exception ex) {
+                ex.printStackTrace();
             }
         }
     }
