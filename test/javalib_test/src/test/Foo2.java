@@ -364,6 +364,27 @@ class Foo2 {
         System.out.println(mail2.matches(mainRegex));//true
         System.out.println(mail3.matches(mainRegex));//false
     }
+    
+    enum COLOR{
+        RED,GREEN,BLUE
+    }
+    
+    enum RGB{
+        RED(0xff0000),
+        GREEN(0x00ff00),
+        BLUE(0x0000ff)
+        ;
+        
+        int argb;
+        RGB(int rgb){
+            this.argb=rgb;
+        }
+    }
+    
+    void t21(){
+        System.out.println(RGB.class+" "+RGB.RED);
+        System.out.println(COLOR.class+" "+COLOR.RED);
+    }
 
     public static void main(String args[]) {
         Foo2 obj = new Foo2();
@@ -386,7 +407,8 @@ class Foo2 {
 //        obj.t17();
 //        obj.t18();
 //        obj.t19();
-        obj.t20();
+//        obj.t20();
+        obj.t21();
     }
 }
 

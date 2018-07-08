@@ -16,14 +16,18 @@ import java.util.List;
 public class LambdaTest {
 
     void t1() {
-        String[] ss = new String[]{"one", "two", "three"};
-        int a = 4;
-        String ls = "local string";
-        Arrays.asList(ss).forEach(s -> System.out.println(this + ":" + ls + a + ":" + s));
-        List<String> list = new ArrayList();
-        list.addAll(Arrays.asList(ss));
-        list.removeIf(s -> s.length() < a);
-        list.forEach(s -> System.out.println(":" + s));
+        for (int i = 0; i < 100000; i++) {
+            String[] ss = new String[]{"one", "two", "three"};
+            int a = 4;
+            //String ls = "local string";
+            String[] c = new String[1];
+            Arrays.asList(ss).forEach(s -> {c[0] = (this + ":" + a + ":" + s);});
+            
+            List<String> list = new ArrayList();
+            list.addAll(Arrays.asList(ss));
+            list.removeIf(s -> s.length() < a);
+            list.forEach(s -> c[0] = (":" + s));
+        }
     }
 
     public static void main(String args[]) {
