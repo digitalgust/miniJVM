@@ -22,7 +22,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import javax.mini.zip.Zip;
+import org.mini.zip.Zip;
 
 /**
  *
@@ -50,7 +50,7 @@ public class TestFile {
     }
 
     void t13() {
-        byte[] b = javax.mini.zip.Zip.getEntry("../lib/minijvm_rt.jar", "sys.properties");
+        byte[] b = org.mini.zip.Zip.getEntry("../lib/minijvm_rt.jar", "sys.properties");
         for (int i = 0; i < b.length; i++) {
             System.out.print((char) b[i]);
         }
