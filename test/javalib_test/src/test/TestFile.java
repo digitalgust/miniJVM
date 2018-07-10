@@ -186,15 +186,25 @@ public class TestFile {
             ex.printStackTrace();
         }
     }
+    
+    void t19(){
+        File f=new File("../lib/minijvm_rt.jar");
+        System.out.println(f.getParent());
+        System.out.println(f.getName());
+        System.out.println(f.getAbsolutePath());
+        System.out.println(f.getAbsolutePath());
+        
+    }
 
     public static void main(String[] args) {
         try {
             TestFile tf = new TestFile();
-            tf.t14();
+//            tf.t14();
 //            tf.t15();
 //            tf.t16();
 //            tf.t17();
 //            tf.t18();
+            tf.t19();
         } catch (Exception e) {
             e.printStackTrace();
         }

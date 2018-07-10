@@ -167,8 +167,8 @@ public class Foo1 {
     }
 
     void t7() {
-        int MAX = 500000;
-        int PRINT_COUNT = 10000;
+        final int MAX = 500000;
+        final int PRINT_COUNT = 10000;
         Thread t = new Thread(new Runnable() {
             List<String> list = new ArrayList(MAX);
 
@@ -452,7 +452,7 @@ public class Foo1 {
             };
         };
 
-        T25 t25 = new T25();
+        final T25 t25 = new T25();
 
         new Thread(new Runnable() {
             @Override

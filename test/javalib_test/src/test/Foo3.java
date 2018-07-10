@@ -31,8 +31,8 @@ class Foo3 {
     }
 
     static void t7() {
-        int MAX = 500000;
-        int PRINT_COUNT = 10000;
+        final int MAX = 500000;
+        final int PRINT_COUNT = 10000;
         Thread t = new Thread(new Runnable() {
             List<String> list = new ArrayList(MAX);
 

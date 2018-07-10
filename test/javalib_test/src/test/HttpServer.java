@@ -34,7 +34,7 @@ public class HttpServer {
             @Override
             public void run() {
                 try {
-                    ServerSocket srvsock = (ServerSocket) Connector.open("serversocket://:8080");
+                    final ServerSocket srvsock = (ServerSocket) Connector.open("serversocket://:8080");
 
                     //建一个线程，过5秒钟关掉自己
                     new Thread(new Runnable() {

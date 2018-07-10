@@ -407,8 +407,8 @@ class Foo2 {
 //        obj.t17();
 //        obj.t18();
 //        obj.t19();
-//        obj.t20();
-        obj.t21();
+        obj.t20();
+//        obj.t21();
     }
 }
 
