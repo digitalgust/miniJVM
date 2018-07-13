@@ -192,8 +192,9 @@ public class TestFile {
         System.out.println(f.getParent());
         System.out.println(f.getName());
         System.out.println(f.getAbsolutePath());
-        System.out.println(f.getAbsolutePath());
         
+        System.out.println(File.pathSeparator);
+        System.out.println(File.separator);
     }
 
     public static void main(String[] args) {
