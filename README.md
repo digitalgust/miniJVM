@@ -84,9 +84,9 @@
    the compile command like :
 ```
 win:
-mini_jvm -cp ../lib/minijvm_rt.jar;../lib/janino.jar;../lib/commons-compiler.jar;../lib/ant-1.7,1.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
+mini_jvm -cp ../lib/minijvm_rt.jar;../lib/janino.jar;../lib/commons-compiler.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
 posix:
-./mini_jvm -cp ../lib/minijvm_rt.jar:../lib/janino.jar:../lib/commons-compiler.jar:../lib/ant-1.7,1.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
+./mini_jvm -cp ../lib/minijvm_rt.jar:../lib/janino.jar:../lib/commons-compiler.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
 ```
 
 Janion compiler [limitation](http://janino-compiler.github.io/janino/#limitations) ,example :
