@@ -83,10 +83,13 @@
    To compile java source file using the third soft Janino binary,  can see example in binary folder.   
    the compile command like :
 ```
+win:
+mini_jvm -cp ../lib/minijvm_rt.jar;../lib/janino.jar;../lib/commons-compiler.jar;../lib/ant-1.7,1.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
+posix:
 ./mini_jvm -cp ../lib/minijvm_rt.jar:../lib/janino.jar:../lib/commons-compiler.jar:../lib/ant-1.7,1.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
 ```
 
-Janion have some [limitation](http://janino-compiler.github.io/janino/#limitations) ,like :
+Janion compiler [limitation](http://janino-compiler.github.io/janino/#limitations) ,example :
 ```
 List<String> list=new ArrayList(); 
 list.add("abc");
