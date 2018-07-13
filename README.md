@@ -78,6 +78,21 @@
   Then you can setup breakpoint or pause mini_jvm and watch variable's value .  
   
 
+
+## Compile java source:  
+   To compile java source file using the third soft Janino binary,  can see example in binary folder.   
+   the compile command like :
+```
+./mini_jvm -cp ../lib/minijvm_rt.jar:../lib/janino.jar:../lib/commons-compiler.jar:../lib/ant-1.7,1.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
+```Janion have some [limitation](http://janino-compiler.github.io/janino/#limitations) ,like :
+```
+List<String> list=new ArrayList(); 
+list.add("abc");
+String s=(String)list.get(0);//can't ignore (String) cast qualifier.   
+```   
+   
+
+
 ## Referenced project and technology:   
    [Sun CLDC](http://www.oracle.com/technetwork/java/cldc-141990.html)  :reference    
    [Miniz](https://github.com/richgel999/miniz) :for read jar files    
@@ -88,6 +103,8 @@
    [GLFW](https://github.com/glfw/glfw)  :for pc cross platform GUI   
    [Dirent](https://github.com/tronkko/dirent)  :for win vc file and directory access    
    [Tinycthread](https://github.com/tinycthread/tinycthread)  :for cross platform thread   
+   [JRegex](https://github.com/digitalgust/jregex)  :for java String regex match     
+   [Janino](http://janino-compiler.github.io/janino/)  :for compile java source file     
 
 ## Development IDE:  
   C code:   JetBrains CLion ,Xcode ,Virtual studio .  
