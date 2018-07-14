@@ -55,16 +55,16 @@
 
 ## How to develop iOS/Android app in java:   
    Write java code once running both iOS and Android.  
-   Open ExApp project in NetBeans , it dependent on project **/javalib** and **/mobile/java/guilib**  
-   Write your code like example **/mobile/java/ExApp/src/test/App1.java**   
-   Change **/mobile/java/ExApp/src/app/GlfmMain.java** App1 to your application entry class   
-   Build **/mobile/java/ExApp** generate ExApp.jar ,MUST NOT change the jar name  
-   Copy ExApp.jar to **/mobile/assets/resfiles/**  
-   Open project **/mobile/iosapp** in Xcode, need not change anything, this project contains minijvm, glfm platform bridge, openGLES native function and jni interface, Nanovg paint module, Other include resource files like  **minijvm_rt.jar** ,**glfm_gui.jar** ,**ExApp.jar** and font files.  
-   Build and run it in simulator or device, your app has launched   
-   Open project **mobile/androidapp** in Android studio, need not change anything  ,same as iosapp  
-   Build and run, it would be startup  
-   Build ipa and apk files .  
+    * Open ExApp project in NetBeans , it dependent on project **/javalib** and **/mobile/java/guilib**  
+    * Write your code like example **/mobile/java/ExApp/src/test/App1.java**   
+    * Change **/mobile/java/ExApp/src/app/GlfmMain.java** App1 to your application entry class   
+    * Build **/mobile/java/ExApp** generate ExApp.jar ,MUST NOT change the jar name  
+    * Copy ExApp.jar to **/mobile/assets/resfiles/**  
+    * Open project **/mobile/iosapp** in Xcode, need not change anything, this project contains minijvm, glfm platform bridge, openGLES native function and jni interface, Nanovg paint module, Other include resource files like  **minijvm_rt.jar** ,**glfm_gui.jar** ,**ExApp.jar** and font files.  
+    * Build and run it in simulator or device, your app has launched   
+    * Open project **mobile/androidapp** in Android studio, need not change anything  ,same as iosapp  
+    * Build and run, it would be startup  
+    * Build ipa and apk files .  
    good luck  
   
   
@@ -82,7 +82,7 @@
 ## Compile java source:  
    To compile java source file ,there are 2 resolution:
    * Oracle JDK javac to compile.
-   * Janio the third compiler.
+   * Janino the third compiler.
    using Janino jar lib,  can see example in binary folder.   
    the compile command like :
 ```
