@@ -55,6 +55,7 @@
 
 ## How to develop iOS/Android app in java:   
    Write java code once running both iOS and Android.  
+   
     * Open ExApp project in NetBeans , it dependent on project **/javalib** and **/mobile/java/guilib**  
     * Write your code like example **/mobile/java/ExApp/src/test/App1.java**   
     * Change **/mobile/java/ExApp/src/app/GlfmMain.java** App1 to your application entry class   
@@ -65,6 +66,7 @@
     * Open project **mobile/androidapp** in Android studio, need not change anything  ,same as iosapp  
     * Build and run, it would be startup  
     * Build ipa and apk files .  
+    
    good luck  
   
   
