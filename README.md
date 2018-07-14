@@ -80,7 +80,10 @@
 
 
 ## Compile java source:  
-   To compile java source file using the third soft Janino binary,  can see example in binary folder.   
+   To compile java source file ,there are 2 resolution:
+   * Oracle JDK javac to compile.
+   * Janio the third compiler.
+   using Janino jar lib,  can see example in binary folder.   
    the compile command like :
 ```
 win:
