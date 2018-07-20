@@ -28,7 +28,7 @@ public class ExecuteSpeed {
 //            System.out.println("gstr=" + gstr + "  str=" + str);
             gstr += str;
 //            System.out.println("gstr=" + gstr + "  str=" + str);
-            gstr = gstr.replaceAll("efgh", "____");
+            gstr = gstr.replace("efgh", "____");
 //            System.out.println("gstr=" + gstr + "  str=" + str);
             lngth = str.length() * i;
             if ((lngth % (1024 * 2)) == 0) {
