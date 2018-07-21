@@ -15,14 +15,19 @@ import java.util.List;
  */
 public class LambdaTest {
 
+    volatile int a;
+
     void t1() {
-        for (int i = 0; i < 100000; i++) {
+        a = 3;
+        for (int i = 0; i < 500000; i++) {
             String[] ss = new String[]{"one", "two", "three"};
             int a = 4;
             //String ls = "local string";
             String[] c = new String[1];
-            Arrays.asList(ss).forEach(s -> {c[0] = (this + ":" + a + ":" + s);});
-            
+            Arrays.asList(ss).forEach(s -> {
+                c[0] = (this + ":" + a + ":" + s);
+            });
+
             List<String> list = new ArrayList();
             list.addAll(Arrays.asList(ss));
             list.removeIf(s -> s.length() < a);
