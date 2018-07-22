@@ -19,17 +19,18 @@ public class LambdaTest {
 
     void t1() {
         a = 3;
+        String[] ss = new String[]{"one", "two", "three"};
+        List sslist = Arrays.asList(ss);
+        String[] c = new String[1];
+        List<String> list = new ArrayList();
+        int a = 4;
         for (int i = 0; i < 500000; i++) {
-            String[] ss = new String[]{"one", "two", "three"};
-            int a = 4;
-            //String ls = "local string";
-            String[] c = new String[1];
-            Arrays.asList(ss).forEach(s -> {
+            sslist.forEach(s -> {
                 c[0] = (this + ":" + a + ":" + s);
             });
 
-            List<String> list = new ArrayList();
-            list.addAll(Arrays.asList(ss));
+            list.clear();
+            list.addAll(sslist);
             list.removeIf(s -> s.length() < a);
             list.forEach(s -> c[0] = (":" + s));
         }
