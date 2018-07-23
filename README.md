@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/digitalgust/miniJVM.svg?branch=master)](https://travis-ci.org/digitalgust/miniJVM)
 # miniJVM
 
-  Develop iOS Android app in java. Jvm for ios/android.
+  Develop iOS Android app in java. Jvm for ios/android or embed system. the fastest ios java interpreter . 
   
 ## Feature:  
 
@@ -11,10 +11,11 @@
   * No dependence Library .  
   * Minimal runtime classlib .   
   * Support java5/6/7/8 class file version .  
+  * Support embedded java source compiler(janino compiler) .  
   * Thread supported .  
   * Network supported .  
   * File io supported .  
-  * Java native method supported (None jni Spec) .  
+  * Java native method supported .  
   * Java garbage collection supported .   
   * Java remote debug supported, JDWP Spec .  
   
