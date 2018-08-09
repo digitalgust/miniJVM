@@ -8,7 +8,6 @@ package org.mini.gui;
 import org.mini.glfm.Glfm;
 import static org.mini.nanovg.Gutil.toUtf8;
 import static org.mini.gui.GToolkit.nvgRGBA;
-import org.mini.nanovg.Nanovg;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_LEFT;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_MIDDLE;
 import static org.mini.nanovg.Nanovg.nvgBeginPath;
@@ -17,10 +16,12 @@ import static org.mini.nanovg.Nanovg.nvgFillColor;
 import static org.mini.nanovg.Nanovg.nvgFillPaint;
 import static org.mini.nanovg.Nanovg.nvgFontFace;
 import static org.mini.nanovg.Nanovg.nvgFontSize;
+import static org.mini.nanovg.Nanovg.nvgLinearGradient;
 import static org.mini.nanovg.Nanovg.nvgRoundedRect;
 import static org.mini.nanovg.Nanovg.nvgStroke;
 import static org.mini.nanovg.Nanovg.nvgStrokeColor;
 import static org.mini.nanovg.Nanovg.nvgTextAlign;
+import static org.mini.nanovg.Nanovg.nvgTextBoundsJni;
 import static org.mini.nanovg.Nanovg.nvgTextJni;
 
 /**
@@ -37,10 +38,8 @@ public class GButton extends GObject {
 
     public GButton(String text, int left, int top, int width, int height) {
         setText(text);
-        boundle[LEFT] = left;
-        boundle[TOP] = top;
-        boundle[WIDTH] = width;
-        boundle[HEIGHT] = height;
+        setLocation(left, top);
+        setSize(width, height);
     }
 
     public void setText(String text) {
@@ -53,6 +52,27 @@ public class GButton extends GObject {
         preicon_arr = toUtf8("" + preicon);
     }
 
+    @Override
+    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+        if (isInArea(x, y)) {
+            if (pressed) {
+                bt_pressed = true;
+                parent.setFocus(this);
+            } else {
+                bt_pressed = false;
+                if (actionListener != null) {
+                    actionListener.action(this);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void cursorPosEvent(int x, int y) {
+        if (!isInArea(x, y)) {
+            bt_pressed = false;
+        }
+    }
     @Override
     public void touchEvent(int phase, int x, int y) {
         if (isInBoundle(boundle, x - parent.getX(), y - parent.getY())) {
@@ -80,7 +100,6 @@ public class GButton extends GObject {
         float w = getW();
         float h = getH();
 
-        Nanovg.nvgScissor(vg, x, y, w, h);
         byte[] bg;
 
         float cornerRadius = 4.0f;
@@ -88,9 +107,9 @@ public class GButton extends GObject {
         float move = 0;
         if (bt_pressed) {
             move = 1;
-            bg = Nanovg.nvgLinearGradient(vg, x, y + h, x, y, nvgRGBA(255, 255, 255, isBlack(bgColor) ? 16 : 32), nvgRGBA(0, 0, 0, isBlack(bgColor) ? 16 : 32));
+            bg = nvgLinearGradient(vg, x, y + h, x, y, nvgRGBA(255, 255, 255, isBlack(bgColor) ? 16 : 32), nvgRGBA(0, 0, 0, isBlack(bgColor) ? 16 : 32));
         } else {
-            bg = Nanovg.nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(255, 255, 255, isBlack(bgColor) ? 16 : 32), nvgRGBA(0, 0, 0, isBlack(bgColor) ? 16 : 32));
+            bg = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(255, 255, 255, isBlack(bgColor) ? 16 : 32), nvgRGBA(0, 0, 0, isBlack(bgColor) ? 16 : 32));
         }
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, cornerRadius - 1);
@@ -108,12 +127,12 @@ public class GButton extends GObject {
 
         nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
-        tw = Nanovg.nvgTextBoundsJni(vg, 0, 0, text_arr, 0, text_arr.length, null);
+        tw = nvgTextBoundsJni(vg, 0, 0, text_arr, 0, text_arr.length, null);
         if (preicon != 0) {
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
 
-            iw = Nanovg.nvgTextBoundsJni(vg, 0, 0, preicon_arr, 0, preicon_arr.length, null);
+            iw = nvgTextBoundsJni(vg, 0, 0, preicon_arr, 0, preicon_arr.length, null);
             //iw += h * 0.15f;
         }
 
@@ -122,7 +141,7 @@ public class GButton extends GObject {
             nvgFontFace(vg, GToolkit.getFontIcon());
             nvgFillColor(vg, nvgRGBA(255, 255, 255, 96));
             nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-            Nanovg.nvgTextJni(vg, x + w * 0.5f - tw * 0.5f - iw * 0.5f, y + h * 0.5f + move, preicon_arr, 0, preicon_arr.length);
+            nvgTextJni(vg, x + w * 0.5f - tw * 0.5f - iw * 0.5f, y + h * 0.5f + move, preicon_arr, 0, preicon_arr.length);
         }
 
         nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
@@ -132,6 +151,7 @@ public class GButton extends GObject {
         nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw * 0.25f, y + h * 0.5f + 1 + move, text_arr, 0, text_arr.length);
         nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
         nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw * 0.25f, y + h * 0.5f + move, text_arr, 0, text_arr.length);
+
         return true;
     }
 // Returns 1 if col.rgba is 0.0f,0.0f,0.0f,0.0f, 0 otherwise

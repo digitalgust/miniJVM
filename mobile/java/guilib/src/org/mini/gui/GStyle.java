@@ -35,3 +35,4 @@ public interface GStyle {
 
     void drawFieldBoxBase(long vg, float x, float y, float w, float h);
 }
+

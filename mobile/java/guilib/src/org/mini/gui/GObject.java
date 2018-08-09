@@ -26,7 +26,7 @@ abstract public class GObject {
     GContainer parent;
 
     //object position and width ,height
-    protected float[] boundle = new float[4];
+    float[] boundle = new float[4];
     static final int LEFT = 0;
     static final int TOP = 1;
     static final int WIDTH = 2;
@@ -43,7 +43,9 @@ abstract public class GObject {
 
     boolean visable = true;
 
-    void init() {
+    boolean fixedLocation;
+
+    public void init() {
 
     }
 
@@ -51,8 +53,16 @@ abstract public class GObject {
     }
 
     static synchronized public void flush() {
-        flush = 1;
+        flush = 3;
         //in android may flush before paint,so the menu not shown
+    }
+
+    public void setFixed(boolean fixed) {
+        fixedLocation = fixed;
+    }
+
+    public boolean getFixed() {
+        return fixedLocation;
     }
 
     static synchronized public boolean flushReq() {
@@ -75,6 +85,27 @@ abstract public class GObject {
         return true;
     }
 
+    public void keyEvent(int key, int scanCode, int action, int mods) {
+    }
+
+    public void characterEvent(char character) {
+    }
+
+    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+    }
+
+    public void clickEvent(int button, int x, int y) {
+    }
+
+    public void cursorPosEvent(int x, int y) {
+    }
+
+    public void dropEvent(int count, String[] paths) {
+    }
+
+    public void longTouchedEvent(int x, int y) {
+    }
+
     public void keyEvent(int key, int action, int mods) {
     }
 
@@ -82,9 +113,6 @@ abstract public class GObject {
     }
 
     public void touchEvent(int phase, int x, int y) {
-    }
-
-    public void longTouchedEvent(int x, int y) {
     }
 
     public void scrollEvent(double scrollX, double scrollY, int x, int y) {
@@ -108,11 +136,18 @@ abstract public class GObject {
                 && y >= bound[TOP] && y <= bound[TOP] + bound[HEIGHT];
     }
 
+    public boolean isInArea(float x, float y) {
+        float absx = getX();
+        float absy = getY();
+        return x >= absx && x <= absx + boundle[WIDTH]
+                && y >= absy && y <= absy + boundle[HEIGHT];
+    }
+
     public float[] getBoundle() {
         return boundle;
     }
 
-    public GContainer getParent() {
+    public GObject getParent() {
         return parent;
     }
 
@@ -120,15 +155,25 @@ abstract public class GObject {
         parent = p;
     }
 
+    public void setLocation(float x, float y) {
+        boundle[LEFT] = x;
+        boundle[TOP] = y;
+    }
+
+    public void setSize(float w, float h) {
+        boundle[WIDTH] = w;
+        boundle[HEIGHT] = h;
+    }
+
     public float getX() {
-        if (parent != null) {
+        if (parent != null && !fixedLocation) {
             return parent.getX() + boundle[LEFT];
         }
         return boundle[LEFT];
     }
 
     public float getY() {
-        if (parent != null) {
+        if (parent != null && !fixedLocation) {
             return parent.getY() + boundle[TOP];
         }
         return boundle[TOP];
@@ -139,6 +184,22 @@ abstract public class GObject {
     }
 
     public float getH() {
+        return boundle[HEIGHT];
+    }
+
+    public float getViewX() {
+        return getX();
+    }
+
+    public float getViewY() {
+        return getY();
+    }
+
+    public float getViewW() {
+        return boundle[WIDTH];
+    }
+
+    public float getViewH() {
         return boundle[HEIGHT];
     }
 

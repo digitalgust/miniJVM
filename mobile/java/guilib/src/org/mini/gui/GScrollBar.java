@@ -6,8 +6,9 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
+import static org.mini.gui.GObject.LEFT;
+import static org.mini.gui.GObject.isInBoundle;
 import static org.mini.gui.GToolkit.nvgRGBA;
-import org.mini.nanovg.Nanovg;
 import static org.mini.nanovg.Nanovg.NVG_HOLE;
 import static org.mini.nanovg.Nanovg.nvgBeginPath;
 import static org.mini.nanovg.Nanovg.nvgBoxGradient;
@@ -41,10 +42,8 @@ public class GScrollBar extends GObject {
     public GScrollBar(float pos, int mode, int left, int top, int width, int height) {
         this.pos = pos;
         this.mode = mode;
-        boundle[LEFT] = left;
-        boundle[TOP] = top;
-        boundle[WIDTH] = width;
-        boundle[HEIGHT] = height;
+        setLocation(left, top);
+        setSize(width, height);
     }
 
     public float getPos() {
@@ -58,6 +57,37 @@ public class GScrollBar extends GObject {
         }
         if (pos < 0) {
             pos = 0.f;
+        }
+    }
+
+    @Override
+    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+        int rx = (int) (x - parent.getX());
+        int ry = (int) (y - parent.getY());
+        if (isInArea(x, y)) {
+            if (pressed) {
+                draged = true;
+                parent.setFocus(this);
+                pos = mode == HORIZONTAL ? (rx - boundle[LEFT]) / boundle[WIDTH] : (ry - boundle[TOP]) / boundle[HEIGHT];
+            } else {
+                draged = false;
+                if (actionListener != null) {
+                    actionListener.action(this);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void cursorPosEvent(int x, int y) {
+        int rx = (int) (x - parent.getX());
+        int ry = (int) (y - parent.getY());
+        if (isInArea(x, y)) {
+            if (draged) {
+                pos = mode == HORIZONTAL ? (rx - boundle[LEFT]) / boundle[WIDTH] : (ry - boundle[TOP]) / boundle[HEIGHT];
+            }
+        } else {
+            //draged = false;
         }
     }
 
@@ -92,8 +122,6 @@ public class GScrollBar extends GObject {
         float y = getY();
         float w = getW();
         float h = getH();
-
-        Nanovg.nvgScissor(vg, x - radius, y - radius, w + radius * 2, h + radius * 2);
 
         if (mode == HORIZONTAL) {
             drawSliderH(vg, pos, x, y, w, h);

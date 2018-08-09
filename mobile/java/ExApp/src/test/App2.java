@@ -14,6 +14,7 @@ import org.mini.gui.GGraphics;
 import org.mini.gui.GImage;
 import org.mini.gui.GList;
 import org.mini.gui.GMenu;
+import org.mini.gui.GMenuItem;
 import org.mini.gui.GObject;
 import org.mini.gui.GuiCallBack;
 import org.mini.gui.event.GActionListener;
@@ -42,7 +43,7 @@ public class App2 implements GApplication {
         if (form != null) {
             return form;
         }
-        
+
         form = new GForm(/*"GuiTest"*/"登录 窗口", 800, 600, ccb);
 
         form.setFps(30f);
@@ -59,7 +60,7 @@ public class App2 implements GApplication {
         File f = new File(resRoot);
         if (f.exists()) {
             String[] files = f.list();
-            int[] imgs=new int[files.length];
+            int[] imgs = new int[files.length];
             list.setItems(imgs, files);
         }
         list.setActionListener(new GActionListener() {
@@ -77,21 +78,14 @@ public class App2 implements GApplication {
         menu.addItem("搜索", img);
         menu.addItem("发现", img);
         menu.addItem("我的", img);
-        menu.addItem("退出", img);
-        form.add(menu);
-        menu.setActionListener(new GActionListener() {
+        GMenuItem item = menu.addItem("退出", img);
+        item.setActionListener(new GActionListener() {
             @Override
             public void action(GObject gobj) {
-                GMenu m = (GMenu) gobj;
-                switch (m.getSelectIndex()) {
-                    case 4: {
-                        ccb.setApplication(App1.getInstance());
-                        break;
-                    }
-
-                }
+                ccb.setApplication(App1.getInstance());
             }
         });
+        form.add(menu);
 
         return form;
     }

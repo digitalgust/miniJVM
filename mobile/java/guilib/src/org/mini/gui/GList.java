@@ -67,10 +67,8 @@ public class GList extends GContainer {
     float pad = 10;
 
     public GList(int left, int top, int width, int height) {
-        boundle[LEFT] = left;
-        boundle[TOP] = top;
-        boundle[WIDTH] = width;
-        boundle[HEIGHT] = height;
+        setLocation(left, top);
+        setSize(width, height);
         normalBoundle = boundle;
     }
 
@@ -108,6 +106,33 @@ public class GList extends GContainer {
 
     public void setSelectedIndex(int i) {
         curIndex = i;
+    }
+
+    @Override
+    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+        int rx = (int) (x - parent.getX());
+        int ry = (int) (y - parent.getY());
+        if (isInArea(x, y)) {
+            if (pressed) {
+                boolean inScroll = false;
+                if (scrollBar != null) {
+                    inScroll = scrollBar.isInArea(x, y);
+                }
+                if (!inScroll) {
+                    if (pulldown) {
+                        float stackh = (labels.length / list_cols) * (list_item_heigh) + pad;
+                        float pos = scrollBar.getPos() * (stackh - popBoundle[HEIGHT]) + (y - getY());
+                        curIndex = (int) (pos / stackh * labels.length);
+                        if (actionListener != null) {
+                            actionListener.action(this);
+                        }
+                    }
+                    pulldown = !pulldown;
+                    parent.setFocus(this);
+                }
+            }
+        }
+        super.mouseButtonEvent(button, pressed, x, y);
     }
 
     int startX, startY;
@@ -180,7 +205,10 @@ public class GList extends GContainer {
                 scrollBar.setPos(scrollBar.getPos() - 1.f / labels.length * (float) (speed / list_item_heigh));
                 flush();
                 if (count++ > maxMoveCount) {
-                    this.cancel();
+                    try {
+                        this.cancel();
+                    } catch (Exception e) {
+                    }
                 }
             }
         };

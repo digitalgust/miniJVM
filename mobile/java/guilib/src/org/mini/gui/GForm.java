@@ -49,12 +49,11 @@ public class GForm extends GPanel {
     //
     boolean premult;
 
-    Timer timer = new Timer();//用于更新画面，UI系统采取按需刷新的原则
+    Timer timer = new Timer(true);//用于更新画面，UI系统采取按需刷新的原则
 
     public GForm(String title, int width, int height, GuiCallBack ccb) {
         this.title = title;
-        boundle[WIDTH] = width;
-        boundle[HEIGHT] = height;
+
         callback = ccb;
 
         fbWidth = ccb.getFrameBufferWidth();
@@ -64,8 +63,9 @@ public class GForm extends GPanel {
 
         pxRatio = ccb.getDeviceRatio();
 
-        boundle[WIDTH] = winWidth;
-        boundle[HEIGHT] = winHeight;
+        setLocation(0, 0);
+        setSize(winWidth, winHeight);
+
     }
 
 //    public void setCallBack(GuiCallBack callback) {
@@ -100,7 +100,7 @@ public class GForm extends GPanel {
     }
 
     @Override
-    void init() {
+    public void init() {
         display = callback.getDisplay();
         vg = callback.getNvContext();
         if (vg == 0) {
@@ -134,6 +134,8 @@ public class GForm extends GPanel {
 
             nvgBeginFrame(vg, winWidth, winHeight, pxRatio);
             drawDebugInfo(vg);
+            Nanovg.nvgResetScissor(vg);
+            Nanovg.nvgScissor(vg, 0, 0, winWidth, winHeight);
             update(vg);
             nvgEndFrame(vg);
 
@@ -175,16 +177,6 @@ public class GForm extends GPanel {
         if (focus != null) {
             b = Gutil.toUtf8("focus x:" + focus.boundle[LEFT] + " y:" + focus.boundle[TOP] + " w:" + focus.boundle[WIDTH] + " h:" + focus.boundle[HEIGHT]);
             Nanovg.nvgTextJni(vg, dx, dy, b, 0, b.length);
-        }
-    }
-
-    void findSetFocus(int x, int y) {
-        for (Iterator<GObject> it = elements.iterator(); it.hasNext();) {
-            GObject nko = it.next();
-            if (isInBoundle(nko.getBoundle(), x, y)) {
-                setFocus(nko);
-                break;
-            }
         }
     }
 

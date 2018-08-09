@@ -14,19 +14,15 @@ public class GCanvas extends GContainer {
     GGraphics g;
 
     public GCanvas(int x, int y, int w, int h) {
-        boundle[LEFT] = x;
-        boundle[TOP] = y;
-        boundle[WIDTH] = w;
-        boundle[HEIGHT] = h;
+        setLocation(x, y);
+        setSize(w, h);
     }
 
     public boolean update(long vg) {
         if (g == null) {
             g = new GGraphics(this, vg);
         }
-        g.save();
         paint(g);
-        g.restore();
         super.update(vg);
         return true;
     }

@@ -8,9 +8,6 @@ package org.mini.gui;
 import java.util.Hashtable;
 import org.mini.reflect.ReflectArray;
 import org.mini.reflect.vm.RefNative;
-import org.mini.glfm.Glfm;
-import org.mini.gui.event.GActionListener;
-import org.mini.gui.event.GFocusChangeListener;
 import static org.mini.nanovg.Gutil.toUtf8;
 import org.mini.nanovg.Nanovg;
 import static org.mini.nanovg.Nanovg.nvgAddFallbackFontId;
@@ -19,6 +16,7 @@ import static org.mini.nanovg.Nanovg.nvgCreateFont;
 import static org.mini.nanovg.Nanovg.nvgFill;
 import static org.mini.nanovg.Nanovg.nvgFillColor;
 import static org.mini.nanovg.Nanovg.nvgRect;
+import static org.mini.nanovg.Nanovg.nvgTextBoundsJni;
 
 /**
  *
@@ -99,7 +97,7 @@ public class GToolkit {
 
     public static float[] getFontBoundle(long vg) {
         float[] bond = new float[4];
-        Nanovg.nvgTextBoundsJni(vg, 0, 0, FONT_GLYPH_TEMPLATE, 0, FONT_GLYPH_TEMPLATE.length, bond);
+        nvgTextBoundsJni(vg, 0, 0, FONT_GLYPH_TEMPLATE, 0, FONT_GLYPH_TEMPLATE.length, bond);
         bond[GObject.WIDTH] -= bond[GObject.LEFT];
         bond[GObject.HEIGHT] -= bond[GObject.TOP];
         bond[GObject.LEFT] = bond[GObject.TOP] = 0;

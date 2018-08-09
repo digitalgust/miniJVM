@@ -7,7 +7,6 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfm.GlfmCallBackAdapter;
-import static org.mini.gui.GObject.flush;
 import org.mini.nanovg.Nanovg;
 import static org.mini.nanovg.Nanovg.NVG_ANTIALIAS;
 import static org.mini.nanovg.Nanovg.NVG_DEBUG;
@@ -161,7 +160,6 @@ public class GuiCallBack extends GlfmCallBackAdapter {
         if (form == null) {
             return true;
         }
-        GObject focus = form.getFocus();
 
         x /= Glfm.glfmGetDisplayScale(display);
         y /= Glfm.glfmGetDisplayScale(display);
@@ -173,17 +171,15 @@ public class GuiCallBack extends GlfmCallBackAdapter {
         long cur = System.currentTimeMillis();
         //
         boolean long_touched = false;
-        System.out.println("   touch=" + touch + "   phase=" + phase + "   x=" + x + "   y=" + y);
+//        System.out.println("   touch=" + touch + "   phase=" + phase + "   x=" + x + "   y=" + y);
 //            System.out.println("display=" + display + "   win=" + win);
         if (display == display) {
 
             switch (phase) {
                 case Glfm.GLFMTouchPhaseBegan: {//
-                    form.findSetFocus(mouseX, mouseY);//找到焦点组件
-                    focus = form.getFocus();
-                    //
                     mouseLastPressed = cur;
 
+                    gform.focus = gform.findFocus(mouseX, mouseY);
                     //处理惯性
                     moveStartX = x;
                     moveStartY = y;
@@ -207,11 +203,7 @@ public class GuiCallBack extends GlfmCallBackAdapter {
                     break;
                 }
                 case Glfm.GLFMTouchPhaseMoved: {//
-                    if (focus != null) {
-                        focus.scrollEvent(mouseX - lastX, mouseY - lastY, mouseX, mouseY);
-                    } else {
-                        form.scrollEvent(mouseX - lastX, mouseY - lastY, mouseX, mouseY);
-                    }
+                    form.scrollEvent(mouseX - lastX, mouseY - lastY, mouseX, mouseY);
                     break;
                 }
                 case Glfm.GLFMTouchPhaseHover: {//
@@ -225,18 +217,10 @@ public class GuiCallBack extends GlfmCallBackAdapter {
 
             //click event
             if (long_touched) {
-                if (focus != null) {
-                    focus.longTouchedEvent(mouseX, mouseY);
-                } else {
-                    form.longTouchedEvent(mouseX, mouseY);
-                }
+                form.longTouchedEvent(mouseX, mouseY);
                 long_touched = false;
             }
-            if (focus != null) {//press event
-                focus.touchEvent(phase, mouseX, mouseY);
-            } else {
-                form.touchEvent(phase, mouseX, mouseY);
-            }
+            form.touchEvent(phase, mouseX, mouseY);
         }
         GObject.flush();
         return true;
@@ -261,7 +245,6 @@ public class GuiCallBack extends GlfmCallBackAdapter {
         if (gform == null) {
             return;
         }
-        //System.out.println("error message: " + description);
         gform.flush();
     }
 }

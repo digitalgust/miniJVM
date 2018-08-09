@@ -5,12 +5,13 @@
  */
 package org.mini.gui;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import org.mini.glfm.Glfm;
+import org.mini.nanovg.Nanovg;
+import static org.mini.nanovg.Nanovg.nvgSave;
+import static org.mini.nanovg.Nanovg.nvgScissor;
 
 /**
  *
@@ -21,10 +22,9 @@ abstract public class GContainer extends GObject {
     LinkedList<GObject> elements = new LinkedList();
     GObject focus;
 
-    int menuCount = 0;
-
     //异步添加删除form
-    final List<AddRemoveItem> cache = new LinkedList();
+    List<AddRemoveItem> cache = Collections.synchronizedList(new LinkedList());
+    List<AddRemoveItem> cacheBack = Collections.synchronizedList(new LinkedList());
 
     class AddRemoveItem {
 
@@ -37,6 +37,16 @@ abstract public class GContainer extends GObject {
             operation = op;
             this.go = go;
         }
+    }
+
+    GObject findFocus(int x, int y) {
+        for (Iterator<GObject> it = elements.iterator(); it.hasNext();) {
+            GObject nko = it.next();
+            if (nko.isInArea(x, y)) {
+                return nko;
+            }
+        }
+        return null;
     }
 
     /**
@@ -67,21 +77,34 @@ abstract public class GContainer extends GObject {
 
     public void add(GObject nko) {
         if (nko != null) {
-            synchronized (cache) {
-                cache.add(new AddRemoveItem(AddRemoveItem.ADD, nko));
-                nko.init();
-                nko.setParent(this);
-            }
+            cache.add(new AddRemoveItem(AddRemoveItem.ADD, nko));
+            nko.init();
+            nko.setParent(this);
+        }
+    }
+
+    public void add(int index, GObject nko) {
+        if (nko != null) {
+            cache.add(index, new AddRemoveItem(AddRemoveItem.ADD, nko));
+            nko.init();
+            nko.setParent(this);
         }
     }
 
     public void remove(GObject nko) {
         if (nko != null) {
-            synchronized (cache) {
-                nko.setParent(null);
-                nko.destory();
-                cache.add(new AddRemoveItem(AddRemoveItem.REMOVE, nko));
-            }
+            nko.setParent(null);
+            nko.destory();
+            cache.add(new AddRemoveItem(AddRemoveItem.REMOVE, nko));
+        }
+    }
+
+    public void remove(int index) {
+        GObject nko = elements.get(index);
+        if (nko != null) {
+            nko.setParent(null);
+            nko.destory();
+            cache.add(new AddRemoveItem(AddRemoveItem.REMOVE, nko));
         }
     }
 
@@ -89,30 +112,45 @@ abstract public class GContainer extends GObject {
         return elements.contains(son);
     }
 
+    public void onAdd(GObject obj) {
+
+    }
+
+    public void onRemove(GObject obj) {
+
+    }
+
+    public void reBoundle() {
+
+    }
+
     @Override
     public boolean update(long ctx) {
-        synchronized (cache) {
-            //菜单加在最前面,focus 在之后,其他组件再在其后
-
-            for (AddRemoveItem ari : cache) {
-                if (ari.operation == AddRemoveItem.ADD) {
-                    setFocus(ari.go);
-                    if (ari.go instanceof GMenu) {
-                        menuCount++;
-                        elements.addFirst(ari.go);
-                    } else {
-                        elements.add(menuCount, ari.go);
-                    }
+        int menuCount = 0;
+        List tmp = cacheBack;
+        cacheBack = cache;
+        cache = tmp;
+        //菜单加在最前面,focus 在之后,其他组件再在其后
+        for (AddRemoveItem ari : cacheBack) {
+            if (ari.operation == AddRemoveItem.ADD) {
+                setFocus(ari.go);
+                if (ari.go instanceof GMenu) {
+                    menuCount++;
+                    elements.addFirst(ari.go);
                 } else {
-                    boolean success = elements.remove(ari.go);
-                    setFocus(null);
-                    if (success && ari.go instanceof GMenu) {
-                        menuCount--;
-                    }
+                    elements.add(menuCount, ari.go);
                 }
+                onAdd(ari.go);
+            } else {
+                boolean success = elements.remove(ari.go);
+                setFocus(null);
+                if (success && ari.go instanceof GMenu) {
+                    menuCount--;
+                }
+                onRemove(ari.go);
             }
-            cache.clear();
         }
+        cacheBack.clear();
         //如果focus不是第一个，则移到第一个，这样遮挡关系才正确
         if (focus != null && !(focus instanceof GMenu)) {
             elements.remove(focus);
@@ -123,12 +161,83 @@ abstract public class GContainer extends GObject {
         for (int i = arr.length - 1; i >= 0; i--) {
             GObject nko = arr[i];
             if (nko.isVisable()) {
+                float x = nko.getViewX();
+                float y = nko.getViewY();
+                float w = nko.getViewW();
+                float h = nko.getViewH();
+
+                nvgSave(ctx);
+//                Nanovg.nvgResetScissor(ctx);
+                nvgScissor(ctx, x, y, w, h);
+//
+//                nvgBeginPath(ctx);
+//                Nanovg.nvgRect(ctx, x + 1, y + 1, w - 2, h - 2);
+//                nvgStrokeColor(ctx, nvgRGBA(255, 0, 0, 255));
+//                nvgStroke(ctx);
+                Nanovg.nvgIntersectScissor(ctx, getViewX(), getViewY(), getViewW(), getViewH());
                 nko.update(ctx);
+                Nanovg.nvgRestore(ctx);
             }
         }
         return true;
     }
 
+    @Override
+    public void keyEvent(int key, int scanCode, int action, int mods) {
+        if (focus != null) {
+            focus.keyEvent(key, scanCode, action, mods);
+        }
+    }
+
+    @Override
+    public void characterEvent(char character) {
+        if (focus != null) {
+            focus.characterEvent(character);
+        }
+    }
+
+    @Override
+    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+        if (focus == null || !focus.isInArea(x, y)) {
+            GObject nko = findFocus(x, y);
+            setFocus(nko);
+        }
+        if (focus != null) {
+            focus.mouseButtonEvent(button, pressed, x, y);
+        }
+
+    }
+
+    @Override
+    public void cursorPosEvent(int x, int y) {
+        if (focus != null) {
+            focus.cursorPosEvent(x, y);
+        }
+
+    }
+
+    @Override
+    public void dropEvent(int count, String[] paths) {
+        if (focus != null) {
+            focus.dropEvent(count, paths);
+        }
+    }
+
+    @Override
+    public void scrollEvent(double scrollX, double scrollY, int x, int y) {
+        if (focus != null) {
+            focus.scrollEvent(scrollX, scrollY, x, y);
+        }
+    }
+
+    @Override
+    public void clickEvent(int button, int x, int y) {
+        if (focus != null) {
+            focus.clickEvent(button, x, y);
+        }
+    }
+
+    ///==========================
     @Override
     public void keyEvent(int key, int action, int mods) {
         if (focus != null) {
@@ -145,32 +254,12 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void touchEvent(int phase, int x, int y) {
-        if (focus == null || !isInBoundle(focus.getBoundle(), x - getX(), y - getY())) {
-            for (Iterator<GObject> it = elements.iterator(); it.hasNext();) {
-                try {
-                    GObject nko = it.next();
-                    if (phase == Glfm.GLFMTouchPhaseBegan) {
-                        if (isInBoundle(nko.getBoundle(), x - getX(), y - getY())) {
-                            setFocus(nko);
-                            break;
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+        if (focus == null || !focus.isInArea(x, y)) {
+            GObject nko = findFocus(x, y);
+            setFocus(nko);
         }
         if (focus != null) {
             focus.touchEvent(phase, x, y);
-        }
-    }
-
-    @Override
-    public void scrollEvent(double scrollX, double scrollY, int x, int y) {
-        if (focus != null) {
-            focus.scrollEvent(scrollX, scrollY, x, y);
-        } else {
-            
         }
     }
 
@@ -179,31 +268,27 @@ abstract public class GContainer extends GObject {
 
         if (focus != null) {
             focus.inertiaEvent(x1, y1, x2, y2, moveTime);
-        } else {
-            for (Iterator<GObject> it = elements.iterator(); it.hasNext();) {
-                try {
-                    GObject nko = it.next();
-                    nko.inertiaEvent(x1, y1, x2, y2, moveTime);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
         }
+//        else {
+//            for (Iterator<GObject> it = elements.iterator(); it.hasNext();) {
+//                try {
+//                    GObject nko = it.next();
+//                    nko.inertiaEvent(x1, y1, x2, y2, moveTime);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
     }
 
     @Override
     public void longTouchedEvent(int x, int y) {
+        if (focus == null || !focus.isInArea(x, y)) {
+            GObject nko = findFocus(x, y);
+            setFocus(nko);
+        }
         if (focus != null) {
             focus.longTouchedEvent(x, y);
-        } else {
-            for (Iterator<GObject> it = elements.iterator(); it.hasNext();) {
-                try {
-                    GObject nko = it.next();
-                    nko.longTouchedEvent(x, y);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
         }
     }
 }

@@ -6,8 +6,11 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
-import static org.mini.nanovg.Gutil.toUtf8;
+import org.mini.glfw.Glfw;
+import static org.mini.gui.GObject.HEIGHT;
+import static org.mini.gui.GObject.isInBoundle;
 import static org.mini.gui.GToolkit.nvgRGBA;
+import static org.mini.nanovg.Gutil.toUtf8;
 import org.mini.nanovg.Nanovg;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_CENTER;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_LEFT;
@@ -50,10 +53,8 @@ public class GTextField extends GTextObject {
     public GTextField(String text, String hint, int left, int top, int width, int height) {
         setText(text);
         setHint(hint);
-        boundle[LEFT] = left;
-        boundle[TOP] = top;
-        boundle[WIDTH] = width;
-        boundle[HEIGHT] = height;
+        setLocation(left, top);
+        setSize(width, height);
         reset_boundle = new float[]{left + width - height, top, height, height};
         setFocusListener(this);
     }
@@ -64,6 +65,57 @@ public class GTextField extends GTextObject {
 
     public void setMaxTextLength(int len) {
         text_max = len;
+    }
+
+    @Override
+    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+        int rx = (int) (x - parent.getX());
+        int ry = (int) (y - parent.getY());
+        if (isInArea(x, y)) {
+            if (button == Glfw.GLFW_MOUSE_BUTTON_1) {
+                if (pressed) {
+                } else if (actionListener != null) {
+                    if (isInBoundle(reset_boundle, rx, ry)) {
+                        textsb.setLength(0);
+                        resetSelect();
+                        disposeEditMenu();
+                    } else {
+                        if (selectMode) {
+                            resetSelect();
+                            disposeEditMenu();
+                        }
+                        setCaretIndex(getCaretIndex(x, y));
+                    }
+                }
+            } else if (button == Glfw.GLFW_MOUSE_BUTTON_2) {
+                if (pressed) {
+
+                } else {
+                    callEditMenu(this, x, y);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void keyEvent(int key, int scanCode, int action, int mods) {
+        if (parent.getFocus() != this) {
+            return;
+        }
+        if (action == Glfw.GLFW_PRESS || action == Glfw.GLFW_REPEAT) {
+            if (key == Glfw.GLFW_KEY_BACKSPACE) {
+                if (textsb.length() > 0 && caretIndex > 0) {
+                    int[] selectFromTo = getSelected();
+                    if (selectFromTo != null) {
+                        deleteSelectedText();
+                    } else {
+                        textsb.delete(caretIndex - 1, caretIndex);
+                        setCaretIndex(caretIndex - 1);
+                        text_arr = null;
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -87,25 +139,6 @@ public class GTextField extends GTextObject {
         }
     }
 
-    public int getCaretIndex(int x, int y) {
-        if (text_pos == null) {
-            return textsb.length();
-        }
-        for (int j = 0; j < text_pos.length; j++) {
-            //取第 j 个字符的X座标
-            float x0 = text_pos[j];
-            if (x < x0) {
-                return j;
-            }
-        }
-        return text_pos.length;
-    }
-
-    /**
-     *
-     * @param str
-     * @param mods
-     */
     @Override
     public void characterEvent(String str, int mods) {
 
@@ -115,6 +148,18 @@ public class GTextField extends GTextObject {
                 textsb.insert(caretIndex, character);
                 setCaretIndex(caretIndex + 1);
             }
+        }
+    }
+
+    /**
+     *
+     * @param character
+     */
+    @Override
+    public void characterEvent(char character) {
+        if (character != '\n' && character != '\r' && textsb.length() < text_max) {
+            textsb.insert(caretIndex, character);
+            setCaretIndex(caretIndex + 1);
         }
     }
 
@@ -135,6 +180,20 @@ public class GTextField extends GTextObject {
                 }
             }
         }
+    }
+
+    public int getCaretIndex(int x, int y) {
+        if (text_pos == null) {
+            return textsb.length();
+        }
+        for (int j = 0; j < text_pos.length; j++) {
+            //取第 j 个字符的X座标
+            float x0 = text_pos[j];
+            if (x < x0) {
+                return j;
+            }
+        }
+        return text_pos.length;
     }
 
     /**
@@ -220,8 +279,6 @@ public class GTextField extends GTextObject {
         float w = getW();
         float h = getH();
 
-        Nanovg.nvgScissor(vg, x, y, w, h);
-
         byte[] bg;
         float FONT_WIDTH = GToolkit.getStyle().getIconFontWidth();
         float leftIcons = 0.5f;//图标占位宽度
@@ -297,8 +354,8 @@ public class GTextField extends GTextObject {
             }
             nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
             Nanovg.nvgScissor(vg, text_show_area_x, y, text_show_area_w, h);
+            Nanovg.nvgIntersectScissor(vg, parent.getX(), parent.getY(), parent.getViewW(), parent.getViewH());
             nvgTextJni(vg, wordx, wordy, text_arr, 0, text_arr.length);
-            Nanovg.nvgResetScissor(vg);
         }
         nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
         nvgFontFace(vg, GToolkit.getFontIcon());

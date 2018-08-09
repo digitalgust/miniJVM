@@ -7,6 +7,8 @@ package org.mini.gui;
 
 import java.util.TimerTask;
 import org.mini.glfm.Glfm;
+import org.mini.glfw.Glfw;
+import static org.mini.gui.GObject.isInBoundle;
 import static org.mini.nanovg.Gutil.toUtf8;
 import org.mini.nanovg.Nanovg;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_LEFT;
@@ -58,13 +60,14 @@ public class GTextBox extends GTextObject {
     static final int AREA_W = WIDTH;
     static final int AREA_H = HEIGHT;
 
+    //
+    boolean drag;
+
     public GTextBox(String text, String hint, int left, int top, int width, int height) {
         setText(text);
         setHint(hint);
-        boundle[LEFT] = left;
-        boundle[TOP] = top;
-        boundle[WIDTH] = width;
-        boundle[HEIGHT] = height;
+        setLocation(left, top);
+        setSize(width, height);
         setFocusListener(this);
     }
 
@@ -129,6 +132,176 @@ public class GTextBox extends GTextObject {
             }
         }
         return null;
+    }
+
+    @Override
+    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+        int rx = (int) (x - parent.getX());
+        int ry = (int) (y - parent.getY());
+        if (isInArea(x, y)) {
+            if (button == Glfw.GLFW_MOUSE_BUTTON_1) {
+                if (pressed) {
+                    int caret = getCaretIndexFromArea(x, y);
+                    if (caret >= 0) {
+                        setCaretIndex(caret);
+                        resetSelect();
+                        selectStart = caret;
+                        drag = true;
+                    }
+                } else {
+                    disposeEditMenu();
+                    drag = false;
+                    if (selectEnd == -1 || selectStart == selectEnd) {
+                        resetSelect();
+                    }
+                }
+            } else if (button == Glfw.GLFW_MOUSE_BUTTON_2) {
+                if (pressed) {
+
+                } else {
+                    callEditMenu(this, x, y);
+                }
+            }
+
+        }
+    }
+
+    @Override
+    public void clickEvent(int button, int x, int y) {
+        int rx = (int) (x - parent.getX());
+        int ry = (int) (y - parent.getY());
+        if (isInArea(x, y)) {
+            int caret = getCaretIndexFromArea(x, y);
+            if (caret >= 0) {
+                setCaretIndex(caret);
+                resetSelect();
+                drag = false;
+            }
+            doSelectText();
+        }
+    }
+
+    @Override
+    public void cursorPosEvent(int x, int y) {
+        int rx = (int) (x - parent.getX());
+        int ry = (int) (y - parent.getY());
+        if (isInArea(x, y)) {
+            if (drag) {
+                int caret = getCaretIndexFromArea(x, y);
+                if (caret >= 0) {
+                    selectEnd = caret;
+                }
+            }
+        }
+    }
+
+    /**
+     *
+     * @param character
+     */
+    @Override
+    public void characterEvent(char character) {
+        if (parent.getFocus() != this) {
+            return;
+        }
+        int[] selectFromTo = getSelected();
+        if (selectFromTo != null) {
+            deleteSelectedText();
+        }
+        textsb.insert(caretIndex, character);
+        caretIndex++;
+        text_arr = null;
+    }
+
+    @Override
+    public void keyEvent(int key, int scanCode, int action, int mods) {
+        if (parent.getFocus() != this) {
+            return;
+        }
+        if (action == Glfw.GLFW_PRESS || action == Glfw.GLFW_REPEAT) {
+            switch (key) {
+                case Glfw.GLFW_KEY_BACKSPACE: {
+                    if (textsb.length() > 0 && caretIndex > 0) {
+                        int[] selectFromTo = getSelected();
+                        if (selectFromTo != null) {
+                            deleteSelectedText();
+                        } else {
+                            textsb.delete(caretIndex - 1, caretIndex);
+                            setCaretIndex(caretIndex - 1);
+                            text_arr = null;
+                        }
+                    }
+                    break;
+                }
+                case Glfw.GLFW_KEY_DELETE: {
+                    if (textsb.length() > caretIndex) {
+                        int[] selectFromTo = getSelected();
+                        if (selectFromTo != null) {
+                            deleteSelectedText();
+                        } else {
+                            textsb.delete(caretIndex, caretIndex + 1);
+                            text_arr = null;
+                        }
+                    }
+                    break;
+                }
+                case Glfw.GLFW_KEY_ENTER: {
+                    String txt = getText();
+                    if (txt != null && txt.length() > 0) {
+                        int[] selectFromTo = getSelected();
+                        if (selectFromTo != null) {
+                            deleteSelectedText();
+                        }
+                        setCaretIndex(caretIndex + 1);
+                        textsb.insert(caretIndex, "\n");
+                        text_arr = null;
+                    }
+                    break;
+                }
+                case Glfw.GLFW_KEY_LEFT: {
+                    if (textsb.length() > 0 && caretIndex > 0) {
+                        setCaretIndex(caretIndex - 1);
+                    }
+                    break;
+                }
+                case Glfw.GLFW_KEY_RIGHT: {
+                    if (textsb.length() > caretIndex) {
+                        setCaretIndex(caretIndex + 1);
+                    }
+                    break;
+                }
+                case Glfw.GLFW_KEY_UP: {
+                    int[] pos = getCaretPosFromArea();
+//                    if (topShowRow > 0 && (pos == null || pos[2] == topShowRow)) {
+//                        topShowRow--;
+//                    }
+                    setScroll(scroll - lineh[0] / (totalTextHeight - showAreaHeight));
+
+                    if (pos != null) {
+                        int cart = getCaretIndexFromArea(pos[0], pos[1] - (int) lineh[0]);
+                        if (cart >= 0) {
+                            setCaretIndex(cart);
+                        }
+                    }
+                    break;
+                }
+                case Glfw.GLFW_KEY_DOWN: {
+                    int[] pos = getCaretPosFromArea();
+//                    if (topShowRow < totalRows - showRows && (pos == null || pos[2] == topShowRow + showRows - 1)) {
+//                        topShowRow++;
+//                    }
+                    setScroll(scroll + lineh[0] / (totalTextHeight - showAreaHeight));
+                    if (pos != null) {
+                        int cart = getCaretIndexFromArea(pos[0], pos[1] + (int) lineh[0]);
+                        if (cart >= 0) {
+                            setCaretIndex(cart);
+                        }
+
+                    }
+                    break;
+                }
+            }
+        }
     }
 
     @Override
@@ -295,25 +468,6 @@ public class GTextBox extends GTextObject {
         }
     }
 
-    float getOutOfShowAreaHeight() {
-        float dh = totalTextHeight - showAreaHeight;
-        return dh < 0 ? 0 : dh;
-    }
-
-    @Override
-    public void scrollEvent(double scrollX, double scrollY, int x, int y) {
-        if (selectMode) {
-            return;
-        }
-        int rx = (int) (x - parent.getX());
-        int ry = (int) (y - parent.getY());
-        if (isInBoundle(boundle, rx, ry)) {
-            float dh = getOutOfShowAreaHeight();
-            if (dh > 0) {
-                setScroll(scroll - (float) scrollY / dh);
-            }
-        }
-    }
     //每多长时间进行一次惯性动作
     long inertiaPeriod = 16;
     //总共做多少次操作
@@ -345,11 +499,27 @@ public class GTextBox extends GTextObject {
                 }
                 flush();
                 if (count++ > maxMoveCount) {
-                    this.cancel();
+                    try {
+                        this.cancel();
+                    } catch (Exception e) {
+                    }
                 }
             }
         };
         getTimer().schedule(task, 0, inertiaPeriod);
+    }
+
+    @Override
+    public void scrollEvent(double scrollX, double scrollY, int x, int y) {
+        if (selectMode) {
+            return;
+        }
+        if (isInArea(x, y)) {
+            float dh = getOutOfShowAreaHeight();
+            if (dh > 0) {
+                setScroll(scroll - (float) scrollY / dh);
+            }
+        }
     }
 
     void setScroll(float p) {
@@ -360,6 +530,11 @@ public class GTextBox extends GTextObject {
         if (scroll < 0) {
             scroll = 0.f;
         }
+    }
+
+    float getOutOfShowAreaHeight() {
+        float dh = totalTextHeight - showAreaHeight;
+        return dh < 0 ? 0 : dh;
     }
 
     @Override
@@ -436,6 +611,8 @@ public class GTextBox extends GTextObject {
         }
         setCaretIndex(selectEnd);
         selectMode = true;
+//        String s=textsb.substring(selectStart,selectEnd);
+//        System.out.println("select :"+s);
     }
 
     @Override
@@ -443,6 +620,13 @@ public class GTextBox extends GTextObject {
         selectStart = 0;
         selectEnd = textsb.length();
         selectMode = true;
+    }
+
+    /**
+     * @param caretIndex the caretIndex to set
+     */
+    private void setCaretIndex(int caretIndex) {
+        this.caretIndex = caretIndex;
     }
 
     /**
@@ -456,7 +640,6 @@ public class GTextBox extends GTextObject {
         float y = getY();
         float w = getW();
         float h = getH();
-        Nanovg.nvgScissor(vg, x, y, w, h);
         drawTextBox(vg, x, y, w, h);
         return true;
     }
@@ -509,6 +692,7 @@ public class GTextBox extends GTextObject {
 
             nvgSave(vg);
             Nanovg.nvgScissor(vg, text_area[LEFT], text_area[TOP], text_area[WIDTH], text_area[HEIGHT]);
+            Nanovg.nvgIntersectScissor(vg, parent.getX(), parent.getY(), parent.getViewW(), parent.getViewH());
             //需要恢复现场
             try {
 
@@ -640,34 +824,12 @@ public class GTextBox extends GTextObject {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            Nanovg.nvgResetScissor(vg);
             nvgRestore(vg);
 
             Nanovg.nvgDeleteNVGtextRow(rowsHandle);
             Nanovg.nvgDeleteNVGglyphPosition(glyphsHandle);
 
         }
-    }
-
-//    public static void drawTextBoxBase(long vg, float x, float y, float w, float h) {
-//        byte[] bg;
-//        // Edit
-//        bg = nvgBoxGradient(vg, x + 1, y + 1 + 1.5f, w - 2, h - 2, 3, 4, GToolkit.getStyle().getEditBackground(), nvgRGBA(32, 32, 32, 32));
-//        nvgBeginPath(vg);
-//        nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, 4 - 1);
-//        nvgFillPaint(vg, bg);
-//        nvgFill(vg);
-//
-//        nvgBeginPath(vg);
-//        nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, 4 - 0.5f);
-//        nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 48));
-//        nvgStroke(vg);
-//    }
-    /**
-     * @param caretIndex the caretIndex to set
-     */
-    private void setCaretIndex(int caretIndex) {
-        this.caretIndex = caretIndex;
     }
 
 }

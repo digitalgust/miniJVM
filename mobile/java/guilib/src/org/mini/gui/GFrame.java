@@ -6,9 +6,11 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
+import org.mini.glfw.Glfw;
+import static org.mini.gui.GObject.LEFT;
+import static org.mini.gui.GObject.isInBoundle;
 import static org.mini.nanovg.Gutil.toUtf8;
 import static org.mini.gui.GToolkit.nvgRGBA;
-import org.mini.nanovg.Nanovg;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_CENTER;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_LEFT;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_MIDDLE;
@@ -57,16 +59,12 @@ public class GFrame extends GContainer {
 
     public GFrame(String title, int left, int top, int width, int height) {
         setTitle(title);
-        boundle[LEFT] = left;
-        boundle[TOP] = top;
-        boundle[WIDTH] = width;
-        boundle[HEIGHT] = height;
+        setLocation(left, top);
+        setSize(width, height);
 
-        panel.boundle[LEFT] = 2;
-        panel.boundle[TOP] = 32;
-        panel.boundle[WIDTH] = width - 4;
-        panel.boundle[HEIGHT] = height - 34;
-        super.add(panel);
+        panel.setLocation(2, 32);
+        panel.setSize(width - 4, height - 34);
+        add(panel);
     }
 
     public void setTitle(String title) {
@@ -84,14 +82,6 @@ public class GFrame extends GContainer {
 
     public int getFrameMode() {
         return frameMode;
-    }
-
-    public void add(GObject nko) {
-        panel.add(nko);
-    }
-
-    public void remove(GObject nko) {
-        panel.remove(nko);
     }
 
     public void setBackground(int rgba) {
@@ -143,9 +133,12 @@ public class GFrame extends GContainer {
 
     @Override
     public boolean update(long vg) {
-        Nanovg.nvgResetScissor(vg);
         this.vg = vg;
-        drawWindow(vg, title, boundle[0], boundle[1], boundle[2], boundle[3]);
+        float x = getX();
+        float y = getY();
+        float w = getW();
+        float h = getH();
+        drawWindow(vg, title, x, y, w, h);
         super.update(this.vg);
         return true;
     }
@@ -156,8 +149,8 @@ public class GFrame extends GContainer {
         byte[] headerPaint;
 
         nvgSave(vg);
-        Nanovg.nvgScissor(vg, x, y, w, h);
 //	nvgClearState(vg);
+
         // Window
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x, y, w, h, cornerRadius);
@@ -218,13 +211,74 @@ public class GFrame extends GContainer {
         close_boundle[WIDTH] = 16;
         close_boundle[HEIGHT] = 16;
 
-        Nanovg.nvgResetScissor(vg);
         nvgRestore(vg);
     }
 
     boolean mouseDrag1 = false;
+    boolean mouseDrag2 = false;
     int mouseX, mouseY;
     boolean isMoveFrame;
+
+    @Override
+    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+
+        switch (button) {
+            case Glfw.GLFW_MOUSE_BUTTON_1: {//left
+                if (pressed) {
+                    mouseDrag1 = true;
+                    if (isInBoundle(title_boundle, mouseX, mouseY)) {
+                        isMoveFrame = true;
+                    }
+                    if (closable && isInBoundle(close_boundle, x, y)) {
+                        parent.remove(this);
+                    }
+                } else {
+                    mouseDrag1 = false;
+                    isMoveFrame = false;
+                }
+                break;
+            }
+            case Glfw.GLFW_MOUSE_BUTTON_2: {//right
+                if (pressed) {
+                    mouseDrag2 = true;
+                } else {
+                    mouseDrag2 = false;
+                }
+                break;
+            }
+            case Glfw.GLFW_MOUSE_BUTTON_3: {//middle
+                break;
+            }
+        }
+        if (isInBoundle(boundle, x, y)) {
+            super.mouseButtonEvent(button, pressed, x, y);
+        } else {
+            panel.setFocus(null);
+        }
+    }
+
+    @Override
+    public void cursorPosEvent(int x, int y) {
+        if (isMoveFrame) {
+            float tx = boundle[LEFT];
+            tx += x - mouseX;
+            float ty = boundle[TOP];
+            ty += y - mouseY;
+            boundle[LEFT] = tx;
+            boundle[TOP] = ty;
+            if (parent != null) {
+                parent.reBoundle();
+            }
+        }
+        mouseX = x;
+        mouseY = y;
+        super.cursorPosEvent(x, y);
+    }
+
+    @Override
+    public void scrollEvent(double scrollX, double scrollY, int x, int y) {
+        panel.scrollEvent(scrollX, scrollY, x, y);
+    }
 
     @Override
     public void touchEvent(int phase, int x, int y) {
@@ -252,6 +306,9 @@ public class GFrame extends GContainer {
                     if (boundle[TOP] + title_boundle[HEIGHT] > gform.boundle[TOP] + gform.boundle[HEIGHT]) {
                         boundle[TOP] = gform.boundle[TOP] + gform.boundle[HEIGHT] - title_boundle[HEIGHT];
                     }
+                    if (parent != null) {
+                        parent.reBoundle();
+                    }
                 }
                 mouseX = x;
                 mouseY = y;
@@ -268,5 +325,4 @@ public class GFrame extends GContainer {
             panel.setFocus(null);
         }
     }
-
 }

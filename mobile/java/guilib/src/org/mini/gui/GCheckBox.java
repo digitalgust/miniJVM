@@ -6,6 +6,7 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
+import static org.mini.gui.GObject.isInBoundle;
 import static org.mini.nanovg.Gutil.toUtf8;
 import static org.mini.gui.GToolkit.nvgRGBA;
 import org.mini.nanovg.Nanovg;
@@ -19,7 +20,10 @@ import static org.mini.nanovg.Nanovg.nvgFillPaint;
 import static org.mini.nanovg.Nanovg.nvgFontFace;
 import static org.mini.nanovg.Nanovg.nvgFontSize;
 import static org.mini.nanovg.Nanovg.nvgRoundedRect;
+import static org.mini.nanovg.Nanovg.nvgSave;
+import static org.mini.nanovg.Nanovg.nvgScissor;
 import static org.mini.nanovg.Nanovg.nvgTextAlign;
+import static org.mini.nanovg.Nanovg.nvgTextJni;
 
 /**
  *
@@ -35,15 +39,29 @@ public class GCheckBox extends GObject {
     public GCheckBox(String text, boolean checked, int left, int top, int width, int height) {
         setText(text);
         this.checked = checked;
-        boundle[LEFT] = left;
-        boundle[TOP] = top;
-        boundle[WIDTH] = width;
-        boundle[HEIGHT] = height;
+        setLocation(left, top);
+        setSize(width, height);
     }
 
     public final void setText(String text) {
         this.text = text;
         text_arr = toUtf8(text);
+    }
+
+    @Override
+    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+        int rx = (int) (x - parent.getX());
+        int ry = (int) (y - parent.getY());
+        if (isInArea(x, y)) {
+            if (pressed) {
+            } else {
+                checked = !checked;
+                parent.setFocus(this);
+                if (actionListener != null) {
+                    actionListener.action(this);
+                }
+            }
+        }
     }
 
     @Override
@@ -73,14 +91,13 @@ public class GCheckBox extends GObject {
         float h = getH();
 
         byte[] bg;
-        Nanovg.nvgScissor(vg, x, y, w, h);
-        
+
         nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
 
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        Nanovg.nvgTextJni(vg, x + 25, y + h * 0.5f, text_arr, 0, text_arr.length);
+        nvgTextJni(vg, x + 25, y + h * 0.5f, text_arr, 0, text_arr.length);
 
         bg = nvgBoxGradient(vg, x + 1, y + (int) (h * 0.5f) - 9 + 1, 18, 18, 3, 3, nvgRGBA(0, 0, 0, 32), nvgRGBA(0, 0, 0, 92));
         nvgBeginPath(vg);
@@ -94,7 +111,7 @@ public class GCheckBox extends GObject {
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
         if (checked) {
-            Nanovg.nvgTextJni(vg, x + 3, y + (int) (h * 0.5f), preicon_arr, 0, preicon_arr.length);
+            nvgTextJni(vg, x + 3, y + (int) (h * 0.5f), preicon_arr, 0, preicon_arr.length);
         }
         return true;
     }

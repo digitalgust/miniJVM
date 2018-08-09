@@ -5,6 +5,7 @@
  */
 package org.mini.gui;
 
+import static org.mini.gui.GObject.LEFT;
 import static org.mini.nanovg.Gutil.toUtf8;
 import org.mini.nanovg.Nanovg;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_LEFT;
@@ -13,7 +14,12 @@ import static org.mini.nanovg.Nanovg.NVG_ALIGN_TOP;
 import static org.mini.nanovg.Nanovg.nvgFillColor;
 import static org.mini.nanovg.Nanovg.nvgFontFace;
 import static org.mini.nanovg.Nanovg.nvgFontSize;
+import static org.mini.nanovg.Nanovg.nvgResetScissor;
+import static org.mini.nanovg.Nanovg.nvgSave;
+import static org.mini.nanovg.Nanovg.nvgScissor;
 import static org.mini.nanovg.Nanovg.nvgTextAlign;
+import static org.mini.nanovg.Nanovg.nvgTextBoxBoundsJni;
+import static org.mini.nanovg.Nanovg.nvgTextBoxJni;
 import static org.mini.nanovg.Nanovg.nvgTextJni;
 
 /**
@@ -28,10 +34,8 @@ public class GLabel extends GObject {
 
     public GLabel(String text, int left, int top, int width, int height) {
         setText(text);
-        boundle[LEFT] = left;
-        boundle[TOP] = top;
-        boundle[WIDTH] = width;
-        boundle[HEIGHT] = height;
+        setLocation(left, top);
+        setSize(width, height);
     }
 
     public final void setText(String text) {
@@ -81,7 +85,7 @@ public class GLabel extends GObject {
         float dy = text_area[TOP];
 
         float[] bond = new float[4];
-        Nanovg.nvgTextBoxBoundsJni(vg, text_area[LEFT], text_area[TOP], text_area[WIDTH], text_arr, 0, text_arr.length, bond);
+        nvgTextBoxBoundsJni(vg, text_area[LEFT], text_area[TOP], text_area[WIDTH], text_arr, 0, text_arr.length, bond);
         bond[WIDTH] -= bond[LEFT];
         bond[HEIGHT] -= bond[TOP];
         bond[LEFT] = bond[TOP] = 0;
@@ -89,9 +93,8 @@ public class GLabel extends GObject {
         if (bond[HEIGHT] > text_area[HEIGHT]) {
             dy -= bond[HEIGHT] - text_area[HEIGHT];
         }
-        Nanovg.nvgScissor(vg, x, y, w, h);
-        Nanovg.nvgTextBoxJni(vg, dx, dy, text_area[WIDTH], text_arr, 0, text_arr.length);
-        Nanovg.nvgResetScissor(vg);
+        nvgTextBoxJni(vg, dx, dy, text_area[WIDTH], text_arr, 0, text_arr.length);
+
     }
 
 }
