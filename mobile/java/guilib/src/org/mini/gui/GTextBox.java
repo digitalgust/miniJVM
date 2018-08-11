@@ -61,7 +61,7 @@ public class GTextBox extends GTextObject {
     static final int AREA_H = HEIGHT;
 
     //
-    boolean drag;
+    boolean mouseDrag;
 
     public GTextBox(String text, String hint, int left, int top, int width, int height) {
         setText(text);
@@ -146,10 +146,10 @@ public class GTextBox extends GTextObject {
                         setCaretIndex(caret);
                         resetSelect();
                         selectStart = caret;
-                        drag = true;
+                        mouseDrag = true;
                     }
                 } else {
-                    drag = false;
+                    mouseDrag = false;
                     if (selectEnd == -1 || selectStart == selectEnd) {
                         resetSelect();
                     }
@@ -174,7 +174,7 @@ public class GTextBox extends GTextObject {
             if (caret >= 0) {
                 setCaretIndex(caret);
                 resetSelect();
-                drag = false;
+                mouseDrag = false;
             }
             doSelectText();
         }
@@ -185,7 +185,7 @@ public class GTextBox extends GTextObject {
         int rx = (int) (x - parent.getX());
         int ry = (int) (y - parent.getY());
         if (isInArea(x, y)) {
-            if (drag) {
+            if (mouseDrag) {
                 int caret = getCaretIndexFromArea(x, y);
                 if (caret >= 0) {
                     selectEnd = caret;
@@ -207,9 +207,8 @@ public class GTextBox extends GTextObject {
         if (selectFromTo != null) {
             deleteSelectedText();
         }
-        textsb.insert(caretIndex, character);
+        insertTextByIndex(caretIndex, character);
         caretIndex++;
-        text_arr = null;
     }
 
     @Override
@@ -225,9 +224,8 @@ public class GTextBox extends GTextObject {
                         if (selectFromTo != null) {
                             deleteSelectedText();
                         } else {
-                            textsb.delete(caretIndex - 1, caretIndex);
                             setCaretIndex(caretIndex - 1);
-                            text_arr = null;
+                            deleteTextByIndex(caretIndex);
                         }
                     }
                     break;
@@ -238,8 +236,7 @@ public class GTextBox extends GTextObject {
                         if (selectFromTo != null) {
                             deleteSelectedText();
                         } else {
-                            textsb.delete(caretIndex, caretIndex + 1);
-                            text_arr = null;
+                            deleteTextByIndex(caretIndex + 1);
                         }
                     }
                     break;
@@ -252,8 +249,7 @@ public class GTextBox extends GTextObject {
                             deleteSelectedText();
                         }
                         setCaretIndex(caretIndex + 1);
-                        textsb.insert(caretIndex, "\n");
-                        text_arr = null;
+                        insertTextByIndex(caretIndex, '\n');
                     }
                     break;
                 }
@@ -383,9 +379,8 @@ public class GTextBox extends GTextObject {
                         if (selectFromTo != null) {
                             deleteSelectedText();
                         } else {
-                            textsb.delete(caretIndex - 1, caretIndex);
                             setCaretIndex(caretIndex - 1);
-                            text_arr = null;
+                            deleteTextByIndex(caretIndex);
                         }
                     }
                     break;
@@ -410,8 +405,7 @@ public class GTextBox extends GTextObject {
                             deleteSelectedText();
                         }
                         setCaretIndex(caretIndex + 1);
-                        textsb.insert(caretIndex, "\n");
-                        text_arr = null;
+                        insertTextByIndex(caretIndex, '\n');
                     }
                     break;
                 }
@@ -509,7 +503,7 @@ public class GTextBox extends GTextObject {
 
     @Override
     public void dragEvent(float dx, float dy, float x, float y) {
-        if (selectMode) {
+        if (selectMode || mouseDrag) {
             return;
         }
         if (isInArea(x, y)) {

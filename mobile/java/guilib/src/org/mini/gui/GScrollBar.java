@@ -38,12 +38,25 @@ public class GScrollBar extends GObject {
     public static final int HORIZONTAL = 0, VERTICAL = 1;
     int mode = HORIZONTAL;
     float radius = 8;
+    float[] line_boundle = new float[4];
 
     public GScrollBar(float pos, int mode, int left, int top, int width, int height) {
         this.pos = pos;
         this.mode = mode;
         setLocation(left, top);
         setSize(width, height);
+        if (mode == HORIZONTAL) {
+            line_boundle[LEFT] = boundle[LEFT] + radius;
+            line_boundle[WIDTH] = boundle[WIDTH] - radius * 2;
+            line_boundle[TOP] = boundle[TOP];
+            line_boundle[HEIGHT] = boundle[HEIGHT];
+        } else {
+            line_boundle[LEFT] = boundle[LEFT];
+            line_boundle[WIDTH] = boundle[WIDTH];
+            line_boundle[TOP] = boundle[TOP] + radius;
+            line_boundle[HEIGHT] = boundle[HEIGHT] - radius * 2;
+
+        }
     }
 
     public float getPos() {
@@ -64,11 +77,11 @@ public class GScrollBar extends GObject {
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         int rx = (int) (x - parent.getX());
         int ry = (int) (y - parent.getY());
-        if (isInArea(x, y)) {
+        if (isInBoundle(line_boundle, rx, ry)) {
             if (pressed) {
                 draged = true;
                 parent.setFocus(this);
-                pos = mode == HORIZONTAL ? (rx - boundle[LEFT]) / boundle[WIDTH] : (ry - boundle[TOP]) / boundle[HEIGHT];
+                pos = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
             } else {
                 draged = false;
                 if (actionListener != null) {
@@ -82,9 +95,9 @@ public class GScrollBar extends GObject {
     public void cursorPosEvent(int x, int y) {
         int rx = (int) (x - parent.getX());
         int ry = (int) (y - parent.getY());
-        if (isInArea(x, y)) {
+        if (isInBoundle(line_boundle, rx, ry)) {
             if (draged) {
-                pos = mode == HORIZONTAL ? (rx - boundle[LEFT]) / boundle[WIDTH] : (ry - boundle[TOP]) / boundle[HEIGHT];
+                pos = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
             }
         } else {
             //draged = false;
@@ -95,18 +108,18 @@ public class GScrollBar extends GObject {
     public void touchEvent(int phase, int x, int y) {
         int rx = (int) (x - parent.getX());
         int ry = (int) (y - parent.getY());
-        if (isInBoundle(boundle, rx, ry)) {
+        if (isInBoundle(line_boundle, rx, ry)) {
             if (phase == Glfm.GLFMTouchPhaseBegan) {
                 draged = true;
-                pos = mode == HORIZONTAL ? (rx - boundle[LEFT]) / boundle[WIDTH] : (ry - boundle[TOP]) / boundle[HEIGHT];
+                pos = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
             } else if (phase == Glfm.GLFMTouchPhaseEnded) {
                 draged = false;
                 if (actionListener != null) {
                     actionListener.action(this);
                 }
-            } else if (isInBoundle(boundle, rx, ry)) {
+            } else if (isInBoundle(line_boundle, rx, ry)) {
                 if (draged) {
-                    pos = mode == HORIZONTAL ? (rx - boundle[LEFT]) / boundle[WIDTH] : (ry - boundle[TOP]) / boundle[HEIGHT];
+                    pos = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
                 }
             }
         }
@@ -118,10 +131,10 @@ public class GScrollBar extends GObject {
      * @return
      */
     public boolean update(long vg) {
-        float x = getX();
-        float y = getY();
-        float w = getW();
-        float h = getH();
+        float x = parent.getX() + line_boundle[LEFT];
+        float y = parent.getY() + line_boundle[TOP];
+        float w = line_boundle[WIDTH];
+        float h = line_boundle[HEIGHT];
 
         if (mode == HORIZONTAL) {
             drawSliderH(vg, pos, x, y, w, h);
@@ -135,9 +148,6 @@ public class GScrollBar extends GObject {
         byte[] bg, knob;
         float cy = y + (int) (h * 0.5f);
         float kr = radius;//(int) (h * 0.25f);
-
-        nvgSave(vg);
-//	nvgClearState(vg);
 
         // Slot
         bg = nvgBoxGradient(vg, x, cy - 2 + 1, w, 4, 2, 2, nvgRGBA(0, 0, 0, 32), nvgRGBA(0, 0, 0, 128));
@@ -169,7 +179,6 @@ public class GScrollBar extends GObject {
         nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 92));
         nvgStroke(vg);
 
-        nvgRestore(vg);
     }
 
     void drawSliderV(long vg, float pos, float x, float y, float w, float h) {
@@ -177,9 +186,6 @@ public class GScrollBar extends GObject {
 //        float cy = y + (int) (h * 0.5f);
         float cx = x + (int) (w * 0.5f);
         float kr = radius;//(int) (w * 0.25f);
-
-        nvgSave(vg);
-//	nvgClearState(vg);
 
         // Slot
 //        bg = nvgBoxGradient(vg, x, cx - 2 + 1, w, 4, 2, 2, nvgRGBA(0, 0, 0, 32), nvgRGBA(0, 0, 0, 128));
@@ -218,7 +224,6 @@ public class GScrollBar extends GObject {
         nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 92));
         nvgStroke(vg);
 
-        nvgRestore(vg);
     }
 
 }

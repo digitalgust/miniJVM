@@ -6,6 +6,7 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
+import org.mini.glfw.Glfw;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
 import static org.mini.nanovg.Gutil.toUtf8;
@@ -43,6 +44,21 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         return textsb.toString();
     }
 
+    public void insertTextByIndex(int index, char ch) {
+        textsb.insert(index, ch);
+        text_arr = null;
+    }
+
+    public void deleteTextByIndex(int index) {
+        textsb.deleteCharAt(index);
+        text_arr = null;
+    }
+
+    public void deleteAll() {
+        textsb.setLength(0);
+        text_arr = null;
+    }
+
     abstract public String getSelectedText();
 
     abstract public void deleteSelectedText();
@@ -63,6 +79,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         String s = getSelectedText();
         if (s != null) {
             Glfm.glfmSetClipBoardContent(s);
+            Glfw.glfwSetClipboardString(getForm().getWinContext(), s);
         }
     }
 
@@ -74,6 +91,9 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     public void doPasteClipBoard() {
         deleteSelectedText();
         String s = Glfm.glfmGetClipBoardContent();
+        if (s == null) {
+            s = Glfw.glfwGetClipboardString(getForm().getWinContext());
+        }
         if (s != null) {
             insertTextAtCaret(s);
         }
@@ -105,6 +125,13 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
             super(left, top, width, height);
         }
 
+        @Override
+        public boolean update(long vg) {
+            if (getForm().getFocus() != this) {
+                getForm().remove(this);
+            }
+            return super.update(vg);
+        }
     }
 
     /**
@@ -190,7 +217,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         //editMenu.move(mx - editMenu.getX(), my - editMenu.getY());
 
         getForm().add(editMenu);
-
+        getForm().setFocus(editMenu);
         //System.out.println("edit menu show");
     }
 
