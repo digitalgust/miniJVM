@@ -127,8 +127,9 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
 
         @Override
         public boolean update(long vg) {
-            if (getForm().getFocus() != this) {
-                getForm().remove(this);
+            GForm gf = getForm();
+            if (gf != null && gf.getFocus() != this) {
+                disposeEditMenu();
             }
             return super.update(vg);
         }
@@ -222,9 +223,12 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     }
 
     synchronized void disposeEditMenu() {
-        if (editMenu != null) {
-            getForm().remove(editMenu);
-
+        GForm gf = getForm();
+        if (gf != null && editMenu != null) {
+            gf.remove(editMenu);
+            if (editMenu.text != null) {
+                gf.setFocus(editMenu.text.getFrame());
+            }
             resetSelect();
             selectMode = false;
         }

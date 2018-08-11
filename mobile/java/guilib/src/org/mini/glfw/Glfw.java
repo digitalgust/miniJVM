@@ -816,5 +816,11 @@ public class Glfw {
             GLFW_EGL_CONTEXT_API = 0x36002,
             GLFW_OSMESA_CONTEXT_API = 0x36003;
 
+    public static void glfwSetClipboardString(long winContext, String s) {
+    }
+
+    public static String glfwGetClipboardString(long winContext) {
+        return null;
+    }
 
 }

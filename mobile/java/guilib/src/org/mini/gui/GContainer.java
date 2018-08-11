@@ -10,13 +10,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import org.mini.glfm.Glfm;
-import static org.mini.gui.GToolkit.nvgRGBA;
 import org.mini.nanovg.Nanovg;
-import static org.mini.nanovg.Nanovg.nvgBeginPath;
 import static org.mini.nanovg.Nanovg.nvgSave;
 import static org.mini.nanovg.Nanovg.nvgScissor;
-import static org.mini.nanovg.Nanovg.nvgStroke;
-import static org.mini.nanovg.Nanovg.nvgStrokeColor;
 
 /**
  *
@@ -139,25 +135,21 @@ abstract public class GContainer extends GObject {
         for (AddRemoveItem ari : cacheBack) {
             if (ari.operation == AddRemoveItem.ADD) {
                 setFocus(ari.go);
-                if (ari.go instanceof GMenu) {
-                    menuCount++;
-                    elements.addFirst(ari.go);
-                } else {
-                    elements.add(menuCount, ari.go);
-                }
+                elements.addFirst(ari.go);
                 onAdd(ari.go);
             } else {
                 boolean success = elements.remove(ari.go);
-                setFocus(null);
-                if (success && ari.go instanceof GMenu) {
-                    menuCount--;
+                if (success) {
+                    if (getFocus() == ari.go) {
+                        setFocus(null);
+                    }
+                    onRemove(ari.go);
                 }
-                onRemove(ari.go);
             }
         }
         cacheBack.clear();
         //如果focus不是第一个，则移到第一个，这样遮挡关系才正确
-        if (focus != null && !(focus instanceof GMenu)&&this instanceof GForm) {
+        if (focus != null && !(this instanceof GMenu)) {
             elements.remove(focus);
             elements.add(menuCount, focus);
         }
@@ -189,7 +181,6 @@ abstract public class GContainer extends GObject {
 //                    nvgStroke(ctx);
 //
 //                }
-
                 Nanovg.nvgRestore(ctx);
             }
         }
