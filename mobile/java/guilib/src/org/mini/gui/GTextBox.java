@@ -149,7 +149,6 @@ public class GTextBox extends GTextObject {
                         drag = true;
                     }
                 } else {
-                    disposeEditMenu();
                     drag = false;
                     if (selectEnd == -1 || selectStart == selectEnd) {
                         resetSelect();
@@ -306,9 +305,7 @@ public class GTextBox extends GTextObject {
 
     @Override
     public void touchEvent(int phase, int x, int y) {
-        int rx = (int) (x - parent.getX());
-        int ry = (int) (y - parent.getY());
-        if (isInBoundle(boundle, rx, ry)) {
+        if (isInArea(x, y)) {
             switch (phase) {
                 case Glfm.GLFMTouchPhaseBegan: {
                     int caret = getCaretIndexFromArea(x, y);
@@ -321,7 +318,6 @@ public class GTextBox extends GTextObject {
                         }
                     } else if (caret >= 0) {
                         setCaretIndex(caret);
-                        disposeEditMenu();
                     }       //
                     if (task != null) {
                         task.cancel();
@@ -332,10 +328,7 @@ public class GTextBox extends GTextObject {
                 case Glfm.GLFMTouchPhaseEnded: {
                     if (selectMode) {
                         if (selectStart != -1) {
-                            if (!selectAdjusted) {
-                                //System.out.println("canceled:"+selectStart);
-                                disposeEditMenu();
-                            }
+                            callEditMenu(this, x, y);
                         }
                     }
                     break;
@@ -476,7 +469,7 @@ public class GTextBox extends GTextObject {
     TimerTask task;
 
     @Override
-    public void inertiaEvent(double x1, double y1, double x2, double y2, final long moveTime) {
+    public void inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
         double dx = x2 - x1;
         final double dy = y2 - y1;
         scrollDelta = 0;
@@ -510,14 +503,19 @@ public class GTextBox extends GTextObject {
     }
 
     @Override
-    public void scrollEvent(double scrollX, double scrollY, int x, int y) {
+    public void scrollEvent(float scrollX, float scrollY, float x, float y) {
+        dragEvent(scrollX, scrollY, x, y);
+    }
+
+    @Override
+    public void dragEvent(float dx, float dy, float x, float y) {
         if (selectMode) {
             return;
         }
         if (isInArea(x, y)) {
             float dh = getOutOfShowAreaHeight();
             if (dh > 0) {
-                setScroll(scroll - (float) scrollY / dh);
+                setScroll(scroll - (float) dy / dh);
             }
         }
     }

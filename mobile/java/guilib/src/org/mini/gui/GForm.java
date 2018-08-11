@@ -168,10 +168,10 @@ public class GForm extends GPanel {
         byte[] b;
         nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
 
-        b = Gutil.toUtf8("touch x:" + cb.mouseX);
+        b = Gutil.toUtf8("touch x,y:" + cb.mouseX + "," + cb.mouseY);
         Nanovg.nvgTextJni(vg, dx, dy, b, 0, b.length);
         dy += font_size;
-        b = Gutil.toUtf8("touch y:" + cb.mouseY);
+        b = Gutil.toUtf8("form x,y:" + getX() + "," + getY());
         Nanovg.nvgTextJni(vg, dx, dy, b, 0, b.length);
         dy += font_size;
         if (focus != null) {

@@ -179,7 +179,6 @@ public class GuiCallBack extends GlfmCallBackAdapter {
                 case Glfm.GLFMTouchPhaseBegan: {//
                     mouseLastPressed = cur;
 
-                    gform.focus = gform.findFocus(mouseX, mouseY);
                     //处理惯性
                     moveStartX = x;
                     moveStartY = y;
@@ -191,7 +190,7 @@ public class GuiCallBack extends GlfmCallBackAdapter {
                     long cost = System.currentTimeMillis() - moveStartAt;
                     if ((Math.abs(x - moveStartX) > INERTIA_MIN_DISTANCE || Math.abs(y - moveStartY) > INERTIA_MIN_DISTANCE)
                             && cost < INERTIA_MAX_MILLS) {//在短时间内进行了滑动操作
-                        form.inertiaEvent(moveStartX, moveStartY, x, y, cost);
+                        form.inertiaEvent((float) moveStartX, (float) moveStartY, (float) x, (float) y, cost);
                     }
                     //检测长按
                     long_touched = cur - mouseLastPressed > LONG_TOUCH_TIME && Math.abs(x - moveStartX) < LONG_TOUCH_MAX_DISTANCE && Math.abs(y - moveStartY) < LONG_TOUCH_MAX_DISTANCE;
@@ -203,16 +202,12 @@ public class GuiCallBack extends GlfmCallBackAdapter {
                     break;
                 }
                 case Glfm.GLFMTouchPhaseMoved: {//
-                    form.scrollEvent(mouseX - lastX, mouseY - lastY, mouseX, mouseY);
+                    form.dragEvent(mouseX - lastX, mouseY - lastY, mouseX, mouseY);
                     break;
                 }
                 case Glfm.GLFMTouchPhaseHover: {//
                     break;
                 }
-            }
-
-            if (phase == Glfm.GLFMTouchPhaseBegan) {
-
             }
 
             //click event

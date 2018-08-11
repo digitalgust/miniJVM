@@ -171,7 +171,12 @@ public class GList extends GContainer {
     }
 
     @Override
-    public void scrollEvent(double scrollX, double scrollY, int x, int y) {
+    public void dragEvent(float scrollX, float scrollY, float x, float y) {
+        scrollEvent(scrollX, scrollY, x, y);
+    }
+
+    @Override
+    public void scrollEvent(float scrollX, float scrollY, float x, float y) {
         int rx = (int) (x - parent.getX());
         int ry = (int) (y - parent.getY());
         if (isInBoundle(boundle, rx, ry) && scrollBar != null) {
@@ -187,7 +192,7 @@ public class GList extends GContainer {
     TimerTask task;
 
     @Override
-    public void inertiaEvent(double x1, double y1, double x2, double y2, final long moveTime) {
+    public void inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
         double dx = x2 - x1;
         final double dy = y2 - y1;
         task = new TimerTask() {

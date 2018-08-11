@@ -52,7 +52,7 @@ public class GFrame extends GContainer {
 
     GPanel panel = new GPanel();
 
-    float[] title_boundle = new float[4];
+    GPanel title_panel = new GPanel();
     long vg;
     int frameMode;
     boolean closable = true;
@@ -65,6 +65,10 @@ public class GFrame extends GContainer {
         panel.setLocation(2, 32);
         panel.setSize(width - 4, height - 34);
         add(panel);
+
+        title_panel.setLocation(1, 1);
+        title_panel.setSize(width - 2, 30);
+        add(title_panel);
     }
 
     public void setTitle(String title) {
@@ -148,9 +152,6 @@ public class GFrame extends GContainer {
         byte[] shadowPaint;
         byte[] headerPaint;
 
-        nvgSave(vg);
-//	nvgClearState(vg);
-
         // Window
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x, y, w, h, cornerRadius);
@@ -169,15 +170,12 @@ public class GFrame extends GContainer {
         // Header
         headerPaint = nvgLinearGradient(vg, x, y, x, y + 15, nvgRGBA(255, 255, 255, 8), nvgRGBA(0, 0, 0, 16));
         nvgBeginPath(vg);
-        title_boundle[LEFT] = x + 1;
-        title_boundle[TOP] = y + 1;
-        title_boundle[WIDTH] = w - 2;
-        title_boundle[HEIGHT] = 30;
+
         nvgRoundedRect(vg,
-                title_boundle[LEFT],
-                title_boundle[TOP],
-                title_boundle[WIDTH],
-                title_boundle[HEIGHT],
+                title_panel.getViewX(),
+                title_panel.getViewY(),
+                title_panel.getViewW(),
+                title_panel.getViewH(),
                 cornerRadius - 1);
         nvgFillPaint(vg, headerPaint);
         nvgFill(vg);
@@ -211,13 +209,10 @@ public class GFrame extends GContainer {
         close_boundle[WIDTH] = 16;
         close_boundle[HEIGHT] = 16;
 
-        nvgRestore(vg);
     }
 
-    boolean mouseDrag1 = false;
-    boolean mouseDrag2 = false;
     int mouseX, mouseY;
-    boolean isMoveFrame;
+    boolean dragFrame = false;
 
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
@@ -225,32 +220,25 @@ public class GFrame extends GContainer {
         switch (button) {
             case Glfw.GLFW_MOUSE_BUTTON_1: {//left
                 if (pressed) {
-                    mouseDrag1 = true;
-                    if (isInBoundle(title_boundle, mouseX, mouseY)) {
-                        isMoveFrame = true;
-                    }
                     if (closable && isInBoundle(close_boundle, x, y)) {
                         parent.remove(this);
+                    } else if (title_panel.isInArea(x, y)) {
+                        dragFrame = true;
                     }
+
                 } else {
-                    mouseDrag1 = false;
-                    isMoveFrame = false;
+                    dragFrame = false;
                 }
                 break;
             }
             case Glfw.GLFW_MOUSE_BUTTON_2: {//right
-                if (pressed) {
-                    mouseDrag2 = true;
-                } else {
-                    mouseDrag2 = false;
-                }
                 break;
             }
             case Glfw.GLFW_MOUSE_BUTTON_3: {//middle
                 break;
             }
         }
-        if (isInBoundle(boundle, x, y)) {
+        if (isInArea(x, y)) {
             super.mouseButtonEvent(button, pressed, x, y);
         } else {
             panel.setFocus(null);
@@ -258,25 +246,21 @@ public class GFrame extends GContainer {
     }
 
     @Override
-    public void cursorPosEvent(int x, int y) {
-        if (isMoveFrame) {
-            float tx = boundle[LEFT];
-            tx += x - mouseX;
-            float ty = boundle[TOP];
-            ty += y - mouseY;
-            boundle[LEFT] = tx;
-            boundle[TOP] = ty;
-            if (parent != null) {
-                parent.reBoundle();
-            }
+    public void dragEvent(float dx, float dy, float x, float y) {
+
+        if (dragFrame) {
+            move(dx, dy);
+//            if (parent != null) {
+//                parent.reBoundle();
+//            }
+        } else {
+
+            super.dragEvent(dx, dy, x, y);
         }
-        mouseX = x;
-        mouseY = y;
-        super.cursorPosEvent(x, y);
     }
 
     @Override
-    public void scrollEvent(double scrollX, double scrollY, int x, int y) {
+    public void scrollEvent(float scrollX, float scrollY, float x, float y) {
         panel.scrollEvent(scrollX, scrollY, x, y);
     }
 
@@ -285,41 +269,25 @@ public class GFrame extends GContainer {
 
         switch (phase) {
             case Glfm.GLFMTouchPhaseBegan:
-                mouseDrag1 = true;
-                if (isInBoundle(title_boundle, x, y)) {
-                    isMoveFrame = true;
-                }
                 if (closable && isInBoundle(close_boundle, x, y)) {
                     parent.remove(this);
+                } else if (title_panel.isInArea(x, y)) {
+                    dragFrame = true;
                 }
                 mouseX = x;
                 mouseY = y;
                 break;
             case Glfm.GLFMTouchPhaseMoved:
-                if (isMoveFrame) {
-                    boundle[LEFT] += x - mouseX;
-                    boundle[TOP] += y - mouseY;
-                    if (boundle[TOP] < 0) {
-                        boundle[TOP] = 0;
-                    }
-                    GForm gform = getForm();
-                    if (boundle[TOP] + title_boundle[HEIGHT] > gform.boundle[TOP] + gform.boundle[HEIGHT]) {
-                        boundle[TOP] = gform.boundle[TOP] + gform.boundle[HEIGHT] - title_boundle[HEIGHT];
-                    }
-                    if (parent != null) {
-                        parent.reBoundle();
-                    }
-                }
                 mouseX = x;
                 mouseY = y;
                 break;
             default:
-                mouseDrag1 = false;
-                isMoveFrame = false;
+                dragFrame = false;
+
                 break;
         }
 
-        if (isInBoundle(boundle, x, y)) {
+        if (isInArea(x, y)) {
             super.touchEvent(phase, x, y);
         } else {
             panel.setFocus(null);

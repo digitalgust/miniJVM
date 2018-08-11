@@ -36,7 +36,7 @@ import static org.mini.nanovg.Nanovg.nvgTextMetrics;
  *
  * @author Gust
  */
-public class GMenu extends GPanel {
+public class GMenu extends GContainer {
 
     float[] lineh = new float[1];
 

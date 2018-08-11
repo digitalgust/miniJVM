@@ -100,6 +100,10 @@ abstract public class GObject {
     public void cursorPosEvent(int x, int y) {
     }
 
+    public void dragEvent(float dx, float dy, float x, float y) {
+
+    }
+
     public void dropEvent(int count, String[] paths) {
     }
 
@@ -115,7 +119,7 @@ abstract public class GObject {
     public void touchEvent(int phase, int x, int y) {
     }
 
-    public void scrollEvent(double scrollX, double scrollY, int x, int y) {
+    public void scrollEvent(float scrollX, float scrollY, float x, float y) {
     }
 
     /**
@@ -127,7 +131,7 @@ abstract public class GObject {
      * @param y2
      * @param moveTime
      */
-    public void inertiaEvent(double x1, double y1, double x2, double y2, long moveTime) {
+    public void inertiaEvent(float x1, float y1, float x2, float y2, long moveTime) {
 
     }
 
@@ -137,10 +141,10 @@ abstract public class GObject {
     }
 
     public boolean isInArea(float x, float y) {
-        float absx = getX();
-        float absy = getY();
-        return x >= absx && x <= absx + boundle[WIDTH]
-                && y >= absy && y <= absy + boundle[HEIGHT];
+        float absx = getViewX();
+        float absy = getViewY();
+        return x >= absx && x <= absx + getViewW()
+                && y >= absy && y <= absy + getViewH();
     }
 
     public float[] getBoundle() {
@@ -203,6 +207,11 @@ abstract public class GObject {
         return boundle[HEIGHT];
     }
 
+    public void move(float dx, float dy) {
+        boundle[LEFT] += dx;
+        boundle[TOP] += dy;
+    }
+
     /**
      * @return the bgColor
      */
@@ -255,11 +264,11 @@ abstract public class GObject {
 
     public GForm getForm() {
         GObject go = this;
-        while ((go = go.parent) != null) {
+        do {
             if (go instanceof GForm) {
                 return (GForm) go;
             }
-        }
+        } while ((go = go.parent) != null);
         return null;
     }
 

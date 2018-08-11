@@ -9,9 +9,14 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import org.mini.glfm.Glfm;
+import static org.mini.gui.GToolkit.nvgRGBA;
 import org.mini.nanovg.Nanovg;
+import static org.mini.nanovg.Nanovg.nvgBeginPath;
 import static org.mini.nanovg.Nanovg.nvgSave;
 import static org.mini.nanovg.Nanovg.nvgScissor;
+import static org.mini.nanovg.Nanovg.nvgStroke;
+import static org.mini.nanovg.Nanovg.nvgStrokeColor;
 
 /**
  *
@@ -39,7 +44,7 @@ abstract public class GContainer extends GObject {
         }
     }
 
-    GObject findFocus(int x, int y) {
+    GObject findFocus(float x, float y) {
         for (Iterator<GObject> it = elements.iterator(); it.hasNext();) {
             GObject nko = it.next();
             if (nko.isInArea(x, y)) {
@@ -152,7 +157,7 @@ abstract public class GContainer extends GObject {
         }
         cacheBack.clear();
         //如果focus不是第一个，则移到第一个，这样遮挡关系才正确
-        if (focus != null && !(focus instanceof GMenu)) {
+        if (focus != null && !(focus instanceof GMenu)&&this instanceof GForm) {
             elements.remove(focus);
             elements.add(menuCount, focus);
         }
@@ -167,15 +172,24 @@ abstract public class GContainer extends GObject {
                 float h = nko.getViewH();
 
                 nvgSave(ctx);
-//                Nanovg.nvgResetScissor(ctx);
                 nvgScissor(ctx, x, y, w, h);
-//
-//                nvgBeginPath(ctx);
-//                Nanovg.nvgRect(ctx, x + 1, y + 1, w - 2, h - 2);
-//                nvgStrokeColor(ctx, nvgRGBA(255, 0, 0, 255));
-//                nvgStroke(ctx);
                 Nanovg.nvgIntersectScissor(ctx, getViewX(), getViewY(), getViewW(), getViewH());
                 nko.update(ctx);
+
+//                if (focus == nko) {
+//                    nvgScissor(ctx, x, y, w, h);
+//                    nvgBeginPath(ctx);
+//                    Nanovg.nvgRect(ctx, x + 1, y + 1, w - 2, h - 2);
+//                    nvgStrokeColor(ctx, nvgRGBA(255, 0, 0, 255));
+//                    nvgStroke(ctx);
+//
+//                    nvgBeginPath(ctx);
+//                    Nanovg.nvgRect(ctx, nko.getX() + 2, nko.getY() + 2, nko.getW() - 4, nko.getH() - 4);
+//                    nvgStrokeColor(ctx, nvgRGBA(0, 0, 255, 255));
+//                    nvgStroke(ctx);
+//
+//                }
+
                 Nanovg.nvgRestore(ctx);
             }
         }
@@ -198,10 +212,8 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
-        if (focus == null || !focus.isInArea(x, y)) {
-            GObject nko = findFocus(x, y);
-            setFocus(nko);
-        }
+        setFocus(findFocus(x, y));
+
         if (focus != null) {
             focus.mouseButtonEvent(button, pressed, x, y);
         }
@@ -210,7 +222,8 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void cursorPosEvent(int x, int y) {
-        if (focus != null) {
+
+        if (focus != null && focus.isInArea(x, y)) {
             focus.cursorPosEvent(x, y);
         }
 
@@ -224,16 +237,24 @@ abstract public class GContainer extends GObject {
     }
 
     @Override
-    public void scrollEvent(double scrollX, double scrollY, int x, int y) {
-        if (focus != null) {
+    public void scrollEvent(float scrollX, float scrollY, float x, float y) {
+        setFocus(findFocus(x, y));
+        if (focus != null && focus.isInArea(x, y)) {
             focus.scrollEvent(scrollX, scrollY, x, y);
         }
     }
 
     @Override
     public void clickEvent(int button, int x, int y) {
-        if (focus != null) {
+        if (focus != null && focus.isInArea(x, y)) {
             focus.clickEvent(button, x, y);
+        }
+    }
+
+    public void dragEvent(float dx, float dy, float x, float y) {
+        setFocus(findFocus(x, y));
+        if (focus != null && focus.isInArea(x, y)) {
+            focus.dragEvent(dx, dy, x, y);
         }
     }
 
@@ -254,9 +275,8 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void touchEvent(int phase, int x, int y) {
-        if (focus == null || !focus.isInArea(x, y)) {
-            GObject nko = findFocus(x, y);
-            setFocus(nko);
+        if (phase == Glfm.GLFMTouchPhaseBegan) {
+            setFocus(findFocus(x, y));
         }
         if (focus != null) {
             focus.touchEvent(phase, x, y);
@@ -264,29 +284,17 @@ abstract public class GContainer extends GObject {
     }
 
     @Override
-    public void inertiaEvent(double x1, double y1, double x2, double y2, long moveTime) {
+    public void inertiaEvent(float x1, float y1, float x2, float y2, long moveTime) {
 
-        if (focus != null) {
+        if (focus != null && focus.isInArea((float) x1, (float) y1)) {
             focus.inertiaEvent(x1, y1, x2, y2, moveTime);
         }
-//        else {
-//            for (Iterator<GObject> it = elements.iterator(); it.hasNext();) {
-//                try {
-//                    GObject nko = it.next();
-//                    nko.inertiaEvent(x1, y1, x2, y2, moveTime);
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }
     }
 
     @Override
     public void longTouchedEvent(int x, int y) {
-        if (focus == null || !focus.isInArea(x, y)) {
-            GObject nko = findFocus(x, y);
-            setFocus(nko);
-        }
+        setFocus(findFocus(x, y));
+
         if (focus != null) {
             focus.longTouchedEvent(x, y);
         }

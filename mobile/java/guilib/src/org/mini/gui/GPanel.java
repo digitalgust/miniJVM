@@ -5,6 +5,13 @@
  */
 package org.mini.gui;
 
+import java.util.TimerTask;
+import org.mini.glfm.Glfm;
+import static org.mini.gui.GObject.flush;
+import static org.mini.gui.GObject.flush;
+import static org.mini.gui.GObject.flush;
+import static org.mini.gui.GObject.flush;
+
 /**
  *
  * @author gust
@@ -35,6 +42,7 @@ public class GPanel extends GContainer {
         return viewBoundle[LEFT];
     }
 
+    @Override
     public float getViewY() {
         if (parent != null) {
             return parent.getViewY() + viewBoundle[TOP];
@@ -42,12 +50,21 @@ public class GPanel extends GContainer {
         return viewBoundle[TOP];
     }
 
+    @Override
     public float getViewW() {
         return viewBoundle[WIDTH];
     }
 
+    @Override
     public float getViewH() {
         return viewBoundle[HEIGHT];
+    }
+
+    public void move(float dx, float dy) {
+        boundle[LEFT] += dx;
+        boundle[TOP] += dy;
+        viewBoundle[LEFT] += dx;
+        viewBoundle[TOP] += dy;
     }
 
     @Override
@@ -61,6 +78,7 @@ public class GPanel extends GContainer {
     }
 
     public void reBoundle() {
+        float oldMinX = minX, oldMaxX = maxX, oldMinY = minY, oldMaxY = maxY;
         minX = 0;
         minY = 0;
         maxX = minX + viewBoundle[WIDTH];
@@ -88,23 +106,121 @@ public class GPanel extends GContainer {
     }
 
     @Override
-    public void scrollEvent(double scrollX, double scrollY, int x, int y) {
-
-        boolean found = false;
-        for (GObject go : elements) {
-            if (go.isInArea(x, y)) {
-                go.scrollEvent(scrollX, scrollY, x, y);
-                found = true;
-                break;
+    public void touchEvent(int phase, int x, int y) {
+        switch (phase) {
+            case Glfm.GLFMTouchPhaseBegan: {
+                if (task != null) {
+                    task.cancel();
+                    task = null;
+                }
             }
         }
-        if (!found) {
+        super.touchEvent(phase, x, y);
+    }
+
+    //每多长时间进行一次惯性动作
+    long inertiaPeriod = 16;
+    //总共做多少次操作
+    long maxMoveCount = 120;
+    //惯性任务
+    TimerTask task;
+
+    @Override
+    public void inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
+        GObject go = findFocus(x1, y1);
+        if (go != null) {
+            go.inertiaEvent(x1, y1, x2, y2, moveTime);
+            return;
+        }
+        //
+        System.out.println("inertia: x1,y1,x2,y2 = " + x1 + "," + y1 + "," + x2 + "," + y2);
+        final double dx = x2 - x1;
+        final double dy = y2 - y1;
+        if (Math.abs(dy) > Math.abs(dx)) {
+            task = new TimerTask() {
+                //惯性速度
+                double speedY = dy / (moveTime / inertiaPeriod);
+                //阻力
+                double resistance = speedY / maxMoveCount;
+                //
+                float count = 0;
+
+                @Override
+                public void run() {
+//                System.out.println("inertia " + speed);
+                    speedY += resistance;//速度和阻力抵消为0时,退出滑动
+
+                    float tmpScrollY = scrolly;
+                    float dh = getOutOfViewHeight();
+                    if (dh > 0) {
+                        float vec = (float) speedY / dh;
+                        setScrollY(vec);
+                        tmpScrollY -= vec;
+                        //System.out.println("dy:" + ((float) speedY / dh));
+                    }
+                    flush();
+                    if (count++ > maxMoveCount || tmpScrollY < 0 || tmpScrollY > 1) {
+                        try {
+                            this.cancel();
+                        } catch (Exception e) {
+                        }
+                    }
+                }
+            };
+        } else {
+            task = new TimerTask() {
+                //惯性速度
+                double speedX = dx / (moveTime / inertiaPeriod);
+                //阴力
+                double resistance = speedX / maxMoveCount;
+                //
+                float count = 0;
+
+                @Override
+                public void run() {
+//                System.out.println("inertia " + speed);
+                    speedX += resistance;//速度和阴力抵消为0时,退出滑动
+
+                    float dw = getOutOfViewWidth();
+                    float tmpScrollX = scrollx;
+                    if (dw > 0) {
+                        float vec = (float) speedX / dw;
+                        setScrollX(vec);
+                        tmpScrollX -= vec;
+                        //System.out.println("dx:" + ((float) speedX / dw));
+                    }
+                    flush();
+                    if (count++ > maxMoveCount || tmpScrollX < 0 || tmpScrollX > 1) {
+                        try {
+                            this.cancel();
+                        } catch (Exception e) {
+                        }
+                    }
+                }
+            };
+        }
+        getTimer().schedule(task, 0, inertiaPeriod);
+    }
+
+    @Override
+    public void dragEvent(float dx, float dy, float x, float y) {
+        if (focus == null) {
+            setFocus(findFocus(x, y));
+        }
+        if (focus != null) {
+            focus.dragEvent(dx, dy, x, y);
+        } else {
+            reBoundle();
             float dw = getOutOfViewWidth();
             float dh = getOutOfViewHeight();
-            float dx = (dw == 0) ? 0.f : (float) scrollX / dw;
-            float dy = (dh == 0) ? 0.f : (float) scrollY / dh;
-            setScrollX(dx);
-            setScrollY(dy);
+            float odx = (dw == 0) ? 0.f : (float) dx / dw;
+            float ody = (dh == 0) ? 0.f : (float) dy / dh;
+            if (Math.abs(odx) > Math.abs(ody)) {
+                setScrollX(odx);
+            } else {
+                setScrollY(ody);
+            }
+
         }
     }
 
