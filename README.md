@@ -138,10 +138,7 @@ There are two class demo how develop java app for iOS and Android, one is App ma
 package app;
 
 import org.mini.glfm.Glfm;
-import static org.mini.glfm.Glfm.GLFMDepthFormat16;
-import static org.mini.glfm.Glfm.GLFMMultisampleNone;
-import static org.mini.glfm.Glfm.GLFMRenderingAPIOpenGLES2;
-import static org.mini.glfm.Glfm.GLFMStencilFormat8;
+import org.mini.gui.GApplication;
 import org.mini.gui.GuiCallBack;
 import test.App1;
 
@@ -166,12 +163,12 @@ public class GlfmMain {
     static public void glinit(long display) {
 
         Glfm.glfmSetDisplayConfig(display,
-                GLFMRenderingAPIOpenGLES2,
+                Glfm.GLFMRenderingAPIOpenGLES2,
                 Glfm.GLFMColorFormatRGBA8888,
-                GLFMDepthFormat16,
-                GLFMStencilFormat8,
-                GLFMMultisampleNone);
-        App1 app = new App1();
+                Glfm.GLFMDepthFormat16,
+                Glfm.GLFMStencilFormat8,
+                Glfm.GLFMMultisampleNone);
+        GApplication app = new App1();
         GuiCallBack ccb = new GuiCallBack(display, app);
         Glfm.glfmSetCallBack(display, ccb);
 
@@ -180,33 +177,13 @@ public class GlfmMain {
 }
 
 
+
 package test;
 
 import java.util.Random;
-import org.mini.gl.warp.GLFrameBuffer;
-import org.mini.gl.warp.GLFrameBufferPainter;
-import org.mini.gui.GButton;
-import org.mini.gui.GCanvas;
-import org.mini.gui.GCheckBox;
-import org.mini.gui.GColorSelector;
-import org.mini.gui.GForm;
-import org.mini.gui.GFrame;
-import org.mini.gui.GGraphics;
-import org.mini.gui.GImage;
-import org.mini.gui.GTextField;
-import org.mini.gui.GLabel;
-import org.mini.gui.GList;
-import org.mini.gui.GMenu;
-import org.mini.gui.GObject;
-import org.mini.gui.GPanel;
-import org.mini.gui.GScrollBar;
-import org.mini.gui.GTextBox;
-import org.mini.gui.GuiCallBack;
-import org.mini.gui.event.GActionListener;
-import static org.mini.nanovg.Gutil.toUtf8;
-import org.mini.nanovg.Nanovg;
-import org.mini.gui.GApplication;
-import org.mini.gui.GLanguage;
+import org.mini.nanovg.*;
+import org.mini.gui.*;
+import org.mini.gui.event.*;
 
 /**
  *
@@ -217,7 +194,6 @@ public class App1 implements GApplication {
     private static App1 app;
 
     GForm form;
-    GMenu menu;
 
     static public App1 getInstance() {
         if (app == null) {
@@ -225,7 +201,6 @@ public class App1 implements GApplication {
         }
         return app;
     }
-
 
     @Override
     public GForm createdForm(GuiCallBack ccb) {
@@ -237,18 +212,26 @@ public class App1 implements GApplication {
 
         form.setFps(30f);
         long vg = form.getNvContext();
-        GFrame gframe = new GFrame("demo", 50, 50, 300, 500);
-        init(gframe.getPanel(), vg, ccb);
-        form.add(gframe);
-        gframe.align(GGraphics.HCENTER | GGraphics.VCENTER);
 
+        GMenu menu;
         int menuH = 80;
         GImage img = new GImage("./image4.png");
         menu = new GMenu(0, form.getDeviceHeight() - menuH, form.getDeviceWidth(), menuH);
-        menu.addItem("Home", img);
+        menu.setFixed(true);
+        GMenuItem item = menu.addItem("Home", img);
+        item.setActionListener(new GActionListener() {
+            @Override
+            public void action(GObject gobj) {
+                GFrame gframe = new GFrame("demo", 50, 50, 300, 500);
+                init(gframe.getPanel(), vg, ccb);
+                form.add(gframe);
+                gframe.align(GGraphics.HCENTER | GGraphics.VCENTER);
+            }
+        });
         menu.addItem("Search", img);
         menu.addItem("New", img);
         menu.addItem("My", img);
+
         form.add(menu);
         return form;
     }
@@ -318,10 +301,6 @@ public class App1 implements GApplication {
             @Override
             public void action(GObject gobj) {
                 System.out.println("delete something");
-                menu.setPos(menu.getX(), menu.getY() - 20);
-                if (menu.getY() < 0) {
-                    menu.setPos(menu.getX(), form.getDeviceHeight() - menu.getH());
-                }
             }
         });
         bt2.setActionListener(new GActionListener() {
@@ -340,7 +319,7 @@ public class App1 implements GApplication {
         GList list = new GList(x, y, 280, 30);
         parent.add(list);
         if (list.getImages() == null) {
-            int i = Nanovg.nvgCreateImage(vg, toUtf8("./image4.png"), 0);
+            int i = Nanovg.nvgCreateImage(vg, Gutil.toUtf8("./image4.png"), 0);
             list.setItems(new int[]{i, i, i},
                     new String[]{"One", "Two", "Three",});
 
@@ -352,7 +331,7 @@ public class App1 implements GApplication {
         list.setMode(GList.MODE_MULTI_LINE);
         parent.add(list);
         if (list.getImages() == null) {
-            int i = Nanovg.nvgCreateImage(vg, toUtf8("./image4.png"), 0);
+            int i = Nanovg.nvgCreateImage(vg, Gutil.toUtf8("./image4.png"), 0);
             list.setItems(new int[]{i, i, i, i, i, i, i, i, i, i},
                     new String[]{"One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",});
         }
@@ -364,8 +343,8 @@ public class App1 implements GApplication {
 
     class TestCanvas extends GCanvas {
 
-        GLFrameBuffer glfb;
-        GLFrameBufferPainter glfbRender;
+//        GLFrameBuffer glfb;
+//        GLFrameBufferPainter glfbRender;
         GImage img3D;
 
         public TestCanvas(int x, int y, int w, int h) {
@@ -401,6 +380,7 @@ public class App1 implements GApplication {
         }
     }
 }
+
 
 ```
 
