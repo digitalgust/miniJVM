@@ -6,31 +6,9 @@
 package test;
 
 import java.util.Random;
-import org.mini.gl.warp.GLFrameBuffer;
-import org.mini.gl.warp.GLFrameBufferPainter;
-import org.mini.gui.GButton;
-import org.mini.gui.GCanvas;
-import org.mini.gui.GCheckBox;
-import org.mini.gui.GColorSelector;
-import org.mini.gui.GForm;
-import org.mini.gui.GFrame;
-import org.mini.gui.GGraphics;
-import org.mini.gui.GImage;
-import org.mini.gui.GTextField;
-import org.mini.gui.GLabel;
-import org.mini.gui.GList;
-import org.mini.gui.GMenu;
-import org.mini.gui.GObject;
-import org.mini.gui.GPanel;
-import org.mini.gui.GScrollBar;
-import org.mini.gui.GTextBox;
-import org.mini.gui.GuiCallBack;
-import org.mini.gui.event.GActionListener;
-import static org.mini.nanovg.Gutil.toUtf8;
-import org.mini.nanovg.Nanovg;
-import org.mini.gui.GApplication;
-import org.mini.gui.GLanguage;
-import org.mini.gui.GMenuItem;
+import org.mini.nanovg.*;
+import org.mini.gui.*;
+import org.mini.gui.event.*;
 
 /**
  *
@@ -144,40 +122,10 @@ public class App1 implements GApplication {
         bt2.setBgColor(0, 0, 0, 0);
         parent.add(bt2);
 
-        y += 35;
-        GButton bt5 = new GButton("long button", x, y, 160, 28);
-        bt5.setBgColor(128, 16, 8, 255);
-        bt5.setIcon(GObject.ICON_TRASH);
-        parent.add(bt5);
-
         bt1.setActionListener(new GActionListener() {
             @Override
             public void action(GObject gobj) {
                 System.out.println("delete something");
-                //menu.setPos(menu.getX(), menu.getY() - 20);
-//                if (menu.getY() < 0) {
-//                    menu.setPos(menu.getX(), form.getDeviceHeight() - menu.getH());
-//                }
-                String gf3_tb_txt = "剧情场景切换时偶尔蹦出的模型场景残留，和不正常UI，特别特别影响气氛\n"
-                        + "开场和大姐npc距离太近了，导致后面的剧情切换显得比较不自然，如果离得远一些还会好一些\n"
-                        + "剧情字幕和角色介绍文字纯白色看起来有点费劲，建议增加一些阴影描边\n"
-                        + "剧情里部分角色没有影子，显得比较飘\n"
-                        + "第二波山贼是等着玩家过去打的，没有主动进攻性，建议主动跑过来攻击玩家，增加玩家大开杀戒的合理性\n"
-                        + "引导的黑屏有点过于黑，太暴力，不过这是个人看法\n"
-                        + "失魂洞刚出生的地方周围障碍就非常容易阻碍视线或者造成大范围视角变化\n"
-                        + "第一次打大粽子的时候丢贴图和动作，第二次打的时候，动作间隙里大粽子会卡住定帧，还会丢失战斗bgm和音效\n"
-                        + "地上的草远看其实效果还行，但是部分剧情里面有特写镜头，拉近就很露怯了\n"
-                        + "和山贼的第一场战斗后没有引导方向和行动，可能会有点懵逼（失魂洞里也卡住过）\n"
-                        + "开局第一波虫子生命略多 \n"
-                        + "玩了几个小时，感觉游戏整体性、打击效果非常好、场景的昼夜切换都是非常不错的，在副本中尝试了一下3D视角和2.5D视角，3D效果在打怪的时候晃的比较厉害导致不好对怪进行瞄准，以及上来打1-2关的大粽子boss的时候，由于场地空间狭小，视野非常受限。2.5D体验的还好只是部分地形会挡住视野。体验的是冲锋枪，希望后期可以有更多种武器选择，使用不同的武器有不同的技能效果，以及增加一些体术技能，冲锋枪枪的技能效果大多都是击退效果，可以加一些击倒效果。游戏闪退的次数较多，以及游戏帧数较低，总体体验还是很好的，非常期待更多优化和更新！ "//
-                        + "玩了几个小时，感觉游戏整体性、打击效果非常好、场景的昼夜切换都是非常不错的，在副本中尝试了一下3D视角和2.5D视角，3D效果在打怪的时候晃的比较厉害导致不好对怪进行瞄准，以及上来打1-2关的大粽子boss的时候，由于场地空间狭小，视野非常受限。2.5D体验的还好只是部分地形会挡住视野。体验的是冲锋枪，希望后期可以有更多种武器选择，使用不同的武器有不同的技能效果，以及增加一些体术技能，冲锋枪枪的技能效果大多都是击退效果，可以加一些击倒效果。游戏闪退的次数较多，以及游戏帧数较低，总体体验还是很好的，非常期待更多优化和更新！ "//
-                        + "玩了几个小时，感觉游戏整体性、打击效果非常好、场景的昼夜切换都是非常不错的，在副本中尝试了一下3D视角和2.5D视角，3D效果在打怪的时候晃的比较厉害导致不好对怪进行瞄准，以及上来打1-2关的大粽子boss的时候，由于场地空间狭小，视野非常受限。2.5D体验的还好只是部分地形会挡住视野。体验的是冲锋枪，希望后期可以有更多种武器选择，使用不同的武器有不同的技能效果，以及增加一些体术技能，冲锋枪枪的技能效果大多都是击退效果，可以加一些击倒效果。游戏闪退的次数较多，以及游戏帧数较低，总体体验还是很好的，非常期待更多优化和更新！ "//
-                        + "玩了几个小时，感觉游戏整体性、打击效果非常好、场景的昼夜切换都是非常不错的，在副本中尝试了一下3D视角和2.5D视角，3D效果在打怪的时候晃的比较厉害导致不好对怪进行瞄准，以及上来打1-2关的大粽子boss的时候，由于场地空间狭小，视野非常受限。2.5D体验的还好只是部分地形会挡住视野。体验的是冲锋枪，希望后期可以有更多种武器选择，使用不同的武器有不同的技能效果，以及增加一些体术技能，冲锋枪枪的技能效果大多都是击退效果，可以加一些击倒效果。游戏闪退的次数较多，以及游戏帧数较低，总体体验还是很好的，非常期待更多优化和更新！ "//
-                        ;
-                GFrame gf3 = new GFrame("文字", 0, 0, form.getDeviceWidth(), form.getDeviceHeight());
-                GTextBox gf3_tb = new GTextBox(gf3_tb_txt, "", 0, 0, (int) gf3.getW(), (int) gf3.getH() - 80);
-                gf3.add(gf3_tb);
-                form.add(gf3);
             }
         });
         bt2.setActionListener(new GActionListener() {
@@ -196,7 +144,7 @@ public class App1 implements GApplication {
         GList list = new GList(x, y, 280, 30);
         parent.add(list);
         if (list.getImages() == null) {
-            int i = Nanovg.nvgCreateImage(vg, toUtf8("./image4.png"), 0);
+            int i = Nanovg.nvgCreateImage(vg, Gutil.toUtf8("./image4.png"), 0);
             list.setItems(new int[]{i, i, i},
                     new String[]{"One", "Two", "Three",});
 
@@ -208,7 +156,7 @@ public class App1 implements GApplication {
         list.setMode(GList.MODE_MULTI_LINE);
         parent.add(list);
         if (list.getImages() == null) {
-            int i = Nanovg.nvgCreateImage(vg, toUtf8("./image4.png"), 0);
+            int i = Nanovg.nvgCreateImage(vg, Gutil.toUtf8("./image4.png"), 0);
             list.setItems(new int[]{i, i, i, i, i, i, i, i, i, i},
                     new String[]{"One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",});
         }
@@ -220,8 +168,8 @@ public class App1 implements GApplication {
 
     class TestCanvas extends GCanvas {
 
-        GLFrameBuffer glfb;
-        GLFrameBufferPainter glfbRender;
+//        GLFrameBuffer glfb;
+//        GLFrameBufferPainter glfbRender;
         GImage img3D;
 
         public TestCanvas(int x, int y, int w, int h) {

@@ -20,9 +20,7 @@ import static org.mini.nanovg.Nanovg.nvgLinearGradient;
 import static org.mini.nanovg.Nanovg.nvgPathWinding;
 import static org.mini.nanovg.Nanovg.nvgRadialGradient;
 import static org.mini.nanovg.Nanovg.nvgRect;
-import static org.mini.nanovg.Nanovg.nvgRestore;
 import static org.mini.nanovg.Nanovg.nvgRoundedRect;
-import static org.mini.nanovg.Nanovg.nvgSave;
 import static org.mini.nanovg.Nanovg.nvgStroke;
 import static org.mini.nanovg.Nanovg.nvgStrokeColor;
 

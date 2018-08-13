@@ -74,10 +74,6 @@ public class App2 implements GApplication {
 
         GImage img = new GImage("./image4.png");
         menu = new GMenu(0, form.getDeviceHeight() - menuH, form.getDeviceWidth(), menuH);
-        menu.addItem("主页", img);
-        menu.addItem("搜索", img);
-        menu.addItem("发现", img);
-        menu.addItem("我的", img);
         GMenuItem item = menu.addItem("退出", img);
         item.setActionListener(new GActionListener() {
             @Override
@@ -85,6 +81,10 @@ public class App2 implements GApplication {
                 ccb.setApplication(App1.getInstance());
             }
         });
+        menu.addItem("我的", img);
+        menu.addItem("搜索", img);
+        menu.addItem("发现", img);
+        menu.addItem("主页", img);
         form.add(menu);
 
         return form;

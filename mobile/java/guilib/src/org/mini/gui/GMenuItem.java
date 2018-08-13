@@ -16,6 +16,7 @@ import static org.mini.nanovg.Nanovg.nvgFillColor;
 import static org.mini.nanovg.Nanovg.nvgFillPaint;
 import static org.mini.nanovg.Nanovg.nvgImagePattern;
 import static org.mini.nanovg.Nanovg.nvgRoundedRect;
+import static org.mini.nanovg.Nanovg.nvgTextMetrics;
 
 /**
  *
@@ -69,6 +70,8 @@ public class GMenuItem extends GObject {
     public boolean update(long vg) {
 
         float cornerRadius = 4.0f;
+        
+        nvgTextMetrics(vg, null, null, lineh);
 
         //touched item background
         if (touched) {

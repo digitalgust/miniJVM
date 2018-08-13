@@ -220,7 +220,10 @@ abstract public class GObject {
     }
 
     /**
-     * @param bgColor the bgColor to set
+     * @param r
+     * @param g
+     * @param b
+     * @param a
      */
     public void setBgColor(int r, int g, int b, int a) {
         bgColor = nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);
@@ -234,7 +237,10 @@ abstract public class GObject {
     }
 
     /**
-     * @param color the color to set
+     * @param r
+     * @param g
+     * @param b
+     * @param a
      */
     public void setColor(int r, int g, int b, int a) {
         color = nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);

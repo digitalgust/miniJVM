@@ -6,10 +6,7 @@
 package app;
 
 import org.mini.glfm.Glfm;
-import static org.mini.glfm.Glfm.GLFMDepthFormat16;
-import static org.mini.glfm.Glfm.GLFMMultisampleNone;
-import static org.mini.glfm.Glfm.GLFMRenderingAPIOpenGLES2;
-import static org.mini.glfm.Glfm.GLFMStencilFormat8;
+import org.mini.gui.GApplication;
 import org.mini.gui.GuiCallBack;
 import test.App1;
 
@@ -34,12 +31,12 @@ public class GlfmMain {
     static public void glinit(long display) {
 
         Glfm.glfmSetDisplayConfig(display,
-                GLFMRenderingAPIOpenGLES2,
+                Glfm.GLFMRenderingAPIOpenGLES2,
                 Glfm.GLFMColorFormatRGBA8888,
-                GLFMDepthFormat16,
-                GLFMStencilFormat8,
-                GLFMMultisampleNone);
-        App1 app = new App1();
+                Glfm.GLFMDepthFormat16,
+                Glfm.GLFMStencilFormat8,
+                Glfm.GLFMMultisampleNone);
+        GApplication app = new App1();
         GuiCallBack ccb = new GuiCallBack(display, app);
         Glfm.glfmSetCallBack(display, ccb);
 

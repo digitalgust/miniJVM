@@ -5,16 +5,8 @@
  */
 package org.mini.gui;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Iterator;
-import org.mini.glfm.Glfm;
-import org.mini.glfw.Glfw;
-import static org.mini.gui.GObject.HEIGHT;
-import static org.mini.gui.GObject.isInBoundle;
 import static org.mini.gui.GToolkit.nvgRGBA;
-import org.mini.gui.event.GActionListener;
-import static org.mini.nanovg.Gutil.toUtf8;
 import org.mini.nanovg.Nanovg;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_MIDDLE;
 import static org.mini.nanovg.Nanovg.nvgBeginPath;
@@ -23,7 +15,6 @@ import static org.mini.nanovg.Nanovg.nvgFillColor;
 import static org.mini.nanovg.Nanovg.nvgFillPaint;
 import static org.mini.nanovg.Nanovg.nvgFontFace;
 import static org.mini.nanovg.Nanovg.nvgFontSize;
-import static org.mini.nanovg.Nanovg.nvgImagePattern;
 import static org.mini.nanovg.Nanovg.nvgLinearGradient;
 import static org.mini.nanovg.Nanovg.nvgRect;
 import static org.mini.nanovg.Nanovg.nvgRoundedRect;
@@ -109,7 +100,6 @@ public class GMenu extends GContainer {
         //画底板
         byte[] bg;
         float cornerRadius = 4.0f;
-        float[] color = null;
         //System.out.println("draw==========="+touched);
         //background
         nvgBeginPath(vg);

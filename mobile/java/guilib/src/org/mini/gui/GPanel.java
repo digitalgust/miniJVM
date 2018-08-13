@@ -8,9 +8,6 @@ package org.mini.gui;
 import java.util.TimerTask;
 import org.mini.glfm.Glfm;
 import static org.mini.gui.GObject.flush;
-import static org.mini.gui.GObject.flush;
-import static org.mini.gui.GObject.flush;
-import static org.mini.gui.GObject.flush;
 
 /**
  *
@@ -23,18 +20,21 @@ public class GPanel extends GContainer {
     float scrollx;
     float scrolly;
 
+    @Override
     public void setLocation(float x, float y) {
         viewBoundle[LEFT] = x;
         viewBoundle[TOP] = y;
         super.setLocation(x, y);
     }
 
+    @Override
     public void setSize(float w, float h) {
         viewBoundle[WIDTH] = w;
         viewBoundle[HEIGHT] = h;
         super.setSize(w, h);
     }
 
+    @Override
     public float getViewX() {
         if (parent != null) {
             return parent.getViewX() + viewBoundle[LEFT];
@@ -60,6 +60,7 @@ public class GPanel extends GContainer {
         return viewBoundle[HEIGHT];
     }
 
+    @Override
     public void move(float dx, float dy) {
         boundle[LEFT] += dx;
         boundle[TOP] += dy;
@@ -77,6 +78,7 @@ public class GPanel extends GContainer {
         reBoundle();
     }
 
+    @Override
     public void reBoundle() {
         float oldMinX = minX, oldMaxX = maxX, oldMinY = minY, oldMaxY = maxY;
         minX = 0;
@@ -133,7 +135,7 @@ public class GPanel extends GContainer {
             return;
         }
         //
-        System.out.println("inertia: x1,y1,x2,y2 = " + x1 + "," + y1 + "," + x2 + "," + y2);
+        //System.out.println("inertia: x1,y1,x2,y2 = " + x1 + "," + y1 + "," + x2 + "," + y2);
         final double dx = x2 - x1;
         final double dy = y2 - y1;
         if (Math.abs(dy) > Math.abs(dx)) {
