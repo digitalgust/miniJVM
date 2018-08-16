@@ -113,7 +113,7 @@ abstract public class GContainer extends GObject {
         }
     }
 
-    public boolean isSon(GObject son) {
+    public boolean contains(GObject son) {
         return elements.contains(son);
     }
 

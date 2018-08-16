@@ -167,7 +167,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         if (editMenu == null) {
             editMenu = new EditMenu((int) mx, (int) my, (int) menuW, (int) menuH);
             GMenuItem item;
-            item = editMenu.addItem(GLanguage.getString("Select All"), null);
+            item = editMenu.addItem(GLanguage.getString("SeleAll"), null);
             item.setActionListener(new GActionListener() {
                 @Override
                 public void action(GObject gobj) {

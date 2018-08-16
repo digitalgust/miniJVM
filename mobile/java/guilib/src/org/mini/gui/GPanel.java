@@ -9,6 +9,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import org.mini.glfm.Glfm;
 import static org.mini.gui.GObject.flush;
+import static org.mini.gui.GObject.flush;
 
 /**
  *

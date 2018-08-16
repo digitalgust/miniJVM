@@ -76,6 +76,14 @@ public class GGraphics {
 
     public void setColor(int argb) {
         curColor = argb;
+        a = (byte) (0xff);
+        r = (byte) (0xff & (argb >> 16));
+        g = (byte) (0xff & (argb >> 8));
+        b = (byte) (0xff & (argb >> 0));
+    }
+
+    public void setARGBColor(int argb) {
+        curColor = argb;
         a = (byte) (0xff & (argb >> 24));
         r = (byte) (0xff & (argb >> 16));
         g = (byte) (0xff & (argb >> 8));
