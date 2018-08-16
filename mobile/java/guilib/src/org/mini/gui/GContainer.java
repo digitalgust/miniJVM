@@ -40,6 +40,10 @@ abstract public class GContainer extends GObject {
         }
     }
 
+    public LinkedList<GObject> getElements() {
+        return elements;
+    }
+
     GObject findFocus(float x, float y) {
         for (Iterator<GObject> it = elements.iterator(); it.hasNext();) {
             GObject nko = it.next();
@@ -228,11 +232,12 @@ abstract public class GContainer extends GObject {
     }
 
     @Override
-    public void scrollEvent(float scrollX, float scrollY, float x, float y) {
+    public boolean scrollEvent(float scrollX, float scrollY, float x, float y) {
         setFocus(findFocus(x, y));
         if (focus != null && focus.isInArea(x, y)) {
-            focus.scrollEvent(scrollX, scrollY, x, y);
+            return focus.scrollEvent(scrollX, scrollY, x, y);
         }
+        return false;
     }
 
     @Override
@@ -242,11 +247,12 @@ abstract public class GContainer extends GObject {
         }
     }
 
-    public void dragEvent(float dx, float dy, float x, float y) {
+    public boolean dragEvent(float dx, float dy, float x, float y) {
         setFocus(findFocus(x, y));
         if (focus != null && focus.isInArea(x, y)) {
-            focus.dragEvent(dx, dy, x, y);
+            return focus.dragEvent(dx, dy, x, y);
         }
+        return false;
     }
 
     ///==========================
@@ -275,11 +281,11 @@ abstract public class GContainer extends GObject {
     }
 
     @Override
-    public void inertiaEvent(float x1, float y1, float x2, float y2, long moveTime) {
-
+    public boolean inertiaEvent(float x1, float y1, float x2, float y2, long moveTime) {
         if (focus != null && focus.isInArea((float) x1, (float) y1)) {
-            focus.inertiaEvent(x1, y1, x2, y2, moveTime);
+            return focus.inertiaEvent(x1, y1, x2, y2, moveTime);
         }
+        return false;
     }
 
     @Override

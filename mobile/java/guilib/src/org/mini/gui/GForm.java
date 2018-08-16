@@ -71,7 +71,7 @@ public class GForm extends GPanel {
 //    public void setCallBack(GuiCallBack callback) {
 //        this.callback = callback;
 //    }
-    public GlfmCallBack getCallBack() {
+    public GuiCallBack getCallBack() {
         return this.callback;
     }
 

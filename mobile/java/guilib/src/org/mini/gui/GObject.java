@@ -100,8 +100,8 @@ abstract public class GObject {
     public void cursorPosEvent(int x, int y) {
     }
 
-    public void dragEvent(float dx, float dy, float x, float y) {
-
+    public boolean dragEvent(float dx, float dy, float x, float y) {
+        return false;
     }
 
     public void dropEvent(int count, String[] paths) {
@@ -119,9 +119,9 @@ abstract public class GObject {
     public void touchEvent(int phase, int x, int y) {
     }
 
-    public void scrollEvent(float scrollX, float scrollY, float x, float y) {
+    public boolean scrollEvent(float scrollX, float scrollY, float x, float y) {
+        return false;
     }
-
     /**
      * 响应惯性事件,从P1到P2用了多长时间
      *
@@ -131,10 +131,10 @@ abstract public class GObject {
      * @param y2
      * @param moveTime
      */
-    public void inertiaEvent(float x1, float y1, float x2, float y2, long moveTime) {
-
+    public boolean inertiaEvent(float x1, float y1, float x2, float y2, long moveTime) {
+        return false;
     }
-
+   
     public static boolean isInBoundle(float[] bound, float x, float y) {
         return x >= bound[LEFT] && x <= bound[LEFT] + bound[WIDTH]
                 && y >= bound[TOP] && y <= bound[TOP] + bound[HEIGHT];

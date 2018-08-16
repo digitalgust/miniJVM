@@ -5,6 +5,7 @@
  */
 package org.mini.gui;
 
+import java.util.Timer;
 import java.util.TimerTask;
 import org.mini.glfm.Glfm;
 import static org.mini.gui.GObject.flush;
@@ -128,17 +129,21 @@ public class GPanel extends GContainer {
     TimerTask task;
 
     @Override
-    public void inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
+    public boolean inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
         GObject go = findFocus(x1, y1);
         if (go != null) {
-            go.inertiaEvent(x1, y1, x2, y2, moveTime);
-            return;
+            if (go.inertiaEvent(x1, y1, x2, y2, moveTime)) {
+                return true;
+            }
         }
         //
         //System.out.println("inertia: x1,y1,x2,y2 = " + x1 + "," + y1 + "," + x2 + "," + y2);
         final double dx = x2 - x1;
         final double dy = y2 - y1;
         if (Math.abs(dy) > Math.abs(dx)) {
+            if (getH() <= getViewH()) {
+                return false;
+            }
             task = new TimerTask() {
                 //惯性速度
                 double speedY = dy / (moveTime / inertiaPeriod);
@@ -170,6 +175,9 @@ public class GPanel extends GContainer {
                 }
             };
         } else {
+            if (getW() <= getViewW()) {
+                return false;
+            }
             task = new TimerTask() {
                 //惯性速度
                 double speedX = dx / (moveTime / inertiaPeriod);
@@ -201,51 +209,73 @@ public class GPanel extends GContainer {
                 }
             };
         }
-        getTimer().schedule(task, 0, inertiaPeriod);
+        Timer timer = getTimer();
+        if (timer != null) {
+            timer.schedule(task, 0, inertiaPeriod);
+        }
+        return true;
     }
 
     @Override
-    public void dragEvent(float dx, float dy, float x, float y) {
+    public boolean scrollEvent(float dx, float dy, float x, float y) {
+        return dragEvent(dx, dy, x, y);
+    }
+
+    @Override
+    public boolean dragEvent(float dx, float dy, float x, float y) {
         if (focus == null) {
             setFocus(findFocus(x, y));
         }
-        if (focus != null) {
-            focus.dragEvent(dx, dy, x, y);
+        if (focus != null && focus.dragEvent(dx, dy, x, y)) {
+            return true;
+        }
+        reBoundle();
+        float dw = getOutOfViewWidth();
+        float dh = getOutOfViewHeight();
+        float odx = (dw == 0) ? 0.f : (float) dx / dw;
+        float ody = (dh == 0) ? 0.f : (float) dy / dh;
+        if (dw == 0 && dh == 0) {
+            return false;
+        }
+        if (Math.abs(odx) > Math.abs(ody)) {
+            return setScrollX(odx);
         } else {
-            reBoundle();
-            float dw = getOutOfViewWidth();
-            float dh = getOutOfViewHeight();
-            float odx = (dw == 0) ? 0.f : (float) dx / dw;
-            float ody = (dh == 0) ? 0.f : (float) dy / dh;
-            if (Math.abs(odx) > Math.abs(ody)) {
-                setScrollX(odx);
-            } else {
-                setScrollY(ody);
-            }
-
+            return setScrollY(ody);
         }
     }
 
-    void setScrollY(float dy) {
-        this.scrolly -= dy;
-        if (scrolly < 0) {
-            scrolly = 0;
+    boolean setScrollY(float dy) {
+        float tmpy = scrolly;
+        tmpy -= dy;
+        if (tmpy < 0) {
+            tmpy = 0;
         }
-        if (scrolly > 1) {
-            scrolly = 1;
+        if (tmpy > 1) {
+            tmpy = 1;
         }
-        boundle[TOP] = viewBoundle[TOP] + (-minY) - scrolly * getOutOfViewHeight();
+        boundle[TOP] = viewBoundle[TOP] + (-minY) - tmpy * getOutOfViewHeight();
+        if (scrolly != tmpy) {
+            scrolly = tmpy;
+            return true;
+        }
+        return false;
     }
 
-    void setScrollX(float dx) {
-        this.scrollx -= dx;
-        if (scrollx < 0) {
-            scrollx = 0;
+    boolean setScrollX(float dx) {
+        float tmpx = scrollx;
+        tmpx -= dx;
+        if (tmpx < 0) {
+            tmpx = 0;
         }
-        if (scrollx > 1) {
-            scrollx = 1;
+        if (tmpx > 1) {
+            tmpx = 1;
         }
-        boundle[LEFT] = viewBoundle[LEFT] + (-minX) - scrollx * getOutOfViewWidth();
+        boundle[LEFT] = viewBoundle[LEFT] + (-minX) - tmpx * getOutOfViewWidth();
+        if (scrollx != tmpx) {
+            scrollx = tmpx;
+            return true;
+        }
+        return false;
     }
 
     float getOutOfViewHeight() {

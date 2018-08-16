@@ -5,6 +5,7 @@
  */
 package org.mini.gui;
 
+import java.util.Timer;
 import java.util.TimerTask;
 import org.mini.glfm.Glfm;
 import static org.mini.nanovg.Gutil.toUtf8;
@@ -171,17 +172,18 @@ public class GList extends GContainer {
     }
 
     @Override
-    public void dragEvent(float scrollX, float scrollY, float x, float y) {
-        scrollEvent(scrollX, scrollY, x, y);
+    public boolean dragEvent(float scrollX, float scrollY, float x, float y) {
+        return scrollEvent(scrollX, scrollY, x, y);
     }
 
     @Override
-    public void scrollEvent(float scrollX, float scrollY, float x, float y) {
+    public boolean scrollEvent(float scrollX, float scrollY, float x, float y) {
         int rx = (int) (x - parent.getX());
         int ry = (int) (y - parent.getY());
         if (isInBoundle(boundle, rx, ry) && scrollBar != null) {
             scrollBar.setPos(scrollBar.getPos() - 1.f / labels.length * (float) (scrollY / list_item_heigh));
         }
+        return true;
     }
 
     //每多长时间进行一次惯性动作
@@ -192,7 +194,11 @@ public class GList extends GContainer {
     TimerTask task;
 
     @Override
-    public void inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
+    public boolean inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
+        if (scrollBar.getPos() >= 1 || scrollBar.getPos() <= 0) {
+            return false;
+        }
+
         double dx = x2 - x1;
         final double dy = y2 - y1;
         task = new TimerTask() {
@@ -217,7 +223,11 @@ public class GList extends GContainer {
                 }
             }
         };
-        getTimer().schedule(task, 0, inertiaPeriod);
+        Timer timer = getTimer();
+        if (timer != null) {
+            timer.schedule(task, 0, inertiaPeriod);
+        }
+        return true;
     }
 
     /**
@@ -234,13 +244,18 @@ public class GList extends GContainer {
             pulldown = true;
         }
 
+        if (images == null) {
+            images = new int[]{0};
+            labels = new String[]{""};
+        }
+
         nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
         nvgTextMetrics(vg, null, null, lineh);
 
-        if (pulldown && labels != null) {
+        if (pulldown && labels.length > 0) {
             popBoundle = new float[4];
 
             if (mode == MODE_MULTI_LINE) {
@@ -316,21 +331,21 @@ public class GList extends GContainer {
         nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, cornerRadius - 0.5f);
         nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 48));
         nvgStroke(vg);
-        float thumb = h - pad;
-        drawImage(vg, x + pad, y + h * 0.5f - thumb / 2, thumb, thumb, curIndex);
 
-        drawText(vg, x + thumb + pad + pad, y + h / 2, thumb, thumb, curIndex);
+        if (images != null && images.length > 0 || labels != null && labels.length > 0) {
+            float thumb = h - pad;
+            drawImage(vg, x + pad, y + h * 0.5f - thumb / 2, thumb, thumb, curIndex);
 
-        nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
-        nvgFontFace(vg, GToolkit.getFontIcon());
-        nvgTextJni(vg, x + w - thumb, y + h * 0.5f, preicon_arr, 0, preicon_arr.length);
+            drawText(vg, x + thumb + pad + pad, y + h / 2, thumb, thumb, curIndex);
+
+            nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
+            nvgFontFace(vg, GToolkit.getFontIcon());
+            nvgTextJni(vg, x + w - thumb, y + h * 0.5f, preicon_arr, 0, preicon_arr.length);
+        }
     }
 
     void drawPop(long vg, float x, float y, float w, float h, int[] images, String[] strs) {
-        if (images == null) {
-            images = new int[]{0};
-            strs = new String[]{""};
-        }
+
         int nimages = images.length;
         float cornerRadius = 3.0f;
         byte[] shadowPaint, fadePaint;
@@ -338,24 +353,10 @@ public class GList extends GContainer {
         float stackh = (nimages / list_cols) * (list_item_heigh) + pad;
 
         nvgSave(vg);
-//	nvgClearState(vg);
         nvgScissor(vg, x, y, w, h);
 
         // Window
         GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h);
-//        nvgBeginPath(vg);
-//        nvgRoundedRect(vg, x, y, w, h, cornerRadius);
-//        nvgFillColor(vg, nvgRGBA(60, 60, 60, 192));
-//        nvgFill(vg);
-
-        // Drop shadow
-//        shadowPaint = nvgBoxGradient(vg, x, y + 2, w, h, cornerRadius * 2, 10, nvgRGBA(0, 0, 0, 128), nvgRGBA(0, 0, 0, 0));
-//        nvgBeginPath(vg);
-//        nvgRect(vg, x - 10, y - 10, w + 20, h + 30);
-//        nvgRoundedRect(vg, x, y, w, h, cornerRadius);
-//        nvgPathWinding(vg, NVG_HOLE);
-//        nvgFillPaint(vg, shadowPaint);
-//        nvgFill(vg);
         nvgSave(vg);
         float th = -(stackh - h) * scrollBar.getPos();
         nvgTranslate(vg, 0, th);

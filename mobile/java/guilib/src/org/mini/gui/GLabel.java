@@ -84,17 +84,18 @@ public class GLabel extends GObject {
         float dx = text_area[LEFT];
         float dy = text_area[TOP];
 
-        float[] bond = new float[4];
-        nvgTextBoxBoundsJni(vg, text_area[LEFT], text_area[TOP], text_area[WIDTH], text_arr, 0, text_arr.length, bond);
-        bond[WIDTH] -= bond[LEFT];
-        bond[HEIGHT] -= bond[TOP];
-        bond[LEFT] = bond[TOP] = 0;
+        if (text_arr != null) {
+            float[] bond = new float[4];
+            nvgTextBoxBoundsJni(vg, text_area[LEFT], text_area[TOP], text_area[WIDTH], text_arr, 0, text_arr.length, bond);
+            bond[WIDTH] -= bond[LEFT];
+            bond[HEIGHT] -= bond[TOP];
+            bond[LEFT] = bond[TOP] = 0;
 
-        if (bond[HEIGHT] > text_area[HEIGHT]) {
-            dy -= bond[HEIGHT] - text_area[HEIGHT];
+            if (bond[HEIGHT] > text_area[HEIGHT]) {
+                dy -= bond[HEIGHT] - text_area[HEIGHT];
+            }
+            nvgTextBoxJni(vg, dx, dy, text_area[WIDTH], text_arr, 0, text_arr.length);
         }
-        nvgTextBoxJni(vg, dx, dy, text_area[WIDTH], text_arr, 0, text_arr.length);
-
     }
 
 }

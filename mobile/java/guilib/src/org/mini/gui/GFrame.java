@@ -246,22 +246,19 @@ public class GFrame extends GContainer {
     }
 
     @Override
-    public void dragEvent(float dx, float dy, float x, float y) {
+    public boolean dragEvent(float dx, float dy, float x, float y) {
 
         if (dragFrame) {
             move(dx, dy);
-//            if (parent != null) {
-//                parent.reBoundle();
-//            }
+            return true;
         } else {
-
-            super.dragEvent(dx, dy, x, y);
+            return super.dragEvent(dx, dy, x, y);
         }
     }
 
     @Override
-    public void scrollEvent(float scrollX, float scrollY, float x, float y) {
-        panel.scrollEvent(scrollX, scrollY, x, y);
+    public boolean scrollEvent(float scrollX, float scrollY, float x, float y) {
+        return panel.scrollEvent(scrollX, scrollY, x, y);
     }
 
     @Override

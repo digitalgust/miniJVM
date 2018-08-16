@@ -6,17 +6,38 @@
 package org.mini.gui;
 
 import java.util.Hashtable;
+import static org.mini.gui.GObject.HEIGHT;
+import static org.mini.gui.GObject.LEFT;
+import static org.mini.gui.GObject.TOP;
+import static org.mini.gui.GObject.WIDTH;
+import static org.mini.nanovg.Gutil.toUtf8;
 import org.mini.reflect.ReflectArray;
 import org.mini.reflect.vm.RefNative;
-import static org.mini.nanovg.Gutil.toUtf8;
 import org.mini.nanovg.Nanovg;
+import static org.mini.nanovg.Nanovg.NVG_ALIGN_LEFT;
+import static org.mini.nanovg.Nanovg.NVG_ALIGN_TOP;
+import static org.mini.nanovg.Nanovg.NVG_HOLE;
 import static org.mini.nanovg.Nanovg.nvgAddFallbackFontId;
 import static org.mini.nanovg.Nanovg.nvgBeginPath;
+import static org.mini.nanovg.Nanovg.nvgBoxGradient;
 import static org.mini.nanovg.Nanovg.nvgCreateFont;
 import static org.mini.nanovg.Nanovg.nvgFill;
 import static org.mini.nanovg.Nanovg.nvgFillColor;
+import static org.mini.nanovg.Nanovg.nvgFillPaint;
+import static org.mini.nanovg.Nanovg.nvgFontFace;
+import static org.mini.nanovg.Nanovg.nvgFontSize;
+import static org.mini.nanovg.Nanovg.nvgImagePattern;
+import static org.mini.nanovg.Nanovg.nvgImageSize;
+import static org.mini.nanovg.Nanovg.nvgPathWinding;
 import static org.mini.nanovg.Nanovg.nvgRect;
+import static org.mini.nanovg.Nanovg.nvgRoundedRect;
+import static org.mini.nanovg.Nanovg.nvgStroke;
+import static org.mini.nanovg.Nanovg.nvgStrokeColor;
+import static org.mini.nanovg.Nanovg.nvgStrokeWidth;
+import static org.mini.nanovg.Nanovg.nvgTextAlign;
 import static org.mini.nanovg.Nanovg.nvgTextBoundsJni;
+import static org.mini.nanovg.Nanovg.nvgTextBoxBoundsJni;
+import static org.mini.nanovg.Nanovg.nvgTextBoxJni;
 
 /**
  *
@@ -155,6 +176,82 @@ public class GToolkit {
         nvgFillColor(vg, color);
         nvgRect(vg, x, y, w, h);
         nvgFill(vg);
+    }
+
+    public static void drawText(long vg, float x, float y, float w, float h, String s) {
+
+        drawText(vg, x, y, w, h, s, GToolkit.getStyle().getTextFontSize(), GToolkit.getStyle().getTextFontColor());
+    }
+
+    public static void drawText(long vg, float x, float y, float w, float h, String s, float fontSize, float[] color) {
+
+        nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
+        nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
+        nvgFontFace(vg, GToolkit.getFontWord());
+
+        byte[] text_arr = toUtf8(s);
+
+        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+        float[] text_area = new float[]{x + 2f, y + 2f, w - 4f, h - 4f};
+        float dx = text_area[LEFT];
+        float dy = text_area[TOP];
+
+        if (text_arr != null) {
+            float[] bond = new float[4];
+            nvgTextBoxBoundsJni(vg, text_area[LEFT], text_area[TOP], text_area[WIDTH], text_arr, 0, text_arr.length, bond);
+            bond[WIDTH] -= bond[LEFT];
+            bond[HEIGHT] -= bond[TOP];
+            bond[LEFT] = bond[TOP] = 0;
+
+            if (bond[HEIGHT] > text_area[HEIGHT]) {
+                dy -= bond[HEIGHT] - text_area[HEIGHT];
+            }
+            nvgTextBoxJni(vg, dx, dy, text_area[WIDTH], text_arr, 0, text_arr.length);
+        }
+    }
+
+    public static void drawImage(long vg, GImage img, float px, float py, float pw, float ph) {
+        if (img == null) {
+            return;
+        }
+
+        byte[] shadowPaint, imgPaint;
+        float ix, iy, iw, ih;
+        float thumb = pw;
+        int[] imgw = {0}, imgh = {0};
+
+        nvgImageSize(vg, img.getTexture(), imgw, imgh);
+        if (imgw[0] < imgh[0]) {
+            iw = thumb;
+            ih = iw * (float) imgh[0] / (float) imgw[0];
+            ix = 0;
+            iy = -(ih - thumb) * 0.5f;
+        } else {
+            ih = thumb;
+            iw = ih * (float) imgw[0] / (float) imgh[0];
+            ix = -(iw - thumb) * 0.5f;
+            iy = 0;
+        }
+
+        imgPaint = nvgImagePattern(vg, px + ix, py + iy, iw, ih, 0.0f / 180.0f * (float) Math.PI, img.getTexture(), 0.8f);
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, px, py, thumb, thumb, 5);
+        nvgFillPaint(vg, imgPaint);
+        nvgFill(vg);
+
+        shadowPaint = nvgBoxGradient(vg, px - 1, py, thumb + 2, thumb + 2, 5, 3, nvgRGBA(0, 0, 0, 128), nvgRGBA(0, 0, 0, 0));
+        nvgBeginPath(vg);
+        nvgRect(vg, px - 5, py - 5, thumb + 10, thumb + 10);
+        nvgRoundedRect(vg, px, py, thumb, thumb, 6);
+        nvgPathWinding(vg, NVG_HOLE);
+        nvgFillPaint(vg, shadowPaint);
+        nvgFill(vg);
+
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, px + 0.5f, py + 0.5f, thumb - 1, thumb - 1, 4 - 0.5f);
+        nvgStrokeWidth(vg, 1.0f);
+        nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 192));
+        nvgStroke(vg);
     }
 
 }

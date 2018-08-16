@@ -30,6 +30,10 @@ public class GImage {
         texture = Gutil.image_load(filepath, w_h_d);
     }
 
+    static public GImage createImage(String filepath) {
+        GImage img = new GImage(filepath);
+        return img;
+    }
 
     public int getWidth() {
         return w_h_d[0];

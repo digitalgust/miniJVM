@@ -5,6 +5,7 @@
  */
 package org.mini.gui;
 
+import java.util.Timer;
 import java.util.TimerTask;
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
@@ -462,7 +463,10 @@ public class GTextBox extends GTextObject {
     TimerTask task;
 
     @Override
-    public void inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
+    public boolean inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
+        if (scroll >= 1 || scroll <= 0) {
+            return false;
+        }
         double dx = x2 - x1;
         final double dy = y2 - y1;
         scrollDelta = 0;
@@ -492,24 +496,31 @@ public class GTextBox extends GTextObject {
                 }
             }
         };
-        getTimer().schedule(task, 0, inertiaPeriod);
-    }
-
-    @Override
-    public void scrollEvent(float scrollX, float scrollY, float x, float y) {
-        dragEvent(scrollX, scrollY, x, y);
-    }
-
-    @Override
-    public void dragEvent(float dx, float dy, float x, float y) {
-        if (selectMode || mouseDrag) {
-            return;
+        Timer timer = getTimer();
+        if (timer != null) {
+            timer.schedule(task, 0, inertiaPeriod);
         }
-        if (isInArea(x, y)) {
+        return true;
+    }
+
+    @Override
+    public boolean scrollEvent(float scrollX, float scrollY, float x, float y) {
+        return dragEvent(scrollX, scrollY, x, y);
+    }
+
+    @Override
+    public boolean dragEvent(float dx, float dy, float x, float y) {
+        if (selectMode || mouseDrag) {
+            return false;
+        }
+        if (getH() > getViewH()) {
             float dh = getOutOfShowAreaHeight();
             if (dh > 0) {
                 setScroll(scroll - (float) dy / dh);
             }
+            return true;
+        } else {
+            return false;
         }
     }
 

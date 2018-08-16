@@ -20,8 +20,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.cldc.io.Connector;
 import javax.cldc.io.ContentConnection;
-import javax.cldc.io.NBServerSocket;
-import javax.cldc.io.NBSocket;
+import javax.cldc.io.SocketConnection;
+import javax.cldc.io.ServerSocketConnection;
 
 /**
  *
@@ -45,7 +45,7 @@ public class HttpServer {
             @Override
             public void run() {
                 try {
-                    final NBServerSocket srvsock = (NBServerSocket) Connector.open("serversocket://:8080");
+                    final ServerSocketConnection srvsock = (ServerSocketConnection) Connector.open("serversocket://:8080");
 
                     //建一个线程，过5秒钟关掉自己
                     new Thread(new Runnable() {
@@ -71,7 +71,7 @@ public class HttpServer {
                     srvsock.listen();
                     while (true) {
                         try {
-                            NBSocket cltsock;
+                            SocketConnection cltsock;
                             try {
                                 cltsock = srvsock.accept();
                             } catch (IOException e) {
@@ -123,7 +123,7 @@ public class HttpServer {
             try {
                 Thread.sleep(2000);
 
-                NBSocket conn = (NBSocket) Connector.open("socket://127.0.0.1:8080");
+                SocketConnection conn = (SocketConnection) Connector.open("socket://127.0.0.1:8080");
                 conn.setOption(SocketNative.SO_BLOCK, SocketNative.VAL_NON_BLOCK, 0);
                 String request = "GET / HTTP/1.1\r\n\r\n";
                 conn.write(request.getBytes(), 0, request.length());
