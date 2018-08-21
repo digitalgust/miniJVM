@@ -16,6 +16,28 @@ import org.mini.gui.event.GFocusChangeListener;
  */
 abstract public class GObject {
 
+    public static final int TYPE_UNKNOW = -1;
+    public static final int TYPE_BUTTON = 0;
+    public static final int TYPE_CANVAS = 1;
+    public static final int TYPE_CHECKBOX = 3;
+    public static final int TYPE_COLORSELECTOR = 4;
+    public static final int TYPE_FORM = 5;
+    public static final int TYPE_FRAME = 6;
+    public static final int TYPE_LABEL = 7;
+    public static final int TYPE_LIST = 8;
+    public static final int TYPE_LISTITEM = 9;
+    public static final int TYPE_MENU = 10;
+    public static final int TYPE_MENUITEM = 11;
+    public static final int TYPE_PANEL = 12;
+    public static final int TYPE_SCROLLBAR = 13;
+    public static final int TYPE_TEXTBOX = 14;
+    public static final int TYPE_TEXTFIELD = 15;
+    
+    //
+    public static final int ALIGN_H_FULL = 1;
+    public static final int ALIGN_V_FULL = 2;
+    
+
     public static char ICON_SEARCH = (char) 0x1F50D;
     public static char ICON_CIRCLED_CROSS = 0x2716;
     public static char ICON_CHEVRON_RIGHT = 0xE75E;
@@ -45,12 +67,21 @@ abstract public class GObject {
 
     boolean fixedLocation;
 
+    String name;
+
+    Object attachment;
+
+    /**
+     *
+     */
     public void init() {
 
     }
 
     void destory() {
     }
+    
+    abstract int getType();
 
     static synchronized public void flush() {
         flush = 3;
@@ -122,6 +153,7 @@ abstract public class GObject {
     public boolean scrollEvent(float scrollX, float scrollY, float x, float y) {
         return false;
     }
+
     /**
      * 响应惯性事件,从P1到P2用了多长时间
      *
@@ -134,7 +166,7 @@ abstract public class GObject {
     public boolean inertiaEvent(float x1, float y1, float x2, float y2, long moveTime) {
         return false;
     }
-   
+
     public static boolean isInBoundle(float[] bound, float x, float y) {
         return x >= bound[LEFT] && x <= bound[LEFT] + bound[WIDTH]
                 && y >= bound[TOP] && y <= bound[TOP] + bound[HEIGHT];
@@ -300,5 +332,33 @@ abstract public class GObject {
      */
     public void setFocusListener(GFocusChangeListener focusListener) {
         this.focusListener = focusListener;
+    }
+
+    /**
+     * @return the name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @param name the name to set
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * @return the attachment
+     */
+    public Object getAttachment() {
+        return attachment;
+    }
+
+    /**
+     * @param attachment the attachment to set
+     */
+    public void setAttachment(Object attachment) {
+        this.attachment = attachment;
     }
 }

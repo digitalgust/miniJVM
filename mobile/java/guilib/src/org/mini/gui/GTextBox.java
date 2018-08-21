@@ -71,6 +71,10 @@ public class GTextBox extends GTextObject {
         setFocusListener(this);
     }
 
+    public int getType() {
+        return TYPE_TEXTBOX;
+    }
+
     boolean isInArea(short[] bound, float x, float y) {
         return x >= bound[LEFT] && x <= bound[LEFT] + bound[WIDTH]
                 && y >= bound[TOP] && y <= bound[TOP] + bound[HEIGHT];
@@ -513,18 +517,15 @@ public class GTextBox extends GTextObject {
         if (selectMode || mouseDrag) {
             return false;
         }
-        if (getH() > getViewH()) {
-            float dh = getOutOfShowAreaHeight();
-            if (dh > 0) {
-                setScroll(scroll - (float) dy / dh);
-            }
-            return true;
-        } else {
-            return false;
+        float dh = getOutOfShowAreaHeight();
+        if (dh > 0) {
+            return setScroll(scroll - (float) dy / dh);
         }
+        return false;
     }
 
-    void setScroll(float p) {
+    boolean setScroll(float p) {
+        float tmp = scroll;
         scroll = p;
         if (scroll > 1) {
             scroll = 1.f;
@@ -532,6 +533,7 @@ public class GTextBox extends GTextObject {
         if (scroll < 0) {
             scroll = 0.f;
         }
+        return tmp != scroll;
     }
 
     float getOutOfShowAreaHeight() {

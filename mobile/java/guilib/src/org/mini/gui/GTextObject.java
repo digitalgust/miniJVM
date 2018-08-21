@@ -167,18 +167,19 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         if (editMenu == null) {
             editMenu = new EditMenu((int) mx, (int) my, (int) menuW, (int) menuH);
             GMenuItem item;
-            item = editMenu.addItem(GLanguage.getString("SeleAll"), null);
+
+            item = editMenu.addItem(GLanguage.getString("Select"), null);
             item.setActionListener(new GActionListener() {
                 @Override
                 public void action(GObject gobj) {
-                    editMenu.text.doSelectAll();
+                    editMenu.text.doSelectText();
                 }
             });
-            item = editMenu.addItem(GLanguage.getString("Cut"), null);
+            item = editMenu.addItem(GLanguage.getString("Copy"), null);
             item.setActionListener(new GActionListener() {
                 @Override
                 public void action(GObject gobj) {
-                    editMenu.text.doCut();
+                    editMenu.text.doCopyClipBoard();
                     disposeEditMenu();
                 }
             });
@@ -190,21 +191,22 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
                     disposeEditMenu();
                 }
             });
-            item = editMenu.addItem(GLanguage.getString("Copy"), null);
+            item = editMenu.addItem(GLanguage.getString("Cut"), null);
             item.setActionListener(new GActionListener() {
                 @Override
                 public void action(GObject gobj) {
-                    editMenu.text.doCopyClipBoard();
+                    editMenu.text.doCut();
                     disposeEditMenu();
                 }
             });
-            item = editMenu.addItem(GLanguage.getString("Select"), null);
+            item = editMenu.addItem(GLanguage.getString("SeleAll"), null);
             item.setActionListener(new GActionListener() {
                 @Override
                 public void action(GObject gobj) {
-                    editMenu.text.doSelectText();
+                    editMenu.text.doSelectAll();
                 }
             });
+
             editMenu.setFocusListener(new GFocusChangeListener() {
                 @Override
                 public void focusGot(GObject go) {

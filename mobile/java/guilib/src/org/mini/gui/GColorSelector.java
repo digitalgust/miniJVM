@@ -57,6 +57,10 @@ public class GColorSelector extends GObject {
 
     }
 
+    public int getType() {
+        return TYPE_COLORSELECTOR;
+    }
+
     @Override
     public void cursorPosEvent(int x, int y) {
         int rx = (int) (x - parent.getX());

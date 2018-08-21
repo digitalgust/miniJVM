@@ -7,16 +7,12 @@ package org.mini.gui;
 
 import static org.mini.gui.GObject.LEFT;
 import static org.mini.nanovg.Gutil.toUtf8;
-import org.mini.nanovg.Nanovg;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_LEFT;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_MIDDLE;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_TOP;
 import static org.mini.nanovg.Nanovg.nvgFillColor;
 import static org.mini.nanovg.Nanovg.nvgFontFace;
 import static org.mini.nanovg.Nanovg.nvgFontSize;
-import static org.mini.nanovg.Nanovg.nvgResetScissor;
-import static org.mini.nanovg.Nanovg.nvgSave;
-import static org.mini.nanovg.Nanovg.nvgScissor;
 import static org.mini.nanovg.Nanovg.nvgTextAlign;
 import static org.mini.nanovg.Nanovg.nvgTextBoxBoundsJni;
 import static org.mini.nanovg.Nanovg.nvgTextBoxJni;
@@ -36,6 +32,10 @@ public class GLabel extends GObject {
         setText(text);
         setLocation(left, top);
         setSize(width, height);
+    }
+
+    public int getType() {
+        return TYPE_LABEL;
     }
 
     public final void setText(String text) {

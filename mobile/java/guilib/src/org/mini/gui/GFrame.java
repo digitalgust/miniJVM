@@ -28,9 +28,7 @@ import static org.mini.nanovg.Nanovg.nvgLinearGradient;
 import static org.mini.nanovg.Nanovg.nvgMoveTo;
 import static org.mini.nanovg.Nanovg.nvgPathWinding;
 import static org.mini.nanovg.Nanovg.nvgRect;
-import static org.mini.nanovg.Nanovg.nvgRestore;
 import static org.mini.nanovg.Nanovg.nvgRoundedRect;
-import static org.mini.nanovg.Nanovg.nvgSave;
 import static org.mini.nanovg.Nanovg.nvgStroke;
 import static org.mini.nanovg.Nanovg.nvgStrokeColor;
 import static org.mini.nanovg.Nanovg.nvgTextAlign;
@@ -69,6 +67,10 @@ public class GFrame extends GContainer {
         title_panel.setLocation(1, 1);
         title_panel.setSize(width - 2, 30);
         add(title_panel);
+    }
+
+    public int getType() {
+        return TYPE_FRAME;
     }
 
     public void setTitle(String title) {
@@ -289,5 +291,10 @@ public class GFrame extends GContainer {
         } else {
             panel.setFocus(null);
         }
+    }
+
+    @Override
+    public String toString() {
+        return title + "/" + super.toString();
     }
 }

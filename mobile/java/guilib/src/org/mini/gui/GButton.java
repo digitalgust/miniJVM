@@ -42,6 +42,11 @@ public class GButton extends GObject {
         setSize(width, height);
         setBgColor(0, 0, 0, 0);
     }
+    
+    
+    public int getType(){
+        return TYPE_BUTTON;
+    }
 
     public void setText(String text) {
         this.text = text;

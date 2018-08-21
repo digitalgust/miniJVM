@@ -22,6 +22,10 @@ public class GPanel extends GContainer {
     float scrollx;
     float scrolly;
 
+    
+    public int getType() {
+        return TYPE_PANEL;
+    }
     @Override
     public void setLocation(float x, float y) {
         viewBoundle[LEFT] = x;

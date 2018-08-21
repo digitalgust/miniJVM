@@ -5,7 +5,6 @@
  */
 package org.mini.gui;
 
-import java.util.Iterator;
 import java.util.Timer;
 import java.util.TimerTask;
 import static org.mini.gl.GL.GL_COLOR_BUFFER_BIT;
@@ -16,7 +15,6 @@ import static org.mini.gl.GL.glClear;
 import static org.mini.gl.GL.glClearColor;
 import static org.mini.gl.GL.glViewport;
 import org.mini.glfm.Glfm;
-import org.mini.glfm.GlfmCallBack;
 import static org.mini.gui.GToolkit.nvgRGBA;
 import org.mini.nanovg.Gutil;
 import org.mini.nanovg.Nanovg;
@@ -32,7 +30,7 @@ import static org.mini.nanovg.Nanovg.nvgTextAlign;
  *
  * @author gust
  */
-public class GForm extends GPanel {
+public class GForm extends GContainer {
 
     String title;
     long display; //glfw win
@@ -68,9 +66,10 @@ public class GForm extends GPanel {
 
     }
 
-//    public void setCallBack(GuiCallBack callback) {
-//        this.callback = callback;
-//    }
+    public int getType() {
+        return TYPE_FORM;
+    }
+
     public GuiCallBack getCallBack() {
         return this.callback;
     }
@@ -164,18 +163,19 @@ public class GForm extends GPanel {
         nvgTextAlign(vg, Nanovg.NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
         GuiCallBack cb = (GuiCallBack) callback;
-        float dx = 10, dy = 40;
+        float dx = 2, dy = 40;
         byte[] b;
         nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
 
         b = Gutil.toUtf8("touch x,y:" + cb.mouseX + "," + cb.mouseY);
         Nanovg.nvgTextJni(vg, dx, dy, b, 0, b.length);
         dy += font_size;
-        b = Gutil.toUtf8("form x,y:" + getX() + "," + getY());
+        b = Gutil.toUtf8("form:" + getX() + "," + getY() + "," + getW() + "," + getH() + "  " + getViewX() + "," + getViewY() + "," + getViewW() + "," + getViewH());
+
         Nanovg.nvgTextJni(vg, dx, dy, b, 0, b.length);
         dy += font_size;
         if (focus != null) {
-            b = Gutil.toUtf8("focus x:" + focus.boundle[LEFT] + " y:" + focus.boundle[TOP] + " w:" + focus.boundle[WIDTH] + " h:" + focus.boundle[HEIGHT]);
+            b = Gutil.toUtf8("focus:" + focus.getX() + "," + focus.getY() + "," + focus.getW() + "," + focus.getH() + "  " + focus.getViewX() + "," + focus.getViewY() + "," + focus.getViewW() + "," + focus.getViewH());
             Nanovg.nvgTextJni(vg, dx, dy, b, 0, b.length);
         }
     }

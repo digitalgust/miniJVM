@@ -37,6 +37,10 @@ public class GMenuItem extends GObject {
 
     }
 
+    public int getType() {
+        return TYPE_MENUITEM;
+    }
+
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         if (isInArea(x, y)) {
@@ -70,7 +74,7 @@ public class GMenuItem extends GObject {
     public boolean update(long vg) {
 
         float cornerRadius = 4.0f;
-        
+
         nvgTextMetrics(vg, null, null, lineh);
 
         //touched item background

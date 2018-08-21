@@ -31,10 +31,13 @@ public class GMenu extends GContainer {
 
     float[] lineh = new float[1];
 
-
     public GMenu(int left, int top, int width, int height) {
         setLocation(left, top);
         setSize(width, height);
+    }
+
+    public int getType() {
+        return TYPE_MENU;
     }
 
     @Override
@@ -140,7 +143,7 @@ public class GMenu extends GContainer {
             }
             i++;
         }
-        
+
         super.update(vg);
         return true;
     }

@@ -43,6 +43,10 @@ public class GCheckBox extends GObject {
         setSize(width, height);
     }
 
+    public int getType() {
+        return TYPE_CHECKBOX;
+    }
+
     public final void setText(String text) {
         this.text = text;
         text_arr = toUtf8(text);

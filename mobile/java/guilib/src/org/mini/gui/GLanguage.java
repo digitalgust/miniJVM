@@ -43,14 +43,12 @@ public class GLanguage {
     static private void addStringInner(String key, String[] values) {
         if (key != null && values != null) {
             lang.put(key, values);
-            System.out.println("add String :"+key);
         }
     }
 
     static public void addString(String key, String[] values) {
         if (key != null && values != null) {
             ext.put(key, values);
-            System.out.println("add String :"+key);
         }
     }
 
@@ -60,7 +58,7 @@ public class GLanguage {
             ss = ext.get(key);
         }
         if (ss == null || langType >= ss.length) {
-            return "NA";
+            return key;
         }
         return ss[langType];
     }

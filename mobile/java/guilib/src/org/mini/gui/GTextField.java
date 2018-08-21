@@ -59,6 +59,10 @@ public class GTextField extends GTextObject {
         setFocusListener(this);
     }
 
+    public int getType() {
+        return TYPE_TEXTFIELD;
+    }
+
     public void setBoxStyle(int boxStyle) {
         this.boxStyle = boxStyle;
     }

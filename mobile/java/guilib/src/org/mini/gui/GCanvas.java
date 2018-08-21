@@ -17,7 +17,9 @@ public class GCanvas extends GContainer {
         setLocation(x, y);
         setSize(w, h);
     }
-
+    public int getType(){
+        return TYPE_CANVAS;
+    }
     public boolean update(long vg) {
         if (g == null) {
             g = new GGraphics(this, vg);

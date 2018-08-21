@@ -56,6 +56,10 @@ public class GScrollBar extends GObject {
 
         }
     }
+    
+    public int getType() {
+        return TYPE_SCROLLBAR;
+    }
 
     public float getPos() {
         return pos;
