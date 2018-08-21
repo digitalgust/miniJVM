@@ -242,4 +242,16 @@ public class GuiCallBack extends GlfmCallBackAdapter {
         }
         gform.flush();
     }
+
+    @Override
+    public void onKeyboardVisible(long display, boolean visible, double x, double y, double w, double h) {
+        System.out.println("keyboardVisableEvent:" + display + "," + visible + "," + x + "," + y + "," + w + "," + h);
+        if (gform == null) {
+            return;
+        }
+        x /= Glfm.glfmGetDisplayScale(display);
+        y /= Glfm.glfmGetDisplayScale(display);
+        gform.KeyboardPopEvent(visible, (float) x, (float) y, (float) w, (float) h);
+    }
+
 }

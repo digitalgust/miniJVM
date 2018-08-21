@@ -69,8 +69,15 @@ public class GFrame extends GContainer {
         add(title_panel);
     }
 
+    @Override
     public int getType() {
         return TYPE_FRAME;
+    }
+
+    public void close() {
+        if (parent != null) {
+            parent.remove(this);
+        }
     }
 
     public void setTitle(String title) {
@@ -134,6 +141,13 @@ public class GFrame extends GContainer {
             boundle[TOP] = getForm().getDeviceHeight() - boundle[HEIGHT];
         } else if ((align_mod & GGraphics.HCENTER) != 0) {
             boundle[TOP] = (getForm().getDeviceHeight() - boundle[HEIGHT]) / 2;
+        }
+    }
+
+    @Override
+    public void onAdd(GObject obj) {
+        if (parent != null) {
+            parent.setFocus(this);
         }
     }
 

@@ -50,6 +50,10 @@ public class GTextField extends GTextObject {
 
     boolean password = false;//是否密码字段
 
+    public GTextField() {
+
+    }
+
     public GTextField(String text, String hint, int left, int top, int width, int height) {
         setText(text);
         setHint(hint);

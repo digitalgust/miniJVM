@@ -24,6 +24,7 @@ public class GListItem extends GObject {
         this.label = lab;
     }
 
+    @Override
     public int getType() {
         return TYPE_LISTITEM;
     }
@@ -73,6 +74,7 @@ public class GListItem extends GObject {
         }
     }
 
+    @Override
     public boolean update(long vg) {
         float x = getViewX();
         float y = getViewY();
@@ -84,19 +86,6 @@ public class GListItem extends GObject {
         float thumb = list.list_item_heigh - pad;
         int[] imgw = {0}, imgh = {0};
 
-        nvgImageSize(vg, img.getTexture(), imgw, imgh);
-        if (imgw[0] < imgh[0]) {
-            iw = thumb;
-            ih = iw * (float) imgh[0] / (float) imgw[0];
-            ix = 0;
-            iy = -(ih - thumb) * 0.5f;
-        } else {
-            ih = thumb;
-            iw = ih * (float) imgw[0] / (float) imgh[0];
-            ix = -(iw - thumb) * 0.5f;
-            iy = 0;
-        }
-
         float tx, ty;
         tx = x + pad;
         ty = y + pad;
@@ -104,9 +93,22 @@ public class GListItem extends GObject {
         if (parent.getElements().get(list.curIndex) == this) {
             GToolkit.drawRect(vg, tx, ty, w - (pad * 2), list.list_item_heigh - pad, GToolkit.getStyle().getSelectedColor());
         }
-
-        GList.drawImage(vg, tx, ty, thumb, thumb, img);
-
+        
+        if (img != null) {
+            nvgImageSize(vg, img.getTexture(), imgw, imgh);
+            if (imgw[0] < imgh[0]) {
+                iw = thumb;
+                ih = iw * (float) imgh[0] / (float) imgw[0];
+                ix = 0;
+                iy = -(ih - thumb) * 0.5f;
+            } else {
+                ih = thumb;
+                iw = ih * (float) imgw[0] / (float) imgh[0];
+                ix = -(iw - thumb) * 0.5f;
+                iy = 0;
+            }
+            GList.drawImage(vg, tx, ty, thumb, thumb, img);
+        }
         GList.drawText(vg, tx + thumb + pad, ty + thumb / 2, thumb, thumb, label);
         return true;
     }

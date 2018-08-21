@@ -20,6 +20,7 @@ abstract public class GContainer extends GObject {
 
     final List<GObject> elements = new ArrayList();
     private final List<GMenu> menus = new ArrayList();
+    private final List<GObject> fronts = new ArrayList();
     GObject focus;
 
     public List<GObject> getElements() {
@@ -46,9 +47,12 @@ abstract public class GContainer extends GObject {
     }
 
     /**
-     * @param focus the focus to set
+     * @param go
      */
     public void setFocus(GObject go) {
+        if (getType() == TYPE_FORM) {
+            int debug = 1;
+        }
         if (this.focus != go) {
             if (focus != null) {
                 if (focus.focusListener != null) {
@@ -68,8 +72,8 @@ abstract public class GContainer extends GObject {
         if (nko != null) {
             synchronized (elements) {
                 elements.add(nko);
-                nko.init();
                 nko.setParent(this);
+                nko.init();
                 onAdd(nko);
             }
         }
@@ -79,8 +83,8 @@ abstract public class GContainer extends GObject {
         if (nko != null) {
             synchronized (elements) {
                 elements.add(index, nko);
-                nko.init();
                 nko.setParent(this);
+                nko.init();
                 onAdd(nko);
             }
         }
@@ -152,12 +156,17 @@ abstract public class GContainer extends GObject {
             synchronized (elements) {
                 //更新所有UI组件
                 menus.clear();
+                fronts.clear();
                 for (GObject nko : elements) {
                     if (nko == focus) {
                         continue;
                     }
                     if (nko.getType() == TYPE_MENU) {
                         menus.add((GMenu) nko);
+                        continue;
+                    }
+                    if (nko.isFront()) {
+                        fronts.add(nko);
                         continue;
                     }
 
@@ -174,6 +183,11 @@ abstract public class GContainer extends GObject {
                         elements.add(focus);
 
                     }
+                }
+                for (GObject m : fronts) {
+                    elements.remove(m);
+                    elements.add(m);
+                    drawObj(ctx, m);
                 }
                 for (GMenu m : menus) {
                     elements.remove(m);
@@ -322,6 +336,13 @@ abstract public class GContainer extends GObject {
 
         if (focus != null) {
             focus.longTouchedEvent(x, y);
+        }
+    }
+
+    @Override
+    public void KeyboardPopEvent(boolean visible, float x, float y, float w, float h) {
+        for (GObject go : elements) {
+            go.KeyboardPopEvent(visible, x, y, w, h);
         }
     }
 }

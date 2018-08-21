@@ -10,6 +10,7 @@ import org.mini.glfw.Glfw;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
 import static org.mini.nanovg.Gutil.toUtf8;
+import org.mini.nanovg.Nanovg;
 
 /**
  *
@@ -239,5 +240,23 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
             selectMode = false;
         }
         //System.out.println("edit menu dispose");
+    }
+
+    float translateY = 0;
+
+    public float getKeyboardTranslat() {
+        return translateY;
+    }
+
+    @Override
+    public void KeyboardPopEvent(boolean visible, float x, float y, float w, float h) {
+        if (visible) {
+            if (getViewY() + getViewH() > y) {
+                translateY = (getViewY() + getViewH()) - y;
+            }
+        } else {
+            translateY = 0;
+        }
+        System.out.println("translateY=" + translateY);
     }
 }

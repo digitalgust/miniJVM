@@ -32,11 +32,10 @@ abstract public class GObject {
     public static final int TYPE_SCROLLBAR = 13;
     public static final int TYPE_TEXTBOX = 14;
     public static final int TYPE_TEXTFIELD = 15;
-    
+
     //
     public static final int ALIGN_H_FULL = 1;
     public static final int ALIGN_V_FULL = 2;
-    
 
     public static char ICON_SEARCH = (char) 0x1F50D;
     public static char ICON_CIRCLED_CROSS = 0x2716;
@@ -45,7 +44,7 @@ abstract public class GObject {
     public static char ICON_LOGIN = 0xE740;
     public static char ICON_TRASH = 0xE729;
     //
-    GContainer parent;
+    protected GContainer parent;
 
     //object position and width ,height
     float[] boundle = new float[4];
@@ -54,22 +53,24 @@ abstract public class GObject {
     static final int WIDTH = 2;
     static final int HEIGHT = 3;
 
-    float[] bgColor;
-    float[] color;
+    protected float[] bgColor;
+    protected float[] color;
 
-    GActionListener actionListener;
+    protected GActionListener actionListener;
 
-    GFocusChangeListener focusListener;
+    protected GFocusChangeListener focusListener;
 
     volatile static int flush;
 
-    boolean visable = true;
+    protected boolean visable = true;
 
-    boolean fixedLocation;
+    protected boolean front = false;
 
-    String name;
+    protected boolean fixedLocation;
 
-    Object attachment;
+    protected String name;
+
+    protected Object attachment;
 
     /**
      *
@@ -80,8 +81,8 @@ abstract public class GObject {
 
     void destory() {
     }
-    
-    abstract int getType();
+
+    public abstract int getType();
 
     static synchronized public void flush() {
         flush = 3;
@@ -152,6 +153,10 @@ abstract public class GObject {
 
     public boolean scrollEvent(float scrollX, float scrollY, float x, float y) {
         return false;
+    }
+
+    public void KeyboardPopEvent(boolean visible, float x, float y, float w, float h) {
+
     }
 
     /**
@@ -360,5 +365,19 @@ abstract public class GObject {
      */
     public void setAttachment(Object attachment) {
         this.attachment = attachment;
+    }
+
+    /**
+     * @return the front
+     */
+    public boolean isFront() {
+        return front;
+    }
+
+    /**
+     * @param front the front to set
+     */
+    public void setFront(boolean front) {
+        this.front = front;
     }
 }

@@ -5,7 +5,7 @@
  */
 package org.mini.gui;
 
-import java.awt.event.FocusListener;
+import java.util.List;
 import org.mini.glfm.Glfm;
 import static org.mini.nanovg.Gutil.toUtf8;
 import static org.mini.gui.GToolkit.nvgRGBA;
@@ -65,6 +65,10 @@ public class GList extends GContainer implements GFocusChangeListener {
     float left, top, width, height;
 
     public GList(int left, int top, int width, int height) {
+        this((float) left, top, width, height);
+    }
+
+    public GList(float left, float top, float width, float height) {
         this.left = left;
         this.top = top;
         this.width = width;
@@ -81,6 +85,15 @@ public class GList extends GContainer implements GFocusChangeListener {
         setFocusListener(this);
         reBoundle();
         changeCurPanel();
+    }
+
+    public void setItemHeight(float h) {
+        list_item_heigh = h;
+        list_image_size = h - 12;
+    }
+
+    public List<GObject> getItems() {
+        return popPanel.getElements();
     }
 
     @Override
@@ -153,7 +166,7 @@ public class GList extends GContainer implements GFocusChangeListener {
         }
 
         reAlignItems();
-        
+
         normalPanel.setLocation(0, 0);
         normalPanel.setSize(width, height);
 
@@ -435,7 +448,7 @@ public class GList extends GContainer implements GFocusChangeListener {
     /**
      *
      */
-    GPanel popPanel = new GPanel() {
+    protected GPanel popPanel = new GPanel() {
 
         @Override
         public boolean update(long vg) {
@@ -448,20 +461,19 @@ public class GList extends GContainer implements GFocusChangeListener {
 
             super.update(vg);
 
-            // Hide fades
-            byte[] fadePaint;
-            fadePaint = nvgLinearGradient(vg, x, y, x, y + 6, nvgRGBA(20, 20, 20, 192), nvgRGBA(30, 30, 30, 0));
-            nvgBeginPath(vg);
-            nvgRect(vg, x + 2, y, w - 4, 6);
-            nvgFillPaint(vg, fadePaint);
-            nvgFill(vg);
-
-            fadePaint = nvgLinearGradient(vg, x, y + h, x, y + h - 6, nvgRGBA(20, 20, 20, 192), nvgRGBA(30, 30, 30, 0));
-            nvgBeginPath(vg);
-            nvgRect(vg, x + 2, y + h - 6, w - 4, 6);
-            nvgFillPaint(vg, fadePaint);
-            nvgFill(vg);
-            nvgRestore(vg);
+//            // Hide fades
+//            byte[] fadePaint;
+//            fadePaint = nvgLinearGradient(vg, x, y, x, y + 6, nvgRGBA(20, 20, 20, 192), nvgRGBA(30, 30, 30, 0));
+//            nvgBeginPath(vg);
+//            nvgRect(vg, x + 2, y, w - 4, 6);
+//            nvgFillPaint(vg, fadePaint);
+//            nvgFill(vg);
+//
+//            fadePaint = nvgLinearGradient(vg, x, y + h, x, y + h - 6, nvgRGBA(20, 20, 20, 192), nvgRGBA(30, 30, 30, 0));
+//            nvgBeginPath(vg);
+//            nvgRect(vg, x + 2, y + h - 6, w - 4, 6);
+//            nvgFillPaint(vg, fadePaint);
+//            nvgFill(vg);
             return true;
         }
 
@@ -472,7 +484,7 @@ public class GList extends GContainer implements GFocusChangeListener {
     class GListPopWindow extends GContainer {
 
         @Override
-        int getType() {
+        public int getType() {
             return TYPE_UNKNOW;
         }
 

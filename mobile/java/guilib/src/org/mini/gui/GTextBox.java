@@ -694,7 +694,6 @@ public class GTextBox extends GTextObject {
             int nrows, i, char_count;
             float caretx = 0;
 
-            nvgSave(vg);
             Nanovg.nvgScissor(vg, text_area[LEFT], text_area[TOP], text_area[WIDTH], text_area[HEIGHT]);
             Nanovg.nvgIntersectScissor(vg, parent.getX(), parent.getY(), parent.getViewW(), parent.getViewH());
             //需要恢复现场
@@ -828,7 +827,6 @@ public class GTextBox extends GTextObject {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            nvgRestore(vg);
 
             Nanovg.nvgDeleteNVGtextRow(rowsHandle);
             Nanovg.nvgDeleteNVGglyphPosition(glyphsHandle);

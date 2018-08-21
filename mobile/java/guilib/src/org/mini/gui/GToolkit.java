@@ -185,8 +185,8 @@ public class GToolkit {
 
     public static void drawText(long vg, float x, float y, float w, float h, String s, float fontSize, float[] color) {
 
-        nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
-        nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
+        nvgFontSize(vg, fontSize);
+        nvgFillColor(vg, color);
         nvgFontFace(vg, GToolkit.getFontWord());
 
         byte[] text_arr = toUtf8(s);
