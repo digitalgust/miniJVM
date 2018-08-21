@@ -9,6 +9,7 @@ import java.awt.event.FocusListener;
 import org.mini.glfm.Glfm;
 import static org.mini.nanovg.Gutil.toUtf8;
 import static org.mini.gui.GToolkit.nvgRGBA;
+import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
 import org.mini.nanovg.Nanovg;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_LEFT;
@@ -73,7 +74,8 @@ public class GList extends GContainer implements GFocusChangeListener {
         setSize(width, height);
 
         //
-        scrollBar = new GScrollBar(0, GScrollBar.VERTICAL, 0, 0, 1, 1);
+        scrollBar = new GScrollBar(0, GScrollBar.VERTICAL, 0, 0, 20, 100);
+        scrollBar.setActionListener(new ScrollBarActionListener());
         popWin.add(scrollBar);
         popWin.add(popPanel);
         setFocusListener(this);
@@ -150,17 +152,22 @@ public class GList extends GContainer implements GFocusChangeListener {
 
         }
 
+        reAlignItems();
+        
+        normalPanel.setLocation(0, 0);
+        normalPanel.setSize(width, height);
+
+        scrollBar.setPos(popPanel.scrolly);
+        flush();
+    }
+
+    void reAlignItems() {
         int i = 0;
         for (GObject go : popPanel.getElements()) {
             go.setLocation(pad, i * list_item_heigh);
             go.setSize(popPanel.getViewW() - pad * 2, list_item_heigh);
             i++;
         }
-
-        normalPanel.setLocation(0, 0);
-        normalPanel.setSize(width, height);
-
-        flush();
     }
 
     void changeCurPanel() {
@@ -481,4 +488,15 @@ public class GList extends GContainer implements GFocusChangeListener {
         }
 
     };
+
+    class ScrollBarActionListener implements GActionListener {
+
+        @Override
+        public void action(GObject gobj) {
+            popPanel.setScrollY(((GScrollBar) gobj).getPos());
+            popPanel.reBoundle();
+            flush();
+        }
+
+    }
 }

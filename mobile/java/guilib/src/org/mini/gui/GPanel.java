@@ -9,7 +9,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import org.mini.glfm.Glfm;
 import static org.mini.gui.GObject.flush;
-import static org.mini.gui.GObject.flush;
 
 /**
  *
@@ -22,10 +21,10 @@ public class GPanel extends GContainer {
     float scrollx;
     float scrolly;
 
-    
     public int getType() {
         return TYPE_PANEL;
     }
+
     @Override
     public void setLocation(float x, float y) {
         viewBoundle[LEFT] = x;
@@ -86,7 +85,6 @@ public class GPanel extends GContainer {
 
     @Override
     public void reBoundle() {
-        float oldMinX = minX, oldMaxX = maxX, oldMinY = minY, oldMaxY = maxY;
         minX = 0;
         minY = 0;
         maxX = minX + viewBoundle[WIDTH];
@@ -166,7 +164,7 @@ public class GPanel extends GContainer {
                     float dh = getOutOfViewHeight();
                     if (dh > 0) {
                         float vec = (float) speedY / dh;
-                        setScrollY(vec);
+                        moveScrollY(vec);
                         tmpScrollY -= vec;
                         //System.out.println("dy:" + ((float) speedY / dh));
                     }
@@ -200,7 +198,7 @@ public class GPanel extends GContainer {
                     float tmpScrollX = scrollx;
                     if (dw > 0) {
                         float vec = (float) speedX / dw;
-                        setScrollX(vec);
+                        moveScrollX(vec);
                         tmpScrollX -= vec;
                         //System.out.println("dx:" + ((float) speedX / dw));
                     }
@@ -243,13 +241,13 @@ public class GPanel extends GContainer {
             return false;
         }
         if (Math.abs(odx) > Math.abs(ody)) {
-            return setScrollX(odx);
+            return moveScrollX(odx);
         } else {
-            return setScrollY(ody);
+            return moveScrollY(ody);
         }
     }
 
-    boolean setScrollY(float dy) {
+    boolean moveScrollY(float dy) {
         float tmpy = scrolly;
         tmpy -= dy;
         if (tmpy < 0) {
@@ -266,7 +264,7 @@ public class GPanel extends GContainer {
         return false;
     }
 
-    boolean setScrollX(float dx) {
+    boolean moveScrollX(float dx) {
         float tmpx = scrollx;
         tmpx -= dx;
         if (tmpx < 0) {
@@ -281,6 +279,22 @@ public class GPanel extends GContainer {
             return true;
         }
         return false;
+    }
+
+    public void setScrollX(float sx) {
+        if (sx < 0 || sx > 1) {
+            return;
+        }
+        scrollx = sx;
+        boundle[LEFT] = viewBoundle[LEFT] + (-minX) - scrollx * getOutOfViewWidth();
+    }
+
+    public void setScrollY(float sy) {
+        if (sy < 0 || sy > 1) {
+            return;
+        }
+        scrolly = sy;
+        boundle[TOP] = viewBoundle[TOP] + (-minY) - scrolly * getOutOfViewHeight();
     }
 
     float getOutOfViewHeight() {

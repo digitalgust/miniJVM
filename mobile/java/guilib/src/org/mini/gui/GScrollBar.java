@@ -9,6 +9,7 @@ import org.mini.glfm.Glfm;
 import static org.mini.gui.GObject.LEFT;
 import static org.mini.gui.GObject.isInBoundle;
 import static org.mini.gui.GToolkit.nvgRGBA;
+import org.mini.nanovg.Nanovg;
 import static org.mini.nanovg.Nanovg.NVG_HOLE;
 import static org.mini.nanovg.Nanovg.nvgBeginPath;
 import static org.mini.nanovg.Nanovg.nvgBoxGradient;
@@ -43,20 +44,35 @@ public class GScrollBar extends GObject {
         this.mode = mode;
         setLocation(left, top);
         setSize(width, height);
+        reBoundle();
+    }
+
+    @Override
+    public void setSize(float w, float h) {
+        super.setSize(w, h);
+        reBoundle();
+    }
+
+    public void setMode(int mode) {
+        this.mode = mode;
+        reBoundle();
+    }
+
+    public void reBoundle() {
         if (mode == HORIZONTAL) {
-            line_boundle[LEFT] = boundle[LEFT] + radius;
+            line_boundle[LEFT] = radius;
             line_boundle[WIDTH] = boundle[WIDTH] - radius * 2;
-            line_boundle[TOP] = boundle[TOP];
+            line_boundle[TOP] = 0;
             line_boundle[HEIGHT] = boundle[HEIGHT];
         } else {
-            line_boundle[LEFT] = boundle[LEFT];
+            line_boundle[LEFT] = 0;
             line_boundle[WIDTH] = boundle[WIDTH];
-            line_boundle[TOP] = boundle[TOP] + radius;
+            line_boundle[TOP] = radius;
             line_boundle[HEIGHT] = boundle[HEIGHT] - radius * 2;
 
         }
     }
-    
+
     public int getType() {
         return TYPE_SCROLLBAR;
     }
@@ -77,8 +93,8 @@ public class GScrollBar extends GObject {
 
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
-        int rx = (int) (x - parent.getX());
-        int ry = (int) (y - parent.getY());
+        int rx = (int) (x - getX());
+        int ry = (int) (y - getY());
         if (isInBoundle(line_boundle, rx, ry)) {
             if (pressed) {
                 draged = true;
@@ -95,8 +111,8 @@ public class GScrollBar extends GObject {
 
     @Override
     public void cursorPosEvent(int x, int y) {
-        int rx = (int) (x - parent.getX());
-        int ry = (int) (y - parent.getY());
+        int rx = (int) (x - getX());
+        int ry = (int) (y - getY());
         if (isInBoundle(line_boundle, rx, ry)) {
             if (draged) {
                 pos = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
@@ -108,21 +124,27 @@ public class GScrollBar extends GObject {
 
     @Override
     public void touchEvent(int phase, int x, int y) {
-        int rx = (int) (x - parent.getX());
-        int ry = (int) (y - parent.getY());
+        int rx = (int) (x - getX());
+        int ry = (int) (y - getY());
         if (isInBoundle(line_boundle, rx, ry)) {
-            if (phase == Glfm.GLFMTouchPhaseBegan) {
-                draged = true;
-                pos = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
-            } else if (phase == Glfm.GLFMTouchPhaseEnded) {
-                draged = false;
-                if (actionListener != null) {
-                    actionListener.action(this);
-                }
-            } else if (isInBoundle(line_boundle, rx, ry)) {
-                if (draged) {
+            switch (phase) {
+                case Glfm.GLFMTouchPhaseBegan:
+                    draged = true;
                     pos = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
-                }
+                    break;
+                case Glfm.GLFMTouchPhaseMoved:
+                    if (draged) {
+                        pos = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
+                    }
+                    break;
+                case Glfm.GLFMTouchPhaseEnded:
+                    draged = false;
+                    if (actionListener != null) {
+                        actionListener.action(this);
+                    }
+                    break;
+                default:
+                    break;
             }
         }
     }
@@ -133,8 +155,8 @@ public class GScrollBar extends GObject {
      * @return
      */
     public boolean update(long vg) {
-        float x = parent.getX() + line_boundle[LEFT];
-        float y = parent.getY() + line_boundle[TOP];
+        float x = getViewX() + line_boundle[LEFT];
+        float y = getViewY() + line_boundle[TOP];
         float w = line_boundle[WIDTH];
         float h = line_boundle[HEIGHT];
 
