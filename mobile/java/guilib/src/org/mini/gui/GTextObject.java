@@ -11,6 +11,7 @@ import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
 import static org.mini.nanovg.Gutil.toUtf8;
 import org.mini.nanovg.Nanovg;
+import org.mini.gui.event.GKeyboardShowListener;
 
 /**
  *
@@ -242,21 +243,26 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         //System.out.println("edit menu dispose");
     }
 
-    float translateY = 0;
-
-    public float getKeyboardTranslat() {
-        return translateY;
-    }
+    GKeyboardShowListener keyshowListener;
 
     @Override
     public void KeyboardPopEvent(boolean visible, float x, float y, float w, float h) {
-        if (visible) {
-            if (getViewY() + getViewH() > y) {
-                translateY = (getViewY() + getViewH()) - y;
-            }
-        } else {
-            translateY = 0;
+        if (keyshowListener != null) {
+            keyshowListener.keyboardShow(visible, x, y, w, h);
         }
-        System.out.println("translateY=" + translateY);
+    }
+
+    /**
+     * @return the keyshowListener
+     */
+    public GKeyboardShowListener getKeyshowListener() {
+        return keyshowListener;
+    }
+
+    /**
+     * @param keyshowListener the keyshowListener to set
+     */
+    public void setKeyshowListener(GKeyboardShowListener keyshowListener) {
+        this.keyshowListener = keyshowListener;
     }
 }

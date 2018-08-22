@@ -45,7 +45,7 @@ import static org.mini.nanovg.Nanovg.nvgTextMetrics;
  *
  * @author gust
  */
-public class GList extends GContainer implements GFocusChangeListener {
+public class GList extends GViewPort implements GFocusChangeListener {
 
     char preicon;
     byte[] preicon_arr = toUtf8("" + ICON_CHEVRON_RIGHT);

@@ -38,7 +38,7 @@ import static org.mini.nanovg.Nanovg.nvgTextJni;
  *
  * @author gust
  */
-public class GFrame extends GContainer {
+public class GFrame extends GViewPort {
 
     String title;
     byte[] title_arr;

@@ -64,6 +64,11 @@ public class GTextBox extends GTextObject {
     boolean mouseDrag;
 
     public GTextBox(String text, String hint, int left, int top, int width, int height) {
+        this(text, hint, (float) left, top, width, height);
+
+    }
+
+    public GTextBox(String text, String hint, float left, float top, float width, float height) {
         setText(text);
         setHint(hint);
         setLocation(left, top);
@@ -695,7 +700,7 @@ public class GTextBox extends GTextObject {
             float caretx = 0;
 
             Nanovg.nvgScissor(vg, text_area[LEFT], text_area[TOP], text_area[WIDTH], text_area[HEIGHT]);
-            Nanovg.nvgIntersectScissor(vg, parent.getX(), parent.getY(), parent.getViewW(), parent.getViewH());
+            Nanovg.nvgIntersectScissor(vg, parent.getViewX(), parent.getViewY(), parent.getViewW(), parent.getViewH());
             //需要恢复现场
             try {
 

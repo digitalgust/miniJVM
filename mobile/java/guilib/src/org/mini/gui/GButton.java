@@ -37,14 +37,17 @@ public class GButton extends GObject {
     boolean bt_pressed = false;
 
     public GButton(String text, int left, int top, int width, int height) {
+        this(text, (float) left, top, width, height);
+    }
+
+    public GButton(String text, float left, float top, float width, float height) {
         setText(text);
         setLocation(left, top);
         setSize(width, height);
         setBgColor(0, 0, 0, 0);
     }
-    
-    
-    public int getType(){
+
+    public int getType() {
         return TYPE_BUTTON;
     }
 
@@ -79,6 +82,7 @@ public class GButton extends GObject {
             bt_pressed = false;
         }
     }
+
     @Override
     public void touchEvent(int phase, int x, int y) {
         if (isInBoundle(boundle, x - parent.getX(), y - parent.getY())) {

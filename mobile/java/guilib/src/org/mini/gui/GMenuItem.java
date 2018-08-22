@@ -46,11 +46,11 @@ public class GMenuItem extends GObject {
         if (isInArea(x, y)) {
             if (pressed && button == Glfw.GLFW_MOUSE_BUTTON_1) {
                 touched = true;
-            } else if (!pressed && button == Glfw.GLFW_MOUSE_BUTTON_1) {
-                touched = false;
                 if (actionListener != null) {
                     actionListener.action(this);
                 }
+            } else if (!pressed && button == Glfw.GLFW_MOUSE_BUTTON_1) {
+                touched = false;
             }
         }
 
@@ -61,11 +61,11 @@ public class GMenuItem extends GObject {
         if (isInArea(x, y)) {
             if (phase == Glfm.GLFMTouchPhaseBegan) {
                 touched = true;
-            } else if (phase == Glfm.GLFMTouchPhaseEnded) {
-                touched = false;
                 if (actionListener != null) {
                     actionListener.action(this);
                 }
+            } else if (phase == Glfm.GLFMTouchPhaseEnded) {
+                touched = false;
             }
         }
 

@@ -32,6 +32,7 @@ abstract public class GObject {
     public static final int TYPE_SCROLLBAR = 13;
     public static final int TYPE_TEXTBOX = 14;
     public static final int TYPE_TEXTFIELD = 15;
+    public static final int TYPE_VIEWPORT = 16;
 
     //
     public static final int ALIGN_H_FULL = 1;
@@ -48,10 +49,10 @@ abstract public class GObject {
 
     //object position and width ,height
     float[] boundle = new float[4];
-    static final int LEFT = 0;
-    static final int TOP = 1;
-    static final int WIDTH = 2;
-    static final int HEIGHT = 3;
+    public static final int LEFT = 0;
+    public static final int TOP = 1;
+    public static final int WIDTH = 2;
+    public static final int HEIGHT = 3;
 
     protected float[] bgColor;
     protected float[] color;
@@ -79,7 +80,7 @@ abstract public class GObject {
 
     }
 
-    void destory() {
+    public void destory() {
     }
 
     public abstract int getType();

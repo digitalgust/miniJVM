@@ -55,6 +55,10 @@ public class GTextField extends GTextObject {
     }
 
     public GTextField(String text, String hint, int left, int top, int width, int height) {
+        this(text, hint, (float) left, top, width, height);
+    }
+
+    public GTextField(String text, String hint, float left, float top, float width, float height) {
         setText(text);
         setHint(hint);
         setLocation(left, top);
@@ -387,7 +391,7 @@ public class GTextField extends GTextObject {
 
             if (selectStart != -1 && selectEnd != -1) {
 
-                GToolkit.drawRect(vg, text_show_area_x, wordy - lineh[0] / 2, text_show_area_w, lineh[0], GToolkit.getStyle().getSelectedColor());
+                GToolkit.drawRect(vg, text_show_area_x, wordy - lineh[0] * .5f, text_show_area_w, lineh[0], GToolkit.getStyle().getSelectedColor());
 
             }
             nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());

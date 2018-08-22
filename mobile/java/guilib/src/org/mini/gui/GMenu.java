@@ -32,6 +32,10 @@ public class GMenu extends GContainer {
     float[] lineh = new float[1];
 
     public GMenu(int left, int top, int width, int height) {
+        this((float) left, top, width, height);
+    }
+
+    public GMenu(float left, float top, float width, float height) {
         setLocation(left, top);
         setSize(width, height);
     }
