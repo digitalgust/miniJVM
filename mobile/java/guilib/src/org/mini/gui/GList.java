@@ -45,7 +45,7 @@ import static org.mini.nanovg.Nanovg.nvgTextMetrics;
  *
  * @author gust
  */
-public class GList extends GViewPort implements GFocusChangeListener {
+public class GList extends GPanel implements GFocusChangeListener {
 
     char preicon;
     byte[] preicon_arr = toUtf8("" + ICON_CHEVRON_RIGHT);
@@ -74,14 +74,14 @@ public class GList extends GViewPort implements GFocusChangeListener {
         this.width = width;
         this.height = height;
 
-        setLocation(left, top);
-        setSize(width, height);
+        setViewLocation(left, top);
+        setViewSize(width, height);
 
         //
         scrollBar = new GScrollBar(0, GScrollBar.VERTICAL, 0, 0, 20, 100);
         scrollBar.setActionListener(new ScrollBarActionListener());
         popWin.add(scrollBar);
-        popWin.add(popPanel);
+        popWin.add(popView);
         setFocusListener(this);
         reBoundle();
         changeCurPanel();
@@ -93,7 +93,7 @@ public class GList extends GViewPort implements GFocusChangeListener {
     }
 
     public List<GObject> getItems() {
-        return popPanel.getElements();
+        return popView.getElements();
     }
 
     @Override
@@ -113,7 +113,7 @@ public class GList extends GViewPort implements GFocusChangeListener {
 
     public void addItem(GListItem gli) {
         if (gli != null) {
-            popPanel.add(gli);
+            popView.add(gli);
             gli.list = this;
             reBoundle();
         }
@@ -121,14 +121,14 @@ public class GList extends GViewPort implements GFocusChangeListener {
 
     public void addItem(int index, GListItem gli) {
         if (gli != null) {
-            popPanel.add(index, gli);
+            popView.add(index, gli);
             gli.list = this;
             reBoundle();
         }
     }
 
     public void removeItem(int index) {
-        popPanel.remove(index);
+        popView.remove(index);
         reBoundle();
     }
 
@@ -136,20 +136,20 @@ public class GList extends GViewPort implements GFocusChangeListener {
         if (go.getType() != TYPE_LISTITEM) {
             throw new IllegalArgumentException("need GListItem");
         }
-        popPanel.remove(go);
+        popView.remove(go);
         reBoundle();
     }
 
     @Override
     public void reBoundle() {
-        int itemcount = popPanel.elements.size();
+        int itemcount = popView.elements.size();
         if (itemcount <= 0) {
             return;
         }
 
         if (mode == MODE_MULTI_LINE) {
-            popWin.setLocation(0, 0);
-            popWin.setSize(width, height);
+            popWin.setViewLocation(0, 0);
+            popWin.setViewSize(width, height);
 
         } else {
             float popH = itemcount * list_item_heigh;
@@ -160,8 +160,8 @@ public class GList extends GViewPort implements GFocusChangeListener {
                 popH = list_rows_max * list_item_heigh;
             }
 
-            popWin.setLocation(0, 0);
-            popWin.setSize(width, popH);
+            popWin.setViewLocation(0, 0);
+            popWin.setViewSize(width, popH);
 
         }
 
@@ -170,21 +170,21 @@ public class GList extends GViewPort implements GFocusChangeListener {
         normalPanel.setLocation(0, 0);
         normalPanel.setSize(width, height);
 
-        scrollBar.setPos(popPanel.scrolly);
+        scrollBar.setPos(popView.scrolly);
         flush();
     }
 
     void reAlignItems() {
         int i = 0;
-        for (GObject go : popPanel.getElements()) {
+        for (GObject go : popView.getElements()) {
             go.setLocation(pad, i * list_item_heigh);
-            go.setSize(popPanel.getViewW() - pad * 2, list_item_heigh);
+            go.setSize(popView.getViewW() - pad * 2, list_item_heigh);
             i++;
         }
     }
 
     void changeCurPanel() {
-        int itemcount = popPanel.elements.size();
+        int itemcount = popView.elements.size();
         clear();
 
         if (mode == MODE_MULTI_LINE) {
@@ -247,10 +247,10 @@ public class GList extends GViewPort implements GFocusChangeListener {
     }
 
     public GListItem getSelectedItem() {
-        if (curIndex < 0 || curIndex >= popPanel.elements.size()) {
+        if (curIndex < 0 || curIndex >= popView.elements.size()) {
             return null;
         }
-        return (GListItem) popPanel.elements.get(curIndex);
+        return (GListItem) popView.elements.get(curIndex);
     }
 
     @Override
@@ -275,7 +275,7 @@ public class GList extends GViewPort implements GFocusChangeListener {
             curIndex = 0;
         }
 
-        int itemcount = popPanel.elements.size();
+        int itemcount = popView.elements.size();
 
         if (curIndex >= itemcount) {
             curIndex = itemcount - 1;
@@ -408,7 +408,7 @@ public class GList extends GViewPort implements GFocusChangeListener {
 
         @Override
         public boolean update(long vg) {
-            drawNormal(vg, normalPanel.getViewX(), normalPanel.getViewY(), normalPanel.getViewW(), normalPanel.getViewH());
+            drawNormal(vg, normalPanel.getX(), normalPanel.getY(), normalPanel.getW(), normalPanel.getH());
             return true;
         }
 
@@ -431,9 +431,9 @@ public class GList extends GViewPort implements GFocusChangeListener {
             nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 48));
             nvgStroke(vg);
 
-            if (popPanel.elements.size() > 0) {
+            if (popView.elements.size() > 0) {
                 float thumb = h - pad;
-                GListItem gli = (GListItem) popPanel.elements.get(curIndex);
+                GListItem gli = (GListItem) popView.elements.get(curIndex);
                 drawImage(vg, x + pad, y + h * 0.5f - thumb / 2, thumb, thumb, gli.img);
 
                 drawText(vg, x + thumb + pad + pad, y + h / 2, thumb, thumb, gli.label);
@@ -448,14 +448,14 @@ public class GList extends GViewPort implements GFocusChangeListener {
     /**
      *
      */
-    protected GPanel popPanel = new GPanel() {
+    protected GViewPort popView = new GViewPort() {
 
         @Override
         public boolean update(long vg) {
-            float x = getViewX();
-            float y = getViewY();
-            float w = getViewW();
-            float h = getViewH();
+            float x = getX();
+            float y = getY();
+            float w = getW();
+            float h = getH();
 
             GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h);
 
@@ -481,7 +481,7 @@ public class GList extends GViewPort implements GFocusChangeListener {
 
     GListPopWindow popWin = new GListPopWindow();
 
-    class GListPopWindow extends GContainer {
+    class GListPopWindow extends GPanel {
 
         @Override
         public int getType() {
@@ -492,8 +492,10 @@ public class GList extends GViewPort implements GFocusChangeListener {
         public void setSize(float width, float height) {
             super.setSize(width, height);
 
-            popPanel.setLocation(0, 0);
-            popPanel.setSize(width - 20, height);
+            popView.setLocation(0, 0);
+            popView.setSize(width - 20, height);
+            popView.setViewLocation(0, 0);
+            popView.setViewSize(width - 20, height);
 
             scrollBar.setLocation(width - 20, 0);
             scrollBar.setSize(20, height);
@@ -505,8 +507,8 @@ public class GList extends GViewPort implements GFocusChangeListener {
 
         @Override
         public void action(GObject gobj) {
-            popPanel.setScrollY(((GScrollBar) gobj).getPos());
-            popPanel.reBoundle();
+            popView.setScrollY(((GScrollBar) gobj).getPos());
+            reBoundle();
             flush();
         }
 

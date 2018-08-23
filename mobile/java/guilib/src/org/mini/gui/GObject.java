@@ -179,10 +179,10 @@ abstract public class GObject {
     }
 
     public boolean isInArea(float x, float y) {
-        float absx = getViewX();
-        float absy = getViewY();
-        return x >= absx && x <= absx + getViewW()
-                && y >= absy && y <= absy + getViewH();
+        float absx = getX();
+        float absy = getY();
+        return x >= absx && x <= absx + getW()
+                && y >= absy && y <= absy + getH();
     }
 
     public float[] getBoundle() {
@@ -226,22 +226,6 @@ abstract public class GObject {
     }
 
     public float getH() {
-        return boundle[HEIGHT];
-    }
-
-    public float getViewX() {
-        return getX();
-    }
-
-    public float getViewY() {
-        return getY();
-    }
-
-    public float getViewW() {
-        return boundle[WIDTH];
-    }
-
-    public float getViewH() {
         return boundle[HEIGHT];
     }
 

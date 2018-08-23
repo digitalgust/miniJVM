@@ -8,9 +8,13 @@ package org.mini.gui;
 import java.util.ArrayList;
 import java.util.List;
 import org.mini.glfm.Glfm;
+import static org.mini.gui.GToolkit.nvgRGBA;
 import org.mini.nanovg.Nanovg;
+import static org.mini.nanovg.Nanovg.nvgBeginPath;
 import static org.mini.nanovg.Nanovg.nvgSave;
 import static org.mini.nanovg.Nanovg.nvgScissor;
+import static org.mini.nanovg.Nanovg.nvgStroke;
+import static org.mini.nanovg.Nanovg.nvgStrokeColor;
 
 /**
  *
@@ -22,6 +26,25 @@ abstract public class GContainer extends GObject {
     private final List<GMenu> menus = new ArrayList();
     private final List<GObject> fronts = new ArrayList();
     GObject focus;
+
+    abstract float getViewX();
+
+    abstract float getViewY();
+
+    abstract float getViewW();
+
+    abstract float getViewH();
+
+    abstract void setViewLocation(float x, float y);
+
+    abstract void setViewSize(float x, float y);
+
+    public boolean isInArea(float x, float y) {
+        float absx = getViewX();
+        float absy = getViewY();
+        return x >= absx && x <= absx + getViewW()
+                && y >= absy && y <= absy + getViewH();
+    }
 
     public List<GObject> getElements() {
         return elements;
@@ -203,29 +226,39 @@ abstract public class GContainer extends GObject {
     }
 
     private void drawObj(long ctx, GObject nko) {
-        float x = nko.getViewX();
-        float y = nko.getViewY();
-        float w = nko.getViewW();
-        float h = nko.getViewH();
+        float x, y, w, h;
+        if (nko instanceof GContainer) {
+            GContainer c = (GContainer) nko;
+            x = c.getViewX();
+            y = c.getViewY();
+            w = c.getViewW();
+            h = c.getViewH();
+
+        } else {
+            x = nko.getX();
+            y = nko.getY();
+            w = nko.getW();
+            h = nko.getH();
+        }
 
         nvgSave(ctx);
         nvgScissor(ctx, x, y, w, h);
         Nanovg.nvgIntersectScissor(ctx, getViewX(), getViewY(), getViewW(), getViewH());
         nko.update(ctx);
 
-//                if (focus == nko) {
-//                    nvgScissor(ctx, x, y, w, h);
-//                    nvgBeginPath(ctx);
-//                    Nanovg.nvgRect(ctx, x + 1, y + 1, w - 2, h - 2);
-//                    nvgStrokeColor(ctx, nvgRGBA(255, 0, 0, 255));
-//                    nvgStroke(ctx);
+//        if (focus == nko) {
+//            nvgScissor(ctx, x, y, w, h);
+//            nvgBeginPath(ctx);
+//            Nanovg.nvgRect(ctx, x + 1, y + 1, w - 2, h - 2);
+//            nvgStrokeColor(ctx, nvgRGBA(255, 0, 0, 255));
+//            nvgStroke(ctx);
 //
-//                    nvgBeginPath(ctx);
-//                    Nanovg.nvgRect(ctx, nko.getX() + 2, nko.getY() + 2, nko.getW() - 4, nko.getH() - 4);
-//                    nvgStrokeColor(ctx, nvgRGBA(0, 0, 255, 255));
-//                    nvgStroke(ctx);
+//            nvgBeginPath(ctx);
+//            Nanovg.nvgRect(ctx, nko.getX() + 2, nko.getY() + 2, nko.getW() - 4, nko.getH() - 4);
+//            nvgStrokeColor(ctx, nvgRGBA(0, 0, 255, 255));
+//            nvgStroke(ctx);
 //
-//                }
+//        }
         Nanovg.nvgRestore(ctx);
     }
 

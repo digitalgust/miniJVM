@@ -9,7 +9,7 @@ package org.mini.gui;
  *
  * @author gust
  */
-public class GCanvas extends GContainer {
+public class GCanvas extends GPanel {
 
     GGraphics g;
 

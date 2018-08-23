@@ -63,6 +63,9 @@ public class GForm extends GViewPort {
 
         setLocation(0, 0);
         setSize(winWidth, winHeight);
+        
+        setViewLocation(0, 0);
+        setViewSize(winWidth, winHeight);
 
     }
 
@@ -132,7 +135,7 @@ public class GForm extends GViewPort {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
             nvgBeginFrame(vg, winWidth, winHeight, pxRatio);
-            //drawDebugInfo(vg);
+            drawDebugInfo(vg);
             Nanovg.nvgResetScissor(vg);
             Nanovg.nvgScissor(vg, 0, 0, winWidth, winHeight);
             update(vg);
@@ -175,7 +178,7 @@ public class GForm extends GViewPort {
         Nanovg.nvgTextJni(vg, dx, dy, b, 0, b.length);
         dy += font_size;
         if (focus != null) {
-            b = Gutil.toUtf8("focus:" + focus.getX() + "," + focus.getY() + "," + focus.getW() + "," + focus.getH() + "  " + focus.getViewX() + "," + focus.getViewY() + "," + focus.getViewW() + "," + focus.getViewH());
+            b = Gutil.toUtf8("focus:" + focus.getX() + "," + focus.getY() + "," + focus.getW() + "," + focus.getH() + "  " + ((focus instanceof GContainer) ? ((GContainer) focus).getViewX() + "," + ((GContainer) focus).getViewY() + "," + ((GContainer) focus).getViewW() + "," + ((GContainer) focus).getViewH() : ""));
             Nanovg.nvgTextJni(vg, dx, dy, b, 0, b.length);
         }
     }

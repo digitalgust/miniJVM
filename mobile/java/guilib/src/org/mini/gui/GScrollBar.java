@@ -155,8 +155,8 @@ public class GScrollBar extends GObject {
      * @return
      */
     public boolean update(long vg) {
-        float x = getViewX() + line_boundle[LEFT];
-        float y = getViewY() + line_boundle[TOP];
+        float x = getX() + line_boundle[LEFT];
+        float y = getY() + line_boundle[TOP];
         float w = line_boundle[WIDTH];
         float h = line_boundle[HEIGHT];
 

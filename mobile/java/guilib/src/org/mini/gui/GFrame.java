@@ -48,7 +48,7 @@ public class GFrame extends GViewPort {
 
     int background_rgba;
 
-    GPanel panel = new GPanel();
+    GViewPort panel = new GViewPort();
 
     GPanel title_panel = new GPanel();
     long vg;
@@ -59,9 +59,13 @@ public class GFrame extends GViewPort {
         setTitle(title);
         setLocation(left, top);
         setSize(width, height);
+        setViewLocation(left, top);
+        setViewSize(width, height);
 
         panel.setLocation(2, 32);
         panel.setSize(width - 4, height - 34);
+        panel.setViewLocation(2, 32);
+        panel.setViewSize(width - 4, height - 34);
         add(panel);
 
         title_panel.setLocation(1, 1);
@@ -101,7 +105,7 @@ public class GFrame extends GViewPort {
         background_rgba = rgba;
     }
 
-    public GPanel getPanel() {
+    public GContainer getView() {
         return panel;
     }
 
@@ -129,18 +133,18 @@ public class GFrame extends GViewPort {
             return;
         }
         if ((align_mod & GGraphics.LEFT) != 0) {
-            boundle[LEFT] = 0;
+            move(-getViewX(), 0);
         } else if ((align_mod & GGraphics.RIGHT) != 0) {
-            boundle[LEFT] = getForm().getDeviceWidth() - boundle[WIDTH];
+            move(getForm().getDeviceWidth() - (getViewX() + getViewW()), 0);
         } else if ((align_mod & GGraphics.HCENTER) != 0) {
-            boundle[LEFT] = (getForm().getDeviceWidth() - boundle[WIDTH]) / 2;
+            move(getForm().getDeviceWidth() / 2 - (getViewX() + getViewW() / 2), 0);
         }
         if ((align_mod & GGraphics.TOP) != 0) {
-            boundle[TOP] = 0;
+            move(0, -getViewY());
         } else if ((align_mod & GGraphics.BOTTOM) != 0) {
-            boundle[TOP] = getForm().getDeviceHeight() - boundle[HEIGHT];
+            move(0, getForm().getDeviceHeight() - (getViewY() + getViewH()));
         } else if ((align_mod & GGraphics.HCENTER) != 0) {
-            boundle[TOP] = (getForm().getDeviceHeight() - boundle[HEIGHT]) / 2;
+            move(0, getForm().getDeviceHeight() / 2 - (getViewY() + getViewH() / 2));
         }
     }
 
@@ -154,10 +158,10 @@ public class GFrame extends GViewPort {
     @Override
     public boolean update(long vg) {
         this.vg = vg;
-        float x = getX();
-        float y = getY();
-        float w = getW();
-        float h = getH();
+        float x = getViewX();
+        float y = getViewY();
+        float w = getViewW();
+        float h = getViewH();
         drawWindow(vg, title, x, y, w, h);
         super.update(this.vg);
         return true;

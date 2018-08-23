@@ -81,7 +81,7 @@ public class GMenuItem extends GObject {
         if (touched) {
             nvgFillColor(vg, nvgRGBA(255, 255, 255, 48));
             nvgBeginPath(vg);
-            nvgRoundedRect(vg, getViewX() + 1, getViewY() + 1, getViewW() - 2, getViewH() - 2, cornerRadius - 0.5f);
+            nvgRoundedRect(vg, getX() + 1, getY() + 1, getW() - 2, getH() - 2, cornerRadius - 0.5f);
             nvgFill(vg);
             //System.out.println("draw touched");
 

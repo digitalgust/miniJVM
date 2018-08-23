@@ -29,19 +29,20 @@ public class GListItem extends GObject {
         return TYPE_LISTITEM;
     }
 
-    int oldSelect;
+    int mouseY;
 
     @Override
     public void touchEvent(int phase, int x, int y) {
         switch (phase) {
             case Glfm.GLFMTouchPhaseBegan:
-                oldSelect = getIndex();
+                mouseY = y;
                 break;
             case Glfm.GLFMTouchPhaseMoved:
-                oldSelect = -1;
                 break;
             case Glfm.GLFMTouchPhaseEnded:
-                select();
+                if (Math.abs(y - mouseY) < list.list_item_heigh) {
+                    select();
+                }
                 break;
             default:
                 break;
@@ -52,7 +53,8 @@ public class GListItem extends GObject {
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         if (pressed) {
-        } else {
+            mouseY = y;
+        } else if (Math.abs(y - mouseY) < list.list_item_heigh) {
             select();
         }
     }
@@ -63,23 +65,21 @@ public class GListItem extends GObject {
 
     void select() {
         int index = getIndex();
-        if (oldSelect == index) {
-            list.curIndex = index;
-            list.pulldown = false;
-            list.changeCurPanel();
-            flush();
-            if (actionListener != null) {
-                actionListener.action(this);
-            }
+        list.curIndex = index;
+        list.pulldown = false;
+        list.changeCurPanel();
+        flush();
+        if (actionListener != null) {
+            actionListener.action(this);
         }
     }
 
     @Override
     public boolean update(long vg) {
-        float x = getViewX();
-        float y = getViewY();
-        float w = getViewW();
-        float h = getViewH();
+        float x = getX();
+        float y = getY();
+        float w = getW();
+        float h = getH();
 
         float pad = 10;
         float ix, iy, iw, ih;
@@ -88,12 +88,12 @@ public class GListItem extends GObject {
 
         float tx, ty;
         tx = x + pad;
-        ty = y + pad;
+        ty = y + pad * .5f;
 
         if (parent.getElements().get(list.curIndex) == this) {
             GToolkit.drawRect(vg, tx, ty, w - (pad * 2), list.list_item_heigh - pad, GToolkit.getStyle().getSelectedColor());
         }
-        
+
         if (img != null) {
             nvgImageSize(vg, img.getTexture(), imgw, imgh);
             if (imgw[0] < imgh[0]) {
