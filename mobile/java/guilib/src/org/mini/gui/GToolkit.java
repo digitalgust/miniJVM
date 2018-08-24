@@ -192,21 +192,19 @@ public class GToolkit {
         byte[] text_arr = toUtf8(s);
 
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-        float[] text_area = new float[]{x + 2f, y + 2f, w - 4f, h - 4f};
-        float dx = text_area[LEFT];
-        float dy = text_area[TOP];
+        float nx = x + .5f, ny = y + .5f, nw = w - 1f, nh = h - 1f;
 
         if (text_arr != null) {
             float[] bond = new float[4];
-            nvgTextBoxBoundsJni(vg, text_area[LEFT], text_area[TOP], text_area[WIDTH], text_arr, 0, text_arr.length, bond);
+            nvgTextBoxBoundsJni(vg, nx, ny, nw, text_arr, 0, text_arr.length, bond);
             bond[WIDTH] -= bond[LEFT];
             bond[HEIGHT] -= bond[TOP];
             bond[LEFT] = bond[TOP] = 0;
 
-            if (bond[HEIGHT] > text_area[HEIGHT]) {
-                dy -= bond[HEIGHT] - text_area[HEIGHT];
+            if (bond[HEIGHT] > nh) {
+                ny -= bond[HEIGHT] - nh;
             }
-            nvgTextBoxJni(vg, dx, dy, text_area[WIDTH], text_arr, 0, text_arr.length);
+            nvgTextBoxJni(vg, nx, ny, nw, text_arr, 0, text_arr.length);
         }
     }
 

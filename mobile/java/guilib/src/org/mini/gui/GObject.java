@@ -47,8 +47,8 @@ abstract public class GObject {
     //
     protected GContainer parent;
 
-    //object position and width ,height
-    float[] boundle = new float[4];
+    protected float[] boundle = new float[4];
+
     public static final int LEFT = 0;
     public static final int TOP = 1;
     public static final int WIDTH = 2;
@@ -205,6 +205,14 @@ abstract public class GObject {
     public void setSize(float w, float h) {
         boundle[WIDTH] = w;
         boundle[HEIGHT] = h;
+    }
+
+    public float getLocationLeft() {
+        return boundle[LEFT];
+    }
+
+    public float getLocationTop() {
+        return boundle[TOP];
     }
 
     public float getX() {

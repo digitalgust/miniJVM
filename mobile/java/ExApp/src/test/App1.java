@@ -48,7 +48,7 @@ public class App1 implements GApplication {
             @Override
             public void action(GObject gobj) {
                 GFrame gframe = new GFrame("demo", 50, 50, 300, 500);
-                init(gframe.getPanel(), vg, ccb);
+                init(gframe.getView(), vg, ccb);
                 form.add(gframe);
                 gframe.align(GGraphics.HCENTER | GGraphics.VCENTER);
             }
@@ -61,7 +61,7 @@ public class App1 implements GApplication {
         return form;
     }
 
-    public void init(GPanel parent, final long vg, final GuiCallBack ccb) {
+    public void init(GContainer parent, final long vg, final GuiCallBack ccb) {
 //        light = new Light();
 
         int x = 8, y = 10;
@@ -100,7 +100,7 @@ public class App1 implements GApplication {
             public void action(GObject gobj) {
                 Random ran = new Random();
                 GFrame sub1 = new GFrame(/*"子窗口"*/"颜色选择", 40 + ran.nextInt(100), 50 + ran.nextInt(100), 300, 600);
-                GPanel panel = sub1.getPanel();
+                GContainer panel = sub1.getView();
                 init1(panel, vg);
                 sub1.setClosable(true);
                 form.add(sub1);
@@ -132,34 +132,30 @@ public class App1 implements GApplication {
             @Override
             public void action(GObject gobj) {
                 System.out.println("switch app");
-                ccb.setApplication(App2.getInstance());
+
             }
         });
     }
 
-    public void init1(GPanel parent, long vg) {
+    public void init1(GContainer parent, long vg) {
         GImage img = new GImage("./image4.png");
 
         int x = 10, y = 10;
         GList list = new GList(x, y, 280, 30);
         parent.add(list);
-        if (list.getImages() == null) {
-            int i = Nanovg.nvgCreateImage(vg, Gutil.toUtf8("./image4.png"), 0);
-            list.setItems(new int[]{i, i, i},
-                    new String[]{"One", "Two", "Three",});
+        int i = Nanovg.nvgCreateImage(vg, Gutil.toUtf8("./image4.png"), 0);
+        list.setItems(new GImage[]{img, img, img, img, img, img, img, img, img, img},
+                new String[]{"One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",});
 
-        }
         y += 50;
         parent.add(new TestCanvas(x, y, 280, 150));
         y += 160;
         list = new GList(x, y, 280, 140);
         list.setMode(GList.MODE_MULTI_LINE);
         parent.add(list);
-        if (list.getImages() == null) {
-            int i = Nanovg.nvgCreateImage(vg, Gutil.toUtf8("./image4.png"), 0);
-            list.setItems(new int[]{i, i, i, i, i, i, i, i, i, i},
-                    new String[]{"One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",});
-        }
+        list.setItems(new GImage[]{img, img, img, img, img, img, img, img, img, img},
+                new String[]{"One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",});
+
         y += 150;
         GColorSelector cs = new GColorSelector(0, x, y, 130, 130);
         parent.add(cs);

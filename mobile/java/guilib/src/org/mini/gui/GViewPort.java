@@ -18,20 +18,18 @@ import static org.mini.gui.GObject.flush;
  *
  * @author Gust
  */
-public class GViewPort extends GContainer{
+public class GViewPort extends GContainer {
 
     protected float[] viewBoundle = new float[4];//可视窗口边界, 
     float minX, maxX, minY, maxY;
     float scrollx;
     float scrolly;
-    
-    
+
     @Override
     public int getType() {
         return TYPE_VIEWPORT;
     }
-    
-    
+
     @Override
     public void setViewLocation(float x, float y) {
         viewBoundle[LEFT] = x;
@@ -108,11 +106,13 @@ public class GViewPort extends GContainer{
                 maxY = nko.boundle[TOP] + nko.boundle[HEIGHT];
             }
         }
-        if (maxX - minX > viewBoundle[WIDTH]) {
-            this.boundle[WIDTH] = maxX - minX;
+        this.boundle[WIDTH] = maxX - minX;
+        this.boundle[HEIGHT] = maxY - minY;
+        if (boundle[WIDTH] <= viewBoundle[WIDTH]) {
+            boundle[LEFT] = viewBoundle[LEFT];
         }
-        if (maxY - minY > viewBoundle[HEIGHT]) {
-            this.boundle[HEIGHT] = maxY - minY;
+        if (boundle[HEIGHT] <= viewBoundle[HEIGHT]) {
+            boundle[TOP] = viewBoundle[TOP];
         }
     }
 
@@ -309,5 +309,5 @@ public class GViewPort extends GContainer{
     float getOutOfViewWidth() {
         return boundle[WIDTH] - viewBoundle[WIDTH];
     }
-    
+
 }

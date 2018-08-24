@@ -52,7 +52,7 @@ public class App2 implements GApplication {
         form.add(gframe);
         gframe.align(GGraphics.TOP | GGraphics.HCENTER);
 
-        GList list = new GList(0, 0, (int) gframe.getPanel().getW(), (int) (gframe.getPanel().getH() - 40));
+        GList list = new GList(0, 0, (int) gframe.getView().getW(), (int) (gframe.getView().getH() - 40));
         //list.setMode(GList.MODE_MULTI_LINE);
         gframe.add(list);
 
@@ -60,15 +60,14 @@ public class App2 implements GApplication {
         File f = new File(resRoot);
         if (f.exists()) {
             String[] files = f.list();
-            int[] imgs = new int[files.length];
+            GImage[] imgs = new GImage[files.length];
             list.setItems(imgs, files);
         }
         list.setActionListener(new GActionListener() {
             @Override
             public void action(GObject gobj) {
                 GList glist = (GList) gobj;
-                int selectIndex = glist.getSelectedIndex();
-                System.out.println(glist.getLabels()[selectIndex]);
+                System.out.println(glist.getSelectedIndex());
             }
         });
 
@@ -81,10 +80,10 @@ public class App2 implements GApplication {
                 ccb.setApplication(App1.getInstance());
             }
         });
-        menu.addItem("我的", img);
+        menu.addItem("主页", img);
         menu.addItem("搜索", img);
         menu.addItem("发现", img);
-        menu.addItem("主页", img);
+        menu.addItem("我的", img);
         form.add(menu);
 
         return form;
