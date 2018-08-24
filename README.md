@@ -5,7 +5,7 @@
 
   Develop iOS Android app in java. Jvm for ios/android or embed system. the fastest ios java interpreter . 
   
-## Feature:  
+## Features:  
 
   * Jvm Build pass: iOS / Android / mingww64 32 64bit / cygwin / MSVC 32 64bit / MacOS /  Linux  .   
   * No dependence Library .  

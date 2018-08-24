@@ -393,7 +393,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "jarfile=\"./../java/guilib/dist/glfm_gui.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n\n#jarfile=\"./../java/ExApp/dist/ExApp.jar\"\njarfile=\"./../../../../javaSrc/blinkblink/client/ExApp/dist/ExApp.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n\njarfile=\"./../../javalib/dist/minijvm_rt.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n";
+			shellScript = "jarfile=\"./../java/guilib/dist/glfm_gui.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n\njarfile=\"./../java/ExApp/dist/ExApp.jar\"\n#jarfile=\"./../../../../javaSrc/blinkblink/client/ExApp/dist/ExApp.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n\njarfile=\"./../../javalib/dist/minijvm_rt.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -554,6 +554,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = M978JH97JT;
 				"HEADER_SEARCH_PATHS[arch=*]" = (
@@ -569,6 +570,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.eglsgame.iosapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -577,6 +579,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = M978JH97JT;
 				"HEADER_SEARCH_PATHS[arch=*]" = (
@@ -592,6 +595,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.eglsgame.iosapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
