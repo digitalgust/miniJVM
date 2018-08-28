@@ -37,13 +37,18 @@ public class GPanel extends GContainer {
     }
 
     @Override
-    void setViewLocation(float x, float y) {
+    public void setViewLocation(float x, float y) {
         setLocation(x, y);
     }
 
     @Override
-    void setViewSize(float x, float y) {
+    public void setViewSize(float x, float y) {
         setSize(x, y);
+    }
+
+    @Override
+    public float[] getViewBoundle() {
+        return getBoundle();
     }
 
 }

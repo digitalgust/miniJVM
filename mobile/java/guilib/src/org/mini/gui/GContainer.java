@@ -27,17 +27,19 @@ abstract public class GContainer extends GObject {
     private final List<GObject> fronts = new ArrayList();
     GObject focus;
 
-    abstract float getViewX();
+    public abstract float getViewX();
 
-    abstract float getViewY();
+    public abstract float getViewY();
 
-    abstract float getViewW();
+    public abstract float getViewW();
 
-    abstract float getViewH();
+    public abstract float getViewH();
 
-    abstract void setViewLocation(float x, float y);
+    public abstract void setViewLocation(float x, float y);
 
-    abstract void setViewSize(float x, float y);
+    public abstract void setViewSize(float x, float y);
+    
+    public abstract float[] getViewBoundle();
 
     public boolean isInArea(float x, float y) {
         float absx = getViewX();

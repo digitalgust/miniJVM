@@ -68,6 +68,10 @@ public class GViewPort extends GContainer {
         return viewBoundle[HEIGHT];
     }
 
+    public float[] getViewBoundle() {
+        return viewBoundle;
+    }
+
     @Override
     public void move(float dx, float dy) {
         boundle[LEFT] += dx;
@@ -93,17 +97,25 @@ public class GViewPort extends GContainer {
         maxX = minX + viewBoundle[WIDTH];
         maxY = minY + viewBoundle[HEIGHT];
         for (GObject nko : elements) {
-            if (nko.boundle[LEFT] < minX) {
-                minX = nko.boundle[LEFT];
+            float[] bond = null;
+            if (nko instanceof GContainer) {
+                GContainer con = (GContainer) nko;
+                bond = con.getViewBoundle();
+
+            } else {
+                bond = nko.getBoundle();
             }
-            if (nko.boundle[LEFT] + nko.boundle[WIDTH] > maxX) {
-                maxX = nko.boundle[LEFT] + nko.boundle[WIDTH];
+            if (bond[LEFT] < minX) {
+                minX = bond[LEFT];
             }
-            if (nko.boundle[TOP] < minY) {
-                minY = nko.boundle[TOP];
+            if (bond[LEFT] + bond[WIDTH] > maxX) {
+                maxX = bond[LEFT] + bond[WIDTH];
             }
-            if (nko.boundle[TOP] + nko.boundle[HEIGHT] > maxY) {
-                maxY = nko.boundle[TOP] + nko.boundle[HEIGHT];
+            if (bond[TOP] < minY) {
+                minY = bond[TOP];
+            }
+            if (bond[TOP] + bond[HEIGHT] > maxY) {
+                maxY = bond[TOP] + bond[HEIGHT];
             }
         }
         this.boundle[WIDTH] = maxX - minX;
@@ -240,11 +252,11 @@ public class GViewPort extends GContainer {
         reBoundle();
         float dw = getOutOfViewWidth();
         float dh = getOutOfViewHeight();
-        float odx = (dw == 0) ? 0.f : (float) dx / dw;
-        float ody = (dh == 0) ? 0.f : (float) dy / dh;
         if (dw == 0 && dh == 0) {
             return false;
         }
+        float odx = (dw == 0) ? 0.f : (float) dx / dw;
+        float ody = (dh == 0) ? 0.f : (float) dy / dh;
         if (Math.abs(odx) > Math.abs(ody)) {
             return moveScrollX(odx);
         } else {
