@@ -200,11 +200,17 @@ abstract public class GObject {
     public void setLocation(float x, float y) {
         boundle[LEFT] = x;
         boundle[TOP] = y;
+        if (parent != null) {
+            parent.reBoundle();
+        }
     }
 
     public void setSize(float w, float h) {
         boundle[WIDTH] = w;
         boundle[HEIGHT] = h;
+        if (parent != null) {
+            parent.reBoundle();
+        }
     }
 
     public float getLocationLeft() {
@@ -240,6 +246,9 @@ abstract public class GObject {
     public void move(float dx, float dy) {
         boundle[LEFT] += dx;
         boundle[TOP] += dy;
+        if (parent != null) {
+            parent.reBoundle();
+        }
     }
 
     /**

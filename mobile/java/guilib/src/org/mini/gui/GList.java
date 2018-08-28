@@ -59,8 +59,10 @@ public class GList extends GPanel implements GFocusChangeListener {
     float list_item_heigh = 40;
     float list_rows_max = 7;
     float list_rows_min = 3;
-
     float pad = 5;
+    int menuWidth = 20;
+
+    boolean showScrollbar = false;
 
     float left, top, width, height;
 
@@ -78,13 +80,23 @@ public class GList extends GPanel implements GFocusChangeListener {
         setViewSize(width, height);
 
         //
-        scrollBar = new GScrollBar(0, GScrollBar.VERTICAL, 0, 0, 20, 100);
+        scrollBar = new GScrollBar(0, GScrollBar.VERTICAL, 0, 0, menuWidth, 100);
         scrollBar.setActionListener(new ScrollBarActionListener());
         popWin.add(scrollBar);
         popWin.add(popView);
         setFocusListener(this);
-        reBoundle();
+        showScrollBar(false);
+        reSize();
         changeCurPanel();
+    }
+
+    public void showScrollBar(boolean show) {
+        this.showScrollbar = show;
+        if (show) {
+            menuWidth = 20;
+        } else {
+            menuWidth = 0;
+        }
     }
 
     public void setItemHeight(float h) {
@@ -115,7 +127,7 @@ public class GList extends GPanel implements GFocusChangeListener {
         if (gli != null) {
             popView.add(gli);
             gli.list = this;
-            reBoundle();
+            reSize();
         }
     }
 
@@ -123,13 +135,13 @@ public class GList extends GPanel implements GFocusChangeListener {
         if (gli != null) {
             popView.add(index, gli);
             gli.list = this;
-            reBoundle();
+            reSize();
         }
     }
 
     public void removeItem(int index) {
         popView.remove(index);
-        reBoundle();
+        reSize();
     }
 
     public void removeItem(GObject go) {
@@ -137,11 +149,10 @@ public class GList extends GPanel implements GFocusChangeListener {
             throw new IllegalArgumentException("need GListItem");
         }
         popView.remove(go);
-        reBoundle();
+        reSize();
     }
 
-    @Override
-    public void reBoundle() {
+    public void reSize() {
         int itemcount = popView.elements.size();
         if (itemcount <= 0) {
             return;
@@ -225,12 +236,12 @@ public class GList extends GPanel implements GFocusChangeListener {
         for (int i = 0; i < len; i++) {
             addItems(imgs == null ? null : imgs[i], labs == null ? null : labs[i]);
         }
-        reBoundle();
+        reSize();
     }
 
     public void setMode(int m) {
         this.mode = m;
-        reBoundle();
+        reSize();
         changeCurPanel();
     }
 
@@ -493,11 +504,11 @@ public class GList extends GPanel implements GFocusChangeListener {
             super.setSize(width, height);
 
             popView.setLocation(0, 0);
-            popView.setSize(width - 20, height);
+            popView.setSize(width - menuWidth, height);
             popView.setViewLocation(0, 0);
-            popView.setViewSize(width - 20, height);
+            popView.setViewSize(width - menuWidth, height);
 
-            scrollBar.setLocation(width - 20, 0);
+            scrollBar.setLocation(width - menuWidth, 0);
             scrollBar.setSize(20, height);
         }
 
@@ -508,7 +519,7 @@ public class GList extends GPanel implements GFocusChangeListener {
         @Override
         public void action(GObject gobj) {
             popView.setScrollY(((GScrollBar) gobj).getPos());
-            reBoundle();
+            reSize();
             flush();
         }
 

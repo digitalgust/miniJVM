@@ -34,12 +34,18 @@ public class GViewPort extends GContainer {
     public void setViewLocation(float x, float y) {
         viewBoundle[LEFT] = x;
         viewBoundle[TOP] = y;
+        if(parent!=null){
+            parent.reBoundle();
+        }
     }
 
     @Override
     public void setViewSize(float w, float h) {
         viewBoundle[WIDTH] = w;
         viewBoundle[HEIGHT] = h;
+        if(parent!=null){
+            parent.reBoundle();
+        }
     }
 
     @Override
@@ -78,6 +84,9 @@ public class GViewPort extends GContainer {
         boundle[TOP] += dy;
         viewBoundle[LEFT] += dx;
         viewBoundle[TOP] += dy;
+        if(parent!=null){
+            parent.reBoundle();
+        }
     }
 
     @Override

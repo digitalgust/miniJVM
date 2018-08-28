@@ -81,7 +81,7 @@ public class GListItem extends GObject {
         float w = getW();
         float h = getH();
 
-        float pad = 10;
+        float pad = 5;
         float ix, iy, iw, ih;
         float thumb = list.list_item_heigh - pad;
         int[] imgw = {0}, imgh = {0};
