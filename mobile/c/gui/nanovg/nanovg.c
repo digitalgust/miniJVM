@@ -2704,14 +2704,8 @@ int nvgTextBreakLines(NVGcontext* ctx, const char* string, const char* end, floa
                     rowWidth = iter.nextx - rowStartX;
                     rowMaxX = q.x1 - rowStartX;
                 }
-                // track last end of a word
-                if ((type == NVG_SPACE) || type == NVG_CJK_CHAR) {
-                    breakEnd = iter.next;
-                    breakWidth = iter.nextx - rowStartX;
-                    breakMaxX = q.x1 - rowStartX;
-                }
                 // track last beginning of a word
-                if ((ptype == NVG_SPACE) || type == NVG_CJK_CHAR) {
+                if ((ptype == NVG_SPACE) || ptype == NVG_CJK_CHAR) {
                     wordStart = iter.str;
                     wordStartX = iter.x;
                     wordMinX = q.x0 - rowStartX;
@@ -2721,7 +2715,7 @@ int nvgTextBreakLines(NVGcontext* ctx, const char* string, const char* end, floa
                 if (nextWidth > breakRowWidth) {
                     // The run length is too long, need to break to new line.
                     if (breakEnd == rowStart) {
-                        // The current word is longer than the row length, just break it from here.
+                        // The current one word is longer than the row length, just break it from here.
                         rows[nrows].start = rowStart;
                         rows[nrows].end = iter.str;
                         rows[nrows].width = rowWidth * invscale;
@@ -2763,6 +2757,14 @@ int nvgTextBreakLines(NVGcontext* ctx, const char* string, const char* end, floa
                     breakEnd = rowStart;
                     breakWidth = 0.0;
                     breakMaxX = 0.0;
+                }else{
+                    // track last end of a word
+                    if ((type == NVG_SPACE) || type == NVG_CJK_CHAR) {
+                        breakEnd = iter.next;
+                        breakWidth = iter.nextx - rowStartX;
+                        breakMaxX = q.x1 - rowStartX;
+                    }
+                    
                 }
             }
         }

@@ -33,6 +33,7 @@ import static org.mini.nanovg.Nanovg.nvgScissor;
 import static org.mini.nanovg.Nanovg.nvgStroke;
 import static org.mini.nanovg.Nanovg.nvgStrokeColor;
 import static org.mini.nanovg.Nanovg.nvgStrokeWidth;
+import static org.mini.nanovg.Nanovg.nvgTextAlign;
 import static org.mini.nanovg.Nanovg.nvgTextJni;
 import static org.mini.nanovg.Nanovg.nvgTranslate;
 
@@ -125,10 +126,10 @@ public class GGraphics {
 
     public void drawLine(int x1, int y1, int x2, int y2) {
 
-        x1 += canvas.getX();;
-        y1 += canvas.getY();;
-        x2 += canvas.getX();;
-        y2 += canvas.getY();;
+        x1 += canvas.getX();
+        y1 += canvas.getY();
+        x2 += canvas.getX();
+        y2 += canvas.getY();
 
         nvgStrokeColor(vg, nvgRGBA(r, g, b, a));
         nvgBeginPath(vg);
@@ -138,16 +139,18 @@ public class GGraphics {
     }
 
     public void drawRect(int x1, int y1, int w, int h) {
-        x1 += canvas.getX();;
-        y1 += canvas.getY();;
+        x1 += canvas.getX();
+        y1 += canvas.getY();
         nvgRoundedRect(vg, x1, y1, w, h, 0);
         nvgStrokeColor(vg, nvgRGBA(r, g, b, a));
         nvgStroke(vg);
     }
 
     public void drawString(String str, int x, int y, int anchor) {
-        x += canvas.getX();;
-        y += canvas.getY();;
+        x += canvas.getX();
+        y += canvas.getY();
+        nvgTextAlign(vg, anchor);
+
         byte[] ba = Gutil.toUtf8(str + "\000");
         nvgFillColor(vg, nvgRGBA(r, g, b, a));
         nvgTextJni(vg, x, y, ba, 0, ba.length);
@@ -157,6 +160,7 @@ public class GGraphics {
 
         x += canvas.getX();
         y += canvas.getY();
+        nvgTextAlign(vg, anchor);
         str = str.substring(offset, len);
         byte[] b = Gutil.toUtf8(str + "\000");
         nvgTextJni(vg, x, y, b, 0, b.length);
@@ -165,6 +169,7 @@ public class GGraphics {
     public void drawChar(char character, int x, int y, int anchor) {
         x += canvas.getX();
         y += canvas.getY();
+        nvgTextAlign(vg, anchor);
         byte[] b = Gutil.toUtf8(character + "\000");
         nvgTextJni(vg, x, y, b, 0, b.length);
     }
@@ -172,6 +177,7 @@ public class GGraphics {
     public void drawChars(char[] data, int offset, int length, int x, int y, int anchor) {
         x += canvas.getX();
         y += canvas.getY();
+        nvgTextAlign(vg, anchor);
         String s = new String(data, offset, length);
         drawString(s, x, y, anchor);
     }

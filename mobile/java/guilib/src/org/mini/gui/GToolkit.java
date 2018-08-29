@@ -178,6 +178,16 @@ public class GToolkit {
         nvgFill(vg);
     }
 
+    public static float[] getTextBoundle(long vg, String s, float width) {
+        float[] bond = new float[4];
+        byte[] b = toUtf8(s);
+        nvgTextBoxBoundsJni(vg, 0, 0, width, b, 0, b.length, bond);
+//        bond[GObject.WIDTH] -= bond[GObject.LEFT];
+//        bond[GObject.HEIGHT] -= bond[GObject.TOP];
+//        bond[GObject.LEFT] = bond[GObject.TOP] = 0;
+        return bond;
+    }
+
     public static void drawText(long vg, float x, float y, float w, float h, String s) {
 
         drawText(vg, x, y, w, h, s, GToolkit.getStyle().getTextFontSize(), GToolkit.getStyle().getTextFontColor());
@@ -192,19 +202,18 @@ public class GToolkit {
         byte[] text_arr = toUtf8(s);
 
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-        float nx = x + .5f, ny = y + .5f, nw = w - 1f, nh = h - 1f;
 
         if (text_arr != null) {
-            float[] bond = new float[4];
-            nvgTextBoxBoundsJni(vg, nx, ny, nw, text_arr, 0, text_arr.length, bond);
-            bond[WIDTH] -= bond[LEFT];
-            bond[HEIGHT] -= bond[TOP];
-            bond[LEFT] = bond[TOP] = 0;
-
-            if (bond[HEIGHT] > nh) {
-                ny -= bond[HEIGHT] - nh;
-            }
-            nvgTextBoxJni(vg, nx, ny, nw, text_arr, 0, text_arr.length);
+//            float[] bond = new float[4];
+//            nvgTextBoxBoundsJni(vg, x, y, w, text_arr, 0, text_arr.length, bond);
+//            bond[WIDTH] -= bond[LEFT];
+//            bond[HEIGHT] -= bond[TOP];
+//            bond[LEFT] = bond[TOP] = 0;
+//
+//            if (bond[HEIGHT] > h) {
+//                y -= bond[HEIGHT] - h;
+//            }
+            nvgTextBoxJni(vg, x, y, w, text_arr, 0, text_arr.length);
         }
     }
 
