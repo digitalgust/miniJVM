@@ -51,6 +51,10 @@ abstract public class GContainer extends GObject {
     public List<GObject> getElements() {
         return elements;
     }
+    
+    public int getElementSize(){
+        return elements.size();
+    }
 
     GObject findFocus(float x, float y) {
         synchronized (elements) {

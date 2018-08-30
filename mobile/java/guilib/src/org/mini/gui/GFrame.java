@@ -38,7 +38,7 @@ import static org.mini.nanovg.Nanovg.nvgTextJni;
  *
  * @author gust
  */
-public class GFrame extends GViewPort {
+public class GFrame extends GPanel {
 
     String title;
     byte[] title_arr;
@@ -56,6 +56,10 @@ public class GFrame extends GViewPort {
     boolean closable = true;
 
     public GFrame(String title, int left, int top, int width, int height) {
+        this(title, (float) left, top, width, height);
+    }
+
+    public GFrame(String title, float left, float top, float width, float height) {
         setTitle(title);
         setLocation(left, top);
         setSize(width, height);
@@ -73,6 +77,12 @@ public class GFrame extends GViewPort {
         add(title_panel);
     }
 
+    @Override
+    public void setSize(float w, float h) {
+        panel.setSize(w - 4, h - 34);
+        super.setSize(w, h);
+    }
+    
     @Override
     public int getType() {
         return TYPE_FRAME;

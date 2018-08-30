@@ -5,6 +5,7 @@
  */
 package org.mini.gui;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.mini.glfm.Glfm;
 import static org.mini.nanovg.Gutil.toUtf8;
@@ -49,10 +50,15 @@ public class GList extends GPanel implements GFocusChangeListener {
 
     char preicon;
     byte[] preicon_arr = toUtf8("" + ICON_CHEVRON_RIGHT);
-    int curIndex;
+    List<Integer> selected = new ArrayList();
     boolean pulldown;
-    public static final int MODE_MULTI_LINE = 1, MODE_SINGLE_LINE = 0;
-    int mode = MODE_SINGLE_LINE;
+    //
+    public static final int MODE_MULTI_SHOW = 1, MODE_SINGLE_SHOW = 0;
+    int showMode = MODE_SINGLE_SHOW;
+    //
+    public static final int MODE_MULTI_SELECT = 1, MODE_SINGLE_SELECT = 0;
+    int selectMode = MODE_SINGLE_SELECT;
+
     GScrollBar scrollBar;
     float[] lineh = {0f};
     float list_image_size = 28;
@@ -104,7 +110,7 @@ public class GList extends GPanel implements GFocusChangeListener {
         list_image_size = h - 12;
     }
 
-    public List<GObject> getItems() {
+    public List<GObject> getItemList() {
         return popView.getElements();
     }
 
@@ -145,20 +151,34 @@ public class GList extends GPanel implements GFocusChangeListener {
     }
 
     public void removeItem(GObject go) {
-        if (go.getType() != TYPE_LISTITEM) {
+        if (!(go instanceof GListItem)) {
             throw new IllegalArgumentException("need GListItem");
         }
         popView.remove(go);
         reSize();
     }
 
-    public void reSize() {
+    public void removeItemAll() {
+        popView.clear();
+    }
+
+    public GListItem[] getItems() {
+        GListItem[] items = new GListItem[popView.getElementSize()];
+        int i = 0;
+        for (GObject go : popView.elements) {
+            items[i] = (GListItem) go;
+            i++;
+        }
+        return items;
+    }
+
+    void reSize() {
         int itemcount = popView.elements.size();
         if (itemcount <= 0) {
             return;
         }
 
-        if (mode == MODE_MULTI_LINE) {
+        if (showMode == MODE_MULTI_SHOW) {
             popWin.setViewLocation(0, 0);
             popWin.setViewSize(width, height);
 
@@ -198,7 +218,7 @@ public class GList extends GPanel implements GFocusChangeListener {
         int itemcount = popView.elements.size();
         clear();
 
-        if (mode == MODE_MULTI_LINE) {
+        if (showMode == MODE_MULTI_SHOW) {
             setLocation(left, top);
             setSize(width, height);
             add(popWin);
@@ -239,29 +259,78 @@ public class GList extends GPanel implements GFocusChangeListener {
         reSize();
     }
 
-    public void setMode(int m) {
-        this.mode = m;
+    public void setShowMode(int m) {
+        this.showMode = m;
         reSize();
         changeCurPanel();
     }
 
-    public int getMode() {
-        return this.mode;
+    public int getShowMode() {
+        return this.showMode;
+    }
+
+    public void setSelectMode(int m) {
+        selectMode = m;
+    }
+
+    public int getSelectMode() {
+        return selectMode;
     }
 
     public int getSelectedIndex() {
-        return curIndex;
+        if (selected.size() > 0) {
+            return selected.get(0);
+        }
+        return -1;
     }
 
     public void setSelectedIndex(int i) {
-        curIndex = i;
+        selected.clear();
+        if (i >= 0 && i < popView.getElements().size()) {
+            selected.add(i);
+        }
     }
 
-    public GListItem getSelectedItem() {
-        if (curIndex < 0 || curIndex >= popView.elements.size()) {
+    public int[] getSelectedIndices() {
+        int size = selected.size();
+        int[] r = new int[size];
+        for (int i = 0; i < size; i++) {
+            r[i] = selected.get(i);
+        }
+        return r;
+    }
+
+    public void setSelectedIndices(int[] s) {
+        selected.clear();
+        for (int i = 0; i < s.length; i++) {
+            selected.add(s[i]);
+        }
+    }
+
+    boolean isSelected(int index) {
+        return selected.contains(index);
+    }
+
+    void select(int index) {
+        if (selectMode == MODE_SINGLE_SELECT) {
+            selected.clear();
+            selected.add(new Integer(index));
+        } else if (selected.contains(index)) {
+            selected.remove(new Integer(index));
+        } else {
+            selected.add(new Integer(index));
+        }
+    }
+
+    void unSelect(int index) {
+        selected.remove(new Integer(index));
+    }
+
+    public GListItem getItem(int index) {
+        if (index < 0 || index >= popView.elements.size()) {
             return null;
         }
-        return (GListItem) popView.elements.get(curIndex);
+        return (GListItem) popView.elements.get(index);
     }
 
     @Override
@@ -282,16 +351,7 @@ public class GList extends GPanel implements GFocusChangeListener {
     @Override
     public boolean update(long vg) {
 
-        if (curIndex < 0) {
-            curIndex = 0;
-        }
-
-        int itemcount = popView.elements.size();
-
-        if (curIndex >= itemcount) {
-            curIndex = itemcount - 1;
-        }
-
+        //int itemcount = popView.elements.size();
         nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
@@ -444,14 +504,17 @@ public class GList extends GPanel implements GFocusChangeListener {
 
             if (popView.elements.size() > 0) {
                 float thumb = h - pad;
-                GListItem gli = (GListItem) popView.elements.get(curIndex);
-                drawImage(vg, x + pad, y + h * 0.5f - thumb / 2, thumb, thumb, gli.img);
+                int selectIndex = getSelectedIndex();
+                if (selectIndex >= 0) {
+                    GListItem gli = (GListItem) getItem(selectIndex);
+                    drawImage(vg, x + pad, y + h * 0.5f - thumb / 2, thumb, thumb, gli.img);
 
-                drawText(vg, x + thumb + pad + pad, y + h / 2, thumb, thumb, gli.label);
+                    drawText(vg, x + thumb + pad + pad, y + h / 2, thumb, thumb, gli.label);
 
-                nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
-                nvgFontFace(vg, GToolkit.getFontIcon());
-                nvgTextJni(vg, x + w - thumb, y + h * 0.5f, preicon_arr, 0, preicon_arr.length);
+                    nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
+                    nvgFontFace(vg, GToolkit.getFontIcon());
+                    nvgTextJni(vg, x + w - thumb, y + h * 0.5f, preicon_arr, 0, preicon_arr.length);
+                }
             }
         }
     };

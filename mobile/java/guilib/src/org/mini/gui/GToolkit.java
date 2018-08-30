@@ -10,6 +10,8 @@ import static org.mini.gui.GObject.HEIGHT;
 import static org.mini.gui.GObject.LEFT;
 import static org.mini.gui.GObject.TOP;
 import static org.mini.gui.GObject.WIDTH;
+import org.mini.gui.event.GActionListener;
+import org.mini.gui.event.GFocusChangeListener;
 import static org.mini.nanovg.Gutil.toUtf8;
 import org.mini.reflect.ReflectArray;
 import org.mini.reflect.vm.RefNative;
@@ -261,4 +263,39 @@ public class GToolkit {
         nvgStroke(vg);
     }
 
+    static public GFrame getConfirmFrame(String title, String msg, String left, GActionListener leftListener, String right, GActionListener rightListener) {
+        GFrame frame = new GFrame(title, 0, 0, 300, 170);
+        frame.setFront(true);
+        frame.setFocusListener(new GFocusChangeListener() {
+            @Override
+            public void focusGot(GObject go) {
+            }
+
+            @Override
+            public void focusLost(GObject go) {
+                if (frame.getForm() != null) {
+                    frame.getForm().remove(frame);
+                }
+            }
+        });
+
+        int x = 10, y = 10, w = 200;
+        GContainer gp = frame.getView();
+
+        GLabel lb1 = new GLabel(msg, x, y, w, 80);
+        gp.add(lb1);
+        y += 85;
+
+        GButton leftBtn = new GButton(left, x, y, 135, 28);
+        leftBtn.setBgColor(128, 16, 8, 255);
+        gp.add(leftBtn);
+        leftBtn.setActionListener(leftListener);
+
+        GButton rightBtn = new GButton(right, x + 145, y, 135, 28);
+        gp.add(rightBtn);
+
+        rightBtn.setActionListener(rightListener);
+
+        return frame;
+    }
 }

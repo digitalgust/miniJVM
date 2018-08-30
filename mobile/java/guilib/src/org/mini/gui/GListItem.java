@@ -65,7 +65,7 @@ public class GListItem extends GObject {
 
     void select() {
         int index = getIndex();
-        list.curIndex = index;
+        list.select(index);
         list.pulldown = false;
         list.changeCurPanel();
         flush();
@@ -90,7 +90,7 @@ public class GListItem extends GObject {
         tx = x + pad;
         ty = y + pad * .5f;
 
-        if (parent.getElements().get(list.curIndex) == this) {
+        if (list.isSelected(getIndex())) {
             GToolkit.drawRect(vg, tx, ty, w - (pad * 2), list.list_item_heigh - pad, GToolkit.getStyle().getSelectedColor());
         }
 
