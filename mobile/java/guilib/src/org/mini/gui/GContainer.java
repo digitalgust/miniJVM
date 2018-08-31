@@ -38,7 +38,7 @@ abstract public class GContainer extends GObject {
     public abstract void setViewLocation(float x, float y);
 
     public abstract void setViewSize(float x, float y);
-    
+
     public abstract float[] getViewBoundle();
 
     public boolean isInArea(float x, float y) {
@@ -51,8 +51,8 @@ abstract public class GContainer extends GObject {
     public List<GObject> getElements() {
         return elements;
     }
-    
-    public int getElementSize(){
+
+    public int getElementSize() {
         return elements.size();
     }
 
@@ -161,6 +161,12 @@ abstract public class GContainer extends GObject {
             for (GObject go : elements) {
                 if (name.equals(go.name)) {
                     return go;
+                }
+                if (go instanceof GContainer) {
+                    GObject sub = ((GContainer) go).findByName(name);
+                    if (sub != null) {
+                        return sub;
+                    }
                 }
             }
         }

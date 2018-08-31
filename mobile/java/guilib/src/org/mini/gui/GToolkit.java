@@ -6,10 +6,8 @@
 package org.mini.gui;
 
 import java.util.Hashtable;
-import static org.mini.gui.GObject.HEIGHT;
-import static org.mini.gui.GObject.LEFT;
-import static org.mini.gui.GObject.TOP;
-import static org.mini.gui.GObject.WIDTH;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
 import static org.mini.nanovg.Gutil.toUtf8;
@@ -263,6 +261,17 @@ public class GToolkit {
         nvgStroke(vg);
     }
 
+    /**
+     * return a frame to confirm msg
+     *
+     * @param title
+     * @param msg
+     * @param left
+     * @param leftListener
+     * @param right
+     * @param rightListener
+     * @return
+     */
     static public GFrame getConfirmFrame(String title, String msg, String left, GActionListener leftListener, String right, GActionListener rightListener) {
         GFrame frame = new GFrame(title, 0, 0, 300, 170);
         frame.setFront(true);
@@ -298,4 +307,68 @@ public class GToolkit {
 
         return frame;
     }
+
+    /**
+     * return a list frame
+     *
+     * @param title
+     * @param items
+     * @param buttonListener
+     * @param itemListener
+     * @return
+     */
+    public static GFrame getListFrame(String title, LinkedHashMap<String, GImage> items, GActionListener buttonListener, GActionListener itemListener) {
+        float pad = 2, btnW = 80, btnH = 28;
+        float y = pad;
+
+        GFrame frame = new GFrame(title, 0, 0, 300, 500);
+
+        frame.setFront(true);
+        frame.setFocusListener(new GFocusChangeListener() {
+            @Override
+            public void focusGot(GObject go) {
+            }
+
+            @Override
+            public void focusLost(GObject go) {
+                if (frame.getForm() != null) {
+                    frame.getForm().remove(frame);
+                }
+            }
+        });
+        GContainer view = frame.getView();
+
+        GTextField search = new GTextField("", "search", pad, y, frame.getViewW() - pad * 2, 30);
+        search.setName("search");
+        search.setBoxStyle(GTextField.BOX_STYLE_SEARCH);
+        view.add(search);
+        y += 30 + pad;
+
+        float h = view.getViewH() - y - 30 - pad * 4;
+        GList glist = new GList(0, y, view.getViewW(), h);
+        glist.setName("list");
+        glist.setShowMode(GList.MODE_MULTI_SHOW);
+        glist.setSelectMode(GList.MODE_MULTI_SELECT);
+        frame.getView().add(glist);
+        y += h + pad;
+
+        GButton btn = new GButton(GLanguage.getString("Perform"), (view.getViewW() - btnW) * .5f, y, btnW, btnH);
+        btn.setName("perform");
+        frame.getView().add(btn);
+        btn.setActionListener(buttonListener);
+        //
+        if (items != null) {
+            for (Map.Entry<String, GImage> item : items.entrySet()) {
+
+                String s = item.getKey();
+                GImage img = item.getValue();
+                GListItem gli = glist.addItems(img, s);
+                gli.setAttachment(s);
+                gli.setActionListener(itemListener);
+            }
+        }
+
+        return frame;
+    }
+
 }

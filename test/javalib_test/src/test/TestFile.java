@@ -186,15 +186,30 @@ public class TestFile {
             ex.printStackTrace();
         }
     }
-    
-    void t19(){
-        File f=new File("../lib/minijvm_rt.jar");
+
+    void t19() {
+        File f = new File("../lib/minijvm_rt.jar");
         System.out.println(f.getParent());
         System.out.println(f.getName());
         System.out.println(f.getAbsolutePath());
-        
+
         System.out.println(File.pathSeparator);
         System.out.println(File.separator);
+    }
+
+    void t20() {
+        try {
+            RandomAccessFile raf = new RandomAccessFile("./raf.dat", "rw");
+
+            raf.setLength(1024);
+            raf.seek(512);
+            raf.write(new byte[]{1,2,3});
+            raf.setLength(600);
+            
+            raf.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {
@@ -205,7 +220,8 @@ public class TestFile {
 //            tf.t16();
 //            tf.t17();
 //            tf.t18();
-            tf.t19();
+//            tf.t19();
+            tf.t20();
         } catch (Exception e) {
             e.printStackTrace();
         }

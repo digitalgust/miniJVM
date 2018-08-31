@@ -135,7 +135,7 @@ public class GForm extends GViewPort {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
             nvgBeginFrame(vg, winWidth, winHeight, pxRatio);
-            drawDebugInfo(vg);
+            //drawDebugInfo(vg);
             Nanovg.nvgResetScissor(vg);
             Nanovg.nvgScissor(vg, 0, 0, winWidth, winHeight);
             update(vg);

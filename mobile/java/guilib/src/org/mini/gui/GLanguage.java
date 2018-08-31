@@ -29,6 +29,7 @@ public class GLanguage {
         addStringInner("Select", new String[]{"Select", "选择", "選擇"});
         addStringInner("Paste", new String[]{"Paste", "粘贴", "粘貼"});
         addStringInner("Cut", new String[]{"Cut", "剪切", "剪切"});
+        addStringInner("Perform", new String[]{"Perform", "完成", "完成"});
 
     }
 

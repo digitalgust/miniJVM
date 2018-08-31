@@ -234,10 +234,10 @@ public class GFrame extends GPanel {
             nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
             nvgTextJni(vg, x + 10, y + 16, close_arr, 0, close_arr.length);
         }
-        close_boundle[LEFT] = x + 10;
-        close_boundle[TOP] = y + 6;
-        close_boundle[WIDTH] = 16;
-        close_boundle[HEIGHT] = 16;
+        close_boundle[LEFT] = x ;
+        close_boundle[TOP] = y ;
+        close_boundle[WIDTH] = 30;
+        close_boundle[HEIGHT] = 30;
 
     }
 
