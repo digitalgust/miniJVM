@@ -168,6 +168,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
 
         if (editMenu == null) {
             editMenu = new EditMenu((int) mx, (int) my, (int) menuW, (int) menuH);
+            editMenu.setFront(true);
             GMenuItem item;
 
             item = editMenu.addItem(GLanguage.getString("Select"), null);

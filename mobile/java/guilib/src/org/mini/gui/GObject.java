@@ -268,6 +268,10 @@ abstract public class GObject {
         bgColor = nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);
     }
 
+    public void setBgColor(float[] color) {
+        bgColor = color;
+    }
+
     /**
      * @return the color
      */

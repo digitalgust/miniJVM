@@ -36,6 +36,10 @@ public class GButton extends GObject {
     byte[] preicon_arr;
     boolean bt_pressed = false;
 
+    public GButton() {
+
+    }
+
     public GButton(String text, int left, int top, int width, int height) {
         this(text, (float) left, top, width, height);
     }

@@ -92,6 +92,8 @@ public class GListItem extends GObject {
 
         if (list.isSelected(getIndex())) {
             GToolkit.drawRect(vg, tx, ty, w - (pad * 2), list.list_item_heigh - pad, GToolkit.getStyle().getSelectedColor());
+        }else{
+            GToolkit.drawRect(vg, tx, ty, w - (pad * 2), list.list_item_heigh - pad, GToolkit.getStyle().getUnselectedColor());
         }
 
         if (img != null) {

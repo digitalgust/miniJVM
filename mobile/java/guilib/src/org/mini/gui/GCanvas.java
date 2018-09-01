@@ -13,13 +13,23 @@ public class GCanvas extends GPanel {
 
     GGraphics g;
 
+    public GCanvas() {
+
+    }
+
     public GCanvas(int x, int y, int w, int h) {
+        this((float) x, y, w, h);
+    }
+
+    public GCanvas(float x, float y, float w, float h) {
         setLocation(x, y);
         setSize(w, h);
     }
-    public int getType(){
+
+    public int getType() {
         return TYPE_CANVAS;
     }
+
     public boolean update(long vg) {
         if (g == null) {
             g = new GGraphics(this, vg);

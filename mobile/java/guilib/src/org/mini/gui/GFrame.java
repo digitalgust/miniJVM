@@ -55,6 +55,10 @@ public class GFrame extends GPanel {
     int frameMode;
     boolean closable = true;
 
+    public GFrame() {
+
+    }
+
     public GFrame(String title, int left, int top, int width, int height) {
         this(title, (float) left, top, width, height);
     }
@@ -82,7 +86,7 @@ public class GFrame extends GPanel {
         panel.setSize(w - 4, h - 34);
         super.setSize(w, h);
     }
-    
+
     @Override
     public int getType() {
         return TYPE_FRAME;
@@ -234,8 +238,8 @@ public class GFrame extends GPanel {
             nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
             nvgTextJni(vg, x + 10, y + 16, close_arr, 0, close_arr.length);
         }
-        close_boundle[LEFT] = x ;
-        close_boundle[TOP] = y ;
+        close_boundle[LEFT] = x;
+        close_boundle[TOP] = y;
         close_boundle[WIDTH] = 30;
         close_boundle[HEIGHT] = 30;
 

@@ -53,10 +53,10 @@ public class GList extends GPanel implements GFocusChangeListener {
     List<Integer> selected = new ArrayList();
     boolean pulldown;
     //
-    public static final int MODE_MULTI_SHOW = 1, MODE_SINGLE_SHOW = 0;
+    public static final int MODE_MULTI_SHOW = 1, MODE_SINGLE_SHOW = 2;
     int showMode = MODE_SINGLE_SHOW;
     //
-    public static final int MODE_MULTI_SELECT = 1, MODE_SINGLE_SELECT = 0;
+    public static final int MODE_MULTI_SELECT = 4, MODE_SINGLE_SELECT = 8;
     int selectMode = MODE_SINGLE_SELECT;
 
     GScrollBar scrollBar;
@@ -72,6 +72,10 @@ public class GList extends GPanel implements GFocusChangeListener {
 
     float left, top, width, height;
 
+    public GList() {
+
+    }
+
     public GList(int left, int top, int width, int height) {
         this((float) left, top, width, height);
     }
@@ -81,6 +85,8 @@ public class GList extends GPanel implements GFocusChangeListener {
         this.top = top;
         this.width = width;
         this.height = height;
+
+        setBgColor(GToolkit.getStyle().getBackgroundColor());
 
         setViewLocation(left, top);
         setViewSize(width, height);
@@ -311,6 +317,19 @@ public class GList extends GPanel implements GFocusChangeListener {
         return selected.contains(index);
     }
 
+    public void selectAll() {
+        if (selectMode == MODE_MULTI_SELECT) {
+            int size = popView.getElementSize();
+            for (int i = 0; i < size; i++) {
+                selected.add(i);
+            }
+        }
+    }
+
+    public void deSelectAll() {
+        selected.clear();
+    }
+
     void select(int index) {
         if (selectMode == MODE_SINGLE_SELECT) {
             selected.clear();
@@ -531,7 +550,7 @@ public class GList extends GPanel implements GFocusChangeListener {
             float w = getW();
             float h = getH();
 
-            GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h);
+            GToolkit.drawRect(vg, x, y, w, h, GList.this.getBgColor());
 
             super.update(vg);
 

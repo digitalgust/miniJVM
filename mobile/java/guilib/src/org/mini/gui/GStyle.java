@@ -11,6 +11,8 @@ package org.mini.gui;
  */
 public interface GStyle {
 
+    float[] getBackgroundColor();
+
     float getTextFontSize();
 
     float getTitleFontSize();
@@ -20,8 +22,10 @@ public interface GStyle {
     float[] getTextFontColor();
 
     float[] getHintFontColor();
-    
+
     float[] getSelectedColor();
+
+    float[] getUnselectedColor();
 
     float[] getEditBackground();
 
@@ -35,4 +39,3 @@ public interface GStyle {
 
     void drawFieldBoxBase(long vg, float x, float y, float w, float h);
 }
-

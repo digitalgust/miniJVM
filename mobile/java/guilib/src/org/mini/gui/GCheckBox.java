@@ -9,7 +9,6 @@ import org.mini.glfm.Glfm;
 import static org.mini.gui.GObject.isInBoundle;
 import static org.mini.nanovg.Gutil.toUtf8;
 import static org.mini.gui.GToolkit.nvgRGBA;
-import org.mini.nanovg.Nanovg;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_LEFT;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_MIDDLE;
 import static org.mini.nanovg.Nanovg.nvgBeginPath;
@@ -20,8 +19,6 @@ import static org.mini.nanovg.Nanovg.nvgFillPaint;
 import static org.mini.nanovg.Nanovg.nvgFontFace;
 import static org.mini.nanovg.Nanovg.nvgFontSize;
 import static org.mini.nanovg.Nanovg.nvgRoundedRect;
-import static org.mini.nanovg.Nanovg.nvgSave;
-import static org.mini.nanovg.Nanovg.nvgScissor;
 import static org.mini.nanovg.Nanovg.nvgTextAlign;
 import static org.mini.nanovg.Nanovg.nvgTextJni;
 
@@ -36,7 +33,15 @@ public class GCheckBox extends GObject {
     boolean checked;
     byte[] preicon_arr = toUtf8("" + ICON_CHECK);
 
+    public GCheckBox() {
+
+    }
+
     public GCheckBox(String text, boolean checked, int left, int top, int width, int height) {
+        this(text, checked, (float) left, top, width, height);
+    }
+
+    public GCheckBox(String text, boolean checked, float left, float top, float width, float height) {
         setText(text);
         this.checked = checked;
         setLocation(left, top);

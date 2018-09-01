@@ -31,6 +31,10 @@ public class GMenu extends GPanel {
 
     float[] lineh = new float[1];
 
+    public GMenu() {
+
+    }
+
     public GMenu(int left, int top, int width, int height) {
         this((float) left, top, width, height);
     }

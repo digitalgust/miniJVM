@@ -13,6 +13,9 @@ import static org.mini.gui.GObject.LEFT;
 import static org.mini.gui.GObject.TOP;
 import static org.mini.gui.GObject.WIDTH;
 import static org.mini.gui.GObject.flush;
+import static org.mini.gui.GObject.flush;
+import static org.mini.gui.GObject.flush;
+import static org.mini.gui.GObject.flush;
 
 /**
  *
@@ -101,6 +104,9 @@ public class GViewPort extends GContainer {
 
     @Override
     public void reBoundle() {
+        float posY = scrolly * (maxY - minY);
+        float posX = scrollx * (maxX - minX);
+
         minX = 0;
         minY = 0;
         maxX = minX + viewBoundle[WIDTH];
@@ -135,6 +141,9 @@ public class GViewPort extends GContainer {
         if (boundle[HEIGHT] <= viewBoundle[HEIGHT]) {
             boundle[TOP] = viewBoundle[TOP];
         }
+
+        setScrollY(posY / (maxY - minY));
+        setScrollX(posX / (maxX - minX));
     }
 
     @Override
@@ -190,7 +199,7 @@ public class GViewPort extends GContainer {
                     float dh = getOutOfViewHeight();
                     if (dh > 0) {
                         float vec = (float) speedY / dh;
-                        moveScrollY(vec);
+                        moveY(vec);
                         tmpScrollY -= vec;
                         //System.out.println("dy:" + ((float) speedY / dh));
                     }
@@ -224,7 +233,7 @@ public class GViewPort extends GContainer {
                     float tmpScrollX = scrollx;
                     if (dw > 0) {
                         float vec = (float) speedX / dw;
-                        moveScrollX(vec);
+                        moveX(vec);
                         tmpScrollX -= vec;
                         //System.out.println("dx:" + ((float) speedX / dw));
                     }
@@ -267,13 +276,13 @@ public class GViewPort extends GContainer {
         float odx = (dw == 0) ? 0.f : (float) dx / dw;
         float ody = (dh == 0) ? 0.f : (float) dy / dh;
         if (Math.abs(odx) > Math.abs(ody)) {
-            return moveScrollX(odx);
+            return moveX(odx);
         } else {
-            return moveScrollY(ody);
+            return moveY(ody);
         }
     }
 
-    boolean moveScrollY(float dy) {
+    boolean moveY(float dy) {
         float tmpy = scrolly;
         tmpy -= dy;
         if (tmpy < 0) {
@@ -290,7 +299,7 @@ public class GViewPort extends GContainer {
         return false;
     }
 
-    boolean moveScrollX(float dx) {
+    boolean moveX(float dx) {
         float tmpx = scrollx;
         tmpx -= dx;
         if (tmpx < 0) {
@@ -308,7 +317,7 @@ public class GViewPort extends GContainer {
     }
 
     public void setScrollX(float sx) {
-        if (sx < 0 || sx > 1) {
+        if (sx < 0 || sx > 1 || boundle[WIDTH] <= viewBoundle[WIDTH]) {
             return;
         }
         scrollx = sx;
@@ -316,7 +325,7 @@ public class GViewPort extends GContainer {
     }
 
     public void setScrollY(float sy) {
-        if (sy < 0 || sy > 1) {
+        if (sy < 0 || sy > 1 || boundle[HEIGHT] <= viewBoundle[HEIGHT]) {
             return;
         }
         scrolly = sy;

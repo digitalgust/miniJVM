@@ -8,6 +8,10 @@ package org.mini.gui;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import static org.mini.gui.GObject.HEIGHT;
+import static org.mini.gui.GObject.LEFT;
+import static org.mini.gui.GObject.TOP;
+import static org.mini.gui.GObject.WIDTH;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
 import static org.mini.nanovg.Gutil.toUtf8;
@@ -288,8 +292,8 @@ public class GToolkit {
             }
         });
 
-        int x = 10, y = 10, w = 200;
         GContainer gp = frame.getView();
+        float x = 10, y = 10, w = gp.getViewW() - 20;
 
         GLabel lb1 = new GLabel(msg, x, y, w, 80);
         gp.add(lb1);
@@ -317,7 +321,7 @@ public class GToolkit {
      * @param itemListener
      * @return
      */
-    public static GFrame getListFrame(String title, LinkedHashMap<String, GImage> items, GActionListener buttonListener, GActionListener itemListener) {
+    public static GFrame getListFrame(String title, String[] strs, GImage[] imgs, GActionListener buttonListener, GActionListener itemListener) {
         float pad = 2, btnW = 80, btnH = 28;
         float y = pad;
 
@@ -352,23 +356,143 @@ public class GToolkit {
         frame.getView().add(glist);
         y += h + pad;
 
-        GButton btn = new GButton(GLanguage.getString("Perform"), (view.getViewW() - btnW) * .5f, y, btnW, btnH);
+        GCheckBox chbox = new GCheckBox(GLanguage.getString("SeleAll"), false, pad, y, view.getViewW() * .5f, btnH);
+        view.add(chbox);
+        chbox.setActionListener(new GActionListener() {
+            @Override
+            public void action(GObject gobj) {
+                if (((GCheckBox) gobj).isChecked()) {
+                    glist.selectAll();
+                } else {
+                    glist.deSelectAll();
+                }
+            }
+        });
+
+        GButton btn = new GButton(GLanguage.getString("Perform"), (view.getViewW() - btnW - pad), y, btnW, btnH);
         btn.setName("perform");
         frame.getView().add(btn);
         btn.setActionListener(buttonListener);
         //
-        if (items != null) {
-            for (Map.Entry<String, GImage> item : items.entrySet()) {
-
-                String s = item.getKey();
-                GImage img = item.getValue();
-                GListItem gli = glist.addItems(img, s);
-                gli.setAttachment(s);
-                gli.setActionListener(itemListener);
-            }
-        }
+        glist.setItems(imgs, strs);
 
         return frame;
     }
 
+    public static GFrame getInputFrame(String title, String msg, String defaultValue, String inputHint, String buttonText, GActionListener listener) {
+
+        int x = 8, y = 10;
+        GFrame frame = new GFrame(title, 50, 50, 300, 170);
+        frame.setFront(true);
+        frame.setFocusListener(new GFocusChangeListener() {
+            @Override
+            public void focusGot(GObject go) {
+            }
+
+            @Override
+            public void focusLost(GObject go) {
+                if (go.getForm() != null) {
+                    go.getForm().remove(frame);
+                }
+            }
+        });
+        GContainer view = frame.getView();
+
+        GLabel lb1 = new GLabel(msg, x, y, 280, 20);
+        view.add(lb1);
+
+        y += 25;
+        GTextField input = new GTextField(defaultValue == null ? "" : defaultValue, inputHint, x, y, 280, 28);
+        input.setName("input");
+        view.add(input);
+        y += 35;
+        GLabel lb_state = new GLabel("", x, y, 280, 20);
+        lb_state.setName("state");
+        view.add(lb_state);
+        y += 25;
+
+        GButton cancelbtn = new GButton(GLanguage.getString("Cancel"), x, y, 135, 28);
+        view.add(cancelbtn);
+
+        GButton okbtn = new GButton(buttonText, x + 145, y, 135, 28);
+        okbtn.setBgColor(0, 96, 128, 255);
+        view.add(okbtn);
+
+        okbtn.setActionListener(listener);
+
+        cancelbtn.setActionListener((GObject gobj) -> {
+            if (gobj.getFrame() != null) {
+                gobj.getFrame().close();
+            }
+        });
+        return frame;
+    }
+
+    public static GList getListMenu(String[] strs, GImage[] imgs, GActionListener[] listener) {
+
+        GList list = new GList(0, 0, 150, 120);
+        list.setShowMode(GList.MODE_MULTI_SHOW);
+        list.setBgColor(GToolkit.getStyle().getFrameBackground());
+        list.setFocusListener(new GFocusChangeListener() {
+            @Override
+            public void focusGot(GObject go) {
+            }
+
+            @Override
+            public void focusLost(GObject go) {
+                if (go.getForm() != null) {
+                    go.getForm().remove(list);
+                }
+            }
+        });
+
+        list.setItems(imgs, strs);
+        GListItem[] items = list.getItems();
+        if (listener != null) {
+            for (int i = 0, imax = items.length; i < imax; i++) {
+                items[i].setActionListener(listener[i]);
+            }
+        }
+        int size = items.length;
+        if (size > 8) {
+            size = 8;
+        }
+        list.setSize(200, size * list.list_item_heigh);
+        list.setFront(true);
+
+        return list;
+    }
+
+    public static GMenu getMenu(String[] strs, GImage[] imgs, GActionListener[] listener) {
+
+        GMenu menu = new GMenu(0, 0, 150, 120);
+        menu.setFocusListener(new GFocusChangeListener() {
+            @Override
+            public void focusGot(GObject go) {
+            }
+
+            @Override
+            public void focusLost(GObject go) {
+                if (go.getForm() != null) {
+                    go.getForm().remove(menu);
+                }
+            }
+        });
+
+        for (int i = 0, imax = strs.length; i < imax; i++) {
+            GMenuItem item = menu.addItem(strs[i], imgs == null ? null : imgs[i]);
+            if (listener != null) {
+                item.setActionListener(listener[i]);
+            }
+        }
+
+        int size = strs.length;
+        if (size > 5) {
+            size = 5;
+        }
+        menu.setSize(300, 40);
+        menu.setFront(true);
+
+        return menu;
+    }
 }

@@ -9,7 +9,6 @@ import org.mini.glfm.Glfm;
 import static org.mini.gui.GObject.LEFT;
 import static org.mini.gui.GObject.isInBoundle;
 import static org.mini.gui.GToolkit.nvgRGBA;
-import org.mini.nanovg.Nanovg;
 import static org.mini.nanovg.Nanovg.NVG_HOLE;
 import static org.mini.nanovg.Nanovg.nvgBeginPath;
 import static org.mini.nanovg.Nanovg.nvgBoxGradient;
@@ -39,7 +38,15 @@ public class GScrollBar extends GObject {
     float radius = 8;
     float[] line_boundle = new float[4];
 
+    public GScrollBar() {
+
+    }
+
     public GScrollBar(float pos, int mode, int left, int top, int width, int height) {
+        this(pos, mode, (float) left, top, width, height);
+    }
+
+    public GScrollBar(float pos, int mode, float left, float top, float width, float height) {
         this.pos = pos;
         this.mode = mode;
         setLocation(left, top);

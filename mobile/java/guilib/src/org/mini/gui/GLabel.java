@@ -27,8 +27,15 @@ public class GLabel extends GObject {
     String text;
     byte[] text_arr;
     char preicon;
+    public GLabel(){
+        
+    }
 
     public GLabel(String text, int left, int top, int width, int height) {
+        this(text, (float) left, top, width, height);
+    }
+
+    public GLabel(String text, float left, float top, float width, float height) {
         setText(text);
         setLocation(left, top);
         setSize(width, height);

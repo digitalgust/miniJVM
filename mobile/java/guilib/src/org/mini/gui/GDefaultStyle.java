@@ -14,7 +14,6 @@ import static org.mini.nanovg.Nanovg.nvgRoundedRect;
 import static org.mini.nanovg.Nanovg.nvgStroke;
 import static org.mini.nanovg.Nanovg.nvgStrokeColor;
 
-
 /**
  *
  * @author gust
@@ -43,7 +42,7 @@ public class GDefaultStyle implements GStyle {
         return textFontColor;
     }
 
-    float[] frameBackground = nvgRGBA(28, 30, 34, 192);
+    float[] frameBackground = nvgRGBA(28, 30, 34, 255);
 
     @Override
     public float[] getFrameBackground() {
@@ -79,9 +78,9 @@ public class GDefaultStyle implements GStyle {
     public void drawEditBoxBase(long vg, float x, float y, float w, float h) {
         byte[] bg;
         // Edit
-        bg = nvgBoxGradient(vg, x + 1, y + 1 + 1.5f, w - 2, h - 2, 3, 4, getEditBackground(), nvgRGBA(32, 32, 32, 192));
+        bg = nvgBoxGradient(vg, x, y, w, h, 3, 4, getEditBackground(), nvgRGBA(32, 32, 32, 192));
         nvgBeginPath(vg);
-        nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, 4 - 1);
+        nvgRoundedRect(vg, x, y, w, h, 4 - 1);
         nvgFillPaint(vg, bg);
         nvgFill(vg);
 
@@ -103,8 +102,23 @@ public class GDefaultStyle implements GStyle {
     }
 
     float[] selectedColor = nvgRGBA(128, 128, 255, 64);
+
     @Override
     public float[] getSelectedColor() {
         return selectedColor;
+    }
+
+    float[] unselectedColor = nvgRGBA(128, 128, 128, 16);
+
+    @Override
+    public float[] getUnselectedColor() {
+        return unselectedColor;
+    }
+
+    float[] backgroundColor = nvgRGBA(96, 96, 100, 32);
+
+    @Override
+    public float[] getBackgroundColor() {
+        return backgroundColor;
     }
 }

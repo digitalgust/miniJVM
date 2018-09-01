@@ -30,7 +30,7 @@ public class GLanguage {
         addStringInner("Paste", new String[]{"Paste", "粘贴", "粘貼"});
         addStringInner("Cut", new String[]{"Cut", "剪切", "剪切"});
         addStringInner("Perform", new String[]{"Perform", "完成", "完成"});
-
+        addString("Cancel", new String[]{"Cancel", "取消", "取消"});
     }
 
     static public void setCurLang(int langType) {

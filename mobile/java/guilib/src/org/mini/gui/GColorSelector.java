@@ -48,7 +48,15 @@ public class GColorSelector extends GObject {
     float r_big, r_small;
     float selectX, selectY;
 
+    public GColorSelector() {
+
+    }
+
     public GColorSelector(float pos, int left, int top, int width, int height) {
+        this(pos, (float) left, top, width, height);
+    }
+
+    public GColorSelector(float pos, float left, float top, float width, float height) {
         this.curAngel = pos;
         setLocation(left, top);
         setSize(width, height);

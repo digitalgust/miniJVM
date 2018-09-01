@@ -19,8 +19,6 @@ import static org.mini.nanovg.Nanovg.nvgFillColor;
 import static org.mini.nanovg.Nanovg.nvgFontFace;
 import static org.mini.nanovg.Nanovg.nvgFontSize;
 import static org.mini.nanovg.Nanovg.nvgNVGglyphPosition_x;
-import static org.mini.nanovg.Nanovg.nvgRestore;
-import static org.mini.nanovg.Nanovg.nvgSave;
 import static org.mini.nanovg.Nanovg.nvgTextAlign;
 import static org.mini.nanovg.Nanovg.nvgTextBreakLinesJni;
 import static org.mini.nanovg.Nanovg.nvgTextGlyphPositionsJni;
@@ -62,6 +60,9 @@ public class GTextBox extends GTextObject {
 
     //
     boolean mouseDrag;
+
+    public GTextBox() {
+    }
 
     public GTextBox(String text, String hint, int left, int top, int width, int height) {
         this(text, hint, (float) left, top, width, height);
