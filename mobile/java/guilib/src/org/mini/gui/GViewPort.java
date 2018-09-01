@@ -34,7 +34,7 @@ public class GViewPort extends GContainer {
     public void setViewLocation(float x, float y) {
         viewBoundle[LEFT] = x;
         viewBoundle[TOP] = y;
-        if(parent!=null){
+        if (parent != null) {
             parent.reBoundle();
         }
     }
@@ -43,7 +43,7 @@ public class GViewPort extends GContainer {
     public void setViewSize(float w, float h) {
         viewBoundle[WIDTH] = w;
         viewBoundle[HEIGHT] = h;
-        if(parent!=null){
+        if (parent != null) {
             parent.reBoundle();
         }
     }
@@ -84,7 +84,7 @@ public class GViewPort extends GContainer {
         boundle[TOP] += dy;
         viewBoundle[LEFT] += dx;
         viewBoundle[TOP] += dy;
-        if(parent!=null){
+        if (parent != null) {
             parent.reBoundle();
         }
     }
@@ -321,6 +321,14 @@ public class GViewPort extends GContainer {
         }
         scrolly = sy;
         boundle[TOP] = viewBoundle[TOP] + (-minY) - scrolly * getOutOfViewHeight();
+    }
+
+    public float getScrollY() {
+        return scrolly;
+    }
+
+    public float getScrollX() {
+        return scrollx;
     }
 
     float getOutOfViewHeight() {
