@@ -67,7 +67,8 @@ static bool _callback_key(GLFMDisplay *window, GLFMKey key, GLFMKeyAction action
         env->push_int(runtime->stack, action);
         env->push_int(runtime->stack, mods);
 
-        s32 ret = env->execute_method(refers._callback_key, runtime, refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_key, runtime,
+                                      refers.glfm_callback->mb.clazz);
         if (ret) {
             env->print_exception(runtime);
         } else {
@@ -87,7 +88,8 @@ static void _callback_character(GLFMDisplay *window, const char *utf8, int modif
         env->push_ref(runtime->stack, ins);
         env->push_int(runtime->stack, modifiers);
 
-        s32 ret = env->execute_method(refers._callback_character, runtime, refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_character, runtime,
+                                      refers.glfm_callback->mb.clazz);
         if (ret) {
             env->print_exception(runtime);
         }
@@ -102,7 +104,8 @@ static void _callback_mainloop(GLFMDisplay *window, f64 frameTime) {
         env->push_long(runtime->stack, (s64) (intptr_t) window);
         env->push_double(runtime->stack, frameTime);
 
-        s32 ret = env->execute_method(refers._callback_mainloop, runtime, refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_mainloop, runtime,
+                                      refers.glfm_callback->mb.clazz);
         if (ret) {
             env->print_exception(runtime);
         }
@@ -115,7 +118,8 @@ void _callback_memory_warning(GLFMDisplay *window) {
         JniEnv *env = refers.env;
         env->push_ref(runtime->stack, refers.glfm_callback);
         env->push_long(runtime->stack, (s64) (intptr_t) window);
-        s32 ret = env->execute_method(refers._callback_memory_warning, runtime, refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_memory_warning, runtime,
+                                      refers.glfm_callback->mb.clazz);
         if (ret) {
             env->print_exception(runtime);
         }
@@ -134,7 +138,8 @@ void _callback_keyboard_visible(GLFMDisplay *window, bool visible, f64 x, f64 y,
         env->push_double(runtime->stack, w);
         env->push_double(runtime->stack, h);
 
-        s32 ret = env->execute_method(refers._callback_keyboard_visible, runtime, refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_keyboard_visible, runtime,
+                                      refers.glfm_callback->mb.clazz);
         if (ret) {
             env->print_exception(runtime);
         }
@@ -152,7 +157,8 @@ bool _callback_touch(GLFMDisplay *window, s32 touch, GLFMTouchPhase phase, f64 x
         env->push_double(runtime->stack, x);
         env->push_double(runtime->stack, y);
 
-        s32 ret = env->execute_method(refers._callback_touch, runtime, refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_touch, runtime,
+                                      refers.glfm_callback->mb.clazz);
         if (ret) {
             env->print_exception(runtime);
         } else {
@@ -172,7 +178,8 @@ void _callback_surface_resized(GLFMDisplay *window, s32 w, s32 h) {
         env->push_int(runtime->stack, w);
         env->push_int(runtime->stack, h);
 
-        s32 ret = env->execute_method(refers._callback_surface_resized, runtime, refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_surface_resized, runtime,
+                                      refers.glfm_callback->mb.clazz);
         if (ret) {
             env->print_exception(runtime);
         }
@@ -186,7 +193,8 @@ void _callback_surface_destroyed(GLFMDisplay *window) {
         env->push_ref(runtime->stack, refers.glfm_callback);
         env->push_long(runtime->stack, (s64) (intptr_t) window);
 
-        s32 ret = env->execute_method(refers._callback_surface_destroyed, runtime, refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_surface_destroyed, runtime,
+                                      refers.glfm_callback->mb.clazz);
         if (ret) {
             env->print_exception(runtime);
         }
@@ -201,7 +209,8 @@ void _callback_app_focus(GLFMDisplay *window, bool focus) {
         env->push_long(runtime->stack, (s64) (intptr_t) window);
         env->push_int(runtime->stack, focus);
 
-        s32 ret = env->execute_method(refers._callback_app_focus, runtime, refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_app_focus, runtime,
+                                      refers.glfm_callback->mb.clazz);
         if (ret) {
             env->print_exception(runtime);
         }
@@ -218,7 +227,34 @@ void _callback_surface_created(GLFMDisplay *window, s32 w, s32 h) {
         env->push_int(runtime->stack, w);
         env->push_int(runtime->stack, h);
 
-        s32 ret = env->execute_method(refers._callback_surface_created, runtime, refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_surface_created, runtime,
+                                      refers.glfm_callback->mb.clazz);
+        if (ret) {
+            env->print_exception(runtime);
+        }
+    }
+}
+
+void
+_callback_photo_picked(GLFMDisplay *window, s32 uid, const c8 *url, c8 *data, s32 length) {
+    gladLoadGLES2Loader(glfmGetProcAddress);
+    if (refers._callback_surface_created) {
+        Runtime *runtime = getRuntimeCurThread();
+        JniEnv *env = refers.env;
+        Instance *jstr_url = createJavaString(runtime, url);
+        Instance *jarr = NULL;
+        if (data) {
+            env->jarray_create_by_type_index(runtime, length, DATATYPE_BYTE);
+            memcpy(jarr->arr_body, data, length);
+        }
+        env->push_ref(runtime->stack, refers.glfm_callback);
+        env->push_long(runtime->stack, (s64) (intptr_t) window);
+        env->push_int(runtime->stack, uid);
+        env->push_ref(runtime->stack, jstr_url);
+        env->push_ref(runtime->stack, jarr);
+
+        s32 ret = env->execute_method(refers._callback_photo_picked, runtime,
+                                      refers.glfm_callback->mb.clazz);
         if (ret) {
             env->print_exception(runtime);
         }
@@ -252,6 +288,7 @@ int org_mini_glfm_Glfm_glfmSetUserData(Runtime *runtime, JClass *clazz) {
     glfmSetSurfaceDestroyedFunc(window, _callback_surface_destroyed);
     glfmSetMemoryWarningFunc(window, _callback_memory_warning);
     glfmSetKeyboardVisibilityChangedFunc(window, _callback_keyboard_visible);
+    glfmSetPhotoPickedFunc(window, _callback_photo_picked);
 
 
     c8 *name_s, *type_s;
@@ -260,7 +297,8 @@ int org_mini_glfm_Glfm_glfmSetUserData(Runtime *runtime, JClass *clazz) {
         type_s = "(JIII)Z";
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
-        refers._callback_key = env->find_methodInfo_by_name(refers.glfm_callback->mb.clazz->name, name, type, runtime);
+        refers._callback_key = env->find_methodInfo_by_name(refers.glfm_callback->mb.clazz->name,
+                                                            name, type, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -269,7 +307,8 @@ int org_mini_glfm_Glfm_glfmSetUserData(Runtime *runtime, JClass *clazz) {
         type_s = "(JLjava/lang/String;I)V";
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
-        refers._callback_character = env->find_methodInfo_by_name(refers.glfm_callback->mb.clazz->name, name, type, runtime);
+        refers._callback_character = env->find_methodInfo_by_name(
+                refers.glfm_callback->mb.clazz->name, name, type, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -278,7 +317,8 @@ int org_mini_glfm_Glfm_glfmSetUserData(Runtime *runtime, JClass *clazz) {
         type_s = "(JZDDDD)V";
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
-        refers._callback_keyboard_visible = env->find_methodInfo_by_name(refers.glfm_callback->mb.clazz->name, name, type, runtime);
+        refers._callback_keyboard_visible = env->find_methodInfo_by_name(
+                refers.glfm_callback->mb.clazz->name, name, type, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -287,7 +327,8 @@ int org_mini_glfm_Glfm_glfmSetUserData(Runtime *runtime, JClass *clazz) {
         type_s = "(JD)V";
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
-        refers._callback_mainloop = env->find_methodInfo_by_name(refers.glfm_callback->mb.clazz->name, name, type, runtime);
+        refers._callback_mainloop = env->find_methodInfo_by_name(
+                refers.glfm_callback->mb.clazz->name, name, type, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -296,7 +337,8 @@ int org_mini_glfm_Glfm_glfmSetUserData(Runtime *runtime, JClass *clazz) {
         type_s = "(J)V";
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
-        refers._callback_memory_warning = env->find_methodInfo_by_name(refers.glfm_callback->mb.clazz->name, name, type, runtime);
+        refers._callback_memory_warning = env->find_methodInfo_by_name(
+                refers.glfm_callback->mb.clazz->name, name, type, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -306,7 +348,8 @@ int org_mini_glfm_Glfm_glfmSetUserData(Runtime *runtime, JClass *clazz) {
         type_s = "(JIIDD)Z";
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
-        refers._callback_touch = env->find_methodInfo_by_name(refers.glfm_callback->mb.clazz->name, name, type, runtime);
+        refers._callback_touch = env->find_methodInfo_by_name(refers.glfm_callback->mb.clazz->name,
+                                                              name, type, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -316,7 +359,8 @@ int org_mini_glfm_Glfm_glfmSetUserData(Runtime *runtime, JClass *clazz) {
         type_s = "(JLjava/lang/String;)V";
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
-        refers._callback_surface_error = env->find_methodInfo_by_name(refers.glfm_callback->mb.clazz->name, name, type, runtime);
+        refers._callback_surface_error = env->find_methodInfo_by_name(
+                refers.glfm_callback->mb.clazz->name, name, type, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -326,7 +370,8 @@ int org_mini_glfm_Glfm_glfmSetUserData(Runtime *runtime, JClass *clazz) {
         type_s = "(JII)V";
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
-        refers._callback_surface_created = env->find_methodInfo_by_name(refers.glfm_callback->mb.clazz->name, name, type, runtime);
+        refers._callback_surface_created = env->find_methodInfo_by_name(
+                refers.glfm_callback->mb.clazz->name, name, type, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -336,7 +381,8 @@ int org_mini_glfm_Glfm_glfmSetUserData(Runtime *runtime, JClass *clazz) {
         type_s = "(JII)V";
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
-        refers._callback_surface_resized = env->find_methodInfo_by_name(refers.glfm_callback->mb.clazz->name, name, type, runtime);
+        refers._callback_surface_resized = env->find_methodInfo_by_name(
+                refers.glfm_callback->mb.clazz->name, name, type, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -345,7 +391,8 @@ int org_mini_glfm_Glfm_glfmSetUserData(Runtime *runtime, JClass *clazz) {
         type_s = "(J)V";
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
-        refers._callback_surface_destroyed = env->find_methodInfo_by_name(refers.glfm_callback->mb.clazz->name, name, type, runtime);
+        refers._callback_surface_destroyed = env->find_methodInfo_by_name(
+                refers.glfm_callback->mb.clazz->name, name, type, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -355,7 +402,19 @@ int org_mini_glfm_Glfm_glfmSetUserData(Runtime *runtime, JClass *clazz) {
         type_s = "(JZ)V";
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
-        refers._callback_app_focus = env->find_methodInfo_by_name(refers.glfm_callback->mb.clazz->name, name, type, runtime);
+        refers._callback_app_focus = env->find_methodInfo_by_name(
+                refers.glfm_callback->mb.clazz->name, name, type, runtime);
+        env->utf8_destory(name);
+        env->utf8_destory(type);
+    }
+
+    {
+        name_s = "onPhotoPicked";
+        type_s = "(JILjava/lang/String;[B)V";
+        Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
+        Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
+        refers._callback_photo_picked = env->find_methodInfo_by_name(
+                refers.glfm_callback->mb.clazz->name, name, type, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -375,7 +434,8 @@ int org_mini_glfm_Glfm_glfmSetDisplayConfig(Runtime *runtime, JClass *clazz) {//
     s32 stencilFormat = env->localvar_getInt(runtime->localvar, pos++);
     s32 multisample = env->localvar_getInt(runtime->localvar, pos++);
 
-    glfmSetDisplayConfig(window, preferredAPI, colorFormat, depthFormat, stencilFormat, multisample);
+    glfmSetDisplayConfig(window, preferredAPI, colorFormat, depthFormat, stencilFormat,
+                         multisample);
 
     return 0;
 }
@@ -456,7 +516,8 @@ int org_mini_glfm_Glfm_glfmGetDisplayChromeInsets(Runtime *runtime, JClass *claz
     GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     Instance *r = env->localvar_getRefer(runtime->localvar, pos++);
     if (r != NULL && r->arr_length >= 4) {
-        glfmGetDisplayChromeInsets(window, &((f64 *) r->arr_body)[0], &((f64 *) r->arr_body)[1], &((f64 *) r->arr_body)[2], &((f64 *) r->arr_body)[3]);
+        glfmGetDisplayChromeInsets(window, &((f64 *) r->arr_body)[0], &((f64 *) r->arr_body)[1],
+                                   &((f64 *) r->arr_body)[2], &((f64 *) r->arr_body)[3]);
     }
     return 0;
 }
@@ -571,6 +632,35 @@ int org_mini_glfm_Glfm_glfmSetClipBoardContent(Runtime *runtime, JClass *clazz) 
     Utf8String *ustr = utf8_create();
     env->jstring_2_utf8(jstr, ustr);
     setClipBoardContent(utf8_cstr(ustr));
+    utf8_destory(ustr);
+    return 0;
+}
+
+int org_mini_glfm_Glfm_glfmPickPhotoAlbum(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 uid = env->localvar_getInt(runtime->localvar, 0);
+    s32 type = env->localvar_getInt(runtime->localvar, 1);
+    pickPhotoAlbum(uid, type);
+    return 0;
+}
+
+int org_mini_glfm_Glfm_glfmPickPhotoCamera(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 uid = env->localvar_getInt(runtime->localvar, 0);
+    s32 type = env->localvar_getInt(runtime->localvar, 1);
+    pickPhotoCamera(uid, type);
+    return 0;
+}
+
+int org_mini_glfm_Glfm_glfmImageCrop(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 uid = env->localvar_getInt(runtime->localvar, 0);
+    Instance *jstr = env->localvar_getRefer(runtime->localvar, 1);
+    Utf8String *ustr = utf8_create();
+    env->jstring_2_utf8(jstr, ustr);
+    s32 w = env->localvar_getInt(runtime->localvar, 2);
+    s32 h = env->localvar_getInt(runtime->localvar, 3);
+    imageCrop(uid, utf8_cstr(ustr), w, h);
     utf8_destory(ustr);
     return 0;
 }
@@ -1072,6 +1162,9 @@ static java_native_method method_glfm_table[] = {
         {"org/mini/glfm/Glfm",        "glfmGetSaveRoot",                 "()Ljava/lang/String;",             org_mini_glfm_Glfm_glfmGetSaveRoot},
         {"org/mini/glfm/Glfm",        "glfmGetClipBoardContent",         "()Ljava/lang/String;",             org_mini_glfm_Glfm_glfmGetClipBoardContent},
         {"org/mini/glfm/Glfm",        "glfmSetClipBoardContent",         "(Ljava/lang/String;)V",            org_mini_glfm_Glfm_glfmSetClipBoardContent},
+        {"org/mini/glfm/Glfm",        "glfmPickPhotoAlbum",              "(II)V",                            org_mini_glfm_Glfm_glfmPickPhotoAlbum},
+        {"org/mini/glfm/Glfm",        "glfmPickPhotoCamera",             "(II)V",                             org_mini_glfm_Glfm_glfmPickPhotoCamera},
+        {"org/mini/glfm/Glfm",        "glfmImageCrop",                   "(ILjava/lang/String;II)V",         org_mini_glfm_Glfm_glfmImageCrop},
 
 };
 

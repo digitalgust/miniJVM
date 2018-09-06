@@ -3,12 +3,25 @@ package org.minijvm.activity;
 import android.app.NativeActivity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
-import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ImageView;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Created by gust on 2018/4/19.
@@ -18,7 +31,8 @@ public class JvmNativeActivity extends NativeActivity {
     static {
         System.loadLibrary("minijvm");
     }
-    ClipboardManager mClipboardManager ;
+
+    ClipboardManager mClipboardManager;
     InputMethodManager inputMethodManager;
     private final static String TAG = "JvmNativeActivity";
 
@@ -70,5 +84,215 @@ public class JvmNativeActivity extends NativeActivity {
         return text;
     }
 
+
     native boolean onStringInput(String str);
+
+    //=======================================================================================================
+    private static final int CAMERA_CODE = 1;
+    private static final int GALLERY_CODE = 2;
+    private static final int CROP_CODE = 3;
+    static final String UNICODE_OF_REQUEST_KEY = "UID";
+    //用于展示选择的图片
+    private ImageView mImageView;
+
+    private final File PHOTO_DIR_SD = new File(Environment.getExternalStorageDirectory() + "/DCIM/Camera");
+    private final File PHOTO_DIR_ROOT = new File(Environment.getRootDirectory() + "/DCIM/Camera");
+
+    /**
+     * 拍照选择图片
+     */
+    public void pickFromCamera(int uid, int type) {
+        //构建隐式Intent
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        intent.putExtra(UNICODE_OF_REQUEST_KEY, uid);
+        //调用系统相机
+        startActivityForResult(intent, CAMERA_CODE);
+    }
+
+    /**
+     * 从相册选择图片
+     */
+    public void pickFromAlbum(int uid, int type) {
+        //构建一个内容选择的Intent
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.putExtra("UID", uid);
+        //设置选择类型为图片类型
+        intent.setType("image/*");
+        //打开图片选择
+        startActivityForResult(intent, GALLERY_CODE);
+    }
+
+    /**
+     * 通过Uri传递图像信息以供裁剪
+     *
+     * @param uris
+     */
+    public void imageCrop(int uid, String uris, int width, int height) {
+        //构建隐式Intent来启动裁剪程序
+        Intent intent = new Intent("com.android.camera.action.CROP");
+        //设置数据uri和类型为图片类型
+        Uri uri = Uri.parse(uris);
+        intent.setDataAndType(uri, "image/*");
+        //显示View为可裁剪的
+        intent.putExtra("crop", true);
+        //裁剪的宽高的比例为1:1
+        intent.putExtra("aspectX", 1);
+        intent.putExtra("aspectY", 1);
+        //输出图片的宽高均为150
+        intent.putExtra("outputX", width);
+        intent.putExtra("outputY", height);
+        //裁剪之后的数据是通过Intent返回
+        intent.putExtra("return-data", true);
+        intent.putExtra(UNICODE_OF_REQUEST_KEY, uid);
+        startActivityForResult(intent, CROP_CODE);
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case CAMERA_CODE:
+                //用户点击了取消
+                if (data == null) {
+                    return;
+                } else {
+                    Bundle extras = data.getExtras();
+                    if (extras != null) {
+                        //获得拍的照片
+                        Bitmap bm = extras.getParcelable("data");
+                        //将Bitmap转化为uri
+                        Uri uri = saveImage(bm, getPhotoStorage());
+                        int uid = data.getIntExtra(UNICODE_OF_REQUEST_KEY, -1);
+                        //启动图像裁剪
+                        //imageCrop(uri, uid);
+                        onPhotoPicked(uid, uri.getPath(), null);
+                    }
+                }
+                break;
+            case GALLERY_CODE:
+                if (data == null) {
+                    return;
+                } else {
+                    //用户从图库选择图片后会返回所选图片的Uri
+                    Uri uri;
+                    //获取到用户所选图片的Uri
+                    uri = data.getData();
+                    int uid = data.getIntExtra(UNICODE_OF_REQUEST_KEY, -1);
+                    //返回的Uri为content类型的Uri,不能进行复制等操作,需要转换为文件Uri
+                    uri = convertUri(uri);
+                    //imageCrop(uri, uid);
+
+                    onPhotoPicked(uid, uri.getPath(), null);
+                }
+                break;
+            case CROP_CODE:
+                if (data == null) {
+                    return;
+                } else {
+                    Bundle extras = data.getExtras();
+                    if (extras != null) {
+                        //获取到裁剪后的图像
+                        Bitmap bm = extras.getParcelable("data");
+                        int uid = data.getIntExtra(UNICODE_OF_REQUEST_KEY, -1);
+                        //mImageView.setImageBitmap(bm);
+                        Uri uri = saveImage(bm, getPhotoStorage());
+                        onPhotoPicked(uid, uri.getPath(), null);
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    static native void onPhotoPicked(int uid, String path, byte[] data);
+
+    /**
+     * 将content类型的Uri转化为文件类型的Uri
+     *
+     * @param uri
+     * @return
+     */
+    private Uri convertUri(Uri uri) {
+        InputStream is;
+        try {
+            //Uri ----> InputStream
+            is = getContentResolver().openInputStream(uri);
+            //InputStream ----> Bitmap
+            Bitmap bm = BitmapFactory.decodeStream(is);
+            //关闭流
+            is.close();
+            return saveImage(bm, getPhotoStorage());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * 将Bitmap写入SD卡中的一个文件中,并返回写入文件的Uri
+     *
+     * @param bm
+     * @param dirPath
+     * @return
+     */
+    private Uri saveImage(Bitmap bm, File dirPath) {
+
+
+        //新建文件存储裁剪后的图片
+        File img = new File(dirPath.getAbsolutePath() + "/" + getImgName());
+        try {
+            //打开文件输出流
+            FileOutputStream fos = new FileOutputStream(img);
+            //将bitmap压缩后写入输出流(参数依次为图片格式、图片质量和输出流)
+            bm.compress(Bitmap.CompressFormat.PNG, 85, fos);
+            //刷新输出流
+            fos.flush();
+            //关闭输出流
+            fos.close();
+            //返回File类型的Uri
+            return Uri.fromFile(img);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
+    private String getImgName() {
+        SimpleDateFormat sdf = new SimpleDateFormat();
+        sdf.applyPattern("yyyyMMdd_HHmmsss");
+        StringBuilder result = new StringBuilder("IMG_");
+        result.append(sdf.format(new Date())).append((System.currentTimeMillis() % 1000))
+                .append(".png");
+        return result.toString();
+    }
+
+    private void imageCrop(Uri uri, int uid) {
+        imageCrop(uid, uri.getPath(), 150, 150);
+    }
+
+
+    private File getPhotoStorage() {
+        File dir = null;
+        // showToast(activity, "若添加实时拍摄照片导致重启，请尝试在应用外拍照，再选择从相册中获取进行添加！");
+        String status = Environment.getExternalStorageState();
+        if (status.equals(Environment.MEDIA_MOUNTED)) {// 判断是否有SD卡
+            dir = PHOTO_DIR_SD;
+        } else {
+            dir = PHOTO_DIR_ROOT;
+        }
+        if (!dir.exists()) {
+            dir.mkdirs();// 创建照片的存储目录
+        }
+        return dir;
+    }
+//=======================================================================================================
+
 }

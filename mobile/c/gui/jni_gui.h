@@ -43,6 +43,7 @@ struct _GlobeRefer {
     MethodInfo *_callback_surface_resized;
     MethodInfo *_callback_app_focus;
     MethodInfo *_callback_surface_created;
+    MethodInfo *_callback_photo_picked;
 
     Pairlist *runtime_list;
 };

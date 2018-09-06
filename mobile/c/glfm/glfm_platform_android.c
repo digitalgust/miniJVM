@@ -79,7 +79,7 @@ typedef struct {
 
     struct timespec initTime;
     bool animating;
-    bool hasInited;
+    bool aniHasInited;
 
     EGLDisplay eglDisplay;
     EGLSurface eglSurface;
@@ -934,8 +934,8 @@ static void _glfmUpdateKeyboardVisibility(GLFMPlatformData *platformData) {
 static void _glfmSetAnimating(GLFMPlatformData *platformData, bool animating) {
     if (platformData->animating != animating) {
         bool sendAppEvent = true;
-        if (!platformData->hasInited && animating) {
-            platformData->hasInited = true;
+        if (!platformData->aniHasInited && animating) {
+            platformData->aniHasInited = true;
             platformData->initTime = _glfmTimeNow();
             sendAppEvent = false;
         }
@@ -968,7 +968,6 @@ static void _glfmOnAppCmd(struct android_app *app, int32_t cmd) {
         }
         case APP_CMD_TERM_WINDOW: {
             LOG_LIFECYCLE("APP_CMD_TERM_WINDOW");
-            glfmDestroy();
             _glfmEGLSurfaceDestroy(platformData);
             _glfmSetAnimating(platformData, false);
             break;
@@ -1027,6 +1026,7 @@ static void _glfmOnAppCmd(struct android_app *app, int32_t cmd) {
         }
         case APP_CMD_DESTROY: {
             LOG_LIFECYCLE("APP_CMD_DESTROY");
+            glfmDestroy();
             _glfmEGLDestroy(platformData);
             break;
         }
@@ -1611,7 +1611,7 @@ void setClipBoardContent(const char *str) {
         return;
     }
     jstring jstr = (*jni)->NewStringUTF(jni, str);
-    const char *rawString = (*jni)->GetStringUTFChars(jni, jstr, 0);
+    //const char *rawString = (*jni)->GetStringUTFChars(jni, jstr, 0);
     _glfmCallJavaMethodWithArgs(jni, app->activity->clazz, "setClipBoardContent",
                                 "(Ljava/lang/String;)V", Void, jstr);
     if ((*jni)->ExceptionCheck(jni)) {
@@ -1619,6 +1619,83 @@ void setClipBoardContent(const char *str) {
         (*jni)->ExceptionClear(jni);
         return;
     }
+}
+
+void pickPhotoAlbum(int uid, int type) {
+    struct android_app *app = platformDataGlobal->app;
+    GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
+    JNIEnv *jni = platformData->jniEnv;
+    if ((*jni)->ExceptionCheck(jni)) {
+        (*jni)->ExceptionDescribe(jni);
+        (*jni)->ExceptionClear(jni);
+        return;
+    }
+    _glfmCallJavaMethodWithArgs(jni, app->activity->clazz, "pickFromAlbum",
+                                "(II)V", Void, uid, type);
+    if ((*jni)->ExceptionCheck(jni)) {
+        (*jni)->ExceptionDescribe(jni);
+        (*jni)->ExceptionClear(jni);
+        return;
+    }
+}
+
+void pickPhotoCamera(int uid, int type) {
+    struct android_app *app = platformDataGlobal->app;
+    GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
+    JNIEnv *jni = platformData->jniEnv;
+    if ((*jni)->ExceptionCheck(jni)) {
+        (*jni)->ExceptionDescribe(jni);
+        (*jni)->ExceptionClear(jni);
+        return;
+    }
+    _glfmCallJavaMethodWithArgs(jni, app->activity->clazz, "pickFromCamera",
+                                "(II)V", Void, uid, type);
+    if ((*jni)->ExceptionCheck(jni)) {
+        (*jni)->ExceptionDescribe(jni);
+        (*jni)->ExceptionClear(jni);
+        return;
+    }
+}
+
+void imageCrop(int uid, const char *uri, int width, int height) {
+    struct android_app *app = platformDataGlobal->app;
+    GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
+    JNIEnv *jni = platformData->jniEnv;
+    if ((*jni)->ExceptionCheck(jni)) {
+        (*jni)->ExceptionDescribe(jni);
+        (*jni)->ExceptionClear(jni);
+        return;
+    }
+    jstring jstr = (*jni)->NewStringUTF(jni, uri);
+    _glfmCallJavaMethodWithArgs(jni, app->activity->clazz, "imageCrop",
+                                "(Ljava/lang/String;III)V", Void, uid, jstr, width, height);
+    if ((*jni)->ExceptionCheck(jni)) {
+        (*jni)->ExceptionDescribe(jni);
+        (*jni)->ExceptionClear(jni);
+        return;
+    }
+}
+
+JNIEXPORT void JNICALL
+Java_org_minijvm_activity_JvmNativeActivity_onPhotoPicked(JNIEnv *env, jclass type, jint uid_,
+                                                          jstring path_, jbyteArray data_) {
+    const char *path = (*env)->GetStringUTFChars(env, path_, 0);
+    jbyte *data = NULL;
+    int len = 0;
+    if (data_) {
+        data = (*env)->GetByteArrayElements(env, data_, NULL);
+        len = (*env)->GetArrayLength(env, data_);
+    }
+    //
+    if (platformDataGlobal && platformDataGlobal->app) {
+        if (platformDataGlobal->display && platformDataGlobal->display->charFunc) {
+            platformDataGlobal->display->pickerFunc(platformDataGlobal->display, uid_, path, data,
+                                                    len);
+        }
+    }
+
+    (*env)->ReleaseStringUTFChars(env, path_, path);
+    if (data)(*env)->ReleaseByteArrayElements(env, data_, data, 0);
 }
 
 #endif
