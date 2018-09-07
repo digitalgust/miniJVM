@@ -244,7 +244,7 @@ _callback_photo_picked(GLFMDisplay *window, s32 uid, const c8 *url, c8 *data, s3
         Instance *jstr_url = createJavaString(runtime, url);
         Instance *jarr = NULL;
         if (data) {
-            env->jarray_create_by_type_index(runtime, length, DATATYPE_BYTE);
+            jarr = env->jarray_create_by_type_index(runtime, length, DATATYPE_BYTE);
             memcpy(jarr->arr_body, data, length);
         }
         env->push_ref(runtime->stack, refers.glfm_callback);
@@ -638,29 +638,40 @@ int org_mini_glfm_Glfm_glfmSetClipBoardContent(Runtime *runtime, JClass *clazz) 
 
 int org_mini_glfm_Glfm_glfmPickPhotoAlbum(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
-    s32 uid = env->localvar_getInt(runtime->localvar, 0);
-    s32 type = env->localvar_getInt(runtime->localvar, 1);
-    pickPhotoAlbum(uid, type);
+    s32 pos=0;
+    GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos+=2;
+    s32 uid = env->localvar_getInt(runtime->localvar, pos++);
+    s32 type = env->localvar_getInt(runtime->localvar, pos++);
+    pickPhotoAlbum(window, uid, type);
     return 0;
 }
 
 int org_mini_glfm_Glfm_glfmPickPhotoCamera(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
-    s32 uid = env->localvar_getInt(runtime->localvar, 0);
-    s32 type = env->localvar_getInt(runtime->localvar, 1);
-    pickPhotoCamera(uid, type);
+    s32 pos=0;
+    GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos+=2;
+    s32 uid = env->localvar_getInt(runtime->localvar, pos++);
+    s32 type = env->localvar_getInt(runtime->localvar, pos++);
+    pickPhotoCamera(window, uid, type);
     return 0;
 }
 
 int org_mini_glfm_Glfm_glfmImageCrop(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
-    s32 uid = env->localvar_getInt(runtime->localvar, 0);
-    Instance *jstr = env->localvar_getRefer(runtime->localvar, 1);
+    s32 pos=0;
+    GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos+=2;
+    s32 uid = env->localvar_getInt(runtime->localvar, pos++);
+    Instance *jstr = env->localvar_getRefer(runtime->localvar, pos++);
     Utf8String *ustr = utf8_create();
     env->jstring_2_utf8(jstr, ustr);
-    s32 w = env->localvar_getInt(runtime->localvar, 2);
-    s32 h = env->localvar_getInt(runtime->localvar, 3);
-    imageCrop(uid, utf8_cstr(ustr), w, h);
+    s32 x = env->localvar_getInt(runtime->localvar, pos++);
+    s32 y = env->localvar_getInt(runtime->localvar, pos++);
+    s32 w = env->localvar_getInt(runtime->localvar, pos++);
+    s32 h = env->localvar_getInt(runtime->localvar, pos++);
+    imageCrop(window, uid, utf8_cstr(ustr),x, y, w, h);
     utf8_destory(ustr);
     return 0;
 }
@@ -1162,9 +1173,9 @@ static java_native_method method_glfm_table[] = {
         {"org/mini/glfm/Glfm",        "glfmGetSaveRoot",                 "()Ljava/lang/String;",             org_mini_glfm_Glfm_glfmGetSaveRoot},
         {"org/mini/glfm/Glfm",        "glfmGetClipBoardContent",         "()Ljava/lang/String;",             org_mini_glfm_Glfm_glfmGetClipBoardContent},
         {"org/mini/glfm/Glfm",        "glfmSetClipBoardContent",         "(Ljava/lang/String;)V",            org_mini_glfm_Glfm_glfmSetClipBoardContent},
-        {"org/mini/glfm/Glfm",        "glfmPickPhotoAlbum",              "(II)V",                            org_mini_glfm_Glfm_glfmPickPhotoAlbum},
-        {"org/mini/glfm/Glfm",        "glfmPickPhotoCamera",             "(II)V",                             org_mini_glfm_Glfm_glfmPickPhotoCamera},
-        {"org/mini/glfm/Glfm",        "glfmImageCrop",                   "(ILjava/lang/String;II)V",         org_mini_glfm_Glfm_glfmImageCrop},
+        {"org/mini/glfm/Glfm",        "glfmPickPhotoAlbum",              "(JII)V",                            org_mini_glfm_Glfm_glfmPickPhotoAlbum},
+        {"org/mini/glfm/Glfm",        "glfmPickPhotoCamera",             "(JII)V",                             org_mini_glfm_Glfm_glfmPickPhotoCamera},
+        {"org/mini/glfm/Glfm",        "glfmImageCrop",                   "(JILjava/lang/String;IIII)V",         org_mini_glfm_Glfm_glfmImageCrop},
 
 };
 

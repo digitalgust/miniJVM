@@ -33,6 +33,7 @@ abstract public class GObject {
     public static final int TYPE_TEXTBOX = 14;
     public static final int TYPE_TEXTFIELD = 15;
     public static final int TYPE_VIEWPORT = 16;
+    public static final int TYPE_IMAGEITEM = 17;
 
     //
     public static final int ALIGN_H_FULL = 1;
@@ -158,6 +159,9 @@ abstract public class GObject {
 
     public void KeyboardPopEvent(boolean visible, float x, float y, float w, float h) {
 
+    }
+
+    public void onPhotoPicked(int uid, String url, byte[] data) {
     }
 
     /**

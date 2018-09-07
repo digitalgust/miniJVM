@@ -48,4 +48,8 @@ public class GlfmCallBackAdapter implements GlfmCallBack {
     public void onAppFocus(long display, boolean focused) {
     }
 
+    
+    @Override
+    public void onPhotoPicked(long display, int uid, String url, byte[] data){
+    }
 }

@@ -307,11 +307,12 @@ NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__); } whil
     return CGSizeMake(newDrawableWidth, newDrawableHeight);
 }
 
+
 @end
 
 #pragma mark - GLFMViewController
 
-@interface GLFMViewController : UIViewController<UIKeyInput, UITextInputTraits> {
+@interface GLFMViewController : UIViewController<UIKeyInput, UITextInputTraits, UIImagePickerControllerDelegate,UINavigationControllerDelegate> {
     const void *activeTouches[MAX_SIMULTANEOUS_TOUCHES];
 }
 
@@ -323,7 +324,14 @@ NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__); } whil
 @property(nonatomic, assign) BOOL keyboardRequested;
 @property(nonatomic, assign) BOOL keyboardVisible;
 @property(nonatomic, assign) BOOL surfaceCreatedNotified;
+@property(nonatomic, assign) int pickerUid;
+@property(nonatomic, assign) int pickerType;
 
+- (void)takePhotoAction:(int) puid:(int)type;
+- (void)browseAlbum:(int) puid:(int)type;
++ (UIImage *)cropImage:(UIImage *)image inRect:(CGRect)rect;
++ (UIImage *)resizeCropImage:(UIImage *)image toRect:(CGSize)size;
++ (UIImage *)resizeImage:(UIImage *)image toSize:(CGSize)reSize;
 @end
 
 @implementation GLFMViewController
@@ -752,6 +760,147 @@ NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__); } whil
     }
 }
 
+
+
+
+#pragma mark - 拍照并保存
+- (void)takePhotoAction:(int) puid:(int) type {
+    //    BOOL isCamera = [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceRear];
+    BOOL isCamera =  [UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera];
+    if (!isCamera) { //若不可用，弹出警告框
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"No Camera" message:nil delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
+        [alert show];
+        return;
+    }
+    _pickerUid=puid;
+    _pickerType=type;
+    UIImagePickerController *imagePicker = [[UIImagePickerController alloc] init];
+    imagePicker.sourceType = UIImagePickerControllerSourceTypeCamera;
+    /**
+     *      UIImagePickerControllerSourceTypePhotoLibrary  ->所有资源文件夹
+     UIImagePickerControllerSourceTypeCamera        ->摄像头
+     UIImagePickerControllerSourceTypeSavedPhotosAlbum ->内置相册
+     */
+    imagePicker.delegate = self;    //设置代理，遵循UINavigationControllerDelegate,UIImagePickerControllerDelegate协议
+    [self presentViewController:imagePicker animated:YES completion:nil];
+    
+}
+
+#pragma mark - 访问相册
+- (void)browseAlbum:(int) puid:(int) type {
+    UIImagePickerController *imagePicker = [[UIImagePickerController alloc] init];
+    _pickerUid=puid;
+    _pickerType=type;
+    imagePicker.sourceType = UIImagePickerControllerSourceTypeSavedPhotosAlbum;
+    imagePicker.delegate = self;
+    [self presentViewController:imagePicker animated:YES completion:nil];
+}
+
+#pragma mark - 协议方法的实现
+//协议方法，选择完毕以后，呈现在imageShow里面
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
+    //NSLog(@"%@",info);  //UIImagePickerControllerMediaType,UIImagePickerControllerOriginalImage,UIImagePickerControllerReferenceURL
+    NSString *mediaType = info[@"UIImagePickerControllerMediaType"];
+    if ([mediaType isEqualToString:@"public.image"]) {  //判断是否为图片
+        
+        UIImage *image = [info objectForKey:UIImagePickerControllerOriginalImage];
+        if(_pickerType==0){//autofit
+            float iw=image.size.width;
+            float ih=image.size.height;
+            float ratio=1024;
+            float scale=iw/ratio>ih/ratio?(iw/ratio):(ih/ratio);
+            image = [GLFMViewController resizeImage:image toSize:(CGSize)CGSizeMake(iw/scale, ih/scale)];
+        }
+        
+        NSData *data=UIImageJPEGRepresentation(image, 0.75);
+        //self.imageShow.image = image;
+        
+        NSURL *nsurl=[info objectForKey:UIImagePickerControllerImageURL];
+        NSString *nss=[nsurl path];
+        const char* url=[nss UTF8String];
+        
+        char *cd=(char*)[data bytes];
+        int len=(int)[data length];
+        _glfmDisplay->pickerFunc(_glfmDisplay, _pickerUid, url, cd, len);
+
+        //通过判断picker的sourceType，如果是拍照则保存到相册去
+        if (picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
+            UIImageWriteToSavedPhotosAlbum(image, self, @selector(image:didFinishSavingWithError:contextInfo:), nil);
+        }
+    }
+    //  else  当然可能是视频，这里不作讨论~方法是类似的~
+    [picker dismissViewControllerAnimated:YES completion:nil];
+}
+
+//此方法就在UIImageWriteToSavedPhotosAlbum的上方
+- (void)image:(UIImage *)image didFinishSavingWithError:(NSError *)error contextInfo:(void *)contextInfo {
+    NSLog(@"Image Saved");
+}
+
+
++(UIImage *)cropImage:(UIImage *)image inRect:(CGRect)rect{
+    
+    //将UIImage转换成CGImageRef
+    CGImageRef sourceImageRef = [image CGImage];
+    
+    //按照给定的矩形区域进行剪裁
+    CGImageRef newImageRef = CGImageCreateWithImageInRect(sourceImageRef, rect);
+    
+    //将CGImageRef转换成UIImage
+    UIImage *newImage = [UIImage imageWithCGImage:newImageRef];
+    
+    // 调用这个方法 否则会造成内存泄漏 楼主可以检测下
+    CGImageRelease(newImageRef);
+    
+    //返回剪裁后的图片
+    return newImage;
+}
+
+/**
+ *根据给定的size的宽高比自动缩放原图片、自动判断截取位置,进行图片截取
+ * UIImage image 原始的图片
+ * CGSize size 截取图片的size
+ */
++(UIImage *)resizeCropImage:(UIImage *)image toRect:(CGSize)size{
+    
+    //被切图片宽比例比高比例小 或者相等，以图片宽进行放大
+    if (image.size.width*size.height <= image.size.height*size.width) {
+        
+        //以被剪裁图片的宽度为基准，得到剪切范围的大小
+        CGFloat width  = image.size.width;
+        CGFloat height = image.size.width * size.height / size.width;
+        
+        // 调用剪切方法
+        // 这里是以中心位置剪切，也可以通过改变rect的x、y值调整剪切位置
+        return [GLFMViewController cropImage:image inRect:CGRectMake(0, (image.size.height -height)/2, width, height)];
+        
+    }else{ //被切图片宽比例比高比例大，以图片高进行剪裁
+        
+        // 以被剪切图片的高度为基准，得到剪切范围的大小
+        CGFloat width  = image.size.height * size.width / size.height;
+        CGFloat height = image.size.height;
+        
+        // 调用剪切方法
+        // 这里是以中心位置剪切，也可以通过改变rect的x、y值调整剪切位置
+        return [GLFMViewController cropImage:image inRect:CGRectMake((image.size.width -width)/2, 0, width, height)];
+    }
+    return nil;
+}
+
++ (UIImage *)resizeImage:(UIImage *)image toSize:(CGSize)reSize{
+    
+    UIGraphicsBeginImageContext(CGSizeMake(reSize.width, reSize.height));
+    
+    [image drawInRect:CGRectMake(0, 0, reSize.width, reSize.height)];
+    
+    UIImage *reSizeImage = UIGraphicsGetImageFromCurrentImageContext();
+    
+    UIGraphicsEndImageContext();
+    
+    return reSizeImage;
+    
+}
+
 @end
 
 #pragma mark - Application Delegate
@@ -1011,5 +1160,38 @@ void setClipBoardContent(const char *str){
     UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
     pasteboard.string = nstr;
 }
+
+
+void pickPhotoAlbum(GLFMDisplay *display, int uid, int type){
+    if (display) {
+        GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
+        [vc browseAlbum:uid:type];
+    }
+}
+
+void pickPhotoCamera(GLFMDisplay *display, int uid, int type){
+    if (display) {
+        GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
+        [vc takePhotoAction:uid:type];
+    }
+    
+}
+
+void imageCrop(GLFMDisplay *display, int uid, const char *cpath,int x,int y, int width, int height){
+    if (display) {
+        GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
+        NSString *path = [[NSString alloc] initWithCString:cpath encoding:NSUTF8StringEncoding];
+        NSURL *url = [NSURL URLWithString:path];
+        NSData *data = [NSData dataWithContentsOfURL:url];
+        UIImage *img = [[UIImage alloc] initWithData:data];
+        UIImage *image=[GLFMViewController cropImage:(UIImage *)img inRect:(CGRect)CGRectMake(x,y,width,height)];
+        NSData *datajpg=UIImageJPEGRepresentation(image, 0.75);
+        
+        char *cd=(char*)[datajpg bytes];
+        int len=(int)[datajpg length];
+        display->pickerFunc(display,vc.pickerUid, NULL, cd, len);
+    }
+}
+
 
 #endif

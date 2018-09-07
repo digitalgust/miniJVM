@@ -37,5 +37,7 @@ public interface GlfmCallBack {
     public void onMemWarning(long display);
 
     public void onAppFocus(long display, boolean focused);
+    
+    public void onPhotoPicked(long display, int uid, String url, byte[] data);
 
 }

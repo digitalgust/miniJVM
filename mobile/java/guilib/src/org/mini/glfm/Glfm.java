@@ -139,9 +139,15 @@ public class Glfm {
     public static native String glfmGetResRoot();
 
     public static native String glfmGetSaveRoot();
-    
+
     public static native String glfmGetClipBoardContent();
-    
+
     public static native void glfmSetClipBoardContent(String str);
+
+    public static native void glfmPickPhotoAlbum(long display, int uid,int type);
+
+    public static native void glfmPickPhotoCamera(long display, int uid,int type);
+
+    public static native void glfmImageCrop(long display, int uid, String uris,int x,int y, int width, int height);
 
 }

@@ -25,6 +25,7 @@ import static org.mini.nanovg.Nanovg.access_mem;
 import static org.mini.nanovg.Nanovg.stbi_image_free;
 import static org.mini.nanovg.Nanovg.stbi_load;
 import org.mini.reflect.ReflectArray;
+import org.mini.reflect.vm.RefNative;
 
 /**
  *
@@ -214,43 +215,105 @@ public class Gutil {
         }
         return barr;
     }
-
-    /**
-     * load image return opengl GL_TEXTURE_2D id
-     *
-     * @param filename
-     * @param w_h_d new int[3] for image w,h,bit depth
-     * @return
-     */
-    public static int image_load(String filename, int[] w_h_d) {
-        int[] x = {0}, y = {0}, n = {0};
-        int[] tex = {0};
-        byte[] b = toUtf8(filename);
-        long data = stbi_load(b, x, y, n, 0);
-        if (data == 0) {
-            System.out.println("ERROR: failed to load image: " + filename);
-            return -1;
-        }
-        w_h_d[0] = x[0];
-        w_h_d[1] = y[0];
-        w_h_d[2] = n[0];
-        byte[] d = new byte[x[0] * y[0] * n[0]];
-        for (int i = 0, imax = d.length; i < imax; i++) {
-            d[i] = access_mem(data + i);
-        }
-        glGenTextures(1, tex, 0);
-        glBindTexture(GL_TEXTURE_2D, tex[0]);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        GL.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, x[0], y[0], 0, GL_RGBA, GL_UNSIGNED_BYTE, d, 0);
-//        glGenerateMipmap(GL_TEXTURE_2D);
-//    printf("x=%d,y=%d,n=%d\n", x, y, n);
-
-        stbi_image_free(data);
-        return tex[0];
-    }
+//
+//    /**
+//     * load image return opengl GL_TEXTURE_2D id
+//     *
+//     * @param filename
+//     * @param w_h_d new int[3] for image w,h,bit depth
+//     * @return
+//     */
+//    public static int image_load(String filename, int[] w_h_d) {
+//        int[] x = {0}, y = {0}, n = {0};
+//        int[] tex = {0};
+//        byte[] b = toUtf8(filename);
+//        long data = stbi_load(b, x, y, n, 0);
+//        if (data == 0) {
+//            System.out.println("ERROR: failed to load image: " + filename);
+//            return -1;
+//        }
+//        w_h_d[0] = x[0];
+//        w_h_d[1] = y[0];
+//        w_h_d[2] = n[0];
+//
+//        //find pow 2
+//        int w = x[0];
+//        int h = y[0];
+//        int de = n[0];
+//        int align = 16;
+//        while (w > align && h > align) {
+//            align <<= 1;
+//        }
+//        byte[] d = new byte[align * align * n[0]];
+//        for (int i = 0; i < h; i++) {
+//            for (int j = 0; j < w; j++) {
+//                for (int k = 0; k < de; k++) {
+//                    int srcPos = i * h * k + j * k + k;
+//                    int dstPos = i * align * k + j * k + k;
+//                    d[dstPos] = access_mem(data + srcPos);
+//                }
+//            }
+//        }
+//        glGenTextures(1, tex, 0);
+//        glBindTexture(GL_TEXTURE_2D, tex[0]);
+//        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+//        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+//        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+//        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+//        GL.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, x[0], y[0], 0, GL_RGBA, GL_UNSIGNED_BYTE, d, 0);
+////        glGenerateMipmap(GL_TEXTURE_2D);
+////    printf("x=%d,y=%d,n=%d\n", x, y, n);
+//
+//        stbi_image_free(data);
+//        return tex[0];
+//    }
+//
+//    public static int image_load(byte[] fileCont, int[] w_h_d) {
+//        int[] x = {0}, y = {0}, n = {0};
+//        int[] tex = {0};
+//        long ptr = new ReflectArray(RefNative.obj2id(fileCont)).getDataPtr();
+//        long data = Nanovg.stbi_load_from_memory(ptr, fileCont.length, x, y, n, 0);
+//        if (data == 0) {
+//            System.out.println("ERROR: failed to load image: " + fileCont);
+//            return -1;
+//        }
+//        w_h_d[0] = x[0];
+//        w_h_d[1] = y[0];
+//        w_h_d[2] = n[0];
+//
+//        //find pow 2
+//        int w = x[0];
+//        int h = y[0];
+//        int de = n[0];
+//        int align = 16;
+//        while (w > align && h > align) {
+//            align <<= 1;
+//        }
+//        byte[] d = new byte[align * align * n[0]];
+//        for (int i = 0; i < h; i++) {
+//            for (int j = 0; j < w; j++) {
+//                for (int k = 0; k < de; k++) {
+//                    int srcPos = i * h * k + j * k + k;
+//                    int dstPos = i * align * k + j * k + k;
+//                    d[dstPos] = access_mem(data + srcPos);
+//                }
+//            }
+//        }
+//
+//        glGenTextures(1, tex, 0);
+//        glBindTexture(GL_TEXTURE_2D, tex[0]);
+//        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+//        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+//        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+//        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+//        GL.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, x[0], y[0], 0, GL_RGBA, GL_UNSIGNED_BYTE, d, 0);
+////        glGenerateMipmap(GL_TEXTURE_2D);
+////    printf("x=%d,y=%d,n=%d\n", x, y, n);
+//
+//        stbi_image_free(data);
+//        return tex[0];
+//
+//    }
 
     static public int genTexture2D(byte[] data, int w, int h, int gl_inner_format, int gl_format) {
         int[] tex = {0};

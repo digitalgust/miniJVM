@@ -372,11 +372,11 @@ const char *getClipBoardContent();
 
 void setClipBoardContent(const char *str);
 
-void pickPhotoAlbum(int uid, int type);
+void pickPhotoAlbum(GLFMDisplay *display, int uid, int type);
 
-void pickPhotoCamera(int uid, int type);
+void pickPhotoCamera(GLFMDisplay *display, int uid, int type);
 
-void imageCrop(int uid, const char *uri, int width, int height);
+void imageCrop(GLFMDisplay *display, int uid, const char *uri,int x,int y, int width, int height);
 
 #if defined(GLFM_PLATFORM_ANDROID)
 

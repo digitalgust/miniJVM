@@ -231,6 +231,14 @@ public class GuiCallBack extends GlfmCallBackAdapter {
         if (gform == null) {
             return;
         }
+        
+        fbWidth = Glfm.glfmGetDisplayWidth(display);
+        fbHeight = Glfm.glfmGetDisplayHeight(display);
+        // Calculate pixel ration for hi-dpi devices.
+        pxRatio = (float) Glfm.glfmGetDisplayScale(display);
+        winWidth = (int) (fbWidth / pxRatio);
+        winHeight = (int) (fbHeight / pxRatio);
+        
         gform.boundle[GObject.WIDTH] = width;
         gform.boundle[GObject.HEIGHT] = height;
         gform.flush();
@@ -256,4 +264,11 @@ public class GuiCallBack extends GlfmCallBackAdapter {
         gform.KeyboardPopEvent(visible, (float) x, (float) y, (float) w, (float) h);
     }
 
+    @Override
+    public void onPhotoPicked(long display, int uid, String url, byte[] data) {
+        if (gform == null) {
+            return;
+        }
+        gform.onPhotoPicked(uid, url, data);
+    }
 }

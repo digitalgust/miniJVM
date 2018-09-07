@@ -86,7 +86,7 @@ public class GForm extends GViewPort {
     }
 
     public long getNvContext() {
-        return vg;
+        return callback.getNvContext();
     }
 
     public long getWinContext() {

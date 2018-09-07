@@ -5,9 +5,9 @@
  */
 package org.mini.gui;
 
-import org.mini.reflect.ReflectArray;
-import org.mini.reflect.vm.RefNative;
+import org.mini.gl.GL;
 import org.mini.nanovg.Gutil;
+import org.mini.nanovg.Nanovg;
 
 /**
  * 装入图片文件或使用纹理图片生成一个GImage对象 load image or generate texture GImage
@@ -17,7 +17,6 @@ import org.mini.nanovg.Gutil;
 public class GImage {
 
     int texture;
-    ReflectArray refectArr;
     int[] w_h_d = new int[3];
 
     public GImage(int textureid, int w, int h) {
@@ -26,12 +25,27 @@ public class GImage {
         w_h_d[1] = h;
     }
 
-    public GImage(String filepath) {
-        texture = Gutil.image_load(filepath, w_h_d);
+    static public GImage createImage(long vg, String filepath) {
+        if (filepath == null) {
+            return null;
+        }
+        int tex = Nanovg.nvgCreateImage(vg, Gutil.toUtf8(filepath), 0);
+        int[] w = new int[1];
+        int[] h = new int[1];
+        Nanovg.nvgImageSize(vg, tex, w, h);
+        GImage img = new GImage(tex, w[0], h[0]);
+        return img;
     }
 
-    static public GImage createImage(String filepath) {
-        GImage img = new GImage(filepath);
+    static public GImage createImage(long vg, byte[] data) {
+        if (data == null) {
+            return null;
+        }
+        int tex = Nanovg.nvgCreateImageMem(vg, 0, data, data.length);
+        int[] w = new int[1];
+        int[] h = new int[1];
+        Nanovg.nvgImageSize(vg, tex, w, h);
+        GImage img = new GImage(tex, w[0], h[0]);
         return img;
     }
 
@@ -47,11 +61,12 @@ public class GImage {
         return w_h_d[2];
     }
 
-    public long getDataPtr() {
-        return refectArr.getDataPtr();
-    }
-
     public int getTexture() {
         return texture;
+    }
+
+    @Override
+    public void finalize() {
+        GL.glDeleteTextures(1, new int[]{texture}, 0);
     }
 }
