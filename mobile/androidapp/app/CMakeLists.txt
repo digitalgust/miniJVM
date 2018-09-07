@@ -34,6 +34,7 @@ set(GUI_SOURCE_FILES
 	../../c/gui/jni_gui.c
 	../../c/gui/jni_glfm.c
 	../../c/gui/jni_gl.c
+	../../c/glfm/glfm.h
 )
 
 set(MINI_JVM_SOURCE_FILES

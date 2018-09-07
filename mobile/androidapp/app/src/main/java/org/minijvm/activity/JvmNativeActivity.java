@@ -6,6 +6,7 @@ import android.content.ClipboardManager;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -15,7 +16,9 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -91,7 +94,8 @@ public class JvmNativeActivity extends NativeActivity {
     private static final int CAMERA_CODE = 1;
     private static final int GALLERY_CODE = 2;
     private static final int CROP_CODE = 3;
-    static final String UNICODE_OF_REQUEST_KEY = "UID";
+    static final String UNICODE_OF_REQUEST_UID = "PICK_UID";
+    static final String UNICODE_OF_REQUEST_TYPE = "PICK_TYPE";
     //用于展示选择的图片
     private ImageView mImageView;
 
@@ -104,7 +108,8 @@ public class JvmNativeActivity extends NativeActivity {
     public void pickFromCamera(int uid, int type) {
         //构建隐式Intent
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        intent.putExtra(UNICODE_OF_REQUEST_KEY, uid);
+        intent.putExtra(UNICODE_OF_REQUEST_UID, uid);
+        intent.putExtra(UNICODE_OF_REQUEST_TYPE, type);
         //调用系统相机
         startActivityForResult(intent, CAMERA_CODE);
     }
@@ -115,7 +120,8 @@ public class JvmNativeActivity extends NativeActivity {
     public void pickFromAlbum(int uid, int type) {
         //构建一个内容选择的Intent
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.putExtra("UID", uid);
+        intent.putExtra(UNICODE_OF_REQUEST_UID, uid);
+        intent.putExtra(UNICODE_OF_REQUEST_TYPE, type);
         //设置选择类型为图片类型
         intent.setType("image/*");
         //打开图片选择
@@ -127,7 +133,7 @@ public class JvmNativeActivity extends NativeActivity {
      *
      * @param uris
      */
-    public void imageCrop(int uid, String uris, int width, int height) {
+    public void imageCrop(int uid, String uris, int x, int y, int width, int height) {
         //构建隐式Intent来启动裁剪程序
         Intent intent = new Intent("com.android.camera.action.CROP");
         //设置数据uri和类型为图片类型
@@ -143,7 +149,7 @@ public class JvmNativeActivity extends NativeActivity {
         intent.putExtra("outputY", height);
         //裁剪之后的数据是通过Intent返回
         intent.putExtra("return-data", true);
-        intent.putExtra(UNICODE_OF_REQUEST_KEY, uid);
+        intent.putExtra(UNICODE_OF_REQUEST_UID, uid);
         startActivityForResult(intent, CROP_CODE);
 
     }
@@ -160,9 +166,13 @@ public class JvmNativeActivity extends NativeActivity {
                     if (extras != null) {
                         //获得拍的照片
                         Bitmap bm = extras.getParcelable("data");
+                        int uid = data.getIntExtra(UNICODE_OF_REQUEST_UID, -1);
+                        int type = data.getIntExtra(UNICODE_OF_REQUEST_TYPE, -1);
+                        if (type == 0) {
+                            bm = resizeImage(bm);
+                        }
                         //将Bitmap转化为uri
                         Uri uri = saveImage(bm, getPhotoStorage());
-                        int uid = data.getIntExtra(UNICODE_OF_REQUEST_KEY, -1);
                         //启动图像裁剪
                         //imageCrop(uri, uid);
                         onPhotoPicked(uid, uri.getPath(), null);
@@ -177,11 +187,15 @@ public class JvmNativeActivity extends NativeActivity {
                     Uri uri;
                     //获取到用户所选图片的Uri
                     uri = data.getData();
-                    int uid = data.getIntExtra(UNICODE_OF_REQUEST_KEY, -1);
+                    int uid = data.getIntExtra(UNICODE_OF_REQUEST_UID, -1);
+                    int type = data.getIntExtra(UNICODE_OF_REQUEST_TYPE, -1);
                     //返回的Uri为content类型的Uri,不能进行复制等操作,需要转换为文件Uri
                     uri = convertUri(uri);
-                    //imageCrop(uri, uid);
-
+                    if (type == 0) {
+                        Bitmap bm = BitmapFactory.decodeFile(uri.getPath());
+                        bm = resizeImage(bm);
+                        uri = saveImage(bm, getPhotoStorage());
+                    }
                     onPhotoPicked(uid, uri.getPath(), null);
                 }
                 break;
@@ -193,7 +207,7 @@ public class JvmNativeActivity extends NativeActivity {
                     if (extras != null) {
                         //获取到裁剪后的图像
                         Bitmap bm = extras.getParcelable("data");
-                        int uid = data.getIntExtra(UNICODE_OF_REQUEST_KEY, -1);
+                        int uid = data.getIntExtra(UNICODE_OF_REQUEST_UID, -1);
                         //mImageView.setImageBitmap(bm);
                         Uri uri = saveImage(bm, getPhotoStorage());
                         onPhotoPicked(uid, uri.getPath(), null);
@@ -232,6 +246,21 @@ public class JvmNativeActivity extends NativeActivity {
         }
     }
 
+    private Bitmap resizeImage(Bitmap bm) {
+        float iw = bm.getWidth();
+        float ih = bm.getHeight();
+        float ratio = 1024;
+        float scale = iw / ratio > ih / ratio ? (iw / ratio) : (ih / ratio);
+        if (scale > 1) {
+            Matrix matrix = new Matrix();
+            matrix.postScale(1 / scale, 1 / scale);
+            // 得到新的图片
+            Bitmap newbm = Bitmap.createBitmap(bm, 0, 0, (int) iw, (int) ih, matrix, true);
+            return newbm;
+        }
+        return bm;
+    }
+
     /**
      * 将Bitmap写入SD卡中的一个文件中,并返回写入文件的Uri
      *
@@ -248,7 +277,7 @@ public class JvmNativeActivity extends NativeActivity {
             //打开文件输出流
             FileOutputStream fos = new FileOutputStream(img);
             //将bitmap压缩后写入输出流(参数依次为图片格式、图片质量和输出流)
-            bm.compress(Bitmap.CompressFormat.PNG, 85, fos);
+            bm.compress(Bitmap.CompressFormat.JPEG, 75, fos);
             //刷新输出流
             fos.flush();
             //关闭输出流
@@ -269,13 +298,24 @@ public class JvmNativeActivity extends NativeActivity {
         SimpleDateFormat sdf = new SimpleDateFormat();
         sdf.applyPattern("yyyyMMdd_HHmmsss");
         StringBuilder result = new StringBuilder("IMG_");
-        result.append(sdf.format(new Date())).append((System.currentTimeMillis() % 1000))
-                .append(".png");
+        result.append(sdf.format(new Date())).append("_").append((System.currentTimeMillis() % 1000))
+                .append(".jpeg");
         return result.toString();
     }
 
-    private void imageCrop(Uri uri, int uid) {
-        imageCrop(uid, uri.getPath(), 150, 150);
+    private byte[] getFileData(Uri uri) {
+        try {
+            File f = new File(uri.getPath());
+            if (f.exists()) {
+                FileInputStream fis = new FileInputStream(f);
+                byte[] b = new byte[(int) f.length()];
+                fis.read(b);
+                return b;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 

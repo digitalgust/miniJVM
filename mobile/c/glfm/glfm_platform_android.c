@@ -1621,7 +1621,7 @@ void setClipBoardContent(const char *str) {
     }
 }
 
-void pickPhotoAlbum(int uid, int type) {
+void pickPhotoAlbum(GLFMDisplay *display, int uid, int type) {
     struct android_app *app = platformDataGlobal->app;
     GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
     JNIEnv *jni = platformData->jniEnv;
@@ -1639,7 +1639,7 @@ void pickPhotoAlbum(int uid, int type) {
     }
 }
 
-void pickPhotoCamera(int uid, int type) {
+void pickPhotoCamera(GLFMDisplay *display, int uid, int type) {
     struct android_app *app = platformDataGlobal->app;
     GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
     JNIEnv *jni = platformData->jniEnv;
@@ -1657,7 +1657,7 @@ void pickPhotoCamera(int uid, int type) {
     }
 }
 
-void imageCrop(int uid, const char *uri, int width, int height) {
+void imageCrop(GLFMDisplay *display,int uid, const char *uri, int x, int y, int width, int height) {
     struct android_app *app = platformDataGlobal->app;
     GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
     JNIEnv *jni = platformData->jniEnv;
@@ -1668,7 +1668,7 @@ void imageCrop(int uid, const char *uri, int width, int height) {
     }
     jstring jstr = (*jni)->NewStringUTF(jni, uri);
     _glfmCallJavaMethodWithArgs(jni, app->activity->clazz, "imageCrop",
-                                "(Ljava/lang/String;III)V", Void, uid, jstr, width, height);
+                                "(ILjava/lang/String;IIII)V", Void, uid, jstr, x, y, width, height);
     if ((*jni)->ExceptionCheck(jni)) {
         (*jni)->ExceptionDescribe(jni);
         (*jni)->ExceptionClear(jni);
