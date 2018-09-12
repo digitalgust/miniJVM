@@ -384,16 +384,5 @@ abstract public class GContainer extends GObject {
         }
     }
 
-    @Override
-    public void KeyboardPopEvent(boolean visible, float x, float y, float w, float h) {
-        for (GObject go : elements) {
-            go.KeyboardPopEvent(visible, x, y, w, h);
-        }
-    }
 
-    public void onPhotoPicked(int uid, String url, byte[] data) {
-        if (focus != null) {
-            focus.onPhotoPicked(uid, url, data);
-        }
-    }
 }

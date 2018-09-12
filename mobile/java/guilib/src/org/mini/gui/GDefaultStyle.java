@@ -63,7 +63,7 @@ public class GDefaultStyle implements GStyle {
         return hintFontColor;
     }
 
-    float[] editBackground = nvgRGBA(20, 20, 20, 192);
+    float[] editBackground = nvgRGBA(0, 0, 0, 32);
 
     @Override
     public float[] getEditBackground() {
@@ -80,13 +80,13 @@ public class GDefaultStyle implements GStyle {
         // Edit
         bg = nvgBoxGradient(vg, x, y, w, h, 3, 4, getEditBackground(), nvgRGBA(32, 32, 32, 192));
         nvgBeginPath(vg);
-        nvgRoundedRect(vg, x, y, w, h, 4 - 1);
+        nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, 4 - 1);
         nvgFillPaint(vg, bg);
         nvgFill(vg);
 
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, 4 - 0.5f);
-        nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 48));
+        nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 16));
         nvgStroke(vg);
     }
 

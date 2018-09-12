@@ -16,6 +16,8 @@ import static org.mini.gl.GL.glClearColor;
 import static org.mini.gl.GL.glViewport;
 import org.mini.glfm.Glfm;
 import static org.mini.gui.GToolkit.nvgRGBA;
+import org.mini.gui.event.GKeyboardShowListener;
+import org.mini.gui.event.GPhotoPickedListener;
 import org.mini.nanovg.Gutil;
 import org.mini.nanovg.Nanovg;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_MIDDLE;
@@ -47,6 +49,9 @@ public class GForm extends GViewPort {
     //
     boolean premult;
 
+    GPhotoPickedListener pickListener;
+    GKeyboardShowListener keyshowListener;
+
     Timer timer = new Timer(true);//用于更新画面，UI系统采取按需刷新的原则
 
     public GForm(String title, int width, int height, GuiCallBack ccb) {
@@ -63,7 +68,7 @@ public class GForm extends GViewPort {
 
         setLocation(0, 0);
         setSize(winWidth, winHeight);
-        
+
         setViewLocation(0, 0);
         setViewSize(winWidth, winHeight);
 
@@ -202,6 +207,46 @@ public class GForm extends GViewPort {
 
     public void setFps(float fps) {
         fpsExpect = fps;
+    }
+
+    public void onPhotoPicked(int uid, String url, byte[] data) {
+        if (pickListener != null) {
+            pickListener.onPicked(uid, url, data);
+        }
+    }
+
+    /**
+     * @return the pickListener
+     */
+    public GPhotoPickedListener getPickListener() {
+        return pickListener;
+    }
+
+    /**
+     * @param pickListener the pickListener to set
+     */
+    public void setPickListener(GPhotoPickedListener pickListener) {
+        this.pickListener = pickListener;
+    }
+
+    public void KeyboardPopEvent(boolean visible, float x, float y, float w, float h) {
+        if (keyshowListener != null) {
+            keyshowListener.keyboardShow(visible, x, y, w, h);
+        }
+    }
+
+    /**
+     * @return the keyshowListener
+     */
+    public GKeyboardShowListener getKeyshowListener() {
+        return keyshowListener;
+    }
+
+    /**
+     * @param keyshowListener the keyshowListener to set
+     */
+    public void setKeyshowListener(GKeyboardShowListener keyshowListener) {
+        this.keyshowListener = keyshowListener;
     }
 
 }

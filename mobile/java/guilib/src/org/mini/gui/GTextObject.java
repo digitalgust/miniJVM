@@ -243,27 +243,4 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         }
         //System.out.println("edit menu dispose");
     }
-
-    GKeyboardShowListener keyshowListener;
-
-    @Override
-    public void KeyboardPopEvent(boolean visible, float x, float y, float w, float h) {
-        if (keyshowListener != null) {
-            keyshowListener.keyboardShow(visible, x, y, w, h);
-        }
-    }
-
-    /**
-     * @return the keyshowListener
-     */
-    public GKeyboardShowListener getKeyshowListener() {
-        return keyshowListener;
-    }
-
-    /**
-     * @param keyshowListener the keyshowListener to set
-     */
-    public void setKeyshowListener(GKeyboardShowListener keyshowListener) {
-        this.keyshowListener = keyshowListener;
-    }
 }

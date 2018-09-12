@@ -30,6 +30,7 @@ import static org.mini.nanovg.Nanovg.nvgTextMetrics;
 public class GMenu extends GPanel {
 
     float[] lineh = new float[1];
+    int selectedIndex=-1;
 
     public GMenu() {
 
@@ -145,7 +146,7 @@ public class GMenu extends GPanel {
             float dy = item.getY();
             if (i > 0) {
                 nvgBeginPath(vg);
-                nvgFillColor(vg, nvgRGBA(0, 0, 0, 48));
+                nvgFillColor(vg, nvgRGBA(192, 192, 192, 48));
                 nvgRect(vg, dx - 1, dy + 2, 2, h - 4);
                 nvgFill(vg);
             }

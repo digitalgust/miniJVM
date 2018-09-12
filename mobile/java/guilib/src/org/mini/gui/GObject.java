@@ -157,13 +157,6 @@ abstract public class GObject {
         return false;
     }
 
-    public void KeyboardPopEvent(boolean visible, float x, float y, float w, float h) {
-
-    }
-
-    public void onPhotoPicked(int uid, String url, byte[] data) {
-    }
-
     /**
      * 响应惯性事件,从P1到P2用了多长时间
      *

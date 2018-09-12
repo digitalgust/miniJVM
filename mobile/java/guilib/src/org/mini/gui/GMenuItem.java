@@ -41,6 +41,23 @@ public class GMenuItem extends GObject {
         return TYPE_MENUITEM;
     }
 
+    boolean isSelected() {
+        if (parent instanceof GMenu) {
+            GMenu menu = (GMenu) parent;
+            if (menu.getElements().indexOf(this) == menu.selectedIndex) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void setSelected() {
+        if (parent instanceof GMenu) {
+            GMenu menu = (GMenu) parent;
+            menu.selectedIndex = menu.getElements().indexOf(this);
+        }
+    }
+
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         if (isInArea(x, y)) {
@@ -63,6 +80,7 @@ public class GMenuItem extends GObject {
                 touched = true;
                 if (actionListener != null) {
                     actionListener.action(this);
+
                 }
             } else if (phase == Glfm.GLFMTouchPhaseEnded) {
                 touched = false;
@@ -87,7 +105,7 @@ public class GMenuItem extends GObject {
 
         }
 
-        float pad = 5;
+        float pad = 2;
         byte[] imgPaint;
         float dx = getX();
         float dy = getY();
@@ -98,14 +116,14 @@ public class GMenuItem extends GObject {
 
         if (img != null) {
             if (tag != null) {
-                img_h = dh * .7f - pad - lineh[0];
+                img_h = dh * .85f - pad - lineh[0];
                 img_x = dx + dw / 2 - img_h / 2;
                 img_w = img_h;
                 img_y = dy + dh * .2f;
                 tag_x = dx + dw / 2;
                 tag_y = img_y + img_h + pad + lineh[0] / 2;
             } else {
-                img_h = dh * .7f - pad - lineh[0];
+                img_h = dh * .85f - pad - lineh[0];
                 img_x = dx + dw / 2 - img_h / 2;
                 img_w = img_h;
                 img_y = dy + dh / 2 - img_h / 2;
@@ -116,6 +134,10 @@ public class GMenuItem extends GObject {
         }
         //画图
         if (img != null) {
+            float alpha = 1.f;
+            if (!isSelected()) {
+                alpha = 0.5f;
+            }
             imgPaint = nvgImagePattern(vg, img_x, img_y, img_w, img_h, 0.0f / 180.0f * (float) Math.PI, img.getTexture(), 0.8f);
             nvgBeginPath(vg);
             nvgRoundedRect(vg, img_x, img_y, img_w, img_h, 5);

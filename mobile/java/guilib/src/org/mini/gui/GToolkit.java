@@ -228,38 +228,37 @@ public class GToolkit {
 
         byte[] shadowPaint, imgPaint;
         float ix, iy, iw, ih;
-        float thumb = pw;
         int[] imgw = {0}, imgh = {0};
 
         nvgImageSize(vg, img.getTexture(), imgw, imgh);
         if (imgw[0] < imgh[0]) {
-            iw = thumb;
+            iw = pw;
             ih = iw * (float) imgh[0] / (float) imgw[0];
             ix = 0;
-            iy = -(ih - thumb) * 0.5f;
+            iy = -(ih - ph) * 0.5f;
         } else {
-            ih = thumb;
+            ih = ph;
             iw = ih * (float) imgw[0] / (float) imgh[0];
-            ix = -(iw - thumb) * 0.5f;
+            ix = -(iw - pw) * 0.5f;
             iy = 0;
         }
 
-        imgPaint = nvgImagePattern(vg, px + ix, py + iy, iw, ih, 0.0f / 180.0f * (float) Math.PI, img.getTexture(), 0.8f);
+        imgPaint = nvgImagePattern(vg, px + ix + 1, py + iy + 1, iw - 2, ih - 2, 0.0f / 180.0f * (float) Math.PI, img.getTexture(), 1.0f);
         nvgBeginPath(vg);
-        nvgRoundedRect(vg, px, py, thumb, thumb, 5);
+        nvgRoundedRect(vg, px, py, pw, ph, 5);
         nvgFillPaint(vg, imgPaint);
         nvgFill(vg);
 
-        shadowPaint = nvgBoxGradient(vg, px - 1, py, thumb + 2, thumb + 2, 5, 3, nvgRGBA(0, 0, 0, 128), nvgRGBA(0, 0, 0, 0));
+        shadowPaint = nvgBoxGradient(vg, px, py, pw, ph, 5, 3, nvgRGBA(0, 0, 0, 128), nvgRGBA(0, 0, 0, 0));
         nvgBeginPath(vg);
-        nvgRect(vg, px - 5, py - 5, thumb + 10, thumb + 10);
-        nvgRoundedRect(vg, px, py, thumb, thumb, 6);
+        nvgRect(vg, px - 5, py - 5, pw + 10, ph + 10);
+        nvgRoundedRect(vg, px, py, pw, ph, 6);
         nvgPathWinding(vg, NVG_HOLE);
         nvgFillPaint(vg, shadowPaint);
         nvgFill(vg);
 
         nvgBeginPath(vg);
-        nvgRoundedRect(vg, px + 0.5f, py + 0.5f, thumb - 1, thumb - 1, 4 - 0.5f);
+        nvgRoundedRect(vg, px - 0.5f, py - 0.5f, pw, ph, 4 - 0.5f);
         nvgStrokeWidth(vg, 1.0f);
         nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 192));
         nvgStroke(vg);
@@ -495,4 +494,66 @@ public class GToolkit {
 
         return menu;
     }
+
+    public static GViewPort getImageView(GImage img, GActionListener listener) {
+
+        GViewPort view = new GViewPort() {
+            GImage image = img;
+
+            @Override
+            public void longTouchedEvent(int x, int y) {
+                GList menu = new GList();
+                GListItem item = menu.addItems(null, GLanguage.getString("Save to album"));
+                item.setActionListener((GObject gobj) -> {
+                });
+                item = menu.addItems(null, GLanguage.getString("Cancel"));
+                item.setActionListener((GObject gobj) -> {
+                    if (gobj.getForm() != null) {
+                        gobj.getForm().remove(menu);
+                    }
+                });
+                menu.setFront(true);
+                add(menu);
+            }
+
+            @Override
+            public boolean update(long vg) {
+                float w = getW();
+                float h = getH();
+                int imgW = image.getWidth();
+                int imgH = image.getHeight();
+
+                GToolkit.drawImage(vg, image, 0, 0, w, h);
+
+                return true;
+            }
+
+            @Override
+            public void touchEvent(int phase, int x, int y) {
+                if (getForm() != null) {
+                    if (getElements().size() == 0) {//no menu
+                        getForm().remove(this);
+                        System.out.println("picture removed");
+                    }
+                }
+            }
+        };
+        view.setFocusListener(new GFocusChangeListener() {
+            @Override
+            public void focusGot(GObject go) {
+            }
+
+            @Override
+            public void focusLost(GObject go) {
+                if (go.getForm() != null) {
+                    go.getForm().remove(go);
+                }
+            }
+        });
+
+        view.setFront(true);
+
+        return view;
+    }
+
 }
