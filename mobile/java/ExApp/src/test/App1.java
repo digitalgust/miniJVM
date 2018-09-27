@@ -40,7 +40,7 @@ public class App1 implements GApplication {
 
         GMenu menu;
         int menuH = 80;
-        GImage img = new GImage("./image4.png");
+        GImage img = GImage.createImage(form.getNvContext(), "./image4.png");
         menu = new GMenu(0, form.getDeviceHeight() - menuH, form.getDeviceWidth(), menuH);
         menu.setFixed(true);
         GMenuItem item = menu.addItem("Home", img);
@@ -138,7 +138,7 @@ public class App1 implements GApplication {
     }
 
     public void init1(GContainer parent, long vg) {
-        GImage img = new GImage("./image4.png");
+        GImage img = GImage.createImage(vg, "./image4.png");
 
         int x = 10, y = 10;
         GList list = new GList(x, y, 280, 30);
@@ -151,7 +151,7 @@ public class App1 implements GApplication {
         parent.add(new TestCanvas(x, y, 280, 150));
         y += 160;
         list = new GList(x, y, 280, 140);
-        list.setMode(GList.MODE_MULTI_LINE);
+        list.setShowMode(GList.MODE_MULTI_SHOW);
         parent.add(list);
         list.setItems(new GImage[]{img, img, img, img, img, img, img, img, img, img},
                 new String[]{"One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",});

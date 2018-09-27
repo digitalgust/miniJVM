@@ -378,7 +378,7 @@ public class GToolkit {
         return frame;
     }
 
-    public static GFrame getInputFrame(String title, String msg, String defaultValue, String inputHint, String buttonText, GActionListener listener) {
+    public static GFrame getInputFrame(String title, String msg, String defaultValue, String inputHint, String leftLabel, GActionListener leftListener, String rightLabel, GActionListener rightListener) {
 
         int x = 8, y = 10;
         GFrame frame = new GFrame(title, 50, 50, 300, 170);
@@ -410,20 +410,32 @@ public class GToolkit {
         view.add(lb_state);
         y += 25;
 
-        GButton cancelbtn = new GButton(GLanguage.getString("Cancel"), x, y, 135, 28);
+        GButton cancelbtn = new GButton(leftLabel == null ? GLanguage.getString("Cancel") : leftLabel, x, y, 135, 28);
         view.add(cancelbtn);
 
-        GButton okbtn = new GButton(buttonText, x + 145, y, 135, 28);
+        GButton okbtn = new GButton(rightLabel == null ? GLanguage.getString("Ok") : rightLabel, x + 145, y, 135, 28);
         okbtn.setBgColor(0, 96, 128, 255);
         view.add(okbtn);
 
-        okbtn.setActionListener(listener);
+        if (rightListener != null) {
+            okbtn.setActionListener(rightListener);
+        } else {
+            okbtn.setActionListener((GObject gobj) -> {
+                if (gobj.getFrame() != null) {
+                    gobj.getFrame().close();
+                }
+            });
+        }
 
-        cancelbtn.setActionListener((GObject gobj) -> {
-            if (gobj.getFrame() != null) {
-                gobj.getFrame().close();
-            }
-        });
+        if (leftListener != null) {
+            cancelbtn.setActionListener(leftListener);
+        } else {
+            cancelbtn.setActionListener((GObject gobj) -> {
+                if (gobj.getFrame() != null) {
+                    gobj.getFrame().close();
+                }
+            });
+        }
         return frame;
     }
 

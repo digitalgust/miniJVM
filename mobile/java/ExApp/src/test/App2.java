@@ -71,7 +71,7 @@ public class App2 implements GApplication {
             }
         });
 
-        GImage img = new GImage("./image4.png");
+        GImage img = GImage.createImage(vg, "./image4.png");
         menu = new GMenu(0, form.getDeviceHeight() - menuH, form.getDeviceWidth(), menuH);
         GMenuItem item = menu.addItem("退出", img);
         item.setActionListener(new GActionListener() {
