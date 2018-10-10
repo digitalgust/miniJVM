@@ -491,7 +491,7 @@ public class GTextBox extends GTextObject {
             @Override
             public void run() {
 //                System.out.println("inertia " + speed);
-                speed += resistance;//速度和阴力抵消为0时,退出滑动
+                speed -= resistance;//速度和阴力抵消为0时,退出滑动
 
                 float dh = getOutOfShowAreaHeight();
                 if (dh > 0) {

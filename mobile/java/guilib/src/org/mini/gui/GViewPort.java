@@ -163,6 +163,8 @@ public class GViewPort extends GContainer {
     long inertiaPeriod = 16;
     //总共做多少次操作
     long maxMoveCount = 120;
+    //初速度加成
+    float addOn = 1.2f;
     //惯性任务
     TimerTask task;
 
@@ -184,19 +186,19 @@ public class GViewPort extends GContainer {
             }
             task = new TimerTask() {
                 //惯性速度
-                double speedY = dy / (moveTime / inertiaPeriod);
+                double speedY = dy * addOn / (moveTime / inertiaPeriod);
                 //阻力
                 double resistance = speedY / maxMoveCount;
-                //
+                //lo
                 float count = 0;
 
                 @Override
                 public void run() {
 //                System.out.println("inertia " + speed);
-                    speedY += resistance;//速度和阻力抵消为0时,退出滑动
+                    speedY -= resistance;//速度和阻力抵消为0时,退出滑动
 
                     float tmpScrollY = scrolly;
-                    float dh = getOutOfViewHeight();
+                    float dh = getH();
                     if (dh > 0) {
                         float vec = (float) speedY / dh;
                         moveY(vec);
@@ -218,7 +220,7 @@ public class GViewPort extends GContainer {
             }
             task = new TimerTask() {
                 //惯性速度
-                double speedX = dx / (moveTime / inertiaPeriod);
+                double speedX = dx * addOn / (moveTime / inertiaPeriod);
                 //阴力
                 double resistance = speedX / maxMoveCount;
                 //
@@ -227,7 +229,7 @@ public class GViewPort extends GContainer {
                 @Override
                 public void run() {
 //                System.out.println("inertia " + speed);
-                    speedX += resistance;//速度和阴力抵消为0时,退出滑动
+                    speedX -= resistance;//速度和阴力抵消为0时,退出滑动
 
                     float dw = getOutOfViewWidth();
                     float tmpScrollX = scrollx;
