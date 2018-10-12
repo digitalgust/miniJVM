@@ -103,9 +103,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
 
     @Override
     public void focusGot(GObject go) {
-        if (getForm() != null) {
-            Glfm.glfmSetKeyboardVisible(getForm().getWinContext(), true);
-        }
+
     }
 
     @Override
@@ -114,14 +112,41 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
             Glfm.glfmSetKeyboardVisible(getForm().getWinContext(), false);
         }
         disposeEditMenu();
+        touched = false;
+    }
+
+    boolean touched;
+
+    @Override
+    public void touchEvent(int phase, int x, int y) {
+        if (isInArea(x, y)) {
+            switch (phase) {
+                case Glfm.GLFMTouchPhaseBegan: {
+                    touched = true;
+                    break;
+                }
+                case Glfm.GLFMTouchPhaseEnded: {
+                    if (touched) {
+                        if (getForm() != null) {
+                            System.out.println("touched textobject");
+                            Glfm.glfmSetKeyboardVisible(getForm().getWinContext(), true);
+                        }
+                        touched = false;
+                    }
+                    break;
+                }
+            }
+        }
+        super.touchEvent(phase, x, y);
     }
 
     @Override
     public void longTouchedEvent(int x, int y) {
         callEditMenu(this, x, y);
         //System.out.println("long toucched");
-
+        super.longTouchedEvent(x, y);
     }
+
 
     class EditMenu extends GMenu {
 

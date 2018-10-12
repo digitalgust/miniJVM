@@ -359,7 +359,7 @@ public class GTextBox extends GTextObject {
                     break;
             }
         }
-
+        super.touchEvent(phase, x, y);
     }
 
     /**
