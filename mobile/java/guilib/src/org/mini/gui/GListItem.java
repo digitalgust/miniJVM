@@ -29,6 +29,34 @@ public class GListItem extends GObject {
         return TYPE_LISTITEM;
     }
 
+    /**
+     * @return the img
+     */
+    public GImage getImg() {
+        return img;
+    }
+
+    /**
+     * @param img the img to set
+     */
+    public void setImg(GImage img) {
+        this.img = img;
+    }
+
+    /**
+     * @return the label
+     */
+    public String getLabel() {
+        return label;
+    }
+
+    /**
+     * @param label the label to set
+     */
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
     int mouseY;
 
     @Override
@@ -92,7 +120,7 @@ public class GListItem extends GObject {
 
         if (list.isSelected(getIndex())) {
             GToolkit.drawRect(vg, tx, ty, w - (pad * 2), list.list_item_heigh - pad, GToolkit.getStyle().getSelectedColor());
-        }else{
+        } else {
             GToolkit.drawRect(vg, tx, ty, w - (pad * 2), list.list_item_heigh - pad, GToolkit.getStyle().getUnselectedColor());
         }
 

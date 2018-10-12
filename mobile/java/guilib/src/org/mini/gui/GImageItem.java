@@ -48,29 +48,29 @@ public class GImageItem extends GObject {
         if (img == null) {
             return true;
         }
+        float ix, iy, iw, ih;
+        int[] imgw = {0}, imgh = {0};
+
+        nvgImageSize(vg, img.getTexture(), imgw, imgh);
+        if (imgw[0] < imgh[0]) {
+            iw = w;
+            ih = iw * (float) imgh[0] / (float) imgw[0];
+            ix = 0;
+            iy = -(ih - h) * 0.5f;
+        } else {
+            ih = h;
+            iw = ih * (float) imgw[0] / (float) imgh[0];
+            ix = -(iw - w) * 0.5f;
+            iy = 0;
+        }
         if (drawBoader) {
             if (img == null) {
                 return true;
             }
 
             byte[] shadowPaint, imgPaint;
-            float ix, iy, iw, ih;
-            int[] imgw = {0}, imgh = {0};
 
-            nvgImageSize(vg, img.getTexture(), imgw, imgh);
-            if (imgw[0] < imgh[0]) {
-                iw = w;
-                ih = iw * (float) imgh[0] / (float) imgw[0];
-                ix = 0;
-                iy = -(ih - h) * 0.5f;
-            } else {
-                ih = h;
-                iw = ih * (float) imgw[0] / (float) imgh[0];
-                ix = -(iw - w) * 0.5f;
-                iy = 0;
-            }
-
-            imgPaint = nvgImagePattern(vg, x + ix + 1, y + iy + 1, iw - 2, ih - 2, 0.0f / 180.0f * (float) Math.PI, img.getTexture(), 1.0f);
+            imgPaint = nvgImagePattern(vg, x + ix + 2, y + iy + 2, iw - 4, ih - 4, 0.0f / 180.0f * (float) Math.PI, img.getTexture(), alpha);
             nvgBeginPath(vg);
             nvgRoundedRect(vg, x, y, w, h, 5);
             nvgFillPaint(vg, imgPaint);
@@ -85,13 +85,13 @@ public class GImageItem extends GObject {
             nvgFill(vg);
 
             nvgBeginPath(vg);
-            nvgRoundedRect(vg, x - 0.5f, y - 0.5f, w, h, 4 - 0.5f);
+            nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, 3.5f);
             nvgStrokeWidth(vg, 1.0f);
             nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 192));
             nvgStroke(vg);
         } else {
 
-            byte[] imgPaint = nvgImagePattern(vg, x, y, w, h, 0.0f / 180.0f * (float) Math.PI, img.getTexture(), alpha);
+            byte[] imgPaint = nvgImagePattern(vg, x + ix + 1, y + iy + 1, iw - 2, ih - 2, 0.0f / 180.0f * (float) Math.PI, img.getTexture(), alpha);
             nvgBeginPath(vg);
             nvgRoundedRect(vg, x, y, w, h, 0);
             nvgFillPaint(vg, imgPaint);

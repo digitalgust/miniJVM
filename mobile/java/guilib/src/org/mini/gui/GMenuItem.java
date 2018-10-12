@@ -102,7 +102,7 @@ public class GMenuItem extends GObject {
             nvgRoundedRect(vg, getX() + 1, getY() + 1, getW() - 2, getH() - 2, cornerRadius - 0.5f);
             nvgFill(vg);
             //System.out.println("draw touched");
-
+            touched = false;
         }
 
         float pad = 2;

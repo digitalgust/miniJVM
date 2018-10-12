@@ -34,6 +34,7 @@ abstract public class GObject {
     public static final int TYPE_TEXTFIELD = 15;
     public static final int TYPE_VIEWPORT = 16;
     public static final int TYPE_IMAGEITEM = 17;
+    public static final int TYPE_EDITMENU = 18;
 
     //
     public static final int ALIGN_H_FULL = 1;
@@ -64,7 +65,7 @@ abstract public class GObject {
 
     volatile static int flush;
 
-    protected boolean visable = true;
+    protected boolean visible = true;
 
     protected boolean front = false;
 
@@ -186,7 +187,7 @@ abstract public class GObject {
         return boundle;
     }
 
-    public GObject getParent() {
+    public GContainer getParent() {
         return parent;
     }
 
@@ -300,12 +301,12 @@ abstract public class GObject {
         this.actionListener = actionListener;
     }
 
-    public void setVisable(boolean v) {
-        visable = v;
+    public void setVisible(boolean v) {
+        visible = v;
     }
 
-    public boolean isVisable() {
-        return visable;
+    public boolean isVisible() {
+        return visible;
     }
 
     public GForm getForm() {

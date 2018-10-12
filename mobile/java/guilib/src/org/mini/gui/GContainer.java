@@ -8,13 +8,9 @@ package org.mini.gui;
 import java.util.ArrayList;
 import java.util.List;
 import org.mini.glfm.Glfm;
-import static org.mini.gui.GToolkit.nvgRGBA;
 import org.mini.nanovg.Nanovg;
-import static org.mini.nanovg.Nanovg.nvgBeginPath;
 import static org.mini.nanovg.Nanovg.nvgSave;
 import static org.mini.nanovg.Nanovg.nvgScissor;
-import static org.mini.nanovg.Nanovg.nvgStroke;
-import static org.mini.nanovg.Nanovg.nvgStrokeColor;
 
 /**
  *
@@ -56,7 +52,7 @@ abstract public class GContainer extends GObject {
         return elements.size();
     }
 
-    GObject findFocus(float x, float y) {
+    GObject findByXY(float x, float y) {
         synchronized (elements) {
             for (int i = elements.size() - 1; i >= 0; i--) {
                 GObject nko = elements.get(i);
@@ -79,8 +75,8 @@ abstract public class GContainer extends GObject {
      * @param go
      */
     public void setFocus(GObject go) {
-        if (getType() == TYPE_FORM) {
-            int debug = 1;
+        if (go instanceof GMenu) {
+            return;
         }
         if (this.focus != go) {
             if (focus != null) {
@@ -99,12 +95,7 @@ abstract public class GContainer extends GObject {
 
     public void add(GObject nko) {
         if (nko != null) {
-            synchronized (elements) {
-                elements.add(nko);
-                nko.setParent(this);
-                nko.init();
-                onAdd(nko);
-            }
+            add(elements.size(), nko);
         }
     }
 
@@ -205,7 +196,7 @@ abstract public class GContainer extends GObject {
                         continue;
                     }
 
-                    if (nko.isVisable()) {
+                    if (nko.isVisible()) {
                         drawObj(ctx, nko);
                     }
                 }
@@ -255,8 +246,15 @@ abstract public class GContainer extends GObject {
 
         nvgSave(ctx);
         nvgScissor(ctx, x, y, w, h);
-        Nanovg.nvgIntersectScissor(ctx, getViewX(), getViewY(), getViewW(), getViewH());
-        nko.update(ctx);
+        float vx = getViewX();
+        float vy = getViewY();
+        float vw = getViewW();
+        float vh = getViewH();
+        if (vx + vw < x || vx > x + w || vy > y + h || vy + vh < y) {
+        } else {
+            Nanovg.nvgIntersectScissor(ctx, vx, vy, vw, vh);
+
+            nko.update(ctx);
 
 //        if (focus == nko) {
 //            nvgScissor(ctx, x, y, w, h);
@@ -271,7 +269,8 @@ abstract public class GContainer extends GObject {
 //            nvgStroke(ctx);
 //
 //        }
-        Nanovg.nvgRestore(ctx);
+            Nanovg.nvgRestore(ctx);
+        }
     }
 
     @Override
@@ -290,7 +289,7 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
-        setFocus(findFocus(x, y));
+        setFocus(findByXY(x, y));
 
         if (focus != null) {
             focus.mouseButtonEvent(button, pressed, x, y);
@@ -316,7 +315,7 @@ abstract public class GContainer extends GObject {
 
     @Override
     public boolean scrollEvent(float scrollX, float scrollY, float x, float y) {
-        setFocus(findFocus(x, y));
+        setFocus(findByXY(x, y));
         if (focus != null && focus.isInArea(x, y)) {
             return focus.scrollEvent(scrollX, scrollY, x, y);
         }
@@ -330,8 +329,14 @@ abstract public class GContainer extends GObject {
         }
     }
 
+    @Override
     public boolean dragEvent(float dx, float dy, float x, float y) {
-        setFocus(findFocus(x, y));
+        GMenu editMenu = GTextObject.getEditMenu();
+        if (editMenu != null && editMenu != this && editMenu.getParent() != null && editMenu.isInArea(x, y)) {
+            return editMenu.dragEvent(dx, dy, x, y);
+        }
+
+        setFocus(findByXY(x, y));
         if (focus != null && focus.isInArea(x, y)) {
             return focus.dragEvent(dx, dy, x, y);
         }
@@ -355,11 +360,17 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void touchEvent(int phase, int x, int y) {
+        GMenu editMenu = GTextObject.getEditMenu();
+        if (editMenu != null && editMenu != this && editMenu.getParent() != null && editMenu.isInArea(x, y)) {
+            editMenu.touchEvent(phase, x, y);
+            return;
+        }
+
         if (focus != null && focus.isInArea(x, y)) {
             focus.touchEvent(phase, x, y);
         } else {
             if (phase == Glfm.GLFMTouchPhaseBegan) {
-                setFocus(findFocus(x, y));
+                setFocus(findByXY(x, y));
             }
             if (focus != null) {
                 focus.touchEvent(phase, x, y);
@@ -377,12 +388,17 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void longTouchedEvent(int x, int y) {
-        setFocus(findFocus(x, y));
+        GMenu editMenu = GTextObject.getEditMenu();
+        if (editMenu != null && editMenu != this && editMenu.getParent() != null && editMenu.isInArea(x, y)) {
+            editMenu.longTouchedEvent(x, y);
+            return;
+        }
+
+        setFocus(findByXY(x, y));
 
         if (focus != null) {
             focus.longTouchedEvent(x, y);
         }
     }
-
 
 }

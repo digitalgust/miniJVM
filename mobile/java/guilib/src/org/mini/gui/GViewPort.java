@@ -16,6 +16,10 @@ import static org.mini.gui.GObject.flush;
 import static org.mini.gui.GObject.flush;
 import static org.mini.gui.GObject.flush;
 import static org.mini.gui.GObject.flush;
+import static org.mini.gui.GObject.flush;
+import static org.mini.gui.GObject.flush;
+import static org.mini.gui.GObject.flush;
+import static org.mini.gui.GObject.flush;
 
 /**
  *
@@ -146,6 +150,10 @@ public class GViewPort extends GContainer {
         setScrollX(posX / (maxX - minX));
     }
 
+    boolean touched;
+    static final byte DIR_NODEF = 0, DIR_X = 1, DIR_Y = 2;
+    byte dragDirection = DIR_NODEF;
+
     @Override
     public void touchEvent(int phase, int x, int y) {
         switch (phase) {
@@ -154,6 +162,13 @@ public class GViewPort extends GContainer {
                     task.cancel();
                     task = null;
                 }
+                touched = true;
+                break;
+            }
+            case Glfm.GLFMTouchPhaseEnded: {
+                touched = false;
+                dragDirection = DIR_NODEF;
+                break;
             }
         }
         super.touchEvent(phase, x, y);
@@ -170,7 +185,7 @@ public class GViewPort extends GContainer {
 
     @Override
     public boolean inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
-        GObject go = findFocus(x1, y1);
+        GObject go = findByXY(x1, y1);
         if (go != null) {
             if (go.inertiaEvent(x1, y1, x2, y2, moveTime)) {
                 return true;
@@ -264,7 +279,7 @@ public class GViewPort extends GContainer {
     @Override
     public boolean dragEvent(float dx, float dy, float x, float y) {
         if (focus == null) {
-            setFocus(findFocus(x, y));
+            setFocus(findByXY(x, y));
         }
         if (focus != null && focus.dragEvent(dx, dy, x, y)) {
             return true;
@@ -275,16 +290,28 @@ public class GViewPort extends GContainer {
         if (dw == 0 && dh == 0) {
             return false;
         }
+        if (dragDirection == DIR_NODEF) {
+            if (Math.abs(dx) > Math.abs(dy)) {
+                dragDirection = DIR_X;
+            } else {
+                dragDirection = DIR_Y;
+            }
+        }
         float odx = (dw == 0) ? 0.f : (float) dx / dw;
         float ody = (dh == 0) ? 0.f : (float) dy / dh;
-        if (Math.abs(odx) > Math.abs(ody)) {
+        if (dragDirection == DIR_X) {
             return moveX(odx);
-        } else {
+        } else if (dragDirection == DIR_Y) {
             return moveY(ody);
+        } else {
+            return false;
         }
     }
 
     boolean moveY(float dy) {
+        if (getOutOfViewHeight() <= 0) {
+            return false;
+        }
         float tmpy = scrolly;
         tmpy -= dy;
         if (tmpy < 0) {
@@ -302,6 +329,9 @@ public class GViewPort extends GContainer {
     }
 
     boolean moveX(float dx) {
+        if (getOutOfViewWidth() <= 0) {
+            return false;
+        }
         float tmpx = scrollx;
         tmpx -= dx;
         if (tmpx < 0) {

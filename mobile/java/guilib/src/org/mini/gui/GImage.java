@@ -5,7 +5,6 @@
  */
 package org.mini.gui;
 
-import org.mini.gl.GL;
 import org.mini.nanovg.Gutil;
 import org.mini.nanovg.Nanovg;
 
@@ -67,6 +66,9 @@ public class GImage {
 
     @Override
     public void finalize() {
-        GL.glDeleteTextures(1, new int[]{texture}, 0);
+        try {
+            GForm.deleteImage(texture);
+        } catch (Throwable e) {
+        }
     }
 }

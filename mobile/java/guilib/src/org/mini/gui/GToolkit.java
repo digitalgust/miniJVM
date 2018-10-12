@@ -228,17 +228,17 @@ public class GToolkit {
 
         byte[] shadowPaint, imgPaint;
         float ix, iy, iw, ih;
-        int[] imgw = {0}, imgh = {0};
+        int[] imgW = {0}, imgH = {0};
 
-        nvgImageSize(vg, img.getTexture(), imgw, imgh);
-        if (imgw[0] < imgh[0]) {
+        nvgImageSize(vg, img.getTexture(), imgW, imgH);
+        if (imgW[0] < imgH[0]) {
             iw = pw;
-            ih = iw * (float) imgh[0] / (float) imgw[0];
+            ih = iw * (float) imgH[0] / (float) imgW[0];
             ix = 0;
             iy = -(ih - ph) * 0.5f;
         } else {
             ih = ph;
-            iw = ih * (float) imgw[0] / (float) imgh[0];
+            iw = ih * (float) imgW[0] / (float) imgH[0];
             ix = -(iw - pw) * 0.5f;
             iy = 0;
         }
@@ -258,7 +258,7 @@ public class GToolkit {
         nvgFill(vg);
 
         nvgBeginPath(vg);
-        nvgRoundedRect(vg, px - 0.5f, py - 0.5f, pw, ph, 4 - 0.5f);
+        nvgRoundedRect(vg, px + 1, py + 1, pw - 2, ph - 2, 4 - 0.5f);
         nvgStrokeWidth(vg, 1.0f);
         nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 192));
         nvgStroke(vg);
@@ -545,7 +545,7 @@ public class GToolkit {
                 if (getForm() != null) {
                     if (getElements().size() == 0) {//no menu
                         getForm().remove(this);
-                        System.out.println("picture removed");
+                        //System.out.println("picture removed");
                     }
                 }
             }

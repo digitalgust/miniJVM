@@ -5,6 +5,8 @@
  */
 package org.mini.gui;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import static org.mini.gl.GL.GL_COLOR_BUFFER_BIT;
@@ -51,6 +53,8 @@ public class GForm extends GViewPort {
 
     GPhotoPickedListener pickListener;
     GKeyboardShowListener keyshowListener;
+
+    final static List<Integer> pendingDeleteImage = new ArrayList();
 
     Timer timer = new Timer(true);//用于更新画面，UI系统采取按需刷新的原则
 
@@ -159,6 +163,16 @@ public class GForm extends GViewPort {
 //                if (cost < 1000 / fpsExpect) {
 //                    Thread.sleep((long) (1000 / fpsExpect - cost));
 //                }
+            synchronized (pendingDeleteImage) {
+                for (int i = pendingDeleteImage.size() - 1; i >= 0; i--) {
+                    Integer tex = pendingDeleteImage.get(i);
+                    if (tex != null) {
+                        Nanovg.nvgDeleteImage(vg, tex);
+                        System.out.println("delete image " + tex);
+                    }
+                }
+                pendingDeleteImage.clear();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -247,6 +261,12 @@ public class GForm extends GViewPort {
      */
     public void setKeyshowListener(GKeyboardShowListener keyshowListener) {
         this.keyshowListener = keyshowListener;
+    }
+
+    public static void deleteImage(int texture) {
+        synchronized (pendingDeleteImage) {
+            pendingDeleteImage.add(texture);
+        }
     }
 
 }

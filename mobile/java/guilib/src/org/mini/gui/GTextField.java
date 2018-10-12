@@ -162,6 +162,7 @@ public class GTextField extends GTextObject {
                 }
             }
         }
+        super.touchEvent(phase, x, y);
     }
 
     @Override
