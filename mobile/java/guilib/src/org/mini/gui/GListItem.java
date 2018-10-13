@@ -57,18 +57,19 @@ public class GListItem extends GObject {
         this.label = label;
     }
 
-    int mouseY;
+    int mouseX, mouseY;
 
     @Override
     public void touchEvent(int phase, int x, int y) {
         switch (phase) {
             case Glfm.GLFMTouchPhaseBegan:
+                mouseX = x;
                 mouseY = y;
                 break;
             case Glfm.GLFMTouchPhaseMoved:
                 break;
             case Glfm.GLFMTouchPhaseEnded:
-                if (Math.abs(y - mouseY) < list.list_item_heigh) {
+                if (Math.abs(y - mouseY) < list.list_item_heigh && Math.abs(x - mouseX) < list.list_item_heigh) {
                     select();
                 }
                 break;

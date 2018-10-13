@@ -175,11 +175,11 @@ public class GViewPort extends GContainer {
     }
 
     //每多长时间进行一次惯性动作
-    long inertiaPeriod = 16;
+    float inertiaPeriod = 16;
     //总共做多少次操作
     long maxMoveCount = 120;
     //初速度加成
-    float addOn = 1.2f;
+    float addOn = 2.2f;
     //惯性任务
     TimerTask task;
 
@@ -192,9 +192,10 @@ public class GViewPort extends GContainer {
             }
         }
         //
-        //System.out.println("inertia: x1,y1,x2,y2 = " + x1 + "," + y1 + "," + x2 + "," + y2);
         final double dx = x2 - x1;
         final double dy = y2 - y1;
+        maxMoveCount = (long) (120 * (moveTime / 200f));
+        System.out.println("inertia time: " + moveTime + " , count: " + maxMoveCount + " pos: x1,y1,x2,y2 = " + x1 + "," + y1 + "," + x2 + "," + y2);
         if (Math.abs(dy) > Math.abs(dx)) {
             if (getH() <= getViewH()) {
                 return false;
@@ -209,7 +210,7 @@ public class GViewPort extends GContainer {
 
                 @Override
                 public void run() {
-//                System.out.println("inertia " + speed);
+                    System.out.println(this + " inertia Y " + speedY + " , " + resistance + " , " + count);
                     speedY -= resistance;//速度和阻力抵消为0时,退出滑动
 
                     float tmpScrollY = scrolly;
@@ -243,10 +244,10 @@ public class GViewPort extends GContainer {
 
                 @Override
                 public void run() {
-//                System.out.println("inertia " + speed);
+                    //System.out.println(this + " inertia X " + speedX + " , " + resistance + " , " + count);
                     speedX -= resistance;//速度和阴力抵消为0时,退出滑动
 
-                    float dw = getOutOfViewWidth();
+                    float dw = getW();
                     float tmpScrollX = scrollx;
                     if (dw > 0) {
                         float vec = (float) speedX / dw;
@@ -266,7 +267,7 @@ public class GViewPort extends GContainer {
         }
         Timer timer = getTimer();
         if (timer != null) {
-            timer.schedule(task, 0, inertiaPeriod);
+            timer.schedule(task, 0, (long) inertiaPeriod);
         }
         return true;
     }
@@ -278,8 +279,13 @@ public class GViewPort extends GContainer {
 
     @Override
     public boolean dragEvent(float dx, float dy, float x, float y) {
+        GObject found = findByXY(x, y);
+        if (found instanceof GMenu) {
+            return found.dragEvent(dx, dy, x, y);
+        }
+
         if (focus == null) {
-            setFocus(findByXY(x, y));
+            setFocus(found);
         }
         if (focus != null && focus.dragEvent(dx, dy, x, y)) {
             return true;

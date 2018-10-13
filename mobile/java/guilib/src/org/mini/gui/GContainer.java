@@ -331,12 +331,12 @@ abstract public class GContainer extends GObject {
 
     @Override
     public boolean dragEvent(float dx, float dy, float x, float y) {
-        GMenu editMenu = GTextObject.getEditMenu();
-        if (editMenu != null && editMenu != this && editMenu.getParent() != null && editMenu.isInArea(x, y)) {
-            return editMenu.dragEvent(dx, dy, x, y);
+        GObject found = findByXY(x, y);
+        if (found instanceof GMenu) {
+            return found.dragEvent(dx, dy, x, y);
         }
 
-        setFocus(findByXY(x, y));
+        setFocus(found);
         if (focus != null && focus.isInArea(x, y)) {
             return focus.dragEvent(dx, dy, x, y);
         }
@@ -360,9 +360,9 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void touchEvent(int phase, int x, int y) {
-        GMenu editMenu = GTextObject.getEditMenu();
-        if (editMenu != null && editMenu != this && editMenu.getParent() != null && editMenu.isInArea(x, y)) {
-            editMenu.touchEvent(phase, x, y);
+        GObject found = findByXY(x, y);
+        if (found instanceof GMenu) {
+            found.touchEvent(phase, x, y);
             return;
         }
 
@@ -370,7 +370,7 @@ abstract public class GContainer extends GObject {
             focus.touchEvent(phase, x, y);
         } else {
             if (phase == Glfm.GLFMTouchPhaseBegan) {
-                setFocus(findByXY(x, y));
+                setFocus(found);
             }
             if (focus != null) {
                 focus.touchEvent(phase, x, y);
@@ -388,13 +388,13 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void longTouchedEvent(int x, int y) {
-        GMenu editMenu = GTextObject.getEditMenu();
-        if (editMenu != null && editMenu != this && editMenu.getParent() != null && editMenu.isInArea(x, y)) {
-            editMenu.longTouchedEvent(x, y);
+        GObject found = findByXY(x, y);
+        if (found instanceof GMenu) {
+            found.longTouchedEvent(x, y);
             return;
         }
 
-        setFocus(findByXY(x, y));
+        setFocus(found);
 
         if (focus != null) {
             focus.longTouchedEvent(x, y);

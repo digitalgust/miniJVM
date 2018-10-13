@@ -27,8 +27,11 @@ public class GLabel extends GObject {
     String text;
     byte[] text_arr;
     char preicon;
-    public GLabel(){
-        
+
+    int align = NVG_ALIGN_LEFT | NVG_ALIGN_TOP;
+
+    public GLabel() {
+
     }
 
     public GLabel(String text, int left, int top, int width, int height) {
@@ -43,6 +46,10 @@ public class GLabel extends GObject {
 
     public int getType() {
         return TYPE_LABEL;
+    }
+
+    public void setAlign(int ali) {
+        align = ali;
     }
 
     public final void setText(String text) {
@@ -75,7 +82,7 @@ public class GLabel extends GObject {
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
 
-        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        nvgTextAlign(vg, align);
         nvgTextJni(vg, x, y + h * 0.5f, text_arr, 0, text_arr.length);
 
     }
@@ -86,7 +93,7 @@ public class GLabel extends GObject {
         nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
         nvgFontFace(vg, GToolkit.getFontWord());
 
-        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+        nvgTextAlign(vg, align);
         float[] text_area = new float[]{x + 2f, y + 2f, w - 4f, h - 4f};
         float dx = text_area[LEFT];
         float dy = text_area[TOP];
