@@ -9,6 +9,8 @@ import com.sun.cldc.i18n.StreamReader;
 import com.sun.cldc.i18n.StreamWriter;
 import com.sun.cldc.i18n.mini.UTF_8_Reader;
 import com.sun.cldc.i18n.mini.UTF_8_Writer;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -20,6 +22,8 @@ import java.io.RandomAccessFile;
 import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import org.mini.zip.Zip;
@@ -75,6 +79,81 @@ public class TestFile {
                 System.out.print((char) ch);
             }
         } catch (IOException ex) {
+        }
+    }
+
+    /**
+     *
+     * @param src
+     * @return
+     */
+    static public byte[] toGzipData(byte[] src) {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            GZIPOutputStream gos = new GZIPOutputStream(baos);
+            gos.write(src, 0, src.length);
+            gos.close();
+            return baos.toByteArray();
+        } catch (Exception e) {
+            // showMsg("！压缩输出时失败：" + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     *
+     * @param src
+     * @param from
+     * @param to
+     * @return
+     */
+    static public byte[] fromGzipData(byte[] src, int from, int to) {
+        try {
+            ByteArrayInputStream bais = new ByteArrayInputStream(src, from, to - from);
+            GZIPInputStream gis = new GZIPInputStream(bais);
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            int b;
+            while ((b = gis.read()) != -1) {
+                bos.write(b);
+            }
+            gis.close();
+            return bos.toByteArray();
+
+        } catch (Exception e) {
+            //System.out.println("！解压缩输出时失败：" + e.getMessage());
+            return null;
+        }
+    }
+
+    void t14_1() {
+        FileOutputStream fos = null;
+        FileInputStream fis = null;
+        try {
+            byte[] b = new byte[1000];
+            for (int i = 0; i < b.length; i++) {
+                b[i] = (byte) (i % 256);
+            }
+            byte[] z = toGzipData(b);
+            fos = new FileOutputStream("ztest.zip");
+            fos.write(z);
+            fos.flush();
+            fos.close();
+            fis = new FileInputStream("ztest.zip");
+            GZIPInputStream gis = new GZIPInputStream(fis);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            int ch;
+            while ((ch = gis.read()) != -1) {
+                baos.write(ch);
+            }
+            System.out.println("extract: " + baos.toByteArray().length);
+            fis.close();
+            byte[] u = baos.toByteArray();
+            for (int i = 0; i < u.length; i++) {
+                System.out.print(" " + (u[i] & 0xff));
+            }
+            System.out.println();
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
     }
 
@@ -203,9 +282,9 @@ public class TestFile {
 
             raf.setLength(1024);
             raf.seek(512);
-            raf.write(new byte[]{1,2,3});
+            raf.write(new byte[]{1, 2, 3});
             raf.setLength(600);
-            
+
             raf.close();
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -216,12 +295,13 @@ public class TestFile {
         try {
             TestFile tf = new TestFile();
 //            tf.t14();
+            tf.t14_1();
 //            tf.t15();
 //            tf.t16();
 //            tf.t17();
 //            tf.t18();
 //            tf.t19();
-            tf.t20();
+//            tf.t20();
         } catch (Exception e) {
             e.printStackTrace();
         }

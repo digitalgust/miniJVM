@@ -5,10 +5,21 @@
  */
 package test;
 
+import org.mini.crypt.AsynCrypt;
+
 /**
  *
  * @author Gust
  */
 public class CryptTest {
-    
+      void t1() {
+          AsynCrypt.test();
+    }
+
+    public static void main(String args[]) {
+        CryptTest obj = new CryptTest();
+        obj.t1();
+        
+        
+    }  
 }
