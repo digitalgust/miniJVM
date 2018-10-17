@@ -42,6 +42,9 @@ void glfmMain(GLFMDisplay *display) {
     //jvm_printf("%s\n",utf8_cstr(classpath));
 
     jvm_init(utf8_cstr(classpath), JNI_OnLoad_mini);
+    sys_properties_set_c("glfm.res.root",glfmGetResRoot());
+    sys_properties_set_c("glfm.save.root", glfmGetSaveRoot());
+    sys_properties_set_c("glfm.uuid", glfmGetUUID());
     Runtime *runtime=getRuntimeCurThread();
 
     utf8_destory(classpath);

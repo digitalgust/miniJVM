@@ -20,6 +20,8 @@
 
 #include "glfm.h"
 
+void setDeviceToken(GLFMDisplay * display, const char *deviceToken);
+
 #if defined(GLFM_PLATFORM_IOS) || defined(GLFM_PLATFORM_TVOS)
 
 #import <UIKit/UIKit.h>
@@ -32,7 +34,7 @@
 #define CHECK_GL_ERROR() do { GLenum error = glGetError(); if (error != GL_NO_ERROR) \
 NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__); } while(0)
 
-@interface GLFMAppDelegate : NSObject <UIApplicationDelegate>
+@interface GLFMAppDelegate : NSObject <UIApplicationDelegate,UNUserNotificationCenterDelegate>
 
 @property(nonatomic, strong) UIWindow *window;
 @property(nonatomic, assign) BOOL active;
@@ -809,7 +811,9 @@ NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__); } whil
             float ih=image.size.height;
             float ratio=1024;
             float scale=iw/ratio>ih/ratio?(iw/ratio):(ih/ratio);
-            image = [GLFMViewController resizeImage:image toSize:(CGSize)CGSizeMake(iw/scale, ih/scale)];
+            if(scale>1){
+                image = [GLFMViewController resizeImage:image toSize:(CGSize)CGSizeMake(iw/scale, ih/scale)];
+            }
         }
         
         NSData *data=UIImageJPEGRepresentation(image, 0.75);
@@ -919,7 +923,120 @@ NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__); } whil
     }
     self.window.rootViewController = [[GLFMViewController alloc] init];
     [self.window makeKeyAndVisible];
+    
+    
+    if (@available(iOS 10.0, *)) {
+        //iOS10特有
+        UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
+        // 必须写代理，不然无法监听通知的接收与点击
+        center.delegate = self;
+        [center requestAuthorizationWithOptions:(UNAuthorizationOptionAlert | UNAuthorizationOptionBadge | UNAuthorizationOptionSound) completionHandler:^(BOOL granted, NSError * _Nullable error) {
+            if (granted) {
+                // 点击允许
+                //NSLog(@"注册成功");
+                [center getNotificationSettingsWithCompletionHandler:^(UNNotificationSettings * _Nonnull settings) {
+                    //NSLog(@"%@", settings);
+                }];
+            } else {
+                // 点击不允许
+                //NSLog(@"注册失败");
+            }
+        }];
+    }else if (@available(iOS 8.0, *)){
+        //iOS8 - iOS10
+        [application registerUserNotificationSettings:[UIUserNotificationSettings settingsForTypes:UIUserNotificationTypeAlert | UIUserNotificationTypeSound | UIUserNotificationTypeBadge categories:nil]];
+        
+    }else {
+        //iOS8系统以下
+        [application registerForRemoteNotificationTypes:UIRemoteNotificationTypeBadge | UIRemoteNotificationTypeAlert | UIRemoteNotificationTypeSound];
+    }
+    // 注册获得device Token
+    [[UIApplication sharedApplication] registerForRemoteNotifications];
+    
     return YES;
+}
+
+// 获得Device Token
+- (void)application:(UIApplication *)application
+didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
+    GLFMViewController *vc = (GLFMViewController *)[self.window rootViewController];
+    //NSLog(@"%@", [NSString stringWithFormat:@"Device Token: %@", deviceToken]);
+    NSString* newStr = [[NSString alloc] initWithData:deviceToken encoding:NSUTF8StringEncoding];
+    if(newStr != nil){
+        const char * token=[newStr UTF8String];
+        setDeviceToken(vc.glfmDisplay,token);
+    }else{
+        setDeviceToken(vc.glfmDisplay,NULL);
+    }
+}
+// 获得Device Token失败
+- (void)application:(UIApplication *)application
+didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
+    GLFMViewController *vc = (GLFMViewController *)[self.window rootViewController];
+    //NSLog(@"did Fail To Register For Remote Notifications With Error: %@", error);
+    setDeviceToken(vc.glfmDisplay,NULL);
+}
+
+
+// iOS 10收到通知
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler API_AVAILABLE(ios(10.0)){
+    NSDictionary * userInfo = notification.request.content.userInfo;
+    UNNotificationRequest *request = notification.request; // 收到推送的请求
+    UNNotificationContent *content = request.content; // 收到推送的消息内容
+    NSNumber *badge = content.badge;  // 推送消息的角标
+    NSString *body = content.body;    // 推送消息体
+    UNNotificationSound *sound = content.sound;  // 推送消息的声音
+    NSString *subtitle = content.subtitle;  // 推送消息的副标题
+    NSString *title = content.title;  // 推送消息的标题
+    
+    if([notification.request.trigger isKindOfClass:[UNPushNotificationTrigger class]]) {
+        NSLog(@"iOS10 前台收到远程通知:%@", userInfo);
+        
+    }
+    else {
+        // 判断为本地通知
+        //NSLog(@"iOS10 前台收到本地通知:{\\\\nbody:%@，\\\\ntitle:%@,\\\\nsubtitle:%@,\\\\nbadge：%@，\\\\nsound：%@，\\\\nuserInfo：%@\\\\n}",body,title,subtitle,badge,sound,userInfo);
+    }
+    completionHandler(UNNotificationPresentationOptionBadge|UNNotificationPresentationOptionSound|UNNotificationPresentationOptionAlert); // 需要执行这个方法，选择是否提醒用户，有Badge、Sound、Alert三种类型可以设置
+}
+
+// 通知的点击事件
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void(^)(void))completionHandler API_AVAILABLE(ios(10.0)){
+    
+    NSDictionary * userInfo = response.notification.request.content.userInfo;
+    UNNotificationRequest *request = response.notification.request; // 收到推送的请求
+    UNNotificationContent *content = request.content; // 收到推送的消息内容
+    NSNumber *badge = content.badge;  // 推送消息的角标
+    NSString *body = content.body;    // 推送消息体
+    UNNotificationSound *sound = content.sound;  // 推送消息的声音
+    NSString *subtitle = content.subtitle;  // 推送消息的副标题
+    NSString *title = content.title;  // 推送消息的标题
+    if([response.notification.request.trigger isKindOfClass:[UNPushNotificationTrigger class]]) {
+        //NSLog(@"iOS10 收到远程通知:%@", userInfo);
+        
+    }
+    else {
+        // 判断为本地通知
+        //NSLog(@"iOS10 收到本地通知:{\\\\nbody:%@，\\\\ntitle:%@,\\\\nsubtitle:%@,\\\\nbadge：%@，\\\\nsound：%@，\\\\nuserInfo：%@\\\\n}",body,title,subtitle,badge,sound,userInfo);
+    }
+    
+    // Warning: UNUserNotificationCenter delegate received call to -userNotificationCenter:didReceiveNotificationResponse:withCompletionHandler: but the completion handler was never called.
+    completionHandler();  // 系统要求执行这个方法
+    
+}
+
+- (void)application:(UIApplication *)application
+didReceiveRemoteNotification:(NSDictionary *)userInfo {
+    //NSLog(@"iOS6及以下系统，收到通知:%@", userInfo);
+}
+
+- (void)application:(UIApplication *)application
+didReceiveRemoteNotification:(NSDictionary *)userInfo
+fetchCompletionHandler:
+(void (^)(UIBackgroundFetchResult))completionHandler {
+    
+    //NSLog(@"iOS7及以上系统，收到通知:%@", userInfo);
+    completionHandler(UIBackgroundFetchResultNewData);
 }
 
 - (void)setActive:(BOOL)active {
@@ -1137,6 +1254,26 @@ const char* glfmGetSaveRoot(){
     
     return [cachesDir UTF8String];
 }
+
+const char* glfmGetUUID(){
+    NSString* Identifier = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+    return [Identifier UTF8String];
+}
+
+extern void sys_properties_set_c(char *key, char *val);
+
+void setDeviceToken(GLFMDisplay * display, const char *deviceToken) {
+    static char *key="glfm.device.token";
+    if(deviceToken){
+        sys_properties_set_c(key,deviceToken);
+    }else{
+        sys_properties_set_c(key,"");
+    }
+    if(display->notifyFunc){
+        display->notifyFunc(display,key,deviceToken);
+    }
+}
+
 
 const char* getClipBoardContent() {
     UIPasteboard* pBoard=[UIPasteboard generalPasteboard];

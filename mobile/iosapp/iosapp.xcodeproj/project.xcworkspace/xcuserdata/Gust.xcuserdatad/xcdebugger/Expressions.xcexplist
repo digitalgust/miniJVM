@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "execute_method_impl:interpreter.c">
+      </ContextState>
+      <ContextState
+         contextName = "fonsTextIterNext:fontstash.h">
+      </ContextState>
+      <ContextState
+         contextName = "fonsTextIterInit:fontstash.h">
+      </ContextState>
+      <ContextState
+         contextName = "nvgTextBreakLines:nanovg.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "rows[nrows]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>

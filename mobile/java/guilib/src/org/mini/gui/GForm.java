@@ -18,7 +18,9 @@ import static org.mini.gl.GL.glClearColor;
 import static org.mini.gl.GL.glViewport;
 import org.mini.glfm.Glfm;
 import static org.mini.gui.GToolkit.nvgRGBA;
+import org.mini.gui.event.GAppActiveListener;
 import org.mini.gui.event.GKeyboardShowListener;
+import org.mini.gui.event.GNotifyListener;
 import org.mini.gui.event.GPhotoPickedListener;
 import org.mini.nanovg.Gutil;
 import org.mini.nanovg.Nanovg;
@@ -53,6 +55,8 @@ public class GForm extends GViewPort {
 
     GPhotoPickedListener pickListener;
     GKeyboardShowListener keyshowListener;
+    GAppActiveListener activeListener;
+    GNotifyListener notifyListener;
 
     final static List<Integer> pendingDeleteImage = new ArrayList();
 
@@ -267,6 +271,47 @@ public class GForm extends GViewPort {
         synchronized (pendingDeleteImage) {
             pendingDeleteImage.add(texture);
         }
+    }
+
+    public void onAppFocus(boolean focus) {
+        //System.out.println("app focus:" + focus);
+        if (activeListener != null) {
+            activeListener.onAppActive(focus);
+        }
+    }
+
+    public void onNotify(String key, String val) {
+        if (notifyListener != null) {
+            notifyListener.onNotify(key, val);
+        }
+    }
+
+    /**
+     * @return the activeListener
+     */
+    public GAppActiveListener getActiveListener() {
+        return activeListener;
+    }
+
+    /**
+     * @param activeListener the activeListener to set
+     */
+    public void setActiveListener(GAppActiveListener activeListener) {
+        this.activeListener = activeListener;
+    }
+
+    /**
+     * @return the notifyListener
+     */
+    public GNotifyListener getNotifyListener() {
+        return notifyListener;
+    }
+
+    /**
+     * @param notifyListener the notifyListener to set
+     */
+    public void setNotifyListener(GNotifyListener notifyListener) {
+        this.notifyListener = notifyListener;
     }
 
 }

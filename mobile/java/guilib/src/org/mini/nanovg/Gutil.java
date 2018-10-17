@@ -6,10 +6,8 @@
 package org.mini.nanovg;
 
 import java.io.UnsupportedEncodingException;
-import org.mini.gl.GL;
 import static org.mini.gl.GL.GL_CLAMP_TO_EDGE;
 import static org.mini.gl.GL.GL_LINEAR_MIPMAP_NEAREST;
-import static org.mini.gl.GL.GL_RGBA;
 import static org.mini.gl.GL.GL_TEXTURE_2D;
 import static org.mini.gl.GL.GL_TEXTURE_MAG_FILTER;
 import static org.mini.gl.GL.GL_TEXTURE_MIN_FILTER;
@@ -21,11 +19,6 @@ import static org.mini.gl.GL.glGenTextures;
 import static org.mini.gl.GL.glGenerateMipmap;
 import static org.mini.gl.GL.glTexImage2D;
 import static org.mini.gl.GL.glTexParameterf;
-import static org.mini.nanovg.Nanovg.access_mem;
-import static org.mini.nanovg.Nanovg.stbi_image_free;
-import static org.mini.nanovg.Nanovg.stbi_load;
-import org.mini.reflect.ReflectArray;
-import org.mini.reflect.vm.RefNative;
 
 /**
  *

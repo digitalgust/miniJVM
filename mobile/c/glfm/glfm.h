@@ -246,6 +246,9 @@ typedef void (*GLFMAppFocusFunc)(GLFMDisplay *display, bool focused);
 typedef void (*GLFMPhotoPickedFunc)(GLFMDisplay *display, int uid, const char *uri, char *data,
                                     int size);
 
+typedef void (*GLFMNotifyFunc)(GLFMDisplay *display,const char *key, const char *value);
+    
+    
 // MARK: Functions
 
 /// Main entry point for the app, where the display can be initialized and the GLFMMainLoopFunc
@@ -363,6 +366,9 @@ void glfmSetKeyboardVisibilityChangedFunc(GLFMDisplay *display,
                                           GLFMKeyboardVisibilityChangedFunc visibilityChangedFunc);
 
 void glfmSetPhotoPickedFunc(GLFMDisplay *display, GLFMPhotoPickedFunc photoPickedFunc);
+    
+void glfmSetNotifyFunc(GLFMDisplay *display, GLFMNotifyFunc notifyFunc);
+
 
 const char *glfmGetResRoot();
 
@@ -377,6 +383,8 @@ void pickPhotoAlbum(GLFMDisplay *display, int uid, int type);
 void pickPhotoCamera(GLFMDisplay *display, int uid, int type);
 
 void imageCrop(GLFMDisplay *display, int uid, const char *uri,int x,int y, int width, int height);
+    
+const char* glfmGetUUID();
 
 #if defined(GLFM_PLATFORM_ANDROID)
 

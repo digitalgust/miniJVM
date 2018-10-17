@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4523724420CAA77C00156C58 /* ltalloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4523724220CAA77B00156C58 /* ltalloc.c */; };
+		45ADDF6E21625C8000F469AC /* libz.1.2.8.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 45ADDF6C21625C5A00F469AC /* libz.1.2.8.tbd */; };
 		45D78F2C209D3E62003B9317 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 45D78F2B209D3E62003B9317 /* Assets.xcassets */; };
 		45D78F66209D4330003B9317 /* glfm_platform_emscripten.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F45209D4330003B9317 /* glfm_platform_emscripten.c */; };
 		45D78F67209D4330003B9317 /* glfm_platform_android.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F46209D4330003B9317 /* glfm_platform_android.c */; };
@@ -41,11 +42,13 @@
 		45D7904B20A002C4003B9317 /* resfiles in Resources */ = {isa = PBXBuildFile; fileRef = 45D7904A20A002C4003B9317 /* resfiles */; };
 		45EAB02520DC9F6100896201 /* d_type.c in Sources */ = {isa = PBXBuildFile; fileRef = 45EAB02220DC9F6100896201 /* d_type.c */; };
 		45EAB02620DC9F6100896201 /* miniz_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 45EAB02320DC9F6100896201 /* miniz_wrapper.c */; };
+		45F5E842217475140001F587 /* miniz.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F5E840217475140001F587 /* miniz.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		4523724220CAA77B00156C58 /* ltalloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ltalloc.c; sourceTree = "<group>"; };
 		4523724320CAA77C00156C58 /* ltalloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ltalloc.h; sourceTree = "<group>"; };
+		45ADDF6C21625C5A00F469AC /* libz.1.2.8.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.1.2.8.tbd; path = usr/lib/libz.1.2.8.tbd; sourceTree = SDKROOT; };
 		45D78F1F209D3E61003B9317 /* iosapp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosapp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		45D78F2B209D3E62003B9317 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		45D78F30209D3E62003B9317 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -116,6 +119,9 @@
 		45EAB02220DC9F6100896201 /* d_type.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = d_type.c; sourceTree = "<group>"; };
 		45EAB02320DC9F6100896201 /* miniz_wrapper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = miniz_wrapper.c; sourceTree = "<group>"; };
 		45EAB02420DC9F6100896201 /* miniz_wrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = miniz_wrapper.h; sourceTree = "<group>"; };
+		45F5E840217475140001F587 /* miniz.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = miniz.c; sourceTree = "<group>"; };
+		45F5E841217475140001F587 /* miniz.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = miniz.h; sourceTree = "<group>"; };
+		45F5E8432175E5000001F587 /* iosapp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iosapp.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -123,18 +129,28 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				45ADDF6E21625C8000F469AC /* libz.1.2.8.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		45ADDF6B21625C5A00F469AC /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				45ADDF6C21625C5A00F469AC /* libz.1.2.8.tbd */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		45D78F16209D3E61003B9317 = {
 			isa = PBXGroup;
 			children = (
-				45D7904A20A002C4003B9317 /* resfiles */,
 				45D78F21209D3E61003B9317 /* iosapp */,
 				45D78F20209D3E61003B9317 /* Products */,
+				45D7904A20A002C4003B9317 /* resfiles */,
+				45ADDF6B21625C5A00F469AC /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -149,12 +165,13 @@
 		45D78F21209D3E61003B9317 /* iosapp */ = {
 			isa = PBXGroup;
 			children = (
-				45D78FB6209D440B003B9317 /* minijvm */,
+				45F5E8432175E5000001F587 /* iosapp.entitlements */,
+				45D78F2B209D3E62003B9317 /* Assets.xcassets */,
 				45D78F44209D4330003B9317 /* glfm */,
 				45D78F64209D4330003B9317 /* glfmapp */,
 				45D78F4A209D4330003B9317 /* gui */,
-				45D78F2B209D3E62003B9317 /* Assets.xcassets */,
 				45D78F30209D3E62003B9317 /* Info.plist */,
+				45D78FB6209D440B003B9317 /* minijvm */,
 			);
 			path = iosapp;
 			sourceTree = "<group>";
@@ -175,18 +192,18 @@
 		45D78F4A209D4330003B9317 /* gui */ = {
 			isa = PBXGroup;
 			children = (
-				45D78F4B209D4330003B9317 /* jni_nanovg_assist.h */,
-				45D78F4C209D4330003B9317 /* jni_gl.c */,
-				45D78F4D209D4330003B9317 /* other */,
-				45D78F4F209D4330003B9317 /* jni_nanovg.c */,
-				45D78F50209D4330003B9317 /* jni_gui.h */,
-				45D78F51209D4330003B9317 /* stb */,
-				45D78F55209D4330003B9317 /* KHR */,
-				45D78F57209D4330003B9317 /* jni_glfm.c */,
 				45D78F58209D4330003B9317 /* glad */,
-				45D78F5C209D4330003B9317 /* jni_stb_assist.h */,
-				45D78F5D209D4330003B9317 /* nanovg */,
+				45D78F4C209D4330003B9317 /* jni_gl.c */,
+				45D78F57209D4330003B9317 /* jni_glfm.c */,
 				45D78F63209D4330003B9317 /* jni_gui.c */,
+				45D78F50209D4330003B9317 /* jni_gui.h */,
+				45D78F4B209D4330003B9317 /* jni_nanovg_assist.h */,
+				45D78F4F209D4330003B9317 /* jni_nanovg.c */,
+				45D78F5C209D4330003B9317 /* jni_stb_assist.h */,
+				45D78F55209D4330003B9317 /* KHR */,
+				45D78F5D209D4330003B9317 /* nanovg */,
+				45D78F4D209D4330003B9317 /* other */,
+				45D78F51209D4330003B9317 /* stb */,
 			);
 			name = gui;
 			path = ../../c/gui;
@@ -261,25 +278,25 @@
 		45D79001209D8662003B9317 /* jvm */ = {
 			isa = PBXGroup;
 			children = (
-				45D79002209D8662003B9317 /* garbage.c */,
-				45D79003209D8662003B9317 /* runtime.c */,
-				45D79004209D8662003B9317 /* jvm.c */,
-				45D79005209D8662003B9317 /* jdwp.h */,
-				45D79006209D8662003B9317 /* class.c */,
-				45D79007209D8662003B9317 /* jvm_util.c */,
-				45D79008209D8662003B9317 /* java_native_std.h */,
-				45D79009209D8662003B9317 /* java_native_reflect.h */,
-				45D7900A209D8662003B9317 /* java_native_io.h */,
-				45D7900B209D8662003B9317 /* jvm.h */,
-				45D7900C209D8662003B9317 /* garbage.h */,
-				45D7900D209D8662003B9317 /* java_native_std.c */,
-				45D7900E209D8662003B9317 /* jvm_util.h */,
 				45D7900F209D8662003B9317 /* class_load.c */,
-				45D79010209D8662003B9317 /* jdwp.c */,
-				45D79011209D8662003B9317 /* interpreter.c */,
-				45D79012209D8662003B9317 /* java_native_reflect.c */,
+				45D79006209D8662003B9317 /* class.c */,
+				45D79002209D8662003B9317 /* garbage.c */,
+				45D7900C209D8662003B9317 /* garbage.h */,
 				45D79013209D8662003B9317 /* global.c */,
+				45D79011209D8662003B9317 /* interpreter.c */,
 				45D79014209D8662003B9317 /* java_native_io.c */,
+				45D7900A209D8662003B9317 /* java_native_io.h */,
+				45D79012209D8662003B9317 /* java_native_reflect.c */,
+				45D79009209D8662003B9317 /* java_native_reflect.h */,
+				45D7900D209D8662003B9317 /* java_native_std.c */,
+				45D79008209D8662003B9317 /* java_native_std.h */,
+				45D79010209D8662003B9317 /* jdwp.c */,
+				45D79005209D8662003B9317 /* jdwp.h */,
+				45D79007209D8662003B9317 /* jvm_util.c */,
+				45D7900E209D8662003B9317 /* jvm_util.h */,
+				45D79004209D8662003B9317 /* jvm.c */,
+				45D7900B209D8662003B9317 /* jvm.h */,
+				45D79003209D8662003B9317 /* runtime.c */,
 			);
 			name = jvm;
 			path = ../../../mini_jvm/jvm;
@@ -288,29 +305,31 @@
 		45D79015209D8662003B9317 /* utils */ = {
 			isa = PBXGroup;
 			children = (
-				45EAB02220DC9F6100896201 /* d_type.c */,
-				45EAB02320DC9F6100896201 /* miniz_wrapper.c */,
-				45EAB02420DC9F6100896201 /* miniz_wrapper.h */,
-				4523724220CAA77B00156C58 /* ltalloc.c */,
-				4523724320CAA77C00156C58 /* ltalloc.h */,
-				45D79016209D8662003B9317 /* dirent_win.h */,
-				45D79017209D8662003B9317 /* spinlock.h */,
-				45D79018209D8662003B9317 /* bytebuf.h */,
-				45D79019209D8662003B9317 /* hashtable.h */,
-				45D7901A209D8662003B9317 /* hashset.c */,
-				45D7901B209D8662003B9317 /* tinycthread.c */,
+				45F5E840217475140001F587 /* miniz.c */,
+				45F5E841217475140001F587 /* miniz.h */,
 				45D7901D209D8662003B9317 /* arraylist.c */,
-				45D7901E209D8662003B9317 /* utf8_string.c */,
-				45D7901F209D8662003B9317 /* linkedlist.h */,
+				45D7902B209D8662003B9317 /* arraylist.h */,
+				45D79028209D8662003B9317 /* bytebuf.c */,
+				45D79018209D8662003B9317 /* bytebuf.h */,
+				45EAB02220DC9F6100896201 /* d_type.c */,
+				45D7902D209D8662003B9317 /* d_type.h */,
+				45D79016209D8662003B9317 /* dirent_win.h */,
+				45D7901A209D8662003B9317 /* hashset.c */,
 				45D79026209D8662003B9317 /* hashset.h */,
 				45D79027209D8662003B9317 /* hashtable.c */,
-				45D79028209D8662003B9317 /* bytebuf.c */,
-				45D79029209D8662003B9317 /* pairlist.h */,
-				45D7902A209D8662003B9317 /* utf8_string.h */,
-				45D7902B209D8662003B9317 /* arraylist.h */,
-				45D7902C209D8662003B9317 /* tinycthread.h */,
-				45D7902D209D8662003B9317 /* d_type.h */,
+				45D79019209D8662003B9317 /* hashtable.h */,
 				45D7902E209D8662003B9317 /* linkedlist.c */,
+				45D7901F209D8662003B9317 /* linkedlist.h */,
+				4523724220CAA77B00156C58 /* ltalloc.c */,
+				4523724320CAA77C00156C58 /* ltalloc.h */,
+				45EAB02320DC9F6100896201 /* miniz_wrapper.c */,
+				45EAB02420DC9F6100896201 /* miniz_wrapper.h */,
+				45D79029209D8662003B9317 /* pairlist.h */,
+				45D79017209D8662003B9317 /* spinlock.h */,
+				45D7901B209D8662003B9317 /* tinycthread.c */,
+				45D7902C209D8662003B9317 /* tinycthread.h */,
+				45D7901E209D8662003B9317 /* utf8_string.c */,
+				45D7902A209D8662003B9317 /* utf8_string.h */,
 			);
 			name = utils;
 			path = ../../../mini_jvm/utils;
@@ -348,6 +367,14 @@
 				TargetAttributes = {
 					45D78F1E209D3E61003B9317 = {
 						CreatedOnToolsVersion = 9.3;
+						SystemCapabilities = {
+							com.apple.BackgroundModes = {
+								enabled = 1;
+							};
+							com.apple.Push = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
@@ -393,7 +420,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "jarfile=\"./../java/guilib/dist/glfm_gui.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n\njarfile=\"./../java/ExApp/dist/ExApp.jar\"\n#jarfile=\"./../../../../javaSrc/blinkblink/client/ExApp/dist/ExApp.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n\njarfile=\"./../../javalib/dist/minijvm_rt.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n";
+			shellScript = "jarfile=\"./../java/guilib/dist/glfm_gui.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n\n#jarfile=\"./../java/ExApp/dist/ExApp.jar\"\njarfile=\"./../../../../javaSrc/blinkblink/client/ExApp/dist/ExApp.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n\njarfile=\"./../../javalib/dist/minijvm_rt.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -417,6 +444,7 @@
 				45D78F6A209D4330003B9317 /* jni_nanovg.c in Sources */,
 				45D79036209D8662003B9317 /* jdwp.c in Sources */,
 				45D7902F209D8662003B9317 /* garbage.c in Sources */,
+				45F5E842217475140001F587 /* miniz.c in Sources */,
 				45D79031209D8662003B9317 /* jvm.c in Sources */,
 				4523724420CAA77C00156C58 /* ltalloc.c in Sources */,
 				45D7903F209D8662003B9317 /* utf8_string.c in Sources */,
@@ -554,9 +582,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CODE_SIGN_ENTITLEMENTS = iosapp/iosapp.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = M978JH97JT;
+				DEVELOPMENT_TEAM = GJXZ73B365;
 				"HEADER_SEARCH_PATHS[arch=*]" = (
 					../c/glfm/,
 					../c/gui/,
@@ -564,11 +594,12 @@
 					../../../mini_jvm/utils,
 				);
 				INFOPLIST_FILE = iosapp/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.eglsgame.iosapp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.eglsgame.iosapp2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -579,9 +610,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CODE_SIGN_ENTITLEMENTS = iosapp/iosapp.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = M978JH97JT;
+				DEVELOPMENT_TEAM = GJXZ73B365;
 				"HEADER_SEARCH_PATHS[arch=*]" = (
 					../c/glfm/,
 					../c/gui/,
@@ -589,11 +622,12 @@
 					../../../mini_jvm/utils,
 				);
 				INFOPLIST_FILE = iosapp/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.eglsgame.iosapp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.eglsgame.iosapp2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				TARGETED_DEVICE_FAMILY = "1,2";

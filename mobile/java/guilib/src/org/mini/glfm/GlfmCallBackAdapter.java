@@ -52,4 +52,8 @@ public class GlfmCallBackAdapter implements GlfmCallBack {
     @Override
     public void onPhotoPicked(long display, int uid, String url, byte[] data){
     }
+
+    @Override
+    public void onNotify(long display, String key, String val) {
+    }
 }

@@ -27,6 +27,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef NSFoundationVersionNumber_iOS_9_x_Max
+#import <UserNotifications/UserNotifications.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -54,6 +58,7 @@ struct GLFMDisplay {
     GLFMMemoryWarningFunc lowMemoryFunc;
     GLFMAppFocusFunc focusFunc;
     GLFMPhotoPickedFunc pickerFunc;
+    GLFMNotifyFunc notifyFunc;
 
     // External data
     void *userData;
@@ -178,6 +183,11 @@ void glfmSetPhotoPickedFunc(GLFMDisplay *display, GLFMPhotoPickedFunc photoPicke
     }
 }
 
+void glfmSetNotifyFunc(GLFMDisplay *display, GLFMNotifyFunc notifyFunc) {
+    if (display) {
+        display->notifyFunc = notifyFunc;
+    }
+}
 // MARK: Helper functions
 
 static void _glfmReportSurfaceError(GLFMDisplay *display, const char *errorMessage) {

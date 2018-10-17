@@ -231,14 +231,14 @@ public class GuiCallBack extends GlfmCallBackAdapter {
         if (gform == null) {
             return;
         }
-        
+
         fbWidth = Glfm.glfmGetDisplayWidth(display);
         fbHeight = Glfm.glfmGetDisplayHeight(display);
         // Calculate pixel ration for hi-dpi devices.
         pxRatio = (float) Glfm.glfmGetDisplayScale(display);
         winWidth = (int) (fbWidth / pxRatio);
         winHeight = (int) (fbHeight / pxRatio);
-        
+
         gform.boundle[GObject.WIDTH] = width;
         gform.boundle[GObject.HEIGHT] = height;
         gform.flush();
@@ -270,5 +270,21 @@ public class GuiCallBack extends GlfmCallBackAdapter {
             return;
         }
         gform.onPhotoPicked(uid, url, data);
+    }
+
+    @Override
+    public void onAppFocus(long display, boolean focused) {
+        if (gform == null) {
+            return;
+        }
+        gform.onAppFocus(focused);
+    }
+
+    @Override
+    public void onNotify(long display, String key, String val) {
+        if (gform == null) {
+            return;
+        }
+        gform.onNotify(key, val);
     }
 }

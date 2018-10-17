@@ -261,6 +261,25 @@ _callback_photo_picked(GLFMDisplay *window, s32 uid, const c8 *url, c8 *data, s3
     }
 }
 
+void _callback_notify(GLFMDisplay *window, const c8* key, const c8* val) {
+    gladLoadGLES2Loader(glfmGetProcAddress);
+    if (refers._callback_surface_created) {
+        Runtime *runtime = getRuntimeCurThread();
+        JniEnv *env = refers.env;
+        env->push_ref(runtime->stack, refers.glfm_callback);
+        env->push_long(runtime->stack, (s64) (intptr_t) window);
+        Instance *insKey = createJavaString(runtime, key);
+        env->push_ref(runtime->stack, insKey);
+        Instance *insVal = createJavaString(runtime, val);
+        env->push_ref(runtime->stack, insVal);
+        
+        s32 ret = env->execute_method(refers._callback_notify, runtime,
+                                      refers.glfm_callback->mb.clazz);
+        if (ret) {
+            env->print_exception(runtime);
+        }
+    }
+}
 /* ==============================   jni glfm =================================*/
 
 int org_mini_glfm_Glfm_glfmSetUserData(Runtime *runtime, JClass *clazz) {
@@ -289,6 +308,7 @@ int org_mini_glfm_Glfm_glfmSetUserData(Runtime *runtime, JClass *clazz) {
     glfmSetMemoryWarningFunc(window, _callback_memory_warning);
     glfmSetKeyboardVisibilityChangedFunc(window, _callback_keyboard_visible);
     glfmSetPhotoPickedFunc(window, _callback_photo_picked);
+    glfmSetNotifyFunc(window, _callback_notify);
 
 
     c8 *name_s, *type_s;
@@ -414,11 +434,22 @@ int org_mini_glfm_Glfm_glfmSetUserData(Runtime *runtime, JClass *clazz) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_photo_picked = env->find_methodInfo_by_name(
-                refers.glfm_callback->mb.clazz->name, name, type, runtime);
+                                                                     refers.glfm_callback->mb.clazz->name, name, type, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
-
+    
+    {
+        name_s = "onNotify";
+        type_s = "(JLjava/lang/String;Ljava/lang/String;)V";
+        Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
+        Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
+        refers._callback_notify = env->find_methodInfo_by_name(
+                                                                     refers.glfm_callback->mb.clazz->name, name, type, runtime);
+        env->utf8_destory(name);
+        env->utf8_destory(type);
+    }
+    
     return 0;
 }
 
