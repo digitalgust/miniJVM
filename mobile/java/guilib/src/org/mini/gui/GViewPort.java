@@ -195,7 +195,7 @@ public class GViewPort extends GContainer {
         final double dx = x2 - x1;
         final double dy = y2 - y1;
         maxMoveCount = (long) (120 * (moveTime / 200f));
-        System.out.println("inertia time: " + moveTime + " , count: " + maxMoveCount + " pos: x1,y1,x2,y2 = " + x1 + "," + y1 + "," + x2 + "," + y2);
+        //System.out.println("inertia time: " + moveTime + " , count: " + maxMoveCount + " pos: x1,y1,x2,y2 = " + x1 + "," + y1 + "," + x2 + "," + y2);
         if (Math.abs(dy) > Math.abs(dx)) {
             if (getH() <= getViewH()) {
                 return false;
@@ -210,7 +210,7 @@ public class GViewPort extends GContainer {
 
                 @Override
                 public void run() {
-                    System.out.println(this + " inertia Y " + speedY + " , " + resistance + " , " + count);
+                    //System.out.println(this + " inertia Y " + speedY + " , " + resistance + " , " + count);
                     speedY -= resistance;//速度和阻力抵消为0时,退出滑动
 
                     float tmpScrollY = scrolly;
