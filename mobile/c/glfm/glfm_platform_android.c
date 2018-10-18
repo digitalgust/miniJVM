@@ -180,6 +180,17 @@ static jmethodID _glfmGetJavaMethodID(JNIEnv *jni, jobject object, const char *n
     }
 }
 
+static jmethodID _glfmGetJavaStaticMethodID(JNIEnv *jni, jclass clazz, const char *name,
+                                            const char *sig) {
+    if (clazz) {
+        jmethodID methodID = (*jni)->GetStaticMethodID(jni, clazz, name, sig);
+        (*jni)->DeleteLocalRef(jni, clazz);
+        return _glfmWasJavaExceptionThrown() ? NULL : methodID;
+    } else {
+        return NULL;
+    }
+}
+
 static jfieldID
 _glfmGetJavaFieldID(JNIEnv *jni, jobject object, const char *name, const char *sig) {
     if (object) {
@@ -201,6 +212,14 @@ static jfieldID _glfmGetJavaStaticFieldID(JNIEnv *jni, jclass class, const char 
         return NULL;
     }
 }
+
+#define _glfmCallStaticJavaMethod(jni, clazz, methodName, methodSig, returnType) \
+    (*jni)->CallStatic##returnType##Method(jni, clazz, \
+        _glfmGetJavaStaticMethodID(jni, clazz, methodName, methodSig))
+
+#define _glfmCallStaticJavaMethodWithArgs(jni, clazz, methodName, methodSig, returnType, ...) \
+    (*jni)->CallStatic##returnType##Method(jni, clazz, \
+        _glfmGetJavaMStaticethodID(jni, clazz, methodName, methodSig), __VA_ARGS__)
 
 #define _glfmCallJavaMethod(jni, object, methodName, methodSig, returnType) \
     (*jni)->Call##returnType##Method(jni, object, \
@@ -1611,7 +1630,7 @@ void setClipBoardContent(const char *str) {
         return;
     }
     jstring jstr = (*jni)->NewStringUTF(jni, str);
-    //const char *rawString = (*jni)->GetStringUTFChars(jni, jstr, 0);
+
     _glfmCallJavaMethodWithArgs(jni, app->activity->clazz, "setClipBoardContent",
                                 "(Ljava/lang/String;)V", Void, jstr);
     if ((*jni)->ExceptionCheck(jni)) {
@@ -1657,7 +1676,8 @@ void pickPhotoCamera(GLFMDisplay *display, int uid, int type) {
     }
 }
 
-void imageCrop(GLFMDisplay *display,int uid, const char *uri, int x, int y, int width, int height) {
+void
+imageCrop(GLFMDisplay *display, int uid, const char *uri, int x, int y, int width, int height) {
     struct android_app *app = platformDataGlobal->app;
     GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
     JNIEnv *jni = platformData->jniEnv;
@@ -1675,6 +1695,7 @@ void imageCrop(GLFMDisplay *display,int uid, const char *uri, int x, int y, int 
         return;
     }
 }
+
 
 JNIEXPORT void JNICALL
 Java_org_minijvm_activity_JvmNativeActivity_onPhotoPicked(JNIEnv *env, jclass type, jint uid_,
@@ -1697,5 +1718,35 @@ Java_org_minijvm_activity_JvmNativeActivity_onPhotoPicked(JNIEnv *env, jclass ty
     (*env)->ReleaseStringUTFChars(env, path_, path);
     if (data)(*env)->ReleaseByteArrayElements(env, data_, data, 0);
 }
+
+#define ANDROID_UUID_MAX_LEN  128
+static char android_uuid[ANDROID_UUID_MAX_LEN] = {0};
+
+const char *glfmGetUUID() {
+    if (!strlen(android_uuid)) {
+        //String uniqueID = java.util.UUID.randomUUID().toString();
+        struct android_app *app = platformDataGlobal->app;
+        GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
+        JNIEnv *jni = platformData->jniEnv;
+
+        jclass clazz = (*jni)->FindClass(jni, "java.util.UUID");
+        jobject UUID = _glfmCallStaticJavaMethod(jni, clazz, "randomUUID", "()Ljava.util.UUID;",
+                                                 Object);
+        (*jni)->DeleteLocalRef(jni, clazz);
+        jstring uuidStr = _glfmCallJavaMethod(jni, UUID, "toString", "()Ljava.lang.String;",
+                                              Object);
+        (*jni)->DeleteLocalRef(jni, UUID);
+        const char *rawString = (*jni)->GetStringUTFChars(jni, uuidStr, 0);
+        int len = strlen(rawString);
+        if (len > ANDROID_UUID_MAX_LEN) {
+            len = ANDROID_UUID_MAX_LEN - 1;
+        }
+        memcpy(android_uuid, rawString, len);
+        (*jni)->DeleteLocalRef(jni, uuidStr);
+        (*jni)->ReleaseStringUTFChars(jni, uuidStr, rawString);
+    }
+    return android_uuid;
+}
+
 
 #endif
