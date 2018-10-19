@@ -507,7 +507,7 @@ public class GToolkit {
         return menu;
     }
 
-    public static GViewPort getImageView(GImage img, GActionListener listener) {
+    public static GViewPort getImageView(GForm form, GImage img, GActionListener listener) {
 
         GViewPort view = new GViewPort() {
             GImage image = img;
@@ -532,10 +532,8 @@ public class GToolkit {
             public boolean update(long vg) {
                 float w = getW();
                 float h = getH();
-                int imgW = image.getWidth();
-                int imgH = image.getHeight();
 
-                GToolkit.drawImage(vg, image, 0, 0, w, h);
+                GToolkit.drawImage(vg, image, getX(), getY(), w, h);
 
                 return true;
             }
@@ -543,7 +541,7 @@ public class GToolkit {
             @Override
             public void touchEvent(int phase, int x, int y) {
                 if (getForm() != null) {
-                    if (getElements().size() == 0) {//no menu
+                    if (getElements().isEmpty()) {//no menu
                         getForm().remove(this);
                         //System.out.println("picture removed");
                     }
@@ -564,6 +562,27 @@ public class GToolkit {
         });
 
         view.setFront(true);
+
+        float imgW = img.getWidth();
+        float imgH = img.getHeight();
+
+        float formW = form.getViewW();
+        float formH = form.getViewH();
+
+        float ratioW = formW / imgW;
+        float ratioH = formH / imgH;
+
+        if (formW < formH) {
+            imgW *= ratioW;
+            imgH *= ratioW;
+        } else {
+            imgW *= ratioH;
+            imgH *= ratioH;
+        }
+        view.setSize(imgW, imgH);
+        view.setViewSize(imgW, imgH);
+        view.setLocation((formW - view.getW()) / 2, (formH - view.getH()) / 2);
+        view.setViewLocation((formW - view.getW()) / 2, (formH - view.getH()) / 2);
 
         return view;
     }

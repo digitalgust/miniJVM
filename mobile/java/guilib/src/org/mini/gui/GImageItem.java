@@ -114,4 +114,18 @@ public class GImageItem extends GObject {
         this.alpha = alpha;
     }
 
+    /**
+     * @return the img
+     */
+    public GImage getImg() {
+        return img;
+    }
+
+    /**
+     * @param img the img to set
+     */
+    public void setImg(GImage img) {
+        this.img = img;
+    }
+
 }
