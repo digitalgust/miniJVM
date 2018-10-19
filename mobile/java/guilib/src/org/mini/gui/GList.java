@@ -211,13 +211,14 @@ public class GList extends GPanel implements GFocusChangeListener {
         flush();
     }
 
-    void reAlignItems() {
+    public void reAlignItems() {
         int i = 0;
         for (GObject go : popView.getElements()) {
             go.setLocation(pad, i * list_item_heigh);
             go.setSize(popView.getViewW() - pad * 2, list_item_heigh);
             i++;
         }
+        selected.clear();
     }
 
     void changeCurPanel() {
@@ -315,6 +316,10 @@ public class GList extends GPanel implements GFocusChangeListener {
 
     boolean isSelected(int index) {
         return selected.contains(index);
+    }
+
+    public int getItemIndex(GListItem item) {
+        return popView.getElements().indexOf(item);
     }
 
     public void selectAll() {
