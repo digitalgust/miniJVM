@@ -30,6 +30,8 @@ public class GMenuItem extends GObject {
     float[] lineh = new float[1];
     boolean touched = false;
 
+    int redPoint;
+
     GMenuItem(String t, GImage i, GMenu _parent) {
         tag = t;
         img = i;
@@ -58,6 +60,14 @@ public class GMenuItem extends GObject {
         }
     }
 
+    public void addNewMsgCount(int count) {
+        redPoint += count;
+    }
+
+    public void clearMsgNewCount() {
+        redPoint = 0;
+    }
+
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         if (isInArea(x, y)) {
@@ -80,7 +90,7 @@ public class GMenuItem extends GObject {
                 touched = true;
                 if (actionListener != null) {
                     actionListener.action(this);
-
+                    clearMsgNewCount();
                 }
             } else if (phase == Glfm.GLFMTouchPhaseEnded) {
                 touched = false;
@@ -153,6 +163,9 @@ public class GMenuItem extends GObject {
             Nanovg.nvgTextJni(vg, tag_x, tag_y, b, 0, b.length);
         }
 
+        if (redPoint > 0) {
+            GToolkit.drawRedPoint(vg, redPoint > 99 ? "..." : Integer.toString(redPoint), dx + dw * .7f, dy + dh * .5f - 10, 12f);
+        }
         return true;
     }
 }

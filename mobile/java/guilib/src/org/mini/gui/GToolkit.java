@@ -24,6 +24,7 @@ import static org.mini.nanovg.Nanovg.NVG_HOLE;
 import static org.mini.nanovg.Nanovg.nvgAddFallbackFontId;
 import static org.mini.nanovg.Nanovg.nvgBeginPath;
 import static org.mini.nanovg.Nanovg.nvgBoxGradient;
+import static org.mini.nanovg.Nanovg.nvgCircle;
 import static org.mini.nanovg.Nanovg.nvgCreateFont;
 import static org.mini.nanovg.Nanovg.nvgFill;
 import static org.mini.nanovg.Nanovg.nvgFillColor;
@@ -172,6 +173,41 @@ public class GToolkit {
             nvgFillColor(vg, nvgRGBA(255, 192, 0, 255));
             nvgRect(vg, x, y, w, h);
             nvgFill(vg);
+        }
+    }
+
+    static float[] RED_POINT_BACKGROUND = Nanovg.nvgRGBAf(1.f, 0, 0, 1.f);
+    static float[] RED_POINT_FRONT = Nanovg.nvgRGBAf(1.f, 1.f, 1.f, 1.f);
+
+    public static void drawRedPoint(long vg, String text, float x, float y, float r) {
+        nvgBeginPath(vg);
+        nvgCircle(vg, x, y, r);
+        nvgFillColor(vg, RED_POINT_BACKGROUND);
+        nvgFill(vg);
+
+        nvgFontSize(vg, r * 2 - 4);
+        nvgFillColor(vg, RED_POINT_FRONT);
+        nvgFontFace(vg, GToolkit.getFontWord());
+        byte[] text_arr = toUtf8(text);
+        nvgTextAlign(vg, Nanovg.NVG_ALIGN_CENTER | Nanovg.NVG_ALIGN_MIDDLE);
+        if (text_arr != null) {
+            Nanovg.nvgTextJni(vg, x, y + 1, text_arr, 0, text_arr.length);
+        }
+
+    }
+
+    public static void drawCircle(long vg, float x, float y, float r, float[] color, boolean fill) {
+        if (fill) {
+            nvgBeginPath(vg);
+            nvgCircle(vg, x, y, r);
+            nvgFillColor(vg, color);
+            nvgFill(vg);
+        } else {
+            nvgBeginPath(vg);
+            nvgCircle(vg, x, y, r);
+            nvgStrokeColor(vg, color);
+            nvgStrokeWidth(vg, 1.0f);
+            nvgStroke(vg);
         }
     }
 
