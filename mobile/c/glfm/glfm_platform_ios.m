@@ -29,6 +29,12 @@ void setDeviceToken(GLFMDisplay * display, const char *deviceToken);
 #include <dlfcn.h>
 #include "glfm_platform.h"
 
+#import <notify.h>
+#define NotificationLock CFSTR("com.apple.springboard.lockcomplete")
+#define NotificationChange CFSTR("com.apple.springboard.lockstate")
+#define NotificationPwdUI CFSTR("com.apple.springboard.hasBlankedScreen")
+
+//
 #define MAX_SIMULTANEOUS_TOUCHES 10
 
 #define CHECK_GL_ERROR() do { GLenum error = glGetError(); if (error != GL_NO_ERROR) \
@@ -953,7 +959,24 @@ NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__); } whil
     // 注册获得device Token
     [[UIApplication sharedApplication] registerForRemoteNotifications];
     
+    //register lock screen event
+    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, screenLockStateChanged, NotificationLock, NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
+    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, screenLockStateChanged, NotificationChange, NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
+
+
+    //setScreenStateCb();
+    
     return YES;
+}
+//lock screen
+static void screenLockStateChanged(CFNotificationCenterRef center,void* observer,CFStringRef name,const void*object,CFDictionaryRef userInfo)
+{
+    NSString* lockstate = (__bridge NSString*)name;
+    if ([lockstate isEqualToString:(__bridge NSString*)NotificationLock]) {
+        NSLog(@"locked.");
+    } else {
+        NSLog(@"lock state changed.");
+    }
 }
 
 // 获得Device Token
@@ -961,7 +984,11 @@ NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__); } whil
 didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
     GLFMViewController *vc = (GLFMViewController *)[self.window rootViewController];
     //NSLog(@"%@", [NSString stringWithFormat:@"Device Token: %@", deviceToken]);
-    NSString* newStr = [[NSString alloc] initWithData:deviceToken encoding:NSUTF8StringEncoding];
+    NSString * newStr = [[[[deviceToken description]
+         stringByReplacingOccurrencesOfString:@"<" withString:@""]
+         stringByReplacingOccurrencesOfString:@">" withString:@""]
+         stringByReplacingOccurrencesOfString:@"" withString:@""];
+    //NSString* newStr = [[NSString alloc] initWithData:deviceToken encoding:NSUTF8StringEncoding];
     if(newStr != nil){
         const char * token=[newStr UTF8String];
         setDeviceToken(vc.glfmDisplay,token);
