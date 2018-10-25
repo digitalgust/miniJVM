@@ -8,6 +8,8 @@ package test;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import org.mini.reflect.DirectMemObj;
+import org.mini.reflect.ReflectArray;
 import org.mini.reflect.vm.RefNative;
 
 /**
@@ -20,6 +22,7 @@ public class ReflectTest {
         ReflectTest obj = new ReflectTest();
         obj.t1();
         obj.t2();
+        obj.t3();
         System.out.println("over");
     }
 
@@ -29,17 +32,17 @@ public class ReflectTest {
             System.out.println(int.class.equals(Integer.TYPE));
             System.out.println(Integer.class.equals(Integer.TYPE));
 
-            int[][][][] refarr = (int[][][][])Array.newInstance(int[].class, new int[]{2, 2, 2});
-            refarr[1][1][1]=new int[1];
-            refarr[1][1][1][0]=9;
-            System.out.println("refarr[1][1][1][0]="+refarr[1][1][1][0]);
-            
+            int[][][][] refarr = (int[][][][]) Array.newInstance(int[].class, new int[]{2, 2, 2});
+            refarr[1][1][1] = new int[1];
+            refarr[1][1][1][0] = 9;
+            System.out.println("refarr[1][1][1][0]=" + refarr[1][1][1][0]);
+
             System.out.println("refarr=" + refarr);
 
-            String[][] refarr1 = (String[][])Array.newInstance(String.class, new int[]{2, 2});
+            String[][] refarr1 = (String[][]) Array.newInstance(String.class, new int[]{2, 2});
             System.out.println("refarr1=" + refarr1);
-            refarr1[1][1]="here you are";
-            System.out.println("refarr1[1][1]="+refarr1[1][1]);
+            refarr1[1][1] = "here you are";
+            System.out.println("refarr1[1][1]=" + refarr1[1][1]);
 
             int[] arr = new int[5];
             System.out.println("arr.name:" + arr.getClass().getName());
@@ -138,5 +141,22 @@ public class ReflectTest {
                 ex.printStackTrace();
             }
         }
+    }
+
+    void t3() {
+        char[] ca = "abcdefg".toCharArray();
+
+        ReflectArray rca = new ReflectArray(RefNative.obj2id(ca));
+
+        rca.setValObj(5, 'x');
+        System.out.println("ca=" + (new String(ca)));
+
+        //rca.setValObj(9, 'y');
+        System.out.println("ca=" + (new String(ca)));
+
+        char[] cb = new char[ca.length];
+        DirectMemObj dmo = new DirectMemObj(rca.getDataPtr(), rca.length, rca.typeTag);
+        dmo.copyTo(1,cb,0,4);
+        System.out.println("cb=" + (new String(cb)));
     }
 }
