@@ -3,10 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.mini.gui;
+package org.mini.gui.impl;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfm.GlfmCallBackAdapter;
+import org.mini.gui.GApplication;
+import org.mini.gui.GForm;
+import org.mini.gui.GObject;
 import org.mini.nanovg.Nanovg;
 import static org.mini.nanovg.Nanovg.NVG_ANTIALIAS;
 import static org.mini.nanovg.Nanovg.NVG_DEBUG;
@@ -23,7 +26,7 @@ public class GuiCallBack extends GlfmCallBackAdapter {
     int fbWidth, fbHeight;
     float pxRatio;
 
-    int mouseX, mouseY, lastX, lastY;
+    public int mouseX, mouseY, lastX, lastY;
     long mouseLastPressed;
     int LONG_TOUCH_TIME = 500;
     int LONG_TOUCH_MAX_DISTANCE = 5;//移动距离超过40单位时可以产生惯性
@@ -42,9 +45,17 @@ public class GuiCallBack extends GlfmCallBackAdapter {
 
     long vg;
 
-    public GuiCallBack(long display, GApplication ap) {
+    static GuiCallBack instance = new GuiCallBack();
+
+    public static GuiCallBack getInstance() {
+        return instance;
+    }
+
+    private GuiCallBack() {
+    }
+
+    public void setDisplay(long display) {
         this.display = display;
-        setApplication(ap);
     }
 
     public final void setApplication(GApplication ap) {
@@ -78,6 +89,14 @@ public class GuiCallBack extends GlfmCallBackAdapter {
 
     public float getDeviceRatio() {
         return pxRatio;
+    }
+
+    public String getResRoot() {
+        return Glfm.glfmGetResRoot();
+    }
+
+    public void setDisplayTitle(String title) {
+        ;
     }
 
     void init() {
@@ -239,8 +258,8 @@ public class GuiCallBack extends GlfmCallBackAdapter {
         winWidth = (int) (fbWidth / pxRatio);
         winHeight = (int) (fbHeight / pxRatio);
 
-        gform.boundle[GObject.WIDTH] = width;
-        gform.boundle[GObject.HEIGHT] = height;
+        gform.getBoundle()[GObject.WIDTH] = width;
+        gform.getBoundle()[GObject.HEIGHT] = height;
         gform.flush();
     }
 
