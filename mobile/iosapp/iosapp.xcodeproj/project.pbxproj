@@ -18,7 +18,7 @@
 		45D78F6B209D4330003B9317 /* jni_glfm.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F57209D4330003B9317 /* jni_glfm.c */; };
 		45D78F6C209D4330003B9317 /* glad.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F5A209D4330003B9317 /* glad.c */; };
 		45D78F6D209D4330003B9317 /* nanovg.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F62209D4330003B9317 /* nanovg.c */; };
-		45D78F6E209D4330003B9317 /* jni_gui.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F63209D4330003B9317 /* jni_gui.c */; };
+		45D78F6E209D4330003B9317 /* media.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F63209D4330003B9317 /* media.c */; };
 		45D78F6F209D4330003B9317 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F65209D4330003B9317 /* main.c */; };
 		45D7902F209D8662003B9317 /* garbage.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D79002209D8662003B9317 /* garbage.c */; };
 		45D79030209D8662003B9317 /* runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D79003209D8662003B9317 /* runtime.c */; };
@@ -61,7 +61,7 @@
 		45D78F4C209D4330003B9317 /* jni_gl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jni_gl.c; sourceTree = "<group>"; };
 		45D78F4E209D4330003B9317 /* linmath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = linmath.h; sourceTree = "<group>"; };
 		45D78F4F209D4330003B9317 /* jni_nanovg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jni_nanovg.c; sourceTree = "<group>"; };
-		45D78F50209D4330003B9317 /* jni_gui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jni_gui.h; sourceTree = "<group>"; };
+		45D78F50209D4330003B9317 /* media.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = media.h; sourceTree = "<group>"; };
 		45D78F52209D4330003B9317 /* stb_image_write.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image_write.h; sourceTree = "<group>"; };
 		45D78F53209D4330003B9317 /* stb_image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
 		45D78F54209D4330003B9317 /* stb_truetype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_truetype.h; sourceTree = "<group>"; };
@@ -76,7 +76,7 @@
 		45D78F60209D4330003B9317 /* fontstash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fontstash.h; sourceTree = "<group>"; };
 		45D78F61209D4330003B9317 /* nanovg_gl_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nanovg_gl_utils.h; sourceTree = "<group>"; };
 		45D78F62209D4330003B9317 /* nanovg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nanovg.c; sourceTree = "<group>"; };
-		45D78F63209D4330003B9317 /* jni_gui.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jni_gui.c; sourceTree = "<group>"; };
+		45D78F63209D4330003B9317 /* media.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = media.c; sourceTree = "<group>"; };
 		45D78F65209D4330003B9317 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		45D79002209D8662003B9317 /* garbage.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = garbage.c; sourceTree = "<group>"; };
 		45D79003209D8662003B9317 /* runtime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = runtime.c; sourceTree = "<group>"; };
@@ -195,8 +195,8 @@
 				45D78F58209D4330003B9317 /* glad */,
 				45D78F4C209D4330003B9317 /* jni_gl.c */,
 				45D78F57209D4330003B9317 /* jni_glfm.c */,
-				45D78F63209D4330003B9317 /* jni_gui.c */,
-				45D78F50209D4330003B9317 /* jni_gui.h */,
+				45D78F63209D4330003B9317 /* media.c */,
+				45D78F50209D4330003B9317 /* media.h */,
 				45D78F4B209D4330003B9317 /* jni_nanovg_assist.h */,
 				45D78F4F209D4330003B9317 /* jni_nanovg.c */,
 				45D78F5C209D4330003B9317 /* jni_stb_assist.h */,
@@ -449,7 +449,7 @@
 				4523724420CAA77C00156C58 /* ltalloc.c in Sources */,
 				45D7903F209D8662003B9317 /* utf8_string.c in Sources */,
 				45D79039209D8662003B9317 /* global.c in Sources */,
-				45D78F6E209D4330003B9317 /* jni_gui.c in Sources */,
+				45D78F6E209D4330003B9317 /* media.c in Sources */,
 				45D79030209D8662003B9317 /* runtime.c in Sources */,
 				45D78F67209D4330003B9317 /* glfm_platform_android.c in Sources */,
 				45D78F6F209D4330003B9317 /* main.c in Sources */,
