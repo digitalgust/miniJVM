@@ -23,6 +23,7 @@ public class ReflectTest {
         obj.t1();
         obj.t2();
         obj.t3();
+        obj.t4();
         System.out.println("over");
     }
 
@@ -145,18 +146,84 @@ public class ReflectTest {
 
     void t3() {
         char[] ca = "abcdefg".toCharArray();
-
-        ReflectArray rca = new ReflectArray(RefNative.obj2id(ca));
-
-        rca.setValObj(5, 'x');
-        System.out.println("ca=" + (new String(ca)));
-
-        //rca.setValObj(9, 'y');
+        DirectMemObj dmo = DirectMemObj.wrap(ca);
+        dmo.setChar(5, 'x');
+        //dmo.setChar(9, 'y');
         System.out.println("ca=" + (new String(ca)));
 
         char[] cb = new char[ca.length];
-        DirectMemObj dmo = new DirectMemObj(rca.getDataPtr(), rca.length, rca.typeTag);
-        dmo.copyTo(1,cb,0,4);
+        dmo.copyTo(1, cb, 0, 4);
         System.out.println("cb=" + (new String(cb)));
+
+        char[] cc = new char[ca.length]; 
+
+        dmo = DirectMemObj.wrap(cc);
+        dmo.copyFrom(0, cb, 0, 4);
+        dmo.copyFrom(2, ca, 4, 2);
+        System.out.println("cc=" + (new String(cc)));
+
+        dmo = DirectMemObj.allocate(1024, byte.class);
+        for (int i = 0; i < 100; i++) {
+            dmo.setByte(i, (byte) i);
+        }
+        for (int i = 0; i < 100; i++) {
+            System.out.print(" " + dmo.getByte(i));
+        }
+        System.out.println();
+    }
+
+    static <T> int getLength(T arr) {
+        return Array.getLength(arr);
+    }
+
+    class A {
+
+        void print() {
+            System.out.println("A");
+        }
+    }
+
+    class B extends A {
+
+        void print() {
+            System.out.println("B");
+        }
+    }
+
+    class C extends B {
+
+        void print() {
+            System.out.println("C");
+        }
+    }
+
+//    void load(A a) {
+//        System.out.print("load A ");
+//        a.print();
+//    }
+//
+//    void load(B b) {
+//        System.out.print("load B ");
+//        b.print();
+//    }
+
+    <T> void load(T t) {
+        System.out.print("load T ");
+        //t.print();
+    }
+
+    C save() {
+        System.out.print("save C ");
+        return new C();
+    }
+
+    void t4() {
+        byte[] b = new byte[4];
+        System.out.println(getLength(b));
+
+        C c = new C();
+        load(c);
+
+        B bb = save();
     }
 }

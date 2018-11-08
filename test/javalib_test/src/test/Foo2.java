@@ -364,26 +364,55 @@ class Foo2 {
         System.out.println(mail2.matches(mainRegex));//true
         System.out.println(mail3.matches(mainRegex));//false
     }
-    
-    enum COLOR{
-        RED,GREEN,BLUE
+
+    enum COLOR {
+        RED, GREEN, BLUE
     }
-    
-    enum RGB{
+
+    enum RGB {
         RED(0xff0000),
         GREEN(0x00ff00),
-        BLUE(0x0000ff)
-        ;
-        
+        BLUE(0x0000ff);
+
         int argb;
-        RGB(int rgb){
-            this.argb=rgb;
+
+        RGB(int rgb) {
+            this.argb = rgb;
         }
     }
-    
-    void t21(){
-        System.out.println(RGB.class+" "+RGB.RED);
-        System.out.println(COLOR.class+" "+COLOR.RED);
+
+    void t21() {
+        System.out.println(RGB.class + " " + RGB.RED);
+        System.out.println(COLOR.class + " " + COLOR.RED);
+    }
+
+    void t22() {
+        class XX {
+
+            float a;
+            float b;
+        }
+
+        XX xx = new XX();
+        xx.a = 0.5f;
+        xx.b = 0.5f;
+        float[] yy = new float[2];
+        yy[0] = .5f;
+        yy[1] = .5f;
+
+        int count = 100000000;
+
+        long t0 = System.currentTimeMillis();
+        for (int i = 0; i < count; i++) {
+            xx.a += xx.b;
+        }
+        long t1 = System.currentTimeMillis();
+        System.out.println("field access spent:" + (t1 - t0));
+        for (int i = 0; i < count; i++) {
+            yy[0] += yy[1];
+        }
+        long t2 = System.currentTimeMillis();
+        System.out.println("field access spent:" + (t2 - t1));
     }
 
     public static void main(String args[]) {
@@ -407,8 +436,9 @@ class Foo2 {
 //        obj.t17();
 //        obj.t18();
 //        obj.t19();
-        obj.t20();
+//        obj.t20();
 //        obj.t21();
+        obj.t22();
     }
 }
 
