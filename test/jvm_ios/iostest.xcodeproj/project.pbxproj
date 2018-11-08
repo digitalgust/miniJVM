@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4535FA3821945F6E00B888BA /* libz.1.2.8.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4535FA3721945F6E00B888BA /* libz.1.2.8.tbd */; };
+		4535FA3B21945FEE00B888BA /* miniz.c in Sources */ = {isa = PBXBuildFile; fileRef = 4535FA3A21945FED00B888BA /* miniz.c */; };
 		454C4AEF1FB6B89D008B9C1D /* invokec.c in Sources */ = {isa = PBXBuildFile; fileRef = 45C1245D1F872A9200BF3925 /* invokec.c */; };
 		45719A2520CABD14009652A7 /* ltalloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 45719A2320CABD14009652A7 /* ltalloc.c */; };
 		45C1242F1F87232100BF3925 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C1242E1F87232100BF3925 /* AppDelegate.swift */; };
@@ -16,8 +18,6 @@
 		45C124391F87232100BF3925 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 45C124371F87232100BF3925 /* LaunchScreen.storyboard */; };
 		45C124441F87232100BF3925 /* iostestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C124431F87232100BF3925 /* iostestTests.swift */; };
 		45C1244F1F87232100BF3925 /* iostestUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C1244E1F87232100BF3925 /* iostestUITests.swift */; };
-		45C124681F872E5E00BF3925 /* libpthread.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 45C124671F872E5E00BF3925 /* libpthread.tbd */; };
-		45C1246A1F872E7E00BF3925 /* libc.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 45C124691F872E7E00BF3925 /* libc.tbd */; };
 		45EAB01B20DC9D3400896201 /* d_type.c in Sources */ = {isa = PBXBuildFile; fileRef = 45EAB01820DC9D3400896201 /* d_type.c */; };
 		45EAB01C20DC9D3400896201 /* miniz_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 45EAB01920DC9D3400896201 /* miniz_wrapper.c */; };
 		45ECB7A9206D038200CF9E7F /* lib in Resources */ = {isa = PBXBuildFile; fileRef = 45ECB7A8206D038200CF9E7F /* lib */; };
@@ -60,6 +60,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4535FA3521945F3500B888BA /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		4535FA3721945F6E00B888BA /* libz.1.2.8.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.1.2.8.tbd; path = usr/lib/libz.1.2.8.tbd; sourceTree = SDKROOT; };
+		4535FA3921945FED00B888BA /* miniz.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = miniz.h; path = ../../mini_jvm/utils/miniz.h; sourceTree = "<group>"; };
+		4535FA3A21945FED00B888BA /* miniz.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = miniz.c; path = ../../mini_jvm/utils/miniz.c; sourceTree = "<group>"; };
 		45719A2320CABD14009652A7 /* ltalloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ltalloc.c; path = ../../mini_jvm/utils/ltalloc.c; sourceTree = "<group>"; };
 		45719A2420CABD14009652A7 /* ltalloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ltalloc.h; path = ../../mini_jvm/utils/ltalloc.h; sourceTree = "<group>"; };
 		45C1242B1F87232100BF3925 /* iostest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iostest.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -127,8 +131,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				45C1246A1F872E7E00BF3925 /* libc.tbd in Frameworks */,
-				45C124681F872E5E00BF3925 /* libpthread.tbd in Frameworks */,
+				4535FA3821945F6E00B888BA /* libz.1.2.8.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -209,6 +212,8 @@
 		45C124661F872E5E00BF3925 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4535FA3721945F6E00B888BA /* libz.1.2.8.tbd */,
+				4535FA3521945F3500B888BA /* libz.tbd */,
 				45C124691F872E7E00BF3925 /* libc.tbd */,
 				45C124671F872E5E00BF3925 /* libpthread.tbd */,
 			);
@@ -244,6 +249,8 @@
 		45ECB7CA206D03B700CF9E7F /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				4535FA3A21945FED00B888BA /* miniz.c */,
+				4535FA3921945FED00B888BA /* miniz.h */,
 				45EAB01820DC9D3400896201 /* d_type.c */,
 				45EAB01920DC9D3400896201 /* miniz_wrapper.c */,
 				45EAB01A20DC9D3400896201 /* miniz_wrapper.h */,
@@ -424,6 +431,7 @@
 				45EAB01C20DC9D3400896201 /* miniz_wrapper.c in Sources */,
 				45ECB7DE206D03CE00CF9E7F /* global.c in Sources */,
 				45ECB806206D03F200CF9E7F /* tinycthread.c in Sources */,
+				4535FA3B21945FEE00B888BA /* miniz.c in Sources */,
 				45ECB807206D03F200CF9E7F /* utf8_string.c in Sources */,
 				45ECB7E3206D03CE00CF9E7F /* class_load.c in Sources */,
 				454C4AEF1FB6B89D008B9C1D /* invokec.c in Sources */,
@@ -608,6 +616,7 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "iostestTests-Bridging-Header.h";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = 1;
+				VALID_ARCHS = arm64;
 			};
 			name = Debug;
 		};
@@ -626,6 +635,7 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "iostestTests-Bridging-Header.h";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = 1;
+				VALID_ARCHS = arm64;
 			};
 			name = Release;
 		};
