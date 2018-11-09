@@ -8,7 +8,6 @@ package org.mini.media;
 import java.util.HashMap;
 import java.util.Map;
 import org.mini.reflect.DirectMemObj;
-import org.mini.reflect.ReflectArray;
 
 /**
  *
@@ -17,7 +16,6 @@ import org.mini.reflect.ReflectArray;
 public class AudioDevice {
 
     long handle_context;
-    long handle_config;
     long handle_device;
 
     public static final int //
@@ -31,31 +29,44 @@ public class AudioDevice {
             mal_device_type_playback = 0,
             mal_device_type_capture = 1;
 
+    int deviceType;
+
     public int format;
     public int channels;
     public int sampleRate;
     public AudioFrameListener listener;
-    AudioDecoder decoder;
+    Object userdata;
 
-    public void config(int format, int channels, int sampleRate, AudioFrameListener listener) {
+    public AudioDevice(int deviceType, int format, int channels, int sampleRate) {
+        this.deviceType = deviceType;
+
         this.format = format;
         this.channels = channels;
         this.sampleRate = sampleRate;
-        this.listener = listener;
-        handle_config = MiniAL.mal_device_config_init(format, channels, sampleRate);
-        if (handle_config == 0) {
-            throw new RuntimeException("MiniAL: init device config error");
-        }
+        init();
     }
 
-    public void init(int deviceType, AudioDecoder decoder) {
-        this.decoder = decoder;
+    public void setAudioFrameListener(AudioFrameListener listener) {
+        this.listener = listener;
+
+    }
+
+    public void setUserData(Object userdata) {
+        this.userdata = userdata;
+
+    }
+
+    public Object getUserData() {
+        return userdata;
+    }
+
+    final void init() {
+        checkThread();
         handle_context = MiniAL.mal_context_init();
         if (handle_context == 0) {
             throw new RuntimeException("MiniAL: init context error");
         }
-        long handle_decode = decoder == null ? 0 : decoder.getHandle_decoder();
-        handle_device = MiniAL.mal_device_init(handle_context, deviceType, handle_config, handle_decode);
+        handle_device = MiniAL.mal_device_init(handle_context, deviceType, 0, format, channels, sampleRate);
         if (handle_device == 0) {
             throw new RuntimeException("MiniAL: init device error");
         } else {
@@ -64,28 +75,43 @@ public class AudioDevice {
     }
 
     public void start() {
+        checkThread();
         MiniAL.mal_device_start(handle_device);
     }
 
     public void stop() {
-        MiniAL.mal_device_stop(handle_device);
+        checkThread();
+//        if (MiniAL.mal_device_is_started(handle_device) == 1) {
+//            MiniAL.mal_device_stop(handle_device);
+//        }
     }
 
     public boolean isStarted() {
         return MiniAL.mal_device_is_started(handle_device) == 1;
     }
 
+    //cant call start stop in callback thread
+    void checkThread() {
+        if (Thread.currentThread() == curThread) {
+            throw new RuntimeException("cant call method in callback, need call this method in other thread.");
+        }
+    }
+
+    @Override
     public void finalize() {
+        destory();
+    }
+
+    void destory() {
         if (handle_context != 0) {
             MiniAL.mal_context_uninit(handle_context);
-        }
-        if (handle_config != 0) {
-            MiniAL.mal_device_config_uninit(handle_config);
+            handle_context = 0;
         }
         if (handle_device != 0) {
             MiniAL.mal_device_uninit(handle_device);
+            handle_device = 0;
         }
-        processors.remove(handle_config);
+        System.out.println("finalize : " + this);
     }
 
     public static int getFormatBytes(int format) {
@@ -111,6 +137,7 @@ public class AudioDevice {
      *
      */
     static Map<Long, AudioDevice> processors = new HashMap();
+    static Thread curThread;
 
     /**
      *
@@ -119,6 +146,7 @@ public class AudioDevice {
      * @param pSamples
      */
     static void onReceiveFrames(long pDevice, int frameCount, long pSamples) {
+        curThread = Thread.currentThread();
         AudioDevice dev = processors.get(pDevice);
         if (dev != null && pSamples != 0) {
             if (dev.listener != null) {
@@ -132,16 +160,10 @@ public class AudioDevice {
     }
 
     static int onSendFrames(long pDevice, int frameCount, long pSamples) {
+        curThread = Thread.currentThread();
         AudioDevice dev = processors.get(pDevice);
-        if (dev != null && pSamples != 0) {
-            if (dev.decoder != null) {
-                System.out.println("onSendFrames: " + frameCount + " , " + pSamples + "  status:" + dev.isStarted());
-                int v = MiniAL.mal_decoder_read(pDevice, frameCount, pSamples);
-                if (v == 0) {
-                    dev.stop();
-                }
-                return v;
-            } else if (dev.listener != null) {
+        if (dev != null) {
+            if (dev.listener != null) {
                 int samplesToRead = frameCount * dev.channels;
                 if (samplesToRead == 0) {
                     return 0;
@@ -156,6 +178,7 @@ public class AudioDevice {
     }
 
     static void onStop(long pDevice) {
+        curThread = Thread.currentThread();
         AudioDevice dev = processors.get(pDevice);
         if (dev != null) {
             if (dev.listener != null) {

@@ -101,6 +101,12 @@ public class GList extends GPanel implements GFocusChangeListener {
         reSize();
         changeCurPanel();
     }
+    
+    @Override
+    public void setViewSize(float w,float h){
+        super.setViewSize(w, h);
+        reSize();
+    }
 
     public void showScrollBar(boolean show) {
         this.showScrollbar = show;

@@ -825,7 +825,7 @@ NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__); } whil
         NSData *data=UIImageJPEGRepresentation(image, 0.75);
         //self.imageShow.image = image;
         
-        NSURL *nsurl=[info objectForKey:UIImagePickerControllerImageURL];
+        NSURL *nsurl=[info objectForKey:UIImagePickerControllerReferenceURL];
         NSString *nss=[nsurl path];
         const char* url=[nss UTF8String];
         

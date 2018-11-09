@@ -5,29 +5,33 @@
  */
 package org.mini.media;
 
+import org.mini.glfw.Glfw;
+
 /**
  *
  * @author Gust
  */
 public class MiniAL {
 
+    static {
+        Glfw.loadLib();
+    }
+
     static native long mal_context_init();
 
     static native void mal_context_uninit(long handle_context);
 
-    static native long mal_device_config_init(int format, int channels, int sampleRate);
+    static native long mal_decoder_init_file(byte[] b, int format, int channels, int sampleRate);
 
-    static native void mal_device_config_uninit(long handle);
+    static native long mal_decoder_init_memory(byte[] data, int format, int channels, int sampleRate);
 
-    static native long mal_decoder_init_file(byte[] b);
-
-    static native long mal_decoder_init_memory(byte[] data);
+    static native void mal_decoder_get_para(long handle_decoder, int[] arr);
 
     static native int mal_decoder_read(long handle_device, int frameCount, long pSamples);
 
     static native void mal_decoder_uninit(long handle_decoder);
 
-    static native long mal_device_init(long handle_context, int deviceType, long handle_config, long handle_decode);
+    static native long mal_device_init(long handle_context, int deviceType, long handle_decode, int format, int channels, int sampleRate);
 
     static native void mal_device_uninit(long handle_device);
 

@@ -26,7 +26,13 @@ __refer ptr_NanovgFuncTable();
 
 s32 count_NanovgFuncTable();
 
-Runtime *getRuntimeCurThread();
+
+__refer ptr_MiniALFuncTable();
+
+s32 count_MiniALFuncTable();
+
+//
+Runtime *getRuntimeCurThread(JniEnv *env);
 
 struct _GlobeRefer {
     JniEnv *env;
@@ -45,7 +51,13 @@ struct _GlobeRefer {
     MethodInfo *_callback_surface_created;
     MethodInfo *_callback_photo_picked;
     MethodInfo *_callback_notify;
-
+    
+    //
+    MethodInfo *_callback_minial_on_send_frames;
+    MethodInfo *_callback_minial_on_recv_frames;
+    MethodInfo *_callback_minial_on_stop;
+    
+    //
     Pairlist *runtime_list;
 };
 

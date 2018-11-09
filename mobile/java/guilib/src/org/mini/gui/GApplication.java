@@ -5,6 +5,8 @@
  */
 package org.mini.gui;
 
+import org.mini.gui.impl.GuiCallBack;
+
 /**
  *
  * @author Gust

@@ -328,7 +328,7 @@ public class GL_java_2_c {
                             varCode += "    if(" + argvName + "){\n";
                             varCode += "        offset_" + argvName + " *= env->data_type_bytes[" + argvName + "->mb.arr_type_index];\n";
                             varCode += "        ptr_" + argvName + " = " + argvName + "->arr_body + offset_" + argvName + ";\n";
-                            varCode += "    }\n";
+                            varCode += "    } else if(offset_" + argvName + ") { ptr_" + argvName + " = (__refer)(intptr_t)offset_" + argvName + ";}\n";
                             if (!isPointer(nativeArgvs[nativei])) {
                                 //curArgvType = "*(" + nativeArgvs[nativei] + "*)";
                             }

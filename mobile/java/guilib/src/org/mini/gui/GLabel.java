@@ -7,8 +7,8 @@ package org.mini.gui;
 
 import static org.mini.gui.GObject.LEFT;
 import static org.mini.nanovg.Gutil.toUtf8;
+import org.mini.nanovg.Nanovg;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_LEFT;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_MIDDLE;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_TOP;
 import static org.mini.nanovg.Nanovg.nvgFillColor;
 import static org.mini.nanovg.Nanovg.nvgFontFace;
@@ -17,6 +17,7 @@ import static org.mini.nanovg.Nanovg.nvgTextAlign;
 import static org.mini.nanovg.Nanovg.nvgTextBoxBoundsJni;
 import static org.mini.nanovg.Nanovg.nvgTextBoxJni;
 import static org.mini.nanovg.Nanovg.nvgTextJni;
+import static org.mini.nanovg.Nanovg.nvgTextMetrics;
 
 /**
  *
@@ -27,6 +28,7 @@ public class GLabel extends GObject {
     String text;
     byte[] text_arr;
     char preicon;
+    float[] lineh = {0};
 
     int align = NVG_ALIGN_LEFT | NVG_ALIGN_TOP;
 
@@ -92,23 +94,44 @@ public class GLabel extends GObject {
         nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
         nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
         nvgFontFace(vg, GToolkit.getFontWord());
+        nvgTextMetrics(vg, null, null, lineh);
 
         nvgTextAlign(vg, align);
-        float[] text_area = new float[]{x + 2f, y + 2f, w - 4f, h - 4f};
-        float dx = text_area[LEFT];
-        float dy = text_area[TOP];
+        float[] area = new float[]{x + 2f, y + 2f, w - 4f, h - 4f};
+        float dx, dy;
+        dx = area[LEFT];
+        dy = area[TOP];
+        if ((align & Nanovg.NVG_ALIGN_MIDDLE) != 0) {
+            dy += lineh[0];
+        } else if ((align & Nanovg.NVG_ALIGN_BOTTOM) != 0) {
+            dy += GToolkit.getStyle().getTextFontSize();
+        }
+//        if ((align & Nanovg.NVG_ALIGN_RIGHT) != 0) {
+//            dx = area[LEFT] + area[WIDTH];
+//        } else if ((align & Nanovg.NVG_ALIGN_CENTER) != 0) {
+//            dx = area[LEFT] + area[WIDTH] / 2;
+//        } else {
+//            dx = area[LEFT];
+//        }
+//        if ((align & Nanovg.NVG_ALIGN_BOTTOM) != 0) {
+//            dy = area[TOP] + area[HEIGHT];
+//        } else if ((align & Nanovg.NVG_ALIGN_MIDDLE) != 0) {
+//            dy = area[TOP] + area[HEIGHT] / 2;
+//        } else {
+//            dy = area[TOP];
+//        }
 
         if (text_arr != null) {
-            float[] bond = new float[4];
-            nvgTextBoxBoundsJni(vg, text_area[LEFT], text_area[TOP], text_area[WIDTH], text_arr, 0, text_arr.length, bond);
-            bond[WIDTH] -= bond[LEFT];
-            bond[HEIGHT] -= bond[TOP];
-            bond[LEFT] = bond[TOP] = 0;
-
-            if (bond[HEIGHT] > text_area[HEIGHT]) {
-                dy -= bond[HEIGHT] - text_area[HEIGHT];
-            }
-            nvgTextBoxJni(vg, dx, dy, text_area[WIDTH], text_arr, 0, text_arr.length);
+//            float[] bond = new float[4];
+//            nvgTextBoxBoundsJni(vg, dx, dy, area[WIDTH], text_arr, 0, text_arr.length, bond);
+//            bond[WIDTH] -= bond[LEFT];
+//            bond[HEIGHT] -= bond[TOP];
+//            bond[LEFT] = bond[TOP] = 0;
+//
+//            if (bond[HEIGHT] > area[HEIGHT]) {
+//                dy -= bond[HEIGHT] - area[HEIGHT];
+//            }
+            nvgTextBoxJni(vg, dx, dy, area[WIDTH], text_arr, 0, text_arr.length);
         }
     }
 

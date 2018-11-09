@@ -52,7 +52,7 @@ abstract public class GContainer extends GObject {
         return elements.size();
     }
 
-    GObject findByXY(float x, float y) {
+    public GObject findByXY(float x, float y) {
         synchronized (elements) {
             for (int i = elements.size() - 1; i >= 0; i--) {
                 GObject nko = elements.get(i);

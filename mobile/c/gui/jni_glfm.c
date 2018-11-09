@@ -12,7 +12,7 @@
 //#include "deps/include/stb_image.h"
 
 #include "jvm.h"
-#include "jni_gui.h"
+#include "media.h"
 
 extern const char *glfmGetResRoot();
 
@@ -42,7 +42,7 @@ static void _callback_error_before_init(int error, const char *description) {
 
 static void _callback_surface_error(GLFMDisplay *window, const char *description) {
     if (refers._callback_surface_error) {
-        Runtime *runtime = getRuntimeCurThread();
+        Runtime *runtime = getRuntimeCurThread(refers.env);
         JniEnv *env = refers.env;
         env->push_ref(runtime->stack, refers.glfm_callback);
         env->push_long(runtime->stack, (s64) (intptr_t) window);
@@ -59,7 +59,7 @@ static void _callback_surface_error(GLFMDisplay *window, const char *description
 
 static bool _callback_key(GLFMDisplay *window, GLFMKey key, GLFMKeyAction action, int mods) {
     if (refers._callback_key) {
-        Runtime *runtime = getRuntimeCurThread();
+        Runtime *runtime = getRuntimeCurThread(refers.env);
         JniEnv *env = refers.env;
         env->push_ref(runtime->stack, refers.glfm_callback);
         env->push_long(runtime->stack, (s64) (intptr_t) window);
@@ -80,7 +80,7 @@ static bool _callback_key(GLFMDisplay *window, GLFMKey key, GLFMKeyAction action
 
 static void _callback_character(GLFMDisplay *window, const char *utf8, int modifiers) {
     if (refers._callback_character) {
-        Runtime *runtime = getRuntimeCurThread();
+        Runtime *runtime = getRuntimeCurThread(refers.env);
         JniEnv *env = refers.env;
         env->push_ref(runtime->stack, refers.glfm_callback);
         env->push_long(runtime->stack, (s64) (intptr_t) window);
@@ -98,7 +98,7 @@ static void _callback_character(GLFMDisplay *window, const char *utf8, int modif
 
 static void _callback_mainloop(GLFMDisplay *window, f64 frameTime) {
     if (refers._callback_mainloop) {
-        Runtime *runtime = getRuntimeCurThread();
+        Runtime *runtime = getRuntimeCurThread(refers.env);
         JniEnv *env = refers.env;
         env->push_ref(runtime->stack, refers.glfm_callback);
         env->push_long(runtime->stack, (s64) (intptr_t) window);
@@ -114,7 +114,7 @@ static void _callback_mainloop(GLFMDisplay *window, f64 frameTime) {
 
 void _callback_memory_warning(GLFMDisplay *window) {
     if (refers._callback_memory_warning) {
-        Runtime *runtime = getRuntimeCurThread();
+        Runtime *runtime = getRuntimeCurThread(refers.env);
         JniEnv *env = refers.env;
         env->push_ref(runtime->stack, refers.glfm_callback);
         env->push_long(runtime->stack, (s64) (intptr_t) window);
@@ -128,7 +128,7 @@ void _callback_memory_warning(GLFMDisplay *window) {
 
 void _callback_keyboard_visible(GLFMDisplay *window, bool visible, f64 x, f64 y, f64 w, f64 h) {
     if (refers._callback_keyboard_visible) {
-        Runtime *runtime = getRuntimeCurThread();
+        Runtime *runtime = getRuntimeCurThread(refers.env);
         JniEnv *env = refers.env;
         env->push_ref(runtime->stack, refers.glfm_callback);
         env->push_long(runtime->stack, (s64) (intptr_t) window);
@@ -148,7 +148,7 @@ void _callback_keyboard_visible(GLFMDisplay *window, bool visible, f64 x, f64 y,
 
 bool _callback_touch(GLFMDisplay *window, s32 touch, GLFMTouchPhase phase, f64 x, f64 y) {
     if (refers._callback_touch) {
-        Runtime *runtime = getRuntimeCurThread();
+        Runtime *runtime = getRuntimeCurThread(refers.env);
         JniEnv *env = refers.env;
         env->push_ref(runtime->stack, refers.glfm_callback);
         env->push_long(runtime->stack, (s64) (intptr_t) window);
@@ -171,7 +171,7 @@ bool _callback_touch(GLFMDisplay *window, s32 touch, GLFMTouchPhase phase, f64 x
 
 void _callback_surface_resized(GLFMDisplay *window, s32 w, s32 h) {
     if (refers._callback_surface_resized) {
-        Runtime *runtime = getRuntimeCurThread();
+        Runtime *runtime = getRuntimeCurThread(refers.env);
         JniEnv *env = refers.env;
         env->push_ref(runtime->stack, refers.glfm_callback);
         env->push_long(runtime->stack, (s64) (intptr_t) window);
@@ -188,7 +188,7 @@ void _callback_surface_resized(GLFMDisplay *window, s32 w, s32 h) {
 
 void _callback_surface_destroyed(GLFMDisplay *window) {
     if (refers._callback_surface_destroyed) {
-        Runtime *runtime = getRuntimeCurThread();
+        Runtime *runtime = getRuntimeCurThread(refers.env);
         JniEnv *env = refers.env;
         env->push_ref(runtime->stack, refers.glfm_callback);
         env->push_long(runtime->stack, (s64) (intptr_t) window);
@@ -203,7 +203,7 @@ void _callback_surface_destroyed(GLFMDisplay *window) {
 
 void _callback_app_focus(GLFMDisplay *window, bool focus) {
     if (refers._callback_app_focus) {
-        Runtime *runtime = getRuntimeCurThread();
+        Runtime *runtime = getRuntimeCurThread(refers.env);
         JniEnv *env = refers.env;
         env->push_ref(runtime->stack, refers.glfm_callback);
         env->push_long(runtime->stack, (s64) (intptr_t) window);
@@ -220,7 +220,7 @@ void _callback_app_focus(GLFMDisplay *window, bool focus) {
 void _callback_surface_created(GLFMDisplay *window, s32 w, s32 h) {
     gladLoadGLES2Loader(glfmGetProcAddress);
     if (refers._callback_surface_created) {
-        Runtime *runtime = getRuntimeCurThread();
+        Runtime *runtime = getRuntimeCurThread(refers.env);
         JniEnv *env = refers.env;
         env->push_ref(runtime->stack, refers.glfm_callback);
         env->push_long(runtime->stack, (s64) (intptr_t) window);
@@ -239,7 +239,7 @@ void
 _callback_photo_picked(GLFMDisplay *window, s32 uid, const c8 *url, c8 *data, s32 length) {
     gladLoadGLES2Loader(glfmGetProcAddress);
     if (refers._callback_surface_created) {
-        Runtime *runtime = getRuntimeCurThread();
+        Runtime *runtime = getRuntimeCurThread(refers.env);
         JniEnv *env = refers.env;
         Instance *jstr_url = createJavaString(runtime, url);
         Instance *jarr = NULL;
@@ -264,7 +264,7 @@ _callback_photo_picked(GLFMDisplay *window, s32 uid, const c8 *url, c8 *data, s3
 void _callback_notify(GLFMDisplay *window, const c8* key, const c8* val) {
     gladLoadGLES2Loader(glfmGetProcAddress);
     if (refers._callback_surface_created) {
-        Runtime *runtime = getRuntimeCurThread();
+        Runtime *runtime = getRuntimeCurThread(refers.env);
         JniEnv *env = refers.env;
         env->push_ref(runtime->stack, refers.glfm_callback);
         env->push_long(runtime->stack, (s64) (intptr_t) window);

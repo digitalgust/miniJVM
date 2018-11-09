@@ -72,8 +72,7 @@ public class GToolkit {
      * @return
      */
     public static long getArrayDataPtr(Object array) {
-        ReflectArray reflect_arr = new ReflectArray(RefNative.obj2id(array));
-        return reflect_arr.getDataPtr();
+        return ReflectArray.getBodyPtr(RefNative.obj2id(array));
     }
 
     public static float[] nvgRGBA(int r, int g, int b, int a) {
@@ -505,6 +504,7 @@ public class GToolkit {
             size = 8;
         }
         list.setSize(200, size * list.list_item_heigh);
+        list.setViewSize(200, size * list.list_item_heigh);
         list.setFront(true);
 
         return list;

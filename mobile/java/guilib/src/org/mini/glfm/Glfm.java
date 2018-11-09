@@ -84,6 +84,18 @@ public class Glfm {
             GLFMKeyActionRepeated = 1,
             GLFMKeyActionReleased = 2;
 
+    /**
+     * photo pick
+     */
+    public static int GLFMPickPhotoZoom_MASK = 0;
+    public static int GLFMPickPhotoZoom_1024 = 0;
+    public static int GLFMPickPhotoZoom_No = 1;
+    //
+    public static int GLFMPickPhotoSave_MASK = 1;
+    public static int GLFMPickPhotoSave_yes = 2;
+    public static int GLFMPickPhotoSave_no = 0;
+    //
+
     public static native void glfmSetCallBack(long display, GlfmCallBack app);
 
 /// Init the display condifuration. Should only be called in glfmMain.
@@ -144,10 +156,10 @@ public class Glfm {
 
     public static native void glfmSetClipBoardContent(String str);
 
-    public static native void glfmPickPhotoAlbum(long display, int uid,int type);
+    public static native void glfmPickPhotoAlbum(long display, int uid, int type);
 
-    public static native void glfmPickPhotoCamera(long display, int uid,int type);
+    public static native void glfmPickPhotoCamera(long display, int uid, int type);
 
-    public static native void glfmImageCrop(long display, int uid, String uris,int x,int y, int width, int height);
+    public static native void glfmImageCrop(long display, int uid, String uris, int x, int y, int width, int height);
 
 }

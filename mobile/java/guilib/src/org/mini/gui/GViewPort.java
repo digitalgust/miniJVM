@@ -13,13 +13,6 @@ import static org.mini.gui.GObject.LEFT;
 import static org.mini.gui.GObject.TOP;
 import static org.mini.gui.GObject.WIDTH;
 import static org.mini.gui.GObject.flush;
-import static org.mini.gui.GObject.flush;
-import static org.mini.gui.GObject.flush;
-import static org.mini.gui.GObject.flush;
-import static org.mini.gui.GObject.flush;
-import static org.mini.gui.GObject.flush;
-import static org.mini.gui.GObject.flush;
-import static org.mini.gui.GObject.flush;
 
 /**
  *

@@ -99,6 +99,19 @@ public class GScrollBar extends GObject {
     }
 
     @Override
+    public boolean scrollEvent(float dx, float dy, float x, float y) {
+        return dragEvent(dx, dy, x, y);
+    }
+
+    @Override
+    public boolean dragEvent(float dx, float dy, float x, float y) {
+        if (draged) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         int rx = (int) (x - getX());
         int ry = (int) (y - getY());

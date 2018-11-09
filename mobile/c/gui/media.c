@@ -2,9 +2,9 @@
 // Created by Gust on 2018/2/1.
 //
 
-
+#include "jvm_util.h"
 #include "jvm.h"
-#include "jni_gui.h"
+#include "media.h"
 
 
 void JNI_OnLoad_mini(JniEnv *env) {
@@ -17,6 +17,7 @@ void JNI_OnLoad_mini(JniEnv *env) {
     env->native_reg_lib(ptr_GlfmFuncTable(), count_GlfmFuncTable());
     env->native_reg_lib(ptr_GLFuncTable(), count_GLFuncTable());
     env->native_reg_lib(ptr_NanovgFuncTable(), count_NanovgFuncTable());
+    env->native_reg_lib(ptr_MiniALFuncTable(), count_MiniALFuncTable());
 }
 
 void JNI_OnUnload_mini(JniEnv *env) {

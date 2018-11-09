@@ -5,6 +5,7 @@
  */
 package org.mini.gui;
 
+import org.mini.gui.impl.GuiCallBack;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -12,11 +13,13 @@ import java.util.TimerTask;
 import static org.mini.gl.GL.GL_COLOR_BUFFER_BIT;
 import static org.mini.gl.GL.GL_DEPTH_BUFFER_BIT;
 import static org.mini.gl.GL.GL_STENCIL_BUFFER_BIT;
-import org.mini.nanovg.StbFont;
 import static org.mini.gl.GL.glClear;
+import org.mini.nanovg.StbFont;
 import static org.mini.gl.GL.glClearColor;
 import static org.mini.gl.GL.glViewport;
 import org.mini.glfm.Glfm;
+import static org.mini.gui.GObject.TYPE_FORM;
+import static org.mini.gui.GObject.flush;
 import static org.mini.gui.GToolkit.nvgRGBA;
 import org.mini.gui.event.GAppActiveListener;
 import org.mini.gui.event.GKeyboardShowListener;
@@ -39,7 +42,7 @@ import static org.mini.nanovg.Nanovg.nvgTextAlign;
 public class GForm extends GViewPort {
 
     String title;
-    long display; //glfw win
+    long display; //glfw display
     long vg; //nk contex
     GuiCallBack callback;
     static StbFont gfont;
@@ -48,7 +51,7 @@ public class GForm extends GViewPort {
     long last, count;
     //
     float pxRatio;
-    int winWidth, winHeight;
+
     int fbWidth, fbHeight;
     //
     boolean premult;
@@ -62,13 +65,14 @@ public class GForm extends GViewPort {
 
     Timer timer = new Timer(true);//用于更新画面，UI系统采取按需刷新的原则
 
-    public GForm(String title, int width, int height, GuiCallBack ccb) {
+    public GForm(GuiCallBack ccb) {
         this.title = title;
 
         callback = ccb;
 
         fbWidth = ccb.getFrameBufferWidth();
         fbHeight = ccb.getFrameBufferHeight();
+        int winWidth, winHeight;
         winWidth = ccb.getDeviceWidth();
         winHeight = ccb.getDeviceHeight();
 
@@ -107,11 +111,15 @@ public class GForm extends GViewPort {
     }
 
     public int getDeviceWidth() {
-        return (int) winWidth;
+        return (int) callback.getDeviceWidth();
     }
 
     public int getDeviceHeight() {
-        return (int) winHeight;
+        return (int) callback.getDeviceHeight();
+    }
+
+    public void setTitle(String title) {
+        callback.setDisplayTitle(title);
     }
 
     @Override
@@ -122,7 +130,7 @@ public class GForm extends GViewPort {
             System.out.println("callback.getNvContext() is null.");
         }
 
-        String respath = Glfm.glfmGetResRoot();
+        String respath = callback.getResRoot();
         System.setProperty("word_font_path", respath + "/resfiles/wqymhei.ttc");
         System.setProperty("icon_font_path", respath + "/resfiles/entypo.ttf");
         System.setProperty("emoji_font_path", respath + "/resfiles/NotoEmoji-Regular.ttf");
@@ -132,7 +140,7 @@ public class GForm extends GViewPort {
         flush();
     }
 
-    void display(long vg) {
+    public void display(long vg) {
 
         long startAt, endAt, cost;
         try {
@@ -146,6 +154,10 @@ public class GForm extends GViewPort {
                 glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
             }
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+            int winWidth, winHeight;
+            winWidth = callback.getDeviceWidth();
+            winHeight = callback.getDeviceHeight();
 
             nvgBeginFrame(vg, winWidth, winHeight, pxRatio);
             //drawDebugInfo(vg);

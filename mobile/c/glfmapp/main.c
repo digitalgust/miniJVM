@@ -10,7 +10,7 @@
 
 #include "jvm.h"
 #include "jvm_util.h"
-#include "jni_gui.h"
+#include "media.h"
 
 #ifdef NDEBUG
 #define LOG_DEBUG(...) do { } while (0)
@@ -45,7 +45,7 @@ void glfmMain(GLFMDisplay *display) {
     sys_properties_set_c("glfm.res.root",glfmGetResRoot());
     sys_properties_set_c("glfm.save.root", glfmGetSaveRoot());
     sys_properties_set_c("glfm.uuid", glfmGetUUID());
-    Runtime *runtime=getRuntimeCurThread();
+    Runtime *runtime=getRuntimeCurThread(&jnienv);
 
     utf8_destory(classpath);
     c8* p_classname="app/GlfmMain";

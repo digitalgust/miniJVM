@@ -128,4 +128,18 @@ public class GImageItem extends GObject {
         this.img = img;
     }
 
+    /**
+     * @return the drawBoader
+     */
+    public boolean isDrawBoader() {
+        return drawBoader;
+    }
+
+    /**
+     * @param drawBoader the drawBoader to set
+     */
+    public void setDrawBoader(boolean drawBoader) {
+        this.drawBoader = drawBoader;
+    }
+
 }

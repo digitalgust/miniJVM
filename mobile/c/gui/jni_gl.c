@@ -7,7 +7,7 @@
 #include "linmath.h"
 
 #include "jvm.h"
-#include "jni_gui.h"
+#include "media.h"
 
 int org_mini_gl_GL_glActiveTexture(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;

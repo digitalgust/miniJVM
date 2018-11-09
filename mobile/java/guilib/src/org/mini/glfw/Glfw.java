@@ -1,6 +1,8 @@
 package org.mini.glfw;
 
 public class Glfw {
+    
+    public static void loadLib(){}
 
     /**
      * The major version number of the GLFW library. This is incremented when
