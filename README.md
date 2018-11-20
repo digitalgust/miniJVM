@@ -9,7 +9,7 @@
 
   * Jvm Build pass: iOS / Android / mingww64 32 64bit / cygwin / MSVC 32 64bit / MacOS /  Linux  .   
   * No dependence Library .  
-  * Low memory footprint , HelloWorld needs 100KB only .  
+  * Low memory footprint .  
   * Minimal runtime classlib .   
   * Support java5/6/7/8 class file version .  
   * Support embedded java source compiler(janino compiler) .  
