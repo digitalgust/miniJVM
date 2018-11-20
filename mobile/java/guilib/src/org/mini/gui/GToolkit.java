@@ -5,13 +5,8 @@
  */
 package org.mini.gui;
 
+import java.io.InputStream;
 import java.util.Hashtable;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import static org.mini.gui.GObject.HEIGHT;
-import static org.mini.gui.GObject.LEFT;
-import static org.mini.gui.GObject.TOP;
-import static org.mini.gui.GObject.WIDTH;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
 import static org.mini.nanovg.Gutil.toUtf8;
@@ -25,7 +20,6 @@ import static org.mini.nanovg.Nanovg.nvgAddFallbackFontId;
 import static org.mini.nanovg.Nanovg.nvgBeginPath;
 import static org.mini.nanovg.Nanovg.nvgBoxGradient;
 import static org.mini.nanovg.Nanovg.nvgCircle;
-import static org.mini.nanovg.Nanovg.nvgCreateFont;
 import static org.mini.nanovg.Nanovg.nvgFill;
 import static org.mini.nanovg.Nanovg.nvgFillColor;
 import static org.mini.nanovg.Nanovg.nvgFillPaint;
@@ -79,45 +73,78 @@ public class GToolkit {
         return Nanovg.nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);
     }
 
+    public static byte[] readFileFromJar(String path) {
+        try {
+            InputStream is = "".getClass().getResourceAsStream(path);
+            int av = is.available();
+            if (is != null && av >= 0) {
+                byte[] b = new byte[av];
+                int len = is.read(b);
+                if (len != av) {
+                    throw new RuntimeException("read file from jar error: " + path);
+                } else {
+                    //System.out.println("load from jar: " + path + " ,bytes:" + len);
+                }
+                return b;
+            } else {
+                System.out.println("load from jar fail : " + path);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
     /**
      * 字体部分
      */
-    static byte[] font_word = toUtf8("word"), font_icon = toUtf8("icon"), font_emoji = toUtf8("emoji");
-    static int font_word_handle, font_icon_handle, font_emoji_handle;
-    static boolean fontLoaded = false;
     static byte[] FONT_GLYPH_TEMPLATE = toUtf8("正");
 
-    public static void loadFont(long vg) {
-        if (fontLoaded) {
-            return;
-        }
-        font_word_handle = nvgCreateFont(vg, font_word, toUtf8(System.getProperty("word_font_path")));
-        if (font_word_handle == -1) {
-            System.out.println("Could not add font.\n");
-        }
-        nvgAddFallbackFontId(vg, font_word_handle, font_word_handle);
+    public static class FontHolder {
 
-        font_icon_handle = nvgCreateFont(vg, font_icon, toUtf8(System.getProperty("icon_font_path")));
-        if (font_icon_handle == -1) {
-            System.out.println("Could not add font.\n");
+        static byte[] font_word = toUtf8("word"), font_icon = toUtf8("icon"), font_emoji = toUtf8("emoji");
+        static int font_word_handle, font_icon_handle, font_emoji_handle;
+        static boolean fontLoaded = false;
+        static byte[] data_word;
+        static byte[] data_icon;
+        static byte[] data_emoji;
+
+        public static synchronized void loadFont(long vg) {
+            if (fontLoaded) {
+                return;
+            }
+            data_word = readFileFromJar("/res/wqymhei.ttc");
+            font_word_handle = Nanovg.nvgCreateFontMem(vg, font_word, data_word, data_word.length, 0);
+            if (font_word_handle == -1) {
+                System.out.println("Could not add font.\n");
+            }
+            nvgAddFallbackFontId(vg, font_word_handle, font_word_handle);
+
+            data_icon = readFileFromJar("/res/entypo.ttf");
+            font_icon_handle = Nanovg.nvgCreateFontMem(vg, font_icon, data_icon, data_icon.length, 0);
+            if (font_icon_handle == -1) {
+                System.out.println("Could not add font.\n");
+            }
+            data_emoji = readFileFromJar("/res/emoji.ttf");
+            font_emoji_handle = Nanovg.nvgCreateFontMem(vg, font_emoji, data_emoji, data_emoji.length, 0);
+            if (font_emoji_handle == -1) {
+                System.out.println("Could not add font.\n");
+            }
+
+            fontLoaded = true;
         }
-        font_emoji_handle = nvgCreateFont(vg, font_emoji, toUtf8(System.getProperty("emoji_font_path")));
-        if (font_emoji_handle == -1) {
-            System.out.println("Could not add font.\n");
-        }
-        fontLoaded = true;
     }
 
     public static byte[] getFontWord() {
-        return font_word;
+        return FontHolder.font_word;
     }
 
     public static byte[] getFontIcon() {
-        return font_icon;
+        return FontHolder.font_icon;
     }
 
     public static byte[] getFontEmoji() {
-        return font_emoji;
+        return FontHolder.font_emoji;
     }
 
     public static float[] getFontBoundle(long vg) {

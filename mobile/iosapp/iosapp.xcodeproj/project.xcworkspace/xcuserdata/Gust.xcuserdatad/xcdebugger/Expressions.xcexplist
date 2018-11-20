@@ -3,13 +3,33 @@
    version = "1.0">
    <ContextStates>
       <ContextState
-         contextName = "execute_method_impl:interpreter.c">
+         contextName = "GLOBAL">
+         <PersistentStrings>
+            <PersistentString
+               value = "clazz-&gt;name-&gt;data">
+            </PersistentString>
+            <PersistentString
+               value = "clazz">
+            </PersistentString>
+            <PersistentString
+               value = "method-&gt;name-&gt;data">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "org_mini_gl_GL_glGetShaderInfoLog:jni_gl.c">
+      </ContextState>
+      <ContextState
+         contextName = "fonsTextIterInit:fontstash.h">
       </ContextState>
       <ContextState
          contextName = "fonsTextIterNext:fontstash.h">
       </ContextState>
       <ContextState
-         contextName = "fonsTextIterInit:fontstash.h">
+         contextName = "class_clinit:class.c">
+      </ContextState>
+      <ContextState
+         contextName = "org_mini_media_MiniAL_mal_decoder_uninit:jni_minial.m">
       </ContextState>
       <ContextState
          contextName = "nvgTextBreakLines:nanovg.c">
@@ -18,6 +38,23 @@
                value = "rows[nrows]">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "primitive_class_create_get:jvm_util.c">
+      </ContextState>
+      <ContextState
+         contextName = "org_mini_gl_GL_glShaderSource:jni_gl.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "(const GLchar*const*)(ptr_pstring-&gt;arr_body)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "mal_on_output__coreaudio:mini_al.h">
+      </ContextState>
+      <ContextState
+         contextName = "java_lang_Class_getPrimitiveClass:java_native_std.c">
       </ContextState>
    </ContextStates>
 </VariablesViewState>

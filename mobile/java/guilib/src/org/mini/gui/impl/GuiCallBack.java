@@ -10,6 +10,7 @@ import org.mini.glfm.GlfmCallBackAdapter;
 import org.mini.gui.GApplication;
 import org.mini.gui.GForm;
 import org.mini.gui.GObject;
+import org.mini.gui.GToolkit;
 import org.mini.nanovg.Nanovg;
 import static org.mini.nanovg.Nanovg.NVG_ANTIALIAS;
 import static org.mini.nanovg.Nanovg.NVG_DEBUG;
@@ -107,12 +108,13 @@ public class GuiCallBack extends GlfmCallBackAdapter {
         winWidth = (int) (fbWidth / pxRatio);
         winHeight = (int) (fbHeight / pxRatio);
 
-        vg = Nanovg.nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
+        vg = Nanovg.nvgCreateGLES3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
         if (vg == 0) {
             System.out.println("Could not init nanovg.\n");
         } else {
             System.out.println("nanovg success.");
         }
+        GToolkit.FontHolder.loadFont(vg);
 
     }
 

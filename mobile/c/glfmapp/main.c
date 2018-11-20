@@ -39,6 +39,8 @@ void glfmMain(GLFMDisplay *display) {
     utf8_append_c(classpath, "/resfiles/glfm_gui.jar;");
     utf8_append_c(classpath, glfmGetResRoot());
     utf8_append_c(classpath, "/resfiles/ExApp.jar;");
+    utf8_append_c(classpath, glfmGetResRoot());
+    utf8_append_c(classpath, "/resfiles/g3d.jar;");
     //jvm_printf("%s\n",utf8_cstr(classpath));
 
     jvm_init(utf8_cstr(classpath), JNI_OnLoad_mini);

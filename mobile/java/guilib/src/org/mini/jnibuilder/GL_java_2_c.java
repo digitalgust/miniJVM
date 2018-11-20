@@ -43,7 +43,7 @@ public class GL_java_2_c {
             + "#include \"linmath.h\"\n"
             + "\n"
             + "#include \"jvm.h\"\n"
-            + "#include \"jni_gui.h\"\n"
+            + "#include \"media.h\"\n"
             + "\n";
 
     String TOOL_FUNC
@@ -323,12 +323,16 @@ public class GL_java_2_c {
 
                         } else if (argvType.indexOf("[]") > 0 || argvType.indexOf("Object") >= 0) {
                             varCode += "    Instance *" + argvName + " = env->localvar_getRefer(runtime->localvar, pos++);\n";
-                            varCode += "    int offset_" + argvName + " = env->localvar_getInt(runtime->localvar, pos++);\n";
-                            varCode += "    __refer ptr_" + argvName + " = NULL;\n";
-                            varCode += "    if(" + argvName + "){\n";
-                            varCode += "        offset_" + argvName + " *= env->data_type_bytes[" + argvName + "->mb.arr_type_index];\n";
-                            varCode += "        ptr_" + argvName + " = " + argvName + "->arr_body + offset_" + argvName + ";\n";
-                            varCode += "    } else if(offset_" + argvName + ") { ptr_" + argvName + " = (__refer)(intptr_t)offset_" + argvName + ";}\n";
+                            if (argvType.indexOf("byte[]") >= 0) {
+                                varCode += "    __refer ptr_" + argvName + " = " + argvName + "->arr_body ;\n";
+                            } else {
+                                varCode += "    int offset_" + argvName + " = env->localvar_getInt(runtime->localvar, pos++);\n";
+                                varCode += "    __refer ptr_" + argvName + " = NULL;\n";
+                                varCode += "    if(" + argvName + "){\n";
+                                varCode += "        offset_" + argvName + " *= env->data_type_bytes[" + argvName + "->mb.arr_type_index];\n";
+                                varCode += "        ptr_" + argvName + " = " + argvName + "->arr_body + offset_" + argvName + ";\n";
+                                varCode += "    } else if(offset_" + argvName + ") { ptr_" + argvName + " = (__refer)(intptr_t)offset_" + argvName + ";}\n";
+                            }
                             if (!isPointer(nativeArgvs[nativei])) {
                                 //curArgvType = "*(" + nativeArgvs[nativei] + "*)";
                             }

@@ -131,6 +131,12 @@
 // BACKEND NUANCES
 // ===============
 //
+// PulseAudio
+// ----------
+// - If you experience bad glitching/noise on Arch Linux, consider this fix from the Arch wiki:
+//     https://wiki.archlinux.org/index.php/PulseAudio/Troubleshooting#Glitches,_skips_or_crackling
+//   Alternatively, consider using a different backend such as ALSA.
+//
 // Android
 // -------
 // - To capture audio on Android, remember to add the RECORD_AUDIO permission to your manifest:
@@ -1114,6 +1120,11 @@ void mal_pcm_f32_to_s24(void* pOut, const void* pIn, mal_uint64 count, mal_dithe
 void mal_pcm_f32_to_s32(void* pOut, const void* pIn, mal_uint64 count, mal_dither_mode ditherMode);
 void mal_pcm_convert(void* pOut, mal_format formatOut, const void* pIn, mal_format formatIn, mal_uint64 sampleCount, mal_dither_mode ditherMode);
 
+// Deinterleaves an interleaved buffer.
+void mal_deinterleave_pcm_frames(mal_format format, mal_uint32 channels, mal_uint32 frameCount, const void* pInterleavedPCMFrames, void** ppDeinterleavedPCMFrames);
+
+// Interleaves a group of deinterleaved buffers.
+void mal_interleave_pcm_frames(mal_format format, mal_uint32 channels, mal_uint32 frameCount, const void** ppDeinterleavedPCMFrames, void* pInterleavedPCMFrames);
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1629,6 +1640,7 @@ struct mal_context
             mal_proc pa_stream_get_sample_spec;
             mal_proc pa_stream_get_channel_map;
             mal_proc pa_stream_get_buffer_attr;
+            mal_proc pa_stream_set_buffer_attr;
             mal_proc pa_stream_get_device_name;
             mal_proc pa_stream_set_write_callback;
             mal_proc pa_stream_set_read_callback;
@@ -4864,7 +4876,7 @@ mal_bool32 mal_device__get_current_frame__null(mal_device* pDevice, mal_uint32* 
     mal_assert(pCurrentPos != NULL);
     *pCurrentPos = 0;
 
-    mal_uint64 currentFrameAbs = (mal_uint64)(mal_timer_get_time_in_seconds(&pDevice->null_device.timer) * pDevice->sampleRate) / pDevice->channels;
+    mal_uint64 currentFrameAbs = (mal_uint64)(mal_timer_get_time_in_seconds(&pDevice->null_device.timer) * pDevice->sampleRate);
 
     *pCurrentPos = (mal_uint32)(currentFrameAbs % pDevice->bufferSizeInFrames);
     return MAL_TRUE;
@@ -4917,11 +4929,11 @@ mal_uint32 mal_device__wait_for_frames__null(mal_device* pDevice)
 
     while (!pDevice->null_device.breakFromMainLoop) {
         mal_uint32 framesAvailable = mal_device__get_available_frames__null(pDevice);
-        if (framesAvailable > 0) {
+        if (framesAvailable >= (pDevice->bufferSizeInFrames/pDevice->periods)) {
             return framesAvailable;
         }
 
-        mal_sleep(16);
+        mal_sleep(pDevice->bufferSizeInMilliseconds/pDevice->periods);
     }
 
     // We'll get here if the loop was terminated. Just return whatever's available.
@@ -11784,6 +11796,7 @@ typedef mal_pa_stream_state_t     (* mal_pa_stream_get_state_proc)              
 typedef const mal_pa_sample_spec* (* mal_pa_stream_get_sample_spec_proc)         (mal_pa_stream* s);
 typedef const mal_pa_channel_map* (* mal_pa_stream_get_channel_map_proc)         (mal_pa_stream* s);
 typedef const mal_pa_buffer_attr* (* mal_pa_stream_get_buffer_attr_proc)         (mal_pa_stream* s);
+typedef mal_pa_operation*         (* mal_pa_stream_set_buffer_attr_proc)         (mal_pa_stream* s, const mal_pa_buffer_attr* attr, mal_pa_stream_success_cb_t cb, void* userdata);
 typedef const char*               (* mal_pa_stream_get_device_name_proc)         (mal_pa_stream* s);
 typedef void                      (* mal_pa_stream_set_write_callback_proc)      (mal_pa_stream* s, mal_pa_stream_request_cb_t cb, void* userdata);
 typedef void                      (* mal_pa_stream_set_read_callback_proc)       (mal_pa_stream* s, mal_pa_stream_request_cb_t cb, void* userdata);
@@ -12305,6 +12318,10 @@ void mal_pulse_device_write_callback(mal_pa_stream* pStream, size_t sizeInBytes,
     mal_context* pContext = pDevice->pContext;
     mal_assert(pContext != NULL);
 
+#ifdef MAL_DEBUG_OUTPUT
+    printf("[PulseAudio] write_callback: sizeInBytes=%d\n", (int)sizeInBytes);
+#endif
+
     size_t bytesRemaining = sizeInBytes;
     while (bytesRemaining > 0) {
         size_t bytesToReadFromClient = bytesRemaining;
@@ -12319,19 +12336,35 @@ void mal_pulse_device_write_callback(mal_pa_stream* pStream, size_t sizeInBytes,
             return;
         }
 
+#ifdef MAL_DEBUG_OUTPUT
+        printf("    bytesToReadFromClient=%d", (int)bytesToReadFromClient);
+#endif
+
         if (pBuffer != NULL && bytesToReadFromClient > 0) {
             mal_uint32 framesToReadFromClient = (mal_uint32)bytesToReadFromClient / (pDevice->internalChannels*mal_get_bytes_per_sample(pDevice->internalFormat));
             if (framesToReadFromClient > 0) {
                 mal_device__read_frames_from_client(pDevice, framesToReadFromClient, pBuffer);
+
+#ifdef MAL_DEBUG_OUTPUT
+                printf(", framesToReadFromClient=%d\n", (int)framesToReadFromClient);
+#endif
 
                 error = ((mal_pa_stream_write_proc)pContext->pulse.pa_stream_write)((mal_pa_stream*)pDevice->pulse.pStream, pBuffer, bytesToReadFromClient, NULL, 0, MAL_PA_SEEK_RELATIVE);
                 if (error < 0) {
                     mal_post_error(pDevice, MAL_LOG_LEVEL_ERROR, "[PulseAudio] Failed to write data to the PulseAudio stream.", mal_result_from_pulse(error));
                     return;
                 }
+            } else {
+#ifdef MAL_DEBUG_OUTPUT
+            printf(", framesToReadFromClient=0\n");
+#endif
             }
 
             bytesRemaining -= bytesToReadFromClient;
+        } else {
+#ifdef MAL_DEBUG_OUTPUT
+            printf(", framesToReadFromClient=0\n");
+#endif
         }
     }
 }
@@ -12460,6 +12493,7 @@ mal_result mal_device_init__pulse(mal_context* pContext, mal_device_type type, c
     mal_pa_sample_spec ss;
     mal_pa_channel_map cmap;
     mal_pa_buffer_attr attr;
+    mal_pa_stream_flags_t streamFlags;
 
     const mal_pa_sample_spec* pActualSS   = NULL;
     const mal_pa_channel_map* pActualCMap = NULL;
@@ -12533,53 +12567,6 @@ mal_result mal_device_init__pulse(mal_context* pContext, mal_device_type type, c
         ((mal_pa_operation_unref_proc)pContext->pulse.pa_operation_unref)(pOP);
     }
 
-
-#if 0
-    mal_pa_sample_spec deviceSS;
-    mal_pa_channel_map deviceCMap;
-    if (type == mal_device_type_playback) {
-        deviceSS = sinkInfo.sample_spec;
-        deviceCMap = sinkInfo.channel_map;
-    } else {
-        deviceSS = sourceInfo.sample_spec;
-        deviceCMap = sourceInfo.channel_map;
-    }
-
-    if (pDevice->usingDefaultFormat) {
-        ss.format = deviceSS.format;
-    } else {
-        ss.format = mal_format_to_pulse(pConfig->format);
-    }
-    if (ss.format == MAL_PA_SAMPLE_INVALID) {
-        ss.format = MAL_PA_SAMPLE_S16LE;
-    }
-
-    if (pDevice->usingDefaultChannels) {
-        ss.channels = deviceSS.channels;
-    } else {
-        ss.channels = pConfig->channels;
-    }
-
-    if (pDevice->usingDefaultSampleRate) {
-        ss.rate = deviceSS.rate;
-    } else {
-        ss.rate = pConfig->sampleRate;
-    }
-
-
-    if (pDevice->usingDefaultChannelMap) {
-        cmap = deviceCMap;
-    } else {
-        cmap.channels = pConfig->channels;
-        for (mal_uint32 iChannel = 0; iChannel < pConfig->channels; ++iChannel) {
-            cmap.map[iChannel] = mal_channel_position_to_pulse(pConfig->channelMap[iChannel]);
-        }
-
-        if (((mal_pa_channel_map_valid_proc)pContext->pulse.pa_channel_map_valid)(&cmap) == 0 || ((mal_pa_channel_map_compatible_proc)pContext->pulse.pa_channel_map_compatible)(&cmap, &ss) == 0) {
-            ((mal_pa_channel_map_init_extend_proc)pContext->pulse.pa_channel_map_init_extend)(&cmap, ss.channels, MAL_PA_CHANNEL_MAP_DEFAULT);     // The channel map is invalid, so just fall back to the default.
-        }
-    }
-#else
     if (type == mal_device_type_playback) {
         ss = sinkInfo.sample_spec;
         cmap = sinkInfo.channel_map;
@@ -12587,7 +12574,7 @@ mal_result mal_device_init__pulse(mal_context* pContext, mal_device_type type, c
         ss = sourceInfo.sample_spec;
         cmap = sourceInfo.channel_map;
     }
-#endif
+
 
     // Buffer size.
     bufferSizeInFrames = pDevice->bufferSizeInFrames;
@@ -12606,10 +12593,14 @@ mal_result mal_device_init__pulse(mal_context* pContext, mal_device_type type, c
     }
 
     attr.maxlength = bufferSizeInFrames * mal_get_bytes_per_sample(mal_format_from_pulse(ss.format))*ss.channels;
-    attr.tlength   = attr.maxlength / pConfig->periods;
+    attr.tlength   = attr.maxlength;
     attr.prebuf    = (mal_uint32)-1;
-    attr.minreq    = attr.tlength;
-    attr.fragsize  = attr.tlength;
+    attr.minreq    = attr.maxlength / pConfig->periods;
+    attr.fragsize  = attr.maxlength / pConfig->periods;
+
+#ifdef MAL_DEBUG_OUTPUT
+    printf("[PulseAudio] attr: maxlength=%d, tlength=%d, prebuf=%d, minreq=%d, fragsize=%d; bufferSizeInFrames=%d\n", attr.maxlength, attr.tlength, attr.prebuf, attr.minreq, attr.fragsize, bufferSizeInFrames);
+#endif
 
     char streamName[256];
     if (pConfig->pulse.pStreamName != NULL) {
@@ -12628,11 +12619,15 @@ mal_result mal_device_init__pulse(mal_context* pContext, mal_device_type type, c
     }
 
 
-
+    streamFlags = MAL_PA_STREAM_START_CORKED;
+    if (dev != NULL) {
+        streamFlags |= MAL_PA_STREAM_DONT_MOVE | MAL_PA_STREAM_FIX_FORMAT | MAL_PA_STREAM_FIX_RATE | MAL_PA_STREAM_FIX_CHANNELS;
+    }
+    
     if (type == mal_device_type_playback) {
-        error = ((mal_pa_stream_connect_playback_proc)pContext->pulse.pa_stream_connect_playback)((mal_pa_stream*)pDevice->pulse.pStream, dev, &attr, MAL_PA_STREAM_START_CORKED, NULL, NULL);
+        error = ((mal_pa_stream_connect_playback_proc)pContext->pulse.pa_stream_connect_playback)((mal_pa_stream*)pDevice->pulse.pStream, dev, &attr, streamFlags, NULL, NULL);
     } else {
-        error = ((mal_pa_stream_connect_record_proc)pContext->pulse.pa_stream_connect_record)((mal_pa_stream*)pDevice->pulse.pStream, dev, &attr, MAL_PA_STREAM_START_CORKED);
+        error = ((mal_pa_stream_connect_record_proc)pContext->pulse.pa_stream_connect_record)((mal_pa_stream*)pDevice->pulse.pStream, dev, &attr, streamFlags);
     }
 
     if (error != MAL_PA_OK) {
@@ -12652,6 +12647,21 @@ mal_result mal_device_init__pulse(mal_context* pContext, mal_device_type type, c
     // Internal format.
     pActualSS = ((mal_pa_stream_get_sample_spec_proc)pContext->pulse.pa_stream_get_sample_spec)((mal_pa_stream*)pDevice->pulse.pStream);
     if (pActualSS != NULL) {
+        // If anything has changed between the requested and the actual sample spec, we need to update the buffer.
+        if (ss.format != pActualSS->format || ss.channels != pActualSS->channels || ss.rate != pActualSS->rate) {
+            attr.maxlength = bufferSizeInFrames * mal_get_bytes_per_sample(mal_format_from_pulse(pActualSS->format))*pActualSS->channels;
+            attr.tlength   = attr.maxlength;
+            attr.prebuf    = (mal_uint32)-1;
+            attr.minreq    = attr.maxlength / pConfig->periods;
+            attr.fragsize  = attr.maxlength / pConfig->periods;
+
+            pOP = ((mal_pa_stream_set_buffer_attr_proc)pContext->pulse.pa_stream_set_buffer_attr)((mal_pa_stream*)pDevice->pulse.pStream, &attr, NULL, NULL);
+            if (pOP != NULL) {
+                mal_device__wait_for_operation__pulse(pDevice, pOP);
+                ((mal_pa_operation_unref_proc)pContext->pulse.pa_operation_unref)(pOP);
+            }
+        }
+
         ss = *pActualSS;
     }
 
@@ -12679,6 +12689,10 @@ mal_result mal_device_init__pulse(mal_context* pContext, mal_device_type type, c
 
     pDevice->bufferSizeInFrames = attr.maxlength / (mal_get_bytes_per_sample(pDevice->internalFormat)*pDevice->internalChannels);
     pDevice->periods = attr.maxlength / attr.tlength;
+
+#ifdef MAL_DEBUG_OUTPUT
+    printf("[PulseAudio] actual attr: maxlength=%d, tlength=%d, prebuf=%d, minreq=%d, fragsize=%d; pDevice->bufferSizeInFrames=%d\n", attr.maxlength, attr.tlength, attr.prebuf, attr.minreq, attr.fragsize, pDevice->bufferSizeInFrames);
+#endif
 
 
     // Grab the name of the device if we can.
@@ -12930,6 +12944,7 @@ mal_result mal_context_init__pulse(mal_context* pContext)
     pContext->pulse.pa_stream_get_sample_spec          = (mal_proc)mal_dlsym(pContext->pulse.pulseSO, "pa_stream_get_sample_spec");
     pContext->pulse.pa_stream_get_channel_map          = (mal_proc)mal_dlsym(pContext->pulse.pulseSO, "pa_stream_get_channel_map");
     pContext->pulse.pa_stream_get_buffer_attr          = (mal_proc)mal_dlsym(pContext->pulse.pulseSO, "pa_stream_get_buffer_attr");
+    pContext->pulse.pa_stream_set_buffer_attr          = (mal_proc)mal_dlsym(pContext->pulse.pulseSO, "pa_stream_set_buffer_attr");
     pContext->pulse.pa_stream_get_device_name          = (mal_proc)mal_dlsym(pContext->pulse.pulseSO, "pa_stream_get_device_name");
     pContext->pulse.pa_stream_set_write_callback       = (mal_proc)mal_dlsym(pContext->pulse.pulseSO, "pa_stream_set_write_callback");
     pContext->pulse.pa_stream_set_read_callback        = (mal_proc)mal_dlsym(pContext->pulse.pulseSO, "pa_stream_set_read_callback");
@@ -12972,6 +12987,7 @@ mal_result mal_context_init__pulse(mal_context* pContext)
     mal_pa_stream_get_sample_spec_proc          _pa_stream_get_sample_spec         = pa_stream_get_sample_spec;
     mal_pa_stream_get_channel_map_proc          _pa_stream_get_channel_map         = pa_stream_get_channel_map;
     mal_pa_stream_get_buffer_attr_proc          _pa_stream_get_buffer_attr         = pa_stream_get_buffer_attr;
+    mal_pa_stream_set_buffer_attr_proc          _pa_stream_set_buffer_attr         = pa_stream_set_buffer_attr;
     mal_pa_stream_get_device_name_proc          _pa_stream_get_device_name         = pa_stream_get_device_name;
     mal_pa_stream_set_write_callback_proc       _pa_stream_set_write_callback      = pa_stream_set_write_callback;
     mal_pa_stream_set_read_callback_proc        _pa_stream_set_read_callback       = pa_stream_set_read_callback;
@@ -13013,6 +13029,7 @@ mal_result mal_context_init__pulse(mal_context* pContext)
     pContext->pulse.pa_stream_get_sample_spec          = (mal_proc)_pa_stream_get_sample_spec;
     pContext->pulse.pa_stream_get_channel_map          = (mal_proc)_pa_stream_get_channel_map;
     pContext->pulse.pa_stream_get_buffer_attr          = (mal_proc)_pa_stream_get_buffer_attr;
+    pContext->pulse.pa_stream_set_buffer_attr          = (mal_proc)_pa_stream_set_buffer_attr;
     pContext->pulse.pa_stream_get_device_name          = (mal_proc)_pa_stream_get_device_name;
     pContext->pulse.pa_stream_set_write_callback       = (mal_proc)_pa_stream_set_write_callback;
     pContext->pulse.pa_stream_set_read_callback        = (mal_proc)_pa_stream_set_read_callback;
@@ -14900,27 +14917,62 @@ OSStatus mal_on_output__coreaudio(void* pUserData, AudioUnitRenderActionFlags* p
 #if defined(MAL_DEBUG_OUTPUT)
     printf("INFO: Output Callback: busNumber=%d, frameCount=%d, mNumberBuffers=%d\n", busNumber, frameCount, pBufferList->mNumberBuffers);
 #endif
-    
-    // For now we can assume everything is interleaved.
-    for (UInt32 iBuffer = 0; iBuffer < pBufferList->mNumberBuffers; ++iBuffer) {
-        if (pBufferList->mBuffers[iBuffer].mNumberChannels == pDevice->internalChannels) {
-            mal_uint32 frameCountForThisBuffer = pBufferList->mBuffers[iBuffer].mDataByteSize / mal_get_bytes_per_frame(pDevice->internalFormat, pDevice->internalChannels);
-            if (frameCountForThisBuffer > 0) {
-                mal_device__read_frames_from_client(pDevice, frameCountForThisBuffer, pBufferList->mBuffers[iBuffer].mData);
-            }
-            
-        #if defined(MAL_DEBUG_OUTPUT)
-            printf("  frameCount=%d, mNumberChannels=%d, mDataByteSize=%d\n", frameCount, pBufferList->mBuffers[iBuffer].mNumberChannels, pBufferList->mBuffers[iBuffer].mDataByteSize);
-        #endif
-        } else {
-            // This case is where the number of channels in the output buffer do not match our internal channels. It could mean that it's
-            // not interleaved, in which case we can't handle right now since mini_al does not yet support non-interleaved streams. We just
-            // output silence here.
-            mal_zero_memory(pBufferList->mBuffers[iBuffer].mData, pBufferList->mBuffers[iBuffer].mDataByteSize);
 
-        #if defined(MAL_DEBUG_OUTPUT)
-            printf("  WARNING: Outputting silence. frameCount=%d, mNumberChannels=%d, mDataByteSize=%d\n", frameCount, pBufferList->mBuffers[iBuffer].mNumberChannels, pBufferList->mBuffers[iBuffer].mDataByteSize);
-        #endif
+    // We need to check whether or not we are outputting interleaved or non-interleaved samples. The
+    // way we do this is slightly different for each type.
+    mal_stream_layout layout = mal_stream_layout_interleaved;
+    if (pBufferList->mBuffers[0].mNumberChannels != pDevice->internalChannels) {
+        layout = mal_stream_layout_deinterleaved;
+    }
+    
+    if (layout == mal_stream_layout_interleaved) {
+        // For now we can assume everything is interleaved.
+        for (UInt32 iBuffer = 0; iBuffer < pBufferList->mNumberBuffers; ++iBuffer) {
+            if (pBufferList->mBuffers[iBuffer].mNumberChannels == pDevice->internalChannels) {
+                mal_uint32 frameCountForThisBuffer = pBufferList->mBuffers[iBuffer].mDataByteSize / mal_get_bytes_per_frame(pDevice->internalFormat, pDevice->internalChannels);
+                if (frameCountForThisBuffer > 0) {
+                    mal_device__read_frames_from_client(pDevice, frameCountForThisBuffer, pBufferList->mBuffers[iBuffer].mData);
+                }
+                
+            #if defined(MAL_DEBUG_OUTPUT)
+                printf("  frameCount=%d, mNumberChannels=%d, mDataByteSize=%d\n", frameCount, pBufferList->mBuffers[iBuffer].mNumberChannels, pBufferList->mBuffers[iBuffer].mDataByteSize);
+            #endif
+            } else {
+                // This case is where the number of channels in the output buffer do not match our internal channels. It could mean that it's
+                // not interleaved, in which case we can't handle right now since mini_al does not yet support non-interleaved streams. We just
+                // output silence here.
+                mal_zero_memory(pBufferList->mBuffers[iBuffer].mData, pBufferList->mBuffers[iBuffer].mDataByteSize);
+
+            #if defined(MAL_DEBUG_OUTPUT)
+                printf("  WARNING: Outputting silence. frameCount=%d, mNumberChannels=%d, mDataByteSize=%d\n", frameCount, pBufferList->mBuffers[iBuffer].mNumberChannels, pBufferList->mBuffers[iBuffer].mDataByteSize);
+            #endif
+            }
+        }
+    } else {
+        // This is the deinterleaved case. We need to update each buffer in groups of internalChannels. This
+        // assumes each buffer is the same size.
+        mal_uint8 tempBuffer[4096];
+        for (UInt32 iBuffer = 0; iBuffer < pBufferList->mNumberBuffers; iBuffer += pDevice->internalChannels) {
+            mal_uint32 frameCountPerBuffer = pBufferList->mBuffers[iBuffer].mDataByteSize / mal_get_bytes_per_sample(pDevice->internalFormat);
+            
+            mal_uint32 framesRemaining = frameCountPerBuffer;
+            while (framesRemaining > 0) {
+                mal_uint32 framesToRead = sizeof(tempBuffer) / mal_get_bytes_per_frame(pDevice->internalFormat, pDevice->internalChannels);
+                if (framesToRead > framesRemaining) {
+                    framesToRead = framesRemaining;
+                }
+                
+                mal_device__read_frames_from_client(pDevice, framesToRead, tempBuffer);
+                
+                void* ppDeinterleavedBuffers[MAL_MAX_CHANNELS];
+                for (mal_uint32 iChannel = 0; iChannel < pDevice->internalChannels; ++iChannel) {
+                    ppDeinterleavedBuffers[iChannel] = (void*)mal_offset_ptr(pBufferList->mBuffers[iBuffer].mData, (frameCountPerBuffer - framesRemaining) * mal_get_bytes_per_sample(pDevice->internalFormat));
+                }
+                
+                mal_deinterleave_pcm_frames(pDevice->internalFormat, pDevice->internalChannels, framesToRead, tempBuffer, ppDeinterleavedBuffers);
+                
+                framesRemaining -= framesToRead;
+            }
         }
     }
     
@@ -14941,6 +14993,13 @@ OSStatus mal_on_input__coreaudio(void* pUserData, AudioUnitRenderActionFlags* pA
     AudioBufferList* pRenderedBufferList = (AudioBufferList*)pDevice->coreaudio.pAudioBufferList;
     mal_assert(pRenderedBufferList);
     
+    // We need to check whether or not we are outputting interleaved or non-interleaved samples. The
+    // way we do this is slightly different for each type.
+    mal_stream_layout layout = mal_stream_layout_interleaved;
+    if (pRenderedBufferList->mBuffers[0].mNumberChannels != pDevice->internalChannels) {
+        layout = mal_stream_layout_deinterleaved;
+    }
+    
 #if defined(MAL_DEBUG_OUTPUT)
     printf("INFO: Input Callback: busNumber=%d, frameCount=%d, mNumberBuffers=%d\n", busNumber, frameCount, pRenderedBufferList->mNumberBuffers);
 #endif
@@ -14953,16 +15012,58 @@ OSStatus mal_on_input__coreaudio(void* pUserData, AudioUnitRenderActionFlags* pA
         return status;
     }
     
-    // For now we can assume everything is interleaved.
-    for (UInt32 iBuffer = 0; iBuffer < pRenderedBufferList->mNumberBuffers; ++iBuffer) {
-        if (pRenderedBufferList->mBuffers[iBuffer].mNumberChannels == pDevice->internalChannels) {
-            mal_device__send_frames_to_client(pDevice, frameCount, pRenderedBufferList->mBuffers[iBuffer].mData);
-        #if defined(MAL_DEBUG_OUTPUT)
-            printf("  mDataByteSize=%d\n", pRenderedBufferList->mBuffers[iBuffer].mDataByteSize);
-        #endif
-        } else {
-            // This case is where the number of channels in the output buffer do not match our internal channels. It could mean that it's
-            // not interleaved, in which case we can't handle right now since mini_al does not yet support non-interleaved streams.
+    if (layout == mal_stream_layout_interleaved) {
+        for (UInt32 iBuffer = 0; iBuffer < pRenderedBufferList->mNumberBuffers; ++iBuffer) {
+            if (pRenderedBufferList->mBuffers[iBuffer].mNumberChannels == pDevice->internalChannels) {
+                mal_device__send_frames_to_client(pDevice, frameCount, pRenderedBufferList->mBuffers[iBuffer].mData);
+            #if defined(MAL_DEBUG_OUTPUT)
+                printf("  mDataByteSize=%d\n", pRenderedBufferList->mBuffers[iBuffer].mDataByteSize);
+            #endif
+            } else {
+                // This case is where the number of channels in the output buffer do not match our internal channels. It could mean that it's
+                // not interleaved, in which case we can't handle right now since mini_al does not yet support non-interleaved streams.
+                
+                mal_uint8 silentBuffer[4096];
+                mal_zero_memory(silentBuffer, sizeof(silentBuffer));
+                
+                mal_uint32 framesRemaining = frameCount;
+                while (framesRemaining > 0) {
+                    mal_uint32 framesToSend = sizeof(silentBuffer) / mal_get_bytes_per_frame(pDevice->internalFormat, pDevice->internalChannels);
+                    if (framesToSend > framesRemaining) {
+                        framesToSend = framesRemaining;
+                    }
+                    
+                    mal_device__send_frames_to_client(pDevice, framesToSend, silentBuffer);
+                    framesRemaining -= framesToSend;
+                }
+                
+            #if defined(MAL_DEBUG_OUTPUT)
+                printf("  WARNING: Outputting silence. frameCount=%d, mNumberChannels=%d, mDataByteSize=%d\n", frameCount, pRenderBufferList->mBuffers[iBuffer].mNumberChannels, pRenderBufferList->mBuffers[iBuffer].mDataByteSize);
+            #endif
+            }
+        }
+    } else {
+        // This is the deinterleaved case. We need to interleave the audio data before sending it to the client. This
+        // assumes each buffer is the same size.
+        mal_uint8 tempBuffer[4096];
+        for (UInt32 iBuffer = 0; iBuffer < pRenderedBufferList->mNumberBuffers; iBuffer += pDevice->internalChannels) {
+            mal_uint32 framesRemaining = frameCount;
+            while (framesRemaining > 0) {
+                mal_uint32 framesToSend = sizeof(tempBuffer) / mal_get_bytes_per_sample(pDevice->internalFormat);
+                if (framesToSend > framesRemaining) {
+                    framesToSend = framesRemaining;
+                }
+                
+                void* ppDeinterleavedBuffers[MAL_MAX_CHANNELS];
+                for (mal_uint32 iChannel = 0; iChannel < pDevice->internalChannels; ++iChannel) {
+                    ppDeinterleavedBuffers[iChannel] = (void*)mal_offset_ptr(pRenderedBufferList->mBuffers[iBuffer].mData, (frameCount - framesRemaining) * mal_get_bytes_per_sample(pDevice->internalFormat));
+                }
+                
+                mal_interleave_pcm_frames(pDevice->internalFormat, pDevice->internalChannels, framesToSend, (const void**)ppDeinterleavedBuffers, tempBuffer);
+                mal_device__send_frames_to_client(pDevice, framesToSend, tempBuffer);
+
+                framesRemaining -= framesToSend;
+            }
         }
     }
 
@@ -15299,11 +15400,14 @@ mal_result mal_device_init_internal__coreaudio(mal_context* pContext, mal_device
     if (result != MAL_SUCCESS) {
         return result;
     }
+    
+    pData->bufferSizeInFramesOut = actualBufferSizeInFrames * pData->periodsOut;
 #else
     actualBufferSizeInFrames = 4096;
+    pData->bufferSizeInFramesOut = actualBufferSizeInFrames;
 #endif
 
-    pData->bufferSizeInFramesOut = actualBufferSizeInFrames * pData->periodsOut;
+
     
     // During testing I discovered that the buffer size can be too big. You'll get an error like this:
     //
@@ -15567,6 +15671,22 @@ mal_result mal_context_uninit__coreaudio(mal_context* pContext)
 mal_result mal_context_init__coreaudio(mal_context* pContext)
 {
     mal_assert(pContext != NULL);
+
+#if defined(MAL_APPLE_MOBILE)
+    @autoreleasepool {
+        AVAudioSession* pAudioSession = [AVAudioSession sharedInstance];
+        mal_assert(pAudioSession != NULL);
+
+        [pAudioSession setCategory: AVAudioSessionCategoryPlayAndRecord error:nil];
+        
+        // By default we want mini_al to use the speakers instead of the receiver. In the future this may
+        // be customizable.
+        mal_bool32 useSpeakers = MAL_TRUE;
+        if (useSpeakers) {
+            [pAudioSession overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
+        }
+    }
+#endif
     
 #if !defined(MAL_NO_RUNTIME_LINKING) && !defined(MAL_APPLE_MOBILE)
     pContext->coreaudio.hCoreFoundation = mal_dlopen("CoreFoundation.framework/CoreFoundation");
@@ -18874,6 +18994,7 @@ mal_result mal_device_init__openal(mal_context* pContext, mal_device_type type, 
     if (type == mal_device_type_playback) {
         pDeviceALC = ((MAL_LPALCOPENDEVICE)pContext->openal.alcOpenDevice)((pDeviceID == NULL) ? NULL : pDeviceID->openal);
     } else {
+        // I had a bug report that suggested I set the OpenAL context to NULL before attempting to open a capture device.
         ((MAL_LPALCMAKECONTEXTCURRENT)pContext->openal.alcMakeContextCurrent)(NULL);
         pDeviceALC = ((MAL_LPALCCAPTUREOPENDEVICE)pContext->openal.alcCaptureOpenDevice)((pDeviceID == NULL) ? NULL : pDeviceID->openal, frequencyAL, formatAL, bufferSizeInSamplesAL);
     }
@@ -20443,6 +20564,14 @@ mal_result mal_context_init(const mal_backend backends[], mal_uint32 backendCoun
                 mal_context_post_error(pContext, NULL, MAL_LOG_LEVEL_WARNING, "Failed to initialize mutex for device info retrieval. mal_context_get_device_info() is not thread safe.", MAL_FAILED_TO_CREATE_MUTEX);
             }
 
+#ifdef MAL_DEBUG_OUTPUT
+            printf("[mini_al] Endian:  %s\n", mal_is_little_endian() ? "LE" : "BE");
+            printf("[mini_al] SSE2:    %s\n", mal_has_sse2()    ? "YES" : "NO");
+            printf("[mini_al] AVX2:    %s\n", mal_has_avx2()    ? "YES" : "NO");
+            printf("[mini_al] AVX512F: %s\n", mal_has_avx512f() ? "YES" : "NO");
+            printf("[mini_al] NEON:    %s\n", mal_has_neon()    ? "YES" : "NO");
+#endif
+
             pContext->backend = backend;
             return result;
         }
@@ -20781,10 +20910,17 @@ mal_result mal_device_init(mal_context* pContext, mal_device_type type, mal_devi
 
 
 #ifdef MAL_DEBUG_OUTPUT
-    printf("[WASAPI] %s (%s)\n", pDevice->name, (pDevice->type == mal_device_type_playback) ? "Playback" : "Capture");
+    printf("[%s] %s (%s)\n", mal_get_backend_name(pDevice->pContext->backend), pDevice->name, (pDevice->type == mal_device_type_playback) ? "Playback" : "Capture");
     printf("  Format:      %s -> %s\n", mal_get_format_name(pDevice->format), mal_get_format_name(pDevice->internalFormat));
     printf("  Channels:    %d -> %d\n", pDevice->channels, pDevice->internalChannels);
     printf("  Sample Rate: %d -> %d\n", pDevice->sampleRate, pDevice->internalSampleRate);
+    printf("  Conversion:\n");
+    printf("    Pre Format Conversion:    %s\n", pDevice->dsp.isPreFormatConversionRequired  ? "YES" : "NO");
+    printf("    Post Format Conversion:   %s\n", pDevice->dsp.isPostFormatConversionRequired ? "YES" : "NO");
+    printf("    Channel Routing:          %s\n", pDevice->dsp.isChannelRoutingRequired       ? "YES" : "NO");
+    printf("    SRC:                      %s\n", pDevice->dsp.isSRCRequired                  ? "YES" : "NO");
+    printf("    Channel Routing at Start: %s\n", pDevice->dsp.isChannelRoutingAtStart        ? "YES" : "NO");
+    printf("    Passthrough:              %s\n", pDevice->dsp.isPassthrough                  ? "YES" : "NO");
 #endif
 
 
@@ -25325,9 +25461,6 @@ mal_uint64 mal_src_read_deinterleaved(mal_src* pSRC, mal_uint64 frameCount, void
     }
 
     mal_src_algorithm algorithm = pSRC->config.algorithm;
-    if (pSRC->config.sampleRateIn == pSRC->config.sampleRateOut) {
-        //algorithm = mal_src_algorithm_none;
-    }
 
     // Can use a function pointer for this.
     switch (algorithm) {
@@ -26149,6 +26282,92 @@ void mal_pcm_convert(void* pOut, mal_format formatOut, const void* pIn, mal_form
         } break;
 
         default: break;
+    }
+}
+
+void mal_deinterleave_pcm_frames(mal_format format, mal_uint32 channels, mal_uint32 frameCount, const void* pInterleavedPCMFrames, void** ppDeinterleavedPCMFrames)
+{
+    if (pInterleavedPCMFrames == NULL || ppDeinterleavedPCMFrames == NULL) {
+        return; // Invalid args.
+    }
+
+    // For efficiency we do this per format.
+    switch (format) {
+        case mal_format_s16:
+        {
+            const mal_int16* pSrcS16 = (const mal_int16*)pInterleavedPCMFrames;
+            for (mal_uint32 iPCMFrame = 0; iPCMFrame < frameCount; ++iPCMFrame) {
+                for (mal_uint32 iChannel = 0; iChannel < channels; ++iChannel) {
+                    mal_int16* pDstS16 = (mal_int16*)ppDeinterleavedPCMFrames[iChannel];
+                    pDstS16[iPCMFrame] = pSrcS16[iPCMFrame*channels+iChannel];
+                }
+            }
+        } break;
+        
+        case mal_format_f32:
+        {
+            const float* pSrcF32 = (const float*)pInterleavedPCMFrames;
+            for (mal_uint32 iPCMFrame = 0; iPCMFrame < frameCount; ++iPCMFrame) {
+                for (mal_uint32 iChannel = 0; iChannel < channels; ++iChannel) {
+                    float* pDstF32 = (float*)ppDeinterleavedPCMFrames[iChannel];
+                    pDstF32[iPCMFrame] = pSrcF32[iPCMFrame*channels+iChannel];
+                }
+            }
+        } break;
+        
+        default:
+        {
+            mal_uint32 sampleSizeInBytes = mal_get_bytes_per_sample(format);
+
+            for (mal_uint32 iPCMFrame = 0; iPCMFrame < frameCount; ++iPCMFrame) {
+                for (mal_uint32 iChannel = 0; iChannel < channels; ++iChannel) {
+                          void* pDst = mal_offset_ptr(ppDeinterleavedPCMFrames[iChannel], iPCMFrame*sampleSizeInBytes);
+                    const void* pSrc = mal_offset_ptr(pInterleavedPCMFrames, (iPCMFrame*channels+iChannel)*sampleSizeInBytes);
+                    memcpy(pDst, pSrc, sampleSizeInBytes);
+                }
+            }
+        } break;
+    }
+}
+
+void mal_interleave_pcm_frames(mal_format format, mal_uint32 channels, mal_uint32 frameCount, const void** ppDeinterleavedPCMFrames, void* pInterleavedPCMFrames)
+{
+    switch (format)
+    {
+        case mal_format_s16:
+        {
+            mal_int16* pDstS16 = (mal_int16*)pInterleavedPCMFrames;
+            for (mal_uint32 iPCMFrame = 0; iPCMFrame < frameCount; ++iPCMFrame) {
+                for (mal_uint32 iChannel = 0; iChannel < channels; ++iChannel) {
+                    const mal_int16* pSrcS16 = (const mal_int16*)ppDeinterleavedPCMFrames[iChannel];
+                    pDstS16[iPCMFrame*channels+iChannel] = pSrcS16[iPCMFrame];
+                }
+            }
+        } break;
+        
+        case mal_format_f32:
+        {
+            float* pDstF32 = (float*)pInterleavedPCMFrames;
+            for (mal_uint32 iPCMFrame = 0; iPCMFrame < frameCount; ++iPCMFrame) {
+                for (mal_uint32 iChannel = 0; iChannel < channels; ++iChannel) {
+                    const float* pSrcF32 = (const float*)ppDeinterleavedPCMFrames[iChannel];
+                    pDstF32[iPCMFrame*channels+iChannel] = pSrcF32[iPCMFrame];
+                }
+            }
+        } break;
+    
+        default:
+        {
+            mal_uint32 sampleSizeInBytes = mal_get_bytes_per_sample(format);
+
+            for (mal_uint32 iPCMFrame = 0; iPCMFrame < frameCount; ++iPCMFrame) {
+                for (mal_uint32 iChannel = 0; iChannel < channels; ++iChannel) {
+                          void* pDst = mal_offset_ptr(pInterleavedPCMFrames, (iPCMFrame*channels+iChannel)*sampleSizeInBytes);
+                    const void* pSrc = mal_offset_ptr(ppDeinterleavedPCMFrames[iChannel], iPCMFrame*sampleSizeInBytes);
+                    memcpy(pDst, pSrc, sampleSizeInBytes);
+                }
+            }
+        } break;
     }
 }
 

@@ -53,14 +53,14 @@ public class Nanovg_java_2_c {
             + "\n"
             + "#include <nanovg/nanovg.h>\n"
             + "#include <jni_nanovg_assist.h>\n"
-            + "#define NANOVG_GLES2_IMPLEMENTATION\n"
+            + "#define NANOVG_GLES3_IMPLEMENTATION\n"
             + "#include <nanovg/nanovg_gl.h>\n"
             + "\n"
             + "\n"
             + "\n"
             + "\n"
             + "#include \"jvm.h\"\n"
-            + "#include \"jni_gui.h\"\n"
+            + "#include \"media.h\"\n"
             + "#include \"jni_stb_assist.h\"\n"
             + "\n\n\n";
 

@@ -176,10 +176,15 @@ enum NVGcreateFlags {
 	NVG_DEBUG 			= 1<<2,
 };
 
-NUTIL_API NVGcontext* nvgCreateGLES2(int flags);
-NUTIL_API void nvgDeleteGLES2(NVGcontext* ctx);
-NUTIL_API int nvglCreateImageFromHandleGLES2(NVGcontext* ctx, GLuint textureId, int w, int h, int flags);
-NUTIL_API GLuint nvglImageHandleGLES2(NVGcontext* ctx, int image);
+ //NUTIL_API NVGcontext* nvgCreateGLES2(int flags);
+ //NUTIL_API void nvgDeleteGLES2(NVGcontext* ctx);
+ //NUTIL_API int nvglCreateImageFromHandleGLES2(NVGcontext* ctx, GLuint textureId, int w, int h, int flags);
+ //NUTIL_API GLuint nvglImageHandleGLES2(NVGcontext* ctx, int image);
+
+ NUTIL_API NVGcontext* nvgCreateGLES3(int flags);
+ NUTIL_API void nvgDeleteGLES3(NVGcontext* ctx);
+ NUTIL_API int nvglCreateImageFromHandleGLES3(NVGcontext* ctx, GLuint textureId, int w, int h, int flags);
+ NUTIL_API GLuint nvglImageHandleGLES3(NVGcontext* ctx, int image);
 
 //NUTIL_API NVGcontext* nvgCreateGL2(int flags);
 //NUTIL_API void nvgDeleteGL2(NVGcontext* ctx);

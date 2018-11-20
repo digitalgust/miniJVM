@@ -5,6 +5,10 @@
  */
 package org.mini.gui;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.mini.nanovg.Gutil;
 import org.mini.nanovg.Nanovg;
 
@@ -46,6 +50,23 @@ public class GImage {
         Nanovg.nvgImageSize(vg, tex, w, h);
         GImage img = new GImage(tex, w[0], h[0]);
         return img;
+    }
+
+    static public GImage createImageFromJar(long vg, String filepath) {
+        try {
+            if (filepath == null) {
+                return null;
+            }
+            InputStream is = "".getClass().getResourceAsStream(filepath);
+            if (is != null && is.available() > 0) {
+                byte[] data = new byte[is.available()];
+                is.read(data);
+                return createImage(vg, data);
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        return null;
     }
 
     public int getWidth() {

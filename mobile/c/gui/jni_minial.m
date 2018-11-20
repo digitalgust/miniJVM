@@ -11,7 +11,9 @@
 
 #include "minial/dr_mp3.h"   // Enables MP3 decoding.
 
-#define MAL_NO_COREAUDIO
+//#define MAL_DEBUG_OUTPUT
+
+//#define MAL_NO_COREAUDIO
 
 #define MINI_AL_IMPLEMENTATION
 
@@ -24,11 +26,71 @@
 //==========================================================================================
 //callback
 //==========================================================================================
+
+typedef struct _S24Int{
+    u8 c0;
+    u8 c1;
+    u8 c2;
+}S24Int;
+
+void scaleSample(void *pSamples,mal_format format, s32 channels, s32 len, float scale){
+    if(len){
+        switch(format){
+            case mal_format_s16:{
+                mal_int16* dataPtr=pSamples;
+                for(s32 i=0,imax=len*channels;i<imax;i++){
+                    dataPtr[i]*=scale;
+                }
+                break;
+            }
+            case mal_format_u8:{
+                mal_uint8* dataPtr=pSamples;
+                for(s32 i=0,imax=len*channels;i<imax;i++){
+                    dataPtr[i]*=scale;
+                }
+                break;
+            }
+            case mal_format_f32:{
+                f32* dataPtr=pSamples;
+                for(s32 i=0,imax=len*channels;i<imax;i++){
+                    dataPtr[i]*=scale;
+                }
+                break;
+            }
+            case mal_format_s24:{
+                S24Int* dataPtr=pSamples;
+                S24Int elem;
+                for(s32 i=0,imax=len*channels;i<imax;i++){
+                    elem =dataPtr[i];
+                    s32 d=elem.c0|(elem.c1<<8)|(elem.c2<<16);
+                    d*=scale;
+                    elem.c0=d;
+                    elem.c1=d>>8;
+                    elem.c2=d>>16;
+                    dataPtr[i]=elem;
+                }
+                break;
+            }
+            case mal_format_s32:{
+                mal_int32* dataPtr=pSamples;
+                for(s32 i=0,imax=len*channels;i<imax;i++){
+                    dataPtr[i]*=scale;
+                }
+                break;
+            }
+        }
+        
+    }
+}
+
+
 void on_recv_frames(mal_device *pDevice, mal_uint32 frameCount, const void *pSamples) {
     if (refers._callback_minial_on_recv_frames) {
         Runtime *runtime;
         runtime = getRuntimeCurThread(refers.env);
         if (runtime) {
+            //scaleSample(pSamples,pDevice->format,pDevice->channels,frameCount,1.f);
+            
             JniEnv *env = refers.env;
             env->push_long(runtime->stack, (s64)(intptr_t)
             pDevice);
@@ -43,6 +105,7 @@ void on_recv_frames(mal_device *pDevice, mal_uint32 frameCount, const void *pSam
         }
     }
 }
+
 
 mal_uint32 on_send_frames(mal_device *pDevice, mal_uint32 frameCount, void *pSamples) {
     if (refers._callback_minial_on_send_frames) {
@@ -60,6 +123,7 @@ mal_uint32 on_send_frames(mal_device *pDevice, mal_uint32 frameCount, void *pSam
                 env->print_exception(runtime);
             }
             s32 v = env->pop_int(runtime->stack);
+            //scaleSample(pSamples,pDevice->format,pDevice->channels,v,1.f);
             runtime = NULL;
             return v;
         }
@@ -105,44 +169,16 @@ int org_mini_media_MiniAL_mal_context_init(Runtime *runtime, JClass *clazz) {
 int org_mini_media_MiniAL_mal_context_uninit(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
-    __refer
+    mal_context *
             handle_context = (__refer)(intptr_t)
     env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
 
-    mal_context_uninit(handle_context);
+    if(handle_context)mal_context_uninit(handle_context);
     env->jvm_free(handle_context);
     return 0;
 }
 
-
-//int org_mini_media_MiniAL_mal_device_config_init(Runtime *runtime, JClass *clazz) {
-//    JniEnv *env = runtime->jnienv;
-//    s32 pos = 0;
-//    s32 format = env->localvar_getInt(runtime->localvar, pos++);
-//    s32 channels = env->localvar_getInt(runtime->localvar, pos++);
-//    s32 sampleRate = env->localvar_getInt(runtime->localvar, pos++);
-//
-//    mal_device_config *handle_config = env->jvm_calloc(sizeof(mal_device_config));
-//
-//    *handle_config = mal_device_config_init(format, channels, sampleRate, on_recv_frames, on_send_frames);
-//    env->push_long(runtime->stack, (s64)(intptr_t)
-//    handle_config);
-//    return 0;
-//}
-//
-//int org_mini_media_MiniAL_mal_device_config_uninit(Runtime *runtime, JClass *clazz) {
-//    JniEnv *env = runtime->jnienv;
-//    s32 pos = 0;
-//    __refer
-//            handle_config = (__refer)(intptr_t)
-//    env->localvar_getLong_2slot(runtime->localvar, pos);
-//    pos += 2;
-//
-//    mal_context_uninit(handle_config);
-//    env->jvm_free(handle_config);
-//    return 0;
-//}
 
 
 int org_mini_media_MiniAL_mal_decoder_init_file(Runtime *runtime, JClass *clazz) {
@@ -194,7 +230,7 @@ int org_mini_media_MiniAL_mal_decoder_get_para(Runtime *runtime, JClass *clazz) 
     mal_decoder *handle_decoder = (__refer)(intptr_t)env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
     Instance *arr = env->localvar_getRefer(runtime->localvar, pos++);
-    if(arr->arr_length>=3){
+    if(handle_decoder && arr->arr_length>=3){
         env->jarray_set_field(arr, 0, handle_decoder->outputFormat);
         env->jarray_set_field(arr, 1, handle_decoder->outputChannels);
         env->jarray_set_field(arr, 2, handle_decoder->outputSampleRate);
@@ -205,7 +241,7 @@ int org_mini_media_MiniAL_mal_decoder_get_para(Runtime *runtime, JClass *clazz) 
 int org_mini_media_MiniAL_mal_decoder_read(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
-    mal_device *handle_decoder = (__refer)(intptr_t)
+    mal_decoder *handle_decoder = (__refer)(intptr_t)
     env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
     s32 frameCount = env->localvar_getInt(runtime->localvar, pos++);
@@ -227,42 +263,17 @@ int org_mini_media_MiniAL_mal_decoder_read(Runtime *runtime, JClass *clazz) {
 int org_mini_media_MiniAL_mal_decoder_uninit(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
-    __refer
+    mal_decoder *
             handle_decoder = (__refer)(intptr_t)
     env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
 
-    mal_context_uninit(handle_decoder);
+    if(handle_decoder)mal_decoder_uninit(handle_decoder);
     env->jvm_free(handle_decoder);
     return 0;
 }
-
-int org_mini_media_MiniAL_mal_device_init(Runtime *runtime, JClass *clazz) {
+void setupCallback(Runtime *runtime){
     JniEnv *env = runtime->jnienv;
-    s32 pos = 0;
-
-    mal_context *handle_context = (__refer)(intptr_t)
-    env->localvar_getLong_2slot(runtime->localvar, pos);
-    pos += 2;
-    s32 deviceType = env->localvar_getInt(runtime->localvar, pos++);
-    __refer handle_userdata = (__refer)(intptr_t)
-    env->localvar_getLong_2slot(runtime->localvar, pos);
-    pos += 2;
-
-    s32 format = env->localvar_getInt(runtime->localvar, pos++);
-    s32 channels = env->localvar_getInt(runtime->localvar, pos++);
-    s32 sampleRate = env->localvar_getInt(runtime->localvar, pos++);
-
-    mal_device_config dev_cfg=mal_device_config_init(format,channels,sampleRate,on_recv_frames,on_send_frames);
-
-    mal_device *handle_device = env->jvm_calloc(sizeof(mal_device));
-    if (mal_device_init(handle_context, deviceType, NULL, &dev_cfg, handle_userdata, handle_device) != MAL_SUCCESS) {
-        env->push_long(runtime->stack, 0);
-    } else {
-        mal_device_set_stop_callback(handle_device, on_stop);
-        env->push_long(runtime->stack, (s64)(intptr_t)handle_device);
-    }
-
     c8 *name_s;
     c8 *type_s;
     c8 *clsname_s;
@@ -274,7 +285,7 @@ int org_mini_media_MiniAL_mal_device_init(Runtime *runtime, JClass *clazz) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_minial_on_recv_frames =
-                env->find_methodInfo_by_name(clsname, name, type, runtime);
+        env->find_methodInfo_by_name(clsname, name, type, runtime);
         env->utf8_destory(clsname);
         env->utf8_destory(name);
         env->utf8_destory(type);
@@ -287,7 +298,7 @@ int org_mini_media_MiniAL_mal_device_init(Runtime *runtime, JClass *clazz) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_minial_on_send_frames =
-                env->find_methodInfo_by_name(clsname, name, type, runtime);
+        env->find_methodInfo_by_name(clsname, name, type, runtime);
         env->utf8_destory(clsname);
         env->utf8_destory(name);
         env->utf8_destory(type);
@@ -300,10 +311,41 @@ int org_mini_media_MiniAL_mal_device_init(Runtime *runtime, JClass *clazz) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_minial_on_stop =
-                env->find_methodInfo_by_name(clsname, name, type, runtime);
+        env->find_methodInfo_by_name(clsname, name, type, runtime);
         env->utf8_destory(clsname);
         env->utf8_destory(name);
         env->utf8_destory(type);
+    }
+
+}
+int org_mini_media_MiniAL_mal_device_init(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+
+    mal_context *handle_context = (__refer)(intptr_t)
+    env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    s32 deviceType = env->localvar_getInt(runtime->localvar, pos++);
+    __refer handle_userdata = (__refer)(intptr_t)
+    env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    
+    
+
+    s32 format = env->localvar_getInt(runtime->localvar, pos++);
+    s32 channels = env->localvar_getInt(runtime->localvar, pos++);
+    s32 sampleRate = env->localvar_getInt(runtime->localvar, pos++);
+    
+    setupCallback(runtime);
+
+    mal_device_config dev_cfg=mal_device_config_init(format,channels,sampleRate,on_recv_frames,on_send_frames);
+
+    mal_device *handle_device = env->jvm_calloc(sizeof(mal_device));
+    if (mal_device_init(handle_context, deviceType, NULL, &dev_cfg, handle_userdata, handle_device) != MAL_SUCCESS) {
+        env->push_long(runtime->stack, 0);
+    } else {
+        mal_device_set_stop_callback(handle_device, on_stop);
+        env->push_long(runtime->stack, (s64)(intptr_t)handle_device);
     }
 
     return 0;
@@ -364,8 +406,6 @@ static java_native_method method_minial_table[] = {
 
         {"org/mini/media/MiniAL", "mal_context_init",        "()J",      org_mini_media_MiniAL_mal_context_init},
         {"org/mini/media/MiniAL", "mal_context_uninit",      "(J)V",     org_mini_media_MiniAL_mal_context_uninit},
-//        {"org/mini/media/MiniAL", "mal_device_config_init",   "(III)J",  org_mini_media_MiniAL_mal_device_config_init},
-//        {"org/mini/media/MiniAL", "mal_device_config_uninit", "(J)V",    org_mini_media_MiniAL_mal_device_config_uninit},
         {"org/mini/media/MiniAL", "mal_decoder_init_file",   "([BIII)J", org_mini_media_MiniAL_mal_decoder_init_file},
         {"org/mini/media/MiniAL", "mal_decoder_init_memory", "([BIII)J", org_mini_media_MiniAL_mal_decoder_init_memory},
         {"org/mini/media/MiniAL", "mal_decoder_get_para",    "(J[I)V",    org_mini_media_MiniAL_mal_decoder_get_para},

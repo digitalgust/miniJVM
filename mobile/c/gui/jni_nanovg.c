@@ -15,7 +15,7 @@
 
 #include <nanovg/nanovg.h>
 #include <jni_nanovg_assist.h>
-#define NANOVG_GLES2_IMPLEMENTATION
+#define NANOVG_GLES3_IMPLEMENTATION
 #include <nanovg/nanovg_gl.h>
 
 
@@ -1920,31 +1920,31 @@ int org_mini_nanovg_Nanovg_nvgTextMetrics(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-int org_mini_nanovg_Nanovg_nvgCreateGLES2(Runtime *runtime, JClass *clazz) {
+int org_mini_nanovg_Nanovg_nvgCreateGLES3(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
     s32 pflags = env->localvar_getInt(runtime->localvar, pos++);
 
-    NVGcontext*/*ptr*/ _re_val = nvgCreateGLES2((int)pflags);
+    NVGcontext*/*ptr*/ _re_val = nvgCreateGLES3((int)pflags);
     s64 ret_value = (s64)(intptr_t)_re_val;env->push_long(runtime->stack, ret_value);
     
     return 0;
 }
 
-int org_mini_nanovg_Nanovg_nvgDeleteGLES2(Runtime *runtime, JClass *clazz) {
+int org_mini_nanovg_Nanovg_nvgDeleteGLES3(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
     intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
 
-    nvgDeleteGLES2((NVGcontext*/*ptr*/)(pctx));
+    nvgDeleteGLES3((NVGcontext*/*ptr*/)(pctx));
     
     
     return 0;
 }
 
-int org_mini_nanovg_Nanovg_nvglCreateImageFromHandleGLES2(Runtime *runtime, JClass *clazz) {
+int org_mini_nanovg_Nanovg_nvglCreateImageFromHandleGLES3(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
@@ -1954,20 +1954,20 @@ int org_mini_nanovg_Nanovg_nvglCreateImageFromHandleGLES2(Runtime *runtime, JCla
     s32 ph = env->localvar_getInt(runtime->localvar, pos++);
     s32 pflags = env->localvar_getInt(runtime->localvar, pos++);
 
-    int _re_val = nvglCreateImageFromHandleGLES2((NVGcontext*/*ptr*/)(pctx), (GLuint)ptextureId, (int)pw, (int)ph, (int)pflags);
+    int _re_val = nvglCreateImageFromHandleGLES3((NVGcontext*/*ptr*/)(pctx), (GLuint)ptextureId, (int)pw, (int)ph, (int)pflags);
     s32 ret_value = (s32)_re_val;env->push_int(runtime->stack, ret_value);
     
     return 0;
 }
 
-int org_mini_nanovg_Nanovg_nvglImageHandleGLES2(Runtime *runtime, JClass *clazz) {
+int org_mini_nanovg_Nanovg_nvglImageHandleGLES3(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     
     intptr_t pctx = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
     s32 pimage = env->localvar_getInt(runtime->localvar, pos++);
 
-    GLuint _re_val = nvglImageHandleGLES2((NVGcontext*/*ptr*/)(pctx), (int)pimage);
+    GLuint _re_val = nvglImageHandleGLES3((NVGcontext*/*ptr*/)(pctx), (int)pimage);
     s32 ret_value = (s32)_re_val;env->push_int(runtime->stack, ret_value);
     
     return 0;
@@ -2337,10 +2337,10 @@ static java_native_method method_nanovg_table[] = {
 {"org/mini/nanovg/Nanovg",  "nvgFontFaceId",  "(JI)V",  org_mini_nanovg_Nanovg_nvgFontFaceId},
 {"org/mini/nanovg/Nanovg",  "nvgFontFace",  "(J[B)V",  org_mini_nanovg_Nanovg_nvgFontFace},
 {"org/mini/nanovg/Nanovg",  "nvgTextMetrics",  "(J[F[F[F)V",  org_mini_nanovg_Nanovg_nvgTextMetrics},
-{"org/mini/nanovg/Nanovg",  "nvgCreateGLES2",  "(I)J",  org_mini_nanovg_Nanovg_nvgCreateGLES2},
-{"org/mini/nanovg/Nanovg",  "nvgDeleteGLES2",  "(J)V",  org_mini_nanovg_Nanovg_nvgDeleteGLES2},
-{"org/mini/nanovg/Nanovg",  "nvglCreateImageFromHandleGLES2",  "(JIIII)I",  org_mini_nanovg_Nanovg_nvglCreateImageFromHandleGLES2},
-{"org/mini/nanovg/Nanovg",  "nvglImageHandleGLES2",  "(JI)I",  org_mini_nanovg_Nanovg_nvglImageHandleGLES2},
+{"org/mini/nanovg/Nanovg",  "nvgCreateGLES3",  "(I)J",  org_mini_nanovg_Nanovg_nvgCreateGLES3},
+{"org/mini/nanovg/Nanovg",  "nvgDeleteGLES3",  "(J)V",  org_mini_nanovg_Nanovg_nvgDeleteGLES3},
+{"org/mini/nanovg/Nanovg",  "nvglCreateImageFromHandleGLES3",  "(JIIII)I",  org_mini_nanovg_Nanovg_nvglCreateImageFromHandleGLES3},
+{"org/mini/nanovg/Nanovg",  "nvglImageHandleGLES3",  "(JI)I",  org_mini_nanovg_Nanovg_nvglImageHandleGLES3},
 {"org/mini/nanovg/Nanovg",  "nvgCreateNVGtextRow",  "(I)J",  org_mini_nanovg_Nanovg_nvgCreateNVGtextRow},
 {"org/mini/nanovg/Nanovg",  "nvgDeleteNVGtextRow",  "(J)V",  org_mini_nanovg_Nanovg_nvgDeleteNVGtextRow},
 {"org/mini/nanovg/Nanovg",  "nvgNVGtextRow_width",  "(JI)F",  org_mini_nanovg_Nanovg_nvgNVGtextRow_width},

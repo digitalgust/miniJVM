@@ -29,7 +29,7 @@ public class Nanovg_h_2_java {
     }
 
     String[] input_path = {
-        "../../c/gui/jni_gui.h",
+        "../../c/gui/media.h",
         "../../c/gui/jni_stb_assist.h",
         "../../c/gui/jni_nanovg_assist.h",};
     String[] output_path = {"src/org/mini/nanovg/Nanovg.java"};

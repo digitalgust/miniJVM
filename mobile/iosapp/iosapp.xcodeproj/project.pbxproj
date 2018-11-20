@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		4523724420CAA77C00156C58 /* ltalloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4523724220CAA77B00156C58 /* ltalloc.c */; };
+		4535FA2821944F7300B888BA /* jni_minial.m in Sources */ = {isa = PBXBuildFile; fileRef = 4535FA2721944F7300B888BA /* jni_minial.m */; };
+		456F472E2195AC9C006F2D8C /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 456F472D2195AC9C006F2D8C /* OpenAL.framework */; };
 		45ADDF6E21625C8000F469AC /* libz.1.2.8.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 45ADDF6C21625C5A00F469AC /* libz.1.2.8.tbd */; };
 		45D78F2C209D3E62003B9317 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 45D78F2B209D3E62003B9317 /* Assets.xcassets */; };
 		45D78F66209D4330003B9317 /* glfm_platform_emscripten.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F45209D4330003B9317 /* glfm_platform_emscripten.c */; };
@@ -48,6 +50,16 @@
 /* Begin PBXFileReference section */
 		4523724220CAA77B00156C58 /* ltalloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ltalloc.c; sourceTree = "<group>"; };
 		4523724320CAA77C00156C58 /* ltalloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ltalloc.h; sourceTree = "<group>"; };
+		4535FA2421944E4200B888BA /* dr_mp3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dr_mp3.h; sourceTree = "<group>"; };
+		4535FA2521944E4200B888BA /* dr_flac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dr_flac.h; sourceTree = "<group>"; };
+		4535FA2621944E4200B888BA /* mini_al.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mini_al.h; sourceTree = "<group>"; };
+		4535FA2721944F7300B888BA /* jni_minial.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = jni_minial.m; sourceTree = "<group>"; };
+		4535FA29219452B300B888BA /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		4535FA2B219456C200B888BA /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
+		4535FA2D2194573A00B888BA /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		4535FA31219457EB00B888BA /* CoreAudioKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioKit.framework; path = System/Library/Frameworks/CoreAudioKit.framework; sourceTree = SDKROOT; };
+		4535FA3321945A2600B888BA /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		456F472D2195AC9C006F2D8C /* OpenAL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenAL.framework; path = System/Library/Frameworks/OpenAL.framework; sourceTree = SDKROOT; };
 		45ADDF6C21625C5A00F469AC /* libz.1.2.8.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.1.2.8.tbd; path = usr/lib/libz.1.2.8.tbd; sourceTree = SDKROOT; };
 		45D78F1F209D3E61003B9317 /* iosapp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosapp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		45D78F2B209D3E62003B9317 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -129,6 +141,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				456F472E2195AC9C006F2D8C /* OpenAL.framework in Frameworks */,
 				45ADDF6E21625C8000F469AC /* libz.1.2.8.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -136,9 +149,25 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4535FA2321944E4200B888BA /* minial */ = {
+			isa = PBXGroup;
+			children = (
+				4535FA2421944E4200B888BA /* dr_mp3.h */,
+				4535FA2521944E4200B888BA /* dr_flac.h */,
+				4535FA2621944E4200B888BA /* mini_al.h */,
+			);
+			path = minial;
+			sourceTree = "<group>";
+		};
 		45ADDF6B21625C5A00F469AC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				456F472D2195AC9C006F2D8C /* OpenAL.framework */,
+				4535FA3321945A2600B888BA /* UIKit.framework */,
+				4535FA31219457EB00B888BA /* CoreAudioKit.framework */,
+				4535FA2D2194573A00B888BA /* CoreAudio.framework */,
+				4535FA2B219456C200B888BA /* AVKit.framework */,
+				4535FA29219452B300B888BA /* AVFoundation.framework */,
 				45ADDF6C21625C5A00F469AC /* libz.1.2.8.tbd */,
 			);
 			name = Frameworks;
@@ -195,12 +224,14 @@
 				45D78F58209D4330003B9317 /* glad */,
 				45D78F4C209D4330003B9317 /* jni_gl.c */,
 				45D78F57209D4330003B9317 /* jni_glfm.c */,
-				45D78F63209D4330003B9317 /* media.c */,
-				45D78F50209D4330003B9317 /* media.h */,
+				4535FA2721944F7300B888BA /* jni_minial.m */,
 				45D78F4B209D4330003B9317 /* jni_nanovg_assist.h */,
 				45D78F4F209D4330003B9317 /* jni_nanovg.c */,
 				45D78F5C209D4330003B9317 /* jni_stb_assist.h */,
 				45D78F55209D4330003B9317 /* KHR */,
+				45D78F63209D4330003B9317 /* media.c */,
+				45D78F50209D4330003B9317 /* media.h */,
+				4535FA2321944E4200B888BA /* minial */,
 				45D78F5D209D4330003B9317 /* nanovg */,
 				45D78F4D209D4330003B9317 /* other */,
 				45D78F51209D4330003B9317 /* stb */,
@@ -420,7 +451,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "jarfile=\"./../java/guilib/dist/glfm_gui.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n\n#jarfile=\"./../java/ExApp/dist/ExApp.jar\"\njarfile=\"./../../../../javaSrc/blinkblink/client/ExApp/dist/ExApp.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n\njarfile=\"./../../javalib/dist/minijvm_rt.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n";
+			shellScript = "jarfile=\"./../java/guilib/dist/glfm_gui.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n\njarfile=\"./../java/ExApp/dist/ExApp.jar\"\n#jarfile=\"./../../../../javaSrc/blinkblink/client/ExApp/dist/ExApp.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n\njarfile=\"./../../javalib/dist/minijvm_rt.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n\n#jarfile=\"./../../../../javaSrc/g3d/dist/g3d.jar\"\nif [ -f \"${jarfile}\" ]; then\ncp \"${jarfile}\" ../assets/resfiles/\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -458,6 +489,7 @@
 				45D78F68209D4330003B9317 /* glfm_platform_ios.m in Sources */,
 				45D78F66209D4330003B9317 /* glfm_platform_emscripten.c in Sources */,
 				45D7903C209D8662003B9317 /* tinycthread.c in Sources */,
+				4535FA2821944F7300B888BA /* jni_minial.m in Sources */,
 				45D78F6C209D4330003B9317 /* glad.c in Sources */,
 				45D7903B209D8662003B9317 /* hashset.c in Sources */,
 				45D79046209D8662003B9317 /* linkedlist.c in Sources */,

@@ -63,7 +63,7 @@ public class GForm extends GViewPort {
 
     final static List<Integer> pendingDeleteImage = new ArrayList();
 
-    Timer timer = new Timer(true);//用于更新画面，UI系统采取按需刷新的原则
+    static Timer timer = new Timer(true);//用于更新画面，UI系统采取按需刷新的原则
 
     public GForm(GuiCallBack ccb) {
         this.title = title;
@@ -130,13 +130,7 @@ public class GForm extends GViewPort {
             System.out.println("callback.getNvContext() is null.");
         }
 
-        String respath = callback.getResRoot();
-        System.setProperty("word_font_path", respath + "/resfiles/wqymhei.ttc");
-        System.setProperty("icon_font_path", respath + "/resfiles/entypo.ttf");
-        System.setProperty("emoji_font_path", respath + "/resfiles/NotoEmoji-Regular.ttf");
-        GToolkit.loadFont(vg);
-
-        System.out.println("fbWidth=" + fbWidth + "  ,fbHeight=" + fbHeight);
+        //System.out.println("fbWidth=" + fbWidth + "  ,fbHeight=" + fbHeight);
         flush();
     }
 

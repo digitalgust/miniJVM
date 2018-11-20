@@ -81,9 +81,10 @@ public class AudioDevice {
 
     public void stop() {
         checkThread();
-//        if (MiniAL.mal_device_is_started(handle_device) == 1) {
-//            MiniAL.mal_device_stop(handle_device);
-//        }
+        if (MiniAL.mal_device_is_started(handle_device) == 1) {
+            MiniAL.mal_device_stop(handle_device);
+            System.out.println("stoped " + this);
+        }
     }
 
     public boolean isStarted() {
@@ -157,6 +158,7 @@ public class AudioDevice {
                 dev.listener.onReceiveFrames(dev, frameCount, dmo);
             }
         }
+        curThread = null;
     }
 
     static int onSendFrames(long pDevice, int frameCount, long pSamples) {
@@ -166,14 +168,17 @@ public class AudioDevice {
             if (dev.listener != null) {
                 int samplesToRead = frameCount * dev.channels;
                 if (samplesToRead == 0) {
+                    curThread = null;
                     return 0;
                 }
                 int len = samplesToRead * getFormatBytes(dev.format);
                 DirectMemObj dmo = new DirectMemObj(pSamples, len);
                 int v = dev.listener.onSendFrames(dev, frameCount, dmo);
-                return samplesToRead / dev.channels;
+                curThread = null;
+                return v;
             }
         }
+        curThread = null;
         return 0;
     }
 
@@ -185,6 +190,7 @@ public class AudioDevice {
                 dev.listener.onStop(dev);
             }
         }
+        curThread = null;
     }
 
 }

@@ -168,10 +168,10 @@ public class Nanovg {
     public static native void nvgFontFaceId(long pctx, int pfont); //NVGcontext*/*ptr*/,int, //void
     public static native void nvgFontFace(long pctx, byte[] pfont); //NVGcontext*/*ptr*/,const char*, //void
     public static native void nvgTextMetrics(long pctx, float[] pascender, float[] pdescender, float[] plineh); //NVGcontext*/*ptr*/,float*,float*,float*, //void
-    public static native long  nvgCreateGLES2(int pflags); //int, //NVGcontext*/*ptr*/ 
-    public static native void nvgDeleteGLES2(long pctx); //NVGcontext*/*ptr*/, //void
-    public static native int nvglCreateImageFromHandleGLES2(long pctx, int ptextureId, int pw, int ph, int pflags); //NVGcontext*/*ptr*/,GLuint,int,int,int, //int
-    public static native int nvglImageHandleGLES2(long pctx, int pimage); //NVGcontext*/*ptr*/,int, //GLuint
+    public static native long  nvgCreateGLES3(int pflags); //int, //NVGcontext*/*ptr*/ 
+    public static native void nvgDeleteGLES3(long pctx); //NVGcontext*/*ptr*/, //void
+    public static native int nvglCreateImageFromHandleGLES3(long pctx, int ptextureId, int pw, int ph, int pflags); //NVGcontext*/*ptr*/,GLuint,int,int,int, //int
+    public static native int nvglImageHandleGLES3(long pctx, int pimage); //NVGcontext*/*ptr*/,int, //GLuint
     public static native long  nvgCreateNVGtextRow(int pcount); //int, //struct NVGtextRow*/*ptr*/ 
     public static native void nvgDeleteNVGtextRow(long pval); //struct NVGtextRow*/*ptr*/, //void
     public static native float nvgNVGtextRow_width(long pptr, int pindex); //struct NVGtextRow*/*ptr*/,int, //float
