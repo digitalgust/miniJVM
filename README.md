@@ -7,7 +7,7 @@
   
 ## Features:  
 
-  * Jvm Build pass: iOS / Android / mingww64 32 64bit / cygwin / MSVC 32 64bit / MacOS /  Linux  .   
+  * Jvm Build pass: iOS / Android / mingww64 32-64bit / cygwin / MSVC 32-64bit / MacOS /  Linux  .   
   * No dependence Library .  
   * Low memory footprint .  
   * Minimal runtime classlib .   
@@ -20,6 +20,14 @@
   * Java garbage collection supported .   
   * Java remote debug supported, JDWP Spec .  
   
+## iOS/Android Platform Extended Features:  
+  * OpenGL ES 3.0 .  
+  * GUI similar with swing .  
+  * Audio Playback and Capture .  
+  * Take photo from Camera or Album .  
+  * Save and Load file from mobile storage .  
+  These java api of features can be found in mobile/java/guilib/
+
   <div align=center><img width="480" height="386" src="/screenshot/arch.png"/></div>
 
 
@@ -124,7 +132,7 @@ String s=(String)list.get(0);//can't ignore (String) cast qualifier.
   android project:  Android Studio ,Android SDK 
 
  
-## Build GUI application, depend on openGL2 or openGLES     
+## Build GUI application, depend on openGL or openGLES     
    * iOS/Android system build with GLFM  (/mobile/iosapp/  ,  /mobile/androidapp/)       
    * Window system build with GLFW   (/ex_lib/gui_jni/)      
    * GUI build on Nanovg          
