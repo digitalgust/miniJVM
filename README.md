@@ -394,7 +394,7 @@ public class App1 implements GApplication {
   
   
 ## License
-License:	unlicense
+License:	Public domain
 
 
 Gust , zhangpeng@egls.cn , Technology and production manage in EGLS ltd. EGLS is a game develop company in China .
