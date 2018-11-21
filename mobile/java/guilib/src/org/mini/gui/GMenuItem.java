@@ -24,7 +24,7 @@ import static org.mini.nanovg.Nanovg.nvgTextMetrics;
  */
 public class GMenuItem extends GObject {
 
-    String tag;
+    String text;
     GImage img;
 
     float[] lineh = new float[1];
@@ -33,7 +33,7 @@ public class GMenuItem extends GObject {
     int redPoint;
 
     GMenuItem(String t, GImage i, GMenu _parent) {
-        tag = t;
+        text = t;
         img = i;
         parent = _parent;
 
@@ -125,8 +125,8 @@ public class GMenuItem extends GObject {
         float tag_x = 0f, tag_y = 0f, img_x = 0f, img_y = 0f, img_w = 0f, img_h = 0f;
 
         if (img != null) {
-            if (tag != null) {
-                img_h = dh * .85f - pad - lineh[0];
+            if (text != null) {
+                img_h = dh * .65f - pad - lineh[0];
                 img_x = dx + dw / 2 - img_h / 2;
                 img_w = img_h;
                 img_y = dy + dh * .2f;
@@ -138,7 +138,7 @@ public class GMenuItem extends GObject {
                 img_w = img_h;
                 img_y = dy + dh / 2 - img_h / 2;
             }
-        } else if (tag != null) {
+        } else if (text != null) {
             tag_x = dx + dw / 2;
             tag_y = dy + dh / 2;
         }
@@ -148,15 +148,15 @@ public class GMenuItem extends GObject {
             if (!isSelected()) {
                 alpha = 0.5f;
             }
-            imgPaint = nvgImagePattern(vg, img_x, img_y, img_w, img_h, 0.0f / 180.0f * (float) Math.PI, img.getTexture(), 0.8f);
+            imgPaint = nvgImagePattern(vg, img_x, img_y, img_w, img_h, 0.0f / 180.0f * (float) Math.PI, img.getTexture(), alpha);
             nvgBeginPath(vg);
             nvgRoundedRect(vg, img_x, img_y, img_w, img_h, 5);
             nvgFillPaint(vg, imgPaint);
             nvgFill(vg);
         }
         //画文字
-        if (tag != null) {
-            byte[] b = toUtf8(tag);
+        if (text != null) {
+            byte[] b = toUtf8(text);
             nvgFillColor(vg, nvgRGBA(0, 0, 0, 96));
             Nanovg.nvgTextJni(vg, tag_x + 1, tag_y + 1, b, 0, b.length);
             nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());

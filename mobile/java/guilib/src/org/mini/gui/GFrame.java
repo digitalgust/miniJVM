@@ -204,7 +204,6 @@ public class GFrame extends GPanel {
         // Header
         headerPaint = nvgLinearGradient(vg, x, y, x, y + 15, nvgRGBA(255, 255, 255, 8), nvgRGBA(0, 0, 0, 16));
         nvgBeginPath(vg);
-
         nvgRoundedRect(vg,
                 title_panel.getViewX(),
                 title_panel.getViewY(),
@@ -213,6 +212,7 @@ public class GFrame extends GPanel {
                 cornerRadius - 1);
         nvgFillPaint(vg, headerPaint);
         nvgFill(vg);
+        
         nvgBeginPath(vg);
         nvgMoveTo(vg, x + 0.5f, y + 0.5f + 30);
         nvgLineTo(vg, x + 0.5f + w - 1, y + 0.5f + 30);
@@ -255,7 +255,7 @@ public class GFrame extends GPanel {
             case Glfw.GLFW_MOUSE_BUTTON_1: {//left
                 if (pressed) {
                     if (closable && isInBoundle(close_boundle, x, y)) {
-                        parent.remove(this);
+                        close();
                     } else if (title_panel.isInArea(x, y)) {
                         dragFrame = true;
                     }
@@ -301,7 +301,7 @@ public class GFrame extends GPanel {
         switch (phase) {
             case Glfm.GLFMTouchPhaseBegan:
                 if (closable && isInBoundle(close_boundle, x, y)) {
-                    parent.remove(this);
+                    close();
                 } else if (title_panel.isInArea(x, y)) {
                     dragFrame = true;
                 }

@@ -252,6 +252,7 @@ public class GColorSelector extends GObject {
             nvgPathWinding(vg, NVG_HOLE);
             nvgFillPaint(vg, paint);
             nvgFill(vg);
+            nvgTranslate(vg, -cx, -cy);
         }
         nvgRestore(vg);
 

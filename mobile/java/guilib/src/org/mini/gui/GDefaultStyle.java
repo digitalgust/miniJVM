@@ -121,4 +121,11 @@ public class GDefaultStyle implements GStyle {
     public float[] getBackgroundColor() {
         return backgroundColor;
     }
+
+    float[] popBackgroundColor = nvgRGBA(16, 16, 16, 255);
+
+    @Override
+    public float[] getPopBackgroundColor() {
+        return popBackgroundColor;
+    }
 }

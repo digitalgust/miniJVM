@@ -21,18 +21,13 @@ import static org.mini.nanovg.Nanovg.nvgClosePath;
 import static org.mini.nanovg.Nanovg.nvgFill;
 import static org.mini.nanovg.Nanovg.nvgFillColor;
 import static org.mini.nanovg.Nanovg.nvgFillPaint;
-import static org.mini.nanovg.Nanovg.nvgFontFace;
-import static org.mini.nanovg.Nanovg.nvgFontSize;
 import static org.mini.nanovg.Nanovg.nvgImagePattern;
 import static org.mini.nanovg.Nanovg.nvgLineTo;
 import static org.mini.nanovg.Nanovg.nvgMoveTo;
-import static org.mini.nanovg.Nanovg.nvgReset;
 import static org.mini.nanovg.Nanovg.nvgRoundedRect;
-import static org.mini.nanovg.Nanovg.nvgSave;
 import static org.mini.nanovg.Nanovg.nvgScissor;
 import static org.mini.nanovg.Nanovg.nvgStroke;
 import static org.mini.nanovg.Nanovg.nvgStrokeColor;
-import static org.mini.nanovg.Nanovg.nvgStrokeWidth;
 import static org.mini.nanovg.Nanovg.nvgTextAlign;
 import static org.mini.nanovg.Nanovg.nvgTextJni;
 import static org.mini.nanovg.Nanovg.nvgTranslate;
@@ -57,22 +52,15 @@ public class GGraphics {
 
     int curColor = 0;
     byte r, g, b, a;
+    float fontSize = GToolkit.getStyle().getTextFontSize();
 
     GGraphics(GCanvas canvas, long context) {
         this.canvas = canvas;
         vg = context;
     }
 
-    void save() {
-        nvgSave(vg);
-        nvgReset(vg);
-        nvgStrokeWidth(vg, 1.0f);
-        nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
-        nvgFontFace(vg, GToolkit.getFontWord());
-    }
-
-    void restore() {
-        nvgReset(vg);
+    public long getNvContext() {
+        return vg;
     }
 
     public void setColor(int argb) {
@@ -262,6 +250,20 @@ public class GGraphics {
 
     public void translate(int x, int y) {
         nvgTranslate(vg, x, y);
+    }
+
+    /**
+     * @return the fontSize
+     */
+    public float getFontSize() {
+        return fontSize;
+    }
+
+    /**
+     * @param fontSize the fontSize to set
+     */
+    public void setFontSize(float fontSize) {
+        this.fontSize = fontSize;
     }
 
 }

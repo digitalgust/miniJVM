@@ -66,7 +66,7 @@ public class GList extends GPanel implements GFocusChangeListener {
     float list_rows_max = 7;
     float list_rows_min = 3;
     float pad = 5;
-    int menuWidth = 20;
+    int scrollbarWidth = 20;
 
     boolean showScrollbar = false;
 
@@ -86,13 +86,11 @@ public class GList extends GPanel implements GFocusChangeListener {
         this.width = width;
         this.height = height;
 
-        setBgColor(GToolkit.getStyle().getBackgroundColor());
-
         setViewLocation(left, top);
         setViewSize(width, height);
 
         //
-        scrollBar = new GScrollBar(0, GScrollBar.VERTICAL, 0, 0, menuWidth, 100);
+        scrollBar = new GScrollBar(0, GScrollBar.VERTICAL, 0, 0, scrollbarWidth, 100);
         scrollBar.setActionListener(new ScrollBarActionListener());
         popWin.add(scrollBar);
         popWin.add(popView);
@@ -100,10 +98,12 @@ public class GList extends GPanel implements GFocusChangeListener {
         showScrollBar(false);
         reSize();
         changeCurPanel();
+
+        setShowMode(MODE_SINGLE_SHOW);
     }
-    
+
     @Override
-    public void setViewSize(float w,float h){
+    public void setViewSize(float w, float h) {
         super.setViewSize(w, h);
         reSize();
     }
@@ -111,9 +111,9 @@ public class GList extends GPanel implements GFocusChangeListener {
     public void showScrollBar(boolean show) {
         this.showScrollbar = show;
         if (show) {
-            menuWidth = 20;
+            scrollbarWidth = 20;
         } else {
-            menuWidth = 0;
+            scrollbarWidth = 0;
         }
     }
 
@@ -274,6 +274,13 @@ public class GList extends GPanel implements GFocusChangeListener {
 
     public void setShowMode(int m) {
         this.showMode = m;
+
+        if (showMode == MODE_MULTI_SHOW) {
+            setBgColor(GToolkit.getStyle().getBackgroundColor());
+        } else {
+            setBgColor(GToolkit.getStyle().getPopBackgroundColor());
+        }
+
         reSize();
         changeCurPanel();
     }
@@ -397,6 +404,9 @@ public class GList extends GPanel implements GFocusChangeListener {
         if (s == null) {
             return;
         }
+        nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
+        nvgFontFace(vg, GToolkit.getFontWord());
+        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
         byte[] b = toUtf8(s);
         Nanovg.nvgTextJni(vg, tx, ty, b, 0, b.length);
@@ -516,11 +526,7 @@ public class GList extends GPanel implements GFocusChangeListener {
         void drawNormal(long vg, float x, float y, float w, float h) {
             byte[] bg;
 
-            if (pulldown) {
-                bg = nvgLinearGradient(vg, x, y + h, x, y, nvgRGBA(255, 255, 255, 16), nvgRGBA(0, 0, 0, 16));
-            } else {
-                bg = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(255, 255, 255, 16), nvgRGBA(0, 0, 0, 16));
-            }
+            bg = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(255, 255, 255, 16), nvgRGBA(0, 0, 0, 16));
             float cornerRadius = 4.0f;
             nvgBeginPath(vg);
             nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, cornerRadius - 1);
@@ -532,20 +538,19 @@ public class GList extends GPanel implements GFocusChangeListener {
             nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 48));
             nvgStroke(vg);
 
+            float thumb = h - pad;
+            nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
+            nvgFontFace(vg, GToolkit.getFontIcon());
+            nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
             if (popView.elements.size() > 0) {
-                float thumb = h - pad;
                 int selectIndex = getSelectedIndex();
                 if (selectIndex >= 0) {
                     GListItem gli = (GListItem) getItem(selectIndex);
                     drawImage(vg, x + pad, y + h * 0.5f - thumb / 2, thumb, thumb, gli.img);
-
                     drawText(vg, x + thumb + pad + pad, y + h / 2, thumb, thumb, gli.label);
-
-                    nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
-                    nvgFontFace(vg, GToolkit.getFontIcon());
-                    nvgTextJni(vg, x + w - thumb, y + h * 0.5f, preicon_arr, 0, preicon_arr.length);
                 }
             }
+            nvgTextJni(vg, x + w - thumb, y + h * 0.5f, preicon_arr, 0, preicon_arr.length);
         }
     };
 
@@ -597,11 +602,11 @@ public class GList extends GPanel implements GFocusChangeListener {
             super.setSize(width, height);
 
             popView.setLocation(0, 0);
-            popView.setSize(width - menuWidth, height);
+            popView.setSize(width - scrollbarWidth, height);
             popView.setViewLocation(0, 0);
-            popView.setViewSize(width - menuWidth, height);
+            popView.setViewSize(width - scrollbarWidth, height);
 
-            scrollBar.setLocation(width - menuWidth, 0);
+            scrollBar.setLocation(width - scrollbarWidth, 0);
             scrollBar.setSize(20, height);
         }
 

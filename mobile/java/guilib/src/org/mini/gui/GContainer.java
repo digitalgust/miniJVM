@@ -102,10 +102,12 @@ abstract public class GContainer extends GObject {
     public void add(int index, GObject nko) {
         if (nko != null) {
             synchronized (elements) {
-                elements.add(index, nko);
-                nko.setParent(this);
-                nko.init();
-                onAdd(nko);
+                if (!elements.contains(nko)) {
+                    elements.add(index, nko);
+                    nko.setParent(this);
+                    nko.init();
+                    onAdd(nko);
+                }
             }
         }
     }
@@ -245,6 +247,7 @@ abstract public class GContainer extends GObject {
         }
 
         nvgSave(ctx);
+//        Nanovg.nvgReset(ctx);
         nvgScissor(ctx, x, y, w, h);
         float vx = getViewX();
         float vy = getViewY();
@@ -256,21 +259,22 @@ abstract public class GContainer extends GObject {
 
             nko.update(ctx);
 
-//        if (focus == nko) {
-//            nvgScissor(ctx, x, y, w, h);
-//            nvgBeginPath(ctx);
-//            Nanovg.nvgRect(ctx, x + 1, y + 1, w - 2, h - 2);
-//            nvgStrokeColor(ctx, nvgRGBA(255, 0, 0, 255));
-//            nvgStroke(ctx);
+//            if (focus == nko) {
+//                Nanovg.nvgScissor(ctx, x, y, w, h);
+//                Nanovg.nvgBeginPath(ctx);
+//                Nanovg.nvgRect(ctx, x + 1, y + 1, w - 2, h - 2);
+//                Nanovg.nvgStrokeColor(ctx, Nanovg.nvgRGBA((byte) 255, (byte) 0, (byte) 0, (byte) 255));
+//                Nanovg.nvgStroke(ctx);
 //
-//            nvgBeginPath(ctx);
-//            Nanovg.nvgRect(ctx, nko.getX() + 2, nko.getY() + 2, nko.getW() - 4, nko.getH() - 4);
-//            nvgStrokeColor(ctx, nvgRGBA(0, 0, 255, 255));
-//            nvgStroke(ctx);
+//                Nanovg.nvgBeginPath(ctx);
+//                Nanovg.nvgRect(ctx, nko.getX() + 2, nko.getY() + 2, nko.getW() - 4, nko.getH() - 4);
+//                Nanovg.nvgStrokeColor(ctx, Nanovg.nvgRGBA((byte) 0, (byte) 0, (byte) 255, (byte) 255));
+//                Nanovg.nvgStroke(ctx);
 //
-//        }
-            Nanovg.nvgRestore(ctx);
+//            }
+//            Nanovg.nvgResetScissor(ctx);
         }
+        Nanovg.nvgRestore(ctx);
     }
 
     @Override

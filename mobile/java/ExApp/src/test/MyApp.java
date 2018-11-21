@@ -1,28 +1,26 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package test;
 
-import java.util.Random;
-import org.mini.nanovg.*;
+import java.io.File;
+import org.mini.glfm.Glfm;
 import org.mini.gui.*;
 import org.mini.gui.event.*;
+import org.mini.gui.impl.GuiCallBack;
 
 /**
  *
  * @author gust
  */
-public class App1 implements GApplication {
+public class MyApp implements GApplication {
 
-    private static App1 app;
+    private static MyApp app;
 
     GForm form;
+    GMenu menu;
 
-    static public App1 getInstance() {
+    static public MyApp getInstance() {
         if (app == null) {
-            app = new App1();
+            app = new MyApp();
         }
         return app;
     }
@@ -33,37 +31,50 @@ public class App1 implements GApplication {
             return form;
         }
         GLanguage.setCurLang(GLanguage.ID_CHN);
-        form = new GForm(/*"GuiTest"*/"登录 窗口", 800, 600, ccb);
+        form = new GForm(ccb);
 
         form.setFps(30f);
         long vg = form.getNvContext();
 
-        GMenu menu;
         int menuH = 80;
-        GImage img = GImage.createImage(form.getNvContext(), "./image4.png");
+        GImage img = GImage.createImageFromJar(form.getNvContext(), "/res/mini_jvm_64.png");
         menu = new GMenu(0, form.getDeviceHeight() - menuH, form.getDeviceWidth(), menuH);
         menu.setFixed(true);
-        GMenuItem item = menu.addItem("Home", img);
+        GMenuItem item = menu.addItem("Login", img);
         item.setActionListener(new GActionListener() {
             @Override
             public void action(GObject gobj) {
-                GFrame gframe = new GFrame("demo", 50, 50, 300, 500);
-                init(gframe.getView(), vg, ccb);
+                GFrame gframe = getFrame1();
                 form.add(gframe);
                 gframe.align(GGraphics.HCENTER | GGraphics.VCENTER);
             }
         });
-        menu.addItem("Search", img);
-        menu.addItem("New", img);
-        menu.addItem("My", img);
+        item = menu.addItem("Select", img);
+        item.setActionListener(new GActionListener() {
+            @Override
+            public void action(GObject gobj) {
+                GFrame gframe = getFrame2();
+                form.add(gframe);
+                gframe.align(GGraphics.VCENTER | GGraphics.HCENTER);
+            }
+        });
+        item = menu.addItem("File", img);
+        item.setActionListener(new GActionListener() {
+            @Override
+            public void action(GObject gobj) {
+                GFrame gframe = getFrame3();
+                form.add(gframe);
+                gframe.align(GGraphics.VCENTER | GGraphics.HCENTER);
+            }
+        });
 
         form.add(menu);
         return form;
     }
 
-    public void init(GContainer parent, final long vg, final GuiCallBack ccb) {
-//        light = new Light();
-
+    public GFrame getFrame1() {
+        GFrame gframe = new GFrame("Login", 50, 50, 300, 500);
+        GContainer parent = gframe.getView();
         int x = 8, y = 10;
         GTextField gif = new GTextField("", "search", x, y, 280, 25);
         gif.setBoxStyle(GTextField.BOX_STYLE_SEARCH);
@@ -78,13 +89,20 @@ public class App1 implements GApplication {
         GTextField pwd = new GTextField("", "Password", x, y, 280, 28);
         parent.add(pwd);
         y += 35;
-//        String conttxt = "  \n  \n ";
-        String conttxt = "子窗口This is longer chunk of text.\n  \n  Would have used lorem ipsum but she    was busy jumping over the lazy dog with the fox and all the men who came to the aid of the party.";
-        conttxt += "I test the program ,there are two window , one window left a button that open the other window, the other left a button for close self.\n"
-                + "\n"
-                + "the issue maybe related with font , if i use nuklear defult font , the bug nerver show , but i am using chinese font (google android system default font), the bug frequently occure. the app memory using about 180M with default font in macos, use chinese font it would be 460M, is that nuklear load all glyph? but it's not the cause of bug .\n"
-                + "\n"
-                + "i have a reference that using stb_truetype, follow code is a stbtt test case , the code using chinese font ,that var byteOffset is -64 , out of the allocated bitmap memory . but i 'm not sure there is a same issue, only a note.";
+
+        String conttxt = "Features:\n"
+                + "Jvm Build pass: iOS / Android / mingww64 32 64bit / cygwin / MSVC 32 64bit / MacOS / Linux .\n"
+                + "No dependence Library .\n"
+                + "Low memory footprint .\n"
+                + "Minimal runtime classlib .\n"
+                + "Support java5/6/7/8 class file version .\n"
+                + "Support embedded java source compiler(janino compiler) .\n"
+                + "Thread supported .\n"
+                + "Network supported .\n"
+                + "File io supported .\n"
+                + "Java native method supported .\n"
+                + "Java garbage collection supported .\n"
+                + "Java remote debug supported, JDWP Spec .";
         GTextBox cont = new GTextBox(conttxt, "Contents", x, y, 280, 188);
         parent.add(cont);
         y += 195;
@@ -95,22 +113,11 @@ public class App1 implements GApplication {
         sig.setBgColor(0, 96, 128, 255);
         sig.setIcon(GObject.ICON_LOGIN);
         parent.add(sig);
-        sig.setActionListener(new GActionListener() {
-            @Override
-            public void action(GObject gobj) {
-                Random ran = new Random();
-                GFrame sub1 = new GFrame(/*"子窗口"*/"颜色选择", 40 + ran.nextInt(100), 50 + ran.nextInt(100), 300, 600);
-                GContainer panel = sub1.getView();
-                init1(panel, vg);
-                sub1.setClosable(true);
-                form.add(sub1);
-            }
-        });
+
         y += 35;
         GLabel lb2 = new GLabel("Diameter", x, y, 280, 20);
         parent.add(lb2);
         y += 25;
-        //drawEditBoxNum(vg, "123.00", "px", x + 180, y, 100, 28);
         GScrollBar sli = new GScrollBar(0.4f, GScrollBar.HORIZONTAL, x, y, 170, 28);
         parent.add(sli);
         y += 35;
@@ -120,6 +127,12 @@ public class App1 implements GApplication {
         parent.add(bt1);
         GButton bt2 = new GButton("Cancel", x + 170, y, 110, 28);
         bt2.setBgColor(0, 0, 0, 0);
+        bt2.setActionListener(new GActionListener() {
+            @Override
+            public void action(GObject gobj) {
+                gobj.getForm().remove(gframe);
+            }
+        });
         parent.add(bt2);
 
         bt1.setActionListener(new GActionListener() {
@@ -128,22 +141,17 @@ public class App1 implements GApplication {
                 System.out.println("delete something");
             }
         });
-        bt2.setActionListener(new GActionListener() {
-            @Override
-            public void action(GObject gobj) {
-                System.out.println("switch app");
-
-            }
-        });
+        return gframe;
     }
 
-    public void init1(GContainer parent, long vg) {
-        GImage img = GImage.createImage(vg, "./image4.png");
+    public GFrame getFrame2() {
+        GFrame gframe = new GFrame("Select", 0, 0, 300, 550);
+        GContainer parent = gframe.getView();
+        GImage img = GImage.createImageFromJar(form.getNvContext(), "/res/logo128.png");
 
         int x = 10, y = 10;
         GList list = new GList(x, y, 280, 30);
         parent.add(list);
-        int i = Nanovg.nvgCreateImage(vg, Gutil.toUtf8("./image4.png"), 0);
         list.setItems(new GImage[]{img, img, img, img, img, img, img, img, img, img},
                 new String[]{"One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",});
 
@@ -159,26 +167,15 @@ public class App1 implements GApplication {
         y += 150;
         GColorSelector cs = new GColorSelector(0, x, y, 130, 130);
         parent.add(cs);
-
+        return gframe;
     }
 
     class TestCanvas extends GCanvas {
 
-//        GLFrameBuffer glfb;
-//        GLFrameBufferPainter glfbRender;
-        GImage img3D;
+        GImage img;
 
         public TestCanvas(int x, int y, int w, int h) {
             super(x, y, w, h);
-//            glfb = new GLFrameBuffer(300, 300);
-//            glfbRender = new GLFrameBufferPainter() {
-//                @Override
-//                public void paint() {
-//                    light.setCamera();
-//                    light.draw();
-//                }
-//            };
-//            img3D = new GImage(glfb.getTexture(), glfb.getWidth(), glfb.getHeight());
         }
 
         int pos = 0, delta = 1;
@@ -187,7 +184,7 @@ public class App1 implements GApplication {
             g.setColor(0xff000000);
             g.fillRect(0, 0, (int) getW(), (int) getH());
             g.setColor(0xff0000ff);
-            g.drawLine(0, 100, 100, 100);
+            g.drawLine(20, 100, 100, 100);
             pos += delta;
             if (pos > 50) {
                 delta = -1;
@@ -195,9 +192,43 @@ public class App1 implements GApplication {
             if (pos < 0) {
                 delta = 1;
             }
+
+            g.setColor(0xffff00ff);
             g.drawString("this is a canvas", pos, 50, GGraphics.TOP | GGraphics.LEFT);
-//            glfb.render(glfbRender);
-//            g.drawImage(img3D, 0, 0, 100, 100, GGraphics.TOP | GGraphics.LEFT);
+
+            g.setColor(0xff00ff00);
+            g.drawLine(20, 50, 100, 50);
+
+            if (img == null) {
+                img = GImage.createImageFromJar(g.getNvContext(), "/res/logo128.png");
+            }
+            g.drawImage(img, 130, 30, 100, 100, GGraphics.TOP | GGraphics.LEFT);
+            form.flush();
         }
+    }
+
+    public GFrame getFrame3() {
+        GFrame gframe = new GFrame("File", 0, 0, form.getDeviceWidth() - 40, (form.getDeviceHeight() - menu.getH() - 150));
+
+        GList list = new GList(0, 0, (int) gframe.getView().getW(), (int) (gframe.getView().getH()));
+        list.setShowMode(GList.MODE_MULTI_SHOW);
+        list.setSelectMode(GList.MODE_MULTI_SHOW);
+        gframe.getView().add(list);
+
+        String resRoot = Glfm.glfmGetResRoot();
+        File f = new File(resRoot);
+        if (f.exists()) {
+            String[] files = f.list();
+            GImage[] imgs = new GImage[files.length];
+            list.setItems(imgs, files);
+        }
+        list.setActionListener(new GActionListener() {
+            @Override
+            public void action(GObject gobj) {
+                GList glist = (GList) gobj;
+                System.out.println(glist.getSelectedIndex());
+            }
+        });
+        return gframe;
     }
 }

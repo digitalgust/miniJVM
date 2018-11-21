@@ -155,6 +155,7 @@ public class GForm extends GViewPort {
 
             nvgBeginFrame(vg, winWidth, winHeight, pxRatio);
             //drawDebugInfo(vg);
+            Nanovg.nvgReset(vg);
             Nanovg.nvgResetScissor(vg);
             Nanovg.nvgScissor(vg, 0, 0, winWidth, winHeight);
             update(vg);

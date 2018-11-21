@@ -5,6 +5,12 @@
  */
 package org.mini.gui;
 
+import static org.mini.nanovg.Nanovg.NVG_ALIGN_LEFT;
+import static org.mini.nanovg.Nanovg.NVG_ALIGN_MIDDLE;
+import static org.mini.nanovg.Nanovg.nvgFontFace;
+import static org.mini.nanovg.Nanovg.nvgFontSize;
+import static org.mini.nanovg.Nanovg.nvgTextAlign;
+
 /**
  *
  * @author gust
@@ -34,6 +40,8 @@ public class GCanvas extends GPanel {
         if (g == null) {
             g = new GGraphics(this, vg);
         }
+        nvgFontSize(vg, g.getFontSize());
+        nvgFontFace(vg, GToolkit.getFontWord());
         paint(g);
         super.update(vg);
         return true;

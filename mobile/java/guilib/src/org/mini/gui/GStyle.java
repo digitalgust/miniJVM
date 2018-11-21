@@ -13,6 +13,8 @@ public interface GStyle {
 
     float[] getBackgroundColor();
 
+    float[] getPopBackgroundColor();
+
     float getTextFontSize();
 
     float getTitleFontSize();
