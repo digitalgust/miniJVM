@@ -3,21 +3,19 @@
 [![Build Status](https://travis-ci.org/digitalgust/miniJVM.svg?branch=master)](https://travis-ci.org/digitalgust/miniJVM)
 # miniJVM
 
-  Develop iOS Android app in java. Jvm for ios/android or embed system. the fastest ios java interpreter . 
+  Develop iOS Android app in java, Cross platform java virtual machine , the minimal jvm . 
   
 ## Features:  
 
   * Jvm Build pass: iOS / Android / mingww64 32-64bit / cygwin / MSVC 32-64bit / MacOS /  Linux  .   
   * No dependence Library .  
-  * Low memory footprint .  
+  * Minimal memory footprint .  
+  * Minimal binary ,300 - 800 KB jvm.  
   * Minimal runtime classlib .   
-  * Support java5/6/7/8 class file version .  
+  * Support java5+ class file .  
   * Support embedded java source compiler(janino compiler) .  
-  * Thread supported .  
-  * Network supported .  
-  * File io supported .  
-  * Java native method supported .  
-  * Java garbage collection supported .   
+  * Java native method  .  
+  * Java garbage collection .   
   * Java remote debug supported, JDWP Spec .  
   
 ## iOS/Android Platform Extended Features:  
@@ -26,7 +24,9 @@
   * Audio Playback and Capture .  
   * Take photo from Camera or Album .  
   * Save and Load file from mobile storage .  
-  These java api of features can be found in mobile/java/guilib/
+  These java api of features can be found in mobile/java/guilib/ , api platform independent .  
+
+## Architecture:  
 
   <div align=center><img width="480" height="386" src="/screenshot/arch.png"/></div>
 
@@ -64,10 +64,11 @@
    
 
 ## How to develop iOS/Android app in java:   
-   Write java code once running both iOS and Android.  
+   Write java code once , running both iOS and Android.  
    * Open ExApp project in NetBeans , it dependent on project **/javalib** and **/mobile/java/guilib**  
-   * Write your code like example **/mobile/java/ExApp/src/test/App1.java**   
-   * Change **/mobile/java/ExApp/src/app/GlfmMain.java** App1 to your application entry class   
+   * Write your code like example **/mobile/java/ExApp/src/test/MyApp.java**   
+   * Change **/mobile/java/ExApp/src/app/GlfmMain.java** MyApp to your application entry class   
+   * Add your resource to **/mobile/java/ExApp/resource/res/** , such as audio/image etc.     
    * Build **/mobile/java/ExApp** generate ExApp.jar ,MUST NOT change the jar name  
    * Copy ExApp.jar to **/mobile/assets/resfiles/**  
    * Open project **/mobile/iosapp** in Xcode, need not change anything, this project contains minijvm, glfm platform bridge, openGLES native function and jni interface, Nanovg paint module, Other include resource files like  **minijvm_rt.jar** ,**glfm_gui.jar** ,**ExApp.jar** and font files.  
@@ -79,7 +80,7 @@
    good luck  
   
   
-## Remote debug:  
+## How to Remote debug:  
   Desktop Computer : Run mini_jvm with flag: -Xdebug for debug mode .  
   iOS/Android simulator : no attached operation.  
   iOS/Android device : check the device ip address from Setting.  
@@ -90,7 +91,7 @@
   
 
 
-## Compile java source:  
+## How to Compile java source:  
    To compile java source file ,there are 2 resolution:
    * Oracle JDK javac to compile.
    * Janino the third compiler.
@@ -124,6 +125,8 @@ String s=(String)list.get(0);//can't ignore (String) cast qualifier.
    [Tinycthread](https://github.com/tinycthread/tinycthread)  :for cross platform thread   
    [JRegex](https://github.com/digitalgust/jregex)  :for java String regex match     
    [Janino](http://janino-compiler.github.io/janino/)  :for compile java source file     
+   [Mini_al](https://github.com/dr-soft/mini_al)  :for java audio playback and capture     
+
 
 ## Development IDE:  
   C code:   JetBrains CLion ,Xcode ,Virtual studio .  
@@ -137,10 +140,8 @@ String s=(String)list.get(0);//can't ignore (String) cast qualifier.
    * Window system build with GLFW   (/ex_lib/gui_jni/)      
    * GUI build on Nanovg          
 
-  Screen shot   :   
-    * iOS mini_jvm gui    
   
-<div align=center><img  src="/screenshot/ios.png"/></div>
+## Example of mobile application
 
 There are two class demo how develop java app for iOS and Android, one is App main class, the other is an GuiApp
 ```
@@ -421,17 +422,16 @@ public class MyApp implements GApplication {
 
 
 ```
-
+##   Screen shot   :   
+    * iOS mini_jvm gui    
+<div align=center><img width="400" height="384"   src="/screenshot/ios.png"/></div>
   * Windows mini_jvm gui    
-![Windows shot](/screenshot/win.png)    
+    <div align=center><img width="433" height="336" src="/screenshot/win.png"/></div>
   * Macos mini_jvm gui    
-![Macos shot](/screenshot/mac.png)    
+  <div align=center><img width="433" height="336" src="/screenshot/mac.png"/></div> 
   * Linux mini_jvm gui    
-![Linux shot](/screenshot/centos.png)    
-  
-  
-  
-  
+  <div align=center><img width="433" height="336" src="/screenshot/centos.png"/></div>
+
   
   
 ## License
