@@ -9,8 +9,6 @@
 /* Begin PBXBuildFile section */
 		4523724420CAA77C00156C58 /* ltalloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4523724220CAA77B00156C58 /* ltalloc.c */; };
 		4535FA2821944F7300B888BA /* jni_minial.m in Sources */ = {isa = PBXBuildFile; fileRef = 4535FA2721944F7300B888BA /* jni_minial.m */; };
-		456F472E2195AC9C006F2D8C /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 456F472D2195AC9C006F2D8C /* OpenAL.framework */; };
-		45ADDF6E21625C8000F469AC /* libz.1.2.8.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 45ADDF6C21625C5A00F469AC /* libz.1.2.8.tbd */; };
 		45D78F2C209D3E62003B9317 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 45D78F2B209D3E62003B9317 /* Assets.xcassets */; };
 		45D78F66209D4330003B9317 /* glfm_platform_emscripten.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F45209D4330003B9317 /* glfm_platform_emscripten.c */; };
 		45D78F67209D4330003B9317 /* glfm_platform_android.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F46209D4330003B9317 /* glfm_platform_android.c */; };
@@ -54,13 +52,6 @@
 		4535FA2521944E4200B888BA /* dr_flac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dr_flac.h; sourceTree = "<group>"; };
 		4535FA2621944E4200B888BA /* mini_al.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mini_al.h; sourceTree = "<group>"; };
 		4535FA2721944F7300B888BA /* jni_minial.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = jni_minial.m; sourceTree = "<group>"; };
-		4535FA29219452B300B888BA /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
-		4535FA2B219456C200B888BA /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
-		4535FA2D2194573A00B888BA /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
-		4535FA31219457EB00B888BA /* CoreAudioKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioKit.framework; path = System/Library/Frameworks/CoreAudioKit.framework; sourceTree = SDKROOT; };
-		4535FA3321945A2600B888BA /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
-		456F472D2195AC9C006F2D8C /* OpenAL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenAL.framework; path = System/Library/Frameworks/OpenAL.framework; sourceTree = SDKROOT; };
-		45ADDF6C21625C5A00F469AC /* libz.1.2.8.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.1.2.8.tbd; path = usr/lib/libz.1.2.8.tbd; sourceTree = SDKROOT; };
 		45D78F1F209D3E61003B9317 /* iosapp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosapp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		45D78F2B209D3E62003B9317 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		45D78F30209D3E62003B9317 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -141,8 +132,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				456F472E2195AC9C006F2D8C /* OpenAL.framework in Frameworks */,
-				45ADDF6E21625C8000F469AC /* libz.1.2.8.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -162,13 +151,6 @@
 		45ADDF6B21625C5A00F469AC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				456F472D2195AC9C006F2D8C /* OpenAL.framework */,
-				4535FA3321945A2600B888BA /* UIKit.framework */,
-				4535FA31219457EB00B888BA /* CoreAudioKit.framework */,
-				4535FA2D2194573A00B888BA /* CoreAudio.framework */,
-				4535FA2B219456C200B888BA /* AVKit.framework */,
-				4535FA29219452B300B888BA /* AVFoundation.framework */,
-				45ADDF6C21625C5A00F469AC /* libz.1.2.8.tbd */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
