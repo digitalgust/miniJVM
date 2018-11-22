@@ -244,6 +244,13 @@ public class GToolkit {
         nvgFill(vg);
     }
 
+    public static void drawRoundedRect(long vg, float x, float y, float w, float h, float r, float[] color) {
+        nvgBeginPath(vg);
+        nvgFillColor(vg, color);
+        nvgRoundedRect(vg, x, y, w, h, r);
+        nvgFill(vg);
+    }
+
     public static float[] getTextBoundle(long vg, String s, float width) {
         float[] bond = new float[4];
         byte[] b = toUtf8(s);
@@ -284,6 +291,10 @@ public class GToolkit {
     }
 
     public static void drawImage(long vg, GImage img, float px, float py, float pw, float ph) {
+        drawImage(vg, img, px, py, pw, ph, true, 1.f);
+    }
+
+    public static void drawImage(long vg, GImage img, float px, float py, float pw, float ph, boolean border, float alpha) {
         if (img == null) {
             return;
         }
@@ -305,25 +316,27 @@ public class GToolkit {
             iy = 0;
         }
 
-        imgPaint = nvgImagePattern(vg, px + ix + 1, py + iy + 1, iw - 2, ih - 2, 0.0f / 180.0f * (float) Math.PI, img.getTexture(), 1.0f);
+        imgPaint = nvgImagePattern(vg, px + ix + 1, py + iy + 1, iw - 2, ih - 2, 0.0f / 180.0f * (float) Math.PI, img.getTexture(), alpha);
         nvgBeginPath(vg);
         nvgRoundedRect(vg, px, py, pw, ph, 5);
         nvgFillPaint(vg, imgPaint);
         nvgFill(vg);
 
-        shadowPaint = nvgBoxGradient(vg, px, py, pw, ph, 5, 3, nvgRGBA(0, 0, 0, 128), nvgRGBA(0, 0, 0, 0));
-        nvgBeginPath(vg);
-        nvgRect(vg, px - 5, py - 5, pw + 10, ph + 10);
-        nvgRoundedRect(vg, px, py, pw, ph, 6);
-        nvgPathWinding(vg, NVG_HOLE);
-        nvgFillPaint(vg, shadowPaint);
-        nvgFill(vg);
+        if (border) {
+            shadowPaint = nvgBoxGradient(vg, px, py, pw, ph, 5, 3, nvgRGBA(0, 0, 0, 128), nvgRGBA(0, 0, 0, 0));
+            nvgBeginPath(vg);
+            //nvgRect(vg, px - 5, py - 5, pw + 10, ph + 10);
+            nvgRoundedRect(vg, px, py, pw, ph, 6);
+            nvgPathWinding(vg, NVG_HOLE);
+            nvgFillPaint(vg, shadowPaint);
+            nvgFill(vg);
 
-        nvgBeginPath(vg);
-        nvgRoundedRect(vg, px + 1, py + 1, pw - 2, ph - 2, 4 - 0.5f);
-        nvgStrokeWidth(vg, 1.0f);
-        nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 192));
-        nvgStroke(vg);
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, px + 1, py + 1, pw - 2, ph - 2, 4 - 0.5f);
+            nvgStrokeWidth(vg, 1.0f);
+            nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 192));
+            nvgStroke(vg);
+        }
     }
 
     /**

@@ -104,6 +104,8 @@ public class GList extends GPanel implements GFocusChangeListener {
 
     @Override
     public void setViewSize(float w, float h) {
+        width = w;
+        height = h;
         super.setViewSize(w, h);
         reSize();
     }

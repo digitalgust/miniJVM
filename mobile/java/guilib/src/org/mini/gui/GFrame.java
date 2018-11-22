@@ -40,6 +40,8 @@ import static org.mini.nanovg.Nanovg.nvgTextJni;
  */
 public class GFrame extends GPanel {
 
+    static final float TITLE_HEIGHT = 30.f, PAD = 2.f;
+
     String title;
     byte[] title_arr;
 
@@ -56,7 +58,7 @@ public class GFrame extends GPanel {
     boolean closable = true;
 
     public GFrame() {
-
+        this("", (float) 0, (float) 0, (float) 300, (float) 200);
     }
 
     public GFrame(String title, int left, int top, int width, int height) {
@@ -70,20 +72,21 @@ public class GFrame extends GPanel {
         setViewLocation(left, top);
         setViewSize(width, height);
 
-        panel.setLocation(2, 32);
-        panel.setSize(width - 4, height - 34);
-        panel.setViewLocation(2, 32);
-        panel.setViewSize(width - 4, height - 34);
+        panel.setLocation(PAD, TITLE_HEIGHT + PAD);
+        panel.setSize(width - PAD * 2, height - TITLE_HEIGHT - PAD * 2);
+        panel.setViewLocation(PAD, TITLE_HEIGHT + PAD);
+        panel.setViewSize(width - PAD * 2, height - TITLE_HEIGHT - PAD * 2);
         add(panel);
 
         title_panel.setLocation(1, 1);
-        title_panel.setSize(width - 2, 30);
+        title_panel.setSize(width - PAD, TITLE_HEIGHT);
         add(title_panel);
     }
 
     @Override
     public void setSize(float w, float h) {
-        panel.setSize(w - 4, h - 34);
+        title_panel.setSize(w - PAD, TITLE_HEIGHT);
+        panel.setSize(w - PAD * 2, h - TITLE_HEIGHT - PAD * 2);
         super.setSize(w, h);
     }
 
@@ -95,6 +98,9 @@ public class GFrame extends GPanel {
     public void close() {
         if (parent != null) {
             parent.remove(this);
+            if (focusListener != null) {
+                focusListener.focusLost(this);
+            }
         }
     }
 
@@ -212,7 +218,7 @@ public class GFrame extends GPanel {
                 cornerRadius - 1);
         nvgFillPaint(vg, headerPaint);
         nvgFill(vg);
-        
+
         nvgBeginPath(vg);
         nvgMoveTo(vg, x + 0.5f, y + 0.5f + 30);
         nvgLineTo(vg, x + 0.5f + w - 1, y + 0.5f + 30);

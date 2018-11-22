@@ -133,7 +133,7 @@ public class GMenuItem extends GObject {
                 tag_x = dx + dw / 2;
                 tag_y = img_y + img_h + pad + lineh[0] / 2;
             } else {
-                img_h = dh * .85f - pad;
+                img_h = dh * .8f - pad;
                 img_x = dx + dw / 2 - img_h / 2;
                 img_w = img_h;
                 img_y = dy + dh / 2 - img_h / 2;
