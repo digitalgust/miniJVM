@@ -323,13 +323,13 @@ public class GToolkit {
         nvgFill(vg);
 
         if (border) {
-            shadowPaint = nvgBoxGradient(vg, px, py, pw, ph, 5, 3, nvgRGBA(0, 0, 0, 128), nvgRGBA(0, 0, 0, 0));
-            nvgBeginPath(vg);
-            //nvgRect(vg, px - 5, py - 5, pw + 10, ph + 10);
-            nvgRoundedRect(vg, px, py, pw, ph, 6);
-            nvgPathWinding(vg, NVG_HOLE);
-            nvgFillPaint(vg, shadowPaint);
-            nvgFill(vg);
+//            shadowPaint = nvgBoxGradient(vg, px, py, pw, ph, 5, 3, nvgRGBA(0, 0, 0, 128), nvgRGBA(0, 0, 0, 0));
+//            nvgBeginPath(vg);
+//            //nvgRect(vg, px - 5, py - 5, pw + 10, ph + 10);
+//            nvgRoundedRect(vg, px, py, pw, ph, 6);
+//            nvgPathWinding(vg, NVG_HOLE);
+//            nvgFillPaint(vg, shadowPaint);
+//            nvgFill(vg);
 
             nvgBeginPath(vg);
             nvgRoundedRect(vg, px + 1, py + 1, pw - 2, ph - 2, 4 - 0.5f);
@@ -373,15 +373,21 @@ public class GToolkit {
         gp.add(lb1);
         y += 85;
 
-        GButton leftBtn = new GButton(left, x, y, 135, 28);
-        leftBtn.setBgColor(128, 16, 8, 255);
-        gp.add(leftBtn);
-        leftBtn.setActionListener(leftListener);
+        if (left != null) {
+            GButton leftBtn = new GButton(left, x, y, 135, 28);
+            leftBtn.setBgColor(128, 16, 8, 255);
+            gp.add(leftBtn);
+            leftBtn.setActionListener(leftListener);
+        }
 
-        GButton rightBtn = new GButton(right, x + 145, y, 135, 28);
+        GButton rightBtn = new GButton(right == null ? GLanguage.getString("Cancel") : right, x + 145, y, 135, 28);
         gp.add(rightBtn);
-
-        rightBtn.setActionListener(rightListener);
+        rightBtn.setActionListener(rightListener == null ? new GActionListener() {
+            @Override
+            public void action(GObject gobj) {
+                frame.close();
+            }
+        } : rightListener);
 
         return frame;
     }

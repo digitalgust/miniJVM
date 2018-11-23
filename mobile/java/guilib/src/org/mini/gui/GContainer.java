@@ -96,6 +96,9 @@ abstract public class GContainer extends GObject {
     public void add(GObject nko) {
         if (nko != null) {
             add(elements.size(), nko);
+            if (nko.isFront()) {
+                setFocus(nko);
+            }
         }
     }
 

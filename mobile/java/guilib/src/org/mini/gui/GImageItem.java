@@ -5,6 +5,8 @@
  */
 package org.mini.gui;
 
+import org.mini.glfm.Glfm;
+import static org.mini.gui.GObject.isInBoundle;
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Nanovg.NVG_HOLE;
 import static org.mini.nanovg.Nanovg.nvgBeginPath;
@@ -142,4 +144,21 @@ public class GImageItem extends GObject {
         this.drawBoader = drawBoader;
     }
 
+    boolean bt_pressed;
+
+    @Override
+    public void touchEvent(int phase, int x, int y) {
+        if (isInBoundle(boundle, x - parent.getX(), y - parent.getY())) {
+            if (phase == Glfm.GLFMTouchPhaseBegan) {
+                bt_pressed = true;
+            } else if (phase == Glfm.GLFMTouchPhaseEnded) {
+                if (actionListener != null && bt_pressed) {
+                    actionListener.action(this);
+                }
+                bt_pressed = false;
+            } else if (!isInBoundle(boundle, x - parent.getX(), y - parent.getY())) {
+                bt_pressed = false;
+            }
+        }
+    }
 }

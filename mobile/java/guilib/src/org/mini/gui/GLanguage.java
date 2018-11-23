@@ -37,6 +37,10 @@ public class GLanguage {
         cur_lang = langType;
     }
 
+    static public int getCurLang() {
+        return cur_lang;
+    }
+
     static public String getString(String key) {
         return getString(key, cur_lang);
     }

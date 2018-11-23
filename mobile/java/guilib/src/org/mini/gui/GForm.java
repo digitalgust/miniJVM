@@ -7,6 +7,8 @@ package org.mini.gui;
 
 import org.mini.gui.impl.GuiCallBack;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -34,6 +36,7 @@ import static org.mini.nanovg.Nanovg.nvgFillColor;
 import static org.mini.nanovg.Nanovg.nvgFontFace;
 import static org.mini.nanovg.Nanovg.nvgFontSize;
 import static org.mini.nanovg.Nanovg.nvgTextAlign;
+import static org.mini.gui.GObject.flush;
 
 /**
  *
@@ -61,9 +64,12 @@ public class GForm extends GViewPort {
     GAppActiveListener activeListener;
     GNotifyListener notifyListener;
 
-    final static List<Integer> pendingDeleteImage = new ArrayList();
+    final static List<Integer> pendingDeleteImage = Collections.synchronizedList(new ArrayList());
 
-    static Timer timer = new Timer(true);//用于更新画面，UI系统采取按需刷新的原则
+    final static Timer timer = new Timer(true);//用于更新画面，UI系统采取按需刷新的原则
+
+    final static List<String> message = Collections.synchronizedList(new ArrayList());
+    static byte[] curShowMessage;
 
     public GForm(GuiCallBack ccb) {
         this.title = title;
@@ -159,6 +165,7 @@ public class GForm extends GViewPort {
             Nanovg.nvgResetScissor(vg);
             Nanovg.nvgScissor(vg, 0, 0, winWidth, winHeight);
             update(vg);
+            paintMessage(vg);
             nvgEndFrame(vg);
 
             //
@@ -321,4 +328,43 @@ public class GForm extends GViewPort {
         this.notifyListener = notifyListener;
     }
 
+    /**
+     *
+     * @param s
+     */
+    public static void addMessage(String s) {
+        message.add(s);
+    }
+
+    public static void clearMessage() {
+        message.clear();
+    }
+
+    void paintMessage(long vg) {
+        if (curShowMessage == null) {
+            if (message.size() > 0) {
+                curShowMessage = Gutil.toUtf8(message.remove(0));
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        curShowMessage = null;
+                        flush();
+                    }
+                }, 1500);
+            }
+        } else {
+            float pad = 20;
+            float panW = callback.getDeviceWidth() - pad * 2;
+            float[] bond = new float[4];
+            nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
+            nvgFontFace(vg, GToolkit.getFontWord());
+            nvgTextAlign(vg, Nanovg.NVG_ALIGN_TOP | Nanovg.NVG_ALIGN_LEFT);
+            Nanovg.nvgTextBoxBoundsJni(vg, 0, 0, panW, curShowMessage, 0, curShowMessage.length, bond);
+
+            GToolkit.drawRoundedRect(vg, pad * .5f, pad * .5f, panW + pad, bond[HEIGHT] - bond[TOP] + pad, 5, Nanovg.nvgRGBf(1.f, 1.f, 1.f));
+
+            nvgFillColor(vg, Nanovg.nvgRGBf(0.f, 0.f, 0.f));
+            Nanovg.nvgTextBoxJni(vg, pad, pad, panW, curShowMessage, 0, curShowMessage.length);
+        }
+    }
 }

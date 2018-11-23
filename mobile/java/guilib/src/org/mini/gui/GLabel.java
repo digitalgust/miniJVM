@@ -85,6 +85,7 @@ public class GLabel extends GObject {
         float y = getY();
         float w = getW();
         float h = getH();
+        nvgTextMetrics(vg, null, null, lineh);
 
         if (showMode == MODE_MULTI_SHOW) {
             drawMultiText(vg, x, y, w, h);
@@ -101,7 +102,23 @@ public class GLabel extends GObject {
         nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
 
         nvgTextAlign(vg, align);
-        nvgTextJni(vg, x, y, text_arr, 0, text_arr.length);
+        if (text_arr != null) {
+            float dx, dy;
+            dx = x + 2;
+            dy = y + 2;
+            if ((align & Nanovg.NVG_ALIGN_CENTER) != 0) {
+                dx += w * .5f;
+            } else if ((align & Nanovg.NVG_ALIGN_RIGHT) != 0) {
+                dx += w;
+            }
+
+            if ((align & Nanovg.NVG_ALIGN_MIDDLE) != 0) {
+                dy += h * .5;
+            } else if ((align & Nanovg.NVG_ALIGN_BOTTOM) != 0) {
+                dy += h;
+            }
+            nvgTextJni(vg, dx, dy, text_arr, 0, text_arr.length);
+        }
 
     }
 
@@ -110,7 +127,6 @@ public class GLabel extends GObject {
         nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
         nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
         nvgFontFace(vg, GToolkit.getFontWord());
-        nvgTextMetrics(vg, null, null, lineh);
 
         nvgTextAlign(vg, align);
         float[] area = new float[]{x + 2f, y + 2f, w - 4f, h - 4f};
