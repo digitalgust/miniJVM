@@ -36,7 +36,7 @@ abstract public class GContainer extends GObject {
     public abstract void setViewSize(float x, float y);
 
     public abstract float[] getViewBoundle();
-
+    
     public boolean isInArea(float x, float y) {
         float absx = getViewX();
         float absy = getViewY();
@@ -275,7 +275,6 @@ abstract public class GContainer extends GObject {
 //                Nanovg.nvgStroke(ctx);
 //
 //            }
-//            Nanovg.nvgResetScissor(ctx);
         }
         Nanovg.nvgRestore(ctx);
     }

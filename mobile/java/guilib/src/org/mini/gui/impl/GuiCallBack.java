@@ -64,6 +64,10 @@ public class GuiCallBack extends GlfmCallBackAdapter {
         gform = null;
     }
 
+    public final GApplication getApplication() {
+        return app;
+    }
+
     public long getDisplay() {
         return display;
     }

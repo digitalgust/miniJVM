@@ -550,7 +550,6 @@ public class GToolkit {
             size = 8;
         }
         list.setSize(200, size * list.list_item_heigh);
-        list.setViewSize(200, size * list.list_item_heigh);
         list.setFront(true);
 
         return list;

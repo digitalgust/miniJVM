@@ -37,6 +37,7 @@ public class GViewPort extends GContainer {
         if (parent != null) {
             parent.reBoundle();
         }
+        setLocation(x, y);
     }
 
     @Override
@@ -46,6 +47,7 @@ public class GViewPort extends GContainer {
         if (parent != null) {
             parent.reBoundle();
         }
+        setSize(w, h);
     }
 
     @Override

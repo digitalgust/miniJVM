@@ -86,8 +86,8 @@ public class GList extends GPanel implements GFocusChangeListener {
         this.width = width;
         this.height = height;
 
-        setViewLocation(left, top);
-        setViewSize(width, height);
+        setLocation(left, top);
+        setSize(width, height);
 
         //
         scrollBar = new GScrollBar(0, GScrollBar.VERTICAL, 0, 0, scrollbarWidth, 100);
@@ -103,10 +103,10 @@ public class GList extends GPanel implements GFocusChangeListener {
     }
 
     @Override
-    public void setViewSize(float w, float h) {
+    public void setSize(float w, float h) {
         width = w;
         height = h;
-        super.setViewSize(w, h);
+        super.setSize(w, h);
         reSize();
     }
 
