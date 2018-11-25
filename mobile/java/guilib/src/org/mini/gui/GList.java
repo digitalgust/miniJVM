@@ -95,7 +95,7 @@ public class GList extends GPanel implements GFocusChangeListener {
         popWin.add(scrollBar);
         popWin.add(popView);
         setFocusListener(this);
-        showScrollBar(false);
+        setScrollBar(false);
         reSize();
         changeCurPanel();
 
@@ -110,7 +110,7 @@ public class GList extends GPanel implements GFocusChangeListener {
         reSize();
     }
 
-    public void showScrollBar(boolean show) {
+    public void setScrollBar(boolean show) {
         this.showScrollbar = show;
         if (show) {
             scrollbarWidth = 20;
