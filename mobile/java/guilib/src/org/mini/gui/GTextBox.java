@@ -86,6 +86,17 @@ public class GTextBox extends GTextObject {
                 && y >= bound[TOP] && y <= bound[TOP] + bound[HEIGHT];
     }
 
+    @Override
+    void onSetText(String text) {
+        if (text != null) {
+            caretIndex = text.length();
+        } else {
+            caretIndex = 0;
+        }
+        resetSelect();
+        area_detail = null;
+    }
+
     /**
      * 返回指定位置所在字符串中的位置
      *
@@ -369,6 +380,7 @@ public class GTextBox extends GTextObject {
         if (selectFromTo != null) {
             deleteSelectedText();
         }
+        System.out.println("input :" + (int) str.charAt(0));
         insertTextAtCaret(str);
     }
 
@@ -708,121 +720,124 @@ public class GTextBox extends GTextObject {
                 //取UTF8字符串的内存地址，供NATIVE API调用
                 long ptr = GToolkit.getArrayDataPtr(text_arr);
                 int start = 0;
-                int end = text_arr.length;
+                int end = text_arr.length - 1;
 
                 int char_at = 0;
                 int char_starti, char_endi;
 
                 int row_index = 0;
 
-                //通过nvgTextBreakLinesJni进行断行
-                while ((nrows = nvgTextBreakLinesJni(vg, text_arr, start, end, text_area[WIDTH], rowsHandle, rowCount)) != 0) {
+                if (end - start == 0) {
+                    GToolkit.drawCaret(vg, dx, dy, 1, lineH, false);
+                } else {//通过nvgTextBreakLinesJni进行断行
+                    while ((nrows = nvgTextBreakLinesJni(vg, text_arr, start, end, text_area[WIDTH], rowsHandle, rowCount)) != 0) {
 
-                    //循环绘制行
-                    for (i = 0; i < nrows; i++) {
+                        //循环绘制行
+                        for (i = 0; i < nrows; i++) {
 //                        if (area_row_index >= topShowRowLocal && area_row_index < topShowRowLocal + showRows) {
-                        if (dy + lineH >= text_area[TOP] && dy < text_area[TOP] + text_area[HEIGHT]) {
-                            //取得第i 行的行宽
-                            float row_width = Nanovg.nvgNVGtextRow_width(rowsHandle, i);
+                            if (dy + lineH >= text_area[TOP] && dy < text_area[TOP] + text_area[HEIGHT]) {
+                                //取得第i 行的行宽
+                                float row_width = Nanovg.nvgNVGtextRow_width(rowsHandle, i);
 
-                            //返回 i 行的起始和结束位置
-                            int byte_starti = (int) (Nanovg.nvgNVGtextRow_start(rowsHandle, i) - ptr);
-                            int byte_endi = (int) (Nanovg.nvgNVGtextRow_end(rowsHandle, i) - ptr);
+                                //返回 i 行的起始和结束位置
+                                int byte_starti = (int) (Nanovg.nvgNVGtextRow_start(rowsHandle, i) - ptr);
+                                int byte_endi = (int) (Nanovg.nvgNVGtextRow_end(rowsHandle, i) - ptr);
 
-                            if (char_at == 0) {
-                                //取得本行之前字符串长度
-                                String preStrs = new String(text_arr, 0, byte_starti, "utf-8");
-                                char_at = preStrs.length();
+                                if (char_at == 0) {
+                                    //取得本行之前字符串长度
+                                    String preStrs = new String(text_arr, 0, byte_starti, "utf-8");
+                                    char_at = preStrs.length();
 
-                            }
-                            //把当前行从字节数组转成字符串
-                            String curRowStrs = "";
-                            curRowStrs = new String(text_arr, byte_starti, byte_endi - byte_starti, "utf-8");
-                            //计算字符串起止位置
-                            char_starti = char_at;
-                            char_endi = char_at + curRowStrs.length() - 1;
+                                }
+                                //把当前行从字节数组转成字符串
+                                String curRowStrs = "";
+                                curRowStrs = new String(text_arr, byte_starti, byte_endi - byte_starti, "utf-8");
+                                //计算字符串起止位置
+                                char_starti = char_at;
+                                char_endi = char_at + curRowStrs.length() - 1;
 
-                            caretx = dx;
-                            //取得i行的各个字符的具体位置，结果存入glyphs
-                            char_count = nvgTextGlyphPositionsJni(vg, dx, dy, text_arr, byte_starti, byte_endi, glyphsHandle, posCount);
-                            int curRow = row_index - topShowRow;
+                                caretx = dx;
+                                //取得i行的各个字符的具体位置，结果存入glyphs
+                                char_count = nvgTextGlyphPositionsJni(vg, dx, dy, text_arr, byte_starti, byte_endi, glyphsHandle, posCount);
+                                int curRow = row_index - topShowRow;
 
-                            if (curRow < 0 || curRow >= area_detail.length) {
-                                break;
-                            }
-                            //把这些信息存下来，用于在点击的时候找到点击了文本的哪个位置
-                            //前面存固定信息
-                            area_detail[curRow] = new short[AREA_DETAIL_ADD + char_count];
-                            area_detail[curRow][AREA_X] = (short) dx;
-                            area_detail[curRow][AREA_Y] = (short) dy;
-                            area_detail[curRow][AREA_W] = (short) text_area[WIDTH];
-                            area_detail[curRow][AREA_H] = (short) lineH;
-                            area_detail[curRow][AREA_START] = (short) char_starti;
-                            area_detail[curRow][AREA_END] = (short) char_endi;
-                            area_detail[curRow][AREA_ROW] = (short) row_index;
-                            //后面把每个char的位置存下来
-                            for (int j = 0; j < char_count; j++) {
-                                //取第 j 个字符的X座标
-                                float x0 = nvgNVGglyphPosition_x(glyphsHandle, j);
-                                area_detail[curRow][AREA_DETAIL_ADD + j] = (short) x0;
-                            }
+                                if (curRow < 0 || curRow >= area_detail.length) {
+                                    break;
+                                }
+                                //把这些信息存下来，用于在点击的时候找到点击了文本的哪个位置
+                                //前面存固定信息
+                                area_detail[curRow] = new short[AREA_DETAIL_ADD + char_count];
+                                area_detail[curRow][AREA_X] = (short) dx;
+                                area_detail[curRow][AREA_Y] = (short) dy;
+                                area_detail[curRow][AREA_W] = (short) text_area[WIDTH];
+                                area_detail[curRow][AREA_H] = (short) lineH;
+                                area_detail[curRow][AREA_START] = (short) char_starti;
+                                area_detail[curRow][AREA_END] = (short) char_endi;
+                                area_detail[curRow][AREA_ROW] = (short) row_index;
+                                //后面把每个char的位置存下来
+                                for (int j = 0; j < char_count; j++) {
+                                    //取第 j 个字符的X座标
+                                    float x0 = nvgNVGglyphPosition_x(glyphsHandle, j);
+                                    area_detail[curRow][AREA_DETAIL_ADD + j] = (short) x0;
+                                }
 
-                            //计算下一行开始
-                            char_at = char_at + curRowStrs.length();
+                                //计算下一行开始
+                                char_at = char_at + curRowStrs.length();
 
-                            if (parent.getFocus() == this) {
-                                boolean draw = false;
-                                if (caretIndex >= char_starti && caretIndex <= char_endi) {
-                                    caretx = area_detail[curRow][AREA_DETAIL_ADD + (caretIndex - char_starti)];
-                                    draw = true;
-                                    if (caretIndex != 0 && caretIndex - char_starti == 0) {//光标移到行首时，只显示在上一行行尾
-                                        draw = false;
+                                if (parent.getFocus() == this) {
+                                    boolean draw = false;
+                                    if (caretIndex >= char_starti && caretIndex <= char_endi) {
+                                        caretx = area_detail[curRow][AREA_DETAIL_ADD + (caretIndex - char_starti)];
+                                        draw = true;
+                                        if (caretIndex != 0 && caretIndex - char_starti == 0) {//光标移到行首时，只显示在上一行行尾
+                                            draw = false;
+                                        }
+                                    } else if (caretIndex == char_endi + 1) {
+                                        caretx = dx + row_width;
+                                        draw = true;
+                                    } else if (char_count == 0) {
+                                        caretx = dx;
+                                        draw = true;
                                     }
-                                } else if (caretIndex == char_endi + 1) {
-                                    caretx = dx + row_width;
-                                    draw = true;
-                                } else if (char_count == 0) {
-                                    caretx = dx;
-                                    draw = true;
-                                }
-                                if (draw) {
-                                    GToolkit.drawCaret(vg, caretx, dy, 1, lineH, false);
-                                }
-                            }
-
-                            if (selectFromTo != null) {
-                                int sel_start = selectFromTo[0];
-                                int sel_end = selectFromTo[1];
-                                float drawSelX = dx, drawSelW = row_width;
-                                //本行只有选择起点
-                                if (sel_start > char_starti && sel_start < char_endi) {
-                                    int pos = sel_start - area_detail[curRow][AREA_START];
-                                    drawSelX = area_detail[curRow][AREA_DETAIL_ADD + pos];
-                                }
-                                //本行有选择终点
-                                if (sel_end > char_starti && sel_end < char_endi) {
-                                    int pos = selectFromTo[1] - area_detail[curRow][AREA_START];
-                                    drawSelW = area_detail[curRow][AREA_DETAIL_ADD + pos] - drawSelX;
+                                    if (draw) {
+                                        GToolkit.drawCaret(vg, caretx, dy, 1, lineH, false);
+                                    }
                                 }
 
-                                if (sel_start >= char_endi || sel_end < char_starti) {
-                                    //此行没有起点和终点
-                                } else {
-                                    //此行有起点或终点,或在起终点之间的整行
-                                    GToolkit.drawRect(vg, drawSelX, dy, drawSelW, lineH, GToolkit.getStyle().getSelectedColor());
+                                if (selectFromTo != null) {
+                                    int sel_start = selectFromTo[0];
+                                    int sel_end = selectFromTo[1];
+                                    float drawSelX = dx, drawSelW = row_width;
+                                    //本行只有选择起点
+                                    if (sel_start > char_starti && sel_start < char_endi) {
+                                        int pos = sel_start - area_detail[curRow][AREA_START];
+                                        drawSelX = area_detail[curRow][AREA_DETAIL_ADD + pos];
+                                    }
+                                    //本行有选择终点
+                                    if (sel_end > char_starti && sel_end < char_endi) {
+                                        int pos = selectFromTo[1] - area_detail[curRow][AREA_START];
+                                        drawSelW = area_detail[curRow][AREA_DETAIL_ADD + pos] - drawSelX;
+                                    }
+
+                                    if (sel_start >= char_endi || sel_end < char_starti) {
+                                        //此行没有起点和终点
+                                    } else {
+                                        //此行有起点或终点,或在起终点之间的整行
+                                        GToolkit.drawRect(vg, drawSelX, dy, drawSelW, lineH, GToolkit.getStyle().getSelectedColor());
+                                    }
+
                                 }
+                                nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
+                                nvgTextJni(vg, dx, dy, text_arr, byte_starti, byte_endi);
 
                             }
-                            nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
-                            nvgTextJni(vg, dx, dy, text_arr, byte_starti, byte_endi);
-
+                            dy += lineH;
+                            row_index++;
                         }
-                        dy += lineH;
-                        row_index++;
-                    }
 
-                    long next = Nanovg.nvgNVGtextRow_next(rowsHandle, nrows - 1);
-                    start = (int) (next - ptr);
+                        long next = Nanovg.nvgNVGtextRow_next(rowsHandle, nrows - 1);
+                        start = (int) (next - ptr);
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();

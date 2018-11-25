@@ -71,6 +71,16 @@ public class GTextField extends GTextObject {
         return TYPE_TEXTFIELD;
     }
 
+    @Override
+    void onSetText(String text) {
+        if (text != null) {
+            caretIndex = text.length();
+        } else {
+            caretIndex = 0;
+        }
+        resetSelect();
+    }
+
     public void setBoxStyle(int boxStyle) {
         this.boxStyle = boxStyle;
     }

@@ -10,8 +10,6 @@ import org.mini.glfw.Glfw;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
 import static org.mini.nanovg.Gutil.toUtf8;
-import org.mini.nanovg.Nanovg;
-import org.mini.gui.event.GKeyboardShowListener;
 
 /**
  *
@@ -23,6 +21,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     byte[] hint_arr;
     StringBuilder textsb = new StringBuilder();
     byte[] text_arr;
+    boolean keyboardAutoPop = true;
 
     private static EditMenu editMenu;
 
@@ -37,9 +36,14 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         return hint;
     }
 
+    abstract void onSetText(String text);
+
     public void setText(String text) {
         this.textsb.setLength(0);
-        this.textsb.append(text);
+        if (text != null) {
+            this.textsb.append(text);
+        }
+        onSetText(text);
         text_arr = null;
     }
 
@@ -107,9 +111,19 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
 
     }
 
+    public void setKeyboardVisible(boolean visible) {
+        if (getForm() != null) {
+            Glfm.glfmSetKeyboardVisible(getForm().getWinContext(), visible);
+        }
+    }
+
+    public void setKeyboardAutoPop(boolean autopop) {
+        keyboardAutoPop = autopop;
+    }
+
     @Override
     public void focusLost(GObject go) {
-        if (getForm() != null) {
+        if (keyboardAutoPop && getForm() != null) {
             Glfm.glfmSetKeyboardVisible(getForm().getWinContext(), false);
         }
         disposeEditMenu();
@@ -128,7 +142,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
                 }
                 case Glfm.GLFMTouchPhaseEnded: {
                     if (touched) {
-                        if (getForm() != null) {
+                        if (keyboardAutoPop && getForm() != null) {
                             System.out.println("touched textobject");
                             Glfm.glfmSetKeyboardVisible(getForm().getWinContext(), true);
                         }
