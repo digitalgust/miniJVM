@@ -367,9 +367,10 @@ public class GToolkit {
         });
 
         GContainer gp = frame.getView();
-        float x = 10, y = 10, w = gp.getViewW() - 20;
+        float x = 10, y = 10, w = gp.getW() - 20;
 
         GLabel lb1 = new GLabel(msg, x, y, w, 80);
+        lb1.setShowMode(GLabel.MODE_MULTI_SHOW);
         gp.add(lb1);
         y += 85;
 
@@ -422,21 +423,21 @@ public class GToolkit {
         });
         GContainer view = frame.getView();
 
-        GTextField search = new GTextField("", "search", pad, y, frame.getViewW() - pad * 2, 30);
+        GTextField search = new GTextField("", "search", pad, y, frame.getW() - pad * 2, 30);
         search.setName("search");
         search.setBoxStyle(GTextField.BOX_STYLE_SEARCH);
         view.add(search);
         y += 30 + pad;
 
-        float h = view.getViewH() - y - 30 - pad * 4;
-        GList glist = new GList(0, y, view.getViewW(), h);
+        float h = view.getH() - y - 30 - pad * 4;
+        GList glist = new GList(0, y, view.getW(), h);
         glist.setName("list");
         glist.setShowMode(GList.MODE_MULTI_SHOW);
         glist.setSelectMode(GList.MODE_MULTI_SELECT);
         frame.getView().add(glist);
         y += h + pad;
 
-        GCheckBox chbox = new GCheckBox(GLanguage.getString("SeleAll"), false, pad, y, view.getViewW() * .5f, btnH);
+        GCheckBox chbox = new GCheckBox(GLanguage.getString("SeleAll"), false, pad, y, view.getW() * .5f, btnH);
         view.add(chbox);
         chbox.setActionListener(new GActionListener() {
             @Override
@@ -449,7 +450,7 @@ public class GToolkit {
             }
         });
 
-        GButton btn = new GButton(GLanguage.getString("Perform"), (view.getViewW() - btnW - pad), y, btnW, btnH);
+        GButton btn = new GButton(GLanguage.getString("Perform"), (view.getW() - btnW - pad), y, btnW, btnH);
         btn.setName("perform");
         frame.getView().add(btn);
         btn.setActionListener(buttonListener);
@@ -647,8 +648,8 @@ public class GToolkit {
         float imgW = img.getWidth();
         float imgH = img.getHeight();
 
-        float formW = form.getViewW();
-        float formH = form.getViewH();
+        float formW = form.getW();
+        float formH = form.getH();
 
         float ratioW = formW / imgW;
         float ratioH = formH / imgH;
@@ -661,9 +662,7 @@ public class GToolkit {
             imgH *= ratioH;
         }
         view.setSize(imgW, imgH);
-        view.setViewSize(imgW, imgH);
         view.setLocation((formW - view.getW()) / 2, (formH - view.getH()) / 2);
-        view.setViewLocation((formW - view.getW()) / 2, (formH - view.getH()) / 2);
 
         return view;
     }

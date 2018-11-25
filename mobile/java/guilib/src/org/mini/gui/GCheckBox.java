@@ -59,8 +59,6 @@ public class GCheckBox extends GObject {
 
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
-        int rx = (int) (x - parent.getX());
-        int ry = (int) (y - parent.getY());
         if (isInArea(x, y)) {
             if (pressed) {
             } else {
@@ -75,9 +73,7 @@ public class GCheckBox extends GObject {
 
     @Override
     public void touchEvent(int phase, int x, int y) {
-        int rx = (int) (x - parent.getX());
-        int ry = (int) (y - parent.getY());
-        if (isInBoundle(boundle, rx, ry)) {
+        if (isInArea(x, y)) {
             if (phase == Glfm.GLFMTouchPhaseBegan) {
                 checked = !checked;
                 if (actionListener != null) {

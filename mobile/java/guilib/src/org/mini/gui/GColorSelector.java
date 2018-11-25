@@ -71,8 +71,6 @@ public class GColorSelector extends GObject {
 
     @Override
     public void cursorPosEvent(int x, int y) {
-        int rx = (int) (x - parent.getX());
-        int ry = (int) (y - parent.getY());
         if (isInArea(x, y)) {
 
         }
@@ -80,8 +78,6 @@ public class GColorSelector extends GObject {
 
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
-        int rx = (int) (x - parent.getX());
-        int ry = (int) (y - parent.getY());
         if (isInArea(x, y)) {
             if (!pressed) {
                 float offX = x - (getX() + centX);
@@ -109,9 +105,7 @@ public class GColorSelector extends GObject {
 
     @Override
     public void touchEvent(int phase, int x, int y) {
-        int rx = (int) (x - parent.getX());
-        int ry = (int) (y - parent.getY());
-        if (isInBoundle(boundle, rx, ry)) {
+        if (isInArea(x, y)) {
             if (phase != Glfm.GLFMTouchPhaseBegan) {
                 float offX = x - (getX() + centX);
                 float offY = y - (getY() + centY);

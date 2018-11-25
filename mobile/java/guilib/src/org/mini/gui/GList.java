@@ -186,6 +186,31 @@ public class GList extends GPanel implements GFocusChangeListener {
         return items;
     }
 
+    @Override
+    public void add(GObject go) {
+        throw new RuntimeException("Please add menu item with addItem()");
+    }
+
+    @Override
+    public void add(int index, GObject go) {
+        throw new RuntimeException("Please add menu item with addItem()");
+    }
+
+    @Override
+    public void remove(GObject go) {
+        throw new RuntimeException("Please remove menu item with removeItem()");
+    }
+
+    @Override
+    public void remove(int index) {
+        throw new RuntimeException("Please remove menu item with removeItem()");
+    }
+
+    @Override
+    public void clear() {
+        throw new RuntimeException("Please clear menu item with removeItemAll()");
+    }
+
     void reSize() {
         int itemcount = popView.elements.size();
         if (itemcount <= 0) {
@@ -193,8 +218,8 @@ public class GList extends GPanel implements GFocusChangeListener {
         }
 
         if (showMode == MODE_MULTI_SHOW) {
-            popWin.setViewLocation(0, 0);
-            popWin.setViewSize(width, height);
+            popWin.setLocation(0, 0);
+            popWin.setSize(width, height);
 
         } else {
             float popH = itemcount * list_item_heigh;
@@ -205,8 +230,8 @@ public class GList extends GPanel implements GFocusChangeListener {
                 popH = list_rows_max * list_item_heigh;
             }
 
-            popWin.setViewLocation(0, 0);
-            popWin.setViewSize(width, popH);
+            popWin.setLocation(0, 0);
+            popWin.setSize(width, popH);
 
         }
 
@@ -223,7 +248,7 @@ public class GList extends GPanel implements GFocusChangeListener {
         int i = 0;
         for (GObject go : popView.getElements()) {
             go.setLocation(pad, i * list_item_heigh);
-            go.setSize(popView.getViewW() - pad * 2, list_item_heigh);
+            go.setSize(popView.getW() - pad * 2, list_item_heigh);
             i++;
         }
         selected.clear();
@@ -231,12 +256,12 @@ public class GList extends GPanel implements GFocusChangeListener {
 
     void changeCurPanel() {
         int itemcount = popView.elements.size();
-        clear();
+        super.clear();
 
         if (showMode == MODE_MULTI_SHOW) {
             setLocation(left, top);
             setSize(width, height);
-            add(popWin);
+            super.add(popWin);
         } else if (pulldown && itemcount > 0) {
             float popH = itemcount * list_item_heigh;
             if (itemcount < list_rows_min) {
@@ -246,20 +271,20 @@ public class GList extends GPanel implements GFocusChangeListener {
                 popH = list_rows_max * list_item_heigh;
             }
             float popY = 0;
-            if (popH > parent.getViewH()) {// small than frame height
+            if (popH > parent.getH()) {// small than frame height
                 popY = parent.getY();
-            } else if (top + popH < parent.getViewH()) {
+            } else if (top + popH < parent.getH()) {
                 popY = top;
             } else {
-                popY = parent.getViewH() - popH;
+                popY = parent.getH() - popH;
             }
             setLocation(left, popY);
-            setSize(popWin.getViewW(), popWin.getViewH());
-            add(popWin);
+            setSize(popWin.getW(), popWin.getH());
+            super.add(popWin);
         } else {
             setLocation(left, top);
             setSize(width, height);
-            add(normalPanel);
+            super.add(normalPanel);
         }
     }
 
@@ -398,7 +423,7 @@ public class GList extends GPanel implements GFocusChangeListener {
         nvgTextMetrics(vg, null, null, lineh);
 
         Nanovg.nvgResetScissor(vg);
-        Nanovg.nvgScissor(vg, getViewX(), getViewY(), getViewW(), getViewH());
+        Nanovg.nvgScissor(vg, getX(), getY(), getW(), getH());
         return super.update(vg);
     }
 
@@ -605,8 +630,6 @@ public class GList extends GPanel implements GFocusChangeListener {
 
             popView.setLocation(0, 0);
             popView.setSize(width - scrollbarWidth, height);
-            popView.setViewLocation(0, 0);
-            popView.setViewSize(width - scrollbarWidth, height);
 
             scrollBar.setLocation(width - scrollbarWidth, 0);
             scrollBar.setSize(20, height);

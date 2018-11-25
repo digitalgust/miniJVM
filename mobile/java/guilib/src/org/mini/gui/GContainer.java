@@ -23,25 +23,25 @@ abstract public class GContainer extends GObject {
     private final List<GObject> fronts = new ArrayList();
     GObject focus;
 
-    public abstract float getViewX();
+    public abstract float getInnerX();
 
-    public abstract float getViewY();
+    public abstract float getInnerY();
 
-    public abstract float getViewW();
+    public abstract float getInnerW();
 
-    public abstract float getViewH();
+    public abstract float getInnerH();
 
-    public abstract void setViewLocation(float x, float y);
+    public abstract void setInnerLocation(float x, float y);
 
-    public abstract void setViewSize(float x, float y);
+    public abstract void setInnerSize(float x, float y);
 
-    public abstract float[] getViewBoundle();
+    public abstract float[] getInnerBoundle();
     
     public boolean isInArea(float x, float y) {
-        float absx = getViewX();
-        float absy = getViewY();
-        return x >= absx && x <= absx + getViewW()
-                && y >= absy && y <= absy + getViewH();
+        float absx = getX();
+        float absy = getY();
+        return x >= absx && x <= absx + getW()
+                && y >= absy && y <= absy + getH();
     }
 
     public List<GObject> getElements() {
@@ -235,27 +235,27 @@ abstract public class GContainer extends GObject {
 
     private void drawObj(long ctx, GObject nko) {
         float x, y, w, h;
-        if (nko instanceof GContainer) {
-            GContainer c = (GContainer) nko;
-            x = c.getViewX();
-            y = c.getViewY();
-            w = c.getViewW();
-            h = c.getViewH();
-
-        } else {
+//        if (nko instanceof GContainer) {
+//            GContainer c = (GContainer) nko;
+//            x = c.getX();
+//            y = c.getY();
+//            w = c.getW();
+//            h = c.getH();
+//
+//        } else {
             x = nko.getX();
             y = nko.getY();
             w = nko.getW();
             h = nko.getH();
-        }
+//        }
 
         nvgSave(ctx);
 //        Nanovg.nvgReset(ctx);
         nvgScissor(ctx, x, y, w, h);
-        float vx = getViewX();
-        float vy = getViewY();
-        float vw = getViewW();
-        float vh = getViewH();
+        float vx = this.getX();
+        float vy = this.getY();
+        float vw = this.getW();
+        float vh = this.getH();
         if (vx + vw < x || vx > x + w || vy > y + h || vy + vh < y) {
         } else {
             Nanovg.nvgIntersectScissor(ctx, vx, vy, vw, vh);

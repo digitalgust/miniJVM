@@ -12,22 +12,22 @@ package org.mini.gui;
 public class GPanel extends GContainer {
 
     @Override
-    public float getViewX() {
+    public float getInnerX() {
         return getX();
     }
 
     @Override
-    public float getViewY() {
+    public float getInnerY() {
         return getY();
     }
 
     @Override
-    public float getViewW() {
+    public float getInnerW() {
         return getW();
     }
 
     @Override
-    public float getViewH() {
+    public float getInnerH() {
         return getH();
     }
 
@@ -37,17 +37,17 @@ public class GPanel extends GContainer {
     }
 
     @Override
-    public void setViewLocation(float x, float y) {
+    public void setInnerLocation(float x, float y) {
         setLocation(x, y);
     }
 
     @Override
-    public void setViewSize(float x, float y) {
+    public void setInnerSize(float x, float y) {
         setSize(x, y);
     }
 
     @Override
-    public float[] getViewBoundle() {
+    public float[] getInnerBoundle() {
         return getBoundle();
     }
 

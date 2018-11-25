@@ -146,8 +146,6 @@ public class GTextBox extends GTextObject {
 
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
-        int rx = (int) (x - parent.getX());
-        int ry = (int) (y - parent.getY());
         if (isInArea(x, y)) {
             if (button == Glfw.GLFW_MOUSE_BUTTON_1) {
                 if (pressed) {
@@ -177,8 +175,6 @@ public class GTextBox extends GTextObject {
 
     @Override
     public void clickEvent(int button, int x, int y) {
-        int rx = (int) (x - parent.getX());
-        int ry = (int) (y - parent.getY());
         if (isInArea(x, y)) {
             int caret = getCaretIndexFromArea(x, y);
             if (caret >= 0) {
@@ -192,8 +188,6 @@ public class GTextBox extends GTextObject {
 
     @Override
     public void cursorPosEvent(int x, int y) {
-        int rx = (int) (x - parent.getX());
-        int ry = (int) (y - parent.getY());
         if (isInArea(x, y)) {
             if (mouseDrag) {
                 int caret = getCaretIndexFromArea(x, y);
@@ -701,7 +695,7 @@ public class GTextBox extends GTextObject {
             float caretx = 0;
 
             Nanovg.nvgScissor(vg, text_area[LEFT], text_area[TOP], text_area[WIDTH], text_area[HEIGHT]);
-            Nanovg.nvgIntersectScissor(vg, parent.getViewX(), parent.getViewY(), parent.getViewW(), parent.getViewH());
+            Nanovg.nvgIntersectScissor(vg, parent.getX(), parent.getY(), parent.getW(), parent.getH());
             //需要恢复现场
             try {
 

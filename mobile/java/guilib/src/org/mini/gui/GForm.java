@@ -87,9 +87,6 @@ public class GForm extends GViewPort {
         setLocation(0, 0);
         setSize(winWidth, winHeight);
 
-        setViewLocation(0, 0);
-        setViewSize(winWidth, winHeight);
-
     }
 
     public int getType() {
@@ -210,12 +207,12 @@ public class GForm extends GViewPort {
         b = Gutil.toUtf8("touch x,y:" + cb.mouseX + "," + cb.mouseY);
         Nanovg.nvgTextJni(vg, dx, dy, b, 0, b.length);
         dy += font_size;
-        b = Gutil.toUtf8("form:" + getX() + "," + getY() + "," + getW() + "," + getH() + "  " + getViewX() + "," + getViewY() + "," + getViewW() + "," + getViewH());
+        b = Gutil.toUtf8("form:" + getX() + "," + getY() + "," + getW() + "," + getH() + "  " + getInnerX() + "," + getInnerY() + "," + getInnerW() + "," + getInnerH());
 
         Nanovg.nvgTextJni(vg, dx, dy, b, 0, b.length);
         dy += font_size;
         if (focus != null) {
-            b = Gutil.toUtf8("focus:" + focus.getX() + "," + focus.getY() + "," + focus.getW() + "," + focus.getH() + "  " + ((focus instanceof GContainer) ? ((GContainer) focus).getViewX() + "," + ((GContainer) focus).getViewY() + "," + ((GContainer) focus).getViewW() + "," + ((GContainer) focus).getViewH() : ""));
+            b = Gutil.toUtf8("focus:" + focus.getX() + "," + focus.getY() + "," + focus.getW() + "," + focus.getH() + "  " + ((focus instanceof GContainer) ? ((GContainer) focus).getInnerX() + "," + ((GContainer) focus).getInnerY() + "," + ((GContainer) focus).getInnerW() + "," + ((GContainer) focus).getInnerH() : ""));
             Nanovg.nvgTextJni(vg, dx, dy, b, 0, b.length);
         }
     }

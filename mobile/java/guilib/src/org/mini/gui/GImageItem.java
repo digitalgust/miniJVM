@@ -148,7 +148,7 @@ public class GImageItem extends GObject {
 
     @Override
     public void touchEvent(int phase, int x, int y) {
-        if (isInBoundle(boundle, x - parent.getX(), y - parent.getY())) {
+        if (isInArea(x, y)) {
             if (phase == Glfm.GLFMTouchPhaseBegan) {
                 bt_pressed = true;
             } else if (phase == Glfm.GLFMTouchPhaseEnded) {
@@ -156,7 +156,7 @@ public class GImageItem extends GObject {
                     actionListener.action(this);
                 }
                 bt_pressed = false;
-            } else if (!isInBoundle(boundle, x - parent.getX(), y - parent.getY())) {
+            } else if (!isInArea(x, y)) {
                 bt_pressed = false;
             }
         }
