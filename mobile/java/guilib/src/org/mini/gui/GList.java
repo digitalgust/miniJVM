@@ -186,30 +186,6 @@ public class GList extends GPanel implements GFocusChangeListener {
         return items;
     }
 
-    @Override
-    public void add(GObject go) {
-        throw new RuntimeException("Please add menu item with addItem()");
-    }
-
-    @Override
-    public void add(int index, GObject go) {
-        throw new RuntimeException("Please add menu item with addItem()");
-    }
-
-    @Override
-    public void remove(GObject go) {
-        throw new RuntimeException("Please remove menu item with removeItem()");
-    }
-
-    @Override
-    public void remove(int index) {
-        throw new RuntimeException("Please remove menu item with removeItem()");
-    }
-
-    @Override
-    public void clear() {
-        throw new RuntimeException("Please clear menu item with removeItemAll()");
-    }
 
     void reSize() {
         int itemcount = popView.elements.size();
