@@ -22,9 +22,9 @@ public class CryptTest {
         byte[] key = XorCrypt.genKey(5);
         System.out.println("key=" + AsynCrypt.bytesToHex(key));
         byte[] src = {'a', 'b'};
-        XorCrypt.xor_crypt(key, key);
+        XorCrypt.xor_encrypt(key, key);
         System.out.println("src=" + AsynCrypt.bytesToHex(src));
-        byte[] cr = XorCrypt.xor_crypt(src, key);
+        byte[] cr = XorCrypt.xor_encrypt(src, key);
         System.out.println("crypt= " + AsynCrypt.bytesToHex(cr));
         byte[] dcr = XorCrypt.xor_decrypt(cr, key);
         System.out.println("dcrypt= " + AsynCrypt.bytesToHex(dcr));
@@ -34,7 +34,7 @@ public class CryptTest {
 
         byte[] src1 = {'3', '4'};
         System.out.println("src1=" + AsynCrypt.bytesToHex(src1));
-        byte[] cr1 = XorCrypt.xor_crypt(src1, key);
+        byte[] cr1 = XorCrypt.xor_encrypt(src1, key);
         System.out.println("crypt1= " + AsynCrypt.bytesToHex(cr1));
         byte[] dcr1 = new byte[src1.length];
         dcr1[0] = (byte) (cr1[0] ^ fake);
