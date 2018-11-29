@@ -36,7 +36,7 @@ abstract public class GContainer extends GObject {
     public abstract void setInnerSize(float x, float y);
 
     public abstract float[] getInnerBoundle();
-    
+
     public boolean isInArea(float x, float y) {
         float absx = getX();
         float absy = getY();
@@ -79,15 +79,16 @@ abstract public class GContainer extends GObject {
             return;
         }
         if (this.focus != go) {
-            if (focus != null) {
-                if (focus.focusListener != null) {
-                    focus.focusListener.focusLost(focus);
+            GObject old = this.focus;
+            this.focus = go;
+            if (old != null) {
+                if (old.focusListener != null) {
+                    old.focusListener.focusLost(go);
                 }
             }
-            this.focus = go;
             if (focus != null) {
                 if (focus.focusListener != null) {
-                    focus.focusListener.focusGot(focus);
+                    focus.focusListener.focusGot(old);
                 }
             }
         }
@@ -122,6 +123,9 @@ abstract public class GContainer extends GObject {
                 nko.destory();
                 elements.remove(nko);
                 if (focus == nko) {
+                    if (focus.focusListener != null) {
+                        focus.focusListener.focusLost(null);
+                    }
                     focus = null;
                 }
                 onRemove(nko);
@@ -243,10 +247,10 @@ abstract public class GContainer extends GObject {
 //            h = c.getH();
 //
 //        } else {
-            x = nko.getX();
-            y = nko.getY();
-            w = nko.getW();
-            h = nko.getH();
+        x = nko.getX();
+        y = nko.getY();
+        w = nko.getW();
+        h = nko.getH();
 //        }
 
         nvgSave(ctx);

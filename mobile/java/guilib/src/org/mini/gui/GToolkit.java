@@ -416,9 +416,7 @@ public class GToolkit {
 
             @Override
             public void focusLost(GObject go) {
-                if (frame.getForm() != null) {
-                    frame.getForm().remove(frame);
-                }
+                frame.close();
             }
         });
         GContainer view = frame.getView();
@@ -467,14 +465,12 @@ public class GToolkit {
         frame.setFront(true);
         frame.setFocusListener(new GFocusChangeListener() {
             @Override
-            public void focusGot(GObject go) {
+            public void focusGot(GObject oldgo) {
             }
 
             @Override
-            public void focusLost(GObject go) {
-                if (go.getForm() != null) {
-                    go.getForm().remove(frame);
-                }
+            public void focusLost(GObject newgo) {
+                frame.close();
             }
         });
         GContainer view = frame.getView();
@@ -528,13 +524,13 @@ public class GToolkit {
         list.setBgColor(GToolkit.getStyle().getFrameBackground());
         list.setFocusListener(new GFocusChangeListener() {
             @Override
-            public void focusGot(GObject go) {
+            public void focusGot(GObject oldgo) {
             }
 
             @Override
-            public void focusLost(GObject go) {
-                if (go.getForm() != null) {
-                    go.getForm().remove(list);
+            public void focusLost(GObject newgo) {
+                if (list.getForm() != null) {
+                    list.getForm().remove(list);
                 }
             }
         });
@@ -551,6 +547,7 @@ public class GToolkit {
             size = 8;
         }
         list.setSize(200, size * list.list_item_heigh);
+        list.setInnerSize(200, size * list.list_item_heigh);
         list.setFront(true);
 
         return list;
@@ -561,13 +558,13 @@ public class GToolkit {
         GMenu menu = new GMenu(0, 0, 150, 120);
         menu.setFocusListener(new GFocusChangeListener() {
             @Override
-            public void focusGot(GObject go) {
+            public void focusGot(GObject oldgo) {
             }
 
             @Override
-            public void focusLost(GObject go) {
-                if (go.getForm() != null) {
-                    go.getForm().remove(menu);
+            public void focusLost(GObject newgo) {
+                if (menu.getForm() != null) {
+                    menu.getForm().remove(menu);
                 }
             }
         });
@@ -632,13 +629,13 @@ public class GToolkit {
         };
         view.setFocusListener(new GFocusChangeListener() {
             @Override
-            public void focusGot(GObject go) {
+            public void focusGot(GObject oldgo) {
             }
 
             @Override
-            public void focusLost(GObject go) {
-                if (go.getForm() != null) {
-                    go.getForm().remove(go);
+            public void focusLost(GObject newgo) {
+                if (view.getForm() != null) {
+                    view.getForm().remove(view);
                 }
             }
         });

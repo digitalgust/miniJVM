@@ -13,7 +13,16 @@ import org.mini.gui.GObject;
  */
 public interface GFocusChangeListener {
 
-    public void focusGot(GObject go);
+    /**
+     * 
+     * 
+     * @param oldgo the old focus
+     */
+    public void focusGot(GObject oldgo);
 
-    public void focusLost(GObject go);
+    /**
+     * 
+     * @param newgo the new focus
+     */
+    public void focusLost(GObject newgo);
 }

@@ -210,7 +210,7 @@ public class GViewPort extends GContainer {
     //总共做多少次操作
     long maxMoveCount = 120;
     //初速度加成
-    float addOn = 2.2f;
+    float addOn = 1.2f;
     //惯性任务
     TimerTask task;
 

@@ -387,7 +387,7 @@ NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__); } whil
     self.view.contentScaleFactor = [UIScreen mainScreen].nativeScale;
     self.inputlabel = [[UILabel alloc]initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 30)];
     //self.inputlabel.backgroundColor = [UIColor lightGrayColor ];//设置背景颜色
-    self.inputlabel.textColor = [UIColor blackColor];//设置Label上文字的颜色
+    self.inputlabel.textColor = [UIColor lightGrayColor];//设置Label上文字的颜色
 }
 
 - (void)viewDidLoad {
@@ -697,7 +697,7 @@ NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__); } whil
                                                         keyboardFrame.origin.y,
                                                         keyboardFrame.size.width,
                                                         keyboardFrame.size.height);
-            [self setInputLabelPos:keyboardFrame.origin.x :[nsValue CGRectValue].origin.y-30];
+            [self setInputLabelPos:keyboardFrame.origin.x+10 :[nsValue CGRectValue].origin.y-30];
         }
     }
 }

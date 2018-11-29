@@ -94,9 +94,7 @@ public class GFrame extends GPanel {
     public void close() {
         if (parent != null) {
             parent.remove(this);
-            if (focusListener != null) {
-                focusListener.focusLost(this);
-            }
+            
         }
     }
 

@@ -5,6 +5,7 @@
  */
 package org.mini.gui;
 
+import java.util.TimerTask;
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.gui.event.GActionListener;
@@ -21,11 +22,13 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     byte[] hint_arr;
     StringBuilder textsb = new StringBuilder();
     byte[] text_arr;
-    boolean keyboardAutoPop = true;
+//    boolean keyboardAutoPop = true;
 
     private static EditMenu editMenu;
 
     boolean selectMode = false;
+
+    GObject unionObj;//if this object exists, the keyboard not disappear
 
     public void setHint(String hint) {
         this.hint = hint;
@@ -106,24 +109,20 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         }
     }
 
-    @Override
-    public void focusGot(GObject go) {
-
-    }
-
     public void setKeyboardVisible(boolean visible) {
         if (getForm() != null) {
             Glfm.glfmSetKeyboardVisible(getForm().getWinContext(), visible);
         }
     }
 
-    public void setKeyboardAutoPop(boolean autopop) {
-        keyboardAutoPop = autopop;
+    @Override
+    public void focusGot(GObject go) {
+
     }
 
     @Override
-    public void focusLost(GObject go) {
-        if (keyboardAutoPop && getForm() != null) {
+    public void focusLost(GObject newgo) {
+        if (newgo != unionObj && newgo != this) {
             Glfm.glfmSetKeyboardVisible(getForm().getWinContext(), false);
         }
         disposeEditMenu();
@@ -142,8 +141,8 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
                 }
                 case Glfm.GLFMTouchPhaseEnded: {
                     if (touched) {
-                        if (keyboardAutoPop && getForm() != null) {
-                            System.out.println("touched textobject");
+                        if (getForm() != null) {
+                            //System.out.println("touched textobject");
                             Glfm.glfmSetKeyboardVisible(getForm().getWinContext(), true);
                         }
                         touched = false;
@@ -171,6 +170,20 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
 
     static public GMenu getEditMenu() {
         return editMenu;
+    }
+
+    /**
+     * @return the unionObj
+     */
+    public GObject getUnionObj() {
+        return unionObj;
+    }
+
+    /**
+     * @param unionObj the unionObj to set
+     */
+    public void setUnionObj(GObject unionObj) {
+        this.unionObj = unionObj;
     }
 
     public class EditMenu extends GMenu {
@@ -260,6 +273,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
                 }
             });
 
+            editMenu.setFixed(true);
         }
         editMenu.text = focus;
         editMenu.setLocation(mx, my);
@@ -270,15 +284,23 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     }
 
     synchronized void disposeEditMenu() {
-        GForm gf = getForm();
-        if (gf != null && editMenu != null) {
-            gf.remove(editMenu);
-            if (editMenu.text != null) {
-                editMenu.text.getParent().setFocus(editMenu.text);
+        GForm.timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                GForm gf = getForm();
+                if (gf != null && editMenu != null) {
+                    gf.remove(editMenu);
+//                    if (editMenu.text == null) {
+//                    } else {
+//                        if (editMenu.text.unionObj != editMenu.text.parent.getFocus()) {
+//                            gf.remove(editMenu);
+//                        }
+//                    }
+                    resetSelect();
+                    selectMode = false;
+                }
             }
-            resetSelect();
-            selectMode = false;
-        }
+        }, 0);
         //System.out.println("edit menu dispose");
     }
 }

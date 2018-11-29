@@ -104,12 +104,15 @@ public class GList extends GPanel implements GFocusChangeListener {
 
     @Override
     public void setSize(float w, float h) {
-        width = w;
-        height = h;
         super.setSize(w, h);
         reSize();
     }
-
+    @Override
+    public void setInnerSize(float w, float h) {
+        width = w;
+        height = h;
+        super.setInnerSize(w, h);
+    }
     public void setScrollBar(boolean show) {
         this.showScrollbar = show;
         if (show) {
@@ -186,7 +189,6 @@ public class GList extends GPanel implements GFocusChangeListener {
         return items;
     }
 
-
     void reSize() {
         int itemcount = popView.elements.size();
         if (itemcount <= 0) {
@@ -227,7 +229,7 @@ public class GList extends GPanel implements GFocusChangeListener {
             go.setSize(popView.getW() - pad * 2, list_item_heigh);
             i++;
         }
-        selected.clear();
+        //selected.clear();
     }
 
     void changeCurPanel() {
@@ -390,6 +392,11 @@ public class GList extends GPanel implements GFocusChangeListener {
      */
     @Override
     public boolean update(long vg) {
+
+//        if (pulldown && parent.getFocus() != this) {
+//            pulldown = false;
+//            GList.this.changeCurPanel();
+//        }
 
         //int itemcount = popView.elements.size();
         nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
