@@ -26,6 +26,9 @@
   * Save and Load file from mobile storage .  
   These java api of features can be found in mobile/java/guilib/ , api platform independent .  
 
+## iOS app Gif Demo :
+  <div align=center><img width="320" height="569" src="/screenshot/demo.gif"/></div>
+
 ## Architecture:  
 
   <div align=center><img width="480" height="386" src="/screenshot/arch.png"/></div>
