@@ -81,9 +81,16 @@ abstract public class GContainer extends GObject {
         if (this.focus != go) {
             GObject old = this.focus;
             this.focus = go;
-            if (old != null) {
-                if (old.focusListener != null) {
-                    old.focusListener.focusLost(go);
+            //notify all focus of sons
+            GObject tmp = old;
+            while (tmp != null) {
+                if (tmp.focusListener != null) {
+                    tmp.focusListener.focusLost(go);
+                }
+                if (tmp instanceof GContainer) {
+                    tmp = ((GContainer) tmp).focus;
+                } else {
+                    break;
                 }
             }
             if (focus != null) {
@@ -121,10 +128,10 @@ abstract public class GContainer extends GObject {
             synchronized (elements) {
                 nko.setParent(null);
                 nko.destory();
-                elements.remove(nko);
+                boolean b = elements.remove(nko);
                 if (focus == nko) {
-                    if (focus.focusListener != null) {
-                        focus.focusListener.focusLost(null);
+                    if (b) {
+                        focus.doFocusLost(null);
                     }
                     focus = null;
                 }
@@ -372,6 +379,7 @@ abstract public class GContainer extends GObject {
     public void touchEvent(int phase, int x, int y) {
         GObject found = findByXY(x, y);
         if (found instanceof GMenu) {
+            setFocus(null);
             found.touchEvent(phase, x, y);
             return;
         }

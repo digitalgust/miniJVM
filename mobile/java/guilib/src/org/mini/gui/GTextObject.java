@@ -111,19 +111,21 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
 
     public void setKeyboardVisible(boolean visible) {
         if (getForm() != null) {
-            Glfm.glfmSetKeyboardVisible(getForm().getWinContext(), visible);
+            Glfm.glfmSetKeyboardVisible(winContext, visible);
         }
     }
 
+    long winContext;
+
     @Override
     public void focusGot(GObject go) {
-
+        winContext = getForm().getWinContext();
     }
 
     @Override
     public void focusLost(GObject newgo) {
         if (newgo != unionObj && newgo != this) {
-            Glfm.glfmSetKeyboardVisible(getForm().getWinContext(), false);
+            Glfm.glfmSetKeyboardVisible(winContext, false);
         }
         disposeEditMenu();
         touched = false;

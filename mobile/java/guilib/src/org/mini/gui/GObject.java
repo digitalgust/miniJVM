@@ -384,4 +384,22 @@ abstract public class GObject {
     public void setFront(boolean front) {
         this.front = front;
     }
+
+    void doAction() {
+        if (actionListener != null) {
+            actionListener.action(this);
+        }
+    }
+
+    void doFocusLost(GObject newgo) {
+        if (focusListener != null) {
+            focusListener.focusLost(newgo);
+        }
+    }
+
+    void doFocusGot(GObject oldgo) {
+        if (focusListener != null) {
+            focusListener.focusGot(oldgo);
+        }
+    }
 }
