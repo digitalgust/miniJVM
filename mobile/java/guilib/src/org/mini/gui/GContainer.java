@@ -353,7 +353,6 @@ abstract public class GContainer extends GObject {
             return found.dragEvent(dx, dy, x, y);
         }
 
-        setFocus(found);
         if (focus != null && focus.isInArea(x, y)) {
             return focus.dragEvent(dx, dy, x, y);
         }
@@ -379,7 +378,9 @@ abstract public class GContainer extends GObject {
     public void touchEvent(int phase, int x, int y) {
         GObject found = findByXY(x, y);
         if (found instanceof GMenu) {
-            setFocus(null);
+            if (!((GMenu) found).isContextMenu()) {
+                setFocus(null);
+            }
             found.touchEvent(phase, x, y);
             return;
         }
@@ -408,6 +409,9 @@ abstract public class GContainer extends GObject {
     public void longTouchedEvent(int x, int y) {
         GObject found = findByXY(x, y);
         if (found instanceof GMenu) {
+            if (!((GMenu) found).isContextMenu()) {
+                setFocus(null);
+            }
             found.longTouchedEvent(x, y);
             return;
         }

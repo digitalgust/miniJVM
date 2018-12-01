@@ -276,6 +276,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
             });
 
             editMenu.setFixed(true);
+            editMenu.setContextMenu(true);
         }
         editMenu.text = focus;
         editMenu.setLocation(mx, my);

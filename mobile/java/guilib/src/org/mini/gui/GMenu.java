@@ -30,7 +30,13 @@ import static org.mini.nanovg.Nanovg.nvgTextMetrics;
 public class GMenu extends GPanel {
 
     float[] lineh = new float[1];
-    int selectedIndex=-1;
+    int selectedIndex = -1;
+    /**
+     * contextMenu :
+     * change focus when this menu touched , the value true would not change current focus, false would chang 
+     * like the edit menu "copy" "paste" can not change the current ui focus
+     */
+    boolean contextMenu = false;
 
     public GMenu() {
 
@@ -155,6 +161,20 @@ public class GMenu extends GPanel {
 
         super.update(vg);
         return true;
+    }
+
+    /**
+     * @return the contextMenu
+     */
+    public boolean isContextMenu() {
+        return contextMenu;
+    }
+
+    /**
+     * @param contextMenu the contextMenu to set
+     */
+    public void setContextMenu(boolean contextMenu) {
+        this.contextMenu = contextMenu;
     }
 
 }

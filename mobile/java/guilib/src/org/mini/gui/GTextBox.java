@@ -808,18 +808,22 @@ public class GTextBox extends GTextObject {
                                     int sel_start = selectFromTo[0];
                                     int sel_end = selectFromTo[1];
                                     float drawSelX = dx, drawSelW = row_width;
-                                    //本行只有选择起点
-                                    if (sel_start > char_starti && sel_start < char_endi) {
+                                    //本行有选择起点
+                                    if (sel_start > char_starti && sel_start <= char_endi) {
                                         int pos = sel_start - area_detail[curRow][AREA_START];
                                         drawSelX = area_detail[curRow][AREA_DETAIL_ADD + pos];
                                     }
                                     //本行有选择终点
-                                    if (sel_end > char_starti && sel_end < char_endi) {
+                                    if (sel_end > char_starti && sel_end <= char_endi + 1) {
                                         int pos = selectFromTo[1] - area_detail[curRow][AREA_START];
-                                        drawSelW = area_detail[curRow][AREA_DETAIL_ADD + pos] - drawSelX;
+                                        if (pos >= char_count) {//the last char
+                                            drawSelW = area_detail[curRow][AREA_DETAIL_ADD] + row_width - drawSelX;
+                                        } else {
+                                            drawSelW = area_detail[curRow][AREA_DETAIL_ADD + pos] - drawSelX;
+                                        }
                                     }
 
-                                    if (sel_start >= char_endi || sel_end < char_starti) {
+                                    if (sel_start >= char_endi + 1 || sel_end < char_starti) {
                                         //此行没有起点和终点
                                     } else {
                                         //此行有起点或终点,或在起终点之间的整行
