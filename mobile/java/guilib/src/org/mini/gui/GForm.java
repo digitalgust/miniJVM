@@ -73,20 +73,7 @@ public class GForm extends GViewPort {
 
     public GForm(GuiCallBack ccb) {
         this.title = title;
-
         callback = ccb;
-
-        fbWidth = ccb.getFrameBufferWidth();
-        fbHeight = ccb.getFrameBufferHeight();
-        int winWidth, winHeight;
-        winWidth = ccb.getDeviceWidth();
-        winHeight = ccb.getDeviceHeight();
-
-        pxRatio = ccb.getDeviceRatio();
-
-        setLocation(0, 0);
-        setSize(winWidth, winHeight);
-
     }
 
     public int getType() {
@@ -133,6 +120,16 @@ public class GForm extends GViewPort {
             System.out.println("callback.getNvContext() is null.");
         }
 
+        fbWidth = callback.getFrameBufferWidth();
+        fbHeight = callback.getFrameBufferHeight();
+        int winWidth, winHeight;
+        winWidth = callback.getDeviceWidth();
+        winHeight = callback.getDeviceHeight();
+
+        pxRatio = callback.getDeviceRatio();
+
+        setLocation(0, 0);
+        setSize(winWidth, winHeight);
         //System.out.println("fbWidth=" + fbWidth + "  ,fbHeight=" + fbHeight);
         flush();
     }

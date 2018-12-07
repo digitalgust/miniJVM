@@ -60,6 +60,10 @@ public class GButton extends GObject {
         text_arr = toUtf8(text);
     }
 
+    public String getText() {
+        return this.text;
+    }
+
     public void setIcon(char icon) {
         preicon = icon;
         preicon_arr = toUtf8("" + preicon);

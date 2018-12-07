@@ -431,7 +431,7 @@ public class GList extends GPanel implements GFocusChangeListener {
         float thumb = pw;
         int[] imgw = {0}, imgh = {0};
 
-        nvgImageSize(vg, img.getTexture(), imgw, imgh);
+        nvgImageSize(vg, img.getTexture(vg), imgw, imgh);
         if (imgw[0] < imgh[0]) {
             iw = thumb;
             ih = iw * (float) imgh[0] / (float) imgw[0];
@@ -444,7 +444,7 @@ public class GList extends GPanel implements GFocusChangeListener {
             iy = 0;
         }
 
-        imgPaint = nvgImagePattern(vg, px + ix, py + iy, iw, ih, 0.0f / 180.0f * (float) Math.PI, img.getTexture(), 0.8f);
+        imgPaint = nvgImagePattern(vg, px + ix, py + iy, iw, ih, 0.0f / 180.0f * (float) Math.PI, img.getTexture(vg), 0.8f);
         nvgBeginPath(vg);
         nvgRoundedRect(vg, px, py, thumb, thumb, 5);
         nvgFillPaint(vg, imgPaint);

@@ -132,13 +132,15 @@ public class GTextField extends GTextObject {
         }
         if (action == Glfw.GLFW_PRESS || action == Glfw.GLFW_REPEAT) {
             if (key == Glfw.GLFW_KEY_BACKSPACE) {
-                if (textsb.length() > 0 && caretIndex > 0) {
-                    int[] selectFromTo = getSelected();
-                    if (selectFromTo != null) {
-                        deleteSelectedText();
-                    } else {
-                        setCaretIndex(caretIndex - 1);
-                        deleteTextByIndex(caretIndex);
+                if (editable) {
+                    if (textsb.length() > 0 && caretIndex > 0) {
+                        int[] selectFromTo = getSelected();
+                        if (selectFromTo != null) {
+                            deleteSelectedText();
+                        } else {
+                            setCaretIndex(caretIndex - 1);
+                            deleteTextByIndex(caretIndex);
+                        }
                     }
                 }
             }
@@ -193,9 +195,11 @@ public class GTextField extends GTextObject {
      */
     @Override
     public void characterEvent(char character) {
-        if (character != '\n' && character != '\r' && textsb.length() < text_max) {
-            insertTextByIndex(caretIndex, character);
-            setCaretIndex(caretIndex + 1);
+        if (editable) {
+            if (character != '\n' && character != '\r' && textsb.length() < text_max) {
+                insertTextByIndex(caretIndex, character);
+                setCaretIndex(caretIndex + 1);
+            }
         }
     }
 
@@ -204,14 +208,16 @@ public class GTextField extends GTextObject {
 
         if (action == Glfm.GLFMKeyActionPressed || action == Glfm.GLFMKeyActionRepeated) {
             if (key == Glfm.GLFMKeyBackspace) {
-                if (textsb.length() > 0 && caretIndex > 0) {
-                    int[] selectFromTo = getSelected();
-                    if (selectFromTo != null) {
-                        deleteSelectedText();
-                        text_arr = null;
-                    } else {
-                        setCaretIndex(caretIndex - 1);
-                        deleteTextByIndex(caretIndex);
+                if (editable) {
+                    if (textsb.length() > 0 && caretIndex > 0) {
+                        int[] selectFromTo = getSelected();
+                        if (selectFromTo != null) {
+                            deleteSelectedText();
+                            text_arr = null;
+                        } else {
+                            setCaretIndex(caretIndex - 1);
+                            deleteTextByIndex(caretIndex);
+                        }
                     }
                 }
             }

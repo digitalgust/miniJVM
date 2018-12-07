@@ -234,37 +234,43 @@ public class GTextBox extends GTextObject {
         if (action == Glfw.GLFW_PRESS || action == Glfw.GLFW_REPEAT) {
             switch (key) {
                 case Glfw.GLFW_KEY_BACKSPACE: {
-                    if (textsb.length() > 0 && caretIndex > 0) {
-                        int[] selectFromTo = getSelected();
-                        if (selectFromTo != null) {
-                            deleteSelectedText();
-                        } else {
-                            setCaretIndex(caretIndex - 1);
-                            deleteTextByIndex(caretIndex);
+                    if (editable) {
+                        if (textsb.length() > 0 && caretIndex > 0) {
+                            int[] selectFromTo = getSelected();
+                            if (selectFromTo != null) {
+                                deleteSelectedText();
+                            } else {
+                                setCaretIndex(caretIndex - 1);
+                                deleteTextByIndex(caretIndex);
+                            }
                         }
                     }
                     break;
                 }
                 case Glfw.GLFW_KEY_DELETE: {
-                    if (textsb.length() > caretIndex) {
-                        int[] selectFromTo = getSelected();
-                        if (selectFromTo != null) {
-                            deleteSelectedText();
-                        } else {
-                            deleteTextByIndex(caretIndex + 1);
+                    if (editable) {
+                        if (textsb.length() > caretIndex) {
+                            int[] selectFromTo = getSelected();
+                            if (selectFromTo != null) {
+                                deleteSelectedText();
+                            } else {
+                                deleteTextByIndex(caretIndex + 1);
+                            }
                         }
                     }
                     break;
                 }
                 case Glfw.GLFW_KEY_ENTER: {
                     String txt = getText();
-                    if (txt != null && txt.length() > 0) {
-                        int[] selectFromTo = getSelected();
-                        if (selectFromTo != null) {
-                            deleteSelectedText();
+                    if (editable) {
+                        if (txt != null && txt.length() > 0) {
+                            int[] selectFromTo = getSelected();
+                            if (selectFromTo != null) {
+                                deleteSelectedText();
+                            }
+                            setCaretIndex(caretIndex + 1);
+                            insertTextByIndex(caretIndex, '\n');
                         }
-                        setCaretIndex(caretIndex + 1);
-                        insertTextByIndex(caretIndex, '\n');
                     }
                     break;
                 }
@@ -282,9 +288,6 @@ public class GTextBox extends GTextObject {
                 }
                 case Glfw.GLFW_KEY_UP: {
                     int[] pos = getCaretPosFromArea();
-//                    if (topShowRow > 0 && (pos == null || pos[2] == topShowRow)) {
-//                        topShowRow--;
-//                    }
                     setScroll(scroll - lineh[0] / (totalTextHeight - showAreaHeight));
 
                     if (pos != null) {
@@ -297,9 +300,6 @@ public class GTextBox extends GTextObject {
                 }
                 case Glfw.GLFW_KEY_DOWN: {
                     int[] pos = getCaretPosFromArea();
-//                    if (topShowRow < totalRows - showRows && (pos == null || pos[2] == topShowRow + showRows - 1)) {
-//                        topShowRow++;
-//                    }
                     setScroll(scroll + lineh[0] / (totalTextHeight - showAreaHeight));
                     if (pos != null) {
                         int cart = getCaretIndexFromArea(pos[0], pos[1] + (int) lineh[0]);
@@ -390,38 +390,30 @@ public class GTextBox extends GTextObject {
         if (action == Glfm.GLFMKeyActionPressed || action == Glfm.GLFMKeyActionRepeated) {
             switch (key) {
                 case Glfm.GLFMKeyBackspace: {
-                    if (textsb.length() > 0 && caretIndex > 0) {
-                        int[] selectFromTo = getSelected();
-                        if (selectFromTo != null) {
-                            deleteSelectedText();
-                        } else {
-                            setCaretIndex(caretIndex - 1);
-                            deleteTextByIndex(caretIndex);
+                    if (editable) {
+                        if (textsb.length() > 0 && caretIndex > 0) {
+                            int[] selectFromTo = getSelected();
+                            if (selectFromTo != null) {
+                                deleteSelectedText();
+                            } else {
+                                setCaretIndex(caretIndex - 1);
+                                deleteTextByIndex(caretIndex);
+                            }
                         }
                     }
                     break;
                 }
-//                case Glfm.GLFMKeyDelete: {
-//                    if (textsb.length() > caretIndex) {
-//                        int[] selectFromTo = getSelected();
-//                        if (selectFromTo != null) {
-//                            delectSelect();
-//                        } else {
-//                            textsb.delete(caretIndex, caretIndex + 1);
-//                            text_arr = null;
-//                        }
-//                    }
-//                    break;
-//                }
                 case Glfm.GLFMKeyEnter: {
                     String txt = getText();
-                    if (txt != null && txt.length() > 0) {
-                        int[] selectFromTo = getSelected();
-                        if (selectFromTo != null) {
-                            deleteSelectedText();
+                    if (editable) {
+                        if (txt != null && txt.length() > 0) {
+                            int[] selectFromTo = getSelected();
+                            if (selectFromTo != null) {
+                                deleteSelectedText();
+                            }
+                            setCaretIndex(caretIndex + 1);
+                            insertTextByIndex(caretIndex, '\n');
                         }
-                        setCaretIndex(caretIndex + 1);
-                        insertTextByIndex(caretIndex, '\n');
                     }
                     break;
                 }
@@ -439,9 +431,6 @@ public class GTextBox extends GTextObject {
                 }
                 case Glfm.GLFMKeyUp: {
                     int[] pos = getCaretPosFromArea();
-//                    if (topShowRow > 0 && (pos == null || pos[2] == topShowRow)) {
-//                        topShowRow--;
-//                    }
                     setScroll(scroll - lineh[0] / (totalTextHeight - showAreaHeight));
 
                     if (pos != null) {
@@ -454,9 +443,6 @@ public class GTextBox extends GTextObject {
                 }
                 case Glfm.GLFMKeyDown: {
                     int[] pos = getCaretPosFromArea();
-//                    if (topShowRow < totalRows - showRows && (pos == null || pos[2] == topShowRow + showRows - 1)) {
-//                        topShowRow++;
-//                    }
                     setScroll(scroll + lineh[0] / (totalTextHeight - showAreaHeight));
                     if (pos != null) {
                         int cart = getCaretIndexFromArea(pos[0], pos[1] + (int) lineh[0]);

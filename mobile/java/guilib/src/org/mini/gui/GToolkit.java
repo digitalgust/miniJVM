@@ -303,7 +303,7 @@ public class GToolkit {
         float ix, iy, iw, ih;
         int[] imgW = {0}, imgH = {0};
 
-        nvgImageSize(vg, img.getTexture(), imgW, imgH);
+        nvgImageSize(vg, img.getTexture(vg), imgW, imgH);
         if (imgW[0] < imgH[0]) {
             iw = pw;
             ih = iw * (float) imgH[0] / (float) imgW[0];
@@ -316,7 +316,7 @@ public class GToolkit {
             iy = 0;
         }
 
-        imgPaint = nvgImagePattern(vg, px + ix + 1, py + iy + 1, iw - 2, ih - 2, 0.0f / 180.0f * (float) Math.PI, img.getTexture(), alpha);
+        imgPaint = nvgImagePattern(vg, px + ix + 1, py + iy + 1, iw - 2, ih - 2, 0.0f / 180.0f * (float) Math.PI, img.getTexture(vg), alpha);
         nvgBeginPath(vg);
         nvgRoundedRect(vg, px, py, pw, ph, 5);
         nvgFillPaint(vg, imgPaint);

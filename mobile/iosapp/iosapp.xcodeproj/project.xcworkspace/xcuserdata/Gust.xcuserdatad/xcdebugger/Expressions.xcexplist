@@ -56,5 +56,16 @@
       <ContextState
          contextName = "java_lang_Class_getPrimitiveClass:java_native_std.c">
       </ContextState>
+      <ContextState
+         contextName = "-[GLFMViewController keyCommands]:glfm_platform_ios.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[GLFMViewController loadView]:glfm_platform_ios.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.view.bounds.size.width">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
    </ContextStates>
 </VariablesViewState>

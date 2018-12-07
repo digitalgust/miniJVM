@@ -5,9 +5,10 @@
  */
 package org.mini.gui.impl;
 
+import org.mini.apploader.AppManager;
+import org.mini.apploader.GlfmMain;
 import org.mini.glfm.Glfm;
 import org.mini.glfm.GlfmCallBackAdapter;
-import org.mini.gui.GApplication;
 import org.mini.gui.GForm;
 import org.mini.gui.GObject;
 import org.mini.gui.GToolkit;
@@ -40,8 +41,6 @@ public class GuiCallBack extends GlfmCallBackAdapter {
     double moveStartY;
     long moveStartAt;
 
-    GApplication app;
-
     GForm gform;
 
     long vg;
@@ -59,13 +58,12 @@ public class GuiCallBack extends GlfmCallBackAdapter {
         this.display = display;
     }
 
-    public final void setApplication(GApplication ap) {
-        this.app = ap;
-        gform = null;
+    public GForm getForm() {
+        return gform;
     }
 
-    public final GApplication getApplication() {
-        return app;
+    public void setForm(GForm form) {
+        gform = form;
     }
 
     public long getDisplay() {
@@ -126,9 +124,8 @@ public class GuiCallBack extends GlfmCallBackAdapter {
     public void mainLoop(long display, double frameTime) {
 
         try {
-            if (gform == null) {
-                gform = app.createdForm(this);
-                if (gform != null) {
+            if (gform != null) {
+                if (gform.getWinContext() == 0) {
                     gform.init();
                 }
             }
@@ -145,6 +142,7 @@ public class GuiCallBack extends GlfmCallBackAdapter {
     @Override
     public void onSurfaceCreated(long display, int width, int height) {
         init();
+        GlfmMain.onSurfaceCreated();
     }
 
     @Override
@@ -253,17 +251,17 @@ public class GuiCallBack extends GlfmCallBackAdapter {
 
     @Override
     public void onSurfaceResize(long window, int width, int height) {
-        if (gform == null) {
-            return;
-        }
-
         fbWidth = Glfm.glfmGetDisplayWidth(display);
         fbHeight = Glfm.glfmGetDisplayHeight(display);
+
         // Calculate pixel ration for hi-dpi devices.
         pxRatio = (float) Glfm.glfmGetDisplayScale(display);
         winWidth = (int) (fbWidth / pxRatio);
         winHeight = (int) (fbHeight / pxRatio);
 
+        if (gform == null) {
+            return;
+        }
         gform.getBoundle()[GObject.WIDTH] = width;
         gform.getBoundle()[GObject.HEIGHT] = height;
         gform.flush();

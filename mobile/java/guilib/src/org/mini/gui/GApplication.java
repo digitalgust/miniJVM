@@ -5,13 +5,21 @@
  */
 package org.mini.gui;
 
-import org.mini.gui.impl.GuiCallBack;
-
 /**
  *
  * @author Gust
  */
-public interface GApplication {
+public abstract class GApplication {
 
-    GForm createdForm( GuiCallBack ccb);
+    String saveRootPath;
+
+    public void setSaveRoot(String path) {
+        saveRootPath = path;
+    }
+
+    public String getSaveRoot() {
+        return saveRootPath;
+    }
+
+    public abstract GForm getForm(GApplication appins);
 }

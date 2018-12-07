@@ -5,11 +5,10 @@
  */
 package org.mini.gui;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.mini.nanovg.Gutil;
 import org.mini.nanovg.Nanovg;
 
 /**
@@ -19,40 +18,68 @@ import org.mini.nanovg.Nanovg;
  */
 public class GImage {
 
-    int texture;
+    int texture = -1;
     int[] w_h_d = new int[3];
+    byte[] data;
 
-    public GImage(int textureid, int w, int h) {
-        texture = textureid;
-        w_h_d[0] = w;
-        w_h_d[1] = h;
+    GImage() {
+
     }
 
-    static public GImage createImage(long vg, String filepath) {
+    GImage(byte[] data) {
+        this.data = data;
+    }
+
+    static public GImage createImage(int textureid, int w, int h) {
+        GImage img = new GImage();
+        img.texture = textureid;
+        img.w_h_d[0] = w;
+        img.w_h_d[1] = h;
+        return img;
+    }
+
+    static public GImage createImage(String filepath) {
         if (filepath == null) {
             return null;
         }
-        int tex = Nanovg.nvgCreateImage(vg, Gutil.toUtf8(filepath), 0);
-        int[] w = new int[1];
-        int[] h = new int[1];
-        Nanovg.nvgImageSize(vg, tex, w, h);
-        GImage img = new GImage(tex, w[0], h[0]);
-        return img;
+        byte[] b = null;
+        File f = new File(filepath);
+        if (f.exists()) {
+            FileInputStream fis = null;
+            try {
+                b = new byte[(int) f.length()];
+                fis = new FileInputStream(f);
+                fis.read(b);
+            } catch (IOException ex) {
+            } finally {
+                try {
+                    if (fis != null) {
+                        fis.close();
+                    }
+                } catch (IOException ex) {
+                }
+            }
+
+        }
+//        int tex = Nanovg.nvgCreateImage(vg, Gutil.toUtf8(filepath), 0);
+//        int[] w = new int[1];
+//        int[] h = new int[1];
+//        Nanovg.nvgImageSize(vg, tex, w, h);
+//        GImage img = new GImage(tex, w[0], h[0]);
+//        return img;
+        return createImage(b);
     }
 
-    static public GImage createImage(long vg, byte[] data) {
+    static public GImage createImage(byte[] data) {
         if (data == null) {
             return null;
         }
-        int tex = Nanovg.nvgCreateImageMem(vg, 0, data, data.length);
-        int[] w = new int[1];
-        int[] h = new int[1];
-        Nanovg.nvgImageSize(vg, tex, w, h);
-        GImage img = new GImage(tex, w[0], h[0]);
+        GImage img = new GImage(data);
+
         return img;
     }
 
-    static public GImage createImageFromJar(long vg, String filepath) {
+    static public GImage createImageFromJar(String filepath) {
         try {
             if (filepath == null) {
                 return null;
@@ -61,7 +88,7 @@ public class GImage {
             if (is != null && is.available() > 0) {
                 byte[] data = new byte[is.available()];
                 is.read(data);
-                return createImage(vg, data);
+                return createImage(data);
             }
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -81,7 +108,17 @@ public class GImage {
         return w_h_d[2];
     }
 
-    public int getTexture() {
+    public int getTexture(long vg) {
+        if (texture == -1) {
+            if (data != null) {
+
+                texture = Nanovg.nvgCreateImageMem(vg, 0, data, data.length);
+                int[] w = new int[1];
+                int[] h = new int[1];
+                Nanovg.nvgImageSize(vg, texture, w, h);
+                data = null;
+            }
+        }
         return texture;
     }
 

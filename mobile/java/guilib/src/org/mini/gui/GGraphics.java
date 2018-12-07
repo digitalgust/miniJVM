@@ -212,7 +212,7 @@ public class GGraphics {
         x += canvas.getX();
         y += canvas.getY();
 
-        byte[] imgPaint = nvgImagePattern(vg, x, y, w, h, 0.0f / 180.0f * (float) Math.PI, img.getTexture(), 1f);
+        byte[] imgPaint = nvgImagePattern(vg, x, y, w, h, 0.0f / 180.0f * (float) Math.PI, img.getTexture(vg), 1f);
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x, y, w, h, 0);
         nvgFillPaint(vg, imgPaint);

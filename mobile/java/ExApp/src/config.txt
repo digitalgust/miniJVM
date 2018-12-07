@@ -1,0 +1,6 @@
+name=ExApp
+app=test.MyApp
+icon=/res/star.png
+desc=  Mobile app develop example.\n  you can upgrade it from github.
+version=1.0.4
+upgradeurl=https://github.com/digitalgust/miniJVM/blob/master/binary/mobile/ExApp.jar

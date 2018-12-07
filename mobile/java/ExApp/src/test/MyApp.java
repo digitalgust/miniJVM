@@ -1,7 +1,7 @@
-
 package test;
 
 import java.io.File;
+import org.mini.apploader.AppManager;
 import org.mini.glfm.Glfm;
 import org.mini.gui.*;
 import org.mini.gui.event.*;
@@ -11,25 +11,17 @@ import org.mini.gui.impl.GuiCallBack;
  *
  * @author gust
  */
-public class MyApp implements GApplication {
-
-    private static MyApp app;
+public class MyApp extends GApplication {
 
     GForm form;
     GMenu menu;
 
-    static public MyApp getInstance() {
-        if (app == null) {
-            app = new MyApp();
-        }
-        return app;
-    }
-
     @Override
-    public GForm createdForm(GuiCallBack ccb) {
+    public GForm getForm(GApplication appins) {
         if (form != null) {
             return form;
         }
+        GuiCallBack ccb = GuiCallBack.getInstance();
         GLanguage.setCurLang(GLanguage.ID_CHN);
         form = new GForm(ccb);
 
@@ -37,7 +29,7 @@ public class MyApp implements GApplication {
         long vg = form.getNvContext();
 
         int menuH = 80;
-        GImage img = GImage.createImageFromJar(form.getNvContext(), "/res/mini_jvm_64.png");
+        GImage img = GImage.createImageFromJar("/res/mini_jvm_64.png");
         menu = new GMenu(0, form.getDeviceHeight() - menuH, form.getDeviceWidth(), menuH);
         menu.setFixed(true);
         GMenuItem item = menu.addItem("Login", img);
@@ -67,6 +59,13 @@ public class MyApp implements GApplication {
                 gframe.align(GGraphics.VCENTER | GGraphics.HCENTER);
             }
         });
+        item = menu.addItem("Exit", img);
+        item.setActionListener(new GActionListener() {
+            @Override
+            public void action(GObject gobj) {
+                AppManager.getInstance().active();
+            }
+        });
 
         form.add(menu);
         return form;
@@ -90,19 +89,8 @@ public class MyApp implements GApplication {
         parent.add(pwd);
         y += 35;
 
-        String conttxt = "Features:\n"
-                + "Jvm Build pass: iOS / Android / mingww64 32 64bit / cygwin / MSVC 32 64bit / MacOS / Linux .\n"
-                + "No dependence Library .\n"
-                + "Low memory footprint .\n"
-                + "Minimal runtime classlib .\n"
-                + "Support java5/6/7/8 class file version .\n"
-                + "Support embedded java source compiler(janino compiler) .\n"
-                + "Thread supported .\n"
-                + "Network supported .\n"
-                + "File io supported .\n"
-                + "Java native method supported .\n"
-                + "Java garbage collection supported .\n"
-                + "Java remote debug supported, JDWP Spec .";
+        String conttxt = "A computer is a device that can be instructed to carry out sequences of arithmetic or logical operations automatically via computer programming. Modern computers have the ability to follow generalized sets of operations, called programs. These programs enable computers to perform an extremely wide range of tasks.\n"
+                + "Computers are used as control systems for a wide variety of industrial and consumer devices. This includes simple special purpose devices like microwave ovens and remote controls, factory devices such as industrial robots and computer-aided design, and also general purpose devices like personal computers and mobile devices such as smartphones.";
         GTextBox cont = new GTextBox(conttxt, "Contents", x, y, 280, 188);
         parent.add(cont);
         y += 195;
@@ -147,7 +135,7 @@ public class MyApp implements GApplication {
     public GFrame getFrame2() {
         GFrame gframe = new GFrame("Select", 0, 0, 300, 550);
         GContainer parent = gframe.getView();
-        GImage img = GImage.createImageFromJar(form.getNvContext(), "/res/logo128.png");
+        GImage img = GImage.createImageFromJar("/res/logo128.png");
 
         int x = 10, y = 10;
         GList list = new GList(x, y, 280, 30);
@@ -200,7 +188,7 @@ public class MyApp implements GApplication {
             g.drawLine(20, 50, 100, 50);
 
             if (img == null) {
-                img = GImage.createImageFromJar(g.getNvContext(), "/res/logo128.png");
+                img = GImage.createImageFromJar("/res/logo128.png");
             }
             g.drawImage(img, 130, 30, 100, 100, GGraphics.TOP | GGraphics.LEFT);
             form.flush();

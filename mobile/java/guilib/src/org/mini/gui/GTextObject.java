@@ -22,7 +22,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     byte[] hint_arr;
     StringBuilder textsb = new StringBuilder();
     byte[] text_arr;
-//    boolean keyboardAutoPop = true;
+    boolean editable = true;
 
     private static EditMenu editMenu;
 
@@ -110,7 +110,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     }
 
     public void setKeyboardVisible(boolean visible) {
-        if (getForm() != null) {
+        if (getForm() != null && editable) {
             Glfm.glfmSetKeyboardVisible(winContext, visible);
         }
     }
@@ -143,7 +143,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
                 }
                 case Glfm.GLFMTouchPhaseEnded: {
                     if (touched) {
-                        if (getForm() != null) {
+                        if (getForm() != null && editable) {
                             //System.out.println("touched textobject");
                             Glfm.glfmSetKeyboardVisible(getForm().getWinContext(), true);
                         }
@@ -186,6 +186,20 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
      */
     public void setUnionObj(GObject unionObj) {
         this.unionObj = unionObj;
+    }
+
+    /**
+     * @return the editable
+     */
+    public boolean isEditable() {
+        return editable;
+    }
+
+    /**
+     * @param editable the editable to set
+     */
+    public void setEditable(boolean editable) {
+        this.editable = editable;
     }
 
     public class EditMenu extends GMenu {
@@ -255,7 +269,9 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
             item.setActionListener(new GActionListener() {
                 @Override
                 public void action(GObject gobj) {
-                    editMenu.text.doPasteClipBoard();
+                    if (editable) {
+                        editMenu.text.doPasteClipBoard();
+                    }
                     disposeEditMenu();
                 }
             });
@@ -263,7 +279,9 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
             item.setActionListener(new GActionListener() {
                 @Override
                 public void action(GObject gobj) {
-                    editMenu.text.doCut();
+                    if (editable) {
+                        editMenu.text.doCut();
+                    }
                     disposeEditMenu();
                 }
             });

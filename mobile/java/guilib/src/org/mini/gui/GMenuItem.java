@@ -148,7 +148,7 @@ public class GMenuItem extends GObject {
             if (!isSelected()) {
                 alpha = 0.5f;
             }
-            imgPaint = nvgImagePattern(vg, img_x, img_y, img_w, img_h, 0.0f / 180.0f * (float) Math.PI, img.getTexture(), alpha);
+            imgPaint = nvgImagePattern(vg, img_x, img_y, img_w, img_h, 0.0f / 180.0f * (float) Math.PI, img.getTexture(vg), alpha);
             nvgBeginPath(vg);
             nvgRoundedRect(vg, img_x, img_y, img_w, img_h, 5);
             nvgFillPaint(vg, imgPaint);

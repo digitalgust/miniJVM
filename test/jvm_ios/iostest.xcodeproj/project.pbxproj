@@ -10,6 +10,7 @@
 		4535FA3821945F6E00B888BA /* libz.1.2.8.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4535FA3721945F6E00B888BA /* libz.1.2.8.tbd */; };
 		4535FA3B21945FEE00B888BA /* miniz.c in Sources */ = {isa = PBXBuildFile; fileRef = 4535FA3A21945FED00B888BA /* miniz.c */; };
 		454C4AEF1FB6B89D008B9C1D /* invokec.c in Sources */ = {isa = PBXBuildFile; fileRef = 45C1245D1F872A9200BF3925 /* invokec.c */; };
+		456F472C21946176006F2D8C /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 456F472B21946176006F2D8C /* AVFoundation.framework */; };
 		45719A2520CABD14009652A7 /* ltalloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 45719A2320CABD14009652A7 /* ltalloc.c */; };
 		45C1242F1F87232100BF3925 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C1242E1F87232100BF3925 /* AppDelegate.swift */; };
 		45C124311F87232100BF3925 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C124301F87232100BF3925 /* ViewController.swift */; };
@@ -64,6 +65,10 @@
 		4535FA3721945F6E00B888BA /* libz.1.2.8.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.1.2.8.tbd; path = usr/lib/libz.1.2.8.tbd; sourceTree = SDKROOT; };
 		4535FA3921945FED00B888BA /* miniz.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = miniz.h; path = ../../mini_jvm/utils/miniz.h; sourceTree = "<group>"; };
 		4535FA3A21945FED00B888BA /* miniz.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = miniz.c; path = ../../mini_jvm/utils/miniz.c; sourceTree = "<group>"; };
+		4535FA3D219460CB00B888BA /* dr_mp3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dr_mp3.h; sourceTree = "<group>"; };
+		4535FA3E219460CB00B888BA /* dr_flac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dr_flac.h; sourceTree = "<group>"; };
+		4535FA3F219460CB00B888BA /* mini_al.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mini_al.h; sourceTree = "<group>"; };
+		456F472B21946176006F2D8C /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		45719A2320CABD14009652A7 /* ltalloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ltalloc.c; path = ../../mini_jvm/utils/ltalloc.c; sourceTree = "<group>"; };
 		45719A2420CABD14009652A7 /* ltalloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ltalloc.h; path = ../../mini_jvm/utils/ltalloc.h; sourceTree = "<group>"; };
 		45C1242B1F87232100BF3925 /* iostest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iostest.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -131,6 +136,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				456F472C21946176006F2D8C /* AVFoundation.framework in Frameworks */,
 				4535FA3821945F6E00B888BA /* libz.1.2.8.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -152,9 +158,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4535FA3C219460CB00B888BA /* minial */ = {
+			isa = PBXGroup;
+			children = (
+				4535FA3D219460CB00B888BA /* dr_mp3.h */,
+				4535FA3E219460CB00B888BA /* dr_flac.h */,
+				4535FA3F219460CB00B888BA /* mini_al.h */,
+			);
+			name = minial;
+			path = ../../mobile/c/gui/minial;
+			sourceTree = "<group>";
+		};
 		45C124221F87232100BF3925 = {
 			isa = PBXGroup;
 			children = (
+				4535FA3C219460CB00B888BA /* minial */,
 				45ECB7CA206D03B700CF9E7F /* utils */,
 				45ECB7C9206D03AF00CF9E7F /* jvm */,
 				45ECB7A8206D038200CF9E7F /* lib */,
@@ -212,6 +230,7 @@
 		45C124661F872E5E00BF3925 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				456F472B21946176006F2D8C /* AVFoundation.framework */,
 				4535FA3721945F6E00B888BA /* libz.1.2.8.tbd */,
 				4535FA3521945F3500B888BA /* libz.tbd */,
 				45C124691F872E7E00BF3925 /* libc.tbd */,
@@ -341,7 +360,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0900;
-				LastUpgradeCheck = 0900;
+				LastUpgradeCheck = 1010;
 				ORGANIZATIONNAME = Gust;
 				TargetAttributes = {
 					45C1242A1F87232100BF3925 = {
@@ -508,6 +527,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -515,6 +535,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
@@ -542,7 +563,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -565,6 +586,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -572,6 +594,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
@@ -593,7 +616,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
