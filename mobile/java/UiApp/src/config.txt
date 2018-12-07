@@ -1,0 +1,6 @@
+name=UiApp
+app=test.UiApp
+icon=/res/star.png
+desc=  UI example.\n 
+version=1.0.4
+upgradeurl=http://192.168.0.155:80/UiApp.jar
