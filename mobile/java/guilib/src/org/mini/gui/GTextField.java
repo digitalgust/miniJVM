@@ -270,6 +270,7 @@ public class GTextField extends GTextObject {
         textsb.delete(sarr[0], sarr[1]);
         text_arr = null;
         resetSelect();
+        doStateChange();
     }
 
     @Override
@@ -293,6 +294,7 @@ public class GTextField extends GTextObject {
             char character = str.charAt(i);
             textsb.insert(caretIndex, character);
             setCaretIndex(caretIndex + 1);
+            doStateChange();
         }
         text_arr = null;
     }

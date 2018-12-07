@@ -5,10 +5,13 @@
  */
 package org.mini.gui.event;
 
+import org.mini.gui.GObject;
+
 /**
  *
- * @author gust
+ * @author Gust
  */
-public interface GListener{
-    
+public interface GStateChangeListener {
+
+    void onStateChange(GObject gobj);
 }

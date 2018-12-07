@@ -8,8 +8,6 @@ package org.mini.apploader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.cldc.io.Connector;
 import javax.cldc.io.ContentConnection;
 
@@ -68,6 +66,9 @@ public class MiniHttpClient extends Thread {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            if (handle != null) {
+                handle.onCompleted(url, null);
+            }
         } finally {
             try {
                 if (dis != null) {

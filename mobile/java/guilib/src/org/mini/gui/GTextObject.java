@@ -10,6 +10,7 @@ import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
+import org.mini.gui.event.GStateChangeListener;
 import static org.mini.nanovg.Gutil.toUtf8;
 
 /**
@@ -23,6 +24,8 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     StringBuilder textsb = new StringBuilder();
     byte[] text_arr;
     boolean editable = true;
+
+    GStateChangeListener stateChangeListener;
 
     private static EditMenu editMenu;
 
@@ -48,6 +51,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         }
         onSetText(text);
         text_arr = null;
+        doStateChange();
     }
 
     public String getText() {
@@ -57,16 +61,19 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     public void insertTextByIndex(int index, char ch) {
         textsb.insert(index, ch);
         text_arr = null;
+        doStateChange();
     }
 
     public void deleteTextByIndex(int index) {
         textsb.deleteCharAt(index);
         text_arr = null;
+        doStateChange();
     }
 
     public void deleteAll() {
         textsb.setLength(0);
         text_arr = null;
+        doStateChange();
     }
 
     abstract public String getSelectedText();
@@ -200,6 +207,26 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
      */
     public void setEditable(boolean editable) {
         this.editable = editable;
+    }
+
+    /**
+     * @return the stateChangeListener
+     */
+    public GStateChangeListener getStateChangeListener() {
+        return stateChangeListener;
+    }
+
+    /**
+     * @param stateChangeListener the stateChangeListener to set
+     */
+    public void setStateChangeListener(GStateChangeListener stateChangeListener) {
+        this.stateChangeListener = stateChangeListener;
+    }
+
+    void doStateChange() {
+        if (this.stateChangeListener != null) {
+            this.stateChangeListener.onStateChange(this);
+        }
     }
 
     public class EditMenu extends GMenu {

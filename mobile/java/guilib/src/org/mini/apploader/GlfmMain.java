@@ -53,7 +53,7 @@ public class GlfmMain {
     static final String APP_DATA_DIR = "/appdata/";
     static final String TMP_DIR = "/tmp/";
     static final String EXAMPLE_APP_FILE = "ExApp.jar";
-    static final String KEY_DEFAULT = "default";
+    static final String KEY_BOOT = "boot";
     static final String KEY_LANGUAGE = "language";
     static Properties appinfo = new Properties();
     static Properties applist = new Properties();
@@ -69,12 +69,12 @@ public class GlfmMain {
         loadProp(APP_INFO_FILE, appinfo);
         loadProp(APP_LIST_FILE, applist);
         copyExApp();
-        String defaultApp = appinfo.getProperty(KEY_DEFAULT);
-        GApplication app = runApp(defaultApp);
-
-        if (app == null) {
-            AppManager.getInstance().active();
+        String bootApp = appinfo.getProperty(KEY_BOOT);
+        if (bootApp == null) {
+            setBootApp(EXAMPLE_APP_FILE);
+            bootApp = EXAMPLE_APP_FILE;
         }
+        runApp(bootApp);
     }
 
     static void checkDir() {
@@ -145,13 +145,13 @@ public class GlfmMain {
         }
     }
 
-    public static String getDefaultApp() {
-        String defaultApp = appinfo.getProperty(KEY_DEFAULT);
+    public static String getBootApp() {
+        String defaultApp = appinfo.getProperty(KEY_BOOT);
         return defaultApp;
     }
 
-    public static void setDefaultApp(String jarName) {
-        appinfo.put(KEY_DEFAULT, jarName);
+    public static void setBootApp(String jarName) {
+        appinfo.put(KEY_BOOT, jarName);
         saveProp(APP_INFO_FILE, appinfo);
     }
 
@@ -331,14 +331,16 @@ public class GlfmMain {
 
     public static void addApp(String jarName, byte[] jarData) {
         try {
-            applist.put(jarName, "");
-            //copy file
-            //System.out.println("add from: " + jarData.length + "  to :" + getAppJarPath(jarName));
-            FileOutputStream fos = new FileOutputStream(getAppJarPath(jarName));
-            fos.write(jarData);
-            fos.close();
-            saveProp(APP_INFO_FILE, appinfo);
-            saveProp(APP_LIST_FILE, applist);
+            if (jarName != null && jarData != null && jarData.length > 0) {
+                applist.put(jarName, "");
+                //copy file
+                //System.out.println("add from: " + jarData.length + "  to :" + getAppJarPath(jarName));
+                FileOutputStream fos = new FileOutputStream(getAppJarPath(jarName));
+                fos.write(jarData);
+                fos.close();
+                saveProp(APP_INFO_FILE, appinfo);
+                saveProp(APP_LIST_FILE, applist);
+            }
         } catch (Exception exception) {
             exception.printStackTrace();
         }

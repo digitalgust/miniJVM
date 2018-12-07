@@ -11,7 +11,7 @@ import org.mini.gui.GObject;
  *
  * @author gust
  */
-public interface GActionListener extends GListener {
+public interface GActionListener{
 
     void action(GObject gobj);
 }

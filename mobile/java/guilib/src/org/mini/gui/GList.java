@@ -71,7 +71,12 @@ public class GList extends GPanel implements GFocusChangeListener {
     boolean showScrollbar = false;
 
     float left, top, width, height;
+    //
+    final List<Integer> outOffilterList = new ArrayList();//if a item in this list , it would show dark text color
 
+    /**
+     *
+     */
     public GList() {
 
     }
@@ -107,12 +112,14 @@ public class GList extends GPanel implements GFocusChangeListener {
         super.setSize(w, h);
         reSize();
     }
+
     @Override
     public void setInnerSize(float w, float h) {
         width = w;
         height = h;
         super.setInnerSize(w, h);
     }
+
     public void setScrollBar(boolean show) {
         this.showScrollbar = show;
         if (show) {
@@ -375,6 +382,40 @@ public class GList extends GPanel implements GFocusChangeListener {
         return (GListItem) popView.elements.get(index);
     }
 
+    public void addOutOfFilter(int index) {
+        outOffilterList.add(index);
+    }
+
+    public void removeOutOfFilter(int index) {
+        outOffilterList.remove(index);
+    }
+
+    public void clearOutOfFilter() {
+        outOffilterList.clear();
+    }
+
+    public boolean isOutOfFilter(int index) {
+        return outOffilterList.contains(index);
+    }
+
+    public void filterLabelWithKey(String key) {
+        if (key == null) {
+            return;
+        }
+        clearOutOfFilter();
+        List<GObject> list = getItemList();
+        for (GObject go : list) {
+            GListItem gli = (GListItem) go;
+            if (gli.getLabel() != null && gli.getLabel().toLowerCase().contains(key.toLowerCase())) {
+
+            } else {
+                addOutOfFilter(getItemIndex(gli));
+                //System.out.println("except item:" + getItemIndex(gli));
+            }
+        }
+
+    }
+
     @Override
     public void focusGot(GObject go) {
     }
@@ -397,7 +438,6 @@ public class GList extends GPanel implements GFocusChangeListener {
 //            pulldown = false;
 //            GList.this.changeCurPanel();
 //        }
-
         //int itemcount = popView.elements.size();
         nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
@@ -410,14 +450,14 @@ public class GList extends GPanel implements GFocusChangeListener {
         return super.update(vg);
     }
 
-    static void drawText(long vg, float tx, float ty, float pw, float ph, String s) {
+    static void drawText(long vg, float tx, float ty, float pw, float ph, String s, float[] color) {
         if (s == null) {
             return;
         }
         nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
+        nvgFillColor(vg, color);
         byte[] b = toUtf8(s);
         Nanovg.nvgTextJni(vg, tx, ty, b, 0, b.length);
     }
@@ -557,7 +597,7 @@ public class GList extends GPanel implements GFocusChangeListener {
                 if (selectIndex >= 0) {
                     GListItem gli = (GListItem) getItem(selectIndex);
                     drawImage(vg, x + pad, y + h * 0.5f - thumb / 2, thumb, thumb, gli.img);
-                    drawText(vg, x + thumb + pad + pad, y + h / 2, thumb, thumb, gli.label);
+                    drawText(vg, x + thumb + pad + pad, y + h / 2, thumb, thumb, gli.label, GToolkit.getStyle().getTextFontColor());
                 }
             }
             nvgTextJni(vg, x + w - thumb, y + h * 0.5f, preicon_arr, 0, preicon_arr.length);

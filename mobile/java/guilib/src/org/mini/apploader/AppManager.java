@@ -29,6 +29,7 @@ import org.mini.gui.GViewPort;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GKeyboardShowListener;
 import org.mini.gui.event.GPhotoPickedListener;
+import org.mini.gui.event.GStateChangeListener;
 import org.mini.gui.impl.GuiCallBack;
 
 /**
@@ -44,26 +45,52 @@ public class AppManager {
     static final String APP_UPGRADE_BTN = "APP_UPGRADE_BTN";
     static final String APP_DELETE_BTN = "APP_DELETE_BTN";
 
-    static final String note = "Start Webserver for upload jar";
+    static final String STR_EXIT = "Exit";
+    static final String STR_START_WEB_SRV_FOR_UPLOAD = "Start Webserver for upload jar";
+    static final String STR_DOWN_APP_FROM_WEB = "Download app from website:";
+    static final String STR_DOWNLOAD = "Download";
+    static final String STR_START = "Start";
+    static final String STR_STOP = "Stop";
+    static final String STR_WEB_LISTEN_ON = "Webserver listen on : ";
+    static final String STR_APP_LIST = "Application list : ";
+    static final String STR_BACK = "Back";
+    static final String STR_RUN = "Run";
+    static final String STR_SET_AS_BOOT = "Set as boot app";
+    static final String STR_UPGRADE = "upgrade";
+    static final String STR_DELETE = "Delete";
+    static final String STR_VERSION = "Version: ";
+    static final String STR_UPGRADE_URL = "Upgrade url: ";
+    static final String STR_FILE_SIZE = "File size: ";
+    static final String STR_DESC = "Description: ";
+    static final String STR_SERVER_STARTED = "Webserver started";
+    static final String STR_SERVER_STOPED = "Webserver stoped";
+    static final String STR_UPLOAD_FILE = "Uploaded file";
+    static final String STR_SUCCESS = "Success";
+    static final String STR_FAIL = "Fail";
 
     static {
-        GLanguage.addString("Exit", new String[]{"Exit", "退出", "退出"});
-        GLanguage.addString("Start Webserver for upload jar", new String[]{"Start Webserver for upload jar", "启动Web服务器上传", "啟動Web伺服器上傳"});
-        GLanguage.addString("Download app from website:", new String[]{"Download app from website:", "从网站下载App", "從網站下載App"});
-        GLanguage.addString("Download", new String[]{"Download", "下载", "下載"});
-        GLanguage.addString("Start", new String[]{"Start", "启动", "啟動"});
-        GLanguage.addString("Stop", new String[]{"Stop", "停止", "停止"});
-        GLanguage.addString("Webserver listen on : ", new String[]{"Webserver listen on : ", "Web服务器临听 : ", "Web伺服器臨聽 : "});
-        GLanguage.addString("Application list : ", new String[]{"Application list : ", "App 列表 : ", "App 列表"});
-        GLanguage.addString("Back", new String[]{"Back", "返回", "返回"});
-        GLanguage.addString("Run", new String[]{"Run", "运行", "運行"});
-        GLanguage.addString("Set as boot app", new String[]{"Set as boot app", "设为启动App", "設為啟動App"});
-        GLanguage.addString("Upgrade", new String[]{"Upgrade", "升级", "升級"});
-        GLanguage.addString("Delete", new String[]{"Delete", "删除", "刪除"});
-        GLanguage.addString("Version: ", new String[]{"Version: ", "版本: ", "版本: "});
-        GLanguage.addString("Upgrade url: ", new String[]{"Upgrade url: ", "升级地址: ", "升級地址: "});
-        GLanguage.addString("File size: ", new String[]{"File size: ", "文件大小: ", "文件大小: "});
-        GLanguage.addString("Description: ", new String[]{"Description: ", "描述: ", "描述: "});
+        GLanguage.addString(STR_EXIT, new String[]{STR_EXIT, "退出", "退出"});
+        GLanguage.addString(STR_START_WEB_SRV_FOR_UPLOAD, new String[]{STR_START_WEB_SRV_FOR_UPLOAD, "启动Web服务器上传", "啟動Web伺服器上傳"});
+        GLanguage.addString(STR_DOWN_APP_FROM_WEB, new String[]{STR_DOWN_APP_FROM_WEB, "从网站下载App", "從網站下載App"});
+        GLanguage.addString(STR_DOWNLOAD, new String[]{STR_DOWNLOAD, "下载", "下載"});
+        GLanguage.addString(STR_START, new String[]{STR_START, "启动", "啟動"});
+        GLanguage.addString(STR_STOP, new String[]{STR_STOP, "停止", "停止"});
+        GLanguage.addString(STR_WEB_LISTEN_ON, new String[]{STR_WEB_LISTEN_ON, "Web服务器临听 : ", "Web伺服器臨聽 : "});
+        GLanguage.addString(STR_APP_LIST, new String[]{STR_APP_LIST, "App 列表 : ", "App 列表"});
+        GLanguage.addString(STR_BACK, new String[]{STR_BACK, "返回", "返回"});
+        GLanguage.addString(STR_RUN, new String[]{STR_RUN, "运行", "運行"});
+        GLanguage.addString(STR_SET_AS_BOOT, new String[]{STR_SET_AS_BOOT, "设为启动App", "設為啟動App"});
+        GLanguage.addString(STR_UPGRADE, new String[]{STR_UPGRADE, "升级", "升級"});
+        GLanguage.addString(STR_DELETE, new String[]{STR_DELETE, "删除", "刪除"});
+        GLanguage.addString(STR_VERSION, new String[]{STR_VERSION, "版本: ", "版本: "});
+        GLanguage.addString(STR_UPGRADE_URL, new String[]{STR_UPGRADE_URL, "升级地址: ", "升級地址: "});
+        GLanguage.addString(STR_FILE_SIZE, new String[]{STR_FILE_SIZE, "文件大小: ", "文件大小: "});
+        GLanguage.addString(STR_DESC, new String[]{STR_DESC, "描述: ", "描述: "});
+        GLanguage.addString(STR_SERVER_STARTED, new String[]{STR_SERVER_STARTED, "服务器已启动", "伺服器已啟動"});
+        GLanguage.addString(STR_SERVER_STOPED, new String[]{STR_SERVER_STOPED, "服务器已停止", "伺服器已停止"});
+        GLanguage.addString(STR_UPLOAD_FILE, new String[]{STR_UPLOAD_FILE, "文件上传结束", "文件上傳結束"});
+        GLanguage.addString(STR_SUCCESS, new String[]{STR_SUCCESS, "成功", "成功"});
+        GLanguage.addString(STR_FAIL, new String[]{STR_FAIL, "失敗", "失败"});
     }
 
     static AppManager instance = new AppManager();
@@ -96,6 +123,10 @@ public class AppManager {
         if (preForm == form) {
             preForm = null;
         }
+        if (webServer != null) {
+            webServer.stopServer();
+        }
+
         form = new GForm(GuiCallBack.getInstance()) {
 
             @Override
@@ -170,7 +201,7 @@ public class AppManager {
         form.add(mainPanel);
 
         float y = pad;
-        GButton exitbtn = new GButton(GLanguage.getString("Exit"), pad, pad, addW, addH);
+        GButton exitbtn = new GButton(GLanguage.getString(STR_EXIT), pad, pad, addW, addH);
         mainPanel.add(exitbtn);
         exitbtn.setActionListener(new GActionListener() {
             @Override
@@ -220,46 +251,30 @@ public class AppManager {
         mainPanel.add(langList);
         y += 35 + pad;
 
-        GLabel downLab = new GLabel(GLanguage.getString("Download app from website:"), pad, y, devW - pad * 2, addH);
+        GLabel downLab = new GLabel(GLanguage.getString(STR_DOWN_APP_FROM_WEB), pad, y, devW - pad * 2, addH);
         downLab.setAlign(GGraphics.LEFT | GGraphics.VCENTER);
         mainPanel.add(downLab);
         y += downLab.getH() + pad;
 
         GTextField downtextfd = new GTextField("http://", "application jar url", pad, y, devW - pad * 3 - addW * 2, addH);
         mainPanel.add(downtextfd);
-        GButton downbtn = new GButton(GLanguage.getString("Download"), devW - addW * 2 - pad, y, addW * 2, addH);
+        GButton downbtn = new GButton(GLanguage.getString(STR_DOWNLOAD), devW - addW * 2 - pad, y, addW * 2, addH);
         mainPanel.add(downbtn);
         downbtn.setActionListener(new GActionListener() {
             @Override
             public void action(GObject gobj) {
                 String url = downtextfd.getText();
 
-                MiniHttpClient hc = new MiniHttpClient(url, new MiniHttpClient.DownloadCompletedHandle() {
-                    @Override
-                    public void onCompleted(String url, byte[] data) {
-                        System.out.println("download success " + url + " ,size: " + data.length);
-                        String jarName = null;
-                        if (url.lastIndexOf('/') > 0) {
-                            jarName = url.substring(url.lastIndexOf('/') + 1);
-                            if (jarName.indexOf('?') > 0) {
-                                jarName = jarName.substring(0, jarName.indexOf('?'));
-                            }
-                        }
-                        if (jarName != null && data != null) {
-                            GlfmMain.addApp(jarName, data);
-                        }
-                        reloadAppList();
-                    }
-                });
+                MiniHttpClient hc = new MiniHttpClient(url, getDownloadCallback());
                 hc.start();
             }
         });
         y += addH + pad;
-        GLabel uploadLab = new GLabel(GLanguage.getString(note), pad, y, devW - pad * 3 - addW * 2, addH);
+        GLabel uploadLab = new GLabel(GLanguage.getString(STR_START_WEB_SRV_FOR_UPLOAD), pad, y, devW - pad * 3 - addW * 2, addH);
         uploadLab.setAlign(GGraphics.LEFT | GGraphics.VCENTER);
         mainPanel.add(uploadLab);
 
-        GButton uploadbtn = new GButton(GLanguage.getString("Start"), devW - addW * 2 - pad, y, addW * 2, addH);
+        GButton uploadbtn = new GButton(GLanguage.getString(STR_START), devW - addW * 2 - pad, y, addW * 2, addH);
         mainPanel.add(uploadbtn);
         uploadbtn.setActionListener(new GActionListener() {
             @Override
@@ -267,9 +282,10 @@ public class AppManager {
                 if (webServer != null) {
                     webServer.stopServer();
                 }
-                if (uploadbtn.getText().equals(GLanguage.getString("Stop"))) {
-                    uploadbtn.setText(GLanguage.getString("Start"));
-                    uploadLab.setText(GLanguage.getString(note));
+                if (uploadbtn.getText().equals(GLanguage.getString(STR_STOP))) {
+                    uploadbtn.setText(GLanguage.getString(STR_START));
+                    uploadLab.setText(GLanguage.getString(STR_START_WEB_SRV_FOR_UPLOAD));
+                    GForm.addMessage(GLanguage.getString(STR_SERVER_STOPED));
                 } else {
                     webServer = new MiniHttpServer();
                     webServer.setUploadCompletedHandle(new MiniHttpServer.UploadCompletedHandle() {
@@ -277,25 +293,37 @@ public class AppManager {
                         public void onCompleted(List<MiniHttpServer.UploadFile> files) {
                             for (MiniHttpServer.UploadFile f : files) {
                                 GlfmMain.addApp(f.filename, f.data);
+                                GForm.addMessage(GLanguage.getString(STR_UPLOAD_FILE) + " " + f.filename);
                             }
                             reloadAppList();
                         }
                     });
                     webServer.start();
-                    uploadbtn.setText(GLanguage.getString("Stop"));
-                    uploadLab.setText(GLanguage.getString("Webserver listen on : ") + webServer.getPort());
+                    uploadbtn.setText(GLanguage.getString(STR_STOP));
+                    uploadLab.setText(GLanguage.getString(STR_WEB_LISTEN_ON) + webServer.getPort());
+                    GForm.addMessage(GLanguage.getString(STR_SERVER_STARTED));
                 }
             }
         });
         y += addH + pad;
 
-        GLabel appsLab = new GLabel(GLanguage.getString("Application list : "), pad, y, devW - pad * 3 - addW * 2, addH);
+        GLabel appsLab = new GLabel(GLanguage.getString(STR_APP_LIST), pad, y, devW - pad * 3 - addW * 2, addH);
         appsLab.setAlign(GGraphics.LEFT | GGraphics.VCENTER);
         mainPanel.add(appsLab);
         y += addH + pad;
 
-        GTextField search = new GTextField("", "Search", pad, y, devW, addH);
+        GTextField search = new GTextField("", "Search", pad, y, devW - pad * 2, addH);
         search.setBoxStyle(GTextField.BOX_STYLE_SEARCH);
+        search.setStateChangeListener(new GStateChangeListener() {
+            @Override
+            public void onStateChange(GObject gobj) {
+                String str = search.getText();
+                if (appList != null) {
+                    appList.filterLabelWithKey(str);
+                    //System.out.println("key=" + str);
+                }
+            }
+        });
         mainPanel.add(search);
         y += addH + pad;
 
@@ -307,7 +335,7 @@ public class AppManager {
         //right
         float x1 = devW + pad;
         y = pad;
-        GButton back2listBtn = new GButton("< " + GLanguage.getString("Back"), x1, y, addW, addH);
+        GButton back2listBtn = new GButton("< " + GLanguage.getString(STR_BACK), x1, y, addW, addH);
         mainPanel.add(back2listBtn);
         back2listBtn.setActionListener(new GActionListener() {
             @Override
@@ -360,7 +388,7 @@ public class AppManager {
         contentView.add(resume);
         y += resume.getH() + pad;
 
-        GButton runBtn = new GButton(GLanguage.getString("Run"), pad, y, devW - pad * 2, bigBtnH);
+        GButton runBtn = new GButton(GLanguage.getString(STR_RUN), pad, y, devW - pad * 2, bigBtnH);
         runBtn.setName(APP_RUN_BTN);
         contentView.add(runBtn);
         runBtn.setActionListener(new GActionListener() {
@@ -376,19 +404,19 @@ public class AppManager {
         });
         y += bigBtnH + pad;
 
-        GButton defaultBtn = new GButton(GLanguage.getString("Set as boot app"), pad, y, devW - pad * 2, bigBtnH);
+        GButton defaultBtn = new GButton(GLanguage.getString(STR_SET_AS_BOOT), pad, y, devW - pad * 2, bigBtnH);
         contentView.add(defaultBtn);
         defaultBtn.setActionListener(new GActionListener() {
             @Override
             public void action(GObject gobj) {
                 if (curSelectedItem != null) {
-                    GlfmMain.setDefaultApp(curSelectedItem.getLabel());
+                    GlfmMain.setBootApp(curSelectedItem.getLabel());
                 }
             }
         });
         y += bigBtnH + pad;
 
-        GButton upgradeBtn = new GButton(GLanguage.getString("Upgrade"), pad, y, devW - pad * 2, bigBtnH);
+        GButton upgradeBtn = new GButton(GLanguage.getString(STR_UPGRADE), pad, y, devW - pad * 2, bigBtnH);
         upgradeBtn.setName(APP_UPGRADE_BTN);
         contentView.add(upgradeBtn);
         upgradeBtn.setActionListener(new GActionListener() {
@@ -399,24 +427,7 @@ public class AppManager {
                     if (appName != null) {
                         String url = GlfmMain.getApplicationUpgradeurl(appName);
                         if (url != null) {
-                            MiniHttpClient hc = new MiniHttpClient(url, new MiniHttpClient.DownloadCompletedHandle() {
-                                @Override
-                                public void onCompleted(String url, byte[] data) {
-                                    System.out.println("download success " + url + " ,size: " + data.length);
-                                    String jarName = null;
-                                    if (url.lastIndexOf('/') > 0) {
-                                        jarName = url.substring(url.lastIndexOf('/') + 1);
-                                        if (jarName.indexOf('?') > 0) {
-                                            jarName = jarName.substring(0, jarName.indexOf('?'));
-                                        }
-                                    }
-                                    if (jarName != null && data != null) {
-                                        GlfmMain.addApp(jarName, data);
-                                    }
-                                    reloadAppList();
-                                    updateContentViewInfo(jarName);
-                                }
-                            });
+                            MiniHttpClient hc = new MiniHttpClient(url, getDownloadCallback());
                             hc.start();
                         }
                     }
@@ -425,7 +436,7 @@ public class AppManager {
         });
         y += bigBtnH + pad;
 
-        GButton deleteBtn = new GButton(GLanguage.getString("Delete"), pad, y, devW - pad * 2, bigBtnH);
+        GButton deleteBtn = new GButton(GLanguage.getString(STR_DELETE), pad, y, devW - pad * 2, bigBtnH);
         deleteBtn.setName(APP_DELETE_BTN);
         deleteBtn.setBgColor(128, 16, 8, 255);
         contentView.add(deleteBtn);
@@ -437,12 +448,35 @@ public class AppManager {
                     if (appName != null) {
                         GlfmMain.removeApp(appName);
                         reloadAppList();
+                        mainPanelShowLeft();
                     }
                 }
 
             }
         });
         y += bigBtnH + pad;
+    }
+
+    MiniHttpClient.DownloadCompletedHandle getDownloadCallback() {
+        return new MiniHttpClient.DownloadCompletedHandle() {
+            @Override
+            public void onCompleted(String url, byte[] data) {
+                //System.out.println("download success " + url + " ,size: " + data.length);
+                GForm.addMessage((data == null ? GLanguage.getString(STR_FAIL) : GLanguage.getString(STR_SUCCESS)) + " " + GLanguage.getString(STR_DOWNLOAD) + " " + url);
+                String jarName = null;
+                if (url.lastIndexOf('/') > 0) {
+                    jarName = url.substring(url.lastIndexOf('/') + 1);
+                    if (jarName.indexOf('?') > 0) {
+                        jarName = jarName.substring(0, jarName.indexOf('?'));
+                    }
+                }
+                if (jarName != null && data != null) {
+                    GlfmMain.addApp(jarName, data);
+                }
+                reloadAppList();
+                updateContentViewInfo(jarName);
+            }
+        };
     }
 
     void reloadAppList() {
@@ -463,7 +497,7 @@ public class AppManager {
                     GListItem item = new GListItem(img, appName) {
                         public boolean update(long vg) {
                             super.update(vg);
-                            if (getLabel() != null && getLabel().equals(GlfmMain.getDefaultApp())) {
+                            if (getLabel() != null && getLabel().equals(GlfmMain.getBootApp())) {
                                 GToolkit.drawRedPoint(vg, "v", getX() + getW() - 20, getY() + getH() * .5f, 10);
                             }
                             return true;
@@ -490,10 +524,10 @@ public class AppManager {
         //
         GTextBox descLab = (GTextBox) contentView.findByName(APP_DESC_LABEL);
 
-        String txt = GLanguage.getString("Version: ") + "\n  " + GlfmMain.getApplicationVersion(appName) + "\n"
-                + GLanguage.getString("File size: ") + "\n  " + GlfmMain.getApplicationFileSize(appName) + "\n"
-                + GLanguage.getString("Upgrade url: ") + "\n  " + GlfmMain.getApplicationUpgradeurl(appName) + "\n"
-                + GLanguage.getString("Description: ") + "\n  " + GlfmMain.getApplicationDesc(appName) + "\n";
+        String txt = GLanguage.getString(STR_VERSION) + "\n  " + GlfmMain.getApplicationVersion(appName) + "\n"
+                + GLanguage.getString(STR_FILE_SIZE) + "\n  " + GlfmMain.getApplicationFileSize(appName) + "\n"
+                + GLanguage.getString(STR_UPGRADE_URL) + "\n  " + GlfmMain.getApplicationUpgradeurl(appName) + "\n"
+                + GLanguage.getString(STR_DESC) + "\n  " + GlfmMain.getApplicationDesc(appName) + "\n";
         descLab.setText(txt);
 
         //re set image

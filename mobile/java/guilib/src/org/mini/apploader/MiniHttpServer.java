@@ -42,9 +42,9 @@ public class MiniHttpServer extends Thread {
             + "<br>\n"
             + "<form name='form1' method='post' action='' enctype='multipart/form-data'>\n"
             + "  \n"
-            + "    File： \n"
-            + "    <input type='file' name='link' style='width:400' class='tx1' value=''>\n"
-            + "    <input type='submit' name='Submit' value='Submit' class='bt'>\n"
+            + "    Choice a file： <br>\n"
+            + "    <input type='file' name='link' style='width:400' class='tx1' value=''><br>\n"
+            + "    <input type='submit' name='Submit' value='Upload File' class='bt'><br>\n"
             + "</form>\n"
             + "</body>\n"
             + "</html>";
