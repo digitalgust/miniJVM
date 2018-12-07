@@ -661,6 +661,10 @@ public class GTextBox extends GTextObject {
         float[] text_area = new float[]{x + 5f, y + 5f, w - 10f, h - 10f};
         float dx = text_area[LEFT];
         float dy = text_area[TOP];
+        
+        //sometime the field text_arr and area_detail may set as null by other thread when update 
+        byte[] local_arr = this.text_arr;
+        short[][] local_detail = this.area_detail;
 
         //画文本或提示
         if ((getText() == null || getText().length() <= 0) && parent.getFocus() != this) {
@@ -669,15 +673,18 @@ public class GTextBox extends GTextObject {
         } else {//编辑中
             int topShowRow = 0;//显示区域第一行的行号
 
-            if (text_arr == null) {//文字被修改过
-                text_arr = toUtf8(textsb.toString());
+            if (local_arr == null) {//文字被修改过
+                local_arr = toUtf8(textsb.toString());
+                this.text_arr = local_arr;
                 showRows = Math.round(text_area[HEIGHT] / lineH) + 2;
                 showAreaHeight = text_area[HEIGHT];
 
                 //用于存放屏墓中各行的一些位置信息
-                area_detail = new short[showRows][];
+                local_detail = new short[showRows][];
+                this.area_detail = local_detail;
+
                 float[] bond = new float[4];
-                Nanovg.nvgTextBoxBoundsJni(vg, 0, 0, text_area[WIDTH], text_arr, 0, text_arr.length, bond);
+                Nanovg.nvgTextBoxBoundsJni(vg, 0, 0, text_area[WIDTH], local_arr, 0, local_arr.length, bond);
                 totalRows = Math.round((bond[HEIGHT] - bond[TOP]) / lineH);
                 totalTextHeight = bond[HEIGHT];
             }
@@ -706,9 +713,9 @@ public class GTextBox extends GTextObject {
                 // or to iterate over the text just few lines (or just one) at a time.
                 // The "next" variable of the last returned item tells where to continue.
                 //取UTF8字符串的内存地址，供NATIVE API调用
-                long ptr = GToolkit.getArrayDataPtr(text_arr);
+                long ptr = GToolkit.getArrayDataPtr(local_arr);
                 int start = 0;
-                int end = text_arr.length - 1;
+                int end = local_arr.length - 1;
 
                 int char_at = 0;
                 int char_starti, char_endi;
@@ -718,7 +725,7 @@ public class GTextBox extends GTextObject {
                 if (end - start == 0) {
                     GToolkit.drawCaret(vg, dx, dy, 1, lineH, false);
                 } else {//通过nvgTextBreakLinesJni进行断行
-                    while ((nrows = nvgTextBreakLinesJni(vg, text_arr, start, end, text_area[WIDTH], rowsHandle, rowCount)) != 0) {
+                    while ((nrows = nvgTextBreakLinesJni(vg, local_arr, start, end, text_area[WIDTH], rowsHandle, rowCount)) != 0) {
 
                         //循环绘制行
                         for (i = 0; i < nrows; i++) {
@@ -733,40 +740,40 @@ public class GTextBox extends GTextObject {
 
                                 if (char_at == 0) {
                                     //取得本行之前字符串长度
-                                    String preStrs = new String(text_arr, 0, byte_starti, "utf-8");
+                                    String preStrs = new String(local_arr, 0, byte_starti, "utf-8");
                                     char_at = preStrs.length();
 
                                 }
                                 //把当前行从字节数组转成字符串
                                 String curRowStrs = "";
-                                curRowStrs = new String(text_arr, byte_starti, byte_endi - byte_starti, "utf-8");
+                                curRowStrs = new String(local_arr, byte_starti, byte_endi - byte_starti, "utf-8");
                                 //计算字符串起止位置
                                 char_starti = char_at;
                                 char_endi = char_at + curRowStrs.length() - 1;
 
                                 caretx = dx;
                                 //取得i行的各个字符的具体位置，结果存入glyphs
-                                char_count = nvgTextGlyphPositionsJni(vg, dx, dy, text_arr, byte_starti, byte_endi, glyphsHandle, posCount);
+                                char_count = nvgTextGlyphPositionsJni(vg, dx, dy, local_arr, byte_starti, byte_endi, glyphsHandle, posCount);
                                 int curRow = row_index - topShowRow;
 
-                                if (curRow < 0 || curRow >= area_detail.length) {
+                                if (curRow < 0 || curRow >= local_detail.length) {
                                     break;
                                 }
                                 //把这些信息存下来，用于在点击的时候找到点击了文本的哪个位置
                                 //前面存固定信息
-                                area_detail[curRow] = new short[AREA_DETAIL_ADD + char_count];
-                                area_detail[curRow][AREA_X] = (short) dx;
-                                area_detail[curRow][AREA_Y] = (short) dy;
-                                area_detail[curRow][AREA_W] = (short) text_area[WIDTH];
-                                area_detail[curRow][AREA_H] = (short) lineH;
-                                area_detail[curRow][AREA_START] = (short) char_starti;
-                                area_detail[curRow][AREA_END] = (short) char_endi;
-                                area_detail[curRow][AREA_ROW] = (short) row_index;
+                                local_detail[curRow] = new short[AREA_DETAIL_ADD + char_count];
+                                local_detail[curRow][AREA_X] = (short) dx;
+                                local_detail[curRow][AREA_Y] = (short) dy;
+                                local_detail[curRow][AREA_W] = (short) text_area[WIDTH];
+                                local_detail[curRow][AREA_H] = (short) lineH;
+                                local_detail[curRow][AREA_START] = (short) char_starti;
+                                local_detail[curRow][AREA_END] = (short) char_endi;
+                                local_detail[curRow][AREA_ROW] = (short) row_index;
                                 //后面把每个char的位置存下来
                                 for (int j = 0; j < char_count; j++) {
                                     //取第 j 个字符的X座标
                                     float x0 = nvgNVGglyphPosition_x(glyphsHandle, j);
-                                    area_detail[curRow][AREA_DETAIL_ADD + j] = (short) x0;
+                                    local_detail[curRow][AREA_DETAIL_ADD + j] = (short) x0;
                                 }
 
                                 //计算下一行开始
@@ -775,7 +782,7 @@ public class GTextBox extends GTextObject {
                                 if (parent.getFocus() == this) {
                                     boolean draw = false;
                                     if (caretIndex >= char_starti && caretIndex <= char_endi) {
-                                        caretx = area_detail[curRow][AREA_DETAIL_ADD + (caretIndex - char_starti)];
+                                        caretx = local_detail[curRow][AREA_DETAIL_ADD + (caretIndex - char_starti)];
                                         draw = true;
                                         if (caretIndex != 0 && caretIndex - char_starti == 0) {//光标移到行首时，只显示在上一行行尾
                                             draw = false;
@@ -798,16 +805,16 @@ public class GTextBox extends GTextObject {
                                     float drawSelX = dx, drawSelW = row_width;
                                     //本行有选择起点
                                     if (sel_start > char_starti && sel_start <= char_endi) {
-                                        int pos = sel_start - area_detail[curRow][AREA_START];
-                                        drawSelX = area_detail[curRow][AREA_DETAIL_ADD + pos];
+                                        int pos = sel_start - local_detail[curRow][AREA_START];
+                                        drawSelX = local_detail[curRow][AREA_DETAIL_ADD + pos];
                                     }
                                     //本行有选择终点
                                     if (sel_end > char_starti && sel_end <= char_endi + 1) {
-                                        int pos = selectFromTo[1] - area_detail[curRow][AREA_START];
+                                        int pos = selectFromTo[1] - local_detail[curRow][AREA_START];
                                         if (pos >= char_count) {//the last char
-                                            drawSelW = area_detail[curRow][AREA_DETAIL_ADD] + row_width - drawSelX;
+                                            drawSelW = local_detail[curRow][AREA_DETAIL_ADD] + row_width - drawSelX;
                                         } else {
-                                            drawSelW = area_detail[curRow][AREA_DETAIL_ADD + pos] - drawSelX;
+                                            drawSelW = local_detail[curRow][AREA_DETAIL_ADD + pos] - drawSelX;
                                         }
                                     }
 
@@ -820,7 +827,7 @@ public class GTextBox extends GTextObject {
 
                                 }
                                 nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
-                                nvgTextJni(vg, dx, dy, text_arr, byte_starti, byte_endi);
+                                nvgTextJni(vg, dx, dy, local_arr, byte_starti, byte_endi);
 
                             }
                             dy += lineH;

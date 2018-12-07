@@ -46,12 +46,12 @@ public class AppManager {
     static final String APP_DELETE_BTN = "APP_DELETE_BTN";
 
     static final String STR_EXIT = "Exit";
-    static final String STR_START_WEB_SRV_FOR_UPLOAD = "Start Webserver for upload jar";
+    static final String STR_START_WEB_SRV_FOR_UPLOAD = "Lan webserver for upload jar";
     static final String STR_DOWN_APP_FROM_WEB = "Download app from website:";
     static final String STR_DOWNLOAD = "Download";
     static final String STR_START = "Start";
     static final String STR_STOP = "Stop";
-    static final String STR_WEB_LISTEN_ON = "Webserver listen on : ";
+    static final String STR_WEB_LISTEN_ON = "Lan webserver on:";
     static final String STR_APP_LIST = "Application list : ";
     static final String STR_BACK = "Back";
     static final String STR_RUN = "Run";

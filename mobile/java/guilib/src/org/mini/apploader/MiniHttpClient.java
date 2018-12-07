@@ -65,7 +65,7 @@ public class MiniHttpClient extends Thread {
                 handle.onCompleted(url, data);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             if (handle != null) {
                 handle.onCompleted(url, null);
             }
