@@ -73,7 +73,7 @@
    * Add your resource to **/mobile/java/ExApp/resource/res/** , such as audio/image etc.     
    * Ensure **/mobile/java/ExApp/src/config.txt** configure right.     
    * Build **/mobile/java/ExApp** generate jar file    
-   * Install **/binary/mobile/MiniPack.ipa** for iPhone, or **/binary/mobile/MiniPack.apk** for Android   
+   * Install **/binary/mobile/MiniPack.ipa** for iPhone (Enterprise distrbute version, need Verify app, Setting->General->Device Management->EGLS Technology ltd->Verify App), or **/binary/mobile/MiniPack.apk** for Android, These two binary built from **/mobile/iosapp/**  and **/mobile/java/androidapp**, you can build it yourself.    
    * Touch the app icon to open MiniPack app, start inapp webserver , in the same lan, open browser of desktop computer, input the url of your phone , http://phone_ip:8088/   
    * In browser, pickup the jar ,and upload , just it would in the manager list   
    * you can run it now . 
