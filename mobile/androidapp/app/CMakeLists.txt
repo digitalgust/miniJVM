@@ -27,11 +27,12 @@ set(GUI_SOURCE_FILES
 	../../c/gui/glad/glad.h
 	../../c/gui/KHR/khrplatform.h
 	../../c/gui/other/linmath.h
-	../../c/gui/jni_gui.h
+	../../c/gui/media.h
 	../../c/gui/jni_nanovg_assist.h
 	../../c/gui/jni_stb_assist.h
 	../../c/gui/jni_nanovg.c
-	../../c/gui/jni_gui.c
+	../../c/gui/jni_minial.m
+	../../c/gui/media.c
 	../../c/gui/jni_glfm.c
 	../../c/gui/jni_gl.c
 	../../c/glfm/glfm.h
@@ -123,7 +124,8 @@ if (CMAKE_SYSTEM_NAME MATCHES "Android")
     find_library(android-lib android)
     find_library(EGL-lib EGL)
     find_library(GLESv2-lib GLESv2)
-    target_link_libraries(minijvm ${log-lib} ${android-lib} ${EGL-lib} ${GLESv2-lib})
+    find_library(SLES-lib OpenSLES)
+    target_link_libraries(minijvm ${log-lib} ${android-lib} ${EGL-lib} ${GLESv2-lib} ${SLES-lib})
     target_include_directories(minijvm PRIVATE ${ANDROID_NDK}/sources/android/native_app_glue/)
     set_target_properties(minijvm PROPERTIES  C_STANDARD 99)
 elseif (IOS)
