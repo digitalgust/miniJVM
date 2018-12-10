@@ -1,5 +1,5 @@
 // Audio playback and capture library. Public domain. See "unlicense" statement at the end of this file.
-// mini_al - v0.8.10 - 2018-10-21
+// mini_al - v0.8.13 - 2018-12-04
 //
 // David Reid - davidreidsoftware@gmail.com
 
@@ -25,7 +25,7 @@
 //   - OSS (FreeBSD)
 //   - OpenSL|ES (Android only)
 //   - OpenAL
-//   - SDL
+//   - SDL2
 //   - Null (Silence)
 //
 // Supported Formats:
@@ -77,8 +77,7 @@
 //
 // Building for Emscripten
 // -----------------------
-// The Emscripten build currently uses SDL 1.2 for it's backend which means specifying "-s USE_SDL=2" is unecessary
-// as of this version.
+// The Emscripten build uses SDL2 and requires "-s USE_SDL=2" on the command line.
 //
 //
 // Playback Example
@@ -153,6 +152,10 @@
 //               <DeviceCapability Name="microphone" />
 //           </Capabilities>
 //       </Package>
+//
+// OpenAL
+// ------
+// - Capture is not supported on iOS with OpenAL. Use the Core Audio backend instead.
 //
 //
 // OPTIONS
@@ -1695,6 +1698,7 @@ struct mal_context
             mal_proc AudioOutputUnitStart;
             mal_proc AudioOutputUnitStop;
             mal_proc AudioUnitAddPropertyListener;
+            mal_proc AudioUnitGetPropertyInfo;
             mal_proc AudioUnitGetProperty;
             mal_proc AudioUnitSetProperty;
             mal_proc AudioUnitInitialize;
@@ -1836,16 +1840,11 @@ struct mal_context
             mal_handle hSDL;    // SDL
             mal_proc SDL_InitSubSystem;
             mal_proc SDL_QuitSubSystem;
-            mal_proc SDL_CloseAudio;
-            mal_proc SDL_OpenAudio;
-            mal_proc SDL_PauseAudio;
             mal_proc SDL_GetNumAudioDevices;
             mal_proc SDL_GetAudioDeviceName;
             mal_proc SDL_CloseAudioDevice;
             mal_proc SDL_OpenAudioDevice;
             mal_proc SDL_PauseAudioDevice;
-
-            mal_bool32 usingSDL1;
         } sdl;
 #endif
 #ifdef MAL_SUPPORT_NULL
@@ -2026,6 +2025,7 @@ MAL_ALIGNED_STRUCT(MAL_SIMD_ALIGNMENT) mal_device
             /*AudioComponent*/ mal_ptr component;   // <-- Can this be per-context?
             /*AudioUnit*/ mal_ptr audioUnit;
             /*AudioBufferList**/ mal_ptr pAudioBufferList;  // Only used for input devices.
+            mal_event stopEvent;
             mal_bool32 isSwitchingDevice;   /* <-- Set to true when the default device has changed and mini_al is in the process of switching. */
         } coreaudio;
 #endif
@@ -2817,6 +2817,10 @@ mal_uint64 mal_sine_wave_read_ex(mal_sine_wave* pSineWave, mal_uint64 frameCount
     #endif
 #endif
 
+#if defined(_MSC_VER)
+    #pragma warning(push)
+    #pragma warning(disable:4752)   // found Intel(R) Advanced Vector Extensions; consider using /arch:AVX
+#endif
 
 #if defined(MAL_X64) || defined(MAL_X86)
     #if defined(_MSC_VER) && !defined(__clang__)
@@ -11090,8 +11094,22 @@ mal_result mal_context_init__alsa(mal_context* pContext)
     mal_assert(pContext != NULL);
 
 #ifndef MAL_NO_RUNTIME_LINKING
-    pContext->alsa.asoundSO = mal_dlopen("libasound.so");
+    const char* libasoundNames[] = {
+        "libasound.so.2",
+        "libasound.so"
+    };
+
+    for (size_t i = 0; i < mal_countof(libasoundNames); ++i) {
+        pContext->alsa.asoundSO = mal_dlopen(libasoundNames[i]);
+        if (pContext->alsa.asoundSO != NULL) {
+            break;
+        }
+    }
+
     if (pContext->alsa.asoundSO == NULL) {
+#ifdef MAL_DEBUG_OUTPUT
+        printf("[ALSA] Failed to open shared object.\n");
+#endif
         return MAL_NO_BACKEND;
     }
 
@@ -13669,6 +13687,7 @@ typedef OSStatus (* mal_AudioComponentInstanceNew_proc)(AudioComponent inCompone
 typedef OSStatus (* mal_AudioOutputUnitStart_proc)(AudioUnit inUnit);
 typedef OSStatus (* mal_AudioOutputUnitStop_proc)(AudioUnit inUnit);
 typedef OSStatus (* mal_AudioUnitAddPropertyListener_proc)(AudioUnit inUnit, AudioUnitPropertyID inID, AudioUnitPropertyListenerProc inProc, void* inProcUserData);
+typedef OSStatus (* mal_AudioUnitGetPropertyInfo_proc)(AudioUnit inUnit, AudioUnitPropertyID inID, AudioUnitScope inScope, AudioUnitElement inElement, UInt32* outDataSize, Boolean* outWriteable);
 typedef OSStatus (* mal_AudioUnitGetProperty_proc)(AudioUnit inUnit, AudioUnitPropertyID inID, AudioUnitScope inScope, AudioUnitElement inElement, void* outData, UInt32* ioDataSize);
 typedef OSStatus (* mal_AudioUnitSetProperty_proc)(AudioUnit inUnit, AudioUnitPropertyID inID, AudioUnitScope inScope, AudioUnitElement inElement, const void* inData, UInt32 inDataSize);
 typedef OSStatus (* mal_AudioUnitInitialize_proc)(AudioUnit inUnit);
@@ -13921,6 +13940,80 @@ mal_result mal_format_from_AudioStreamBasicDescription(const AudioStreamBasicDes
     return MAL_FORMAT_NOT_SUPPORTED;
 }
 
+mal_result mal_get_channel_map_from_AudioChannelLayout(AudioChannelLayout* pChannelLayout, mal_channel channelMap[MAL_MAX_CHANNELS])
+{
+    mal_assert(pChannelLayout != NULL);
+    
+    if (pChannelLayout->mChannelLayoutTag == kAudioChannelLayoutTag_UseChannelDescriptions) {
+        for (UInt32 iChannel = 0; iChannel < pChannelLayout->mNumberChannelDescriptions; ++iChannel) {
+            channelMap[iChannel] = mal_channel_from_AudioChannelLabel(pChannelLayout->mChannelDescriptions[iChannel].mChannelLabel);
+        }
+    } else
+#if 0
+    if (pChannelLayout->mChannelLayoutTag == kAudioChannelLayoutTag_UseChannelBitmap) {
+        // This is the same kind of system that's used by Windows audio APIs.
+        UInt32 iChannel = 0;
+        AudioChannelBitmap bitmap = pChannelLayout->mChannelBitmap;
+        for (UInt32 iBit = 0; iBit < 32; ++iBit) {
+            AudioChannelBitmap bit = bitmap & (1 << iBit);
+            if (bit != 0) {
+                channelMap[iChannel++] = mal_channel_from_AudioChannelBit(bit);
+            }
+        }
+    } else
+#endif
+    {
+        // Need to use the tag to determine the channel map. For now I'm just assuming a default channel map, but later on this should
+        // be updated to determine the mapping based on the tag.
+        UInt32 channelCount = AudioChannelLayoutTag_GetNumberOfChannels(pChannelLayout->mChannelLayoutTag);
+        switch (pChannelLayout->mChannelLayoutTag)
+        {
+            case kAudioChannelLayoutTag_Mono:
+            case kAudioChannelLayoutTag_Stereo:
+            case kAudioChannelLayoutTag_StereoHeadphones:
+            case kAudioChannelLayoutTag_MatrixStereo:
+            case kAudioChannelLayoutTag_MidSide:
+            case kAudioChannelLayoutTag_XY:
+            case kAudioChannelLayoutTag_Binaural:
+            case kAudioChannelLayoutTag_Ambisonic_B_Format:
+            {
+                mal_get_standard_channel_map(mal_standard_channel_map_default, channelCount, channelMap);
+            } break;
+            
+            case kAudioChannelLayoutTag_Octagonal:
+            {
+                channelMap[7] = MAL_CHANNEL_SIDE_RIGHT;
+                channelMap[6] = MAL_CHANNEL_SIDE_LEFT;
+            } // Intentional fallthrough.
+            case kAudioChannelLayoutTag_Hexagonal:
+            {
+                channelMap[5] = MAL_CHANNEL_BACK_CENTER;
+            } // Intentional fallthrough.
+            case kAudioChannelLayoutTag_Pentagonal:
+            {
+                channelMap[4] = MAL_CHANNEL_FRONT_CENTER;
+            } // Intentional fallghrough.
+            case kAudioChannelLayoutTag_Quadraphonic:
+            {
+                channelMap[3] = MAL_CHANNEL_BACK_RIGHT;
+                channelMap[2] = MAL_CHANNEL_BACK_LEFT;
+                channelMap[1] = MAL_CHANNEL_RIGHT;
+                channelMap[0] = MAL_CHANNEL_LEFT;
+            } break;
+            
+            // TODO: Add support for more tags here.
+        
+            default:
+            {
+                mal_get_standard_channel_map(mal_standard_channel_map_default, channelCount, channelMap);
+            } break;
+        }
+    }
+    
+    return MAL_SUCCESS;
+}
+
+
 #if defined(MAL_APPLE_DESKTOP)
 mal_result mal_get_device_object_ids__coreaudio(mal_context* pContext, UInt32* pDeviceCount, AudioObjectID** ppDeviceObjectIDs) // NOTE: Free the returned buffer with mal_free().
 {
@@ -14102,7 +14195,6 @@ mal_result mal_get_AudioObject_stream_descriptions(mal_context* pContext, AudioO
 }
 
 
-
 mal_result mal_get_AudioObject_channel_layout(mal_context* pContext, AudioObjectID deviceObjectID, mal_device_type deviceType, AudioChannelLayout** ppChannelLayout)   // NOTE: Free the returned pointer with mal_free().
 {
     mal_assert(pContext != NULL);
@@ -14161,79 +14253,6 @@ mal_result mal_get_AudioObject_channel_count(mal_context* pContext, AudioObjectI
     return MAL_SUCCESS;
 }
 
-mal_result mal_get_channel_map_from_AudioChannelLayout(AudioChannelLayout* pChannelLayout, mal_channel channelMap[MAL_MAX_CHANNELS])
-{
-    mal_assert(pChannelLayout != NULL);
-    
-    if (pChannelLayout->mChannelLayoutTag == kAudioChannelLayoutTag_UseChannelDescriptions) {
-        for (UInt32 iChannel = 0; iChannel < pChannelLayout->mNumberChannelDescriptions; ++iChannel) {
-            channelMap[iChannel] = mal_channel_from_AudioChannelLabel(pChannelLayout->mChannelDescriptions[iChannel].mChannelLabel);
-        }
-    } else
-#if 0
-    if (pChannelLayout->mChannelLayoutTag == kAudioChannelLayoutTag_UseChannelBitmap) {
-        // This is the same kind of system that's used by Windows audio APIs.
-        UInt32 iChannel = 0;
-        AudioChannelBitmap bitmap = pChannelLayout->mChannelBitmap;
-        for (UInt32 iBit = 0; iBit < 32; ++iBit) {
-            AudioChannelBitmap bit = bitmap & (1 << iBit);
-            if (bit != 0) {
-                channelMap[iChannel++] = mal_channel_from_AudioChannelBit(bit);
-            }
-        }
-    } else
-#endif
-    {
-        // Need to use the tag to determine the channel map. For now I'm just assuming a default channel map, but later on this should
-        // be updated to determine the mapping based on the tag.
-        UInt32 channelCount = AudioChannelLayoutTag_GetNumberOfChannels(pChannelLayout->mChannelLayoutTag);
-        switch (pChannelLayout->mChannelLayoutTag)
-        {
-            case kAudioChannelLayoutTag_Mono:
-            case kAudioChannelLayoutTag_Stereo:
-            case kAudioChannelLayoutTag_StereoHeadphones:
-            case kAudioChannelLayoutTag_MatrixStereo:
-            case kAudioChannelLayoutTag_MidSide:
-            case kAudioChannelLayoutTag_XY:
-            case kAudioChannelLayoutTag_Binaural:
-            case kAudioChannelLayoutTag_Ambisonic_B_Format:
-            {
-                mal_get_standard_channel_map(mal_standard_channel_map_default, channelCount, channelMap);
-            } break;
-            
-            case kAudioChannelLayoutTag_Octagonal:
-            {
-                channelMap[7] = MAL_CHANNEL_SIDE_RIGHT;
-                channelMap[6] = MAL_CHANNEL_SIDE_LEFT;
-            } // Intentional fallthrough.
-            case kAudioChannelLayoutTag_Hexagonal:
-            {
-                channelMap[5] = MAL_CHANNEL_BACK_CENTER;
-            } // Intentional fallthrough.
-            case kAudioChannelLayoutTag_Pentagonal:
-            {
-                channelMap[4] = MAL_CHANNEL_FRONT_CENTER;
-            } // Intentional fallghrough.
-            case kAudioChannelLayoutTag_Quadraphonic:
-            {
-                channelMap[3] = MAL_CHANNEL_BACK_RIGHT;
-                channelMap[2] = MAL_CHANNEL_BACK_LEFT;
-                channelMap[1] = MAL_CHANNEL_RIGHT;
-                channelMap[0] = MAL_CHANNEL_LEFT;
-            } break;
-            
-            // TODO: Add support for more tags here.
-        
-            default:
-            {
-                mal_get_standard_channel_map(mal_standard_channel_map_default, channelCount, channelMap);
-            } break;
-        }
-    }
-    
-    return MAL_SUCCESS;
-}
-
 mal_result mal_get_AudioObject_channel_map(mal_context* pContext, AudioObjectID deviceObjectID, mal_device_type deviceType, mal_channel channelMap[MAL_MAX_CHANNELS])
 {
     mal_assert(pContext != NULL);
@@ -14246,9 +14265,11 @@ mal_result mal_get_AudioObject_channel_map(mal_context* pContext, AudioObjectID 
     
     result = mal_get_channel_map_from_AudioChannelLayout(pChannelLayout, channelMap);
     if (result != MAL_SUCCESS) {
+        mal_free(pChannelLayout);
         return result;
     }
     
+    mal_free(pChannelLayout);
     return result;
 }
 
@@ -14666,7 +14687,46 @@ mal_result mal_find_best_format__coreaudio(mal_context* pContext, AudioObjectID 
 }
 #endif
 
+mal_result mal_get_AudioUnit_channel_map(mal_context* pContext, AudioUnit audioUnit, mal_device_type deviceType, mal_channel channelMap[MAL_MAX_CHANNELS])
+{
+    mal_assert(pContext != NULL);
+    
+    AudioUnitScope deviceScope;
+    AudioUnitElement deviceBus;
+    if (deviceType == mal_device_type_playback) {
+        deviceScope = kAudioUnitScope_Output;
+        deviceBus = MAL_COREAUDIO_OUTPUT_BUS;
+    } else {
+        deviceScope = kAudioUnitScope_Input;
+        deviceBus = MAL_COREAUDIO_INPUT_BUS;
+    }
+    
+    UInt32 channelLayoutSize;
+    OSStatus status = ((mal_AudioUnitGetPropertyInfo_proc)pContext->coreaudio.AudioUnitGetPropertyInfo)(audioUnit, kAudioUnitProperty_AudioChannelLayout, deviceScope, deviceBus, &channelLayoutSize, NULL);
+    if (status != noErr) {
+        return mal_result_from_OSStatus(status);
+    }
+    
+    AudioChannelLayout* pChannelLayout = (AudioChannelLayout*)mal_malloc(channelLayoutSize);
+    if (pChannelLayout == NULL) {
+        return MAL_OUT_OF_MEMORY;
+    }
+    
+    status = ((mal_AudioUnitGetProperty_proc)pContext->coreaudio.AudioUnitGetProperty)(audioUnit, kAudioUnitProperty_AudioChannelLayout, deviceScope, deviceBus, pChannelLayout, &channelLayoutSize);
+    if (status != noErr) {
+        mal_free(pChannelLayout);
+        return mal_result_from_OSStatus(status);
+    }
+    
+    mal_result result = mal_get_channel_map_from_AudioChannelLayout(pChannelLayout, channelMap);
+    if (result != MAL_SUCCESS) {
+        mal_free(pChannelLayout);
+        return result;
+    }
 
+    mal_free(pChannelLayout);
+    return MAL_SUCCESS;
+}
 
 mal_bool32 mal_context_is_device_id_equal__coreaudio(mal_context* pContext, const mal_device_id* pID0, const mal_device_id* pID1)
 {
@@ -15038,7 +15098,7 @@ OSStatus mal_on_input__coreaudio(void* pUserData, AudioUnitRenderActionFlags* pA
                 }
                 
             #if defined(MAL_DEBUG_OUTPUT)
-                printf("  WARNING: Outputting silence. frameCount=%d, mNumberChannels=%d, mDataByteSize=%d\n", frameCount, pRenderBufferList->mBuffers[iBuffer].mNumberChannels, pRenderBufferList->mBuffers[iBuffer].mDataByteSize);
+                printf("  WARNING: Outputting silence. frameCount=%d, mNumberChannels=%d, mDataByteSize=%d\n", frameCount, pRenderedBufferList->mBuffers[iBuffer].mNumberChannels, pRenderedBufferList->mBuffers[iBuffer].mDataByteSize);
             #endif
             }
         }
@@ -15086,6 +15146,8 @@ void on_start_stop__coreaudio(void* pUserData, AudioUnit audioUnit, AudioUnitPro
         if (onStop) {
             onStop(pDevice);
         }
+        
+        mal_event_signal(&pDevice->coreaudio.stopEvent);
     } else {
         UInt32 isRunning;
         UInt32 isRunningSize = sizeof(isRunning);
@@ -15375,11 +15437,24 @@ mal_result mal_device_init_internal__coreaudio(mal_context* pContext, mal_device
     }
     
     
-    // Internal channel map.
+    // Internal channel map. This is weird in my testing. If I use the AudioObject to get the
+    // channel map, the channel descriptions are set to "Unknown" for some reason. To work around
+    // this it looks like retrieving it from the AudioUnit will work. However, and this is where
+    // it gets weird, it doesn't seem to work with capture devices, nor at all on iOS... Therefore
+    // I'm going to fall back to a default assumption in these cases.
 #if defined(MAL_APPLE_DESKTOP)
-    result = mal_get_AudioObject_channel_map(pContext, deviceObjectID, deviceType, pData->channelMapOut);
+    result = mal_get_AudioUnit_channel_map(pContext, pData->audioUnit, deviceType, pData->channelMapOut);
     if (result != MAL_SUCCESS) {
-        return result;
+    #if 0
+        // Try falling back to the channel map from the AudioObject.
+        result = mal_get_AudioObject_channel_map(pContext, deviceObjectID, deviceType, pData->channelMapOut);
+        if (result != MAL_SUCCESS) {
+            return result;
+        }
+    #else
+        // Fall back to default assumptions.
+        mal_get_standard_channel_map(mal_standard_channel_map_default, pData->channelsOut, pData->channelMapOut);
+    #endif
     }
 #else
     // TODO: Figure out how to get the channel map using AVAudioSession.
@@ -15508,6 +15583,12 @@ mal_result mal_device_init_internal__coreaudio(mal_context* pContext, mal_device
     // Grab the name.
 #if defined(MAL_APPLE_DESKTOP)
     mal_get_AudioObject_name(pContext, deviceObjectID, sizeof(pData->deviceName), pData->deviceName);
+#else
+    if (deviceType == mal_device_type_playback) {
+        mal_strcpy_s(pData->deviceName, sizeof(pData->deviceName), MAL_DEFAULT_PLAYBACK_DEVICE_NAME);
+    } else {
+        mal_strcpy_s(pData->deviceName, sizeof(pData->deviceName), MAL_DEFAULT_CAPTURE_DEVICE_NAME);
+    }
 #endif
     
     return result;
@@ -15586,7 +15667,7 @@ mal_result mal_device_init__coreaudio(mal_context* pContext, mal_device_type dev
     data.usingDefaultChannelMap = pDevice->usingDefaultChannelMap;
     data.shareMode = pDevice->initConfig.shareMode;
 
-    mal_result result = mal_device_init_internal__coreaudio(pDevice->pContext, pDevice->type, NULL, &data, (void*)pDevice);
+    mal_result result = mal_device_init_internal__coreaudio(pDevice->pContext, pDevice->type, pDeviceID, &data, (void*)pDevice);
     if (result != MAL_SUCCESS) {
         return result;
     }
@@ -15624,6 +15705,12 @@ mal_result mal_device_init__coreaudio(mal_context* pContext, mal_device_type dev
     ((mal_AudioObjectAddPropertyListener_proc)pDevice->pContext->coreaudio.AudioObjectAddPropertyListener)(kAudioObjectSystemObject, &propAddress, &mal_default_output_device_changed__coreaudio, pDevice);
 #endif
 
+    /*
+    When stopping the device, a callback is called on another thread. We need to wait for this callback
+    before returning from mal_device_stop(). This event is used for this.
+    */
+    mal_event_init(pContext, &pDevice->coreaudio.stopEvent);
+
     return MAL_SUCCESS;
 }
 
@@ -15649,6 +15736,8 @@ mal_result mal_device__stop_backend__coreaudio(mal_device* pDevice)
         return mal_result_from_OSStatus(status);
     }
     
+    /* We need to wait for the callback to finish before returning. */
+    mal_event_wait(&pDevice->coreaudio.stopEvent);
     return MAL_SUCCESS;
 }
 
@@ -15737,6 +15826,7 @@ mal_result mal_context_init__coreaudio(mal_context* pContext)
     pContext->coreaudio.AudioOutputUnitStart           = mal_dlsym(pContext->coreaudio.hAudioUnit, "AudioOutputUnitStart");
     pContext->coreaudio.AudioOutputUnitStop            = mal_dlsym(pContext->coreaudio.hAudioUnit, "AudioOutputUnitStop");
     pContext->coreaudio.AudioUnitAddPropertyListener   = mal_dlsym(pContext->coreaudio.hAudioUnit, "AudioUnitAddPropertyListener");
+    pContext->coreaudio.AudioUnitGetPropertyInfo       = mal_dlsym(pContext->coreaudio.hAudioUnit, "AudioUnitGetPropertyInfo");
     pContext->coreaudio.AudioUnitGetProperty           = mal_dlsym(pContext->coreaudio.hAudioUnit, "AudioUnitGetProperty");
     pContext->coreaudio.AudioUnitSetProperty           = mal_dlsym(pContext->coreaudio.hAudioUnit, "AudioUnitSetProperty");
     pContext->coreaudio.AudioUnitInitialize            = mal_dlsym(pContext->coreaudio.hAudioUnit, "AudioUnitInitialize");
@@ -15757,6 +15847,7 @@ mal_result mal_context_init__coreaudio(mal_context* pContext)
     pContext->coreaudio.AudioOutputUnitStart           = (mal_proc)AudioOutputUnitStart;
     pContext->coreaudio.AudioOutputUnitStop            = (mal_proc)AudioOutputUnitStop;
     pContext->coreaudio.AudioUnitAddPropertyListener   = (mal_proc)AudioUnitAddPropertyListener;
+    pContext->coreaudio.AudioUnitGetPropertyInfo       = (mal_proc)AudioUnitGetPropertyInfo;
     pContext->coreaudio.AudioUnitGetProperty           = (mal_proc)AudioUnitGetProperty;
     pContext->coreaudio.AudioUnitSetProperty           = (mal_proc)AudioUnitSetProperty;
     pContext->coreaudio.AudioUnitInitialize            = (mal_proc)AudioUnitInitialize;
@@ -18994,8 +19085,6 @@ mal_result mal_device_init__openal(mal_context* pContext, mal_device_type type, 
     if (type == mal_device_type_playback) {
         pDeviceALC = ((MAL_LPALCOPENDEVICE)pContext->openal.alcOpenDevice)((pDeviceID == NULL) ? NULL : pDeviceID->openal);
     } else {
-        // I had a bug report that suggested I set the OpenAL context to NULL before attempting to open a capture device.
-        ((MAL_LPALCMAKECONTEXTCURRENT)pContext->openal.alcMakeContextCurrent)(NULL);
         pDeviceALC = ((MAL_LPALCCAPTUREOPENDEVICE)pContext->openal.alcCaptureOpenDevice)((pDeviceID == NULL) ? NULL : pDeviceID->openal, frequencyAL, formatAL, bufferSizeInSamplesAL);
     }
 
@@ -19538,8 +19627,6 @@ mal_result mal_context_init__openal(mal_context* pContext)
 ///////////////////////////////////////////////////////////////////////////////
 #ifdef MAL_HAS_SDL
 
-//#define MAL_USE_SDL_1
-
 #define MAL_SDL_INIT_AUDIO                      0x00000010
 #define MAL_AUDIO_U8                            0x0008
 #define MAL_AUDIO_S16                           0x8010
@@ -19556,11 +19643,6 @@ mal_result mal_context_init__openal(mal_context* pContext)
     #define SDL_MAIN_HANDLED
     #ifdef MAL_EMSCRIPTEN
         #include <SDL/SDL.h>
-
-        // For now just use SDL 1.2 with Emscripten. This avoids the need for "-s USE_SDL=2" at compile time.
-        #ifndef MAL_USE_SDL_1
-        #define MAL_USE_SDL_1
-        #endif
     #else
         #include <SDL2/SDL.h>
     #endif
@@ -19592,11 +19674,8 @@ typedef int                   (* MAL_PFN_SDL_InitSubSystem)(mal_uint32 flags);
 typedef void                  (* MAL_PFN_SDL_QuitSubSystem)(mal_uint32 flags);
 typedef int                   (* MAL_PFN_SDL_GetNumAudioDevices)(int iscapture);
 typedef const char*           (* MAL_PFN_SDL_GetAudioDeviceName)(int index, int iscapture);
-typedef void                  (* MAL_PFN_SDL_CloseAudio)(void);
 typedef void                  (* MAL_PFN_SDL_CloseAudioDevice)(MAL_SDL_AudioDeviceID dev);
-typedef int                   (* MAL_PFN_SDL_OpenAudio)(MAL_SDL_AudioSpec* desired, MAL_SDL_AudioSpec* obtained);
 typedef MAL_SDL_AudioDeviceID (* MAL_PFN_SDL_OpenAudioDevice)(const char* device, int iscapture, const MAL_SDL_AudioSpec* desired, MAL_SDL_AudioSpec* obtained, int allowed_changes);
-typedef void                  (* MAL_PFN_SDL_PauseAudio)(int pause_on);
 typedef void                  (* MAL_PFN_SDL_PauseAudioDevice)(MAL_SDL_AudioDeviceID dev, int pause_on);
 
 MAL_SDL_AudioFormat mal_format_to_sdl(mal_format format)
@@ -19639,68 +19718,42 @@ mal_result mal_context_enumerate_devices__sdl(mal_context* pContext, mal_enum_de
     mal_assert(pContext != NULL);
     mal_assert(callback != NULL);
 
-#ifndef MAL_USE_SDL_1
-    if (!pContext->sdl.usingSDL1) {
-        mal_bool32 isTerminated = MAL_FALSE;
+    mal_bool32 isTerminated = MAL_FALSE;
 
-        // Playback
-        if (!isTerminated) {
-            int deviceCount = ((MAL_PFN_SDL_GetNumAudioDevices)pContext->sdl.SDL_GetNumAudioDevices)(0);
-            for (int i = 0; i < deviceCount; ++i) {
-                mal_device_info deviceInfo;
-                mal_zero_object(&deviceInfo);
-
-                deviceInfo.id.sdl = i;
-                mal_strncpy_s(deviceInfo.name, sizeof(deviceInfo.name), ((MAL_PFN_SDL_GetAudioDeviceName)pContext->sdl.SDL_GetAudioDeviceName)(i, 0), (size_t)-1);
-
-                mal_bool32 cbResult = callback(pContext, mal_device_type_playback, &deviceInfo, pUserData);
-                if (cbResult == MAL_FALSE) {
-                    isTerminated = MAL_TRUE;
-                    break;
-                }
-            }
-        }
-
-        // Capture
-        if (!isTerminated) {
-            int deviceCount = ((MAL_PFN_SDL_GetNumAudioDevices)pContext->sdl.SDL_GetNumAudioDevices)(1);
-            for (int i = 0; i < deviceCount; ++i) {
-                mal_device_info deviceInfo;
-                mal_zero_object(&deviceInfo);
-
-                deviceInfo.id.sdl = i;
-                mal_strncpy_s(deviceInfo.name, sizeof(deviceInfo.name), ((MAL_PFN_SDL_GetAudioDeviceName)pContext->sdl.SDL_GetAudioDeviceName)(i, 1), (size_t)-1);
-
-                mal_bool32 cbResult = callback(pContext, mal_device_type_capture, &deviceInfo, pUserData);
-                if (cbResult == MAL_FALSE) {
-                    isTerminated = MAL_TRUE;
-                    break;
-                }
-            }
-        }
-    } else
-#endif
-    {
-        // SDL1 only uses default devices, and does not support capture.
-        mal_bool32 cbResult = MAL_TRUE;
-
-        // Playback.
-        if (cbResult) {
+    // Playback
+    if (!isTerminated) {
+        int deviceCount = ((MAL_PFN_SDL_GetNumAudioDevices)pContext->sdl.SDL_GetNumAudioDevices)(0);
+        for (int i = 0; i < deviceCount; ++i) {
             mal_device_info deviceInfo;
             mal_zero_object(&deviceInfo);
-            mal_strncpy_s(deviceInfo.name, sizeof(deviceInfo.name), MAL_DEFAULT_PLAYBACK_DEVICE_NAME, (size_t)-1);
-            cbResult = callback(pContext, mal_device_type_playback, &deviceInfo, pUserData);
-        }
 
-#if 0   // No capture with SDL1.
-        // Capture.
-        if (cbResult) {
+            deviceInfo.id.sdl = i;
+            mal_strncpy_s(deviceInfo.name, sizeof(deviceInfo.name), ((MAL_PFN_SDL_GetAudioDeviceName)pContext->sdl.SDL_GetAudioDeviceName)(i, 0), (size_t)-1);
+
+            mal_bool32 cbResult = callback(pContext, mal_device_type_playback, &deviceInfo, pUserData);
+            if (cbResult == MAL_FALSE) {
+                isTerminated = MAL_TRUE;
+                break;
+            }
+        }
+    }
+
+    // Capture
+    if (!isTerminated) {
+        int deviceCount = ((MAL_PFN_SDL_GetNumAudioDevices)pContext->sdl.SDL_GetNumAudioDevices)(1);
+        for (int i = 0; i < deviceCount; ++i) {
             mal_device_info deviceInfo;
             mal_zero_object(&deviceInfo);
-            mal_strncpy_s(deviceInfo.name, sizeof(deviceInfo.name), MAL_DEFAULT_CAPTURE_DEVICE_NAME, (size_t)-1);
-            cbResult = callback(pContext, mal_device_type_capture, &deviceInfo, pUserData);
+
+            deviceInfo.id.sdl = i;
+            mal_strncpy_s(deviceInfo.name, sizeof(deviceInfo.name), ((MAL_PFN_SDL_GetAudioDeviceName)pContext->sdl.SDL_GetAudioDeviceName)(i, 1), (size_t)-1);
+
+            mal_bool32 cbResult = callback(pContext, mal_device_type_capture, &deviceInfo, pUserData);
+            if (cbResult == MAL_FALSE) {
+                isTerminated = MAL_TRUE;
+                break;
+            }
         }
-#endif
     }
 
     return MAL_SUCCESS;
@@ -19711,24 +19764,7 @@ mal_result mal_context_get_device_info__sdl(mal_context* pContext, mal_device_ty
     mal_assert(pContext != NULL);
     (void)shareMode;
 
-#ifndef MAL_USE_SDL_1
-    if (!pContext->sdl.usingSDL1) {
-        if (pDeviceID == NULL) {
-            if (deviceType == mal_device_type_playback) {
-                pDeviceInfo->id.sdl = 0;
-                mal_strncpy_s(pDeviceInfo->name, sizeof(pDeviceInfo->name), MAL_DEFAULT_PLAYBACK_DEVICE_NAME, (size_t)-1);
-            } else {
-                pDeviceInfo->id.sdl = 0;
-                mal_strncpy_s(pDeviceInfo->name, sizeof(pDeviceInfo->name), MAL_DEFAULT_CAPTURE_DEVICE_NAME, (size_t)-1);
-            }
-        } else {
-            pDeviceInfo->id.sdl = pDeviceID->sdl;
-            mal_strncpy_s(pDeviceInfo->name, sizeof(pDeviceInfo->name), ((MAL_PFN_SDL_GetAudioDeviceName)pContext->sdl.SDL_GetAudioDeviceName)(pDeviceID->sdl, (deviceType == mal_device_type_playback) ? 0 : 1), (size_t)-1);
-        }
-    } else
-#endif
-    {
-        // SDL1 uses default devices.
+    if (pDeviceID == NULL) {
         if (deviceType == mal_device_type_playback) {
             pDeviceInfo->id.sdl = 0;
             mal_strncpy_s(pDeviceInfo->name, sizeof(pDeviceInfo->name), MAL_DEFAULT_PLAYBACK_DEVICE_NAME, (size_t)-1);
@@ -19736,6 +19772,9 @@ mal_result mal_context_get_device_info__sdl(mal_context* pContext, mal_device_ty
             pDeviceInfo->id.sdl = 0;
             mal_strncpy_s(pDeviceInfo->name, sizeof(pDeviceInfo->name), MAL_DEFAULT_CAPTURE_DEVICE_NAME, (size_t)-1);
         }
+    } else {
+        pDeviceInfo->id.sdl = pDeviceID->sdl;
+        mal_strncpy_s(pDeviceInfo->name, sizeof(pDeviceInfo->name), ((MAL_PFN_SDL_GetAudioDeviceName)pContext->sdl.SDL_GetAudioDeviceName)(pDeviceID->sdl, (deviceType == mal_device_type_playback) ? 0 : 1), (size_t)-1);
     }
 
     // To get an accurate idea on the backend's native format we need to open the device. Not ideal, but it's the only way. An
@@ -19759,39 +19798,19 @@ mal_result mal_context_get_device_info__sdl(mal_context* pContext, mal_device_ty
     MAL_SDL_AudioSpec desiredSpec, obtainedSpec;
     mal_zero_memory(&desiredSpec, sizeof(desiredSpec));
 
-#ifndef MAL_USE_SDL_1
-    if (!pContext->sdl.usingSDL1) {
-        int isCapture = (deviceType == mal_device_type_playback) ? 0 : 1;
+    int isCapture = (deviceType == mal_device_type_playback) ? 0 : 1;
 
-        const char* pDeviceName = NULL;
-        if (pDeviceID != NULL) {
-            pDeviceName = ((MAL_PFN_SDL_GetAudioDeviceName)pContext->sdl.SDL_GetAudioDeviceName)(pDeviceID->sdl, isCapture);
-        }
-
-        MAL_SDL_AudioDeviceID tempDeviceID = ((MAL_PFN_SDL_OpenAudioDevice)pContext->sdl.SDL_OpenAudioDevice)(pDeviceName, isCapture, &desiredSpec, &obtainedSpec, MAL_SDL_AUDIO_ALLOW_ANY_CHANGE);
-        if (tempDeviceID == 0) {
-            return mal_context_post_error(pContext, NULL, MAL_LOG_LEVEL_ERROR, "Failed to open SDL device.", MAL_FAILED_TO_OPEN_BACKEND_DEVICE);
-        }
-
-        ((MAL_PFN_SDL_CloseAudioDevice)pContext->sdl.SDL_CloseAudioDevice)(tempDeviceID);
-    } else
-#endif
-    {
-        // SDL1 uses default devices.
-        (void)pDeviceID;
-
-        // SDL1 only supports playback as far as I can tell.
-        if (deviceType != mal_device_type_playback) {
-            return MAL_NO_DEVICE;
-        }
-
-        MAL_SDL_AudioDeviceID tempDeviceID = ((MAL_PFN_SDL_OpenAudio)pContext->sdl.SDL_OpenAudio)(&desiredSpec, &obtainedSpec);
-        if (tempDeviceID != 0) {
-            return mal_context_post_error(pContext, NULL, MAL_LOG_LEVEL_ERROR, "Failed to open SDL device.", MAL_FAILED_TO_OPEN_BACKEND_DEVICE);
-        }
-
-        ((MAL_PFN_SDL_CloseAudio)pContext->sdl.SDL_CloseAudio)();
+    const char* pDeviceName = NULL;
+    if (pDeviceID != NULL) {
+        pDeviceName = ((MAL_PFN_SDL_GetAudioDeviceName)pContext->sdl.SDL_GetAudioDeviceName)(pDeviceID->sdl, isCapture);
     }
+
+    MAL_SDL_AudioDeviceID tempDeviceID = ((MAL_PFN_SDL_OpenAudioDevice)pContext->sdl.SDL_OpenAudioDevice)(pDeviceName, isCapture, &desiredSpec, &obtainedSpec, MAL_SDL_AUDIO_ALLOW_ANY_CHANGE);
+    if (tempDeviceID == 0) {
+        return mal_context_post_error(pContext, NULL, MAL_LOG_LEVEL_ERROR, "Failed to open SDL device.", MAL_FAILED_TO_OPEN_BACKEND_DEVICE);
+    }
+
+    ((MAL_PFN_SDL_CloseAudioDevice)pContext->sdl.SDL_CloseAudioDevice)(tempDeviceID);
 
     pDeviceInfo->minChannels = obtainedSpec.channels;
     pDeviceInfo->maxChannels = obtainedSpec.channels;
@@ -19819,14 +19838,7 @@ void mal_device_uninit__sdl(mal_device* pDevice)
 {
     mal_assert(pDevice != NULL);
 
-#ifndef MAL_USE_SDL_1
-    if (!pDevice->pContext->sdl.usingSDL1) {
-        ((MAL_PFN_SDL_CloseAudioDevice)pDevice->pContext->sdl.SDL_CloseAudioDevice)(pDevice->sdl.deviceID);
-    } else
-#endif
-    {
-        ((MAL_PFN_SDL_CloseAudio)pDevice->pContext->sdl.SDL_CloseAudio)();
-    }
+    ((MAL_PFN_SDL_CloseAudioDevice)pDevice->pContext->sdl.SDL_CloseAudioDevice)(pDevice->sdl.deviceID);
 }
 
 
@@ -19835,7 +19847,11 @@ void mal_audio_callback__sdl(void* pUserData, mal_uint8* pBuffer, int bufferSize
     mal_device* pDevice = (mal_device*)pUserData;
     mal_assert(pDevice != NULL);
 
-    mal_uint32 bufferSizeInFrames = (mal_uint32)bufferSizeInBytes / mal_get_bytes_per_sample(pDevice->internalFormat) / pDevice->internalChannels;
+    mal_uint32 bufferSizeInFrames = (mal_uint32)bufferSizeInBytes / mal_get_bytes_per_frame(pDevice->internalFormat, pDevice->internalChannels);
+
+#ifdef MAL_DEBUG_OUTPUT
+    printf("[SDL] Callback: bufferSizeInBytes=%d, bufferSizeInFrames=%d\n", bufferSizeInBytes, bufferSizeInFrames);
+#endif
 
     if (pDevice->type == mal_device_type_playback) {
         mal_device__read_frames_from_client(pDevice, bufferSizeInFrames, pBuffer);
@@ -19882,41 +19898,16 @@ mal_result mal_device_init__sdl(mal_context* pContext, mal_device_type type, con
         desiredSpec.format = MAL_AUDIO_F32;
     }
 
-#ifndef MAL_USE_SDL_1
-    if (!pDevice->pContext->sdl.usingSDL1) {
-        int isCapture = (type == mal_device_type_playback) ? 0 : 1;
+    int isCapture = (type == mal_device_type_playback) ? 0 : 1;
 
-        const char* pDeviceName = NULL;
-        if (pDeviceID != NULL) {
-            pDeviceName = ((MAL_PFN_SDL_GetAudioDeviceName)pDevice->pContext->sdl.SDL_GetAudioDeviceName)(pDeviceID->sdl, isCapture);
-        }
+    const char* pDeviceName = NULL;
+    if (pDeviceID != NULL) {
+        pDeviceName = ((MAL_PFN_SDL_GetAudioDeviceName)pDevice->pContext->sdl.SDL_GetAudioDeviceName)(pDeviceID->sdl, isCapture);
+    }
 
-        pDevice->sdl.deviceID = ((MAL_PFN_SDL_OpenAudioDevice)pDevice->pContext->sdl.SDL_OpenAudioDevice)(pDeviceName, isCapture, &desiredSpec, &obtainedSpec, MAL_SDL_AUDIO_ALLOW_ANY_CHANGE);
-        if (pDevice->sdl.deviceID == 0) {
-            return mal_post_error(pDevice, MAL_LOG_LEVEL_ERROR, "Failed to open SDL2 device.", MAL_FAILED_TO_OPEN_BACKEND_DEVICE);
-        }
-    } else
-#endif
-    {
-        // SDL1 uses default devices.
-        (void)pDeviceID;
-
-        // SDL1 only supports playback as far as I can tell.
-        if (type != mal_device_type_playback) {
-            return MAL_NO_DEVICE;
-        }
-
-        // SDL1 does not support floating point formats.
-        if (desiredSpec.format == MAL_AUDIO_F32) {
-            desiredSpec.format  = MAL_AUDIO_S16;
-        }
-
-        int deviceID = ((MAL_PFN_SDL_OpenAudio)pDevice->pContext->sdl.SDL_OpenAudio)(&desiredSpec, &obtainedSpec);
-        if (deviceID < 0) {
-            return mal_post_error(pDevice, MAL_LOG_LEVEL_ERROR, "Failed to open SDL1 device.", MAL_FAILED_TO_OPEN_BACKEND_DEVICE);
-        }
-
-        pDevice->sdl.deviceID = (mal_uint32)deviceID;
+    pDevice->sdl.deviceID = ((MAL_PFN_SDL_OpenAudioDevice)pDevice->pContext->sdl.SDL_OpenAudioDevice)(pDeviceName, isCapture, &desiredSpec, &obtainedSpec, MAL_SDL_AUDIO_ALLOW_ANY_CHANGE);
+    if (pDevice->sdl.deviceID == 0) {
+        return mal_post_error(pDevice, MAL_LOG_LEVEL_ERROR, "Failed to open SDL2 device.", MAL_FAILED_TO_OPEN_BACKEND_DEVICE);
     }
 
     pDevice->internalFormat     = mal_format_from_sdl(obtainedSpec.format);
@@ -19928,7 +19919,6 @@ mal_result mal_device_init__sdl(mal_context* pContext, mal_device_type type, con
 
 #ifdef MAL_DEBUG_OUTPUT
     printf("=== SDL CONFIG ===\n");
-    printf("REQUESTED -> RECEIVED\n");
     printf("    FORMAT:                 %s -> %s\n", mal_get_format_name(pConfig->format), mal_get_format_name(pDevice->internalFormat));
     printf("    CHANNELS:               %d -> %d\n", desiredSpec.channels, obtainedSpec.channels);
     printf("    SAMPLE RATE:            %d -> %d\n", desiredSpec.freq, obtainedSpec.freq);
@@ -19942,15 +19932,7 @@ mal_result mal_device__start_backend__sdl(mal_device* pDevice)
 {
     mal_assert(pDevice != NULL);
 
-#ifndef MAL_USE_SDL_1
-    if (!pDevice->pContext->sdl.usingSDL1) {
-        ((MAL_PFN_SDL_PauseAudioDevice)pDevice->pContext->sdl.SDL_PauseAudioDevice)(pDevice->sdl.deviceID, 0);
-    } else
-#endif
-    {
-        ((MAL_PFN_SDL_PauseAudio)pDevice->pContext->sdl.SDL_PauseAudio)(0);
-    }
-
+    ((MAL_PFN_SDL_PauseAudioDevice)pDevice->pContext->sdl.SDL_PauseAudioDevice)(pDevice->sdl.deviceID, 0);
     return MAL_SUCCESS;
 }
 
@@ -19958,14 +19940,7 @@ mal_result mal_device__stop_backend__sdl(mal_device* pDevice)
 {
     mal_assert(pDevice != NULL);
 
-#ifndef MAL_USE_SDL_1
-    if (!pDevice->pContext->sdl.usingSDL1) {
-        ((MAL_PFN_SDL_PauseAudioDevice)pDevice->pContext->sdl.SDL_PauseAudioDevice)(pDevice->sdl.deviceID, 1);
-    } else
-#endif
-    {
-        ((MAL_PFN_SDL_PauseAudio)pDevice->pContext->sdl.SDL_PauseAudio)(1);
-    }
+    ((MAL_PFN_SDL_PauseAudioDevice)pDevice->pContext->sdl.SDL_PauseAudioDevice)(pDevice->sdl.deviceID, 1);
     
     mal_device__set_state(pDevice, MAL_STATE_STOPPED);
     mal_stop_proc onStop = pDevice->onStop;
@@ -19994,14 +19969,11 @@ mal_result mal_context_init__sdl(mal_context* pContext)
     // Run-time linking.
     const char* libNames[] = {
 #if defined(MAL_WIN32)
-        "SDL2.dll",
-        "SDL.dll"
+        "SDL2.dll"
 #elif defined(MAL_APPLE)
-        "SDL2.framework/SDL2",
-        "SDL.framework/SDL"
+        "SDL2.framework/SDL2"
 #else
-        "libSDL2-2.0.so.0",
-        "libSDL-1.2.so.0"
+        "libSDL2-2.0.so.0"
 #endif
     };
 
@@ -20018,41 +19990,21 @@ mal_result mal_context_init__sdl(mal_context* pContext)
 
     pContext->sdl.SDL_InitSubSystem      = mal_dlsym(pContext->sdl.hSDL, "SDL_InitSubSystem");
     pContext->sdl.SDL_QuitSubSystem      = mal_dlsym(pContext->sdl.hSDL, "SDL_QuitSubSystem");
-    pContext->sdl.SDL_CloseAudio         = mal_dlsym(pContext->sdl.hSDL, "SDL_CloseAudio");
-    pContext->sdl.SDL_OpenAudio          = mal_dlsym(pContext->sdl.hSDL, "SDL_OpenAudio");
-    pContext->sdl.SDL_PauseAudio         = mal_dlsym(pContext->sdl.hSDL, "SDL_PauseAudio");
-#ifndef MAL_USE_SDL_1
     pContext->sdl.SDL_GetNumAudioDevices = mal_dlsym(pContext->sdl.hSDL, "SDL_GetNumAudioDevices");
     pContext->sdl.SDL_GetAudioDeviceName = mal_dlsym(pContext->sdl.hSDL, "SDL_GetAudioDeviceName");
     pContext->sdl.SDL_CloseAudioDevice   = mal_dlsym(pContext->sdl.hSDL, "SDL_CloseAudioDevice");
     pContext->sdl.SDL_OpenAudioDevice    = mal_dlsym(pContext->sdl.hSDL, "SDL_OpenAudioDevice");
     pContext->sdl.SDL_PauseAudioDevice   = mal_dlsym(pContext->sdl.hSDL, "SDL_PauseAudioDevice");
-#endif
 #else
     // Compile-time linking.
     pContext->sdl.SDL_InitSubSystem      = (mal_proc)SDL_InitSubSystem;
     pContext->sdl.SDL_QuitSubSystem      = (mal_proc)SDL_QuitSubSystem;
-    pContext->sdl.SDL_CloseAudio         = (mal_proc)SDL_CloseAudio;
-    pContext->sdl.SDL_OpenAudio          = (mal_proc)SDL_OpenAudio;
-    pContext->sdl.SDL_PauseAudio         = (mal_proc)SDL_PauseAudio;
-#ifndef MAL_USE_SDL_1
     pContext->sdl.SDL_GetNumAudioDevices = (mal_proc)SDL_GetNumAudioDevices;
     pContext->sdl.SDL_GetAudioDeviceName = (mal_proc)SDL_GetAudioDeviceName;
     pContext->sdl.SDL_CloseAudioDevice   = (mal_proc)SDL_CloseAudioDevice;
     pContext->sdl.SDL_OpenAudioDevice    = (mal_proc)SDL_OpenAudioDevice;
     pContext->sdl.SDL_PauseAudioDevice   = (mal_proc)SDL_PauseAudioDevice;
 #endif
-#endif
-
-    // We need to determine whether or not we are using SDL2 or SDL1. We can know this by looking at whether or not certain
-    // function pointers are NULL.
-    if (pContext->sdl.SDL_GetNumAudioDevices == NULL ||
-        pContext->sdl.SDL_GetAudioDeviceName == NULL ||
-        pContext->sdl.SDL_CloseAudioDevice   == NULL ||
-        pContext->sdl.SDL_OpenAudioDevice    == NULL ||
-        pContext->sdl.SDL_PauseAudioDevice   == NULL) {
-        pContext->sdl.usingSDL1 = MAL_TRUE;
-    }
 
     int resultSDL = ((MAL_PFN_SDL_InitSubSystem)pContext->sdl.SDL_InitSubSystem)(MAL_SDL_INIT_AUDIO);
     if (resultSDL != 0) {
@@ -21100,6 +21052,7 @@ mal_result mal_device_stop(mal_device* pDevice)
         // Asynchronous backends need to be handled differently.
         if (mal_context_is_backend_asynchronous(pDevice->pContext)) {
             result = pDevice->pContext->onDeviceStop(pDevice);
+            mal_device__set_state(pDevice, MAL_STATE_STOPPED);
         } else {
             // Synchronous backends.
 
@@ -24735,8 +24688,8 @@ float g_malChannelPlaneRatios[MAL_CHANNEL_POSITION_COUNT][6] = {
     { 0.0f,  0.5f,  0.5f,  0.0f,  0.0f,  0.0f},  // MAL_CHANNEL_FRONT_RIGHT
     { 0.0f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f},  // MAL_CHANNEL_FRONT_CENTER
     { 0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f},  // MAL_CHANNEL_LFE
-    { 0.5f,  0.0f,  0.0f,  0.0f,  0.5f,  0.0f},  // MAL_CHANNEL_BACK_LEFT
-    { 0.0f,  0.5f,  0.0f,  0.0f,  0.5f,  0.0f},  // MAL_CHANNEL_BACK_RIGHT
+    { 0.5f,  0.0f,  0.0f,  0.5f,  0.0f,  0.0f},  // MAL_CHANNEL_BACK_LEFT
+    { 0.0f,  0.5f,  0.0f,  0.5f,  0.0f,  0.0f},  // MAL_CHANNEL_BACK_RIGHT
     { 0.25f, 0.0f,  0.75f, 0.0f,  0.0f,  0.0f},  // MAL_CHANNEL_FRONT_LEFT_CENTER
     { 0.0f,  0.25f, 0.75f, 0.0f,  0.0f,  0.0f},  // MAL_CHANNEL_FRONT_RIGHT_CENTER
     { 0.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f},  // MAL_CHANNEL_BACK_CENTER
@@ -28522,12 +28475,28 @@ mal_uint64 mal_sine_wave_read_ex(mal_sine_wave* pSineWave, mal_uint64 frameCount
     return frameCount;
 }
 
+#if defined(_MSC_VER)
+    #pragma warning(pop)
+#endif
 
 #endif  // MINI_AL_IMPLEMENTATION
 
 
 // REVISION HISTORY
 // ================
+//
+// v0.8.13 - 2018-12-04
+//   - Core Audio: Fix a bug with channel mapping.
+//   - Fix a bug with channel routing where the back/left and back/right channels have the wrong weight.
+//
+// v0.8.12 - 2018-11-27
+//   - Drop support for SDL 1.2. The Emscripten build now requires "-s USE_SDL=2".
+//   - Fix a linking error with ALSA.
+//   - Fix a bug on iOS where the device name is not set correctly.
+//
+// v0.8.11 - 2018-11-21
+//   - iOS bug fixes.
+//   - Minor tweaks to PulseAudio.
 //
 // v0.8.10 - 2018-10-21
 //   - Core Audio: Fix a hang when uninitializing a device.
