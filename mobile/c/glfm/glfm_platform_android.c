@@ -173,7 +173,7 @@ static jmethodID _glfmGetJavaMethodID(JNIEnv *jni, jobject object, const char *n
     if (object) {
         jclass class = (*jni)->GetObjectClass(jni, object);
         jmethodID methodID = (*jni)->GetMethodID(jni, class, name, sig);
-        (*jni)->DeleteLocalRef(jni, class);
+        //(*jni)->DeleteLocalRef(jni, class);
         return _glfmWasJavaExceptionThrown() ? NULL : methodID;
     } else {
         return NULL;
@@ -184,7 +184,7 @@ static jmethodID _glfmGetJavaStaticMethodID(JNIEnv *jni, jclass clazz, const cha
                                             const char *sig) {
     if (clazz) {
         jmethodID methodID = (*jni)->GetStaticMethodID(jni, clazz, name, sig);
-        (*jni)->DeleteLocalRef(jni, clazz);
+        //(*jni)->DeleteLocalRef(jni, clazz);
         return _glfmWasJavaExceptionThrown() ? NULL : methodID;
     } else {
         return NULL;
@@ -1278,8 +1278,6 @@ jobject copyAssets(JNIEnv *env, jobject jassetMgr, char *cpath) {
         strcat(expath, "/");
         strcat(expath, assetpath);
 
-        // Don't forget to call `ReleaseStringUTFChars` when you're done.
-        (*env)->ReleaseStringUTFChars(env, string, rawString);
 
         int fsize = -1;
         if (access(expath, F_OK) == 0) {
@@ -1319,6 +1317,9 @@ jobject copyAssets(JNIEnv *env, jobject jassetMgr, char *cpath) {
             copyAssets(env, jassetMgr, assetpath);
             AAssetDir_close(assetDir);
         }
+        // Don't forget to call `ReleaseStringUTFChars` when you're done.
+        (*env)->ReleaseStringUTFChars(env, string, rawString);
+        (*env)->DeleteLocalRef(env,string);
 
     }
 }
@@ -1729,21 +1730,21 @@ const char *glfmGetUUID() {
         GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
         JNIEnv *jni = platformData->jniEnv;
 
-        jclass clazz = (*jni)->FindClass(jni, "java.util.UUID");
-        jobject UUID = _glfmCallStaticJavaMethod(jni, clazz, "randomUUID", "()Ljava.util.UUID;",
+        jclass clazz = (*jni)->FindClass(jni, "java/util/UUID");
+        jobject UUID = _glfmCallStaticJavaMethod(jni, clazz, "randomUUID", "()Ljava/util/UUID;",
                                                  Object);
-        (*jni)->DeleteLocalRef(jni, clazz);
-        jstring uuidStr = _glfmCallJavaMethod(jni, UUID, "toString", "()Ljava.lang.String;",
+        jstring uuidStr = _glfmCallJavaMethod(jni, UUID, "toString", "()Ljava/lang/String;",
                                               Object);
-        (*jni)->DeleteLocalRef(jni, UUID);
         const char *rawString = (*jni)->GetStringUTFChars(jni, uuidStr, 0);
         int len = strlen(rawString);
         if (len > ANDROID_UUID_MAX_LEN) {
             len = ANDROID_UUID_MAX_LEN - 1;
         }
         memcpy(android_uuid, rawString, len);
-        (*jni)->DeleteLocalRef(jni, uuidStr);
+        (*jni)->DeleteLocalRef(jni, clazz);
+        (*jni)->DeleteLocalRef(jni, UUID);
         (*jni)->ReleaseStringUTFChars(jni, uuidStr, rawString);
+        (*jni)->DeleteLocalRef(jni, uuidStr);
     }
     return android_uuid;
 }
