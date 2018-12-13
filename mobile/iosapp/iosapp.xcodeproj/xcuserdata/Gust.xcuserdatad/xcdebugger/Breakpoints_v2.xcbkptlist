@@ -26,7 +26,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../c/gui/minial/mini_al.h"
-            timestampString = "564482460.325701"
+            timestampString = "566399350.482538"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "15366"
@@ -42,12 +42,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../c/gui/minial/mini_al.h"
-            timestampString = "564482460.325811"
+            timestampString = "566399350.483578"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "14961"
             endingLineNumber = "14961"
-            landmarkName = "mal_on_output__coreaudio(void* pUserData, AudioUnitRenderActionFlags* pActionFlags, const AudioTimeStamp* pTimeStamp, UInt32 busNumber, UInt32 frameCount, AudioBufferList* pBufferList)"
+            landmarkName = "mal_device_uninit__coreaudio(mal_device* pDevice)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
