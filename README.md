@@ -26,8 +26,11 @@
   * Save and Load file from mobile storage .  
   These java api of features can be found in mobile/java/guilib/ , api platform independent .  
 
-## iOS app Gif Demo :
-  <div align=center><img width="320" height="569" src="/screenshot/demo.gif"/></div>
+## iOS app IM Demo :
+  <div align=center><img width="224" height="398" src="/screenshot/demo.gif"/></div>
+   This demo can be download from : http://bb.egls.cn:8080/down/BiBiX.jar , First install AppManager from :
+   /binary/ios/MiniPack.ipa or /binary/android/MiniPack.apk 
+   then download demo in MiniPack and run the app. 
 
 ## Architecture:  
 
@@ -79,7 +82,7 @@
    * Touch the app icon to open MiniPack app, start inapp webserver , in the same lan, open browser of desktop computer, input the url of your phone , http://phone_ip:8088/   
    * In browser, pickup the jar ,and upload , just it would in the manager list   
    * you can run it now . 
-    <div align=center><img width="960" height="569"   src="/screenshot/appmgr.png"/></div>
+    <div align=center><img width="672" height="398"   src="/screenshot/appmgr.png"/></div>
   
   
 ## How to Remote debug:  
