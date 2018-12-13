@@ -67,17 +67,19 @@
    
 
 ## How to develop iOS/Android app in java:   
-   Write java code once , running both iOS and Android.  
-   * Open ExApp project in NetBeans , it depend on lib **/mobile/assets/resfiles/minijvm_rt.jar** and **/mobile/assets/resfiles/glfm_gui.jar**  
+   Write java code once , running both iOS and Android.   
+   1. Can develop app by Eclipse, Netbeans or Intelli Idea , or any ide .   
+   2. Add  **/mobile/assets/resfiles/minijvm_rt.jar** and **/mobile/assets/resfiles/glfm_gui.jar**  as library   
+   * Open ExApp project in NetBeans    
    * Write your code like example **/mobile/java/ExApp/src/test/MyApp.java**    
    * Add your resource to **/mobile/java/ExApp/resource/res/** , such as audio/image etc.     
    * Ensure **/mobile/java/ExApp/src/config.txt** configure right.     
    * Build **/mobile/java/ExApp** generate jar file    
-   * Install **/binary/mobile/MiniPack.ipa** for iPhone (Enterprise distrbute version, need Verify app, Setting->General->Device Management->EGLS Technology ltd->Verify App), or **/binary/mobile/MiniPack.apk** for Android, These two binary built from **/mobile/iosapp/**  and **/mobile/java/androidapp**, you can build it yourself.    
+   * Install **/binary/ios/MiniPack.ipa** for iPhone device , (Enterprise distrbute version, need Verify app, Setting->General->Device Management->EGLS Technology ltd->Verify App), or **/binary/android/MiniPack.apk** for Android device , These two binary built from **/mobile/iosapp/**  and **/mobile/java/androidapp**, you can build it yourself.    
    * Touch the app icon to open MiniPack app, start inapp webserver , in the same lan, open browser of desktop computer, input the url of your phone , http://phone_ip:8088/   
    * In browser, pickup the jar ,and upload , just it would in the manager list   
    * you can run it now . 
-    
+    <div align=center><img width="400" height="384"   src="/screenshot/appmgr.png"/></div>
   
   
 ## How to Remote debug:  
@@ -92,11 +94,9 @@
   
 
 
-## How to Compile java source:  
-   To compile java source file ,there are 2 resolution:
-   * Oracle JDK javac to compile.
-   * Janino the third compiler.
-   using Janino jar lib,  can see example in binary folder.   
+## How to embed Java Compiler to mini_jvm:  
+   Copy /binary/lib/janino.jar to mini_jvm lib directory, and add the jar to classpath.   
+   using Janino compiler,  can find in example in binary folder.   
    the compile command like :
 ```
 win:
@@ -105,7 +105,7 @@ posix:
 ./mini_jvm -cp ../lib/minijvm_rt.jar:../lib/janino.jar:../lib/commons-compiler.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
 ```
 
-Janion compiler [limitation](http://janino-compiler.github.io/janino/#limitations) ,example :
+Janion compiler is not the full java compiler, see [limitation](http://janino-compiler.github.io/janino/#limitations) , like :
 ```
 List<String> list=new ArrayList(); 
 list.add("abc");
@@ -243,8 +243,6 @@ public class MyApp extends GApplication {
 
 ```
 ##   Screen shot   :   
-    * iOS mini_jvm gui    
-<div align=center><img width="400" height="384"   src="/screenshot/ios.png"/></div>
   * Windows mini_jvm gui    
     <div align=center><img width="433" height="336" src="/screenshot/win.png"/></div>
   * Macos mini_jvm gui    
