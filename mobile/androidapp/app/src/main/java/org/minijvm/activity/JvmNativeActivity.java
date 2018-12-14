@@ -42,11 +42,12 @@ public class JvmNativeActivity extends NativeActivity {
     // android:name="android.app.NativeActivity"
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         View v = getWindow().getDecorView();
         super.onCreate(savedInstanceState);
-        mClipboardManager = mClipboardManager =
-                (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+        mClipboardManager = mClipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+        PHOTO_DIR_SD = new File(getExternalFilesDir("").getAbsolutePath() + "/tmp");
+        PHOTO_DIR_ROOT = new File(getFilesDir().getAbsolutePath() + "/tmp");
+
     }
 
     @Override
@@ -91,25 +92,32 @@ public class JvmNativeActivity extends NativeActivity {
     native boolean onStringInput(String str);
 
     //=======================================================================================================
-    private static final int CAMERA_CODE = 1;
-    private static final int GALLERY_CODE = 2;
-    private static final int CROP_CODE = 3;
-    static final String UNICODE_OF_REQUEST_UID = "PICK_UID";
-    static final String UNICODE_OF_REQUEST_TYPE = "PICK_TYPE";
+    private static final int CAMERA_CODE = 0;
+    private static final int GALLERY_CODE = 1;
+    private static final int CROP_CODE = 2;
     //用于展示选择的图片
-    private ImageView mImageView;
 
-    private final File PHOTO_DIR_SD = new File(Environment.getExternalStorageDirectory() + "/DCIM/Camera");
-    private final File PHOTO_DIR_ROOT = new File(Environment.getRootDirectory() + "/DCIM/Camera");
+    static final int PARA_REQUEST_UID = 0;
+    static final int PARA_REQUEST_TYPE = 1;
+    int[][] pick_para=new int[3][2];
 
+    private File PHOTO_DIR_SD;
+    private File PHOTO_DIR_ROOT;
+//    private final File PHOTO_DIR_SD = new File(Environment.getExternalStorageDirectory() + "/DCIM/Camera");
+//    private final File PHOTO_DIR_ROOT = new File(Environment.getRootDirectory() + "/DCIM/Camera");
+
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+    }
     /**
      * 拍照选择图片
      */
     public void pickFromCamera(int uid, int type) {
         //构建隐式Intent
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        intent.putExtra(UNICODE_OF_REQUEST_UID, uid);
-        intent.putExtra(UNICODE_OF_REQUEST_TYPE, type);
+        pick_para[CAMERA_CODE][PARA_REQUEST_UID]=uid;
+        pick_para[CAMERA_CODE][PARA_REQUEST_TYPE]=type;
         //调用系统相机
         startActivityForResult(intent, CAMERA_CODE);
     }
@@ -120,8 +128,8 @@ public class JvmNativeActivity extends NativeActivity {
     public void pickFromAlbum(int uid, int type) {
         //构建一个内容选择的Intent
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.putExtra(UNICODE_OF_REQUEST_UID, uid);
-        intent.putExtra(UNICODE_OF_REQUEST_TYPE, type);
+        pick_para[GALLERY_CODE][PARA_REQUEST_UID]=uid;
+        pick_para[GALLERY_CODE][PARA_REQUEST_TYPE]=type;
         //设置选择类型为图片类型
         intent.setType("image/*");
         //打开图片选择
@@ -149,7 +157,8 @@ public class JvmNativeActivity extends NativeActivity {
         intent.putExtra("outputY", height);
         //裁剪之后的数据是通过Intent返回
         intent.putExtra("return-data", true);
-        intent.putExtra(UNICODE_OF_REQUEST_UID, uid);
+        pick_para[CROP_CODE][PARA_REQUEST_UID]=uid;
+        pick_para[CROP_CODE][PARA_REQUEST_TYPE]=0;
         startActivityForResult(intent, CROP_CODE);
 
     }
@@ -166,8 +175,8 @@ public class JvmNativeActivity extends NativeActivity {
                     if (extras != null) {
                         //获得拍的照片
                         Bitmap bm = extras.getParcelable("data");
-                        int uid = data.getIntExtra(UNICODE_OF_REQUEST_UID, -1);
-                        int type = data.getIntExtra(UNICODE_OF_REQUEST_TYPE, -1);
+                        int uid = pick_para[CAMERA_CODE][PARA_REQUEST_UID];
+                        int type = pick_para[CAMERA_CODE][PARA_REQUEST_TYPE];
                         if (type == 0) {
                             bm = resizeImage(bm);
                         }
@@ -187,8 +196,8 @@ public class JvmNativeActivity extends NativeActivity {
                     Uri uri;
                     //获取到用户所选图片的Uri
                     uri = data.getData();
-                    int uid = data.getIntExtra(UNICODE_OF_REQUEST_UID, -1);
-                    int type = data.getIntExtra(UNICODE_OF_REQUEST_TYPE, -1);
+                    int uid = pick_para[GALLERY_CODE][PARA_REQUEST_UID];
+                    int type = pick_para[GALLERY_CODE][PARA_REQUEST_TYPE];
                     //返回的Uri为content类型的Uri,不能进行复制等操作,需要转换为文件Uri
                     uri = convertUri(uri);
                     if (type == 0) {
@@ -207,7 +216,8 @@ public class JvmNativeActivity extends NativeActivity {
                     if (extras != null) {
                         //获取到裁剪后的图像
                         Bitmap bm = extras.getParcelable("data");
-                        int uid = data.getIntExtra(UNICODE_OF_REQUEST_UID, -1);
+                        int uid = pick_para[CROP_CODE][PARA_REQUEST_UID];
+                        int type = pick_para[CROP_CODE][PARA_REQUEST_TYPE];
                         //mImageView.setImageBitmap(bm);
                         Uri uri = saveImage(bm, getPhotoStorage());
                         onPhotoPicked(uid, uri.getPath(), null);
