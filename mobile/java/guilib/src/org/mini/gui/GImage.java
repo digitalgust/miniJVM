@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import org.mini.nanovg.Gutil;
 import org.mini.nanovg.Nanovg;
 
 /**
@@ -28,6 +29,7 @@ public class GImage {
 
     GImage(byte[] data) {
         this.data = data;
+        Gutil.image_load_whd(data, w_h_d);
     }
 
     static public GImage createImage(int textureid, int w, int h) {

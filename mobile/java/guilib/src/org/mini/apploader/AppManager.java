@@ -256,7 +256,7 @@ public class AppManager {
         mainPanel.add(downLab);
         y += downLab.getH() + pad;
 
-        GTextField downtextfd = new GTextField("http://bb.egls.cn:8080:/down/BiBiX.jar", "application jar url", pad, y, devW - pad * 3 - addW * 2, addH);
+        GTextField downtextfd = new GTextField("http://bb.egls.cn:8080/down/BiBiX.jar", "application jar url", pad, y, devW - pad * 3 - addW * 2, addH);
         mainPanel.add(downtextfd);
         GButton downbtn = new GButton(GLanguage.getString(STR_DOWNLOAD), devW - addW * 2 - pad, y, addW * 2, addH);
         mainPanel.add(downbtn);

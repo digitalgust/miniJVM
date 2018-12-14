@@ -39,6 +39,10 @@ import static org.mini.nanovg.Nanovg.nvgTextAlign;
 import static org.mini.gui.GObject.flush;
 import static org.mini.gui.GObject.flush;
 import static org.mini.gui.GObject.flush;
+import static org.mini.gui.GObject.flush;
+import static org.mini.gui.GObject.flush;
+import static org.mini.gui.GObject.flush;
+import static org.mini.gui.GObject.flush;
 
 /**
  *

@@ -26,6 +26,8 @@ import static org.mini.gl.GL.glTexImage2D;
 import static org.mini.gl.GL.glTexParameterf;
 import static org.mini.nanovg.Nanovg.stbi_load;
 import org.mini.reflect.DirectMemObj;
+import org.mini.reflect.ReflectArray;
+import org.mini.reflect.vm.RefNative;
 
 /**
  *
@@ -293,8 +295,22 @@ public class Gutil {
 
         return tex[0];
     }
+
+    public static void image_load_whd(byte[] fileCont, int[] w_h_d) {
+        int[] x = {0}, y = {0}, n = {0};
+        long ptr = ReflectArray.getBodyPtr(fileCont);
+        long data = Nanovg.stbi_load_from_memory(ptr, fileCont.length, x, y, n, 0);
+        if (data == 0) {
+            System.out.println("ERROR: failed to load image: " + fileCont);
+            return;
+        }
+        w_h_d[0] = x[0];
+        w_h_d[1] = y[0];
+        w_h_d[2] = n[0];
+    }
+
 //
-//    public static int image_load_data(byte[] fileCont, int[] w_h_d) {
+//    public static int image_load_whd(byte[] fileCont, int[] w_h_d) {
 //        int[] x = {0}, y = {0}, n = {0};
 //        int[] tex = {0};
 //        long ptr = new ReflectArray(RefNative.obj2id(fileCont)).getDataPtr();
@@ -340,7 +356,6 @@ public class Gutil {
 //        return tex[0];
 //
 //    }
-
     static public int genTexture2D(byte[] data, int w, int h, int gl_inner_format, int gl_format) {
         int[] tex = {0};
         glGenTextures(1, tex, 0);
