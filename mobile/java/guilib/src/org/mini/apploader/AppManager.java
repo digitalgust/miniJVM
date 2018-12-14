@@ -97,7 +97,7 @@ public class AppManager {
 
     GForm preForm;
 
-    GForm form;
+    GForm mgrForm;
     GMenu menu;
 
     GPanel mainPanel;
@@ -119,15 +119,14 @@ public class AppManager {
     }
 
     public void active() {
-        preForm = GuiCallBack.getInstance().getForm();
-        if (preForm == form) {
-            preForm = null;
+        if (GuiCallBack.getInstance().getForm() != mgrForm) {
+            preForm = GuiCallBack.getInstance().getForm();
         }
         if (webServer != null) {
             webServer.stopServer();
         }
 
-        form = new GForm(GuiCallBack.getInstance()) {
+        mgrForm = new GForm(GuiCallBack.getInstance()) {
 
             @Override
             public void init() {
@@ -189,7 +188,7 @@ public class AppManager {
 
             }
         };
-        GuiCallBack.getInstance().setForm(form);
+        GuiCallBack.getInstance().setForm(mgrForm);
         reloadAppList();
     }
 
@@ -198,7 +197,7 @@ public class AppManager {
         mainPanel = new GPanel();
         mainPanel.setLocation(0, 0);
         mainPanel.setSize(devW * 2, devH);
-        form.add(mainPanel);
+        mgrForm.add(mainPanel);
 
         float y = pad;
         GButton exitbtn = new GButton(GLanguage.getString(STR_EXIT), pad, pad, addW, addH);
@@ -246,9 +245,9 @@ public class AppManager {
                 AppManager.getInstance().active();
             }
         });
-        langList.setSelectedIndex(GlfmMain.getDefaultLang());
         langList.addItem(item);
         mainPanel.add(langList);
+        langList.setSelectedIndex(GlfmMain.getDefaultLang());
         y += 35 + pad;
 
         GLabel downLab = new GLabel(GLanguage.getString(STR_DOWN_APP_FROM_WEB), pad, y, devW - pad * 2, addH);
@@ -351,7 +350,7 @@ public class AppManager {
         buildContentView();
         mainPanel.add(contentView);
 
-        form.setKeyshowListener(new GKeyboardShowListener() {
+        mgrForm.setKeyshowListener(new GKeyboardShowListener() {
             @Override
             public void keyboardShow(boolean show, float kx, float ky, float kw, float kh) {
                 if (show) {
@@ -539,7 +538,7 @@ public class AppManager {
     void mainPanelShowLeft() {
         float panelX = mainPanel.getX();
         float panelY = mainPanel.getY();
-        form.inertiaEvent(panelX, panelY, panelX + 200, panelY, 100);
+        mgrForm.inertiaEvent(panelX, panelY, panelX + 200, panelY, 100);
         if (curSelectedItem != null) {
             appList.setSelectedIndex(-1);
             curSelectedItem = null;
@@ -549,7 +548,7 @@ public class AppManager {
     void mainPanelShowRight() {
         float panelX = mainPanel.getX();
         float panelY = mainPanel.getY();
-        form.inertiaEvent(panelX + 200, panelY, panelX, panelY, 100);
+        mgrForm.inertiaEvent(panelX + 200, panelY, panelX, panelY, 100);
     }
 
 }

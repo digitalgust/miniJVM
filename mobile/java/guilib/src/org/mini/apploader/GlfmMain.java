@@ -87,6 +87,10 @@ public class GlfmMain {
         if (!f.exists()) {
             f.mkdirs();
         }
+        //clear tmp files
+        f = new File(Glfm.glfmGetSaveRoot() + TMP_DIR);
+        deleteTree(f);
+        //check tmp dir
         f = new File(Glfm.glfmGetSaveRoot() + TMP_DIR);
         if (!f.exists()) {
             f.mkdirs();
