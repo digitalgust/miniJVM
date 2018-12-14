@@ -138,7 +138,7 @@ public class AppManager {
                 devH = ccb.getDeviceHeight();
                 //System.out.println("devW , devH " + devW + " , " + devH);
 
-                Glfm.glfmSetKeyboardVisible(ccb.getDisplay(), false);
+                GForm.hideKeyboard();
                 GLanguage.setCurLang(GlfmMain.getDefaultLang());
 
                 setFps(30f);

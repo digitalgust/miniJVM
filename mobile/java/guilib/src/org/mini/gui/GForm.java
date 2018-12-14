@@ -37,6 +37,8 @@ import static org.mini.nanovg.Nanovg.nvgFontFace;
 import static org.mini.nanovg.Nanovg.nvgFontSize;
 import static org.mini.nanovg.Nanovg.nvgTextAlign;
 import static org.mini.gui.GObject.flush;
+import static org.mini.gui.GObject.flush;
+import static org.mini.gui.GObject.flush;
 
 /**
  *
@@ -64,12 +66,12 @@ public class GForm extends GViewPort {
     GAppActiveListener activeListener;
     GNotifyListener notifyListener;
 
-    final static List<Integer> pendingDeleteImage = Collections.synchronizedList(new ArrayList());
-
+//    final static List<Integer> pendingDeleteImage = Collections.synchronizedList(new ArrayList());
     final static Timer timer = new Timer(true);//用于更新画面，UI系统采取按需刷新的原则
 
-    final static List<String> message = Collections.synchronizedList(new ArrayList());
+
     static byte[] curShowMessage;
+    static GCmdHandler cmdHandler = new GCmdHandler();
 
     public GForm(GuiCallBack ccb) {
         this.title = title;
@@ -159,7 +161,7 @@ public class GForm extends GViewPort {
             Nanovg.nvgResetScissor(vg);
             Nanovg.nvgScissor(vg, 0, 0, winWidth, winHeight);
             update(vg);
-            paintMessage(vg);
+            cmdHandler.update(this);
             nvgEndFrame(vg);
 
             //
@@ -175,16 +177,7 @@ public class GForm extends GViewPort {
 //                if (cost < 1000 / fpsExpect) {
 //                    Thread.sleep((long) (1000 / fpsExpect - cost));
 //                }
-            synchronized (pendingDeleteImage) {
-                for (int i = pendingDeleteImage.size() - 1; i >= 0; i--) {
-                    Integer tex = pendingDeleteImage.get(i);
-                    if (tex != null) {
-                        Nanovg.nvgDeleteImage(vg, tex);
-                        System.out.println("delete image " + tex);
-                    }
-                }
-                pendingDeleteImage.clear();
-            }
+            cmdHandler.process(this);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -276,9 +269,7 @@ public class GForm extends GViewPort {
     }
 
     public static void deleteImage(int texture) {
-        synchronized (pendingDeleteImage) {
-            pendingDeleteImage.add(texture);
-        }
+        cmdHandler.addCmd(GCmd.GCMD_DESTORY_TEXTURE, texture);
     }
 
     public void onAppFocus(boolean focus) {
@@ -327,38 +318,19 @@ public class GForm extends GViewPort {
      * @param s
      */
     public static void addMessage(String s) {
-        message.add(s);
+        cmdHandler.addCmd(GCmd.GCMD_SHOW_MESSAGE, s);
     }
 
     public static void clearMessage() {
-        message.clear();
+        cmdHandler.addCmd(GCmd.GCMD_CLEAR_MESSAGE);
+    }
+    
+    public static void showKeyboard(){
+        cmdHandler.addCmd(GCmd.GCMD_SHOW_KEYBOARD);
+    }
+    
+    public static void hideKeyboard(){
+        cmdHandler.addCmd(GCmd.GCMD_HIDE_KEYBOARD);
     }
 
-    void paintMessage(long vg) {
-        if (curShowMessage == null) {
-            if (message.size() > 0) {
-                curShowMessage = Gutil.toUtf8(message.remove(0));
-                timer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        curShowMessage = null;
-                        flush();
-                    }
-                }, 1500);
-            }
-        } else {
-            float pad = 20;
-            float panW = callback.getDeviceWidth() - pad * 2;
-            float[] bond = new float[4];
-            nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
-            nvgFontFace(vg, GToolkit.getFontWord());
-            nvgTextAlign(vg, Nanovg.NVG_ALIGN_TOP | Nanovg.NVG_ALIGN_LEFT);
-            Nanovg.nvgTextBoxBoundsJni(vg, 0, 0, panW, curShowMessage, 0, curShowMessage.length, bond);
-
-            GToolkit.drawRoundedRect(vg, pad * .5f, pad * .5f, panW + pad, bond[HEIGHT] - bond[TOP] + pad, 5, Nanovg.nvgRGBf(1.f, 1.f, 1.f));
-
-            nvgFillColor(vg, Nanovg.nvgRGBf(0.f, 0.f, 0.f));
-            Nanovg.nvgTextBoxJni(vg, pad, pad, panW, curShowMessage, 0, curShowMessage.length);
-        }
-    }
 }

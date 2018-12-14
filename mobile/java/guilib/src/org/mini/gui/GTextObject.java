@@ -116,23 +116,19 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         }
     }
 
-    public void setKeyboardVisible(boolean visible) {
-        if (getForm() != null && editable) {
-            Glfm.glfmSetKeyboardVisible(winContext, visible);
-        }
-    }
-
     long winContext;
 
     @Override
     public void focusGot(GObject go) {
-        winContext = getForm().getWinContext();
+        if (editable) {
+            GForm.showKeyboard();
+        }
     }
 
     @Override
     public void focusLost(GObject newgo) {
         if (newgo != unionObj && newgo != this) {
-            Glfm.glfmSetKeyboardVisible(winContext, false);
+            GForm.hideKeyboard();
         }
         disposeEditMenu();
         touched = false;
@@ -152,7 +148,6 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
                     if (touched) {
                         if (getForm() != null && editable) {
                             //System.out.println("touched textobject");
-                            Glfm.glfmSetKeyboardVisible(getForm().getWinContext(), true);
                         }
                         touched = false;
                     }
