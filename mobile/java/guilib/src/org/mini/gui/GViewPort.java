@@ -48,6 +48,7 @@ public class GViewPort extends GContainer {
             parent.reBoundle();
         }
         setInnerSize(w, h);
+        reBoundle();
     }
 
     @Override
