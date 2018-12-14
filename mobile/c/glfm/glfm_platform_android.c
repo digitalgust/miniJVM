@@ -94,6 +94,8 @@ typedef struct {
     GLFMDisplay *display;
     GLFMRenderingAPI renderingAPI;
 
+    char *clipBoardStr;
+
     JNIEnv *jniEnv;
 } GLFMPlatformData;
 
@@ -173,7 +175,7 @@ static jmethodID _glfmGetJavaMethodID(JNIEnv *jni, jobject object, const char *n
     if (object) {
         jclass class = (*jni)->GetObjectClass(jni, object);
         jmethodID methodID = (*jni)->GetMethodID(jni, class, name, sig);
-        //(*jni)->DeleteLocalRef(jni, class);
+        (*jni)->DeleteLocalRef(jni, class);
         return _glfmWasJavaExceptionThrown() ? NULL : methodID;
     } else {
         return NULL;
@@ -184,7 +186,6 @@ static jmethodID _glfmGetJavaStaticMethodID(JNIEnv *jni, jclass clazz, const cha
                                             const char *sig) {
     if (clazz) {
         jmethodID methodID = (*jni)->GetStaticMethodID(jni, clazz, name, sig);
-        //(*jni)->DeleteLocalRef(jni, clazz);
         return _glfmWasJavaExceptionThrown() ? NULL : methodID;
     } else {
         return NULL;
@@ -885,7 +886,13 @@ static void _glfmOnContentRectChanged(ANativeActivity *activity, const ARect *re
 
 static void _glfmUpdateKeyboardVisibility(GLFMPlatformData *platformData) {
     if (platformData->display) {
-        ARect windowRect = platformData->app->contentRect;
+        //gust fix windowRect same as visibleDisplayFrame ,use egl width ,height
+//        ARect windowRect = platformData->app->contentRect;
+        ARect windowRect;
+        windowRect.top = 0;
+        windowRect.left = 0;
+        windowRect.right = platformData->width;
+        windowRect.bottom = platformData->height;
         ARect visibleRect = _glfmGetWindowVisibleDisplayFrame(platformData, windowRect);
         ARect nonVisibleRect[4];
 
@@ -1256,13 +1263,12 @@ static int32_t _glfmOnInputEvent(struct android_app *app, AInputEvent *event) {
 jobject copyAssets(JNIEnv *env, jobject jassetMgr, char *cpath) {
     //java.lang.String[] files=mgr.list("");
     jstring path = (*env)->NewStringUTF(env, cpath);
-    jobjectArray stringArray = _glfmCallJavaMethodWithArgs(env, jassetMgr, "list",
-                                                           "(Ljava/lang/String;)[Ljava/lang/String;",
+    jobjectArray stringArray = _glfmCallJavaMethodWithArgs(env, jassetMgr, "list", "(Ljava/lang/String;)[Ljava/lang/String;",
                                                            Object, path);
     int stringCount = (*env)->GetArrayLength(env, stringArray);
 
-    AAssetManager *mgr = glfmAndroidGetActivity()->assetManager;
-    const char *exDirRoot = (const char *) glfmAndroidGetActivity()->externalDataPath;
+    AAssetManager *nmgr = glfmAndroidGetActivity()->assetManager;
+    const char *exDirRoot = glfmAndroidGetActivity()->externalDataPath;
     for (int i = 0; i < stringCount; i++) {
         jstring string = (jstring) ((*env)->GetObjectArrayElement(env, stringArray, i));
         const char *rawString = (*env)->GetStringUTFChars(env, string, 0);
@@ -1297,7 +1303,7 @@ jobject copyAssets(JNIEnv *env, jobject jassetMgr, char *cpath) {
 //            }
         }
 
-        AAsset *asset = AAssetManager_open(mgr, assetpath, AASSET_MODE_UNKNOWN);
+        AAsset *asset = AAssetManager_open(nmgr, assetpath, AASSET_MODE_UNKNOWN);
         if (asset) {
             if (AAsset_getLength(asset) != fsize) {//TODO file size not equire , need md5 match
                 LOG_DEBUG("assets file =%s\n", assetpath);
@@ -1312,16 +1318,17 @@ jobject copyAssets(JNIEnv *env, jobject jassetMgr, char *cpath) {
             AAsset_close(asset);
         } else {
             LOG_DEBUG("assets dir =%s\n", assetpath);
-            AAssetDir *assetDir = AAssetManager_openDir(mgr, assetpath);
+            AAssetDir *assetDir = AAssetManager_openDir(nmgr, assetpath);
             mkdir(expath, S_IRWXU | S_IRWXG);
             copyAssets(env, jassetMgr, assetpath);
             AAssetDir_close(assetDir);
         }
         // Don't forget to call `ReleaseStringUTFChars` when you're done.
         (*env)->ReleaseStringUTFChars(env, string, rawString);
-        (*env)->DeleteLocalRef(env,string);
+        (*env)->DeleteLocalRef(env, string);
 
     }
+    (*env)->DeleteLocalRef(env, path);
 }
 
 /**
@@ -1342,6 +1349,8 @@ static int copyFile2ExternData(struct android_app *app) {
     jobject amgr = _glfmCallJavaMethod(env, context, "getAssets",
                                        "()Landroid/content/res/AssetManager;", Object);
     copyAssets(env, amgr, "");
+    (*env)->DeleteLocalRef(env, context);
+    (*env)->DeleteLocalRef(env, amgr);
     return 0;
 }
 
@@ -1580,8 +1589,7 @@ ANativeActivity *glfmAndroidGetActivity() {
     }
 }
 
-JNIEXPORT jboolean JNICALL
-Java_org_minijvm_activity_JvmNativeActivity_onStringInput(JNIEnv *env, jobject jobj, jstring s) {
+JNIEXPORT jboolean JNICALL Java_org_minijvm_activity_JvmNativeActivity_onStringInput(JNIEnv *env, jobject jobj, jstring s) {
     int down = 0;
     if (platformDataGlobal && platformDataGlobal->app) {
         const char *rawString = (*env)->GetStringUTFChars(env, s, 0);
@@ -1618,63 +1626,53 @@ const char *getClipBoardContent() {
     jstring jstr = _glfmCallJavaMethod(jni, app->activity->clazz, "getClipBoardContent",
                                        "()Ljava/lang/String;", Object);
     const char *rawString = (*jni)->GetStringUTFChars(jni, jstr, 0);
-    return rawString;
+
+    //copy str to mem cache
+    if (platformDataGlobal->clipBoardStr) {
+        free(platformDataGlobal->clipBoardStr);
+        platformDataGlobal->clipBoardStr = NULL;
+    }
+    int size = strlen(rawString) + 1;
+    platformDataGlobal->clipBoardStr = malloc(size);
+    memcpy(platformDataGlobal->clipBoardStr, rawString, size);
+    platformDataGlobal->clipBoardStr[size] = 0;
+
+    (*jni)->ReleaseStringUTFChars(jni, jstr, rawString);
+    (*jni)->DeleteLocalRef(jni, jstr);
+    return platformDataGlobal->clipBoardStr;
 }
 
 void setClipBoardContent(const char *str) {
     struct android_app *app = platformDataGlobal->app;
     GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
     JNIEnv *jni = platformData->jniEnv;
-    if ((*jni)->ExceptionCheck(jni)) {
-        (*jni)->ExceptionDescribe(jni);
-        (*jni)->ExceptionClear(jni);
-        return;
-    }
+
     jstring jstr = (*jni)->NewStringUTF(jni, str);
 
     _glfmCallJavaMethodWithArgs(jni, app->activity->clazz, "setClipBoardContent",
                                 "(Ljava/lang/String;)V", Void, jstr);
-    if ((*jni)->ExceptionCheck(jni)) {
-        (*jni)->ExceptionDescribe(jni);
-        (*jni)->ExceptionClear(jni);
-        return;
-    }
+    (*jni)->DeleteLocalRef(jni, jstr);
+    _glfmClearJavaException()
 }
 
 void pickPhotoAlbum(GLFMDisplay *display, int uid, int type) {
     struct android_app *app = platformDataGlobal->app;
     GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
     JNIEnv *jni = platformData->jniEnv;
-    if ((*jni)->ExceptionCheck(jni)) {
-        (*jni)->ExceptionDescribe(jni);
-        (*jni)->ExceptionClear(jni);
-        return;
-    }
+
     _glfmCallJavaMethodWithArgs(jni, app->activity->clazz, "pickFromAlbum",
                                 "(II)V", Void, uid, type);
-    if ((*jni)->ExceptionCheck(jni)) {
-        (*jni)->ExceptionDescribe(jni);
-        (*jni)->ExceptionClear(jni);
-        return;
-    }
+    _glfmClearJavaException()
 }
 
 void pickPhotoCamera(GLFMDisplay *display, int uid, int type) {
     struct android_app *app = platformDataGlobal->app;
     GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
     JNIEnv *jni = platformData->jniEnv;
-    if ((*jni)->ExceptionCheck(jni)) {
-        (*jni)->ExceptionDescribe(jni);
-        (*jni)->ExceptionClear(jni);
-        return;
-    }
+
     _glfmCallJavaMethodWithArgs(jni, app->activity->clazz, "pickFromCamera",
                                 "(II)V", Void, uid, type);
-    if ((*jni)->ExceptionCheck(jni)) {
-        (*jni)->ExceptionDescribe(jni);
-        (*jni)->ExceptionClear(jni);
-        return;
-    }
+    _glfmClearJavaException()
 }
 
 void
@@ -1682,19 +1680,12 @@ imageCrop(GLFMDisplay *display, int uid, const char *uri, int x, int y, int widt
     struct android_app *app = platformDataGlobal->app;
     GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
     JNIEnv *jni = platformData->jniEnv;
-    if ((*jni)->ExceptionCheck(jni)) {
-        (*jni)->ExceptionDescribe(jni);
-        (*jni)->ExceptionClear(jni);
-        return;
-    }
+
     jstring jstr = (*jni)->NewStringUTF(jni, uri);
     _glfmCallJavaMethodWithArgs(jni, app->activity->clazz, "imageCrop",
                                 "(ILjava/lang/String;IIII)V", Void, uid, jstr, x, y, width, height);
-    if ((*jni)->ExceptionCheck(jni)) {
-        (*jni)->ExceptionDescribe(jni);
-        (*jni)->ExceptionClear(jni);
-        return;
-    }
+    (*jni)->DeleteLocalRef(jni, jstr);
+    _glfmClearJavaException()
 }
 
 
