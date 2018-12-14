@@ -277,6 +277,7 @@ public class GForm extends GViewPort {
         if (activeListener != null) {
             activeListener.onAppActive(focus);
         }
+        flush();
     }
 
     public void onNotify(String key, String val) {
