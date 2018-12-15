@@ -286,6 +286,10 @@ public class MiniHttpServer extends Thread {
                     }
                 }
                 String fileName = map.get(FILE_NAME_TAG);
+                //get filename from path
+                fileName = fileName.replace('\\', '/');
+                fileName = fileName.indexOf('/') > 0 ? fileName.substring(fileName.indexOf('/') + 1) : fileName;
+                //
                 String fieldName = map.get(FIELD_NAME_TAG);
                 byte[] b = creader.readRemain();
                 if (fileName != null) { //是文件

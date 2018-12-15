@@ -103,7 +103,7 @@ public class AudioDevice {
         destory();
     }
 
-    void destory() {
+    public void destory() {
         if (handle_context != 0) {
             MiniAL.mal_context_uninit(handle_context);
             handle_context = 0;

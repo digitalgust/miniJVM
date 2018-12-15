@@ -68,9 +68,21 @@ public class GlfmMain {
         checkDir();
         loadProp(APP_INFO_FILE, appinfo);
         loadProp(APP_LIST_FILE, applist);
+
+        for (String s : getAppList()) {
+            try {
+                if (!isJarExists(s)) {
+                    removeApp(s);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        saveProp(APP_LIST_FILE, applist);
+
         copyExApp();
         String bootApp = appinfo.getProperty(KEY_BOOT);
-        if (bootApp == null) {
+        if (bootApp == null || isJarExists(bootApp)) {
             setBootApp(EXAMPLE_APP_FILE);
             bootApp = EXAMPLE_APP_FILE;
         }
