@@ -46,7 +46,7 @@ import static org.mini.nanovg.Nanovg.nvgTextMetrics;
  *
  * @author gust
  */
-public class GList extends GPanel implements GFocusChangeListener {
+public class GList extends GContainer implements GFocusChangeListener {
 
     char preicon;
     byte[] preicon_arr = toUtf8("" + ICON_CHEVRON_RIGHT);
@@ -117,7 +117,7 @@ public class GList extends GPanel implements GFocusChangeListener {
     public void setInnerSize(float w, float h) {
         width = w;
         height = h;
-        super.setInnerSize(w, h);
+        super.setSize(w, h);
     }
 
     public void setScrollBar(boolean show) {
@@ -141,6 +141,36 @@ public class GList extends GPanel implements GFocusChangeListener {
     @Override
     public int getType() {
         return TYPE_LIST;
+    }
+
+    @Override
+    public float getInnerX() {
+        return getX();
+    }
+
+    @Override
+    public float getInnerY() {
+        return getY();
+    }
+
+    @Override
+    public float getInnerW() {
+        return getW();
+    }
+
+    @Override
+    public float getInnerH() {
+        return getH();
+    }
+
+    @Override
+    public void setInnerLocation(float x, float y) {
+        setLocation(x, y);
+    }
+
+    @Override
+    public float[] getInnerBoundle() {
+        return getBoundle();
     }
 
     public void setIcon(char icon) {

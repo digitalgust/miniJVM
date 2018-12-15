@@ -5,6 +5,7 @@
  */
 package org.mini.gui;
 
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import org.mini.glfm.Glfm;
@@ -418,4 +419,43 @@ public class GViewPort extends GContainer {
         return boundle[WIDTH] - viewBoundle[WIDTH];
     }
 
+    @Override
+    public List<GObject> getElements() {
+        return super.getElements();
+    }
+
+    @Override
+    public int getElementSize() {
+        return elements.size();
+    }
+
+    @Override
+    public void add(GObject nko) {
+        super.add(nko);
+    }
+
+    @Override
+    public void add(int index, GObject nko) {
+        super.add(index, nko);
+    }
+
+    @Override
+    public void remove(GObject nko) {
+        super.remove(nko);
+    }
+
+    @Override
+    public void remove(int index) {
+        super.remove(index);
+    }
+
+    @Override
+    public boolean contains(GObject son) {
+        return super.contains(son);
+    }
+
+    @Override
+    public void clear() {
+        super.clear();
+    }
 }

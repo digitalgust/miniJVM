@@ -64,9 +64,7 @@ public class GCheckBox extends GObject {
             } else {
                 checked = !checked;
                 parent.setFocus(this);
-                if (actionListener != null) {
-                    actionListener.action(this);
-                }
+                doAction();
             }
         }
     }
@@ -76,9 +74,7 @@ public class GCheckBox extends GObject {
         if (isInArea(x, y)) {
             if (phase == Glfm.GLFMTouchPhaseBegan) {
                 checked = !checked;
-                if (actionListener != null) {
-                    actionListener.action(this);
-                }
+                doAction();
             }
         }
     }

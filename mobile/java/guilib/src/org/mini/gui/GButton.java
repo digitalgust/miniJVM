@@ -77,9 +77,7 @@ public class GButton extends GObject {
                 parent.setFocus(this);
             } else {
                 bt_pressed = false;
-                if (actionListener != null) {
-                    actionListener.action(this);
-                }
+                doAction();
             }
         }
     }
@@ -97,9 +95,7 @@ public class GButton extends GObject {
             if (phase == Glfm.GLFMTouchPhaseBegan) {
                 bt_pressed = true;
             } else if (phase == Glfm.GLFMTouchPhaseEnded) {
-                if (actionListener != null && bt_pressed) {
-                    actionListener.action(this);
-                }
+                doAction();
                 bt_pressed = false;
             } else if (!isInArea(x, y)) {
                 bt_pressed = false;

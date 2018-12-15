@@ -38,7 +38,7 @@ import static org.mini.nanovg.Nanovg.nvgTextJni;
  *
  * @author gust
  */
-public class GFrame extends GPanel {
+public class GFrame extends GContainer {
 
     static final float TITLE_HEIGHT = 30.f, PAD = 2.f;
 
@@ -91,10 +91,45 @@ public class GFrame extends GPanel {
         return TYPE_FRAME;
     }
 
+    @Override
+    public float getInnerX() {
+        return getX();
+    }
+
+    @Override
+    public float getInnerY() {
+        return getY();
+    }
+
+    @Override
+    public float getInnerW() {
+        return getW();
+    }
+
+    @Override
+    public float getInnerH() {
+        return getH();
+    }
+
+    @Override
+    public void setInnerLocation(float x, float y) {
+        setLocation(x, y);
+    }
+
+    @Override
+    public void setInnerSize(float x, float y) {
+        setSize(x, y);
+    }
+
+    @Override
+    public float[] getInnerBoundle() {
+        return getBoundle();
+    }
+
     public void close() {
         if (parent != null) {
             parent.remove(this);
-            
+
         }
     }
 
@@ -119,7 +154,7 @@ public class GFrame extends GPanel {
         background_rgba = rgba;
     }
 
-    public GContainer getView() {
+    public GViewPort getView() {
         return panel;
     }
 

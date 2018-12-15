@@ -311,22 +311,18 @@ abstract public class GObject {
 
     public GForm getForm() {
         GObject go = this;
-        do {
-            if (go instanceof GForm) {
-                return (GForm) go;
-            }
-        } while ((go = go.parent) != null);
-        return null;
+        while (!(go instanceof GForm)) {
+            go = go.parent;
+        }
+        return (GForm) go;
     }
 
     public GFrame getFrame() {
         GObject go = this;
-        while ((go = go.parent) != null) {
-            if (go instanceof GFrame) {
-                return (GFrame) go;
-            }
+        while (!(go instanceof GFrame)) {
+            go = go.parent;
         }
-        return null;
+        return (GFrame) go;
     }
 
     /**

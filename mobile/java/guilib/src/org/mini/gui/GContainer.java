@@ -44,12 +44,91 @@ abstract public class GContainer extends GObject {
                 && y >= absy && y <= absy + getH();
     }
 
-    public List<GObject> getElements() {
+    List<GObject> getElements() {
         return elements;
     }
 
-    public int getElementSize() {
+    int getElementSize() {
         return elements.size();
+    }
+
+    void add(GObject nko) {
+        if (nko != null) {
+            add(elements.size(), nko);
+            if (nko.isFront()) {
+                setFocus(nko);
+            }
+        }
+    }
+
+    void add(int index, GObject nko) {
+        if (nko != null) {
+            synchronized (elements) {
+                if (!elements.contains(nko)) {
+                    elements.add(index, nko);
+                    nko.setParent(this);
+                    nko.init();
+                    onAdd(nko);
+                }
+            }
+        }
+    }
+
+    void remove(GObject nko) {
+        if (nko != null) {
+            synchronized (elements) {
+                nko.setParent(null);
+                nko.destory();
+                boolean b = elements.remove(nko);
+                if (focus == nko) {
+                    if (b) {
+                        focus.doFocusLost(null);
+                    }
+                    focus = null;
+                }
+                onRemove(nko);
+            }
+        }
+    }
+
+    void remove(int index) {
+        synchronized (elements) {
+            GObject nko = elements.get(index);
+            remove(nko);
+        }
+    }
+
+    boolean contains(GObject son) {
+        return elements.contains(son);
+    }
+
+    void clear() {
+        synchronized (elements) {
+            int size = elements.size();
+            for (int i = 0; i < size; i++) {
+                remove(elements.size() - 1);
+            }
+        }
+    }
+
+    public GObject findByName(String name) {
+        if (name == null) {
+            return null;
+        }
+        synchronized (elements) {
+            for (GObject go : elements) {
+                if (name.equals(go.name)) {
+                    return go;
+                }
+                if (go instanceof GContainer) {
+                    GObject sub = ((GContainer) go).findByName(name);
+                    if (sub != null) {
+                        return sub;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     public GObject findByXY(float x, float y) {
@@ -84,9 +163,7 @@ abstract public class GContainer extends GObject {
             //notify all focus of sons
             GObject tmp = old;
             while (tmp != null) {
-                if (tmp.focusListener != null) {
-                    tmp.focusListener.focusLost(go);
-                }
+                tmp.doFocusLost(go);
                 if (tmp instanceof GContainer) {
                     tmp = ((GContainer) tmp).focus;
                 } else {
@@ -94,90 +171,9 @@ abstract public class GContainer extends GObject {
                 }
             }
             if (focus != null) {
-                if (focus.focusListener != null) {
-                    focus.focusListener.focusGot(old);
-                }
+                focus.doFocusGot(old);
             }
         }
-    }
-
-    public void add(GObject nko) {
-        if (nko != null) {
-            add(elements.size(), nko);
-            if (nko.isFront()) {
-                setFocus(nko);
-            }
-        }
-    }
-
-    public void add(int index, GObject nko) {
-        if (nko != null) {
-            synchronized (elements) {
-                if (!elements.contains(nko)) {
-                    elements.add(index, nko);
-                    nko.setParent(this);
-                    nko.init();
-                    onAdd(nko);
-                }
-            }
-        }
-    }
-
-    public void remove(GObject nko) {
-        if (nko != null) {
-            synchronized (elements) {
-                nko.setParent(null);
-                nko.destory();
-                boolean b = elements.remove(nko);
-                if (focus == nko) {
-                    if (b) {
-                        focus.doFocusLost(null);
-                    }
-                    focus = null;
-                }
-                onRemove(nko);
-            }
-        }
-    }
-
-    public void remove(int index) {
-        synchronized (elements) {
-            GObject nko = elements.get(index);
-            remove(nko);
-        }
-    }
-
-    public boolean contains(GObject son) {
-        return elements.contains(son);
-    }
-
-    public void clear() {
-        synchronized (elements) {
-            int size = elements.size();
-            for (int i = 0; i < size; i++) {
-                remove(elements.size() - 1);
-            }
-        }
-    }
-
-    public GObject findByName(String name) {
-        if (name == null) {
-            return null;
-        }
-        synchronized (elements) {
-            for (GObject go : elements) {
-                if (name.equals(go.name)) {
-                    return go;
-                }
-                if (go instanceof GContainer) {
-                    GObject sub = ((GContainer) go).findByName(name);
-                    if (sub != null) {
-                        return sub;
-                    }
-                }
-            }
-        }
-        return null;
     }
 
     public void onAdd(GObject obj) {

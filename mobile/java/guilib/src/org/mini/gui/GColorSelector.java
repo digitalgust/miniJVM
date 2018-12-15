@@ -96,9 +96,7 @@ public class GColorSelector extends GObject {
                     selectX = (float) (Math.cos(angel) * oldX - Math.sin(angel) * oldY);//(float) Math.cos(120.0f / 180.0f * Math.PI) * r * 0.3f;
                     selectY = (float) (Math.sin(angel) * oldX + Math.cos(angel) * oldY);//(float) Math.sin(120.0f / 180.0f * Math.PI) * r * 0.4f;
                 }
-            } else if (actionListener != null) {
-                actionListener.action(this);
-            }
+            } else doAction();
         }
 
     }
@@ -124,9 +122,7 @@ public class GColorSelector extends GObject {
                     selectY = (float) (Math.sin(angel) * oldX + Math.cos(angel) * oldY);//(float) Math.sin(120.0f / 180.0f * Math.PI) * r * 0.4f;
                 }
             } else if (phase != Glfm.GLFMTouchPhaseEnded) {
-                if (actionListener != null) {
-                    actionListener.action(this);
-                }
+                doAction();
             } else {
 
             }

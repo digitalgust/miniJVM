@@ -60,7 +60,7 @@ public class MyApp extends GApplication {
     public GFrame getFrame1() {
 
         GFrame gframe = new GFrame("Hello World", 50, 50, form.getDeviceWidth() * .8f, (form.getDeviceHeight() - menu.getH()) * .7f);
-        GContainer parent = gframe.getView();
+        GViewPort parent = gframe.getView();
         float pad = 8;
         float x = pad, y = 10;
         float btnH = 28;

@@ -5,11 +5,18 @@
  */
 package org.mini.gui;
 
+import java.util.List;
+
 /**
  *
  * @author gust
  */
 public class GPanel extends GContainer {
+
+    @Override
+    public int getType() {
+        return TYPE_PANEL;
+    }
 
     @Override
     public float getInnerX() {
@@ -32,11 +39,6 @@ public class GPanel extends GContainer {
     }
 
     @Override
-    public int getType() {
-        return TYPE_PANEL;
-    }
-
-    @Override
     public void setInnerLocation(float x, float y) {
         setLocation(x, y);
     }
@@ -51,4 +53,43 @@ public class GPanel extends GContainer {
         return getBoundle();
     }
 
+    @Override
+    public List<GObject> getElements() {
+        return super.getElements();
+    }
+
+    @Override
+    public int getElementSize() {
+        return elements.size();
+    }
+
+    @Override
+    public void add(GObject nko) {
+        super.add(nko);
+    }
+
+    @Override
+    public void add(int index, GObject nko) {
+        super.add(index, nko);
+    }
+
+    @Override
+    public void remove(GObject nko) {
+        super.remove(nko);
+    }
+
+    @Override
+    public void remove(int index) {
+        super.remove(index);
+    }
+
+    @Override
+    public boolean contains(GObject son) {
+        return super.contains(son);
+    }
+
+    @Override
+    public void clear() {
+        super.clear();
+    }
 }

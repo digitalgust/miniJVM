@@ -98,9 +98,7 @@ public class GListItem extends GObject {
         list.pulldown = false;
         list.changeCurPanel();
         flush();
-        if (actionListener != null) {
-            actionListener.action(this);
-        }
+        doAction();
     }
 
     @Override
