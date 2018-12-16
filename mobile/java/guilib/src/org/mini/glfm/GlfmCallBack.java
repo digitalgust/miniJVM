@@ -5,11 +5,13 @@
  */
 package org.mini.glfm;
 
+import org.mini.gui.GCallback;
+
 /**
  *
  * @author gust
  */
-public interface GlfmCallBack {
+public interface GlfmCallBack extends GCallback{
 
     //void onFrame(GLFMDisplay *display, double frameTime)
     public void mainLoop(long display, double frameTime);

@@ -302,12 +302,8 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
-        setFocus(findByXY(x, y));
-
-        if (focus != null) {
-            focus.mouseButtonEvent(button, pressed, x, y);
-        }
-
+        int phase = pressed ? Glfm.GLFMTouchPhaseBegan : Glfm.GLFMTouchPhaseEnded;
+        touchEvent(phase, x, y);
     }
 
     @Override
