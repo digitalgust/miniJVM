@@ -5,8 +5,6 @@
  */
 package org.mini.glfm;
 
-import org.mini.gui.GCallback;
-
 /**
  *
  * @author gust
@@ -98,7 +96,7 @@ public class Glfm {
     public static int GLFMPickPhotoSave_no = 0;
     //
 
-    public static native void glfmSetCallBack(long display, GCallback app);
+    public static native void glfmSetCallBack(long display, GlfmCallBack app);
 
 /// Init the display condifuration. Should only be called in glfmMain.
 /// If the device does not support the preferred rendering API, the next available rendering API is

@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.TimerTask;
 import org.mini.glfm.Glfm;
-import static org.mini.gui.GForm.curShowMessage;
 import org.mini.nanovg.Gutil;
 import org.mini.nanovg.Nanovg;
 import static org.mini.nanovg.Nanovg.nvgFillColor;

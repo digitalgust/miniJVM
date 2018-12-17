@@ -13,10 +13,9 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
-import org.mini.glfm.Glfm;
 import org.mini.gui.GApplication;
 import org.mini.gui.GLanguage;
-import org.mini.gui.impl.GuiCallBack;
+import org.mini.guijni.GuiCallBack;
 import org.mini.reflect.vm.RefNative;
 import org.mini.zip.Zip;
 
@@ -32,19 +31,7 @@ import org.mini.zip.Zip;
  */
 public class GlfmMain {
 
-    static public void glinit(long winContext) {
 
-        Glfm.glfmSetDisplayConfig(winContext,
-                Glfm.GLFMRenderingAPIOpenGLES3,
-                Glfm.GLFMColorFormatRGBA8888,
-                Glfm.GLFMDepthFormat16,
-                Glfm.GLFMStencilFormat8,
-                Glfm.GLFMMultisampleNone);
-
-        GuiCallBack.getInstance().setDisplay(winContext);
-        Glfm.glfmSetCallBack(winContext, GuiCallBack.getInstance());
-
-    }
 
     static final String APP_INFO_FILE = "/appinfo.properties";
     static final String APP_LIST_FILE = "/applist.properties";
@@ -90,36 +77,36 @@ public class GlfmMain {
     }
 
     static void checkDir() {
-        File f = new File(Glfm.glfmGetSaveRoot() + APP_DIR);
+        File f = new File(GuiCallBack.getInstance().getAppSaveRoot() + APP_DIR);
         if (!f.exists()) {
             f.mkdirs();
         }
 
-        f = new File(Glfm.glfmGetSaveRoot() + APP_DATA_DIR);
+        f = new File(GuiCallBack.getInstance().getAppSaveRoot() + APP_DATA_DIR);
         if (!f.exists()) {
             f.mkdirs();
         }
         //clear tmp files
-        f = new File(Glfm.glfmGetSaveRoot() + TMP_DIR);
+        f = new File(GuiCallBack.getInstance().getAppSaveRoot() + TMP_DIR);
         deleteTree(f);
         //check tmp dir
-        f = new File(Glfm.glfmGetSaveRoot() + TMP_DIR);
+        f = new File(GuiCallBack.getInstance().getAppSaveRoot() + TMP_DIR);
         if (!f.exists()) {
             f.mkdirs();
         }
     }
 
     static public String getTmpDirPath() {
-        return Glfm.glfmGetSaveRoot() + TMP_DIR;
+        return GuiCallBack.getInstance().getAppSaveRoot() + TMP_DIR;
     }
 
     static public String getAppJarPath(String jarName) {
-        String s = Glfm.glfmGetSaveRoot() + APP_DIR + jarName;
+        String s = GuiCallBack.getInstance().getAppSaveRoot() + APP_DIR + jarName;
         return s;
     }
 
     static public String getAppDataPath(String jarName) {
-        String s = Glfm.glfmGetSaveRoot() + APP_DATA_DIR + jarName + "/";
+        String s = GuiCallBack.getInstance().getAppSaveRoot() + APP_DATA_DIR + jarName + "/";
         File f = new File(s);
         if (!f.exists()) {
             f.mkdirs();
@@ -128,7 +115,7 @@ public class GlfmMain {
     }
 
     static void copyExApp() {
-        String srcPath = Glfm.glfmGetResRoot() + "/resfiles/" + EXAMPLE_APP_FILE;
+        String srcPath = GuiCallBack.getInstance().getAppResRoot() + "/resfiles/" + EXAMPLE_APP_FILE;
         //if (!applist.contains(EXAMPLE_APP_FILE) || !isJarExists(srcPath)) {
         addApp(EXAMPLE_APP_FILE, srcPath);
         //System.out.println("copy exapp");
@@ -137,7 +124,7 @@ public class GlfmMain {
 
     public static void loadProp(String fname, Properties prop) {
         try {
-            File f = new File(Glfm.glfmGetSaveRoot() + fname);
+            File f = new File(GuiCallBack.getInstance().getAppSaveRoot() + fname);
             if (f.exists()) {
                 FileInputStream fis = new FileInputStream(f);
                 prop.load(fis);
@@ -151,7 +138,7 @@ public class GlfmMain {
 
     public static void saveProp(String name, Properties prop) {
         try {
-            File f = new File(Glfm.glfmGetSaveRoot() + name);
+            File f = new File(GuiCallBack.getInstance().getAppSaveRoot() + name);
 
             FileOutputStream fos = new FileOutputStream(f);
             prop.store(fos, "");

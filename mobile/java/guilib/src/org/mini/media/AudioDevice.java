@@ -104,13 +104,13 @@ public class AudioDevice {
     }
 
     public void destory() {
-        if (handle_context != 0) {
-            MiniAL.mal_context_uninit(handle_context);
-            handle_context = 0;
-        }
         if (handle_device != 0) {
             MiniAL.mal_device_uninit(handle_device);
             handle_device = 0;
+        }
+        if (handle_context != 0) {
+            MiniAL.mal_context_uninit(handle_context);
+            handle_context = 0;
         }
         System.out.println("finalize : " + this);
     }

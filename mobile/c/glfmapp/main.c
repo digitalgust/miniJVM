@@ -46,7 +46,7 @@ void glfmMain(GLFMDisplay *display) {
     Runtime *runtime=getRuntimeCurThread(&jnienv);
 
     utf8_destory(classpath);
-    c8* p_classname="org/mini/apploader/GlfmMain";
+    c8* p_classname="org/mini/guijni/GuiCallBackImpl";
     c8* p_methodname="glinit";
     c8* p_methodtype="(J)V";
     push_long(runtime->stack,(intptr_t)display);

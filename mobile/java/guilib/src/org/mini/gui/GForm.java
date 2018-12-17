@@ -5,11 +5,7 @@
  */
 package org.mini.gui;
 
-import org.mini.gui.impl.GuiCallBack;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import org.mini.guijni.GuiCallBack;
 import java.util.Timer;
 import java.util.TimerTask;
 import static org.mini.gl.GL.GL_COLOR_BUFFER_BIT;
@@ -19,9 +15,7 @@ import static org.mini.gl.GL.glClear;
 import org.mini.nanovg.StbFont;
 import static org.mini.gl.GL.glClearColor;
 import static org.mini.gl.GL.glViewport;
-import org.mini.glfm.Glfm;
 import static org.mini.gui.GObject.TYPE_FORM;
-import static org.mini.gui.GObject.flush;
 import static org.mini.gui.GToolkit.nvgRGBA;
 import org.mini.gui.event.GAppActiveListener;
 import org.mini.gui.event.GKeyboardShowListener;
@@ -36,12 +30,6 @@ import static org.mini.nanovg.Nanovg.nvgFillColor;
 import static org.mini.nanovg.Nanovg.nvgFontFace;
 import static org.mini.nanovg.Nanovg.nvgFontSize;
 import static org.mini.nanovg.Nanovg.nvgTextAlign;
-import static org.mini.gui.GObject.flush;
-import static org.mini.gui.GObject.flush;
-import static org.mini.gui.GObject.flush;
-import static org.mini.gui.GObject.flush;
-import static org.mini.gui.GObject.flush;
-import static org.mini.gui.GObject.flush;
 import static org.mini.gui.GObject.flush;
 
 /**
@@ -73,13 +61,11 @@ public class GForm extends GViewPort {
 //    final static List<Integer> pendingDeleteImage = Collections.synchronizedList(new ArrayList());
     final static Timer timer = new Timer(true);//用于更新画面，UI系统采取按需刷新的原则
 
-
-    static byte[] curShowMessage;
     static GCmdHandler cmdHandler = new GCmdHandler();
 
-    public GForm(GuiCallBack ccb) {
+    public GForm() {
         this.title = title;
-        callback = ccb;
+        callback = GuiCallBack.getInstance();
     }
 
     public int getType() {
@@ -198,8 +184,6 @@ public class GForm extends GViewPort {
         byte[] b;
         nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
 
-        b = Gutil.toUtf8("touch x,y:" + cb.mouseX + "," + cb.mouseY);
-        Nanovg.nvgTextJni(vg, dx, dy, b, 0, b.length);
         dy += font_size;
         b = Gutil.toUtf8("form:" + getX() + "," + getY() + "," + getW() + "," + getH() + "  " + getInnerX() + "," + getInnerY() + "," + getInnerW() + "," + getInnerH());
 
@@ -329,12 +313,12 @@ public class GForm extends GViewPort {
     public static void clearMessage() {
         cmdHandler.addCmd(GCmd.GCMD_CLEAR_MESSAGE);
     }
-    
-    public static void showKeyboard(){
+
+    public static void showKeyboard() {
         cmdHandler.addCmd(GCmd.GCMD_SHOW_KEYBOARD);
     }
-    
-    public static void hideKeyboard(){
+
+    public static void hideKeyboard() {
         cmdHandler.addCmd(GCmd.GCMD_HIDE_KEYBOARD);
     }
 

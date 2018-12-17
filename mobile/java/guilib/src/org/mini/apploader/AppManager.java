@@ -30,7 +30,7 @@ import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GKeyboardShowListener;
 import org.mini.gui.event.GPhotoPickedListener;
 import org.mini.gui.event.GStateChangeListener;
-import org.mini.gui.impl.GuiCallBack;
+import org.mini.guijni.GuiCallBack;
 
 /**
  *
@@ -126,7 +126,7 @@ public class AppManager {
             webServer.stopServer();
         }
 
-        mgrForm = new GForm(GuiCallBack.getInstance()) {
+        mgrForm = new GForm() {
 
             @Override
             public void init() {

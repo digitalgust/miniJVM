@@ -3,7 +3,6 @@ package test;
 import org.mini.apploader.AppManager;
 import org.mini.gui.*;
 import org.mini.gui.event.*;
-import org.mini.gui.impl.GuiCallBack;
 
 /**
  *
@@ -20,9 +19,8 @@ public class MyApp extends GApplication {
         if (form != null) {
             return form;
         }
-        GuiCallBack ccb = GuiCallBack.getInstance();
         GLanguage.setCurLang(GLanguage.ID_CHN);
-        form = new GForm(ccb);
+        form = new GForm();
 
         form.setFps(30f);
         long vg = form.getNvContext();

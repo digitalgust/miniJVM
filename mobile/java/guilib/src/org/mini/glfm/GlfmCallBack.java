@@ -5,13 +5,11 @@
  */
 package org.mini.glfm;
 
-import org.mini.gui.GCallback;
-
 /**
  *
  * @author gust
  */
-public interface GlfmCallBack extends GCallback{
+public interface GlfmCallBack {
 
     //void onFrame(GLFMDisplay *display, double frameTime)
     public void mainLoop(long display, double frameTime);
@@ -39,9 +37,9 @@ public interface GlfmCallBack extends GCallback{
     public void onMemWarning(long display);
 
     public void onAppFocus(long display, boolean focused);
-    
+
     public void onPhotoPicked(long display, int uid, String url, byte[] data);
-    
+
     public void onNotify(long display, String key, String val);
 
 }
