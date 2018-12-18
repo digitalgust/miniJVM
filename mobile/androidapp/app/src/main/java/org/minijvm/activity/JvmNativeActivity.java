@@ -1,9 +1,11 @@
 package org.minijvm.activity;
 
+import android.Manifest;
 import android.app.NativeActivity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -11,12 +13,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.ImageView;
+import android.widget.Toast;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -47,9 +50,66 @@ public class JvmNativeActivity extends NativeActivity {
         mClipboardManager = mClipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
         PHOTO_DIR_SD = new File(getExternalFilesDir("").getAbsolutePath() + "/tmp");
         PHOTO_DIR_ROOT = new File(getFilesDir().getAbsolutePath() + "/tmp");
-
+        requestAudioPermissions();
     }
 
+    //============================================= audio record permission==================================================
+    //Requesting run-time permissions
+    //Create placeholder for user's consent to record_audio permission.
+    //This will be used in handling callback
+    private final int MY_PERMISSIONS_RECORD_AUDIO = 1;
+
+    private void requestAudioPermissions() {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            //When permission is not granted by user, show them message why this permission is needed.
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.RECORD_AUDIO)) {
+                Toast.makeText(this, "Please grant permissions to record audio", Toast.LENGTH_LONG).show();
+
+                //Give user option to still opt-in the permissions
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.RECORD_AUDIO},
+                        MY_PERMISSIONS_RECORD_AUDIO);
+
+            } else {
+                // Show user dialog to grant permission to record audio
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.RECORD_AUDIO},
+                        MY_PERMISSIONS_RECORD_AUDIO);
+            }
+        }
+        //If permission is granted, then go ahead recording audio
+        else if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED) {
+
+            //Go ahead with recording audio now
+            //recordAudio();
+        }
+    }
+
+    //Handling callback
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_RECORD_AUDIO: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay!
+                    //recordAudio();
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    Toast.makeText(this, "Permissions Denied to record audio", Toast.LENGTH_LONG).show();
+                }
+                return;
+            }
+        }
+    }
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         String str = event.getCharacters();
@@ -106,10 +166,6 @@ public class JvmNativeActivity extends NativeActivity {
 //    private final File PHOTO_DIR_SD = new File(Environment.getExternalStorageDirectory() + "/DCIM/Camera");
 //    private final File PHOTO_DIR_ROOT = new File(Environment.getRootDirectory() + "/DCIM/Camera");
 
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        setIntent(intent);
-    }
     /**
      * 拍照选择图片
      */
