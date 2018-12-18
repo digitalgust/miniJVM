@@ -84,6 +84,9 @@
     <ClCompile Include="..\..\mini_jvm\utils\miniz_wrapper.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\mini_jvm\utils\miniz.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\mini_jvm\jvm\garbage.h">
@@ -144,6 +147,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\mini_jvm\utils\miniz_wrapper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\mini_jvm\utils\miniz.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
