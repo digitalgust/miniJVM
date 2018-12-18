@@ -21,15 +21,10 @@ import org.mini.zip.Zip;
 
 /**
  *
- * This class MUST be app.GlfmMain
- *
- * And this jar MUST be resfiles/ExApp.jar
- *
- * it used in c source glfmapp/main.c
  *
  * @author gust
  */
-public class GlfmMain {
+public class AppLoader {
 
 
 

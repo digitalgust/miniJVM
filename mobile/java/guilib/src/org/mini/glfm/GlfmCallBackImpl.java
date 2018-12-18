@@ -5,7 +5,7 @@
  */
 package org.mini.glfm;
 
-import org.mini.apploader.GlfmMain;
+import org.mini.apploader.AppLoader;
 import org.mini.gui.GForm;
 import org.mini.gui.GObject;
 import org.mini.gui.GToolkit;
@@ -19,7 +19,7 @@ import static org.mini.nanovg.Nanovg.NVG_STENCIL_STROKES;
  *
  * @author Gust
  */
-public class GuiCallBackImpl extends GuiCallBack {
+public class GlfmCallBackImpl extends GuiCallBack {
 
     long display;
     int winWidth, winHeight;
@@ -43,7 +43,7 @@ public class GuiCallBackImpl extends GuiCallBack {
 
     long vg;
 
-    static GuiCallBackImpl instance = new GuiCallBackImpl();
+    static GlfmCallBackImpl instance = new GlfmCallBackImpl();
 
     static public void glinit(long winContext) {
 
@@ -54,16 +54,16 @@ public class GuiCallBackImpl extends GuiCallBack {
                 Glfm.GLFMStencilFormat8,
                 Glfm.GLFMMultisampleNone);
 
-        GuiCallBackImpl.getInstance().setDisplay(winContext);
-        Glfm.glfmSetCallBack(winContext, GuiCallBackImpl.getInstance());
+        GuiCallBack.getInstance().setDisplay(winContext);
+        Glfm.glfmSetCallBack(winContext, GuiCallBack.getInstance());
 
     }
 
-    public static GuiCallBackImpl getInstance() {
+    public static GlfmCallBackImpl getInstance() {
         return instance;
     }
 
-    private GuiCallBackImpl() {
+    private GlfmCallBackImpl() {
     }
 
     public void setDisplay(long display) {
@@ -154,7 +154,8 @@ public class GuiCallBackImpl extends GuiCallBack {
     @Override
     public void onSurfaceCreated(long display, int width, int height) {
         init();
-        GlfmMain.onSurfaceCreated();
+        AppLoader.onSurfaceCreated();
+        System.out.println("onSurfaceCreated");
     }
 
     @Override

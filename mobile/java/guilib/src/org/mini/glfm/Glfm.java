@@ -11,6 +11,10 @@ package org.mini.glfm;
  */
 public class Glfm {
 
+    static {
+        System.setProperty("gui.driver", "org.mini.glfm.GlfmCallBackImpl");
+    }
+
     public static final int //
             GLFMRenderingAPIOpenGLES2 = 0,
             GLFMRenderingAPIOpenGLES3 = 1,

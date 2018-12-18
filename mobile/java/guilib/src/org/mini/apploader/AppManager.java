@@ -138,7 +138,7 @@ public class AppManager {
                 //System.out.println("devW , devH " + devW + " , " + devH);
 
                 GForm.hideKeyboard();
-                GLanguage.setCurLang(GlfmMain.getDefaultLang());
+                GLanguage.setCurLang(AppLoader.getDefaultLang());
 
                 setFps(30f);
 
@@ -221,7 +221,7 @@ public class AppManager {
             @Override
             public void action(GObject gobj) {
                 GLanguage.setCurLang(GLanguage.ID_ENG);
-                GlfmMain.setDefaultLang(GLanguage.ID_ENG);
+                AppLoader.setDefaultLang(GLanguage.ID_ENG);
                 AppManager.getInstance().active();
             }
         });
@@ -231,7 +231,7 @@ public class AppManager {
             @Override
             public void action(GObject gobj) {
                 GLanguage.setCurLang(GLanguage.ID_CHN);
-                GlfmMain.setDefaultLang(GLanguage.ID_CHN);
+                AppLoader.setDefaultLang(GLanguage.ID_CHN);
                 AppManager.getInstance().active();
             }
         });
@@ -241,13 +241,13 @@ public class AppManager {
             @Override
             public void action(GObject gobj) {
                 GLanguage.setCurLang(GLanguage.ID_CHT);
-                GlfmMain.setDefaultLang(GLanguage.ID_CHT);
+                AppLoader.setDefaultLang(GLanguage.ID_CHT);
                 AppManager.getInstance().active();
             }
         });
         langList.addItem(item);
         mainPanel.add(langList);
-        langList.setSelectedIndex(GlfmMain.getDefaultLang());
+        langList.setSelectedIndex(AppLoader.getDefaultLang());
         y += 35 + pad;
 
         GLabel downLab = new GLabel(GLanguage.getString(STR_DOWN_APP_FROM_WEB), pad, y, devW - pad * 2, addH);
@@ -291,7 +291,7 @@ public class AppManager {
                         @Override
                         public void onCompleted(List<MiniHttpServer.UploadFile> files) {
                             for (MiniHttpServer.UploadFile f : files) {
-                                GlfmMain.addApp(f.filename, f.data);
+                                AppLoader.addApp(f.filename, f.data);
                                 GForm.addMessage(GLanguage.getString(STR_UPLOAD_FILE) + " " + f.filename);
                             }
                             reloadAppList();
@@ -396,7 +396,7 @@ public class AppManager {
                 if (curSelectedItem != null) {
                     String appName = curSelectedItem.getLabel();
                     if (appName != null) {
-                        GlfmMain.runApp(appName);
+                        AppLoader.runApp(appName);
                     }
                 }
             }
@@ -409,7 +409,7 @@ public class AppManager {
             @Override
             public void action(GObject gobj) {
                 if (curSelectedItem != null) {
-                    GlfmMain.setBootApp(curSelectedItem.getLabel());
+                    AppLoader.setBootApp(curSelectedItem.getLabel());
                 }
             }
         });
@@ -424,7 +424,7 @@ public class AppManager {
                 if (curSelectedItem != null) {
                     String appName = curSelectedItem.getLabel();
                     if (appName != null) {
-                        String url = GlfmMain.getApplicationUpgradeurl(appName);
+                        String url = AppLoader.getApplicationUpgradeurl(appName);
                         if (url != null) {
                             MiniHttpClient hc = new MiniHttpClient(url, getDownloadCallback());
                             hc.start();
@@ -445,7 +445,7 @@ public class AppManager {
                 if (curSelectedItem != null) {
                     String appName = curSelectedItem.getLabel();
                     if (appName != null) {
-                        GlfmMain.removeApp(appName);
+                        AppLoader.removeApp(appName);
                         reloadAppList();
                         mainPanelShowLeft();
                     }
@@ -470,7 +470,7 @@ public class AppManager {
                     }
                 }
                 if (jarName != null && data != null) {
-                    GlfmMain.addApp(jarName, data);
+                    AppLoader.addApp(jarName, data);
                 }
                 reloadAppList();
                 updateContentViewInfo(jarName);
@@ -483,12 +483,12 @@ public class AppManager {
             return;
         }
         appList.removeItemAll();
-        List<String> list = GlfmMain.getAppList();
+        List<String> list = AppLoader.getAppList();
         if (list != null && list.size() > 0) {
             for (String appName : list) {
                 //System.out.println("appName:" + appName);
-                if (GlfmMain.isJarExists(appName)) {
-                    byte[] iconBytes = GlfmMain.getApplicationIcon(appName);
+                if (AppLoader.isJarExists(appName)) {
+                    byte[] iconBytes = AppLoader.getApplicationIcon(appName);
                     GImage img = null;
                     if (iconBytes != null) {
                         img = GImage.createImage(iconBytes);
@@ -496,7 +496,7 @@ public class AppManager {
                     GListItem item = new GListItem(img, appName) {
                         public boolean update(long vg) {
                             super.update(vg);
-                            if (getLabel() != null && getLabel().equals(GlfmMain.getBootApp())) {
+                            if (getLabel() != null && getLabel().equals(AppLoader.getBootApp())) {
                                 GToolkit.drawRedPoint(vg, "v", getX() + getW() - 20, getY() + getH() * .5f, 10);
                             }
                             return true;
@@ -519,14 +519,14 @@ public class AppManager {
 
     void updateContentViewInfo(String appName) {
         GLabel nameLab = (GLabel) contentView.findByName(APP_NAME_LABEL);
-        nameLab.setText(GlfmMain.getApplicationName(appName));
+        nameLab.setText(AppLoader.getApplicationName(appName));
         //
         GTextBox descLab = (GTextBox) contentView.findByName(APP_DESC_LABEL);
 
-        String txt = GLanguage.getString(STR_VERSION) + "\n  " + GlfmMain.getApplicationVersion(appName) + "\n"
-                + GLanguage.getString(STR_FILE_SIZE) + "\n  " + GlfmMain.getApplicationFileSize(appName) + "\n"
-                + GLanguage.getString(STR_UPGRADE_URL) + "\n  " + GlfmMain.getApplicationUpgradeurl(appName) + "\n"
-                + GLanguage.getString(STR_DESC) + "\n  " + GlfmMain.getApplicationDesc(appName) + "\n";
+        String txt = GLanguage.getString(STR_VERSION) + "\n  " + AppLoader.getApplicationVersion(appName) + "\n"
+                + GLanguage.getString(STR_FILE_SIZE) + "\n  " + AppLoader.getApplicationFileSize(appName) + "\n"
+                + GLanguage.getString(STR_UPGRADE_URL) + "\n  " + AppLoader.getApplicationUpgradeurl(appName) + "\n"
+                + GLanguage.getString(STR_DESC) + "\n  " + AppLoader.getApplicationDesc(appName) + "\n";
         descLab.setText(txt);
 
         //re set image

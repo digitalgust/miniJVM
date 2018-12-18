@@ -5,9 +5,8 @@
  */
 package org.mini.guijni;
 
-import org.mini.glfm.GuiCallBackImpl;
-import org.mini.glfm.GlfmCallBack;
 import org.mini.glfw.GlfwCallback;
+import org.mini.glfm.GlfmCallBack;
 import org.mini.gui.GForm;
 
 /**
@@ -16,8 +15,23 @@ import org.mini.gui.GForm;
  */
 public abstract class GuiCallBack implements GlfwCallback, GlfmCallBack {
 
+    static GuiCallBack instance;
+
     public static GuiCallBack getInstance() {
-        return GuiCallBackImpl.getInstance();
+        if (instance == null) {
+
+            try {
+                Class glfw = Class.forName("org.mini.glfw.Glfw");
+                System.out.println("load gui native " + glfw);
+                Class glfm = Class.forName("org.mini.glfm.Glfm");
+                System.out.println("load gui native " + glfm);
+                Class c = Class.forName(System.getProperty("gui.driver"));
+                instance = (GuiCallBack) c.newInstance();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return instance;
     }
 
     public abstract String getAppSaveRoot();
@@ -47,4 +61,6 @@ public abstract class GuiCallBack implements GlfwCallback, GlfmCallBack {
     public abstract void init(int w, int h);
 
     public abstract void destory();
+
+    public abstract void setDisplay(long winContext);
 }
