@@ -7,6 +7,7 @@ package org.mini.guijni;
 
 import org.mini.glfw.GlfwCallback;
 import org.mini.glfm.GlfmCallBack;
+import org.mini.gui.GApplication;
 import org.mini.gui.GForm;
 
 /**
@@ -54,13 +55,19 @@ public abstract class GuiCallBack implements GlfwCallback, GlfmCallBack {
 
     public abstract int getFrameBufferWidth();
 
-    public abstract void setForm(GForm form);
-
-    public abstract GForm getForm();
+//    public abstract void setForm(GForm form);
+//
+//    public abstract GForm getForm();
 
     public abstract void init(int w, int h);
 
     public abstract void destory();
 
     public abstract void setDisplay(long winContext);
+
+    public abstract GApplication getApplication();
+
+    public abstract void setApplication(GApplication app);
+
+    public abstract void notifyCurrentFormChanged(GApplication app);
 }

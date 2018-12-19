@@ -26,8 +26,6 @@ import org.mini.zip.Zip;
  */
 public class AppLoader {
 
-
-
     static final String APP_INFO_FILE = "/appinfo.properties";
     static final String APP_LIST_FILE = "/applist.properties";
     static final String APP_CONFIG = "config.txt";
@@ -64,7 +62,7 @@ public class AppLoader {
 
         copyExApp();
         String bootApp = appinfo.getProperty(KEY_BOOT);
-        if (bootApp == null || isJarExists(bootApp)) {
+        if (bootApp == null || !isJarExists(bootApp)) {
             setBootApp(EXAMPLE_APP_FILE);
             bootApp = EXAMPLE_APP_FILE;
         }
@@ -297,7 +295,7 @@ public class AppLoader {
             if (c != null) {
                 app = (GApplication) c.newInstance();
                 app.setSaveRoot(getAppDataPath(jarName));
-                GuiCallBack.getInstance().setForm(app.getForm(app));
+                GuiCallBack.getInstance().setApplication(app);
             }
         } catch (Exception ex) {
             ex.printStackTrace();

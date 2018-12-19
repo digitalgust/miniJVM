@@ -6,6 +6,7 @@
 package org.mini.glfm;
 
 import org.mini.apploader.AppLoader;
+import org.mini.gui.GApplication;
 import org.mini.gui.GForm;
 import org.mini.gui.GObject;
 import org.mini.gui.GToolkit;
@@ -39,6 +40,7 @@ public class GlfmCallBackImpl extends GuiCallBack {
     double moveStartY;
     long moveStartAt;
 
+    GApplication gapp;
     GForm gform;
 
     long vg;
@@ -70,11 +72,11 @@ public class GlfmCallBackImpl extends GuiCallBack {
         this.display = display;
     }
 
-    public GForm getForm() {
+    GForm getForm() {
         return gform;
     }
 
-    public void setForm(GForm form) {
+    void setForm(GForm form) {
         gform = form;
     }
 
@@ -432,6 +434,29 @@ public class GlfmCallBackImpl extends GuiCallBack {
     @Override
     public void destory() {
 
+    }
+
+    @Override
+    public GApplication getApplication() {
+        return gapp;
+    }
+
+    @Override
+    public void setApplication(GApplication app) {
+        if (app != null) {
+            if (gapp != null) {
+                gapp.close();
+            }
+            gapp = app;
+            setForm(app.getForm(app));
+        }
+    }
+
+    @Override
+    public void notifyCurrentFormChanged(GApplication app) {
+        if (gapp == app) {
+            setForm(app.getForm(app));
+        }
     }
 
 }

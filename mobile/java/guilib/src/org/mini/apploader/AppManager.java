@@ -9,7 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
-import org.mini.glfm.Glfm;
+import org.mini.gui.GApplication;
 import org.mini.gui.GButton;
 import org.mini.gui.GForm;
 import org.mini.gui.GGraphics;
@@ -36,7 +36,7 @@ import org.mini.guijni.GuiCallBack;
  *
  * @author Gust
  */
-public class AppManager {
+public class AppManager extends GApplication {
 
     static final String APP_NAME_LABEL = "APP_NAME_LABEL";
     static final String APP_ICON_ITEM = "APP_ICON_ITEM";
@@ -95,7 +95,7 @@ public class AppManager {
 
     static AppManager instance = new AppManager();
 
-    GForm preForm;
+    GApplication preApp;
 
     GForm mgrForm;
     GMenu menu;
@@ -119,13 +119,18 @@ public class AppManager {
     }
 
     public void active() {
-        if (GuiCallBack.getInstance().getForm() != mgrForm) {
-            preForm = GuiCallBack.getInstance().getForm();
+        if (GuiCallBack.getInstance().getApplication() != this) {
+            preApp = GuiCallBack.getInstance().getApplication();
         }
         if (webServer != null) {
             webServer.stopServer();
         }
+        GuiCallBack.getInstance().setApplication(this);
+        reloadAppList();
+    }
 
+    @Override
+    public GForm getForm(GApplication app) {
         mgrForm = new GForm() {
 
             @Override
@@ -188,8 +193,7 @@ public class AppManager {
 
             }
         };
-        GuiCallBack.getInstance().setForm(mgrForm);
-        reloadAppList();
+        return mgrForm;
     }
 
     GPanel getMainPanel() {
@@ -205,8 +209,8 @@ public class AppManager {
         exitbtn.setActionListener(new GActionListener() {
             @Override
             public void action(GObject gobj) {
-                if (preForm != null) {
-                    GuiCallBack.getInstance().setForm(preForm);
+                if (preApp != null) {
+                    GuiCallBack.getInstance().setApplication(preApp);
                 }
             }
         });
