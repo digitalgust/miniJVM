@@ -23,51 +23,19 @@
   * GUI similar with swing .  
   * Audio Playback and Capture .  
   * Take photo from Camera or Album .  
-  * Save and Load file from mobile storage .  
-  These java api of features can be found in mobile/java/guilib/ , api platform independent .  
+  * Save and Load file from mobile storage .   
 
 ## iOS app IM Demo :
   <div align=center><img width="224" height="398" src="/screenshot/demo.gif"/></div>
    This demo can be download from : http://bb.egls.cn:8080/down/BiBiX.jar , First install AppManager from :
-   /binary/ios/MiniPack.ipa or /binary/android/MiniPack.apk 
-   then download demo in MiniPack and run the app. 
+   /binary/ios/MiniPack.ipa or /binary/android/MiniPack.apk ,or run AppManager in mini_jvm (eg. /binary/win_64)
+   then download demo in AppManager and run the app. 
 
 ## Architecture:  
 
-  <div align=center><img width="480" height="386" src="/screenshot/arch.png"/></div>
+  <div align=center><img width="540" height="350" src="/screenshot/arch.png"/></div>
 
 
-## Directories: 
-> /   
->> binary/-------- minijvm binary for pc (win32/win64/mac/linux)  
->> mini_jvm/------ minijvm c source   
->> javalib/------- minijvm runtime class library   
->>
->> ex_lib/   
->>> jni_gui/------ desktop computer native gui jni module   
->>> luaj/--------- lua java    
->>
->> mobile/        
->>> c/------------- java native lib, glfm framework, gui jni, glfmapp    
->>> java/guilib---- java jni for above **/mobile/c** native gui lib    
->>> java/ExApp----- java app entry point    
->>> iosapp/-------- iOS launcher     
->>> androidapp/---- Android launcher     
->>> assets/resfiles/- java app resource, font files, jar files ,pic etc.  
->>
->> test/   
->>> javalib_test/- test **/javalib** classes.   
->>> jni_test/----- jni example     
->>> jvm_ios/------ ios swift test project ,only test the jvm.      
->>> jvm_macos/---- macosX test project, only test jvm.      
->>> jvm_vs/------- virtual studio test project, only test jvm.      
-  
- * **/mini_jvm** is an independent small and fast jvm interpreter, Need **/javalib** runtime class library only, it run on Win/Mac/Linux/iOS/Android.     
- * **/javalib** is the jvm foundation runtime class library, ex *java.lang* , *java.util* ,and extended classes *org.mini* for file reflect and network etc, this project generate minijvm_rt.jar , copy it into **/mobile/assets/resfiles**  .   
- * **/mobile/iosapp** **/mobile/androidapp** are iOS/Android launcher program, it include minijvm source and native gui function, java call gui library with jni.       
- * **/mobile/java/guilib** is a gui library ,it dependent on native gui library ,that include openGLES glad, glfm, nanovg, stb lib etc , this project generate glfm_gui.jar , copy it into **/mobile/assets/resfiles** .     
- * **/mobile/java/ExApp** is an example of mobile app, it run on iOS and Android platform.  
-   
 
 ## How to develop iOS/Android app in java:   
    Write java code once , running both iOS and Android.   
@@ -97,7 +65,7 @@
   
 
 
-## How to embed Java Compiler to mini_jvm:  
+## How to use Embed java compiler in mini_jvm:  
    Copy /binary/lib/janino.jar to mini_jvm lib directory, and add the jar to classpath.   
    using Janino compiler,  can find in example in binary folder.   
    the compile command like :
@@ -108,7 +76,7 @@ posix:
 ./mini_jvm -cp ../lib/minijvm_rt.jar:../lib/janino.jar:../lib/commons-compiler.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
 ```
 
-Janion compiler is not the full java compiler, see [limitation](http://janino-compiler.github.io/janino/#limitations) , like :
+Janino compiler is not the full java compiler, see [limitation](http://janino-compiler.github.io/janino/#limitations) , like :
 ```
 List<String> list=new ArrayList(); 
 list.add("abc");
@@ -132,22 +100,22 @@ String s=(String)list.get(0);//can't ignore (String) cast qualifier.
    [Mini_al](https://github.com/dr-soft/mini_al)  :for java audio playback and capture     
 
 
-## Development IDE:  
+## Development IDE using:  
   C code:   JetBrains CLion ,Xcode ,Virtual studio .  
-  Swift code/Object c:    XCode , LLVM 9 .  
-  Java code:    Netbeans 8.0 ,jdk 1.8 .  
-  android project:  Android Studio ,Android SDK 
+  Swift code/Object c:    XCode , LLVM  .  
+  Java code:    Netbeans  ,jdk  .  
+  android project:  Android Studio , Android SDK 
 
  
 ## Build GUI application, depend on openGL or openGLES     
    * iOS/Android system build with GLFM  (/mobile/iosapp/  ,  /mobile/androidapp/)       
    * Window system build with GLFW   (/ex_lib/gui_jni/)      
-   * GUI build on Nanovg          
+   * GUI build with Nanovg          
 
   
 ## Example of mobile application
 
-There are two class demo how develop java app for iOS and Android, one is App main class, the other is an GuiApp
+the example demonstrate how develop java app for iOS and Android
 ```
 package test;
 
@@ -253,7 +221,38 @@ public class MyApp extends GApplication {
   * Linux mini_jvm gui    
   <div align=center><img width="433" height="336" src="/screenshot/centos.png"/></div>
 
+
+## Directories: 
+> /   
+>> binary/-------- minijvm binary for pc (win32/win64/mac/linux)  
+>> mini_jvm/------ minijvm c source   
+>> javalib/------- minijvm runtime class library   
+>>
+>> ex_lib/   
+>>> jni_gui/------ desktop computer native gui jni module   
+>>> luaj/--------- lua java    
+>>
+>> mobile/        
+>>> c/------------- java native lib, glfm framework, gui jni, glfmapp    
+>>> java/guilib---- java jni for above **/mobile/c** native gui lib    
+>>> java/ExApp----- java app entry point    
+>>> iosapp/-------- iOS launcher     
+>>> androidapp/---- Android launcher     
+>>> assets/resfiles/- java app resource, font files, jar files ,pic etc.  
+>>
+>> test/   
+>>> javalib_test/- test **/javalib** classes.   
+>>> jni_test/----- jni example     
+>>> jvm_ios/------ ios swift test project ,only test the jvm.      
+>>> jvm_macos/---- macosX test project, only test jvm.      
+>>> jvm_vs/------- virtual studio test project, only test jvm.      
   
+ * **/mini_jvm** is an independent small and fast jvm interpreter, Need **/javalib** runtime class library only, it run on Win/Mac/Linux/iOS/Android.     
+ * **/javalib** is the jvm foundation runtime class library, ex *java.lang* , *java.util* ,and extended classes *org.mini* for file reflect and network etc, this project generate minijvm_rt.jar , copy it into **/mobile/assets/resfiles**  .   
+ * **/mobile/iosapp** **/mobile/androidapp** are iOS/Android launcher program, it include minijvm source and native gui function, java call gui library with jni.       
+ * **/mobile/java/guilib** is a gui library ,it dependent on native gui library ,that include openGLES glad, glfm, nanovg, stb lib etc , this project generate glfm_gui.jar , copy it into **/mobile/assets/resfiles** .     
+ * **/mobile/java/ExApp** is an example of mobile app, it run on iOS and Android platform.  
+     
   
 ## License
 License:	Public domain
