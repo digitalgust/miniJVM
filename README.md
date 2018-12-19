@@ -25,7 +25,7 @@
   * Take photo from Camera or Album .  
   * Save and Load file from mobile storage .   
 
-## iOS app IM Demo :
+## mobile app IM Demo :
   <div align=center><img width="224" height="398" src="/screenshot/demo.gif"/></div>
    This demo can be download from : http://bb.egls.cn:8080/down/BiBiX.jar , First install AppManager from :
    /binary/ios/MiniPack.ipa or /binary/android/MiniPack.apk ,or run AppManager in mini_jvm (eg. /binary/win_64)
@@ -54,9 +54,10 @@
   
   
 ## How to Remote debug:  
+  Prepare:
   Desktop Computer : Run mini_jvm with flag: -Xdebug for debug mode .  
-  iOS/Android simulator : no attached operation.  
-  iOS/Android device : check the device ip address from Setting.  
+  iOS/Android simulator : nothing to do .  
+  iOS/Android device : check the device ip address from General Setting -> wifi ->(i).  
   mini_jvm jdwp listen port is 8000.   
    * Intelli idea : open the java project , menu Run .> Edit Configurations , + remote , Transport : socket , Debugger mode : attach , host is your mini_jvm running at host ip and port ,ex. "localhost:8000" .  
    * Eclipse : configuration  like as idea .  
@@ -66,9 +67,9 @@
 
 
 ## How to use Embed java compiler in mini_jvm:  
-   Copy /binary/lib/janino.jar to mini_jvm lib directory, and add the jar to classpath.   
-   using Janino compiler,  can find in example in binary folder.   
-   the compile command like :
+   Java Compiler : /binary/lib/janino.jar    
+   Example can be found in /binary folder   
+   the compile command like :  
 ```
 win:
 mini_jvm -cp ../lib/minijvm_rt.jar;../lib/janino.jar;../lib/commons-compiler.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
@@ -115,7 +116,7 @@ String s=(String)list.get(0);//can't ignore (String) cast qualifier.
   
 ## Example of mobile application
 
-the example demonstrate how develop java app for iOS and Android
+the example demonstrate how develop java app for iOS and Android 
 ```
 package test;
 
@@ -215,7 +216,7 @@ public class MyApp extends GApplication {
 ```
 ##   Screen shot   :   
   * Windows mini_jvm gui    
-    <div align=center><img width="433" height="336" src="/screenshot/win.png"/></div>
+  <div align=center><img width="433" height="336" src="/screenshot/win.png"/></div>
   * Macos mini_jvm gui    
   <div align=center><img width="433" height="336" src="/screenshot/mac.png"/></div> 
   * Linux mini_jvm gui    
