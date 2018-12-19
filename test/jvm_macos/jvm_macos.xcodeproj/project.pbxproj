@@ -14,6 +14,7 @@
 		457248EB2020ABE200349683 /* invoke.c in Sources */ = {isa = PBXBuildFile; fileRef = 457248EA2020ABE200349683 /* invoke.c */; };
 		457249342020AFAA00349683 /* libc.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 457249332020AFAA00349683 /* libc.tbd */; };
 		457249362020AFB400349683 /* libpthread.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 457249352020AFB400349683 /* libpthread.tbd */; };
+		45A2C2FE21CA265F000F3505 /* miniz.c in Sources */ = {isa = PBXBuildFile; fileRef = 45A2C2FC21CA265F000F3505 /* miniz.c */; };
 		45EAB02020DC9DE200896201 /* d_type.c in Sources */ = {isa = PBXBuildFile; fileRef = 45EAB01D20DC9DE100896201 /* d_type.c */; };
 		45EAB02120DC9DE200896201 /* miniz_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 45EAB01E20DC9DE200896201 /* miniz_wrapper.c */; };
 		45EAB02820DCDC2300896201 /* pcallstack.m in Sources */ = {isa = PBXBuildFile; fileRef = 45EAB02720DCDC2300896201 /* pcallstack.m */; };
@@ -70,6 +71,8 @@
 		457249332020AFAA00349683 /* libc.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libc.tbd; path = usr/lib/libc.tbd; sourceTree = SDKROOT; };
 		457249352020AFB400349683 /* libpthread.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libpthread.tbd; path = usr/lib/libpthread.tbd; sourceTree = SDKROOT; };
 		457249962020B71500349683 /* libgui.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgui.dylib; path = "../jni_gui/cmake-build-debug/libgui.dylib"; sourceTree = "<group>"; };
+		45A2C2FC21CA265F000F3505 /* miniz.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = miniz.c; path = ../../mini_jvm/utils/miniz.c; sourceTree = "<group>"; };
+		45A2C2FD21CA265F000F3505 /* miniz.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = miniz.h; path = ../../mini_jvm/utils/miniz.h; sourceTree = "<group>"; };
 		45EAB01D20DC9DE100896201 /* d_type.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = d_type.c; path = ../../mini_jvm/utils/d_type.c; sourceTree = "<group>"; };
 		45EAB01E20DC9DE200896201 /* miniz_wrapper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = miniz_wrapper.c; path = ../../mini_jvm/utils/miniz_wrapper.c; sourceTree = "<group>"; };
 		45EAB01F20DC9DE200896201 /* miniz_wrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = miniz_wrapper.h; path = ../../mini_jvm/utils/miniz_wrapper.h; sourceTree = "<group>"; };
@@ -193,6 +196,8 @@
 		4572490F2020AD8000349683 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				45A2C2FC21CA265F000F3505 /* miniz.c */,
+				45A2C2FD21CA265F000F3505 /* miniz.h */,
 				45EAB01D20DC9DE100896201 /* d_type.c */,
 				45EAB01E20DC9DE200896201 /* miniz_wrapper.c */,
 				45EAB01F20DC9DE200896201 /* miniz_wrapper.h */,
@@ -306,6 +311,7 @@
 				457248EB2020ABE200349683 /* invoke.c in Sources */,
 				45ECB78F206D00F900CF9E7F /* runtime.c in Sources */,
 				45ECB774206D00D300CF9E7F /* tinycthread.c in Sources */,
+				45A2C2FE21CA265F000F3505 /* miniz.c in Sources */,
 				45ECB78D206D00F900CF9E7F /* jdwp.c in Sources */,
 				45ECB794206D00FA00CF9E7F /* java_native_reflect.c in Sources */,
 				45ECB773206D00D300CF9E7F /* hashset.c in Sources */,

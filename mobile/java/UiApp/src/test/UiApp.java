@@ -5,7 +5,7 @@ import org.mini.apploader.AppManager;
 import org.mini.glfm.Glfm;
 import org.mini.gui.*;
 import org.mini.gui.event.*;
-import org.mini.gui.impl.GuiCallBack;
+import org.mini.guijni.GuiCallBack;
 
 /**
  *
@@ -21,9 +21,8 @@ public class UiApp extends GApplication {
         if (form != null) {
             return form;
         }
-        GuiCallBack ccb = GuiCallBack.getInstance();
         GLanguage.setCurLang(GLanguage.ID_CHN);
-        form = new GForm(ccb);
+        form = new GForm();
 
         form.setFps(30f);
         long vg = form.getNvContext();
@@ -73,7 +72,7 @@ public class UiApp extends GApplication {
 
     public GFrame getFrame1() {
         GFrame gframe = new GFrame("Login", 50, 50, 300, 500);
-        GContainer parent = gframe.getView();
+        GViewPort parent = gframe.getView();
         int x = 8, y = 10;
         GTextField gif = new GTextField("", "search", x, y, 280, 25);
         gif.setBoxStyle(GTextField.BOX_STYLE_SEARCH);
@@ -134,7 +133,7 @@ public class UiApp extends GApplication {
 
     public GFrame getFrame2() {
         GFrame gframe = new GFrame("Select", 0, 0, 300, 550);
-        GContainer parent = gframe.getView();
+        GViewPort parent = gframe.getView();
         GImage img = GImage.createImageFromJar("/res/logo128.png");
 
         int x = 10, y = 10;
