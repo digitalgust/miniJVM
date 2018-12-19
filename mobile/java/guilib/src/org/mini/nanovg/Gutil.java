@@ -256,6 +256,7 @@ public class Gutil {
         for (int i = 0; i < h; i++) {
             dmo.copyTo(i * lineCount, d, i * lineCount, lineCount);
         }
+        Nanovg.stbi_image_free(data);
         return d;
     }
 
@@ -307,6 +308,7 @@ public class Gutil {
         w_h_d[0] = x[0];
         w_h_d[1] = y[0];
         w_h_d[2] = n[0];
+        Nanovg.stbi_image_free(data);
     }
 
 //
