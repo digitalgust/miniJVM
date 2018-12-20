@@ -26,7 +26,7 @@
   * Save and Load file from mobile storage .   
   * Api compatible with miniJVM desktop platform, can running on pc . 
 
-## mobile app IM Demo :
+## mobile app IM Demo ,[Github](https://github.com/digitalgust/BiBiX):
   <div align=center><img width="224" height="398" src="/screenshot/demo.gif"/></div>
    This demo can be download from : http://bb.egls.cn:8080/down/BiBiX.jar , First install AppManager from :
    /binary/ios/MiniPack.ipa or /binary/android/MiniPack.apk ,or run AppManager in mini_jvm (eg. /binary/win_64)
