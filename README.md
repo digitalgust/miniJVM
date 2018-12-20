@@ -20,10 +20,11 @@
   
 ## iOS/Android Platform Extended Features:  
   * OpenGL ES 3.0 .  
-  * GUI similar with swing .  
+  * Swing like gui .  
   * Audio Playback and Capture .  
   * Take photo from Camera or Album .  
   * Save and Load file from mobile storage .   
+  * Api compatible with miniJVM desktop platform, can running on pc . 
 
 ## mobile app IM Demo :
   <div align=center><img width="224" height="398" src="/screenshot/demo.gif"/></div>
@@ -38,17 +39,17 @@
 
 
 ## How to develop iOS/Android app in java:   
-   Write java code once , running both iOS and Android.   
+   Write java code once , running on all of iOS / Android / MacOSX / Win / Linux platforms.   
    1. Can develop app by Eclipse, Netbeans or Intelli Idea , or any ide .   
    2. Add  **/mobile/assets/resfiles/minijvm_rt.jar** and **/mobile/assets/resfiles/glfm_gui.jar**  as library   
-   * Open ExApp project in NetBeans    
+   * Open ExApp project in NetBeans ,or create new project like ExApp   
    * Write your code like example **/mobile/java/ExApp/src/test/MyApp.java**    
    * Add your resource to **/mobile/java/ExApp/resource/res/** , such as audio/image etc.     
-   * Ensure **/mobile/java/ExApp/src/config.txt** configure right.     
+   * Configure **/mobile/java/ExApp/src/config.txt** for icon ,version, boot class, etc .     
    * Build **/mobile/java/ExApp** generate jar file    
    * Install **/binary/ios/MiniPack.ipa** for iPhone device , (Enterprise distrbute version, need Verify app, Setting->General->Device Management->EGLS Technology ltd->Verify App), or **/binary/android/MiniPack.apk** for Android device , These two binary built from **/mobile/iosapp/**  and **/mobile/java/androidapp**, you can build it yourself.    
    * Touch the app icon to open MiniPack app, start inapp webserver , in the same lan, open browser of desktop computer, input the url of your phone , http://phone_ip:8088/   
-   * In browser, pickup the jar ,and upload , just it would in the manager list   
+   * In browser, pickup the generated jar ,and upload , just it would in the manager list   
    * you can run it now . 
     <div align=center><img width="672" height="398"   src="/screenshot/appmgr.png"/></div>
   
@@ -68,8 +69,8 @@
 
 ## How to use Embed java compiler in mini_jvm:  
    Java Compiler : /binary/lib/janino.jar    
-   Example can be found in /binary folder   
-   the compile command like :  
+   Usage of compiler can be found in /binary folder   
+   the compile command :  
 ```
 win:
 mini_jvm -cp ../lib/minijvm_rt.jar;../lib/janino.jar;../lib/commons-compiler.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java

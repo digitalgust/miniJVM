@@ -312,6 +312,9 @@ abstract public class GObject {
     public GForm getForm() {
         GObject go = this;
         while (!(go instanceof GForm)) {
+            if (go == null) {
+                return null;
+            }
             go = go.parent;
         }
         return (GForm) go;
@@ -320,6 +323,9 @@ abstract public class GObject {
     public GFrame getFrame() {
         GObject go = this;
         while (!(go instanceof GFrame)) {
+            if (go == null) {
+                return null;
+            }
             go = go.parent;
         }
         return (GFrame) go;
