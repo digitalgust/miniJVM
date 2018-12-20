@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.5.0 -->
+<title>miniJVM | Develop iOS Android app in java, Cross platform java virtual machine , the minimal jvm .</title>
+<meta name="generator" content="Jekyll v3.7.4" />
+<meta property="og:title" content="miniJVM" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Develop iOS Android app in java, Cross platform java virtual machine , the minimal jvm ." />
+<meta property="og:description" content="Develop iOS Android app in java, Cross platform java virtual machine , the minimal jvm ." />
+<link rel="canonical" href="https://digitalgust.github.io/miniJVM/" />
+<meta property="og:url" content="https://digitalgust.github.io/miniJVM/" />
+<meta property="og:site_name" content="miniJVM" />
+<script type="application/ld+json">
+{"@type":"WebSite","headline":"miniJVM","url":"https://digitalgust.github.io/miniJVM/","name":"miniJVM","description":"Develop iOS Android app in java, Cross platform java virtual machine , the minimal jvm .","@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/miniJVM/assets/css/style.css?v=c213d24ded965b2cac249c45341376d6fcf60cd9">
+    <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1><a href="https://digitalgust.github.io/miniJVM/">miniJVM</a></h1>
+        
+        
+
+        <p>Develop iOS Android app in java, Cross platform java virtual machine , the minimal jvm .</p>
+
+        
+        <p class="view"><a href="https://github.com/digitalgust/miniJVM">View the Project on GitHub <small>digitalgust/miniJVM</small></a></p>
+        
+
+        
+
+        
+      </header>
+      <section>
+
+      
+<p><img src="/screenshot/mini_jvm_64.png" alt="" /><br />
+<a href="https://travis-ci.org/digitalgust/miniJVM"><img src="https://travis-ci.org/digitalgust/miniJVM.svg?branch=master" alt="Build Status" /></a></p>
+<h1 id="minijvm">miniJVM</h1>
+
+<p>Develop iOS Android app in java, Cross platform java virtual machine , the minimal jvm .</p>
+
+<h2 id="features">Features:</h2>
+
+<ul>
+  <li>Jvm Build pass: iOS / Android / mingww64 32-64bit / cygwin / MSVC 32-64bit / MacOS /  Linux  .</li>
+  <li>No dependence Library .</li>
+  <li>Minimal memory footprint .</li>
+  <li>Minimal binary ,300 - 800 KB jvm.</li>
+  <li>Minimal runtime classlib .</li>
+  <li>Support java5+ class file .</li>
+  <li>Support embedded java source compiler(janino compiler) .</li>
+  <li>Java native method  .</li>
+  <li>Java garbage collection .</li>
+  <li>Java remote debug supported, JDWP Spec .</li>
+</ul>
+
+<h2 id="iosandroid-platform-extended-features">iOS/Android Platform Extended Features:</h2>
+<ul>
+  <li>OpenGL ES 3.0 .</li>
+  <li>Swing like gui .</li>
+  <li>Audio Playback and Capture .</li>
+  <li>Take photo from Camera or Album .</li>
+  <li>Save and Load file from mobile storage .</li>
+  <li>Api compatible with miniJVM desktop platform, can running on pc .</li>
+</ul>
+
+<h2 id="mobile-app-im-demo-github">mobile app IM Demo ,<a href="https://github.com/digitalgust/BiBiX">Github</a>:</h2>
+<p>&lt;div align=center&gt;<img width="224" height="398" src="/screenshot/demo.gif" />&lt;/div&gt;
+   This demo can be download from : http://bb.egls.cn:8080/down/BiBiX.jar , First install AppManager from :
+   /binary/ios/MiniPack.ipa or /binary/android/MiniPack.apk ,or run AppManager in mini_jvm (eg. /binary/win_64)
+   then download demo in AppManager and run the app.</p>
+
+<h2 id="architecture">Architecture:</h2>
+
+<p>&lt;div align=center&gt;<img width="540" height="350" src="/screenshot/arch.png" />&lt;/div&gt;</p>
+
+<h2 id="how-to-develop-iosandroid-app-in-java">How to develop iOS/Android app in java:</h2>
+<p>Write java code once , running on all of iOS / Android / MacOSX / Win / Linux platforms.</p>
+<ol>
+  <li>Can develop app by Eclipse, Netbeans or Intelli Idea , or any ide .</li>
+  <li>Add  <strong>/mobile/assets/resfiles/minijvm_rt.jar</strong> and <strong>/mobile/assets/resfiles/glfm_gui.jar</strong>  as library
+    <ul>
+      <li>Open ExApp project in NetBeans ,or create new project like ExApp</li>
+      <li>Write your code like example <strong>/mobile/java/ExApp/src/test/MyApp.java</strong></li>
+      <li>Add your resource to <strong>/mobile/java/ExApp/resource/res/</strong> , such as audio/image etc.</li>
+      <li>Configure <strong>/mobile/java/ExApp/src/config.txt</strong> for icon ,version, boot class, etc .</li>
+      <li>Build <strong>/mobile/java/ExApp</strong> generate jar file</li>
+      <li>Install <strong>/binary/ios/MiniPack.ipa</strong> for iPhone device , (Enterprise distrbute version, need Verify app, Setting-&gt;General-&gt;Device Management-&gt;EGLS Technology ltd-&gt;Verify App), or <strong>/binary/android/MiniPack.apk</strong> for Android device , These two binary built from <strong>/mobile/iosapp/</strong>  and <strong>/mobile/java/androidapp</strong>, you can build it yourself.</li>
+      <li>Touch the app icon to open MiniPack app, start inapp webserver , in the same lan, open browser of desktop computer, input the url of your phone , http://phone_ip:8088/</li>
+      <li>In browser, pickup the generated jar ,and upload , just it would in the manager list</li>
+      <li>you can run it now . 
+    &lt;div align=center&gt;<img width="672" height="398" src="/screenshot/appmgr.png" />&lt;/div&gt;</li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="how-to-remote-debug">How to Remote debug:</h2>
+<p>Prepare:
+  Desktop Computer : Run mini_jvm with flag: -Xdebug for debug mode .<br />
+  iOS/Android simulator : nothing to do .<br />
+  iOS/Android device : check the device ip address from General Setting -&gt; wifi -&gt;(i).<br />
+  mini_jvm jdwp listen port is 8000.</p>
+<ul>
+  <li>Intelli idea : open the java project , menu Run .&gt; Edit Configurations , + remote , Transport : socket , Debugger mode : attach , host is your mini_jvm running at host ip and port ,ex. “localhost:8000” .</li>
+  <li>Eclipse : configuration  like as idea .</li>
+  <li>Netbeans : open java project ,  menu Debug .&gt; connect to Debugger, Connector : SocketAttach , host is your mini_jvm running at the host and port, ex. “localhost:8000” , Timeout: 10000 .<br />
+  Then you can setup breakpoint or pause mini_jvm and watch variable’s value .</li>
+</ul>
+
+<h2 id="how-to-use-embed-java-compiler-in-mini_jvm">How to use Embed java compiler in mini_jvm:</h2>
+<p>Java Compiler : /binary/lib/janino.jar  <br />
+   Usage of compiler can be found in /binary folder <br />
+   the compile command :</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>win:
+mini_jvm -cp ../lib/minijvm_rt.jar;../lib/janino.jar;../lib/commons-compiler.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
+posix:
+./mini_jvm -cp ../lib/minijvm_rt.jar:../lib/janino.jar:../lib/commons-compiler.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
+</code></pre></div></div>
+
+<p>Janino compiler is not the full java compiler, see <a href="http://janino-compiler.github.io/janino/#limitations">limitation</a> , like :</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>List&lt;String&gt; list=new ArrayList(); 
+list.add("abc");
+String s=(String)list.get(0);//can't ignore (String) cast qualifier.   
+</code></pre></div></div>
+
+<h2 id="referenced-project-and-technology">Referenced project and technology:</h2>
+<p><a href="http://www.oracle.com/technetwork/java/cldc-141990.html">Sun CLDC</a>  :reference  <br />
+   <a href="https://github.com/richgel999/miniz">Miniz</a> :for read jar files  <br />
+   <a href="https://github.com/brackeen/glfm">GLFM</a> :for cross platform (android/ios) GUI <br />
+   <a href="https://github.com/memononen/nanovg">Nanovg</a>  :for GUI paint function <br />
+   <a href="https://github.com/nothings/stb">Stb</a> :for GUI truetype font and image<br />
+   <a href="https://github.com/Dav1dde/glad">Glad</a>  :for replace openGL/GLES head file <br />
+   <a href="https://github.com/glfw/glfw">GLFW</a>  :for pc cross platform GUI <br />
+   <a href="https://github.com/tronkko/dirent">Dirent</a>  :for win vc file and directory access  <br />
+   <a href="https://github.com/tinycthread/tinycthread">Tinycthread</a>  :for cross platform thread <br />
+   <a href="https://github.com/digitalgust/jregex">JRegex</a>  :for java String regex match   <br />
+   <a href="http://janino-compiler.github.io/janino/">Janino</a>  :for compile java source file   <br />
+   <a href="https://github.com/dr-soft/mini_al">Mini_al</a>  :for java audio playback and capture</p>
+
+<h2 id="development-ide-using">Development IDE using:</h2>
+<p>C code:   JetBrains CLion ,Xcode ,Virtual studio .<br />
+  Swift code/Object c:    XCode , LLVM  .<br />
+  Java code:    Netbeans  ,jdk  .<br />
+  android project:  Android Studio , Android SDK</p>
+
+<h2 id="build-gui-application-depend-on-opengl-or-opengles">Build GUI application, depend on openGL or openGLES</h2>
+<ul>
+  <li>iOS/Android system build with GLFM  (/mobile/iosapp/  ,  /mobile/androidapp/)</li>
+  <li>Window system build with GLFW   (/ex_lib/gui_jni/)</li>
+  <li>GUI build with Nanovg</li>
+</ul>
+
+<h2 id="example-of-mobile-application">Example of mobile application</h2>
+
+<p>the example demonstrate how develop java app for iOS and Android</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span> <span class="n">test</span><span class="p">;</span>
+
+<span class="n">import</span> <span class="n">org</span><span class="p">.</span><span class="n">mini</span><span class="p">.</span><span class="n">apploader</span><span class="p">.</span><span class="n">AppManager</span><span class="p">;</span>
+<span class="n">import</span> <span class="n">org</span><span class="p">.</span><span class="n">mini</span><span class="p">.</span><span class="n">gui</span><span class="p">.*;</span>
+<span class="n">import</span> <span class="n">org</span><span class="p">.</span><span class="n">mini</span><span class="p">.</span><span class="n">gui</span><span class="p">.</span><span class="n">event</span><span class="p">.*;</span>
+
+<span class="p">/**</span>
+ <span class="p">*</span>
+ <span class="p">*</span> <span class="p">@</span><span class="n">author</span> <span class="n">gust</span>
+ <span class="p">*/</span>
+<span class="k">public</span> <span class="n">class</span> <span class="n">MyApp</span> <span class="n">extends</span> <span class="n">GApplication</span> <span class="p">{</span>
+
+    <span class="n">GForm</span> <span class="n">form</span><span class="p">;</span>
+    <span class="n">GMenu</span> <span class="n">menu</span><span class="p">;</span>
+    <span class="n">GFrame</span> <span class="n">gframe</span><span class="p">;</span>
+
+    <span class="p">@</span><span class="n">Override</span>
+    <span class="k">public</span> <span class="n">GForm</span> <span class="n">getForm</span><span class="p">(</span><span class="n">GApplication</span> <span class="n">appins</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">form</span> <span class="c1">!= null) {
+</span>            <span class="n">return</span> <span class="n">form</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">GLanguage</span><span class="p">.</span><span class="n">setCurLang</span><span class="p">(</span><span class="n">GLanguage</span><span class="p">.</span><span class="n">ID_CHN</span><span class="p">);</span>
+        <span class="n">form</span> <span class="p">=</span> <span class="n">new</span> <span class="n">GForm</span><span class="p">();</span>
+
+        <span class="n">form</span><span class="p">.</span><span class="n">setFps</span><span class="p">(</span><span class="m">30f</span><span class="p">);</span>
+        <span class="n">long</span> <span class="n">vg</span> <span class="p">=</span> <span class="n">form</span><span class="p">.</span><span class="n">getNvContext</span><span class="p">();</span>
+
+        <span class="n">int</span> <span class="n">menuH</span> <span class="p">=</span> <span class="m">80</span><span class="p">;</span>
+        <span class="n">GImage</span> <span class="n">img</span> <span class="p">=</span> <span class="n">GImage</span><span class="p">.</span><span class="n">createImageFromJar</span><span class="p">(</span><span class="s2">"/res/hello.png"</span><span class="p">);</span>
+        <span class="n">menu</span> <span class="p">=</span> <span class="n">new</span> <span class="n">GMenu</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="n">form</span><span class="p">.</span><span class="n">getDeviceHeight</span><span class="p">()</span> <span class="p">-</span> <span class="n">menuH</span><span class="p">,</span> <span class="n">form</span><span class="p">.</span><span class="n">getDeviceWidth</span><span class="p">(),</span> <span class="n">menuH</span><span class="p">);</span>
+        <span class="n">menu</span><span class="p">.</span><span class="n">setFixed</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+        <span class="n">GMenuItem</span> <span class="n">item</span> <span class="p">=</span> <span class="n">menu</span><span class="p">.</span><span class="n">addItem</span><span class="p">(</span><span class="s2">"Hello World"</span><span class="p">,</span> <span class="n">img</span><span class="p">);</span>
+        <span class="n">item</span><span class="p">.</span><span class="n">setActionListener</span><span class="p">(</span><span class="n">new</span> <span class="n">GActionListener</span><span class="p">()</span> <span class="p">{</span>
+            <span class="p">@</span><span class="n">Override</span>
+            <span class="k">public</span> <span class="n">void</span> <span class="n">action</span><span class="p">(</span><span class="n">GObject</span> <span class="n">gobj</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">gframe</span> <span class="c1">!= null) {
+</span>                    <span class="n">gframe</span><span class="p">.</span><span class="n">close</span><span class="p">();</span>
+                <span class="p">}</span>
+                <span class="n">gframe</span> <span class="p">=</span> <span class="n">getFrame1</span><span class="p">();</span>
+                <span class="n">form</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">gframe</span><span class="p">);</span>
+                <span class="n">gframe</span><span class="p">.</span><span class="n">align</span><span class="p">(</span><span class="n">GGraphics</span><span class="p">.</span><span class="n">HCENTER</span> <span class="p">|</span> <span class="n">GGraphics</span><span class="p">.</span><span class="n">VCENTER</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+
+        <span class="n">img</span> <span class="p">=</span> <span class="n">GImage</span><span class="p">.</span><span class="n">createImageFromJar</span><span class="p">(</span><span class="s2">"/res/appmgr.png"</span><span class="p">);</span>
+        <span class="n">item</span> <span class="p">=</span> <span class="n">menu</span><span class="p">.</span><span class="n">addItem</span><span class="p">(</span><span class="s2">"Exit to AppManager"</span><span class="p">,</span> <span class="n">img</span><span class="p">);</span>
+        <span class="n">item</span><span class="p">.</span><span class="n">setActionListener</span><span class="p">(</span><span class="n">new</span> <span class="n">GActionListener</span><span class="p">()</span> <span class="p">{</span>
+            <span class="p">@</span><span class="n">Override</span>
+            <span class="k">public</span> <span class="n">void</span> <span class="n">action</span><span class="p">(</span><span class="n">GObject</span> <span class="n">gobj</span><span class="p">)</span> <span class="p">{</span>
+                <span class="n">AppManager</span><span class="p">.</span><span class="n">getInstance</span><span class="p">().</span><span class="n">active</span><span class="p">();</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+
+        <span class="n">form</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">menu</span><span class="p">);</span>
+        <span class="n">return</span> <span class="n">form</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="n">GFrame</span> <span class="n">getFrame1</span><span class="p">()</span> <span class="p">{</span>
+
+        <span class="n">GFrame</span> <span class="n">gframe</span> <span class="p">=</span> <span class="n">new</span> <span class="n">GFrame</span><span class="p">(</span><span class="s2">"Hello World"</span><span class="p">,</span> <span class="m">50</span><span class="p">,</span> <span class="m">50</span><span class="p">,</span> <span class="n">form</span><span class="p">.</span><span class="n">getDeviceWidth</span><span class="p">()</span> <span class="p">*</span> <span class="m">.8f</span><span class="p">,</span> <span class="p">(</span><span class="n">form</span><span class="p">.</span><span class="n">getDeviceHeight</span><span class="p">()</span> <span class="p">-</span> <span class="n">menu</span><span class="p">.</span><span class="n">getH</span><span class="p">())</span> <span class="p">*</span> <span class="m">.7f</span><span class="p">);</span>
+        <span class="n">GViewPort</span> <span class="n">parent</span> <span class="p">=</span> <span class="n">gframe</span><span class="p">.</span><span class="n">getView</span><span class="p">();</span>
+        <span class="n">float</span> <span class="n">pad</span> <span class="p">=</span> <span class="m">8</span><span class="p">;</span>
+        <span class="n">float</span> <span class="n">x</span> <span class="p">=</span> <span class="n">pad</span><span class="p">,</span> <span class="n">y</span> <span class="p">=</span> <span class="m">10</span><span class="p">;</span>
+        <span class="n">float</span> <span class="n">btnH</span> <span class="p">=</span> <span class="m">28</span><span class="p">;</span>
+
+        <span class="k">String</span> <span class="n">conttxt</span> <span class="p">=</span> <span class="s2">"  This app is an example of mini_jvm, Threre are a menu and a frame .</span><span class="se">\n</span><span class="s2">"</span>
+                <span class="p">+</span> <span class="s2">"  Touch the 'Exit to AppManager' , you will enter the AppManager, AppManager manage all app, it can upload ,download , delete app.</span><span class="se">\n</span><span class="s2">"</span>
+                <span class="p">+</span> <span class="s2">"  1. DOWNLOAD : Put your jar in a website , then input the url of jar in AppManager, Touch 'Download' ,it would download the jar ,then update the app list.</span><span class="se">\n</span><span class="s2">"</span>
+                <span class="p">+</span> <span class="s2">"  2. UPLOAD : The first you touch the 'Start' to open the inapp webserver, then open browser in your Desktop Computer, open 'http://phone_ip_addr:8088' , and pickup a jar in the page, upload it.  NOTE: That computer and the phone must be same LAN.</span><span class="se">\n</span><span class="s2">"</span>
+                <span class="p">+</span> <span class="s2">"  3. RUN : Touch the App name in the list, Touch 'Run' can start the app.</span><span class="se">\n</span><span class="s2"> "</span>
+                <span class="p">+</span> <span class="s2">"  4. SET AS BOOT APP : The boot app will startup when MiniPack opend. </span><span class="se">\n</span><span class="s2">"</span>
+                <span class="p">+</span> <span class="s2">"  5. UPGRADE : AppManager will download the new jar ,url that get from config.txt in jar.</span><span class="se">\n</span><span class="s2">"</span>
+                <span class="p">+</span> <span class="s2">"  6. DELETE : The app would be deleteted.</span><span class="se">\n</span><span class="s2">"</span><span class="p">;</span>
+        <span class="n">GTextBox</span> <span class="n">cont</span> <span class="p">=</span> <span class="n">new</span> <span class="n">GTextBox</span><span class="p">(</span><span class="n">conttxt</span><span class="p">,</span> <span class="s2">"Contents"</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">parent</span><span class="p">.</span><span class="n">getW</span><span class="p">()</span> <span class="p">-</span> <span class="n">x</span> <span class="p">*</span> <span class="m">2</span><span class="p">,</span> <span class="n">parent</span><span class="p">.</span><span class="n">getH</span><span class="p">()</span> <span class="p">-</span> <span class="n">pad</span> <span class="p">*</span> <span class="m">2</span> <span class="p">-</span> <span class="n">btnH</span> <span class="p">-</span> <span class="n">y</span><span class="p">);</span>
+        <span class="n">cont</span><span class="p">.</span><span class="n">setEditable</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+        <span class="n">parent</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">cont</span><span class="p">);</span>
+        <span class="n">y</span> <span class="p">+=</span> <span class="n">cont</span><span class="p">.</span><span class="n">getH</span><span class="p">()</span> <span class="p">+</span> <span class="n">pad</span><span class="p">;</span>
+
+        <span class="n">GButton</span> <span class="n">bt2</span> <span class="p">=</span> <span class="n">new</span> <span class="n">GButton</span><span class="p">(</span><span class="s2">"Cancel"</span><span class="p">,</span> <span class="n">x</span> <span class="p">+</span> <span class="m">170</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="m">110</span><span class="p">,</span> <span class="n">btnH</span><span class="p">);</span>
+        <span class="n">bt2</span><span class="p">.</span><span class="n">setBgColor</span><span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="m">0</span><span class="p">);</span>
+        <span class="n">bt2</span><span class="p">.</span><span class="n">setActionListener</span><span class="p">(</span><span class="n">new</span> <span class="n">GActionListener</span><span class="p">()</span> <span class="p">{</span>
+            <span class="p">@</span><span class="n">Override</span>
+            <span class="k">public</span> <span class="n">void</span> <span class="n">action</span><span class="p">(</span><span class="n">GObject</span> <span class="n">gobj</span><span class="p">)</span> <span class="p">{</span>
+                <span class="n">gobj</span><span class="p">.</span><span class="n">getForm</span><span class="p">().</span><span class="n">remove</span><span class="p">(</span><span class="n">gframe</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+        <span class="n">parent</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">bt2</span><span class="p">);</span>
+
+        <span class="n">return</span> <span class="n">gframe</span><span class="p">;</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+
+
+
+</code></pre></div></div>
+<h2 id="screen-shot---">Screen shot   :</h2>
+<ul>
+  <li>Windows mini_jvm gui</li>
+</ul>
+<p>&lt;div align=center&gt;<img width="433" height="336" src="/screenshot/win.png" />&lt;/div&gt;</p>
+<ul>
+  <li>Macos mini_jvm gui</li>
+</ul>
+<p>&lt;div align=center&gt;<img width="433" height="336" src="/screenshot/mac.png" />&lt;/div&gt;</p>
+<ul>
+  <li>Linux mini_jvm gui</li>
+</ul>
+<p>&lt;div align=center&gt;<img width="433" height="336" src="/screenshot/centos.png" />&lt;/div&gt;</p>
+
+<h2 id="directories">Directories:</h2>
+<blockquote>
+  <p>/</p>
+  <blockquote>
+    <p>binary/——– minijvm binary for pc (win32/win64/mac/linux)<br />
+mini_jvm/—— minijvm c source <br />
+javalib/——- minijvm runtime class library</p>
+
+    <p>ex_lib/</p>
+    <blockquote>
+      <p>jni_gui/—— desktop computer native gui jni module <br />
+luaj/——— lua java</p>
+    </blockquote>
+
+    <p>mobile/</p>
+    <blockquote>
+      <p>c/————- java native lib, glfm framework, gui jni, glfmapp  <br />
+java/guilib—- java jni for above <strong>/mobile/c</strong> native gui lib  <br />
+java/ExApp—– java app entry point  <br />
+iosapp/——– iOS launcher   <br />
+androidapp/—- Android launcher   <br />
+assets/resfiles/- java app resource, font files, jar files ,pic etc.</p>
+    </blockquote>
+
+    <p>test/</p>
+    <blockquote>
+      <p>javalib_test/- test <strong>/javalib</strong> classes. <br />
+jni_test/—– jni example   <br />
+jvm_ios/—— ios swift test project ,only test the jvm.    <br />
+jvm_macos/—- macosX test project, only test jvm.    <br />
+jvm_vs/——- virtual studio test project, only test jvm.</p>
+    </blockquote>
+  </blockquote>
+</blockquote>
+
+<ul>
+  <li><strong>/mini_jvm</strong> is an independent small and fast jvm interpreter, Need <strong>/javalib</strong> runtime class library only, it run on Win/Mac/Linux/iOS/Android.</li>
+  <li><strong>/javalib</strong> is the jvm foundation runtime class library, ex <em>java.lang</em> , <em>java.util</em> ,and extended classes <em>org.mini</em> for file reflect and network etc, this project generate minijvm_rt.jar , copy it into <strong>/mobile/assets/resfiles</strong>  .</li>
+  <li><strong>/mobile/iosapp</strong> <strong>/mobile/androidapp</strong> are iOS/Android launcher program, it include minijvm source and native gui function, java call gui library with jni.</li>
+  <li><strong>/mobile/java/guilib</strong> is a gui library ,it dependent on native gui library ,that include openGLES glad, glfm, nanovg, stb lib etc , this project generate glfm_gui.jar , copy it into <strong>/mobile/assets/resfiles</strong> .</li>
+  <li><strong>/mobile/java/ExApp</strong> is an example of mobile app, it run on iOS and Android platform.</li>
+</ul>
+
+<h2 id="license">License</h2>
+<p>License:	Public domain</p>
+
+<p>Gust , zhangpeng@egls.cn , Technology and production manage in EGLS ltd. EGLS is a game develop company in China .</p>
+
+
+      </section>
+      <footer>
+        
+        <p>This project is maintained by <a href="https://github.com/digitalgust">digitalgust</a></p>
+        
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="/miniJVM/assets/js/scale.fix.js"></script>
+    
+  </body>
+</html>
