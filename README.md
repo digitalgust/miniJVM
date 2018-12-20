@@ -34,7 +34,7 @@
 
 ## Architecture:  
 
-  <div align=center><img width="540" height="350" src="/screenshot/arch.png"/></div>
+  <div align=center><img width="540" height="350" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/arch.png"/></div>
 
 
 
@@ -51,7 +51,7 @@
    * Touch the app icon to open MiniPack app, start inapp webserver , in the same lan, open browser of desktop computer, input the url of your phone , http://phone_ip:8088/   
    * In browser, pickup the generated jar ,and upload , just it would in the manager list   
    * you can run it now . 
-    <div align=center><img width="672" height="398"   src="/screenshot/appmgr.png"/></div>
+    <div align=center><img width="672" height="398"   src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/appmgr.png"/></div>
   
   
 ## How to Remote debug:  
@@ -217,11 +217,11 @@ public class MyApp extends GApplication {
 ```
 ##   Screen shot   :   
   * Windows mini_jvm gui    
-  <div align=center><img width="433" height="336" src="/screenshot/win.png"/></div>
+  <div align=center><img width="433" height="336" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/win.png"/></div>
   * Macos mini_jvm gui    
-  <div align=center><img width="433" height="336" src="/screenshot/mac.png"/></div> 
+  <div align=center><img width="433" height="336" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/mac.png"/></div> 
   * Linux mini_jvm gui    
-  <div align=center><img width="433" height="336" src="/screenshot/centos.png"/></div>
+  <div align=center><img width="433" height="336" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/centos.png"/></div>
 
 
 ## Directories: 
