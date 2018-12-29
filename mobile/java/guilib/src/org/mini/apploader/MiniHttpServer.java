@@ -485,6 +485,7 @@ public class MiniHttpServer extends Thread {
                 for (int j = 1; j < key.length; j++) {
                     if (src[i + j] != key[j]) {
                         march = false;
+                        break;
                     }
                 }
                 if (march) {
