@@ -30,8 +30,6 @@ static GLFMDisplay *glfm_display;
 void glfmMain(GLFMDisplay *display) {
     glfm_display=display;
 
-    java_debug=1;
-
     Utf8String *classpath = utf8_create();
     utf8_append_c(classpath, glfmGetResRoot());
     utf8_append_c(classpath, "/resfiles/minijvm_rt.jar;");

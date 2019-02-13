@@ -6,10 +6,16 @@
          contextName = "GLOBAL">
          <PersistentStrings>
             <PersistentString
-               value = "clazz-&gt;name-&gt;data">
+               value = "(Instance*)(&amp;stack-&gt;store[1])">
+            </PersistentString>
+            <PersistentString
+               value = "getInstanceInStack(clazz, cmr, stack)">
             </PersistentString>
             <PersistentString
                value = "clazz">
+            </PersistentString>
+            <PersistentString
+               value = "clazz-&gt;name-&gt;data">
             </PersistentString>
             <PersistentString
                value = "method-&gt;name-&gt;data">
@@ -27,6 +33,9 @@
       </ContextState>
       <ContextState
          contextName = "class_clinit:class.c">
+      </ContextState>
+      <ContextState
+         contextName = "execute_method_impl:interpreter.c">
       </ContextState>
       <ContextState
          contextName = "org_mini_media_MiniAL_mal_decoder_uninit:jni_minial.m">
