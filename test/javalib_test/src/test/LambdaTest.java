@@ -24,7 +24,7 @@ public class LambdaTest {
         String[] c = new String[1];
         List<String> list = new ArrayList();
         int a = 4;
-        for (int i = 0; i < 500000; i++) {
+        for (int i = 0; i < 1; i++) {
             sslist.forEach(s -> {
                 c[0] = (this + ":" + a + ":" + s);
             });
