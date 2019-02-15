@@ -433,7 +433,9 @@ public class GlfmCallBackImpl extends GuiCallBack {
 
     @Override
     public void destory() {
-
+        if (vg != 0) {
+            Nanovg.nvgDeleteGLES3(vg);
+        }
     }
 
     @Override
