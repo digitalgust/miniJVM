@@ -49,8 +49,7 @@ static void _callback_surface_error(GLFMDisplay *window, const char *description
         Instance *jstr = createJavaString(runtime, description);
         env->push_ref(runtime->stack, jstr);
 
-        s32 ret = env->execute_method(refers._callback_surface_error, runtime,
-                                      refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_surface_error, runtime);
         if (ret) {
             env->print_exception(runtime);
         }
@@ -67,8 +66,7 @@ static bool _callback_key(GLFMDisplay *window, GLFMKey key, GLFMKeyAction action
         env->push_int(runtime->stack, action);
         env->push_int(runtime->stack, mods);
 
-        s32 ret = env->execute_method(refers._callback_key, runtime,
-                                      refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_key, runtime);
         if (ret) {
             env->print_exception(runtime);
         } else {
@@ -88,8 +86,7 @@ static void _callback_character(GLFMDisplay *window, const char *utf8, int modif
         env->push_ref(runtime->stack, ins);
         env->push_int(runtime->stack, modifiers);
 
-        s32 ret = env->execute_method(refers._callback_character, runtime,
-                                      refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_character, runtime);
         if (ret) {
             env->print_exception(runtime);
         }
@@ -104,8 +101,7 @@ static void _callback_mainloop(GLFMDisplay *window, f64 frameTime) {
         env->push_long(runtime->stack, (s64) (intptr_t) window);
         env->push_double(runtime->stack, frameTime);
 
-        s32 ret = env->execute_method(refers._callback_mainloop, runtime,
-                                      refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_mainloop, runtime);
         if (ret) {
             env->print_exception(runtime);
         }
@@ -118,8 +114,7 @@ void _callback_memory_warning(GLFMDisplay *window) {
         JniEnv *env = refers.env;
         env->push_ref(runtime->stack, refers.glfm_callback);
         env->push_long(runtime->stack, (s64) (intptr_t) window);
-        s32 ret = env->execute_method(refers._callback_memory_warning, runtime,
-                                      refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_memory_warning, runtime);
         if (ret) {
             env->print_exception(runtime);
         }
@@ -138,8 +133,7 @@ void _callback_keyboard_visible(GLFMDisplay *window, bool visible, f64 x, f64 y,
         env->push_double(runtime->stack, w);
         env->push_double(runtime->stack, h);
 
-        s32 ret = env->execute_method(refers._callback_keyboard_visible, runtime,
-                                      refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_keyboard_visible, runtime);
         if (ret) {
             env->print_exception(runtime);
         }
@@ -157,8 +151,7 @@ bool _callback_touch(GLFMDisplay *window, s32 touch, GLFMTouchPhase phase, f64 x
         env->push_double(runtime->stack, x);
         env->push_double(runtime->stack, y);
 
-        s32 ret = env->execute_method(refers._callback_touch, runtime,
-                                      refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_touch, runtime);
         if (ret) {
             env->print_exception(runtime);
         } else {
@@ -178,8 +171,7 @@ void _callback_surface_resized(GLFMDisplay *window, s32 w, s32 h) {
         env->push_int(runtime->stack, w);
         env->push_int(runtime->stack, h);
 
-        s32 ret = env->execute_method(refers._callback_surface_resized, runtime,
-                                      refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_surface_resized, runtime);
         if (ret) {
             env->print_exception(runtime);
         }
@@ -193,8 +185,7 @@ void _callback_surface_destroyed(GLFMDisplay *window) {
         env->push_ref(runtime->stack, refers.glfm_callback);
         env->push_long(runtime->stack, (s64) (intptr_t) window);
 
-        s32 ret = env->execute_method(refers._callback_surface_destroyed, runtime,
-                                      refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_surface_destroyed, runtime);
         if (ret) {
             env->print_exception(runtime);
         }
@@ -209,8 +200,7 @@ void _callback_app_focus(GLFMDisplay *window, bool focus) {
         env->push_long(runtime->stack, (s64) (intptr_t) window);
         env->push_int(runtime->stack, focus);
 
-        s32 ret = env->execute_method(refers._callback_app_focus, runtime,
-                                      refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_app_focus, runtime);
         if (ret) {
             env->print_exception(runtime);
         }
@@ -227,8 +217,7 @@ void _callback_surface_created(GLFMDisplay *window, s32 w, s32 h) {
         env->push_int(runtime->stack, w);
         env->push_int(runtime->stack, h);
 
-        s32 ret = env->execute_method(refers._callback_surface_created, runtime,
-                                      refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_surface_created, runtime);
         if (ret) {
             env->print_exception(runtime);
         }
@@ -253,8 +242,7 @@ _callback_photo_picked(GLFMDisplay *window, s32 uid, const c8 *url, c8 *data, s3
         env->push_ref(runtime->stack, jstr_url);
         env->push_ref(runtime->stack, jarr);
 
-        s32 ret = env->execute_method(refers._callback_photo_picked, runtime,
-                                      refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_photo_picked, runtime);
         if (ret) {
             env->print_exception(runtime);
         }
@@ -273,8 +261,7 @@ void _callback_notify(GLFMDisplay *window, const c8* key, const c8* val) {
         Instance *insVal = createJavaString(runtime, val);
         env->push_ref(runtime->stack, insVal);
         
-        s32 ret = env->execute_method(refers._callback_notify, runtime,
-                                      refers.glfm_callback->mb.clazz);
+        s32 ret = env->execute_method(refers._callback_notify, runtime);
         if (ret) {
             env->print_exception(runtime);
         }

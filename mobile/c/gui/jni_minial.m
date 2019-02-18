@@ -97,7 +97,7 @@ void on_recv_frames(mal_device *pDevice, mal_uint32 frameCount, const void *pSam
             env->push_int(runtime->stack, frameCount);
             env->push_long(runtime->stack, (s64)(intptr_t)
             pSamples);
-            s32 ret = env->execute_method(refers._callback_minial_on_recv_frames, runtime, refers._callback_minial_on_recv_frames->_this_class);
+            s32 ret = env->execute_method(refers._callback_minial_on_recv_frames, runtime);
             if (ret) {
                 env->print_exception(runtime);
             }
@@ -118,7 +118,7 @@ mal_uint32 on_send_frames(mal_device *pDevice, mal_uint32 frameCount, void *pSam
             env->push_int(runtime->stack, frameCount);
             env->push_long(runtime->stack, (s64)(intptr_t)
             pSamples);
-            s32 ret = env->execute_method(refers._callback_minial_on_send_frames, runtime, refers._callback_minial_on_send_frames->_this_class);
+            s32 ret = env->execute_method(refers._callback_minial_on_send_frames, runtime);
             if (ret) {
                 env->print_exception(runtime);
             }
@@ -140,7 +140,7 @@ void on_stop(mal_device *pDevice) {
             JniEnv *env = refers.env;
             env->push_long(runtime->stack, (s64)(intptr_t)
             pDevice);
-            s32 ret = env->execute_method(refers._callback_minial_on_stop, runtime, refers._callback_minial_on_stop->_this_class);
+            s32 ret = env->execute_method(refers._callback_minial_on_stop, runtime);
             if (ret) {
                 env->print_exception(runtime);
             }
