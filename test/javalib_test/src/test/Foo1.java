@@ -167,7 +167,7 @@ public class Foo1 {
     }
 
     void t7() {
-        final int MAX = 500000;
+        final int MAX = 100000;
         final int PRINT_COUNT = 10000;
         Thread t = new Thread(new Runnable() {
             List<String> list = new ArrayList(MAX);
@@ -360,7 +360,7 @@ public class Foo1 {
 
         System.out.println("fi=" + fi);
         int i = 0;
-        while (i++ < 100000) {
+        while (i++ < 1000) {
             try {
                 //Thread.sleep(1000);
                 int debug = 1;
@@ -472,6 +472,11 @@ public class Foo1 {
         }).start();
     }
 
+    void t26() {
+        int a = 10;
+        t26();
+    }
+
     public static void exec() {
         Foo1 f = new Foo1();
         for (int i = 0; i < 1; i++) {
@@ -495,6 +500,7 @@ public class Foo1 {
             f.t23();
             f.t24();
             f.t25();
+            f.t26();
         }
     }
 
