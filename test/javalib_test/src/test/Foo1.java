@@ -472,9 +472,17 @@ public class Foo1 {
         }).start();
     }
 
+    void t26_1(int i) {
+        i++;
+        if (i < 100) {
+            t26_1(i);
+        } else {
+            return;
+        }
+    }
+
     void t26() {
-        int a = 10;
-        t26();
+        t26_1(1);
     }
 
     public static void exec() {
