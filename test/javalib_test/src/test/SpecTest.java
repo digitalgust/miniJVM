@@ -5,9 +5,6 @@
  */
 package test;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 /**
  *
  * @author Gust
@@ -25,6 +22,8 @@ public class SpecTest {
         test_typecast();
         test_array();
         test_other();
+        test_field();
+        test_method();
         print("test end");
     }
 
@@ -814,7 +813,7 @@ public class SpecTest {
 
         o = new Integer(6);
         if (o == null) {
-            printerr("ifnull");
+            printerr("ifnull aconst_null");
         }
 
         try {
@@ -822,7 +821,48 @@ public class SpecTest {
             printerr("checkcast");
         } catch (Exception e) {
         }
+        //=========================================================
 
+        int ch = 5;
+        int v = 0;
+        switch (ch) {
+            case 4:
+                v = 98;
+                break;
+            case 5:
+                v = 85;
+                break;
+            case 6:
+                v = 108;
+                break;
+            default:
+                v = 90;
+        }
+        if (v != 85) {
+            printerr("tableswitch");
+        }
+
+        //
+        ch = 1000;
+        v = 0;
+        switch (ch) {
+            case 1:
+                v = 98;
+                break;
+            case 100:
+                v = 85;
+                break;
+            case 1000:
+                v = 108;
+                break;
+            default:
+                v = 90;
+        }
+        if (v != 108) {
+            printerr("lookupswitch");
+        }
+
+        //=========================================================
         class A extends Thread implements Cloneable {
 
             public Object lock = new Object();
@@ -878,5 +918,238 @@ public class SpecTest {
         if (a.v2 != 2) {
             printerr("monitorenter, monitorexit");
         }
+        //=========================================================
+
+        try {
+            throw new NullPointerException();
+        } catch (Exception e) {
+            if (!(e instanceof NullPointerException)) {
+                printerr("athrow");
+            }
+        }
+    }
+
+    static class XF {
+
+        byte b;
+        short s;
+        char c;
+        int i;
+        long j;
+        float f;
+        double d;
+        Object o;
+
+        static byte sb;
+        static short ss;
+        static char sc;
+        static int si;
+        static long sj;
+        static float sf;
+        static double sd;
+        static Object so;
+
+        byte rb() {
+            return b;
+        }
+
+        short rs() {
+            return s;
+        }
+
+        char rc() {
+            return c;
+        }
+
+        int ri() {
+            return i;
+        }
+
+        long rj() {
+            return j;
+        }
+
+        float rf() {
+            return f;
+        }
+
+        double rd() {
+            return d;
+        }
+
+        Object ro() {
+            return o;
+        }
+    }
+
+    static void test_field() {
+        XF.sb = (byte) 0xff;
+        if (XF.sb != -1) {
+            printerr("getstatic, putstatic b");
+        }
+        XF.ss = (short) 0xffff;
+        if (XF.sb != -1) {
+            printerr("getstatic, putstatic s");
+        }
+        XF.sc = (char) 0xffff;
+        if (XF.sc != 0xffff) {
+            printerr("getstatic, putstatic c");
+        }
+        XF.si = 0xffffffff;
+        if (XF.si != -1) {
+            printerr("getstatic, putstatic i");
+        }
+        XF.sj = 0xffff;
+        if (XF.sj != 0xffff) {
+            printerr("getstatic, putstatic j");
+        }
+        XF.sf = .5f;
+        if (XF.sf != 0.5f) {
+            printerr("getstatic, putstatic f");
+        }
+        XF.sd = .5d;
+        if (XF.sf != 0.5d) {
+            printerr("getstatic, putstatic d");
+        }
+        XF.so = new Integer(1);
+        Object o = XF.so;
+        if (XF.so != o) {
+            printerr("getstatic, putstatic r");
+        }
+
+        //
+        XF xf = new XF();
+        xf.b = (byte) 0xff;
+        if (xf.b != -1) {
+            printerr("getfield, putfield b");
+        }
+        xf.s = (short) 0xffff;
+        if (xf.b != -1) {
+            printerr("getfield, putfield s");
+        }
+        xf.c = (char) 0xffff;
+        if (xf.c != 0xffff) {
+            printerr("getfield, putfield c");
+        }
+        xf.i = 0xffffffff;
+        if (xf.i != -1) {
+            printerr("getfield, putfield i");
+        }
+        xf.j = 0xffff;
+        if (xf.j != 0xffff) {
+            printerr("getfield, putfield j");
+        }
+        xf.f = .5f;
+        if (xf.f != 0.5f) {
+            printerr("getfield, putfield f");
+        }
+        xf.d = .5d;
+        if (xf.f != 0.5d) {
+            printerr("getfield, putfield d");
+        }
+        xf.o = new Integer(1);
+        o = xf.o;
+        if (xf.o != o) {
+            printerr("getfield, putfield r");
+        }
+
+        //
+        xf.b = (byte) 0xff;
+        if (xf.rb() != -1) {
+            printerr("ireturn b");
+        }
+        xf.s = (short) 0xffff;
+        if (xf.rb() != -1) {
+            printerr("ireturn s");
+        }
+        xf.c = (char) 0xffff;
+        if (xf.rc() != 0xffff) {
+            printerr("ireturn c");
+        }
+        xf.i = 0xffffffff;
+        if (xf.ri() != -1) {
+            printerr("ireturn i");
+        }
+        xf.j = 0xffff;
+        if (xf.rj() != 0xffff) {
+            printerr("lreturn j");
+        }
+        xf.f = .5f;
+        if (xf.rf() != 0.5f) {
+            printerr("freturn f");
+        }
+        xf.d = .5d;
+        if (xf.rd() != 0.5d) {
+            printerr("dreturn d");
+        }
+        xf.o = new Integer(1);
+        o = xf.o;
+        if (xf.ro() != o) {
+            printerr("areturn r");
+        }
+
+    }
+
+    static void test_method() {
+        Human one = new Son();
+        if (one.age() != 10) {
+            printerr("invokeinterface");
+        }
+
+        Grandpa man = new Son();
+        if (man.age() != 10) {
+            printerr("invokevirtual");
+        }
+
+        if (!man.lastName().equals("Zhang")) {
+            printerr("invokevirtual");
+        }
+
+        if (!Son.live().equals("earth")) {
+            printerr("invokestatic");
+        }
+
+        Human jason = () -> 30;
+
+        if (jason.age() != 30) {
+            printerr("invokedynamic");
+        }
     }
 }
+
+//=========================================================
+interface Human {
+
+    int age();
+}
+
+class Grandpa implements Human {
+
+    public int age() {
+        return 60;
+    }
+
+    public String lastName() {
+        return "Zhang";
+    }
+
+    public static String live() {
+        return "earth";
+    }
+}
+
+class Father extends Grandpa {
+
+    public int age() {
+        return 35;
+    }
+}
+
+class Son extends Father {
+
+    public int age() {
+        return 10;
+    }
+}
+
+        //=========================================================
