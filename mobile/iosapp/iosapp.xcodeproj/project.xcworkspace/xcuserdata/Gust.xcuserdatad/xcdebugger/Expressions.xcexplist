@@ -9,9 +9,6 @@
                value = "(Instance*)(&amp;stack-&gt;store[1])">
             </PersistentString>
             <PersistentString
-               value = "getInstanceInStack(clazz, cmr, stack)">
-            </PersistentString>
-            <PersistentString
                value = "clazz">
             </PersistentString>
             <PersistentString
