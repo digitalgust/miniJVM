@@ -9,11 +9,11 @@ package org.mini.media;
  *
  * @author Gust
  */
-public interface AudioMgrCallback {
+public interface AudioCallback {
 
     void onCapture(int millSecond, byte[] data);
     
-    void onPlay(int millSecond, byte[] data);
+    void onPlayback(int millSecond, byte[] data);
 
     void onStop();
 }

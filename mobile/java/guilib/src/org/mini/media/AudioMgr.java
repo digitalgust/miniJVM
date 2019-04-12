@@ -23,9 +23,9 @@ public class AudioMgr {
     public static int channels = 2;
     public static int ratio = 22050;
 
-    static AudioMgrCallback listener;
+    static AudioCallback listener;
 
-    public static void setCallback(AudioMgrCallback plistener) {
+    public static void setCallback(AudioCallback plistener) {
 
         listener = plistener;
     }
@@ -61,18 +61,18 @@ public class AudioMgr {
         public AudioDecoder decoder;
         public byte[] rawdata;
         public int pos;
-        public AudioMgrCallback callback;
+        public AudioCallback callback;
     }
 
-    static AudioFrameListener frameProcessor = new AudioFrameListener() {
+    static DeviceListener frameProcessor = new DeviceListener() {
 
         @Override
-        public void onReceiveFrames(AudioDevice pDevice, int frameCount, DirectMemObj dmo) {
+        public void onCapture(AudioDevice pDevice, int frameCount, DirectMemObj dmo) {
             int readNeed = frameCount * pDevice.channels;
             int bytes = readNeed * AudioDevice.getFormatBytes(capDevice.format);
             byte[] b = new byte[bytes];
             dmo.copyTo(b);
-            //System.out.println("onSendFrames: " + frameCount + " , " + frameCount + "  b.len:" + b.length);
+            System.out.println("onCapture: " + Long.toHexString(pDevice.handle_device) + " , " + frameCount + "  b.len:" + b.length);
             try {
                 baos.write(b);
             } catch (IOException ex) {
@@ -84,7 +84,7 @@ public class AudioMgr {
         }
 
         @Override
-        public int onSendFrames(AudioDevice pDevice, int frameCount, DirectMemObj dmo) {
+        public int onPlayback(AudioDevice pDevice, int frameCount, DirectMemObj dmo) {
             Object obj = pDevice.getUserData();
             if (obj == null) {
                 return 0;
@@ -101,7 +101,7 @@ public class AudioMgr {
                         }
                     }
                     if (listener != null) {
-                        listener.onPlay(0, null);
+                        listener.onPlayback(0, null);
                     }
                     return v;
                 } else if (src.rawdata != null) {
@@ -123,7 +123,7 @@ public class AudioMgr {
                     }
                     if (listener != null) {
                         int time = (int) (src.pos / getDataTime(b));
-                        listener.onPlay(time, null);
+                        listener.onPlayback(time, null);
                     }
                     return bytes / getFormatBytes(pDevice.format) / pDevice.channels;
                 }
@@ -157,7 +157,7 @@ public class AudioMgr {
     public static void playData(byte[] data) {
         if (canPlay() && data != null) {
             playDevice.setUserData(new AudioSource(data, 0));
-            System.out.println("total len:" + data.length);
+            //System.out.println("total len:" + data.length);
             playImpl();
         }
     }
@@ -179,8 +179,9 @@ public class AudioMgr {
     }
 
     static private void playImpl() {
-
-        playDevice.start();
+        if (!playDevice.isStarted()) {
+            playDevice.start();
+        }
     }
 
     static private boolean canPlay() {
@@ -189,7 +190,7 @@ public class AudioMgr {
         }
         if (playDevice == null) {
             playDevice = new AudioDevice(AudioDevice.mal_device_type_playback, format, channels, ratio);
-            playDevice.setAudioFrameListener(frameProcessor);
+            playDevice.setDeviceListener(frameProcessor);
         }
         return true;
     }
@@ -223,9 +224,9 @@ public class AudioMgr {
         capZipData = null;
         if (capDevice == null) {
             capDevice = new AudioDevice(AudioDevice.mal_device_type_capture, format, channels, ratio);
-            capDevice.setAudioFrameListener(frameProcessor);
+            capDevice.setDeviceListener(frameProcessor);
         }
-        System.out.println("begin capture ");
+        //System.out.println("begin capture ");
 
         capStartAt = System.currentTimeMillis();
         capDevice.start();
