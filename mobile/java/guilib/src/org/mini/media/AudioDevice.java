@@ -26,15 +26,16 @@ public class AudioDevice {
             mal_format_s32 = 4,
             mal_format_f32 = 5;
     public static final int //
-            mal_device_type_playback = 0,
-            mal_device_type_capture = 1;
+            mal_device_type_playback = 1,
+            mal_device_type_capture = 2,
+            ma_device_type_duplex = mal_device_type_playback | mal_device_type_capture;
 
     int deviceType;
 
     public int format;
     public int channels;
     public int sampleRate;
-    public AudioFrameListener listener;
+    public DeviceListener listener;
     Object userdata;
 
     public AudioDevice(int deviceType, int format, int channels, int sampleRate) {
@@ -46,7 +47,7 @@ public class AudioDevice {
         init();
     }
 
-    public void setAudioFrameListener(AudioFrameListener listener) {
+    public void setDeviceListener(DeviceListener listener) {
         this.listener = listener;
 
     }
@@ -60,35 +61,48 @@ public class AudioDevice {
         return userdata;
     }
 
+    public int getDeviceType() {
+        return deviceType;
+    }
+
+    public int getChannels() {
+        return channels;
+    }
+
+    public int getSampleRate() {
+        return sampleRate;
+    }
+
     final void init() {
         checkThread();
-        handle_context = MiniAL.mal_context_init();
+        handle_context = MiniAL.ma_context_init();
         if (handle_context == 0) {
             throw new RuntimeException("MiniAL: init context error");
         }
-        handle_device = MiniAL.mal_device_init(handle_context, deviceType, 0, format, channels, sampleRate);
+        handle_device = MiniAL.ma_device_init(handle_context, deviceType, 0, format, channels, sampleRate);
         if (handle_device == 0) {
             throw new RuntimeException("MiniAL: init device error");
         } else {
-            processors.put(handle_device, this);
+            devices.put(handle_device, this);
         }
+        //System.out.println("audio init " + Long.toHexString(handle_device));
     }
 
     public void start() {
         checkThread();
-        MiniAL.mal_device_start(handle_device);
+        MiniAL.ma_device_start(handle_device);
     }
 
     public void stop() {
         checkThread();
-        if (MiniAL.mal_device_is_started(handle_device) == 1) {
-            MiniAL.mal_device_stop(handle_device);
-            System.out.println("stoped " + this);
+        if (MiniAL.ma_device_is_started(handle_device) == 1) {
+            MiniAL.ma_device_stop(handle_device);
+            //System.out.println("audio init " + Long.toHexString(handle_device));
         }
     }
 
     public boolean isStarted() {
-        return MiniAL.mal_device_is_started(handle_device) == 1;
+        return MiniAL.ma_device_is_started(handle_device) == 1;
     }
 
     //cant call start stop in callback thread
@@ -104,15 +118,15 @@ public class AudioDevice {
     }
 
     public void destory() {
+        //System.out.println("audio finalize : " + Long.toHexString(handle_device));
         if (handle_device != 0) {
-            MiniAL.mal_device_uninit(handle_device);
+            MiniAL.ma_device_uninit(handle_device);
             handle_device = 0;
         }
         if (handle_context != 0) {
-            MiniAL.mal_context_uninit(handle_context);
+            MiniAL.ma_context_uninit(handle_context);
             handle_context = 0;
         }
-        System.out.println("finalize : " + this);
     }
 
     public static int getFormatBytes(int format) {
@@ -137,7 +151,7 @@ public class AudioDevice {
      * =================================================================================================
      *
      */
-    static Map<Long, AudioDevice> processors = new HashMap();
+    static Map<Long, AudioDevice> devices = new HashMap();
     static Thread curThread;
 
     /**
@@ -147,23 +161,25 @@ public class AudioDevice {
      * @param pSamples
      */
     static void onReceiveFrames(long pDevice, int frameCount, long pSamples) {
+        //System.out.println("audio onReceiveFrames : " + Long.toHexString(pDevice));
         curThread = Thread.currentThread();
-        AudioDevice dev = processors.get(pDevice);
+        AudioDevice dev = devices.get(pDevice);
         if (dev != null && pSamples != 0) {
             if (dev.listener != null) {
 
                 int sampleCount = frameCount * dev.channels;
                 int len = sampleCount * getFormatBytes(dev.format);
                 DirectMemObj dmo = new DirectMemObj(pSamples, len);
-                dev.listener.onReceiveFrames(dev, frameCount, dmo);
+                dev.listener.onCapture(dev, frameCount, dmo);
             }
         }
         curThread = null;
     }
 
     static int onSendFrames(long pDevice, int frameCount, long pSamples) {
+        //System.out.println("audio onSendFrames : " + Long.toHexString(pDevice));
         curThread = Thread.currentThread();
-        AudioDevice dev = processors.get(pDevice);
+        AudioDevice dev = devices.get(pDevice);
         if (dev != null) {
             if (dev.listener != null) {
                 int samplesToRead = frameCount * dev.channels;
@@ -173,7 +189,7 @@ public class AudioDevice {
                 }
                 int len = samplesToRead * getFormatBytes(dev.format);
                 DirectMemObj dmo = new DirectMemObj(pSamples, len);
-                int v = dev.listener.onSendFrames(dev, frameCount, dmo);
+                int v = dev.listener.onPlayback(dev, frameCount, dmo);
                 curThread = null;
                 return v;
             }
@@ -183,8 +199,9 @@ public class AudioDevice {
     }
 
     static void onStop(long pDevice) {
+        //System.out.println("audio onStop : " + Long.toHexString(pDevice));
         curThread = Thread.currentThread();
-        AudioDevice dev = processors.get(pDevice);
+        AudioDevice dev = devices.get(pDevice);
         if (dev != null) {
             if (dev.listener != null) {
                 dev.listener.onStop(dev);
