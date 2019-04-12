@@ -1,7 +1,6 @@
 package test;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Vector;
 
 class Foo3 {
 
@@ -30,13 +29,13 @@ class Foo3 {
         x = null;
     }
 
+    
     static void t7() {
         final int MAX = 2000000;
         final int PRINT_COUNT = 10000;
         Thread t = new Thread(new Runnable() {
-            List<String> list = new ArrayList(MAX);
+            Vector list = new Vector(MAX);
 
-            @Override
             public void run() {
                 try {
                     System.out.println("total mem:" + Runtime.getRuntime().totalMemory()
@@ -53,7 +52,8 @@ class Foo3 {
                     String a = "abc";
                     String b = "def";
                     c = a + b;
-                    list.add(c);
+                    list.addElement(c);
+                    list.removeElementAt(0);
                     if (i % PRINT_COUNT == 0) {
                         System.out.println(this + " thread i=" + i);
                     }
@@ -64,47 +64,17 @@ class Foo3 {
         });
         t.start();
 
-        //
-        Thread t1 = new Thread(new Runnable() {
-            List<String> list = new ArrayList();
-
-            @Override
-            public void run() {
-                try {
-                    System.out.println("total mem:" + Runtime.getRuntime().totalMemory()
-                            + "   free: " + Runtime.getRuntime().freeMemory());
-
-                } catch (Exception ex) {
-                }
-
-                long start = System.currentTimeMillis();
-                System.out.println("thread here.");
-                int j = 0;
-                String c = null;
-                for (int i = 0; i < MAX; i++) {
-                    String a = "abc";
-                    String b = "def";
-                    c = a + b;
-                    list.add(c);
-                    if (i % PRINT_COUNT == 0) {
-                        System.out.println(this + " thread i=" + i);
-                    }
-                }
-                System.out.println(this + " list.size():" + list.size());
-                System.out.println(this + " thread cost: " + (System.currentTimeMillis() - start));
-            }
-        });
-        //t1.start();
 
         //
-        List<String> list = new ArrayList();
+        Vector list = new Vector();
         long start = System.currentTimeMillis();
         String c = null;
         for (int i = 0; i < MAX; i++) {
             String a = "abc";
             String b = "def";
             c = a + b;
-            list.add(c);
+            list.addElement(c);
+            list.removeElementAt(0);
             if (i % PRINT_COUNT == 0) {
                 System.out.println("main i=" + i);
             }
@@ -112,6 +82,7 @@ class Foo3 {
         System.out.println("main list.size():" + list.size());
         System.out.println("main thread cost: " + (System.currentTimeMillis() - start));
     }
+
 
     static class Thine implements Cloneable {
 
@@ -127,7 +98,7 @@ class Foo3 {
             try {
                 c = super.clone();
                 return c;
-            } catch (CloneNotSupportedException ex) {
+            } catch (Exception ex) {
             }
             return null;
         }
