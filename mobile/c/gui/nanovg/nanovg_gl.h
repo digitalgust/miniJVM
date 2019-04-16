@@ -989,12 +989,12 @@ static void glnvg__setUniforms(GLNVGcontext* gl, int uniformOffset, int image)
 	}
 }
 
-static void glnvg__renderViewport(void* uptr, int width, int height, float devicePixelRatio)
+static void glnvg__renderViewport(void* uptr, float width, float height, float devicePixelRatio)
 {
 	NVG_NOTUSED(devicePixelRatio);
 	GLNVGcontext* gl = (GLNVGcontext*)uptr;
-	gl->view[0] = (float)width;
-	gl->view[1] = (float)height;
+	gl->view[0] = width;
+	gl->view[1] = height;
 }
 
 static void glnvg__fill(GLNVGcontext* gl, GLNVGcall* call)
@@ -1049,12 +1049,12 @@ static void glnvg__convexFill(GLNVGcontext* gl, GLNVGcall* call)
 	glnvg__setUniforms(gl, call->uniformOffset, call->image);
 	glnvg__checkError(gl, "convex fill");
 
-	for (i = 0; i < npaths; i++)
+	for (i = 0; i < npaths; i++) {
 		glDrawArrays(GL_TRIANGLE_FAN, paths[i].fillOffset, paths[i].fillCount);
-	if (gl->flags & NVG_ANTIALIAS) {
 		// Draw fringes
-		for (i = 0; i < npaths; i++)
+		if (paths[i].strokeCount > 0) {
 			glDrawArrays(GL_TRIANGLE_STRIP, paths[i].strokeOffset, paths[i].strokeCount);
+		}
 	}
 }
 
