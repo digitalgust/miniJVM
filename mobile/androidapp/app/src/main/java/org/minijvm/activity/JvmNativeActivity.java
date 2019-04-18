@@ -45,7 +45,6 @@ public class JvmNativeActivity extends NativeActivity {
     // android:name="android.app.NativeActivity"
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        View v = getWindow().getDecorView();
         super.onCreate(savedInstanceState);
         mClipboardManager = mClipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
         PHOTO_DIR_SD = new File(getExternalFilesDir("").getAbsolutePath() + "/tmp");
