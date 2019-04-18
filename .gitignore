@@ -1,5 +1,4 @@
 .idea
-*.sh
 *.xml
 cmake*
 mini_jvm/cmake*
