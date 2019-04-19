@@ -24,6 +24,7 @@ public class SpecTest {
         test_other();
         test_field();
         test_method();
+        test_cal();
         print("test end");
     }
 
@@ -39,6 +40,28 @@ public class SpecTest {
 
     static void print(String s) {
         System.out.println(s);
+    }
+
+    static void test_cal() {
+
+        class Lua {
+
+            public static final int MASK_B = 0xff800000;
+            public static final int MASK_C = 0x7fc000;
+            public static final int POS_B = 23;
+            public static final int POS_C = 14;
+        }
+        int i = 0x100401d;
+        System.out.println("Lua.MASK_B=" + Lua.MASK_B + "Lua.MASK_C=" + Lua.MASK_C);
+
+        int m = Lua.MASK_B | Lua.MASK_C;
+
+        int a = i & (Lua.MASK_B | Lua.MASK_C);
+
+        int b = (2 << Lua.POS_B) | (1 << Lua.POS_C);
+        if (a != b) {
+            printerr("iand");
+        }
     }
 
     static public void test_int() {
