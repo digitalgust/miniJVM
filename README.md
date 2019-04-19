@@ -95,11 +95,11 @@ String s=(String)list.get(0);//can't ignore (String) cast qualifier.
    [Stb](https://github.com/nothings/stb) :for GUI truetype font and image  
    [Glad](https://github.com/Dav1dde/glad)  :for replace openGL/GLES head file   
    [GLFW](https://github.com/glfw/glfw)  :for pc cross platform GUI   
-   [Dirent](https://github.com/tronkko/dirent)  :for win vc file and directory access    
+   [Dirent](https://github.com/tronkko/dirent)  :for linux style on win vc file and directory access    
    [Tinycthread](https://github.com/tinycthread/tinycthread)  :for cross platform thread   
    [JRegex](https://github.com/digitalgust/jregex)  :for java String regex match     
    [Janino](http://janino-compiler.github.io/janino/)  :for compile java source file     
-   [Mini_al](https://github.com/dr-soft/mini_al)  :for java audio playback and capture     
+   [MiniAudio](https://github.com/dr-soft/miniaudio)  :for java audio playback and capture     
 
 
 ## Development IDE using:  
