@@ -10,7 +10,7 @@
   * Jvm Build pass: iOS / Android / mingww64 32-64bit / cygwin / MSVC 32-64bit / MacOS /  Linux  .   
   * No dependence Library .  
   * Minimal memory footprint .  
-  * Minimal binary ,300 - 800 KB jvm.  
+  * Minimal binary ,300 KB jvm.  
   * Minimal runtime classlib .   
   * Support java5+ class file .  
   * Support embedded java source compiler(janino compiler) .  
@@ -40,22 +40,22 @@
 
 ## How to develop iOS/Android app in java:   
    Write java code once , running on all of iOS / Android / MacOSX / Win / Linux platforms.   
-   1. Can develop app by Eclipse, Netbeans or Intelli Idea , or any ide .   
-   2. Add  **/mobile/assets/resfiles/minijvm_rt.jar** and **/mobile/assets/resfiles/glfm_gui.jar**  as library   
+   * Can develop app by Eclipse, Netbeans or Intelli Idea , or any IDE .   
+   * Build maven projects /minijvm/java and /mobile/java/glfm_gui, it world copy generated jar to  **/mobile/assets/resfiles/minijvm_rt.jar** and **/mobile/assets/resfiles/glfm_gui.jar**     
    * Open maven project ExApp in IDE ,or create new project same as ExApp   
    * Write your code like example **/mobile/java/ExApp/src/main/java/test/MyApp.java**    
    * Add your resource to **/mobile/java/ExApp/src/main/resource/res/** , such as audio or image etc.     
    * Configure **/mobile/java/ExApp/src/main/config.txt** for icon ,version, boot class, etc .     
-   * Build project , maven would copy ExApp.jar to   **/mobile/assets/resfiles/**   
+   * Build ExApp project , it would copy ExApp.jar to **/mobile/assets/resfiles/ExApp.jar**   
    * Install **/binary/ios/MiniPack.ipa** for iPhone device , (Enterprise distrbute version, need Verify app, Setting->General->Device Management->EGLS Technology ltd->Verify App), or **/binary/android/MiniPack.apk** for Android device , These two binary built from **/mobile/iosapp/**  and **/mobile/java/androidapp**, you can build it yourself.    
-   * Touch the app icon to open MiniPack app, start inapp webserver , in the same lan, open browser of desktop computer, input the url of your phone , http://phone_ip:8088/   
-   * In browser, pickup the generated jar ,and upload , just it would in the manager list   
-   * you can run it now . 
+   * Touch the app icon to open MiniPack app, you would see the ExApp is running (the left of picture).
+     You can touch "exit to AppManager" in ExApp, AppManager is a App maintaince tool (the middle and right of picture), It can start a in-app webserver for upload app, it can download app from a website also .  
     <div align=center><img width="672" height="398"   src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/appmgr.png"/></div>
   
   
 ## How to Remote debug:  
   Prepare:
+  Rebuild /minijvm/c ,change  /minijvm/c/jvm/jvm.h "#define JDWP_DEBUG 0" as "#define JDWP_DEBUG 1"
   Desktop Computer : Run mini_jvm with flag: -Xdebug for debug mode .  
   iOS/Android simulator : nothing to do .  
   iOS/Android device : check the device ip address from General Setting -> wifi ->(i).  
