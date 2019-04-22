@@ -42,11 +42,11 @@
    Write java code once , running on all of iOS / Android / MacOSX / Win / Linux platforms.   
    1. Can develop app by Eclipse, Netbeans or Intelli Idea , or any ide .   
    2. Add  **/mobile/assets/resfiles/minijvm_rt.jar** and **/mobile/assets/resfiles/glfm_gui.jar**  as library   
-   * Open ExApp project in NetBeans ,or create new project like ExApp   
-   * Write your code like example **/mobile/java/ExApp/src/test/MyApp.java**    
-   * Add your resource to **/mobile/java/ExApp/resource/res/** , such as audio/image etc.     
-   * Configure **/mobile/java/ExApp/src/config.txt** for icon ,version, boot class, etc .     
-   * Build **/mobile/java/ExApp** generate jar file    
+   * Open maven project ExApp in IDE ,or create new project same as ExApp   
+   * Write your code like example **/mobile/java/ExApp/src/main/java/test/MyApp.java**    
+   * Add your resource to **/mobile/java/ExApp/src/main/resource/res/** , such as audio or image etc.     
+   * Configure **/mobile/java/ExApp/src/main/config.txt** for icon ,version, boot class, etc .     
+   * Build project , maven would copy ExApp.jar to   **/mobile/assets/resfiles/**   
    * Install **/binary/ios/MiniPack.ipa** for iPhone device , (Enterprise distrbute version, need Verify app, Setting->General->Device Management->EGLS Technology ltd->Verify App), or **/binary/android/MiniPack.apk** for Android device , These two binary built from **/mobile/iosapp/**  and **/mobile/java/androidapp**, you can build it yourself.    
    * Touch the app icon to open MiniPack app, start inapp webserver , in the same lan, open browser of desktop computer, input the url of your phone , http://phone_ip:8088/   
    * In browser, pickup the generated jar ,and upload , just it would in the manager list   
@@ -68,14 +68,14 @@
 
 
 ## How to use Embed java compiler in mini_jvm:  
-   Java Compiler : /binary/lib/janino.jar    
+   Java Compiler : /binary/libex/janino.jar    
    Usage of compiler can be found in /binary folder   
    the compile command :  
 ```
 win:
-mini_jvm -cp ../lib/minijvm_rt.jar;../lib/janino.jar;../lib/commons-compiler.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
+mini_jvm -cp ../lib/minijvm_rt.jar;../libex/janino.jar;../libex/commons-compiler.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
 posix:
-./mini_jvm -cp ../lib/minijvm_rt.jar:../lib/janino.jar:../lib/commons-compiler.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
+./mini_jvm -cp ../lib/minijvm_rt.jar:../libex/janino.jar:../libex/commons-compiler.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
 ```
 
 Janino compiler is not the full java compiler, see [limitation](http://janino-compiler.github.io/janino/#limitations) , like :
@@ -226,33 +226,33 @@ public class MyApp extends GApplication {
 
 ## Directories: 
 > /   
->> binary/-------- minijvm binary for pc (win32/win64/mac/linux)  
->> mini_jvm/------ minijvm c source   
->> javalib/------- minijvm runtime class library   
+>> binary/-------- minijvm binary (win32/win64/mac/linux/android/ios)  
+>> minijvm/    
+>>> c/------------ minijvm c source   
+>>> java/--------- minijvm runtime class library    
 >>
->> ex_lib/   
->>> jni_gui/------ desktop computer native gui jni module   
->>> luaj/--------- lua java    
+>> desktop/   
+>>> glfw_gui/------ desktop computer native gui jni module   
+>>> jni_test/------ jni example    
+>>> javalib_test/-- test case of **/minijvm/java** .   
 >>
 >> mobile/        
 >>> c/------------- java native lib, glfm framework, gui jni, glfmapp    
->>> java/guilib---- java jni for above **/mobile/c** native gui lib    
+>>> java/glfm_gui-- mobile platform native gui lib    
 >>> java/ExApp----- java app entry point    
 >>> iosapp/-------- iOS launcher     
 >>> androidapp/---- Android launcher     
->>> assets/resfiles/- java app resource, font files, jar files ,pic etc.  
+>>> assets/resfiles/- mobile app resource, font files, jar files ,pic ,audio etc.  
 >>
 >> test/   
->>> javalib_test/- test **/javalib** classes.   
->>> jni_test/----- jni example     
->>> jvm_ios/------ ios swift test project ,only test the jvm.      
->>> jvm_macos/---- macosX test project, only test jvm.      
->>> jvm_vs/------- virtual studio test project, only test jvm.      
+>>> jvm_ios/------ ios swift test project .      
+>>> jvm_macos/---- macosX test project.      
+>>> jvm_vs/------- windows virtual studio test project.      
   
- * **/mini_jvm** is an independent small and fast jvm interpreter, Need **/javalib** runtime class library only, it run on Win/Mac/Linux/iOS/Android.     
- * **/javalib** is the jvm foundation runtime class library, ex *java.lang* , *java.util* ,and extended classes *org.mini* for file reflect and network etc, this project generate minijvm_rt.jar , copy it into **/mobile/assets/resfiles**  .   
+ * **/minijvm/c** is an independent small and fast jvm interpreter, Need **/javalib** runtime class library only, it run on Win/Mac/Linux/iOS/Android.     
+ * **/minijvm/java** is the jvm foundation runtime class library, ex *java.lang* , *java.util* ,and extended classes *org.mini* for file reflect and network etc, this project generate minijvm_rt.jar , copy it into **/mobile/assets/resfiles**  .   
  * **/mobile/iosapp** **/mobile/androidapp** are iOS/Android launcher program, it include minijvm source and native gui function, java call gui library with jni.       
- * **/mobile/java/guilib** is a gui library ,it dependent on native gui library ,that include openGLES glad, glfm, nanovg, stb lib etc , this project generate glfm_gui.jar , copy it into **/mobile/assets/resfiles** .     
+ * **/mobile/java/glfm_gui** is a gui library ,it dependent on native gui library ,that include openGLES glad, glfm, nanovg, stb lib etc , this project generate glfm_gui.jar , copy it into **/mobile/assets/resfiles** .     
  * **/mobile/java/ExApp** is an example of mobile app, it run on iOS and Android platform.  
      
   
