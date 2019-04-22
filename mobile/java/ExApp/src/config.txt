@@ -1,6 +1,0 @@
-name=ExApp
-app=test.MyApp
-icon=/res/hello.png
-desc=  Mobile app develop example.\n  you can upgrade it.
-version=1.0.4
-upgradeurl=http://192.168.0.10/ExApp.jar

@@ -6,8 +6,8 @@
 //  Copyright © 2018年 Gust. All rights reserved.
 //
 
-#include "../../../mini_jvm/jvm/jvm.h"
-#include "../../../mini_jvm/utils/arraylist.h"
+#include "../../../minijvm/c/jvm/jvm.h"
+#include "../../../minijvm/c/utils/arraylist.h"
 #include "jvm_macos-Bridging-Header.h"
 
 int call_jvm(char* app_path) {
@@ -19,12 +19,12 @@ int call_jvm(char* app_path) {
     strcat(path,"/lib/minijvm_rt.jar");
     strcat(path,";");
     strcat(path,app_path);
-    strcat(path,"/lib/luaj.jar");
+    strcat(path,"/libex/luaj.jar");
     strcat(path,";");
     strcat(path,app_path);
-    strcat(path,"/lib/minijvm_test.jar");
+    strcat(path,"/libex/minijvm_test.jar");
     printf("classpath: %s\n",path);
-    java_debug=0;
+
     ArrayList * java_para=arraylist_create(0);
 //    ret= execute_jvm(path, "test/Foo1", java_para);
 //    ret= execute_jvm(path, "test/GuiTest", java_para);

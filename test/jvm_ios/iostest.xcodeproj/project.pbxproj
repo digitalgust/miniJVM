@@ -8,10 +8,32 @@
 
 /* Begin PBXBuildFile section */
 		4535FA3821945F6E00B888BA /* libz.1.2.8.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4535FA3721945F6E00B888BA /* libz.1.2.8.tbd */; };
-		4535FA3B21945FEE00B888BA /* miniz.c in Sources */ = {isa = PBXBuildFile; fileRef = 4535FA3A21945FED00B888BA /* miniz.c */; };
 		454C4AEF1FB6B89D008B9C1D /* invokec.c in Sources */ = {isa = PBXBuildFile; fileRef = 45C1245D1F872A9200BF3925 /* invokec.c */; };
 		456F472C21946176006F2D8C /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 456F472B21946176006F2D8C /* AVFoundation.framework */; };
-		45719A2520CABD14009652A7 /* ltalloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 45719A2320CABD14009652A7 /* ltalloc.c */; };
+		4581C452226D990800E88538 /* libex in Resources */ = {isa = PBXBuildFile; fileRef = 4581C451226D990800E88538 /* libex */; };
+		4581C56E226D99DC00E88538 /* garbage.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4A8226D99DC00E88538 /* garbage.c */; };
+		4581C56F226D99DC00E88538 /* runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4A9226D99DC00E88538 /* runtime.c */; };
+		4581C570226D99DC00E88538 /* jvm.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4AA226D99DC00E88538 /* jvm.c */; };
+		4581C571226D99DC00E88538 /* class.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4AC226D99DC00E88538 /* class.c */; };
+		4581C572226D99DC00E88538 /* jvm_util.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4AD226D99DC00E88538 /* jvm_util.c */; };
+		4581C573226D99DC00E88538 /* java_native_std.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4B3226D99DC00E88538 /* java_native_std.c */; };
+		4581C574226D99DC00E88538 /* class_load.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4B5226D99DC00E88538 /* class_load.c */; };
+		4581C575226D99DC00E88538 /* jdwp.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4B6226D99DC00E88538 /* jdwp.c */; };
+		4581C576226D99DC00E88538 /* interpreter.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4B7226D99DC00E88538 /* interpreter.c */; };
+		4581C577226D99DC00E88538 /* java_native_reflect.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4B8226D99DC00E88538 /* java_native_reflect.c */; };
+		4581C578226D99DC00E88538 /* global.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4B9226D99DC00E88538 /* global.c */; };
+		4581C579226D99DC00E88538 /* java_native_io.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4BA226D99DC00E88538 /* java_native_io.c */; };
+		4581C57A226D99DC00E88538 /* ltalloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4BE226D99DC00E88538 /* ltalloc.c */; };
+		4581C57B226D99DC00E88538 /* miniz.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4BF226D99DC00E88538 /* miniz.c */; };
+		4581C57C226D99DC00E88538 /* hashset.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4C3226D99DC00E88538 /* hashset.c */; };
+		4581C57D226D99DC00E88538 /* tinycthread.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4C4226D99DC00E88538 /* tinycthread.c */; };
+		4581C57E226D99DC00E88538 /* arraylist.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4C5226D99DC00E88538 /* arraylist.c */; };
+		4581C57F226D99DC00E88538 /* utf8_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4C6226D99DC00E88538 /* utf8_string.c */; };
+		4581C580226D99DC00E88538 /* d_type.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4C8226D99DC00E88538 /* d_type.c */; };
+		4581C581226D99DC00E88538 /* hashtable.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4CC226D99DC00E88538 /* hashtable.c */; };
+		4581C582226D99DC00E88538 /* miniz_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4CD226D99DC00E88538 /* miniz_wrapper.c */; };
+		4581C583226D99DC00E88538 /* bytebuf.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4CE226D99DC00E88538 /* bytebuf.c */; };
+		4581C584226D99DC00E88538 /* linkedlist.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4D4226D99DC00E88538 /* linkedlist.c */; };
 		45C1242F1F87232100BF3925 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C1242E1F87232100BF3925 /* AppDelegate.swift */; };
 		45C124311F87232100BF3925 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C124301F87232100BF3925 /* ViewController.swift */; };
 		45C124341F87232100BF3925 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 45C124321F87232100BF3925 /* Main.storyboard */; };
@@ -19,28 +41,7 @@
 		45C124391F87232100BF3925 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 45C124371F87232100BF3925 /* LaunchScreen.storyboard */; };
 		45C124441F87232100BF3925 /* iostestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C124431F87232100BF3925 /* iostestTests.swift */; };
 		45C1244F1F87232100BF3925 /* iostestUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C1244E1F87232100BF3925 /* iostestUITests.swift */; };
-		45EAB01B20DC9D3400896201 /* d_type.c in Sources */ = {isa = PBXBuildFile; fileRef = 45EAB01820DC9D3400896201 /* d_type.c */; };
-		45EAB01C20DC9D3400896201 /* miniz_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 45EAB01920DC9D3400896201 /* miniz_wrapper.c */; };
 		45ECB7A9206D038200CF9E7F /* lib in Resources */ = {isa = PBXBuildFile; fileRef = 45ECB7A8206D038200CF9E7F /* lib */; };
-		45ECB7DE206D03CE00CF9E7F /* global.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB7CC206D03CD00CF9E7F /* global.c */; };
-		45ECB7DF206D03CE00CF9E7F /* java_native_std.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB7CD206D03CD00CF9E7F /* java_native_std.c */; };
-		45ECB7E0206D03CE00CF9E7F /* jdwp.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB7CE206D03CD00CF9E7F /* jdwp.c */; };
-		45ECB7E1206D03CE00CF9E7F /* jvm.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB7CF206D03CD00CF9E7F /* jvm.c */; };
-		45ECB7E2206D03CE00CF9E7F /* runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB7D0206D03CD00CF9E7F /* runtime.c */; };
-		45ECB7E3206D03CE00CF9E7F /* class_load.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB7D3206D03CD00CF9E7F /* class_load.c */; };
-		45ECB7E4206D03CE00CF9E7F /* interpreter.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB7D4206D03CD00CF9E7F /* interpreter.c */; };
-		45ECB7E5206D03CE00CF9E7F /* garbage.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB7D5206D03CD00CF9E7F /* garbage.c */; };
-		45ECB7E6206D03CE00CF9E7F /* jvm_util.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB7D9206D03CE00CF9E7F /* jvm_util.c */; };
-		45ECB7E7206D03CE00CF9E7F /* java_native_reflect.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB7DA206D03CE00CF9E7F /* java_native_reflect.c */; };
-		45ECB7E8206D03CE00CF9E7F /* class.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB7DB206D03CE00CF9E7F /* class.c */; };
-		45ECB7E9206D03CE00CF9E7F /* java_native_io.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB7DD206D03CE00CF9E7F /* java_native_io.c */; };
-		45ECB800206D03F200CF9E7F /* arraylist.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB7EC206D03EF00CF9E7F /* arraylist.c */; };
-		45ECB801206D03F200CF9E7F /* bytebuf.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB7ED206D03EF00CF9E7F /* bytebuf.c */; };
-		45ECB805206D03F200CF9E7F /* hashset.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB7F4206D03F000CF9E7F /* hashset.c */; };
-		45ECB806206D03F200CF9E7F /* tinycthread.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB7F5206D03F000CF9E7F /* tinycthread.c */; };
-		45ECB807206D03F200CF9E7F /* utf8_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB7F7206D03F000CF9E7F /* utf8_string.c */; };
-		45ECB808206D03F200CF9E7F /* linkedlist.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB7F9206D03F100CF9E7F /* linkedlist.c */; };
-		45ECB809206D03F200CF9E7F /* hashtable.c in Sources */ = {isa = PBXBuildFile; fileRef = 45ECB7FE206D03F100CF9E7F /* hashtable.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -63,14 +64,52 @@
 /* Begin PBXFileReference section */
 		4535FA3521945F3500B888BA /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		4535FA3721945F6E00B888BA /* libz.1.2.8.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.1.2.8.tbd; path = usr/lib/libz.1.2.8.tbd; sourceTree = SDKROOT; };
-		4535FA3921945FED00B888BA /* miniz.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = miniz.h; path = ../../mini_jvm/utils/miniz.h; sourceTree = "<group>"; };
-		4535FA3A21945FED00B888BA /* miniz.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = miniz.c; path = ../../mini_jvm/utils/miniz.c; sourceTree = "<group>"; };
-		4535FA3D219460CB00B888BA /* dr_mp3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dr_mp3.h; sourceTree = "<group>"; };
-		4535FA3E219460CB00B888BA /* dr_flac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dr_flac.h; sourceTree = "<group>"; };
-		4535FA3F219460CB00B888BA /* mini_al.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mini_al.h; sourceTree = "<group>"; };
 		456F472B21946176006F2D8C /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
-		45719A2320CABD14009652A7 /* ltalloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ltalloc.c; path = ../../mini_jvm/utils/ltalloc.c; sourceTree = "<group>"; };
-		45719A2420CABD14009652A7 /* ltalloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ltalloc.h; path = ../../mini_jvm/utils/ltalloc.h; sourceTree = "<group>"; };
+		4581C451226D990800E88538 /* libex */ = {isa = PBXFileReference; lastKnownFileType = folder; name = libex; path = ../../binary/libex; sourceTree = "<group>"; };
+		4581C4A8226D99DC00E88538 /* garbage.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = garbage.c; sourceTree = "<group>"; };
+		4581C4A9226D99DC00E88538 /* runtime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = runtime.c; sourceTree = "<group>"; };
+		4581C4AA226D99DC00E88538 /* jvm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jvm.c; sourceTree = "<group>"; };
+		4581C4AB226D99DC00E88538 /* jdwp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jdwp.h; sourceTree = "<group>"; };
+		4581C4AC226D99DC00E88538 /* class.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = class.c; sourceTree = "<group>"; };
+		4581C4AD226D99DC00E88538 /* jvm_util.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jvm_util.c; sourceTree = "<group>"; };
+		4581C4AE226D99DC00E88538 /* java_native_std.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = java_native_std.h; sourceTree = "<group>"; };
+		4581C4AF226D99DC00E88538 /* java_native_reflect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = java_native_reflect.h; sourceTree = "<group>"; };
+		4581C4B0226D99DC00E88538 /* java_native_io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = java_native_io.h; sourceTree = "<group>"; };
+		4581C4B1226D99DC00E88538 /* jvm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jvm.h; sourceTree = "<group>"; };
+		4581C4B2226D99DC00E88538 /* garbage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = garbage.h; sourceTree = "<group>"; };
+		4581C4B3226D99DC00E88538 /* java_native_std.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = java_native_std.c; sourceTree = "<group>"; };
+		4581C4B4226D99DC00E88538 /* jvm_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jvm_util.h; sourceTree = "<group>"; };
+		4581C4B5226D99DC00E88538 /* class_load.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = class_load.c; sourceTree = "<group>"; };
+		4581C4B6226D99DC00E88538 /* jdwp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jdwp.c; sourceTree = "<group>"; };
+		4581C4B7226D99DC00E88538 /* interpreter.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = interpreter.c; sourceTree = "<group>"; };
+		4581C4B8226D99DC00E88538 /* java_native_reflect.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = java_native_reflect.c; sourceTree = "<group>"; };
+		4581C4B9226D99DC00E88538 /* global.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = global.c; sourceTree = "<group>"; };
+		4581C4BA226D99DC00E88538 /* java_native_io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = java_native_io.c; sourceTree = "<group>"; };
+		4581C4BC226D99DC00E88538 /* dirent_win.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dirent_win.h; sourceTree = "<group>"; };
+		4581C4BD226D99DC00E88538 /* spinlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = spinlock.h; sourceTree = "<group>"; };
+		4581C4BE226D99DC00E88538 /* ltalloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ltalloc.c; sourceTree = "<group>"; };
+		4581C4BF226D99DC00E88538 /* miniz.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = miniz.c; sourceTree = "<group>"; };
+		4581C4C0226D99DC00E88538 /* bytebuf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bytebuf.h; sourceTree = "<group>"; };
+		4581C4C1226D99DC00E88538 /* miniz_wrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = miniz_wrapper.h; sourceTree = "<group>"; };
+		4581C4C2226D99DC00E88538 /* hashtable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hashtable.h; sourceTree = "<group>"; };
+		4581C4C3226D99DC00E88538 /* hashset.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hashset.c; sourceTree = "<group>"; };
+		4581C4C4226D99DC00E88538 /* tinycthread.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tinycthread.c; sourceTree = "<group>"; };
+		4581C4C5226D99DC00E88538 /* arraylist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = arraylist.c; sourceTree = "<group>"; };
+		4581C4C6226D99DC00E88538 /* utf8_string.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = utf8_string.c; sourceTree = "<group>"; };
+		4581C4C7226D99DC00E88538 /* linkedlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = linkedlist.h; sourceTree = "<group>"; };
+		4581C4C8226D99DC00E88538 /* d_type.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = d_type.c; sourceTree = "<group>"; };
+		4581C4C9226D99DC00E88538 /* miniz.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = miniz.h; sourceTree = "<group>"; };
+		4581C4CA226D99DC00E88538 /* ltalloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ltalloc.h; sourceTree = "<group>"; };
+		4581C4CB226D99DC00E88538 /* hashset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hashset.h; sourceTree = "<group>"; };
+		4581C4CC226D99DC00E88538 /* hashtable.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hashtable.c; sourceTree = "<group>"; };
+		4581C4CD226D99DC00E88538 /* miniz_wrapper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = miniz_wrapper.c; sourceTree = "<group>"; };
+		4581C4CE226D99DC00E88538 /* bytebuf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = bytebuf.c; sourceTree = "<group>"; };
+		4581C4CF226D99DC00E88538 /* pairlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pairlist.h; sourceTree = "<group>"; };
+		4581C4D0226D99DC00E88538 /* utf8_string.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = utf8_string.h; sourceTree = "<group>"; };
+		4581C4D1226D99DC00E88538 /* arraylist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = arraylist.h; sourceTree = "<group>"; };
+		4581C4D2226D99DC00E88538 /* tinycthread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinycthread.h; sourceTree = "<group>"; };
+		4581C4D3226D99DC00E88538 /* d_type.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = d_type.h; sourceTree = "<group>"; };
+		4581C4D4226D99DC00E88538 /* linkedlist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = linkedlist.c; sourceTree = "<group>"; };
 		45C1242B1F87232100BF3925 /* iostest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iostest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		45C1242E1F87232100BF3925 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		45C124301F87232100BF3925 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -88,47 +127,7 @@
 		45C1245D1F872A9200BF3925 /* invokec.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = invokec.c; sourceTree = "<group>"; };
 		45C124671F872E5E00BF3925 /* libpthread.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libpthread.tbd; path = usr/lib/libpthread.tbd; sourceTree = SDKROOT; };
 		45C124691F872E7E00BF3925 /* libc.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libc.tbd; path = usr/lib/libc.tbd; sourceTree = SDKROOT; };
-		45EAB01820DC9D3400896201 /* d_type.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = d_type.c; path = ../../mini_jvm/utils/d_type.c; sourceTree = "<group>"; };
-		45EAB01920DC9D3400896201 /* miniz_wrapper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = miniz_wrapper.c; path = ../../mini_jvm/utils/miniz_wrapper.c; sourceTree = "<group>"; };
-		45EAB01A20DC9D3400896201 /* miniz_wrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = miniz_wrapper.h; path = ../../mini_jvm/utils/miniz_wrapper.h; sourceTree = "<group>"; };
 		45ECB7A8206D038200CF9E7F /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = ../../binary/lib; sourceTree = "<group>"; };
-		45ECB7CB206D03CC00CF9E7F /* java_native_std.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = java_native_std.h; path = ../../mini_jvm/jvm/java_native_std.h; sourceTree = "<group>"; };
-		45ECB7CC206D03CD00CF9E7F /* global.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = global.c; path = ../../mini_jvm/jvm/global.c; sourceTree = "<group>"; };
-		45ECB7CD206D03CD00CF9E7F /* java_native_std.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = java_native_std.c; path = ../../mini_jvm/jvm/java_native_std.c; sourceTree = "<group>"; };
-		45ECB7CE206D03CD00CF9E7F /* jdwp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = jdwp.c; path = ../../mini_jvm/jvm/jdwp.c; sourceTree = "<group>"; };
-		45ECB7CF206D03CD00CF9E7F /* jvm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = jvm.c; path = ../../mini_jvm/jvm/jvm.c; sourceTree = "<group>"; };
-		45ECB7D0206D03CD00CF9E7F /* runtime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = runtime.c; path = ../../mini_jvm/jvm/runtime.c; sourceTree = "<group>"; };
-		45ECB7D1206D03CD00CF9E7F /* java_native_reflect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = java_native_reflect.h; path = ../../mini_jvm/jvm/java_native_reflect.h; sourceTree = "<group>"; };
-		45ECB7D2206D03CD00CF9E7F /* jvm_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = jvm_util.h; path = ../../mini_jvm/jvm/jvm_util.h; sourceTree = "<group>"; };
-		45ECB7D3206D03CD00CF9E7F /* class_load.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = class_load.c; path = ../../mini_jvm/jvm/class_load.c; sourceTree = "<group>"; };
-		45ECB7D4206D03CD00CF9E7F /* interpreter.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = interpreter.c; path = ../../mini_jvm/jvm/interpreter.c; sourceTree = "<group>"; };
-		45ECB7D5206D03CD00CF9E7F /* garbage.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = garbage.c; path = ../../mini_jvm/jvm/garbage.c; sourceTree = "<group>"; };
-		45ECB7D6206D03CD00CF9E7F /* garbage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = garbage.h; path = ../../mini_jvm/jvm/garbage.h; sourceTree = "<group>"; };
-		45ECB7D7206D03CD00CF9E7F /* java_native_io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = java_native_io.h; path = ../../mini_jvm/jvm/java_native_io.h; sourceTree = "<group>"; };
-		45ECB7D8206D03CE00CF9E7F /* jvm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = jvm.h; path = ../../mini_jvm/jvm/jvm.h; sourceTree = "<group>"; };
-		45ECB7D9206D03CE00CF9E7F /* jvm_util.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = jvm_util.c; path = ../../mini_jvm/jvm/jvm_util.c; sourceTree = "<group>"; };
-		45ECB7DA206D03CE00CF9E7F /* java_native_reflect.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = java_native_reflect.c; path = ../../mini_jvm/jvm/java_native_reflect.c; sourceTree = "<group>"; };
-		45ECB7DB206D03CE00CF9E7F /* class.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = class.c; path = ../../mini_jvm/jvm/class.c; sourceTree = "<group>"; };
-		45ECB7DC206D03CE00CF9E7F /* jdwp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = jdwp.h; path = ../../mini_jvm/jvm/jdwp.h; sourceTree = "<group>"; };
-		45ECB7DD206D03CE00CF9E7F /* java_native_io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = java_native_io.c; path = ../../mini_jvm/jvm/java_native_io.c; sourceTree = "<group>"; };
-		45ECB7EB206D03EF00CF9E7F /* pairlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pairlist.h; path = ../../mini_jvm/utils/pairlist.h; sourceTree = "<group>"; };
-		45ECB7EC206D03EF00CF9E7F /* arraylist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = arraylist.c; path = ../../mini_jvm/utils/arraylist.c; sourceTree = "<group>"; };
-		45ECB7ED206D03EF00CF9E7F /* bytebuf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bytebuf.c; path = ../../mini_jvm/utils/bytebuf.c; sourceTree = "<group>"; };
-		45ECB7EE206D03EF00CF9E7F /* d_type.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = d_type.h; path = ../../mini_jvm/utils/d_type.h; sourceTree = "<group>"; };
-		45ECB7EF206D03EF00CF9E7F /* linkedlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = linkedlist.h; path = ../../mini_jvm/utils/linkedlist.h; sourceTree = "<group>"; };
-		45ECB7F3206D03F000CF9E7F /* hashset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hashset.h; path = ../../mini_jvm/utils/hashset.h; sourceTree = "<group>"; };
-		45ECB7F4206D03F000CF9E7F /* hashset.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = hashset.c; path = ../../mini_jvm/utils/hashset.c; sourceTree = "<group>"; };
-		45ECB7F5206D03F000CF9E7F /* tinycthread.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tinycthread.c; path = ../../mini_jvm/utils/tinycthread.c; sourceTree = "<group>"; };
-		45ECB7F6206D03F000CF9E7F /* tinycthread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tinycthread.h; path = ../../mini_jvm/utils/tinycthread.h; sourceTree = "<group>"; };
-		45ECB7F7206D03F000CF9E7F /* utf8_string.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = utf8_string.c; path = ../../mini_jvm/utils/utf8_string.c; sourceTree = "<group>"; };
-		45ECB7F8206D03F000CF9E7F /* hashtable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hashtable.h; path = ../../mini_jvm/utils/hashtable.h; sourceTree = "<group>"; };
-		45ECB7F9206D03F100CF9E7F /* linkedlist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = linkedlist.c; path = ../../mini_jvm/utils/linkedlist.c; sourceTree = "<group>"; };
-		45ECB7FA206D03F100CF9E7F /* bytebuf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bytebuf.h; path = ../../mini_jvm/utils/bytebuf.h; sourceTree = "<group>"; };
-		45ECB7FB206D03F100CF9E7F /* dirent_win.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dirent_win.h; path = ../../mini_jvm/utils/dirent_win.h; sourceTree = "<group>"; };
-		45ECB7FC206D03F100CF9E7F /* utf8_string.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utf8_string.h; path = ../../mini_jvm/utils/utf8_string.h; sourceTree = "<group>"; };
-		45ECB7FD206D03F100CF9E7F /* spinlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = spinlock.h; path = ../../mini_jvm/utils/spinlock.h; sourceTree = "<group>"; };
-		45ECB7FE206D03F100CF9E7F /* hashtable.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = hashtable.c; path = ../../mini_jvm/utils/hashtable.c; sourceTree = "<group>"; };
-		45ECB7FF206D03F200CF9E7F /* arraylist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = arraylist.h; path = ../../mini_jvm/utils/arraylist.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -158,24 +157,80 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		4535FA3C219460CB00B888BA /* minial */ = {
+		4581C453226D99DB00E88538 /* c */ = {
 			isa = PBXGroup;
 			children = (
-				4535FA3D219460CB00B888BA /* dr_mp3.h */,
-				4535FA3E219460CB00B888BA /* dr_flac.h */,
-				4535FA3F219460CB00B888BA /* mini_al.h */,
+				4581C4A7226D99DC00E88538 /* jvm */,
+				4581C4BB226D99DC00E88538 /* utils */,
 			);
-			name = minial;
-			path = ../../mobile/c/gui/minial;
+			name = c;
+			path = ../../minijvm/c;
+			sourceTree = "<group>";
+		};
+		4581C4A7226D99DC00E88538 /* jvm */ = {
+			isa = PBXGroup;
+			children = (
+				4581C4A8226D99DC00E88538 /* garbage.c */,
+				4581C4A9226D99DC00E88538 /* runtime.c */,
+				4581C4AA226D99DC00E88538 /* jvm.c */,
+				4581C4AB226D99DC00E88538 /* jdwp.h */,
+				4581C4AC226D99DC00E88538 /* class.c */,
+				4581C4AD226D99DC00E88538 /* jvm_util.c */,
+				4581C4AE226D99DC00E88538 /* java_native_std.h */,
+				4581C4AF226D99DC00E88538 /* java_native_reflect.h */,
+				4581C4B0226D99DC00E88538 /* java_native_io.h */,
+				4581C4B1226D99DC00E88538 /* jvm.h */,
+				4581C4B2226D99DC00E88538 /* garbage.h */,
+				4581C4B3226D99DC00E88538 /* java_native_std.c */,
+				4581C4B4226D99DC00E88538 /* jvm_util.h */,
+				4581C4B5226D99DC00E88538 /* class_load.c */,
+				4581C4B6226D99DC00E88538 /* jdwp.c */,
+				4581C4B7226D99DC00E88538 /* interpreter.c */,
+				4581C4B8226D99DC00E88538 /* java_native_reflect.c */,
+				4581C4B9226D99DC00E88538 /* global.c */,
+				4581C4BA226D99DC00E88538 /* java_native_io.c */,
+			);
+			path = jvm;
+			sourceTree = "<group>";
+		};
+		4581C4BB226D99DC00E88538 /* utils */ = {
+			isa = PBXGroup;
+			children = (
+				4581C4BC226D99DC00E88538 /* dirent_win.h */,
+				4581C4BD226D99DC00E88538 /* spinlock.h */,
+				4581C4BE226D99DC00E88538 /* ltalloc.c */,
+				4581C4BF226D99DC00E88538 /* miniz.c */,
+				4581C4C0226D99DC00E88538 /* bytebuf.h */,
+				4581C4C1226D99DC00E88538 /* miniz_wrapper.h */,
+				4581C4C2226D99DC00E88538 /* hashtable.h */,
+				4581C4C3226D99DC00E88538 /* hashset.c */,
+				4581C4C4226D99DC00E88538 /* tinycthread.c */,
+				4581C4C5226D99DC00E88538 /* arraylist.c */,
+				4581C4C6226D99DC00E88538 /* utf8_string.c */,
+				4581C4C7226D99DC00E88538 /* linkedlist.h */,
+				4581C4C8226D99DC00E88538 /* d_type.c */,
+				4581C4C9226D99DC00E88538 /* miniz.h */,
+				4581C4CA226D99DC00E88538 /* ltalloc.h */,
+				4581C4CB226D99DC00E88538 /* hashset.h */,
+				4581C4CC226D99DC00E88538 /* hashtable.c */,
+				4581C4CD226D99DC00E88538 /* miniz_wrapper.c */,
+				4581C4CE226D99DC00E88538 /* bytebuf.c */,
+				4581C4CF226D99DC00E88538 /* pairlist.h */,
+				4581C4D0226D99DC00E88538 /* utf8_string.h */,
+				4581C4D1226D99DC00E88538 /* arraylist.h */,
+				4581C4D2226D99DC00E88538 /* tinycthread.h */,
+				4581C4D3226D99DC00E88538 /* d_type.h */,
+				4581C4D4226D99DC00E88538 /* linkedlist.c */,
+			);
+			path = utils;
 			sourceTree = "<group>";
 		};
 		45C124221F87232100BF3925 = {
 			isa = PBXGroup;
 			children = (
-				4535FA3C219460CB00B888BA /* minial */,
-				45ECB7CA206D03B700CF9E7F /* utils */,
-				45ECB7C9206D03AF00CF9E7F /* jvm */,
+				4581C453226D99DB00E88538 /* c */,
 				45ECB7A8206D038200CF9E7F /* lib */,
+				4581C451226D990800E88538 /* libex */,
 				45C1245C1F872A9100BF3925 /* iostestTests-Bridging-Header.h */,
 				45C1245D1F872A9200BF3925 /* invokec.c */,
 				45C1242D1F87232100BF3925 /* iostest */,
@@ -237,64 +292,6 @@
 				45C124671F872E5E00BF3925 /* libpthread.tbd */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		45ECB7C9206D03AF00CF9E7F /* jvm */ = {
-			isa = PBXGroup;
-			children = (
-				45ECB7D3206D03CD00CF9E7F /* class_load.c */,
-				45ECB7DB206D03CE00CF9E7F /* class.c */,
-				45ECB7D5206D03CD00CF9E7F /* garbage.c */,
-				45ECB7D6206D03CD00CF9E7F /* garbage.h */,
-				45ECB7CC206D03CD00CF9E7F /* global.c */,
-				45ECB7D4206D03CD00CF9E7F /* interpreter.c */,
-				45ECB7DD206D03CE00CF9E7F /* java_native_io.c */,
-				45ECB7D7206D03CD00CF9E7F /* java_native_io.h */,
-				45ECB7DA206D03CE00CF9E7F /* java_native_reflect.c */,
-				45ECB7D1206D03CD00CF9E7F /* java_native_reflect.h */,
-				45ECB7CD206D03CD00CF9E7F /* java_native_std.c */,
-				45ECB7CB206D03CC00CF9E7F /* java_native_std.h */,
-				45ECB7CE206D03CD00CF9E7F /* jdwp.c */,
-				45ECB7DC206D03CE00CF9E7F /* jdwp.h */,
-				45ECB7D9206D03CE00CF9E7F /* jvm_util.c */,
-				45ECB7D2206D03CD00CF9E7F /* jvm_util.h */,
-				45ECB7CF206D03CD00CF9E7F /* jvm.c */,
-				45ECB7D8206D03CE00CF9E7F /* jvm.h */,
-				45ECB7D0206D03CD00CF9E7F /* runtime.c */,
-			);
-			name = jvm;
-			sourceTree = "<group>";
-		};
-		45ECB7CA206D03B700CF9E7F /* utils */ = {
-			isa = PBXGroup;
-			children = (
-				4535FA3A21945FED00B888BA /* miniz.c */,
-				4535FA3921945FED00B888BA /* miniz.h */,
-				45EAB01820DC9D3400896201 /* d_type.c */,
-				45EAB01920DC9D3400896201 /* miniz_wrapper.c */,
-				45EAB01A20DC9D3400896201 /* miniz_wrapper.h */,
-				45719A2320CABD14009652A7 /* ltalloc.c */,
-				45719A2420CABD14009652A7 /* ltalloc.h */,
-				45ECB7EC206D03EF00CF9E7F /* arraylist.c */,
-				45ECB7FF206D03F200CF9E7F /* arraylist.h */,
-				45ECB7ED206D03EF00CF9E7F /* bytebuf.c */,
-				45ECB7FA206D03F100CF9E7F /* bytebuf.h */,
-				45ECB7EE206D03EF00CF9E7F /* d_type.h */,
-				45ECB7FB206D03F100CF9E7F /* dirent_win.h */,
-				45ECB7F4206D03F000CF9E7F /* hashset.c */,
-				45ECB7F3206D03F000CF9E7F /* hashset.h */,
-				45ECB7FE206D03F100CF9E7F /* hashtable.c */,
-				45ECB7F8206D03F000CF9E7F /* hashtable.h */,
-				45ECB7F9206D03F100CF9E7F /* linkedlist.c */,
-				45ECB7EF206D03EF00CF9E7F /* linkedlist.h */,
-				45ECB7EB206D03EF00CF9E7F /* pairlist.h */,
-				45ECB7FD206D03F100CF9E7F /* spinlock.h */,
-				45ECB7F5206D03F000CF9E7F /* tinycthread.c */,
-				45ECB7F6206D03F000CF9E7F /* tinycthread.h */,
-				45ECB7F7206D03F000CF9E7F /* utf8_string.c */,
-				45ECB7FC206D03F100CF9E7F /* utf8_string.h */,
-			);
-			name = utils;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -406,6 +403,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				45C124391F87232100BF3925 /* LaunchScreen.storyboard in Resources */,
+				4581C452226D990800E88538 /* libex in Resources */,
 				45ECB7A9206D038200CF9E7F /* lib in Resources */,
 				45C124361F87232100BF3925 /* Assets.xcassets in Resources */,
 				45C124341F87232100BF3925 /* Main.storyboard in Resources */,
@@ -433,32 +431,32 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				45ECB7E4206D03CE00CF9E7F /* interpreter.c in Sources */,
-				45ECB7E7206D03CE00CF9E7F /* java_native_reflect.c in Sources */,
-				45ECB7E8206D03CE00CF9E7F /* class.c in Sources */,
+				4581C580226D99DC00E88538 /* d_type.c in Sources */,
+				4581C576226D99DC00E88538 /* interpreter.c in Sources */,
+				4581C573226D99DC00E88538 /* java_native_std.c in Sources */,
+				4581C579226D99DC00E88538 /* java_native_io.c in Sources */,
+				4581C577226D99DC00E88538 /* java_native_reflect.c in Sources */,
+				4581C571226D99DC00E88538 /* class.c in Sources */,
+				4581C57C226D99DC00E88538 /* hashset.c in Sources */,
+				4581C583226D99DC00E88538 /* bytebuf.c in Sources */,
+				4581C575226D99DC00E88538 /* jdwp.c in Sources */,
+				4581C584226D99DC00E88538 /* linkedlist.c in Sources */,
+				4581C57A226D99DC00E88538 /* ltalloc.c in Sources */,
+				4581C570226D99DC00E88538 /* jvm.c in Sources */,
+				4581C578226D99DC00E88538 /* global.c in Sources */,
+				4581C581226D99DC00E88538 /* hashtable.c in Sources */,
+				4581C57F226D99DC00E88538 /* utf8_string.c in Sources */,
+				4581C582226D99DC00E88538 /* miniz_wrapper.c in Sources */,
 				45C124311F87232100BF3925 /* ViewController.swift in Sources */,
-				45ECB7DF206D03CE00CF9E7F /* java_native_std.c in Sources */,
-				45ECB805206D03F200CF9E7F /* hashset.c in Sources */,
-				45ECB7E0206D03CE00CF9E7F /* jdwp.c in Sources */,
-				45ECB809206D03F200CF9E7F /* hashtable.c in Sources */,
-				45ECB7E5206D03CE00CF9E7F /* garbage.c in Sources */,
-				45ECB808206D03F200CF9E7F /* linkedlist.c in Sources */,
-				45ECB800206D03F200CF9E7F /* arraylist.c in Sources */,
+				4581C57D226D99DC00E88538 /* tinycthread.c in Sources */,
+				4581C57E226D99DC00E88538 /* arraylist.c in Sources */,
+				4581C572226D99DC00E88538 /* jvm_util.c in Sources */,
 				45C1242F1F87232100BF3925 /* AppDelegate.swift in Sources */,
-				45719A2520CABD14009652A7 /* ltalloc.c in Sources */,
-				45ECB801206D03F200CF9E7F /* bytebuf.c in Sources */,
-				45EAB01C20DC9D3400896201 /* miniz_wrapper.c in Sources */,
-				45ECB7DE206D03CE00CF9E7F /* global.c in Sources */,
-				45ECB806206D03F200CF9E7F /* tinycthread.c in Sources */,
-				4535FA3B21945FEE00B888BA /* miniz.c in Sources */,
-				45ECB807206D03F200CF9E7F /* utf8_string.c in Sources */,
-				45ECB7E3206D03CE00CF9E7F /* class_load.c in Sources */,
+				4581C574226D99DC00E88538 /* class_load.c in Sources */,
+				4581C57B226D99DC00E88538 /* miniz.c in Sources */,
+				4581C56E226D99DC00E88538 /* garbage.c in Sources */,
 				454C4AEF1FB6B89D008B9C1D /* invokec.c in Sources */,
-				45ECB7E6206D03CE00CF9E7F /* jvm_util.c in Sources */,
-				45ECB7E2206D03CE00CF9E7F /* runtime.c in Sources */,
-				45ECB7E1206D03CE00CF9E7F /* jvm.c in Sources */,
-				45EAB01B20DC9D3400896201 /* d_type.c in Sources */,
-				45ECB7E9206D03CE00CF9E7F /* java_native_io.c in Sources */,
+				4581C56F226D99DC00E88538 /* runtime.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -629,7 +627,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = M978JH97JT;
+				DEVELOPMENT_TEAM = GL52RBBC48;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				INFOPLIST_FILE = iostest/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
@@ -648,7 +646,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = M978JH97JT;
+				DEVELOPMENT_TEAM = GL52RBBC48;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				INFOPLIST_FILE = iostest/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;

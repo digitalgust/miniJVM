@@ -9,7 +9,7 @@ project(androidapp C)
 
 set(CMAKE_C_STANDARD 99)
 
-include_directories(../../c/glfm ../../c/gui/ ../../c/gui/stb ../../c/gui/other ../../../mini_jvm/jvm)
+include_directories(../../c/glfm ../../c/gui/ ../../c/gui/stb ../../c/gui/other ../../../minijvm/c/jvm)
 
 set(GLFMAPP_SOURCE_FILES
 ../../c/glfmapp/main.c
@@ -39,50 +39,50 @@ set(GUI_SOURCE_FILES
 )
 
 set(MINI_JVM_SOURCE_FILES
-        ../../../mini_jvm/utils/ltalloc.h
-        ../../../mini_jvm/utils/ltalloc.c
-        ../../../mini_jvm/utils/d_type.h
-        ../../../mini_jvm/utils/d_type.c
-        ../../../mini_jvm/utils/arraylist.c
-        ../../../mini_jvm/utils/arraylist.h
-        ../../../mini_jvm/utils/hashtable.c
-        ../../../mini_jvm/utils/hashtable.h
-        ../../../mini_jvm/utils/utf8_string.c
-        ../../../mini_jvm/utils/utf8_string.h
-        ../../../mini_jvm/utils/pairlist.h
-        ../../../mini_jvm/utils/hashset.c
-        ../../../mini_jvm/utils/hashset.h
-        ../../../mini_jvm/jvm/jvm.h
-        ../../../mini_jvm/jvm/interpreter.c
-        ../../../mini_jvm/jvm/jvm.c
-        ../../../mini_jvm/jvm/class.c
-        ../../../mini_jvm/jvm/runtime.c
-        ../../../mini_jvm/jvm/garbage.c
-        ../../../mini_jvm/jvm/jvm_util.c
-        ../../../mini_jvm/jvm/jvm_util.h
-        ../../../mini_jvm/jvm/global.c
-        ../../../mini_jvm/jvm/java_native_std.h
-        ../../../mini_jvm/jvm/java_native_io.c
-        ../../../mini_jvm/jvm/java_native_std.c
-        ../../../mini_jvm/jvm/java_native_reflect.c
-        ../../../mini_jvm/jvm/java_native_reflect.h
-        ../../../mini_jvm/jvm/jdwp.c
-        ../../../mini_jvm/jvm/jdwp.h
-        ../../../mini_jvm/jvm/java_native_io.h
-        ../../../mini_jvm/jvm/class_load.c
-        ../../../mini_jvm/jvm/garbage.h
-        ../../../mini_jvm/utils/tinycthread.h
-        ../../../mini_jvm/utils/tinycthread.c
-        ../../../mini_jvm/utils/linkedlist.c
-        ../../../mini_jvm/utils/linkedlist.h
-        ../../../mini_jvm/utils/spinlock.h
-        ../../../mini_jvm/utils/bytebuf.c
-        ../../../mini_jvm/utils/bytebuf.h
-	../../../mini_jvm/utils/miniz.c
-        ../../../mini_jvm/utils/miniz.h
-        ../../../mini_jvm/utils/miniz_wrapper.c
-        ../../../mini_jvm/utils/miniz_wrapper.h
-        ../../../mini_jvm/utils/dirent_win.h)
+        ../../../minijvm/c/utils/ltalloc.h
+        ../../../minijvm/c/utils/ltalloc.c
+        ../../../minijvm/c/utils/d_type.h
+        ../../../minijvm/c/utils/d_type.c
+        ../../../minijvm/c/utils/arraylist.c
+        ../../../minijvm/c/utils/arraylist.h
+        ../../../minijvm/c/utils/hashtable.c
+        ../../../minijvm/c/utils/hashtable.h
+        ../../../minijvm/c/utils/utf8_string.c
+        ../../../minijvm/c/utils/utf8_string.h
+        ../../../minijvm/c/utils/pairlist.h
+        ../../../minijvm/c/utils/hashset.c
+        ../../../minijvm/c/utils/hashset.h
+        ../../../minijvm/c/jvm/jvm.h
+        ../../../minijvm/c/jvm/interpreter.c
+        ../../../minijvm/c/jvm/jvm.c
+        ../../../minijvm/c/jvm/class.c
+        ../../../minijvm/c/jvm/runtime.c
+        ../../../minijvm/c/jvm/garbage.c
+        ../../../minijvm/c/jvm/jvm_util.c
+        ../../../minijvm/c/jvm/jvm_util.h
+        ../../../minijvm/c/jvm/global.c
+        ../../../minijvm/c/jvm/java_native_std.h
+        ../../../minijvm/c/jvm/java_native_io.c
+        ../../../minijvm/c/jvm/java_native_std.c
+        ../../../minijvm/c/jvm/java_native_reflect.c
+        ../../../minijvm/c/jvm/java_native_reflect.h
+        ../../../minijvm/c/jvm/jdwp.c
+        ../../../minijvm/c/jvm/jdwp.h
+        ../../../minijvm/c/jvm/java_native_io.h
+        ../../../minijvm/c/jvm/class_load.c
+        ../../../minijvm/c/jvm/garbage.h
+        ../../../minijvm/c/utils/tinycthread.h
+        ../../../minijvm/c/utils/tinycthread.c
+        ../../../minijvm/c/utils/linkedlist.c
+        ../../../minijvm/c/utils/linkedlist.h
+        ../../../minijvm/c/utils/spinlock.h
+        ../../../minijvm/c/utils/bytebuf.c
+        ../../../minijvm/c/utils/bytebuf.h
+	../../../minijvm/c/utils/miniz.c
+        ../../../minijvm/c/utils/miniz.h
+        ../../../minijvm/c/utils/miniz_wrapper.c
+        ../../../minijvm/c/utils/miniz_wrapper.h
+        ../../../minijvm/c/utils/dirent_win.h)
 
 
 if (CMAKE_SYSTEM_NAME MATCHES "Emscripten")
