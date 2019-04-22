@@ -36,7 +36,7 @@
 		4581C6DD226DAA3600E88538 /* miniz_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C650226DAA3500E88538 /* miniz_wrapper.c */; };
 		4581C6DE226DAA3600E88538 /* bytebuf.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C651226DAA3500E88538 /* bytebuf.c */; };
 		4581C6DF226DAA3600E88538 /* linkedlist.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C657226DAA3500E88538 /* linkedlist.c */; };
-		4581C6FC226DAAB100E88538 /* libex in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4581C5D5226DA9DC00E88538 /* libex */; };
+		4581C6FE226DBEE100E88538 /* libex in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4581C6FD226DBE5E00E88538 /* libex */; };
 		45EAB02820DCDC2300896201 /* pcallstack.m in Sources */ = {isa = PBXBuildFile; fileRef = 45EAB02720DCDC2300896201 /* pcallstack.m */; };
 		45ECB7A3206D01C700CF9E7F /* libjnitest.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45ECB79C206D017900CF9E7F /* libjnitest.dylib */; };
 		45ECB7A4206D01CC00CF9E7F /* libgui.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45ECB79E206D017A00CF9E7F /* libgui.dylib */; };
@@ -49,7 +49,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 16;
 			files = (
-				4581C6FC226DAAB100E88538 /* libex in CopyFiles */,
+				4581C6FE226DBEE100E88538 /* libex in CopyFiles */,
 				4523723C20C94B9300156C58 /* lib in CopyFiles */,
 				4523723B20C94B8B00156C58 /* res in CopyFiles */,
 				45ECB7A4206D01CC00CF9E7F /* libgui.dylib in CopyFiles */,
@@ -69,7 +69,6 @@
 		457249332020AFAA00349683 /* libc.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libc.tbd; path = usr/lib/libc.tbd; sourceTree = SDKROOT; };
 		457249352020AFB400349683 /* libpthread.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libpthread.tbd; path = usr/lib/libpthread.tbd; sourceTree = SDKROOT; };
 		457249962020B71500349683 /* libgui.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgui.dylib; path = "../jni_gui/cmake-build-debug/libgui.dylib"; sourceTree = "<group>"; };
-		4581C5D5226DA9DC00E88538 /* libex */ = {isa = PBXFileReference; lastKnownFileType = folder; name = libex; path = ../../binary/libex; sourceTree = "<group>"; };
 		4581C62B226DAA3500E88538 /* garbage.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = garbage.c; sourceTree = "<group>"; };
 		4581C62C226DAA3500E88538 /* runtime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = runtime.c; sourceTree = "<group>"; };
 		4581C62D226DAA3500E88538 /* jvm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jvm.c; sourceTree = "<group>"; };
@@ -114,6 +113,7 @@
 		4581C655226DAA3500E88538 /* tinycthread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinycthread.h; sourceTree = "<group>"; };
 		4581C656226DAA3500E88538 /* d_type.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = d_type.h; sourceTree = "<group>"; };
 		4581C657226DAA3500E88538 /* linkedlist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = linkedlist.c; sourceTree = "<group>"; };
+		4581C6FD226DBE5E00E88538 /* libex */ = {isa = PBXFileReference; lastKnownFileType = folder; name = libex; path = ../../binary/libex; sourceTree = "<group>"; };
 		45EAB02720DCDC2300896201 /* pcallstack.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = pcallstack.m; sourceTree = "<group>"; };
 		45ECB79C206D017900CF9E7F /* libjnitest.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libjnitest.dylib; path = ../../binary/macos/libjnitest.dylib; sourceTree = "<group>"; };
 		45ECB79E206D017A00CF9E7F /* libgui.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgui.dylib; path = ../../binary/macos/libgui.dylib; sourceTree = "<group>"; };
@@ -135,10 +135,10 @@
 		457248D52020AAC600349683 = {
 			isa = PBXGroup;
 			children = (
+				4581C6FD226DBE5E00E88538 /* libex */,
 				4581C5D6226DAA3500E88538 /* c */,
 				4523723A20C8ECA500156C58 /* res */,
 				4523723920C8EC8C00156C58 /* lib */,
-				4581C5D5226DA9DC00E88538 /* libex */,
 				45ECB79E206D017A00CF9E7F /* libgui.dylib */,
 				45ECB79C206D017900CF9E7F /* libjnitest.dylib */,
 				457248E02020AAC600349683 /* jvm_macos */,
