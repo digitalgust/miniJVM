@@ -76,15 +76,15 @@ int main(int argc, char **argv) {
 //        classpath = "../../binary/lib/minijvm_rt.jar;../../binary/libex/jni_test.jar;./";
 //        main_name = "test/JniTest";
 
-        classpath = "../../binary/lib/minijvm_rt.jar;../../binary/libex/luaj.jar;./";
-        main_name = "Sample";
+//        classpath = "../../binary/lib/minijvm_rt.jar;../../binary/libex/luaj.jar;./";
+//        main_name = "Sample";
 
 
-//        classpath = "../../binary/lib/minijvm_rt.jar;../../binary/libex/minijvm_test.jar;./";
+        classpath = "../../binary/lib/minijvm_rt.jar;../../binary/libex/minijvm_test.jar;./";
 //        main_name = "test/HelloWorld";
 //        main_name = "test/Foo1";
 //        main_name = "test/Foo2";
-//        main_name = "test/Foo3";
+        main_name = "test/Foo3";
 //        main_name = "test/SpecTest";
 //        main_name = "test/MultiThread";
 //        main_name = "test/ExecuteSpeed";
@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
     }
     ret = execute_jvm(classpath, main_name, java_para);
     arraylist_destory(java_para);
-    //getchar();
+    getchar();
     return ret;
 }
 
