@@ -79,6 +79,12 @@ int main(int argc, char **argv) {
 //        classpath = "../../binary/lib/minijvm_rt.jar;../../binary/libex/luaj.jar;./";
 //        main_name = "Sample";
 
+//        classpath = "../../../minijvm_third_lib/vm_test_rt/target/test_rt.jar;";
+//        main_name = "com/egls/test/Foo1";
+
+//        classpath = "../../../minijvm_third_lib/vm_micro_rt/target/micro_rt.jar;";
+//        main_name = "test/Foo3";
+
 
         classpath = "../../binary/lib/minijvm_rt.jar;../../binary/libex/minijvm_test.jar;./";
 //        main_name = "test/HelloWorld";
@@ -106,7 +112,7 @@ int main(int argc, char **argv) {
     }
     ret = execute_jvm(classpath, main_name, java_para);
     arraylist_destory(java_para);
-    getchar();
+    //getchar();
     return ret;
 }
 
