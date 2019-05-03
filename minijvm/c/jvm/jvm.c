@@ -121,6 +121,7 @@ ClassLoader *classloader_create(c8 *path) {
 
     //创建jstring 相关容器
     class_loader->table_jstring_const = hashtable_create(UNICODE_STR_HASH_FUNC, UNICODE_STR_EQUALS_FUNC);
+
     return class_loader;
 }
 
@@ -143,6 +144,7 @@ void classloader_destory(ClassLoader *class_loader) {
     hashtable_destory(class_loader->table_jstring_const);
 
     class_loader->classes = NULL;
+
     spin_destroy(&class_loader->lock);
     jvm_free(class_loader);
 }
@@ -302,9 +304,8 @@ s32 call_method_main(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, ArrayL
     utf8_replace_c(str_mainClsName, ".", "/");
 
     //装入主类
-    load_class(sys_classloader, str_mainClsName, runtime);
 
-    JClass *clazz = classes_get(str_mainClsName);
+    JClass *clazz = classes_load_get(str_mainClsName, runtime);
 
     s32 ret = 0;
     if (clazz) {
@@ -395,9 +396,7 @@ s32 call_method_c(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, Runtime *
     Utf8String *str_mainClsName = utf8_create_c(p_mainclass);
 
     //装入主类
-    load_class(sys_classloader, str_mainClsName, runtime);
-
-    JClass *clazz = classes_get(str_mainClsName);
+    JClass *clazz = classes_load_get(str_mainClsName, runtime);
 
     s32 ret = 0;
     if (clazz) {

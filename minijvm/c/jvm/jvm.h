@@ -384,6 +384,7 @@ struct _ClassLoader {
 
     Hashtable *table_jstring_const;
 
+
     //
     spinlock_t lock;
 };
@@ -486,6 +487,10 @@ typedef struct _ConstantFieldRef {
     u16 nameAndTypeIndex;
     //
     FieldInfo *fieldInfo;
+    ConstantNameAndType *nameAndType;
+    Utf8String *name;
+    Utf8String *descriptor;
+    Utf8String *clsName;
 } ConstantFieldRef;
 
 typedef struct _ConstantMethodRef {
@@ -731,11 +736,9 @@ void constant_list_destory(JClass *clazz);
 
 s32 class_destory(JClass *clazz);
 
-JClass *resole_class(ByteBuf *bytebuf, Runtime *runtime);
+JClass *class_parse(ByteBuf *bytebuf, Runtime *runtime);
 
-s32 load_class(ClassLoader *loader, Utf8String *pClassName, Runtime *runtime);
-
-//s32 load_related_class(ClassLoader *loader, Class *clazz, Runtime *runtime);
+JClass *load_class(ClassLoader *loader, Utf8String *pClassName, Runtime *runtime);
 
 s32 _LOAD_CLASS_FROM_BYTES(JClass *_this, ByteBuf *buf);
 

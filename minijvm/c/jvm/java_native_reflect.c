@@ -488,7 +488,7 @@ s32 org_mini_reflect_vm_RefNative_defineClass(Runtime *runtime, JClass *clazz) {
 
     ByteBuf *bytebuf = bytebuf_create(len);
     bytebuf_write_batch(bytebuf, bytesarr->arr_body + offset, len);
-    JClass *cl = resole_class(bytebuf, runtime);
+    JClass *cl = class_parse(bytebuf, runtime);
     cl->jClassLoader = cloader;
     bytebuf_destory(bytebuf);
 

@@ -993,6 +993,13 @@ void _class_optimize(JClass *clazz) {
         ccr->name = class_get_utf8_string(clazz, ccr->stringIndex);
     }
 
+    for (i = 0; i < clazz->constantPool.fieldRef->length; i++) {
+        ConstantFieldRef *cfr = (ConstantFieldRef *) arraylist_get_value(clazz->constantPool.fieldRef, i);
+        cfr->nameAndType = class_get_constant_name_and_type(clazz, cfr->nameAndTypeIndex);
+        cfr->name = class_get_utf8_string(clazz, cfr->nameAndType->nameIndex);
+        cfr->descriptor = class_get_utf8_string(clazz, cfr->nameAndType->typeIndex);
+        cfr->clsName = class_get_constant_classref(clazz, cfr->classIndex)->name;
+    }
     for (i = 0; i < clazz->constantPool.methodRef->length; i++) {
         ConstantMethodRef *cmr = (ConstantMethodRef *) arraylist_get_value(clazz->constantPool.methodRef, i);
         cmr->nameAndType = class_get_constant_name_and_type(clazz, cmr->nameAndTypeIndex);
@@ -1111,7 +1118,7 @@ s32 _LOAD_CLASS_FROM_BYTES(JClass *_this, ByteBuf *buf) {
     return 0;
 }
 
-JClass *resole_class(ByteBuf *bytebuf, Runtime *runtime) {
+JClass *class_parse(ByteBuf *bytebuf, Runtime *runtime) {
     JClass *tmpclazz = NULL;
     if (bytebuf != NULL) {
         tmpclazz = class_create(runtime);
@@ -1119,9 +1126,13 @@ JClass *resole_class(ByteBuf *bytebuf, Runtime *runtime) {
 
         if (iret == 0) {
             classes_put(tmpclazz);
+
+//            class_mark_clinit(sys_classloader,tmpclazz);
+
             class_prepar(tmpclazz, runtime);
             gc_refer_hold(tmpclazz);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+
+#if _JVM_DEBUG_BYTECODE_DETAIL > 2
             jvm_printf("load class:  %s \n", utf8_cstr(tmpclazz->name));
 #endif
         } else {
@@ -1132,7 +1143,7 @@ JClass *resole_class(ByteBuf *bytebuf, Runtime *runtime) {
     return tmpclazz;
 }
 
-s32 load_class(ClassLoader *loader, Utf8String *pClassName, Runtime *runtime) {
+JClass *load_class(ClassLoader *loader, Utf8String *pClassName, Runtime *runtime) {
     if (!loader)return 0;
     s32 iret = 0;
     //
@@ -1148,7 +1159,7 @@ s32 load_class(ClassLoader *loader, Utf8String *pClassName, Runtime *runtime) {
         utf8_append_c(clsName, ".class");
         bytebuf = load_file_from_classpath(loader, clsName);
         if (bytebuf != NULL) {
-            tmpclazz = resole_class(bytebuf, runtime);
+            tmpclazz = class_parse(bytebuf, runtime);
             bytebuf_destory(bytebuf);
         }
 
@@ -1157,7 +1168,7 @@ s32 load_class(ClassLoader *loader, Utf8String *pClassName, Runtime *runtime) {
         jvm_printf("class not found:  %s \n", utf8_cstr(clsName));
     }
     utf8_destory(clsName);
-    return iret;
+    return tmpclazz;
 }
 
 

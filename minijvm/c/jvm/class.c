@@ -115,6 +115,25 @@ s32 class_prepar(JClass *clazz, Runtime *runtime) {
     }
 
     int i;
+//    for (i = 0; i < clazz->constantPool.methodRef->length; i++) {
+//        ConstantMethodRef *cmr = (ConstantMethodRef *) arraylist_get_value(clazz->constantPool.methodRef, i);
+//        load_class(sys_classloader, cmr->clsName, runtime);
+//        //jvm_printf("%s.%s %llx\n", utf8_cstr(clazz->name), utf8_cstr(cmr->name), (s64) (intptr_t) cmr->virtual_methods);
+//    }
+//    for (i = 0; i < clazz->constantPool.interfaceMethodRef->length; i++) {
+//        ConstantMethodRef *cmr = (ConstantMethodRef *) arraylist_get_value(clazz->constantPool.interfaceMethodRef, i);
+//        load_class(sys_classloader, cmr->clsName, runtime);
+//    }
+//
+//    for (i = 0; i < clazz->constantPool.fieldRef->length; i++) {
+//        ConstantFieldRef *cfr = (ConstantFieldRef *) arraylist_get_value(clazz->constantPool.fieldRef, i);
+//        load_class(sys_classloader, cfr->clsName, runtime);
+//    }
+//    for (i = 0; i < clazz->constantPool.classRef->length; i++) {
+//        ConstantClassRef *ccr = (ConstantClassRef *) arraylist_get_value(clazz->constantPool.classRef, i);
+//        JClass *other = classes_load_get_without_clinit(ccr->name, runtime);
+//        class_mark_clinit(sys_classloader, other);
+//    }
 
 //    if (utf8_equals_c(clazz->name, "espresso/parser/JavaParser")) {
 //        int debug = 1;
@@ -336,23 +355,22 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
         for (i = 0; i < p->method_used; i++) {
             //jvm_printf("%s,%s\n", utf8_cstr(p->methodRef[i].name), utf8_cstr(p->methodRef[i].descriptor));
             if (utf8_equals_c(p->method[i].name, STR_METHOD_CLINIT)) {
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
-                jvm_printf(" <clinit>  :%s\n", utf8_cstr(clazz->name));
+#if _JVM_DEBUG_BYTECODE_DETAIL > 2
+                invoke_deepth(runtime);
+                jvm_printf(" %s.<clinit>  {\n", utf8_cstr(clazz->name));
 #endif
 
                 s32 ret = execute_method_impl(&(p->method[i]), runtime);
                 if (ret != RUNTIME_STATUS_NORMAL) {
                     print_exception(runtime);
                 }
+#if _JVM_DEBUG_BYTECODE_DETAIL > 2
+                invoke_deepth(runtime);
+                jvm_printf(" }  //%s\n", utf8_cstr(clazz->name));
+#endif
                 break;
             }
         }
-
-        //MUST load all relative classes, because  instanceof maybe match ins to parent's parent, but it not in memory
-//        for (i = 0; i < clazz->constantPool.classRef->length; i++) {
-//            ConstantClassRef *ccr = (ConstantClassRef *) arraylist_get_value(clazz->constantPool.classRef, i);
-//            classes_load_get(ccr->name, runtime);
-//        }
 
         clazz->status = CLASS_STATUS_CLINITED;
     }

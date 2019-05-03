@@ -91,6 +91,10 @@ typedef void (*ArrayListIteratorFunc)(ArrayListValue value, void *para);
 
 typedef int (*ArrayListEqualFunc)(ArrayListValue value1, ArrayListValue value2);
 
+static inline int DEFAULT_ARRAYLIST_EQUALS_FUNC(ArrayListValue value1, ArrayListValue value2) {
+    return value2 == value1;
+}
+
 /**
  * Compare two values in an arraylist.  Used by @ref arraylist_sort
  * when sorting values.
