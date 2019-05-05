@@ -26,7 +26,7 @@
   * Save and Load file from mobile storage .   
   * Api compatible with miniJVM desktop platform, can running on pc . 
 
-## mobile app IM Demo ,[Github](https://github.com/digitalgust/BiBiX):
+## mobile app IM Demo , source at :[BiBiX](https://github.com/digitalgust/BiBiX):
   <div align=center><img width="224" height="398" src="/screenshot/demo.gif"/></div>
    This demo can be download from : http://bb.egls.cn:8080/down/BiBiX.jar , First install AppManager from :
    /binary/ios/MiniPack.ipa or /binary/android/MiniPack.apk ,or run AppManager in mini_jvm (eg. /binary/win_64)
@@ -97,7 +97,7 @@ String s=(String)list.get(0);//can't ignore (String) cast qualifier.
    [GLFW](https://github.com/glfw/glfw)  :for pc cross platform GUI   
    [Dirent](https://github.com/tronkko/dirent)  :for linux style on win vc file and directory access    
    [Tinycthread](https://github.com/tinycthread/tinycthread)  :for cross platform thread   
-   [JRegex](https://github.com/digitalgust/jregex)  :for java String regex match     
+   [JRegex](https://github.com/digitalgust/minijvm_third_lib/tree/master/jregex)  :for java String regex match     
    [Janino](http://janino-compiler.github.io/janino/)  :for compile java source file     
    [MiniAudio](https://github.com/dr-soft/miniaudio)  :for java audio playback and capture     
 
