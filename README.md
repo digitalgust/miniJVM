@@ -111,7 +111,7 @@ String s=(String)list.get(0);//can't ignore (String) cast qualifier.
  
 ## Build GUI application, depend on openGL or openGLES     
    * iOS/Android system build with GLFM  (/mobile/iosapp/  ,  /mobile/androidapp/)       
-   * Window system build with GLFW   (/ex_lib/gui_jni/)      
+   * Window system build with GLFW   (/desktop/glfw_gui/)      
    * GUI build with Nanovg          
 
   
@@ -229,12 +229,10 @@ public class MyApp extends GApplication {
 >> binary/-------- minijvm binary (win32/win64/mac/linux/android/ios)  
 >> minijvm/    
 >>> c/------------ minijvm c source   
->>> java/--------- minijvm runtime class library    
+>>> java/--------- minijvm runtime library    
 >>
 >> desktop/   
->>> glfw_gui/------ desktop computer native gui jni module   
->>> jni_test/------ jni example    
->>> javalib_test/-- test case of **/minijvm/java** .   
+>>> glfw_gui/------ desktop computer gui/audio native module   
 >>
 >> mobile/        
 >>> c/------------- java native lib, glfm framework, gui jni, glfmapp    
@@ -248,11 +246,13 @@ public class MyApp extends GApplication {
 >>> jvm_ios/------ ios swift test project .      
 >>> jvm_macos/---- macosX test project.      
 >>> jvm_vs/------- windows virtual studio test project.      
+>>> jni_test/------ jni example    
+>>> javalib_test/-- test case of **/minijvm/java** .   
   
- * **/minijvm/c** is an independent small and fast jvm interpreter, Need **/javalib** runtime class library only, it run on Win/Mac/Linux/iOS/Android.     
- * **/minijvm/java** is the jvm foundation runtime class library, ex *java.lang* , *java.util* ,and extended classes *org.mini* for file reflect and network etc, this project generate minijvm_rt.jar , copy it into **/mobile/assets/resfiles**  .   
- * **/mobile/iosapp** **/mobile/androidapp** are iOS/Android launcher program, it include minijvm source and native gui function, java call gui library with jni.       
- * **/mobile/java/glfm_gui** is a gui library ,it dependent on native gui library ,that include openGLES glad, glfm, nanovg, stb lib etc , this project generate glfm_gui.jar , copy it into **/mobile/assets/resfiles** .     
+ * **/minijvm/c** is an independent small and fast jvm interpreter, it run on Win/Mac/Linux/iOS/Android.     
+ * **/minijvm/java** is the jvm foundation runtime library, ex *java.lang* , *java.util* ,and extended classes *org.mini* for file,reflect and network etc, this project generate minijvm_rt.jar .   
+ * **/mobile/iosapp** **/mobile/androidapp** are iOS/Android launcher program, it include minijvm source and native function, java call gui library with jni.       
+ * **/mobile/java/glfm_gui** is a gui library ,it dependent on native gui library ,that include openGLES glad, glfm, nanovg, stb lib etc , this project generate glfm_gui.jar .     
  * **/mobile/java/ExApp** is an example of mobile app, it run on iOS and Android platform.  
      
   
