@@ -10,7 +10,7 @@
   * Jvm Build pass: iOS / Android / mingww64 32-64bit / cygwin / MSVC 32-64bit / MacOS /  Linux  .   
   * No dependence Library .  
   * Minimal memory footprint .  
-  * Minimal binary ,300 KB jvm.  
+  * Minimal binary, embedded jvm.  
   * Minimal runtime classlib .   
   * Support java5+ class file .  
   * Support embedded java source compiler(janino compiler) .  
@@ -26,7 +26,7 @@
   * Save and Load file from mobile storage .   
   * Api compatible with miniJVM desktop platform, can running on pc . 
 
-## mobile app IM Demo , source at :[BiBiX](https://github.com/digitalgust/BiBiX):
+## mobile app IM Demo BiBiX , source at :https://github.com/digitalgust/BiBiX
   <div align=center><img width="224" height="398" src="/screenshot/demo.gif"/></div>
    This demo can be download from : http://bb.egls.cn:8080/down/BiBiX.jar , First install AppManager from :
    /binary/ios/MiniPack.ipa or /binary/android/MiniPack.apk ,or run AppManager in mini_jvm (eg. /binary/win_64)
