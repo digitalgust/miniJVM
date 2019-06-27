@@ -62,9 +62,26 @@ public interface SocketConnection extends StreamConnection {
     /**
      * 设置阻塞或非阻塞属性
      *
-     * @param type
-     * @param val
-     * @param val2
+     * @param option
+     * @param value
      */
-    void setOption(int type, int val, int val2);
+    void setSocketOption(byte option, int value);
+
+
+    /**
+     * get current value
+     *
+     * @param option
+     */
+    void getSocketOption(byte option);
+
+
+    int getLocalPort();
+
+    int getPort();
+
+
+    String getAddress();
+
+    String getLocalAddress();
 }
