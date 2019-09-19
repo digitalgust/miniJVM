@@ -743,7 +743,7 @@ s32 org_mini_reflect_ReflectMethod_invokeMethod(Runtime *runtime, JClass *clazz)
     Instance *argsArr = (Instance *) localvar_getRefer(runtime->localvar, pos++);
     s32 ret = 0;
     if (methodInfo) {
-        if (!(methodInfo->access_flags & ACC_STATIC)) {
+        if (!(methodInfo->is_static)) {
             push_ref(runtime->stack, ins);
         }
         s32 i;
@@ -825,7 +825,7 @@ s32 org_mini_reflect_StackFrame_mapRuntime(Runtime *runtime, JClass *clazz) {
         ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_RUNTIME, "methodId", "J", runtime);
         if (ptr)setFieldLong(ptr, (u64) (intptr_t) target->method);
         //
-        if (target->method && !(target->method->access_flags & ACC_STATIC)) {//top runtime method is null
+        if (target->method && !(target->method->is_static)) {//top runtime method is null
             ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_RUNTIME, "localThis", "J", runtime);
             if (ptr)setFieldLong(ptr, (s64) (intptr_t) localvar_getRefer(target->localvar, 0));
         }

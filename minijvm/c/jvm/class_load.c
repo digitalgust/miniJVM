@@ -494,6 +494,9 @@ s32 _parseMP(JClass *_this, ByteBuf *buf) {
     s2c.c1 = (u8) bytebuf_read(buf);//short_tmp[0];
     s2c.c0 = (u8) bytebuf_read(buf);//short_tmp[1];
     ptr->access_flags = s2c.s;
+    ptr->is_native = (s2c.s & ACC_NATIVE) != 0;
+    ptr->is_sync = (s2c.s & ACC_SYNCHRONIZED) != 0;
+    ptr->is_static = (s2c.s & ACC_STATIC) != 0;
 
     /* name index */
     //fread(short_tmp, 2, 1, fp);
@@ -942,7 +945,7 @@ void _class_optimize(JClass *clazz) {
             //parse method description return slots
             ptr->para_slots = parseMethodPara(ptr->descriptor, ptr->paraType);
             ptr->para_count_with_this = ptr->paraType->length;
-            if (!(ptr->access_flags & ACC_STATIC)) {
+            if (!(ptr->is_static)) {
                 ptr->para_slots++;//add this pointer
                 ptr->para_count_with_this++;
             }

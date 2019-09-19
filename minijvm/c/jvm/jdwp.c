@@ -1716,7 +1716,7 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
                 MethodInfo *method = jdwppacket_read_refer(req);
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
                 CodeAttribute *ca = getCodeAttribute(method);
-                if (method->access_flags & ACC_NATIVE) {
+                if (method->is_native) {
                     jdwppacket_write_long(res, -1);
                     jdwppacket_write_long(res, -1);
                 } else {
@@ -1814,7 +1814,7 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
                 s32 arguments = jdwppacket_read_int(req);
 
                 s32 stacksize = stack_size(runtime->stack);
-                if (!(methodInfo->access_flags & ACC_STATIC)) {
+                if (!(methodInfo->is_static)) {
                     push_ref(runtime->stack, object);
                 }
                 runtime->clazz = clazz;
@@ -2272,7 +2272,7 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
                 Runtime *frame = jdwppacket_read_refer(req);
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
                 ValueType vt;
-                if (frame->method->access_flags & ACC_STATIC || frame->method->access_flags & ACC_NATIVE) {
+                if (frame->method->is_static || frame->method->is_native) {
                     vt.type = JDWP_TAG_OBJECT;
                     vt.value = 0;
                 } else {

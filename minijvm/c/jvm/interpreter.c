@@ -441,7 +441,7 @@ static inline Instance *getInstanceInStack(ConstantMethodRef *cmr, RuntimeStack 
 static inline void _synchronized_lock_method(MethodInfo *method, Runtime *runtime) {
     //synchronized process
     {
-        if (method->access_flags & ACC_STATIC) {
+        if (method->is_static) {
             runtime->lock = (MemoryBlock *) runtime->clazz;
         } else {
             runtime->lock = (MemoryBlock *) localvar_getRefer(runtime->localvar, 0);
@@ -689,7 +689,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
     while (clazz->status < CLASS_STATUS_CLINITING) {
         class_clinit(clazz, runtime);
     }
-    s32 method_sync = method->access_flags & ACC_SYNCHRONIZED;
 
     //    if (utf8_equals_c(method->name, "lambda$t1$1")
     ////        && utf8_equals_c(clazz->name, "java/lang/String")
@@ -699,7 +698,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
     RuntimeStack *stack = runtime->stack;
 
-    if (!(method->access_flags & ACC_NATIVE)) {
+    if (!(method->is_native)) {
         CodeAttribute *ca = method->converted_code;
         if (ca) {
             if (ca->code_length == 1 && *ca->code == op_return) {//empty method, do nothing
@@ -732,7 +731,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             }
             localvar_init(runtime, ca->max_locals, method->para_slots);
             LocalVarItem *localvar = runtime->localvar;
-            if (method_sync)_synchronized_lock_method(method, runtime);
+            if (method->is_sync)_synchronized_lock_method(method, runtime);
 
             register u8 *opCode = ca->code;
             runtime->ca = ca;
@@ -956,7 +955,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         push_long(stack, value);
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("ldc2_w: push a constant(%d) [%llx] onto the stack \n", index, value);
+                        jvm_printf("ldc2_w: push a constant(%d) [%llx] onto the stack \n", s2c.us, value);
 #endif
                         opCode += 3;
 
@@ -4261,7 +4260,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
 
             }//end while
-            if (method_sync)_synchronized_unlock_method(method, runtime);
+            if (method->is_sync)_synchronized_unlock_method(method, runtime);
 
         } else {
             jvm_printf("method code attribute is null.");
@@ -4283,9 +4282,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
         }
 
         if (method->native_func) {
-            if (method_sync)_synchronized_lock_method(method, runtime);
+            if (method->is_sync)_synchronized_lock_method(method, runtime);
             ret = method->native_func(runtime, clazz);
-            if (method_sync)_synchronized_unlock_method(method, runtime);
+            if (method->is_sync)_synchronized_unlock_method(method, runtime);
             switch (method->return_slots) {
                 case 0: {// V
                     localvar_dispose(runtime);

@@ -1225,7 +1225,7 @@ Instance *buildStackElement(Runtime *runtime, Runtime *target) {
         //
         ptr = getFieldPtr_byName_c(ins, STR_CLASS_JAVA_LANG_STACKTRACE, "lineNumber", "I", runtime);
         if (ptr) {
-            if (target->method->access_flags & ACC_NATIVE) {
+            if (target->method->is_native) {
                 setFieldInt(ptr, -1);
             } else {
                 setFieldInt(ptr, getLineNumByIndex(target->ca, (s32) (target->pc - target->ca->code)));

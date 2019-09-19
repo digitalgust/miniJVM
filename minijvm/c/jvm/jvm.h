@@ -631,23 +631,10 @@ typedef struct _FieldPool {
 } FieldPool;
 //============================================
 
-typedef struct _MethodParaOffset {
-    s32 stackOffset;
-    s16 localOffset;
-    s16 byteCount;
-} MethodParaOffset;
-
 struct _MethodInfo {
-    u16 access_flags;
-    u16 name_index;
-    u16 descriptor_index;
-    u16 attributes_count;
     AttributeInfo *attributes;
     //
     CodeAttribute *converted_code;
-
-    MethodParaOffset *paraOffset;
-
     //link
     Utf8String *name;
     Utf8String *descriptor;
@@ -659,6 +646,17 @@ struct _MethodInfo {
     s16 para_slots;
     s16 para_count_with_this;
     s16 return_slots;
+    s16 na_1;
+    //
+    u16 access_flags;
+    u16 name_index;
+    u16 descriptor_index;
+    u16 attributes_count;
+    //
+    u8 is_native;
+    u8 is_sync;
+    u8 is_static;
+    u8 na_2;
 };
 //============================================
 
@@ -934,7 +932,9 @@ struct _Runtime {
     Runtime *parent;//father method's runtime
     RuntimeStack *stack;
     LocalVarItem *localvar;
+    s32 invoke_type;
     s16 localvar_slots;
+
     //
     union {
         Runtime *runtime_pool_header;// cache runtimes for performance
