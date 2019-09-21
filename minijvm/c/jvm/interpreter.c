@@ -476,27 +476,37 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             GET_LABEL_ADDRESS(label_breakpoint)
     };
 
+    s32 ret;
+    Runtime *runtime;
+    JClass *clazz;
+    RuntimeStack *stack;
+    CodeAttribute *ca;
+    LocalVarItem *localvar;
+    u8 *opCode;
+    u8 cur_inst;
+    s32 exit_exec;
 
-    s32 ret = RUNTIME_STATUS_NORMAL;
+    ret = RUNTIME_STATUS_NORMAL;
 
-    Runtime *runtime = runtime_create_inl(pruntime);
-    JClass *clazz = method->_this_class;
+    runtime = runtime_create_inl(pruntime);
+    clazz = method->_this_class;
     runtime->method = method;
     runtime->clazz = clazz;
     while (clazz->status < CLASS_STATUS_CLINITING) {
         class_clinit(clazz, runtime);
     }
 
-    //    if (utf8_equals_c(method->name, "lambda$t1$1")
-    ////        && utf8_equals_c(clazz->name, "java/lang/String")
-    //            ) {
-    //        s32 debug = 1;
-    //    }
 
-    RuntimeStack *stack = runtime->stack;
+//    if (utf8_equals_c(method->name, "main")
+//                && utf8_equals_c(clazz->name, "java/lang/String")
+//            ) {
+//        s32 debug = 1;
+//    }
+
+    stack = runtime->stack;
 
     if (!(method->is_native)) {
-        CodeAttribute *ca = method->converted_code;
+        ca = method->converted_code;
         if (ca) {
             if (ca->code_length == 1 && *ca->code == op_return) {//empty method, do nothing
                 s32 paras = method->para_slots;
@@ -527,17 +537,17 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                 exit(1);
             }
             localvar_init(runtime, ca->max_locals, method->para_slots);
-            LocalVarItem *localvar = runtime->localvar;
+            localvar = runtime->localvar;
             if (method->is_sync)_synchronized_lock_method(method, runtime);
 
-            register u8 *opCode = ca->code;
+            opCode = ca->code;
             runtime->ca = ca;
             JavaThreadInfo *threadInfo = runtime->threadInfo;
 
-            s32 exit_exec = 0;
+            exit_exec = 0;
             while (!exit_exec) {
                 runtime->pc = opCode;
-                u8 cur_inst = *opCode;
+                cur_inst = *opCode;
                 if (JDWP_DEBUG) {
                     //breakpoint
                     if (method->breakpoint) {
