@@ -11,211 +11,6 @@
 
 
 
-enum {
-    /* 0x00 */ op_nop,
-    /* 0x01 */ op_aconst_null,
-    /* 0x02 */ op_iconst_m1,
-    /* 0x03 */ op_iconst_0,
-    /* 0x04 */ op_iconst_1,
-    /* 0x05 */ op_iconst_2,
-    /* 0x06 */ op_iconst_3,
-    /* 0x07 */ op_iconst_4,
-    /* 0x08 */ op_iconst_5,
-    /* 0x09 */ op_lconst_0,
-    /* 0x0A */ op_lconst_1,
-    /* 0x0B */ op_fconst_0,
-    /* 0x0C */ op_fconst_1,
-    /* 0x0D */ op_fconst_2,
-    /* 0x0E */ op_dconst_0,
-    /* 0x0F */ op_dconst_1,
-    /* 0x10 */ op_bipush,
-    /* 0x11 */ op_sipush,
-    /* 0x12 */ op_ldc,
-    /* 0x13 */ op_ldc_w,
-    /* 0x14 */ op_ldc2_w,
-    /* 0x15 */ op_iload,
-    /* 0x16 */ op_lload,
-    /* 0x17 */ op_fload,
-    /* 0x18 */ op_dload,
-    /* 0x19 */ op_aload,
-    /* 0x1A */ op_iload_0,
-    /* 0x1B */ op_iload_1,
-    /* 0x1C */ op_iload_2,
-    /* 0x1D */ op_iload_3,
-    /* 0x1E */ op_lload_0,
-    /* 0x1F */ op_lload_1,
-    /* 0x20 */ op_lload_2,
-    /* 0x21 */ op_lload_3,
-    /* 0x22 */ op_fload_0,
-    /* 0x23 */ op_fload_1,
-    /* 0x24 */ op_fload_2,
-    /* 0x25 */ op_fload_3,
-    /* 0x26 */ op_dload_0,
-    /* 0x27 */ op_dload_1,
-    /* 0x28 */ op_dload_2,
-    /* 0x29 */ op_dload_3,
-    /* 0x2A */ op_aload_0,
-    /* 0x2B */ op_aload_1,
-    /* 0x2C */ op_aload_2,
-    /* 0x2D */ op_aload_3,
-    /* 0x2E */ op_iaload,
-    /* 0x2F */ op_laload,
-    /* 0x30 */ op_faload,
-    /* 0x31 */ op_daload,
-    /* 0x32 */ op_aaload,
-    /* 0x33 */ op_baload,
-    /* 0x34 */ op_caload,
-    /* 0x35 */ op_saload,
-    /* 0x36 */ op_istore,
-    /* 0x37 */ op_lstore,
-    /* 0x38 */ op_fstore,
-    /* 0x39 */ op_dstore,
-    /* 0x3A */ op_astore,
-    /* 0x3B */ op_istore_0,
-    /* 0x3C */ op_istore_1,
-    /* 0x3D */ op_istore_2,
-    /* 0x3E */ op_istore_3,
-    /* 0x3F */ op_lstore_0,
-    /* 0x40 */ op_lstore_1,
-    /* 0x41 */ op_lstore_2,
-    /* 0x42 */ op_lstore_3,
-    /* 0x43 */ op_fstore_0,
-    /* 0x44 */ op_fstore_1,
-    /* 0x45 */ op_fstore_2,
-    /* 0x46 */ op_fstore_3,
-    /* 0x47 */ op_dstore_0,
-    /* 0x48 */ op_dstore_1,
-    /* 0x49 */ op_dstore_2,
-    /* 0x4A */ op_dstore_3,
-    /* 0x4B */ op_astore_0,
-    /* 0x4C */ op_astore_1,
-    /* 0x4D */ op_astore_2,
-    /* 0x4E */ op_astore_3,
-    /* 0x4F */ op_iastore,
-    /* 0x50 */ op_lastore,
-    /* 0x51 */ op_fastore,
-    /* 0x52 */ op_dastore,
-    /* 0x53 */ op_aastore,
-    /* 0x54 */ op_bastore,
-    /* 0x55 */ op_castore,
-    /* 0x56 */ op_sastore,
-    /* 0x57 */ op_pop,
-    /* 0x58 */ op_pop2,
-    /* 0x59 */ op_dup,
-    /* 0x5A */ op_dup_x1,
-    /* 0x5B */ op_dup_x2,
-    /* 0x5C */ op_dup2,
-    /* 0x5D */ op_dup2_x1,
-    /* 0x5E */ op_dup2_x2,
-    /* 0x5F */ op_swap,
-    /* 0x60 */ op_iadd,
-    /* 0x61 */ op_ladd,
-    /* 0x62 */ op_fadd,
-    /* 0x63 */ op_dadd,
-    /* 0x64 */ op_isub,
-    /* 0x65 */ op_lsub,
-    /* 0x66 */ op_fsub,
-    /* 0x67 */ op_dsub,
-    /* 0x68 */ op_imul,
-    /* 0x69 */ op_lmul,
-    /* 0x6A */ op_fmul,
-    /* 0x6B */ op_dmul,
-    /* 0x6C */ op_idiv,
-    /* 0x6D */ op_ldiv,
-    /* 0x6E */ op_fdiv,
-    /* 0x6F */ op_ddiv,
-    /* 0x70 */ op_irem,
-    /* 0x71 */ op_lrem,
-    /* 0x72 */ op_frem,
-    /* 0x73 */ op_drem,
-    /* 0x74 */ op_ineg,
-    /* 0x75 */ op_lneg,
-    /* 0x76 */ op_fneg,
-    /* 0x77 */ op_dneg,
-    /* 0x78 */ op_ishl,
-    /* 0x79 */ op_lshl,
-    /* 0x7A */ op_ishr,
-    /* 0x7B */ op_lshr,
-    /* 0x7C */ op_iushr,
-    /* 0x7D */ op_lushr,
-    /* 0x7E */ op_iand,
-    /* 0x7F */ op_land,
-    /* 0x80 */ op_ior,
-    /* 0x81 */ op_lor,
-    /* 0x82 */ op_ixor,
-    /* 0x83 */ op_lxor,
-    /* 0x84 */ op_iinc,
-    /* 0x85 */ op_i2l,
-    /* 0x86 */ op_i2f,
-    /* 0x87 */ op_i2d,
-    /* 0x88 */ op_l2i,
-    /* 0x89 */ op_l2f,
-    /* 0x8A */ op_l2d,
-    /* 0x8B */ op_f2i,
-    /* 0x8C */ op_f2l,
-    /* 0x8D */ op_f2d,
-    /* 0x8E */ op_d2i,
-    /* 0x8F */ op_d2l,
-    /* 0x90 */ op_d2f,
-    /* 0x91 */ op_i2b,
-    /* 0x92 */ op_i2c,
-    /* 0x93 */ op_i2s,
-    /* 0x94 */ op_lcmp,
-    /* 0x95 */ op_fcmpl,
-    /* 0x96 */ op_fcmpg,
-    /* 0x97 */ op_dcmpl,
-    /* 0x98 */ op_dcmpg,
-    /* 0x99 */ op_ifeq,
-    /* 0x9A */ op_ifne,
-    /* 0x9B */ op_iflt,
-    /* 0x9C */ op_ifge,
-    /* 0x9D */ op_ifgt,
-    /* 0x9E */ op_ifle,
-    /* 0x9F */ op_if_icmpeq,
-    /* 0xA0 */ op_if_icmpne,
-    /* 0xA1 */ op_if_icmplt,
-    /* 0xA2 */ op_if_icmpge,
-    /* 0xA3 */ op_if_icmpgt,
-    /* 0xA4 */ op_if_icmple,
-    /* 0xA5 */ op_if_acmpeq,
-    /* 0xA6 */ op_if_acmpne,
-    /* 0xA7 */ op_goto,
-    /* 0xA8 */ op_jsr,
-    /* 0xA9 */ op_ret,
-    /* 0xAA */ op_tableswitch,
-    /* 0xAB */ op_lookupswitch,
-    /* 0xAC */ op_ireturn,
-    /* 0xAD */ op_lreturn,
-    /* 0xAE */ op_freturn,
-    /* 0xAF */ op_dreturn,
-    /* 0xB0 */ op_areturn,
-    /* 0xB1 */ op_return,
-    /* 0xB2 */ op_getstatic,
-    /* 0xB3 */ op_putstatic,
-    /* 0xB4 */ op_getfield,
-    /* 0xB5 */ op_putfield,
-    /* 0xB6 */ op_invokevirtual,
-    /* 0xB7 */ op_invokespecial,
-    /* 0xB8 */ op_invokestatic,
-    /* 0xB9 */ op_invokeinterface,
-    /* 0xBA */ op_invokedynamic,
-    /* 0xBB */ op_new,
-    /* 0xBC */ op_newarray,
-    /* 0xBD */ op_anewarray,
-    /* 0xBE */ op_arraylength,
-    /* 0xBF */ op_athrow,
-    /* 0xC0 */ op_checkcast,
-    /* 0xC1 */ op_instanceof,
-    /* 0xC2 */ op_monitorenter,
-    /* 0xC3 */ op_monitorexit,
-    /* 0xC4 */ op_wide,
-    /* 0xC5 */ op_multianewarray,
-    /* 0xC6 */ op_ifnull,
-    /* 0xC7 */ op_ifnonnull,
-    /* 0xC8 */ op_goto_w,
-    /* 0xC9 */ op_jsr_w,
-    /* 0xCA */ op_breakpoint,
-};
 
 static inline void _op_load_1_slot(RuntimeStack *stack, LocalVarItem *localvar, Runtime *runtime, s32 i) {
     push_entry(stack, localvar_getEntry(localvar, i));
@@ -276,7 +71,8 @@ static inline void _op_ldc_impl(RuntimeStack *stack, JClass *clazz, Runtime *run
             break;
         }
         case CONSTANT_STRING_REF: {
-            ConstantUTF8 *cutf = class_get_constant_utf8(clazz, class_get_constant_stringref(clazz, index)->stringIndex);
+            ConstantUTF8 *cutf = class_get_constant_utf8(clazz,
+                                                         class_get_constant_stringref(clazz, index)->stringIndex);
             push_ref(stack, (__refer) cutf->jstr);
 
 
@@ -383,7 +179,8 @@ static inline s32 exception_handle(RuntimeStack *stack, Runtime *runtime) {
            lineNum
     );
 #endif
-    ExceptionTable *et = _find_exception_handler(runtime, ins, runtime->ca, (s32) (runtime->pc - runtime->ca->code), ins);
+    ExceptionTable *et = _find_exception_handler(runtime, ins, runtime->ca, (s32) (runtime->pc - runtime->ca->code),
+                                                 ins);
     if (et == NULL) {
         Instance *ins = pop_ref(stack);
         localvar_dispose(runtime);
@@ -912,14 +709,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_sipush:
                     case op_sipush: {
-                        Short2Char s2c;
-                        s2c.c1 = opCode[1];
-                        s2c.c0 = opCode[2];
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("sipush value %d\n", s2c.s);
 #endif
-                        push_int(stack, s2c.s);
+                        push_int(stack, *((s16 *) (opCode + 1)));
                         opCode += 3;
 
                         break;
@@ -936,21 +730,15 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_ldc_w:
                     case op_ldc_w: {
-                        Short2Char s2c;
-                        s2c.c1 = opCode[1];
-                        s2c.c0 = opCode[2];
+                        _op_ldc_impl(stack, clazz, runtime, *((u16 *) (opCode + 1)));
                         opCode += 3;
-                        _op_ldc_impl(stack, clazz, runtime, s2c.us);
                         break;
                     }
 
                     label_ldc2_w:
                     case op_ldc2_w: {
-                        Short2Char s2c;
-                        s2c.c1 = opCode[1];
-                        s2c.c0 = opCode[2];
 
-                        s64 value = class_get_constant_long(clazz, s2c.us);//long or double
+                        s64 value = class_get_constant_long(clazz, *((u16 *) (opCode + 1)));//long or double
 
                         push_long(stack, value);
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
@@ -2585,7 +2373,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("i2s(c): %d --> %d\n", (s16) value, value);
+                        jvm_printf("i2c: %d --> %d\n", (s16) value, value);
 #endif
                         push_int(stack, (u16) value);
                         opCode++;
@@ -2598,7 +2386,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("i2s(c): %d --> %d\n", (s16) value, value);
+                        jvm_printf("i2s: %d --> %d\n", (s16) value, value);
 #endif
                         push_int(stack, (s16) value);
                         opCode++;
@@ -2697,10 +2485,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     case op_ifeq: {
                         s32 val = pop_int(stack);
                         if (val == 0) {
-                            Short2Char s2c;
-                            s2c.c1 = opCode[1];
-                            s2c.c0 = opCode[2];
-                            opCode += s2c.s;
+                            opCode += *((s16 *) (opCode + 1));
                         } else {
                             opCode += 3;
                         }
@@ -2717,10 +2502,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     case op_ifne: {
                         s32 val = pop_int(stack);
                         if (val != 0) {
-                            Short2Char s2c;
-                            s2c.c1 = opCode[1];
-                            s2c.c0 = opCode[2];
-                            opCode += s2c.s;
+                            opCode += *((s16 *) (opCode + 1));
                         } else {
                             opCode += 3;
                         }
@@ -2738,10 +2520,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     case op_iflt: {
                         s32 val = pop_int(stack);
                         if (val < 0) {
-                            Short2Char s2c;
-                            s2c.c1 = opCode[1];
-                            s2c.c0 = opCode[2];
-                            opCode += s2c.s;
+                            opCode += *((s16 *) (opCode + 1));
                         } else {
                             opCode += 3;
                         }
@@ -2758,10 +2537,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     case op_ifge: {
                         s32 val = pop_int(stack);
                         if (val >= 0) {
-                            Short2Char s2c;
-                            s2c.c1 = opCode[1];
-                            s2c.c0 = opCode[2];
-                            opCode += s2c.s;
+                            opCode += *((s16 *) (opCode + 1));
                         } else {
                             opCode += 3;
                         }
@@ -2778,10 +2554,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     case op_ifgt: {
                         s32 val = pop_int(stack);
                         if (val > 0) {
-                            Short2Char s2c;
-                            s2c.c1 = opCode[1];
-                            s2c.c0 = opCode[2];
-                            opCode += s2c.s;
+                            opCode += *((s16 *) (opCode + 1));
                         } else {
                             opCode += 3;
                         }
@@ -2798,10 +2571,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     case op_ifle: {
                         s32 val = pop_int(stack);
                         if (val <= 0) {
-                            Short2Char s2c;
-                            s2c.c1 = opCode[1];
-                            s2c.c0 = opCode[2];
-                            opCode += s2c.s;
+                            opCode += *((s16 *) (opCode + 1));
                         } else {
                             opCode += 3;
                         }
@@ -2819,10 +2589,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         s32 v2 = pop_int(stack);
                         s32 v1 = pop_int(stack);
                         if (v1 == v2) {
-                            Short2Char s2c;
-                            s2c.c1 = opCode[1];
-                            s2c.c0 = opCode[2];
-                            opCode += s2c.s;
+                            opCode += *((s16 *) (opCode + 1));
                         } else {
                             opCode += 3;
                         }
@@ -2839,10 +2606,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         s32 v2 = pop_int(stack);
                         s32 v1 = pop_int(stack);
                         if (v1 != v2) {
-                            Short2Char s2c;
-                            s2c.c1 = opCode[1];
-                            s2c.c0 = opCode[2];
-                            opCode += s2c.s;
+                            opCode += *((s16 *) (opCode + 1));
                         } else {
                             opCode += 3;
                         }
@@ -2859,10 +2623,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         s32 v2 = pop_int(stack);
                         s32 v1 = pop_int(stack);
                         if (v1 < v2) {
-                            Short2Char s2c;
-                            s2c.c1 = opCode[1];
-                            s2c.c0 = opCode[2];
-                            opCode += s2c.s;
+                            opCode += *((s16 *) (opCode + 1));
                         } else {
                             opCode += 3;
                         }
@@ -2879,10 +2640,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         s32 v2 = pop_int(stack);
                         s32 v1 = pop_int(stack);
                         if (v1 >= v2) {
-                            Short2Char s2c;
-                            s2c.c1 = opCode[1];
-                            s2c.c0 = opCode[2];
-                            opCode += s2c.s;
+                            opCode += *((s16 *) (opCode + 1));
                         } else {
                             opCode += 3;
                         }
@@ -2899,10 +2657,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         s32 v2 = pop_int(stack);
                         s32 v1 = pop_int(stack);
                         if (v1 > v2) {
-                            Short2Char s2c;
-                            s2c.c1 = opCode[1];
-                            s2c.c0 = opCode[2];
-                            opCode += s2c.s;
+                            opCode += *((s16 *) (opCode + 1));
                         } else {
                             opCode += 3;
                         }
@@ -2920,10 +2675,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         s32 v2 = pop_int(stack);
                         s32 v1 = pop_int(stack);
                         if (v1 <= v2) {
-                            Short2Char s2c;
-                            s2c.c1 = opCode[1];
-                            s2c.c0 = opCode[2];
-                            opCode += s2c.s;
+                            opCode += *((s16 *) (opCode + 1));
                         } else {
                             opCode += 3;
                         }
@@ -2940,10 +2692,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         __refer v2 = pop_ref(stack);
                         __refer v1 = pop_ref(stack);
                         if (v1 == v2) {
-                            Short2Char s2c;
-                            s2c.c1 = opCode[1];
-                            s2c.c0 = opCode[2];
-                            opCode += s2c.s;
+                            opCode += *((s16 *) (opCode + 1));
                         } else {
                             opCode += 3;
                         }
@@ -2960,10 +2709,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         __refer v2 = pop_ref(stack);
                         __refer v1 = pop_ref(stack);
                         if (v1 != v2) {
-                            Short2Char s2c;
-                            s2c.c1 = opCode[1];
-                            s2c.c0 = opCode[2];
-                            opCode += s2c.s;
+                            opCode += *((s16 *) (opCode + 1));
                         } else {
                             opCode += 3;
                         }
@@ -2977,11 +2723,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_goto:
                     case op_goto: {
-                        Short2Char s2c;
-                        s2c.c1 = opCode[1];
-                        s2c.c0 = opCode[2];
 
-                        s32 branchoffset = s2c.s;
+                        s32 branchoffset = *((s16 *) (opCode + 1));
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -2995,11 +2738,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_jsr:
                     case op_jsr: {
-                        Short2Char s2c;
-                        s2c.c1 = opCode[1];
-                        s2c.c0 = opCode[2];
-
-                        s32 branchoffset = s2c.s;
+                        s32 branchoffset = *((s16 *) (opCode + 1));
                         push_ref(stack, (__refer) (opCode + 3));
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -3031,22 +2770,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         s32 pos = 0;
                         pos = 4 - ((((u64) (intptr_t) opCode) - (u64) (intptr_t) (ca->code)) % 4);//4 byte对齐
 
-                        Int2Float i2c;
-                        i2c.c3 = opCode[pos++];
-                        i2c.c2 = opCode[pos++];
-                        i2c.c1 = opCode[pos++];
-                        i2c.c0 = opCode[pos++];
-                        s32 default_offset = i2c.i;
-                        i2c.c3 = opCode[pos++];
-                        i2c.c2 = opCode[pos++];
-                        i2c.c1 = opCode[pos++];
-                        i2c.c0 = opCode[pos++];
-                        s32 low = i2c.i;
-                        i2c.c3 = opCode[pos++];
-                        i2c.c2 = opCode[pos++];
-                        i2c.c1 = opCode[pos++];
-                        i2c.c0 = opCode[pos++];
-                        s32 high = i2c.i;
+
+                        s32 default_offset = *((s32 *) (opCode + pos));
+                        pos += 4;
+                        s32 low = *((s32 *) (opCode + pos));
+                        pos += 4;
+                        s32 high = *((s32 *) (opCode + pos));
+                        pos += 4;
 
                         int val = pop_int(stack);// pop an int from the stack
                         int offset = 0;
@@ -3054,11 +2784,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             offset = default_offset;              // branch to default
                         } else {                        // otherwise
                             pos += (val - low) * 4;
-                            i2c.c3 = opCode[pos++];
-                            i2c.c2 = opCode[pos++];
-                            i2c.c1 = opCode[pos++];
-                            i2c.c0 = opCode[pos++];
-                            offset = i2c.i;     // branch to entry in table
+
+                            offset = *((s32 *) (opCode + pos));     // branch to entry in table
                         }
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
@@ -3075,33 +2802,21 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     case op_lookupswitch: {
                         s32 pos = 0;
                         pos = 4 - ((((u64) (intptr_t) opCode) - (u64) (intptr_t) (ca->code)) % 4);//4 byte对齐
-                        Int2Float i2c;
-                        i2c.c3 = opCode[pos++];
-                        i2c.c2 = opCode[pos++];
-                        i2c.c1 = opCode[pos++];
-                        i2c.c0 = opCode[pos++];
-                        s32 default_offset = i2c.i;
-                        i2c.c3 = opCode[pos++];
-                        i2c.c2 = opCode[pos++];
-                        i2c.c1 = opCode[pos++];
-                        i2c.c0 = opCode[pos++];
-                        s32 n = i2c.i;
+
+                        s32 default_offset = *((s32 *) (opCode + pos));
+                        pos += 4;
+                        s32 n = *((s32 *) (opCode + pos));
+                        pos += 4;
                         s32 i, key;
 
                         int val = pop_int(stack);// pop an int from the stack
                         int offset = default_offset;
                         for (i = 0; i < n; i++) {
-                            i2c.c3 = opCode[pos++];
-                            i2c.c2 = opCode[pos++];
-                            i2c.c1 = opCode[pos++];
-                            i2c.c0 = opCode[pos++];
-                            key = i2c.i;
+
+                            key = *((s32 *) (opCode + pos));
+                            pos += 4;
                             if (key == val) {
-                                i2c.c3 = opCode[pos++];
-                                i2c.c2 = opCode[pos++];
-                                i2c.c1 = opCode[pos++];
-                                i2c.c0 = opCode[pos++];
-                                offset = i2c.i;
+                                offset = *((s32 *) (opCode + pos));
                                 break;
                             } else {
                                 pos += 4;
@@ -3165,13 +2880,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_getstatic:
                     case op_getstatic: {
-                        Short2Char s2c;
-                        s2c.c1 = opCode[1];
-                        s2c.c0 = opCode[2];
 
-                        FieldInfo *fi = class_get_constant_fieldref(clazz, s2c.us)->fieldInfo;
+                        u16 idx = *((u16 *) (opCode + 1));
+                        FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                         if (!fi) {
-                            ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, s2c.us);
+                            ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
                             fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
                             cfr->fieldInfo = fi;
                         }
@@ -3218,13 +2931,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_putstatic:
                     case op_putstatic: {
-                        Short2Char s2c;
-                        s2c.c1 = opCode[1];
-                        s2c.c0 = opCode[2];
+                        u16 idx = *((u16 *) (opCode + 1));
 
-                        FieldInfo *fi = class_get_constant_fieldref(clazz, s2c.us)->fieldInfo;
+                        FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                         if (!fi) {
-                            ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, s2c.us);
+                            ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
                             fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
                             cfr->fieldInfo = fi;
                         }
@@ -3270,9 +2981,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_getfield:
                     case op_getfield: {
-                        Short2Char s2c;
-                        s2c.c1 = opCode[1];
-                        s2c.c0 = opCode[2];
+                        u16 idx = *((u16 *) (opCode + 1));
 
 
                         Instance *ins = (Instance *) pop_ref(stack);
@@ -3287,9 +2996,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 ret = RUNTIME_STATUS_NORMAL;
                             }
                         } else {
-                            FieldInfo *fi = class_get_constant_fieldref(clazz, s2c.us)->fieldInfo;
+                            FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             if (!fi) {
-                                ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, s2c.us);
+                                ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
                                 fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
                                 cfr->fieldInfo = fi;
                             }
@@ -3339,9 +3048,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_putfield:
                     case op_putfield: {
-                        Short2Char s2c;
-                        s2c.c1 = opCode[1];
-                        s2c.c0 = opCode[2];
+                        u16 idx = *((u16 *) (opCode + 1));
 
                         StackEntry entry;
                         pop_entry(stack, &entry);
@@ -3362,9 +3069,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             }
                         } else {
                             // check variable type to determain long/s32/f64/f32
-                            FieldInfo *fi = class_get_constant_fieldref(clazz, s2c.us)->fieldInfo;
+                            FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             if (!fi) {
-                                ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, s2c.us);
+                                ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
                                 fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
                                 cfr->fieldInfo = fi;
                             }
@@ -3410,12 +3117,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_invokevirtual:
                     case op_invokevirtual: {
-                        Short2Char s2c;
-                        s2c.c1 = opCode[1];
-                        s2c.c0 = opCode[2];
+
 
                         //此cmr所描述的方法，对于不同的实例，有不同的method
-                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, s2c.us);
+                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (opCode + 1)));
 
                         Instance *ins = getInstanceInStack(cmr, stack);
                         if (ins == NULL) {
@@ -3473,11 +3178,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_invokespecial:
                     case op_invokespecial: {
-                        Short2Char s2c;
-                        s2c.c1 = opCode[1];
-                        s2c.c0 = opCode[2];
 
-                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, s2c.us);
+
+                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (opCode + 1)));
                         MethodInfo *m = cmr->methodInfo;
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 3
@@ -3496,7 +3199,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         if (m) {
                             ret = execute_method_impl(m, runtime);
                         } else {
-                            Instance *exception = exception_create_str(JVM_EXCEPTION_NOSUCHMETHOD, runtime, utf8_cstr(cmr->name));
+                            Instance *exception = exception_create_str(JVM_EXCEPTION_NOSUCHMETHOD, runtime,
+                                                                       utf8_cstr(cmr->name));
                             push_ref(stack, (__refer) exception);
                             ret = RUNTIME_STATUS_EXCEPTION;
                         }
@@ -3521,10 +3225,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_invokestatic:
                     case op_invokestatic: {
-                        Short2Char s2c;
-                        s2c.c1 = opCode[1];
-                        s2c.c0 = opCode[2];
-                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, s2c.us);
+
+                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (opCode + 1)));
 
                         MethodInfo *m = cmr->methodInfo;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 3
@@ -3541,7 +3243,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         if (m) {
                             ret = execute_method_impl(m, runtime);
                         } else {
-                            Instance *exception = exception_create_str(JVM_EXCEPTION_NOSUCHMETHOD, runtime, utf8_cstr(cmr->name));
+                            Instance *exception = exception_create_str(JVM_EXCEPTION_NOSUCHMETHOD, runtime,
+                                                                       utf8_cstr(cmr->name));
                             push_ref(stack, (__refer) exception);
                             ret = RUNTIME_STATUS_EXCEPTION;
                         }
@@ -3566,13 +3269,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_invokeinterface:
                     case op_invokeinterface: {
-                        Short2Char s2c;
-                        s2c.c1 = opCode[1];
-                        s2c.c0 = opCode[2];
+
 
                         s32 paraCount = (u8) opCode[3];
 
-                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, s2c.us);
+                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (opCode + 1)));
                         Instance *ins = getInstanceInStack(cmr, stack);
                         if (ins == NULL) {
                             Instance *exception = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
@@ -3603,7 +3304,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (m) {
                                 ret = execute_method_impl(m, runtime);
                             } else {
-                                Instance *exception = exception_create_str(JVM_EXCEPTION_NOSUCHMETHOD, runtime, utf8_cstr(cmr->name));
+                                Instance *exception = exception_create_str(JVM_EXCEPTION_NOSUCHMETHOD, runtime,
+                                                                           utf8_cstr(cmr->name));
                                 push_ref(stack, (__refer) exception);
                                 ret = RUNTIME_STATUS_EXCEPTION;
                             }
@@ -3628,12 +3330,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_invokedynamic:
                     case op_invokedynamic: {
-                        Short2Char s2c;
-                        s2c.c1 = opCode[1];
-                        s2c.c0 = opCode[2];
+
 
                         //get bootMethod struct
-                        ConstantInvokeDynamic *cid = class_get_invoke_dynamic(clazz, s2c.us);
+                        ConstantInvokeDynamic *cid = class_get_invoke_dynamic(clazz, *((u16 *) (opCode + 1)));
                         BootstrapMethod *bootMethod = &clazz->bootstrapMethodAttr->bootstrap_methods[cid->bootstrap_method_attr_index];//Boot
 
                         if (bootMethod->make == NULL) {
@@ -3658,11 +3358,17 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             Instance *lookup = method_handles_lookup_create(runtime, clazz);
                             push_ref(stack, lookup); //lookup
 
-                            Utf8String *ustr_invokeName = class_get_constant_utf8(clazz, class_get_constant_name_and_type(clazz, cid->nameAndTypeIndex)->nameIndex)->utfstr;
+                            Utf8String *ustr_invokeName = class_get_constant_utf8(clazz,
+                                                                                  class_get_constant_name_and_type(
+                                                                                          clazz,
+                                                                                          cid->nameAndTypeIndex)->nameIndex)->utfstr;
                             Instance *jstr_invokeName = jstring_create(ustr_invokeName, runtime);
                             push_ref(stack, jstr_invokeName); //invokeName
 
-                            Utf8String *ustr_invokeType = class_get_constant_utf8(clazz, class_get_constant_name_and_type(clazz, cid->nameAndTypeIndex)->typeIndex)->utfstr;
+                            Utf8String *ustr_invokeType = class_get_constant_utf8(clazz,
+                                                                                  class_get_constant_name_and_type(
+                                                                                          clazz,
+                                                                                          cid->nameAndTypeIndex)->typeIndex)->utfstr;
                             Instance *mt_invokeType = method_type_create(runtime, ustr_invokeType);
                             push_ref(stack, mt_invokeType); //invokeMethodType
 
@@ -3688,7 +3394,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     }
                                     case CONSTANT_METHOD_HANDLE: {
                                         ConstantMethodHandle *cmh = (ConstantMethodHandle *) item;
-                                        MethodInfo *mip = find_methodInfo_by_methodref(clazz, cmh->reference_index, runtime);
+                                        MethodInfo *mip = find_methodInfo_by_methodref(clazz, cmh->reference_index,
+                                                                                       runtime);
                                         Instance *mh = method_handle_create(runtime, mip, cmh->reference_kind);
                                         push_ref(stack, mh);
                                         break;
@@ -3701,13 +3408,18 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             }
 
                             //get bootmethod
-                            MethodInfo *boot_m = find_methodInfo_by_methodref(clazz, class_get_method_handle(clazz, bootMethod->bootstrap_method_ref)->reference_index, runtime);
+                            MethodInfo *boot_m = find_methodInfo_by_methodref(clazz, class_get_method_handle(clazz,
+                                                                                                             bootMethod->bootstrap_method_ref)->reference_index,
+                                                                              runtime);
 
                             if (boot_m) {
 
                                 ret = execute_method_impl(boot_m, runtime);
                                 if (ret == RUNTIME_STATUS_NORMAL) {
-                                    MethodInfo *finder = find_methodInfo_by_name_c("org/mini/reflect/vm/LambdaUtil", "getMethodInfoHandle", "(Ljava/lang/invoke/CallSite;)J", runtime);
+                                    MethodInfo *finder = find_methodInfo_by_name_c("org/mini/reflect/vm/LambdaUtil",
+                                                                                   "getMethodInfoHandle",
+                                                                                   "(Ljava/lang/invoke/CallSite;)J",
+                                                                                   runtime);
                                     if (finder) {
                                         //run finder to convert calsite.target(MethodHandle) to MethodInfo * pointer
                                         ret = execute_method_impl(finder, runtime);
@@ -3766,11 +3478,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_new:
                     case op_new: {
-                        Short2Char s2c;
-                        s2c.c1 = opCode[1];
-                        s2c.c0 = opCode[2];
 
-                        ConstantClassRef *ccf = class_get_constant_classref(clazz, s2c.us);
+                        ConstantClassRef *ccf = class_get_constant_classref(clazz, *((u16 *) (opCode + 1)));
                         if (!ccf->clazz) {
                             Utf8String *clsName = class_get_utf8_string(clazz, ccf->stringIndex);
                             ccf->clazz = classes_load_get(clsName, runtime);
@@ -3824,18 +3533,16 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_anewarray:
                     case op_anewarray: {
-                        Short2Char s2c;
-                        s2c.c1 = opCode[1];
-                        s2c.c0 = opCode[2];
+                        u16 idx = *((u16 *) (opCode + 1));
 
                         s32 count = pop_int(stack);
 
-                        JClass *arr_class = pairlist_get(clazz->arr_class_type, (__refer) (intptr_t) s2c.us);
+                        JClass *arr_class = pairlist_get(clazz->arr_class_type, (__refer) (intptr_t) idx);
 
                         Instance *arr = NULL;
                         if (!arr_class) {//cache to speed
-                            arr_class = array_class_get_by_name(runtime, class_get_utf8_string(clazz, s2c.us));
-                            pairlist_put(clazz->arr_class_type, (__refer) (intptr_t) s2c.us, arr_class);
+                            arr_class = array_class_get_by_name(runtime, class_get_utf8_string(clazz, idx));
+                            pairlist_put(clazz->arr_class_type, (__refer) (intptr_t) idx, arr_class);
                         }
                         arr = jarray_create_by_class(runtime, count, arr_class);
 
@@ -3912,11 +3619,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     label_checkcast:
                     case op_checkcast: {
                         Instance *ins = (Instance *) pop_ref(stack);
-                        Short2Char s2c;
-                        s2c.c1 = opCode[1];
-                        s2c.c0 = opCode[2];
 
-                        s32 typeIdx = s2c.us;
+
+                        s32 typeIdx = *((u16 *) (opCode + 1));
                         s32 checkok = 0;
                         if (ins != NULL) {
                             if (ins->mb.type == MEM_TYPE_INS) {
@@ -3970,11 +3675,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     label_instanceof:
                     case op_instanceof: {
                         Instance *ins = (Instance *) pop_ref(stack);
-                        Short2Char s2c;
-                        s2c.c1 = opCode[1];
-                        s2c.c0 = opCode[2];
 
-                        s32 typeIdx = s2c.us;
+
+                        s32 typeIdx = *((u16 *) (opCode + 1));
 
                         s32 checkok = 0;
                         if (ins == NULL) {
@@ -4040,46 +3743,31 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             case op_iload:
                             case op_fload:
                             case op_aload: {
-                                Short2Char s2c;
-                                s2c.c1 = opCode[1];
-                                s2c.c0 = opCode[2];
-                                _op_load_1_slot(stack, localvar, runtime, s2c.us);
+                                _op_load_1_slot(stack, localvar, runtime, *((u16 *) (opCode + 1)));
                                 opCode += 3;
                                 break;
                             }
                             case op_lload:
                             case op_dload: {
-                                Short2Char s2c;
-                                s2c.c1 = opCode[1];
-                                s2c.c0 = opCode[2];
-                                _op_load_2_slot(stack, localvar, runtime, s2c.us);
+                                _op_load_2_slot(stack, localvar, runtime, *((u16 *) (opCode + 1)));
                                 opCode += 3;
                                 break;
                             }
                             case op_istore:
                             case op_fstore:
                             case op_astore: {
-                                Short2Char s2c;
-                                s2c.c1 = opCode[1];
-                                s2c.c0 = opCode[2];
-                                _op_store_1_slot(stack, localvar, runtime, s2c.us);
+                                _op_store_1_slot(stack, localvar, runtime, *((u16 *) (opCode + 1)));
                                 opCode += 3;
                                 break;
                             }
                             case op_lstore:
                             case op_dstore: {
-                                Short2Char s2c;
-                                s2c.c1 = opCode[1];
-                                s2c.c0 = opCode[2];
-                                _op_store_2_slot(stack, localvar, runtime, s2c.us);
+                                _op_store_2_slot(stack, localvar, runtime, *((u16 *) (opCode + 1)));
                                 opCode += 3;
                                 break;
                             }
                             case op_ret: {
-                                Short2Char s2c;
-                                s2c.c1 = opCode[1];
-                                s2c.c0 = opCode[2];
-                                __refer addr = localvar_getRefer(localvar, s2c.us);
+                                __refer addr = localvar_getRefer(localvar, *((u16 *) (opCode + 1)));
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                                 invoke_deepth(runtime);
@@ -4089,14 +3777,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 break;
                             }
                             case op_iinc    : {
-                                Short2Char s2c1, s2c2;
 
-                                s2c1.c1 = opCode[1];
-                                s2c1.c0 = opCode[2];
-                                s2c2.c1 = opCode[3];
-                                s2c2.c0 = opCode[4];
-
-                                localvar[s2c1.us].ivalue += s2c2.s;
+                                localvar[*((u16 *) (opCode + 1))].ivalue += *((s16 *) (opCode + 3));
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                                 invoke_deepth(runtime);
                                 jvm_printf("wide iinc: localvar(%d) = %d , inc %d\n", s2c1.s, localvar[s2c1.us].ivalue, s2c2.s);
@@ -4113,11 +3795,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     label_multianewarray:
                     case op_multianewarray: {
                         //data type index
-                        Short2Char s2c;
-                        s2c.c1 = opCode[1];
-                        s2c.c0 = opCode[2];
 
-                        Utf8String *desc = class_get_utf8_string(clazz, s2c.us);
+                        Utf8String *desc = class_get_utf8_string(clazz, *((u16 *) (opCode + 1)));
                         //array dim
                         s32 count = (u8) opCode[3];
 #ifdef __JVM_OS_VS__
@@ -4157,10 +3836,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     case op_ifnull: {
                         __refer ref = pop_ref(stack);
                         if (!ref) {
-                            Short2Char s2c;
-                            s2c.c1 = opCode[1];
-                            s2c.c0 = opCode[2];
-                            opCode += s2c.s;
+
+                            opCode += *((s16 *) (opCode + 1));
                         } else {
                             opCode += 3;
                         }
@@ -4178,10 +3855,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     case op_ifnonnull: {
                         __refer ref = pop_ref(stack);
                         if (ref) {
-                            Short2Char s2c;
-                            s2c.c1 = opCode[1];
-                            s2c.c0 = opCode[2];
-                            opCode += s2c.s;
+                            opCode += *((s16 *) (opCode + 1));
                         } else {
                             opCode += 3;
                         }
@@ -4208,13 +3882,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_goto_w:
                     case op_goto_w: {
-                        Int2Float i2f;
-                        i2f.c3 = opCode[1];
-                        i2f.c2 = opCode[2];
-                        i2f.c1 = opCode[3];
-                        i2f.c0 = opCode[4];
 
-                        s32 branchoffset = i2f.i;
+                        s32 branchoffset = *((s32 *) (opCode + 1));
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -4228,13 +3897,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_jsr_w:
                     case op_jsr_w: {
-                        Int2Float i2f;
-                        i2f.c3 = opCode[1];
-                        i2f.c2 = opCode[2];
-                        i2f.c1 = opCode[3];
-                        i2f.c0 = opCode[4];
 
-                        s32 branchoffset = i2f.i;
+                        s32 branchoffset = *((s32 *) (opCode + 1));
                         push_ref(stack, (__refer) (opCode + 3));
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);

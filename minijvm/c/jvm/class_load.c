@@ -690,6 +690,630 @@ s32 _parse_constant_pool(JClass *_this, ByteBuf *buf, s32 count) {
     return 0;
 }
 
+/**
+ *  change bytes order in  method bytecode to cpu bytes order
+ * @param method
+ */
+void _changeBytesOrder(MethodInfo *method) {
+    CodeAttribute *ca = method->converted_code;
+    u8 *opCode = ca->code;
+    u8 *end = ca->code_length + opCode;
+    //jvm_printf("adapte method %s.%s()\n", method->_this_class->name->data, method->name->data);
+    while (opCode < end) {
+        u8 cur_inst = *opCode;
+        s32 pc = opCode - ca->code;
+        if (cur_inst < op_breakpoint) {
+//            if (utf8_equals_c(method->name, "test_typecast"))
+//                jvm_printf("%8d, %s\n", pc, inst_name[cur_inst]);
+        } else {
+            int debug = 1;
+        }
+        switch (cur_inst) {
+            case op_nop:
+            case op_aconst_null:
+            case op_iconst_m1:
+            case op_iconst_0:
+            case op_iconst_1:
+            case op_iconst_2:
+            case op_iconst_3:
+            case op_iconst_4:
+            case op_iconst_5:
+            case op_lconst_0:
+            case op_lconst_1:
+            case op_fconst_0:
+            case op_fconst_1:
+            case op_fconst_2:
+            case op_dconst_0:
+            case op_dconst_1: {
+                opCode++;
+                break;
+            }
+            case op_bipush: {
+                opCode += 2;
+                break;
+            }
+            case op_sipush: {
+                Short2Char s2c;
+                s2c.c1 = opCode[1];
+                s2c.c0 = opCode[2];
+                u8 *addr = opCode + 1;
+                *((u16 *) addr) = s2c.us;
+                opCode += 3;
+                break;
+            }
+
+
+            case op_ldc: {
+
+                opCode += 2;
+                break;
+            }
+
+            case op_ldc_w: {
+                Short2Char s2c;
+                s2c.c1 = opCode[1];
+                s2c.c0 = opCode[2];
+                u8 *addr = opCode + 1;
+                *((u16 *) addr) = s2c.us;
+                opCode += 3;
+                break;
+            }
+
+            case op_ldc2_w: {
+                Short2Char s2c;
+                s2c.c1 = opCode[1];
+                s2c.c0 = opCode[2];
+
+                u8 *addr = opCode + 1;
+                *((u16 *) addr) = s2c.us;
+                opCode += 3;
+
+                break;
+            }
+
+
+            case op_iload:
+            case op_fload:
+            case op_aload: {
+                opCode += 2;
+                break;
+            }
+            case op_lload:
+            case op_dload: {
+                opCode += 2;
+                break;
+            }
+
+            case op_iload_0:
+            case op_iload_1:
+            case op_iload_2:
+            case op_iload_3:
+            case op_lload_0:
+            case op_lload_1:
+            case op_lload_2:
+            case op_lload_3:
+            case op_fload_0:
+            case op_fload_1:
+            case op_fload_2:
+            case op_fload_3:
+            case op_dload_0:
+            case op_dload_1:
+            case op_dload_2:
+            case op_dload_3:
+            case op_aload_0:
+            case op_aload_1:
+            case op_aload_2:
+            case op_aload_3:
+            case op_iaload:
+            case op_faload:
+            case op_laload:
+            case op_daload:
+            case op_aaload:
+            case op_baload:
+            case op_caload:
+            case op_saload: {
+                opCode++;
+                break;
+            }
+            case op_istore:
+            case op_fstore:
+            case op_astore:
+            case op_lstore:
+            case op_dstore: {
+                opCode += 2;
+                break;
+            }
+
+            case op_istore_0:
+            case op_istore_1:
+            case op_istore_2:
+            case op_istore_3:
+            case op_lstore_0:
+            case op_lstore_1:
+            case op_lstore_2:
+            case op_lstore_3:
+            case op_fstore_0:
+            case op_fstore_1:
+            case op_fstore_2:
+            case op_fstore_3:
+            case op_dstore_0:
+            case op_dstore_1:
+            case op_dstore_2:
+            case op_dstore_3:
+            case op_astore_0:
+            case op_astore_1:
+            case op_astore_2:
+            case op_astore_3:
+            case op_fastore:
+            case op_iastore:
+            case op_dastore:
+            case op_lastore:
+            case op_aastore:
+            case op_bastore:
+            case op_castore:
+            case op_sastore:
+            case op_pop:
+            case op_pop2:
+            case op_dup:
+            case op_dup_x1:
+            case op_dup_x2:
+            case op_dup2:
+            case op_dup2_x1:
+            case op_dup2_x2:
+            case op_swap:
+            case op_iadd:
+            case op_ladd:
+            case op_fadd:
+            case op_dadd:
+            case op_isub:
+            case op_lsub:
+            case op_fsub:
+            case op_dsub:
+            case op_imul:
+            case op_lmul:
+            case op_fmul:
+            case op_dmul:
+            case op_idiv:
+            case op_ldiv:
+            case op_fdiv:
+            case op_ddiv:
+            case op_irem:
+            case op_lrem:
+            case op_frem:
+            case op_drem:
+            case op_ineg:
+            case op_lneg:
+            case op_fneg:
+            case op_dneg:
+            case op_ishl:
+            case op_lshl:
+            case op_ishr:
+            case op_lshr:
+            case op_iushr:
+            case op_lushr:
+            case op_iand:
+            case op_land:
+            case op_ior:
+            case op_lor:
+            case op_ixor:
+            case op_lxor: {
+                opCode++;
+                break;
+            }
+
+            case op_iinc: {
+                opCode += 3;
+                break;
+            }
+
+            case op_i2l:
+            case op_i2f:
+            case op_i2d:
+            case op_l2i:
+            case op_l2f:
+            case op_l2d:
+            case op_f2i:
+            case op_f2l:
+            case op_f2d:
+            case op_d2i:
+            case op_d2l:
+            case op_d2f:
+            case op_i2b:
+            case op_i2c:
+            case op_i2s:
+            case op_lcmp:
+            case op_fcmpl:
+            case op_fcmpg:
+            case op_dcmpl:
+            case op_dcmpg: {
+                opCode++;
+                break;
+            }
+
+
+            case op_ifeq:
+            case op_ifne:
+            case op_iflt:
+            case op_ifge:
+            case op_ifgt:
+            case op_ifle:
+            case op_if_icmpeq:
+            case op_if_icmpne:
+            case op_if_icmplt:
+            case op_if_icmpge:
+            case op_if_icmpgt:
+            case op_if_icmple:
+            case op_if_acmpeq:
+            case op_if_acmpne:
+            case op_goto:
+            case op_jsr: {
+                Short2Char s2c;
+                s2c.c1 = opCode[1];
+                s2c.c0 = opCode[2];
+                u8 *addr = opCode + 1;
+                *((u16 *) addr) = s2c.us;
+                opCode += 3;
+                break;
+            }
+
+            case op_ret: {
+                opCode += 2;
+                break;
+            }
+
+
+            case op_tableswitch: {
+                s32 pos = 0;
+                pos = 4 - ((((u64) (intptr_t) opCode) - (u64) (intptr_t) (ca->code)) % 4);//4 byte对齐
+
+                u8 *addr = opCode + pos;
+                Int2Float i2c;
+                i2c.c3 = opCode[pos++];
+                i2c.c2 = opCode[pos++];
+                i2c.c1 = opCode[pos++];
+                i2c.c0 = opCode[pos++];
+                s32 default_offset = i2c.i;
+                *((s32 *) addr) = i2c.i;
+                addr += 4;
+                i2c.c3 = opCode[pos++];
+                i2c.c2 = opCode[pos++];
+                i2c.c1 = opCode[pos++];
+                i2c.c0 = opCode[pos++];
+                s32 low = i2c.i;
+                *((s32 *) addr) = i2c.i;
+                addr += 4;
+                i2c.c3 = opCode[pos++];
+                i2c.c2 = opCode[pos++];
+                i2c.c1 = opCode[pos++];
+                i2c.c0 = opCode[pos++];
+                s32 high = i2c.i;
+                *((s32 *) addr) = i2c.i;
+                addr += 4;
+                //
+                s32 i = low;
+                for (; i <= high; i++) {
+
+                    i2c.c3 = opCode[pos++];
+                    i2c.c2 = opCode[pos++];
+                    i2c.c1 = opCode[pos++];
+                    i2c.c0 = opCode[pos++];
+                    *((s32 *) addr) = i2c.i;
+                    addr += 4;
+                }
+                opCode += pos;
+                break;
+            }
+
+            case op_lookupswitch: {
+                s32 pos = 0;
+                pos = 4 - ((((u64) (intptr_t) opCode) - (u64) (intptr_t) (ca->code)) % 4);//4 byte对齐
+
+                u8 *addr = opCode + pos;
+
+                Int2Float i2c;
+                i2c.c3 = opCode[pos++];
+                i2c.c2 = opCode[pos++];
+                i2c.c1 = opCode[pos++];
+                i2c.c0 = opCode[pos++];
+                s32 default_offset = i2c.i;
+                *((s32 *) addr) = i2c.i;
+                i2c.c3 = opCode[pos++];
+                i2c.c2 = opCode[pos++];
+                i2c.c1 = opCode[pos++];
+                i2c.c0 = opCode[pos++];
+                s32 n = i2c.i;
+                addr += 4;
+                *((s32 *) addr) = i2c.i;
+                s32 i, key;
+
+                int offset = default_offset;
+                for (i = 0; i < n; i++) {
+                    i2c.c3 = opCode[pos++];
+                    i2c.c2 = opCode[pos++];
+                    i2c.c1 = opCode[pos++];
+                    i2c.c0 = opCode[pos++];
+                    key = i2c.i;
+                    addr += 4;
+                    *((s32 *) addr) = i2c.i;
+                    i2c.c3 = opCode[pos++];
+                    i2c.c2 = opCode[pos++];
+                    i2c.c1 = opCode[pos++];
+                    i2c.c0 = opCode[pos++];
+                    offset = i2c.i;
+                    addr += 4;
+                    *((s32 *) addr) = i2c.i;
+                }
+                opCode += pos;
+                break;
+            }
+
+            case op_lreturn:
+            case op_dreturn:
+            case op_ireturn:
+            case op_freturn:
+            case op_areturn:
+            case op_return: {
+                opCode++;
+                break;
+            }
+
+            case op_getstatic:
+            case op_putstatic:
+            case op_getfield:
+            case op_putfield: {
+                Short2Char s2c;
+                s2c.c1 = opCode[1];
+                s2c.c0 = opCode[2];
+
+                u8 *addr = opCode + 1;
+                *((u16 *) addr) = s2c.us;
+                opCode += 3;
+                break;
+            }
+
+            case op_invokevirtual: {
+                Short2Char s2c;
+                s2c.c1 = opCode[1];
+                s2c.c0 = opCode[2];
+
+                u8 *addr = opCode + 1;
+                *((u16 *) addr) = s2c.us;
+
+                opCode += 3;
+
+                break;
+            }
+
+
+            case op_invokespecial: {
+                Short2Char s2c;
+                s2c.c1 = opCode[1];
+                s2c.c0 = opCode[2];
+
+                u8 *addr = opCode + 1;
+                *((u16 *) addr) = s2c.us;
+                opCode += 3;
+
+                break;
+            }
+
+
+            case op_invokestatic: {
+                Short2Char s2c;
+                s2c.c1 = opCode[1];
+                s2c.c0 = opCode[2];
+                u8 *addr = opCode + 1;
+                *((u16 *) addr) = s2c.us;
+                opCode += 3;
+                break;
+            }
+
+
+            case op_invokeinterface: {
+                Short2Char s2c;
+                s2c.c1 = opCode[1];
+                s2c.c0 = opCode[2];
+
+                u8 *addr = opCode + 1;
+                *((u16 *) addr) = s2c.us;
+
+                opCode += 5;
+                break;
+            }
+
+            case op_invokedynamic: {
+                Short2Char s2c;
+                s2c.c1 = opCode[1];
+                s2c.c0 = opCode[2];
+
+                u8 *addr = opCode + 1;
+                *((u16 *) addr) = s2c.us;
+                opCode += 5;
+                break;
+            }
+
+
+            case op_new: {
+                Short2Char s2c;
+                s2c.c1 = opCode[1];
+                s2c.c0 = opCode[2];
+
+                u8 *addr = opCode + 1;
+                *((u16 *) addr) = s2c.us;
+                opCode += 3;
+
+                break;
+            }
+
+
+            case op_newarray: {
+                opCode += 2;
+                break;
+            }
+
+            case op_anewarray: {
+                Short2Char s2c;
+                s2c.c1 = opCode[1];
+                s2c.c0 = opCode[2];
+                u8 *addr = opCode + 1;
+                *((u16 *) addr) = s2c.us;
+                opCode += 3;
+
+                break;
+            }
+
+            case op_arraylength: {
+                opCode++;
+                break;
+            }
+
+
+            case op_athrow: {
+                opCode++;
+                break;
+            }
+
+            case op_checkcast: {
+                Short2Char s2c;
+                s2c.c1 = opCode[1];
+                s2c.c0 = opCode[2];
+
+                u8 *addr = opCode + 1;
+                *((u16 *) addr) = s2c.us;
+                opCode += 3;
+
+                break;
+            }
+
+
+            case op_instanceof: {
+                Short2Char s2c;
+                s2c.c1 = opCode[1];
+                s2c.c0 = opCode[2];
+
+                u8 *addr = opCode + 1;
+                *((u16 *) addr) = s2c.us;
+
+                opCode += 3;
+
+                break;
+            }
+
+            case op_monitorenter:
+            case op_monitorexit: {
+                opCode++;
+
+                break;
+            }
+
+            case op_wide: {
+                opCode++;
+
+                cur_inst = *opCode;
+                switch (cur_inst) {
+                    case op_iload:
+                    case op_fload:
+                    case op_aload:
+                    case op_lload:
+                    case op_dload:
+                    case op_istore:
+                    case op_fstore:
+                    case op_astore:
+                    case op_lstore:
+                    case op_dstore:
+                    case op_ret: {
+                        Short2Char s2c;
+                        s2c.c1 = opCode[1];
+                        s2c.c0 = opCode[2];
+                        u8 *addr = opCode + 1;
+                        *((u16 *) addr) = s2c.us;
+                        opCode += 3;
+                        break;
+                    }
+                    case op_iinc    : {
+                        Short2Char s2c1, s2c2;
+
+                        s2c1.c1 = opCode[1];
+                        s2c1.c0 = opCode[2];
+                        s2c2.c1 = opCode[3];
+                        s2c2.c0 = opCode[4];
+
+                        u8 *addr = opCode + 1;
+                        *((u16 *) addr) = s2c1.us;
+                        addr += 2;
+                        *((u16 *) addr) = s2c2.us;
+                        opCode += 5;
+                        break;
+                    }
+                    default:
+                        jvm_printf("instruct wide %x not found\n", cur_inst);
+                }
+                break;
+            }
+
+            case op_multianewarray: {
+                //data type index
+                Short2Char s2c;
+                s2c.c1 = opCode[1];
+                s2c.c0 = opCode[2];
+
+                u8 *addr = opCode + 1;
+                *((u16 *) addr) = s2c.us;
+                opCode += 4;
+                break;
+            }
+
+
+            case op_ifnull:
+            case op_ifnonnull: {
+                Short2Char s2c;
+                s2c.c1 = opCode[1];
+                s2c.c0 = opCode[2];
+                u8 *addr = opCode + 1;
+                *((u16 *) addr) = s2c.us;
+                opCode += 3;
+                break;
+            }
+
+            case op_breakpoint: {
+                opCode += 1;
+                break;
+            }
+
+
+            case op_goto_w: {
+                Int2Float i2f;
+                i2f.c3 = opCode[1];
+                i2f.c2 = opCode[2];
+                i2f.c1 = opCode[3];
+                i2f.c0 = opCode[4];
+
+                u8 *addr = opCode + 1;
+                *((s32 *) addr) = i2f.i;
+                opCode += 5;
+
+
+                break;
+            }
+
+            case op_jsr_w: {
+                Int2Float i2f;
+                i2f.c3 = opCode[1];
+                i2f.c2 = opCode[2];
+                i2f.c1 = opCode[3];
+                i2f.c0 = opCode[4];
+
+                u8 *addr = opCode + 1;
+                *((s32 *) addr) = i2f.i;
+                opCode += 5;
+                break;
+            }
+            default:
+                jvm_printf("adapte instruct %x not found\n", cur_inst);
+        }
+    }
+
+}
 
 s32 _convert_to_code_attribute(CodeAttribute *ca, AttributeInfo *attr, JClass *clazz) {
     s32 info_p = 0;
@@ -974,6 +1598,7 @@ void _class_optimize(JClass *clazz) {
                 jvm_free(ptr->attributes[j].info);//无用删除
                 ptr->attributes[j].info = NULL;
                 ptr->converted_code = ca;
+                _changeBytesOrder(ptr);
             }
         }
     }
