@@ -23,6 +23,10 @@ JdwpClient *jdwp_client_create(s32 sockfd);
 
 void jdwp_client_destory(JdwpClient *client);
 
+void resume_all_thread();
+
+void suspend_all_thread();
+
 //==================================================    server    ==================================================
 
 void jdwp_put_client(ArrayList *clients, JdwpClient *client) {
@@ -465,6 +469,24 @@ s32 jdwp_writepacket(JdwpClient *client, JdwpPacket *packet) {
 }
 
 //==================================================    toolkit    ==================================================
+
+void suspend_all_thread() {
+    s32 i;
+    for (i = 0; i < thread_list->length; i++) {
+        Runtime *t = threadlist_get(i);
+        if (t)jthread_suspend(t);
+        //jvm_printf("VirtualMachine_Suspend: %lld\n" + (s64) (intptr_t) t);
+    }
+}
+
+void resume_all_thread() {
+    s32 i;
+    for (i = 0; i < thread_list->length; i++) {
+        Runtime *t = threadlist_get(i);
+        if (t)jthread_resume(t);
+        //jvm_printf("VirtualMachine_Suspend: %lld\n" + (s64) (intptr_t) t);
+    }
+}
 
 Runtime *getRuntimeOfThread(Instance *jthread) {
     Runtime *r = NULL;
@@ -1372,27 +1394,22 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
                 jdwppacket_write_int(res, sizeof(__refer));
                 jdwppacket_write_int(res, sizeof(__refer));
                 jdwp_writepacket(client, res);
+
+
+                //this  is the first jdwp client command
+                resume_all_thread();
+
                 break;
             }
             case JDWP_CMD_VirtualMachine_Suspend: {//1.8
-                s32 i;
-                for (i = 0; i < thread_list->length; i++) {
-                    Runtime *t = threadlist_get(i);
-                    if (t)jthread_suspend(t);
-                    //jvm_printf("VirtualMachine_Suspend: %lld\n" + (s64) (intptr_t) t);
-                }
+                suspend_all_thread();
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
 
                 jdwp_writepacket(client, res);
                 break;
             }
             case JDWP_CMD_VirtualMachine_Resume: {//1.9
-                s32 i;
-                for (i = 0; i < thread_list->length; i++) {
-                    Runtime *t = threadlist_get(i);
-                    if (t)jthread_resume(t);
-                    //jvm_printf("VirtualMachine_Resume: %llx\n", (s64) (intptr_t) t);
-                }
+                resume_all_thread();
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
 
                 jdwp_writepacket(client, res);
@@ -1594,7 +1611,11 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
                 break;
             }
             case JDWP_CMD_ReferenceType_Status: {//2.9
-                jvm_printf("%x not support\n", jdwppacket_get_cmd_err(req));
+                JClass *ref = jdwppacket_read_refer(req);
+                jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                jdwppacket_write_int(res, getClassStatus(ref));
+                //jvm_printf("JDWP_CMD_ReferenceType_Status:%s\n", utf8_cstr(ref->name));
+                jdwp_writepacket(client, res);
                 break;
             }
             case JDWP_CMD_ReferenceType_Interfaces: {//2.10
@@ -1818,7 +1839,6 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
                     push_ref(runtime->stack, object);
                 }
                 runtime->clazz = clazz;
-                Long2Double l2d;
                 s32 i;
                 for (i = 0; i < arguments; i++) {
                     ValueType vt;
@@ -2208,10 +2228,8 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
                             }
                             case '8':
                                 l2d.l = localvar_getLong(frame->localvar, slot);
-//                                l2d.i2l.i1 = localvar_getInt(frame->localvar, slot);
-//                                l2d.i2l.i0 = localvar_getInt(frame->localvar, slot + 1);
                                 vt.value = l2d.l;
-                                i++;
+                                //can't skip i, localvar getvalue from received slot .
                                 break;
                             case '4':
                             case '2':
@@ -2246,9 +2264,6 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
                             case '8':
                                 l2d.l = vt.value;
                                 localvar_setLong(frame->localvar, slot, l2d.l);
-//                                localvar_setInt(frame->localvar, slot, l2d.i2l.i0);
-//                                localvar_setInt(frame->localvar, slot + 1, l2d.i2l.i1);
-                                i++;
                                 break;
                             case '4':
                             case '2':

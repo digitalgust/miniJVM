@@ -721,7 +721,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     case op_sipush: {
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("sipush value %d\n", s2c.s);
+                        jvm_printf("sipush value %d\n", *((s16 *) (opCode + 1)));
 #endif
                         push_int(stack, *((s16 *) (opCode + 1)));
                         opCode += 3;
@@ -753,7 +753,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         push_long(stack, value);
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("ldc2_w: push a constant(%d) [%llx] onto the stack \n", s2c.us, value);
+                        jvm_printf("ldc2_w: push a constant(%d) [%llx] onto the stack \n", *((u16 *) (opCode + 1)), value);
 #endif
                         opCode += 3;
 
@@ -3791,7 +3791,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 localvar[*((u16 *) (opCode + 1))].ivalue += *((s16 *) (opCode + 3));
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                                 invoke_deepth(runtime);
-                                jvm_printf("wide iinc: localvar(%d) = %d , inc %d\n", s2c1.s, localvar[s2c1.us].ivalue, s2c2.s);
+                                jvm_printf("wide iinc: localvar(%d) = %d , inc %d\n", *((u16 *) (opCode + 1)), localvar[*((u16 *) (opCode + 1))].ivalue, *((u16 *) (opCode + 3)));
 #endif
                                 opCode += 5;
                                 break;

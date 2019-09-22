@@ -239,6 +239,17 @@ void jvm_init(c8 *p_classpath, StaticLibRegFunc regFunc) {
     jdwp_start_server();
 
     set_jvm_state(JVM_STATUS_RUNNING);
+
+    //init load thread, string etc
+    Runtime *runtime = runtime_create(NULL);
+    Utf8String *clsName = utf8_create_c("java/lang/Integer");
+    classes_load_get(clsName,runtime);
+    thread_boundle(runtime);
+    //开始装载类
+    utf8_destory(clsName);
+    thread_unboundle(runtime);
+    runtime_destory(runtime);
+    runtime=NULL;
 }
 
 void jvm_destroy(StaticLibRegFunc unRegFunc) {
