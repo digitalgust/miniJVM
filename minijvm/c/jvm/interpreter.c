@@ -173,28 +173,56 @@ static inline s32 exception_handle(RuntimeStack *stack, Runtime *runtime) {
 #if _JVM_DEBUG_BYTECODE_DETAIL > 3
     JClass *clazz = runtime->clazz;
     s32 lineNum = getLineNumByIndex(runtime->ca, runtime->pc - runtime->ca->code);
-    printf("   at %s.%s(%s.java:%d)\n",
+    jvm_printf("Exception   at %s.%s(%s.java:%d)\n",
            utf8_cstr(clazz->name), utf8_cstr(runtime->method->name),
            utf8_cstr(clazz->name),
            lineNum
     );
 #endif
-    ExceptionTable *et = _find_exception_handler(runtime, ins, runtime->ca, (s32) (runtime->pc - runtime->ca->code),
-                                                 ins);
+    ExceptionTable *et = _find_exception_handler(runtime, ins, runtime->ca, (s32) (runtime->pc - runtime->ca->code), ins);
     if (et == NULL) {
         Instance *ins = pop_ref(stack);
         localvar_dispose(runtime);
         push_ref(stack, ins);
-        return 1;
+        return 0;
     } else {
 #if _JVM_DEBUG_BYTECODE_DETAIL > 3
         jvm_printf("Exception : %s\n", utf8_cstr(ins->mb.clazz->name));
 #endif
         runtime->pc = (runtime->ca->code + et->handler_pc);
-        return 0;
+        return 1;
     }
 
 }
+
+static inline s32 _jarray_check_exception(Instance *arr, s32 index, Runtime *runtime) {
+    if (!arr) {
+        Instance *exception = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
+        push_ref(runtime->stack, (__refer) exception);
+    } else if (index >= arr->arr_length || index < 0) {
+        Instance *exception = exception_create(JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS, runtime);
+        push_ref(runtime->stack, (__refer) exception);
+    } else {
+        return RUNTIME_STATUS_NORMAL;
+    }
+    return RUNTIME_STATUS_EXCEPTION;
+}
+
+static inline void _null_throw_exception(RuntimeStack *stack, Runtime *runtime) {
+    Instance *exception = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
+    push_ref(stack, (__refer) exception);
+}
+
+static inline void _nosuchmethod_check_exception(c8 *mn, RuntimeStack *stack, Runtime *runtime) {
+    Instance *exception = exception_create_str(JVM_EXCEPTION_NOSUCHMETHOD, runtime, mn);
+    push_ref(stack, (__refer) exception);
+}
+
+static inline void _arrithmetic_throw_exception(RuntimeStack *stack, Runtime *runtime) {
+    Instance *exception = exception_create(JVM_EXCEPTION_ARRITHMETIC, runtime);
+    push_ref(stack, (__refer) exception);
+}
+
 
 static s32 filterClassName(Utf8String *clsName) {
     if (utf8_indexof_c(clsName, "com/sun") < 0
@@ -270,7 +298,7 @@ static inline void _synchronized_unlock_method(MethodInfo *method, Runtime *runt
 
 s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
-    static __refer opcode_addr[0xCB] = {
+    static __refer opcode_addr[0xFF] = {
             GET_LABEL_ADDRESS(label_nop),
             GET_LABEL_ADDRESS(label_aconst_null),
             GET_LABEL_ADDRESS(label_iconst_m1),
@@ -473,21 +501,45 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             GET_LABEL_ADDRESS(label_ifnonnull),
             GET_LABEL_ADDRESS(label_goto_w),
             GET_LABEL_ADDRESS(label_jsr_w),
-            GET_LABEL_ADDRESS(label_breakpoint)
+            GET_LABEL_ADDRESS(label_breakpoint),
+            GET_LABEL_ADDRESS(label_getstatic_ref),
+            GET_LABEL_ADDRESS(label_getstatic_long),
+            GET_LABEL_ADDRESS(label_getstatic_int),
+            GET_LABEL_ADDRESS(label_getstatic_short),
+            GET_LABEL_ADDRESS(label_getstatic_jchar),
+            GET_LABEL_ADDRESS(label_getstatic_byte),
+            GET_LABEL_ADDRESS(label_putstatic_ref),
+            GET_LABEL_ADDRESS(label_putstatic_long),
+            GET_LABEL_ADDRESS(label_putstatic_int),
+            GET_LABEL_ADDRESS(label_putstatic_short),
+            GET_LABEL_ADDRESS(label_putstatic_byte),
+            GET_LABEL_ADDRESS(label_getfield_ref),
+            GET_LABEL_ADDRESS(label_getfield_long),
+            GET_LABEL_ADDRESS(label_getfield_int),
+            GET_LABEL_ADDRESS(label_getfield_short),
+            GET_LABEL_ADDRESS(label_getfield_byte),
+            GET_LABEL_ADDRESS(label_putfield_ref),
+            GET_LABEL_ADDRESS(label_putfield_long),
+            GET_LABEL_ADDRESS(label_putfield_int),
+            GET_LABEL_ADDRESS(label_putfield_short),
+            GET_LABEL_ADDRESS(label_putfield_jchar),
+            GET_LABEL_ADDRESS(label_putfield_byte),
+            GET_LABEL_ADDRESS(label_invokevirtual_fast),
+            GET_LABEL_ADDRESS(label_invokespecial_fast),
+            GET_LABEL_ADDRESS(label_invokestatic_fast),
+            GET_LABEL_ADDRESS(label_invokeinterface_fast),
+            GET_LABEL_ADDRESS(label_invokedynamic_fast),
     };
 
     s32 ret;
     Runtime *runtime;
     JClass *clazz;
     RuntimeStack *stack;
-    CodeAttribute *ca;
     LocalVarItem *localvar;
-    u8 *opCode;
-    u8 cur_inst;
-    s32 exit_exec;
+    register u8 *opCode;
+
 
     ret = RUNTIME_STATUS_NORMAL;
-
     runtime = runtime_create_inl(pruntime);
     clazz = method->_this_class;
     runtime->method = method;
@@ -506,7 +558,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
     stack = runtime->stack;
 
     if (!(method->is_native)) {
-        ca = method->converted_code;
+        CodeAttribute *ca = method->converted_code;
         if (ca) {
             if (ca->code_length == 1 && *ca->code == op_return) {//empty method, do nothing
                 s32 paras = method->para_slots;
@@ -544,10 +596,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             runtime->ca = ca;
             JavaThreadInfo *threadInfo = runtime->threadInfo;
 
-            exit_exec = 0;
-            while (!exit_exec) {
+            do {
                 runtime->pc = opCode;
-                cur_inst = *opCode;
+                u8 cur_inst = *opCode;
                 if (JDWP_DEBUG) {
                     //breakpoint
                     if (method->breakpoint) {
@@ -927,7 +978,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     case op_faload: {
                         s32 index = pop_int(stack);
                         Instance *arr = (Instance *) pop_ref(stack);
-                        ret = jarray_check_exception(arr, index, runtime);
+                        ret = _jarray_check_exception(arr, index, runtime);
                         if (!ret) {
                             s32 s = *((s32 *) (arr->arr_body) + index);
                             push_int(stack, s);
@@ -939,12 +990,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                             opCode++;
                         } else {
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+                            goto label_exception_handle;
                         }
 
                         break;
@@ -956,7 +1002,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     case op_daload: {
                         s32 index = pop_int(stack);
                         Instance *arr = (Instance *) pop_ref(stack);
-                        ret = jarray_check_exception(arr, index, runtime);
+                        ret = _jarray_check_exception(arr, index, runtime);
                         if (!ret) {
                             s64 s = *(((s64 *) arr->arr_body) + index);
                             push_long(stack, s);
@@ -969,12 +1015,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                             opCode++;
                         } else {
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+                            goto label_exception_handle;
                         }
                         break;
                     }
@@ -983,7 +1024,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     case op_aaload: {
                         s32 index = pop_int(stack);
                         Instance *arr = (Instance *) pop_ref(stack);
-                        ret = jarray_check_exception(arr, index, runtime);
+                        ret = _jarray_check_exception(arr, index, runtime);
                         if (!ret) {
                             __refer s = *(((__refer *) arr->arr_body) + index);
                             push_ref(stack, s);
@@ -996,12 +1037,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                             opCode++;
                         } else {
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+                            goto label_exception_handle;
                         }
                         break;
                     }
@@ -1010,7 +1046,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     case op_baload: {
                         s32 index = pop_int(stack);
                         Instance *arr = (Instance *) pop_ref(stack);
-                        ret = jarray_check_exception(arr, index, runtime);
+                        ret = _jarray_check_exception(arr, index, runtime);
                         if (!ret) {
                             s32 s = *(((s8 *) arr->arr_body) + index);
                             push_int(stack, s);
@@ -1023,12 +1059,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                             opCode++;
                         } else {
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+                            goto label_exception_handle;
                         }
                         break;
                     }
@@ -1037,7 +1068,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     case op_caload: {
                         s32 index = pop_int(stack);
                         Instance *arr = (Instance *) pop_ref(stack);
-                        ret = jarray_check_exception(arr, index, runtime);
+                        ret = _jarray_check_exception(arr, index, runtime);
                         if (!ret) {
                             s32 s = *(((u16 *) arr->arr_body) + index);
                             push_int(stack, s);
@@ -1050,12 +1081,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                             opCode++;
                         } else {
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+                            goto label_exception_handle;
                         }
                         break;
                     }
@@ -1064,7 +1090,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     case op_saload: {
                         s32 index = pop_int(stack);
                         Instance *arr = (Instance *) pop_ref(stack);
-                        ret = jarray_check_exception(arr, index, runtime);
+                        ret = _jarray_check_exception(arr, index, runtime);
                         if (!ret) {
                             s32 s = *(((s16 *) arr->arr_body) + index);
                             push_int(stack, s);
@@ -1077,12 +1103,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                             opCode++;
                         } else {
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+                            goto label_exception_handle;
                         }
                         break;
                     }
@@ -1259,7 +1280,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         s32 i = pop_int(stack);
                         s32 index = pop_int(stack);
                         Instance *jarr = (Instance *) pop_ref(stack);
-                        ret = jarray_check_exception(jarr, index, runtime);
+                        ret = _jarray_check_exception(jarr, index, runtime);
                         if (!ret) {
                             *(((s32 *) jarr->arr_body) + index) = i;
 
@@ -1271,12 +1292,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                             opCode++;
                         } else {
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+                            goto label_exception_handle;
                         }
                         break;
                     }
@@ -1288,7 +1304,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         s64 j = pop_long(stack);
                         s32 index = pop_int(stack);
                         Instance *jarr = (Instance *) pop_ref(stack);
-                        ret = jarray_check_exception(jarr, index, runtime);
+                        ret = _jarray_check_exception(jarr, index, runtime);
                         if (!ret) {
                             *(((s64 *) jarr->arr_body) + index) = j;
 
@@ -1300,12 +1316,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                             opCode++;
                         } else {
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+                            goto label_exception_handle;
                         }
                         break;
                     }
@@ -1316,7 +1327,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         __refer r = pop_ref(stack);
                         s32 index = pop_int(stack);
                         Instance *jarr = (Instance *) pop_ref(stack);
-                        ret = jarray_check_exception(jarr, index, runtime);
+                        ret = _jarray_check_exception(jarr, index, runtime);
                         if (!ret) {
                             *(((__refer *) jarr->arr_body) + index) = r;
 
@@ -1328,12 +1339,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                             opCode++;
                         } else {
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+                            goto label_exception_handle;
                         }
                         break;
                     }
@@ -1343,7 +1349,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         s32 i = pop_int(stack);
                         s32 index = pop_int(stack);
                         Instance *jarr = (Instance *) pop_ref(stack);
-                        ret = jarray_check_exception(jarr, index, runtime);
+                        ret = _jarray_check_exception(jarr, index, runtime);
                         if (!ret) {
                             *(((s8 *) jarr->arr_body) + index) = (s8) i;
 
@@ -1355,12 +1361,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                             opCode++;
                         } else {
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+                            goto label_exception_handle;
                         }
                         break;
                     }
@@ -1371,7 +1372,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         s32 i = pop_int(stack);
                         s32 index = pop_int(stack);
                         Instance *jarr = (Instance *) pop_ref(stack);
-                        ret = jarray_check_exception(jarr, index, runtime);
+                        ret = _jarray_check_exception(jarr, index, runtime);
                         if (!ret) {
                             *(((u16 *) jarr->arr_body) + index) = i;
 
@@ -1383,12 +1384,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                             opCode++;
                         } else {
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+                            goto label_exception_handle;
                         }
                         break;
                     }
@@ -1398,7 +1394,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         s32 i = pop_int(stack);
                         s32 index = pop_int(stack);
                         Instance *jarr = (Instance *) pop_ref(stack);
-                        ret = jarray_check_exception(jarr, index, runtime);
+                        ret = _jarray_check_exception(jarr, index, runtime);
                         if (!ret) {
                             *(((s16 *) jarr->arr_body) + index) = i;
 
@@ -1410,12 +1406,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                             opCode++;
                         } else {
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+                            goto label_exception_handle;
                         }
                         break;
                     }
@@ -1518,7 +1509,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("op_dup2\n");
+                        jvm_printf("dup2\n");
 #endif
                         opCode++;
 
@@ -1801,15 +1792,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("idiv: %d / %d = %d\n", value1, value2, value2 / value1);
 #endif
                         if (!value1) {
-                            Instance *exception = exception_create(JVM_EXCEPTION_ARRITHMETIC, runtime);
-                            push_ref(stack, (__refer) exception);
+                            _arrithmetic_throw_exception(stack, runtime);
                             ret = RUNTIME_STATUS_EXCEPTION;
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+                            goto label_exception_handle;
                         } else {
                             s32 result = value2 / value1;
                             push_int(stack, result);
@@ -1828,15 +1813,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("ldiv: %lld / %lld = %lld\n", value2, value1, value2 / value1);
 #endif
                         if (!value1) {
-                            Instance *exception = exception_create(JVM_EXCEPTION_ARRITHMETIC, runtime);
-                            push_ref(stack, (__refer) exception);
+                            _arrithmetic_throw_exception(stack, runtime);
                             ret = RUNTIME_STATUS_EXCEPTION;
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+                            goto label_exception_handle;
                         } else {
                             s64 result = value2 / value1;
                             push_long(stack, result);
@@ -2501,7 +2480,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("op_ifeq: %d != 0  then jump \n", val);
+                        jvm_printf("ifeq: %d != 0  then jump \n", val);
 #endif
 
 
@@ -2518,7 +2497,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("op_ifne: %d != 0  then jump\n", val);
+                        jvm_printf("ifne: %d != 0  then jump\n", val);
 #endif
 
 
@@ -2536,7 +2515,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("op_iflt: %d < 0  then jump  \n", val);
+                        jvm_printf("iflt: %d < 0  then jump  \n", val);
 #endif
 
 
@@ -2553,7 +2532,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("op_ifge: %d >= 0  then jump \n", val);
+                        jvm_printf("ifge: %d >= 0  then jump \n", val);
 #endif
 
 
@@ -2570,7 +2549,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("op_ifgt: %d > 0  then jump \n", val);
+                        jvm_printf("ifgt: %d > 0  then jump \n", val);
 #endif
 
 
@@ -2587,7 +2566,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("op_ifle: %d <= 0  then jump \n", val);
+                        jvm_printf("ifle: %d <= 0  then jump \n", val);
 #endif
 
 
@@ -2605,7 +2584,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("op_if_icmpeq: %lld == %lld \n", (s64) (intptr_t) v1, (s64) (intptr_t) v2);
+                        jvm_printf("if_icmpeq: %lld == %lld \n", (s64) (intptr_t) v1, (s64) (intptr_t) v2);
 #endif
 
                         break;
@@ -2622,7 +2601,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("op_if_icmpne: %lld != %lld \n", (s64) (intptr_t) v1, (s64) (intptr_t) v2);
+                        jvm_printf("if_icmpne: %lld != %lld \n", (s64) (intptr_t) v1, (s64) (intptr_t) v2);
 #endif
 
                         break;
@@ -2639,7 +2618,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("op_if_icmplt: %lld < %lld \n", (s64) (intptr_t) v1, (s64) (intptr_t) v2);
+                        jvm_printf("if_icmplt: %lld < %lld \n", (s64) (intptr_t) v1, (s64) (intptr_t) v2);
 #endif
 
                         break;
@@ -2656,7 +2635,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("op_if_icmpge: %lld >= %lld \n", (s64) (intptr_t) v1, (s64) (intptr_t) v2);
+                        jvm_printf("if_icmpge: %lld >= %lld \n", (s64) (intptr_t) v1, (s64) (intptr_t) v2);
 #endif
 
                         break;
@@ -2673,7 +2652,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("op_if_icmpgt: %lld > %lld \n", (s64) (intptr_t) v1, (s64) (intptr_t) v2);
+                        jvm_printf("if_icmpgt: %lld > %lld \n", (s64) (intptr_t) v1, (s64) (intptr_t) v2);
 #endif
 
                         break;
@@ -2691,7 +2670,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("op_if_icmple: %lld <= %lld \n", (s64) (intptr_t) v1, (s64) (intptr_t) v2);
+                        jvm_printf("if_icmple: %lld <= %lld \n", (s64) (intptr_t) v1, (s64) (intptr_t) v2);
 #endif
 
                         break;
@@ -2708,7 +2687,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("op_if_acmpeq: %lld == %lld \n", (s64) (intptr_t) v1, (s64) (intptr_t) v2);
+                        jvm_printf("if_acmpeq: %lld == %lld \n", (s64) (intptr_t) v1, (s64) (intptr_t) v2);
 #endif
 
                         break;
@@ -2725,7 +2704,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("op_if_acmpne: %lld != %lld \n", (s64) (intptr_t) v1, (s64) (intptr_t) v2);
+                        jvm_printf("if_acmpne: %lld != %lld \n", (s64) (intptr_t) v1, (s64) (intptr_t) v2);
 #endif
 
                         break;
@@ -2851,12 +2830,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         StackEntry entry;
                         peek_entry(stack->sp - 1, &entry);
                         invoke_deepth(runtime);
-                        jvm_printf("ld_return=[%x]/%d/[%llx]\n", entry_2_int(&entry), entry_2_int(&entry), entry_2_long(&entry));
+                        jvm_printf("ld_return=%lld/[%llx]\n", entry_2_long(&entry), entry_2_long(&entry));
 #endif
                         s64 v = pop_long(stack);
                         localvar_dispose(runtime);
                         push_long(stack, v);
-                        exit_exec = 1;
+                        goto label_exit_while;
                         break;
                     }
                     label_ireturn:
@@ -2869,11 +2848,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         pop_entry(stack, &entry);
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("ifa_return=[%x]/%d/[%llx]\n", entry_2_int(&entry), entry_2_int(&entry), entry_2_long(&entry));
+                        jvm_printf("ifa_return=%d/[%llx]\n", entry_2_int(&entry), entry_2_long(&entry));
 #endif
                         localvar_dispose(runtime);
                         push_entry(stack, &entry);
-                        exit_exec = 1;
+                        goto label_exit_while;
                         break;
                     }
 
@@ -2884,7 +2863,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("return: \n");
 #endif
                         localvar_dispose(runtime);
-                        exit_exec = 1;
+                        goto label_exit_while;
                         break;
                     }
 
@@ -2898,44 +2877,35 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
                             cfr->fieldInfo = fi;
                         }
-                        c8 *ptr = getStaticFieldPtr(fi);
 
-                        if (fi->isvolatile) {
-                            barrier();
-                        }
                         if (fi->isrefer) {
-                            push_ref(stack, getFieldRefer(ptr));
+                            *opCode = op_getstatic_ref;
                         } else {
                             // check variable type to determine s64/s32/f64/f32
                             s32 data_bytes = fi->datatype_bytes;
                             switch (data_bytes) {
                                 case 4: {
-                                    push_int(stack, getFieldInt(ptr));
+                                    *opCode = op_getstatic_int;
                                     break;
                                 }
                                 case 1: {
-                                    push_int(stack, getFieldByte(ptr));
+                                    *opCode = op_getstatic_byte;
                                     break;
                                 }
                                 case 8: {
-                                    push_long(stack, getFieldLong(ptr));
+                                    *opCode = op_getstatic_long;
                                     break;
                                 }
                                 case 2: {
-                                    if (fi->datatype_idx == DATATYPE_JCHAR)push_int(stack, getFieldChar(ptr));
-                                    else push_int(stack, getFieldShort(ptr));
+                                    if (fi->datatype_idx == DATATYPE_JCHAR) {
+                                        *opCode = op_getstatic_jchar;
+                                    } else {
+                                        *opCode = op_getstatic_short;
+                                    }
                                     break;
                                 }
                             }
                         }
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
-                        invoke_deepth(runtime);
-                        StackEntry entry;
-                        peek_entry(stack->sp - 1, &entry);
-                        s64 v = entry_2_long(&entry);
-                        jvm_printf("%s: push %s.%s[%llx]\n", "getstatic", utf8_cstr(clazz->name), utf8_cstr(fi->name), (s64) (intptr_t) ptr, v);
-#endif
-                        opCode += 3;
                         break;
                     }
 
@@ -2949,62 +2919,44 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
                             cfr->fieldInfo = fi;
                         }
-
-                        c8 *ptr = getStaticFieldPtr(fi);
-
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
-                        StackEntry entry;
-                        peek_entry(stack->sp - 1, &entry);
-                        invoke_deepth(runtime);
-                        jvm_printf("%s  save:%s.%s[%llx]=[%llx]  \n", "putstatic", utf8_cstr(clazz->name), utf8_cstr(fi->name), (s64) (intptr_t) ptr, entry_2_long(&entry));
-#endif
-
                         if (fi->isrefer) {//垃圾回收标识
-                            setFieldRefer(ptr, pop_ref(stack));
+                            *opCode = op_putstatic_ref;
                         } else {
                             // check variable type to determain long/s32/f64/f32
                             s32 data_bytes = fi->datatype_bytes;
                             //非引用类型
                             switch (data_bytes) {
                                 case 4: {
-                                    setFieldInt(ptr, pop_int(stack));
+                                    *opCode = op_putstatic_int;
                                     break;
                                 }
                                 case 1: {
-                                    setFieldByte(ptr, pop_int(stack));
+                                    *opCode = op_putstatic_byte;
                                     break;
                                 }
                                 case 8: {
-                                    setFieldLong(ptr, pop_long(stack));
+                                    *opCode = op_putstatic_long;
                                     break;
                                 }
                                 case 2: {
-                                    setFieldShort(ptr, pop_int(stack));
+                                    *opCode = op_putstatic_short;
                                     break;
                                 }
                             }
                         }
-
-                        opCode += 3;
                         break;
                     }
 
                     label_getfield:
                     case op_getfield: {
                         u16 idx = *((u16 *) (opCode + 1));
-
-
-                        Instance *ins = (Instance *) pop_ref(stack);
+                        StackEntry entry;
+                        peek_entry(stack->sp - 1, &entry);
+                        Instance *ins = entry_2_refer(&entry);
                         if (!ins) {
-                            Instance *exception = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
-                            push_ref(stack, (__refer) exception);
+                            _null_throw_exception(stack, runtime);
                             ret = RUNTIME_STATUS_EXCEPTION;
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+                            goto label_exception_handle;
                         } else {
                             FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             if (!fi) {
@@ -3012,45 +2964,35 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
                                 cfr->fieldInfo = fi;
                             }
-                            c8 *ptr = getInstanceFieldPtr(ins, fi);
-
-                            if (fi->isvolatile) {
-                                barrier();
-                            }
                             if (fi->isrefer) {
-                                push_ref(stack, getFieldRefer(ptr));
+                                *opCode = op_getfield_ref;
                             } else {
                                 // check variable type to determine s64/s32/f64/f32
                                 s32 data_bytes = fi->datatype_bytes;
                                 switch (data_bytes) {
                                     case 4: {
-                                        push_int(stack, getFieldInt(ptr));
+                                        *opCode = op_getfield_int;
                                         break;
                                     }
                                     case 1: {
-                                        push_int(stack, getFieldByte(ptr));
+                                        *opCode = op_getfield_byte;
                                         break;
                                     }
                                     case 8: {
-                                        push_long(stack, getFieldLong(ptr));
+                                        *opCode = op_getfield_long;
                                         break;
                                     }
                                     case 2: {
-                                        if (fi->datatype_idx == DATATYPE_JCHAR)push_int(stack, getFieldChar(ptr));
-                                        else push_int(stack, getFieldShort(ptr));
+                                        if (fi->datatype_idx == DATATYPE_JCHAR) {
+                                            *opCode = op_getfield_jchar;
+                                        } else {
+                                            *opCode = op_getfield_short;
+                                        }
                                         break;
                                     }
                                 }
                             }
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
-                            invoke_deepth(runtime);
-                            StackEntry entry;
-                            peek_entry(stack->sp - 1, &entry);
-                            s64 v = entry_2_long(&entry);
-                            jvm_printf("%s: push %s.%s[%llx]\n", "getfield", utf8_cstr(clazz->name), utf8_cstr(fi->name), (s64) (intptr_t) ptr, v);
-#endif
 
-                            opCode += 3;
                         }
                         break;
                     }
@@ -3060,23 +3002,19 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     case op_putfield: {
                         u16 idx = *((u16 *) (opCode + 1));
 
+                        s32 pos = 2;
                         StackEntry entry;
-                        pop_entry(stack, &entry);
+                        peek_entry(stack->sp - 1, &entry);
                         if (entry.type & (STACK_ENTRY_LONG | STACK_ENTRY_DOUBLE)) {
-                            pop_entry(stack, &entry);
+                            pos++;
                         }
+                        peek_entry(stack->sp - pos, &entry);
 
-                        Instance *ins = (Instance *) pop_ref(stack);
+                        Instance *ins = entry_2_refer(&entry);
                         if (!ins) {
-                            Instance *exception = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
-                            push_ref(stack, (__refer) exception);
+                            _null_throw_exception(stack, runtime);
                             ret = RUNTIME_STATUS_EXCEPTION;
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+                            goto label_exception_handle;
                         } else {
                             // check variable type to determain long/s32/f64/f32
                             FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
@@ -3085,193 +3023,90 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
                                 cfr->fieldInfo = fi;
                             }
-                            c8 *ptr = getInstanceFieldPtr(ins, fi);
-
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
-                            if (utf8_equals_c(fi->name, "count") && utf8_equals_c(fi->_this_class->name, "java/lang/StringBuilder")) {
-                                int debug = 1;
-                            }
-                            invoke_deepth(runtime);
-                            jvm_printf("%s  save:%s.%s[%llx]=[%llx]  \n", "putfield", utf8_cstr(clazz->name), utf8_cstr(fi->name), (s64) (intptr_t) ptr, entry_2_long(&entry));
-#endif
 
                             if (fi->isrefer) {//垃圾回收标识
-                                setFieldRefer(ptr, entry_2_refer(&entry));
+                                *opCode = op_putfield_ref;
                             } else {
                                 s32 data_bytes = fi->datatype_bytes;
                                 //非引用类型
                                 switch (data_bytes) {
                                     case 4: {
-                                        setFieldInt(ptr, entry_2_int(&entry));
+                                        *opCode = op_putfield_int;
                                         break;
                                     }
                                     case 1: {
-                                        setFieldByte(ptr, entry_2_int(&entry));
+                                        *opCode = op_putfield_byte;
                                         break;
                                     }
                                     case 8: {
-                                        setFieldLong(ptr, entry_2_long(&entry));
+                                        *opCode = op_putfield_long;
                                         break;
                                     }
                                     case 2: {
-                                        setFieldShort(ptr, entry_2_int(&entry));
+                                        *opCode = op_putfield_short;
                                         break;
                                     }
                                 }
                             }
-
-                            opCode += 3;
                         }
                         break;
                     }
 
                     label_invokevirtual:
                     case op_invokevirtual: {
-
-
                         //此cmr所描述的方法，对于不同的实例，有不同的method
                         ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (opCode + 1)));
 
                         Instance *ins = getInstanceInStack(cmr, stack);
-                        if (ins == NULL) {
-                            Instance *exception = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
-                            push_ref(stack, (__refer) exception);
+                        if (!ins) {
+                            _null_throw_exception(stack, runtime);
                             ret = RUNTIME_STATUS_EXCEPTION;
+                            goto label_exception_handle;
                         } else {
                             MethodInfo *m = (MethodInfo *) pairlist_get(cmr->virtual_methods, ins->mb.clazz);
-                            if (m == NULL) {
+                            if (!m) {
                                 m = find_instance_methodInfo_by_name(ins, cmr->name, cmr->descriptor, runtime);
                                 pairlist_put(cmr->virtual_methods, ins->mb.clazz, m);//放入缓存，以便下次直接调用
                             }
 
-
-#if _JVM_DEBUG_BYTECODE_DETAIL > 3
-                            if (utf8_equals_c(cmr->clsName, "java/io/FileInputStream")
-                                && utf8_equals_c(cmr->name, "open")
-                                //                                && utf8_equals_c(cmr->descriptor, "(Ljava/lang/String;)Ljava/lang/StringBuilder;")
-                                    ) {
-                                int debug = 1;
-                            }
-                            invoke_deepth(runtime);
-                            jvm_printf("invokevirtual    %s.%s%s  {\n", utf8_cstr(m->_this_class->name), utf8_cstr(m->name), utf8_cstr(m->descriptor));
-#endif
-
-#if _JVM_DEBUG_PROFILE
-                            spent = nanoTime() - start_at;
-#endif
-                            if (m) {
-                                ret = execute_method_impl(m, runtime);
-                            } else {
-                                Instance *exception = exception_create_str(JVM_EXCEPTION_NOSUCHMETHOD, runtime,
-                                                                           utf8_cstr(cmr->name));
-                                push_ref(stack, (__refer) exception);
+                            if (!m) {
+                                _nosuchmethod_check_exception(utf8_cstr(cmr->name), stack, runtime);
                                 ret = RUNTIME_STATUS_EXCEPTION;
-                            }
-#if _JVM_DEBUG_BYTECODE_DETAIL > 3
-                            invoke_deepth(runtime);
-                            jvm_printf("}\n");
-#endif
-                        }
-                        if (ret == RUNTIME_STATUS_EXCEPTION) {
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
+                                goto label_exception_handle;
                             } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
+                                *opCode = op_invokevirtual_fast;
                             }
-                        } else {
-                            opCode += 3;
                         }
                         break;
                     }
-
 
                     label_invokespecial:
                     case op_invokespecial: {
 
-
                         ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (opCode + 1)));
                         MethodInfo *m = cmr->methodInfo;
 
-#if _JVM_DEBUG_BYTECODE_DETAIL > 3
-                        if (utf8_equals_c(cmr->clsName, "org/mini/fs/InnerFile")
-                            && utf8_equals_c(cmr->name, "<init>")
-                            //                                && utf8_equals_c(cmr->descriptor, "(Ljava/lang/String;)Ljava/lang/StringBuilder;")
-                                ) {
-                            int debug = 1;
-                        }
-                        invoke_deepth(runtime);
-                        jvm_printf("invokespecial    %s.%s%s {\n", utf8_cstr(m->_this_class->name), utf8_cstr(m->name), utf8_cstr(m->descriptor));
-#endif
-#if _JVM_DEBUG_PROFILE
-                        spent = nanoTime() - start_at;
-#endif
-                        if (m) {
-                            ret = execute_method_impl(m, runtime);
-                        } else {
-                            Instance *exception = exception_create_str(JVM_EXCEPTION_NOSUCHMETHOD, runtime,
-                                                                       utf8_cstr(cmr->name));
-                            push_ref(stack, (__refer) exception);
+                        if (!m) {
+                            _nosuchmethod_check_exception(utf8_cstr(cmr->name), stack, runtime);
                             ret = RUNTIME_STATUS_EXCEPTION;
-                        }
-#if _JVM_DEBUG_BYTECODE_DETAIL > 3
-                        invoke_deepth(runtime);
-                        jvm_printf("}\n");
-#endif
-
-                        if (ret == RUNTIME_STATUS_EXCEPTION) {
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+                            goto label_exception_handle;
                         } else {
-                            opCode += 3;
+                            *opCode = op_invokespecial_fast;
                         }
                         break;
                     }
 
-
                     label_invokestatic:
                     case op_invokestatic: {
-
                         ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (opCode + 1)));
-
                         MethodInfo *m = cmr->methodInfo;
-#if _JVM_DEBUG_BYTECODE_DETAIL > 3
-                        if (utf8_equals_c(cmr->name, "readbuf") && utf8_equals_c(cmr->clsName, "org/mini/fs/InnerFile")) {
-                            int debug = 1;
-                        }
 
-                        invoke_deepth(runtime);
-                        jvm_printf("invokestatic   | %s.%s%s {\n", utf8_cstr(m->_this_class->name), utf8_cstr(m->name), utf8_cstr(m->descriptor));
-#endif
-#if _JVM_DEBUG_PROFILE
-                        spent = nanoTime() - start_at;
-#endif
-                        if (m) {
-                            ret = execute_method_impl(m, runtime);
-                        } else {
-                            Instance *exception = exception_create_str(JVM_EXCEPTION_NOSUCHMETHOD, runtime,
-                                                                       utf8_cstr(cmr->name));
-                            push_ref(stack, (__refer) exception);
+                        if (!m) {
+                            _nosuchmethod_check_exception(utf8_cstr(cmr->name), stack, runtime);
                             ret = RUNTIME_STATUS_EXCEPTION;
-                        }
-#if _JVM_DEBUG_BYTECODE_DETAIL > 3
-                        invoke_deepth(runtime);
-                        jvm_printf("}\n");
-#endif
-
-                        if (ret == RUNTIME_STATUS_EXCEPTION) {
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+                            goto label_exception_handle;
                         } else {
-                            opCode += 3;
+                            *opCode = op_invokestatic_fast;
                         }
                         break;
                     }
@@ -3279,106 +3114,62 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_invokeinterface:
                     case op_invokeinterface: {
-
-
                         s32 paraCount = (u8) opCode[3];
-
                         ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (opCode + 1)));
                         Instance *ins = getInstanceInStack(cmr, stack);
-                        if (ins == NULL) {
-                            Instance *exception = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
-                            push_ref(stack, (__refer) exception);
+                        if (!ins) {
+                            _null_throw_exception(stack, runtime);
                             ret = RUNTIME_STATUS_EXCEPTION;
+                            goto label_exception_handle;
                         } else {
-                            //                            if (utf8_equals_c(cmr->name, "forEach") && utf8_equals_c(cmr->clsName, "java/util/List")) {
-                            //                                int debug = 1;
-                            //                            }
-                            //                            if (utf8_equals_c(cmr->name, "hasNext") && utf8_equals_c(cmr->clsName, "java/util/Iterator")) {
-                            //                                int debug = 1;
-                            //                            }
                             MethodInfo *m = (MethodInfo *) pairlist_get(cmr->virtual_methods, ins->mb.clazz);
-                            if (m == NULL) {
+                            if (!m) {
                                 m = find_instance_methodInfo_by_name(ins, cmr->name, cmr->descriptor, runtime);
                                 pairlist_put(cmr->virtual_methods, ins->mb.clazz, m);//放入缓存，以便下次直接调用
                             }
-//                            }
-
-#if _JVM_DEBUG_BYTECODE_DETAIL > 3
-                            invoke_deepth(runtime);
-                            jvm_printf("invokeinterface   | %s.%s%s {\n", utf8_cstr(m->_this_class->name),
-                                       utf8_cstr(m->name), utf8_cstr(m->descriptor));
-#endif
-#if _JVM_DEBUG_PROFILE
-                            spent = nanoTime() - start_at;
-#endif
-                            if (m) {
-                                ret = execute_method_impl(m, runtime);
-                            } else {
-                                Instance *exception = exception_create_str(JVM_EXCEPTION_NOSUCHMETHOD, runtime,
-                                                                           utf8_cstr(cmr->name));
-                                push_ref(stack, (__refer) exception);
+                            if (!m) {
+                                _nosuchmethod_check_exception(utf8_cstr(cmr->name), stack, runtime);
                                 ret = RUNTIME_STATUS_EXCEPTION;
-                            }
-#if _JVM_DEBUG_BYTECODE_DETAIL > 3
-                            invoke_deepth(runtime);
-                            jvm_printf("}\n");
-#endif
-
-                        }
-                        if (ret == RUNTIME_STATUS_EXCEPTION) {
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
+                                goto label_exception_handle;
                             } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
+                                *opCode = op_invokeinterface_fast;
                             }
-                        } else {
-                            opCode += 5;
                         }
                         break;
                     }
 
                     label_invokedynamic:
                     case op_invokedynamic: {
-
-
                         //get bootMethod struct
                         ConstantInvokeDynamic *cid = class_get_invoke_dynamic(clazz, *((u16 *) (opCode + 1)));
                         BootstrapMethod *bootMethod = &clazz->bootstrapMethodAttr->bootstrap_methods[cid->bootstrap_method_attr_index];//Boot
 
                         if (bootMethod->make == NULL) {
-                            /**
-						* run bootstrap method java.lang.invoke.LambdaMetafactory
-						*
-						* public static CallSite metafactory(
-                        *           MethodHandles.Lookup caller,
-						*           String invokedName,
-						*           MethodType invokedType,
-						*           MethodType samMethodType,
-						*           MethodHandle implMethod,
-						*           MethodType instantiatedMethodType
-                        *           )
-						*
-						*
-						*  to generate Lambda Class implementation specify interface
-						*  and new a callsite
-						*/
+                            // =====================================================================
+                            //         run bootstrap method java.lang.invoke.LambdaMetafactory
+                            //
+                            //         public static CallSite metafactory(
+                            //                   MethodHandles.Lookup caller,
+                            //                   String invokedName,
+                            //                   MethodType invokedType,
+                            //                   MethodType samMethodType,
+                            //                   MethodHandle implMethod,
+                            //                   MethodType instantiatedMethodType
+                            //                   )
+                            //
+                            //          to generate Lambda Class implementation specify interface
+                            //          and new a callsite
+                            // =====================================================================
 
                             //parper bootMethod parameter
                             Instance *lookup = method_handles_lookup_create(runtime, clazz);
                             push_ref(stack, lookup); //lookup
 
-                            Utf8String *ustr_invokeName = class_get_constant_utf8(clazz,
-                                                                                  class_get_constant_name_and_type(
-                                                                                          clazz,
-                                                                                          cid->nameAndTypeIndex)->nameIndex)->utfstr;
+                            Utf8String *ustr_invokeName = class_get_constant_utf8(clazz, class_get_constant_name_and_type(clazz, cid->nameAndTypeIndex)->nameIndex)->utfstr;
                             Instance *jstr_invokeName = jstring_create(ustr_invokeName, runtime);
                             push_ref(stack, jstr_invokeName); //invokeName
 
-                            Utf8String *ustr_invokeType = class_get_constant_utf8(clazz,
-                                                                                  class_get_constant_name_and_type(
-                                                                                          clazz,
-                                                                                          cid->nameAndTypeIndex)->typeIndex)->utfstr;
+                            Utf8String *ustr_invokeType = class_get_constant_utf8(clazz, class_get_constant_name_and_type(clazz, cid->nameAndTypeIndex)->typeIndex)->utfstr;
                             Instance *mt_invokeType = method_type_create(runtime, ustr_invokeType);
                             push_ref(stack, mt_invokeType); //invokeMethodType
 
@@ -3404,8 +3195,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     }
                                     case CONSTANT_METHOD_HANDLE: {
                                         ConstantMethodHandle *cmh = (ConstantMethodHandle *) item;
-                                        MethodInfo *mip = find_methodInfo_by_methodref(clazz, cmh->reference_index,
-                                                                                       runtime);
+                                        MethodInfo *mip = find_methodInfo_by_methodref(clazz, cmh->reference_index, runtime);
                                         Instance *mh = method_handle_create(runtime, mip, cmh->reference_kind);
                                         push_ref(stack, mh);
                                         break;
@@ -3418,73 +3208,46 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             }
 
                             //get bootmethod
-                            MethodInfo *boot_m = find_methodInfo_by_methodref(clazz, class_get_method_handle(clazz,
-                                                                                                             bootMethod->bootstrap_method_ref)->reference_index,
-                                                                              runtime);
+                            MethodInfo *boot_m = find_methodInfo_by_methodref(clazz, class_get_method_handle(clazz, bootMethod->bootstrap_method_ref)->reference_index, runtime);
 
-                            if (boot_m) {
-
+                            if (!boot_m) {
+                                ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, class_get_method_handle(clazz, bootMethod->bootstrap_method_ref)->reference_index);
+                                _nosuchmethod_check_exception(utf8_cstr(cmr->name), stack, runtime);
+                                ret = RUNTIME_STATUS_EXCEPTION;
+                                goto label_exception_handle;
+                            } else {
                                 ret = execute_method_impl(boot_m, runtime);
                                 if (ret == RUNTIME_STATUS_NORMAL) {
                                     MethodInfo *finder = find_methodInfo_by_name_c("org/mini/reflect/vm/LambdaUtil",
                                                                                    "getMethodInfoHandle",
                                                                                    "(Ljava/lang/invoke/CallSite;)J",
                                                                                    runtime);
-                                    if (finder) {
+                                    if (!finder) {
+                                        _nosuchmethod_check_exception("getMethodInfoHandle", stack, runtime);
+                                        ret = RUNTIME_STATUS_EXCEPTION;
+                                        goto label_exception_handle;
+                                    } else {
                                         //run finder to convert calsite.target(MethodHandle) to MethodInfo * pointer
                                         ret = execute_method_impl(finder, runtime);
                                         if (ret == RUNTIME_STATUS_NORMAL) {
                                             MethodInfo *make = (MethodInfo *) (intptr_t) pop_long(stack);
                                             bootMethod->make = make;
                                         }
-                                    } else {
-                                        Instance *exception = exception_create(JVM_EXCEPTION_NOSUCHMETHOD, runtime);
-                                        push_ref(stack, (__refer) exception);
-                                        ret = RUNTIME_STATUS_EXCEPTION;
                                     }
                                 }
-                            } else {
-                                Instance *exception = exception_create(JVM_EXCEPTION_NOSUCHMETHOD, runtime);
-                                push_ref(stack, (__refer) exception);
-                                ret = RUNTIME_STATUS_EXCEPTION;
                             }
                         }
                         MethodInfo *m = bootMethod->make;
-#if _JVM_DEBUG_BYTECODE_DETAIL > 3
-                        invoke_deepth(runtime);
-                        jvm_printf("invokedynamic   | %s.%s%s {\n", utf8_cstr(m->_this_class->name),
-                                   utf8_cstr(m->name), utf8_cstr(m->descriptor));
-#endif
-#if _JVM_DEBUG_PROFILE
-                        spent = nanoTime() - start_at;
-#endif
-                        if (ret == RUNTIME_STATUS_NORMAL) {
-                            if (m) {
-                                // run make to generate instance of Lambda Class
-                                ret = execute_method_impl(m, runtime);
-                            } else {
-                                Instance *exception = exception_create(JVM_EXCEPTION_NOSUCHMETHOD, runtime);
-                                push_ref(stack, (__refer) exception);
-                                ret = RUNTIME_STATUS_EXCEPTION;
-                            }
-                        }
-#if _JVM_DEBUG_BYTECODE_DETAIL > 3
-                        invoke_deepth(runtime);
-                        jvm_printf("}\n");
-#endif
-                        if (ret == RUNTIME_STATUS_EXCEPTION) {
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+
+                        if (!m) {
+                            _nosuchmethod_check_exception("Lambda generated method", stack, runtime);
+                            ret = RUNTIME_STATUS_EXCEPTION;
+                            goto label_exception_handle;
                         } else {
-                            opCode += 5;
+                            *opCode = op_invokedynamic_fast;
                         }
                         break;
                     }
-
 
                     label_new:
                     case op_new: {
@@ -3523,21 +3286,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         invoke_deepth(runtime);
                         jvm_printf("(a)newarray  [%llx] type:%c , count:%d  \n", (s64) (intptr_t) arr, getDataTypeTag(typeIdx), count);
 #endif
-                        if (arr) {
+                        if (!arr) {
+                            _null_throw_exception(stack, runtime);
+                            ret = RUNTIME_STATUS_EXCEPTION;
+                            goto label_exception_handle;
+                        } else {
                             push_ref(stack, (__refer) arr);
                             opCode += 2;
-                        } else {
-                            Instance *exception = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
-                            push_ref(stack, (__refer) exception);
-                            ret = RUNTIME_STATUS_EXCEPTION;
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
                         }
-
                         break;
                     }
 
@@ -3561,45 +3317,32 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         invoke_deepth(runtime);
                         jvm_printf("(a)newarray  [%llx] type:%d , count:%d  \n", (s64) (intptr_t) arr, arr_class->arr_class_type, count);
 #endif
-                        if (arr) {
+                        if (!arr) {
+                            _null_throw_exception(stack, runtime);
+                            ret = RUNTIME_STATUS_EXCEPTION;
+                            goto label_exception_handle;
+                        } else {
                             push_ref(stack, (__refer) arr);
                             opCode += 3;
-                        } else {
-                            Instance *exception = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
-                            push_ref(stack, (__refer) exception);
-                            ret = RUNTIME_STATUS_EXCEPTION;
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
                         }
-
                         break;
                     }
 
                     label_arraylength:
                     case op_arraylength: {
-                        Instance *arr_ref = (Instance *) pop_ref(stack);
+                        Instance *arr = (Instance *) pop_ref(stack);
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("arraylength  [%llx].arr_body[%llx] len:%d  \n",
-                                   (s64) (intptr_t) arr_ref, (s64) (intptr_t) arr_ref->arr_body, arr_ref->arr_length);
+                                   (s64) (intptr_t) arr, (s64) (intptr_t) arr->arr_body, arr->arr_length);
 #endif
-                        if (arr_ref == NULL) {
-                            Instance *exception = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
-                            push_ref(stack, (__refer) exception);
+                        if (!arr) {
+                            _null_throw_exception(stack, runtime);
                             ret = RUNTIME_STATUS_EXCEPTION;
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+                            goto label_exception_handle;
                         } else {
-                            push_int(stack, arr_ref->arr_length);
+                            push_int(stack, arr->arr_length);
                             opCode++;
                         }
                         break;
@@ -3608,21 +3351,15 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_athrow:
                     case op_athrow: {
-                        Instance *ins = (Instance *) pop_ref(stack);
-                        push_ref(stack, (__refer) ins);
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                        Instance *ins = (Instance *) pop_ref(stack);
+                        push_ref(stack, (__refer) ins);
                         invoke_deepth(runtime);
                         jvm_printf("athrow  [%llx].exception throws  \n", (s64) (intptr_t) ins);
 #endif
-                        //opCode +=  1;
                         ret = RUNTIME_STATUS_EXCEPTION;
-                        if (exception_handle(stack, runtime)) {
-                            exit_exec = 1;
-                        } else {
-                            opCode = runtime->pc;
-                            ret = RUNTIME_STATUS_NORMAL;
-                        }
+                        goto label_exception_handle;
                         break;
                     }
 
@@ -3636,9 +3373,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         if (ins != NULL) {
                             if (ins->mb.type == MEM_TYPE_INS) {
                                 JClass *cl = getClassByConstantClassRef(clazz, typeIdx, runtime);
-                                //                                if (utf8_equals_c(ins->mb.clazz->name, "java/lang/String")&&utf8_equals_c(cl->name,"java/lang/Comparable")) {//
-                                //                                    int debug = 1;
-                                //                                }
                                 if (instance_of(cl, ins, runtime)) {
                                     checkok = 1;
                                 }
@@ -3661,12 +3395,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             Instance *exception = exception_create(JVM_EXCEPTION_CLASSCAST, runtime);
                             push_ref(stack, (__refer) exception);
                             ret = RUNTIME_STATUS_EXCEPTION;
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
+                            goto label_exception_handle;
                         } else {
                             push_ref(stack, (__refer) ins);
                             opCode += 3;
@@ -3685,22 +3414,15 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     label_instanceof:
                     case op_instanceof: {
                         Instance *ins = (Instance *) pop_ref(stack);
-
-
                         s32 typeIdx = *((u16 *) (opCode + 1));
 
                         s32 checkok = 0;
-                        if (ins == NULL) {
+                        if (!ins) {
                         } else if (ins->mb.type & (MEM_TYPE_INS | MEM_TYPE_ARR)) {
                             if (instance_of(getClassByConstantClassRef(clazz, typeIdx, runtime), ins, runtime)) {
                                 checkok = 1;
                             }
                         }
-                        //                        else {
-                        //                            if (utf8_equals(ins->mb.clazz->name, getClassByConstantClassRef(clazz, typeIdx)->name)) {//
-                        //                                checkok = 1;
-                        //                            }
-                        //                        }
                         push_int(stack, checkok);
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
@@ -3708,7 +3430,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("instanceof  [%llx] instancof %s  \n", (s64) (intptr_t) ins, utf8_cstr(class_get_constant_classref(clazz, typeIdx)->name));
 #endif
                         opCode += 3;
-
                         break;
                     }
 
@@ -3721,7 +3442,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("monitorenter  [%llx] %s  \n", (s64) (intptr_t) ins, ins ? utf8_cstr(ins->mb.clazz->name) : "null");
 #endif
                         opCode++;
-
                         break;
                     }
 
@@ -3734,7 +3454,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("monitorexit  [%llx] %s  \n", (s64) (intptr_t) ins, ins ? utf8_cstr(ins->mb.clazz->name) : "null");
 #endif
                         opCode++;
-
                         break;
                     }
 
@@ -3824,19 +3543,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("multianewarray  [%llx] type:%s , count:%d  \n", (s64) (intptr_t) arr,
                                    utf8_cstr(desc), count);
 #endif
-                        if (arr) {
+                        if (!arr) {
+                            _null_throw_exception(stack, runtime);
+                            ret = RUNTIME_STATUS_EXCEPTION;
+                            goto label_exception_handle;
+                        } else {
                             push_ref(stack, (__refer) arr);
                             opCode += 4;
-                        } else {
-                            Instance *exception = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
-                            push_ref(stack, (__refer) exception);
-                            ret = RUNTIME_STATUS_EXCEPTION;
-                            if (exception_handle(stack, runtime)) {
-                                exit_exec = 1;
-                            } else {
-                                opCode = runtime->pc;
-                                ret = RUNTIME_STATUS_NORMAL;
-                            }
                         }
                         break;
                     }
@@ -3853,7 +3566,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("op_ifnonnull: %d/%llx != 0  then jump %d \n", (s32) (intptr_t) ref,
+                        jvm_printf("ifnonnull: %d/%llx != 0  then jump %d \n", (s32) (intptr_t) ref,
                                    (s64) (intptr_t) ref);
 #endif
 
@@ -3871,28 +3584,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("op_ifnonnull: %d/%llx != 0  then \n", (s32) (intptr_t) ref, (s64) (intptr_t) ref);
+                        jvm_printf("ifnonnull: %d/%llx != 0  then \n", (s32) (intptr_t) ref, (s64) (intptr_t) ref);
 #endif
-
                         break;
                     }
-
-                    label_breakpoint:
-                    case op_breakpoint: {
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
-
-                        invoke_deepth(runtime);
-                        jvm_printf("breakpoint \n");
-#endif
-                        //opCode +=  1;
-
-                        break;
-                    }
-
 
                     label_goto_w:
                     case op_goto_w: {
-
                         s32 branchoffset = *((s32 *) (opCode + 1));
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
@@ -3900,8 +3598,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("goto: %d\n", branchoffset);
 #endif
                         opCode += branchoffset;
-
-
                         break;
                     }
 
@@ -3915,8 +3611,588 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("jsr_w: %d\n", branchoffset);
 #endif
                         opCode += branchoffset;
+                        break;
+                    }
+
+                    label_breakpoint:
+                    case op_breakpoint: {
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+
+                        invoke_deepth(runtime);
+                        jvm_printf("breakpoint \n");
+#endif
+                        break;
+                    }
 
 
+                    label_getstatic_ref:
+                    case op_getstatic_ref: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                        c8 *ptr = getStaticFieldPtr(fi);
+                        if (fi->isvolatile) {
+                            barrier();
+                        }
+                        push_ref(stack, getFieldRefer(ptr));
+                        opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                        invoke_deepth(runtime);
+                        jvm_printf("%s: ref  %d = %s.%s \n", "getstatic", (s64) (intptr_t) getFieldRefer(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
+#endif
+                        break;
+                    }
+                    label_getstatic_long:
+                    case op_getstatic_long: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                        c8 *ptr = getStaticFieldPtr(fi);
+                        if (fi->isvolatile) {
+                            barrier();
+                        }
+                        push_long(stack, getFieldLong(ptr));
+                        opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                        invoke_deepth(runtime);
+                        jvm_printf("%s: long  %d = %s.%s \n", "getstatic", getFieldLong(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
+#endif
+                        break;
+                    }
+                    label_getstatic_int:
+                    case op_getstatic_int: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                        c8 *ptr = getStaticFieldPtr(fi);
+                        if (fi->isvolatile) {
+                            barrier();
+                        }
+                        push_int(stack, getFieldInt(ptr));
+                        opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                        invoke_deepth(runtime);
+                        jvm_printf("%s: int  %d = %s.%s \n", "getstatic", (s32) getFieldInt(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
+#endif
+                        break;
+                    }
+                    label_getstatic_short:
+                    case op_getstatic_short: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                        c8 *ptr = getStaticFieldPtr(fi);
+                        if (fi->isvolatile) {
+                            barrier();
+                        }
+                        push_int(stack, getFieldShort(ptr));
+                        opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                        invoke_deepth(runtime);
+                        jvm_printf("%s: short  %d = %s.%s \n", "getstatic", (s32) getFieldShort(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
+#endif
+                        break;
+                    }
+                    label_getstatic_jchar:
+                    case op_getstatic_jchar: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                        c8 *ptr = getStaticFieldPtr(fi);
+                        if (fi->isvolatile) {
+                            barrier();
+                        }
+                        push_int(stack, getFieldChar(ptr));
+                        opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                        invoke_deepth(runtime);
+                        jvm_printf("%s: char  %d = %s.%s \n", "getstatic", (s32) (u16) getFieldChar(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
+#endif
+                        break;
+                    }
+                    label_getstatic_byte:
+                    case op_getstatic_byte: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                        c8 *ptr = getStaticFieldPtr(fi);
+                        if (fi->isvolatile) {
+                            barrier();
+                        }
+                        push_int(stack, getFieldByte(ptr));
+                        opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                        invoke_deepth(runtime);
+                        jvm_printf("%s: byte  %d = %s.%s \n", "getstatic", (s32) getFieldByte(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
+#endif
+                        break;
+                    }
+
+                    label_putstatic_ref:
+                    case op_putstatic_ref: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                        c8 *ptr = getStaticFieldPtr(fi);
+                        setFieldRefer(ptr, pop_ref(stack));
+                        opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                        invoke_deepth(runtime);
+                        jvm_printf("%s: ref  %s.%s = %llx \n", "putstatic", utf8_cstr(clazz->name), utf8_cstr(fi->name), (s64) (intptr_t) getFieldRefer(ptr));
+#endif
+                        break;
+                    }
+
+                    label_putstatic_long:
+                    case op_putstatic_long: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                        c8 *ptr = getStaticFieldPtr(fi);
+                        setFieldLong(ptr, pop_long(stack));
+                        opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                        invoke_deepth(runtime);
+                        jvm_printf("%s: long  %s.%s = %lld \n", "putstatic", utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
+#endif
+                        break;
+                    }
+                    label_putstatic_int:
+                    case op_putstatic_int: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                        c8 *ptr = getStaticFieldPtr(fi);
+                        setFieldInt(ptr, pop_int(stack));
+                        opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                        invoke_deepth(runtime);
+                        jvm_printf("%s: int  %s.%s = %d \n", "putstatic", utf8_cstr(clazz->name), utf8_cstr(fi->name), (s32) getFieldInt(ptr));
+#endif
+                        break;
+                    }
+                    label_putstatic_short:
+                    case op_putstatic_short: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                        c8 *ptr = getStaticFieldPtr(fi);
+                        setFieldShort(ptr, pop_int(stack));
+                        opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                        invoke_deepth(runtime);
+                        jvm_printf("%s: short  %s.%s = %d \n", "putstatic", utf8_cstr(clazz->name), utf8_cstr(fi->name), (s32) getFieldShort(ptr));
+#endif
+                        break;
+                    }
+                    label_putstatic_byte:
+                    case op_putstatic_byte: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                        c8 *ptr = getStaticFieldPtr(fi);
+                        setFieldByte(ptr, pop_int(stack));
+                        opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                        invoke_deepth(runtime);
+                        jvm_printf("%s: byte  %s.%s = %d \n", "putstatic", utf8_cstr(clazz->name), utf8_cstr(fi->name), (s32) getFieldByte(ptr));
+#endif
+                        break;
+                    }
+
+                    label_getfield_ref:
+                    case op_getfield_ref: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        Instance *ins = (Instance *) pop_ref(stack);
+                        if (!ins) {
+                            _null_throw_exception(stack, runtime);
+                            ret = RUNTIME_STATUS_EXCEPTION;
+                            goto label_exception_handle;
+                        } else {
+                            FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                            c8 *ptr = getInstanceFieldPtr(ins, fi);
+
+                            if (fi->isvolatile) {
+                                barrier();
+                            }
+                            push_ref(stack, getFieldRefer(ptr));
+                            opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                            invoke_deepth(runtime);
+                            jvm_printf("%s: ref %llx = %s.%s \n", "getfield", getFieldRefer(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name));
+#endif
+                        }
+                        break;
+                    }
+
+                    label_getfield_long:
+                    case op_getfield_long: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        Instance *ins = (Instance *) pop_ref(stack);
+                        if (!ins) {
+                            _null_throw_exception(stack, runtime);
+                            ret = RUNTIME_STATUS_EXCEPTION;
+                            goto label_exception_handle;
+                        } else {
+                            FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                            c8 *ptr = getInstanceFieldPtr(ins, fi);
+
+                            if (fi->isvolatile) {
+                                barrier();
+                            }
+                            push_long(stack, getFieldLong(ptr));
+                            opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                            invoke_deepth(runtime);
+                            jvm_printf("%s: long %lld = %s.%s \n", "getfield", getFieldLong(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name));
+#endif
+                        }
+                        break;
+                    }
+
+                    label_getfield_int:
+                    case op_getfield_int: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        Instance *ins = (Instance *) pop_ref(stack);
+                        if (!ins) {
+                            _null_throw_exception(stack, runtime);
+                            ret = RUNTIME_STATUS_EXCEPTION;
+                            goto label_exception_handle;
+                        } else {
+                            FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                            c8 *ptr = getInstanceFieldPtr(ins, fi);
+
+                            if (fi->isvolatile) {
+                                barrier();
+                            }
+                            push_int(stack, getFieldInt(ptr));
+                            opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                            invoke_deepth(runtime);
+                            jvm_printf("%s: int %d = %s.%s \n", "getfield", (s32) getFieldInt(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name));
+#endif
+                        }
+                        break;
+                    }
+
+                    label_getfield_short:
+                    case op_getfield_short: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        Instance *ins = (Instance *) pop_ref(stack);
+                        if (!ins) {
+                            _null_throw_exception(stack, runtime);
+                            ret = RUNTIME_STATUS_EXCEPTION;
+                            goto label_exception_handle;
+                        } else {
+                            FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                            c8 *ptr = getInstanceFieldPtr(ins, fi);
+
+                            if (fi->isvolatile) {
+                                barrier();
+                            }
+                            push_int(stack, getFieldShort(ptr));
+                            opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                            invoke_deepth(runtime);
+                            jvm_printf("%s: short %d = %s.%s \n", "getfield", (s32) getFieldShort(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name));
+#endif
+                        }
+                        break;
+                    }
+
+                    label_getfield_jchar:
+                    case op_getfield_jchar: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        Instance *ins = (Instance *) pop_ref(stack);
+                        if (!ins) {
+                            _null_throw_exception(stack, runtime);
+                            ret = RUNTIME_STATUS_EXCEPTION;
+                            goto label_exception_handle;
+                        } else {
+                            FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                            c8 *ptr = getInstanceFieldPtr(ins, fi);
+
+                            if (fi->isvolatile) {
+                                barrier();
+                            }
+                            push_int(stack, getFieldChar(ptr));
+                            opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                            invoke_deepth(runtime);
+                            jvm_printf("%s: char %d = %s.%s \n", "getfield", (s32) (u16) getFieldChar(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name));
+#endif
+                        }
+                        break;
+                    }
+
+                    label_getfield_byte:
+                    case op_getfield_byte: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        Instance *ins = (Instance *) pop_ref(stack);
+                        if (!ins) {
+                            _null_throw_exception(stack, runtime);
+                            ret = RUNTIME_STATUS_EXCEPTION;
+                            goto label_exception_handle;
+                        } else {
+                            FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                            c8 *ptr = getInstanceFieldPtr(ins, fi);
+
+                            if (fi->isvolatile) {
+                                barrier();
+                            }
+                            push_int(stack, getFieldByte(ptr));
+                            opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                            invoke_deepth(runtime);
+                            jvm_printf("%s: byte %d = %s.%s \n", "getfield", (s32) getFieldByte(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name));
+#endif
+                        }
+                        break;
+                    }
+
+                    label_putfield_ref:
+                    case op_putfield_ref: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        __refer ref = pop_ref(stack);
+                        Instance *ins = (Instance *) pop_ref(stack);
+                        if (!ins) {
+                            _null_throw_exception(stack, runtime);
+                            ret = RUNTIME_STATUS_EXCEPTION;
+                            goto label_exception_handle;
+                        } else {
+                            // check variable type to determain long/s32/f64/f32
+                            FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                            c8 *ptr = getInstanceFieldPtr(ins, fi);
+                            setFieldRefer(ptr, ref);
+                            opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                            invoke_deepth(runtime);
+                            jvm_printf("%s: ref %s.%s = %llx\n", "putfield", utf8_cstr(clazz->name), utf8_cstr(fi->name), (s64) (intptr_t) ref);
+#endif
+                        }
+                        break;
+                    }
+
+                    label_putfield_long:
+                    case op_putfield_long: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        s64 v = pop_long(stack);
+                        Instance *ins = (Instance *) pop_ref(stack);
+                        if (!ins) {
+                            _null_throw_exception(stack, runtime);
+                            ret = RUNTIME_STATUS_EXCEPTION;
+                            goto label_exception_handle;
+                        } else {
+                            FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                            c8 *ptr = getInstanceFieldPtr(ins, fi);
+                            setFieldLong(ptr, v);
+                            opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                            invoke_deepth(runtime);
+                            jvm_printf("%s: long %s.%s = %lld\n", "putfield", utf8_cstr(clazz->name), utf8_cstr(fi->name), v);
+#endif
+                        }
+                        break;
+                    }
+
+                    label_putfield_int:
+                    case op_putfield_int: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        s32 v = pop_int(stack);
+                        Instance *ins = (Instance *) pop_ref(stack);
+                        if (!ins) {
+                            _null_throw_exception(stack, runtime);
+                            ret = RUNTIME_STATUS_EXCEPTION;
+                            goto label_exception_handle;
+                        } else {
+                            FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                            c8 *ptr = getInstanceFieldPtr(ins, fi);
+                            setFieldInt(ptr, v);
+                            opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                            invoke_deepth(runtime);
+                            jvm_printf("%s: int %s.%s = %d\n", "putfield", utf8_cstr(clazz->name), utf8_cstr(fi->name), v);
+#endif
+                        }
+                        break;
+                    }
+
+                    label_putfield_short:
+                    case op_putfield_short: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        s32 v = pop_int(stack);
+                        Instance *ins = (Instance *) pop_ref(stack);
+                        if (!ins) {
+                            _null_throw_exception(stack, runtime);
+                            ret = RUNTIME_STATUS_EXCEPTION;
+                            goto label_exception_handle;
+                        } else {
+                            FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                            c8 *ptr = getInstanceFieldPtr(ins, fi);
+                            setFieldShort(ptr, v);
+                            opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                            invoke_deepth(runtime);
+                            jvm_printf("%s: short %s.%s = %d\n", "putfield", utf8_cstr(clazz->name), utf8_cstr(fi->name), v);
+#endif
+                        }
+                        break;
+                    }
+
+                    label_putfield_byte:
+                    case op_putfield_byte: {
+                        u16 idx = *((u16 *) (opCode + 1));
+                        s32 v = pop_int(stack);
+                        Instance *ins = (Instance *) pop_ref(stack);
+                        if (!ins) {
+                            _null_throw_exception(stack, runtime);
+                            ret = RUNTIME_STATUS_EXCEPTION;
+                            goto label_exception_handle;
+                        } else {
+                            FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                            c8 *ptr = getInstanceFieldPtr(ins, fi);
+                            setFieldByte(ptr, v);
+                            opCode += 3;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+                            invoke_deepth(runtime);
+                            jvm_printf("%s: byte %s.%s = %d\n", "putfield", utf8_cstr(clazz->name), utf8_cstr(fi->name), v);
+#endif
+                        }
+                        break;
+                    }
+
+                    label_invokevirtual_fast:
+                    case op_invokevirtual_fast: {
+                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (opCode + 1)));
+                        Instance *ins = getInstanceInStack(cmr, stack);
+                        if (!ins) {
+                            _null_throw_exception(stack, runtime);
+                            ret = RUNTIME_STATUS_EXCEPTION;
+                            goto label_exception_handle;
+                        } else {
+                            MethodInfo *m = (MethodInfo *) pairlist_get(cmr->virtual_methods, ins->mb.clazz);
+#if _JVM_DEBUG_PROFILE
+                            spent = nanoTime() - start_at;
+#endif
+                            if (!m) {
+                                *opCode = op_invokevirtual;
+                            } else {
+#if _JVM_DEBUG_BYTECODE_DETAIL > 3
+                                invoke_deepth(runtime);
+                                jvm_printf("invokevirtual    %s.%s%s  {\n", utf8_cstr(m->_this_class->name), utf8_cstr(m->name), utf8_cstr(m->descriptor));
+#endif
+                                ret = execute_method_impl(m, runtime);
+#if _JVM_DEBUG_BYTECODE_DETAIL > 3
+                                invoke_deepth(runtime);
+                                jvm_printf("}\n");
+#endif
+                                if (ret) {
+                                    goto label_exception_handle;
+                                }
+                                opCode += 3;
+                            }
+                        }
+                        break;
+                    }
+
+                    label_invokespecial_fast:
+                    case op_invokespecial_fast: {
+                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (opCode + 1)));
+                        MethodInfo *m = cmr->methodInfo;
+#if _JVM_DEBUG_PROFILE
+                        spent = nanoTime() - start_at;
+#endif
+#if _JVM_DEBUG_BYTECODE_DETAIL > 3
+                        invoke_deepth(runtime);
+                        jvm_printf("invokespecial    %s.%s%s {\n", utf8_cstr(m->_this_class->name), utf8_cstr(m->name), utf8_cstr(m->descriptor));
+#endif
+                        ret = execute_method_impl(m, runtime);
+#if _JVM_DEBUG_BYTECODE_DETAIL > 3
+                        invoke_deepth(runtime);
+                        jvm_printf("}\n");
+#endif
+                        if (ret) {
+                            goto label_exception_handle;
+                        }
+                        opCode += 3;
+                        break;
+                    }
+
+                    label_invokestatic_fast:
+                    case op_invokestatic_fast: {
+                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (opCode + 1)));
+                        MethodInfo *m = cmr->methodInfo;
+#if _JVM_DEBUG_PROFILE
+                        spent = nanoTime() - start_at;
+#endif
+#if _JVM_DEBUG_BYTECODE_DETAIL > 3
+                        invoke_deepth(runtime);
+                        jvm_printf("invokestatic   | %s.%s%s {\n", utf8_cstr(m->_this_class->name), utf8_cstr(m->name), utf8_cstr(m->descriptor));
+#endif
+                        ret = execute_method_impl(m, runtime);
+#if _JVM_DEBUG_BYTECODE_DETAIL > 3
+                        invoke_deepth(runtime);
+                        jvm_printf("}\n");
+#endif
+                        if (ret) {
+                            goto label_exception_handle;
+                        }
+                        opCode += 3;
+                        break;
+                    }
+
+                    label_invokeinterface_fast:
+                    case op_invokeinterface_fast: {
+                        //此cmr所描述的方法，对于不同的实例，有不同的method
+                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (opCode + 1)));
+
+                        Instance *ins = getInstanceInStack(cmr, stack);
+                        if (!ins) {
+                            _null_throw_exception(stack, runtime);
+                            ret = RUNTIME_STATUS_EXCEPTION;
+                            goto label_exception_handle;
+                        } else {
+                            MethodInfo *m = (MethodInfo *) pairlist_get(cmr->virtual_methods, ins->mb.clazz);
+#if _JVM_DEBUG_PROFILE
+                            spent = nanoTime() - start_at;
+#endif
+                            if (!m) {
+                                *opCode = op_invokeinterface;
+                            } else {
+#if _JVM_DEBUG_BYTECODE_DETAIL > 3
+                                invoke_deepth(runtime);
+                                jvm_printf("invokeinterface   | %s.%s%s {\n", utf8_cstr(m->_this_class->name),
+                                           utf8_cstr(m->name), utf8_cstr(m->descriptor));
+#endif
+                                ret = execute_method_impl(m, runtime);
+#if _JVM_DEBUG_BYTECODE_DETAIL > 3
+                                invoke_deepth(runtime);
+                                jvm_printf("}\n");
+#endif
+                                if (ret) {
+                                    goto label_exception_handle;
+                                }
+                                opCode += 5;
+                            }
+                        }
+                        break;
+                    }
+
+                    label_invokedynamic_fast:
+                    case op_invokedynamic_fast: {
+                        //get bootMethod struct
+                        ConstantInvokeDynamic *cid = class_get_invoke_dynamic(clazz, *((u16 *) (opCode + 1)));
+                        BootstrapMethod *bootMethod = &clazz->bootstrapMethodAttr->bootstrap_methods[cid->bootstrap_method_attr_index];//Boot
+                        MethodInfo *m = bootMethod->make;
+
+#if _JVM_DEBUG_PROFILE
+                        spent = nanoTime() - start_at;
+#endif
+#if _JVM_DEBUG_BYTECODE_DETAIL > 3
+                        invoke_deepth(runtime);
+                        jvm_printf("invokedynamic   | %s.%s%s {\n", utf8_cstr(m->_this_class->name),
+                                   utf8_cstr(m->name), utf8_cstr(m->descriptor));
+#endif
+                        // run make to generate instance of Lambda Class
+                        ret = execute_method_impl(m, runtime);
+#if _JVM_DEBUG_BYTECODE_DETAIL > 3
+                        invoke_deepth(runtime);
+                        jvm_printf("}\n");
+#endif
+                        if (ret) {
+                            goto label_exception_handle;
+                        }
+
+                        opCode += 5;
                         break;
                     }
 
@@ -3926,14 +4202,31 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                 /* ================================== opcode end =============================*/
 
-
 #if _JVM_DEBUG_PROFILE
                 //time
                 if (!spent) spent = nanoTime() - start_at;
                 profile_put(cur_inst, spent, 1);
 #endif
+                continue;
 
-            }//end while
+                label_exception_handle:
+                if (exception_handle(runtime->stack, runtime)) {
+                    ret = RUNTIME_STATUS_NORMAL;
+                    opCode = runtime->pc;
+                } else {
+                    break;
+                }
+#if _JVM_DEBUG_PROFILE
+                //time
+                if (!spent) spent = nanoTime() - start_at;
+                profile_put(cur_inst, spent, 1);
+#endif
+                continue;
+
+                label_exit_while:
+                break;
+
+            } while (1);//end while
             if (method->is_sync)_synchronized_unlock_method(method, runtime);
 
         } else {
@@ -3946,8 +4239,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             java_native_method *native = find_native_method(utf8_cstr(clazz->name), utf8_cstr(method->name),
                                                             utf8_cstr(method->descriptor));
             if (!native) {
-                Instance *exception = exception_create_str(JVM_EXCEPTION_NOSUCHMETHOD, runtime,
-                                                           utf8_cstr(method->name));
+                Instance *exception = exception_create_str(JVM_EXCEPTION_NOSUCHMETHOD, runtime, utf8_cstr(method->name));
                 push_ref(stack, (__refer) exception);
                 ret = RUNTIME_STATUS_EXCEPTION;
             } else {

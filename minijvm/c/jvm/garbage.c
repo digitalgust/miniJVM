@@ -102,11 +102,10 @@ void garbage_collector_destory() {
 
 
 void _garbage_clear() {
-    jvm_printf("[INFO]garbage clear start========================\n");
-
-    //
+#if _JVM_DEBUG_BYTECODE_DETAIL > 1
+    jvm_printf("[INFO]garbage clear start\n");
     jvm_printf("[INFO]objs size :%lld\n", collector->obj_count);
-
+#endif
     //解除所有引用关系后，回收全部对象
     while (garbage_collect());//collect instance
 
@@ -120,7 +119,9 @@ void _garbage_clear() {
     while (garbage_collect());//collect classes
 
     //
+#if _JVM_DEBUG_BYTECODE_DETAIL > 1
     jvm_printf("[INFO]objs size :%lld\n", collector->obj_count);
+#endif
     //dump_refer();
 }
 
@@ -320,7 +321,8 @@ void _garbage_remove_out_holder(__refer ref) {
 s32 _collect_thread_run(void *para) {
     s64 lastgc = currentTimeMillis();
     while (1) {
-        threadSleep(10);
+        threadSleep(100);
+        s64 cur_mil = currentTimeMillis();
 
         if (collector->_garbage_thread_status == GARBAGE_THREAD_STOP) {
             break;
@@ -328,17 +330,17 @@ s32 _collect_thread_run(void *para) {
         if (collector->_garbage_thread_status == GARBAGE_THREAD_PAUSE) {
             continue;
         }
-        if (currentTimeMillis() - lastgc < 1000) {// less than custom sec no gc
+        if (cur_mil - lastgc < 1000) {// less than custom sec no gc
             continue;
         }
 //        if (JDWP_DEBUG && jdwpserver.clients->length) {// less than 3 sec no gc
 //            continue;
 //        }
-        if (currentTimeMillis() - lastgc > GARBAGE_PERIOD_MS || heap_size > MAX_HEAP_SIZE * .8f) {
-            garbage_collect();
-            lastgc = currentTimeMillis();
-        }
 
+        if (cur_mil - lastgc > GARBAGE_PERIOD_MS || heap_size > MAX_HEAP_SIZE * .8f) {
+            garbage_collect();
+            lastgc = cur_mil;
+        }
     }
     collector->_garbage_thread_status = GARBAGE_THREAD_DEAD;
     return 0;
@@ -442,8 +444,9 @@ s64 garbage_collect() {
     spin_unlock(&collector->lock);
 
     s64 time_gc = currentTimeMillis() - time;
-//    jvm_printf("[INFO]gc obj: %lld->%lld   heap : %lld -> %lld  stop_world: %lld  gc:%lld\n",
-//               iter, collector->obj_count, mem_total, heap_size, time_stopWorld, time_gc);
+#if _JVM_DEBUG_BYTECODE_DETAIL > 1
+    jvm_printf("[INFO]gc obj: %lld->%lld   heap : %lld -> %lld  stop_world: %lld  gc:%lld\n", iter, collector->obj_count, mem_total, heap_size, time_stopWorld, time_gc);
+#endif
 
 #ifdef MEM_ALLOC_LTALLOC
     jvm_squeeze(0);

@@ -188,6 +188,7 @@ JClass *array_class_get_by_name(Runtime *runtime, Utf8String *name) {
     }
     return clazz;
 }
+
 /**
  * =============================== threadlist ==============================
  */
@@ -598,9 +599,9 @@ s32 sys_properties_load(ClassLoader *loader) {
     sys_properties_set_c("file.separator","/");
     sys_properties_set_c("line.separator", "\n");
 #elif __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__ || __JVM_OS_VS__
-    sys_properties_set_c("os.name","Windows");
-    sys_properties_set_c("path.separator",";");
-    sys_properties_set_c("file.separator","\\");
+    sys_properties_set_c("os.name", "Windows");
+    sys_properties_set_c("path.separator", ";");
+    sys_properties_set_c("file.separator", "\\");
     sys_properties_set_c("line.separator", "\r\n");
 #endif
 
@@ -705,8 +706,10 @@ s32 jthread_dispose(Instance *jthread) {
 
 s32 jtherad_run(void *para) {
     Instance *jthread = (Instance *) para;
+#if _JVM_DEBUG_BYTECODE_DETAIL > 0
+    s64 startAt = currentTimeMillis();
     jvm_printf("thread start %llx\n", (s64) (intptr_t) jthread);
-
+#endif
     s32 ret = 0;
     Runtime *runtime = (Runtime *) jthread_get_stackframe_value(jthread);
     runtime->threadInfo->pthread = thrd_current();
@@ -732,7 +735,10 @@ s32 jtherad_run(void *para) {
     runtime->threadInfo->thread_status = THREAD_STATUS_ZOMBIE;
     jthread_dispose(jthread);
     runtime_destory(runtime);
-    jvm_printf("thread over %llx\n", (s64) (intptr_t) jthread);
+#if _JVM_DEBUG_BYTECODE_DETAIL > 0
+    s64 spent = currentTimeMillis() - startAt;
+    jvm_printf("thread over %llx , spent : %lld\n", (s64) (intptr_t) jthread, spent);
+#endif
     return ret;
 }
 

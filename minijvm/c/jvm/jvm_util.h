@@ -407,20 +407,6 @@ void jarray_set_field(Instance *arr, s32 index, s64 val);
 
 s64 jarray_get_field(Instance *arr, s32 index);
 
-
-static inline s32 jarray_check_exception(Instance *arr, s32 index, Runtime *runtime) {
-    if (arr == NULL) {
-        Instance *exception = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
-        push_ref(runtime->stack, (__refer) exception);
-        return RUNTIME_STATUS_EXCEPTION;
-    } else if (index >= arr->arr_length || index < 0) {
-        Instance *exception = exception_create(JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS, runtime);
-        push_ref(runtime->stack, (__refer) exception);
-        return RUNTIME_STATUS_EXCEPTION;
-    }
-    return RUNTIME_STATUS_NORMAL;
-}
-
 c8 *getFieldPtr_byName_c(Instance *instance, c8 *pclassName, c8 *pfieldName, c8 *pfieldType, Runtime *runtime);
 
 c8 *getFieldPtr_byName(Instance *instance, Utf8String *clsName, Utf8String *fieldName, Utf8String *fieldType, Runtime *runtime);
@@ -438,6 +424,8 @@ s32 classes_put(JClass *clazz);
 JClass *classes_load_get(Utf8String *pclassName, Runtime *runtime);
 
 JClass *primitive_class_create_get(Runtime *runtime, Utf8String *ustr);
+
+
 
 
 #ifdef __cplusplus

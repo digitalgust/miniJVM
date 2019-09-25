@@ -82,7 +82,7 @@ void profile_print() {
         ProfileDetail *pd = &profile_instructs[i];
         if (pd->count)
             jvm_printf("%2x %15lld %8d %8lld %s\n",
-                       i, pd->cost, pd->count, pd->count ? (pd->cost / pd->count) : 0, inst_name[i]);
+                       i|0xffffff00, pd->cost, pd->count, pd->count ? (pd->cost / pd->count) : 0, inst_name[i]);
     }
 }
 
@@ -243,13 +243,13 @@ void jvm_init(c8 *p_classpath, StaticLibRegFunc regFunc) {
     //init load thread, string etc
     Runtime *runtime = runtime_create(NULL);
     Utf8String *clsName = utf8_create_c("java/lang/Integer");
-    classes_load_get(clsName,runtime);
+    classes_load_get(clsName, runtime);
     thread_boundle(runtime);
     //开始装载类
     utf8_destory(clsName);
     thread_unboundle(runtime);
     runtime_destory(runtime);
-    runtime=NULL;
+    runtime = NULL;
 }
 
 void jvm_destroy(StaticLibRegFunc unRegFunc) {
@@ -278,7 +278,9 @@ void jvm_destroy(StaticLibRegFunc unRegFunc) {
     native_lib_destory();
     sys_properties_dispose();
     close_log();
-    jvm_printf("jvm over %lld\n", heap_size);
+#if _JVM_DEBUG_BYTECODE_DETAIL > 0
+    jvm_printf("jvm destoried heap size = %lld\n", heap_size);
+#endif
     set_jvm_state(JVM_STATUS_UNKNOW);
 }
 
@@ -347,7 +349,9 @@ s32 call_method_main(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, ArrayL
 
 
             s64 start = currentTimeMillis();
-            jvm_printf("\n================================= main start ================================\n");
+#if _JVM_DEBUG_BYTECODE_DETAIL > 0
+            jvm_printf("\nmain thread start\n");
+#endif
             //调用主方法
             if (JDWP_DEBUG) {
                 jthread_suspend(runtime);
@@ -359,9 +363,9 @@ s32 call_method_main(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, ArrayL
             if (ret != RUNTIME_STATUS_NORMAL && ret != RUNTIME_STATUS_INTERRUPT) {
                 print_exception(runtime);
             }
-
-            jvm_printf("================================= main  end  ================================\n");
-            jvm_printf("spent %lld\n", (currentTimeMillis() - start));
+#if _JVM_DEBUG_BYTECODE_DETAIL > 0
+            jvm_printf("main thread over %llx , spent : %lld\n", (s64) (intptr_t) runtime->threadInfo->jthread, (currentTimeMillis() - start));
+#endif
 
 #if _JVM_DEBUG_PROFILE
             profile_print();
