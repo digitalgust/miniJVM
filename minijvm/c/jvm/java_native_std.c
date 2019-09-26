@@ -1228,7 +1228,7 @@ Instance *buildStackElement(Runtime *runtime, Runtime *target) {
             if (target->method->is_native) {
                 setFieldInt(ptr, -1);
             } else {
-                setFieldInt(ptr, getLineNumByIndex(target->ca, (s32) (target->pc - target->ca->code)));
+                setFieldInt(ptr, getLineNumByIndex(target->method->converted_code, (s32) (target->pc - target->method->converted_code->code)));
             }
         }
         if (target->parent && target->parent->parent) {

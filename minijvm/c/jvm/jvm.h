@@ -27,7 +27,7 @@ extern "C" {
 
 //=======================  micro define  =============================
 //_JVM_DEBUG  01=thread info, 02=garage info , 03=class load, 04=method call,  06=all bytecode
-#define _JVM_DEBUG_BYTECODE_DETAIL 02
+#define _JVM_DEBUG_BYTECODE_DETAIL 01
 #define _JVM_DEBUG_PRINT_FILE 0
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_PROFILE 0
@@ -1174,7 +1174,6 @@ struct _Runtime {
     MethodInfo *method;
     JClass *clazz;
     u8 *pc;
-    CodeAttribute *ca;//method bytecode
     JavaThreadInfo *threadInfo;
     MemoryBlock *lock;
     Runtime *son;//sub method's runtime

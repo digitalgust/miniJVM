@@ -151,8 +151,8 @@ Runtime *getTopRuntime(Runtime *runtime) {
 }
 
 s64 getInstructPointer(Runtime *runtime) {
-    if (runtime && runtime->method && runtime->ca) {
-        return runtime->pc - runtime->ca->code;
+    if (runtime && runtime->method && runtime->method->converted_code) {
+        return runtime->pc - runtime->method->converted_code->code;
     }
     return -1;
 }
@@ -168,7 +168,7 @@ void getRuntimeStack(Runtime *runtime, Utf8String *ustr) {
             utf8_append(ustr, last->method->name);
             utf8_append(ustr, last->method->descriptor);
             utf8_append_c(ustr, ":");
-            utf8_append_s64(ustr, (s64) ((last->pc) - (last->ca ? last->ca->code : 0)), 10);
+            utf8_append_s64(ustr, (s64) ((last->pc) - (last->method->converted_code ? last->method->converted_code->code : 0)), 10);
         }
         utf8_append_c(ustr, "\n");
 

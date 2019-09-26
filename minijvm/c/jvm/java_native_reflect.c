@@ -820,7 +820,7 @@ s32 org_mini_reflect_StackFrame_mapRuntime(Runtime *runtime, JClass *clazz) {
         if (ptr)setFieldLong(ptr, (u64) (intptr_t) target->pc);
         //
         ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_RUNTIME, "byteCode", "J", runtime);
-        if (ptr)setFieldLong(ptr, target->ca ? (u64) (intptr_t) target->ca->code : 0);
+        if (ptr)setFieldLong(ptr, target->method->converted_code ? (u64) (intptr_t) target->method->converted_code->code : 0);
         //
         ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_RUNTIME, "methodId", "J", runtime);
         if (ptr)setFieldLong(ptr, (u64) (intptr_t) target->method);

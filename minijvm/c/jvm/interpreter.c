@@ -189,17 +189,18 @@ static inline s32 exception_handle(RuntimeStack *stack, Runtime *runtime) {
     StackEntry entry;
     peek_entry(stack->sp - 1, &entry);
     Instance *ins = entry_2_refer(&entry);
+    CodeAttribute *ca = runtime->method->converted_code;
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 3
     JClass *clazz = runtime->clazz;
-    s32 lineNum = getLineNumByIndex(runtime->ca, runtime->pc - runtime->ca->code);
+    s32 lineNum = getLineNumByIndex(runtime->method->converted_code, runtime->pc - runtime->method->converted_code->code);
     jvm_printf("Exception   at %s.%s(%s.java:%d)\n",
                utf8_cstr(clazz->name), utf8_cstr(runtime->method->name),
                utf8_cstr(clazz->name),
                lineNum
     );
 #endif
-    ExceptionTable *et = _find_exception_handler(runtime, ins, runtime->ca, (s32) (runtime->pc - runtime->ca->code), ins);
+    ExceptionTable *et = _find_exception_handler(runtime, ins, ca, (s32) (runtime->pc - ca->code), ins);
     if (et == NULL) {
         Instance *ins = pop_ref(stack);
         localvar_dispose(runtime);
@@ -209,7 +210,7 @@ static inline s32 exception_handle(RuntimeStack *stack, Runtime *runtime) {
 #if _JVM_DEBUG_BYTECODE_DETAIL > 3
         jvm_printf("Exception : %s\n", utf8_cstr(ins->mb.clazz->name));
 #endif
-        runtime->pc = (runtime->ca->code + et->handler_pc);
+        runtime->pc = (ca->code + et->handler_pc);
         return 1;
     }
 
@@ -623,9 +624,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             if (method->is_sync)_synchronized_lock_method(method, runtime);
 
             opCode = ca->code;
-            runtime->ca = ca;
             JavaThreadInfo *threadInfo = runtime->threadInfo;
-
             do {
                 runtime->pc = opCode;
                 u8 cur_inst = *opCode;
@@ -650,15 +649,16 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     check_suspend_and_pause(runtime);
                 }
 
+
 #if _JVM_DEBUG_PROFILE
-                s64 spent = 0;
-                s64 start_at = nanoTime();
+                    s64 spent = 0;
+                    s64 start_at = nanoTime();
 #endif
 
 
-                /* ==================================opcode start =============================*/
+                    /* ==================================opcode start =============================*/
 #ifdef __JVM_DEBUG__
-                s64 inst_pc = runtime->pc - ca->code;
+                    s64 inst_pc = runtime->pc - ca->code;
 #endif
                 JUMP_TO_IP(cur_inst);
                 switch (cur_inst) {
@@ -4251,7 +4251,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                 continue;
 
                 label_exception_handle:
-                if (exception_handle(runtime->stack, runtime)) {
+                // there is exception handle, but not error/interrupt handle
+                if (ret == RUNTIME_STATUS_EXCEPTION
+                    && exception_handle(runtime->stack, runtime)) {
                     ret = RUNTIME_STATUS_NORMAL;
                     opCode = runtime->pc;
                 } else {
