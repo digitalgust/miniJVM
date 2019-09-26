@@ -651,14 +651,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
 #if _JVM_DEBUG_PROFILE
-                    s64 spent = 0;
-                    s64 start_at = nanoTime();
+                s64 spent = 0;
+                s64 start_at = nanoTime();
 #endif
 
 
-                    /* ==================================opcode start =============================*/
+                /* ==================================opcode start =============================*/
 #ifdef __JVM_DEBUG__
-                    s64 inst_pc = runtime->pc - ca->code;
+                s64 inst_pc = runtime->pc - ca->code;
 #endif
                 JUMP_TO_IP(cur_inst);
                 switch (cur_inst) {
@@ -4267,6 +4267,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                 continue;
 
                 label_exit_while:
+#if _JVM_DEBUG_PROFILE
+                //time
+                if (!spent) spent = nanoTime() - start_at;
+                profile_put(cur_inst, spent, 1);
+#endif
                 break;
 
             } while (1);//end while

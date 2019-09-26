@@ -6,7 +6,6 @@
 package test;
 
 /**
- *
  * @author Gust
  */
 public class SpecTest {
@@ -23,6 +22,7 @@ public class SpecTest {
         test_array();
         test_other();
         test_field();
+        test_wide();
         test_method();
         test_cal();
         print("test end");
@@ -52,7 +52,7 @@ public class SpecTest {
             public static final int POS_C = 14;
         }
         int i = 0x100401d;
-        System.out.println("Lua.MASK_B=" + Lua.MASK_B + "Lua.MASK_C=" + Lua.MASK_C);
+        //System.out.println("Lua.MASK_B=" + Lua.MASK_B + "Lua.MASK_C=" + Lua.MASK_C);
 
         int m = Lua.MASK_B | Lua.MASK_C;
 
@@ -613,7 +613,7 @@ public class SpecTest {
         if (i != 5) {
             printerr("f2i");
         }
-        j = (long) d;
+        j = (long) f;
         if (j != 5) {
             printerr("f2l");
         }
@@ -919,6 +919,7 @@ public class SpecTest {
             while (true) {
                 try {
                     if (!a.start) {//wait v2++ first
+                        a.lock.notify();
                         a.lock.wait(5);
                         continue;
                     }
@@ -972,35 +973,45 @@ public class SpecTest {
         static double sd;
         static Object so;
 
+        double result;
+
         byte rb() {
+            result += b;
             return b;
         }
 
         short rs() {
+            result += s;
             return s;
         }
 
         char rc() {
+            result += c;
             return c;
         }
 
         int ri() {
+            result += i;
             return i;
         }
 
         long rj() {
+            result += j;
             return j;
         }
 
         float rf() {
+            result += f;
             return f;
         }
 
         double rd() {
+            result += d;
             return d;
         }
 
         Object ro() {
+            result += result;
             return o;
         }
     }
@@ -1066,8 +1077,8 @@ public class SpecTest {
         if (xf.f != 0.5f) {
             printerr("getfield, putfield f");
         }
-        xf.d = .5d;
-        if (xf.f != 0.5d) {
+        xf.d = .51d;
+        if (xf.d != 0.51d) {
             printerr("getfield, putfield d");
         }
         xf.o = new Integer(1);
@@ -1082,7 +1093,7 @@ public class SpecTest {
             printerr("ireturn b");
         }
         xf.s = (short) 0xffff;
-        if (xf.rb() != -1) {
+        if (xf.rs() != -1) {
             printerr("ireturn s");
         }
         xf.c = (char) 0xffff;
@@ -1093,8 +1104,8 @@ public class SpecTest {
         if (xf.ri() != -1) {
             printerr("ireturn i");
         }
-        xf.j = 0xffff;
-        if (xf.rj() != 0xffff) {
+        xf.j = 0xffffffffffffffffL;
+        if (xf.rj() != -1) {
             printerr("lreturn j");
         }
         xf.f = .5f;
@@ -1112,6 +1123,82 @@ public class SpecTest {
         }
 
     }
+
+    static void test_wide() {
+
+        byte b00, b01, b02, b03, b04, b05, b06, b07, b08, b09, b10, b11, b12, b13, b14, b15, b16, b17, b18, b19, b20, b21, b22, b23, b24, b25, b26, b27, b28, b29, b30, b31;
+        short s00, s01, s02, s03, s04, s05, s06, s07, s08, s09, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19, s20, s21, s22, s23, s24, s25, s26, s27, s28, s29, s30, s31;
+        char c00, c01, c02, c03, c04, c05, c06, c07, c08, c09, c10, c11, c12, c13, c14, c15, c16, c17, c18, c19, c20, c21, c22, c23, c24, c25, c26, c27, c28, c29, c30, c31;
+        int i00, i01, i02, i03, i04, i05, i06, i07, i08, i09, i10, i11, i12, i13, i14, i15, i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31;
+        long j00, j01, j02, j03, j04, j05, j06, j07, j08, j09, j10, j11, j12, j13, j14, j15, j16, j17, j18, j19, j20, j21, j22, j23, j24, j25, j26, j27, j28, j29, j30, j31;
+        float f00, f01, f02, f03, f04, f05, f06, f07, f08, f09, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31;
+        double d00, d01, d02, d03, d04, d05, d06, d07, d08, d09, d10, d11, d12, d13, d14, d15, d16, d17, d18, d19, d20, d21, d22, d23, d24, d25, d26, d27, d28, d29, d30, d31;
+        Object r00, r01, r02, r03, r04, r05, r06, r07, r08, r09, r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, r24, r25, r26, r27, r28, r29, r30, r31;
+
+        b00 = b01 = b02 = b03 = b04 = b05 = b06 = b07 = b08 = b09 = b10 = b11 = b12 = b13 = b14 = b15 = b16 = b17 = b18 = b19 = b20 = b21 = b22 = b23 = b24 = b25 = b26 = b27 = b28 = b29 = b30 = b31 = 1;
+        s00 = s01 = s02 = s03 = s04 = s05 = s06 = s07 = s08 = s09 = s10 = s11 = s12 = s13 = s14 = s15 = s16 = s17 = s18 = s19 = s20 = s21 = s22 = s23 = s24 = s25 = s26 = s27 = s28 = s29 = s30 = s31 = 1;
+        c00 = c01 = c02 = c03 = c04 = c05 = c06 = c07 = c08 = c09 = c10 = c11 = c12 = c13 = c14 = c15 = c16 = c17 = c18 = c19 = c20 = c21 = c22 = c23 = c24 = c25 = c26 = c27 = c28 = c29 = c30 = c31 = 1;
+        i00 = i01 = i02 = i03 = i04 = i05 = i06 = i07 = i08 = i09 = i10 = i11 = i12 = i13 = i14 = i15 = i16 = i17 = i18 = i19 = i20 = i21 = i22 = i23 = i24 = i25 = i26 = i27 = i28 = i29 = i30 = i31 = 1;
+        j00 = j01 = j02 = j03 = j04 = j05 = j06 = j07 = j08 = j09 = j10 = j11 = j12 = j13 = j14 = j15 = j16 = j17 = j18 = j19 = j20 = j21 = j22 = j23 = j24 = j25 = j26 = j27 = j28 = j29 = j30 = j31 = 1L;
+        f00 = f01 = f02 = f03 = f04 = f05 = f06 = f07 = f08 = f09 = f10 = f11 = f12 = f13 = f14 = f15 = f16 = f17 = f18 = f19 = f20 = f21 = f22 = f23 = f24 = f25 = f26 = f27 = f28 = f29 = f30 = f31 = 1.F;
+        d00 = d01 = d02 = d03 = d04 = d05 = d06 = d07 = d08 = d09 = d10 = d11 = d12 = d13 = d14 = d15 = d16 = d17 = d18 = d19 = d20 = d21 = d22 = d23 = d24 = d25 = d26 = d27 = d28 = d29 = d30 = d31 = 1.D;
+        r00 = r01 = r02 = r03 = r04 = r05 = r06 = r07 = r08 = r09 = r10 = r11 = r12 = r13 = r14 = r15 = r16 = r17 = r18 = r19 = r20 = r21 = r22 = r23 = r24 = r25 = r26 = r27 = r28 = r29 = r30 = r31 = new Object();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(b00).append(b01).append(b02).append(b03).append(b04).append(b05).append(b06).append(b07).append(b08).append(b09).append(b10).append(b11).append(b12).append(b13).append(b14).append(b15).append(b16).append(b17).append(b18).append(b19).append(b20).append(b21).append(b22).append(b23).append(b24).append(b25).append(b26).append(b27).append(b28).append(b29).append(b30).append(b31)
+                .append(s00).append(s01).append(s02).append(s03).append(s04).append(s05).append(s06).append(s07).append(s08).append(s09).append(s10).append(s11).append(s12).append(s13).append(s14).append(s15).append(s16).append(s17).append(s18).append(s19).append(s20).append(s21).append(s22).append(s23).append(s24).append(s25).append(s26).append(s27).append(s28).append(s29).append(s30).append(s31)
+                .append(c00).append(c01).append(c02).append(c03).append(c04).append(c05).append(c06).append(c07).append(c08).append(c09).append(c10).append(c11).append(c12).append(c13).append(c14).append(c15).append(c16).append(c17).append(c18).append(c19).append(c20).append(c21).append(c22).append(c23).append(c24).append(c25).append(c26).append(c27).append(c28).append(c29).append(c30).append(c31)
+                .append(i00).append(i01).append(i02).append(i03).append(i04).append(i05).append(i06).append(i07).append(i08).append(i09).append(i10).append(i11).append(i12).append(i13).append(i14).append(i15).append(i16).append(i17).append(i18).append(i19).append(i20).append(i21).append(i22).append(i23).append(i24).append(i25).append(i26).append(i27).append(i28).append(i29).append(i30).append(i31)
+                .append(j00).append(j01).append(j02).append(j03).append(j04).append(j05).append(j06).append(j07).append(j08).append(j09).append(j10).append(j11).append(j12).append(j13).append(j14).append(j15).append(j16).append(j17).append(j18).append(j19).append(j20).append(j21).append(j22).append(j23).append(j24).append(j25).append(j26).append(j27).append(j28).append(j29).append(j30).append(j31)
+                .append(f00).append(f01).append(f02).append(f03).append(f04).append(f05).append(f06).append(f07).append(f08).append(f09).append(f10).append(f11).append(f12).append(f13).append(f14).append(f15).append(f16).append(f17).append(f18).append(f19).append(f20).append(f21).append(f22).append(f23).append(f24).append(f25).append(f26).append(f27).append(f28).append(f29).append(f30).append(f31)
+                .append(d00).append(d01).append(d02).append(d03).append(d04).append(d05).append(d06).append(d07).append(d08).append(d09).append(d10).append(d11).append(d12).append(d13).append(d14).append(d15).append(d16).append(d17).append(d18).append(d19).append(d20).append(d21).append(d22).append(d23).append(d24).append(d25).append(d26).append(d27).append(d28).append(d29).append(d30).append(d31)
+                .append(r00).append(r01).append(r02).append(r03).append(r04).append(r05).append(r06).append(r07).append(r08).append(r09).append(r10).append(r11).append(r12).append(r13).append(r14).append(r15).append(r16).append(r17).append(r18).append(r19).append(r20).append(r21).append(r22).append(r23).append(r24).append(r25).append(r26).append(r27).append(r28).append(r29).append(r30).append(r31);
+        System.setProperty("unuse", sb.toString());
+// align localvar index >255, need 2byte for wide instruction
+        byte b32;
+        short s32;
+        char c32;
+        int i32;
+        long j32;
+        float f32;
+        double d32;
+        Object r32;
+
+        b32 = (byte) 0xff;
+        if (b32 != -1) {
+            printerr("wide iload istore b");
+        }
+        s32 = (short) 0xffff;
+        if (s32 != -1) {
+            printerr("wide iload istore  s");
+        }
+        c32 = (char) 0xffff;
+        if (c32 != 0xffff) {
+            printerr("wide iload istore  c");
+        }
+        i32 = 0xffffffff;
+        if (i32 != -1) {
+            printerr("wide iload istore  i");
+        }
+        j32 = 0xffffffffffffffffL;
+        if (j32 != -1) {
+            printerr("wide lload lstore j");
+        }
+        f32 = .5f;
+        if (f32 != 0.5f) {
+            printerr("wide fload fstore f");
+        }
+        d32 = 5.5d;
+        if (d32 != 5.5d) {
+            printerr("wide dload dstore d");
+        }
+        r32 = new Integer(1);
+        Object o = r32;
+        if (r32 != o) {
+            printerr("wide aload astore r");
+        }
+    }
+
 
     static void test_method() {
         Human one = new Son();
@@ -1133,8 +1220,13 @@ public class SpecTest {
         }
 
         Human jason = () -> 30;
-
-        if (jason.age() != 30) {
+        Human jack = new Human() {
+            @Override
+            public int age() {
+                return 40;
+            }
+        };
+        if (jason.age() != 30 || jack.age() != 40) {
             printerr("invokedynamic");
         }
     }
@@ -1175,4 +1267,4 @@ class Son extends Father {
     }
 }
 
-        //=========================================================
+//=========================================================
