@@ -13,12 +13,22 @@
 
 
 static inline void _op_load_1_slot(RuntimeStack *stack, LocalVarItem *localvar, Runtime *runtime, s32 i) {
-    push_entry(stack, localvar_getEntry(localvar, i));
+    push_int(stack, localvar_getInt(localvar, i));
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
     StackEntry entry;
     peek_entry(stack->sp - 1, &entry);
     invoke_deepth(runtime);
-    jvm_printf("load_1slot : load localvar[%d] value %lld/[%llx] into stack\n", i, entry.lvalue, entry.rvalue);
+    jvm_printf("load_1slot : load localvar[%d] value %lld into stack\n", i, entry.lvalue);
+#endif
+}
+
+static inline void _op_load_refer(RuntimeStack *stack, LocalVarItem *localvar, Runtime *runtime, s32 i) {
+    push_ref(stack, localvar_getRefer(localvar, i));
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+    StackEntry entry;
+    peek_entry(stack->sp - 1, &entry);
+    invoke_deepth(runtime);
+    jvm_printf("load_ref : load localvar[%d] value [%llx] into stack\n", i, entry.rvalue);
 #endif
 }
 
@@ -42,6 +52,16 @@ static inline void _op_store_1_slot(RuntimeStack *stack, LocalVarItem *localvar,
     jvm_printf("store_1slot : save %llx/%lld into localvar[%d]\n", entry.rvalue, entry.lvalue, i);
 #endif
     localvar_setEntry(localvar, i, (--stack->sp));
+}
+
+static inline void _op_store_refer(RuntimeStack *stack, LocalVarItem *localvar, Runtime *runtime, s32 i) {
+#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+    StackEntry entry;
+    peek_entry(stack->sp - 1, &entry);
+    invoke_deepth(runtime);
+    jvm_printf("store_ref : save [%llx] into localvar[%d]\n", entry.rvalue, i);
+#endif
+    localvar_setRefer(localvar, i, (--stack->sp)->rvalue);
 }
 
 
@@ -174,9 +194,9 @@ static inline s32 exception_handle(RuntimeStack *stack, Runtime *runtime) {
     JClass *clazz = runtime->clazz;
     s32 lineNum = getLineNumByIndex(runtime->ca, runtime->pc - runtime->ca->code);
     jvm_printf("Exception   at %s.%s(%s.java:%d)\n",
-           utf8_cstr(clazz->name), utf8_cstr(runtime->method->name),
-           utf8_cstr(clazz->name),
-           lineNum
+               utf8_cstr(clazz->name), utf8_cstr(runtime->method->name),
+               utf8_cstr(clazz->name),
+               lineNum
     );
 #endif
     ExceptionTable *et = _find_exception_handler(runtime, ins, runtime->ca, (s32) (runtime->pc - runtime->ca->code), ins);
@@ -280,6 +300,32 @@ static inline void _synchronized_unlock_method(MethodInfo *method, Runtime *runt
     {
         jthread_unlock(runtime->lock, runtime);
         runtime->lock = NULL;
+    }
+}
+
+/**
+ *    only static and special can be optimize , invokevirtual and invokeinterface may called by diff instance
+ * @param subm
+ * @param parent_method_code
+ */
+static inline void _optimize_empty_method_call(MethodInfo *subm, u8 *parent_method_code) {
+    CodeAttribute *ca = subm->converted_code;
+    if (ca && ca->code_length == 1 && *ca->code == op_return) {//empty method, do nothing
+        s32 paras = subm->para_slots;//
+
+        if (paras == 0) {
+            *parent_method_code = op_nop;
+            *(parent_method_code + 1) = op_nop;
+            *(parent_method_code + 2) = op_nop;
+        } else if (paras == 1) {
+            *parent_method_code = op_pop;
+            *(parent_method_code + 1) = op_nop;
+            *(parent_method_code + 2) = op_nop;
+        } else if (paras == 2) {
+            *parent_method_code = op_pop2;
+            *(parent_method_code + 1) = op_nop;
+            *(parent_method_code + 2) = op_nop;
+        }
     }
 }
 
@@ -560,28 +606,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
     if (!(method->is_native)) {
         CodeAttribute *ca = method->converted_code;
         if (ca) {
-            if (ca->code_length == 1 && *ca->code == op_return) {//empty method, do nothing
-                s32 paras = method->para_slots;
-                switch (*pruntime->pc) {//only static and special can be optimize , invokevirtual may call by diff instance
-                    case op_invokestatic:
-                    case op_invokespecial: {
-                        if (paras == 0) {
-                            *pruntime->pc = op_nop;
-                            *(pruntime->pc + 1) = op_nop;
-                            *(pruntime->pc + 2) = op_nop;
-                        } else if (paras == 1) {
-                            *pruntime->pc = op_pop;
-                            *(pruntime->pc + 1) = op_nop;
-                            *(pruntime->pc + 2) = op_nop;
-                        } else if (paras == 2) {
-                            *pruntime->pc = op_pop2;
-                            *(pruntime->pc + 1) = op_nop;
-                            *(pruntime->pc + 2) = op_nop;
-                        }
-                        break;
-                    }
-                }
-            }
+
             if (stack->max_size < stack->sp - stack->store) {
                 Utf8String *ustr = utf8_create();
                 getRuntimeStack(runtime, ustr);
@@ -815,10 +840,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     label_iload:
                     label_fload:
                     case op_iload:
-                    case op_fload:
+                    case op_fload:{
+                        _op_load_1_slot(stack, localvar, runtime, (u8) opCode[1]);
+                        opCode += 2;
+                        break;
+                    }
                     label_aload:
                     case op_aload: {
-                        _op_load_1_slot(stack, localvar, runtime, (u8) opCode[1]);
+                        _op_load_refer(stack, localvar, runtime, (u8) opCode[1]);
                         opCode += 2;
                         break;
                     }
@@ -946,28 +975,28 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_aload_0:
                     case op_aload_0: {
-                        _op_load_1_slot(stack, localvar, runtime, 0);
+                        _op_load_refer(stack, localvar, runtime, 0);
                         opCode++;
                         break;
                     }
 
                     label_aload_1:
                     case op_aload_1: {
-                        _op_load_1_slot(stack, localvar, runtime, 1);
+                        _op_load_refer(stack, localvar, runtime, 1);
                         opCode++;
                         break;
                     }
 
                     label_aload_2:
                     case op_aload_2: {
-                        _op_load_1_slot(stack, localvar, runtime, 2);
+                        _op_load_refer(stack, localvar, runtime, 2);
                         opCode++;
                         break;
                     }
 
                     label_aload_3:
                     case op_aload_3: {
-                        _op_load_1_slot(stack, localvar, runtime, 3);
+                        _op_load_refer(stack, localvar, runtime, 3);
                         opCode++;
                         break;
                     }
@@ -1111,14 +1140,17 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     label_istore:
                     case op_istore:
                     label_fstore:
-                    case op_fstore:
-                    label_astore:
-                    case op_astore: {
+                    case op_fstore:{
                         _op_store_1_slot(stack, localvar, runtime, (u8) opCode[1]);
                         opCode += 2;
                         break;
                     }
-
+                    label_astore:
+                    case op_astore: {
+                        _op_store_refer(stack, localvar, runtime, (u8) opCode[1]);
+                        opCode += 2;
+                        break;
+                    }
 
                     label_lstore:
                     case op_lstore:
@@ -1247,28 +1279,28 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_astore_0:
                     case op_astore_0: {
-                        _op_store_1_slot(stack, localvar, runtime, 0);
+                        _op_store_refer(stack, localvar, runtime, 0);
                         opCode++;
                         break;
                     }
 
                     label_astore_1:
                     case op_astore_1: {
-                        _op_store_1_slot(stack, localvar, runtime, 1);
+                        _op_store_refer(stack, localvar, runtime, 1);
                         opCode++;
                         break;
                     }
 
                     label_astore_2:
                     case op_astore_2: {
-                        _op_store_1_slot(stack, localvar, runtime, 2);
+                        _op_store_refer(stack, localvar, runtime, 2);
                         opCode++;
                         break;
                     }
 
                     label_astore_3:
                     case op_astore_3: {
-                        _op_store_1_slot(stack, localvar, runtime, 3);
+                        _op_store_refer(stack, localvar, runtime, 3);
                         opCode++;
                         break;
                     }
@@ -3092,6 +3124,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             goto label_exception_handle;
                         } else {
                             *opCode = op_invokespecial_fast;
+                            _optimize_empty_method_call(m, opCode);//if method is empty ,bytecode would replaced 'nop' and 'pop' para
                         }
                         break;
                     }
@@ -3107,6 +3140,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             goto label_exception_handle;
                         } else {
                             *opCode = op_invokestatic_fast;
+                            _optimize_empty_method_call(m, opCode);
                         }
                         break;
                     }
@@ -3470,9 +3504,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         cur_inst = *opCode;
                         switch (cur_inst) {
                             case op_iload:
-                            case op_fload:
-                            case op_aload: {
+                            case op_fload: {
                                 _op_load_1_slot(stack, localvar, runtime, *((u16 *) (opCode + 1)));
+                                opCode += 3;
+                                break;
+                            }
+                            case op_aload: {
+                                _op_load_refer(stack, localvar, runtime, *((u16 *) (opCode + 1)));
                                 opCode += 3;
                                 break;
                             }
@@ -3483,9 +3521,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 break;
                             }
                             case op_istore:
-                            case op_fstore:
-                            case op_astore: {
+                            case op_fstore: {
                                 _op_store_1_slot(stack, localvar, runtime, *((u16 *) (opCode + 1)));
+                                opCode += 3;
+                                break;
+                            }
+                            case op_astore: {
+                                _op_store_refer(stack, localvar, runtime, *((u16 *) (opCode + 1)));
                                 opCode += 3;
                                 break;
                             }
