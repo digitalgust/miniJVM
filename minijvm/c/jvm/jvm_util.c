@@ -708,7 +708,7 @@ s32 jtherad_run(void *para) {
     Instance *jthread = (Instance *) para;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 0
     s64 startAt = currentTimeMillis();
-    jvm_printf("thread start %llx\n", (s64) (intptr_t) jthread);
+    jvm_printf("[INFO]thread start %llx\n", (s64) (intptr_t) jthread);
 #endif
     s32 ret = 0;
     Runtime *runtime = (Runtime *) jthread_get_stackframe_value(jthread);
@@ -737,7 +737,7 @@ s32 jtherad_run(void *para) {
     runtime_destory(runtime);
 #if _JVM_DEBUG_BYTECODE_DETAIL > 0
     s64 spent = currentTimeMillis() - startAt;
-    jvm_printf("thread over %llx , spent : %lld\n", (s64) (intptr_t) jthread, spent);
+    jvm_printf("[INFO]thread over %llx , spent : %lld\n", (s64) (intptr_t) jthread, spent);
 #endif
     return ret;
 }

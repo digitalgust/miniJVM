@@ -27,7 +27,7 @@ extern "C" {
 
 //=======================  micro define  =============================
 //_JVM_DEBUG  01=thread info, 02=garage info , 03=class load, 04=method call,  06=all bytecode
-#define _JVM_DEBUG_BYTECODE_DETAIL 01
+#define _JVM_DEBUG_BYTECODE_DETAIL 02
 #define _JVM_DEBUG_PRINT_FILE 0
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_PROFILE 0
@@ -267,12 +267,22 @@ enum {
     /* 0xDD */ op_putfield_long,
     /* 0xDE */ op_putfield_int,
     /* 0xDF */ op_putfield_short,
-    /* 0xF0 */ op_putfield_byte,
-    /* 0xF1 */ op_invokevirtual_fast,
-    /* 0xF2 */ op_invokespecial_fast,
-    /* 0xF3 */ op_invokestatic_fast,
-    /* 0xF4 */ op_invokeinterface_fast,
-    /* 0xF5 */ op_invokedynamic_fast,
+    /* 0xE0 */ op_putfield_byte,
+    /* 0xE1 */ op_invokevirtual_fast,
+    /* 0xE2 */ op_invokespecial_fast,
+    /* 0xE3 */ op_invokestatic_fast,
+    /* 0xE4 */ op_invokeinterface_fast,
+    /* 0xE5 */ op_invokedynamic_fast,
+    /* 0xE6 */ op_0xF6,
+    /* 0xE7 */ op_0xF,
+    /* 0xE8 */ op_0xF7,
+    /* 0xE9 */ op_0xF8,
+    /* 0xEA */ op_0xF9,
+    /* 0xEB */ op_0xFA,
+    /* 0xEC */ op_0xFB,
+    /* 0xED */ op_0xFC,
+    /* 0xEE */ op_0xFD,
+    /* 0xEF */ op_0xFE,
 };
 
 
@@ -427,6 +437,7 @@ enum {
     JVM_EXCEPTION_CLASSNOTFOUND,
     JVM_EXCEPTION_NULLPOINTER,
     JVM_EXCEPTION_NOSUCHMETHOD,
+    JVM_EXCEPTION_NOSUCHFIELD,
     JVM_EXCEPTION_ILLEGALARGUMENT,
     JVM_EXCEPTION_CLASSCAST,
     JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS,
@@ -583,7 +594,7 @@ extern c8 *inst_name[];
 //==============profile============
 #if _JVM_DEBUG_PROFILE
 
-#define INST_COUNT 0xff
+#define INST_COUNT 0xEF
 typedef struct _ProfileDetail {
     s64 cost;
     s32 count;

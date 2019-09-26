@@ -238,6 +238,11 @@ static inline void _nosuchmethod_check_exception(c8 *mn, RuntimeStack *stack, Ru
     push_ref(stack, (__refer) exception);
 }
 
+static inline void _nosuchfield_check_exception(c8 *mn, RuntimeStack *stack, Runtime *runtime) {
+    Instance *exception = exception_create_str(JVM_EXCEPTION_NOSUCHFIELD, runtime, mn);
+    push_ref(stack, (__refer) exception);
+}
+
 static inline void _arrithmetic_throw_exception(RuntimeStack *stack, Runtime *runtime) {
     Instance *exception = exception_create(JVM_EXCEPTION_ARRITHMETIC, runtime);
     push_ref(stack, (__refer) exception);
@@ -840,7 +845,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     label_iload:
                     label_fload:
                     case op_iload:
-                    case op_fload:{
+                    case op_fload: {
                         _op_load_1_slot(stack, localvar, runtime, (u8) opCode[1]);
                         opCode += 2;
                         break;
@@ -1140,7 +1145,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     label_istore:
                     case op_istore:
                     label_fstore:
-                    case op_fstore:{
+                    case op_fstore: {
                         _op_store_1_slot(stack, localvar, runtime, (u8) opCode[1]);
                         opCode += 2;
                         break;
@@ -2908,6 +2913,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
                             fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
                             cfr->fieldInfo = fi;
+                            if (!fi) {
+                                _nosuchfield_check_exception(utf8_cstr(cfr->name), stack, runtime);
+                                ret = RUNTIME_STATUS_EXCEPTION;
+                                goto label_exception_handle;
+                            }
                         }
 
                         if (fi->isrefer) {
@@ -2950,6 +2960,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
                             fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
                             cfr->fieldInfo = fi;
+                            if (!fi) {
+                                _nosuchfield_check_exception(utf8_cstr(cfr->name), stack, runtime);
+                                ret = RUNTIME_STATUS_EXCEPTION;
+                                goto label_exception_handle;
+                            }
                         }
                         if (fi->isrefer) {//垃圾回收标识
                             *opCode = op_putstatic_ref;
@@ -2982,49 +2997,44 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     label_getfield:
                     case op_getfield: {
                         u16 idx = *((u16 *) (opCode + 1));
-                        StackEntry entry;
-                        peek_entry(stack->sp - 1, &entry);
-                        Instance *ins = entry_2_refer(&entry);
-                        if (!ins) {
-                            _null_throw_exception(stack, runtime);
-                            ret = RUNTIME_STATUS_EXCEPTION;
-                            goto label_exception_handle;
-                        } else {
-                            FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                        FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                        if (!fi) {
+                            ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
+                            fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
+                            cfr->fieldInfo = fi;
                             if (!fi) {
-                                ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
-                                fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
-                                cfr->fieldInfo = fi;
+                                _nosuchfield_check_exception(utf8_cstr(cfr->name), stack, runtime);
+                                ret = RUNTIME_STATUS_EXCEPTION;
+                                goto label_exception_handle;
                             }
-                            if (fi->isrefer) {
-                                *opCode = op_getfield_ref;
-                            } else {
-                                // check variable type to determine s64/s32/f64/f32
-                                s32 data_bytes = fi->datatype_bytes;
-                                switch (data_bytes) {
-                                    case 4: {
-                                        *opCode = op_getfield_int;
-                                        break;
+                        }
+                        if (fi->isrefer) {
+                            *opCode = op_getfield_ref;
+                        } else {
+                            // check variable type to determine s64/s32/f64/f32
+                            s32 data_bytes = fi->datatype_bytes;
+                            switch (data_bytes) {
+                                case 4: {
+                                    *opCode = op_getfield_int;
+                                    break;
+                                }
+                                case 1: {
+                                    *opCode = op_getfield_byte;
+                                    break;
+                                }
+                                case 8: {
+                                    *opCode = op_getfield_long;
+                                    break;
+                                }
+                                case 2: {
+                                    if (fi->datatype_idx == DATATYPE_JCHAR) {
+                                        *opCode = op_getfield_jchar;
+                                    } else {
+                                        *opCode = op_getfield_short;
                                     }
-                                    case 1: {
-                                        *opCode = op_getfield_byte;
-                                        break;
-                                    }
-                                    case 8: {
-                                        *opCode = op_getfield_long;
-                                        break;
-                                    }
-                                    case 2: {
-                                        if (fi->datatype_idx == DATATYPE_JCHAR) {
-                                            *opCode = op_getfield_jchar;
-                                        } else {
-                                            *opCode = op_getfield_short;
-                                        }
-                                        break;
-                                    }
+                                    break;
                                 }
                             }
-
                         }
                         break;
                     }
@@ -3033,54 +3043,43 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     label_putfield:
                     case op_putfield: {
                         u16 idx = *((u16 *) (opCode + 1));
-
-                        s32 pos = 2;
-                        StackEntry entry;
-                        peek_entry(stack->sp - 1, &entry);
-                        if (entry.type & (STACK_ENTRY_LONG | STACK_ENTRY_DOUBLE)) {
-                            pos++;
-                        }
-                        peek_entry(stack->sp - pos, &entry);
-
-                        Instance *ins = entry_2_refer(&entry);
-                        if (!ins) {
-                            _null_throw_exception(stack, runtime);
-                            ret = RUNTIME_STATUS_EXCEPTION;
-                            goto label_exception_handle;
-                        } else {
-                            // check variable type to determain long/s32/f64/f32
-                            FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                        FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                        if (!fi) {
+                            ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
+                            fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
+                            cfr->fieldInfo = fi;
                             if (!fi) {
-                                ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
-                                fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
-                                cfr->fieldInfo = fi;
+                                _nosuchfield_check_exception(utf8_cstr(cfr->name), stack, runtime);
+                                ret = RUNTIME_STATUS_EXCEPTION;
+                                goto label_exception_handle;
                             }
+                        }
 
-                            if (fi->isrefer) {//垃圾回收标识
-                                *opCode = op_putfield_ref;
-                            } else {
-                                s32 data_bytes = fi->datatype_bytes;
-                                //非引用类型
-                                switch (data_bytes) {
-                                    case 4: {
-                                        *opCode = op_putfield_int;
-                                        break;
-                                    }
-                                    case 1: {
-                                        *opCode = op_putfield_byte;
-                                        break;
-                                    }
-                                    case 8: {
-                                        *opCode = op_putfield_long;
-                                        break;
-                                    }
-                                    case 2: {
-                                        *opCode = op_putfield_short;
-                                        break;
-                                    }
+                        if (fi->isrefer) {//垃圾回收标识
+                            *opCode = op_putfield_ref;
+                        } else {
+                            s32 data_bytes = fi->datatype_bytes;
+                            //非引用类型
+                            switch (data_bytes) {
+                                case 4: {
+                                    *opCode = op_putfield_int;
+                                    break;
+                                }
+                                case 1: {
+                                    *opCode = op_putfield_byte;
+                                    break;
+                                }
+                                case 8: {
+                                    *opCode = op_putfield_long;
+                                    break;
+                                }
+                                case 2: {
+                                    *opCode = op_putfield_short;
+                                    break;
                                 }
                             }
                         }
+
                         break;
                     }
 

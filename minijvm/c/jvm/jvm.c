@@ -80,9 +80,8 @@ void profile_print() {
     jvm_printf("id           total    count      avg inst  \n");
     for (i = 0; i < INST_COUNT; i++) {
         ProfileDetail *pd = &profile_instructs[i];
-        if (pd->count)
-            jvm_printf("%2x %15lld %8d %8lld %s\n",
-                       i|0xffffff00, pd->cost, pd->count, pd->count ? (pd->cost / pd->count) : 0, inst_name[i]);
+        jvm_printf("%2x %15lld %8d %8lld %s\n",
+                   i | 0xffffff00, pd->cost, pd->count, pd->count ? (pd->cost / pd->count) : 0, inst_name[i]);
     }
 }
 
@@ -180,7 +179,7 @@ int get_jvm_state() {
 
 void _on_jvm_sig(int no) {
 
-    jvm_printf("jvm signo:%d  errno: %d , %s\n", no, errno, strerror(errno));
+    jvm_printf("[ERROR]jvm signo:%d  errno: %d , %s\n", no, errno, strerror(errno));
     exit(no);
 }
 
@@ -279,7 +278,7 @@ void jvm_destroy(StaticLibRegFunc unRegFunc) {
     sys_properties_dispose();
     close_log();
 #if _JVM_DEBUG_BYTECODE_DETAIL > 0
-    jvm_printf("jvm destoried heap size = %lld\n", heap_size);
+    jvm_printf("[INFO]jvm destoried heap size = %lld\n", heap_size);
 #endif
     set_jvm_state(JVM_STATUS_UNKNOW);
 }
@@ -350,7 +349,7 @@ s32 call_method_main(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, ArrayL
 
             s64 start = currentTimeMillis();
 #if _JVM_DEBUG_BYTECODE_DETAIL > 0
-            jvm_printf("\nmain thread start\n");
+            jvm_printf("\n[INFO]main thread start\n");
 #endif
             //调用主方法
             if (JDWP_DEBUG) {
@@ -364,7 +363,7 @@ s32 call_method_main(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, ArrayL
                 print_exception(runtime);
             }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 0
-            jvm_printf("main thread over %llx , spent : %lld\n", (s64) (intptr_t) runtime->threadInfo->jthread, (currentTimeMillis() - start));
+            jvm_printf("[INFO]main thread over %llx , spent : %lld\n", (s64) (intptr_t) runtime->threadInfo->jthread, (currentTimeMillis() - start));
 #endif
 
 #if _JVM_DEBUG_PROFILE
