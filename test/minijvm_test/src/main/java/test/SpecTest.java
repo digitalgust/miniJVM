@@ -894,16 +894,20 @@ public class SpecTest {
             volatile boolean start = false, exit = false;
 
             public void run() {
-                synchronized (lock) {
-                    while (!exit) {
-                        try {
+
+                while (!exit) {
+                    try {
+                        synchronized (lock) {
+                            //System.out.println("A got lock ");
                             v2++;
                             start = true;
                             //System.out.println("a.v2=" + v2);
+                            Thread.sleep(1000);
                             lock.notify();
                             lock.wait();
-                        } catch (InterruptedException ex) {
                         }
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
                     }
                 }
             }
@@ -915,17 +919,22 @@ public class SpecTest {
         }
 
         a.start();
-        synchronized (a.lock) {
-            while (true) {
-                try {
-                    if (!a.start) {//wait v2++ first
-                        a.lock.notify();
-                        a.lock.wait(5);
-                        continue;
+        while (true) {
+            try {
+                if (!a.start) {//wait v2++ first
+                    try {
+                        Thread.sleep(100);
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
+                    //System.out.println("Main waiting for A start");
+                    continue;
+                }
+                synchronized (a.lock) {
+                    //System.out.println("Main got lock ");
                     a.v1++;
-
                     //System.out.println("a.v1=" + a.v1);
+                    Thread.sleep(1000);
                     if (a.v1 >= 2) {
                         a.exit = true;
                         a.lock.notify();
@@ -934,10 +943,12 @@ public class SpecTest {
                         a.lock.notify();
                         a.lock.wait();
                     }
-                } catch (InterruptedException ex) {
                 }
+            } catch (InterruptedException ex) {
             }
+
         }
+        //System.out.println("Main release lock final");
 
         if (a.v2 != 2) {
             printerr("monitorenter, monitorexit");
