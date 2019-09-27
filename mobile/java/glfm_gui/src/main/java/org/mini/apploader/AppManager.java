@@ -5,32 +5,17 @@
  */
 package org.mini.apploader;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.List;
-import org.mini.gui.GApplication;
-import org.mini.gui.GButton;
-import org.mini.gui.GForm;
-import org.mini.gui.GGraphics;
-import org.mini.gui.GImage;
-import org.mini.gui.GImageItem;
-import org.mini.gui.GLabel;
-import org.mini.gui.GLanguage;
-import org.mini.gui.GList;
-import org.mini.gui.GListItem;
-import org.mini.gui.GMenu;
-import org.mini.gui.GObject;
-import org.mini.gui.GPanel;
-import org.mini.gui.GTextBox;
-import org.mini.gui.GTextField;
-import org.mini.gui.GToolkit;
-import org.mini.gui.GViewPort;
+import org.mini.gui.*;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GKeyboardShowListener;
 import org.mini.gui.event.GPhotoPickedListener;
 import org.mini.gui.event.GStateChangeListener;
 import org.mini.guijni.GuiCallBack;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.List;
 
 /**
  *
@@ -477,7 +462,7 @@ public class AppManager extends GApplication {
                     AppLoader.addApp(jarName, data);
                 }
                 reloadAppList();
-                updateContentViewInfo(jarName);
+                //updateContentViewInfo(jarName);
             }
         };
     }

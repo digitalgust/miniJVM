@@ -5,18 +5,13 @@
  */
 package org.mini.gui;
 
+import org.mini.glfm.Glfm;
+
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import org.mini.glfm.Glfm;
-import static org.mini.gui.GObject.HEIGHT;
-import static org.mini.gui.GObject.LEFT;
-import static org.mini.gui.GObject.TOP;
-import static org.mini.gui.GObject.WIDTH;
-import static org.mini.gui.GObject.flush;
 
 /**
- *
  * @author Gust
  */
 public class GViewPort extends GContainer {
@@ -227,7 +222,6 @@ public class GViewPort extends GContainer {
         //
         final double dx = x2 - x1;
         final double dy = y2 - y1;
-        maxMoveCount = (long) (120 * (moveTime / 200f));
         //System.out.println("inertia time: " + moveTime + " , count: " + maxMoveCount + " pos: x1,y1,x2,y2 = " + x1 + "," + y1 + "," + x2 + "," + y2);
         if (Math.abs(dy) > Math.abs(dx)) {
             if (getInnerH() <= getH()) {
@@ -239,7 +233,7 @@ public class GViewPort extends GContainer {
                 //阻力
                 double resistance = speedY / maxMoveCount;
                 //lo
-                float count = 0;
+                int count = 0;
 
                 @Override
                 public void run() {
@@ -247,12 +241,13 @@ public class GViewPort extends GContainer {
                     speedY -= resistance;//速度和阻力抵消为0时,退出滑动
 
                     float tmpScrollY = scrolly;
-                    float dh = getH();
-                    if (dh > 0) {
-                        float vec = (float) speedY / dh;
+                    float inh = getInnerH();
+                    if (inh > 0) {
+                        float vec = (float) speedY / inh;
                         moveY(vec);
                         tmpScrollY -= vec;
                         //System.out.println("dy:" + ((float) speedY / dh));
+                        //System.out.println("count:" + count + " speedY :" + speedY + " dh:" + inh + " res:" + resistance + " sy :" + scrolly + " vec:" + vec);
                     }
                     flush();
                     if (count++ > maxMoveCount || tmpScrollY < 0 || tmpScrollY > 1) {
@@ -280,7 +275,7 @@ public class GViewPort extends GContainer {
                     //System.out.println(this + " inertia X " + speedX + " , " + resistance + " , " + count);
                     speedX -= resistance;//速度和阴力抵消为0时,退出滑动
 
-                    float dw = getW();
+                    float dw = getInnerW();
                     float tmpScrollX = scrollx;
                     if (dw > 0) {
                         float vec = (float) speedX / dw;

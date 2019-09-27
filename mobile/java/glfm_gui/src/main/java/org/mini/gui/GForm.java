@@ -5,35 +5,23 @@
  */
 package org.mini.gui;
 
-import org.mini.guijni.GuiCallBack;
-import java.util.Timer;
-import java.util.TimerTask;
-import static org.mini.gl.GL.GL_COLOR_BUFFER_BIT;
-import static org.mini.gl.GL.GL_DEPTH_BUFFER_BIT;
-import static org.mini.gl.GL.GL_STENCIL_BUFFER_BIT;
-import static org.mini.gl.GL.glClear;
-import org.mini.nanovg.StbFont;
-import static org.mini.gl.GL.glClearColor;
-import static org.mini.gl.GL.glViewport;
-import static org.mini.gui.GObject.TYPE_FORM;
-import static org.mini.gui.GToolkit.nvgRGBA;
 import org.mini.gui.event.GAppActiveListener;
 import org.mini.gui.event.GKeyboardShowListener;
 import org.mini.gui.event.GNotifyListener;
 import org.mini.gui.event.GPhotoPickedListener;
+import org.mini.guijni.GuiCallBack;
 import org.mini.nanovg.Gutil;
 import org.mini.nanovg.Nanovg;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_MIDDLE;
-import static org.mini.nanovg.Nanovg.nvgBeginFrame;
-import static org.mini.nanovg.Nanovg.nvgEndFrame;
-import static org.mini.nanovg.Nanovg.nvgFillColor;
-import static org.mini.nanovg.Nanovg.nvgFontFace;
-import static org.mini.nanovg.Nanovg.nvgFontSize;
-import static org.mini.nanovg.Nanovg.nvgTextAlign;
-import static org.mini.gui.GObject.flush;
+import org.mini.nanovg.StbFont;
+
+import java.util.Timer;
+import java.util.TimerTask;
+
+import static org.mini.gl.GL.*;
+import static org.mini.gui.GToolkit.nvgRGBA;
+import static org.mini.nanovg.Nanovg.*;
 
 /**
- *
  * @author gust
  */
 public class GForm extends GViewPort {
@@ -58,7 +46,7 @@ public class GForm extends GViewPort {
     GAppActiveListener activeListener;
     GNotifyListener notifyListener;
 
-//    final static List<Integer> pendingDeleteImage = Collections.synchronizedList(new ArrayList());
+    //    final static List<Integer> pendingDeleteImage = Collections.synchronizedList(new ArrayList());
     final static Timer timer = new Timer(true);//用于更新画面，UI系统采取按需刷新的原则
 
     static GCmdHandler cmdHandler = new GCmdHandler();
@@ -303,7 +291,6 @@ public class GForm extends GViewPort {
     }
 
     /**
-     *
      * @param s
      */
     public static void addMessage(String s) {
@@ -322,4 +309,7 @@ public class GForm extends GViewPort {
         cmdHandler.addCmd(GCmd.GCMD_HIDE_KEYBOARD);
     }
 
+    public float getRatio() {
+        return pxRatio;
+    }
 }

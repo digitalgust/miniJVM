@@ -5,28 +5,17 @@
  */
 package org.mini.gui;
 
-import java.util.Timer;
-import java.util.TimerTask;
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
-import static org.mini.nanovg.Gutil.toUtf8;
 import org.mini.nanovg.Nanovg;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_LEFT;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_TOP;
-import static org.mini.nanovg.Nanovg.nvgCreateNVGglyphPosition;
-import static org.mini.nanovg.Nanovg.nvgCreateNVGtextRow;
-import static org.mini.nanovg.Nanovg.nvgFillColor;
-import static org.mini.nanovg.Nanovg.nvgFontFace;
-import static org.mini.nanovg.Nanovg.nvgFontSize;
-import static org.mini.nanovg.Nanovg.nvgNVGglyphPosition_x;
-import static org.mini.nanovg.Nanovg.nvgTextAlign;
-import static org.mini.nanovg.Nanovg.nvgTextBreakLinesJni;
-import static org.mini.nanovg.Nanovg.nvgTextGlyphPositionsJni;
-import static org.mini.nanovg.Nanovg.nvgTextJni;
-import static org.mini.nanovg.Nanovg.nvgTextMetrics;
+
+import java.util.Timer;
+import java.util.TimerTask;
+
+import static org.mini.nanovg.Gutil.toUtf8;
+import static org.mini.nanovg.Nanovg.*;
 
 /**
- *
  * @author gust
  */
 public class GTextBox extends GTextObject {
@@ -210,7 +199,6 @@ public class GTextBox extends GTextObject {
     }
 
     /**
-     *
      * @param character
      */
     @Override
@@ -368,10 +356,8 @@ public class GTextBox extends GTextObject {
     }
 
     /**
-     *
      * @param str
      * @param mods
-     * @param character
      */
     @Override
     public void characterEvent(String str, int mods) {
@@ -472,18 +458,19 @@ public class GTextBox extends GTextObject {
         double dx = x2 - x1;
         final double dy = y2 - y1;
         scrollDelta = 0;
+        //System.out.println("inertia time: " + moveTime + " , count: " + maxMoveCount + " pos: x1,y1,x2,y2 = " + x1 + "," + y1 + "," + x2 + "," + y2);
         task = new TimerTask() {
             //惯性速度
             double speed = dy / (moveTime / inertiaPeriod);
             //阴力
-            double resistance = -speed / maxMoveCount;
+            double resistance = speed / maxMoveCount;
             //
-            float count = 0;
+            int count = 0;
 
             @Override
             public void run() {
-//                System.out.println("inertia " + speed);
                 speed -= resistance;//速度和阴力抵消为0时,退出滑动
+                //System.out.println("count :" + count + "    inertia :" + speed + "    resistance :" + resistance);
 
                 float dh = getOutOfShowAreaHeight();
                 if (dh > 0) {
@@ -634,7 +621,6 @@ public class GTextBox extends GTextObject {
     }
 
     /**
-     *
      * @param vg
      * @return
      */
@@ -661,7 +647,7 @@ public class GTextBox extends GTextObject {
         float[] text_area = new float[]{x + 5f, y + 5f, w - 10f, h - 10f};
         float dx = text_area[LEFT];
         float dy = text_area[TOP];
-        
+
         //sometime the field text_arr and area_detail may set as null by other thread when update 
         byte[] local_arr = this.text_arr;
         short[][] local_detail = this.area_detail;
