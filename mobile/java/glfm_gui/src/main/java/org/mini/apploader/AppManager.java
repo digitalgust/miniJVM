@@ -527,7 +527,7 @@ public class AppManager extends GApplication {
     void mainPanelShowLeft() {
         float panelX = mainPanel.getX();
         float panelY = mainPanel.getY();
-        mgrForm.inertiaEvent(panelX, panelY, panelX + 200, panelY, 100);
+        mgrForm.inertiaEvent(panelX, panelY, panelX + 200, panelY, 50);
         if (curSelectedItem != null) {
             appList.setSelectedIndex(-1);
             curSelectedItem = null;
@@ -537,7 +537,7 @@ public class AppManager extends GApplication {
     void mainPanelShowRight() {
         float panelX = mainPanel.getX();
         float panelY = mainPanel.getY();
-        mgrForm.inertiaEvent(panelX + 200, panelY, panelX, panelY, 100);
+        mgrForm.inertiaEvent(panelX + 200, panelY, panelX, panelY, 50);
     }
 
 }
