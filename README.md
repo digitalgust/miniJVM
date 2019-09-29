@@ -260,4 +260,4 @@ public class MyApp extends GApplication {
 License:	Public domain
 
 
-Gust , zhangpeng@egls.cn , Technology and production manage in EGLS ltd. EGLS is a game develop company in China .
+Gust , zhangpeng@egls.cn , work in EGLS ltd. EGLS is a game development and distribution company in China .
