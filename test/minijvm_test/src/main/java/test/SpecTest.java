@@ -816,6 +816,15 @@ public class SpecTest {
             printerr("multianewarray, aaload, aastore");
         }
 
+        String[] ss=new String[0];
+        if(ss.length>0){
+            printerr("anewarray");
+        }
+        String[][] ss2=new String[7][];
+        if(ss2.length!=7){
+            printerr("anewarray");
+        }
+
         try {
             oma[-1] = null;
             printerr("arr index out of bounds");

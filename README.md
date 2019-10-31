@@ -37,6 +37,10 @@
   <div align=center><img width="540" height="350" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/arch.png"/></div>
 
 
+## Changelog
+   2019.10.  Jit is developing
+   2018.12.  Optimize performance
+
 
 ## How to develop iOS/Android app in java:   
    Write java code once , running on all of iOS / Android / MacOSX / Win / Linux platforms.   
