@@ -38,8 +38,8 @@
 
 
 ## Changelog
-   2019.10.  Jit is developing
-   2018.12.  Optimize performance
+   2019.10.  Jit is developing     
+   2018.12.  Optimize performance     
 
 
 ## How to develop iOS/Android app in java:   
