@@ -684,13 +684,14 @@ s32 java_lang_String_replace0(Runtime *runtime, JClass *clazz) {
         u16 *dst_value = (u16 *) jstring_get_value_array(dst)->arr_body;
 
         ByteBuf *sb = bytebuf_create(count);
-        for (int i = 0; i < count;) {
+        int i, j;
+        for (i = 0; i < count;) {
             int index = i + offset;
             u16 ch = value[index];
             s32 match = 0;
             if (ch == src_value[src_offset]) {
                 match = 1;
-                for (int j = 1; j < src_count; j++) {
+                for (j = 1; j < src_count; j++) {
                     if (value[index + j] != src_value[src_offset + j]) {
                         match = 0;
                         break;
