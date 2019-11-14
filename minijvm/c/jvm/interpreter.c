@@ -369,7 +369,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
         CodeAttribute *ca = method->converted_code;
         if (ca) {
 
-            if (stack->max_size < stack->sp - stack->store) {
+            if (stack->max_size < (stack->sp - stack->store) + ca->max_stack) {
                 Utf8String *ustr = utf8_create();
                 getRuntimeStack(runtime, ustr);
                 jvm_printf("Stack overflow :\n %s\n", utf8_cstr(ustr));
