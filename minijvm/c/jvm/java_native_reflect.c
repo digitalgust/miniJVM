@@ -627,7 +627,7 @@ s32 org_mini_reflect_ReflectField_mapField(Runtime *runtime, JClass *clazz) {
 Instance *localVarTable2java(JClass *clazz, LocalVarTable *lvt, Runtime *runtime) {
     JClass *cl = classes_load_get_c(JDWP_CLASS_LOCALVARTABLE, runtime);
     Instance *ins = instance_create(runtime, cl);
-    gc_refer_hold(ins);// hold by manual
+    instance_hold_to_thread(ins, runtime);// hold by manual
     instance_init(ins, runtime);
 
     if (ins && lvt) {
@@ -651,7 +651,7 @@ Instance *localVarTable2java(JClass *clazz, LocalVarTable *lvt, Runtime *runtime
         ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_LOCALVARTABLE, "length", "I", runtime);
         if (ptr)setFieldInt(ptr, lvt->length);
     }
-    gc_refer_release(ins);//release by manual
+    instance_release_from_thread(ins, runtime);//release by manual
     return ins;
 }
 
@@ -770,7 +770,7 @@ s32 org_mini_reflect_ReflectMethod_invokeMethod(Runtime *runtime, JClass *clazz)
             c8 *clsName = "org/mini/reflect/DataWrap";
             JClass *dwcl = classes_load_get_c(clsName, runtime);
             Instance *result = instance_create(runtime, dwcl);
-            gc_refer_hold(result);
+            instance_hold_to_thread(result, runtime);
             instance_init(result, runtime);
 
             if (ch == 'V') {
@@ -788,7 +788,7 @@ s32 org_mini_reflect_ReflectMethod_invokeMethod(Runtime *runtime, JClass *clazz)
                 c8 *ptr = getFieldPtr_byName_c(result, clsName, "nv", "J", runtime);
                 setFieldLong(ptr, nv);
             }
-            gc_refer_release(result);
+            instance_release_from_thread(result, runtime);
             push_ref(runtime->stack, result);
         } else {
             print_exception(runtime);

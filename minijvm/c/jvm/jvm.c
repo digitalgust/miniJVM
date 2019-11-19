@@ -17,11 +17,11 @@ void thread_boundle(Runtime *runtime) {
     JClass *thread_clazz = classes_load_get_c("java/lang/Thread", runtime);
     //为主线程创建Thread实例
     Instance *t = instance_create(runtime, thread_clazz);
-    gc_refer_hold(t);
+    instance_hold_to_thread(t, runtime);
     runtime->threadInfo->jthread = t;//Thread.init currentThread() need this
     instance_init(t, runtime);
     jthread_init(t, runtime);
-    gc_refer_release(t);
+    instance_release_from_thread(t, runtime);
 
 }
 
@@ -334,7 +334,7 @@ s32 call_method_main(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, ArrayL
             s32 count = java_para->length;
             Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
             Instance *arr = jarray_create_by_type_name(runtime, count, ustr);
-            gc_refer_hold(arr);
+            instance_hold_to_thread(arr, runtime);
             utf8_destory(ustr);
             int i;
             for (i = 0; i < count; i++) {
@@ -344,7 +344,7 @@ s32 call_method_main(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, ArrayL
                 utf8_destory(utfs);
             }
             push_ref(runtime->stack, arr);
-            gc_refer_release(arr);
+            instance_release_from_thread(arr, runtime);
 
 
             s64 start = currentTimeMillis();

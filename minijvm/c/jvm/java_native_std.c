@@ -97,9 +97,9 @@ s32 java_lang_Class_newInstance(Runtime *runtime, JClass *clazz) {
     s32 ret = 0;
     if (cl && !cl->mb.arr_type_index) {//class exists and not array class
         ins = instance_create(runtime, cl);
-        gc_refer_hold(ins);
+        instance_hold_to_thread(ins, runtime);
         instance_init(ins, runtime);
-        gc_refer_release(ins);
+        instance_release_from_thread(ins, runtime);
     }
     if (ins) {
         push_ref(stack, (__refer) ins);
@@ -1202,7 +1202,7 @@ Instance *buildStackElement(Runtime *runtime, Runtime *target) {
     JClass *clazz = classes_load_get_c(STR_CLASS_JAVA_LANG_STACKTRACE, target);
     if (clazz) {
         Instance *ins = instance_create(runtime, clazz);
-        gc_refer_hold(ins);
+        instance_hold_to_thread(ins, runtime);
         instance_init(ins, runtime);
         c8 *ptr;
         //
@@ -1239,7 +1239,7 @@ Instance *buildStackElement(Runtime *runtime, Runtime *target) {
                 setFieldRefer(ptr, parent);
             }
         }
-        gc_refer_release(ins);
+        instance_release_from_thread(ins, runtime);
         return ins;
     }
     return NULL;
@@ -1263,7 +1263,7 @@ s32 java_lang_System_getNativeProperties(Runtime *runtime, JClass *clazz) {
     s32 size = (s32) sys_prop->entries;
     Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
     Instance *jarr = jarray_create_by_type_name(runtime, size, ustr);
-    gc_refer_hold(jarr);
+    instance_hold_to_thread(jarr, runtime);
 
     s32 i = 0;
     HashtableIterator hti;
@@ -1281,7 +1281,7 @@ s32 java_lang_System_getNativeProperties(Runtime *runtime, JClass *clazz) {
         i++;
     }
     push_ref(runtime->stack, jarr);//先放入栈，
-    gc_refer_release(jarr);
+    instance_release_from_thread(jarr, runtime);
 
     utf8_destory(ustr);
 

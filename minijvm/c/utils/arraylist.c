@@ -188,24 +188,29 @@ static inline void arraylist_remove_range(ArrayList *arraylist, int index, int l
 }
 
 
+int arraylist_remove_unsafe(ArrayList *arraylist, ArrayListValue data) {
+    int index = -1;
+    int i;
+    for (i = 0; i < arraylist->length; ++i) {
+        if (arraylist_compare_ptr(arraylist->data[i], data)) {
+            index = i;
+            break;
+        }
+    }
+    if (index >= 0)
+        arraylist_remove_range(arraylist, index, 1);
+    return index;
+}
+
 int arraylist_remove(ArrayList *arraylist, ArrayListValue data) {
     int index = -1;
     spin_lock(&arraylist->spinlock);
     {
-        int i;
-        for (i = 0; i < arraylist->length; ++i) {
-            if (arraylist_compare_ptr(arraylist->data[i], data)) {
-                index = i;
-                break;
-            }
-        }
-        if (index >= 0)
-            arraylist_remove_range(arraylist, index, 1);
+        arraylist_remove_unsafe(arraylist, data);
     }
     spin_unlock(&arraylist->spinlock);
     return index;
 }
-
 int arraylist_compare_ptr(ArrayListValue a, ArrayListValue b) {
     return a == b;
 }

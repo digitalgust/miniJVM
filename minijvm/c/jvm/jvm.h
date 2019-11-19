@@ -41,7 +41,6 @@ extern "C" {
 #endif
 
 
-
 enum {
     /* 0x00 */ op_nop,
     /* 0x01 */ op_aconst_null,
@@ -520,6 +519,7 @@ enum {
     DATATYPE_LONG = 11,
     DATATYPE_REFERENCE = 12,
     DATATYPE_ARRAY = 13,
+    DATATYPE_RETURNADDRESS = 14,
 };
 //访问标志
 enum {
@@ -616,7 +616,8 @@ void profile_print();
 typedef struct _MemoryBlock {
 
     JClass *clazz;
-    struct _MemoryBlock *next;
+    struct _MemoryBlock *next; //reg for gc
+    struct _MemoryBlock *tmp_next;  //hold by thread
     ThreadLock *volatile thread_lock;
 
     u8 type;//type of array or object runtime,class
@@ -1149,6 +1150,7 @@ JClass *getClassByConstantClassRef(JClass *clazz, s32 index, Runtime *runtime);
 #define STACK_ENTRY_LONG        4
 #define STACK_ENTRY_DOUBLE      8
 #define STACK_ENTRY_REF         16
+#define STACK_ENTRY_RETURNADDRESS         32
 
 typedef struct _StackEntry {
     union {
@@ -1306,6 +1308,19 @@ static inline void push_ref(RuntimeStack *stack, __refer value) {
 }
 
 static inline __refer pop_ref(RuntimeStack *stack) {
+    stack->sp--;
+    return stack->sp->rvalue;
+}
+
+
+/* push ReturnAddress */
+static inline void push_ra(RuntimeStack *stack, __refer value) {
+    stack->sp->type = STACK_ENTRY_RETURNADDRESS;
+    stack->sp->rvalue = value;
+    stack->sp++;
+}
+
+static inline __refer pop_ra(RuntimeStack *stack) {
     stack->sp--;
     return stack->sp->rvalue;
 }
@@ -1476,7 +1491,6 @@ s32 call_method_c(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, Runtime *
 s32 execute_method_impl(MethodInfo *method, Runtime *runtime);
 
 s32 execute_method(MethodInfo *method, Runtime *runtime);
-
 
 
 //======================= jni =============================

@@ -1247,7 +1247,7 @@ Instance *jstring_create(Utf8String *src, Runtime *runtime) {
     Utf8String *clsName = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
     JClass *jstr_clazz = classes_load_get(clsName, runtime);
     Instance *jstring = instance_create(runtime, jstr_clazz);
-    gc_refer_hold(jstring);//hold for no gc
+    instance_hold_to_thread(jstring, runtime);//hold for no gc
 
     jstring->mb.clazz = jstr_clazz;
     instance_init(jstring, runtime);
@@ -1263,7 +1263,7 @@ Instance *jstring_create(Utf8String *src, Runtime *runtime) {
     jvm_free(buf);
     jstring_set_count(jstring, len);//设置长度
     utf8_destory(clsName);
-    gc_refer_release(jstring);
+    instance_release_from_thread(jstring, runtime);
     return jstring;
 }
 
@@ -1390,9 +1390,9 @@ Instance *exception_create(s32 exception_type, Runtime *runtime) {
     utf8_destory(clsName);
 
     Instance *ins = instance_create(runtime, clazz);
-    gc_refer_hold(ins);
+    instance_hold_to_thread(ins, runtime);
     instance_init(ins, runtime);
-    gc_refer_release(ins);
+    instance_release_from_thread(ins, runtime);
     return ins;
 }
 
@@ -1402,18 +1402,18 @@ Instance *exception_create_str(s32 exception_type, Runtime *runtime, c8 *errmsg)
 #endif
     Utf8String *uerrmsg = utf8_create_c(errmsg);
     Instance *jstr = jstring_create(uerrmsg, runtime);
-    gc_refer_hold(jstr);
+    instance_hold_to_thread(jstr, runtime);
     utf8_destory(uerrmsg);
     RuntimeStack *para = stack_create(1);
     push_ref(para, jstr);
-    gc_refer_release(jstr);
+    instance_release_from_thread(jstr, runtime);
     Utf8String *clsName = utf8_create_c(STRS_CLASS_EXCEPTION[exception_type]);
     JClass *clazz = classes_load_get(clsName, runtime);
     utf8_destory(clsName);
     Instance *ins = instance_create(runtime, clazz);
-    gc_refer_hold(ins);
+    instance_hold_to_thread(ins, runtime);
     instance_init_methodtype(ins, runtime, "(Ljava/lang/String;)V", para);
-    gc_refer_release(ins);
+    instance_release_from_thread(ins, runtime);
     stack_destory(para);
     return ins;
 }
@@ -1424,7 +1424,7 @@ Instance *method_type_create(Runtime *runtime, Utf8String *desc) {
     JClass *cl = classes_load_get_c(STR_CLASS_JAVA_LANG_INVOKE_METHODTYPE, runtime);
     if (cl) {
         Instance *mt = instance_create(runtime, cl);
-        gc_refer_hold(mt);
+        instance_hold_to_thread(mt, runtime);
         Instance *jstr_desc = jstring_create(desc, runtime);
 
 
@@ -1433,7 +1433,7 @@ Instance *method_type_create(Runtime *runtime, Utf8String *desc) {
         push_ref(para, jstr_desc);
         instance_init_methodtype(mt, runtime, "(Ljava/lang/String;)V", para);
         stack_destory(para);
-        gc_refer_release(mt);
+        instance_release_from_thread(mt, runtime);
         return mt;
     }
     return NULL;
@@ -1443,24 +1443,24 @@ Instance *method_handle_create(Runtime *runtime, MethodInfo *mi, s32 kind) {
     JClass *cl = classes_load_get_c(STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLE, runtime);
     if (cl) {
         Instance *mh = instance_create(runtime, cl);
-        gc_refer_hold(mh);
+        instance_hold_to_thread(mh, runtime);
         RuntimeStack *para = stack_create(4);
         push_int(para, kind);
         Instance *jstr_clsName = jstring_create(mi->_this_class->name, runtime);
-        gc_refer_hold(jstr_clsName);
+        instance_hold_to_thread(jstr_clsName, runtime);
         push_ref(para, jstr_clsName);
         Instance *jstr_methodName = jstring_create(mi->name, runtime);
         push_ref(para, jstr_methodName);
-        gc_refer_hold(jstr_methodName);
+        instance_hold_to_thread(jstr_methodName, runtime);
         Instance *jstr_methodDesc = jstring_create(mi->descriptor, runtime);
         push_ref(para, jstr_methodDesc);
-        gc_refer_hold(jstr_methodDesc);
+        instance_hold_to_thread(jstr_methodDesc, runtime);
         instance_init_methodtype(mh, runtime, "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", para);
         stack_destory(para);
-        gc_refer_release(mh);
-        gc_refer_release(jstr_clsName);
-        gc_refer_release(jstr_methodName);
-        gc_refer_release(jstr_methodDesc);
+        instance_release_from_thread(mh, runtime);
+        instance_release_from_thread(jstr_clsName, runtime);
+        instance_release_from_thread(jstr_methodName, runtime);
+        instance_release_from_thread(jstr_methodDesc, runtime);
         return mh;
     }
     return NULL;
@@ -1470,13 +1470,13 @@ Instance *method_handles_lookup_create(Runtime *runtime, JClass *caller) {
     JClass *cl = classes_load_get_c(STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLES_LOOKUP, runtime);
     if (cl) {
         Instance *lookup = instance_create(runtime, cl);
-        gc_refer_hold(lookup);
+        instance_hold_to_thread(lookup, runtime);
         RuntimeStack *para = stack_create(1);
 
         push_ref(para, insOfJavaLangClass_create_get(runtime, caller));
         instance_init_methodtype(lookup, runtime, "(Ljava/lang/Class;)V", para);
         stack_destory(para);
-        gc_refer_release(lookup);
+        instance_release_from_thread(lookup, runtime);
         return lookup;
     }
     return NULL;
@@ -1554,12 +1554,10 @@ void memoryblock_destory(__refer ref) {
 
 JavaThreadInfo *threadinfo_create() {
     JavaThreadInfo *threadInfo = jvm_calloc(sizeof(JavaThreadInfo));
-    threadInfo->instance_holder = arraylist_create(0);
     return threadInfo;
 }
 
 void threadinfo_destory(JavaThreadInfo *threadInfo) {
-    arraylist_destory(threadInfo->instance_holder);
     jvm_free(threadInfo);
 }
 
@@ -1596,15 +1594,34 @@ s64 threadSleep(s64 ms) {
     return (rem.tv_sec * MILL_2_SEC_SCALE + rem.tv_nsec / NANO_2_MILLS_SCALE);
 }
 
-void instance_hold_to_thread(Instance *ref, Runtime *runtime) {
-    if (runtime && ref) {
-        arraylist_push_back(runtime->threadInfo->instance_holder, ref);
+void instance_hold_to_thread(Instance *ins, Runtime *runtime) {
+    if (runtime && ins) {
+        ins->mb.tmp_next = runtime->threadInfo->tmp_holder;
+        runtime->threadInfo->tmp_holder = (MemoryBlock *) ins;
     }
 }
 
-void instance_release_from_thread(Instance *ref, Runtime *runtime) {
-    if (runtime && ref) {
-        arraylist_remove(runtime->threadInfo->instance_holder, ref);
+void instance_release_from_thread(Instance *ins, Runtime *runtime) {
+    if (runtime && ins) {
+        MemoryBlock *ref = (MemoryBlock *) ins;
+        if (ref == runtime->threadInfo->tmp_holder) {
+            runtime->threadInfo->tmp_holder = ref->tmp_next;
+            return;
+        }
+        MemoryBlock *next, *pre;
+        pre = runtime->threadInfo->tmp_holder;
+        if (pre) {
+            next = pre->tmp_next;
+
+            while (next) {
+                if (ref == next) {
+                    pre->tmp_next = next->tmp_next;
+                    return;
+                }
+                pre = next;
+                next = next->tmp_next;
+            }
+        }
     }
 }
 

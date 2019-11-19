@@ -86,7 +86,7 @@ void sys_properties_set_c(c8 *key, c8 *val);
 
 void instance_release_from_thread(Instance *ref, Runtime *runtime);
 
-void instance_hold_to_thread(Instance *ref, Runtime *runtime);
+void instance_hold_to_thread(Instance *ins, Runtime *runtime);
 
 int jvm_printf(const char *, ...);
 
@@ -251,7 +251,7 @@ JavaThreadInfo *threadinfo_create(void);
 struct _JavaThreadInfo {
     Instance *jthread;
     Runtime *top_runtime;
-    ArrayList *instance_holder;//for jni hold java object
+    MemoryBlock *tmp_holder;//for jni hold java object
     MemoryBlock *objs_header;//link to new instance, until garbage accept
     MemoryBlock *objs_tailer;//link to last instance, until garbage accept
     MemoryBlock *curThreadLock;//if thread is locked ,the filed save the lock

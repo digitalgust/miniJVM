@@ -626,10 +626,10 @@ s32 _garbage_copy_refer_thread(Runtime *pruntime) {
             }
         }
     }
-    ArrayList *holder = runtime->threadInfo->instance_holder;
-    for (i = 0, imax = holder->length; i < imax; i++) {
-        __refer ref = arraylist_get_value(holder, i);
-        arraylist_push_back_unsafe(collector->runtime_refer_copy, ref);
+    MemoryBlock *next = runtime->threadInfo->tmp_holder;
+    for (; next;) {
+        arraylist_push_back_unsafe(collector->runtime_refer_copy, next);
+        next = next->tmp_next;
     }
 
     //jvm_printf("[%llx] notified\n", (s64) (intptr_t) pruntime->threadInfo->jthread);
