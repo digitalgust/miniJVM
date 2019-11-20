@@ -1249,8 +1249,7 @@ static inline void push_int(RuntimeStack *stack, s32 value) {
 
 /* pop Integer */
 static inline s32 pop_int(RuntimeStack *stack) {
-    stack->sp--;
-    return stack->sp->ivalue;
+    return (--stack->sp)->ivalue;
 }
 
 /* push Double */
@@ -1279,8 +1278,7 @@ static inline void push_float(RuntimeStack *stack, f32 value) {
 
 /* pop Float */
 static inline f32 pop_float(RuntimeStack *stack) {
-    stack->sp--;
-    return stack->sp->fvalue;
+    return (--stack->sp)->fvalue;
 }
 
 
@@ -1308,8 +1306,7 @@ static inline void push_ref(RuntimeStack *stack, __refer value) {
 }
 
 static inline __refer pop_ref(RuntimeStack *stack) {
-    stack->sp--;
-    return stack->sp->rvalue;
+    return (--stack->sp)->rvalue;
 }
 
 
@@ -1321,8 +1318,7 @@ static inline void push_ra(RuntimeStack *stack, __refer value) {
 }
 
 static inline __refer pop_ra(RuntimeStack *stack) {
-    stack->sp--;
-    return stack->sp->rvalue;
+    return (--stack->sp)->rvalue;
 }
 
 

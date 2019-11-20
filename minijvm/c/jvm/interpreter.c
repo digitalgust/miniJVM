@@ -2,9 +2,7 @@
 
 #include "../utils/d_type.h"
 #include "jvm.h"
-#include "java_native_std.h"
 #include "jvm_util.h"
-#include "garbage.h"
 
 
 /* ==================================opcode implementation =============================*/
@@ -95,8 +93,7 @@ static inline void _op_ldc_impl(RuntimeStack *stack, JClass *clazz, Runtime *run
             break;
         }
         case CONSTANT_STRING_REF: {
-            ConstantUTF8 *cutf = class_get_constant_utf8(clazz,
-                                                         class_get_constant_stringref(clazz, index)->stringIndex);
+            ConstantUTF8 *cutf = class_get_constant_utf8(clazz, class_get_constant_stringref(clazz, index)->stringIndex);
             push_ref(stack, (__refer) cutf->jstr);
 
 
@@ -166,8 +163,7 @@ void _op_notsupport(u8 *opCode, Runtime *runtime) {
 //----------------------------------  tool func  ------------------------------------------
 
 static ExceptionTable *
-_find_exception_handler(Runtime *runtime, Instance *exception, CodeAttribute *ca, s32 offset, __refer exception_ref) {
-    Instance *ins = (Instance *) exception_ref;
+_find_exception_handler(Runtime *runtime, Instance *exception, CodeAttribute *ca, s32 offset) {
 
     s32 i;
     ExceptionTable *e = ca->exception_table;
@@ -197,16 +193,16 @@ static inline s32 exception_handle(RuntimeStack *stack, Runtime *runtime) {
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 3
     JClass *clazz = runtime->clazz;
-    s32 lineNum = getLineNumByIndex(runtime->method->converted_code, runtime->pc - runtime->method->converted_code->code);
+    s32 lineNum = getLineNumByIndex(runtime->method->converted_code, (s32) (runtime->pc - runtime->method->converted_code->code));
     jvm_printf("Exception   at %s.%s(%s.java:%d)\n",
                utf8_cstr(clazz->name), utf8_cstr(runtime->method->name),
                utf8_cstr(clazz->name),
                lineNum
     );
 #endif
-    ExceptionTable *et = _find_exception_handler(runtime, ins, ca, (s32) (runtime->pc - ca->code), ins);
+    ExceptionTable *et = _find_exception_handler(runtime, ins, ca, (s32) (runtime->pc - ca->code));
     if (et == NULL) {
-        Instance *ins = pop_ref(stack);
+        pop_empty(stack);
         localvar_dispose(runtime);
         push_ref(stack, ins);
         return 0;
@@ -261,16 +257,6 @@ static s32 filterClassName(Utf8String *clsName) {
         return 1;
     }
     return 0;
-}
-
-static void _printCodeAttribute(CodeAttribute *ca, JClass *p) {
-
-    jvm_printf("attribute name : %s\n", utf8_cstr(class_get_utf8_string(p, ca->attribute_name_index)));
-    jvm_printf("attribute arr_length: %d\n", ca->attribute_length);
-
-    jvm_printf("max_stack: %d\n", ca->max_stack);
-    jvm_printf("max_locals: %d\n", ca->max_locals);
-    jvm_printf("code_length: %d\n", ca->code_length);
 }
 
 /**
@@ -344,7 +330,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
     s32 ret;
-    register Runtime *runtime;
+    Runtime *runtime;
+    register u8 *ip;
     JClass *clazz;
     RuntimeStack *stack;
 
@@ -380,10 +367,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             localvar_init(runtime, ca->max_locals, method->para_slots);
             if (method->is_sync)_synchronized_lock_method(method, runtime);
 
-            runtime->pc = ca->code;
+            ip = ca->code;
             JavaThreadInfo *threadInfo = runtime->threadInfo;
             do {
-                u8 cur_inst = *runtime->pc;
+                runtime->pc = ip;
+                u8 cur_inst = *ip;
                 if (JDWP_DEBUG) {
                     //breakpoint
                     if (method->breakpoint) {
@@ -417,352 +405,344 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                 s64 inst_pc = runtime->pc - ca->code;
 #endif
                 switch (cur_inst) {
-                    label_nop:
+
                     case op_nop: {
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("nop\n");
 #endif
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
-                    label_aconst_null:
+
                     case op_aconst_null: {
                         push_ref(stack, NULL);
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("aconst_null: push %d into stack\n", 0);
 #endif
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
-                    label_iconst_m1:
+
                     case op_iconst_m1: {
                         _op_iconst_n(stack, runtime, -1);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
 
-                    label_iconst_0:
                     case op_iconst_0: {
                         _op_iconst_n(stack, runtime, 0);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_iconst_1:
+
                     case op_iconst_1: {
                         _op_iconst_n(stack, runtime, 1);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_iconst_2:
+
                     case op_iconst_2: {
                         _op_iconst_n(stack, runtime, 2);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_iconst_3:
+
                     case op_iconst_3: {
                         _op_iconst_n(stack, runtime, 3);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_iconst_4:
+
                     case op_iconst_4: {
                         _op_iconst_n(stack, runtime, 4);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_iconst_5:
+
                     case op_iconst_5: {
                         _op_iconst_n(stack, runtime, 5);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_lconst_0:
+
                     case op_lconst_0: {
                         _op_lconst_n(stack, runtime, 0);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_lconst_1:
+
                     case op_lconst_1: {
                         _op_lconst_n(stack, runtime, 1);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
 
-                    label_fconst_0:
                     case op_fconst_0: {
                         _op_fconst_n(stack, runtime, 0.0f);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_fconst_1:
+
                     case op_fconst_1: {
                         _op_fconst_n(stack, runtime, 1.0f);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_fconst_2:
+
                     case op_fconst_2: {
                         _op_fconst_n(stack, runtime, 2.0f);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
 
-                    label_dconst_0:
                     case op_dconst_0: {
                         _op_dconst_n(stack, runtime, 0.0f);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_dconst_1:
+
                     case op_dconst_1: {
                         _op_dconst_n(stack, runtime, 1.0f);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_bipush:
+
                     case op_bipush: {
 
-                        s32 value = (s8) runtime->pc[1];
+                        s32 value = (s8) ip[1];
                         push_int(stack, value);
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("bipush a byte %d onto the stack \n", value);
 #endif
-                        runtime->pc += 2;
+                        ip += 2;
 
                         break;
                     }
 
-                    label_sipush:
+
                     case op_sipush: {
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("sipush value %d\n", *((s16 *) (runtime->pc + 1)));
+                        jvm_printf("sipush value %d\n", *((s16 *) (ip + 1)));
 #endif
-                        push_int(stack, *((s16 *) (runtime->pc + 1)));
-                        runtime->pc += 3;
+                        push_int(stack, *((s16 *) (ip + 1)));
+                        ip += 3;
 
                         break;
                     }
 
 
-                    label_ldc:
                     case op_ldc: {
-                        s32 index = runtime->pc[1];
-                        runtime->pc += 2;
+                        s32 index = ip[1];
+                        ip += 2;
                         _op_ldc_impl(stack, clazz, runtime, index);
                         break;
                     }
 
-                    label_ldc_w:
+
                     case op_ldc_w: {
-                        _op_ldc_impl(stack, clazz, runtime, *((u16 *) (runtime->pc + 1)));
-                        runtime->pc += 3;
+                        _op_ldc_impl(stack, clazz, runtime, *((u16 *) (ip + 1)));
+                        ip += 3;
                         break;
                     }
 
-                    label_ldc2_w:
+
                     case op_ldc2_w: {
 
-                        s64 value = class_get_constant_long(clazz, *((u16 *) (runtime->pc + 1)));//long or double
+                        s64 value = class_get_constant_long(clazz, *((u16 *) (ip + 1)));//long or double
 
                         push_long(stack, value);
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("ldc2_w: push a constant(%d) [%llx] onto the stack \n", *((u16 *) (runtime->pc + 1)), value);
+                        jvm_printf("ldc2_w: push a constant(%d) [%llx] onto the stack \n", *((u16 *) (ip + 1)), value);
 #endif
-                        runtime->pc += 3;
+                        ip += 3;
 
                         break;
                     }
 
 
-                    label_iload:
-                    label_fload:
                     case op_iload:
                     case op_fload: {
-                        _op_load_1_slot(stack, runtime, (u8) runtime->pc[1]);
-                        runtime->pc += 2;
+                        _op_load_1_slot(stack, runtime, (u8) ip[1]);
+                        ip += 2;
                         break;
                     }
-                    label_aload:
+
                     case op_aload: {
-                        _op_load_refer(stack, runtime, (u8) runtime->pc[1]);
-                        runtime->pc += 2;
+                        _op_load_refer(stack, runtime, (u8) ip[1]);
+                        ip += 2;
                         break;
                     }
-                    label_lload:
-                    label_dload:
+
+
                     case op_lload:
                     case op_dload: {
-                        _op_load_2_slot(stack, runtime, (u8) runtime->pc[1]);
-                        runtime->pc += 2;
+                        _op_load_2_slot(stack, runtime, (u8) ip[1]);
+                        ip += 2;
                         break;
                     }
 
-                    label_iload_0:
+
                     case op_iload_0: {
                         _op_load_1_slot(stack, runtime, 0);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_iload_1:
+
                     case op_iload_1: {
                         _op_load_1_slot(stack, runtime, 1);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_iload_2:
+
                     case op_iload_2: {
                         _op_load_1_slot(stack, runtime, 2);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_iload_3:
+
                     case op_iload_3: {
                         _op_load_1_slot(stack, runtime, 3);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_lload_0:
+
                     case op_lload_0: {
                         _op_load_2_slot(stack, runtime, 0);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_lload_1:
+
                     case op_lload_1: {
                         _op_load_2_slot(stack, runtime, 1);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_lload_2:
+
                     case op_lload_2: {
                         _op_load_2_slot(stack, runtime, 2);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_lload_3:
+
                     case op_lload_3: {
                         _op_load_2_slot(stack, runtime, 3);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_fload_0:
+
                     case op_fload_0: {
                         _op_load_1_slot(stack, runtime, 0);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_fload_1:
+
                     case op_fload_1: {
                         _op_load_1_slot(stack, runtime, 1);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_fload_2:
+
                     case op_fload_2: {
                         _op_load_1_slot(stack, runtime, 2);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_fload_3:
+
                     case op_fload_3: {
                         _op_load_1_slot(stack, runtime, 3);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
 
-                    label_dload_0:
                     case op_dload_0: {
                         _op_load_2_slot(stack, runtime, 0);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_dload_1:
+
                     case op_dload_1: {
                         _op_load_2_slot(stack, runtime, 1);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_dload_2:
+
                     case op_dload_2: {
                         _op_load_2_slot(stack, runtime, 2);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_dload_3:
+
                     case op_dload_3: {
                         _op_load_2_slot(stack, runtime, 3);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_aload_0:
+
                     case op_aload_0: {
                         _op_load_refer(stack, runtime, 0);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_aload_1:
+
                     case op_aload_1: {
                         _op_load_refer(stack, runtime, 1);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_aload_2:
+
                     case op_aload_2: {
                         _op_load_refer(stack, runtime, 2);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_aload_3:
+
                     case op_aload_3: {
                         _op_load_refer(stack, runtime, 3);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_faload:
-                    label_iaload:
+
                     case op_iaload:
                     case op_faload: {
                         s32 index = pop_int(stack);
@@ -777,7 +757,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("if_aload push arr[%llx].(%d)=%x:%d:%lf into stack\n", (u64) (intptr_t) arr, index,
                                        s, s, *(f32 *) &s);
 #endif
-                            runtime->pc++;
+                            ip++;
                         } else {
                             goto label_exception_handle;
                         }
@@ -785,8 +765,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_laload:
-                    label_daload:
+
                     case op_laload:
                     case op_daload: {
                         s32 index = pop_int(stack);
@@ -802,14 +781,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                        s, s, *(f64 *) &s);
 #endif
 
-                            runtime->pc++;
+                            ip++;
                         } else {
                             goto label_exception_handle;
                         }
                         break;
                     }
 
-                    label_aaload:
+
                     case op_aaload: {
                         s32 index = pop_int(stack);
                         Instance *arr = (Instance *) pop_ref(stack);
@@ -824,14 +803,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                        (s64) (intptr_t) s, (s64) (intptr_t) s);
 #endif
 
-                            runtime->pc++;
+                            ip++;
                         } else {
                             goto label_exception_handle;
                         }
                         break;
                     }
 
-                    label_baload:
+
                     case op_baload: {
                         s32 index = pop_int(stack);
                         Instance *arr = (Instance *) pop_ref(stack);
@@ -846,14 +825,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                        s, s, *(f32 *) &s);
 #endif
 
-                            runtime->pc++;
+                            ip++;
                         } else {
                             goto label_exception_handle;
                         }
                         break;
                     }
 
-                    label_caload:
+
                     case op_caload: {
                         s32 index = pop_int(stack);
                         Instance *arr = (Instance *) pop_ref(stack);
@@ -868,14 +847,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                        s, s, *(f32 *) &s);
 #endif
 
-                            runtime->pc++;
+                            ip++;
                         } else {
                             goto label_exception_handle;
                         }
                         break;
                     }
 
-                    label_saload:
+
                     case op_saload: {
                         s32 index = pop_int(stack);
                         Instance *arr = (Instance *) pop_ref(stack);
@@ -890,183 +869,179 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                        s, s, *(f32 *) &s);
 #endif
 
-                            runtime->pc++;
+                            ip++;
                         } else {
                             goto label_exception_handle;
                         }
                         break;
                     }
 
-                    label_istore:
+
                     case op_istore:
-                    label_fstore:
+
                     case op_fstore: {
-                        _op_store_1_slot(stack, runtime, (u8) runtime->pc[1]);
-                        runtime->pc += 2;
+                        _op_store_1_slot(stack, runtime, (u8) ip[1]);
+                        ip += 2;
                         break;
                     }
-                    label_astore:
+
                     case op_astore: {
-                        _op_store_refer(stack, runtime, (u8) runtime->pc[1]);
-                        runtime->pc += 2;
+                        _op_store_refer(stack, runtime, (u8) ip[1]);
+                        ip += 2;
                         break;
                     }
 
-                    label_lstore:
+
                     case op_lstore:
-                    label_dstore:
+
                     case op_dstore: {
-                        _op_store_2_slot(stack, runtime, (u8) runtime->pc[1]);
-                        runtime->pc += 2;
+                        _op_store_2_slot(stack, runtime, (u8) ip[1]);
+                        ip += 2;
 
                         break;
                     }
 
-                    label_istore_0:
+
                     case op_istore_0: {
                         _op_store_1_slot(stack, runtime, 0);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_istore_1:
+
                     case op_istore_1: {
                         _op_store_1_slot(stack, runtime, 1);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_istore_2:
+
                     case op_istore_2: {
                         _op_store_1_slot(stack, runtime, 2);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_istore_3:
+
                     case op_istore_3: {
                         _op_store_1_slot(stack, runtime, 3);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_lstore_0:
+
                     case op_lstore_0: {
                         _op_store_2_slot(stack, runtime, 0);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_lstore_1:
+
                     case op_lstore_1: {
                         _op_store_2_slot(stack, runtime, 1);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_lstore_2:
+
                     case op_lstore_2: {
                         _op_store_2_slot(stack, runtime, 2);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_lstore_3:
+
                     case op_lstore_3: {
                         _op_store_2_slot(stack, runtime, 3);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
 
-                    label_fstore_0:
                     case op_fstore_0: {
                         _op_store_1_slot(stack, runtime, 0);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_fstore_1:
+
                     case op_fstore_1: {
                         _op_store_1_slot(stack, runtime, 1);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_fstore_2:
+
                     case op_fstore_2: {
                         _op_store_1_slot(stack, runtime, 2);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_fstore_3:
+
                     case op_fstore_3: {
                         _op_store_1_slot(stack, runtime, 3);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
 
-                    label_dstore_0:
                     case op_dstore_0: {
                         _op_store_2_slot(stack, runtime, 0);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_dstore_1:
+
                     case op_dstore_1: {
                         _op_store_2_slot(stack, runtime, 1);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
                     case op_dstore_2: {
-                        label_dstore_2:
+
                         _op_store_2_slot(stack, runtime, 2);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_dstore_3:
+
                     case op_dstore_3: {
                         _op_store_2_slot(stack, runtime, 3);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
 
-                    label_astore_0:
                     case op_astore_0: {
                         _op_store_refer(stack, runtime, 0);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_astore_1:
+
                     case op_astore_1: {
                         _op_store_refer(stack, runtime, 1);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_astore_2:
+
                     case op_astore_2: {
                         _op_store_refer(stack, runtime, 2);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_astore_3:
+
                     case op_astore_3: {
                         _op_store_refer(stack, runtime, 3);
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_fastore:
-                    label_iastore:
+
                     case op_fastore:
                     case op_iastore: {
                         s32 i = pop_int(stack);
@@ -1082,15 +1057,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                        (s64) (intptr_t) jarr, index, i);
 #endif
 
-                            runtime->pc++;
+                            ip++;
                         } else {
                             goto label_exception_handle;
                         }
                         break;
                     }
 
-                    label_dastore:
-                    label_lastore:
+
                     case op_dastore:
                     case op_lastore: {
                         s64 j = pop_long(stack);
@@ -1106,7 +1080,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                        (s64) (intptr_t) jarr, index, j);
 #endif
 
-                            runtime->pc++;
+                            ip++;
                         } else {
                             goto label_exception_handle;
                         }
@@ -1114,7 +1088,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     }
 
 
-                    label_aastore:
                     case op_aastore: {
                         __refer r = pop_ref(stack);
                         s32 index = pop_int(stack);
@@ -1129,14 +1102,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                        (s64) (intptr_t) jarr, index, (s64) (intptr_t) r);
 #endif
 
-                            runtime->pc++;
+                            ip++;
                         } else {
                             goto label_exception_handle;
                         }
                         break;
                     }
 
-                    label_bastore:
+
                     case op_bastore: {
                         s32 i = pop_int(stack);
                         s32 index = pop_int(stack);
@@ -1151,7 +1124,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                        (s64) (intptr_t) jarr, index, i);
 #endif
 
-                            runtime->pc++;
+                            ip++;
                         } else {
                             goto label_exception_handle;
                         }
@@ -1159,14 +1132,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     }
 
 
-                    label_castore:
                     case op_castore: {
                         s32 i = pop_int(stack);
                         s32 index = pop_int(stack);
                         Instance *jarr = (Instance *) pop_ref(stack);
                         ret = _jarray_check_exception(jarr, index, runtime);
                         if (!ret) {
-                            *(((u16 *) jarr->arr_body) + index) = i;
+                            *(((u16 *) jarr->arr_body) + index) = (u16) i;
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
@@ -1174,21 +1146,21 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                        (s64) (intptr_t) jarr, index, i);
 #endif
 
-                            runtime->pc++;
+                            ip++;
                         } else {
                             goto label_exception_handle;
                         }
                         break;
                     }
 
-                    label_sastore:
+
                     case op_sastore: {
                         s32 i = pop_int(stack);
                         s32 index = pop_int(stack);
                         Instance *jarr = (Instance *) pop_ref(stack);
                         ret = _jarray_check_exception(jarr, index, runtime);
                         if (!ret) {
-                            *(((s16 *) jarr->arr_body) + index) = i;
+                            *(((s16 *) jarr->arr_body) + index) = (s16) i;
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
@@ -1196,7 +1168,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                        (s64) (intptr_t) jarr, index, i);
 #endif
 
-                            runtime->pc++;
+                            ip++;
                         } else {
                             goto label_exception_handle;
                         }
@@ -1204,20 +1176,18 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     }
 
 
-                    label_pop:
                     case op_pop: {
                         pop_empty(stack);
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("pop\n");
 #endif
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
 
-                    label_pop2:
                     case op_pop2: {
                         pop_empty(stack);
                         pop_empty(stack);
@@ -1226,13 +1196,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         invoke_deepth(runtime);
                         jvm_printf("pop2\n");
 #endif
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
 
-                    label_dup:
                     case op_dup: {
 
                         push_entry(stack, stack->sp - 1);
@@ -1241,12 +1210,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         invoke_deepth(runtime);
                         jvm_printf("dup\n");
 #endif
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_dup_x1:
+
                     case op_dup_x1: {
                         StackEntry entry1;
                         pop_entry(stack, &entry1);
@@ -1261,12 +1230,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         invoke_deepth(runtime);
                         jvm_printf("dup_x1\n");
 #endif
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_dup_x2:
+
                     case op_dup_x2: {
                         StackEntry entry1;
                         pop_entry(stack, &entry1);
@@ -1284,12 +1253,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         invoke_deepth(runtime);
                         jvm_printf("dup_x2 \n");
 #endif
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_dup2:
+
                     case op_dup2: {
                         StackEntry entry1;
                         peek_entry(stack->sp - 1, &entry1);
@@ -1303,13 +1272,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         invoke_deepth(runtime);
                         jvm_printf("dup2\n");
 #endif
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
 
-                    label_dup2_x1:
                     case op_dup2_x1: {
                         StackEntry entry1;
                         pop_entry(stack, &entry1);
@@ -1328,12 +1296,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         invoke_deepth(runtime);
                         jvm_printf("dup2_x1\n");
 #endif
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_dup2_x2:
+
                     case op_dup2_x2: {
                         StackEntry entry1;
                         pop_entry(stack, &entry1);
@@ -1355,12 +1323,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         invoke_deepth(runtime);
                         jvm_printf("dup2_x2\n");
 #endif
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_swap:
+
                     case op_swap: {
 
                         StackEntry entry1;
@@ -1376,13 +1344,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         invoke_deepth(runtime);
                         jvm_printf("swap\n");
 #endif
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
 
-                    label_iadd:
                     case op_iadd: {
 
                         s32 value1 = pop_int(stack);
@@ -1393,13 +1360,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("iadd: %d + %d = %d\n", value1, value2, result);
 #endif
                         push_int(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
 
-                    label_ladd:
                     case op_ladd: {
                         s64 value1 = pop_long(stack);
                         s64 value2 = pop_long(stack);
@@ -1410,12 +1376,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("ladd: %lld + %lld = %lld\n", value2, value1, result);
 #endif
                         push_long(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_fadd:
+
                     case op_fadd: {
                         f32 value1 = pop_float(stack);
                         f32 value2 = pop_float(stack);
@@ -1426,12 +1392,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("fadd: %lf + %lf = %lf\n", value2, value1, result);
 #endif
                         push_float(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_dadd:
+
                     case op_dadd: {
 
                         f64 value1 = pop_double(stack);
@@ -1442,12 +1408,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("dadd: %lf + %lf = %lf\n", value1, value2, result);
 #endif
                         push_double(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_isub:
+
                     case op_isub: {
                         s32 value2 = pop_int(stack);
                         s32 value1 = pop_int(stack);
@@ -1457,12 +1423,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("isub : %d - %d = %d\n", value1, value2, result);
 #endif
                         push_int(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_lsub:
+
                     case op_lsub: {
                         s64 value1 = pop_long(stack);
                         s64 value2 = pop_long(stack);
@@ -1473,12 +1439,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("lsub: %lld - %lld = %lld\n", value2, value1, result);
 #endif
                         push_long(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_fsub:
+
                     case op_fsub: {
                         f32 value1 = pop_float(stack);
                         f32 value2 = pop_float(stack);
@@ -1489,13 +1455,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("fsub: %f - %f = %f\n", value2, value1, result);
 #endif
                         push_float(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
 
-                    label_dsub:
                     case op_dsub: {
                         f64 value1 = pop_double(stack);
                         f64 value2 = pop_double(stack);
@@ -1506,12 +1471,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("dsub: %lf - %lf = %lf\n", value2, value1, result);
 #endif
                         push_double(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_imul:
+
                     case op_imul: {
 
                         s32 value1 = pop_int(stack);
@@ -1522,12 +1487,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("imul: %d * %d = %d\n", value1, value2, result);
 #endif
                         push_int(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_lmul:
+
                     case op_lmul: {
                         s64 value1 = pop_long(stack);
                         s64 value2 = pop_long(stack);
@@ -1538,12 +1503,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("lmul: %lld * %lld = %lld\n", value2, value1, result);
 #endif
                         push_long(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_fmul:
+
                     case op_fmul: {
                         f32 value1 = pop_float(stack);
                         f32 value2 = pop_float(stack);
@@ -1553,12 +1518,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("fmul: %f * %f = %f\n", value1, value2, result);
 #endif
                         push_float(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_dmul:
+
                     case op_dmul: {
                         f64 value1 = pop_double(stack);
                         f64 value2 = pop_double(stack);
@@ -1568,13 +1533,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("dmul: %lf * %lf = %lf\n", value1, value2, result);
 #endif
                         push_double(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
 
-                    label_idiv:
                     case op_idiv: {
 
                         s32 value1 = pop_int(stack);
@@ -1590,13 +1554,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         } else {
                             s32 result = value2 / value1;
                             push_int(stack, result);
-                            runtime->pc++;
+                            ip++;
                         }
 
                         break;
                     }
 
-                    label_ldiv:
+
                     case op_ldiv: {
                         s64 value1 = pop_long(stack);
                         s64 value2 = pop_long(stack);
@@ -1611,13 +1575,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         } else {
                             s64 result = value2 / value1;
                             push_long(stack, result);
-                            runtime->pc++;
+                            ip++;
                         }
 
                         break;
                     }
 
-                    label_fdiv:
+
                     case op_fdiv: {
                         f32 value1 = pop_float(stack);
                         f32 value2 = pop_float(stack);
@@ -1628,11 +1592,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("fdiv: %f / %f = %f\n", value2, value1, result);
 #endif
                         push_float(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
-                    label_ddiv:
+
                     case op_ddiv: {
                         f64 value1 = pop_double(stack);
                         f64 value2 = pop_double(stack);
@@ -1643,13 +1607,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("ddiv: %f / %f = %f\n", value2, value1, result);
 #endif
                         push_double(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
 
-                    label_irem:
                     case op_irem: {
                         s32 value1 = pop_int(stack);
                         s32 value2 = pop_int(stack);
@@ -1659,12 +1622,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("irem: %d % %d = %d\n", value2, value1, result);
 #endif
                         push_int(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_lrem:
+
                     case op_lrem: {
                         s64 value1 = pop_long(stack);
                         s64 value2 = pop_long(stack);
@@ -1675,12 +1638,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("lrem: %lld mod %lld = %lld\n", value2, value1, result);
 #endif
                         push_long(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_frem:
+
                     case op_frem: {
                         f32 value1 = pop_float(stack);
                         f32 value2 = pop_float(stack);
@@ -1690,12 +1653,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("frem: %f % %f = %f\n", value2, value1, result);
 #endif
                         push_float(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_drem:
+
                     case op_drem: {
                         f64 value1 = pop_double(stack);
                         f64 value2 = pop_double(stack);
@@ -1706,12 +1669,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("drem: %lf mod %lf = %lf\n", value2, value1, result);
 #endif
                         push_double(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_ineg:
+
                     case op_ineg: {
                         s32 value1 = pop_int(stack);
 
@@ -1720,12 +1683,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("ineg: -(%d) = %d\n", value1, -value1);
 #endif
                         push_int(stack, -value1);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_lneg:
+
                     case op_lneg: {
                         s64 value1 = pop_long(stack);
 
@@ -1734,13 +1697,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("lneg: -(%lld) = %lld\n", value1, -value1);
 #endif
                         push_long(stack, -value1);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
 
-                    label_fneg:
                     case op_fneg: {
                         f32 value1 = pop_float(stack);
 
@@ -1749,13 +1711,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("fneg: -(%f) = %f\n", value1, -value1);
 #endif
                         push_float(stack, -value1);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
 
-                    label_dneg:
                     case op_dneg: {
                         f64 value1 = pop_double(stack);
 
@@ -1764,12 +1725,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("dneg: -(%lf) = %lf\n", value1, -value1);
 #endif
                         push_double(stack, -value1);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_ishl:
+
                     case op_ishl: {
                         s32 value1 = pop_int(stack);
                         s32 value2 = pop_int(stack);
@@ -1779,12 +1740,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("ishl: %x << %x =%x \n", value2, value1, value2 << value1);
 #endif
                         push_int(stack, value2 << value1);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_lshl:
+
                     case op_lshl: {
                         s32 value1 = pop_int(stack);
                         s64 value2 = pop_long(stack);
@@ -1794,12 +1755,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("lshl: %llx << %x =%llx \n", value2, value1, (value2 << value1));
 #endif
                         push_long(stack, value2 << value1);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_ishr:
+
                     case op_ishr: {
                         s32 value1 = pop_int(stack);
                         s32 value2 = pop_int(stack);
@@ -1809,12 +1770,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("ishr: %x >> %x =%x \n", value2, value1, value2 >> value1);
 #endif
                         push_int(stack, value2 >> value1);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_lshr:
+
                     case op_lshr: {
                         s32 value1 = pop_int(stack);
                         s64 value2 = pop_long(stack);
@@ -1824,42 +1785,42 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("lshr: %llx >> %x =%llx \n", value2, value1, value2 >> value1);
 #endif
                         push_long(stack, value2 >> value1);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_iushr:
+
                     case op_iushr: {
-                        s32 value1 = pop_int(stack);
-                        u32 value2 = pop_int(stack);
+                        s32 value1 = pop_int(stack) & 0x1F;
+                        u32 value2 = (u32) pop_int(stack);
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("iushr: %x >>> %x =%x \n", value2, value1, value2 >> value1);
 #endif
                         push_int(stack, value2 >> value1);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_lushr:
+
                     case op_lushr: {
-                        s32 value1 = pop_int(stack);
-                        u64 value2 = pop_long(stack);
+                        s32 value1 = pop_int(stack) & 0x3f;
+                        u64 value2 = (u64) pop_long(stack);
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("lushr: %llx >>> %x =%llx \n", value2, value1, value2 >> value1);
 #endif
                         push_long(stack, value2 >> value1);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_iand:
+
                     case op_iand: {
                         s32 value1 = pop_int(stack);
                         s32 value2 = pop_int(stack);
@@ -1869,101 +1830,99 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("iand: %x & %x =%x \n", value2, value1, value2 & value1);
 #endif
                         push_int(stack, value2 & value1);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_land:
+
                     case op_land: {
-                        u64 value1 = pop_long(stack);
-                        u64 value2 = pop_long(stack);
+                        s64 value1 = pop_long(stack);
+                        s64 value2 = pop_long(stack);
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("land: %llx  &  %llx =%llx \n", value2, value1, value2 & value1);
 #endif
                         push_long(stack, value2 & value1);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
 
-                    label_ior:
                     case op_ior: {
-                        u32 value1 = pop_int(stack);
-                        u32 value2 = pop_int(stack);
+                        s32 value1 = pop_int(stack);
+                        s32 value2 = pop_int(stack);
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("ior: %x & %x =%x \n", value2, value1, value2 | value1);
 #endif
                         push_int(stack, value2 | value1);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_lor:
+
                     case op_lor: {
-                        u64 value1 = pop_long(stack);
-                        u64 value2 = pop_long(stack);
+                        s64 value1 = pop_long(stack);
+                        s64 value2 = pop_long(stack);
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("lor: %llx  |  %llx =%llx \n", value2, value1, value2 | value1);
 #endif
                         push_long(stack, value2 | value1);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
 
-                    label_ixor:
                     case op_ixor: {
-                        u32 value1 = pop_int(stack);
-                        u32 value2 = pop_int(stack);
+                        s32 value1 = pop_int(stack);
+                        s32 value2 = pop_int(stack);
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("ixor: %x ^ %x =%x \n", value2, value1, value2 ^ value1);
 #endif
                         push_int(stack, value2 ^ value1);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_lxor:
+
                     case op_lxor: {
-                        u64 value1 = pop_long(stack);
-                        u64 value2 = pop_long(stack);
+                        s64 value1 = pop_long(stack);
+                        s64 value2 = pop_long(stack);
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("lxor: %llx  ^  %llx =%llx \n", value2, value1, value2 ^ value1);
 #endif
                         push_long(stack, value2 ^ value1);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_iinc:
+
                     case op_iinc: {
-                        runtime->localvar[(u8) runtime->pc[1]].ivalue += (s8) runtime->pc[2];
-                        runtime->pc += 3;
+                        runtime->localvar[(u8) ip[1]].ivalue += (s8) ip[2];
+                        ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
-                        jvm_printf("iinc: localvar(%d) = %d , inc %d\n", (u8) runtime->pc[1], runtime->localvar[(u8) runtime->pc[1]].ivalue, (s8) runtime->pc[2]);
+                        jvm_printf("iinc: localvar(%d) = %d , inc %d\n", (u8) ip[1], runtime->localvar[(u8) ip[1]].ivalue, (s8) ip[2]);
 #endif
 
                         break;
                     }
 
-                    label_i2l:
+
                     case op_i2l: {
                         s32 value = pop_int(stack);
 
@@ -1972,12 +1931,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("i2l: %d --> %lld\n", (s32) value, (s64) value);
 #endif
                         push_long(stack, (s64) value);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_i2f:
+
                     case op_i2f: {
                         s32 value = pop_int(stack);
                         f32 result = (f32) value;
@@ -1986,12 +1945,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("i2f: %d --> %f\n", (s32) value, result);
 #endif
                         push_float(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_i2d:
+
                     case op_i2d: {
                         s32 value = pop_int(stack);
                         f64 result = value;
@@ -2000,12 +1959,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("i2d: %d --> %lf\n", (s32) value, result);
 #endif
                         push_double(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_l2i:
+
                     case op_l2i: {
                         s64 value = pop_long(stack);
 
@@ -2014,12 +1973,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("l2i: %d <-- %lld\n", (s32) value, value);
 #endif
                         push_int(stack, (s32) value);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_l2f:
+
                     case op_l2f: {
                         s64 value = pop_long(stack);
 
@@ -2028,12 +1987,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("l2f: %f <-- %lld\n", (f32) value, value);
 #endif
                         push_float(stack, (f32) value);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_l2d:
+
                     case op_l2d: {
                         s64 value = pop_long(stack);
 
@@ -2042,13 +2001,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("l2d: %lf <-- %lld\n", (f64) value, value);
 #endif
                         push_double(stack, (f64) value);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
 
-                    label_f2i:
                     case op_f2i: {
                         f32 value1 = pop_float(stack);
                         s32 result = (s32) value1;
@@ -2057,12 +2015,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("f2i: %d <-- %f\n", result, value1);
 #endif
                         push_int(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_f2l:
+
                     case op_f2l: {
                         f32 value1 = pop_float(stack);
                         s64 result = (s64) value1;
@@ -2071,12 +2029,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("f2l: %lld <-- %f\n", result, value1);
 #endif
                         push_long(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_f2d:
+
                     case op_f2d: {
                         f32 value1 = pop_float(stack);
                         f64 result = value1;
@@ -2085,13 +2043,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("f2d: %f <-- %f\n", result, value1);
 #endif
                         push_double(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
 
-                    label_d2i:
                     case op_d2i: {
                         f64 value1 = pop_double(stack);
                         s32 result = (s32) value1;
@@ -2100,12 +2057,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("d2i: %d <-- %lf\n", result, value1);
 #endif
                         push_int(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_d2l:
+
                     case op_d2l: {
                         f64 value1 = pop_double(stack);
                         s64 result = (s64) value1;
@@ -2114,12 +2071,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("d2l: %lld <-- %lf\n", result, value1);
 #endif
                         push_long(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_d2f:
+
                     case op_d2f: {
                         f64 value1 = pop_double(stack);
                         f32 result = (f32) value1;
@@ -2128,12 +2085,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("d2f: %f <-- %lf\n", result, value1);
 #endif
                         push_float(stack, result);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_i2b:
+
                     case op_i2b: {
                         s32 value = pop_int(stack);
 
@@ -2142,13 +2099,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("i2b: %d --> %d\n", (s8) value, value);
 #endif
                         push_int(stack, (s8) value);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
 
-                    label_i2c:
                     case op_i2c: {
                         s32 value = pop_int(stack);
 
@@ -2157,11 +2113,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("i2c: %d --> %d\n", (s16) value, value);
 #endif
                         push_int(stack, (u16) value);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
-                    label_i2s:
+
                     case op_i2s: {
                         s32 value = pop_int(stack);
 
@@ -2170,12 +2126,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         jvm_printf("i2s: %d --> %d\n", (s16) value, value);
 #endif
                         push_int(stack, (s16) value);
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_lcmp:
+
                     case op_lcmp: {
                         s64 value1 = pop_long(stack);
                         s64 value2 = pop_long(stack);
@@ -2187,13 +2143,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                         push_int(stack, result);
 
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
 
-                    label_fcmpl:
                     case op_fcmpl: {
                         f32 value1 = pop_float(stack);
                         f32 value2 = pop_float(stack);
@@ -2205,12 +2160,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                         push_int(stack, result);
 
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_fcmpg:
+
                     case op_fcmpg: {
                         f32 value1 = pop_float(stack);
                         f32 value2 = pop_float(stack);
@@ -2222,12 +2177,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                         push_int(stack, result);
 
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_dcmpl:
+
                     case op_dcmpl: {
                         f64 value1 = pop_double(stack);
                         f64 value2 = pop_double(stack);
@@ -2239,12 +2194,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                         push_int(stack, result);
 
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
-                    label_dcmpg:
+
                     case op_dcmpg: {
                         f64 value1 = pop_double(stack);
                         f64 value2 = pop_double(stack);
@@ -2256,19 +2211,18 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                         push_int(stack, result);
 
-                        runtime->pc++;
+                        ip++;
 
                         break;
                     }
 
 
-                    label_ifeq:
                     case op_ifeq: {
                         s32 val = pop_int(stack);
                         if (val == 0) {
-                            runtime->pc += *((s16 *) (runtime->pc + 1));
+                            ip += *((s16 *) (ip + 1));
                         } else {
-                            runtime->pc += 3;
+                            ip += 3;
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -2279,13 +2233,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_ifne:
+
                     case op_ifne: {
                         s32 val = pop_int(stack);
                         if (val != 0) {
-                            runtime->pc += *((s16 *) (runtime->pc + 1));
+                            ip += *((s16 *) (ip + 1));
                         } else {
-                            runtime->pc += 3;
+                            ip += 3;
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -2297,13 +2251,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     }
 
 
-                    label_iflt:
                     case op_iflt: {
                         s32 val = pop_int(stack);
                         if (val < 0) {
-                            runtime->pc += *((s16 *) (runtime->pc + 1));
+                            ip += *((s16 *) (ip + 1));
                         } else {
-                            runtime->pc += 3;
+                            ip += 3;
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -2314,13 +2267,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_ifge:
+
                     case op_ifge: {
                         s32 val = pop_int(stack);
                         if (val >= 0) {
-                            runtime->pc += *((s16 *) (runtime->pc + 1));
+                            ip += *((s16 *) (ip + 1));
                         } else {
-                            runtime->pc += 3;
+                            ip += 3;
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -2331,13 +2284,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_ifgt:
+
                     case op_ifgt: {
                         s32 val = pop_int(stack);
                         if (val > 0) {
-                            runtime->pc += *((s16 *) (runtime->pc + 1));
+                            ip += *((s16 *) (ip + 1));
                         } else {
-                            runtime->pc += 3;
+                            ip += 3;
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -2348,13 +2301,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_ifle:
+
                     case op_ifle: {
                         s32 val = pop_int(stack);
                         if (val <= 0) {
-                            runtime->pc += *((s16 *) (runtime->pc + 1));
+                            ip += *((s16 *) (ip + 1));
                         } else {
-                            runtime->pc += 3;
+                            ip += 3;
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -2365,14 +2318,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_if_icmpeq:
+
                     case op_if_icmpeq: {
                         s32 v2 = pop_int(stack);
                         s32 v1 = pop_int(stack);
                         if (v1 == v2) {
-                            runtime->pc += *((s16 *) (runtime->pc + 1));
+                            ip += *((s16 *) (ip + 1));
                         } else {
-                            runtime->pc += 3;
+                            ip += 3;
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -2382,14 +2335,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_if_icmpne:
+
                     case op_if_icmpne: {
                         s32 v2 = pop_int(stack);
                         s32 v1 = pop_int(stack);
                         if (v1 != v2) {
-                            runtime->pc += *((s16 *) (runtime->pc + 1));
+                            ip += *((s16 *) (ip + 1));
                         } else {
-                            runtime->pc += 3;
+                            ip += 3;
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -2399,14 +2352,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_if_icmplt:
+
                     case op_if_icmplt: {
                         s32 v2 = pop_int(stack);
                         s32 v1 = pop_int(stack);
                         if (v1 < v2) {
-                            runtime->pc += *((s16 *) (runtime->pc + 1));
+                            ip += *((s16 *) (ip + 1));
                         } else {
-                            runtime->pc += 3;
+                            ip += 3;
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -2416,14 +2369,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_if_icmpge:
+
                     case op_if_icmpge: {
                         s32 v2 = pop_int(stack);
                         s32 v1 = pop_int(stack);
                         if (v1 >= v2) {
-                            runtime->pc += *((s16 *) (runtime->pc + 1));
+                            ip += *((s16 *) (ip + 1));
                         } else {
-                            runtime->pc += 3;
+                            ip += 3;
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -2433,14 +2386,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_if_icmpgt:
+
                     case op_if_icmpgt: {
                         s32 v2 = pop_int(stack);
                         s32 v1 = pop_int(stack);
                         if (v1 > v2) {
-                            runtime->pc += *((s16 *) (runtime->pc + 1));
+                            ip += *((s16 *) (ip + 1));
                         } else {
-                            runtime->pc += 3;
+                            ip += 3;
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -2451,14 +2404,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     }
 
 
-                    label_if_icmple:
                     case op_if_icmple: {
                         s32 v2 = pop_int(stack);
                         s32 v1 = pop_int(stack);
                         if (v1 <= v2) {
-                            runtime->pc += *((s16 *) (runtime->pc + 1));
+                            ip += *((s16 *) (ip + 1));
                         } else {
-                            runtime->pc += 3;
+                            ip += 3;
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -2468,14 +2420,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_if_acmpeq:
+
                     case op_if_acmpeq: {
                         __refer v2 = pop_ref(stack);
                         __refer v1 = pop_ref(stack);
                         if (v1 == v2) {
-                            runtime->pc += *((s16 *) (runtime->pc + 1));
+                            ip += *((s16 *) (ip + 1));
                         } else {
-                            runtime->pc += 3;
+                            ip += 3;
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -2485,14 +2437,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_if_acmpne:
+
                     case op_if_acmpne: {
                         __refer v2 = pop_ref(stack);
                         __refer v1 = pop_ref(stack);
                         if (v1 != v2) {
-                            runtime->pc += *((s16 *) (runtime->pc + 1));
+                            ip += *((s16 *) (ip + 1));
                         } else {
-                            runtime->pc += 3;
+                            ip += 3;
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -2502,61 +2454,60 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_goto:
+
                     case op_goto: {
 
-                        s32 branchoffset = *((s16 *) (runtime->pc + 1));
+                        s32 branchoffset = *((s16 *) (ip + 1));
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("goto: %d\n", branchoffset);
 #endif
-                        runtime->pc += branchoffset;
+                        ip += branchoffset;
 
 
                         break;
                     }
 
-                    label_jsr:
+
                     case op_jsr: {
-                        s32 branchoffset = *((s16 *) (runtime->pc + 1));
-                        push_ra(stack, (__refer) (runtime->pc + 3));
+                        s32 branchoffset = *((s16 *) (ip + 1));
+                        push_ra(stack, (__refer) (ip + 3));
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("jsr: %d\n", branchoffset);
 #endif
-                        runtime->pc += branchoffset;
+                        ip += branchoffset;
 
 
                         break;
                     }
 
-                    label_ret:
+
                     case op_ret: {
-                        __refer addr = localvar_getRefer(runtime->localvar, (u8) runtime->pc[1]);
+                        __refer addr = localvar_getRefer(runtime->localvar, (u8) ip[1]);
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("ret: %x\n", (s64) (intptr_t) addr);
 #endif
-                        runtime->pc = (u8 *) addr;
+                        ip = (u8 *) addr;
 
 
                         break;
                     }
 
 
-                    label_tableswitch:
                     case op_tableswitch: {
                         s32 pos = 0;
-                        pos = 4 - ((((u64) (intptr_t) runtime->pc) - (u64) (intptr_t) (ca->code)) % 4);//4 byte对齐
+                        pos = (s32) (4 - ((((u64) (intptr_t) ip) - (u64) (intptr_t) (ca->code)) % 4));//4 byte对齐
 
 
-                        s32 default_offset = *((s32 *) (runtime->pc + pos));
+                        s32 default_offset = *((s32 *) (ip + pos));
                         pos += 4;
-                        s32 low = *((s32 *) (runtime->pc + pos));
+                        s32 low = *((s32 *) (ip + pos));
                         pos += 4;
-                        s32 high = *((s32 *) (runtime->pc + pos));
+                        s32 high = *((s32 *) (ip + pos));
                         pos += 4;
 
                         int val = pop_int(stack);// pop an int from the stack
@@ -2566,27 +2517,27 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         } else {                        // otherwise
                             pos += (val - low) * 4;
 
-                            offset = *((s32 *) (runtime->pc + pos));     // branch to entry in table
+                            offset = *((s32 *) (ip + pos));     // branch to entry in table
                         }
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("tableswitch: val=%d, offset=%d\n", val, offset);
 #endif
-                        runtime->pc += offset;
+                        ip += offset;
 
 
                         break;
                     }
 
-                    label_lookupswitch:
+
                     case op_lookupswitch: {
                         s32 pos = 0;
-                        pos = 4 - ((((u64) (intptr_t) runtime->pc) - (u64) (intptr_t) (ca->code)) % 4);//4 byte对齐
+                        pos = (s32) (4 - ((((u64) (intptr_t) ip) - (u64) (intptr_t) (ca->code)) % 4));//4 byte对齐
 
-                        s32 default_offset = *((s32 *) (runtime->pc + pos));
+                        s32 default_offset = *((s32 *) (ip + pos));
                         pos += 4;
-                        s32 n = *((s32 *) (runtime->pc + pos));
+                        s32 n = *((s32 *) (ip + pos));
                         pos += 4;
                         s32 i, key;
 
@@ -2594,10 +2545,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         int offset = default_offset;
                         for (i = 0; i < n; i++) {
 
-                            key = *((s32 *) (runtime->pc + pos));
+                            key = *((s32 *) (ip + pos));
                             pos += 4;
                             if (key == val) {
-                                offset = *((s32 *) (runtime->pc + pos));
+                                offset = *((s32 *) (ip + pos));
                                 break;
                             } else {
                                 pos += 4;
@@ -2608,13 +2559,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         invoke_deepth(runtime);
                         jvm_printf("tableswitch: val=%d, offset=%d\n", val, offset);
 #endif
-                        runtime->pc += offset;
+                        ip += offset;
 
                         break;
                     }
 
-                    label_lreturn:
-                    label_dreturn:
+
                     case op_lreturn:
                     case op_dreturn: {
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
@@ -2630,9 +2580,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         goto label_exit_while;
                         break;
                     }
-                    label_ireturn:
-                    label_freturn:
-                    label_areturn:
+
+
                     case op_ireturn:
                     case op_freturn:
                     case op_areturn: {
@@ -2648,7 +2597,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_return:
+
                     case op_return: {
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -2659,10 +2608,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_getstatic:
+
                     case op_getstatic: {
 
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                         if (!fi) {
                             ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
@@ -2676,29 +2625,32 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 
                         if (fi->isrefer) {
-                            *runtime->pc = op_getstatic_ref;
+                            *ip = op_getstatic_ref;
                         } else {
                             // check variable type to determine s64/s32/f64/f32
                             s32 data_bytes = fi->datatype_bytes;
                             switch (data_bytes) {
                                 case 4: {
-                                    *runtime->pc = op_getstatic_int;
+                                    *ip = op_getstatic_int;
                                     break;
                                 }
                                 case 1: {
-                                    *runtime->pc = op_getstatic_byte;
+                                    *ip = op_getstatic_byte;
                                     break;
                                 }
                                 case 8: {
-                                    *runtime->pc = op_getstatic_long;
+                                    *ip = op_getstatic_long;
                                     break;
                                 }
                                 case 2: {
                                     if (fi->datatype_idx == DATATYPE_JCHAR) {
-                                        *runtime->pc = op_getstatic_jchar;
+                                        *ip = op_getstatic_jchar;
                                     } else {
-                                        *runtime->pc = op_getstatic_short;
+                                        *ip = op_getstatic_short;
                                     }
+                                    break;
+                                }
+                                default: {
                                     break;
                                 }
                             }
@@ -2706,9 +2658,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_putstatic:
+
                     case op_putstatic: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
 
                         FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                         if (!fi) {
@@ -2722,26 +2674,29 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             }
                         }
                         if (fi->isrefer) {//垃圾回收标识
-                            *runtime->pc = op_putstatic_ref;
+                            *ip = op_putstatic_ref;
                         } else {
                             // check variable type to determain long/s32/f64/f32
                             s32 data_bytes = fi->datatype_bytes;
                             //非引用类型
                             switch (data_bytes) {
                                 case 4: {
-                                    *runtime->pc = op_putstatic_int;
+                                    *ip = op_putstatic_int;
                                     break;
                                 }
                                 case 1: {
-                                    *runtime->pc = op_putstatic_byte;
+                                    *ip = op_putstatic_byte;
                                     break;
                                 }
                                 case 8: {
-                                    *runtime->pc = op_putstatic_long;
+                                    *ip = op_putstatic_long;
                                     break;
                                 }
                                 case 2: {
-                                    *runtime->pc = op_putstatic_short;
+                                    *ip = op_putstatic_short;
+                                    break;
+                                }
+                                default: {
                                     break;
                                 }
                             }
@@ -2749,9 +2704,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_getfield:
+
                     case op_getfield: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                         if (!fi) {
                             ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
@@ -2764,29 +2719,32 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             }
                         }
                         if (fi->isrefer) {
-                            *runtime->pc = op_getfield_ref;
+                            *ip = op_getfield_ref;
                         } else {
                             // check variable type to determine s64/s32/f64/f32
                             s32 data_bytes = fi->datatype_bytes;
                             switch (data_bytes) {
                                 case 4: {
-                                    *runtime->pc = op_getfield_int;
+                                    *ip = op_getfield_int;
                                     break;
                                 }
                                 case 1: {
-                                    *runtime->pc = op_getfield_byte;
+                                    *ip = op_getfield_byte;
                                     break;
                                 }
                                 case 8: {
-                                    *runtime->pc = op_getfield_long;
+                                    *ip = op_getfield_long;
                                     break;
                                 }
                                 case 2: {
                                     if (fi->datatype_idx == DATATYPE_JCHAR) {
-                                        *runtime->pc = op_getfield_jchar;
+                                        *ip = op_getfield_jchar;
                                     } else {
-                                        *runtime->pc = op_getfield_short;
+                                        *ip = op_getfield_short;
                                     }
+                                    break;
+                                }
+                                default: {
                                     break;
                                 }
                             }
@@ -2795,9 +2753,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     }
 
 
-                    label_putfield:
                     case op_putfield: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                         if (!fi) {
                             ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
@@ -2811,25 +2768,28 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 
                         if (fi->isrefer) {//垃圾回收标识
-                            *runtime->pc = op_putfield_ref;
+                            *ip = op_putfield_ref;
                         } else {
                             s32 data_bytes = fi->datatype_bytes;
                             //非引用类型
                             switch (data_bytes) {
                                 case 4: {
-                                    *runtime->pc = op_putfield_int;
+                                    *ip = op_putfield_int;
                                     break;
                                 }
                                 case 1: {
-                                    *runtime->pc = op_putfield_byte;
+                                    *ip = op_putfield_byte;
                                     break;
                                 }
                                 case 8: {
-                                    *runtime->pc = op_putfield_long;
+                                    *ip = op_putfield_long;
                                     break;
                                 }
                                 case 2: {
-                                    *runtime->pc = op_putfield_short;
+                                    *ip = op_putfield_short;
+                                    break;
+                                }
+                                default: {
                                     break;
                                 }
                             }
@@ -2838,10 +2798,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_invokevirtual:
+
                     case op_invokevirtual: {
                         //此cmr所描述的方法，对于不同的实例，有不同的method
-                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (runtime->pc + 1)));
+                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (ip + 1)));
 
                         Instance *ins = getInstanceInStack(cmr, stack);
                         if (!ins) {
@@ -2860,16 +2820,16 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 ret = RUNTIME_STATUS_EXCEPTION;
                                 goto label_exception_handle;
                             } else {
-                                *runtime->pc = op_invokevirtual_fast;
+                                *ip = op_invokevirtual_fast;
                             }
                         }
                         break;
                     }
 
-                    label_invokespecial:
+
                     case op_invokespecial: {
 
-                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (runtime->pc + 1)));
+                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (ip + 1)));
                         MethodInfo *m = cmr->methodInfo;
 
                         if (!m) {
@@ -2877,15 +2837,15 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             ret = RUNTIME_STATUS_EXCEPTION;
                             goto label_exception_handle;
                         } else {
-                            *runtime->pc = op_invokespecial_fast;
-                            _optimize_empty_method_call(m, runtime->pc);//if method is empty ,bytecode would replaced 'nop' and 'pop' para
+                            *ip = op_invokespecial_fast;
+                            _optimize_empty_method_call(m, ip);//if method is empty ,bytecode would replaced 'nop' and 'pop' para
                         }
                         break;
                     }
 
-                    label_invokestatic:
+
                     case op_invokestatic: {
-                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (runtime->pc + 1)));
+                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (ip + 1)));
                         MethodInfo *m = cmr->methodInfo;
 
                         if (!m) {
@@ -2893,17 +2853,16 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             ret = RUNTIME_STATUS_EXCEPTION;
                             goto label_exception_handle;
                         } else {
-                            *runtime->pc = op_invokestatic_fast;
-                            _optimize_empty_method_call(m, runtime->pc);
+                            *ip = op_invokestatic_fast;
+                            _optimize_empty_method_call(m, ip);
                         }
                         break;
                     }
 
 
-                    label_invokeinterface:
                     case op_invokeinterface: {
-                        s32 paraCount = (u8) runtime->pc[3];
-                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (runtime->pc + 1)));
+                        //s32 paraCount = (u8) ip[3];
+                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (ip + 1)));
                         Instance *ins = getInstanceInStack(cmr, stack);
                         if (!ins) {
                             _null_throw_exception(stack, runtime);
@@ -2920,16 +2879,16 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 ret = RUNTIME_STATUS_EXCEPTION;
                                 goto label_exception_handle;
                             } else {
-                                *runtime->pc = op_invokeinterface_fast;
+                                *ip = op_invokeinterface_fast;
                             }
                         }
                         break;
                     }
 
-                    label_invokedynamic:
+
                     case op_invokedynamic: {
                         //get bootMethod struct
-                        ConstantInvokeDynamic *cid = class_get_invoke_dynamic(clazz, *((u16 *) (runtime->pc + 1)));
+                        ConstantInvokeDynamic *cid = class_get_invoke_dynamic(clazz, *((u16 *) (ip + 1)));
                         BootstrapMethod *bootMethod = &clazz->bootstrapMethodAttr->bootstrap_methods[cid->bootstrap_method_attr_index];//Boot
 
                         if (bootMethod->make == NULL) {
@@ -3032,15 +2991,15 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             ret = RUNTIME_STATUS_EXCEPTION;
                             goto label_exception_handle;
                         } else {
-                            *runtime->pc = op_invokedynamic_fast;
+                            *ip = op_invokedynamic_fast;
                         }
                         break;
                     }
 
-                    label_new:
+
                     case op_new: {
 
-                        ConstantClassRef *ccf = class_get_constant_classref(clazz, *((u16 *) (runtime->pc + 1)));
+                        ConstantClassRef *ccf = class_get_constant_classref(clazz, *((u16 *) (ip + 1)));
                         if (!ccf->clazz) {
                             Utf8String *clsName = class_get_utf8_string(clazz, ccf->stringIndex);
                             ccf->clazz = classes_load_get(clsName, runtime);
@@ -3056,15 +3015,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         invoke_deepth(runtime);
                         jvm_printf("new %s [%llx]\n", utf8_cstr(ccf->name), (s64) (intptr_t) ins);
 #endif
-                        runtime->pc += 3;
+                        ip += 3;
 
                         break;
                     }
 
 
-                    label_newarray:
                     case op_newarray: {
-                        s32 typeIdx = runtime->pc[1];
+                        s32 typeIdx = ip[1];
 
                         s32 count = pop_int(stack);
 
@@ -3080,14 +3038,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             goto label_exception_handle;
                         } else {
                             push_ref(stack, (__refer) arr);
-                            runtime->pc += 2;
+                            ip += 2;
                         }
                         break;
                     }
 
-                    label_anewarray:
+
                     case op_anewarray: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
 
                         s32 count = pop_int(stack);
 
@@ -3111,12 +3069,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             goto label_exception_handle;
                         } else {
                             push_ref(stack, (__refer) arr);
-                            runtime->pc += 3;
+                            ip += 3;
                         }
                         break;
                     }
 
-                    label_arraylength:
+
                     case op_arraylength: {
                         Instance *arr = (Instance *) pop_ref(stack);
 
@@ -3131,13 +3089,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             goto label_exception_handle;
                         } else {
                             push_int(stack, arr->arr_length);
-                            runtime->pc++;
+                            ip++;
                         }
                         break;
                     }
 
 
-                    label_athrow:
                     case op_athrow: {
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
@@ -3151,12 +3108,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_checkcast:
+
                     case op_checkcast: {
                         Instance *ins = (Instance *) pop_ref(stack);
 
 
-                        s32 typeIdx = *((u16 *) (runtime->pc + 1));
+                        s32 typeIdx = *((u16 *) (ip + 1));
                         s32 checkok = 0;
                         if (ins != NULL) {
                             if (ins->mb.type == MEM_TYPE_INS) {
@@ -3186,7 +3143,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             goto label_exception_handle;
                         } else {
                             push_ref(stack, (__refer) ins);
-                            runtime->pc += 3;
+                            ip += 3;
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -3199,10 +3156,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     }
 
 
-                    label_instanceof:
                     case op_instanceof: {
                         Instance *ins = (Instance *) pop_ref(stack);
-                        s32 typeIdx = *((u16 *) (runtime->pc + 1));
+                        s32 typeIdx = *((u16 *) (ip + 1));
 
                         s32 checkok = 0;
                         if (!ins) {
@@ -3217,11 +3173,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         invoke_deepth(runtime);
                         jvm_printf("instanceof  [%llx] instancof %s  \n", (s64) (intptr_t) ins, utf8_cstr(class_get_constant_classref(clazz, typeIdx)->name));
 #endif
-                        runtime->pc += 3;
+                        ip += 3;
                         break;
                     }
 
-                    label_monitorenter:
+
                     case op_monitorenter: {
                         Instance *ins = (Instance *) pop_ref(stack);
                         jthread_lock(&ins->mb, runtime);
@@ -3229,11 +3185,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         invoke_deepth(runtime);
                         jvm_printf("monitorenter  [%llx] %s  \n", (s64) (intptr_t) ins, ins ? utf8_cstr(ins->mb.clazz->name) : "null");
 #endif
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_monitorexit:
+
                     case op_monitorexit: {
                         Instance *ins = (Instance *) pop_ref(stack);
                         jthread_unlock(&ins->mb, runtime);
@@ -3241,89 +3197,87 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         invoke_deepth(runtime);
                         jvm_printf("monitorexit  [%llx] %s  \n", (s64) (intptr_t) ins, ins ? utf8_cstr(ins->mb.clazz->name) : "null");
 #endif
-                        runtime->pc++;
+                        ip++;
                         break;
                     }
 
-                    label_wide:
+
                     case op_wide: {
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
 
                         invoke_deepth(runtime);
                         jvm_printf("wide  \n");
 #endif
-                        runtime->pc++;
-
-                        runtime->pc = runtime->pc;
-                        cur_inst = *runtime->pc;
+                        ip++;
+                        cur_inst = *ip;
                         switch (cur_inst) {
                             case op_iload:
                             case op_fload: {
-                                _op_load_1_slot(stack, runtime, *((u16 *) (runtime->pc + 1)));
-                                runtime->pc += 3;
+                                _op_load_1_slot(stack, runtime, *((u16 *) (ip + 1)));
+                                ip += 3;
                                 break;
                             }
                             case op_aload: {
-                                _op_load_refer(stack, runtime, *((u16 *) (runtime->pc + 1)));
-                                runtime->pc += 3;
+                                _op_load_refer(stack, runtime, *((u16 *) (ip + 1)));
+                                ip += 3;
                                 break;
                             }
                             case op_lload:
                             case op_dload: {
-                                _op_load_2_slot(stack, runtime, *((u16 *) (runtime->pc + 1)));
-                                runtime->pc += 3;
+                                _op_load_2_slot(stack, runtime, *((u16 *) (ip + 1)));
+                                ip += 3;
                                 break;
                             }
                             case op_istore:
                             case op_fstore: {
-                                _op_store_1_slot(stack, runtime, *((u16 *) (runtime->pc + 1)));
-                                runtime->pc += 3;
+                                _op_store_1_slot(stack, runtime, *((u16 *) (ip + 1)));
+                                ip += 3;
                                 break;
                             }
                             case op_astore: {
-                                _op_store_refer(stack, runtime, *((u16 *) (runtime->pc + 1)));
-                                runtime->pc += 3;
+                                _op_store_refer(stack, runtime, *((u16 *) (ip + 1)));
+                                ip += 3;
                                 break;
                             }
                             case op_lstore:
                             case op_dstore: {
-                                _op_store_2_slot(stack, runtime, *((u16 *) (runtime->pc + 1)));
-                                runtime->pc += 3;
+                                _op_store_2_slot(stack, runtime, *((u16 *) (ip + 1)));
+                                ip += 3;
                                 break;
                             }
                             case op_ret: {
-                                __refer addr = localvar_getRefer(runtime->localvar, *((u16 *) (runtime->pc + 1)));
+                                __refer addr = localvar_getRefer(runtime->localvar, *((u16 *) (ip + 1)));
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                                 invoke_deepth(runtime);
                                 jvm_printf("wide ret: %x\n", (s64) (intptr_t) addr);
 #endif
-                                runtime->pc = (u8 *) addr;
+                                ip = (u8 *) addr;
                                 break;
                             }
                             case op_iinc    : {
 
-                                runtime->localvar[*((u16 *) (runtime->pc + 1))].ivalue += *((s16 *) (runtime->pc + 3));
+                                runtime->localvar[*((u16 *) (ip + 1))].ivalue += *((s16 *) (ip + 3));
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                                 invoke_deepth(runtime);
-                                jvm_printf("wide iinc: localvar(%d) = %d , inc %d\n", *((u16 *) (runtime->pc + 1)), runtime->localvar[*((u16 *) (runtime->pc + 1))].ivalue, *((u16 *) (runtime->pc + 3)));
+                                jvm_printf("wide iinc: localvar(%d) = %d , inc %d\n", *((u16 *) (ip + 1)), runtime->localvar[*((u16 *) (ip + 1))].ivalue, *((u16 *) (ip + 3)));
 #endif
-                                runtime->pc += 5;
+                                ip += 5;
                                 break;
                             }
                             default:
-                                jvm_printf("instruct wide %x not found\n", cur_inst);
+                                _op_notsupport(ip, runtime);
                         }
                         break;
                     }
 
-                    label_multianewarray:
+
                     case op_multianewarray: {
                         //data type index
 
-                        Utf8String *desc = class_get_utf8_string(clazz, *((u16 *) (runtime->pc + 1)));
+                        Utf8String *desc = class_get_utf8_string(clazz, *((u16 *) (ip + 1)));
                         //array dim
-                        s32 count = (u8) runtime->pc[3];
+                        s32 count = (u8) ip[3];
 #ifdef __JVM_OS_VS__
                         s32 dim[32];
 #else
@@ -3345,20 +3299,19 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             goto label_exception_handle;
                         } else {
                             push_ref(stack, (__refer) arr);
-                            runtime->pc += 4;
+                            ip += 4;
                         }
                         break;
                     }
 
 
-                    label_ifnull:
                     case op_ifnull: {
                         __refer ref = pop_ref(stack);
                         if (!ref) {
 
-                            runtime->pc += *((s16 *) (runtime->pc + 1));
+                            ip += *((s16 *) (ip + 1));
                         } else {
-                            runtime->pc += 3;
+                            ip += 3;
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -3370,13 +3323,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_ifnonnull:
+
                     case op_ifnonnull: {
                         __refer ref = pop_ref(stack);
                         if (ref) {
-                            runtime->pc += *((s16 *) (runtime->pc + 1));
+                            ip += *((s16 *) (ip + 1));
                         } else {
-                            runtime->pc += 3;
+                            ip += 3;
                         }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
@@ -3385,32 +3338,32 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_goto_w:
+
                     case op_goto_w: {
-                        s32 branchoffset = *((s32 *) (runtime->pc + 1));
+                        s32 branchoffset = *((s32 *) (ip + 1));
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("goto: %d\n", branchoffset);
 #endif
-                        runtime->pc += branchoffset;
+                        ip += branchoffset;
                         break;
                     }
 
-                    label_jsr_w:
+
                     case op_jsr_w: {
 
-                        s32 branchoffset = *((s32 *) (runtime->pc + 1));
-                        push_ra(stack, (__refer) (runtime->pc + 3));
+                        s32 branchoffset = *((s32 *) (ip + 1));
+                        push_ra(stack, (__refer) (ip + 3));
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("jsr_w: %d\n", branchoffset);
 #endif
-                        runtime->pc += branchoffset;
+                        ip += branchoffset;
                         break;
                     }
 
-                    label_breakpoint:
+
                     case op_breakpoint: {
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
 
@@ -3421,96 +3374,95 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     }
 
 
-                    label_getstatic_ref:
                     case op_getstatic_ref: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                         c8 *ptr = getStaticFieldPtr(fi);
                         if (fi->isvolatile) {
                             barrier();
                         }
                         push_ref(stack, getFieldRefer(ptr));
-                        runtime->pc += 3;
+                        ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("%s: ref  %d = %s.%s \n", "getstatic", (s64) (intptr_t) getFieldRefer(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
 #endif
                         break;
                     }
-                    label_getstatic_long:
+
                     case op_getstatic_long: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                         c8 *ptr = getStaticFieldPtr(fi);
                         if (fi->isvolatile) {
                             barrier();
                         }
                         push_long(stack, getFieldLong(ptr));
-                        runtime->pc += 3;
+                        ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("%s: long  %d = %s.%s \n", "getstatic", getFieldLong(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
 #endif
                         break;
                     }
-                    label_getstatic_int:
+
                     case op_getstatic_int: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                         c8 *ptr = getStaticFieldPtr(fi);
                         if (fi->isvolatile) {
                             barrier();
                         }
                         push_int(stack, getFieldInt(ptr));
-                        runtime->pc += 3;
+                        ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("%s: int  %d = %s.%s \n", "getstatic", (s32) getFieldInt(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
 #endif
                         break;
                     }
-                    label_getstatic_short:
+
                     case op_getstatic_short: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                         c8 *ptr = getStaticFieldPtr(fi);
                         if (fi->isvolatile) {
                             barrier();
                         }
                         push_int(stack, getFieldShort(ptr));
-                        runtime->pc += 3;
+                        ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("%s: short  %d = %s.%s \n", "getstatic", (s32) getFieldShort(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
 #endif
                         break;
                     }
-                    label_getstatic_jchar:
+
                     case op_getstatic_jchar: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                         c8 *ptr = getStaticFieldPtr(fi);
                         if (fi->isvolatile) {
                             barrier();
                         }
                         push_int(stack, getFieldChar(ptr));
-                        runtime->pc += 3;
+                        ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("%s: char  %d = %s.%s \n", "getstatic", (s32) (u16) getFieldChar(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
 #endif
                         break;
                     }
-                    label_getstatic_byte:
+
                     case op_getstatic_byte: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                         c8 *ptr = getStaticFieldPtr(fi);
                         if (fi->isvolatile) {
                             barrier();
                         }
                         push_int(stack, getFieldByte(ptr));
-                        runtime->pc += 3;
+                        ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("%s: byte  %d = %s.%s \n", "getstatic", (s32) getFieldByte(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
@@ -3518,13 +3470,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_putstatic_ref:
+
                     case op_putstatic_ref: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                         c8 *ptr = getStaticFieldPtr(fi);
                         setFieldRefer(ptr, pop_ref(stack));
-                        runtime->pc += 3;
+                        ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("%s: ref  %s.%s = %llx \n", "putstatic", utf8_cstr(clazz->name), utf8_cstr(fi->name), (s64) (intptr_t) getFieldRefer(ptr));
@@ -3532,52 +3484,52 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_putstatic_long:
+
                     case op_putstatic_long: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                         c8 *ptr = getStaticFieldPtr(fi);
                         setFieldLong(ptr, pop_long(stack));
-                        runtime->pc += 3;
+                        ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("%s: long  %s.%s = %lld \n", "putstatic", utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
 #endif
                         break;
                     }
-                    label_putstatic_int:
+
                     case op_putstatic_int: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                         c8 *ptr = getStaticFieldPtr(fi);
                         setFieldInt(ptr, pop_int(stack));
-                        runtime->pc += 3;
+                        ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("%s: int  %s.%s = %d \n", "putstatic", utf8_cstr(clazz->name), utf8_cstr(fi->name), (s32) getFieldInt(ptr));
 #endif
                         break;
                     }
-                    label_putstatic_short:
+
                     case op_putstatic_short: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                         c8 *ptr = getStaticFieldPtr(fi);
-                        setFieldShort(ptr, pop_int(stack));
-                        runtime->pc += 3;
+                        setFieldShort(ptr, (s16) pop_int(stack));
+                        ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("%s: short  %s.%s = %d \n", "putstatic", utf8_cstr(clazz->name), utf8_cstr(fi->name), (s32) getFieldShort(ptr));
 #endif
                         break;
                     }
-                    label_putstatic_byte:
+
                     case op_putstatic_byte: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                         c8 *ptr = getStaticFieldPtr(fi);
-                        setFieldByte(ptr, pop_int(stack));
-                        runtime->pc += 3;
+                        setFieldByte(ptr, (s8) pop_int(stack));
+                        ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                         invoke_deepth(runtime);
                         jvm_printf("%s: byte  %s.%s = %d \n", "putstatic", utf8_cstr(clazz->name), utf8_cstr(fi->name), (s32) getFieldByte(ptr));
@@ -3585,9 +3537,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_getfield_ref:
+
                     case op_getfield_ref: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         Instance *ins = (Instance *) pop_ref(stack);
                         if (!ins) {
                             _null_throw_exception(stack, runtime);
@@ -3601,7 +3553,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 barrier();
                             }
                             push_ref(stack, getFieldRefer(ptr));
-                            runtime->pc += 3;
+                            ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: ref %llx = %s.%s \n", "getfield", getFieldRefer(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name));
@@ -3610,9 +3562,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_getfield_long:
+
                     case op_getfield_long: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         Instance *ins = (Instance *) pop_ref(stack);
                         if (!ins) {
                             _null_throw_exception(stack, runtime);
@@ -3626,7 +3578,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 barrier();
                             }
                             push_long(stack, getFieldLong(ptr));
-                            runtime->pc += 3;
+                            ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: long %lld = %s.%s \n", "getfield", getFieldLong(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name));
@@ -3635,9 +3587,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_getfield_int:
+
                     case op_getfield_int: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         Instance *ins = (Instance *) pop_ref(stack);
                         if (!ins) {
                             _null_throw_exception(stack, runtime);
@@ -3651,7 +3603,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 barrier();
                             }
                             push_int(stack, getFieldInt(ptr));
-                            runtime->pc += 3;
+                            ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: int %d = %s.%s \n", "getfield", (s32) getFieldInt(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name));
@@ -3660,9 +3612,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_getfield_short:
+
                     case op_getfield_short: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         Instance *ins = (Instance *) pop_ref(stack);
                         if (!ins) {
                             _null_throw_exception(stack, runtime);
@@ -3676,7 +3628,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 barrier();
                             }
                             push_int(stack, getFieldShort(ptr));
-                            runtime->pc += 3;
+                            ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: short %d = %s.%s \n", "getfield", (s32) getFieldShort(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name));
@@ -3685,9 +3637,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_getfield_jchar:
+
                     case op_getfield_jchar: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         Instance *ins = (Instance *) pop_ref(stack);
                         if (!ins) {
                             _null_throw_exception(stack, runtime);
@@ -3701,7 +3653,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 barrier();
                             }
                             push_int(stack, getFieldChar(ptr));
-                            runtime->pc += 3;
+                            ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: char %d = %s.%s \n", "getfield", (s32) (u16) getFieldChar(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name));
@@ -3710,9 +3662,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_getfield_byte:
+
                     case op_getfield_byte: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         Instance *ins = (Instance *) pop_ref(stack);
                         if (!ins) {
                             _null_throw_exception(stack, runtime);
@@ -3726,7 +3678,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 barrier();
                             }
                             push_int(stack, getFieldByte(ptr));
-                            runtime->pc += 3;
+                            ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: byte %d = %s.%s \n", "getfield", (s32) getFieldByte(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name));
@@ -3735,9 +3687,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_putfield_ref:
+
                     case op_putfield_ref: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         __refer ref = pop_ref(stack);
                         Instance *ins = (Instance *) pop_ref(stack);
                         if (!ins) {
@@ -3749,7 +3701,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             c8 *ptr = getInstanceFieldPtr(ins, fi);
                             setFieldRefer(ptr, ref);
-                            runtime->pc += 3;
+                            ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: ref %s.%s = %llx\n", "putfield", utf8_cstr(clazz->name), utf8_cstr(fi->name), (s64) (intptr_t) ref);
@@ -3758,9 +3710,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_putfield_long:
+
                     case op_putfield_long: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         s64 v = pop_long(stack);
                         Instance *ins = (Instance *) pop_ref(stack);
                         if (!ins) {
@@ -3771,7 +3723,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             c8 *ptr = getInstanceFieldPtr(ins, fi);
                             setFieldLong(ptr, v);
-                            runtime->pc += 3;
+                            ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: long %s.%s = %lld\n", "putfield", utf8_cstr(clazz->name), utf8_cstr(fi->name), v);
@@ -3780,9 +3732,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_putfield_int:
+
                     case op_putfield_int: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         s32 v = pop_int(stack);
                         Instance *ins = (Instance *) pop_ref(stack);
                         if (!ins) {
@@ -3793,7 +3745,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             c8 *ptr = getInstanceFieldPtr(ins, fi);
                             setFieldInt(ptr, v);
-                            runtime->pc += 3;
+                            ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: int %s.%s = %d\n", "putfield", utf8_cstr(clazz->name), utf8_cstr(fi->name), v);
@@ -3802,9 +3754,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_putfield_short:
+
                     case op_putfield_short: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         s32 v = pop_int(stack);
                         Instance *ins = (Instance *) pop_ref(stack);
                         if (!ins) {
@@ -3814,8 +3766,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         } else {
                             FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             c8 *ptr = getInstanceFieldPtr(ins, fi);
-                            setFieldShort(ptr, v);
-                            runtime->pc += 3;
+                            setFieldShort(ptr, (s16) v);
+                            ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: short %s.%s = %d\n", "putfield", utf8_cstr(clazz->name), utf8_cstr(fi->name), v);
@@ -3824,9 +3776,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_putfield_byte:
+
                     case op_putfield_byte: {
-                        u16 idx = *((u16 *) (runtime->pc + 1));
+                        u16 idx = *((u16 *) (ip + 1));
                         s32 v = pop_int(stack);
                         Instance *ins = (Instance *) pop_ref(stack);
                         if (!ins) {
@@ -3836,8 +3788,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         } else {
                             FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             c8 *ptr = getInstanceFieldPtr(ins, fi);
-                            setFieldByte(ptr, v);
-                            runtime->pc += 3;
+                            setFieldByte(ptr, (s8) v);
+                            ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: byte %s.%s = %d\n", "putfield", utf8_cstr(clazz->name), utf8_cstr(fi->name), v);
@@ -3846,9 +3798,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         break;
                     }
 
-                    label_invokevirtual_fast:
+
                     case op_invokevirtual_fast: {
-                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (runtime->pc + 1)));
+                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (ip + 1)));
                         Instance *ins = getInstanceInStack(cmr, stack);
                         if (!ins) {
                             _null_throw_exception(stack, runtime);
@@ -3860,7 +3812,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             spent = nanoTime() - start_at;
 #endif
                             if (!m) {
-                                *runtime->pc = op_invokevirtual;
+                                *ip = op_invokevirtual;
                             } else {
 #if _JVM_DEBUG_BYTECODE_DETAIL > 3
                                 invoke_deepth(runtime);
@@ -3874,15 +3826,15 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 if (ret) {
                                     goto label_exception_handle;
                                 }
-                                runtime->pc += 3;
+                                ip += 3;
                             }
                         }
                         break;
                     }
 
-                    label_invokespecial_fast:
+
                     case op_invokespecial_fast: {
-                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (runtime->pc + 1)));
+                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (ip + 1)));
                         MethodInfo *m = cmr->methodInfo;
 #if _JVM_DEBUG_PROFILE
                         spent = nanoTime() - start_at;
@@ -3899,13 +3851,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         if (ret) {
                             goto label_exception_handle;
                         }
-                        runtime->pc += 3;
+                        ip += 3;
                         break;
                     }
 
-                    label_invokestatic_fast:
+
                     case op_invokestatic_fast: {
-                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (runtime->pc + 1)));
+                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (ip + 1)));
                         MethodInfo *m = cmr->methodInfo;
 #if _JVM_DEBUG_PROFILE
                         spent = nanoTime() - start_at;
@@ -3922,14 +3874,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         if (ret) {
                             goto label_exception_handle;
                         }
-                        runtime->pc += 3;
+                        ip += 3;
                         break;
                     }
 
-                    label_invokeinterface_fast:
+
                     case op_invokeinterface_fast: {
                         //此cmr所描述的方法，对于不同的实例，有不同的method
-                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (runtime->pc + 1)));
+                        ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (ip + 1)));
 
                         Instance *ins = getInstanceInStack(cmr, stack);
                         if (!ins) {
@@ -3942,7 +3894,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             spent = nanoTime() - start_at;
 #endif
                             if (!m) {
-                                *runtime->pc = op_invokeinterface;
+                                *ip = op_invokeinterface;
                             } else {
 #if _JVM_DEBUG_BYTECODE_DETAIL > 3
                                 invoke_deepth(runtime);
@@ -3957,16 +3909,16 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 if (ret) {
                                     goto label_exception_handle;
                                 }
-                                runtime->pc += 5;
+                                ip += 5;
                             }
                         }
                         break;
                     }
 
-                    label_invokedynamic_fast:
+
                     case op_invokedynamic_fast: {
                         //get bootMethod struct
-                        ConstantInvokeDynamic *cid = class_get_invoke_dynamic(clazz, *((u16 *) (runtime->pc + 1)));
+                        ConstantInvokeDynamic *cid = class_get_invoke_dynamic(clazz, *((u16 *) (ip + 1)));
                         BootstrapMethod *bootMethod = &clazz->bootstrapMethodAttr->bootstrap_methods[cid->bootstrap_method_attr_index];//Boot
                         MethodInfo *m = bootMethod->make;
 
@@ -3988,12 +3940,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             goto label_exception_handle;
                         }
 
-                        runtime->pc += 5;
+                        ip += 5;
                         break;
                     }
 
                     default:
-                        jvm_printf("instruct %x not found\n", cur_inst);
+                        _op_notsupport(ip, runtime);
                 }
 
                 /* ================================== runtime->pc end =============================*/
@@ -4010,6 +3962,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                 if (ret == RUNTIME_STATUS_EXCEPTION
                     && exception_handle(runtime->stack, runtime)) {
                     ret = RUNTIME_STATUS_NORMAL;
+                    ip = runtime->pc;
                 } else {
                     break;
                 }
@@ -4071,13 +4024,15 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     push_long(stack, v);
                     break;
                 }
+                default: {
+                    break;
+                }
             }
         }
     }
 
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 3
-    Utf8String *ustr = method->descriptor;
     invoke_deepth(runtime);
     jvm_printf("stack size  %s.%s%s in:%d out:%d  \n", utf8_cstr(clazz->name), utf8_cstr(method->name), utf8_cstr(method->descriptor), (runtime->stack->sp - runtime->localvar), stack_size(stack));
     if (ret != RUNTIME_STATUS_EXCEPTION) {
