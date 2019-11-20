@@ -11,8 +11,8 @@
 
 
 static inline void _op_load_1_slot(RuntimeStack *stack, Runtime *runtime, s32 i) {
-//    push_int(stack, localvar_getInt(runtime->localvar, i));
-    *(stack->sp++) = runtime->localvar[i];
+    push_int(stack, runtime->localvar[i].ivalue);
+//    *(stack->sp++) = runtime->localvar[i];
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
     StackEntry entry;
     peek_entry(stack->sp - 1, &entry);
@@ -22,8 +22,8 @@ static inline void _op_load_1_slot(RuntimeStack *stack, Runtime *runtime, s32 i)
 }
 
 static inline void _op_load_refer(RuntimeStack *stack, Runtime *runtime, s32 i) {
-//    push_ref(stack, localvar_getRefer(runtime->localvar, i));
-    *(stack->sp++) = runtime->localvar[i];
+    push_ref(stack, localvar_getRefer(runtime->localvar, i));
+//    *(stack->sp++) = runtime->localvar[i];
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
     StackEntry entry;
     peek_entry(stack->sp - 1, &entry);
@@ -51,8 +51,8 @@ static inline void _op_store_1_slot(RuntimeStack *stack, Runtime *runtime, s32 i
     invoke_deepth(runtime);
     jvm_printf("store_1slot : save %llx/%lld into localvar[%d]\n", entry.rvalue, entry.lvalue, i);
 #endif
-    //localvar_setEntry(runtime->localvar, i, (--stack->sp));
-    runtime->localvar[i] = *(--stack->sp);
+    localvar_setInt(runtime->localvar, i, (--stack->sp)->ivalue);
+//    runtime->localvar[i] = *(--stack->sp);
 }
 
 static inline void _op_store_refer(RuntimeStack *stack, Runtime *runtime, s32 i) {
@@ -62,8 +62,8 @@ static inline void _op_store_refer(RuntimeStack *stack, Runtime *runtime, s32 i)
     invoke_deepth(runtime);
     jvm_printf("store_ref : save [%llx] into localvar[%d]\n", entry.rvalue, i);
 #endif
-    //localvar_setRefer(runtime->localvar, i, (--stack->sp)->rvalue);
-    runtime->localvar[i] = *(--stack->sp);
+    localvar_setRefer(runtime->localvar, i, (--stack->sp)->rvalue);
+//    runtime->localvar[i] = *(--stack->sp);
 }
 
 
