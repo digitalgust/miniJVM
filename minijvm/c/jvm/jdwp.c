@@ -81,7 +81,7 @@ s32 jdwp_thread_dispacher(void *para) {
 }
 
 s32 jdwp_start_server() {
-    if (!JDWP_DEBUG)return 0;
+    if (!jdwp_enable)return 0;
     jdwpserver.ip = utf8_create();
     jdwpserver.port = JDWP_TCP_PORT;
     jdwpserver.exit = 0;
@@ -95,7 +95,7 @@ s32 jdwp_start_server() {
 }
 
 s32 jdwp_stop_server() {
-    if (!JDWP_DEBUG)return 0;
+    if (!jdwp_enable)return 0;
     while (jdwpserver.mode != JDWP_MODE_LISTEN + JDWP_MODE_DISPATCH) {
         threadSleep(10);
     }

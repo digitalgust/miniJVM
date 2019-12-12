@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.6)
 project(mini_jvm C)
 
+#enable_language(CXX)
+enable_language(C)
+
 #set(CMAKE_CXX_STANDARD 11)
 #set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD 99)
@@ -12,7 +15,8 @@ if (CMAKE_BUILD_TYPE MATCHES "Debug")
     message("this is a debug compile")
 endif ()
 
-include_directories()
+
+include_directories(jvm/ utils/ utils/sljit/)
 
 set(SOURCE_FILES
         utils/d_type.h
@@ -45,6 +49,8 @@ set(SOURCE_FILES
         jvm/java_native_io.h
         jvm/class_load.c
         jvm/garbage.h
+        jvm/jit.c
+        jvm/jit.h
         utils/tinycthread.h
         utils/tinycthread.c
         utils/linkedlist.c
@@ -59,7 +65,10 @@ set(SOURCE_FILES
         utils/ltalloc.h
         utils/miniz.c
         utils/miniz.h
+
+        utils/sljit/sljitLir.c
         )
+
 
 MESSAGE(STATUS "platform: ${CMAKE_SYSTEM_NAME}")
 

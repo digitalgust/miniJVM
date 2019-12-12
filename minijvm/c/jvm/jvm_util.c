@@ -697,7 +697,7 @@ s32 jthread_dispose(Instance *jthread) {
     Runtime *runtime = (Runtime *) jthread_get_stackframe_value(jthread);
     gc_move_refer_thread_2_gc(runtime);
     threadlist_remove(runtime);
-    if (JDWP_DEBUG)event_on_thread_death(runtime->threadInfo->jthread);
+    if (jdwp_enable)event_on_thread_death(runtime->threadInfo->jthread);
     //destory
     jthread_set_stackframe_value(jthread, NULL);
 
@@ -725,7 +725,7 @@ s32 jtherad_run(void *para) {
                utf8_cstr(method->name), utf8_cstr(method->descriptor));
 #endif
     gc_refer_reg(runtime, jthread);
-    if (JDWP_DEBUG)event_on_thread_start(runtime->threadInfo->jthread);
+    if (jdwp_enable)event_on_thread_start(runtime->threadInfo->jthread);
     runtime->threadInfo->thread_status = THREAD_STATUS_RUNNING;
     push_ref(runtime->stack, (__refer) jthread);
     ret = execute_method_impl(method, runtime);

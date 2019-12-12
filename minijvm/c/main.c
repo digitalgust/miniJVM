@@ -18,7 +18,6 @@
 #include "jvm/garbage.h"
 
 
-
 /*
  *
  */
@@ -37,9 +36,10 @@ int main(int argc, char **argv) {
                 classpath = argv[i + 1];
                 i++;
             } else if (strcmp(argv[i], "-Xdebug") == 0) {
-                if (!JDWP_DEBUG) {
-                    printf("binary not support debug, please recompile and define JDWP_DEBUG as 1 ");
-                }
+                jdwp_enable = 1;
+//                if (!jdwp_enable) {
+//                    printf("binary not support debug, please recompile and define JDWP_DEBUG as 1 ");
+//                }
             } else if (argv[i][0] == '-') {
                 if (argv[i][1] == 'X' && argv[i][2] == 'm' && argv[i][3] == 'x') {//"-Xmx1G"
                     s32 alen = strlen(argv[i]);
@@ -62,6 +62,7 @@ int main(int argc, char **argv) {
             }
         }
     } else {
+        jdwp_enable = 0;
 //        classpath = "../../binary/lib/minijvm_rt.jar;../../binary/libex/glfw_gui.jar;./";
 //        main_name = "test/Gears";
 //        main_name = "test/TestGL";

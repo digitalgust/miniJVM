@@ -10,9 +10,12 @@
 #include "stdint.h"
 #include "ltalloc.h"
 
+
+
+
 // x86   x64 ...
 #define __JVM_LITTLE_ENDIAN__ 1
-// arm
+//
 #define __JVM_BIG_ENDIAN__ 0
 
 #define MEM_ALLOC_LTALLOC
@@ -60,6 +63,7 @@ typedef double f64;
 typedef unsigned long long int u64;
 typedef signed long long int s64;
 typedef void *__refer;
+typedef void *__returnaddress;
 
 
 extern s64 heap_size;

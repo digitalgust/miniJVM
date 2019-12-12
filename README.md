@@ -12,9 +12,9 @@
   * Minimal memory footprint .  
   * Minimal binary, embedded jvm.  
   * Minimal runtime classlib .   
-  * Support java5+ class file .  
+  * Support java5-8 class file .
   * Support embedded java source compiler(janino compiler) .  
-  * Java native method  .  
+  * Jit supported  .
   * Java garbage collection .   
   * Java remote debug supported, JDWP Spec .  
   
@@ -38,6 +38,7 @@
 
 
 ## Changelog
+   2019.12.  Jit enabled, it based on sljit project
    2019.10.  Jit is developing     
    2018.12.  Optimize performance     
 
@@ -104,6 +105,7 @@ String s=(String)list.get(0);//can't ignore (String) cast qualifier.
    [JRegex](https://github.com/digitalgust/minijvm_third_lib/tree/master/jregex)  :for java String regex match     
    [Janino](http://janino-compiler.github.io/janino/)  :for compile java source file     
    [MiniAudio](https://github.com/dr-soft/miniaudio)  :for java audio playback and capture     
+   [SLJIT](https://github.com/zherczeg/sljit)  :Platform independent low-level JIT compiler
 
 
 ## Development IDE using:  
