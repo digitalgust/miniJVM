@@ -55,11 +55,11 @@ static void CHECK(struct sljit_compiler *compiler) {
 }
 
 static void print_reg(s64 a, s64 b, s64 c) {
-    printf("R0=%ld[%llx] , R1=%ld[%llx] , R2=%ld[%llx]\n", a, a, b, b, c, c);
+    printf("R0=%lld[%llx] , R1=%lld[%llx] , R2=%lld[%llx]\n", a, a, b, b, c, c);
 }
 
 static void print_freg(f32 a, f32 b, f32 c) {
-    printf("FR0=%lf , FR1=%lf , FR2=%lf\n", a, b, c);
+    printf("FR0=%f , FR1=%f , FR2=%f\n", a, b, c);
 }
 
 static void print_dreg(f64 a, f64 b, f64 c) {
@@ -1109,16 +1109,13 @@ s32 multiarray(Runtime *runtime, Utf8String *desc, s32 count) {
         dim[i] = pop_int(stack);
 
     Instance *arr = jarray_multi_create(runtime, dim, count, desc, 0);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
-    invoke_deepth(runtime);
-                            jvm_printf("multianewarray  [%llx] type:%s , count:%d  \n", (s64) (intptr_t) arr,
-                                       utf8_cstr(desc), count);
-#endif
+
     if (!arr) {
         return RUNTIME_STATUS_EXCEPTION;
     } else {
         push_ref(stack, (__refer) arr);
     }
+    return RUNTIME_STATUS_NORMAL;
 }
 
 

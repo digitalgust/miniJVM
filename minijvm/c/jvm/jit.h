@@ -31,7 +31,6 @@ enum {
     JIT_GEN_SUCCESS,
 };
 
-typedef struct _SwitchTable SwitchTable;
 
 typedef void (*thread_suspend_check_func)();
 
