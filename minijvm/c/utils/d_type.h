@@ -21,22 +21,47 @@
 #define MEM_ALLOC_LTALLOC
 
 
-#if defined(__MINGW_H) || defined(__MINGW32_MAJOR_VERSION)
-#define __JVM_OS_MINGW__ 1
-#endif
-#ifdef _CYGWIN_CONFIG_H
-#define __JVM_OS_CYGWIN__ 1
-#endif
-#ifdef __DARWIN_C_ANSI
-#define __JVM_OS_MAC__ 1
-#endif
-#if defined(__GNU_LIBRARY__) || defined(__ANDROID__)
-#define __JVM_OS_LINUX__ 1
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+    //define something for Windows (32-bit and 64-bit, this part is common)
+   #ifdef _WIN64
+      //define something for Windows (64-bit only)
+   #else
+      //define something for Windows (32-bit only)
+   #endif
+   #if defined(_MSC_VER)
+       #define __JVM_OS_VS__ 1
+   #endif
+   #if defined(__MINGW_H) || defined(__MINGW32_MAJOR_VERSION)
+       #define __JVM_OS_MINGW__ 1
+   #endif
+   #ifdef _CYGWIN_CONFIG_H
+       #define __JVM_OS_CYGWIN__ 1
+   #endif
+#elif __APPLE__
+    #define __JVM_OS_MAC__ 1
+    #include <TargetConditionals.h>
+    #if TARGET_IPHONE_SIMULATOR
+        // iOS Simulator
+        #define __JVM_OS_IOS__ 1
+    #elif TARGET_OS_IPHONE
+        // iOS device
+        #define __JVM_OS_IOS__ 1
+    #elif TARGET_OS_MAC
+    // Other kinds of Mac OS
+    #else
+    #   error "Unknown Apple platform"
+    #endif
+#elif __linux__
+   // linux
+   #define __JVM_OS_LINUX__ 1
+#elif __unix__ // all unices not caught above
+    // Unix
+#elif defined(_POSIX_VERSION)
+    // POSIX
+#else
+#   error "Unknown compiler"
 #endif
 
-#if defined(_MSC_VER)
-#define __JVM_OS_VS__ 1
-#endif
 
 
 //compile

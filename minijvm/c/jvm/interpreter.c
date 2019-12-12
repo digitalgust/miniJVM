@@ -215,7 +215,7 @@ s32 exception_handle(RuntimeStack *stack, Runtime *runtime) {
         jvm_printf("Exception : %s\n", utf8_cstr(ins->mb.clazz->name));
 #endif
         runtime->pc = (ca->code + et->handler_pc);
-        runtime->exception_jump_ptr = ca->jit.exception_handle_jump_ptr[index];
+        jit_set_exception_jump_addr(runtime, ca, index);
         return 1;
     }
 
@@ -535,7 +535,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     }
                 }
             } else {
-                if (ca->jit.state == JIT_GEN_UNKNOW) {
+                if (JIT_ENABLE && ca->jit.state == JIT_GEN_UNKNOW) {
                     if (ca->jit.interpreted_count++ > JIT_COMPILE_EXEC_COUNT) {
                         construct_jit(method, runtime);
                     }

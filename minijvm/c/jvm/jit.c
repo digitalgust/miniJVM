@@ -2,10 +2,11 @@
 // Created by gust on 10/30/19.
 //
 
-
 #include "jvm.h"
 #include "jvm_util.h"
 #include "jit.h"
+#if JIT_ENABLE
+#include "sljitLir.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,6 +21,9 @@
 
 
 //------------------------  declare ----------------------------
+
+thread_suspend_check_func check_suspend;
+
 /**
  * Generate jit code for exception check , throw , and handle
  * if src1 == src2 then throw Exception and handle it,
@@ -38,7 +42,9 @@ void _gen_exception_handle(struct sljit_compiler *C);
 
 void _gen_exception_new(struct sljit_compiler *C, s32 exception_type);
 
-thread_suspend_check_func check_suspend;
+SwitchTable *switchtable_create(Jit *jit, s32 size);
+
+s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime *runtime);
 //------------------------  jit util ----------------------------
 
 static void FAILE(s32 cond, c8 *text) {
@@ -2438,11 +2444,14 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                     jump_if_greater_high = sljit_emit_cmp(C, SLJIT_SIG_GREATER, SLJIT_R0, 0, SLJIT_R1, 0);
                     {
                         sljit_emit_op2(C, SLJIT_SUB, SLJIT_R0, 0, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw) low);
-                        sljit_emit_op2(C, SLJIT_MUL, SLJIT_R0, 0, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw) sizeof(struct V2PTable));
+                        sljit_emit_op2(C, SLJIT_MUL, SLJIT_R0, 0, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw)
+                                sizeof(struct V2PTable));
                         sljit_emit_op2(C, SLJIT_ADD, SLJIT_R0, 0, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw) st->table);
-                        sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_R0), SLJIT_OFFSETOF(struct V2PTable, bc_pos));
+                        sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_R0), SLJIT_OFFSETOF(
+                                struct V2PTable, bc_pos));
                         _gen_ip_modify_reg(C, SLJIT_R1, 0);
-                        sljit_emit_ijump(C, SLJIT_JUMP, SLJIT_MEM1(SLJIT_R0), SLJIT_OFFSETOF(struct V2PTable, jump_ptr));
+                        sljit_emit_ijump(C, SLJIT_JUMP, SLJIT_MEM1(SLJIT_R0), SLJIT_OFFSETOF(
+                                struct V2PTable, jump_ptr));
                     }
                 }
                 label_default = sljit_emit_label(C);
@@ -2499,7 +2508,8 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
                 _gen_stack_pop_int(C, SLJIT_R2, 0);
                 sljit_emit_op1(C, SLJIT_MOV, SLJIT_R1, 0, SLJIT_IMM, (sljit_sw) st->table);
-                sljit_emit_op2(C, SLJIT_ADD, SLJIT_R0, 0, SLJIT_R1, 0, SLJIT_IMM, (sljit_sw) sizeof(struct V2PTable) * n);
+                sljit_emit_op2(C, SLJIT_ADD, SLJIT_R0, 0, SLJIT_R1, 0, SLJIT_IMM, (sljit_sw)
+                                                                                          sizeof(struct V2PTable) * n);
 
                 struct sljit_jump *jump_to_loop, *jump_to_not_equal;
                 struct sljit_label *label_not_equal, *label_end_loop;
@@ -2509,12 +2519,15 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 struct sljit_jump *jump_to_end_loop = sljit_emit_cmp(C, SLJIT_EQUAL, SLJIT_R1, 0, SLJIT_R0, 0);
                 //body
                 {
-                    jump_to_not_equal = sljit_emit_cmp(C, SLJIT_NOT_EQUAL32, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R1), SLJIT_OFFSETOF(struct V2PTable, value));
+                    jump_to_not_equal = sljit_emit_cmp(C, SLJIT_NOT_EQUAL32, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R1), SLJIT_OFFSETOF(
+                            struct V2PTable, value));
                     {//found left
-                        sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R1), SLJIT_OFFSETOF(struct V2PTable, bc_pos));
+                        sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R1), SLJIT_OFFSETOF(
+                                struct V2PTable, bc_pos));
                         sljit_emit_op2(C, SLJIT_SUB, SLJIT_R2, 0, SLJIT_R2, 0, SLJIT_IMM, code_idx);
                         _gen_ip_modify_reg(C, SLJIT_R2, 0);
-                        sljit_emit_ijump(C, SLJIT_JUMP, SLJIT_MEM1(SLJIT_R1), SLJIT_OFFSETOF(struct V2PTable, jump_ptr));
+                        sljit_emit_ijump(C, SLJIT_JUMP, SLJIT_MEM1(SLJIT_R1), SLJIT_OFFSETOF(
+                                struct V2PTable, jump_ptr));
                     }
                     label_not_equal = sljit_emit_label(C);
                     //ptr++
@@ -3306,7 +3319,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             if (!label) {
                 jvm_printf("switch label not found %s.%s pc: %d\n", method->_this_class->name->data, method->name->data, (s32) (intptr_t) pos);
             } else {
-                v2p[i].jump_ptr = sljit_get_label_addr(label);
+                v2p[i].jump_ptr = (__refer) sljit_get_label_addr(label);
             }
         }
         st1 = st1->next;
@@ -3361,3 +3374,55 @@ void construct_jit(MethodInfo *method, Runtime *runtime) {
 //    if (ca->jit.state == JIT_GEN_SUCCESS)dump_code(ca->jit.func, ca->jit.len);
     sljit_free_compiler(C);
 }
+
+SwitchTable *switchtable_create(Jit *jit, s32 size) {
+    SwitchTable *st = jvm_calloc(sizeof(SwitchTable));
+    st->size = size;
+    st->next = jit->switchtable;
+    jit->switchtable = st;
+    st->table = jvm_calloc(sizeof(struct V2PTable) * size);
+    return st;
+}
+
+void jit_init(CodeAttribute *ca) {
+    Jit *jit = &ca->jit;
+    s32 count = ca->exception_table_length;
+    if (count) {
+        jit->exception_handle_jump_ptr = jvm_calloc(sizeof(__refer) * count);
+    }
+}
+
+void jit_destory(Jit *jit) {
+
+    while (jit->switchtable) {
+        SwitchTable *tmp = jit->switchtable->next;
+        jvm_free(jit->switchtable);
+        jit->switchtable = tmp;
+    }
+
+    if (jit->exception_handle_jump_ptr) {
+        jvm_free(jit->exception_handle_jump_ptr);
+        jit->exception_handle_jump_ptr = NULL;
+    }
+
+    if (jit->func) {
+        sljit_free_code(jit->func);
+    }
+}
+
+void jit_set_exception_jump_addr(Runtime* runtime, CodeAttribute *ca, s32 index){
+    runtime->exception_jump_ptr = ca->jit.exception_handle_jump_ptr[index];
+}
+#else
+
+void jit_init(CodeAttribute *ca) {
+
+}
+void jit_destory(Jit *jit) {
+
+}
+
+void jit_set_exception_jump_addr(Runtime* runtime, CodeAttribute *ca, s32 index){
+}
+
+#endif

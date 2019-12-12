@@ -35,7 +35,7 @@
    which helps maintaining patches (with diff / patch utilities). */
 
 #define SLJIT_CONFIG_AUTO 1
-
+//#define SLJIT_CONFIG_UNSUPPORTED 1
 
 /* --------------------------------------------------------------------- */
 /*  Architecture                                                         */
