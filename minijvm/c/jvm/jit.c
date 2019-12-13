@@ -2,8 +2,7 @@
 // Created by gust on 10/30/19.
 //
 
-#include "jvm.h"
-#include "jvm_util.h"
+
 #include "jit.h"
 
 #if JIT_ENABLE

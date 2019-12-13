@@ -4,7 +4,8 @@
 
 #ifndef MINI_JVM_JIT_H
 #define MINI_JVM_JIT_H
-
+#include "jvm.h"
+#include "jvm_util.h"
 
 #if __JVM_OS_IOS__ || __JVM_ARCH_32__
     #define JIT_ENABLE 0

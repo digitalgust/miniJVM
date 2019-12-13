@@ -34,11 +34,8 @@
 /* Put your custom defines here. This empty section will never change
    which helps maintaining patches (with diff / patch utilities). */
 
-#if JIT_ENABLE
 #define SLJIT_CONFIG_AUTO 1
-#else
-#define SLJIT_CONFIG_UNSUPPORTED 1
-#endif
+
 
 
 /* --------------------------------------------------------------------- */

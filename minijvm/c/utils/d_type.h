@@ -21,9 +21,9 @@
 #define MEM_ALLOC_LTALLOC
 
 #if INTPTR_MAX == INT32_MAX
-    #define __JVM_ARCH_64__ 1
-#elif INTPTR_MAX == INT64_MAX
     #define __JVM_ARCH_32__ 1
+#elif INTPTR_MAX == INT64_MAX
+    #define __JVM_ARCH_64__ 1
 #else
     #error "Environment not 32 or 64-bit."
 #endif

@@ -9,7 +9,7 @@ project(androidapp C)
 
 set(CMAKE_C_STANDARD 99)
 
-include_directories(../../c/glfm ../../c/gui/ ../../c/gui/stb ../../c/gui/other ../../../minijvm/c/jvm)
+include_directories(../../c/glfm ../../c/gui/ ../../c/gui/stb ../../c/gui/other ../../../minijvm/c/jvm ../../../minijvm/c/utils ../../../minijvm/c/utils/sljit)
 
 set(GLFMAPP_SOURCE_FILES
 ../../c/glfmapp/main.c
@@ -71,6 +71,8 @@ set(MINI_JVM_SOURCE_FILES
         ../../../minijvm/c/jvm/java_native_io.h
         ../../../minijvm/c/jvm/class_load.c
         ../../../minijvm/c/jvm/garbage.h
+        ../../../minijvm/c/jvm/jit.h
+        ../../../minijvm/c/jvm/jit.c
         ../../../minijvm/c/utils/tinycthread.h
         ../../../minijvm/c/utils/tinycthread.c
         ../../../minijvm/c/utils/linkedlist.c
@@ -78,11 +80,17 @@ set(MINI_JVM_SOURCE_FILES
         ../../../minijvm/c/utils/spinlock.h
         ../../../minijvm/c/utils/bytebuf.c
         ../../../minijvm/c/utils/bytebuf.h
-	../../../minijvm/c/utils/miniz.c
+	    ../../../minijvm/c/utils/miniz.c
         ../../../minijvm/c/utils/miniz.h
         ../../../minijvm/c/utils/miniz_wrapper.c
         ../../../minijvm/c/utils/miniz_wrapper.h
-        ../../../minijvm/c/utils/dirent_win.h)
+        ../../../minijvm/c/utils/dirent_win.h
+
+        ../../../minijvm/c/utils/sljit/sljitLir.c
+        ../../../minijvm/c/utils/sljit/sljitLir.h
+        ../../../minijvm/c/utils/sljit/sljitConfig.h
+
+        )
 
 
 if (CMAKE_SYSTEM_NAME MATCHES "Emscripten")
