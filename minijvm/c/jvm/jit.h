@@ -6,11 +6,10 @@
 #define MINI_JVM_JIT_H
 
 
-#if __JVM_OS_IOS__
+#if __JVM_OS_IOS__ || __JVM_ARCH_32__
     #define JIT_ENABLE 0
-    #define SLJIT_CONFIG_UNSUPPORTED 1
 #else
-#define JIT_ENABLE 01
+    #define JIT_ENABLE 01
 #endif
 
 #define JIT_COMPILE_EXEC_COUNT 500
@@ -39,7 +38,7 @@ enum {
 typedef void (*thread_suspend_check_func)();
 
 struct _SwitchTable {
-    SwitchTable *next;
+    struct _SwitchTable  *next;
     s32 size;//table length
     struct V2PTable {
         s32 value; //for value

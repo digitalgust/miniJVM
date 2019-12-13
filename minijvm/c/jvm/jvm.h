@@ -1252,7 +1252,7 @@ s64 entry_2_long_jni(StackEntry *entry);
 __refer entry_2_refer_jni(StackEntry *entry);
 
 static inline s32 stack_size(RuntimeStack *stack) {
-    return (stack->sp - stack->store);
+    return (s32)(stack->sp - stack->store);
 }
 
 /* push Integer */

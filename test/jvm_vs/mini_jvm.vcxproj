@@ -91,6 +91,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>..\..\minijvm\c\utils\sljit;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -105,6 +106,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>..\..\minijvm\c\utils\sljit;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -123,6 +125,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>..\..\minijvm\c\utils\sljit;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -141,6 +144,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>..\..\minijvm\c\utils\sljit;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -162,6 +166,7 @@
     <ClCompile Include="..\..\minijvm\c\jvm\java_native_reflect.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\java_native_std.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\jdwp.c" />
+    <ClCompile Include="..\..\minijvm\c\jvm\jit.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\jvm.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\jvm_util.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\runtime.c" />
@@ -175,6 +180,7 @@
     <ClCompile Include="..\..\minijvm\c\utils\ltalloc.c" />
     <ClCompile Include="..\..\minijvm\c\utils\miniz.c" />
     <ClCompile Include="..\..\minijvm\c\utils\miniz_wrapper.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\sljit\sljitLir.c" />
     <ClCompile Include="..\..\minijvm\c\utils\tinycthread.c" />
     <ClCompile Include="..\..\minijvm\c\utils\utf8_string.c" />
   </ItemGroup>
@@ -184,6 +190,7 @@
     <ClInclude Include="..\..\minijvm\c\jvm\java_native_reflect.h" />
     <ClInclude Include="..\..\minijvm\c\jvm\java_native_std.h" />
     <ClInclude Include="..\..\minijvm\c\jvm\jdwp.h" />
+    <ClInclude Include="..\..\minijvm\c\jvm\jit.h" />
     <ClInclude Include="..\..\minijvm\c\jvm\jvm.h" />
     <ClInclude Include="..\..\minijvm\c\jvm\jvm_util.h" />
     <ClInclude Include="..\..\minijvm\c\utils\arraylist.h" />
@@ -196,6 +203,7 @@
     <ClInclude Include="..\..\minijvm\c\utils\miniz.h" />
     <ClInclude Include="..\..\minijvm\c\utils\miniz_wrapper.h" />
     <ClInclude Include="..\..\minijvm\c\utils\pairlist.h" />
+    <ClInclude Include="..\..\minijvm\c\utils\sljit\sljitLir.h" />
     <ClInclude Include="..\..\minijvm\c\utils\spinlock.h" />
     <ClInclude Include="..\..\minijvm\c\utils\thread.h" />
     <ClInclude Include="..\..\minijvm\c\utils\tinycthread.h" />
