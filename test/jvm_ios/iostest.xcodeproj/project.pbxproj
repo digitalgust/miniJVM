@@ -8,34 +8,35 @@
 
 /* Begin PBXBuildFile section */
 		4535FA3821945F6E00B888BA /* libz.1.2.8.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4535FA3721945F6E00B888BA /* libz.1.2.8.tbd */; };
-		454C4AEF1FB6B89D008B9C1D /* invokec.c in Sources */ = {isa = PBXBuildFile; fileRef = 45C1245D1F872A9200BF3925 /* invokec.c */; };
 		456F472C21946176006F2D8C /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 456F472B21946176006F2D8C /* AVFoundation.framework */; };
 		4581C452226D990800E88538 /* libex in Resources */ = {isa = PBXBuildFile; fileRef = 4581C451226D990800E88538 /* libex */; };
-		4581C56E226D99DC00E88538 /* garbage.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4A8226D99DC00E88538 /* garbage.c */; };
-		4581C56F226D99DC00E88538 /* runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4A9226D99DC00E88538 /* runtime.c */; };
-		4581C570226D99DC00E88538 /* jvm.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4AA226D99DC00E88538 /* jvm.c */; };
-		4581C571226D99DC00E88538 /* class.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4AC226D99DC00E88538 /* class.c */; };
-		4581C572226D99DC00E88538 /* jvm_util.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4AD226D99DC00E88538 /* jvm_util.c */; };
-		4581C573226D99DC00E88538 /* java_native_std.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4B3226D99DC00E88538 /* java_native_std.c */; };
-		4581C574226D99DC00E88538 /* class_load.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4B5226D99DC00E88538 /* class_load.c */; };
-		4581C575226D99DC00E88538 /* jdwp.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4B6226D99DC00E88538 /* jdwp.c */; };
-		4581C576226D99DC00E88538 /* interpreter.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4B7226D99DC00E88538 /* interpreter.c */; };
-		4581C577226D99DC00E88538 /* java_native_reflect.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4B8226D99DC00E88538 /* java_native_reflect.c */; };
-		4581C578226D99DC00E88538 /* global.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4B9226D99DC00E88538 /* global.c */; };
-		4581C579226D99DC00E88538 /* java_native_io.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4BA226D99DC00E88538 /* java_native_io.c */; };
-		4581C57A226D99DC00E88538 /* ltalloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4BE226D99DC00E88538 /* ltalloc.c */; };
-		4581C57B226D99DC00E88538 /* miniz.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4BF226D99DC00E88538 /* miniz.c */; };
-		4581C57C226D99DC00E88538 /* hashset.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4C3226D99DC00E88538 /* hashset.c */; };
-		4581C57D226D99DC00E88538 /* tinycthread.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4C4226D99DC00E88538 /* tinycthread.c */; };
-		4581C57E226D99DC00E88538 /* arraylist.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4C5226D99DC00E88538 /* arraylist.c */; };
-		4581C57F226D99DC00E88538 /* utf8_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4C6226D99DC00E88538 /* utf8_string.c */; };
-		4581C580226D99DC00E88538 /* d_type.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4C8226D99DC00E88538 /* d_type.c */; };
-		4581C581226D99DC00E88538 /* hashtable.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4CC226D99DC00E88538 /* hashtable.c */; };
-		4581C582226D99DC00E88538 /* miniz_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4CD226D99DC00E88538 /* miniz_wrapper.c */; };
-		4581C583226D99DC00E88538 /* bytebuf.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4CE226D99DC00E88538 /* bytebuf.c */; };
-		4581C584226D99DC00E88538 /* linkedlist.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4D4226D99DC00E88538 /* linkedlist.c */; };
-		45C1242F1F87232100BF3925 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C1242E1F87232100BF3925 /* AppDelegate.swift */; };
-		45C124311F87232100BF3925 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C124301F87232100BF3925 /* ViewController.swift */; };
+		459A79A423A328D0007C85C6 /* garbage.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4A8226D99DC00E88538 /* garbage.c */; };
+		459A79A523A328D0007C85C6 /* runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4A9226D99DC00E88538 /* runtime.c */; };
+		459A79A623A328D0007C85C6 /* jvm.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4AA226D99DC00E88538 /* jvm.c */; };
+		459A79A723A328D0007C85C6 /* class.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4AC226D99DC00E88538 /* class.c */; };
+		459A79A823A328D0007C85C6 /* jvm_util.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4AD226D99DC00E88538 /* jvm_util.c */; };
+		459A79A923A328D0007C85C6 /* java_native_std.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4B3226D99DC00E88538 /* java_native_std.c */; };
+		459A79AA23A328D0007C85C6 /* class_load.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4B5226D99DC00E88538 /* class_load.c */; };
+		459A79AB23A328D0007C85C6 /* jdwp.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4B6226D99DC00E88538 /* jdwp.c */; };
+		459A79AC23A328D0007C85C6 /* interpreter.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4B7226D99DC00E88538 /* interpreter.c */; };
+		459A79AD23A328D0007C85C6 /* java_native_reflect.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4B8226D99DC00E88538 /* java_native_reflect.c */; };
+		459A79AE23A328D0007C85C6 /* global.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4B9226D99DC00E88538 /* global.c */; };
+		459A79AF23A328D0007C85C6 /* java_native_io.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4BA226D99DC00E88538 /* java_native_io.c */; };
+		459A79B023A328E0007C85C6 /* ltalloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4BE226D99DC00E88538 /* ltalloc.c */; };
+		459A79B123A328E0007C85C6 /* miniz.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4BF226D99DC00E88538 /* miniz.c */; };
+		459A79B223A328E0007C85C6 /* hashset.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4C3226D99DC00E88538 /* hashset.c */; };
+		459A79B323A328E0007C85C6 /* tinycthread.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4C4226D99DC00E88538 /* tinycthread.c */; };
+		459A79B423A328E0007C85C6 /* arraylist.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4C5226D99DC00E88538 /* arraylist.c */; };
+		459A79B523A328E0007C85C6 /* utf8_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4C6226D99DC00E88538 /* utf8_string.c */; };
+		459A79B623A328E0007C85C6 /* d_type.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4C8226D99DC00E88538 /* d_type.c */; };
+		459A79B723A328E0007C85C6 /* hashtable.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4CC226D99DC00E88538 /* hashtable.c */; };
+		459A79B823A328E0007C85C6 /* miniz_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4CD226D99DC00E88538 /* miniz_wrapper.c */; };
+		459A79B923A328E0007C85C6 /* bytebuf.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4CE226D99DC00E88538 /* bytebuf.c */; };
+		459A79BA23A328E1007C85C6 /* linkedlist.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C4D4226D99DC00E88538 /* linkedlist.c */; };
+		459A79BB23A328E1007C85C6 /* invokec.c in Sources */ = {isa = PBXBuildFile; fileRef = 45C1245D1F872A9200BF3925 /* invokec.c */; };
+		459A79BC23A32940007C85C6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C1242E1F87232100BF3925 /* AppDelegate.swift */; };
+		459A79BD23A32940007C85C6 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C124301F87232100BF3925 /* ViewController.swift */; };
+		459A79C023A32A32007C85C6 /* jit.c in Sources */ = {isa = PBXBuildFile; fileRef = 459A79BE23A32A32007C85C6 /* jit.c */; };
 		45C124341F87232100BF3925 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 45C124321F87232100BF3925 /* Main.storyboard */; };
 		45C124361F87232100BF3925 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 45C124351F87232100BF3925 /* Assets.xcassets */; };
 		45C124391F87232100BF3925 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 45C124371F87232100BF3925 /* LaunchScreen.storyboard */; };
@@ -110,6 +111,31 @@
 		4581C4D2226D99DC00E88538 /* tinycthread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinycthread.h; sourceTree = "<group>"; };
 		4581C4D3226D99DC00E88538 /* d_type.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = d_type.h; sourceTree = "<group>"; };
 		4581C4D4226D99DC00E88538 /* linkedlist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = linkedlist.c; sourceTree = "<group>"; };
+		459A797923A328BF007C85C6 /* sljitNativePPC_64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativePPC_64.c; sourceTree = "<group>"; };
+		459A797A23A328BF007C85C6 /* sljitNativeARM_64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeARM_64.c; sourceTree = "<group>"; };
+		459A797B23A328BF007C85C6 /* sljitNativeTILEGX-encoder.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "sljitNativeTILEGX-encoder.c"; sourceTree = "<group>"; };
+		459A797C23A328BF007C85C6 /* sljitNativeX86_common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeX86_common.c; sourceTree = "<group>"; };
+		459A797D23A328BF007C85C6 /* sljitNativeSPARC_common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeSPARC_common.c; sourceTree = "<group>"; };
+		459A797E23A328BF007C85C6 /* sljitNativePPC_common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativePPC_common.c; sourceTree = "<group>"; };
+		459A797F23A328BF007C85C6 /* sljitNativeX86_64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeX86_64.c; sourceTree = "<group>"; };
+		459A798023A328BF007C85C6 /* sljitLir.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sljitLir.h; sourceTree = "<group>"; };
+		459A798123A328BF007C85C6 /* sljitNativeMIPS_64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeMIPS_64.c; sourceTree = "<group>"; };
+		459A798223A328BF007C85C6 /* sljitExecAllocator.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitExecAllocator.c; sourceTree = "<group>"; };
+		459A798323A328BF007C85C6 /* sljitNativeARM_32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeARM_32.c; sourceTree = "<group>"; };
+		459A798423A328BF007C85C6 /* sljitConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sljitConfig.h; sourceTree = "<group>"; };
+		459A798523A328BF007C85C6 /* sljitNativeTILEGX_64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeTILEGX_64.c; sourceTree = "<group>"; };
+		459A798623A328BF007C85C6 /* sljitNativePPC_32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativePPC_32.c; sourceTree = "<group>"; };
+		459A798723A328BF007C85C6 /* sljitUtils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitUtils.c; sourceTree = "<group>"; };
+		459A798823A328BF007C85C6 /* sljitNativeMIPS_common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeMIPS_common.c; sourceTree = "<group>"; };
+		459A798923A328BF007C85C6 /* sljitLir.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitLir.c; sourceTree = "<group>"; };
+		459A798A23A328BF007C85C6 /* sljitNativeARM_T2_32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeARM_T2_32.c; sourceTree = "<group>"; };
+		459A798B23A328BF007C85C6 /* sljitNativeMIPS_32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeMIPS_32.c; sourceTree = "<group>"; };
+		459A798C23A328BF007C85C6 /* sljitNativeX86_32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeX86_32.c; sourceTree = "<group>"; };
+		459A798D23A328BF007C85C6 /* sljitConfigInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sljitConfigInternal.h; sourceTree = "<group>"; };
+		459A798E23A328BF007C85C6 /* sljitProtExecAllocator.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitProtExecAllocator.c; sourceTree = "<group>"; };
+		459A798F23A328BF007C85C6 /* sljitNativeSPARC_32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeSPARC_32.c; sourceTree = "<group>"; };
+		459A79BE23A32A32007C85C6 /* jit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jit.c; sourceTree = "<group>"; };
+		459A79BF23A32A32007C85C6 /* jit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jit.h; sourceTree = "<group>"; };
 		45C1242B1F87232100BF3925 /* iostest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iostest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		45C1242E1F87232100BF3925 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		45C124301F87232100BF3925 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -170,6 +196,8 @@
 		4581C4A7226D99DC00E88538 /* jvm */ = {
 			isa = PBXGroup;
 			children = (
+				459A79BE23A32A32007C85C6 /* jit.c */,
+				459A79BF23A32A32007C85C6 /* jit.h */,
 				4581C4A8226D99DC00E88538 /* garbage.c */,
 				4581C4A9226D99DC00E88538 /* runtime.c */,
 				4581C4AA226D99DC00E88538 /* jvm.c */,
@@ -196,6 +224,7 @@
 		4581C4BB226D99DC00E88538 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				459A797823A328BF007C85C6 /* sljit */,
 				4581C4BC226D99DC00E88538 /* dirent_win.h */,
 				4581C4BD226D99DC00E88538 /* spinlock.h */,
 				4581C4BE226D99DC00E88538 /* ltalloc.c */,
@@ -223,6 +252,36 @@
 				4581C4D4226D99DC00E88538 /* linkedlist.c */,
 			);
 			path = utils;
+			sourceTree = "<group>";
+		};
+		459A797823A328BF007C85C6 /* sljit */ = {
+			isa = PBXGroup;
+			children = (
+				459A797923A328BF007C85C6 /* sljitNativePPC_64.c */,
+				459A797A23A328BF007C85C6 /* sljitNativeARM_64.c */,
+				459A797B23A328BF007C85C6 /* sljitNativeTILEGX-encoder.c */,
+				459A797C23A328BF007C85C6 /* sljitNativeX86_common.c */,
+				459A797D23A328BF007C85C6 /* sljitNativeSPARC_common.c */,
+				459A797E23A328BF007C85C6 /* sljitNativePPC_common.c */,
+				459A797F23A328BF007C85C6 /* sljitNativeX86_64.c */,
+				459A798023A328BF007C85C6 /* sljitLir.h */,
+				459A798123A328BF007C85C6 /* sljitNativeMIPS_64.c */,
+				459A798223A328BF007C85C6 /* sljitExecAllocator.c */,
+				459A798323A328BF007C85C6 /* sljitNativeARM_32.c */,
+				459A798423A328BF007C85C6 /* sljitConfig.h */,
+				459A798523A328BF007C85C6 /* sljitNativeTILEGX_64.c */,
+				459A798623A328BF007C85C6 /* sljitNativePPC_32.c */,
+				459A798723A328BF007C85C6 /* sljitUtils.c */,
+				459A798823A328BF007C85C6 /* sljitNativeMIPS_common.c */,
+				459A798923A328BF007C85C6 /* sljitLir.c */,
+				459A798A23A328BF007C85C6 /* sljitNativeARM_T2_32.c */,
+				459A798B23A328BF007C85C6 /* sljitNativeMIPS_32.c */,
+				459A798C23A328BF007C85C6 /* sljitNativeX86_32.c */,
+				459A798D23A328BF007C85C6 /* sljitConfigInternal.h */,
+				459A798E23A328BF007C85C6 /* sljitProtExecAllocator.c */,
+				459A798F23A328BF007C85C6 /* sljitNativeSPARC_32.c */,
+			);
+			path = sljit;
 			sourceTree = "<group>";
 		};
 		45C124221F87232100BF3925 = {
@@ -431,32 +490,33 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4581C580226D99DC00E88538 /* d_type.c in Sources */,
-				4581C576226D99DC00E88538 /* interpreter.c in Sources */,
-				4581C573226D99DC00E88538 /* java_native_std.c in Sources */,
-				4581C579226D99DC00E88538 /* java_native_io.c in Sources */,
-				4581C577226D99DC00E88538 /* java_native_reflect.c in Sources */,
-				4581C571226D99DC00E88538 /* class.c in Sources */,
-				4581C57C226D99DC00E88538 /* hashset.c in Sources */,
-				4581C583226D99DC00E88538 /* bytebuf.c in Sources */,
-				4581C575226D99DC00E88538 /* jdwp.c in Sources */,
-				4581C584226D99DC00E88538 /* linkedlist.c in Sources */,
-				4581C57A226D99DC00E88538 /* ltalloc.c in Sources */,
-				4581C570226D99DC00E88538 /* jvm.c in Sources */,
-				4581C578226D99DC00E88538 /* global.c in Sources */,
-				4581C581226D99DC00E88538 /* hashtable.c in Sources */,
-				4581C57F226D99DC00E88538 /* utf8_string.c in Sources */,
-				4581C582226D99DC00E88538 /* miniz_wrapper.c in Sources */,
-				45C124311F87232100BF3925 /* ViewController.swift in Sources */,
-				4581C57D226D99DC00E88538 /* tinycthread.c in Sources */,
-				4581C57E226D99DC00E88538 /* arraylist.c in Sources */,
-				4581C572226D99DC00E88538 /* jvm_util.c in Sources */,
-				45C1242F1F87232100BF3925 /* AppDelegate.swift in Sources */,
-				4581C574226D99DC00E88538 /* class_load.c in Sources */,
-				4581C57B226D99DC00E88538 /* miniz.c in Sources */,
-				4581C56E226D99DC00E88538 /* garbage.c in Sources */,
-				454C4AEF1FB6B89D008B9C1D /* invokec.c in Sources */,
-				4581C56F226D99DC00E88538 /* runtime.c in Sources */,
+				459A79BC23A32940007C85C6 /* AppDelegate.swift in Sources */,
+				459A79BD23A32940007C85C6 /* ViewController.swift in Sources */,
+				459A79B023A328E0007C85C6 /* ltalloc.c in Sources */,
+				459A79B123A328E0007C85C6 /* miniz.c in Sources */,
+				459A79B223A328E0007C85C6 /* hashset.c in Sources */,
+				459A79B323A328E0007C85C6 /* tinycthread.c in Sources */,
+				459A79B423A328E0007C85C6 /* arraylist.c in Sources */,
+				459A79B523A328E0007C85C6 /* utf8_string.c in Sources */,
+				459A79B623A328E0007C85C6 /* d_type.c in Sources */,
+				459A79B723A328E0007C85C6 /* hashtable.c in Sources */,
+				459A79B823A328E0007C85C6 /* miniz_wrapper.c in Sources */,
+				459A79B923A328E0007C85C6 /* bytebuf.c in Sources */,
+				459A79C023A32A32007C85C6 /* jit.c in Sources */,
+				459A79BA23A328E1007C85C6 /* linkedlist.c in Sources */,
+				459A79BB23A328E1007C85C6 /* invokec.c in Sources */,
+				459A79A423A328D0007C85C6 /* garbage.c in Sources */,
+				459A79A523A328D0007C85C6 /* runtime.c in Sources */,
+				459A79A623A328D0007C85C6 /* jvm.c in Sources */,
+				459A79A723A328D0007C85C6 /* class.c in Sources */,
+				459A79A823A328D0007C85C6 /* jvm_util.c in Sources */,
+				459A79A923A328D0007C85C6 /* java_native_std.c in Sources */,
+				459A79AA23A328D0007C85C6 /* class_load.c in Sources */,
+				459A79AB23A328D0007C85C6 /* jdwp.c in Sources */,
+				459A79AC23A328D0007C85C6 /* interpreter.c in Sources */,
+				459A79AD23A328D0007C85C6 /* java_native_reflect.c in Sources */,
+				459A79AE23A328D0007C85C6 /* global.c in Sources */,
+				459A79AF23A328D0007C85C6 /* java_native_io.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -626,14 +686,16 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = GL52RBBC48;
+				DEVELOPMENT_TEAM = M978JH97JT;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				INFOPLIST_FILE = iostest/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.eglsgame.test.iostest;
+				PRODUCT_BUNDLE_IDENTIFIER = com.eglsgame.test.iostest1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "iostestTests-Bridging-Header.h";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -645,14 +707,16 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = GL52RBBC48;
+				DEVELOPMENT_TEAM = M978JH97JT;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				INFOPLIST_FILE = iostest/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.eglsgame.test.iostest;
+				PRODUCT_BUNDLE_IDENTIFIER = com.eglsgame.test.iostest1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "iostestTests-Bridging-Header.h";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = 1;

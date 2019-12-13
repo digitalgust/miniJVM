@@ -5,7 +5,9 @@
 #include "jvm.h"
 #include "jvm_util.h"
 #include "jit.h"
+
 #if JIT_ENABLE
+
 #include "sljitLir.h"
 
 #include <stdio.h>
@@ -3410,19 +3412,21 @@ void jit_destory(Jit *jit) {
     }
 }
 
-void jit_set_exception_jump_addr(Runtime* runtime, CodeAttribute *ca, s32 index){
+void jit_set_exception_jump_addr(Runtime *runtime, CodeAttribute *ca, s32 index) {
     runtime->exception_jump_ptr = ca->jit.exception_handle_jump_ptr[index];
 }
+
 #else
 
 void jit_init(CodeAttribute *ca) {
-
 }
 void jit_destory(Jit *jit) {
-
 }
 
 void jit_set_exception_jump_addr(Runtime* runtime, CodeAttribute *ca, s32 index){
+}
+
+void construct_jit(MethodInfo *method, Runtime *runtime){
 }
 
 #endif

@@ -37,6 +37,8 @@
 		4581C6DE226DAA3600E88538 /* bytebuf.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C651226DAA3500E88538 /* bytebuf.c */; };
 		4581C6DF226DAA3600E88538 /* linkedlist.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C657226DAA3500E88538 /* linkedlist.c */; };
 		4581C6FE226DBEE100E88538 /* libex in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4581C6FD226DBE5E00E88538 /* libex */; };
+		459A79C323A32B19007C85C6 /* jit.c in Sources */ = {isa = PBXBuildFile; fileRef = 459A79C123A32B18007C85C6 /* jit.c */; };
+		459A79EA23A32B29007C85C6 /* sljitLir.c in Sources */ = {isa = PBXBuildFile; fileRef = 459A79D523A32B29007C85C6 /* sljitLir.c */; };
 		45EAB02820DCDC2300896201 /* pcallstack.m in Sources */ = {isa = PBXBuildFile; fileRef = 45EAB02720DCDC2300896201 /* pcallstack.m */; };
 		45ECB7A3206D01C700CF9E7F /* libjnitest.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45ECB79C206D017900CF9E7F /* libjnitest.dylib */; };
 		45ECB7A4206D01CC00CF9E7F /* libgui.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45ECB79E206D017A00CF9E7F /* libgui.dylib */; };
@@ -114,6 +116,10 @@
 		4581C656226DAA3500E88538 /* d_type.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = d_type.h; sourceTree = "<group>"; };
 		4581C657226DAA3500E88538 /* linkedlist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = linkedlist.c; sourceTree = "<group>"; };
 		4581C6FD226DBE5E00E88538 /* libex */ = {isa = PBXFileReference; lastKnownFileType = folder; name = libex; path = ../../binary/libex; sourceTree = "<group>"; };
+		459A79C123A32B18007C85C6 /* jit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jit.c; sourceTree = "<group>"; };
+		459A79C223A32B18007C85C6 /* jit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jit.h; sourceTree = "<group>"; };
+		459A79CC23A32B29007C85C6 /* sljitLir.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sljitLir.h; sourceTree = "<group>"; };
+		459A79D523A32B29007C85C6 /* sljitLir.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitLir.c; sourceTree = "<group>"; };
 		45EAB02720DCDC2300896201 /* pcallstack.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = pcallstack.m; sourceTree = "<group>"; };
 		45ECB79C206D017900CF9E7F /* libjnitest.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libjnitest.dylib; path = ../../binary/macos/libjnitest.dylib; sourceTree = "<group>"; };
 		45ECB79E206D017A00CF9E7F /* libgui.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgui.dylib; path = ../../binary/macos/libgui.dylib; sourceTree = "<group>"; };
@@ -189,6 +195,8 @@
 		4581C62A226DAA3500E88538 /* jvm */ = {
 			isa = PBXGroup;
 			children = (
+				459A79C123A32B18007C85C6 /* jit.c */,
+				459A79C223A32B18007C85C6 /* jit.h */,
 				4581C62B226DAA3500E88538 /* garbage.c */,
 				4581C62C226DAA3500E88538 /* runtime.c */,
 				4581C62D226DAA3500E88538 /* jvm.c */,
@@ -215,6 +223,7 @@
 		4581C63E226DAA3500E88538 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				459A79C423A32B29007C85C6 /* sljit */,
 				4581C63F226DAA3500E88538 /* dirent_win.h */,
 				4581C640226DAA3500E88538 /* spinlock.h */,
 				4581C641226DAA3500E88538 /* ltalloc.c */,
@@ -242,6 +251,15 @@
 				4581C657226DAA3500E88538 /* linkedlist.c */,
 			);
 			path = utils;
+			sourceTree = "<group>";
+		};
+		459A79C423A32B29007C85C6 /* sljit */ = {
+			isa = PBXGroup;
+			children = (
+				459A79CC23A32B29007C85C6 /* sljitLir.h */,
+				459A79D523A32B29007C85C6 /* sljitLir.c */,
+			);
+			path = sljit;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -312,9 +330,11 @@
 				4581C6D7226DAA3600E88538 /* hashset.c in Sources */,
 				4581C6DE226DAA3600E88538 /* bytebuf.c in Sources */,
 				4581C6D0226DAA3600E88538 /* jdwp.c in Sources */,
+				459A79EA23A32B29007C85C6 /* sljitLir.c in Sources */,
 				4581C6DF226DAA3600E88538 /* linkedlist.c in Sources */,
 				4581C6D5226DAA3600E88538 /* ltalloc.c in Sources */,
 				4581C6CB226DAA3600E88538 /* jvm.c in Sources */,
+				459A79C323A32B19007C85C6 /* jit.c in Sources */,
 				4581C6D3226DAA3600E88538 /* global.c in Sources */,
 				4581C6DC226DAA3600E88538 /* hashtable.c in Sources */,
 				4581C6DA226DAA3600E88538 /* utf8_string.c in Sources */,
