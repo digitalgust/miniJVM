@@ -222,15 +222,15 @@ static void dump_code(void *code, sljit_uw len) {
     fwrite(code, len, 1, fp);
     fclose(fp);
 
-#if defined(SLJIT_CONFIG_X86_64)
+#if __JVM_ARCH_64__
 #if __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__
     system("D:\\msys64\\mingw64\\bin\\objdump.exe -b binary -m l1om -D d:/tmp/slj_dump");
 #else
     system("objdump -b binary -m l1om -D /tmp/slj_dump");
 #endif
-#elif defined(SLJIT_CONFIG_X86_32)
+#elif __JVM_ARCH_32__
 #if __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__
-    system("D:\msys64\mingw32\bin\objdump -b binary -m i386 -D d:/tmp/slj_dump");
+    system("D:\\msys64\\mingw32\\bin\\objdump -b binary -m i386 -D d:/tmp/slj_dump");
 #else
     system("objdump -b binary -m i386 -D /tmp/slj_dump");
 #endif
