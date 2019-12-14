@@ -1257,16 +1257,16 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
         && utf8_equals_c(method->descriptor, "(D)Z")
         && utf8_equals_c(method->name, "raweq")
         ||
-        utf8_equals_c(method->_this_class->name, "org/luaj/vm2/LuaDouble")
-        && utf8_equals_c(method->descriptor, "(DD)Lorg/luaj/vm2/LuaValue;")
-        && utf8_equals_c(method->name, "dmod")
+        utf8_equals_c(method->_this_class->name, "org/mini/gui/GContainer")
+        //&& utf8_equals_c(method->descriptor, "(DD)Lorg/luaj/vm2/LuaValue;")
+        && utf8_equals_c(method->name, "drawObj")
             ) {
         int debug = 1;
 
     } else {
         return JIT_GEN_ERROR;
     }
-//    if (utf8_equals_c(method->_this_class->name, "org/luaj/vm2/LuaInteger")&&utf8_equals_c(method->name, "raweq")) {
+//    if (utf8_equals_c(method->_this_class->name, "org/mini/gui/GContainer")&&utf8_equals_c(method->name, "drawObj")) {
 //        int debug = 1;
 //        return JIT_GEN_ERROR;
 //    } else {
@@ -1322,6 +1322,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 #if JIT_DEBUG
     //_debug_gen_print_callstack(C);
     //_debug_gen_print_stack(C);
+    sljit_emit_op0(C, SLJIT_NOP);
 #endif
     while (ip < end) {
         u8 cur_inst = *ip;
@@ -2237,8 +2238,8 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             }
             case op_fcmpl:
             case op_fcmpg: {
-                _gen_stack_peek_float(C, -1, SLJIT_FR1, 0);
-                _gen_stack_peek_float(C, -2, SLJIT_FR0, 0);
+                _gen_stack_peek_float(C, -1, SLJIT_FR0, 0);
+                _gen_stack_peek_float(C, -2, SLJIT_FR1, 0);
                 sljit_emit_op1(C, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, cur_inst);
                 sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(S32) | SLJIT_ARG2(F32) | SLJIT_ARG3(F32), SLJIT_IMM, SLJIT_FUNC_OFFSET(fcmp));
                 _gen_stack_set_int(C, -2, SLJIT_R0, 0);
@@ -2250,8 +2251,8 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             }
             case op_dcmpl:
             case op_dcmpg: {
-                _gen_stack_peek_double(C, -2, SLJIT_FR1, 0);
-                _gen_stack_peek_double(C, -4, SLJIT_FR0, 0);
+                _gen_stack_peek_double(C, -2, SLJIT_FR0, 0);
+                _gen_stack_peek_double(C, -4, SLJIT_FR1, 0);
                 sljit_emit_op1(C, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, cur_inst);
                 sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(S32) | SLJIT_ARG2(F64) | SLJIT_ARG3(F64), SLJIT_IMM, SLJIT_FUNC_OFFSET(dcmp));
                 _gen_stack_set_int(C, -4, SLJIT_R0, 0);
