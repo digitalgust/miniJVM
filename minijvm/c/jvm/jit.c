@@ -1189,7 +1189,16 @@ static s32 dcmp(u8 bytecode, double value1, double value2) {
     return value2 == value1 ? 0 : (value2 > value1 ? 1 : -1);
 }
 
-
+static s32 instanceof(JClass *other, Instance *ins, Runtime *runtime) {
+    s32 checkok = 0;
+    if (!ins) {
+    } else if (ins->mb.type & (MEM_TYPE_INS | MEM_TYPE_ARR)) {
+        if (instance_of(other, ins, runtime)) {
+            checkok = 1;
+        }
+    }
+    return checkok;
+}
 
 
 //-----------------------------------------------------------------
@@ -3035,7 +3044,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw) other);
                 _gen_stack_peek_ref(C, -1, SLJIT_R1, 0);
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW) | SLJIT_ARG3(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(instance_of));
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW) | SLJIT_ARG3(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(instanceof));
                 _gen_load_sp_ip(C);
                 _gen_stack_set_int(C, -1, SLJIT_RETURN_REG, 0);
 
