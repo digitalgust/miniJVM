@@ -465,14 +465,13 @@ static inline void _optimize_empty_method_call(MethodInfo *subm, CodeAttribute *
 s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
-    s32 ret;
     Runtime *runtime;
     register u8 *ip;
     JClass *clazz;
     RuntimeStack *stack;
 
 
-    ret = RUNTIME_STATUS_NORMAL;
+    s32 ret = RUNTIME_STATUS_NORMAL;
     runtime = runtime_create_inl(pruntime);
     clazz = method->_this_class;
     runtime->clazz = clazz;
@@ -504,7 +503,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             localvar_init(runtime, ca->max_locals, method->para_slots);
             if (method->is_sync)_synchronized_lock_method(method, runtime);
 
-            ip = ca->code;
+
 
 //            if (utf8_equals_c(method->_this_class->name, "test/SpecTest")) {
 //                jvm_printf("call %s\n", method->name->data);
@@ -540,6 +539,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         construct_jit(method, runtime);
                     }
                 }
+
+                //
+                ip = ca->code;
+
                 do {
                     runtime->pc = ip;
                     u8 cur_inst = *ip;

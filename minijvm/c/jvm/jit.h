@@ -22,7 +22,7 @@ enum {
     LOCAL_STACK_SP,
     LOCAL_RUNTIME_PC,
     LOCAL_STACK,
-    LOCAL_THREADINFO_SUSPEND,
+    LOCAL_THREADINFO,
     LOCAL_R0,//for save_ip_sp
     LOCAL_R2,//for check_suspend
     LOCAL_COUNT,
