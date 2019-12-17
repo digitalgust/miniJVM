@@ -38,21 +38,24 @@ void scaleSample(void *pSamples, ma_format format, s32 channels, s32 len, float 
         switch (format) {
             case ma_format_s16: {
                 ma_int16 *dataPtr = pSamples;
-                for (s32 i = 0, imax = len * channels; i < imax; i++) {
+                s32 i, imax;
+                for (i = 0, imax = len * channels; i < imax; i++) {
                     dataPtr[i] *= scale;
                 }
                 break;
             }
             case ma_format_u8: {
                 ma_uint8 *dataPtr = pSamples;
-                for (s32 i = 0, imax = len * channels; i < imax; i++) {
+                s32 i, imax;
+                for (i = 0, imax = len * channels; i < imax; i++) {
                     dataPtr[i] *= scale;
                 }
                 break;
             }
             case ma_format_f32: {
                 f32 *dataPtr = pSamples;
-                for (s32 i = 0, imax = len * channels; i < imax; i++) {
+                s32 i, imax;
+                for (i = 0, imax = len * channels; i < imax; i++) {
                     dataPtr[i] *= scale;
                 }
                 break;
@@ -60,7 +63,8 @@ void scaleSample(void *pSamples, ma_format format, s32 channels, s32 len, float 
             case ma_format_s24: {
                 S24Int *dataPtr = pSamples;
                 S24Int elem;
-                for (s32 i = 0, imax = len * channels; i < imax; i++) {
+                s32 i, imax;
+                for (i = 0, imax = len * channels; i < imax; i++) {
                     elem = dataPtr[i];
                     s32 d = elem.c0 | (elem.c1 << 8) | (elem.c2 << 16);
                     d *= scale;
@@ -73,7 +77,8 @@ void scaleSample(void *pSamples, ma_format format, s32 channels, s32 len, float 
             }
             case ma_format_s32: {
                 ma_int32 *dataPtr = pSamples;
-                for (s32 i = 0, imax = len * channels; i < imax; i++) {
+                s32 i, imax;
+                for (i = 0, imax = len * channels; i < imax; i++) {
                     dataPtr[i] *= scale;
                 }
                 break;
