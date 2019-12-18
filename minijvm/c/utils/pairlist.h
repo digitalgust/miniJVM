@@ -15,11 +15,11 @@ extern "C" {
 typedef struct _Pair {
     union {
         __refer left;
-        long leftl;
+        intptr_t leftl;
     };
     union {
         __refer right;
-        long rightl;
+        intptr_t rightl;
     };
 } Pair;
 
