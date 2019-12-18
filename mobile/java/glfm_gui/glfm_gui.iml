@@ -10,5 +10,14 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library">
+      <library name="Maven: org.minijvm:minijvm_rt:1.0">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../assets/resfiles/minijvm_rt.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

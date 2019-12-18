@@ -27,9 +27,6 @@
     <ClCompile Include="..\..\minijvm\c\jvm\global.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\minijvm\c\jvm\interpreter.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\minijvm\c\jvm\java_native_io.c">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -85,6 +82,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\minijvm\c\utils\miniz.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\jvm\interpreter.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\jvm\jit.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\sljit\sljitLir.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -150,6 +156,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\minijvm\c\utils\miniz.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\minijvm\c\jvm\jit.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\minijvm\c\utils\sljit\sljitLir.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
