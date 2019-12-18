@@ -32,63 +32,61 @@
 // GLFM_PLATFORM_EMSCRIPTEN
 
 #if defined(__ANDROID__)
-#define GLFM_PLATFORM_ANDROID
+  #define GLFM_PLATFORM_ANDROID
 #elif defined(__EMSCRIPTEN__)
-#define GLFM_PLATFORM_EMSCRIPTEN
+  #define GLFM_PLATFORM_EMSCRIPTEN
 #elif defined(__APPLE__)
-#include <TargetConditionals.h>
-#if TARGET_OS_IOS
-#define GLFM_PLATFORM_IOS
-#elif TARGET_OS_TV
-#define GLFM_PLATFORM_TVOS
+  #include <TargetConditionals.h>
+  #if TARGET_OS_IOS
+    #define GLFM_PLATFORM_IOS
+  #elif TARGET_OS_TV
+    #define GLFM_PLATFORM_TVOS
+  #else
+    #error Unknown Apple platform
+  #endif
 #else
-#error Unknown Apple platform
-#endif
-#else
-#error Unknown platform
+  #error Unknown platform
 #endif
 
 // OpenGL ES includes
 
 #if defined(GLFM_INCLUDE_ES32)
-#if defined(GLFM_PLATFORM_IOS) || defined(GLFM_PLATFORM_TVOS)
-#error No OpenGL ES 3.2 support in iOS
-#elif defined(GLFM_PLATFORM_EMSCRIPTEN)
-#error No OpenGL ES 3.2 support in WebGL
-#else
-#include <GLES3/gl32.h>
-#include <GLES3/gl3ext.h>
-#endif
+  #if defined(GLFM_PLATFORM_IOS) || defined(GLFM_PLATFORM_TVOS)
+    #error No OpenGL ES 3.2 support in iOS
+  #elif defined(GLFM_PLATFORM_EMSCRIPTEN)
+    #error No OpenGL ES 3.2 support in WebGL
+  #else
+    #include <GLES3/gl32.h>
+    #include <GLES3/gl3ext.h>
+  #endif
 #elif defined(GLFM_INCLUDE_ES31)
-#if defined(GLFM_PLATFORM_IOS) || defined(GLFM_PLATFORM_TVOS)
-#error No OpenGL ES 3.1 support in iOS
-#elif defined(GLFM_PLATFORM_EMSCRIPTEN)
-#error No OpenGL ES 3.1 support in WebGL
-#else
-#include <GLES3/gl31.h>
-#include <GLES3/gl3ext.h>
-#endif
+  #if defined(GLFM_PLATFORM_IOS) || defined(GLFM_PLATFORM_TVOS)
+    #error No OpenGL ES 3.1 support in iOS
+  #elif defined(GLFM_PLATFORM_EMSCRIPTEN)
+    #error No OpenGL ES 3.1 support in WebGL
+  #else
+    #include <GLES3/gl31.h>
+    #include <GLES3/gl3ext.h>
+  #endif
 #elif defined(GLFM_INCLUDE_ES3)
-#if defined(GLFM_PLATFORM_IOS) || defined(GLFM_PLATFORM_TVOS)
-#include <OpenGLES/ES3/gl.h>
-#include <OpenGLES/ES3/glext.h>
-#elif defined(GLFM_PLATFORM_EMSCRIPTEN)
-#include <GLES3/gl3.h>
-#include <GLES3/gl2ext.h>
-#else
-#include <GLES3/gl3.h>
-#include <GLES3/gl3ext.h>
-#endif
+  #if defined(GLFM_PLATFORM_IOS) || defined(GLFM_PLATFORM_TVOS)
+    #include <OpenGLES/ES3/gl.h>
+    #include <OpenGLES/ES3/glext.h>
+  #elif defined(GLFM_PLATFORM_EMSCRIPTEN)
+    #include <GLES3/gl3.h>
+    #include <GLES3/gl2ext.h>
+  #else
+    #include <GLES3/gl3.h>
+    #include <GLES3/gl3ext.h>
+  #endif
 #elif !defined(GLFM_INCLUDE_NONE)
-#if defined(GLFM_PLATFORM_IOS) || defined(GLFM_PLATFORM_TVOS)
-#include <OpenGLES/ES2/gl.h>
-#include <OpenGLES/ES2/glext.h>
-#else
-
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-
-#endif
+  #if defined(GLFM_PLATFORM_IOS) || defined(GLFM_PLATFORM_TVOS)
+    #include <OpenGLES/ES2/gl.h>
+    #include <OpenGLES/ES2/glext.h>
+  #else
+    #include <GLES2/gl2.h>
+    #include <GLES2/gl2ext.h>
+  #endif
 #endif
 
 #include <stdbool.h>
@@ -254,8 +252,6 @@ typedef void (*GLFMNotifyFunc)(GLFMDisplay *display,const char *key, const char 
 /// Main entry point for the app, where the display can be initialized and the GLFMMainLoopFunc
 /// can be set.
 extern void glfmMain(GLFMDisplay *display);
-
-extern void glfmDestroy();
 
 /// Init the display condifuration. Should only be called in glfmMain.
 /// If the device does not support the preferred rendering API, the next available rendering API is

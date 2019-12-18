@@ -200,7 +200,7 @@ static void _glfmReportSurfaceError(GLFMDisplay *display, const char *errorMessa
 // http://www.opengl.org/archives/resources/features/OGLextensions/
 bool glfmExtensionSupported(const char *extension) {
     // Extension names should not have spaces.
-    GLubyte *where = (GLubyte *) strchr(extension, ' ');
+    GLubyte *where = (GLubyte *)strchr(extension, ' ');
     if (where || *extension == '\0') {
         return false;
     }
@@ -211,7 +211,7 @@ bool glfmExtensionSupported(const char *extension) {
     // OpenGL extensions string. Don't be fooled by sub-strings, etc.
     const GLubyte *start = extensions;
     for (;;) {
-        where = (GLubyte *) strstr((const char *) start, extension);
+        where = (GLubyte *)strstr((const char *)start, extension);
         if (!where) {
             break;
         }

@@ -1,7 +1,7 @@
 /*
  GLFM
  https://github.com/brackeen/glfm
- Copyright (c) 2014-2017 David Brackeen
+ Copyright (c) 2014-2019 David Brackeen
  
  This software is provided 'as-is', without any express or implied warranty.
  In no event will the authors be held liable for any damages arising from the
@@ -50,7 +50,7 @@ static struct timespec _glfmTimeNow() {
 }
 
 static double _glfmTimeSeconds(struct timespec t) {
-    return t.tv_sec + (double) t.tv_nsec / 1e9;
+    return t.tv_sec + (double)t.tv_nsec / 1e9;
 }
 
 static struct timespec _glfmTimeSubstract(struct timespec a, struct timespec b) {
@@ -79,7 +79,7 @@ typedef struct {
 
     struct timespec initTime;
     bool animating;
-    bool aniHasInited;
+    bool hasInited;
 
     EGLDisplay eglDisplay;
     EGLSurface eglSurface;
@@ -100,65 +100,6 @@ typedef struct {
 } GLFMPlatformData;
 
 static GLFMPlatformData *platformDataGlobal = NULL;
-
-//MARK: STD redirection
-
-struct StdRedirectFiles {
-    int pipes[2];
-    FILE *inputFile;
-    int STD_TYPE;
-} stdErr, stdOut;
-
-
-void initStdPipe(struct StdRedirectFiles *stdFiles) {
-    int lWriteFD = dup(stdFiles->STD_TYPE);//STDERR_FILENO
-
-    if (lWriteFD < 0) {
-        // WE failed to get our file descriptor
-        LOG_DEBUG("Unable to get STDERR file descriptor.");
-        return;
-    }
-
-
-    pipe(stdFiles->pipes);
-    dup2(stdFiles->pipes[1], stdFiles->STD_TYPE);//STDERR_FILENO
-    stdFiles->inputFile = fdopen(stdFiles->pipes[0], "r");
-
-    close(stdFiles->pipes[1]);
-
-    int fd = fileno(stdFiles->inputFile);
-    int flags = fcntl(fd, F_GETFL, 0);
-    flags |= O_NONBLOCK;
-    fcntl(fd, F_SETFL, flags);
-
-    if (NULL == stdFiles->inputFile) {
-        LOG_DEBUG("Unable to get read pipe for %d", stdFiles->STD_TYPE);
-        return;
-    }
-}
-
-void refreshStdPipe(struct StdRedirectFiles *stdFiles) {
-    char readBuffer[256];
-    memset(&readBuffer, 0, sizeof(readBuffer));
-    while (1) {
-        int len = fgets(readBuffer, sizeof(readBuffer), stdFiles->inputFile);
-
-        if (len != 0) {
-            __android_log_write(
-                    stdFiles->STD_TYPE == STDERR_FILENO ? ANDROID_LOG_ERROR : ANDROID_LOG_INFO,
-                    stdFiles->STD_TYPE == STDERR_FILENO ? "stderr" : "stdout",
-                    readBuffer);
-        } else {
-            break;
-        }
-
-    }
-}
-
-void closeStdPipe(struct StdRedirectFiles *stdFiles) {
-    close(stdFiles->pipes[0]);
-    fclose(stdFiles->inputFile);
-}
 
 // MARK: JNI code
 
@@ -243,7 +184,7 @@ static void _glfmSetOrientation(struct android_app *app) {
     static const int ActivityInfo_SCREEN_ORIENTATION_SENSOR_LANDSCAPE = 0x00000006;
     static const int ActivityInfo_SCREEN_ORIENTATION_SENSOR_PORTRAIT = 0x00000007;
 
-    GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
+    GLFMPlatformData *platformData = (GLFMPlatformData *)app->userData;
     int orientation;
     switch (platformData->display->allowedOrientations) {
         case GLFMUserInterfaceOrientationPortrait:
@@ -269,7 +210,7 @@ static void _glfmSetOrientation(struct android_app *app) {
 }
 
 static jobject _glfmGetDecorView(struct android_app *app) {
-    GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
+    GLFMPlatformData *platformData = (GLFMPlatformData *)app->userData;
     JNIEnv *jni = platformData->jniEnv;
     if ((*jni)->ExceptionCheck(jni)) {
         return NULL;
@@ -300,7 +241,7 @@ static void _glfmSetFullScreen(struct android_app *app, GLFMUserInterfaceChrome 
         return;
     }
 
-    GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
+    GLFMPlatformData *platformData = (GLFMPlatformData *)app->userData;
     JNIEnv *jni = platformData->jniEnv;
     if ((*jni)->ExceptionCheck(jni)) {
         return;
@@ -353,7 +294,7 @@ static void _glfmSetFullScreen(struct android_app *app, GLFMUserInterfaceChrome 
  * When this, when the app is in the background, the app will pause in the ALooper_pollAll() call.
  */
 static bool _glfmHandleBackButton(struct android_app *app) {
-    GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
+    GLFMPlatformData *platformData = (GLFMPlatformData *)app->userData;
     JNIEnv *jni = platformData->jniEnv;
     if ((*jni)->ExceptionCheck(jni)) {
         return false;
@@ -512,7 +453,7 @@ static uint32_t _glfmGetUnicodeChar(GLFMPlatformData *platformData, AInputEvent 
     if (_glfmWasJavaExceptionThrown()) {
         return 0;
     } else {
-        return (uint32_t) unicodeKey;
+        return (uint32_t)unicodeKey;
     }
 }
 
@@ -524,23 +465,27 @@ static bool _glfmEGLContextInit(GLFMPlatformData *platformData) {
     static const int EGL_CONTEXT_MAJOR_VERSION_KHR = 0x3098;
     static const int EGL_CONTEXT_MINOR_VERSION_KHR = 0x30FB;
 
+    EGLint majorVersion = 0;
+    EGLint minorVersion = 0;
     bool created = false;
     if (platformData->eglContext == EGL_NO_CONTEXT) {
         // OpenGL ES 3.2
         if (platformData->display->preferredAPI >= GLFMRenderingAPIOpenGLES32) {
-            // TODO: Untested, need an OpenGL ES 3.2 device for testing
-            const EGLint contextAttribs[] = {EGL_CONTEXT_MAJOR_VERSION_KHR, 3,
-                                             EGL_CONTEXT_MINOR_VERSION_KHR, 2, EGL_NONE};
+            majorVersion = 3;
+            minorVersion = 2;
+            const EGLint contextAttribs[] = {EGL_CONTEXT_MAJOR_VERSION_KHR, majorVersion,
+                                             EGL_CONTEXT_MINOR_VERSION_KHR, minorVersion, EGL_NONE};
             platformData->eglContext = eglCreateContext(platformData->eglDisplay,
                                                         platformData->eglConfig,
                                                         EGL_NO_CONTEXT, contextAttribs);
             created = platformData->eglContext != EGL_NO_CONTEXT;
         }
         // OpenGL ES 3.1
-        if (platformData->display->preferredAPI >= GLFMRenderingAPIOpenGLES31) {
-            // TODO: Untested, need an OpenGL ES 3.1 device for testing
-            const EGLint contextAttribs[] = {EGL_CONTEXT_MAJOR_VERSION_KHR, 3,
-                                             EGL_CONTEXT_MINOR_VERSION_KHR, 1, EGL_NONE};
+        if (!created && platformData->display->preferredAPI >= GLFMRenderingAPIOpenGLES31) {
+            majorVersion = 3;
+            minorVersion = 1;
+            const EGLint contextAttribs[] = {EGL_CONTEXT_MAJOR_VERSION_KHR, majorVersion,
+                                             EGL_CONTEXT_MINOR_VERSION_KHR, minorVersion, EGL_NONE};
             platformData->eglContext = eglCreateContext(platformData->eglDisplay,
                                                         platformData->eglConfig,
                                                         EGL_NO_CONTEXT, contextAttribs);
@@ -548,7 +493,10 @@ static bool _glfmEGLContextInit(GLFMPlatformData *platformData) {
         }
         // OpenGL ES 3.0
         if (!created && platformData->display->preferredAPI >= GLFMRenderingAPIOpenGLES3) {
-            const EGLint contextAttribs[] = {EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE, EGL_NONE};
+            majorVersion = 3;
+            minorVersion = 0;
+            const EGLint contextAttribs[] = {EGL_CONTEXT_CLIENT_VERSION, majorVersion,
+                                             EGL_NONE, EGL_NONE};
             platformData->eglContext = eglCreateContext(platformData->eglDisplay,
                                                         platformData->eglConfig,
                                                         EGL_NO_CONTEXT, contextAttribs);
@@ -556,7 +504,10 @@ static bool _glfmEGLContextInit(GLFMPlatformData *platformData) {
         }
         // OpenGL ES 2.0
         if (!created) {
-            const EGLint contextAttribs[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE, EGL_NONE};
+            majorVersion = 2;
+            minorVersion = 0;
+            const EGLint contextAttribs[] = {EGL_CONTEXT_CLIENT_VERSION, majorVersion,
+                                             EGL_NONE, EGL_NONE};
             platformData->eglContext = eglCreateContext(platformData->eglDisplay,
                                                         platformData->eglConfig,
                                                         EGL_NO_CONTEXT, contextAttribs);
@@ -564,15 +515,17 @@ static bool _glfmEGLContextInit(GLFMPlatformData *platformData) {
         }
 
         if (created) {
-            EGLint majorVersion = 0;
-            EGLint minorVersion = 0;
             eglQueryContext(platformData->eglDisplay, platformData->eglContext,
                             EGL_CONTEXT_MAJOR_VERSION_KHR, &majorVersion);
-            if (majorVersion >= 3) {
+            if (majorVersion >= 3) { 
+                // This call fails on many (all?) devices.
+                // When it fails, `minorVersion` is left unchanged.
                 eglQueryContext(platformData->eglDisplay, platformData->eglContext,
                                 EGL_CONTEXT_MINOR_VERSION_KHR, &minorVersion);
             }
-            if (majorVersion == 3 && minorVersion == 1) {
+            if (majorVersion == 3 && minorVersion == 2) {
+                platformData->renderingAPI = GLFMRenderingAPIOpenGLES32;
+            } else if (majorVersion == 3 && minorVersion == 1) {
                 platformData->renderingAPI = GLFMRenderingAPIOpenGLES31;
             } else if (majorVersion == 3) {
                 platformData->renderingAPI = GLFMRenderingAPIOpenGLES3;
@@ -704,20 +657,19 @@ static bool _glfmEGLInit(GLFMPlatformData *platformData) {
 
     while (true) {
         const EGLint attribs[] = {
-                EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-                EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-                EGL_RED_SIZE, rBits,
-                EGL_GREEN_SIZE, gBits,
-                EGL_BLUE_SIZE, bBits,
-                EGL_ALPHA_SIZE, aBits,
-                EGL_DEPTH_SIZE, depthBits,
-                EGL_STENCIL_SIZE, stencilBits,
-                EGL_SAMPLE_BUFFERS, samples > 0 ? 1 : 0,
-                EGL_SAMPLES, samples > 0 ? samples : 0,
-                EGL_NONE};
+            EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+            EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+            EGL_RED_SIZE, rBits,
+            EGL_GREEN_SIZE, gBits,
+            EGL_BLUE_SIZE, bBits,
+            EGL_ALPHA_SIZE, aBits,
+            EGL_DEPTH_SIZE, depthBits,
+            EGL_STENCIL_SIZE, stencilBits,
+            EGL_SAMPLE_BUFFERS, samples > 0 ? 1 : 0,
+            EGL_SAMPLES, samples > 0 ? samples : 0,
+            EGL_NONE};
 
-        eglChooseConfig(platformData->eglDisplay, attribs, &platformData->eglConfig, 1,
-                        &numConfigs);
+        eglChooseConfig(platformData->eglDisplay, attribs, &platformData->eglConfig, 1, &numConfigs);
         if (numConfigs) {
             // Found!
             //_glfmEGLLogConfig(platformData, platformData->eglConfig);
@@ -879,7 +831,7 @@ static void _glfmSetContentRect(struct android_app *android_app, ARect rect) {
 }
 
 static void _glfmOnContentRectChanged(ANativeActivity *activity, const ARect *rect) {
-    _glfmSetContentRect((struct android_app *) activity->instance, *rect);
+    _glfmSetContentRect((struct android_app *)activity->instance, *rect);
 }
 
 // MARK: Keyboard visibility
@@ -921,7 +873,7 @@ static void _glfmUpdateKeyboardVisibility(GLFMPlatformData *platformData) {
         nonVisibleRect[3].bottom = windowRect.bottom;
 
         // Find largest with minimum keyboard size
-        const int minimumKeyboardSize = (int) (100 * platformData->scale);
+        const int minimumKeyboardSize = (int)(100 * platformData->scale);
         int largestIndex = 0;
         int largestArea = -1;
         for (int i = 0; i < 4; i++) {
@@ -935,11 +887,11 @@ static void _glfmUpdateKeyboardVisibility(GLFMPlatformData *platformData) {
         }
 
         bool keyboardVisible = largestArea > 0;
-        ARect keyboardFrame = keyboardVisible ? nonVisibleRect[largestIndex] : (ARect) {0, 0, 0, 0};
+        ARect keyboardFrame = keyboardVisible ? nonVisibleRect[largestIndex] : (ARect){0, 0, 0, 0};
 
         // Send update notification
         if (platformData->keyboardVisible != keyboardVisible ||
-            !ARectsEqual(platformData->keyboardFrame, keyboardFrame)) {
+                !ARectsEqual(platformData->keyboardFrame, keyboardFrame)) {
             platformData->keyboardVisible = keyboardVisible;
             platformData->keyboardFrame = keyboardFrame;
             if (platformData->display->keyboardVisibilityChangedFunc) {
@@ -960,8 +912,8 @@ static void _glfmUpdateKeyboardVisibility(GLFMPlatformData *platformData) {
 static void _glfmSetAnimating(GLFMPlatformData *platformData, bool animating) {
     if (platformData->animating != animating) {
         bool sendAppEvent = true;
-        if (!platformData->aniHasInited && animating) {
-            platformData->aniHasInited = true;
+        if (!platformData->hasInited && animating) {
+            platformData->hasInited = true;
             platformData->initTime = _glfmTimeNow();
             sendAppEvent = false;
         }
@@ -973,7 +925,7 @@ static void _glfmSetAnimating(GLFMPlatformData *platformData, bool animating) {
 }
 
 static void _glfmOnAppCmd(struct android_app *app, int32_t cmd) {
-    GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
+    GLFMPlatformData *platformData = (GLFMPlatformData *)app->userData;
     switch (cmd) {
         case APP_CMD_SAVE_STATE: {
             LOG_LIFECYCLE("APP_CMD_SAVE_STATE");
@@ -1052,7 +1004,6 @@ static void _glfmOnAppCmd(struct android_app *app, int32_t cmd) {
         }
         case APP_CMD_DESTROY: {
             LOG_LIFECYCLE("APP_CMD_DESTROY");
-            glfmDestroy();
             _glfmEGLDestroy(platformData);
             break;
         }
@@ -1068,22 +1019,22 @@ static void _glfmOnAppCmd(struct android_app *app, int32_t cmd) {
 static const char *_glfmUnicodeToUTF8(uint32_t unicode) {
     static char utf8[5];
     if (unicode < 0x80) {
-        utf8[0] = (char) (unicode & 0x7f);
+        utf8[0] = (char)(unicode & 0x7f);
         utf8[1] = 0;
     } else if (unicode < 0x800) {
-        utf8[0] = (char) (0xc0 | (unicode >> 6));
-        utf8[1] = (char) (0x80 | (unicode & 0x3f));
+        utf8[0] = (char)(0xc0 | (unicode >> 6));
+        utf8[1] = (char)(0x80 | (unicode & 0x3f));
         utf8[2] = 0;
     } else if (unicode < 0x10000) {
-        utf8[0] = (char) (0xe0 | (unicode >> 12));
-        utf8[1] = (char) (0x80 | ((unicode >> 6) & 0x3f));
-        utf8[2] = (char) (0x80 | (unicode & 0x3f));
+        utf8[0] = (char)(0xe0 | (unicode >> 12));
+        utf8[1] = (char)(0x80 | ((unicode >> 6) & 0x3f));
+        utf8[2] = (char)(0x80 | (unicode & 0x3f));
         utf8[3] = 0;
     } else if (unicode < 0x110000) {
-        utf8[0] = (char) (0xf0 | (unicode >> 18));
-        utf8[1] = (char) (0x80 | ((unicode >> 12) & 0x3f));
-        utf8[2] = (char) (0x80 | ((unicode >> 6) & 0x3f));
-        utf8[3] = (char) (0x80 | (unicode & 0x3f));
+        utf8[0] = (char)(0xf0 | (unicode >> 18));
+        utf8[1] = (char)(0x80 | ((unicode >> 12) & 0x3f));
+        utf8[2] = (char)(0x80 | ((unicode >> 6) & 0x3f));
+        utf8[3] = (char)(0x80 | (unicode & 0x3f));
         utf8[4] = 0;
     } else {
         utf8[0] = 0;
@@ -1092,7 +1043,7 @@ static const char *_glfmUnicodeToUTF8(uint32_t unicode) {
 }
 
 static int32_t _glfmOnInputEvent(struct android_app *app, AInputEvent *event) {
-    GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
+    GLFMPlatformData *platformData = (GLFMPlatformData *)app->userData;
     const int32_t eventType = AInputEvent_getType(event);
     if (eventType == AINPUT_EVENT_TYPE_KEY) {
         int handled = 0;
@@ -1136,11 +1087,11 @@ static int32_t _glfmOnInputEvent(struct android_app *app, AInputEvent *event) {
                     default:
                         // TODO: Send all keycodes?
                         if (aKeyCode >= AKEYCODE_0 && aKeyCode <= AKEYCODE_9) {
-                            key = (GLFMKey) (aKeyCode - AKEYCODE_0 + '0');
+                            key = (GLFMKey)(aKeyCode - AKEYCODE_0 + '0');
                         } else if (aKeyCode >= AKEYCODE_A && aKeyCode <= AKEYCODE_Z) {
-                            key = (GLFMKey) (aKeyCode - AKEYCODE_A + 'A');
+                            key = (GLFMKey)(aKeyCode - AKEYCODE_A + 'A');
                         } else {
-                            key = (GLFMKey) 0;
+                            key = (GLFMKey)0;
                         }
                         break;
                 }
@@ -1165,9 +1116,9 @@ static int32_t _glfmOnInputEvent(struct android_app *app, AInputEvent *event) {
                         int32_t i;
                         for (i = AKeyEvent_getRepeatCount(event); i > 0; i--) {
                             handled |= platformData->display->keyFunc(platformData->display, key,
-                                                                      GLFMKeyActionPressed, 0);
+                                                                GLFMKeyActionPressed, 0);
                             handled |= platformData->display->keyFunc(platformData->display, key,
-                                                                      GLFMKeyActionReleased, 0);
+                                                                GLFMKeyActionReleased, 0);
                         }
                     }
                 }
@@ -1228,8 +1179,8 @@ static int32_t _glfmOnInputEvent(struct android_app *app, AInputEvent *event) {
                     for (i = 0; i < count; i++) {
                         const int touchNumber = AMotionEvent_getPointerId(event, i);
                         if (touchNumber >= 0 && touchNumber < maxTouches) {
-                            double x = (double) AMotionEvent_getX(event, i);
-                            double y = (double) AMotionEvent_getY(event, i);
+                            double x = (double)AMotionEvent_getX(event, i);
+                            double y = (double)AMotionEvent_getY(event, i);
                             platformData->display->touchFunc(platformData->display, touchNumber,
                                                              phase, x, y);
                             //LOG_DEBUG("Touch %i: (%i) %i,%i", touchNumber, phase, x, y);
@@ -1237,12 +1188,12 @@ static int32_t _glfmOnInputEvent(struct android_app *app, AInputEvent *event) {
                     }
                 } else {
                     const size_t index =
-                            (size_t) ((action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >>
-                                                                                         AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
+                        (size_t)((action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >>
+                                 AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
                     const int touchNumber = AMotionEvent_getPointerId(event, index);
                     if (touchNumber >= 0 && touchNumber < maxTouches) {
-                        double x = (double) AMotionEvent_getX(event, index);
-                        double y = (double) AMotionEvent_getY(event, index);
+                        double x = (double)AMotionEvent_getX(event, index);
+                        double y = (double)AMotionEvent_getY(event, index);
                         platformData->display->touchFunc(platformData->display, touchNumber,
                                                          phase, x, y);
                         //LOG_DEBUG("Touch %i: (%i) %i,%i", touchNumber, phase, x, y);
@@ -1365,15 +1316,6 @@ void android_main(struct android_app *app) {
 
     LOG_LIFECYCLE("android_main");
 
-#ifndef NDEBUG
-    memset(&stdErr, 0, sizeof(stdErr));
-    stdErr.STD_TYPE = STDERR_FILENO;
-    initStdPipe(&stdErr);
-    memset(&stdOut, 0, sizeof(stdOut));
-    stdOut.STD_TYPE = STDOUT_FILENO;
-    initStdPipe(&stdOut);
-#endif
-
     // Init platform data
     GLFMPlatformData *platformData;
     if (platformDataGlobal == NULL) {
@@ -1395,7 +1337,7 @@ void android_main(struct android_app *app) {
     const int ACONFIGURATION_DENSITY_ANY = 0xfffe; // Added in API 21
     const int32_t density = AConfiguration_getDensity(app->config);
     if (density == ACONFIGURATION_DENSITY_DEFAULT || density == ACONFIGURATION_DENSITY_NONE ||
-        density == ACONFIGURATION_DENSITY_ANY || density <= 0) {
+            density == ACONFIGURATION_DENSITY_ANY || density <= 0) {
         platformData->scale = 1.0;
     } else {
         platformData->scale = density / 160.0;
@@ -1417,8 +1359,7 @@ void android_main(struct android_app *app) {
         case GLFMColorFormatRGB565:
             windowFormat = WINDOW_FORMAT_RGB_565;
             break;
-        case GLFMColorFormatRGBA8888:
-        default:
+        case GLFMColorFormatRGBA8888: default:
             windowFormat = WINDOW_FORMAT_RGBA_8888;
             break;
     }
@@ -1429,21 +1370,47 @@ void android_main(struct android_app *app) {
                                    AWINDOW_FLAG_FULLSCREEN);
     _glfmSetFullScreen(app, platformData->display->uiChrome);
 
+    static bool windowAttributesSet = false;
+    if (!windowAttributesSet) {
+        windowAttributesSet = true;
 
+        const int SDK_INT = app->activity->sdkVersion;
+        JNIEnv *jni = platformData->jniEnv;
+
+        if (SDK_INT >= 28) {
+            static const int LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES = 0x00000001;
+
+            jobject window = _glfmCallJavaMethod(jni, app->activity->clazz, "getWindow",
+                                                 "()Landroid/view/Window;", Object);
+            jobject attributes = _glfmCallJavaMethod(jni, window, "getAttributes",
+                                                     "()Landroid/view/WindowManager$LayoutParams;",
+                                                     Object);
+            jclass clazz = (*jni)->GetObjectClass(jni, attributes);
+            jfieldID layoutInDisplayCutoutMode = (*jni)->GetFieldID(jni, clazz,
+                    "layoutInDisplayCutoutMode", "I");
+
+            (*jni)->SetIntField(jni, attributes, layoutInDisplayCutoutMode,
+                    LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES);
+            (*jni)->DeleteLocalRef(jni, clazz);
+            (*jni)->DeleteLocalRef(jni, attributes);
+            (*jni)->DeleteLocalRef(jni, window);
+        }
+    }
 
     // Run the main loop
     while (1) {
-        int ident;
+        int eventIdentifier;
         int events;
         struct android_poll_source *source;
 
-        while ((ident = ALooper_pollAll(platformData->animating ? 0 : -1, NULL, &events,
-                                        (void **) &source)) >= 0) {
+        while ((eventIdentifier = ALooper_pollAll(platformData->animating ? 0 : -1, NULL, &events,
+                (void **)&source)) >= 0) {
             if (source) {
                 source->process(app, source);
             }
 
-//          if (ident == LOOPER_ID_USER) {
+            (void)eventIdentifier;
+//          if (eventIdentifier == LOOPER_ID_USER) {
 //              if (platformData->accelerometerSensor != NULL) {
 //                  ASensorEvent event;
 //                  while (ASensorEventQueue_getEvents(platformData->sensorEventQueue,
@@ -1469,15 +1436,7 @@ void android_main(struct android_app *app) {
         if (platformData->animating && platformData->display) {
             _glfmDrawFrame(platformData);
         }
-#ifndef NDEBUG
-        refreshStdPipe(&stdOut);
-        refreshStdPipe(&stdErr);
-#endif
     }
-#ifndef NDEBUG
-    closeStdPipe(&stdOut);
-    closeStdPipe(&stdErr);
-#endif
 }
 
 // MARK: GLFM implementation
@@ -1486,69 +1445,145 @@ void glfmSetUserInterfaceOrientation(GLFMDisplay *display,
                                      GLFMUserInterfaceOrientation allowedOrientations) {
     if (display->allowedOrientations != allowedOrientations) {
         display->allowedOrientations = allowedOrientations;
-        GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+        GLFMPlatformData *platformData = (GLFMPlatformData *)display->platformData;
         _glfmSetOrientation(platformData->app);
     }
 }
 
 void glfmGetDisplaySize(GLFMDisplay *display, int *width, int *height) {
-    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+    GLFMPlatformData *platformData = (GLFMPlatformData *)display->platformData;
     *width = platformData->width;
     *height = platformData->height;
 }
 
 double glfmGetDisplayScale(GLFMDisplay *display) {
-    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+    GLFMPlatformData *platformData = (GLFMPlatformData *)display->platformData;
     return platformData->scale;
+}
+
+static bool _glfmGetSafeInsets(GLFMDisplay *display, double *top, double *right, double *bottom,
+                               double *left) {
+    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+    const int SDK_INT = platformData->app->activity->sdkVersion;
+    if (SDK_INT < 28) {
+        return false;
+    }
+
+    JNIEnv *jni = platformData->jniEnv;
+    jobject decorView = _glfmGetDecorView(platformData->app);
+    if (!decorView) {
+        return false;
+    }
+
+    jobject insets = _glfmCallJavaMethod(jni, decorView, "getRootWindowInsets",
+                                         "()Landroid/view/WindowInsets;", Object);
+    (*jni)->DeleteLocalRef(jni, decorView);
+    if (!insets) {
+        return false;
+    }
+
+    jobject cutouts = _glfmCallJavaMethod(jni, insets, "getDisplayCutout",
+                                          "()Landroid/view/DisplayCutout;", Object);
+    (*jni)->DeleteLocalRef(jni, insets);
+    if (!cutouts) {
+        return false;
+    }
+
+    *top = _glfmCallJavaMethod(jni, cutouts, "getSafeInsetTop", "()I", Int);
+    *right = _glfmCallJavaMethod(jni, cutouts, "getSafeInsetRight", "()I", Int);
+    *bottom = _glfmCallJavaMethod(jni, cutouts, "getSafeInsetBottom", "()I", Int);
+    *left = _glfmCallJavaMethod(jni, cutouts, "getSafeInsetLeft", "()I", Int);
+
+    (*jni)->DeleteLocalRef(jni, cutouts);
+    return true;
+}
+
+static bool _glfmGetSystemWindowInsets(GLFMDisplay *display, double *top, double *right, double *bottom,
+                               double *left) {
+    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+    const int SDK_INT = platformData->app->activity->sdkVersion;
+    if (SDK_INT < 20) {
+        return false;
+    }
+
+    JNIEnv *jni = platformData->jniEnv;
+    jobject decorView = _glfmGetDecorView(platformData->app);
+    if (!decorView) {
+        return false;
+    }
+
+    jobject insets = _glfmCallJavaMethod(jni, decorView, "getRootWindowInsets",
+                                         "()Landroid/view/WindowInsets;", Object);
+    (*jni)->DeleteLocalRef(jni, decorView);
+    if (!insets) {
+        return false;
+    }
+
+    *top = _glfmCallJavaMethod(jni, insets, "getSystemWindowInsetTop", "()I", Int);
+    *right = _glfmCallJavaMethod(jni, insets, "getSystemWindowInsetRight", "()I", Int);
+    *bottom = _glfmCallJavaMethod(jni, insets, "getSystemWindowInsetBottom", "()I", Int);
+    *left = _glfmCallJavaMethod(jni, insets, "getSystemWindowInsetLeft", "()I", Int);
+
+    (*jni)->DeleteLocalRef(jni, insets);
+    return true;
 }
 
 void glfmGetDisplayChromeInsets(GLFMDisplay *display, double *top, double *right, double *bottom,
                                 double *left) {
-    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
-    ARect windowRect = platformData->app->contentRect;
-    ARect visibleRect = _glfmGetWindowVisibleDisplayFrame(platformData, windowRect);
-    if (visibleRect.right - visibleRect.left <= 0 || visibleRect.bottom - visibleRect.top <= 0) {
-        *top = 0;
-        *right = 0;
-        *bottom = 0;
-        *left = 0;
+
+    bool success;
+    if (glfmGetDisplayChrome(display) == GLFMUserInterfaceChromeFullscreen) {
+        success = _glfmGetSafeInsets(display, top, right, bottom, left);
     } else {
-        *top = visibleRect.top;
-        *right = platformData->width - visibleRect.right;
-        *bottom = platformData->height - visibleRect.bottom;
-        *left = visibleRect.left;
+        success = _glfmGetSystemWindowInsets(display, top, right, bottom, left);
+    }
+    if (!success) {
+        GLFMPlatformData *platformData = (GLFMPlatformData *)display->platformData;
+        ARect windowRect = platformData->app->contentRect;
+        ARect visibleRect = _glfmGetWindowVisibleDisplayFrame(platformData, windowRect);
+        if (visibleRect.right - visibleRect.left <= 0 || visibleRect.bottom - visibleRect.top <= 0) {
+            *top = 0;
+            *right = 0;
+            *bottom = 0;
+            *left = 0;
+        } else {
+            *top = visibleRect.top;
+            *right = platformData->width - visibleRect.right;
+            *bottom = platformData->height - visibleRect.bottom;
+            *left = visibleRect.left;
+        }
     }
 }
 
 void _glfmDisplayChromeUpdated(GLFMDisplay *display) {
-    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+    GLFMPlatformData *platformData = (GLFMPlatformData *)display->platformData;
     _glfmSetFullScreen(platformData->app, display->uiChrome);
 }
 
 GLFMRenderingAPI glfmGetRenderingAPI(GLFMDisplay *display) {
-    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+    GLFMPlatformData *platformData = (GLFMPlatformData *)display->platformData;
     return platformData->renderingAPI;
 }
 
 bool glfmHasTouch(GLFMDisplay *display) {
-    (void) display;
+    (void)display;
     // This will need to change, for say, TV apps
     return true;
 }
 
 void glfmSetMouseCursor(GLFMDisplay *display, GLFMMouseCursor mouseCursor) {
-    (void) display;
-    (void) mouseCursor;
+    (void)display;
+    (void)mouseCursor;
     // Do nothing
 }
 
 void glfmSetMultitouchEnabled(GLFMDisplay *display, bool multitouchEnabled) {
-    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+    GLFMPlatformData *platformData = (GLFMPlatformData *)display->platformData;
     platformData->multitouchEnabled = multitouchEnabled;
 }
 
 bool glfmGetMultitouchEnabled(GLFMDisplay *display) {
-    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+    GLFMPlatformData *platformData = (GLFMPlatformData *)display->platformData;
     return platformData->multitouchEnabled;
 }
 
@@ -1559,13 +1594,13 @@ GLFMProc glfmGetProcAddress(const char *functionName) {
         if (!handle) {
             handle = dlopen(NULL, RTLD_LAZY);
         }
-        function = handle ? (GLFMProc) dlsym(handle, functionName) : NULL;
+        function = handle ? (GLFMProc)dlsym(handle, functionName) : NULL;
     }
     return function;
 }
 
 void glfmSetKeyboardVisible(GLFMDisplay *display, bool visible) {
-    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+    GLFMPlatformData *platformData = (GLFMPlatformData *)display->platformData;
     if (_glfmSetKeyboardVisible(platformData, visible)) {
         if (visible && display->uiChrome == GLFMUserInterfaceChromeFullscreen) {
             // This seems to be required to reset to fullscreen when the keyboard is shown.
@@ -1575,7 +1610,7 @@ void glfmSetKeyboardVisible(GLFMDisplay *display, bool visible) {
 }
 
 bool glfmIsKeyboardVisible(GLFMDisplay *display) {
-    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+    GLFMPlatformData *platformData = (GLFMPlatformData *)display->platformData;
     return platformData->keyboardVisible;
 }
 
