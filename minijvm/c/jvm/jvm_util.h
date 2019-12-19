@@ -280,7 +280,7 @@ s32 jthread_init(Instance *jthread, Runtime *runtime);
 
 s32 jthread_dispose(Instance *jthread);
 
-s32 jtherad_run(void *para);
+s32 jthread_run(void *para);
 
 thrd_t jthread_start(Instance *ins);
 

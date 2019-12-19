@@ -343,6 +343,7 @@ s32 _collect_thread_run(void *para) {
         }
     }
     collector->_garbage_thread_status = GARBAGE_THREAD_DEAD;
+    thrd_exit(0);
     return 0;
 }
 

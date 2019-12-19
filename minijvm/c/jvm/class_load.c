@@ -305,8 +305,28 @@ void *_parseCPInvokeDynamic(JClass *_this, ByteBuf *buf, s32 index) {
 s32 _class_constant_pool_destory(JClass *clazz) {
     int i;
     for (i = 0; i < clazz->constant_item_count; i++) {
-        __refer ptr = clazz->constant_item_ptr[i];
-        jvm_free(ptr);
+        ConstantItem *cptr = clazz->constant_item_ptr[i];
+        if (cptr) {
+            switch (cptr->tag) {
+                case CONSTANT_UTF8: {
+                    ConstantUTF8 *ptr = (ConstantUTF8 *) cptr;
+                    if (ptr->utfstr) {
+                        utf8_destory(ptr->utfstr);
+                        ptr->utfstr = NULL;
+                    }
+                    break;
+                }
+                case CONSTANT_METHOD_REF: {
+                    ConstantMethodRef *ptr = (ConstantMethodRef *) cptr;
+                    if (ptr->virtual_methods) {
+                        pairlist_destory(ptr->virtual_methods);
+                        ptr->virtual_methods = NULL;
+                    }
+                    break;
+                }
+            }
+        }
+        jvm_free(cptr);
     }
 
     return 0;
@@ -567,6 +587,10 @@ s32 _class_method_info_destory(JClass *clazz) {
         }
         if (mi->attributes)jvm_free(mi->attributes);
         mi->attributes = NULL;
+        if (mi->jump_2_pos)jvm_free(mi->jump_2_pos);
+        mi->jump_2_pos = NULL;
+        if (mi->pos_2_label)jvm_free(mi->pos_2_label);
+        mi->pos_2_label = NULL;
         utf8_destory(mi->paraType);
         utf8_destory(mi->returnType);
         if (mi->breakpoint)jvm_free(mi->breakpoint);
