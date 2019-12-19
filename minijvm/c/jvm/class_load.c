@@ -727,6 +727,8 @@ void _changeBytesOrder(MethodInfo *method) {
     method->pos_2_label = pairlist_create(4);
     method->jump_2_pos = pairlist_create(4);
     CodeAttribute *ca = method->converted_code;
+    spin_init(&ca->compile_lock, 0);
+
     u8 *ip = ca->code;
     u8 *end = ca->code_length + ip;
     //jvm_printf("adapte method %s.%s()\n", method->_this_class->name->data, method->name->data);

@@ -26,7 +26,7 @@ extern "C" {
 
 
 //=======================  micro define  =============================
-//_JVM_DEBUG  01=thread info, 02=garage info , 03=class load, 04=method call,  06=all bytecode
+//_JVM_DEBUG  01=thread info, 02=garage&jit info  , 03=class load, 04=method call,  06=all bytecode
 #define _JVM_DEBUG_BYTECODE_DETAIL 01
 #define _JVM_DEBUG_PRINT_FILE 0
 #define _JVM_DEBUG_GARBAGE_DUMP 0
@@ -833,10 +833,11 @@ struct _CodeAttribute {
     s32 code_length;
     u8 *code; // [code_length];
     u8 *bytecode_for_jit; // [code_length];
+    spinlock_t compile_lock;
     struct _Jit {
         jit_func func;
         s32 len;
-        s32 state;
+        volatile s32 state;
         volatile s32 interpreted_count;
         SwitchTable *switchtable;//a table that compile switch ,fill in jump address
         __refer *exception_handle_jump_ptr;//a ptr list for exception jump, size= exceptiontable.length
@@ -1252,7 +1253,7 @@ s64 entry_2_long_jni(StackEntry *entry);
 __refer entry_2_refer_jni(StackEntry *entry);
 
 static inline s32 stack_size(RuntimeStack *stack) {
-    return (s32)(stack->sp - stack->store);
+    return (s32) (stack->sp - stack->store);
 }
 
 /* push Integer */

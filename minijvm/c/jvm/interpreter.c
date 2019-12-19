@@ -536,7 +536,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             } else {
                 if (JIT_ENABLE && ca->jit.state == JIT_GEN_UNKNOW) {
                     if (ca->jit.interpreted_count++ > JIT_COMPILE_EXEC_COUNT) {
-                        construct_jit(method, runtime);
+                        spin_lock(&ca->compile_lock);
+                        if(ca->jit.state == JIT_GEN_UNKNOW){//re test
+                            //jvm_printf("enter jit %s.%s()\n", utf8_cstr(method->_this_class->name), utf8_cstr(method->name));
+                            construct_jit(method, runtime);
+                        }
+                        spin_unlock(&ca->compile_lock);
                     }
                 }
 

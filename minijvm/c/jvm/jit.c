@@ -778,7 +778,7 @@ void _gen_icmp_op1(struct sljit_compiler *C, MethodInfo *method, u8 *ip, s32 cod
     s32 jumpto = code_idx + offset;
     struct sljit_label *label = (__refer) pairlist_getl(method->pos_2_label, jumpto);
     if (!label) {
-        jvm_printf("label not found %s.%s pc: %d\n", method->_this_class->name->data, method->name->data, code_idx);
+        jvm_printf("label not found %s.%s pc: %d\n", utf8_cstr(method->_this_class->name), utf8_cstr(method->name), code_idx);
     }
 
     _gen_stack_pop_int(C, SLJIT_R0, 0);
@@ -807,7 +807,7 @@ void _gen_icmp_op2(struct sljit_compiler *C, MethodInfo *method, u8 *ip, s32 cod
     s32 jumpto = code_idx + offset;
     struct sljit_label *label = (__refer) pairlist_getl(method->pos_2_label, jumpto);
     if (!label) {
-        jvm_printf("label not found %s.%s pc: %d\n", method->_this_class->name->data, method->name->data, code_idx);
+        jvm_printf("label not found %s.%s pc: %d\n", utf8_cstr(method->_this_class->name), utf8_cstr(method->name), code_idx);
     }
 
     _gen_stack_peek_int(C, -1, SLJIT_R0, 0);
@@ -857,7 +857,7 @@ void _gen_cmp_reg2(struct sljit_compiler *C, MethodInfo *method, u8 *ip, s32 cod
     s32 jumpto = code_idx + offset;
     struct sljit_label *label = (__refer) pairlist_getl(method->pos_2_label, jumpto);
     if (!label) {
-        jvm_printf("label not found %s.%s pc: %d\n", method->_this_class->name->data, method->name->data, code_idx);
+        jvm_printf("label not found %s.%s pc: %d\n", utf8_cstr(method->_this_class->name), utf8_cstr(method->name), code_idx);
     }
 
     struct sljit_jump *jump_out, *jump_if_true;
@@ -892,7 +892,7 @@ void _gen_goto(struct sljit_compiler *C, MethodInfo *method, s32 code_idx, s32 o
     s32 jumpto = code_idx + offset;
     struct sljit_label *label = (__refer) pairlist_getl(method->pos_2_label, jumpto);
     if (!label) {
-        jvm_printf("label not found %s.%s pc: %d\n", method->_this_class->name->data, method->name->data, code_idx);
+        jvm_printf("label not found %s.%s pc: %d\n", utf8_cstr(method->_this_class->name), utf8_cstr(method->name), code_idx);
     }
 
     struct sljit_jump *jump_away = sljit_emit_jump(C, SLJIT_JUMP);
@@ -3251,7 +3251,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
         struct sljit_jump *jump = (__refer) (intptr_t) p.leftl;
         struct sljit_label *label = (__refer) (intptr_t) pairlist_getl(method->pos_2_label, p.rightl);
         if (!label) {
-            jvm_printf("label not found %s.%s pc: %d\n", method->_this_class->name->data, method->name->data, (s32) (intptr_t) p.rightl);
+            jvm_printf("label not found %s.%s pc: %d\n", utf8_cstr(method->_this_class->name), utf8_cstr(method->name), (s32) (intptr_t) p.rightl);
         } else {
             sljit_set_label(jump, label);
         }
@@ -3273,7 +3273,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             s32 pos = v2p[i].bc_pos;
             struct sljit_label *label = (__refer) (intptr_t) pairlist_getl(method->pos_2_label, pos);
             if (!label) {
-                jvm_printf("switch label not found %s.%s pc: %d\n", method->_this_class->name->data, method->name->data, (s32) (intptr_t) pos);
+                jvm_printf("switch label not found %s.%s pc: %d\n", utf8_cstr(method->_this_class->name), utf8_cstr(method->name), (s32) (intptr_t) pos);
             } else {
                 v2p[i].jump_ptr = (__refer) sljit_get_label_addr(label);
             }
@@ -3288,7 +3288,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             s32 pos = (e + i)->handler_pc;
             struct sljit_label *label = (__refer) (intptr_t) pairlist_getl(method->pos_2_label, pos);
             if (!label) {
-                jvm_printf("exception label not found %s.%s pc: %d\n", method->_this_class->name->data, method->name->data, (s32) (intptr_t) pos);
+                jvm_printf("exception label not found %s.%s pc: %d\n", utf8_cstr(method->_this_class->name), utf8_cstr(method->name), (s32) (intptr_t) pos);
             } else {
                 ca->jit.exception_handle_jump_ptr[i] = (__refer) sljit_get_label_addr(label);
             }
@@ -3300,7 +3300,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
     //Execute code
     ca->jit.func = (jit_func) genfunc;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 1
-    jvm_printf("jit compile method %s.%s() ,func length:\n", method->_this_class->name->data, method->name->data, ca->jit.len);
+    jvm_printf("jit compile method %s.%s() ,func length:%d\n", utf8_cstr(method->_this_class->name), utf8_cstr(method->name), ca->jit.len);
 #endif
 
     return JIT_GEN_SUCCESS;
