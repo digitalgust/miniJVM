@@ -840,7 +840,11 @@ struct _CodeAttribute {
         volatile s32 state;
         volatile s32 interpreted_count;
         SwitchTable *switchtable;//a table that compile switch ,fill in jump address
-        __refer *exception_handle_jump_ptr;//a ptr list for exception jump, size= exceptiontable.length
+        struct _ExceptionJumpTable{
+            __refer exception_handle_jump_ptr;//a ptr list for exception jump, size= exceptiontable.length
+            s32 bc_pos;
+        } *ex_jump_table;
+        __refer interrupt_handle_jump_ptr;
     } jit;
     u16 exception_table_length;
     ExceptionTable *exception_table; //[exception_table_length];
@@ -1193,13 +1197,14 @@ struct _Runtime {
     MethodInfo *method;
     JClass *clazz;
     u8 *pc;
-    __refer exception_jump_ptr;
     JavaThreadInfo *threadInfo;
     MemoryBlock *lock;
     Runtime *son;//sub method's runtime
     Runtime *parent;//father method's runtime
     RuntimeStack *stack;
     LocalVarItem *localvar;
+    __refer jit_exception_jump_ptr;
+    s32 jit_exception_bc_pos;
     s16 localvar_slots;
 
     //

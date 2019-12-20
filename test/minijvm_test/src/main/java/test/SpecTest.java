@@ -21,6 +21,7 @@ public class SpecTest {
         test_typecast();
         test_array();
         test_other();
+        test_thread();
         test_field();
         test_wide();
         test_method();
@@ -816,12 +817,12 @@ public class SpecTest {
             printerr("multianewarray, aaload, aastore");
         }
 
-        String[] ss=new String[0];
-        if(ss.length>0){
+        String[] ss = new String[0];
+        if (ss.length > 0) {
             printerr("anewarray");
         }
-        String[][] ss2=new String[7][];
-        if(ss2.length!=7){
+        String[][] ss2 = new String[7][];
+        if (ss2.length != 7) {
             printerr("anewarray");
         }
 
@@ -894,6 +895,20 @@ public class SpecTest {
             printerr("lookupswitch");
         }
 
+
+        //=========================================================
+
+        try {
+            throw new NullPointerException();
+        } catch (Exception e) {
+            if (!(e instanceof NullPointerException)) {
+                printerr("athrow");
+            }
+        }
+    }
+
+    static void test_thread() {
+
         //=========================================================
         class A extends Thread implements Cloneable {
 
@@ -958,18 +973,8 @@ public class SpecTest {
 
         }
         //System.out.println("Main release lock final");
-
         if (a.v2 != 2) {
             printerr("monitorenter, monitorexit");
-        }
-        //=========================================================
-
-        try {
-            throw new NullPointerException();
-        } catch (Exception e) {
-            if (!(e instanceof NullPointerException)) {
-                printerr("athrow");
-            }
         }
     }
 
