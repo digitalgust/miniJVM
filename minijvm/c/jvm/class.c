@@ -274,7 +274,7 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
                 fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
             }
             if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
-                class_clinit(fi->_this_class, runtime);
+                //class_clinit(fi->_this_class, runtime); //init here would too early
             }
         }
         //find finalize method, but not process java.lang.Object.finalize()

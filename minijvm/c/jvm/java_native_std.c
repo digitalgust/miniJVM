@@ -934,6 +934,7 @@ s32 java_lang_System_loadLibrary0(Runtime *runtime, JClass *clazz) {
 
 #else
         utf8_append_c(libname, "/lib");
+        utf8_replace_c(libname, "//", "/");
         utf8_append_c(libname, name_arr->arr_body);
 #if defined(__JVM_OS_MAC__)
         utf8_append_c(libname, ".dylib");
