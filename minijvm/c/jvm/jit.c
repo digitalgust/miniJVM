@@ -2534,11 +2534,19 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 u16 idx = *((u16 *) (ip + 1));
                 FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
 
-                c8 *ptr = getStaticFieldPtr(fi);
-                if (fi->isvolatile) {
-                    barrier();
+                if (!fi) {
+                    ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
+                    fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
+                    cfr->fieldInfo = fi;
+                    if (!fi) {
+                        return JIT_GEN_ERROR;
+                    }
+                }
+                if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
+                    class_clinit(fi->_this_class, runtime);
                 }
 
+                c8 *ptr = getStaticFieldPtr(fi);
                 if (fi->isrefer) {
                     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM0(), (sljit_sw) ptr);
                     _gen_stack_push_ref(C, SLJIT_R0, 0);
@@ -2591,11 +2599,18 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             case op_putstatic: {
                 u16 idx = *((u16 *) (ip + 1));
                 FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
-
-                c8 *ptr = getStaticFieldPtr(fi);
-                if (fi->isvolatile) {
-                    barrier();
+                if (!fi) {
+                    ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
+                    fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
+                    cfr->fieldInfo = fi;
+                    if (!fi) {
+                        return JIT_GEN_ERROR;
+                    }
                 }
+                if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
+                    class_clinit(fi->_this_class, runtime);
+                }
+                c8 *ptr = getStaticFieldPtr(fi);
 
                 if (fi->isrefer) {
                     _gen_stack_pop_ref(C, SLJIT_R0, 0);
@@ -2637,9 +2652,16 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             case op_getfield: {
                 u16 idx = *((u16 *) (ip + 1));
                 FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
-
-                if (fi->isvolatile) {
-                    barrier();
+                if (!fi) {
+                    ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
+                    fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
+                    cfr->fieldInfo = fi;
+                    if (!fi) {
+                        return JIT_GEN_ERROR;
+                    }
+                }
+                if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
+                    class_clinit(fi->_this_class, runtime);
                 }
 
                 _gen_stack_peek_ref(C, -1, SLJIT_R0, 0);
@@ -2703,7 +2725,17 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             case op_putfield: {
                 u16 idx = *((u16 *) (ip + 1));
                 FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
-
+                if (!fi) {
+                    ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
+                    fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
+                    cfr->fieldInfo = fi;
+                    if (!fi) {
+                        return JIT_GEN_ERROR;
+                    }
+                }
+                if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
+                    class_clinit(fi->_this_class, runtime);
+                }
                 s32 stack_size;
 
                 if (fi->isrefer) {
