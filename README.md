@@ -38,9 +38,11 @@
 
 
 ## Changelog
+   2019.12.  Bind cross platform awtk ui system , see [awtk-minijvm](https://raw.githubusercontent.com/digitalgust/miniJVM/master/desktop/awtk_gui/readme.MD)
    2019.12.  Jit enabled, it based on sljit project
-   2019.10.  Jit is developing     
+   2019.10.  Jit is developing
    2018.12.  Optimize performance     
+   2017.09.  miniJVM start
 
 
 ## How to develop iOS/Android app in java:   
@@ -93,19 +95,20 @@ String s=(String)list.get(0);//can't ignore (String) cast qualifier.
 
 
 ## Referenced project and technology:   
-   [Sun CLDC](http://www.oracle.com/technetwork/java/cldc-141990.html)  :reference    
+   [Sun CLDC](http://www.oracle.com/technetwork/java/cldc-141990.html)  :referenced cldc
    [Miniz](https://github.com/richgel999/miniz) :for read jar files    
    [GLFM](https://github.com/brackeen/glfm) :for cross platform (android/ios) GUI   
    [Nanovg](https://github.com/memononen/nanovg)  :for GUI paint function   
    [Stb](https://github.com/nothings/stb) :for GUI truetype font and image  
-   [Glad](https://github.com/Dav1dde/glad)  :for replace openGL/GLES head file   
+   [Glad](https://github.com/Dav1dde/glad)  :for replace openGL/GLES head file
    [GLFW](https://github.com/glfw/glfw)  :for pc cross platform GUI   
    [Dirent](https://github.com/tronkko/dirent)  :for linux style on win vc file and directory access    
    [Tinycthread](https://github.com/tinycthread/tinycthread)  :for cross platform thread   
    [JRegex](https://github.com/digitalgust/minijvm_third_lib/tree/master/jregex)  :for java String regex match     
    [Janino](http://janino-compiler.github.io/janino/)  :for compile java source file     
-   [MiniAudio](https://github.com/dr-soft/miniaudio)  :for java audio playback and capture     
+   [MiniAudio](https://github.com/dr-soft/miniaudio)  :for java audio playback and capture
    [SLJIT](https://github.com/zherczeg/sljit)  :Platform independent low-level JIT compiler
+   [AWTK-MINIJVM](https://github.com/zlgopen/awtk-minijvm)  :awtk cross platform ui bind to minijvm
 
 
 ## Development IDE using:  
