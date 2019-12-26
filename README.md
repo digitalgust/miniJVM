@@ -29,8 +29,8 @@
 ## mobile app IM Demo BiBiX , source at :https://github.com/digitalgust/BiBiX 
   <div align=center><img width="224" height="398" src="/screenshot/demo.gif"/></div>    
    This demo can be download from : http://bb.egls.cn:8080/down/BiBiX.jar ,    
->   Mobile platform : First install AppManager from iOS for binary/ios/MiniPack.ipa , Android for /binary/android/MiniPack.apk ,then download demo in AppManager and run the app.     
->   Desktop computer: /binary/win_64  , /binary/macos , /binary/win32 , /binary/centos_x64   run test.sh 
+  * Mobile platform : First install AppManager from iOS for binary/ios/MiniPack.ipa , Android for /binary/android/MiniPack.apk ,then download demo in AppManager and run the app.     
+  * Desktop computer: /binary/win_64  , /binary/macos , /binary/win32 , /binary/centos_x64   run test.sh 
 
 
 ## Architecture:  
@@ -39,7 +39,7 @@
 
 
 ## Changelog
-   2019.12.  Bind cross platform awtk ui system , see [awtk-minijvm](https://raw.githubusercontent.com/digitalgust/miniJVM/master/desktop/awtk_gui/readme.MD)   
+   2019.12.  Bind cross platform awtk ui system , see [awtk-minijvm](https://github.com/digitalgust/miniJVM/tree/master/desktop/awtk_gui)   
    2019.12.  Jit enabled, it based on sljit project   
    2019.10.  Jit is developing   
    2018.12.  Optimize performance     
