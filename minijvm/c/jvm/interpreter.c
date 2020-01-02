@@ -370,8 +370,8 @@ s32 checkcast(Runtime *runtime, Instance *ins, s32 typeIdx) {
     JClass *clazz = runtime->clazz;
     if (ins != NULL) {
         if (ins->mb.type == MEM_TYPE_INS) {
-            JClass *cl = getClassByConstantClassRef(clazz, typeIdx, runtime);
-            if (instance_of(cl, ins, runtime)) {
+            JClass *other = getClassByConstantClassRef(clazz, typeIdx, runtime);
+            if (instance_of(other, ins, runtime)) {
                 return 1;
             }
         } else if (ins->mb.type == MEM_TYPE_ARR) {
@@ -2797,7 +2797,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     goto label_exception_handle;
                                 }
                             }
-
+                            if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
+                                class_clinit(fi->_this_class, runtime);
+                            }
                             if (fi->isrefer) {
                                 *ip = op_getstatic_ref;
                             } else {
@@ -2847,6 +2849,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     goto label_exception_handle;
                                 }
                             }
+                            if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
+                                class_clinit(fi->_this_class, runtime);
+                            }
                             if (fi->isrefer) {//垃圾回收标识
                                 *ip = op_putstatic_ref;
                             } else {
@@ -2891,6 +2896,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     ret = RUNTIME_STATUS_EXCEPTION;
                                     goto label_exception_handle;
                                 }
+                            }
+                            if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
+                                class_clinit(fi->_this_class, runtime);
                             }
                             if (fi->isrefer) {
                                 *ip = op_getfield_ref;
@@ -2940,7 +2948,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     goto label_exception_handle;
                                 }
                             }
-
+                            if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
+                                class_clinit(fi->_this_class, runtime);
+                            }
                             if (fi->isrefer) {//垃圾回收标识
                                 *ip = op_putfield_ref;
                             } else {
