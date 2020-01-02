@@ -25,6 +25,7 @@ char *STRS_CLASS_EXCEPTION[] = {
         "java.lang.InstantiationException",
 };
 
+c8 *STR_CLASS_JAVA_LANG_INTEGER = "java/lang/Integer";
 c8 *STR_CLASS_JAVA_LANG_STRING = "java/lang/String";
 c8 *STR_CLASS_JAVA_LANG_STRINGBUILDER = "java/lang/StringBuilder";
 c8 *STR_CLASS_JAVA_LANG_OBJECT = "java/lang/Object";
@@ -66,7 +67,7 @@ GcCollector *collector;
 JniEnv jnienv;
 
 
-c8 *data_type_str = "    ZCFDBSIJL[";
+c8 *data_type_str = "    ZCFDBSIJL[R";
 
 s32 data_type_bytes[DATATYPE_COUNT] = {0, 0, 0, 0,
                                        sizeof(c8),
@@ -77,6 +78,7 @@ s32 data_type_bytes[DATATYPE_COUNT] = {0, 0, 0, 0,
                                        sizeof(s16),
                                        sizeof(s32),
                                        sizeof(s64),
+                                       sizeof(__refer),
                                        sizeof(__refer),
                                        sizeof(__refer),
 };

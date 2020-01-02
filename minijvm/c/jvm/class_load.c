@@ -1846,7 +1846,7 @@ JClass *load_class(ClassLoader *loader, Utf8String *pClassName, Runtime *runtime
             tmpclazz = class_parse(bytebuf, runtime);
             bytebuf_destory(bytebuf);
         }
-
+        if (jdwp_enable && tmpclazz)event_on_class_prepare(runtime, tmpclazz);
     }
     if (!tmpclazz) {
         jvm_printf("class not found:  %s \n", utf8_cstr(clsName));

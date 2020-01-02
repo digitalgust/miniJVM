@@ -444,6 +444,7 @@ enum {
 
 extern char *STRS_CLASS_EXCEPTION[];
 
+extern c8 *STR_CLASS_JAVA_LANG_INTEGER;
 extern c8 *STR_CLASS_JAVA_LANG_STRING;
 extern c8 *STR_CLASS_JAVA_LANG_STRINGBUILDER;
 extern c8 *STR_CLASS_JAVA_LANG_OBJECT;
@@ -502,10 +503,7 @@ int  10
 long  11
   reference 12
  */
-#define DATATYPE_COUNT 14
-extern c8 *data_type_str;
 
-extern s32 data_type_bytes[DATATYPE_COUNT];
 
 enum {
     DATATYPE_BOOLEAN = 4,
@@ -519,7 +517,12 @@ enum {
     DATATYPE_REFERENCE = 12,
     DATATYPE_ARRAY = 13,
     DATATYPE_RETURNADDRESS = 14,
+    DATATYPE_COUNT,
 };
+
+extern s32 data_type_bytes[DATATYPE_COUNT];
+extern c8 *data_type_str;
+
 //访问标志
 enum {
     ACC_PUBLIC = 0x0001,

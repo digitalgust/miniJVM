@@ -118,6 +118,11 @@ static c8 JDWP_THREAD_WAIT = 4;
 //=============================      suspend   ==============================================
 
 static c8 JDWP_SUSPEND_STATUS_SUSPENDED = 0x1;
+
+
+static c8 JDWP_SUSPENDPOLICY_NONE = 0;//Suspend no threads when this event is encountered.
+static c8 JDWP_SUSPENDPOLICY_EVENT_THREAD = 1;//Suspend the event thread when this event is encountered.
+static c8 JDWP_SUSPENDPOLICY_ALL = 2;//Suspend all threads when this event is encountered.
 //=============================      tag   ==============================================
 
 #define JDWP_TAG_ARRAY  91
@@ -295,8 +300,9 @@ typedef struct _JdwpServer {
     thrd_t pt_dispacher;
     s32 srvsock;
     ArrayList *clients;
-    ArrayList *events;
-    Hashtable *event_sets;
+    ArrayList *event_packets;
+    Pairlist *event_sets;
+    mtx_t event_sets_lock;
     Runtime *runtime;
     u16 port;
     u8 exit;
@@ -496,11 +502,13 @@ s32 jdwp_set_breakpoint(s32 setOrClear, JClass *clazz, MethodInfo *methodInfo, s
 
 void event_on_breakpoint(Runtime *breakpoint_runtime);
 
-void event_on_class_prepar(Runtime *runtime, JClass *clazz);
+void event_on_class_prepare(Runtime *runtime, JClass *clazz);
 
 void event_on_thread_death(Instance *jthread);
 
 void event_on_thread_start(Instance *jthread);
+
+void event_on_vmstart(Instance *jthread);
 
 void jdwp_check_breakpoint(Runtime *runtime);
 

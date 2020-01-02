@@ -241,12 +241,13 @@ void jvm_init(c8 *p_classpath, StaticLibRegFunc regFunc) {
 
     //init load thread, string etc
     Runtime *runtime = runtime_create(NULL);
-    Utf8String *clsName = utf8_create_c("java/lang/Integer");
+    Utf8String *clsName = utf8_create_c(STR_CLASS_JAVA_LANG_INTEGER);
     classes_load_get(clsName, runtime);
-    thread_boundle(runtime);
+    utf8_clear(clsName);
+    utf8_append_c(clsName, STR_CLASS_JAVA_LANG_THREAD);
+    classes_load_get(clsName, runtime);
     //开始装载类
     utf8_destory(clsName);
-    thread_unboundle(runtime);
     runtime_destory(runtime);
     runtime = NULL;
 }
@@ -353,6 +354,7 @@ s32 call_method_main(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, ArrayL
 #endif
             //调用主方法
             if (jdwp_enable) {
+                event_on_vmstart(runtime->threadInfo->jthread);
                 jthread_suspend(runtime);
                 jvm_printf("[JDWP]waiting for jdwp(port:%d) debug client connected...\n", JDWP_TCP_PORT);
             }//jdwp 会启动调试器
