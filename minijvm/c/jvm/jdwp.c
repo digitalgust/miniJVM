@@ -1282,6 +1282,88 @@ s16 jdwp_eventset_clear(s32 id) {
     return JDWP_ERROR_NONE;
 }
 
+
+void invoke_method(s32 call_mode, Runtime *runtime, JdwpPacket *req, JdwpPacket *res, JdwpClient *client) {
+    jthread_block_exit(runtime);//exit native method
+    JClass *clazz;
+    Instance *thread;
+    Instance *object;
+    if (call_mode == CALL_MODE_STATIC) {
+        clazz = jdwppacket_read_refer(req);
+        thread = jdwppacket_read_refer(req);
+    } else {
+        object = jdwppacket_read_refer(req);
+        thread = jdwppacket_read_refer(req);
+        clazz = jdwppacket_read_refer(req);
+    }
+    MethodInfo *methodInfo = jdwppacket_read_refer(req);
+    s32 arguments = jdwppacket_read_int(req);
+
+    s32 stacksize = stack_size(runtime->stack);
+    if (!(methodInfo->is_static)) {
+        push_ref(runtime->stack, object);
+    }
+    runtime->clazz = clazz;
+    s32 i;
+    for (i = 0; i < arguments; i++) {
+        ValueType vt;
+        readValueType(req, &vt);
+
+        switch (getSimpleTag(vt.type)) {
+            case '8':
+                push_long(runtime->stack, vt.value);
+                break;
+            case 'R':
+                push_ref(runtime->stack, (__refer) (intptr_t) vt.value);
+                break;
+            default:
+                push_int(runtime->stack, (s32) vt.value);
+        }
+    }
+    s32 ret = execute_method_impl(methodInfo, runtime);
+    if (ret != RUNTIME_STATUS_NORMAL) {
+        print_exception(runtime);
+    }
+    jdwppacket_set_err(res, JDWP_ERROR_NONE);
+
+    ValueType vt;
+    memset(&vt, 0, sizeof(ValueType));
+    if (stack_size(runtime->stack) > stacksize) {
+        Utf8String *us = utf8_create_copy(methodInfo->descriptor);
+        utf8_substring(us, utf8_indexof_c(us, ")") + 1, us->length);
+        vt.type = getJdwpTag(us);
+        switch (getSimpleTag(vt.type)) {
+            case '8':
+                vt.value = pop_long(runtime->stack);
+                break;
+            case 'R': {
+                __refer r = pop_ref(runtime->stack);
+                vt.type = getInstanceOfClassTag(r);//recorrect type, may be Arraylist<String>
+                vt.value = (s64) (intptr_t) r;
+                jdwp_client_hold_obj(client, runtime, r);
+
+//                            if (vt.type == 's') {
+//                                s32 debug = 1;
+//                                Utf8String *ustr = utf8_create();
+//                                jstring_2_utf8((Instance *) r, ustr);
+//                                utf8_destory(ustr);
+//                            }
+                break;
+            }
+            default:
+                vt.value = pop_int(runtime->stack);
+        }
+        utf8_destory(us);
+    }
+    writeValueType(res, &vt);
+    vt.type = 'L';
+    vt.value = 0;
+    writeValueType(res, &vt);
+    jdwp_writepacket(client, res);
+    jthread_block_enter(runtime);//re-enter native function
+
+}
+
 //==================================================    process packet    ==================================================
 
 s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
@@ -1726,7 +1808,8 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
                 break;
             }
             case JDWP_CMD_ClassType_InvokeMethod: {//3.3
-                jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                invoke_method(CALL_MODE_STATIC, runtime, req, res, client);
+                //jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
                 break;
             }
             case JDWP_CMD_ClassType_NewInstance: {//3.4
@@ -1841,75 +1924,77 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
                 break;
             }
             case JDWP_CMD_ObjectReference_InvokeMethod: {//9.6
-                jthread_block_exit(runtime);//exit native method
-                Instance *object = jdwppacket_read_refer(req);
-                Instance *thread = jdwppacket_read_refer(req);
-                JClass *clazz = jdwppacket_read_refer(req);
-                MethodInfo *methodInfo = jdwppacket_read_refer(req);
-                s32 arguments = jdwppacket_read_int(req);
+//                jthread_block_exit(runtime);//exit native method
+//                Instance *object = jdwppacket_read_refer(req);
+//                Instance *thread = jdwppacket_read_refer(req);
+//                JClass *clazz = jdwppacket_read_refer(req);
+//                MethodInfo *methodInfo = jdwppacket_read_refer(req);
+//                s32 arguments = jdwppacket_read_int(req);
+//
+//                s32 stacksize = stack_size(runtime->stack);
+//                if (!(methodInfo->is_static)) {
+//                    push_ref(runtime->stack, object);
+//                }
+//                runtime->clazz = clazz;
+//                s32 i;
+//                for (i = 0; i < arguments; i++) {
+//                    ValueType vt;
+//                    readValueType(req, &vt);
+//
+//                    switch (getSimpleTag(vt.type)) {
+//                        case '8':
+//                            push_long(runtime->stack, vt.value);
+//                            break;
+//                        case 'R':
+//                            push_ref(runtime->stack, (__refer) (intptr_t) vt.value);
+//                            break;
+//                        default:
+//                            push_int(runtime->stack, (s32) vt.value);
+//                    }
+//                }
+//                s32 ret = execute_method_impl(methodInfo, runtime);
+//                if (ret != RUNTIME_STATUS_NORMAL) {
+//                    print_exception(runtime);
+//                }
+//                jdwppacket_set_err(res, JDWP_ERROR_NONE);
+//
+//                ValueType vt;
+//                memset(&vt, 0, sizeof(ValueType));
+//                if (stack_size(runtime->stack) > stacksize) {
+//                    Utf8String *us = utf8_create_copy(methodInfo->descriptor);
+//                    utf8_substring(us, utf8_indexof_c(us, ")") + 1, us->length);
+//                    vt.type = getJdwpTag(us);
+//                    switch (getSimpleTag(vt.type)) {
+//                        case '8':
+//                            vt.value = pop_long(runtime->stack);
+//                            break;
+//                        case 'R': {
+//                            __refer r = pop_ref(runtime->stack);
+//                            vt.type = getInstanceOfClassTag(r);//recorrect type, may be Arraylist<String>
+//                            vt.value = (s64) (intptr_t) r;
+//                            jdwp_client_hold_obj(client, runtime, r);
+//
+////                            if (vt.type == 's') {
+////                                s32 debug = 1;
+////                                Utf8String *ustr = utf8_create();
+////                                jstring_2_utf8((Instance *) r, ustr);
+////                                utf8_destory(ustr);
+////                            }
+//                            break;
+//                        }
+//                        default:
+//                            vt.value = pop_int(runtime->stack);
+//                    }
+//                    utf8_destory(us);
+//                }
+//                writeValueType(res, &vt);
+//                vt.type = 'L';
+//                vt.value = 0;
+//                writeValueType(res, &vt);
+//                jdwp_writepacket(client, res);
+//                jthread_block_enter(runtime);//re-enter native function
 
-                s32 stacksize = stack_size(runtime->stack);
-                if (!(methodInfo->is_static)) {
-                    push_ref(runtime->stack, object);
-                }
-                runtime->clazz = clazz;
-                s32 i;
-                for (i = 0; i < arguments; i++) {
-                    ValueType vt;
-                    readValueType(req, &vt);
-
-                    switch (getSimpleTag(vt.type)) {
-                        case '8':
-                            push_long(runtime->stack, vt.value);
-                            break;
-                        case 'R':
-                            push_ref(runtime->stack, (__refer) (intptr_t) vt.value);
-                            break;
-                        default:
-                            push_int(runtime->stack, (s32) vt.value);
-                    }
-                }
-                s32 ret = execute_method_impl(methodInfo, runtime);
-                if (ret != RUNTIME_STATUS_NORMAL) {
-                    print_exception(runtime);
-                }
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
-
-                ValueType vt;
-                memset(&vt, 0, sizeof(ValueType));
-                if (stack_size(runtime->stack) > stacksize) {
-                    Utf8String *us = utf8_create_copy(methodInfo->descriptor);
-                    utf8_substring(us, utf8_indexof_c(us, ")") + 1, us->length);
-                    vt.type = getJdwpTag(us);
-                    switch (getSimpleTag(vt.type)) {
-                        case '8':
-                            vt.value = pop_long(runtime->stack);
-                            break;
-                        case 'R': {
-                            __refer r = pop_ref(runtime->stack);
-                            vt.type = getInstanceOfClassTag(r);//recorrect type, may be Arraylist<String>
-                            vt.value = (s64) (intptr_t) r;
-                            jdwp_client_hold_obj(client, runtime, r);
-
-//                            if (vt.type == 's') {
-//                                s32 debug = 1;
-//                                Utf8String *ustr = utf8_create();
-//                                jstring_2_utf8((Instance *) r, ustr);
-//                                utf8_destory(ustr);
-//                            }
-                            break;
-                        }
-                        default:
-                            vt.value = pop_int(runtime->stack);
-                    }
-                    utf8_destory(us);
-                }
-                writeValueType(res, &vt);
-                vt.type = 'L';
-                vt.value = 0;
-                writeValueType(res, &vt);
-                jdwp_writepacket(client, res);
-                jthread_block_enter(runtime);//re-enter native function
+                invoke_method(CALL_MODE_INSTANCE, runtime, req, res, client);
                 break;
             }
             case JDWP_CMD_ObjectReference_DisableCollection: {//9.7

@@ -485,6 +485,10 @@ typedef struct _JdwpStep {
     s32 bytecode_count;
 } JdwpStep;
 
+enum {
+    CALL_MODE_INSTANCE = 0,
+    CALL_MODE_STATIC = 1,
+};
 
 static s32 jdwp_eventset_requestid = 0;
 static s32 jdwp_eventset_commandid = 0;
