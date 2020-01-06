@@ -404,4 +404,8 @@ abstract public class GObject {
             focusListener.focusGot(oldgo);
         }
     }
+
+    public String toString() {
+        return super.toString() + "(" + boundle[LEFT] + "," + boundle[TOP] + "," + boundle[WIDTH] + "," + boundle[HEIGHT] + ")";
+    }
 }

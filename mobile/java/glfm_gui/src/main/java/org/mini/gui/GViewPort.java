@@ -5,11 +5,13 @@
  */
 package org.mini.gui;
 
-import org.mini.glfm.Glfm;
-
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import org.mini.glfm.Glfm;
+
+import static org.mini.gui.GObject.flush;
 
 /**
  * @author Gust
@@ -33,7 +35,7 @@ public class GViewPort extends GContainer {
         if (parent != null) {
             parent.reBoundle();
         }
-        setInnerLocation(x, y);
+//        setInnerLocation(x, y);
     }
 
     @Override
@@ -43,7 +45,7 @@ public class GViewPort extends GContainer {
         if (parent != null) {
             parent.reBoundle();
         }
-        setInnerSize(w, h);
+//        setInnerSize(w, h);
         reBoundle();
     }
 
@@ -101,6 +103,8 @@ public class GViewPort extends GContainer {
     @Override
     public void setInnerLocation(float x, float y) {
         super.setLocation(x, y);
+        setScrollX(-x / getOutOfViewWidth());
+        setScrollY(-y / getOutOfViewHeight());
     }
 
     @Override
@@ -167,6 +171,9 @@ public class GViewPort extends GContainer {
         }
         this.boundle[WIDTH] = maxX - minX;
         this.boundle[HEIGHT] = maxY - minY;
+        if (this instanceof GViewSlot) {
+            int debug = 1;
+        }
         if (boundle[WIDTH] <= viewBoundle[WIDTH]) {
             boundle[LEFT] = viewBoundle[LEFT];
         }
@@ -244,10 +251,9 @@ public class GViewPort extends GContainer {
                     float inh = getInnerH();
                     if (inh > 0) {
                         float vec = (float) speedY / inh;
-                        moveY(vec);
+                        movePercentY(vec);
                         tmpScrollY -= vec;
                         //System.out.println("dy:" + ((float) speedY / dh));
-                        //System.out.println("count:" + count + " speedY :" + speedY + " dh:" + inh + " res:" + resistance + " sy :" + scrolly + " vec:" + vec);
                     }
                     flush();
                     if (count++ > maxMoveCount || tmpScrollY < 0 || tmpScrollY > 1) {
@@ -275,11 +281,11 @@ public class GViewPort extends GContainer {
                     //System.out.println(this + " inertia X " + speedX + " , " + resistance + " , " + count);
                     speedX -= resistance;//速度和阴力抵消为0时,退出滑动
 
-                    float dw = getInnerW();
+                    float inw = getInnerW();
                     float tmpScrollX = scrollx;
-                    if (dw > 0) {
-                        float vec = (float) speedX / dw;
-                        moveX(vec);
+                    if (inw > 0) {
+                        float vec = (float) speedX / inw;
+                        movePercentX(vec);
                         tmpScrollX -= vec;
                         //System.out.println("dx:" + ((float) speedX / dw));
                     }
@@ -334,15 +340,15 @@ public class GViewPort extends GContainer {
         float odx = (dw == 0) ? 0.f : (float) dx / dw;
         float ody = (dh == 0) ? 0.f : (float) dy / dh;
         if (dragDirection == DIR_X) {
-            return moveX(odx);
+            return movePercentX(odx);
         } else if (dragDirection == DIR_Y) {
-            return moveY(ody);
+            return movePercentY(ody);
         } else {
             return false;
         }
     }
 
-    boolean moveY(float dy) {
+    boolean movePercentY(float dy) {
         if (getOutOfViewHeight() <= 0) {
             return false;
         }
@@ -362,7 +368,7 @@ public class GViewPort extends GContainer {
         return false;
     }
 
-    boolean moveX(float dx) {
+    boolean movePercentX(float dx) {
         if (getOutOfViewWidth() <= 0) {
             return false;
         }
