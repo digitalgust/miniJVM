@@ -469,19 +469,23 @@ public class GTextBox extends GTextObject {
 
             @Override
             public void run() {
-                speed -= resistance;//速度和阴力抵消为0时,退出滑动
-                //System.out.println("count :" + count + "    inertia :" + speed + "    resistance :" + resistance);
+                try {
+                    speed -= resistance;//速度和阴力抵消为0时,退出滑动
+                    //System.out.println("count :" + count + "    inertia :" + speed + "    resistance :" + resistance);
 
-                float dh = getOutOfShowAreaHeight();
-                if (dh > 0) {
-                    setScroll(scroll - (float) speed / dh);
-                }
-                flush();
-                if (count++ > maxMoveCount) {
-                    try {
-                        this.cancel();
-                    } catch (Exception e) {
+                    float dh = getOutOfShowAreaHeight();
+                    if (dh > 0) {
+                        setScroll(scroll - (float) speed / dh);
                     }
+                    flush();
+                    if (count++ > maxMoveCount) {
+                        try {
+                            this.cancel();
+                        } catch (Exception e) {
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         };

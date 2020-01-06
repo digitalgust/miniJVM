@@ -5,40 +5,21 @@ package org.mini.glfw;
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-import java.io.File;
 import org.mini.apploader.AppLoader;
-import static org.mini.gl.GL.GL_TRUE;
-import static org.mini.glfw.Glfw.GLFW_CONTEXT_VERSION_MAJOR;
-import static org.mini.glfw.Glfw.GLFW_CONTEXT_VERSION_MINOR;
-import static org.mini.glfw.Glfw.GLFW_DEPTH_BITS;
-import static org.mini.glfw.Glfw.GLFW_KEY_ESCAPE;
-import static org.mini.glfw.Glfw.GLFW_OPENGL_CORE_PROFILE;
-import static org.mini.glfw.Glfw.GLFW_OPENGL_FORWARD_COMPAT;
-import static org.mini.glfw.Glfw.GLFW_OPENGL_PROFILE;
-import static org.mini.glfw.Glfw.GLFW_PRESS;
-import static org.mini.glfw.Glfw.GLFW_TRANSPARENT_FRAMEBUFFER;
-import static org.mini.glfw.Glfw.GLFW_TRUE;
-import static org.mini.glfw.Glfw.glfwGetFramebufferHeight;
-import static org.mini.glfw.Glfw.glfwGetFramebufferWidth;
-import static org.mini.glfw.Glfw.glfwPollEvents;
-import static org.mini.glfw.Glfw.glfwSetWindowShouldClose;
-import static org.mini.glfw.Glfw.glfwSwapBuffers;
-import static org.mini.glfw.Glfw.glfwSwapInterval;
-import static org.mini.glfw.Glfw.glfwTerminate;
-import static org.mini.glfw.Glfw.glfwWindowHint;
-import static org.mini.glfw.Glfw.glfwWindowShouldClose;
 import org.mini.gui.GApplication;
 import org.mini.gui.GForm;
 import org.mini.gui.GObject;
 import org.mini.gui.GToolkit;
-import static org.mini.gui.GObject.HEIGHT;
-import static org.mini.gui.GObject.WIDTH;
 import org.mini.guijni.GuiCallBack;
 import org.mini.nanovg.Gutil;
-import static org.mini.nanovg.Nanovg.NVG_ANTIALIAS;
-import static org.mini.nanovg.Nanovg.NVG_STENCIL_STROKES;
-import static org.mini.nanovg.Nanovg.nvgCreateGL3;
-import static org.mini.nanovg.Nanovg.nvgDeleteGL3;
+
+import java.io.File;
+
+import static org.mini.gl.GL.GL_TRUE;
+import static org.mini.glfw.Glfw.*;
+import static org.mini.gui.GObject.HEIGHT;
+import static org.mini.gui.GObject.WIDTH;
+import static org.mini.nanovg.Nanovg.*;
 
 /**
  *
@@ -132,15 +113,15 @@ public class GlfwCallBackImpl extends GuiCallBack {
                 glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
                 glfwWindowHint(Glfw.GLFW_COCOA_RETINA_FRAMEBUFFER, GL_TRUE);
             } else if (osname.contains("Linux")) {
-//                glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+                glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
             }
         }
-//        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 
         glfwWindowHint(GLFW_DEPTH_BITS, 16);
-//        glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
+        glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 
         display = Glfw.glfwCreateWindow(winWidth, winHeight, Gutil.toUtf8(""), 0, 0);
         if (display == 0) {

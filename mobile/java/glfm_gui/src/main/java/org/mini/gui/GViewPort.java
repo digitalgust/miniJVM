@@ -5,13 +5,11 @@
  */
 package org.mini.gui;
 
+import org.mini.glfm.Glfm;
+
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import org.mini.glfm.Glfm;
-
-import static org.mini.gui.GObject.flush;
 
 /**
  * @author Gust
@@ -147,26 +145,28 @@ public class GViewPort extends GContainer {
         minY = 0;
         maxX = minX + viewBoundle[WIDTH];
         maxY = minY + viewBoundle[HEIGHT];
-        for (GObject nko : elements) {
-            float[] bond = null;
-            if (nko instanceof GContainer) {
-                GContainer con = (GContainer) nko;
-                bond = con.getBoundle();
+        synchronized (elements) {
+            for (GObject nko : elements) {
+                float[] bond = null;
+                if (nko instanceof GContainer) {
+                    GContainer con = (GContainer) nko;
+                    bond = con.getBoundle();
 
-            } else {
-                bond = nko.getBoundle();
-            }
-            if (bond[LEFT] < minX) {
-                minX = bond[LEFT];
-            }
-            if (bond[LEFT] + bond[WIDTH] > maxX) {
-                maxX = bond[LEFT] + bond[WIDTH];
-            }
-            if (bond[TOP] < minY) {
-                minY = bond[TOP];
-            }
-            if (bond[TOP] + bond[HEIGHT] > maxY) {
-                maxY = bond[TOP] + bond[HEIGHT];
+                } else {
+                    bond = nko.getBoundle();
+                }
+                if (bond[LEFT] < minX) {
+                    minX = bond[LEFT];
+                }
+                if (bond[LEFT] + bond[WIDTH] > maxX) {
+                    maxX = bond[LEFT] + bond[WIDTH];
+                }
+                if (bond[TOP] < minY) {
+                    minY = bond[TOP];
+                }
+                if (bond[TOP] + bond[HEIGHT] > maxY) {
+                    maxY = bond[TOP] + bond[HEIGHT];
+                }
             }
         }
         this.boundle[WIDTH] = maxX - minX;
@@ -214,7 +214,7 @@ public class GViewPort extends GContainer {
     //总共做多少次操作
     long maxMoveCount = 120;
     //初速度加成
-    float addOn = 1.2f;
+    float addOn = 1.5f;
     //惯性任务
     TimerTask task;
 
@@ -244,23 +244,27 @@ public class GViewPort extends GContainer {
 
                 @Override
                 public void run() {
-                    //System.out.println(this + " inertia Y " + speedY + " , " + resistance + " , " + count);
-                    speedY -= resistance;//速度和阻力抵消为0时,退出滑动
+                    try {
+                        //System.out.println(this + " inertia Y " + speedY + " , " + resistance + " , " + count);
+                        speedY -= resistance;//速度和阻力抵消为0时,退出滑动
 
-                    float tmpScrollY = scrolly;
-                    float inh = getInnerH();
-                    if (inh > 0) {
-                        float vec = (float) speedY / inh;
-                        movePercentY(vec);
-                        tmpScrollY -= vec;
-                        //System.out.println("dy:" + ((float) speedY / dh));
-                    }
-                    flush();
-                    if (count++ > maxMoveCount || tmpScrollY < 0 || tmpScrollY > 1) {
-                        try {
-                            this.cancel();
-                        } catch (Exception e) {
+                        float tmpScrollY = scrolly;
+                        float inh = getInnerH();
+                        if (inh > 0) {
+                            float vec = (float) speedY / inh;
+                            movePercentY(vec);
+                            tmpScrollY -= vec;
+                            //System.out.println("dy:" + ((float) speedY / dh));
                         }
+                        flush();
+                        if (count++ > maxMoveCount || tmpScrollY < 0 || tmpScrollY > 1) {
+                            try {
+                                this.cancel();
+                            } catch (Exception e) {
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
             };
@@ -278,23 +282,27 @@ public class GViewPort extends GContainer {
 
                 @Override
                 public void run() {
-                    //System.out.println(this + " inertia X " + speedX + " , " + resistance + " , " + count);
-                    speedX -= resistance;//速度和阴力抵消为0时,退出滑动
+                    try {
+                        //System.out.println(this + " inertia X " + speedX + " , " + resistance + " , " + count);
+                        speedX -= resistance;//速度和阴力抵消为0时,退出滑动
 
-                    float inw = getInnerW();
-                    float tmpScrollX = scrollx;
-                    if (inw > 0) {
-                        float vec = (float) speedX / inw;
-                        movePercentX(vec);
-                        tmpScrollX -= vec;
-                        //System.out.println("dx:" + ((float) speedX / dw));
-                    }
-                    flush();
-                    if (count++ > maxMoveCount || tmpScrollX < 0 || tmpScrollX > 1) {
-                        try {
-                            this.cancel();
-                        } catch (Exception e) {
+                        float inw = getInnerW();
+                        float tmpScrollX = scrollx;
+                        if (inw > 0) {
+                            float vec = (float) speedX / inw;
+                            movePercentX(vec);
+                            tmpScrollX -= vec;
+                            //System.out.println("dx:" + ((float) speedX / dw));
                         }
+                        flush();
+                        if (count++ > maxMoveCount || tmpScrollX < 0 || tmpScrollX > 1) {
+                            try {
+                                this.cancel();
+                            } catch (Exception e) {
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
             };

@@ -140,26 +140,30 @@ public class GViewSlot extends GViewPort {
         }
 
         public void run() {
-            curTime = System.currentTimeMillis();
-            long goTime = curTime - startAt;
-            if ((distX == 0 && scrollMode == SCROLL_MODE_HORIZONTAL)
-                    || (distY == 0 && scrollMode == SCROLL_MODE_VERTICAL)) {
-                cancel();
-                return;
-            }
+            try {
+                curTime = System.currentTimeMillis();
+                long goTime = curTime - startAt;
+                if ((distX == 0 && scrollMode == SCROLL_MODE_HORIZONTAL)
+                        || (distY == 0 && scrollMode == SCROLL_MODE_VERTICAL)) {
+                    cancel();
+                    return;
+                }
 
-            float curX, curY;
-            if (goTime < timeInMils) {
-                curX = slotOrignalX - distX * goTime / timeInMils;
-                curY = slotOrignalY - distY * goTime / timeInMils;
-            } else {
-                curX = slotOrignalX - distX;
-                curY = slotOrignalY - distY;
-                cancel();
+                float curX, curY;
+                if (goTime < timeInMils) {
+                    curX = slotOrignalX - distX * goTime / timeInMils;
+                    curY = slotOrignalY - distY * goTime / timeInMils;
+                } else {
+                    curX = slotOrignalX - distX;
+                    curY = slotOrignalY - distY;
+                    cancel();
+                }
+                slots.setInnerLocation(curX, curY);
+                //System.out.println("==slot(" + slots.getInnerX() + "," + slots.getInnerY() + "), from:" + from + "to:" + to + ")");
+                from.flush();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            slots.setInnerLocation(curX, curY);
-            //System.out.println("==slot(" + slots.getInnerX() + "," + slots.getInnerY() + "), from:" + from + "to:" + to + ")");
-            from.flush();
         }
     }
 
@@ -207,6 +211,7 @@ public class GViewSlot extends GViewPort {
     }
 
     public boolean dragEvent(float dx, float dy, float x, float y) {
+
         GObject found = findByXY(x, y);
         if (found instanceof GMenu) {
             return found.dragEvent(dx, dy, x, y);
@@ -218,6 +223,7 @@ public class GViewSlot extends GViewPort {
         if (focus != null && focus.dragEvent(dx, dy, x, y)) {
             return true;
         }
+        //System.out.println("drag " + x + "," + y + "," + dx + "," + dy);
         reBoundle();
         float dw = getOutOfViewWidth();
         float dh = getOutOfViewHeight();
@@ -225,7 +231,7 @@ public class GViewSlot extends GViewPort {
             return false;
         }
         if (dragDirection == DIR_NODEF) {
-            if (Math.abs(dx) > Math.abs(dy)) {
+            if (SCROLL_MODE_HORIZONTAL == scrollMode) {
                 dragDirection = DIR_X;
             } else {
                 dragDirection = DIR_Y;
@@ -257,5 +263,16 @@ public class GViewSlot extends GViewPort {
         }
     }
 
+    @Override
+    public boolean inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
+
+        GObject go = findByXY(x1, y1);
+        if (go != null) {
+            if (go.inertiaEvent(x1, y1, x2, y2, moveTime)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 }
