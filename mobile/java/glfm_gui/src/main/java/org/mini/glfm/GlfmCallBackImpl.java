@@ -12,12 +12,12 @@ import org.mini.gui.GObject;
 import org.mini.gui.GToolkit;
 import org.mini.guijni.GuiCallBack;
 import org.mini.nanovg.Nanovg;
+
 import static org.mini.nanovg.Nanovg.NVG_ANTIALIAS;
 import static org.mini.nanovg.Nanovg.NVG_DEBUG;
 import static org.mini.nanovg.Nanovg.NVG_STENCIL_STROKES;
 
 /**
- *
  * @author Gust
  */
 public class GlfmCallBackImpl extends GuiCallBack {
@@ -30,10 +30,10 @@ public class GlfmCallBackImpl extends GuiCallBack {
     public int mouseX, mouseY, lastX, lastY;
     long mouseLastPressed;
     int LONG_TOUCH_TIME = 500;
-    int LONG_TOUCH_MAX_DISTANCE = 5;//移动距离超过40单位时可以产生惯性
+    int LONG_TOUCH_MAX_DISTANCE = 5;//
 
-    int INERTIA_MIN_DISTANCE = 20;//移动距离超过40单位时可以产生惯性
-    int INERTIA_MAX_MILLS = 300;//在300毫秒内的滑动可以产生惯性
+    int INERTIA_MIN_DISTANCE = 10;//移动距离超过xx单位时可以产生惯性
+    int INERTIA_MAX_MILLS = 200;//在300毫秒内的滑动可以产生惯性
 
     //
     double moveStartX;
@@ -241,6 +241,12 @@ public class GlfmCallBackImpl extends GuiCallBack {
                 }
                 case Glfm.GLFMTouchPhaseMoved: {//
                     form.dragEvent(mouseX - lastX, mouseY - lastY, mouseX, mouseY);
+                    long cost = System.currentTimeMillis() - moveStartAt;
+                    if (cost > INERTIA_MAX_MILLS) {//reset
+                        moveStartX = x;
+                        moveStartY = y;
+                        moveStartAt = System.currentTimeMillis();
+                    }
                     break;
                 }
                 case Glfm.GLFMTouchPhaseHover: {//

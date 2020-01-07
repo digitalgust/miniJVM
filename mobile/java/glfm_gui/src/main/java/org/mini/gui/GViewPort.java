@@ -252,7 +252,9 @@ public class GViewPort extends GContainer {
                         float inh = getInnerH();
                         if (inh > 0) {
                             float vec = (float) speedY / inh;
-                            movePercentY(vec);
+                            synchronized (elements){
+                                movePercentY(vec);
+                            }
                             tmpScrollY -= vec;
                             //System.out.println("dy:" + ((float) speedY / dh));
                         }
@@ -290,7 +292,9 @@ public class GViewPort extends GContainer {
                         float tmpScrollX = scrollx;
                         if (inw > 0) {
                             float vec = (float) speedX / inw;
-                            movePercentX(vec);
+                            synchronized (elements){
+                                movePercentX(vec);
+                            }
                             tmpScrollX -= vec;
                             //System.out.println("dx:" + ((float) speedX / dw));
                         }
