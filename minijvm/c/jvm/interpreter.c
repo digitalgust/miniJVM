@@ -3451,9 +3451,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             u16 idx = *((u16 *) (ip + 1));
                             FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             c8 *ptr = getStaticFieldPtr(fi);
-                            if (fi->isvolatile) {
-                                barrier();
-                            }
+
                             push_ref(stack, getFieldRefer(ptr));
                             ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
@@ -3467,9 +3465,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             u16 idx = *((u16 *) (ip + 1));
                             FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             c8 *ptr = getStaticFieldPtr(fi);
-                            if (fi->isvolatile) {
-                                barrier();
-                            }
                             push_long(stack, getFieldLong(ptr));
                             ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
@@ -3483,9 +3478,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             u16 idx = *((u16 *) (ip + 1));
                             FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             c8 *ptr = getStaticFieldPtr(fi);
-                            if (fi->isvolatile) {
-                                barrier();
-                            }
                             push_int(stack, getFieldInt(ptr));
                             ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
@@ -3499,9 +3491,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             u16 idx = *((u16 *) (ip + 1));
                             FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             c8 *ptr = getStaticFieldPtr(fi);
-                            if (fi->isvolatile) {
-                                barrier();
-                            }
                             push_int(stack, getFieldShort(ptr));
                             ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
@@ -3515,9 +3504,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             u16 idx = *((u16 *) (ip + 1));
                             FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             c8 *ptr = getStaticFieldPtr(fi);
-                            if (fi->isvolatile) {
-                                barrier();
-                            }
                             push_int(stack, getFieldChar(ptr));
                             ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
@@ -3531,9 +3517,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             u16 idx = *((u16 *) (ip + 1));
                             FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             c8 *ptr = getStaticFieldPtr(fi);
-                            if (fi->isvolatile) {
-                                barrier();
-                            }
                             push_int(stack, getFieldByte(ptr));
                             ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
@@ -3622,9 +3605,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                                 c8 *ptr = getInstanceFieldPtr(ins, fi);
 
-                                if (fi->isvolatile) {
-                                    barrier();
-                                }
                                 push_ref(stack, getFieldRefer(ptr));
                                 ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
@@ -3647,9 +3627,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                                 c8 *ptr = getInstanceFieldPtr(ins, fi);
 
-                                if (fi->isvolatile) {
-                                    barrier();
-                                }
                                 push_long(stack, getFieldLong(ptr));
                                 ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
@@ -3672,9 +3649,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                                 c8 *ptr = getInstanceFieldPtr(ins, fi);
 
-                                if (fi->isvolatile) {
-                                    barrier();
-                                }
                                 push_int(stack, getFieldInt(ptr));
                                 ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
@@ -3697,9 +3671,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                                 c8 *ptr = getInstanceFieldPtr(ins, fi);
 
-                                if (fi->isvolatile) {
-                                    barrier();
-                                }
                                 push_int(stack, getFieldShort(ptr));
                                 ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
@@ -3722,9 +3693,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                                 c8 *ptr = getInstanceFieldPtr(ins, fi);
 
-                                if (fi->isvolatile) {
-                                    barrier();
-                                }
                                 push_int(stack, getFieldChar(ptr));
                                 ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
@@ -3747,9 +3715,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                                 c8 *ptr = getInstanceFieldPtr(ins, fi);
 
-                                if (fi->isvolatile) {
-                                    barrier();
-                                }
                                 push_int(stack, getFieldByte(ptr));
                                 ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
