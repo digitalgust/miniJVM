@@ -38,6 +38,8 @@ public class GlfmCallBackImpl extends GuiCallBack {
     //
     double moveStartX;
     double moveStartY;
+    double longStartX;
+    double longStartY;
     long moveStartAt;
 
     GApplication gapp;
@@ -218,8 +220,8 @@ public class GlfmCallBackImpl extends GuiCallBack {
                     mouseLastPressed = cur;
 
                     //处理惯性
-                    moveStartX = x;
-                    moveStartY = y;
+                    longStartX = moveStartX = x;
+                    longStartY = moveStartY = y;
                     moveStartAt = System.currentTimeMillis();
                     break;
                 }
@@ -231,7 +233,7 @@ public class GlfmCallBackImpl extends GuiCallBack {
                         form.inertiaEvent((float) moveStartX, (float) moveStartY, (float) x, (float) y, cost);
                     }
                     //检测长按
-                    long_touched = cur - mouseLastPressed > LONG_TOUCH_TIME && Math.abs(x - moveStartX) < LONG_TOUCH_MAX_DISTANCE && Math.abs(y - moveStartY) < LONG_TOUCH_MAX_DISTANCE;
+                    long_touched = cur - mouseLastPressed > LONG_TOUCH_TIME && Math.abs(x - longStartX) < LONG_TOUCH_MAX_DISTANCE && Math.abs(y - longStartY) < LONG_TOUCH_MAX_DISTANCE;
 
                     //处理惯性
                     moveStartX = 0;

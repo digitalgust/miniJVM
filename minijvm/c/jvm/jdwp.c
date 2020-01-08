@@ -2017,10 +2017,12 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
                 break;
             }
             case JDWP_CMD_ObjectReference_IsCollected: {//9.9
+                jthread_block_exit(runtime);
                 Instance *obj = (Instance *) jdwppacket_read_refer(req);
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
                 jdwppacket_write_byte(res, !gc_is_alive(obj));
                 jdwp_writepacket(client, res);
+                jthread_block_enter(runtime);
                 break;
             }
 //set 10
@@ -2238,26 +2240,26 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
 //set 13
             case JDWP_CMD_ArrayReference_Length: {//13.1
                 Instance *arr = jdwppacket_read_refer(req);
-                if (gc_is_alive(arr)) {
-                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                    jdwppacket_write_int(res, arr->arr_length);
-                } else {
-                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_ARRAY);
-                }
+//                if (gc_is_alive(arr)) {
+                jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                jdwppacket_write_int(res, arr->arr_length);
+//                } else {
+//                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_ARRAY);
+//                }
                 //jvm_printf("[JDWP]ArrayReference_Length:%d\n", arr->arr_length);
                 jdwp_writepacket(client, res);
                 break;
             }
             case JDWP_CMD_ArrayReference_GetValues: {//13.2
                 Instance *arr = jdwppacket_read_refer(req);
-                if (gc_is_alive(arr)) {
-                    s32 firstIndex = jdwppacket_read_int(req);
-                    s32 length = jdwppacket_read_int(req);
-                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                    writeArrayRegion(res, arr, firstIndex, length);
-                } else {
-                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_ARRAY);
-                }
+//                if (gc_is_alive(arr)) {
+                s32 firstIndex = jdwppacket_read_int(req);
+                s32 length = jdwppacket_read_int(req);
+                jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                writeArrayRegion(res, arr, firstIndex, length);
+//                } else {
+//                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_ARRAY);
+//                }
                 jdwp_writepacket(client, res);
                 //jvm_printf("[JDWP]ArrayReference_GetValues:%llx\n", arr);
                 break;
