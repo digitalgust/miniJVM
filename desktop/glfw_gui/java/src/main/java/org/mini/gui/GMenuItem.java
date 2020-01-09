@@ -7,16 +7,11 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
+import org.mini.nanovg.Nanovg;
+
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Gutil.toUtf8;
-import org.mini.nanovg.Nanovg;
-import static org.mini.nanovg.Nanovg.nvgBeginPath;
-import static org.mini.nanovg.Nanovg.nvgFill;
-import static org.mini.nanovg.Nanovg.nvgFillColor;
-import static org.mini.nanovg.Nanovg.nvgFillPaint;
-import static org.mini.nanovg.Nanovg.nvgImagePattern;
-import static org.mini.nanovg.Nanovg.nvgRoundedRect;
-import static org.mini.nanovg.Nanovg.nvgTextMetrics;
+import static org.mini.nanovg.Nanovg.*;
 
 /**
  *
@@ -86,9 +81,9 @@ public class GMenuItem extends GObject {
         if (isInArea(x, y)) {
             if (phase == Glfm.GLFMTouchPhaseBegan) {
                 touched = true;
-                doAction();
             } else if (phase == Glfm.GLFMTouchPhaseEnded) {
                 touched = false;
+                doAction();
             }
         }
 

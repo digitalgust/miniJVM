@@ -29,7 +29,7 @@ public class GlfmCallBackImpl extends GuiCallBack {
 
     public int mouseX, mouseY, lastX, lastY;
     long mouseLastPressed;
-    int LONG_TOUCH_TIME = 500;
+    int LONG_TOUCH_TIME = 350;
     int LONG_TOUCH_MAX_DISTANCE = 5;//
 
     int INERTIA_MIN_DISTANCE = 10;//移动距离超过xx单位时可以产生惯性

@@ -7,26 +7,13 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
-import static org.mini.gui.GObject.HEIGHT;
-import static org.mini.gui.GObject.isInBoundle;
+import org.mini.nanovg.Nanovg;
+
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Gutil.toUtf8;
-import org.mini.nanovg.Nanovg;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_CENTER;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_LEFT;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_MIDDLE;
-import static org.mini.nanovg.Nanovg.nvgCreateNVGglyphPosition;
-import static org.mini.nanovg.Nanovg.nvgFillColor;
-import static org.mini.nanovg.Nanovg.nvgFontFace;
-import static org.mini.nanovg.Nanovg.nvgFontSize;
-import static org.mini.nanovg.Nanovg.nvgNVGglyphPosition_x;
-import static org.mini.nanovg.Nanovg.nvgTextAlign;
-import static org.mini.nanovg.Nanovg.nvgTextGlyphPositionsJni;
-import static org.mini.nanovg.Nanovg.nvgTextJni;
-import static org.mini.nanovg.Nanovg.nvgTextMetrics;
+import static org.mini.nanovg.Nanovg.*;
 
 /**
- *
  * @author gust
  */
 public class GTextField extends GTextObject {
@@ -107,11 +94,11 @@ public class GTextField extends GTextObject {
                 } else if (isInBoundle(reset_boundle, rx, ry)) {
                     deleteAll();
                     resetSelect();
-                    disposeEditMenu();
+                    if (GToolkit.getEditMenu() != null) GToolkit.getEditMenu().dispose();
                 } else {
                     if (selectMode) {
                         resetSelect();
-                        disposeEditMenu();
+                        if (GToolkit.getEditMenu() != null) GToolkit.getEditMenu().dispose();
                     }
                     setCaretIndex(getCaretIndex(x, y));
                 }
@@ -119,7 +106,7 @@ public class GTextField extends GTextObject {
                 if (pressed) {
 
                 } else {
-                    callEditMenu(this, x, y);
+                    GToolkit.callEditMenu(this, x, y);
                 }
             }
         }
@@ -164,11 +151,11 @@ public class GTextField extends GTextObject {
                 if (isInBoundle(reset_boundle, rx, ry)) {
                     deleteAll();
                     resetSelect();
-                    disposeEditMenu();
+                    if (GToolkit.getEditMenu() != null) GToolkit.getEditMenu().dispose();
                 } else {
                     if (selectMode) {
                         resetSelect();
-                        disposeEditMenu();
+                        if (GToolkit.getEditMenu() != null) GToolkit.getEditMenu().dispose();
                     }
                     setCaretIndex(getCaretIndex(x, y));
                 }
@@ -190,7 +177,6 @@ public class GTextField extends GTextObject {
     }
 
     /**
-     *
      * @param character
      */
     @Override
@@ -313,7 +299,6 @@ public class GTextField extends GTextObject {
     }
 
     /**
-     *
      * @param vg
      * @return
      */

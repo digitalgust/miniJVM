@@ -166,7 +166,7 @@ public class GTextBox extends GTextObject {
                 if (pressed) {
 
                 } else {
-                    callEditMenu(this, x, y);
+                    GToolkit.callEditMenu(this, x, y);
                 }
             }
 
@@ -327,7 +327,7 @@ public class GTextBox extends GTextObject {
                 case Glfm.GLFMTouchPhaseEnded: {
                     if (selectMode) {
                         if (selectStart != -1) {
-                            callEditMenu(this, x, y);
+                            GToolkit.callEditMenu(this, x, y);
                         }
                     }
                     break;
