@@ -5,12 +5,12 @@
  */
 package org.mini.media;
 
-import java.util.HashMap;
-import java.util.Map;
 import org.mini.reflect.DirectMemObj;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- *
  * @author Gust
  */
 public class AudioDevice {
@@ -146,16 +146,14 @@ public class AudioDevice {
 
     /**
      * =================================================================================================
-     *
+     * <p>
      * follow on... methods would call by native
      * =================================================================================================
-     *
      */
     static Map<Long, AudioDevice> devices = new HashMap();
     static Thread curThread;
 
     /**
-     *
      * @param pDevice
      * @param frameCount
      * @param pSamples

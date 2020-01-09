@@ -649,6 +649,10 @@ public class GToolkit {
         return editMenu;
     }
 
+    static public void disposeEditMenu() {
+        if (editMenu != null) editMenu.dispose();
+    }
+
     static public class EditMenu extends GMenu {
 
         boolean shown = false;

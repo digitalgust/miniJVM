@@ -5,6 +5,7 @@ package org.mini.glfw;
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+
 import org.mini.apploader.AppLoader;
 import org.mini.gui.GApplication;
 import org.mini.gui.GForm;
@@ -22,7 +23,6 @@ import static org.mini.gui.GObject.WIDTH;
 import static org.mini.nanovg.Nanovg.*;
 
 /**
- *
  * @author Gust
  */
 public class GlfwCallBackImpl extends GuiCallBack {
@@ -241,6 +241,7 @@ public class GlfwCallBackImpl extends GuiCallBack {
                         drag = true;
                         hoverX = mouseX;
                         hoverY = mouseY;
+                        //gform.longTouchedEvent(mouseX, mouseY);
                     } else {
                         drag = false;
                     }

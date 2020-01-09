@@ -160,6 +160,7 @@ public class GTextBox extends GTextObject {
                     mouseDrag = false;
                     if (selectEnd == -1 || selectStart == selectEnd) {
                         resetSelect();
+                        GToolkit.disposeEditMenu();
                     }
                 }
             } else if (button == Glfw.GLFW_MOUSE_BUTTON_2) {
@@ -335,12 +336,13 @@ public class GTextBox extends GTextObject {
                 case Glfm.GLFMTouchPhaseMoved: {
                     if (selectMode) {
                         int caret = getCaretIndexFromArea(x, y);
+                        int mid = selectStart + (selectEnd - selectStart) / 2;
                         if (adjustSelStart) {
-                            if (caret < selectEnd) {
+                            if (caret < mid) {
                                 selectStart = caret;
 
                             }
-                        } else if (caret > selectStart) {
+                        } else if (caret > mid) {
                             selectEnd = caret;
                             setCaretIndex(selectEnd);
                         }
@@ -498,19 +500,26 @@ public class GTextBox extends GTextObject {
 
     @Override
     public boolean scrollEvent(float scrollX, float scrollY, float x, float y) {
-        return dragEvent(scrollX, scrollY, x, y);
+        float dh = getOutOfShowAreaHeight();
+        if (dh > 0) {
+            return setScroll(scroll - (float) scrollY / dh);
+        }
+        return true;
     }
 
     @Override
     public boolean dragEvent(float dx, float dy, float x, float y) {
-        if (selectMode || mouseDrag) {
+        if (mouseDrag) {
+            return true;
+        }
+        if (selectMode) {
             return false;
         }
         float dh = getOutOfShowAreaHeight();
         if (dh > 0) {
-            return setScroll(scroll - (float) dy / dh);
+            setScroll(scroll - (float) dy / dh);
         }
-        return false;
+        return true;
     }
 
     boolean setScroll(float p) {
@@ -797,6 +806,7 @@ public class GTextBox extends GTextObject {
                                     if (sel_start > char_starti && sel_start <= char_endi) {
                                         int pos = sel_start - local_detail[curRow][AREA_START];
                                         drawSelX = local_detail[curRow][AREA_DETAIL_ADD + pos];
+                                        drawSelW = row_width - (drawSelX - local_detail[curRow][AREA_DETAIL_ADD]);
                                     }
                                     //本行有选择终点
                                     if (sel_end > char_starti && sel_end <= char_endi + 1) {
@@ -808,7 +818,7 @@ public class GTextBox extends GTextObject {
                                         }
                                     }
 
-                                    if (sel_start >= char_endi + 1 || sel_end < char_starti) {
+                                    if (sel_start >= char_endi + 1 || sel_end <= char_starti) {
                                         //此行没有起点和终点
                                     } else {
                                         //此行有起点或终点,或在起终点之间的整行

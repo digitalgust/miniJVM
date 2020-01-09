@@ -15,7 +15,6 @@ import static org.mini.nanovg.Nanovg.nvgSave;
 import static org.mini.nanovg.Nanovg.nvgScissor;
 
 /**
- *
  * @author gust
  */
 abstract public class GContainer extends GObject {
@@ -304,8 +303,25 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
-        int phase = pressed ? Glfm.GLFMTouchPhaseBegan : Glfm.GLFMTouchPhaseEnded;
-        touchEvent(phase, x, y);
+        GObject found = findByXY(x, y);
+        if (found instanceof GMenu) {
+            if (!((GMenu) found).isContextMenu()) {
+                setFocus(null);
+            }
+            found.mouseButtonEvent(button, pressed, x, y);
+            return;
+        }
+
+        if (focus != null && focus.isInArea(x, y)) {
+            focus.mouseButtonEvent(button, pressed, x, y);
+        } else {
+            if (pressed) {
+                setFocus(found);
+            }
+            if (focus != null) {
+                focus.mouseButtonEvent(button, pressed, x, y);
+            }
+        }
     }
 
     @Override

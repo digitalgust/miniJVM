@@ -5,16 +5,19 @@
  */
 package org.mini.media;
 
+import org.mini.reflect.DirectMemObj;
+import org.mini.zip.Zip;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import static org.mini.media.AudioDevice.getFormatBytes;
-import org.mini.reflect.DirectMemObj;
-import org.mini.zip.Zip;
 
 /**
- *
  * @author Gust
  */
 public class AudioMgr {
@@ -46,6 +49,7 @@ public class AudioMgr {
 //        }
 //    };
     static AudioDevice playDevice;
+    static Timer timer = new Timer();
 
     static public class AudioSource {
 
@@ -72,7 +76,7 @@ public class AudioMgr {
             int bytes = readNeed * AudioDevice.getFormatBytes(capDevice.format);
             byte[] b = new byte[bytes];
             dmo.copyTo(b);
-            System.out.println("onCapture: " + Long.toHexString(pDevice.handle_device) + " , " + frameCount + "  b.len:" + b.length);
+            //System.out.println("onCapture: " + Long.toHexString(pDevice.handle_device) + " , " + frameCount + "  b.len:" + b.length);
             try {
                 baos.write(b);
             } catch (IOException ex) {
@@ -87,6 +91,12 @@ public class AudioMgr {
         public int onPlayback(AudioDevice pDevice, int frameCount, DirectMemObj dmo) {
             Object obj = pDevice.getUserData();
             if (obj == null) {
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        playStop();
+                    }
+                }, 0);
                 return 0;
             } else {
                 AudioSource src = (AudioSource) obj;
@@ -202,6 +212,7 @@ public class AudioMgr {
         }
         playDevice = null;
     }
+
     /**
      * ========================================================================================================
      * capture

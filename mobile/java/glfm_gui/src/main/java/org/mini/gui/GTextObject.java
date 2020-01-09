@@ -127,7 +127,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         if (newgo != unionObj && newgo != this) {
             GForm.hideKeyboard();
         }
-        if (GToolkit.getEditMenu() != null) GToolkit.getEditMenu().dispose();
+        GToolkit.disposeEditMenu();
         touched = false;
     }
 

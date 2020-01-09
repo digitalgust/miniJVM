@@ -94,11 +94,11 @@ public class GTextField extends GTextObject {
                 } else if (isInBoundle(reset_boundle, rx, ry)) {
                     deleteAll();
                     resetSelect();
-                    if (GToolkit.getEditMenu() != null) GToolkit.getEditMenu().dispose();
+                    GToolkit.disposeEditMenu();
                 } else {
                     if (selectMode) {
                         resetSelect();
-                        if (GToolkit.getEditMenu() != null) GToolkit.getEditMenu().dispose();
+                        GToolkit.disposeEditMenu();
                     }
                     setCaretIndex(getCaretIndex(x, y));
                 }
