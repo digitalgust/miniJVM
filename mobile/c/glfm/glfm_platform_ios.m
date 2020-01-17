@@ -25,6 +25,16 @@ void setDeviceToken(GLFMDisplay * display, const char *deviceToken);
 #if defined(GLFM_PLATFORM_IOS) || defined(GLFM_PLATFORM_TVOS)
 
 #import <UIKit/UIKit.h>
+#import <AVFoundation/AVFoundation.h>
+#import <MobileCoreServices/MobileCoreServices.h>
+#import <AssetsLibrary/AssetsLibrary.h>
+#import <AVFoundation/AVFoundation.h>
+
+
+#ifdef NSFoundationVersionNumber_iOS_9_x_Max
+#import <UserNotifications/UserNotifications.h>
+#endif
+
 
 #include <dlfcn.h>
 #include "glfm_platform.h"
@@ -346,6 +356,8 @@ NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__); } whil
 @property(nonatomic, assign) int pickerType;
 @property (nonatomic, retain) NSString *textStore;
 @property (nonatomic, retain) UILabel *inputlabel;
+//@property (nonatomic, retain) UIView *videoPanel;
+//@property (nonatomic, retain) AVPlayer *avplayer;
 
 - (void)takePhotoAction:(int) puid : (int) type;
 - (void)browseAlbum:(int) puid : (int) type;
@@ -550,6 +562,38 @@ NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__); } whil
     [view finishRender];
 }
 
+#pragma mark - Action Methods
+- (void)targetAction:(UIButton*)sender
+{
+    switch (sender.tag) {
+        case 555: { //close
+            UIView *videoPanel = sender.superview;
+            AVPlayer *avplayer = [videoPanel.layer valueForKey:@"AVPLAYER"];
+            [avplayer pause];
+                    [videoPanel removeFromSuperview];
+            [[AVPlayerLayer playerLayerWithPlayer:avplayer] removeFromSuperlayer];
+            avplayer = NULL;
+            break;
+        }
+
+        case 557: { //播放
+            UIView *videoPanel = sender.superview;
+            AVPlayer *avplayer = [videoPanel.layer valueForKey:@"AVPLAYER"];
+            [avplayer play];
+            break;
+        }
+        case 556: { //暂停
+            UIView *videoPanel = sender.superview;
+            AVPlayer *avplayer = [videoPanel.layer valueForKey:@"AVPLAYER"];
+            [avplayer pause];
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+
 #pragma mark - UIResponder
 
 - (void)clearTouches {
@@ -592,25 +636,39 @@ NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__); } whil
     }
 }
 
+- (BOOL) isVideoPlayerShown {
+    for (UIView *subView in self.view.subviews) {
+        AVPlayer *avplayer = [subView.layer valueForKey:@"AVPLAYER"];
+        if(avplayer != nil){
+            return true;
+        }
+    }
+    return false;
+}
+
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+    if ([self isVideoPlayerShown])return;
     for (UITouch *touch in touches) {
         [self addTouchEvent:touch withType:GLFMTouchPhaseBegan];
     }
 }
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+    if ([self isVideoPlayerShown])return;
     for (UITouch *touch in touches) {
         [self addTouchEvent:touch withType:GLFMTouchPhaseMoved];
     }
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+    if ([self isVideoPlayerShown])return;
     for (UITouch *touch in touches) {
         [self addTouchEvent:touch withType:GLFMTouchPhaseEnded];
     }
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
+    if ([self isVideoPlayerShown])return;
     for (UITouch *touch in touches) {
         [self addTouchEvent:touch withType:GLFMTouchPhaseCancelled];
     }
@@ -985,13 +1043,19 @@ NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__); } whil
     _pickerType=type;
     UIImagePickerController *imagePicker = [[UIImagePickerController alloc] init];
     imagePicker.sourceType = UIImagePickerControllerSourceTypeCamera;
+
+    NSArray *availableMedia = [UIImagePickerController availableMediaTypesForSourceType:UIImagePickerControllerSourceTypeCamera];//Camera所支持的Media格式都有哪些,共有两个分别是@"public.image",@"public.movie"
+    [imagePicker setMediaTypes:availableMedia];
+    [self presentViewController:imagePicker animated:YES completion:nil];
+    imagePicker.videoMaximumDuration = 30.0f;//30秒
+    [imagePicker setAllowsEditing:YES];
+
     /**
      *      UIImagePickerControllerSourceTypePhotoLibrary  ->所有资源文件夹
      UIImagePickerControllerSourceTypeCamera        ->摄像头
      UIImagePickerControllerSourceTypeSavedPhotosAlbum ->内置相册
      */
     imagePicker.delegate = self;    //设置代理，遵循UINavigationControllerDelegate,UIImagePickerControllerDelegate协议
-    [self presentViewController:imagePicker animated:YES completion:nil];
     
 }
 
@@ -1001,11 +1065,26 @@ NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__); } whil
     _pickerUid=puid;
     _pickerType=type;
     imagePicker.sourceType = UIImagePickerControllerSourceTypeSavedPhotosAlbum;
-    imagePicker.delegate = self;
+    NSArray *availableMedia = [UIImagePickerController availableMediaTypesForSourceType:UIImagePickerControllerSourceTypeCamera];//Camera所支持的Media格式都有哪些,共有两个分别是@"public.image",@"public.movie"
+    [imagePicker setMediaTypes:availableMedia];
     [self presentViewController:imagePicker animated:YES completion:nil];
+    imagePicker.delegate = self;
 }
 
 #pragma mark - 协议方法的实现
+- (void)saveVideo:(NSURL *)outputFileURL
+{
+    //ALAssetsLibrary提供了我们对iOS设备中的相片、视频的访问。
+    ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
+    [library writeVideoAtPathToSavedPhotosAlbum:outputFileURL completionBlock:^(NSURL *assetURL, NSError *error) {
+        if (error) {
+            NSLog(@"保存视频失败:%@",error);
+        } else {
+            NSLog(@"保存视频到相册成功");
+        }
+    }];
+}
+
 //协议方法，选择完毕以后，呈现在imageShow里面
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
     //NSLog(@"%@",info);  //UIImagePickerControllerMediaType,UIImagePickerControllerOriginalImage,UIImagePickerControllerReferenceURL
@@ -1038,8 +1117,43 @@ NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__); } whil
         if (picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
             UIImageWriteToSavedPhotosAlbum(image, self, @selector(image:didFinishSavingWithError:contextInfo:), nil);
         }
+    } else if([mediaType isEqualToString:@"public.movie"]){
+        NSURL *videoURL = [info objectForKey:UIImagePickerControllerMediaURL];
+        NSString *path = [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true) lastObject] stringByAppendingPathComponent:[NSString stringWithFormat:@"%ld_compressedVideo.mp4",time(NULL)]];
+        NSLog(@"compressedVideoSavePath : %@",path);
+        //if(![path isEqualToString:@".mp4"]){
+            //压缩
+            AVURLAsset *avAsset = [[AVURLAsset alloc] initWithURL:videoURL options:nil];
+            NSArray *compatiblePresets = [AVAssetExportSession exportPresetsCompatibleWithAsset:avAsset];
+            if ([compatiblePresets containsObject:AVAssetExportPresetHighestQuality]) {
+                AVAssetExportSession *exportSession = [[AVAssetExportSession alloc] initWithAsset:avAsset presetName:AVAssetExportPreset640x480];
+                //输出URL
+                exportSession.outputURL = [NSURL fileURLWithPath:path];
+                //优化网络
+                exportSession.shouldOptimizeForNetworkUse = true;
+                //转换后的格式
+                exportSession.outputFileType = AVFileTypeMPEG4;
+                //异步导出
+                [exportSession exportAsynchronouslyWithCompletionHandler:^{
+                    // 如果导出的状态为完成
+                    if ([exportSession status] == AVAssetExportSessionStatusCompleted) {
+                        [self saveVideo:[NSURL fileURLWithPath: path]];
+                        NSData *data = [NSData dataWithContentsOfURL:exportSession.outputURL];
+                        char *cd = (char*)[data bytes];
+                        int len = [data length];
+                        NSLog(@"压缩完毕,压缩后大小 %f MB",(CGFloat)len / 1024 / 1024);
+                        const char* url=[path UTF8String];
+                        self->_glfmDisplay->pickerFunc(self->_glfmDisplay, self->_pickerUid, url, cd, len);
+                    }else{
+                        NSLog(@"当前压缩进度:%f",exportSession.progress);
+                    }
+                    NSLog(@"%@",exportSession.error);
+                    
+                }];
+            }
+        //}
     }
-    //  else  当然可能是视频，这里不作讨论~方法是类似的~
+  
     [picker dismissViewControllerAnimated:YES completion:nil];
 }
 
@@ -1565,5 +1679,119 @@ void imageCrop(GLFMDisplay *display, int uid, const char *cpath,int x,int y, int
     }
 }
 
+void *playVideo(GLFMDisplay *display, char *cpath, char *mimeType) {
+    if (display) {
+        GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
+        int x = 0;
+        int y = 0;
+        int w = vc.view.frame.size.width;
+        int h = vc.view.frame.size.height;
+        //cpath = "http://vfx.mtime.cn/Video/2019/02/04/mp4/190204084208765161.mp4";
+        NSString *nspath = [[NSString alloc] initWithCString:cpath encoding:NSUTF8StringEncoding];
+        NSURL *url = [NSURL fileURLWithPath:nspath];
+        
+        UIView *videoPanel = [[UIView alloc]initWithFrame:CGRectMake(0, 0, vc.view.bounds.size.width, vc.view.bounds.size.height)];
+        videoPanel.backgroundColor = [UIColor whiteColor];
+        
+        NSString * nsMimeType = [[NSString alloc] initWithCString:mimeType encoding:NSUTF8StringEncoding];
+        
+        AVPlayer * avplayer;
+        if(mimeType){
+            AVURLAsset * asset = [[AVURLAsset alloc] initWithURL:url options:@{@"AVURLAssetOutOfBandMIMETypeKey": nsMimeType}];
+            avplayer = [AVPlayer playerWithPlayerItem:[AVPlayerItem playerItemWithAsset:asset]];
+        } else {
+            AVPlayerItem *avplayerItem = [[AVPlayerItem alloc] initWithURL:url];
+            //创建监听（这是一种KOV的监听模式）
+            //[avplayerItem addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionNew context:nil];
+            avplayer = [AVPlayer playerWithPlayerItem:avplayerItem];
+        }
+
+        //指定显示的Layer
+        AVPlayerLayer *layer = [AVPlayerLayer playerLayerWithPlayer:avplayer];
+        layer.videoGravity = AVLayerVideoGravityResizeAspect;
+        layer.frame = CGRectMake(x, y, w, h-40);
+        [videoPanel.layer addSublayer:layer];
+        
+        videoPanel.frame = CGRectMake(x, y, w, h);
+        
+        //设置播放暂停按钮
+        NSArray *titles = @[@"CLOSE",@"PAUSE",@"PLAY"];
+        CGFloat gap = 10.f;
+
+        for (int i = 0; i < 3; i++) {
+
+            UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
+            [btn setTitle:titles[i] forState:UIControlStateNormal];
+            btn.backgroundColor = [UIColor whiteColor];
+            btn.tag = 555+i;
+            btn.frame = CGRectMake(w/4*(i+1)-30, h-100,  60, 40);
+            btn.titleLabel.textAlignment = NSTextAlignmentCenter;
+            btn.titleLabel.font = [UIFont systemFontOfSize:16.0f];
+            [btn addTarget:vc action:@selector(targetAction:) forControlEvents:UIControlEventTouchUpInside];
+            [btn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+            [videoPanel addSubview:btn];
+        }
+        [vc.view addSubview: videoPanel];
+        [avplayer play];
+        
+        [videoPanel.layer setValue:avplayer forKey:@"AVPLAYER"];
+        return (__bridge void *)videoPanel;
+    }
+    return NULL;
+}
+
+void startVideo(GLFMDisplay *display, void *panel){
+    UIView *videoPanel = (__bridge UIView *)panel;
+    GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
+    if([videoPanel isDescendantOfView: vc.view]){
+        AVPlayer *avplayer = [videoPanel.layer.superlayer valueForKey:@"AVPLAYER"];
+        if (avplayer.rate == 0) {
+            [avplayer play];
+        }
+    }
+}
+
+void pauseVideo(GLFMDisplay *display, void *panel){
+    UIView *videoPanel = (__bridge UIView *)panel;
+    GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
+    if([videoPanel isDescendantOfView: vc.view]){
+        AVPlayer *avplayer = [videoPanel.layer.superlayer valueForKey:@"AVPLAYER"];
+        if (avplayer.rate == 0) {
+            [avplayer pause];
+        }
+    }
+}
+
+void stopVideo(GLFMDisplay *display, void *panel){
+    UIView *videoPanel = (__bridge UIView *)panel;
+    GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
+    if([videoPanel isDescendantOfView: vc.view]){
+        AVPlayer *avplayer = [videoPanel.layer.superlayer valueForKey:@"AVPLAYER"];
+        if (avplayer.rate == 0) {
+            [avplayer pause];
+        }
+    
+        [videoPanel removeFromSuperview];
+        [[AVPlayerLayer playerLayerWithPlayer:avplayer] removeFromSuperlayer];
+        avplayer = NULL;
+    }
+}
+
+// 获取视频第一帧
+//void getVideoPreViewImage(const char *videopath, Utf8String *imagepath)
+//{
+//    NSURL *path;
+//    AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:path options:nil];
+//    AVAssetImageGenerator *assetGen = [[AVAssetImageGenerator alloc] initWithAsset:asset];
+//
+//    assetGen.appliesPreferredTrackTransform = YES;
+//    CMTime time = CMTimeMakeWithSeconds(0.0, 600);
+//    NSError *error = nil;
+//    CMTime actualTime;
+//    CGImageRef image = [assetGen copyCGImageAtTime:time actualTime:&actualTime error:&error];
+//    UIImage *videoImage = [[UIImage alloc] initWithCGImage:image];
+//    CGImageRelease(image);
+//    return videoImage;
+//}
 
 #endif

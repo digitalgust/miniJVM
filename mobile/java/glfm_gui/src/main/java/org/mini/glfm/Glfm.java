@@ -98,6 +98,10 @@ public class Glfm {
     public static int GLFMPickPhotoSave_MASK = 1;
     public static int GLFMPickPhotoSave_yes = 2;
     public static int GLFMPickPhotoSave_no = 0;
+
+    public static int GLFMPickupTypeNoDef = 0;
+    public static int GLFMPickupTypeImage = 1;
+    public static int GLFMPickupTypeVideo = 2;
     //
 
     public static native void glfmSetCallBack(long display, GlfmCallBack app);
@@ -165,5 +169,14 @@ public class Glfm {
     public static native void glfmPickPhotoCamera(long display, int uid, int type);
 
     public static native void glfmImageCrop(long display, int uid, String uris, int x, int y, int width, int height);
+
+    public static native long glfmPlayVideo(long display, String uris, String mimeType);
+
+    public static native void glfmStartVideo(long display, long handle);
+
+    public static native void glfmStopVideo(long display, long handle);
+
+    public static native void glfmPauseVideo(long display, long handle);
+
 
 }

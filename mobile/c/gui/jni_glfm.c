@@ -694,6 +694,58 @@ int org_mini_glfm_Glfm_glfmImageCrop(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+
+int org_mini_glfm_Glfm_glfmPlayVideo(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos=0;
+    GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos+=2;
+    Instance *jstr = env->localvar_getRefer(runtime->localvar, pos++);
+    Instance *jstrMime = env->localvar_getRefer(runtime->localvar, pos++);
+    Utf8String *ustr = env->utf8_create();
+    Utf8String *ustrMime = env->utf8_create();
+    env->jstring_2_utf8(jstr, ustr);
+    env->jstring_2_utf8(jstrMime, ustrMime);
+    void *panel = playVideo(window, env->utf8_cstr(ustr), env->utf8_cstr(ustrMime));
+    env->utf8_destory(ustr);
+    env->utf8_destory(ustrMime);
+    env->push_long(runtime->stack, (s64)(intptr_t)panel);
+    return 0;
+}
+
+int org_mini_glfm_Glfm_glfmStartVideo(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos=0;
+    GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos+=2;
+    void *panel = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos+=2;
+    startVideo(window, panel);
+    return 0;
+}
+
+int org_mini_glfm_Glfm_glfmPauseVideo(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos=0;
+    GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos+=2;
+    void *panel = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos+=2;
+    pauseVideo(window, panel);
+    return 0;
+}
+
+int org_mini_glfm_Glfm_glfmStopVideo(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos=0;
+    GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos+=2;
+    void *panel = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos+=2;
+    stopVideo(window, panel);
+    return 0;
+}
+
 /* ==============================   jni utils =================================*/
 
 int org_mini_glfm_utils_Gutil_f2b(Runtime *runtime, JClass *clazz) {
@@ -1194,6 +1246,10 @@ static java_native_method method_glfm_table[] = {
         {"org/mini/glfm/Glfm",        "glfmPickPhotoAlbum",              "(JII)V",                            org_mini_glfm_Glfm_glfmPickPhotoAlbum},
         {"org/mini/glfm/Glfm",        "glfmPickPhotoCamera",             "(JII)V",                             org_mini_glfm_Glfm_glfmPickPhotoCamera},
         {"org/mini/glfm/Glfm",        "glfmImageCrop",                   "(JILjava/lang/String;IIII)V",         org_mini_glfm_Glfm_glfmImageCrop},
+        {"org/mini/glfm/Glfm",        "glfmPlayVideo",                   "(JLjava/lang/String;Ljava/lang/String;)J",         org_mini_glfm_Glfm_glfmPlayVideo},
+        {"org/mini/glfm/Glfm",        "glfmPauseVideo",                   "(JJ)V",         org_mini_glfm_Glfm_glfmPauseVideo},
+        {"org/mini/glfm/Glfm",        "glfmStopVideo",                   "(JJ)V",         org_mini_glfm_Glfm_glfmStopVideo},
+        {"org/mini/glfm/Glfm",        "glfmStartVideo",                   "(JJ)V",         org_mini_glfm_Glfm_glfmStartVideo},
 
 };
 

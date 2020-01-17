@@ -5,7 +5,6 @@
  */
 package org.mini.glfm;
 
-import java.io.File;
 import org.mini.guijni.GuiCallBack;
 
 /**
@@ -87,6 +86,21 @@ public class Glfm {
             GLFMKeyActionRepeated = 1,
             GLFMKeyActionReleased = 2;
 
+    /**
+     * photo pick
+     */
+    public static int GLFMPickPhotoZoom_MASK = 0;
+    public static int GLFMPickPhotoZoom_1024 = 0;
+    public static int GLFMPickPhotoZoom_No = 1;
+    //
+    public static int GLFMPickPhotoSave_MASK = 1;
+    public static int GLFMPickPhotoSave_yes = 2;
+    public static int GLFMPickPhotoSave_no = 0;
+
+    public static int GLFMPickupTypeNoDef = 0;
+    public static int GLFMPickupTypeImage = 1;
+    public static int GLFMPickupTypeVideo = 2;
+
     public static String glfmGetClipBoardContent() {
         return null;
     }
@@ -135,4 +149,23 @@ public class Glfm {
     public static String glfmGetResRoot() {
         return null;
     }
+
+    public static long glfmPlayVideo(long display, String uris, String mimeType){
+        return 0;
+    }
+
+    public static void glfmStartVideo(long display, long handle){
+
+    }
+
+    public static void glfmStopVideo(long display, long handle){
+
+    }
+
+    public static void glfmPauseVideo(long display, long handle){
+
+    }
+
+
+
 }

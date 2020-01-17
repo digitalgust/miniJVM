@@ -196,6 +196,12 @@ typedef enum {
     GLFMKeyActionReleased,
 } GLFMKeyAction;
 
+typedef enum {
+    GLFMPickupTypeNoDef = 0,
+    GLFMPickupTypeImage = 1,
+    GLFMPickupTypeVideo = 2,
+} GLFMMediaPickup;
+
 // MARK: Structs and function pointers
 
 typedef struct GLFMDisplay GLFMDisplay;
@@ -379,6 +385,14 @@ void pickPhotoAlbum(GLFMDisplay *display, int uid, int type);
 void pickPhotoCamera(GLFMDisplay *display, int uid, int type);
 
 void imageCrop(GLFMDisplay *display, int uid, const char *uri,int x,int y, int width, int height);
+
+void *playVideo(GLFMDisplay *display, char *cpath, char *mimeType);
+
+void startVideo(GLFMDisplay *display, void *videoPanel);
+
+void pauseVideo(GLFMDisplay *display, void *videoPanel);
+
+void stopVideo(GLFMDisplay *display, void *videoPanel);
     
 const char* glfmGetUUID();
 

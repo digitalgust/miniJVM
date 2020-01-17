@@ -27,10 +27,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef NSFoundationVersionNumber_iOS_9_x_Max
-#import <UserNotifications/UserNotifications.h>
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
