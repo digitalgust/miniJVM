@@ -204,7 +204,7 @@ public class FileInputStream extends InputStream {
      * @exception IOException if an I/O error occurs.
      */
     public void close() throws IOException {
-        ifis.close();
+        if(ifis != null)ifis.close();
     }
 
     /**

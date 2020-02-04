@@ -33,7 +33,18 @@ import java.io.IOException;
  * @author gust
  */
 public interface SocketConnection extends StreamConnection {
-
+    public static byte	DELAY = 0;
+    //Socket option for the small buffer writing delay (0).
+    public static byte	KEEPALIVE = 1;
+    //Socket option for the keep alive feature (2).
+    public static byte	LINGER = 2;
+    //Socket option for the linger time to wait in seconds before closing a connection with pending data output (1).
+    public static byte	RCVBUF = 3;
+    //Socket option for the size of the receiving buffer (3).
+    public static byte	SNDBUF = 4;
+    //Socket option for the size of the sending buffer (4).
+    public static byte	TIMEOUT = 5;
+    //Socket option for a timeout on a blocking read or write operation.
     /**
      * 非阻塞写，返回写长度
      *
@@ -73,7 +84,7 @@ public interface SocketConnection extends StreamConnection {
      *
      * @param option
      */
-    void getSocketOption(byte option);
+    int getSocketOption(byte option);
 
 
     int getLocalPort();

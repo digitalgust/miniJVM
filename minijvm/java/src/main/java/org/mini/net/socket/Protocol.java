@@ -1,38 +1,40 @@
 /*
- *   
+ *
  *
  * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version
  * 2 only, as published by the Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 2 for more details (a copy is
  * included at /legal/license.txt).
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * version 2 along with this work; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
- * 
+ *
  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
  * Clara, CA 95054 or visit www.sun.com if you need additional
  * information or have any questions.
  */
 package org.mini.net.socket;
 
-import javax.cldc.io.Connector;
-import javax.cldc.io.Connection;
-import java.io.*;
-import com.sun.cldc.io.*;
-import java.net.SocketTimeoutException;
-import static org.mini.fs.InnerFile.available0;
+import com.sun.cldc.io.ConnectionBaseInterface;
 import org.mini.net.SocketNative;
+
+import javax.cldc.io.Connection;
+import javax.cldc.io.Connector;
 import javax.cldc.io.SocketConnection;
+import java.io.*;
+import java.net.SocketTimeoutException;
+
+import static org.mini.fs.InnerFile.available0;
 
 /**
  * Connection to the J2ME socket API.
@@ -83,11 +85,11 @@ public class Protocol implements ConnectionBaseInterface, SocketConnection {
     /**
      * Open the connection
      *
-     * @param name the target for the connection. It must be in this format:
-     * "//<name or IP number>:<port number>"
-     * @param mode read/write mode of the connection (currently ignored).
+     * @param name     the target for the connection. It must be in this format:
+     *                 "//<name or IP number>:<port number>"
+     * @param mode     read/write mode of the connection (currently ignored).
      * @param timeouts A flag to indicate that the called wants timeout
-     * exceptions (currently ignored).
+     *                 exceptions (currently ignored).
      */
     public Connection openPrim(String name, int mode, boolean timeouts)
             throws IOException {
@@ -133,8 +135,8 @@ public class Protocol implements ConnectionBaseInterface, SocketConnection {
      * Open the connection
      *
      * @param handle an already formed socket handle
-     * <p>
-     * This function is only used by com.sun.cldc.io.j2me.socketserver;
+     *               <p>
+     *               This function is only used by com.sun.cldc.io.j2me.socketserver;
      */
     public void open(int handle, int mode) throws IOException {
         this.handle = handle;
@@ -157,8 +159,8 @@ public class Protocol implements ConnectionBaseInterface, SocketConnection {
      * Returns an input stream for this socket.
      *
      * @return an input stream for reading bytes from this socket.
-     * @exception IOException if an I/O error occurs when creating the input
-     * stream.
+     * @throws IOException if an I/O error occurs when creating the input
+     *                     stream.
      */
     synchronized public InputStream openInputStream() throws IOException {
         ensureOpen();
@@ -180,8 +182,8 @@ public class Protocol implements ConnectionBaseInterface, SocketConnection {
      * Returns an output stream for this socket.
      *
      * @return an output stream for writing bytes to this socket.
-     * @exception IOException if an I/O error occurs when creating the output
-     * stream.
+     * @throws IOException if an I/O error occurs when creating the output
+     *                     stream.
      */
     synchronized public OutputStream openOutputStream() throws IOException {
         ensureOpen();
@@ -202,8 +204,8 @@ public class Protocol implements ConnectionBaseInterface, SocketConnection {
     /**
      * Close the connection.
      *
-     * @exception IOException if an I/O error occurs when closing the
-     * connection.
+     * @throws IOException if an I/O error occurs when closing the
+     *                     connection.
      */
     synchronized public void close() throws IOException {
         if (copen) {
@@ -215,7 +217,7 @@ public class Protocol implements ConnectionBaseInterface, SocketConnection {
     /**
      * Close the connection.
      *
-     * @exception IOException if an I/O error occurs.
+     * @throws IOException if an I/O error occurs.
      */
     synchronized void realClose() throws IOException {
         if (--opens == 0) {
@@ -227,7 +229,7 @@ public class Protocol implements ConnectionBaseInterface, SocketConnection {
      * Open and return a data input stream for a connection.
      *
      * @return An input stream
-     * @exception IOException If an I/O error occurs
+     * @throws IOException If an I/O error occurs
      */
     public DataInputStream openDataInputStream() throws IOException {
         return new DataInputStream(openInputStream());
@@ -237,17 +239,17 @@ public class Protocol implements ConnectionBaseInterface, SocketConnection {
      * Open and return a data output stream for a connection.
      *
      * @return An input stream
-     * @exception IOException If an I/O error occurs
+     * @throws IOException If an I/O error occurs
      */
     public DataOutputStream openDataOutputStream() throws IOException {
         return new DataOutputStream(openOutputStream());
     }
 
     /*
-    * A note about readByte()
-    *
-    * This function will return an unsigned byte, or -1.
-    * -1 means that EOF was reached.
+     * A note about readByte()
+     *
+     * This function will return an unsigned byte, or -1.
+     * -1 means that EOF was reached.
      */
     @Override
     public int write(byte[] b, int off, int len) throws IOException {
@@ -261,18 +263,122 @@ public class Protocol implements ConnectionBaseInterface, SocketConnection {
         return r;
     }
 
-//    @Override
+    //    @Override
 //    public int available() throws IOException {
 //        return available0(handle);
 //    }
     boolean nonBlock = false;
 
-    @Override
     public void setOption(int type, int val, int val2) {
         if (type == SocketNative.SO_BLOCK && val == SocketNative.VAL_NON_BLOCK) {
             nonBlock = true;
         }
         SocketNative.setOption0(handle, type, val, val2);
+    }
+
+
+    public String getLocalAddress() {
+        String s = SocketNative.getSockAddr(handle, 0);
+        if (s != null) {
+            int index = s.indexOf(':');
+            if (index >= 0) {
+                return s.substring(0, index);
+            }
+        }
+        return "";
+    }
+
+    public int getLocalPort() {
+        String s = SocketNative.getSockAddr(handle, 1);
+        if (s != null) {
+            int index = s.indexOf(':');
+            if (index >= 0) {
+
+                return Integer.parseInt(s.substring(index + 1));
+            }
+        }
+        return -1;
+    }
+
+    public String getAddress() {
+        String s = SocketNative.getSockAddr(handle, 1);
+        if (s != null) {
+            int index = s.indexOf(':');
+            if (index >= 0) {
+                return s.substring(0, index);
+            }
+        }
+        return "";
+    }
+
+    public int getPort() {
+        String s = SocketNative.getSockAddr(handle, 0);
+        if (s != null) {
+            int index = s.indexOf(':');
+            if (index >= 0) {
+
+                return Integer.parseInt(s.substring(index + 1));
+            }
+        }
+        return -1;
+    }
+
+
+    public void setSocketOption(byte option, int value) {
+        switch (option) {
+            case DELAY: {
+                break;
+            }
+            case KEEPALIVE: {
+                SocketNative.setOption0(handle, SocketNative.SO_KEEPALIVE, value, 0);
+                break;
+            }
+            case LINGER: {
+                SocketNative.setOption0(handle, SocketNative.SO_LINGER, value, 0);
+                break;
+            }
+            case SNDBUF: {
+                SocketNative.setOption0(handle, SocketNative.SO_SNDBUF, value, 0);
+                break;
+            }
+            case RCVBUF: {
+                SocketNative.setOption0(handle, SocketNative.SO_RCVBUF, value, 0);
+                break;
+            }
+            case TIMEOUT: {
+                SocketNative.setOption0(handle, SocketNative.SO_TIMEOUT, value, 0);
+                break;
+            }
+        }
+    }
+
+    /**
+     * get current value
+     *
+     * @param option
+     */
+    public int getSocketOption(byte option) {
+        switch (option) {
+            case DELAY: {
+                break;
+            }
+            case KEEPALIVE: {
+                return SocketNative.getOption0(handle, SocketNative.SO_KEEPALIVE);
+            }
+            case LINGER: {
+                return SocketNative.getOption0(handle, SocketNative.SO_LINGER);
+            }
+            case SNDBUF: {
+                return SocketNative.getOption0(handle, SocketNative.SO_SNDBUF);
+            }
+            case RCVBUF: {
+                return SocketNative.getOption0(handle, SocketNative.SO_RCVBUF);
+            }
+            case TIMEOUT: {
+                return SocketNative.getOption0(handle, SocketNative.SO_TIMEOUT);
+            }
+        }
+        return 0;
     }
 
 }
@@ -295,9 +401,7 @@ class PrivateInputStream extends InputStream {
     /**
      * Constructor
      *
-     * @param pointer to the connection object
-     *
-     * @exception IOException if an I/O error occurs.
+     * @throws IOException if an I/O error occurs.
      */
     /* public */ PrivateInputStream(Protocol parent) throws IOException {
         this.parent = parent;
@@ -306,7 +410,7 @@ class PrivateInputStream extends InputStream {
     /**
      * Check the stream is open
      *
-     * @exception IOException if it is not.
+     * @throws IOException if it is not.
      */
     void ensureOpen() throws IOException {
         if (parent == null) {
@@ -324,7 +428,7 @@ class PrivateInputStream extends InputStream {
      *
      * @return the next byte of data, or <code>-1</code> if the end of the
      * stream is reached.
-     * @exception IOException if an I/O error occurs.
+     * @throws IOException if an I/O error occurs.
      */
     synchronized public int read() throws IOException {
         int res;
@@ -352,14 +456,14 @@ class PrivateInputStream extends InputStream {
      * native code to be written. Not all implementations work this way (they
      * block in the native code) but the same Java code works for both.
      *
-     * @param b the buffer into which the data is read.
+     * @param b   the buffer into which the data is read.
      * @param off the start offset in array <code>b</code> at which the data is
-     * written.
+     *            written.
      * @param len the maximum number of bytes to read.
      * @return the total number of bytes read into the buffer, or
      * <code>-1</code> if there is no more data because the end of the stream
      * has been reached.
-     * @exception IOException if an I/O error occurs.
+     * @throws IOException if an I/O error occurs.
      */
     synchronized public int read(byte b[], int off, int len)
             throws IOException {
@@ -401,7 +505,7 @@ class PrivateInputStream extends InputStream {
      * input stream.
      *
      * @return the number of bytes that can be read from this input stream.
-     * @exception IOException if an I/O error occurs.
+     * @throws IOException if an I/O error occurs.
      */
     synchronized public int available() throws IOException {
         ensureOpen();
@@ -411,7 +515,7 @@ class PrivateInputStream extends InputStream {
     /**
      * Close the stream.
      *
-     * @exception IOException if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
     public void close() throws IOException {
         if (parent != null) {
@@ -436,9 +540,7 @@ class PrivateOutputStream extends OutputStream {
     /**
      * Constructor
      *
-     * @param pointer to the connection object
-     *
-     * @exception IOException if an I/O error occurs.
+     * @throws IOException if an I/O error occurs.
      */
     /* public */ PrivateOutputStream(Protocol parent) throws IOException {
         this.parent = parent;
@@ -447,7 +549,7 @@ class PrivateOutputStream extends OutputStream {
     /**
      * Check the stream is open
      *
-     * @exception IOException if it is not.
+     * @throws IOException if it is not.
      */
     void ensureOpen() throws IOException {
         if (parent == null) {
@@ -464,9 +566,9 @@ class PrivateOutputStream extends OutputStream {
      * block in the native code) but the same Java code works for both.
      *
      * @param b the <code>byte</code>.
-     * @exception IOException if an I/O error occurs. In particular, an
-     * <code>IOException</code> may be thrown if the output stream has been
-     * closed.
+     * @throws IOException if an I/O error occurs. In particular, an
+     *                     <code>IOException</code> may be thrown if the output stream has been
+     *                     closed.
      */
     synchronized public void write(int b) throws IOException {
         ensureOpen();
@@ -492,11 +594,11 @@ class PrivateOutputStream extends OutputStream {
      * native code to be written. Not all implementations work this way (they
      * block in the native code) but the same Java code works for both.
      *
-     * @param b the data.
+     * @param b   the data.
      * @param off the start offset in the data.
      * @param len the number of bytes to write.
-     * @exception IOException if an I/O error occurs. In particular, an
-     * <code>IOException</code> is thrown if the output stream is closed.
+     * @throws IOException if an I/O error occurs. In particular, an
+     *                     <code>IOException</code> is thrown if the output stream is closed.
      */
     synchronized public void write(byte b[], int off, int len)
             throws IOException {
@@ -523,7 +625,7 @@ class PrivateOutputStream extends OutputStream {
     /**
      * Close the stream.
      *
-     * @exception IOException if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
     public void close() throws IOException {
         if (parent != null) {

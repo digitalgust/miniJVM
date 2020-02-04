@@ -1212,7 +1212,7 @@ void gen_jit_suspend_check_func() {
             sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_R0), SLJIT_OFFSETOF(MethodInfo, converted_code));
             sljit_emit_op2(C, SLJIT_ADD, SLJIT_R0, 0, SLJIT_R0, 0, SLJIT_IMM, SLJIT_OFFSETOF(CodeAttribute, jit));
             sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R0), SLJIT_OFFSETOF(Jit, interrupt_handle_jump_ptr));
-            sljit_emit_fast_return(C, SLJIT_R2, 0);
+            sljit_emit_op_src(C, SLJIT_FAST_RETURN, SLJIT_R2, 0);
         }
         label_not_interrupted = sljit_emit_label(C);
         sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
@@ -1229,7 +1229,7 @@ void gen_jit_suspend_check_func() {
     sljit_set_label(jump_to_interrupted, label_interrupted);
     sljit_set_label(jump_not_interrupted, label_not_interrupted);
 
-    sljit_emit_fast_return(C, SLJIT_R2, 0);
+    sljit_emit_op_src(C, SLJIT_FAST_RETURN, SLJIT_R2, 0);
 
 
     check_suspend = sljit_generate_code(C);

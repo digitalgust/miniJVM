@@ -24,6 +24,7 @@ public final class Modifier {
   public static final int INTERFACE    = 1 <<  9;
   public static final int ABSTRACT     = 1 << 10;
   public static final int STRICT       = 1 << 11;
+  public static final int SYNTHETIC    = 1 << 12;
 
   private Modifier() { }
 
