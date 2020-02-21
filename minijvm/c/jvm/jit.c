@@ -1901,8 +1901,8 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 break;
             }
             case op_frem: {
-                _gen_stack_peek_float(C, -1, SLJIT_FR1, 0);
-                _gen_stack_peek_float(C, -2, SLJIT_FR0, 0);
+                _gen_stack_peek_float(C, -1, SLJIT_FR0, 0);
+                _gen_stack_peek_float(C, -2, SLJIT_FR1, 0);
                 sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(F32) | SLJIT_ARG1(F32) | SLJIT_ARG2(F32), SLJIT_IMM, SLJIT_FUNC_OFFSET(frem));
                 _gen_stack_set_float(C, -2, SLJIT_FR0, 0);
                 _gen_stack_size_modify(C, -1);
@@ -1911,8 +1911,8 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 break;
             }
             case op_drem: {
-                _gen_stack_peek_double(C, -2, SLJIT_FR1, 0);
-                _gen_stack_peek_double(C, -4, SLJIT_FR0, 0);
+                _gen_stack_peek_double(C, -2, SLJIT_FR0, 0);
+                _gen_stack_peek_double(C, -4, SLJIT_FR1, 0);
                 sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(F64) | SLJIT_ARG1(F64) | SLJIT_ARG2(F64), SLJIT_IMM, SLJIT_FUNC_OFFSET(drem_1));
                 _gen_stack_set_double(C, -4, SLJIT_FR0, 0);
                 _gen_stack_size_modify(C, -2);
