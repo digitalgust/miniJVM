@@ -5,12 +5,7 @@
  */
 package org.mini.jnibuilder;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -31,8 +26,8 @@ public class Nanovg_h_2_java {
     String[] input_path = {
         "../../c/gui/media.h",
         "../../c/gui/jni_stb_assist.h",
-        "../../c/gui/jni_nanovg_assist.h",};
-    String[] output_path = {"src/org/mini/nanovg/Nanovg.java"};
+        "../../c/gui/nanovg/nanovg_jni_assist.h",};
+    String[] output_path = {"src/main/java/org/mini/nanovg/Nanovg.java"};
 
     String CLASS_TEMPLATE
             = //

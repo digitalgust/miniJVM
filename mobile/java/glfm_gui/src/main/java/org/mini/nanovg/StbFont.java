@@ -5,22 +5,11 @@
  */
 package org.mini.nanovg;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import org.mini.gl.GL;
 import org.mini.gui.GImage;
 import org.mini.gui.GToolkit;
-import static org.mini.nanovg.Nanovg.stbtt_GetCodepointBitmapBox;
-import static org.mini.nanovg.Nanovg.stbtt_GetCodepointHMetrics;
-import static org.mini.nanovg.Nanovg.stbtt_GetCodepointKernAdvance;
-import static org.mini.nanovg.Nanovg.stbtt_GetFontVMetrics;
-import static org.mini.nanovg.Nanovg.stbtt_InitFont;
-import static org.mini.nanovg.Nanovg.stbtt_MakeCodepointBitmapOffset;
-import static org.mini.nanovg.Nanovg.stbtt_MakeFontInfo;
-import static org.mini.nanovg.Nanovg.stbtt_ScaleForPixelHeight;
 
-
+import static org.mini.nanovg.Nanovg.*;
 
 /**
  * warp stb_truetype.h - v0.6c - public domain ,
@@ -35,30 +24,10 @@ public class StbFont {
     byte[] fontInfo;
 
     public StbFont(String fontPath) {
-        /* load font file */
-        int size;
-
-        File fontFile = new File(fontPath);//"./wqymhei.ttc"
-        if (!fontFile.exists()) {
-//            fontFile = new File("./Roboto-Light.ttf");//
-            fontFile = new File("./wqymhei.ttc");//
-        }
-        size = (int) fontFile.length();
-        /* how long is the file ? */
-
-        fontBuffer = new byte[size];
-        FileInputStream fis;
-        try {
-            fis = new FileInputStream(fontFile);
-            int read = 0;
-
-            while (read < size) {
-                read += fis.read(fontBuffer, read, size - read);
-            }
-            System.out.println("read=" + read);
-            fis.close();
-        } catch (IOException ex) {
-            ex.printStackTrace();
+        if (fontPath == null) {
+            fontBuffer = GToolkit.getFontWord();
+        } else {
+            fontBuffer = GToolkit.readFileFromJar(fontPath);
         }
         /* prepare font */
         fontInfo = stbtt_MakeFontInfo();
@@ -108,11 +77,18 @@ public class StbFont {
         }
         return x;
     }
+
     static int[] PIC_WIDTH = {16, 32, 64, 128, 256, 512, 1024};
 
-    public GImage renderToTexture(String word, int fontSize) {
+    public GImage renderToImage(String word, int fontSize) {
+        int[] wh = new int[2];
+        int tex = renderToTexture(word, fontSize, wh);
+        return GImage.createImage(tex, wh[0], wh[1]);
+    }
+
+    public int renderToTexture(String word, int fontSize, int[] width_height) {
         if (word == null) {
-            return null;
+            return -1;
         }
         int width = getWidth(word, fontSize);
         int pic_width = 0;
@@ -129,6 +105,8 @@ public class StbFont {
                 }
             }
         }
+//        int max = pic_width > pic_height ? pic_width : pic_height;
+//        pic_width = pic_height = max;
         //System.out.println(pic_width + "," + pic_height);
         byte[] bitmap = new byte[pic_width * pic_height];
 
@@ -173,7 +151,9 @@ public class StbFont {
             x += kern * scale;
         }
         //NK.stbi_write_png("./out.png\000".getBytes(), pic_width, pic_height, 1, GToolkit.getArrayDataPtr(bitmap), pic_width);
-        int tex = Gutil.genTexture2D(bitmap, pic_width, pic_height, GL.GL_RGB565, GL.GL_RGB565);
-        return GImage.createImage(tex, pic_width, pic_height);
+        int tex = Gutil.genTexture2D(bitmap, pic_width, pic_height, GL.GL_R8, GL.GL_RED);
+        width_height[0] = pic_width;
+        width_height[1] = pic_height;
+        return tex;
     }
 }

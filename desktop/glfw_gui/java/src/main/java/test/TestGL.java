@@ -1,36 +1,10 @@
 package test;
 
 import org.mini.gl.GL;
-import static org.mini.gl.GL.GL_AMBIENT;
-import static org.mini.gl.GL.GL_BLEND;
-import static org.mini.gl.GL.GL_COLOR_BUFFER_BIT;
-import static org.mini.gl.GL.GL_DEPTH_BUFFER_BIT;
-import static org.mini.gl.GL.GL_DIFFUSE;
-import static org.mini.gl.GL.GL_EMISSION;
-import static org.mini.gl.GL.GL_FRONT;
-import static org.mini.gl.GL.GL_LIGHT0;
-import static org.mini.gl.GL.GL_LIGHTING;
-import static org.mini.gl.GL.GL_MODELVIEW;
-import static org.mini.gl.GL.GL_ONE;
-import static org.mini.gl.GL.GL_ONE_MINUS_SRC_ALPHA;
-import static org.mini.gl.GL.GL_POSITION;
-import static org.mini.gl.GL.GL_SHININESS;
-import static org.mini.gl.GL.GL_SPECULAR;
-import static org.mini.gl.GL.GL_SRC_ALPHA;
-import static org.mini.gl.GL.GL_ZERO;
-import static org.mini.gl.GL.glBlendFunc;
-import static org.mini.gl.GL.glClear;
-import static org.mini.gl.GL.glColor3f;
-import static org.mini.gl.GL.glEnable;
-import static org.mini.gl.GL.glEnd;
-import static org.mini.gl.GL.glFlush;
-import static org.mini.gl.GL.glLightfv;
-import static org.mini.gl.GL.glMaterialf;
-import static org.mini.gl.GL.glMaterialfv;
-import static org.mini.gl.GL.glMatrixMode;
-import static org.mini.gl.GL.glTranslatef;
 import org.mini.glfw.Glfw;
 import org.mini.nanovg.Gutil;
+
+import static org.mini.gl.GL.*;
 import static org.mini.nanovg.Gutil.vec_mul_cross;
 import static org.mini.nanovg.Gutil.vec_sub;
 
@@ -208,7 +182,6 @@ public class TestGL {
             }
         }
         GL.glEnd();
-        Gutil.drawCood();
     }
     int day = 200; // day的变化：从0到359
     int w, h;

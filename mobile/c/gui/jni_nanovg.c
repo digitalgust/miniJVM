@@ -14,7 +14,7 @@
 
 
 #include <nanovg/nanovg.h>
-#include <jni_nanovg_assist.h>
+#include <nanovg/nanovg_jni_assist.h>
 #define NANOVG_GLES3_IMPLEMENTATION
 #include <nanovg/nanovg_gl.h>
 

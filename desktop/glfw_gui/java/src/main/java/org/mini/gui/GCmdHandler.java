@@ -5,20 +5,18 @@
  */
 package org.mini.gui;
 
+import org.mini.glfm.Glfm;
+import org.mini.nanovg.Gutil;
+import org.mini.nanovg.Nanovg;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.TimerTask;
-import org.mini.glfm.Glfm;
-import org.mini.nanovg.Gutil;
-import org.mini.nanovg.Nanovg;
-import static org.mini.nanovg.Nanovg.nvgFillColor;
-import static org.mini.nanovg.Nanovg.nvgFontFace;
-import static org.mini.nanovg.Nanovg.nvgFontSize;
-import static org.mini.nanovg.Nanovg.nvgTextAlign;
+
+import static org.mini.nanovg.Nanovg.*;
 
 /**
- *
  * Many of glfm function need call by glcontext thread ,if call by other thread
  * ,maybe error occur so , call these glfm function, post a cmd to GForm , it
  * would call by glcontext callback thread.
@@ -73,6 +71,13 @@ public class GCmdHandler {
                             Glfm.glfmSetKeyboardVisible(form.getWinContext(), false);
                             break;
                         }
+                        case GCmd.GCMD_RUN_CODE: {
+                            if (cmd.attachment instanceof Runnable) {
+                                Runnable runnable = (Runnable) cmd.attachment;
+                                runnable.run();
+                            }
+                            break;
+                        }
                         default: {
 
                         }
@@ -112,5 +117,10 @@ public class GCmdHandler {
             nvgFillColor(vg, Nanovg.nvgRGBf(0.f, 0.f, 0.f));
             Nanovg.nvgTextBoxJni(vg, pad, pad, panW, curShowMessage, 0, curShowMessage.length);
         }
+    }
+
+
+    public int size() {
+        return cmds.size();
     }
 }

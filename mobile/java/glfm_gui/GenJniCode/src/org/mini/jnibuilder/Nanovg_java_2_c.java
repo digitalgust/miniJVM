@@ -30,7 +30,7 @@ public class Nanovg_java_2_c {
         gt.buildC();
     }
 
-    String[] path = {"src/org/mini/nanovg/Nanovg.java", "org_mini_nanovg_Nanovg_", "org/mini/nanovg/Nanovg", "../jni_nanovg.c"};
+    String[] path = {"src/main/java/org/mini/nanovg/Nanovg.java", "org_mini_nanovg_Nanovg_", "org/mini/nanovg/Nanovg", "../../c/gui/jni_nanovg.c"};
 
     String[] ignore_list = {"",
         "",};
@@ -43,18 +43,17 @@ public class Nanovg_java_2_c {
             + "#include <string.h>\n"
             + "\n"
             + "#include <glad/glad.h>\n"
-            + "#include <GLFW/glfw3.h>\n"
             + "\n"
             + "//#define STB_TRUETYPE_IMPLEMENTATION\n"
-            + "#include <stb_truetype.h>\n"
+            + "#include <stb/stb_truetype.h>\n"
             + "#define STB_IMAGE_WRITE_IMPLEMENTATION\n"
-            + "#include <stb_image_write.h>\n" + "\n"
+            + "#include <stb/stb_image_write.h>\n" + "\n"
             + "//#define STB_IMAGE_IMPLEMENTATION\n"
-            + "#include <stb_image.h>\n" + "\n"
+            + "#include <stb/stb_image.h>\n" + "\n"
             + "\n"
             + "#include <nanovg/nanovg.h>\n"
             + "#include <nanovg/nanovg_jni_assist.h>\n"
-            + "#define NANOVG_GL3_IMPLEMENTATION\n"
+            + "#define NANOVG_GLES3_IMPLEMENTATION\n"
             + "#include <nanovg/nanovg_gl.h>\n"
             + "\n"
             + "\n"
@@ -62,20 +61,20 @@ public class Nanovg_java_2_c {
             + "\n"
             + "#include \"jvm.h\"\n"
             + "#include \"media.h\"\n"
-            + "#include \"stb_jni_assist.h\"\n"
+            + "#include \"jni_stb_assist.h\"\n"
             + "\n\n\n";
 
     String TOOL_FUNC
             = //
-            "s32 count_NutilFuncTable() {\n"
-            + "    return sizeof(method_nutil_table) / sizeof(java_native_method);\n"
+            "s32 count_NanovgFuncTable() {\n"
+            + "    return sizeof(method_nanovg_table) / sizeof(java_native_method);\n"
             + "}\n"
             + "\n"
-            + "__refer ptr_NutilFuncTable() {\n"
-            + "    return &method_nutil_table[0];\n"
+            + "__refer ptr_NanovgFuncTable() {\n"
+            + "    return &method_nanovg_table[0];\n"
             + "}";
 
-    String FUNC_TABLE_HEADER = "static java_native_method method_nutil_table[] = {\n\n";
+    String FUNC_TABLE_HEADER = "static java_native_method method_nanovg_table[] = {\n\n";
     String FUNC_TABLE_FOOTER = "};\n\n";
 
     String FUNC_BODY_TEMPLATE
@@ -312,7 +311,7 @@ public class Nanovg_java_2_c {
                             releaseMemCode += "env->utf8_destory(u_" + argvName + ");";
                             javaArgvCode += "Ljava/lang/String;";
                         } else if ("byte[][]".equals(argvType) || "byte[]...".equals(argvType)) {
-                            varCode += "    Instance *" + argvName + " = env->localvar_getRefer(runtime->localvar, pos++);\n";
+                            varCode += "    Instance *" + argvName + " = env->localvar_getRefer(runtime, pos++);\n";
                             varCode += "    CStringArr *ptr_" + argvName + " = NULL;\n";
                             varCode += "    if(" + argvName + "){\n";
                             varCode += "        ptr_" + argvName + " = env->cstringarr_create(" + argvName + ");\n";

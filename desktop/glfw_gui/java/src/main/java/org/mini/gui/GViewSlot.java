@@ -171,7 +171,6 @@ public class GViewSlot extends GViewPort {
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         int phase = pressed ? Glfm.GLFMTouchPhaseBegan : Glfm.GLFMTouchPhaseEnded;
         touchEvent(phase, x, y);
-        super.mouseButtonEvent(button, pressed, x, y);
     }
 
     public void touchEvent(int phase, int x, int y) {

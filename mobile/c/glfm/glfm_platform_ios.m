@@ -47,8 +47,12 @@ void setDeviceToken(GLFMDisplay * display, const char *deviceToken);
 //
 #define MAX_SIMULTANEOUS_TOUCHES 10
 
-#define CHECK_GL_ERROR() do { GLenum error = glGetError(); if (error != GL_NO_ERROR) \
-NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__); } while(0)
+void CHECK_GL_ERROR() {do { GLenum error = glGetError();
+    if (error != GL_NO_ERROR)
+{
+    NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__);
+    
+}} while(0);}
 
 #if __has_feature(objc_arc)
 #define GLFM_AUTORELEASE(value) value

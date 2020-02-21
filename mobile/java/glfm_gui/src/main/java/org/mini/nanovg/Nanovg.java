@@ -40,6 +40,12 @@ public class Nanovg {
     public static final int NVG_LIGHTER = 8;
     public static final int NVG_COPY = 9;
     public static final int NVG_XOR = 10;
+    public static final int NVG_IMAGE_GENERATE_MIPMAPS = 1<<0;
+    public static final int NVG_IMAGE_REPEATX = 1<<1;
+    public static final int NVG_IMAGE_REPEATY = 1<<2;
+    public static final int NVG_IMAGE_FLIPY = 1<<3;
+    public static final int NVG_IMAGE_PREMULTIPLIED = 1<<4;
+    public static final int NVG_IMAGE_NEAREST = 1<<5;
     public static final int NVG_ANTIALIAS = 1<<0;
     public static final int NVG_STENCIL_STROKES = 1<<1;
     public static final int NVG_DEBUG = 1<<2;

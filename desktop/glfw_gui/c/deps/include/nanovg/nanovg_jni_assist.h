@@ -68,6 +68,15 @@ enum NVGcompositeOperation {
 	NVG_XOR,
 };
 
+enum NVGimageFlags {
+    NVG_IMAGE_GENERATE_MIPMAPS	= 1<<0,     // Generate mipmaps during creation of the image.
+	NVG_IMAGE_REPEATX			= 1<<1,		// Repeat image in X direction.
+	NVG_IMAGE_REPEATY			= 1<<2,		// Repeat image in Y direction.
+	NVG_IMAGE_FLIPY				= 1<<3,		// Flips (inverses) image in Y direction when rendered.
+	NVG_IMAGE_PREMULTIPLIED		= 1<<4,		// Image data has premultiplied alpha.
+	NVG_IMAGE_NEAREST			= 1<<5,		// Image interpolation is Nearest instead Linear
+};
+
 NUTIL_API void nvgBeginFrame(NVGcontext* ctx, int windowWidth, int windowHeight, float devicePixelRatio);
 NUTIL_API void nvgCancelFrame(NVGcontext* ctx);
 NUTIL_API void nvgEndFrame(NVGcontext* ctx);

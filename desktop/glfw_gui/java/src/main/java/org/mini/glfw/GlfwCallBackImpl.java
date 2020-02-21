@@ -99,6 +99,12 @@ public class GlfwCallBackImpl extends GuiCallBack {
         Glfw.glfwSetWindowTitle(display, title);
     }
 
+
+    public String getGLVersion(){
+        return GLVERSION_GL3;
+    }
+
+
     public void init(int width, int height) {
         this.winWidth = width;
         this.winHeight = height;
@@ -118,7 +124,7 @@ public class GlfwCallBackImpl extends GuiCallBack {
         }
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
         glfwWindowHint(GLFW_DEPTH_BITS, 16);
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);

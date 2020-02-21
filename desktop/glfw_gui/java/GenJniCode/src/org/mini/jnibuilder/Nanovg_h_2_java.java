@@ -29,10 +29,10 @@ public class Nanovg_h_2_java {
     }
 
     String[] input_path = {
-        "../media.h",
-        "../deps/include/stb_jni_assist.h",
-        "../deps/include/nanovg/nanovg_jni_assist.h",};
-    String[] output_path = {"src/org/mini/nanovg/Nanovg.java"};
+        "../c/media.h",
+        "../c/deps/include/stb_jni_assist.h",
+        "../c/deps/include/nanovg/nanovg_jni_assist.h",};
+    String[] output_path = {"src/main/java/org/mini/nanovg/Nanovg.java"};
 
     String CLASS_TEMPLATE
             = //

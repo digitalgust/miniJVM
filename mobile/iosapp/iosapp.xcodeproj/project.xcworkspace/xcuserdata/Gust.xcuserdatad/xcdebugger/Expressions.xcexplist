@@ -3,39 +3,25 @@
    version = "1.0">
    <ContextStates>
       <ContextState
-         contextName = "GLOBAL">
-         <PersistentStrings>
-            <PersistentString
-               value = "(Instance*)(&amp;stack-&gt;store[1])">
-            </PersistentString>
-            <PersistentString
-               value = "clazz">
-            </PersistentString>
-            <PersistentString
-               value = "clazz-&gt;name-&gt;data">
-            </PersistentString>
-            <PersistentString
-               value = "method-&gt;name-&gt;data">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "org_mini_gl_GL_glGetShaderInfoLog:jni_gl.c">
-      </ContextState>
-      <ContextState
-         contextName = "fonsTextIterInit:fontstash.h">
+         contextName = "_checkAndWaitThreadIsSuspend:garbage.c">
       </ContextState>
       <ContextState
          contextName = "fonsTextIterNext:fontstash.h">
       </ContextState>
       <ContextState
-         contextName = "class_clinit:class.c">
-      </ContextState>
-      <ContextState
-         contextName = "execute_method_impl:interpreter.c">
+         contextName = "gc_is_alive:garbage.c">
       </ContextState>
       <ContextState
          contextName = "org_mini_media_MiniAL_mal_decoder_uninit:jni_minial.m">
+      </ContextState>
+      <ContextState
+         contextName = "class_clinit:class.c">
+      </ContextState>
+      <ContextState
+         contextName = "java_lang_Class_getPrimitiveClass:java_native_std.c">
+      </ContextState>
+      <ContextState
+         contextName = "jdwp_client_process:jdwp.c">
       </ContextState>
       <ContextState
          contextName = "nvgTextBreakLines:nanovg.c">
@@ -46,21 +32,28 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "_garbage_mark_object:garbage.c">
+      </ContextState>
+      <ContextState
+         contextName = "check_suspend_and_pause:jvm_util.c">
+      </ContextState>
+      <ContextState
+         contextName = "_instance_mark_refer:garbage.c">
+      </ContextState>
+      <ContextState
+         contextName = "fonsTextIterInit:fontstash.h">
+      </ContextState>
+      <ContextState
+         contextName = "execute_method_impl:interpreter.c">
+      </ContextState>
+      <ContextState
          contextName = "primitive_class_create_get:jvm_util.c">
       </ContextState>
       <ContextState
-         contextName = "org_mini_gl_GL_glShaderSource:jni_gl.c">
-         <PersistentStrings>
-            <PersistentString
-               value = "(const GLchar*const*)(ptr_pstring-&gt;arr_body)">
-            </PersistentString>
-         </PersistentStrings>
+         contextName = "org_mini_gl_GL_glGetShaderInfoLog:jni_gl.c">
       </ContextState>
       <ContextState
          contextName = "mal_on_output__coreaudio:mini_al.h">
-      </ContextState>
-      <ContextState
-         contextName = "java_lang_Class_getPrimitiveClass:java_native_std.c">
       </ContextState>
       <ContextState
          contextName = "-[GLFMViewController keyCommands]:glfm_platform_ios.m">
@@ -72,6 +65,17 @@
                value = "self.view.bounds.size.width">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "org_mini_gl_GL_glShaderSource:jni_gl.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "(const GLchar*const*)(ptr_pstring-&gt;arr_body)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "_jarray_mark_refer:garbage.c">
       </ContextState>
    </ContextStates>
 </VariablesViewState>

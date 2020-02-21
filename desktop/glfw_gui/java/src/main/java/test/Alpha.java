@@ -1,34 +1,9 @@
 package test;
 
 import org.mini.gl.GL;
-import static org.mini.gl.GL.GL_AMBIENT;
-import static org.mini.gl.GL.GL_AMBIENT_AND_DIFFUSE;
-import static org.mini.gl.GL.GL_BLEND;
-import static org.mini.gl.GL.GL_COLOR_BUFFER_BIT;
-import static org.mini.gl.GL.GL_DEPTH_BUFFER_BIT;
-import static org.mini.gl.GL.GL_DEPTH_TEST;
-import static org.mini.gl.GL.GL_DIFFUSE;
-import static org.mini.gl.GL.GL_EMISSION;
-import static org.mini.gl.GL.GL_FALSE;
-import static org.mini.gl.GL.GL_LIGHT0;
-import static org.mini.gl.GL.GL_LIGHTING;
-import static org.mini.gl.GL.GL_ONE_MINUS_SRC_ALPHA;
-import static org.mini.gl.GL.GL_POSITION;
-import static org.mini.gl.GL.GL_SHININESS;
-import static org.mini.gl.GL.GL_SMOOTH;
-import static org.mini.gl.GL.GL_SPECULAR;
-import static org.mini.gl.GL.GL_SRC_ALPHA;
-import static org.mini.gl.GL.GL_TRUE;
-import static org.mini.gl.GL.glBlendFunc;
-import static org.mini.gl.GL.glClear;
-import static org.mini.gl.GL.glDepthMask;
-import static org.mini.gl.GL.glEnable;
-import static org.mini.gl.GL.glLightfv;
-import static org.mini.gl.GL.glMaterialf;
-import static org.mini.gl.GL.glMaterialfv;
-import static org.mini.gl.GL.glTranslatef;
 import org.mini.glfw.Glfw;
-import org.mini.nanovg.Gutil;
+
+import static org.mini.gl.GL.*;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -136,7 +111,6 @@ public class Alpha {
                 int sleep = 100;
 
                 draw2();
-                Gutil.drawCood();
 
                 Glfw.glfwPollEvents();
                 Glfw.glfwSwapBuffers(win);
@@ -215,10 +189,10 @@ public class Alpha {
         // 创建透视效果视图  
         GL.glMatrixMode(GL.GL_PROJECTION);//对投影矩阵操作  
         GL.glLoadIdentity();//将坐标原点移到中心  
-        Gutil.gluPerspective(20.0f, 1.0f, 1.0f, 20.0f);//设置透视投影矩阵  
+        gluPerspective(20.0f, 1.0f, 1.0f, 20.0f);//设置透视投影矩阵
         GL.glMatrixMode(GL.GL_MODELVIEW);//对模型视景矩阵操作  
         GL.glLoadIdentity();
-        Gutil.gluLookAt(0.0, 0.0, -5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);//视点转换  
+        gluLookAt(0.0, 0.0, -5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);//视点转换
 
         
         // 启动混合并设置混合因子
@@ -266,4 +240,82 @@ public class Alpha {
 
     }
 
+    static public void gluPerspective(double fov, double aspectRatio, double zNear, double zFar) {
+        // 使用glu库函数，需要添加glu.h头文件
+        //gluPerspective( fov, aspectRatio, zNear, zFar );
+
+        // 使用OpenGL函数，但是需要添加math.h头文件
+        double rFov = fov * 3.14159265 / 180.0;
+        GL.glFrustum(-zNear * Math.tan(rFov / 2.0) * aspectRatio,
+                zNear * Math.tan(rFov / 2.0) * aspectRatio,
+                -zNear * Math.tan(rFov / 2.0),
+                zNear * Math.tan(rFov / 2.0),
+                zNear, zFar);
+    }
+
+    static public void gluLookAt(double eX, double eY, double eZ, double cX, double cY,
+                                 double cZ, double upX, double upY, double upZ) {
+        // eye and center are points, but up is a vector
+        // 1. change center into a vector:
+        // glTranslated(-eX, -eY, -eZ);
+        cX = cX - eX;
+        cY = cY - eY;
+        cZ = cZ - eZ;
+        // 2. The angle of center on xz plane and x axis
+        // i.e. angle to rot so center in the neg. yz plane
+        double a = Math.atan(cZ / cX);
+        if (cX >= 0) {
+            a = a + Math.PI / 2;
+        } else {
+            a = a - Math.PI / 2;
+        }
+        // 3. The angle between the center and y axis
+        // i.e. angle to rot so center in the negative z axis
+        double b = Math.acos(cY / Math.sqrt(cX * cX + cY * cY + cZ * cZ));
+        b = b - Math.PI / 2;
+        // 4. up rotate around y axis (a) radians
+        double upx = upX * Math.cos(a) + upZ * Math.sin(a);
+        double upz = -upX * Math.sin(a) + upZ * Math.cos(a);
+        upX = upx;
+        upZ = upz;
+        // 5. up rotate around x axis (b) radians
+        double upy = upY * Math.cos(b) - upZ * Math.sin(b);
+        upz = upY * Math.sin(b) + upZ * Math.cos(b);
+        upY = upy;
+        upZ = upz;
+        double c = Math.atan(upX / upY);
+        if (upY < 0) {
+            // 6. the angle between up on xy plane and y axis
+            c = c + Math.PI;
+        }
+        GL.glRotated(Math.toDegrees(c), 0, 0, 1);
+        // up in yz plane
+        GL.glRotated(Math.toDegrees(b), 1, 0, 0);
+        // center in negative z axis
+        GL.glRotated(Math.toDegrees(a), 0, 1, 0);
+        // center in yz plane
+        GL.glTranslated(-eX, -eY, -eZ);
+        // eye at the origin
+    }
+
+    static public void drawCood() {
+        GL.glPushMatrix();
+        float len = 1000f;
+        GL.glBegin(GL.GL_LINES);
+        GL.glColor3f(1.f, 0, 0);
+        GL.glVertex3f(0, 0, 0);
+        GL.glVertex3f(len, 0, 0);
+        GL.glEnd();
+        GL.glBegin(GL.GL_LINES);
+        GL.glColor3f(0, 1.f, 0);
+        GL.glVertex3f(0, 0, 0);
+        GL.glVertex3f(0, len, 0);
+        GL.glEnd();
+        GL.glBegin(GL.GL_LINES);
+        GL.glColor3f(0, 0, 1.f);
+        GL.glVertex3f(0, 0, 0);
+        GL.glVertex3f(0, 0, len);
+        GL.glEnd();
+        GL.glPopMatrix();
+    }
 }

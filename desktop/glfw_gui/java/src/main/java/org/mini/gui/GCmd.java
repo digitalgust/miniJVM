@@ -16,6 +16,7 @@ public class GCmd {
     static public final int GCMD_CLEAR_MESSAGE = 2;
     static public final int GCMD_SHOW_KEYBOARD = 3;
     static public final int GCMD_HIDE_KEYBOARD = 4;
+    static public final int GCMD_RUN_CODE = 5;
 
     int cmdId;
     Object attachment;

@@ -27,7 +27,7 @@ public class GL_java_2_c {
         gt.buildC();
     }
 
-    String[] path = {"src/org/mini/gl/GL.java", "org_mini_gl_GL_", "org/mini/gl/GL", "../jni_gl.c"};
+    String[] path = {"src/main/java/org/mini/gl/GL.java", "org_mini_gl_GL_", "org/mini/gl/GL", "../c/jni_gl.c"};
 
     String[] ignore_list = {"",
         "",};
@@ -254,7 +254,7 @@ public class GL_java_2_c {
                             varCode += "    s32 " + argvName + " = env->localvar_getInt(runtime->localvar, pos++);\n";
                             curArgvName = argvName;
                             javaArgvCode += "I";
-                            if (!isPointer(nativeArgvs[nativei])) {
+                            if (!Util.isPointer(nativeArgvs[nativei])) {
                                 curArgvType = "(" + nativeArgvs[nativei] + ")";
                             }
                         } else if ("short".equals(argvType)) {
@@ -332,7 +332,7 @@ public class GL_java_2_c {
                                 varCode += "        offset_" + argvName + " *= env->data_type_bytes[" + argvName + "->mb.arr_type_index];\n";
                                 varCode += "        ptr_" + argvName + " = " + argvName + "->arr_body + offset_" + argvName + ";\n";
                                 varCode += "    } else if(offset_" + argvName + ") { ptr_" + argvName + " = (__refer)(intptr_t)offset_" + argvName + ";}\n";
-                            }                            if (!isPointer(nativeArgvs[nativei])) {
+                            }                            if (!Util.isPointer(nativeArgvs[nativei])) {
                                 //curArgvType = "*(" + nativeArgvs[nativei] + "*)";
                             }
                             curArgvName = "(ptr_" + argvName + ")";
@@ -366,7 +366,7 @@ public class GL_java_2_c {
                     funcBodyCode = funcBodyCode.replace(RELEASE_MEM, releaseMemCode);
                     funcTableLine = funcTableLine.replace(JAVA_ARGV, javaArgvCode);
 
-                    if (!isTypes(ignore_list, methodName)) {
+                    if (!Util.isTypes(ignore_list, methodName)) {
                         bw.write(funcBodyCode);
                         funcTable.add(funcTableLine);
                     }

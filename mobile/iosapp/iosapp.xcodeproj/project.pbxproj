@@ -72,9 +72,13 @@
 		451F26BB23A24ADE00F99984 /* sljitConfigInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sljitConfigInternal.h; sourceTree = "<group>"; };
 		451F26BC23A24ADE00F99984 /* sljitProtExecAllocator.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitProtExecAllocator.c; sourceTree = "<group>"; };
 		451F26BD23A24ADE00F99984 /* sljitNativeSPARC_32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeSPARC_32.c; sourceTree = "<group>"; };
+		452AD04323F9645D0069A699 /* nanovg_jni_assist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nanovg_jni_assist.h; sourceTree = "<group>"; };
 		4535FA2421944E4200B888BA /* dr_mp3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dr_mp3.h; sourceTree = "<group>"; };
 		4535FA2521944E4200B888BA /* dr_flac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dr_flac.h; sourceTree = "<group>"; };
 		4535FA2721944F7300B888BA /* jni_minial.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = jni_minial.m; sourceTree = "<group>"; };
+		457AFCAE23C84C53002F5E34 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
+		457AFCB023C84F89002F5E34 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
+		457AFCB223C84FF2002F5E34 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		4581C35F226D637C00E88538 /* garbage.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = garbage.c; sourceTree = "<group>"; };
 		4581C360226D637C00E88538 /* runtime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = runtime.c; sourceTree = "<group>"; };
 		4581C361226D637C00E88538 /* jvm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jvm.c; sourceTree = "<group>"; };
@@ -127,7 +131,6 @@
 		45D78F47209D4330003B9317 /* glfm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glfm.h; sourceTree = "<group>"; };
 		45D78F48209D4330003B9317 /* glfm_platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glfm_platform.h; sourceTree = "<group>"; };
 		45D78F49209D4330003B9317 /* glfm_platform_ios.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = glfm_platform_ios.m; sourceTree = "<group>"; };
-		45D78F4B209D4330003B9317 /* jni_nanovg_assist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jni_nanovg_assist.h; sourceTree = "<group>"; };
 		45D78F4C209D4330003B9317 /* jni_gl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jni_gl.c; sourceTree = "<group>"; };
 		45D78F4E209D4330003B9317 /* linmath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = linmath.h; sourceTree = "<group>"; };
 		45D78F4F209D4330003B9317 /* jni_nanovg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jni_nanovg.c; sourceTree = "<group>"; };
@@ -278,6 +281,9 @@
 		45ADDF6B21625C5A00F469AC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				457AFCB223C84FF2002F5E34 /* AVFoundation.framework */,
+				457AFCB023C84F89002F5E34 /* AVKit.framework */,
+				457AFCAE23C84C53002F5E34 /* MediaPlayer.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -334,7 +340,6 @@
 				45D78F4C209D4330003B9317 /* jni_gl.c */,
 				45D78F57209D4330003B9317 /* jni_glfm.c */,
 				4535FA2721944F7300B888BA /* jni_minial.m */,
-				45D78F4B209D4330003B9317 /* jni_nanovg_assist.h */,
 				45D78F4F209D4330003B9317 /* jni_nanovg.c */,
 				45D78F5C209D4330003B9317 /* jni_stb_assist.h */,
 				45D78F55209D4330003B9317 /* KHR */,
@@ -388,6 +393,7 @@
 		45D78F5D209D4330003B9317 /* nanovg */ = {
 			isa = PBXGroup;
 			children = (
+				452AD04323F9645D0069A699 /* nanovg_jni_assist.h */,
 				45D78F5E209D4330003B9317 /* nanovg_gl.h */,
 				45D78F5F209D4330003B9317 /* nanovg.h */,
 				45D78F60209D4330003B9317 /* fontstash.h */,

@@ -152,9 +152,6 @@ public class GForm extends GViewPort {
                 last = endAt;
                 count = 0;
             }
-//                if (cost < 1000 / fpsExpect) {
-//                    Thread.sleep((long) (1000 / fpsExpect - cost));
-//                }
             cmdHandler.process(this);
         } catch (Exception e) {
             e.printStackTrace();
@@ -307,6 +304,10 @@ public class GForm extends GViewPort {
 
     public static void hideKeyboard() {
         cmdHandler.addCmd(GCmd.GCMD_HIDE_KEYBOARD);
+    }
+
+    public static void addCmd(GCmd cmd) {
+        cmdHandler.addCmd(cmd);
     }
 
     public float getRatio() {

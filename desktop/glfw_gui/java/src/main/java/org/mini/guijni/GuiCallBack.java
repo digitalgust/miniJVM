@@ -5,16 +5,19 @@
  */
 package org.mini.guijni;
 
-import org.mini.glfw.GlfwCallback;
 import org.mini.glfm.GlfmCallBack;
+import org.mini.glfw.GlfwCallback;
 import org.mini.gui.GApplication;
-import org.mini.gui.GForm;
 
 /**
- *
  * @author Gust
  */
 public abstract class GuiCallBack implements GlfwCallback, GlfmCallBack {
+
+
+    public static final String GLVERSION_GL3 = "GL3";
+    public static final String GLVERSION_GLES3 = "GLES3";
+
 
     static GuiCallBack instance;
 
@@ -70,4 +73,6 @@ public abstract class GuiCallBack implements GlfwCallback, GlfmCallBack {
     public abstract void setApplication(GApplication app);
 
     public abstract void notifyCurrentFormChanged(GApplication app);
+
+    public abstract String getGLVersion();
 }

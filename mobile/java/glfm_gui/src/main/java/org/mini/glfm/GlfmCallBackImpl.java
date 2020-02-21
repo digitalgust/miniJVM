@@ -118,6 +118,10 @@ public class GlfmCallBackImpl extends GuiCallBack {
         ;
     }
 
+    public String getGLVersion(){
+        return GLVERSION_GLES3;
+    }
+
     void init() {
         fbWidth = Glfm.glfmGetDisplayWidth(display);
         fbHeight = Glfm.glfmGetDisplayHeight(display);

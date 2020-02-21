@@ -1,55 +1,10 @@
 package test;
 
 import org.mini.gl.GL;
-import static org.mini.gl.GL.GL_ARRAY_BUFFER;
-import static org.mini.gl.GL.GL_COLOR_BUFFER_BIT;
-import static org.mini.gl.GL.GL_FALSE;
-import static org.mini.gl.GL.GL_FLOAT;
-import static org.mini.gl.GL.GL_FRAGMENT_SHADER;
-import static org.mini.gl.GL.GL_STATIC_DRAW;
-import static org.mini.gl.GL.GL_TRIANGLES;
-import static org.mini.gl.GL.GL_TRUE;
-import static org.mini.gl.GL.GL_VERTEX_SHADER;
-import static org.mini.gl.GL.glAttachShader;
-import static org.mini.gl.GL.glBindBuffer;
-import static org.mini.gl.GL.glBindVertexArray;
-import static org.mini.gl.GL.glClear;
-import static org.mini.gl.GL.glCompileShader;
-import static org.mini.gl.GL.glCreateProgram;
-import static org.mini.gl.GL.glCreateShader;
-import static org.mini.gl.GL.glDrawArrays;
-import static org.mini.gl.GL.glEnableVertexAttribArray;
-import static org.mini.gl.GL.glGenBuffers;
-import static org.mini.gl.GL.glGenVertexArrays;
-import static org.mini.gl.GL.glLinkProgram;
-import static org.mini.gl.GL.glShaderSource;
-import static org.mini.gl.GL.glUseProgram;
-import static org.mini.gl.GL.glVertexAttribPointer;
-import static org.mini.glfw.Glfw.GLFW_CONTEXT_VERSION_MAJOR;
-import static org.mini.glfw.Glfw.GLFW_CONTEXT_VERSION_MINOR;
-import static org.mini.glfw.Glfw.GLFW_DEPTH_BITS;
-import static org.mini.glfw.Glfw.GLFW_KEY_ESCAPE;
-import static org.mini.glfw.Glfw.GLFW_MOUSE_BUTTON_2;
-import static org.mini.glfw.Glfw.GLFW_MOUSE_BUTTON_LEFT;
-import static org.mini.glfw.Glfw.GLFW_OPENGL_CORE_PROFILE;
-import static org.mini.glfw.Glfw.GLFW_OPENGL_FORWARD_COMPAT;
-import static org.mini.glfw.Glfw.GLFW_OPENGL_PROFILE;
-import static org.mini.glfw.Glfw.GLFW_PRESS;
-import static org.mini.glfw.Glfw.GLFW_TRANSPARENT_FRAMEBUFFER;
-import static org.mini.glfw.Glfw.GLFW_TRUE;
-import static org.mini.glfw.Glfw.glfwCreateWindow;
-import static org.mini.glfw.Glfw.glfwInit;
-import static org.mini.glfw.Glfw.glfwMakeContextCurrent;
-import static org.mini.glfw.Glfw.glfwPollEvents;
-import static org.mini.glfw.Glfw.glfwSetCallback;
-import static org.mini.glfw.Glfw.glfwSetWindowShouldClose;
-import static org.mini.glfw.Glfw.glfwSwapBuffers;
-import static org.mini.glfw.Glfw.glfwTerminate;
-import static org.mini.glfw.Glfw.glfwWindowHint;
-import static org.mini.glfw.Glfw.glfwWindowShouldClose;
 import org.mini.nanovg.Gutil;
-import static org.mini.glfw.Glfw.glfwGetFramebufferWidth;
-import static org.mini.glfw.Glfw.glfwGetFramebufferHeight;
+
+import static org.mini.gl.GL.*;
+import static org.mini.glfw.Glfw.*;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -107,6 +62,7 @@ public class Shader {
         public void framebufferSize(long window, int x, int y) {
         }
     }
+
     int loadShader(int shaderType, String shaderStr) {
         int[] return_val = {0};
         int fragment_shader = glCreateShader(shaderType);
@@ -171,7 +127,7 @@ public class Shader {
             + "precision mediump float; \n"
             + "out vec4 fragColor; \n"
             + "void main(){ \n"
-            + "fragColor=vec4(1.0,1.0,1.0,1.0); \n"
+            + "fragColor=vec4(1.0,0.0,0.0,1.0); \n"
             + "} \n";
 
     int vaoIndex = 0, vaoCount = 1;
@@ -192,6 +148,8 @@ public class Shader {
             -0.85f, 0.90f, 0
         };
 
+        int program;
+
     void init() {
         glGenVertexArrays(vaoCount, VAOs, 0);
         glBindVertexArray(VAOs[vaoIndex]);
@@ -201,7 +159,7 @@ public class Shader {
         glBindBuffer(GL_ARRAY_BUFFER, BOs[bufIndex]);
         GL.glBufferData(GL_ARRAY_BUFFER, (long) (vertices.length * 4), vertices, 0, GL_STATIC_DRAW);
 
-        int vertex_shader, fragment_shader, program;
+        int vertex_shader, fragment_shader;
         vertex_shader = loadShader(GL_VERTEX_SHADER, s_v);
 
         fragment_shader = loadShader(GL_FRAGMENT_SHADER, s_f);

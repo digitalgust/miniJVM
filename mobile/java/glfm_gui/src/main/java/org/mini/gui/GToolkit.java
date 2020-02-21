@@ -56,11 +56,10 @@ public class GToolkit {
             int av = is.available();
             if (is != null && av >= 0) {
                 byte[] b = new byte[av];
-                int len = is.read(b);
-                if (len != av) {
-                    throw new RuntimeException("read file from jar error: " + path);
-                } else {
-                    //System.out.println("load from jar: " + path + " ,bytes:" + len);
+                int r, read = 0;
+                while (read < av) {
+                    r = is.read(b, read, av - read);
+                    read += r;
                 }
                 return b;
             } else {
@@ -280,8 +279,10 @@ public class GToolkit {
         byte[] shadowPaint, imgPaint;
         float ix, iy, iw, ih;
         int[] imgW = {0}, imgH = {0};
+        imgW[0] = img.getWidth();
+        imgH[0] = img.getHeight();
 
-        nvgImageSize(vg, img.getTexture(vg), imgW, imgH);
+        //nvgImageSize(vg, img.getTexture(vg), imgW, imgH);
         if (imgW[0] < imgH[0]) {
             iw = pw;
             ih = iw * (float) imgH[0] / (float) imgW[0];
