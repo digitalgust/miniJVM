@@ -15,7 +15,7 @@ import static org.mini.gl.GL.*;
  *
  * @author gust
  */
-abstract public class GLFrameBuffer extends GPanel {
+abstract public class GLFrameBuffer {
 
     int texture_w = 512;
     int texture_h = 512;
@@ -24,37 +24,15 @@ abstract public class GLFrameBuffer extends GPanel {
     int[] rendertex = {0};        // 纹理对象的句柄
     int[] curFrameBuffer = {0};
     GImage fboimg;
-    GCmd cmd = new GCmd(GCmd.GCMD_RUN_CODE, new Runnable() {
-        @Override
-        public void run() {
-            if (fboimg == null) {
-                gl_init_fbo();
-            }
-            begin();
-            gl_paint();
-            end();
-        }
-    });
+
     ;
 
-    public GLFrameBuffer(int x, int y, int w, int h) {
-        this((float) x, (float) y, (float) w, (float) h);
+    public GLFrameBuffer(int w, int h) {
+        texture_w = w;
+        texture_h = h;
     }
 
-    public GLFrameBuffer(float x, float y, float w, float h) {
-        setLocation(x, y);
-        setSize(w, h);
-
-        texture_w = (int) w;
-        texture_h = (int) h;
-    }
-
-    abstract public void gl_paint();
-
-    abstract public void gl_init();
-
-    // 初始化几何形体
-    private void gl_init_fbo() {
+    public void gl_init() {
         // 创建FBO对象
         glGenFramebuffers(fbo.length, fbo, 0);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo[0]);
@@ -81,7 +59,6 @@ abstract public class GLFrameBuffer extends GPanel {
 
         fboimg = GImage.createImage(getTexture(), texture_w, texture_h, Nanovg.NVG_IMAGE_FLIPY);
 
-        gl_init();
     }
 
     public void delete() {
@@ -93,20 +70,13 @@ abstract public class GLFrameBuffer extends GPanel {
 
     public void finalize() {
         //Don't reference to this instance
-        GLCleaner attachment = new GLCleaner();
+        GLFboCleaner attachment = new GLFboCleaner();
         attachment.rendertext[0] = rendertex[0];
         attachment.renderbuf1[0] = depth_stencil_buffer[0];
         attachment.fboobj[0] = fbo[0];
         GForm.addCmd(new GCmd(GCmd.GCMD_RUN_CODE, attachment));
     }
 
-    public boolean update(long vg) {
-        GForm.addCmd(cmd);
-        GToolkit.drawImage(vg, fboimg, 0, 0, getW(), getH());
-        GObject.flush();
-
-        return super.update(vg);
-    }
 
     public int getTexture() {
         return rendertex[0];
@@ -120,20 +90,24 @@ abstract public class GLFrameBuffer extends GPanel {
         return texture_h;
     }
 
-    void begin() {
+    public GImage getFboimg() {
+        return fboimg;
+    }
+
+    public void begin() {
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, curFrameBuffer, 0);
         // 绑定渲染到纹理
         glBindFramebuffer(GL_FRAMEBUFFER, fbo[0]);
-        glViewport(0, 0, (int) getW(), (int) getH());
+        glViewport(0, 0, (int) texture_w, texture_h);
     }
 
-    void end() {
+    public void end() {
         glBindFramebuffer(GL_FRAMEBUFFER, curFrameBuffer[0]);
     }
 }
 
 
-class GLCleaner implements Runnable {
+class GLFboCleaner implements Runnable {
     public int[] rendertext = {0};
     int[] renderbuf1 = {0};
     int[] fboobj = {0};
