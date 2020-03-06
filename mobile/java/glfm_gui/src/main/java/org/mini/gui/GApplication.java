@@ -5,8 +5,6 @@
  */
 package org.mini.gui;
 
-import org.mini.guijni.GuiCallBack;
-
 /**
  *
  * @author Gust
@@ -28,14 +26,13 @@ public abstract class GApplication {
     }
 
     public void notifyCurrentFormChanged() {
-        GuiCallBack.getInstance().notifyCurrentFormChanged(this);
+        GCallBack.getInstance().notifyCurrentFormChanged(this);
     }
 
     /**
      * return current form
      *
-     * @param appins
      * @return
      */
-    public abstract GForm getForm(GApplication appins);
+    public abstract GForm getForm();
 }

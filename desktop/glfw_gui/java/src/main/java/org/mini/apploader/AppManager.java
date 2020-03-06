@@ -5,18 +5,16 @@
  */
 package org.mini.apploader;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.List;
-
 import org.mini.gui.*;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GKeyboardShowListener;
 import org.mini.gui.event.GPhotoPickedListener;
 import org.mini.gui.event.GStateChangeListener;
-import org.mini.guijni.GuiCallBack;
-import org.mini.nanovg.Nanovg;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * @author Gust
@@ -108,25 +106,25 @@ public class AppManager extends GApplication {
     }
 
     public void active() {
-        if (GuiCallBack.getInstance().getApplication() != this) {
-            preApp = GuiCallBack.getInstance().getApplication();
+        if (GCallBack.getInstance().getApplication() != this) {
+            preApp = GCallBack.getInstance().getApplication();
         }
         if (webServer != null) {
             webServer.stopServer();
         }
-        GuiCallBack.getInstance().setApplication(this);
+        GCallBack.getInstance().setApplication(this);
         reloadAppList();
     }
 
     @Override
-    public GForm getForm(GApplication app) {
+    public GForm getForm() {
         mgrForm = new GForm() {
 
             @Override
             public void init() {
                 super.init();
 
-                final GuiCallBack ccb = GuiCallBack.getInstance();
+                final GCallBack ccb = GCallBack.getInstance();
                 devW = ccb.getDeviceWidth();
                 devH = ccb.getDeviceHeight();
                 //System.out.println("devW , devH " + devW + " , " + devH);
@@ -204,7 +202,7 @@ public class AppManager extends GApplication {
 //            @Override
 //            public void action(GObject gobj) {
 //                if (preApp != null) {
-//                    GuiCallBack.getInstance().setApplication(preApp);
+//                    GCallBack.getInstance().setApplication(preApp);
 //                }
 //            }
 //        });

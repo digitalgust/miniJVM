@@ -143,7 +143,7 @@ public class GTextField extends GTextObject {
     }
 
     @Override
-    public void touchEvent(int phase, int x, int y) {
+    public void touchEvent(int touchid, int phase, int x, int y) {
         int rx = (int) (x - parent.getInnerX());
         int ry = (int) (y - parent.getInnerY());
         if (isInBoundle(boundle, rx, ry)) {
@@ -161,7 +161,7 @@ public class GTextField extends GTextObject {
                 }
             }
         }
-        super.touchEvent(phase, x, y);
+        super.touchEvent(touchid, phase, x, y);
     }
 
     @Override

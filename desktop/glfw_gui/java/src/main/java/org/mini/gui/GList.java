@@ -5,42 +5,17 @@
  */
 package org.mini.gui;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.mini.glfm.Glfm;
-import static org.mini.nanovg.Gutil.toUtf8;
-import static org.mini.gui.GToolkit.nvgRGBA;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
 import org.mini.nanovg.Nanovg;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_LEFT;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_MIDDLE;
-import static org.mini.nanovg.Nanovg.NVG_CCW;
-import static org.mini.nanovg.Nanovg.NVG_CW;
-import static org.mini.nanovg.Nanovg.NVG_HOLE;
-import static org.mini.nanovg.Nanovg.nvgArc;
-import static org.mini.nanovg.Nanovg.nvgBeginPath;
-import static org.mini.nanovg.Nanovg.nvgBoxGradient;
-import static org.mini.nanovg.Nanovg.nvgClosePath;
-import static org.mini.nanovg.Nanovg.nvgFill;
-import static org.mini.nanovg.Nanovg.nvgFillColor;
-import static org.mini.nanovg.Nanovg.nvgFillPaint;
-import static org.mini.nanovg.Nanovg.nvgFontFace;
-import static org.mini.nanovg.Nanovg.nvgFontSize;
-import static org.mini.nanovg.Nanovg.nvgImagePattern;
-import static org.mini.nanovg.Nanovg.nvgImageSize;
-import static org.mini.nanovg.Nanovg.nvgLinearGradient;
-import static org.mini.nanovg.Nanovg.nvgPathWinding;
-import static org.mini.nanovg.Nanovg.nvgRect;
-import static org.mini.nanovg.Nanovg.nvgRestore;
-import static org.mini.nanovg.Nanovg.nvgRoundedRect;
-import static org.mini.nanovg.Nanovg.nvgSave;
-import static org.mini.nanovg.Nanovg.nvgStroke;
-import static org.mini.nanovg.Nanovg.nvgStrokeColor;
-import static org.mini.nanovg.Nanovg.nvgStrokeWidth;
-import static org.mini.nanovg.Nanovg.nvgTextAlign;
-import static org.mini.nanovg.Nanovg.nvgTextJni;
-import static org.mini.nanovg.Nanovg.nvgTextMetrics;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.mini.gui.GToolkit.nvgRGBA;
+import static org.mini.nanovg.Gutil.toUtf8;
+import static org.mini.nanovg.Nanovg.*;
 
 /**
  *
@@ -570,7 +545,7 @@ public class GList extends GContainer implements GFocusChangeListener {
     GPanel normalPanel = new GPanel() {
 
         @Override
-        public void touchEvent(int phase, int x, int y) {
+        public void touchEvent(int touchid, int phase, int x, int y) {
 
             if (phase == Glfm.GLFMTouchPhaseEnded) {
                 if (!pulldown) {
@@ -578,7 +553,7 @@ public class GList extends GContainer implements GFocusChangeListener {
                     GList.this.changeCurPanel();
                 }
             }
-            super.touchEvent(phase, x, y);
+            super.touchEvent(touchid, phase, x, y);
 
         }
 

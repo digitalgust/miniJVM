@@ -5,7 +5,7 @@
  */
 package org.mini.glfm;
 
-import org.mini.guijni.GuiCallBack;
+import org.mini.gui.GCallBack;
 
 /**
  *
@@ -138,7 +138,7 @@ public class Glfm {
 
     }
 
-    public static void glfmSetCallBack(long display, GuiCallBack app) {
+    public static void glfmSetCallBack(long display, GCallBack app) {
 
     }
 

@@ -170,10 +170,10 @@ public class GViewSlot extends GViewPort {
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         int phase = pressed ? Glfm.GLFMTouchPhaseBegan : Glfm.GLFMTouchPhaseEnded;
-        touchEvent(phase, x, y);
+        touchEvent(0, phase, x, y);
     }
 
-    public void touchEvent(int phase, int x, int y) {
+    public void touchEvent(int touchid, int phase, int x, int y) {
         switch (phase) {
             case Glfm.GLFMTouchPhaseBegan: {
                 touched = true;
@@ -213,7 +213,7 @@ public class GViewSlot extends GViewPort {
                 break;
             }
         }
-        super.touchEvent(phase, x, y);
+        super.touchEvent(touchid, phase, x, y);
     }
 
     public boolean dragEvent(float dx, float dy, float x, float y) {

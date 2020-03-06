@@ -94,7 +94,7 @@ public class GImage {
     }
 
     static public GImage createImageFromJar(String filepath) {
-        return createImage(filepath, 0);
+        return createImageFromJar(filepath, 0);
     }
 
     static public GImage createImageFromJar(String filepath, int imageflag) {

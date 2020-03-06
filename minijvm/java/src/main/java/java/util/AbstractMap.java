@@ -24,7 +24,6 @@
  */
 
 package java.util;
-import java.util.Map.Entry;
 
 /**
  * This class provides a skeletal implementation of the <tt>Map</tt>

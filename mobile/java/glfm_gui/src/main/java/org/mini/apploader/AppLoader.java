@@ -5,6 +5,12 @@
  */
 package org.mini.apploader;
 
+import org.mini.gui.GApplication;
+import org.mini.gui.GCallBack;
+import org.mini.gui.GLanguage;
+import org.mini.reflect.vm.RefNative;
+import org.mini.zip.Zip;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -13,15 +19,8 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
-import org.mini.gui.GApplication;
-import org.mini.gui.GLanguage;
-import org.mini.guijni.GuiCallBack;
-import org.mini.reflect.vm.RefNative;
-import org.mini.zip.Zip;
 
 /**
- *
- *
  * @author gust
  */
 public class AppLoader {
@@ -70,36 +69,36 @@ public class AppLoader {
     }
 
     static void checkDir() {
-        File f = new File(GuiCallBack.getInstance().getAppSaveRoot() + APP_DIR);
+        File f = new File(GCallBack.getInstance().getAppSaveRoot() + APP_DIR);
         if (!f.exists()) {
             f.mkdirs();
         }
 
-        f = new File(GuiCallBack.getInstance().getAppSaveRoot() + APP_DATA_DIR);
+        f = new File(GCallBack.getInstance().getAppSaveRoot() + APP_DATA_DIR);
         if (!f.exists()) {
             f.mkdirs();
         }
         //clear tmp files
-        f = new File(GuiCallBack.getInstance().getAppSaveRoot() + TMP_DIR);
+        f = new File(GCallBack.getInstance().getAppSaveRoot() + TMP_DIR);
         deleteTree(f);
         //check tmp dir
-        f = new File(GuiCallBack.getInstance().getAppSaveRoot() + TMP_DIR);
+        f = new File(GCallBack.getInstance().getAppSaveRoot() + TMP_DIR);
         if (!f.exists()) {
             f.mkdirs();
         }
     }
 
     static public String getTmpDirPath() {
-        return GuiCallBack.getInstance().getAppSaveRoot() + TMP_DIR;
+        return GCallBack.getInstance().getAppSaveRoot() + TMP_DIR;
     }
 
     static public String getAppJarPath(String jarName) {
-        String s = GuiCallBack.getInstance().getAppSaveRoot() + APP_DIR + jarName;
+        String s = GCallBack.getInstance().getAppSaveRoot() + APP_DIR + jarName;
         return s;
     }
 
     static public String getAppDataPath(String jarName) {
-        String s = GuiCallBack.getInstance().getAppSaveRoot() + APP_DATA_DIR + jarName + "/";
+        String s = GCallBack.getInstance().getAppSaveRoot() + APP_DATA_DIR + jarName + "/";
         File f = new File(s);
         if (!f.exists()) {
             f.mkdirs();
@@ -108,7 +107,7 @@ public class AppLoader {
     }
 
     static void copyExApp() {
-        String srcPath = GuiCallBack.getInstance().getAppResRoot() + "/resfiles/" + EXAMPLE_APP_FILE;
+        String srcPath = GCallBack.getInstance().getAppResRoot() + "/resfiles/" + EXAMPLE_APP_FILE;
         //if (!applist.contains(EXAMPLE_APP_FILE) || !isJarExists(srcPath)) {
         addApp(EXAMPLE_APP_FILE, srcPath);
         //System.out.println("copy exapp");
@@ -117,7 +116,7 @@ public class AppLoader {
 
     public static void loadProp(String fname, Properties prop) {
         try {
-            File f = new File(GuiCallBack.getInstance().getAppSaveRoot() + fname);
+            File f = new File(GCallBack.getInstance().getAppSaveRoot() + fname);
             if (f.exists()) {
                 FileInputStream fis = new FileInputStream(f);
                 prop.load(fis);
@@ -131,7 +130,7 @@ public class AppLoader {
 
     public static void saveProp(String name, Properties prop) {
         try {
-            File f = new File(GuiCallBack.getInstance().getAppSaveRoot() + name);
+            File f = new File(GCallBack.getInstance().getAppSaveRoot() + name);
 
             FileOutputStream fos = new FileOutputStream(f);
             prop.store(fos, "");
@@ -268,7 +267,7 @@ public class AppLoader {
 
     static public List<String> getAppList() {
         List<String> list = new ArrayList();
-        for (Enumeration e = applist.keys(); e.hasMoreElements();) {
+        for (Enumeration e = applist.keys(); e.hasMoreElements(); ) {
             try {
                 String s = (String) e.nextElement();
                 list.add(s.trim());
@@ -295,7 +294,7 @@ public class AppLoader {
             if (c != null) {
                 app = (GApplication) c.newInstance();
                 app.setSaveRoot(getAppDataPath(jarName));
-                GuiCallBack.getInstance().setApplication(app);
+                GCallBack.getInstance().setApplication(app);
             }
         } catch (Exception ex) {
             ex.printStackTrace();

@@ -153,7 +153,7 @@ abstract public class GObject {
     public void characterEvent(String str, int modifiers) {
     }
 
-    public void touchEvent(int phase, int x, int y) {
+    public void touchEvent(int touchid, int phase, int x, int y) {
     }
 
     public boolean scrollEvent(float scrollX, float scrollY, float x, float y) {

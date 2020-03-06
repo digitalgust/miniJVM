@@ -190,7 +190,7 @@ public class GViewPort extends GContainer {
     byte dragDirection = DIR_NODEF;
 
     @Override
-    public void touchEvent(int phase, int x, int y) {
+    public void touchEvent(int touchid, int phase, int x, int y) {
         switch (phase) {
             case Glfm.GLFMTouchPhaseBegan: {
                 if (task != null) {
@@ -206,7 +206,7 @@ public class GViewPort extends GContainer {
                 break;
             }
         }
-        super.touchEvent(phase, x, y);
+        super.touchEvent(touchid, phase, x, y);
     }
 
     //每多长时间进行一次惯性动作

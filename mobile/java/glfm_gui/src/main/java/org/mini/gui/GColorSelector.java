@@ -6,7 +6,7 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
-import static org.mini.gui.GObject.isInBoundle;
+
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Nanovg.NVG_CCW;
 import static org.mini.nanovg.Nanovg.NVG_CW;
@@ -28,7 +28,6 @@ import static org.mini.nanovg.Nanovg.nvgRect;
 import static org.mini.nanovg.Nanovg.nvgRestore;
 import static org.mini.nanovg.Nanovg.nvgRotate;
 import static org.mini.nanovg.Nanovg.nvgSave;
-import static org.mini.nanovg.Nanovg.nvgScissor;
 import static org.mini.nanovg.Nanovg.nvgStroke;
 import static org.mini.nanovg.Nanovg.nvgStrokeColor;
 import static org.mini.nanovg.Nanovg.nvgStrokeWidth;
@@ -102,7 +101,7 @@ public class GColorSelector extends GObject {
     }
 
     @Override
-    public void touchEvent(int phase, int x, int y) {
+    public void touchEvent(int touchid, int phase, int x, int y) {
         if (isInArea(x, y)) {
             if (phase != Glfm.GLFMTouchPhaseBegan) {
                 float offX = x - (getX() + centX);

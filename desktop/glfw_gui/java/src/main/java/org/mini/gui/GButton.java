@@ -90,7 +90,7 @@ public class GButton extends GObject {
     }
 
     @Override
-    public void touchEvent(int phase, int x, int y) {
+    public void touchEvent(int touchid, int phase, int x, int y) {
         if (isInArea(x, y)) {
             if (phase == Glfm.GLFMTouchPhaseBegan) {
                 bt_pressed = true;

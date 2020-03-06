@@ -6,7 +6,7 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
-import static org.mini.gui.GObject.isInBoundle;
+
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Nanovg.NVG_HOLE;
 import static org.mini.nanovg.Nanovg.nvgBeginPath;
@@ -147,7 +147,7 @@ public class GImageItem extends GObject {
     boolean bt_pressed;
 
     @Override
-    public void touchEvent(int phase, int x, int y) {
+    public void touchEvent(int touchid, int phase, int x, int y) {
         if (isInArea(x, y)) {
             if (phase == Glfm.GLFMTouchPhaseBegan) {
                 bt_pressed = true;

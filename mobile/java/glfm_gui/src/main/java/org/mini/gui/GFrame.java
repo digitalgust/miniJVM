@@ -7,8 +7,7 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
-import static org.mini.gui.GObject.LEFT;
-import static org.mini.gui.GObject.isInBoundle;
+
 import static org.mini.nanovg.Gutil.toUtf8;
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_CENTER;
@@ -331,7 +330,7 @@ public class GFrame extends GContainer {
     }
 
     @Override
-    public void touchEvent(int phase, int x, int y) {
+    public void touchEvent(int touchid, int phase, int x, int y) {
 
         switch (phase) {
             case Glfm.GLFMTouchPhaseBegan:
@@ -354,7 +353,7 @@ public class GFrame extends GContainer {
         }
 
         if (isInArea(x, y)) {
-            super.touchEvent(phase, x, y);
+            super.touchEvent(touchid, phase, x, y);
         } else {
             panel.setFocus(null);
         }

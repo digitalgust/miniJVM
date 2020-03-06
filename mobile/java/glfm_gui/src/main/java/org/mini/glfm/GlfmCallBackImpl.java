@@ -6,11 +6,8 @@
 package org.mini.glfm;
 
 import org.mini.apploader.AppLoader;
-import org.mini.gui.GApplication;
-import org.mini.gui.GForm;
-import org.mini.gui.GObject;
-import org.mini.gui.GToolkit;
-import org.mini.guijni.GuiCallBack;
+import org.mini.gui.*;
+import org.mini.gui.GCallBack;
 import org.mini.nanovg.Nanovg;
 
 import static org.mini.nanovg.Nanovg.NVG_ANTIALIAS;
@@ -20,7 +17,7 @@ import static org.mini.nanovg.Nanovg.NVG_STENCIL_STROKES;
 /**
  * @author Gust
  */
-public class GlfmCallBackImpl extends GuiCallBack {
+public class GlfmCallBackImpl extends GCallBack {
 
     long display;
     int winWidth, winHeight;
@@ -58,8 +55,8 @@ public class GlfmCallBackImpl extends GuiCallBack {
                 Glfm.GLFMStencilFormat8,
                 Glfm.GLFMMultisampleNone);
 
-        GuiCallBack.getInstance().setDisplay(winContext);
-        Glfm.glfmSetCallBack(winContext, GuiCallBack.getInstance());
+        GCallBack.getInstance().setDisplay(winContext);
+        Glfm.glfmSetCallBack(winContext, GCallBack.getInstance());
 
     }
 
@@ -116,10 +113,6 @@ public class GlfmCallBackImpl extends GuiCallBack {
 
     public void setDisplayTitle(String title) {
         ;
-    }
-
-    public String getGLVersion(){
-        return GLVERSION_GLES3;
     }
 
     void init() {
@@ -265,7 +258,7 @@ public class GlfmCallBackImpl extends GuiCallBack {
                 form.longTouchedEvent(mouseX, mouseY);
                 long_touched = false;
             }
-            form.touchEvent(phase, mouseX, mouseY);
+            form.touchEvent(touch, phase, mouseX, mouseY);
         }
         GObject.flush();
         return true;
@@ -338,98 +331,7 @@ public class GlfmCallBackImpl extends GuiCallBack {
         gform.onNotify(key, val);
     }
 
-    //============================== glfw
-    @Override
-    public void error(int error, String description) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
 
-    @Override
-    public void monitor(long monitor, boolean connected) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void framebufferSize(long window, int x, int y) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void windowPos(long window, int x, int y) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void windowSize(long window, int width, int height) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean windowClose(long window) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void windowRefresh(long window) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void windowFocus(long window, boolean focused) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void windowIconify(long window, boolean iconified) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void key(long window, int key, int scancode, int action, int mods) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void character(long window, char character) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void mouseButton(long window, int button, boolean pressed) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void cursorPos(long window, int x, int y) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void cursorEnter(long window, boolean entered) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void scroll(long window, double scrollX, double scrollY) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void drop(long window, int count, String[] paths) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void mainLoop() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void onMemWarning(long display) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    //==============================
     public String getAppSaveRoot() {
         return Glfm.glfmGetSaveRoot();
     }
@@ -444,33 +346,11 @@ public class GlfmCallBackImpl extends GuiCallBack {
     }
 
     @Override
-    public void destory() {
+    public void destroy() {
         if (vg != 0) {
             Nanovg.nvgDeleteGLES3(vg);
         }
     }
 
-    @Override
-    public GApplication getApplication() {
-        return gapp;
-    }
-
-    @Override
-    public void setApplication(GApplication app) {
-        if (app != null) {
-            if (gapp != null) {
-                gapp.close();
-            }
-            gapp = app;
-            setForm(app.getForm(app));
-        }
-    }
-
-    @Override
-    public void notifyCurrentFormChanged(GApplication app) {
-        if (gapp == app) {
-            setForm(app.getForm(app));
-        }
-    }
 
 }

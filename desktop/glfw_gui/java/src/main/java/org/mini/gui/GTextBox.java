@@ -304,7 +304,7 @@ public class GTextBox extends GTextObject {
     }
 
     @Override
-    public void touchEvent(int phase, int x, int y) {
+    public void touchEvent(int touchid, int phase, int x, int y) {
         if (isInArea(x, y)) {
             switch (phase) {
                 case Glfm.GLFMTouchPhaseBegan: {
@@ -354,7 +354,7 @@ public class GTextBox extends GTextObject {
                     break;
             }
         }
-        super.touchEvent(phase, x, y);
+        super.touchEvent(touchid, phase, x, y);
     }
 
     /**

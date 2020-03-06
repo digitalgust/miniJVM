@@ -570,7 +570,7 @@ public class GList extends GContainer implements GFocusChangeListener {
     GPanel normalPanel = new GPanel() {
 
         @Override
-        public void touchEvent(int phase, int x, int y) {
+        public void touchEvent(int touchid, int phase, int x, int y) {
 
             if (phase == Glfm.GLFMTouchPhaseEnded) {
                 if (!pulldown) {
@@ -578,7 +578,7 @@ public class GList extends GContainer implements GFocusChangeListener {
                     GList.this.changeCurPanel();
                 }
             }
-            super.touchEvent(phase, x, y);
+            super.touchEvent(touchid, phase, x, y);
 
         }
 

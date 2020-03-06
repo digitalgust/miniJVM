@@ -7,11 +7,7 @@ package org.mini.glfw;
  */
 
 import org.mini.apploader.AppLoader;
-import org.mini.gui.GApplication;
-import org.mini.gui.GForm;
-import org.mini.gui.GObject;
-import org.mini.gui.GToolkit;
-import org.mini.guijni.GuiCallBack;
+import org.mini.gui.*;
 import org.mini.nanovg.Gutil;
 
 import java.io.File;
@@ -25,10 +21,9 @@ import static org.mini.nanovg.Nanovg.*;
 /**
  * @author Gust
  */
-public class GlfwCallBackImpl extends GuiCallBack {
+public class GlfwCallBackImpl extends GCallBack {
 
-    GApplication gapp;
-    GForm gform;
+
     long display;
 
     int winWidth, winHeight;
@@ -57,14 +52,6 @@ public class GlfwCallBackImpl extends GuiCallBack {
 
     public long getDisplay() {
         return display;
-    }
-
-    public GForm getForm() {
-        return gform;
-    }
-
-    public void setForm(GForm form) {
-        gform = form;
     }
 
     public long getNvContext() {
@@ -97,11 +84,6 @@ public class GlfwCallBackImpl extends GuiCallBack {
 
     public void setDisplayTitle(String title) {
         Glfw.glfwSetWindowTitle(display, title);
-    }
-
-
-    public String getGLVersion(){
-        return GLVERSION_GL3;
     }
 
 
@@ -196,7 +178,7 @@ public class GlfwCallBackImpl extends GuiCallBack {
         }
     }
 
-    public void destory() {
+    public void destroy() {
         nvgDeleteGL3(vg);
         glfwTerminate();
         GToolkit.removeForm(vg);
@@ -363,72 +345,6 @@ public class GlfwCallBackImpl extends GuiCallBack {
     public void cursorEnter(long window, boolean entered) {
     }
 
-    //============================== glfm
-    @Override
-    public void mainLoop(long display, double frameTime) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean onTouch(long display, int touch, int phase, double x, double y) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean onKey(long display, int keyCode, int action, int modifiers) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void onCharacter(long display, String str, int modifiers) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void onKeyboardVisible(long display, boolean visible, double x, double y, double w, double h) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void onSurfaceError(long display, String description) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void onSurfaceCreated(long display, int width, int height) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void onSurfaceResize(long display, int width, int height) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void onSurfaceDestroyed(long display) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void onMemWarning(long display) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void onAppFocus(long display, boolean focused) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void onPhotoPicked(long display, int uid, String url, byte[] data) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void onNotify(long display, String key, String val) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
     //==============================
     @Override
     public String getAppSaveRoot() {
@@ -445,21 +361,5 @@ public class GlfwCallBackImpl extends GuiCallBack {
         return gapp;
     }
 
-    @Override
-    public void setApplication(GApplication app) {
-        if (app != null) {
-            if (gapp != null) {
-                gapp.close();
-            }
-            gapp = app;
-            setForm(app.getForm(app));
-        }
-    }
 
-    @Override
-    public void notifyCurrentFormChanged(GApplication app) {
-        if (gapp == app) {
-            setForm(app.getForm(app));
-        }
-    }
 }

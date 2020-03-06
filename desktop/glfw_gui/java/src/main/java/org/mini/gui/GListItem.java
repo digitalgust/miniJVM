@@ -6,7 +6,7 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
-import static org.mini.gui.GObject.TYPE_LISTITEM;
+
 import static org.mini.nanovg.Nanovg.nvgImageSize;
 
 /**
@@ -60,7 +60,7 @@ public class GListItem extends GObject {
     int mouseX, mouseY;
 
     @Override
-    public void touchEvent(int phase, int x, int y) {
+    public void touchEvent(int touchid, int phase, int x, int y) {
         switch (phase) {
             case Glfm.GLFMTouchPhaseBegan:
                 mouseX = x;

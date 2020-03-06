@@ -9,7 +9,6 @@ import org.mini.gui.event.GAppActiveListener;
 import org.mini.gui.event.GKeyboardShowListener;
 import org.mini.gui.event.GNotifyListener;
 import org.mini.gui.event.GPhotoPickedListener;
-import org.mini.guijni.GuiCallBack;
 import org.mini.nanovg.Gutil;
 import org.mini.nanovg.Nanovg;
 import org.mini.nanovg.StbFont;
@@ -29,7 +28,7 @@ public class GForm extends GViewPort {
     String title;
     long display; //glfw display
     long vg; //nk contex
-    GuiCallBack callback;
+    GCallBack callback;
     static StbFont gfont;
     float fps;
     float fpsExpect = 30;
@@ -53,14 +52,14 @@ public class GForm extends GViewPort {
 
     public GForm() {
         this.title = title;
-        callback = GuiCallBack.getInstance();
+        callback = GCallBack.getInstance();
     }
 
     public int getType() {
         return TYPE_FORM;
     }
 
-    public GuiCallBack getCallBack() {
+    public GCallBack getCallBack() {
         return this.callback;
     }
 
@@ -164,7 +163,6 @@ public class GForm extends GViewPort {
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextAlign(vg, Nanovg.NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
-        GuiCallBack cb = (GuiCallBack) callback;
         float dx = 2, dy = 40;
         byte[] b;
         nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));

@@ -596,7 +596,7 @@ public class GToolkit {
             }
 
             @Override
-            public void touchEvent(int phase, int x, int y) {
+            public void touchEvent(int touchid, int phase, int x, int y) {
                 if (getForm() != null) {
                     if (getElements().isEmpty()) {//no menu
                         getForm().remove(this);

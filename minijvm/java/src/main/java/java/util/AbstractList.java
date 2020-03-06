@@ -7,8 +7,6 @@
 
 package java.util;
 
-import java.util.NoSuchElementException;
-
 /**
  * This class provides a skeletal implementation of the <tt>List</tt>
  * interface to minimize the effort required to implement this interface

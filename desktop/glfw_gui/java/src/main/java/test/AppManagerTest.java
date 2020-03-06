@@ -1,7 +1,7 @@
 package test;
 
 import org.mini.apploader.AppManager;
-import org.mini.guijni.GuiCallBack;
+import org.mini.gui.GCallBack;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -15,12 +15,12 @@ import org.mini.guijni.GuiCallBack;
 public class AppManagerTest  {
 
     public static void main(String[] args) {
-        GuiCallBack ccb = GuiCallBack.getInstance();
+        GCallBack ccb = GCallBack.getInstance();
         ccb.init(800, 600);//window size
 
         AppManager.getInstance().active();
 
         ccb.mainLoop();
-        ccb.destory();
+        ccb.destroy();
     }
 }

@@ -385,24 +385,24 @@ abstract public class GContainer extends GObject {
     }
 
     @Override
-    public void touchEvent(int phase, int x, int y) {
+    public void touchEvent(int touchid, int phase, int x, int y) {
         GObject found = findByXY(x, y);
         if (found instanceof GMenu) {
             if (!((GMenu) found).isContextMenu()) {
                 setFocus(null);
             }
-            found.touchEvent(phase, x, y);
+            found.touchEvent(touchid, phase, x, y);
             return;
         }
 
         if (focus != null && focus.isInArea(x, y)) {
-            focus.touchEvent(phase, x, y);
+            focus.touchEvent(touchid, phase, x, y);
         } else {
             if (phase == Glfm.GLFMTouchPhaseBegan) {
                 setFocus(found);
             }
             if (focus != null) {
-                focus.touchEvent(phase, x, y);
+                focus.touchEvent(touchid, phase, x, y);
             }
         }
     }
