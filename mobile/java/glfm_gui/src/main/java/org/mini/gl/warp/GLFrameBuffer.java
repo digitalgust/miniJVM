@@ -15,7 +15,7 @@ import static org.mini.gl.GL.*;
  *
  * @author gust
  */
-abstract public class GLFrameBuffer {
+public class GLFrameBuffer {
 
     int texture_w = 512;
     int texture_h = 512;
@@ -24,8 +24,22 @@ abstract public class GLFrameBuffer {
     int[] rendertex = {0};        // 纹理对象的句柄
     int[] curFrameBuffer = {0};
     GImage fboimg;
+    public long cost;
 
-    ;
+
+    static class Cleaner implements Runnable {
+        public int[] rendertext = {0};
+        int[] renderbuf1 = {0};
+        int[] fboobj = {0};
+
+        @Override
+        public void run() {
+            glDeleteTextures(rendertext.length, rendertext, 0);
+            glDeleteRenderbuffers(renderbuf1.length, renderbuf1, 0);
+            glDeleteFramebuffers(fboobj.length, fboobj, 0);
+            System.out.println("delete fbo success");
+        }
+    }
 
     public GLFrameBuffer(int w, int h) {
         texture_w = w;
@@ -70,7 +84,7 @@ abstract public class GLFrameBuffer {
 
     public void finalize() {
         //Don't reference to this instance
-        GLFboCleaner attachment = new GLFboCleaner();
+        Cleaner attachment = new Cleaner();
         attachment.rendertext[0] = rendertex[0];
         attachment.renderbuf1[0] = depth_stencil_buffer[0];
         attachment.fboobj[0] = fbo[0];
@@ -95,6 +109,7 @@ abstract public class GLFrameBuffer {
     }
 
     public void begin() {
+        cost = System.currentTimeMillis();
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, curFrameBuffer, 0);
         // 绑定渲染到纹理
         glBindFramebuffer(GL_FRAMEBUFFER, fbo[0]);
@@ -103,20 +118,7 @@ abstract public class GLFrameBuffer {
 
     public void end() {
         glBindFramebuffer(GL_FRAMEBUFFER, curFrameBuffer[0]);
+        cost = System.currentTimeMillis() - cost;
     }
 }
 
-
-class GLFboCleaner implements Runnable {
-    public int[] rendertext = {0};
-    int[] renderbuf1 = {0};
-    int[] fboobj = {0};
-
-    @Override
-    public void run() {
-        glDeleteTextures(rendertext.length, rendertext, 0);
-        glDeleteRenderbuffers(renderbuf1.length, renderbuf1, 0);
-        glDeleteFramebuffers(fboobj.length, fboobj, 0);
-        System.out.println("delete fbo success");
-    }
-}

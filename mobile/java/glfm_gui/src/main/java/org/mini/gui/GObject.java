@@ -5,10 +5,12 @@
  */
 package org.mini.gui;
 
-import java.util.Timer;
-import static org.mini.gui.GToolkit.nvgRGBA;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
+
+import java.util.Timer;
+
+import static org.mini.gui.GToolkit.nvgRGBA;
 
 /**
  *
@@ -82,7 +84,7 @@ abstract public class GObject {
 
     }
 
-    public void destory() {
+    public void destroy() {
     }
 
     public abstract int getType();

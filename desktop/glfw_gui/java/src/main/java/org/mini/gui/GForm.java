@@ -142,6 +142,7 @@ public class GForm extends GViewPort {
             cmdHandler.update(this);
             nvgEndFrame(vg);
 
+            cmdHandler.process(this);
             //
             count++;
             endAt = System.currentTimeMillis();
@@ -152,7 +153,6 @@ public class GForm extends GViewPort {
                 last = endAt;
                 count = 0;
             }
-            cmdHandler.process(this);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -17,7 +17,7 @@ import static org.mini.gl.GL.*;
  *
  * @author gust
  */
-abstract public class GLShadowMapping {
+public class GLShadowMapping {
 
     int texture_w = 512;
     int texture_h = 512;
@@ -25,7 +25,20 @@ abstract public class GLShadowMapping {
     int[] rendertex = {0};        // 纹理对象的句柄
     int[] curFrameBuffer = {0};
     GImage fboimg;
+    public long cost;
 
+
+    static class Cleaner implements Runnable {
+        public int[] rendertext = {0};
+        int[] fboobj = {0};
+
+        @Override
+        public void run() {
+            glDeleteTextures(rendertext.length, rendertext, 0);
+            glDeleteFramebuffers(fboobj.length, fboobj, 0);
+            System.out.println("delete fbo success");
+        }
+    }
 
     public GLShadowMapping(int w, int h) {
 
@@ -42,7 +55,7 @@ abstract public class GLShadowMapping {
         // 创建纹理
         glGenTextures(rendertex.length, rendertex, 0);
         glBindTexture(GL_TEXTURE_2D, rendertex[0]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, texture_w, texture_h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, null, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, texture_w, texture_h, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, null, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -64,7 +77,6 @@ abstract public class GLShadowMapping {
 
         fboimg = GImage.createImage(getTexture(), texture_w, texture_h, Nanovg.NVG_IMAGE_FLIPY);
 
-
     }
 
     public void delete() {
@@ -75,7 +87,7 @@ abstract public class GLShadowMapping {
 
     public void finalize() {
         //Don't reference to this instance
-        GLSmCleaner attachment = new GLSmCleaner();
+        Cleaner attachment = new Cleaner();
         attachment.rendertext[0] = rendertex[0];
         attachment.fboobj[0] = fbo[0];
         GForm.addCmd(new GCmd(GCmd.GCMD_RUN_CODE, attachment));
@@ -99,27 +111,17 @@ abstract public class GLShadowMapping {
     }
 
     public void begin() {
+        cost = System.currentTimeMillis();
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, curFrameBuffer, 0);
         // 绑定渲染到纹理
         glBindFramebuffer(GL_FRAMEBUFFER, fbo[0]);
         glViewport(0, 0, texture_w, texture_h);
+        glEnable(GL_DEPTH_TEST);
         glClear(GL_DEPTH_BUFFER_BIT);
     }
 
     public void end() {
         glBindFramebuffer(GL_FRAMEBUFFER, curFrameBuffer[0]);
-    }
-}
-
-
-class GLSmCleaner implements Runnable {
-    public int[] rendertext = {0};
-    int[] fboobj = {0};
-
-    @Override
-    public void run() {
-        glDeleteTextures(rendertext.length, rendertext, 0);
-        glDeleteFramebuffers(fboobj.length, fboobj, 0);
-        System.out.println("delete fbo success");
+        cost = System.currentTimeMillis() - cost;
     }
 }

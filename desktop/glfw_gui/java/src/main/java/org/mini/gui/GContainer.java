@@ -79,7 +79,7 @@ abstract public class GContainer extends GObject {
         if (nko != null) {
             synchronized (elements) {
                 nko.setParent(null);
-                nko.destory();
+                nko.destroy();
                 boolean b = elements.remove(nko);
                 if (focus == nko) {
                     if (b) {

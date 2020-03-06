@@ -30,6 +30,8 @@ abstract public class GOpenGLPanel extends GPanel {
 
     abstract public void gl_init();
 
+    abstract public void gl_destroy();
+
     private void gl_panel_init() {
         gl_init();
     }
@@ -42,6 +44,9 @@ abstract public class GOpenGLPanel extends GPanel {
         return glRendereredImg;
     }
 
+    public boolean isGLInited() {
+        return inited;
+    }
 
     public boolean update(long vg) {
         GForm.addCmd(cmd);
