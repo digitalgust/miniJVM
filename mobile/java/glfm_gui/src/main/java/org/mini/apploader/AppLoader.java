@@ -7,6 +7,7 @@ package org.mini.apploader;
 
 import org.mini.gui.GApplication;
 import org.mini.gui.GCallBack;
+import org.mini.gui.GForm;
 import org.mini.gui.GLanguage;
 import org.mini.reflect.vm.RefNative;
 import org.mini.zip.Zip;
@@ -295,6 +296,11 @@ public class AppLoader {
                 app = (GApplication) c.newInstance();
                 app.setSaveRoot(getAppDataPath(jarName));
                 GCallBack.getInstance().setApplication(app);
+            }
+            if (app == null || GCallBack.getInstance().getGform() == null) {
+                app = AppManager.getInstance();
+                AppManager.getInstance().active();
+                GForm.addMessage(GLanguage.getString(AppManager.STR_OPEN_APP_FAIL) + ": " + jarName);
             }
         } catch (Exception ex) {
             ex.printStackTrace();

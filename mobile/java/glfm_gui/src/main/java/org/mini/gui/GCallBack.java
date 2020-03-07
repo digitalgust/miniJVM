@@ -49,6 +49,11 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
         }
     }
 
+    public GForm getGform() {
+        return gform;
+    }
+
+
     public void notifyCurrentFormChanged(GApplication app) {
         if (gapp == app) {
             gform = app.getForm();

@@ -51,6 +51,7 @@ public class AppManager extends GApplication {
     static final String STR_UPLOAD_FILE = "Uploaded file";
     static final String STR_SUCCESS = "Success";
     static final String STR_FAIL = "Fail";
+    static final String STR_OPEN_APP_FAIL = "Open app failed";
 
     static {
         GLanguage.addString(STR_EXIT, new String[]{STR_EXIT, "退出", "退出"});
@@ -76,6 +77,7 @@ public class AppManager extends GApplication {
         GLanguage.addString(STR_UPLOAD_FILE, new String[]{STR_UPLOAD_FILE, "文件上传结束", "文件上傳結束"});
         GLanguage.addString(STR_SUCCESS, new String[]{STR_SUCCESS, "成功", "成功"});
         GLanguage.addString(STR_FAIL, new String[]{STR_FAIL, "失敗", "失败"});
+        GLanguage.addString(STR_OPEN_APP_FAIL, new String[]{STR_OPEN_APP_FAIL, "打開應用失敗", "打开应用失败"});
     }
 
     static AppManager instance = new AppManager();
