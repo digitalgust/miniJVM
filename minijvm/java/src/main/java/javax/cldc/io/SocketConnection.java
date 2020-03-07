@@ -45,6 +45,7 @@ public interface SocketConnection extends StreamConnection {
     //Socket option for the size of the sending buffer (4).
     public static byte	TIMEOUT = 5;
     //Socket option for a timeout on a blocking read or write operation.
+    public static byte	NONBLOCK = 6;
     /**
      * 非阻塞写，返回写长度
      *

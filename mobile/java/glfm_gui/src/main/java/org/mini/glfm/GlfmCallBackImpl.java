@@ -39,8 +39,6 @@ public class GlfmCallBackImpl extends GCallBack {
     double longStartY;
     long moveStartAt;
 
-    GApplication gapp;
-    GForm gform;
 
     long vg;
 

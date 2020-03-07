@@ -15,7 +15,7 @@ public class MyApp extends GApplication {
     GFrame gframe;
 
     @Override
-    public GForm getForm(GApplication appins) {
+    public GForm getForm() {
         if (form != null) {
             return form;
         }

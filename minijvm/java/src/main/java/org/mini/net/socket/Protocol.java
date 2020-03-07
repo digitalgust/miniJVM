@@ -270,7 +270,7 @@ public class Protocol implements ConnectionBaseInterface, SocketConnection {
     boolean nonBlock = false;
 
     public void setOption(int type, int val, int val2) {
-        if (type == SocketNative.SO_BLOCK && val == SocketNative.VAL_NON_BLOCK) {
+        if (type == SocketNative.SO_NONBLOCK && val == SocketNative.VAL_NON_BLOCK) {
             nonBlock = true;
         }
         SocketNative.setOption0(handle, type, val, val2);
@@ -349,6 +349,10 @@ public class Protocol implements ConnectionBaseInterface, SocketConnection {
                 SocketNative.setOption0(handle, SocketNative.SO_TIMEOUT, value, 0);
                 break;
             }
+            case NONBLOCK: {
+                SocketNative.setOption0(handle, SocketNative.SO_NONBLOCK, value, 0);
+                break;
+            }
         }
     }
 
@@ -376,6 +380,9 @@ public class Protocol implements ConnectionBaseInterface, SocketConnection {
             }
             case TIMEOUT: {
                 return SocketNative.getOption0(handle, SocketNative.SO_TIMEOUT);
+            }
+            case NONBLOCK: {
+                return SocketNative.getOption0(handle, SocketNative.SO_NONBLOCK);
             }
         }
         return 0;

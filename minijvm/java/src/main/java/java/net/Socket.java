@@ -1,12 +1,12 @@
 package java.net;
 
 import org.mini.net.SocketNative;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- *
  * @author Gust
  */
 public class Socket extends SocketImpl {
@@ -112,11 +112,6 @@ public class Socket extends SocketImpl {
         connect(endpoint);
     }
 
-    public void setTcpNoDelay(boolean on) throws SocketException {
-        if (fd >= 0) {
-            //setOption0(handle,OP_TYPE_NON_BLOCK,OP_VAL_NON_BLOCK);
-        }
-    }
 
     public void shutdownInput() throws IOException {
         if (inputStream != null) {
@@ -127,6 +122,19 @@ public class Socket extends SocketImpl {
     public void shutdownOutput() throws IOException {
         if (outputStream != null) {
             outputStream.close();
+        }
+    }
+
+
+    public void setNonBlock(boolean on) throws SocketException {
+        if (fd >= 0) {
+            SocketNative.setOption0(fd, SocketNative.SO_NONBLOCK, on ? 1 : 0, 0);
+        }
+    }
+
+    public void setTcpNoDelay(boolean on) throws SocketException {
+        if (fd >= 0) {
+            //setOption0(handle,OP_TYPE_NON_BLOCK,OP_VAL_NON_BLOCK);
         }
     }
 

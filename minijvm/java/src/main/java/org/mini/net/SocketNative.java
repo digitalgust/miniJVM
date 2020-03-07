@@ -19,7 +19,7 @@ public class SocketNative {
     public static final byte VAL_REUSEADDR = 0;
     public static final byte SO_RCVBUF = 2;
     public static final byte SO_LINGER = 5;
-    public static final byte SO_BLOCK = 0;
+    public static final byte SO_NONBLOCK = 0;
     public static final byte VAL_NON_BLOCK = 1;
     public static final byte VAL_NON_REUSEADDR = 1;
     public static final byte SO_REUSEADDR = 1;
