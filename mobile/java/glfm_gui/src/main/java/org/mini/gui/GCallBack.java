@@ -86,6 +86,10 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
 
     public abstract void setDisplay(long winContext);
 
+    public abstract void setFps(float fpsExpect);
+
+    public abstract float getFps();
+
 
     //============================== glfm
     @Override

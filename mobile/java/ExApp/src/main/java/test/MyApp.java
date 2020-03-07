@@ -22,7 +22,6 @@ public class MyApp extends GApplication {
         GLanguage.setCurLang(GLanguage.ID_CHN);
         form = new GForm();
 
-        form.setFps(30f);
         long vg = form.getNvContext();
 
         int menuH = 80;

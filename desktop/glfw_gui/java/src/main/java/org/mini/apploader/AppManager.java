@@ -134,7 +134,6 @@ public class AppManager extends GApplication {
                 GForm.hideKeyboard();
                 GLanguage.setCurLang(AppLoader.getDefaultLang());
 
-                setFps(30f);
 
                 logoImg = GImage.createImageFromJar("/res/img/logo128.png");
 

@@ -97,7 +97,7 @@ public class MiniHttpServer extends Thread {
                 baos.reset();
                 int contentLength = getContentLength();
                 if (contentLength != -1) {
-                    byte[] b = new byte[2048];
+                    byte[] b = new byte[4096];
                     int read;
                     while ((read = in.read(b)) != -1) {
                         baos.write(b, 0, read);

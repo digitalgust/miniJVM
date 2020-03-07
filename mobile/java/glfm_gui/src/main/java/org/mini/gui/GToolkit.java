@@ -297,7 +297,7 @@ public class GToolkit {
 
         imgPaint = nvgImagePattern(vg, px + ix + 1, py + iy + 1, iw - 2, ih - 2, 0.0f / 180.0f * (float) Math.PI, img.getTexture(vg), alpha);
         nvgBeginPath(vg);
-        nvgRoundedRect(vg, px, py, pw, ph, 5);
+        nvgRoundedRect(vg, px, py, pw, ph, border ? 5f : 0f);
         nvgFillPaint(vg, imgPaint);
         nvgFill(vg);
 
@@ -311,7 +311,7 @@ public class GToolkit {
 //            nvgFill(vg);
 
             nvgBeginPath(vg);
-            nvgRoundedRect(vg, px + 1, py + 1, pw - 2, ph - 2, 4 - 0.5f);
+            nvgRoundedRect(vg, px + 1, py + 1, pw - 2, ph - 2, border ? 3.5f : 0f);
             nvgStrokeWidth(vg, 1.0f);
             nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 192));
             nvgStroke(vg);

@@ -30,9 +30,6 @@ public class GForm extends GViewPort {
     long vg; //nk contex
     GCallBack callback;
     static StbFont gfont;
-    float fps;
-    float fpsExpect = 30;
-    long last, count;
     //
     float pxRatio;
 
@@ -115,9 +112,7 @@ public class GForm extends GViewPort {
 
     public void display(long vg) {
 
-        long startAt, endAt, cost;
         try {
-            startAt = System.currentTimeMillis();
 
             // Update and render
             glViewport(0, 0, fbWidth, fbHeight);
@@ -143,15 +138,6 @@ public class GForm extends GViewPort {
 
             cmdHandler.process(this);
             //
-            count++;
-            endAt = System.currentTimeMillis();
-            cost = endAt - startAt;
-            if (cost > 1000) {
-                //System.out.println("fps:" + count);
-                fps = count;
-                last = endAt;
-                count = 0;
-            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -188,16 +174,6 @@ public class GForm extends GViewPort {
         timer.schedule(tt_OnTouch, 0L);//, (long) (1000 / fpsExpect));
     }
 
-    /**
-     * @return the fps
-     */
-    public float getFps() {
-        return fps;
-    }
-
-    public void setFps(float fps) {
-        fpsExpect = fps;
-    }
 
     public void onPhotoPicked(int uid, String url, byte[] data) {
         if (pickListener != null) {

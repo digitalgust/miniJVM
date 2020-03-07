@@ -40,8 +40,8 @@ public class GlfwCallBackImpl extends GCallBack {
     long vg;
 
     //not in mobile
-    int fps;
-    int fpsExpect = 60;
+    float fps;
+    float fpsExpect = 60;
 
     public GlfwCallBackImpl() {
     }
@@ -142,7 +142,7 @@ public class GlfwCallBackImpl extends GCallBack {
         long last = System.currentTimeMillis(), now;
         int count = 0;
 
-        long startAt, endAt, cost;
+        long startAt, cost;
         while (!glfwWindowShouldClose(display)) {
             try {
                 startAt = System.currentTimeMillis();
@@ -166,8 +166,7 @@ public class GlfwCallBackImpl extends GCallBack {
                     count = 0;
                 }
 
-                endAt = System.currentTimeMillis();
-                cost = endAt - startAt;
+                cost = now - startAt;
                 if (cost < 1000 / fpsExpect) {
                     Thread.sleep((long) (1000 / fpsExpect - cost));
                 }
@@ -184,6 +183,17 @@ public class GlfwCallBackImpl extends GCallBack {
         GToolkit.removeForm(vg);
         vg = 0;
         System.exit(0);//some thread not exit ,that will continue running
+    }
+
+    /**
+     * @return the fps
+     */
+    public float getFps() {
+        return fps;
+    }
+
+    public void setFps(float fps) {
+        fpsExpect = fps;
     }
 
     @Override

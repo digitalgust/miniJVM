@@ -42,8 +42,19 @@ public class GlfmCallBackImpl extends GCallBack {
 
     long vg;
 
+    float fps;
+    float fpsExpect = 60;
+    long startAt, cost;
+    long last = System.currentTimeMillis(), now;
+    int count = 0;
+
     static GlfmCallBackImpl instance = new GlfmCallBackImpl();
 
+    /**
+     * the glinit method call by native function, glfmapp/main.c
+     *
+     * @param winContext
+     */
     static public void glinit(long winContext) {
 
         Glfm.glfmSetDisplayConfig(winContext,
@@ -76,6 +87,19 @@ public class GlfmCallBackImpl extends GCallBack {
     void setForm(GForm form) {
         gform = form;
     }
+
+
+    /**
+     * @return the fps
+     */
+    public float getFps() {
+        return fps;
+    }
+
+    public void setFps(float fps) {
+        fpsExpect = fps;
+    }
+
 
     public long getDisplay() {
         return display;
@@ -133,8 +157,8 @@ public class GlfmCallBackImpl extends GCallBack {
 
     @Override
     public void mainLoop(long display, double frameTime) {
-
         try {
+            startAt = System.currentTimeMillis();
             if (gform != null) {
                 if (gform.getWinContext() == 0) {
                     gform.init();
@@ -144,6 +168,20 @@ public class GlfmCallBackImpl extends GCallBack {
                 if (gform != null) {
                     gform.display(vg);
                 }
+            }
+            //
+            count++;
+            now = System.currentTimeMillis();
+            if (now - last > 1000) {
+                //System.out.println("fps:" + count);
+                fps = count;
+                last = now;
+                count = 0;
+            }
+
+            cost = now - startAt;
+            if (cost < 1000 / fpsExpect) {
+                Thread.sleep((long) (1000 / fpsExpect - cost));
             }
         } catch (Exception e) {
             e.printStackTrace();

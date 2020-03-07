@@ -297,13 +297,15 @@ public class AppLoader {
                 app.setSaveRoot(getAppDataPath(jarName));
                 GCallBack.getInstance().setApplication(app);
             }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
             if (app == null || GCallBack.getInstance().getGform() == null) {
                 app = AppManager.getInstance();
                 AppManager.getInstance().active();
                 GForm.addMessage(GLanguage.getString(AppManager.STR_OPEN_APP_FAIL) + ": " + jarName);
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
         }
         return app;
     }
