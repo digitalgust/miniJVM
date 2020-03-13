@@ -34,7 +34,6 @@ import static org.mini.nanovg.Nanovg.nvgTextAlign;
 import static org.mini.nanovg.Nanovg.nvgTextJni;
 
 /**
- *
  * @author gust
  */
 public class GFrame extends GContainer {
@@ -49,7 +48,7 @@ public class GFrame extends GContainer {
 
     int background_rgba;
 
-    GViewPort panel = new GViewPort();
+    GViewPort view = new GViewPort();
 
     GPanel title_panel = new GPanel();
     long vg;
@@ -69,9 +68,9 @@ public class GFrame extends GContainer {
         setLocation(left, top);
         setSize(width, height);
 
-        panel.setLocation(PAD, TITLE_HEIGHT + PAD);
-        panel.setSize(width - PAD * 2, height - TITLE_HEIGHT - PAD * 2);
-        add(panel);
+        view.setLocation(PAD, TITLE_HEIGHT + PAD);
+        view.setSize(width - PAD * 2, height - TITLE_HEIGHT - PAD * 2);
+        add(view);
 
         title_panel.setLocation(1, 1);
         title_panel.setSize(width - PAD, TITLE_HEIGHT);
@@ -81,7 +80,7 @@ public class GFrame extends GContainer {
     @Override
     public void setSize(float w, float h) {
         title_panel.setSize(w - PAD, TITLE_HEIGHT);
-        panel.setSize(w - PAD * 2, h - TITLE_HEIGHT - PAD * 2);
+        view.setSize(w - PAD * 2, h - TITLE_HEIGHT - PAD * 2);
         super.setSize(w, h);
     }
 
@@ -154,7 +153,7 @@ public class GFrame extends GContainer {
     }
 
     public GViewPort getView() {
-        return panel;
+        return view;
     }
 
     /**
@@ -309,7 +308,7 @@ public class GFrame extends GContainer {
         if (isInArea(x, y)) {
             super.mouseButtonEvent(button, pressed, x, y);
         } else {
-            panel.setFocus(null);
+            view.setFocus(null);
         }
     }
 
@@ -326,7 +325,7 @@ public class GFrame extends GContainer {
 
     @Override
     public boolean scrollEvent(float scrollX, float scrollY, float x, float y) {
-        return panel.scrollEvent(scrollX, scrollY, x, y);
+        return view.scrollEvent(scrollX, scrollY, x, y);
     }
 
     @Override
@@ -355,7 +354,7 @@ public class GFrame extends GContainer {
         if (isInArea(x, y)) {
             super.touchEvent(touchid, phase, x, y);
         } else {
-            panel.setFocus(null);
+            view.setFocus(null);
         }
     }
 

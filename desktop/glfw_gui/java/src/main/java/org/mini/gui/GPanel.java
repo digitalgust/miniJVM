@@ -8,10 +8,21 @@ package org.mini.gui;
 import java.util.List;
 
 /**
- *
  * @author gust
  */
 public class GPanel extends GContainer {
+
+    public GPanel() {
+    }
+
+    public GPanel(int left, int top, int width, int height) {
+        this((float) left, top, width, height);
+    }
+
+    public GPanel(float left, float top, float width, float height) {
+        setLocation(left, top);
+        setSize(width, height);
+    }
 
     @Override
     public int getType() {

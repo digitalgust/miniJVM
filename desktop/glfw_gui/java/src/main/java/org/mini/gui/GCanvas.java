@@ -5,14 +5,10 @@
  */
 package org.mini.gui;
 
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_LEFT;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_MIDDLE;
 import static org.mini.nanovg.Nanovg.nvgFontFace;
 import static org.mini.nanovg.Nanovg.nvgFontSize;
-import static org.mini.nanovg.Nanovg.nvgTextAlign;
 
 /**
- *
  * @author gust
  */
 public class GCanvas extends GPanel {
@@ -49,5 +45,13 @@ public class GCanvas extends GPanel {
 
     public void paint(GGraphics g) {
 
+    }
+
+    public int getWidth() {
+        return (int) getW();
+    }
+
+    public int getHeight() {
+        return (int) getH();
     }
 }

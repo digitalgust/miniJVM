@@ -136,7 +136,7 @@ public class GImage {
                 Nanovg.nvgImageSize(vg, nvg_texture, w, h);
                 data = null;
             } else if (gl_texture != -1) {
-                nvg_texture = Nanovg.nvglCreateImageFromHandleGLES3(vg, gl_texture, w_h_d[0], w_h_d[1], image_init_flag);
+                nvg_texture = Nanovg.nvglCreateImageFromHandleGL3(vg, gl_texture, w_h_d[0], w_h_d[1], image_init_flag);
             }
         }
         return nvg_texture;

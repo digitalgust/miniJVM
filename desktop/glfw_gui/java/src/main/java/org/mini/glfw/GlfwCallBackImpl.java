@@ -146,10 +146,8 @@ public class GlfwCallBackImpl extends GCallBack {
         while (!glfwWindowShouldClose(display)) {
             try {
                 startAt = System.currentTimeMillis();
-                if (gform != null) {
-                    if (gform.getWinContext() == 0) {
-                        gform.init();
-                    }
+                if (!gform.isInited()) {
+                    gform.init();
                 }
                 //user define contents
                 if (GObject.flushReq()) {

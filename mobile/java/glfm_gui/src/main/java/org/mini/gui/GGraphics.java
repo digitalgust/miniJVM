@@ -6,6 +6,7 @@
 package org.mini.gui;
 
 import org.mini.nanovg.Gutil;
+
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_BASELINE;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_BOTTOM;
@@ -33,7 +34,6 @@ import static org.mini.nanovg.Nanovg.nvgTextJni;
 import static org.mini.nanovg.Nanovg.nvgTranslate;
 
 /**
- *
  * @author gust
  */
 public class GGraphics {
@@ -266,4 +266,7 @@ public class GGraphics {
         this.fontSize = fontSize;
     }
 
+    public void setClip(int x, int y, int w, int h) {
+        nvgScissor(vg, x, y, w, h);
+    }
 }

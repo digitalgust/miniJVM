@@ -55,11 +55,11 @@ public class GMenuItem extends GObject {
         }
     }
 
-    public void addNewMsgCount(int count) {
+    public void incMsgNew(int count) {
         redPoint += count;
     }
 
-    public void clearMsgNewCount() {
+    public void resetMsgNew() {
         redPoint = 0;
     }
 

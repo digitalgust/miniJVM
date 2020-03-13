@@ -42,6 +42,10 @@ public class GViewSlot extends GViewPort {
     float dragBeginX, dragBeginY;
 
     public GViewSlot(float w, float h, int scrollMod) {
+        this(0, 0, w, h, scrollMod);
+    }
+
+    public GViewSlot(float x, float y, float w, float h, int scrollMod) {
         setSize(w, h);
         scrollMode = scrollMod;
     }
@@ -59,7 +63,7 @@ public class GViewSlot extends GViewPort {
                 moveMode & (MOVE_LEFT | MOVE_RIGHT) :
                 moveMode & (MOVE_UP | MOVE_DOWN);
         props.add(index, prop);
-        reBoundle();
+        reSize();
     }
 
     public void remove(int index) {
@@ -230,7 +234,7 @@ public class GViewSlot extends GViewPort {
             return true;
         }
         //System.out.println("drag " + x + "," + y + "," + dx + "," + dy);
-        reBoundle();
+        reSize();
         float dw = getOutOfViewWidth();
         float dh = getOutOfViewHeight();
         if (dw == 0 && dh == 0) {

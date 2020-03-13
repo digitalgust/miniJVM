@@ -1506,6 +1506,8 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
             }
             case JDWP_CMD_VirtualMachine_Exit: {//1.10
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
             case JDWP_CMD_VirtualMachine_CreateString: {//1.11
@@ -1542,6 +1544,8 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
             }
             case JDWP_CMD_VirtualMachine_ClassPaths: {//1.13
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
             case JDWP_CMD_VirtualMachine_DisposeObjects: {//1.14
@@ -1559,10 +1563,14 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
             }
             case JDWP_CMD_VirtualMachine_HoldEvents: {//1.15
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
             case JDWP_CMD_VirtualMachine_ReleaseEvents: {//1.16
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
             case JDWP_CMD_VirtualMachine_CapabilitiesNew: {//1.17
@@ -1576,10 +1584,14 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
             }
             case JDWP_CMD_VirtualMachine_RedefineClasses: {//1.18
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
             case JDWP_CMD_VirtualMachine_SetDefaultStratum: {//1.19
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
             case JDWP_CMD_VirtualMachine_AllClassesWithGeneric: {//1.20
@@ -1701,6 +1713,8 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
             }
             case JDWP_CMD_ReferenceType_NestedTypes: {//2.8
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
             case JDWP_CMD_ReferenceType_Status: {//2.9
@@ -1805,6 +1819,8 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
             }
             case JDWP_CMD_ClassType_SetValues: {//3.2
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
             case JDWP_CMD_ClassType_InvokeMethod: {//3.3
@@ -1814,12 +1830,16 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
             }
             case JDWP_CMD_ClassType_NewInstance: {//3.4
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
 //set 4
 
             case JDWP_CMD_ArrayType_NewInstance: {//4.1
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
 //set 5
@@ -1870,14 +1890,20 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
             }
             case JDWP_CMD_Method_Bytecodes: {//6.3
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
             case JDWP_CMD_Method_IsObsolete: {//6.4
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
             case JDWP_CMD_Method_VariableTableWithGeneric: {//6.5
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
 //set 8
@@ -1917,10 +1943,14 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
             }
             case JDWP_CMD_ObjectReference_SetValues: {//9.3
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
             case JDWP_CMD_ObjectReference_MonitorInfo: {//9.5
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
             case JDWP_CMD_ObjectReference_InvokeMethod: {//9.6
@@ -2227,14 +2257,20 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
 
             case JDWP_CMD_ThreadGroupReference_Name: {//12.1
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
             case JDWP_CMD_ThreadGroupReference_Parent: {//12.2
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
             case JDWP_CMD_ThreadGroupReference_Children: {//12.3
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
 //set 13
@@ -2266,11 +2302,15 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
             }
             case JDWP_CMD_ArrayReference_SetValues: {//13.3
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
 //set 14
             case JDWP_CMD_ClassLoaderReference_VisibleClasses: {//14.1
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
 //set 15
@@ -2405,6 +2445,8 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
             }
             case JDWP_CMD_StackFrame_PopFrames: {//16.4
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
 //set 17
@@ -2422,6 +2464,8 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
 //set 64
             case JDWP_CMD_Event_Composite: {
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                jdwp_writepacket(client, res);
                 break;
             }
         }

@@ -159,10 +159,8 @@ public class GlfmCallBackImpl extends GCallBack {
     public void mainLoop(long display, double frameTime) {
         try {
             startAt = System.currentTimeMillis();
-            if (gform != null) {
-                if (gform.getWinContext() == 0) {
-                    gform.init();
-                }
+            if (!gform.isInited()) {
+                gform.init();
             }
             if (GObject.flushReq()) {
                 if (gform != null) {

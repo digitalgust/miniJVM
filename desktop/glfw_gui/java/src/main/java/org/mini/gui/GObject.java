@@ -13,7 +13,6 @@ import java.util.Timer;
 import static org.mini.gui.GToolkit.nvgRGBA;
 
 /**
- *
  * @author gust
  */
 abstract public class GObject {
@@ -201,7 +200,7 @@ abstract public class GObject {
         boundle[LEFT] = x;
         boundle[TOP] = y;
         if (parent != null) {
-            parent.reBoundle();
+            parent.reSize();
         }
     }
 
@@ -209,7 +208,7 @@ abstract public class GObject {
         boundle[WIDTH] = w;
         boundle[HEIGHT] = h;
         if (parent != null) {
-            parent.reBoundle();
+            parent.reSize();
         }
     }
 
@@ -247,7 +246,7 @@ abstract public class GObject {
         boundle[LEFT] += dx;
         boundle[TOP] += dy;
         if (parent != null) {
-            parent.reBoundle();
+            parent.reSize();
         }
     }
 
@@ -287,6 +286,10 @@ abstract public class GObject {
      */
     public void setColor(int r, int g, int b, int a) {
         color = nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);
+    }
+
+    public void setColor(float[] color) {
+        this.color = color;
     }
 
     /**

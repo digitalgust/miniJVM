@@ -5,22 +5,13 @@
  */
 package org.mini.gui;
 
-import static org.mini.gui.GObject.LEFT;
-import static org.mini.nanovg.Gutil.toUtf8;
+import org.mini.glfm.Glfm;
 import org.mini.nanovg.Nanovg;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_LEFT;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_TOP;
-import static org.mini.nanovg.Nanovg.nvgFillColor;
-import static org.mini.nanovg.Nanovg.nvgFontFace;
-import static org.mini.nanovg.Nanovg.nvgFontSize;
-import static org.mini.nanovg.Nanovg.nvgTextAlign;
-import static org.mini.nanovg.Nanovg.nvgTextBoxBoundsJni;
-import static org.mini.nanovg.Nanovg.nvgTextBoxJni;
-import static org.mini.nanovg.Nanovg.nvgTextJni;
-import static org.mini.nanovg.Nanovg.nvgTextMetrics;
+
+import static org.mini.nanovg.Gutil.toUtf8;
+import static org.mini.nanovg.Nanovg.*;
 
 /**
- *
  * @author gust
  */
 public class GLabel extends GObject {
@@ -29,6 +20,7 @@ public class GLabel extends GObject {
     byte[] text_arr;
     char preicon;
     float[] lineh = {0};
+    boolean pressed;
 
     int align = NVG_ALIGN_LEFT | NVG_ALIGN_TOP;
 
@@ -66,17 +58,55 @@ public class GLabel extends GObject {
         align = ali;
     }
 
-    public final void setText(String text) {
+    public void setText(String text) {
         this.text = text;
         text_arr = toUtf8(text);
+    }
+
+    public String getText() {
+        return text;
     }
 
     public void setIcon(char icon) {
         preicon = icon;
     }
 
+
+    @Override
+    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+        if (isInArea(x, y)) {
+            if (pressed) {
+                this.pressed = true;
+                parent.setFocus(this);
+            } else {
+                this.pressed = false;
+                doAction();
+            }
+        }
+    }
+
+    @Override
+    public void cursorPosEvent(int x, int y) {
+        if (!isInArea(x, y)) {
+            pressed = false;
+        }
+    }
+
+    @Override
+    public void touchEvent(int touchid, int phase, int x, int y) {
+        if (isInArea(x, y)) {
+            if (phase == Glfm.GLFMTouchPhaseBegan) {
+                pressed = true;
+            } else if (phase == Glfm.GLFMTouchPhaseEnded) {
+                doAction();
+                pressed = false;
+            } else if (!isInArea(x, y)) {
+                pressed = false;
+            }
+        }
+    }
+
     /**
-     *
      * @param vg
      * @return
      */

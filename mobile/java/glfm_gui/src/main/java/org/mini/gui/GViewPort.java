@@ -31,7 +31,7 @@ public class GViewPort extends GContainer {
         viewBoundle[LEFT] = x;
         viewBoundle[TOP] = y;
         if (parent != null) {
-            parent.reBoundle();
+            parent.reSize();
         }
 //        setInnerLocation(x, y);
     }
@@ -41,10 +41,10 @@ public class GViewPort extends GContainer {
         viewBoundle[WIDTH] = w;
         viewBoundle[HEIGHT] = h;
         if (parent != null) {
-            parent.reBoundle();
+            parent.reSize();
         }
 //        setInnerSize(w, h);
-        reBoundle();
+        reSize();
     }
 
     @Override
@@ -122,22 +122,22 @@ public class GViewPort extends GContainer {
         viewBoundle[LEFT] += dx;
         viewBoundle[TOP] += dy;
         if (parent != null) {
-            parent.reBoundle();
+            parent.reSize();
         }
     }
 
     @Override
     public void onAdd(GObject obj) {
-        reBoundle();
+        reSize();
     }
 
     @Override
     public void onRemove(GObject obj) {
-        reBoundle();
+        reSize();
     }
 
     @Override
-    public void reBoundle() {
+    public void reSize() {
         float posY = scrolly * (maxY - minY);
         float posX = scrollx * (maxX - minX);
 
@@ -337,7 +337,7 @@ public class GViewPort extends GContainer {
         if (focus != null && focus.dragEvent(dx, dy, x, y)) {
             return true;
         }
-        reBoundle();
+        reSize();
         float dw = getOutOfViewWidth();
         float dh = getOutOfViewHeight();
         if (dw == 0 && dh == 0) {

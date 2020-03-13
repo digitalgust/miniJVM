@@ -10,53 +10,77 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
-    
+
+
+    <!--    <dependencies>-->
+    <!--        <dependency>-->
+    <!--            <groupId>org.minijvm</groupId>  -->
+    <!--            <artifactId>minijvm_rt</artifactId>   -->
+    <!--            <version>1.0</version>-->
+    <!--            <scope>system</scope> -->
+    <!--            <systemPath>${basedir}/../../assets/resfiles/minijvm_rt.jar</systemPath> -->
+    <!--        </dependency> -->
+    <!--        <dependency>-->
+    <!--            <groupId>org.minijvm</groupId>  -->
+    <!--            <artifactId>glfm_gui</artifactId>   -->
+    <!--            <version>1.0</version>-->
+    <!--            <scope>system</scope> -->
+    <!--            <systemPath>${basedir}/../../assets/resfiles/glfm_gui.jar</systemPath> -->
+    <!--        </dependency> -->
+    <!--    </dependencies>-->
 
     <dependencies>
         <dependency>
-            <groupId>org.minijvm</groupId>  
-            <artifactId>minijvm_rt</artifactId>   
+            <groupId>org.minijvm</groupId>
+            <artifactId>minijvm_rt</artifactId>
             <version>1.0</version>
-            <scope>system</scope> 
-            <systemPath>${basedir}/../../assets/resfiles/minijvm_rt.jar</systemPath> 
-        </dependency> 
+            <scope>system</scope>
+            <systemPath>${basedir}/../../../../miniJVM/binary/lib/minijvm_rt.jar</systemPath>
+        </dependency>
         <dependency>
-            <groupId>org.minijvm</groupId>  
-            <artifactId>glfm_gui</artifactId>   
+            <groupId>org.minijvm</groupId>
+            <artifactId>glfm_gui</artifactId>
             <version>1.0</version>
-            <scope>system</scope> 
-            <systemPath>${basedir}/../../assets/resfiles/glfm_gui.jar</systemPath> 
-        </dependency> 
+            <scope>system</scope>
+            <systemPath>${basedir}/../../../../miniJVM/binary/libex/glfw_gui.jar</systemPath>
+        </dependency>
     </dependencies>
-    
+
     <build>
         <finalName>${project.artifactId}</finalName>
         <plugins>
-            <plugin>   
-                <artifactId>maven-antrun-plugin</artifactId>    
-                <executions>       
-                    <execution>         
-                        <phase>package</phase>        
-                        <goals>            
-                            <goal>run</goal>        
-                        </goals>             
-                        <configuration>       
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
                             <tasks>
                                 <!--  copy to binary lib dir -->
-                                <mkdir dir="../../assets/resfiles"/>        
-                                <copy todir="../../assets/resfiles/" overwrite="true" > 
+                                <mkdir dir="../../assets/resfiles"/>
+                                <copy todir="../../assets/resfiles/" overwrite="true">
                                     <fileset dir="${project.build.directory}" erroronmissingdir="false">
                                         <include name="${project.artifactId}.jar"/>
                                     </fileset>
-                                </copy>        
-                            </tasks>        
-                        </configuration>        
-                    </execution>    
-                </executions>  
-            </plugin>   
+                                </copy>
+
+                                <mkdir dir="${basedir}/../miniJVM/binary/macos/apps/"/>
+                                <copy todir="${basedir}../../../../binary/macos/apps/" overwrite="true" >
+                                    <fileset dir="${project.build.directory}" erroronmissingdir="false">
+                                        <include name="${project.artifactId}.jar"/>
+                                    </fileset>
+                                </copy>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
-        
-            
+
+
         <resources>
             <resource>
                 <directory>src/main/resource</directory>
@@ -68,7 +92,5 @@
         </resources>
 
 
-        
-        
     </build>
 </project>

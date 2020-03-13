@@ -536,7 +536,7 @@ public class AppManager extends GApplication {
         //re set image
         GImageItem icon = (GImageItem) contentView.findByName(APP_ICON_ITEM);
         if (curSelectedItem != null) icon.setImg(curSelectedItem.getImg());
-        contentView.reBoundle();
+        contentView.reSize();
     }
 
     void mainPanelShowLeft() {

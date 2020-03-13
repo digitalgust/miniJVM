@@ -35,7 +35,7 @@ public class GForm extends GViewPort {
 
     int fbWidth, fbHeight;
     //
-    boolean premult;
+    boolean inited = false;
 
     GPhotoPickedListener pickListener;
     GKeyboardShowListener keyshowListener;
@@ -50,6 +50,26 @@ public class GForm extends GViewPort {
     public GForm() {
         this.title = title;
         callback = GCallBack.getInstance();
+
+        display = callback.getDisplay();
+        vg = callback.getNvContext();
+        if (vg == 0) {
+            System.out.println("callback.getNvContext() is null.");
+        }
+
+        fbWidth = callback.getFrameBufferWidth();
+        fbHeight = callback.getFrameBufferHeight();
+        int winWidth, winHeight;
+        winWidth = callback.getDeviceWidth();
+        winHeight = callback.getDeviceHeight();
+
+        pxRatio = callback.getDeviceRatio();
+
+
+        //System.out.println("fbWidth=" + fbWidth + "  ,fbHeight=" + fbHeight);
+        flush();
+        setLocation(0, 0);
+        setSize(winWidth, winHeight);
     }
 
     public int getType() {
@@ -88,26 +108,14 @@ public class GForm extends GViewPort {
         callback.setDisplayTitle(title);
     }
 
+    public boolean isInited() {
+        return inited;
+    }
+
     @Override
     public void init() {
-        display = callback.getDisplay();
-        vg = callback.getNvContext();
-        if (vg == 0) {
-            System.out.println("callback.getNvContext() is null.");
-        }
 
-        fbWidth = callback.getFrameBufferWidth();
-        fbHeight = callback.getFrameBufferHeight();
-        int winWidth, winHeight;
-        winWidth = callback.getDeviceWidth();
-        winHeight = callback.getDeviceHeight();
-
-        pxRatio = callback.getDeviceRatio();
-
-        setLocation(0, 0);
-        setSize(winWidth, winHeight);
-        //System.out.println("fbWidth=" + fbWidth + "  ,fbHeight=" + fbHeight);
-        flush();
+        inited = true;
     }
 
     public void display(long vg) {
@@ -116,11 +124,7 @@ public class GForm extends GViewPort {
 
             // Update and render
             glViewport(0, 0, fbWidth, fbHeight);
-            if (premult) {
-                glClearColor(0, 0, 0, 0);
-            } else {
-                glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
-            }
+            glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
             int winWidth, winHeight;

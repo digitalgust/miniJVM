@@ -23,7 +23,6 @@ import static org.mini.nanovg.Nanovg.nvgTextAlign;
 import static org.mini.nanovg.Nanovg.nvgTextJni;
 
 /**
- *
  * @author gust
  */
 public class GCheckBox extends GObject {
@@ -52,9 +51,13 @@ public class GCheckBox extends GObject {
         return TYPE_CHECKBOX;
     }
 
-    public final void setText(String text) {
+    public void setText(String text) {
         this.text = text;
         text_arr = toUtf8(text);
+    }
+
+    public String getText() {
+        return text;
     }
 
     @Override
@@ -80,7 +83,6 @@ public class GCheckBox extends GObject {
     }
 
     /**
-     *
      * @param vg
      * @return
      */

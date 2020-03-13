@@ -45,6 +45,13 @@ abstract public class GContainer extends GObject {
                 && y >= absy && y <= absy + getH();
     }
 
+    //
+    //  these methods : getElements getElementSize add remove clear
+    //  they aren't public ,
+    //  because it protect combin Conponent that : GFrame GList
+    //  GFrame can't direct add children in it , GList too
+    //
+
     List<GObject> getElements() {
         return elements;
     }
@@ -185,7 +192,7 @@ abstract public class GContainer extends GObject {
 
     }
 
-    public void reBoundle() {
+    public void reSize() {
 
     }
 
