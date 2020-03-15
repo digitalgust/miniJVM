@@ -7,7 +7,10 @@ package org.mini.glfw;
  */
 
 import org.mini.apploader.AppLoader;
-import org.mini.gui.*;
+import org.mini.gui.GApplication;
+import org.mini.gui.GCallBack;
+import org.mini.gui.GObject;
+import org.mini.gui.GToolkit;
 import org.mini.nanovg.Gutil;
 
 import java.io.File;
@@ -300,9 +303,18 @@ public class GlfwCallBackImpl extends GCallBack {
 
     @Override
     public void windowSize(long window, int width, int height) {
+        winWidth = Glfw.glfwGetWindowWidth(display);
+        winHeight = Glfw.glfwGetWindowHeight(display);
+        fbWidth = glfwGetFramebufferWidth(display);
+        fbHeight = glfwGetFramebufferHeight(display);
+        // Calculate pixel ration for hi-dpi devices.
+        pxRatio = (float) fbWidth / (float) winWidth;
+
         if (gform == null) {
             return;
         }
+        gform.setSize(width, height);
+        gform.onSizeChange(width, height);
         gform.flush();
     }
 

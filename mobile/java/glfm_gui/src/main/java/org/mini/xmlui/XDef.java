@@ -20,12 +20,7 @@ public class XDef {
 
 
     public static final int DEFAULT_COMPONENT_HEIGHT = 28;
+    public static final int DEFAULT_LIST_HEIGHT = 40;
     public static final int DEFAULT_FONT_SIZE = 18;
 
-    public static final int HALIGN_LEFT = 0;
-    public static final int HALIGN_CENTER = 1;
-    public static final int HALIGN_RIGHT = 2;
-    public static final int VALIGN_TOP = 0;
-    public static final int VALIGN_MIDDLE = 1;
-    public static final int VALIGN_BOTTOM = 2;
 }

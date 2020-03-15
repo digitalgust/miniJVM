@@ -6,13 +6,13 @@
 package org.mini.glfm;
 
 import org.mini.apploader.AppLoader;
-import org.mini.gui.*;
 import org.mini.gui.GCallBack;
+import org.mini.gui.GForm;
+import org.mini.gui.GObject;
+import org.mini.gui.GToolkit;
 import org.mini.nanovg.Nanovg;
 
-import static org.mini.nanovg.Nanovg.NVG_ANTIALIAS;
-import static org.mini.nanovg.Nanovg.NVG_DEBUG;
-import static org.mini.nanovg.Nanovg.NVG_STENCIL_STROKES;
+import static org.mini.nanovg.Nanovg.*;
 
 /**
  * @author Gust
@@ -190,7 +190,7 @@ public class GlfmCallBackImpl extends GCallBack {
     public void onSurfaceCreated(long display, int width, int height) {
         init();
         AppLoader.onSurfaceCreated();
-        System.out.println("onSurfaceCreated");
+        System.out.println("onSurfaceCreated " + width + "," + height + "," + pxRatio);
     }
 
     @Override
@@ -307,7 +307,6 @@ public class GlfmCallBackImpl extends GCallBack {
     public void onSurfaceResize(long window, int width, int height) {
         fbWidth = Glfm.glfmGetDisplayWidth(display);
         fbHeight = Glfm.glfmGetDisplayHeight(display);
-
         // Calculate pixel ration for hi-dpi devices.
         pxRatio = (float) Glfm.glfmGetDisplayScale(display);
         winWidth = (int) (fbWidth / pxRatio);
@@ -316,8 +315,10 @@ public class GlfmCallBackImpl extends GCallBack {
         if (gform == null) {
             return;
         }
-        gform.getBoundle()[GObject.WIDTH] = width;
-        gform.getBoundle()[GObject.HEIGHT] = height;
+        System.out.println(width + "," + height + "," + pxRatio);
+        System.out.println(winWidth + "," + winHeight);
+        gform.setSize(winWidth, winHeight);
+        gform.onSizeChange(winWidth, winHeight);
         gform.flush();
     }
 

@@ -82,15 +82,19 @@ public class GList extends GContainer implements GFocusChangeListener {
     }
 
     @Override
-    public void setInnerSize(float w, float h) {
-//        super.setSize(w, h);
-//        sizeAdjust();
-    }
-
-    @Override
     public void setSize(float w, float h) {
         width = w;
         height = h;
+        super.setSize(w, h);
+        sizeAdjust();
+    }
+
+    @Override
+    public void setInnerSize(float w, float h) {
+        setSize(w,h);
+    }
+
+    private void switchAppearanceSize(float w, float h){
         super.setSize(w, h);
         sizeAdjust();
     }
@@ -250,7 +254,7 @@ public class GList extends GContainer implements GFocusChangeListener {
 
         if (showMode == MODE_MULTI_SHOW) {
             setLocation(left, top);
-            setSize(width, height);
+            switchAppearanceSize(width, height);
             super.add(popWin);
         } else if (pulldown && itemcount > 0) {
             float popH = itemcount * list_item_heigh;
@@ -269,11 +273,11 @@ public class GList extends GContainer implements GFocusChangeListener {
                 popY = parent.getH() - popH;
             }
             setLocation(left, popY);
-            setSize(popWin.getW(), popWin.getH());
+            switchAppearanceSize(popWin.getW(), popWin.getH());
             super.add(popWin);
         } else {
             setLocation(left, top);
-            setSize(width, height);
+            switchAppearanceSize(width, height);
             super.add(normalPanel);
         }
     }
@@ -449,8 +453,6 @@ public class GList extends GContainer implements GFocusChangeListener {
 
         nvgTextMetrics(vg, null, null, lineh);
 
-        Nanovg.nvgResetScissor(vg);
-        Nanovg.nvgScissor(vg, getX(), getY(), getW(), getH());
         return super.update(vg);
     }
 

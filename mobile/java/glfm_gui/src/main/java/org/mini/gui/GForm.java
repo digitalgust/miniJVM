@@ -5,10 +5,7 @@
  */
 package org.mini.gui;
 
-import org.mini.gui.event.GAppActiveListener;
-import org.mini.gui.event.GKeyboardShowListener;
-import org.mini.gui.event.GNotifyListener;
-import org.mini.gui.event.GPhotoPickedListener;
+import org.mini.gui.event.*;
 import org.mini.nanovg.Gutil;
 import org.mini.nanovg.Nanovg;
 import org.mini.nanovg.StbFont;
@@ -33,7 +30,7 @@ public class GForm extends GViewPort {
     //
     float pxRatio;
 
-    int fbWidth, fbHeight;
+
     //
     boolean inited = false;
 
@@ -41,6 +38,7 @@ public class GForm extends GViewPort {
     GKeyboardShowListener keyshowListener;
     GAppActiveListener activeListener;
     GNotifyListener notifyListener;
+    GSizeChangeListener sizeChangeListener;
 
     //    final static List<Integer> pendingDeleteImage = Collections.synchronizedList(new ArrayList());
     final static Timer timer = new Timer(true);//用于更新画面，UI系统采取按需刷新的原则
@@ -57,8 +55,6 @@ public class GForm extends GViewPort {
             System.out.println("callback.getNvContext() is null.");
         }
 
-        fbWidth = callback.getFrameBufferWidth();
-        fbHeight = callback.getFrameBufferHeight();
         int winWidth, winHeight;
         winWidth = callback.getDeviceWidth();
         winHeight = callback.getDeviceHeight();
@@ -123,6 +119,9 @@ public class GForm extends GViewPort {
         try {
 
             // Update and render
+            int fbWidth, fbHeight;
+            fbWidth = callback.getFrameBufferWidth();
+            fbHeight = callback.getFrameBufferHeight();
             glViewport(0, 0, fbWidth, fbHeight);
             glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -205,6 +204,15 @@ public class GForm extends GViewPort {
         }
     }
 
+    public GSizeChangeListener getSizeChangeListener() {
+        return sizeChangeListener;
+    }
+
+    public void setSizeChangeListener(GSizeChangeListener sizeChangeListener) {
+        this.sizeChangeListener = sizeChangeListener;
+    }
+
+
     /**
      * @return the keyshowListener
      */
@@ -234,6 +242,12 @@ public class GForm extends GViewPort {
     public void onNotify(String key, String val) {
         if (notifyListener != null) {
             notifyListener.onNotify(key, val);
+        }
+    }
+
+    public void onSizeChange(int width, int height) {
+        if (sizeChangeListener != null) {
+            sizeChangeListener.onSizeChange(width, height);
         }
     }
 

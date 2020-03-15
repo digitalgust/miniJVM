@@ -14,6 +14,9 @@ public class XTextInput
     static public final String XML_NAME = "input";
 
     boolean multiLine = false;
+    boolean edit = true;
+    int style = GTextField.BOX_STYLE_EDIT;
+    String hint = "";
 
     GTextObject textInput;
 
@@ -38,12 +41,31 @@ public class XTextInput
                 }
                 multiLine = v == 0 ? false : true;
             }
+        } else if (attName.equals("edit")) {
+            if (attValue != null) {
+                int v = 0;
+                try {
+                    v = Integer.parseInt(attValue);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                edit = v == 0 ? false : true;
+            }
+        } else if (attName.equals("style")) {
+            if (attValue.equalsIgnoreCase("search")) {
+                style = GTextField.BOX_STYLE_SEARCH;
+            }
+        } else if (attName.equals("hint")) {
+            hint = attValue;
         }
     }
 
 
     public void parse(KXmlParser parser) throws Exception {
         super.parse(parser);
+        String tmps;
+        tmps = parser.nextText(); //得到文本
+        setText(tmps);
         toEndTag(parser, XML_NAME);
     }
 
@@ -68,22 +90,24 @@ public class XTextInput
         }
     }
 
-    GObject getGui() {
+    public GObject getGui() {
         return textInput;
     }
 
     void createGui() {
         if (textInput == null) {
             if (multiLine) {
-                textInput = new GTextBox("", "", x, y, width, height);
+                textInput = new GTextBox(getText(), hint, x, y, width, height);
 
             } else {
-                textInput = new GTextField("", "", x, y, width, height);
+                textInput = new GTextField(getText(), hint, x, y, width, height);
+                ((GTextField) textInput).setBoxStyle(style);
             }
             textInput.setName(name);
             textInput.setAttachment(this);
-            textInput.getForm().setKeyshowListener(this);
+            //textInput.getForm().setKeyshowListener(this);
             textInput.setStateChangeListener(this);
+            textInput.setEditable(edit);
         } else {
             textInput.setLocation(x, y);
             textInput.setSize(width, height);

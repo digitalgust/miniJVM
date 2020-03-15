@@ -134,8 +134,8 @@ public class GLabel extends GObject {
         nvgTextAlign(vg, align);
         if (text_arr != null) {
             float dx, dy;
-            dx = x + 2;
-            dy = y + 2;
+            dx = x;
+            dy = y;
             if ((align & Nanovg.NVG_ALIGN_CENTER) != 0) {
                 dx += w * .5f;
             } else if ((align & Nanovg.NVG_ALIGN_RIGHT) != 0) {
@@ -159,41 +159,17 @@ public class GLabel extends GObject {
         nvgFontFace(vg, GToolkit.getFontWord());
 
         nvgTextAlign(vg, align);
-        float[] area = new float[]{x + 2f, y + 2f, w - 4f, h - 4f};
         float dx, dy;
-        dx = area[LEFT];
-        dy = area[TOP];
+        dx = x;
+        dy = y;
         if ((align & Nanovg.NVG_ALIGN_MIDDLE) != 0) {
             dy += lineh[0];
         } else if ((align & Nanovg.NVG_ALIGN_BOTTOM) != 0) {
             dy += GToolkit.getStyle().getTextFontSize();
         }
-//        if ((align & Nanovg.NVG_ALIGN_RIGHT) != 0) {
-//            dx = area[LEFT] + area[WIDTH];
-//        } else if ((align & Nanovg.NVG_ALIGN_CENTER) != 0) {
-//            dx = area[LEFT] + area[WIDTH] / 2;
-//        } else {
-//            dx = area[LEFT];
-//        }
-//        if ((align & Nanovg.NVG_ALIGN_BOTTOM) != 0) {
-//            dy = area[TOP] + area[HEIGHT];
-//        } else if ((align & Nanovg.NVG_ALIGN_MIDDLE) != 0) {
-//            dy = area[TOP] + area[HEIGHT] / 2;
-//        } else {
-//            dy = area[TOP];
-//        }
 
         if (text_arr != null) {
-//            float[] bond = new float[4];
-//            nvgTextBoxBoundsJni(vg, dx, dy, area[WIDTH], text_arr, 0, text_arr.length, bond);
-//            bond[WIDTH] -= bond[LEFT];
-//            bond[HEIGHT] -= bond[TOP];
-//            bond[LEFT] = bond[TOP] = 0;
-//
-//            if (bond[HEIGHT] > area[HEIGHT]) {
-//                dy -= bond[HEIGHT] - area[HEIGHT];
-//            }
-            nvgTextBoxJni(vg, dx, dy, area[WIDTH], text_arr, 0, text_arr.length);
+            nvgTextBoxJni(vg, dx, dy, w, text_arr, 0, text_arr.length);
         }
     }
 

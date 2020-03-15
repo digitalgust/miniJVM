@@ -2,10 +2,11 @@ package test;
 
 import org.mini.apploader.AppManager;
 import org.mini.gui.*;
-import org.mini.gui.event.*;
+import org.mini.gui.event.GActionListener;
+import org.mini.gui.event.GSizeChangeListener;
+import org.mini.xmlui.*;
 
 /**
- *
  * @author gust
  */
 public class MyApp extends GApplication {
@@ -13,6 +14,7 @@ public class MyApp extends GApplication {
     GForm form;
     GMenu menu;
     GFrame gframe;
+    int menuH = 80;
 
     @Override
     public GForm getForm() {
@@ -24,7 +26,6 @@ public class MyApp extends GApplication {
 
         long vg = form.getNvContext();
 
-        int menuH = 80;
         GImage img = GImage.createImageFromJar("/res/hello.png");
         menu = new GMenu(0, form.getDeviceHeight() - menuH, form.getDeviceWidth(), menuH);
         menu.setFixed(true);
@@ -41,8 +42,21 @@ public class MyApp extends GApplication {
             }
         });
 
+        item = menu.addItem("Xml UI", img);
+        item.setActionListener(new GActionListener() {
+            @Override
+            public void action(GObject gobj) {
+                if (gframe != null) {
+                    gframe.close();
+                }
+                gframe = getFrame2();
+                form.add(gframe);
+                gframe.align(GGraphics.HCENTER | GGraphics.VCENTER);
+            }
+        });
+
         img = GImage.createImageFromJar("/res/appmgr.png");
-        item = menu.addItem("Exit to AppManager", img);
+        item = menu.addItem("Exit", img);
         item.setActionListener(new GActionListener() {
             @Override
             public void action(GObject gobj) {
@@ -51,6 +65,7 @@ public class MyApp extends GApplication {
         });
 
         form.add(menu);
+
         return form;
     }
 
@@ -88,4 +103,64 @@ public class MyApp extends GApplication {
         return gframe;
     }
 
+    public GFrame getFrame2() {
+        String xmlStr = "<frame x='0' y='0' w='80%' h='80%' align='hcenter' title='Its a title' name='m_1437' onclose='println(\"closed\")' >\n" +
+                "    <script>\n" +
+                "        sub changeBut1()\n" +
+                "            setBgColor(\"but1\",255,0,0,128)\n" +
+                "            setColor(\"but1\",0,255,0,128)\n" +
+                "            setText(\"but1\",\"text\")\n" +
+                "            println(\"text=\"+getText(\"but1\"))\n" +
+                "            loc[2]\n" +
+                "            loc=getLocation(\"but1\")\n" +
+                "            println(loc[0]+\",\"+loc[1])\n" +
+                "        ret\n" +
+                "    </script>\n" +
+                "    <table w='80%'>\n" +
+                "        <tr>\n" +
+                "            <td h='40'>TOP+LEFT</td><td align='bottom,right'>BOTTOM+RIGHT</td>\n" +
+                "        </tr>\n" +
+                "        <tr>\n" +
+                "            <td w='50%' align='right,vcenter'><button  name='but1' bgcolor='7f000020' onclick='changeBut1()'>change</button><br/>" +
+                "<button name='BT_RESIZE' bgcolor='00ff0020'>Resize</button></td>" +
+                "            <td align='vcenter,hcenter'>align center<br/>hcenter<br/>vcenter<br/>testok</td>" +
+                "            <td align='vcenter'>vcenter</td>\n" +
+                "        </tr>    " +
+                "    </table><br/>\n" +
+                "    <list>\n" +
+                "        <li >a</li>\n" +
+                "        <li >b</li>\n" +
+                "        <li >c</li>\n" +
+                "    </list>\n" +
+                "    <button onclick='close()'>Close frame</button>\n" +
+                "</frame>";
+        XFrame xframe = new XFrame();
+        xframe.parseXml(xmlStr);
+        xframe.build(form.getDeviceWidth(), form.getDeviceHeight() - menuH, new XEventHandler() {
+            @Override
+            public void action(GObject gobj, String cmd) {
+                System.out.println("action :" + gobj.getName() + "," + cmd);
+                if ("BT_RESIZE".equals(gobj.getName())) {
+                    xframe.reSize((int) (form.getDeviceWidth() * .8f), (int) ((form.getDeviceHeight() - menuH) * .8f));
+                }
+            }
+        });
+        form.add(xframe.getGui());
+
+
+        form.setSizeChangeListener(new GSizeChangeListener() {
+            @Override
+            public void onSizeChange(int width, int height) {
+                System.out.println("onSizeChange: " + width + " , " + height);
+                System.out.println("onSizeChange: " + form.getDeviceWidth() + " , " + form.getDeviceHeight());
+                xframe.reSize(form.getDeviceWidth(), form.getDeviceHeight() - menuH);
+                menu.setLocation(0, form.getDeviceHeight() - menuH);
+                menu.setSize(form.getDeviceWidth(), menuH);
+            }
+        });
+
+        gframe = (GFrame) xframe.getGui();
+
+        return gframe;
+    }
 }

@@ -19,6 +19,7 @@ public class XButton
     static public final char SPLIT_CMD_CHAR = ':'; //命令中的分隔符
     // 当前绘制颜色
     int fontSize = XDef.DEFAULT_FONT_SIZE;
+    int addon = XDef.SPACING_BUTTON_ADD;
 
     GButton button;
 
@@ -39,6 +40,8 @@ public class XButton
             cmd = attValue;
         } else if (attName.equals("onclick")) {
             onClick = XUtil.getField(attValue, 0);
+        } else if (attName.equals("addon")) {
+            addon = Integer.parseInt(attValue);
         }
     }
 
@@ -82,7 +85,7 @@ public class XButton
         if (width == XDef.NODEF) {
             if (raw_widthPercent == XDef.NODEF) {
                 int w = XUtil.measureWidth(parent.viewW, text, fontSize);
-                w += XDef.SPACING_BUTTON_ADD;
+                w += addon;
                 viewW = width = w;
             } else {
                 viewW = width = raw_widthPercent * parent.viewW / 100;
@@ -96,6 +99,12 @@ public class XButton
             button.setName(name);
             button.setAttachment(this);
             button.setActionListener(this);
+            if (color != null) {
+                button.setColor(color);
+            }
+            if (bgColor != null) {
+                button.setBgColor(bgColor);
+            }
         } else {
             button.setLocation(x, y);
             button.setSize(width, height);
@@ -103,11 +112,7 @@ public class XButton
     }
 
 
-    public GButton getButton() {
-        return button;
-    }
-
-    GObject getGui() {
+    public GObject getGui() {
         return button;
     }
 }

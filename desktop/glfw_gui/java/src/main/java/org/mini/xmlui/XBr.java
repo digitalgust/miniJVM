@@ -37,7 +37,7 @@ public class XBr
     }
 
     @Override
-    GObject getGui() {
+    public GObject getGui() {
         return null;
     }
 }

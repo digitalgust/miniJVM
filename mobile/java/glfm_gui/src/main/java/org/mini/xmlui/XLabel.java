@@ -1,5 +1,6 @@
 package org.mini.xmlui;
 
+import org.mini.gui.GGraphics;
 import org.mini.gui.GLabel;
 import org.mini.gui.GObject;
 import org.mini.gui.event.GActionListener;
@@ -14,10 +15,13 @@ public class XLabel
         extends XObject implements GActionListener {
 
     String onClick;
-    static public final String XML_NAME = "checkBox";
+    static public final String XML_NAME = "label";
     // 当前绘制颜色
     int fontSize = XDef.DEFAULT_FONT_SIZE;
 
+    int align = GGraphics.LEFT | GGraphics.TOP;
+    int addon = XDef.SPACING_LABEL_ADD;
+    ;
     GLabel label;
 
 
@@ -42,6 +46,21 @@ public class XLabel
         getRoot().getEventHandler().action(gobj, cmd);
     }
 
+    void parseMoreAttribute(String attName, String attValue) {
+        super.parseMoreAttribute(attName, attValue);
+        if (attName.equals("align")) {
+            align = 0;
+            for (String s : attValue.split(",")) {
+                align |= XUtil.parseAlign(s);
+            }
+        } else if (attName.equals("cmd")) {
+            cmd = attValue;
+        } else if (attName.equals("onclick")) {
+            onClick = XUtil.getField(attValue, 0);
+        } else if (attName.equals("addon")) {
+            addon = Integer.parseInt(attValue);
+        }
+    }
 
     public void parse(KXmlParser parser) throws Exception {
         super.parse(parser);
@@ -70,7 +89,7 @@ public class XLabel
         if (width == XDef.NODEF) {
             if (raw_widthPercent == XDef.NODEF) {
                 int w = XUtil.measureWidth(parent.viewW, text, fontSize);
-                viewW = width = w + XDef.SPACING_LABEL_ADD;
+                viewW = width = w + addon;
             } else {
                 viewW = width = raw_widthPercent * parent.viewW / 100;
             }
@@ -84,6 +103,8 @@ public class XLabel
             label.setName(name);
             label.setAttachment(this);
             label.setActionListener(this);
+            label.setAlign(align);
+            label.setShowMode(GLabel.MODE_MULTI_SHOW);
         } else {
             label.setLocation(x, y);
             label.setSize(width, height);
@@ -91,11 +112,7 @@ public class XLabel
     }
 
 
-    public GLabel getLabel() {
-        return label;
-    }
-
-    GObject getGui() {
+    public GObject getGui() {
         return label;
     }
 }

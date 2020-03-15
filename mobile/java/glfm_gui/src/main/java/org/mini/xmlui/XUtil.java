@@ -6,12 +6,14 @@
 package org.mini.xmlui;
 
 import org.mini.gui.GCallBack;
+import org.mini.gui.GGraphics;
 import org.mini.gui.GObject;
 import org.mini.gui.GToolkit;
 
 import java.io.*;
 
-import static org.mini.nanovg.Nanovg.*;
+import static org.mini.nanovg.Nanovg.nvgFontFace;
+import static org.mini.nanovg.Nanovg.nvgFontSize;
 
 /**
  * @author gust
@@ -134,7 +136,7 @@ public class XUtil {
         nvgFontSize(vg, fontSize);
         nvgFontFace(vg, GToolkit.getFontWord());
         float[] boundle = GToolkit.getTextBoundle(vg, str, width);
-        return (int) (boundle[GObject.HEIGHT] - boundle[GObject.TOP]);
+        return (int) (boundle[GObject.HEIGHT] - boundle[GObject.TOP] + 1);
     }
 
     public static int measureWidth(int width, String str, int fontSize) {
@@ -143,6 +145,33 @@ public class XUtil {
         nvgFontSize(vg, fontSize);
         nvgFontFace(vg, GToolkit.getFontWord());
         float[] boundle = GToolkit.getTextBoundle(vg, str, width);
-        return (int) (boundle[GObject.WIDTH] - boundle[GObject.LEFT]);
+        return (int) (boundle[GObject.WIDTH] - boundle[GObject.LEFT] + 1);
     }
+
+    public static int parseAlign(String align) {
+        if (align.equalsIgnoreCase("left")) {
+            return GGraphics.LEFT;
+        }
+        if (align.equalsIgnoreCase("hcenter")) {
+            return GGraphics.HCENTER;
+        }
+        if (align.equalsIgnoreCase("right")) {
+            return GGraphics.RIGHT;
+        }
+        if (align.equalsIgnoreCase("top")) {
+            return GGraphics.TOP;
+        }
+        if (align.equalsIgnoreCase("vcenter")) {
+            return GGraphics.VCENTER;
+        }
+        if (align.equalsIgnoreCase("bottom")) {
+            return GGraphics.BOTTOM;
+        }
+        if (align.equalsIgnoreCase("center")) {
+            return GGraphics.HCENTER | GGraphics.VCENTER;
+        }
+        return 0;
+    }
+
+
 }

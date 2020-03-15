@@ -6,6 +6,7 @@ import org.mini.gui.GObject;
 import org.mini.gui.event.GActionListener;
 import org.mini.xmlui.gscript.Interpreter;
 import org.mini.xmlui.gscript.Str;
+import org.mini.xmlui.xmlpull.KXmlParser;
 
 public class XImageItem extends XObject implements GActionListener {
     static public final String XML_NAME = "img"; //xml tag名
@@ -13,8 +14,6 @@ public class XImageItem extends XObject implements GActionListener {
     String cmd;
     String onClick;
     GImageItem imgItem = null;
-    int width = 0;
-    int height = 0;
 
     public XImageItem(XContainer xc) {
         super(xc);
@@ -35,6 +34,13 @@ public class XImageItem extends XObject implements GActionListener {
         }
     }
 
+    public void parse(KXmlParser parser) throws Exception {
+        super.parse(parser);
+        String tmps;
+        tmps = parser.nextText(); //得到文本
+        setText(tmps);
+        toEndTag(parser, XML_NAME);
+    }
 
     @Override
     public void action(GObject gobj) {
@@ -85,7 +91,7 @@ public class XImageItem extends XObject implements GActionListener {
     }
 
     @Override
-    GObject getGui() {
+    public GObject getGui() {
         return imgItem;
     }
 }

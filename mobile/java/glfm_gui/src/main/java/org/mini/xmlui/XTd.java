@@ -14,4 +14,19 @@ public class XTd
         return XML_NAME;
     }
 
+    void preAlignVertical() {
+        super.preAlignVertical();
+        int parentTrialViewH = parent.getTrialViewH();
+        if (height < parentTrialViewH) {
+            viewH = height = parentTrialViewH;
+
+            int tx = x;
+            int ty = y;
+            reSize(width, height);
+            x = tx;
+            y = ty;
+            getGui().setLocation(x, y);
+        }
+    }
+
 }

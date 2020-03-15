@@ -1,20 +1,17 @@
 package org.mini.xmlui;
 
-import org.mini.gui.GImage;
-import org.mini.gui.GList;
-import org.mini.gui.GListItem;
-import org.mini.gui.GObject;
+import org.mini.gui.*;
 import org.mini.gui.event.GActionListener;
 import org.mini.xmlui.xmlpull.KXmlParser;
 import org.mini.xmlui.xmlpull.XmlPullParser;
 
 import java.util.Vector;
 
-public class XList extends XObject implements GActionListener {
-    static public final String XML_NAME = "list";
+public class XMenu extends XObject implements GActionListener {
+    static public final String XML_NAME = "menu";
 
-    static class ListItem {
-        static public final String XML_NAME = "li";
+    static class MenuItem {
+        static public final String XML_NAME = "mi";
         String name;
         String text;
         String pic;
@@ -22,11 +19,10 @@ public class XList extends XObject implements GActionListener {
 
     Vector items = new Vector();
 
-    GList list;
-    boolean multiLine = false;
-    int itemheight = XDef.DEFAULT_LIST_HEIGHT;
+    GMenu menu;
+    boolean contextMenu = false;
 
-    public XList(XContainer xc) {
+    public XMenu(XContainer xc) {
         super(xc);
     }
 
@@ -37,7 +33,7 @@ public class XList extends XObject implements GActionListener {
 
     void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
-        if (attName.equals("multiline")) {
+        if (attName.equals("contextmenu")) {
             if (attValue != null) {
                 int v = 0;
                 try {
@@ -45,10 +41,8 @@ public class XList extends XObject implements GActionListener {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                multiLine = v == 0 ? false : true;
+                contextMenu = v == 0 ? false : true;
             }
-        } else if (attName.equals("itemh")) {
-            itemheight = Integer.parseInt(attValue);
         }
     }
 
@@ -69,8 +63,8 @@ public class XList extends XObject implements GActionListener {
             String tagName = parser.getName();
             if (parser.getEventType() == XmlPullParser.START_TAG) {
 
-                if (tagName.equals(XList.ListItem.XML_NAME)) {
-                    XList.ListItem item = new ListItem();
+                if (tagName.equals(MenuItem.XML_NAME)) {
+                    MenuItem item = new MenuItem();
 
                     item.name = parser.getAttributeValue(null, "name");
                     item.pic = parser.getAttributeValue(null, "pic");
@@ -78,7 +72,7 @@ public class XList extends XObject implements GActionListener {
                     item.text = tmp == null ? "" : tmp;
                     items.add(item);
                 }
-                toEndTag(parser, XList.ListItem.XML_NAME);
+                toEndTag(parser, MenuItem.XML_NAME);
                 parser.require(XmlPullParser.END_TAG, null, tagName);
             }
         }
@@ -88,11 +82,10 @@ public class XList extends XObject implements GActionListener {
 
     void preAlignVertical() {
         if (height == XDef.NODEF) {
-            int parentTrialViewH = parent.getTrialViewH();
-            if (raw_heightPercent != XDef.NODEF && parentTrialViewH != XDef.NODEF) {
-                viewH = height = raw_heightPercent * parentTrialViewH / 100;
+            if (raw_heightPercent != XDef.NODEF && parent.viewH != XDef.NODEF) {
+                viewH = height = raw_heightPercent * parent.viewH / 100;
             } else {
-                viewH = height = XDef.DEFAULT_LIST_HEIGHT;
+                viewH = height = XDef.DEFAULT_COMPONENT_HEIGHT;
             }
         }
     }
@@ -108,31 +101,27 @@ public class XList extends XObject implements GActionListener {
     }
 
     public GObject getGui() {
-        return list;
+        return menu;
     }
 
     void createGui() {
-        if (list == null) {
-            list = new GList(x, y, width, height);
-            list.setShowMode(multiLine ? GList.MODE_MULTI_SHOW : GList.MODE_SINGLE_SHOW);
-            list.setName(name);
-            list.setItemHeight(itemheight);
-            list.setAttachment(this);
+        if (menu == null) {
+            menu = new GMenu(x, y, width, height);
+            menu.setName(name);
+            menu.setAttachment(this);
             for (int i = 0; i < items.size(); i++) {
-                ListItem item = (ListItem) items.elementAt(i);
+                MenuItem item = (MenuItem) items.elementAt(i);
                 GImage img = null;
                 if (item.pic != null) {
                     img = GImage.createImageFromJar(item.pic);
                 }
-                GListItem gli = new GListItem(img, item.text);
-                gli.setName(item.name);
+                GMenuItem gli = menu.addItem(item.text, img);
                 gli.setActionListener(this);
-
-                list.addItem(gli);
+                menu.setContextMenu(contextMenu);
             }
         } else {
-            list.setLocation(x, y);
-            list.setSize(width, height);
+            menu.setLocation(x, y);
+            menu.setSize(width, height);
         }
     }
 

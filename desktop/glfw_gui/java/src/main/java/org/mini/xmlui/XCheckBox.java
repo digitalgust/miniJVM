@@ -92,7 +92,7 @@ public class XCheckBox
     }
 
 
-    GObject getGui() {
+    public GObject getGui() {
         return checkBox;
     }
 }

@@ -69,7 +69,7 @@ public class XFrame
     }
 
     @Override
-    GObject getGui() {
+    public GObject getGui() {
         return frame;
     }
 
@@ -80,8 +80,5 @@ public class XFrame
     }
 
 
-    public GFrame getFrame() {
-        return frame;
-    }
 
 }

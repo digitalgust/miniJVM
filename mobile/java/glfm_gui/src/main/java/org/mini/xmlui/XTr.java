@@ -1,9 +1,5 @@
 package org.mini.xmlui;
 
-import org.mini.xmlui.xmlpull.KXmlParser;
-import org.mini.xmlui.xmlpull.XmlPullParser;
-
-
 public class XTr
         extends XPanel {
 
@@ -17,27 +13,32 @@ public class XTr
         return XML_NAME;
     }
 
-
-    /**
-     * 解析
-     *
-     * @param parser KXmlParser
-     * @throws Exception
-     */
-    public void parse(KXmlParser parser) throws Exception {
-        depth = parser.getDepth();
-        //得到域
-        do {
-            parser.next();
-            String tagName = parser.getName();
-
-            if (parser.getEventType() == XmlPullParser.START_TAG) {
-                parseSon(parser);
-                parser.require(XmlPullParser.END_TAG, null, tagName);
-            }
-        }
-        while (!(parser.getEventType() == XmlPullParser.END_TAG && parser.getName().equals(XML_NAME) && depth == parser.getDepth()));
+    boolean parseNoTagText() {
+        return false;
     }
+
+
+//    /**
+//     * 解析
+//     *
+//     * @param parser KXmlParser
+//     * @throws Exception
+//     */
+//    public void parse(KXmlParser parser) throws Exception {
+//
+//        depth = parser.getDepth();
+//        //得到域
+//        do {
+//            parser.next();
+//            String tagName = parser.getName();
+//
+//            if (parser.getEventType() == XmlPullParser.START_TAG) {
+//                parseSon(parser);
+//                parser.require(XmlPullParser.END_TAG, null, tagName);
+//            }
+//        }
+//        while (!(parser.getEventType() == XmlPullParser.END_TAG && parser.getName().equals(XML_NAME) && depth == parser.getDepth()));
+//    }
 
 
     boolean isSameHeightRow() {

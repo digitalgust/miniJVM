@@ -78,6 +78,14 @@ public class GViewPort extends GContainer {
         return viewBoundle;
     }
 
+    public float getLocationLeft() {
+        return viewBoundle[LEFT];
+    }
+
+    public float getLocationTop() {
+        return viewBoundle[TOP];
+    }
+
     @Override
     public float getInnerX() {
         return super.getX();

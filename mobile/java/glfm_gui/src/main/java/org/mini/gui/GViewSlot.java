@@ -84,6 +84,10 @@ public class GViewSlot extends GViewPort {
         props.get(i).move = moveMode;
     }
 
+    public int getCurrentSlot(){
+        return current;
+    }
+
     public void showSlot(int slot) {
         GObject go = getElements().get(slot);
         if (go != null) {
@@ -94,9 +98,11 @@ public class GViewSlot extends GViewPort {
     }
 
     public void moveTo(int slot, long timeInMils) {
-        GObject go = getElements().get(slot);
-        if (go != null) {
-            moveTo(go, timeInMils);
+        if (slot >= 0 && slot < getElementSize()) {
+            GObject go = getElements().get(slot);
+            if (go != null) {
+                moveTo(go, timeInMils);
+            }
         }
     }
 
@@ -105,11 +111,13 @@ public class GViewSlot extends GViewPort {
      * @param go
      */
     public void moveTo(GObject go, long timeInMils) {
-        GObject curGo = getElements().get(current);
-        if (curGo != null && go != null) {
-            SlotSwaper swaper = new SlotSwaper(this, curGo, go, timeInMils);
-            getForm().getTimer().schedule(swaper, 0, (long) 16);
-            this.current = getElements().indexOf(go);
+        if (contains(go)) {
+            GObject curGo = getElements().get(current);
+            if (curGo != null && go != null) {
+                SlotSwaper swaper = new SlotSwaper(this, curGo, go, timeInMils);
+                getForm().getTimer().schedule(swaper, 0, (long) 16);
+                this.current = getElements().indexOf(go);
+            }
         }
     }
 
@@ -132,8 +140,8 @@ public class GViewSlot extends GViewPort {
             slotOrignalX = slots.getInnerBoundle()[LEFT];
             slotOrignalY = slots.getInnerBoundle()[TOP];
             if (from != null && to != null) {
-                distX = to.getBoundle()[LEFT] + slotOrignalX;
-                distY = to.getBoundle()[TOP] + slotOrignalY;
+                distX = to.getLocationLeft() + slotOrignalX;
+                distY = to.getLocationTop() + slotOrignalY;
             }
             if (timeInMils == 0) {
                 timeInMils = 1;
@@ -194,7 +202,7 @@ public class GViewSlot extends GViewPort {
                         if (scrollMode == SCROLL_MODE_HORIZONTAL) {
                             if (dx > getW() / 5 && p.canMoveToLeft()) {
                                 moveTo(current - 1, 200);
-                            } else if (dx < getW() / 5 && p.canMoveToRight()) {
+                            } else if (dx < -getW() / 5 && p.canMoveToRight()) {
                                 moveTo(current + 1, 200);
                             } else {
                                 moveTo(current, 200);
@@ -202,7 +210,7 @@ public class GViewSlot extends GViewPort {
                         } else {
                             if (dy > getH() / 5 && p.canMoveToUp()) {
                                 moveTo(current - 1, 200);
-                            } else if (dy < getH() / 5 && p.canMoveToDown()) {
+                            } else if (dy < -getH() / 5 && p.canMoveToDown()) {
                                 moveTo(current + 1, 200);
                             } else {
                                 moveTo(current, 200);

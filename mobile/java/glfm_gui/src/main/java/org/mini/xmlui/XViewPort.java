@@ -17,7 +17,7 @@ public class XViewPort extends XContainer {
     }
 
     @Override
-    GObject getGui() {
+    public GObject getGui() {
         return viewPort;
     }
 

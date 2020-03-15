@@ -2,8 +2,6 @@ package org.mini.xmlui;
 
 import org.mini.gui.GObject;
 import org.mini.gui.GPanel;
-import org.mini.gui.GToolkit;
-import org.mini.nanovg.Nanovg;
 
 import java.util.Random;
 
@@ -23,11 +21,8 @@ public class XPanel extends XContainer {
     }
 
 
-    public GPanel getPanel() {
-        return panel;
-    }
 
-    GObject getGui() {
+    public GObject getGui() {
         return panel;
     }
 
@@ -35,14 +30,16 @@ public class XPanel extends XContainer {
 
     void createGui() {
         if (panel == null) {
-            panel = new GPanel(x, y, width, height) {
-                public boolean update(long vg) {
-                    Nanovg.nvgScissor(vg, getX(), getY(), width, height);
-                    GToolkit.drawRect(vg, getX(), getY(), width, height, new float[]{random.nextFloat(), random.nextFloat(), 0.2f, 0.5f});
-                    super.update(vg);
-                    return true;
-                }
-            };
+            panel = new GPanel(x, y, width, height)
+//            {
+//                public boolean update(long vg) {
+//                    Nanovg.nvgScissor(vg, getX(), getY(), width, height);
+//                    GToolkit.drawRect(vg, getX(), getY(), width, height, new float[]{random.nextFloat(), random.nextFloat(), 0.2f, 0.5f});
+//                    super.update(vg);
+//                    return true;
+//                }
+//            }
+            ;
             panel.setName(name);
             panel.setAttachment(this);
             for (int i = 0; i < size(); i++) {

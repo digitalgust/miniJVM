@@ -15,6 +15,8 @@ public class XViewSlot extends XContainer {
     GViewSlot viewSlot;
     int scroll = GViewSlot.SCROLL_MODE_HORIZONTAL;
 
+    String moveMode;
+
     public XViewSlot(XContainer xc) {
         super(xc);
     }
@@ -58,10 +60,18 @@ public class XViewSlot extends XContainer {
         xo.raw_heightPercent = 100;
     }
 
+    void align() {
+        for (int i = 0; i < size(); i++) {
+            XObject xo = elementAt(i);
+            if (xo instanceof XContainer) {
+                ((XContainer) xo).align();
+            }
+        }
+    }
 
     @Override
-    GObject getGui() {
-        return null;
+    public GObject getGui() {
+        return viewSlot;
     }
 
     void createGui() {
@@ -79,6 +89,12 @@ public class XViewSlot extends XContainer {
         } else {
             viewSlot.setLocation(x, y);
             viewSlot.setSize(width, height);
+            viewSlot.clear();
+            for (int i = 0; i < size(); i++) {
+                XObject xo = elementAt(i);
+                GObject go = xo.getGui();
+                if (go != null) viewSlot.add(i, go, parseMoveMode(xo.moveMode));
+            }
         }
     }
 }

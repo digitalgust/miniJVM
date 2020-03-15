@@ -5,26 +5,14 @@
  */
 package org.mini.gui;
 
-import java.util.Iterator;
-import static org.mini.gui.GToolkit.nvgRGBA;
 import org.mini.nanovg.Nanovg;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_MIDDLE;
-import static org.mini.nanovg.Nanovg.nvgBeginPath;
-import static org.mini.nanovg.Nanovg.nvgFill;
-import static org.mini.nanovg.Nanovg.nvgFillColor;
-import static org.mini.nanovg.Nanovg.nvgFillPaint;
-import static org.mini.nanovg.Nanovg.nvgFontFace;
-import static org.mini.nanovg.Nanovg.nvgFontSize;
-import static org.mini.nanovg.Nanovg.nvgLinearGradient;
-import static org.mini.nanovg.Nanovg.nvgRect;
-import static org.mini.nanovg.Nanovg.nvgRoundedRect;
-import static org.mini.nanovg.Nanovg.nvgStroke;
-import static org.mini.nanovg.Nanovg.nvgStrokeColor;
-import static org.mini.nanovg.Nanovg.nvgTextAlign;
-import static org.mini.nanovg.Nanovg.nvgTextMetrics;
+
+import java.util.Iterator;
+
+import static org.mini.gui.GToolkit.nvgRGBA;
+import static org.mini.nanovg.Nanovg.*;
 
 /**
- *
  * @author Gust
  */
 public class GMenu extends GPanel {
@@ -33,7 +21,7 @@ public class GMenu extends GPanel {
     int selectedIndex = -1;
     /**
      * contextMenu :
-     * change focus when this menu touched , the value true would not change current focus, false would chang 
+     * change focus when this menu touched , the value true would not change current focus, false would chang
      * like the edit menu "copy" "paste" can not change the current ui focus
      */
     boolean contextMenu = false;
@@ -58,6 +46,12 @@ public class GMenu extends GPanel {
     @Override
     public void setLocation(float x, float y) {
         super.setLocation(x, y);
+        reAlign();
+    }
+
+    @Override
+    public void setSize(float w, float h) {
+        super.setSize(w, h);
         reAlign();
     }
 
@@ -95,7 +89,7 @@ public class GMenu extends GPanel {
             float item_w = getW() / size;
             float item_h = getH();
             int i = 0;
-            for (Iterator it = elements.iterator(); it.hasNext();) {
+            for (Iterator it = elements.iterator(); it.hasNext(); ) {
                 GMenuItem item = (GMenuItem) it.next();
                 item.setLocation(i * item_w, 0);
                 item.setSize(item_w, item_h);
@@ -105,7 +99,6 @@ public class GMenu extends GPanel {
     }
 
     /**
-     *
      * @param vg
      * @return
      */
@@ -145,7 +138,7 @@ public class GMenu extends GPanel {
         nvgTextMetrics(vg, null, null, lineh);
 
         int i = 0;
-        for (Iterator it = elements.iterator(); it.hasNext();) {
+        for (Iterator it = elements.iterator(); it.hasNext(); ) {
             //畫竖线
             GMenuItem item = (GMenuItem) it.next();
             float dx = item.getX();

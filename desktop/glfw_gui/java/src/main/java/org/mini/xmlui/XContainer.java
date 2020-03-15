@@ -1,5 +1,6 @@
 package org.mini.xmlui;
 
+import org.mini.gui.GGraphics;
 import org.mini.nanovg.Gutil;
 import org.mini.xmlui.gscript.Interpreter;
 import org.mini.xmlui.xmlpull.KXmlParser;
@@ -17,7 +18,7 @@ public abstract class XContainer
     static public final String SCRIPT_XML_NAME = "script"; // 脚本代码
     private XObject[] children = new XObject[4];
     private short size = 0;
-    public int halign = XDef.HALIGN_LEFT, valign = XDef.VALIGN_TOP;
+    public int align = GGraphics.LEFT | GGraphics.TOP;
     int depth = -1;
     // 脚本引擎
     private Interpreter inp;// 脚本引擎
@@ -197,8 +198,9 @@ public abstract class XContainer
 
         }
         if (height == XDef.NODEF) {
-            if (raw_heightPercent != XDef.NODEF && parent.viewH != XDef.NODEF) {
-                viewH = height = raw_heightPercent * parent.viewH / 100;
+            int parentTrialViewH = parent.getTrialViewH();
+            if (raw_heightPercent != XDef.NODEF && parentTrialViewH != XDef.NODEF) {
+                viewH = height = raw_heightPercent * parentTrialViewH / 100;
             } else {
                 viewH = height = totalH;
             }
@@ -266,23 +268,24 @@ public abstract class XContainer
             }
 
             int rightPix = (viewW - sumWidth);
-            int centerPix = rightPix / 2;
+            int hcenterPix = rightPix / 2;
             for (XObject xo : crow) {
-                if (halign == XDef.HALIGN_CENTER) {
-                    xo.x += centerPix;
-                } else if (halign == XDef.HALIGN_RIGHT) {
+                if ((align & GGraphics.HCENTER) != 0) {
+                    xo.x += hcenterPix;
+                } else if ((align & GGraphics.RIGHT) != 0) {
                     xo.x += rightPix;
                 }
             }
         }
         //start realign vert
         int bottomPix = viewH - sumHeight;
-        int middlePix = bottomPix / 2;
+        int vcenterPix = bottomPix / 2;
         for (List<XObject> crow : rows) {
+            boolean rowHasFloatObj = false;
             for (XObject xo : crow) {
-                if (valign == XDef.VALIGN_MIDDLE) {
-                    xo.y += middlePix;
-                } else if (halign == XDef.VALIGN_BOTTOM) {
+                if ((align & GGraphics.VCENTER) != 0) {
+                    xo.y += vcenterPix;
+                } else if ((align & GGraphics.BOTTOM) != 0) {
                     xo.y += bottomPix;
                 }
                 if (xo.getGui() != null) xo.getGui().setLocation(xo.x, xo.y);
@@ -411,6 +414,18 @@ public abstract class XContainer
             XButton xaction = new XButton(this);
             xaction.parse(parser);
             add(xaction);
+        } else if (tagName.equals(XLabel.XML_NAME)) { //label
+            XLabel label = new XLabel(this);
+            label.parse(parser);
+            add(label);
+        } else if (tagName.equals(XImageItem.XML_NAME)) { //img
+            XImageItem img = new XImageItem(this);
+            img.parse(parser);
+            add(img);
+        } else if (tagName.equals(XCheckBox.XML_NAME)) { //checkbox
+            XCheckBox xbox = new XCheckBox(this);
+            xbox.parse(parser);
+            add(xbox);
         } else if (tagName.equals(XTextInput.XML_NAME)) { //textinput
             XTextInput xinput = new XTextInput(this);
             xinput.parse(parser);
@@ -419,20 +434,28 @@ public abstract class XContainer
             XTable xtb = new XTable(this);
             xtb.parse(parser);
             add(xtb);
-        } else if (tagName.equals(XTr.XML_NAME)) { //<tr>
+        } else if (tagName.equals(XTr.XML_NAME)) { //tr
             XTr xtr = new XTr(this);
             xtr.parse(parser);
             add(xtr);
-        } else if (tagName.equals(XTd.XML_NAME)) { //<td>
+        } else if (tagName.equals(XTd.XML_NAME)) { //td
             XTd xtd = new XTd(this);
             xtd.parse(parser);
             add(xtd);
-        } else if (tagName.equals(XList.XML_NAME)) { //<list>
+        } else if (tagName.equals(XList.XML_NAME)) { //menu
             XList xlist = new XList(this);
             xlist.parse(parser);
             add(xlist);
-        } else if (tagName.equals(XPanel.XML_NAME)) { //<panel>
+        } else if (tagName.equals(XPanel.XML_NAME)) { //panel
             XPanel panel = new XPanel(this);
+            panel.parse(parser);
+            add(panel);
+        } else if (tagName.equals(XViewPort.XML_NAME)) { //viewport
+            XViewPort panel = new XViewPort(this);
+            panel.parse(parser);
+            add(panel);
+        } else if (tagName.equals(XViewSlot.XML_NAME)) { //viewslot
+            XViewSlot panel = new XViewSlot(this);
             panel.parse(parser);
             add(panel);
         } else if (tagName.equals(SCRIPT_XML_NAME)) {
@@ -447,66 +470,14 @@ public abstract class XContainer
 
     }
 
-    int parseAlign(String align) {
-        if (align.equalsIgnoreCase("left")) {
-            return XDef.HALIGN_LEFT;
-        }
-        if (align.equalsIgnoreCase("center")) {
-            return XDef.HALIGN_CENTER;
-        }
-        if (align.equalsIgnoreCase("right")) {
-            return XDef.HALIGN_RIGHT;
-        }
-        if (align.equalsIgnoreCase("top")) {
-            return XDef.VALIGN_TOP;
-        }
-        if (align.equalsIgnoreCase("middle")) {
-            return XDef.VALIGN_MIDDLE;
-        }
-        if (align.equalsIgnoreCase("bottom")) {
-            return XDef.VALIGN_BOTTOM;
-        }
-
-        return 0;
-    }
 
     void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
-        if (attName.equals("w")) {
-            if (attValue.indexOf('%') >= 0) {
-                attValue = attValue.trim();
-                raw_widthPercent = Integer.parseInt(attValue.substring(0, attValue.length() - 1));
-            } else {
-                raw_width = Integer.parseInt(attValue);
+        if (attName.equals("align")) {
+            align = 0;
+            for (String s : attValue.split(",")) {
+                align |= XUtil.parseAlign(s);
             }
-        } else if (attName.equals("h")) {
-            if (attValue.indexOf('%') >= 0) {
-                attValue = attValue.trim();
-                raw_heightPercent = Integer.parseInt(attValue.substring(0, attValue.length() - 1));
-            } else {
-                raw_height = Integer.parseInt(attValue);
-            }
-
-        } else if (attName.equals("x")) {
-            if (attValue.indexOf('%') >= 0) {
-                attValue = attValue.trim();
-                raw_xPercent = Integer.parseInt(attValue.substring(0, attValue.length() - 1));
-            } else {
-                raw_x = Integer.parseInt(attValue);
-            }
-        } else if (attName.equals("y")) {
-            if (attValue.indexOf('%') >= 0) {
-                attValue = attValue.trim();
-                raw_yPercent = Integer.parseInt(attValue.substring(0, attValue.length() - 1));
-            } else {
-                raw_y = Integer.parseInt(attValue);
-            }
-        } else if (attName.equals("bgcolor")) {
-            bgColor = Integer.parseInt(attValue, 16);
-        } else if (attName.equals("halign")) {
-            halign = parseAlign(attValue);
-        } else if (attName.equals("valign")) {
-            valign = parseAlign(attValue);
         }
     }
 

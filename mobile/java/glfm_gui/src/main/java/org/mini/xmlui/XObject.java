@@ -16,6 +16,8 @@ public abstract class XObject {
     //供子组件显示的区域
     int viewW = XDef.NODEF, viewH = XDef.NODEF;
 
+    boolean vfloat = false, hfloat = false;
+
     private boolean visable = true; //是否显示
 
     String name = null; //组件名字
@@ -27,6 +29,10 @@ public abstract class XObject {
     String moveMode;
 
     XContainer parent;
+
+    float[] bgColor;
+
+    float[] color;
 
     public XObject(XContainer xc) {
         parent = xc;
@@ -67,7 +73,7 @@ public abstract class XObject {
 
     abstract void createGui();
 
-    abstract GObject getGui();
+    public abstract GObject getGui();
 
     /**
      * 解析对应的xml
@@ -83,17 +89,65 @@ public abstract class XObject {
             String attName = parser.getAttributeName(i);
             String attValue = parser.getAttributeValue(i);
 
-            if (attName.equals("name")) { // 标题
-                name = attValue;
-            } else if (attName.equals("move")) { // viewslot move mode
-                moveMode = attValue;
-            }
+
             parseMoreAttribute(attName, attValue);
         }
     }
 
-    void parseMoreAttribute(String attName, String attValue) {
 
+    void parseMoreAttribute(String attName, String attValue) {
+        if (attName.equals("name")) { // 标题
+            name = attValue;
+        } else if (attName.equals("move")) { // viewslot move mode
+            moveMode = attValue;
+        } else if (attName.equals("w")) {
+            if (attValue.equals("float")) {
+                hfloat = true;
+            } else if (attValue.indexOf('%') >= 0) {
+                attValue = attValue.trim();
+                raw_widthPercent = Integer.parseInt(attValue.substring(0, attValue.length() - 1));
+            } else {
+                raw_width = Integer.parseInt(attValue);
+            }
+        } else if (attName.equals("h")) {
+            if (attValue.equals("float")) {
+                vfloat = true;
+            } else if (attValue.indexOf('%') >= 0) {
+                attValue = attValue.trim();
+                raw_heightPercent = Integer.parseInt(attValue.substring(0, attValue.length() - 1));
+            } else {
+                raw_height = Integer.parseInt(attValue);
+            }
+
+        } else if (attName.equals("x")) {
+            if (attValue.indexOf('%') >= 0) {
+                attValue = attValue.trim();
+                raw_xPercent = Integer.parseInt(attValue.substring(0, attValue.length() - 1));
+            } else {
+                raw_x = Integer.parseInt(attValue);
+            }
+        } else if (attName.equals("y")) {
+            if (attValue.indexOf('%') >= 0) {
+                attValue = attValue.trim();
+                raw_yPercent = Integer.parseInt(attValue.substring(0, attValue.length() - 1));
+            } else {
+                raw_y = Integer.parseInt(attValue);
+            }
+        } else if (attName.equals("bgcolor")) {
+            bgColor = new float[4];
+            int c = (int) Long.parseLong(attValue, 16);
+            bgColor[0] = ((c >> 24) & 0xff) / 255f;
+            bgColor[1] = ((c >> 16) & 0xff) / 255f;
+            bgColor[2] = ((c >> 8) & 0xff) / 255f;
+            bgColor[3] = ((c >> 0) & 0xff) / 255f;
+        } else if (attName.equals("color")) {
+            color = new float[4];
+            int c = (int) Long.parseLong(attValue, 16);
+            color[0] = ((c >> 24) & 0xff) / 255f;
+            color[1] = ((c >> 16) & 0xff) / 255f;
+            color[2] = ((c >> 8) & 0xff) / 255f;
+            color[3] = ((c >> 0) & 0xff) / 255f;
+        }
     }
 
 
@@ -165,6 +219,22 @@ public abstract class XObject {
         height = raw_height;
         viewW = XDef.NODEF;
         viewH = XDef.NODEF;
+    }
+
+    public int getTrialViewH() {
+        if (viewH != XDef.NODEF) {
+            return viewH;
+        }
+        int parentViewH = parent.getTrialViewH();
+        if (parentViewH != XDef.NODEF) {
+            if (raw_heightPercent != XDef.NODEF) {
+                return parentViewH * raw_heightPercent / 100;
+            } else {
+                return XDef.NODEF;
+            }
+        } else {
+            return XDef.NODEF;
+        }
     }
 }
 

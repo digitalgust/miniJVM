@@ -30,6 +30,8 @@ public class ScriptLib extends Lib {
             "setCmd",//8
             "getCmd",//9
             "close",// 10 close frame
+            "getCurSlot",//11
+            "showSlot",//12
     };
 
     /**
@@ -271,6 +273,40 @@ public class ScriptLib extends Lib {
         }
         if (go instanceof GFrame) {
             ((GFrame) go).close();
+        }
+        return null;
+    }
+
+    public DataType getCurSlot(Vector para) {
+        Int val = new Int(0);
+        Str p1 = (Str) Interpreter.vPopBack(para);
+        String compont = p1 != null ? p1.getVal() : null;
+        if (compont != null) {
+            XObject xo = root.find(compont);
+            if (xo != null) {
+                GObject go = xo.getGui();
+                if (go instanceof GViewSlot) {
+                    val.setVal(((GViewSlot) go).getCurrentSlot());
+                }
+
+            }
+        }
+        return val;
+    }
+
+    public DataType moveToSlot(Vector para) {
+        Str p1 = (Str) Interpreter.vPopBack(para);
+        String compont = p1 != null ? p1.getVal() : null;
+        if (compont != null) {
+            XObject xo = root.find(compont);
+            if (xo != null) {
+                GObject go = xo.getGui();
+                int slot = ((Int) Interpreter.vPopBack(para)).getVal();
+                Int time = ((Int) Interpreter.vPopBack(para));
+                if (go instanceof GViewSlot) {
+                    ((GViewSlot) go).moveTo(slot, time == null ? 200 : time.getVal());
+                }
+            }
         }
         return null;
     }

@@ -24,6 +24,7 @@ public class XList extends XObject implements GActionListener {
 
     GList list;
     boolean multiLine = false;
+    int itemheight = XDef.DEFAULT_LIST_HEIGHT;
 
     public XList(XContainer xc) {
         super(xc);
@@ -46,6 +47,8 @@ public class XList extends XObject implements GActionListener {
                 }
                 multiLine = v == 0 ? false : true;
             }
+        } else if (attName.equals("itemh")) {
+            itemheight = Integer.parseInt(attValue);
         }
     }
 
@@ -70,8 +73,9 @@ public class XList extends XObject implements GActionListener {
                     XList.ListItem item = new ListItem();
 
                     item.name = parser.getAttributeValue(null, "name");
-                    item.text = parser.getAttributeValue(null, "text");
                     item.pic = parser.getAttributeValue(null, "pic");
+                    String tmp = parser.nextText();
+                    item.text = tmp == null ? "" : tmp;
                     items.add(item);
                 }
                 toEndTag(parser, XList.ListItem.XML_NAME);
@@ -84,10 +88,11 @@ public class XList extends XObject implements GActionListener {
 
     void preAlignVertical() {
         if (height == XDef.NODEF) {
-            if (raw_heightPercent != XDef.NODEF && parent.viewH != XDef.NODEF) {
-                viewH = height = raw_heightPercent * parent.viewH / 100;
+            int parentTrialViewH = parent.getTrialViewH();
+            if (raw_heightPercent != XDef.NODEF && parentTrialViewH != XDef.NODEF) {
+                viewH = height = raw_heightPercent * parentTrialViewH / 100;
             } else {
-                viewH = height = XDef.DEFAULT_COMPONENT_HEIGHT;
+                viewH = height = XDef.DEFAULT_LIST_HEIGHT;
             }
         }
     }
@@ -102,14 +107,16 @@ public class XList extends XObject implements GActionListener {
         }
     }
 
-    GObject getGui() {
+    public GObject getGui() {
         return list;
     }
 
     void createGui() {
         if (list == null) {
             list = new GList(x, y, width, height);
+            list.setShowMode(multiLine ? GList.MODE_MULTI_SHOW : GList.MODE_SINGLE_SHOW);
             list.setName(name);
+            list.setItemHeight(itemheight);
             list.setAttachment(this);
             for (int i = 0; i < items.size(); i++) {
                 ListItem item = (ListItem) items.elementAt(i);
@@ -118,9 +125,10 @@ public class XList extends XObject implements GActionListener {
                     img = GImage.createImageFromJar(item.pic);
                 }
                 GListItem gli = new GListItem(img, item.text);
+                gli.setName(item.name);
                 gli.setActionListener(this);
+
                 list.addItem(gli);
-                list.setShowMode(multiLine ? GList.MODE_MULTI_SHOW : GList.MODE_SINGLE_SHOW);
             }
         } else {
             list.setLocation(x, y);

@@ -51,6 +51,8 @@ public class UITemplate {
                 break;
         }
         System.out.println(s);
+        System.out.println((int)Long.parseLong("801010ff",16));
+        System.out.println(Integer.parseUnsignedInt("801010ff",16));
     }
 
     /**

@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.mini.nanovg.Nanovg.nvgSave;
-import static org.mini.nanovg.Nanovg.nvgScissor;
 
 /**
  * @author gust
@@ -266,7 +265,7 @@ abstract public class GContainer extends GObject {
 
         nvgSave(ctx);
 //        Nanovg.nvgReset(ctx);
-        nvgScissor(ctx, x, y, w, h);
+        Nanovg.nvgScissor(ctx, x, y, w, h);
         float vx = this.getX();
         float vy = this.getY();
         float vw = this.getW();
