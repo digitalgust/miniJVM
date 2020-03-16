@@ -276,19 +276,19 @@ abstract public class GContainer extends GObject {
 
             nko.update(ctx);
 
-            if (focus == nko) {
-                Nanovg.nvgScissor(ctx, x, y, w, h);
-                Nanovg.nvgBeginPath(ctx);
-                Nanovg.nvgRect(ctx, x + 1, y + 1, w - 2, h - 2);
-                Nanovg.nvgStrokeColor(ctx, Nanovg.nvgRGBA((byte) 255, (byte) 0, (byte) 0, (byte) 255));
-                Nanovg.nvgStroke(ctx);
-
-                Nanovg.nvgBeginPath(ctx);
-                Nanovg.nvgRect(ctx, nko.getX() + 2, nko.getY() + 2, nko.getW() - 4, nko.getH() - 4);
-                Nanovg.nvgStrokeColor(ctx, Nanovg.nvgRGBA((byte) 0, (byte) 0, (byte) 255, (byte) 255));
-                Nanovg.nvgStroke(ctx);
-
-            }
+//            if (focus == nko) {
+//                Nanovg.nvgScissor(ctx, x, y, w, h);
+//                Nanovg.nvgBeginPath(ctx);
+//                Nanovg.nvgRect(ctx, x + 1, y + 1, w - 2, h - 2);
+//                Nanovg.nvgStrokeColor(ctx, Nanovg.nvgRGBA((byte) 255, (byte) 0, (byte) 0, (byte) 255));
+//                Nanovg.nvgStroke(ctx);
+//
+//                Nanovg.nvgBeginPath(ctx);
+//                Nanovg.nvgRect(ctx, nko.getX() + 2, nko.getY() + 2, nko.getW() - 4, nko.getH() - 4);
+//                Nanovg.nvgStrokeColor(ctx, Nanovg.nvgRGBA((byte) 0, (byte) 0, (byte) 255, (byte) 255));
+//                Nanovg.nvgStroke(ctx);
+//
+//            }
         }
         Nanovg.nvgRestore(ctx);
     }

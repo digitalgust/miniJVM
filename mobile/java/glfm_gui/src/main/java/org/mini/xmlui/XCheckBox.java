@@ -18,6 +18,7 @@ public class XCheckBox
     static public final String XML_NAME = "checkbox";
     // 当前绘制颜色
     int fontSize = XDef.DEFAULT_FONT_SIZE;
+    boolean selected = true;
 
     GCheckBox checkBox;
 
@@ -43,6 +44,12 @@ public class XCheckBox
         getRoot().getEventHandler().action(gobj, cmd);
     }
 
+    void parseMoreAttribute(String attName, String attValue) {
+        super.parseMoreAttribute(attName, attValue);
+        if (attName.equals("selected")) {
+            selected = "0".equals(attValue) ? false : true;
+        }
+    }
 
     public void parse(KXmlParser parser) throws Exception {
         super.parse(parser);
@@ -85,6 +92,7 @@ public class XCheckBox
             checkBox.setName(name);
             checkBox.setAttachment(this);
             checkBox.setActionListener(this);
+            checkBox.setChecked(selected);
         } else {
             checkBox.setLocation(x, y);
             checkBox.setSize(width, height);

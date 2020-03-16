@@ -92,7 +92,8 @@ public class GMenuItem extends GObject {
     public boolean update(long vg) {
 
         float cornerRadius = 4.0f;
-
+        nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
+        nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextMetrics(vg, null, null, lineh);
 
         //touched item background

@@ -4,12 +4,11 @@ import org.mini.gui.GObject;
 import org.mini.gui.GTextBox;
 import org.mini.gui.GTextField;
 import org.mini.gui.GTextObject;
-import org.mini.gui.event.GKeyboardShowListener;
 import org.mini.gui.event.GStateChangeListener;
 import org.mini.xmlui.xmlpull.KXmlParser;
 
 public class XTextInput
-        extends XObject implements GKeyboardShowListener, GStateChangeListener {
+        extends XObject implements GStateChangeListener {
 
     static public final String XML_NAME = "input";
 
@@ -32,25 +31,9 @@ public class XTextInput
     void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("multiline")) {
-            if (attValue != null) {
-                int v = 0;
-                try {
-                    v = Integer.parseInt(attValue);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                multiLine = v == 0 ? false : true;
-            }
+            multiLine = "0".equals(attValue) ? false : true;
         } else if (attName.equals("edit")) {
-            if (attValue != null) {
-                int v = 0;
-                try {
-                    v = Integer.parseInt(attValue);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                edit = v == 0 ? false : true;
-            }
+            edit = "0".equals(attValue) ? false : true;
         } else if (attName.equals("style")) {
             if (attValue.equalsIgnoreCase("search")) {
                 style = GTextField.BOX_STYLE_SEARCH;
@@ -112,11 +95,6 @@ public class XTextInput
             textInput.setLocation(x, y);
             textInput.setSize(width, height);
         }
-    }
-
-    @Override
-    public void keyboardShow(boolean show, float x, float y, float w, float h) {
-        getRoot().getEventHandler().keyboardShow(show, x, y, w, h);
     }
 
     @Override

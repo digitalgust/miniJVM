@@ -15,10 +15,6 @@ public class XEventHandler {
 
     }
 
-    public void keyboardShow(boolean show, float x, float y, float w, float h) {
-
-    }
-
     public void onStateChange(GObject gobj,String cmd) {
 
     }

@@ -71,6 +71,17 @@ public class GToolkit {
         return null;
     }
 
+    public static String readFileFromJarAsString(String path, String encode) {
+        try {
+            byte[] cont = readFileFromJar(path);
+            String s = new String(cont, encode);
+            return s;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
     /**
      * 字体部分
      */
@@ -232,7 +243,7 @@ public class GToolkit {
         float[] bond = new float[4];
         byte[] b = toUtf8(s);
         nvgTextBoxBoundsJni(vg, 0, 0, width, b, 0, b.length, bond);
-        bond[GObject.WIDTH] -= bond[GObject.LEFT] + 2;
+        bond[GObject.WIDTH] -= bond[GObject.LEFT];
         bond[GObject.HEIGHT] -= bond[GObject.TOP];
         bond[GObject.LEFT] = bond[GObject.TOP] = 0;
         return bond;

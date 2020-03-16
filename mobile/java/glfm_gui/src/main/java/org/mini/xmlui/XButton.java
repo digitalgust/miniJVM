@@ -20,6 +20,7 @@ public class XButton
     // 当前绘制颜色
     int fontSize = XDef.DEFAULT_FONT_SIZE;
     int addon = XDef.SPACING_BUTTON_ADD;
+    char emoji = 0;
 
     GButton button;
 
@@ -42,6 +43,8 @@ public class XButton
             onClick = XUtil.getField(attValue, 0);
         } else if (attName.equals("addon")) {
             addon = Integer.parseInt(attValue);
+        } else if (attName.equals("emoji")) {
+            emoji = (char) Integer.parseInt(attValue, 16);
         }
     }
 
@@ -105,6 +108,7 @@ public class XButton
             if (bgColor != null) {
                 button.setBgColor(bgColor);
             }
+            button.setIcon(emoji);
         } else {
             button.setLocation(x, y);
             button.setSize(width, height);

@@ -28,7 +28,7 @@ public class GLabel extends GObject {
     int showMode = MODE_SINGLE_SHOW;
 
     public GLabel() {
-
+        this("",0f,0f,1f,1f);
     }
 
     public GLabel(String text, int left, int top, int width, int height) {
@@ -39,6 +39,8 @@ public class GLabel extends GObject {
         setText(text);
         setLocation(left, top);
         setSize(width, height);
+        setColor(GToolkit.getStyle().getTextFontColor());
+        setFontSize(GToolkit.getStyle().getTextFontSize());
     }
 
     public int getType() {
@@ -115,7 +117,7 @@ public class GLabel extends GObject {
         float y = getY();
         float w = getW();
         float h = getH();
-        nvgTextMetrics(vg, null, null, lineh);
+
 
         if (showMode == MODE_MULTI_SHOW) {
             drawMultiText(vg, x, y, w, h);
@@ -127,9 +129,9 @@ public class GLabel extends GObject {
 
     void drawLine(long vg, float x, float y, float w, float h) {
         //NVG_NOTUSED(w);
-        nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
+        nvgFontSize(vg, fontSize);
         nvgFontFace(vg, GToolkit.getFontWord());
-        nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
+        nvgFillColor(vg, color);
 
         nvgTextAlign(vg, align);
         if (text_arr != null) {
@@ -154,9 +156,10 @@ public class GLabel extends GObject {
 
     void drawMultiText(long vg, float x, float y, float w, float h) {
 
-        nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
-        nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
+        nvgFontSize(vg, fontSize);
+        nvgFillColor(vg, color);
         nvgFontFace(vg, GToolkit.getFontWord());
+        nvgTextMetrics(vg, null, null, lineh);
 
         nvgTextAlign(vg, align);
         float dx, dy;
@@ -165,7 +168,7 @@ public class GLabel extends GObject {
         if ((align & Nanovg.NVG_ALIGN_MIDDLE) != 0) {
             dy += lineh[0];
         } else if ((align & Nanovg.NVG_ALIGN_BOTTOM) != 0) {
-            dy += GToolkit.getStyle().getTextFontSize();
+            dy += fontSize;
         }
 
         if (text_arr != null) {

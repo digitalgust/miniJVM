@@ -38,15 +38,7 @@ public class XList extends XObject implements GActionListener {
     void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("multiline")) {
-            if (attValue != null) {
-                int v = 0;
-                try {
-                    v = Integer.parseInt(attValue);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                multiLine = v == 0 ? false : true;
-            }
+            multiLine = "0".equals(attValue) ? false : true;
         } else if (attName.equals("itemh")) {
             itemheight = Integer.parseInt(attValue);
         }

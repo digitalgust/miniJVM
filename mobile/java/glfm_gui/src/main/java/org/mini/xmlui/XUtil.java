@@ -136,7 +136,7 @@ public class XUtil {
         nvgFontSize(vg, fontSize);
         nvgFontFace(vg, GToolkit.getFontWord());
         float[] boundle = GToolkit.getTextBoundle(vg, str, width);
-        return (int) (boundle[GObject.HEIGHT] - boundle[GObject.TOP] + 1);
+        return (int) (boundle[GObject.HEIGHT] - boundle[GObject.TOP] + 1f);
     }
 
     public static int measureWidth(int width, String str, int fontSize) {
@@ -145,7 +145,7 @@ public class XUtil {
         nvgFontSize(vg, fontSize);
         nvgFontFace(vg, GToolkit.getFontWord());
         float[] boundle = GToolkit.getTextBoundle(vg, str, width);
-        return (int) (boundle[GObject.WIDTH] - boundle[GObject.LEFT] + 1);
+        return (int) (boundle[GObject.WIDTH] - boundle[GObject.LEFT] + 1f);
     }
 
     public static int parseAlign(String align) {

@@ -77,8 +77,8 @@ public class AppManager extends GApplication {
         GLanguage.addString(STR_SERVER_STOPED, new String[]{STR_SERVER_STOPED, "服务器已停止", "伺服器已停止"});
         GLanguage.addString(STR_UPLOAD_FILE, new String[]{STR_UPLOAD_FILE, "文件上传结束", "文件上傳結束"});
         GLanguage.addString(STR_SUCCESS, new String[]{STR_SUCCESS, "成功", "成功"});
-        GLanguage.addString(STR_FAIL, new String[]{STR_FAIL, "失敗", "失败"});
-        GLanguage.addString(STR_OPEN_APP_FAIL, new String[]{STR_OPEN_APP_FAIL, "打開應用失敗", "打开应用失败"});
+        GLanguage.addString(STR_FAIL, new String[]{STR_FAIL, "失败", "失敗"});
+        GLanguage.addString(STR_OPEN_APP_FAIL, new String[]{STR_OPEN_APP_FAIL, "打开应用失败", "打開應用失敗"});
     }
 
     static AppManager instance = new AppManager();
@@ -303,10 +303,6 @@ public class AppManager extends GApplication {
             }
         }
 
-
-        public void keyboardShow(boolean show, float x, float y, float w, float h) {
-
-        }
 
         public void onStateChange(GObject gobj, String cmd) {
             String name = gobj.getName();

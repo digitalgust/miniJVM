@@ -7,6 +7,7 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
+import org.mini.gui.event.GStateChangeListener;
 
 import static org.mini.nanovg.Gutil.toUtf8;
 import static org.mini.gui.GToolkit.nvgRGBA;
@@ -54,6 +55,7 @@ public class GFrame extends GContainer {
     long vg;
     int frameMode;
     boolean closable = true;
+    GStateChangeListener stateChangeListener;
 
     public GFrame() {
         this("", (float) 0, (float) 0, (float) 300, (float) 200);
@@ -127,7 +129,9 @@ public class GFrame extends GContainer {
     public void close() {
         if (parent != null) {
             parent.remove(this);
-
+            if (stateChangeListener != null) {
+                stateChangeListener.onStateChange(this);
+            }
         }
     }
 

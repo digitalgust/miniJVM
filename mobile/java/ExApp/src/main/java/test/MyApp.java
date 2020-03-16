@@ -4,7 +4,8 @@ import org.mini.apploader.AppManager;
 import org.mini.gui.*;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GSizeChangeListener;
-import org.mini.xmlui.*;
+import org.mini.xmlui.XEventHandler;
+import org.mini.xmlui.XFrame;
 
 /**
  * @author gust
@@ -65,6 +66,21 @@ public class MyApp extends GApplication {
         });
 
         form.add(menu);
+
+        form.setSizeChangeListener(new GSizeChangeListener() {
+            @Override
+            public void onSizeChange(int width, int height) {
+                System.out.println("onSizeChange: " + width + " , " + height);
+                System.out.println("onSizeChange: " + form.getDeviceWidth() + " , " + form.getDeviceHeight());
+                if (gframe != null && gframe.getAttachment() != null
+                        && (gframe.getAttachment() instanceof XFrame)) {
+                    XFrame xframe = (XFrame) gframe.getAttachment();
+                    xframe.reSize(form.getDeviceWidth(), form.getDeviceHeight() - menuH);
+                }
+                menu.setLocation(0, form.getDeviceHeight() - menuH);
+                menu.setSize(form.getDeviceWidth(), menuH);
+            }
+        });
 
         return form;
     }
@@ -147,17 +163,6 @@ public class MyApp extends GApplication {
         });
         form.add(xframe.getGui());
 
-
-        form.setSizeChangeListener(new GSizeChangeListener() {
-            @Override
-            public void onSizeChange(int width, int height) {
-                System.out.println("onSizeChange: " + width + " , " + height);
-                System.out.println("onSizeChange: " + form.getDeviceWidth() + " , " + form.getDeviceHeight());
-                xframe.reSize(form.getDeviceWidth(), form.getDeviceHeight() - menuH);
-                menu.setLocation(0, form.getDeviceHeight() - menuH);
-                menu.setSize(form.getDeviceWidth(), menuH);
-            }
-        });
 
         gframe = (GFrame) xframe.getGui();
 

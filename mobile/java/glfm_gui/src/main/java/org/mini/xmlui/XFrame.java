@@ -2,13 +2,16 @@ package org.mini.xmlui;
 
 import org.mini.gui.GFrame;
 import org.mini.gui.GObject;
+import org.mini.gui.event.GStateChangeListener;
+import org.mini.xmlui.gscript.Interpreter;
+import org.mini.xmlui.gscript.Str;
 
 
 /**
  *
  */
 public class XFrame
-        extends XContainer {
+        extends XContainer implements GStateChangeListener {
 
     static public final String XML_NAME = "frame";
 
@@ -80,5 +83,16 @@ public class XFrame
     }
 
 
-
+    @Override
+    public void onStateChange(GObject gobj) {
+        if (onClose != null) {
+            Interpreter inp = getRoot().getInp();
+            // 执行脚本
+            if (inp != null) {
+                inp.putGlobalVar("cmd", new Str(cmd));
+                inp.callSub(onClose);
+            }
+        }
+        getRoot().getEventHandler().onStateChange(gobj, cmd);
+    }
 }

@@ -60,6 +60,8 @@ abstract public class GObject {
     protected float[] bgColor;
     protected float[] color;
 
+    protected float fontSize;
+
     protected GActionListener actionListener;
 
     protected GFocusChangeListener focusListener;
@@ -290,6 +292,14 @@ abstract public class GObject {
 
     public void setColor(float[] color) {
         this.color = color;
+    }
+
+    public float getFontSize() {
+        return fontSize;
+    }
+
+    public void setFontSize(float fontSize) {
+        this.fontSize = fontSize;
     }
 
     /**

@@ -18,29 +18,6 @@ public class XTr
     }
 
 
-//    /**
-//     * 解析
-//     *
-//     * @param parser KXmlParser
-//     * @throws Exception
-//     */
-//    public void parse(KXmlParser parser) throws Exception {
-//
-//        depth = parser.getDepth();
-//        //得到域
-//        do {
-//            parser.next();
-//            String tagName = parser.getName();
-//
-//            if (parser.getEventType() == XmlPullParser.START_TAG) {
-//                parseSon(parser);
-//                parser.require(XmlPullParser.END_TAG, null, tagName);
-//            }
-//        }
-//        while (!(parser.getEventType() == XmlPullParser.END_TAG && parser.getName().equals(XML_NAME) && depth == parser.getDepth()));
-//    }
-
-
     boolean isSameHeightRow() {
         return true;
     }
