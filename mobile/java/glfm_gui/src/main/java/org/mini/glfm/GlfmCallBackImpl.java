@@ -315,8 +315,8 @@ public class GlfmCallBackImpl extends GCallBack {
         if (gform == null) {
             return;
         }
-        System.out.println(width + "," + height + "," + pxRatio);
-        System.out.println(winWidth + "," + winHeight);
+        //System.out.println(width + "," + height + "," + pxRatio);
+        //System.out.println(winWidth + "," + winHeight);
         gform.setSize(winWidth, winHeight);
         gform.onSizeChange(winWidth, winHeight);
         gform.flush();

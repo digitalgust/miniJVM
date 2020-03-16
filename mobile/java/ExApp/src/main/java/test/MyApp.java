@@ -4,8 +4,8 @@ import org.mini.apploader.AppManager;
 import org.mini.gui.*;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GSizeChangeListener;
-import org.mini.xmlui.XEventHandler;
-import org.mini.xmlui.XFrame;
+import org.mini.layout.XEventHandler;
+import org.mini.layout.XFrame;
 
 /**
  * @author gust

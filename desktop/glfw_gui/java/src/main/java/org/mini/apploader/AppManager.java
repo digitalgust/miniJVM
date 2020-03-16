@@ -7,10 +7,10 @@ package org.mini.apploader;
 
 import org.mini.gui.*;
 import org.mini.gui.event.*;
-import org.mini.xmlui.UITemplate;
-import org.mini.xmlui.XContainer;
-import org.mini.xmlui.XEventHandler;
-import org.mini.xmlui.XViewSlot;
+import org.mini.layout.UITemplate;
+import org.mini.layout.XContainer;
+import org.mini.layout.XEventHandler;
+import org.mini.layout.XViewSlot;
 
 import java.io.File;
 import java.io.FileInputStream;
