@@ -14,14 +14,13 @@ import org.mini.layout.xmlpull.KXmlParser;
 public class XLabel
         extends XObject implements GActionListener {
 
-    String onClick;
     static public final String XML_NAME = "label";
     // 当前绘制颜色
-    int fontSize = XDef.DEFAULT_FONT_SIZE;
+    protected int fontSize = XDef.DEFAULT_FONT_SIZE;
+    protected String onClick;
+    protected int align = GGraphics.LEFT | GGraphics.TOP;
+    protected int addon = XDef.SPACING_LABEL_ADD;
 
-    int align = GGraphics.LEFT | GGraphics.TOP;
-    int addon = XDef.SPACING_LABEL_ADD;
-    ;
     GLabel label;
 
 
@@ -46,7 +45,7 @@ public class XLabel
         getRoot().getEventHandler().action(gobj, cmd);
     }
 
-    void parseMoreAttribute(String attName, String attValue) {
+    protected void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("align")) {
             align = 0;
@@ -67,14 +66,14 @@ public class XLabel
         String tmps;
         tmps = parser.nextText(); //得到文本
         setText(tmps);
-        toEndTag(parser, XML_NAME);
+        toEndTag(parser, getXmlTag());
     }
 
 //----------------------------------------------------------------------------
 //                    内部方法
 //----------------------------------------------------------------------------
 
-    void preAlignVertical() {
+    protected void preAlignVertical() {
         if (height == XDef.NODEF) {
             if (raw_heightPercent != XDef.NODEF && parent.viewH != XDef.NODEF) {
                 viewH = height = raw_heightPercent * parent.viewH / 100;
@@ -85,7 +84,7 @@ public class XLabel
         }
     }
 
-    void preAlignHorizontal() {
+    protected void preAlignHorizontal() {
         if (width == XDef.NODEF) {
             if (raw_widthPercent == XDef.NODEF) {
                 int w = XUtil.measureWidth(parent.viewW, text, fontSize);
@@ -97,7 +96,7 @@ public class XLabel
     }
 
 
-    void createGui() {
+    protected void createGui() {
         if (label == null) {
             label = new GLabel(text, x, y, width, height);
             label.setName(name);

@@ -1,9 +1,9 @@
 package org.mini.gui;
 
 abstract public class GOpenGLPanel extends GPanel {
-    GImage glRendereredImg;
+    protected GImage glRendereredImg;
 
-    boolean inited = false;
+    protected boolean inited = false;
 
     GCmd cmd = new GCmd(GCmd.GCMD_RUN_CODE, new Runnable() {
         @Override
@@ -16,6 +16,9 @@ abstract public class GOpenGLPanel extends GPanel {
         }
     });
 
+    public GOpenGLPanel(){
+        this(0f, 0f, 1f, 1f);
+    }
 
     public GOpenGLPanel(int left, int top, int width, int height) {
         this((float) left, top, width, height);

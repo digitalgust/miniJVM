@@ -14,25 +14,25 @@ public abstract class XObject {
     protected int raw_xPercent = XDef.NODEF, raw_yPercent = XDef.NODEF, raw_widthPercent = XDef.NODEF, raw_heightPercent = XDef.NODEF;
 
     //供子组件显示的区域
-    int viewW = XDef.NODEF, viewH = XDef.NODEF;
+    protected int viewW = XDef.NODEF, viewH = XDef.NODEF;
 
-    boolean vfloat = false, hfloat = false;
+    protected boolean vfloat = false, hfloat = false;
 
-    private boolean visable = true; //是否显示
+    protected boolean visable = true; //是否显示
 
-    String name = null; //组件名字
+    protected String name = null; //组件名字
 
-    String text = null; //文本
+    protected String text = null; //文本
 
-    String cmd = null;
+    protected String cmd = null;
 
-    String moveMode;
+    protected String moveMode;
 
-    XContainer parent;
+    protected XContainer parent;
 
-    float[] bgColor;
+    protected float[] bgColor;
 
-    float[] color;
+    protected float[] color;
 
     public XObject(XContainer xc) {
         parent = xc;
@@ -41,6 +41,12 @@ public abstract class XObject {
     public XContainer getParent() {
         return parent;
     }
+
+
+    public void setParent(XContainer parent) {
+        this.parent = parent;
+    }
+
 
     public XContainer getRoot() {
         XContainer p = parent;
@@ -60,20 +66,6 @@ public abstract class XObject {
         }
         return scriptHolder.getInp();
     }
-
-    abstract String getXmlTag();
-
-
-    /**
-     *
-     */
-    abstract void preAlignVertical();
-
-    abstract void preAlignHorizontal();
-
-    abstract void createGui();
-
-    public abstract GObject getGui();
 
     /**
      * 解析对应的xml
@@ -95,7 +87,7 @@ public abstract class XObject {
     }
 
 
-    void parseMoreAttribute(String attName, String attValue) {
+    protected void parseMoreAttribute(String attName, String attValue) {
         if (attName.equals("name")) { // 标题
             name = attValue;
         } else if (attName.equals("move")) { // viewslot move mode
@@ -212,7 +204,7 @@ public abstract class XObject {
         this.cmd = cmd;
     }
 
-    public void resetBoundle() {
+    protected void resetBoundle() {
         x = raw_x;
         y = raw_y;
         width = raw_width;
@@ -236,5 +228,33 @@ public abstract class XObject {
             return XDef.NODEF;
         }
     }
+
+    public int getTrialViewW() {
+        if (viewW != XDef.NODEF) {
+            return viewW;
+        }
+        int parentViewW = parent.getTrialViewW();
+        if (parentViewW != XDef.NODEF) {
+            if (raw_widthPercent != XDef.NODEF) {
+                return parentViewW * raw_widthPercent / 100;
+            } else {
+                return XDef.NODEF;
+            }
+        } else {
+            return XDef.NODEF;
+        }
+    }
+
+    public abstract GObject getGui();
+
+    protected abstract String getXmlTag();
+
+    protected abstract void preAlignVertical();
+
+    protected abstract void preAlignHorizontal();
+
+    protected abstract void createGui();
+
+
 }
 

@@ -13,7 +13,7 @@ import static org.mini.nanovg.Nanovg.nvgFontSize;
  */
 public class GCanvas extends GPanel {
 
-    GGraphics g;
+    protected GGraphics g;
 
     public GCanvas() {
 

@@ -18,8 +18,7 @@ public class XDef {
     public static int SPACING_CHECKBOX_ADD = 30; //
 
 
-
-    public static final int DEFAULT_COMPONENT_HEIGHT = 28;
+    public static final int DEFAULT_COMPONENT_HEIGHT = 30;
     public static final int DEFAULT_LIST_HEIGHT = 40;
     public static final int DEFAULT_FONT_SIZE = 18;
 

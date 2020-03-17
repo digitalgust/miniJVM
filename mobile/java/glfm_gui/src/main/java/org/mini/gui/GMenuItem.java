@@ -19,13 +19,13 @@ import static org.mini.nanovg.Nanovg.*;
  */
 public class GMenuItem extends GObject {
 
-    String text;
-    GImage img;
+    protected String text;
+    protected GImage img;
 
-    float[] lineh = new float[1];
-    boolean touched = false;
+    protected float[] lineh = new float[1];
+    protected boolean touched = false;
 
-    int redPoint;
+    protected int redPoint;
 
     GMenuItem(String t, GImage i, GMenu _parent) {
         text = t;
@@ -41,7 +41,7 @@ public class GMenuItem extends GObject {
     boolean isSelected() {
         if (parent instanceof GMenu) {
             GMenu menu = (GMenu) parent;
-            if (menu.getElements().indexOf(this) == menu.selectedIndex) {
+            if (menu.getElementsImpl().indexOf(this) == menu.selectedIndex) {
                 return true;
             }
         }
@@ -51,7 +51,7 @@ public class GMenuItem extends GObject {
     void setSelected() {
         if (parent instanceof GMenu) {
             GMenu menu = (GMenu) parent;
-            menu.selectedIndex = menu.getElements().indexOf(this);
+            menu.selectedIndex = menu.getElementsImpl().indexOf(this);
         }
     }
 

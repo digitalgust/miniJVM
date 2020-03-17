@@ -19,24 +19,6 @@ import static org.mini.nanovg.Nanovg.*;
  * @author gust
  */
 public class GTextBox extends GTextObject {
-
-    //
-    float[] lineh = {0};
-    private int caretIndex;//光标在字符串中的位置
-
-    int selectStart = -1;//选取开始
-    int selectEnd = -1;//选取结束
-    boolean adjustSelStart = true;//是修改选择起点还是终点
-    boolean selectAdjusted;//在选取状态下,如果点击了,但是没有修改位置,取消选取状态
-
-    int totalRows;//字符串总行数，动态计算出
-    int showRows;//可显示行数
-
-    short[][] area_detail;
-    int scrollDelta;
-    float scroll = 0;//0-1 区间,描述窗口滚动条件位置, 滚动符0-1分别对应文本顶部超出显示区域的高度百分比
-    float totalTextHeight;//字符串总高度
-    float showAreaHeight;//显示区域高度
     //
     static final int AREA_DETAIL_ADD = 7;//额外增加slot数量
     static final int AREA_START = 4;//字符串起点位置
@@ -48,9 +30,28 @@ public class GTextBox extends GTextObject {
     static final int AREA_H = HEIGHT;
 
     //
-    boolean mouseDrag;
+    protected float[] lineh = {0};
+    protected  int caretIndex;//光标在字符串中的位置
+
+    protected int selectStart = -1;//选取开始
+    protected int selectEnd = -1;//选取结束
+    protected boolean adjustSelStart = true;//是修改选择起点还是终点
+    protected boolean selectAdjusted;//在选取状态下,如果点击了,但是没有修改位置,取消选取状态
+
+    protected int totalRows;//字符串总行数，动态计算出
+    protected int showRows;//可显示行数
+
+    protected short[][] area_detail;
+    protected int scrollDelta;
+    protected float scroll = 0;//0-1 区间,描述窗口滚动条件位置, 滚动符0-1分别对应文本顶部超出显示区域的高度百分比
+    protected float totalTextHeight;//字符串总高度
+    protected float showAreaHeight;//显示区域高度
+
+    //
+    protected boolean mouseDrag;
 
     public GTextBox() {
+        this("", "", 0f, 0f, 1f, 1f);
     }
 
     public GTextBox(String text, String hint, int left, int top, int width, int height) {

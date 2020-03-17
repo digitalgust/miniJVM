@@ -13,29 +13,29 @@ import java.util.Vector;
 public class XList extends XObject implements GActionListener {
     static public final String XML_NAME = "list";
 
-    static class ListItem {
+    protected static class ListItem {
         static public final String XML_NAME = "li";
         String name;
         String text;
         String pic;
     }
 
-    Vector items = new Vector();
+    protected Vector items = new Vector();
+    protected boolean multiLine = false;
+    protected int itemheight = XDef.DEFAULT_LIST_HEIGHT;
 
-    GList list;
-    boolean multiLine = false;
-    int itemheight = XDef.DEFAULT_LIST_HEIGHT;
+    protected GList list;
 
     public XList(XContainer xc) {
         super(xc);
     }
 
     @Override
-    String getXmlTag() {
+    protected String getXmlTag() {
         return XML_NAME;
     }
 
-    void parseMoreAttribute(String attName, String attValue) {
+    protected void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("multiline")) {
             multiLine = "0".equals(attValue) ? false : true;
@@ -74,11 +74,11 @@ public class XList extends XObject implements GActionListener {
                 parser.require(XmlPullParser.END_TAG, null, tagName);
             }
         }
-        while (!(parser.getEventType() == XmlPullParser.END_TAG && parser.getName().equals(XML_NAME) && depth == parser.getDepth()));
+        while (!(parser.getEventType() == XmlPullParser.END_TAG && parser.getName().equals(getXmlTag()) && depth == parser.getDepth()));
 
     }
 
-    void preAlignVertical() {
+    protected void preAlignVertical() {
         if (height == XDef.NODEF) {
             int parentTrialViewH = parent.getTrialViewH();
             if (raw_heightPercent != XDef.NODEF && parentTrialViewH != XDef.NODEF) {
@@ -89,7 +89,7 @@ public class XList extends XObject implements GActionListener {
         }
     }
 
-    void preAlignHorizontal() {
+    protected void preAlignHorizontal() {
         if (width == XDef.NODEF) {
             if (raw_widthPercent == XDef.NODEF) {
                 viewW = width = parent.viewW;
@@ -103,7 +103,7 @@ public class XList extends XObject implements GActionListener {
         return list;
     }
 
-    void createGui() {
+    protected void createGui() {
         if (list == null) {
             list = new GList(x, y, width, height);
             list.setShowMode(multiLine ? GList.MODE_MULTI_SHOW : GList.MODE_SINGLE_SHOW);
@@ -120,7 +120,7 @@ public class XList extends XObject implements GActionListener {
                 gli.setName(item.name);
                 gli.setActionListener(this);
 
-                list.addItem(gli);
+                list.add(gli);
             }
         } else {
             list.setLocation(x, y);

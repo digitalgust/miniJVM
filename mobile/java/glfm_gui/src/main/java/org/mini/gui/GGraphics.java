@@ -6,6 +6,7 @@
 package org.mini.gui;
 
 import org.mini.nanovg.Gutil;
+import org.mini.nanovg.StbFont;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_BASELINE;
@@ -46,9 +47,9 @@ public class GGraphics {
     public static final int BOTTOM = NVG_ALIGN_BOTTOM;
     public static final int BASELINE = NVG_ALIGN_BASELINE;
 
-    GCanvas canvas;
-    long vg;
-    long font;
+    protected GCanvas canvas;
+    protected long vg;
+    protected StbFont font;
 
     int curColor = 0;
     byte r, g, b, a;

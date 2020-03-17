@@ -30,11 +30,11 @@ import static org.mini.nanovg.Nanovg.nvgTextJni;
  */
 public class GButton extends GObject {
 
-    String text;
-    byte[] text_arr;
-    char preicon;
-    byte[] preicon_arr;
-    boolean bt_pressed = false;
+    protected String text;
+    protected byte[] text_arr;
+    protected char preicon;
+    protected byte[] preicon_arr;
+    protected boolean bt_pressed = false;
 
     public GButton() {
         this(null, 0f, 0f, 1f, 1f);

@@ -6,6 +6,7 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
+import org.mini.gui.event.GChildrenListener;
 import org.mini.nanovg.Nanovg;
 
 import java.util.ArrayList;
@@ -18,10 +19,11 @@ import static org.mini.nanovg.Nanovg.nvgSave;
  */
 abstract public class GContainer extends GObject {
 
-    final List<GObject> elements = new ArrayList();
+    protected final List<GObject> elements = new ArrayList();
     private final List<GMenu> menus = new ArrayList();
     private final List<GObject> fronts = new ArrayList();
-    GObject focus;
+    private final List<GChildrenListener> childrenListeners = new ArrayList();
+    protected GObject focus;
 
     public abstract float getInnerX();
 
@@ -51,24 +53,57 @@ abstract public class GContainer extends GObject {
     //  GFrame can't direct add children in it , GList too
     //
 
-    List<GObject> getElements() {
-        return elements;
+    public List<GObject> getElements() {
+        return getElementsImpl();
     }
 
-    int getElementSize() {
+    public int getElementSize() {
         return elements.size();
     }
 
-    void add(GObject nko) {
+    public void add(GObject nko) {
+        addImpl(nko);
+    }
+
+    public void add(int index, GObject nko) {
+        addImpl(index, nko);
+    }
+
+    public void remove(GObject nko) {
+        removeImpl(nko);
+    }
+
+    public void remove(int index) {
+        removeImpl(index);
+    }
+
+    public boolean contains(GObject son) {
+        return containsImpl(son);
+    }
+
+    public void clear() {
+        clearImpl();
+    }
+
+    //inner method
+    List<GObject> getElementsImpl() {
+        return elements;
+    }
+
+    int getElementSizeImpl() {
+        return elements.size();
+    }
+
+    void addImpl(GObject nko) {
         if (nko != null) {
-            add(elements.size(), nko);
+            addImpl(elements.size(), nko);
             if (nko.isFront()) {
                 setFocus(nko);
             }
         }
     }
 
-    void add(int index, GObject nko) {
+    void addImpl(int index, GObject nko) {
         if (nko != null) {
             synchronized (elements) {
                 if (!elements.contains(nko)) {
@@ -81,7 +116,7 @@ abstract public class GContainer extends GObject {
         }
     }
 
-    void remove(GObject nko) {
+    void removeImpl(GObject nko) {
         if (nko != null) {
             synchronized (elements) {
                 nko.setParent(null);
@@ -98,22 +133,22 @@ abstract public class GContainer extends GObject {
         }
     }
 
-    void remove(int index) {
+    void removeImpl(int index) {
         synchronized (elements) {
             GObject nko = elements.get(index);
-            remove(nko);
+            removeImpl(nko);
         }
     }
 
-    boolean contains(GObject son) {
+    boolean containsImpl(GObject son) {
         return elements.contains(son);
     }
 
-    void clear() {
+    void clearImpl() {
         synchronized (elements) {
             int size = elements.size();
             for (int i = 0; i < size; i++) {
-                remove(elements.size() - 1);
+                removeImpl(elements.size() - 1);
             }
         }
     }
@@ -168,13 +203,10 @@ abstract public class GContainer extends GObject {
             GObject old = this.focus;
             this.focus = go;
             //notify all focus of sons
-            GObject tmp = old;
-            while (tmp != null) {
-                tmp.doFocusLost(go);
-                if (tmp instanceof GContainer) {
-                    tmp = ((GContainer) tmp).focus;
-                } else {
-                    break;
+            if (old != null) {
+                old.doFocusLost(go);
+                if (old instanceof GContainer) {
+                    ((GContainer) old).setFocus(null);
                 }
             }
             if (focus != null) {
@@ -183,12 +215,32 @@ abstract public class GContainer extends GObject {
         }
     }
 
-    public void onAdd(GObject obj) {
+    public void addChildrenListener(GChildrenListener listener) {
+        if (!childrenListeners.contains(listener)) childrenListeners.add(listener);
+    }
 
+    public void removeChildrenListener(GChildrenListener listener) {
+        childrenListeners.remove(listener);
+    }
+
+    public void onAdd(GObject obj) {
+        for (GChildrenListener l : childrenListeners) {
+            try {
+                l.onChildAdd(obj);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void onRemove(GObject obj) {
-
+        for (GChildrenListener l : childrenListeners) {
+            try {
+                l.onChildRemove(obj);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void reSize() {

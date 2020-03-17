@@ -34,21 +34,20 @@ import static org.mini.nanovg.Nanovg.nvgStrokeWidth;
 import static org.mini.nanovg.Nanovg.nvgTranslate;
 
 /**
- *
  * @author gust
  */
 public class GColorSelector extends GObject {
 
-    String text;
-    float curAngel;
-    float oldAngel;
-    float centX;
-    float centY;
-    float r_big, r_small;
-    float selectX, selectY;
+    protected String text;
+    protected float curAngel;
+    protected float oldAngel;
+    protected float centX;
+    protected float centY;
+    protected float r_big, r_small;
+    protected float selectX, selectY;
 
     public GColorSelector() {
-
+        this(0f, 0f, 0f, 1f, 1f);
     }
 
     public GColorSelector(float pos, int left, int top, int width, int height) {
@@ -130,7 +129,6 @@ public class GColorSelector extends GObject {
     }
 
     /**
-     *
      * @param vg
      * @return
      */
@@ -156,7 +154,7 @@ public class GColorSelector extends GObject {
         r_big = r1;
         r0 = r1 - 20.0f;
         r_small = r0;
-        aeps = 0.5f / r1;	// half a pixel arc length in radians (2pi cancels out).
+        aeps = 0.5f / r1;    // half a pixel arc length in radians (2pi cancels out).
 
         for (i = 0; i < 6; i++) {
             float a0 = (float) (i / 6.0f * Math.PI * 2.0f - aeps);

@@ -14,7 +14,7 @@ public class XTd
         return XML_NAME;
     }
 
-    void preAlignVertical() {
+    protected void preAlignVertical() {
         super.preAlignVertical();
         int parentTrialViewH = parent.getTrialViewH();
         if (height < parentTrialViewH) {

@@ -27,13 +27,13 @@ import static org.mini.nanovg.Nanovg.nvgTextJni;
  */
 public class GCheckBox extends GObject {
 
-    String text;
-    byte[] text_arr;
-    boolean checked;
-    byte[] preicon_arr = toUtf8("" + ICON_CHECK);
+    protected String text;
+    protected byte[] text_arr;
+    protected boolean checked;
+    protected byte[] preicon_arr = toUtf8("" + ICON_CHECK);
 
     public GCheckBox() {
-
+        this("", false, 0f, 0f, 1f, 1f);
     }
 
     public GCheckBox(String text, boolean checked, int left, int top, int width, int height) {

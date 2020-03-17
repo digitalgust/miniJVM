@@ -17,7 +17,7 @@ public class XTable
     }
 
 
-    void preAlignVertical() {
+    protected void preAlignVertical() {
         super.preAlignVertical();
 
         int floatCount = 0;

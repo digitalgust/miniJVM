@@ -23,7 +23,7 @@ public class XTr
     }
 
 
-    void preAlignHorizontal() {
+    protected void preAlignHorizontal() {
         if (width == XDef.NODEF) {
             if (raw_widthPercent == XDef.NODEF) {
                 viewW = width = parent.viewW;

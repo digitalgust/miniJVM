@@ -194,5 +194,9 @@ public class Nanovg {
     public static native int nvgTextBreakLinesJni(long pctx, byte[] pstring, int pstart, int pend, float pbreakRowWidth, long prows, int pmaxRows); //NVGcontext*/*ptr*/,const char*,int,int,float,NVGtextRow*/*ptr*/,int, //int
     public static native int nvgTextGlyphPositionsJni(long pctx, float px, float py, byte[] pstring, int pstart, int pend, long ppositions, int pmaxPositions); //NVGcontext*/*ptr*/,float,float,const char*,int,int,NVGglyphPosition*/*ptr*/,int, //int
 
+
+    static public int nvglCreateImageFromHandleGL3(long pctx, int ptextureId, int pw, int ph, int pflags) {
+        return Nanovg.nvglCreateImageFromHandleGLES3(pctx, ptextureId, pw, ph, pflags);
+    }
 }
 

@@ -12,22 +12,22 @@ import org.mini.gui.GViewSlot;
 
 public class XViewSlot extends XContainer {
     static public final String XML_NAME = "viewslot";
-    GViewSlot viewSlot;
-    int scroll = GViewSlot.SCROLL_MODE_HORIZONTAL;
 
-    String moveMode;
+    protected int scroll = GViewSlot.SCROLL_MODE_HORIZONTAL;
+
+    protected GViewSlot viewSlot;
 
     public XViewSlot(XContainer xc) {
         super(xc);
     }
 
     @Override
-    String getXmlTag() {
+    protected String getXmlTag() {
         return XML_NAME;
     }
 
 
-    void parseMoreAttribute(String attName, String attValue) {
+    protected void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("scroll")) {
             scroll = attValue.equalsIgnoreCase("h") ? GViewSlot.SCROLL_MODE_HORIZONTAL : GViewSlot.SCROLL_MODE_VERTICAL;
@@ -52,14 +52,6 @@ public class XViewSlot extends XContainer {
         return mode;
     }
 
-    void onChildAdded(XObject xo) {
-        //set everyone to full size
-        xo.viewW = xo.width = XDef.NODEF;
-        xo.viewH = xo.height = XDef.NODEF;
-        xo.raw_widthPercent = 100;
-        xo.raw_heightPercent = 100;
-    }
-
     void align() {
         for (int i = 0; i < size(); i++) {
             XObject xo = elementAt(i);
@@ -74,7 +66,7 @@ public class XViewSlot extends XContainer {
         return viewSlot;
     }
 
-    void createGui() {
+    protected void createGui() {
         if (viewSlot == null) {
             viewSlot = new GViewSlot(x, y, width, height, scroll);
             viewSlot.setLocation(x, y);

@@ -12,7 +12,7 @@ public class XForm extends XContainer {
     }
 
     @Override
-    String getXmlTag() {
+    protected String getXmlTag() {
         return XML_NAME;
     }
 
@@ -21,7 +21,7 @@ public class XForm extends XContainer {
         return form;
     }
 
-    void createGui() {
+    protected void createGui() {
         if (form == null) {
             form = new GForm();
             form.setLocation(x, y);

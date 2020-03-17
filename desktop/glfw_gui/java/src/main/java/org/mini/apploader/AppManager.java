@@ -343,7 +343,7 @@ public class AppManager extends GApplication {
         if (appList == null) {
             return;
         }
-        appList.removeItemAll();
+        appList.clear();
         List<String> list = AppLoader.getAppList();
         if (list != null && list.size() > 0) {
             for (String appName : list) {
@@ -363,7 +363,7 @@ public class AppManager extends GApplication {
                             return true;
                         }
                     };
-                    appList.addItem(item);
+                    appList.add(item);
                     item.setActionListener(new GActionListener() {
                         @Override
                         public void action(GObject gobj) {

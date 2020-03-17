@@ -10,10 +10,11 @@ import org.mini.layout.xmlpull.KXmlParser;
 
 public class XImageItem extends XObject implements GActionListener {
     static public final String XML_NAME = "img"; //xml tag名
-    String pic;
-    String cmd;
-    String onClick;
-    GImageItem imgItem = null;
+    protected String pic;
+    protected String onClick;
+    protected GImageItem imgItem = null;
+    protected boolean border;
+    protected float alpha = 1.f;
 
     public XImageItem(XContainer xc) {
         super(xc);
@@ -23,14 +24,16 @@ public class XImageItem extends XObject implements GActionListener {
         return XML_NAME;
     }
 
-    void parseMoreAttribute(String attName, String attValue) {
+    protected void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("pic")) {
             pic = attValue;
-        } else if (attName.equals("cmd")) {
-            cmd = attValue;
+        } else if (attName.equals("border")) {
+            border = "0".equals(attValue) ? false : true;
         } else if (attName.equals("onclick")) {
             onClick = XUtil.getField(attValue, 0);
+        } else if (attName.equals("alpha")) {
+            alpha = (float) Integer.parseInt(attValue) / 255;
         }
     }
 
@@ -39,7 +42,7 @@ public class XImageItem extends XObject implements GActionListener {
         String tmps;
         tmps = parser.nextText(); //得到文本
         setText(tmps);
-        toEndTag(parser, XML_NAME);
+        toEndTag(parser, getXmlTag());
     }
 
     @Override
@@ -55,7 +58,7 @@ public class XImageItem extends XObject implements GActionListener {
         getRoot().getEventHandler().action(gobj, cmd);
     }
 
-    void preAlignVertical() {
+    protected void preAlignVertical() {
         if (height == XDef.NODEF) {
             if (raw_heightPercent != XDef.NODEF && parent.viewH != XDef.NODEF) {
                 viewH = height = raw_heightPercent * parent.viewH / 100;
@@ -65,7 +68,7 @@ public class XImageItem extends XObject implements GActionListener {
         }
     }
 
-    void preAlignHorizontal() {
+    protected void preAlignHorizontal() {
         if (width == XDef.NODEF) {
             if (raw_widthPercent == XDef.NODEF) {
                 viewW = width = parent.viewW;
@@ -76,7 +79,7 @@ public class XImageItem extends XObject implements GActionListener {
     }
 
     @Override
-    void createGui() {
+    protected void createGui() {
         if (imgItem == null) {
             GImage img = GImage.createImageFromJar(pic);
             imgItem = new GImageItem(img);
@@ -84,6 +87,8 @@ public class XImageItem extends XObject implements GActionListener {
             imgItem.setSize(width, height);
             imgItem.setName(name);
             imgItem.setAttachment(this);
+            imgItem.setAlpha(alpha);
+            imgItem.setDrawBorder(border);
         } else {
             imgItem.setLocation(x, y);
             imgItem.setSize(width, height);

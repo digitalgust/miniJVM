@@ -17,32 +17,27 @@ public class XMenu extends XObject implements GActionListener {
         String pic;
     }
 
-    Vector items = new Vector();
+    protected Vector items = new Vector();
+    protected boolean contextMenu = false;
+    protected boolean fixed = true;
 
-    GMenu menu;
-    boolean contextMenu = false;
+    protected GMenu menu;
 
     public XMenu(XContainer xc) {
         super(xc);
     }
 
     @Override
-    String getXmlTag() {
+    protected String getXmlTag() {
         return XML_NAME;
     }
 
-    void parseMoreAttribute(String attName, String attValue) {
+    protected void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("contextmenu")) {
-            if (attValue != null) {
-                int v = 0;
-                try {
-                    v = Integer.parseInt(attValue);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                contextMenu = v == 0 ? false : true;
-            }
+            contextMenu = "0".equals(attValue) ? false : true;
+        } else if (attName.equals("fixed")) {
+            fixed = "0".equals(attValue) ? false : true;
         }
     }
 
@@ -69,7 +64,7 @@ public class XMenu extends XObject implements GActionListener {
                     item.name = parser.getAttributeValue(null, "name");
                     item.pic = parser.getAttributeValue(null, "pic");
                     String tmp = parser.nextText();
-                    item.text = tmp == null ? "" : tmp;
+                    item.text = tmp.length() == 0 ? null : tmp;
                     items.add(item);
                 }
                 toEndTag(parser, MenuItem.XML_NAME);
@@ -80,22 +75,38 @@ public class XMenu extends XObject implements GActionListener {
 
     }
 
-    void preAlignVertical() {
+    protected void preAlignVertical() {
+        int parentTrialViewH = parent.getTrialViewH();
         if (height == XDef.NODEF) {
-            if (raw_heightPercent != XDef.NODEF && parent.viewH != XDef.NODEF) {
-                viewH = height = raw_heightPercent * parent.viewH / 100;
+            if (raw_heightPercent != XDef.NODEF && parentTrialViewH != XDef.NODEF) {
+                viewH = height = raw_heightPercent * parentTrialViewH / 100;
             } else {
                 viewH = height = XDef.DEFAULT_COMPONENT_HEIGHT;
             }
         }
+        if (y == XDef.NODEF) {
+            if (raw_yPercent != XDef.NODEF && parentTrialViewH != XDef.NODEF) {
+                y = raw_yPercent * parentTrialViewH / 100;
+            } else {
+                y = XDef.DEFAULT_COMPONENT_HEIGHT;
+            }
+        }
     }
 
-    void preAlignHorizontal() {
+    protected void preAlignHorizontal() {
+        int parentTrialViewW = parent.getTrialViewW();
         if (width == XDef.NODEF) {
             if (raw_widthPercent == XDef.NODEF) {
-                viewW = width = parent.viewW;
+                viewW = width = parentTrialViewW;
             } else {
-                viewW = width = raw_widthPercent * parent.viewW / 100;
+                viewW = width = raw_widthPercent * parentTrialViewW / 100;
+            }
+        }
+        if (x == XDef.NODEF) {
+            if (raw_xPercent == XDef.NODEF) {
+                x = parentTrialViewW;
+            } else {
+                x = raw_xPercent * parentTrialViewW / 100;
             }
         }
     }
@@ -104,7 +115,7 @@ public class XMenu extends XObject implements GActionListener {
         return menu;
     }
 
-    void createGui() {
+    protected void createGui() {
         if (menu == null) {
             menu = new GMenu(x, y, width, height);
             menu.setName(name);
@@ -117,14 +128,15 @@ public class XMenu extends XObject implements GActionListener {
                 }
                 GMenuItem gli = menu.addItem(item.text, img);
                 gli.setActionListener(this);
-                menu.setContextMenu(contextMenu);
+                gli.setName(item.name);
             }
+            menu.setContextMenu(contextMenu);
+            menu.setFixed(fixed);
         } else {
             menu.setLocation(x, y);
             menu.setSize(width, height);
         }
     }
-
 
     @Override
     public void action(GObject gobj) {

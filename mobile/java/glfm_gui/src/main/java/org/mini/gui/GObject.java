@@ -48,14 +48,16 @@ abstract public class GObject {
     public static char ICON_LOGIN = 0xE740;
     public static char ICON_TRASH = 0xE729;
     //
-    protected GContainer parent;
-
-    protected float[] boundle = new float[4];
-
     public static final int LEFT = 0;
     public static final int TOP = 1;
     public static final int WIDTH = 2;
     public static final int HEIGHT = 3;
+
+    volatile static int flush;
+
+    protected GContainer parent;
+
+    protected float[] boundle = new float[4];
 
     protected float[] bgColor;
     protected float[] color;
@@ -66,7 +68,6 @@ abstract public class GObject {
 
     protected GFocusChangeListener focusListener;
 
-    volatile static int flush;
 
     protected boolean visible = true;
 

@@ -17,12 +17,12 @@ public class Stdlib
         "print" //0 向控制台输出字符串
         , "min" //1 求最小值
         , "max" //2 求最大值
-        , "asize" //3 求数组大小
+        , "arrlen" //3 求数组大小
         , "abs" //4 求取对值
         , "random" //5 得到一个随机数
         , "mod" //6 取余
         , "println" //7 输出回车
-        , "ssize" //8 字符串长度
+        , "strlen" //8 字符串长度
         , "equals" //9 字符串比较
         , "def" //10 存入全局变量
         , "isDef" //11 是否存在某全局变量
@@ -48,7 +48,7 @@ public class Stdlib
             case 2:
                 return max(para);
             case 3:
-                return asize(para);
+                return arrlen(para);
             case 4:
                 return abs(para);
             case 5:
@@ -58,7 +58,7 @@ public class Stdlib
             case 7:
                 return println(para);
             case 8:
-                return ssize(para);
+                return strlen(para);
             case 9:
                 return equals(para);
             case 10:
@@ -134,7 +134,7 @@ public class Stdlib
      * @param para int
      * @return Integer
      */
-    private Int asize(Vector para) {
+    private Int arrlen(Vector para) {
         Array arr = (Array) Interpreter.vPopBack(para);
         return new Int(arr.elements.length);
     }
@@ -179,7 +179,7 @@ public class Stdlib
      * @param para int
      * @return Integer
      */
-    private Int ssize(Vector para) {
+    private Int strlen(Vector para) {
         String s = Interpreter.vPopBack(para).toString();
         return new Int(s.length());
     }

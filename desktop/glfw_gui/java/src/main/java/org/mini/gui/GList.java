@@ -21,38 +21,38 @@ import static org.mini.nanovg.Nanovg.*;
  * @author gust
  */
 public class GList extends GContainer implements GFocusChangeListener {
-
-    char preicon;
-    byte[] preicon_arr = toUtf8("" + ICON_CHEVRON_RIGHT);
-    List<Integer> selected = new ArrayList();
-    boolean pulldown;
-    //
     public static final int MODE_MULTI_SHOW = 1, MODE_SINGLE_SHOW = 2;
-    int showMode = MODE_SINGLE_SHOW;
-    //
     public static final int MODE_MULTI_SELECT = 4, MODE_SINGLE_SELECT = 8;
-    int selectMode = MODE_SINGLE_SELECT;
 
-    GScrollBar scrollBar;
-    float[] lineh = {0f};
-    float list_image_size = 28;
-    float list_item_heigh = 40;
-    float list_rows_max = 7;
-    float list_rows_min = 3;
-    float pad = 5;
-    int scrollbarWidth = 20;
-
-    boolean showScrollbar = false;
-
-    float left, top, width, height;
+    protected char preicon;
+    protected byte[] preicon_arr = toUtf8("" + ICON_CHEVRON_RIGHT);
+    protected List<Integer> selected = new ArrayList();
+    protected boolean pulldown;
     //
-    final List<Integer> outOffilterList = new ArrayList();//if a item in this list , it would show dark text color
+    protected int showMode = MODE_SINGLE_SHOW;
+    //
+    protected int selectMode = MODE_SINGLE_SELECT;
+
+    protected GScrollBar scrollBar;
+    protected float[] lineh = {0f};
+    protected float list_image_size = 28;
+    protected float list_item_heigh = 40;
+    protected float list_rows_max = 7;
+    protected float list_rows_min = 3;
+    protected float pad = 5;
+    protected int scrollbarWidth = 20;
+
+    protected boolean showScrollbar = false;
+
+    protected float left, top, width, height;
+    //
+    protected final List<Integer> outOffilterList = new ArrayList();//if a item in this list , it would show dark text color
 
     /**
      *
      */
     public GList() {
-
+        this(0f, 0f, 1f, 1f);
     }
 
     public GList(int left, int top, int width, int height) {
@@ -71,8 +71,8 @@ public class GList extends GContainer implements GFocusChangeListener {
         //
         scrollBar = new GScrollBar(0, GScrollBar.VERTICAL, 0, 0, scrollbarWidth, 100);
         scrollBar.setActionListener(new ScrollBarActionListener());
-        popWin.add(scrollBar);
-        popWin.add(popView);
+        popWin.addImpl(scrollBar);
+        popWin.addImpl(popView);
         setFocusListener(this);
         setScrollBar(false);
         sizeAdjust();
@@ -91,10 +91,10 @@ public class GList extends GContainer implements GFocusChangeListener {
 
     @Override
     public void setInnerSize(float w, float h) {
-        setSize(w,h);
+        setSize(w, h);
     }
 
-    private void switchAppearanceSize(float w, float h){
+    private void switchAppearanceSize(float w, float h) {
         super.setSize(w, h);
         sizeAdjust();
     }
@@ -114,7 +114,7 @@ public class GList extends GContainer implements GFocusChangeListener {
     }
 
     public List<GObject> getItemList() {
-        return popView.getElements();
+        return popView.getElementsImpl();
     }
 
     @Override
@@ -158,45 +158,41 @@ public class GList extends GContainer implements GFocusChangeListener {
 
     public GListItem addItems(GImage img, String lab) {
         GListItem gli = new GListItem(img, lab);
-        addItem(gli);
+        add(gli);
         return gli;
     }
 
-    public void addItem(GListItem gli) {
-        if (gli != null) {
-            popView.add(gli);
-            gli.list = this;
+    public void add(GObject gli) {
+        if (gli != null && gli instanceof GListItem) {
+            popView.addImpl(gli);
+            ((GListItem) gli).list = this;
             sizeAdjust();
         }
     }
 
-    public void addItem(int index, GListItem gli) {
-        if (gli != null) {
-            popView.add(index, gli);
-            gli.list = this;
+    public void add(int index, GObject gli) {
+        if (gli != null && gli instanceof GListItem) {
+            popView.addImpl(index, gli);
+            ((GListItem) gli).list = this;
             sizeAdjust();
         }
     }
 
-    public void removeItem(int index) {
-        popView.remove(index);
+    public void remove(int index) {
+        popView.removeImpl(index);
         sizeAdjust();
     }
 
-    public void removeItem(GObject go) {
+    public void remove(GObject go) {
         if (!(go instanceof GListItem)) {
             throw new IllegalArgumentException("need GListItem");
         }
-        popView.remove(go);
+        popView.removeImpl(go);
         sizeAdjust();
     }
 
-    public void removeItemAll() {
-        popView.clear();
-    }
-
     public GListItem[] getItems() {
-        GListItem[] items = new GListItem[popView.getElementSize()];
+        GListItem[] items = new GListItem[popView.getElementSizeImpl()];
         int i = 0;
         for (GObject go : popView.elements) {
             items[i] = (GListItem) go;
@@ -204,6 +200,24 @@ public class GList extends GContainer implements GFocusChangeListener {
         }
         return items;
     }
+
+
+    public List<GObject> getElements() {
+        return popView.getElementsImpl();
+    }
+
+    public int getElementSize() {
+        return popView.elements.size();
+    }
+
+    public boolean contains(GObject son) {
+        return popView.containsImpl(son);
+    }
+
+    public void clear() {
+        popView.clearImpl();
+    }
+
 
     void sizeAdjust() {
         int itemcount = popView.elements.size();
@@ -240,7 +254,7 @@ public class GList extends GContainer implements GFocusChangeListener {
 
     public void reAlignItems() {
         int i = 0;
-        for (GObject go : popView.getElements()) {
+        for (GObject go : popView.getElementsImpl()) {
             go.setLocation(pad, i * list_item_heigh);
             go.setSize(popView.getW() - pad * 2, list_item_heigh);
             i++;
@@ -250,12 +264,12 @@ public class GList extends GContainer implements GFocusChangeListener {
 
     void changeCurPanel() {
         int itemcount = popView.elements.size();
-        super.clear();
+        super.clearImpl();
 
         if (showMode == MODE_MULTI_SHOW) {
             setLocation(left, top);
             switchAppearanceSize(width, height);
-            super.add(popWin);
+            super.addImpl(popWin);
         } else if (pulldown && itemcount > 0) {
             float popH = itemcount * list_item_heigh;
             if (itemcount < list_rows_min) {
@@ -274,11 +288,11 @@ public class GList extends GContainer implements GFocusChangeListener {
             }
             setLocation(left, popY);
             switchAppearanceSize(popWin.getW(), popWin.getH());
-            super.add(popWin);
+            super.addImpl(popWin);
         } else {
             setLocation(left, top);
             switchAppearanceSize(width, height);
-            super.add(normalPanel);
+            super.addImpl(normalPanel);
         }
     }
 
@@ -327,7 +341,7 @@ public class GList extends GContainer implements GFocusChangeListener {
 
     public void setSelectedIndex(int i) {
         selected.clear();
-        if (i >= 0 && i < popView.getElements().size()) {
+        if (i >= 0 && i < popView.getElementsImpl().size()) {
             selected.add(i);
         }
     }
@@ -353,12 +367,12 @@ public class GList extends GContainer implements GFocusChangeListener {
     }
 
     public int getItemIndex(GListItem item) {
-        return popView.getElements().indexOf(item);
+        return popView.getElementsImpl().indexOf(item);
     }
 
     public void selectAll() {
         if (selectMode == MODE_MULTI_SELECT) {
-            int size = popView.getElementSize();
+            int size = popView.getElementSizeImpl();
             for (int i = 0; i < size; i++) {
                 selected.add(i);
             }

@@ -16,19 +16,25 @@ import static org.mini.nanovg.Gutil.toUtf8;
  * @author Gust
  */
 public abstract class GTextObject extends GObject implements GFocusChangeListener {
+    static GObject defaultUnionObj = new GObject() {
+        @Override
+        public int getType() {
+            return -1;
+        }
+    };
 
-    String hint;
-    byte[] hint_arr;
-    StringBuilder textsb = new StringBuilder();
-    byte[] text_arr;
-    boolean editable = true;
+    protected String hint;
+    protected byte[] hint_arr;
+    protected StringBuilder textsb = new StringBuilder();
+    protected byte[] text_arr;
+    protected boolean editable = true;
 
-    GStateChangeListener stateChangeListener;
+    protected GStateChangeListener stateChangeListener;
 
 
-    boolean selectMode = false;
+    protected boolean selectMode = false;
 
-    GObject unionObj;//if this object exists, the keyboard not disappear
+    protected GObject unionObj = defaultUnionObj;//if this object exists, the keyboard not disappear
 
     public void setHint(String hint) {
         this.hint = hint;
@@ -173,6 +179,9 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
      * @return the unionObj
      */
     public GObject getUnionObj() {
+        if (unionObj == defaultUnionObj) {
+            return null;
+        }
         return unionObj;
     }
 
@@ -180,7 +189,11 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
      * @param unionObj the unionObj to set
      */
     public void setUnionObj(GObject unionObj) {
-        this.unionObj = unionObj;
+        if (unionObj == null) {
+            this.unionObj = defaultUnionObj;
+        } else {
+            this.unionObj = unionObj;
+        }
     }
 
     /**

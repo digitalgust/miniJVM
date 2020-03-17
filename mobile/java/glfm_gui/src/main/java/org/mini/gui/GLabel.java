@@ -16,11 +16,11 @@ import static org.mini.nanovg.Nanovg.*;
  */
 public class GLabel extends GObject {
 
-    String text;
-    byte[] text_arr;
-    char preicon;
-    float[] lineh = {0};
-    boolean pressed;
+    protected String text;
+    protected byte[] text_arr;
+    protected char preicon;
+    protected float[] lineh = {0};
+    protected boolean pressed;
 
     int align = NVG_ALIGN_LEFT | NVG_ALIGN_TOP;
 

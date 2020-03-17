@@ -8,7 +8,6 @@ package org.mini.gui;
 import org.mini.gui.event.*;
 import org.mini.nanovg.Gutil;
 import org.mini.nanovg.Nanovg;
-import org.mini.nanovg.StbFont;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -22,28 +21,24 @@ import static org.mini.nanovg.Nanovg.*;
  */
 public class GForm extends GViewPort {
 
-    String title;
-    long display; //glfw display
-    long vg; //nk contex
-    GCallBack callback;
-    static StbFont gfont;
-    //
-    float pxRatio;
-
-
-    //
-    boolean inited = false;
-
-    GPhotoPickedListener pickListener;
-    GKeyboardShowListener keyshowListener;
-    GAppActiveListener activeListener;
-    GNotifyListener notifyListener;
-    GSizeChangeListener sizeChangeListener;
-
-    //    final static List<Integer> pendingDeleteImage = Collections.synchronizedList(new ArrayList());
     final static Timer timer = new Timer(true);//用于更新画面，UI系统采取按需刷新的原则
 
     static GCmdHandler cmdHandler = new GCmdHandler();
+    private boolean inited = false;
+
+    protected String title;
+    protected long display; //glfw display
+    protected long vg; //nk contex
+    protected GCallBack callback;
+    protected float pxRatio;
+    //
+    //
+
+    protected GPhotoPickedListener pickListener;
+    protected GKeyboardShowListener keyshowListener;
+    protected GAppActiveListener activeListener;
+    protected GNotifyListener notifyListener;
+    protected GSizeChangeListener sizeChangeListener;
 
     public GForm() {
         this.title = title;
@@ -74,14 +69,6 @@ public class GForm extends GViewPort {
 
     public GCallBack getCallBack() {
         return this.callback;
-    }
-
-    static public void setGFont(StbFont pgfont) {
-        gfont = pgfont;
-    }
-
-    static public StbFont getGFont() {
-        return gfont;
     }
 
     public long getNvContext() {

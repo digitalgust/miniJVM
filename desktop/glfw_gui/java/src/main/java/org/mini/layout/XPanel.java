@@ -16,7 +16,7 @@ public class XPanel extends XContainer {
     }
 
     @Override
-    String getXmlTag() {
+    protected String getXmlTag() {
         return XML_NAME;
     }
 
@@ -28,7 +28,7 @@ public class XPanel extends XContainer {
 
     Random random = new Random();
 
-    void createGui() {
+    protected void createGui() {
         if (panel == null) {
             panel = new GPanel(x, y, width, height)
 //            {

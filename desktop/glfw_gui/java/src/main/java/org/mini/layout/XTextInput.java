@@ -1,9 +1,6 @@
 package org.mini.layout;
 
-import org.mini.gui.GObject;
-import org.mini.gui.GTextBox;
-import org.mini.gui.GTextField;
-import org.mini.gui.GTextObject;
+import org.mini.gui.*;
 import org.mini.gui.event.GStateChangeListener;
 import org.mini.layout.xmlpull.KXmlParser;
 
@@ -12,10 +9,12 @@ public class XTextInput
 
     static public final String XML_NAME = "input";
 
-    boolean multiLine = false;
-    boolean edit = true;
-    int style = GTextField.BOX_STYLE_EDIT;
-    String hint = "";
+    protected boolean multiLine = false;
+    protected boolean edit = true;
+    protected boolean password = false;
+    protected int style = GTextField.BOX_STYLE_EDIT;
+    protected String hint = "";
+    protected String union = null;
 
     GTextObject textInput;
 
@@ -28,7 +27,7 @@ public class XTextInput
         return XML_NAME;
     }
 
-    void parseMoreAttribute(String attName, String attValue) {
+    protected void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("multiline")) {
             multiLine = "0".equals(attValue) ? false : true;
@@ -40,6 +39,10 @@ public class XTextInput
             }
         } else if (attName.equals("hint")) {
             hint = attValue;
+        } else if (attName.equals("union")) {
+            union = attValue;
+        } else if (attName.equals("password")) {
+            password = "0".equals(attValue) ? false : true;
         }
     }
 
@@ -53,7 +56,7 @@ public class XTextInput
     }
 
 
-    void preAlignVertical() {
+    protected void preAlignVertical() {
         if (height == XDef.NODEF) {
             if (raw_heightPercent != XDef.NODEF && parent.viewH != XDef.NODEF) {
                 viewH = height = raw_heightPercent * parent.viewH / 100;
@@ -63,7 +66,7 @@ public class XTextInput
         }
     }
 
-    void preAlignHorizontal() {
+    protected void preAlignHorizontal() {
         if (width == XDef.NODEF) {
             if (raw_widthPercent == XDef.NODEF) {
                 viewW = width = parent.viewW;
@@ -74,10 +77,21 @@ public class XTextInput
     }
 
     public GObject getGui() {
+        try {
+            GContainer root = (GContainer) getRoot().getGui();
+            if (root != null) {
+                GObject unionObj = root.findByName(union);
+                if (unionObj != null) {
+                    textInput.setUnionObj(unionObj);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return textInput;
     }
 
-    void createGui() {
+    protected void createGui() {
         if (textInput == null) {
             if (multiLine) {
                 textInput = new GTextBox(getText(), hint, x, y, width, height);
@@ -85,6 +99,7 @@ public class XTextInput
             } else {
                 textInput = new GTextField(getText(), hint, x, y, width, height);
                 ((GTextField) textInput).setBoxStyle(style);
+                ((GTextField) textInput).setPasswordMode(password);
             }
             textInput.setName(name);
             textInput.setAttachment(this);

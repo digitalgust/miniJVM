@@ -20,12 +20,12 @@ import java.io.InputStream;
  */
 public class GImage {
 
-    int nvg_texture = -1;
-    int[] w_h_d = new int[3];
+    protected int nvg_texture = -1;
+    protected int[] w_h_d = new int[3];
     //
-    byte[] data;
-    int gl_texture;
-    int image_init_flag;
+    private byte[] data;
+    private int gl_texture;
+    private int image_init_flag;
 
     GImage() {
 

@@ -1551,12 +1551,13 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
             case JDWP_CMD_VirtualMachine_DisposeObjects: {//1.14
                 s32 requests = jdwppacket_read_int(req);
                 s32 i;
-                for (i = 0; i < requests; i++) {
-                    __refer ins = jdwppacket_read_refer(req);
-                    memoryblock_destory(ins);
-                    s32 count = jdwppacket_read_int(req);
-                    jdwp_client_release_obj(client, ins);//release obj
-                }
+//                for (i = 0; i < requests; i++) {
+//                    __refer ins = jdwppacket_read_refer(req);
+//                    memoryblock_destory(ins);
+//                    s32 count = jdwppacket_read_int(req);
+//                    jdwp_client_release_obj(client, ins);//release obj
+//                    jvm_printf("[JDWP]%x disposed.\n", (s64) (intptr_t) ins);
+//                }
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
                 jdwp_writepacket(client, res);
                 break;
@@ -2351,38 +2352,42 @@ s32 jdwp_client_process(JdwpClient *client, Runtime *runtime) {
             case JDWP_CMD_StackFrame_GetValues: {//16.1
                 Instance *thread = jdwppacket_read_refer(req);
                 Runtime *frame = jdwppacket_read_refer(req);
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                s32 slots = jdwppacket_read_int(req);
-                jdwppacket_write_int(res, slots);
-                Long2Double l2d;
-                s32 i;
-                for (i = 0; i < slots; i++) {
-                    s32 slot = jdwppacket_read_int(req);
-                    ValueType vt;
-                    vt.type = jdwppacket_read_byte(req);
-                    if (slot < frame->method->converted_code->max_locals) {
-                        switch (getSimpleTag(vt.type)) {
-                            case 'R': {
-                                Instance *ins = localvar_getRefer(frame->localvar, slot);
-                                vt.type = getInstanceOfClassTag(ins);
-                                vt.value = (s64) (intptr_t) ins;
-                                break;
+                if(frame->method->converted_code) {
+                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                    s32 slots = jdwppacket_read_int(req);
+                    jdwppacket_write_int(res, slots);
+                    Long2Double l2d;
+                    s32 i;
+                    for (i = 0; i < slots; i++) {
+                        s32 slot = jdwppacket_read_int(req);
+                        ValueType vt;
+                        vt.type = jdwppacket_read_byte(req);
+                        if (slot < frame->method->converted_code->max_locals) {
+                            switch (getSimpleTag(vt.type)) {
+                                case 'R': {
+                                    Instance *ins = localvar_getRefer(frame->localvar, slot);
+                                    vt.type = getInstanceOfClassTag(ins);
+                                    vt.value = (s64) (intptr_t) ins;
+                                    break;
+                                }
+                                case '8':
+                                    l2d.l = localvar_getLong(frame->localvar, slot);
+                                    vt.value = l2d.l;
+                                    //can't skip i, localvar getvalue from received slot .
+                                    break;
+                                case '4':
+                                case '2':
+                                case '1':
+                                    vt.value = localvar_getInt(frame->localvar, slot);
+                                    break;
                             }
-                            case '8':
-                                l2d.l = localvar_getLong(frame->localvar, slot);
-                                vt.value = l2d.l;
-                                //can't skip i, localvar getvalue from received slot .
-                                break;
-                            case '4':
-                            case '2':
-                            case '1':
-                                vt.value = localvar_getInt(frame->localvar, slot);
-                                break;
                         }
+                        writeValueType(res, &vt);
+                        //jvm_printf("[JDWP]JDWP_CMD_StackFrame_GetValues,thead=%llx , frame=%llx, val=%llx\n", (s64) (intptr_t) thread,
+                        //(s64) (intptr_t) frame, vt.value);
                     }
-                    writeValueType(res, &vt);
-                    //jvm_printf("[JDWP]JDWP_CMD_StackFrame_GetValues,thead=%llx , frame=%llx, val=%llx\n", (s64) (intptr_t) thread,
-                    //(s64) (intptr_t) frame, vt.value);
+                }else{
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_SLOT);
                 }
                 jdwp_writepacket(client, res);
                 break;

@@ -15,10 +15,10 @@ public class XFrame
 
     static public final String XML_NAME = "frame";
 
-    GFrame frame;
+    protected GFrame frame;
 
-    private String title;
-    private String onClose;
+    protected String title;
+    protected String onClose;
 
 
     /**
@@ -28,7 +28,11 @@ public class XFrame
         super(null);
     }
 
-    void parseMoreAttribute(String attName, String attValue) {
+    public XFrame(XContainer parent) {
+        super(parent);
+    }
+
+    protected void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("title")) {
             title = attValue;
@@ -53,7 +57,7 @@ public class XFrame
         viewH = (int) tmp.getView().getH();
     }
 
-    void createGui() {
+    protected void createGui() {
         if (frame == null) {
             frame = new GFrame(title, x, y, width, height);
             viewW = (int) frame.getView().getW();

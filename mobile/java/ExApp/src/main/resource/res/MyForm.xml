@@ -1,0 +1,35 @@
+<form name="FORM_MAIN" w="100%" h="100%">
+    <script>
+        sub change()
+            red=mod(random(),255)
+            green=mod(random(),255)
+            blue=mod(random(),255)
+            setColor("LAB_HELP",red,green,blue,255)
+            setText("LAB_HELP","Any a test")
+        ret
+    </script>
+
+    <frame name="FRAME_TEST" w="80%" h="400" align="top,hcenter" title="WINDOW">
+        <label name="LAB_HELP" w="100%">Help text:</label>
+        <input w="100%" h="300" multiline="1"><![CDATA[
+            This app is an example of mini_jvm, Threre are a menu and a frame .
+            Touch the 'Exit to AppManager' , you will enter the AppManager, AppManager manage all app, it can upload ,download , delete app.
+            1. DOWNLOAD : Put your jar in a website , then input the url of jar in AppManager, Touch 'Download' ,it would download the jar ,then update the app list.
+            2. UPLOAD : The first you touch the 'Start' to open the inapp webserver, then open browser in your Desktop Computer, open 'http://phone_ip_addr:8088' , and pickup a jar in the page, upload it. NOTE: That computer and the phone must be same LAN.
+            3. RUN : Touch the App name in the list, Touch 'Run' can start the app.
+            4. SET AS BOOT APP : The boot app will startup when MiniPack opend.
+            5. UPGRADE : AppManager will download the new jar ,url that get from config.txt in jar.
+            6. DELETE : The app would be deleteted.;
+            ]]>
+        </input>
+        <br/>
+        <button name="BT_SCRIPT" h="30" onclick="change()">{Change}</button>
+        <button name="BT_CANCEL" h="30">{Cancel}</button>
+        <br/>
+    </frame>
+
+    <menu name="MENU_MAIN" x="0" y="90%" w="100%" h="10%" fixed="1">
+        <mi name="MI_OPENFRAME" pic="/res/hello.png">{Test}</mi>
+        <mi name="MI_EXIT" pic="/res/appmgr.png">{Exit}</mi>
+    </menu>
+</form>

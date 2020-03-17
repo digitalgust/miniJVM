@@ -13,14 +13,13 @@ import org.mini.layout.xmlpull.KXmlParser;
 public class XCheckBox
         extends XObject implements GActionListener {
 
-    String cmd = null; //命令
-    String onClick;
     static public final String XML_NAME = "checkbox";
     // 当前绘制颜色
-    int fontSize = XDef.DEFAULT_FONT_SIZE;
-    boolean selected = true;
+    protected int fontSize = XDef.DEFAULT_FONT_SIZE;
+    protected boolean selected = true;
+    protected String onClick;
 
-    GCheckBox checkBox;
+    protected GCheckBox checkBox;
 
 
     public XCheckBox(XContainer xc) {
@@ -44,7 +43,7 @@ public class XCheckBox
         getRoot().getEventHandler().action(gobj, cmd);
     }
 
-    void parseMoreAttribute(String attName, String attValue) {
+    protected void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("selected")) {
             selected = "0".equals(attValue) ? false : true;
@@ -56,14 +55,14 @@ public class XCheckBox
         String tmps;
         tmps = parser.nextText(); //得到文本
         setText(tmps);
-        toEndTag(parser, XML_NAME);
+        toEndTag(parser, getXmlTag());
     }
 
 //----------------------------------------------------------------------------
 //                    内部方法
 //----------------------------------------------------------------------------
 
-    void preAlignVertical() {
+    protected void preAlignVertical() {
         if (height == XDef.NODEF) {
             if (raw_heightPercent != XDef.NODEF && parent.viewH != XDef.NODEF) {
                 viewH = height = raw_heightPercent * parent.viewH / 100;
@@ -74,7 +73,7 @@ public class XCheckBox
         }
     }
 
-    void preAlignHorizontal() {
+    protected void preAlignHorizontal() {
         if (width == XDef.NODEF) {
             if (raw_widthPercent == XDef.NODEF) {
                 int w = XUtil.measureWidth(parent.viewW, text, fontSize);
@@ -86,7 +85,7 @@ public class XCheckBox
     }
 
 
-    void createGui() {
+    protected void createGui() {
         if (checkBox == null) {
             checkBox = new GCheckBox(text, false, x, y, width, height);
             checkBox.setName(name);

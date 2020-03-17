@@ -24,21 +24,20 @@ import static org.mini.nanovg.Nanovg.nvgStroke;
 import static org.mini.nanovg.Nanovg.nvgStrokeColor;
 
 /**
- *
  * @author gust
  */
 public class GScrollBar extends GObject {
-
-    String text;
-    float pos;
-    boolean draged;
     public static final int HORIZONTAL = 0, VERTICAL = 1;
-    int mode = HORIZONTAL;
-    float radius = 8;
-    float[] line_boundle = new float[4];
+
+    protected String text;
+    protected float pos;
+    protected boolean draged;
+    protected int mode = HORIZONTAL;
+    protected float radius = 8;
+    protected float[] line_boundle = new float[4];
 
     public GScrollBar() {
-
+        this(0f, HORIZONTAL, 0f, 0f, 1f, 1f);
     }
 
     public GScrollBar(float pos, int mode, int left, int top, int width, int height) {
@@ -165,7 +164,6 @@ public class GScrollBar extends GObject {
     }
 
     /**
-     *
      * @param vg
      * @return
      */

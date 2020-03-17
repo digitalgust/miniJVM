@@ -13,6 +13,9 @@ import java.util.TimerTask;
  * move decide to the view can move to direction
  */
 public class GViewSlot extends GViewPort {
+    public static final int SCROLL_MODE_HORIZONTAL = 0, SCROLL_MODE_VERTICAL = 1;
+    public static final int MOVE_FIXED = 0, MOVE_LEFT = 1, MOVE_RIGHT = 2, MOVE_UP = 4, MOVE_DOWN = 8;
+
     class SlotProp {
         int move = MOVE_FIXED;
 
@@ -33,13 +36,11 @@ public class GViewSlot extends GViewPort {
         }
     }
 
-    List<SlotProp> props = new ArrayList<>();
-    public static final int SCROLL_MODE_HORIZONTAL = 0, SCROLL_MODE_VERTICAL = 1;
-    public static final int MOVE_FIXED = 0, MOVE_LEFT = 1, MOVE_RIGHT = 2, MOVE_UP = 4, MOVE_DOWN = 8;
-    int scrollMode;
-    int current = 0;
+    protected List<SlotProp> props = new ArrayList<>();
+    protected int scrollMode;
+    protected int current = 0;
 
-    float dragBeginX, dragBeginY;
+    protected float dragBeginX, dragBeginY;
 
     public GViewSlot(float w, float h, int scrollMod) {
         this(0, 0, w, h, scrollMod);
@@ -51,7 +52,7 @@ public class GViewSlot extends GViewPort {
     }
 
     public void add(int index, GObject go, int moveMode) {
-        super.add(index, go);
+        super.addImpl(index, go);
         if (scrollMode == SCROLL_MODE_HORIZONTAL) {
             go.setLocation(index * getW(), 0);
         } else {
@@ -67,11 +68,11 @@ public class GViewSlot extends GViewPort {
     }
 
     public void remove(int index) {
-        super.remove(index);
+        super.removeImpl(index);
     }
 
     private SlotProp getProp(GObject go) {
-        int slot = getElements().indexOf(go);
+        int slot = getElementsImpl().indexOf(go);
         return props.get(slot);
     }
 
@@ -80,16 +81,16 @@ public class GViewSlot extends GViewPort {
     }
 
     public void setSlotMoveMode(GObject go, int moveMode) {
-        int i = getElements().indexOf(go);
+        int i = getElementsImpl().indexOf(go);
         props.get(i).move = moveMode;
     }
 
-    public int getCurrentSlot(){
+    public int getCurrentSlot() {
         return current;
     }
 
     public void showSlot(int slot) {
-        GObject go = getElements().get(slot);
+        GObject go = getElementsImpl().get(slot);
         if (go != null) {
             float x = scrollMode == SCROLL_MODE_HORIZONTAL ? -slot * getW() : 0;
             float y = scrollMode == SCROLL_MODE_VERTICAL ? -slot * getH() : 0;
@@ -98,8 +99,8 @@ public class GViewSlot extends GViewPort {
     }
 
     public void moveTo(int slot, long timeInMils) {
-        if (slot >= 0 && slot < getElementSize()) {
-            GObject go = getElements().get(slot);
+        if (slot >= 0 && slot < getElementSizeImpl()) {
+            GObject go = getElementsImpl().get(slot);
             if (go != null) {
                 moveTo(go, timeInMils);
             }
@@ -111,12 +112,12 @@ public class GViewSlot extends GViewPort {
      * @param go
      */
     public void moveTo(GObject go, long timeInMils) {
-        if (contains(go)) {
-            GObject curGo = getElements().get(current);
+        if (containsImpl(go)) {
+            GObject curGo = getElementsImpl().get(current);
             if (curGo != null && go != null) {
                 SlotSwaper swaper = new SlotSwaper(this, curGo, go, timeInMils);
                 getForm().getTimer().schedule(swaper, 0, (long) 16);
-                this.current = getElements().indexOf(go);
+                this.current = getElementsImpl().indexOf(go);
             }
         }
     }

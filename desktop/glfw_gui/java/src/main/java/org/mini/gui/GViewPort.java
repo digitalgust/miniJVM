@@ -7,7 +7,6 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -17,9 +16,9 @@ import java.util.TimerTask;
 public class GViewPort extends GContainer {
 
     protected float[] viewBoundle = new float[4];//可视窗口边界, 
-    float minX, maxX, minY, maxY;
-    float scrollx;
-    float scrolly;
+    protected float minX, maxX, minY, maxY;
+    protected float scrollx;
+    protected float scrolly;
 
     @Override
     public int getType() {
@@ -136,11 +135,13 @@ public class GViewPort extends GContainer {
 
     @Override
     public void onAdd(GObject obj) {
+        super.onAdd(obj);
         reSize();
     }
 
     @Override
     public void onRemove(GObject obj) {
+        super.onRemove(obj);
         reSize();
     }
 
@@ -441,43 +442,4 @@ public class GViewPort extends GContainer {
         return boundle[WIDTH] - viewBoundle[WIDTH];
     }
 
-    @Override
-    public List<GObject> getElements() {
-        return super.getElements();
-    }
-
-    @Override
-    public int getElementSize() {
-        return elements.size();
-    }
-
-    @Override
-    public void add(GObject nko) {
-        super.add(nko);
-    }
-
-    @Override
-    public void add(int index, GObject nko) {
-        super.add(index, nko);
-    }
-
-    @Override
-    public void remove(GObject nko) {
-        super.remove(nko);
-    }
-
-    @Override
-    public void remove(int index) {
-        super.remove(index);
-    }
-
-    @Override
-    public boolean contains(GObject son) {
-        return super.contains(son);
-    }
-
-    @Override
-    public void clear() {
-        super.clear();
-    }
 }

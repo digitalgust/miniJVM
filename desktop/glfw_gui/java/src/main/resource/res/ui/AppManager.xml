@@ -1,5 +1,5 @@
 <viewslot w="100%" h="100%" scroll="h">
-    <panel name="PAN_MGR" w="100%" h="100%" move="right" align="hcenter,top">
+    <panel name="PAN_MGR" w="100%" h="100%" move="fixed" align="hcenter,top">
         <table w="98%" h="100%">
             <tr>
                 <td>

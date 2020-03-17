@@ -22,17 +22,17 @@ public class XBr
         toEndTag(parser, XML_NAME);
     }
 
-    void preAlignVertical() {
+    protected void preAlignVertical() {
         viewH = height = 1;
 
     }
 
-    void preAlignHorizontal() {
+    protected void preAlignHorizontal() {
         viewW = width = parent.viewW;
     }
 
     @Override
-    void createGui() {
+    protected void createGui() {
 
     }
 

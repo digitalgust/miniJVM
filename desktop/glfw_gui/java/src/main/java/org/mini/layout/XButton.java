@@ -13,16 +13,15 @@ import org.mini.layout.xmlpull.KXmlParser;
 public class XButton
         extends XObject implements GActionListener {
 
-    String pic;
-    String onClick;
     static public final String XML_NAME = "button";
-    static public final char SPLIT_CMD_CHAR = ':'; //命令中的分隔符
-    // 当前绘制颜色
-    int fontSize = XDef.DEFAULT_FONT_SIZE;
-    int addon = XDef.SPACING_BUTTON_ADD;
-    char emoji = 0;
+    //
+    protected String pic;
+    protected String onClick;
+    protected int fontSize = XDef.DEFAULT_FONT_SIZE;
+    protected int addon = XDef.SPACING_BUTTON_ADD;
+    protected char emoji = 0;
 
-    GButton button;
+    protected GButton button;
 
     public XButton(XContainer xc) {
         super(xc);
@@ -33,7 +32,7 @@ public class XButton
     }
 
 
-    void parseMoreAttribute(String attName, String attValue) {
+    protected void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("pic")) {
             pic = attValue;
@@ -53,7 +52,7 @@ public class XButton
         String tmps;
         tmps = parser.nextText(); //得到文本
         setText(tmps);
-        toEndTag(parser, XML_NAME);
+        toEndTag(parser, getXmlTag());
     }
 
     @Override
@@ -74,7 +73,7 @@ public class XButton
     //                    内部方法
     //----------------------------------------------------------------------------
 
-    void preAlignVertical() {
+    protected void preAlignVertical() {
         if (height == XDef.NODEF) {
             if (raw_heightPercent != XDef.NODEF && parent.viewH != XDef.NODEF) {
                 viewH = height = raw_heightPercent * parent.viewH / 100;
@@ -84,7 +83,7 @@ public class XButton
         }
     }
 
-    void preAlignHorizontal() {
+    protected void preAlignHorizontal() {
         if (width == XDef.NODEF) {
             if (raw_widthPercent == XDef.NODEF) {
                 int w = XUtil.measureWidth(parent.viewW, text, fontSize);
@@ -96,7 +95,7 @@ public class XButton
         }
     }
 
-    void createGui() {
+    protected void createGui() {
         if (button == null) {
             button = new GButton(text, x, y, width, height);
             button.setName(name);

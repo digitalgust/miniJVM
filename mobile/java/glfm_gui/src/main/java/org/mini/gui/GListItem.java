@@ -15,9 +15,9 @@ import static org.mini.nanovg.Nanovg.nvgImageSize;
  */
 public class GListItem extends GObject {
 
-    GImage img;
-    String label;
-    GList list;
+    protected GImage img;
+    protected String label;
+    protected GList list;
 
     public GListItem(GImage img, String lab) {
         this.img = img;
@@ -89,7 +89,7 @@ public class GListItem extends GObject {
     }
 
     int getIndex() {
-        return parent.getElements().indexOf(this);
+        return parent.getElementsImpl().indexOf(this);
     }
 
     void select() {

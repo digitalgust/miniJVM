@@ -17,17 +17,17 @@ import static org.mini.nanovg.Nanovg.*;
  */
 public class GMenu extends GPanel {
 
-    float[] lineh = new float[1];
-    int selectedIndex = -1;
+    protected float[] lineh = new float[1];
+    protected int selectedIndex = -1;
     /**
      * contextMenu :
      * change focus when this menu touched , the value true would not change current focus, false would chang
      * like the edit menu "copy" "paste" can not change the current ui focus
      */
-    boolean contextMenu = false;
+    protected boolean contextMenu = false;
 
     public GMenu() {
-
+        this(0f, 0f, 1f, 1f);
     }
 
     public GMenu(int left, int top, int width, int height) {
@@ -57,18 +57,18 @@ public class GMenu extends GPanel {
 
     public GMenuItem addItem(int index, String itemTag, GImage img) {
         GMenuItem item = new GMenuItem(itemTag, img, GMenu.this);
-        add(index, item);
+        addImpl(index, item);
         return item;
     }
 
     public GMenuItem addItem(String itemTag, GImage img) {
         GMenuItem item = new GMenuItem(itemTag, img, GMenu.this);
-        add(item);
+        addImpl(item);
         return item;
     }
 
     public void removeItem(int index) {
-        remove(index);
+        removeImpl(index);
     }
 
     @Override

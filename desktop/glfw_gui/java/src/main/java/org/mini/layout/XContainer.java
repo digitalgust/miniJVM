@@ -1,10 +1,13 @@
 package org.mini.layout;
 
+import org.mini.gui.GContainer;
 import org.mini.gui.GGraphics;
-import org.mini.nanovg.Gutil;
+import org.mini.gui.GObject;
+import org.mini.gui.event.GChildrenListener;
 import org.mini.layout.gscript.Interpreter;
 import org.mini.layout.xmlpull.KXmlParser;
 import org.mini.layout.xmlpull.XmlPullParser;
+import org.mini.nanovg.Gutil;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -14,27 +17,36 @@ import java.util.Vector;
 
 
 public abstract class XContainer
-        extends XObject {
+        extends XObject implements GChildrenListener {
     static public final String SCRIPT_XML_NAME = "script"; // 脚本代码
+
+    protected Vector<XMenu> menus = new Vector();
     private XObject[] children = new XObject[4];
     private short size = 0;
     public int align = GGraphics.LEFT | GGraphics.TOP;
-    int depth = -1;
+    private int depth = -1;
     // 脚本引擎
     private Interpreter inp;// 脚本引擎
 
-    private Vector hide_elmts = new Vector(4); //隐藏组件列表
-    int bgColor;
-    XEventHandler eventHandler;
+    protected XEventHandler eventHandler;
+    protected static Vector<String> extGuiClassName = new Vector();
 
 
     public XContainer(XContainer parent) {
         super(parent);
     }
 
-    void onChildAdded(XObject xo) {
 
+    static public void registerGUI(String guiClassName) {
+        if (!extGuiClassName.contains(guiClassName)) {
+            extGuiClassName.addElement(guiClassName);
+        }
     }
+
+    static public void unregisterGUI(String guiClassName) {
+        extGuiClassName.removeElement(guiClassName);
+    }
+
 
     /**
      * 添加一个组件
@@ -55,17 +67,20 @@ public abstract class XContainer
      * @param xcon XObject
      */
     public void remove(XObject xcon) {
-        boolean move = false;
+        if (xcon == null) {
+            return;
+        }
+        int move = Integer.MAX_VALUE;
         for (int i = 0; i < size; i++) {
-            if (children[i] == xcon || move) {
-                children[i] = null;
-                move = true;
-                if (children.length >= i + 1) {
-                    children[i] = children[i + 1];
-                }
+            if (children[i] == xcon) {
+                move = i;
+                size--;
+                //System.out.println("removed: " + xcon + "," + size);
+            }
+            if (i > move) {
+                children[i - 1] = children[i];
             }
         }
-        size--;
     }
 
     public XObject elementAt(int i) {
@@ -124,22 +139,6 @@ public abstract class XContainer
     }
 
 
-    /**
-     * get hide elements
-     *
-     * @param name String
-     * @return XFrame
-     */
-    public XFrame getHideElement(String name) {
-        for (int i = 0; i < hide_elmts.size(); i++) {
-            XFrame xf = (XFrame) hide_elmts.elementAt(i);
-            if (xf.name != null && xf.name.equals(name)) {
-                return xf;
-            }
-        }
-        return null;
-    }
-
     public XEventHandler getEventHandler() {
         return eventHandler;
     }
@@ -171,7 +170,7 @@ public abstract class XContainer
         return false;
     }
 
-    void preAlignVertical() {
+    protected void preAlignVertical() {
 
 
         //follow layout
@@ -209,7 +208,7 @@ public abstract class XContainer
         createGui();
     }
 
-    void preAlignHorizontal() {
+    protected void preAlignHorizontal() {
         if (width == XDef.NODEF) {
             if (raw_widthPercent == XDef.NODEF) {
                 viewW = width = parent.viewW;
@@ -297,8 +296,36 @@ public abstract class XContainer
     }
 
 
-    void createGui() {
+    protected void createGui() {
 
+    }
+
+    private void addListenerToContainer() {
+        GContainer gc = (GContainer) getGui();
+        if (gc != null) {
+            gc.addChildrenListener(this);
+        }
+        for (int i = 0; i < size; i++) {
+            XObject xo = elementAt(i);
+            if (xo instanceof XContainer) {
+                XContainer xc = (XContainer) xo;
+                xc.addListenerToContainer();
+            }
+        }
+    }
+
+    private void removeListenerFromContainer() {
+        GContainer gc = (GContainer) getGui();
+        if (gc != null) {
+            gc.removeChildrenListener(this);
+        }
+        for (int i = 0; i < size; i++) {
+            XObject xo = elementAt(i);
+            if (xo instanceof XContainer) {
+                XContainer xc = (XContainer) xo;
+                xc.removeListenerFromContainer();
+            }
+        }
     }
 
     void setRootSize(int guiRootW, int guiRootH) {
@@ -336,6 +363,16 @@ public abstract class XContainer
         viewH = height;
     }
 
+    protected void alignMenus() {
+        for (XMenu menu : menus) {
+            menu.preAlignHorizontal();
+            menu.preAlignVertical();
+            menu.createGui();
+            GContainer gc = (GContainer) getGui();
+            gc.add(menu.getGui());
+        }
+    }
+
     public void build(int guiRootW, int guiRootH, XEventHandler eventHandler) {
 
         if (eventHandler == null) {
@@ -350,27 +387,42 @@ public abstract class XContainer
         preAlignVertical();
 
         align();
+        alignMenus();
+        addListenerToContainer();
     }
 
-
-    public void resetBoundle() {
-        super.resetBoundle();
-        for (int i = 0; i < size; i++) {
-            XObject xo = elementAt(i);
-            xo.resetBoundle();
-        }
-    }
 
     public void reSize(int guiRootW, int guiRootH) {
+        int tx = x;
+        int ty = y;
         resetBoundle();
+        removeListenerFromContainer();
         setRootSize(guiRootW, guiRootH);
 
         preAlignHorizontal();
         preAlignVertical();
 
         align();
-
+        alignMenus();
+        addListenerToContainer();
+        x = tx;
+        y = ty;
+        getGui().setLocation(x, y);
     }
+
+
+    protected void resetBoundle() {
+        super.resetBoundle();
+        for (int i = 0; i < size; i++) {
+            XObject xo = elementAt(i);
+            xo.resetBoundle();
+        }
+
+        for (XMenu menu : menus) {
+            menu.resetBoundle();
+        }
+    }
+
 
     boolean parseNoTagText() {
         return true;
@@ -442,22 +494,30 @@ public abstract class XContainer
             XTd xtd = new XTd(this);
             xtd.parse(parser);
             add(xtd);
-        } else if (tagName.equals(XList.XML_NAME)) { //menu
+        } else if (tagName.equals(XList.XML_NAME)) { //list
             XList xlist = new XList(this);
             xlist.parse(parser);
             add(xlist);
+        } else if (tagName.equals(XMenu.XML_NAME)) { //menu
+            XMenu xmenu = new XMenu(this);
+            xmenu.parse(parser);
+            menus.add(xmenu);
         } else if (tagName.equals(XPanel.XML_NAME)) { //panel
             XPanel panel = new XPanel(this);
             panel.parse(parser);
             add(panel);
         } else if (tagName.equals(XViewPort.XML_NAME)) { //viewport
-            XViewPort panel = new XViewPort(this);
-            panel.parse(parser);
-            add(panel);
+            XViewPort viewport = new XViewPort(this);
+            viewport.parse(parser);
+            add(viewport);
         } else if (tagName.equals(XViewSlot.XML_NAME)) { //viewslot
-            XViewSlot panel = new XViewSlot(this);
-            panel.parse(parser);
-            add(panel);
+            XViewSlot viewSlot = new XViewSlot(this);
+            viewSlot.parse(parser);
+            add(viewSlot);
+        } else if (tagName.equals(XFrame.XML_NAME)) { //viewslot
+            XFrame frame = new XFrame(this);
+            frame.parse(parser);
+            add(frame);
         } else if (tagName.equals(SCRIPT_XML_NAME)) {
             parser.next();
             String scode = parser.getText();
@@ -466,12 +526,32 @@ public abstract class XContainer
             inp.register(new ScriptLib(this));
             toEndTag(parser, tagName); // 跳过结束符
 
+        } else {
+            boolean found = false;
+            for (String s : extGuiClassName) {
+                if (s.equals(tagName)) {
+                    try {
+                        Class clazz = Class.forName(s);
+                        XObject xobj = (XObject) clazz.newInstance();
+                        xobj.setParent(this);
+                        xobj.parse(parser);
+                        add(xobj);
+                        found = true;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            if (!found) {
+                new Exception("xml tag not found:" + tagName).printStackTrace();
+                toEndTag(parser, tagName);
+            }
         }
 
     }
 
 
-    void parseMoreAttribute(String attName, String attValue) {
+    protected void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("align")) {
             align = 0;
@@ -540,6 +620,32 @@ public abstract class XContainer
             parseXml(bais);
         } catch (Exception ex) {
             ex.printStackTrace();
+        }
+    }
+
+    //===================================================================
+    //         if any GObject add to GContainer
+    //         the xsystem would be collective action
+    //===================================================================
+
+    @Override
+    public void onChildAdd(GObject child) {
+        Object obj = child.getAttachment();
+        if (child.getAttachment() instanceof XObject) {
+            XObject xobj = (XObject) obj;
+            xobj.setParent(this);
+            add(xobj);
+            color = null;
+        }
+    }
+
+    @Override
+    public void onChildRemove(GObject child) {
+        Object obj = child.getAttachment();
+        if (child.getAttachment() instanceof XObject) {
+            XObject xobj = (XObject) obj;
+            xobj.setParent(null);
+            remove(xobj);
         }
     }
 }

@@ -28,9 +28,13 @@ import static org.mini.nanovg.Nanovg.nvgStrokeWidth;
  */
 public class GImageItem extends GObject {
 
-    GImage img;
-    float alpha = 1.f;
-    boolean drawBoader = true;
+    protected GImage img;
+    protected float alpha = 1.f;
+    protected boolean drawBorder = true;
+
+    public GImageItem(){
+
+    }
 
     public GImageItem(GImage img) {
         this.img = img;
@@ -65,7 +69,7 @@ public class GImageItem extends GObject {
             ix = -(iw - w) * 0.5f;
             iy = 0;
         }
-        if (drawBoader) {
+        if (drawBorder) {
             if (img == null) {
                 return true;
             }
@@ -131,17 +135,17 @@ public class GImageItem extends GObject {
     }
 
     /**
-     * @return the drawBoader
+     * @return the drawBorder
      */
-    public boolean isDrawBoader() {
-        return drawBoader;
+    public boolean isDrawBorder() {
+        return drawBorder;
     }
 
     /**
-     * @param drawBoader the drawBoader to set
+     * @param drawBorder the drawBorder to set
      */
-    public void setDrawBoader(boolean drawBoader) {
-        this.drawBoader = drawBoader;
+    public void setDrawBorder(boolean drawBorder) {
+        this.drawBorder = drawBorder;
     }
 
     boolean bt_pressed;

@@ -20,12 +20,12 @@ import java.io.InputStream;
  */
 public class GImage {
 
-    int nvg_texture = -1;
-    int[] w_h_d = new int[3];
+    protected int nvg_texture = -1;
+    protected int[] w_h_d = new int[3];
     //
-    byte[] data;
-    int gl_texture;
-    int image_init_flag;
+    private byte[] data;
+    private int gl_texture;
+    private int image_init_flag;
 
     GImage() {
 
@@ -136,7 +136,7 @@ public class GImage {
                 Nanovg.nvgImageSize(vg, nvg_texture, w, h);
                 data = null;
             } else if (gl_texture != -1) {
-                nvg_texture = Nanovg.nvglCreateImageFromHandleGLES3(vg, gl_texture, w_h_d[0], w_h_d[1], image_init_flag);
+                nvg_texture = Nanovg.nvglCreateImageFromHandleGL3(vg, gl_texture, w_h_d[0], w_h_d[1], image_init_flag);
             }
         }
         return nvg_texture;

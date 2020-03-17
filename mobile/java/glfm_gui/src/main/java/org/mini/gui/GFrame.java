@@ -9,6 +9,8 @@ import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.gui.event.GStateChangeListener;
 
+import java.util.List;
+
 import static org.mini.nanovg.Gutil.toUtf8;
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Nanovg.NVG_ALIGN_CENTER;
@@ -41,21 +43,18 @@ public class GFrame extends GContainer {
 
     static final float TITLE_HEIGHT = 30.f, PAD = 2.f;
 
-    String title;
-    byte[] title_arr;
+    protected String title;
+    protected byte[] title_arr;
 
-    byte[] close_arr = {(byte) 0xe2, (byte) 0x9d, (byte) 0x8e, 0};
-    float[] close_boundle = new float[4];
+    protected byte[] close_arr = {(byte) 0xe2, (byte) 0x9d, (byte) 0x8e, 0};
+    protected float[] close_boundle = new float[4];
 
-    int background_rgba;
+    protected GViewPort view = new GViewPort();
+    protected GPanel title_panel = new GPanel();
 
-    GViewPort view = new GViewPort();
-
-    GPanel title_panel = new GPanel();
-    long vg;
-    int frameMode;
-    boolean closable = true;
-    GStateChangeListener stateChangeListener;
+    protected int frameMode;
+    protected boolean closable = true;
+    protected GStateChangeListener stateChangeListener;
 
     public GFrame() {
         this("", (float) 0, (float) 0, (float) 300, (float) 200);
@@ -72,11 +71,11 @@ public class GFrame extends GContainer {
 
         view.setLocation(PAD, TITLE_HEIGHT + PAD);
         view.setSize(width - PAD * 2, height - TITLE_HEIGHT - PAD * 2);
-        add(view);
+        addImpl(view);
 
         title_panel.setLocation(1, 1);
         title_panel.setSize(width - PAD, TITLE_HEIGHT);
-        add(title_panel);
+        addImpl(title_panel);
     }
 
     @Override
@@ -128,7 +127,7 @@ public class GFrame extends GContainer {
 
     public void close() {
         if (parent != null) {
-            parent.remove(this);
+            parent.removeImpl(this);
             if (stateChangeListener != null) {
                 stateChangeListener.onStateChange(this);
             }
@@ -150,10 +149,6 @@ public class GFrame extends GContainer {
 
     public int getFrameMode() {
         return frameMode;
-    }
-
-    public void setBackground(int rgba) {
-        background_rgba = rgba;
     }
 
     public GViewPort getView() {
@@ -201,6 +196,7 @@ public class GFrame extends GContainer {
 
     @Override
     public void onAdd(GObject obj) {
+        super.onAdd(obj);
         if (parent != null) {
             parent.setFocus(this);
         }
@@ -208,13 +204,12 @@ public class GFrame extends GContainer {
 
     @Override
     public boolean update(long vg) {
-        this.vg = vg;
         float x = getX();
         float y = getY();
         float w = getW();
         float h = getH();
         drawWindow(vg, title, x, y, w, h);
-        super.update(this.vg);
+        super.update(vg);
         return true;
     }
 
@@ -260,14 +255,15 @@ public class GFrame extends GContainer {
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 
-        nvgFontBlur(vg, 2);
-        nvgFillColor(vg, nvgRGBA(0, 0, 0, 128));
-        nvgTextJni(vg, x + w / 2, y + 16 + 1, title_arr, 0, title_arr.length);
+        if (title_arr != null) {
+            nvgFontBlur(vg, 2);
+            nvgFillColor(vg, nvgRGBA(0, 0, 0, 128));
+            nvgTextJni(vg, x + w / 2, y + 16 + 1, title_arr, 0, title_arr.length);
 
-        nvgFontBlur(vg, 0);
-        nvgFillColor(vg, GToolkit.getStyle().getFrameTitleColor());
-        nvgTextJni(vg, x + w / 2, y + 16, title_arr, 0, title_arr.length);
-
+            nvgFontBlur(vg, 0);
+            nvgFillColor(vg, GToolkit.getStyle().getFrameTitleColor());
+            nvgTextJni(vg, x + w / 2, y + 16, title_arr, 0, title_arr.length);
+        }
         if (closable) {
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
@@ -365,5 +361,38 @@ public class GFrame extends GContainer {
     @Override
     public String toString() {
         return title + "/" + super.toString();
+    }
+
+
+    public List<GObject> getElements() {
+        return view.getElementsImpl();
+    }
+
+    public int getElementSize() {
+        return view.elements.size();
+    }
+
+    public void add(GObject nko) {
+        view.addImpl(nko);
+    }
+
+    public void add(int index, GObject nko) {
+        view.addImpl(index, nko);
+    }
+
+    public void remove(GObject nko) {
+        view.removeImpl(nko);
+    }
+
+    public void remove(int index) {
+        view.removeImpl(index);
+    }
+
+    public boolean contains(GObject son) {
+        return view.containsImpl(son);
+    }
+
+    public void clear() {
+        view.clearImpl();
     }
 }

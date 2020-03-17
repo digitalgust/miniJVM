@@ -21,24 +21,24 @@ public class GTextField extends GTextObject {
     static public final int BOX_STYLE_EDIT = 0;
     static public final int BOX_STYLE_SEARCH = 1;
 
-    float[] reset_boundle;
-    int text_max = 256;
-    int boxStyle = BOX_STYLE_EDIT;
+    protected float[] reset_boundle;
+    protected int text_max = 256;
+    protected int boxStyle = BOX_STYLE_EDIT;
     //
-    byte[] search_arr = {(byte) 0xe2, (byte) 0x8c, (byte) 0xa8, 0};
-    byte[] reset_arr = toUtf8("" + ICON_CIRCLED_CROSS);
+    protected byte[] search_arr = {(byte) 0xe2, (byte) 0x8c, (byte) 0xa8, 0};
+    protected byte[] reset_arr = toUtf8("" + ICON_CIRCLED_CROSS);
     //
-    float[] lineh = {0};
-    short[] text_pos;
+    protected float[] lineh = {0};
+    protected short[] text_pos;
     //
-    int caretIndex;
-    int selectStart = -1;//选取开始
-    int selectEnd = -1;//选取结束
+    protected int caretIndex;
+    protected int selectStart = -1;//选取开始
+    protected int selectEnd = -1;//选取结束
 
-    boolean password = false;//是否密码字段
+    protected boolean password = false;//是否密码字段
 
     public GTextField() {
-
+        this("", "", 0f, 0f, 1f, 1f);
     }
 
     public GTextField(String text, String hint, int left, int top, int width, int height) {

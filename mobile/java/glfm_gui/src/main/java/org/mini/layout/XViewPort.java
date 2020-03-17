@@ -5,14 +5,14 @@ import org.mini.gui.GViewPort;
 
 public class XViewPort extends XContainer {
     static public final String XML_NAME = "viewport";
-    GViewPort viewPort;
+    protected GViewPort viewPort;
 
     public XViewPort(XContainer xc) {
         super(xc);
     }
 
     @Override
-    String getXmlTag() {
+    protected String getXmlTag() {
         return XML_NAME;
     }
 
@@ -21,7 +21,7 @@ public class XViewPort extends XContainer {
         return viewPort;
     }
 
-    void createGui() {
+    protected void createGui() {
         if (viewPort == null) {
             viewPort = new GViewPort();
             viewPort.setLocation(x, y);
