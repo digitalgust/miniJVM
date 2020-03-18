@@ -220,7 +220,10 @@ public class AppManager extends GApplication {
         public void action(GObject gobj, String cmd) {
             String name = gobj.getName();
             if ("APP_DELETE_BTN".equals(name)) {
-
+                String appName = curSelectedItem.getLabel();
+                AppLoader.removeApp(appName);
+                mainPanelShowLeft();
+                reloadAppList();
             } else if ("BT_DOWN".equals(name)) {
                 GTextObject downtextfd = (GTextObject) mgrForm.findByName("INPUT_URL");
                 String url = downtextfd.getText();
