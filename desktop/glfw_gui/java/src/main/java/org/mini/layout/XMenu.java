@@ -23,6 +23,10 @@ public class XMenu extends XObject implements GActionListener {
 
     protected GMenu menu;
 
+    public XMenu() {
+        super(null);
+    }
+
     public XMenu(XContainer xc) {
         super(xc);
     }
@@ -76,14 +80,8 @@ public class XMenu extends XObject implements GActionListener {
     }
 
     protected void preAlignVertical() {
+        super.preAlignVertical();
         int parentTrialViewH = parent.getTrialViewH();
-        if (height == XDef.NODEF) {
-            if (raw_heightPercent != XDef.NODEF && parentTrialViewH != XDef.NODEF) {
-                viewH = height = raw_heightPercent * parentTrialViewH / 100;
-            } else {
-                viewH = height = XDef.DEFAULT_COMPONENT_HEIGHT;
-            }
-        }
         if (y == XDef.NODEF) {
             if (raw_yPercent != XDef.NODEF && parentTrialViewH != XDef.NODEF) {
                 y = raw_yPercent * parentTrialViewH / 100;
@@ -94,14 +92,8 @@ public class XMenu extends XObject implements GActionListener {
     }
 
     protected void preAlignHorizontal() {
+        super.preAlignHorizontal();
         int parentTrialViewW = parent.getTrialViewW();
-        if (width == XDef.NODEF) {
-            if (raw_widthPercent == XDef.NODEF) {
-                viewW = width = parentTrialViewW;
-            } else {
-                viewW = width = raw_widthPercent * parentTrialViewW / 100;
-            }
-        }
         if (x == XDef.NODEF) {
             if (raw_xPercent == XDef.NODEF) {
                 x = parentTrialViewW;
@@ -109,6 +101,14 @@ public class XMenu extends XObject implements GActionListener {
                 x = raw_xPercent * parentTrialViewW / 100;
             }
         }
+    }
+
+    protected int getDefaultWidth(int parentViewW) {
+        return parentViewW;
+    }
+
+    protected int getDefaultHeight(int parentViewH) {
+        return XDef.DEFAULT_COMPONENT_HEIGHT;
     }
 
     public GObject getGui() {

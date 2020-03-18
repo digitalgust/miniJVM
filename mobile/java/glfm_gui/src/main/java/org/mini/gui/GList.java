@@ -34,6 +34,7 @@ public class GList extends GContainer implements GFocusChangeListener {
     protected int selectMode = MODE_SINGLE_SELECT;
 
     protected GScrollBar scrollBar;
+    GListPopWindow popWin;
     protected float[] lineh = {0f};
     protected float list_image_size = 28;
     protected float list_item_heigh = 40;
@@ -71,6 +72,7 @@ public class GList extends GContainer implements GFocusChangeListener {
         //
         scrollBar = new GScrollBar(0, GScrollBar.VERTICAL, 0, 0, scrollbarWidth, 100);
         scrollBar.setActionListener(new ScrollBarActionListener());
+        popWin = new GListPopWindow();
         popWin.addImpl(scrollBar);
         popWin.addImpl(popView);
         setFocusListener(this);
@@ -658,7 +660,7 @@ public class GList extends GContainer implements GFocusChangeListener {
 
     };
 
-    GListPopWindow popWin = new GListPopWindow();
+
 
     class GListPopWindow extends GPanel {
 

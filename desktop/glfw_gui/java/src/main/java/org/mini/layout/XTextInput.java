@@ -56,24 +56,12 @@ public class XTextInput
     }
 
 
-    protected void preAlignVertical() {
-        if (height == XDef.NODEF) {
-            if (raw_heightPercent != XDef.NODEF && parent.viewH != XDef.NODEF) {
-                viewH = height = raw_heightPercent * parent.viewH / 100;
-            } else {
-                viewH = height = XDef.DEFAULT_COMPONENT_HEIGHT;
-            }
-        }
+    protected int getDefaultWidth(int parentViewW) {
+        return parentViewW;
     }
 
-    protected void preAlignHorizontal() {
-        if (width == XDef.NODEF) {
-            if (raw_widthPercent == XDef.NODEF) {
-                viewW = width = parent.viewW;
-            } else {
-                viewW = width = raw_widthPercent * parent.viewW / 100;
-            }
-        }
+    protected int getDefaultHeight(int parentViewH) {
+        return XDef.DEFAULT_COMPONENT_HEIGHT;
     }
 
     public GObject getGui() {

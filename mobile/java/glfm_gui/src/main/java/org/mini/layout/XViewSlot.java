@@ -17,6 +17,10 @@ public class XViewSlot extends XContainer {
 
     protected GViewSlot viewSlot;
 
+    public XViewSlot() {
+        super(null);
+    }
+
     public XViewSlot(XContainer xc) {
         super(xc);
     }
@@ -53,6 +57,12 @@ public class XViewSlot extends XContainer {
     }
 
     void align() {
+        viewSlot.clear();
+        for (int i = 0; i < size(); i++) {
+            XObject xo = elementAt(i);
+            GObject go = xo.getGui();
+            if (go != null) viewSlot.add(i, go, parseMoveMode(xo.moveMode));
+        }
         for (int i = 0; i < size(); i++) {
             XObject xo = elementAt(i);
             if (xo instanceof XContainer) {
@@ -73,11 +83,7 @@ public class XViewSlot extends XContainer {
             viewSlot.setSize(width, height);
             viewSlot.setName(name);
             viewSlot.setAttachment(this);
-            for (int i = 0; i < size(); i++) {
-                XObject xo = elementAt(i);
-                GObject go = xo.getGui();
-                if (go != null) viewSlot.add(i, go, parseMoveMode(xo.moveMode));
-            }
+
         } else {
             viewSlot.setLocation(x, y);
             viewSlot.setSize(width, height);

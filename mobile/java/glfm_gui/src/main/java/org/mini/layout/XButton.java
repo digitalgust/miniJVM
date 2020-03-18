@@ -23,6 +23,10 @@ public class XButton
 
     protected GButton button;
 
+    public XButton() {
+        super(null);
+    }
+
     public XButton(XContainer xc) {
         super(xc);
     }
@@ -73,27 +77,17 @@ public class XButton
     //                    内部方法
     //----------------------------------------------------------------------------
 
-    protected void preAlignVertical() {
-        if (height == XDef.NODEF) {
-            if (raw_heightPercent != XDef.NODEF && parent.viewH != XDef.NODEF) {
-                viewH = height = raw_heightPercent * parent.viewH / 100;
-            } else {
-                viewH = height = XDef.DEFAULT_COMPONENT_HEIGHT;
-            }
-        }
+
+    protected int getDefaultWidth(int parentViewW) {
+        int w = XUtil.measureWidth(parentViewW, text, fontSize);
+        w += addon;
+        return w;
     }
 
-    protected void preAlignHorizontal() {
-        if (width == XDef.NODEF) {
-            if (raw_widthPercent == XDef.NODEF) {
-                int w = XUtil.measureWidth(parent.viewW, text, fontSize);
-                w += addon;
-                viewW = width = w;
-            } else {
-                viewW = width = raw_widthPercent * parent.viewW / 100;
-            }
-        }
+    protected int getDefaultHeight(int parentViewH) {
+        return XDef.DEFAULT_COMPONENT_HEIGHT;
     }
+
 
     protected void createGui() {
         if (button == null) {

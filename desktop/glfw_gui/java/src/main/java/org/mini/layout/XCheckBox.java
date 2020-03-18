@@ -21,6 +21,9 @@ public class XCheckBox
 
     protected GCheckBox checkBox;
 
+    public XCheckBox() {
+        super(null);
+    }
 
     public XCheckBox(XContainer xc) {
         super((xc));
@@ -62,28 +65,15 @@ public class XCheckBox
 //                    内部方法
 //----------------------------------------------------------------------------
 
-    protected void preAlignVertical() {
-        if (height == XDef.NODEF) {
-            if (raw_heightPercent != XDef.NODEF && parent.viewH != XDef.NODEF) {
-                viewH = height = raw_heightPercent * parent.viewH / 100;
-            } else {
-                int h = XUtil.measureHeight(viewW, text, fontSize);
-                viewH = height = h;
-            }
-        }
+    protected int getDefaultWidth(int parentViewW) {
+        int w = XUtil.measureWidth(parentViewW, text, fontSize);
+        viewW = width = w + XDef.SPACING_CHECKBOX_ADD;
+        return w;
     }
 
-    protected void preAlignHorizontal() {
-        if (width == XDef.NODEF) {
-            if (raw_widthPercent == XDef.NODEF) {
-                int w = XUtil.measureWidth(parent.viewW, text, fontSize);
-                viewW = width = w + XDef.SPACING_CHECKBOX_ADD;
-            } else {
-                viewW = width = raw_widthPercent * parent.viewW / 100;
-            }
-        }
+    protected int getDefaultHeight(int parentViewH) {
+        return XUtil.measureHeight(viewW, text, fontSize);
     }
-
 
     protected void createGui() {
         if (checkBox == null) {

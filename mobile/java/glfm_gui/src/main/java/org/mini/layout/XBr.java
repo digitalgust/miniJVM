@@ -8,6 +8,9 @@ public class XBr
         extends XObject {
     static public final String XML_NAME = "br";
 
+    public XBr() {
+        super(null);
+    }
 
     public XBr(XContainer xc) {
         super(xc);
@@ -22,14 +25,14 @@ public class XBr
         toEndTag(parser, XML_NAME);
     }
 
-    protected void preAlignVertical() {
-        viewH = height = 1;
-
+    protected int getDefaultWidth(int parentViewW) {
+        return parentViewW;
     }
 
-    protected void preAlignHorizontal() {
-        viewW = width = parent.viewW;
+    protected int getDefaultHeight(int parentViewH) {
+        return 1;
     }
+
 
     @Override
     protected void createGui() {

@@ -5,6 +5,10 @@ public class XTr
 
     static public final String XML_NAME = "tr";
 
+    public XTr() {
+        super(null);
+    }
+
     public XTr(XContainer xc) {
         super(xc);
     }
@@ -25,10 +29,11 @@ public class XTr
 
     protected void preAlignHorizontal() {
         if (width == XDef.NODEF) {
+            int parentTrialViewW = parent.getTrialViewW();
             if (raw_widthPercent == XDef.NODEF) {
-                viewW = width = parent.viewW;
+                viewW = width = parentTrialViewW;
             } else {
-                viewW = width = raw_widthPercent * parent.viewW / 100;
+                viewW = width = raw_widthPercent * parentTrialViewW / 100;
             }
         }
 

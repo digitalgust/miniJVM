@@ -9,7 +9,11 @@ public class XPanel extends XContainer {
     static public final String XML_NAME = "panel";
 
 
-    GPanel panel;
+    protected GPanel panel;
+
+    public XPanel() {
+        super(null);
+    }
 
     public XPanel(XContainer xc) {
         super(xc);
@@ -19,7 +23,6 @@ public class XPanel extends XContainer {
     protected String getXmlTag() {
         return XML_NAME;
     }
-
 
 
     public GObject getGui() {
@@ -42,11 +45,6 @@ public class XPanel extends XContainer {
             ;
             panel.setName(name);
             panel.setAttachment(this);
-            for (int i = 0; i < size(); i++) {
-                XObject xo = elementAt(i);
-                GObject go = xo.getGui();
-                if (go != null) panel.add(go);
-            }
         } else {
             panel.setLocation(x, y);
             panel.setSize(width, height);

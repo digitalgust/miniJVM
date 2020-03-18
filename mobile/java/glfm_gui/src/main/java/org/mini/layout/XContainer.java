@@ -31,6 +31,9 @@ public abstract class XContainer
     protected XEventHandler eventHandler;
     protected static Vector<String> extGuiClassName = new Vector();
 
+    public XContainer() {
+        super(null);
+    }
 
     public XContainer(XContainer parent) {
         super(parent);
@@ -199,23 +202,23 @@ public abstract class XContainer
         if (height == XDef.NODEF) {
             int parentTrialViewH = parent.getTrialViewH();
             if (raw_heightPercent != XDef.NODEF && parentTrialViewH != XDef.NODEF) {
-                viewH = height = raw_heightPercent * parentTrialViewH / 100;
+                height = raw_heightPercent * parentTrialViewH / 100;
             } else {
-                viewH = height = totalH;
+                height = totalH;
             }
+            viewH = height - getDiff_ViewH2Height();
         }
 
         createGui();
+        for (int i = 0; i < size(); i++) {
+            XObject xo = elementAt(i);
+            GObject go = xo.getGui();
+            if (go != null) ((GContainer) getGui()).add(go);
+        }
     }
 
     protected void preAlignHorizontal() {
-        if (width == XDef.NODEF) {
-            if (raw_widthPercent == XDef.NODEF) {
-                viewW = width = parent.viewW;
-            } else {
-                viewW = width = raw_widthPercent * parent.viewW / 100;
-            }
-        }
+        super.preAlignHorizontal();
 
         for (int i = 0; i < size; i++) {
             XObject xo = elementAt(i);
@@ -359,8 +362,8 @@ public abstract class XContainer
             }
         }
 
-        viewW = width;
-        viewH = height;
+        viewW = width - getDiff_viewW2Width();
+        viewH = height - getDiff_viewW2Width();
     }
 
     protected void alignMenus() {

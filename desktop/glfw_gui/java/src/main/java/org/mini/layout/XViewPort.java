@@ -7,6 +7,10 @@ public class XViewPort extends XContainer {
     static public final String XML_NAME = "viewport";
     protected GViewPort viewPort;
 
+    public XViewPort() {
+        super(null);
+    }
+
     public XViewPort(XContainer xc) {
         super(xc);
     }
@@ -28,11 +32,6 @@ public class XViewPort extends XContainer {
             viewPort.setSize(width, height);
             viewPort.setName(name);
             viewPort.setAttachment(this);
-            for (int i = 0; i < size(); i++) {
-                XObject xo = elementAt(i);
-                GObject go = xo.getGui();
-                if (go != null) viewPort.add(go);
-            }
         } else {
             viewPort.setLocation(x, y);
             viewPort.setSize(width, height);

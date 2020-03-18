@@ -46,29 +46,30 @@ public class XFrame
     }
 
 
-    void setRootSize(int guiRootW, int guiRootH) {
 
-        super.setRootSize(guiRootW, guiRootH);
-        //create a frame only for get viewW and viewH
-        // because fram width != viewW
-        GFrame tmp = new GFrame(title, x, y, width, height);
-        tmp.setAttachment(this);
-        viewW = (int) tmp.getView().getW();
-        viewH = (int) tmp.getView().getH();
+    /**
+     * how pix viewW less than width
+     *
+     * @return
+     */
+    protected int getDiff_viewW2Width() {
+        return 4;
+    }
+
+    /**
+     * how pix viewH less than height
+     *
+     * @return
+     */
+    protected int getDiff_ViewH2Height() {
+        return 34;
     }
 
     protected void createGui() {
         if (frame == null) {
             frame = new GFrame(title, x, y, width, height);
-            viewW = (int) frame.getView().getW();
-            viewH = (int) frame.getView().getH();
             frame.setName(name);
             frame.setAttachment(this);
-            for (int i = 0; i < size(); i++) {
-                XObject xo = elementAt(i);
-                GObject go = xo.getGui();
-                if (go != null) frame.getView().add(go);
-            }
         } else {
             frame.setLocation(x, y);
             frame.setSize(width, height);

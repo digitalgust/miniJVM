@@ -26,6 +26,10 @@ public class XList extends XObject implements GActionListener {
 
     protected GList list;
 
+    public XList() {
+        super(null);
+    }
+
     public XList(XContainer xc) {
         super(xc);
     }
@@ -78,26 +82,15 @@ public class XList extends XObject implements GActionListener {
 
     }
 
-    protected void preAlignVertical() {
-        if (height == XDef.NODEF) {
-            int parentTrialViewH = parent.getTrialViewH();
-            if (raw_heightPercent != XDef.NODEF && parentTrialViewH != XDef.NODEF) {
-                viewH = height = raw_heightPercent * parentTrialViewH / 100;
-            } else {
-                viewH = height = XDef.DEFAULT_LIST_HEIGHT;
-            }
-        }
+
+    protected int getDefaultWidth(int parentViewW) {
+        return parentViewW;
     }
 
-    protected void preAlignHorizontal() {
-        if (width == XDef.NODEF) {
-            if (raw_widthPercent == XDef.NODEF) {
-                viewW = width = parent.viewW;
-            } else {
-                viewW = width = raw_widthPercent * parent.viewW / 100;
-            }
-        }
+    protected int getDefaultHeight(int parentViewH) {
+        return XDef.DEFAULT_LIST_HEIGHT;
     }
+
 
     public GObject getGui() {
         return list;

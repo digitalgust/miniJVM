@@ -16,6 +16,10 @@ public class XImageItem extends XObject implements GActionListener {
     protected boolean border;
     protected float alpha = 1.f;
 
+    public XImageItem() {
+        super(null);
+    }
+
     public XImageItem(XContainer xc) {
         super(xc);
     }
@@ -58,24 +62,12 @@ public class XImageItem extends XObject implements GActionListener {
         getRoot().getEventHandler().action(gobj, cmd);
     }
 
-    protected void preAlignVertical() {
-        if (height == XDef.NODEF) {
-            if (raw_heightPercent != XDef.NODEF && parent.viewH != XDef.NODEF) {
-                viewH = height = raw_heightPercent * parent.viewH / 100;
-            } else {
-                viewH = height = parent.viewW;
-            }
-        }
+    protected int getDefaultWidth(int parentViewW) {
+        return parentViewW;
     }
 
-    protected void preAlignHorizontal() {
-        if (width == XDef.NODEF) {
-            if (raw_widthPercent == XDef.NODEF) {
-                viewW = width = parent.viewW;
-            } else {
-                viewW = width = raw_widthPercent * parent.viewW / 100;
-            }
-        }
+    protected int getDefaultHeight(int parentViewH) {
+        return viewW;
     }
 
     @Override

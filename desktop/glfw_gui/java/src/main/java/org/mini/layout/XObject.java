@@ -213,14 +213,14 @@ public abstract class XObject {
         viewH = XDef.NODEF;
     }
 
-    public int getTrialViewH() {
+    protected int getTrialViewH() {
         if (viewH != XDef.NODEF) {
             return viewH;
         }
         int parentViewH = parent.getTrialViewH();
         if (parentViewH != XDef.NODEF) {
             if (raw_heightPercent != XDef.NODEF) {
-                return parentViewH * raw_heightPercent / 100;
+                return parentViewH * raw_heightPercent / 100 - getDiff_ViewH2Height();
             } else {
                 return XDef.NODEF;
             }
@@ -229,14 +229,14 @@ public abstract class XObject {
         }
     }
 
-    public int getTrialViewW() {
+    protected int getTrialViewW() {
         if (viewW != XDef.NODEF) {
             return viewW;
         }
         int parentViewW = parent.getTrialViewW();
         if (parentViewW != XDef.NODEF) {
             if (raw_widthPercent != XDef.NODEF) {
-                return parentViewW * raw_widthPercent / 100;
+                return parentViewW * raw_widthPercent / 100 - getDiff_viewW2Width();
             } else {
                 return XDef.NODEF;
             }
@@ -245,13 +245,59 @@ public abstract class XObject {
         }
     }
 
+    /**
+     * how pix viewW less than width
+     *
+     * @return
+     */
+    protected int getDiff_viewW2Width() {
+        return 0;
+    }
+
+    /**
+     * how pix viewH less than height
+     *
+     * @return
+     */
+    protected int getDiff_ViewH2Height() {
+        return 0;
+    }
+
+    protected int getDefaultWidth(int parentViewW) {
+        return parentViewW;
+    }
+
+    protected int getDefaultHeight(int parentViewH) {
+        return parentViewH;
+    }
+
+    protected void preAlignVertical() {
+        if (height == XDef.NODEF) {
+            int parentTrialViewH = parent.getTrialViewH();
+            if (raw_heightPercent != XDef.NODEF && parentTrialViewH != XDef.NODEF) {
+                height = raw_heightPercent * parentTrialViewH / 100;
+            } else {
+                height = getDefaultHeight(parentTrialViewH);
+            }
+            viewH = height - getDiff_ViewH2Height();
+        }
+    }
+
+    protected void preAlignHorizontal() {
+        if (width == XDef.NODEF) {
+            int parentTrialViewW = parent.getTrialViewW();
+            if (raw_widthPercent != XDef.NODEF && parentTrialViewW != XDef.NODEF) {
+                width = raw_widthPercent * parentTrialViewW / 100;
+            } else {
+                width = getDefaultWidth(parentTrialViewW);
+            }
+            viewW = width - getDiff_viewW2Width();
+        }
+    }
+
     public abstract GObject getGui();
 
     protected abstract String getXmlTag();
-
-    protected abstract void preAlignVertical();
-
-    protected abstract void preAlignHorizontal();
 
     protected abstract void createGui();
 
