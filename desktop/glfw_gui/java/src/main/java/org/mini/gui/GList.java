@@ -8,7 +8,6 @@ package org.mini.gui;
 import org.mini.glfm.Glfm;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
-import org.mini.nanovg.Nanovg;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -81,6 +80,9 @@ public class GList extends GContainer implements GFocusChangeListener {
         changeCurPanel();
 
         setShowMode(MODE_SINGLE_SHOW);
+
+        setFontSize(GToolkit.getStyle().getTextFontSize());
+        setColor(GToolkit.getStyle().getTextFontColor());
     }
 
     @Override
@@ -458,10 +460,6 @@ public class GList extends GContainer implements GFocusChangeListener {
     @Override
     public boolean update(long vg) {
 
-//        if (pulldown && parent.getFocus() != this) {
-//            pulldown = false;
-//            GList.this.changeCurPanel();
-//        }
         //int itemcount = popView.elements.size();
         nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
@@ -470,90 +468,6 @@ public class GList extends GContainer implements GFocusChangeListener {
         nvgTextMetrics(vg, null, null, lineh);
 
         return super.update(vg);
-    }
-
-    static void drawText(long vg, float tx, float ty, float pw, float ph, String s, float[] color) {
-        if (s == null) {
-            return;
-        }
-        nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
-        nvgFontFace(vg, GToolkit.getFontWord());
-        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        nvgFillColor(vg, color);
-        byte[] b = toUtf8(s);
-        Nanovg.nvgTextJni(vg, tx, ty, b, 0, b.length);
-    }
-
-    static void drawImage(long vg, float px, float py, float pw, float ph, GImage img) {
-        if (img == null) {
-            return;
-        }
-        byte[] shadowPaint, imgPaint;
-        float ix, iy, iw, ih;
-        float thumb = pw;
-        int[] imgw = {0}, imgh = {0};
-
-        nvgImageSize(vg, img.getTexture(vg), imgw, imgh);
-        if (imgw[0] < imgh[0]) {
-            iw = thumb;
-            ih = iw * (float) imgh[0] / (float) imgw[0];
-            ix = 0;
-            iy = -(ih - thumb) * 0.5f;
-        } else {
-            ih = thumb;
-            iw = ih * (float) imgw[0] / (float) imgh[0];
-            ix = -(iw - thumb) * 0.5f;
-            iy = 0;
-        }
-
-        imgPaint = nvgImagePattern(vg, px + ix, py + iy, iw, ih, 0.0f / 180.0f * (float) Math.PI, img.getTexture(vg), 0.8f);
-        nvgBeginPath(vg);
-        nvgRoundedRect(vg, px, py, thumb, thumb, 5);
-        nvgFillPaint(vg, imgPaint);
-        nvgFill(vg);
-
-        shadowPaint = nvgBoxGradient(vg, px - 1, py, thumb + 2, thumb + 2, 5, 3, nvgRGBA(0, 0, 0, 128), nvgRGBA(0, 0, 0, 0));
-        nvgBeginPath(vg);
-        nvgRect(vg, px - 5, py - 5, thumb + 10, thumb + 10);
-        nvgRoundedRect(vg, px, py, thumb, thumb, 6);
-        nvgPathWinding(vg, NVG_HOLE);
-        nvgFillPaint(vg, shadowPaint);
-        nvgFill(vg);
-
-        nvgBeginPath(vg);
-        nvgRoundedRect(vg, px + 0.5f, py + 0.5f, thumb - 1, thumb - 1, 4 - 0.5f);
-        nvgStrokeWidth(vg, 1.0f);
-        nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 192));
-        nvgStroke(vg);
-    }
-
-    void drawSpinner(long vg, float cx, float cy, float r, float t) {
-        float a0 = 0.0f + t * 6;
-        float a1 = (float) Math.PI + t * 6;
-        float r0 = r;
-        float r1 = r * 0.75f;
-        float ax, ay, bx, by;
-        byte[] paint;
-
-        nvgSave(vg);
-
-        nvgBeginPath(vg);
-        nvgArc(vg, cx, cy, r0, a0, a1, NVG_CW);
-        nvgArc(vg, cx, cy, r1, a1, a0, NVG_CCW);
-        nvgClosePath(vg);
-        ax = cx + (float) Math.cos(a0) * (r0 + r1) * 0.5f;
-        ay = cy + (float) Math.sin(a0) * (r0 + r1) * 0.5f;
-        bx = cx + (float) Math.cos(a1) * (r0 + r1) * 0.5f;
-        by = cy + (float) Math.sin(a1) * (r0 + r1) * 0.5f;
-        paint = nvgLinearGradient(vg, ax, ay, bx, by, nvgRGBA(0, 0, 0, 0), nvgRGBA(0, 0, 0, 128));
-        nvgFillPaint(vg, paint);
-        nvgFill(vg);
-
-        nvgRestore(vg);
-    }
-
-    static float clampf(float a, float mn, float mx) {
-        return a < mn ? mn : (a > mx ? mx : a);
     }
 
     /**
@@ -585,9 +499,6 @@ public class GList extends GContainer implements GFocusChangeListener {
             super.mouseButtonEvent(button, pressed, x, y);
         }
 
-        void click() {
-
-        }
 
         @Override
         public boolean update(long vg) {
@@ -615,8 +526,8 @@ public class GList extends GContainer implements GFocusChangeListener {
                 int selectIndex = getSelectedIndex();
                 if (selectIndex >= 0) {
                     GListItem gli = (GListItem) getItem(selectIndex);
-                    drawImage(vg, x + pad, y + h * 0.5f - thumb / 2, thumb, thumb, gli.img);
-                    drawText(vg, x + thumb + pad + pad, y + h / 2, thumb, thumb, gli.label, GToolkit.getStyle().getTextFontColor());
+                    GToolkit.drawImage(vg, gli.img, x + pad, y + h * 0.5f - thumb / 2, thumb, thumb, false, 1.0f);
+                    GToolkit.drawTextLine(vg, x + thumb + pad + pad, y + h / 2, w - (thumb + pad + pad), thumb, gli.label, GList.this.fontSize, GList.this.color, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
                 }
             }
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
@@ -659,7 +570,6 @@ public class GList extends GContainer implements GFocusChangeListener {
         }
 
     };
-
 
 
     class GListPopWindow extends GPanel {

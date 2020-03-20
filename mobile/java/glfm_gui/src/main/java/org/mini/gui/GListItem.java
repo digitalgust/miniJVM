@@ -7,10 +7,9 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 
-import static org.mini.nanovg.Nanovg.nvgImageSize;
+import static org.mini.nanovg.Nanovg.*;
 
 /**
- *
  * @author Gust
  */
 public class GListItem extends GObject {
@@ -22,6 +21,8 @@ public class GListItem extends GObject {
     public GListItem(GImage img, String lab) {
         this.img = img;
         this.label = lab;
+        setFontSize(GToolkit.getStyle().getTextFontSize());
+        setColor(GToolkit.getStyle().getTextFontColor());
     }
 
     @Override
@@ -140,11 +141,10 @@ public class GListItem extends GObject {
                 ix = -(iw - thumb) * 0.5f;
                 iy = 0;
             }
-//            GList.drawImage(vg, tx, ty, thumb, thumb, img);
             GToolkit.drawImage(vg, img, tx, ty, thumb, thumb, !outOfFilter, outOfFilter ? 0.5f : 0.8f);
         }
-        float[] c = outOfFilter ? GToolkit.getStyle().getHintFontColor() : GToolkit.getStyle().getTextFontColor();
-        GList.drawText(vg, tx + thumb + pad, ty + thumb / 2, thumb, thumb, label, c);
+        float[] c = outOfFilter ? GToolkit.getStyle().getHintFontColor() : list.color;
+        GToolkit.drawTextLine(vg, tx + thumb + pad, ty + thumb / 2, w - (thumb + pad), thumb, label, list.fontSize, c, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         return true;
     }
 

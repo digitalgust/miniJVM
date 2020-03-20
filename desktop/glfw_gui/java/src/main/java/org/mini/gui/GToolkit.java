@@ -249,13 +249,28 @@ public class GToolkit {
         return bond;
     }
 
+    public static void drawTextLine(long vg, float tx, float ty, float pw, float ph, String s, float fontSize, float[] color, int align) {
+        if (s == null) {
+            return;
+        }
+        nvgFontSize(vg, fontSize);
+        nvgFontFace(vg, GToolkit.getFontWord());
+        nvgTextAlign(vg, align);
+        nvgFillColor(vg, color);
+        byte[] b = toUtf8(s);
+        Nanovg.nvgTextJni(vg, tx, ty, b, 0, b.length);
+    }
+
+
     public static void drawText(long vg, float x, float y, float w, float h, String s) {
 
         drawText(vg, x, y, w, h, s, GToolkit.getStyle().getTextFontSize(), GToolkit.getStyle().getTextFontColor());
     }
 
     public static void drawText(long vg, float x, float y, float w, float h, String s, float fontSize, float[] color) {
-
+        if (s == null) {
+            return;
+        }
         nvgFontSize(vg, fontSize);
         nvgFillColor(vg, color);
         nvgFontFace(vg, GToolkit.getFontWord());
@@ -265,15 +280,7 @@ public class GToolkit {
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 
         if (text_arr != null) {
-//            float[] bond = new float[4];
-//            nvgTextBoxBoundsJni(vg, x, y, w, text_arr, 0, text_arr.length, bond);
-//            bond[WIDTH] -= bond[LEFT];
-//            bond[HEIGHT] -= bond[TOP];
-//            bond[LEFT] = bond[TOP] = 0;
-//
-//            if (bond[HEIGHT] > h) {
-//                y -= bond[HEIGHT] - h;
-//            }
+
             nvgTextBoxJni(vg, x, y, w, text_arr, 0, text_arr.length);
         }
     }
