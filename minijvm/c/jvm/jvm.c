@@ -215,8 +215,7 @@ void jvm_init(c8 *p_classpath, StaticLibRegFunc regFunc) {
     thread_list = arraylist_create(0);
     //创建垃圾收集器
     garbage_collector_create();
-    //启动垃圾回收
-    garbage_thread_resume();
+
 
     memset(&jvm_runtime_cache, 0, sizeof(OptimizeCache));
 
@@ -354,8 +353,8 @@ s32 call_method_main(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, ArrayL
 #endif
             //调用主方法
             if (jdwp_enable) {
+                //jthread_suspend(runtime);
                 event_on_vmstart(runtime->threadInfo->jthread);
-                jthread_suspend(runtime);
                 jvm_printf("[JDWP]waiting for jdwp(port:%d) debug client connected...\n", JDWP_TCP_PORT);
             }//jdwp 会启动调试器
             runtime->method = NULL;

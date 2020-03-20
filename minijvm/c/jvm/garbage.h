@@ -63,11 +63,11 @@ void garbage_thread_lock(void);
 
 void garbage_thread_unlock(void);
 
-void garbage_thread_stop(void);
+void garbage_collection_stop(void);
 
-void garbage_thread_pause(void);
+void garbage_collection_pause(void);
 
-void garbage_thread_resume(void);
+void garbage_collection_resume(void);
 
 void garbage_thread_wait(void);
 

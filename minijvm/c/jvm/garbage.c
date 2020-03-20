@@ -74,13 +74,16 @@ s32 garbage_collector_create() {
     s32 rc = thrd_create(&collector->_garbage_thread, _collect_thread_run, NULL);
     if (rc != thrd_success) {
         jvm_printf("ERROR: garbage thread can't create is %d\n", rc);
+    } else {
+        //启动垃圾回收
+        garbage_collection_resume();
     }
     return 0;
 }
 
 void garbage_collector_destory() {
+    garbage_collection_stop();
     garbage_thread_lock();
-    garbage_thread_stop();
     while (collector->_garbage_thread_status != GARBAGE_THREAD_DEAD) {
         garbage_thread_timedwait(50);
     }
@@ -140,16 +143,22 @@ void garbage_thread_unlock() {
     mtx_unlock(&collector->garbagelock.mutex_lock);
 }
 
-void garbage_thread_pause() {
+void garbage_collection_pause() {
+    garbage_thread_lock();
     collector->_garbage_thread_status = GARBAGE_THREAD_PAUSE;
+    garbage_thread_unlock();
 }
 
-void garbage_thread_resume() {
+void garbage_collection_resume() {
+    garbage_thread_lock();
     collector->_garbage_thread_status = GARBAGE_THREAD_NORMAL;
+    garbage_thread_unlock();
 }
 
-void garbage_thread_stop() {
+void garbage_collection_stop() {
+    garbage_thread_lock();
     collector->_garbage_thread_status = GARBAGE_THREAD_STOP;
+    garbage_thread_unlock();
 }
 
 void garbage_thread_wait() {
