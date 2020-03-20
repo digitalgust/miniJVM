@@ -495,7 +495,7 @@ static s32 jdwp_eventset_commandid = 0;
 
 extern JdwpServer jdwpserver;
 
-s32 jdwp_client_process(JdwpClient *client, Runtime *runtime);
+s32 jdwp_client_process(JdwpClient *client);
 
 s32 jdwp_start_server(void);
 
