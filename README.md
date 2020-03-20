@@ -26,8 +26,12 @@
   * Save and Load file from mobile storage .   
   * Api compatible with miniJVM desktop platform, can running on pc .  
 
-## mobile app IM Demo BiBiX , source at :https://github.com/digitalgust/BiBiX 
-  <div align=center><img width="224" height="398" src="/screenshot/demo.gif"/></div>    
+## Demo
+
+  <div align=center><img width="224" height="398" src="/screenshot/demo.gif"/></div>
+<div align=center><img width="224" height="398" src="/screenshot/g3d.gif"/></div>    
+   mobile app IM Demo BiBiX , source at :https://github.com/digitalgust/BiBiX     
+   3d game app IM Demo G3d , source at :https://github.com/digitalgust/g3d     
    This demo can be download from : http://bb.egls.cn:8080/down/BiBiX.jar ,    
   * Mobile platform : First install AppManager from iOS for binary/ios/MiniPack.ipa , Android for /binary/android/MiniPack.apk ,then download demo in AppManager and run the app.     
   * Desktop computer: /binary/win_64  , /binary/macos , /binary/win32 , /binary/centos_x64   run test.sh 
