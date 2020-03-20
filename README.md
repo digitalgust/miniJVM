@@ -14,13 +14,13 @@
   * Minimal runtime classlib .   
   * Support java5-8 class file .
   * Support embedded java source compiler(janino compiler) .  
-  * Jit supported  .
-  * Java garbage collection .   
+  * Jit supported .    
+  * Java garbage collection, Low latency .   
   * Java remote debug supported, JDWP Spec .  
   
 ## iOS/Android Platform Extended Features:  
-  * OpenGL ES 3.0 .  
-  * Swing like gui .  
+  * OpenGL ES 2.0 / 3.0 .  
+  * Swing like gui , XML gui layout, Auto layout on horizontal and vertical screen switch.    
   * Audio Playback and Capture .  
   * Take photo from Camera or Album .  
   * Save and Load file from mobile storage .   
@@ -30,9 +30,10 @@
 
   <div align=center><img width="224" height="398" src="/screenshot/demo.gif"/><img width="224" height="398" src="/screenshot/g3d.gif"/></div>
 
-   mobile app IM Demo BiBiX , source at :https://github.com/digitalgust/BiBiX     
-   3d game app IM Demo G3d , source at :https://github.com/digitalgust/g3d     
-   This demo can be download from : http://bb.egls.cn:8080/down/BiBiX.jar ,    
+  * Mobile app IM Demo BiBiX , source at :https://github.com/digitalgust/BiBiX     
+  * BiBiX binary can be download from : http://bb.egls.cn:8080/down/BiBiX.jar     
+  * 3D game app IM Demo G3D , source at :https://github.com/digitalgust/g3d     
+  * G3D binary can be download from : http://bb.egls.cn:8080/down/g3d.jar     
   * Mobile platform : First install AppManager from iOS for binary/ios/MiniPack.ipa , Android for /binary/android/MiniPack.apk ,then download demo in AppManager and run the app.     
   * Desktop computer: /binary/win_64  , /binary/macos , /binary/win32 , /binary/centos_x64   run test.sh 
 
@@ -42,7 +43,8 @@
   <div align=center><img width="540" height="350" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/arch.png"/></div>
 
 
-## Changelog
+## Changelog:
+   2020.03.  Add xml layout for gui system, add 3D game demo for minijvm, fix jdwp debug for jetbrain idea.               
    2019.12.  Bind cross platform awtk ui system , see [awtk-minijvm](https://github.com/digitalgust/miniJVM/tree/master/desktop/awtk_gui)   
    2019.12.  Jit enabled, it based on sljit project   
    2019.10.  Jit is developing   
