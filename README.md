@@ -28,8 +28,8 @@
 
 ## Demo
 
-  <div align=center><img width="224" height="398" src="/screenshot/demo.gif"/></div>
-<div align=center><img width="224" height="398" src="/screenshot/g3d.gif"/></div>    
+  <div align=center><img width="224" height="398" src="/screenshot/demo.gif"/><img width="224" height="398" src="/screenshot/g3d.gif"/></div>
+
    mobile app IM Demo BiBiX , source at :https://github.com/digitalgust/BiBiX     
    3d game app IM Demo G3d , source at :https://github.com/digitalgust/g3d     
    This demo can be download from : http://bb.egls.cn:8080/down/BiBiX.jar ,    
