@@ -850,11 +850,10 @@ void event_on_class_prepare(Runtime *runtime, JClass *clazz) {
                             classNameMatch = utf8_equals(set->mods[i].classPattern, clazz->name);
                         } else {
                             Utf8String *prefix = utf8_create_part(cpattern, 0, starPos);
-                            utf8_replace_c(prefix, ".", "/");
                             classNameMatch = utf8_indexof(clazz->name, prefix) >= 0;
                         }
                         if (classNameMatch) {
-                            if (set->suspendPolicy == JDWP_SUSPENDPOLICY_EVENT_THREAD) {
+                            if (set->suspendPolicy != JDWP_SUSPENDPOLICY_NONE) {
                                 if (runtime)jthread_suspend(runtime);
                             }
                             JdwpPacket *req = jdwppacket_create();
@@ -1065,6 +1064,7 @@ EventSet *jdwp_create_eventset(JdwpPacket *req) {
             case 5:
             case 6:
                 mod->classPattern = jdwppacket_read_utf(req);
+                utf8_replace_c(mod->classPattern, ".", "/");
                 break;
             case 7:
                 readLocation(req, &mod->loc);
@@ -1402,6 +1402,8 @@ s32 jdwp_client_process(JdwpClient *client) {
                 jdwppacket_write_utf(res, ustr);
                 jdwp_writepacket(client, res);
                 utf8_destory(ustr);
+                Runtime *mainthread = (Runtime *) arraylist_get_value(thread_list, 0);
+                if (jdwp_suspend_on_start)event_on_vmstart(mainthread->threadInfo->jthread);
                 break;
             }
             case JDWP_CMD_VirtualMachine_ClassesBySignature: {//1.2

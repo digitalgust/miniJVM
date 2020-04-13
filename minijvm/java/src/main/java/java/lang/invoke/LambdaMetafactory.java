@@ -9,37 +9,23 @@
    details. */
 package java.lang.invoke;
 
-import java.lang.reflect.Modifier;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.io.IOException;
-
-import java.lang.reflect.Method;
-import org.mini.reflect.vm.RefNative;
 import org.mini.reflect.vm.ByteCodeAssembler;
-import org.mini.reflect.vm.ByteCodeAssembler.FieldData;
-import org.mini.reflect.vm.ByteCodeAssembler.MethodData;
-import static org.mini.reflect.vm.ByteCodeAssembler.aload_0;
-import static org.mini.reflect.vm.ByteCodeAssembler.areturn;
-import static org.mini.reflect.vm.ByteCodeAssembler.dup;
-import static org.mini.reflect.vm.ByteCodeAssembler.getfield;
-import static org.mini.reflect.vm.ByteCodeAssembler.invokeinterface;
-import static org.mini.reflect.vm.ByteCodeAssembler.invokespecial;
-import static org.mini.reflect.vm.ByteCodeAssembler.invokestatic;
-import static org.mini.reflect.vm.ByteCodeAssembler.invokevirtual;
-import static org.mini.reflect.vm.ByteCodeAssembler.new_;
-import static org.mini.reflect.vm.ByteCodeAssembler.putfield;
-import static org.mini.reflect.vm.ByteCodeAssembler.return_;
+import org.mini.reflect.vm.ByteCodeAssembler.*;
 import org.mini.reflect.vm.ByteCodeConstantPool;
 import org.mini.reflect.vm.ByteCodeConstantPool.PoolEntry;
-import static org.mini.reflect.vm.ByteCodeStream.set4;
-import static org.mini.reflect.vm.ByteCodeStream.write1;
-import static org.mini.reflect.vm.ByteCodeStream.write2;
-import static org.mini.reflect.vm.ByteCodeStream.write4;
+import org.mini.reflect.vm.RefNative;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import static org.mini.reflect.vm.ByteCodeAssembler.*;
+import static org.mini.reflect.vm.ByteCodeStream.*;
 
 // To understand what this is all about, please read:
 //
@@ -345,7 +331,7 @@ public class LambdaMetafactory {
                 //                Classes.makeString(method.class_.name, 0, method.class_.name.length - 1),
                 method.getName(),
                 //                Classes.makeString(method.name, 0, method.name.length - 1),
-                method.getSignature()
+                method.getDescriptor()
         //                Classes.makeString(method.spec, 0, method.spec.length - 1)
         ) + 1);
 
@@ -360,7 +346,7 @@ public class LambdaMetafactory {
                 //                Classes.makeString(method.class_.name, 0, method.class_.name.length - 1),
                 method.getName(),
                 //                Classes.makeString(method.name, 0, method.name.length - 1),
-                method.getSignature()
+                method.getDescriptor()
         //                Classes.makeString(method.spec, 0, method.spec.length - 1)
         ) + 1);
     }
@@ -535,7 +521,7 @@ public class LambdaMetafactory {
         //
         // This is allowed by the Java language, even though the interface representing the
         // lambda specifies three specific arguments and the method implementing the lambda
-        // uses varargs and a different type signature. Behind the scenes the compiler generates
+        // uses varargs and a different type descriptor. Behind the scenes the compiler generates
         // a "bridge" method that does the adaptation.
         //
         // You can learn more here: http://www.oracle.com/technetwork/java/jvmls2013heid-2013922.pdf

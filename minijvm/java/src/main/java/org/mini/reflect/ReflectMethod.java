@@ -5,11 +5,11 @@
  */
 package org.mini.reflect;
 
-import java.lang.reflect.Method;
 import org.mini.reflect.vm.RConst;
-import java.util.ArrayList;
-import java.util.List;
 import org.mini.reflect.vm.RefNative;
+
+import java.lang.reflect.Type;
+import java.util.List;
 
 /**
  * 类方法的反射，以mini jvm中的 MethofInfo的实例内存地址进行初始化 初始化中会把内存中的相应变量反射到ReflectMethod实例中。
@@ -23,8 +23,8 @@ public class ReflectMethod {
     //不可随意改动字段类型及名字，要和native一起改
     public long methodId;
     public String methodName;
+    public String descriptor;
     public String signature;
-    public String genericSignature = "";
     public short accessFlags;
     public long codeStart;
     public long codeEnd;
@@ -36,6 +36,7 @@ public class ReflectMethod {
 
     private String[] paras;//参数列表
     private Class<?>[] paras_class;
+    private Type[] paras_type;
 
     public ReflectMethod(ReflectClass c, long mid) {
         if (mid == 0) {
@@ -45,12 +46,19 @@ public class ReflectMethod {
         //System.out.println("mid:" + mid);
         this.methodId = mid;
         mapMethod(methodId);
-        paras = splitMethodPara(signature);
-        paras_class = getMethodPara(signature);
+        paras = ReflectClass.splitSignature(
+                descriptor.substring(descriptor.indexOf("(") + 1, descriptor.indexOf(")"))
+        ).toArray(new String[0]);
+        paras_class = getMethodPara(descriptor);
+        paras_type = getMethodParaType(signature != null ? signature : descriptor);
     }
 
     public Class[] getParameterTypes() {
         return paras_class;
+    }
+
+    public Type[] getGenericParameterTypes() {
+        return paras_type;
     }
 
     public String[] getParameterStrs() {
@@ -115,7 +123,7 @@ public class ReflectMethod {
             }
         }
         DataWrap result = invokeMethod(methodId, obj, argslong);//todo result would be gc
-        char rtype = signature.charAt(signature.indexOf(')') + 1);
+        char rtype = descriptor.charAt(descriptor.indexOf(')') + 1);
         switch (rtype) {
             case 'S':
                 return ((short) result.nv);
@@ -138,78 +146,67 @@ public class ReflectMethod {
         }
     }
 
-    public static String[] splitMethodPara(String signature) {
-        String methodType = signature;
-        List<String> args = new ArrayList();
-        //System.out.println("methodType:" + methodType);
-        String s = methodType.substring(methodType.indexOf("(") + 1, methodType.indexOf(")"));
-        //从后往前拆分方法参数，从栈中弹出放入本地变量
-        while (s.length() > 0) {
-            char ch = s.charAt(0);
-            String types = "";
-            switch (ch) {
-                case 'S':
-                case 'C':
-                case 'B':
-                case 'I':
-                case 'F':
-                case 'Z':
-                case 'D':
-                case 'J': {
-                    String tmps = s.substring(0, 1);
-                    args.add(tmps);
-                    s = s.substring(1, s.length());
-                    break;
-                }
-                case 'L': {
-                    int end = s.indexOf(';') + 1;
-                    String tmps = s.substring(0, end);
-                    args.add(tmps);
-                    s = s.substring(end, s.length());
-                    break;
-                }
-                case '[': {
-                    int end = 1;
-                    while (s.charAt(end) == '[') {//去掉多维中的 [[[[LObject; 中的 [符
-                        end++;
-                    }
-                    if (s.charAt(end) == 'L') {
-                        end = s.indexOf(';') + 1;
-                    } else {
-                        end++;
-                    }
-                    String tmps = s.substring(0, end);
-                    args.add(tmps);
-                    s = s.substring(end, s.length());
-                    break;
-                }
-            }
-
-        }
-        String[] paras = args.toArray(new String[args.size()]);
-        return paras;
-    }
-
-    public static Class<?>[] getMethodPara(String signature) {
-        String[] paras = splitMethodPara(signature);
+    public static Class<?>[] getMethodPara(String descriptor) {
+        List<String> paras = ReflectClass.splitSignature(
+                descriptor.substring(descriptor.indexOf("(") + 1, descriptor.indexOf(")"))
+        );
         Class<?>[] paras_class;
-        paras_class = new Class[paras.length];
-        for (int i = 0; i < paras.length; i++) {
-            paras_class[i] = ReflectClass.getClassBySignature(paras[i]);
+        paras_class = new Class[paras.size()];
+        for (int i = 0; i < paras.size(); i++) {
+            paras_class[i] = ReflectClass.getClassByDescriptor(paras.get(i));
         }
         return paras_class;
     }
 
-    public Class<?> getReturnType() {
-        return getMethodReturnType(signature);
+    static class TypeMethodImpl implements Type {
+        String name;
+
+        public String getTypeName() {
+            return name;
+        }
     }
 
-    static public Class<?> getMethodReturnType(String signature) {
-        String s = signature.substring(signature.indexOf(')') + 1);
+    public static Type[] getMethodParaType(String signature) {
+        if (signature == null) {
+            return null;
+        }
+        List<String> paras = ReflectClass.splitSignature(
+                signature.substring(signature.indexOf("(") + 1, signature.indexOf(")")));
+        Type[] paras_type;
+        paras_type = new Type[paras.size()];
+        for (int i = 0; i < paras.size(); i++) {
+            TypeMethodImpl t = new TypeMethodImpl();
+            t.name = ReflectClass.getNameByDescriptor(paras.get(i));
+            paras_type[i] = t;
+        }
+        return paras_type;
+    }
+
+    public Class<?> getReturnType() {
+        return getMethodReturnType(descriptor);
+    }
+
+    static public Class<?> getMethodReturnType(String descriptor) {
+        String s = descriptor.substring(descriptor.indexOf(')') + 1);
         if (s.equals("V")) {
             return Void.TYPE;
         }
-        return ReflectClass.getClassBySignature(s);
+        return ReflectClass.getClassByDescriptor(s);
+    }
+
+    public Type getGenericReturnType() {
+        return getGenericReturnType(signature == null ? descriptor : signature);
+    }
+
+    static public Type getGenericReturnType(String signature) {
+        String s = signature.substring(signature.indexOf(')') + 1);
+        TypeMethodImpl t = new TypeMethodImpl();
+        t.name = ReflectClass.getNameByDescriptor(s);
+        return t;
+    }
+
+    public boolean hasGenericInformation() {
+        return signature != null;
     }
 
     static public ReflectMethod findMethod(String className, String methodName, String methodSignature) {
@@ -225,17 +222,18 @@ public class ReflectMethod {
         StringBuilder sb = new StringBuilder();
         sb.append('(');
         for (Class<?> c : ptypes) {
-            sb.append(ReflectClass.getSignatureByClass(c));
+            sb.append(ReflectClass.getDescriptorByClass(c));
         }
         sb.append(')');
-        sb.append(ReflectClass.getSignatureByClass(rtype));
+        sb.append(ReflectClass.getDescriptorByClass(rtype));
         return sb.toString();
     }
+
 
     public String toString() {
         return Long.toString(methodId, 16) + "|"
                 + methodName + "|"
-                + signature + "|access:"
+                + descriptor + "|access:"
                 + Integer.toHexString(accessFlags) + "|"
                 + codeStart + "|"
                 + codeEnd + "|lines:"

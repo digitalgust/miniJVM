@@ -5,26 +5,19 @@
  */
 package test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import javax.cldc.io.Connector;
+import javax.cldc.io.ContentConnection;
+import javax.cldc.io.ServerSocketConnection;
+import javax.cldc.io.SocketConnection;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketImpl;
-import org.mini.net.SocketNative;
 import java.net.SocketTimeoutException;
 import java.util.Calendar;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.cldc.io.Connector;
-import javax.cldc.io.ContentConnection;
-import javax.cldc.io.SocketConnection;
-import javax.cldc.io.ServerSocketConnection;
 
 /**
- *
  * @author gust
  */
 public class HttpServer {
@@ -77,7 +70,7 @@ public class HttpServer {
                             } catch (IOException e) {
                                 break;
                             }
-                            cltsock.setOption(SocketNative.SO_BLOCK, SocketNative.VAL_NON_BLOCK, 0);
+                            cltsock.setSocketOption(SocketConnection.NONBLOCK, 1);
                             System.out.println("accepted client socket:" + cltsock);
                             byte[] buf = new byte[256];
                             StringBuffer tmps = new StringBuffer();
@@ -124,7 +117,7 @@ public class HttpServer {
                 Thread.sleep(2000);
 
                 SocketConnection conn = (SocketConnection) Connector.open("socket://127.0.0.1:8080");
-                conn.setOption(SocketNative.SO_BLOCK, SocketNative.VAL_NON_BLOCK, 0);
+                conn.setSocketOption(SocketConnection.NONBLOCK, 1);
                 String request = "GET / HTTP/1.1\r\n\r\n";
                 conn.write(request.getBytes(), 0, request.length());
                 byte[] rcvbuf = new byte[256];
@@ -142,7 +135,8 @@ public class HttpServer {
                         System.out.print((char) rcvbuf[i]);
                     }
 
-                };
+                }
+                ;
                 System.out.print("\nend\n");
                 conn.close();
             } catch (Exception e) {
@@ -324,7 +318,8 @@ public class HttpServer {
                         System.out.print((char) rcvbuf[i]);
                     }
 
-                };
+                }
+                ;
                 System.out.print("\nend\n");
                 socket.close();
             } catch (Exception e) {

@@ -8,13 +8,7 @@
    There is NO WARRANTY for this software.  See license.txt for
    details. */
 
-package java.lang.reflect;
+package java.nio;
 
-public interface Type {
-    /**
-     * @since 1.8
-     */
-    default String getTypeName() {
-        return toString();
-    }
+public class BufferOverflowException extends RuntimeException {
 }

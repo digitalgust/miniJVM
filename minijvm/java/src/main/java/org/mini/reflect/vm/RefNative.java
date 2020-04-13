@@ -6,7 +6,6 @@
 package org.mini.reflect.vm;
 
 /**
- *
  * @author gust
  */
 public class RefNative {
@@ -54,4 +53,42 @@ public class RefNative {
     public static native Class defineClass(ClassLoader cloader, String name, byte[] bytecodes, int offset, int length);
 
     public static native void addJarToClasspath(String jarFullPath);
+
+    //
+    //
+    public static native long heap_calloc(int capacity);
+
+    public static native void heap_free(long memAddr);
+
+    public static native void heap_put_byte(long memAddr, int pos, byte value);
+
+    public static native byte heap_get_byte(long memAddr, int pos);
+
+    public static native void heap_put_short(long memAddr, int pos, short value);
+
+    public static native short heap_get_short(long memAddr, int pos);
+
+    public static native void heap_put_int(long memAddr, int pos, int value);
+
+    public static native int heap_get_int(long memAddr, int pos);
+
+    public static native void heap_put_long(long memAddr, int pos, long value);
+
+    public static native long heap_get_long(long memAddr, int pos);
+
+    public static native void heap_put_float(long memAddr, int pos, float value);
+
+    public static native float heap_get_float(long memAddr, int pos);
+
+    public static native void heap_put_double(long memAddr, int pos, double value);
+
+    public static native double heap_get_double(long memAddr, int pos);
+
+    public static native void heap_put_ref(long memAddr, int pos, Object value);
+
+    public static native Object heap_get_ref(long memAddr, int pos);
+
+    public static native void heap_copy(long srcMemAddr, int srcPos, long destMemAddr, int destPos, int length);
+
+    public static native int heap_endian();
 }

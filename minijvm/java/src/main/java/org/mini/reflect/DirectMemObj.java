@@ -5,12 +5,12 @@
  */
 package org.mini.reflect;
 
-import java.lang.reflect.Array;
 import org.mini.reflect.vm.RConst;
 import org.mini.reflect.vm.RefNative;
 
+import java.lang.reflect.Array;
+
 /**
- *
  * @author Gust
  */
 public class DirectMemObj {
@@ -33,8 +33,8 @@ public class DirectMemObj {
     DMOFinalizer finalizer;
 
     //
+
     /**
-     *
      * @param mem_addr
      * @param len
      */
@@ -43,14 +43,13 @@ public class DirectMemObj {
     }
 
     /**
-     *
      * It's a direct memory access obj , danger for write operation , danger for
      * read data safe
-     *
+     * <p>
      * this class main aim to process native lib memory pointer.
-     *
+     * <p>
      * like an array or ByteBuffer
-     *
+     * <p>
      * typeTag is RConst.xxxtag
      *
      * @param mem_addr
@@ -107,8 +106,7 @@ public class DirectMemObj {
 
     public static <T> DirectMemObj wrap(T array, int offset, int length) {
 
-        long arrayId = RefNative.obj2id(array);
-        long ptr = ReflectArray.getBodyPtr(arrayId);
+        long ptr = ReflectArray.getBodyPtr(array);
         int bytes = 1;
         byte tag = 0;
         if (array instanceof byte[]) {
@@ -132,11 +130,14 @@ public class DirectMemObj {
         } else if (array instanceof double[]) {
             bytes = 8;
             tag = RConst.TAG_DOUBLE;
+        } else if (array instanceof boolean[]) {
+            bytes = 1;
+            tag = RConst.TAG_BOOLEAN;
         } else {
             bytes = RefNative.refIdSize();
             tag = RConst.TAG_OBJECT;
         }
-        if (ptr == 0 || tag == 0 || ReflectArray.getLength(arrayId) > offset + length) {
+        if (ptr == 0 || tag == 0 || ReflectArray.getLength(array) > offset + length) {
             throw new IllegalArgumentException("espected array " + Long.toHexString(ptr) + " tag:" + (char) tag);
         }
 
@@ -331,9 +332,5 @@ public class DirectMemObj {
 
     private native void copyFrom0(int src_offset, Object srcArr, int tgt_offset, int len);
 
-    //
-    private static native long heap_calloc(int capacity);
-
-    private static native void heap_free(long memAddr);
 
 }

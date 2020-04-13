@@ -53,13 +53,13 @@ public class MethodHandle {
             sb.append(method.getDeclaringClass());
             sb.append(".");
         }
-        sb.append(method.getName()).append(method.getSignature());
+        sb.append(method.getName()).append(method.getDescriptor());
         return sb.toString();
     }
 
     public MethodType type() {
         if (type == null) {
-            type = new MethodType(loader, method.getSignature());
+            type = new MethodType(loader, method.getDescriptor());
         }
         return type;
     }

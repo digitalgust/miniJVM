@@ -134,15 +134,38 @@ public class Gutil {
         return barr;
     }
 
+
+    public static String fromUtf8(byte[] bytes) {
+        if (bytes == null) {
+            return null;
+        }
+        int i = 0;
+        for (; i < bytes.length; i++) {
+            if (bytes[i] == '\000') {
+                break;
+            }
+        }
+        try {
+            return new String(bytes, 0, i, "utf-8");
+        } catch (UnsupportedEncodingException ex) {
+        }
+        return null;
+    }
+
+
     public static byte[] image_parse_from_file_content(byte[] fileCont, int[] w_h_d) {
+        return image_parse_from_file_content(fileCont, 0, fileCont.length, w_h_d);
+    }
+
+    public static byte[] image_parse_from_file_content(byte[] fileCont, int start, int len, int[] w_h_d) {
         if (fileCont == null) {
             System.out.println("ERROR: image parse file content is null");
         }
         int[] x = {0}, y = {0}, n = {0};
         long ptr = ReflectArray.getBodyPtr(fileCont);
-        long raw_data_handle = Nanovg.stbi_load_from_memory(ptr, fileCont.length, x, y, n, 0);
+        long raw_data_handle = Nanovg.stbi_load_from_memory(ptr + start, len, x, y, n, 0);
         if (raw_data_handle == 0) {
-            System.out.println("ERROR: failed to load image from file content , size:" + fileCont.length);
+            System.out.println("ERROR: failed to load image from file content start:" + start + ", size:" + len);
             return null;
         }
         w_h_d[0] = x[0];

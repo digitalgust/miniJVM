@@ -27,7 +27,7 @@ extern "C" {
 
 //=======================  micro define  =============================
 //_JVM_DEBUG  01=thread info, 02=garage&jit info  , 03=class load, 04=method call,  06=all bytecode
-#define _JVM_DEBUG_BYTECODE_DETAIL 01
+#define _JVM_DEBUG_BYTECODE_DETAIL 02
 #define _JVM_DEBUG_PRINT_FILE 0
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_PROFILE 0
@@ -595,6 +595,8 @@ extern c8 *inst_name[];
 
 extern s32 jdwp_enable;
 
+extern s32 jdwp_suspend_on_start;
+
 //==============profile============
 #if _JVM_DEBUG_PROFILE
 
@@ -885,6 +887,7 @@ struct _FieldInfo {
     ConstantItem *const_value_item;
     Utf8String *name;
     Utf8String *descriptor;
+    Utf8String *signature;
     JClass *_this_class;
     u16 offset;//字段的偏移地址，静态字段存放在class中
     u16 offset_instance;
@@ -908,6 +911,7 @@ struct _MethodInfo {
     //link
     Utf8String *name;
     Utf8String *descriptor;
+    Utf8String *signature;
     Utf8String *paraType;
     Utf8String *returnType;
     JClass *_this_class;
@@ -971,6 +975,7 @@ struct _ClassType {
 
     //
     Utf8String *source;
+    Utf8String *signature;
     BootstrapMethodsAttr *bootstrapMethodAttr;
 
     //

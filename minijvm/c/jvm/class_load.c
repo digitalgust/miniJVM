@@ -1572,7 +1572,7 @@ void _class_optimize(JClass *clazz) {
     Utf8String *ustr = class_get_utf8_string(clazz,
                                              class_get_constant_classref(clazz, clazz->cff.this_class)->stringIndex);
     clazz->name = utf8_create_copy(ustr);
-//    if (utf8_equals_c(clazz->name, "javax/mini/eio/socket/PrivateOutputStream")) {
+//    if (utf8_equals_c(clazz->name, "com/meslewis/simplegltf2/simpleviewer/SimpleViewer$1")) {
 //        int debug = 1;
 //    }
     s32 i;
@@ -1609,6 +1609,11 @@ void _class_optimize(JClass *clazz) {
                 s2c.c1 = att->info[0];
                 s2c.c0 = att->info[1];
                 fi->const_value_item = class_get_constant_item(clazz, s2c.us);
+            } else if (utf8_equals_c(attName, "Signature")) {
+                Short2Char s2c;
+                s2c.c1 = att->info[0];
+                s2c.c0 = att->info[1];
+                fi->signature = class_get_utf8_string(clazz, s2c.us);
             }
         }
 
@@ -1643,7 +1648,8 @@ void _class_optimize(JClass *clazz) {
 
         //转attribute为CdoeAttribute
         for (j = 0; j < ptr->attributes_count; j++) {
-            if (utf8_equals_c(class_get_utf8_string(clazz, ptr->attributes[j].attribute_name_index), "Code") == 1) {
+            Utf8String *attname = class_get_utf8_string(clazz, ptr->attributes[j].attribute_name_index);
+            if (utf8_equals_c(attname, "Code") == 1) {
 //                if (utf8_equals_c(clazz->name, "espresso/syntaxtree/ExpressionNode") && utf8_equals_c(ptr->name, "evaluateExp")) {
 //                    int debug = 1;
 //                }
@@ -1655,6 +1661,11 @@ void _class_optimize(JClass *clazz) {
                 ptr->converted_code = ca;
                 _changeBytesOrder(ptr);
                 jit_init(ca);
+            } else if (utf8_equals_c(attname, "Signature") == 1) {
+                Short2Char s2c;
+                s2c.c1 = ptr->attributes[j].info[0];
+                s2c.c0 = ptr->attributes[j].info[1];
+                ptr->signature = class_get_utf8_string(clazz, s2c.us);
             }
         }
     }
@@ -1665,10 +1676,15 @@ void _class_optimize(JClass *clazz) {
             Short2Char s2c;
             s2c.c1 = ptr->info[0];
             s2c.c0 = ptr->info[1];
-            clazz->source = class_get_utf8_string(clazz, s2c.s);
+            clazz->source = class_get_utf8_string(clazz, s2c.us);
         } else if (utf8_equals_c(name, "BootstrapMethods")) {
             _convert_2_bootstrap_methods(ptr, clazz);
 
+        } else if (utf8_equals_c(name, "Signature")) {
+            Short2Char s2c;
+            s2c.c1 = ptr->info[0];
+            s2c.c0 = ptr->info[1];
+            clazz->signature = class_get_utf8_string(clazz, s2c.us);
         }
     }
 

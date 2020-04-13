@@ -9,21 +9,14 @@
    details. */
 package java.lang.invoke;
 
-import java.util.List;
-import java.util.ArrayList;
 import org.mini.reflect.ReflectClass;
 import org.mini.reflect.ReflectMethod;
 import org.mini.reflect.vm.ByteCodeAssembler;
-import static org.mini.reflect.vm.ByteCodeAssembler.aload;
-import static org.mini.reflect.vm.ByteCodeAssembler.areturn;
-import static org.mini.reflect.vm.ByteCodeAssembler.dload;
-import static org.mini.reflect.vm.ByteCodeAssembler.dreturn;
-import static org.mini.reflect.vm.ByteCodeAssembler.fload;
-import static org.mini.reflect.vm.ByteCodeAssembler.freturn;
-import static org.mini.reflect.vm.ByteCodeAssembler.iload;
-import static org.mini.reflect.vm.ByteCodeAssembler.ireturn;
-import static org.mini.reflect.vm.ByteCodeAssembler.lload;
-import static org.mini.reflect.vm.ByteCodeAssembler.lreturn;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.mini.reflect.vm.ByteCodeAssembler.*;
 
 public final class MethodType implements java.io.Serializable {
 
@@ -157,7 +150,7 @@ public final class MethodType implements java.io.Serializable {
 
             ++i;
 
-            String paramSpec = ReflectClass.getSignatureByClass(rtype);
+            String paramSpec = ReflectClass.getDescriptorByClass(rtype);
             Type type = type(paramSpec);
 
             result = new Result(paramSpec, rtype, type.return_);

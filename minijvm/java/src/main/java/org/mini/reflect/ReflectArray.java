@@ -5,8 +5,6 @@
  */
 package org.mini.reflect;
 
-import org.mini.reflect.vm.RefNative;
-
 /**
  * 反射一个数组实例，如
  *
@@ -20,14 +18,8 @@ import org.mini.reflect.vm.RefNative;
 public class ReflectArray {
 
     public long arrayId;
-    //不可随意改动字段类型及名字，要和native一起改
-    //native field name ,dont change name
-//    public byte typeTag;
-//    long body_addr;
-//    public int length;
 
     //
-    DirectMemObj dmo;
 
     /**
      *
@@ -35,34 +27,14 @@ public class ReflectArray {
      */
     public ReflectArray(long array) {
         arrayId = array;
-//        mapArray(arrayId);
-        byte typeTag = getTypeTag(array);
-        long body_addr = getBodyPtr(array);
-        int length = getLength(array);
-        dmo = new DirectMemObj(body_addr, length, typeTag);
     }
 
-    public void setValObj(int index, Object val) {
-        dmo.setValObj(index, val);
-    }
 
-    public Object getValObj(int index) {
-        return dmo.getValObj(index);
-    }
+    public static native int getLength(Object arr);
 
-    public static long getBodyPtr(Object array) {
-        if (array == null || !array.getClass().isArray()) {
-            return 0;
-        }
-        return getBodyPtr(RefNative.obj2id(array));
-    }
+    public static native byte getTypeTag(Object arr);
 
-//    final native void mapArray(long classId);
-    public static native int getLength(long arr);
-
-    public static native byte getTypeTag(long arr);
-
-    public static native long getBodyPtr(long array);
+    public static native long getBodyPtr(Object array);
 
     /*
      * Private

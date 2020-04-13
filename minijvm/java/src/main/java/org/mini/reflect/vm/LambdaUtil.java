@@ -5,10 +5,11 @@
  */
 package org.mini.reflect.vm;
 
+import org.mini.reflect.ReflectMethod;
+
 import java.lang.invoke.CallSite;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Method;
-import org.mini.reflect.ReflectMethod;
 
 /**
  *
@@ -30,7 +31,7 @@ public class LambdaUtil {
     public static long getMethodInfoHandle(CallSite callsite) {
         if (callsite != null && callsite.getTarget() != null) {
             Method m = callsite.getTarget().getMethod();
-            return ReflectMethod.findMethod0(m.getDeclaringClass().getName(), m.getName(), m.getSignature());
+            return ReflectMethod.findMethod0(m.getDeclaringClass().getName(), m.getName(), m.getDescriptor());
         } else {
             return 0;
         }

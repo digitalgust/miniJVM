@@ -5,17 +5,17 @@
  */
 package java.lang;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
 import org.mini.reflect.ReflectClass;
 import org.mini.reflect.ReflectField;
 import org.mini.reflect.ReflectMethod;
 import org.mini.reflect.vm.RConst;
 import org.mini.reflect.vm.RefNative;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Instances of the class <code>Class</code> represent classes and interfaces in
@@ -72,6 +72,12 @@ public final class Class<T> {
         return (isInterface() ? "interface " : "class ") + getName();
     }
 
+
+    public String toGenericString() {
+        checkRefectClassLoaded();
+        return (isInterface() ? "interface " : "class ") + refClass.className + getName();
+    }
+
     /**
      * Returns the <code>Class</code> object associated with the class with the
      * given string name. Given the fully-qualified name for a class or
@@ -81,14 +87,14 @@ public final class Class<T> {
      * <code>Class</code> descriptor for the class named
      * <code>java.lang.Thread</code>:
      * <ul><code>
-     *   Class&nbsp;t&nbsp;= Class.forName("java.lang.Thread")
+     * Class&nbsp;t&nbsp;= Class.forName("java.lang.Thread")
      * </code></ul>
      *
      * @param className the fully qualified name of the desired class.
      * @return the <code>Class</code> object for the class with the specified
      * name.
-     * @exception ClassNotFoundException if the class could not be found.
-     * @exception Error if the function fails for any other reason.
+     * @throws ClassNotFoundException if the class could not be found.
+     * @throws Error                  if the function fails for any other reason.
      * @since JDK1.0
      */
     public static native Class<?> forName(String className)
@@ -100,11 +106,11 @@ public final class Class<T> {
      * @return a newly allocated instance of the class represented by this
      * object. This is done exactly as if by a <code>new</code> expression with
      * an empty argument list.
-     * @exception IllegalAccessException if the class or initializer is not
-     * accessible.
-     * @exception InstantiationException if an application tries to instantiate
-     * an abstract class or an interface, or if the instantiation fails for some
-     * other reason.
+     * @throws IllegalAccessException if the class or initializer is not
+     *                                accessible.
+     * @throws InstantiationException if an application tries to instantiate
+     *                                an abstract class or an interface, or if the instantiation fails for some
+     *                                other reason.
      * @since JDK1.0
      */
     public native T newInstance()
@@ -137,7 +143,6 @@ public final class Class<T> {
      *
      * @param obj the object to check
      * @return true if <code>obj</code> is an instance of this class
-     *
      * @since JDK1.1
      */
     public native boolean isInstance(Object obj);
@@ -162,7 +167,7 @@ public final class Class<T> {
      * @param cls the <code>Class</code> object to be checked
      * @return the <code>boolean</code> value indicating whether objects of the
      * type <code>cls</code> can be assigned to objects of this class
-     * @exception NullPointerException if the specified Class parameter is null.
+     * @throws NullPointerException if the specified Class parameter is null.
      * @since JDK1.1
      */
     public native boolean isAssignableFrom(Class cls);
@@ -171,7 +176,7 @@ public final class Class<T> {
      * Determines if the specified <code>Class</code> object represents an
      * interface type.
      *
-     * @return  <code>true</code> if this object represents an interface;
+     * @return <code>true</code> if this object represents an interface;
      * <code>false</code> otherwise.
      */
     public native boolean isInterface();
@@ -179,7 +184,7 @@ public final class Class<T> {
     /**
      * Determines if this <code>Class</code> object represents an array class.
      *
-     * @return  <code>true</code> if this object represents an array class;
+     * @return <code>true</code> if this object represents an array class;
      * <code>false</code> otherwise.
      * @since JDK1.1
      */
@@ -193,19 +198,19 @@ public final class Class<T> {
      * <p>
      * If this <code>Class</code> object represents a class of arrays, then the
      * internal form of the name consists of the name of the element type in
-     * Java signature format, preceded by one or more "<tt>[</tt>" characters
+     * Java descriptor format, preceded by one or more "<tt>[</tt>" characters
      * representing the depth of array nesting. Thus:
      *
      * <blockquote><pre>
      * (new Object[3]).getClass().getName()
      * </pre></blockquote>
-     *
+     * <p>
      * returns "<code>[Ljava.lang.Object;</code>" and:
      *
      * <blockquote><pre>
      * (new int[3][4][5][6][7][8][9]).getClass().getName()
      * </pre></blockquote>
-     *
+     * <p>
      * returns "<code>[[[[[[[I</code>". The encoding of element type names is as
      * follows:
      *
@@ -220,7 +225,7 @@ public final class Class<T> {
      * S            short
      * Z            boolean
      * </pre></blockquote>
-     *
+     * <p>
      * The class or interface name <tt><i>classname</i></tt> is given in fully
      * qualified form as shown in the example above.
      *
@@ -322,8 +327,8 @@ public final class Class<T> {
      * @return the class loader that loaded the class or interface represented
      * by this object.
      * @throws SecurityException if a security manager exists and its
-     * {@code checkPermission} method denies access to the class loader for the
-     * class.
+     *                           {@code checkPermission} method denies access to the class loader for the
+     *                           class.
      * @see java.lang.ClassLoader
      * @see SecurityManager#checkPermission
      * @see java.lang.RuntimePermission
@@ -419,6 +424,7 @@ public final class Class<T> {
         }
         return enumConstants;
     }
+
     private volatile transient T[] enumConstants = null;
 
     /**
@@ -443,13 +449,11 @@ public final class Class<T> {
         }
         return enumConstantDirectory;
     }
+
     private volatile transient Map<String, T> enumConstantDirectory = null;
 
     /**
-     *
      * --------------------------- reflect ----------------------------------
-     *
-     *
      */
     long classHandle;//save JClass ptr ,MUST NOT delete it and rename it, set it when JClass->ins_class init
 
@@ -460,9 +464,7 @@ public final class Class<T> {
     }
 
     public int getModifiers() {
-        if (refClass == null) {
-            refClass = new ReflectClass(classHandle);
-        }
+        checkRefectClassLoaded();
         return refClass.accessFlags;
     }
 
@@ -475,9 +477,7 @@ public final class Class<T> {
     }
 
     public Method getDeclaredMethod(String name, Class<?>... parameterTypes) throws NoSuchMethodException {
-        if (refClass == null) {
-            refClass = new ReflectClass(classHandle);
-        }
+        checkRefectClassLoaded();
         ReflectMethod rm = refClass.getMethod(name, parameterTypes);
         if (rm != null) {
             return new Method(this, rm);
@@ -486,9 +486,7 @@ public final class Class<T> {
     }
 
     public Method[] getMethods() {
-        if (refClass == null) {
-            refClass = new ReflectClass(classHandle);
-        }
+        checkRefectClassLoaded();
         ReflectMethod[] rms = refClass.getMethods();
         int mcount = 0;
         for (int i = 0, imax = rms.length; i < imax; i++) {
@@ -498,19 +496,22 @@ public final class Class<T> {
             }
         }
         Method[] ms = new Method[mcount];
-        for (int i = 0; i < mcount; i++) {
+        for (int i = 0, j = 0, imax = rms.length; i < imax; i++) {
             if (rms[i].methodName.charAt(0) != '<'
                     && (rms[i].accessFlags & (RConst.ACC_PUBLIC)) != 0) {
-                ms[i] = new Method(this, rms[i]);
+                ms[j] = new Method(this, rms[i]);
+                j++;
             }
         }
-        return ms;
+        Method[] superms = getSuperclass() == null ? new Method[0] : getSuperclass().getMethods();
+        Method[] result = new Method[ms.length + superms.length];
+        System.arraycopy(superms, 0, result, 0, superms.length);
+        System.arraycopy(ms, 0, result, superms.length, ms.length);
+        return result;
     }
 
     public Method[] getDeclaredMethods() {
-        if (refClass == null) {
-            refClass = new ReflectClass(classHandle);
-        }
+        checkRefectClassLoaded();
         ReflectMethod[] rms = refClass.getMethods();
         int mcount = 0;
         for (int i = 0, imax = rms.length; i < imax; i++) {
@@ -519,9 +520,10 @@ public final class Class<T> {
             }
         }
         Method[] ms = new Method[mcount];
-        for (int i = 0; i < mcount; i++) {
+        for (int i = 0, j = 0, imax = rms.length; i < imax; i++) {
             if (rms[i].methodName.charAt(0) != '<') {
-                ms[i] = new Method(this, rms[i]);
+                ms[j] = new Method(this, rms[i]);
+                j++;
             }
         }
         return ms;
@@ -536,9 +538,7 @@ public final class Class<T> {
     }
 
     public Constructor<?>[] getConstructors() {
-        if (refClass == null) {
-            refClass = new ReflectClass(classHandle);
-        }
+        checkRefectClassLoaded();
         ReflectMethod[] rms = refClass.getMethods();
         int mcount = 0;
         for (int i = 0, imax = rms.length; i < imax; i++) {
@@ -547,18 +547,17 @@ public final class Class<T> {
             }
         }
         Constructor[] cs = new Constructor[mcount];
-        for (int i = 0; i < mcount; i++) {
+        for (int i = 0, j = 0, imax = rms.length; i < imax; i++) {
             if (rms[i].methodName.equals("<init>")) {
-                cs[i] = new Constructor<>(this, rms[i]);
+                cs[j] = new Constructor<>(this, rms[i]);
+                j++;
             }
         }
         return cs;
     }
 
     public Constructor<T> getDeclaredConstructor(Class<?>... parameterTypes) throws NoSuchMethodException {
-        if (refClass == null) {
-            refClass = new ReflectClass(classHandle);
-        }
+        checkRefectClassLoaded();
         ReflectMethod rm = refClass.getMethod("<init>", parameterTypes);
         if (rm != null) {
             return new Constructor<>(this, rm);
@@ -575,9 +574,7 @@ public final class Class<T> {
     }
 
     public Field getDeclaredField(String name) throws NoSuchFieldException {
-        if (refClass == null) {
-            refClass = new ReflectClass(classHandle);
-        }
+        checkRefectClassLoaded();
         ReflectField rf = refClass.getField(name);
         if (rf != null) {
             return new Field(this, rf);
@@ -586,9 +583,7 @@ public final class Class<T> {
     }
 
     public Field[] getFields() {
-        if (refClass == null) {
-            refClass = new ReflectClass(classHandle);
-        }
+        checkRefectClassLoaded();
         ReflectField[] rfs = refClass.getFields();
         int fcount = 0;
         for (ReflectField rf : rfs) {
@@ -598,18 +593,22 @@ public final class Class<T> {
         }
 
         Field[] fs = new Field[fcount];
-        for (int i = 0; i < fcount; i++) {
+
+        for (int i = 0, j = 0, imax = rfs.length; i < imax; i++) {
             if ((rfs[i].accessFlags & RConst.ACC_PUBLIC) != 0) {
-                fs[i] = new Field(this, rfs[i]);
+                fs[j] = new Field(this, rfs[i]);
+                j++;
             }
         }
-        return fs;
+        Field[] superfs = getSuperclass() == null ? new Field[0] : getSuperclass().getFields();
+        Field[] result = new Field[fs.length + superfs.length];
+        System.arraycopy(superfs, 0, result, 0, superfs.length);
+        System.arraycopy(fs, 0, result, superfs.length, fs.length);
+        return result;
     }
 
     public Field[] getDeclaredFields() {
-        if (refClass == null) {
-            refClass = new ReflectClass(classHandle);
-        }
+        checkRefectClassLoaded();
         ReflectField[] rfs = refClass.getFields();
         int fcount = rfs.length;
 
@@ -666,4 +665,9 @@ public final class Class<T> {
         return (T) obj;
     }
 
+    private void checkRefectClassLoaded() {
+        if (refClass == null) {
+            refClass = new ReflectClass(classHandle);
+        }
+    }
 }

@@ -26,6 +26,8 @@ package java.lang;
  * @since   JDK1.1
  */
 public final class Short extends Number implements Comparable<Short> {
+    //type of bytes
+    public static final int   BYTES = 2;
 
     /**
      * A constant holding the minimum value a <code>short</code> can

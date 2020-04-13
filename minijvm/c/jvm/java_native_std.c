@@ -220,7 +220,7 @@ s32 java_lang_Class_getSuperclass(Runtime *runtime, JClass *clazz) {
     if (cl) {
 
         JClass *scl = getSuperClass(cl);
-        push_ref(stack, insOfJavaLangClass_create_get(runtime, scl));
+        push_ref(stack, scl ? insOfJavaLangClass_create_get(runtime, scl) : NULL);
     } else {
         push_ref(stack, NULL);
     }

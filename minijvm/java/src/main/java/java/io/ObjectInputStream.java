@@ -10,37 +10,11 @@
 
 package java.io;
 
-import static java.io.ObjectOutputStream.STREAM_MAGIC;
-import static java.io.ObjectOutputStream.STREAM_VERSION;
-import static java.io.ObjectOutputStream.TC_NULL;
-import static java.io.ObjectOutputStream.TC_REFERENCE;
-import static java.io.ObjectOutputStream.TC_CLASSDESC;
-import static java.io.ObjectOutputStream.TC_OBJECT;
-import static java.io.ObjectOutputStream.TC_STRING;
-import static java.io.ObjectOutputStream.TC_ARRAY;
-import static java.io.ObjectOutputStream.TC_CLASS;
-import static java.io.ObjectOutputStream.TC_BLOCKDATA;
-import static java.io.ObjectOutputStream.TC_ENDBLOCKDATA;
-import static java.io.ObjectOutputStream.TC_RESET;
-import static java.io.ObjectOutputStream.TC_BLOCKDATALONG;
-import static java.io.ObjectOutputStream.TC_EXCEPTION;
-import static java.io.ObjectOutputStream.TC_LONGSTRING;
-import static java.io.ObjectOutputStream.TC_PROXYCLASSDESC;
-import static java.io.ObjectOutputStream.TC_ENUM;
-import static java.io.ObjectOutputStream.SC_WRITE_METHOD;
-import static java.io.ObjectOutputStream.SC_BLOCK_DATA;
-import static java.io.ObjectOutputStream.SC_SERIALIZABLE;
-import static java.io.ObjectOutputStream.SC_EXTERNALIZABLE;
-import static java.io.ObjectOutputStream.SC_ENUM;
-import static java.io.ObjectOutputStream.getReadOrWriteMethod;
-
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+
+import static java.io.ObjectOutputStream.*;
 
 public class ObjectInputStream extends InputStream implements DataInput {
   private final static int HANDLE_OFFSET = 0x7e0000;
@@ -52,7 +26,7 @@ public class ObjectInputStream extends InputStream implements DataInput {
     this.in = in;
     short signature = (short)rawShort();
     if (signature != STREAM_MAGIC) {
-      throw new IOException("Unrecognized signature: 0x"
+      throw new IOException("Unrecognized descriptor: 0x"
           + Integer.toHexString(signature));
     }
     int version = rawShort();

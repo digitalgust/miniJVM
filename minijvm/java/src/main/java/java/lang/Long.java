@@ -32,6 +32,9 @@ package java.lang;
  * @since   JDK1.0
  */
 public final class Long extends Number implements Comparable<Long> {
+    //type of bytes
+    public static final int   BYTES = 8;
+
     /**
      * A constant holding the minimum value a <code>long</code> can
      * have, -2<sup>63</sup>.

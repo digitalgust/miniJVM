@@ -33,6 +33,9 @@ package java.lang;
  * @since JDK1.0
  */
 public final class Integer extends Number implements Comparable<Integer> {
+	//type of bytes
+	public static final int   BYTES = 4;
+
     /**
      * A constant holding the minimum value an <code>int</code> can
      * have, -2<sup>31</sup>.

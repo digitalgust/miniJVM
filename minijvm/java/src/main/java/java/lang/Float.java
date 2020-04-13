@@ -21,6 +21,8 @@ package java.lang;
  * @since JDK1.0, CLDC 1.1
  */
 public final class Float extends Number implements Comparable<Float> {
+    //type of bytes
+    public static final int   BYTES = 4;
 
     /**
      * The positive infinity of type <code>float</code>. It is equal to the

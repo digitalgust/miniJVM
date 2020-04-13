@@ -1,10 +1,10 @@
 /**
  * Copyright (c) 2001, Sergey A. Samokhodkin
  * All rights reserved.
- *
+ * <p>
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- *
+ * <p>
  * - Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
  * - Redistributions in binary form
@@ -13,7 +13,7 @@
  * - Neither the name of jregex nor the names of its contributors may be used
  * to endorse or promote products derived from this software without specific prior
  * written permission.
- *
+ * <p>
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -177,9 +177,9 @@ public class Matcher implements MatchResult {
      * @param m - a matcher that is a source of data
      * @param groupId - which group to take data from
      * @see Matcher#setTarget(java.lang.String)
-     * @see Matcher#setTarget(java.lang.String,int,int)
-     * @see Matcher#setTarget(char[],int,int)
-     * @see Matcher#setTarget(java.io.Reader,int)
+     * @see Matcher#setTarget(java.lang.String, int, int)
+     * @see Matcher#setTarget(char[], int, int)
+     * @see Matcher#setTarget(java.io.Reader, int)
      */
     public final void setTarget(Matcher m, int groupId) {
         MemReg mr = m.bounds(groupId);
@@ -207,10 +207,10 @@ public class Matcher implements MatchResult {
      * to zero.
      *
      * @param text - a data
-     * @see Matcher#setTarget(jregex.Matcher,int)
-     * @see Matcher#setTarget(java.lang.String,int,int)
-     * @see Matcher#setTarget(char[],int,int)
-     * @see Matcher#setTarget(java.io.Reader,int)
+     * @see Matcher#setTarget(jregex.Matcher, int)
+     * @see Matcher#setTarget(java.lang.String, int, int)
+     * @see Matcher#setTarget(char[], int, int)
+     * @see Matcher#setTarget(java.io.Reader, int)
      */
     public void setTarget(String text) {
         setTarget(text, 0, text.length());
@@ -223,10 +223,10 @@ public class Matcher implements MatchResult {
      * @param text - a data source
      * @param start - where the target starts
      * @param len - how long is the target
-     * @see Matcher#setTarget(jregex.Matcher,int)
+     * @see Matcher#setTarget(jregex.Matcher, int)
      * @see Matcher#setTarget(java.lang.String)
-     * @see Matcher#setTarget(char[],int,int)
-     * @see Matcher#setTarget(java.io.Reader,int)
+     * @see Matcher#setTarget(char[], int, int)
+     * @see Matcher#setTarget(java.io.Reader, int)
      */
     public void setTarget(String text, int start, int len) {
         char[] mychars = data;
@@ -252,10 +252,10 @@ public class Matcher implements MatchResult {
      * @param text - a data source
      * @param start - where the target starts
      * @param len - how long is the target
-     * @see Matcher#setTarget(jregex.Matcher,int)
+     * @see Matcher#setTarget(jregex.Matcher, int)
      * @see Matcher#setTarget(java.lang.String)
-     * @see Matcher#setTarget(java.lang.String,int,int)
-     * @see Matcher#setTarget(java.io.Reader,int)
+     * @see Matcher#setTarget(java.lang.String, int, int)
+     * @see Matcher#setTarget(java.io.Reader, int)
      */
     public void setTarget(char[] text, int start, int len) {
         setTarget(text, start, len, true);
@@ -279,11 +279,11 @@ public class Matcher implements MatchResult {
      * @param shared - if <code>true<code>: data are shared or used later,
      * <b>don't</b> modify it; if <code>false<code>: possible modifications of the text on subsequent
      * <code>setTarget()</code> calls are perceived and allowed.
-     * @see Matcher#setTarget(jregex.Matcher,int)
+     * @see Matcher#setTarget(jregex.Matcher, int)
      * @see Matcher#setTarget(java.lang.String)
-     * @see Matcher#setTarget(java.lang.String,int,int)
-     * @see Matcher#setTarget(char[],int,int)
-     * @see Matcher#setTarget(java.io.Reader,int)
+     * @see Matcher#setTarget(java.lang.String, int, int)
+     * @see Matcher#setTarget(char[], int, int)
+     * @see Matcher#setTarget(java.io.Reader, int)
      */
     public final void setTarget(char[] text, int start, int len, boolean shared) {
         cache = null;
@@ -301,10 +301,10 @@ public class Matcher implements MatchResult {
      * @param in - a data stream;
      * @param len - how much characters should be read; if len is -1, read the
      * entire stream.
-     * @see Matcher#setTarget(jregex.Matcher,int)
+     * @see Matcher#setTarget(jregex.Matcher, int)
      * @see Matcher#setTarget(java.lang.String)
-     * @see Matcher#setTarget(java.lang.String,int,int)
-     * @see Matcher#setTarget(char[],int,int)
+     * @see Matcher#setTarget(java.lang.String, int, int)
+     * @see Matcher#setTarget(char[], int, int)
      */
     public void setTarget(Reader in, int len) throws IOException {
         if (len < 0) {
@@ -375,6 +375,7 @@ public class Matcher implements MatchResult {
     }
 
     /* Matching */
+
     /**
      * Tells whether the entire target matches the beginning of the pattern. The
      * whole pattern is also regarded as its beginning.<br>
@@ -479,19 +480,18 @@ public class Matcher implements MatchResult {
     }
 
     public String replaceFirst(String replacement) {
-        //matches();
+        StringBuilder sb = new StringBuilder();
+        int index = 0;
+        init();
+        String tc = target();
         if (find()) {
             int start = start();
-            int end = end();
-            String tc = target();
-            StringBuilder sb = new StringBuilder();
-            sb.append(tc, 0, start);
+            sb.append(tc, index, start);
             sb.append(replacement);
-            sb.append(targetChars(), end, tc.length());
-
-            return sb.toString();
+            index = end();
         }
-        return target();
+        sb.append(tc, index, tc.length());
+        return sb.toString();
     }
 
     /**
@@ -1047,7 +1047,7 @@ new Exception().printStackTrace();
         main:
         while (wOffset <= end) {
             matchHere:
-            for (;;) {
+            for (; ; ) {
                 /*
      System.out.print("char: "+i+", term: ");
      System.out.print(term.toString());
@@ -2306,7 +2306,7 @@ new Exception().printStackTrace();
                 char c = term.c;
                 int i = off;
                 int iMin = off - maxCount;
-                for (;;) {
+                for (; ; ) {
                     if (data[--i] == c) {
                         break;
                     }
@@ -2323,7 +2323,7 @@ new Exception().printStackTrace();
                 char c;
                 int iMin = off - maxCount;
                 if (!term.inverse) {
-                    for (;;) {
+                    for (; ; ) {
                         if ((c = data[--i]) <= 255 && arr[c]) {
                             break;
                         }
@@ -2332,7 +2332,7 @@ new Exception().printStackTrace();
                         }
                     }
                 } else {
-                    for (;;) {
+                    for (; ; ) {
                         if ((c = data[--i]) > 255 || !arr[c]) {
                             break;
                         }
@@ -2349,7 +2349,7 @@ new Exception().printStackTrace();
                 char c;
                 int iMin = off - maxCount;
                 if (!term.inverse) {
-                    for (;;) {
+                    for (; ; ) {
                         boolean[] arr = bitset2[(c = data[--i]) >> 8];
                         if (arr != null && arr[c & 0xff]) {
                             break;
@@ -2359,7 +2359,7 @@ new Exception().printStackTrace();
                         }
                     }
                 } else {
-                    for (;;) {
+                    for (; ; ) {
                         boolean[] arr = bitset2[(c = data[--i]) >> 8];
                         if (arr == null || arr[c & 0xff]) {
                             break;
@@ -2384,7 +2384,7 @@ new Exception().printStackTrace();
             char first = data[regOff];
             regOff++;
             regLen--;
-            for (;;) {
+            for (; ; ) {
                 i--;
                 if (data[i] == first && compareRegions(data, i + 1, regOff, regLen, out)) {
                     break;
@@ -2401,7 +2401,7 @@ new Exception().printStackTrace();
             char firstTitle = Character.toTitleCase(c);
             regOff++;
             regLen--;
-            for (;;) {
+            for (; ; ) {
                 i--;
                 if (((c = data[i]) == firstLower || c == firstUpper || c == firstTitle) && compareRegionsI(data, i + 1, regOff, regLen, out)) {
                     break;

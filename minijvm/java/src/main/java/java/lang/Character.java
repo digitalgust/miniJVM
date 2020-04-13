@@ -39,6 +39,8 @@ import com.sun.cldc.i18n.uclc.*;
  * for details.
  */
 public final class Character implements Comparable<Character> {
+    //type of bytes
+    public static final int   BYTES = 2;
 
     /**
      * The minimum radix available for conversion to and from Strings.

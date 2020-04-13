@@ -6,9 +6,11 @@
  */
 package java.lang.reflect;
 
-import java.lang.annotation.Annotation;
 import org.mini.reflect.ReflectMethod;
+import org.mini.reflect.vm.RConst;
 import org.mini.reflect.vm.RefNative;
+
+import java.lang.annotation.Annotation;
 
 /**
  * A <code>Method</code> provides information about, and access to, a single
@@ -21,15 +23,14 @@ import org.mini.reflect.vm.RefNative;
  * but it throws an <code>IllegalArgumentException</code> if a narrowing
  * conversion would occur.
  *
+ * @author Kenneth Russell
+ * @author Nakul Saraiya
  * @see Member
  * @see java.lang.Class
  * @see java.lang.Class#getMethods()
  * @see java.lang.Class#getMethod(String, Class[])
  * @see java.lang.Class#getDeclaredMethods()
  * @see java.lang.Class#getDeclaredMethod(String, Class[])
- *
- * @author Kenneth Russell
- * @author Nakul Saraiya
  */
 public class Method<T> extends AccessibleObject implements Member {
 
@@ -93,8 +94,8 @@ public class Method<T> extends AccessibleObject implements Member {
         return null;
     }
 
-    public String getSignature() {
-        return refMethod.signature;
+    public String getDescriptor() {
+        return refMethod.descriptor;
     }
 
     @Override
@@ -115,4 +116,63 @@ public class Method<T> extends AccessibleObject implements Member {
         return getAnnotations();
     }
 
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        if ((refMethod.accessFlags & RConst.ACC_STATIC) != 0) {
+            sb.append("static ");
+        }
+        if ((refMethod.accessFlags & RConst.ACC_PUBLIC) != 0) {
+            sb.append("public ");
+        } else if ((refMethod.accessFlags & RConst.ACC_PRIVATE) != 0) {
+            sb.append("private ");
+        } else if ((refMethod.accessFlags & RConst.ACC_PROTECTED) != 0) {
+            sb.append("protected ");
+        }
+        sb.append(refMethod.getReturnType().getCanonicalName()).append(' ');
+        sb.append(getDeclaringClass().getName()).append('.');
+        sb.append(refMethod.methodName).append('(');
+        Class[] ps = getParameterTypes();
+        for (int i = 0; i < ps.length; i++) {
+            sb.append(ps[i].getCanonicalName());
+            if (i + 1 < ps.length) sb.append(',');
+        }
+        sb.append(')');
+        return sb.toString();
+    }
+
+    public String toGenericString() {
+        StringBuilder sb = new StringBuilder();
+        if ((refMethod.accessFlags & RConst.ACC_STATIC) != 0) {
+            sb.append("static ");
+        }
+        if ((refMethod.accessFlags & RConst.ACC_PUBLIC) != 0) {
+            sb.append("public ");
+        } else if ((refMethod.accessFlags & RConst.ACC_PRIVATE) != 0) {
+            sb.append("private ");
+        } else if ((refMethod.accessFlags & RConst.ACC_PROTECTED) != 0) {
+            sb.append("protected ");
+        }
+        sb.append(refMethod.getGenericReturnType().getTypeName()).append(' ');
+        sb.append(getDeclaringClass().getName()).append('.');
+        sb.append(refMethod.methodName).append('(');
+        Type[] ps = getGenericParameterTypes();
+        for (int i = 0; i < ps.length; i++) {
+            sb.append(ps[i].getTypeName());
+            if (i + 1 < ps.length) sb.append(',');
+        }
+        sb.append(')');
+        return sb.toString();
+    }
+
+    public boolean hasGenericInformation() {
+        return refMethod.hasGenericInformation();
+    }
+
+    public Type[] getGenericParameterTypes() {
+        return refMethod.getGenericParameterTypes();
+    }
+
+    public Type getGenericReturnType() {
+        return refMethod.getGenericReturnType();
+    }
 }

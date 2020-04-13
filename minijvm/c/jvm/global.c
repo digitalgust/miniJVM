@@ -90,6 +90,7 @@ s64 GARBAGE_PERIOD_MS = 1 * 1000;
 s64 MAX_HEAP_SIZE = 30 * 1024 * 1024;
 
 s32 jdwp_enable = 0;
+s32 jdwp_suspend_on_start = 0;
 //
 OptimizeCache jvm_runtime_cache;
 //

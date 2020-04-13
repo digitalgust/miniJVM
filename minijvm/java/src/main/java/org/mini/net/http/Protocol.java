@@ -42,21 +42,8 @@ package org.mini.net.http;
  * read/write on those streams.
  *
  */
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import javax.cldc.io.ConnectionNotFoundException;
-import javax.cldc.io.Connector;
-import javax.cldc.io.StreamConnection;
-import javax.cldc.io.ConnectionBaseAdapter;
-import javax.cldc.io.DateParser;
-import javax.cldc.io.HttpConnection;
-import static javax.cldc.io.HttpConnection.GET;
-import static javax.cldc.io.HttpConnection.HEAD;
-import static javax.cldc.io.HttpConnection.POST;
-import javax.cldc.io.HttpUrl;
+import javax.cldc.io.*;
+import java.io.*;
 
 /**
  * This class implements the necessary functionality for an HTTP connection.

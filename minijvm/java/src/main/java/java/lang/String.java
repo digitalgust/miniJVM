@@ -5,8 +5,9 @@
  */
 package java.lang;
 
+import com.sun.cldc.i18n.Helper;
+
 import java.io.UnsupportedEncodingException;
-import com.sun.cldc.i18n.*;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Map;
@@ -1542,6 +1543,11 @@ public final class String implements Comparable<String>, CharSequence {
         return Pattern.matches(regex, this);
     }
 
+    /**
+     * @param regex
+     * @param replacement
+     * @return
+     */
     public String replaceFirst(String regex, String replacement) {
         return Pattern.compile(regex).matcher(this).replaceFirst(replacement);
     }

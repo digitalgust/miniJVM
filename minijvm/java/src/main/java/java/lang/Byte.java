@@ -40,6 +40,9 @@ public final class Byte extends Number implements Comparable<Byte> {
      */
     public static final byte   MAX_VALUE = 127;
 
+    //type of bytes
+    public static final int   BYTES = 1;
+
     /**
      * The <code>Class</code> instance representing the primitive type
      * <code>byte</code>.
