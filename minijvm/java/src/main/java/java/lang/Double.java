@@ -21,6 +21,8 @@ package java.lang;
  * @since JDK1.0, CLDC 1.1
  */
 public final class Double  extends Number implements Comparable<Double>{
+    //type of bytes
+    public static final int   BYTES = 8;
 
     /**
      * The positive infinity of type <code>double</code>. It is equal to the

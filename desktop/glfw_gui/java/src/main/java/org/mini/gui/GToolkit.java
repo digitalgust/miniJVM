@@ -9,7 +9,6 @@ import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
 import org.mini.nanovg.Nanovg;
 import org.mini.reflect.ReflectArray;
-import org.mini.reflect.vm.RefNative;
 
 import java.io.InputStream;
 import java.util.Hashtable;
@@ -43,7 +42,7 @@ public class GToolkit {
      * @return
      */
     public static long getArrayDataPtr(Object array) {
-        return ReflectArray.getBodyPtr(RefNative.obj2id(array));
+        return ReflectArray.getBodyPtr(array);
     }
 
     public static float[] nvgRGBA(int r, int g, int b, int a) {
