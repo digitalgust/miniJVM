@@ -559,7 +559,7 @@ s32 _garbage_resume_the_world() {
 s32 _checkAndWaitThreadIsSuspend(Runtime *runtime) {
     while (!(runtime->threadInfo->is_suspend) &&
            !(runtime->threadInfo->is_blocking)) { // if a native method blocking , must set thread status is wait before enter native method
-        garbage_thread_timedwait(100);
+        garbage_thread_wait();
         if (collector->_garbage_thread_status != GARBAGE_THREAD_NORMAL) {
             return -1;
         }
