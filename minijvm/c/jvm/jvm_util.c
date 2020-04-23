@@ -945,6 +945,10 @@ Instance *jarray_create_by_class(Runtime *runtime, s32 count, JClass *clazz) {
     arr->arr_length = count;
     if (arr->arr_length)arr->arr_body = (c8 *) (&arr[1]);
     gc_refer_reg(runtime, arr);
+//    jvm_printf("%s\n", utf8_cstr(clazz->name));
+//    if(utf8_equals_c(clazz->name,"[Lorg/mini/util/StringFormatImpl$FmtCmpnt;")){
+//        int debug = 1;
+//    }
     return arr;
 }
 

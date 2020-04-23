@@ -305,9 +305,11 @@ int org_mini_glfw_utils_Gutil_vec_sub(Runtime *runtime, JClass *clazz) {
 
 float vec_mul_inner(Instance *aa, Instance *ba) {
     int i;
-    float r;
+    float r = 0;
+    GLfloat *a = (GLfloat *) aa->arr_body;
+    GLfloat *b = (GLfloat *) ba->arr_body;
     for (i = 0; i < aa->arr_length; ++i)
-        r += aa->arr_body[i] * ba->arr_body[i];
+        r += a[i] * b[i];
     return r;
 }
 
@@ -342,7 +344,7 @@ int org_mini_glfw_utils_Gutil_vec_scale(Runtime *runtime, JClass *clazz) {
 }
 
 float vec_len(Instance *ra) {
-    return (float) sqrt(vec_mul_inner(ra, ra));
+    return (float) sqrtf(vec_mul_inner(ra, ra));
 }
 
 int org_mini_glfw_utils_Gutil_vec_len(Runtime *runtime, JClass *clazz) {
@@ -378,6 +380,34 @@ int org_mini_glfw_utils_Gutil_vec_reflect(Runtime *runtime, JClass *clazz) {
     int i;
     for (i = 0; i < 4; ++i)
         r[i] = a[i] - p * b[i];
+    env->push_ref(runtime->stack, ra);
+    return 0;
+}
+
+int org_mini_glfw_utils_Gutil_vec4_slerp(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    int pos = 0;
+    Instance *ra = env->localvar_getRefer(runtime->localvar, pos++);
+    Instance *aa = env->localvar_getRefer(runtime->localvar, pos++);
+    Instance *ba = env->localvar_getRefer(runtime->localvar, pos++);
+    Int2Float i2f;
+    i2f.i = env->localvar_getInt(runtime->localvar, pos++);
+    GLfloat *r = (GLfloat *) ra->arr_body;
+    GLfloat *a = (GLfloat *) aa->arr_body;
+    GLfloat *b = (GLfloat *) ba->arr_body;
+    vec4_slerp(r, a, b, i2f.f);
+    env->push_ref(runtime->stack, ra);
+    return 0;
+}
+
+int org_mini_glfw_utils_Gutil_vec4_from_mat4x4(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    int pos = 0;
+    Instance *ra = env->localvar_getRefer(runtime->localvar, pos++);
+    Instance *aa = env->localvar_getRefer(runtime->localvar, pos++);
+    GLfloat *r = (GLfloat *) ra->arr_body;
+    GLfloat *a = (GLfloat *) aa->arr_body;
+    quat_from_mat4x4(r, a);
     env->push_ref(runtime->stack, ra);
     return 0;
 }
@@ -687,6 +717,21 @@ int org_mini_glfw_utils_Gutil_mat4x4_look_at(Runtime *runtime, JClass *clazz) {
     env->push_ref(runtime->stack, r);
     return 0;
 }
+
+int org_mini_glfw_utils_Gutil_mat4x4_trans_rotate_scale(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    int pos = 0;
+    Instance *r = env->localvar_getRefer(runtime->localvar, pos++);
+    Instance *vec3_trans = env->localvar_getRefer(runtime->localvar, pos++);
+    Instance *vec4_rotate = env->localvar_getRefer(runtime->localvar, pos++);
+    Instance *vec3_scale = env->localvar_getRefer(runtime->localvar, pos++);
+    mat4x4_trans_rotate_scale((vec4 *) r->arr_body, (float *) vec3_trans->arr_body,
+                              (float *) vec4_rotate->arr_body,
+                              (float *) vec3_scale->arr_body);
+    env->push_ref(runtime->stack, r);
+    return 0;
+}
+
 
 /* ==============================   jni glfw =================================*/
 
@@ -1100,6 +1145,8 @@ static java_native_method method_glfw_table[] = {
         {"org/mini/nanovg/Gutil", "vec_normal",                 "([F[F)[F",                         org_mini_glfw_utils_Gutil_vec_normal},
         {"org/mini/nanovg/Gutil", "vec_mul_cross",              "([F[F[F)[F",                       org_mini_glfw_utils_Gutil_vec_mul_cross},
         {"org/mini/nanovg/Gutil", "vec_reflect",                "([F[F[F)[F",                       org_mini_glfw_utils_Gutil_vec_reflect},
+        {"org/mini/nanovg/Gutil", "vec4_slerp",                 "([F[F[FF)[F",                      org_mini_glfw_utils_Gutil_vec4_slerp},
+        {"org/mini/nanovg/Gutil", "vec4_from_mat4x4",           "([F[F[FF)[F",                      org_mini_glfw_utils_Gutil_vec4_from_mat4x4},
         {"org/mini/nanovg/Gutil", "mat4x4_identity",            "([F)[F",                           org_mini_glfw_utils_Gutil_mat4x4_identity},
         {"org/mini/nanovg/Gutil", "mat4x4_dup",                 "([F[F)[F",                         org_mini_glfw_utils_Gutil_mat4x4_dup},
         {"org/mini/nanovg/Gutil", "mat4x4_row",                 "([F[FI)[F",                        org_mini_glfw_utils_Gutil_mat4x4_row},
@@ -1124,28 +1171,29 @@ static java_native_method method_glfw_table[] = {
         {"org/mini/nanovg/Gutil", "mat4x4_frustum",             "([FFFFFFF)[F",                     org_mini_glfw_utils_Gutil_mat4x4_frustum},
         {"org/mini/nanovg/Gutil", "mat4x4_perspective",         "([FFFFF)[F",                       org_mini_glfw_utils_Gutil_mat4x4_perspective},
         {"org/mini/nanovg/Gutil", "mat4x4_look_at",             "([F[F[F[F)[F",                     org_mini_glfw_utils_Gutil_mat4x4_look_at},
-        {"org/mini/glfw/Glfw",        "glfwGetTime",                "()D",                              org_mini_glfw_Glfw_glfwGetTime},
-        {"org/mini/glfw/Glfw",        "glfwSetTime",                "(D)V",                             org_mini_glfw_Glfw_glfwSetTime},
-        {"org/mini/glfw/Glfw",        "glfwCreateWindow",           "(II[BJJ)J",                        org_mini_glfw_Glfw_glfwCreateWindow},
-        {"org/mini/glfw/Glfw",        "glfwDestroyWindow",          "(J)V",                             org_mini_glfw_Glfw_glfwDestroyWindow},
-        {"org/mini/glfw/Glfw",        "glfwWindowShouldClose",      "(J)Z",                             org_mini_glfw_Glfw_glfwWindowShouldClose},
-        {"org/mini/glfw/Glfw",        "glfwSetCallback",            "(JLorg/mini/glfw/GlfwCallback;)V", org_mini_glfw_Glfw_glfwSetCallback},
-        {"org/mini/glfw/Glfw",        "glfwInitJni",                "()Z",                              org_mini_glfw_Glfw_glfwInitJni},
-        {"org/mini/glfw/Glfw",        "glfwTerminate",              "()V",                              org_mini_glfw_Glfw_glfwTerminate},
-        {"org/mini/glfw/Glfw",        "glfwWindowHint",             "(II)V",                            org_mini_glfw_Glfw_glfwWindowHint},
-        {"org/mini/glfw/Glfw",        "glfwPollEvents",             "()V",                              org_mini_glfw_Glfw_glfwPollEvents},
-        {"org/mini/glfw/Glfw",        "glfwSetWindowShouldClose",   "(JI)V",                            org_mini_glfw_Glfw_glfwSetWindowShouldClose},
-        {"org/mini/glfw/Glfw",        "glfwMakeContextCurrentJni",  "(J)V",                             org_mini_glfw_Glfw_glfwMakeContextCurrentJni},
-        {"org/mini/glfw/Glfw",        "glfwSwapInterval",           "(I)V",                             org_mini_glfw_Glfw_glfwSwapInterval},
-        {"org/mini/glfw/Glfw",        "glfwSwapBuffers",            "(J)V",                             org_mini_glfw_Glfw_glfwSwapBuffers},
-        {"org/mini/glfw/Glfw",        "glfwGetFramebufferWidth",    "(J)I",                             org_mini_glfw_Glfw_glfwGetFramebufferWidth},
-        {"org/mini/glfw/Glfw",        "glfwGetFramebufferHeight",   "(J)I",                             org_mini_glfw_Glfw_glfwGetFramebufferHeight},
-        {"org/mini/glfw/Glfw",        "glfwGetWindowWidth",         "(J)I",                             org_mini_glfw_Glfw_glfwGetWindowWidth},
-        {"org/mini/glfw/Glfw",        "glfwGetWindowHeight",        "(J)I",                             org_mini_glfw_Glfw_glfwGetWindowHeight},
-        {"org/mini/glfw/Glfw",        "glfwSetWindowAspectRatio",   "(JII)V",                           org_mini_glfw_Glfw_glfwSetWindowAspectRatio},
-        {"org/mini/glfw/Glfw",        "glfwGetClipboardString",     "(J)Ljava/lang/String;",            org_mini_glfw_Glfw_glfwGetClipboardString},
-        {"org/mini/glfw/Glfw",        "glfwSetClipboardString",     "(JLjava/lang/String;)V",           org_mini_glfw_Glfw_glfwSetClipboardString},
-        {"org/mini/glfw/Glfw",        "glfwSetWindowTitle",         "(JLjava/lang/String;)V",           org_mini_glfw_Glfw_glfwSetWindowTitle},
+        {"org/mini/nanovg/Gutil", "mat4x4_trans_rotate_scale",  "([F[F[F[F)[F",                     org_mini_glfw_utils_Gutil_mat4x4_trans_rotate_scale},
+        {"org/mini/glfw/Glfw",    "glfwGetTime",                "()D",                              org_mini_glfw_Glfw_glfwGetTime},
+        {"org/mini/glfw/Glfw",    "glfwSetTime",                "(D)V",                             org_mini_glfw_Glfw_glfwSetTime},
+        {"org/mini/glfw/Glfw",    "glfwCreateWindow",           "(II[BJJ)J",                        org_mini_glfw_Glfw_glfwCreateWindow},
+        {"org/mini/glfw/Glfw",    "glfwDestroyWindow",          "(J)V",                             org_mini_glfw_Glfw_glfwDestroyWindow},
+        {"org/mini/glfw/Glfw",    "glfwWindowShouldClose",      "(J)Z",                             org_mini_glfw_Glfw_glfwWindowShouldClose},
+        {"org/mini/glfw/Glfw",    "glfwSetCallback",            "(JLorg/mini/glfw/GlfwCallback;)V", org_mini_glfw_Glfw_glfwSetCallback},
+        {"org/mini/glfw/Glfw",    "glfwInitJni",                "()Z",                              org_mini_glfw_Glfw_glfwInitJni},
+        {"org/mini/glfw/Glfw",    "glfwTerminate",              "()V",                              org_mini_glfw_Glfw_glfwTerminate},
+        {"org/mini/glfw/Glfw",    "glfwWindowHint",             "(II)V",                            org_mini_glfw_Glfw_glfwWindowHint},
+        {"org/mini/glfw/Glfw",    "glfwPollEvents",             "()V",                              org_mini_glfw_Glfw_glfwPollEvents},
+        {"org/mini/glfw/Glfw",    "glfwSetWindowShouldClose",   "(JI)V",                            org_mini_glfw_Glfw_glfwSetWindowShouldClose},
+        {"org/mini/glfw/Glfw",    "glfwMakeContextCurrentJni",  "(J)V",                             org_mini_glfw_Glfw_glfwMakeContextCurrentJni},
+        {"org/mini/glfw/Glfw",    "glfwSwapInterval",           "(I)V",                             org_mini_glfw_Glfw_glfwSwapInterval},
+        {"org/mini/glfw/Glfw",    "glfwSwapBuffers",            "(J)V",                             org_mini_glfw_Glfw_glfwSwapBuffers},
+        {"org/mini/glfw/Glfw",    "glfwGetFramebufferWidth",    "(J)I",                             org_mini_glfw_Glfw_glfwGetFramebufferWidth},
+        {"org/mini/glfw/Glfw",    "glfwGetFramebufferHeight",   "(J)I",                             org_mini_glfw_Glfw_glfwGetFramebufferHeight},
+        {"org/mini/glfw/Glfw",    "glfwGetWindowWidth",         "(J)I",                             org_mini_glfw_Glfw_glfwGetWindowWidth},
+        {"org/mini/glfw/Glfw",    "glfwGetWindowHeight",        "(J)I",                             org_mini_glfw_Glfw_glfwGetWindowHeight},
+        {"org/mini/glfw/Glfw",    "glfwSetWindowAspectRatio",   "(JII)V",                           org_mini_glfw_Glfw_glfwSetWindowAspectRatio},
+        {"org/mini/glfw/Glfw",    "glfwGetClipboardString",     "(J)Ljava/lang/String;",            org_mini_glfw_Glfw_glfwGetClipboardString},
+        {"org/mini/glfw/Glfw",    "glfwSetClipboardString",     "(JLjava/lang/String;)V",           org_mini_glfw_Glfw_glfwSetClipboardString},
+        {"org/mini/glfw/Glfw",    "glfwSetWindowTitle",         "(JLjava/lang/String;)V",           org_mini_glfw_Glfw_glfwSetWindowTitle},
 
 };
 

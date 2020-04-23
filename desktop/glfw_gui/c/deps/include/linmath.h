@@ -37,7 +37,7 @@ static inline float vec##n##_mul_inner(vec##n const a, vec##n const b) \
 } \
 static inline float vec##n##_len(vec##n const v) \
 { \
-	return (float) sqrt(vec##n##_mul_inner(v,v)); \
+	return (float) sqrtf(vec##n##_mul_inner(v,v)); \
 } \
 static inline void vec##n##_norm(vec##n r, vec##n const v) \
 { \
@@ -78,6 +78,26 @@ static inline void vec4_reflect(vec4 r, vec4 v, vec4 n)
 	int i;
 	for(i=0;i<4;++i)
 		r[i] = v[i] - p*n[i];
+}
+
+static inline void vec4_slerp(vec4 r, vec4 a, vec4 b, float alpha) {
+    float cosom = a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
+    float absCosom = fabsf(cosom);
+    float scale0, scale1;
+    if (1.0f - absCosom > 1E-6f) {
+        float sinSqr = 1.0f - absCosom * absCosom;
+        float sinom = (float) (1.0 / sqrtf(sinSqr));
+        float omega = (float) atan2f(sinSqr * sinom, absCosom);
+        scale0 = (float) (sinf((1.0 - alpha) * omega) * sinom);
+        scale1 = (float) (sinf(alpha * omega) * sinom);
+    } else {
+        scale0 = 1.0f - alpha;
+        scale1 = alpha;
+    }
+    scale1 = cosom >= 0.0f ? scale1 : -scale1;
+    int i;
+    for (i = 0; i < 4; ++i)
+        r[i] = scale0 * a[i] + scale1 * b[i];
 }
 
 typedef vec4 mat4x4[4];
@@ -541,6 +561,38 @@ static inline void mat4x4o_mul_quat(mat4x4 R, mat4x4 M, quat q)
 	R[3][0] = R[3][1] = R[3][2] = 0.f;
 	R[3][3] = 1.f;
 }
+
+static inline void mat4x4_trans_rotate_scale(mat4x4 R, vec3 t, vec4 q, vec3 s) {
+    float dqx = q[0] + q[0];
+    float dqy = q[1] + q[1];
+    float dqz = q[2] + q[2];
+    float q00 = dqx * q[0];
+    float q11 = dqy * q[1];
+    float q22 = dqz * q[2];
+    float q01 = dqx * q[1];
+    float q02 = dqx * q[2];
+    float q03 = dqx * q[3];
+    float q12 = dqy * q[2];
+    float q13 = dqy * q[3];
+    float q23 = dqz * q[3];
+    R[0][0] = (s[0] - (q11 + q22) * s[0]);
+    R[0][1] = ((q01 + q23) * s[0]);
+    R[0][2] = ((q02 - q13) * s[0]);
+    R[0][3] = (0.0f);
+    R[1][0] = ((q01 - q23) * s[1]);
+    R[1][1] = (s[1] - (q22 + q00) * s[1]);
+    R[1][2] = ((q12 + q03) * s[1]);
+    R[1][3] = (0.0f);
+    R[2][0] = ((q02 + q13) * s[2]);
+    R[2][1] = ((q12 - q03) * s[2]);
+    R[2][2] = (s[2] - (q11 + q00) * s[2]);
+    R[2][3] = (0.0f);
+    R[3][0] = (t[0]);
+    R[3][1] = (t[1]);
+    R[3][2] = (t[2]);
+    R[3][3] = (1.0f);
+}
+
 static inline void quat_from_mat4x4(quat q, mat4x4 M)
 {
 	float r=0.f;

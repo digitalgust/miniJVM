@@ -57,6 +57,10 @@ public class Gutil {
     //vec3, vec4
     static public native float[] vec_reflect(float[] result, float[] vec1, float[] vec2);
 
+    static public native float[] vec4_slerp(float[] result, float[] vec1, float[] vec2, float alpha);
+
+    static public native float[] vec4_from_mat4x4(float[] vec4_result, float[] mat4x4);
+
     static public native float[] mat4x4_identity(float[] m1);
 
     static public native float[] mat4x4_dup(float[] r, float[] m1);
@@ -104,6 +108,8 @@ public class Gutil {
     static public native float[] mat4x4_perspective(float[] rm, float y_fov, float aspect, float near, float far);
 
     static public native float[] mat4x4_look_at(float[] rm, float[] vec3_eye, float[] vec3_center, float[] vec3_up);
+
+    static public native float[] mat4x4_trans_rotate_scale(float[] rm, float[] vec3_trans, float[] vec4_rotate, float[] vec3_scale);
 
     static public void printMat4(float[] mat4) {
         for (int i = 0; i < 4; i++) {

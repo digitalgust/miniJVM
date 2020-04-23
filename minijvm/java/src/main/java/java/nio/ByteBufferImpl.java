@@ -216,11 +216,16 @@ class ByteBufferImpl extends ByteBuffer {
     }
 
     public double getDouble(int position) {
-        return Double.longBitsToDouble(getLong(position));
+        checkGet(position, 8, true);
+
+        return RefNative.heap_get_double(address, baseOffset + position);
+
     }
 
     public float getFloat(int position) {
-        return Float.intBitsToFloat(getInt(position));
+        checkGet(position, 4, true);
+
+        return RefNative.heap_get_float(address, baseOffset + position);
     }
 
     public long getLong(int position) {
@@ -248,11 +253,19 @@ class ByteBufferImpl extends ByteBuffer {
     }
 
     public double getDouble() {
-        return Double.longBitsToDouble(getLong());
+        checkGet(position, 8, false);
+
+        double r = RefNative.heap_get_double(address, baseOffset + position);
+        position += 8;
+        return r;
     }
 
     public float getFloat() {
-        return Float.intBitsToFloat(getInt());
+        checkGet(position, 4, false);
+
+        float r = RefNative.heap_get_float(address, baseOffset + position);
+        position += 4;
+        return r;
     }
 
     public long getLong() {
