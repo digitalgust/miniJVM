@@ -137,10 +137,9 @@ public class GMenu extends GPanel {
 
         nvgTextMetrics(vg, null, null, lineh);
 
-        int i = 0;
-        for (Iterator it = elements.iterator(); it.hasNext(); ) {
+        for (int i = 0, imax = elements.size(); i < imax; i++) {
             //畫竖线
-            GMenuItem item = (GMenuItem) it.next();
+            GMenuItem item = (GMenuItem) elements.get(i);
             float dx = item.getX();
             float dy = item.getY();
             if (i > 0) {
@@ -149,7 +148,6 @@ public class GMenu extends GPanel {
                 nvgRect(vg, dx - 1, dy + 2, 2, h - 4);
                 nvgFill(vg);
             }
-            i++;
         }
 
         super.update(vg);

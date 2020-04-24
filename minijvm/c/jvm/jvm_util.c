@@ -1069,7 +1069,10 @@ Instance *instance_create(Runtime *runtime, JClass *clazz) {
     ins->mb.clazz = clazz;
 
     ins->obj_fields = (c8 *) (&ins[1]);//jvm_calloc(clazz->field_instance_len);
-
+//    jvm_printf("%s\n", utf8_cstr(clazz->name));
+//    if (utf8_equals_c(clazz->name, "java/lang/String")) {
+//        s32 debug = 1;
+//    }
     gc_refer_reg(runtime, ins);
     return ins;
 }

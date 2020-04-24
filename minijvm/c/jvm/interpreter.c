@@ -3777,9 +3777,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 ret = RUNTIME_STATUS_EXCEPTION;
                                 goto label_exception_handle;
                             } else {
-                                c8 *ptr = getInstanceFieldPtrByOffset(ins, offset);
+                                c8 *ptr = &(ins->obj_fields[offset]);
 
-                                push_ref(stack, getFieldRefer(ptr));
+                                push_ref(stack, *((__refer *) ptr));
                                 ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                                 invoke_deepth(runtime);
@@ -3798,9 +3798,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 ret = RUNTIME_STATUS_EXCEPTION;
                                 goto label_exception_handle;
                             } else {
-                                c8 *ptr = getInstanceFieldPtrByOffset(ins, offset);
+                                c8 *ptr = &(ins->obj_fields[offset]);
 
-                                push_long(stack, getFieldLong(ptr));
+                                push_long(stack, *((s64 *) ptr));
                                 ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                                 invoke_deepth(runtime);
@@ -3819,9 +3819,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 ret = RUNTIME_STATUS_EXCEPTION;
                                 goto label_exception_handle;
                             } else {
-                                c8 *ptr = getInstanceFieldPtrByOffset(ins, offset);
+                                c8 *ptr = &(ins->obj_fields[offset]);
 
-                                push_int(stack, getFieldInt(ptr));
+                                push_int(stack, *((s32 *) ptr));
                                 ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                                 invoke_deepth(runtime);
@@ -3840,9 +3840,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 ret = RUNTIME_STATUS_EXCEPTION;
                                 goto label_exception_handle;
                             } else {
-                                c8 *ptr = getInstanceFieldPtrByOffset(ins, offset);
+                                c8 *ptr = &(ins->obj_fields[offset]);
 
-                                push_int(stack, getFieldShort(ptr));
+                                push_int(stack, *((s16 *) ptr));
                                 ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                                 invoke_deepth(runtime);
@@ -3861,9 +3861,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 ret = RUNTIME_STATUS_EXCEPTION;
                                 goto label_exception_handle;
                             } else {
-                                c8 *ptr = getInstanceFieldPtrByOffset(ins, offset);
+                                c8 *ptr = &(ins->obj_fields[offset]);
 
-                                push_int(stack, getFieldChar(ptr));
+                                push_int(stack, *((u16 *) ptr));
                                 ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                                 invoke_deepth(runtime);
@@ -3882,9 +3882,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 ret = RUNTIME_STATUS_EXCEPTION;
                                 goto label_exception_handle;
                             } else {
-                                c8 *ptr = getInstanceFieldPtrByOffset(ins, offset);
+                                c8 *ptr = &(ins->obj_fields[offset]);
 
-                                push_int(stack, getFieldByte(ptr));
+                                push_int(stack, *((s8 *) ptr));
                                 ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                                 invoke_deepth(runtime);
@@ -3897,7 +3897,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_putfield_ref: {
                             u16 offset = *((u16 *) (ip + 1));
-                            __refer ref = pop_ref(stack);
+                            __refer v = pop_ref(stack);
                             Instance *ins = (Instance *) pop_ref(stack);
                             if (!ins) {
                                 _null_throw_exception(stack, runtime);
@@ -3905,8 +3905,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 goto label_exception_handle;
                             } else {
                                 // check variable type to determain long/s32/f64/f32
-                                c8 *ptr = getInstanceFieldPtrByOffset(ins, offset);
-                                setFieldRefer(ptr, ref);
+                                c8 *ptr = &(ins->obj_fields[offset]);
+                                *((__refer *) ptr) = v;
                                 ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                                 invoke_deepth(runtime);
@@ -3926,8 +3926,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 ret = RUNTIME_STATUS_EXCEPTION;
                                 goto label_exception_handle;
                             } else {
-                                c8 *ptr = getInstanceFieldPtrByOffset(ins, offset);
-                                setFieldLong(ptr, v);
+                                c8 *ptr = &(ins->obj_fields[offset]);
+                                *((s64 *) ptr) = v;
                                 ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                                 invoke_deepth(runtime);
@@ -3947,8 +3947,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 ret = RUNTIME_STATUS_EXCEPTION;
                                 goto label_exception_handle;
                             } else {
-                                c8 *ptr = getInstanceFieldPtrByOffset(ins, offset);
-                                setFieldInt(ptr, v);
+                                c8 *ptr = &(ins->obj_fields[offset]);
+                                *((s32 *) ptr) = v;
                                 ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                                 invoke_deepth(runtime);
@@ -3968,8 +3968,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 ret = RUNTIME_STATUS_EXCEPTION;
                                 goto label_exception_handle;
                             } else {
-                                c8 *ptr = getInstanceFieldPtrByOffset(ins, offset);
-                                setFieldShort(ptr, (s16) v);
+                                c8 *ptr = &(ins->obj_fields[offset]);
+                                *((s16 *) ptr) = (s16) v;
                                 ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                                 invoke_deepth(runtime);
@@ -3989,8 +3989,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 ret = RUNTIME_STATUS_EXCEPTION;
                                 goto label_exception_handle;
                             } else {
-                                c8 *ptr = getInstanceFieldPtrByOffset(ins, offset);
-                                setFieldByte(ptr, (s8) v);
+                                c8 *ptr = &(ins->obj_fields[offset]);
+                                *((s8 *) ptr) = (s8) v;
                                 ip += 3;
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                                 invoke_deepth(runtime);

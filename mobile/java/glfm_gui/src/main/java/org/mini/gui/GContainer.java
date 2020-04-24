@@ -254,7 +254,8 @@ abstract public class GContainer extends GObject {
                 //更新所有UI组件
                 menus.clear();
                 fronts.clear();
-                for (GObject nko : elements) {
+                for (int i = 0, imax = elements.size(); i < imax; i++) {
+                    GObject nko = elements.get(i);
                     if (nko == focus) {
                         continue;
                     }
@@ -281,12 +282,14 @@ abstract public class GContainer extends GObject {
 
                     }
                 }
-                for (GObject m : fronts) {
+                for (int i = 0, imax = fronts.size(); i < imax; i++) {
+                    GObject m = fronts.get(i);
                     elements.remove(m);
                     elements.add(m);
                     drawObj(ctx, m);
                 }
-                for (GMenu m : menus) {
+                for (int i = 0, imax = menus.size(); i < imax; i++) {
+                    GMenu m = menus.get(i);
                     elements.remove(m);
                     elements.add(m);
                     drawObj(ctx, m);

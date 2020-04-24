@@ -44,7 +44,8 @@ public class GCmdHandler {
 
     public void process(GForm form) {
         synchronized (cmds) {
-            for (GCmd cmd : cmds) {
+            for (int i = 0, imax = cmds.size(); i < imax; i++) {
+                GCmd cmd = cmds.get(i);
                 try {
                     switch (cmd.cmdId) {
                         case GCmd.GCMD_DESTORY_TEXTURE: {
