@@ -922,7 +922,6 @@ struct _MethodInfo {
     s16 para_slots;
     s16 para_count_with_this;
     s16 return_slots;
-    s16 na_1;
     //
     u16 access_flags;
     u16 name_index;
@@ -932,7 +931,8 @@ struct _MethodInfo {
     u8 is_native;
     u8 is_sync;
     u8 is_static;
-    u8 na_2;
+    u8 is_getter;
+    u8 is_setter;
 };
 //============================================
 

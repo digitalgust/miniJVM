@@ -116,6 +116,10 @@ static inline c8 *getInstanceFieldPtr(Instance *ins, FieldInfo *fi) {
     return &(ins->obj_fields[fi->offset_instance]);
 }
 
+static inline c8 *getInstanceFieldPtrByOffset(Instance *ins, u16 offset) {
+    return &(ins->obj_fields[offset]);
+}
+
 static inline c8 *getStaticFieldPtr(FieldInfo *fi) {
     return &(fi->_this_class->field_static[fi->offset]);
 }
