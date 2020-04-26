@@ -407,7 +407,7 @@ int org_mini_glfw_utils_Gutil_vec4_from_mat4x4(Runtime *runtime, JClass *clazz) 
     Instance *aa = env->localvar_getRefer(runtime->localvar, pos++);
     GLfloat *r = (GLfloat *) ra->arr_body;
     GLfloat *a = (GLfloat *) aa->arr_body;
-    quat_from_mat4x4(r, a);
+    quat_from_mat4x4(r, (vec4 *)a);
     env->push_ref(runtime->stack, ra);
     return 0;
 }

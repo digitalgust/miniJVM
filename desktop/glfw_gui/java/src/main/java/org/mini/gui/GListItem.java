@@ -25,10 +25,6 @@ public class GListItem extends GObject {
         setColor(GToolkit.getStyle().getTextFontColor());
     }
 
-    @Override
-    public int getType() {
-        return TYPE_LISTITEM;
-    }
 
     /**
      * @return the img
@@ -103,7 +99,7 @@ public class GListItem extends GObject {
     }
 
     @Override
-    public boolean update(long vg) {
+    public boolean paint(long vg) {
         float x = getX();
         float y = getY();
         float w = getW();

@@ -603,7 +603,7 @@ public class GToolkit {
             }
 
             @Override
-            public boolean update(long vg) {
+            public boolean paint(long vg) {
                 float w = getW();
                 float h = getH();
 
@@ -681,11 +681,11 @@ public class GToolkit {
         }
 
         @Override
-        public boolean update(long vg) {
+        public boolean paint(long vg) {
             if (text != null && text.getParent().getForm() == null) {
                 dispose();
             }
-            return super.update(vg);
+            return super.paint(vg);
         }
 
 

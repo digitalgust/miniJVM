@@ -35,10 +35,10 @@ public class XPanel extends XContainer {
         if (panel == null) {
             panel = new GPanel(x, y, width, height)
 //            {
-//                public boolean update(long vg) {
+//                public boolean paint(long vg) {
 //                    Nanovg.nvgScissor(vg, getX(), getY(), width, height);
 //                    GToolkit.drawRect(vg, getX(), getY(), width, height, new float[]{random.nextFloat(), random.nextFloat(), 0.2f, 0.5f});
-//                    super.update(vg);
+//                    super.paint(vg);
 //                    return true;
 //                }
 //            }

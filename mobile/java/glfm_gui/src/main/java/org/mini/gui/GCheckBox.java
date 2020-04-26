@@ -47,9 +47,6 @@ public class GCheckBox extends GObject {
         setSize(width, height);
     }
 
-    public int getType() {
-        return TYPE_CHECKBOX;
-    }
 
     public void setText(String text) {
         this.text = text;
@@ -87,7 +84,7 @@ public class GCheckBox extends GObject {
      * @return
      */
     @Override
-    public boolean update(long vg) {
+    public boolean paint(long vg) {
         float x = getX();
         float y = getY();
         float w = getW();

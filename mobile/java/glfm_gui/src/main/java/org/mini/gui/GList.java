@@ -121,10 +121,6 @@ public class GList extends GContainer implements GFocusChangeListener {
         return popView.getElementsImpl();
     }
 
-    @Override
-    public int getType() {
-        return TYPE_LIST;
-    }
 
     @Override
     public float getInnerX() {
@@ -458,7 +454,7 @@ public class GList extends GContainer implements GFocusChangeListener {
      * @return
      */
     @Override
-    public boolean update(long vg) {
+    public boolean paint(long vg) {
 
         //int itemcount = popView.elements.size();
         nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
@@ -467,7 +463,7 @@ public class GList extends GContainer implements GFocusChangeListener {
 
         nvgTextMetrics(vg, null, null, lineh);
 
-        return super.update(vg);
+        return super.paint(vg);
     }
 
     /**
@@ -501,7 +497,7 @@ public class GList extends GContainer implements GFocusChangeListener {
 
 
         @Override
-        public boolean update(long vg) {
+        public boolean paint(long vg) {
             drawNormal(vg, normalPanel.getX(), normalPanel.getY(), normalPanel.getW(), normalPanel.getH());
             return true;
         }
@@ -543,7 +539,7 @@ public class GList extends GContainer implements GFocusChangeListener {
     protected GViewPort popView = new GViewPort() {
 
         @Override
-        public boolean update(long vg) {
+        public boolean paint(long vg) {
             float x = getX();
             float y = getY();
             float w = getW();
@@ -551,7 +547,7 @@ public class GList extends GContainer implements GFocusChangeListener {
 
             GToolkit.drawRect(vg, x, y, w, h, GList.this.getBgColor());
 
-            super.update(vg);
+            super.paint(vg);
 
 //            // Hide fades
 //            byte[] fadePaint;
@@ -574,10 +570,6 @@ public class GList extends GContainer implements GFocusChangeListener {
 
     class GListPopWindow extends GPanel {
 
-        @Override
-        public int getType() {
-            return TYPE_UNKNOW;
-        }
 
         @Override
         public void setSize(float width, float height) {

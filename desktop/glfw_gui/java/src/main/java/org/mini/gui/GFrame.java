@@ -85,10 +85,6 @@ public class GFrame extends GContainer {
         super.setSize(w, h);
     }
 
-    @Override
-    public int getType() {
-        return TYPE_FRAME;
-    }
 
     @Override
     public float getInnerX() {
@@ -203,13 +199,13 @@ public class GFrame extends GContainer {
     }
 
     @Override
-    public boolean update(long vg) {
+    public boolean paint(long vg) {
         float x = getX();
         float y = getY();
         float w = getW();
         float h = getH();
         drawWindow(vg, title, x, y, w, h);
-        super.update(vg);
+        super.paint(vg);
         return true;
     }
 

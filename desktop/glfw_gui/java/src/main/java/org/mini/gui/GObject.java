@@ -17,26 +17,6 @@ import static org.mini.gui.GToolkit.nvgRGBA;
  */
 abstract public class GObject {
 
-    public static final int TYPE_UNKNOW = -1;
-    public static final int TYPE_BUTTON = 0;
-    public static final int TYPE_CANVAS = 1;
-    public static final int TYPE_CHECKBOX = 3;
-    public static final int TYPE_COLORSELECTOR = 4;
-    public static final int TYPE_FORM = 5;
-    public static final int TYPE_FRAME = 6;
-    public static final int TYPE_LABEL = 7;
-    public static final int TYPE_LIST = 8;
-    public static final int TYPE_LISTITEM = 9;
-    public static final int TYPE_MENU = 10;
-    public static final int TYPE_MENUITEM = 11;
-    public static final int TYPE_PANEL = 12;
-    public static final int TYPE_SCROLLBAR = 13;
-    public static final int TYPE_TEXTBOX = 14;
-    public static final int TYPE_TEXTFIELD = 15;
-    public static final int TYPE_VIEWPORT = 16;
-    public static final int TYPE_IMAGEITEM = 17;
-    public static final int TYPE_EDITMENU = 18;
-
     //
     public static final int ALIGN_H_FULL = 1;
     public static final int ALIGN_V_FULL = 2;
@@ -89,7 +69,6 @@ abstract public class GObject {
     public void destroy() {
     }
 
-    public abstract int getType();
 
     static synchronized public void flush() {
         flush = 3;
@@ -120,7 +99,7 @@ abstract public class GObject {
         return null;
     }
 
-    public boolean update(long ctx) {
+    public boolean paint(long ctx) {
         return true;
     }
 
@@ -423,5 +402,13 @@ abstract public class GObject {
 
     public String toString() {
         return super.toString() + "(" + boundle[LEFT] + "," + boundle[TOP] + "," + boundle[WIDTH] + "," + boundle[HEIGHT] + ")";
+    }
+
+    public void setText(String text) {
+
+    }
+
+    public String getText() {
+        return "";
     }
 }

@@ -67,9 +67,6 @@ public class GTextBox extends GTextObject {
         setFocusListener(this);
     }
 
-    public int getType() {
-        return TYPE_TEXTBOX;
-    }
 
     boolean isInArea(short[] bound, float x, float y) {
         return x >= bound[LEFT] && x <= bound[LEFT] + bound[WIDTH]
@@ -639,7 +636,7 @@ public class GTextBox extends GTextObject {
      * @return
      */
     @Override
-    public boolean update(long vg) {
+    public boolean paint(long vg) {
         float x = getX();
         float y = getY();
         float w = getW();
@@ -662,7 +659,7 @@ public class GTextBox extends GTextObject {
         float dx = text_area[LEFT];
         float dy = text_area[TOP];
 
-        //sometime the field text_arr and area_detail may set as null by other thread when update 
+        //sometime the field text_arr and area_detail may set as null by other thread when paint
         byte[] local_arr = this.text_arr;
         short[][] local_detail = this.area_detail;
 

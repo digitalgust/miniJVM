@@ -358,8 +358,8 @@ public class AppManager extends GApplication {
                         img = GImage.createImage(iconBytes);
                     }
                     GListItem item = new GListItem(img, appName) {
-                        public boolean update(long vg) {
-                            super.update(vg);
+                        public boolean paint(long vg) {
+                            super.paint(vg);
                             if (getLabel() != null && getLabel().equals(AppLoader.getBootApp())) {
                                 GToolkit.drawRedPoint(vg, "v", getX() + getW() - 20, getY() + getH() * .5f, 10);
                             }

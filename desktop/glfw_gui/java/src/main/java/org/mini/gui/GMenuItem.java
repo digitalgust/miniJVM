@@ -34,10 +34,6 @@ public class GMenuItem extends GObject {
 
     }
 
-    public int getType() {
-        return TYPE_MENUITEM;
-    }
-
     boolean isSelected() {
         if (parent instanceof GMenu) {
             GMenu menu = (GMenu) parent;
@@ -89,7 +85,7 @@ public class GMenuItem extends GObject {
 
     }
 
-    public boolean update(long vg) {
+    public boolean paint(long vg) {
 
         float cornerRadius = 4.0f;
         nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());

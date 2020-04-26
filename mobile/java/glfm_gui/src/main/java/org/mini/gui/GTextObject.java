@@ -17,10 +17,6 @@ import static org.mini.nanovg.Gutil.toUtf8;
  */
 public abstract class GTextObject extends GObject implements GFocusChangeListener {
     static GObject defaultUnionObj = new GObject() {
-        @Override
-        public int getType() {
-            return -1;
-        }
     };
 
     protected String hint;

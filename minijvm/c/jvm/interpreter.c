@@ -556,12 +556,12 @@ static inline int _optimize_putfield(u8 *ip, JClass *clazz, s32 idx, Runtime *ru
 }
 
 
-static inline int _optimize_inline_getter(JClass *clazz, s32 idx, Runtime *runtime) {
+static inline int _optimize_inline_getter(JClass *clazz, s32 cmrIdx, Runtime *runtime) {
 
     RuntimeStack *stack = runtime->stack;
-    FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+    FieldInfo *fi = class_get_constant_fieldref(clazz, cmrIdx)->fieldInfo;
     if (!fi) {
-        ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
+        ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, cmrIdx);
         fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
         cfr->fieldInfo = fi;
         if (!fi) {
@@ -611,12 +611,12 @@ static inline int _optimize_inline_getter(JClass *clazz, s32 idx, Runtime *runti
     return RUNTIME_STATUS_NORMAL;
 }
 
-static inline int _optimize_inline_setter(JClass *clazz, s32 idx, Runtime *runtime) {
+static inline int _optimize_inline_setter(JClass *clazz, s32 cmrIdx, Runtime *runtime) {
 
     RuntimeStack *stack = runtime->stack;
-    FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+    FieldInfo *fi = class_get_constant_fieldref(clazz, cmrIdx)->fieldInfo;
     if (!fi) {
-        ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
+        ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, cmrIdx);
         fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
         cfr->fieldInfo = fi;
         if (!fi) {

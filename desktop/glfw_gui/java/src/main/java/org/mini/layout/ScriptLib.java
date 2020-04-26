@@ -139,11 +139,7 @@ public class ScriptLib extends Lib {
                 xo.setText(text);
                 GObject go = xo.getGui();
                 if (go != null) {
-                    if (go.getType() == GObject.TYPE_BUTTON) ((GButton) go).setText(text);
-                    if (go.getType() == GObject.TYPE_LABEL) ((GLabel) go).setText(text);
-                    if (go.getType() == GObject.TYPE_TEXTFIELD) ((GTextField) go).setText(text);
-                    if (go.getType() == GObject.TYPE_TEXTBOX) ((GTextBox) go).setText(text);
-                    if (go.getType() == GObject.TYPE_CHECKBOX) ((GCheckBox) go).setText(text);
+                    go.setText(text);
                 }
             }
         }
@@ -158,11 +154,7 @@ public class ScriptLib extends Lib {
             if (xo != null) {
                 GObject go = xo.getGui();
                 if (go != null) {
-                    if (go.getType() == GObject.TYPE_BUTTON) text = ((GButton) go).getText();
-                    if (go.getType() == GObject.TYPE_LABEL) text = ((GLabel) go).getText();
-                    if (go.getType() == GObject.TYPE_TEXTFIELD) text = ((GTextField) go).getText();
-                    if (go.getType() == GObject.TYPE_TEXTBOX) text = ((GTextBox) go).getText();
-                    if (go.getType() == GObject.TYPE_CHECKBOX) text = ((GCheckBox) go).getText();
+                    text = go.getText();
                 }
             }
         }

@@ -23,10 +23,6 @@ public class GPanel extends GContainer {
         setSize(width, height);
     }
 
-    @Override
-    public int getType() {
-        return TYPE_PANEL;
-    }
 
     @Override
     public float getInnerX() {

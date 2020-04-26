@@ -39,9 +39,6 @@ public class GMenu extends GPanel {
         setSize(width, height);
     }
 
-    public int getType() {
-        return TYPE_MENU;
-    }
 
     @Override
     public void setLocation(float x, float y) {
@@ -102,7 +99,7 @@ public class GMenu extends GPanel {
      * @param vg
      * @return
      */
-    public boolean update(long vg) {
+    public boolean paint(long vg) {
         float x = getX();
         float y = getY();
         float w = getW();
@@ -150,7 +147,7 @@ public class GMenu extends GPanel {
             }
         }
 
-        super.update(vg);
+        super.paint(vg);
         return true;
     }
 

@@ -51,13 +51,13 @@ abstract public class GOpenGLPanel extends GPanel {
         return inited;
     }
 
-    public boolean update(long vg) {
+    public boolean paint(long vg) {
         GForm.addCmd(cmd);
         if (glRendereredImg != null) {
             GToolkit.drawImage(vg, glRendereredImg, getX(), getY(), getW(), getH(), false, 1.f);
         }
         GObject.flush();
 
-        return super.update(vg);
+        return super.paint(vg);
     }
 }

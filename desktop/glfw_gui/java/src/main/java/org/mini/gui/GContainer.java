@@ -248,7 +248,7 @@ abstract public class GContainer extends GObject {
     }
 
     @Override
-    public boolean update(long ctx) {
+    public boolean paint(long ctx) {
         try {
             synchronized (elements) {
                 //更新所有UI组件
@@ -259,7 +259,7 @@ abstract public class GContainer extends GObject {
                     if (nko == focus) {
                         continue;
                     }
-                    if (nko.getType() == TYPE_MENU) {
+                    if (nko instanceof GMenu) {
                         menus.add((GMenu) nko);
                         continue;
                     }
@@ -276,7 +276,7 @@ abstract public class GContainer extends GObject {
                     drawObj(ctx, focus);
 
                     //frame re sort
-                    if (getType() == TYPE_FORM) {
+                    if (this instanceof GForm) {
                         elements.remove(focus);
                         elements.add(focus);
 
@@ -329,7 +329,7 @@ abstract public class GContainer extends GObject {
         } else {
             Nanovg.nvgIntersectScissor(ctx, vx, vy, vw, vh);
 
-            nko.update(ctx);
+            nko.paint(ctx);
 
 //            if (focus == nko) {
 //                Nanovg.nvgScissor(ctx, x, y, w, h);

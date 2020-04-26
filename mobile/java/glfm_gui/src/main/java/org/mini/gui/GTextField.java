@@ -54,9 +54,6 @@ public class GTextField extends GTextObject {
         setFocusListener(this);
     }
 
-    public int getType() {
-        return TYPE_TEXTFIELD;
-    }
 
     @Override
     void onSetText(String text) {
@@ -303,7 +300,7 @@ public class GTextField extends GTextObject {
      * @return
      */
     @Override
-    public boolean update(long vg) {
+    public boolean paint(long vg) {
         float x = getX();
         float y = getY();
         float w = getW();

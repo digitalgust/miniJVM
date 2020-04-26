@@ -53,9 +53,6 @@ public class GButton extends GObject {
         setFontSize(GToolkit.getStyle().getTextFontSize());
     }
 
-    public int getType() {
-        return TYPE_BUTTON;
-    }
 
     public void setText(String text) {
         this.text = text;
@@ -109,7 +106,7 @@ public class GButton extends GObject {
      * @param vg
      * @return
      */
-    public boolean update(long vg) {
+    public boolean paint(long vg) {
         float x = getX();
         float y = getY();
         float w = getW();

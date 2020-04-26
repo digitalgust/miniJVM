@@ -78,9 +78,6 @@ public class GScrollBar extends GObject {
         }
     }
 
-    public int getType() {
-        return TYPE_SCROLLBAR;
-    }
 
     public float getPos() {
         return pos;
@@ -167,7 +164,7 @@ public class GScrollBar extends GObject {
      * @param vg
      * @return
      */
-    public boolean update(long vg) {
+    public boolean paint(long vg) {
         float x = getX() + line_boundle[LEFT];
         float y = getY() + line_boundle[TOP];
         float w = line_boundle[WIDTH];

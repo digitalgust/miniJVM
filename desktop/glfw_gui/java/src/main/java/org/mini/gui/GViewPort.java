@@ -20,10 +20,6 @@ public class GViewPort extends GContainer {
     protected float scrollx;
     protected float scrolly;
 
-    @Override
-    public int getType() {
-        return TYPE_VIEWPORT;
-    }
 
     @Override
     public void setLocation(float x, float y) {

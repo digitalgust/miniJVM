@@ -28,18 +28,15 @@ public class GCanvas extends GPanel {
         setSize(w, h);
     }
 
-    public int getType() {
-        return TYPE_CANVAS;
-    }
 
-    public boolean update(long vg) {
+    public boolean paint(long vg) {
         if (g == null) {
             g = new GGraphics(this, vg);
         }
         nvgFontSize(vg, g.getFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
         paint(g);
-        super.update(vg);
+        super.paint(vg);
         return true;
     }
 

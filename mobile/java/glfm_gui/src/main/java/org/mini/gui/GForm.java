@@ -63,9 +63,6 @@ public class GForm extends GViewPort {
         setSize(winWidth, winHeight);
     }
 
-    public int getType() {
-        return TYPE_FORM;
-    }
 
     public GCallBack getCallBack() {
         return this.callback;
@@ -122,7 +119,7 @@ public class GForm extends GViewPort {
             Nanovg.nvgReset(vg);
             Nanovg.nvgResetScissor(vg);
             Nanovg.nvgScissor(vg, 0, 0, winWidth, winHeight);
-            update(vg);
+            paint(vg);
             cmdHandler.update(this);
             nvgEndFrame(vg);
 

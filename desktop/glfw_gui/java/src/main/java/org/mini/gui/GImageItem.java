@@ -40,12 +40,8 @@ public class GImageItem extends GObject {
         this.img = img;
     }
 
-    @Override
-    public int getType() {
-        return TYPE_IMAGEITEM;
-    }
 
-    public boolean update(long vg) {
+    public boolean paint(long vg) {
 
         float x = getX();
         float y = getY();

@@ -63,9 +63,6 @@ public class GColorSelector extends GObject {
 
     }
 
-    public int getType() {
-        return TYPE_COLORSELECTOR;
-    }
 
     @Override
     public void cursorPosEvent(int x, int y) {
@@ -132,7 +129,7 @@ public class GColorSelector extends GObject {
      * @param vg
      * @return
      */
-    public boolean update(long vg) {
+    public boolean paint(long vg) {
         float x = getX();
         float y = getY();
         float w = getW();

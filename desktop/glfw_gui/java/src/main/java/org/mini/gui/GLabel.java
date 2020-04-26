@@ -43,9 +43,6 @@ public class GLabel extends GObject {
         setFontSize(GToolkit.getStyle().getTextFontSize());
     }
 
-    public int getType() {
-        return TYPE_LABEL;
-    }
 
     public void setShowMode(int m) {
         this.showMode = m;
@@ -112,7 +109,7 @@ public class GLabel extends GObject {
      * @param vg
      * @return
      */
-    public boolean update(long vg) {
+    public boolean paint(long vg) {
         float x = getX();
         float y = getY();
         float w = getW();
