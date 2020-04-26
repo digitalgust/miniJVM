@@ -9,6 +9,7 @@ import java.util.*;
 
 /**
  * same as jackson jason
+ *
  * @param <T>
  */
 public class JsonParser<T> {
@@ -204,6 +205,7 @@ public class JsonParser<T> {
 
 
     private Object findInjectableValues(Class<?> c) {
+        if (injectableValues == null) return null;
         Object ds = injectableValues.values.get(c);
         if (ds != null) {
             return ds;
@@ -326,7 +328,7 @@ public class JsonParser<T> {
     }
 
 
-    static private JsonMap deserialMap(String s, int pos) {
+    static private JsonMap parseMap(String s, int pos) {
         if (s == null || s.charAt(0) != '{') {
             return null;
         } else {
@@ -345,7 +347,7 @@ public class JsonParser<T> {
                 //value
                 pos = getNext(s, pos, sb);
                 String value = sb.toString();
-                map.put(name, deserialImpl(value, 0));
+                map.put(name, parse(value, 0));
                 //,
                 pos = getNext(s, pos, sb);
                 if (sb.length() == 0) {
@@ -357,7 +359,7 @@ public class JsonParser<T> {
         }
     }
 
-    static private JsonList deserialList(String s, int pos) {
+    static private JsonList parseList(String s, int pos) {
         if (s == null || s.charAt(0) != '[') {
             return null;
         } else {
@@ -371,7 +373,7 @@ public class JsonParser<T> {
                     break;
                 }
                 String value = sb.toString();
-                list.add(deserialImpl(value, 0));
+                list.add(parse(value, 0));
                 //,
                 pos = getNext(s, pos, sb);
                 if (sb.length() == 0) {
@@ -398,7 +400,7 @@ public class JsonParser<T> {
      * @param s
      * @return
      */
-    static public final JsonCell deserialImpl(String s, int pos) {
+    static public final JsonCell parse(String s, int pos) {
         try {
             if (s.length() == 0) {
                 return null;
@@ -406,9 +408,9 @@ public class JsonParser<T> {
             s = s.trim();
             char ch = s.charAt(0);
             if (ch == '{') {
-                return deserialMap(s, pos);
+                return parseMap(s, pos);
             } else if (ch == '[') {
-                return deserialList(s, pos);
+                return parseList(s, pos);
             } else if (ch == '"') {
                 return new JsonString(s.substring(1, s.length() - 1));
             } else {
@@ -517,7 +519,7 @@ public class JsonParser<T> {
 
 
     public final T deserial(String s, Class clazz) {
-        JsonCell json = deserialImpl(s, 0);
+        JsonCell json = parse(s, 0);
         return (T) map2obj(json, clazz, null);
     }
 
@@ -540,7 +542,7 @@ public class JsonParser<T> {
         fis.read(fb, 0, fb.length);
         fis.close();
         String s = new String(fb, "utf-8");
-        Object obj = new JsonParser().deserialImpl(s, 0);
+        Object obj = new JsonParser().parse(s, 0);
 
 
         System.out.println(obj);
