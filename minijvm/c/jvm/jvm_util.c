@@ -923,8 +923,8 @@ s32 check_suspend_and_pause(Runtime *runtime) {
         threadInfo->is_suspend = 1;
         garbage_thread_lock();
         while (threadInfo->suspend_count) {
-            garbage_thread_notify();
-            garbage_thread_wait();
+            garbage_thread_notifyall();
+            garbage_thread_timedwait(5);
         }
         threadInfo->is_suspend = 0;
         //jvm_printf(".");
