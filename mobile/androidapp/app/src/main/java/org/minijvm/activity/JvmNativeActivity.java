@@ -1,6 +1,7 @@
 package org.minijvm.activity;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.NativeActivity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -15,13 +16,16 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
+import android.widget.MediaController;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -109,6 +113,7 @@ public class JvmNativeActivity extends NativeActivity {
             }
         }
     }
+
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         String str = event.getCharacters();
@@ -147,34 +152,79 @@ public class JvmNativeActivity extends NativeActivity {
         return text;
     }
 
+    public long playVideo(String path, String mimeType) {
+        Intent intent = new Intent(this, JvmNativeActivity.VideoViewPlayActivity.class);
+        intent.putExtra("path", path);
+        intent.putExtra("mimeType", mimeType);
+        startActivity(intent);
+        return 1;
+    }
+
 
     native boolean onStringInput(String str);
 
     //=======================================================================================================
-    private static final int CAMERA_CODE = 0;
-    private static final int GALLERY_CODE = 1;
-    private static final int CROP_CODE = 2;
+    private static final int CAMERA_IMAGE_CODE = 0;
+    private static final int CAMERA_VIDEO_CODE = 1;
+    private static final int GALLERY_CODE = 2;
+    private static final int CROP_CODE = 3;
+    private static final int CAPTURE_MEDIA_RESULT_CODE = 4;
     //用于展示选择的图片
 
     static final int PARA_REQUEST_UID = 0;
     static final int PARA_REQUEST_TYPE = 1;
-    int[][] pick_para=new int[3][2];
+    int[][] pick_para = new int[5][2];
+    Uri imageUri, videoUri;
 
     private File PHOTO_DIR_SD;
     private File PHOTO_DIR_ROOT;
 //    private final File PHOTO_DIR_SD = new File(Environment.getExternalStorageDirectory() + "/DCIM/Camera");
 //    private final File PHOTO_DIR_ROOT = new File(Environment.getRootDirectory() + "/DCIM/Camera");
 
+
+    public static int GLFMPickupTypeNoDef = 0;
+    public static int GLFMPickupTypeImage = 1;
+    public static int GLFMPickupTypeVideo = 2;
+
     /**
      * 拍照选择图片
      */
     public void pickFromCamera(int uid, int type) {
         //构建隐式Intent
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        pick_para[CAMERA_CODE][PARA_REQUEST_UID]=uid;
-        pick_para[CAMERA_CODE][PARA_REQUEST_TYPE]=type;
-        //调用系统相机
-        startActivityForResult(intent, CAMERA_CODE);
+
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        pick_para[CAMERA_IMAGE_CODE][PARA_REQUEST_UID] = uid;
+        pick_para[CAMERA_IMAGE_CODE][PARA_REQUEST_TYPE] = type;
+//        imageUri = getOutputMediaFileUri(MEDIA_TYPE_IMAGE);
+//        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+        //takePictureIntent.putExtra("android.intent.extras.CAMERA_FACING", 1);
+
+        Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+        takeVideoIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0);
+        takeVideoIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 30);
+        videoUri = getOutputMediaFileUri(MEDIA_TYPE_VIDEO);
+        takeVideoIntent.putExtra(MediaStore.EXTRA_OUTPUT, videoUri);
+        //takeVideoIntent.putExtra("android.intent.extras.CAMERA_FACING", 1);
+        pick_para[CAMERA_VIDEO_CODE][PARA_REQUEST_UID] = uid;
+        pick_para[CAMERA_VIDEO_CODE][PARA_REQUEST_TYPE] = type;
+
+        Intent chooserIntent = Intent.createChooser(takePictureIntent, "Capture Image or Video");
+        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{takeVideoIntent});
+
+
+        if (type == GLFMPickupTypeImage) {
+            if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+                startActivityForResult(takePictureIntent, CAMERA_IMAGE_CODE);
+            }
+        } else if (type == GLFMPickupTypeVideo) {
+            if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+                startActivityForResult(takeVideoIntent, CAMERA_VIDEO_CODE);
+            }
+        } else {
+            if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+                startActivityForResult(chooserIntent, CAPTURE_MEDIA_RESULT_CODE);
+            }
+        }
     }
 
     /**
@@ -182,11 +232,20 @@ public class JvmNativeActivity extends NativeActivity {
      */
     public void pickFromAlbum(int uid, int type) {
         //构建一个内容选择的Intent
+        String itype = "";
+        if (type == GLFMPickupTypeImage) {
+            itype = "image/*";
+        } else if (type == GLFMPickupTypeVideo) {
+            itype = "video/*";
+        } else {
+            itype = "*/*";
+        }
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        pick_para[GALLERY_CODE][PARA_REQUEST_UID]=uid;
-        pick_para[GALLERY_CODE][PARA_REQUEST_TYPE]=type;
-        //设置选择类型为图片类型
-        intent.setType("image/*");
+        pick_para[GALLERY_CODE][PARA_REQUEST_UID] = uid;
+        pick_para[GALLERY_CODE][PARA_REQUEST_TYPE] = type;
+        intent.setType(itype);
+//        String[] mimetypes = {"image/*", "video/*"};
+//        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimetypes);//android 4.4 api>=19
         //打开图片选择
         startActivityForResult(intent, GALLERY_CODE);
     }
@@ -212,45 +271,67 @@ public class JvmNativeActivity extends NativeActivity {
         intent.putExtra("outputY", height);
         //裁剪之后的数据是通过Intent返回
         intent.putExtra("return-data", true);
-        pick_para[CROP_CODE][PARA_REQUEST_UID]=uid;
-        pick_para[CROP_CODE][PARA_REQUEST_TYPE]=0;
+        pick_para[CROP_CODE][PARA_REQUEST_UID] = uid;
+        pick_para[CROP_CODE][PARA_REQUEST_TYPE] = 0;
         startActivityForResult(intent, CROP_CODE);
-
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         switch (requestCode) {
-            case CAMERA_CODE:
-                //用户点击了取消
-                if (data == null) {
+            case CAPTURE_MEDIA_RESULT_CODE: {
+                if (intent == null) {
                     return;
                 } else {
-                    Bundle extras = data.getExtras();
+                    Uri file = intent.getData();
+
+                    if (file != null && file.getPath().endsWith(".mp4")) {
+                        onActivityResult(CAMERA_VIDEO_CODE, resultCode, intent);
+                    } else {
+                        onActivityResult(CAMERA_IMAGE_CODE, resultCode, intent);
+                    }
+                }
+                break;
+            }
+            case CAMERA_VIDEO_CODE: {
+                try {
+                    int uid = pick_para[CAMERA_VIDEO_CODE][PARA_REQUEST_UID];
+                    Uri uri = intent.getData();
+                    onPhotoPicked(uid, uri.getPath(), null);
+                } catch (Exception io_e) {
+                }
+                break;
+            }
+            case CAMERA_IMAGE_CODE: {
+                //用户点击了取消
+                if (intent == null) {
+                    return;
+                } else {
+                    Bundle extras = intent.getExtras();
                     if (extras != null) {
                         //获得拍的照片
                         Bitmap bm = extras.getParcelable("data");
-                        int uid = pick_para[CAMERA_CODE][PARA_REQUEST_UID];
-                        int type = pick_para[CAMERA_CODE][PARA_REQUEST_TYPE];
-                        if (type == 0) {
-                            bm = resizeImage(bm);
-                        }
+                        int uid = pick_para[CAMERA_IMAGE_CODE][PARA_REQUEST_UID];
+                        int type = pick_para[CAMERA_IMAGE_CODE][PARA_REQUEST_TYPE];
+                        bm = resizeImage(bm);
+
                         //将Bitmap转化为uri
-                        Uri uri = saveImage(bm, getPhotoStorage());
+                        Uri uri = saveImage(bm);
                         //启动图像裁剪
                         //imageCrop(uri, uid);
                         onPhotoPicked(uid, uri.getPath(), null);
                     }
                 }
                 break;
-            case GALLERY_CODE:
-                if (data == null) {
+            }
+            case GALLERY_CODE: {
+                if (intent == null) {
                     return;
                 } else {
                     //用户从图库选择图片后会返回所选图片的Uri
                     Uri uri;
                     //获取到用户所选图片的Uri
-                    uri = data.getData();
+                    uri = intent.getData();
                     int uid = pick_para[GALLERY_CODE][PARA_REQUEST_UID];
                     int type = pick_para[GALLERY_CODE][PARA_REQUEST_TYPE];
                     //返回的Uri为content类型的Uri,不能进行复制等操作,需要转换为文件Uri
@@ -258,27 +339,29 @@ public class JvmNativeActivity extends NativeActivity {
                     if (type == 0) {
                         Bitmap bm = BitmapFactory.decodeFile(uri.getPath());
                         bm = resizeImage(bm);
-                        uri = saveImage(bm, getPhotoStorage());
+                        uri = saveImage(bm);
                     }
                     onPhotoPicked(uid, uri.getPath(), null);
                 }
                 break;
-            case CROP_CODE:
-                if (data == null) {
+            }
+            case CROP_CODE: {
+                if (intent == null) {
                     return;
                 } else {
-                    Bundle extras = data.getExtras();
+                    Bundle extras = intent.getExtras();
                     if (extras != null) {
                         //获取到裁剪后的图像
                         Bitmap bm = extras.getParcelable("data");
                         int uid = pick_para[CROP_CODE][PARA_REQUEST_UID];
                         int type = pick_para[CROP_CODE][PARA_REQUEST_TYPE];
                         //mImageView.setImageBitmap(bm);
-                        Uri uri = saveImage(bm, getPhotoStorage());
+                        Uri uri = saveImage(bm);
                         onPhotoPicked(uid, uri.getPath(), null);
                     }
                 }
                 break;
+            }
             default:
                 break;
         }
@@ -301,7 +384,7 @@ public class JvmNativeActivity extends NativeActivity {
             Bitmap bm = BitmapFactory.decodeStream(is);
             //关闭流
             is.close();
-            return saveImage(bm, getPhotoStorage());
+            return saveImage(bm);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             return null;
@@ -330,14 +413,13 @@ public class JvmNativeActivity extends NativeActivity {
      * 将Bitmap写入SD卡中的一个文件中,并返回写入文件的Uri
      *
      * @param bm
-     * @param dirPath
      * @return
      */
-    private Uri saveImage(Bitmap bm, File dirPath) {
+    private Uri saveImage(Bitmap bm) {
 
 
         //新建文件存储裁剪后的图片
-        File img = new File(dirPath.getAbsolutePath() + "/" + getImgName());
+        File img = getOutputMediaFile(MEDIA_TYPE_IMAGE);
         try {
             //打开文件输出流
             FileOutputStream fos = new FileOutputStream(img);
@@ -359,29 +441,29 @@ public class JvmNativeActivity extends NativeActivity {
 
     }
 
-    private String getImgName() {
-        SimpleDateFormat sdf = new SimpleDateFormat();
-        sdf.applyPattern("yyyyMMdd_HHmmsss");
-        StringBuilder result = new StringBuilder("IMG_");
-        result.append(sdf.format(new Date())).append("_").append((System.currentTimeMillis() % 1000))
-                .append(".jpeg");
-        return result.toString();
-    }
+//    private String getImgName() {
+//        SimpleDateFormat sdf = new SimpleDateFormat();
+//        sdf.applyPattern("yyyyMMdd_HHmmsss");
+//        StringBuilder result = new StringBuilder("IMG_");
+//        result.append(sdf.format(new Date())).append("_").append((System.currentTimeMillis() % 1000))
+//                .append(".jpeg");
+//        return result.toString();
+//    }
 
-    private byte[] getFileData(Uri uri) {
-        try {
-            File f = new File(uri.getPath());
-            if (f.exists()) {
-                FileInputStream fis = new FileInputStream(f);
-                byte[] b = new byte[(int) f.length()];
-                fis.read(b);
-                return b;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
+//    private byte[] getFileData(Uri uri) {
+//        try {
+//            File f = new File(uri.getPath());
+//            if (f.exists()) {
+//                FileInputStream fis = new FileInputStream(f);
+//                byte[] b = new byte[(int) f.length()];
+//                fis.read(b);
+//                return b;
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return null;
+//    }
 
 
     private File getPhotoStorage() {
@@ -398,6 +480,97 @@ public class JvmNativeActivity extends NativeActivity {
         }
         return dir;
     }
+
+    public static final int MEDIA_TYPE_IMAGE = 1;
+    public static final int MEDIA_TYPE_VIDEO = 2;
+
+    /**
+     * Create a file Uri for saving an image or video
+     */
+    private Uri getOutputMediaFileUri(int type) {
+        return Uri.fromFile(getOutputMediaFile(type));
+    }
+
+    /**
+     * Create a File for saving an image or video
+     */
+    private File getOutputMediaFile(int type) {
+        // To be safe, you should check that the SDCard is mounted
+        // using Environment.getExternalStorageState() before doing this.
+
+        File mediaStorageDir = getPhotoStorage();
+        // This location works best if you want the created images to be shared
+        // between applications and persist after your app has been uninstalled.
+
+        // Create the storage directory if it does not exist
+        if (!mediaStorageDir.exists()) {
+            if (!mediaStorageDir.mkdirs()) {
+                Log.d("minipack", "failed to create directory");
+                return null;
+            }
+        }
+
+        // Create a media file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        File mediaFile;
+        if (type == MEDIA_TYPE_IMAGE) {
+            mediaFile = new File(mediaStorageDir.getPath() + File.separator +
+                    "IMG_" + timeStamp + ".jpg");
+        } else if (type == MEDIA_TYPE_VIDEO) {
+            mediaFile = new File(mediaStorageDir.getPath() + File.separator +
+                    "VID_" + timeStamp + ".mp4");
+        } else {
+            return null;
+        }
+
+        return mediaFile;
+    }
 //=======================================================================================================
 
+    public static class VideoViewPlayActivity extends Activity {
+        public MediaController mc;
+
+        @Override
+        protected void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+
+            Intent intent = getIntent();
+            String path = intent.getStringExtra("path");
+            String mimeType = intent.getStringExtra("mimeType");
+
+
+            setContentView(R.layout.activity_video_view);
+            final VideoView videoView = (VideoView) findViewById(R.id.videoView);
+            final Button closeButton = (Button) findViewById(R.id.closeButton);
+            closeButton.getBackground().setAlpha(0);
+            closeButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View arg0) {//实际处理button的click事件的方法
+                    VideoViewPlayActivity.this.finish();
+                }
+            });
+
+            //加载指定的视频文件
+            //String path = "http://vfx.mtime.cn/Video/2019/02/04/mp4/190204084208765161.mp4";//Environment.getExternalStorageDirectory().getPath()+"/20180730.mp4";
+            videoView.setVideoPath(path);
+            videoView.start();
+            //创建MediaController对象
+            MediaController mediaController = new MediaController(this) {
+//                @Override
+//                public void hide() {
+//                    super.show();
+//                }
+            };
+            mediaController.show();
+
+            //VideoView与MediaController建立关联
+            videoView.setMediaController(mediaController);
+            mc = mediaController;
+
+            //让VideoView获取焦点
+            videoView.requestFocus();
+
+
+        }
+    }
 }

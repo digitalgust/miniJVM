@@ -29,6 +29,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".JvmNativeActivity$VideoViewPlayActivity"
+            android:configChanges="orientation|screenLayout|screenSize|keyboardHidden|keyboard" />
     </application>
 
 </manifest>

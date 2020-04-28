@@ -1775,5 +1775,40 @@ const char *glfmGetUUID() {
     return android_uuid;
 }
 
+void *playVideo(GLFMDisplay *display, char *cpath, char *mimeType) {
+
+    if (display) {
+        //cpath = "http://vfx.mtime.cn/Video/2019/02/04/mp4/190204084208765161.mp4";
+        if(!mimeType){
+            mimeType = "video/mp4";
+        }
+
+        struct android_app *app = platformDataGlobal->app;
+        GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
+        JNIEnv *jni = platformData->jniEnv;
+
+        jstring jstr = (*jni)->NewStringUTF(jni, cpath);
+        jstring jstrMime = (*jni)->NewStringUTF(jni, mimeType);
+        _glfmCallJavaMethodWithArgs(jni, app->activity->clazz, "playVideo",
+                                    "(Ljava/lang/String;Ljava/lang/String;)J", Long, jstr, jstrMime);
+        (*jni)->DeleteLocalRef(jni, jstr);
+        (*jni)->DeleteLocalRef(jni, jstrMime);
+        _glfmClearJavaException()
+    }
+}
+
+
+void startVideo(GLFMDisplay *display, void *panel){
+
+}
+
+void pauseVideo(GLFMDisplay *display, void *panel){
+
+}
+
+void stopVideo(GLFMDisplay *display, void *panel){
+
+}
+
 
 #endif
