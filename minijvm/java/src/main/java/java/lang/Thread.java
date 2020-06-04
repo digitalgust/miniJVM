@@ -245,6 +245,10 @@ public class Thread implements Runnable {
         interrupt0();
     }
 
+
+    static public boolean interrupted(){
+        return false;
+    }
     /**
      * Tests if this thread is alive. A thread is alive if it has been started
      * and has not yet died.

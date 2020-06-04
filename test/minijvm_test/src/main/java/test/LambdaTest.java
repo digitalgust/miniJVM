@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- *
  * @author Gust
  */
 public class LambdaTest {
@@ -37,7 +36,9 @@ public class LambdaTest {
     }
 
     public static void main(String args[]) {
+        long start = System.currentTimeMillis();
         LambdaTest obj = new LambdaTest();
         obj.t1();
+        System.out.println("cost " + (System.currentTimeMillis() - start));
     }
 }

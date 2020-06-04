@@ -322,11 +322,11 @@ public final class MathContext implements Serializable {
         // validate possibly bad fields
         if (precision < MIN_DIGITS) {
             String message = "MathContext: invalid digits in stream";
-            throw new java.io.StreamCorruptedException(message);
+            throw new RuntimeException(message);
         }
         if (roundingMode == null) {
             String message = "MathContext: null roundingMode in stream";
-            throw new java.io.StreamCorruptedException(message);
+            throw new RuntimeException(message);
         }
         // Set the lookaside, if applicable
         if (precision <= MAX_LOOKASIDE) {

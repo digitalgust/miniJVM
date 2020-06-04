@@ -37,7 +37,7 @@ import java.util.*;
  * @param <E> the type of elements held in this collection
  */
 public class CopyOnWriteArrayList<E>
-        implements List<E>, Cloneable {
+        implements List<E>, RandomAccess, Cloneable, java.io.Serializable {
     private static final long serialVersionUID = 8673264195747942595L;
 
     /**
@@ -133,8 +133,8 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
-     * Searches for the first occurrence of the given argument, testing
-     * for equality using the <tt>equals</tt> method.
+     * Searches for the first occurrence of the given argument, testing 
+     * for equality using the <tt>equals</tt> method. 
      *
      * @param   elem   an object.
      * @return  the index of the first occurrence of the argument in this
@@ -250,18 +250,18 @@ public class CopyOnWriteArrayList<E>
      *
      * @return  a clone of this list.
      */
-//    public Object clone() {
-//        try {
-//            E[] elementData = array();
-//            CopyOnWriteArrayList<E> v = (CopyOnWriteArrayList<E>)super.clone();
-//            v.array = (E[]) new Object[elementData.length];
-//            System.arraycopy(elementData, 0, v.array, 0, elementData.length);
-//            return v;
-//        } catch (CloneNotSupportedException e) {
-//            // this shouldn't happen, since we are Cloneable
-//            throw new InternalError();
-//        }
-//    }
+    public Object clone() {
+        try {
+            E[] elementData = array();
+            CopyOnWriteArrayList<E> v = (CopyOnWriteArrayList<E>)super.clone();
+            v.array = (E[]) new Object[elementData.length];
+            System.arraycopy(elementData, 0, v.array, 0, elementData.length);
+            return v;
+        } catch (Exception e) {
+            // this shouldn't happen, since we are Cloneable
+            throw new InternalError();
+        }
+    }
 
     /**
      * Returns an array containing all of the elements in this list

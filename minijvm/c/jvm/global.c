@@ -8,9 +8,9 @@
 //======================= global var =============================
 
 char *STRS_CLASS_EXCEPTION[] = {
-        "java.io.OutOfMemoryError",
-        "java.io.VirtualMachineError",
-        "java.io.NoClassDefFoundError",
+        "java.lang.OutOfMemoryError",
+        "java.lang.VirtualMachineError",
+        "java.lang.NoClassDefFoundError",
         "java.io.EOFException",
         "java.io.IOException",
         "java.lang.FileNotFoundException",

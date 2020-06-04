@@ -373,21 +373,21 @@ public class StringBuilder implements Appendable {
      * @param str a string.
      * @return a reference to this <code>StringBuilder</code>.
      */
-      public native  StringBuilder append(String str);
-//    public StringBuilder append(String str) {
-//        if (str == null) {
-//            str = String.valueOf(str);
-//        }
-//
-//        int len = str.length();
-//        int newcount = count + len;
-//        if (newcount > value.length) {
-//            expandCapacity(newcount);
-//        }
-//        str.getChars(0, len, value, count);
-//        count = newcount;
-//        return this;
-//    }
+//      public native  StringBuilder append(String str);
+    public StringBuilder append(String str) {
+        if (str == null) {
+            str = String.valueOf(str);
+        }
+
+        int len = str.length();
+        int newcount = count + len;
+        if (newcount > value.length) {
+            expandCapacity(newcount);
+        }
+        str.getChars(0, len, value, count);
+        count = newcount;
+        return this;
+    }
 
     /**
      * Appends the string representation of the <code>char</code> array argument

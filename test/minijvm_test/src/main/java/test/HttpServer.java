@@ -298,7 +298,7 @@ public class HttpServer {
             try {
                 Thread.sleep(2000);
 
-                Socket socket = new Socket("127.0.0.1", 8080);
+                Socket socket = new Socket("127.0.0.1", 8088);
                 String request = "GET / HTTP/1.1\r\n\r\n";
                 InputStream in = socket.getInputStream();
                 OutputStream out = socket.getOutputStream();

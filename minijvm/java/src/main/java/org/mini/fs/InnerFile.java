@@ -263,8 +263,6 @@ public class InnerFile {
 
     public static native int rename0(byte[] oldpath, byte[] newpath);
 
-    public static native int fullpath(byte[] fullpath, byte[] path);
-
     public static native String[] listDir(byte[] filePath);
 
     public static native long openFile(byte[] filePath, byte[] mode);

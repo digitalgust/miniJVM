@@ -300,7 +300,7 @@ s32 org_mini_reflect_ReflectArray_multiNewArray(Runtime *runtime, JClass *clazz)
     }
 
     Instance *arr = jarray_multi_create(runtime, (s32 *) dimarr->arr_body, dimarr->arr_length, desc, 0);
-
+    utf8_destory(desc);
     push_ref(runtime->stack, arr);
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
     jvm_printf("org_mini_reflect_ReflectArray_multiNewArray\n");

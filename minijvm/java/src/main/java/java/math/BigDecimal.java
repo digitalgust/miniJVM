@@ -3154,7 +3154,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal> {
         // validate possibly bad fields
 	if (intVal == null) {
             String message = "BigDecimal: null intVal in stream";
-            throw new java.io.StreamCorruptedException(message);
+            throw new RuntimeException(message);
         // [all values of scale are now allowed]
         }
 	// Set intCompact to uninitialized value; could also see if the
