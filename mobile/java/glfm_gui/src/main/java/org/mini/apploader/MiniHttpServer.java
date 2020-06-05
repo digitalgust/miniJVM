@@ -12,14 +12,12 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- *
  * @author Gust
  */
 public class MiniHttpServer extends Thread {
@@ -64,7 +62,6 @@ public class MiniHttpServer extends Thread {
         private final HashMap<String, String> parameters = new HashMap();
 
         /**
-         *
          * @param sock
          */
         public RequestHandle(Socket sock) {
@@ -156,14 +153,88 @@ public class MiniHttpServer extends Thread {
                     tokens = para.split("=");
                     if (tokens.length > 1) {
                         try {
-                            tokens[0] = URLDecoder.decode(tokens[0], "utf-8");
-                            tokens[1] = URLDecoder.decode(tokens[1], "utf-8");
+                            tokens[0] = decode(tokens[0], "utf-8");
+                            tokens[1] = decode(tokens[1], "utf-8");
                         } catch (Exception ex) {
                         }
                         parameters.put(tokens[0], tokens[1]);
                     }
                 }
             }
+        }
+
+        public String decode(String s, String enc)
+                throws UnsupportedEncodingException {
+
+            boolean needToChange = false;
+            int numChars = s.length();
+            StringBuffer sb = new StringBuffer(numChars > 500 ? numChars / 2 : numChars);
+            int i = 0;
+
+            if (enc.length() == 0) {
+                throw new UnsupportedEncodingException("URLDecoder: empty string enc parameter");
+            }
+
+            char c;
+            byte[] bytes = null;
+            while (i < numChars) {
+                c = s.charAt(i);
+                switch (c) {
+                    case '+':
+                        sb.append(' ');
+                        i++;
+                        needToChange = true;
+                        break;
+                    case '%':
+                        /*
+                         * Starting with this instance of %, process all
+                         * consecutive substrings of the form %xy. Each
+                         * substring %xy will yield a byte. Convert all
+                         * consecutive  bytes obtained this way to whatever
+                         * character(s) they represent in the provided
+                         * encoding.
+                         */
+
+                        try {
+
+                            // (numChars-i)/3 is an upper bound for the number
+                            // of remaining bytes
+                            if (bytes == null)
+                                bytes = new byte[(numChars - i) / 3];
+                            int pos = 0;
+
+                            while (((i + 2) < numChars) &&
+                                    (c == '%')) {
+                                bytes[pos++] =
+                                        (byte) Integer.parseInt(s.substring(i + 1, i + 3), 16);
+                                i += 3;
+                                if (i < numChars)
+                                    c = s.charAt(i);
+                            }
+
+                            // A trailing, incomplete byte encoding such as
+                            // "%x" will cause an exception to be thrown
+
+                            if ((i < numChars) && (c == '%'))
+                                throw new IllegalArgumentException(
+                                        "URLDecoder: Incomplete trailing escape (%) pattern");
+
+                            sb.append(new String(bytes, 0, pos, enc));
+                        } catch (NumberFormatException e) {
+                            throw new IllegalArgumentException(
+                                    "URLDecoder: Illegal hex characters in escape (%) pattern - "
+                                            + e.getMessage());
+                        }
+                        needToChange = true;
+                        break;
+                    default:
+                        sb.append(c);
+                        i++;
+                        break;
+                }
+            }
+
+            return (needToChange ? sb.toString() : s);
         }
 
         public String getContentType() {
@@ -211,7 +282,6 @@ public class MiniHttpServer extends Thread {
         RequestHandle request;
 
         /**
-         *
          * @param request
          * @param data
          */
@@ -401,7 +471,9 @@ public class MiniHttpServer extends Thread {
         public String filename;
         public String field;
         public byte[] data;
-    };
+    }
+
+    ;
 
     public interface UploadCompletedHandle {
 

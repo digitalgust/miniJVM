@@ -52,7 +52,7 @@ public class UITemplate {
         }
         System.out.println(s);
         System.out.println((int)Long.parseLong("801010ff",16));
-        System.out.println(Integer.parseUnsignedInt("801010ff",16));
+        //System.out.println(Integer.parseUnsignedInt("801010ff",16));
     }
 
     /**
@@ -191,7 +191,7 @@ public class UITemplate {
         try {
             copy = (UITemplate) super.clone();
 
-        } catch (CloneNotSupportedException e) {
+        } catch (Exception e) {
         }
         return copy;
     }

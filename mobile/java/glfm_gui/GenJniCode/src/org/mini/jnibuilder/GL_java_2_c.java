@@ -164,7 +164,7 @@ public class GL_java_2_c {
                         } else if ("double".equals(returnType)) {
                             returnCode = "f64 ret_value = (f64)";
                             pushCode = "env->push_double(runtime->stack, ret_value);";
-                            javaReturnCode = "F";
+                            javaReturnCode = "D";
                         } else if ("String".equals(returnType)) {
                             if (nativeReturnIsPointer) {
                                 returnCode = "c8* _cstr = (c8*)";
