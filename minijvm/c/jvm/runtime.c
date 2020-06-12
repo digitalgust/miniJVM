@@ -111,7 +111,7 @@ void peek_entry_jni(StackEntry *src, StackEntry *dst) {
 
 
 s32 is_ref(StackEntry *entry) {
-    if (entry->type & STACK_ENTRY_REF)
+    if (entry->rvalue)
         return 1;
     return 0;
 }
@@ -157,23 +157,21 @@ s64 getInstructPointer(Runtime *runtime) {
     return -1;
 }
 
+
 void getRuntimeStack(Runtime *runtime, Utf8String *ustr) {
-    Runtime *last = getLastSon(runtime);
-    while (last) {
+    s32 i, imax;
+    for (i = 0, imax = runtime->threadInfo->stacktrack->length; i < imax; i++) {
         utf8_append_s64(ustr, (s64) (intptr_t) runtime, 16);
         utf8_append_c(ustr, " ");
-        if (last->method) {
-            utf8_append(ustr, last->method->_this_class->name);
-            utf8_append_c(ustr, ".");
-            utf8_append(ustr, last->method->name);
-            utf8_append(ustr, last->method->descriptor);
-            utf8_append_c(ustr, ":");
-            utf8_append_s64(ustr, (s64) ((last->pc) - (last->method->converted_code ? last->method->converted_code->code : 0)), 10);
-        }
+        MethodInfo *method = arraylist_get_value(runtime->threadInfo->stacktrack, i);
+        utf8_append(ustr, method->_this_class->name);
+        utf8_append_c(ustr, ".");
+        utf8_append(ustr, method->name);
+        utf8_append(ustr, method->descriptor);
+        utf8_append_c(ustr, ":");
+        s32 lineNo = getLineNumByIndex(method->converted_code, (s32) (intptr_t) arraylist_get_value(runtime->threadInfo->lineNo, i));
+        utf8_append_s64(ustr, lineNo, 10);
         utf8_append_c(ustr, "\n");
-
-        last = last->parent;
-        if (last == NULL || last->parent == NULL || last->parent->parent == NULL)break;
     }
 }
 

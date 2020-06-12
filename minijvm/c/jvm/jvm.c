@@ -34,28 +34,11 @@ void thread_unboundle(Runtime *runtime) {
 }
 
 void print_exception(Runtime *runtime) {
-    __refer ref = pop_ref(runtime->stack);
-    Instance *ins = (Instance *) ref;
-    Utf8String *getStackFrame_name = utf8_create_c("getCodeStack");
-    Utf8String *getStackFrame_type = utf8_create_c("()Ljava/lang/String;");
-    MethodInfo *getStackFrame = find_methodInfo_by_name(ins->mb.clazz->name, getStackFrame_name,
-                                                        getStackFrame_type, runtime);
-    utf8_destory(getStackFrame_name);
-    utf8_destory(getStackFrame_type);
-    if (getStackFrame) {
-        push_ref(runtime->stack, ins);
-        s32 ret = execute_method_impl(getStackFrame, runtime);
-        if (ret != RUNTIME_STATUS_NORMAL) {
-            ins = pop_ref(runtime->stack);
-            return;
-        }
-        ins = (Instance *) pop_ref(runtime->stack);
-        Utf8String *str = utf8_create();
-        jstring_2_utf8(ins, str);
-        printf("%s\n", utf8_cstr(str));
-        utf8_destory(str);
-    } else {
-        printf("ERROR: %s\n", utf8_cstr(ins->mb.clazz->name));
+    if (runtime) {
+        Utf8String *stacktrack = utf8_create();
+        getRuntimeStack(runtime, stacktrack);
+        jvm_printf("%s\n", utf8_cstr(stacktrack));
+        utf8_destory(stacktrack);
     }
 }
 

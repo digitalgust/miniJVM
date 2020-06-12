@@ -354,20 +354,13 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
         MethodPool *p = &(clazz->methodPool);
         for (i = 0; i < p->method_used; i++) {
             //jvm_printf("%s,%s\n", utf8_cstr(p->methodRef[i].name), utf8_cstr(p->methodRef[i].descriptor));
-            if (utf8_equals_c(p->method[i].name, STR_METHOD_CLINIT)) {
-#if _JVM_DEBUG_BYTECODE_DETAIL > 3
-                invoke_deepth(runtime);
-                jvm_printf(" %s.<clinit>  {\n", utf8_cstr(clazz->name));
-#endif
+            MethodInfo *mi = &(p->method[i]);
+            if (utf8_equals_c(mi->name, STR_METHOD_CLINIT)) {
 
-                s32 ret = execute_method_impl(&(p->method[i]), runtime);
+                s32 ret = execute_method_impl(mi, runtime);
                 if (ret != RUNTIME_STATUS_NORMAL) {
                     print_exception(runtime);
                 }
-#if _JVM_DEBUG_BYTECODE_DETAIL > 3
-                invoke_deepth(runtime);
-                jvm_printf(" }  //%s\n", utf8_cstr(clazz->name));
-#endif
                 break;
             }
         }

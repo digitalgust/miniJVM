@@ -274,12 +274,12 @@ void garbage_dump_runtime() {
 
         jvm_printf("[INFO]============ runtime dump [%llx] ============\n", (s64) (intptr_t) runtime);
         s32 j;
-        StackEntry entry;
+        StackEntry *entry;
         RuntimeStack *stack = runtime->stack;
         for (j = 0; j < stack_size(stack); j++) {
-            peek_entry(stack->store + j, &entry);
-            if (is_ref(&entry)) {
-                __refer ref = entry_2_refer(&entry);
+            entry = stack->store + j;
+            if (entry->rvalue) {
+                __refer ref = entry->rvalue;
                 if (ref) {
                     utf8_clear(name);
                     _getMBName(ref, name);
@@ -291,7 +291,7 @@ void garbage_dump_runtime() {
         while (runtime) {
             for (j = 0; j < runtime->localvar_slots; j++) {
                 LocalVarItem *item = &runtime->localvar[j];
-                if (item->type & STACK_ENTRY_REF) {
+                if (item->rvalue) {
                     __refer ref = item->rvalue;
                     utf8_clear(name);
                     _getMBName(ref, name);
@@ -625,16 +625,13 @@ s32 _garbage_copy_refer_thread(Runtime *pruntime) {
     arraylist_push_back_unsafe(collector->runtime_refer_copy, pruntime->threadInfo->jthread);
 
     s32 i, imax;
-    StackEntry entry;
+    StackEntry *entry;
     Runtime *runtime = pruntime;
     RuntimeStack *stack = runtime->stack;
-    for (i = 0; i < stack_size(stack); i++) {
-        peek_entry(stack->store + i, &entry);
-        if (is_ref(&entry)) {
-            __refer ref = entry_2_refer(&entry);
-            if (ref) {
-                arraylist_push_back_unsafe(collector->runtime_refer_copy, ref);
-            }
+    for (i = 0, imax = stack_size(stack); i < imax; i++) {
+        entry = stack->store + i;
+        if (entry->rvalue) {
+            arraylist_push_back_unsafe(collector->runtime_refer_copy, entry->rvalue);
         }
     }
     MemoryBlock *next = runtime->threadInfo->tmp_holder;

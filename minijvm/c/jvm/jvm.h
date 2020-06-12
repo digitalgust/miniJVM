@@ -27,7 +27,7 @@ extern "C" {
 
 //=======================  micro define  =============================
 //_JVM_DEBUG  01=thread info, 02=garage&jit info  , 03=class load, 04=method call,  06=all bytecode
-#define _JVM_DEBUG_BYTECODE_DETAIL 01
+#define _JVM_DEBUG_BYTECODE_DETAIL 02
 #define _JVM_DEBUG_PRINT_FILE 0
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_PROFILE 0
@@ -845,7 +845,7 @@ struct _CodeAttribute {
         volatile s32 state;
         volatile s32 interpreted_count;
         SwitchTable *switchtable;//a table that compile switch ,fill in jump address
-        struct _ExceptionJumpTable{
+        struct _ExceptionJumpTable {
             __refer exception_handle_jump_ptr;//a ptr list for exception jump, size= exceptiontable.length
             s32 bc_pos;
         } *ex_jump_table;
@@ -1187,10 +1187,11 @@ typedef struct _StackEntry {
         f64 dvalue;
         f32 fvalue;
         s32 ivalue;
+    };
+    union {
         __refer rvalue;
         Instance *ins;
     };
-    s32 type;
 } StackEntry, LocalVarItem;
 
 struct _StackFrame {
@@ -1272,7 +1273,6 @@ static inline s32 stack_size(RuntimeStack *stack) {
 /* push Integer */
 static inline void push_int(RuntimeStack *stack, s32 value) {
     stack->sp->ivalue = value;//clear 64bit
-    stack->sp->type = STACK_ENTRY_INT;
     ++stack->sp;
 }
 
@@ -1285,24 +1285,20 @@ static inline s32 pop_int(RuntimeStack *stack) {
 /* push Double */
 static inline void push_double(RuntimeStack *stack, f64 value) {
     stack->sp->dvalue = value;
-    stack->sp->type = STACK_ENTRY_DOUBLE;
     ++stack->sp;
-    stack->sp->type = STACK_ENTRY_DOUBLE;
-//    ptr->dvalue = value;
     ++stack->sp;
 }
 
 /* pop Double */
 static inline f64 pop_double(RuntimeStack *stack) {
-    stack->sp -= 2;
+    --stack->sp;
+    --stack->sp;
     return stack->sp->dvalue;
 }
 
 /* push Float */
 static inline void push_float(RuntimeStack *stack, f32 value) {
-    //ptr->lvalue = 0;//clear 64bit
     stack->sp->fvalue = value;
-    stack->sp->type = STACK_ENTRY_FLOAT;
     ++stack->sp;
 }
 
@@ -1315,10 +1311,7 @@ static inline f32 pop_float(RuntimeStack *stack) {
 /* push Long */
 static inline void push_long(RuntimeStack *stack, s64 value) {
     stack->sp->lvalue = value;
-    stack->sp->type = STACK_ENTRY_LONG;
     ++stack->sp;
-    stack->sp->type = STACK_ENTRY_LONG;
-//    ptr->lvalue = value;
     ++stack->sp;
 }
 
@@ -1330,7 +1323,6 @@ static inline s64 pop_long(RuntimeStack *stack) {
 
 /* push Ref */
 static inline void push_ref(RuntimeStack *stack, __refer value) {
-    stack->sp->type = STACK_ENTRY_REF;
     stack->sp->rvalue = value;
     ++stack->sp;
 }
@@ -1342,7 +1334,6 @@ static inline __refer pop_ref(RuntimeStack *stack) {
 
 /* push ReturnAddress */
 static inline void push_ra(RuntimeStack *stack, __refer value) {
-    stack->sp->type = STACK_ENTRY_RETURNADDRESS;
     stack->sp->rvalue = value;
     ++stack->sp;
 }
@@ -1353,16 +1344,14 @@ static inline __refer pop_ra(RuntimeStack *stack) {
 
 
 static inline void push_entry(RuntimeStack *stack, StackEntry *entry) {
-    stack->sp->lvalue = entry->lvalue;
-    stack->sp->type = entry->type;
+    *stack->sp = *entry;
     ++stack->sp;
 }
 
 /* Pop Stack Entry */
 static inline void pop_entry(RuntimeStack *stack, StackEntry *entry) {
     stack->sp--;
-    entry->lvalue = stack->sp->lvalue;
-    entry->type = stack->sp->type;
+    *entry = *stack->sp;
 
 }
 
@@ -1372,8 +1361,7 @@ static inline void pop_empty(RuntimeStack *stack) {
 
 
 static inline void peek_entry(StackEntry *src, StackEntry *dst) {
-    dst->lvalue = src->lvalue;
-    dst->type = src->type;
+    *dst = *src;
 }
 
 
@@ -1390,19 +1378,6 @@ static inline __refer entry_2_refer(StackEntry *entry) {
     return entry->rvalue;
 }
 
-static inline s32 is_cat1(StackEntry *entry) {
-    if (entry->type & (STACK_ENTRY_INT | STACK_ENTRY_FLOAT | STACK_ENTRY_REF)) {
-        return 1;
-    }
-    return 0;
-}
-
-static inline s32 is_cat2(StackEntry *entry) {
-    if (entry->type & (STACK_ENTRY_LONG | STACK_ENTRY_DOUBLE)) {
-        return 1;
-    }
-    return 0;
-}
 
 s32 is_ref(StackEntry *entry);
 
@@ -1439,18 +1414,9 @@ static inline void localvar_dispose(Runtime *runtime) {
     runtime->stack->sp = runtime->localvar;
 }
 
-static inline StackEntry *localvar_getEntry(LocalVarItem *localvar, s32 index) {
-    return &localvar[index];
-}
-
-static inline void localvar_setEntry(LocalVarItem *localvar, s32 index, StackEntry *entry) {
-    localvar[index].lvalue = entry->lvalue;
-    localvar[index].type = entry->type;
-}
 
 static inline void localvar_setInt(LocalVarItem *localvar, s32 index, s32 val) {
     localvar[index].ivalue = val;
-    localvar[index].type = STACK_ENTRY_INT;
 }
 
 static inline s32 localvar_getInt(LocalVarItem *localvar, s32 index) {
@@ -1459,7 +1425,6 @@ static inline s32 localvar_getInt(LocalVarItem *localvar, s32 index) {
 
 static inline void localvar_setLong(LocalVarItem *localvar, s32 index, s64 val) {
     localvar[index].lvalue = val;
-    localvar[index].type = STACK_ENTRY_LONG;
 }
 
 static inline s64 localvar_getLong(LocalVarItem *localvar, s32 index) {
@@ -1468,7 +1433,6 @@ static inline s64 localvar_getLong(LocalVarItem *localvar, s32 index) {
 
 static inline void localvar_setRefer(LocalVarItem *localvar, s32 index, __refer val) {
     localvar[index].rvalue = val;
-    localvar[index].type = STACK_ENTRY_REF;
 }
 
 static inline __refer localvar_getRefer(LocalVarItem *localvar, s32 index) {

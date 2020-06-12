@@ -1562,10 +1562,14 @@ void memoryblock_destory(__refer ref) {
 
 JavaThreadInfo *threadinfo_create() {
     JavaThreadInfo *threadInfo = jvm_calloc(sizeof(JavaThreadInfo));
+    threadInfo->stacktrack = arraylist_create(16);
+    threadInfo->lineNo = arraylist_create(16);
     return threadInfo;
 }
 
 void threadinfo_destory(JavaThreadInfo *threadInfo) {
+    arraylist_destory(threadInfo->lineNo);
+    arraylist_destory(threadInfo->stacktrack);
     jvm_free(threadInfo);
 }
 

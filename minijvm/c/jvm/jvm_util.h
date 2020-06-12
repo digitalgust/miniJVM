@@ -272,6 +272,9 @@ struct _JavaThreadInfo {
     thrd_t pthread;
     //调试器相关字段
     JdwpStep jdwp_step;
+
+    ArrayList *stacktrack;  //save methodrawindex, the pos 0 is the throw point
+    ArrayList *lineNo;  //save methodrawindex, the pos 0 is the throw point
 };
 
 struct _ThreadLock {

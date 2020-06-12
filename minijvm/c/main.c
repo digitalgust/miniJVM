@@ -63,16 +63,20 @@ int main(int argc, char **argv) {
         }
     } else {
         jdwp_enable = 0;
-//        classpath = "../../binary/lib/minijvm_rt.jar;../../binary/libex/glfw_gui.jar;./";
+        jdwp_suspend_on_start = 0;
+        classpath = "../../binary/lib/minijvm_rt.jar;../../binary/libex/glfw_gui.jar;./";
 //        main_name = "test/Gears";
 //        main_name = "test/TestGL";
-//        main_name = "test/AppManagerTest";
+        main_name = "test/AppManagerTest";
 //        main_name = "test/RenderTexure";
 //        main_name = "test/Alpha";
 //        main_name = "test/Light";
 //        main_name = "test/Shader";
+//        main_name = "test/Shader1";
+//        main_name = "test/Shader2";
 //        main_name = "test/Boing";
 //        main_name = "test/TestNanovg";
+
 
 //        classpath = "../../binary/lib/minijvm_rt.jar;../../binary/libex/jni_test.jar;./";
 //        main_name = "test/JniTest";
@@ -86,12 +90,16 @@ int main(int argc, char **argv) {
 //        classpath = "../../../minijvm_third_lib/vm_micro_rt/target/micro_rt.jar;";
 //        main_name = "test/Foo3";
 
+//        classpath = "../../binary/lib/minijvm_rt.jar;../../binary/libex/g3d.jar;../../binary/libex/glfw_gui.jar;./";
+//        main_name = "test/Test2";
+//        main_name = "test/G3d";
 
-        classpath = "../../binary/lib/minijvm_rt.jar;../../binary/libex/minijvm_test.jar;./";
+
+//        classpath = "../../binary/lib/minijvm_rt.jar;../../binary/libex/minijvm_test.jar;../../binary/libex/glfw_gui.jar;../../binary/libex/gltf2.jar;../../binary/macos/apps/g3d.jar;./";
 //        main_name = "test/HelloWorld";
 //        main_name = "test/Foo1";
 //        main_name = "test/Foo2";
-        main_name = "test/Foo3";
+//        main_name = "test/Foo3";
 //        main_name = "test/SpecTest";
 //        main_name = "test/MultiThread";
 //        main_name = "test/ExecuteSpeed";
@@ -100,7 +108,10 @@ int main(int argc, char **argv) {
 //        main_name = "test/BpDeepTest";
 //        main_name = "test/ReflectTest";
 //        main_name = "test/LambdaTest";
-
+//        main_name = "test/NioBufferTest";
+//        main_name = "test/JsonDataBind";
+//        main_name = "com/meslewis/simplegltf2/TestLoad";
+//        main_name = "org/mini/g3d/ani/SimpleViewer";
 
 
 
