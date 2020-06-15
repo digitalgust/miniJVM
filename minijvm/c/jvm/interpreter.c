@@ -161,30 +161,6 @@ void _op_notsupport(u8 *opCode, Runtime *runtime) {
 
 //----------------------------------  tool func  ------------------------------------------
 
-ExceptionTable *
-_find_exception_handler(Runtime *runtime, Instance *exception, CodeAttribute *ca, s32 offset, s32 *ret_index) {
-
-    s32 i;
-    ExceptionTable *e = ca->exception_table;
-    for (i = 0; i < ca->exception_table_length; i++) {
-
-        if (offset >= (e + i)->start_pc
-            && offset <= (e + i)->end_pc) {
-            if (!(e + i)->catch_type) {
-                *ret_index = i;
-                return e + i;
-            }
-            ConstantClassRef *ccr = class_get_constant_classref(runtime->clazz, (e + i)->catch_type);
-            JClass *catchClass = classes_load_get(ccr->name, runtime);
-            if (instance_of(catchClass, exception, runtime)) {
-                *ret_index = i;
-                return e + i;
-            }
-        }
-    }
-    return NULL;
-}
-
 
 s32 exception_handle(RuntimeStack *stack, Runtime *runtime) {
 
@@ -201,7 +177,28 @@ s32 exception_handle(RuntimeStack *stack, Runtime *runtime) {
     );
 #endif
     s32 index = 0;
-    ExceptionTable *et = _find_exception_handler(runtime, ins, ca, (s32) (runtime->pc - ca->code), &index);
+    ExceptionTable *et = NULL;// _find_exception_handler(runtime, ins, ca, (s32) (ip - ca->code), &index);
+    s32 offset = (s32) (runtime->pc - ca->code);
+    s32 i;
+    ExceptionTable *e = ca->exception_table;
+    for (i = 0; i < ca->exception_table_length; i++) {
+
+        if (offset >= (e + i)->start_pc
+            && offset <= (e + i)->end_pc) {
+            if (!(e + i)->catch_type) {
+                et = e + i;
+                index = i;
+                break;
+            }
+            ConstantClassRef *ccr = class_get_constant_classref(runtime->clazz, (e + i)->catch_type);
+            JClass *catchClass = classes_load_get(ccr->name, runtime);
+            if (instance_of(catchClass, ins, runtime)) {
+                et = e + i;
+                index = i;
+                break;
+            }
+        }
+    }
     if (et == NULL) {
         localvar_dispose(runtime);
         push_ref(stack, ins);
@@ -264,6 +261,16 @@ static s32 filterClassName(Utf8String *clsName) {
         return 1;
     }
     return 0;
+}
+
+#define check_gc_pause(offset){\
+    if (offset < 0 && threadInfo->suspend_count) {\
+        runtime->pc = ip;\
+        if (threadInfo->is_interrupt) {\
+            break;\
+        }\
+        check_suspend_and_pause(runtime);\
+    }\
 }
 
 s32 invokedynamic_prepare(Runtime *runtime, BootstrapMethod *bootMethod, ConstantInvokeDynamic *cid) {
@@ -775,12 +782,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                 //
                 ip = ca->code;
+                runtime->pc = ip;
+                JavaThreadInfo *threadInfo = runtime->threadInfo;
 
                 do {
-                    runtime->pc = ip;
                     u8 cur_inst = *ip;
 
-                    JavaThreadInfo *threadInfo = runtime->threadInfo;
                     if (jdwp_enable) {
                         //breakpoint
                         if (method->breakpoint) {
@@ -792,14 +799,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jdwp_check_debug_step(runtime);
 
                         }
-                    }
-                    //process thread suspend
-                    if (threadInfo->suspend_count) {
-                        if (threadInfo->is_interrupt) {
-                            ret = RUNTIME_STATUS_INTERRUPT;
-                            break;
-                        }
-                        check_suspend_and_pause(runtime);
                     }
 
 
@@ -1611,8 +1610,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_dup: {
-
-                            push_entry(stack, stack->sp - 1);
+                            stack->sp++;
+                            *(stack->sp - 1) = *(stack->sp - 2);
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
@@ -1625,14 +1624,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_dup_x1: {
-                            StackEntry entry1;
-                            pop_entry(stack, &entry1);
-                            StackEntry entry2;
-                            pop_entry(stack, &entry2);
-
-                            push_entry(stack, &entry1);
-                            push_entry(stack, &entry2);
-                            push_entry(stack, &entry1);
+                            stack->sp++;
+                            *(stack->sp - 1) = *(stack->sp - 2);
+                            *(stack->sp - 2) = *(stack->sp - 3);
+                            *(stack->sp - 3) = *(stack->sp - 1);
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
@@ -2628,7 +2623,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_ifeq: {
                             s32 val = pop_int(stack);
                             if (val == 0) {
-                                ip += *((s16 *) (ip + 1));
+                                s32 offset = *((s16 *) (ip + 1));
+                                ip += offset;
+                                check_gc_pause(offset);
                             } else {
                                 ip += 3;
                             }
@@ -2645,7 +2642,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_ifne: {
                             s32 val = pop_int(stack);
                             if (val != 0) {
-                                ip += *((s16 *) (ip + 1));
+                                s32 offset = *((s16 *) (ip + 1));
+                                ip += offset;
+                                check_gc_pause(offset);
                             } else {
                                 ip += 3;
                             }
@@ -2662,7 +2661,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_iflt: {
                             s32 val = pop_int(stack);
                             if (val < 0) {
-                                ip += *((s16 *) (ip + 1));
+                                s32 offset = *((s16 *) (ip + 1));
+                                ip += offset;
+                                check_gc_pause(offset);
                             } else {
                                 ip += 3;
                             }
@@ -2679,7 +2680,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_ifge: {
                             s32 val = pop_int(stack);
                             if (val >= 0) {
-                                ip += *((s16 *) (ip + 1));
+                                s32 offset = *((s16 *) (ip + 1));
+                                ip += offset;
+                                check_gc_pause(offset);
                             } else {
                                 ip += 3;
                             }
@@ -2696,7 +2699,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_ifgt: {
                             s32 val = pop_int(stack);
                             if (val > 0) {
-                                ip += *((s16 *) (ip + 1));
+                                s32 offset = *((s16 *) (ip + 1));
+                                ip += offset;
+                                check_gc_pause(offset);
                             } else {
                                 ip += 3;
                             }
@@ -2713,7 +2718,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_ifle: {
                             s32 val = pop_int(stack);
                             if (val <= 0) {
-                                ip += *((s16 *) (ip + 1));
+                                s32 offset = *((s16 *) (ip + 1));
+                                ip += offset;
+                                check_gc_pause(offset);
                             } else {
                                 ip += 3;
                             }
@@ -2731,7 +2738,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             s32 v2 = pop_int(stack);
                             s32 v1 = pop_int(stack);
                             if (v1 == v2) {
-                                ip += *((s16 *) (ip + 1));
+                                s32 offset = *((s16 *) (ip + 1));
+                                ip += offset;
+                                check_gc_pause(offset);
                             } else {
                                 ip += 3;
                             }
@@ -2748,7 +2757,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             s32 v2 = pop_int(stack);
                             s32 v1 = pop_int(stack);
                             if (v1 != v2) {
-                                ip += *((s16 *) (ip + 1));
+                                s32 offset = *((s16 *) (ip + 1));
+                                ip += offset;
+                                check_gc_pause(offset);
                             } else {
                                 ip += 3;
                             }
@@ -2765,7 +2776,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             s32 v2 = pop_int(stack);
                             s32 v1 = pop_int(stack);
                             if (v1 < v2) {
-                                ip += *((s16 *) (ip + 1));
+                                s32 offset = *((s16 *) (ip + 1));
+                                ip += offset;
+                                check_gc_pause(offset);
                             } else {
                                 ip += 3;
                             }
@@ -2782,7 +2795,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             s32 v2 = pop_int(stack);
                             s32 v1 = pop_int(stack);
                             if (v1 >= v2) {
-                                ip += *((s16 *) (ip + 1));
+                                s32 offset = *((s16 *) (ip + 1));
+                                ip += offset;
+                                check_gc_pause(offset);
                             } else {
                                 ip += 3;
                             }
@@ -2799,7 +2814,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             s32 v2 = pop_int(stack);
                             s32 v1 = pop_int(stack);
                             if (v1 > v2) {
-                                ip += *((s16 *) (ip + 1));
+                                s32 offset = *((s16 *) (ip + 1));
+                                ip += offset;
+                                check_gc_pause(offset);
                             } else {
                                 ip += 3;
                             }
@@ -2816,7 +2833,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             s32 v2 = pop_int(stack);
                             s32 v1 = pop_int(stack);
                             if (v1 <= v2) {
-                                ip += *((s16 *) (ip + 1));
+                                s32 offset = *((s16 *) (ip + 1));
+                                ip += offset;
+                                check_gc_pause(offset);
                             } else {
                                 ip += 3;
                             }
@@ -2833,7 +2852,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             __refer v2 = pop_ref(stack);
                             __refer v1 = pop_ref(stack);
                             if (v1 == v2) {
-                                ip += *((s16 *) (ip + 1));
+                                s32 offset = *((s16 *) (ip + 1));
+                                ip += offset;
+                                check_gc_pause(offset);
                             } else {
                                 ip += 3;
                             }
@@ -2850,7 +2871,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             __refer v2 = pop_ref(stack);
                             __refer v1 = pop_ref(stack);
                             if (v1 != v2) {
-                                ip += *((s16 *) (ip + 1));
+                                s32 offset = *((s16 *) (ip + 1));
+                                ip += offset;
+                                check_gc_pause(offset);
                             } else {
                                 ip += 3;
                             }
@@ -2865,25 +2888,26 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_goto: {
 
-                            s32 branchoffset = *((s16 *) (ip + 1));
+                            s32 offset = *((s16 *) (ip + 1));
+                            ip += offset;
+                            check_gc_pause(offset);
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
-                            jvm_printf("goto: %d\n", branchoffset);
+                            jvm_printf("goto: %d\n", offset);
 #endif
-                            ip += branchoffset;
                             break;
                         }
 
 
                         case op_jsr: {
-                            s32 branchoffset = *((s16 *) (ip + 1));
+                            s32 offset = *((s16 *) (ip + 1));
                             push_ra(stack, (__refer) (ip + 3));
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
-                            jvm_printf("jsr: %d\n", branchoffset);
+                            jvm_printf("jsr: %d\n", offset);
 #endif
-                            ip += branchoffset;
+                            ip += offset;
                             break;
                         }
 
@@ -3589,26 +3613,26 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_goto_w: {
-                            s32 branchoffset = *((s32 *) (ip + 1));
-
+                            s32 offset = *((s32 *) (ip + 1));
+                            ip += offset;
+                            check_gc_pause(offset);
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
-                            jvm_printf("goto: %d\n", branchoffset);
+                            jvm_printf("goto: %d\n", offset);
 #endif
-                            ip += branchoffset;
                             break;
                         }
 
 
                         case op_jsr_w: {
 
-                            s32 branchoffset = *((s32 *) (ip + 1));
+                            s32 offset = *((s32 *) (ip + 1));
                             push_ra(stack, (__refer) (ip + 3));
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
-                            jvm_printf("jsr_w: %d\n", branchoffset);
+                            jvm_printf("jsr_w: %d\n", offset);
 #endif
-                            ip += branchoffset;
+                            ip += offset;
                             break;
                         }
 
@@ -4120,6 +4144,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                     label_exception_handle:
                     // there is exception handle, but not error/interrupt handle
+                    runtime->pc = ip;
                     if (ret == RUNTIME_STATUS_EXCEPTION
                         && exception_handle(runtime->stack, runtime)) {
                         ret = RUNTIME_STATUS_NORMAL;

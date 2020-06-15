@@ -288,19 +288,7 @@ void garbage_dump_runtime() {
                 }
             }
         }
-        while (runtime) {
-            for (j = 0; j < runtime->localvar_slots; j++) {
-                LocalVarItem *item = &runtime->localvar[j];
-                if (item->rvalue) {
-                    __refer ref = item->rvalue;
-                    utf8_clear(name);
-                    _getMBName(ref, name);
-                    jvm_printf("   %s[%llx] \n", utf8_cstr(name), (s64) (intptr_t) ref);
-                    utf8_destory(name);
-                }
-            }
-            runtime = runtime->son;
-        }
+
     }
 }
 
