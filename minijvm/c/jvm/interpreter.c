@@ -192,7 +192,7 @@ s32 exception_handle(RuntimeStack *stack, Runtime *runtime) {
             }
             ConstantClassRef *ccr = class_get_constant_classref(runtime->clazz, (e + i)->catch_type);
             JClass *catchClass = classes_load_get(ccr->name, runtime);
-            if (instance_of(catchClass, ins, runtime)) {
+            if (instance_of(ins, catchClass, runtime)) {
                 et = e + i;
                 index = i;
                 break;
@@ -375,7 +375,7 @@ s32 checkcast(Runtime *runtime, Instance *ins, s32 typeIdx) {
     if (ins != NULL) {
         if (ins->mb.type == MEM_TYPE_INS) {
             JClass *other = getClassByConstantClassRef(clazz, typeIdx, runtime);
-            if (instance_of(other, ins, runtime)) {
+            if (instance_of(ins, other, runtime)) {
                 return 1;
             }
         } else if (ins->mb.type == MEM_TYPE_ARR) {
@@ -3298,12 +3298,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_new: {
 
-                            ConstantClassRef *ccf = class_get_constant_classref(clazz, *((u16 *) (ip + 1)));
-                            if (!ccf->clazz) {
-                                Utf8String *clsName = class_get_utf8_string(clazz, ccf->stringIndex);
-                                ccf->clazz = classes_load_get(clsName, runtime);
-                            }
-                            JClass *other = ccf->clazz;
+                            s32 i = *((u16 *) (ip + 1));
+
+                            JClass *other = getClassByConstantClassRef(clazz, i, runtime);
                             Instance *ins = NULL;
                             if (other) {
                                 ins = instance_create(runtime, other);
@@ -3436,7 +3433,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             s32 checkok = 0;
                             if (!ins) {
                             } else if (ins->mb.type & (MEM_TYPE_INS | MEM_TYPE_ARR)) {
-                                if (instance_of(getClassByConstantClassRef(clazz, typeIdx, runtime), ins, runtime)) {
+                                if (instance_of(ins, getClassByConstantClassRef(clazz, typeIdx, runtime), runtime)) {
                                     checkok = 1;
                                 }
                             }

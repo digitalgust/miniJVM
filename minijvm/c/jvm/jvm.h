@@ -992,6 +992,7 @@ struct _ClassType {
     Pairlist *arr_class_type;//for object array create speedup,left is utf8 index of class, right is arr class
     ArrayList *insFieldPtrIndex;//for optmize , save object pointer field index
     ArrayList *staticFieldPtrIndex; //save static field index
+    ArrayList *supers; //cache superclass and interfaces , for checkcast and instanceof
 
     //
     s8 status;
@@ -1017,6 +1018,8 @@ JClass *load_class(ClassLoader *loader, Utf8String *pClassName, Runtime *runtime
 
 s32 _LOAD_CLASS_FROM_BYTES(JClass *_this, ByteBuf *buf);
 
+void find_supers(JClass *clazz, Runtime *runtime);
+
 s32 class_prepar(JClass *clazz, Runtime *runtime);
 
 void _class_optimize(JClass *clazz);
@@ -1035,7 +1038,7 @@ s32 _class_constant_pool_destory(JClass *clazz);
 
 s32 _class_field_info_destory(JClass *clazz);
 
-u8 instance_of(JClass *clazz, Instance *ins, Runtime *runtime);
+u8 instance_of(Instance *ins, JClass *other, Runtime *runtime);
 
 u8 isSonOfInterface(JClass *clazz, JClass *son, Runtime *runtime);
 
@@ -1405,7 +1408,7 @@ static inline void localvar_init(Runtime *runtime, s32 var_slots, s32 para_slots
     runtime->localvar_slots = max_slots;
     s32 reserve_slots = max_slots - para_slots;
     if (reserve_slots) {
-        memset(&stack->store[stack_size(stack)], 0, reserve_slots * sizeof(StackEntry));
+        //memset(&stack->store[stack_size(stack)], 0, reserve_slots * sizeof(StackEntry));
         stack->sp += reserve_slots;
     }
 }

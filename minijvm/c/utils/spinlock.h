@@ -58,7 +58,7 @@ static inline int spin_lock_count(volatile spinlock_t *lock, int count) {
 }
 
 static inline int spin_lock(volatile spinlock_t *lock) {
-    return spin_lock_count(lock, 100);
+    return spin_lock_count(lock, 1);
 }
 
 static inline int spin_trylock(volatile spinlock_t *lock) {
