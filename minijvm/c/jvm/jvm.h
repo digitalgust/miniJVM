@@ -1187,9 +1187,11 @@ JClass *getClassByConstantClassRef(JClass *clazz, s32 index, Runtime *runtime);
 typedef struct _StackEntry {
     union {
         s64 lvalue;
+        u64 ulvalue;
         f64 dvalue;
         f32 fvalue;
         s32 ivalue;
+        u32 uivalue;
     };
     union {
         __refer rvalue;
@@ -1496,11 +1498,11 @@ static inline Instance *getInstanceInStack(ConstantMethodRef *cmr, RuntimeStack 
     return (stack->sp - 1 - cmr->para_slots)->rvalue;
 }
 
+s32 exception_handle(RuntimeStack *stack, Runtime *runtime);
+
 s32 _jarray_check_exception(Instance *arr, s32 index, Runtime *runtime);
 
 void _null_throw_exception(RuntimeStack *stack, Runtime *runtime);
-
-s32 exception_handle(RuntimeStack *stack, Runtime *runtime);
 
 void _nosuchmethod_check_exception(c8 *mn, RuntimeStack *stack, Runtime *runtime);
 

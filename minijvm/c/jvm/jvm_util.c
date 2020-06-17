@@ -51,12 +51,8 @@ JClass *classes_load_get_without_clinit(Utf8String *ustr, Runtime *runtime) {
         garbage_thread_lock();//slow lock
         cl = classes_get(ustr);
         if (!cl) {
-            load_class(sys_classloader, ustr, runtime);
+            cl = load_class(sys_classloader, ustr, runtime);
         }
-        if (!cl) {
-            array_class_create_get(runtime, ustr);
-        }
-        cl = classes_get(ustr);
         garbage_thread_unlock();
 
     }
