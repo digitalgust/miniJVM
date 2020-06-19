@@ -1038,7 +1038,7 @@ s32 _class_constant_pool_destory(JClass *clazz);
 
 s32 _class_field_info_destory(JClass *clazz);
 
-u8 instance_of(Instance *ins, JClass *other, Runtime *runtime);
+u8 instance_of(Instance *ins, JClass *other);
 
 u8 isSonOfInterface(JClass *clazz, JClass *son, Runtime *runtime);
 
@@ -1480,9 +1480,9 @@ void print_exception(Runtime *runtime);
 
 s32 execute_jvm(c8 *p_classpath, c8 *mainclass, ArrayList *java_para);
 
-s32 call_method_main(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, ArrayList *java_para);
+s32 call_method_para(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, ArrayList *java_para, Runtime *p_runtime);
 
-s32 call_method_c(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, Runtime *runtime);
+s32 call_method(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, Runtime *runtime);
 
 s32 execute_method_impl(MethodInfo *method, Runtime *runtime);
 

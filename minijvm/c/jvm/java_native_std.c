@@ -120,7 +120,7 @@ s32 java_lang_Class_isInstance(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     JClass *cl = insOfJavaLangClass_get_classHandle((Instance *) localvar_getRefer(runtime->localvar, 0));
     Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, 1);
-    if (instance_of(ins, cl, runtime)) {
+    if (instance_of(ins, cl)) {
         push_int(stack, 1);
     } else {
         push_int(stack, 0);

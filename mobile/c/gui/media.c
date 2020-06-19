@@ -37,20 +37,27 @@ void JNI_OnUnload_mini(JniEnv *env) {
     
 }
 
+tss_t TSS_KEY_RUNTIME_OF_THREAD;
 Runtime *getRuntimeCurThread(JniEnv *env) {
+    static s32 init=0;
+    if(!init){
+        tss_create(&TSS_KEY_RUNTIME_OF_THREAD,NULL);
+        //tss_create(&TSS_KEY_RUNTIME_OF_THREAD,(tss_dtor_t)env->runtime_destory);
+        init = 1;
+    }
     if (env->get_jvm_state() != JVM_STATUS_RUNNING) {
         return NULL;
     }
     thrd_t t = env->thrd_current();
-    Runtime *runtime = env->pairlist_get(refers.runtime_list, t);
+    Runtime *runtime = tss_get(TSS_KEY_RUNTIME_OF_THREAD);
     if (!runtime) {
         runtime = env->runtime_create(NULL);
         env->thread_boundle(runtime);
         env->jthread_set_daemon_value(runtime->threadInfo->jthread, runtime, 1);
-        env->pairlist_put(refers.runtime_list, t, runtime);
+        tss_set(TSS_KEY_RUNTIME_OF_THREAD,runtime);
     }
     
-    return env->getLastSon(runtime);//
+    return runtime;//
 }
 
 /* ===============================================================

@@ -357,24 +357,17 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
 }
 //===============================    实例化相关  ==================================
 
-u8 instance_of(Instance *ins, JClass *other, Runtime *runtime) {
+u8 instance_of(Instance *ins, JClass *other) {
     JClass *clazz = ins->mb.clazz;
     s32 i, imax;
     if (clazz) {
         for (i = 0, imax = clazz->supers->length; i < imax; i++) {
-            JClass *cl = arraylist_get_value_unsafe(clazz->supers, i);
+            JClass *cl = clazz->supers->data[i];
             if (other == cl) {
                 return 1;
             }
         }
     }
-//    while (clazz) {
-//        if (clazz == other || isSonOfInterface(other, clazz->mb.clazz, runtime)) {
-//            return 1;
-//        }
-//        clazz = getSuperClass(clazz);
-//    }
-
     return 0;
 }
 
@@ -572,22 +565,29 @@ MethodInfo *find_methodInfo_by_name(Utf8String *clsName, Utf8String *methodName,
  * @param runtime
  * @return
  */
-void find_supers(JClass *clazz, Runtime *runtime) {
+
+static void find_supers_impl(JClass *clazz, Runtime *runtime, ArrayList *list) {
     JClass *other = clazz;
     s32 i;
     while (other) {
-        arraylist_push_back(clazz->supers, other);
+        if (arraylist_index_of(list, DEFAULT_ARRAYLIST_EQUALS_FUNC, other) < 0) {
+            arraylist_push_back(list, other);
+        }
 
         //find interface default method implementation JDK8
         for (i = 0; i < other->interfacePool.clasz_used; i++) {
             ConstantClassRef *ccr = (other->interfacePool.clasz + i);
             Utf8String *icl_name = class_get_constant_utf8(other, ccr->stringIndex)->utfstr;
             JClass *icl = classes_load_get_without_clinit(icl_name, runtime);
-            arraylist_push_back(clazz->supers, icl);
+            find_supers_impl(icl, runtime, list);//find interface's interfaces
         }
         //find superclass
         other = getSuperClass(other);
     }
+}
+
+void find_supers(JClass *clazz, Runtime *runtime) {
+    find_supers_impl(clazz, runtime, clazz->supers);
 }
 
 /* Get Major Version String */

@@ -48,7 +48,7 @@ void glfmMain(GLFMDisplay *display) {
     c8* p_methodname="glinit";
     c8* p_methodtype="(J)V";
     push_long(runtime->stack,(intptr_t)display);
-    call_method_c(p_classname,p_methodname,p_methodtype,runtime);
+    call_method(p_classname,p_methodname,p_methodtype,runtime);
 }
 
 void glfmDestroy(){

@@ -211,6 +211,7 @@ int arraylist_remove(ArrayList *arraylist, ArrayListValue data) {
     spin_unlock(&arraylist->spinlock);
     return index;
 }
+
 int arraylist_compare_ptr(ArrayListValue a, ArrayListValue b) {
     return a == b;
 }
@@ -221,6 +222,10 @@ void arraylist_remove_at(ArrayList *arraylist, int index) {
         arraylist_remove_range(arraylist, index, 1);
     }
     spin_unlock(&arraylist->spinlock);
+}
+
+int DEFAULT_ARRAYLIST_EQUALS_FUNC(ArrayListValue value1, ArrayListValue value2) {
+    return value2 == value1;
 }
 
 int arraylist_index_of(ArrayList *arraylist,

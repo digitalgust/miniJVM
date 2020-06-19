@@ -117,8 +117,9 @@ void hashset_clear(Hashset *hash_table);
  *                             memory for the new entry.
  */
 
-int hashset_put(Hashset *hash_table,
-                HashsetKey key);
+int hashset_put(Hashset *hash_table, HashsetKey key);
+
+int hashset_put_unsafe(Hashset *set, HashsetKey key);
 
 /**
  * Look up a value in a hash table by key.
@@ -129,10 +130,9 @@ int hashset_put(Hashset *hash_table,
  *                            is no value with that key in the hash table.
  */
 
-HashsetKey hashset_get(Hashset *hash_table,
-                       HashsetKey key);
+HashsetKey hashset_get(Hashset *hash_table, HashsetKey key);
 
-
+HashsetKey hashset_get_unsafe(Hashset *set, HashsetKey key);
 
 /**
  * Remove a value from a hash table.
@@ -191,8 +191,6 @@ int hashset_iter_has_more(HashsetIterator *iterator);
 HashsetKey hashset_iter_next_key(HashsetIterator *iterator);
 
 HashsetKey hashset_iter_remove(HashsetIterator *iterator);
-
-int hashset_resize(Hashset *hash_table, u64 size);
 
 u64 hashset_count(Hashset *set);
 

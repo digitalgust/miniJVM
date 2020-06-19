@@ -1084,7 +1084,7 @@ static float frem(float value1, float value2) {
 }
 
 static double drem_1(double value1, double value2) {
-    return value2 - ((int) (value2 / value1) * value1);
+    return value2 - ((s64) (value2 / value1) * value1);
 }
 
 
@@ -1114,7 +1114,7 @@ static s32 instanceof(JClass *other, Instance *ins, Runtime *runtime) {
     s32 checkok = 0;
     if (!ins) {
     } else if (ins->mb.type & (MEM_TYPE_INS | MEM_TYPE_ARR)) {
-        if (instance_of(other, ins, runtime)) {
+        if (instance_of(ins, other)) {
             checkok = 1;
         }
     }

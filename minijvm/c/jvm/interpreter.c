@@ -14,7 +14,7 @@
 void _op_notsupport(u8 *opCode, Runtime *runtime) {
     invoke_deepth(runtime);
     jvm_printf("not support instruct [%x]\n", opCode[0]);
-    exit(-3);
+    exit(2);
 }
 
 //----------------------------------  tool func  ------------------------------------------
@@ -50,7 +50,7 @@ s32 exception_handle(RuntimeStack *stack, Runtime *runtime) {
             }
             ConstantClassRef *ccr = class_get_constant_classref(runtime->clazz, (e + i)->catch_type);
             JClass *catchClass = classes_load_get(ccr->name, runtime);
-            if (instance_of(ins, catchClass, runtime)) {
+            if (instance_of(ins, catchClass)) {
                 et = e + i;
                 index = i;
                 break;
@@ -239,7 +239,7 @@ s32 checkcast(Runtime *runtime, Instance *ins, s32 typeIdx) {
     if (ins != NULL) {
         if (ins->mb.type == MEM_TYPE_INS) {
             JClass *other = getClassByConstantClassRef(clazz, typeIdx, runtime);
-            if (instance_of(ins, other, runtime)) {
+            if (instance_of(ins, other)) {
                 return 1;
             }
         } else if (ins->mb.type == MEM_TYPE_ARR) {
@@ -329,42 +329,51 @@ static inline void _optimize_empty_method_call(MethodInfo *subm, CodeAttribute *
     }
 }
 
-static inline s32 _optimize_getfield(u8 *ip, JClass *clazz, s32 idx, Runtime *runtime) {
-    FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+
+static inline int _optimize_inline_getter(JClass *clazz, s32 cmrIdx, Runtime *runtime) {
+
+    RuntimeStack *stack = runtime->stack;
+    FieldInfo *fi = class_get_constant_fieldref(clazz, cmrIdx)->fieldInfo;
     if (!fi) {
-        ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
+        ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, cmrIdx);
         fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
         cfr->fieldInfo = fi;
         if (!fi) {
+            _nosuchfield_check_exception(utf8_cstr(cfr->name), runtime->stack, runtime);
             return RUNTIME_STATUS_EXCEPTION;
         }
+    }
+    Instance *fins = pop_ref(stack);
+    if (!fins) {
+        _null_throw_exception(stack, runtime);
+        return RUNTIME_STATUS_EXCEPTION;
     }
     if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
         class_clinit(fi->_this_class, runtime);
     }
     if (fi->isrefer) {
-        *ip = op_getfield_ref;
+        push_ref(stack, *((__refer *) (getInstanceFieldPtr(fins, fi))));
     } else {
         // check variable type to determine s64/s32/f64/f32
         s32 data_bytes = fi->datatype_bytes;
         switch (data_bytes) {
             case 4: {
-                *ip = op_getfield_int;
+                push_int(stack, *((s32 *) (getInstanceFieldPtr(fins, fi))));
                 break;
             }
             case 1: {
-                *ip = op_getfield_byte;
+                push_int(stack, *((s8 *) (getInstanceFieldPtr(fins, fi))));
                 break;
             }
             case 8: {
-                *ip = op_getfield_long;
+                push_long(stack, *((s64 *) (getInstanceFieldPtr(fins, fi))));
                 break;
             }
             case 2: {
                 if (fi->datatype_idx == DATATYPE_JCHAR) {
-                    *ip = op_getfield_jchar;
+                    push_int(stack, *((u16 *) (getInstanceFieldPtr(fins, fi))));
                 } else {
-                    *ip = op_getfield_short;
+                    push_int(stack, *((s16 *) (getInstanceFieldPtr(fins, fi))));
                 }
                 break;
             }
@@ -373,43 +382,76 @@ static inline s32 _optimize_getfield(u8 *ip, JClass *clazz, s32 idx, Runtime *ru
             }
         }
     }
-    *((u16 *) (ip + 1)) = fi->offset_instance;
     return RUNTIME_STATUS_NORMAL;
 }
 
-static inline int _optimize_putfield(u8 *ip, JClass *clazz, s32 idx, Runtime *runtime) {
-    FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+static inline int _optimize_inline_setter(JClass *clazz, s32 cmrIdx, Runtime *runtime) {
+
+    RuntimeStack *stack = runtime->stack;
+    FieldInfo *fi = class_get_constant_fieldref(clazz, cmrIdx)->fieldInfo;
     if (!fi) {
-        ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
+        ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, cmrIdx);
         fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
         cfr->fieldInfo = fi;
         if (!fi) {
+            _nosuchfield_check_exception(utf8_cstr(cfr->name), runtime->stack, runtime);
             return RUNTIME_STATUS_EXCEPTION;
         }
     }
+
     if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
         class_clinit(fi->_this_class, runtime);
     }
-    if (fi->isrefer) {//垃圾回收标识
-        *ip = op_putfield_ref;
+    if (fi->isrefer) {
+        __refer v = pop_ref(stack);
+        Instance *fins = pop_ref(stack);
+        if (!fins) {
+            _null_throw_exception(stack, runtime);
+            return RUNTIME_STATUS_EXCEPTION;
+        }
+        *((__refer *) (getInstanceFieldPtr(fins, fi))) = v;
     } else {
+        // check variable type to determine s64/s32/f64/f32
         s32 data_bytes = fi->datatype_bytes;
-        //非引用类型
         switch (data_bytes) {
             case 4: {
-                *ip = op_putfield_int;
+                s32 v = pop_int(stack);
+                Instance *fins = pop_ref(stack);
+                if (!fins) {
+                    _null_throw_exception(stack, runtime);
+                    return RUNTIME_STATUS_EXCEPTION;
+                }
+                *((s32 *) (getInstanceFieldPtr(fins, fi))) = v;
                 break;
             }
             case 1: {
-                *ip = op_putfield_byte;
+                s32 v = pop_int(stack);
+                Instance *fins = pop_ref(stack);
+                if (!fins) {
+                    _null_throw_exception(stack, runtime);
+                    return RUNTIME_STATUS_EXCEPTION;
+                }
+                *((s8 *) (getInstanceFieldPtr(fins, fi))) = v;
                 break;
             }
             case 8: {
-                *ip = op_putfield_long;
+                s64 v = pop_long(stack);
+                Instance *fins = pop_ref(stack);
+                if (!fins) {
+                    _null_throw_exception(stack, runtime);
+                    return RUNTIME_STATUS_EXCEPTION;
+                }
+                *((s64 *) (getInstanceFieldPtr(fins, fi))) = v;
                 break;
             }
             case 2: {
-                *ip = op_putfield_short;
+                s32 v = pop_int(stack);
+                Instance *fins = pop_ref(stack);
+                if (!fins) {
+                    _null_throw_exception(stack, runtime);
+                    return RUNTIME_STATUS_EXCEPTION;
+                }
+                *((u16 *) (getInstanceFieldPtr(fins, fi))) = v;
                 break;
             }
             default: {
@@ -417,142 +459,8 @@ static inline int _optimize_putfield(u8 *ip, JClass *clazz, s32 idx, Runtime *ru
             }
         }
     }
-    *((u16 *) (ip + 1)) = fi->offset_instance;
     return RUNTIME_STATUS_NORMAL;
 }
-
-
-//static inline int _optimize_inline_getter(JClass *clazz, s32 cmrIdx, Runtime *runtime) {
-//
-//    RuntimeStack *stack = runtime->stack;
-//    FieldInfo *fi = class_get_constant_fieldref(clazz, cmrIdx)->fieldInfo;
-//    if (!fi) {
-//        ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, cmrIdx);
-//        fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
-//        cfr->fieldInfo = fi;
-//        if (!fi) {
-//            _nosuchfield_check_exception(utf8_cstr(cfr->name), runtime->stack, runtime);
-//            return RUNTIME_STATUS_EXCEPTION;
-//        }
-//    }
-//    Instance *fins = pop_ref(stack);
-//    if (!fins) {
-//        _null_throw_exception(stack, runtime);
-//        return RUNTIME_STATUS_EXCEPTION;
-//    }
-//    if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
-//        class_clinit(fi->_this_class, runtime);
-//    }
-//    if (fi->isrefer) {
-//        push_ref(stack, *((__refer *) (getInstanceFieldPtr(fins, fi))));
-//    } else {
-//        // check variable type to determine s64/s32/f64/f32
-//        s32 data_bytes = fi->datatype_bytes;
-//        switch (data_bytes) {
-//            case 4: {
-//                push_int(stack, *((s32 *) (getInstanceFieldPtr(fins, fi))));
-//                break;
-//            }
-//            case 1: {
-//                push_int(stack, *((s8 *) (getInstanceFieldPtr(fins, fi))));
-//                break;
-//            }
-//            case 8: {
-//                push_long(stack, *((s64 *) (getInstanceFieldPtr(fins, fi))));
-//                break;
-//            }
-//            case 2: {
-//                if (fi->datatype_idx == DATATYPE_JCHAR) {
-//                    push_int(stack, *((u16 *) (getInstanceFieldPtr(fins, fi))));
-//                } else {
-//                    push_int(stack, *((s16 *) (getInstanceFieldPtr(fins, fi))));
-//                }
-//                break;
-//            }
-//            default: {
-//                break;
-//            }
-//        }
-//    }
-//    return RUNTIME_STATUS_NORMAL;
-//}
-//
-//static inline int _optimize_inline_setter(JClass *clazz, s32 cmrIdx, Runtime *runtime) {
-//
-//    RuntimeStack *stack = runtime->stack;
-//    FieldInfo *fi = class_get_constant_fieldref(clazz, cmrIdx)->fieldInfo;
-//    if (!fi) {
-//        ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, cmrIdx);
-//        fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
-//        cfr->fieldInfo = fi;
-//        if (!fi) {
-//            _nosuchfield_check_exception(utf8_cstr(cfr->name), runtime->stack, runtime);
-//            return RUNTIME_STATUS_EXCEPTION;
-//        }
-//    }
-//
-//    if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
-//        class_clinit(fi->_this_class, runtime);
-//    }
-//    if (fi->isrefer) {
-//        __refer v = pop_ref(stack);
-//        Instance *fins = pop_ref(stack);
-//        if (!fins) {
-//            _null_throw_exception(stack, runtime);
-//            return RUNTIME_STATUS_EXCEPTION;
-//        }
-//        *((__refer *) (getInstanceFieldPtr(fins, fi))) = v;
-//    } else {
-//        // check variable type to determine s64/s32/f64/f32
-//        s32 data_bytes = fi->datatype_bytes;
-//        switch (data_bytes) {
-//            case 4: {
-//                s32 v = pop_int(stack);
-//                Instance *fins = pop_ref(stack);
-//                if (!fins) {
-//                    _null_throw_exception(stack, runtime);
-//                    return RUNTIME_STATUS_EXCEPTION;
-//                }
-//                *((s32 *) (getInstanceFieldPtr(fins, fi))) = v;
-//                break;
-//            }
-//            case 1: {
-//                s32 v = pop_int(stack);
-//                Instance *fins = pop_ref(stack);
-//                if (!fins) {
-//                    _null_throw_exception(stack, runtime);
-//                    return RUNTIME_STATUS_EXCEPTION;
-//                }
-//                *((s8 *) (getInstanceFieldPtr(fins, fi))) = v;
-//                break;
-//            }
-//            case 8: {
-//                s64 v = pop_long(stack);
-//                Instance *fins = pop_ref(stack);
-//                if (!fins) {
-//                    _null_throw_exception(stack, runtime);
-//                    return RUNTIME_STATUS_EXCEPTION;
-//                }
-//                *((s64 *) (getInstanceFieldPtr(fins, fi))) = v;
-//                break;
-//            }
-//            case 2: {
-//                s32 v = pop_int(stack);
-//                Instance *fins = pop_ref(stack);
-//                if (!fins) {
-//                    _null_throw_exception(stack, runtime);
-//                    return RUNTIME_STATUS_EXCEPTION;
-//                }
-//                *((u16 *) (getInstanceFieldPtr(fins, fi))) = v;
-//                break;
-//            }
-//            default: {
-//                break;
-//            }
-//        }
-//    }
-//    return RUNTIME_STATUS_NORMAL;
-//}
 
 s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
@@ -592,8 +500,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                 utf8_destory(ustr);
                 exit(1);
             }
+            register u8 *ip = ca->code;
+            runtime->pc = ip;
+            JavaThreadInfo *threadInfo = runtime->threadInfo;
+            c8 *err_msg;
             localvar_init(runtime, ca->max_locals, method->para_slots);
             LocalVarItem *localvar = runtime->localvar;
+            register StackEntry *sp = runtime->stack->sp;
 
 
             if (method->is_sync)_synchronized_lock_method(method, runtime);
@@ -635,14 +548,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     }
                 }
 
-                register u8 *ip;
-                register StackEntry *sp;
-                sp = runtime->stack->sp;
-                //
-                ip = ca->code;
-                runtime->pc = ip;
-                JavaThreadInfo *threadInfo = runtime->threadInfo;
-                c8 *err_msg;
 
                 do {
                     u8 cur_inst = *ip;
@@ -650,6 +555,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     if (jdwp_enable) {
                         //breakpoint
                         stack->sp = sp;
+                        runtime->pc = ip;
                         if (method->breakpoint) {
                             jdwp_check_breakpoint(runtime);
                         }
@@ -660,6 +566,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         }
                         sp = stack->sp;
+                        check_gc_pause(-1);
                     }
 
 
@@ -1415,8 +1322,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_dup: {
+                            *(sp - 0) = *(sp - 1);
                             sp++;
-                            *(sp - 1) = *(sp - 2);
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
@@ -1429,10 +1336,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_dup_x1: {
-                            sp++;
+                            *(sp - 0) = *(sp - 1);
                             *(sp - 1) = *(sp - 2);
-                            *(sp - 2) = *(sp - 3);
-                            *(sp - 3) = *(sp - 1);
+                            *(sp - 2) = *(sp - 0);
+                            sp++;
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
@@ -1445,11 +1352,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_dup_x2: {
-                            sp++;
+                            *(sp - 0) = *(sp - 1);
                             *(sp - 1) = *(sp - 2);
                             *(sp - 2) = *(sp - 3);
-                            *(sp - 3) = *(sp - 4);
-                            *(sp - 4) = *(sp - 1);
+                            *(sp - 3) = *(sp - 0);
+                            sp++;
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
@@ -1462,10 +1369,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_dup2: {
+                            *(sp - 0) = *(sp - 2);
+                            *(sp + 1) = *(sp - 1);
                             sp++;
                             sp++;
-                            *(sp - 2) = *(sp - 4);
-                            *(sp - 1) = *(sp - 3);
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
                             invoke_deepth(runtime);
@@ -2725,13 +2632,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_lreturn:
                         case op_dreturn: {
-                            stack->sp = sp;
-//                            s32 local_slots = ca->max_locals > method->para_slots ? ca->max_locals : method->para_slots;
-//                            if (stack->sp != runtime->localvar + local_slots + method->return_slots) {
-//                                invoke_deepth(runtime);
-//                                jvm_printf("stack size  %s.%s%s in:%d out:%d  \n", utf8_cstr(clazz->name), utf8_cstr(method->name), utf8_cstr(method->descriptor), (runtime->localvar + local_slots + method->return_slots - runtime->stack->store), stack_size(stack));
-//                                exit(1);
-//                            }
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
 
                             StackEntry entry;
@@ -2794,7 +2694,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             if (!fi) {
                                 ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
+                                stack->sp = sp;
                                 fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
+                                sp = stack->sp;
                                 cfr->fieldInfo = fi;
                                 if (!fi) {
                                     err_msg = utf8_cstr(cfr->name);
@@ -2802,7 +2704,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 }
                             }
                             if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
+                                stack->sp = sp;
                                 class_clinit(fi->_this_class, runtime);
+                                sp = stack->sp;
                             }
                             if (fi->isrefer) {
                                 *ip = op_getstatic_ref;
@@ -2835,19 +2739,21 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     }
                                 }
                             }
-                            sp = stack->sp;
                             break;
                         }
 
 
                         case op_putstatic: {
-                            stack->sp = sp;
+
                             u16 idx = *((u16 *) (ip + 1));
 
                             FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             if (!fi) {
                                 ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
+                                stack->sp = sp;
                                 fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
+                                sp = stack->sp;
+
                                 cfr->fieldInfo = fi;
                                 if (!fi) {
                                     err_msg = utf8_cstr(cfr->name);
@@ -2855,7 +2761,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 }
                             }
                             if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
+                                stack->sp = sp;
                                 class_clinit(fi->_this_class, runtime);
+                                sp = stack->sp;
                             }
                             if (fi->isrefer) {//垃圾回收标识
                                 *ip = op_putstatic_ref;
@@ -2885,43 +2793,121 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     }
                                 }
                             }
-                            sp = stack->sp;
                             break;
                         }
 
 
                         case op_getfield: {
                             u16 idx = *((u16 *) (ip + 1));
-                            stack->sp = sp;
-                            ret = _optimize_getfield(ip, clazz, idx, runtime);
-                            sp = stack->sp;
-                            if (ret) {
-                                goto label_nosuchfield_throw;
+                            FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                            if (!fi) {
+                                ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
+                                stack->sp = sp;
+                                fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
+                                sp = stack->sp;
+                                cfr->fieldInfo = fi;
+                                if (!fi) {
+                                    err_msg = utf8_cstr(cfr->name);
+                                    goto label_nosuchfield_throw;
+                                }
                             }
+                            if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
+                                stack->sp = sp;
+                                class_clinit(fi->_this_class, runtime);
+                                sp = stack->sp;
+                            }
+                            if (fi->isrefer) {
+                                *ip = op_getfield_ref;
+                            } else {
+                                // check variable type to determine s64/s32/f64/f32
+                                s32 data_bytes = fi->datatype_bytes;
+                                switch (data_bytes) {
+                                    case 4: {
+                                        *ip = op_getfield_int;
+                                        break;
+                                    }
+                                    case 1: {
+                                        *ip = op_getfield_byte;
+                                        break;
+                                    }
+                                    case 8: {
+                                        *ip = op_getfield_long;
+                                        break;
+                                    }
+                                    case 2: {
+                                        if (fi->datatype_idx == DATATYPE_JCHAR) {
+                                            *ip = op_getfield_jchar;
+                                        } else {
+                                            *ip = op_getfield_short;
+                                        }
+                                        break;
+                                    }
+                                    default: {
+                                        break;
+                                    }
+                                }
+                            }
+                            *((u16 *) (ip + 1)) = fi->offset_instance;
                             break;
                         }
 
 
                         case op_putfield: {
+
                             u16 idx = *((u16 *) (ip + 1));
-                            stack->sp = sp;
-                            ret = _optimize_putfield(ip, clazz, idx, runtime);
-                            sp = stack->sp;
-                            if (ret) {
-                                goto label_nosuchfield_throw;
+                            FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
+                            if (!fi) {
+                                ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
+
+                                stack->sp = sp;
+                                fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
+                                sp = stack->sp;
+                                cfr->fieldInfo = fi;
+                                if (!fi) {
+                                    err_msg = utf8_cstr(cfr->name);
+                                    goto label_nosuchfield_throw;
+                                }
                             }
+                            if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
+                                stack->sp = sp;
+                                class_clinit(fi->_this_class, runtime);
+                                sp = stack->sp;
+                            }
+                            if (fi->isrefer) {//垃圾回收标识
+                                *ip = op_putfield_ref;
+                            } else {
+                                s32 data_bytes = fi->datatype_bytes;
+                                //非引用类型
+                                switch (data_bytes) {
+                                    case 4: {
+                                        *ip = op_putfield_int;
+                                        break;
+                                    }
+                                    case 1: {
+                                        *ip = op_putfield_byte;
+                                        break;
+                                    }
+                                    case 8: {
+                                        *ip = op_putfield_long;
+                                        break;
+                                    }
+                                    case 2: {
+                                        *ip = op_putfield_short;
+                                        break;
+                                    }
+                                    default: {
+                                        break;
+                                    }
+                                }
+                            }
+                            *((u16 *) (ip + 1)) = fi->offset_instance;
                             break;
                         }
 
 
                         case op_invokevirtual: {
 
-                            //此cmr所描述的方法，对于不同的实例，有不同的method
                             ConstantMethodRef *cmr = class_get_constant_method_ref(clazz, *((u16 *) (ip + 1)));
-//                            if (utf8_equals_c(cmr->clsName, "org/mini/json/JsonParser$SimpleModule")
-//                                && utf8_equals_c(cmr->name, "addDeserializer")) {
-//                                s32 debug = 1;
-//                            }
 
                             Instance *ins = (sp - 1 - cmr->para_slots)->rvalue;
                             if (!ins) {
@@ -2940,31 +2926,35 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     goto label_nosuchmethod_throw;
                                 } else {
                                     s32 match = 0;
-//                                    if (m->is_getter) {//optimize getter eg:  int getSize(){return size;}
-//                                        u8 *mc = m->converted_code->bytecode_for_jit;//must use original bytecode
-//                                        match = 1;
-//                                        //do getter here
-//                                        u16 idx = *((u16 *) (mc + 2));//field desc index
-//                                        JClass *other = m->_this_class;
-//                                        ret = _optimize_inline_getter(other, idx, runtime);
-//                                        if (ret) {
-//                                            goto label_exception_handle;
-//                                        }
-//                                        //jvm_printf("methodcall getter %s.%s  %d  in    %s.%s\n", utf8_cstr(m->_this_class->name), utf8_cstr(m->name), m->_this_class->status, utf8_cstr(clazz->name), utf8_cstr(method->name));
-//                                        ip += 3;
-//                                    } else if (m->is_setter) {//optimize setter eg: void setSize(int size){this.size=size;}
-//                                        u8 *mc = m->converted_code->bytecode_for_jit;//must use original bytecode
-//                                        match = 1;
-//                                        //do setter here
-//                                        u16 idx = *((u16 *) (mc + 3));//field desc index
-//                                        JClass *other = m->_this_class;
-//                                        ret = _optimize_inline_setter(other, idx, runtime);
-//                                        if (ret) {
-//                                            goto label_exception_handle;
-//                                        }
-//                                        //jvm_printf("methodcall setter %s.%s  %d  in    %s.%s\n", utf8_cstr(m->_this_class->name), utf8_cstr(m->name), m->_this_class->status, utf8_cstr(clazz->name), utf8_cstr(method->name));
-//                                        ip += 3;
-//                                    }
+                                    if (m->is_getter) {//optimize getter eg:  int getSize(){return size;}
+                                        u8 *mc = m->converted_code->bytecode_for_jit;//must use original bytecode
+                                        match = 1;
+                                        //do getter here
+                                        u16 idx = *((u16 *) (mc + 2));//field desc index
+                                        JClass *other = m->_this_class;
+                                        stack->sp = sp;
+                                        ret = _optimize_inline_getter(other, idx, runtime);
+                                        sp = stack->sp;
+                                        if (ret) {
+                                            goto label_exception_handle;
+                                        }
+                                        //jvm_printf("methodcall getter %s.%s  %d  in    %s.%s\n", utf8_cstr(m->_this_class->name), utf8_cstr(m->name), m->_this_class->status, utf8_cstr(clazz->name), utf8_cstr(method->name));
+                                        ip += 3;
+                                    } else if (m->is_setter) {//optimize setter eg: void setSize(int size){this.size=size;}
+                                        u8 *mc = m->converted_code->bytecode_for_jit;//must use original bytecode
+                                        match = 1;
+                                        //do setter here
+                                        u16 idx = *((u16 *) (mc + 3));//field desc index
+                                        JClass *other = m->_this_class;
+                                        stack->sp = sp;
+                                        ret = _optimize_inline_setter(other, idx, runtime);
+                                        sp = stack->sp;
+                                        if (ret) {
+                                            goto label_exception_handle;
+                                        }
+                                        //jvm_printf("methodcall setter %s.%s  %d  in    %s.%s\n", utf8_cstr(m->_this_class->name), utf8_cstr(m->name), m->_this_class->status, utf8_cstr(clazz->name), utf8_cstr(method->name));
+                                        ip += 3;
+                                    }
                                     if (!match) {
                                         *ip = op_invokevirtual_fast;
                                     }
@@ -3147,7 +3137,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("athrow  [%llx].exception throws  \n", (s64) (intptr_t) ins);
 #endif
-                            ret = RUNTIME_STATUS_EXCEPTION;
                             goto label_exception_handle;
                             break;
                         }
@@ -3183,7 +3172,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (!ins) {
                             } else if (ins->mb.type & (MEM_TYPE_INS | MEM_TYPE_ARR)) {
                                 stack->sp = sp;
-                                if (instance_of(ins, getClassByConstantClassRef(clazz, typeIdx, runtime), runtime)) {
+                                if (instance_of(ins, getClassByConstantClassRef(clazz, typeIdx, runtime))) {
                                     checkok = 1;
                                 }
                                 sp = stack->sp;
@@ -3322,12 +3311,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("multianewarray  [%llx] type:%s , count:%d  \n", (s64) (intptr_t) arr,
                                        utf8_cstr(desc), count);
 #endif
-                            if (!arr) {
-                                goto label_null_throw;
-                            } else {
-                                (sp++)->rvalue = arr;
-                                ip += 4;
-                            }
+                            (sp++)->rvalue = arr;
+                            ip += 4;
                             break;
                         }
 

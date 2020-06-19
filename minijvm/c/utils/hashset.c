@@ -10,8 +10,8 @@
 
 HashsetEntry *hashset_find_entry(Hashset *set, HashsetKey key);
 
-static s32 HASH_SET_DEFAULT_SIZE = 4 * 1024;
-static s32 HASH_SET_POOL_SIZE = 1024 * 1;
+static s32 HASH_SET_DEFAULT_SIZE = 8;
+static s32 HASH_SET_POOL_SIZE = 32;
 
 
 HashsetEntry *_hashset_get_entry(Hashset *set) {
@@ -54,6 +54,44 @@ u64 _DEFAULT_HASH_FUNC(HashsetKey kmer) {
 
 int _DEFAULT_HASH_EQUALS_FUNC(HashsetKey value1, HashsetKey value2) {
     return (value1 == value2);
+}
+
+
+static int hashset_resize(Hashset *set, u64 size) {
+    HashsetEntry **old_table;
+    u64 old_table_size;
+    HashsetEntry *rover;
+    HashsetEntry *next;
+    u64 index;
+    unsigned int i;
+
+    if (size != 0 && size != set->table_size) {
+        old_table = set->table;
+        old_table_size = set->table_size;
+
+        if (!hashset_allocate_table(set, (unsigned int) size)) {
+            printf("CRITICAL: FAILED TO ALLOCATE HASH TABLE!\n");
+            set->table = old_table;
+            set->table_size = old_table_size;
+            old_table = NULL;
+
+        } else {
+            for (i = 0; i < old_table_size; ++i) {
+                rover = old_table[i];
+
+                while (rover != NULL) {
+                    next = rover->next;
+                    index = _DEFAULT_HASH_FUNC(rover->key) % set->table_size;
+                    rover->next = set->table[index];
+                    set->table[index] = rover;
+                    rover = next;
+                }
+            }
+        }
+        if (old_table)jvm_free(old_table);
+    }
+
+    return 1;
 }
 
 
@@ -127,43 +165,50 @@ void hashset_clear(Hashset *set) {
     }
 }
 
-
 int hashset_put(Hashset *set, HashsetKey key) {
+    int success = 0;
+    spin_lock(&set->lock);
+    {
+        success = hashset_put_unsafe(set, key);
+    }
+    spin_unlock(&set->lock);
+    return success;
+}
+
+int hashset_put_unsafe(Hashset *set, HashsetKey key) {
     HashsetEntry *rover;
     HashsetEntry *newentry;
     u64 index;
     int success = 0;
 
 
-    if ((set->entries << 1) >= set->table_size) {
+    if ((set->entries * 75 / 100 + 1) >= set->table_size) {
         hashset_resize(set, set->table_size << 1);
     }
-    spin_lock(&set->lock);
-    {
-        index = _DEFAULT_HASH_FUNC(key) % set->table_size;
 
-        rover = set->table[index];
+    index = _DEFAULT_HASH_FUNC(key) % set->table_size;
 
-        while (rover != NULL) {
-            if (_DEFAULT_HASH_EQUALS_FUNC(rover->key, key) != 0) {
-                success = 2;
-                break;
-            }
-            rover = rover->next;
+    rover = set->table[index];
+
+    while (rover != NULL) {
+        if (_DEFAULT_HASH_EQUALS_FUNC(rover->key, key) != 0) {
+            success = 2;
+            break;
         }
+        rover = rover->next;
+    }
 
-        if (!success) {
-            newentry = _hashset_get_entry(set);
-            if (newentry != NULL) {
-                newentry->key = key;
-                newentry->next = set->table[index];
-                set->table[index] = newentry;
-                ++set->entries;
-                success = 1;
-            }
+    if (!success) {
+        newentry = _hashset_get_entry(set);
+        if (newentry != NULL) {
+            newentry->key = key;
+            newentry->next = set->table[index];
+            set->table[index] = newentry;
+            ++set->entries;
+            success = 1;
         }
     }
-    spin_unlock(&set->lock);
+
     return success;
 }
 
@@ -176,6 +221,13 @@ HashsetKey hashset_get(Hashset *set, HashsetKey key) {
         if (rover)ret = rover->key;
     }
     spin_unlock(&set->lock);
+    return ret;
+}
+
+HashsetKey hashset_get_unsafe(Hashset *set, HashsetKey key) {
+    HashsetKey *ret = HASH_NULL;
+    HashsetEntry *rover = hashset_find_entry(set, key);
+    if (rover)ret = rover->key;
     return ret;
 }
 
@@ -201,12 +253,12 @@ int hashset_remove(Hashset *set, HashsetKey key, int resize) {
     u64 index;
     unsigned int result;
 
-
-    if (resize && (set->entries << 3) < set->table_size) {
-        hashset_resize(set, set->table_size >> 1);
-    }
     spin_lock(&set->lock);
     {
+
+        if (resize && (set->entries << 3) < set->table_size) {
+            hashset_resize(set, set->table_size >> 1);
+        }
         index = _DEFAULT_HASH_FUNC(key) % set->table_size;
 
         result = 0;
@@ -317,47 +369,6 @@ HashsetKey hashset_iter_remove(HashsetIterator *iterator) {
 
     }
     return key;
-}
-
-int hashset_resize(Hashset *set, u64 size) {
-    HashsetEntry **old_table;
-    u64 old_table_size;
-    HashsetEntry *rover;
-    HashsetEntry *next;
-    u64 index;
-    unsigned int i;
-
-    spin_lock_count(&set->lock, 1);
-    {
-        if (size != 0 && size != set->table_size) {
-            old_table = set->table;
-            old_table_size = set->table_size;
-
-            if (!hashset_allocate_table(set, (unsigned int) size)) {
-                printf("CRITICAL: FAILED TO ALLOCATE HASH TABLE!\n");
-                set->table = old_table;
-                set->table_size = old_table_size;
-                old_table = NULL;
-
-            } else {
-                for (i = 0; i < old_table_size; ++i) {
-                    rover = old_table[i];
-
-                    while (rover != NULL) {
-                        next = rover->next;
-                        index = _DEFAULT_HASH_FUNC(rover->key) % set->table_size;
-                        rover->next = set->table[index];
-                        set->table[index] = rover;
-                        rover = next;
-                    }
-                }
-            }
-            if (old_table)jvm_free(old_table);
-        }
-    }
-    spin_unlock(&set->lock);
-
-    return 1;
 }
 
 
