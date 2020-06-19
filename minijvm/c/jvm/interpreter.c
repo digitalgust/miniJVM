@@ -2189,16 +2189,19 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_fcmpl: {
-                            f32 value1 = (--sp)->ivalue;
-                            f32 value2 = (--sp)->ivalue;
-                            s32 result = value2 == value1 ? 0 : (value2 > value1 ? 1 : -1);
+                            f32 value1 = (--sp)->fvalue;
+                            f32 value2 = (--sp)->fvalue;
+                            if ((sp + 0)->uivalue == 0x7fc00000 || (sp + 1)->uivalue == 0x7fc00000) {
+                                (sp++)->ivalue = -1;
+                            } else {
+                                s32 result = value2 == value1 ? 0 : (value2 > value1 ? 1 : -1);
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
-                            invoke_deepth(runtime);
-                            jvm_printf("fcmpl: %f < %f = %d\n", value2, value1, result);
+                                invoke_deepth(runtime);
+                                jvm_printf("fcmpl: %f < %f = %d\n", value2, value1, result);
 #endif
-                            (sp++)->ivalue = result;
-
+                                (sp++)->ivalue = result;
+                            }
                             ip++;
 
                             break;
@@ -2206,16 +2209,19 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_fcmpg: {
-                            f32 value1 = (--sp)->ivalue;
-                            f32 value2 = (--sp)->ivalue;
-                            s32 result = value2 == value1 ? 0 : (value2 > value1 ? 1 : -1);
+                            f32 value1 = (--sp)->fvalue;
+                            f32 value2 = (--sp)->fvalue;
+                            if ((sp + 0)->uivalue == 0x7fc00000 || (sp + 1)->uivalue == 0x7fc00000) {
+                                (sp++)->ivalue = 1;
+                            } else {
+                                s32 result = value2 == value1 ? 0 : (value2 > value1 ? 1 : -1);
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
-                            invoke_deepth(runtime);
-                            jvm_printf("fcmpg: %f > %f = %d\n", value2, value1, result);
+                                invoke_deepth(runtime);
+                                jvm_printf("fcmpg: %f > %f = %d\n", value2, value1, result);
 #endif
-                            (sp++)->ivalue = result;
-
+                                (sp++)->ivalue = result;
+                            }
                             ip++;
 
                             break;
@@ -2227,14 +2233,17 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             f64 value1 = (--sp)->dvalue;
                             --sp;
                             f64 value2 = (--sp)->dvalue;
-                            s32 result = value2 == value1 ? 0 : (value2 > value1 ? 1 : -1);
+                            if ((sp + 0)->ulvalue == 0x7ff8000000000000L || (sp + 2)->ulvalue == 0x7ff8000000000000L) {
+                                (sp++)->ivalue = -1;
+                            } else {
+                                s32 result = value2 == value1 ? 0 : (value2 > value1 ? 1 : -1);
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
-                            invoke_deepth(runtime);
-                            jvm_printf("dcmpl: %lf < %lf = %d\n", value2, value1, result);
+                                invoke_deepth(runtime);
+                                jvm_printf("dcmpl: %lf < %lf = %d\n", value2, value1, result);
 #endif
-                            (sp++)->ivalue = result;
-
+                                (sp++)->ivalue = result;
+                            }
                             ip++;
 
                             break;
@@ -2246,13 +2255,17 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             f64 value1 = (--sp)->dvalue;
                             --sp;
                             f64 value2 = (--sp)->dvalue;
-                            s32 result = value2 == value1 ? 0 : (value2 > value1 ? 1 : -1);
+                            if ((sp + 0)->ulvalue == 0x7ff8000000000000L || (sp + 2)->ulvalue == 0x7ff8000000000000L) {
+                                (sp++)->ivalue = 1;
+                            } else {
+                                s32 result = value2 == value1 ? 0 : (value2 > value1 ? 1 : -1);
 
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
-                            invoke_deepth(runtime);
-                            jvm_printf("dcmpg: %lf > %lf = %d\n", value2, value1, result);
+                                invoke_deepth(runtime);
+                                jvm_printf("dcmpg: %lf > %lf = %d\n", value2, value1, result);
 #endif
-                            (sp++)->ivalue = result;
+                                (sp++)->ivalue = result;
+                            }
                             ip++;
 
                             break;
