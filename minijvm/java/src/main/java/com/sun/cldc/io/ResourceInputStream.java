@@ -22,8 +22,8 @@ public class ResourceInputStream extends InputStream {
      *
      * @param name the name of the resource in classpath to access.
      * @return the fixed string.
-     * @exception IOException if the resource name points to a classfile, as
-     * determined by the resource name's extension.
+     * @throws IOException if the resource name points to a classfile, as
+     *                     determined by the resource name's extension.
      */
     private static String fixResourceName(String name) throws IOException {
         Vector dirVector = new Vector();
@@ -85,8 +85,8 @@ public class ResourceInputStream extends InputStream {
      * Construct a resource input stream for accessing objects in the jar file.
      *
      * @param name the name of the resource in classpath to access. The name
-     * must not have a leading '/'.
-     * @exception IOException if an I/O error occurs.
+     *             must not have a leading '/'.
+     * @throws IOException if an I/O error occurs.
      */
     public ResourceInputStream(String name) throws IOException {
         String fixedName = fixResourceName(name);
@@ -104,7 +104,7 @@ public class ResourceInputStream extends InputStream {
      *
      * @return the next byte of data, or <code>-1</code> if the end of the
      * stream is reached.
-     * @exception IOException if an I/O error occurs.
+     * @throws IOException if an I/O error occurs.
      */
     public int read() throws IOException {
         int result;
@@ -147,7 +147,7 @@ public class ResourceInputStream extends InputStream {
         return readLength;
     }
 
-//    private static native Object open(String name) throws IOException;
+    //    private static native Object open(String name) throws IOException;
 //    private static native void close(Object handle) throws IOException;
 //    private static native int size(Object handle) throws IOException;
 //    private static native int read(Object handle) throws IOException;
@@ -163,7 +163,7 @@ public class ResourceInputStream extends InputStream {
     }
 
     private static int readBytes(ByteArrayWrap handle, byte[] b, int offset,
-            int pos, int len) throws IOException {
+                                 int pos, int len) throws IOException {
         handle.setPos(pos);
         return handle.nextBlock(b, offset, len);
     }
@@ -182,7 +182,7 @@ public class ResourceInputStream extends InputStream {
             if (b == null || r_pos >= b.length) {
                 return -1;
             }
-            return b[r_pos++];
+            return b[r_pos++] & 0xff;
         }
 
         void setPos(int readPos) {

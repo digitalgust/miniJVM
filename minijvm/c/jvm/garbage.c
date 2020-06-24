@@ -615,7 +615,7 @@ s32 _garbage_copy_refer_thread(Runtime *pruntime) {
     Runtime *runtime = pruntime;
     RuntimeStack *stack = runtime->stack;
     //reset free stack space
-    memset(stack, 0, sizeof(StackEntry) * (stack->max_size - stack_size(stack)));
+    memset(stack->sp, 0, sizeof(StackEntry) * (stack->max_size - stack_size(stack)));
 
     s32 i, imax;
     StackEntry *entry;
