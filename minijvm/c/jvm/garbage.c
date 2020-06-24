@@ -612,10 +612,13 @@ void _garbage_copy_refer() {
 s32 _garbage_copy_refer_thread(Runtime *pruntime) {
     arraylist_push_back_unsafe(collector->runtime_refer_copy, pruntime->threadInfo->jthread);
 
-    s32 i, imax;
-    StackEntry *entry;
     Runtime *runtime = pruntime;
     RuntimeStack *stack = runtime->stack;
+    //reset free stack space
+    memset(stack, 0, sizeof(StackEntry) * (stack->max_size - stack_size(stack)));
+
+    s32 i, imax;
+    StackEntry *entry;
     for (i = 0, imax = stack_size(stack); i < imax; i++) {
         entry = stack->store + i;
         if (entry->rvalue) {

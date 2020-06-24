@@ -654,9 +654,6 @@ s32 java_lang_Runtime_gc(Runtime *runtime, JClass *clazz) {
     invoke_deepth(runtime);
     jvm_printf("java_lang_Runtime_gc \n");
 #endif
-    jthread_block_enter(runtime);
-    garbage_collect();
-    jthread_block_exit(runtime);
     return 0;
 }
 
