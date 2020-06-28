@@ -504,8 +504,10 @@ void signatureToName(Utf8String *signature) {
 }
 
 void nameToSignature(Utf8String *name) {
-    utf8_insert(name, 0, 'L');
-    utf8_append_c(name, ";");
+    if (utf8_char_at(name, 0) != '[') {
+        utf8_insert(name, 0, 'L');
+        utf8_append_c(name, ";");
+    }
 }
 
 u8 getClassStatus(JClass *clazz) {

@@ -83,7 +83,7 @@ public class AppManager extends GApplication {
 
     static AppManager instance = new AppManager();
 
-    GApplication preApp;
+    //GApplication preApp;
 
     GForm mgrForm;
 
@@ -109,7 +109,7 @@ public class AppManager extends GApplication {
 
     public void active() {
         if (GCallBack.getInstance().getApplication() != this) {
-            preApp = GCallBack.getInstance().getApplication();
+            //preApp = GCallBack.getInstance().getApplication();
         }
         if (webServer != null) {
             webServer.stopServer();

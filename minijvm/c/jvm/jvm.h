@@ -1416,7 +1416,7 @@ static inline void localvar_init(Runtime *runtime, s32 var_slots, s32 para_slots
 }
 
 static inline void localvar_dispose(Runtime *runtime) {
-    memset(runtime->localvar, 0, sizeof(StackEntry) * (runtime->stack->sp - runtime->localvar));
+    //memset(runtime->localvar, 0, sizeof(StackEntry) * (runtime->stack->sp - runtime->localvar));
     runtime->stack->sp = runtime->localvar;
 }
 
