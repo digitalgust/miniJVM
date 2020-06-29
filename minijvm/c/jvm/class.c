@@ -21,7 +21,7 @@ JClass *class_create(Runtime *runtime) {
     clazz->status = CLASS_STATUS_RAW;
     clazz->_load_class_from_bytes = _LOAD_CLASS_FROM_BYTES;
     //
-    jthreadlock_create(&clazz->mb);
+    jthreadlock_create(runtime, &clazz->mb);
     constant_list_create(clazz);
     clazz->arr_class_type = pairlist_create(16);
     clazz->insFieldPtrIndex = arraylist_create(8);

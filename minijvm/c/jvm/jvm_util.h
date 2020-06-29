@@ -299,7 +299,7 @@ void jthread_set_stackframe_value(Instance *ins, void *val);
 
 __refer jthread_get_name_value(Instance *ins);
 
-void jthreadlock_create(MemoryBlock *mb);
+void jthreadlock_create(Runtime *runtime, MemoryBlock *mb);
 
 void jthreadlock_destory(MemoryBlock *mb);
 

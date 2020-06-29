@@ -242,8 +242,6 @@ void thread_stop_all() {
 void thread_lock_init(ThreadLock *lock) {
     if (lock) {
         cnd_init(&lock->thread_cond);
-//        pthread_mutexattr_init(&lock->lock_attr);
-//        pthread_mutexattr_settype(&lock->lock_attr, PTHREAD_MUTEX_RECURSIVE);
         mtx_init(&lock->mutex_lock, mtx_recursive);
     }
 }
@@ -777,14 +775,14 @@ void jthread_set_daemon_value(Instance *ins, Runtime *runtime, s32 daemon) {
     }
 }
 
-void jthreadlock_create(MemoryBlock *mb) {
-    garbage_thread_lock();
+void jthreadlock_create(Runtime *runtime, MemoryBlock *mb) {
+    spin_lock(&runtime->threadInfo->lock);
     if (!mb->thread_lock) {
         ThreadLock *tl = jvm_calloc(sizeof(ThreadLock));
         thread_lock_init(tl);
         mb->thread_lock = tl;
     }
-    garbage_thread_unlock();
+    spin_unlock(&runtime->threadInfo->lock);
 }
 
 void jthreadlock_destory(MemoryBlock *mb) {
@@ -798,7 +796,7 @@ void jthreadlock_destory(MemoryBlock *mb) {
 s32 jthread_lock(MemoryBlock *mb, Runtime *runtime) { //可能会重入，同一个线程多次锁同一对象
     if (mb == NULL)return -1;
     if (!mb->thread_lock) {
-        jthreadlock_create(mb);
+        jthreadlock_create(runtime, mb);
     }
     ThreadLock *jtl = mb->thread_lock;
     //can pause when lock
@@ -818,7 +816,7 @@ s32 jthread_lock(MemoryBlock *mb, Runtime *runtime) { //可能会重入，同一
 s32 jthread_unlock(MemoryBlock *mb, Runtime *runtime) {
     if (mb == NULL)return -1;
     if (!mb->thread_lock) {
-        jthreadlock_create(mb);
+        jthreadlock_create(runtime, mb);
     }
     ThreadLock *jtl = mb->thread_lock;
     mtx_unlock(&jtl->mutex_lock);
@@ -833,7 +831,7 @@ s32 jthread_unlock(MemoryBlock *mb, Runtime *runtime) {
 s32 jthread_notify(MemoryBlock *mb, Runtime *runtime) {
     if (mb == NULL)return -1;
     if (mb->thread_lock == NULL) {
-        jthreadlock_create(mb);
+        jthreadlock_create(runtime, mb);
     }
     cnd_signal(&mb->thread_lock->thread_cond);
     return 0;
@@ -842,7 +840,7 @@ s32 jthread_notify(MemoryBlock *mb, Runtime *runtime) {
 s32 jthread_notifyAll(MemoryBlock *mb, Runtime *runtime) {
     if (mb == NULL)return -1;
     if (mb->thread_lock == NULL) {
-        jthreadlock_create(mb);
+        jthreadlock_create(runtime, mb);
     }
     cnd_broadcast(&mb->thread_lock->thread_cond);
     return 0;
@@ -855,8 +853,6 @@ s32 jthread_yield(Runtime *runtime) {
 
 s32 jthread_suspend(Runtime *runtime) {
     spin_lock(&runtime->threadInfo->lock);
-//    MethodInfo *m = runtime->threadInfo->top_runtime->method;
-//    jvm_printf("suspend %lx ,%s\n", runtime->threadInfo->jthread, m ? utf8_cstr(m->name) : "");
     runtime->threadInfo->suspend_count++;
     spin_unlock(&runtime->threadInfo->lock);
     return 0;
@@ -873,8 +869,6 @@ void jthread_block_exit(Runtime *runtime) {
 
 s32 jthread_resume(Runtime *runtime) {
     spin_lock(&runtime->threadInfo->lock);
-//    MethodInfo *m = runtime->threadInfo->top_runtime->method;
-//    jvm_printf("resume %lx ,%s\n", runtime->threadInfo->jthread, m ? utf8_cstr(m->name) : "");
     if (runtime->threadInfo->suspend_count > 0)runtime->threadInfo->suspend_count--;
     spin_unlock(&runtime->threadInfo->lock);
     return 0;
@@ -883,7 +877,7 @@ s32 jthread_resume(Runtime *runtime) {
 s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms) {
     if (mb == NULL)return -1;
     if (!mb->thread_lock) {
-        jthreadlock_create(mb);
+        jthreadlock_create(runtime, mb);
     }
     jthread_block_enter(runtime);
     runtime->threadInfo->curThreadLock = mb;
