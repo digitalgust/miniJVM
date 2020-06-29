@@ -363,6 +363,8 @@ s64 garbage_collect() {
 
     if (_garbage_pause_the_world() != 0) {
         _garbage_resume_the_world();
+        garbage_thread_unlock();
+        jvm_printf("gc canceled ");
         return -1;
     }
 //    jvm_printf("garbage_pause_the_world %lld\n", (currentTimeMillis() - time));

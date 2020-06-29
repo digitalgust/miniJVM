@@ -268,7 +268,7 @@ struct _JavaThreadInfo {
     u8 is_interrupt;
 
 
-    spinlock_t lock;
+
     thrd_t pthread;
     //调试器相关字段
     JdwpStep jdwp_step;

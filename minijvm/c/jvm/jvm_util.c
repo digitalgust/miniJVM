@@ -776,13 +776,13 @@ void jthread_set_daemon_value(Instance *ins, Runtime *runtime, s32 daemon) {
 }
 
 void jthreadlock_create(Runtime *runtime, MemoryBlock *mb) {
-    spin_lock(&runtime->threadInfo->lock);
+    spin_lock(&sys_classloader->lock);
     if (!mb->thread_lock) {
         ThreadLock *tl = jvm_calloc(sizeof(ThreadLock));
         thread_lock_init(tl);
         mb->thread_lock = tl;
     }
-    spin_unlock(&runtime->threadInfo->lock);
+    spin_unlock(&sys_classloader->lock);
 }
 
 void jthreadlock_destory(MemoryBlock *mb) {
@@ -852,9 +852,9 @@ s32 jthread_yield(Runtime *runtime) {
 }
 
 s32 jthread_suspend(Runtime *runtime) {
-    spin_lock(&runtime->threadInfo->lock);
+    spin_lock(&sys_classloader->lock);
     runtime->threadInfo->suspend_count++;
-    spin_unlock(&runtime->threadInfo->lock);
+    spin_unlock(&sys_classloader->lock);
     return 0;
 }
 
@@ -868,9 +868,9 @@ void jthread_block_exit(Runtime *runtime) {
 }
 
 s32 jthread_resume(Runtime *runtime) {
-    spin_lock(&runtime->threadInfo->lock);
+    spin_lock(&sys_classloader->lock);
     if (runtime->threadInfo->suspend_count > 0)runtime->threadInfo->suspend_count--;
-    spin_unlock(&runtime->threadInfo->lock);
+    spin_unlock(&sys_classloader->lock);
     return 0;
 }
 
