@@ -2811,109 +2811,145 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_getfield: {
-                            u16 idx = *((u16 *) (ip + 1));
-                            FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
-                            if (!fi) {
-                                ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
-                                stack->sp = sp;
-                                fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
-                                sp = stack->sp;
-                                cfr->fieldInfo = fi;
+                            u16 idx;
+                            s32 byte_changed = 0;
+                            spin_lock(&sys_classloader->lock);
+                            {
+                                if (*(ip) == op_getfield) {
+                                    idx = *((u16 *) (ip + 1));
+                                } else {
+                                    byte_changed = 1;
+                                }
+                            }
+                            spin_unlock(&sys_classloader->lock);
+
+                            if (!byte_changed) {
+                                FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                                 if (!fi) {
-                                    err_msg = utf8_cstr(cfr->name);
-                                    goto label_nosuchfield_throw;
+                                    ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
+                                    stack->sp = sp;
+                                    fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
+                                    sp = stack->sp;
+                                    cfr->fieldInfo = fi;
+                                    if (!fi) {
+                                        err_msg = utf8_cstr(cfr->name);
+                                        goto label_nosuchfield_throw;
+                                    }
                                 }
-                            }
-                            if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
-                                stack->sp = sp;
-                                class_clinit(fi->_this_class, runtime);
-                                sp = stack->sp;
-                            }
-                            if (fi->isrefer) {
-                                *ip = op_getfield_ref;
-                            } else {
-                                // check variable type to determine s64/s32/f64/f32
-                                s32 data_bytes = fi->datatype_bytes;
-                                switch (data_bytes) {
-                                    case 4: {
-                                        *ip = op_getfield_int;
-                                        break;
-                                    }
-                                    case 1: {
-                                        *ip = op_getfield_byte;
-                                        break;
-                                    }
-                                    case 8: {
-                                        *ip = op_getfield_long;
-                                        break;
-                                    }
-                                    case 2: {
-                                        if (fi->datatype_idx == DATATYPE_JCHAR) {
-                                            *ip = op_getfield_jchar;
-                                        } else {
-                                            *ip = op_getfield_short;
+                                if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
+                                    stack->sp = sp;
+                                    class_clinit(fi->_this_class, runtime);
+                                    sp = stack->sp;
+                                }
+                                spin_lock(&sys_classloader->lock);
+                                {
+                                    if (fi->isrefer) {
+                                        *ip = op_getfield_ref;
+                                    } else {
+                                        // check variable type to determine s64/s32/f64/f32
+                                        s32 data_bytes = fi->datatype_bytes;
+                                        switch (data_bytes) {
+                                            case 4: {
+                                                *ip = op_getfield_int;
+                                                break;
+                                            }
+                                            case 1: {
+                                                *ip = op_getfield_byte;
+                                                break;
+                                            }
+                                            case 8: {
+                                                *ip = op_getfield_long;
+                                                break;
+                                            }
+                                            case 2: {
+                                                if (fi->datatype_idx == DATATYPE_JCHAR) {
+                                                    *ip = op_getfield_jchar;
+                                                } else {
+                                                    *ip = op_getfield_short;
+                                                }
+                                                break;
+                                            }
+                                            default: {
+                                                break;
+                                            }
                                         }
-                                        break;
                                     }
-                                    default: {
-                                        break;
-                                    }
+                                    *((u16 *) (ip + 1)) = fi->offset_instance;
                                 }
+                                spin_unlock(&sys_classloader->lock);
                             }
-                            *((u16 *) (ip + 1)) = fi->offset_instance;
                             break;
                         }
 
 
                         case op_putfield: {
+                            //there were a multithread error , one enter the ins but changed by another
+                            u16 idx;
+                            s32 byte_changed = 0;
+                            spin_lock(&sys_classloader->lock);
+                            {
+                                if (*(ip) == op_putfield) {
+                                    idx = *((u16 *) (ip + 1));
+                                } else {
+                                    byte_changed = 1;
+                                }
+                            }
+                            spin_unlock(&sys_classloader->lock);
 
-                            u16 idx = *((u16 *) (ip + 1));
-                            FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
-                            if (!fi) {
-                                ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
-
-                                stack->sp = sp;
-                                fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
-                                sp = stack->sp;
-                                cfr->fieldInfo = fi;
+                            if (!byte_changed) {
+                                FieldInfo *fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                                 if (!fi) {
-                                    err_msg = utf8_cstr(cfr->name);
-                                    goto label_nosuchfield_throw;
+                                    ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, idx);
+
+                                    stack->sp = sp;
+                                    fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
+                                    sp = stack->sp;
+                                    cfr->fieldInfo = fi;
+                                    if (!fi) {
+                                        err_msg = utf8_cstr(cfr->name);
+                                        goto label_nosuchfield_throw;
+                                    }
                                 }
-                            }
-                            if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
-                                stack->sp = sp;
-                                class_clinit(fi->_this_class, runtime);
-                                sp = stack->sp;
-                            }
-                            if (fi->isrefer) {//垃圾回收标识
-                                *ip = op_putfield_ref;
+                                if (fi->_this_class->status < CLASS_STATUS_CLINITED) {
+                                    stack->sp = sp;
+                                    class_clinit(fi->_this_class, runtime);
+                                    sp = stack->sp;
+                                }
+                                spin_lock(&sys_classloader->lock);
+                                {
+                                    if (fi->isrefer) {//垃圾回收标识
+                                        *ip = op_putfield_ref;
+                                    } else {
+                                        s32 data_bytes = fi->datatype_bytes;
+                                        //非引用类型
+                                        switch (data_bytes) {
+                                            case 4: {
+                                                *ip = op_putfield_int;
+                                                break;
+                                            }
+                                            case 1: {
+                                                *ip = op_putfield_byte;
+                                                break;
+                                            }
+                                            case 8: {
+                                                *ip = op_putfield_long;
+                                                break;
+                                            }
+                                            case 2: {
+                                                *ip = op_putfield_short;
+                                                break;
+                                            }
+                                            default: {
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    *((u16 *) (ip + 1)) = fi->offset_instance;
+                                }
+                                spin_unlock(&sys_classloader->lock);
                             } else {
-                                s32 data_bytes = fi->datatype_bytes;
-                                //非引用类型
-                                switch (data_bytes) {
-                                    case 4: {
-                                        *ip = op_putfield_int;
-                                        break;
-                                    }
-                                    case 1: {
-                                        *ip = op_putfield_byte;
-                                        break;
-                                    }
-                                    case 8: {
-                                        *ip = op_putfield_long;
-                                        break;
-                                    }
-                                    case 2: {
-                                        *ip = op_putfield_short;
-                                        break;
-                                    }
-                                    default: {
-                                        break;
-                                    }
-                                }
+                                jvm_printf("putfield byte code changed by other thread.");
                             }
-                            *((u16 *) (ip + 1)) = fi->offset_instance;
                             break;
                         }
 
