@@ -2877,6 +2877,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     *((u16 *) (ip + 1)) = fi->offset_instance;
                                 }
                                 spin_unlock(&sys_classloader->lock);
+                            } else {
+                                //jvm_printf("getfield byte code changed by other thread.\n");
                             }
                             break;
                         }
@@ -2948,7 +2950,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 }
                                 spin_unlock(&sys_classloader->lock);
                             } else {
-                                jvm_printf("putfield byte code changed by other thread.");
+                                //jvm_printf("putfield byte code changed by other thread.\n");
                             }
                             break;
                         }
