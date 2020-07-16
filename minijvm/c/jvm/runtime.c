@@ -160,17 +160,21 @@ s64 getInstructPointer(Runtime *runtime) {
 
 void getRuntimeStack(Runtime *runtime, Utf8String *ustr) {
     s32 i, imax;
+    utf8_append_c(ustr, "Exception threw :\n");
     for (i = 0, imax = runtime->threadInfo->stacktrack->length; i < imax; i++) {
-        utf8_append_s64(ustr, (s64) (intptr_t) runtime, 16);
-        utf8_append_c(ustr, " ");
+        utf8_append_c(ustr, "    at ");
         MethodInfo *method = arraylist_get_value(runtime->threadInfo->stacktrack, i);
         utf8_append(ustr, method->_this_class->name);
         utf8_append_c(ustr, ".");
         utf8_append(ustr, method->name);
-        utf8_append(ustr, method->descriptor);
-        utf8_append_c(ustr, ":");
-        s32 lineNo = getLineNumByIndex(method->converted_code, (s32) (intptr_t) arraylist_get_value(runtime->threadInfo->lineNo, i));
-        utf8_append_s64(ustr, lineNo, 10);
+        if (method->_this_class->source) {
+            utf8_append_c(ustr, "(");
+            utf8_append(ustr, method->_this_class->source);
+            utf8_append_c(ustr, ":");
+            s32 lineNo = method->converted_code ? getLineNumByIndex(method->converted_code, (s32) (intptr_t) arraylist_get_value(runtime->threadInfo->lineNo, i)) : -1;
+            utf8_append_s64(ustr, lineNo, 10);
+            utf8_append_c(ustr, ")");
+        }
         utf8_append_c(ustr, "\n");
     }
 }

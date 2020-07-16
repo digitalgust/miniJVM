@@ -390,6 +390,11 @@ static inline void runtime_destory_inl(Runtime *runtime) {
     }
 }
 
+static inline void runtime_clear_stacktrack(Runtime *runtime) {
+    arraylist_clear(runtime->threadInfo->stacktrack);
+    arraylist_clear(runtime->threadInfo->lineNo);
+}
+
 ////======================= array =============================
 
 Instance *jarray_create_by_class(Runtime *runtime, s32 count, JClass *clazz);

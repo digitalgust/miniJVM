@@ -39,6 +39,8 @@ void print_exception(Runtime *runtime) {
         getRuntimeStack(runtime, stacktrack);
         jvm_printf("%s\n", utf8_cstr(stacktrack));
         utf8_destory(stacktrack);
+
+        runtime_clear_stacktrack(runtime);
     }
 }
 

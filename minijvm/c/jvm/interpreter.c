@@ -3977,8 +3977,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     if (exception_handle(runtime->stack, runtime)) {
                         ret = RUNTIME_STATUS_NORMAL;
                         ip = runtime->pc;
-                        arraylist_clear(runtime->threadInfo->stacktrack);
-                        arraylist_clear(runtime->threadInfo->lineNo);
+                        runtime_clear_stacktrack(runtime);
                     } else {
                         arraylist_push_back(runtime->threadInfo->stacktrack, method);
                         arraylist_push_back(runtime->threadInfo->lineNo, (__refer) (intptr_t) getLineNumByIndex(ca, runtime->pc - ca->code));

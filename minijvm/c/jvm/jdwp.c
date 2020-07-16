@@ -764,7 +764,7 @@ void jdwp_check_debug_step(Runtime *runtime) {
             }
             break;
         case NEXT_TYPE_INTO:
-            if (getRuntimeDepth(runtime->threadInfo->top_runtime) >= step->next_stop_runtime_depth) {
+            if (getRuntimeDepth(runtime->threadInfo->top_runtime) <= step->next_stop_runtime_depth) {// at least equile nextstop, or lessthan nextstop
                 suspend = 1;
             }
             break;
