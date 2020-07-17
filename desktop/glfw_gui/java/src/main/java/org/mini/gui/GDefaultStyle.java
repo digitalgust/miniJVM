@@ -6,13 +6,7 @@
 package org.mini.gui;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
-import static org.mini.nanovg.Nanovg.nvgBeginPath;
-import static org.mini.nanovg.Nanovg.nvgBoxGradient;
-import static org.mini.nanovg.Nanovg.nvgFill;
-import static org.mini.nanovg.Nanovg.nvgFillPaint;
-import static org.mini.nanovg.Nanovg.nvgRoundedRect;
-import static org.mini.nanovg.Nanovg.nvgStroke;
-import static org.mini.nanovg.Nanovg.nvgStrokeColor;
+import static org.mini.nanovg.Nanovg.*;
 
 /**
  *

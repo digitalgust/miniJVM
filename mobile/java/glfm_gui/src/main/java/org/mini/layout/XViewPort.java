@@ -31,7 +31,7 @@ public class XViewPort extends XContainer {
             viewPort.setLocation(x, y);
             viewPort.setSize(width, height);
             viewPort.setName(name);
-            viewPort.setAttachment(this);
+            viewPort.setXmlAgent(this);
         } else {
             viewPort.setLocation(x, y);
             viewPort.setSize(width, height);

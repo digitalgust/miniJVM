@@ -79,7 +79,7 @@ public class XCheckBox
         if (checkBox == null) {
             checkBox = new GCheckBox(text, false, x, y, width, height);
             checkBox.setName(name);
-            checkBox.setAttachment(this);
+            checkBox.setXmlAgent(this);
             checkBox.setActionListener(this);
             checkBox.setChecked(selected);
         } else {

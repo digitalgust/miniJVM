@@ -5,7 +5,9 @@
  */
 package org.mini.gl.warp;
 
-import org.mini.gui.*;
+import org.mini.gui.GCmd;
+import org.mini.gui.GForm;
+import org.mini.gui.GImage;
 import org.mini.nanovg.Nanovg;
 
 import static org.mini.gl.GL.*;
@@ -17,8 +19,8 @@ import static org.mini.gl.GL.*;
  */
 public class GLFrameBuffer {
 
-    int texture_w = 512;
-    int texture_h = 512;
+    int texture_w;
+    int texture_h;
     int[] fbo = {0};        // FBO对象的句柄
     int[] depth_stencil_buffer = {0};
     int[] rendertex = {0};        // 纹理对象的句柄
@@ -42,8 +44,8 @@ public class GLFrameBuffer {
     }
 
     public GLFrameBuffer(int w, int h) {
-        texture_w = w;
-        texture_h = h;
+        texture_w = w * 2;
+        texture_h = h * 2;
     }
 
     public void gl_init() {

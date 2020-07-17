@@ -26,8 +26,8 @@ public class XTable
 
         int floatCount = 0;
         int nonFloatPix = 0;
-        for (int i = 0; i < size(); i++) {
-            XObject xo = elementAt(i);
+        for (int i = 0; i < children.size(); i++) {
+            XObject xo = children.get(i);
             if (xo.vfloat) {
                 floatCount++;
             } else {
@@ -38,8 +38,8 @@ public class XTable
         if (viewH - nonFloatPix > 0) {
             int floatAvgH = floatCount == 0 ? 0 : (viewH - nonFloatPix) / floatCount;
             int yOffset = 0;
-            for (int i = 0; i < size(); i++) {
-                XObject xo = elementAt(i);
+            for (int i = 0; i < children.size(); i++) {
+                XObject xo = children.get(i);
                 xo.y += yOffset;
                 xo.getGui().setLocation(xo.x, xo.y);
                 if (xo.vfloat) {

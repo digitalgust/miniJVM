@@ -27,9 +27,8 @@ public class MyApp extends GApplication {
         for (String key : uit.getVariable()) {
             uit.setVar(key, GLanguage.getString(key));
         }
-        XContainer xc = new XForm(null);
-        xc.parseXml(uit.parse());
-        xc.build((int) GCallBack.getInstance().getDeviceWidth(), (int) GCallBack.getInstance().getDeviceHeight(), new XEventHandler() {
+        XContainer xc = (XContainer) XContainer.parseXml(uit.parse());
+        xc.build(GCallBack.getInstance().getDeviceWidth(), GCallBack.getInstance().getDeviceHeight(), new XEventHandler() {
             public void action(GObject gobj, String cmd) {
                 String name = gobj.getName();
                 if ("MI_OPENFRAME".equals(name)) {
@@ -42,6 +41,7 @@ public class MyApp extends GApplication {
                     gframe.close();
                 }
             }
+
             public void onStateChange(GObject gobj, String cmd) {
             }
         });

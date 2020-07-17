@@ -5,19 +5,28 @@ import org.mini.gui.GList;
 import org.mini.gui.GListItem;
 import org.mini.gui.GObject;
 import org.mini.gui.event.GActionListener;
+import org.mini.gui.event.GStateChangeListener;
 import org.mini.layout.xmlpull.KXmlParser;
 import org.mini.layout.xmlpull.XmlPullParser;
 
 import java.util.Vector;
 
-public class XList extends XObject implements GActionListener {
+public class XList extends XObject implements GStateChangeListener {
     static public final String XML_NAME = "list";
 
-    protected static class ListItem {
+    protected static class ListItem implements GActionListener {
         static public final String XML_NAME = "li";
+
+        XList xlist;
         String name;
         String text;
         String pic;
+        String cmd;
+
+        @Override
+        public void action(GObject gobj) {
+            xlist.getRoot().getEventHandler().action(gobj, cmd);
+        }
     }
 
     protected Vector items = new Vector();
@@ -67,9 +76,10 @@ public class XList extends XObject implements GActionListener {
 
                 if (tagName.equals(XList.ListItem.XML_NAME)) {
                     XList.ListItem item = new ListItem();
-
+                    item.xlist = this;
                     item.name = parser.getAttributeValue(null, "name");
                     item.pic = parser.getAttributeValue(null, "pic");
+                    item.cmd = parser.getAttributeValue(null, "cmd");
                     String tmp = parser.nextText();
                     item.text = tmp == null ? "" : tmp;
                     items.add(item);
@@ -88,7 +98,11 @@ public class XList extends XObject implements GActionListener {
     }
 
     protected int getDefaultHeight(int parentViewH) {
-        return XDef.DEFAULT_LIST_HEIGHT;
+        if (multiLine) {
+            return XDef.DEFAULT_LIST_HEIGHT * items.size();
+        } else {
+            return XDef.DEFAULT_LIST_HEIGHT;
+        }
     }
 
 
@@ -102,7 +116,8 @@ public class XList extends XObject implements GActionListener {
             list.setShowMode(multiLine ? GList.MODE_MULTI_SHOW : GList.MODE_SINGLE_SHOW);
             list.setName(name);
             list.setItemHeight(itemheight);
-            list.setAttachment(this);
+            list.setXmlAgent(this);
+            list.setStateChangeListener(this);
             for (int i = 0; i < items.size(); i++) {
                 ListItem item = (ListItem) items.elementAt(i);
                 GImage img = null;
@@ -111,7 +126,7 @@ public class XList extends XObject implements GActionListener {
                 }
                 GListItem gli = new GListItem(img, item.text);
                 gli.setName(item.name);
-                gli.setActionListener(this);
+                gli.setActionListener(item);
 
                 list.add(gli);
             }
@@ -123,8 +138,7 @@ public class XList extends XObject implements GActionListener {
 
 
     @Override
-    public void action(GObject gobj) {
-        getRoot().getEventHandler().action(gobj, null);
+    public void onStateChange(GObject gobj) {
+        getRoot().getEventHandler().onStateChange(gobj, null);
     }
-
 }

@@ -15,12 +15,11 @@ import static org.mini.nanovg.Nanovg.*;
 public class GListItem extends GObject {
 
     protected GImage img;
-    protected String label;
     protected GList list;
 
     public GListItem(GImage img, String lab) {
         this.img = img;
-        this.label = lab;
+        setText(lab);
         setFontSize(GToolkit.getStyle().getTextFontSize());
         setColor(GToolkit.getStyle().getTextFontColor());
     }
@@ -44,14 +43,14 @@ public class GListItem extends GObject {
      * @return the label
      */
     public String getLabel() {
-        return label;
+        return getText();
     }
 
     /**
      * @param label the label to set
      */
     public void setLabel(String label) {
-        this.label = label;
+        setText(label);
     }
 
     int mouseX, mouseY;
@@ -94,6 +93,9 @@ public class GListItem extends GObject {
         list.select(index);
         list.pulldown = false;
         list.changeCurPanel();
+        if (list.stateChangeListener != null) {
+            list.stateChangeListener.onStateChange(list);
+        }
         flush();
         doAction();
     }
@@ -140,7 +142,7 @@ public class GListItem extends GObject {
             GToolkit.drawImage(vg, img, tx, ty, thumb, thumb, !outOfFilter, outOfFilter ? 0.5f : 0.8f);
         }
         float[] c = outOfFilter ? GToolkit.getStyle().getHintFontColor() : list.color;
-        GToolkit.drawTextLine(vg, tx + thumb + pad, ty + thumb / 2, w - (thumb + pad), thumb, label, list.fontSize, c, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        GToolkit.drawTextLine(vg, tx + thumb + pad, ty + thumb / 2, w - (thumb + pad), thumb, getText(), list.fontSize, c, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         return true;
     }
 

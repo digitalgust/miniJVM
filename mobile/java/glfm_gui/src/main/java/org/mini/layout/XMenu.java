@@ -119,7 +119,7 @@ public class XMenu extends XObject implements GActionListener {
         if (menu == null) {
             menu = new GMenu(x, y, width, height);
             menu.setName(name);
-            menu.setAttachment(this);
+            menu.setXmlAgent(this);
             for (int i = 0; i < items.size(); i++) {
                 MenuItem item = (MenuItem) items.elementAt(i);
                 GImage img = null;

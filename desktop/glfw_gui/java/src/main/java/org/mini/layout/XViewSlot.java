@@ -58,13 +58,13 @@ public class XViewSlot extends XContainer {
 
     void align() {
         viewSlot.clear();
-        for (int i = 0; i < size(); i++) {
-            XObject xo = elementAt(i);
+        for (int i = 0; i < children.size(); i++) {
+            XObject xo = children.get(i);
             GObject go = xo.getGui();
             if (go != null) viewSlot.add(i, go, parseMoveMode(xo.moveMode));
         }
-        for (int i = 0; i < size(); i++) {
-            XObject xo = elementAt(i);
+        for (int i = 0; i < children.size(); i++) {
+            XObject xo = children.get(i);
             if (xo instanceof XContainer) {
                 ((XContainer) xo).align();
             }
@@ -82,14 +82,14 @@ public class XViewSlot extends XContainer {
             viewSlot.setLocation(x, y);
             viewSlot.setSize(width, height);
             viewSlot.setName(name);
-            viewSlot.setAttachment(this);
+            viewSlot.setXmlAgent(this);
 
         } else {
             viewSlot.setLocation(x, y);
             viewSlot.setSize(width, height);
             viewSlot.clear();
-            for (int i = 0; i < size(); i++) {
-                XObject xo = elementAt(i);
+            for (int i = 0; i < children.size(); i++) {
+                XObject xo = children.get(i);
                 GObject go = xo.getGui();
                 if (go != null) viewSlot.add(i, go, parseMoveMode(xo.moveMode));
             }

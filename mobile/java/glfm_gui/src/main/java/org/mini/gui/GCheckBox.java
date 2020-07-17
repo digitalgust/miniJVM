@@ -7,20 +7,9 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 
-import static org.mini.nanovg.Gutil.toUtf8;
 import static org.mini.gui.GToolkit.nvgRGBA;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_LEFT;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_MIDDLE;
-import static org.mini.nanovg.Nanovg.nvgBeginPath;
-import static org.mini.nanovg.Nanovg.nvgBoxGradient;
-import static org.mini.nanovg.Nanovg.nvgFill;
-import static org.mini.nanovg.Nanovg.nvgFillColor;
-import static org.mini.nanovg.Nanovg.nvgFillPaint;
-import static org.mini.nanovg.Nanovg.nvgFontFace;
-import static org.mini.nanovg.Nanovg.nvgFontSize;
-import static org.mini.nanovg.Nanovg.nvgRoundedRect;
-import static org.mini.nanovg.Nanovg.nvgTextAlign;
-import static org.mini.nanovg.Nanovg.nvgTextJni;
+import static org.mini.nanovg.Gutil.toUtf8;
+import static org.mini.nanovg.Nanovg.*;
 
 /**
  * @author gust

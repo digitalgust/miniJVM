@@ -19,6 +19,7 @@ public class XFrame
 
     protected String title;
     protected String onClose;
+    boolean closable = true;
 
 
     /**
@@ -34,7 +35,9 @@ public class XFrame
 
     protected void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
-        if (attName.equals("title")) {
+        if (attName.equals("closable")) {
+            closable = "0".equals(attValue) ? false : true;
+        } else if (attName.equals("title")) {
             title = attValue;
         } else if (attName.equals("onclose")) {
             onClose = attValue;
@@ -44,7 +47,6 @@ public class XFrame
     public String getXmlTag() {
         return XML_NAME;
     }
-
 
 
     /**
@@ -69,7 +71,8 @@ public class XFrame
         if (frame == null) {
             frame = new GFrame(title, x, y, width, height);
             frame.setName(name);
-            frame.setAttachment(this);
+            frame.setXmlAgent(this);
+            frame.setClosable(closable);
         } else {
             frame.setLocation(x, y);
             frame.setSize(width, height);

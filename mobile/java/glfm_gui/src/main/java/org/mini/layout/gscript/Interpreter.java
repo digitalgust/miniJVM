@@ -97,7 +97,7 @@ public class Interpreter {
 //        stack.clear();
         //加入标准库
         Stdlib stdlib = new Stdlib();
-        register(stdlib);
+        reglib(stdlib);
     }
 
     /**
@@ -359,7 +359,7 @@ public class Interpreter {
      *
      * @param lib Lib
      */
-    public void register(Lib lib) {
+    public void reglib(Lib lib) {
         extSubList.addElement(lib);
     }
 
@@ -998,20 +998,20 @@ public class Interpreter {
             }
         }
     }
-
     //---------------------------表达式求值------------------------------
+
+    //运算类型
+    static final int T_NUM = 1 //数值
+            , T_STR = 2 //串
+            , T_LOG = 4 //布尔值
+            , T_ARR = 8 //数组指针，非数组
+            , T_LOGSYM = 16 //逻辑符号
+            , T_OBJ = 32; //对象
     DataType calcExpr(Expression stat, Hashtable varList) throws Exception {
 
         //Vector expr = parseInstruct(exprStr); //分解表达式
         Vector expr = preCalc(stat, varList); //求变量和过程调用的值
 
-        //运算类型
-        final int T_NUM = 1 //数值
-                , T_STR = 2 //串
-                , T_LOG = 4 //布尔值
-                , T_ARR = 8 //数组指针，非数组
-                , T_LOGSYM = 16 //逻辑符号
-                , T_OBJ = 32; //对象
         int cType = 0, cType1 = 0; //默认为算术运算
 
         for (int i = 0; i < expr.size(); i++) {

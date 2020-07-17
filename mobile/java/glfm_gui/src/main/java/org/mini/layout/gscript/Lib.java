@@ -1,29 +1,34 @@
 package org.mini.layout.gscript;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 abstract public class Lib {
-    //方法名表
+    protected Map<String, Integer> methodNames = new HashMap<>();
+
     /**
      * 构造方法
      */
     public Lib() {
     }
 
-    abstract public String[] getMethodNames();
+    public Map<String, Integer> getMethodNames() {
+        return methodNames;
+    }
 
     /**
      * 供解释器调用，取得某个名字方法的ID
+     *
      * @param name String
      * @return int
      */
     public int getMethodID(String name) {
-        String[] methodNames = getMethodNames();
-        if (methodNames != null) {
-            for (int i = 0; i < methodNames.length; i++) {
-                if (name.equals(methodNames[i].toLowerCase())) {
-                    return i;
-                }
+        Map<String, Integer> methodNames = getMethodNames();
+        if (methodNames != null && name != null) {
+            Integer i = methodNames.get(name.toLowerCase());
+            if (i != null) {
+                return i;
             }
         }
         return -1;
@@ -31,7 +36,8 @@ abstract public class Lib {
 
     /**
      * 用户方法实现
-     * @param para Stack
+     *
+     * @param para     Stack
      * @param methodID int
      * @return Object
      */

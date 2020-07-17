@@ -9,30 +9,7 @@ import org.mini.nanovg.Gutil;
 import org.mini.nanovg.StbFont;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_BASELINE;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_BOTTOM;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_CENTER;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_LEFT;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_MIDDLE;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_RIGHT;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_TOP;
-import static org.mini.nanovg.Nanovg.NVG_CW;
-import static org.mini.nanovg.Nanovg.nvgArc;
-import static org.mini.nanovg.Nanovg.nvgBeginPath;
-import static org.mini.nanovg.Nanovg.nvgClosePath;
-import static org.mini.nanovg.Nanovg.nvgFill;
-import static org.mini.nanovg.Nanovg.nvgFillColor;
-import static org.mini.nanovg.Nanovg.nvgFillPaint;
-import static org.mini.nanovg.Nanovg.nvgImagePattern;
-import static org.mini.nanovg.Nanovg.nvgLineTo;
-import static org.mini.nanovg.Nanovg.nvgMoveTo;
-import static org.mini.nanovg.Nanovg.nvgRoundedRect;
-import static org.mini.nanovg.Nanovg.nvgScissor;
-import static org.mini.nanovg.Nanovg.nvgStroke;
-import static org.mini.nanovg.Nanovg.nvgStrokeColor;
-import static org.mini.nanovg.Nanovg.nvgTextAlign;
-import static org.mini.nanovg.Nanovg.nvgTextJni;
-import static org.mini.nanovg.Nanovg.nvgTranslate;
+import static org.mini.nanovg.Nanovg.*;
 
 /**
  * @author gust
@@ -54,8 +31,9 @@ public class GGraphics {
     int curColor = 0;
     byte r, g, b, a;
     float fontSize = GToolkit.getStyle().getTextFontSize();
+    int clipX, clipY, clipW, clipH;
 
-    GGraphics(GCanvas canvas, long context) {
+    public GGraphics(GCanvas canvas, long context) {
         this.canvas = canvas;
         vg = context;
     }
@@ -64,12 +42,27 @@ public class GGraphics {
         return vg;
     }
 
+    public GCanvas getCanvas() {
+        return canvas;
+    }
+
+    public void setColor(int pr, int pg, int pb) {
+        r = (byte) (pr & 0xff);
+        g = (byte) (pg & 0xff);
+        b = (byte) (pb & 0xff);
+        curColor = (curColor & 0xff000000) | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
+    }
+
     public void setColor(int argb) {
         curColor = argb;
         a = (byte) (0xff);
         r = (byte) (0xff & (argb >> 16));
         g = (byte) (0xff & (argb >> 8));
         b = (byte) (0xff & (argb >> 0));
+    }
+
+    public void setAlpha(int b) {
+        curColor = (curColor & 0x00ffffff) | ((b & 0xff) << 24);
     }
 
     public void setARGBColor(int argb) {
@@ -246,7 +239,7 @@ public class GGraphics {
     }
 
     public void clipRect(int x, int y, int width, int height) {
-        nvgScissor(vg, x, y, width, height);
+        setClip(x, y, width, height);
     }
 
     public void translate(int x, int y) {
@@ -268,6 +261,28 @@ public class GGraphics {
     }
 
     public void setClip(int x, int y, int w, int h) {
+        clipX = x;
+        clipY = y;
+        clipW = w;
+        clipH = h;
         nvgScissor(vg, x, y, w, h);
     }
+
+    public int getClipX() {
+        return clipX;
+    }
+
+    public int getClipY() {
+        return clipY;
+    }
+
+    public int getClipWidth() {
+        return clipW;
+    }
+
+    public int getClipHeight() {
+        return clipH;
+    }
+
+
 }

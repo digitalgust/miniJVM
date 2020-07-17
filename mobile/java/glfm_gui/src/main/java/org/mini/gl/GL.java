@@ -845,7 +845,7 @@ public class GL {
     public static native int glClientWaitSync(long psync, int pflags, long ptimeout); //GLsync,GLbitfield,GLuint64, //GLenum
     public static native void glWaitSync(long psync, int pflags, long ptimeout); //GLsync,GLbitfield,GLuint64, //void
     public static native void glGetInteger64v(int ppname, long[] pdata, int offset_pdata); //GLenum,GLint64*, //void
-    public static native void glGetSynciv(long psync, int ppname, int pbufSize, int[] plength, int offset_plength, int[] pvalues, int offset_pvalues); //GLsync,GLenum,GLsizei,GLsizei*,GLint*, //void
+    public static native void glGetSynciv(long psync, int ppname, int pcount, int[] plength, int offset_plength, int[] pvalues, int offset_pvalues); //GLsync,GLenum,GLsizei,GLsizei*,GLint*, //void
     public static native void glGetInteger64i_v(int ptarget, int pindex, long[] pdata, int offset_pdata); //GLenum,GLuint,GLint64*, //void
     public static native void glGetBufferParameteri64v(int ptarget, int ppname, long[] pparams, int offset_pparams); //GLenum,GLenum,GLint64*, //void
     public static native void glGenSamplers(int pcount, int[] psamplers, int offset_psamplers); //GLsizei,GLuint*, //void
@@ -872,7 +872,7 @@ public class GL {
     public static native void glInvalidateSubFramebuffer(int ptarget, int pnumAttachments, int[] pattachments, int offset_pattachments, int px, int py, int pwidth, int pheight); //GLenum,GLsizei,const GLenum*,GLint,GLint,GLsizei,GLsizei, //void
     public static native void glTexStorage2D(int ptarget, int plevels, int pinternalformat, int pwidth, int pheight); //GLenum,GLsizei,GLenum,GLsizei,GLsizei, //void
     public static native void glTexStorage3D(int ptarget, int plevels, int pinternalformat, int pwidth, int pheight, int pdepth); //GLenum,GLsizei,GLenum,GLsizei,GLsizei,GLsizei, //void
-    public static native void glGetInternalformativ(int ptarget, int pinternalformat, int ppname, int pbufSize, int[] pparams, int offset_pparams); //GLenum,GLenum,GLenum,GLsizei,GLint*, //void
+    public static native void glGetInternalformativ(int ptarget, int pinternalformat, int ppname, int pcount, int[] pparams, int offset_pparams); //GLenum,GLenum,GLenum,GLsizei,GLint*, //void
 
 }
 

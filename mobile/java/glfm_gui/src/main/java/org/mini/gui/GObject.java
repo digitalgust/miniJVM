@@ -57,7 +57,11 @@ abstract public class GObject {
 
     protected String name;
 
+    protected String text;
+
     protected Object attachment;
+
+    protected Object xmlAgent;
 
     /**
      *
@@ -368,6 +372,15 @@ abstract public class GObject {
         this.attachment = attachment;
     }
 
+
+    public Object getXmlAgent() {
+        return xmlAgent;
+    }
+
+    public void setXmlAgent(Object xmlAgent) {
+        this.xmlAgent = xmlAgent;
+    }
+
     /**
      * @return the front
      */
@@ -405,10 +418,10 @@ abstract public class GObject {
     }
 
     public void setText(String text) {
-
+        this.text = text;
     }
 
     public String getText() {
-        return "";
+        return this.text;
     }
 }

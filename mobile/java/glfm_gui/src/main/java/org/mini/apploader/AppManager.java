@@ -83,7 +83,7 @@ public class AppManager extends GApplication {
 
     static AppManager instance = new AppManager();
 
-    //GApplication preApp;
+//    GApplication preApp;
 
     GForm mgrForm;
 
@@ -108,9 +108,9 @@ public class AppManager extends GApplication {
     }
 
     public void active() {
-        if (GCallBack.getInstance().getApplication() != this) {
-            //preApp = GCallBack.getInstance().getApplication();
-        }
+//        if (GCallBack.getInstance().getApplication() != this) {
+//            preApp = GCallBack.getInstance().getApplication();
+//        }
         if (webServer != null) {
             webServer.stopServer();
         }
@@ -195,8 +195,7 @@ public class AppManager extends GApplication {
         }
 
         eventHandler = new AppmEventHandler();
-        XContainer container = new XViewSlot(null);
-        container.parseXml(uit.parse());
+        XContainer container = (XViewSlot) XContainer.parseXml(uit.parse());
         container.build((int) devW, (int) (devH), eventHandler);
         mainSlot = (GViewSlot) (container.getGui());
         appList = (GList) mainSlot.findByName("LIST_APP");

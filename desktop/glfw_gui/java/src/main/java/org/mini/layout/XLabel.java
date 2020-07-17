@@ -55,8 +55,6 @@ public class XLabel
             for (String s : attValue.split(",")) {
                 align |= XUtil.parseAlign(s);
             }
-        } else if (attName.equals("cmd")) {
-            cmd = attValue;
         } else if (attName.equals("onclick")) {
             onClick = XUtil.getField(attValue, 0);
         } else if (attName.equals("addon")) {
@@ -84,14 +82,15 @@ public class XLabel
     }
 
     protected int getDefaultHeight(int parentViewH) {
-        return XUtil.measureHeight(viewW, text, fontSize);
+//        return XUtil.measureHeight(viewW, text, fontSize);
+        return XDef.DEFAULT_COMPONENT_HEIGHT;
     }
 
     protected void createGui() {
         if (label == null) {
             label = new GLabel(text, x, y, width, height);
             label.setName(name);
-            label.setAttachment(this);
+            label.setXmlAgent(this);
             label.setActionListener(this);
             label.setAlign(align);
             label.setShowMode(GLabel.MODE_MULTI_SHOW);

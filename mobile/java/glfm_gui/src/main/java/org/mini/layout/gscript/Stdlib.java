@@ -1,5 +1,7 @@
 package org.mini.layout.gscript;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.Vector;
 
@@ -13,29 +15,30 @@ import java.util.Vector;
 public class Stdlib
         extends Lib {
 
-    static public final String[] methodNames = new String[]{
-        "print" //0 向控制台输出字符串
-        , "min" //1 求最小值
-        , "max" //2 求最大值
-        , "arrlen" //3 求数组大小
-        , "abs" //4 求取对值
-        , "random" //5 得到一个随机数
-        , "mod" //6 取余
-        , "println" //7 输出回车
-        , "strlen" //8 字符串长度
-        , "equals" //9 字符串比较
-        , "def" //10 存入全局变量
-        , "isDef" //11 是否存在某全局变量
-        , "valueOf" //12 转换字符串为数值
-        , "idxOf" //13 子串在母串的位置        idxof("abc","a")  结果0
-        , "substr" //13 截子串        substr("abcde",1,4)      结果"bcd"
-    };
+    {
+        methodNames.put("print", 0); // 向控制台输出字符串
+        methodNames.put("min", 1);// 求最小值
+        methodNames.put("max", 2); // 求最大值
+        methodNames.put("arrlen", 3); // 求数组大小
+        methodNames.put("abs", 4); // 求取对值
+        methodNames.put("random", 5); // 得到一个随机数
+        methodNames.put("mod", 6);// 取余
+        methodNames.put("println", 7); // 输出回车
+        methodNames.put("strlen", 8); // 字符串长度
+        methodNames.put("equals", 9); // 字符串比较
+        methodNames.put("def", 10); // 存入全局变量
+        methodNames.put("isdef", 11); // 是否存在某全局变量
+        methodNames.put("valueof", 12); // 转换字符串为数值
+        methodNames.put("idxof", 13);// 子串在母串的位置        idxof("abc","a")  结果0
+        methodNames.put("substr", 14); // 截子串        substr("abcde",1,4)      结果"bcd"
+    }
+
+    ;
 
     /**
-     *
      * @return
      */
-    public String[] getMethodNames() {
+    public Map<String, Integer> getMethodNames() {
         return methodNames;
     }
 
@@ -149,6 +152,7 @@ public class Stdlib
         long x = ((Int) Interpreter.vPopBack(para)).getVal();
         return new Int(Math.abs(x));
     }
+
     //随机数基石
     private static Random random = new Random(); //定义一个随机值
 
@@ -185,7 +189,6 @@ public class Stdlib
     }
 
     /**
-     *
      * 比较字符串
      *
      * @param para int
@@ -198,7 +201,6 @@ public class Stdlib
     }
 
     /**
-     *
      * 保存全局变量
      *
      * @param para int
@@ -212,7 +214,6 @@ public class Stdlib
     }
 
     /**
-     *
      * 某名称的全局变量是否存在
      *
      * @param para int
@@ -227,7 +228,6 @@ public class Stdlib
     }
 
     /**
-     *
      * 某名称的全局变量是否存在
      *
      * @param para int

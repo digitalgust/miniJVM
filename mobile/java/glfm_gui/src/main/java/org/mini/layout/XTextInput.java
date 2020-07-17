@@ -90,7 +90,7 @@ public class XTextInput
                 ((GTextField) textInput).setPasswordMode(password);
             }
             textInput.setName(name);
-            textInput.setAttachment(this);
+            textInput.setXmlAgent(this);
             //textInput.getForm().setKeyshowListener(this);
             textInput.setStateChangeListener(this);
             textInput.setEditable(edit);

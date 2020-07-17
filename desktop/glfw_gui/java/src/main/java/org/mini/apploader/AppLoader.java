@@ -365,6 +365,29 @@ public class AppLoader {
         saveProp(APP_LIST_FILE, applist);
     }
 
+    public static GApplication runClass(String className) {
+        GApplication app = null;
+        try {
+            if (className != null && className.length() > 0) {
+                System.out.println("run className:" + className);
+                Class c = Class.forName(className);
+                if (c != null) {
+                    app = (GApplication) c.newInstance();
+                    GCallBack.getInstance().setApplication(app);
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            if (app == null || GCallBack.getInstance().getGform() == null) {
+                app = AppManager.getInstance();
+                AppManager.getInstance().active();
+            }
+        }
+        return app;
+    }
+
+
     static void deleteTree(File f) {
         if (f.isDirectory()) {
             File[] files = f.listFiles();

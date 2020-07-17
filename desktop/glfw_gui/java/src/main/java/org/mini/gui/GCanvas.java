@@ -33,10 +33,10 @@ public class GCanvas extends GPanel {
         if (g == null) {
             g = new GGraphics(this, vg);
         }
+        super.paint(vg);
         nvgFontSize(vg, g.getFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
         paint(g);
-        super.paint(vg);
         return true;
     }
 
@@ -50,5 +50,9 @@ public class GCanvas extends GPanel {
 
     public int getHeight() {
         return (int) getH();
+    }
+
+    public GGraphics getGraphics(){
+        return g;
     }
 }

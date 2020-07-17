@@ -11,30 +11,9 @@ import org.mini.gui.event.GStateChangeListener;
 
 import java.util.List;
 
-import static org.mini.nanovg.Gutil.toUtf8;
 import static org.mini.gui.GToolkit.nvgRGBA;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_CENTER;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_LEFT;
-import static org.mini.nanovg.Nanovg.NVG_ALIGN_MIDDLE;
-import static org.mini.nanovg.Nanovg.NVG_HOLE;
-import static org.mini.nanovg.Nanovg.nvgBeginPath;
-import static org.mini.nanovg.Nanovg.nvgBoxGradient;
-import static org.mini.nanovg.Nanovg.nvgFill;
-import static org.mini.nanovg.Nanovg.nvgFillColor;
-import static org.mini.nanovg.Nanovg.nvgFillPaint;
-import static org.mini.nanovg.Nanovg.nvgFontBlur;
-import static org.mini.nanovg.Nanovg.nvgFontFace;
-import static org.mini.nanovg.Nanovg.nvgFontSize;
-import static org.mini.nanovg.Nanovg.nvgLineTo;
-import static org.mini.nanovg.Nanovg.nvgLinearGradient;
-import static org.mini.nanovg.Nanovg.nvgMoveTo;
-import static org.mini.nanovg.Nanovg.nvgPathWinding;
-import static org.mini.nanovg.Nanovg.nvgRect;
-import static org.mini.nanovg.Nanovg.nvgRoundedRect;
-import static org.mini.nanovg.Nanovg.nvgStroke;
-import static org.mini.nanovg.Nanovg.nvgStrokeColor;
-import static org.mini.nanovg.Nanovg.nvgTextAlign;
-import static org.mini.nanovg.Nanovg.nvgTextJni;
+import static org.mini.nanovg.Gutil.toUtf8;
+import static org.mini.nanovg.Nanovg.*;
 
 /**
  * @author gust
@@ -391,4 +370,15 @@ public class GFrame extends GContainer {
     public void clear() {
         view.clearImpl();
     }
+
+
+    public GStateChangeListener getStateChangeListener() {
+        return stateChangeListener;
+    }
+
+    public void setStateChangeListener(GStateChangeListener stateChangeListener) {
+        this.stateChangeListener = stateChangeListener;
+    }
+
+
 }

@@ -16,7 +16,6 @@ import static org.mini.nanovg.Nanovg.*;
  */
 public class GLabel extends GObject {
 
-    protected String text;
     protected byte[] text_arr;
     protected char preicon;
     protected float[] lineh = {0};

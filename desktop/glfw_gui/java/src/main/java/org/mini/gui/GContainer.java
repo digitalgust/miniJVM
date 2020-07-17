@@ -256,15 +256,15 @@ abstract public class GContainer extends GObject {
                 fronts.clear();
                 for (int i = 0, imax = elements.size(); i < imax; i++) {
                     GObject nko = elements.get(i);
-                    if (nko == focus) {
+                    if (nko.isFront()) {
+                        fronts.add(nko);
                         continue;
                     }
                     if (nko instanceof GMenu) {
                         menus.add((GMenu) nko);
                         continue;
                     }
-                    if (nko.isFront()) {
-                        fronts.add(nko);
+                    if (nko == focus) {
                         continue;
                     }
 
@@ -272,7 +272,7 @@ abstract public class GContainer extends GObject {
                         drawObj(ctx, nko);
                     }
                 }
-                if (focus != null) {
+                if (focus != null && !focus.isFront()) {
                     drawObj(ctx, focus);
 
                     //frame re sort
@@ -331,19 +331,19 @@ abstract public class GContainer extends GObject {
 
             nko.paint(ctx);
 
-//            if (focus == nko) {
-//                Nanovg.nvgScissor(ctx, x, y, w, h);
-//                Nanovg.nvgBeginPath(ctx);
-//                Nanovg.nvgRect(ctx, x + 1, y + 1, w - 2, h - 2);
-//                Nanovg.nvgStrokeColor(ctx, Nanovg.nvgRGBA((byte) 255, (byte) 0, (byte) 0, (byte) 255));
-//                Nanovg.nvgStroke(ctx);
-//
-//                Nanovg.nvgBeginPath(ctx);
-//                Nanovg.nvgRect(ctx, nko.getX() + 2, nko.getY() + 2, nko.getW() - 4, nko.getH() - 4);
-//                Nanovg.nvgStrokeColor(ctx, Nanovg.nvgRGBA((byte) 0, (byte) 0, (byte) 255, (byte) 255));
-//                Nanovg.nvgStroke(ctx);
-//
-//            }
+            if (focus == nko) {
+                Nanovg.nvgScissor(ctx, x, y, w, h);
+                Nanovg.nvgBeginPath(ctx);
+                Nanovg.nvgRect(ctx, x + 1, y + 1, w - 2, h - 2);
+                Nanovg.nvgStrokeColor(ctx, Nanovg.nvgRGBA((byte) 255, (byte) 0, (byte) 0, (byte) 255));
+                Nanovg.nvgStroke(ctx);
+
+                Nanovg.nvgBeginPath(ctx);
+                Nanovg.nvgRect(ctx, nko.getX() + 2, nko.getY() + 2, nko.getW() - 4, nko.getH() - 4);
+                Nanovg.nvgStrokeColor(ctx, Nanovg.nvgRGBA((byte) 0, (byte) 0, (byte) 255, (byte) 255));
+                Nanovg.nvgStroke(ctx);
+
+            }
         }
         Nanovg.nvgRestore(ctx);
     }
@@ -369,6 +369,9 @@ abstract public class GContainer extends GObject {
             if (!((GMenu) found).isContextMenu()) {
                 setFocus(null);
             }
+            found.mouseButtonEvent(button, pressed, x, y);
+            return;
+        } else if (found != null && found.isFront()) {
             found.mouseButtonEvent(button, pressed, x, y);
             return;
         }
@@ -422,6 +425,8 @@ abstract public class GContainer extends GObject {
         GObject found = findByXY(x, y);
         if (found instanceof GMenu) {
             return found.dragEvent(dx, dy, x, y);
+        } else if (found != null && found.isFront()) {
+            return found.dragEvent(dx, dy, x, y);
         }
 
         if (focus != null && focus.isInArea(x, y)) {
@@ -452,6 +457,9 @@ abstract public class GContainer extends GObject {
             if (!((GMenu) found).isContextMenu()) {
                 setFocus(null);
             }
+            found.touchEvent(touchid, phase, x, y);
+            return;
+        } else if (found != null && found.isFront()) {
             found.touchEvent(touchid, phase, x, y);
             return;
         }

@@ -18,34 +18,32 @@ import java.util.Vector;
 public class ScriptLib extends Lib {
 
     XContainer root = null;
-    static public final String[] methodNames = new String[]{//
-            "setBgColor",// 0 set background color
-            "setColor",// 1 set background color
-            "setText",// 2 set text
-            "getText",// 3 get text
-            "setLocation",//4
-            "setSize",//5
-            "getLocation",//6
-            "getSize",//7
-            "setCmd",//8
-            "getCmd",//9
-            "close",// 10 close frame
-            "getCurSlot",//11
-            "showSlot",//12
-    };
+
+    {
+        methodNames.put("setBgColor".toLowerCase(), 0);//  set background color
+        methodNames.put("setColor".toLowerCase(), 1);//  set background color
+        methodNames.put("setText".toLowerCase(), 2);//  set text
+        methodNames.put("getText".toLowerCase(), 3);//  get text
+        methodNames.put("setLocation".toLowerCase(), 4);//
+        methodNames.put("setSize".toLowerCase(), 5);//
+        methodNames.put("getLocation".toLowerCase(), 6);//
+        methodNames.put("getSize".toLowerCase(), 7);//
+        methodNames.put("setCmd".toLowerCase(), 8);//
+        methodNames.put("getCmd".toLowerCase(), 9);//
+        methodNames.put("close".toLowerCase(), 10);//  close frame
+        methodNames.put("getCurSlot".toLowerCase(), 11);//
+        methodNames.put("showSlot".toLowerCase(), 12);//
+        methodNames.put("getImg".toLowerCase(), 13);//
+        methodNames.put("setImg".toLowerCase(), 14);//
+    }
+
+    ;
 
     /**
      * @param xf
      */
     public ScriptLib(XContainer xf) {
         root = xf;
-    }
-
-    /**
-     * @return
-     */
-    public String[] getMethodNames() {
-        return methodNames;
     }
 
     /**
@@ -78,6 +76,14 @@ public class ScriptLib extends Lib {
                 return getCmd(para);
             case 10:
                 return close(para);
+            case 11:
+                return getCurSlot(para);
+            case 12:
+                return showSlot(para);
+            case 13:
+                return getImg(para);
+            case 14:
+                return setImg(para);
             default:
         }
         return null;
@@ -286,7 +292,7 @@ public class ScriptLib extends Lib {
         return val;
     }
 
-    public DataType moveToSlot(Vector para) {
+    public DataType showSlot(Vector para) {
         Str p1 = (Str) Interpreter.vPopBack(para);
         String compont = p1 != null ? p1.getVal() : null;
         if (compont != null) {
@@ -303,4 +309,33 @@ public class ScriptLib extends Lib {
         return null;
     }
 
+
+    public DataType setImg(Vector para) {
+        String compont = ((Str) Interpreter.vPopBack(para)).getVal();
+        if (compont != null) {
+            XObject xo = root.find(compont);
+            if (xo != null) {
+                String img = ((Str) Interpreter.vPopBack(para)).getVal();
+                if (xo instanceof XImageItem) {
+                    XImageItem xi = ((XImageItem) xo);
+                    xi.setPic(img);
+
+                }
+            }
+        }
+        return null;
+    }
+
+    public DataType getImg(Vector para) {
+        String text = "";
+        String compont = ((Str) Interpreter.vPopBack(para)).getVal();
+        if (compont != null) {
+            XObject xo = root.find(compont);
+            if (xo instanceof XImageItem) {
+                XImageItem xi = ((XImageItem) xo);
+                text = xi.getPic();
+            }
+        }
+        return new Str(text);
+    }
 }

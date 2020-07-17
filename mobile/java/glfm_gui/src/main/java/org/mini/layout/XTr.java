@@ -38,11 +38,11 @@ public class XTr
         }
 
 
-        int size = size();
+        int size = children.size();
         int totalPixer = 0;
         int nodefCount = 0;
         for (int i = 0; i < size; i++) {
-            XTd td = (XTd) elementAt(i);
+            XTd td = (XTd) children.get(i);
             if (td.raw_widthPercent != XDef.NODEF) {
                 totalPixer += td.raw_widthPercent * viewW / 100;
             } else if (td.width != XDef.NODEF) {
@@ -56,7 +56,7 @@ public class XTr
         //for nodef
         int nodefTdW = nodefCount == 0 ? 0 : ((viewW - totalPixer) / nodefCount);
         for (int i = 0; i < size; i++) {
-            XTd td = (XTd) elementAt(i);
+            XTd td = (XTd) children.get(i);
             //if over parent.width
             if (totalPixer > viewW) {
                 td.viewW = td.width = tdw;

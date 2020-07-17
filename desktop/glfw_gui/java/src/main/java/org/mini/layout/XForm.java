@@ -31,7 +31,7 @@ public class XForm extends XContainer {
             form.setLocation(x, y);
             form.setSize(width, height);
             form.setName(name);
-            form.setAttachment(this);
+            form.setXmlAgent(this);
         } else {
             form.setLocation(x, y);
             form.setSize(width, height);

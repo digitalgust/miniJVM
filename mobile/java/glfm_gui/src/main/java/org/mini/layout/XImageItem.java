@@ -11,6 +11,7 @@ import org.mini.layout.xmlpull.KXmlParser;
 public class XImageItem extends XObject implements GActionListener {
     static public final String XML_NAME = "img"; //xml tag名
     protected String pic;
+    protected int img_w = XDef.DEFAULT_COMPONENT_HEIGHT, img_h = XDef.DEFAULT_COMPONENT_HEIGHT;
     protected String onClick;
     protected GImageItem imgItem = null;
     protected boolean border;
@@ -32,6 +33,11 @@ public class XImageItem extends XObject implements GActionListener {
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("pic")) {
             pic = attValue;
+            GImage img = GImage.createImageFromJar(pic);
+            if (img != null) {
+                img_w = img.getWidth();
+                img_h = img.getHeight();
+            }
         } else if (attName.equals("border")) {
             border = "0".equals(attValue) ? false : true;
         } else if (attName.equals("onclick")) {
@@ -63,11 +69,11 @@ public class XImageItem extends XObject implements GActionListener {
     }
 
     protected int getDefaultWidth(int parentViewW) {
-        return parentViewW;
+        return img_w;
     }
 
     protected int getDefaultHeight(int parentViewH) {
-        return viewW;
+        return img_h;
     }
 
     @Override
@@ -78,9 +84,10 @@ public class XImageItem extends XObject implements GActionListener {
             imgItem.setLocation(x, y);
             imgItem.setSize(width, height);
             imgItem.setName(name);
-            imgItem.setAttachment(this);
+            imgItem.setXmlAgent(this);
             imgItem.setAlpha(alpha);
             imgItem.setDrawBorder(border);
+            imgItem.setActionListener(this);
         } else {
             imgItem.setLocation(x, y);
             imgItem.setSize(width, height);
@@ -90,5 +97,17 @@ public class XImageItem extends XObject implements GActionListener {
     @Override
     public GObject getGui() {
         return imgItem;
+    }
+
+    public String getPic() {
+        return pic;
+    }
+
+    public void setPic(String s) {
+        pic = s;
+        if (imgItem != null) {
+            GImage img = GImage.createImageFromJar(s);
+            imgItem.setImg(img);
+        }
     }
 }

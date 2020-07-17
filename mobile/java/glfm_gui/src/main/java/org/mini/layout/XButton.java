@@ -40,8 +40,6 @@ public class XButton
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("pic")) {
             pic = attValue;
-        } else if (attName.equals("cmd")) {
-            cmd = attValue;
         } else if (attName.equals("onclick")) {
             onClick = XUtil.getField(attValue, 0);
         } else if (attName.equals("addon")) {
@@ -93,7 +91,7 @@ public class XButton
         if (button == null) {
             button = new GButton(text, x, y, width, height);
             button.setName(name);
-            button.setAttachment(this);
+            button.setXmlAgent(this);
             button.setActionListener(this);
             if (color != null) {
                 button.setColor(color);

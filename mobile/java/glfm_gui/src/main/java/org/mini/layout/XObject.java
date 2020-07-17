@@ -18,7 +18,7 @@ public abstract class XObject {
 
     protected boolean vfloat = false, hfloat = false;
 
-    protected boolean visable = true; //是否显示
+    protected boolean hidden = false; //是否显示
 
     protected String name = null; //组件名字
 
@@ -90,6 +90,10 @@ public abstract class XObject {
     protected void parseMoreAttribute(String attName, String attValue) {
         if (attName.equals("name")) { // 标题
             name = attValue;
+        } else if (attName.equals("cmd")) {
+            cmd = attValue;
+        } else if (attName.equals("hidden")) {
+            hidden = "0".equals(attValue) ? false : true;
         } else if (attName.equals("move")) { // viewslot move mode
             moveMode = attValue;
         } else if (attName.equals("w")) {
@@ -174,6 +178,14 @@ public abstract class XObject {
 
     public String getText() {
         return text;
+    }
+
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
     }
 
 

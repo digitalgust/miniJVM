@@ -6,24 +6,12 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
+import org.mini.glfw.Glfw;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
-import static org.mini.nanovg.Nanovg.NVG_HOLE;
-import static org.mini.nanovg.Nanovg.nvgBeginPath;
-import static org.mini.nanovg.Nanovg.nvgBoxGradient;
-import static org.mini.nanovg.Nanovg.nvgFill;
-import static org.mini.nanovg.Nanovg.nvgFillPaint;
-import static org.mini.nanovg.Nanovg.nvgImagePattern;
-import static org.mini.nanovg.Nanovg.nvgImageSize;
-import static org.mini.nanovg.Nanovg.nvgPathWinding;
-import static org.mini.nanovg.Nanovg.nvgRect;
-import static org.mini.nanovg.Nanovg.nvgRoundedRect;
-import static org.mini.nanovg.Nanovg.nvgStroke;
-import static org.mini.nanovg.Nanovg.nvgStrokeColor;
-import static org.mini.nanovg.Nanovg.nvgStrokeWidth;
+import static org.mini.nanovg.Nanovg.*;
 
 /**
- *
  * @author Gust
  */
 public class GImageItem extends GObject {
@@ -32,7 +20,7 @@ public class GImageItem extends GObject {
     protected float alpha = 1.f;
     protected boolean drawBorder = true;
 
-    public GImageItem(){
+    public GImageItem() {
 
     }
 
@@ -157,6 +145,21 @@ public class GImageItem extends GObject {
             } else if (!isInArea(x, y)) {
                 bt_pressed = false;
             }
+        }
+    }
+
+    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+        if (isInArea(x, y)) {
+            if (button == Glfw.GLFW_MOUSE_BUTTON_1) {//left
+                if (pressed) {
+                    bt_pressed = true;
+                } else {
+                    doAction();
+                    bt_pressed = false;
+                }
+            }
+        } else {
+            bt_pressed = false;
         }
     }
 }
