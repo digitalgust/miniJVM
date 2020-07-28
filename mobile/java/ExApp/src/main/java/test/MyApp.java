@@ -2,8 +2,9 @@ package test;
 
 import org.mini.apploader.AppManager;
 import org.mini.gui.*;
-import org.mini.gui.event.GSizeChangeListener;
-import org.mini.layout.*;
+import org.mini.layout.UITemplate;
+import org.mini.layout.XContainer;
+import org.mini.layout.XEventHandler;
 
 /**
  * @author gust
@@ -19,26 +20,37 @@ public class MyApp extends GApplication {
         if (form != null) {
             return form;
         }
+        //set the default language
         GLanguage.setCurLang(GLanguage.ID_CHN);
 
+        //load xml
         String xmlStr = GToolkit.readFileFromJarAsString("/res/MyForm.xml", "utf-8");
 
         UITemplate uit = new UITemplate(xmlStr);
-        for (String key : uit.getVariable()) {
-            uit.setVar(key, GLanguage.getString(key));
-        }
+        UITemplate.getVarMap().put("Cancel", "CANCEL"); //replace keywork in xml
+        UITemplate.getVarMap().put("Change", "Change");
+        UITemplate.getVarMap().put("Test", "test");
+        UITemplate.getVarMap().put("Exit", "QUIT");
         XContainer xc = (XContainer) XContainer.parseXml(uit.parse());
-        xc.build(GCallBack.getInstance().getDeviceWidth(), GCallBack.getInstance().getDeviceHeight(), new XEventHandler() {
+        int screenW = GCallBack.getInstance().getDeviceWidth();
+        int screenH = GCallBack.getInstance().getDeviceHeight();
+
+        //build gui with event handler
+        xc.build(screenW, screenH, new XEventHandler() {
             public void action(GObject gobj, String cmd) {
                 String name = gobj.getName();
-                if ("MI_OPENFRAME".equals(name)) {
-                    if (form.findByName("FRAME_TEST") == null) {
-                        form.add(gframe);
-                    }
-                } else if ("MI_EXIT".equals(name)) {
-                    AppManager.getInstance().active();
-                } else if ("BT_CANCEL".equals(name)) {
-                    gframe.close();
+                switch (name) {
+                    case "MI_OPENFRAME":
+                        if (form.findByName("FRAME_TEST") == null) {
+                            form.add(gframe);
+                        }
+                        break;
+                    case "MI_EXIT":
+                        AppManager.getInstance().active();
+                        break;
+                    case "BT_CANCEL":
+                        gframe.close();
+                        break;
                 }
             }
 
@@ -49,14 +61,13 @@ public class MyApp extends GApplication {
         gframe = (GFrame) form.findByName("FRAME_TEST");
         if (gframe != null) gframe.align(GGraphics.HCENTER | GGraphics.VCENTER);
         menu = (GMenu) form.findByName("MENU_MAIN");
-        form.setSizeChangeListener(new GSizeChangeListener() {
-            @Override
-            public void onSizeChange(int width, int height) {
-                if (gframe != null && gframe.getAttachment() != null
-                        && (gframe.getAttachment() instanceof XFrame)) {
-                    ((XContainer) form.getAttachment()).reSize(width, height);
-                    if (gframe != null) gframe.align(GGraphics.HCENTER | GGraphics.VCENTER);
-                }
+
+        //process Hori screen or Vert screen
+        //if screen size changed ,then ui will resized relative
+        form.setSizeChangeListener((width, height) -> {
+            if (gframe != null && gframe.getXmlAgent() != null) {
+                ((XContainer) form.getXmlAgent()).reSize(width, height);
+                gframe.align(GGraphics.HCENTER | GGraphics.VCENTER);
             }
         });
         return form;

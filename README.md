@@ -30,9 +30,9 @@
 
   <div align=center><img width="224" height="398" src="/screenshot/demo.gif"/><img width="224" height="398" src="/screenshot/g3d.gif"/></div>
 
-  * Mobile app IM Demo BiBiX , source at :https://github.com/digitalgust/BiBiX     
+  * Instant Message app  Demo , source at :https://github.com/digitalgust/BiBiX     
   * BiBiX binary can be download from : http://bb.egls.cn:8080/down/BiBiX.jar     
-  * 3D game app IM Demo G3D , source at :https://github.com/digitalgust/g3d     
+  * 3D game app Demo, source at :https://github.com/digitalgust/g3d     
   * G3D binary can be download from : http://bb.egls.cn:8080/down/g3d.jar     
   * Mobile platform : First install AppManager from iOS for binary/ios/MiniPack.ipa , Android for /binary/android/MiniPack.apk ,then download demo in AppManager and run the app.     
   * Desktop computer: /binary/win_64  , /binary/macos , /binary/win32 , /binary/centos_x64   run test.sh 
@@ -180,8 +180,9 @@ package test;
 
 import org.mini.apploader.AppManager;
 import org.mini.gui.*;
-import org.mini.gui.event.GSizeChangeListener;
-import org.mini.layout.*;
+import org.mini.layout.UITemplate;
+import org.mini.layout.XContainer;
+import org.mini.layout.XEventHandler;
 
 /**
  * @author gust
@@ -197,29 +198,40 @@ public class MyApp extends GApplication {
         if (form != null) {
             return form;
         }
+        //set the default language
         GLanguage.setCurLang(GLanguage.ID_CHN);
 
+        //load xml
         String xmlStr = GToolkit.readFileFromJarAsString("/res/MyForm.xml", "utf-8");
 
         UITemplate uit = new UITemplate(xmlStr);
-        for (String key : uit.getVariable()) {
-            uit.setVar(key, GLanguage.getString(key));
-        }
-        XContainer xc = new XForm(null);
-        xc.parseXml(uit.parse());
-        xc.build((int) GCallBack.getInstance().getDeviceWidth(), (int) GCallBack.getInstance().getDeviceHeight(), new XEventHandler() {
+        UITemplate.getVarMap().put("Cancel", "CANCEL"); //replace keywork in xml
+        UITemplate.getVarMap().put("Change", "Change");
+        UITemplate.getVarMap().put("Test", "test");
+        UITemplate.getVarMap().put("Exit", "QUIT");
+        XContainer xc = (XContainer) XContainer.parseXml(uit.parse());
+        int screenW = GCallBack.getInstance().getDeviceWidth();
+        int screenH = GCallBack.getInstance().getDeviceHeight();
+
+        //build gui with event handler
+        xc.build(screenW, screenH, new XEventHandler() {
             public void action(GObject gobj, String cmd) {
                 String name = gobj.getName();
-                if ("MI_OPENFRAME".equals(name)) {
-                    if (form.findByName("FRAME_TEST") == null) {
-                        form.add(gframe);
-                    }
-                } else if ("MI_EXIT".equals(name)) {
-                    AppManager.getInstance().active();
-                } else if ("BT_CANCEL".equals(name)) {
-                    gframe.close();
+                switch (name) {
+                    case "MI_OPENFRAME":
+                        if (form.findByName("FRAME_TEST") == null) {
+                            form.add(gframe);
+                        }
+                        break;
+                    case "MI_EXIT":
+                        AppManager.getInstance().active();
+                        break;
+                    case "BT_CANCEL":
+                        gframe.close();
+                        break;
                 }
             }
+
             public void onStateChange(GObject gobj, String cmd) {
             }
         });
@@ -227,14 +239,13 @@ public class MyApp extends GApplication {
         gframe = (GFrame) form.findByName("FRAME_TEST");
         if (gframe != null) gframe.align(GGraphics.HCENTER | GGraphics.VCENTER);
         menu = (GMenu) form.findByName("MENU_MAIN");
-        form.setSizeChangeListener(new GSizeChangeListener() {
-            @Override
-            public void onSizeChange(int width, int height) {
-                if (gframe != null && gframe.getAttachment() != null
-                        && (gframe.getAttachment() instanceof XFrame)) {
-                    ((XContainer) form.getAttachment()).reSize(width, height);
-                    if (gframe != null) gframe.align(GGraphics.HCENTER | GGraphics.VCENTER);
-                }
+
+        //process Hori screen or Vert screen
+        //if screen size changed ,then ui will resized relative
+        form.setSizeChangeListener((width, height) -> {
+            if (gframe != null && gframe.getXmlAgent() != null) {
+                ((XContainer) form.getXmlAgent()).reSize(width, height);
+                gframe.align(GGraphics.HCENTER | GGraphics.VCENTER);
             }
         });
         return form;
