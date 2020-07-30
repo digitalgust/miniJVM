@@ -191,9 +191,11 @@ JClass *array_class_get_by_name(Runtime *runtime, Utf8String *name) {
 
 Runtime *threadlist_get(s32 i) {
     Runtime *r = NULL;
+    spin_lock(&thread_list->spinlock);
     if (i < thread_list->length) {
-        r = (Runtime *) arraylist_get_value(thread_list, i);
+        r = (Runtime *) arraylist_get_value_unsafe(thread_list, i);
     }
+    spin_unlock(&thread_list->spinlock);
     return r;
 }
 
@@ -222,10 +224,10 @@ s32 threadlist_count_none_daemon() {
 }
 
 void thread_stop_all() {
-    garbage_thread_lock();
+    spin_lock(&thread_list->spinlock);
     s32 i;
     for (i = 0; i < thread_list->length; i++) {
-        Runtime *r = threadlist_get(i);
+        Runtime *r = arraylist_get_value_unsafe(thread_list, i);
 
         r->threadInfo->suspend_count = 1;
         r->threadInfo->no_pause = 1;
@@ -235,7 +237,7 @@ void thread_stop_all() {
         jthread_unlock(r->threadInfo->curThreadLock, r);
 
     }
-    garbage_thread_unlock();
+    spin_unlock(&thread_list->spinlock);
 }
 
 
