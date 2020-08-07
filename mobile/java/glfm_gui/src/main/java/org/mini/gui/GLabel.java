@@ -27,7 +27,7 @@ public class GLabel extends GObject {
     int showMode = MODE_SINGLE_SHOW;
 
     public GLabel() {
-        this("",0f,0f,1f,1f);
+        this("", 0f, 0f, 1f, 1f);
     }
 
     public GLabel(String text, int left, int top, int width, int height) {
@@ -54,6 +54,9 @@ public class GLabel extends GObject {
 
     public void setAlign(int ali) {
         align = ali;
+        if ((align & 0x78) == 0) {
+            align |= NVG_ALIGN_TOP;
+        }
     }
 
     public void setText(String text) {
