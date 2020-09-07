@@ -49,7 +49,7 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
         }
     }
 
-    public GForm getGform() {
+    public GForm getForm() {
         return gform;
     }
 

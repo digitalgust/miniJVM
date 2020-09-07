@@ -1,6 +1,7 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
+import org.mini.nanovg.Nanovg;
 
 import java.util.ArrayList;
 import java.util.List;

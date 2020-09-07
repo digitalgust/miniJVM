@@ -6,6 +6,8 @@ import org.mini.gui.GListItem;
 import org.mini.gui.GObject;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GStateChangeListener;
+import org.mini.layout.gscript.Interpreter;
+import org.mini.layout.gscript.Str;
 import org.mini.layout.xmlpull.KXmlParser;
 import org.mini.layout.xmlpull.XmlPullParser;
 
@@ -22,15 +24,25 @@ public class XList extends XObject implements GStateChangeListener {
         String text;
         String pic;
         String cmd;
+        String onClick;
 
         @Override
         public void action(GObject gobj) {
+            if (onClick != null) {
+                Interpreter inp = xlist.getRoot().getInp();
+                // 执行脚本
+                if (inp != null) {
+                    inp.putGlobalVar("cmd", new Str(cmd));
+                    inp.callSub(onClick);
+                }
+            }
             xlist.getRoot().getEventHandler().action(gobj, cmd);
         }
     }
 
     protected Vector items = new Vector();
     protected boolean multiLine = false;
+    protected boolean multiSelect = false;
     protected int itemheight = XDef.DEFAULT_LIST_HEIGHT;
 
     protected GList list;
@@ -52,6 +64,8 @@ public class XList extends XObject implements GStateChangeListener {
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("multiline")) {
             multiLine = "0".equals(attValue) ? false : true;
+        } else  if(attName.equals("multiselect")) {
+            multiSelect = "0".equals(attValue) ? false : true;
         } else if (attName.equals("itemh")) {
             itemheight = Integer.parseInt(attValue);
         }
@@ -80,6 +94,7 @@ public class XList extends XObject implements GStateChangeListener {
                     item.name = parser.getAttributeValue(null, "name");
                     item.pic = parser.getAttributeValue(null, "pic");
                     item.cmd = parser.getAttributeValue(null, "cmd");
+                    item.onClick = parser.getAttributeValue(null, "onclick");
                     String tmp = parser.nextText();
                     item.text = tmp == null ? "" : tmp;
                     items.add(item);

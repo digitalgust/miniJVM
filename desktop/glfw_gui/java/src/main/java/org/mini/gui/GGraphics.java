@@ -133,7 +133,11 @@ public class GGraphics {
         y += canvas.getY();
         nvgTextAlign(vg, anchor);
 
-        byte[] ba = Gutil.toUtf8(str + "\000");
+        byte[] ba = Gutil.toUtf8(str);
+        if (ba == null || ba.length <= 0) {
+            return;
+        }
+
         nvgFillColor(vg, nvgRGBA(r, g, b, a));
         nvgTextJni(vg, x, y, ba, 0, ba.length);
     }
@@ -144,7 +148,10 @@ public class GGraphics {
         y += canvas.getY();
         nvgTextAlign(vg, anchor);
         str = str.substring(offset, len);
-        byte[] b = Gutil.toUtf8(str + "\000");
+        byte[] b = Gutil.toUtf8(str);
+        if (b == null || b.length <= 0) {
+            return;
+        }
         nvgTextJni(vg, x, y, b, 0, b.length);
     }
 
@@ -152,7 +159,7 @@ public class GGraphics {
         x += canvas.getX();
         y += canvas.getY();
         nvgTextAlign(vg, anchor);
-        byte[] b = Gutil.toUtf8(character + "\000");
+        byte[] b = Gutil.toUtf8(character + "");
         nvgTextJni(vg, x, y, b, 0, b.length);
     }
 

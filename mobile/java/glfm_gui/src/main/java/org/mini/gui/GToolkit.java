@@ -49,6 +49,10 @@ public class GToolkit {
         return Nanovg.nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);
     }
 
+    public static float[] nvgRGBA(int rgba) {
+        return Nanovg.nvgRGBA((byte) ((rgba >> 24) & 0xff), (byte) ((rgba >> 16) & 0xff), (byte) ((rgba >> 8) & 0xff), (byte) ((rgba >> 0) & 0xff));
+    }
+
     public static byte[] readFileFromJar(String path) {
         try {
             InputStream is = "".getClass().getResourceAsStream(path);
@@ -389,6 +393,43 @@ public class GToolkit {
         return frame;
     }
 
+    static public GFrame getMsgFrame(String title, String msg) {
+        final GFrame frame = new GFrame(title, 0, 0, 300, 300);
+        frame.setFront(true);
+        frame.setFocusListener(new GFocusChangeListener() {
+            @Override
+            public void focusGot(GObject go) {
+            }
+
+            @Override
+            public void focusLost(GObject go) {
+                if (frame.getForm() != null) {
+                    frame.getForm().remove(frame);
+                }
+            }
+        });
+
+        GContainer gp = frame.getView();
+        float x = 10, y = 10, w = gp.getW() - 20;
+
+        GTextBox tbox = new GTextBox(msg, "", x, y, w, 210);
+        tbox.setEditable(false);
+        gp.add(tbox);
+        y += 215;
+
+        GButton leftBtn = new GButton("Ok", x, y, 280, 28);
+        leftBtn.setBgColor(128, 16, 8, 255);
+        gp.add(leftBtn);
+        leftBtn.setActionListener(new GActionListener() {
+            @Override
+            public void action(GObject gobj) {
+                frame.close();
+            }
+        });
+
+        return frame;
+    }
+
     /**
      * @param title
      * @param strs
@@ -657,6 +698,29 @@ public class GToolkit {
         view.setLocation((formW - view.getW()) / 2, (formH - view.getH()) / 2);
 
         return view;
+    }
+
+    public static void showFrame(GObject gobj) {
+        if (gobj == null) return;
+        GForm form = GCallBack.getInstance().getForm();
+        gobj.setLocation(form.getW() / 2 - gobj.getW() / 2, form.getH() / 2 - gobj.getH() / 2);
+        form.add(gobj);
+    }
+
+    public static void showFrame(GObject gobj, float x, float y) {
+        if (gobj == null) return;
+        GForm form = GCallBack.getInstance().getForm();
+        gobj.setLocation(x, y);
+        form.add(gobj);
+    }
+
+    public static void closeFrame(String frameName) {
+        if (frameName == null) return;
+        GForm form = GCallBack.getInstance().getForm();
+        GObject go = form.findByName(frameName);
+        if (go != null) {
+            form.remove(go);
+        }
     }
 
 

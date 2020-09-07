@@ -80,9 +80,6 @@ public class GlfmCallBackImpl extends GCallBack {
         this.display = display;
     }
 
-    GForm getForm() {
-        return gform;
-    }
 
     void setForm(GForm form) {
         gform = form;

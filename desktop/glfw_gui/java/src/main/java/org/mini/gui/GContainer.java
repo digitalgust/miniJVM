@@ -325,7 +325,7 @@ abstract public class GContainer extends GObject {
         float vy = this.getY();
         float vw = this.getW();
         float vh = this.getH();
-        if (vx + vw < x || vx > x + w || vy > y + h || vy + vh < y) {
+        if (vx + vw <= x || vx >= x + w || vy >= y + h || vy + vh <= y) {
         } else {
             Nanovg.nvgIntersectScissor(ctx, vx, vy, vw, vh);
 

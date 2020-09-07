@@ -301,7 +301,7 @@ public class AppLoader {
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {
-            if (app == null || GCallBack.getInstance().getGform() == null) {
+            if (app == null || GCallBack.getInstance().getForm() == null) {
                 app = AppManager.getInstance();
                 AppManager.getInstance().active();
                 GForm.addMessage(GLanguage.getString(AppManager.STR_OPEN_APP_FAIL) + ": " + jarName);
@@ -379,7 +379,7 @@ public class AppLoader {
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {
-            if (app == null || GCallBack.getInstance().getGform() == null) {
+            if (app == null || GCallBack.getInstance().getForm() == null) {
                 app = AppManager.getInstance();
                 AppManager.getInstance().active();
             }

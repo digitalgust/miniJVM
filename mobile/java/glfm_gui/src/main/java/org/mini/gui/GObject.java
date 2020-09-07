@@ -7,6 +7,7 @@ package org.mini.gui;
 
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
+import org.mini.nanovg.Nanovg;
 
 import java.util.Timer;
 
@@ -250,13 +251,16 @@ abstract public class GObject {
      * @param a
      */
     public void setBgColor(int r, int g, int b, int a) {
-        bgColor = nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);
+        bgColor = Nanovg.nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);
     }
 
     public void setBgColor(float[] color) {
         bgColor = color;
     }
 
+    public void setBgColor(int rgba){
+        bgColor = nvgRGBA(rgba);
+    }
     /**
      * @return the color
      */
@@ -271,11 +275,15 @@ abstract public class GObject {
      * @param a
      */
     public void setColor(int r, int g, int b, int a) {
-        color = nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);
+        color = Nanovg.nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);
     }
 
     public void setColor(float[] color) {
         this.color = color;
+    }
+
+    public void setColor(int rgba){
+        color = nvgRGBA(rgba);
     }
 
     public float getFontSize() {
@@ -314,7 +322,7 @@ abstract public class GObject {
             if (go == null) {
                 return null;
             }
-            go = go.parent;
+            go = go.getParent();
         }
         return (GForm) go;
     }
@@ -325,7 +333,7 @@ abstract public class GObject {
             if (go == null) {
                 return null;
             }
-            go = go.parent;
+            go = go.getParent();
         }
         return (GFrame) go;
     }

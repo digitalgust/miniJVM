@@ -173,6 +173,9 @@ public abstract class XObject {
 
     public void setText(String s) {
         text = s;
+        if (getGui() != null) {
+            getGui().setText(s);
+        }
     }
 
 
@@ -221,8 +224,8 @@ public abstract class XObject {
         y = raw_y;
         width = raw_width;
         height = raw_height;
-        viewW = XDef.NODEF;
-        viewH = XDef.NODEF;
+        viewW = width - getDiff_viewW2Width();
+        viewH = height - getDiff_ViewH2Height();
     }
 
     protected int getTrialViewH() {
