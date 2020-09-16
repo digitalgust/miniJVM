@@ -1331,7 +1331,9 @@ void invoke_method(s32 call_mode, JdwpPacket *req, JdwpPacket *res, JdwpClient *
                 push_int(runtime->stack, (s32) vt.value);
         }
     }
+    resume_all_thread();
     s32 ret = execute_method_impl(methodInfo, runtime);
+    suspend_all_thread();
     if (ret != RUNTIME_STATUS_NORMAL) {
         print_exception(runtime);
     }

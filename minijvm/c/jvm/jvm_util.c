@@ -229,7 +229,7 @@ void thread_stop_all() {
     for (i = 0; i < thread_list->length; i++) {
         Runtime *r = arraylist_get_value_unsafe(thread_list, i);
 
-        r->threadInfo->suspend_count = 1;
+        jthread_suspend(r);
         r->threadInfo->no_pause = 1;
         r->threadInfo->is_interrupt = 1;
         jthread_lock(r->threadInfo->curThreadLock, r);
