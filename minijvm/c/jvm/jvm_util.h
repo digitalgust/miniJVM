@@ -260,6 +260,13 @@ struct _JavaThreadInfo {
     MemoryBlock *objs_tailer;//link to last instance, until garbage accept
     MemoryBlock *curThreadLock;//if thread is locked ,the filed save the lock
 
+    ArrayList *stacktrack;  //save methodrawindex, the pos 0 is the throw point
+    ArrayList *lineNo;  //save methodrawindex, the pos 0 is the throw point
+
+    void (*block_break)(__refer para);//function for break io blocking
+
+    __refer block_break_para; //thread blocking on io
+
     u16 volatile suspend_count;//for jdwp suspend ,>0 suspend, ==0 resume
     u16 volatile no_pause;  //can't pause when clinit
     u8 volatile thread_status;
@@ -267,14 +274,10 @@ struct _JavaThreadInfo {
     u8 volatile is_blocking;
     u8 is_interrupt;
 
-
-
     thrd_t pthread;
     //调试器相关字段
     JdwpStep jdwp_step;
 
-    ArrayList *stacktrack;  //save methodrawindex, the pos 0 is the throw point
-    ArrayList *lineNo;  //save methodrawindex, the pos 0 is the throw point
 };
 
 struct _ThreadLock {
@@ -436,8 +439,6 @@ s32 classes_put(JClass *clazz);
 JClass *classes_load_get(Utf8String *pclassName, Runtime *runtime);
 
 JClass *primitive_class_create_get(Runtime *runtime, Utf8String *ustr);
-
-
 
 
 #ifdef __cplusplus

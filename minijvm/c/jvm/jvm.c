@@ -247,8 +247,15 @@ void jvm_destroy(StaticLibRegFunc unRegFunc) {
         thread_stop_all();
         for (i = 0; i < thread_list->length; i++) {
             Runtime *r = threadlist_get(i);
-            if (!r->son) {//未在执行jvm指令
-                thread_unboundle(r);//
+            if (r) {
+                if (!r->son) {//未在执行jvm指令
+                    thread_unboundle(r);//
+                }
+                if (r->threadInfo->block_break) {
+                    r->threadInfo->block_break(r->threadInfo->block_break_para);
+                    r->threadInfo->block_break = NULL;
+                    r->threadInfo->block_break_para = NULL;
+                }
             }
         }
         threadSleep(20);

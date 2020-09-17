@@ -376,6 +376,11 @@ s32 sock_close(s32 listenfd) {
     return 0;
 }
 
+void block_break(__refer para) {
+    s32 sockfd = (s32) (intptr_t) para;
+    sock_close(sockfd);
+}
+
 
 s32 host_2_ip4(Utf8String *hostname) {
     s32 addr;
@@ -483,7 +488,11 @@ s32 org_mini_net_SocketNative_readBuf(Runtime *runtime, JClass *clazz) {
     s32 count = localvar_getInt(runtime->localvar, 3);
 
     jthread_block_enter(runtime);
+    runtime->threadInfo->block_break = block_break;
+    runtime->threadInfo->block_break_para = (__refer) (intptr_t) sockfd;
     s32 len = sock_recv(sockfd, jbyte_arr->arr_body + offset, count);
+    runtime->threadInfo->block_break = NULL;
+    runtime->threadInfo->block_break_para = NULL;
     jthread_block_exit(runtime);
     push_int(runtime->stack, len);
 #if _JVM_DEBUG_BYTECODE_DETAIL > 5
@@ -497,7 +506,11 @@ s32 org_mini_net_SocketNative_readByte(Runtime *runtime, JClass *clazz) {
     s32 sockfd = localvar_getInt(runtime->localvar, 0);
     c8 b = 0;
     jthread_block_enter(runtime);
+    runtime->threadInfo->block_break = block_break;
+    runtime->threadInfo->block_break_para = (__refer) (intptr_t) sockfd;
     s32 len = sock_recv(sockfd, &b, 1);
+    runtime->threadInfo->block_break = NULL;
+    runtime->threadInfo->block_break_para = NULL;
     jthread_block_exit(runtime);
     if (len < 0) {
         push_int(runtime->stack, len);
