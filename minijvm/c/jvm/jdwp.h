@@ -307,6 +307,7 @@ typedef struct _JdwpServer {
     u16 port;
     u8 exit;
     u8 mode;
+    u8 thread_sync_ignore;  //for jdwp invokemethod , the flag indicate that method need not synchronized ,because all of java thread were suspended.
 } JdwpServer;
 
 typedef struct _JdwpClient {
@@ -480,7 +481,7 @@ typedef struct _JdwpStep {
     s32 next_stop_runtime_depth;
     union {
         s32 next_stop_bytecode_count;
-        s32 next_stop_bytecode_index;
+        s32 next_stop_line_no;
     };
     s32 bytecode_count;
 } JdwpStep;

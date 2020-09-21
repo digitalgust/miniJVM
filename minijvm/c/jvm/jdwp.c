@@ -743,6 +743,7 @@ void jdwp_check_breakpoint(Runtime *runtime) {
 
 void jdwp_check_debug_step(Runtime *runtime) {
     JdwpStep *step = &(runtime->threadInfo->jdwp_step);
+
     s32 suspend = 0;
     switch (step->next_type) {
         case NEXT_TYPE_SINGLE:
@@ -750,12 +751,18 @@ void jdwp_check_debug_step(Runtime *runtime) {
                 suspend = 1;
             }
             break;
-        case NEXT_TYPE_OVER:
-            if (runtime->method->converted_code) {
+        case NEXT_TYPE_OVER: {
+            CodeAttribute *ca = runtime->method->converted_code;
+            if (ca) {
                 s32 depth = getRuntimeDepth(runtime->threadInfo->top_runtime);
                 if (depth == step->next_stop_runtime_depth) {
-                    if (getLineNumByIndex(runtime->method->converted_code, (s32) (runtime->pc - runtime->method->converted_code->code)) !=
-                        step->next_stop_bytecode_index) {
+                    s32 lineNo = getLineNumByIndex(ca, (s32) (runtime->pc - ca->code));
+//                    jvm_printf("[jdwp] STEPOVER: %s, depth=%d/%d, pc=%d, line=%d/%d\n",
+//                               utf8_cstr(runtime->method->name),
+//                               depth, step->next_stop_runtime_depth,
+//                               runtime->pc - ca->code,
+//                               lineNo, step->next_stop_line_no);
+                    if (lineNo != step->next_stop_line_no) {
                         suspend = 1;
                     }
                 } else if (depth < step->next_stop_runtime_depth) {
@@ -763,6 +770,7 @@ void jdwp_check_debug_step(Runtime *runtime) {
                 }
             }
             break;
+        }
         case NEXT_TYPE_INTO:
             if (getRuntimeDepth(runtime->threadInfo->top_runtime) <= step->next_stop_runtime_depth) {// at least equile nextstop, or lessthan nextstop
                 suspend = 1;
@@ -776,8 +784,6 @@ void jdwp_check_debug_step(Runtime *runtime) {
     }
     if (suspend) {
         event_on_debug_step(runtime);
-//        jthread_suspend(runtime);
-//        suspend_all_thread();
     }
 }
 //==================================================    event    ==================================================
@@ -1026,10 +1032,19 @@ s32 jdwp_set_debug_step(s32 setOrClear, Instance *jthread, s32 size, s32 depth) 
             step->next_stop_runtime_depth = getRuntimeDepth(r->threadInfo->top_runtime) - 1;
         } else {
             if (size == JDWP_STEPSIZE_LINE) {//当前runtime
-                s32 nextPc = getLineNumByIndex(last->method->converted_code, (s32) (last->pc - last->method->converted_code->code));
+                s32 cur_line_no = getLineNumByIndex(last->method->converted_code, (s32) (last->pc - last->method->converted_code->code));
                 step->next_type = NEXT_TYPE_OVER;
-                step->next_stop_bytecode_index = nextPc;
+                step->next_stop_line_no = cur_line_no;
                 step->next_stop_runtime_depth = getRuntimeDepth(r->threadInfo->top_runtime);
+                if (utf8_equals_c(getLastSon(r)->method->name, "display") && (r->threadInfo->suspend_count == 0)) {
+                    s32 debug = 1;
+                }
+//
+//                jvm_printf("[jdwp] set  : %s, depth=%d, pc=%d, line=%d\n",
+//                           utf8_cstr(last->method->name),
+//                           step->next_stop_runtime_depth,
+//                           last->pc - last->method->converted_code->code,
+//                           cur_line_no);
             } else {
                 step->next_type = NEXT_TYPE_SINGLE;
                 step->next_stop_bytecode_count = 1;
@@ -1331,9 +1346,11 @@ void invoke_method(s32 call_mode, JdwpPacket *req, JdwpPacket *res, JdwpClient *
                 push_int(runtime->stack, (s32) vt.value);
         }
     }
-    resume_all_thread();
+
+    jdwpserver.thread_sync_ignore = 1;
     s32 ret = execute_method_impl(methodInfo, runtime);
-    suspend_all_thread();
+    jdwpserver.thread_sync_ignore = 0;
+
     if (ret != RUNTIME_STATUS_NORMAL) {
         print_exception(runtime);
     }

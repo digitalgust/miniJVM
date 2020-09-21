@@ -126,6 +126,7 @@ void runtime_destory(Runtime *runtime) {
 }
 
 s32 getRuntimeDepth(Runtime *top) {
+    top = top->threadInfo->top_runtime;
     s32 deep = 0;
     while (top) {
         deep++;
