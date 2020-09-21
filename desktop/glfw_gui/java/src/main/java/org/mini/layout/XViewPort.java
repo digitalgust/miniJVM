@@ -28,10 +28,9 @@ public class XViewPort extends XContainer {
     protected void createGui() {
         if (viewPort == null) {
             viewPort = new GViewPort();
+            initGui();
             viewPort.setLocation(x, y);
             viewPort.setSize(width, height);
-            viewPort.setName(name);
-            viewPort.setXmlAgent(this);
         } else {
             viewPort.setLocation(x, y);
             viewPort.setSize(width, height);

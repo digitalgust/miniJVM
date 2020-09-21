@@ -1,7 +1,6 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
-import org.mini.nanovg.Nanovg;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +51,14 @@ public class GViewSlot extends GViewPort {
         scrollMode = scrollMod;
     }
 
+    public void add(GObject go) {
+        add(props.size(), go, MOVE_FIXED);
+    }
+
+    public void add(GObject go, int moveMode) {
+        add(props.size(), go, moveMode);
+    }
+
     public void add(int index, GObject go, int moveMode) {
         super.addImpl(index, go);
         if (scrollMode == SCROLL_MODE_HORIZONTAL) {
@@ -69,7 +76,16 @@ public class GViewSlot extends GViewPort {
     }
 
     public void remove(int index) {
+        props.remove(index);
         super.removeImpl(index);
+        if (props.size() > 0) {
+            showSlot(index > 0 ? index - 1 : 0);
+        }
+    }
+
+    public void remove(GObject go) {
+        int index = getElements().indexOf(go);
+        remove(index);
     }
 
     private SlotProp getProp(GObject go) {

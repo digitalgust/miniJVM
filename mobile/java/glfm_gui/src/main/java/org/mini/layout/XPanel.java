@@ -43,8 +43,7 @@ public class XPanel extends XContainer {
 //                }
 //            }
             ;
-            panel.setName(name);
-            panel.setXmlAgent(this);
+            initGui();
         } else {
             panel.setLocation(x, y);
             panel.setSize(width, height);

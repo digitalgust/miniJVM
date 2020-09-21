@@ -70,8 +70,7 @@ public class XFrame
     protected void createGui() {
         if (frame == null) {
             frame = new GFrame(title, x, y, width, height);
-            frame.setName(name);
-            frame.setXmlAgent(this);
+            initGui();
             frame.setClosable(closable);
         } else {
             frame.setLocation(x, y);

@@ -89,17 +89,11 @@ public class XLabel
     protected void createGui() {
         if (label == null) {
             label = new GLabel(text, x, y, width, height);
-            label.setName(name);
-            label.setXmlAgent(this);
+            initGui();
             label.setActionListener(this);
             label.setAlign(align);
             label.setShowMode(GLabel.MODE_MULTI_SHOW);
-            if (color != null) {
-                label.setColor(color);
-            }
-            if (bgColor != null) {
-                label.setBgColor(bgColor);
-            }
+
         } else {
             label.setLocation(x, y);
             label.setSize(width, height);

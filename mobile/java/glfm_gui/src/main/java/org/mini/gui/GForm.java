@@ -107,7 +107,8 @@ public class GForm extends GViewPort {
             fbWidth = callback.getFrameBufferWidth();
             fbHeight = callback.getFrameBufferHeight();
             glViewport(0, 0, fbWidth, fbHeight);
-            glClearColor(0.3f, 0.3f, 0.32f, 1.0f);
+            float[] bgc = GToolkit.getStyle().getBackgroundColor();
+            glClearColor(bgc[0], bgc[1], bgc[2], bgc[3]);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
             int winWidth, winHeight;

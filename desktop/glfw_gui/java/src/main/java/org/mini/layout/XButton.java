@@ -90,15 +90,8 @@ public class XButton
     protected void createGui() {
         if (button == null) {
             button = new GButton(text, x, y, width, height);
-            button.setName(name);
-            button.setXmlAgent(this);
+            initGui();
             button.setActionListener(this);
-            if (color != null) {
-                button.setColor(color);
-            }
-            if (bgColor != null) {
-                button.setBgColor(bgColor);
-            }
             button.setIcon(emoji);
         } else {
             button.setLocation(x, y);

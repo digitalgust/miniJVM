@@ -23,7 +23,6 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     protected byte[] hint_arr;
     protected StringBuilder textsb = new StringBuilder();
     protected byte[] text_arr;
-    protected boolean editable = true;
 
     protected GStateChangeListener stateChangeListener;
 
@@ -119,7 +118,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
 
     @Override
     public void focusGot(GObject go) {
-        if (editable) {
+        if (enable) {
             GForm.showKeyboard();
         }
     }
@@ -145,7 +144,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
                 }
                 case Glfm.GLFMTouchPhaseEnded: {
                     if (touched) {
-                        if (getForm() != null && editable) {
+                        if (getForm() != null && enable) {
                             //System.out.println("touched textobject");
                         }
                         touched = false;
@@ -196,14 +195,14 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
      * @return the editable
      */
     public boolean isEditable() {
-        return editable;
+        return enable;
     }
 
     /**
      * @param editable the editable to set
      */
     public void setEditable(boolean editable) {
-        this.editable = editable;
+        this.enable = editable;
     }
 
     /**

@@ -1,6 +1,9 @@
 package org.mini.layout;
 
-import org.mini.gui.*;
+import org.mini.gui.GImage;
+import org.mini.gui.GMenu;
+import org.mini.gui.GMenuItem;
+import org.mini.gui.GObject;
 import org.mini.gui.event.GActionListener;
 import org.mini.layout.xmlpull.KXmlParser;
 import org.mini.layout.xmlpull.XmlPullParser;
@@ -13,6 +16,7 @@ public class XMenu extends XObject implements GActionListener {
     static class MenuItem {
         static public final String XML_NAME = "mi";
         String name;
+        String attachment;
         String text;
         String pic;
     }
@@ -67,6 +71,7 @@ public class XMenu extends XObject implements GActionListener {
 
                     item.name = parser.getAttributeValue(null, "name");
                     item.pic = parser.getAttributeValue(null, "pic");
+                    item.attachment = parser.getAttributeValue(null, "attachment");
                     String tmp = parser.nextText();
                     item.text = tmp.length() == 0 ? null : tmp;
                     items.add(item);
@@ -118,8 +123,7 @@ public class XMenu extends XObject implements GActionListener {
     protected void createGui() {
         if (menu == null) {
             menu = new GMenu(x, y, width, height);
-            menu.setName(name);
-            menu.setXmlAgent(this);
+            initGui();
             for (int i = 0; i < items.size(); i++) {
                 MenuItem item = (MenuItem) items.elementAt(i);
                 GImage img = null;
@@ -129,6 +133,8 @@ public class XMenu extends XObject implements GActionListener {
                 GMenuItem gli = menu.addItem(item.text, img);
                 gli.setActionListener(this);
                 gli.setName(item.name);
+                gli.setAttachment(item.attachment);
+                gli.setEnable(enable);
             }
             menu.setContextMenu(contextMenu);
             menu.setFixed(fixed);

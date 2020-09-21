@@ -20,8 +20,6 @@ import static org.mini.nanovg.Nanovg.nvgSave;
 abstract public class GContainer extends GObject {
 
     protected final List<GObject> elements = new ArrayList();
-    private final List<GMenu> menus = new ArrayList();
-    private final List<GObject> fronts = new ArrayList();
     private final List<GChildrenListener> childrenListeners = new ArrayList();
     protected GObject focus;
 
@@ -158,7 +156,8 @@ abstract public class GContainer extends GObject {
             return null;
         }
         synchronized (elements) {
-            for (GObject go : elements) {
+            for (int i = 0, imax = elements.size(); i < imax; i++) {
+                GObject go = elements.get(i);
                 if (name.equals(go.name)) {
                     return go;
                 }
@@ -251,48 +250,32 @@ abstract public class GContainer extends GObject {
     public boolean paint(long ctx) {
         try {
             synchronized (elements) {
-                //更新所有UI组件
-                menus.clear();
-                fronts.clear();
+//                //更新所有UI组件
+
+                if (focus != null && focus instanceof GForm) {
+                    elements.remove(focus);
+                    elements.add(focus);
+                }
                 for (int i = 0, imax = elements.size(); i < imax; i++) {
                     GObject nko = elements.get(i);
-                    if (nko.isFront()) {
-                        fronts.add(nko);
-                        continue;
-                    }
-                    if (nko instanceof GMenu) {
-                        menus.add((GMenu) nko);
-                        continue;
-                    }
-                    if (nko == focus) {
-                        continue;
-                    }
-
-                    if (nko.isVisible()) {
+                    if (nko.isBack()) {
                         drawObj(ctx, nko);
+                        continue;
                     }
                 }
-                if (focus != null && !focus.isFront()) {
-                    drawObj(ctx, focus);
-
-                    //frame re sort
-                    if (this instanceof GForm) {
-                        elements.remove(focus);
-                        elements.add(focus);
-
+                for (int i = 0, imax = elements.size(); i < imax; i++) {
+                    GObject nko = elements.get(i);
+                    if (!nko.isBack() && !nko.isMenu()) {
+                        drawObj(ctx, nko);
+                        continue;
                     }
                 }
-                for (int i = 0, imax = fronts.size(); i < imax; i++) {
-                    GObject m = fronts.get(i);
-                    elements.remove(m);
-                    elements.add(m);
-                    drawObj(ctx, m);
-                }
-                for (int i = 0, imax = menus.size(); i < imax; i++) {
-                    GMenu m = menus.get(i);
-                    elements.remove(m);
-                    elements.add(m);
-                    drawObj(ctx, m);
+                for (int i = 0, imax = elements.size(); i < imax; i++) {
+                    GObject nko = elements.get(i);
+                    if (nko.isMenu()) {
+                        drawObj(ctx, nko);
+                        continue;
+                    }
                 }
             }
 
@@ -303,6 +286,9 @@ abstract public class GContainer extends GObject {
     }
 
     private void drawObj(long ctx, GObject nko) {
+        if (!nko.isVisible()) {
+            return;
+        }
         float x, y, w, h;
 //        if (nko instanceof GContainer) {
 //            GContainer c = (GContainer) nko;
@@ -331,7 +317,7 @@ abstract public class GContainer extends GObject {
 
             nko.paint(ctx);
 
-            if (focus == nko) {
+            if (paintDebug && (focus == nko)) {
                 Nanovg.nvgScissor(ctx, x, y, w, h);
                 Nanovg.nvgBeginPath(ctx);
                 Nanovg.nvgRect(ctx, x + 1, y + 1, w - 2, h - 2);
@@ -350,6 +336,9 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void keyEvent(int key, int scanCode, int action, int mods) {
+        if (!isEnable()) {
+            return;
+        }
         if (focus != null) {
             focus.keyEvent(key, scanCode, action, mods);
         }
@@ -357,6 +346,9 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void characterEvent(char character) {
+        if (!isEnable()) {
+            return;
+        }
         if (focus != null) {
             focus.characterEvent(character);
         }
@@ -364,6 +356,9 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+        if (!isEnable()) {
+            return;
+        }
         GObject found = findByXY(x, y);
         if (found instanceof GMenu) {
             if (!((GMenu) found).isContextMenu()) {
@@ -391,6 +386,9 @@ abstract public class GContainer extends GObject {
     @Override
     public void cursorPosEvent(int x, int y) {
 
+        if (!isEnable()) {
+            return;
+        }
         if (focus != null && focus.isInArea(x, y)) {
             focus.cursorPosEvent(x, y);
         }
@@ -399,6 +397,9 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void dropEvent(int count, String[] paths) {
+        if (!isEnable()) {
+            return;
+        }
         if (focus != null) {
             focus.dropEvent(count, paths);
         }
@@ -406,6 +407,9 @@ abstract public class GContainer extends GObject {
 
     @Override
     public boolean scrollEvent(float scrollX, float scrollY, float x, float y) {
+        if (!isEnable()) {
+            return false;
+        }
         setFocus(findByXY(x, y));
         if (focus != null && focus.isInArea(x, y)) {
             return focus.scrollEvent(scrollX, scrollY, x, y);
@@ -415,6 +419,9 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void clickEvent(int button, int x, int y) {
+        if (!isEnable()) {
+            return;
+        }
         if (focus != null && focus.isInArea(x, y)) {
             focus.clickEvent(button, x, y);
         }
@@ -422,6 +429,9 @@ abstract public class GContainer extends GObject {
 
     @Override
     public boolean dragEvent(float dx, float dy, float x, float y) {
+        if (!isEnable()) {
+            return false;
+        }
         GObject found = findByXY(x, y);
         if (found instanceof GMenu) {
             return found.dragEvent(dx, dy, x, y);
@@ -438,6 +448,9 @@ abstract public class GContainer extends GObject {
     ///==========================
     @Override
     public void keyEvent(int key, int action, int mods) {
+        if (!isEnable()) {
+            return;
+        }
         if (focus != null) {
             focus.keyEvent(key, action, mods);
         }
@@ -445,6 +458,9 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void characterEvent(String str, int mods) {
+        if (!isEnable()) {
+            return;
+        }
         if (focus != null) {
             focus.characterEvent(str, mods);
         }
@@ -452,6 +468,9 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void touchEvent(int touchid, int phase, int x, int y) {
+        if (!isEnable()) {
+            return;
+        }
         GObject found = findByXY(x, y);
         if (found instanceof GMenu) {
             if (!((GMenu) found).isContextMenu()) {
@@ -478,6 +497,10 @@ abstract public class GContainer extends GObject {
 
     @Override
     public boolean inertiaEvent(float x1, float y1, float x2, float y2, long moveTime) {
+
+        if (!isEnable()) {
+            return false;
+        }
         if (focus != null && focus.isInArea((float) x1, (float) y1)) {
             return focus.inertiaEvent(x1, y1, x2, y2, moveTime);
         }
@@ -486,6 +509,9 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void longTouchedEvent(int x, int y) {
+        if (!isEnable()) {
+            return;
+        }
         GObject found = findByXY(x, y);
         if (found instanceof GMenu) {
             if (!((GMenu) found).isContextMenu()) {

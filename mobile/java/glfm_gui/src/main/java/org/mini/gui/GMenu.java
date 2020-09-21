@@ -52,6 +52,10 @@ public class GMenu extends GPanel {
         reAlign();
     }
 
+    public boolean isMenu() {
+        return true;
+    }
+
     public GMenuItem addItem(int index, String itemTag, GImage img) {
         GMenuItem item = new GMenuItem(itemTag, img, GMenu.this);
         addImpl(index, item);

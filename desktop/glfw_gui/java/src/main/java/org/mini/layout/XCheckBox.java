@@ -78,8 +78,7 @@ public class XCheckBox
     protected void createGui() {
         if (checkBox == null) {
             checkBox = new GCheckBox(text, false, x, y, width, height);
-            checkBox.setName(name);
-            checkBox.setXmlAgent(this);
+            initGui();
             checkBox.setActionListener(this);
             checkBox.setChecked(selected);
         } else {

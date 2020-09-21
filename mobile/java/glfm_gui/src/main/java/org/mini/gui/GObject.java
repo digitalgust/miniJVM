@@ -35,6 +35,7 @@ abstract public class GObject {
     public static final int HEIGHT = 3;
 
     volatile static int flush;
+    static boolean paintDebug;
 
     protected GContainer parent;
 
@@ -42,6 +43,7 @@ abstract public class GObject {
 
     protected float[] bgColor;
     protected float[] color;
+    protected float[] disabledColor;
 
     protected float fontSize;
 
@@ -52,7 +54,11 @@ abstract public class GObject {
 
     protected boolean visible = true;
 
+    protected boolean enable = true;
+
     protected boolean front = false;
+
+    protected boolean back = false;
 
     protected boolean fixedLocation;
 
@@ -258,9 +264,10 @@ abstract public class GObject {
         bgColor = color;
     }
 
-    public void setBgColor(int rgba){
+    public void setBgColor(int rgba) {
         bgColor = nvgRGBA(rgba);
     }
+
     /**
      * @return the color
      */
@@ -276,14 +283,21 @@ abstract public class GObject {
      */
     public void setColor(int r, int g, int b, int a) {
         color = Nanovg.nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);
+        a = a - 48;
+        if (a < 0) a = 16;
+        disabledColor = Nanovg.nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);
     }
 
     public void setColor(float[] color) {
         this.color = color;
+        float a = color[3];
+        a -= 0.125f;
+        if (a < 0) a = .0625f;
+        disabledColor = Nanovg.nvgRGBAf(color[0], color[1], color[2], a);
     }
 
-    public void setColor(int rgba){
-        color = nvgRGBA(rgba);
+    public void setColor(int rgba) {
+        setColor(nvgRGBA(rgba));
     }
 
     public float getFontSize() {
@@ -315,6 +329,16 @@ abstract public class GObject {
     public boolean isVisible() {
         return visible;
     }
+
+
+    public boolean isEnable() {
+        return enable;
+    }
+
+    public void setEnable(boolean enable) {
+        this.enable = enable;
+    }
+
 
     public GForm getForm() {
         GObject go = this;
@@ -401,10 +425,30 @@ abstract public class GObject {
      */
     public void setFront(boolean front) {
         this.front = front;
+        if (front) this.back = false;
+    }
+
+    /**
+     * @return the front
+     */
+    public boolean isBack() {
+        return back;
+    }
+
+    /**
+     * @param back the front to set
+     */
+    public void setBack(boolean back) {
+        this.back = back;
+        if (back) this.front = false;
+    }
+
+    public boolean isMenu() {
+        return false;
     }
 
     void doAction() {
-        if (actionListener != null) {
+        if (actionListener != null && enable) {
             actionListener.action(this);
         }
     }

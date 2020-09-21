@@ -130,7 +130,7 @@ public class GLabel extends GObject {
         //NVG_NOTUSED(w);
         nvgFontSize(vg, fontSize);
         nvgFontFace(vg, GToolkit.getFontWord());
-        nvgFillColor(vg, color);
+        nvgFillColor(vg, enable?color:disabledColor);
 
         nvgTextAlign(vg, align);
         if (text_arr != null) {
@@ -156,7 +156,7 @@ public class GLabel extends GObject {
     void drawMultiText(long vg, float x, float y, float w, float h) {
 
         nvgFontSize(vg, fontSize);
-        nvgFillColor(vg, color);
+        nvgFillColor(vg, enable?color:disabledColor);
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextMetrics(vg, null, null, lineh);
 

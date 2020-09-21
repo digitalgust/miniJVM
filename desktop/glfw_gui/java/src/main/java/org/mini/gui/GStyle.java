@@ -17,6 +17,8 @@ public interface GStyle {
 
     float getTextFontSize();
 
+    float[] getDisabledTextFontColor();
+
     float getTitleFontSize();
 
     float getIconFontSize();

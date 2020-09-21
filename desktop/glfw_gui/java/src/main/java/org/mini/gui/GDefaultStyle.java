@@ -36,6 +36,13 @@ public class GDefaultStyle implements GStyle {
         return textFontColor;
     }
 
+    float[] disabledTextFontColor = nvgRGBA(96, 96, 96, 128);
+
+    @Override
+    public float[] getDisabledTextFontColor() {
+        return textFontColor;
+    }
+
     float[] frameBackground = nvgRGBA(28, 30, 34, 255);
 
     @Override
@@ -109,7 +116,7 @@ public class GDefaultStyle implements GStyle {
         return unselectedColor;
     }
 
-    float[] backgroundColor = nvgRGBA(96, 96, 100, 32);
+    float[] backgroundColor = nvgRGBA(32, 32, 32, 255);
 
     @Override
     public float[] getBackgroundColor() {

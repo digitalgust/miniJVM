@@ -28,9 +28,9 @@ public class XForm extends XContainer {
     protected void createGui() {
         if (form == null) {
             form = new GForm();
+            initGui();
             form.setLocation(x, y);
             form.setSize(width, height);
-            form.setName(name);
             form.setXmlAgent(this);
         } else {
             form.setLocation(x, y);

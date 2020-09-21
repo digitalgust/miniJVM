@@ -24,6 +24,7 @@ public class XList extends XObject implements GStateChangeListener {
         String text;
         String pic;
         String cmd;
+        String attachment;
         String onClick;
 
         @Override
@@ -64,7 +65,7 @@ public class XList extends XObject implements GStateChangeListener {
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("multiline")) {
             multiLine = "0".equals(attValue) ? false : true;
-        } else  if(attName.equals("multiselect")) {
+        } else if (attName.equals("multiselect")) {
             multiSelect = "0".equals(attValue) ? false : true;
         } else if (attName.equals("itemh")) {
             itemheight = Integer.parseInt(attValue);
@@ -95,6 +96,7 @@ public class XList extends XObject implements GStateChangeListener {
                     item.pic = parser.getAttributeValue(null, "pic");
                     item.cmd = parser.getAttributeValue(null, "cmd");
                     item.onClick = parser.getAttributeValue(null, "onclick");
+                    item.attachment = parser.getAttributeValue(null, "attachment");
                     String tmp = parser.nextText();
                     item.text = tmp == null ? "" : tmp;
                     items.add(item);
@@ -128,10 +130,9 @@ public class XList extends XObject implements GStateChangeListener {
     protected void createGui() {
         if (list == null) {
             list = new GList(x, y, width, height);
+            initGui();
             list.setShowMode(multiLine ? GList.MODE_MULTI_SHOW : GList.MODE_SINGLE_SHOW);
-            list.setName(name);
             list.setItemHeight(itemheight);
-            list.setXmlAgent(this);
             list.setStateChangeListener(this);
             for (int i = 0; i < items.size(); i++) {
                 ListItem item = (ListItem) items.elementAt(i);
@@ -141,10 +142,12 @@ public class XList extends XObject implements GStateChangeListener {
                 }
                 GListItem gli = new GListItem(img, item.text);
                 gli.setName(item.name);
+                gli.setAttachment(item.attachment);
                 gli.setActionListener(item);
-
+                gli.setEnable(enable);
                 list.add(gli);
             }
+            list.setEnable(enable);
         } else {
             list.setLocation(x, y);
             list.setSize(width, height);

@@ -221,7 +221,7 @@ public class GTextBox extends GTextObject {
         if (action == Glfw.GLFW_PRESS || action == Glfw.GLFW_REPEAT) {
             switch (key) {
                 case Glfw.GLFW_KEY_BACKSPACE: {
-                    if (editable) {
+                    if (enable) {
                         if (textsb.length() > 0 && caretIndex > 0) {
                             int[] selectFromTo = getSelected();
                             if (selectFromTo != null) {
@@ -235,7 +235,7 @@ public class GTextBox extends GTextObject {
                     break;
                 }
                 case Glfw.GLFW_KEY_DELETE: {
-                    if (editable) {
+                    if (enable) {
                         if (textsb.length() > caretIndex) {
                             int[] selectFromTo = getSelected();
                             if (selectFromTo != null) {
@@ -249,7 +249,7 @@ public class GTextBox extends GTextObject {
                 }
                 case Glfw.GLFW_KEY_ENTER: {
                     String txt = getText();
-                    if (editable) {
+                    if (enable) {
                         if (txt != null && txt.length() > 0) {
                             int[] selectFromTo = getSelected();
                             if (selectFromTo != null) {
@@ -376,7 +376,7 @@ public class GTextBox extends GTextObject {
         if (action == Glfm.GLFMKeyActionPressed || action == Glfm.GLFMKeyActionRepeated) {
             switch (key) {
                 case Glfm.GLFMKeyBackspace: {
-                    if (editable) {
+                    if (enable) {
                         if (textsb.length() > 0 && caretIndex > 0) {
                             int[] selectFromTo = getSelected();
                             if (selectFromTo != null) {
@@ -391,7 +391,7 @@ public class GTextBox extends GTextObject {
                 }
                 case Glfm.GLFMKeyEnter: {
                     String txt = getText();
-                    if (editable) {
+                    if (enable) {
                         if (txt != null && txt.length() > 0) {
                             int[] selectFromTo = getSelected();
                             if (selectFromTo != null) {

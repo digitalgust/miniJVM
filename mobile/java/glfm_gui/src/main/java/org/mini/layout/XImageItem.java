@@ -81,10 +81,9 @@ public class XImageItem extends XObject implements GActionListener {
         if (imgItem == null) {
             GImage img = GImage.createImageFromJar(pic);
             imgItem = new GImageItem(img);
+            initGui();
             imgItem.setLocation(x, y);
             imgItem.setSize(width, height);
-            imgItem.setName(name);
-            imgItem.setXmlAgent(this);
             imgItem.setAlpha(alpha);
             imgItem.setDrawBorder(border);
             imgItem.setActionListener(this);

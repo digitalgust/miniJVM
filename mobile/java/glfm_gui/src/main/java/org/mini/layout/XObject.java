@@ -20,11 +20,15 @@ public abstract class XObject {
 
     protected boolean hidden = false; //是否显示
 
+    protected boolean enable = true; //是否显示
+
     protected String name = null; //组件名字
 
     protected String text = null; //文本
 
     protected String cmd = null;
+
+    protected String attachment = null;
 
     protected String moveMode;
 
@@ -90,9 +94,13 @@ public abstract class XObject {
     protected void parseMoreAttribute(String attName, String attValue) {
         if (attName.equals("name")) { // 标题
             name = attValue;
+        } else if (attName.equals("attachment")) {
+            cmd = attValue;
         } else if (attName.equals("cmd")) {
             cmd = attValue;
         } else if (attName.equals("hidden")) {
+            hidden = "0".equals(attValue) ? false : true;
+        } else if (attName.equals("enable")) {
             hidden = "0".equals(attValue) ? false : true;
         } else if (attName.equals("move")) { // viewslot move mode
             moveMode = attValue;
@@ -146,6 +154,22 @@ public abstract class XObject {
         }
     }
 
+    public void initGui() {
+        GObject gui = getGui();
+        if (gui != null) {
+            gui.setEnable(enable);
+            gui.setName(name);
+            gui.setText(text);
+            gui.setAttachment(attachment);
+            gui.setXmlAgent(this);
+            if (color != null) {
+                gui.setColor(color);
+            }
+            if (bgColor != null) {
+                gui.setBgColor(bgColor);
+            }
+        }
+    }
 
     /**
      * 当自己被拖动时的处理
@@ -191,6 +215,17 @@ public abstract class XObject {
         this.hidden = hidden;
     }
 
+    public boolean isEnable() {
+        return enable;
+    }
+
+    public void setEnable(boolean enable) {
+        if (getGui() != null) {
+            getGui().setEnable(enable);
+        }
+        this.enable = enable;
+    }
+
 
     public String getName() {
         return name;
@@ -210,6 +245,16 @@ public abstract class XObject {
         }
     }
 
+    public String getAttachment() {
+        return attachment;
+    }
+
+    public void setAttachment(String attachment) {
+        this.attachment = attachment;
+        if (getGui() != null) {
+            getGui().setAttachment(attachment);
+        }
+    }
 
     public String getCmd() {
         return cmd;

@@ -116,7 +116,7 @@ public class GTextField extends GTextObject {
         }
         if (action == Glfw.GLFW_PRESS || action == Glfw.GLFW_REPEAT) {
             if (key == Glfw.GLFW_KEY_BACKSPACE) {
-                if (editable) {
+                if (enable) {
                     if (textsb.length() > 0 && caretIndex > 0) {
                         int[] selectFromTo = getSelected();
                         if (selectFromTo != null) {
@@ -178,7 +178,7 @@ public class GTextField extends GTextObject {
      */
     @Override
     public void characterEvent(char character) {
-        if (editable) {
+        if (enable) {
             if (character != '\n' && character != '\r' && textsb.length() < text_max) {
                 insertTextByIndex(caretIndex, character);
                 setCaretIndex(caretIndex + 1);
@@ -191,7 +191,7 @@ public class GTextField extends GTextObject {
 
         if (action == Glfm.GLFMKeyActionPressed || action == Glfm.GLFMKeyActionRepeated) {
             if (key == Glfm.GLFMKeyBackspace) {
-                if (editable) {
+                if (enable) {
                     if (textsb.length() > 0 && caretIndex > 0) {
                         int[] selectFromTo = getSelected();
                         if (selectFromTo != null) {

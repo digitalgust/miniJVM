@@ -79,10 +79,9 @@ public class XViewSlot extends XContainer {
     protected void createGui() {
         if (viewSlot == null) {
             viewSlot = new GViewSlot(x, y, width, height, scroll);
+            initGui();
             viewSlot.setLocation(x, y);
             viewSlot.setSize(width, height);
-            viewSlot.setName(name);
-            viewSlot.setXmlAgent(this);
 
         } else {
             viewSlot.setLocation(x, y);

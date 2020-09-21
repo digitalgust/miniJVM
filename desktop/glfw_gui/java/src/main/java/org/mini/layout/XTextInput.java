@@ -89,11 +89,10 @@ public class XTextInput
                 ((GTextField) textInput).setBoxStyle(style);
                 ((GTextField) textInput).setPasswordMode(password);
             }
-            textInput.setName(name);
-            textInput.setXmlAgent(this);
-            //textInput.getForm().setKeyshowListener(this);
+            initGui();
             textInput.setStateChangeListener(this);
             textInput.setEditable(edit);
+            textInput.setEnable(enable);
         } else {
             textInput.setLocation(x, y);
             textInput.setSize(width, height);
