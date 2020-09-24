@@ -1127,7 +1127,7 @@ static s32 instanceof(JClass *other, Instance *ins, Runtime *runtime) {
 //-----------------------------------------------------------------
 
 void gen_jit_suspend_check_func() {
-    struct sljit_compiler *C = sljit_create_compiler(NULL);
+    struct sljit_compiler *C = sljit_create_compiler(NULL, NULL);
     sljit_set_context(C, 0, 0, 3, 3, 3, 3, LOCAL_COUNT * sizeof(sljit_sw));
 
     sljit_emit_fast_enter(C, SLJIT_R2, 0);
@@ -3318,7 +3318,7 @@ void construct_jit(MethodInfo *method, Runtime *runtime) {
         return;
     }
     /* Create a SLJIT compiler */
-    struct sljit_compiler *C = sljit_create_compiler(NULL);
+    struct sljit_compiler *C = sljit_create_compiler(NULL, NULL);
     ca->jit.state = JIT_GEN_COMPILING;
     ca->jit.state = gen_jit_bytecode_func(C, method, runtime);
 
@@ -3360,7 +3360,7 @@ void jit_destory(Jit *jit) {
     }
 
     if (jit->func) {
-        sljit_free_code(jit->func);
+        sljit_free_code(jit->func, NULL);
     }
 }
 

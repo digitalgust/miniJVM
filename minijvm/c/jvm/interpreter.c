@@ -131,7 +131,7 @@ static s32 filterClassName(Utf8String *clsName) {
         runtime->pc = ip;\
         runtime->stack->sp = sp;\
         if (threadInfo->is_interrupt) {\
-            break;\
+            goto label_exit_while;\
         }\
         check_suspend_and_pause(runtime);\
     }\
@@ -272,7 +272,7 @@ s32 checkcast(Runtime *runtime, Instance *ins, s32 typeIdx) {
 
 static inline void _synchronized_lock_method(MethodInfo *method, Runtime *runtime) {
     //synchronized process
-    if(!jdwpserver.thread_sync_ignore){
+    if (!jdwpserver.thread_sync_ignore) {
         if (method->is_static) {
             runtime->lock = (MemoryBlock *) runtime->clazz;
         } else {
@@ -284,7 +284,7 @@ static inline void _synchronized_lock_method(MethodInfo *method, Runtime *runtim
 
 static inline void _synchronized_unlock_method(MethodInfo *method, Runtime *runtime) {
     //synchronized process
-    if(!jdwpserver.thread_sync_ignore){
+    if (!jdwpserver.thread_sync_ignore) {
         jthread_unlock(runtime->lock, runtime);
         runtime->lock = NULL;
     }
