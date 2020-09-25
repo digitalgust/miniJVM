@@ -430,15 +430,15 @@ abstract public class GContainer extends GObject {
         if (!isEnable()) {
             return false;
         }
+
+        if (focus != null) {
+            return focus.dragEvent(dx, dy, x, y);
+        }
         GObject found = findByXY(x, y);
         if (found instanceof GMenu) {
             return found.dragEvent(dx, dy, x, y);
         } else if (found != null && found.isFront()) {
             return found.dragEvent(dx, dy, x, y);
-        }
-
-        if (focus != null && focus.isInArea(x, y)) {
-            return focus.dragEvent(dx, dy, x, y);
         }
         return false;
     }
