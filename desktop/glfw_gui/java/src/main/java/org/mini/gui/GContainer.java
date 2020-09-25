@@ -117,16 +117,13 @@ abstract public class GContainer extends GObject {
     void removeImpl(GObject nko) {
         if (nko != null) {
             synchronized (elements) {
-                nko.setParent(null);
-                nko.destroy();
-                boolean b = elements.remove(nko);
                 if (focus == nko) {
-                    if (b) {
-                        focus.doFocusLost(null);
-                    }
-                    focus = null;
+                setFocus(null);
                 }
                 onRemove(nko);
+                nko.setParent(null);
+                nko.destroy();
+                elements.remove(nko);
             }
         }
     }
@@ -252,7 +249,7 @@ abstract public class GContainer extends GObject {
             synchronized (elements) {
 //                //更新所有UI组件
 
-                if (focus != null && focus instanceof GForm) {
+                if (focus != null && focus instanceof GFrame) {
                     elements.remove(focus);
                     elements.add(focus);
                 }
@@ -367,6 +364,7 @@ abstract public class GContainer extends GObject {
             found.mouseButtonEvent(button, pressed, x, y);
             return;
         } else if (found != null && found.isFront()) {
+            setFocus(found);
             found.mouseButtonEvent(button, pressed, x, y);
             return;
         }
@@ -479,6 +477,7 @@ abstract public class GContainer extends GObject {
             found.touchEvent(touchid, phase, x, y);
             return;
         } else if (found != null && found.isFront()) {
+            setFocus(found);
             found.touchEvent(touchid, phase, x, y);
             return;
         }
