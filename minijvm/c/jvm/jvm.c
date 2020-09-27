@@ -318,22 +318,20 @@ s32 call_method_para(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, ArrayL
         if (m) {
 
             //准备参数
-            if (java_para && java_para->length) {
-                s32 count = java_para->length;
-                Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
-                Instance *arr = jarray_create_by_type_name(runtime, count, ustr);
-                instance_hold_to_thread(arr, runtime);
-                utf8_destory(ustr);
-                int i;
-                for (i = 0; i < count; i++) {
-                    Utf8String *utfs = utf8_create_c(arraylist_get_value(java_para, i));
-                    Instance *jstr = jstring_create(utfs, runtime);
-                    jarray_set_field(arr, i, (intptr_t) jstr);
-                    utf8_destory(utfs);
-                }
-                push_ref(runtime->stack, arr);
-                instance_release_from_thread(arr, runtime);
+            s32 count = java_para ? java_para->length : 0;
+            Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
+            Instance *arr = jarray_create_by_type_name(runtime, count, ustr);
+            instance_hold_to_thread(arr, runtime);
+            utf8_destory(ustr);
+            int i;
+            for (i = 0; i < count; i++) {
+                Utf8String *utfs = utf8_create_c(arraylist_get_value(java_para, i));
+                Instance *jstr = jstring_create(utfs, runtime);
+                jarray_set_field(arr, i, (intptr_t) jstr);
+                utf8_destory(utfs);
             }
+            push_ref(runtime->stack, arr);
+            instance_release_from_thread(arr, runtime);
 
             s64 start = currentTimeMillis();
 #if _JVM_DEBUG_BYTECODE_DETAIL > 0
