@@ -435,7 +435,7 @@ s32 org_mini_net_SocketNative_open0(Runtime *runtime, JClass *clazz) {
     jthread_block_enter(runtime);
     s32 sockfd = sock_open();
     jthread_block_exit(runtime);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_net_SocketNative_open0  \n");
 #endif
@@ -454,7 +454,7 @@ s32 org_mini_net_SocketNative_bind0(Runtime *runtime, JClass *clazz) {
     s32 ret = sock_bind(sockfd, ip, port);
     jthread_block_exit(runtime);
     utf8_destory(ip);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_net_SocketNative_open0  \n");
 #endif
@@ -473,7 +473,7 @@ s32 org_mini_net_SocketNative_connect0(Runtime *runtime, JClass *clazz) {
     s32 ret = sock_connect(sockfd, ip, port);
     jthread_block_exit(runtime);
     utf8_destory(ip);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_net_SocketNative_open0  \n");
 #endif
@@ -495,7 +495,7 @@ s32 org_mini_net_SocketNative_readBuf(Runtime *runtime, JClass *clazz) {
     runtime->threadInfo->block_break_para = NULL;
     jthread_block_exit(runtime);
     push_int(runtime->stack, len);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_net_SocketNative_readBuf  \n");
 #endif
@@ -519,7 +519,7 @@ s32 org_mini_net_SocketNative_readByte(Runtime *runtime, JClass *clazz) {
 
     }
 
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_net_SocketNative_readByte  \n");
 #endif
@@ -538,7 +538,7 @@ s32 org_mini_net_SocketNative_writeBuf(Runtime *runtime, JClass *clazz) {
     jthread_block_exit(runtime);
 
     push_int(runtime->stack, len);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_net_SocketNative_writeBuf  \n");
 #endif
@@ -552,7 +552,7 @@ s32 org_mini_net_SocketNative_writeByte(Runtime *runtime, JClass *clazz) {
     jthread_block_enter(runtime);
     s32 len = sock_send(sockfd, &b, 1);
     jthread_block_exit(runtime);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_net_SocketNative_writeByte  \n");
 #endif
@@ -561,7 +561,7 @@ s32 org_mini_net_SocketNative_writeByte(Runtime *runtime, JClass *clazz) {
 }
 
 s32 org_mini_net_SocketNative_available0(Runtime *runtime, JClass *clazz) {
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_net_SocketNative_available0  \n");
 #endif
@@ -572,7 +572,7 @@ s32 org_mini_net_SocketNative_available0(Runtime *runtime, JClass *clazz) {
 s32 org_mini_net_SocketNative_close0(Runtime *runtime, JClass *clazz) {
     s32 sockfd = localvar_getInt(runtime->localvar, 0);
     sock_close(sockfd);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_net_SocketNative_close0  \n");
 #endif
@@ -589,7 +589,7 @@ s32 org_mini_net_SocketNative_setOption0(Runtime *runtime, JClass *clazz) {
         ret = sock_option(sockfd, type, val, val2);
     }
     push_int(runtime->stack, ret);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_net_SocketNative_setOption0  \n");
 #endif
@@ -606,7 +606,7 @@ s32 org_mini_net_SocketNative_getOption0(Runtime *runtime, JClass *clazz) {
         ret = sock_get_option(sockfd, type);
     }
     push_int(runtime->stack, ret);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_net_SocketNative_getOption0  \n");
 #endif
@@ -623,7 +623,7 @@ s32 org_mini_net_SocketNative_listen0(Runtime *runtime, JClass *clazz) {
         jthread_block_exit(runtime);
     }
     push_int(runtime->stack, ret);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_net_SocketNative_listen0  \n");
 #endif
@@ -641,7 +641,7 @@ s32 org_mini_net_SocketNative_accept0(Runtime *runtime, JClass *clazz) {
         jthread_block_exit(runtime);
     }
     push_int(runtime->stack, ret);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_net_SocketNative_accept0  \n");
 #endif
@@ -656,7 +656,7 @@ s32 org_mini_net_SocketNative_registerCleanup(Runtime *runtime, JClass *clazz) {
 
     }
 
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_net_SocketNative_registerCleanup  \n");
 #endif
@@ -669,7 +669,7 @@ s32 org_mini_net_SocketNative_finalize(Runtime *runtime, JClass *clazz) {
         close(sockfd);
     }
 
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_net_SocketNative_finalize  \n");
 #endif
@@ -707,7 +707,7 @@ s32 org_mini_net_SocketNative_getSockAddr(Runtime *runtime, JClass *clazz) {
         push_ref(runtime->stack, jstr);
     }
 
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_net_SocketNative_getSockAddr  \n");
 #endif
@@ -723,7 +723,7 @@ s32 org_mini_net_SocketNative_host2ip4(Runtime *runtime, JClass *clazz) {
         utf8_destory(ip);
     }
     push_int(runtime->stack, addr);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_net_SocketNative_host2ip4  \n");
 #endif
@@ -740,7 +740,7 @@ s32 org_mini_fs_InnerFile_openFile(Runtime *runtime, JClass *clazz) {
         push_long(runtime->stack, 0);
     }
 
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_openFile  \n");
 #endif
@@ -756,7 +756,7 @@ s32 org_mini_fs_InnerFile_closeFile(Runtime *runtime, JClass *clazz) {
         ret = fclose(fd);
     }
     push_int(runtime->stack, ret);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_closeFile  \n");
 #endif
@@ -779,7 +779,7 @@ s32 org_mini_fs_InnerFile_read0(Runtime *runtime, JClass *clazz) {
         push_int(runtime->stack, ret);
     }
 
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_read0  \n");
 #endif
@@ -803,7 +803,7 @@ s32 org_mini_fs_InnerFile_write0(Runtime *runtime, JClass *clazz) {
         push_int(runtime->stack, ret);
     }
 
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_write0  \n");
 #endif
@@ -828,7 +828,7 @@ s32 org_mini_fs_InnerFile_readbuf(Runtime *runtime, JClass *clazz) {
     }
     push_int(runtime->stack, ret);
 
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_readbuf  \n");
 #endif
@@ -855,7 +855,7 @@ s32 org_mini_fs_InnerFile_writebuf(Runtime *runtime, JClass *clazz) {
         push_int(runtime->stack, ret);
     }
 
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_writebuf  \n");
 #endif
@@ -876,7 +876,7 @@ s32 org_mini_fs_InnerFile_seek0(Runtime *runtime, JClass *clazz) {
         ret = fseek(fd, (long) filepos, SEEK_SET);
     }
     push_int(runtime->stack, ret);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_seek0  \n");
 #endif
@@ -898,7 +898,7 @@ s32 org_mini_fs_InnerFile_available0(Runtime *runtime, JClass *clazz) {
         fseek(fd, (long) cur, SEEK_SET);
     }
     push_int(runtime->stack, end - cur);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_available0  \n");
 #endif
@@ -940,7 +940,7 @@ s32 org_mini_fs_InnerFile_setLength0(Runtime *runtime, JClass *clazz) {
         }
     }
     push_int(runtime->stack, ret);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_setLength0  \n");
 #endif
@@ -957,7 +957,7 @@ s32 org_mini_fs_InnerFile_flush0(Runtime *runtime, JClass *clazz) {
         ret = fflush(fd);
     }
     push_int(runtime->stack, ret);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_flush0  \n");
 #endif
@@ -1004,7 +1004,7 @@ s32 org_mini_fs_InnerFile_loadFS(Runtime *runtime, JClass *clazz) {
         utf8_destory(filepath);
     }
     push_int(runtime->stack, ret);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_loadFD  \n");
 #endif
@@ -1054,7 +1054,7 @@ s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
     } else {
         push_ref(runtime->stack, NULL);
     }
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_listDir  \n");
 #endif
@@ -1069,7 +1069,7 @@ s32 org_mini_fs_InnerFile_getcwd(Runtime *runtime, JClass *clazz) {
     } else {
         push_int(runtime->stack, -1);
     }
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_getcwd  \n");
 #endif
@@ -1085,7 +1085,7 @@ s32 org_mini_fs_InnerFile_chmod(Runtime *runtime, JClass *clazz) {
     } else {
         push_int(runtime->stack, -1);
     }
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_fullpath  \n");
 #endif
@@ -1101,7 +1101,7 @@ s32 org_mini_fs_InnerFile_rename0(Runtime *runtime, JClass *clazz) {
     } else {
         push_int(runtime->stack, -1);
     }
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_rename0  \n");
 #endif
@@ -1117,7 +1117,7 @@ s32 org_mini_fs_InnerFile_getTmpDir(Runtime *runtime, JClass *clazz) {
     } else {
         push_ref(runtime->stack, NULL);
     }
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_getTmpDir  \n");
 #endif
@@ -1137,7 +1137,7 @@ s32 org_mini_fs_InnerFile_mkdir0(Runtime *runtime, JClass *clazz) {
     } else {
         push_int(runtime->stack, ret);
     }
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_mkdir  \n");
 #endif
@@ -1150,7 +1150,7 @@ s32 org_mini_fs_InnerFile_getOS(Runtime *runtime, JClass *clazz) {
 #else
     push_int(runtime->stack, 0);
 #endif
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_getOS  \n");
 #endif
@@ -1173,7 +1173,7 @@ s32 org_mini_fs_InnerFile_delete0(Runtime *runtime, JClass *clazz) {
     } else {
         push_int(runtime->stack, ret);
     }
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_delete0  \n");
 #endif
@@ -1198,7 +1198,7 @@ s32 org_mini_zip_ZipFile_getEntry0(Runtime *runtime, JClass *clazz) {
     if (ret) {
         push_ref(runtime->stack, NULL);
     }
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_zip_ZipFile_getEntry0  \n");
 #endif
@@ -1215,7 +1215,7 @@ s32 org_mini_zip_ZipFile_putEntry0(Runtime *runtime, JClass *clazz) {
         ret = 0;
     }
     push_int(runtime->stack, ret);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_zip_ZipFile_putEntry0  \n");
 #endif
@@ -1230,7 +1230,7 @@ s32 org_mini_zip_ZipFile_fileCount0(Runtime *runtime, JClass *clazz) {
         ret = zip_filecount(zip_path_arr->arr_body);
     }
     push_int(runtime->stack, ret);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_zip_ZipFile_fileCount0  \n");
 #endif
@@ -1262,7 +1262,7 @@ s32 org_mini_zip_ZipFile_listFiles0(Runtime *runtime, JClass *clazz) {
     if (ret == -1) {
         push_ref(runtime->stack, NULL);
     }
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_zip_ZipFile_listFiles0  \n");
 #endif
@@ -1279,7 +1279,7 @@ s32 org_mini_zip_ZipFile_isDirectory0(Runtime *runtime, JClass *clazz) {
 
     push_int(runtime->stack, ret);
 
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_zip_ZipFile_isDirectory0  \n");
 #endif
@@ -1301,7 +1301,7 @@ s32 org_mini_zip_ZipFile_extract0(Runtime *runtime, JClass *clazz) {
         push_ref(runtime->stack, byte_arr);
     }
     bytebuf_destory(data);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_zip_ZipFile_extract0  \n");
 #endif
@@ -1323,7 +1323,7 @@ s32 org_mini_zip_ZipFile_compress0(Runtime *runtime, JClass *clazz) {
         push_ref(runtime->stack, byte_arr);
     }
     bytebuf_destory(zip_data);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_zip_ZipFile_compress0  \n");
 #endif

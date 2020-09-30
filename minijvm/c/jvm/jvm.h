@@ -27,8 +27,8 @@ extern "C" {
 
 //=======================  micro define  =============================
 //_JVM_DEBUG  01=thread info, 02=garage&jit info  , 03=class load, 04=method call,  06=all bytecode
-#define _JVM_DEBUG_BYTECODE_DETAIL 02
-#define _JVM_DEBUG_PRINT_FILE 0
+#define _JVM_DEBUG_LOG_LEVEL 01
+#define _JVM_DEBUG_LOG_TO_FILE 0
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_PROFILE 0
 
@@ -456,6 +456,7 @@ extern c8 *STR_CLASS_JAVA_LANG_INVOKE_METHODTYPE;
 extern c8 *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLE;
 extern c8 *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLES_LOOKUP;
 extern c8 *STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ;
+extern c8 *STR_CLASS_ORG_MINI_REFLECT_LAUNCHER;
 
 extern c8 *STR_FIELD_STACKFRAME;
 extern c8 *STR_FIELD_NAME;
@@ -464,6 +465,7 @@ extern c8 *STR_FIELD_COUNT;
 extern c8 *STR_FIELD_OFFSET;
 
 extern c8 *STR_FIELD_CLASSHANDLE;
+extern c8 *STR_FIELD_CLASSLOADER;
 
 extern c8 *STR_METHOD_CLINIT;
 extern c8 *STR_METHOD_FINALIZE;
@@ -574,7 +576,7 @@ enum {
 //======================= global var =============================
 extern s32 jvm_state;
 
-extern ClassLoader *sys_classloader;
+extern ClassLoader *boot_classloader;
 
 
 extern JniEnv jnienv;
@@ -1012,15 +1014,15 @@ void constant_list_destory(JClass *clazz);
 
 s32 class_destory(JClass *clazz);
 
-JClass *class_parse(ByteBuf *bytebuf, Runtime *runtime);
+JClass *class_parse(Instance *loader, ByteBuf *bytebuf, Runtime *runtime);
 
-JClass *load_class(ClassLoader *loader, Utf8String *pClassName, Runtime *runtime);
+JClass *load_class(Instance *jcloader, Utf8String *pClassName, Runtime *runtime);
 
 s32 _LOAD_CLASS_FROM_BYTES(JClass *_this, ByteBuf *buf);
 
 void find_supers(JClass *clazz, Runtime *runtime);
 
-s32 class_prepar(JClass *clazz, Runtime *runtime);
+s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime);
 
 void _class_optimize(JClass *clazz);
 
@@ -1152,13 +1154,11 @@ static inline ConstantInvokeDynamic *class_get_invoke_dynamic(JClass *clazz, s32
     return (ConstantInvokeDynamic *) (clazz->constant_item_ptr[index]);
 }
 
-MethodInfo *
-find_instance_methodInfo_by_name(Instance *ins, Utf8String *methodName, Utf8String *methodType, Runtime *runtime);
+MethodInfo *find_instance_methodInfo_by_name(Instance *ins, Utf8String *methodName, Utf8String *methodType, Runtime *runtime);
 
 MethodInfo *find_methodInfo_by_methodref(JClass *clazz, s32 method_ref, Runtime *runtime);
 
-MethodInfo *
-find_methodInfo_by_name(Utf8String *clsName, Utf8String *methodName, Utf8String *methodType, Runtime *runtime);
+MethodInfo *find_methodInfo_by_name(Utf8String *clsName, Utf8String *methodName, Utf8String *methodType, Runtime *runtime);
 
 MethodInfo *find_methodInfo_by_name_c(c8 *pclsName, c8 *pmethodName, c8 *pmethodType, Runtime *runtime);
 
@@ -1467,8 +1467,7 @@ void close_log(void);
 
 c8 *getMajorVersionString(u16 major_number);
 
-
-void jvm_init(c8 *p_classpath, StaticLibRegFunc regFunc);
+void jvm_init(c8 *p_bootclasspath, c8 *p_classpath, StaticLibRegFunc regFunc);
 
 void jvm_destroy(StaticLibRegFunc unRegFunc);
 
@@ -1478,7 +1477,7 @@ void thread_unboundle(Runtime *runtime);
 
 void print_exception(Runtime *runtime);
 
-s32 execute_jvm(c8 *p_classpath, c8 *mainclass, ArrayList *java_para);
+s32 execute_jvm(c8 *p_bootclasspath, c8 *p_classpath, c8 *mainclass, ArrayList *java_para);
 
 s32 call_method_para(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, ArrayList *java_para, Runtime *p_runtime);
 
@@ -1658,8 +1657,7 @@ struct _JNIENV {
 
     s32 (*execute_method)(MethodInfo *method, Runtime *runtime);
 
-    MethodInfo *
-    (*find_methodInfo_by_name)(Utf8String *clsName, Utf8String *methodName, Utf8String *methodType, Runtime *runtime);
+    MethodInfo *(*find_methodInfo_by_name)(Utf8String *clsName, Utf8String *methodName, Utf8String *methodType, Runtime *runtime);
 
     void (*print_exception)(Runtime *runtime);
 

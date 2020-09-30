@@ -1838,10 +1838,12 @@ s32 _LOAD_CLASS_FROM_BYTES(JClass *_this, ByteBuf *buf) {
     return 0;
 }
 
-JClass *class_parse(ByteBuf *bytebuf, Runtime *runtime) {
+JClass *class_parse(Instance *loader, ByteBuf *bytebuf, Runtime *runtime) {
     JClass *tmpclazz = NULL;
     if (bytebuf != NULL) {
         tmpclazz = class_create(runtime);
+        tmpclazz->jClassLoader = loader;
+
         s32 iret = tmpclazz->_load_class_from_bytes(tmpclazz, bytebuf);//load file
 
         if (iret == 0) {
@@ -1849,10 +1851,10 @@ JClass *class_parse(ByteBuf *bytebuf, Runtime *runtime) {
 
 //            class_mark_clinit(sys_classloader,tmpclazz);
 
-            class_prepar(tmpclazz, runtime);
+            class_prepar(loader, tmpclazz, runtime);
             gc_refer_hold(tmpclazz);
 
-#if _JVM_DEBUG_BYTECODE_DETAIL > 2
+#if _JVM_DEBUG_LOG_LEVEL > 2
             jvm_printf("load class:  %s \n", utf8_cstr(tmpclazz->name));
 #endif
         } else {
@@ -1863,13 +1865,15 @@ JClass *class_parse(ByteBuf *bytebuf, Runtime *runtime) {
     return tmpclazz;
 }
 
-JClass *load_class(ClassLoader *loader, Utf8String *pClassName, Runtime *runtime) {
-    if (!loader)return 0;
+JClass *load_class(Instance *loader, Utf8String *pClassName, Runtime *runtime) {
+    if (!boot_classloader)return 0;
     s32 iret = 0;
     //
     Utf8String *clsName = utf8_create_copy(pClassName);
     utf8_replace_c(clsName, ".", "/");
+
     JClass *tmpclazz = classes_get(clsName);
+
     if (utf8_indexof_c(clsName, "[") == 0) {
         tmpclazz = array_class_create_get(runtime, clsName);
     }
@@ -1877,10 +1881,29 @@ JClass *load_class(ClassLoader *loader, Utf8String *pClassName, Runtime *runtime
         ByteBuf *bytebuf = NULL;
 
         utf8_append_c(clsName, ".class");
-        bytebuf = load_file_from_classpath(loader, clsName);
+        bytebuf = load_file_from_classpath(clsName);//bootstrap classloader
         if (bytebuf != NULL) {
-            tmpclazz = class_parse(bytebuf, runtime);
+            tmpclazz = class_parse(loader, bytebuf, runtime);
             bytebuf_destory(bytebuf);
+        } else { //using appclassloader load
+            if (jvm_runtime_cache.classloader_load_class) {
+                Instance *jstr = jstring_create(pClassName, runtime);
+                push_ref(runtime->stack, jstr);
+                push_ref(runtime->stack, loader);
+                if (utf8_equals_c(clsName, "com/ebsee/tj/UISkillTree")) {
+                    int debug = 1;
+                }
+
+                s32 ret = execute_method_impl(jvm_runtime_cache.classloader_load_class, runtime);
+                if (!ret) {
+                    Instance *ins_of_clazz = pop_ref(runtime->stack);
+                    if (ins_of_clazz) {
+                        tmpclazz = insOfJavaLangClass_get_classHandle(ins_of_clazz);
+                    }
+                } else {
+                    print_exception(runtime);
+                }
+            }
         }
         if (jdwp_enable && tmpclazz)event_on_class_prepare(runtime, tmpclazz);
     }

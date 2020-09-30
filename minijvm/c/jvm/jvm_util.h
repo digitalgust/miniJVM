@@ -26,14 +26,15 @@ typedef struct _OptimizeCache {
     FieldInfo *string_offset;
     FieldInfo *string_count;
     FieldInfo *string_value;
-    //
+    //java.lang.StringBuilder
     FieldInfo *stringbuilder_value;
     FieldInfo *stringbuilder_count;
-    //
+    //java.lang.Thread
     FieldInfo *thread_name;
     FieldInfo *thread_stackFrame;
-    //
+    //java.lang.Class
     FieldInfo *class_classHandle;
+    FieldInfo *class_classLoader;
 
     //
     FieldInfo *stacktrace_declaringClass;
@@ -46,6 +47,9 @@ typedef struct _OptimizeCache {
     FieldInfo *dmo_memAddr;
     FieldInfo *dmo_length;
     FieldInfo *dmo_desc;
+
+    //
+    MethodInfo *classloader_load_class;
 
     //
     JClass *array_classes[DATATYPE_COUNT];
@@ -190,7 +194,7 @@ s32 getLineNumByIndex(CodeAttribute *ca, s32 offset);
 
 s32 _loadFileContents(c8 *file, ByteBuf *buf);
 
-ByteBuf *load_file_from_classpath(ClassLoader *loader, Utf8String *path);
+ByteBuf *load_file_from_classpath(Utf8String *path);
 
 
 //===============================    实例化 java.lang.Class  ==================================
@@ -254,6 +258,7 @@ JavaThreadInfo *threadinfo_create(void);
 
 struct _JavaThreadInfo {
     Instance *jthread;
+    Instance *context_classloader;
     Runtime *top_runtime;
     MemoryBlock *tmp_holder;//for jni hold java object
     MemoryBlock *objs_header;//link to new instance, until garbage accept
@@ -292,7 +297,7 @@ s32 jthread_dispose(Instance *jthread);
 
 s32 jthread_run(void *para);
 
-thrd_t jthread_start(Instance *ins);
+thrd_t jthread_start(Instance *parent_classloader, Instance *ins);
 
 __refer jthread_get_stackframe_value(Instance *ins);
 
@@ -430,13 +435,13 @@ JClass *classes_get_c(c8 *clsName);
 
 JClass *classes_get(Utf8String *clsName);
 
-JClass *classes_load_get_without_clinit(Utf8String *ustr, Runtime *runtime);
+JClass *classes_load_get_without_clinit(Instance *loader, Utf8String *ustr, Runtime *runtime);
 
-JClass *classes_load_get_c(c8 *pclassName, Runtime *runtime);
+JClass *classes_load_get_c(Instance *loader, c8 *pclassName, Runtime *runtime);
 
 s32 classes_put(JClass *clazz);
 
-JClass *classes_load_get(Utf8String *pclassName, Runtime *runtime);
+JClass *classes_load_get(Instance *loader, Utf8String *pclassName, Runtime *runtime);
 
 JClass *primitive_class_create_get(Runtime *runtime, Utf8String *ustr);
 

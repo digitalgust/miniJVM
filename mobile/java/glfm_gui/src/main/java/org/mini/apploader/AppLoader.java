@@ -9,7 +9,6 @@ import org.mini.gui.GApplication;
 import org.mini.gui.GCallBack;
 import org.mini.gui.GForm;
 import org.mini.gui.GLanguage;
-import org.mini.reflect.vm.RefNative;
 import org.mini.zip.Zip;
 
 import java.io.File;
@@ -176,7 +175,17 @@ public class AppLoader {
             String className = getAppConfig(jarName, "app");
             if (className != null && className.length() > 0) {
                 //System.out.println("className:" + className);
-                Class c = Class.forName(className);
+                Class c = null;
+                try {
+                    c = Class.forName(className);
+                } catch (Exception e) {
+                }
+                if (c == null) {
+                    StandalongGuiAppClassLoader sgacl = new StandalongGuiAppClassLoader(getAppJarPath(jarName), ClassLoader.getSystemClassLoader());
+                    Thread.currentThread().setContextClassLoader(sgacl);
+                    c = sgacl.loadClass(className);
+                }
+
                 return c;
             }
         } catch (Exception ex) {
@@ -290,7 +299,8 @@ public class AppLoader {
     public static GApplication runApp(String jarName) {
         GApplication app = null;
         try {
-            RefNative.addJarToClasspath(getAppJarPath(jarName));
+            //RefNative.addJarToClasspath(getAppJarPath(jarName));
+
             Class c = getApplicationClass(jarName);
             if (c != null) {
                 app = (GApplication) c.newInstance();

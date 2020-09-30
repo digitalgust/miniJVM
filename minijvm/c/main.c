@@ -24,15 +24,19 @@
 int main(int argc, char **argv) {
 
 
+    char *bootclasspath = NULL;
     char *classpath = NULL;
     char *main_name = NULL;
     ArrayList *java_para = arraylist_create(0);
     s32 ret;
-    //  mini_jvm   -Xmx16M -cp ../../binary/lib/minijvm_rt.jar;../../binary/lib/minijvm_test.jar;./ test/Foo1 999
+    //  mini_jvm   -Xmx16M -bootclasspath ../../binary/lib/minijvm_rt.jar -cp ../../binary/lib/minijvm_test.jar;./ test/Foo1 999
     if (argc > 1) {
         s32 i;
         for (i = 1; i < argc; i++) {
-            if (strcmp(argv[i], "-cp") == 0 || strcmp(argv[i], "-classpath") == 0) {
+            if (strcmp(argv[i], "-bootclasspath") == 0) {
+                bootclasspath = argv[i + 1];
+                i++;
+            } else if (strcmp(argv[i], "-cp") == 0 || strcmp(argv[i], "-classpath") == 0) {
                 classpath = argv[i + 1];
                 i++;
             } else if (strcmp(argv[i], "-Xdebug") == 0) {
@@ -64,7 +68,8 @@ int main(int argc, char **argv) {
     } else {
         jdwp_enable = 0;
         jdwp_suspend_on_start = 0;
-        classpath = "../../binary/lib/minijvm_rt.jar;../../binary/libex/glfw_gui.jar;./";
+        bootclasspath = "../../binary/lib/minijvm_rt.jar";
+        classpath = "../../binary/libex/glfw_gui.jar;./";
 //        main_name = "test/Gears";
 //        main_name = "test/TestGL";
         main_name = "test/AppManagerTest";
@@ -78,10 +83,10 @@ int main(int argc, char **argv) {
 //        main_name = "test/TestNanovg";
 
 
-//        classpath = "../../binary/lib/minijvm_rt.jar;../../binary/libex/jni_test.jar;./";
+//        classpath = "../../binary/libex/jni_test.jar;./";
 //        main_name = "test/JniTest";
 
-//        classpath = "../../binary/lib/minijvm_rt.jar;../../binary/libex/luaj.jar;./";
+//        classpath = "../../binary/libex/luaj.jar;./";
 //        main_name = "Sample";
 
 //        classpath = "../../../minijvm_third_lib/vm_test_rt/target/test_rt.jar;";
@@ -90,12 +95,12 @@ int main(int argc, char **argv) {
 //        classpath = "../../../minijvm_third_lib/vm_micro_rt/target/micro_rt.jar;";
 //        main_name = "test/Foo3";
 
-//        classpath = "../../binary/lib/minijvm_rt.jar;../../binary/libex/g3d.jar;../../binary/libex/glfw_gui.jar;./";
+//        classpath = "../../binary/libex/g3d.jar;../../binary/libex/glfw_gui.jar;./";
 //        main_name = "test/Test2";
 //        main_name = "test/G3d";
 
 
-//        classpath = "../../binary/lib/minijvm_rt.jar;../../binary/libex/minijvm_test.jar;../../binary/libex/glfw_gui.jar;../../binary/libex/gltf2.jar;../../binary/macos/apps/g3d.jar;./";
+//        classpath = "../../binary/libex/minijvm_test.jar;../../binary/libex/glfw_gui.jar;../../binary/libex/gltf2.jar;../../binary/macos/apps/g3d.jar;./";
 //        main_name = "test/HelloWorld";
 //        main_name = "test/Foo1";
 //        main_name = "test/Foo2";
@@ -115,14 +120,14 @@ int main(int argc, char **argv) {
 
 
 
-//        classpath = "../../binary/lib/minijvm_rt.jar;../../binary/libex/janino.jar;../../binary/libex/commons-compiler.jar";
+//        classpath = "../../binary/libex/janino.jar;../../binary/libex/commons-compiler.jar";
 //        main_name = "org.codehaus.janino.Compiler";
 //        arraylist_push_back(java_para,"../../binary/res/BpDeepTest.java");
 
 
 
     }
-    ret = execute_jvm(classpath, main_name, java_para);
+    ret = execute_jvm(bootclasspath, classpath, main_name, java_para);
     arraylist_destory(java_para);
     //getchar();
     return ret;

@@ -16,8 +16,15 @@ public class JsonParser<T> {
 
     private List<SimpleModule> modules = new ArrayList();
     private InjectableValues injectableValues = null;
+    ClassLoader classLoader;
 
-    {
+    public JsonParser() {
+        this(ClassLoader.getSystemClassLoader());
+    }
+
+    public JsonParser(ClassLoader cl) {
+        this.classLoader = cl;
+
         SimpleModule module = new SimpleModule();
         module.addDeserializer(java.util.List.class, new StdDeserializer(null) {
             @Override
@@ -45,7 +52,7 @@ public class JsonParser<T> {
                 JsonMap<String, JsonCell> jsonMap = (JsonMap) p;
                 for (String key : jsonMap.keySet()) {
                     try {
-                        map.put(key, map2obj(jsonMap.get(key), Class.forName(className), childType));
+                        map.put(key, map2obj(jsonMap.get(key), Class.forName(className, true, classLoader), childType));
                     } catch (ClassNotFoundException e) {
                         e.printStackTrace();
                     }
@@ -56,6 +63,16 @@ public class JsonParser<T> {
 
         registerModule(module);
     }
+
+
+    public ClassLoader getClassLoader() {
+        return classLoader;
+    }
+
+    public void setClassLoader(ClassLoader classLoader) {
+        this.classLoader = classLoader;
+    }
+
 
     public interface JsonCell {
         int TYPE_MAP = 0;
@@ -447,9 +464,9 @@ public class JsonParser<T> {
                     }
                     for (String fieldName : map.keySet()) {
                         JsonCell childJson = map.get(fieldName);
-                        if (fieldName.equals("COLOR_0")) {
-                            int debug = 1;
-                        }
+//                        if (fieldName.equals("COLOR_0")) {
+//                            int debug = 1;
+//                        }
                         Method method = getMethodByName(fieldName, clazz);
                         if (method != null) {
                             Type[] pt = method.getGenericParameterTypes();
@@ -497,7 +514,7 @@ public class JsonParser<T> {
                         }
                         Collection collection = (Collection) clazz.newInstance();
                         for (JsonCell cell : list) {
-                            Object ins = map2obj(cell, Class.forName(className), typevar);
+                            Object ins = map2obj(cell, Class.forName(className, true, classLoader), typevar);
                             collection.add(ins);
                         }
                         return collection;

@@ -9,29 +9,25 @@
    details. */
 package java.lang;
 
-import java.io.InputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.Map;
-import java.util.HashMap;
-import java.security.ProtectionDomain;
-import org.mini.reflect.SystemClassLoader;
+import org.mini.reflect.Launcher;
 import org.mini.reflect.vm.RefNative;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.security.ProtectionDomain;
+import java.util.*;
+
 
 public abstract class ClassLoader {
 
-    static ClassLoader systemClassLoader;
 
     private final ClassLoader parent;
     private Map<String, Package> packages;
 
     protected ClassLoader(ClassLoader parent) {
         if (parent == null) {
-            if (!getClass().equals(SystemClassLoader.class)) {
+            if (!getClass().equals(Launcher.ExtClassLoader.class)) {
                 this.parent = getSystemClassLoader();
             } else {
                 this.parent = null;
@@ -42,11 +38,11 @@ public abstract class ClassLoader {
     }
 
     protected ClassLoader() {
-        if (!getClass().equals(SystemClassLoader.class)) {
-                this.parent = getSystemClassLoader();
-            } else {
-                this.parent = null;
-            }
+        if (!getClass().equals(Launcher.ExtClassLoader.class)) {
+            this.parent = getSystemClassLoader();
+        } else {
+            this.parent = null;
+        }
     }
 
     private Map<String, Package> packages() {
@@ -90,13 +86,13 @@ public abstract class ClassLoader {
     }
 
     protected Package definePackage(String name,
-            String specificationTitle,
-            String specificationVersion,
-            String specificationVendor,
-            String implementationTitle,
-            String implementationVersion,
-            String implementationVendor,
-            URL sealBase) {
+                                    String specificationTitle,
+                                    String specificationVersion,
+                                    String specificationVendor,
+                                    String implementationTitle,
+                                    String implementationVersion,
+                                    String implementationVendor,
+                                    URL sealBase) {
         Package p = new Package(name, implementationTitle, implementationVersion,
                 implementationVendor, specificationTitle, specificationVersion,
                 specificationVendor, sealBase, this);
@@ -108,10 +104,7 @@ public abstract class ClassLoader {
     }
 
     public static ClassLoader getSystemClassLoader() {
-        if (systemClassLoader == null) {
-            systemClassLoader = new SystemClassLoader(null);
-        }
-        return systemClassLoader;
+        return Launcher.getSystemClassLoader();
     }
 
     protected Class defineClass(String name, byte[] b, int offset, int length) {
@@ -126,24 +119,16 @@ public abstract class ClassLoader {
         return RefNative.defineClass(this, name, b, offset, length);
     }
 
-    protected Class defineClass(String name, byte[] b, int offset, int length,
-            ProtectionDomain domain) {
+    protected Class defineClass(String name, byte[] b, int offset, int length, ProtectionDomain domain) {
         return defineClass(name, b, offset, length);
     }
 
     protected Class findClass(String name) throws ClassNotFoundException {
-        return parent.findClass(name);
+        return null;
     }
 
     protected final Class findLoadedClass(String name) {
-        try {
-            Class c = findClass(name);
-            if (c.getClassLoader() == this) {
-                return c;
-            }
-        } catch (ClassNotFoundException ex) {
-        }
-        return null;
+        return RefNative.findLoadedClass0(this, name);
     }
 
     public Class loadClass(String name) throws ClassNotFoundException {
@@ -242,7 +227,5 @@ public abstract class ClassLoader {
         return null;
     }
 
-    static native Class getCaller();
 
-    static native void load(String name, Class caller, boolean mapName);
 }

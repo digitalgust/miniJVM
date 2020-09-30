@@ -37,6 +37,7 @@ c8 *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLES_LOOKUP = "java/lang/invoke/MethodHa
 c8 *STR_CLASS_JAVA_LANG_STACKTRACE = "java/lang/StackTraceElement";
 c8 *STR_CLASS_JAVA_LANG_THROWABLE = "java/lang/Throwable";
 c8 *STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ = "org/mini/reflect/DirectMemObj";
+c8 *STR_CLASS_ORG_MINI_REFLECT_LAUNCHER = "org/mini/reflect/Launcher";
 
 c8 *STR_FIELD_STACKFRAME = "stackFrame";
 c8 *STR_FIELD_NAME = "name";
@@ -45,6 +46,7 @@ c8 *STR_FIELD_COUNT = "count";
 c8 *STR_FIELD_OFFSET = "offset";
 
 c8 *STR_FIELD_CLASSHANDLE = "classHandle";
+c8 *STR_FIELD_CLASSLOADER = "classLoader";
 
 c8 *STR_METHOD_CLINIT = "<clinit>";
 c8 *STR_METHOD_FINALIZE = "finalize";
@@ -56,7 +58,7 @@ c8 *STR_INS_JAVA_LANG_OBJECT = "Ljava/lang/Object;";
 c8 *STR_INS_JAVA_LANG_STACKTRACEELEMENT = "Ljava/lang/StackTraceElement;";
 
 
-ClassLoader *sys_classloader;
+ClassLoader *boot_classloader;
 
 ArrayList *native_libs;
 ArrayList *thread_list; //all thread

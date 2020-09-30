@@ -105,7 +105,7 @@ void garbage_collector_destory() {
 
 
 void _garbage_clear() {
-#if _JVM_DEBUG_BYTECODE_DETAIL > 1
+#if _JVM_DEBUG_LOG_LEVEL > 1
     jvm_printf("[INFO]garbage clear start\n");
     jvm_printf("[INFO]objs size :%lld\n", collector->obj_count);
 #endif
@@ -113,16 +113,16 @@ void _garbage_clear() {
     while (garbage_collect());//collect instance
 
     //release class static field
-    classloader_release_classs_static_field(sys_classloader);
+    classloader_release_classs_static_field(boot_classloader);
     while (garbage_collect());//collect classes
 
     //release classes
-    classloader_destory(sys_classloader);
-    sys_classloader = NULL;
+    classloader_destory(boot_classloader);
+    boot_classloader = NULL;
     while (garbage_collect());//collect classes
 
     //
-#if _JVM_DEBUG_BYTECODE_DETAIL > 1
+#if _JVM_DEBUG_LOG_LEVEL > 1
     jvm_printf("[INFO]objs size :%lld\n", collector->obj_count);
 #endif
     //dump_refer();
@@ -444,7 +444,7 @@ s64 garbage_collect() {
     spin_unlock(&collector->lock);
 
     s64 time_gc = currentTimeMillis() - time;
-#if _JVM_DEBUG_BYTECODE_DETAIL > 1
+#if _JVM_DEBUG_LOG_LEVEL > 1
     jvm_printf("[INFO]gc obj: %lld->%lld   heap : %lld -> %lld  stop_world: %lld  gc:%lld\n", iter, collector->obj_count, mem_total, heap_size, time_stopWorld, time_gc);
 #endif
 

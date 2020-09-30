@@ -8,6 +8,8 @@ package org.mini.gui;
 import org.mini.glfm.GlfmCallBack;
 import org.mini.glfw.GlfwCallback;
 
+import java.io.InputStream;
+
 /**
  * @author Gust
  */
@@ -59,6 +61,16 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
             gform = app.getForm();
         }
     }
+
+    private ClassLoader getClassLoader() {
+        return (gapp == null || gapp.getClass().getClassLoader() == null)
+                ? ClassLoader.getSystemClassLoader() : gapp.getClass().getClassLoader();
+    }
+
+    public InputStream getResourceAsStream(String path) {
+        return getClassLoader().getResourceAsStream(path);
+    }
+
 
     public abstract String getAppSaveRoot();
 

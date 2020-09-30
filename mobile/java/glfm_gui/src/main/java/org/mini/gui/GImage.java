@@ -102,7 +102,7 @@ public class GImage {
             if (filepath == null) {
                 return null;
             }
-            InputStream is = "".getClass().getResourceAsStream(filepath);
+            InputStream is = GCallBack.getInstance().getResourceAsStream(filepath);
             if (is != null && is.available() > 0) {
                 byte[] data = new byte[is.available()];
                 is.read(data);

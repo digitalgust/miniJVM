@@ -360,9 +360,6 @@ public class Thread implements Runnable {
         return daemon;
     }
 
-    public ClassLoader getContextClassLoader() {
-        return ClassLoader.getSystemClassLoader();
-    }
 
     /**
      * Returns a string representation of this thread, including the thread's
@@ -373,6 +370,10 @@ public class Thread implements Runnable {
     public String toString() {
         return "Thread[" + getName() + "," + getPriority() + "]";
     }
+
+    public native void setContextClassLoader(ClassLoader cl);
+
+    public native ClassLoader getContextClassLoader();
 
     /* Some private helper methods */
     private native void setPriority0(int newPriority);

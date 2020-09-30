@@ -203,6 +203,8 @@ static void dump_code(void *code, sljit_uw len) {
 #if __JVM_ARCH_64__
 #if __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__
     system("D:\\msys64\\mingw64\\bin\\objdump.exe -b binary -m l1om -D d:/tmp/slj_dump");
+#elif __JVM_OS_MAC__
+    system("/usr/local/Cellar/binutils/2.34/bin/objdump -b binary -m l1om -D /tmp/slj_dump");
 #else
     system("objdump -b binary -m l1om -D /tmp/slj_dump");
 #endif
@@ -950,7 +952,8 @@ void _gen_exception_handle(struct sljit_compiler *C) {
     struct sljit_label *label_out, *label_found_handle;
     jump_found_handle = sljit_emit_cmp(C, SLJIT_NOT_EQUAL, SLJIT_RETURN_REG, 0, SLJIT_IMM, 0);
     {
-        sljit_emit_return(C, SLJIT_MOV, SLJIT_RETURN_REG, 0);
+        //_debug_gen_print_reg(C);
+        sljit_emit_return(C, SLJIT_MOV, SLJIT_IMM, RUNTIME_STATUS_EXCEPTION);
     }
     label_found_handle = sljit_emit_label(C);
     {// if R0 vs. 0 true
@@ -1186,13 +1189,13 @@ void gen_jit_suspend_check_func() {
 
 s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime *runtime) {
 #if JIT_DEBUG
-    if (utf8_equals_c(method->_this_class->name, "test/SpecTest")
-        //&& utf8_equals_c(method->descriptor, "(D)Z")
-        && utf8_equals_c(method->name, "test_other")
+    if ((utf8_equals_c(method->_this_class->name, "java/lang/ClassLoader")
+         && utf8_equals_c(method->descriptor, "(Ljava/lang/String;Z)Ljava/lang/Class;")
+         && utf8_equals_c(method->name, "loadClass"))
         ||
-        utf8_equals_c(method->_this_class->name, "org/mini/gui/GContainer")
-        //&& utf8_equals_c(method->descriptor, "(DD)Lorg/luaj/vm2/LuaValue;")
-        && utf8_equals_c(method->name, "drawObj")
+        (utf8_equals_c(method->_this_class->name, "java/lang/ClassLoader")
+         && utf8_equals_c(method->descriptor, "(Ljava/lang/String;)Ljava/lang/Class;")
+         && utf8_equals_c(method->name, "loadClass"))
             ) {
         int debug = 1;
 
@@ -1206,6 +1209,8 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
     //    } else {
     //    }
 #endif
+
+
     CodeAttribute *ca = method->converted_code;
     u8 *ip = ca->bytecode_for_jit;
     u8 *end = ca->code_length + ip;
@@ -2471,7 +2476,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             case op_areturn:
             case op_return: {
                 _gen_save_sp_ip(C);
-                sljit_emit_return(C, SLJIT_MOV, SLJIT_RETURN_REG, 0);
+                sljit_emit_return(C, SLJIT_MOV, SLJIT_IMM, RUNTIME_STATUS_NORMAL);
                 ip++;
                 break;
             }
@@ -2840,7 +2845,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 ConstantClassRef *ccf = class_get_constant_classref(clazz, idx);
                 if (!ccf->clazz) {
                     Utf8String *clsName = class_get_utf8_string(clazz, ccf->stringIndex);
-                    ccf->clazz = classes_load_get(clsName, runtime);
+                    ccf->clazz = classes_load_get(clazz->jClassLoader, clsName, runtime);
                 }
                 JClass *other = ccf->clazz;
                 Instance *ins = NULL;
@@ -3295,8 +3300,8 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
     //Execute code
     ca->jit.func = (jit_func) genfunc;
-#if _JVM_DEBUG_BYTECODE_DETAIL > 1
-    jvm_printf("jit compile method %s.%s() ,func length:%d\n", utf8_cstr(method->_this_class->name), utf8_cstr(method->name), ca->jit.len);
+#if _JVM_DEBUG_LOG_LEVEL > 1
+    jvm_printf("jit compile method %s.%s%s ,func length:%d\n", utf8_cstr(method->_this_class->name), utf8_cstr(method->name), utf8_cstr(method->descriptor), ca->jit.len);
 #endif
 
     return JIT_GEN_SUCCESS;
@@ -3325,7 +3330,7 @@ void construct_jit(MethodInfo *method, Runtime *runtime) {
     if (ca->jit.state == JIT_GEN_SUCCESS) {
         int debug = 1;
     }
-//    if (ca->jit.state == JIT_GEN_SUCCESS)dump_code(ca->jit.func, ca->jit.len);
+    //if (ca->jit.state == JIT_GEN_SUCCESS)dump_code(ca->jit.func, ca->jit.len);
     sljit_free_compiler(C);
 }
 

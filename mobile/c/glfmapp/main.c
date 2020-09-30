@@ -30,20 +30,23 @@ static GLFMDisplay *glfm_display;
 void glfmMain(GLFMDisplay *display) {
     glfm_display=display;
 
+
+     Utf8String *bootclasspath = utf8_create();
+    utf8_append_c(bootclasspath, glfmGetResRoot());
+    utf8_append_c(bootclasspath, "/resfiles/minijvm_rt.jar;");
     Utf8String *classpath = utf8_create();
-    utf8_append_c(classpath, glfmGetResRoot());
-    utf8_append_c(classpath, "/resfiles/minijvm_rt.jar;");
     utf8_append_c(classpath, glfmGetResRoot());
     utf8_append_c(classpath, "/resfiles/glfm_gui.jar;");
     //jvm_printf("%s\n",utf8_cstr(classpath));
 
-    jvm_init(utf8_cstr(classpath), JNI_OnLoad_mini);
+    jvm_init(utf8_cstr(bootclasspath), utf8_cstr(classpath), JNI_OnLoad_mini);
     sys_properties_set_c("glfm.res.root",glfmGetResRoot());
     sys_properties_set_c("glfm.save.root", glfmGetSaveRoot());
     sys_properties_set_c("glfm.uuid", glfmGetUUID());
     Runtime *runtime=getRuntimeCurThread(&jnienv);
 
     utf8_destory(classpath);
+    utf8_destory(bootclasspath);
     c8* p_classname="org/mini/glfm/GlfmCallBackImpl";
     c8* p_methodname="glinit";
     c8* p_methodtype="(J)V";

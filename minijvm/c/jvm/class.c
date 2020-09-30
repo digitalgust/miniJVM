@@ -95,11 +95,11 @@ void class_clear_refer(JClass *clazz) {
  * @param clazz class
  * @return ret
  */
-s32 class_prepar(JClass *clazz, Runtime *runtime) {
+s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
     if (clazz->status >= CLASS_STATUS_PREPARING)return 0;
     clazz->status = CLASS_STATUS_PREPARING;
 
-//    if (utf8_equals_c(clazz->name, "java/lang/NullPointerException")) {
+//    if (utf8_equals_c(clazz->name, "com/ebsee/tj/UIForm")) {
 //        int debug = 1;
 //    }
 
@@ -109,7 +109,7 @@ s32 class_prepar(JClass *clazz, Runtime *runtime) {
         ConstantClassRef *ccf = class_get_constant_classref(clazz, superid);
         if (ccf) {
             Utf8String *clsName_u = class_get_utf8_string(clazz, ccf->stringIndex);
-            JClass *other = classes_load_get_without_clinit(clsName_u, runtime);
+            JClass *other = classes_load_get_without_clinit(loader, clsName_u, runtime);
             clazz->superclass = other;
         } else {
             jvm_printf("error get superclass , class: %s\n", utf8_cstr(clazz->name));
@@ -168,6 +168,8 @@ s32 class_prepar(JClass *clazz, Runtime *runtime) {
         FieldInfo *fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_CLASS, STR_FIELD_CLASSHANDLE, "J", runtime);
         jvm_runtime_cache.class_classHandle = fi;
+        fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_CLASS, STR_FIELD_CLASSLOADER, "Ljava/lang/ClassLoader;", runtime);
+        jvm_runtime_cache.class_classLoader = fi;
     } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_STRING)) {
         FieldInfo *fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_STRING, STR_FIELD_COUNT, "I", runtime);
@@ -208,6 +210,8 @@ s32 class_prepar(JClass *clazz, Runtime *runtime) {
         jvm_runtime_cache.dmo_length = fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ, "typeDesc", "C", runtime);
         jvm_runtime_cache.dmo_desc = fi;
+    } else if (utf8_equals_c(clazz->name, STR_CLASS_ORG_MINI_REFLECT_LAUNCHER)) {
+        jvm_runtime_cache.classloader_load_class = find_methodInfo_by_name_c(STR_CLASS_ORG_MINI_REFLECT_LAUNCHER, "loadClass", "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/Class;", runtime);
     }
 //    jvm_printf("prepared: %s\n", utf8_cstr(clazz->name));
 
@@ -224,7 +228,7 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
     garbage_thread_lock();
     runtime->threadInfo->no_pause++;
     if (clazz->status < CLASS_STATUS_PREPARED) {
-        class_prepar(clazz, runtime);
+        class_prepar(clazz->jClassLoader, clazz, runtime);
     }
     if (clazz->status < CLASS_STATUS_CLINITING) {
         clazz->status = CLASS_STATUS_CLINITING;
@@ -275,10 +279,10 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
         for (i = 0, len = strlist->length; i < len; i++) {
             ConstantStringRef *strRef = arraylist_get_value_unsafe(strlist, i);
             ConstantUTF8 *cutf = class_get_constant_utf8(clazz, strRef->stringIndex);
-            Instance *jstr = hashtable_get(sys_classloader->table_jstring_const, cutf->utfstr);
+            Instance *jstr = hashtable_get(boot_classloader->table_jstring_const, cutf->utfstr);
             if (!jstr) {
                 jstr = jstring_create(cutf->utfstr, runtime);
-                hashtable_put(sys_classloader->table_jstring_const, cutf->utfstr, jstr);
+                hashtable_put(boot_classloader->table_jstring_const, cutf->utfstr, jstr);
                 gc_refer_hold(jstr);
             }
             cutf->jstr = jstr;
@@ -375,7 +379,7 @@ u8 isSonOfInterface(JClass *clazz, JClass *son, Runtime *runtime) {
     s32 i;
     for (i = 0; i < son->interfacePool.clasz_used; i++) {
         ConstantClassRef *ccr = (son->interfacePool.clasz + i);
-        JClass *other = classes_load_get(class_get_constant_utf8(son, ccr->stringIndex)->utfstr, runtime);
+        JClass *other = classes_load_get(son->jClassLoader, class_get_constant_utf8(son, ccr->stringIndex)->utfstr, runtime);
         if (clazz == other) {
             return 1;
         } else {
@@ -408,7 +412,7 @@ JClass *getClassByConstantClassRef(JClass *clazz, s32 index, Runtime *runtime) {
     ConstantClassRef *ccf = class_get_constant_classref(clazz, index);
     if (!ccf->clazz) {
         Utf8String *clsName = class_get_utf8_string(clazz, ccf->stringIndex);
-        ccf->clazz = classes_load_get(clsName, runtime);
+        ccf->clazz = classes_load_get(clazz->jClassLoader, clsName, runtime);
     }
     return ccf->clazz;
 }
@@ -427,8 +431,7 @@ JClass *getClassByConstantClassRef(JClass *clazz, s32 index, Runtime *runtime) {
 FieldInfo *find_fieldInfo_by_fieldref(JClass *clazz, s32 field_ref, Runtime *runtime) {
     ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, field_ref);
     ConstantNameAndType *nat = class_get_constant_name_and_type(clazz, cfr->nameAndTypeIndex);
-    Utf8String *clsName = class_get_utf8_string(clazz,
-                                                class_get_constant_classref(clazz, cfr->classIndex)->stringIndex);
+    Utf8String *clsName = class_get_utf8_string(clazz, class_get_constant_classref(clazz, cfr->classIndex)->stringIndex);
     Utf8String *fieldName = class_get_utf8_string(clazz, nat->nameIndex);
     Utf8String *type = class_get_utf8_string(clazz, nat->typeIndex);
     return find_fieldInfo_by_name(clsName, fieldName, type, runtime);
@@ -447,7 +450,7 @@ FieldInfo *find_fieldInfo_by_name_c(c8 *pclsName, c8 *pfieldName, c8 *pfieldType
 
 FieldInfo *find_fieldInfo_by_name(Utf8String *clsName, Utf8String *fieldName, Utf8String *fieldType, Runtime *runtime) {
     FieldInfo *fi = NULL;
-    JClass *other = classes_load_get_without_clinit(clsName, runtime);
+    JClass *other = classes_load_get_without_clinit(runtime->threadInfo->context_classloader, clsName, runtime);
 //    if (utf8_equals_c(clsName, "espresso/parser/JavaParser")&&utf8_equals_c(fieldName, "methodNode_d")) {
 //        int debug = 1;
 //    }
@@ -519,7 +522,7 @@ MethodInfo *find_methodInfo_by_name_c(c8 *pclsName, c8 *pmethodName, c8 *pmethod
 
 MethodInfo *find_methodInfo_by_name(Utf8String *clsName, Utf8String *methodName, Utf8String *methodType, Runtime *runtime) {
     MethodInfo *mi = NULL;
-    JClass *other = classes_load_get_without_clinit(clsName, runtime);
+    JClass *other = classes_load_get_without_clinit(runtime->threadInfo->context_classloader, clsName, runtime);
 
     while (mi == NULL && other) {
         MethodPool *fp = &(other->methodPool);
@@ -540,10 +543,7 @@ MethodInfo *find_methodInfo_by_name(Utf8String *clsName, Utf8String *methodName,
             for (i = 0; i < other->interfacePool.clasz_used; i++) {
                 ConstantClassRef *ccr = (other->interfacePool.clasz + i);
                 Utf8String *icl_name = class_get_constant_utf8(other, ccr->stringIndex)->utfstr;
-                JClass *icl = classes_load_get_without_clinit(icl_name, runtime);
-//                if (utf8_equals_c(icl_name, "java/util/List")&&utf8_equals_c(methodName, "size")) {
-//                    int debug = 1;
-//                }
+                JClass *icl = classes_load_get_without_clinit(runtime->threadInfo->context_classloader, icl_name, runtime);
                 MethodInfo *imi = find_methodInfo_by_name(icl_name, methodName, methodType, runtime);
                 if (imi != NULL && imi->converted_code != NULL) {
                     mi = imi;
@@ -578,7 +578,7 @@ static void find_supers_impl(JClass *clazz, Runtime *runtime, ArrayList *list) {
         for (i = 0; i < other->interfacePool.clasz_used; i++) {
             ConstantClassRef *ccr = (other->interfacePool.clasz + i);
             Utf8String *icl_name = class_get_constant_utf8(other, ccr->stringIndex)->utfstr;
-            JClass *icl = classes_load_get_without_clinit(icl_name, runtime);
+            JClass *icl = classes_load_get_without_clinit(other->jClassLoader, icl_name, runtime);
             find_supers_impl(icl, runtime, list);//find interface's interfaces
         }
         //find superclass

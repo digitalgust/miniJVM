@@ -6,7 +6,6 @@
 package org.mini.gui;
 
 /**
- *
  * @author Gust
  */
 public abstract class GApplication {

@@ -5,7 +5,9 @@
  */
 package java.lang;
 
-import java.io.*;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 
 /**
  * The <code>System</code> class contains several useful class fields and
@@ -152,22 +154,22 @@ public final class System {
      * the situation where both arrays have component types that are reference
      * types.)
      *
-     * @param src the source array.
+     * @param src       the source array.
      * @param srcOffset start position in the source array.
-     * @param dst the destination array.
+     * @param dst       the destination array.
      * @param dstOffset start position in the destination data.
-     * @param length the number of array elements to be copied.
-     * @exception IndexOutOfBoundsException if copying would cause access of
-     * data outside array bounds.
-     * @exception ArrayStoreException if an element in the <code>src</code>
-     * array could not be stored into the <code>dest</code> array because of a
-     * type mismatch.
-     * @exception NullPointerException if either <code>src</code> or
-     * <code>dst</code> is <code>null</code>.
+     * @param length    the number of array elements to be copied.
+     * @throws IndexOutOfBoundsException if copying would cause access of
+     *                                   data outside array bounds.
+     * @throws ArrayStoreException       if an element in the <code>src</code>
+     *                                   array could not be stored into the <code>dest</code> array because of a
+     *                                   type mismatch.
+     * @throws NullPointerException      if either <code>src</code> or
+     *                                   <code>dst</code> is <code>null</code>.
      */
     public static native void arraycopy(Object src, int srcOffset,
-            Object dst, int dstOffset,
-            int length);
+                                        Object dst, int dstOffset,
+                                        int length);
 
     /**
      * Returns the same hashcode for the given object as would be returned by
@@ -195,9 +197,8 @@ public final class System {
      * @param key the name of the system property.
      * @return the string value of the system property, or <code>null</code> if
      * there is no property with that key.
-     *
-     * @exception NullPointerException if <code>key</code> is <code>null</code>.
-     * @exception IllegalArgumentException if <code>key</code> is empty.
+     * @throws NullPointerException     if <code>key</code> is <code>null</code>.
+     * @throws IllegalArgumentException if <code>key</code> is empty.
      */
     public static String getProperty(String key) {
         if (key == null) {
@@ -206,26 +207,12 @@ public final class System {
         if (key.equals("")) {
             throw new IllegalArgumentException("key can't be empty");
         }
-        if (key.equals("java.class.path")) {
-            String cp = getClassPath();
-            return cp.replace(';', File.pathSeparatorChar);
-        }
 
-        if (key.equals("sun.boot.class.path")) {
-            String cp = getClassPath();
-            String[] strs = cp.split(";");
-            for (String s : strs) {
-                if (s.endsWith("minijvm_rt.jar")) {
-                    return s;
-                }
-            }
-        }
         return getProperty0(key);
     }
 
     private native static String getProperty0(String key);
 
-    private native static String getClassPath();
 
     /**
      * Sets the system property indicated by the specified key.
@@ -237,16 +224,15 @@ public final class System {
      * specified property is set to the given value.
      * <p>
      *
-     * @param key the name of the system property.
+     * @param key   the name of the system property.
      * @param value the value of the system property.
      * @return the previous value of the system property, or <code>null</code>
      * if it did not have one.
-     *
-     * @exception SecurityException if a security manager exists and its
-     * <code>checkPermission</code> method doesn't allow setting of the
-     * specified property.
-     * @exception NullPointerException if <code>key</code> is <code>null</code>.
-     * @exception IllegalArgumentException if <code>key</code> is empty.
+     * @throws SecurityException        if a security manager exists and its
+     *                                  <code>checkPermission</code> method doesn't allow setting of the
+     *                                  specified property.
+     * @throws NullPointerException     if <code>key</code> is <code>null</code>.
+     * @throws IllegalArgumentException if <code>key</code> is empty.
      * @see #getProperty
      * @see java.lang.System#getProperty(java.lang.String)
      * @see java.lang.System#getProperty(java.lang.String, java.lang.String)

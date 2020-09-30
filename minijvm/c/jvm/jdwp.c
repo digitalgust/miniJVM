@@ -1175,10 +1175,10 @@ s16 jdwp_eventset_set(EventSet *set) {
             }
             case JDWP_EVENTKIND_CLASS_PREPARE: {
                 HashtableIterator hti;
-                hashtable_iterate(sys_classloader->classes, &hti);
+                hashtable_iterate(boot_classloader->classes, &hti);
                 for (; hashtable_iter_has_more(&hti);) {
                     Utf8String *k = hashtable_iter_next_key(&hti);
-                    JClass *cl = hashtable_get(sys_classloader->classes, k);
+                    JClass *cl = hashtable_get(boot_classloader->classes, k);
 
                     event_on_class_prepare(NULL, cl);
                 }
@@ -1453,14 +1453,14 @@ s32 jdwp_client_process(JdwpClient *client) {
             }
             case JDWP_CMD_VirtualMachine_AllClasses: {//1.3
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                jdwppacket_write_int(res, (s32) sys_classloader->classes->entries);
+                jdwppacket_write_int(res, (s32) boot_classloader->classes->entries);
 
                 Utf8String *ustr = utf8_create();
                 HashtableIterator hti;
-                hashtable_iterate(sys_classloader->classes, &hti);
+                hashtable_iterate(boot_classloader->classes, &hti);
                 for (; hashtable_iter_has_more(&hti);) {
                     Utf8String *k = hashtable_iter_next_key(&hti);
-                    JClass *cl = hashtable_get(sys_classloader->classes, k);
+                    JClass *cl = hashtable_get(boot_classloader->classes, k);
 
                     jdwppacket_write_byte(res, getClassType(cl));
                     jdwppacket_write_refer(res, cl);
@@ -1638,14 +1638,14 @@ s32 jdwp_client_process(JdwpClient *client) {
             }
             case JDWP_CMD_VirtualMachine_AllClassesWithGeneric: {//1.20
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                jdwppacket_write_int(res, (s32) sys_classloader->classes->entries);
+                jdwppacket_write_int(res, (s32) boot_classloader->classes->entries);
 
                 Utf8String *ustr = utf8_create();
                 HashtableIterator hti;
-                hashtable_iterate(sys_classloader->classes, &hti);
+                hashtable_iterate(boot_classloader->classes, &hti);
                 for (; hashtable_iter_has_more(&hti);) {
                     Utf8String *k = hashtable_iter_next_key(&hti);
-                    JClass *cl = hashtable_get(sys_classloader->classes, k);
+                    JClass *cl = hashtable_get(boot_classloader->classes, k);
 
                     jdwppacket_write_byte(res, getClassType(cl));
                     jdwppacket_write_refer(res, cl);

@@ -34,24 +34,23 @@ JClass *classes_get_c(c8 *clsName) {
 JClass *classes_get(Utf8String *clsName) {
     JClass *cl = NULL;
     if (clsName) {
-        cl = hashtable_get(sys_classloader->classes, clsName);
+        cl = hashtable_get(boot_classloader->classes, clsName);
     }
     return cl;
 }
 
-JClass *classes_load_get_without_clinit(Utf8String *ustr, Runtime *runtime) {
+JClass *classes_load_get_without_clinit(Instance *loader, Utf8String *ustr, Runtime *runtime) {
     if (!ustr)return NULL;
     JClass *cl;
-    spin_lock(&sys_classloader->lock);//fast lock
-    if (utf8_index_of(ustr, '.') >= 0)
-        utf8_replace_c(ustr, ".", "/");
-    spin_unlock(&sys_classloader->lock);
+    spin_lock(&boot_classloader->lock);//fast lock
+    if (utf8_index_of(ustr, '.') >= 0) utf8_replace_c(ustr, ".", "/");
+    spin_unlock(&boot_classloader->lock);
     cl = classes_get(ustr);
     if (!cl) {
         garbage_thread_lock();//slow lock
         cl = classes_get(ustr);
         if (!cl) {
-            cl = load_class(sys_classloader, ustr, runtime);
+            cl = load_class(loader, ustr, runtime);
         }
         garbage_thread_unlock();
 
@@ -59,15 +58,15 @@ JClass *classes_load_get_without_clinit(Utf8String *ustr, Runtime *runtime) {
     return cl;
 }
 
-JClass *classes_load_get_c(c8 *pclassName, Runtime *runtime) {
+JClass *classes_load_get_c(Instance *loader, c8 *pclassName, Runtime *runtime) {
     Utf8String *ustr = utf8_create_c(pclassName);
-    JClass *clazz = classes_load_get(ustr, runtime);
+    JClass *clazz = classes_load_get(loader, ustr, runtime);
     utf8_destory(ustr);
     return clazz;
 }
 
-JClass *classes_load_get(Utf8String *ustr, Runtime *runtime) {
-    JClass *cl = classes_load_get_without_clinit(ustr, runtime);
+JClass *classes_load_get(Instance *loader, Utf8String *ustr, Runtime *runtime) {
+    JClass *cl = classes_load_get_without_clinit(loader, ustr, runtime);
     if (cl && cl->status < CLASS_STATUS_CLINITED) {
         class_clinit(cl, runtime);
     }
@@ -77,7 +76,7 @@ JClass *classes_load_get(Utf8String *ustr, Runtime *runtime) {
 s32 classes_put(JClass *clazz) {
     if (clazz) {
         //jvm_printf("sys_classloader %d : %s\n", sys_classloader->classes->entries, utf8_cstr(clazz->name));
-        hashtable_put(sys_classloader->classes, clazz->name, clazz);
+        hashtable_put(boot_classloader->classes, clazz->name, clazz);
         return 0;
     }
     return -1;
@@ -104,10 +103,10 @@ JClass *primitive_class_create_get(Runtime *runtime, Utf8String *ustr) {
 
 JClass *array_class_create_get(Runtime *runtime, Utf8String *desc) {
     if (desc && desc->length && utf8_char_at(desc, 0) == '[') {
-        JClass *clazz = hashtable_get(sys_classloader->classes, desc);
+        JClass *clazz = hashtable_get(boot_classloader->classes, desc);
         if (!clazz) {
             garbage_thread_lock();
-            clazz = hashtable_get(sys_classloader->classes, desc);//maybe other thread created
+            clazz = hashtable_get(boot_classloader->classes, desc);//maybe other thread created
             if (!clazz) {
                 clazz = class_create(runtime);
                 clazz->mb.arr_type_index = getDataTypeIndex(utf8_char_at(desc, 1));
@@ -116,7 +115,7 @@ JClass *array_class_create_get(Runtime *runtime, Utf8String *desc) {
                 classes_put(clazz);
                 gc_refer_hold(clazz);
 
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
                 jvm_printf("load class:  %s \n", utf8_cstr(desc));
 #endif
 
@@ -524,7 +523,7 @@ s32 isDataReferByIndex(s32 index) {
 
 void printDumpOfClasses() {
     HashtableIterator hti;
-    hashtable_iterate(sys_classloader->classes, &hti);
+    hashtable_iterate(boot_classloader->classes, &hti);
     for (; hashtable_iter_has_more(&hti);) {
         Utf8String *k = hashtable_iter_next_key(&hti);
         JClass *clazz = classes_get(k);
@@ -535,6 +534,12 @@ void printDumpOfClasses() {
 void sys_properties_set_c(c8 *key, c8 *val) {
     Utf8String *ukey = utf8_create_c(key);
     Utf8String *uval = utf8_create_c(val);
+#if __JVM_OS_MAC__ || __JVM_OS_LINUX__
+    if (utf8_equals_c(ukey, "java.class.path") || utf8_equals_c(ukey, "sun.boot.class.path")) {
+        utf8_replace_c(uval, ";", ":");
+    }
+#elif __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__ || __JVM_OS_VS__
+#endif
     hashtable_put(sys_prop, ukey, uval);
 }
 
@@ -545,7 +550,7 @@ s32 sys_properties_load(ClassLoader *loader) {
                                       (HashtableValueFreeFunc) utf8_destory);
     Utf8String *ustr = NULL;
     Utf8String *prop_name = utf8_create_c("sys.properties");
-    ByteBuf *buf = load_file_from_classpath(sys_classloader, prop_name);
+    ByteBuf *buf = load_file_from_classpath(prop_name);
     if (buf) {
         ustr = utf8_create();
         while (bytebuf_available(buf)) {
@@ -613,7 +618,7 @@ FILE *logfile = NULL;
 s64 last_flush = 0;
 
 void open_log() {
-#if _JVM_DEBUG_PRINT_FILE
+#if _JVM_DEBUG_LOG_TO_FILE
     if (!logfile) {
         logfile = fopen("./jvmlog.txt", "wb+");
     }
@@ -621,7 +626,7 @@ void open_log() {
 }
 
 void close_log() {
-#if _JVM_DEBUG_PRINT_FILE
+#if _JVM_DEBUG_LOG_TO_FILE
     if (!logfile) {
         fclose(logfile);
         logfile = NULL;
@@ -634,7 +639,7 @@ int jvm_printf(const char *format, ...) {
     va_list vp;
     va_start(vp, format);
     int result = 0;
-#if _JVM_DEBUG_PRINT_FILE
+#if _JVM_DEBUG_LOG_TO_FILE
     if (logfile) {
 
         result = vfprintf(logfile, format, vp);
@@ -659,7 +664,7 @@ void invoke_deepth(Runtime *runtime) {
     }
     s32 len = i;
 
-#if _JVM_DEBUG_PRINT_FILE
+#if _JVM_DEBUG_LOG_TO_FILE
     fprintf(logfile, "%llx", (s64) (intptr_t) thrd_current());
     for (i = 0; i < len; i++) {
         fprintf(logfile, "  ");
@@ -702,7 +707,7 @@ s32 jthread_dispose(Instance *jthread) {
 
 s32 jthread_run(void *para) {
     Instance *jthread = (Instance *) para;
-#if _JVM_DEBUG_BYTECODE_DETAIL > 0
+#if _JVM_DEBUG_LOG_LEVEL > 0
     s64 startAt = currentTimeMillis();
     jvm_printf("[INFO]thread start %llx\n", (s64) (intptr_t) jthread);
 #endif
@@ -716,7 +721,7 @@ s32 jthread_run(void *para) {
     method = find_instance_methodInfo_by_name(jthread, methodName, methodType, runtime);
     utf8_destory(methodName);
     utf8_destory(methodType);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     jvm_printf("therad_loader    %s.%s%s  \n", utf8_cstr(method->_this_class->name),
                utf8_cstr(method->name), utf8_cstr(method->descriptor));
 #endif
@@ -731,7 +736,7 @@ s32 jthread_run(void *para) {
     runtime->threadInfo->thread_status = THREAD_STATUS_ZOMBIE;
     jthread_dispose(jthread);
     runtime_destory(runtime);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 0
+#if _JVM_DEBUG_LOG_LEVEL > 0
     s64 spent = currentTimeMillis() - startAt;
     jvm_printf("[INFO]thread over %llx , spent : %lld\n", (s64) (intptr_t) jthread, spent);
 #endif
@@ -739,8 +744,9 @@ s32 jthread_run(void *para) {
     return ret;
 }
 
-thrd_t jthread_start(Instance *ins) {//
+thrd_t jthread_start(Instance *parent_classloader, Instance *ins) {//
     Runtime *runtime = runtime_create(NULL);
+    runtime->threadInfo->context_classloader = parent_classloader;
     jthread_init(ins, runtime);
     thrd_t pt;
     thrd_create(&pt, jthread_run, ins);
@@ -778,13 +784,13 @@ void jthread_set_daemon_value(Instance *ins, Runtime *runtime, s32 daemon) {
 }
 
 void jthreadlock_create(Runtime *runtime, MemoryBlock *mb) {
-    spin_lock(&sys_classloader->lock);
+    spin_lock(&boot_classloader->lock);
     if (!mb->thread_lock) {
         ThreadLock *tl = jvm_calloc(sizeof(ThreadLock));
         thread_lock_init(tl);
         mb->thread_lock = tl;
     }
-    spin_unlock(&sys_classloader->lock);
+    spin_unlock(&boot_classloader->lock);
 }
 
 void jthreadlock_destory(MemoryBlock *mb) {
@@ -807,7 +813,7 @@ s32 jthread_lock(MemoryBlock *mb, Runtime *runtime) { //可能会重入，同一
         jthread_yield(runtime);
     }
 
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("  lock: %llx   lock holder: %s \n", (s64) (intptr_t) (runtime->threadInfo->jthread),
                utf8_cstr(mb->clazz->name));
@@ -822,7 +828,7 @@ s32 jthread_unlock(MemoryBlock *mb, Runtime *runtime) {
     }
     ThreadLock *jtl = mb->thread_lock;
     mtx_unlock(&jtl->mutex_lock);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("unlock: %llx   lock holder: %s, \n", (s64) (intptr_t) (runtime->threadInfo->jthread),
                utf8_cstr(mb->clazz->name));
@@ -854,9 +860,9 @@ s32 jthread_yield(Runtime *runtime) {
 }
 
 s32 jthread_suspend(Runtime *runtime) {
-    spin_lock(&sys_classloader->lock);
+    spin_lock(&boot_classloader->lock);
     runtime->threadInfo->suspend_count++;
-    spin_unlock(&sys_classloader->lock);
+    spin_unlock(&boot_classloader->lock);
     return 0;
 }
 
@@ -870,9 +876,9 @@ void jthread_block_exit(Runtime *runtime) {
 }
 
 s32 jthread_resume(Runtime *runtime) {
-    spin_lock(&sys_classloader->lock);
+    spin_lock(&boot_classloader->lock);
     if (runtime->threadInfo->suspend_count > 0)runtime->threadInfo->suspend_count--;
-    spin_unlock(&sys_classloader->lock);
+    spin_unlock(&boot_classloader->lock);
     return 0;
 }
 
@@ -985,7 +991,7 @@ Instance *jarray_multi_create(Runtime *runtime, s32 *dim, s32 dim_size, Utf8Stri
     Utf8String *desc = utf8_create_part(pdesc, 1, pdesc->length - 1);
 
     c8 ch = utf8_char_at(desc, 0);
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     jvm_printf("multi arr deep :%d  type(%c) arr[%x] size:%d\n", deep, ch, arr, len);
 #endif
     if (ch == '[') {
@@ -1216,7 +1222,7 @@ Instance *instance_copy(Runtime *runtime, Instance *src, s32 deep_copy) {
  */
 
 Instance *insOfJavaLangClass_create_get(Runtime *runtime, JClass *clazz) {
-    JClass *java_lang_class = classes_load_get_c(STR_CLASS_JAVA_LANG_CLASS, runtime);
+    JClass *java_lang_class = classes_load_get_c(NULL, STR_CLASS_JAVA_LANG_CLASS, runtime);
     if (java_lang_class) {
         if (clazz->ins_class) {
             return clazz->ins_class;
@@ -1244,8 +1250,7 @@ void insOfJavaLangClass_set_classHandle(Instance *insOfJavaLangClass, JClass *ha
 //===============================    实例化字符串  ==================================
 Instance *jstring_create(Utf8String *src, Runtime *runtime) {
     if (!src)return NULL;
-    Utf8String *clsName = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
-    JClass *jstr_clazz = classes_load_get(clsName, runtime);
+    JClass *jstr_clazz = classes_load_get_c(NULL, STR_CLASS_JAVA_LANG_STRING, runtime);
     Instance *jstring = instance_create(runtime, jstr_clazz);
     instance_hold_to_thread(jstring, runtime);//hold for no gc
 
@@ -1262,7 +1267,6 @@ Instance *jstring_create(Utf8String *src, Runtime *runtime) {
     }
     jvm_free(buf);
     jstring_set_count(jstring, len);//设置长度
-    utf8_destory(clsName);
     instance_release_from_thread(jstring, runtime);
     return jstring;
 }
@@ -1382,11 +1386,11 @@ s32 jstring_2_utf8(Instance *jstr, Utf8String *utf8) {
 //===============================    例外  ==================================
 
 Instance *exception_create(s32 exception_type, Runtime *runtime) {
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     jvm_printf("create exception : %s\n", STRS_CLASS_EXCEPTION[exception_type]);
 #endif
     Utf8String *clsName = utf8_create_c(STRS_CLASS_EXCEPTION[exception_type]);
-    JClass *clazz = classes_load_get(clsName, runtime);
+    JClass *clazz = classes_load_get(NULL, clsName, runtime);
     utf8_destory(clsName);
 
     Instance *ins = instance_create(runtime, clazz);
@@ -1397,7 +1401,7 @@ Instance *exception_create(s32 exception_type, Runtime *runtime) {
 }
 
 Instance *exception_create_str(s32 exception_type, Runtime *runtime, c8 *errmsg) {
-#if _JVM_DEBUG_BYTECODE_DETAIL > 5
+#if _JVM_DEBUG_LOG_LEVEL > 5
     jvm_printf("create exception : %s\n", STRS_CLASS_EXCEPTION[exception_type]);
 #endif
     Utf8String *uerrmsg = utf8_create_c(errmsg);
@@ -1408,7 +1412,7 @@ Instance *exception_create_str(s32 exception_type, Runtime *runtime, c8 *errmsg)
     push_ref(para, jstr);
     instance_release_from_thread(jstr, runtime);
     Utf8String *clsName = utf8_create_c(STRS_CLASS_EXCEPTION[exception_type]);
-    JClass *clazz = classes_load_get(clsName, runtime);
+    JClass *clazz = classes_load_get(NULL, clsName, runtime);
     utf8_destory(clsName);
     Instance *ins = instance_create(runtime, clazz);
     instance_hold_to_thread(ins, runtime);
@@ -1421,7 +1425,7 @@ Instance *exception_create_str(s32 exception_type, Runtime *runtime, c8 *errmsg)
 
 
 Instance *method_type_create(Runtime *runtime, Utf8String *desc) {
-    JClass *cl = classes_load_get_c(STR_CLASS_JAVA_LANG_INVOKE_METHODTYPE, runtime);
+    JClass *cl = classes_load_get_c(NULL, STR_CLASS_JAVA_LANG_INVOKE_METHODTYPE, runtime);
     if (cl) {
         Instance *mt = instance_create(runtime, cl);
         instance_hold_to_thread(mt, runtime);
@@ -1440,7 +1444,7 @@ Instance *method_type_create(Runtime *runtime, Utf8String *desc) {
 }
 
 Instance *method_handle_create(Runtime *runtime, MethodInfo *mi, s32 kind) {
-    JClass *cl = classes_load_get_c(STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLE, runtime);
+    JClass *cl = classes_load_get_c(NULL, STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLE, runtime);
     if (cl) {
         Instance *mh = instance_create(runtime, cl);
         instance_hold_to_thread(mh, runtime);
@@ -1467,7 +1471,7 @@ Instance *method_handle_create(Runtime *runtime, MethodInfo *mi, s32 kind) {
 }
 
 Instance *method_handles_lookup_create(Runtime *runtime, JClass *caller) {
-    JClass *cl = classes_load_get_c(STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLES_LOOKUP, runtime);
+    JClass *cl = classes_load_get_c(NULL, STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLES_LOOKUP, runtime);
     if (cl) {
         Instance *lookup = instance_create(runtime, cl);
         instance_hold_to_thread(lookup, runtime);
@@ -1724,11 +1728,11 @@ s32 _loadFileContents(c8 *file, ByteBuf *buf) {
 }
 
 
-ByteBuf *load_file_from_classpath(ClassLoader *loader, Utf8String *path) {
+ByteBuf *load_file_from_classpath(Utf8String *path) {
     ByteBuf *bytebuf = NULL;
     s32 i, iret;
-    for (i = 0; i < loader->classpath->length; i++) {
-        Utf8String *pClassPath = arraylist_get_value(loader->classpath, i);
+    for (i = 0; i < boot_classloader->classpath->length; i++) {
+        Utf8String *pClassPath = arraylist_get_value(boot_classloader->classpath, i);
         if (isDir(pClassPath)) { //form file
             Utf8String *filepath = utf8_create_copy(pClassPath);
             utf8_pushback(filepath, '/');

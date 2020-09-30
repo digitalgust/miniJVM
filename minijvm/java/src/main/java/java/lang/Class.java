@@ -49,6 +49,7 @@ public final class Class<T> {
     private static final int ANNOTATION = 0x00002000;
     private static final int ENUM = 0x00004000;
     private static final int SYNTHETIC = 0x00001000;
+    ClassLoader classLoader; //don't change var name, it used in vm
 
     /*
      * Constructor. Only the Java Virtual Machine creates Class
@@ -97,7 +98,12 @@ public final class Class<T> {
      * @throws Error                  if the function fails for any other reason.
      * @since JDK1.0
      */
-    public static native Class<?> forName(String className)
+    public static Class<?> forName(String className) throws ClassNotFoundException {
+        Class c = RefNative.getCallerClass();
+        return forName(className, true, c == null ? null : c.getClassLoader());
+    }
+
+    public static native Class<?> forName(String className, boolean resolve, ClassLoader loader)
             throws ClassNotFoundException;
 
     /**
@@ -271,23 +277,32 @@ public final class Class<T> {
      * @return a <code>java.io.InputStream</code> object.
      */
     public java.io.InputStream getResourceAsStream(String name) {
-        try {
-            if (name.length() > 0 && name.charAt(0) == '/') {
-                /* Absolute format */
-                name = name.substring(1);
-            } else {
-                /* Relative format */
-                String className = this.getName();
-                int dotIndex = className.lastIndexOf('.');
-                if (dotIndex >= 0) {
-                    name = className.substring(0, dotIndex + 1).replace('.', '/')
-                            + name;
-                }
-            }
-            return new com.sun.cldc.io.ResourceInputStream(name);
-        } catch (java.io.IOException x) {
-            return null;
+        name = resolveName(name);
+        if (classLoader == null) {
+            // A system class.
+            return ClassLoader.getSystemResourceAsStream(name);
         }
+        return classLoader.getResourceAsStream(name);
+    }
+
+    private String resolveName(String name) {
+        if (name == null) {
+            return name;
+        }
+        if (!name.startsWith("/")) {
+            Class c = this;
+            while (c.isArray()) {
+                c = c.getComponentType();
+            }
+            String baseName = c.getName();
+            int index = baseName.lastIndexOf('.');
+            if (index != -1) {
+                name = baseName.substring(0, index).replace('.', '/') + "/" + name;
+            }
+        } else {
+            name = name.substring(1);
+        }
+        return name;
     }
 
     /**
@@ -334,15 +349,8 @@ public final class Class<T> {
      * @see java.lang.RuntimePermission
      */
     public ClassLoader getClassLoader() {
-        ClassLoader cl = getClassLoader0();
-        if (cl == null) {
-            return null;
-        }
-        return cl;
+        return classLoader;
     }
-
-    // Package-private to allow ClassLoader access
-    native ClassLoader getClassLoader0();
 
     /*
      * Return the Virtual Machine's Class object for the named

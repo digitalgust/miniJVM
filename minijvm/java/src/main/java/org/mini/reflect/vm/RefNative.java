@@ -54,6 +54,8 @@ public class RefNative {
 
     public static native void addJarToClasspath(String jarFullPath);
 
+    public static native Class findLoadedClass0(ClassLoader loader, String name);
+
     //
     //
     public static native long heap_calloc(int capacity);
@@ -91,4 +93,6 @@ public class RefNative {
     public static native void heap_copy(long srcMemAddr, int srcPos, long destMemAddr, int destPos, int length);
 
     public static native int heap_endian();
+
+    public static native Class<?> getCallerClass();
 }
