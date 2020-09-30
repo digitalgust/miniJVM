@@ -55,6 +55,7 @@ public class GToolkit {
 
     public static byte[] readFileFromJar(String path) {
         try {
+
             InputStream is = GCallBack.getInstance().getResourceAsStream(path);
             int av = is.available();
             if (is != null && av >= 0) {

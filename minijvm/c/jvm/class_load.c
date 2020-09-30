@@ -1887,12 +1887,10 @@ JClass *load_class(Instance *loader, Utf8String *pClassName, Runtime *runtime) {
             bytebuf_destory(bytebuf);
         } else { //using appclassloader load
             if (jvm_runtime_cache.classloader_load_class) {
+                runtime->threadInfo->no_pause++;
                 Instance *jstr = jstring_create(pClassName, runtime);
                 push_ref(runtime->stack, jstr);
                 push_ref(runtime->stack, loader);
-                if (utf8_equals_c(clsName, "com/ebsee/tj/UISkillTree")) {
-                    int debug = 1;
-                }
 
                 s32 ret = execute_method_impl(jvm_runtime_cache.classloader_load_class, runtime);
                 if (!ret) {
@@ -1903,6 +1901,7 @@ JClass *load_class(Instance *loader, Utf8String *pClassName, Runtime *runtime) {
                 } else {
                     print_exception(runtime);
                 }
+                runtime->threadInfo->no_pause--;
             }
         }
         if (jdwp_enable && tmpclazz)event_on_class_prepare(runtime, tmpclazz);

@@ -53,7 +53,6 @@ public abstract class XContainer
     }
 
 
-
     /**
      * 在各子元素中查找某组件。
      *
@@ -474,7 +473,7 @@ public abstract class XContainer
             for (String s : extGuiClassName) {
                 if (s.equals(tagName)) {
                     try {
-                        Class clazz = Class.forName(s);
+                        Class clazz = Class.forName(s, true, Thread.currentThread().getContextClassLoader());
                         XObject xobj = (XObject) clazz.newInstance();
                         xobj.setParent(parent);
                         xobj.parse(parser);
@@ -526,9 +525,9 @@ public abstract class XContainer
             if (parser.getEventType() == XmlPullParser.START_TAG) {
                 XObject xobj = XContainer.parseSon(parser, this);
                 if (xobj != null) {
-                    if(xobj.hidden){
+                    if (xobj.hidden) {
                         hiddens.add(xobj);
-                    }else{
+                    } else {
                         children.add(xobj);
                     }
                 }

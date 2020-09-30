@@ -69,6 +69,13 @@ public class Launcher {
         return System.getProperty("sun.boot.class.path");
     }
 
+    /**
+     * this method is used for vm
+     * @param name
+     * @param classLoader
+     * @return
+     * @throws ClassNotFoundException
+     */
     static Class<?> loadClass(String name, ClassLoader classLoader) throws ClassNotFoundException {
         return (classLoader == null ? getSystemClassLoader() : classLoader).loadClass(name);
     }

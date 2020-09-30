@@ -63,8 +63,15 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
     }
 
     private ClassLoader getClassLoader() {
-        return (gapp == null || gapp.getClass().getClassLoader() == null)
-                ? ClassLoader.getSystemClassLoader() : gapp.getClass().getClassLoader();
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        if (loader == null) {
+            if (gapp == null) {
+                loader = ClassLoader.getSystemClassLoader();
+            } else {
+                loader = gapp.getClass().getClassLoader();
+            }
+        }
+        return loader;
     }
 
     public InputStream getResourceAsStream(String path) {

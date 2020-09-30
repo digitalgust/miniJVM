@@ -299,7 +299,6 @@ public class AppLoader {
     public static GApplication runApp(String jarName) {
         GApplication app = null;
         try {
-            //RefNative.addJarToClasspath(getAppJarPath(jarName));
 
             Class c = getApplicationClass(jarName);
             if (c != null) {
