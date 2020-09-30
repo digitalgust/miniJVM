@@ -12,16 +12,21 @@
 
 int call_jvm(char* app_path) {
     s32 ret ;
+    char bootstrappath[512];
+    memset(&bootstrappath,0,512);
+    strcat(bootstrappath,app_path);
+    strcat(bootstrappath,"/lib/minijvm_rt.jar");
+    strcat(bootstrappath,";");
     char path[512];
     memset(&path,0,512);
     strcat(path,app_path);
-    strcat(path,"/lib/minijvm_rt.jar");
+    strcat(path,"/libex/luaj.jar");
     strcat(path,";");
     strcat(path,app_path);
     strcat(path,"/libex/minijvm_test.jar");
     printf("classpath: %s\n",path);
     ArrayList * java_para=arraylist_create(0);
-    ret= execute_jvm(path, "test/Foo3", java_para);
+    ret= execute_jvm(bootstrappath, path, "test/Foo3", java_para);
     arraylist_destory(java_para);
     return ret;
 }

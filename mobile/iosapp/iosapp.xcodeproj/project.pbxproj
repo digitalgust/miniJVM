@@ -220,27 +220,27 @@
 		4581C35E226D637C00E88538 /* jvm */ = {
 			isa = PBXGroup;
 			children = (
+				4581C36C226D637C00E88538 /* class_load.c */,
+				4581C363226D637C00E88538 /* class.c */,
+				4581C35F226D637C00E88538 /* garbage.c */,
+				4581C369226D637C00E88538 /* garbage.h */,
+				4581C370226D637C00E88538 /* global.c */,
+				4581C36E226D637C00E88538 /* interpreter.c */,
+				4581C371226D637C00E88538 /* java_native_io.c */,
+				4581C367226D637C00E88538 /* java_native_io.h */,
+				4581C36F226D637C00E88538 /* java_native_reflect.c */,
+				4581C366226D637C00E88538 /* java_native_reflect.h */,
+				4581C36A226D637C00E88538 /* java_native_std.c */,
+				4581C365226D637C00E88538 /* java_native_std.h */,
+				4581C36D226D637C00E88538 /* jdwp.c */,
+				4581C362226D637C00E88538 /* jdwp.h */,
 				451F269F23A248D300F99984 /* jit.c */,
 				451F26A023A248D300F99984 /* jit.h */,
-				4581C35F226D637C00E88538 /* garbage.c */,
-				4581C360226D637C00E88538 /* runtime.c */,
-				4581C361226D637C00E88538 /* jvm.c */,
-				4581C362226D637C00E88538 /* jdwp.h */,
-				4581C363226D637C00E88538 /* class.c */,
 				4581C364226D637C00E88538 /* jvm_util.c */,
-				4581C365226D637C00E88538 /* java_native_std.h */,
-				4581C366226D637C00E88538 /* java_native_reflect.h */,
-				4581C367226D637C00E88538 /* java_native_io.h */,
-				4581C368226D637C00E88538 /* jvm.h */,
-				4581C369226D637C00E88538 /* garbage.h */,
-				4581C36A226D637C00E88538 /* java_native_std.c */,
 				4581C36B226D637C00E88538 /* jvm_util.h */,
-				4581C36C226D637C00E88538 /* class_load.c */,
-				4581C36D226D637C00E88538 /* jdwp.c */,
-				4581C36E226D637C00E88538 /* interpreter.c */,
-				4581C36F226D637C00E88538 /* java_native_reflect.c */,
-				4581C370226D637C00E88538 /* global.c */,
-				4581C371226D637C00E88538 /* java_native_io.c */,
+				4581C361226D637C00E88538 /* jvm.c */,
+				4581C368226D637C00E88538 /* jvm.h */,
+				4581C360226D637C00E88538 /* runtime.c */,
 			);
 			path = jvm;
 			sourceTree = "<group>";
@@ -248,32 +248,32 @@
 		4581C372226D637C00E88538 /* utils */ = {
 			isa = PBXGroup;
 			children = (
-				451F26A623A24ADE00F99984 /* sljit */,
-				4581C373226D637C00E88538 /* dirent_win.h */,
-				4581C374226D637C00E88538 /* spinlock.h */,
-				4581C375226D637C00E88538 /* ltalloc.c */,
-				4581C376226D637C00E88538 /* miniz.c */,
-				4581C377226D637C00E88538 /* bytebuf.h */,
-				4581C378226D637C00E88538 /* miniz_wrapper.h */,
-				4581C379226D637C00E88538 /* hashtable.h */,
-				4581C37A226D637C00E88538 /* hashset.c */,
-				4581C37B226D637C00E88538 /* tinycthread.c */,
 				4581C37C226D637C00E88538 /* arraylist.c */,
-				4581C37D226D637C00E88538 /* utf8_string.c */,
-				4581C37E226D637C00E88538 /* linkedlist.h */,
+				4581C388226D637C00E88538 /* arraylist.h */,
+				4581C385226D637C00E88538 /* bytebuf.c */,
+				4581C377226D637C00E88538 /* bytebuf.h */,
 				4581C37F226D637C00E88538 /* d_type.c */,
-				4581C380226D637C00E88538 /* miniz.h */,
-				4581C381226D637C00E88538 /* ltalloc.h */,
+				4581C38A226D637C00E88538 /* d_type.h */,
+				4581C373226D637C00E88538 /* dirent_win.h */,
+				4581C37A226D637C00E88538 /* hashset.c */,
 				4581C382226D637C00E88538 /* hashset.h */,
 				4581C383226D637C00E88538 /* hashtable.c */,
-				4581C384226D637C00E88538 /* miniz_wrapper.c */,
-				4581C385226D637C00E88538 /* bytebuf.c */,
-				4581C386226D637C00E88538 /* pairlist.h */,
-				4581C387226D637C00E88538 /* utf8_string.h */,
-				4581C388226D637C00E88538 /* arraylist.h */,
-				4581C389226D637C00E88538 /* tinycthread.h */,
-				4581C38A226D637C00E88538 /* d_type.h */,
+				4581C379226D637C00E88538 /* hashtable.h */,
 				4581C38B226D637C00E88538 /* linkedlist.c */,
+				4581C37E226D637C00E88538 /* linkedlist.h */,
+				4581C375226D637C00E88538 /* ltalloc.c */,
+				4581C381226D637C00E88538 /* ltalloc.h */,
+				4581C384226D637C00E88538 /* miniz_wrapper.c */,
+				4581C378226D637C00E88538 /* miniz_wrapper.h */,
+				4581C376226D637C00E88538 /* miniz.c */,
+				4581C380226D637C00E88538 /* miniz.h */,
+				4581C386226D637C00E88538 /* pairlist.h */,
+				451F26A623A24ADE00F99984 /* sljit */,
+				4581C374226D637C00E88538 /* spinlock.h */,
+				4581C37B226D637C00E88538 /* tinycthread.c */,
+				4581C389226D637C00E88538 /* tinycthread.h */,
+				4581C37D226D637C00E88538 /* utf8_string.c */,
+				4581C387226D637C00E88538 /* utf8_string.h */,
 			);
 			path = utils;
 			sourceTree = "<group>";
@@ -680,7 +680,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.minijvm.minipack;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ebsee.minipack;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				TARGETED_DEVICE_FAMILY = 1;
@@ -710,7 +710,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.minijvm.minipack;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ebsee.minipack;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				TARGETED_DEVICE_FAMILY = 1;

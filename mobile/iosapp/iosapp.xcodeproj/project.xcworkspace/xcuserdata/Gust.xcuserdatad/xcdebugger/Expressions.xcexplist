@@ -9,6 +9,17 @@
          contextName = "fonsTextIterNext:fontstash.h">
       </ContextState>
       <ContextState
+         contextName = "GLOBAL">
+         <PersistentStrings>
+            <PersistentString
+               value = "method-&gt;_this_class-&gt;name-&gt;data">
+            </PersistentString>
+            <PersistentString
+               value = "method-&gt;name-&gt;data">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "gc_is_alive:garbage.c">
       </ContextState>
       <ContextState
@@ -22,6 +33,9 @@
       </ContextState>
       <ContextState
          contextName = "jdwp_client_process:jdwp.c">
+      </ContextState>
+      <ContextState
+         contextName = "jdwp_check_breakpoint:jdwp.c">
       </ContextState>
       <ContextState
          contextName = "nvgTextBreakLines:nanovg.c">
@@ -38,13 +52,26 @@
          contextName = "check_suspend_and_pause:jvm_util.c">
       </ContextState>
       <ContextState
-         contextName = "_instance_mark_refer:garbage.c">
+         contextName = "jthread_run:jvm_util.c">
+      </ContextState>
+      <ContextState
+         contextName = "getRuntimeCurThread:media.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "thread_list">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "find_methodInfo_by_name:class.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "tmp-&gt;name-&gt;data">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "fonsTextIterInit:fontstash.h">
-      </ContextState>
-      <ContextState
-         contextName = "execute_method_impl:interpreter.c">
       </ContextState>
       <ContextState
          contextName = "primitive_class_create_get:jvm_util.c">
@@ -59,12 +86,24 @@
          contextName = "-[GLFMViewController keyCommands]:glfm_platform_ios.m">
       </ContextState>
       <ContextState
+         contextName = "_garbage_big_search:garbage.c">
+      </ContextState>
+      <ContextState
+         contextName = "localvar_init:jvm.h">
+      </ContextState>
+      <ContextState
          contextName = "-[GLFMViewController loadView]:glfm_platform_ios.m">
          <PersistentStrings>
             <PersistentString
                value = "self.view.bounds.size.width">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "_garbage_pause_the_world:garbage.c">
+      </ContextState>
+      <ContextState
+         contextName = "event_on_breakpoint:jdwp.c">
       </ContextState>
       <ContextState
          contextName = "org_mini_gl_GL_glShaderSource:jni_gl.c">
@@ -76,6 +115,20 @@
       </ContextState>
       <ContextState
          contextName = "_jarray_mark_refer:garbage.c">
+      </ContextState>
+      <ContextState
+         contextName = "org_mini_nanovg_Nanovg_nvgTextBoxJni:jni_nanovg.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "(char*)ptr_pstring">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "localvar_dispose:jvm.h">
+      </ContextState>
+      <ContextState
+         contextName = "instance_of:class.c">
       </ContextState>
    </ContextStates>
 </VariablesViewState>

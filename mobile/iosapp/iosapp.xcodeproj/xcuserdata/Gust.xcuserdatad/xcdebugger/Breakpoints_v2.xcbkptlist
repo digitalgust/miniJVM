@@ -109,16 +109,32 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "6AFA959C-7038-4DBD-B62F-96039A1E9251"
+            uuid = "B20B1CBA-A047-4878-AA75-B449D74D338B"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../../minijvm/c/jvm/jdwp.c"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1788"
-            endingLineNumber = "1788"
-            landmarkName = "jdwp_client_process(client, runtime)"
+            startingLineNumber = "1387"
+            endingLineNumber = "1387"
+            landmarkName = "jdwp_client_process(client)"
+            landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "9B6D6EC2-CEB0-4484-B014-4F5269D022BC"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../../minijvm/c/jvm/garbage.c"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "709"
+            endingLineNumber = "709"
+            landmarkName = "_garbage_mark_object(ref)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
