@@ -269,8 +269,8 @@ public abstract class XObject {
         y = raw_y;
         width = raw_width;
         height = raw_height;
-        viewW = width - getDiff_viewW2Width();
-        viewH = height - getDiff_ViewH2Height();
+        viewW = (raw_width != XDef.NODEF) ? (width - getDiff_viewW2Width()) : XDef.NODEF;
+        viewH = (raw_height != XDef.NODEF) ? (height - getDiff_ViewH2Height()) : XDef.NODEF;
     }
 
     protected int getTrialViewH() {

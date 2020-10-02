@@ -281,16 +281,39 @@ void jvm_destroy(StaticLibRegFunc unRegFunc) {
 s32 execute_jvm(c8 *p_bootclasspath, c8 *p_classpath, c8 *p_mainclass, ArrayList *java_para) {
     jvm_init(p_bootclasspath, p_classpath, NULL);
 
+
+    Runtime *runtime = runtime_create(NULL);
+    thread_boundle(runtime);
+
+    //准备参数
+    s32 count = java_para ? java_para->length : 0;
+    Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
+    Instance *arr = jarray_create_by_type_name(runtime, count, ustr);
+    instance_hold_to_thread(arr, runtime);
+    utf8_destory(ustr);
+    int i;
+    for (i = 0; i < count; i++) {
+        Utf8String *utfs = utf8_create_c(arraylist_get_value(java_para, i));
+        Instance *jstr = jstring_create(utfs, runtime);
+        jarray_set_field(arr, i, (intptr_t) jstr);
+        utf8_destory(utfs);
+    }
+    push_ref(runtime->stack, arr);
+    instance_release_from_thread(arr, runtime);
+
     c8 *p_methodname = "main";
     c8 *p_methodtype = "([Ljava/lang/String;)V";
-    s32 ret = call_method_para(p_mainclass, p_methodname, p_methodtype, java_para, NULL);
+    s32 ret = call_method(p_mainclass, p_methodname, p_methodtype, runtime);
+
+    thread_unboundle(runtime);
+    runtime_destory(runtime);
 
     jvm_destroy(NULL);
     return ret;
 }
 
 
-s32 call_method_para(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, ArrayList *java_para, Runtime *p_runtime) {
+s32 call_method(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, Runtime *p_runtime) {
     if (!p_mainclass) {
         jvm_printf("No main class .\n");
         return 1;
@@ -319,21 +342,7 @@ s32 call_method_para(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, ArrayL
         MethodInfo *m = find_methodInfo_by_name(str_mainClsName, methodName, methodType, runtime);
         if (m) {
 
-            //准备参数
-            s32 count = java_para ? java_para->length : 0;
-            Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
-            Instance *arr = jarray_create_by_type_name(runtime, count, ustr);
-            instance_hold_to_thread(arr, runtime);
-            utf8_destory(ustr);
-            int i;
-            for (i = 0; i < count; i++) {
-                Utf8String *utfs = utf8_create_c(arraylist_get_value(java_para, i));
-                Instance *jstr = jstring_create(utfs, runtime);
-                jarray_set_field(arr, i, (intptr_t) jstr);
-                utf8_destory(utfs);
-            }
-            push_ref(runtime->stack, arr);
-            instance_release_from_thread(arr, runtime);
+
 
             s64 start = currentTimeMillis();
 #if _JVM_DEBUG_LOG_LEVEL > 0
@@ -375,9 +384,6 @@ s32 call_method_para(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, ArrayL
     return ret;
 }
 
-s32 call_method(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, Runtime *p_runtime) {
-    return call_method_para(p_mainclass, p_methodname, p_methodtype, NULL, p_runtime);
-}
 
 s32 execute_method(MethodInfo *method, Runtime *runtime) {
     jthread_block_exit(runtime);

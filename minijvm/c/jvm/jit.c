@@ -88,7 +88,7 @@ static void print_stack(s64 a, s64 b, s64 c) {
     printf("[%d]====", size);
     s32 i, imax;
     s32 MAX = 10;
-    imax = size > MAX ? imax = MAX : size;
+    imax = size > MAX ? MAX : size;
     for (i = 0; i < imax; i++) {
         StackEntry *e = runtime->stack->sp - 1 - i;
         s64 v1 = e->lvalue;

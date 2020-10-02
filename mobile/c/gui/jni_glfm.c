@@ -269,7 +269,7 @@ void _callback_notify(GLFMDisplay *window, const c8* key, const c8* val) {
 }
 /* ==============================   jni glfm =================================*/
 
-int org_mini_glfm_Glfm_glfmSetUserData(Runtime *runtime, JClass *clazz) {
+int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     GLFMDisplay *window = (__refer) (intptr_t)
@@ -1267,7 +1267,7 @@ static java_native_method method_glfm_table[] = {
     {"org/mini/nanovg/Gutil", "mat4x4_perspective",         "([FFFFF)[F",                       org_mini_glfm_utils_Gutil_mat4x4_perspective},
     {"org/mini/nanovg/Gutil", "mat4x4_look_at",             "([F[F[F[F)[F",                     org_mini_glfm_utils_Gutil_mat4x4_look_at},
         {"org/mini/nanovg/Gutil", "mat4x4_trans_rotate_scale",  "([F[F[F[F)[F",                     org_mini_glfw_utils_Gutil_mat4x4_trans_rotate_scale},
-    {"org/mini/glfm/Glfm",        "glfmSetCallBack",                 "(JLorg/mini/glfm/GlfmCallBack;)V", org_mini_glfm_Glfm_glfmSetUserData},
+    {"org/mini/glfm/Glfm",        "glfmSetCallBack",                 "(JLorg/mini/glfm/GlfmCallBack;)V", org_mini_glfm_Glfm_glfmSetCallBack},
         {"org/mini/glfm/Glfm",        "glfmSetDisplayConfig",            "(JIIIII)V",                        org_mini_glfm_Glfm_glfmSetDisplayConfig},
         {"org/mini/glfm/Glfm",        "glfmSetUserInterfaceOrientation", "(JI)V",                            org_mini_glfm_Glfm_glfmSetUserInterfaceOrientation},
         {"org/mini/glfm/Glfm",        "glfmGetUserInterfaceOrientation", "(J)I",                             org_mini_glfm_Glfm_glfmGetUserInterfaceOrientation},

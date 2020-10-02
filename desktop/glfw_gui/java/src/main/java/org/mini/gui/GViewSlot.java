@@ -88,6 +88,11 @@ public class GViewSlot extends GViewPort {
         remove(index);
     }
 
+    public void clear() {
+        super.clear();
+        props.clear();
+    }
+
     private SlotProp getProp(GObject go) {
         int slot = getElementsImpl().indexOf(go);
         return props.get(slot);

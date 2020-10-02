@@ -90,9 +90,9 @@ public class XTextInput
                 ((GTextField) textInput).setPasswordMode(password);
             }
             initGui();
+            textInput.setEnable(enable);
             textInput.setStateChangeListener(this);
             textInput.setEditable(edit);
-            textInput.setEnable(enable);
         } else {
             textInput.setLocation(x, y);
             textInput.setSize(width, height);

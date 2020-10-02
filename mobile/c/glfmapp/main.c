@@ -37,7 +37,7 @@ void glfmMain(GLFMDisplay *display) {
     Utf8String *classpath = utf8_create();
     utf8_append_c(classpath, glfmGetResRoot());
     utf8_append_c(classpath, "/resfiles/glfm_gui.jar;");
-    //jvm_printf("%s\n",utf8_cstr(classpath));
+    jvm_printf("%s\n",utf8_cstr(classpath));
 
     jvm_init(utf8_cstr(bootclasspath), utf8_cstr(classpath), JNI_OnLoad_mini);
     sys_properties_set_c("glfm.res.root",glfmGetResRoot());
@@ -50,7 +50,7 @@ void glfmMain(GLFMDisplay *display) {
     c8* p_classname="org/mini/glfm/GlfmCallBackImpl";
     c8* p_methodname="glinit";
     c8* p_methodtype="(J)V";
-    push_long(runtime->stack,(intptr_t)display);
+    push_long(runtime->stack,(s64)(intptr_t)display);
     call_method(p_classname,p_methodname,p_methodtype,runtime);
 }
 

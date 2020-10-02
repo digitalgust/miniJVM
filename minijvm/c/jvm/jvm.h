@@ -1479,9 +1479,7 @@ void print_exception(Runtime *runtime);
 
 s32 execute_jvm(c8 *p_bootclasspath, c8 *p_classpath, c8 *mainclass, ArrayList *java_para);
 
-s32 call_method_para(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, ArrayList *java_para, Runtime *p_runtime);
-
-s32 call_method(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, Runtime *runtime);
+s32 call_method(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, Runtime *p_runtime);
 
 s32 execute_method_impl(MethodInfo *method, Runtime *runtime);
 
