@@ -3421,7 +3421,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_jsr_w: {
 
                             s32 offset = *((s32 *) (ip + 1));
-                            (sp++)->lvalue = (s64) (__refer) (ip + 3);
+                            (sp++)->lvalue = (s64) (intptr_t) (ip + 3);
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("jsr_w: %d\n", offset);
