@@ -41,7 +41,6 @@ public class GForm extends GPanel {
     protected GSizeChangeListener sizeChangeListener;
 
     public GForm() {
-        this.title = title;
         callback = GCallBack.getInstance();
 
         display = callback.getDisplay();

@@ -139,6 +139,7 @@ UI layout xml file MyForm.xml
 ```
 <form name="FORM_MAIN" w="100%" h="100%">
     <script>
+        <![CDATA[
         sub change()
             red=mod(random(),255)
             green=mod(random(),255)
@@ -146,11 +147,12 @@ UI layout xml file MyForm.xml
             setColor("LAB_HELP",red,green,blue,255)
             setText("LAB_HELP","Any a test")
         ret
+        ]]>
     </script>
 
-    <frame name="FRAME_TEST" w="80%" h="400" align="top,hcenter" title="WINDOW">
-        <label name="LAB_HELP" w="100%">Help text:</label>
-        <input w="100%" h="300" multiline="1"><![CDATA[
+    <frame name="FRAME_TEST" w="80%" h="500" align="top,hcenter" title="WINDOW">
+        <label name="LAB_HELP" w="100%" h="30" align="hcenter,vcenter">Help text:</label>
+        <input w="100%" h="395" multiline="1" edit="0"><![CDATA[
             This app is an example of mini_jvm, Threre are a menu and a frame .
             Touch the 'Exit to AppManager' , you will enter the AppManager, AppManager manage all app, it can upload ,download , delete app.
             1. DOWNLOAD : Put your jar in a website , then input the url of jar in AppManager, Touch 'Download' ,it would download the jar ,then update the app list.
@@ -162,8 +164,8 @@ UI layout xml file MyForm.xml
             ]]>
         </input>
         <br/>
-        <button name="BT_SCRIPT" h="30" onclick="change()">{Change}</button>
-        <button name="BT_CANCEL" h="30">{Cancel}</button>
+        <button name="BT_SCRIPT" h="40" onclick="change()">{Change}</button>
+        <button name="BT_CANCEL" h="40">{Cancel}</button>
         <br/>
     </frame>
 
@@ -252,10 +254,10 @@ public class MyApp extends GApplication {
     }
 }
 
-
-
-
 ```
+<div align=center><img width="224" height="398" src="/screenshot/myapp.jpg"/>
+
+
 ##   Screen shot   :   
   * Windows mini_jvm gui    
   <div align=center><img width="433" height="336" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/win.png"/></div>

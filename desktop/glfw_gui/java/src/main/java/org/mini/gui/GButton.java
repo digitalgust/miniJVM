@@ -143,7 +143,7 @@ public class GButton extends GObject {
         nvgFontSize(vg, fontSize);
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        nvgFillColor(vg, nvgRGBA(0, 0, 0, 160));
+        nvgFillColor(vg, GToolkit.getStyle().getTextShadowColor());
         nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw * 0.25f, y + h * 0.5f + 1 + move, text_arr, 0, text_arr.length);
         nvgFillColor(vg, enable ? color : disabledColor);
         nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw * 0.25f, y + h * 0.5f + move, text_arr, 0, text_arr.length);

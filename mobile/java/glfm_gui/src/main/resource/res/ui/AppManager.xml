@@ -9,6 +9,11 @@
                         <li name="LI_CHS">简体中文</li>
                         <li name="LI_CHT">繁體中文</li>
                     </list>
+                    <br/>
+                    <list name="LIST_STYLE" w="100%">
+                        <li name="LI_BRIGHT" selected="1">{Bright appearance}</li>
+                        <li name="LI_DARK">{Dark appearance}</li>
+                    </list>
                     <label w="100%" h="30" align="left,vcenter">{Download app from website:}</label>
                     <input name="INPUT_URL" w="80%" h="30" hint="application jar url">http://bb.egls.cn:8080/down/BiBiX.jar</input>
                     <button name="BT_DOWN" w="20%" h="30">{Download}</button>
@@ -33,9 +38,13 @@
             <img name="APP_ICON_ITEM" pic="/res/appmgr.png" w="128" h="128"></img>
             <br/>
             <input name="APP_DESC_LABEL" multiline="1" edit="0" w="100%" h="150"></input>
+            <br/>
             <button name="APP_RUN_BTN" w="100%" h="35">{Run}</button>
+            <br/>
             <button name="APP_SET_BOOT_BTN" w="100%" h="35">{Set as boot app}</button>
+            <br/>
             <button name="APP_UPGRADE_BTN" w="100%" h="35">{upgrade}</button>
+            <br/>
             <button name="APP_DELETE_BTN" w="100%" h="35" bgcolor="801010ff">{Delete}</button>
         </viewport>
     </panel>

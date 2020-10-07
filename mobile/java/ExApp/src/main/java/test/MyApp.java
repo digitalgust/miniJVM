@@ -29,7 +29,7 @@ public class MyApp extends GApplication {
         UITemplate uit = new UITemplate(xmlStr);
         UITemplate.getVarMap().put("Cancel", "CANCEL"); //replace keywork in xml
         UITemplate.getVarMap().put("Change", "Change");
-        UITemplate.getVarMap().put("Test", "test");
+        UITemplate.getVarMap().put("Test", "Test");
         UITemplate.getVarMap().put("Exit", "QUIT");
         XContainer xc = (XContainer) XContainer.parseXml(uit.parse());
         int screenW = GCallBack.getInstance().getDeviceWidth();

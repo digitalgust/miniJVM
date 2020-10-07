@@ -5,41 +5,70 @@
  */
 package org.mini.gui;
 
+import static org.mini.gui.GToolkit.nvgRGBA;
+import static org.mini.nanovg.Nanovg.*;
+import static org.mini.nanovg.Nanovg.nvgFill;
+
 /**
  *
  * @author gust
  */
-public interface GStyle {
+public abstract class GStyle {
 
-    float[] getBackgroundColor();
+    abstract float[] getBackgroundColor();
 
-    float[] getPopBackgroundColor();
+    abstract float[] getPopBackgroundColor();
 
-    float getTextFontSize();
+    abstract float getTextFontSize();
 
-    float[] getDisabledTextFontColor();
+    abstract float[] getDisabledTextFontColor();
 
-    float getTitleFontSize();
+    abstract float getTitleFontSize();
 
-    float getIconFontSize();
+    abstract float getIconFontSize();
 
-    float[] getTextFontColor();
+    abstract float[] getTextFontColor();
 
-    float[] getHintFontColor();
+    abstract float[] getTextShadowColor();
 
-    float[] getSelectedColor();
+    abstract float[] getHintFontColor();
 
-    float[] getUnselectedColor();
+    abstract float[] getSelectedColor();
 
-    float[] getEditBackground();
+    abstract float[] getUnselectedColor();
 
-    float[] getFrameBackground();
+    abstract float[] getEditBackground();
 
-    float[] getFrameTitleColor();
+    abstract float[] getFrameBackground();
 
-    float getIconFontWidth();
+    abstract float[] getFrameTitleColor();
 
-    void drawEditBoxBase(long vg, float x, float y, float w, float h);
+    abstract float getIconFontWidth();
 
-    void drawFieldBoxBase(long vg, float x, float y, float w, float h);
+
+    public void drawEditBoxBase(long vg, float x, float y, float w, float h) {
+        byte[] bg;
+        // Edit
+        bg = nvgBoxGradient(vg, x, y, w, h, 3, 4, getEditBackground(), nvgRGBA(32, 32, 32, 192));
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, 4 - 1);
+        nvgFillPaint(vg, bg);
+        nvgFill(vg);
+
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, 4 - 0.5f);
+        nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 16));
+        nvgStroke(vg);
+    }
+
+    public void drawFieldBoxBase(long vg, float x, float y, float w, float h) {
+        byte[] bg;
+        float cornerRadius = h / 2 - 1;
+        bg = nvgBoxGradient(vg, x, y + 1.5f, w, h, h / 2, 5, nvgRGBA(0, 0, 0, 16), nvgRGBA(0, 0, 0, 92));
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, x, y, w, h, cornerRadius);
+        nvgFillPaint(vg, bg);
+        nvgFill(vg);
+    }
+
 }

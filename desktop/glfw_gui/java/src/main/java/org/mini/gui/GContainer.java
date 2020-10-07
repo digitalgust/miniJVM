@@ -118,7 +118,7 @@ abstract public class GContainer extends GObject {
         if (nko != null) {
             synchronized (elements) {
                 if (focus == nko) {
-                setFocus(null);
+                    setFocus(null);
                 }
                 onRemove(nko);
                 nko.setParent(null);
@@ -249,7 +249,7 @@ abstract public class GContainer extends GObject {
             synchronized (elements) {
 //                //更新所有UI组件
 
-                if (focus != null && focus instanceof GFrame) {
+                if (focus != null && (focus instanceof GFrame || focus instanceof GList)) {
                     elements.remove(focus);
                     elements.add(focus);
                 }

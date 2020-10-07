@@ -6,7 +6,6 @@
 package org.mini.apploader;
 
 import org.mini.gui.*;
-import org.mini.gui.event.*;
 import org.mini.layout.UITemplate;
 import org.mini.layout.XContainer;
 import org.mini.layout.XEventHandler;
@@ -53,6 +52,8 @@ public class AppManager extends GApplication {
     static final String STR_SUCCESS = "Success";
     static final String STR_FAIL = "Fail";
     static final String STR_OPEN_APP_FAIL = "Open app failed";
+    static final String STR_BRIGHT_STYLE = "Bright appearance";
+    static final String STR_DARK_STYLE = "Dark appearance";
 
     static {
         GLanguage.addString(STR_EXIT, new String[]{STR_EXIT, "退出", "退出"});
@@ -79,6 +80,8 @@ public class AppManager extends GApplication {
         GLanguage.addString(STR_SUCCESS, new String[]{STR_SUCCESS, "成功", "成功"});
         GLanguage.addString(STR_FAIL, new String[]{STR_FAIL, "失败", "失敗"});
         GLanguage.addString(STR_OPEN_APP_FAIL, new String[]{STR_OPEN_APP_FAIL, "打开应用失败", "打開應用失敗"});
+        GLanguage.addString(STR_BRIGHT_STYLE, new String[]{STR_BRIGHT_STYLE, "浅色外观", "淺色外觀"});
+        GLanguage.addString(STR_DARK_STYLE, new String[]{STR_DARK_STYLE, "深色外观", "深色外觀"});
     }
 
     static AppManager instance = new AppManager();
@@ -134,42 +137,39 @@ public class AppManager extends GApplication {
                 GForm.hideKeyboard();
                 GLanguage.setCurLang(AppLoader.getDefaultLang());
 
-                setPickListener(new GPhotoPickedListener() {
-                    @Override
-                    public void onPicked(int uid, String url, byte[] data) {
-                        if (data == null && url != null) {
-                            File f = new File(url);
-                            if (f.exists()) {
-                                try {
-                                    FileInputStream fis = new FileInputStream(f);
-                                    data = new byte[(int) f.length()];
-                                    fis.read(data);
-                                    fis.close();
-                                } catch (IOException ex) {
-                                    ex.printStackTrace();
-                                }
+                setPickListener((uid, url, data) -> {
+                    if (data == null && url != null) {
+                        File f = new File(url);
+                        if (f.exists()) {
+                            try {
+                                FileInputStream fis = new FileInputStream(f);
+                                data = new byte[(int) f.length()];
+                                fis.read(data);
+                                fis.close();
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
                             }
                         }
-                        switch (uid) {
+                    }
+                    switch (uid) {
 
-                            case PICK_PHOTO:
-                            case PICK_CAMERA: {
+                        case PICK_PHOTO:
+                        case PICK_CAMERA: {
 
-                                if (data != null) {
+                            if (data != null) {
 
-                                }
-                                break;
                             }
-                            case PICK_QR: {
+                            break;
+                        }
+                        case PICK_QR: {
 
-                                break;
-                            }
-                            case PICK_HEAD: {
-                                if (data != null) {
+                            break;
+                        }
+                        case PICK_HEAD: {
+                            if (data != null) {
 
-                                }
-                                break;
                             }
+                            break;
                         }
                     }
                 });
@@ -203,13 +203,14 @@ public class AppManager extends GApplication {
         mangePanel = (GPanel) mainSlot.findByName("PAN_MGR");
         GList langList = (GList) mainSlot.findByName("LIST_LANG");
         langList.setSelectedIndex(AppLoader.getDefaultLang());
+        GList styleList = (GList) mainSlot.findByName("LIST_STYLE");
+        if (GToolkit.getStyle() instanceof GStyleBright) {
+            styleList.setSelectedIndex(0);
+        } else {
+            styleList.setSelectedIndex(1);
+        }
 
-        mgrForm.setSizeChangeListener(new GSizeChangeListener() {
-            @Override
-            public void onSizeChange(int width, int height) {
-                container.reSize(width, height);
-            }
-        });
+        mgrForm.setSizeChangeListener((width, height) -> container.reSize(width, height));
         reloadAppList();
         return this.mainSlot;
     }
@@ -243,15 +244,12 @@ public class AppManager extends GApplication {
                     GForm.addMessage(GLanguage.getString(STR_SERVER_STOPED));
                 } else {
                     webServer = new MiniHttpServer();
-                    webServer.setUploadCompletedHandle(new MiniHttpServer.UploadCompletedHandle() {
-                        @Override
-                        public void onCompleted(List<MiniHttpServer.UploadFile> files) {
-                            for (MiniHttpServer.UploadFile f : files) {
-                                AppLoader.addApp(f.filename, f.data);
-                                GForm.addMessage(GLanguage.getString(STR_UPLOAD_FILE) + " " + f.filename);
-                            }
-                            reloadAppList();
+                    webServer.setUploadCompletedHandle(files -> {
+                        for (MiniHttpServer.UploadFile f : files) {
+                            AppLoader.addApp(f.filename, f.data);
+                            GForm.addMessage(GLanguage.getString(STR_UPLOAD_FILE) + " " + f.filename);
                         }
+                        reloadAppList();
                     });
                     webServer.start();
                     uploadbtn.setText(GLanguage.getString(STR_STOP));
@@ -302,6 +300,14 @@ public class AppManager extends GApplication {
                 GLanguage.setCurLang(GLanguage.ID_CHT);
                 AppLoader.setDefaultLang(GLanguage.ID_CHT);
                 AppManager.getInstance().active();
+            } else if ("LI_BRIGHT".equals(name)) {
+                GToolkit.setStyle(new GStyleBright());
+                instance = new AppManager();
+                active();
+            } else if ("LI_DARK".equals(name)) {
+                GToolkit.setStyle(new GStyleDark());
+                instance = new AppManager();
+                active();
             }
         }
 
@@ -320,24 +326,21 @@ public class AppManager extends GApplication {
     }
 
     MiniHttpClient.DownloadCompletedHandle getDownloadCallback() {
-        return new MiniHttpClient.DownloadCompletedHandle() {
-            @Override
-            public void onCompleted(String url, byte[] data) {
-                //System.out.println("download success " + url + " ,size: " + data.length);
-                GForm.addMessage((data == null ? GLanguage.getString(STR_FAIL) : GLanguage.getString(STR_SUCCESS)) + " " + GLanguage.getString(STR_DOWNLOAD) + " " + url);
-                String jarName = null;
-                if (url.lastIndexOf('/') > 0) {
-                    jarName = url.substring(url.lastIndexOf('/') + 1);
-                    if (jarName.indexOf('?') > 0) {
-                        jarName = jarName.substring(0, jarName.indexOf('?'));
-                    }
+        return (url, data) -> {
+            //System.out.println("download success " + url + " ,size: " + data.length);
+            GForm.addMessage((data == null ? GLanguage.getString(STR_FAIL) : GLanguage.getString(STR_SUCCESS)) + " " + GLanguage.getString(STR_DOWNLOAD) + " " + url);
+            String jarName = null;
+            if (url.lastIndexOf('/') > 0) {
+                jarName = url.substring(url.lastIndexOf('/') + 1);
+                if (jarName.indexOf('?') > 0) {
+                    jarName = jarName.substring(0, jarName.indexOf('?'));
                 }
-                if (jarName != null && data != null) {
-                    AppLoader.addApp(jarName, data);
-                }
-                reloadAppList();
-                updateContentViewInfo(jarName);
             }
+            if (jarName != null && data != null) {
+                AppLoader.addApp(jarName, data);
+            }
+            reloadAppList();
+            updateContentViewInfo(jarName);
         };
     }
 
@@ -366,13 +369,10 @@ public class AppManager extends GApplication {
                         }
                     };
                     appList.add(item);
-                    item.setActionListener(new GActionListener() {
-                        @Override
-                        public void action(GObject gobj) {
-                            curSelectedItem = (GListItem) gobj;
-                            updateContentViewInfo(appName);
-                            mainPanelShowRight();
-                        }
+                    item.setActionListener(gobj -> {
+                        curSelectedItem = (GListItem) gobj;
+                        updateContentViewInfo(appName);
+                        mainPanelShowRight();
                     });
                 }
             }

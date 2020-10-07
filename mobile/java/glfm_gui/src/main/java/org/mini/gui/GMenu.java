@@ -116,7 +116,7 @@ public class GMenu extends GPanel {
         //background
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x + 1f, y + 1f, w - 2, h - 2, cornerRadius - 0.5f);
-        nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+        nvgFillColor(vg, GToolkit.getStyle().getPopBackgroundColor());
         nvgFill(vg);
 
         //渐变

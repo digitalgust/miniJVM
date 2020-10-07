@@ -182,9 +182,10 @@ public class AppLoader {
                 }
                 if (c == null) {
                     StandalongGuiAppClassLoader sgacl = new StandalongGuiAppClassLoader(getAppJarPath(jarName), ClassLoader.getSystemClassLoader());
-                    Thread.currentThread().setContextClassLoader(sgacl);
                     c = sgacl.loadClass(className);
                 }
+                ClassLoader cloader = c.getClassLoader();
+                Thread.currentThread().setContextClassLoader(cloader);
 
                 return c;
             }

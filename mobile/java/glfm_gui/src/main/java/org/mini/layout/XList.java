@@ -26,6 +26,7 @@ public class XList extends XObject implements GStateChangeListener {
         String cmd;
         String attachment;
         String onClick;
+        boolean selected;
 
         @Override
         public void action(GObject gobj) {
@@ -97,8 +98,10 @@ public class XList extends XObject implements GStateChangeListener {
                     item.cmd = parser.getAttributeValue(null, "cmd");
                     item.onClick = parser.getAttributeValue(null, "onclick");
                     item.attachment = parser.getAttributeValue(null, "attachment");
-                    String tmp = parser.nextText();
-                    item.text = tmp == null ? "" : tmp;
+                    String tmp1 = parser.getAttributeValue(null, "selected");
+                    item.selected = ("1".equals(tmp1)) ? true : false;
+                    String tmp2 = parser.nextText();
+                    item.text = tmp2 == null ? "" : tmp2;
                     items.add(item);
                 }
                 toEndTag(parser, XList.ListItem.XML_NAME);
@@ -132,8 +135,10 @@ public class XList extends XObject implements GStateChangeListener {
             list = new GList(x, y, width, height);
             initGui();
             list.setShowMode(multiLine ? GList.MODE_MULTI_SHOW : GList.MODE_SINGLE_SHOW);
+            list.setSelectMode(multiSelect ? GList.MODE_MULTI_SELECT : GList.MODE_SINGLE_SELECT);
             list.setItemHeight(itemheight);
             list.setStateChangeListener(this);
+            int selected = -1, selectCount = 0;
             for (int i = 0; i < items.size(); i++) {
                 ListItem item = (ListItem) items.elementAt(i);
                 GImage img = null;
@@ -146,8 +151,26 @@ public class XList extends XObject implements GStateChangeListener {
                 gli.setActionListener(item);
                 gli.setEnable(enable);
                 list.add(gli);
+                if (item.selected) {
+                    selectCount++;
+                    selected = i;
+                }
             }
             list.setEnable(enable);
+            if (multiSelect && selectCount > 0) {
+                int[] seleArr = new int[selectCount];
+                int tmp = 0;
+                for (int i = 0; i < items.size(); i++) {
+                    ListItem item = (ListItem) items.elementAt(i);
+                    if (item.selected) {
+                        seleArr[tmp] = i;
+                        tmp++;
+                    }
+                }
+                list.setSelectedIndices(seleArr);
+            } else {
+                list.setSelectedIndex(selected);
+            }
         } else {
             list.setLocation(x, y);
             list.setSize(width, height);

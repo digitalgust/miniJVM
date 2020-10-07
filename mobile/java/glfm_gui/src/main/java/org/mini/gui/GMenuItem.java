@@ -133,7 +133,7 @@ public class GMenuItem extends GObject {
         if (img != null) {
             float alpha = 1.f;
             if (!isSelected()) {
-                alpha = 0.5f;
+                alpha = 0.9f;
             }
             imgPaint = nvgImagePattern(vg, img_x, img_y, img_w, img_h, 0.0f / 180.0f * (float) Math.PI, img.getTexture(vg), alpha);
             nvgBeginPath(vg);
@@ -144,7 +144,7 @@ public class GMenuItem extends GObject {
         //画文字
         if (text != null) {
             byte[] b = toUtf8(text);
-            nvgFillColor(vg, nvgRGBA(0, 0, 0, 96));
+            nvgFillColor(vg, GToolkit.getStyle().getTextShadowColor());
             Nanovg.nvgTextJni(vg, tag_x + 1, tag_y + 1, b, 0, b.length);
             nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
             Nanovg.nvgTextJni(vg, tag_x, tag_y, b, 0, b.length);

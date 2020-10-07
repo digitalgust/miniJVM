@@ -154,7 +154,7 @@ public class GToolkit {
 
     public static GStyle getStyle() {
         if (defaultStyle == null) {
-            defaultStyle = new GDefaultStyle();
+            defaultStyle = new GStyleBright(); //new GStyleBlack();//
         }
         return defaultStyle;
     }

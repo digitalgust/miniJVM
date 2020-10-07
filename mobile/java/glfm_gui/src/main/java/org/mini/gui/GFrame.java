@@ -232,7 +232,7 @@ public class GFrame extends GContainer {
 
         if (title_arr != null) {
             nvgFontBlur(vg, 2);
-            nvgFillColor(vg, nvgRGBA(0, 0, 0, 128));
+            nvgFillColor(vg, GToolkit.getStyle().getTextShadowColor());
             nvgTextJni(vg, x + w / 2, y + 16 + 1, title_arr, 0, title_arr.length);
 
             nvgFontBlur(vg, 0);
