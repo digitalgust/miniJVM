@@ -38,7 +38,7 @@ public class GStyleDark extends GStyle {
     float[] textShadowColor = nvgRGBA(0, 0, 0, 0xb0);
 
     @Override
-    float[] getTextShadowColor() {
+    public float[] getTextShadowColor() {
         return textShadowColor;
     }
 

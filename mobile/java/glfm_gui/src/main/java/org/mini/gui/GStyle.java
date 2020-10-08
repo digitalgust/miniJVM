@@ -15,35 +15,35 @@ import static org.mini.nanovg.Nanovg.nvgFill;
  */
 public abstract class GStyle {
 
-    abstract float[] getBackgroundColor();
+    public abstract float[] getBackgroundColor();
 
-    abstract float[] getPopBackgroundColor();
+    public abstract float[] getPopBackgroundColor();
 
-    abstract float getTextFontSize();
+    public abstract float getTextFontSize();
 
-    abstract float[] getDisabledTextFontColor();
+    public abstract float[] getDisabledTextFontColor();
 
-    abstract float getTitleFontSize();
+    public abstract float getTitleFontSize();
 
-    abstract float getIconFontSize();
+    public abstract float getIconFontSize();
 
-    abstract float[] getTextFontColor();
+    public abstract float[] getTextFontColor();
 
-    abstract float[] getTextShadowColor();
+    public abstract float[] getTextShadowColor();
 
-    abstract float[] getHintFontColor();
+    public abstract float[] getHintFontColor();
 
-    abstract float[] getSelectedColor();
+    public abstract float[] getSelectedColor();
 
-    abstract float[] getUnselectedColor();
+    public abstract float[] getUnselectedColor();
 
-    abstract float[] getEditBackground();
+    public abstract float[] getEditBackground();
 
-    abstract float[] getFrameBackground();
+    public abstract float[] getFrameBackground();
 
-    abstract float[] getFrameTitleColor();
+    public abstract float[] getFrameTitleColor();
 
-    abstract float getIconFontWidth();
+    public abstract float getIconFontWidth();
 
 
     public void drawEditBoxBase(long vg, float x, float y, float w, float h) {
