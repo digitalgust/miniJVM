@@ -128,17 +128,41 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
     //计算不同种类变量长度
     s32 static_len = 0;
     s32 instance_len = 0;
-    for (i = 0; i < clazz->fieldPool.field_used; i++) {
-        s32 width = data_type_bytes[f[i].datatype_idx];
-        if (f[i].access_flags & ACC_STATIC) {//静态变量
-            f[i].offset = static_len;
+    s32 field_count = clazz->fieldPool.field_used;
+    s32 *mem_align_order = jvm_calloc(field_count * sizeof(s32));//fieldwidth order 8,4,2,1
+    s32 order_idx = 0;
+    s32 datawidth = 8;//
+    //memory align begin
+    //先排8字节成员,紧跟4字节成员,再跟2字节成员,最后排1字节成员
+    while (datawidth > 0) {//first align width=8B ,then width=4B, then width=2,then 1
+        for (i = 0; i < field_count; i++) {
+            s32 width = data_type_bytes[f[i].datatype_idx];
+            if (width == datawidth) {
+                mem_align_order[order_idx] = i;
+                order_idx++;
+            }
+        }
+        datawidth /= 2;
+    }
+    for (i = 0; i < field_count; i++) {
+        FieldInfo *fi = &f[mem_align_order[i]];
+        s32 width = data_type_bytes[fi->datatype_idx];
+        if (fi->access_flags & ACC_STATIC) {//静态变量
+            fi->offset = static_len;
             static_len += width;
         } else {//实例变量
-            f[i].offset = instance_len;
+            fi->offset = instance_len;
             instance_len += width;
         }
-        f[i]._this_class = clazz;
+        fi->_this_class = clazz;
     }
+
+    jvm_free(mem_align_order);
+    s32 align = 8;
+    static_len = static_len / align * align + ((static_len % align) > 0 ? align : 0); // 8 byte align
+    instance_len = instance_len / align * align + ((instance_len % align) > 0 ? align : 0); // 8 byte align
+    //memory align end
+
     //静态变量分配
     clazz->field_static_len = static_len;
     clazz->field_static = jvm_calloc(clazz->field_static_len);

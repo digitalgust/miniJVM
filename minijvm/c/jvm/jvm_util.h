@@ -62,6 +62,8 @@ int unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 totalSize);
 
 void swap_endian_little_big(u8 *ptr, s32 size);
 
+s32 instance_base_size();
+
 s32 getDataTypeIndex(c8 ch);
 
 c8 *getDataTypeFullName(c8 ch);

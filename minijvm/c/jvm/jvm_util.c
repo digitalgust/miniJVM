@@ -936,7 +936,7 @@ Instance *jarray_create_by_class(Runtime *runtime, s32 count, JClass *clazz) {
     if (count < 0)return NULL;
     s32 typeIdx = clazz->mb.arr_type_index;
     s32 width = data_type_bytes[typeIdx];
-    Instance *arr = jvm_calloc(sizeof(Instance) + (width * count));
+    Instance *arr = jvm_calloc(instance_base_size() + (width * count));
     arr->mb.type = MEM_TYPE_ARR;
     arr->mb.clazz = clazz;
     arr->mb.arr_type_index = typeIdx;
@@ -1060,13 +1060,21 @@ s64 jarray_get_field(Instance *arr, s32 index) {
 }
 
 //===============================    实例化对象  ==================================
+
+s32 instance_base_size() {
+    s32 ins_base = sizeof(Instance);
+    s32 align = 8;
+    ins_base = ins_base / align * align + ((ins_base % align) > 0 ? align : 0);
+    return ins_base;
+}
+
 Instance *instance_create(Runtime *runtime, JClass *clazz) {
 
-    Instance *ins = jvm_calloc(sizeof(Instance) + clazz->field_instance_len);
+    Instance *ins = jvm_calloc(instance_base_size() + clazz->field_instance_len);
     ins->mb.type = MEM_TYPE_INS;
     ins->mb.clazz = clazz;
 
-    ins->obj_fields = (c8 *) (&ins[1]);//jvm_calloc(clazz->field_instance_len);
+    ins->obj_fields = ((c8 *) (&ins[0])) + instance_base_size();//jvm_calloc(clazz->field_instance_len);
 //    jvm_printf("%s\n", utf8_cstr(clazz->name));
 //    if (utf8_equals_c(clazz->name, "java/lang/String")) {
 //        s32 debug = 1;
@@ -1155,9 +1163,8 @@ Instance *instance_copy(Runtime *runtime, Instance *src, s32 deep_copy) {
     } else if (src->mb.type == MEM_TYPE_ARR) {
         bodySize = src->arr_length * data_type_bytes[src->mb.arr_type_index];
     }
-    Instance *dst = jvm_malloc(sizeof(Instance) + bodySize);
-//    Instance *dst = jvm_malloc(sizeof(Instance));
-    memcpy(dst, src, sizeof(Instance));
+    Instance *dst = jvm_malloc(instance_base_size() + bodySize);
+    memcpy(dst, src, instance_base_size());
     dst->mb.thread_lock = NULL;
     dst->mb.garbage_reg = 0;
     dst->mb.garbage_mark = 0;
@@ -1165,8 +1172,7 @@ Instance *instance_copy(Runtime *runtime, Instance *src, s32 deep_copy) {
         JClass *clazz = src->mb.clazz;
         s32 fileds_len = clazz->field_instance_len;
         if (fileds_len) {
-            dst->obj_fields = (c8 *) dst + sizeof(Instance);//jvm_malloc(fileds_len);
-//            dst->obj_fields = jvm_malloc(fileds_len);
+            dst->obj_fields = (c8 *) dst + instance_base_size();//
             memcpy(dst->obj_fields, src->obj_fields, fileds_len);
             if (deep_copy) {
                 s32 i, len;
@@ -1190,7 +1196,7 @@ Instance *instance_copy(Runtime *runtime, Instance *src, s32 deep_copy) {
         }
     } else if (src->mb.type == MEM_TYPE_ARR) {
         s32 size = src->arr_length * data_type_bytes[src->mb.arr_type_index];
-        dst->arr_body = (c8 *) dst + sizeof(Instance);//jvm_malloc(fileds_len);
+        dst->arr_body = (c8 *) dst + instance_base_size();//
         if (isDataReferByIndex(src->mb.arr_type_index) && deep_copy) {
             s32 i;
             s64 val;

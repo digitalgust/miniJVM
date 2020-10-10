@@ -230,12 +230,12 @@ s32 _getMBSize(MemoryBlock *mb) {
     if (mb) {
         switch (mb->type) {
             case MEM_TYPE_INS: {
-                size = sizeof(Instance) + mb->clazz->field_instance_len;
+                size = instance_base_size() + mb->clazz->field_instance_len;
                 break;
             }
             case MEM_TYPE_ARR: {
                 Instance *arr = (Instance *) mb;
-                size = sizeof(Instance) + data_type_bytes[mb->arr_type_index] * arr->arr_length;
+                size = instance_base_size() + data_type_bytes[mb->arr_type_index] * arr->arr_length;
                 break;
             }
             case MEM_TYPE_CLASS: {
