@@ -49,6 +49,28 @@ public class XFrame
     }
 
 
+    protected void preAlignVertical() {
+        super.preAlignVertical();
+        if (y == XDef.NODEF) {
+            if (raw_yPercent != XDef.NODEF && parent != null && parent.getTrialViewH() != XDef.NODEF) {
+                y = raw_yPercent * parent.getTrialViewH() / 100;
+            } else {
+                y = 0;
+            }
+        }
+    }
+
+    protected void preAlignHorizontal() {
+        super.preAlignHorizontal();
+        if (x == XDef.NODEF) {
+            if (raw_xPercent != XDef.NODEF && parent != null && parent.getTrialViewH() != XDef.NODEF) {
+                x = raw_xPercent * parent.getTrialViewW() / 100;
+            } else {
+                x = 0;
+            }
+        }
+    }
+
     /**
      * how pix viewW less than width
      *
@@ -72,10 +94,15 @@ public class XFrame
             frame = new GFrame(title, x, y, width, height);
             initGui();
             frame.setClosable(closable);
+            frame.setFront(true);
         } else {
             frame.setLocation(x, y);
             frame.setSize(width, height);
         }
+    }
+
+    protected boolean isFloatUi() {
+        return true;
     }
 
     @Override

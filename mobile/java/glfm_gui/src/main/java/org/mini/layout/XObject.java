@@ -22,6 +22,10 @@ public abstract class XObject {
 
     protected boolean enable = true; //是否显示
 
+    protected boolean frontest = false; //始终最前端显示
+
+    protected boolean backest = false; //始终最后端显示
+
     protected String name = null; //组件名字
 
     protected String text = null; //文本
@@ -151,6 +155,10 @@ public abstract class XObject {
             color[1] = ((c >> 16) & 0xff) / 255f;
             color[2] = ((c >> 8) & 0xff) / 255f;
             color[3] = ((c >> 0) & 0xff) / 255f;
+        } else if (attName.equals("front")) {
+            frontest = "0".equals(attValue) ? false : true;
+        } else if (attName.equals("back")) {
+            backest = "0".equals(attValue) ? false : true;
         }
     }
 
@@ -162,6 +170,8 @@ public abstract class XObject {
             gui.setText(text);
             gui.setAttachment(attachment);
             gui.setXmlAgent(this);
+            gui.setFront(frontest);
+            gui.setBack(backest);
             if (color != null) {
                 gui.setColor(color);
             }
@@ -353,6 +363,14 @@ public abstract class XObject {
             }
             viewW = width - getDiff_viewW2Width();
         }
+    }
+
+    /**
+     * XFrame and XMenu is float gobject
+     * @return
+     */
+    protected boolean isFloatUi(){
+        return false;
     }
 
     public abstract GObject getGui();

@@ -104,7 +104,11 @@ public class GViewSlot extends GViewPort {
 
     public void setSlotMoveMode(GObject go, int moveMode) {
         int i = getElementsImpl().indexOf(go);
-        props.get(i).move = moveMode;
+        if (i >= 0) props.get(i).move = moveMode;
+    }
+
+    public void setSlotMoveMode(int slot, int moveMode) {
+        if (slot >= 0 && slot < props.size()) props.get(slot).move = moveMode;
     }
 
     public int getCurrentSlot() {

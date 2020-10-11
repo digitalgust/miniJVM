@@ -86,26 +86,29 @@ public class XMenu extends XObject implements GActionListener {
 
     protected void preAlignVertical() {
         super.preAlignVertical();
-        int parentTrialViewH = parent.getTrialViewH();
         if (y == XDef.NODEF) {
-            if (raw_yPercent != XDef.NODEF && parentTrialViewH != XDef.NODEF) {
-                y = raw_yPercent * parentTrialViewH / 100;
+            if (raw_yPercent != XDef.NODEF && parent != null && parent.getTrialViewH() != XDef.NODEF) {
+                y = raw_yPercent * parent.getTrialViewH() / 100;
             } else {
-                y = XDef.DEFAULT_COMPONENT_HEIGHT;
+                y = 0;
             }
         }
     }
 
     protected void preAlignHorizontal() {
         super.preAlignHorizontal();
-        int parentTrialViewW = parent.getTrialViewW();
         if (x == XDef.NODEF) {
-            if (raw_xPercent == XDef.NODEF) {
-                x = parentTrialViewW;
+            if (raw_xPercent != XDef.NODEF && parent != null && parent.getTrialViewH() != XDef.NODEF) {
+                x = raw_xPercent * parent.getTrialViewW() / 100;
             } else {
-                x = raw_xPercent * parentTrialViewW / 100;
+                x = 0;
             }
         }
+    }
+
+
+    protected boolean isFloatUi(){
+        return true;
     }
 
     protected int getDefaultWidth(int parentViewW) {

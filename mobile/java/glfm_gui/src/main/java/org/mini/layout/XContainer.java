@@ -21,7 +21,6 @@ public abstract class XContainer
         extends XObject implements GChildrenListener {
     static public final String SCRIPT_XML_NAME = "script"; // 脚本代码
 
-    protected Vector<XMenu> menus = new Vector();
     ArrayList<XObject> children = new ArrayList<>();
     ArrayList<XObject> hiddens = new ArrayList<>();
     public int align = GGraphics.LEFT | GGraphics.TOP;
@@ -114,19 +113,21 @@ public abstract class XContainer
         for (int i = 0; i < children.size(); i++) {
             XObject xo = children.get(i);
             xo.preAlignVertical();
-            curRowW = xo.width + dx;
-            if (curRowW > viewW || xo instanceof XBr) {
-                dy += curRowH;
-                dx = 0;
-                curRowH = 0;
+            if (!xo.isFloatUi()) {//  float ui need not layout in it's parent
+                curRowW = xo.width + dx;
+                if (curRowW > viewW || xo instanceof XBr) {
+                    dy += curRowH;
+                    dx = 0;
+                    curRowH = 0;
 
-            }
-            xo.x = dx;
-            xo.y = dy;
-            dx += xo.width;
-            if (curRowH < xo.height) {
-                curRowH = xo.height;
-                totalH = dy + curRowH;
+                }
+                xo.x = dx;
+                xo.y = dy;
+                dx += xo.width;
+                if (curRowH < xo.height) {
+                    curRowH = xo.height;
+                    totalH = dy + curRowH;
+                }
             }
             xo.createGui();
 
@@ -298,15 +299,6 @@ public abstract class XContainer
         viewH = height - getDiff_viewW2Width();
     }
 
-    protected void alignMenus() {
-        for (XMenu menu : menus) {
-            menu.preAlignHorizontal();
-            menu.preAlignVertical();
-            menu.createGui();
-            GContainer gc = (GContainer) getGui();
-            gc.add(menu.getGui());
-        }
-    }
 
     public void build(int guiRootW, int guiRootH, XEventHandler eventHandler) {
 
@@ -322,7 +314,6 @@ public abstract class XContainer
         preAlignVertical();
 
         align();
-        alignMenus();
         addListenerToContainer();
     }
 
@@ -338,7 +329,6 @@ public abstract class XContainer
         preAlignVertical();
 
         align();
-        alignMenus();
         addListenerToContainer();
         x = tx;
         y = ty;
@@ -351,10 +341,6 @@ public abstract class XContainer
         for (int i = 0; i < children.size(); i++) {
             XObject xo = children.get(i);
             xo.resetBoundle();
-        }
-
-        for (XMenu menu : menus) {
-            menu.resetBoundle();
         }
     }
 
@@ -436,7 +422,7 @@ public abstract class XContainer
         } else if (tagName.equals(XMenu.XML_NAME)) { //menu
             XMenu xmenu = new XMenu(parent);
             xmenu.parse(parser);
-            parent.menus.add(xmenu);
+            return (xmenu);
         } else if (tagName.equals(XPanel.XML_NAME)) { //panel
             XPanel panel = new XPanel(parent);
             panel.parse(parser);

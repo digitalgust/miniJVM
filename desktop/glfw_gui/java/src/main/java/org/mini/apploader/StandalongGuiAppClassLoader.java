@@ -18,7 +18,7 @@ public class StandalongGuiAppClassLoader extends ClassLoader {
     protected Class<?> findClass(String name) throws ClassNotFoundException {
 
         // 加载D盘根目录下指定类名的class
-        String classname = name.replace('.', File.separatorChar) + ".class";
+        String classname = name.replace('.', '/') + ".class";
         byte[] classData = Launcher.getFileData(classname, jarPath);
         if (classData == null) {
             throw new ClassNotFoundException();
