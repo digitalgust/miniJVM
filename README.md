@@ -255,7 +255,7 @@ public class MyApp extends GApplication {
 }
 
 ```
-<div align=center><img width="224" height="398" src="/screenshot/myapp.jpg"/>
+<div align=center><img width="224" height="398" src="/screenshot/myapp.jpg"/></div>
 
 
 ##   Screen shot   :   
