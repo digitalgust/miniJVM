@@ -32,12 +32,12 @@ Runtime *getRuntimeCurThread(JniEnv *env) {
         return NULL;
     }
     thrd_t t = env->thrd_current();
-    Runtime *runtime = env->pairlist_get(refers.runtime_list, t);
+    Runtime *runtime = env->pairlist_get(refers.runtime_list, (__refer)(intptr_t)t);
     if (!runtime) {
         runtime = env->runtime_create(NULL);
         env->thread_boundle(runtime);
         env->jthread_set_daemon_value(runtime->threadInfo->jthread, runtime, 1);
-        env->pairlist_put(refers.runtime_list, t, runtime);
+        env->pairlist_put(refers.runtime_list, (__refer)(intptr_t)t, runtime);
     }
 
     return env->getLastSon(runtime);//
