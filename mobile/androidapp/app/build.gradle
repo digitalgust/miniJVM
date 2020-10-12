@@ -1,6 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+        config {
+            keyAlias 'key0'
+            keyPassword '123456'
+            storeFile file('D:/SOURCE/mini_jvm/mobile/androidapp/minijvm_key.jks')
+            storePassword '123456'
+        }
+    }
     compileSdkVersion 26
     defaultConfig {
         applicationId "org.minijvm.activity"
@@ -26,6 +34,10 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.config
+        }
+        debug {
+            signingConfig signingConfigs.config
         }
     }
     externalNativeBuild {
@@ -39,7 +51,7 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:26.1.0'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
