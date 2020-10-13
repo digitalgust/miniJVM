@@ -169,16 +169,26 @@ abstract public class GContainer extends GObject {
         return null;
     }
 
+    /**
+     * find uiobject by x,y , if the pos is menu return immediate, no menu there then return other type uiobject
+     * @param x
+     * @param y
+     * @return
+     */
     public GObject findByXY(float x, float y) {
+        GObject found = null, menu = null;
         synchronized (elements) {
             for (int i = elements.size() - 1; i >= 0; i--) {
                 GObject nko = elements.get(i);
                 if (nko.isInArea(x, y)) {
-                    return nko;
+                    found = nko;
+                    if (found instanceof GMenu) {
+                        return nko;
+                    }
                 }
             }
         }
-        return null;
+        return found;
     }
 
     /**
