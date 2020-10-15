@@ -1,6 +1,7 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
+import org.mini.glfw.Glfw;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -209,7 +210,11 @@ public class GViewSlot extends GViewPort {
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         int phase = pressed ? Glfm.GLFMTouchPhaseBegan : Glfm.GLFMTouchPhaseEnded;
-        touchEvent(0, phase, x, y);
+        if (button == Glfw.GLFW_MOUSE_BUTTON_1) {
+            touchEvent(0, phase, x, y);
+        }
+
+        super.mouseButtonEvent(button, pressed, x, y);
     }
 
     public void touchEvent(int touchid, int phase, int x, int y) {

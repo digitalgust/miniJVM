@@ -342,12 +342,12 @@ abstract public class GContainer extends GObject {
     }
 
     @Override
-    public void keyEvent(int key, int scanCode, int action, int mods) {
+    public void keyEventGlfw(int key, int scanCode, int action, int mods) {
         if (!isEnable()) {
             return;
         }
         if (focus != null) {
-            focus.keyEvent(key, scanCode, action, mods);
+            focus.keyEventGlfw(key, scanCode, action, mods);
         }
     }
 
@@ -455,12 +455,12 @@ abstract public class GContainer extends GObject {
 
     ///==========================
     @Override
-    public void keyEvent(int key, int action, int mods) {
+    public void keyEventGlfm(int key, int action, int mods) {
         if (!isEnable()) {
             return;
         }
         if (focus != null) {
-            focus.keyEvent(key, action, mods);
+            focus.keyEventGlfm(key, action, mods);
         }
     }
 

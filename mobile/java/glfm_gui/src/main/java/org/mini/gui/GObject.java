@@ -114,7 +114,7 @@ abstract public class GObject {
         return true;
     }
 
-    public void keyEvent(int key, int scanCode, int action, int mods) {
+    public void keyEventGlfw(int key, int scanCode, int action, int mods) {
     }
 
     public void characterEvent(char character) {
@@ -139,7 +139,7 @@ abstract public class GObject {
     public void longTouchedEvent(int x, int y) {
     }
 
-    public void keyEvent(int key, int action, int mods) {
+    public void keyEventGlfm(int key, int action, int mods) {
     }
 
     public void characterEvent(String str, int modifiers) {

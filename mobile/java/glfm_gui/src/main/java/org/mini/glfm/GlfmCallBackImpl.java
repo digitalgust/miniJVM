@@ -198,9 +198,9 @@ public class GlfmCallBackImpl extends GCallBack {
         GObject focus = gform.getFocus();
         //System.out.println("keyCode  :" + keyCode + "   action=" + action + "   modifiers=" + modifiers);
         if (focus != null) {
-            focus.keyEvent(keyCode, action, modifiers);
+            focus.keyEventGlfm(keyCode, action, modifiers);
         } else {
-            gform.keyEvent(keyCode, action, modifiers);
+            gform.keyEventGlfm(keyCode, action, modifiers);
         }
         gform.flush();
         return true;

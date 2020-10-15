@@ -35,6 +35,7 @@ public class GlfwCallBackImpl extends GCallBack {
 
     public int mouseX, mouseY, button;
     long mouseLastPressed;
+    int clickCount = 0;
     int CLICK_PERIOD = 200;
 
     boolean drag;
@@ -205,7 +206,7 @@ public class GlfwCallBackImpl extends GCallBack {
         if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
-        gform.keyEvent(key, scancode, action, mods);
+        gform.keyEventGlfw(key, scancode, action, mods);
         gform.flush();
     }
 
@@ -250,16 +251,24 @@ public class GlfwCallBackImpl extends GCallBack {
                     break;
                 }
             }
+            gform.mouseButtonEvent(button, pressed, mouseX, mouseY);
             //click event
             long cur = System.currentTimeMillis();
-            if (pressed && cur - mouseLastPressed < CLICK_PERIOD && this.button == button) {
-                gform.clickEvent(button, mouseX, mouseY);
-            } else //press event
-            {
-                gform.mouseButtonEvent(button, pressed, mouseX, mouseY);
+            if (pressed) {
+                if ((cur - mouseLastPressed < CLICK_PERIOD) && (this.button == button)) {
+                    clickCount++;
+                } else {
+                    clickCount = 0;
+                }
+                this.button = button;
+                mouseLastPressed = cur;
             }
-            this.button = button;
-            mouseLastPressed = cur;
+            if (!pressed) {
+                if (clickCount >0) {
+                    gform.clickEvent(button, mouseX, mouseY);
+                    clickCount = 0;
+                }
+            }
         }
         gform.flush();
         //System.out.println("flushed");

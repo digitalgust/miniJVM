@@ -6,6 +6,7 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
+import org.mini.glfw.Glfw;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
 import org.mini.gui.event.GStateChangeListener;
@@ -489,7 +490,7 @@ public class GList extends GContainer implements GFocusChangeListener {
 
         @Override
         public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
-            if (pressed) {
+            if (pressed && button == Glfw.GLFW_MOUSE_BUTTON_1) {
                 if (!pulldown) {
                     pulldown = true;
                     GList.this.changeCurPanel();

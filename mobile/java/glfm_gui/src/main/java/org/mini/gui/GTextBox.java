@@ -31,7 +31,7 @@ public class GTextBox extends GTextObject {
 
     //
     protected float[] lineh = {0};
-    protected  int caretIndex;//光标在字符串中的位置
+    protected int caretIndex;//光标在字符串中的位置
 
     protected int selectStart = -1;//选取开始
     protected int selectEnd = -1;//选取结束
@@ -153,6 +153,8 @@ public class GTextBox extends GTextObject {
                         resetSelect();
                         selectStart = caret;
                         mouseDrag = true;
+                    }else{
+                        GToolkit.disposeEditMenu();
                     }
                 } else {
                     mouseDrag = false;
@@ -214,14 +216,15 @@ public class GTextBox extends GTextObject {
     }
 
     @Override
-    public void keyEvent(int key, int scanCode, int action, int mods) {
+    public void keyEventGlfw(int key, int scanCode, int action, int mods) {
         if (parent.getFocus() != this) {
             return;
         }
         if (action == Glfw.GLFW_PRESS || action == Glfw.GLFW_REPEAT) {
-            switch (key) {
-                case Glfw.GLFW_KEY_BACKSPACE: {
-                    if (enable) {
+            //edit key
+            if (enable) {
+                switch (key) {
+                    case Glfw.GLFW_KEY_BACKSPACE: {
                         if (textsb.length() > 0 && caretIndex > 0) {
                             int[] selectFromTo = getSelected();
                             if (selectFromTo != null) {
@@ -231,11 +234,9 @@ public class GTextBox extends GTextObject {
                                 deleteTextByIndex(caretIndex);
                             }
                         }
+                        break;
                     }
-                    break;
-                }
-                case Glfw.GLFW_KEY_DELETE: {
-                    if (enable) {
+                    case Glfw.GLFW_KEY_DELETE: {
                         if (textsb.length() > caretIndex) {
                             int[] selectFromTo = getSelected();
                             if (selectFromTo != null) {
@@ -244,12 +245,10 @@ public class GTextBox extends GTextObject {
                                 deleteTextByIndex(caretIndex + 1);
                             }
                         }
+                        break;
                     }
-                    break;
-                }
-                case Glfw.GLFW_KEY_ENTER: {
-                    String txt = getText();
-                    if (enable) {
+                    case Glfw.GLFW_KEY_ENTER: {
+                        String txt = getText();
                         if (txt != null && txt.length() > 0) {
                             int[] selectFromTo = getSelected();
                             if (selectFromTo != null) {
@@ -258,9 +257,33 @@ public class GTextBox extends GTextObject {
                             setCaretIndex(caretIndex + 1);
                             insertTextByIndex(caretIndex, '\n');
                         }
+                        break;
                     }
-                    break;
+                    case Glfw.GLFW_KEY_C: {
+                        if ((mods & Glfw.GLFW_MOD_CONTROL) != 0) {
+                            String s = getSelectedText();
+                            Glfw.glfwSetClipboardString(winContext, s);
+                            Glfm.glfmSetClipBoardContent(s);
+                        }
+                        break;
+                    }
+                    case Glfw.GLFW_KEY_V: {
+                        if ((mods & Glfw.GLFW_MOD_CONTROL) != 0) {
+                            String s = Glfw.glfwGetClipboardString(winContext);
+                            if (s == null) s = Glfm.glfmGetClipBoardContent();
+                            if (s != null) {
+                                deleteSelectedText();
+                                insertTextAtCaret(s);
+                            }
+                        }
+                        break;
+                    }
                 }
+            }
+
+            //move key
+            switch (key) {
+
                 case Glfw.GLFW_KEY_LEFT: {
                     if (textsb.length() > 0 && caretIndex > 0) {
                         setCaretIndex(caretIndex - 1);
@@ -371,7 +394,7 @@ public class GTextBox extends GTextObject {
     }
 
     @Override
-    public void keyEvent(int key, int action, int mods) {
+    public void keyEventGlfm(int key, int action, int mods) {
 
         if (action == Glfm.GLFMKeyActionPressed || action == Glfm.GLFMKeyActionRepeated) {
             switch (key) {

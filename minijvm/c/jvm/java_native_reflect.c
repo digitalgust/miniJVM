@@ -524,7 +524,6 @@ s32 org_mini_reflect_vm_RefNative_findLoadedClass0(Runtime *runtime, JClass *cla
     JClass *cl = classes_get(ustr);
     utf8_destory(ustr);
     if (cl && cl->jClassLoader == cloader) {
-        cl->source = cl->name;
         Instance *clIns = insOfJavaLangClass_create_get(runtime, cl);
         push_ref(runtime->stack, clIns);
     } else {

@@ -87,17 +87,18 @@ public class GTextField extends GTextObject {
         int ry = (int) (y - parent.getInnerY());
         if (isInArea(x, y)) {
             if (button == Glfw.GLFW_MOUSE_BUTTON_1) {
-                if (pressed) {
-                } else if (isInBoundle(reset_boundle, rx, ry)) {
-                    deleteAll();
-                    resetSelect();
-                    GToolkit.disposeEditMenu();
-                } else {
-                    if (selectMode) {
+                if (!pressed) {
+                    if (isInBoundle(reset_boundle, rx, ry)) {
+                        deleteAll();
                         resetSelect();
                         GToolkit.disposeEditMenu();
+                    } else {
+                        if (selectMode) {
+                            resetSelect();
+                            GToolkit.disposeEditMenu();
+                        }
+                        setCaretIndex(getCaretIndex(x, y));
                     }
-                    setCaretIndex(getCaretIndex(x, y));
                 }
             } else if (button == Glfw.GLFW_MOUSE_BUTTON_2) {
                 if (pressed) {
@@ -110,13 +111,20 @@ public class GTextField extends GTextObject {
     }
 
     @Override
-    public void keyEvent(int key, int scanCode, int action, int mods) {
+    public void clickEvent(int button, int x, int y) {
+        if (isInArea(x, y)) {
+            doSelectAll();
+        }
+    }
+
+    @Override
+    public void keyEventGlfw(int key, int scanCode, int action, int mods) {
         if (parent.getFocus() != this) {
             return;
         }
         if (action == Glfw.GLFW_PRESS || action == Glfw.GLFW_REPEAT) {
-            if (key == Glfw.GLFW_KEY_BACKSPACE) {
-                if (enable) {
+            if (enable) {
+                if (key == Glfw.GLFW_KEY_BACKSPACE) {
                     if (textsb.length() > 0 && caretIndex > 0) {
                         int[] selectFromTo = getSelected();
                         if (selectFromTo != null) {
@@ -127,15 +135,51 @@ public class GTextField extends GTextObject {
                         }
                     }
                 }
+                if ((mods & Glfw.GLFW_MOD_CONTROL) != 0) {
+                    switch (key) {
+                        case Glfw.GLFW_KEY_C: {
+                            String s = getSelectedText();
+                            Glfw.glfwSetClipboardString(winContext, s);
+                            Glfm.glfmSetClipBoardContent(s);
+                            break;
+                        }
+                        case Glfw.GLFW_KEY_V: {
+                            String s = Glfw.glfwGetClipboardString(winContext);
+                            if (s == null) s = Glfm.glfmGetClipBoardContent();
+                            if (s != null) {
+                                deleteSelectedText();
+                                insertTextAtCaret(s);
+                            }
+                            break;
+                        }
+                    }
+                }
             }
-        }
-    }
 
-    @Override
-    public void clickEvent(int button, int x, int y) {
-        if (isInArea(x, y)) {
+            //move key
+            switch (key) {
 
-            doSelectAll();
+                case Glfw.GLFW_KEY_LEFT: {
+                    if (textsb.length() > 0 && caretIndex > 0) {
+                        setCaretIndex(caretIndex - 1);
+                    }
+                    break;
+                }
+                case Glfw.GLFW_KEY_RIGHT: {
+                    if (textsb.length() > caretIndex) {
+                        setCaretIndex(caretIndex + 1);
+                    }
+                    break;
+                }
+                case Glfw.GLFW_KEY_UP: {
+                    setCaretIndex(0);
+                    break;
+                }
+                case Glfw.GLFW_KEY_DOWN: {
+                    setCaretIndex(textsb.length());
+                    break;
+                }
+            }
         }
     }
 
@@ -187,23 +231,26 @@ public class GTextField extends GTextObject {
     }
 
     @Override
-    public void keyEvent(int key, int action, int mods) {
+    public void keyEventGlfm(int key, int action, int mods) {
 
         if (action == Glfm.GLFMKeyActionPressed || action == Glfm.GLFMKeyActionRepeated) {
-            if (key == Glfm.GLFMKeyBackspace) {
-                if (enable) {
-                    if (textsb.length() > 0 && caretIndex > 0) {
-                        int[] selectFromTo = getSelected();
-                        if (selectFromTo != null) {
-                            deleteSelectedText();
-                            text_arr = null;
-                        } else {
-                            setCaretIndex(caretIndex - 1);
-                            deleteTextByIndex(caretIndex);
+            if (enable) {
+                switch (key) {
+                    case Glfm.GLFMKeyBackspace: {
+                        if (textsb.length() > 0 && caretIndex > 0) {
+                            int[] selectFromTo = getSelected();
+                            if (selectFromTo != null) {
+                                deleteSelectedText();
+                                text_arr = null;
+                            } else {
+                                setCaretIndex(caretIndex - 1);
+                                deleteTextByIndex(caretIndex);
+                            }
                         }
                     }
                 }
             }
+
         }
     }
 
