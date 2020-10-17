@@ -44,6 +44,7 @@
 
 
 ## Changelog:
+   2020.10.  Https supported.
    2020.03.  Add xml layout for gui system, add 3D game demo for minijvm, fix jdwp debug for jetbrain idea.               
    2019.12.  Bind cross platform awtk ui system , see [awtk-minijvm](https://github.com/digitalgust/miniJVM/tree/master/desktop/awtk_gui)   
    2019.12.  Jit enabled, it based on sljit project   

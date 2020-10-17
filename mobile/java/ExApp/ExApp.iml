@@ -28,5 +28,23 @@
     </orderEntry>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library">
+      <library name="Maven: org.minijvm:minijvm_rt:1.0">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../binary/lib/minijvm_rt.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="Maven: org.minijvm:glfm_gui:1.0">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../binary/libex/glfw_gui.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

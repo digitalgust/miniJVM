@@ -5,14 +5,13 @@
  */
 package org.mini.apploader;
 
+import javax.cldc.io.Connector;
+import javax.cldc.io.HttpConnection;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import javax.cldc.io.Connector;
-import javax.cldc.io.ContentConnection;
 
 /**
- *
  * @author Gust
  */
 public class MiniHttpClient extends Thread {
@@ -20,7 +19,7 @@ public class MiniHttpClient extends Thread {
     String url;
     DownloadCompletedHandle handle;
     boolean exit;
-    ContentConnection c = null;
+    HttpConnection c = null;
 
     public MiniHttpClient(final String url, final DownloadCompletedHandle handle) {
         this.url = url;
@@ -45,24 +44,36 @@ public class MiniHttpClient extends Thread {
         byte[] data;
         try {
             System.out.println("http url:" + url);
-            c = (ContentConnection) Connector.open(url);
-            int len = (int) c.getLength();
-            dis = c.openDataInputStream();
-            if (len > 0) {
-                data = new byte[len];
-                dis.readFully(data);
-            } else {
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                int ch;
-                while ((ch = dis.read()) != -1 || exit) {
+            c = (HttpConnection) Connector.open(url);
+            int rescode = c.getResponseCode();
+            if (rescode == 200) {
+                int len = (int) c.getLength();
+                dis = c.openDataInputStream();
+                if (len > 0) {
+                    data = new byte[len];
+                    dis.readFully(data);
+                } else {
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    int ch;
+                    while ((ch = dis.read()) != -1 || exit) {
 
-                    baos.write(ch);
+                        baos.write(ch);
+                    }
+                    data = baos.toByteArray();
+
                 }
-                data = baos.toByteArray();
-
-            }
-            if (handle != null) {
-                handle.onCompleted(url, data);
+                if (handle != null) {
+                    handle.onCompleted(url, data);
+                }
+            } else if (rescode == 301 || rescode == 302) {
+                String redirect = c.getHeaderField("Location");
+                System.out.println("redirect:" + redirect);
+                MiniHttpClient hc = new MiniHttpClient(redirect, handle);
+                hc.start();
+            } else {
+                if (handle != null) {
+                    handle.onCompleted(url, null);
+                }
             }
         } catch (Exception e) {
             //e.printStackTrace();

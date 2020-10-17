@@ -2,16 +2,8 @@ package javax.cldc.io;
 
 
 import com.sun.cldc.io.ConnectionBaseInterface;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InterruptedIOException;
-import java.io.OutputStream;
-import javax.cldc.io.Connection;
-import javax.cldc.io.ConnectionNotFoundException;
-import javax.cldc.io.Connector;
-import javax.cldc.io.StreamConnection;
+
+import java.io.*;
 
 /*
  * @(#)ConnectionBaseAdapter.java	1.25 02/10/14 @(#)
@@ -45,15 +37,19 @@ import javax.cldc.io.StreamConnection;
  * <p align="center">
  * <img src="doc-files/ConnectionBaseAdapter.gif" border=0></p>
  *
- * @author  Stephen Flores
+ * @author Stephen Flores
  * @version 3.0 9/1/2000
  */
 public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
-    StreamConnection {
+        StreamConnection {
 
-    /** Flag indicating if the connection is open. */
+    /**
+     * Flag indicating if the connection is open.
+     */
     protected boolean connectionOpen = false;
-    /** Number of input streams that were opened. */
+    /**
+     * Number of input streams that were opened.
+     */
     protected int iStreams = 0;
     /**
      * Maximum number of open input streams. Set this
@@ -61,7 +57,9 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
      * write-only mode.
      */
     protected int maxIStreams = 1;
-    /** Number of output streams were opened. */
+    /**
+     * Number of output streams were opened.
+     */
     protected int oStreams = 0;
     /**
      * Maximum number of output streams. Set this
@@ -69,11 +67,17 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
      * read-only mode.
      */
     protected int maxOStreams = 1;
-    /** The security permission required by a subclass. -1 for none. */
+    /**
+     * The security permission required by a subclass. -1 for none.
+     */
     protected int requiredPermission = -1;
-    /** Protocol name of subclass to prefix name of resource, can be null. */
+    /**
+     * Protocol name of subclass to prefix name of resource, can be null.
+     */
     protected String protocol;
-    /** The subclass needs know that the permission occured. */
+    /**
+     * The subclass needs know that the permission occured.
+     */
     private boolean permissionChecked;
 
     /**
@@ -87,7 +91,7 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
      * protocol and then call its connect method. A subclass can detect
      * this attack by calling this method.
      *
-     * @exception SecurityException if the check did not happen.
+     * @throws SecurityException if the check did not happen.
      */
     protected void verifyPermissionCheck() {
         if (permissionChecked) {
@@ -100,31 +104,30 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
     /**
      * Check for required permission and open a connection to a target.
      *
-     * @param name             URL for the connection, without the
-     *                         without the protocol part
-     * @param mode             I/O access mode, see {@link Connector}
-     * @param timeouts         flag to indicate that the caller
-     *                         wants timeout exceptions
-     * @return                 this Connection object
-     *
-     * @exception IllegalArgumentException If a parameter is invalid.
-     * @exception ConnectionNotFoundException If the connection cannot
-     *                                        be found.
-     * @exception IOException  If some other kind of I/O error occurs.
+     * @param name     URL for the connection, without the
+     *                 without the protocol part
+     * @param mode     I/O access mode, see {@link Connector}
+     * @param timeouts flag to indicate that the caller
+     *                 wants timeout exceptions
+     * @return this Connection object
+     * @throws IllegalArgumentException    If a parameter is invalid.
+     * @throws ConnectionNotFoundException If the connection cannot
+     *                                     be found.
+     * @throws IOException                 If some other kind of I/O error occurs.
      */
     public Connection openPrim(String name, int mode, boolean timeouts)
             throws IOException {
-          permissionChecked = true;
+        permissionChecked = true;
         checkForPermission(name);
 
         switch (mode) {
-        case Connector.READ:
-        case Connector.WRITE:
-        case Connector.READ_WRITE:
-            break;
+            case Connector.READ:
+            case Connector.WRITE:
+            case Connector.READ_WRITE:
+                break;
 
-        default:
-            throw new IllegalArgumentException("Illegal mode");
+            default:
+                throw new IllegalArgumentException("Illegal mode");
         }
 
         connect(name, mode, timeouts);
@@ -136,10 +139,9 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
      * Check for the required permission, if needed.
      *
      * @param name name of resource to insert into the permission question
-     *
-     * @exception IOInterruptedException if another thread interrupts the
-     *   calling thread while this method is waiting to preempt the
-     *   display.
+     * @throws InterruptedIOException if another thread interrupts the
+     *                                calling thread while this method is waiting to preempt the
+     *                                display.
      */
     public void checkForPermission(String name) throws InterruptedIOException {
 
@@ -155,28 +157,26 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
      * Check for required permission and open a connection to a target.
      * This method can be used with permissions greater than
      * the current MIDlet suite. Assume read/write and no timeouts.
-     * 
-     * @param token            security token of the calling class
-     * @param name             URL for the connection, without the
-     *                         without the protocol part
-     * @return                 this Connection object
      *
-     * @exception IllegalArgumentException If a parameter is invalid.
-     * @exception ConnectionNotFoundException If the connection cannot
-     *                                        be found.
-     * @exception IOException  If some other kind of I/O error occurs.
+     * @param name URL for the connection, without the
+     *             without the protocol part
+     * @return this Connection object
+     * @throws IllegalArgumentException    If a parameter is invalid.
+     * @throws ConnectionNotFoundException If the connection cannot
+     *                                     be found.
+     * @throws IOException                 If some other kind of I/O error occurs.
      */
-    public Connection openPrim( String name)
+    public Connection openPrim(String name)
             throws IOException {
-        return openPrim( name, Connector.READ_WRITE, false);
+        return openPrim(name, Connector.READ_WRITE, false);
     }
 
     /**
      * Returns an input stream.
      *
-     * @return     an input stream for writing bytes to this port.
-     * @exception  IOException  if an I/O error occurs when creating the
-     *                          output stream.
+     * @return an input stream for writing bytes to this port.
+     * @throws IOException if an I/O error occurs when creating the
+     *                     output stream.
      */
     public InputStream openInputStream() throws IOException {
         InputStream i;
@@ -184,9 +184,9 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
         ensureOpen();
 
         if (maxIStreams == 0) {
-	    throw new IOException("no more input streams available");
+            throw new IOException("no more input streams available");
         }
-        
+
         i = new BaseInputStream(this);
         maxIStreams--;
         iStreams++;
@@ -196,8 +196,8 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
     /**
      * Open and return a data input stream for a connection.
      *
-     * @return                 An input stream
-     * @exception IOException  If an I/O error occurs
+     * @return An input stream
+     * @throws IOException If an I/O error occurs
      */
     public DataInputStream openDataInputStream() throws IOException {
         return new DataInputStream(openInputStream());
@@ -206,9 +206,9 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
     /**
      * Returns an output stream.
      *
-     * @return     an output stream for writing bytes to this port.
-     * @exception  IOException  if an I/O error occurs when creating the
-     *                          output stream.
+     * @return an output stream for writing bytes to this port.
+     * @throws IOException if an I/O error occurs when creating the
+     *                     output stream.
      */
     public OutputStream openOutputStream() throws IOException {
         OutputStream o;
@@ -216,7 +216,7 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
         ensureOpen();
 
         if (maxOStreams == 0) {
-	    throw new IOException("no more output streams available");
+            throw new IOException("no more output streams available");
         }
 
         o = new BaseOutputStream(this);
@@ -228,8 +228,8 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
     /**
      * Open and return a data output stream for a connection.
      *
-     * @return                 An input stream
-     * @exception IOException  If an I/O error occurs
+     * @return An input stream
+     * @throws IOException If an I/O error occurs
      */
     public DataOutputStream openDataOutputStream() throws IOException {
         return new DataOutputStream(openOutputStream());
@@ -238,8 +238,8 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
     /**
      * Close the connection.
      *
-     * @exception  IOException  if an I/O error occurs when closing the
-     *                          connection.
+     * @throws IOException if an I/O error occurs when closing the
+     *                     connection.
      */
     public void close() throws IOException {
         if (connectionOpen) {
@@ -254,7 +254,7 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
      * the if the connection and output stream are closed the disconnect
      * method will be called.
      *
-     * @exception IOException if the subclass throws one
+     * @throws IOException if the subclass throws one
      */
     protected void closeInputStream() throws IOException {
         iStreams--;
@@ -267,7 +267,7 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
      * the if the connection and input stream are closed the disconnect
      * method will be called.
      *
-     * @exception IOException if the subclass throws one
+     * @throws IOException if the subclass throws one
      */
     protected void closeOutputStream() throws IOException {
         oStreams--;
@@ -277,8 +277,8 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
     /**
      * Disconnect if the connection and all the streams and the closed.
      *
-     * @exception  IOException  if an I/O error occurs when closing the
-     *                          connection.
+     * @throws IOException if an I/O error occurs when closing the
+     *                     connection.
      */
     void closeCommon() throws IOException {
         if (!connectionOpen && iStreams == 0 && oStreams == 0) {
@@ -289,7 +289,7 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
     /**
      * Check if the connection is open.
      *
-     * @exception  IOException  is thrown, if the stream is not open.
+     * @throws IOException is thrown, if the stream is not open.
      */
     protected void ensureOpen() throws IOException {
         if (!connectionOpen) {
@@ -300,24 +300,23 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
     /**
      * Connect to a target.
      *
-     * @param name             URL for the connection, without the protocol
-     *                         part
-     * @param mode             I/O access mode, see {@link Connector}
-     * @param timeouts         flag to indicate that the called wants
-     *                         timeout exceptions
-     *
-     * @exception IllegalArgumentException If a parameter is invalid.
-     * @exception ConnectionNotFoundException If the connection cannot be
-     *             found.
-     * @exception IOException  If some other kind of I/O error occurs.
+     * @param name     URL for the connection, without the protocol
+     *                 part
+     * @param mode     I/O access mode, see {@link Connector}
+     * @param timeouts flag to indicate that the called wants
+     *                 timeout exceptions
+     * @throws IllegalArgumentException    If a parameter is invalid.
+     * @throws ConnectionNotFoundException If the connection cannot be
+     *                                     found.
+     * @throws IOException                 If some other kind of I/O error occurs.
      */
     protected abstract void connect(String name, int mode, boolean timeouts)
-        throws IOException;
+            throws IOException;
 
     /**
      * Free up the connection resources.
      *
-     * @exception  IOException  if an I/O error occurs.
+     * @throws IOException if an I/O error occurs.
      */
     protected abstract void disconnect() throws IOException;
 
@@ -325,17 +324,17 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
      * Reads up to <code>len</code> bytes of data from the input stream into
      * an array of bytes, blocks until at least one byte is available.
      *
-     * @param      b     the buffer into which the data is read.
-     * @param      off   the start offset in array <code>b</code>
-     *                   at which the data is written.
-     * @param      len   the maximum number of bytes to read.
-     * @return     the total number of bytes read into the buffer, or
-     *             <code>-1</code> if there is no more data because the end of
-     *             the stream has been reached.
-     * @exception  IOException  if an I/O error occurs.
+     * @param b   the buffer into which the data is read.
+     * @param off the start offset in array <code>b</code>
+     *            at which the data is written.
+     * @param len the maximum number of bytes to read.
+     * @return the total number of bytes read into the buffer, or
+     * <code>-1</code> if there is no more data because the end of
+     * the stream has been reached.
+     * @throws IOException if an I/O error occurs.
      */
     protected abstract int readBytes(byte b[], int off, int len)
-        throws IOException;
+            throws IOException;
 
     /**
      * Returns the number of bytes that can be read (or skipped over) from
@@ -344,9 +343,9 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
      * another thread. This classes implementation always returns
      * <code>0</code>. It is up to subclasses to override this method.
      *
-     * @return     the number of bytes that can be read from this input stream
-     *             without blocking.
-     * @exception  IOException  if an I/O error occurs.
+     * @return the number of bytes that can be read from this input stream
+     * without blocking.
+     * @throws IOException if an I/O error occurs.
      */
     public int available() throws IOException {
         return 0;
@@ -361,16 +360,16 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
      * work this way (they block in the native code) but the same
      * Java code works for both.
      *
-     * @param      b     the data.
-     * @param      off   the start offset in the data.
-     * @param      len   the number of bytes to write.
-     * @return     number of bytes written
-     * @exception  IOException  if an I/O error occurs. In particular,
-     *             an <code>IOException</code> is thrown if the output
-     *             stream is closed.
+     * @param b   the data.
+     * @param off the start offset in the data.
+     * @param len the number of bytes to write.
+     * @return number of bytes written
+     * @throws IOException if an I/O error occurs. In particular,
+     *                     an <code>IOException</code> is thrown if the output
+     *                     stream is closed.
      */
     protected abstract int writeBytes(byte b[], int off, int len)
-        throws IOException;
+            throws IOException;
 
     /**
      * Forces any buffered output bytes to be written out.
@@ -382,7 +381,7 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
      * The <code>flush</code> method of <code>ConnectionBaseAdapter</code>
      * does nothing.
      *
-     * @exception  IOException  if an I/O error occurs.
+     * @throws IOException if an I/O error occurs.
      */
     protected void flush() throws IOException {
     }
@@ -393,18 +392,21 @@ public abstract class ConnectionBaseAdapter implements ConnectionBaseInterface,
  */
 class BaseInputStream extends InputStream {
 
-    /** Pointer to the connection */
+    /**
+     * Pointer to the connection
+     */
     private ConnectionBaseAdapter parent;
 
-    /** Buffer for single char reads */
+    /**
+     * Buffer for single char reads
+     */
     byte[] buf = new byte[1];
 
     /**
      * Constructs a BaseInputStream for a ConnectionBaseAdapter.
      *
      * @param parent pointer to the connection object
-     *
-     * @exception  IOException  if an I/O error occurs.
+     * @throws IOException if an I/O error occurs.
      */
     BaseInputStream(ConnectionBaseAdapter parent) throws IOException {
         this.parent = parent;
@@ -413,7 +415,7 @@ class BaseInputStream extends InputStream {
     /**
      * Check the stream is open
      *
-     * @exception  InterruptedIOException  if it is not.
+     * @throws InterruptedIOException if it is not.
      */
     private void ensureOpen() throws InterruptedIOException {
         if (parent == null) {
@@ -431,9 +433,9 @@ class BaseInputStream extends InputStream {
      * {@link ConnectionBaseAdapter#available()} is
      * not overridden by the subclass.
      *
-     * @return     the number of bytes that can be read from this input stream
-     *             without blocking.
-     * @exception  IOException  if an I/O error occurs.
+     * @return the number of bytes that can be read from this input stream
+     * without blocking.
+     * @throws IOException if an I/O error occurs.
      */
     public int available() throws IOException {
 
@@ -450,9 +452,9 @@ class BaseInputStream extends InputStream {
      * blocks until input data is available, the end of the stream is detected,
      * or an exception is thrown.
      *
-     * @return     the next byte of data, or <code>-1</code> if the end of the
-     *             stream is reached.
-     * @exception  IOException  if an I/O error occurs.
+     * @return the next byte of data, or <code>-1</code> if the end of the
+     * stream is reached.
+     * @throws IOException if an I/O error occurs.
      */
     public int read() throws IOException {
         if (read(buf, 0, 1) > 0) {
@@ -501,15 +503,15 @@ class BaseInputStream extends InputStream {
      * file, then an <code>IOException</code> is thrown. In particular, an
      * <code>IOException</code> is thrown if the input stream has been closed.
      *
-     * @param      b     the buffer into which the data is read.
-     * @param      off   the start offset in array <code>b</code>
-     *                   at which the data is written.
-     * @param      len   the maximum number of bytes to read.
-     * @return     the total number of bytes read into the buffer, or
-     *             <code>-1</code> if there is no more data because the end of
-     *             the stream has been reached.
-     * @exception  IOException  if an I/O error occurs.
-     * @see        java.io.InputStream#read()
+     * @param b   the buffer into which the data is read.
+     * @param off the start offset in array <code>b</code>
+     *            at which the data is written.
+     * @param len the maximum number of bytes to read.
+     * @return the total number of bytes read into the buffer, or
+     * <code>-1</code> if there is no more data because the end of
+     * the stream has been reached.
+     * @throws IOException if an I/O error occurs.
+     * @see java.io.InputStream#read()
      */
     public int read(byte b[], int off, int len) throws IOException {
         int test;
@@ -533,7 +535,7 @@ class BaseInputStream extends InputStream {
      * Closes this input stream and releases any system resources associated
      * with the stream.
      *
-     * @exception  IOException  if an I/O error occurs.
+     * @throws IOException if an I/O error occurs.
      */
     public void close() throws IOException {
         if (parent != null) {
@@ -549,10 +551,14 @@ class BaseInputStream extends InputStream {
  */
 class BaseOutputStream extends OutputStream {
 
-    /** Pointer to the connection */
+    /**
+     * Pointer to the connection
+     */
     ConnectionBaseAdapter parent;
 
-    /** Buffer for single char writes */
+    /**
+     * Buffer for single char writes
+     */
     byte[] buf = new byte[1];
 
     /**
@@ -567,7 +573,7 @@ class BaseOutputStream extends OutputStream {
     /**
      * Check the stream is open
      *
-     * @exception  InterruptedIOException  if it is not.
+     * @throws InterruptedIOException if it is not.
      */
     private void ensureOpen() throws InterruptedIOException {
         if (parent == null) {
@@ -582,13 +588,13 @@ class BaseOutputStream extends OutputStream {
      * low-order bits of the argument <code>b</code>. The 24
      * high-order bits of <code>b</code> are ignored.
      *
-     * @param      b   the <code>byte</code>.
-     * @exception  IOException  if an I/O error occurs. In particular,
-     *             an <code>IOException</code> may be thrown if the
-     *             output stream has been closed.
+     * @param b the <code>byte</code>.
+     * @throws IOException if an I/O error occurs. In particular,
+     *                     an <code>IOException</code> may be thrown if the
+     *                     output stream has been closed.
      */
     public void write(int b) throws IOException {
-        buf[0] = (byte)b;
+        buf[0] = (byte) b;
         write(buf, 0, 1);
     }
 
@@ -608,15 +614,15 @@ class BaseOutputStream extends OutputStream {
      * <code>off+len</code> is greater than the length of the array
      * <code>b</code>, then an <tt>IndexOutOfBoundsException</tt> is thrown.
      *
-     * @param      b     the data.
-     * @param      off   the start offset in the data.
-     * @param      len   the number of bytes to write.
-     * @exception  IOException  if an I/O error occurs. In particular,
-     *             an <code>IOException</code> is thrown if the output
-     *             stream is closed.
+     * @param b   the data.
+     * @param off the start offset in the data.
+     * @param len the number of bytes to write.
+     * @throws IOException if an I/O error occurs. In particular,
+     *                     an <code>IOException</code> is thrown if the output
+     *                     stream is closed.
      */
     public void write(byte b[], int off, int len)
-           throws IOException {
+            throws IOException {
         int test;
         int bytesWritten;
 
@@ -641,7 +647,7 @@ class BaseOutputStream extends OutputStream {
         for (bytesWritten = 0; ; ) {
             try {
                 bytesWritten += parent.writeBytes(b, off + bytesWritten,
-                                                  len - bytesWritten);
+                        len - bytesWritten);
             } finally {
                 if (parent == null) {
                     throw new InterruptedIOException("Stream closed");
@@ -651,7 +657,7 @@ class BaseOutputStream extends OutputStream {
             if (bytesWritten == len) {
                 break;
             }
-            
+
 //            GeneralBase.iowait(); 
         }
     }
@@ -664,7 +670,7 @@ class BaseOutputStream extends OutputStream {
      * stream, such bytes should immediately be written to their
      * intended destination.
      *
-     * @exception  IOException  if an I/O error occurs.
+     * @throws IOException if an I/O error occurs.
      */
     public void flush() throws IOException {
         ensureOpen();
@@ -677,7 +683,7 @@ class BaseOutputStream extends OutputStream {
      * is that it closes the output stream. A closed stream cannot perform
      * output operations and cannot be reopened.
      *
-     * @exception  IOException  if an I/O error occurs.
+     * @throws IOException if an I/O error occurs.
      */
     public void close() throws IOException {
         if (parent != null) {

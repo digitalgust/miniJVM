@@ -5,21 +5,17 @@
  */
 package test;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
-import org.mini.zip.Zip;
+
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
+import java.net.URL;
+import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
- *
  * @author gust
  */
 public class Foo1 {
@@ -74,7 +70,7 @@ public class Foo1 {
         htable.put("J", new Long(0x2222222211111111L));
         htable.put("S", new String("SSS"));
         htable.put("L", new Object());
-        for (Enumeration e = htable.keys(); e.hasMoreElements();) {
+        for (Enumeration e = htable.keys(); e.hasMoreElements(); ) {
             String s = (String) e.nextElement();
             Object obj = htable.get(s);
             java.lang.System.out.println(s + " : " + obj);
@@ -316,8 +312,149 @@ public class Foo1 {
         }
     }
 
-    void t13() {
+    class MyClassLoader extends ClassLoader {
+        String[] paths = new String[1];
 
+        public MyClassLoader(String jarPath) {
+            super(null);
+            paths[0] = jarPath;
+        }
+
+        @Override
+        protected Class<?> findClass(String name) throws ClassNotFoundException {
+
+            // 加载D盘根目录下指定类名的class
+            String classname = name.replace('.', File.separatorChar) + ".class";
+            byte[] classData = getFileData(classname, paths);
+            if (classData == null) {
+                throw new ClassNotFoundException();
+            } else {
+                return defineClass(name, classData, 0, classData.length);
+            }
+        }
+
+        protected URL findResource(String path) {
+            URL url = getFileUrl(path, paths);
+            return url;
+        }
+
+
+        /**
+         * find a file bytes from classes paths
+         *
+         * @param name
+         * @param paths
+         * @return
+         * @throws ClassNotFoundException
+         */
+        public byte[] getFileData(String name, String[] paths) {
+
+            // 加载D盘根目录下指定类名的class
+            byte[] classData = null;
+            for (String s : paths) {
+                if (s != null && s.length() > 0) {
+                    File f = new File(s);
+                    if (f.isFile()) {
+                        try {
+                            ZipFile zf = new ZipFile(s);
+                            ZipEntry ze = zf.getEntry(name);
+                            InputStream is = zf.getInputStream(ze);
+                            DataInputStream dis = new DataInputStream(is);
+                            classData = new byte[is.available()];
+                            dis.readFully(classData);
+                            dis.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        if (classData != null) {
+                            break;
+                        }
+                    } else {
+                        File cf = new File(s + "/" + name);
+                        if (cf.exists()) {
+                            try {
+                                classData = new byte[(int) cf.length()];
+                                RandomAccessFile fis = new RandomAccessFile(cf, "r");
+                                fis.read(classData, 0, classData.length);
+                            } catch (Exception e) {
+                                classData = null;
+                            }
+                        }
+                    }
+                }
+            }
+            return classData;
+        }
+
+        /**
+         * find a file url from paths ,the paths may contains jar and directory
+         *
+         * @param sourceName
+         * @param paths
+         * @return
+         */
+        public URL getFileUrl(String sourceName, String[] paths) {
+            URL url = null;
+            for (String s : paths) {
+                if (s != null && s.length() > 0) {
+                    File f = new File(s);
+                    if (f.isFile()) {
+                        try {
+                            ZipFile zf = new ZipFile(f.getAbsolutePath());
+                            while (sourceName.startsWith("/")) sourceName = sourceName.substring(1);
+                            ZipEntry ze = zf.getEntry(sourceName);
+                            if (ze != null) {
+                                String us = "jar:file:" + f.getAbsolutePath() + "!/" + sourceName;
+                                url = new URL(us);
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        File cf = new File(s + "/" + sourceName);
+                        if (cf.exists()) {
+                            try {
+                                String us = "file:" + cf.getAbsolutePath();
+                                System.out.println(us);
+                                url = new URL(us);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            }
+            return url;
+        }
+    }
+
+    void t13() {
+        ClassLoader cl = Integer.class.getClassLoader();
+        System.out.println(cl);
+        System.out.println(Foo1.class.getClassLoader());
+        System.out.println(Foo1.class.getClassLoader().getParent());
+        System.out.println(Foo1.class.getClassLoader().getParent().getParent());
+        try {
+            InputStream is = this.getClass().getResourceAsStream("/sys.properties");
+            System.out.println("length:" + is.available());
+            is.close();
+
+//            File f = new File("test/Foo1.class");
+//            if (f.exists()) {
+//                URL url = new URL(f.getAbsolutePath());
+//            }
+            MyClassLoader mycl = new MyClassLoader("/Users/Gust/Documents/GitHub/miniJVM/binary/libex/glfw_gui.jar");
+            Thread.currentThread().setContextClassLoader(mycl);
+            Class c = mycl.loadClass("test.Ball");
+            System.out.println("loadClass:" + c);
+            c = Class.forName("test.Ball");
+            System.out.println("Class.forName:" + c);
+            is = Thread.currentThread().getContextClassLoader().getResourceAsStream("/test/Boing.class");
+            System.out.println(is);
+            if (is != null) System.out.println(is.available());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     void t14() {
@@ -339,7 +476,7 @@ public class Foo1 {
         List<Integer> list = new ArrayList();
         list.add(1);
         list.add(999);
-        for (Iterator it = list.iterator(); it.hasNext();) {
+        for (Iterator it = list.iterator(); it.hasNext(); ) {
             Object o = it.next();
             System.out.println("list[i]=" + o);
         }
@@ -450,7 +587,8 @@ public class Foo1 {
                     return new StringBuilder();
                 }
             };
-        };
+        }
+        ;
 
         final T25 t25 = new T25();
 
@@ -488,27 +626,27 @@ public class Foo1 {
     public static void exec() {
         Foo1 f = new Foo1();
         for (int i = 0; i < 1; i++) {
-            f.t1();
-            f.t2();
-            f.t3();
-            f.t4();
-            f.t5();
-            f.t6();
-            f.t7();
-            f.t8();
-            f.t9();
-            f.t10();
-            f.t11();
-            f.t12();
+//            f.t1();
+//            f.t2();
+//            f.t3();
+//            f.t4();
+//            f.t5();
+//            f.t6();
+//            f.t7();
+//            f.t8();
+//            f.t9();
+//            f.t10();
+//            f.t11();
+//            f.t12();
             f.t13();
-            f.t14();
-            f.t19();
-            f.t20();
-            f.t21();
-            f.t23();
-            f.t24();
-            f.t25();
-            f.t26();
+//            f.t14();
+//            f.t19();
+//            f.t20();
+//            f.t21();
+//            f.t23();
+//            f.t24();
+//            f.t25();
+//            f.t26();
         }
     }
 

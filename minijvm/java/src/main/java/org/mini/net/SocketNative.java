@@ -8,7 +8,6 @@ package org.mini.net;
 import java.io.IOException;
 
 /**
- *
  * @author Gust
  */
 public class SocketNative {
@@ -71,4 +70,20 @@ public class SocketNative {
         }
         return r;
     }
+
+
+    //https implementation
+
+    public static native byte[] http_construct_httpinfo();
+
+    public static native int http_init(byte[] hi, boolean verify);
+
+    public static native int http_open(byte[] hi, byte[] url);
+
+    public static native int http_close(byte[] hi);
+
+    public static native int https_write(byte[] hi, byte[] data, int offset, int len);
+
+    public static native int https_read(byte[] hi, byte[] data, int offset, int len);
+
 }

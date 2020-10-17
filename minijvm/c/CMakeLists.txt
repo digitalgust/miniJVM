@@ -16,59 +16,15 @@ if (CMAKE_BUILD_TYPE MATCHES "Debug")
 endif ()
 
 
-include_directories(jvm/ utils/ utils/sljit/)
+include_directories(jvm/ utils/ utils/sljit/ utils/https/ utils/https/mbedtls/include)
 
-set(SOURCE_FILES
-        utils/d_type.h
-        utils/d_type.c
-        utils/arraylist.c
-        utils/arraylist.h
-        utils/hashtable.c
-        utils/hashtable.h
-        utils/utf8_string.c
-        utils/utf8_string.h
-        utils/pairlist.h
-        utils/hashset.c
-        utils/hashset.h
-        jvm/jvm.h
-        jvm/interpreter.c
-        jvm/jvm.c
-        jvm/class.c
-        jvm/runtime.c
-        jvm/garbage.c
-        jvm/jvm_util.c
-        jvm/jvm_util.h
-        jvm/global.c
-        jvm/java_native_std.h
-        jvm/java_native_io.c
-        jvm/java_native_std.c
-        jvm/java_native_reflect.c
-        jvm/java_native_reflect.h
-        jvm/jdwp.c
-        jvm/jdwp.h
-        jvm/java_native_io.h
-        jvm/class_load.c
-        jvm/garbage.h
-        jvm/jit.c
-        jvm/jit.h
-        utils/tinycthread.h
-        utils/tinycthread.c
-        utils/linkedlist.c
-        utils/linkedlist.h
-        utils/spinlock.h
-        utils/bytebuf.c
-        utils/bytebuf.h
-        utils/miniz_wrapper.c
-        utils/miniz_wrapper.h
-        utils/dirent_win.h
-        utils/ltalloc.c
-        utils/ltalloc.h
-        utils/miniz.c
-        utils/miniz.h
+aux_source_directory(./jvm SOURCE_JVM)
+aux_source_directory(./utils SOURCE_UTILS)
+aux_source_directory(./utils/https SOURCE_HTTPS)
+aux_source_directory(./utils/https/mbedtls/library SOURCE_TLS)
+set(SOURCE_SLJIT ./utils/sljit/sljitLir.c)
 
-        utils/sljit/sljitLir.c
-        )
-
+SET(SOURCE_FILES ${SOURCE_JVM} ${SOURCE_UTILS} ${SOURCE_HTTPS} ${SOURCE_TLS} ${SOURCE_SLJIT})
 
 MESSAGE(STATUS "platform: ${CMAKE_SYSTEM_NAME}")
 

@@ -207,17 +207,8 @@ public class GViewSlot extends GViewPort {
         }
     }
 
-    @Override
-    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
-        int phase = pressed ? Glfm.GLFMTouchPhaseBegan : Glfm.GLFMTouchPhaseEnded;
-        if (button == Glfw.GLFW_MOUSE_BUTTON_1) {
-            touchEvent(0, phase, x, y);
-        }
 
-        super.mouseButtonEvent(button, pressed, x, y);
-    }
-
-    public void touchEvent(int touchid, int phase, int x, int y) {
+    public void touchedOrMouseClicked(int touchid, int phase, int x, int y) {
         switch (phase) {
             case Glfm.GLFMTouchPhaseBegan: {
                 touched = true;
@@ -257,6 +248,21 @@ public class GViewSlot extends GViewPort {
                 break;
             }
         }
+    }
+
+
+    @Override
+    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+        if (button == Glfw.GLFW_MOUSE_BUTTON_1) {
+            int phase = pressed ? Glfm.GLFMTouchPhaseBegan : Glfm.GLFMTouchPhaseEnded;
+            touchedOrMouseClicked(0, phase, x, y);
+        }
+
+        super.mouseButtonEvent(button, pressed, x, y);
+    }
+
+    public void touchEvent(int touchid, int phase, int x, int y) {
+        touchedOrMouseClicked(0, phase, x, y);
         super.touchEvent(touchid, phase, x, y);
     }
 

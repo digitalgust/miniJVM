@@ -26,9 +26,9 @@ public class HttpServer {
         HttpServer f = new HttpServer();
 //        f.t12();
 //        f.t13();
-//        f.t18();
-        f.t20();
-        f.t21();
+        f.t18();
+//        f.t20();
+//        f.t21();
     }
 
     void t12() {
@@ -178,14 +178,14 @@ public class HttpServer {
     }
 
     void t18() {
-        String url = "http://360.cn/";
+        String url = "https://www.apple.com/";
         System.out.println("Connect to :" + url);
         try {
             byte[] data = getViaContentConnection(url);
             for (int i = 0; i < data.length; i++) {
                 System.out.print((char) data[i]);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
 //            System.out.println(ex.getMessage());
             e.printStackTrace();
         }

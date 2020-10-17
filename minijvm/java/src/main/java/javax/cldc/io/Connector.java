@@ -224,7 +224,7 @@ public class Connector {
     /**
      * Create and open a Connection.
      *
-     * @param string           The URL for the connection
+     * @param name           The URL for the connection
      * @param mode             The access mode
      * @param timeouts         A flag to indicate that the caller
      *                         wants timeout exceptions
