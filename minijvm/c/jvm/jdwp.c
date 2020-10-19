@@ -161,7 +161,7 @@ void jdwp_client_destory(JdwpClient *client) {
 void jdwp_client_hold_obj(JdwpClient *client, Runtime *runtime, __refer obj) {
     hashset_put(client->temp_obj_holder, obj);
     gc_refer_hold(obj);
-    gc_refer_reg(runtime, obj);
+    //gc_refer_reg(runtime, obj);
 }
 
 void jdwp_client_release_obj(JdwpClient *client, __refer obj) {

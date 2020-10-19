@@ -18,7 +18,10 @@
 //
 #define __JVM_BIG_ENDIAN__ 0
 
+#ifdef LTALLOC_ENABLE
 #define MEM_ALLOC_LTALLOC
+#endif
+
 
 #if INTPTR_MAX == INT32_MAX
     #define __JVM_ARCH_32__ 1

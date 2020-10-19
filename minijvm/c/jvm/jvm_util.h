@@ -252,6 +252,8 @@ Runtime *threadlist_get(s32 i);
 
 s32 threadlist_count_none_daemon();
 
+s64 threadlist_sum_heap();
+
 void threadinfo_destory(JavaThreadInfo *threadInfo);
 
 void thread_stop_all();
@@ -274,6 +276,7 @@ struct _JavaThreadInfo {
 
     __refer block_break_para; //thread blocking on io
 
+    s64 objs_heap_of_thread;// heap use for objs_header, if translate to gc ,the var need clear to 0
     u16 volatile suspend_count;//for jdwp suspend ,>0 suspend, ==0 resume
     u16 volatile no_pause;  //can't pause when clinit
     u8 volatile thread_status;

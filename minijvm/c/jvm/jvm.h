@@ -628,6 +628,7 @@ typedef struct _MemoryBlock {
     struct _MemoryBlock *tmp_next;  //hold by thread
     ThreadLock *volatile thread_lock;
 
+    s32 heap_size;//objsize of jclass or jarray or jclass , but not memoryblock
     u8 type;//type of array or object runtime,class
     u8 garbage_mark;
     u8 garbage_reg;

@@ -226,28 +226,7 @@ void _getMBName(void *memblock, Utf8String *name) {
 
 
 s32 _getMBSize(MemoryBlock *mb) {
-    s32 size = 0;
-    if (mb) {
-        switch (mb->type) {
-            case MEM_TYPE_INS: {
-                size = instance_base_size() + mb->clazz->field_instance_len;
-                break;
-            }
-            case MEM_TYPE_ARR: {
-                Instance *arr = (Instance *) mb;
-                size = instance_base_size() + data_type_bytes[mb->arr_type_index] * arr->arr_length;
-                break;
-            }
-            case MEM_TYPE_CLASS: {
-                size = sizeof(JClass) + ((JClass *) mb)->field_static_len;
-                break;
-            }
-            default:
-                jvm_printf("[ERROR] error memblock %llx.\n", (s64) (intptr_t) mb);
-        }
-    }
-
-    return size;
+    return mb->heap_size;
 }
 
 /**
@@ -313,12 +292,23 @@ void _garbage_remove_out_holder(__refer ref) {
     utf8_destory(sus);
 #endif
 }
+
+s64 _garbage_sum_heap() {
+    s64 hsize = 0;
+    hsize += threadlist_sum_heap();
+    spin_lock(&collector->lock);
+    {
+        hsize += collector->obj_heap_size;
+    }
+    spin_unlock(&collector->lock);
+    return hsize;
+}
 //==============================   thread_run() =====================================
 
 s32 _collect_thread_run(void *para) {
     s64 lastgc = currentTimeMillis();
     while (1) {
-        threadSleep(100);
+
         s64 cur_mil = currentTimeMillis();
 
         if (collector->_garbage_thread_status == GARBAGE_THREAD_STOP) {
@@ -334,9 +324,11 @@ s32 _collect_thread_run(void *para) {
 //            continue;
 //        }
 
-        if (cur_mil - lastgc > GARBAGE_PERIOD_MS || heap_size > MAX_HEAP_SIZE * .8f) {
+        if (cur_mil - lastgc > GARBAGE_PERIOD_MS || _garbage_sum_heap() > MAX_HEAP_SIZE * .8f) {
             garbage_collect();
             lastgc = cur_mil;
+        } else {
+            threadSleep(10);
         }
     }
     collector->_garbage_thread_status = GARBAGE_THREAD_DEAD;
@@ -425,7 +417,7 @@ s64 garbage_collect() {
         iter++;
         curmb = nextmb;
         nextmb = curmb->next;
-        s32 size = _getMBSize(curmb);
+        s32 size = curmb->heap_size;
         mem_total += size;
         if (curmb->garbage_mark != collector->flag_refer) {
             mem_free += size;
@@ -441,10 +433,11 @@ s64 garbage_collect() {
     spin_lock(&collector->lock);
     collector->obj_count = iter - del;
     heap_size = mem_total - mem_free;
+    collector->obj_heap_size -= mem_free;
     spin_unlock(&collector->lock);
 
-    s64 time_gc = currentTimeMillis() - time;
 #if _JVM_DEBUG_LOG_LEVEL > 1
+    s64 time_gc = currentTimeMillis() - time;
     jvm_printf("[INFO]gc obj: %lld->%lld   heap : %lld -> %lld  stop_world: %lld  gc:%lld\n", iter, collector->obj_count, mem_total, heap_size, time_stopWorld, time_gc);
 #endif
 
@@ -792,6 +785,7 @@ void gc_refer_reg(Runtime *runtime, __refer ref) {
         if (!ti->objs_tailer) {
             ti->objs_tailer = ref;
         }
+        ti->objs_heap_of_thread += mb->heap_size;
 #if _JVM_DEBUG_GARBAGE_DUMP
         Utf8String *sus = utf8_create();
         _getMBName(mb, sus);
@@ -813,26 +807,30 @@ void gc_move_refer_thread_2_gc(Runtime *runtime) {
         if (ti->objs_header) {
             //lock
             spin_lock(&collector->lock);
-
+            {
 #if _JVM_DEBUG_GARBAGE_DUMP
-            MemoryBlock *mb = ti->objs_header;
-            while (mb) {
-                Utf8String *sus = utf8_create();
-                _getMBName(mb, sus);
-                jvm_printf("M: %s[%llx]\n", utf8_cstr(sus), (s64) (intptr_t) mb);
-                utf8_destory(sus);
-                mb = mb->next;
-            }
+                MemoryBlock *mb = ti->objs_header;
+                while (mb) {
+                    Utf8String *sus = utf8_create();
+                    _getMBName(mb, sus);
+                    jvm_printf("M: %s[%llx]\n", utf8_cstr(sus), (s64) (intptr_t) mb);
+                    utf8_destory(sus);
+                    mb = mb->next;
+                }
 #endif
-            ti->objs_tailer->next = collector->tmp_header;
-            if (!collector->tmp_tailer) {
-                collector->tmp_tailer = ti->objs_tailer;
+                ti->objs_tailer->next = collector->tmp_header;
+                if (!collector->tmp_tailer) {
+                    collector->tmp_tailer = ti->objs_tailer;
+                }
+                collector->tmp_header = ti->objs_header;
+                collector->obj_heap_size += ti->objs_heap_of_thread;
             }
-            collector->tmp_header = ti->objs_header;
             spin_unlock(&collector->lock);
 
             ti->objs_header = NULL;
             ti->objs_tailer = NULL;
+
+            ti->objs_heap_of_thread = 0;
         }
     }
 }

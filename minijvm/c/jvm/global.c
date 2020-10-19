@@ -87,9 +87,9 @@ s32 data_type_bytes[DATATYPE_COUNT] = {0, 0, 0, 0,
 s32 STACK_LENGHT_MAX = 4096;
 s32 STACK_LENGHT_INIT = 4096;
 
-s64 GARBAGE_PERIOD_MS = 1 * 1000;
+s64 GARBAGE_PERIOD_MS = 60 * 1000;
 
-s64 MAX_HEAP_SIZE = 30 * 1024 * 1024;
+s64 MAX_HEAP_SIZE = 100 * 1024 * 1024;
 
 s32 jdwp_enable = 0;
 s32 jdwp_suspend_on_start = 0;

@@ -222,6 +222,18 @@ s32 threadlist_count_none_daemon() {
     return count;
 }
 
+s64 threadlist_sum_heap() {
+    s64 hsize = 0;
+    spin_lock(&thread_list->spinlock);
+    s32 i;
+    for (i = 0; i < thread_list->length; i++) {
+        Runtime *r = arraylist_get_value_unsafe(thread_list, i);
+        hsize += r->threadInfo->objs_heap_of_thread;
+    }
+    spin_unlock(&thread_list->spinlock);
+    return hsize;
+}
+
 void thread_stop_all() {
     spin_lock(&thread_list->spinlock);
     s32 i;
@@ -725,7 +737,7 @@ s32 jthread_run(void *para) {
     jvm_printf("therad_loader    %s.%s%s  \n", utf8_cstr(method->_this_class->name),
                utf8_cstr(method->name), utf8_cstr(method->descriptor));
 #endif
-    gc_refer_reg(runtime, jthread);
+    //gc_refer_reg(runtime, jthread);//20201019 gust comment it , duplicate reg
     if (jdwp_enable)event_on_thread_start(runtime->threadInfo->jthread);
     runtime->threadInfo->thread_status = THREAD_STATUS_RUNNING;
     push_ref(runtime->stack, (__refer) jthread);
@@ -936,7 +948,9 @@ Instance *jarray_create_by_class(Runtime *runtime, s32 count, JClass *clazz) {
     if (count < 0)return NULL;
     s32 typeIdx = clazz->mb.arr_type_index;
     s32 width = data_type_bytes[typeIdx];
-    Instance *arr = jvm_calloc(instance_base_size() + (width * count));
+    s32 insSize = instance_base_size() + (width * count);
+    Instance *arr = jvm_calloc(insSize);
+    arr->mb.heap_size = insSize;
     arr->mb.type = MEM_TYPE_ARR;
     arr->mb.clazz = clazz;
     arr->mb.arr_type_index = typeIdx;
@@ -1069,10 +1083,11 @@ s32 instance_base_size() {
 }
 
 Instance *instance_create(Runtime *runtime, JClass *clazz) {
-
-    Instance *ins = jvm_calloc(instance_base_size() + clazz->field_instance_len);
+    s32 insSize = instance_base_size() + clazz->field_instance_len;
+    Instance *ins = jvm_calloc(insSize);
     ins->mb.type = MEM_TYPE_INS;
     ins->mb.clazz = clazz;
+    ins->mb.heap_size = insSize;
 
     ins->obj_fields = ((c8 *) (&ins[0])) + instance_base_size();//jvm_calloc(clazz->field_instance_len);
 //    jvm_printf("%s\n", utf8_cstr(clazz->name));
@@ -1163,11 +1178,13 @@ Instance *instance_copy(Runtime *runtime, Instance *src, s32 deep_copy) {
     } else if (src->mb.type == MEM_TYPE_ARR) {
         bodySize = src->arr_length * data_type_bytes[src->mb.arr_type_index];
     }
-    Instance *dst = jvm_malloc(instance_base_size() + bodySize);
+    s32 insSize = instance_base_size() + bodySize;
+    Instance *dst = jvm_malloc(insSize);
     memcpy(dst, src, instance_base_size());
     dst->mb.thread_lock = NULL;
     dst->mb.garbage_reg = 0;
     dst->mb.garbage_mark = 0;
+    dst->mb.heap_size = insSize;
     if (src->mb.type == MEM_TYPE_INS) {
         JClass *clazz = src->mb.clazz;
         s32 fileds_len = clazz->field_instance_len;

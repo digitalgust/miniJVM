@@ -171,24 +171,30 @@ abstract public class GContainer extends GObject {
 
     /**
      * find uiobject by x,y , if the pos is menu return immediate, no menu there then return other type uiobject
+     *
      * @param x
      * @param y
      * @return
      */
     public GObject findByXY(float x, float y) {
-        GObject found = null, menu = null;
+        GObject front = null, mid = null, back = null, menu = null;
         synchronized (elements) {
             for (int i = elements.size() - 1; i >= 0; i--) {
                 GObject nko = elements.get(i);
                 if (nko.isInArea(x, y)) {
-                    found = nko;
-                    if (found instanceof GMenu) {
+                    if (nko instanceof GMenu) {
                         return nko;
+                    } else if (nko.isFront()) {
+                        front = nko;
+                    } else if (nko.isBack()) {
+                        back = nko;
+                    } else {
+                        mid = nko;
                     }
                 }
             }
         }
-        return found;
+        return front != null ? front : (mid != null ? mid : back);
     }
 
     /**
@@ -373,10 +379,6 @@ abstract public class GContainer extends GObject {
             }
             found.mouseButtonEvent(button, pressed, x, y);
             return;
-        } else if (found != null && found.isFront()) {
-            setFocus(found);
-            found.mouseButtonEvent(button, pressed, x, y);
-            return;
         }
 
         if (focus != null && focus.isInArea(x, y)) {
@@ -484,10 +486,6 @@ abstract public class GContainer extends GObject {
             if (!((GMenu) found).isContextMenu()) {
                 setFocus(null);
             }
-            found.touchEvent(touchid, phase, x, y);
-            return;
-        } else if (found != null && found.isFront()) {
-            setFocus(found);
             found.touchEvent(touchid, phase, x, y);
             return;
         }
