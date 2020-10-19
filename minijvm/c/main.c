@@ -106,12 +106,12 @@ int main(int argc, char **argv) {
 //        main_name = "test/HelloWorld";
 //        main_name = "test/Foo1";
 //        main_name = "test/Foo2";
-        main_name = "test/Foo3";
+//        main_name = "test/Foo3";
 //        main_name = "test/SpecTest";
 //        main_name = "test/MultiThread";
 //        main_name = "test/ExecuteSpeed";
 //        main_name = "test/TestFile";
-//        main_name = "test/HttpServer";
+        main_name = "test/HttpServer";
 //        main_name = "test/BpDeepTest";
 //        main_name = "test/ReflectTest";
 //        main_name = "test/LambdaTest";
