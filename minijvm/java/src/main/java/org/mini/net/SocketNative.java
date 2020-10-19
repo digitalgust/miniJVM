@@ -74,16 +74,16 @@ public class SocketNative {
 
     //https implementation
 
-    public static native byte[] http_construct_httpinfo();
+    public static native byte[] sslc_construct_entry();
 
-    public static native int http_init(byte[] hi, boolean verify);
+    public static native int sslc_init(byte[] hi);
 
-    public static native int http_open(byte[] hi, byte[] url);
+    public static native int sslc_connect(byte[] hi, byte[] host, byte[] port);
 
-    public static native int http_close(byte[] hi);
+    public static native int sslc_close(byte[] hi);
 
-    public static native int https_write(byte[] hi, byte[] data, int offset, int len);
+    public static native int sslc_write(byte[] hi, byte[] data, int offset, int len);
 
-    public static native int https_read(byte[] hi, byte[] data, int offset, int len);
+    public static native int sslc_read(byte[] hi, byte[] data, int offset, int len);
 
 }

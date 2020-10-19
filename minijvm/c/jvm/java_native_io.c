@@ -56,7 +56,7 @@ typedef int socklen_t;
 #endif
 
 #include <errno.h>
-#include "https.h"
+#include "ssl_client.h"
 
 //=================================  socket  ====================================
 s32 sock_option(s32 sockfd, s32 opType, s32 opValue, s32 opValue2) {
@@ -730,37 +730,37 @@ s32 org_mini_net_SocketNative_host2ip4(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-s32 org_mini_net_SocketNative_http_construct_httpinfo(Runtime *runtime, JClass *clazz) {
-    Instance *jbyte_arr = jarray_create_by_type_index(runtime, sizeof(HTTP_INFO), DATATYPE_BYTE);
+s32 org_mini_net_SocketNative_sslc_construct_entry(Runtime *runtime, JClass *clazz) {
+    Instance *jbyte_arr = jarray_create_by_type_index(runtime, sizeof(struct _SSLC_Entry), DATATYPE_BYTE);
     push_ref(runtime->stack, jbyte_arr);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
-    jvm_printf("org_mini_net_SocketNative_http_construct_httpinfo  \n");
+    jvm_printf("org_mini_net_SocketNative_sslc_construct_entry  \n");
 #endif
     return 0;
 }
 
-s32 org_mini_net_SocketNative_http_init(Runtime *runtime, JClass *clazz) {
+s32 org_mini_net_SocketNative_sslc_init(Runtime *runtime, JClass *clazz) {
     s32 v = 0;
     Instance *jbyte_arr = (Instance *) localvar_getRefer(runtime->localvar, 0);
-    s32 valid = localvar_getInt(runtime->localvar, 1);
     if (jbyte_arr) {
-        v = http_init((HTTP_INFO *) jbyte_arr->arr_body, valid);
+        v = sslc_init((SSLC_Entry *) jbyte_arr->arr_body);
     }
     push_int(runtime->stack, v);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
-    jvm_printf("org_mini_net_SocketNative_http_init  \n");
+    jvm_printf("org_mini_net_SocketNative_sslc_init  \n");
 #endif
     return 0;
 }
 
-s32 org_mini_net_SocketNative_http_open(Runtime *runtime, JClass *clazz) {
+s32 org_mini_net_SocketNative_sslc_connect(Runtime *runtime, JClass *clazz) {
     s32 v = 0;
     Instance *jbyte_arr = (Instance *) localvar_getRefer(runtime->localvar, 0);
-    Instance *data_arr = (Instance *) localvar_getRefer(runtime->localvar, 1);
-    if (jbyte_arr && data_arr) {
-        v = http_open((HTTP_INFO *) jbyte_arr->arr_body, data_arr->arr_body);
+    Instance *host_arr = (Instance *) localvar_getRefer(runtime->localvar, 1);
+    Instance *port_arr = (Instance *) localvar_getRefer(runtime->localvar, 2);
+    if (jbyte_arr && host_arr && port_arr) {
+        v = sslc_connect((SSLC_Entry *) jbyte_arr->arr_body, host_arr->arr_body, port_arr->arr_body);
     }
     push_int(runtime->stack, v);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -770,11 +770,11 @@ s32 org_mini_net_SocketNative_http_open(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-s32 org_mini_net_SocketNative_http_close(Runtime *runtime, JClass *clazz) {
+s32 org_mini_net_SocketNative_sslc_close(Runtime *runtime, JClass *clazz) {
     s32 v = 0;
     Instance *jbyte_arr = (Instance *) localvar_getRefer(runtime->localvar, 0);
     if (jbyte_arr) {
-        v = http_close((HTTP_INFO *) jbyte_arr->arr_body);
+        v = sslc_close((SSLC_Entry *) jbyte_arr->arr_body);
     }
     push_int(runtime->stack, v);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -784,14 +784,16 @@ s32 org_mini_net_SocketNative_http_close(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-s32 org_mini_net_SocketNative_https_read(Runtime *runtime, JClass *clazz) {
+s32 org_mini_net_SocketNative_sslc_read(Runtime *runtime, JClass *clazz) {
     s32 v = 0;
     Instance *jbyte_arr = (Instance *) localvar_getRefer(runtime->localvar, 0);
     Instance *data_arr = (Instance *) localvar_getRefer(runtime->localvar, 1);
     s32 offset = localvar_getInt(runtime->localvar, 2);
     s32 len = localvar_getInt(runtime->localvar, 3);
     if (jbyte_arr && data_arr) {
-        v = https_read((HTTP_INFO *) jbyte_arr->arr_body, data_arr->arr_body + offset, len);
+        jthread_block_enter(runtime);
+        v = sslc_read((SSLC_Entry *) jbyte_arr->arr_body, data_arr->arr_body + offset, len);
+        jthread_block_exit(runtime);
     }
     push_int(runtime->stack, v < 0 ? -1 : v);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -801,14 +803,16 @@ s32 org_mini_net_SocketNative_https_read(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-s32 org_mini_net_SocketNative_https_write(Runtime *runtime, JClass *clazz) {
+s32 org_mini_net_SocketNative_sslc_write(Runtime *runtime, JClass *clazz) {
     s32 v = 0;
     Instance *jbyte_arr = (Instance *) localvar_getRefer(runtime->localvar, 0);
     Instance *data_arr = (Instance *) localvar_getRefer(runtime->localvar, 1);
     s32 offset = localvar_getInt(runtime->localvar, 2);
     s32 len = localvar_getInt(runtime->localvar, 3);
     if (jbyte_arr && data_arr) {
-        v = https_write((HTTP_INFO *) jbyte_arr->arr_body, data_arr->arr_body + offset, len);
+        jthread_block_enter(runtime);
+        v = sslc_write((SSLC_Entry *) jbyte_arr->arr_body, data_arr->arr_body + offset, len);
+        jthread_block_exit(runtime);
     }
     push_int(runtime->stack, v < 0 ? -1 : v);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1478,57 +1482,57 @@ s32 org_mini_crypt_XorCrypt_decrypt(Runtime *runtime, JClass *clazz) {
 }
 
 static java_native_method method_net_table[] = {
-        {"org/mini/net/SocketNative", "open0",                   "()I",                              org_mini_net_SocketNative_open0},
-        {"org/mini/net/SocketNative", "bind0",                   "(I[BI)I",                          org_mini_net_SocketNative_bind0},
-        {"org/mini/net/SocketNative", "connect0",                "(I[BI)I",                          org_mini_net_SocketNative_connect0},
-        {"org/mini/net/SocketNative", "listen0",                 "(I)I",                             org_mini_net_SocketNative_listen0},
-        {"org/mini/net/SocketNative", "accept0",                 "(I)I",                             org_mini_net_SocketNative_accept0},
-        {"org/mini/net/SocketNative", "registerCleanup",         "()V",                              org_mini_net_SocketNative_registerCleanup},
-        {"org/mini/net/SocketNative", "readBuf",                 "(I[BII)I",                         org_mini_net_SocketNative_readBuf},
-        {"org/mini/net/SocketNative", "readByte",                "(I)I",                             org_mini_net_SocketNative_readByte},
-        {"org/mini/net/SocketNative", "writeBuf",                "(I[BII)I",                         org_mini_net_SocketNative_writeBuf},
-        {"org/mini/net/SocketNative", "writeByte",               "(II)I",                            org_mini_net_SocketNative_writeByte},
-        {"org/mini/net/SocketNative", "available0",              "(I)I",                             org_mini_net_SocketNative_available0},
-        {"org/mini/net/SocketNative", "close0",                  "(I)V",                             org_mini_net_SocketNative_close0},
-        {"org/mini/net/SocketNative", "setOption0",              "(IIII)I",                          org_mini_net_SocketNative_setOption0},
-        {"org/mini/net/SocketNative", "getOption0",              "(II)I",                            org_mini_net_SocketNative_getOption0},
-        {"org/mini/net/SocketNative", "finalize",                "()V",                              org_mini_net_SocketNative_finalize},
-        {"org/mini/net/SocketNative", "getSockAddr",             "(II)Ljava/lang/String;",           org_mini_net_SocketNative_getSockAddr},
-        {"org/mini/net/SocketNative", "host2ip4",                "([B)I",                            org_mini_net_SocketNative_host2ip4},
-        {"org/mini/net/SocketNative", "http_construct_httpinfo", "()[B",                             org_mini_net_SocketNative_http_construct_httpinfo},
-        {"org/mini/net/SocketNative", "http_init",               "([BZ)I",                           org_mini_net_SocketNative_http_init},
-        {"org/mini/net/SocketNative", "http_open",               "([B[B)I",                          org_mini_net_SocketNative_http_open},
-        {"org/mini/net/SocketNative", "http_close",              "([B)I",                            org_mini_net_SocketNative_http_close},
-        {"org/mini/net/SocketNative", "https_read",              "([B[BII)I",                        org_mini_net_SocketNative_https_read},
-        {"org/mini/net/SocketNative", "https_write",             "([B[BII)I",                        org_mini_net_SocketNative_https_write},
-        {"org/mini/fs/InnerFile",     "openFile",                "([B[B)J",                          org_mini_fs_InnerFile_openFile},
-        {"org/mini/fs/InnerFile",     "closeFile",               "(J)I",                             org_mini_fs_InnerFile_closeFile},
-        {"org/mini/fs/InnerFile",     "read0",                   "(J)I",                             org_mini_fs_InnerFile_read0},
-        {"org/mini/fs/InnerFile",     "write0",                  "(JI)I",                            org_mini_fs_InnerFile_write0},
-        {"org/mini/fs/InnerFile",     "readbuf",                 "(J[BII)I",                         org_mini_fs_InnerFile_readbuf},
-        {"org/mini/fs/InnerFile",     "writebuf",                "(J[BII)I",                         org_mini_fs_InnerFile_writebuf},
-        {"org/mini/fs/InnerFile",     "seek0",                   "(JJ)I",                            org_mini_fs_InnerFile_seek0},
-        {"org/mini/fs/InnerFile",     "available0",              "(J)I",                             org_mini_fs_InnerFile_available0},
-        {"org/mini/fs/InnerFile",     "setLength0",              "(JJ)I",                            org_mini_fs_InnerFile_setLength0},
-        {"org/mini/fs/InnerFile",     "flush0",                  "(J)I",                             org_mini_fs_InnerFile_flush0},
-        {"org/mini/fs/InnerFile",     "loadFS",                  "([BLorg/mini/fs/InnerFileStat;)I", org_mini_fs_InnerFile_loadFS},
-        {"org/mini/fs/InnerFile",     "listDir",                 "([B)[Ljava/lang/String;",          org_mini_fs_InnerFile_listDir},
-        {"org/mini/fs/InnerFile",     "getcwd",                  "([B)I",                            org_mini_fs_InnerFile_getcwd},
-        {"org/mini/fs/InnerFile",     "chmod",                   "([BI)I",                           org_mini_fs_InnerFile_chmod},
-        {"org/mini/fs/InnerFile",     "mkdir0",                  "([B)I",                            org_mini_fs_InnerFile_mkdir0},
-        {"org/mini/fs/InnerFile",     "getOS",                   "()I",                              org_mini_fs_InnerFile_getOS},
-        {"org/mini/fs/InnerFile",     "delete0",                 "([B)I",                            org_mini_fs_InnerFile_delete0},
-        {"org/mini/fs/InnerFile",     "rename0",                 "([B[B)I",                          org_mini_fs_InnerFile_rename0},
-        {"org/mini/fs/InnerFile",     "getTmpDir",               "()Ljava/lang/String;",             org_mini_fs_InnerFile_getTmpDir},
-        {"org/mini/zip/Zip",          "getEntry0",               "([B[B)[B",                         org_mini_zip_ZipFile_getEntry0},
-        {"org/mini/zip/Zip",          "putEntry0",               "([B[B[B)I",                        org_mini_zip_ZipFile_putEntry0},
-        {"org/mini/zip/Zip",          "fileCount0",              "([B)I",                            org_mini_zip_ZipFile_fileCount0},
-        {"org/mini/zip/Zip",          "listFiles0",              "([B)[Ljava/lang/String;",          org_mini_zip_ZipFile_listFiles0},
-        {"org/mini/zip/Zip",          "isDirectory0",            "([BI)I",                           org_mini_zip_ZipFile_isDirectory0},
-        {"org/mini/zip/Zip",          "extract0",                "([B)[B",                           org_mini_zip_ZipFile_extract0},
-        {"org/mini/zip/Zip",          "compress0",               "([B)[B",                           org_mini_zip_ZipFile_compress0},
-        {"org/mini/crypt/XorCrypt",   "encrypt",                 "([B[B)[B",                         org_mini_crypt_XorCrypt_encrypt},
-        {"org/mini/crypt/XorCrypt",   "decrypt",                 "([B[B)[B",                         org_mini_crypt_XorCrypt_decrypt},
+        {"org/mini/net/SocketNative", "open0",                "()I",                              org_mini_net_SocketNative_open0},
+        {"org/mini/net/SocketNative", "bind0",                "(I[BI)I",                          org_mini_net_SocketNative_bind0},
+        {"org/mini/net/SocketNative", "connect0",             "(I[BI)I",                          org_mini_net_SocketNative_connect0},
+        {"org/mini/net/SocketNative", "listen0",              "(I)I",                             org_mini_net_SocketNative_listen0},
+        {"org/mini/net/SocketNative", "accept0",              "(I)I",                             org_mini_net_SocketNative_accept0},
+        {"org/mini/net/SocketNative", "registerCleanup",      "()V",                              org_mini_net_SocketNative_registerCleanup},
+        {"org/mini/net/SocketNative", "readBuf",              "(I[BII)I",                         org_mini_net_SocketNative_readBuf},
+        {"org/mini/net/SocketNative", "readByte",             "(I)I",                             org_mini_net_SocketNative_readByte},
+        {"org/mini/net/SocketNative", "writeBuf",             "(I[BII)I",                         org_mini_net_SocketNative_writeBuf},
+        {"org/mini/net/SocketNative", "writeByte",            "(II)I",                            org_mini_net_SocketNative_writeByte},
+        {"org/mini/net/SocketNative", "available0",           "(I)I",                             org_mini_net_SocketNative_available0},
+        {"org/mini/net/SocketNative", "close0",               "(I)V",                             org_mini_net_SocketNative_close0},
+        {"org/mini/net/SocketNative", "setOption0",           "(IIII)I",                          org_mini_net_SocketNative_setOption0},
+        {"org/mini/net/SocketNative", "getOption0",           "(II)I",                            org_mini_net_SocketNative_getOption0},
+        {"org/mini/net/SocketNative", "finalize",             "()V",                              org_mini_net_SocketNative_finalize},
+        {"org/mini/net/SocketNative", "getSockAddr",          "(II)Ljava/lang/String;",           org_mini_net_SocketNative_getSockAddr},
+        {"org/mini/net/SocketNative", "host2ip4",             "([B)I",                            org_mini_net_SocketNative_host2ip4},
+        {"org/mini/net/SocketNative", "sslc_construct_entry", "()[B",                             org_mini_net_SocketNative_sslc_construct_entry},
+        {"org/mini/net/SocketNative", "sslc_init",            "([B)I",                            org_mini_net_SocketNative_sslc_init},
+        {"org/mini/net/SocketNative", "sslc_connect",         "([B[B[B)I",                        org_mini_net_SocketNative_sslc_connect},
+        {"org/mini/net/SocketNative", "sslc_close",           "([B)I",                            org_mini_net_SocketNative_sslc_close},
+        {"org/mini/net/SocketNative", "sslc_read",            "([B[BII)I",                        org_mini_net_SocketNative_sslc_read},
+        {"org/mini/net/SocketNative", "sslc_write",           "([B[BII)I",                        org_mini_net_SocketNative_sslc_write},
+        {"org/mini/fs/InnerFile",     "openFile",             "([B[B)J",                          org_mini_fs_InnerFile_openFile},
+        {"org/mini/fs/InnerFile",     "closeFile",            "(J)I",                             org_mini_fs_InnerFile_closeFile},
+        {"org/mini/fs/InnerFile",     "read0",                "(J)I",                             org_mini_fs_InnerFile_read0},
+        {"org/mini/fs/InnerFile",     "write0",               "(JI)I",                            org_mini_fs_InnerFile_write0},
+        {"org/mini/fs/InnerFile",     "readbuf",              "(J[BII)I",                         org_mini_fs_InnerFile_readbuf},
+        {"org/mini/fs/InnerFile",     "writebuf",             "(J[BII)I",                         org_mini_fs_InnerFile_writebuf},
+        {"org/mini/fs/InnerFile",     "seek0",                "(JJ)I",                            org_mini_fs_InnerFile_seek0},
+        {"org/mini/fs/InnerFile",     "available0",           "(J)I",                             org_mini_fs_InnerFile_available0},
+        {"org/mini/fs/InnerFile",     "setLength0",           "(JJ)I",                            org_mini_fs_InnerFile_setLength0},
+        {"org/mini/fs/InnerFile",     "flush0",               "(J)I",                             org_mini_fs_InnerFile_flush0},
+        {"org/mini/fs/InnerFile",     "loadFS",               "([BLorg/mini/fs/InnerFileStat;)I", org_mini_fs_InnerFile_loadFS},
+        {"org/mini/fs/InnerFile",     "listDir",              "([B)[Ljava/lang/String;",          org_mini_fs_InnerFile_listDir},
+        {"org/mini/fs/InnerFile",     "getcwd",               "([B)I",                            org_mini_fs_InnerFile_getcwd},
+        {"org/mini/fs/InnerFile",     "chmod",                "([BI)I",                           org_mini_fs_InnerFile_chmod},
+        {"org/mini/fs/InnerFile",     "mkdir0",               "([B)I",                            org_mini_fs_InnerFile_mkdir0},
+        {"org/mini/fs/InnerFile",     "getOS",                "()I",                              org_mini_fs_InnerFile_getOS},
+        {"org/mini/fs/InnerFile",     "delete0",              "([B)I",                            org_mini_fs_InnerFile_delete0},
+        {"org/mini/fs/InnerFile",     "rename0",              "([B[B)I",                          org_mini_fs_InnerFile_rename0},
+        {"org/mini/fs/InnerFile",     "getTmpDir",            "()Ljava/lang/String;",             org_mini_fs_InnerFile_getTmpDir},
+        {"org/mini/zip/Zip",          "getEntry0",            "([B[B)[B",                         org_mini_zip_ZipFile_getEntry0},
+        {"org/mini/zip/Zip",          "putEntry0",            "([B[B[B)I",                        org_mini_zip_ZipFile_putEntry0},
+        {"org/mini/zip/Zip",          "fileCount0",           "([B)I",                            org_mini_zip_ZipFile_fileCount0},
+        {"org/mini/zip/Zip",          "listFiles0",           "([B)[Ljava/lang/String;",          org_mini_zip_ZipFile_listFiles0},
+        {"org/mini/zip/Zip",          "isDirectory0",         "([BI)I",                           org_mini_zip_ZipFile_isDirectory0},
+        {"org/mini/zip/Zip",          "extract0",             "([B)[B",                           org_mini_zip_ZipFile_extract0},
+        {"org/mini/zip/Zip",          "compress0",            "([B)[B",                           org_mini_zip_ZipFile_compress0},
+        {"org/mini/crypt/XorCrypt",   "encrypt",              "([B[B)[B",                         org_mini_crypt_XorCrypt_encrypt},
+        {"org/mini/crypt/XorCrypt",   "decrypt",              "([B[B)[B",                         org_mini_crypt_XorCrypt_decrypt},
 
 };
 

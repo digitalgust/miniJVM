@@ -1,5 +1,11 @@
-#define ca_crt_rsa_size 70369 
+#ifndef _CA_CERT_H
+#define _CA_CERT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define ca_crt_rsa_size 70369
 char ca_crt_rsa[70369] = {
     "-----BEGIN CERTIFICATE-----\r\n"
     "MIICWjCCAcMCAgGlMA0GCSqGSIb3DQEBBAUAMHUxCzAJBgNVBAYTAlVTMRgwFgYD\r\n"
@@ -1143,3 +1149,9 @@ char ca_crt_rsa[70369] = {
     "-----END CERTIFICATE-----\r\n"
     " "
 };
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /*_CA_CERT_H*/

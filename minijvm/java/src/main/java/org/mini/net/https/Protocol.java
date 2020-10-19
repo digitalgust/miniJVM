@@ -173,12 +173,12 @@ public class Protocol extends org.mini.net.http.Protocol
         }
 
         public void connectImpl() throws IOException {
-            httpsinfo = SocketNative.http_construct_httpinfo();
-            int ret = SocketNative.http_init(httpsinfo, false);
+            httpsinfo = SocketNative.sslc_construct_entry();
+            int ret = SocketNative.sslc_init(httpsinfo);
             if (httpsinfo == null || ret < 0) {
                 throw new IOException("https init error");
             }
-            ret = SocketNative.http_open(httpsinfo, toutf8bytes(getURL()));
+            ret = SocketNative.sslc_connect(httpsinfo, toutf8bytes(getHost()), toutf8bytes(Integer.toString(getPort())));
             if (ret < 0) {
                 throw new IOException("https open error");
             }
@@ -200,9 +200,9 @@ public class Protocol extends org.mini.net.http.Protocol
                     public int read() throws IOException {
                         int ret;
                         while (buf.remaining() == 0) {
-                            ret = SocketNative.https_read(httpsinfo, b, 0, b.length);
+                            ret = SocketNative.sslc_read(httpsinfo, b, 0, b.length);
                             if (ret < 0) {
-                                SocketNative.http_close(httpsinfo);
+                                SocketNative.sslc_close(httpsinfo);
                                 return -1;
                             }
                             if (ret == 0) {
@@ -218,7 +218,7 @@ public class Protocol extends org.mini.net.http.Protocol
 
                     @Override
                     public void close() throws IOException {
-                        int ret = SocketNative.http_close(httpsinfo);
+                        int ret = SocketNative.sslc_close(httpsinfo);
                         if (ret < 0) throw new IOException("https inputstream close error");
                     }
                 };
@@ -245,16 +245,16 @@ public class Protocol extends org.mini.net.http.Protocol
 
                     @Override
                     public void write(byte[] b, int offset, int len) throws IOException {
-                        int ret = SocketNative.https_write(httpsinfo, b, offset, len);
+                        int ret = SocketNative.sslc_write(httpsinfo, b, offset, len);
                         if (ret <= 0) {
-                            SocketNative.http_close(httpsinfo);
+                            SocketNative.sslc_close(httpsinfo);
                             throw new IOException("https write error");
                         }
                     }
 
                     @Override
                     public void close() throws IOException {
-                        int ret = SocketNative.http_close(httpsinfo);
+                        int ret = SocketNative.sslc_close(httpsinfo);
                         if (ret < 0) throw new IOException("https outputstream close error");
                     }
                 };
@@ -281,7 +281,7 @@ public class Protocol extends org.mini.net.http.Protocol
                 }
             } catch (Exception e) {
             }
-            SocketNative.http_close(httpsinfo);
+            SocketNative.sslc_close(httpsinfo);
         }
     }
 

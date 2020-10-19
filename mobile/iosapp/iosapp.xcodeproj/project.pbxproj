@@ -44,7 +44,6 @@
 		451F272F23A24C7B00F99984 /* jni_minial.m in Sources */ = {isa = PBXBuildFile; fileRef = 4535FA2721944F7300B888BA /* jni_minial.m */; };
 		4581C5CC226DA7BE00E88538 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 45D78F2B209D3E62003B9317 /* Assets.xcassets */; };
 		45D7904B20A002C4003B9317 /* resfiles in Resources */ = {isa = PBXBuildFile; fileRef = 45D7904A20A002C4003B9317 /* resfiles */; };
-		45F9966B253B69C80053E7A0 /* https.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F9966A253B69C80053E7A0 /* https.c */; };
 		45F996B4253B69E40053E7A0 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F9966D253B69DE0053E7A0 /* md5.c */; };
 		45F996B5253B69E40053E7A0 /* cmac.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F9966E253B69DE0053E7A0 /* cmac.c */; };
 		45F996B6253B69E40053E7A0 /* ssl_cli.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F9966F253B69DE0053E7A0 /* ssl_cli.c */; };
@@ -116,6 +115,7 @@
 		45F996F8253B69E40053E7A0 /* ssl_ticket.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F996B1253B69E30053E7A0 /* ssl_ticket.c */; };
 		45F996F9253B69E40053E7A0 /* threading.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F996B2253B69E40053E7A0 /* threading.c */; };
 		45F996FA253B69E40053E7A0 /* timing.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F996B3253B69E40053E7A0 /* timing.c */; };
+		45F9982E253D2B6D0053E7A0 /* ssl_client.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F9982D253D2B6D0053E7A0 /* ssl_client.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -226,9 +226,7 @@
 		45D7904A20A002C4003B9317 /* resfiles */ = {isa = PBXFileReference; lastKnownFileType = folder; name = resfiles; path = ../assets/resfiles; sourceTree = "<group>"; };
 		45F5E8432175E5000001F587 /* iosapp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iosapp.entitlements; sourceTree = "<group>"; };
 		45F65EB9224E343800390C0D /* miniaudio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = miniaudio.h; sourceTree = "<group>"; };
-		45F99668253B69C80053E7A0 /* https.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = https.h; path = https/https.h; sourceTree = "<group>"; };
 		45F99669253B69C80053E7A0 /* ca_cert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ca_cert.h; path = https/ca_cert.h; sourceTree = "<group>"; };
-		45F9966A253B69C80053E7A0 /* https.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = https.c; path = https/https.c; sourceTree = "<group>"; };
 		45F9966D253B69DE0053E7A0 /* md5.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = md5.c; path = https/mbedtls/library/md5.c; sourceTree = "<group>"; };
 		45F9966E253B69DE0053E7A0 /* cmac.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmac.c; path = https/mbedtls/library/cmac.c; sourceTree = "<group>"; };
 		45F9966F253B69DE0053E7A0 /* ssl_cli.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ssl_cli.c; path = https/mbedtls/library/ssl_cli.c; sourceTree = "<group>"; };
@@ -369,6 +367,8 @@
 		45F9973E253B6A070053E7A0 /* arc4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = arc4.h; path = https/mbedtls/include/mbedtls/arc4.h; sourceTree = "<group>"; };
 		45F9973F253B6A070053E7A0 /* bignum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bignum.h; path = https/mbedtls/include/mbedtls/bignum.h; sourceTree = "<group>"; };
 		45F99740253B6A070053E7A0 /* cipher_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cipher_internal.h; path = https/mbedtls/include/mbedtls/cipher_internal.h; sourceTree = "<group>"; };
+		45F9982C253D2B6D0053E7A0 /* ssl_client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ssl_client.h; path = https/ssl_client.h; sourceTree = "<group>"; };
+		45F9982D253D2B6D0053E7A0 /* ssl_client.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ssl_client.c; path = https/ssl_client.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -631,9 +631,9 @@
 		45F99663253B69600053E7A0 /* https */ = {
 			isa = PBXGroup;
 			children = (
+				45F9982D253D2B6D0053E7A0 /* ssl_client.c */,
+				45F9982C253D2B6D0053E7A0 /* ssl_client.h */,
 				45F99669253B69C80053E7A0 /* ca_cert.h */,
-				45F9966A253B69C80053E7A0 /* https.c */,
-				45F99668253B69C80053E7A0 /* https.h */,
 				45F99664253B696B0053E7A0 /* mbedtls */,
 			);
 			name = https;
@@ -910,9 +910,9 @@
 				45F996E5253B69E40053E7A0 /* x509_create.c in Sources */,
 				451F272E23A24C7B00F99984 /* glfm_platform_ios.m in Sources */,
 				451F272F23A24C7B00F99984 /* jni_minial.m in Sources */,
+				45F9982E253D2B6D0053E7A0 /* ssl_client.c in Sources */,
 				451F271A23A24C3A00F99984 /* ltalloc.c in Sources */,
 				45F996CD253B69E40053E7A0 /* md4.c in Sources */,
-				45F9966B253B69C80053E7A0 /* https.c in Sources */,
 				45F996CC253B69E40053E7A0 /* version_features.c in Sources */,
 				451F271B23A24C3A00F99984 /* miniz.c in Sources */,
 				45F996BB253B69E40053E7A0 /* ssl_tls.c in Sources */,

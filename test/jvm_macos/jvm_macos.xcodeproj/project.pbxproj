@@ -42,7 +42,6 @@
 		45EAB02820DCDC2300896201 /* pcallstack.m in Sources */ = {isa = PBXBuildFile; fileRef = 45EAB02720DCDC2300896201 /* pcallstack.m */; };
 		45ECB7A3206D01C700CF9E7F /* libjnitest.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45ECB79C206D017900CF9E7F /* libjnitest.dylib */; };
 		45ECB7A4206D01CC00CF9E7F /* libgui.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45ECB79E206D017A00CF9E7F /* libgui.dylib */; };
-		45F9974B253B6A9E0053E7A0 /* https.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F9974A253B6A9E0053E7A0 /* https.c */; };
 		45F99794253B6AAE0053E7A0 /* version_features.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F9974D253B6AAB0053E7A0 /* version_features.c */; };
 		45F99795253B6AAE0053E7A0 /* x509write_csr.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F9974E253B6AAB0053E7A0 /* x509write_csr.c */; };
 		45F99796253B6AAE0053E7A0 /* havege.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F9974F253B6AAB0053E7A0 /* havege.c */; };
@@ -114,6 +113,7 @@
 		45F997D8253B6AAE0053E7A0 /* dhm.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F99791253B6AAE0053E7A0 /* dhm.c */; };
 		45F997D9253B6AAE0053E7A0 /* md2.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F99792253B6AAE0053E7A0 /* md2.c */; };
 		45F997DA253B6AAE0053E7A0 /* ssl_cache.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F99793253B6AAE0053E7A0 /* ssl_cache.c */; };
+		45F9982A253D2B360053E7A0 /* ssl_client.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F99829253D2B360053E7A0 /* ssl_client.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -195,8 +195,6 @@
 		45ECB79C206D017900CF9E7F /* libjnitest.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libjnitest.dylib; path = ../../binary/macos/libjnitest.dylib; sourceTree = "<group>"; };
 		45ECB79E206D017A00CF9E7F /* libgui.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgui.dylib; path = ../../binary/macos/libgui.dylib; sourceTree = "<group>"; };
 		45F99748253B6A9E0053E7A0 /* ca_cert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ca_cert.h; path = https/ca_cert.h; sourceTree = "<group>"; };
-		45F99749253B6A9E0053E7A0 /* https.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = https.h; path = https/https.h; sourceTree = "<group>"; };
-		45F9974A253B6A9E0053E7A0 /* https.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = https.c; path = https/https.c; sourceTree = "<group>"; };
 		45F9974D253B6AAB0053E7A0 /* version_features.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = version_features.c; path = https/mbedtls/library/version_features.c; sourceTree = "<group>"; };
 		45F9974E253B6AAB0053E7A0 /* x509write_csr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = x509write_csr.c; path = https/mbedtls/library/x509write_csr.c; sourceTree = "<group>"; };
 		45F9974F253B6AAB0053E7A0 /* havege.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = havege.c; path = https/mbedtls/library/havege.c; sourceTree = "<group>"; };
@@ -337,6 +335,8 @@
 		45F9981E253B6ABE0053E7A0 /* oid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = oid.h; path = https/mbedtls/include/mbedtls/oid.h; sourceTree = "<group>"; };
 		45F9981F253B6ABE0053E7A0 /* cipher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cipher.h; path = https/mbedtls/include/mbedtls/cipher.h; sourceTree = "<group>"; };
 		45F99820253B6ABE0053E7A0 /* pkcs5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pkcs5.h; path = https/mbedtls/include/mbedtls/pkcs5.h; sourceTree = "<group>"; };
+		45F99828253D2B360053E7A0 /* ssl_client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ssl_client.h; path = https/ssl_client.h; sourceTree = "<group>"; };
+		45F99829253D2B360053E7A0 /* ssl_client.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ssl_client.c; path = https/ssl_client.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -479,6 +479,8 @@
 		45F99743253B6A660053E7A0 /* https */ = {
 			isa = PBXGroup;
 			children = (
+				45F99829253D2B360053E7A0 /* ssl_client.c */,
+				45F99828253D2B360053E7A0 /* ssl_client.h */,
 				45F99744253B6A700053E7A0 /* mbedtls */,
 			);
 			name = https;
@@ -488,8 +490,6 @@
 			isa = PBXGroup;
 			children = (
 				45F99748253B6A9E0053E7A0 /* ca_cert.h */,
-				45F9974A253B6A9E0053E7A0 /* https.c */,
-				45F99749253B6A9E0053E7A0 /* https.h */,
 				45F99746253B6A7F0053E7A0 /* library */,
 				45F99745253B6A790053E7A0 /* include */,
 			);
@@ -738,9 +738,9 @@
 				45F997A0253B6AAE0053E7A0 /* aesni.c in Sources */,
 				45F997AC253B6AAE0053E7A0 /* xtea.c in Sources */,
 				45F9979E253B6AAE0053E7A0 /* pkcs5.c in Sources */,
+				45F9982A253D2B360053E7A0 /* ssl_client.c in Sources */,
 				4581C6D2226DAA3600E88538 /* java_native_reflect.c in Sources */,
 				4581C6CC226DAA3600E88538 /* class.c in Sources */,
-				45F9974B253B6A9E0053E7A0 /* https.c in Sources */,
 				45F997AA253B6AAE0053E7A0 /* arc4.c in Sources */,
 				45F9979B253B6AAE0053E7A0 /* ecdsa.c in Sources */,
 				45F997D2253B6AAE0053E7A0 /* x509.c in Sources */,
