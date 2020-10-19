@@ -104,7 +104,7 @@ public class GToolkit {
             if (fontLoaded) {
                 return;
             }
-            data_word = readFileFromJar("/res/wqymhei.ttc");
+            data_word = readFileFromJar("/res/NotoSansCJKsc-Medium.otf");
             font_word_handle = Nanovg.nvgCreateFontMem(vg, font_word, data_word, data_word.length, 0);
             if (font_word_handle == -1) {
                 System.out.println("Could not add font.\n");

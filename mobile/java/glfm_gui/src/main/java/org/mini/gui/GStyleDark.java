@@ -15,12 +15,12 @@ public class GStyleDark extends GStyle {
 
     @Override
     public float getTextFontSize() {
-        return 16f;
+        return 18f;
     }
 
     @Override
     public float getTitleFontSize() {
-        return 18f;
+        return 20f;
     }
 
     @Override
