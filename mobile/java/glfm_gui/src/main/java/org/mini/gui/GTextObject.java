@@ -10,14 +10,39 @@ import org.mini.glfw.Glfw;
 import org.mini.gui.event.GFocusChangeListener;
 import org.mini.gui.event.GStateChangeListener;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.mini.nanovg.Gutil.toUtf8;
 
 /**
  * @author Gust
  */
 public abstract class GTextObject extends GObject implements GFocusChangeListener {
+    //for keyboard union action
     static GObject defaultUnionObj = new GObject() {
     };
+    protected GObject unionObj = defaultUnionObj;//if this object exists, the keyboard not disappear
+
+    //for undo redo
+    static class UserAction {
+        static final int ADD = 0, DEL = 1;
+
+        UserAction(int mod, String t, int c) {
+            addOrDel = mod;
+            txt = t;
+            caretIndex = c;
+        }
+
+        int addOrDel;
+        String txt;
+        int caretIndex;
+    }
+
+    protected List<UserAction> undoQ = new ArrayList();
+    protected List<UserAction> redoQ = new ArrayList();
+    static final int MAXUNDO = 15;
+
 
     protected String hint;
     protected byte[] hint_arr;
@@ -29,7 +54,6 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
 
     protected boolean selectMode = false;
 
-    protected GObject unionObj = defaultUnionObj;//if this object exists, the keyboard not disappear
 
     public void setHint(String hint) {
         this.hint = hint;
@@ -60,18 +84,39 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         textsb.insert(index, ch);
         text_arr = null;
         doStateChange();
+        putInUndo(UserAction.ADD, "" + ch, index);
+    }
+
+    public void insertTextByIndex(int index, String str) {
+        textsb.insert(index, str);
+        text_arr = null;
+        doStateChange();
+        putInUndo(UserAction.ADD, str, index);
     }
 
     public void deleteTextByIndex(int index) {
+        char ch = textsb.charAt(index);
         textsb.deleteCharAt(index);
         text_arr = null;
         doStateChange();
+        putInUndo(UserAction.DEL, "" + ch, index);
     }
 
+    public void deleteTextRange(int start, int end) {
+        String str = textsb.substring(start, end);
+        textsb.delete(start, end);
+        text_arr = null;
+        doStateChange();
+        putInUndo(UserAction.DEL, str, start);
+    }
+
+
     public void deleteAll() {
+        String str = textsb.toString();
         textsb.setLength(0);
         text_arr = null;
         doStateChange();
+        putInUndo(UserAction.DEL, str, 0);
     }
 
     abstract public String getSelectedText();
@@ -81,6 +126,8 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     abstract public void insertTextAtCaret(String str);
 
     abstract void resetSelect();
+
+    abstract void setCaretIndex(int caretIndex);
 
     public void doSelectText() {
 
@@ -225,4 +272,77 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         }
     }
 
+
+    public void putInUndo(int mod, String t, int caretIndex) {
+        undoQ.add(new UserAction(mod, t, caretIndex));
+        if (undoQ.size() > MAXUNDO) {
+            undoQ.remove(0);
+        }
+    }
+
+    public void putInUndo(UserAction te) {
+        undoQ.add(te);
+        if (undoQ.size() > MAXUNDO) {
+            undoQ.remove(0);
+        }
+    }
+
+    public UserAction getUndo() {
+        if (!undoQ.isEmpty()) {
+            UserAction te = undoQ.remove(undoQ.size() - 1);
+            return te;
+        }
+        return null;
+    }
+
+
+    public void putInRedo(int mod, String t, int caretIndex) {
+        redoQ.add(new UserAction(mod, t, caretIndex));
+        if (redoQ.size() > MAXUNDO) {
+            redoQ.remove(0);
+        }
+    }
+
+    public void putInRedo(UserAction te) {
+        redoQ.add(te);
+        if (redoQ.size() > MAXUNDO) {
+            redoQ.remove(0);
+        }
+    }
+
+    public UserAction getRedo() {
+        if (!redoQ.isEmpty()) {
+            UserAction te = redoQ.remove(redoQ.size() - 1);
+            return te;
+        }
+        return null;
+    }
+
+    public void undo() {
+        UserAction action = getUndo();
+        if (action != null) {
+            if (action.addOrDel == UserAction.ADD) {
+                textsb.delete(action.caretIndex, action.caretIndex + action.txt.length());
+            } else {
+                textsb.insert(action.caretIndex, action.txt);
+            }
+            setCaretIndex(action.caretIndex);
+            putInRedo(action);
+            text_arr = null;
+        }
+    }
+
+    public void redo() {
+        UserAction action = getRedo();
+        if (action != null) {
+            if (action.addOrDel == UserAction.ADD) {
+                textsb.insert(action.caretIndex, action.txt);
+            } else {
+                textsb.delete(action.caretIndex, action.caretIndex + action.txt.length());
+            }
+            setCaretIndex(action.caretIndex);
+            putInUndo(action);
+            text_arr = null;
+        }
+    }
 }

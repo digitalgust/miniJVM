@@ -34,8 +34,11 @@ public class GTextField extends GTextObject {
     protected int caretIndex;
     protected int selectStart = -1;//选取开始
     protected int selectEnd = -1;//选取结束
+    boolean mouseDrag;
 
     protected boolean password = false;//是否密码字段
+
+    protected float wordShowOffsetX = 0.f;
 
     public GTextField() {
         this("", "", 0f, 0f, 1f, 1f);
@@ -87,25 +90,44 @@ public class GTextField extends GTextObject {
         int ry = (int) (y - parent.getInnerY());
         if (isInArea(x, y)) {
             if (button == Glfw.GLFW_MOUSE_BUTTON_1) {
-                if (!pressed) {
-                    if (isInBoundle(reset_boundle, rx, ry)) {
-                        deleteAll();
+
+                if (pressed) {
+                    int caret = getCaretIndex(x, y);
+                    if (caret >= 0) {
+                        setCaretIndex(caret);
+                        resetSelect();
+                        selectStart = caret;
+                        mouseDrag = true;
+                    } else {
+                        GToolkit.disposeEditMenu();
+                    }
+                } else {
+                    mouseDrag = false;
+                    if (selectEnd == -1 || selectStart == selectEnd) {
                         resetSelect();
                         GToolkit.disposeEditMenu();
-                    } else {
-                        if (selectMode) {
-                            resetSelect();
-                            GToolkit.disposeEditMenu();
-                        }
-                        setCaretIndex(getCaretIndex(x, y));
                     }
                 }
+
             } else if (button == Glfw.GLFW_MOUSE_BUTTON_2) {
                 if (pressed) {
 
                 } else {
                     GToolkit.callEditMenu(this, x, y);
                 }
+            }
+        }
+    }
+
+    @Override
+    public void cursorPosEvent(int x, int y) {
+        if (isInArea(x, y)) {
+            if (mouseDrag) {
+                int caret = getCaretIndex(x, y);
+                if (caret >= 0) {
+                    selectEnd = caret;
+                }
+                setCaretIndex(caret);
             }
         }
     }
@@ -149,6 +171,26 @@ public class GTextField extends GTextObject {
                             if (s != null) {
                                 deleteSelectedText();
                                 insertTextAtCaret(s);
+                            }
+                            break;
+                        }
+                        case Glfw.GLFW_KEY_A: {
+                            if ((mods & Glfw.GLFW_MOD_CONTROL) != 0) {
+                                doSelectAll();
+                            }
+                            break;
+                        }
+                        case Glfw.GLFW_KEY_X: {
+                            if ((mods & Glfw.GLFW_MOD_CONTROL) != 0) {
+                                deleteSelectedText();
+                            }
+                            break;
+                        }
+                        case Glfw.GLFW_KEY_Z: {
+                            if ((mods & Glfw.GLFW_MOD_CONTROL) != 0 && (mods & Glfw.GLFW_MOD_SHIFT) != 0) {
+                                redo();
+                            } else if ((mods & Glfw.GLFW_MOD_CONTROL) != 0) {
+                                undo();
                             }
                             break;
                         }
@@ -207,14 +249,8 @@ public class GTextField extends GTextObject {
 
     @Override
     public void characterEvent(String str, int mods) {
-
-        for (int i = 0, imax = str.length(); i < imax; i++) {
-            char character = str.charAt(i);
-            if (character != '\n' && character != '\r' && textsb.length() < text_max) {
-                insertTextByIndex(caretIndex, character);
-                setCaretIndex(caretIndex + 1);
-            }
-        }
+        insertTextByIndex(caretIndex, str);
+        setCaretIndex(caretIndex + str.length());
     }
 
     /**
@@ -254,24 +290,34 @@ public class GTextField extends GTextObject {
         }
     }
 
+    public int getPosXByIndex(int i) {
+        if (text_pos != null) {
+            if (i >= 0 && i < text_pos.length) {
+                return text_pos[i];
+            }
+        }
+        return -1;
+    }
+
     public int getCaretIndex(int x, int y) {
         if (text_pos == null) {
-            return textsb.length();
+            return textsb.length() - 1;
         }
         for (int j = 0; j < text_pos.length; j++) {
             //取第 j 个字符的X座标
             float x0 = text_pos[j];
-            if (x < x0) {
+            float x1 = j == text_pos.length - 1 ? x0 : text_pos[j + 1];
+            if (x < x0 + ((x1 - x0) / 2)) {
                 return j;
             }
         }
-        return text_pos.length;
+        return text_pos.length - 1;
     }
 
     /**
      * @param caretIndex the caretIndex to set
      */
-    private void setCaretIndex(int caretIndex) {
+    void setCaretIndex(int caretIndex) {
         if (caretIndex < 0) {
             caretIndex = 0;
         } else if (caretIndex > textsb.length()) {
@@ -297,10 +343,8 @@ public class GTextField extends GTextObject {
             return;
         }
         setCaretIndex(sarr[0]);
-        textsb.delete(sarr[0], sarr[1]);
-        text_arr = null;
+        deleteTextRange(sarr[0], sarr[1]);
         resetSelect();
-        doStateChange();
     }
 
     @Override
@@ -320,13 +364,8 @@ public class GTextField extends GTextObject {
 
     @Override
     public void insertTextAtCaret(String str) {
-        for (int i = 0, imax = str.length(); i < imax; i++) {
-            char character = str.charAt(i);
-            textsb.insert(caretIndex, character);
-            setCaretIndex(caretIndex + 1);
-            doStateChange();
-        }
-        text_arr = null;
+        insertTextByIndex(caretIndex, str);
+        setCaretIndex(caretIndex + str.length());
     }
 
     @Override
@@ -412,11 +451,14 @@ public class GTextField extends GTextObject {
             try {
                 if (text_width > text_show_area_w) {
                     wordx -= text_width - text_show_area_w;
+                    wordx += wordShowOffsetX;
                 }
                 int char_count = nvgTextGlyphPositionsJni(vg, wordx, wordy, text_arr, 0, text_arr.length, glyphsHandle, text_max);
 
                 text_pos = new short[char_count];
                 float caretx = 0;
+                float text_show_area_right = text_show_area_x + text_show_area_w;
+                int leftShowCharIdx = Integer.MIN_VALUE, rightShowCharIdx = Integer.MAX_VALUE;
                 //确定每个char的位置
                 for (int j = 0; j < char_count; j++) {
                     //取第 j 个字符的X座标
@@ -425,10 +467,28 @@ public class GTextField extends GTextObject {
                     if (caretIndex == j) {
                         caretx = x0;
                     }
+                    if (j - 1 >= 0 && text_pos[j - 1] <= text_show_area_x && x0 > text_show_area_x) {
+                        leftShowCharIdx = j;
+                    }
+                    if (j - 1 >= 0 && text_pos[j - 1] <= text_show_area_right && x0 > text_show_area_right) {
+                        rightShowCharIdx = j;
+                    }
                 }
-                if (caretx == 0) {
-                    caretx = wordx + text_width;
+
+                //本次计算,下次绘制生效
+                if (Math.abs(caretx - text_show_area_x) < 50 && leftShowCharIdx > 0) {
+                    wordShowOffsetX += 20;
                 }
+                if (Math.abs(caretx - text_show_area_right) < 50 && rightShowCharIdx < text_pos.length - 1) {
+                    wordShowOffsetX -= 20;
+                }
+
+                if (caretx < text_show_area_x) {
+                    wordShowOffsetX += text_show_area_x - caretx;
+                } else if (caretx > text_show_area_right) {
+                    wordShowOffsetX -= caretx - text_show_area_right;
+                }
+
                 if (parent.getFocus() == this) {
                     GToolkit.drawCaret(vg, caretx, wordy - 0.5f * lineh[0], 1, lineh[0], false);
                 }
@@ -438,8 +498,10 @@ public class GTextField extends GTextObject {
             Nanovg.nvgDeleteNVGglyphPosition(glyphsHandle);
 
             if (selectStart != -1 && selectEnd != -1) {
+                float selStartX = getPosXByIndex(selectStart);
+                float selEndX = getPosXByIndex(selectEnd);
 
-                GToolkit.drawRect(vg, text_show_area_x, wordy - lineh[0] * .5f, text_show_area_w, lineh[0], GToolkit.getStyle().getSelectedColor());
+                GToolkit.drawRect(vg, selStartX, wordy - lineh[0] * .5f, selEndX - selStartX, lineh[0], GToolkit.getStyle().getSelectedColor());
 
             }
             nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
