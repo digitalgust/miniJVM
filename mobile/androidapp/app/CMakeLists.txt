@@ -9,88 +9,36 @@ project(androidapp C)
 
 set(CMAKE_C_STANDARD 99)
 
-include_directories(../../c/glfm ../../c/gui/ ../../c/gui/stb ../../c/gui/other ../../../minijvm/c/jvm ../../../minijvm/c/utils ../../../minijvm/c/utils/sljit)
+include_directories(../../c/glfm
+../../c/gui/
+../../c/gui/stb
+../../c/gui/other
+../../../minijvm/c/jvm
+../../../minijvm/c/utils
+../../../minijvm/c/utils/https
+../../../minijvm/c/utils/https/mbedtls/include
+../../../minijvm/c/utils/sljit
+)
 
 set(GLFMAPP_SOURCE_FILES
 ../../c/glfmapp/main.c
 )
 set(GUI_SOURCE_FILES
-	../../c/gui/stb/stb_image_write.h
-	../../c/gui/stb/stb_image.h
-	../../c/gui/stb/stb_truetype.h
-	../../c/gui/nanovg/fontstash.h
-	../../c/gui/nanovg/nanovg_gl.h
-	../../c/gui/nanovg/nanovg_gl_utils.h
-	../../c/gui/nanovg/nanovg.h
 	../../c/gui/nanovg/nanovg.c
     ../../c/gui/glad/glad.c
-	../../c/gui/glad/glad.h
-	../../c/gui/KHR/khrplatform.h
-	../../c/gui/other/linmath.h
-	../../c/gui/media.h
-	../../c/gui/jni_nanovg_assist.h
-	../../c/gui/jni_stb_assist.h
 	../../c/gui/jni_nanovg.c
 	../../c/gui/jni_minial.m
 	../../c/gui/media.c
 	../../c/gui/jni_glfm.c
 	../../c/gui/jni_gl.c
-	../../c/glfm/glfm.h
 )
 
-set(MINI_JVM_SOURCE_FILES
-        ../../../minijvm/c/utils/ltalloc.h
-        ../../../minijvm/c/utils/ltalloc.c
-        ../../../minijvm/c/utils/d_type.h
-        ../../../minijvm/c/utils/d_type.c
-        ../../../minijvm/c/utils/arraylist.c
-        ../../../minijvm/c/utils/arraylist.h
-        ../../../minijvm/c/utils/hashtable.c
-        ../../../minijvm/c/utils/hashtable.h
-        ../../../minijvm/c/utils/utf8_string.c
-        ../../../minijvm/c/utils/utf8_string.h
-        ../../../minijvm/c/utils/pairlist.h
-        ../../../minijvm/c/utils/hashset.c
-        ../../../minijvm/c/utils/hashset.h
-        ../../../minijvm/c/jvm/jvm.h
-        ../../../minijvm/c/jvm/interpreter.c
-        ../../../minijvm/c/jvm/jvm.c
-        ../../../minijvm/c/jvm/class.c
-        ../../../minijvm/c/jvm/runtime.c
-        ../../../minijvm/c/jvm/garbage.c
-        ../../../minijvm/c/jvm/jvm_util.c
-        ../../../minijvm/c/jvm/jvm_util.h
-        ../../../minijvm/c/jvm/global.c
-        ../../../minijvm/c/jvm/java_native_std.h
-        ../../../minijvm/c/jvm/java_native_io.c
-        ../../../minijvm/c/jvm/java_native_std.c
-        ../../../minijvm/c/jvm/java_native_reflect.c
-        ../../../minijvm/c/jvm/java_native_reflect.h
-        ../../../minijvm/c/jvm/jdwp.c
-        ../../../minijvm/c/jvm/jdwp.h
-        ../../../minijvm/c/jvm/java_native_io.h
-        ../../../minijvm/c/jvm/class_load.c
-        ../../../minijvm/c/jvm/garbage.h
-        ../../../minijvm/c/jvm/jit.h
-        ../../../minijvm/c/jvm/jit.c
-        ../../../minijvm/c/utils/tinycthread.h
-        ../../../minijvm/c/utils/tinycthread.c
-        ../../../minijvm/c/utils/linkedlist.c
-        ../../../minijvm/c/utils/linkedlist.h
-        ../../../minijvm/c/utils/spinlock.h
-        ../../../minijvm/c/utils/bytebuf.c
-        ../../../minijvm/c/utils/bytebuf.h
-	    ../../../minijvm/c/utils/miniz.c
-        ../../../minijvm/c/utils/miniz.h
-        ../../../minijvm/c/utils/miniz_wrapper.c
-        ../../../minijvm/c/utils/miniz_wrapper.h
-        ../../../minijvm/c/utils/dirent_win.h
-
-        ../../../minijvm/c/utils/sljit/sljitLir.c
-        ../../../minijvm/c/utils/sljit/sljitLir.h
-        ../../../minijvm/c/utils/sljit/sljitConfig.h
-
-        )
+aux_source_directory(../../../minijvm/c/jvm SOURCE_JVM)
+aux_source_directory(../../../minijvm/c/utils SOURCE_UTILS)
+aux_source_directory(../../../minijvm/c/utils/https SOURCE_HTTPS)
+aux_source_directory(../../../minijvm/c/utils/https/mbedtls/library SOURCE_TLS)
+set(SOURCE_SLJIT ../../../minijvm/c/utils/sljit/sljitLir.c)
+SET(MINI_JVM_SOURCE_FILES ${SOURCE_JVM} ${SOURCE_UTILS} ${SOURCE_HTTPS} ${SOURCE_TLS} ${SOURCE_SLJIT})
 
 
 if (CMAKE_SYSTEM_NAME MATCHES "Emscripten")
