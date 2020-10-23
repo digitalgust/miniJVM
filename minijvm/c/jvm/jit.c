@@ -1182,7 +1182,7 @@ void gen_jit_suspend_check_func() {
 
 
     check_suspend = sljit_generate_code(C);
-    s32 len = sljit_get_generated_code_size(C);
+    sljit_uw len = sljit_get_generated_code_size(C);
     sljit_free_compiler(C);
     //dump_code(check_suspend, len);
 }

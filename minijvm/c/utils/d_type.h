@@ -8,8 +8,7 @@
 #include "sys/types.h"
 #include "stdlib.h"
 #include "stdint.h"
-#include "ltalloc.h"
-
+#include <stdio.h>
 
 
 
@@ -18,9 +17,6 @@
 //
 #define __JVM_BIG_ENDIAN__ 0
 
-#ifdef LTALLOC_ENABLE
-#define MEM_ALLOC_LTALLOC
-#endif
 
 
 #if INTPTR_MAX == INT32_MAX
@@ -32,7 +28,8 @@
 #endif
 
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) || defined(WIN64) || defined(_WIN64) || defined(__WIN64) || defined(__WIN32__) || defined(__NT__)
+
     //define something for Windows (32-bit and 64-bit, this part is common)
    #ifdef _WIN64
       //define something for Windows (64-bit only)
@@ -45,7 +42,7 @@
    #if defined(__MINGW_H) || defined(__MINGW32_MAJOR_VERSION)
        #define __JVM_OS_MINGW__ 1
    #endif
-   #ifdef _CYGWIN_CONFIG_H
+   #if defined(__CYGWIN__) || defined(__CYGWIN32__)
        #define __JVM_OS_CYGWIN__ 1
    #endif
 #elif __APPLE__
@@ -65,10 +62,11 @@
 #elif __linux__
    // linux
    #define __JVM_OS_LINUX__ 1
-#elif __unix__ // all unices not caught above
-    // Unix
 #elif defined(_POSIX_VERSION)
     // POSIX
+    #define __JVM_OS_CYGWIN__ 1
+#elif __unix__ // all unices not caught above
+    // Unix
 #else
 #   error "Unknown compiler"
 #endif

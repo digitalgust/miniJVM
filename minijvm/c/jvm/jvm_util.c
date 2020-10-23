@@ -682,11 +682,7 @@ void invoke_deepth(Runtime *runtime) {
         fprintf(logfile, "  ");
     }
 #else
-#if __JVM_OS_MAC__ || __JVM_OS_CYGWIN__
     fprintf(stderr, "%llx", (s64) (intptr_t) thrd_current());
-#else
-    fprintf(stderr, "%llx", (s64) (intptr_t) thrd_current());
-#endif //
     for (i = 0; i < len; i++) {
         fprintf(stderr, "  ");
     }

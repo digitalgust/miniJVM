@@ -91,7 +91,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>..\..\minijvm\c\utils\sljit;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\minijvm\c\utils\sljit;..\..\minijvm\c\utils\https;..\..\minijvm\c\utils\https\mbedtls\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -106,7 +106,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>..\..\minijvm\c\utils\sljit;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\minijvm\c\utils\sljit;..\..\minijvm\c\utils\https;..\..\minijvm\c\utils\https\mbedtls\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -125,7 +125,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>..\..\minijvm\c\utils\sljit;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\minijvm\c\utils\sljit;..\..\minijvm\c\utils\https;..\..\minijvm\c\utils\https\mbedtls\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -144,7 +144,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>..\..\minijvm\c\utils\sljit;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\minijvm\c\utils\sljit;..\..\minijvm\c\utils\https;..\..\minijvm\c\utils\https\mbedtls\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -176,8 +176,79 @@
     <ClCompile Include="..\..\minijvm\c\utils\d_type.c" />
     <ClCompile Include="..\..\minijvm\c\utils\hashset.c" />
     <ClCompile Include="..\..\minijvm\c\utils\hashtable.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\aes.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\aesni.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\arc4.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\asn1parse.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\asn1write.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\base64.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\bignum.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\blowfish.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\camellia.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ccm.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\certs.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\cipher.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\cipher_wrap.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\cmac.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ctr_drbg.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\debug.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\des.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\dhm.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ecdh.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ecdsa.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ecjpake.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ecp.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ecp_curves.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\entropy.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\entropy_poll.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\error.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\gcm.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\havege.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\hmac_drbg.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\md.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\md2.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\md4.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\md5.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\md_wrap.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\memory_buffer_alloc.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\net_sockets.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\oid.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\padlock.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\pem.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\pk.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\pkcs11.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\pkcs12.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\pkcs5.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\pkparse.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\pkwrite.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\pk_wrap.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\platform.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ripemd160.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\rsa.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\sha1.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\sha256.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\sha512.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ssl_cache.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ssl_ciphersuites.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ssl_cli.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ssl_cookie.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ssl_srv.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ssl_ticket.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ssl_tls.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\threading.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\timing.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\version.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\version_features.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\x509.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\x509write_crt.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\x509write_csr.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\x509_create.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\x509_crl.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\x509_crt.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\x509_csr.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\xtea.c" />
+    <ClCompile Include="..\..\minijvm\c\utils\https\ssl_client.c" />
     <ClCompile Include="..\..\minijvm\c\utils\linkedlist.c" />
-    <ClCompile Include="..\..\minijvm\c\utils\ltalloc.c" />
     <ClCompile Include="..\..\minijvm\c\utils\miniz.c" />
     <ClCompile Include="..\..\minijvm\c\utils\miniz_wrapper.c" />
     <ClCompile Include="..\..\minijvm\c\utils\sljit\sljitLir.c" />
@@ -199,6 +270,8 @@
     <ClInclude Include="..\..\minijvm\c\utils\d_type.h" />
     <ClInclude Include="..\..\minijvm\c\utils\hashset.h" />
     <ClInclude Include="..\..\minijvm\c\utils\hashtable.h" />
+    <ClInclude Include="..\..\minijvm\c\utils\https\ca_cert.h" />
+    <ClInclude Include="..\..\minijvm\c\utils\https\ssl_client.h" />
     <ClInclude Include="..\..\minijvm\c\utils\linkedlist.h" />
     <ClInclude Include="..\..\minijvm\c\utils\miniz.h" />
     <ClInclude Include="..\..\minijvm\c\utils\miniz_wrapper.h" />

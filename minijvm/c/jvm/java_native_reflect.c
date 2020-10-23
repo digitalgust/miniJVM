@@ -845,7 +845,7 @@ s32 org_mini_reflect_ReflectMethod_invokeMethod(Runtime *runtime, JClass *clazz)
                 c8 *ptr = getFieldPtr_byName_c(result, clsName, "ov", STR_INS_JAVA_LANG_OBJECT, runtime);
                 setFieldRefer(ptr, ov);
             } else {
-                long nv;
+                s64 nv;
                 if (isData8ByteByTag(ch)) {
                     nv = pop_long(runtime->stack);
                 } else {

@@ -7,7 +7,7 @@
 #include "jvm.h"
 #include "jvm_util.h"
 
-#if __JVM_OS_IOS__ || __JVM_ARCH_32__
+#if __JVM_OS_IOS__ || __JVM_OS_CYGWIN__ || __JVM_ARCH_32__
     #define JIT_ENABLE 0
 #else
     #define JIT_ENABLE 01

@@ -274,8 +274,8 @@ static c8 *JDWP_HANDSHAKE = "JDWP-Handshake";
 static c8 JDWP_EVENTSET_SET = 1;
 static c8 JDWP_EVENTSET_CLEAR = 0;
 
-static u16 JDWP_PACKET_REQUEST = 0;
-static u16 JDWP_PACKET_RESPONSE = 0x80;
+static u8 JDWP_PACKET_REQUEST = 0;
+static u8 JDWP_PACKET_RESPONSE = 0x80;
 
 //=============================      typedef   ==============================================
 

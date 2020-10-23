@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="源文件\https">
+      <UniqueIdentifier>{4eb60fec-eda0-435a-917f-d6dc7a6ce60c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\https">
+      <UniqueIdentifier>{93cf7e3b-1e2e-4b21-8e35-e2ed144b4938}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\minijvm\c\jvm\class.c">
@@ -72,9 +78,6 @@
     <ClCompile Include="..\..\minijvm\c\utils\utf8_string.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\minijvm\c\utils\ltalloc.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\minijvm\c\utils\d_type.c">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -92,6 +95,222 @@
     </ClCompile>
     <ClCompile Include="..\..\minijvm\c\utils\sljit\sljitLir.c">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\aes.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\aesni.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\arc4.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\asn1parse.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\asn1write.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\base64.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\bignum.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\blowfish.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\camellia.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ccm.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\certs.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\cipher.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\cipher_wrap.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\cmac.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ctr_drbg.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\debug.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\des.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\dhm.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ecdh.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ecdsa.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ecjpake.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ecp.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ecp_curves.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\entropy.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\entropy_poll.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\error.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\gcm.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\havege.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\hmac_drbg.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\md.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\md_wrap.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\md2.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\md4.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\md5.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\memory_buffer_alloc.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\net_sockets.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\oid.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\padlock.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\pem.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\pk.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\pk_wrap.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\pkcs5.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\pkcs11.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\pkcs12.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\pkparse.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\pkwrite.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\platform.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ripemd160.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\rsa.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\sha1.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\sha256.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\sha512.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ssl_cache.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ssl_ciphersuites.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ssl_cli.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ssl_cookie.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ssl_srv.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ssl_ticket.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\ssl_tls.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\threading.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\timing.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\version.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\version_features.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\x509.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\x509_create.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\x509_crl.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\x509_crt.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\x509_csr.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\x509write_crt.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\x509write_csr.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\mbedtls\library\xtea.c">
+      <Filter>源文件\https</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\https\ssl_client.c">
+      <Filter>源文件\https</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -163,6 +382,12 @@
     </ClInclude>
     <ClInclude Include="..\..\minijvm\c\utils\sljit\sljitLir.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\minijvm\c\utils\https\ca_cert.h">
+      <Filter>头文件\https</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\minijvm\c\utils\https\ssl_client.h">
+      <Filter>头文件\https</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
