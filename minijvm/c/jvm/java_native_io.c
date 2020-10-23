@@ -47,7 +47,7 @@ extern "C" {
 #endif
 
 #include "ssl_client.h"
-#include "mbedtls/net_sockets.h"
+#include "../utils/https/mbedtls/include/mbedtls/net_sockets.h"
 
 
 #if __JVM_OS_MINGW__
