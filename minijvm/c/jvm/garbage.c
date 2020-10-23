@@ -500,7 +500,7 @@ s32 _garbage_pause_the_world(void) {
     }
     //调试线程
     if (jdwp_enable) {
-        Runtime *runtime = jdwpserver.runtime;
+        Runtime *runtime = jdwp_get_runtime(&jdwpserver);
         if (runtime) {
             jthread_suspend(runtime);
             if (_checkAndWaitThreadIsSuspend(runtime) == -1) {
@@ -530,7 +530,7 @@ s32 _garbage_resume_the_world() {
 
     //调试线程
     if (jdwp_enable) {
-        Runtime *runtime = jdwpserver.runtime;
+        Runtime *runtime = jdwp_get_runtime(&jdwpserver);
         if (runtime) {
             jthread_resume(runtime);
         }
@@ -587,7 +587,7 @@ void _garbage_copy_refer() {
 //    arraylist_iter_safe(thread_list, _list_iter_iter_copy, NULL);
     //调试线程
     if (jdwp_enable) {
-        Runtime *runtime = jdwpserver.runtime;
+        Runtime *runtime = jdwp_get_runtime(&jdwpserver);
         if (runtime) {
             _garbage_copy_refer_thread(runtime);
         }
@@ -752,7 +752,7 @@ MemoryBlock *gc_is_alive(__refer ref) {
     }
     if (!result) {
         if (jdwp_enable) {
-            Runtime *runtime = jdwpserver.runtime;
+            Runtime *runtime = jdwp_get_runtime(&jdwpserver);
             if (runtime) {
                 MemoryBlock *mb = runtime->threadInfo->objs_header;
                 while (mb) {
