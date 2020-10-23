@@ -24,23 +24,23 @@ extern "C" {
 #define  SOCK_OP_VAL_NON_REUSEADDR   1
 #define  SOCK_OP_VAL_REUSEADDR   0
 
-s32 sock_open();
-
-s32 sock_connect(s32 sockfd, Utf8String *remote_ip, s32 remote_port);
-
-s32 sock_bind(s32 sockfd, Utf8String *local_ip, s32 local_port);
-
-s32 sock_send(s32 sockfd, c8 *buf, s32 count);
-
-s32 sock_recv(s32 sockfd, c8 *buf, s32 count);
-
-s32 sock_option(s32 sockfd, s32 opType, s32 opValue, s32 opValue2);
-
-s32 sock_listen(s32 listenfd);
-
-s32 sock_accept(s32 listenfd);
-
-s32 sock_close(s32 listenfd);
+//s32 sock_open();
+//
+//s32 sock_connect(s32 sockfd, Utf8String *remote_ip, s32 remote_port);
+//
+//s32 sock_bind(s32 sockfd, Utf8String *local_ip, s32 local_port);
+//
+//s32 sock_send(s32 sockfd, c8 *buf, s32 count);
+//
+//s32 sock_recv(s32 sockfd, c8 *buf, s32 count);
+//
+//s32 sock_option(s32 sockfd, s32 opType, s32 opValue, s32 opValue2);
+//
+//s32 sock_listen(s32 listenfd);
+//
+//s32 sock_accept(s32 listenfd);
+//
+//s32 sock_close(s32 listenfd);
 
 s32 isDir(Utf8String *path);
 

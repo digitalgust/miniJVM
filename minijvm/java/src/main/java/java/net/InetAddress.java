@@ -9,17 +9,18 @@
    details. */
 package java.net;
 
-import java.io.IOException;
 import org.mini.net.SocketNative;
+
+import java.io.IOException;
 
 public class InetAddress {
 
     private final String name;
-    private final int ip;
+    private final String ip;
 
     private InetAddress(String name) throws UnknownHostException {
         this.name = name;
-        this.ip = SocketNative.host2ip4(name.getBytes());
+        this.ip = new String(SocketNative.host2ip(SocketNative.toCStyle(name)));
     }
 
     public String getHostName() {
@@ -30,7 +31,7 @@ public class InetAddress {
         try {
             return new InetAddress(name).toString();
         } catch (UnknownHostException e) {
-            return null;	// Strange case
+            return null;    // Strange case
         }
     }
 
@@ -43,33 +44,23 @@ public class InetAddress {
         }
     }
 
-    public byte[] getAddress() {
-        byte[] res = new byte[4];
-        res[0] = (byte) (ip >>> 24);
-        res[1] = (byte) ((ip >>> 16) & 0xFF);
-        res[2] = (byte) ((ip >>> 8) & 0xFF);
-        res[3] = (byte) ((ip) & 0xFF);
-        return res;
+    public String getAddress() {
+
+        return ip;
     }
 
     @Override
     public String toString() {
-        byte[] addr = getAddress();
-        return (int) ((addr[0] + 256) % 256) + "."
-                + (int) ((addr[1] + 256) % 256) + "."
-                + (int) ((addr[2] + 256) % 256) + "."
-                + (int) ((addr[3] + 256) % 256);
-    }
 
-    public int getRawAddress() {
         return ip;
     }
+
 
     public boolean equals(Object o) {
         return o instanceof InetAddress && ((InetAddress) o).ip == ip;
     }
 
     public int hashCode() {
-        return ip;
+        return toString().hashCode();
     }
 }

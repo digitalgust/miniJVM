@@ -72,12 +72,6 @@ import java.io.IOException;
  */
 public interface ServerSocketConnection extends Connection {
 
-    /**
-     * 开始监听
-     *
-     * @throws IOException
-     */
-    void listen() throws IOException;
 
     /**
      * 开始接受连接

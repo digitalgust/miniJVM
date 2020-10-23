@@ -5,17 +5,17 @@
  */
 package java.net;
 
-import java.io.Closeable;
-import java.io.IOException;
 import org.mini.net.SocketNative;
 
+import java.io.Closeable;
+import java.io.IOException;
+
 /**
- *
  * @author Gust
  */
 public class SocketImpl implements Closeable {
 
-    int fd = -1;
+    byte[] fd;
 
     String host;
     int port;//remotePort
@@ -25,22 +25,22 @@ public class SocketImpl implements Closeable {
     SocketImpl() throws IOException {
         fd = SocketNative.open0();
         //System.out.println("open fd:" + fd);
-        if (fd < 0) {
+        if (fd == null) {
             throw new IOException("Init socket error");
         }
     }
 
-    void bind(int sockfd, String host, int port) throws IOException {
+    void bind(byte[] sockfd, String host, int port) throws IOException {
         localHost = host;
         localport = port;
-        int ret = SocketNative.bind0(sockfd, localHost.getBytes(), localport);
+        int ret = SocketNative.bind0(sockfd, SocketNative.toCStyle(localHost), SocketNative.toCStyle(localport + ""), SocketNative.NET_PROTO_TCP);
         if (ret < 0) {
             throw new IOException("bind error");
         }
     }
 
     public void bind(SocketAddress bindpoint) throws IOException {
-        if (fd < 0) {
+        if (fd == null) {
             throw new IOException("socket not open");
         }
         if (bindpoint instanceof InetSocketAddress) {
@@ -53,10 +53,10 @@ public class SocketImpl implements Closeable {
 
     @Override
     public void close() throws IOException {
-        if (fd >= 0) {
+        if (fd != null) {
             //System.out.println("close fd:" + fd);
             SocketNative.close0(fd);
-            fd = -1;
+            fd = null;
         }
     }
 
@@ -70,7 +70,7 @@ public class SocketImpl implements Closeable {
         return localHost;
     }
 
-    public int getFileDesc() {
+    public byte[] getFileDesc() {
         return fd;
     }
 }

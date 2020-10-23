@@ -24,38 +24,55 @@ public class SocketNative {
     public static final byte SO_REUSEADDR = 1;
     public static final byte SO_TIMEOUT = 6;
 
-    public static native int open0();
+    /**
+     * < The TCP transport protocol
+     */
+    public static final int NET_PROTO_TCP = 0;
 
-    public static native int bind0(int handle, byte hostname[], int port);
+    /**
+     * < The UDP transport protocol
+     */
+    public static final int NET_PROTO_UDP = 1;
 
-    public static native int connect0(int handle, byte hostname[], int port);
+    public static byte[] toCStyle(String s) {
+        try {
+            return (s + "\0").getBytes("utf-8");
+        } catch (Exception e) {
+        }
+        return null;
+    }
 
-    public static native int listen0(int handle);
 
-    public static native int accept0(int handle);
+    public static native byte[] open0();
 
-    private static native int readBuf(int handle, byte b[], int off, int len);
+    public static native int bind0(byte[] handle, byte[] hostname, byte[] port, int tcp_udp);
 
-    public static native int readByte(int handle);
+    public static native int connect0(byte[] handle, byte[] hostname, byte[] port, int tcp_udp);
 
-    private static native int writeBuf(int handle, byte b[], int off, int len);
+    public static native byte[] accept0(byte[] handle);
 
-    public static native int writeByte(int handle, int b);
+    private static native int readBuf(byte[] handle, byte b[], int off, int len);
 
-    public static native int available0(int handle);
+    public static native int readByte(byte[] handle);
 
-    public static native void close0(int handle);
+    private static native int writeBuf(byte[] handle, byte b[], int off, int len);
 
-    public static native int setOption0(int handle, int type, int val, int val2);
+    public static native int writeByte(byte[] handle, int b);
 
-    public static native int getOption0(int handle, int type);
+    public static native int available0(byte[] handle);
 
-    public static native int host2ip4(byte[] hostname);
+    public static native void close0(byte[] handle);
+
+    public static native int setOption0(byte[] handle, int type, int val, int val2);
+
+    public static native int getOption0(byte[] handle, int type);
+
+    public static native byte[] host2ip(byte[] hostname);
 
     //mode=0 get peername , mode=1 getlocalname
-    public static native String getSockAddr(int handle, int mode);
+    public static native String getSockAddr(byte[] handle, int mode);
 
-    static public int write(int handle, byte[] b, int off, int len) throws IOException {
+    static public int write(byte[] handle, byte[] b, int off, int len) throws IOException {
         int w = SocketNative.writeBuf(handle, b, off, len);
         if (w == -2) {
             w = 0;
@@ -63,7 +80,7 @@ public class SocketNative {
         return w;
     }
 
-    static public int read(int handle, byte[] b, int off, int len) throws IOException {
+    static public int read(byte[] handle, byte[] b, int off, int len) throws IOException {
         int r = SocketNative.readBuf(handle, b, off, len);
         if (r == -2) {
             r = 0;

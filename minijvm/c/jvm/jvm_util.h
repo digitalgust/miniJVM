@@ -272,10 +272,6 @@ struct _JavaThreadInfo {
     ArrayList *stacktrack;  //save methodrawindex, the pos 0 is the throw point
     ArrayList *lineNo;  //save methodrawindex, the pos 0 is the throw point
 
-    void (*block_break)(__refer para);//function for break io blocking
-
-    __refer block_break_para; //thread blocking on io
-
     s64 objs_heap_of_thread;// heap use for objs_header, if translate to gc ,the var need clear to 0
     u16 volatile suspend_count;//for jdwp suspend ,>0 suspend, ==0 resume
     u16 volatile no_pause;  //can't pause when clinit

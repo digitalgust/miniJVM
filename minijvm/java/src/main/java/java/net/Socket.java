@@ -13,7 +13,7 @@ public class Socket extends SocketImpl {
 
     boolean isConnected = false;
 
-    protected Socket(int sockfd) throws IOException {
+    protected Socket(byte[] sockfd) throws IOException {
         fd = sockfd;
         isConnected = true;
     }
@@ -35,7 +35,7 @@ public class Socket extends SocketImpl {
     OutputStream outputStream;
 
     public InputStream getInputStream() throws IOException {
-        if (fd < 0) {
+        if (fd == null) {
             throw new IOException("socket not open");
         }
         connect(host, port);
@@ -60,7 +60,7 @@ public class Socket extends SocketImpl {
     }
 
     public OutputStream getOutputStream() throws IOException {
-        if (fd < 0) {
+        if (fd == null) {
             throw new IOException("socket not open");
         }
         connect(host, port);
@@ -88,17 +88,16 @@ public class Socket extends SocketImpl {
         if (isConnected) {
             return;
         }
-        if (fd >= 0) {
+        if (fd != null) {
             this.host = host;
             this.port = port;
-            int ret = SocketNative.connect0(fd, this.host.getBytes(), this.port);
+            int ret = SocketNative.connect0(fd, SocketNative.toCStyle(host), SocketNative.toCStyle(port + ""), SocketNative.NET_PROTO_TCP);
             if (ret < 0) {
                 throw new IOException("socket connect error");
             }
             isConnected = true;
 
         }
-        throw new IOException("socket not open");
     }
 
     public void connect(SocketAddress endpoint) throws IOException {
@@ -127,13 +126,13 @@ public class Socket extends SocketImpl {
 
 
     public void setNonBlock(boolean on) throws SocketException {
-        if (fd >= 0) {
+        if (fd != null) {
             SocketNative.setOption0(fd, SocketNative.SO_NONBLOCK, on ? 1 : 0, 0);
         }
     }
 
     public void setTcpNoDelay(boolean on) throws SocketException {
-        if (fd >= 0) {
+        if (fd != null) {
             //setOption0(handle,OP_TYPE_NON_BLOCK,OP_VAL_NON_BLOCK);
         }
     }
@@ -181,7 +180,7 @@ public class Socket extends SocketImpl {
     public SocketAddress getRemoteSocketAddress() {
         String s = SocketNative.getSockAddr(fd, 0);
         if (s != null) {
-            int index = s.indexOf(':');
+            int index = s.lastIndexOf(':');
             if (index >= 0) {
                 host = s.substring(0, index);
                 port = Integer.parseInt(s.substring(index + 1));
@@ -194,7 +193,7 @@ public class Socket extends SocketImpl {
     public SocketAddress getLocalSocketAddress() {
         String s = SocketNative.getSockAddr(fd, 1);
         if (s != null) {
-            int index = s.indexOf(':');
+            int index = s.lastIndexOf(':');
             if (index >= 0) {
                 localHost = s.substring(0, index);
                 localport = Integer.parseInt(s.substring(index + 1));

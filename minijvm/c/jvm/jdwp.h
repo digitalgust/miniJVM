@@ -10,7 +10,7 @@
 #include "../utils/arraylist.h"
 #include "jvm.h"
 #include "../utils/hashset.h"
-
+#include "mbedtls/net_sockets.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -267,7 +267,7 @@ static c8 JDWP_SUSPENDPOLICY_ALL = 2;//Suspend all threads when this event is en
 
 //=============================      my define   ==============================================
 
-static u16 JDWP_TCP_PORT = 8000;
+static c8 *JDWP_TCP_PORT = "8000";
 
 static c8 *JDWP_HANDSHAKE = "JDWP-Handshake";
 
@@ -295,23 +295,23 @@ enum {
     JDWP_MODE_DISPATCH = 0x02,
 };
 typedef struct _JdwpServer {
-    Utf8String *ip;
+    c8 *ip;
+    c8 *port;
     thrd_t pt_listener;
     thrd_t pt_dispacher;
-    s32 srvsock;
+    mbedtls_net_context srvsock;
     ArrayList *clients;
     ArrayList *event_packets;
     Pairlist *event_sets;
     mtx_t event_sets_lock;
     Runtime *runtime;
-    u16 port;
     u8 exit;
     u8 mode;
     u8 thread_sync_ignore;  //for jdwp invokemethod , the flag indicate that method need not synchronized ,because all of java thread were suspended.
 } JdwpServer;
 
 typedef struct _JdwpClient {
-    s32 sockfd;
+    mbedtls_net_context sockfd;
     u8 closed;
     u8 conn_first;
     JdwpPacket *rcvp; //用于非阻塞接收，多次接收往同一个包内写入字节

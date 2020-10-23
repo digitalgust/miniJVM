@@ -8,11 +8,12 @@
 package org.mini.net.serversocket;
 
 import com.sun.cldc.io.ConnectionBaseInterface;
-import java.io.IOException;
+import org.mini.net.SocketNative;
+
 import javax.cldc.io.Connection;
 import javax.cldc.io.Connector;
-import org.mini.net.SocketNative;
 import javax.cldc.io.ServerSocketConnection;
+import java.io.IOException;
 
 
 /*
@@ -21,6 +22,7 @@ import javax.cldc.io.ServerSocketConnection;
  * initialized when this class loads if needed without extending
  * NetworkConnectionBase.
  */
+
 /**
  * StreamConnectionNotifier to the TCP Server Socket API.
  *
@@ -32,7 +34,7 @@ public class Protocol implements ConnectionBaseInterface, ServerSocketConnection
     /**
      * Socket object used by native code, for now must be the first field.
      */
-    private int handle;
+    private byte[] handle;
 
     /**
      * Flag to indicate connection is currently open.
@@ -64,16 +66,16 @@ public class Protocol implements ConnectionBaseInterface, ServerSocketConnection
         }
         // cstring is always NUL terminated (note the extra byte allocated).
         // This avoids awkward char array manipulation in C code.
-        byte cstring[] = new byte[hostname.length()];
+        byte cstring[] = new byte[hostname.length() + 1];
         for (int n = 0; n < hostname.length(); n++) {
             cstring[n] = (byte) (hostname.charAt(n));
         }
-        if ((this.handle = SocketNative.open0()) < 0) {
-            if (this.handle < 0);
+        if ((this.handle = SocketNative.open0()) != null) {
+            if (this.handle == null) ;
             throw new IOException( /* #ifdef VERBOSE_EXCEPTIONS */ /// skipped                       "connection failed: error = " + errorCode
                     /* #endif */);
         }
-        if(SocketNative.bind0(this.handle,cstring, port)<0){
+        if (SocketNative.bind0(this.handle, cstring, SocketNative.toCStyle(port + ""), SocketNative.NET_PROTO_TCP) < 0) {
             throw new IOException("bind error");
         }
         this.connectionOpen = true;
@@ -83,7 +85,7 @@ public class Protocol implements ConnectionBaseInterface, ServerSocketConnection
     /**
      * Checks if the connection is open.
      *
-     * @exception IOException is thrown, if the stream is not open
+     * @throws IOException is thrown, if the stream is not open
      */
     void ensureOpen() throws IOException {
         if (!connectionOpen) {
@@ -99,9 +101,8 @@ public class Protocol implements ConnectionBaseInterface, ServerSocketConnection
      * block in the native code) but the same Java code works for both.
      *
      * @return a socket to communicate with a client.
-     *
-     * @exception IOException if an I/O error occurs when creating the input
-     * stream
+     * @throws IOException if an I/O error occurs when creating the input
+     *                     stream
      */
     synchronized public javax.cldc.io.SocketConnection accept()
             throws IOException {
@@ -111,12 +112,12 @@ public class Protocol implements ConnectionBaseInterface, ServerSocketConnection
         ensureOpen();
 
         while (true) {
-            int clt_handle = SocketNative.accept0(this.handle);
-            if (clt_handle >= 0) {
+            byte[] clt_handle = SocketNative.accept0(this.handle);
+            if (clt_handle != null) {
                 con = new org.mini.net.socket.Protocol();
                 con.open(clt_handle, Connector.READ_WRITE);
                 break;
-            }else{
+            } else {
                 throw new IOException("accept error, maybe listen() before accept()");
             }
             /* Wait a while for I/O to become ready */
@@ -129,18 +130,18 @@ public class Protocol implements ConnectionBaseInterface, ServerSocketConnection
     /**
      * Gets the local address to which the socket is bound.
      *
-     * <P>
+     * <p>
      * The host address(IP number) that can be used to connect to this end of
      * the socket connection from an external system. Since IP addresses may be
      * dynamically assigned, a remote application will need to be robust in the
      * face of IP number reasssignment.</P>
-     * <P>
+     * <p>
      * The local hostname (if available) can be accessed from
      * <code> System.getProperty("microedition.hostname")</code>
      * </P>
      *
      * @return the local address to which the socket is bound
-     * @exception IOException if the connection was closed
+     * @throws IOException if the connection was closed
      * @see ServerSocketConnection
      */
     public String getLocalAddress() throws IOException {
@@ -152,7 +153,7 @@ public class Protocol implements ConnectionBaseInterface, ServerSocketConnection
      * Returns the local port to which this socket is bound.
      *
      * @return the local port number to which this socket is connected
-     * @exception IOException if the connection was closed
+     * @throws IOException if the connection was closed
      * @see ServerSocketConnection
      */
     public int getLocalPort() throws IOException {
@@ -163,20 +164,13 @@ public class Protocol implements ConnectionBaseInterface, ServerSocketConnection
     /**
      * Closes the connection, accesses the handle field.
      *
-     * @exception IOException if an I/O error occurs when closing the connection
+     * @throws IOException if an I/O error occurs when closing the connection
      */
     public void close() throws IOException {
         if (connectionOpen) {
             SocketNative.close0(handle);
             connectionOpen = false;
         }
-    }
-
-
-
-    @Override
-    public void listen() throws IOException {
-        SocketNative.listen0(handle);
     }
 
 }

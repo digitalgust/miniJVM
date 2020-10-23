@@ -46,7 +46,7 @@ public class Protocol implements ConnectionBaseInterface, SocketConnection {
     /**
      * Socket object used by native code
      */
-    int handle;
+    byte[] handle;
 
     /**
      * Access mode
@@ -116,13 +116,12 @@ public class Protocol implements ConnectionBaseInterface, SocketConnection {
         for (int n = 0; n < hostname.length(); n++) {
             cstring[n] = (byte) (hostname.charAt(n));
         }
-        if ((this.handle = SocketNative.open0()) < 0) {
+        if ((this.handle = SocketNative.open0()) == null) {
 
-            int errorCode = this.handle & 0x7fffffff;
             throw new IOException( /* #ifdef VERBOSE_EXCEPTIONS */ /// skipped                       "connection failed: error = " + errorCode
                     /* #endif */);
         }
-        if (SocketNative.connect0(handle, cstring, port) < 0) {
+        if (SocketNative.connect0(handle, cstring, SocketNative.toCStyle(port + ""), SocketNative.NET_PROTO_TCP) < 0) {
             throw new IOException("Socket connect error");
         }
         opens++;
@@ -138,7 +137,7 @@ public class Protocol implements ConnectionBaseInterface, SocketConnection {
      *               <p>
      *               This function is only used by com.sun.cldc.io.j2me.socketserver;
      */
-    public void open(int handle, int mode) throws IOException {
+    public void open(byte[] handle, int mode) throws IOException {
         this.handle = handle;
         opens++;
         copen = true;
@@ -516,7 +515,7 @@ class PrivateInputStream extends InputStream {
      */
     synchronized public int available() throws IOException {
         ensureOpen();
-        return available0(parent.handle);
+        return SocketNative.available0(parent.handle);
     }
 
     /**

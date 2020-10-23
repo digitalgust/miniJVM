@@ -164,13 +164,7 @@ public class Protocol extends org.mini.net.http.Protocol
         InputStream in;
         OutputStream out;
 
-        byte[] toutf8bytes(String s) {
-            try {
-                return (s + "\0").getBytes("utf-8");
-            } catch (Exception e) {
-            }
-            return null;
-        }
+
 
         public void connectImpl() throws IOException {
             httpsinfo = SocketNative.sslc_construct_entry();
@@ -178,7 +172,7 @@ public class Protocol extends org.mini.net.http.Protocol
             if (httpsinfo == null || ret < 0) {
                 throw new IOException("https init error");
             }
-            ret = SocketNative.sslc_connect(httpsinfo, toutf8bytes(getHost()), toutf8bytes(Integer.toString(getPort())));
+            ret = SocketNative.sslc_connect(httpsinfo, SocketNative.toCStyle(getHost()), SocketNative.toCStyle(Integer.toString(getPort())));
             if (ret < 0) {
                 throw new IOException("https open error");
             }

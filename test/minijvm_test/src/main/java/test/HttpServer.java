@@ -25,8 +25,8 @@ public class HttpServer {
     public static void main(String args[]) {
         HttpServer f = new HttpServer();
 //        f.t12();
-//        f.t13();
-        f.t18();
+        f.t13();
+//        f.t18();
 //        f.t20();
 //        f.t21();
     }
@@ -61,7 +61,6 @@ public class HttpServer {
 
                     }).start();
                     System.out.println("server socket listen 8080...");
-                    srvsock.listen();
                     while (true) {
                         try {
                             SocketConnection cltsock;
@@ -116,9 +115,10 @@ public class HttpServer {
             try {
                 Thread.sleep(2000);
 
-                SocketConnection conn = (SocketConnection) Connector.open("socket://127.0.0.1:8080");
+                SocketConnection conn = (SocketConnection) Connector.open("socket://www.baidu.com:80");
+                System.out.println(conn.getLocalAddress() + "/" + conn.getAddress());
                 conn.setSocketOption(SocketConnection.NONBLOCK, 1);
-                String request = "GET / HTTP/1.1\r\n\r\n";
+                String request = "GET / HTTP/1.1\r\nHost: www.baidu.com\r\n\r\n";
                 conn.write(request.getBytes(), 0, request.length());
                 byte[] rcvbuf = new byte[256];
                 int len = 0;
@@ -203,7 +203,7 @@ public class HttpServer {
         public void run() {
             try {
                 StringBuilder tmps = new StringBuilder();
-                //cltsock.setSoTimeout(20);
+                cltsock.setSoTimeout(500);
                 InputStream in = cltsock.getInputStream();
                 int ch = 0;
                 while ((ch) != -1) {
@@ -252,10 +252,10 @@ public class HttpServer {
                         @Override
                         public void run() {
                             try {
-                                int MAX = 50;
+                                int MAX = 100;
                                 for (int i = 0; i < MAX; i++) {
-                                    System.out.println("server would close at " + (MAX - i) + " second later.");
-                                    Thread.sleep(1000);
+                                    System.out.println("server would close at " + (MAX - i) * 5 + " second later.");
+                                    Thread.sleep(5000);
                                 }
                                 if (srvsock != null) {
                                     srvsock.close();
@@ -293,27 +293,23 @@ public class HttpServer {
     }
 
     void t21() {
-        for (int j = 0; j < 1; j++) {
+        for (int j = 0; j < 2; j++) {
 
             try {
                 Thread.sleep(2000);
-
+                System.out.println("connecting to server");
                 Socket socket = new Socket("127.0.0.1", 8088);
+//                Socket socket = new Socket("www.baidu.com", 80);
                 String request = "GET / HTTP/1.1\r\n\r\n";
                 InputStream in = socket.getInputStream();
                 OutputStream out = socket.getOutputStream();
+                Thread.sleep(2000);
                 out.write(request.getBytes(), 0, request.length());
                 byte[] rcvbuf = new byte[256];
                 int len = 0;
                 int zero = 0;
                 while (len != -1) {
                     len = in.read(rcvbuf, 0, 256);
-                    if (len == 0) {
-                        zero++;
-                    }
-                    if (zero > 3000000) {
-                        break;
-                    }
                     for (int i = 0; i < len; i++) {
                         System.out.print((char) rcvbuf[i]);
                     }
@@ -323,7 +319,7 @@ public class HttpServer {
                 System.out.print("\nend\n");
                 socket.close();
             } catch (Exception e) {
-
+                e.printStackTrace();
             }
         }
     }

@@ -254,11 +254,6 @@ void jvm_destroy(StaticLibRegFunc unRegFunc) {
                 if (!r->son) {//未在执行jvm指令
                     thread_unboundle(r);//
                 }
-                if (r->threadInfo->block_break) {
-                    r->threadInfo->block_break(r->threadInfo->block_break_para);
-                    r->threadInfo->block_break = NULL;
-                    r->threadInfo->block_break_para = NULL;
-                }
             }
         }
         threadSleep(20);
@@ -351,7 +346,7 @@ s32 call_method(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, Runtime *p_
             //调用主方法
             if (jdwp_enable) {
                 if (jdwp_suspend_on_start)jthread_suspend(runtime);
-                jvm_printf("[JDWP]waiting for jdwp(port:%d) debug client connected...\n", JDWP_TCP_PORT);
+                jvm_printf("[JDWP]waiting for jdwp(port:%s) debug client connected...\n", JDWP_TCP_PORT);
             }//jdwp 会启动调试器
             runtime->method = NULL;
             runtime->clazz = clazz;

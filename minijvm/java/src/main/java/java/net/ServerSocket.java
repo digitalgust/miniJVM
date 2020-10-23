@@ -9,8 +9,9 @@
    details. */
 package java.net;
 
-import java.io.IOException;
 import org.mini.net.SocketNative;
+
+import java.io.IOException;
 
 public class ServerSocket extends SocketImpl {
 
@@ -26,38 +27,27 @@ public class ServerSocket extends SocketImpl {
     }
 
     public ServerSocket(int port,
-            int backlog)
+                        int backlog)
             throws IOException {
         this(port, backlog, null);
     }
 
     public ServerSocket(int port,
-            int backlog,
-            InetAddress bindAddr)
+                        int backlog,
+                        InetAddress bindAddr)
             throws IOException {
         this();
         bind(fd, "", port);
 
     }
 
-    void listen() throws IOException {
-        if (isListen) {
-            return;
-        }
-        int ret = SocketNative.listen0(fd);
-        if (ret < 0) {
-            throw new IOException("ServerSocket listen error");
-        }
-        isListen = true;
-    }
 
     public Socket accept() throws IOException {
-        if (fd < 0) {
+        if (fd == null) {
             throw new IOException("ServerSocket not open");
         }
-        listen();
-        int sockfd = SocketNative.accept0(fd);
-        if (sockfd < 0) {
+        byte[] sockfd = SocketNative.accept0(fd);
+        if (sockfd == null) {
             throw new IOException("ServerSocket accept error");
         }
         Socket socket = new Socket(sockfd);

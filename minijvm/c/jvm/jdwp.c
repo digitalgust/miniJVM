@@ -17,7 +17,7 @@ void jdwp_eventset_destory(EventSet *set);
 
 void jdwppacket_destory(JdwpPacket *packet);
 
-JdwpClient *jdwp_client_create(s32 sockfd);
+JdwpClient *jdwp_client_create();
 
 void jdwp_client_destory(JdwpClient *client);
 
@@ -33,20 +33,18 @@ void jdwp_put_client(ArrayList *clients, JdwpClient *client) {
 
 s32 jdwp_thread_listener(void *para) {
     JdwpServer *srv = (JdwpServer *) para;
-    s32 srvsock = sock_open();
-    sock_bind(srvsock, srv->ip, srv->port);
-    srv->srvsock = srvsock;
-    sock_listen(srvsock);
+    mbedtls_net_init(&srv->srvsock);
+    mbedtls_net_bind(&srv->srvsock, NULL, srv->port, MBEDTLS_NET_PROTO_TCP);
     srv->mode |= JDWP_MODE_LISTEN;
 
     while (!srv->exit) {
-        s32 sockfd = sock_accept(srvsock);
-        if (sockfd == -1) {
+        JdwpClient *client = jdwp_client_create();
+        s32 ret = mbedtls_net_accept(&srv->srvsock, &client->sockfd, NULL, 0, NULL);
+        if (ret < 0) {
             srv->exit = 1;
             break;
         }
-        sock_option(sockfd, SOCK_OP_TYPE_NON_BLOCK, SOCK_OP_VAL_NON_BLOCK, 0);
-        JdwpClient *client = jdwp_client_create(sockfd);
+        mbedtls_net_set_nonblock(&client->sockfd);
         jdwp_put_client(srv->clients, client);
     }
 
@@ -75,7 +73,7 @@ s32 jdwp_thread_dispacher(void *para) {
 
 s32 jdwp_start_server() {
     if (!jdwp_enable)return 0;
-    jdwpserver.ip = utf8_create();
+    jdwpserver.ip = NULL;//bind to all ip
     jdwpserver.port = JDWP_TCP_PORT;
     jdwpserver.exit = 0;
     jdwpserver.clients = arraylist_create(0);
@@ -94,7 +92,7 @@ s32 jdwp_stop_server() {
         threadSleep(10);
     }
     jdwpserver.exit = 1;
-    sock_close(jdwpserver.srvsock);
+    mbedtls_net_free(&jdwpserver.srvsock);
     s32 i;
     //
     for (i = 0; i < jdwpserver.clients->length; i++) {
@@ -125,18 +123,17 @@ s32 jdwp_stop_server() {
     //
 
     //
-    utf8_destory(jdwpserver.ip);
     thrd_detach(jdwpserver.pt_listener);
     thrd_detach(jdwpserver.pt_dispacher);
     return 0;
 }
 
 
-JdwpClient *jdwp_client_create(s32 sockfd) {
+JdwpClient *jdwp_client_create() {
     JdwpClient *client = jvm_calloc(sizeof(JdwpClient));
     client->closed = 0;
     client->conn_first = 1;
-    client->sockfd = sockfd;
+    mbedtls_net_init(&client->sockfd);
     client->rcvp = NULL;
     client->temp_obj_holder = hashset_create();
     return client;
@@ -379,7 +376,7 @@ s32 jdwp_read_fully(JdwpClient *client, c8 *buf, s32 need) {
     while (len != -1) {
         got += len;
         if (got == need)break;
-        len = sock_recv(client->sockfd, buf + got, need - got);
+        len = mbedtls_net_recv(&client->sockfd, (u8 *) buf + got, need - got);
         if (len == -2)len = 0;
     }
     if (len == -1)return len;
@@ -391,10 +388,10 @@ s32 jdwp_write_fully(JdwpClient *client, c8 *buf, s32 need) {
     while (len != -1) {
         sent += len;
         if (sent == need)break;
-        len = sock_send(client->sockfd, buf + sent, need - sent);
-        if (len == -2)len = 0;
+        len = mbedtls_net_send(&client->sockfd, (const u8 *) buf + sent, need - sent);
+        if (len == MBEDTLS_ERR_SSL_WANT_WRITE)len = 0;
     }
-    if (len == -1)return len;
+    if (len < 0)return -1;
     return sent;
 }
 
@@ -408,10 +405,10 @@ JdwpPacket *jdwp_readpacket(JdwpClient *client) {
         }
         if (client->rcvp) {//上个包收到一半，有两种情况，先收4字节，再收剩余部分
             if (client->rcvp->_4len) {
-                s32 len = sock_recv(client->sockfd, client->rcvp->data + client->rcvp->_rcv_len,
-                                    client->rcvp->_req_len - client->rcvp->_rcv_len);
-                if (len == -1)client->closed = 1;
-                if (len == -2)len = 0;
+                s32 len = mbedtls_net_recv(&client->sockfd, (u8 *) client->rcvp->data + client->rcvp->_rcv_len,
+                                           client->rcvp->_req_len - client->rcvp->_rcv_len);
+                if (len == MBEDTLS_ERR_SSL_WANT_READ)len = 0;
+                if (len < 0)client->closed = 1;
                 client->rcvp->_rcv_len += len;
                 if (client->rcvp->_rcv_len == client->rcvp->_req_len) {
                     client->rcvp->_4len = 0;
@@ -420,10 +417,10 @@ JdwpPacket *jdwp_readpacket(JdwpClient *client) {
                     jdwppacket_ensureCapacity(client->rcvp, client->rcvp->_req_len);
                 }
             } else {
-                s32 len = sock_recv(client->sockfd, client->rcvp->data + 4 + client->rcvp->_rcv_len,
-                                    client->rcvp->_req_len - client->rcvp->_rcv_len);
+                s32 len = mbedtls_net_recv(&client->sockfd, (u8 *) client->rcvp->data + 4 + client->rcvp->_rcv_len,
+                                           client->rcvp->_req_len - client->rcvp->_rcv_len);
+                if (len == MBEDTLS_ERR_SSL_WANT_READ)len = 0;
                 if (len == -1)client->closed = 1;
-                if (len == -2)len = 0;
                 client->rcvp->_rcv_len += len;
                 if (client->rcvp->_rcv_len == client->rcvp->_req_len) {
                     JdwpPacket *p = client->rcvp;
