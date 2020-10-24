@@ -25,7 +25,6 @@
 		4581C6D2226DAA3600E88538 /* java_native_reflect.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C63B226DAA3500E88538 /* java_native_reflect.c */; };
 		4581C6D3226DAA3600E88538 /* global.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C63C226DAA3500E88538 /* global.c */; };
 		4581C6D4226DAA3600E88538 /* java_native_io.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C63D226DAA3500E88538 /* java_native_io.c */; };
-		4581C6D5226DAA3600E88538 /* ltalloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C641226DAA3500E88538 /* ltalloc.c */; };
 		4581C6D6226DAA3600E88538 /* miniz.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C642226DAA3500E88538 /* miniz.c */; };
 		4581C6D7226DAA3600E88538 /* hashset.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C646226DAA3500E88538 /* hashset.c */; };
 		4581C6D8226DAA3600E88538 /* tinycthread.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C647226DAA3500E88538 /* tinycthread.c */; };
@@ -163,7 +162,6 @@
 		4581C63D226DAA3500E88538 /* java_native_io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = java_native_io.c; sourceTree = "<group>"; };
 		4581C63F226DAA3500E88538 /* dirent_win.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dirent_win.h; sourceTree = "<group>"; };
 		4581C640226DAA3500E88538 /* spinlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = spinlock.h; sourceTree = "<group>"; };
-		4581C641226DAA3500E88538 /* ltalloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ltalloc.c; sourceTree = "<group>"; };
 		4581C642226DAA3500E88538 /* miniz.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = miniz.c; sourceTree = "<group>"; };
 		4581C643226DAA3500E88538 /* bytebuf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bytebuf.h; sourceTree = "<group>"; };
 		4581C644226DAA3500E88538 /* miniz_wrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = miniz_wrapper.h; sourceTree = "<group>"; };
@@ -175,7 +173,6 @@
 		4581C64A226DAA3500E88538 /* linkedlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = linkedlist.h; sourceTree = "<group>"; };
 		4581C64B226DAA3500E88538 /* d_type.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = d_type.c; sourceTree = "<group>"; };
 		4581C64C226DAA3500E88538 /* miniz.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = miniz.h; sourceTree = "<group>"; };
-		4581C64D226DAA3500E88538 /* ltalloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ltalloc.h; sourceTree = "<group>"; };
 		4581C64E226DAA3500E88538 /* hashset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hashset.h; sourceTree = "<group>"; };
 		4581C64F226DAA3500E88538 /* hashtable.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hashtable.c; sourceTree = "<group>"; };
 		4581C650226DAA3500E88538 /* miniz_wrapper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = miniz_wrapper.c; sourceTree = "<group>"; };
@@ -440,7 +437,6 @@
 				459A79C423A32B29007C85C6 /* sljit */,
 				4581C63F226DAA3500E88538 /* dirent_win.h */,
 				4581C640226DAA3500E88538 /* spinlock.h */,
-				4581C641226DAA3500E88538 /* ltalloc.c */,
 				4581C642226DAA3500E88538 /* miniz.c */,
 				4581C643226DAA3500E88538 /* bytebuf.h */,
 				4581C644226DAA3500E88538 /* miniz_wrapper.h */,
@@ -452,7 +448,6 @@
 				4581C64A226DAA3500E88538 /* linkedlist.h */,
 				4581C64B226DAA3500E88538 /* d_type.c */,
 				4581C64C226DAA3500E88538 /* miniz.h */,
-				4581C64D226DAA3500E88538 /* ltalloc.h */,
 				4581C64E226DAA3500E88538 /* hashset.h */,
 				4581C64F226DAA3500E88538 /* hashtable.c */,
 				4581C650226DAA3500E88538 /* miniz_wrapper.c */,
@@ -771,7 +766,6 @@
 				4581C6DF226DAA3600E88538 /* linkedlist.c in Sources */,
 				45F997D0253B6AAE0053E7A0 /* cipher_wrap.c in Sources */,
 				45F997D5253B6AAE0053E7A0 /* sha1.c in Sources */,
-				4581C6D5226DAA3600E88538 /* ltalloc.c in Sources */,
 				4581C6CB226DAA3600E88538 /* jvm.c in Sources */,
 				459A79C323A32B19007C85C6 /* jit.c in Sources */,
 				45F997C7253B6AAE0053E7A0 /* md4.c in Sources */,

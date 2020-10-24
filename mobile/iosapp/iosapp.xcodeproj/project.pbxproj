@@ -20,7 +20,6 @@
 		451F271723A24C1F00F99984 /* java_native_reflect.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C36F226D637C00E88538 /* java_native_reflect.c */; };
 		451F271823A24C1F00F99984 /* global.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C370226D637C00E88538 /* global.c */; };
 		451F271923A24C1F00F99984 /* java_native_io.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C371226D637C00E88538 /* java_native_io.c */; };
-		451F271A23A24C3A00F99984 /* ltalloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C375226D637C00E88538 /* ltalloc.c */; };
 		451F271B23A24C3A00F99984 /* miniz.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C376226D637C00E88538 /* miniz.c */; };
 		451F271C23A24C3A00F99984 /* hashset.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C37A226D637C00E88538 /* hashset.c */; };
 		451F271D23A24C3A00F99984 /* tinycthread.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C37B226D637C00E88538 /* tinycthread.c */; };
@@ -172,7 +171,6 @@
 		4581C371226D637C00E88538 /* java_native_io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = java_native_io.c; sourceTree = "<group>"; };
 		4581C373226D637C00E88538 /* dirent_win.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dirent_win.h; sourceTree = "<group>"; };
 		4581C374226D637C00E88538 /* spinlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = spinlock.h; sourceTree = "<group>"; };
-		4581C375226D637C00E88538 /* ltalloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ltalloc.c; sourceTree = "<group>"; };
 		4581C376226D637C00E88538 /* miniz.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = miniz.c; sourceTree = "<group>"; };
 		4581C377226D637C00E88538 /* bytebuf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bytebuf.h; sourceTree = "<group>"; };
 		4581C378226D637C00E88538 /* miniz_wrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = miniz_wrapper.h; sourceTree = "<group>"; };
@@ -184,7 +182,6 @@
 		4581C37E226D637C00E88538 /* linkedlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = linkedlist.h; sourceTree = "<group>"; };
 		4581C37F226D637C00E88538 /* d_type.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = d_type.c; sourceTree = "<group>"; };
 		4581C380226D637C00E88538 /* miniz.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = miniz.h; sourceTree = "<group>"; };
-		4581C381226D637C00E88538 /* ltalloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ltalloc.h; sourceTree = "<group>"; };
 		4581C382226D637C00E88538 /* hashset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hashset.h; sourceTree = "<group>"; };
 		4581C383226D637C00E88538 /* hashtable.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hashtable.c; sourceTree = "<group>"; };
 		4581C384226D637C00E88538 /* miniz_wrapper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = miniz_wrapper.c; sourceTree = "<group>"; };
@@ -477,8 +474,6 @@
 				4581C379226D637C00E88538 /* hashtable.h */,
 				4581C38B226D637C00E88538 /* linkedlist.c */,
 				4581C37E226D637C00E88538 /* linkedlist.h */,
-				4581C375226D637C00E88538 /* ltalloc.c */,
-				4581C381226D637C00E88538 /* ltalloc.h */,
 				4581C384226D637C00E88538 /* miniz_wrapper.c */,
 				4581C378226D637C00E88538 /* miniz_wrapper.h */,
 				4581C376226D637C00E88538 /* miniz.c */,
@@ -911,7 +906,6 @@
 				451F272E23A24C7B00F99984 /* glfm_platform_ios.m in Sources */,
 				451F272F23A24C7B00F99984 /* jni_minial.m in Sources */,
 				45F9982E253D2B6D0053E7A0 /* ssl_client.c in Sources */,
-				451F271A23A24C3A00F99984 /* ltalloc.c in Sources */,
 				45F996CD253B69E40053E7A0 /* md4.c in Sources */,
 				45F996CC253B69E40053E7A0 /* version_features.c in Sources */,
 				451F271B23A24C3A00F99984 /* miniz.c in Sources */,
