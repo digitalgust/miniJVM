@@ -237,7 +237,10 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
         fi = find_fieldInfo_by_name_c(STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ, "typeDesc", "C", runtime);
         jvm_runtime_cache.dmo_desc = fi;
     } else if (utf8_equals_c(clazz->name, STR_CLASS_ORG_MINI_REFLECT_LAUNCHER)) {
-        jvm_runtime_cache.classloader_load_class = find_methodInfo_by_name_c(STR_CLASS_ORG_MINI_REFLECT_LAUNCHER, "loadClass", "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/Class;", runtime);
+        jvm_runtime_cache.classloader_loadClass = find_methodInfo_by_name_c(STR_CLASS_ORG_MINI_REFLECT_LAUNCHER, "loadClass", "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/Class;", runtime);
+    } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_REF_REFERENCE)) {
+        jvm_runtime_cache.reference = clazz;
+        jvm_runtime_cache.reference_vmEnqueneReference = find_methodInfo_by_name_c(STR_CLASS_JAVA_LANG_REF_REFERENCE, "vmEnqueneReference", "(Ljava/lang/ref/Reference;)V", runtime);
     }
 //    jvm_printf("prepared: %s\n", utf8_cstr(clazz->name));
 

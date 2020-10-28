@@ -10,7 +10,6 @@ package org.mini.reflect.vm;
  */
 public class RefNative {
 
-    ClassLoader cl;
 
     public static native int refIdSize();
 

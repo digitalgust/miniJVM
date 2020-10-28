@@ -49,8 +49,11 @@ typedef struct _OptimizeCache {
     FieldInfo *dmo_desc;
 
     //
-    MethodInfo *classloader_load_class;
+    MethodInfo *classloader_loadClass;
 
+    //
+    MethodInfo *reference_vmEnqueneReference;
+    JClass *reference;
     //
     JClass *array_classes[DATATYPE_COUNT];
 } OptimizeCache;

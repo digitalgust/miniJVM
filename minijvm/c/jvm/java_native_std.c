@@ -619,7 +619,7 @@ s32 java_lang_Runtime_exitInternal(Runtime *runtime, JClass *clazz) {
 s32 java_lang_Runtime_freeMemory(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
 
-    push_long(stack, MAX_HEAP_SIZE - heap_size);
+    push_long(stack, MAX_HEAP_SIZE - collector->obj_heap_size);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("java_lang_Runtime_freeMemory \n");
@@ -639,6 +639,9 @@ s32 java_lang_Runtime_totalMemory(Runtime *runtime, JClass *clazz) {
 }
 
 s32 java_lang_Runtime_gc(Runtime *runtime, JClass *clazz) {
+
+    collector->lastgc = 0;//active gc now
+
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("java_lang_Runtime_gc \n");

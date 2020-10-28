@@ -187,7 +187,6 @@ void jvm_init(c8 *p_bootclasspath, c8 *p_classpath, StaticLibRegFunc regFunc) {
         p_bootclasspath = "./";
     }
 
-    heap_size = 0;
     //
     open_log();
 
@@ -268,7 +267,7 @@ void jvm_destroy(StaticLibRegFunc unRegFunc) {
     sys_properties_dispose();
     close_log();
 #if _JVM_DEBUG_LOG_LEVEL > 0
-    jvm_printf("[INFO]jvm destoried heap size = %lld\n", heap_size);
+    jvm_printf("[INFO]jvm destoried\n");
 #endif
     set_jvm_state(JVM_STATUS_UNKNOW);
 }

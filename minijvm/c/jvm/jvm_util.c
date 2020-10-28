@@ -1134,6 +1134,19 @@ void instance_finalize(Instance *ins, Runtime *runtime) {
     }
 }
 
+void instance_of_reference_enqueue(Instance *ins, Runtime *runtime) {
+    if (ins) {
+        MethodInfo *mi = jvm_runtime_cache.reference_vmEnqueneReference;
+        if (mi) {
+            push_ref(runtime->stack, ins);
+            s32 ret = execute_method_impl(mi, runtime);
+            if (ret != RUNTIME_STATUS_NORMAL) {
+                print_exception(runtime);
+            }
+        }
+    }
+}
+
 void instance_clear_refer(Instance *ins) {
     s32 i;
     JClass *clazz = ins->mb.clazz;

@@ -450,6 +450,7 @@ extern c8 *STR_CLASS_JAVA_LANG_STRINGBUILDER;
 extern c8 *STR_CLASS_JAVA_LANG_OBJECT;
 extern c8 *STR_CLASS_JAVA_LANG_THREAD;
 extern c8 *STR_CLASS_JAVA_LANG_CLASS;
+extern c8 *STR_CLASS_JAVA_LANG_REF_REFERENCE;
 extern c8 *STR_CLASS_JAVA_LANG_STACKTRACE;
 extern c8 *STR_CLASS_JAVA_LANG_THROWABLE;
 extern c8 *STR_CLASS_JAVA_LANG_INVOKE_METHODTYPE;
@@ -1072,6 +1073,8 @@ void instance_init(Instance *ins, Runtime *runtime);
 void instance_init_methodtype(Instance *ins, Runtime *runtime, c8 *methodtype, RuntimeStack *para);
 
 void instance_finalize(Instance *ins, Runtime *runtime);
+
+void instance_of_reference_enqueue(Instance *ins, Runtime *runtime);
 
 s32 instance_destory(Instance *instance);
 

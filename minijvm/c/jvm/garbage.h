@@ -17,6 +17,7 @@ extern "C" {
 typedef struct _GcCollectorType GcCollector;
 
 //回收线程
+extern s32 GARBAGE_OVERLOAD;//
 extern s64 GARBAGE_PERIOD_MS;//
 extern GcCollector *collector;
 
@@ -30,6 +31,7 @@ struct _GcCollectorType {
     MemoryBlock *header, *tmp_header, *tmp_tailer;
     s64 obj_count;
     s64 obj_heap_size;
+    s64 lastgc;//last gc at mills
     Runtime *runtime;
     //
 
@@ -96,6 +98,8 @@ void gc_refer_reg(Runtime *runtime, __refer ref);
 void gc_move_refer_thread_2_gc(Runtime *runtime);
 
 void garbage_dump_runtime();
+
+s64 garbage_sum_heap();
 
 #ifdef __cplusplus
 }

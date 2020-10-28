@@ -31,6 +31,7 @@ c8 *STR_CLASS_JAVA_LANG_STRINGBUILDER = "java/lang/StringBuilder";
 c8 *STR_CLASS_JAVA_LANG_OBJECT = "java/lang/Object";
 c8 *STR_CLASS_JAVA_LANG_THREAD = "java/lang/Thread";
 c8 *STR_CLASS_JAVA_LANG_CLASS = "java/lang/Class";
+c8 *STR_CLASS_JAVA_LANG_REF_REFERENCE = "java/lang/ref/Reference";
 c8 *STR_CLASS_JAVA_LANG_INVOKE_METHODTYPE = "java/lang/invoke/MethodType";
 c8 *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLE = "java/lang/invoke/MethodHandle";
 c8 *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLES_LOOKUP = "java/lang/invoke/MethodHandles$Lookup";
@@ -87,7 +88,9 @@ s32 data_type_bytes[DATATYPE_COUNT] = {0, 0, 0, 0,
 s32 STACK_LENGHT_MAX = 4096;
 s32 STACK_LENGHT_INIT = 4096;
 
-s64 GARBAGE_PERIOD_MS = 60 * 1000;
+s64 GARBAGE_PERIOD_MS = 10 * 60 * 1000;
+
+s32 GARBAGE_OVERLOAD = 90; // overload of max heap size ,will active garbage collection
 
 s64 MAX_HEAP_SIZE = 100 * 1024 * 1024;
 

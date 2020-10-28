@@ -100,7 +100,6 @@ typedef void *__refer;
 typedef void *__returnaddress;
 
 
-extern s64 heap_size;
 
 
 //======================= memory manage =============================

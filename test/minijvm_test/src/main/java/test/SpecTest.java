@@ -5,6 +5,10 @@
  */
 package test;
 
+import java.lang.ref.Reference;
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.WeakReference;
+
 /**
  * @author Gust
  */
@@ -26,6 +30,7 @@ public class SpecTest {
         test_wide();
         test_method();
         test_cal();
+        test_reference();
         print("test end");
     }
 
@@ -926,7 +931,7 @@ public class SpecTest {
                             v2++;
                             start = true;
                             //System.out.println("a.v2=" + v2);
-                            Thread.sleep(1000);
+                            Thread.sleep(100);
                             lock.notify();
                             lock.wait();
                         }
@@ -1255,6 +1260,30 @@ public class SpecTest {
             printerr("invokedynamic");
         }
     }
+
+    static void test_reference() {
+        ReferenceQueue<Apple> appleReferenceQueue = new ReferenceQueue<>();
+        WeakReference<Apple> apple1 = new WeakReference<Apple>(new Apple("Green"), appleReferenceQueue);
+
+        System.gc();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+        //下面两个输出为null,表示对象被回收了
+        if (apple1.get() != null) printerr("weakreference");
+
+        //输出结果，并且就是上面的appleWeakReference、appleWeakReference2，再次证明对象被回收了
+        int count = 0;
+        Reference<? extends Apple> ref = null;
+        while ((ref = appleReferenceQueue.poll()) != null) {
+            count++;
+        }
+        if (count == 0) printerr("referencequeue enqueue");
+    }
 }
 
 //=========================================================
@@ -1293,3 +1322,37 @@ class Son extends Father {
 }
 
 //=========================================================
+class Apple {
+
+    private String name;
+
+    public Apple(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * 覆盖finalize，在回收的时候会执行。
+     *
+     * @throws Throwable
+     */
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        System.out.println("Apple： " + name + " finalize。");
+    }
+
+    @Override
+    public String toString() {
+        return "Apple{" +
+                "name='" + name + '\'' +
+                '}' + ", hashCode:" + this.hashCode();
+    }
+}

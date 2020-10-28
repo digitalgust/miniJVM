@@ -3,5 +3,3 @@
 //
 #include "d_type.h"
 
-
-s64 heap_size = 0;

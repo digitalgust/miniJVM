@@ -71,6 +71,8 @@ s32 garbage_collector_create() {
     collector->_garbage_thread_status = GARBAGE_THREAD_PAUSE;
     thread_lock_init(&collector->garbagelock);
 
+    collector->lastgc = currentTimeMillis();
+
     s32 rc = thrd_create(&collector->_garbage_thread, _collect_thread_run, NULL);
     if (rc != thrd_success) {
         jvm_printf("ERROR: garbage thread can't create is %d\n", rc);
@@ -293,7 +295,7 @@ void _garbage_remove_out_holder(__refer ref) {
 #endif
 }
 
-s64 _garbage_sum_heap() {
+s64 garbage_sum_heap() {
     s64 hsize = 0;
     hsize += threadlist_sum_heap();
     spin_lock(&collector->lock);
@@ -306,7 +308,6 @@ s64 _garbage_sum_heap() {
 //==============================   thread_run() =====================================
 
 s32 _collect_thread_run(void *para) {
-    s64 lastgc = currentTimeMillis();
     while (1) {
 
         s64 cur_mil = currentTimeMillis();
@@ -317,18 +318,12 @@ s32 _collect_thread_run(void *para) {
         if (collector->_garbage_thread_status == GARBAGE_THREAD_PAUSE) {
             continue;
         }
-        if (cur_mil - lastgc < 1000) {// less than custom sec no gc
-            continue;
-        }
-//        if (JDWP_DEBUG && jdwpserver.clients->length) {// less than 3 sec no gc
-//            continue;
-//        }
 
-        if (cur_mil - lastgc > GARBAGE_PERIOD_MS || _garbage_sum_heap() > MAX_HEAP_SIZE * .8f) {
+        if (cur_mil - collector->lastgc > GARBAGE_PERIOD_MS || garbage_sum_heap() >= MAX_HEAP_SIZE * GARBAGE_OVERLOAD / 100) {
             garbage_collect();
-            lastgc = cur_mil;
+            collector->lastgc = cur_mil;
         } else {
-            threadSleep(10);
+            threadSleep(5);
         }
     }
     collector->_garbage_thread_status = GARBAGE_THREAD_DEAD;
@@ -398,9 +393,14 @@ s64 garbage_collect() {
         while (nextmb) {
             curmb = nextmb;
             nextmb = curmb->next;
-            if (curmb->clazz->finalizeMethod) {// there is a method called finalize
-                if (curmb->type == MEM_TYPE_INS && curmb->garbage_mark != collector->flag_refer) {
-                    instance_finalize((Instance *) curmb, collector->runtime);
+            if (curmb->type == MEM_TYPE_INS) {
+                if (curmb->clazz->finalizeMethod) {// there is a method called finalize
+                    if (curmb->type == MEM_TYPE_INS && curmb->garbage_mark != collector->flag_refer) {
+                        instance_finalize((Instance *) curmb, collector->runtime);
+                    }
+                }
+                if (instance_of((Instance *) curmb, jvm_runtime_cache.reference)) {
+                    instance_of_reference_enqueue((Instance *) curmb, collector->runtime);
                 }
             }
         }
@@ -432,13 +432,12 @@ s64 garbage_collect() {
     }
     spin_lock(&collector->lock);
     collector->obj_count = iter - del;
-    heap_size = mem_total - mem_free;
     collector->obj_heap_size -= mem_free;
     spin_unlock(&collector->lock);
 
 #if _JVM_DEBUG_LOG_LEVEL > 1
     s64 time_gc = currentTimeMillis() - time;
-    jvm_printf("[INFO]gc obj: %lld->%lld   heap : %lld -> %lld  stop_world: %lld  gc:%lld\n", iter, collector->obj_count, mem_total, heap_size, time_stopWorld, time_gc);
+    jvm_printf("[INFO]gc obj: %lld->%lld   heap : %lld -> %lld  stop_world: %lld  gc:%lld\n", iter, collector->obj_count, mem_total, collector->obj_heap_size, time_stopWorld, time_gc);
 #endif
 
 #ifdef MEM_ALLOC_LTALLOC
@@ -786,6 +785,12 @@ void gc_refer_reg(Runtime *runtime, __refer ref) {
             ti->objs_tailer = ref;
         }
         ti->objs_heap_of_thread += mb->heap_size;
+
+        while (MAX_HEAP_SIZE * GARBAGE_OVERLOAD / 100 - collector->obj_heap_size < 0) {
+            jthread_block_enter(runtime);
+            jthread_block_exit(runtime);//for jthread pause waiting for gc
+        }
+
 #if _JVM_DEBUG_GARBAGE_DUMP
         Utf8String *sus = utf8_create();
         _getMBName(mb, sus);

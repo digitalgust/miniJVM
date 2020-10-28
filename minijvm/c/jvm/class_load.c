@@ -1886,13 +1886,13 @@ JClass *load_class(Instance *loader, Utf8String *pClassName, Runtime *runtime) {
             tmpclazz = class_parse(loader, bytebuf, runtime);
             bytebuf_destory(bytebuf);
         } else { //using appclassloader load
-            if (jvm_runtime_cache.classloader_load_class) {
+            if (jvm_runtime_cache.classloader_loadClass) {
                 runtime->threadInfo->no_pause++;
                 Instance *jstr = jstring_create(pClassName, runtime);
                 push_ref(runtime->stack, jstr);
                 push_ref(runtime->stack, loader);
 
-                s32 ret = execute_method_impl(jvm_runtime_cache.classloader_load_class, runtime);
+                s32 ret = execute_method_impl(jvm_runtime_cache.classloader_loadClass, runtime);
                 if (!ret) {
                     Instance *ins_of_clazz = pop_ref(runtime->stack);
                     if (ins_of_clazz) {
