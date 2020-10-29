@@ -622,6 +622,16 @@ void profile_print();
 
 //======================= MEM_OBJ =============================
 
+#define GCFLAG_REG_SET(reg_v) (reg_v = (0x80 | reg_v))
+#define GCFLAG_REG_GET(reg_v) (0x80 & reg_v)
+#define GCFLAG_REG_CLEAR(reg_v) (reg_v = (0x7F & reg_v))
+#define GCFLAG_FINALIZED_SET(reg_v) (reg_v = (0x40 | reg_v))
+#define GCFLAG_FINALIZED_GET(reg_v) (0x40 & reg_v)
+#define GCFLAG_FINALIZED_CLEAR(reg_v) (reg_v = (0xBF & reg_v))
+#define GCFLAG_REFERENCE_SET(reg_v) (reg_v = (0x20 | reg_v))
+#define GCFLAG_REFERENCE_GET(reg_v) (0x20 & reg_v)
+#define GCFLAG_REFERENCE_CLEAR(reg_v) (reg_v = (0xDF & reg_v))
+
 typedef struct _MemoryBlock {
 
     JClass *clazz;
@@ -632,7 +642,7 @@ typedef struct _MemoryBlock {
     s32 heap_size;//objsize of jclass or jarray or jclass , but not memoryblock
     u8 type;//type of array or object runtime,class
     u8 garbage_mark;
-    u8 garbage_reg;
+    u8 gcflag;
     u8 arr_type_index;
 } MemoryBlock;
 

@@ -1191,7 +1191,9 @@ Instance *instance_copy(Runtime *runtime, Instance *src, s32 deep_copy) {
     Instance *dst = jvm_malloc(insSize);
     memcpy(dst, src, instance_base_size());
     dst->mb.thread_lock = NULL;
-    dst->mb.garbage_reg = 0;
+    dst->mb.gcflag = src->mb.gcflag;
+    GCFLAG_REG_CLEAR(dst->mb.gcflag);
+    GCFLAG_FINALIZED_CLEAR(dst->mb.gcflag);
     dst->mb.garbage_mark = 0;
     dst->mb.heap_size = insSize;
     if (src->mb.type == MEM_TYPE_INS) {

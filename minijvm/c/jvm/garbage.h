@@ -22,6 +22,7 @@ extern s64 GARBAGE_PERIOD_MS;//
 extern GcCollector *collector;
 
 extern s64 MAX_HEAP_SIZE;
+//#define HARD_LIMIT
 
 
 //每个线程一个回收站，线程多了就是灾难
@@ -44,7 +45,7 @@ struct _GcCollectorType {
     ArrayList *runtime_refer_copy;
     //
     u8 _garbage_thread_status;
-    u8 flag_refer;
+    u8 mark_cnt;
     u8 isgc;
     s16 exit_flag;
     s16 exit_code;

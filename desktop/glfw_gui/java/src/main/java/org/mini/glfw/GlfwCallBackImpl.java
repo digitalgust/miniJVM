@@ -123,12 +123,7 @@ public class GlfwCallBackImpl extends GCallBack {
         Glfw.glfwSetCallback(display, this);
         Glfw.glfwMakeContextCurrent(display);
         glfwSwapInterval(1);
-        winWidth = Glfw.glfwGetWindowWidth(display);
-        winHeight = Glfw.glfwGetWindowHeight(display);
-        fbWidth = glfwGetFramebufferWidth(display);
-        fbHeight = glfwGetFramebufferHeight(display);
-        // Calculate pixel ration for hi-dpi devices.
-        pxRatio = (float) fbWidth / (float) winWidth;
+        reloadWindow();
         System.out.println("fbWidth=" + fbWidth + "  ,fbHeight=" + fbHeight);
 
         vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
@@ -264,7 +259,7 @@ public class GlfwCallBackImpl extends GCallBack {
                 mouseLastPressed = cur;
             }
             if (!pressed) {
-                if (clickCount >0) {
+                if (clickCount > 0) {
                     gform.clickEvent(button, mouseX, mouseY);
                     clickCount = 0;
                 }
@@ -310,14 +305,18 @@ public class GlfwCallBackImpl extends GCallBack {
         return true;
     }
 
-    @Override
-    public void windowSize(long window, int width, int height) {
+    private void reloadWindow(){
         winWidth = Glfw.glfwGetWindowWidth(display);
         winHeight = Glfw.glfwGetWindowHeight(display);
         fbWidth = glfwGetFramebufferWidth(display);
         fbHeight = glfwGetFramebufferHeight(display);
         // Calculate pixel ration for hi-dpi devices.
         pxRatio = (float) fbWidth / (float) winWidth;
+    }
+
+    @Override
+    public void windowSize(long window, int width, int height) {
+        reloadWindow();
 
         if (gform == null) {
             return;
@@ -334,6 +333,7 @@ public class GlfwCallBackImpl extends GCallBack {
         }
         gform.getBoundle()[WIDTH] = x;
         gform.getBoundle()[HEIGHT] = y;
+        reloadWindow();
         gform.flush();
     }
 

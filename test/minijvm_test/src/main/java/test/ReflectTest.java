@@ -9,7 +9,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import org.mini.reflect.DirectMemObj;
-import org.mini.reflect.ReflectArray;
 import org.mini.reflect.vm.RefNative;
 
 /**
@@ -105,31 +104,7 @@ public class ReflectTest {
                     Object result = m.invoke(s, new Object[]{"cd", 1});
                     System.out.println("reflect invoke result:" + result);
                 }
-                if (RefNative.getGarbageStatus() == 1) {
-                    Object[] objs = RefNative.getGarbageReferedObjs();
-                    for (int n = 0; n < objs.length; n++) {
-                        Object o = objs[n];
-                        if (o != null && o instanceof Class) {
-                            Method[] mds = ((Class) objs[n]).getMethods();
-                            System.out.println("Class[" + Long.toString(RefNative.obj2id(objs[n]), 10) + "]:");
-                            for (int j = 0; j < mds.length; j++) {
-                                Method md = mds[j];
 
-                                if (md == null) {
-                                    System.out.println("Method[" + j + "]:" + md);
-                                } else {
-//                                    String[] paras = md.getParameterStrs();
-//                                    int k = 0;
-//                                    for (String p : paras) {
-//                                        System.out.println("Method[" + j + "][" + Long.toString(RefNative.obj2id(md), 16) + "](" + Long.toString(RefNative.obj2id(md), 10) + "):" + md.getName() + " paras[" + k + "]:" + p + "|" + Long.toString(RefNative.obj2id(p), 16));
-//                                        k++;
-//                                    }
-                                }
-                            }
-                        }
-                    }
-                    int debug = 1;
-                }
 
                 Long lo = new Long(0x1010101020202020L);
 

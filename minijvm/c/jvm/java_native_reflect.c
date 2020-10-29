@@ -456,22 +456,11 @@ s32 org_mini_reflect_vm_RefNative_getStackFrame(Runtime *runtime, JClass *clazz)
     return 0;
 }
 
-s32 org_mini_reflect_vm_RefNative_getGarbageReferedObjs(Runtime *runtime, JClass *clazz) {
-    s32 size = (s32) collector->runtime_refer_copy->length;
-
-    Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_OBJECT);
-    Instance *jarr = jarray_create_by_type_name(runtime, size, ustr);
-    utf8_destory(ustr);
-    s32 i = 0;
-
-    for (i = 0; i < collector->runtime_refer_copy->length; i++) {
-        __refer r = arraylist_get_value(collector->runtime_refer_copy, i);
-        jarray_set_field(jarr, i, (intptr_t) r);
-    }
-    push_ref(runtime->stack, jarr);//先放入栈，再关联回收器，防止多线程回收
+s32 org_mini_reflect_vm_RefNative_getGarbageMarkCounter(Runtime *runtime, JClass *clazz) {
+    push_int(runtime->stack, collector->mark_cnt);
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
-    jvm_printf("org_mini_reflect_vm_RefNative_getGarbageReferedObjs %llx\n", (u64) (intptr_t) jarr);
+    jvm_printf("org_mini_reflect_vm_RefNative_getGarbageMarkCounter %llx\n", (u64) (intptr_t) jarr);
 #endif
     return 0;
 }
@@ -1295,7 +1284,7 @@ static java_native_method method_jdwp_table[] = {
         {"org/mini/reflect/vm/RefNative",  "getFrameCount",         "(Ljava/lang/Thread;)I",                                            org_mini_reflect_vm_RefNative_getFrameCount},
         {"org/mini/reflect/vm/RefNative",  "stopThread",            "(Ljava/lang/Thread;J)I",                                           org_mini_reflect_vm_RefNative_stopThread},
         {"org/mini/reflect/vm/RefNative",  "getStackFrame",         "(Ljava/lang/Thread;)J",                                            org_mini_reflect_vm_RefNative_getStackFrame},
-        {"org/mini/reflect/vm/RefNative",  "getGarbageReferedObjs", "()[Ljava/lang/Object;",                                            org_mini_reflect_vm_RefNative_getGarbageReferedObjs},
+        {"org/mini/reflect/vm/RefNative",  "getGarbageMarkCounter", "()I",                                                              org_mini_reflect_vm_RefNative_getGarbageMarkCounter},
         {"org/mini/reflect/vm/RefNative",  "getGarbageStatus",      "()I",                                                              org_mini_reflect_vm_RefNative_getGarbageStatus},
         {"org/mini/reflect/vm/RefNative",  "defineClass",           "(Ljava/lang/ClassLoader;Ljava/lang/String;[BII)Ljava/lang/Class;", org_mini_reflect_vm_RefNative_defineClass},
         {"org/mini/reflect/vm/RefNative",  "findLoadedClass0",      "(Ljava/lang/ClassLoader;Ljava/lang/String;)Ljava/lang/Class;",     org_mini_reflect_vm_RefNative_findLoadedClass0},

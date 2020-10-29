@@ -164,9 +164,12 @@ int get_jvm_state() {
     return jvm_state;
 }
 
-void _on_jvm_sig(int no) {
+void _on_jvm_sig_print(int no) {
+    jvm_printf("[SIGNAL]jvm sig:%d  errno: %d , %s\n", no, errno, strerror(errno));
+}
 
-    jvm_printf("[ERROR]jvm signo:%d  errno: %d , %s\n", no, errno, strerror(errno));
+void _on_jvm_sig(int no) {
+    _on_jvm_sig_print(no);
     exit(no);
 }
 
@@ -176,7 +179,7 @@ void jvm_init(c8 *p_bootclasspath, c8 *p_classpath, StaticLibRegFunc regFunc) {
     signal(SIGSEGV, _on_jvm_sig);
     signal(SIGTERM, _on_jvm_sig);
 #ifdef SIGPIPE
-    signal(SIGPIPE, _on_jvm_sig);
+    signal(SIGPIPE, _on_jvm_sig_print); //not exit when network sigpipe
 #endif
     if (get_jvm_state() != JVM_STATUS_UNKNOW) {
         return;
@@ -335,7 +338,6 @@ s32 call_method(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, Runtime *p_
 
         MethodInfo *m = find_methodInfo_by_name(str_mainClsName, methodName, methodType, runtime);
         if (m) {
-
 
 
             s64 start = currentTimeMillis();

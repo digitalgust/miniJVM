@@ -7,6 +7,50 @@
 #include "garbage.h"
 //======================= global var =============================
 
+ClassLoader *boot_classloader;
+
+ArrayList *native_libs;
+ArrayList *thread_list; //all thread
+Hashtable *sys_prop;
+
+GcCollector *collector;
+
+JniEnv jnienv;
+
+
+c8 *data_type_str = "    ZCFDBSIJL[R";
+
+s32 data_type_bytes[DATATYPE_COUNT] = {0, 0, 0, 0,
+                                       sizeof(c8),
+                                       sizeof(u16),
+                                       sizeof(f32),
+                                       sizeof(f64),
+                                       sizeof(c8),
+                                       sizeof(s16),
+                                       sizeof(s32),
+                                       sizeof(s64),
+                                       sizeof(__refer),
+                                       sizeof(__refer),
+                                       sizeof(__refer),
+};
+s32 STACK_LENGHT_MAX = 4096;
+s32 STACK_LENGHT_INIT = 4096;
+
+s64 GARBAGE_PERIOD_MS = 10 * 60 * 1000;
+
+s32 GARBAGE_OVERLOAD = 90; // overload of max heap size ,will active garbage collection
+
+s64 MAX_HEAP_SIZE = 100 * 1024 * 1024;
+
+s32 jdwp_enable = 0;
+s32 jdwp_suspend_on_start = 0;
+//
+OptimizeCache jvm_runtime_cache;
+//
+
+s32 jvm_state = JVM_STATUS_UNKNOW;
+
+
 char *STRS_CLASS_EXCEPTION[] = {
         "java.lang.OutOfMemoryError",
         "java.lang.VirtualMachineError",
@@ -59,48 +103,6 @@ c8 *STR_INS_JAVA_LANG_OBJECT = "Ljava/lang/Object;";
 c8 *STR_INS_JAVA_LANG_STACKTRACEELEMENT = "Ljava/lang/StackTraceElement;";
 
 
-ClassLoader *boot_classloader;
-
-ArrayList *native_libs;
-ArrayList *thread_list; //all thread
-Hashtable *sys_prop;
-
-GcCollector *collector;
-
-JniEnv jnienv;
-
-
-c8 *data_type_str = "    ZCFDBSIJL[R";
-
-s32 data_type_bytes[DATATYPE_COUNT] = {0, 0, 0, 0,
-                                       sizeof(c8),
-                                       sizeof(u16),
-                                       sizeof(f32),
-                                       sizeof(f64),
-                                       sizeof(c8),
-                                       sizeof(s16),
-                                       sizeof(s32),
-                                       sizeof(s64),
-                                       sizeof(__refer),
-                                       sizeof(__refer),
-                                       sizeof(__refer),
-};
-s32 STACK_LENGHT_MAX = 4096;
-s32 STACK_LENGHT_INIT = 4096;
-
-s64 GARBAGE_PERIOD_MS = 10 * 60 * 1000;
-
-s32 GARBAGE_OVERLOAD = 90; // overload of max heap size ,will active garbage collection
-
-s64 MAX_HEAP_SIZE = 100 * 1024 * 1024;
-
-s32 jdwp_enable = 0;
-s32 jdwp_suspend_on_start = 0;
-//
-OptimizeCache jvm_runtime_cache;
-//
-
-s32 jvm_state = JVM_STATUS_UNKNOW;
 
 c8 *inst_name[] = {
         /* 0x00 */ "nop",

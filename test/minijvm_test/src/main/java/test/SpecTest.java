@@ -5,6 +5,8 @@
  */
 package test;
 
+import org.mini.reflect.vm.RefNative;
+
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
@@ -31,6 +33,7 @@ public class SpecTest {
         test_method();
         test_cal();
         test_reference();
+        test_finalized();
         print("test end");
     }
 
@@ -46,6 +49,19 @@ public class SpecTest {
 
     static void print(String s) {
         System.out.println(s);
+    }
+
+    static void _wait_for_gc() {
+
+        int cnt = RefNative.getGarbageMarkCounter();
+        while (RefNative.getGarbageMarkCounter() == cnt) {//cnt ++ when next gc
+            try {
+                System.gc();
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     static void test_cal() {
@@ -1265,12 +1281,7 @@ public class SpecTest {
         ReferenceQueue<Apple> appleReferenceQueue = new ReferenceQueue<>();
         WeakReference<Apple> apple1 = new WeakReference<Apple>(new Apple("Green"), appleReferenceQueue);
 
-        System.gc();
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        _wait_for_gc();
 
 
         //下面两个输出为null,表示对象被回收了
@@ -1283,6 +1294,20 @@ public class SpecTest {
             count++;
         }
         if (count == 0) printerr("referencequeue enqueue");
+    }
+
+
+    static void _new_apple() {
+        Object ap = new Apple("Blue");
+        ap = null;
+    }
+
+    static void test_finalized() {
+        _new_apple();
+        _wait_for_gc();
+        if (Apple.lastOne == null) {
+            printerr("finlize " + Apple.lastOne);
+        }
     }
 }
 
@@ -1323,6 +1348,7 @@ class Son extends Father {
 
 //=========================================================
 class Apple {
+    public static Apple lastOne = null;
 
     private String name;
 
@@ -1346,7 +1372,7 @@ class Apple {
     @Override
     protected void finalize() throws Throwable {
         super.finalize();
-        System.out.println("Apple： " + name + " finalize。");
+        Apple.lastOne = this;
     }
 
     @Override
