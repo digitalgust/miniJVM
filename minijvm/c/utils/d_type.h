@@ -104,29 +104,6 @@ typedef void *__returnaddress;
 
 //======================= memory manage =============================
 
-#ifdef MEM_ALLOC_LTALLOC
-
-static inline void *jvm_calloc(u32 size) {
-    return ltcalloc(1, size);
-}
-
-static inline void *jvm_malloc(u32 size) {
-    return ltmalloc(size);
-}
-
-static inline void jvm_free(void *ptr) {
-    ltfree(ptr);
-}
-
-static inline void *jvm_realloc(void *pPtr, u32 size) {
-    return ltrealloc(pPtr, size);
-}
-
-static inline void jvm_squeeze(u32 padsz) {
-    ltsqueeze(padsz);
-}
-
-#else
 
 static inline void *jvm_calloc(u32 size) {
     return calloc(size, 1);
@@ -145,7 +122,6 @@ static inline void *jvm_realloc(void *pPtr, u32 size) {
 
 }
 
-#endif
 
 #ifdef __cplusplus
 }

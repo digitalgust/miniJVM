@@ -7,29 +7,36 @@
 
 int test_JniTest_getValue(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
-    int v = env->localvar_getInt(runtime->localvar, 0);
-    printf("native test_JniTest_getValue(I)I invoked: v = %d\n", v);
+    s64 t = env->localvar_getLong_2slot(runtime->localvar, 0);//long used 2 slots
+    s32 v = env->localvar_getInt(runtime->localvar, 2);
+    Instance *jstr = env->localvar_getRefer(runtime->localvar, 3);
+    //convert jstring to utf8 string
+    void *ustr = env->utf8_create();
+    env->jstring_2_utf8(jstr, ustr, runtime);
+
+    printf("native print time = %lld , v = %d ,s = %s\n", t, v, env->utf8_cstr(ustr));
     env->push_int(runtime->stack, v + 1);
-    return 0;
+
+    env->utf8_destory(ustr);
+    return RUNTIME_STATUS_NORMAL;
 }
-int test_JniTest_test(Runtime *runtime, JClass *clazz) {
 
-    printf("native test_JniTest_test()V invoked: \n");
-
-    return 0;
+int test_JniTest_print(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    int v = env->localvar_getInt(runtime->localvar, 0);
+    printf("%d", v);
+    return RUNTIME_STATUS_NORMAL;
 }
 
 static java_native_method method_test2_table[] = {
-        {"test/JniTest", "getValue", "(I)I", test_JniTest_getValue},
-        {"test/JniTest", "test", "()V", test_JniTest_test},
+        {"test/JniTest", "getValue", "(JILjava/lang/String;)I", test_JniTest_getValue},
+        {"test/JniTest", "print",     "(I)V",                    test_JniTest_print},
 };
 
-void JNI_OnLoad(JniEnv *env) {
-    env->native_reg_lib(&(method_test2_table[0]), sizeof(method_test2_table) / sizeof(java_native_method));
-}
-void JNI_OnUnload(JniEnv *env) {
+void JNI_OnLoad(MiniJVM *jvm) {
+    jvm->env->native_reg_lib(jvm, &(method_test2_table[0]), sizeof(method_test2_table) / sizeof(java_native_method));
 }
 
-int main(int argc, char **argv) {
-    return 0;
+void JNI_OnUnload(MiniJVM *jvm) {
 }
+

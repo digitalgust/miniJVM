@@ -280,7 +280,7 @@ int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
     //this object not refered by jvm , so needs to hold by jni manaul
     if (refers.glfm_callback) env->instance_release_from_thread(refers.glfm_callback, runtime);
     //env->instance_hold_to_thread(refers.glfm_callback, runtime);
-    env->garbage_refer_hold(refers.glfm_callback);
+    env->garbage_refer_hold(runtime->jvm->collector, refers.glfm_callback);
 
 
     glfmSetMainLoopFunc(window, _callback_mainloop);
@@ -596,7 +596,7 @@ int org_mini_glfm_Glfm_glfmExtensionSupported(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     Instance *ext = env->localvar_getRefer(runtime->localvar, pos++);
     Utf8String *ustr = env->utf8_create();
-    env->jstring_2_utf8(ext, ustr);
+    env->jstring_2_utf8(ext, ustr, runtime);
     env->push_int(runtime->stack, glfmExtensionSupported(env->utf8_cstr(ustr)));
     env->utf8_destory(ustr);
     return 0;
@@ -648,7 +648,7 @@ int org_mini_glfm_Glfm_glfmSetClipBoardContent(Runtime *runtime, JClass *clazz) 
     JniEnv *env = runtime->jnienv;
     Instance *jstr = env->localvar_getRefer(runtime->localvar, 0);
     Utf8String *ustr = utf8_create();
-    env->jstring_2_utf8(jstr, ustr);
+    env->jstring_2_utf8(jstr, ustr, runtime);
     setClipBoardContent(utf8_cstr(ustr));
     utf8_destory(ustr);
     return 0;
@@ -684,7 +684,7 @@ int org_mini_glfm_Glfm_glfmImageCrop(Runtime *runtime, JClass *clazz) {
     s32 uid = env->localvar_getInt(runtime->localvar, pos++);
     Instance *jstr = env->localvar_getRefer(runtime->localvar, pos++);
     Utf8String *ustr = utf8_create();
-    env->jstring_2_utf8(jstr, ustr);
+    env->jstring_2_utf8(jstr, ustr, runtime);
     s32 x = env->localvar_getInt(runtime->localvar, pos++);
     s32 y = env->localvar_getInt(runtime->localvar, pos++);
     s32 w = env->localvar_getInt(runtime->localvar, pos++);
@@ -704,8 +704,8 @@ int org_mini_glfm_Glfm_glfmPlayVideo(Runtime *runtime, JClass *clazz) {
     Instance *jstrMime = env->localvar_getRefer(runtime->localvar, pos++);
     Utf8String *ustr = env->utf8_create();
     Utf8String *ustrMime = env->utf8_create();
-    env->jstring_2_utf8(jstr, ustr);
-    env->jstring_2_utf8(jstrMime, ustrMime);
+    env->jstring_2_utf8(jstr, ustr, runtime);
+    env->jstring_2_utf8(jstrMime, ustrMime, runtime);
     void *panel = playVideo(window, env->utf8_cstr(ustr), env->utf8_cstr(ustrMime));
     env->utf8_destory(ustr);
     env->utf8_destory(ustrMime);

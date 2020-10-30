@@ -403,6 +403,14 @@ typedef union _Long2Double {
 } Long2Double;
 #endif
 
+#define GARBAGE_OVERLOAD_DEFAULT 90  // overload of max heap size ,will active garbage collection
+#define GARBAGE_PERIOD_MS_DEFAULT 10 * 60 * 1000
+#define MAX_HEAP_SIZE_DEFAULT  100 * 1024 * 1024
+#define MAX_STACK_SIZE_DEFAULT 4096
+
+//#define HARD_LIMIT
+
+
 typedef struct _ClassLoader ClassLoader;
 typedef struct _ClassType JClass;
 typedef struct _InstanceType Instance;
@@ -418,10 +426,13 @@ typedef struct _ReferArr CStringArr;
 typedef struct _ReferArr ReferArr;
 typedef struct _StackFrame RuntimeStack;
 typedef struct _Jit Jit;
+typedef struct _GcCollectorType GcCollector;
+typedef struct _MiniJVM MiniJVM;
+typedef struct _JdwpServer JdwpServer;
+typedef struct _JdwpStep JdwpStep;
+typedef struct _JdwpClient JdwpClient;
 
 typedef s32 (*java_native_fun)(Runtime *runtime, JClass *p);
-
-typedef void (*StaticLibRegFunc)(JniEnv *env);
 
 
 enum {
@@ -523,8 +534,8 @@ enum {
     DATATYPE_COUNT,
 };
 
-extern s32 data_type_bytes[DATATYPE_COUNT];
-extern c8 *data_type_str;
+extern s32 DATA_TYPE_BYTES[DATATYPE_COUNT];
+extern c8 *DATA_TYPE_STR;
 
 //访问标志
 enum {
@@ -575,30 +586,10 @@ enum {
     JVM_STATUS_STOPED,
 };
 //======================= global var =============================
-extern s32 jvm_state;
 
-extern ClassLoader *boot_classloader;
-
+extern c8 *INST_NAME[];
 
 extern JniEnv jnienv;
-
-extern ArrayList *thread_list;
-
-extern ArrayList *native_libs;
-extern Hashtable *sys_prop;
-
-extern s32 STACK_LENGHT_MAX;
-extern s32 STACK_LENGHT_INIT;
-
-s32 get_jvm_state();
-
-void set_jvm_state(int state);
-
-extern c8 *inst_name[];
-
-extern s32 jdwp_enable;
-
-extern s32 jdwp_suspend_on_start;
 
 //==============profile============
 #if _JVM_DEBUG_PROFILE
@@ -647,6 +638,7 @@ typedef struct _MemoryBlock {
 } MemoryBlock;
 
 struct _ClassLoader {
+    MiniJVM *jvm;
     ArrayList *classpath;
     Hashtable *classes;
 
@@ -820,7 +812,7 @@ typedef struct _AttributeInfo {
 
 //============================================
 
-typedef struct _line_number {
+typedef struct _LineNumberTable {
     u16 start_pc;
     u16 line_number;
 } LineNumberTable;
@@ -885,7 +877,7 @@ typedef struct _BootstrapMethod {
     MethodInfo *make;
 } BootstrapMethod;
 
-typedef struct BootstrapMethods_attribute {
+typedef struct _BootstrapMethodsAttribute {
     u16 num_bootstrap_methods;
     BootstrapMethod *bootstrap_methods;
 } BootstrapMethodsAttr;
@@ -1058,7 +1050,7 @@ u8 isSonOfInterface(JClass *clazz, JClass *son, Runtime *runtime);
 
 u8 assignable_from(JClass *clazzSon, JClass *clazzSuper);
 
-void class_clear_refer(JClass *clazz);
+void class_clear_refer(ClassLoader *cloader, JClass *clazz);
 
 
 //======================= instance =============================
@@ -1189,6 +1181,36 @@ JClass *getClassByConstantClassRef(JClass *clazz, s32 index, Runtime *runtime);
 
 //======================= runtime =============================
 
+struct _JavaThreadInfo {
+//    MiniJVM *jvm;
+    Instance *jthread;
+    Instance *context_classloader;
+    Runtime *top_runtime;
+    MemoryBlock *tmp_holder;//for jni hold java object
+    MemoryBlock *objs_header;//link to new instance, until garbage accept
+    MemoryBlock *objs_tailer;//link to last instance, until garbage accept
+    MemoryBlock *curThreadLock;//if thread is locked ,the filed save the lock
+
+    ArrayList *stacktrack;  //save methodrawindex, the pos 0 is the throw point
+    ArrayList *lineNo;  //save methodrawindex, the pos 0 is the throw point
+
+    s64 objs_heap_of_thread;// heap use for objs_header, if translate to gc ,the var need clear to 0
+    spinlock_t lock;
+    u16 volatile suspend_count;//for jdwp suspend ,>0 suspend, ==0 resume
+    u16 volatile no_pause;  //can't pause when clinit
+    u8 volatile thread_status;
+    u8 volatile is_suspend;
+    u8 volatile is_blocking;
+    u8 is_interrupt;
+
+    thrd_t pthread;
+    //调试器相关字段
+    JdwpStep *jdwp_step;
+
+};
+
+
+
 /* Stack Frame */
 #define STACK_ENTRY_NONE        0
 #define STACK_ENTRY_INT         1
@@ -1221,11 +1243,11 @@ struct _StackFrame {
 
 
 struct _Runtime {
-
+    MiniJVM *jvm;
     MethodInfo *method;
     JClass *clazz;
     u8 *pc;
-    JavaThreadInfo *threadInfo;
+    JavaThreadInfo *thrd_info;
     MemoryBlock *lock;
     Runtime *son;//sub method's runtime
     Runtime *parent;//father method's runtime
@@ -1403,7 +1425,7 @@ s32 is_ref(StackEntry *entry);
 
 //======================= localvar =============================
 
-Runtime *runtime_create(Runtime *parent);
+Runtime *runtime_create(MiniJVM *jvm);
 
 void runtime_destory(Runtime *runtime);
 
@@ -1472,33 +1494,8 @@ s64 localvar_getLong_2slot_jni(LocalVarItem *localvar, s32 index);
 
 void localvar_setLong_2slot_jni(LocalVarItem *localvar, s32 index, s64 val);
 
-//======================= other =============================
 //======================= execute =============================
 //
-void open_log(void);
-
-void close_log(void);
-
-c8 *getMajorVersionString(u16 major_number);
-
-void jvm_init(c8 *p_bootclasspath, c8 *p_classpath, StaticLibRegFunc regFunc);
-
-void jvm_destroy(StaticLibRegFunc unRegFunc);
-
-void thread_boundle(Runtime *runtime);
-
-void thread_unboundle(Runtime *runtime);
-
-void print_exception(Runtime *runtime);
-
-s32 execute_jvm(c8 *p_bootclasspath, c8 *p_classpath, c8 *mainclass, ArrayList *java_para);
-
-s32 call_method(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, Runtime *p_runtime);
-
-s32 execute_method_impl(MethodInfo *method, Runtime *runtime);
-
-s32 execute_method(MethodInfo *method, Runtime *runtime);
-
 /**
 * 从栈中取得实例对象，中间穿插着调用参数
 * @param cmr cmr
@@ -1528,17 +1525,16 @@ s32 invokedynamic_prepare(Runtime *runtime, BootstrapMethod *bootMethod, Constan
 s32 checkcast(Runtime *runtime, Instance *ins, s32 typeIdx);
 
 //======================= jni =============================
-typedef struct _java_native_method {
+typedef struct _JavaNativeMethod {
     c8 *clzname;
     c8 *methodname;
     c8 *methodtype;
     java_native_fun func_pointer;
 } java_native_method;
 
-java_native_method *find_native_method(c8 *cls_name, c8 *method_name, c8 *method_type);
+java_native_method *find_native_method(MiniJVM *jvm, c8 *cls_name, c8 *method_name, c8 *method_type);
 
-s32 invoke_native_method(Runtime *runtime, JClass *p,
-                         c8 *cls_name, c8 *method_name, c8 *type);
+s32 invoke_native_method(MiniJVM *jvm, Runtime *runtime, JClass *p, c8 *cls_name, c8 *method_name, c8 *type);
 
 
 typedef struct _JavaNativeLib {
@@ -1552,26 +1548,26 @@ struct _ReferArr {
     s32 arr_length;
 };
 
-s32 native_reg_lib(java_native_method *methods, s32 method_size);
+s32 native_reg_lib(MiniJVM *jvm, java_native_method *methods, s32 method_size);
 
-s32 native_remove_lib(JavaNativeLib *lib);
+s32 native_remove_lib(MiniJVM *jvm, JavaNativeLib *lib);
 
-s32 native_lib_destory(void);
+s32 native_lib_destory(MiniJVM *jvm);
 
-void reg_std_native_lib(void);
+void reg_std_native_lib(MiniJVM *jvm);
 
-void reg_net_native_lib(void);
+void reg_net_native_lib(MiniJVM *jvm);
 
-void reg_jdwp_native_lib(void);
+void reg_reflect_native_lib(MiniJVM *jvm);
 
-void init_jni_func_table();
+void init_jni_func_table(MiniJVM *jvm);
 
 struct _JNIENV {
     s32 *data_type_bytes;
 
-    s32 (*native_reg_lib)(java_native_method *methods, s32 method_size);
+    s32 (*native_reg_lib)(MiniJVM *jvm, java_native_method *methods, s32 method_size);
 
-    s32 (*native_remove_lib)(JavaNativeLib *lib);
+    s32 (*native_remove_lib)(MiniJVM *jvm, JavaNativeLib *lib);
 
     void (*push_entry)(RuntimeStack *stack, StackEntry *entry);
 
@@ -1635,7 +1631,7 @@ struct _JNIENV {
 
     Instance *(*jstring_create_cstr)(c8 *cstr, Runtime *runtime);
 
-    s32 (*jstring_2_utf8)(Instance *jstr, Utf8String *utf8);
+    s32 (*jstring_2_utf8)(Instance *jstr, Utf8String *utf8, Runtime *runtime);
 
     CStringArr *(*cstringarr_create)(Instance *jstr_arr);
 
@@ -1673,11 +1669,11 @@ struct _JNIENV {
 
     void (*print_exception)(Runtime *runtime);
 
-    void (*garbage_refer_hold)(__refer ref);
+    void (*garbage_refer_hold)(GcCollector *collector, __refer ref);
 
-    void (*garbage_refer_release)(__refer ref);
+    void (*garbage_refer_release)(GcCollector *collector, __refer ref);
 
-    Runtime *(*runtime_create)(Runtime *parent);
+    Runtime *(*runtime_create)(MiniJVM *jvm);
 
     void (*runtime_destory)(Runtime *runtime);
 
@@ -1699,11 +1695,107 @@ struct _JNIENV {
 
     void (*jthread_set_daemon_value)(Instance *ins, Runtime *runtime, s32 daemon);
 
-    s32 (*get_jvm_state)();
+    s32 (*get_jvm_state)(MiniJVM *jvm);
 
 };
 
+typedef struct _PreProcessor {
+    FieldInfo *string_offset;
+    FieldInfo *string_count;
+    FieldInfo *string_value;
+    //java.lang.StringBuilder
+    FieldInfo *stringbuilder_value;
+    FieldInfo *stringbuilder_count;
+    //java.lang.Thread
+    FieldInfo *thread_name;
+    FieldInfo *thread_stackFrame;
+    //java.lang.Class
+    FieldInfo *class_classHandle;
+    FieldInfo *class_classLoader;
 
+    //
+    FieldInfo *stacktrace_declaringClass;
+    FieldInfo *stacktrace_methodName;
+    FieldInfo *stacktrace_fileName;
+    FieldInfo *stacktrace_lineNumber;
+    FieldInfo *stacktrace_parent;
+
+    //
+    FieldInfo *dmo_memAddr;
+    FieldInfo *dmo_length;
+    FieldInfo *dmo_desc;
+
+    //
+    MethodInfo *classloader_loadClass;
+
+    //
+    MethodInfo *reference_vmEnqueneReference;
+    JClass *reference;
+    //
+    JClass *array_classes[DATATYPE_COUNT];
+} PreProcessor;
+
+
+struct _ThreadLock {
+    cnd_t thread_cond;
+    mtx_t mutex_lock; //互斥锁
+};
+//======================= Jvm =============================
+struct _MiniJVM {
+    ClassLoader *boot_classloader;
+
+    ThreadLock threadlock;
+
+    ArrayList *native_libs;
+    ArrayList *thread_list; //all thread
+    Hashtable *sys_prop;
+
+    GcCollector *collector;
+
+    PreProcessor shortcut;
+
+    JdwpServer *jdwpserver;
+    s32 jdwp_enable;
+    s32 jdwp_suspend_on_start;
+    s64 max_heap_size;
+    s32 heap_overload_percent;
+    s64 garbage_collect_period_ms;
+
+    JniEnv *env;
+
+    s32 jvm_state;
+};
+
+
+void open_log(void);
+
+void close_log(void);
+
+c8 *getMajorVersionString(u16 major_number);
+
+MiniJVM *jvm_create();
+
+s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath);
+
+void jvm_destroy(MiniJVM *jvm);
+
+void thread_boundle(Runtime *runtime);
+
+void thread_unboundle(Runtime *runtime);
+
+void print_exception(Runtime *runtime);
+
+s32 call_main(MiniJVM *jvm, c8 *p_mainclass, ArrayList *java_para);
+
+s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddesc, Runtime *p_runtime);
+
+s32 execute_method_impl(MethodInfo *method, Runtime *runtime);
+
+s32 execute_method(MethodInfo *method, Runtime *runtime);
+
+s32 get_jvm_state(MiniJVM *jvm);
+
+void set_jvm_state(MiniJVM *jvm, int state);
 
 //=======================   =============================
 

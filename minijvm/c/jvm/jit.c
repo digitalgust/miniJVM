@@ -25,7 +25,7 @@
 
 //------------------------  declare ----------------------------
 
-thread_suspend_check_func check_suspend;
+static thread_suspend_check_func check_suspend;
 
 /**
  * Generate jit code for exception check , throw , and handle
@@ -97,7 +97,7 @@ static void print_stack(s64 a, s64 b, s64 c) {
     }
     if (size > imax) printf("  >>");
     printf("\n");
-    printf("%d %s\n", offset, inst_name[ca->bytecode_for_jit[offset]]);
+    printf("%d %s\n", offset, INST_NAME[ca->bytecode_for_jit[offset]]);
 }
 
 static void print_callstack(Runtime *runtime) {
@@ -1253,7 +1253,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
     sljit_emit_op2(C, SLJIT_ADD, SLJIT_R0, 0, SLJIT_S1, 0, SLJIT_IMM, SLJIT_OFFSETOF(Runtime, pc));
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME_PC, SLJIT_R0, 0);
     //arr[LOCAL_THREADINFO_SUSPEND]= runtime->threadInfo
-    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_S1), SLJIT_OFFSETOF(Runtime, threadInfo));
+    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_S1), SLJIT_OFFSETOF(Runtime, thrd_info));
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_THREADINFO, SLJIT_R0, 0);
     //S1=runtime->localvar
     sljit_emit_op1(C, SLJIT_MOV_P, REGISTER_LOCALVAR, 0, SLJIT_MEM1(SLJIT_S1), SLJIT_OFFSETOF(Runtime, localvar));
@@ -1372,7 +1372,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                         break;
                     }
                     case CONSTANT_CLASS: {
-                        JClass *cl = classes_get(class_get_constant_classref(clazz, index)->name);
+                        JClass *cl = classes_get(runtime->jvm->boot_classloader, class_get_constant_classref(clazz, index)->name);
                         //push_ref(stack, cl->ins_class);
                         _gen_stack_push_ref(C, SLJIT_IMM, (sljit_sw) cl->ins_class);
                         break;
@@ -3318,7 +3318,7 @@ void construct_jit(MethodInfo *method, Runtime *runtime) {
     if (!check_suspend) {
         gen_jit_suspend_check_func();
     }
-    if (jdwp_enable) {
+    if (runtime->jvm->jdwp_enable) {
         ca->jit.state = JIT_GEN_ERROR;
         return;
     }

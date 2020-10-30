@@ -6,10 +6,7 @@
 #define MINI_JVM_JDWP_H
 
 
-#include "../utils/utf8_string.h"
-#include "../utils/arraylist.h"
 #include "jvm.h"
-#include "../utils/hashset.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -90,38 +87,38 @@ enum {
 #define JDWP_EVENTKIND_VM_DEATH  99
 #define JDWP_EVENTKIND_VM_DISCONNECTED  100  //Never sent by across JDWP
 //=============================      event   ==============================================
-static u8 JDWP_STEPDEPTH_INTO = 0;
-static u8 JDWP_STEPDEPTH_OVER = 1;
-static u8 JDWP_STEPDEPTH_OUT = 2;
+#define JDWP_STEPDEPTH_INTO  0
+#define JDWP_STEPDEPTH_OVER 1
+#define JDWP_STEPDEPTH_OUT 2
 
 
-static u8 JDWP_STEPSIZE_MIN = 0;
-static u8 JDWP_STEPSIZE_LINE = 1;
+#define JDWP_STEPSIZE_MIN 0
+#define JDWP_STEPSIZE_LINE 1
 //=============================      class status   ==============================================
 
-static u8 JDWP_CLASS_STATUS_VERIFIED = 1;
-static u8 JDWP_CLASS_STATUS_PREPARED = 2;
-static u8 JDWP_CLASS_STATUS_INITIALIZED = 4;
-static u8 JDWP_CLASS_STATUS_ERROR = 8;
+#define JDWP_CLASS_STATUS_VERIFIED 1
+#define JDWP_CLASS_STATUS_PREPARED 2
+#define JDWP_CLASS_STATUS_INITIALIZED 4
+#define JDWP_CLASS_STATUS_ERROR 8
 //=============================      typetag   ==============================================
 
-static u8 JDWP_TYPETAG_CLASS = 1; //ReferenceType is a class.
-static u8 JDWP_TYPETAG_INTERFACE = 2; //ReferenceType is an interface.
-static u8 JDWP_TYPETAG_ARRAY = 3; //ReferenceType is an array.
+#define JDWP_TYPETAG_CLASS 1  //ReferenceType is a class.
+#define JDWP_TYPETAG_INTERFACE 2  //ReferenceType is an interface.
+#define JDWP_TYPETAG_ARRAY 3  //ReferenceType is an array.
 //=============================      Thread status   ==============================================
-static c8 JDWP_THREAD_ZOMBIE = 0;
-static c8 JDWP_THREAD_RUNNING = 1;
-static c8 JDWP_THREAD_SLEEPING = 2;
-static c8 JDWP_THREAD_MONITOR = 3;
-static c8 JDWP_THREAD_WAIT = 4;
+#define JDWP_THREAD_ZOMBIE 0
+#define JDWP_THREAD_RUNNING 1
+#define JDWP_THREAD_SLEEPING 2
+#define JDWP_THREAD_MONITOR 3
+#define JDWP_THREAD_WAIT 4
 //=============================      suspend   ==============================================
 
-static c8 JDWP_SUSPEND_STATUS_SUSPENDED = 0x1;
+#define JDWP_SUSPEND_STATUS_SUSPENDED 0x1
 
 
-static c8 JDWP_SUSPENDPOLICY_NONE = 0;//Suspend no threads when this event is encountered.
-static c8 JDWP_SUSPENDPOLICY_EVENT_THREAD = 1;//Suspend the event thread when this event is encountered.
-static c8 JDWP_SUSPENDPOLICY_ALL = 2;//Suspend all threads when this event is encountered.
+#define JDWP_SUSPENDPOLICY_NONE 0 //Suspend no threads when this event is encountered.
+#define JDWP_SUSPENDPOLICY_EVENT_THREAD 1 //Suspend the event thread when this event is encountered.
+#define JDWP_SUSPENDPOLICY_ALL 2 //Suspend all threads when this event is encountered.
 //=============================      tag   ==============================================
 
 #define JDWP_TAG_ARRAY  91
@@ -266,15 +263,15 @@ static c8 JDWP_SUSPENDPOLICY_ALL = 2;//Suspend all threads when this event is en
 
 //=============================      my define   ==============================================
 
-static c8 *JDWP_TCP_PORT = "8000";
+#define JDWP_TCP_PORT  "8000"
 
-static c8 *JDWP_HANDSHAKE = "JDWP-Handshake";
+#define JDWP_HANDSHAKE  "JDWP-Handshake"
 
-static c8 JDWP_EVENTSET_SET = 1;
-static c8 JDWP_EVENTSET_CLEAR = 0;
+#define JDWP_EVENTSET_SET 1
+#define JDWP_EVENTSET_CLEAR 0
 
-static u8 JDWP_PACKET_REQUEST = 0;
-static u8 JDWP_PACKET_RESPONSE = 0x80;
+#define JDWP_PACKET_REQUEST 0
+#define JDWP_PACKET_RESPONSE 0x80
 
 //=============================      typedef   ==============================================
 
@@ -293,9 +290,7 @@ enum {
     JDWP_MODE_LISTEN = 0x01,
     JDWP_MODE_DISPATCH = 0x02,
 };
-typedef struct _JdwpServer JdwpServer;
 
-typedef struct _JdwpClient JdwpClient;
 
 typedef struct _JdwpConn {
     s32 sockfd;
@@ -454,7 +449,7 @@ enum {
     NEXT_TYPE_OVER,
     NEXT_TYPE_SINGLE,
 };
-typedef struct _JdwpStep {
+struct _JdwpStep {
     u8 active;
     u8 next_type;
     s32 next_stop_runtime_depth;
@@ -463,23 +458,19 @@ typedef struct _JdwpStep {
         s32 next_stop_line_no;
     };
     s32 bytecode_count;
-} JdwpStep;
+};
 
 enum {
     CALL_MODE_INSTANCE = 0,
     CALL_MODE_STATIC = 1,
 };
 
-static s32 jdwp_eventset_requestid = 0;
-static s32 jdwp_eventset_commandid = 0;
 
-extern JdwpServer jdwpserver;
+s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client);
 
-s32 jdwp_client_process(JdwpClient *client);
+s32 jdwp_start_server(MiniJVM *jvm);
 
-s32 jdwp_start_server(void);
-
-s32 jdwp_stop_server(void);
+s32 jdwp_stop_server(MiniJVM *jvm);
 
 Runtime *jdwp_get_runtime(JdwpServer *srv);
 
@@ -488,15 +479,15 @@ s32 jdwp_is_ignore_sync(JdwpServer *srv);
 s32 jdwp_set_breakpoint(s32 setOrClear, JClass *clazz, MethodInfo *methodInfo, s64 execIndex);
 
 
-void event_on_breakpoint(Runtime *breakpoint_runtime);
+void event_on_breakpoint(JdwpServer *jdwpserver, Runtime *breakpoint_runtime);
 
-void event_on_class_prepare(Runtime *runtime, JClass *clazz);
+void event_on_class_prepare(JdwpServer *jdwpserver, Runtime *runtime, JClass *clazz);
 
-void event_on_thread_death(Instance *jthread);
+void event_on_thread_death(JdwpServer *jdwpserver, Instance *jthread);
 
-void event_on_thread_start(Instance *jthread);
+void event_on_thread_start(JdwpServer *jdwpserver, Instance *jthread);
 
-void event_on_vmstart(Instance *jthread);
+void event_on_vmstart(JdwpServer *jdwpserver, Instance *jthread);
 
 void jdwp_check_breakpoint(Runtime *runtime);
 

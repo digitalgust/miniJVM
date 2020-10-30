@@ -407,7 +407,7 @@ int org_mini_glfw_utils_Gutil_vec4_from_mat4x4(Runtime *runtime, JClass *clazz) 
     Instance *aa = env->localvar_getRefer(runtime->localvar, pos++);
     GLfloat *r = (GLfloat *) ra->arr_body;
     GLfloat *a = (GLfloat *) aa->arr_body;
-    quat_from_mat4x4(r, (vec4 *)a);
+    quat_from_mat4x4(r, (vec4 *) a);
     env->push_ref(runtime->stack, ra);
     return 0;
 }
@@ -1112,7 +1112,7 @@ int org_mini_glfw_Glfw_glfwSetClipboardString(Runtime *runtime, JClass *clazz) {
     pos += 2;
     Instance *jstr = env->localvar_getRefer(runtime->localvar, pos++);
     Utf8String *ustr = env->utf8_create();
-    env->jstring_2_utf8(jstr, ustr);
+    env->jstring_2_utf8(jstr, ustr, runtime);
     glfwSetClipboardString(window, env->utf8_cstr(ustr));
     env->utf8_destory(ustr);
     return 0;
@@ -1126,7 +1126,7 @@ int org_mini_glfw_Glfw_glfwSetWindowTitle(Runtime *runtime, JClass *clazz) {
     pos += 2;
     Instance *jstr = env->localvar_getRefer(runtime->localvar, pos++);
     Utf8String *ustr = env->utf8_create();
-    env->jstring_2_utf8(jstr, ustr);
+    env->jstring_2_utf8(jstr, ustr, runtime);
     glfwSetWindowTitle(window, env->utf8_cstr(ustr));
     env->utf8_destory(ustr);
     return 0;

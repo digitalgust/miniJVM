@@ -23,11 +23,12 @@
  */
 int main(int argc, char **argv) {
 
-
     char *bootclasspath = NULL;
     char *classpath = NULL;
     char *main_name = NULL;
     ArrayList *java_para = arraylist_create(0);
+    s32 jdwp = 0;
+    s64 maxheap = MAX_HEAP_SIZE_DEFAULT;
     s32 ret;
     //  mini_jvm   -Xmx16M -bootclasspath ../../binary/lib/minijvm_rt.jar -cp ../../binary/lib/minijvm_test.jar;./ test/Foo1 999
     if (argc > 1) {
@@ -40,7 +41,7 @@ int main(int argc, char **argv) {
                 classpath = argv[i + 1];
                 i++;
             } else if (strcmp(argv[i], "-Xdebug") == 0) {
-                jdwp_enable = 1;
+                jdwp = 1;
 //                if (!jdwp_enable) {
 //                    printf("binary not support debug, please recompile and define JDWP_DEBUG as 1 ");
 //                }
@@ -54,7 +55,7 @@ int main(int argc, char **argv) {
                     Utf8String *num_u = utf8_create_part_c(argv[i], 4, alen - 5);
                     s64 num = utf8_aton(num_u, 10);
                     if (num > 0)
-                        MAX_HEAP_SIZE = num * mb * 1024 * 1024;
+                        maxheap = num * mb * 1024 * 1024;
                     //jvm_printf("%s , %lld\n", argv[i], MAX_HEAP_SIZE);
                 } else
                     jvm_printf("skiped argv: %s", argv[i]);
@@ -66,23 +67,22 @@ int main(int argc, char **argv) {
             }
         }
     } else {
-        jdwp_enable = 0;
-        jdwp_suspend_on_start = 0;
         bootclasspath = "../../binary/lib/minijvm_rt.jar";
-        
-        
+        jdwp = 01;
+
+        //test for graphics
 //        classpath = "../../binary/libex/glfw_gui.jar;./";
-//        main_name = "test/Gears";
-//        main_name = "test/TestGL";
-//        main_name = "test/AppManagerTest";
-//        main_name = "test/RenderTexure";
-//        main_name = "test/Alpha";
-//        main_name = "test/Light";
-//        main_name = "test/Shader";
-//        main_name = "test/Shader1";
-//        main_name = "test/Shader2";
-//        main_name = "test/Boing";
-//        main_name = "test/TestNanovg";
+//        main_name = "test.Gears";
+//        main_name = "test.TestGL";
+//        main_name = "test.AppManagerTest";
+//        main_name = "test.RenderTexure";
+//        main_name = "test.Alpha";
+//        main_name = "test.Light";
+//        main_name = "test.Shader";
+//        main_name = "test.Shader1";
+//        main_name = "test.Shader2";
+//        main_name = "test.Boing";
+//        main_name = "test.TestNanovg";
 
 
 //        classpath = "../../binary/libex/jni_test.jar;./";
@@ -91,32 +91,22 @@ int main(int argc, char **argv) {
 //        classpath = "../../binary/libex/luaj.jar;./";
 //        main_name = "Sample";
 
-//        classpath = "../../../minijvm_third_lib/vm_test_rt/target/test_rt.jar;";
-//        main_name = "com/egls/test/Foo1";
-
-//        classpath = "../../../minijvm_third_lib/vm_micro_rt/target/micro_rt.jar;";
-//        main_name = "test/Foo3";
-
-//        classpath = "../../binary/libex/g3d.jar;../../binary/libex/glfw_gui.jar;./";
-//        main_name = "test/Test2";
-//        main_name = "test/G3d";
 
 
         classpath = "../../binary/libex/minijvm_test.jar;./";
-//        main_name = "test/HelloWorld";
-//        main_name = "test/Foo1";
-//        main_name = "test/Foo2";
-//        main_name = "test/Foo3";
-//        main_name = "test/SpecTest";
-//        main_name = "test/MultiThread";
-//        main_name = "test/ExecuteSpeed";
-//        main_name = "test/TestFile";
-        main_name = "test/HttpServer";
-//        main_name = "test/BpDeepTest";
-//        main_name = "test/ReflectTest";
-//        main_name = "test/LambdaTest";
-//        main_name = "test/NioBufferTest";
-//        main_name = "test/JsonDataBind";
+//        main_name = "test.HelloWorld";
+//        main_name = "test.Foo1";
+//        main_name = "test.Foo2";
+//        main_name = "test.Foo3";
+//        main_name = "test.SpecTest";
+//        main_name = "test.MultiThread";
+//        main_name = "test.ExecuteSpeed";
+//        main_name = "test.TestFile";
+        main_name = "test.HttpServer";
+//        main_name = "test.BpDeepTest";
+//        main_name = "test.ReflectTest";
+//        main_name = "test.LambdaTest";
+//        main_name = "test.NioBufferTest";
 
 
 
@@ -124,11 +114,18 @@ int main(int argc, char **argv) {
 //        main_name = "org.codehaus.janino.Compiler";
 //        arraylist_push_back(java_para,"../../binary/res/BpDeepTest.java");
 
-
-
     }
-    ret = execute_jvm(bootclasspath, classpath, main_name, java_para);
+    MiniJVM *jvm = jvm_create();
+    jvm->jdwp_enable = jdwp;
+    jvm->jdwp_suspend_on_start = 0;
+    jvm->max_heap_size = maxheap;
+
+    jvm_init(jvm, bootclasspath, classpath);
+
+    ret = call_main(jvm, main_name, java_para);
     arraylist_destory(java_para);
+    jvm_destroy(jvm);
+
 //    getchar();
     return ret;
 }

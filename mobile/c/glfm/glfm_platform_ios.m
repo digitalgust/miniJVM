@@ -1613,15 +1613,9 @@ const char* glfmGetUUID(){
     return [Identifier UTF8String];
 }
 
-extern void sys_properties_set_c(char *key, char *val);
-
 void setDeviceToken(GLFMDisplay * display, const char *deviceToken) {
     static char *key="glfm.device.token";
-    if(deviceToken){
-        sys_properties_set_c(key,deviceToken);
-    }else{
-        sys_properties_set_c(key,"");
-    }
+
     if(display->notifyFunc){
         display->notifyFunc(display,key,deviceToken);
     }

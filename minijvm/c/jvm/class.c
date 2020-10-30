@@ -29,7 +29,7 @@ JClass *class_create(Runtime *runtime) {
     clazz->insFieldPtrIndex = arraylist_create(8);
     clazz->staticFieldPtrIndex = arraylist_create(4);
     clazz->supers = arraylist_create(4);
-    gc_refer_reg(runtime, clazz);
+    gc_obj_reg(runtime, clazz);
     return clazz;
 }
 
@@ -62,7 +62,7 @@ void constant_list_destory(JClass *clazz) {
     arraylist_destory(clazz->constantPool.interfaceMethodRef);
 }
 
-void class_clear_refer(JClass *clazz) {
+void class_clear_refer(ClassLoader *cloader, JClass *clazz) {
     s32 i, len;
     if (clazz->field_static) {
         FieldPool *fp = &clazz->fieldPool;
@@ -84,9 +84,9 @@ void class_clear_refer(JClass *clazz) {
     ArrayList *utf8list = clazz->constantPool.utf8CP;
     for (i = 0, len = utf8list->length; i < len; i++) {
         ConstantUTF8 *cutf = arraylist_get_value(utf8list, i);
-        gc_refer_release(cutf->jstr);
+        gc_obj_release(cloader->jvm->collector, cutf->jstr);
     }
-    gc_refer_release(clazz->ins_class);
+    gc_obj_release(cloader->jvm->collector, clazz->ins_class);
     clazz->ins_class = NULL;
 }
 //===============================    初始化相关  ==================================
@@ -138,7 +138,7 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
     //先排8字节成员,紧跟4字节成员,再跟2字节成员,最后排1字节成员
     while (datawidth > 0) {//first align width=8B ,then width=4B, then width=2,then 1
         for (i = 0; i < field_count; i++) {
-            s32 width = data_type_bytes[f[i].datatype_idx];
+            s32 width = DATA_TYPE_BYTES[f[i].datatype_idx];
             if (width == datawidth) {
                 mem_align_order[order_idx] = i;
                 order_idx++;
@@ -148,7 +148,7 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
     }
     for (i = 0; i < field_count; i++) {
         FieldInfo *fi = &f[mem_align_order[i]];
-        s32 width = data_type_bytes[fi->datatype_idx];
+        s32 width = DATA_TYPE_BYTES[fi->datatype_idx];
         if (fi->access_flags & ACC_STATIC) {//静态变量
             fi->offset = static_len;
             static_len += width;
@@ -189,58 +189,59 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
         fi->offset_instance = fi->_this_class->field_instance_start + fi->offset;
     }
 
+    PreProcessor *jvm_runtime_cache = &runtime->jvm->shortcut;
     //预计算字段在实例内存中的偏移，节约运行时时间
     if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_CLASS)) {
         FieldInfo *fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_CLASS, STR_FIELD_CLASSHANDLE, "J", runtime);
-        jvm_runtime_cache.class_classHandle = fi;
+        jvm_runtime_cache->class_classHandle = fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_CLASS, STR_FIELD_CLASSLOADER, "Ljava/lang/ClassLoader;", runtime);
-        jvm_runtime_cache.class_classLoader = fi;
+        jvm_runtime_cache->class_classLoader = fi;
     } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_STRING)) {
         FieldInfo *fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_STRING, STR_FIELD_COUNT, "I", runtime);
-        jvm_runtime_cache.string_count = fi;
+        jvm_runtime_cache->string_count = fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_STRING, STR_FIELD_OFFSET, "I", runtime);
-        jvm_runtime_cache.string_offset = fi;
+        jvm_runtime_cache->string_offset = fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_STRING, STR_FIELD_VALUE, "[C", runtime);
-        jvm_runtime_cache.string_value = fi;
+        jvm_runtime_cache->string_value = fi;
     } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_STRINGBUILDER)) {
         FieldInfo *fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_STRINGBUILDER, STR_FIELD_COUNT, "I", runtime);
-        jvm_runtime_cache.stringbuilder_count = fi;
+        jvm_runtime_cache->stringbuilder_count = fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_STRINGBUILDER, STR_FIELD_VALUE, "[C", runtime);
-        jvm_runtime_cache.stringbuilder_value = fi;
+        jvm_runtime_cache->stringbuilder_value = fi;
     } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_THREAD)) {
         FieldInfo *fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_THREAD, STR_FIELD_NAME, "[C", runtime);
-        jvm_runtime_cache.thread_name = fi;
+        jvm_runtime_cache->thread_name = fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_THREAD, STR_FIELD_STACKFRAME, "J", runtime);
-        jvm_runtime_cache.thread_stackFrame = fi;
+        jvm_runtime_cache->thread_stackFrame = fi;
     } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_STACKTRACE)) {
         FieldInfo *fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_STACKTRACE, "declaringClass", STR_INS_JAVA_LANG_STRING, runtime);
-        jvm_runtime_cache.stacktrace_declaringClass = fi;
+        jvm_runtime_cache->stacktrace_declaringClass = fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_STACKTRACE, "methodName", STR_INS_JAVA_LANG_STRING, runtime);
-        jvm_runtime_cache.stacktrace_methodName = fi;
+        jvm_runtime_cache->stacktrace_methodName = fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_STACKTRACE, "fileName", STR_INS_JAVA_LANG_STRING, runtime);
-        jvm_runtime_cache.stacktrace_fileName = fi;
+        jvm_runtime_cache->stacktrace_fileName = fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_STACKTRACE, "lineNumber", "I", runtime);
-        jvm_runtime_cache.stacktrace_lineNumber = fi;
+        jvm_runtime_cache->stacktrace_lineNumber = fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_STACKTRACE, "parent", STR_INS_JAVA_LANG_STACKTRACEELEMENT, runtime);
-        jvm_runtime_cache.stacktrace_parent = fi;
+        jvm_runtime_cache->stacktrace_parent = fi;
     } else if (utf8_equals_c(clazz->name, STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ)) {
         FieldInfo *fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ, "memAddr", "J", runtime);
-        jvm_runtime_cache.dmo_memAddr = fi;
+        jvm_runtime_cache->dmo_memAddr = fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ, "length", "I", runtime);
-        jvm_runtime_cache.dmo_length = fi;
+        jvm_runtime_cache->dmo_length = fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ, "typeDesc", "C", runtime);
-        jvm_runtime_cache.dmo_desc = fi;
+        jvm_runtime_cache->dmo_desc = fi;
     } else if (utf8_equals_c(clazz->name, STR_CLASS_ORG_MINI_REFLECT_LAUNCHER)) {
-        jvm_runtime_cache.classloader_loadClass = find_methodInfo_by_name_c(STR_CLASS_ORG_MINI_REFLECT_LAUNCHER, "loadClass", "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/Class;", runtime);
+        jvm_runtime_cache->classloader_loadClass = find_methodInfo_by_name_c(STR_CLASS_ORG_MINI_REFLECT_LAUNCHER, "loadClass", "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/Class;", runtime);
     } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_REF_REFERENCE)) {
-        jvm_runtime_cache.reference = clazz;
-        jvm_runtime_cache.reference_vmEnqueneReference = find_methodInfo_by_name_c(STR_CLASS_JAVA_LANG_REF_REFERENCE, "vmEnqueneReference", "(Ljava/lang/ref/Reference;)V", runtime);
+        jvm_runtime_cache->reference = clazz;
+        jvm_runtime_cache->reference_vmEnqueneReference = find_methodInfo_by_name_c(STR_CLASS_JAVA_LANG_REF_REFERENCE, "vmEnqueneReference", "(Ljava/lang/ref/Reference;)V", runtime);
     }
 //    jvm_printf("prepared: %s\n", utf8_cstr(clazz->name));
 
@@ -254,8 +255,8 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
  * @param runtime  runtime
  */
 void class_clinit(JClass *clazz, Runtime *runtime) {
-    garbage_thread_lock();
-    runtime->threadInfo->no_pause++;
+    vm_share_lock(runtime->jvm);
+    runtime->thrd_info->no_pause++;
     if (clazz->status < CLASS_STATUS_PREPARED) {
         class_prepar(clazz->jClassLoader, clazz, runtime);
     }
@@ -308,11 +309,11 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
         for (i = 0, len = strlist->length; i < len; i++) {
             ConstantStringRef *strRef = arraylist_get_value_unsafe(strlist, i);
             ConstantUTF8 *cutf = class_get_constant_utf8(clazz, strRef->stringIndex);
-            Instance *jstr = hashtable_get(boot_classloader->table_jstring_const, cutf->utfstr);
+            Instance *jstr = hashtable_get(runtime->jvm->boot_classloader->table_jstring_const, cutf->utfstr);
             if (!jstr) {
                 jstr = jstring_create(cutf->utfstr, runtime);
-                hashtable_put(boot_classloader->table_jstring_const, cutf->utfstr, jstr);
-                gc_refer_hold(jstr);
+                hashtable_put(runtime->jvm->boot_classloader->table_jstring_const, cutf->utfstr, jstr);
+                gc_obj_hold(runtime->jvm->collector, jstr);
             }
             cutf->jstr = jstr;
         }
@@ -385,8 +386,8 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
 
         clazz->status = CLASS_STATUS_CLINITED;
     }
-    runtime->threadInfo->no_pause--;
-    garbage_thread_unlock();
+    runtime->thrd_info->no_pause--;
+    vm_share_unlock(runtime->jvm);
 }
 //===============================    实例化相关  ==================================
 
@@ -479,7 +480,7 @@ FieldInfo *find_fieldInfo_by_name_c(c8 *pclsName, c8 *pfieldName, c8 *pfieldType
 
 FieldInfo *find_fieldInfo_by_name(Utf8String *clsName, Utf8String *fieldName, Utf8String *fieldType, Runtime *runtime) {
     FieldInfo *fi = NULL;
-    JClass *other = classes_load_get_without_clinit(runtime->threadInfo->context_classloader, clsName, runtime);
+    JClass *other = classes_load_get_without_clinit(runtime->thrd_info->context_classloader, clsName, runtime);
 //    if (utf8_equals_c(clsName, "espresso/parser/JavaParser")&&utf8_equals_c(fieldName, "methodNode_d")) {
 //        int debug = 1;
 //    }
@@ -551,7 +552,7 @@ MethodInfo *find_methodInfo_by_name_c(c8 *pclsName, c8 *pmethodName, c8 *pmethod
 
 MethodInfo *find_methodInfo_by_name(Utf8String *clsName, Utf8String *methodName, Utf8String *methodType, Runtime *runtime) {
     MethodInfo *mi = NULL;
-    JClass *other = classes_load_get_without_clinit(runtime->threadInfo->context_classloader, clsName, runtime);
+    JClass *other = classes_load_get_without_clinit(runtime->thrd_info->context_classloader, clsName, runtime);
 
     while (mi == NULL && other) {
         MethodPool *fp = &(other->methodPool);
@@ -572,7 +573,7 @@ MethodInfo *find_methodInfo_by_name(Utf8String *clsName, Utf8String *methodName,
             for (i = 0; i < other->interfacePool.clasz_used; i++) {
                 ConstantClassRef *ccr = (other->interfacePool.clasz + i);
                 Utf8String *icl_name = class_get_constant_utf8(other, ccr->stringIndex)->utfstr;
-                JClass *icl = classes_load_get_without_clinit(runtime->threadInfo->context_classloader, icl_name, runtime);
+                JClass *icl = classes_load_get_without_clinit(runtime->thrd_info->context_classloader, icl_name, runtime);
                 MethodInfo *imi = find_methodInfo_by_name(icl_name, methodName, methodType, runtime);
                 if (imi != NULL && imi->converted_code != NULL) {
                     mi = imi;

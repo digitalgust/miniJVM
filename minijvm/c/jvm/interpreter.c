@@ -1,6 +1,5 @@
 
 
-#include "../utils/d_type.h"
 #include "jvm.h"
 #include "jvm_util.h"
 #include "jit.h"
@@ -272,7 +271,7 @@ s32 checkcast(Runtime *runtime, Instance *ins, s32 typeIdx) {
 
 static inline void _synchronized_lock_method(MethodInfo *method, Runtime *runtime) {
     //synchronized process
-    if (!jdwp_is_ignore_sync(&jdwpserver)) {
+    if (!jdwp_is_ignore_sync(runtime->jvm->jdwpserver)) {
         if (method->is_static) {
             runtime->lock = (MemoryBlock *) runtime->clazz;
         } else {
@@ -284,7 +283,7 @@ static inline void _synchronized_lock_method(MethodInfo *method, Runtime *runtim
 
 static inline void _synchronized_unlock_method(MethodInfo *method, Runtime *runtime) {
     //synchronized process
-    if (!jdwp_is_ignore_sync(&jdwpserver)) {
+    if (!jdwp_is_ignore_sync(runtime->jvm->jdwpserver)) {
         jthread_unlock(runtime->lock, runtime);
         runtime->lock = NULL;
     }
@@ -468,6 +467,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
     s32 ret = RUNTIME_STATUS_NORMAL;
     Runtime *runtime = runtime_create_inl(pruntime);
 
+    MiniJVM *jvm = runtime->jvm;
+
     JClass *clazz = method->_this_class;
     runtime->clazz = clazz;
     runtime->method = method;
@@ -502,7 +503,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             }
             register u8 *ip = ca->code;
             runtime->pc = ip;
-            JavaThreadInfo *threadInfo = runtime->threadInfo;
+            JavaThreadInfo *threadInfo = runtime->thrd_info;
             c8 *err_msg;
             localvar_init(runtime, ca->max_locals, method->para_slots);
             LocalVarItem *localvar = runtime->localvar;
@@ -556,7 +557,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                 do {
                     u8 cur_inst = *ip;
 
-                    if (jdwp_enable) {
+                    if (jvm->jdwp_enable) {
                         //breakpoint
                         stack->sp = sp;
                         runtime->pc = ip;
@@ -564,8 +565,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jdwp_check_breakpoint(runtime);
                         }
                         //debug step
-                        if (threadInfo->jdwp_step.active) {//单步状态
-                            threadInfo->jdwp_step.bytecode_count++;
+                        if (threadInfo->jdwp_step->active) {//单步状态
+                            threadInfo->jdwp_step->bytecode_count++;
                             jdwp_check_debug_step(runtime);
 
                         }
@@ -2817,6 +2818,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_getfield: {
                             u16 idx;
                             s32 byte_changed = 0;
+                            ClassLoader *boot_classloader = jvm->boot_classloader;
                             spin_lock(&boot_classloader->lock);
                             {
                                 if (*(ip) == op_getfield) {
@@ -2892,6 +2894,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             //there were a multithread error , one enter the ins but changed by another
                             u16 idx;
                             s32 byte_changed = 0;
+
+                            ClassLoader *boot_classloader = jvm->boot_classloader;
                             spin_lock(&boot_classloader->lock);
                             {
                                 if (*(ip) == op_putfield) {
@@ -3983,8 +3987,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         ip = runtime->pc;
                         runtime_clear_stacktrack(runtime);
                     } else {
-                        arraylist_push_back(runtime->threadInfo->stacktrack, method);
-                        arraylist_push_back(runtime->threadInfo->lineNo, (__refer) (intptr_t) getLineNumByIndex(ca, runtime->pc - ca->code));
+                        arraylist_push_back(runtime->thrd_info->stacktrack, method);
+                        arraylist_push_back(runtime->thrd_info->lineNo, (__refer) (intptr_t) getLineNumByIndex(ca, runtime->pc - ca->code));
                         break;
                     }
                     sp = stack->sp;
@@ -4014,8 +4018,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
         localvar_init(runtime, method->para_slots, method->para_slots);
         //缓存调用本地方法
         if (!method->native_func) { //把本地方法找出来缓存
-            java_native_method *native = find_native_method(utf8_cstr(clazz->name), utf8_cstr(method->name),
-                                                            utf8_cstr(method->descriptor));
+            java_native_method *native = find_native_method(jvm, utf8_cstr(clazz->name), utf8_cstr(method->name), utf8_cstr(method->descriptor));
             if (!native) {
                 _nosuchmethod_check_exception(utf8_cstr(method->name), stack, runtime);
                 ret = RUNTIME_STATUS_EXCEPTION;

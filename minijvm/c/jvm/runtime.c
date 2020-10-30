@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../utils/d_type.h"
 #include "jvm.h"
 #include "garbage.h"
 #include "jvm_util.h"
@@ -117,8 +116,15 @@ s32 is_ref(StackEntry *entry) {
 }
 
 //======================= runtime =============================
-Runtime *runtime_create(Runtime *parent) {
-    return runtime_create_inl(parent);
+Runtime *runtime_create(MiniJVM *jvm) {
+    if (!jvm) {
+        jvm_printf("[ERROR]create runtime must have a jvm.\n");
+        return NULL;
+    }
+    Runtime *runtime = runtime_create_inl(NULL);
+    runtime->jvm = jvm;
+//    runtime->jvm = jvm;
+    return runtime;
 }
 
 void runtime_destory(Runtime *runtime) {
@@ -126,7 +132,7 @@ void runtime_destory(Runtime *runtime) {
 }
 
 s32 getRuntimeDepth(Runtime *top) {
-    top = top->threadInfo->top_runtime;
+    top = top->thrd_info->top_runtime;
     s32 deep = 0;
     while (top) {
         deep++;
@@ -146,7 +152,7 @@ Runtime *getLastSon(Runtime *top) {
 
 Runtime *getTopRuntime(Runtime *runtime) {
     if (runtime) {
-        return runtime->threadInfo->top_runtime;
+        return runtime->thrd_info->top_runtime;
     }
     return NULL;
 }
@@ -164,9 +170,9 @@ void getRuntimeStack(Runtime *runtime, Utf8String *ustr) {
     utf8_append_c(ustr, "Exception threw: ");
     utf8_append(ustr, (runtime->stack->sp - 1)->ins->mb.clazz->name);
     utf8_pushback(ustr, '\n');
-    for (i = 0, imax = runtime->threadInfo->stacktrack->length; i < imax; i++) {
+    for (i = 0, imax = runtime->thrd_info->stacktrack->length; i < imax; i++) {
         utf8_append_c(ustr, "    at ");
-        MethodInfo *method = arraylist_get_value(runtime->threadInfo->stacktrack, i);
+        MethodInfo *method = arraylist_get_value(runtime->thrd_info->stacktrack, i);
         utf8_append(ustr, method->_this_class->name);
         utf8_append_c(ustr, ".");
         utf8_append(ustr, method->name);
@@ -174,7 +180,7 @@ void getRuntimeStack(Runtime *runtime, Utf8String *ustr) {
             utf8_append_c(ustr, "(");
             utf8_append(ustr, method->_this_class->source);
             utf8_append_c(ustr, ":");
-            s32 lineNo = method->converted_code ? (s32) (intptr_t) arraylist_get_value(runtime->threadInfo->lineNo, i) : -1;
+            s32 lineNo = method->converted_code ? (s32) (intptr_t) arraylist_get_value(runtime->thrd_info->lineNo, i) : -1;
             utf8_append_s64(ustr, lineNo, 10);
             utf8_append_c(ustr, ")");
         }

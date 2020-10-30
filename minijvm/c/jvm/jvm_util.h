@@ -7,7 +7,6 @@
 
 
 #include "jvm.h"
-#include "../utils/hashset.h"
 #include "jdwp.h"
 
 
@@ -18,46 +17,9 @@ extern "C" {
 #define NANO_2_SEC_SCALE 1000000000
 #define NANO_2_MILLS_SCALE 1000000
 #define MILL_2_SEC_SCALE 1000
-static s64 NANO_START = 0;
-typedef unsigned short uni_char;
 
 //======================= utils =============================
-typedef struct _OptimizeCache {
-    FieldInfo *string_offset;
-    FieldInfo *string_count;
-    FieldInfo *string_value;
-    //java.lang.StringBuilder
-    FieldInfo *stringbuilder_value;
-    FieldInfo *stringbuilder_count;
-    //java.lang.Thread
-    FieldInfo *thread_name;
-    FieldInfo *thread_stackFrame;
-    //java.lang.Class
-    FieldInfo *class_classHandle;
-    FieldInfo *class_classLoader;
-
-    //
-    FieldInfo *stacktrace_declaringClass;
-    FieldInfo *stacktrace_methodName;
-    FieldInfo *stacktrace_fileName;
-    FieldInfo *stacktrace_lineNumber;
-    FieldInfo *stacktrace_parent;
-
-    //
-    FieldInfo *dmo_memAddr;
-    FieldInfo *dmo_length;
-    FieldInfo *dmo_desc;
-
-    //
-    MethodInfo *classloader_loadClass;
-
-    //
-    MethodInfo *reference_vmEnqueneReference;
-    JClass *reference;
-    //
-    JClass *array_classes[DATATYPE_COUNT];
-} OptimizeCache;
-extern OptimizeCache jvm_runtime_cache;
+s32 isDir(Utf8String *path);
 
 s32 utf8_2_unicode(Utf8String *ustr, u16 *arr);
 
@@ -87,11 +49,11 @@ s64 nanoTime(void);
 
 s64 threadSleep(s64 ms);
 
-s32 sys_properties_load(ClassLoader *loader);
+s32 sys_properties_load(MiniJVM *jvm);
 
-void sys_properties_dispose(void);
+void sys_properties_dispose(MiniJVM *jvm);
 
-void sys_properties_set_c(c8 *key, c8 *val);
+void sys_properties_set_c(MiniJVM *jvm, c8 *key, c8 *val);
 
 void instance_release_from_thread(Instance *ref, Runtime *runtime);
 
@@ -199,16 +161,16 @@ s32 getLineNumByIndex(CodeAttribute *ca, s32 offset);
 
 s32 _loadFileContents(c8 *file, ByteBuf *buf);
 
-ByteBuf *load_file_from_classpath(Utf8String *path);
+ByteBuf *load_file_from_classpath(ClassLoader *cloader, Utf8String *path);
 
 
 //===============================    实例化 java.lang.Class  ==================================
 
 Instance *insOfJavaLangClass_create_get(Runtime *runtime, JClass *clazz);
 
-void insOfJavaLangClass_set_classHandle(Instance *insOfJavaLangClass, JClass *handle);
+void insOfJavaLangClass_set_classHandle(Runtime *runtime, Instance *insOfJavaLangClass, JClass *handle);
 
-JClass *insOfJavaLangClass_get_classHandle(Instance *insOfJavaLangClass);
+JClass *insOfJavaLangClass_get_classHandle(Runtime *runtime, Instance *insOfJavaLangClass);
 
 ////======================= jstring =============================
 
@@ -216,23 +178,23 @@ Instance *jstring_create(Utf8String *src, Runtime *runtime);
 
 Instance *jstring_create_cstr(c8 *cstr, Runtime *runtime);
 
-void jstring_set_count(Instance *jstr, s32 count);
+void jstring_set_count(Instance *jstr, s32 count, Runtime *runtime);
 
-s32 jstring_get_count(Instance *jstr);
+s32 jstring_get_count(Instance *jstr, Runtime *runtime);
 
-s32 jstring_get_offset(Instance *jstr);
+s32 jstring_get_offset(Instance *jstr, Runtime *runtime);
 
-c8 *jstring_get_value_ptr(Instance *jstr);
+c8 *jstring_get_value_ptr(Instance *jstr, Runtime *runtime);
 
-Instance *jstring_get_value_array(Instance *jstr);
+Instance *jstring_get_value_array(Instance *jstr, Runtime *runtime);
 
-u16 jstring_char_at(Instance *jstr, s32 index);
+u16 jstring_char_at(Instance *jstr, s32 index, Runtime *runtime);
 
-s32 jstring_index_of(Instance *jstr, uni_char ch, s32 startAt);
+s32 jstring_index_of(Instance *jstr, u16 ch, s32 startAt, Runtime *runtime);
 
-s32 jstring_equals(Instance *jstr1, Instance *jstr2);
+s32 jstring_equals(Instance *jstr1, Instance *jstr2, Runtime *runtime);
 
-s32 jstring_2_utf8(Instance *jstr, Utf8String *utf8);
+s32 jstring_2_utf8(Instance *jstr, Utf8String *utf8, Runtime *runtime);
 
 CStringArr *cstringarr_create(Instance *jstr_arr);
 
@@ -251,65 +213,49 @@ void threadlist_add(Runtime *r);
 
 void threadlist_remove(Runtime *r);
 
-Runtime *threadlist_get(s32 i);
+Runtime *threadlist_get(MiniJVM *jvm, s32 i);
 
-s32 threadlist_count_none_daemon();
+s32 threadlist_count_none_daemon(MiniJVM *jvm);
 
-s64 threadlist_sum_heap();
+s64 threadlist_sum_heap(MiniJVM *jvm);
 
-void threadinfo_destory(JavaThreadInfo *threadInfo);
+void thread_stop_all(MiniJVM *jvm);
 
-void thread_stop_all();
+
+s32 vm_share_trylock(MiniJVM *jvm);
+
+void vm_share_lock(MiniJVM *jvm);
+
+void vm_share_unlock(MiniJVM *jvm);
+
+void vm_share_wait(MiniJVM *jvm);
+
+void vm_share_timedwait(MiniJVM *jvm, s64 ms);
+
+void vm_share_notify(MiniJVM *jvm);
+
+void vm_share_notifyall(MiniJVM *jvm);
+
 
 JavaThreadInfo *threadinfo_create(void);
 
-struct _JavaThreadInfo {
-    Instance *jthread;
-    Instance *context_classloader;
-    Runtime *top_runtime;
-    MemoryBlock *tmp_holder;//for jni hold java object
-    MemoryBlock *objs_header;//link to new instance, until garbage accept
-    MemoryBlock *objs_tailer;//link to last instance, until garbage accept
-    MemoryBlock *curThreadLock;//if thread is locked ,the filed save the lock
-
-    ArrayList *stacktrack;  //save methodrawindex, the pos 0 is the throw point
-    ArrayList *lineNo;  //save methodrawindex, the pos 0 is the throw point
-
-    s64 objs_heap_of_thread;// heap use for objs_header, if translate to gc ,the var need clear to 0
-    u16 volatile suspend_count;//for jdwp suspend ,>0 suspend, ==0 resume
-    u16 volatile no_pause;  //can't pause when clinit
-    u8 volatile thread_status;
-    u8 volatile is_suspend;
-    u8 volatile is_blocking;
-    u8 is_interrupt;
-
-    thrd_t pthread;
-    //调试器相关字段
-    JdwpStep jdwp_step;
-
-};
-
-struct _ThreadLock {
-    cnd_t thread_cond;
-    mtx_t mutex_lock; //互斥锁
-};
-
+void threadinfo_destory(JavaThreadInfo *threadInfo);
 
 s32 jthread_init(Instance *jthread, Runtime *runtime);
 
-s32 jthread_dispose(Instance *jthread);
+s32 jthread_dispose(Instance *jthread, Runtime *runtime);
 
 s32 jthread_run(void *para);
 
-thrd_t jthread_start(Instance *parent_classloader, Instance *ins);
-
-__refer jthread_get_stackframe_value(Instance *ins);
+thrd_t jthread_start(Instance *parent_classloader, Instance *ins, Runtime *runtime);
 
 s32 jthread_get_daemon_value(Instance *ins, Runtime *runtime);
 
-void jthread_set_stackframe_value(Instance *ins, void *val);
+__refer jthread_get_stackframe_value(MiniJVM *jvm, Instance *ins);
 
-__refer jthread_get_name_value(Instance *ins);
+void jthread_set_stackframe_value(MiniJVM *jvm, Instance *ins, void *val);
+
+__refer jthread_get_name_value(MiniJVM *jvm, Instance *ins);
 
 void jthreadlock_create(Runtime *runtime, MemoryBlock *mb);
 
@@ -361,19 +307,19 @@ static inline Runtime *runtime_create_inl(Runtime *parent) {
 
     if (!parent) {
         runtime = _runtime_alloc();
-        runtime->stack = stack_create(STACK_LENGHT_INIT);
-        runtime->threadInfo = threadinfo_create();
-        runtime->threadInfo->top_runtime = runtime;
+        runtime->stack = stack_create(MAX_STACK_SIZE_DEFAULT);
+        runtime->thrd_info = threadinfo_create();
+        runtime->thrd_info->top_runtime = runtime;
     } else {
-        Runtime *top_runtime = parent->threadInfo->top_runtime;
+        Runtime *top_runtime = parent->thrd_info->top_runtime;
         runtime = top_runtime->runtime_pool_header;
         if (runtime) {
             top_runtime->runtime_pool_header = runtime->next;
-            //runtime->next = NULL;
         } else {
             runtime = _runtime_alloc();
+            runtime->jvm = parent->jvm;
             runtime->stack = parent->stack;
-            runtime->threadInfo = parent->threadInfo;
+            runtime->thrd_info = parent->thrd_info;
         }
         runtime->parent = parent;
         parent->son = runtime;
@@ -383,13 +329,13 @@ static inline Runtime *runtime_create_inl(Runtime *parent) {
 
 
 static inline void runtime_destory_inl(Runtime *runtime) {
-    Runtime *top_runtime = runtime->threadInfo->top_runtime;
+    Runtime *top_runtime = runtime->thrd_info->top_runtime;
     if (top_runtime != runtime) {
         runtime->next = top_runtime->runtime_pool_header;
         top_runtime->runtime_pool_header = runtime;
     } else {
         stack_destory(runtime->stack);
-        threadinfo_destory(runtime->threadInfo);
+        threadinfo_destory(runtime->thrd_info);
 
         Runtime *next = top_runtime->runtime_pool_header;
         while (next) {
@@ -403,8 +349,8 @@ static inline void runtime_destory_inl(Runtime *runtime) {
 }
 
 static inline void runtime_clear_stacktrack(Runtime *runtime) {
-    arraylist_clear(runtime->threadInfo->stacktrack);
-    arraylist_clear(runtime->threadInfo->lineNo);
+    arraylist_clear(runtime->thrd_info->stacktrack);
+    arraylist_clear(runtime->thrd_info->lineNo);
 }
 
 ////======================= array =============================
@@ -435,15 +381,15 @@ c8 *getFieldPtr_byName_c(Instance *instance, c8 *pclassName, c8 *pfieldName, c8 
 
 c8 *getFieldPtr_byName(Instance *instance, Utf8String *clsName, Utf8String *fieldName, Utf8String *fieldType, Runtime *runtime);
 
-JClass *classes_get_c(c8 *clsName);
+JClass *classes_get_c(ClassLoader *cloader, c8 *clsName);
 
-JClass *classes_get(Utf8String *clsName);
+JClass *classes_get(ClassLoader *cloader, Utf8String *clsName);
 
 JClass *classes_load_get_without_clinit(Instance *loader, Utf8String *ustr, Runtime *runtime);
 
 JClass *classes_load_get_c(Instance *loader, c8 *pclassName, Runtime *runtime);
 
-s32 classes_put(JClass *clazz);
+s32 classes_put(ClassLoader *cloader, JClass *clazz);
 
 JClass *classes_load_get(Instance *loader, Utf8String *pclassName, Runtime *runtime);
 

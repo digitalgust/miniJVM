@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4517C548254C608E00F03459 /* jni_reflect.c in Sources */ = {isa = PBXBuildFile; fileRef = 4517C545254C608E00F03459 /* jni_reflect.c */; };
+		4517C549254C608E00F03459 /* jni_io.c in Sources */ = {isa = PBXBuildFile; fileRef = 4517C546254C608E00F03459 /* jni_io.c */; };
+		4517C54A254C608E00F03459 /* jni_std.c in Sources */ = {isa = PBXBuildFile; fileRef = 4517C547254C608E00F03459 /* jni_std.c */; };
 		4523723B20C94B8B00156C58 /* res in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4523723A20C8ECA500156C58 /* res */; };
 		4523723C20C94B9300156C58 /* lib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4523723920C8EC8C00156C58 /* lib */; };
 		457248E22020AAC600349683 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 457248E12020AAC600349683 /* main.swift */; };
@@ -18,13 +21,10 @@
 		4581C6CB226DAA3600E88538 /* jvm.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C62D226DAA3500E88538 /* jvm.c */; };
 		4581C6CC226DAA3600E88538 /* class.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C62F226DAA3500E88538 /* class.c */; };
 		4581C6CD226DAA3600E88538 /* jvm_util.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C630226DAA3500E88538 /* jvm_util.c */; };
-		4581C6CE226DAA3600E88538 /* java_native_std.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C636226DAA3500E88538 /* java_native_std.c */; };
 		4581C6CF226DAA3600E88538 /* class_load.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C638226DAA3500E88538 /* class_load.c */; };
 		4581C6D0226DAA3600E88538 /* jdwp.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C639226DAA3500E88538 /* jdwp.c */; };
 		4581C6D1226DAA3600E88538 /* interpreter.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C63A226DAA3500E88538 /* interpreter.c */; };
-		4581C6D2226DAA3600E88538 /* java_native_reflect.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C63B226DAA3500E88538 /* java_native_reflect.c */; };
 		4581C6D3226DAA3600E88538 /* global.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C63C226DAA3500E88538 /* global.c */; };
-		4581C6D4226DAA3600E88538 /* java_native_io.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C63D226DAA3500E88538 /* java_native_io.c */; };
 		4581C6D6226DAA3600E88538 /* miniz.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C642226DAA3500E88538 /* miniz.c */; };
 		4581C6D7226DAA3600E88538 /* hashset.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C646226DAA3500E88538 /* hashset.c */; };
 		4581C6D8226DAA3600E88538 /* tinycthread.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C647226DAA3500E88538 /* tinycthread.c */; };
@@ -133,6 +133,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4517C545254C608E00F03459 /* jni_reflect.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jni_reflect.c; sourceTree = "<group>"; };
+		4517C546254C608E00F03459 /* jni_io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jni_io.c; sourceTree = "<group>"; };
+		4517C547254C608E00F03459 /* jni_std.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jni_std.c; sourceTree = "<group>"; };
 		4523723920C8EC8C00156C58 /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = ../../binary/lib; sourceTree = "<group>"; };
 		4523723A20C8ECA500156C58 /* res */ = {isa = PBXFileReference; lastKnownFileType = folder; name = res; path = ../../binary/res; sourceTree = "<group>"; };
 		457248DE2020AAC600349683 /* jvm_macos */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = jvm_macos; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -147,19 +150,13 @@
 		4581C62E226DAA3500E88538 /* jdwp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jdwp.h; sourceTree = "<group>"; };
 		4581C62F226DAA3500E88538 /* class.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = class.c; sourceTree = "<group>"; };
 		4581C630226DAA3500E88538 /* jvm_util.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jvm_util.c; sourceTree = "<group>"; };
-		4581C631226DAA3500E88538 /* java_native_std.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = java_native_std.h; sourceTree = "<group>"; };
-		4581C632226DAA3500E88538 /* java_native_reflect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = java_native_reflect.h; sourceTree = "<group>"; };
-		4581C633226DAA3500E88538 /* java_native_io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = java_native_io.h; sourceTree = "<group>"; };
 		4581C634226DAA3500E88538 /* jvm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jvm.h; sourceTree = "<group>"; };
 		4581C635226DAA3500E88538 /* garbage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = garbage.h; sourceTree = "<group>"; };
-		4581C636226DAA3500E88538 /* java_native_std.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = java_native_std.c; sourceTree = "<group>"; };
 		4581C637226DAA3500E88538 /* jvm_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jvm_util.h; sourceTree = "<group>"; };
 		4581C638226DAA3500E88538 /* class_load.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = class_load.c; sourceTree = "<group>"; };
 		4581C639226DAA3500E88538 /* jdwp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jdwp.c; sourceTree = "<group>"; };
 		4581C63A226DAA3500E88538 /* interpreter.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = interpreter.c; sourceTree = "<group>"; };
-		4581C63B226DAA3500E88538 /* java_native_reflect.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = java_native_reflect.c; sourceTree = "<group>"; };
 		4581C63C226DAA3500E88538 /* global.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = global.c; sourceTree = "<group>"; };
-		4581C63D226DAA3500E88538 /* java_native_io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = java_native_io.c; sourceTree = "<group>"; };
 		4581C63F226DAA3500E88538 /* dirent_win.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dirent_win.h; sourceTree = "<group>"; };
 		4581C640226DAA3500E88538 /* spinlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = spinlock.h; sourceTree = "<group>"; };
 		4581C642226DAA3500E88538 /* miniz.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = miniz.c; sourceTree = "<group>"; };
@@ -405,6 +402,9 @@
 		4581C62A226DAA3500E88538 /* jvm */ = {
 			isa = PBXGroup;
 			children = (
+				4517C546254C608E00F03459 /* jni_io.c */,
+				4517C545254C608E00F03459 /* jni_reflect.c */,
+				4517C547254C608E00F03459 /* jni_std.c */,
 				459A79C123A32B18007C85C6 /* jit.c */,
 				459A79C223A32B18007C85C6 /* jit.h */,
 				4581C62B226DAA3500E88538 /* garbage.c */,
@@ -413,19 +413,13 @@
 				4581C62E226DAA3500E88538 /* jdwp.h */,
 				4581C62F226DAA3500E88538 /* class.c */,
 				4581C630226DAA3500E88538 /* jvm_util.c */,
-				4581C631226DAA3500E88538 /* java_native_std.h */,
-				4581C632226DAA3500E88538 /* java_native_reflect.h */,
-				4581C633226DAA3500E88538 /* java_native_io.h */,
 				4581C634226DAA3500E88538 /* jvm.h */,
 				4581C635226DAA3500E88538 /* garbage.h */,
-				4581C636226DAA3500E88538 /* java_native_std.c */,
 				4581C637226DAA3500E88538 /* jvm_util.h */,
 				4581C638226DAA3500E88538 /* class_load.c */,
 				4581C639226DAA3500E88538 /* jdwp.c */,
 				4581C63A226DAA3500E88538 /* interpreter.c */,
-				4581C63B226DAA3500E88538 /* java_native_reflect.c */,
 				4581C63C226DAA3500E88538 /* global.c */,
-				4581C63D226DAA3500E88538 /* java_native_io.c */,
 			);
 			path = jvm;
 			sourceTree = "<group>";
@@ -721,20 +715,17 @@
 				45F997D1253B6AAE0053E7A0 /* x509_crl.c in Sources */,
 				45F997B7253B6AAE0053E7A0 /* x509_create.c in Sources */,
 				45F997BB253B6AAE0053E7A0 /* md5.c in Sources */,
-				4581C6CE226DAA3600E88538 /* java_native_std.c in Sources */,
 				45F997A8253B6AAE0053E7A0 /* ripemd160.c in Sources */,
 				45F997BC253B6AAE0053E7A0 /* bignum.c in Sources */,
 				45F997C8253B6AAE0053E7A0 /* ssl_cookie.c in Sources */,
 				45F997C9253B6AAE0053E7A0 /* debug.c in Sources */,
 				45F997CC253B6AAE0053E7A0 /* net_sockets.c in Sources */,
 				45F99798253B6AAE0053E7A0 /* error.c in Sources */,
-				4581C6D4226DAA3600E88538 /* java_native_io.c in Sources */,
 				45F997A9253B6AAE0053E7A0 /* ssl_ciphersuites.c in Sources */,
 				45F997A0253B6AAE0053E7A0 /* aesni.c in Sources */,
 				45F997AC253B6AAE0053E7A0 /* xtea.c in Sources */,
 				45F9979E253B6AAE0053E7A0 /* pkcs5.c in Sources */,
 				45F9982A253D2B360053E7A0 /* ssl_client.c in Sources */,
-				4581C6D2226DAA3600E88538 /* java_native_reflect.c in Sources */,
 				4581C6CC226DAA3600E88538 /* class.c in Sources */,
 				45F997AA253B6AAE0053E7A0 /* arc4.c in Sources */,
 				45F9979B253B6AAE0053E7A0 /* ecdsa.c in Sources */,
@@ -786,6 +777,7 @@
 				457248E22020AAC600349683 /* main.swift in Sources */,
 				45F997DA253B6AAE0053E7A0 /* ssl_cache.c in Sources */,
 				4581C6D8226DAA3600E88538 /* tinycthread.c in Sources */,
+				4517C548254C608E00F03459 /* jni_reflect.c in Sources */,
 				45F997A7253B6AAE0053E7A0 /* md.c in Sources */,
 				4581C6D9226DAA3600E88538 /* arraylist.c in Sources */,
 				45F997CE253B6AAE0053E7A0 /* des.c in Sources */,
@@ -795,6 +787,7 @@
 				45F997D8253B6AAE0053E7A0 /* dhm.c in Sources */,
 				4581C6CD226DAA3600E88538 /* jvm_util.c in Sources */,
 				457248EB2020ABE200349683 /* invoke.c in Sources */,
+				4517C549254C608E00F03459 /* jni_io.c in Sources */,
 				45F997AF253B6AAE0053E7A0 /* ccm.c in Sources */,
 				4581C6CF226DAA3600E88538 /* class_load.c in Sources */,
 				45F9979F253B6AAE0053E7A0 /* sha256.c in Sources */,
@@ -809,6 +802,7 @@
 				4581C6CA226DAA3600E88538 /* runtime.c in Sources */,
 				45F997C6253B6AAE0053E7A0 /* pkcs11.c in Sources */,
 				45F997C5253B6AAE0053E7A0 /* x509_csr.c in Sources */,
+				4517C54A254C608E00F03459 /* jni_std.c in Sources */,
 				45F997B4253B6AAE0053E7A0 /* cipher.c in Sources */,
 				45F997B2253B6AAE0053E7A0 /* hmac_drbg.c in Sources */,
 			);

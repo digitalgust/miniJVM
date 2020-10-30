@@ -1607,7 +1607,7 @@ void _class_optimize(JClass *clazz) {
         fi->descriptor = class_get_utf8_string(clazz, fi->descriptor_index);
         fi->datatype_idx = getDataTypeIndex(utf8_char_at(fi->descriptor, 0));
         fi->isrefer = isDataReferByIndex(fi->datatype_idx);
-        fi->datatype_bytes = data_type_bytes[fi->datatype_idx];
+        fi->datatype_bytes = DATA_TYPE_BYTES[fi->datatype_idx];
         fi->isvolatile = fi->access_flags & ACC_VOLATILE;
 
         //for gc iterator fast
@@ -1847,12 +1847,12 @@ JClass *class_parse(Instance *loader, ByteBuf *bytebuf, Runtime *runtime) {
         s32 iret = tmpclazz->_load_class_from_bytes(tmpclazz, bytebuf);//load file
 
         if (iret == 0) {
-            classes_put(tmpclazz);
+            classes_put(runtime->jvm->boot_classloader, tmpclazz);
 
 //            class_mark_clinit(sys_classloader,tmpclazz);
 
             class_prepar(loader, tmpclazz, runtime);
-            gc_refer_hold(tmpclazz);
+            gc_obj_hold(runtime->jvm->collector, tmpclazz);
 
 #if _JVM_DEBUG_LOG_LEVEL > 2
             jvm_printf("load class:  %s \n", utf8_cstr(tmpclazz->name));
@@ -1866,13 +1866,13 @@ JClass *class_parse(Instance *loader, ByteBuf *bytebuf, Runtime *runtime) {
 }
 
 JClass *load_class(Instance *loader, Utf8String *pClassName, Runtime *runtime) {
-    if (!boot_classloader)return 0;
-    s32 iret = 0;
+    MiniJVM *jvm = runtime->jvm;
+    if (!jvm->boot_classloader)return 0;
     //
     Utf8String *clsName = utf8_create_copy(pClassName);
     utf8_replace_c(clsName, ".", "/");
 
-    JClass *tmpclazz = classes_get(clsName);
+    JClass *tmpclazz = classes_get(jvm->boot_classloader, clsName);
 
     if (utf8_indexof_c(clsName, "[") == 0) {
         tmpclazz = array_class_create_get(runtime, clsName);
@@ -1881,30 +1881,30 @@ JClass *load_class(Instance *loader, Utf8String *pClassName, Runtime *runtime) {
         ByteBuf *bytebuf = NULL;
 
         utf8_append_c(clsName, ".class");
-        bytebuf = load_file_from_classpath(clsName);//bootstrap classloader
+        bytebuf = load_file_from_classpath(jvm->boot_classloader, clsName);//bootstrap classloader
         if (bytebuf != NULL) {
             tmpclazz = class_parse(loader, bytebuf, runtime);
             bytebuf_destory(bytebuf);
         } else { //using appclassloader load
-            if (jvm_runtime_cache.classloader_loadClass) {
-                runtime->threadInfo->no_pause++;
+            if (jvm->shortcut.classloader_loadClass) {
+                runtime->thrd_info->no_pause++;
                 Instance *jstr = jstring_create(pClassName, runtime);
                 push_ref(runtime->stack, jstr);
                 push_ref(runtime->stack, loader);
 
-                s32 ret = execute_method_impl(jvm_runtime_cache.classloader_loadClass, runtime);
+                s32 ret = execute_method_impl(jvm->shortcut.classloader_loadClass, runtime);
                 if (!ret) {
                     Instance *ins_of_clazz = pop_ref(runtime->stack);
                     if (ins_of_clazz) {
-                        tmpclazz = insOfJavaLangClass_get_classHandle(ins_of_clazz);
+                        tmpclazz = insOfJavaLangClass_get_classHandle(runtime, ins_of_clazz);
                     }
                 } else {
                     print_exception(runtime);
                 }
-                runtime->threadInfo->no_pause--;
+                runtime->thrd_info->no_pause--;
             }
         }
-        if (jdwp_enable && tmpclazz)event_on_class_prepare(runtime, tmpclazz);
+        if (jvm->jdwp_enable && jvm->jdwpserver && tmpclazz)event_on_class_prepare(jvm->jdwpserver, runtime, tmpclazz);
     }
     if (!tmpclazz) {
         jvm_printf("class not found:  %s \n", utf8_cstr(clsName));

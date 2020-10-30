@@ -4,55 +4,58 @@
 
 
 #include <stdarg.h>
-#include "../utils/d_type.h"
+#include <sys/stat.h>
 #include "jvm.h"
 
-#include <sys/stat.h>
 #include "../utils/miniz_wrapper.h"
 #include "jvm_util.h"
 #include "garbage.h"
-#include "java_native_reflect.h"
-#include "java_native_io.h"
 #include "jdwp.h"
 
 
 
 //==================================================================================
 
+static FILE *logfile = NULL;
+static s64 last_flush = 0;
+static s64 nano_sec_start_at = 0;
+
 
 /**
  * =============================== JClass ==============================
  */
 
-JClass *classes_get_c(c8 *clsName) {
+JClass *classes_get_c(ClassLoader *cloader, c8 *clsName) {
     Utf8String *ustr = utf8_create_c(clsName);
-    JClass *clazz = classes_get(ustr);
+    JClass *clazz = classes_get(cloader, ustr);
     utf8_destory(ustr);
     return clazz;
 }
 
-JClass *classes_get(Utf8String *clsName) {
+JClass *classes_get(ClassLoader *cloader, Utf8String *clsName) {
     JClass *cl = NULL;
     if (clsName) {
-        cl = hashtable_get(boot_classloader->classes, clsName);
+        cl = hashtable_get(cloader->classes, clsName);
     }
     return cl;
 }
 
 JClass *classes_load_get_without_clinit(Instance *loader, Utf8String *ustr, Runtime *runtime) {
     if (!ustr)return NULL;
+    ClassLoader *cloader = runtime->jvm->boot_classloader;
+    MiniJVM *jvm = cloader->jvm;
     JClass *cl;
-    spin_lock(&boot_classloader->lock);//fast lock
+    spin_lock(&cloader->lock);//fast lock
     if (utf8_index_of(ustr, '.') >= 0) utf8_replace_c(ustr, ".", "/");
-    spin_unlock(&boot_classloader->lock);
-    cl = classes_get(ustr);
+    spin_unlock(&cloader->lock);
+    cl = classes_get(cloader, ustr);
     if (!cl) {
-        garbage_thread_lock();//slow lock
-        cl = classes_get(ustr);
+        vm_share_lock(jvm);//slow lock
+        cl = classes_get(cloader, ustr);
         if (!cl) {
             cl = load_class(loader, ustr, runtime);
         }
-        garbage_thread_unlock();
+        vm_share_unlock(jvm);
 
     }
     return cl;
@@ -73,25 +76,27 @@ JClass *classes_load_get(Instance *loader, Utf8String *ustr, Runtime *runtime) {
     return cl;
 }
 
-s32 classes_put(JClass *clazz) {
+s32 classes_put(ClassLoader *cloader, JClass *clazz) {
     if (clazz) {
         //jvm_printf("sys_classloader %d : %s\n", sys_classloader->classes->entries, utf8_cstr(clazz->name));
-        hashtable_put(boot_classloader->classes, clazz->name, clazz);
+        hashtable_put(cloader->classes, clazz->name, clazz);
         return 0;
     }
     return -1;
 }
 
 JClass *primitive_class_create_get(Runtime *runtime, Utf8String *ustr) {
-    JClass *cl = classes_get(ustr);
+    ClassLoader *cloader = runtime->jvm->boot_classloader;
+    MiniJVM *jvm = cloader->jvm;
+    JClass *cl = classes_get(cloader, ustr);
     if (!cl) {
-        garbage_thread_lock();
+        vm_share_lock(jvm);
         cl = class_create(runtime);
         cl->name = ustr;
         cl->primitive = 1;
-        classes_put(cl);
-        gc_refer_hold(cl);
-        garbage_thread_unlock();
+        classes_put(cloader, cl);
+        gc_obj_hold(jvm->collector, cl);
+        vm_share_unlock(jvm);
     } else {
         utf8_destory(ustr);
     }
@@ -103,24 +108,26 @@ JClass *primitive_class_create_get(Runtime *runtime, Utf8String *ustr) {
 
 JClass *array_class_create_get(Runtime *runtime, Utf8String *desc) {
     if (desc && desc->length && utf8_char_at(desc, 0) == '[') {
-        JClass *clazz = hashtable_get(boot_classloader->classes, desc);
+        ClassLoader *cloader = runtime->jvm->boot_classloader;
+        MiniJVM *jvm = cloader->jvm;
+        JClass *clazz = hashtable_get(cloader->classes, desc);
         if (!clazz) {
-            garbage_thread_lock();
-            clazz = hashtable_get(boot_classloader->classes, desc);//maybe other thread created
+            vm_share_lock(jvm);
+            clazz = hashtable_get(cloader->classes, desc);//maybe other thread created
             if (!clazz) {
                 clazz = class_create(runtime);
                 clazz->mb.arr_type_index = getDataTypeIndex(utf8_char_at(desc, 1));
                 clazz->name = utf8_create_copy(desc);
-                clazz->superclass = classes_get_c(STR_CLASS_JAVA_LANG_OBJECT);
-                classes_put(clazz);
-                gc_refer_hold(clazz);
+                clazz->superclass = classes_get_c(cloader, STR_CLASS_JAVA_LANG_OBJECT);
+                classes_put(cloader, clazz);
+                gc_obj_hold(jvm->collector, clazz);
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                 jvm_printf("load class:  %s \n", utf8_cstr(desc));
 #endif
 
             }
-            garbage_thread_unlock();
+            vm_share_unlock(jvm);
         }
         return clazz;
     }
@@ -138,13 +145,14 @@ JClass *array_class_create_get(Runtime *runtime, Utf8String *desc) {
  */
 JClass *array_class_get_by_index(Runtime *runtime, s32 typeIdx) {
     JClass *clazz = NULL;
-    if (jvm_runtime_cache.array_classes[typeIdx] == NULL) {
+    PreProcessor *cache = &runtime->jvm->shortcut;
+    if (cache->array_classes[typeIdx] == NULL) {
         Utf8String *ustr = utf8_create_c("[");
         utf8_insert(ustr, ustr->length, getDataTypeTag(typeIdx));
-        clazz = jvm_runtime_cache.array_classes[typeIdx] = array_class_create_get(runtime, ustr);
+        clazz = cache->array_classes[typeIdx] = array_class_create_get(runtime, ustr);
         utf8_destory(ustr);
     } else {
-        clazz = jvm_runtime_cache.array_classes[typeIdx];
+        clazz = cache->array_classes[typeIdx];
     }
     return clazz;
 }
@@ -188,67 +196,67 @@ JClass *array_class_get_by_name(Runtime *runtime, Utf8String *name) {
  * =============================== threadlist ==============================
  */
 
-Runtime *threadlist_get(s32 i) {
+Runtime *threadlist_get(MiniJVM *jvm, s32 i) {
     Runtime *r = NULL;
-    spin_lock(&thread_list->spinlock);
-    if (i < thread_list->length) {
-        r = (Runtime *) arraylist_get_value_unsafe(thread_list, i);
+    spin_lock(&jvm->thread_list->spinlock);
+    if (i < jvm->thread_list->length) {
+        r = (Runtime *) arraylist_get_value_unsafe(jvm->thread_list, i);
     }
-    spin_unlock(&thread_list->spinlock);
+    spin_unlock(&jvm->thread_list->spinlock);
     return r;
 }
 
-void threadlist_remove(Runtime *r) {
-    arraylist_remove(thread_list, r);
+void threadlist_remove(Runtime *runtime) {
+    if (runtime)arraylist_remove(runtime->jvm->thread_list, runtime);
 }
 
-void threadlist_add(Runtime *r) {
-    arraylist_push_back(thread_list, r);
+void threadlist_add(Runtime *runtime) {
+    if (runtime)arraylist_push_back(runtime->jvm->thread_list, runtime);
 }
 
-s32 threadlist_count_none_daemon() {
-    spin_lock(&thread_list->spinlock);
+s32 threadlist_count_none_daemon(MiniJVM *jvm) {
+    spin_lock(&jvm->thread_list->spinlock);
     s32 count = 0;
     s32 i;
-    for (i = 0; i < thread_list->length; i++) {
-        Runtime *r = (Runtime *) arraylist_get_value_unsafe(thread_list, i);
-        Instance *ins = r->threadInfo->jthread;
+    for (i = 0; i < jvm->thread_list->length; i++) {
+        Runtime *r = (Runtime *) arraylist_get_value_unsafe(jvm->thread_list, i);
+        Instance *ins = r->thrd_info->jthread;
         s32 daemon = jthread_get_daemon_value(ins, r);
         if (!daemon) {
             count++;
         }
     }
-    spin_unlock(&thread_list->spinlock);
+    spin_unlock(&jvm->thread_list->spinlock);
     return count;
 }
 
-s64 threadlist_sum_heap() {
+s64 threadlist_sum_heap(MiniJVM *jvm) {
     s64 hsize = 0;
-    spin_lock(&thread_list->spinlock);
+    spin_lock(&jvm->thread_list->spinlock);
     s32 i;
-    for (i = 0; i < thread_list->length; i++) {
-        Runtime *r = arraylist_get_value_unsafe(thread_list, i);
-        hsize += r->threadInfo->objs_heap_of_thread;
+    for (i = 0; i < jvm->thread_list->length; i++) {
+        Runtime *r = arraylist_get_value_unsafe(jvm->thread_list, i);
+        hsize += r->thrd_info->objs_heap_of_thread;
     }
-    spin_unlock(&thread_list->spinlock);
+    spin_unlock(&jvm->thread_list->spinlock);
     return hsize;
 }
 
-void thread_stop_all() {
-    spin_lock(&thread_list->spinlock);
+void thread_stop_all(MiniJVM *jvm) {
+    spin_lock(&jvm->thread_list->spinlock);
     s32 i;
-    for (i = 0; i < thread_list->length; i++) {
-        Runtime *r = arraylist_get_value_unsafe(thread_list, i);
+    for (i = 0; i < jvm->thread_list->length; i++) {
+        Runtime *r = arraylist_get_value_unsafe(jvm->thread_list, i);
 
         jthread_suspend(r);
-        r->threadInfo->no_pause = 1;
-        r->threadInfo->is_interrupt = 1;
-        jthread_lock(r->threadInfo->curThreadLock, r);
-        jthread_notify(r->threadInfo->curThreadLock, r);
-        jthread_unlock(r->threadInfo->curThreadLock, r);
+        r->thrd_info->no_pause = 1;
+        r->thrd_info->is_interrupt = 1;
+        jthread_lock(r->thrd_info->curThreadLock, r);
+        jthread_notify(r->thrd_info->curThreadLock, r);
+        jthread_unlock(r->thrd_info->curThreadLock, r);
 
     }
-    spin_unlock(&thread_list->spinlock);
+    spin_unlock(&jvm->thread_list->spinlock);
 }
 
 
@@ -262,10 +270,46 @@ void thread_lock_init(ThreadLock *lock) {
 void thread_lock_dispose(ThreadLock *lock) {
     if (lock) {
         cnd_destroy(&lock->thread_cond);
-//        pthread_mutexattr_destroy(&lock->lock_attr);
         mtx_destroy(&lock->mutex_lock);
     }
 }
+
+
+s32 vm_share_trylock(MiniJVM *jvm) {
+    return mtx_trylock(&jvm->threadlock.mutex_lock);
+}
+
+void vm_share_lock(MiniJVM *jvm) {
+    mtx_lock(&jvm->threadlock.mutex_lock);
+}
+
+void vm_share_unlock(MiniJVM *jvm) {
+    mtx_unlock(&jvm->threadlock.mutex_lock);
+}
+
+void vm_share_wait(MiniJVM *jvm) {
+    cnd_wait(&jvm->threadlock.thread_cond, &jvm->threadlock.mutex_lock);
+}
+
+void vm_share_timedwait(MiniJVM *jvm, s64 ms) {
+    struct timespec t;
+    clock_gettime(CLOCK_REALTIME, &t);
+    t.tv_sec += ms / 1000;
+    t.tv_nsec += (ms % 1000) * 1000000;
+    s32 ret = cnd_timedwait(&jvm->threadlock.thread_cond, &jvm->threadlock.mutex_lock, &t);
+//    if (ret == ETIMEDOUT) {
+//        s32 debug = 1;
+//    }
+}
+
+void vm_share_notify(MiniJVM *jvm) {
+    cnd_signal(&jvm->threadlock.thread_cond);
+}
+
+void vm_share_notifyall(MiniJVM *jvm) {
+    cnd_broadcast(&jvm->threadlock.thread_cond);
+}
+
 /**
  * =============================== utf8 ==============================
  */
@@ -508,7 +552,7 @@ u8 getDataTypeTagByName(Utf8String *name) {
 
 
 u8 getDataTypeTag(s32 index) {
-    return data_type_str[index];
+    return DATA_TYPE_STR[index];
 }
 
 s32 isDataReferByTag(c8 c) {
@@ -533,17 +577,7 @@ s32 isDataReferByIndex(s32 index) {
 }
 
 
-void printDumpOfClasses() {
-    HashtableIterator hti;
-    hashtable_iterate(boot_classloader->classes, &hti);
-    for (; hashtable_iter_has_more(&hti);) {
-        Utf8String *k = hashtable_iter_next_key(&hti);
-        JClass *clazz = classes_get(k);
-        jvm_printf("classes entry : hash( %x )%s,%d\n", k->hash, utf8_cstr(k), clazz);
-    }
-}
-
-void sys_properties_set_c(c8 *key, c8 *val) {
+void sys_properties_set_c(MiniJVM *jvm, c8 *key, c8 *val) {
     Utf8String *ukey = utf8_create_c(key);
     Utf8String *uval = utf8_create_c(val);
 #if __JVM_OS_MAC__ || __JVM_OS_LINUX__
@@ -552,17 +586,17 @@ void sys_properties_set_c(c8 *key, c8 *val) {
     }
 #elif __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__ || __JVM_OS_VS__
 #endif
-    hashtable_put(sys_prop, ukey, uval);
+    hashtable_put(jvm->sys_prop, ukey, uval);
 }
 
-s32 sys_properties_load(ClassLoader *loader) {
-    sys_prop = hashtable_create(UNICODE_STR_HASH_FUNC, UNICODE_STR_EQUALS_FUNC);
-    hashtable_register_free_functions(sys_prop,
+s32 sys_properties_load(MiniJVM *jvm) {
+    jvm->sys_prop = hashtable_create(UNICODE_STR_HASH_FUNC, UNICODE_STR_EQUALS_FUNC);
+    hashtable_register_free_functions(jvm->sys_prop,
                                       (HashtableKeyFreeFunc) utf8_destory,
                                       (HashtableValueFreeFunc) utf8_destory);
     Utf8String *ustr = NULL;
     Utf8String *prop_name = utf8_create_c("sys.properties");
-    ByteBuf *buf = load_file_from_classpath(prop_name);
+    ByteBuf *buf = load_file_from_classpath(jvm->boot_classloader, prop_name);
     if (buf) {
         ustr = utf8_create();
         while (bytebuf_available(buf)) {
@@ -593,7 +627,7 @@ s32 sys_properties_load(ClassLoader *loader) {
                 Utf8String *val = utf8_create();
                 utf8_append_part(key, line, 0, eqAt);
                 utf8_append_part(val, line, eqAt + 1, line->length - (eqAt + 1));
-                hashtable_put(sys_prop, key, val);
+                hashtable_put(jvm->sys_prop, key, val);
             }
         }
         utf8_destory(line);
@@ -602,32 +636,29 @@ s32 sys_properties_load(ClassLoader *loader) {
 
     //modify os para
 #if __JVM_OS_MAC__
-    sys_properties_set_c("os.name", "Mac");
-    sys_properties_set_c("path.separator", ":");
-    sys_properties_set_c("file.separator", "/");
-    sys_properties_set_c("line.separator", "\n");
+    sys_properties_set_c(jvm, "os.name", "Mac");
+    sys_properties_set_c(jvm, "path.separator", ":");
+    sys_properties_set_c(jvm, "file.separator", "/");
+    sys_properties_set_c(jvm, "line.separator", "\n");
 #elif __JVM_OS_LINUX__
-    sys_properties_set_c("os.name", "Linux");
-    sys_properties_set_c("path.separator", ":");
-    sys_properties_set_c("file.separator", "/");
-    sys_properties_set_c("line.separator", "\n");
+    sys_properties_set_c(jvm, "os.name", "Linux");
+    sys_properties_set_c(jvm, "path.separator", ":");
+    sys_properties_set_c(jvm, "file.separator", "/");
+    sys_properties_set_c(jvm, "line.separator", "\n");
 #elif __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__ || __JVM_OS_VS__
-    sys_properties_set_c("os.name", "Windows");
-    sys_properties_set_c("path.separator", ";");
-    sys_properties_set_c("file.separator", "\\");
-    sys_properties_set_c("line.separator", "\r\n");
+    sys_properties_set_c(jvm, "os.name", "Windows");
+    sys_properties_set_c(jvm, "path.separator", ";");
+    sys_properties_set_c(jvm, "file.separator", "\\");
+    sys_properties_set_c(jvm, "line.separator", "\r\n");
 #endif
 
 
     return 0;
 }
 
-void sys_properties_dispose() {
-    hashtable_destory(sys_prop);
+void sys_properties_dispose(MiniJVM *jvm) {
+    hashtable_destory(jvm->sys_prop);
 }
-
-FILE *logfile = NULL;
-s64 last_flush = 0;
 
 void open_log() {
 #if _JVM_DEBUG_LOG_TO_FILE
@@ -668,7 +699,7 @@ int jvm_printf(const char *format, ...) {
 }
 
 void invoke_deepth(Runtime *runtime) {
-    garbage_thread_lock();
+    vm_share_lock(runtime->jvm);
     int i = 0;
     while (runtime) {
         i++;
@@ -687,41 +718,41 @@ void invoke_deepth(Runtime *runtime) {
         fprintf(stderr, "  ");
     }
 #endif
-    garbage_thread_unlock();
+    vm_share_unlock(runtime->jvm);
 }
 
 //===============================    java 线程  ==================================
 
 s32 jthread_init(Instance *jthread, Runtime *runtime) {
-
-    jthread_set_stackframe_value(jthread, runtime);
+    jthread_set_stackframe_value(runtime->jvm, jthread, runtime);
     runtime->clazz = jthread->mb.clazz;
-    runtime->threadInfo->jthread = jthread;
-    runtime->threadInfo->thread_status = THREAD_STATUS_RUNNING;
+    runtime->thrd_info->jthread = jthread;
+    runtime->thrd_info->thread_status = THREAD_STATUS_RUNNING;
     threadlist_add(runtime);
     return 0;
 }
 
-s32 jthread_dispose(Instance *jthread) {
-    Runtime *runtime = (Runtime *) jthread_get_stackframe_value(jthread);
-    gc_move_refer_thread_2_gc(runtime);
+s32 jthread_dispose(Instance *jthread, Runtime *runtime) {
+    gc_move_objs_thread_2_gc(runtime);
     threadlist_remove(runtime);
-    if (jdwp_enable)event_on_thread_death(runtime->threadInfo->jthread);
+    if (runtime->jvm->jdwp_enable)event_on_thread_death(runtime->jvm->jdwpserver, runtime->thrd_info->jthread);
     //destory
-    jthread_set_stackframe_value(jthread, NULL);
+    jthread_set_stackframe_value(runtime->jvm, jthread, NULL);
 
     return 0;
 }
 
 s32 jthread_run(void *para) {
-    Instance *jthread = (Instance *) para;
+    Instance *jthread = ((__refer *) para)[0];
+    MiniJVM *jvm = ((__refer *) para)[1];
+    jvm_free(para);
 #if _JVM_DEBUG_LOG_LEVEL > 0
     s64 startAt = currentTimeMillis();
     jvm_printf("[INFO]thread start %llx\n", (s64) (intptr_t) jthread);
 #endif
     s32 ret = 0;
-    Runtime *runtime = (Runtime *) jthread_get_stackframe_value(jthread);
-    runtime->threadInfo->pthread = thrd_current();
+    Runtime *runtime = (Runtime *) jthread_get_stackframe_value(jvm, jthread);
+    runtime->thrd_info->pthread = thrd_current();
 
     Utf8String *methodName = utf8_create_c("run");
     Utf8String *methodType = utf8_create_c("()V");
@@ -734,45 +765,50 @@ s32 jthread_run(void *para) {
                utf8_cstr(method->name), utf8_cstr(method->descriptor));
 #endif
     //gc_refer_reg(runtime, jthread);//20201019 gust comment it , duplicate reg
-    if (jdwp_enable)event_on_thread_start(runtime->threadInfo->jthread);
-    runtime->threadInfo->thread_status = THREAD_STATUS_RUNNING;
+    if (jvm->jdwp_enable && jvm->jdwpserver)event_on_thread_start(jvm->jdwpserver, runtime->thrd_info->jthread);
+    runtime->thrd_info->thread_status = THREAD_STATUS_RUNNING;
     push_ref(runtime->stack, (__refer) jthread);
     ret = execute_method_impl(method, runtime);
     if (ret != RUNTIME_STATUS_NORMAL && ret != RUNTIME_STATUS_INTERRUPT) {
         print_exception(runtime);
     }
-    runtime->threadInfo->thread_status = THREAD_STATUS_ZOMBIE;
-    jthread_dispose(jthread);
+    runtime->thrd_info->thread_status = THREAD_STATUS_ZOMBIE;
+    jthread_dispose(jthread, runtime);
     runtime_destory(runtime);
 #if _JVM_DEBUG_LOG_LEVEL > 0
     s64 spent = currentTimeMillis() - startAt;
-    jvm_printf("[INFO]thread over %llx , spent : %lld\n", (s64) (intptr_t) jthread, spent);
+    jvm_printf("[INFO]thread over %llx , return %d , spent : %lld\n", (s64) (intptr_t) jthread, ret, spent);
 #endif
     thrd_exit(ret);
     return ret;
 }
 
-thrd_t jthread_start(Instance *parent_classloader, Instance *ins) {//
-    Runtime *runtime = runtime_create(NULL);
-    runtime->threadInfo->context_classloader = parent_classloader;
+thrd_t jthread_start(Instance *parent_classloader, Instance *ins, Runtime *parent) {//
+    Runtime *runtime = runtime_create(parent->jvm);
+    runtime->thrd_info->context_classloader = parent_classloader;
+
+    __refer *para = jvm_calloc(sizeof(__refer) * 2);
+    para[0] = ins;
+    para[1] = runtime->jvm;
+
     jthread_init(ins, runtime);
     thrd_t pt;
-    thrd_create(&pt, jthread_run, ins);
+    thrd_create(&pt, jthread_run, para);
     return pt;
 }
 
-__refer jthread_get_name_value(Instance *ins) {
-    c8 *ptr = getInstanceFieldPtr(ins, jvm_runtime_cache.thread_name);
+__refer jthread_get_name_value(MiniJVM *jvm, Instance *ins) {
+    c8 *ptr = getInstanceFieldPtr(ins, jvm->shortcut.thread_name);
     return getFieldRefer(ptr);
 }
 
-__refer jthread_get_stackframe_value(Instance *ins) {
-    c8 *ptr = getInstanceFieldPtr(ins, jvm_runtime_cache.thread_stackFrame);
+__refer jthread_get_stackframe_value(MiniJVM *jvm, Instance *ins) {
+    c8 *ptr = getInstanceFieldPtr(ins, jvm->shortcut.thread_stackFrame);
     return (__refer) (intptr_t) getFieldLong(ptr);
 }
 
-void jthread_set_stackframe_value(Instance *ins, __refer val) {
-    c8 *ptr = getInstanceFieldPtr(ins, jvm_runtime_cache.thread_stackFrame);
+void jthread_set_stackframe_value(MiniJVM *jvm, Instance *ins, __refer val) {
+    c8 *ptr = getInstanceFieldPtr(ins, jvm->shortcut.thread_stackFrame);
     setFieldLong(ptr, (s64) (intptr_t) val);
 }
 
@@ -792,6 +828,7 @@ void jthread_set_daemon_value(Instance *ins, Runtime *runtime, s32 daemon) {
 }
 
 void jthreadlock_create(Runtime *runtime, MemoryBlock *mb) {
+    ClassLoader *boot_classloader = runtime->jvm->boot_classloader;
     spin_lock(&boot_classloader->lock);
     if (!mb->thread_lock) {
         ThreadLock *tl = jvm_calloc(sizeof(ThreadLock));
@@ -868,25 +905,25 @@ s32 jthread_yield(Runtime *runtime) {
 }
 
 s32 jthread_suspend(Runtime *runtime) {
-    spin_lock(&boot_classloader->lock);
-    runtime->threadInfo->suspend_count++;
-    spin_unlock(&boot_classloader->lock);
+    spin_lock(&runtime->thrd_info->lock);
+    runtime->thrd_info->suspend_count++;
+    spin_unlock(&runtime->thrd_info->lock);
     return 0;
 }
 
 void jthread_block_enter(Runtime *runtime) {
-    runtime->threadInfo->is_blocking = 1;
+    runtime->thrd_info->is_blocking = 1;
 }
 
 void jthread_block_exit(Runtime *runtime) {
-    runtime->threadInfo->is_blocking = 0;
+    runtime->thrd_info->is_blocking = 0;
     check_suspend_and_pause(runtime);
 }
 
 s32 jthread_resume(Runtime *runtime) {
-    spin_lock(&boot_classloader->lock);
-    if (runtime->threadInfo->suspend_count > 0)runtime->threadInfo->suspend_count--;
-    spin_unlock(&boot_classloader->lock);
+    spin_lock(&runtime->thrd_info->lock);
+    if (runtime->thrd_info->suspend_count > 0)runtime->thrd_info->suspend_count--;
+    spin_unlock(&runtime->thrd_info->lock);
     return 0;
 }
 
@@ -896,8 +933,8 @@ s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms) {
         jthreadlock_create(runtime, mb);
     }
     jthread_block_enter(runtime);
-    runtime->threadInfo->curThreadLock = mb;
-    runtime->threadInfo->thread_status = THREAD_STATUS_WAIT;
+    runtime->thrd_info->curThreadLock = mb;
+    runtime->thrd_info->thread_status = THREAD_STATUS_WAIT;
     if (waitms) {
         waitms += currentTimeMillis();
         struct timespec t;
@@ -908,33 +945,34 @@ s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms) {
     } else {
         cnd_wait(&mb->thread_lock->thread_cond, &mb->thread_lock->mutex_lock);
     }
-    runtime->threadInfo->thread_status = THREAD_STATUS_RUNNING;
-    runtime->threadInfo->curThreadLock = NULL;
+    runtime->thrd_info->thread_status = THREAD_STATUS_RUNNING;
+    runtime->thrd_info->curThreadLock = NULL;
     jthread_block_exit(runtime);
     return 0;
 }
 
 s32 jthread_sleep(Runtime *runtime, s64 ms) {
     jthread_block_enter(runtime);
-    runtime->threadInfo->thread_status = THREAD_STATUS_SLEEPING;
+    runtime->thrd_info->thread_status = THREAD_STATUS_SLEEPING;
     threadSleep(ms);
-    runtime->threadInfo->thread_status = THREAD_STATUS_RUNNING;
+    runtime->thrd_info->thread_status = THREAD_STATUS_RUNNING;
     jthread_block_exit(runtime);
     return 0;
 }
 
 s32 check_suspend_and_pause(Runtime *runtime) {
-    JavaThreadInfo *threadInfo = runtime->threadInfo;
+    JavaThreadInfo *threadInfo = runtime->thrd_info;
+    MiniJVM *jvm = runtime->jvm;
     if (threadInfo->suspend_count && !threadInfo->no_pause) {
-        garbage_thread_lock();
+        vm_share_lock(jvm);
         threadInfo->is_suspend = 1;
         while (threadInfo->suspend_count) {
-            garbage_thread_notifyall();
-            garbage_thread_timedwait(20);
+            vm_share_notifyall(jvm);
+            vm_share_timedwait(jvm, 20);
         }
         threadInfo->is_suspend = 0;
         //jvm_printf(".");
-        garbage_thread_unlock();
+        vm_share_unlock(jvm);
     }
     return 0;
 }
@@ -943,7 +981,7 @@ s32 check_suspend_and_pause(Runtime *runtime) {
 Instance *jarray_create_by_class(Runtime *runtime, s32 count, JClass *clazz) {
     if (count < 0)return NULL;
     s32 typeIdx = clazz->mb.arr_type_index;
-    s32 width = data_type_bytes[typeIdx];
+    s32 width = DATA_TYPE_BYTES[typeIdx];
     s32 insSize = instance_base_size() + (width * count);
     Instance *arr = jvm_calloc(insSize);
     arr->mb.heap_size = insSize;
@@ -952,7 +990,7 @@ Instance *jarray_create_by_class(Runtime *runtime, s32 count, JClass *clazz) {
     arr->mb.arr_type_index = typeIdx;
     arr->arr_length = count;
     if (arr->arr_length)arr->arr_body = (c8 *) (&arr[1]);
-    gc_refer_reg(runtime, arr);
+    gc_obj_reg(runtime, arr);
 //    jvm_printf("%s\n", utf8_cstr(clazz->name));
 //    if(utf8_equals_c(clazz->name,"[Lorg/mini/util/StringFormatImpl$FmtCmpnt;")){
 //        int debug = 1;
@@ -1020,7 +1058,7 @@ Instance *jarray_multi_create(Runtime *runtime, s32 *dim, s32 dim_size, Utf8Stri
 
 void jarray_set_field(Instance *arr, s32 index, s64 val) {
     s32 idx = arr->mb.arr_type_index;
-    s32 bytes = data_type_bytes[idx];
+    s32 bytes = DATA_TYPE_BYTES[idx];
     if (isDataReferByIndex(idx)) {
         setFieldRefer((c8 *) ((__refer *) arr->arr_body + index), (__refer) (intptr_t) val);
     } else {
@@ -1043,7 +1081,7 @@ void jarray_set_field(Instance *arr, s32 index, s64 val) {
 
 s64 jarray_get_field(Instance *arr, s32 index) {
     s32 idx = arr->mb.arr_type_index;
-    s32 bytes = data_type_bytes[idx];
+    s32 bytes = DATA_TYPE_BYTES[idx];
     s64 val = 0;
     if (isDataReferByIndex(idx)) {
         val = (intptr_t) getFieldRefer((c8 *) ((__refer *) arr->arr_body + index));
@@ -1090,7 +1128,7 @@ Instance *instance_create(Runtime *runtime, JClass *clazz) {
 //    if (utf8_equals_c(clazz->name, "java/lang/String")) {
 //        s32 debug = 1;
 //    }
-    gc_refer_reg(runtime, ins);
+    gc_obj_reg(runtime, ins);
     return ins;
 }
 
@@ -1136,7 +1174,7 @@ void instance_finalize(Instance *ins, Runtime *runtime) {
 
 void instance_of_reference_enqueue(Instance *ins, Runtime *runtime) {
     if (ins) {
-        MethodInfo *mi = jvm_runtime_cache.reference_vmEnqueneReference;
+        MethodInfo *mi = runtime->jvm->shortcut.reference_vmEnqueneReference;
         if (mi) {
             push_ref(runtime->stack, ins);
             s32 ret = execute_method_impl(mi, runtime);
@@ -1185,7 +1223,7 @@ Instance *instance_copy(Runtime *runtime, Instance *src, s32 deep_copy) {
     if (src->mb.type == MEM_TYPE_INS) {
         bodySize = src->mb.clazz->field_instance_len;
     } else if (src->mb.type == MEM_TYPE_ARR) {
-        bodySize = src->arr_length * data_type_bytes[src->mb.arr_type_index];
+        bodySize = src->arr_length * DATA_TYPE_BYTES[src->mb.arr_type_index];
     }
     s32 insSize = instance_base_size() + bodySize;
     Instance *dst = jvm_malloc(insSize);
@@ -1223,7 +1261,7 @@ Instance *instance_copy(Runtime *runtime, Instance *src, s32 deep_copy) {
             }
         }
     } else if (src->mb.type == MEM_TYPE_ARR) {
-        s32 size = src->arr_length * data_type_bytes[src->mb.arr_type_index];
+        s32 size = src->arr_length * DATA_TYPE_BYTES[src->mb.arr_type_index];
         dst->arr_body = (c8 *) dst + instance_base_size();//
         if (isDataReferByIndex(src->mb.arr_type_index) && deep_copy) {
             s32 i;
@@ -1239,7 +1277,7 @@ Instance *instance_copy(Runtime *runtime, Instance *src, s32 deep_copy) {
             memcpy(dst->arr_body, src->arr_body, size);
         }
     }
-    gc_refer_reg(runtime, dst);
+    gc_obj_reg(runtime, dst);
     return dst;
 }
 
@@ -1262,10 +1300,10 @@ Instance *insOfJavaLangClass_create_get(Runtime *runtime, JClass *clazz) {
             return clazz->ins_class;
         } else {
             Instance *ins = instance_create(runtime, java_lang_class);
-            gc_refer_hold(ins);
+            gc_obj_hold(runtime->jvm->collector, ins);
             instance_init(ins, runtime);
             clazz->ins_class = ins;
-            insOfJavaLangClass_set_classHandle(ins, clazz);
+            insOfJavaLangClass_set_classHandle(runtime, ins, clazz);
             return ins;
         }
     }
@@ -1273,12 +1311,12 @@ Instance *insOfJavaLangClass_create_get(Runtime *runtime, JClass *clazz) {
 }
 
 
-JClass *insOfJavaLangClass_get_classHandle(Instance *insOfJavaLangClass) {
-    return (JClass *) (intptr_t) getFieldLong(getInstanceFieldPtr(insOfJavaLangClass, jvm_runtime_cache.class_classHandle));
+JClass *insOfJavaLangClass_get_classHandle(Runtime *runtime, Instance *insOfJavaLangClass) {
+    return (JClass *) (intptr_t) getFieldLong(getInstanceFieldPtr(insOfJavaLangClass, runtime->jvm->shortcut.class_classHandle));
 }
 
-void insOfJavaLangClass_set_classHandle(Instance *insOfJavaLangClass, JClass *handle) {
-    setFieldLong(getInstanceFieldPtr(insOfJavaLangClass, jvm_runtime_cache.class_classHandle), (s64) (intptr_t) handle);
+void insOfJavaLangClass_set_classHandle(Runtime *runtime, Instance *insOfJavaLangClass, JClass *handle) {
+    setFieldLong(getInstanceFieldPtr(insOfJavaLangClass, runtime->jvm->shortcut.class_classHandle), (s64) (intptr_t) handle);
 }
 
 //===============================    实例化字符串  ==================================
@@ -1291,16 +1329,16 @@ Instance *jstring_create(Utf8String *src, Runtime *runtime) {
     jstring->mb.clazz = jstr_clazz;
     instance_init(jstring, runtime);
 
-    c8 *ptr = jstring_get_value_ptr(jstring);
-    u16 *buf = jvm_calloc(src->length * data_type_bytes[DATATYPE_JCHAR]);
+    c8 *ptr = jstring_get_value_ptr(jstring, runtime);
+    u16 *buf = jvm_calloc(src->length * DATA_TYPE_BYTES[DATATYPE_JCHAR]);
     s32 len = utf8_2_unicode(src, buf);
     if (len >= 0) {//可能解析出错
         Instance *arr = jarray_create_by_type_index(runtime, len, DATATYPE_JCHAR);//u16 type is 5
         setFieldRefer(ptr, (__refer) arr);//设置数组
-        memcpy(arr->arr_body, buf, len * data_type_bytes[DATATYPE_JCHAR]);
+        memcpy(arr->arr_body, buf, len * DATA_TYPE_BYTES[DATATYPE_JCHAR]);
     }
     jvm_free(buf);
-    jstring_set_count(jstring, len);//设置长度
+    jstring_set_count(jstring, len, runtime);//设置长度
     instance_release_from_thread(jstring, runtime);
     return jstring;
 }
@@ -1313,32 +1351,32 @@ Instance *jstring_create_cstr(c8 *cstr, Runtime *runtime) {
     return jstr;
 }
 
-s32 jstring_get_count(Instance *jstr) {
-    return getFieldInt(getInstanceFieldPtr(jstr, jvm_runtime_cache.string_count));
+s32 jstring_get_count(Instance *jstr, Runtime *runtime) {
+    return getFieldInt(getInstanceFieldPtr(jstr, runtime->jvm->shortcut.string_count));
 }
 
-void jstring_set_count(Instance *jstr, s32 count) {
-    setFieldInt(getInstanceFieldPtr(jstr, jvm_runtime_cache.string_count), count);
+void jstring_set_count(Instance *jstr, s32 count, Runtime *runtime) {
+    setFieldInt(getInstanceFieldPtr(jstr, runtime->jvm->shortcut.string_count), count);
 }
 
-s32 jstring_get_offset(Instance *jstr) {
-    return getFieldInt(getInstanceFieldPtr(jstr, jvm_runtime_cache.string_offset));
+s32 jstring_get_offset(Instance *jstr, Runtime *runtime) {
+    return getFieldInt(getInstanceFieldPtr(jstr, runtime->jvm->shortcut.string_offset));
 }
 
-c8 *jstring_get_value_ptr(Instance *jstr) {
-    return getInstanceFieldPtr(jstr, jvm_runtime_cache.string_value);
+c8 *jstring_get_value_ptr(Instance *jstr, Runtime *runtime) {
+    return getInstanceFieldPtr(jstr, runtime->jvm->shortcut.string_value);
 }
 
-Instance *jstring_get_value_array(Instance *jstr) {
-    c8 *fieldPtr = jstring_get_value_ptr(jstr);
+Instance *jstring_get_value_array(Instance *jstr, Runtime *runtime) {
+    c8 *fieldPtr = jstring_get_value_ptr(jstr, runtime);
     Instance *arr = (Instance *) getFieldRefer(fieldPtr);
     return arr;
 }
 
-u16 jstring_char_at(Instance *jstr, s32 index) {
-    Instance *ptr = jstring_get_value_array(jstr);
-    s32 offset = jstring_get_offset(jstr);
-    s32 count = jstring_get_count(jstr);
+u16 jstring_char_at(Instance *jstr, s32 index, Runtime *runtime) {
+    Instance *ptr = jstring_get_value_array(jstr, runtime);
+    s32 offset = jstring_get_offset(jstr, runtime);
+    s32 count = jstring_get_count(jstr, runtime);
     if (index >= count) {
         return -1;
     }
@@ -1350,13 +1388,13 @@ u16 jstring_char_at(Instance *jstr, s32 index) {
 }
 
 
-s32 jstring_index_of(Instance *jstr, uni_char ch, s32 startAt) {
-    c8 *fieldPtr = jstring_get_value_ptr(jstr);
+s32 jstring_index_of(Instance *jstr, u16 ch, s32 startAt, Runtime *runtime) {
+    c8 *fieldPtr = jstring_get_value_ptr(jstr, runtime);
     Instance *ptr = (Instance *) getFieldRefer(fieldPtr);//char[]数组实例
     if (ptr && ptr->arr_body && startAt >= 0) {
         u16 *jchar_arr = (u16 *) ptr->arr_body;
-        s32 count = jstring_get_count(jstr);
-        s32 offset = jstring_get_offset(jstr);
+        s32 count = jstring_get_count(jstr, runtime);
+        s32 offset = jstring_get_offset(jstr, runtime);
         s32 i;
         for (i = startAt; i < count; i++) {
             if (jchar_arr[i + offset] == ch) {
@@ -1367,7 +1405,7 @@ s32 jstring_index_of(Instance *jstr, uni_char ch, s32 startAt) {
     return -1;
 }
 
-s32 jstring_equals(Instance *jstr1, Instance *jstr2) {
+s32 jstring_equals(Instance *jstr1, Instance *jstr2, Runtime *runtime) {
     if (!jstr1 && !jstr2) { //两个都是null
         return 1;
     } else if (!jstr1) {
@@ -1375,17 +1413,17 @@ s32 jstring_equals(Instance *jstr1, Instance *jstr2) {
     } else if (!jstr2) {
         return 0;
     }
-    Instance *arr1 = jstring_get_value_array(jstr1);//取得 char[] value
-    Instance *arr2 = jstring_get_value_array(jstr2);//取得 char[] value
+    Instance *arr1 = jstring_get_value_array(jstr1, runtime);//取得 char[] value
+    Instance *arr2 = jstring_get_value_array(jstr2, runtime);//取得 char[] value
     s32 count1 = 0, offset1 = 0, count2 = 0, offset2 = 0;
     //0长度字符串可能value[] 是空值，也可能不是空值但count是0
     if (arr1) {
-        count1 = jstring_get_count(jstr1);
-        offset1 = jstring_get_offset(jstr1);
+        count1 = jstring_get_count(jstr1, runtime);
+        offset1 = jstring_get_offset(jstr1, runtime);
     }
     if (arr2) {
-        count2 = jstring_get_count(jstr2);
-        offset2 = jstring_get_offset(jstr2);
+        count2 = jstring_get_count(jstr2, runtime);
+        offset2 = jstring_get_offset(jstr2, runtime);
     }
     if (count1 != count2) {
         return 0;
@@ -1406,12 +1444,12 @@ s32 jstring_equals(Instance *jstr1, Instance *jstr2) {
     return 0;
 }
 
-s32 jstring_2_utf8(Instance *jstr, Utf8String *utf8) {
+s32 jstring_2_utf8(Instance *jstr, Utf8String *utf8, Runtime *runtime) {
     if (!jstr)return 0;
-    Instance *arr = jstring_get_value_array(jstr);
+    Instance *arr = jstring_get_value_array(jstr, runtime);
     if (arr) {
-        s32 count = jstring_get_count(jstr);
-        s32 offset = jstring_get_offset(jstr);
+        s32 count = jstring_get_count(jstr, runtime);
+        s32 offset = jstring_get_offset(jstr, runtime);
         u16 *arrbody = (u16 *) arr->arr_body;
         if (arr->arr_body)unicode_2_utf8(&arrbody[offset], utf8, count);
     }
@@ -1594,12 +1632,16 @@ JavaThreadInfo *threadinfo_create() {
     JavaThreadInfo *threadInfo = jvm_calloc(sizeof(JavaThreadInfo));
     threadInfo->stacktrack = arraylist_create(16);
     threadInfo->lineNo = arraylist_create(16);
+    threadInfo->jdwp_step = jvm_calloc(sizeof(JdwpStep));
+    spin_init(&threadInfo->lock, 0);
     return threadInfo;
 }
 
 void threadinfo_destory(JavaThreadInfo *threadInfo) {
     arraylist_destory(threadInfo->lineNo);
     arraylist_destory(threadInfo->stacktrack);
+    jvm_free(threadInfo->jdwp_step);
+    spin_destroy(&threadInfo->lock);
     jvm_free(threadInfo);
 }
 
@@ -1615,11 +1657,11 @@ s64 nanoTime() {
     struct timespec tv;
     clock_gettime(CLOCK_REALTIME, &tv);
 
-    if (!NANO_START) {
-        NANO_START = ((s64) tv.tv_sec) * NANO_2_SEC_SCALE + tv.tv_nsec;
+    if (!nano_sec_start_at) {
+        nano_sec_start_at = ((s64) tv.tv_sec) * NANO_2_SEC_SCALE + tv.tv_nsec;
     }
     s64 v = ((s64) tv.tv_sec) * NANO_2_SEC_SCALE + tv.tv_nsec;
-    return v - NANO_START;
+    return v - nano_sec_start_at;
 }
 
 s64 threadSleep(s64 ms) {
@@ -1638,20 +1680,20 @@ s64 threadSleep(s64 ms) {
 
 void instance_hold_to_thread(Instance *ins, Runtime *runtime) {
     if (runtime && ins) {
-        ins->mb.tmp_next = runtime->threadInfo->tmp_holder;
-        runtime->threadInfo->tmp_holder = (MemoryBlock *) ins;
+        ins->mb.tmp_next = runtime->thrd_info->tmp_holder;
+        runtime->thrd_info->tmp_holder = (MemoryBlock *) ins;
     }
 }
 
 void instance_release_from_thread(Instance *ins, Runtime *runtime) {
     if (runtime && ins) {
         MemoryBlock *ref = (MemoryBlock *) ins;
-        if (ref == runtime->threadInfo->tmp_holder) {
-            runtime->threadInfo->tmp_holder = ref->tmp_next;
+        if (ref == runtime->thrd_info->tmp_holder) {
+            runtime->thrd_info->tmp_holder = ref->tmp_next;
             return;
         }
         MemoryBlock *next, *pre;
-        pre = runtime->threadInfo->tmp_holder;
+        pre = runtime->thrd_info->tmp_holder;
         if (pre) {
             next = pre->tmp_next;
 
@@ -1762,11 +1804,11 @@ s32 _loadFileContents(c8 *file, ByteBuf *buf) {
 }
 
 
-ByteBuf *load_file_from_classpath(Utf8String *path) {
+ByteBuf *load_file_from_classpath(ClassLoader *cloader, Utf8String *path) {
     ByteBuf *bytebuf = NULL;
     s32 i, iret;
-    for (i = 0; i < boot_classloader->classpath->length; i++) {
-        Utf8String *pClassPath = arraylist_get_value(boot_classloader->classpath, i);
+    for (i = 0; i < cloader->classpath->length; i++) {
+        Utf8String *pClassPath = arraylist_get_value(cloader->classpath, i);
         if (isDir(pClassPath)) { //form file
             Utf8String *filepath = utf8_create_copy(pClassPath);
             utf8_pushback(filepath, '/');
@@ -1795,8 +1837,8 @@ ByteBuf *load_file_from_classpath(Utf8String *path) {
     return bytebuf;
 }
 
-void init_jni_func_table() {
-    jnienv.data_type_bytes = (s32 *) &data_type_bytes;
+void init_jni_func_table(MiniJVM *jvm) {
+    jnienv.data_type_bytes = (s32 *) &DATA_TYPE_BYTES;
     jnienv.native_reg_lib = native_reg_lib;
     jnienv.native_remove_lib = native_remove_lib;
     jnienv.push_entry = push_entry_jni;
@@ -1849,8 +1891,8 @@ void init_jni_func_table() {
     jnienv.instance_hold_to_thread = instance_hold_to_thread;
     jnienv.instance_release_from_thread = instance_release_from_thread;
     jnienv.print_exception = print_exception;
-    jnienv.garbage_refer_hold = gc_refer_hold;
-    jnienv.garbage_refer_release = gc_refer_release;
+    jnienv.garbage_refer_hold = gc_obj_hold;
+    jnienv.garbage_refer_release = gc_obj_release;
     jnienv.runtime_create = runtime_create;
     jnienv.runtime_destory = runtime_destory;
     jnienv.getLastSon = getLastSon;

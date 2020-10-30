@@ -37,6 +37,7 @@ Runtime *getRuntimeCurThread(JniEnv *env);
 static void init(){}
 
 struct _GlobeRefer {
+    MiniJVM *jvm;
     JniEnv *env;
     Runtime *runtime;
     Instance *glfw_callback;

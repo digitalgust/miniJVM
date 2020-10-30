@@ -1,7 +1,6 @@
 
 
 #include <time.h>
-#include "java_native_std.h"
 #include "garbage.h"
 #include "jvm_util.h"
 #include <math.h>
@@ -40,8 +39,8 @@ s32 com_sun_cldc_io_ConsoleInputStream_read(Runtime *runtime, JClass *clazz) {
 s32 com_sun_cldc_io_ResourceInputStream_open(Runtime *runtime, JClass *clazz) {
     Instance *jstr = localvar_getRefer(runtime->localvar, 0);
     Utf8String *path = utf8_create();
-    jstring_2_utf8(jstr, path);
-    ByteBuf *buf = load_file_from_classpath(path);
+    jstring_2_utf8(jstr, path, runtime);
+    ByteBuf *buf = load_file_from_classpath(runtime->jvm->boot_classloader, path);
     if (buf) {
         s32 _j_t_bytes = buf->wp;
         Instance *_arr = jarray_create_by_type_index(runtime, _j_t_bytes, DATATYPE_BYTE);
@@ -68,7 +67,7 @@ s32 java_lang_Class_forName(Runtime *runtime, JClass *clazz) {
     s32 ret = RUNTIME_STATUS_NORMAL;
     if (jstr) {
         Utf8String *ustr = utf8_create();
-        jstring_2_utf8(jstr, ustr);
+        jstring_2_utf8(jstr, ustr, runtime);
         utf8_replace_c(ustr, ".", "/");
         cl = classes_load_get(classloader, ustr, runtime);
         if (!cl) {
@@ -94,7 +93,7 @@ s32 java_lang_Class_forName(Runtime *runtime, JClass *clazz) {
 
 s32 java_lang_Class_newInstance(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
-    JClass *cl = insOfJavaLangClass_get_classHandle((Instance *) localvar_getRefer(runtime->localvar, 0));
+    JClass *cl = insOfJavaLangClass_get_classHandle(runtime, (Instance *) localvar_getRefer(runtime->localvar, 0));
     Instance *ins = NULL;
     s32 ret = 0;
     if (cl && !cl->mb.arr_type_index) {//class exists and not array class
@@ -120,7 +119,7 @@ s32 java_lang_Class_newInstance(Runtime *runtime, JClass *clazz) {
 
 s32 java_lang_Class_isInstance(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
-    JClass *cl = insOfJavaLangClass_get_classHandle((Instance *) localvar_getRefer(runtime->localvar, 0));
+    JClass *cl = insOfJavaLangClass_get_classHandle(runtime, (Instance *) localvar_getRefer(runtime->localvar, 0));
     Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, 1);
     if (instance_of(ins, cl)) {
         push_int(stack, 1);
@@ -136,8 +135,8 @@ s32 java_lang_Class_isInstance(Runtime *runtime, JClass *clazz) {
 
 s32 java_lang_Class_isAssignableFrom(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
-    JClass *c0 = insOfJavaLangClass_get_classHandle((Instance *) localvar_getRefer(runtime->localvar, 0));
-    JClass *c1 = insOfJavaLangClass_get_classHandle((Instance *) localvar_getRefer(runtime->localvar, 1));
+    JClass *c0 = insOfJavaLangClass_get_classHandle(runtime, (Instance *) localvar_getRefer(runtime->localvar, 0));
+    JClass *c1 = insOfJavaLangClass_get_classHandle(runtime, (Instance *) localvar_getRefer(runtime->localvar, 1));
 
     if (assignable_from(c1, c0)) {
         push_int(stack, 1);
@@ -153,7 +152,7 @@ s32 java_lang_Class_isAssignableFrom(Runtime *runtime, JClass *clazz) {
 
 s32 java_lang_Class_isInterface(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
-    JClass *cl = insOfJavaLangClass_get_classHandle((Instance *) localvar_getRefer(runtime->localvar, 0));
+    JClass *cl = insOfJavaLangClass_get_classHandle(runtime, (Instance *) localvar_getRefer(runtime->localvar, 0));
 
     if (cl->cff.access_flags & ACC_INTERFACE) {//
         push_int(stack, 1);
@@ -169,7 +168,7 @@ s32 java_lang_Class_isInterface(Runtime *runtime, JClass *clazz) {
 
 s32 java_lang_Class_isArray(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
-    JClass *cl = insOfJavaLangClass_get_classHandle((Instance *) localvar_getRefer(runtime->localvar, 0));
+    JClass *cl = insOfJavaLangClass_get_classHandle(runtime, (Instance *) localvar_getRefer(runtime->localvar, 0));
     if (cl->mb.arr_type_index) {
         push_int(stack, 1);
     } else {
@@ -184,7 +183,7 @@ s32 java_lang_Class_isArray(Runtime *runtime, JClass *clazz) {
 
 s32 java_lang_Class_isPrimitive(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
-    JClass *cl = insOfJavaLangClass_get_classHandle((Instance *) localvar_getRefer(runtime->localvar, 0));
+    JClass *cl = insOfJavaLangClass_get_classHandle(runtime, (Instance *) localvar_getRefer(runtime->localvar, 0));
     if (cl->mb.clazz->primitive) {
         push_int(stack, 1);
     } else {
@@ -199,7 +198,7 @@ s32 java_lang_Class_isPrimitive(Runtime *runtime, JClass *clazz) {
 
 s32 java_lang_Class_getName0(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
-    JClass *cl = insOfJavaLangClass_get_classHandle((Instance *) localvar_getRefer(runtime->localvar, 0));
+    JClass *cl = insOfJavaLangClass_get_classHandle(runtime, (Instance *) localvar_getRefer(runtime->localvar, 0));
     if (cl) {
         Utf8String *ustr = utf8_create_copy(cl->name);
         utf8_replace_c(ustr, "/", ".");
@@ -218,7 +217,7 @@ s32 java_lang_Class_getName0(Runtime *runtime, JClass *clazz) {
 
 s32 java_lang_Class_getSuperclass(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
-    JClass *cl = insOfJavaLangClass_get_classHandle((Instance *) localvar_getRefer(runtime->localvar, 0));
+    JClass *cl = insOfJavaLangClass_get_classHandle(runtime, (Instance *) localvar_getRefer(runtime->localvar, 0));
     if (cl) {
 
         JClass *scl = getSuperClass(cl);
@@ -238,7 +237,7 @@ s32 java_lang_Class_getPrimitiveClass(Runtime *runtime, JClass *clazz) {
     Instance *jstr = localvar_getRefer(runtime->localvar, 0);
     if (jstr) {
         Utf8String *ustr = utf8_create();
-        jstring_2_utf8(jstr, ustr);
+        jstring_2_utf8(jstr, ustr, runtime);
         JClass *cl = primitive_class_create_get(runtime, ustr);
         push_ref(stack, cl->ins_class);
     } else {
@@ -254,7 +253,7 @@ s32 java_lang_Class_getPrimitiveClass(Runtime *runtime, JClass *clazz) {
 s32 java_lang_Class_getComponentType(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, 0);
-    JClass *present = insOfJavaLangClass_get_classHandle(ins);
+    JClass *present = insOfJavaLangClass_get_classHandle(runtime, ins);
     s32 idx = utf8_last_indexof_c(present->name, "[");
     if (idx > 0) {
         Utf8String *ustr = utf8_create_part(present->name, idx + 1, present->name->length - 1 - idx);
@@ -267,7 +266,7 @@ s32 java_lang_Class_getComponentType(Runtime *runtime, JClass *clazz) {
             utf8_append_c(ustr, cstr);
         }
 
-        JClass *cl = classes_load_get(runtime->threadInfo->context_classloader, ustr, runtime);
+        JClass *cl = classes_load_get(runtime->thrd_info->context_classloader, ustr, runtime);
         if (cl) {
             push_ref(stack, cl->ins_class);
         } else {
@@ -606,9 +605,9 @@ s32 java_lang_Runtime_exitInternal(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     s32 status = localvar_getInt(runtime->localvar, 1);
     //exit(status);
-    collector->exit_flag = 1;
-    collector->exit_code = status;
-    thread_stop_all();
+    runtime->jvm->collector->exit_flag = 1;
+    runtime->jvm->collector->exit_code = status;
+    thread_stop_all(runtime->jvm);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("java_lang_Runtime_exitInternal %d\n", status);
@@ -618,9 +617,9 @@ s32 java_lang_Runtime_exitInternal(Runtime *runtime, JClass *clazz) {
 
 s32 java_lang_Runtime_freeMemory(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
-    spin_lock(&collector->lock);
-    push_long(stack, MAX_HEAP_SIZE - collector->obj_heap_size);
-    spin_unlock(&collector->lock);
+    spin_lock(&runtime->jvm->collector->lock);
+    push_long(stack, runtime->jvm->max_heap_size - runtime->jvm->collector->obj_heap_size);
+    spin_unlock(&runtime->jvm->collector->lock);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("java_lang_Runtime_freeMemory \n");
@@ -631,7 +630,7 @@ s32 java_lang_Runtime_freeMemory(Runtime *runtime, JClass *clazz) {
 s32 java_lang_Runtime_totalMemory(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
 
-    push_long(stack, MAX_HEAP_SIZE);
+    push_long(stack, runtime->jvm->max_heap_size);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("java_lang_Runtime_totalMemory \n");
@@ -641,7 +640,7 @@ s32 java_lang_Runtime_totalMemory(Runtime *runtime, JClass *clazz) {
 
 s32 java_lang_Runtime_gc(Runtime *runtime, JClass *clazz) {
 
-    collector->lastgc = 0;//active gc now
+    runtime->jvm->collector->lastgc = 0;//active gc now
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
@@ -656,22 +655,22 @@ s32 java_lang_String_replace0(Runtime *runtime, JClass *clazz) {
     Instance *src = (Instance *) localvar_getRefer(runtime->localvar, 1);
     Instance *dst = (Instance *) localvar_getRefer(runtime->localvar, 2);
 
-    s32 count = jstring_get_count(base);
-    s32 offset = jstring_get_offset(base);
-    u16 *value = (u16 *) jstring_get_value_array(base)->arr_body;
+    s32 count = jstring_get_count(base, runtime);
+    s32 offset = jstring_get_offset(base, runtime);
+    u16 *value = (u16 *) jstring_get_value_array(base, runtime)->arr_body;
 
-    s32 src_count = jstring_get_count(src);
-    s32 dst_count = jstring_get_count(dst);
+    s32 src_count = jstring_get_count(src, runtime);
+    s32 dst_count = jstring_get_count(dst, runtime);
     if (count == 0 || src == NULL || dst == NULL || src_count == 0 || dst_count == 0) {
         Instance *jchar_arr = jarray_create_by_type_index(runtime, count, DATATYPE_JCHAR);
         memcpy((c8 *) jchar_arr->arr_body, (c8 *) &value[offset], count * sizeof(u16));
         push_ref(stack, jchar_arr);
     } else {
 
-        s32 src_offset = jstring_get_offset(src);
-        u16 *src_value = (u16 *) jstring_get_value_array(src)->arr_body;
-        s32 dst_offset = jstring_get_offset(dst);
-        u16 *dst_value = (u16 *) jstring_get_value_array(dst)->arr_body;
+        s32 src_offset = jstring_get_offset(src, runtime);
+        u16 *src_value = (u16 *) jstring_get_value_array(src, runtime)->arr_body;
+        s32 dst_offset = jstring_get_offset(dst, runtime);
+        u16 *dst_value = (u16 *) jstring_get_value_array(dst, runtime)->arr_body;
 
         ByteBuf *sb = bytebuf_create(count);
         int i, j;
@@ -715,7 +714,7 @@ s32 java_lang_String_charAt0(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     Instance *jstr = (Instance *) localvar_getRefer(runtime->localvar, 0);
     s32 index = localvar_getInt(runtime->localvar, 1);
-    u16 ch = jstring_char_at(jstr, index);
+    u16 ch = jstring_char_at(jstr, index, runtime);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("java_lang_String_charAt ch = %d\n", ch);
@@ -728,7 +727,7 @@ s32 java_lang_String_equals(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     Instance *jstr1 = (Instance *) localvar_getRefer(runtime->localvar, 0);
     Instance *jstr2 = (Instance *) localvar_getRefer(runtime->localvar, 1);
-    s32 r = jstring_equals(jstr1, jstr2);
+    s32 r = jstring_equals(jstr1, jstr2, runtime);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("java_lang_String_equals r = %f\n", r);
@@ -741,7 +740,7 @@ s32 java_lang_String_indexOf(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     Instance *jstr = (Instance *) localvar_getRefer(runtime->localvar, 0);
     u16 ch = localvar_getInt(runtime->localvar, 1);
-    s32 r = jstring_index_of(jstr, ch, 0);
+    s32 r = jstring_index_of(jstr, ch, 0, runtime);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("java_lang_String_indexOf r = %f\n", r);
@@ -755,7 +754,7 @@ s32 java_lang_String_indexOfFrom(Runtime *runtime, JClass *clazz) {
     Instance *jstr = (Instance *) localvar_getRefer(runtime->localvar, 0);
     u16 ch = localvar_getInt(runtime->localvar, 1);
     s32 startAt = localvar_getInt(runtime->localvar, 2);
-    s32 r = jstring_index_of(jstr, ch, startAt);
+    s32 r = jstring_index_of(jstr, ch, startAt, runtime);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("java_lang_String_indexOfFrom r = %f\n", r);
@@ -769,8 +768,8 @@ s32 java_lang_String_intern0(Runtime *runtime, JClass *clazz) {
     Instance *jstr = (Instance *) localvar_getRefer(runtime->localvar, 0);
     if (jstr) {
         Utf8String *ustr = utf8_create();
-        jstring_2_utf8(jstr, ustr);
-        Instance *in_jstr = (Instance *) hashtable_get(boot_classloader->table_jstring_const, ustr);
+        jstring_2_utf8(jstr, ustr, runtime);
+        Instance *in_jstr = (Instance *) hashtable_get(runtime->jvm->boot_classloader->table_jstring_const, ustr);
         push_ref(stack, (__refer) in_jstr);
         utf8_destory(ustr);
     } else {
@@ -790,16 +789,17 @@ s32 java_lang_StringBuilder_append(Runtime *runtime, JClass *clazz) {
     Instance *jstr = (Instance *) localvar_getRefer(runtime->localvar, 1);
 
     if (jstr) {
-        s32 scount = getFieldInt(getInstanceFieldPtr(jstr, jvm_runtime_cache.string_count));
+        PreProcessor *jvm_runtime_cache = &runtime->jvm->shortcut;
+        s32 scount = getFieldInt(getInstanceFieldPtr(jstr, jvm_runtime_cache->string_count));
         if (scount) {
-            c8 *ptr_bvalue = getInstanceFieldPtr(jbuilder, jvm_runtime_cache.stringbuilder_value);
+            c8 *ptr_bvalue = getInstanceFieldPtr(jbuilder, jvm_runtime_cache->stringbuilder_value);
             Instance *bvalue = getFieldRefer(ptr_bvalue);
-            c8 *ptr_bcount = getInstanceFieldPtr(jbuilder, jvm_runtime_cache.stringbuilder_count);
+            c8 *ptr_bcount = getInstanceFieldPtr(jbuilder, jvm_runtime_cache->stringbuilder_count);
             s32 bcount = getFieldInt(ptr_bcount);
 
-            s32 soffset = getFieldInt(getInstanceFieldPtr(jstr, jvm_runtime_cache.string_offset));
-            Instance *svalue = getFieldRefer(getInstanceFieldPtr(jstr, jvm_runtime_cache.string_value));
-            s32 bytes = data_type_bytes[DATATYPE_JCHAR];
+            s32 soffset = getFieldInt(getInstanceFieldPtr(jstr, jvm_runtime_cache->string_offset));
+            Instance *svalue = getFieldRefer(getInstanceFieldPtr(jstr, jvm_runtime_cache->string_value));
+            s32 bytes = DATA_TYPE_BYTES[DATATYPE_JCHAR];
             if (bvalue->arr_length - bcount < scount) {//need expand stringbuilder
                 s32 n_count = bcount + scount + 1;
                 n_count = n_count > bcount * 2 ? n_count : bcount * 2;
@@ -838,7 +838,7 @@ s32 java_lang_System_arraycopy(Runtime *runtime, JClass *clazz) {
         push_ref(stack, (__refer) exception);
         ret = RUNTIME_STATUS_EXCEPTION;
     } else {
-        s32 bytes = data_type_bytes[src->mb.clazz->mb.arr_type_index];
+        s32 bytes = DATA_TYPE_BYTES[src->mb.clazz->mb.arr_type_index];
         //根据元素宽
         src_start *= bytes;
         count *= bytes;
@@ -895,7 +895,7 @@ s32 java_lang_System_loadLibrary0(Runtime *runtime, JClass *clazz) {
     Instance *name_arr = localvar_getRefer(runtime->localvar, 0);
     if (name_arr && name_arr->arr_length) {
         Utf8String *lab = utf8_create_c("java.library.path");
-        Utf8String *val = hashtable_get(sys_prop, lab);
+        Utf8String *val = hashtable_get(runtime->jvm->sys_prop, lab);
         Utf8String *libname = utf8_create();
         if (val) {
             utf8_append(libname, val);
@@ -940,7 +940,7 @@ s32 java_lang_System_loadLibrary0(Runtime *runtime, JClass *clazz) {
             if (!f) {
                 jvm_printf(note2, onload);
             } else {
-                f(&jnienv);
+                f(runtime->jvm);
             }
         }
 
@@ -989,8 +989,8 @@ s32 java_lang_System_getProperty0(Runtime *runtime, JClass *clazz) {
 
     Instance *jstr1 = (Instance *) localvar_getRefer(runtime->localvar, 0);
     Utf8String *key = utf8_create();
-    jstring_2_utf8(jstr1, key);
-    Utf8String *val = (Utf8String *) hashtable_get(sys_prop, key);
+    jstring_2_utf8(jstr1, key, runtime);
+    Utf8String *val = (Utf8String *) hashtable_get(runtime->jvm->sys_prop, key);
     if (val) {
         Instance *jstr = jstring_create(val, runtime);
         push_ref(stack, jstr);
@@ -1009,20 +1009,21 @@ s32 java_lang_System_getProperty0(Runtime *runtime, JClass *clazz) {
 s32 java_lang_System_setProperty0(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
 
+    MiniJVM *jvm = runtime->jvm;
     Instance *jstr1 = (Instance *) localvar_getRefer(runtime->localvar, 0);
     Utf8String *key = utf8_create();
-    jstring_2_utf8(jstr1, key);
+    jstring_2_utf8(jstr1, key, runtime);
     Instance *jstr2 = (Instance *) localvar_getRefer(runtime->localvar, 1);
     Utf8String *val = utf8_create();
-    jstring_2_utf8(jstr2, val);
-    Utf8String *old_val = (Utf8String *) hashtable_get(sys_prop, key);
+    jstring_2_utf8(jstr2, val, runtime);
+    Utf8String *old_val = (Utf8String *) hashtable_get(jvm->sys_prop, key);
     if (old_val) {
         Instance *jstr = jstring_create(old_val, runtime);
         push_ref(stack, jstr);
     } else {
         push_ref(stack, (__refer) (intptr_t) NULL);
     }
-    hashtable_put(sys_prop, key, val);
+    hashtable_put(jvm->sys_prop, key, val);
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
@@ -1033,7 +1034,7 @@ s32 java_lang_System_setProperty0(Runtime *runtime, JClass *clazz) {
 
 s32 java_lang_Thread_currentThread(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
-    push_ref(stack, (__refer) runtime->threadInfo->jthread);
+    push_ref(stack, (__refer) runtime->thrd_info->jthread);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("java_lang_Thread_currentThread \n");
@@ -1066,7 +1067,7 @@ s32 java_lang_Thread_sleep(Runtime *runtime, JClass *clazz) {
 s32 java_lang_Thread_start(Runtime *runtime, JClass *clazz) {
 
     Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, 0);
-    jthread_start(runtime->threadInfo->context_classloader, ins);
+    jthread_start(runtime->thrd_info->context_classloader, ins, runtime);
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
@@ -1079,9 +1080,9 @@ s32 java_lang_Thread_start(Runtime *runtime, JClass *clazz) {
 s32 java_lang_Thread_isAlive(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, 0);
-    Runtime *rt = jthread_get_stackframe_value(ins);
+    Runtime *rt = jthread_get_stackframe_value(runtime->jvm, ins);
     if (rt)
-        push_int(stack, runtime->threadInfo->thread_status != THREAD_STATUS_ZOMBIE);
+        push_int(stack, runtime->thrd_info->thread_status != THREAD_STATUS_ZOMBIE);
     else
         push_int(stack, 0);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1095,7 +1096,7 @@ s32 java_lang_Thread_isAlive(Runtime *runtime, JClass *clazz) {
 s32 java_lang_Thread_activeCount(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
 
-    push_int(stack, thread_list->length);
+    push_int(stack, runtime->jvm->thread_list->length);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("java_lang_Thread_activeCount \n");
@@ -1135,9 +1136,9 @@ s32 java_lang_Thread_setContextClassLoader(Runtime *runtime, JClass *clazz) {
     Instance *ins_thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
     Instance *ins_classloader = (Instance *) localvar_getRefer(runtime->localvar, 1);
 
-    Runtime *rt_thread = jthread_get_stackframe_value(ins_thread);
+    Runtime *rt_thread = jthread_get_stackframe_value(runtime->jvm, ins_thread);
     if (rt_thread) {
-        rt_thread->threadInfo->context_classloader = ins_classloader;
+        rt_thread->thrd_info->context_classloader = ins_classloader;
     }
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
@@ -1150,9 +1151,9 @@ s32 java_lang_Thread_setContextClassLoader(Runtime *runtime, JClass *clazz) {
 s32 java_lang_Thread_getContextClassLoader(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     Instance *ins_thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
-    Runtime *rt_thread = jthread_get_stackframe_value(ins_thread);
+    Runtime *rt_thread = jthread_get_stackframe_value(runtime->jvm, ins_thread);
     if (rt_thread) {
-        push_ref(stack, rt_thread->threadInfo->context_classloader);
+        push_ref(stack, rt_thread->thrd_info->context_classloader);
     } else {
         push_ref(stack, NULL);
     }
@@ -1177,7 +1178,7 @@ s32 java_io_PrintStream_printImpl(Runtime *runtime, JClass *clazz) {
     tmps = (Instance *) localvar_getRefer(runtime->localvar, 0);
     if (tmps) {
 
-        c8 *fieldPtr = jstring_get_value_ptr(tmps);
+        c8 *fieldPtr = jstring_get_value_ptr(tmps, runtime);
         Instance *ptr = (Instance *) getFieldRefer(fieldPtr);
         //jvm_printf("printImpl [%x]\n", arr_body);
         if (ptr && ptr->arr_body) {
@@ -1265,6 +1266,7 @@ s32 java_io_Throwable_buildStackElement(Runtime *runtime, JClass *clazz) {
 //===================================    avian    ========================================
 
 s32 java_lang_System_getNativeProperties(Runtime *runtime, JClass *clazz) {
+    Hashtable *sys_prop = runtime->jvm->sys_prop;
     s32 size = (s32) sys_prop->entries;
     Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
     Instance *jarr = jarray_create_by_type_name(runtime, size, ustr);
@@ -1297,22 +1299,7 @@ s32 java_lang_System_getNativeProperties(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-//s32 java_lang_invoke_CallSite_invokeExact(Runtime *runtime, JClass *clazz) {
-//    Instance *_this = localvar_getRefer(runtime->localvar, 0);
-//    Instance *jarr = localvar_getRefer(runtime->localvar, 1);
-//
-//
-//
-//    push_ref(runtime->stack, NULL);//先放入栈，
-//
-//#if _JVM_DEBUG_BYTECODE_DETAIL > 5
-//    invoke_deepth(runtime);
-//    jvm_printf("java_lang_invoke_CallSite_invokeExact \n");
-//#endif
-//    return 0;
-//}
-
-static java_native_method method_table[] = {
+static java_native_method METHODS_STD_TABLE[] = {
         {"com/sun/cldc/io/ConsoleOutputStream", "write",                 "(I)V",                                                          com_sun_cldc_io_ConsoleOutputStream_write},
         {"com/sun/cldc/io/ConsoleInputStream",  "read",                  "()I",                                                           com_sun_cldc_io_ConsoleInputStream_read},
         {"com/sun/cldc/io/ResourceInputStream", "open",                  "(Ljava/lang/String;)[B",                                        com_sun_cldc_io_ResourceInputStream_open},
@@ -1384,16 +1371,14 @@ static java_native_method method_table[] = {
         {"java/lang/Throwable",                 "printStackTrace0",      "",                                                              java_io_Throwable_printStackTrace0},
         {"java/lang/Throwable",                 "buildStackElement",     "()Ljava/lang/StackTraceElement;",                               java_io_Throwable_buildStackElement},
         {"java/io/PrintStream",                 "printImpl",             "(Ljava/lang/String;)V",                                         java_io_PrintStream_printImpl},
-        //avian jni
-
         {"java/lang/System",                    "getNativeProperties",   "()[Ljava/lang/String;",                                         java_lang_System_getNativeProperties},
 };
 
 
-java_native_method *find_native_method(c8 *cls_name, c8 *method_name, c8 *method_type) {
+java_native_method *find_native_method(MiniJVM *jvm, c8 *cls_name, c8 *method_name, c8 *method_type) {
     s32 i, j;
-    for (j = 0; j < native_libs->length; j++) {
-        JavaNativeLib *lib = arraylist_get_value(native_libs, j);
+    for (j = 0; j < jvm->native_libs->length; j++) {
+        JavaNativeLib *lib = arraylist_get_value(jvm->native_libs, j);
         java_native_method *methods = lib->methods;
         for (i = 0; i < lib->methods_count; i++)
             if (strcmp(cls_name, (methods + i)->clzname) == 0 &&
@@ -1404,9 +1389,8 @@ java_native_method *find_native_method(c8 *cls_name, c8 *method_name, c8 *method
     return 0;
 }
 
-s32 invoke_native_method(Runtime *runtime, JClass *p,
-                         c8 *cls_name, c8 *method_name, c8 *method_type) {
-    java_native_method *method = find_native_method(cls_name, method_name, method_type);
+s32 invoke_native_method(MiniJVM *jvm, Runtime *runtime, JClass *p, c8 *cls_name, c8 *method_name, c8 *method_type) {
+    java_native_method *method = find_native_method(jvm, cls_name, method_name, method_type);
     if (method != 0) {
 #if _JVM_DEBUG_LOG_LEVEL > 5
         invoke_deepth(runtime);
@@ -1418,29 +1402,29 @@ s32 invoke_native_method(Runtime *runtime, JClass *p,
     return 0;
 }
 
-void reg_std_native_lib() {
-    native_reg_lib(&(method_table[0]), sizeof(method_table) / sizeof(java_native_method));
+void reg_std_native_lib(MiniJVM *jvm) {
+    native_reg_lib(jvm, &(METHODS_STD_TABLE[0]), sizeof(METHODS_STD_TABLE) / sizeof(java_native_method));
 }
 
-s32 native_reg_lib(java_native_method *methods, s32 method_size) {
+s32 native_reg_lib(MiniJVM *jvm, java_native_method *methods, s32 method_size) {
     JavaNativeLib *lib = jvm_calloc(sizeof(JavaNativeLib));
     lib->methods_count = method_size;
     lib->methods = methods;
-    arraylist_push_back(native_libs, lib);
+    arraylist_push_back(jvm->native_libs, lib);
     return 0;
 }
 
-s32 native_remove_lib(JavaNativeLib *lib) {
-    arraylist_remove(native_libs, lib);
+s32 native_remove_lib(MiniJVM *jvm, JavaNativeLib *lib) {
+    arraylist_remove(jvm->native_libs, lib);
     return 0;
 }
 
-s32 native_lib_destory() {
+s32 native_lib_destory(MiniJVM *jvm) {
     s32 i;
-    for (i = 0; i < native_libs->length; i++) {
-        __refer lib = arraylist_get_value(native_libs, i);
+    for (i = 0; i < jvm->native_libs->length; i++) {
+        __refer lib = arraylist_get_value(jvm->native_libs, i);
         jvm_free(lib);
     }
-    arraylist_destory(native_libs);
+    arraylist_destory(jvm->native_libs);
     return 0;
 }

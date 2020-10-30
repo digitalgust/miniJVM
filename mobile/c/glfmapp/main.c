@@ -22,27 +22,40 @@
 #endif
 #endif
 
-extern void JNI_OnLoad_mini(JniEnv *env);
-extern void JNI_OnUnload_mini(JniEnv *env);
+extern void JNI_OnLoad_mini(MiniJVM *jvm);
+extern void JNI_OnUnload_mini(MiniJVM *jvm);
 static GLFMDisplay *glfm_display;
+
 
 // Main entry point
 void glfmMain(GLFMDisplay *display) {
     glfm_display=display;
+    
+    //init refers ,the globle var
+    memset(&refers, 0, sizeof(GlobeRefer));
 
-
-     Utf8String *bootclasspath = utf8_create();
+    Utf8String *bootclasspath = utf8_create();
     utf8_append_c(bootclasspath, glfmGetResRoot());
     utf8_append_c(bootclasspath, "/resfiles/minijvm_rt.jar;");
     Utf8String *classpath = utf8_create();
     utf8_append_c(classpath, glfmGetResRoot());
     utf8_append_c(classpath, "/resfiles/glfm_gui.jar;");
-    jvm_printf("%s\n",utf8_cstr(classpath));
+    //jvm_printf("%s\n",utf8_cstr(classpath));
 
-    jvm_init(utf8_cstr(bootclasspath), utf8_cstr(classpath), JNI_OnLoad_mini);
-    sys_properties_set_c("glfm.res.root",glfmGetResRoot());
-    sys_properties_set_c("glfm.save.root", glfmGetSaveRoot());
-    sys_properties_set_c("glfm.uuid", glfmGetUUID());
+    refers.jvm = jvm_create();
+    if(!refers.jvm){
+        jvm_printf("[ERROR] jvm create error.\n");
+        return;
+    }
+    s32 ret = jvm_init(refers.jvm, utf8_cstr(bootclasspath), utf8_cstr(classpath));
+    if(ret){
+        jvm_printf("[ERROR] jvm init error.\n");
+        return ;
+    }
+    JNI_OnLoad_mini(refers.jvm);
+    sys_properties_set_c(refers.jvm, "glfm.res.root",glfmGetResRoot());
+    sys_properties_set_c(refers.jvm, "glfm.save.root", glfmGetSaveRoot());
+    sys_properties_set_c(refers.jvm, "glfm.uuid", glfmGetUUID());
     Runtime *runtime=getRuntimeCurThread(&jnienv);
 
     utf8_destory(classpath);
@@ -51,9 +64,10 @@ void glfmMain(GLFMDisplay *display) {
     c8* p_methodname="glinit";
     c8* p_methodtype="(J)V";
     push_long(runtime->stack,(s64)(intptr_t)display);
-    call_method(p_classname,p_methodname,p_methodtype,runtime);
+    call_method(refers.jvm, p_classname,p_methodname,p_methodtype,runtime);
 }
 
 void glfmDestroy(){
-    jvm_destroy(JNI_OnUnload_mini);
+    JNI_OnUnload_mini(refers.jvm);
+    jvm_destroy(refers.jvm);
 }

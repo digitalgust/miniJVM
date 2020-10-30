@@ -35,6 +35,7 @@ s32 count_MiniALFuncTable();
 Runtime *getRuntimeCurThread(JniEnv *env);
 
 struct _GlobeRefer {
+    MiniJVM *jvm;
     JniEnv *env;
     Instance *glfm_callback;
 

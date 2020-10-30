@@ -8,36 +8,39 @@
 #include "media.h"
 
 
-void JNI_OnLoad(JniEnv *env) {
+void JNI_OnLoad(MiniJVM *jvm) {
     memset(&refers, 0, sizeof(GlobeRefer));
+    JniEnv *env = jvm->env;
+    refers.jvm = jvm;
     refers.env = env;
 
     refers.runtime_list = env->pairlist_create(10);
 
-    env->native_reg_lib(ptr_GlfwFuncTable(), count_GlfwFuncTable());
-    env->native_reg_lib(ptr_MiniALFuncTable(), count_MiniALFuncTable());
-    env->native_reg_lib(ptr_GLFuncTable(), count_GLFuncTable());
-    env->native_reg_lib(ptr_NutilFuncTable(), count_NutilFuncTable());
+    env->native_reg_lib(jvm, ptr_GlfwFuncTable(), count_GlfwFuncTable());
+    env->native_reg_lib(jvm, ptr_MiniALFuncTable(), count_MiniALFuncTable());
+    env->native_reg_lib(jvm, ptr_GLFuncTable(), count_GLFuncTable());
+    env->native_reg_lib(jvm, ptr_NutilFuncTable(), count_NutilFuncTable());
 }
 
-void JNI_OnUnload(JniEnv *env) {
-    env->native_remove_lib(ptr_GlfwFuncTable());
-    env->native_remove_lib(ptr_MiniALFuncTable());
-    env->native_remove_lib(ptr_GLFuncTable());
-    env->native_remove_lib(ptr_NutilFuncTable());
+void JNI_OnUnload(MiniJVM *jvm) {
+    JniEnv *env = jvm->env;
+    env->native_remove_lib(jvm, ptr_GlfwFuncTable());
+    env->native_remove_lib(jvm, ptr_MiniALFuncTable());
+    env->native_remove_lib(jvm, ptr_GLFuncTable());
+    env->native_remove_lib(jvm, ptr_NutilFuncTable());
 }
 
 Runtime *getRuntimeCurThread(JniEnv *env) {
-    if (env->get_jvm_state() != JVM_STATUS_RUNNING) {
+    if (env->get_jvm_state(refers.jvm) != JVM_STATUS_RUNNING) {
         return NULL;
     }
     thrd_t t = env->thrd_current();
-    Runtime *runtime = env->pairlist_get(refers.runtime_list, (__refer)(intptr_t)t);
+    Runtime *runtime = env->pairlist_get(refers.runtime_list, (__refer) (intptr_t) t);
     if (!runtime) {
-        runtime = env->runtime_create(NULL);
+        runtime = env->runtime_create(refers.jvm);
         env->thread_boundle(runtime);
-        env->jthread_set_daemon_value(runtime->threadInfo->jthread, runtime, 1);
-        env->pairlist_put(refers.runtime_list, (__refer)(intptr_t)t, runtime);
+        env->jthread_set_daemon_value(runtime->thrd_info->jthread, runtime, 1);
+        env->pairlist_put(refers.runtime_list, (__refer) (intptr_t) t, runtime);
     }
 
     return env->getLastSon(runtime);//

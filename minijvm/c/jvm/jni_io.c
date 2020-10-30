@@ -2,20 +2,35 @@
 // Created by gust on 2017/9/1.
 //
 
+#include <sys/stat.h>
+#include <string.h>   // NULL and possibly memcpy, memset
 #include "jvm.h"
-#include "java_native_std.h"
 #include "garbage.h"
-#include "java_native_io.h"
 #include "jvm_util.h"
 #include "../utils/miniz_wrapper.h"
-#include <sys/stat.h>
 
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <string.h>   // NULL and possibly memcpy, memset
+
+
+#define  SOCK_OP_TYPE_NON_BLOCK   0
+#define  SOCK_OP_TYPE_REUSEADDR   1
+#define  SOCK_OP_TYPE_RCVBUF   2
+#define  SOCK_OP_TYPE_SNDBUF   3
+#define  SOCK_OP_TYPE_KEEPALIVE   4
+#define  SOCK_OP_TYPE_LINGER   5
+#define  SOCK_OP_TYPE_TIMEOUT   6
+
+#define  SOCK_OP_VAL_NON_BLOCK   1
+#define  SOCK_OP_VAL_BLOCK   0
+#define  SOCK_OP_VAL_NON_REUSEADDR   1
+#define  SOCK_OP_VAL_REUSEADDR   0
+
+
+
 
 #if __JVM_OS_VS__ || __JVM_OS_MINGW__
 
@@ -735,13 +750,13 @@ s32 org_mini_net_SocketNative_accept0(Runtime *runtime, JClass *clazz) {
         mbedtls_net_context *ctx = &((VmSock *) vmarr->arr_body)->contex;
         Instance *cltarr = jarray_create_by_type_index(runtime, sizeof(VmSock), DATATYPE_BYTE);
         VmSock *cltsock = (VmSock *) cltarr->arr_body;
-        gc_refer_hold(cltarr);
+        gc_obj_hold(runtime->jvm->collector, cltarr);
         s32 ret = 0;
         while (1) {
             jthread_block_enter(runtime);
             ret = mbedtls_net_accept(ctx, &cltsock->contex, NULL, 0, NULL);
             jthread_block_exit(runtime);
-            if (runtime->threadInfo->is_interrupt) {//vm notify thread destroy
+            if (runtime->thrd_info->is_interrupt) {//vm notify thread destroy
                 ret = -1;
                 break;
             }
@@ -756,7 +771,7 @@ s32 org_mini_net_SocketNative_accept0(Runtime *runtime, JClass *clazz) {
                 break;
             }
         }
-        gc_refer_release(cltarr);
+        gc_obj_release(runtime->jvm->collector, cltarr);
         push_ref(runtime->stack, ret < 0 ? NULL : cltarr);
     } else {
         push_ref(runtime->stack, NULL);
@@ -813,7 +828,7 @@ static s32 sock_recv(VmSock *vmsock, u8 *buf, s32 count, Runtime *runtime) {
         } else {
             ret = mbedtls_net_recv_timeout(&vmsock->contex, buf, count, vmsock->rcv_time_out ? vmsock->rcv_time_out : 100);
         }
-        if (runtime->threadInfo->is_interrupt) {//vm waiting for destroy
+        if (runtime->thrd_info->is_interrupt) {//vm waiting for destroy
             ret = -1;
             break;
         }
@@ -1794,7 +1809,7 @@ s32 org_mini_crypt_XorCrypt_decrypt(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-static java_native_method method_net_table[] = {
+static java_native_method METHODS_IO_TABLE[] = {
         {"org/mini/net/SocketNative", "open0",                "()[B",                             org_mini_net_SocketNative_open0},
         {"org/mini/net/SocketNative", "bind0",                "([B[B[BI)I",                       org_mini_net_SocketNative_bind0},
         {"org/mini/net/SocketNative", "connect0",             "([B[B[BI)I",                       org_mini_net_SocketNative_connect0},
@@ -1847,8 +1862,8 @@ static java_native_method method_net_table[] = {
 };
 
 
-void reg_net_native_lib() {
-    native_reg_lib(&(method_net_table[0]), sizeof(method_net_table) / sizeof(java_native_method));
+void reg_net_native_lib(MiniJVM *jvm) {
+    native_reg_lib(jvm, &(METHODS_IO_TABLE[0]), sizeof(METHODS_IO_TABLE) / sizeof(java_native_method));
 }
 
 

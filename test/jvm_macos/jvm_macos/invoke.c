@@ -28,12 +28,15 @@ int call_jvm(char* app_path) {
         printf("classpath: %s\n",path);
 
         ArrayList * java_para=arraylist_create(0);
-        ret= execute_jvm(bootstrappath, path, "test/HttpServer", java_para);
-    //    ret= execute_jvm(bootstrappath, path, "test/BpDeepTest", java_para);
-    //    ret= execute_jvm(bootstrappath, path, "Sample", java_para);
-    //    ret= execute_jvm(bootstrappath, path, "test/ReflectTest", java_para);
-    //    ret= execute_jvm(bootstrappath, path, "test/LambdaTest", java_para);
+    MiniJVM *jvm=jvm_create();
+    ret = jvm_init(jvm, bootstrappath, path);
+    //ret = call_main(jvm, "test/HttpServer", java_para);
+    //ret = call_main(jvm, "test/BpDeepTest", java_para);
+    ret = call_main(jvm, "test.SpecTest", java_para);
+    //ret = call_main(jvm, "test/ReflectTest", java_para);
+    //ret = call_main(jvm, "test/LambdaTest", java_para);
         arraylist_destory(java_para);
+    jvm_destroy(jvm);
     return ret;
 }
 

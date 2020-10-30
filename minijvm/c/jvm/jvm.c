@@ -5,10 +5,8 @@
 #include <string.h>
 #include <signal.h>
 #include "jvm.h"
-#include "../utils/utf8_string.h"
 #include "garbage.h"
 #include "jvm_util.h"
-#include "java_native_std.h"
 #include "jdwp.h"
 
 
@@ -18,7 +16,7 @@ void thread_boundle(Runtime *runtime) {
     //为主线程创建Thread实例
     Instance *t = instance_create(runtime, thread_clazz);
     instance_hold_to_thread(t, runtime);
-    runtime->threadInfo->jthread = t;//Thread.init currentThread() need this
+    runtime->thrd_info->jthread = t;//Thread.init currentThread() need this
     instance_init(t, runtime);
     jthread_init(t, runtime);
     instance_release_from_thread(t, runtime);
@@ -27,10 +25,10 @@ void thread_boundle(Runtime *runtime) {
 
 void thread_unboundle(Runtime *runtime) {
 
-    runtime->threadInfo->is_suspend = 1;
-    Instance *t = runtime->threadInfo->jthread;
+    runtime->thrd_info->is_suspend = 1;
+    Instance *t = runtime->thrd_info->jthread;
     //主线程实例被回收
-    jthread_dispose(t);
+    jthread_dispose(t, runtime);
 }
 
 void print_exception(Runtime *runtime) {
@@ -116,7 +114,7 @@ void classloader_destory(ClassLoader *class_loader) {
     hashtable_iterate(class_loader->classes, &hti);
     for (; hashtable_iter_has_more(&hti);) {
         HashtableValue v = hashtable_iter_next_value(&hti);
-        gc_refer_release(v);
+        gc_obj_release(class_loader->jvm->collector, v);
     }
 
     hashtable_clear(class_loader->classes);
@@ -141,7 +139,7 @@ void classloader_release_classs_static_field(ClassLoader *class_loader) {
     for (; hashtable_iter_has_more(&hti);) {
         HashtableValue v = hashtable_iter_next_value(&hti);
         JClass *clazz = (JClass *) (v);
-        class_clear_refer(clazz);
+        class_clear_refer(class_loader, clazz);
     }
 }
 
@@ -156,12 +154,12 @@ void classloader_add_jar_path(ClassLoader *class_loader, Utf8String *jarPath) {
     arraylist_push_back(class_loader->classpath, jarPath1);
 }
 
-void set_jvm_state(int state) {
-    jvm_state = state;
+void set_jvm_state(MiniJVM *jvm, int state) {
+    jvm->jvm_state = state;
 }
 
-int get_jvm_state() {
-    return jvm_state;
+int get_jvm_state(MiniJVM *jvm) {
+    return jvm->jvm_state;
 }
 
 void _on_jvm_sig_print(int no) {
@@ -173,7 +171,25 @@ void _on_jvm_sig(int no) {
     exit(no);
 }
 
-void jvm_init(c8 *p_bootclasspath, c8 *p_classpath, StaticLibRegFunc regFunc) {
+MiniJVM *jvm_create() {
+    MiniJVM *jvm = jvm_calloc(sizeof(MiniJVM));
+    if (!jvm) {
+        jvm_printf("jvm create error.");
+        return NULL;
+    }
+    jvm->env = &jnienv;
+    jvm->max_heap_size = MAX_HEAP_SIZE_DEFAULT;
+    jvm->heap_overload_percent = GARBAGE_OVERLOAD_DEFAULT;
+    jvm->garbage_collect_period_ms = GARBAGE_PERIOD_MS_DEFAULT;
+    return jvm;
+}
+
+s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
+    if (!jvm) {
+        jvm_printf("jvm not found.");
+        return -1;
+    }
+
     signal(SIGABRT, _on_jvm_sig);
     signal(SIGFPE, _on_jvm_sig);
     signal(SIGSEGV, _on_jvm_sig);
@@ -181,10 +197,8 @@ void jvm_init(c8 *p_bootclasspath, c8 *p_classpath, StaticLibRegFunc regFunc) {
 #ifdef SIGPIPE
     signal(SIGPIPE, _on_jvm_sig_print); //not exit when network sigpipe
 #endif
-    if (get_jvm_state() != JVM_STATUS_UNKNOW) {
-        return;
-    }
-    set_jvm_state(JVM_STATUS_INITING);
+
+    set_jvm_state(jvm, JVM_STATUS_INITING);
 
     if (!p_classpath) {
         p_bootclasspath = "./";
@@ -197,36 +211,34 @@ void jvm_init(c8 *p_bootclasspath, c8 *p_classpath, StaticLibRegFunc regFunc) {
     profile_init();
 #endif
     //
-    init_jni_func_table();
+    init_jni_func_table(jvm);
 
     //创建线程容器
-    thread_list = arraylist_create(0);
+    jvm->thread_list = arraylist_create(0);
     //创建垃圾收集器
-    garbage_collector_create();
-
-    memset(&jvm_runtime_cache, 0, sizeof(OptimizeCache));
+    gc_create(jvm);
 
     //本地方法库
-    native_libs = arraylist_create(0);
-    reg_std_native_lib();
-    reg_net_native_lib();
-    reg_jdwp_native_lib();
-    if (regFunc)regFunc(&jnienv);//register static lib
+    jvm->native_libs = arraylist_create(0);
+    reg_std_native_lib(jvm);
+    reg_net_native_lib(jvm);
+    reg_reflect_native_lib(jvm);
 
-    boot_classloader = classloader_create(p_bootclasspath);
+    jvm->boot_classloader = classloader_create(p_bootclasspath);
+    jvm->boot_classloader->jvm = jvm;
 
     //装入系统属性
-    sys_properties_load(boot_classloader);
-    sys_properties_set_c("java.class.path", p_classpath);
-    sys_properties_set_c("sun.boot.class.path", p_bootclasspath);
+    sys_properties_load(jvm);
+    sys_properties_set_c(jvm, "java.class.path", p_classpath);
+    sys_properties_set_c(jvm, "sun.boot.class.path", p_bootclasspath);
 
     //启动调试器
-    jdwp_start_server();
+    jdwp_start_server(jvm);
 
-    set_jvm_state(JVM_STATUS_RUNNING);
+    set_jvm_state(jvm, JVM_STATUS_RUNNING);
 
     //init load thread, string etc
-    Runtime *runtime = runtime_create(NULL);
+    Runtime *runtime = runtime_create(jvm);
     Utf8String *clsName = utf8_create_c(STR_CLASS_JAVA_LANG_INTEGER);
     classes_load_get(NULL, clsName, runtime);
     utf8_clear(clsName);
@@ -239,19 +251,20 @@ void jvm_init(c8 *p_bootclasspath, c8 *p_classpath, StaticLibRegFunc regFunc) {
     utf8_destory(clsName);
     runtime_destory(runtime);
     runtime = NULL;
+    return 0;
 }
 
-void jvm_destroy(StaticLibRegFunc unRegFunc) {
-    while (threadlist_count_none_daemon() > 0 && !collector->exit_flag) {//wait for other thread over ,
+void jvm_destroy(MiniJVM *jvm) {
+    while (threadlist_count_none_daemon(jvm) > 0 && !jvm->collector->exit_flag) {//wait for other thread over ,
         threadSleep(20);
     }
-    set_jvm_state(JVM_STATUS_STOPED);
+    set_jvm_state(jvm, JVM_STATUS_STOPED);
     //waiting for daemon thread terminate
     s32 i;
-    while (thread_list->length) {
-        thread_stop_all();
-        for (i = 0; i < thread_list->length; i++) {
-            Runtime *r = threadlist_get(i);
+    while (jvm->thread_list->length) {
+        thread_stop_all(jvm);
+        for (i = 0; i < jvm->thread_list->length; i++) {
+            Runtime *r = threadlist_get(jvm, i);
             if (r) {
                 if (!r->son) {//未在执行jvm指令
                     thread_unboundle(r);//
@@ -260,26 +273,29 @@ void jvm_destroy(StaticLibRegFunc unRegFunc) {
         }
         threadSleep(20);
     }
-    jdwp_stop_server();
-    //
-    garbage_collector_destory();
-    //
 
-    arraylist_destory(thread_list);
-    native_lib_destory();
-    sys_properties_dispose();
+    jdwp_stop_server(jvm);
+    //
+    gc_destory(jvm);
+    //
+    thread_lock_dispose(&jvm->threadlock);
+    arraylist_destory(jvm->thread_list);
+    native_lib_destory(jvm);
+    sys_properties_dispose(jvm);
     close_log();
 #if _JVM_DEBUG_LOG_LEVEL > 0
     jvm_printf("[INFO]jvm destoried\n");
 #endif
-    set_jvm_state(JVM_STATUS_UNKNOW);
+    set_jvm_state(jvm, JVM_STATUS_UNKNOW);
+    jvm_free(jvm);
 }
 
-s32 execute_jvm(c8 *p_bootclasspath, c8 *p_classpath, c8 *p_mainclass, ArrayList *java_para) {
-    jvm_init(p_bootclasspath, p_classpath, NULL);
-
-
-    Runtime *runtime = runtime_create(NULL);
+s32 call_main(MiniJVM *jvm, c8 *p_mainclass, ArrayList *java_para) {
+    if (!jvm) {
+        jvm_printf("jvm not found .\n");
+        return 1;
+    }
+    Runtime *runtime = runtime_create(jvm);
     thread_boundle(runtime);
 
     //准备参数
@@ -300,31 +316,36 @@ s32 execute_jvm(c8 *p_bootclasspath, c8 *p_classpath, c8 *p_mainclass, ArrayList
 
     c8 *p_methodname = "main";
     c8 *p_methodtype = "([Ljava/lang/String;)V";
-    s32 ret = call_method(p_mainclass, p_methodname, p_methodtype, runtime);
+    s32 ret = call_method(jvm, p_mainclass, p_methodname, p_methodtype, runtime);
 
     thread_unboundle(runtime);
     runtime_destory(runtime);
-
-    jvm_destroy(NULL);
     return ret;
 }
 
 
-s32 call_method(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, Runtime *p_runtime) {
-    if (!p_mainclass) {
+s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddesc, Runtime *p_runtime) {
+    if (!p_classname) {
         jvm_printf("No main class .\n");
-        return 1;
+        return RUNTIME_STATUS_ERROR;
+    }
+    if (p_runtime && p_runtime->jvm != jvm) {
+        return RUNTIME_STATUS_ERROR;
+    }
+    if (!jvm) {
+        jvm_printf("jvm not found .\n");
+        return RUNTIME_STATUS_ERROR;
     }
     //创建运行时栈
     Runtime *runtime = p_runtime;
     if (!p_runtime) {
-        runtime = runtime_create(NULL);
+        runtime = runtime_create(jvm);
         thread_boundle(runtime);
     }
 
     //开始装载类
 
-    Utf8String *str_mainClsName = utf8_create_c(p_mainclass);
+    Utf8String *str_mainClsName = utf8_create_c(p_classname);
     utf8_replace_c(str_mainClsName, ".", "/");
 
     //装入主类
@@ -334,7 +355,7 @@ s32 call_method(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, Runtime *p_
     s32 ret = 0;
     if (clazz) {
         Utf8String *methodName = utf8_create_c(p_methodname);
-        Utf8String *methodType = utf8_create_c(p_methodtype);
+        Utf8String *methodType = utf8_create_c(p_methoddesc);
 
         MethodInfo *m = find_methodInfo_by_name(str_mainClsName, methodName, methodType, runtime);
         if (m) {
@@ -345,18 +366,18 @@ s32 call_method(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, Runtime *p_
             jvm_printf("\n[INFO]main thread start\n");
 #endif
             //调用主方法
-            if (jdwp_enable) {
-                if (jdwp_suspend_on_start)jthread_suspend(runtime);
+            if (jvm->jdwp_enable) {
+                if (jvm->jdwp_suspend_on_start)jthread_suspend(runtime);
                 jvm_printf("[JDWP]waiting for jdwp(port:%s) debug client connected...\n", JDWP_TCP_PORT);
             }//jdwp 会启动调试器
             runtime->method = NULL;
             runtime->clazz = clazz;
             ret = execute_method(m, runtime);
-            if (ret != RUNTIME_STATUS_NORMAL && ret != RUNTIME_STATUS_INTERRUPT) {
+            if (ret == RUNTIME_STATUS_EXCEPTION) {
                 print_exception(runtime);
             }
 #if _JVM_DEBUG_LOG_LEVEL > 0
-            jvm_printf("[INFO]main thread over %llx , spent : %lld\n", (s64) (intptr_t) runtime->threadInfo->jthread, (currentTimeMillis() - start));
+            jvm_printf("[INFO]main thread over %llx , return %d , spent : %lld\n", (s64) (intptr_t) runtime->thrd_info->jthread, ret, (currentTimeMillis() - start));
 #endif
 
 #if _JVM_DEBUG_PROFILE
@@ -382,6 +403,9 @@ s32 call_method(c8 *p_mainclass, c8 *p_methodname, c8 *p_methodtype, Runtime *p_
 
 
 s32 execute_method(MethodInfo *method, Runtime *runtime) {
+    if (!runtime || !method) {
+        return RUNTIME_STATUS_ERROR;
+    }
     jthread_block_exit(runtime);
     s32 ret = execute_method_impl(method, runtime);
     jthread_block_enter(runtime);

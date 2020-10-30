@@ -8,25 +8,25 @@ package test;
 
 
 /**
- *
  * @author gust
  */
 public class JniTest {
 
     static {
         String s;
-//        s = System.setProperty("java.library.path", "../../jni_test/cmake-build-release/");
-//        System.out.println("java.library.path:"+s);
-        s=System.getProperty("java.library.path");
-        System.out.println("java.library.path:"+s);
+        s = System.getProperty("java.library.path");
+        System.out.println("java.library.path:" + s);
         System.loadLibrary("jnitest"); //加载 linux:libjnitest.so  ,win: libjnitest.dll ,mac libjnitest.dylib
     }
 
-    public static native int getValue(int old);
+    public static native int getValue(long time, int v, String s);
+
+    public static native void print(int v);
 
     public static void main(String[] args) {
         int a = 1;
-        a = getValue(a);
-        System.out.println(a);
+        long t = System.currentTimeMillis();
+        a = getValue(t, a, "JNI HELLO");
+        print(a);
     }
 }
