@@ -76,6 +76,7 @@ s32 jdwp_thread_listener(void *para) {
             jdwpserver->exit = 1;
             break;
         }
+        jvm_printf("[JDWP]accepetd client\n");
         mbedtls_net_set_nonblock(&client->sockfd);
         jdwp_put_client(jdwpserver->clients, client);
     }

@@ -162,11 +162,11 @@
     <ClCompile Include="..\..\minijvm\c\jvm\garbage.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\global.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\interpreter.c" />
-    <ClCompile Include="..\..\minijvm\c\jvm\java_native_io.c" />
-    <ClCompile Include="..\..\minijvm\c\jvm\java_native_reflect.c" />
-    <ClCompile Include="..\..\minijvm\c\jvm\java_native_std.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\jdwp.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\jit.c" />
+    <ClCompile Include="..\..\minijvm\c\jvm\jni_io.c" />
+    <ClCompile Include="..\..\minijvm\c\jvm\jni_reflect.c" />
+    <ClCompile Include="..\..\minijvm\c\jvm\jni_std.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\jvm.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\jvm_util.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\runtime.c" />
@@ -257,9 +257,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\minijvm\c\jvm\garbage.h" />
-    <ClInclude Include="..\..\minijvm\c\jvm\java_native_io.h" />
-    <ClInclude Include="..\..\minijvm\c\jvm\java_native_reflect.h" />
-    <ClInclude Include="..\..\minijvm\c\jvm\java_native_std.h" />
     <ClInclude Include="..\..\minijvm\c\jvm\jdwp.h" />
     <ClInclude Include="..\..\minijvm\c\jvm\jit.h" />
     <ClInclude Include="..\..\minijvm\c\jvm\jvm.h" />

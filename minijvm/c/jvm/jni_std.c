@@ -918,7 +918,7 @@ s32 java_lang_System_loadLibrary0(Runtime *runtime, JClass *clazz) {
                 jvm_printf(note2, onload);
             } else {
                 f = (jni_fun) fp;
-                f(&jnienv);
+                f(runtime->jvm);
             }
         }
 
