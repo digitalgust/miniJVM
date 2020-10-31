@@ -25,8 +25,11 @@ int call_jvm(char* app_path) {
     strcat(path,app_path);
     strcat(path,"/libex/minijvm_test.jar");
     printf("classpath: %s\n",path);
-    ArrayList * java_para=arraylist_create(0);
-    ret= execute_jvm(bootstrappath, path, "test/Foo3", java_para);
+    ArrayList * java_para = arraylist_create(0);
+    MiniJVM *jvm = jvm_create();
+    jvm_init(jvm, bootstrappath, path);
+    call_main(jvm, "test/Foo3", java_para);
+    jvm_destroy(jvm);
     arraylist_destory(java_para);
     return ret;
 }

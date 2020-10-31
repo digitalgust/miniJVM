@@ -25,6 +25,7 @@
   * Take photo from Camera or Album .  
   * Save and Load file from mobile storage .   
   * Api compatible with miniJVM desktop platform, can running on pc .  
+  * Compile all java source code to C source by [java2c](https://github.com/digitalgust/java2c) .  
 
 ## Demo
 
