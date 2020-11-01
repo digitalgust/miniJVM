@@ -7,35 +7,34 @@
   
 ## Features:  
 
-  * Jvm Build pass: iOS / Android / mingww64 32-64bit / cygwin / MSVC 32-64bit / MacOS /  Linux  .   
+  * Jvm Build pass: iOS / Android / mingww64 32|64bit / cygwin / MSVC 32|64bit / MacOS /  Linux  .   
   * No dependence Library .  
   * Minimal memory footprint .  
   * Minimal binary, embedded jvm.  
-  * Minimal runtime classlib .   
-  * Support java5-8 class file .
+  * Minimal bootstrap classlib .   
   * Support embedded java source compiler(janino compiler) .  
   * Jit supported .    
-  * Java garbage collection, Low latency .   
+  *  Low latency  java garbage collection .   
   * Java remote debug supported, JDWP Spec .  
   
 ## iOS/Android Platform Extended Features:  
   * OpenGL ES 2.0 / 3.0 .  
-  * Swing like gui , XML gui layout, Auto layout on horizontal and vertical screen switch.    
+  * Swing like gui lib, XML gui html like layout.    
   * Audio Playback and Capture .  
   * Take photo from Camera or Album .  
   * Save and Load file from mobile storage .   
-  * Api compatible with miniJVM desktop platform, can running on pc .  
-  * Compile all java source code to C source by [java2c](https://github.com/digitalgust/java2c) .  
+  * Api compatible with miniJVM desktop platform,  app can running on desktop platform .  
+  * Compile minijvm java source code to C boost performance.  Source on [java2c](https://github.com/digitalgust/java2c) .  
 
 ## Demo
 
   <div align=center><img width="224" height="398" src="/screenshot/demo.gif"/><img width="224" height="398" src="/screenshot/g3d.gif"/></div>
 
-  * Instant Message app  Demo , source at :https://github.com/digitalgust/BiBiX     
+  * Instant Message app  Demo , source on :https://github.com/digitalgust/BiBiX     
   * BiBiX binary can be download from : http://bb.egls.cn:8080/down/BiBiX.jar     
-  * 3D game app Demo, source at :https://github.com/digitalgust/g3d     
+  * 3D game app Demo, source on :https://github.com/digitalgust/g3d     
   * G3D binary can be download from : http://bb.egls.cn:8080/down/g3d.jar     
-  * Mobile platform : First install AppManager from iOS for binary/ios/MiniPack.ipa , Android for /binary/android/MiniPack.apk ,then download demo in AppManager and run the app.     
+  * Mobile platform : First build and install AppManager for iOS /mobile/iosapp , Or build and install for Android /mobile/androidapp ,then download demo in AppManager and run these app.     
   * Desktop computer: /binary/win_64  , /binary/macos , /binary/win32 , /binary/centos_x64   run test.sh 
 
 
@@ -45,6 +44,7 @@
 
 
 ## Changelog:
+   2020.10.  Refactor source and remove binary in repository.   
    2020.10.  Https supported.   
    2020.03.  Add xml layout for gui system, add 3D game demo for minijvm, fix jdwp debug for jetbrain idea.               
    2019.12.  Bind cross platform awtk ui system , see [awtk-minijvm](https://github.com/digitalgust/miniJVM/tree/master/desktop/awtk_gui)   
@@ -56,7 +56,7 @@
 
 ## How to develop iOS/Android app in java:   
    Write java code once , running on all of iOS / Android / MacOSX / Win / Linux platforms.   
-   * Can develop app by Eclipse, Netbeans or Intelli Idea , or any IDE .   
+   * Develop app by Eclipse, Netbeans or Intelli Idea , or any IDE .   
    * Build maven projects /minijvm/java and /mobile/java/glfm_gui, it world copy generated jar to  **/mobile/assets/resfiles/minijvm_rt.jar** and **/mobile/assets/resfiles/glfm_gui.jar**     
    * Open maven project ExApp in IDE ,or create new project same as ExApp   
    * Write your code like example **/mobile/java/ExApp/src/main/java/test/MyApp.java**    
@@ -69,11 +69,18 @@
     <div align=center><img width="672" height="398"   src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/appmgr.png"/></div>   
   
   
+  ## Build for desktop platform:     
+ * Build java bootclass  **/minijvm/java**  , Maven build jar copy to /binary/lib/minijvm_rt.jar    
+ * Build gui class **/desktop/glfw_gui/java** , Maven build jar copy to /binary/libex/glfw_gui.jar     
+ * Build console test case class **/test/minijvm_test** , Maven build jar copy to /binary/libex/minijvm_test.jar     
+ * Build gui test app class **/test/minijvm_test** , Maven build jar copy to /binary/<platform>/apps/ExApp.jar    
+ * Build gui jni dynamic library **/desktop/glfw_gui/c** , Cmake build library copy to /binary/<platform>/libgui.<so | dylib | dll>    
+ * Run test script /binary/<platform>/test.<sh | bat>    
+ 
+   
 ## How to Remote debug:  
-  Prepare:
-  Rebuild /minijvm/c ,change  /minijvm/c/jvm/jvm.h "#define JDWP_DEBUG 0" as "#define JDWP_DEBUG 1"
-  Desktop Computer : Run mini_jvm with flag: -Xdebug for debug mode .  
-  iOS/Android simulator : nothing to do .  
+  Desktop platform : Run mini_jvm with flag: -Xdebug for debug mode .  
+  iOS/Android simulator : change /mobile/c/glfmapp/main.c , set **jvm->jdp_enable = 1** after **jvm_create()** .  
   iOS/Android device : check the device ip address from General Setting -> wifi ->(i).  
   mini_jvm jdwp listen port is 8000.   
    * Intelli idea : open the java project , menu Run .> Edit Configurations , + remote , Transport : socket , Debugger mode : attach , host is your mini_jvm running at host ip and port ,ex. "localhost:8000" .  
@@ -103,7 +110,7 @@ String s=(String)list.get(0);//can't ignore (String) cast qualifier.
    
 
 
-## Referenced project and technology:   
+## Related project and technology:   
    [Sun CLDC](http://www.oracle.com/technetwork/java/cldc-141990.html)  :referenced cldc    
    [Miniz](https://github.com/richgel999/miniz) :for read jar files    
    [Glfm](https://github.com/brackeen/glfm) :for cross platform (android/ios) GUI   
@@ -118,24 +125,26 @@ String s=(String)list.get(0);//can't ignore (String) cast qualifier.
    [MiniAudio](https://github.com/dr-soft/miniaudio)  :for java audio playback and capture   
    [Sljit](https://github.com/zherczeg/sljit)  :Platform independent low-level JIT compiler   
    [Awtk-minijvm](https://github.com/zlgopen/awtk-minijvm)  :[AWTK](https://github.com/zlgopen/awtk) cross platform ui bind to minijvm   
-   [mbedtls](https://github.com/ARMmbed/mbedtls)  :Https support by mbedtls
+   [Mbedtls](https://github.com/ARMmbed/mbedtls)  :Https support by mbedtls
+   [Avian](https://github.com/ReadyTalk/avian)  :Some of class files   
+   
 
 ## Development IDE using:  
   C code:   JetBrains CLion ,Xcode ,Virtual studio .  
-  Swift code/Object c:    XCode , LLVM  .  
-  Java code:    Netbeans  ,jdk  .  
-  android project:  Android Studio , Android SDK 
+  Swift code/Object c:    XCode  .  
+  Java code:    Jetbrain Idea, Netbeans  ,jdk  .  
+  android project:  Android Studio .
 
  
-## Build GUI application, depend on openGL or openGLES     
+## Build GUI application, depend on OpenGL or OpenGLES     
    * iOS/Android system build with GLFM  (/mobile/iosapp/  ,  /mobile/androidapp/)       
    * Window system build with GLFW   (/desktop/glfw_gui/)      
    * GUI build with Nanovg          
-
+   * GUI based on OpenGL 3.3 and OpenGLES 3.0 as default
   
 ## Example of mobile application
 
-the example demonstrate how develop java app for iOS and Android 
+The example demonstrate how develop java app for iOS and Android 
 UI layout xml file MyForm.xml
 
 ```
@@ -271,10 +280,10 @@ public class MyApp extends GApplication {
 
 ## Directories: 
 > /   
->> binary/-------- minijvm binary (win32/win64/mac/linux/android/ios)  
+>> binary/-------- minijvm binary  for build(win32/win64/mac/linux/android/ios)  
 >> minijvm/    
->>> c/------------ minijvm c source   
->>> java/--------- minijvm runtime library    
+>>> c/------------ minijvm c source    
+>>> java/--------- minijvm runtime library     
 >>
 >> desktop/   
 >>> glfw_gui/------ desktop computer gui/audio native module   
@@ -288,21 +297,16 @@ public class MyApp extends GApplication {
 >>> assets/resfiles/- mobile app resource, font files, jar files ,pic ,audio etc.  
 >>
 >> test/   
->>> jvm_ios/------ ios swift test project .      
->>> jvm_macos/---- macosX test project.      
->>> jvm_vs/------- windows virtual studio test project.      
 >>> jni_test/------ jni example    
->>> javalib_test/-- test case of **/minijvm/java** .   
+>>> jvm_ios/------ ios swift test project       
+>>> jvm_macos/---- macosX test project      
+>>> jvm_vs/------- windows virtual studio test project      
+>>> minijvm_test/-- test case of **/minijvm/java**      
   
- * **/minijvm/c** is an independent small and fast jvm interpreter, it run on Win/Mac/Linux/iOS/Android.     
- * **/minijvm/java** is the jvm foundation runtime library, ex *java.lang* , *java.util* ,and extended classes *org.mini* for file,reflect and network etc, this project generate minijvm_rt.jar .   
- * **/mobile/iosapp** **/mobile/androidapp** are iOS/Android launcher program, it include minijvm source and native function, java call gui library with jni.       
- * **/mobile/java/glfm_gui** is a gui library ,it dependent on native gui library ,that include openGLES glad, glfm, nanovg, stb lib etc , this project generate glfm_gui.jar .     
- * **/mobile/java/ExApp** is an example of mobile app, it run on iOS and Android platform.  
      
   
 ## License
 License:	MIT
 
 
-Gust , zhangpeng@egls.cn , work in EGLS ltd. EGLS is a game development and distribution company in China .
+Gust , digitalgust@163.com , works at EGLS ltd. EGLS is a game development and distribution company .
