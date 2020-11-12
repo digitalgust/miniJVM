@@ -900,7 +900,7 @@ s32 java_lang_System_loadLibrary0(Runtime *runtime, JClass *clazz) {
         if (val) {
             utf8_append(libname, val);
         }
-        const c8 *note1 = "lib not found:%s, %s\n";
+        const c8 *note1 = "lib not found:%s\n";
         const c8 *note2 = "register function not found:%s\n";
         const c8 *onload = "JNI_OnLoad";
         jni_fun f;

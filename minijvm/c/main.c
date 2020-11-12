@@ -71,10 +71,10 @@ int main(int argc, char **argv) {
         jdwp = 0;
 
         //test for graphics
-        classpath = "../../binary/libex/glfw_gui.jar;./";
+//        classpath = "../../binary/libex/glfw_gui.jar;./";
 //        main_name = "test.Gears";
 //        main_name = "test.TestGL";
-        main_name = "test.AppManagerTest";
+//        main_name = "test.AppManagerTest";
 //        main_name = "test.RenderTexure";
 //        main_name = "test.Alpha";
 //        main_name = "test.Light";
@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
 
 
 
-//        classpath = "../../binary/libex/minijvm_test.jar;./";
+        classpath = "../../binary/libex/minijvm_test.jar;./";
 //        main_name = "test.HelloWorld";
 //        main_name = "test.Foo1";
 //        main_name = "test.Foo2";
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
 //        main_name = "test.MultiThread";
 //        main_name = "test.ExecuteSpeed";
 //        main_name = "test.TestFile";
-//        main_name = "test.HttpServer";
+        main_name = "test.HttpServer";
 //        main_name = "test.BpDeepTest";
 //        main_name = "test.ReflectTest";
 //        main_name = "test.LambdaTest";
@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
         arraylist_destory(java_para);
         jvm_destroy(jvm);
     }
-//    getchar();
+    //getchar();
     return ret;
 }
 
