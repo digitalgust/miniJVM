@@ -210,7 +210,7 @@ void set_jvm_state(MiniJVM *jvm, int state) {
     jvm->jvm_state = state;
 }
 
-int get_jvm_state(MiniJVM *jvm) {
+s32 get_jvm_state(MiniJVM *jvm) {
     return jvm->jvm_state;
 }
 
@@ -298,7 +298,11 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     //init load thread, string etc
     Runtime *runtime = runtime_create(jvm);
     Utf8String *clsName = utf8_create_c(STR_CLASS_JAVA_LANG_INTEGER);
-    classes_load_get(NULL, clsName, runtime);
+    JClass *c = classes_load_get(NULL, clsName, runtime);
+    if (!c) {
+        jvm_printf("[ERROR]maybe bootstrap classpath misstake: %s \n", p_bootclasspath);
+        return -1;
+    }
     utf8_clear(clsName);
     utf8_append_c(clsName, STR_CLASS_JAVA_LANG_THREAD);
     classes_load_get(NULL, clsName, runtime);
@@ -309,6 +313,9 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     utf8_destory(clsName);
     runtime_destory(runtime);
     runtime = NULL;
+#if _JVM_DEBUG_LOG_LEVEL > 0
+    jvm_printf("[INFO]jvm inited\n");
+#endif
     return 0;
 }
 
@@ -385,15 +392,12 @@ s32 call_main(MiniJVM *jvm, c8 *p_mainclass, ArrayList *java_para) {
 
 
 s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddesc, Runtime *p_runtime) {
-    if (!p_classname) {
-        jvm_printf("No main class .\n");
-        return RUNTIME_STATUS_ERROR;
-    }
     if (p_runtime && p_runtime->jvm != jvm) {
+        jvm_printf("[ERROR]runtime not adapted to jvm .\n");
         return RUNTIME_STATUS_ERROR;
     }
     if (!jvm) {
-        jvm_printf("jvm not found .\n");
+        jvm_printf("[ERROR]jvm not found .\n");
         return RUNTIME_STATUS_ERROR;
     }
     //创建运行时栈
@@ -418,6 +422,7 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
     }
     //装入主类
     JClass *clazz = classes_load_get(jloader, str_mainClsName, runtime);
+
 
     ret = 0;
     if (clazz) {
@@ -455,16 +460,15 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
         }
         utf8_destory(methodName);
         utf8_destory(methodType);
+    } else {
+        jvm_printf("[ERROR]main class not found: %s\n", p_classname);
+        ret = RUNTIME_STATUS_ERROR;
     }
     if (!p_runtime) {
         thread_unboundle(runtime);
         runtime_destory(runtime);
     }
-
-
     utf8_destory(str_mainClsName);
-    //
-
     return ret;
 }
 

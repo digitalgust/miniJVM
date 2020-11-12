@@ -116,16 +116,20 @@ int main(int argc, char **argv) {
 
     }
     MiniJVM *jvm = jvm_create();
-    jvm->jdwp_enable = jdwp;
-    jvm->jdwp_suspend_on_start = 0;
-    jvm->max_heap_size = maxheap;//25*1024*1024;//
+    if(jvm!=NULL) {
+        jvm->jdwp_enable = jdwp;
+        jvm->jdwp_suspend_on_start = 0;
+        jvm->max_heap_size = maxheap;//25*1024*1024;//
 
-    jvm_init(jvm, bootclasspath, classpath);
-
-    ret = call_main(jvm, main_name, java_para);
-    arraylist_destory(java_para);
-    jvm_destroy(jvm);
-
+        ret = jvm_init(jvm, bootclasspath, classpath);
+        if(ret){
+            jvm_printf("[ERROR]minijvm init error.\n");
+        }else {
+            ret = call_main(jvm, main_name, java_para);
+        }
+        arraylist_destory(java_para);
+        jvm_destroy(jvm);
+    }
 //    getchar();
     return ret;
 }
