@@ -7,13 +7,13 @@
   
 ## Features:  
 
-  * Jvm Build pass: iOS / Android / mingww64 32|64bit / cygwin / MSVC 32|64bit / MacOS /  Linux  .   
+  * Jvm Build pass: iOS / Android / mingw-w64 32|64bit / cygwin / MSVC 32|64bit / MacOS /  Linux  .   
   * No dependence Library .  
   * Minimal memory footprint .  
   * Minimal binary, embedded jvm.  
   * Minimal bootstrap classlib .   
   * Support embedded java source compiler(janino compiler) .  
-  * Jit supported .    
+  * Jit support .    
   *  Low latency  java garbage collection .   
   * Java remote debug supported, JDWP Spec .  
   
@@ -54,27 +54,24 @@
    2017.09.  miniJVM start   
 
 
-## How to develop iOS/Android app in java:   
+## Build for iOS/Android:   
    Write java code once , running on all of iOS / Android / MacOSX / Win / Linux platforms.   
-   * Develop app by Eclipse, Netbeans or Intelli Idea , or any IDE .   
-   * Build maven projects /minijvm/java and /mobile/java/glfm_gui, it world copy generated jar to  **/mobile/assets/resfiles/minijvm_rt.jar** and **/mobile/assets/resfiles/glfm_gui.jar**     
-   * Open maven project ExApp in IDE ,or create new project same as ExApp   
-   * Write your code like example **/mobile/java/ExApp/src/main/java/test/MyApp.java**    
-   * Add your resource to **/mobile/java/ExApp/src/main/resource/res/** , such as audio or image etc.     
-   * Configure **/mobile/java/ExApp/src/main/config.txt** for icon ,version, boot class, etc .     
-   * Build ExApp project , it would copy ExApp.jar to **/mobile/assets/resfiles/ExApp.jar**   
-   * Install **/binary/ios/MiniPack.ipa** for iPhone device , (Enterprise distrbute version, need Verify app, Setting->General->Device Management->EGLS Technology ltd->Verify App), or **/binary/android/MiniPack.apk** for Android device , These two binary built from **/mobile/iosapp/**  and **/mobile/java/androidapp**, you can build it yourself.    
-   * Touch the app icon to open MiniPack app, you would see the ExApp is running (the left of picture).   
-     You can touch "exit to AppManager" in ExApp, AppManager is a App maintaince tool (the middle and right of picture), It can start a in-app webserver for upload app, it can download app from a website also .   
+   * Develop app by Eclipse, Netbeans or Intelli Idea  .   
+   * Build maven projects /minijvm/java copy to  **/mobile/assets/resfiles/minijvm_rt.jar**      
+   * Build maven projects /mobile/java/glfm_gui, copy to  **/mobile/assets/resfiles/glfm_gui.jar**       
+   * Build maven projects /mobile/java/ExApp, copy to  **/mobile/assets/resfiles/ExApp.jar**  , Maybe you can change   **/mobile/java/ExApp/src/main/java/test/MyApp.java**    , Add your resource to **/mobile/java/ExApp/src/main/resource/res/** , such as audio or image etc,  Configure **/mobile/java/ExApp/src/main/config.txt** for icon ,version, boot class, etc .     
+   * XCode open **/mobile/iosapp** build and install app to Device ,(Require verify app, Setting->General->Device Management->EGLS Technology ltd->Verify App)      
+   * Android Studio open **/mobile/androidapp**  build and install app to Android device     
+   * AppManager is running, It can start a in-app webserver for upload app, and download app from a website too .   
     <div align=center><img width="672" height="398"   src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/appmgr.png"/></div>   
   
   
   ## Build for desktop platform:     
- * Build java bootclass  **/minijvm/java**  , Maven build jar copy to /binary/lib/minijvm_rt.jar    
- * Build gui class **/desktop/glfw_gui/java** , Maven build jar copy to /binary/libex/glfw_gui.jar     
- * Build console test case class **/test/minijvm_test** , Maven build jar copy to /binary/libex/minijvm_test.jar     
- * Build gui test app class **/test/minijvm_test** , Maven build jar copy to /binary/<platform>/apps/ExApp.jar    
- * Build gui jni dynamic library **/desktop/glfw_gui/c** , Cmake build library copy to /binary/<platform>/libgui.<so | dylib | dll>    
+ * Build java bootstrap classes  **/minijvm/java**  , Maven build jar and copy to /binary/lib/minijvm_rt.jar    
+ * Build gui classes **/desktop/glfw_gui/java** , Maven build jar and copy to /binary/libex/glfw_gui.jar     
+ * Build console test case classes **/test/minijvm_test** , Maven build jar and copy to /binary/libex/minijvm_test.jar     
+ * Build gui test app classes **/mobile/java/ExApp** , Maven built jar and copy to /binary/<platform>/apps/ExApp.jar    
+ * Build gui jni dynamic library **/desktop/glfw_gui/c** , Cmake build library and copy to /binary/<platform>/libgui.<so | dylib | dll>    
  * Run test script /binary/<platform>/test.<sh | bat>    
  
    
@@ -91,14 +88,14 @@
 
 
 ## How to use Embed java compiler in mini_jvm:  
-   Java Compiler : /binary/libex/janino.jar    
-   Usage of compiler can be found in /binary folder   
-   the compile command :  
+   The third compiler [Janino](http://janino-compiler.github.io/janino/)     
+   Download and build it to  /binary/libex/janino.jar  and   /binary/libex/commons-compiler.jar    
+   Type compile command :  
 ```
-win:
-mini_jvm -cp ../lib/minijvm_rt.jar;../libex/janino.jar;../libex/commons-compiler.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
-posix:
-./mini_jvm -cp ../lib/minijvm_rt.jar:../libex/janino.jar:../libex/commons-compiler.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
+#win:
+mini_jvm -bootclasspath ../lib/minijvm_rt.jar  -cp ../libex/janino.jar;../libex/commons-compiler.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
+#posix:
+./mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/janino.jar:../libex/commons-compiler.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
 ```
 
 Janino compiler is not the full java compiler, see [limitation](http://janino-compiler.github.io/janino/#limitations) , like :
@@ -110,11 +107,12 @@ String s=(String)list.get(0);//can't ignore (String) cast qualifier.
    
 
 
-## Related project and technology:   
-   [Sun CLDC](http://www.oracle.com/technetwork/java/cldc-141990.html)  :referenced cldc    
+## Referenced project and technology:   
+   [Oracle CLDC](http://www.oracle.com/technetwork/java/cldc-141990.html)  :referenced cldc  api     
+   [OpenJDK](https://openjdk.java.net/) : referenced java api    
    [Miniz](https://github.com/richgel999/miniz) :for read jar files    
-   [Glfm](https://github.com/brackeen/glfm) :for cross platform (android/ios) GUI   
-   [Nanovg](https://github.com/memononen/nanovg)  :for GUI paint function   
+   [Glfm](https://github.com/brackeen/glfm) :for cross platform (android/ios) GUI     
+   [Nanovg](https://github.com/memononen/nanovg)  :for GUI paint function     
    [Stb](https://github.com/nothings/stb) :for GUI truetype font and image    
    [Glad](https://github.com/Dav1dde/glad)  :for replace openGL/GLES head file   
    [Glfw](https://github.com/glfw/glfw)  :for pc cross platform GUI   
@@ -126,21 +124,21 @@ String s=(String)list.get(0);//can't ignore (String) cast qualifier.
    [Sljit](https://github.com/zherczeg/sljit)  :Platform independent low-level JIT compiler   
    [Awtk-minijvm](https://github.com/zlgopen/awtk-minijvm)  :[AWTK](https://github.com/zlgopen/awtk) cross platform ui bind to minijvm   
    [Mbedtls](https://github.com/ARMmbed/mbedtls)  :Https support by mbedtls
-   [Avian](https://github.com/ReadyTalk/avian)  :Some of class files   
+   [Avian](https://github.com/ReadyTalk/avian)  :referenced java api    
    
 
-## Development IDE using:  
-  C code:   JetBrains CLion ,Xcode ,Virtual studio .  
-  Swift code/Object c:    XCode  .  
-  Java code:    Jetbrain Idea, Netbeans  ,jdk  .  
-  android project:  Android Studio .
+## Development IDE usage:  
+  C / ObjC:   JetBrains CLion ,Xcode ,Virtual studio .  
+  Swift :    XCode  .  
+  Java :    Jetbrain Idea, Netbeans  ,jdk  .  
+  Android :  Android Studio .
 
  
 ## Build GUI application, depend on OpenGL or OpenGLES     
    * iOS/Android system build with GLFM  (/mobile/iosapp/  ,  /mobile/androidapp/)       
    * Window system build with GLFW   (/desktop/glfw_gui/)      
    * GUI build with Nanovg          
-   * GUI based on OpenGL 3.3 and OpenGLES 3.0 as default
+   * Based on OpenGL 3.3 and OpenGLES 3.0 as default
   
 ## Example of mobile application
 
@@ -156,7 +154,7 @@ UI layout xml file MyForm.xml
             green=mod(random(),255)
             blue=mod(random(),255)
             setColor("LAB_HELP",red,green,blue,255)
-            setText("LAB_HELP","Any a test")
+            setText("LAB_HELP","Only a test")
         ret
         ]]>
     </script>
