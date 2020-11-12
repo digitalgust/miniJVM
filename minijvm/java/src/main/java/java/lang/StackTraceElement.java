@@ -14,7 +14,7 @@ import java.util.logging.Logger;
  */
 public class StackTraceElement {
 
-    private String declaringClass;
+    private Class declaringClass;
     private String methodName;
     private String fileName;
     private int lineNumber;
@@ -24,12 +24,12 @@ public class StackTraceElement {
     /**
      * @return the declaringClass
      */
-    public String getDeclaringClass() {
+    Class getDeclaringClass() {
         return declaringClass;
     }
 
     public String getClassName() {
-        return declaringClass;
+        return declaringClass.getName();
     }
 
     /**

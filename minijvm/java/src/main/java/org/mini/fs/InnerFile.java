@@ -5,6 +5,9 @@
  */
 package org.mini.fs;
 
+import org.mini.net.SocketNative;
+import org.mini.reflect.vm.RefNative;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -83,7 +86,7 @@ public class InnerFile {
     public InnerFile(String path) {
         this.path = path;
         fd = new InnerFileStat();
-        int ret = loadFS(InnerFile.getPathBytesForNative(path), fd);
+        int ret = loadFS(SocketNative.toCStyle(path), fd);
     }
 
     protected InnerFile() {
@@ -106,7 +109,7 @@ public class InnerFile {
     }
 
     public String[] list() {
-        return listDir(InnerFile.getPathBytesForNative(path));
+        return listDir(SocketNative.toCStyle(path));
     }
 
     public OutputStream getOutputStream(boolean append) throws IOException {
@@ -114,7 +117,7 @@ public class InnerFile {
             closeFile(filePointer);
             filePointer = 0;
         }
-        filePointer = openFile(InnerFile.getPathBytesForNative(path), append ? InnerFile.getPathBytesForNative("a+b") : InnerFile.getPathBytesForNative("w+b"));;
+        filePointer = openFile(SocketNative.toCStyle(path), append ? SocketNative.toCStyle("a+b") : SocketNative.toCStyle("w+b"));;
         if (filePointer == 0) {
             throw new IOException("open file error:" + path);
         }
@@ -126,7 +129,7 @@ public class InnerFile {
             closeFile(filePointer);
             filePointer = 0;
         }
-        filePointer = openFile(InnerFile.getPathBytesForNative(path), InnerFile.getPathBytesForNative("rb"));
+        filePointer = openFile(SocketNative.toCStyle(path), SocketNative.toCStyle("rb"));
         if (filePointer == 0) {
             throw new IOException("open file error:" + path);
         }
@@ -229,25 +232,6 @@ public class InnerFile {
         filePointer = fd;
     }
 
-    /**
-     * 在字节数组后加一个0 ，C string中的结束符
-     *
-     * @param path
-     * @return
-     */
-    static public byte[] getPathBytesForNative(String path) {
-        byte[] bp = null;
-        try {
-            bp = path.getBytes("utf-8");
-        } catch (UnsupportedEncodingException ex) {
-        }
-        if (bp == null) {
-            bp = path.getBytes();
-        }
-        byte[] result = new byte[bp.length + 1];
-        System.arraycopy(bp, 0, result, 0, bp.length);
-        return result;
-    }
 
     public static native int getOS();
 

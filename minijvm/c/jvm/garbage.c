@@ -113,17 +113,12 @@ void _garbage_clear(GcCollector *collector) {
     jvm_printf("[INFO]garbage clear start\n");
     jvm_printf("[INFO]objs size :%lld\n", collector->obj_count);
 #endif
+    MiniJVM *jvm = collector->jvm;
+
     //解除所有引用关系后，回收全部对象
     while (_garbage_collect(collector));//collect instance
 
-    ClassLoader *boot_classloader = collector->jvm->boot_classloader;
-    //release class static field
-    classloader_release_classs_static_field(boot_classloader);
-    while (_garbage_collect(collector->jvm->collector));//collect classes
-
-    //release classes
-    classloader_destory(boot_classloader);
-    collector->jvm->boot_classloader = NULL;
+    classloaders_destroy_all(jvm);
     while (_garbage_collect(collector));//collect classes
 
     //
@@ -358,7 +353,7 @@ s64 _garbage_collect(GcCollector *collector) {
                         GCFLAG_FINALIZED_SET(curmb->gcflag);
                     }
                 }
-                if (GCFLAG_REFERENCE_GET(curmb->gcflag)) {
+                if (GCFLAG_REFERENCE_GET(curmb->gcflag)) {//is weakreference
                     instance_of_reference_enqueue((Instance *) curmb, collector->runtime);
                 }
             }
@@ -582,6 +577,7 @@ static inline void _gc_instance_mark(Instance *ins, u8 flag_cnt) {
                 if (ref)_gc_mark_object(ref, flag_cnt);
             }
         }
+        _gc_mark_object(clazz->ins_class, flag_cnt);//keep class and classloader alive
         clazz = getSuperClass(clazz);
     }
 }
@@ -650,28 +646,33 @@ void _gc_mark_object(__refer ref, u8 flag_cnt) {
 }
 //=================================  reg unreg ==================================
 
+s32 _gc_is_alive_in_link(MemoryBlock *header, MemoryBlock *target) {
+    MemoryBlock *mb = header;
+    while (mb) {
+        if (mb == target) {
+            return 1;
+        }
+        mb = mb->next;
+    }
+    return 0;
+}
+
 MemoryBlock *gc_is_alive(GcCollector *collector, __refer ref) {
     __refer result = hashset_get(collector->objs_holder, ref);
+    if (result)return ref;
+
     MiniJVM *jvm = collector->jvm;
     spin_lock(&collector->lock);
     if (!result) {
         MemoryBlock *mb = collector->header;
-        while (mb) {
-            if (mb == ref) {
-                result = mb;
-                break;
-            }
-            mb = mb->next;
+        if (_gc_is_alive_in_link(mb, ref)) {
+            result = ref; //don't return ,there is a lock need unlock
         }
     }
     if (!result) {
         MemoryBlock *mb = jvm->collector->tmp_header;
-        while (mb) {
-            if (mb == ref) {
-                result = mb;
-                break;
-            }
-            mb = mb->next;
+        if (_gc_is_alive_in_link(mb, ref)) {
+            result = ref;//don't return ,there is a lock need unlock
         }
     }
     if (!result) {
@@ -679,12 +680,8 @@ MemoryBlock *gc_is_alive(GcCollector *collector, __refer ref) {
         for (i = 0; i < jvm->thread_list->length; i++) {
             Runtime *runtime = threadlist_get(jvm, i);
             MemoryBlock *mb = runtime->thrd_info->objs_header;
-            while (mb) {
-                if (mb == ref) {
-                    result = mb;
-                    break;
-                }
-                mb = mb->next;
+            if (_gc_is_alive_in_link(mb, ref)) {
+                result = ref;//don't return ,there is a lock need unlock
             }
         }
     }
@@ -693,12 +690,8 @@ MemoryBlock *gc_is_alive(GcCollector *collector, __refer ref) {
             Runtime *runtime = jdwp_get_runtime(jvm->jdwpserver);
             if (runtime) {
                 MemoryBlock *mb = runtime->thrd_info->objs_header;
-                while (mb) {
-                    if (mb == ref) {
-                        result = mb;
-                        break;
-                    }
-                    mb = mb->next;
+                if (_gc_is_alive_in_link(mb, ref)) {
+                    result = ref;//don't return ,there is a lock need unlock
                 }
             }
         }
@@ -744,6 +737,8 @@ void gc_obj_reg(Runtime *runtime, __refer ref) {
         jvm_printf("R: %s[%llx]\n", utf8_cstr(sus), (s64) (intptr_t) mb);
         utf8_destory(sus);
 #endif
+    } else {
+        s32 debug = 1;
     }
 }
 

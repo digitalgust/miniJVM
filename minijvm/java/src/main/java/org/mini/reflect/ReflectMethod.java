@@ -18,7 +18,7 @@ import java.util.List;
  */
 public class ReflectMethod {
 
-    ReflectClass refClass;
+    Class clazzObj;
 
     //不可随意改动字段类型及名字，要和native一起改
     public long methodId;
@@ -38,18 +38,18 @@ public class ReflectMethod {
     private Class<?>[] paras_class;
     private Type[] paras_type;
 
-    public ReflectMethod(ReflectClass c, long mid) {
+    public ReflectMethod(Class c, long mid) {
         if (mid == 0) {
             throw new IllegalArgumentException();
         }
-        refClass = c;
+        clazzObj = c;
         //System.out.println("mid:" + mid);
         this.methodId = mid;
         mapMethod(methodId);
         paras = ReflectClass.splitSignature(
                 descriptor.substring(descriptor.indexOf("(") + 1, descriptor.indexOf(")"))
         ).toArray(new String[0]);
-        paras_class = getMethodPara(descriptor);
+        paras_class = getMethodPara(clazzObj.getClassLoader(), descriptor);
         paras_type = getMethodParaType(signature != null ? signature : descriptor);
     }
 
@@ -146,14 +146,14 @@ public class ReflectMethod {
         }
     }
 
-    public static Class<?>[] getMethodPara(String descriptor) {
+    public static Class<?>[] getMethodPara(ClassLoader loader, String descriptor) {
         List<String> paras = ReflectClass.splitSignature(
                 descriptor.substring(descriptor.indexOf("(") + 1, descriptor.indexOf(")"))
         );
         Class<?>[] paras_class;
         paras_class = new Class[paras.size()];
         for (int i = 0; i < paras.size(); i++) {
-            paras_class[i] = ReflectClass.getClassByDescriptor(paras.get(i));
+            paras_class[i] = ReflectClass.getClassByDescriptor(loader, paras.get(i));
         }
         return paras_class;
     }
@@ -183,15 +183,15 @@ public class ReflectMethod {
     }
 
     public Class<?> getReturnType() {
-        return getMethodReturnType(descriptor);
+        return getMethodReturnType(clazzObj.getClassLoader(), descriptor);
     }
 
-    static public Class<?> getMethodReturnType(String descriptor) {
+    static public Class<?> getMethodReturnType(ClassLoader loader, String descriptor) {
         String s = descriptor.substring(descriptor.indexOf(')') + 1);
         if (s.equals("V")) {
             return Void.TYPE;
         }
-        return ReflectClass.getClassByDescriptor(s);
+        return ReflectClass.getClassByDescriptor(loader, s);
     }
 
     public Type getGenericReturnType() {
@@ -209,12 +209,17 @@ public class ReflectMethod {
         return signature != null;
     }
 
-    static public ReflectMethod findMethod(String className, String methodName, String methodSignature) {
-        long mid = findMethod0(className, methodName, methodSignature);
-        if (mid != 0) {
-            ReflectMethod rm = new ReflectMethod(null, mid);
-            return rm;
+    static public ReflectMethod findMethod(ClassLoader cloader, String className, String methodName, String methodSignature) {
+        try {
+            Class c = Class.forName(className, false, cloader);
+            long mid = findMethod0(cloader, className, methodName, methodSignature);
+            if (mid != 0) {
+                ReflectMethod rm = new ReflectMethod(c, mid);
+                return rm;
+            }
+        } catch (ClassNotFoundException e) {
         }
+
         return null;
     }
 
@@ -244,6 +249,6 @@ public class ReflectMethod {
 
     native DataWrap invokeMethod(long mid, Object ins, long[] args_long);
 
-    public static native long findMethod0(String className, String methodName, String methodSignature);
+    public static native long findMethod0(ClassLoader cloader, String className, String methodName, String methodSignature);
 
 }

@@ -72,44 +72,26 @@ void profile_print() {
 
 #endif
 
-ClassLoader *classloader_create(c8 *path) {
-    ClassLoader *class_loader = jvm_calloc(sizeof(ClassLoader));
-    spin_init(&class_loader->lock, 0);
+PeerClassLoader *classloader_create(MiniJVM *jvm) {
+    return classloader_create_with_path(jvm, "");
+}
 
+PeerClassLoader *classloader_create_with_path(MiniJVM *jvm, c8 *path) {
+    PeerClassLoader *class_loader = jvm_calloc(sizeof(PeerClassLoader));
+
+    class_loader->jvm = jvm;
     //split classpath
     class_loader->classpath = arraylist_create(0);
     Utf8String *g_classpath = utf8_create_c(path);
-    Utf8String *tmp = NULL;
-    s32 i = 0;
-    while (i < g_classpath->length) {
-        if (tmp == NULL) {
-            tmp = utf8_create();
-        }
-        c8 ch = utf8_char_at(g_classpath, i++);
-        if (i == g_classpath->length) {
-            if (ch != ';' && ch != ':')utf8_insert(tmp, tmp->length, ch);
-            ch = ';';
-        }
-        if (ch == ';' || ch == ':') {
-            if (utf8_last_indexof_c(tmp, "/") == tmp->length - 1)
-                utf8_remove(tmp, tmp->length - 1);
-            arraylist_push_back(class_loader->classpath, tmp);
-            tmp = NULL;
-        } else {
-            utf8_insert(tmp, tmp->length, ch);
-        }
-    }
+    classloader_add_jar_path(class_loader, g_classpath);
     utf8_destory(g_classpath);
     //创建类容器
     class_loader->classes = hashtable_create(UNICODE_STR_HASH_FUNC, UNICODE_STR_EQUALS_FUNC);
 
-    //创建jstring 相关容器
-    class_loader->table_jstring_const = hashtable_create(UNICODE_STR_HASH_FUNC, UNICODE_STR_EQUALS_FUNC);
-
     return class_loader;
 }
 
-void classloader_destory(ClassLoader *class_loader) {
+void classloader_destory(PeerClassLoader *class_loader) {
     HashtableIterator hti;
     hashtable_iterate(class_loader->classes, &hti);
     for (; hashtable_iter_has_more(&hti);) {
@@ -125,15 +107,12 @@ void classloader_destory(ClassLoader *class_loader) {
     arraylist_destory(class_loader->classpath);
     hashtable_destory(class_loader->classes);
 
-    hashtable_destory(class_loader->table_jstring_const);
-
     class_loader->classes = NULL;
 
-    spin_destroy(&class_loader->lock);
     jvm_free(class_loader);
 }
 
-void classloader_release_classs_static_field(ClassLoader *class_loader) {
+void classloader_release_class_static_field(PeerClassLoader *class_loader) {
     HashtableIterator hti;
     hashtable_iterate(class_loader->classes, &hti);
     for (; hashtable_iter_has_more(&hti);) {
@@ -143,15 +122,88 @@ void classloader_release_classs_static_field(ClassLoader *class_loader) {
     }
 }
 
-void classloader_add_jar_path(ClassLoader *class_loader, Utf8String *jarPath) {
-    s32 i;
-    for (i = 0; i < class_loader->classpath->length; i++) {
-        if (utf8_equals(arraylist_get_value(class_loader->classpath, i), jarPath)) {
-            return;
+
+void classloader_add_jar_path(PeerClassLoader *class_loader, Utf8String *jar_path) {
+
+    Utf8String *tmp = NULL;
+    s32 i = 0;
+    while (i < jar_path->length) {
+        if (tmp == NULL) {
+            tmp = utf8_create();
+        }
+        c8 ch = utf8_char_at(jar_path, i++);
+        if (i == jar_path->length) {
+            if (ch != ';' && ch != ':')utf8_insert(tmp, tmp->length, ch);
+            ch = ';';
+        }
+        if (ch == ';' || ch == ':') {
+            if (utf8_last_indexof_c(tmp, "/") == tmp->length - 1) {
+                utf8_remove(tmp, tmp->length - 1);
+            }
+            //check duplicate
+            s32 j;
+            for (j = 0; j < class_loader->classpath->length; j++) {
+                if (utf8_equals(arraylist_get_value(class_loader->classpath, j), tmp)) {
+                    continue;
+                }
+            }
+            arraylist_push_back(class_loader->classpath, tmp);
+            tmp = NULL;
+        } else {
+            utf8_insert(tmp, tmp->length, ch);
         }
     }
-    Utf8String *jarPath1 = utf8_create_copy(jarPath);
-    arraylist_push_back(class_loader->classpath, jarPath1);
+}
+
+void classloaders_add(MiniJVM *jvm, PeerClassLoader *pcl) {
+    spin_lock(&jvm->lock_cloader);
+    {
+        arraylist_push_back_unsafe(jvm->classloaders, pcl);
+    }
+    spin_unlock(&jvm->lock_cloader);
+}
+
+void classloaders_remove(MiniJVM *jvm, PeerClassLoader *pcl) {
+    spin_lock(&jvm->lock_cloader);
+    {
+        arraylist_remove_unsafe(jvm->classloaders, pcl);
+    }
+    spin_unlock(&jvm->lock_cloader);
+}
+
+PeerClassLoader *classLoaders_find_by_instance(MiniJVM *jvm, Instance *jloader) {
+    PeerClassLoader *r = NULL;
+    spin_lock(&jvm->lock_cloader);
+    {
+        s32 i;
+        for (i = 0; i < jvm->classloaders->length; i++) {
+            PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
+            if (pcl->jloader == jloader) {
+                r = pcl;
+            }
+        }
+    }
+    spin_unlock(&jvm->lock_cloader);
+    return r;
+}
+
+void classloaders_destroy_all(MiniJVM *jvm) {
+
+    spin_lock(&jvm->lock_cloader);
+    {
+        s32 i;
+        for (i = 0; i < jvm->classloaders->length; i++) {
+            PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
+            //release class static field
+            classloader_release_class_static_field(pcl);
+            classloader_destory(pcl);
+        }
+    }
+    spin_unlock(&jvm->lock_cloader);
+    spin_destroy(&jvm->lock_cloader);
+    arraylist_destory(jvm->classloaders);
+    jvm->boot_classloader = NULL;
+    jvm->classloaders = NULL;
 }
 
 void set_jvm_state(MiniJVM *jvm, int state) {
@@ -224,8 +276,14 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     reg_net_native_lib(jvm);
     reg_reflect_native_lib(jvm);
 
-    jvm->boot_classloader = classloader_create(p_bootclasspath);
-    jvm->boot_classloader->jvm = jvm;
+    //创建jstring 相关容器
+    jvm->table_jstring_const = hashtable_create(UNICODE_STR_HASH_FUNC, UNICODE_STR_EQUALS_FUNC);
+    hashtable_register_free_functions(jvm->table_jstring_const, (HashtableKeyFreeFunc) utf8_destory, NULL);
+
+    spin_init(&jvm->lock_cloader, 0);
+    jvm->boot_classloader = classloader_create_with_path(jvm, p_bootclasspath);
+    jvm->classloaders = arraylist_create(4);
+    classloaders_add(jvm, jvm->boot_classloader);
 
     //装入系统属性
     sys_properties_load(jvm);
@@ -277,6 +335,8 @@ void jvm_destroy(MiniJVM *jvm) {
     jdwp_stop_server(jvm);
     //
     gc_destory(jvm);
+
+    hashtable_destory(jvm->table_jstring_const);
     //
     thread_lock_dispose(&jvm->threadlock);
     arraylist_destory(jvm->thread_list);
@@ -348,16 +408,23 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
     Utf8String *str_mainClsName = utf8_create_c(p_classname);
     utf8_replace_c(str_mainClsName, ".", "/");
 
+    //find systemclassloader
+    Instance *jloader = NULL;
+    s32 ret = execute_method_impl(jvm->shortcut.launcher_getSystemClassLoader, runtime);
+    if (!ret) {
+        jloader = pop_ref(runtime->stack);
+    } else {
+        print_exception(runtime);
+    }
     //装入主类
+    JClass *clazz = classes_load_get(jloader, str_mainClsName, runtime);
 
-    JClass *clazz = classes_load_get(NULL, str_mainClsName, runtime);
-
-    s32 ret = 0;
+    ret = 0;
     if (clazz) {
         Utf8String *methodName = utf8_create_c(p_methodname);
         Utf8String *methodType = utf8_create_c(p_methoddesc);
 
-        MethodInfo *m = find_methodInfo_by_name(str_mainClsName, methodName, methodType, runtime);
+        MethodInfo *m = find_methodInfo_by_name(str_mainClsName, methodName, methodType, clazz->jloader, runtime);
         if (m) {
 
 

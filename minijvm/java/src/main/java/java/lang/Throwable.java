@@ -93,7 +93,7 @@ public class Throwable {
      * Constructs a new <code>Throwable</code> with the specified error message.
      *
      * @param message the error message. The error message is saved for later
-     * retrieval by the {@link #getMessage()} method.
+     *                retrieval by the {@link #getMessage()} method.
      */
     public Throwable(String message) {
         detailMessage = message;
@@ -115,7 +115,6 @@ public class Throwable {
      * it was {@link #Throwable(String) created} with an error message string;
      * or <code>null</code> if it was {@link #Throwable() created} with no error
      * message.
-     *
      */
     public String getMessage() {
         return detailMessage;
@@ -154,7 +153,7 @@ public class Throwable {
      * value of the field <code>System.err</code>. The first line of output
      * contains the result of the {@link #toString()} method for this object.
      * <p>
-     *
+     * <p>
      * The format of the backtrace information depends on the implementation.
      */
     public void printStackTrace() {
@@ -178,7 +177,7 @@ public class Throwable {
             StackTraceElement sf = (StackTraceElement) backtrace;
             while (sf != null) {
                 try {
-                    Class clazz = Class.forName(sf.getDeclaringClass());
+                    Class clazz = Class.forName(sf.getClassName(), false, sf.getDeclaringClass().getClassLoader());
                     if (!clazz.isAssignableFrom(Throwable.class)) {
                         count++;
                     }
@@ -191,7 +190,7 @@ public class Throwable {
             count = 0;
             while (sf != null) {
                 try {
-                    Class clazz = Class.forName(sf.getDeclaringClass());
+                    Class clazz = Class.forName(sf.getClassName(), false, sf.getDeclaringClass().getClassLoader());
                     if (!clazz.isAssignableFrom(Throwable.class)) {
                         arr[count++] = sf;
                     }
@@ -212,7 +211,7 @@ public class Throwable {
             StackTraceElement sf = (StackTraceElement) backtrace;
             while (sf != null) {
                 try {
-                    Class clazz = Class.forName(sf.getDeclaringClass());
+                    Class clazz = Class.forName(sf.getClassName(), false, sf.getDeclaringClass().getClassLoader());
                     if (!clazz.isAssignableFrom(Throwable.class)) {
                         stack.append("    at ").append(sf.getDeclaringClass());
                         stack.append(".").append(sf.getMethodName());

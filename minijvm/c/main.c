@@ -68,13 +68,13 @@ int main(int argc, char **argv) {
         }
     } else {
         bootclasspath = "../../binary/lib/minijvm_rt.jar";
-        jdwp = 01;
+        jdwp = 0;
 
         //test for graphics
-//        classpath = "../../binary/libex/glfw_gui.jar;./";
+        classpath = "../../binary/libex/glfw_gui.jar;./";
 //        main_name = "test.Gears";
 //        main_name = "test.TestGL";
-//        main_name = "test.AppManagerTest";
+        main_name = "test.AppManagerTest";
 //        main_name = "test.RenderTexure";
 //        main_name = "test.Alpha";
 //        main_name = "test.Light";
@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
 
 
 
-        classpath = "../../binary/libex/minijvm_test.jar;./";
+//        classpath = "../../binary/libex/minijvm_test.jar;./";
 //        main_name = "test.HelloWorld";
 //        main_name = "test.Foo1";
 //        main_name = "test.Foo2";
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
 //        main_name = "test.MultiThread";
 //        main_name = "test.ExecuteSpeed";
 //        main_name = "test.TestFile";
-        main_name = "test.HttpServer";
+//        main_name = "test.HttpServer";
 //        main_name = "test.BpDeepTest";
 //        main_name = "test.ReflectTest";
 //        main_name = "test.LambdaTest";
@@ -118,7 +118,7 @@ int main(int argc, char **argv) {
     MiniJVM *jvm = jvm_create();
     jvm->jdwp_enable = jdwp;
     jvm->jdwp_suspend_on_start = 0;
-    jvm->max_heap_size = maxheap;
+    jvm->max_heap_size = maxheap;//25*1024*1024;//
 
     jvm_init(jvm, bootclasspath, classpath);
 

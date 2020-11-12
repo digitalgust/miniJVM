@@ -19,7 +19,7 @@ public class RefNative {
 
     public static native Class[] getClasses();
 
-    public static native Class getClassByName(String className);
+    public static native Class getBootstrapClassByName(String className);//only get bootstrap class, other return null
 
     public static native int setLocalVal(long frame, int slot, byte type, long value, int bytes);
 
@@ -94,4 +94,8 @@ public class RefNative {
     public static native int heap_endian();
 
     public static native Class<?> getCallerClass();
+
+    public static native void initNativeClassLoader(ClassLoader cloader, ClassLoader parent);
+
+    public static native void destroyNativeClassLoader(ClassLoader cloader);
 }

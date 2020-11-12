@@ -134,7 +134,7 @@ public class AppLoader {
 
             FileOutputStream fos = new FileOutputStream(f);
             prop.store(fos, "");
-
+            fos.close();
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -175,17 +175,10 @@ public class AppLoader {
             String className = getAppConfig(jarName, "app");
             if (className != null && className.length() > 0) {
                 //System.out.println("className:" + className);
-                Class c = null;
-                try {
-                    c = Class.forName(className);
-                } catch (Exception e) {
-                }
-                if (c == null) {
-                    StandalongGuiAppClassLoader sgacl = new StandalongGuiAppClassLoader(getAppJarPath(jarName), ClassLoader.getSystemClassLoader());
-                    c = sgacl.loadClass(className);
-                }
-                ClassLoader cloader = c.getClassLoader();
-                Thread.currentThread().setContextClassLoader(cloader);
+
+                StandalongGuiAppClassLoader sgacl = new StandalongGuiAppClassLoader(getAppJarPath(jarName), ClassLoader.getSystemClassLoader());
+                Thread.currentThread().setContextClassLoader(sgacl);
+                Class c = sgacl.loadClass(className);
 
                 return c;
             }
@@ -373,28 +366,6 @@ public class AppLoader {
 
         saveProp(APP_INFO_FILE, appinfo);
         saveProp(APP_LIST_FILE, applist);
-    }
-
-    public static GApplication runClass(String className) {
-        GApplication app = null;
-        try {
-            if (className != null && className.length() > 0) {
-                System.out.println("run className:" + className);
-                Class c = Class.forName(className);
-                if (c != null) {
-                    app = (GApplication) c.newInstance();
-                    GCallBack.getInstance().setApplication(app);
-                }
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        } finally {
-            if (app == null || GCallBack.getInstance().getForm() == null) {
-                app = AppManager.getInstance();
-                AppManager.getInstance().active();
-            }
-        }
-        return app;
     }
 
 

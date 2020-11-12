@@ -1,5 +1,6 @@
 package org.mini.reflect;
 
+import org.mini.reflect.vm.RefNative;
 import org.mini.zip.Zip;
 
 import java.io.File;
@@ -11,6 +12,9 @@ public class Launcher {
     static ExtClassLoader extcl = new ExtClassLoader(null);
     static ClassLoader systemClassLoader = new AppClassLoader(extcl);
 
+    /**
+     * the console application main class loader
+     */
     static public class AppClassLoader extends ClassLoader {
         String[] paths;
 
@@ -39,6 +43,9 @@ public class Launcher {
         }
     }
 
+    /**
+     * the jvm runtime class loader
+     */
     static public class ExtClassLoader extends ClassLoader {
         String[] paths;
 
@@ -48,7 +55,7 @@ public class Launcher {
         }
 
         protected Class findClass(String name) throws ClassNotFoundException {
-            throw new ClassNotFoundException(name);
+            return RefNative.getBootstrapClassByName(name);
         }
 
         protected URL findResource(String path) {
@@ -56,6 +63,8 @@ public class Launcher {
             return url;
         }
     }
+
+    //=======================================================================
 
     public static ExtClassLoader getExtClassLoader() {
         return extcl;
@@ -71,6 +80,7 @@ public class Launcher {
 
     /**
      * this method is used for vm
+     *
      * @param name
      * @param classLoader
      * @return

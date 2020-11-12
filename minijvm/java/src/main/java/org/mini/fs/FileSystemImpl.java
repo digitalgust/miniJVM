@@ -5,6 +5,8 @@
  */
 package org.mini.fs;
 
+import org.mini.net.SocketNative;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -87,7 +89,7 @@ abstract public class FileSystemImpl extends org.mini.fs.FileSystem {
     public int getBooleanAttributes(File f) {
         int att = 0;
         InnerFileStat ifa = new InnerFileStat();
-        InnerFile.loadFS(InnerFile.getPathBytesForNative(f.getPath()), ifa);
+        InnerFile.loadFS(SocketNative.toCStyle(f.getPath()), ifa);
         att |= ifa.isDirectory() ? BA_DIRECTORY : 0;
         att |= ifa.exists ? BA_EXISTS : 0;
         att |= ifa.isFile() ? BA_REGULAR : 0;
@@ -97,32 +99,32 @@ abstract public class FileSystemImpl extends org.mini.fs.FileSystem {
     @Override
     public boolean checkAccess(File f, boolean write) {
         InnerFileStat ifa = new InnerFileStat();
-        InnerFile.loadFS(InnerFile.getPathBytesForNative(f.getPath()), ifa);
+        InnerFile.loadFS(SocketNative.toCStyle(f.getPath()), ifa);
         return write ? ifa.canWrite() : ifa.canRead();
     }
 
     @Override
     public long getLastModifiedTime(File f) {
         InnerFileStat ifa = new InnerFileStat();
-        InnerFile.loadFS(InnerFile.getPathBytesForNative(f.getPath()), ifa);
+        InnerFile.loadFS(SocketNative.toCStyle(f.getPath()), ifa);
         return ifa.st_mtime;
     }
 
     @Override
     public long getLength(File f) {
         InnerFileStat ifa = new InnerFileStat();
-        InnerFile.loadFS(InnerFile.getPathBytesForNative(f.getPath()), ifa);
+        InnerFile.loadFS(SocketNative.toCStyle(f.getPath()), ifa);
         return ifa.st_size;
     }
 
     @Override
     public boolean createFileExclusively(String pathname) throws IOException {
         InnerFileStat ifa = new InnerFileStat();
-        InnerFile.loadFS(InnerFile.getPathBytesForNative(pathname), ifa);
+        InnerFile.loadFS(SocketNative.toCStyle(pathname), ifa);
         if (ifa.exists) {
             throw new IOException("file exists.");
         }
-        long fd = InnerFile.openFile(InnerFile.getPathBytesForNative(pathname), "w".getBytes());
+        long fd = InnerFile.openFile(SocketNative.toCStyle(pathname), "w".getBytes());
         if (fd != 0) {
             InnerFile.closeFile(fd);
             return true;
@@ -132,7 +134,7 @@ abstract public class FileSystemImpl extends org.mini.fs.FileSystem {
 
     @Override
     public boolean delete(File f) {
-        return InnerFile.delete0(InnerFile.getPathBytesForNative(f.getPath())) == 0;
+        return InnerFile.delete0(SocketNative.toCStyle(f.getPath())) == 0;
     }
 
     @Override
@@ -143,13 +145,13 @@ abstract public class FileSystemImpl extends org.mini.fs.FileSystem {
 
     @Override
     public String[] list(File f) {
-        return InnerFile.listDir(InnerFile.getPathBytesForNative(f.getPath()));
+        return InnerFile.listDir(SocketNative.toCStyle(f.getPath()));
     }
 
     @Override
     public boolean createDirectory(File f) {
         String ap = f.getAbsolutePath();
-        byte[] bp1 = InnerFile.getPathBytesForNative(ap);
+        byte[] bp1 = SocketNative.toCStyle(ap);
         return InnerFile.mkdir0(bp1) == 0;
     }
 
@@ -157,8 +159,8 @@ abstract public class FileSystemImpl extends org.mini.fs.FileSystem {
     public boolean rename(File f1, File f2) {
 
         return InnerFile.rename0(
-                InnerFile.getPathBytesForNative(f1.getPath()),
-                InnerFile.getPathBytesForNative(f2.getPath())
+                SocketNative.toCStyle(f1.getPath()),
+                SocketNative.toCStyle(f2.getPath())
         ) == 0;
     }
 

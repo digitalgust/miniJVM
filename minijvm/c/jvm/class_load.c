@@ -1842,20 +1842,18 @@ JClass *class_parse(Instance *loader, ByteBuf *bytebuf, Runtime *runtime) {
     JClass *tmpclazz = NULL;
     if (bytebuf != NULL) {
         tmpclazz = class_create(runtime);
-        tmpclazz->jClassLoader = loader;
+        tmpclazz->jloader = loader;
 
         s32 iret = tmpclazz->_load_class_from_bytes(tmpclazz, bytebuf);//load file
 
         if (iret == 0) {
-            classes_put(runtime->jvm->boot_classloader, tmpclazz);
-
-//            class_mark_clinit(sys_classloader,tmpclazz);
+            classes_put(runtime->jvm, tmpclazz);
 
             class_prepar(loader, tmpclazz, runtime);
             gc_obj_hold(runtime->jvm->collector, tmpclazz);
 
 #if _JVM_DEBUG_LOG_LEVEL > 2
-            jvm_printf("load class:  %s \n", utf8_cstr(tmpclazz->name));
+            jvm_printf("load class (%016llx load %016llx):  %s \n", (s64) (intptr_t) loader, (s64) (intptr_t) tmpclazz, utf8_cstr(tmpclazz->name));
 #endif
         } else {
             class_destory(tmpclazz);
@@ -1865,34 +1863,41 @@ JClass *class_parse(Instance *loader, ByteBuf *bytebuf, Runtime *runtime) {
     return tmpclazz;
 }
 
-JClass *load_class(Instance *loader, Utf8String *pClassName, Runtime *runtime) {
+JClass *load_class(Instance *jloader, Utf8String *pClassName, Runtime *runtime) {
+    if (!pClassName)return NULL;
     MiniJVM *jvm = runtime->jvm;
-    if (!jvm->boot_classloader)return 0;
     //
     Utf8String *clsName = utf8_create_copy(pClassName);
     utf8_replace_c(clsName, ".", "/");
 
-    JClass *tmpclazz = classes_get(jvm->boot_classloader, clsName);
+    JClass *tmpclazz = classes_get(jvm, jloader, clsName);
 
     if (utf8_indexof_c(clsName, "[") == 0) {
         tmpclazz = array_class_create_get(runtime, clsName);
     }
     if (!tmpclazz) {
         ByteBuf *bytebuf = NULL;
+        PeerClassLoader *pcl = jloader ? classLoaders_find_by_instance(jvm, jloader) : jvm->boot_classloader;
+
 
         utf8_append_c(clsName, ".class");
-        bytebuf = load_file_from_classpath(jvm->boot_classloader, clsName);//bootstrap classloader
+        bytebuf = load_file_from_classpath(pcl, clsName);//load class from classloader
         if (bytebuf != NULL) {
-            tmpclazz = class_parse(loader, bytebuf, runtime);
+            tmpclazz = class_parse(jloader, bytebuf, runtime);
             bytebuf_destory(bytebuf);
-        } else { //using appclassloader load
-            if (jvm->shortcut.classloader_loadClass) {
+        } else if (jloader) { //using appclassloader load
+            if (jvm->shortcut.launcher_loadClass) {
+//                if (utf8_equals_c(pClassName, "test/AppManagerTest")) {
+//                    int debug = 1;
+//                }
+
                 runtime->thrd_info->no_pause++;
+                utf8_replace_c(clsName, "/", ".");
                 Instance *jstr = jstring_create(pClassName, runtime);
                 push_ref(runtime->stack, jstr);
-                push_ref(runtime->stack, loader);
+                push_ref(runtime->stack, jloader);
 
-                s32 ret = execute_method_impl(jvm->shortcut.classloader_loadClass, runtime);
+                s32 ret = execute_method_impl(jvm->shortcut.launcher_loadClass, runtime);
                 if (!ret) {
                     Instance *ins_of_clazz = pop_ref(runtime->stack);
                     if (ins_of_clazz) {
@@ -1906,15 +1911,20 @@ JClass *load_class(Instance *loader, Utf8String *pClassName, Runtime *runtime) {
         }
         if (jvm->jdwp_enable && jvm->jdwpserver && tmpclazz)event_on_class_prepare(jvm->jdwpserver, runtime, tmpclazz);
     }
+#if _JVM_DEBUG_LOG_LEVEL > 2
     if (!tmpclazz) {
-        jvm_printf("class not found:  %s \n", utf8_cstr(clsName));
+        //jvm_printf("class not found in bootstrap classpath:  %s \n", utf8_cstr(clsName));
     }
+#endif
     utf8_destory(clsName);
     return tmpclazz;
 }
 
 
 s32 _DESTORY_CLASS(JClass *clazz) {
+#if _JVM_DEBUG_LOG_LEVEL > 2
+    jvm_printf("destroy class (%016llx load %016llx):  %s \n", (s64) (intptr_t) clazz->jloader, (s64) (intptr_t) clazz, utf8_cstr(clazz->name));
+#endif
     //
     _class_method_info_destory(clazz);
     _class_bootstrap_methods_destory(clazz);

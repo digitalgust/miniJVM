@@ -434,6 +434,8 @@ public class Foo1 {
         System.out.println(Foo1.class.getClassLoader());
         System.out.println(Foo1.class.getClassLoader().getParent());
         System.out.println(Foo1.class.getClassLoader().getParent().getParent());
+        System.out.println((new Foo1[3]).getClass().getClassLoader());
+        System.out.println((new int[3]).getClass().getClassLoader());
         try {
             InputStream is = this.getClass().getResourceAsStream("/sys.properties");
             System.out.println("length:" + is.available());
@@ -447,8 +449,14 @@ public class Foo1 {
             Thread.currentThread().setContextClassLoader(mycl);
             Class c = mycl.loadClass("test.Ball");
             System.out.println("loadClass:" + c);
-            c = Class.forName("test.Ball");
-            System.out.println("Class.forName:" + c);
+            try {
+                c = Class.forName("test.Ball", false, mycl);
+                System.out.println("MyClassLoader Class.forName:" + c);
+                c = Class.forName("test.Ball");
+                System.out.println("SysClassLoader Class.forName:" + c);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             is = Thread.currentThread().getContextClassLoader().getResourceAsStream("/test/Boing.class");
             System.out.println(is);
             if (is != null) System.out.println(is.available());

@@ -71,7 +71,7 @@ s32 java_lang_Class_forName(Runtime *runtime, JClass *clazz) {
         utf8_replace_c(ustr, ".", "/");
         cl = classes_load_get(classloader, ustr, runtime);
         if (!cl) {
-            Instance *exception = exception_create(JVM_EXCEPTION_CLASSNOTFOUND, runtime);
+            Instance *exception = exception_create_str(JVM_EXCEPTION_CLASSNOTFOUND, runtime, utf8_cstr(ustr));
             push_ref(stack, (__refer) exception);
             ret = RUNTIME_STATUS_EXCEPTION;
         } else {
@@ -253,10 +253,10 @@ s32 java_lang_Class_getPrimitiveClass(Runtime *runtime, JClass *clazz) {
 s32 java_lang_Class_getComponentType(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, 0);
-    JClass *present = insOfJavaLangClass_get_classHandle(runtime, ins);
-    s32 idx = utf8_last_indexof_c(present->name, "[");
+    JClass *other = insOfJavaLangClass_get_classHandle(runtime, ins);
+    s32 idx = utf8_last_indexof_c(other->name, "[");
     if (idx > 0) {
-        Utf8String *ustr = utf8_create_part(present->name, idx + 1, present->name->length - 1 - idx);
+        Utf8String *ustr = utf8_create_part(other->name, idx + 1, other->name->length - 1 - idx);
         c8 ch = utf8_index_of(ustr, 0);
         if (ch == 'L') {
             utf8_substring(ustr, 1, ustr->length - 2);
@@ -266,7 +266,7 @@ s32 java_lang_Class_getComponentType(Runtime *runtime, JClass *clazz) {
             utf8_append_c(ustr, cstr);
         }
 
-        JClass *cl = classes_load_get(runtime->thrd_info->context_classloader, ustr, runtime);
+        JClass *cl = classes_load_get(other->jloader, ustr, runtime);
         if (cl) {
             push_ref(stack, cl->ins_class);
         } else {
@@ -678,7 +678,7 @@ s32 java_lang_String_replace0(Runtime *runtime, JClass *clazz) {
             int index = i + offset;
             u16 ch = value[index];
             s32 match = 0;
-            if (ch == src_value[src_offset]) {
+            if (ch == src_value[src_offset] && index + src_count < count) {
                 match = 1;
                 for (j = 1; j < src_count; j++) {
                     if (value[index + j] != src_value[src_offset + j]) {
@@ -769,7 +769,7 @@ s32 java_lang_String_intern0(Runtime *runtime, JClass *clazz) {
     if (jstr) {
         Utf8String *ustr = utf8_create();
         jstring_2_utf8(jstr, ustr, runtime);
-        Instance *in_jstr = (Instance *) hashtable_get(runtime->jvm->boot_classloader->table_jstring_const, ustr);
+        Instance *in_jstr = (Instance *) hashtable_get(runtime->jvm->table_jstring_const, ustr);
         push_ref(stack, (__refer) in_jstr);
         utf8_destory(ustr);
     } else {
@@ -789,7 +789,7 @@ s32 java_lang_StringBuilder_append(Runtime *runtime, JClass *clazz) {
     Instance *jstr = (Instance *) localvar_getRefer(runtime->localvar, 1);
 
     if (jstr) {
-        PreProcessor *jvm_runtime_cache = &runtime->jvm->shortcut;
+        ShortCut *jvm_runtime_cache = &runtime->jvm->shortcut;
         s32 scount = getFieldInt(getInstanceFieldPtr(jstr, jvm_runtime_cache->string_count));
         if (scount) {
             c8 *ptr_bvalue = getInstanceFieldPtr(jbuilder, jvm_runtime_cache->stringbuilder_value);
@@ -1067,7 +1067,7 @@ s32 java_lang_Thread_sleep(Runtime *runtime, JClass *clazz) {
 s32 java_lang_Thread_start(Runtime *runtime, JClass *clazz) {
 
     Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, 0);
-    jthread_start(runtime->thrd_info->context_classloader, ins, runtime);
+    jthread_start(ins, runtime);
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
@@ -1131,7 +1131,7 @@ s32 java_lang_Thread_interrupt0(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-s32 java_lang_Thread_setContextClassLoader(Runtime *runtime, JClass *clazz) {
+s32 java_lang_Thread_setContextClassLoader0(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     Instance *ins_thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
     Instance *ins_classloader = (Instance *) localvar_getRefer(runtime->localvar, 1);
@@ -1148,7 +1148,7 @@ s32 java_lang_Thread_setContextClassLoader(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-s32 java_lang_Thread_getContextClassLoader(Runtime *runtime, JClass *clazz) {
+s32 java_lang_Thread_getContextClassLoader0(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     Instance *ins_thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
     Runtime *rt_thread = jthread_get_stackframe_value(runtime->jvm, ins_thread);
@@ -1207,30 +1207,31 @@ s32 java_io_Throwable_printStackTrace0(Runtime *runtime, JClass *clazz) {
 Instance *buildStackElement(Runtime *runtime, Runtime *target) {
     JClass *clazz = classes_load_get_c(NULL, STR_CLASS_JAVA_LANG_STACKTRACE, target);
     if (clazz) {
+        ShortCut *shortcut = &runtime->jvm->shortcut;
         Instance *ins = instance_create(runtime, clazz);
         instance_hold_to_thread(ins, runtime);
         instance_init(ins, runtime);
         c8 *ptr;
         //
-        ptr = getFieldPtr_byName_c(ins, STR_CLASS_JAVA_LANG_STACKTRACE, "declaringClass", STR_INS_JAVA_LANG_STRING, runtime);
+        ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_declaringClass);
         if (ptr) {
-            Instance *name = jstring_create(target->clazz->name, runtime);
-            setFieldRefer(ptr, name);
+            //Instance *name = jstring_create(target->clazz->name, runtime);
+            setFieldRefer(ptr, insOfJavaLangClass_create_get(runtime, target->clazz));
         }
         //
-        ptr = getFieldPtr_byName_c(ins, STR_CLASS_JAVA_LANG_STACKTRACE, "methodName", STR_INS_JAVA_LANG_STRING, runtime);
+        ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_methodName);
         if (ptr) {
             Instance *name = jstring_create(target->method->name, runtime);
             setFieldRefer(ptr, name);
         }
         //
-        ptr = getFieldPtr_byName_c(ins, STR_CLASS_JAVA_LANG_STACKTRACE, "fileName", STR_INS_JAVA_LANG_STRING, runtime);
+        ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_fileName);
         if (ptr) {
             Instance *name = jstring_create(target->clazz->source, runtime);
             setFieldRefer(ptr, name);
         }
         //
-        ptr = getFieldPtr_byName_c(ins, STR_CLASS_JAVA_LANG_STACKTRACE, "lineNumber", "I", runtime);
+        ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_lineNumber);
         if (ptr) {
             if (target->method->is_native) {
                 setFieldInt(ptr, -1);
@@ -1239,7 +1240,7 @@ Instance *buildStackElement(Runtime *runtime, Runtime *target) {
             }
         }
         if (target->parent && target->parent->parent) {
-            ptr = getFieldPtr_byName_c(ins, STR_CLASS_JAVA_LANG_STACKTRACE, "parent", "Ljava/lang/StackTraceElement;", runtime);
+            ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_parent);
             if (ptr) {
                 Instance *parent = buildStackElement(runtime, target->parent);
                 setFieldRefer(ptr, parent);
@@ -1300,78 +1301,78 @@ s32 java_lang_System_getNativeProperties(Runtime *runtime, JClass *clazz) {
 }
 
 static java_native_method METHODS_STD_TABLE[] = {
-        {"com/sun/cldc/io/ConsoleOutputStream", "write",                 "(I)V",                                                          com_sun_cldc_io_ConsoleOutputStream_write},
-        {"com/sun/cldc/io/ConsoleInputStream",  "read",                  "()I",                                                           com_sun_cldc_io_ConsoleInputStream_read},
-        {"com/sun/cldc/io/ResourceInputStream", "open",                  "(Ljava/lang/String;)[B",                                        com_sun_cldc_io_ResourceInputStream_open},
+        {"com/sun/cldc/io/ConsoleOutputStream", "write",                  "(I)V",                                                          com_sun_cldc_io_ConsoleOutputStream_write},
+        {"com/sun/cldc/io/ConsoleInputStream",  "read",                   "()I",                                                           com_sun_cldc_io_ConsoleInputStream_read},
+        {"com/sun/cldc/io/ResourceInputStream", "open",                   "(Ljava/lang/String;)[B",                                        com_sun_cldc_io_ResourceInputStream_open},
 //        {"com/sun/cldc/io/Waiter",              "waitForIO",       "",         com_sun_cldc_io_ResourceInputStream_waitForIO},
-        {"java/lang/Class",                     "forName",               "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;", java_lang_Class_forName},
-        {"java/lang/Class",                     "newInstance",           "()Ljava/lang/Object;",                                          java_lang_Class_newInstance},
-        {"java/lang/Class",                     "isInstance",            "(Ljava/lang/Object;)Z",                                         java_lang_Class_isInstance},
-        {"java/lang/Class",                     "isAssignableFrom",      "(Ljava/lang/Class;)Z",                                          java_lang_Class_isAssignableFrom},
-        {"java/lang/Class",                     "isInterface",           "()Z",                                                           java_lang_Class_isInterface},
-        {"java/lang/Class",                     "isArray",               "()Z",                                                           java_lang_Class_isArray},
-        {"java/lang/Class",                     "isPrimitive",           "()Z",                                                           java_lang_Class_isPrimitive},
-        {"java/lang/Class",                     "getName0",              "()Ljava/lang/String;",                                          java_lang_Class_getName0},
-        {"java/lang/Class",                     "getSuperclass",         "()Ljava/lang/Class;",                                           java_lang_Class_getSuperclass},
-        {"java/lang/Class",                     "getPrimitiveClass",     "(Ljava/lang/String;)Ljava/lang/Class;",                         java_lang_Class_getPrimitiveClass},
-        {"java/lang/Class",                     "getComponentType",      "()Ljava/lang/Class;",                                           java_lang_Class_getComponentType},
-        {"java/lang/Double",                    "doubleToLongBits",      "(D)J",                                                          java_lang_Double_doubleToLongBits},
-        {"java/lang/Double",                    "longBitsToDouble",      "(J)D",                                                          java_lang_Double_longBitsToDouble},
-        {"java/lang/Float",                     "floatToIntBits",        "(F)I",                                                          java_lang_Float_floatToIntBits},
-        {"java/lang/Float",                     "intBitsToFloat",        "(I)F",                                                          java_lang_Float_intBitsToFloat},
-        {"java/lang/Math",                      "exp",                   "(D)D",                                                          java_lang_Math_exp},
-        {"java/lang/Math",                      "random",                "",                                                              java_lang_Math_random},
-        {"java/lang/Math",                      "sin",                   "(D)D",                                                          java_lang_Math_sin},
-        {"java/lang/Math",                      "cos",                   "(D)D",                                                          java_lang_Math_cos},
-        {"java/lang/Math",                      "tan",                   "(D)D",                                                          java_lang_Math_tan},
-        {"java/lang/Math",                      "sqrt",                  "(D)D",                                                          java_lang_Math_sqrt},
-        {"java/lang/Math",                      "ceil",                  "(D)D",                                                          java_lang_Math_ceil},
-        {"java/lang/Math",                      "floor",                 "(D)D",                                                          java_lang_Math_floor},
-        {"java/lang/Math",                      "asin",                  "(D)D",                                                          java_lang_Math_asin},
-        {"java/lang/Math",                      "acos",                  "(D)D",                                                          java_lang_Math_acos},
-        {"java/lang/Math",                      "atan",                  "(D)D",                                                          java_lang_Math_atan},
-        {"java/lang/Math",                      "log",                   "(D)D",                                                          java_lang_Math_log},
-        {"java/lang/Math",                      "atan2",                 "(DD)D",                                                         java_lang_Math_atan2},
-        {"java/lang/Math",                      "pow",                   "(DD)D",                                                         java_lang_Math_pow},
-        {"java/lang/Object",                    "clone",                 "()Ljava/lang/Object;",                                          java_lang_Object_clone},
-        {"java/lang/Object",                    "getClass",              "()Ljava/lang/Class;",                                           java_lang_Object_getClass},
-        {"java/lang/Object",                    "hashCode",              "()I",                                                           java_lang_Object_hashCode},
-        {"java/lang/Object",                    "notify",                "()V",                                                           java_lang_Object_notify},
-        {"java/lang/Object",                    "notifyAll",             "()V",                                                           java_lang_Object_notifyAll},
-        {"java/lang/Object",                    "wait",                  "(J)V",                                                          java_lang_Object_wait},
-        {"java/lang/Runtime",                   "exitInternal",          "(I)V",                                                          java_lang_Runtime_exitInternal},
-        {"java/lang/Runtime",                   "freeMemory",            "()J",                                                           java_lang_Runtime_freeMemory},
-        {"java/lang/Runtime",                   "totalMemory",           "()J",                                                           java_lang_Runtime_totalMemory},
-        {"java/lang/Runtime",                   "gc",                    "()V",                                                           java_lang_Runtime_gc},
-        {"java/lang/String",                    "charAt0",               "(I)C",                                                          java_lang_String_charAt0},
-        {"java/lang/String",                    "replace0",              "(Ljava/lang/String;Ljava/lang/String;)[C",                      java_lang_String_replace0},
-        {"java/lang/String",                    "equals",                "(Ljava/lang/Object;)Z",                                         java_lang_String_equals},
-        {"java/lang/String",                    "indexOf",               "(I)I",                                                          java_lang_String_indexOf},
-        {"java/lang/String",                    "indexOf",               "(II)I",                                                         java_lang_String_indexOfFrom},
-        {"java/lang/String",                    "intern0",               "()Ljava/lang/String;",                                          java_lang_String_intern0},
-        {"java/lang/StringBuilder",             "append",                "(Ljava/lang/String;)Ljava/lang/StringBuilder;",                 java_lang_StringBuilder_append},
-        {"java/lang/System",                    "arraycopy",             "(Ljava/lang/Object;ILjava/lang/Object;II)V",                    java_lang_System_arraycopy},
-        {"java/lang/System",                    "doubleToString",        "(D)Ljava/lang/String;",                                         java_lang_System_doubleToString},
-        {"java/lang/System",                    "currentTimeMillis",     "()J",                                                           java_lang_System_currentTimeMillis},
-        {"java/lang/System",                    "loadLibrary0",          "([B)V",                                                         java_lang_System_loadLibrary0},
-        {"java/lang/System",                    "nanoTime",              "()J",                                                           java_lang_System_nanotime},
-        {"java/lang/System",                    "identityHashCode",      "(Ljava/lang/Object;)I",                                         java_lang_System_identityHashCode},
-        {"java/lang/System",                    "getProperty0",          "(Ljava/lang/String;)Ljava/lang/String;",                        java_lang_System_getProperty0},
-        {"java/lang/System",                    "setProperty0",          "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",      java_lang_System_setProperty0},
-        {"java/lang/Thread",                    "currentThread",         "()Ljava/lang/Thread;",                                          java_lang_Thread_currentThread},
-        {"java/lang/Thread",                    "yield",                 "()V",                                                           java_lang_Thread_yield},
-        {"java/lang/Thread",                    "sleep",                 "(J)V",                                                          java_lang_Thread_sleep},
-        {"java/lang/Thread",                    "start",                 "()V",                                                           java_lang_Thread_start},
-        {"java/lang/Thread",                    "isAlive",               "()Z",                                                           java_lang_Thread_isAlive},
-        {"java/lang/Thread",                    "activeCount",           "()I",                                                           java_lang_Thread_activeCount},
-        {"java/lang/Thread",                    "setPriority0",          "(I)V",                                                          java_lang_Thread_setPriority0},
-        {"java/lang/Thread",                    "interrupt0",            "()V",                                                           java_lang_Thread_interrupt0},
-        {"java/lang/Thread",                    "setContextClassLoader", "(Ljava/lang/ClassLoader;)V",                                    java_lang_Thread_setContextClassLoader},
-        {"java/lang/Thread",                    "getContextClassLoader", "()Ljava/lang/ClassLoader;",                                     java_lang_Thread_getContextClassLoader},
-        {"java/lang/Throwable",                 "printStackTrace0",      "",                                                              java_io_Throwable_printStackTrace0},
-        {"java/lang/Throwable",                 "buildStackElement",     "()Ljava/lang/StackTraceElement;",                               java_io_Throwable_buildStackElement},
-        {"java/io/PrintStream",                 "printImpl",             "(Ljava/lang/String;)V",                                         java_io_PrintStream_printImpl},
-        {"java/lang/System",                    "getNativeProperties",   "()[Ljava/lang/String;",                                         java_lang_System_getNativeProperties},
+        {"java/lang/Class",                     "forName",                "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;", java_lang_Class_forName},
+        {"java/lang/Class",                     "newInstance",            "()Ljava/lang/Object;",                                          java_lang_Class_newInstance},
+        {"java/lang/Class",                     "isInstance",             "(Ljava/lang/Object;)Z",                                         java_lang_Class_isInstance},
+        {"java/lang/Class",                     "isAssignableFrom",       "(Ljava/lang/Class;)Z",                                          java_lang_Class_isAssignableFrom},
+        {"java/lang/Class",                     "isInterface",            "()Z",                                                           java_lang_Class_isInterface},
+        {"java/lang/Class",                     "isArray",                "()Z",                                                           java_lang_Class_isArray},
+        {"java/lang/Class",                     "isPrimitive",            "()Z",                                                           java_lang_Class_isPrimitive},
+        {"java/lang/Class",                     "getName0",               "()Ljava/lang/String;",                                          java_lang_Class_getName0},
+        {"java/lang/Class",                     "getSuperclass",          "()Ljava/lang/Class;",                                           java_lang_Class_getSuperclass},
+        {"java/lang/Class",                     "getPrimitiveClass",      "(Ljava/lang/String;)Ljava/lang/Class;",                         java_lang_Class_getPrimitiveClass},
+        {"java/lang/Class",                     "getComponentType",       "()Ljava/lang/Class;",                                           java_lang_Class_getComponentType},
+        {"java/lang/Double",                    "doubleToLongBits",       "(D)J",                                                          java_lang_Double_doubleToLongBits},
+        {"java/lang/Double",                    "longBitsToDouble",       "(J)D",                                                          java_lang_Double_longBitsToDouble},
+        {"java/lang/Float",                     "floatToIntBits",         "(F)I",                                                          java_lang_Float_floatToIntBits},
+        {"java/lang/Float",                     "intBitsToFloat",         "(I)F",                                                          java_lang_Float_intBitsToFloat},
+        {"java/lang/Math",                      "exp",                    "(D)D",                                                          java_lang_Math_exp},
+        {"java/lang/Math",                      "random",                 "",                                                              java_lang_Math_random},
+        {"java/lang/Math",                      "sin",                    "(D)D",                                                          java_lang_Math_sin},
+        {"java/lang/Math",                      "cos",                    "(D)D",                                                          java_lang_Math_cos},
+        {"java/lang/Math",                      "tan",                    "(D)D",                                                          java_lang_Math_tan},
+        {"java/lang/Math",                      "sqrt",                   "(D)D",                                                          java_lang_Math_sqrt},
+        {"java/lang/Math",                      "ceil",                   "(D)D",                                                          java_lang_Math_ceil},
+        {"java/lang/Math",                      "floor",                  "(D)D",                                                          java_lang_Math_floor},
+        {"java/lang/Math",                      "asin",                   "(D)D",                                                          java_lang_Math_asin},
+        {"java/lang/Math",                      "acos",                   "(D)D",                                                          java_lang_Math_acos},
+        {"java/lang/Math",                      "atan",                   "(D)D",                                                          java_lang_Math_atan},
+        {"java/lang/Math",                      "log",                    "(D)D",                                                          java_lang_Math_log},
+        {"java/lang/Math",                      "atan2",                  "(DD)D",                                                         java_lang_Math_atan2},
+        {"java/lang/Math",                      "pow",                    "(DD)D",                                                         java_lang_Math_pow},
+        {"java/lang/Object",                    "clone",                  "()Ljava/lang/Object;",                                          java_lang_Object_clone},
+        {"java/lang/Object",                    "getClass",               "()Ljava/lang/Class;",                                           java_lang_Object_getClass},
+        {"java/lang/Object",                    "hashCode",               "()I",                                                           java_lang_Object_hashCode},
+        {"java/lang/Object",                    "notify",                 "()V",                                                           java_lang_Object_notify},
+        {"java/lang/Object",                    "notifyAll",              "()V",                                                           java_lang_Object_notifyAll},
+        {"java/lang/Object",                    "wait",                   "(J)V",                                                          java_lang_Object_wait},
+        {"java/lang/Runtime",                   "exitInternal",           "(I)V",                                                          java_lang_Runtime_exitInternal},
+        {"java/lang/Runtime",                   "freeMemory",             "()J",                                                           java_lang_Runtime_freeMemory},
+        {"java/lang/Runtime",                   "totalMemory",            "()J",                                                           java_lang_Runtime_totalMemory},
+        {"java/lang/Runtime",                   "gc",                     "()V",                                                           java_lang_Runtime_gc},
+        {"java/lang/String",                    "charAt0",                "(I)C",                                                          java_lang_String_charAt0},
+        {"java/lang/String",                    "replace0",               "(Ljava/lang/String;Ljava/lang/String;)[C",                      java_lang_String_replace0},
+        {"java/lang/String",                    "equals",                 "(Ljava/lang/Object;)Z",                                         java_lang_String_equals},
+        {"java/lang/String",                    "indexOf",                "(I)I",                                                          java_lang_String_indexOf},
+        {"java/lang/String",                    "indexOf",                "(II)I",                                                         java_lang_String_indexOfFrom},
+        {"java/lang/String",                    "intern0",                "()Ljava/lang/String;",                                          java_lang_String_intern0},
+        {"java/lang/StringBuilder",             "append",                 "(Ljava/lang/String;)Ljava/lang/StringBuilder;",                 java_lang_StringBuilder_append},
+        {"java/lang/System",                    "arraycopy",              "(Ljava/lang/Object;ILjava/lang/Object;II)V",                    java_lang_System_arraycopy},
+        {"java/lang/System",                    "doubleToString",         "(D)Ljava/lang/String;",                                         java_lang_System_doubleToString},
+        {"java/lang/System",                    "currentTimeMillis",      "()J",                                                           java_lang_System_currentTimeMillis},
+        {"java/lang/System",                    "loadLibrary0",           "([B)V",                                                         java_lang_System_loadLibrary0},
+        {"java/lang/System",                    "nanoTime",               "()J",                                                           java_lang_System_nanotime},
+        {"java/lang/System",                    "identityHashCode",       "(Ljava/lang/Object;)I",                                         java_lang_System_identityHashCode},
+        {"java/lang/System",                    "getProperty0",           "(Ljava/lang/String;)Ljava/lang/String;",                        java_lang_System_getProperty0},
+        {"java/lang/System",                    "setProperty0",           "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",      java_lang_System_setProperty0},
+        {"java/lang/Thread",                    "currentThread",          "()Ljava/lang/Thread;",                                          java_lang_Thread_currentThread},
+        {"java/lang/Thread",                    "yield",                  "()V",                                                           java_lang_Thread_yield},
+        {"java/lang/Thread",                    "sleep",                  "(J)V",                                                          java_lang_Thread_sleep},
+        {"java/lang/Thread",                    "start",                  "()V",                                                           java_lang_Thread_start},
+        {"java/lang/Thread",                    "isAlive",                "()Z",                                                           java_lang_Thread_isAlive},
+        {"java/lang/Thread",                    "activeCount",            "()I",                                                           java_lang_Thread_activeCount},
+        {"java/lang/Thread",                    "setPriority0",           "(I)V",                                                          java_lang_Thread_setPriority0},
+        {"java/lang/Thread",                    "interrupt0",             "()V",                                                           java_lang_Thread_interrupt0},
+        {"java/lang/Thread",                    "setContextClassLoader0", "(Ljava/lang/ClassLoader;)V",                                    java_lang_Thread_setContextClassLoader0},
+        {"java/lang/Thread",                    "getContextClassLoader0", "()Ljava/lang/ClassLoader;",                                     java_lang_Thread_getContextClassLoader0},
+        {"java/lang/Throwable",                 "printStackTrace0",       "",                                                              java_io_Throwable_printStackTrace0},
+        {"java/lang/Throwable",                 "buildStackElement",      "()Ljava/lang/StackTraceElement;",                               java_io_Throwable_buildStackElement},
+        {"java/io/PrintStream",                 "printImpl",              "(Ljava/lang/String;)V",                                         java_io_PrintStream_printImpl},
+        {"java/lang/System",                    "getNativeProperties",    "()[Ljava/lang/String;",                                         java_lang_System_getNativeProperties},
 };
 
 

@@ -5,6 +5,8 @@
  */
 package org.mini.fs;
 
+import org.mini.net.SocketNative;
+
 import java.io.IOException;
 
 /**
@@ -60,10 +62,10 @@ public class InnerRandomAccessFile extends InnerFile {
         } else {
             this.mode = "rb+";
         }
-        filePointer = openFile(InnerFile.getPathBytesForNative(path), mode.getBytes());
+        filePointer = openFile(SocketNative.toCStyle(path), mode.getBytes());
         if (filePointer == 0 && "rb+".equals(this.mode)) {// file not exists , create new 
             this.mode = "wb+";
-            filePointer = openFile(InnerFile.getPathBytesForNative(path), mode.getBytes());
+            filePointer = openFile(SocketNative.toCStyle(path), mode.getBytes());
         }
         if (filePointer == 0) {
             throw new RuntimeException("open file error:" + path);

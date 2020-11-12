@@ -21,7 +21,7 @@ import static org.mini.reflect.vm.ByteCodeAssembler.*;
 public final class MethodType implements java.io.Serializable {
 
     private static final char[] Primitives = new char[]{
-        'V', 'Z', 'B', 'C', 'S', 'I', 'F', 'J', 'D'
+            'V', 'Z', 'B', 'C', 'S', 'I', 'F', 'J', 'D'
     };
 
     final ClassLoader loader;
@@ -36,8 +36,8 @@ public final class MethodType implements java.io.Serializable {
     MethodType(ClassLoader loader, String spec) {
         this.loader = loader;
         this.spec = spec;
-        this.rtype = ReflectMethod.getMethodReturnType(spec);
-        this.ptypes = ReflectMethod.getMethodPara(spec);
+        this.rtype = ReflectMethod.getMethodReturnType(loader, spec);
+        this.ptypes = ReflectMethod.getMethodPara(loader, spec);
     }
 
     MethodType(String spec) {

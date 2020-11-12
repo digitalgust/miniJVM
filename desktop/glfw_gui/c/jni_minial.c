@@ -283,7 +283,7 @@ int org_mini_media_MiniAL_ma_decoder_uninit(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-void setupCallback(Runtime *runtime) {
+void setupCallback(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     c8 *name_s;
     c8 *type_s;
@@ -296,7 +296,7 @@ void setupCallback(Runtime *runtime) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_minial_on_recv_frames =
-                env->find_methodInfo_by_name(clsname, name, type, runtime);
+                env->find_methodInfo_by_name(clsname, name, type, clazz->jloader, runtime);
         env->utf8_destory(clsname);
         env->utf8_destory(name);
         env->utf8_destory(type);
@@ -309,7 +309,7 @@ void setupCallback(Runtime *runtime) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_minial_on_send_frames =
-                env->find_methodInfo_by_name(clsname, name, type, runtime);
+                env->find_methodInfo_by_name(clsname, name, type, clazz->jloader, runtime);
         env->utf8_destory(clsname);
         env->utf8_destory(name);
         env->utf8_destory(type);
@@ -322,7 +322,7 @@ void setupCallback(Runtime *runtime) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_minial_on_stop =
-                env->find_methodInfo_by_name(clsname, name, type, runtime);
+                env->find_methodInfo_by_name(clsname, name, type, clazz->jloader, runtime);
         env->utf8_destory(clsname);
         env->utf8_destory(name);
         env->utf8_destory(type);
@@ -347,7 +347,7 @@ int org_mini_media_MiniAL_ma_device_init(Runtime *runtime, JClass *clazz) {
     s32 channels = env->localvar_getInt(runtime->localvar, pos++);
     s32 sampleRate = env->localvar_getInt(runtime->localvar, pos++);
 
-    setupCallback(runtime);
+    setupCallback(runtime, clazz);
 
     ma_device_config dev_cfg = ma_device_config_init(deviceType);
     dev_cfg.playback.format = format;

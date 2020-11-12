@@ -70,7 +70,7 @@ Instance *exception_create(s32 exception_type, Runtime *runtime);
 
 Instance *exception_create_str(s32 exception_type, Runtime *runtime, c8 *errmsg);
 
-Instance *method_type_create(Runtime *runtime, Utf8String *desc);
+Instance *method_type_create(Runtime *runtime, Instance *jloader, Utf8String *desc);
 
 Instance *method_handle_create(Runtime *runtime, MethodInfo *mi, s32 kind);
 
@@ -161,7 +161,7 @@ s32 getLineNumByIndex(CodeAttribute *ca, s32 offset);
 
 s32 _loadFileContents(c8 *file, ByteBuf *buf);
 
-ByteBuf *load_file_from_classpath(ClassLoader *cloader, Utf8String *path);
+ByteBuf *load_file_from_classpath(PeerClassLoader *cloader, Utf8String *path);
 
 
 //===============================    实例化 java.lang.Class  ==================================
@@ -171,6 +171,8 @@ Instance *insOfJavaLangClass_create_get(Runtime *runtime, JClass *clazz);
 void insOfJavaLangClass_set_classHandle(Runtime *runtime, Instance *insOfJavaLangClass, JClass *handle);
 
 JClass *insOfJavaLangClass_get_classHandle(Runtime *runtime, Instance *insOfJavaLangClass);
+
+void insOfJavaLangClass_hold(JClass *clazz, Runtime *runtime);
 
 ////======================= jstring =============================
 
@@ -247,7 +249,7 @@ s32 jthread_dispose(Instance *jthread, Runtime *runtime);
 
 s32 jthread_run(void *para);
 
-thrd_t jthread_start(Instance *parent_classloader, Instance *ins, Runtime *runtime);
+thrd_t jthread_start(Instance *ins, Runtime *parent);
 
 s32 jthread_get_daemon_value(Instance *ins, Runtime *runtime);
 
@@ -381,17 +383,17 @@ c8 *getFieldPtr_byName_c(Instance *instance, c8 *pclassName, c8 *pfieldName, c8 
 
 c8 *getFieldPtr_byName(Instance *instance, Utf8String *clsName, Utf8String *fieldName, Utf8String *fieldType, Runtime *runtime);
 
-JClass *classes_get_c(ClassLoader *cloader, c8 *clsName);
+JClass *classes_get_c(MiniJVM *jvm, Instance *jloader, c8 *clsName);
 
-JClass *classes_get(ClassLoader *cloader, Utf8String *clsName);
+JClass *classes_get(MiniJVM *jvm, Instance *jloader, Utf8String *clsName);
 
-JClass *classes_load_get_without_clinit(Instance *loader, Utf8String *ustr, Runtime *runtime);
+JClass *classes_load_get_without_resolve(Instance *jloader, Utf8String *ustr, Runtime *runtime);
 
-JClass *classes_load_get_c(Instance *loader, c8 *pclassName, Runtime *runtime);
+JClass *classes_load_get_c(Instance *jloader, c8 *pclassName, Runtime *runtime);
 
-s32 classes_put(ClassLoader *cloader, JClass *clazz);
+s32 classes_put(MiniJVM *jvm, JClass *clazz);
 
-JClass *classes_load_get(Instance *loader, Utf8String *pclassName, Runtime *runtime);
+JClass *classes_load_get(Instance *jloader, Utf8String *pclassName, Runtime *runtime);
 
 JClass *primitive_class_create_get(Runtime *runtime, Utf8String *ustr);
 

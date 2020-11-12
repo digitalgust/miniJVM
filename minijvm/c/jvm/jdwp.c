@@ -1081,9 +1081,9 @@ s32 jdwp_set_debug_step(JdwpServer *jdwpserver, s32 setOrClear, Instance *jthrea
                 step->next_type = NEXT_TYPE_OVER;
                 step->next_stop_line_no = cur_line_no;
                 step->next_stop_runtime_depth = getRuntimeDepth(r->thrd_info->top_runtime);
-                if (utf8_equals_c(getLastSon(r)->method->name, "display") && (r->thrd_info->suspend_count == 0)) {
-                    s32 debug = 1;
-                }
+//                if (utf8_equals_c(getLastSon(r)->method->name, "display") && (r->thrd_info->suspend_count == 0)) {
+//                    s32 debug = 1;
+//                }
 //
 //                jvm_printf("[jdwp] set  : %s, depth=%d, pc=%d, line=%d\n",
 //                           utf8_cstr(last->method->name),
@@ -1445,6 +1445,7 @@ void invoke_method(s32 call_mode, JdwpPacket *req, JdwpPacket *res, JdwpClient *
 
 s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
     JdwpPacket *req = NULL;
+    MiniJVM *jvm = jdwpserver->jvm;
     while ((req = jdwp_readpacket(client)) != NULL) {
 
         u16 cmd = jdwppacket_get_cmd_err(req);
@@ -1470,6 +1471,9 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 jdwppacket_write_utf(res, ustr);
                 jdwp_packet_put(jdwpserver, res);
                 utf8_destory(ustr);
+                while (!jvm->thread_list->length) {
+                    threadSleep(10);
+                }
                 Runtime *mainthread = (Runtime *) arraylist_get_value(jdwpserver->jvm->thread_list, 0);
                 if (jdwpserver->jvm->jdwp_suspend_on_start)event_on_vmstart(jdwpserver, mainthread->thrd_info->jthread);
                 break;
@@ -1479,44 +1483,74 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
 
                 signatureToName(signature);
-                JClass *cl = classes_get(jdwpserver->jvm->boot_classloader, signature);
-                if (cl == NULL) {
-                    jdwppacket_write_int(res, 0);
-                } else {
-                    jdwppacket_write_int(res, 1);
-                    jdwppacket_write_byte(res, getClassType(cl));
-                    jdwppacket_write_refer(res, cl);
-                    jdwppacket_write_int(res, getClassStatus(cl));
+                MiniJVM *jvm = jdwpserver->jvm;
+                spin_lock(&jvm->lock_cloader);
+                {
+                    s32 i, count = 0;
+                    for (i = 0; i < jvm->classloaders->length; i++) {
+                        PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
+                        JClass *cl = classes_get(jdwpserver->jvm, pcl->jloader, signature);
+                        if (cl != NULL) {
+                            count++;
+                        }
+                    }
+                    jdwppacket_write_int(res, count);
+                    for (i = 0; i < jvm->classloaders->length; i++) {
+                        PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
+                        JClass *cl = classes_get(jdwpserver->jvm, pcl->jloader, signature);
+                        if (cl != NULL) {
+                            jdwppacket_write_byte(res, getClassType(cl));
+                            jdwppacket_write_refer(res, cl);
+                            jdwppacket_write_int(res, getClassStatus(cl));
 
-                    event_on_class_prepare(jdwpserver, NULL, cl);
+                            event_on_class_prepare(jdwpserver, NULL, cl);
+                        }
+                    }
                 }
+                spin_unlock(&jvm->lock_cloader);
                 //jvm_printf("[JDWP]VirtualMachine_ClassesBySignature:%s ,%lld\n", utf8_cstr(signature), (s64) (intptr_t) cl);
                 jdwp_packet_put(jdwpserver, res);
                 utf8_destory(signature);
                 break;
             }
             case JDWP_CMD_VirtualMachine_AllClasses: {//1.3
-                ClassLoader *boot_classloader = jdwpserver->jvm->boot_classloader;
+                PeerClassLoader *boot_classloader = jdwpserver->jvm->boot_classloader;
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                jdwppacket_write_int(res, (s32) boot_classloader->classes->entries);
 
                 Utf8String *ustr = utf8_create();
-                HashtableIterator hti;
-                hashtable_iterate(boot_classloader->classes, &hti);
-                for (; hashtable_iter_has_more(&hti);) {
-                    Utf8String *k = hashtable_iter_next_key(&hti);
-                    JClass *cl = hashtable_get(boot_classloader->classes, k);
 
-                    jdwppacket_write_byte(res, getClassType(cl));
-                    jdwppacket_write_refer(res, cl);
-                    utf8_clear(ustr);
-                    utf8_append(ustr, cl->name);
-                    nameToSignature(ustr);
-                    //jvm_printf("jdwp:%s\n", utf8_cstr(ustr));
-                    jdwppacket_write_utf(res, ustr);
-                    jdwppacket_write_int(res, getClassStatus(cl));
+                MiniJVM *jvm = jdwpserver->jvm;
+                spin_lock(&jvm->lock_cloader);
+                {
+                    s32 i, count = 0;
+                    for (i = 0; i < jvm->classloaders->length; i++) {
+                        PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
+                        count += pcl->classes->entries;
+                    }
+                    jdwppacket_write_int(res, count);
+                    for (i = 0; i < jvm->classloaders->length; i++) {
+                        PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
+                        HashtableIterator hti;
+                        hashtable_iterate(pcl->classes, &hti);
+                        for (; hashtable_iter_has_more(&hti);) {
+                            Utf8String *k = hashtable_iter_next_key(&hti);
+                            JClass *cl = hashtable_get(pcl->classes, k);
+
+                            jdwppacket_write_byte(res, getClassType(cl));
+                            jdwppacket_write_refer(res, cl);
+                            utf8_clear(ustr);
+                            utf8_append(ustr, cl->name);
+                            nameToSignature(ustr);
+                            //jvm_printf("jdwp:%s\n", utf8_cstr(ustr));
+                            jdwppacket_write_utf(res, ustr);
+                            jdwppacket_write_int(res, getClassStatus(cl));
+                        }
+                    }
                 }
+                spin_unlock(&jvm->lock_cloader);
+
                 utf8_destory(ustr);
+
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
@@ -1682,7 +1716,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 break;
             }
             case JDWP_CMD_VirtualMachine_AllClassesWithGeneric: {//1.20
-                ClassLoader *boot_classloader = jdwpserver->jvm->boot_classloader;
+                PeerClassLoader *boot_classloader = jdwpserver->jvm->boot_classloader;
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
                 jdwppacket_write_int(res, (s32) boot_classloader->classes->entries);
 
@@ -1704,6 +1738,39 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                     jdwppacket_write_utf(res, ustr);
                     jdwppacket_write_int(res, getClassStatus(cl));
                 }
+
+                MiniJVM *jvm = jdwpserver->jvm;
+                spin_lock(&jvm->lock_cloader);
+                {
+                    s32 i, count = 0;
+                    for (i = 0; i < jvm->classloaders->length; i++) {
+                        PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
+                        count += pcl->classes->entries;
+                    }
+                    jdwppacket_write_int(res, count);
+                    for (i = 0; i < jvm->classloaders->length; i++) {
+                        PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
+                        HashtableIterator hti;
+                        hashtable_iterate(pcl->classes, &hti);
+                        for (; hashtable_iter_has_more(&hti);) {
+                            Utf8String *k = hashtable_iter_next_key(&hti);
+                            JClass *cl = hashtable_get(pcl->classes, k);
+
+                            jdwppacket_write_byte(res, getClassType(cl));
+                            jdwppacket_write_refer(res, cl);
+                            utf8_clear(ustr);
+                            utf8_append(ustr, cl->name);
+                            nameToSignature(ustr);
+                            //jvm_printf("jdwp:%s\n", utf8_cstr(ustr));
+                            jdwppacket_write_utf(res, ustr);
+                            utf8_clear(ustr);
+                            jdwppacket_write_utf(res, ustr);
+                            jdwppacket_write_int(res, getClassStatus(cl));
+                        }
+                    }
+                }
+                spin_unlock(&jvm->lock_cloader);
+
                 utf8_destory(ustr);
                 jdwp_packet_put(jdwpserver, res);
                 break;
@@ -1727,7 +1794,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
 
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
 
-                jdwppacket_write_refer(res, 0);
+                jdwppacket_write_refer(res, ref->jloader);
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
@@ -1783,7 +1850,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                     FieldInfo *fi = jdwppacket_read_refer(req);
                     ValueType vt;
                     vt.type = getJdwpTag(fi->descriptor);
-                    c8 *ptr = getFieldPtr_byName(NULL, ref->name, fi->name, fi->descriptor, runtime);
+                    c8 *ptr = getStaticFieldPtr(fi);
                     vt.value = getPtrValue(vt.type, ptr);
                     writeValueType(res, &vt);
                 }
@@ -1825,7 +1892,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 jdwppacket_write_int(res, len);
                 s32 i;
                 for (i = 0; i < len; i++) {
-                    JClass *cl = classes_get(jdwpserver->jvm->boot_classloader, ref->interfacePool.clasz[i].name);
+                    JClass *cl = classes_get(jdwpserver->jvm, ref->jloader, ref->interfacePool.clasz[i].name);
                     jdwppacket_write_refer(res, cl);
                 }
                 //jvm_printf("[JDWP]ReferenceType_Interfaces:%s\n", utf8_cstr(ref->name));
@@ -2008,7 +2075,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
                 jdwppacket_write_byte(res, getClassType(ref));
                 if (obj->mb.type == MEM_TYPE_CLASS) {//类对象
-                    ref = classes_get_c(jdwpserver->jvm->boot_classloader, STR_CLASS_JAVA_LANG_CLASS);
+                    ref = classes_get_c(jdwpserver->jvm, NULL, STR_CLASS_JAVA_LANG_CLASS);
                 }
                 jdwppacket_write_refer(res, ref);
                 jdwp_packet_put(jdwpserver, res);

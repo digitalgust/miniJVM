@@ -28,7 +28,6 @@ package java.lang.reflect;
 
 import org.mini.reflect.ReflectMethod;
 import org.mini.reflect.vm.RConst;
-import org.mini.reflect.vm.RefNative;
 
 import java.lang.annotation.Annotation;
 
@@ -104,9 +103,14 @@ public class Method<T> extends AccessibleObject implements Member {
     }
 
     static public Method findMethod(ClassLoader cloader, String className, String methodName, String methodSignature) {
-        Class c = RefNative.getClassByName(className);
+        Class c = null;
+        try {
+            c = Class.forName(className, false, cloader);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         if (c != null) {
-            ReflectMethod rm = ReflectMethod.findMethod(className, methodName, methodSignature);
+            ReflectMethod rm = ReflectMethod.findMethod(cloader, className, methodName, methodSignature);
             if (rm != null) {
                 return new Method(c, rm);
             }

@@ -42,14 +42,14 @@ public class ReflectClass {
     long fieldIds[];
     long methodIds[];
     public long interfaces[];
-    public long classObj;//类对象
+    public Class classObj;//类对象
 
     private ReflectField[] fields;
     private ReflectMethod[] methods;
 
     public ReflectClass(long classId) {
         this.classId = classId;
-        mapReference(classId);
+        mapClass(classId);
 
     }
 
@@ -69,8 +69,12 @@ public class ReflectClass {
         }
         methods = new ReflectMethod[methodIds.length];
         for (int i = 0; i < methodIds.length; i++) {
-            methods[i] = new ReflectMethod(this, methodIds[i]);
+            methods[i] = new ReflectMethod(classObj, methodIds[i]);
         }
+    }
+
+    public Class getClassObj() {
+        return classObj;
     }
 
     public ReflectMethod[] getMethods() {
@@ -163,7 +167,7 @@ public class ReflectClass {
     static Class[] primitiveClass; //cant init static , because some type wasnt init
     static String[] primitiveTag = {"S", "C", "B", "I", "F", "Z", "D", "J", "V"};
 
-    static public Class getClassByDescriptor(String s) {
+    static public Class getClassByDescriptor(ClassLoader loader, String s) {
         switch (s.charAt(0)) {
             case 'S':
                 return Short.TYPE;
@@ -188,10 +192,14 @@ public class ReflectClass {
                     s = s.substring(1, s.indexOf('<'));
                 } else {
                     s = s.substring(1, s.length() - 1);
-                }
-                return RefNative.getClassByName(s);
+                }//no break here
             default:
-                return RefNative.getClassByName(s);
+                try {
+                    return Class.forName(s, false, loader);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return null;
         }
     }
 
@@ -341,6 +349,6 @@ public class ReflectClass {
     }
 
 
-    final native void mapReference(long classId);
+    final native void mapClass(long classId);
 
 }

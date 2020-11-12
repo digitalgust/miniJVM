@@ -20,40 +20,44 @@ static FILE *logfile = NULL;
 static s64 last_flush = 0;
 static s64 nano_sec_start_at = 0;
 
-
 /**
  * =============================== JClass ==============================
  */
 
-JClass *classes_get_c(ClassLoader *cloader, c8 *clsName) {
+JClass *classes_get_c(MiniJVM *jvm, Instance *jloader, c8 *clsName) {
     Utf8String *ustr = utf8_create_c(clsName);
-    JClass *clazz = classes_get(cloader, ustr);
+    JClass *clazz = classes_get(jvm, jloader, ustr);
     utf8_destory(ustr);
     return clazz;
 }
 
-JClass *classes_get(ClassLoader *cloader, Utf8String *clsName) {
+JClass *classes_get(MiniJVM *jvm, Instance *jloader, Utf8String *clsName) {
     JClass *cl = NULL;
     if (clsName) {
-        cl = hashtable_get(cloader->classes, clsName);
+        PeerClassLoader *pcl = jloader ? classLoaders_find_by_instance(jvm, jloader) : jvm->boot_classloader;
+        cl = hashtable_get(pcl->classes, clsName);
+        if (!cl) {
+            if (jloader) {
+                cl = classes_get(jvm, pcl->parent, clsName);
+            }
+        }
     }
     return cl;
 }
 
-JClass *classes_load_get_without_clinit(Instance *loader, Utf8String *ustr, Runtime *runtime) {
+JClass *classes_load_get_without_resolve(Instance *jloader, Utf8String *ustr, Runtime *runtime) {
     if (!ustr)return NULL;
-    ClassLoader *cloader = runtime->jvm->boot_classloader;
-    MiniJVM *jvm = cloader->jvm;
+    MiniJVM *jvm = runtime->jvm;
     JClass *cl;
-    spin_lock(&cloader->lock);//fast lock
+    spin_lock(&jvm->lock_cloader);//fast lock
     if (utf8_index_of(ustr, '.') >= 0) utf8_replace_c(ustr, ".", "/");
-    spin_unlock(&cloader->lock);
-    cl = classes_get(cloader, ustr);
+    spin_unlock(&jvm->lock_cloader);
+    cl = classes_get(jvm, jloader, ustr);
     if (!cl) {
         vm_share_lock(jvm);//slow lock
-        cl = classes_get(cloader, ustr);
+        cl = classes_get(jvm, jloader, ustr);
         if (!cl) {
-            cl = load_class(loader, ustr, runtime);
+            cl = load_class(jloader, ustr, runtime);
         }
         vm_share_unlock(jvm);
 
@@ -61,40 +65,40 @@ JClass *classes_load_get_without_clinit(Instance *loader, Utf8String *ustr, Runt
     return cl;
 }
 
-JClass *classes_load_get_c(Instance *loader, c8 *pclassName, Runtime *runtime) {
+JClass *classes_load_get_c(Instance *jloader, c8 *pclassName, Runtime *runtime) {
     Utf8String *ustr = utf8_create_c(pclassName);
-    JClass *clazz = classes_load_get(loader, ustr, runtime);
+    JClass *clazz = classes_load_get(jloader, ustr, runtime);
     utf8_destory(ustr);
     return clazz;
 }
 
-JClass *classes_load_get(Instance *loader, Utf8String *ustr, Runtime *runtime) {
-    JClass *cl = classes_load_get_without_clinit(loader, ustr, runtime);
+JClass *classes_load_get(Instance *jloader, Utf8String *ustr, Runtime *runtime) {
+    JClass *cl = classes_load_get_without_resolve(jloader, ustr, runtime);
     if (cl && cl->status < CLASS_STATUS_CLINITED) {
         class_clinit(cl, runtime);
     }
     return cl;
 }
 
-s32 classes_put(ClassLoader *cloader, JClass *clazz) {
+s32 classes_put(MiniJVM *jvm, JClass *clazz) {
     if (clazz) {
         //jvm_printf("sys_classloader %d : %s\n", sys_classloader->classes->entries, utf8_cstr(clazz->name));
-        hashtable_put(cloader->classes, clazz->name, clazz);
+        PeerClassLoader *pcl = classLoaders_find_by_instance(jvm, clazz->jloader);
+        hashtable_put(pcl->classes, clazz->name, clazz);
         return 0;
     }
     return -1;
 }
 
 JClass *primitive_class_create_get(Runtime *runtime, Utf8String *ustr) {
-    ClassLoader *cloader = runtime->jvm->boot_classloader;
-    MiniJVM *jvm = cloader->jvm;
-    JClass *cl = classes_get(cloader, ustr);
+    MiniJVM *jvm = runtime->jvm;
+    JClass *cl = classes_get(jvm, NULL, ustr);
     if (!cl) {
         vm_share_lock(jvm);
         cl = class_create(runtime);
         cl->name = ustr;
         cl->primitive = 1;
-        classes_put(cloader, cl);
+        classes_put(jvm, cl);
         gc_obj_hold(jvm->collector, cl);
         vm_share_unlock(jvm);
     } else {
@@ -108,7 +112,7 @@ JClass *primitive_class_create_get(Runtime *runtime, Utf8String *ustr) {
 
 JClass *array_class_create_get(Runtime *runtime, Utf8String *desc) {
     if (desc && desc->length && utf8_char_at(desc, 0) == '[') {
-        ClassLoader *cloader = runtime->jvm->boot_classloader;
+        PeerClassLoader *cloader = runtime->jvm->boot_classloader;
         MiniJVM *jvm = cloader->jvm;
         JClass *clazz = hashtable_get(cloader->classes, desc);
         if (!clazz) {
@@ -118,9 +122,12 @@ JClass *array_class_create_get(Runtime *runtime, Utf8String *desc) {
                 clazz = class_create(runtime);
                 clazz->mb.arr_type_index = getDataTypeIndex(utf8_char_at(desc, 1));
                 clazz->name = utf8_create_copy(desc);
-                clazz->superclass = classes_get_c(cloader, STR_CLASS_JAVA_LANG_OBJECT);
-                classes_put(cloader, clazz);
+                clazz->superclass = classes_get_c(jvm, NULL, STR_CLASS_JAVA_LANG_OBJECT);
+                classes_put(jvm, clazz);
                 gc_obj_hold(jvm->collector, clazz);
+                //this arrayclass need to set loader with element type
+                //JClass *typec=classes_load_get();
+                //clazz->jloader=typec;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                 jvm_printf("load class:  %s \n", utf8_cstr(desc));
@@ -145,7 +152,7 @@ JClass *array_class_create_get(Runtime *runtime, Utf8String *desc) {
  */
 JClass *array_class_get_by_index(Runtime *runtime, s32 typeIdx) {
     JClass *clazz = NULL;
-    PreProcessor *cache = &runtime->jvm->shortcut;
+    ShortCut *cache = &runtime->jvm->shortcut;
     if (cache->array_classes[typeIdx] == NULL) {
         Utf8String *ustr = utf8_create_c("[");
         utf8_insert(ustr, ustr->length, getDataTypeTag(typeIdx));
@@ -686,6 +693,7 @@ int jvm_printf(const char *format, ...) {
     if (logfile) {
 
         result = vfprintf(logfile, format, vp);
+        fflush(logfile);
         if (currentTimeMillis() - last_flush > 1000) {
             fflush(logfile);
             last_flush = currentTimeMillis();
@@ -695,15 +703,17 @@ int jvm_printf(const char *format, ...) {
     result = vfprintf(stderr, format, vp);
 #endif
     va_end(vp);
+    fflush(stderr);
     return result;
 }
 
 void invoke_deepth(Runtime *runtime) {
     vm_share_lock(runtime->jvm);
     int i = 0;
-    while (runtime) {
+    Runtime *r = runtime;
+    while (r) {
         i++;
-        runtime = runtime->parent;
+        r = r->parent;
     }
     s32 len = i;
 
@@ -783,9 +793,9 @@ s32 jthread_run(void *para) {
     return ret;
 }
 
-thrd_t jthread_start(Instance *parent_classloader, Instance *ins, Runtime *parent) {//
+thrd_t jthread_start(Instance *ins, Runtime *parent) {//
     Runtime *runtime = runtime_create(parent->jvm);
-    runtime->thrd_info->context_classloader = parent_classloader;
+    runtime->thrd_info->context_classloader = parent->thrd_info->context_classloader;//copy context classloader
 
     __refer *para = jvm_calloc(sizeof(__refer) * 2);
     para[0] = ins;
@@ -828,14 +838,13 @@ void jthread_set_daemon_value(Instance *ins, Runtime *runtime, s32 daemon) {
 }
 
 void jthreadlock_create(Runtime *runtime, MemoryBlock *mb) {
-    ClassLoader *boot_classloader = runtime->jvm->boot_classloader;
-    spin_lock(&boot_classloader->lock);
+    spin_lock(&runtime->jvm->lock_cloader);
     if (!mb->thread_lock) {
         ThreadLock *tl = jvm_calloc(sizeof(ThreadLock));
         thread_lock_init(tl);
         mb->thread_lock = tl;
     }
-    spin_unlock(&boot_classloader->lock);
+    spin_unlock(&runtime->jvm->lock_cloader);
 }
 
 void jthreadlock_destory(MemoryBlock *mb) {
@@ -860,7 +869,7 @@ s32 jthread_lock(MemoryBlock *mb, Runtime *runtime) { //可能会重入，同一
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
-    jvm_printf("  lock: %llx   lock holder: %s \n", (s64) (intptr_t) (runtime->threadInfo->jthread),
+    jvm_printf("  lock: %llx   lock holder: %s \n", (s64) (intptr_t) (runtime->thrd_info->jthread),
                utf8_cstr(mb->clazz->name));
 #endif
     return 0;
@@ -875,7 +884,7 @@ s32 jthread_unlock(MemoryBlock *mb, Runtime *runtime) {
     mtx_unlock(&jtl->mutex_lock);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
-    jvm_printf("unlock: %llx   lock holder: %s, \n", (s64) (intptr_t) (runtime->threadInfo->jthread),
+    jvm_printf("unlock: %llx   lock holder: %s, \n", (s64) (intptr_t) (runtime->thrd_info->jthread),
                utf8_cstr(mb->clazz->name));
 #endif
     return 0;
@@ -1133,14 +1142,14 @@ Instance *instance_create(Runtime *runtime, JClass *clazz) {
 }
 
 void instance_init(Instance *ins, Runtime *runtime) {
-    instance_init_methodtype(ins, runtime, "()V", NULL);
+    instance_init_with_para(ins, runtime, "()V", NULL);
 }
 
-void instance_init_methodtype(Instance *ins, Runtime *runtime, c8 *methodtype, RuntimeStack *para) {
+void instance_init_with_para(Instance *ins, Runtime *runtime, c8 *methodtype, RuntimeStack *para) {
     if (ins) {
         Utf8String *methodName = utf8_create_c("<init>");
         Utf8String *methodType = utf8_create_c(methodtype);
-        MethodInfo *mi = find_methodInfo_by_name(ins->mb.clazz->name, methodName, methodType, runtime);
+        MethodInfo *mi = find_methodInfo_by_name(ins->mb.clazz->name, methodName, methodType, ins->mb.clazz->jloader, runtime);
         push_ref(runtime->stack, (__refer) ins);
         if (para) {
             s32 i;
@@ -1300,10 +1309,10 @@ Instance *insOfJavaLangClass_create_get(Runtime *runtime, JClass *clazz) {
             return clazz->ins_class;
         } else {
             Instance *ins = instance_create(runtime, java_lang_class);
-            gc_obj_hold(runtime->jvm->collector, ins);
             instance_init(ins, runtime);
             clazz->ins_class = ins;
             insOfJavaLangClass_set_classHandle(runtime, ins, clazz);
+            insOfJavaLangClass_hold(clazz, runtime);
             return ins;
         }
     }
@@ -1317,6 +1326,24 @@ JClass *insOfJavaLangClass_get_classHandle(Runtime *runtime, Instance *insOfJava
 
 void insOfJavaLangClass_set_classHandle(Runtime *runtime, Instance *insOfJavaLangClass, JClass *handle) {
     setFieldLong(getInstanceFieldPtr(insOfJavaLangClass, runtime->jvm->shortcut.class_classHandle), (s64) (intptr_t) handle);
+}
+
+void insOfJavaLangClass_hold(JClass *clazz, Runtime *runtime) {
+    if (clazz) {
+        Instance *loader = clazz->jloader;
+        if (loader) { //if classloader exists , then hold in java classloader
+            runtime->thrd_info->no_pause++;
+            push_ref(runtime->stack, loader);
+            push_ref(runtime->stack, clazz->ins_class ? clazz->ins_class : insOfJavaLangClass_create_get(runtime, clazz));
+            s32 ret = execute_method_impl(runtime->jvm->shortcut.classloader_holdClass, runtime);
+            if (ret) {
+                print_exception(runtime);
+            }
+            runtime->thrd_info->no_pause--;
+        } else { //hold in systemclassloader
+            gc_obj_hold(runtime->jvm->collector, clazz->ins_class);
+        }
+    }
 }
 
 //===============================    实例化字符串  ==================================
@@ -1480,7 +1507,7 @@ Instance *exception_create_str(s32 exception_type, Runtime *runtime, c8 *errmsg)
     Instance *jstr = jstring_create(uerrmsg, runtime);
     instance_hold_to_thread(jstr, runtime);
     utf8_destory(uerrmsg);
-    RuntimeStack *para = stack_create(1);
+    RuntimeStack *para = stack_create(10);
     push_ref(para, jstr);
     instance_release_from_thread(jstr, runtime);
     Utf8String *clsName = utf8_create_c(STRS_CLASS_EXCEPTION[exception_type]);
@@ -1488,7 +1515,7 @@ Instance *exception_create_str(s32 exception_type, Runtime *runtime, c8 *errmsg)
     utf8_destory(clsName);
     Instance *ins = instance_create(runtime, clazz);
     instance_hold_to_thread(ins, runtime);
-    instance_init_methodtype(ins, runtime, "(Ljava/lang/String;)V", para);
+    instance_init_with_para(ins, runtime, "(Ljava/lang/String;)V", para);
     instance_release_from_thread(ins, runtime);
     stack_destory(para);
     return ins;
@@ -1496,18 +1523,18 @@ Instance *exception_create_str(s32 exception_type, Runtime *runtime, c8 *errmsg)
 //===============================    lambda  ==================================
 
 
-Instance *method_type_create(Runtime *runtime, Utf8String *desc) {
+Instance *method_type_create(Runtime *runtime, Instance *jloader, Utf8String *desc) {
     JClass *cl = classes_load_get_c(NULL, STR_CLASS_JAVA_LANG_INVOKE_METHODTYPE, runtime);
     if (cl) {
         Instance *mt = instance_create(runtime, cl);
         instance_hold_to_thread(mt, runtime);
         Instance *jstr_desc = jstring_create(desc, runtime);
 
+        RuntimeStack *para = stack_create(10);
 
-        RuntimeStack *para = stack_create(1);
-
+        push_ref(para, jloader);
         push_ref(para, jstr_desc);
-        instance_init_methodtype(mt, runtime, "(Ljava/lang/String;)V", para);
+        instance_init_with_para(mt, runtime, "(Ljava/lang/ClassLoader;Ljava/lang/String;)V", para);
         stack_destory(para);
         instance_release_from_thread(mt, runtime);
         return mt;
@@ -1520,7 +1547,7 @@ Instance *method_handle_create(Runtime *runtime, MethodInfo *mi, s32 kind) {
     if (cl) {
         Instance *mh = instance_create(runtime, cl);
         instance_hold_to_thread(mh, runtime);
-        RuntimeStack *para = stack_create(4);
+        RuntimeStack *para = stack_create(10);
         push_int(para, kind);
         Instance *jstr_clsName = jstring_create(mi->_this_class->name, runtime);
         instance_hold_to_thread(jstr_clsName, runtime);
@@ -1531,7 +1558,8 @@ Instance *method_handle_create(Runtime *runtime, MethodInfo *mi, s32 kind) {
         Instance *jstr_methodDesc = jstring_create(mi->descriptor, runtime);
         push_ref(para, jstr_methodDesc);
         instance_hold_to_thread(jstr_methodDesc, runtime);
-        instance_init_methodtype(mh, runtime, "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", para);
+        push_ref(para, mi->_this_class->jloader);
+        instance_init_with_para(mh, runtime, "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/ClassLoader;)V", para);
         stack_destory(para);
         instance_release_from_thread(mh, runtime);
         instance_release_from_thread(jstr_clsName, runtime);
@@ -1547,10 +1575,10 @@ Instance *method_handles_lookup_create(Runtime *runtime, JClass *caller) {
     if (cl) {
         Instance *lookup = instance_create(runtime, cl);
         instance_hold_to_thread(lookup, runtime);
-        RuntimeStack *para = stack_create(1);
+        RuntimeStack *para = stack_create(10);
 
         push_ref(para, insOfJavaLangClass_create_get(runtime, caller));
-        instance_init_methodtype(lookup, runtime, "(Ljava/lang/Class;)V", para);
+        instance_init_with_para(lookup, runtime, "(Ljava/lang/Class;)V", para);
         stack_destory(para);
         instance_release_from_thread(lookup, runtime);
         return lookup;
@@ -1579,7 +1607,7 @@ c8 *getFieldPtr_byName_c(Instance *instance, c8 *pclassName, c8 *pfieldName, c8 
 c8 *getFieldPtr_byName(Instance *instance, Utf8String *clsName, Utf8String *fieldName, Utf8String *fieldType, Runtime *runtime) {
 
     c8 *ptr = NULL;
-    FieldInfo *fi = find_fieldInfo_by_name(clsName, fieldName, fieldType, runtime);
+    FieldInfo *fi = find_fieldInfo_by_name(clsName, fieldName, fieldType, instance->mb.clazz->jloader, runtime);
 
     if (fi) {
         if (fi->access_flags & ACC_STATIC) {
@@ -1804,7 +1832,7 @@ s32 _loadFileContents(c8 *file, ByteBuf *buf) {
 }
 
 
-ByteBuf *load_file_from_classpath(ClassLoader *cloader, Utf8String *path) {
+ByteBuf *load_file_from_classpath(PeerClassLoader *cloader, Utf8String *path) {
     ByteBuf *bytebuf = NULL;
     s32 i, iret;
     for (i = 0; i < cloader->classpath->length; i++) {

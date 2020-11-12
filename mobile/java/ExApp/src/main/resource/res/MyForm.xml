@@ -6,7 +6,7 @@
             green=mod(random(),255)
             blue=mod(random(),255)
             setColor("LAB_HELP",red,green,blue,255)
-            setText("LAB_HELP","Any a test")
+            setText("LAB_HELP","Only a test")
         ret
         ]]>
     </script>

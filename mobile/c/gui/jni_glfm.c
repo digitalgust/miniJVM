@@ -298,6 +298,7 @@ int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
     glfmSetNotifyFunc(window, _callback_notify);
 
 
+    Instance *jloader = clazz->jloader;
     c8 *name_s, *type_s;
     {
         name_s = "onKey";
@@ -305,7 +306,7 @@ int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_key = env->find_methodInfo_by_name(refers.glfm_callback->mb.clazz->name,
-                                                            name, type, runtime);
+                                                            name, type, jloader, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -315,7 +316,7 @@ int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_character = env->find_methodInfo_by_name(
-                refers.glfm_callback->mb.clazz->name, name, type, runtime);
+                refers.glfm_callback->mb.clazz->name, name, type, jloader, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -325,7 +326,7 @@ int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_keyboard_visible = env->find_methodInfo_by_name(
-                refers.glfm_callback->mb.clazz->name, name, type, runtime);
+                refers.glfm_callback->mb.clazz->name, name, type, jloader, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -335,7 +336,7 @@ int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_mainloop = env->find_methodInfo_by_name(
-                refers.glfm_callback->mb.clazz->name, name, type, runtime);
+                refers.glfm_callback->mb.clazz->name, name, type, jloader, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -345,7 +346,7 @@ int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_memory_warning = env->find_methodInfo_by_name(
-                refers.glfm_callback->mb.clazz->name, name, type, runtime);
+                refers.glfm_callback->mb.clazz->name, name, type, jloader, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -356,7 +357,7 @@ int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_touch = env->find_methodInfo_by_name(refers.glfm_callback->mb.clazz->name,
-                                                              name, type, runtime);
+                                                              name, type, jloader, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -367,7 +368,7 @@ int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_surface_error = env->find_methodInfo_by_name(
-                refers.glfm_callback->mb.clazz->name, name, type, runtime);
+                refers.glfm_callback->mb.clazz->name, name, type, jloader, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -378,7 +379,7 @@ int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_surface_created = env->find_methodInfo_by_name(
-                refers.glfm_callback->mb.clazz->name, name, type, runtime);
+                refers.glfm_callback->mb.clazz->name, name, type, jloader, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -389,7 +390,7 @@ int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_surface_resized = env->find_methodInfo_by_name(
-                refers.glfm_callback->mb.clazz->name, name, type, runtime);
+                refers.glfm_callback->mb.clazz->name, name, type, jloader, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -399,7 +400,7 @@ int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_surface_destroyed = env->find_methodInfo_by_name(
-                refers.glfm_callback->mb.clazz->name, name, type, runtime);
+                refers.glfm_callback->mb.clazz->name, name, type, jloader, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -410,7 +411,7 @@ int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_app_focus = env->find_methodInfo_by_name(
-                refers.glfm_callback->mb.clazz->name, name, type, runtime);
+                refers.glfm_callback->mb.clazz->name, name, type, jloader, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -421,7 +422,7 @@ int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_photo_picked = env->find_methodInfo_by_name(
-                                                                     refers.glfm_callback->mb.clazz->name, name, type, runtime);
+                                                                     refers.glfm_callback->mb.clazz->name, name, type, jloader, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
@@ -432,7 +433,7 @@ int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_notify = env->find_methodInfo_by_name(
-                                                                     refers.glfm_callback->mb.clazz->name, name, type, runtime);
+                                                                     refers.glfm_callback->mb.clazz->name, name, type, jloader, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }

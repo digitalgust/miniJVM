@@ -117,6 +117,10 @@ public class AppManager extends GApplication {
         if (webServer != null) {
             webServer.stopServer();
         }
+        GApplication app = GCallBack.getInstance().getApplication();
+        if (app != null) {
+            app.close();
+        }
         GCallBack.getInstance().setApplication(this);
         reloadAppList();
     }
@@ -288,7 +292,6 @@ public class AppManager extends GApplication {
                     }
                 }
             } else if ("LI_ENG".equals(name)) {
-                System.out.println("Englist" + gobj);
                 GLanguage.setCurLang(GLanguage.ID_ENG);
                 AppLoader.setDefaultLang(GLanguage.ID_ENG);
                 AppManager.getInstance().active();

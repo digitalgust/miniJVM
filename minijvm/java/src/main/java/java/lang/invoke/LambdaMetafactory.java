@@ -57,8 +57,12 @@ public class LambdaMetafactory {
             ++end;
         }
         String ts = s.substring(index, end);
-//        Class c = SystemClassLoader.getClass(Classes.loadVMClass(type.loader, s, index, end - index));
-        Class c = RefNative.getClassByName(ts);
+        Class c = null;
+        try {
+            c = Class.forName(ts, false, type.loader);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         if (!c.isInterface()) {
             throw new RuntimeException();
         }
@@ -72,9 +76,9 @@ public class LambdaMetafactory {
     }
 
     private static byte[] makeFactoryCode(List<PoolEntry> pool,
-            String className,
-            String constructorSpec,
-            MethodType type)
+                                          String className,
+                                          String constructorSpec,
+                                          MethodType type)
             throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         write2(out, type.footprint() + 2); // max stack
@@ -105,8 +109,8 @@ public class LambdaMetafactory {
     }
 
     private static byte[] makeConstructorCode(List<PoolEntry> pool,
-            String className,
-            MethodType type)
+                                              String className,
+                                              MethodType type)
             throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         write2(out, 3); // max stack
@@ -137,9 +141,9 @@ public class LambdaMetafactory {
     }
 
     private static void maybeBoxOrUnbox(ByteArrayOutputStream out,
-            List<PoolEntry> pool,
-            MethodType.TypeSpec from,
-            MethodType.TypeSpec to)
+                                        List<PoolEntry> pool,
+                                        MethodType.TypeSpec from,
+                                        MethodType.TypeSpec to)
             throws IOException {
         if (to.type().isPrimitive()) {
             if (!(from.type().isPrimitive() || "V".equals(to.spec()))) {
@@ -233,11 +237,11 @@ public class LambdaMetafactory {
     }
 
     private static byte[] makeInvocationCode(List<PoolEntry> pool,
-            String className,
-            String constructorSpec,
-            MethodType fieldType,
-            MethodType localType,
-            MethodHandle implMethodHandle)
+                                             String className,
+                                             String constructorSpec,
+                                             MethodType fieldType,
+                                             MethodType localType,
+                                             MethodHandle implMethodHandle)
             throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         write2(out, fieldType.footprint()
@@ -323,8 +327,8 @@ public class LambdaMetafactory {
     }
 
     private static void writeMethodReference(OutputStream out,
-            List<PoolEntry> pool,
-            Method method)
+                                             List<PoolEntry> pool,
+                                             Method method)
             throws IOException {
         write2(out, ByteCodeConstantPool.addMethodRef(pool,
                 method.getDeclaringClass().getName(),
@@ -332,14 +336,14 @@ public class LambdaMetafactory {
                 method.getName(),
                 //                Classes.makeString(method.name, 0, method.name.length - 1),
                 method.getDescriptor()
-        //                Classes.makeString(method.spec, 0, method.spec.length - 1)
+                //                Classes.makeString(method.spec, 0, method.spec.length - 1)
         ) + 1);
 
     }
 
     private static void writeInterfaceMethodReference(OutputStream out,
-            List<PoolEntry> pool,
-            Method method)
+                                                      List<PoolEntry> pool,
+                                                      Method method)
             throws IOException {
         write2(out, ByteCodeConstantPool.addInterfaceMethodRef(pool,
                 method.getDeclaringClass().getName(),
@@ -347,32 +351,35 @@ public class LambdaMetafactory {
                 method.getName(),
                 //                Classes.makeString(method.name, 0, method.name.length - 1),
                 method.getDescriptor()
-        //                Classes.makeString(method.spec, 0, method.spec.length - 1)
+                //                Classes.makeString(method.spec, 0, method.spec.length - 1)
         ) + 1);
     }
 
     public static byte[] makeLambda(String invokedName,
-            String invokedType,
-            String methodType,
-            String implementationClass,
-            String implementationName,
-            String implementationSpec,
-            int implementationKind) {
+                                    String invokedType,
+                                    String methodType,
+                                    String implementationClass,
+                                    String implementationName,
+                                    String implementationSpec,
+                                    int implementationKind,
+                                    ClassLoader loader) {
         return makeLambda(invokedName,
                 new MethodType(invokedType),
                 new MethodType(methodType),
-                new MethodHandle(implementationKind, implementationClass,
+                new MethodHandle(implementationKind,
+                        implementationClass,
                         implementationName,
-                        implementationSpec
+                        implementationSpec,
+                        loader
                 ),
                 emptyInterfaceList);
     }
 
     private static byte[] makeLambda(String invokedName,
-            MethodType invokedType,
-            MethodType methodType,
-            MethodHandle methodImplementation,
-            Class[] interfaces) {
+                                     MethodType invokedType,
+                                     MethodType methodType,
+                                     MethodHandle methodImplementation,
+                                     Class[] interfaces) {
         String className;
         {
             int number;
@@ -452,6 +459,7 @@ public class LambdaMetafactory {
                     c.getMethod("make", invokedType.parameterArray()));
             return new CallSite(mh);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
@@ -459,20 +467,20 @@ public class LambdaMetafactory {
     private static final Class[] emptyInterfaceList = new Class[]{};
 
     public static CallSite metafactory(MethodHandles.Lookup caller,
-            String invokedName,
-            MethodType invokedType,
-            MethodType samMethodType,
-            MethodHandle implMethod,
-            MethodType instantiatedMethodType)
+                                       String invokedName,
+                                       MethodType invokedType,
+                                       MethodType samMethodType,
+                                       MethodHandle implMethod,
+                                       MethodType instantiatedMethodType)
             throws LambdaConversionException {
         byte[] classData = makeLambda(invokedName, invokedType, samMethodType, implMethod, emptyInterfaceList);
         return makeCallSite(invokedType, classData);
     }
 
     public static CallSite altMetafactory(MethodHandles.Lookup caller,
-            String invokedName,
-            MethodType invokedType,
-            Object... args) throws LambdaConversionException {
+                                          String invokedName,
+                                          MethodType invokedType,
+                                          Object... args) throws LambdaConversionException {
         // See openjdk8/jdk/src/share/classes/java/lang/invoke/LambdaMetafactory.java
         // Behaves as if the prototype is like this:
         //

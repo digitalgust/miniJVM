@@ -24,6 +24,7 @@ public abstract class ClassLoader {
 
     private final ClassLoader parent;
     private Map<String, Package> packages;
+    private Vector holderClasses = new Vector();//hold classes avoid  gc
 
     protected ClassLoader(ClassLoader parent) {
         if (parent == null) {
@@ -35,14 +36,23 @@ public abstract class ClassLoader {
         } else {
             this.parent = parent;
         }
+        RefNative.initNativeClassLoader(this, parent);
     }
 
     protected ClassLoader() {
-        if (!getClass().equals(Launcher.ExtClassLoader.class)) {
-            this.parent = getSystemClassLoader();
-        } else {
-            this.parent = null;
-        }
+        this(null);
+    }
+
+    /**
+     * this will release all loaded class by this classloader
+     *
+     * @throws Throwable
+     */
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        RefNative.destroyNativeClassLoader(this);
+        System.out.println(this + " finalized");
     }
 
     private Map<String, Package> packages() {
@@ -138,6 +148,7 @@ public abstract class ClassLoader {
     protected Class loadClass(String name, boolean resolve)
             throws ClassNotFoundException {
         Class c = findLoadedClass(name);
+
         if (c == null) {
             if (parent != null) {
                 try {
@@ -227,5 +238,12 @@ public abstract class ClassLoader {
         return null;
     }
 
+    /**
+     * called by vm
+     * @param c
+     */
+    private void holdClass(Class c) {
+        holderClasses.add(c);
+    }
 
 }

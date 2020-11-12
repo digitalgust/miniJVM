@@ -203,7 +203,6 @@ public class ThreadLocal<T> {
      *
      * @param t the current thread
      * @param firstValue value for the initial entry of the map
-     * @param map the map to store.
      */
     void createMap(Thread t, T firstValue) {
         t.threadLocals = new ThreadLocalMap(this, firstValue);
@@ -355,7 +354,6 @@ public class ThreadLocal<T> {
          * inlinable.
          *
          * @param  key the thread local object
-         * @param  h key's  hash code
          * @return the value associated with key
          */
         private Object get(ThreadLocal key) {

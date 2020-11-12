@@ -88,7 +88,7 @@ public final class Field<T> extends AccessibleObject implements Member {
     }
 
     public Class<?> getType() {
-        return ReflectClass.getClassByDescriptor(refField.descriptor);
+        return ReflectClass.getClassByDescriptor(clazz.getClassLoader(), refField.descriptor);
     }
 
     public Type getGenericType() {

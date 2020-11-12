@@ -12,7 +12,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Method;
 
 /**
- *
  * @author Gust
  */
 public class LambdaUtil {
@@ -24,14 +23,14 @@ public class LambdaUtil {
 
     /**
      * 返回c MethodInfo 地址
-     * 
+     *
      * @param callsite
-     * @return 
+     * @return
      */
     public static long getMethodInfoHandle(CallSite callsite) {
         if (callsite != null && callsite.getTarget() != null) {
             Method m = callsite.getTarget().getMethod();
-            return ReflectMethod.findMethod0(m.getDeclaringClass().getName(), m.getName(), m.getDescriptor());
+            return ReflectMethod.findMethod0(m.getDeclaringClass().getClassLoader(), m.getDeclaringClass().getName(), m.getName(), m.getDescriptor());
         } else {
             return 0;
         }

@@ -11,7 +11,7 @@
 package java.lang.ref;
 
 public abstract class Reference<T> {
-    private T target;
+    private T target; //don't chang the var name ,access by vm
     private ReferenceQueue<? super T> queue;
 
     Reference jNext;

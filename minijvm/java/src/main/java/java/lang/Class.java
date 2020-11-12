@@ -74,7 +74,7 @@ public final class Class<T> {
 
     /*
      * Constructor. Only the Java Virtual Machine creates Class
-     * objects.
+     * objects.classloader
      */
     private Class() {
     }
@@ -669,7 +669,12 @@ public final class Class<T> {
                 return double.class;
             }
             String objname = n.substring(n.indexOf("[L") + 2, n.length() - 1);
-            return RefNative.getClassByName(objname);
+            try {
+                return Class.forName(objname, false, getClassLoader());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
         } else {
             return null;
         }

@@ -42,7 +42,7 @@ public class MethodHandles {
         public MethodHandle findSpecial(Class<?> clazz, String name, MethodType type) throws NoSuchMethodException {
             Method m = clazz.getMethod(name, type.parameterArray());
             if ((m.getModifiers() & (Modifier.PRIVATE)) != 0) {
-                MethodHandle mh = new MethodHandle(MethodHandle.REF_invokeVirtual, null, m);
+                MethodHandle mh = new MethodHandle(MethodHandle.REF_invokeVirtual, clazz.getClassLoader(), m);
                 return mh;
             }
             throw new NoSuchMethodException(name);
@@ -51,7 +51,7 @@ public class MethodHandles {
         public MethodHandle findVirtual(Class<?> clazz, String name, MethodType type) throws NoSuchMethodException {
             Method m = clazz.getMethod(name, type.parameterArray());
             if ((m.getModifiers() & (Modifier.STATIC | Modifier.PRIVATE)) == 0) {
-                MethodHandle mh = new MethodHandle(MethodHandle.REF_invokeVirtual, null, m);
+                MethodHandle mh = new MethodHandle(MethodHandle.REF_invokeVirtual, clazz.getClassLoader(), m);
                 return mh;
             }
             throw new NoSuchMethodException(name);
@@ -60,7 +60,7 @@ public class MethodHandles {
         public MethodHandle findStatic(Class<?> clazz, String name, MethodType type) throws NoSuchMethodException {
             Method m = clazz.getMethod(name, type.parameterArray());
             if ((m.getModifiers() & (Modifier.STATIC)) != 0) {
-                MethodHandle mh = new MethodHandle(MethodHandle.REF_invokeVirtual, null, m);
+                MethodHandle mh = new MethodHandle(MethodHandle.REF_invokeVirtual, clazz.getClassLoader(), m);
                 return mh;
             }
             throw new NoSuchMethodException(name);
@@ -69,7 +69,7 @@ public class MethodHandles {
         public MethodHandle findConstructor(Class<?> clazz, MethodType type) throws NoSuchMethodException {
             Constructor m = clazz.getConstructor(type.parameterArray());
             if ((m.getModifiers() & (Modifier.STATIC)) == 0) {
-                MethodHandle mh = new MethodHandle(MethodHandle.REF_invokeVirtual, null, m);
+                MethodHandle mh = new MethodHandle(MethodHandle.REF_invokeVirtual, clazz.getClassLoader(), m);
                 return mh;
             }
             throw new NoSuchMethodException();

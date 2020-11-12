@@ -52,6 +52,7 @@ c8 *STR_CLASS_JAVA_LANG_STRINGBUILDER = "java/lang/StringBuilder";
 c8 *STR_CLASS_JAVA_LANG_OBJECT = "java/lang/Object";
 c8 *STR_CLASS_JAVA_LANG_THREAD = "java/lang/Thread";
 c8 *STR_CLASS_JAVA_LANG_CLASS = "java/lang/Class";
+c8 *STR_CLASS_JAVA_LANG_CLASSLOADER = "java/lang/ClassLoader";
 c8 *STR_CLASS_JAVA_LANG_REF_REFERENCE = "java/lang/ref/Reference";
 c8 *STR_CLASS_JAVA_LANG_INVOKE_METHODTYPE = "java/lang/invoke/MethodType";
 c8 *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLE = "java/lang/invoke/MethodHandle";

@@ -31,7 +31,7 @@ extern "C" {
 #define _JVM_DEBUG_LOG_TO_FILE 0
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_PROFILE 0
-
+#pragma GCC diagnostic error "-Wframe-larger-than="
 
 #if __JVM_OS_VS__ || __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__
 #define barrier() MemoryBarrier()
@@ -411,7 +411,7 @@ typedef union _Long2Double {
 //#define HARD_LIMIT
 
 
-typedef struct _ClassLoader ClassLoader;
+typedef struct _PeerClassLoader PeerClassLoader;
 typedef struct _ClassType JClass;
 typedef struct _InstanceType Instance;
 typedef struct _FieldInfo FieldInfo;
@@ -461,6 +461,7 @@ extern c8 *STR_CLASS_JAVA_LANG_STRINGBUILDER;
 extern c8 *STR_CLASS_JAVA_LANG_OBJECT;
 extern c8 *STR_CLASS_JAVA_LANG_THREAD;
 extern c8 *STR_CLASS_JAVA_LANG_CLASS;
+extern c8 *STR_CLASS_JAVA_LANG_CLASSLOADER;
 extern c8 *STR_CLASS_JAVA_LANG_REF_REFERENCE;
 extern c8 *STR_CLASS_JAVA_LANG_STACKTRACE;
 extern c8 *STR_CLASS_JAVA_LANG_THROWABLE;
@@ -622,6 +623,9 @@ void profile_print();
 #define GCFLAG_REFERENCE_SET(reg_v) (reg_v = (0x20 | reg_v))
 #define GCFLAG_REFERENCE_GET(reg_v) (0x20 & reg_v)
 #define GCFLAG_REFERENCE_CLEAR(reg_v) (reg_v = (0xDF & reg_v))
+#define GCFLAG_CHECK_SET(reg_v) (reg_v = (0x10 | reg_v))
+#define GCFLAG_CHECK_GET(reg_v) (0x10 & reg_v)
+#define GCFLAG_CHECK_CLEAR(reg_v) (reg_v = ((~0x10) & reg_v))
 
 typedef struct _MemoryBlock {
 
@@ -637,26 +641,36 @@ typedef struct _MemoryBlock {
     u8 arr_type_index;
 } MemoryBlock;
 
-struct _ClassLoader {
-    MiniJVM *jvm;
-    ArrayList *classpath;
-    Hashtable *classes;
-
-    Hashtable *table_jstring_const;
-
-
-    //
-    spinlock_t lock;
-};
-
 void memoryblock_destory(__refer ref);
 
-void classloader_release_classs_static_field(ClassLoader *class_loader);
+//======================= classloader =============================
 
-void classloader_destory(ClassLoader *class_loader);
+struct _PeerClassLoader {
+    MiniJVM *jvm;
+    Instance *jloader;
+    Instance *parent;
+    ArrayList *classpath;
+    Hashtable *classes;
+    //
+};
 
-void classloader_add_jar_path(ClassLoader *class_loader, Utf8String *jarPath);
+PeerClassLoader *classloader_create(MiniJVM *jvm);
 
+PeerClassLoader *classloader_create_with_path(MiniJVM *jvm, c8 *path);
+
+void classloaders_destroy_all(MiniJVM *jvm);
+
+void classloader_release_class_static_field(PeerClassLoader *class_loader);
+
+void classloader_destory(PeerClassLoader *class_loader);
+
+void classloader_add_jar_path(PeerClassLoader *class_loader, Utf8String *jar_path);
+
+void classloaders_remove(MiniJVM *jvm, PeerClassLoader *pcl);
+
+void classloaders_add(MiniJVM *jvm, PeerClassLoader *pcl);
+
+PeerClassLoader *classLoaders_find_by_instance(MiniJVM *jvm, Instance *jloader);
 
 //======================= class file =============================
 
@@ -974,7 +988,7 @@ struct _ClassType {
 
     //
     Instance *ins_class; //object of java.lang.Class
-    Instance *jClassLoader;// java classloader
+    Instance *jloader;// java classloader
 
     //public:
     s32 (*_load_class_from_bytes)(struct _ClassType *_this, ByteBuf *buf);
@@ -1020,7 +1034,7 @@ s32 class_destory(JClass *clazz);
 
 JClass *class_parse(Instance *loader, ByteBuf *bytebuf, Runtime *runtime);
 
-JClass *load_class(Instance *jcloader, Utf8String *pClassName, Runtime *runtime);
+JClass *load_class(Instance *jloader, Utf8String *pClassName, Runtime *runtime);
 
 s32 _LOAD_CLASS_FROM_BYTES(JClass *_this, ByteBuf *buf);
 
@@ -1032,7 +1046,10 @@ void _class_optimize(JClass *clazz);
 
 void class_clinit(JClass *clazz, Runtime *runtime);
 
-void printClassFileFormat(ClassFileFormat *cff);
+void printClassFileFormat(
+
+        ClassFileFormat *cff
+);
 
 s32 _class_method_info_destory(JClass *clazz);
 
@@ -1050,7 +1067,7 @@ u8 isSonOfInterface(JClass *clazz, JClass *son, Runtime *runtime);
 
 u8 assignable_from(JClass *clazzSon, JClass *clazzSuper);
 
-void class_clear_refer(ClassLoader *cloader, JClass *clazz);
+void class_clear_refer(PeerClassLoader *cloader, JClass *clazz);
 
 
 //======================= instance =============================
@@ -1072,7 +1089,7 @@ Instance *instance_create(Runtime *runtime, JClass *clazz);
 
 void instance_init(Instance *ins, Runtime *runtime);
 
-void instance_init_methodtype(Instance *ins, Runtime *runtime, c8 *methodtype, RuntimeStack *para);
+void instance_init_with_para(Instance *ins, Runtime *runtime, c8 *methodtype, RuntimeStack *para);
 
 void instance_finalize(Instance *ins, Runtime *runtime);
 
@@ -1164,15 +1181,15 @@ MethodInfo *find_instance_methodInfo_by_name(Instance *ins, Utf8String *methodNa
 
 MethodInfo *find_methodInfo_by_methodref(JClass *clazz, s32 method_ref, Runtime *runtime);
 
-MethodInfo *find_methodInfo_by_name(Utf8String *clsName, Utf8String *methodName, Utf8String *methodType, Runtime *runtime);
+MethodInfo *find_methodInfo_by_name(Utf8String *clsName, Utf8String *methodName, Utf8String *methodType, Instance *jloader, Runtime *runtime);
 
-MethodInfo *find_methodInfo_by_name_c(c8 *pclsName, c8 *pmethodName, c8 *pmethodType, Runtime *runtime);
+MethodInfo *find_methodInfo_by_name_c(c8 *pclsName, c8 *pmethodName, c8 *pmethodType, Instance *jloader, Runtime *runtime);
 
 FieldInfo *find_fieldInfo_by_fieldref(JClass *clazz, s32 field_ref, Runtime *runtime);
 
-FieldInfo *find_fieldInfo_by_name_c(c8 *pclsName, c8 *pfieldName, c8 *pfieldType, Runtime *runtime);
+FieldInfo *find_fieldInfo_by_name_c(c8 *pclsName, c8 *pfieldName, c8 *pfieldType, Instance *jloader, Runtime *runtime);
 
-FieldInfo *find_fieldInfo_by_name(Utf8String *clsName, Utf8String *fieldName, Utf8String *fieldType, Runtime *runtime);
+FieldInfo *find_fieldInfo_by_name(Utf8String *clsName, Utf8String *fieldName, Utf8String *fieldType, Instance *jloader, Runtime *runtime);
 
 //
 
@@ -1665,7 +1682,7 @@ struct _JNIENV {
 
     s32 (*execute_method)(MethodInfo *method, Runtime *runtime);
 
-    MethodInfo *(*find_methodInfo_by_name)(Utf8String *clsName, Utf8String *methodName, Utf8String *methodType, Runtime *runtime);
+    MethodInfo *(*find_methodInfo_by_name)(Utf8String *clsName, Utf8String *methodName, Utf8String *methodType, Instance *jloader, Runtime *runtime);
 
     void (*print_exception)(Runtime *runtime);
 
@@ -1699,7 +1716,8 @@ struct _JNIENV {
 
 };
 
-typedef struct _PreProcessor {
+typedef struct _ShortCut {
+    //java.lang.String
     FieldInfo *string_offset;
     FieldInfo *string_count;
     FieldInfo *string_value;
@@ -1726,14 +1744,18 @@ typedef struct _PreProcessor {
     FieldInfo *dmo_desc;
 
     //
-    MethodInfo *classloader_loadClass;
-
+    MethodInfo *launcher_loadClass;
+    //
+    MethodInfo *launcher_getSystemClassLoader;
     //
     MethodInfo *reference_vmEnqueneReference;
+    FieldInfo *reference_target;
     JClass *reference;
     //
+    MethodInfo *classloader_holdClass;
+    //
     JClass *array_classes[DATATYPE_COUNT];
-} PreProcessor;
+} ShortCut;
 
 
 struct _ThreadLock {
@@ -1742,7 +1764,11 @@ struct _ThreadLock {
 };
 //======================= Jvm =============================
 struct _MiniJVM {
-    ClassLoader *boot_classloader;
+    PeerClassLoader *boot_classloader;
+    ArrayList *classloaders;
+    spinlock_t lock_cloader;
+
+    Hashtable *table_jstring_const;//for cache same string
 
     ThreadLock threadlock;
 
@@ -1752,7 +1778,7 @@ struct _MiniJVM {
 
     GcCollector *collector;
 
-    PreProcessor shortcut;
+    ShortCut shortcut;
 
     JdwpServer *jdwpserver;
     s32 jdwp_enable;

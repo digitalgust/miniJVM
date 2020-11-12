@@ -26,9 +26,7 @@ public class MethodHandle {
     private volatile MethodType type;
 
     MethodHandle(int kind, Method method) {
-        this.kind = kind;
-        this.loader = ClassLoader.getSystemClassLoader();
-        this.method = method;
+        this(kind, ClassLoader.getSystemClassLoader(), method);
     }
 
     MethodHandle(int kind, ClassLoader loader, Method method) {
@@ -37,12 +35,21 @@ public class MethodHandle {
         this.method = method;
     }
 
-    MethodHandle(int kind, String className, String methodName, String spec) {
+    /**
+     * vm call method
+     * @param kind
+     * @param loader
+     * @param className
+     * @param methodName
+     * @param spec
+     */
+    MethodHandle(int kind, String className, String methodName, String spec, ClassLoader loader) {
         this.kind = kind;
-        this.loader = ClassLoader.getSystemClassLoader();
+        this.loader = loader;
         try {
             this.method = Method.findMethod(this.loader, className, methodName, spec);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
@@ -63,8 +70,8 @@ public class MethodHandle {
         }
         return type;
     }
-    
-    public Method getMethod(){
+
+    public Method getMethod() {
         return method;
     }
 
