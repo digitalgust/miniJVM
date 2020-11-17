@@ -222,14 +222,6 @@
 #	define FCSR_FCC		33
 #endif
 
-#if (defined SLJIT_CONFIG_TILEGX && SLJIT_CONFIG_TILEGX)
-#	define IS_JAL		0x04
-#	define IS_COND		0x08
-
-#	define PATCH_B		0x10
-#	define PATCH_J		0x20
-#endif
-
 #if (defined SLJIT_CONFIG_SPARC_32 && SLJIT_CONFIG_SPARC_32)
 #	define IS_MOVABLE	0x04
 #	define IS_COND		0x08
@@ -493,12 +485,16 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_set_compiler_memory_error(struct sljit_compi
 #if (defined SLJIT_CONFIG_ARM_THUMB2 && SLJIT_CONFIG_ARM_THUMB2)
 SLJIT_API_FUNC_ATTRIBUTE void sljit_free_code(void* code, void *exec_allocator_data)
 {
+	SLJIT_UNUSED_ARG(exec_allocator_data);
+
 	/* Remove thumb mode flag. */
 	SLJIT_FREE_EXEC((void*)((sljit_uw)code & ~0x1), exec_allocator_data);
 }
 #elif (defined SLJIT_INDIRECT_CALL && SLJIT_INDIRECT_CALL)
 SLJIT_API_FUNC_ATTRIBUTE void sljit_free_code(void* code, void *exec_allocator_data)
 {
+	SLJIT_UNUSED_ARG(exec_allocator_data);
+
 	/* Resolve indirection. */
 	code = (void*)(*(sljit_uw*)code);
 	SLJIT_FREE_EXEC(code, exec_allocator_data);
@@ -506,6 +502,8 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_free_code(void* code, void *exec_allocator_d
 #else
 SLJIT_API_FUNC_ATTRIBUTE void sljit_free_code(void* code, void *exec_allocator_data)
 {
+	SLJIT_UNUSED_ARG(exec_allocator_data);
+
 	SLJIT_FREE_EXEC(code, exec_allocator_data);
 }
 #endif
@@ -2045,7 +2043,7 @@ static SLJIT_INLINE sljit_s32 emit_mov_before_return(struct sljit_compiler *comp
 #if (defined SLJIT_CONFIG_X86 && SLJIT_CONFIG_X86) \
 		|| (defined SLJIT_CONFIG_PPC && SLJIT_CONFIG_PPC) \
 		|| (defined SLJIT_CONFIG_SPARC_32 && SLJIT_CONFIG_SPARC_32) \
-		|| ((defined SLJIT_CONFIG_MIPS && SLJIT_CONFIG_MIPS) && !(defined SLJIT_MIPS_REV && SLJIT_MIPS_REV >= 1))
+		|| ((defined SLJIT_CONFIG_MIPS && SLJIT_CONFIG_MIPS) && !(defined SLJIT_MIPS_REV && SLJIT_MIPS_REV >= 1 && SLJIT_MIPS_REV < 6))
 
 static SLJIT_INLINE sljit_s32 sljit_emit_cmov_generic(struct sljit_compiler *compiler, sljit_s32 type,
 	sljit_s32 dst_reg,
@@ -2122,8 +2120,6 @@ static SLJIT_INLINE sljit_s32 sljit_emit_cmov_generic(struct sljit_compiler *com
 #	include "sljitNativeMIPS_common.c"
 #elif (defined SLJIT_CONFIG_SPARC && SLJIT_CONFIG_SPARC)
 #	include "sljitNativeSPARC_common.c"
-#elif (defined SLJIT_CONFIG_TILEGX && SLJIT_CONFIG_TILEGX)
-#	include "sljitNativeTILEGX_64.c"
 #elif (defined SLJIT_CONFIG_S390X && SLJIT_CONFIG_S390X)
 #	include "sljitNativeS390X.c"
 #endif
