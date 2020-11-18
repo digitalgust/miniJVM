@@ -587,9 +587,9 @@ s32 _class_method_info_destory(JClass *clazz) {
         }
         if (mi->attributes)jvm_free(mi->attributes);
         mi->attributes = NULL;
-        if (mi->jump_2_pos)jvm_free(mi->jump_2_pos);
+        if (mi->jump_2_pos)pairlist_destory(mi->jump_2_pos);
         mi->jump_2_pos = NULL;
-        if (mi->pos_2_label)jvm_free(mi->pos_2_label);
+        if (mi->pos_2_label)pairlist_destory(mi->pos_2_label);
         mi->pos_2_label = NULL;
         utf8_destory(mi->paraType);
         utf8_destory(mi->returnType);

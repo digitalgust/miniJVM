@@ -784,6 +784,7 @@ s32 jthread_run(void *para) {
     }
     runtime->thrd_info->thread_status = THREAD_STATUS_ZOMBIE;
     jthread_dispose(jthread, runtime);
+    gc_move_objs_thread_2_gc(runtime);
     runtime_destory(runtime);
 #if _JVM_DEBUG_LOG_LEVEL > 0
     s64 spent = currentTimeMillis() - startAt;

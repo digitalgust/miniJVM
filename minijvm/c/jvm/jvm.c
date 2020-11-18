@@ -311,6 +311,7 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     classes_load_get(NULL, clsName, runtime);
     //开始装载类
     utf8_destory(clsName);
+    gc_move_objs_thread_2_gc(runtime);
     runtime_destory(runtime);
     runtime = NULL;
 #if _JVM_DEBUG_LOG_LEVEL > 0
@@ -386,6 +387,7 @@ s32 call_main(MiniJVM *jvm, c8 *p_mainclass, ArrayList *java_para) {
     s32 ret = call_method(jvm, p_mainclass, p_methodname, p_methodtype, runtime);
 
     thread_unboundle(runtime);
+    gc_move_objs_thread_2_gc(runtime);
     runtime_destory(runtime);
     return ret;
 }
@@ -466,6 +468,7 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
     }
     if (!p_runtime) {
         thread_unboundle(runtime);
+        gc_move_objs_thread_2_gc(runtime);
         runtime_destory(runtime);
     }
     utf8_destory(str_mainClsName);
