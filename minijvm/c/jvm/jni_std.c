@@ -843,8 +843,14 @@ s32 java_lang_System_arraycopy(Runtime *runtime, JClass *clazz) {
         src_start *= bytes;
         count *= bytes;
         dest_start *= bytes;
-        if (src && dest && src->arr_body && dest->arr_body && count > 0)
-            memmove(&(dest->arr_body[dest_start]), &(src->arr_body[src_start]), count);
+        if (src_start + count > src->arr_length * bytes || dest_start + count > dest->arr_length * bytes || count < 0) {
+            Instance *exception = exception_create(JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS, runtime);
+            push_ref(stack, (__refer) exception);
+            ret = RUNTIME_STATUS_EXCEPTION;
+        } else {
+            if (src->arr_body && dest->arr_body)
+                memmove(&(dest->arr_body[dest_start]), &(src->arr_body[src_start]), count);
+        }
     }
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);

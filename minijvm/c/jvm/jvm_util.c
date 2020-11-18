@@ -753,15 +753,15 @@ s32 jthread_dispose(Instance *jthread, Runtime *runtime) {
 }
 
 s32 jthread_run(void *para) {
-    Instance *jthread = ((__refer *) para)[0];
-    MiniJVM *jvm = ((__refer *) para)[1];
-    jvm_free(para);
+    Runtime *runtime = (Runtime *) para;
+    Instance *jthread = runtime->thrd_info->jthread;
+    MiniJVM *jvm = runtime->jvm;
+
 #if _JVM_DEBUG_LOG_LEVEL > 0
     s64 startAt = currentTimeMillis();
     jvm_printf("[INFO]thread start %llx\n", (s64) (intptr_t) jthread);
 #endif
     s32 ret = 0;
-    Runtime *runtime = (Runtime *) jthread_get_stackframe_value(jvm, jthread);
     runtime->thrd_info->pthread = thrd_current();
 
     Utf8String *methodName = utf8_create_c("run");
@@ -796,16 +796,12 @@ s32 jthread_run(void *para) {
 
 thrd_t jthread_start(Instance *ins, Runtime *parent) {//
     Runtime *runtime = runtime_create(parent->jvm);
+    runtime->thrd_info->jthread = ins;
     runtime->thrd_info->context_classloader = parent->thrd_info->context_classloader;//copy context classloader
 
-    __refer *para = jvm_calloc(sizeof(__refer) * 2);
-    para[0] = ins;
-    para[1] = runtime->jvm;
-
     jthread_init(ins, runtime);
-    thrd_t pt;
-    thrd_create(&pt, jthread_run, para);
-    return pt;
+    thrd_create(&runtime->thrd_info->pthread, jthread_run, runtime);
+    return runtime->thrd_info->pthread;
 }
 
 __refer jthread_get_name_value(MiniJVM *jvm, Instance *ins) {
