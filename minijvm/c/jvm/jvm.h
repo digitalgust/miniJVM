@@ -916,6 +916,7 @@ struct _FieldInfo {
     u8 isrefer;
     u8 datatype_bytes;
     u8 isvolatile;
+    u8 is_weak_target;
 };
 
 typedef struct _FieldPool {

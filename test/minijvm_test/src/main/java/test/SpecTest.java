@@ -10,6 +10,7 @@ import org.mini.reflect.vm.RefNative;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
+import java.util.WeakHashMap;
 
 /**
  * @author Gust
@@ -33,6 +34,7 @@ public class SpecTest {
         test_method();
         test_cal();
         test_reference();
+        test_weakhashmap();
         test_finalized();
         print("test end");
     }
@@ -53,15 +55,15 @@ public class SpecTest {
 
     static void _wait_for_gc() {
 
-        int cnt = RefNative.getGarbageMarkCounter();
-        while (RefNative.getGarbageMarkCounter() == cnt) {//cnt ++ when next gc
-            try {
-                System.gc();
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+//        int cnt = RefNative.getGarbageMarkCounter();
+//        while (RefNative.getGarbageMarkCounter() == cnt) {//cnt ++ when next gc
+        try {
+            System.gc();
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+//        }
     }
 
     static void test_cal() {
@@ -1278,13 +1280,16 @@ public class SpecTest {
     }
 
     static void test_reference() {
+        Apple a = new Apple("Green");
         ReferenceQueue<Apple> appleReferenceQueue = new ReferenceQueue<>();
-        WeakReference<Apple> apple1 = new WeakReference<Apple>(new Apple("Green"), appleReferenceQueue);
+        WeakReference<Apple> apple1 = new WeakReference<Apple>(a, appleReferenceQueue);
 
         _wait_for_gc();
-
-
         //下面两个输出为null,表示对象被回收了
+        if (apple1.get() == null) printerr("weakreference");
+
+        a = null;
+        _wait_for_gc();
         if (apple1.get() != null) printerr("weakreference");
 
         //输出结果，并且就是上面的appleWeakReference、appleWeakReference2，再次证明对象被回收了
@@ -1307,6 +1312,33 @@ public class SpecTest {
         _wait_for_gc();
         if (Apple.lastOne == null) {
             printerr("finlize " + Apple.lastOne);
+        }
+    }
+
+    static void test_weakhashmap() {
+        WeakHashMap<Object, String> weakHashMap = new WeakHashMap<>(10);
+
+        Object key0 = new Integer(1);
+        Object key1 = new Byte((byte) 1);
+        Object key2 = new Long(3);
+
+        // 存放元素
+        weakHashMap.put(key0, "K");
+        weakHashMap.put(key1, "Z");
+        weakHashMap.put(key2, "W");
+        if (weakHashMap.size() != 3) {
+            printerr("weakHashMap ");
+        }
+        // 这意味着"弱键"key0再没有被其它对象引用，调用gc时会回收WeakHashMap中与key0对应的键值对
+        key0 = null;
+        key1 = null;
+        // 内存回收，这里会回收WeakHashMap中与"key0"对应的键值对
+        System.gc();
+
+        _wait_for_gc();
+
+        if (weakHashMap.size() != 1) {
+            printerr("weakHashMap ");
         }
     }
 }

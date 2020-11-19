@@ -238,6 +238,7 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
     } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_REF_REFERENCE)) {
         jvm_runtime_cache->reference = clazz;
         jvm_runtime_cache->reference_target = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_REF_REFERENCE, "target", STR_INS_JAVA_LANG_OBJECT, NULL, runtime);
+        jvm_runtime_cache->reference_target->is_weak_target = 1;//mark as weakreference.target field
         jvm_runtime_cache->reference_vmEnqueneReference = find_methodInfo_by_name_c(STR_CLASS_JAVA_LANG_REF_REFERENCE, "vmEnqueneReference", "(Ljava/lang/ref/Reference;)V", NULL, runtime);
     } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_CLASSLOADER)) {
         jvm_runtime_cache->classloader_holdClass = find_methodInfo_by_name_c(STR_CLASS_JAVA_LANG_CLASSLOADER, "holdClass", "(Ljava/lang/Class;)V", NULL, runtime);

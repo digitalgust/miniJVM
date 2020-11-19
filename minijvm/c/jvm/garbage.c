@@ -346,6 +346,7 @@ s64 _garbage_collect(GcCollector *collector) {
             curmb = nextmb;
             nextmb = curmb->next;
             if (curmb->type == MEM_TYPE_INS) {
+                //execute finalize() method
                 if (curmb->clazz->finalizeMethod) {// there is a method called finalize
                     if (curmb->garbage_mark != collector->mark_cnt && !GCFLAG_FINALIZED_GET(curmb->gcflag)) {
                         instance_finalize((Instance *) curmb, collector->runtime);
@@ -353,8 +354,14 @@ s64 _garbage_collect(GcCollector *collector) {
                         GCFLAG_FINALIZED_SET(curmb->gcflag);
                     }
                 }
+                //process weakreference
                 if (GCFLAG_REFERENCE_GET(curmb->gcflag)) {//is weakreference
-                    instance_of_reference_enqueue((Instance *) curmb, collector->runtime);
+                    Instance *target = getFieldRefer(getInstanceFieldPtr((Instance *) curmb, jvm->shortcut.reference_target));
+                    //jvm_printf("weak reference : %llx %s, %d\n", (s64) (intptr_t) curmb, utf8_cstr(target->mb.clazz->name), curmb->garbage_mark);
+                    if (target && target->mb.garbage_mark != collector->mark_cnt) {
+                        instance_of_reference_enqueue((Instance *) curmb, collector->runtime);
+                        _gc_mark_object(curmb, collector->mark_cnt);//mark next collect it
+                    }
                 }
             }
         }
@@ -571,6 +578,7 @@ static inline void _gc_instance_mark(Instance *ins, u8 flag_cnt) {
         ArrayList *fiList = clazz->insFieldPtrIndex;
         for (i = 0, len = fiList->length; i < len; i++) {
             FieldInfo *fi = &fp->field[(s32) (intptr_t) arraylist_get_value_unsafe(fiList, i)];
+            if (fi->is_weak_target)continue;//skip weakreference target mark, but others mark need
             c8 *ptr = getInstanceFieldPtr(ins, fi);
             if (ptr) {
                 __refer ref = getFieldRefer(ptr);
