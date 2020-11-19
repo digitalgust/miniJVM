@@ -258,7 +258,7 @@ void thread_stop_all(MiniJVM *jvm) {
         jthread_suspend(r);
         r->thrd_info->no_pause = 1;
         r->thrd_info->is_interrupt = 1;
-        ThreadLock *tl = r->thrd_info->curThreadLock;
+        MemoryBlock *tl = r->thrd_info->curThreadLock;
         if (tl) {
             jthread_lock(tl, r);
             jthread_notify(tl, r);
