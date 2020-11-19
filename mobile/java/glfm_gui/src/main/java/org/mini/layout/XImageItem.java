@@ -3,6 +3,7 @@ package org.mini.layout;
 import org.mini.gui.GImage;
 import org.mini.gui.GImageItem;
 import org.mini.gui.GObject;
+import org.mini.gui.GToolkit;
 import org.mini.gui.event.GActionListener;
 import org.mini.layout.gscript.Interpreter;
 import org.mini.layout.gscript.Str;
@@ -33,7 +34,7 @@ public class XImageItem extends XObject implements GActionListener {
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("pic")) {
             pic = attValue;
-            GImage img = GImage.createImageFromJar(pic);
+            GImage img = GToolkit.getCachedImageFromJar(pic);
             if (img != null) {
                 img_w = img.getWidth();
                 img_h = img.getHeight();
@@ -79,7 +80,7 @@ public class XImageItem extends XObject implements GActionListener {
     @Override
     protected void createGui() {
         if (imgItem == null) {
-            GImage img = GImage.createImageFromJar(pic);
+            GImage img = GToolkit.getCachedImageFromJar(pic);
             imgItem = new GImageItem(img);
             initGui();
             imgItem.setLocation(x, y);
@@ -105,7 +106,7 @@ public class XImageItem extends XObject implements GActionListener {
     public void setPic(String s) {
         pic = s;
         if (imgItem != null) {
-            GImage img = GImage.createImageFromJar(s);
+            GImage img = GToolkit.getCachedImageFromJar(s);
             imgItem.setImg(img);
         }
     }

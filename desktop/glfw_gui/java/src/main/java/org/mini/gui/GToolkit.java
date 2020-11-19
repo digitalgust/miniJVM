@@ -896,7 +896,7 @@ public class GToolkit {
             img = GImage.createImageFromJar(filepath);
             imageCache.put(filepath, img);
         } else {
-            System.out.println("hit image from cache " + filepath);
+            //System.out.println("hit image from cache " + filepath);
         }
         return img;
     }
@@ -907,7 +907,7 @@ public class GToolkit {
             img = GImage.createImage(filepath);
             imageCache.put(filepath, img);
         } else {
-            System.out.println("hit image from cache " + filepath);
+            //System.out.println("hit image from cache " + filepath);
         }
         return img;
     }

@@ -12,6 +12,7 @@ import org.mini.reflect.ReflectArray;
 
 import java.io.InputStream;
 import java.util.Hashtable;
+import java.util.WeakHashMap;
 
 import static org.mini.nanovg.Gutil.toUtf8;
 import static org.mini.nanovg.Nanovg.*;
@@ -884,4 +885,30 @@ public class GToolkit {
         //System.out.println("edit menu show");
     }
 
+    /**
+     * --------------------------------    image cache    --------------------------------
+     */
+    static WeakHashMap<String, GImage> imageCache = new WeakHashMap<>();
+
+    static public GImage getCachedImageFromJar(String filepath) {
+        GImage img = imageCache.get(filepath);
+        if (img == null) {
+            img = GImage.createImageFromJar(filepath);
+            imageCache.put(filepath, img);
+        } else {
+            //System.out.println("hit image from cache " + filepath);
+        }
+        return img;
+    }
+
+    static public GImage getCachedImageFromFile(String filepath) {
+        GImage img = imageCache.get(filepath);
+        if (img == null) {
+            img = GImage.createImage(filepath);
+            imageCache.put(filepath, img);
+        } else {
+            //System.out.println("hit image from cache " + filepath);
+        }
+        return img;
+    }
 }

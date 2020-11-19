@@ -52,7 +52,7 @@ public class GCmdHandler {
                             Integer tex = (Integer) cmd.attachment;
                             if (tex != null) {
                                 Nanovg.nvgDeleteImage(form.getNvContext(), tex);
-                                System.out.println("delete image " + tex);
+                                //System.out.println("delete image " + tex);
                             }
                             break;
                         }
