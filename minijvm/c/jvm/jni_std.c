@@ -678,7 +678,7 @@ s32 java_lang_String_replace0(Runtime *runtime, JClass *clazz) {
             int index = i + offset;
             u16 ch = value[index];
             s32 match = 0;
-            if (ch == src_value[src_offset] && index + src_count < count) {
+            if (ch == src_value[src_offset] && index + src_count <= count) {
                 match = 1;
                 for (j = 1; j < src_count; j++) {
                     if (value[index + j] != src_value[src_offset + j]) {

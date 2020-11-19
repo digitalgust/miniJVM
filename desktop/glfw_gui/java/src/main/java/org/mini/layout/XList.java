@@ -1,9 +1,6 @@
 package org.mini.layout;
 
-import org.mini.gui.GImage;
-import org.mini.gui.GList;
-import org.mini.gui.GListItem;
-import org.mini.gui.GObject;
+import org.mini.gui.*;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GStateChangeListener;
 import org.mini.layout.gscript.Interpreter;
@@ -143,7 +140,7 @@ public class XList extends XObject implements GStateChangeListener {
                 ListItem item = (ListItem) items.elementAt(i);
                 GImage img = null;
                 if (item.pic != null) {
-                    img = GImage.createImageFromJar(item.pic);
+                    img = GToolkit.getCachedImageFromJar(item.pic);
                 }
                 GListItem gli = new GListItem(img, item.text);
                 gli.setName(item.name);

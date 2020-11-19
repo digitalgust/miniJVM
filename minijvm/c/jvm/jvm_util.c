@@ -258,9 +258,12 @@ void thread_stop_all(MiniJVM *jvm) {
         jthread_suspend(r);
         r->thrd_info->no_pause = 1;
         r->thrd_info->is_interrupt = 1;
-        jthread_lock(r->thrd_info->curThreadLock, r);
-        jthread_notify(r->thrd_info->curThreadLock, r);
-        jthread_unlock(r->thrd_info->curThreadLock, r);
+        ThreadLock *tl = r->thrd_info->curThreadLock;
+        if (tl) {
+            jthread_lock(tl, r);
+            jthread_notify(tl, r);
+            jthread_unlock(tl, r);
+        }
 
     }
     spin_unlock(&jvm->thread_list->spinlock);

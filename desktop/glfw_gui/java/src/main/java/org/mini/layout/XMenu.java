@@ -1,9 +1,6 @@
 package org.mini.layout;
 
-import org.mini.gui.GImage;
-import org.mini.gui.GMenu;
-import org.mini.gui.GMenuItem;
-import org.mini.gui.GObject;
+import org.mini.gui.*;
 import org.mini.gui.event.GActionListener;
 import org.mini.layout.xmlpull.KXmlParser;
 import org.mini.layout.xmlpull.XmlPullParser;
@@ -131,7 +128,7 @@ public class XMenu extends XObject implements GActionListener {
                 MenuItem item = (MenuItem) items.elementAt(i);
                 GImage img = null;
                 if (item.pic != null) {
-                    img = GImage.createImageFromJar(item.pic);
+                    img = GToolkit.getCachedImageFromJar(item.pic);
                 }
                 GMenuItem gli = menu.addItem(item.text, img);
                 gli.setActionListener(this);
