@@ -1125,7 +1125,7 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "iostestTests-Bridging-Header.h";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				USER_HEADER_SEARCH_PATHS = "/Users/Gust/Documents/GitHub/miniJVM/minijvm/c/utils/https/** /Users/Gust/Documents/GitHub/miniJVM/minijvm/c/utils/https/mbedtls/include/";
+				USER_HEADER_SEARCH_PATHS = "../../minijvm/c/utils/https/** ../../minijvm/c/utils/https/mbedtls/include/";
 				VALID_ARCHS = arm64;
 			};
 			name = Debug;
@@ -1147,7 +1147,7 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "iostestTests-Bridging-Header.h";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				USER_HEADER_SEARCH_PATHS = "/Users/Gust/Documents/GitHub/miniJVM/minijvm/c/utils/https/** /Users/Gust/Documents/GitHub/miniJVM/minijvm/c/utils/https/mbedtls/include/";
+				USER_HEADER_SEARCH_PATHS = "../../minijvm/c/utils/https/** ../../minijvm/c/utils/https/mbedtls/include/";
 				VALID_ARCHS = arm64;
 			};
 			name = Release;
