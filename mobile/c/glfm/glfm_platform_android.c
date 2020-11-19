@@ -517,7 +517,7 @@ static bool _glfmEGLContextInit(GLFMPlatformData *platformData) {
         if (created) {
             eglQueryContext(platformData->eglDisplay, platformData->eglContext,
                             EGL_CONTEXT_MAJOR_VERSION_KHR, &majorVersion);
-            if (majorVersion >= 3) { 
+            if (majorVersion >= 3) {
                 // This call fails on many (all?) devices.
                 // When it fails, `minorVersion` is left unchanged.
                 eglQueryContext(platformData->eglDisplay, platformData->eglContext,
@@ -1660,20 +1660,24 @@ const char *getClipBoardContent() {
     }
     jstring jstr = _glfmCallJavaMethod(jni, app->activity->clazz, "getClipBoardContent",
                                        "()Ljava/lang/String;", Object);
-    const char *rawString = (*jni)->GetStringUTFChars(jni, jstr, 0);
+    if (jstr) {
+        const char *rawString = (*jni)->GetStringUTFChars(jni, jstr, 0);
 
-    //copy str to mem cache
-    if (platformDataGlobal->clipBoardStr) {
-        free(platformDataGlobal->clipBoardStr);
+        //copy str to mem cache
+        if (platformDataGlobal->clipBoardStr) {
+            free(platformDataGlobal->clipBoardStr);
+            platformDataGlobal->clipBoardStr = NULL;
+        }
+        int size = strlen(rawString) + 1;
+        platformDataGlobal->clipBoardStr = malloc(size);
+        memcpy(platformDataGlobal->clipBoardStr, rawString, size);
+        platformDataGlobal->clipBoardStr[size] = 0;
+
+        (*jni)->ReleaseStringUTFChars(jni, jstr, rawString);
+        (*jni)->DeleteLocalRef(jni, jstr);
+    } else {
         platformDataGlobal->clipBoardStr = NULL;
     }
-    int size = strlen(rawString) + 1;
-    platformDataGlobal->clipBoardStr = malloc(size);
-    memcpy(platformDataGlobal->clipBoardStr, rawString, size);
-    platformDataGlobal->clipBoardStr[size] = 0;
-
-    (*jni)->ReleaseStringUTFChars(jni, jstr, rawString);
-    (*jni)->DeleteLocalRef(jni, jstr);
     return platformDataGlobal->clipBoardStr;
 }
 

@@ -653,7 +653,7 @@ s32 host_2_ip(c8 *hostname, char *buf, s32 buflen) {
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
     hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_ALL;
+    hints.ai_flags = AI_CANONNAME;
     hints.ai_protocol = IPPROTO_TCP;
 
     s = getaddrinfo(hostname, NULL, &hints, &result);
