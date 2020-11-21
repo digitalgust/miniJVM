@@ -17,4 +17,14 @@ public interface ObjectOutput {
   public void write(byte[] b, int off, int len);
   public void write(int b);
   public void writeObject(Object obj);
+  public void writeInt(int f);
+  public void writeLong(long f);
+  public void writeByte(byte f);
+  public void writeUnsignedByte(float f);
+  public void writeChar(char f);
+  public void writeShort(short f);
+  public void writeUnsignedShort(float f);
+  public void writeFloat(float f);
+  public void writeDouble(double f);
+  public void writeUTF(String f);
 }

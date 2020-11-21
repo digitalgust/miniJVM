@@ -17,5 +17,16 @@ public interface ObjectInput {
   public void read(byte[] b);
   public void read(byte[] b, int off, int len);
   public Object readObject();
+  public int readInt();
+  public long readLong();
+  public byte readByte();
+  public int readUnsignedByte();
+  public char readChar();
+  public short readShort();
+  public int readUnsignedShort();
+  public float readFloat();
+  public double readDouble();
+  public String readLine();
+  public String readUTF();
   public long skip(long n);
 }
