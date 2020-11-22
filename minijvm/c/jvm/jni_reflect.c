@@ -1337,21 +1337,21 @@ s32 org_mini_reflect_vm_RefNative_heap_little_endian(Runtime *runtime, JClass *c
 s32 org_mini_reflect_DirectMemObj_objectFieldOffset(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     FieldInfo *fi = (__refer) (intptr_t) localvar_getLong(runtime->localvar, pos);
-    push_long(runtime->stack, fi ? -1 : fi->offset_instance);
+    push_long(runtime->stack, fi ? -1 : (s64) (intptr_t) fi->offset_instance);
     return 0;
 }
 
 s32 org_mini_reflect_DirectMemObj_staticFieldOffset(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     FieldInfo *fi = (__refer) (intptr_t) localvar_getLong(runtime->localvar, pos);
-    push_long(runtime->stack, fi && (fi->access_flags & ACC_STATIC) ? -1 : fi->offset);
+    push_long(runtime->stack, fi && (fi->access_flags & ACC_STATIC) ? -1 : (s64) (intptr_t) fi->offset);
     return 0;
 }
 
 s32 org_mini_reflect_DirectMemObj_objectFieldBase(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     Instance *ins = localvar_getRefer(runtime->localvar, pos);
-    push_long(runtime->stack, ins ? -1 : ins->arr_body);
+    push_long(runtime->stack, ins ? -1 : (s64) (intptr_t) ins->arr_body);
     return 0;
 }
 
