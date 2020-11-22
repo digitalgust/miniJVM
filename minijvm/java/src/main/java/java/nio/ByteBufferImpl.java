@@ -7,7 +7,6 @@ import org.mini.reflect.vm.RefNative;
 class ByteBufferImpl extends ByteBuffer {
     protected byte[] array;
 
-    protected final long address;
     int baseOffset;
 
     protected ByteBufferImpl(byte[] arr, int start, int length, boolean readOnly) {

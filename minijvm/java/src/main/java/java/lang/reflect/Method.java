@@ -26,6 +26,7 @@
 
 package java.lang.reflect;
 
+import org.mini.reflect.ReflectField;
 import org.mini.reflect.ReflectMethod;
 import org.mini.reflect.vm.RConst;
 
@@ -59,6 +60,11 @@ public class Method<T> extends AccessibleObject implements Member {
     public Method(Class cl, ReflectMethod refm) {
         refMethod = refm;
         clazz = cl;
+    }
+
+
+    public ReflectMethod getReflectMethod() {
+        return refMethod;
     }
 
     public Object invoke(Object obj, Object... args)

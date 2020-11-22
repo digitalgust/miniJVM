@@ -15,7 +15,6 @@ import org.mini.reflect.ReflectArray;
 class FloatBufferImpl extends FloatBuffer {
     protected float[] array;
 
-    protected final long address;
     int arrayOffset;
 
     FloatBufferImpl(float[] array, int offset, int length, boolean readOnly) {

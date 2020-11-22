@@ -15,7 +15,6 @@ import org.mini.reflect.ReflectArray;
 class DoubleBufferImpl extends DoubleBuffer {
     protected double[] array;
 
-    protected final long address;
     int arrayOffset;
 
     DoubleBufferImpl(double[] array, int offset, int length, boolean readOnly) {

@@ -15,7 +15,6 @@ import org.mini.reflect.ReflectArray;
 class CharBufferImpl extends CharBuffer {
     protected char[] array = null;
 
-    protected final long address;
     int arrayOffset;
 
     CharBufferImpl(char[] array, int offset, int length, boolean readOnly) {

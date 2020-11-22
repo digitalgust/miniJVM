@@ -60,6 +60,10 @@ public final class Field<T> extends AccessibleObject implements Member {
         clazz = cl;
     }
 
+    public ReflectField getRefField() {
+        return refField;
+    }
+
     public String getName() {
         return refField.fieldName;
     }

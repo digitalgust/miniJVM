@@ -16,6 +16,9 @@ public abstract class Buffer {
     protected int limit;
     protected boolean readonly;
 
+    //for unsafe
+    protected long address;
+
     public final int limit() {
         return limit;
     }
@@ -65,5 +68,9 @@ public abstract class Buffer {
 
     public boolean isReadOnly() {
         return readonly;
+    }
+
+    public boolean isDirect(){
+        return false;
     }
 }

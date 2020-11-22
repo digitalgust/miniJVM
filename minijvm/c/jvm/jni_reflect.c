@@ -1334,6 +1334,27 @@ s32 org_mini_reflect_vm_RefNative_heap_little_endian(Runtime *runtime, JClass *c
     return 0;
 }
 
+s32 org_mini_reflect_DirectMemObj_objectFieldOffset(Runtime *runtime, JClass *clazz) {
+    s32 pos = 0;
+    FieldInfo *fi = (__refer) (intptr_t) localvar_getLong(runtime->localvar, pos);
+    push_long(runtime->stack, fi ? -1 : fi->offset_instance);
+    return 0;
+}
+
+s32 org_mini_reflect_DirectMemObj_staticFieldOffset(Runtime *runtime, JClass *clazz) {
+    s32 pos = 0;
+    FieldInfo *fi = (__refer) (intptr_t) localvar_getLong(runtime->localvar, pos);
+    push_long(runtime->stack, fi && (fi->access_flags & ACC_STATIC) ? -1 : fi->offset);
+    return 0;
+}
+
+s32 org_mini_reflect_DirectMemObj_objectFieldBase(Runtime *runtime, JClass *clazz) {
+    s32 pos = 0;
+    Instance *ins = localvar_getRefer(runtime->localvar, pos);
+    push_long(runtime->stack, ins ? -1 : ins->arr_body);
+    return 0;
+}
+
 
 static java_native_method METHODS_REFLECT_TABLE[] = {
         {"org/mini/reflect/vm/RefNative",  "refIdSize",                "()I",                                                                              org_mini_reflect_vm_RefNative_refIdSize},
@@ -1396,6 +1417,9 @@ static java_native_method METHODS_REFLECT_TABLE[] = {
         {"org/mini/reflect/DirectMemObj",  "getVal",                   "(I)J",                                                                             org_mini_reflect_DirectMemObj_getVal},
         {"org/mini/reflect/DirectMemObj",  "copyTo0",                  "(ILjava/lang/Object;II)V",                                                         org_mini_reflect_DirectMemObj_copyTo0},
         {"org/mini/reflect/DirectMemObj",  "copyFrom0",                "(ILjava/lang/Object;II)V",                                                         org_mini_reflect_DirectMemObj_copyFrom0},
+        {"sun/misc/Unsafe",                "objectFieldOffset",        "(J)J",                                                                             org_mini_reflect_DirectMemObj_objectFieldOffset},
+        {"sun/misc/Unsafe",                "objectFieldBase",          "(Ljava/lang/Object;)J",                                                            org_mini_reflect_DirectMemObj_objectFieldBase},
+        {"sun/misc/Unsafe",                "staticFieldOffset",        "(J)J",                                                                             org_mini_reflect_DirectMemObj_staticFieldOffset},
 
 };
 

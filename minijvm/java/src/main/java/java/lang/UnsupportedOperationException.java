@@ -50,4 +50,9 @@ public class UnsupportedOperationException extends RuntimeException {
     public UnsupportedOperationException(String message) {
 	super(message);
     }
+
+
+    public UnsupportedOperationException(Throwable cause) {
+        super(cause);
+    }
 }

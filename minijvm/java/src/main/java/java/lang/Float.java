@@ -433,6 +433,10 @@ public final class Float extends Number implements Comparable<Float> {
      */
     public static native int floatToIntBits(float value);
 
+    public static int floatToRawIntBits(float value) {
+        int result = floatToIntBits(value);
+        return result;
+    }
     /**
      * Returns the bit representation of a single-float value. The result is a
      * representation of the floating-point argument according to the IEEE 754
@@ -548,7 +552,7 @@ public final class Float extends Number implements Comparable<Float> {
      * a <code>ClassCastException</code> (as Floats are comparable only to other
      * Floats).
      *
-     * @param o the <code>Object</code> to be compared.
+     * @param anotherFloat the <code>Object</code> to be compared.
      * @return the value <code>0</code> if the argument is a Float numerically
      * equal to this Float; a value less than <code>0</code> if the argument is
      * a Float numerically greater than this Float; and a value greater than

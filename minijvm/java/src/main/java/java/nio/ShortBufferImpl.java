@@ -15,7 +15,6 @@ import org.mini.reflect.ReflectArray;
 class ShortBufferImpl extends ShortBuffer {
     protected short[] array;
 
-    protected final long address;
     int arrayOffset;
 
     ShortBufferImpl(short[] array, int offset, int length, boolean readOnly) {

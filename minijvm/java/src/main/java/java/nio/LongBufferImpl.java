@@ -15,7 +15,6 @@ import org.mini.reflect.ReflectArray;
 class LongBufferImpl extends LongBuffer {
     protected long[] array;
 
-    protected final long address;
     int arrayOffset;
 
     LongBufferImpl(long[] array, int offset, int length, boolean readOnly) {

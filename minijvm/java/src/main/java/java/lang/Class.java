@@ -704,4 +704,9 @@ public final class Class<T> {
             refClass = new ReflectClass(classHandle);
         }
     }
+
+    public ReflectClass getRefClass(){
+        checkRefectClassLoaded();
+        return refClass;
+    }
 }
