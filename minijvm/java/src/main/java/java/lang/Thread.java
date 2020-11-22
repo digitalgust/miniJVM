@@ -387,6 +387,19 @@ public class Thread implements Runnable {
     public ClassLoader getContextClassLoader() {
         return getContextClassLoader0();
     }
+    
+    /**
+     * Returns the identifier of this Thread.  The thread ID is a positive
+     * <tt>long</tt> number generated when this thread was created.
+     * The thread ID is unique and remains unchanged during its lifetime.
+     * When a thread is terminated, this thread ID may be reused.
+     *
+     * @return this thread's ID.
+     * @since 1.5
+     */
+    public long getId() {
+        return stackFrame;
+    }
 
     /**
      * Returns a string representation of this thread, including the thread's
