@@ -488,6 +488,10 @@ FieldInfo *find_fieldInfo_by_name(Utf8String *clsName, Utf8String *fieldName, Ut
 //    if (utf8_equals_c(clsName, "espresso/parser/JavaParser")&&utf8_equals_c(fieldName, "methodNode_d")) {
 //        int debug = 1;
 //    }
+    if (!other) {
+        jvm_printf("field not exist :%s.%s%s\n", utf8_cstr(clsName), utf8_cstr(fieldName), utf8_cstr(fieldType));
+        return NULL;
+    }
 
     while (fi == NULL && other) {
         FieldPool *fp = &(other->fieldPool);
@@ -557,6 +561,10 @@ MethodInfo *find_methodInfo_by_name_c(c8 *pclsName, c8 *pmethodName, c8 *pmethod
 MethodInfo *find_methodInfo_by_name(Utf8String *clsName, Utf8String *methodName, Utf8String *methodType, Instance *jloader, Runtime *runtime) {
     MethodInfo *mi = NULL;
     JClass *other = classes_load_get_without_resolve(jloader, clsName, runtime);
+    if (!other) {
+        jvm_printf("method not exist :%s.%s%s\n", utf8_cstr(clsName), utf8_cstr(methodName), utf8_cstr(methodType));
+        return NULL;
+    }
 
     while (mi == NULL && other) {
         MethodPool *fp = &(other->methodPool);

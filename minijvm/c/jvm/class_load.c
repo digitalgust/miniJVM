@@ -1905,6 +1905,8 @@ JClass *load_class(Instance *jloader, Utf8String *pClassName, Runtime *runtime) 
                     }
                 } else {
                     print_exception(runtime);
+                    Instance *ins = pop_ref(runtime->stack);
+                    //jvm_printf("load class exception:%s\n", utf8_cstr(ins->mb.clazz->name));
                 }
                 runtime->thrd_info->no_pause--;
             }
