@@ -1613,6 +1613,10 @@ const char* glfmGetUUID(){
     return [Identifier UTF8String];
 }
 
+const char* getOsName(){
+    return "iOS";
+}
+
 void setDeviceToken(GLFMDisplay * display, const char *deviceToken) {
     static char *key="glfm.device.token";
 

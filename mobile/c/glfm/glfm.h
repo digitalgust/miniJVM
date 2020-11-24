@@ -378,6 +378,8 @@ const char *glfmGetSaveRoot();
 
 const char *getClipBoardContent();
 
+const char *getOsName();
+
 void setClipBoardContent(const char *str);
 
 void pickPhotoAlbum(GLFMDisplay *display, int uid, int type);

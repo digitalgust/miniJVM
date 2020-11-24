@@ -57,6 +57,7 @@ void glfmMain(GLFMDisplay *display) {
     sys_properties_set_c(refers.jvm, "glfm.res.root",glfmGetResRoot());
     sys_properties_set_c(refers.jvm, "glfm.save.root", glfmGetSaveRoot());
     sys_properties_set_c(refers.jvm, "glfm.uuid", glfmGetUUID());
+    sys_properties_set_c(refers.jvm, "os.name", getOsName());
     Runtime *runtime=getRuntimeCurThread(&jnienv);
 
     utf8_destory(classpath);

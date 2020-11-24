@@ -650,6 +650,7 @@ s32 sys_properties_load(MiniJVM *jvm) {
     sys_properties_set_c(jvm, "path.separator", ":");
     sys_properties_set_c(jvm, "file.separator", "/");
     sys_properties_set_c(jvm, "line.separator", "\n");
+    sys_properties_set_c(jvm, "XstartOnFirstThread", "1");
 #elif __JVM_OS_LINUX__
     sys_properties_set_c(jvm, "os.name", "Linux");
     sys_properties_set_c(jvm, "path.separator", ":");
