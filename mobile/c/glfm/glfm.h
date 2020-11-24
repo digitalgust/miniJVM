@@ -380,6 +380,8 @@ const char *getClipBoardContent();
 
 void setClipBoardContent(const char *str);
 
+const char *getOsName();
+
 void pickPhotoAlbum(GLFMDisplay *display, int uid, int type);
 
 void pickPhotoCamera(GLFMDisplay *display, int uid, int type);

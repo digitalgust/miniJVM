@@ -1645,6 +1645,9 @@ void setClipBoardContent(const char *str){
     pasteboard.string = nstr;
 }
 
+const char* getOsName(){
+    return "iOS";
+}
 
 void pickPhotoAlbum(GLFMDisplay *display, int uid, int type){
     if (display) {

@@ -1779,6 +1779,10 @@ const char *glfmGetUUID() {
     return android_uuid;
 }
 
+const char* getOsName(){
+    return "iOS";
+}
+
 void *playVideo(GLFMDisplay *display, char *cpath, char *mimeType) {
 
     if (display) {
