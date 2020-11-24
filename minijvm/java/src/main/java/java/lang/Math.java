@@ -147,7 +147,7 @@ public final strictfp class Math {
      * <code>-Math.floor(-x)</code>.
      *
      * @param a a <code>double</code> value. <!--@return the value
-     * &lceil;&nbsp;<code>a</code>&nbsp;&rceil;.-->
+     *          &lceil;&nbsp;<code>a</code>&nbsp;&rceil;.-->
      * @return the smallest (closest to negative infinity) <code>double</code>
      * value that is not less than the argument and is equal to a mathematical
      * integer.
@@ -167,7 +167,7 @@ public final strictfp class Math {
      * zero, then the result is the same as the argument.</ul>
      *
      * @param a a <code>double</code> value. <!--@return the value
-     * &lfloor;&nbsp;<code>a</code>&nbsp;&rfloor;.-->
+     *          &lfloor;&nbsp;<code>a</code>&nbsp;&rfloor;.-->
      * @return the largest (closest to positive infinity) <code>double</code>
      * value that is not greater than the argument and is equal to a
      * mathematical integer.
@@ -407,6 +407,22 @@ public final strictfp class Math {
             return b;
         }
         return (a <= b) ? a : b;
+    }
+
+    public static double signum(double d) {
+        if (Double.isNaN(d)) return d;
+        if (Double.doubleToLongBits(d) == negativeZeroDoubleBits) return d;
+        if (Double.doubleToLongBits(d) == 0.0d) return d;
+        if (d > 0) return 1.0d;
+        else return -1.0d;
+    }
+
+    public static float signum(float f) {
+        if (Float.isNaN(f)) return f;
+        if (Float.floatToIntBits(f) == negativeZeroFloatBits) return f;
+        if (Float.floatToIntBits(f) == 0.0f) return f;
+        if (f > 0) return 1.0f;
+        else return -1.0f;
     }
 
     public static long round(double a) {
