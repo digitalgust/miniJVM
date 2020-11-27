@@ -45,7 +45,7 @@ package java.lang;
  * @see     java.lang.Class#newInstance()
  * @since   JDK1.0, CLDC 1.0
  */
-public class IllegalAccessException extends Exception {
+public class IllegalAccessException extends ReflectiveOperationException {
     /**
      * Constructs an <code>IllegalAccessException</code> without a 
      * detail message. 

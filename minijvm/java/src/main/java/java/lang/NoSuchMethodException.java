@@ -9,7 +9,7 @@ package java.lang;
  *
  * @author gust
  */
-public class NoSuchMethodException extends Exception {
+public class NoSuchMethodException extends ReflectiveOperationException {
 
     public NoSuchMethodException() {
         super();

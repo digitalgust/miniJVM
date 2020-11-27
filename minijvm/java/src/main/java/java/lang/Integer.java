@@ -730,6 +730,23 @@ public final class Integer extends Number implements Comparable<Integer> {
 	return value;
     }
 
+	public static int hashCode(int value) {
+		return value;
+	}
+
+	/**
+	 * Adds two integers together as per the + operator.
+	 *
+	 * @param a the first operand
+	 * @param b the second operand
+	 * @return the sum of {@code a} and {@code b}
+	 * @see java.util.function.BinaryOperator
+	 * @since 1.8
+	 */
+	public static int sum(int a, int b) {
+		return a + b;
+	}
+
     /**
      * Compares this object to the specified object.  The result is
      * <code>true</code> if and only if the argument is not
@@ -1195,6 +1212,25 @@ public final class Integer extends Number implements Comparable<Integer> {
                ((i << 24));
     }
 
+	public static int compare(int x, int y) {
+		return (x < y) ? -1 : ((x == y) ? 0 : 1);
+	}
+
+	public static int compareUnsigned(int x, int y) {
+		return compare(x + MIN_VALUE, y + MIN_VALUE);
+	}
+
+	public static long toUnsignedLong(int x) {
+		return ((long) x) & 0xffffffffL;
+	}
+	public static int divideUnsigned(int dividend, int divisor) {
+		// In lieu of tricky code, for now just use long arithmetic.
+		return (int)(toUnsignedLong(dividend) / toUnsignedLong(divisor));
+	}
+	public static int remainderUnsigned(int dividend, int divisor) {
+		// In lieu of tricky code, for now just use long arithmetic.
+		return (int)(toUnsignedLong(dividend) % toUnsignedLong(divisor));
+	}
     /** use serialVersionUID from JDK 1.0.2 for interoperability */
     private static final long serialVersionUID = 1360826667806852920L;
 }

@@ -28,9 +28,7 @@
 package java.util;
 
 import java.lang.reflect.Array;
-import java.util.function.Consumer;
-import java.util.function.UnaryOperator;
-
+import java.util.function.*;
 
 
 /**
@@ -2389,7 +2387,6 @@ public class Arrays {
         }
 
         @Override
-        @SuppressWarnings("unchecked")
         public <T> T[] toArray(T[] a) {
             int size = size();
             if (a.length < size)
@@ -3329,7 +3326,6 @@ public class Arrays {
      * @throws NullPointerException if <tt>original</tt> is null
      * @since 1.6
      */
-    @SuppressWarnings("unchecked")
     public static <T> T[] copyOf(T[] original, int newLength) {
         return (T[]) copyOf(original, newLength, original.getClass());
     }
@@ -3346,7 +3342,7 @@ public class Arrays {
      *
      * @param <U> the class of the objects in the original array
      * @param <T> the class of the objects in the returned array
-     * @param original the array to be copied
+     * @param array the array to be copied
      * @param newLength the length of the copy to be returned
      * @param newType the class of the copy to be returned
      * @return a copy of the original array, truncated or padded with nulls
@@ -3376,4 +3372,247 @@ public class Arrays {
                 Math.min(original.length - from, newLength));
         return copy;
     }
+
+
+    /**
+     * Set all elements of the specified array, using the provided
+     * generator function to compute each element.
+     *
+     * <p>If the generator function throws an exception, it is relayed to
+     * the caller and the array is left in an indeterminate state.
+     *
+     * @param <T> type of elements of the array
+     * @param array array to be initialized
+     * @param generator a function accepting an index and producing the desired
+     *        value for that position
+     * @throws NullPointerException if the generator is null
+     * @since 1.8
+     */
+    public static <T> void setAll(T[] array, IntFunction<? extends T> generator) {
+        Objects.requireNonNull(generator);
+        for (int i = 0; i < array.length; i++)
+            array[i] = generator.apply(i);
+    }
+
+
+    /**
+     * Set all elements of the specified array, using the provided
+     * generator function to compute each element.
+     *
+     * <p>If the generator function throws an exception, it is relayed to
+     * the caller and the array is left in an indeterminate state.
+     *
+     * @param array array to be initialized
+     * @param generator a function accepting an index and producing the desired
+     *        value for that position
+     * @throws NullPointerException if the generator is null
+     * @since 1.8
+     */
+    public static void setAll(int[] array, IntUnaryOperator generator) {
+        Objects.requireNonNull(generator);
+        for (int i = 0; i < array.length; i++)
+            array[i] = generator.applyAsInt(i);
+    }
+
+
+    /**
+     * Set all elements of the specified array, using the provided
+     * generator function to compute each element.
+     *
+     * <p>If the generator function throws an exception, it is relayed to
+     * the caller and the array is left in an indeterminate state.
+     *
+     * @param array array to be initialized
+     * @param generator a function accepting an index and producing the desired
+     *        value for that position
+     * @throws NullPointerException if the generator is null
+     * @since 1.8
+     */
+    public static void setAll(long[] array, IntToLongFunction generator) {
+        Objects.requireNonNull(generator);
+        for (int i = 0; i < array.length; i++)
+            array[i] = generator.applyAsLong(i);
+    }
+
+
+    /**
+     * Set all elements of the specified array, using the provided
+     * generator function to compute each element.
+     *
+     * <p>If the generator function throws an exception, it is relayed to
+     * the caller and the array is left in an indeterminate state.
+     *
+     * @param array array to be initialized
+     * @param generator a function accepting an index and producing the desired
+     *        value for that position
+     * @throws NullPointerException if the generator is null
+     * @since 1.8
+     */
+    public static void setAll(double[] array, IntToDoubleFunction generator) {
+        Objects.requireNonNull(generator);
+        for (int i = 0; i < array.length; i++)
+            array[i] = generator.applyAsDouble(i);
+    }
+
+
+    /**
+     * Returns a {@link Spliterator} covering all of the specified array.
+     *
+     * <p>The spliterator reports {@link Spliterator#SIZED},
+     * {@link Spliterator#SUBSIZED}, {@link Spliterator#ORDERED}, and
+     * {@link Spliterator#IMMUTABLE}.
+     *
+     * @param <T> type of elements
+     * @param array the array, assumed to be unmodified during use
+     * @return a spliterator for the array elements
+     * @since 1.8
+     */
+    public static <T> Spliterator<T> spliterator(T[] array) {
+        return Spliterators.spliterator(array,
+                Spliterator.ORDERED | Spliterator.IMMUTABLE);
+    }
+
+    /**
+     * Returns a {@link Spliterator} covering the specified range of the
+     * specified array.
+     *
+     * <p>The spliterator reports {@link Spliterator#SIZED},
+     * {@link Spliterator#SUBSIZED}, {@link Spliterator#ORDERED}, and
+     * {@link Spliterator#IMMUTABLE}.
+     *
+     * @param <T> type of elements
+     * @param array the array, assumed to be unmodified during use
+     * @param startInclusive the first index to cover, inclusive
+     * @param endExclusive index immediately past the last index to cover
+     * @return a spliterator for the array elements
+     * @throws ArrayIndexOutOfBoundsException if {@code startInclusive} is
+     *         negative, {@code endExclusive} is less than
+     *         {@code startInclusive}, or {@code endExclusive} is greater than
+     *         the array size
+     * @since 1.8
+     */
+    public static <T> Spliterator<T> spliterator(T[] array, int startInclusive, int endExclusive) {
+        return Spliterators.spliterator(array, startInclusive, endExclusive,
+                Spliterator.ORDERED | Spliterator.IMMUTABLE);
+    }
+
+    /**
+     * Returns a {@link Spliterator.OfInt} covering all of the specified array.
+     *
+     * <p>The spliterator reports {@link Spliterator#SIZED},
+     * {@link Spliterator#SUBSIZED}, {@link Spliterator#ORDERED}, and
+     * {@link Spliterator#IMMUTABLE}.
+     *
+     * @param array the array, assumed to be unmodified during use
+     * @return a spliterator for the array elements
+     * @since 1.8
+     */
+    public static Spliterator.OfInt spliterator(int[] array) {
+        return Spliterators.spliterator(array,
+                Spliterator.ORDERED | Spliterator.IMMUTABLE);
+    }
+
+    /**
+     * Returns a {@link Spliterator.OfInt} covering the specified range of the
+     * specified array.
+     *
+     * <p>The spliterator reports {@link Spliterator#SIZED},
+     * {@link Spliterator#SUBSIZED}, {@link Spliterator#ORDERED}, and
+     * {@link Spliterator#IMMUTABLE}.
+     *
+     * @param array the array, assumed to be unmodified during use
+     * @param startInclusive the first index to cover, inclusive
+     * @param endExclusive index immediately past the last index to cover
+     * @return a spliterator for the array elements
+     * @throws ArrayIndexOutOfBoundsException if {@code startInclusive} is
+     *         negative, {@code endExclusive} is less than
+     *         {@code startInclusive}, or {@code endExclusive} is greater than
+     *         the array size
+     * @since 1.8
+     */
+    public static Spliterator.OfInt spliterator(int[] array, int startInclusive, int endExclusive) {
+        return Spliterators.spliterator(array, startInclusive, endExclusive,
+                Spliterator.ORDERED | Spliterator.IMMUTABLE);
+    }
+
+    /**
+     * Returns a {@link Spliterator.OfLong} covering all of the specified array.
+     *
+     * <p>The spliterator reports {@link Spliterator#SIZED},
+     * {@link Spliterator#SUBSIZED}, {@link Spliterator#ORDERED}, and
+     * {@link Spliterator#IMMUTABLE}.
+     *
+     * @param array the array, assumed to be unmodified during use
+     * @return the spliterator for the array elements
+     * @since 1.8
+     */
+    public static Spliterator.OfLong spliterator(long[] array) {
+        return Spliterators.spliterator(array,
+                Spliterator.ORDERED | Spliterator.IMMUTABLE);
+    }
+
+    /**
+     * Returns a {@link Spliterator.OfLong} covering the specified range of the
+     * specified array.
+     *
+     * <p>The spliterator reports {@link Spliterator#SIZED},
+     * {@link Spliterator#SUBSIZED}, {@link Spliterator#ORDERED}, and
+     * {@link Spliterator#IMMUTABLE}.
+     *
+     * @param array the array, assumed to be unmodified during use
+     * @param startInclusive the first index to cover, inclusive
+     * @param endExclusive index immediately past the last index to cover
+     * @return a spliterator for the array elements
+     * @throws ArrayIndexOutOfBoundsException if {@code startInclusive} is
+     *         negative, {@code endExclusive} is less than
+     *         {@code startInclusive}, or {@code endExclusive} is greater than
+     *         the array size
+     * @since 1.8
+     */
+    public static Spliterator.OfLong spliterator(long[] array, int startInclusive, int endExclusive) {
+        return Spliterators.spliterator(array, startInclusive, endExclusive,
+                Spliterator.ORDERED | Spliterator.IMMUTABLE);
+    }
+
+    /**
+     * Returns a {@link Spliterator.OfDouble} covering all of the specified
+     * array.
+     *
+     * <p>The spliterator reports {@link Spliterator#SIZED},
+     * {@link Spliterator#SUBSIZED}, {@link Spliterator#ORDERED}, and
+     * {@link Spliterator#IMMUTABLE}.
+     *
+     * @param array the array, assumed to be unmodified during use
+     * @return a spliterator for the array elements
+     * @since 1.8
+     */
+    public static Spliterator.OfDouble spliterator(double[] array) {
+        return Spliterators.spliterator(array,
+                Spliterator.ORDERED | Spliterator.IMMUTABLE);
+    }
+
+    /**
+     * Returns a {@link Spliterator.OfDouble} covering the specified range of
+     * the specified array.
+     *
+     * <p>The spliterator reports {@link Spliterator#SIZED},
+     * {@link Spliterator#SUBSIZED}, {@link Spliterator#ORDERED}, and
+     * {@link Spliterator#IMMUTABLE}.
+     *
+     * @param array the array, assumed to be unmodified during use
+     * @param startInclusive the first index to cover, inclusive
+     * @param endExclusive index immediately past the last index to cover
+     * @return a spliterator for the array elements
+     * @throws ArrayIndexOutOfBoundsException if {@code startInclusive} is
+     *         negative, {@code endExclusive} is less than
+     *         {@code startInclusive}, or {@code endExclusive} is greater than
+     *         the array size
+     * @since 1.8
+     */
+    public static Spliterator.OfDouble spliterator(double[] array, int startInclusive, int endExclusive) {
+        return Spliterators.spliterator(array, startInclusive, endExclusive,
+                Spliterator.ORDERED | Spliterator.IMMUTABLE);
+    }
+
+
 }

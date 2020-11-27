@@ -14,22 +14,23 @@ import java.util.logging.Logger;
  */
 public class StackTraceElement {
 
-    private Class declaringClass;
+    private String declaringClass;
     private String methodName;
     private String fileName;
     private int lineNumber;
 
     StackTraceElement parent;
+    Class declaringClazz;
 
     /**
      * @return the declaringClass
      */
     Class getDeclaringClass() {
-        return declaringClass;
+        return declaringClazz;
     }
 
     public String getClassName() {
-        return declaringClass.getName();
+        return declaringClass;
     }
 
     /**

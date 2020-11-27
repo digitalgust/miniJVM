@@ -214,7 +214,7 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
         jvm_runtime_cache->thread_stackFrame = fi;
     } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_STACKTRACE)) {
         FieldInfo *fi;
-        fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_STACKTRACE, "declaringClass", STR_INS_JAVA_LANG_CLASS, NULL, runtime);
+        fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_STACKTRACE, "declaringClass", STR_INS_JAVA_LANG_STRING, NULL, runtime);
         jvm_runtime_cache->stacktrace_declaringClass = fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_STACKTRACE, "methodName", STR_INS_JAVA_LANG_STRING, NULL, runtime);
         jvm_runtime_cache->stacktrace_methodName = fi;
@@ -224,6 +224,8 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
         jvm_runtime_cache->stacktrace_lineNumber = fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_STACKTRACE, "parent", STR_INS_JAVA_LANG_STACKTRACEELEMENT, NULL, runtime);
         jvm_runtime_cache->stacktrace_parent = fi;
+        fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_STACKTRACE, "declaringClazz", STR_INS_JAVA_LANG_CLASS, NULL, runtime);
+        jvm_runtime_cache->stacktrace_declaringClazz = fi;
     } else if (utf8_equals_c(clazz->name, STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ)) {
         FieldInfo *fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ, "memAddr", "J", NULL, runtime);

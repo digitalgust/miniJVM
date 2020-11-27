@@ -369,8 +369,26 @@ public final class Double  extends Number implements Comparable<Double>{
      * @return a <code>hash code</code> value for this object.
      */
     public int hashCode() {
-        long bits = doubleToLongBits(value);
-        return (int) (bits ^ (bits >>> 32));
+        return hashCode(value);
+    }
+
+    public static int hashCode(double v) {
+        long bits = doubleToLongBits(v);
+        return (int)(bits ^ (bits >>> 32));
+    }
+
+    /**
+     * Adds two {@code double} values together as per the + operator.
+     *
+     * @param a the first operand
+     * @param b the second operand
+     * @return the sum of {@code a} and {@code b}
+     * @jls 4.2.4 Floating-Point Operations
+     * @see java.util.function.BinaryOperator
+     * @since 1.8
+     */
+    public static double sum(double a, double b) {
+        return a + b;
     }
 
     /**

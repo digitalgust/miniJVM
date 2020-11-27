@@ -1738,6 +1738,7 @@ typedef struct _ShortCut {
     FieldInfo *stacktrace_fileName;
     FieldInfo *stacktrace_lineNumber;
     FieldInfo *stacktrace_parent;
+    FieldInfo *stacktrace_declaringClazz;
 
     //
     FieldInfo *dmo_memAddr;

@@ -10,7 +10,7 @@
 
 package java.lang.reflect;
 
-public class InvocationTargetException extends Exception {
+public class InvocationTargetException extends ReflectiveOperationException {
   private Throwable target; // for compatibility with OpenJDK
 
   public InvocationTargetException(Throwable targetException, String message) {

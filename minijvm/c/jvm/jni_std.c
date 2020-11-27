@@ -1221,8 +1221,8 @@ Instance *buildStackElement(Runtime *runtime, Runtime *target) {
         //
         ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_declaringClass);
         if (ptr) {
-            //Instance *name = jstring_create(target->clazz->name, runtime);
-            setFieldRefer(ptr, insOfJavaLangClass_create_get(runtime, target->clazz));
+            Instance *name = jstring_create(target->clazz->name, runtime);
+            setFieldRefer(ptr, name);
         }
         //
         ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_methodName);
@@ -1252,6 +1252,11 @@ Instance *buildStackElement(Runtime *runtime, Runtime *target) {
                 setFieldRefer(ptr, parent);
             }
         }
+        ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_declaringClazz);
+        if (ptr) {
+            setFieldRefer(ptr, insOfJavaLangClass_create_get(runtime, target->clazz));
+        }
+
         instance_release_from_thread(ins, runtime);
         return ins;
     }

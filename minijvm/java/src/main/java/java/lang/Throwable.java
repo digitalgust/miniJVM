@@ -28,6 +28,9 @@ package java.lang;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * The <code>Throwable</code> class is the superclass of all errors and
@@ -146,6 +149,126 @@ public class Throwable {
         return (message != null) ? (s + ": " + message) : s;
     }
 
+
+    // Setting this static field introduces an acceptable
+    // initialization dependency on a few java.util classes.
+    private static final List<Throwable> SUPPRESSED_SENTINEL =
+            Collections.unmodifiableList(new ArrayList<Throwable>(0));
+
+    /**
+     * The list of suppressed exceptions, as returned by {@link
+     * #getSuppressed()}.  The list is initialized to a zero-element
+     * unmodifiable sentinel list.  When a serialized Throwable is
+     * read in, if the {@code suppressedExceptions} field points to a
+     * zero-element list, the field is reset to the sentinel value.
+     *
+     * @serial
+     * @since 1.7
+     */
+    private List<Throwable> suppressedExceptions = SUPPRESSED_SENTINEL;
+
+    /** Message for trying to suppress a null exception. */
+    private static final String NULL_CAUSE_MESSAGE = "Cannot suppress a null exception.";
+
+    /** Message for trying to suppress oneself. */
+    private static final String SELF_SUPPRESSION_MESSAGE = "Self-suppression not permitted";
+
+    /** Caption  for labeling causative exception stack traces */
+    private static final String CAUSE_CAPTION = "Caused by: ";
+
+    /** Caption for labeling suppressed exception stack traces */
+    private static final String SUPPRESSED_CAPTION = "Suppressed: ";
+
+    /**
+     * Appends the specified exception to the exceptions that were
+     * suppressed in order to deliver this exception. This method is
+     * thread-safe and typically called (automatically and implicitly)
+     * by the {@code try}-with-resources statement.
+     *
+     * <p>The suppression behavior is enabled <em>unless</em> disabled
+     * {@linkplain #Throwable(String, Throwable, boolean, boolean) via
+     * a constructor}.  When suppression is disabled, this method does
+     * nothing other than to validate its argument.
+     *
+     * <p>Note that when one exception {@linkplain
+     * #initCause(Throwable) causes} another exception, the first
+     * exception is usually caught and then the second exception is
+     * thrown in response.  In other words, there is a causal
+     * connection between the two exceptions.
+     *
+     * In contrast, there are situations where two independent
+     * exceptions can be thrown in sibling code blocks, in particular
+     * in the {@code try} block of a {@code try}-with-resources
+     * statement and the compiler-generated {@code finally} block
+     * which closes the resource.
+     *
+     * In these situations, only one of the thrown exceptions can be
+     * propagated.  In the {@code try}-with-resources statement, when
+     * there are two such exceptions, the exception originating from
+     * the {@code try} block is propagated and the exception from the
+     * {@code finally} block is added to the list of exceptions
+     * suppressed by the exception from the {@code try} block.  As an
+     * exception unwinds the stack, it can accumulate multiple
+     * suppressed exceptions.
+     *
+     * <p>An exception may have suppressed exceptions while also being
+     * caused by another exception.  Whether or not an exception has a
+     * cause is semantically known at the time of its creation, unlike
+     * whether or not an exception will suppress other exceptions
+     * which is typically only determined after an exception is
+     * thrown.
+     *
+     * <p>Note that programmer written code is also able to take
+     * advantage of calling this method in situations where there are
+     * multiple sibling exceptions and only one can be propagated.
+     *
+     * @param exception the exception to be added to the list of
+     *        suppressed exceptions
+     * @throws IllegalArgumentException if {@code exception} is this
+     *         throwable; a throwable cannot suppress itself.
+     * @throws NullPointerException if {@code exception} is {@code null}
+     * @since 1.7
+     */
+    public final synchronized void addSuppressed(Throwable exception) {
+        if (exception == this)
+            throw new IllegalArgumentException(SELF_SUPPRESSION_MESSAGE, exception);
+
+        if (exception == null)
+            throw new NullPointerException(NULL_CAUSE_MESSAGE);
+
+        if (suppressedExceptions == null) // Suppressed exceptions not recorded
+            return;
+
+        if (suppressedExceptions == SUPPRESSED_SENTINEL)
+            suppressedExceptions = new ArrayList<>(1);
+
+        suppressedExceptions.add(exception);
+    }
+
+    private static final Throwable[] EMPTY_THROWABLE_ARRAY = new Throwable[0];
+
+    /**
+     * Returns an array containing all of the exceptions that were
+     * suppressed, typically by the {@code try}-with-resources
+     * statement, in order to deliver this exception.
+     *
+     * If no exceptions were suppressed or {@linkplain
+     * #Throwable(String, Throwable, boolean, boolean) suppression is
+     * disabled}, an empty array is returned.  This method is
+     * thread-safe.  Writes to the returned array do not affect future
+     * calls to this method.
+     *
+     * @return an array containing all of the exceptions that were
+     *         suppressed to deliver this exception.
+     * @since 1.7
+     */
+    public final synchronized Throwable[] getSuppressed() {
+        if (suppressedExceptions == SUPPRESSED_SENTINEL ||
+                suppressedExceptions == null)
+            return EMPTY_THROWABLE_ARRAY;
+        else
+            return suppressedExceptions.toArray(EMPTY_THROWABLE_ARRAY);
+    }
     /**
      * Prints this <code>Throwable</code> and its backtrace to the standard
      * error stream. This method prints a stack trace for this
@@ -213,7 +336,7 @@ public class Throwable {
                 try {
                     Class clazz = Class.forName(sf.getClassName(), false, sf.getDeclaringClass().getClassLoader());
                     if (!clazz.isAssignableFrom(Throwable.class)) {
-                        stack.append("    at ").append(sf.getDeclaringClass());
+                        stack.append("    at ").append(sf.getClassName());
                         stack.append(".").append(sf.getMethodName());
                         stack.append("(").append(sf.getFileName());
                         stack.append(":").append(sf.getLineNumber());

@@ -448,4 +448,11 @@ public interface Collection<E> extends java.lang.Iterable<E> {
      * @see Object#equals(Object)
      */
     int hashCode();
+
+
+    @Override
+    default Spliterator<E> spliterator() {
+        return Spliterators.spliterator(this, 0);
+    }
+
 }

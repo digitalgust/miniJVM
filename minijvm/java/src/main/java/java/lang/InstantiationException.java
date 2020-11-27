@@ -39,7 +39,7 @@ package java.lang;
  * @since   JDK1.0, CLDC 1.0
  */
 public
-class InstantiationException extends Exception {
+class InstantiationException extends ReflectiveOperationException {
     /**
      * Constructs an <code>InstantiationException</code> with no detail message.
      */

@@ -93,6 +93,29 @@ public class EnumSet<T extends Enum<T>> extends AbstractSet<T> {
     
     return enumSet;
   }
+
+  public static <E extends Enum<E>> EnumSet<E> copyOf(Collection<E> c) {
+    if (c instanceof EnumSet) {
+      return ((EnumSet<E>)c).clone();
+    } else {
+      if (c.isEmpty())
+        throw new IllegalArgumentException("Collection is empty");
+      Iterator<E> i = c.iterator();
+      E first = i.next();
+      EnumSet<E> result = EnumSet.of(first);
+      while (i.hasNext())
+        result.add(i.next());
+      return result;
+    }
+  }
+
+  public EnumSet<T> clone() {
+    try {
+      return (EnumSet<T>) super.clone();
+    } catch(CloneNotSupportedException e) {
+      throw new AssertionError(e);
+    }
+  }
   
   private static <T extends Enum<T>>EnumSet<T> createEmptyEnumSet(Class<T> elementType) {
     T[] constants = elementType.getEnumConstants();
@@ -107,7 +130,7 @@ public class EnumSet<T extends Enum<T>> extends AbstractSet<T> {
     }
   }
   
-  @SuppressWarnings("unchecked")
+  //@SuppressWarnings("unchecked")
   private T tryToCast(Object object) throws ClassCastException {
     //We want the class cast exception if we can't convert.
     return (T) object;

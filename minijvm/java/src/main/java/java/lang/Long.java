@@ -27,6 +27,8 @@
 
 package java.lang;
 
+import java.math.BigInteger;
+
 /**
  * The <code>Long</code> class wraps a value of the primitive type
  * <code>long</code> in an object. An object of type <code>Long</code>
@@ -755,9 +757,12 @@ public final class Long extends Number implements Comparable<Long> {
      * @return  a hash code value for this object.
      */
     public int hashCode() {
-	return (int)(value ^ (value >>> 32));
+        return Long.hashCode(value);
     }
 
+    public static int hashCode(long value) {
+        return (int)(value ^ (value >>> 32));
+    }
     /**
      * Compares this object to the specified object.  The result is
      * <code>true</code> if and only if the argument is not
@@ -1135,7 +1140,19 @@ public final class Long extends Number implements Comparable<Long> {
         // HD, Section 2-7
         return (int) ((i >> 63) | (-i >>> 63));
     }
- 
+
+    /**
+     * Adds two {@code long} values together as per the + operator.
+     *
+     * @param a the first operand
+     * @param b the second operand
+     * @return the sum of {@code a} and {@code b}
+     * @see java.util.function.BinaryOperator
+     * @since 1.8
+     */
+    public static long sum(long a, long b) {
+        return a + b;
+    }
     /**
      * Returns the value obtained by reversing the order of the bytes in the
      * two's complement representation of the specified <tt>long</tt> value.
@@ -1148,6 +1165,66 @@ public final class Long extends Number implements Comparable<Long> {
         i = (i & 0x00ff00ff00ff00ffL) << 8 | (i >>> 8) & 0x00ff00ff00ff00ffL;
         return (i << 48) | ((i & 0xffff0000L) << 16) |
             ((i >>> 16) & 0xffff0000L) | (i >>> 48);
+    }
+
+    public static int compare(long x, long y) {
+        return (x < y) ? -1 : ((x == y) ? 0 : 1);
+    }
+
+    public static int compareUnsigned(long x, long y) {
+        return compare(x + MIN_VALUE, y + MIN_VALUE);
+    }
+
+
+    /**
+     * Return a BigInteger equal to the unsigned value of the
+     * argument.
+     */
+    private static BigInteger toUnsignedBigInteger(long i) {
+        if (i >= 0L)
+            return BigInteger.valueOf(i);
+        else {
+            int upper = (int) (i >>> 32);
+            int lower = (int) i;
+
+            // return (upper << 32) + lower
+            return (BigInteger.valueOf(Integer.toUnsignedLong(upper))).shiftLeft(32).
+                    add(BigInteger.valueOf(Integer.toUnsignedLong(lower)));
+        }
+    }
+
+
+    public static long divideUnsigned(long dividend, long divisor) {
+        if (divisor < 0L) { // signed comparison
+            // Answer must be 0 or 1 depending on relative magnitude
+            // of dividend and divisor.
+            return (compareUnsigned(dividend, divisor)) < 0 ? 0L :1L;
+        }
+
+        if (dividend > 0) //  Both inputs non-negative
+            return dividend/divisor;
+        else {
+            /*
+             * For simple code, leveraging BigInteger.  Longer and faster
+             * code written directly in terms of operations on longs is
+             * possible; see "Hacker's Delight" for divide and remainder
+             * algorithms.
+             */
+            return toUnsignedBigInteger(dividend).
+                    divide(toUnsignedBigInteger(divisor)).longValue();
+        }
+    }
+
+    public static long remainderUnsigned(long dividend, long divisor) {
+        if (dividend > 0 && divisor > 0) { // signed comparisons
+            return dividend % divisor;
+        } else {
+            if (compareUnsigned(dividend, divisor) < 0) // Avoid explicit check for 0 divisor
+                return dividend;
+            else
+                return toUnsignedBigInteger(dividend).
+                        remainder(toUnsignedBigInteger(divisor)).longValue();
+        }
     }
 
     /** use serialVersionUID from JDK 1.0.2 for interoperability */

@@ -37,7 +37,6 @@ package java.util.function;
  * @see Function
  * @since 1.8
  */
-@FunctionalInterface
 public interface IntToDoubleFunction {
 
     /**
