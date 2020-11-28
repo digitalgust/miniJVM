@@ -7,6 +7,7 @@ package org.mini.glfw;
  */
 
 import org.mini.apploader.AppLoader;
+import org.mini.apploader.Sync;
 import org.mini.gui.GApplication;
 import org.mini.gui.GCallBack;
 import org.mini.gui.GObject;
@@ -144,7 +145,7 @@ public class GlfwCallBackImpl extends GCallBack {
         long startAt, cost;
         while (!glfwWindowShouldClose(display)) {
             try {
-                startAt = System.currentTimeMillis();
+//                startAt = System.currentTimeMillis();
                 if (!gform.isInited()) {
                     gform.init();
                 }
@@ -154,19 +155,20 @@ public class GlfwCallBackImpl extends GCallBack {
                     glfwSwapBuffers(display);
                 }
                 glfwPollEvents();
-                count++;
-                now = System.currentTimeMillis();
-                if (now - last > 1000) {
-                    //System.out.println("fps:" + count);
-                    fps = count;
-                    last = now;
-                    count = 0;
-                }
-
-                cost = now - startAt;
-                if (cost < 1000 / fpsExpect) {
-                    Thread.sleep((long) (1000 / fpsExpect - cost));
-                }
+//                count++;
+//                now = System.currentTimeMillis();
+//                if (now - last > 1000) {
+//                    //System.out.println("fps:" + count);
+//                    fps = count;
+//                    last = now;
+//                    count = 0;
+//                }
+//
+//                cost = now - startAt;
+//                if (cost < 1000 / fpsExpect) {
+//                    Thread.sleep((long) (1000 / fpsExpect - cost));
+//                }
+                Sync.sync((int) fpsExpect);
             } catch (Exception ex) {
                 ex.printStackTrace();
 

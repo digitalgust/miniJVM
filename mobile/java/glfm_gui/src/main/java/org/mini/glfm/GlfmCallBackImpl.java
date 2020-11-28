@@ -6,6 +6,7 @@
 package org.mini.glfm;
 
 import org.mini.apploader.AppLoader;
+import org.mini.apploader.Sync;
 import org.mini.gui.GCallBack;
 import org.mini.gui.GForm;
 import org.mini.gui.GObject;
@@ -155,7 +156,7 @@ public class GlfmCallBackImpl extends GCallBack {
     @Override
     public void mainLoop(long display, double frameTime) {
         try {
-            startAt = System.currentTimeMillis();
+//            startAt = System.currentTimeMillis();
             if (!gform.isInited()) {
                 gform.init();
             }
@@ -165,19 +166,17 @@ public class GlfmCallBackImpl extends GCallBack {
                 }
             }
             //
-            count++;
-            now = System.currentTimeMillis();
-            if (now - last > 1000) {
-                //System.out.println("fps:" + count);
-                fps = count;
-                last = now;
-                count = 0;
-            }
-
-            cost = now - startAt;
-            if (cost < 1000 / fpsExpect) {
-                Thread.sleep((long) (1000 / fpsExpect - cost));
-            }
+//            count++;
+//            now = System.currentTimeMillis();
+//            if (now - last > 1000) {
+//                //System.out.println("fps:" + count);
+//                fps = count;
+//                last = now;
+//                count = 0;
+//            }
+//
+//            cost = now - startAt;
+            Sync.sync((int) fpsExpect);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -241,7 +240,7 @@ public class GlfmCallBackImpl extends GCallBack {
         boolean long_touched = false;
 //        System.out.println("   touch=" + touch + "   phase=" + phase + "   x=" + x + "   y=" + y);
 //            System.out.println("display=" + display + "   win=" + win);
-        if (display == display) {
+        if (this.display == display) {
 
             switch (phase) {
                 case Glfm.GLFMTouchPhaseBegan: {//
