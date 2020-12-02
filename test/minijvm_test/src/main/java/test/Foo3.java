@@ -5,18 +5,21 @@ import java.util.Vector;
 class Foo3 {
 
     public static void main(String args[]) {
+        long t = System.currentTimeMillis();
 //        t5();
 //        t6();
         t7();
 //        t8();
+//        t9();
+        System.out.println("spent:" + (System.currentTimeMillis() - t));
     }
-    
-    static char ch='\u9F08';
-    
-    static void t5(){
-        System.out.println(""+ch);
-        ch='\u9F09';
-        System.out.println(""+(int)ch);
+
+    static char ch = '\u9F08';
+
+    static void t5() {
+        System.out.println("" + ch);
+        ch = '\u9F09';
+        System.out.println("" + (int) ch);
     }
 
     static void t6() {
@@ -29,7 +32,7 @@ class Foo3 {
         x = null;
     }
 
-    
+
     static void t7() {
         final int MAX = 2000000;
         final int PRINT_COUNT = 10000;
@@ -123,5 +126,18 @@ class Foo3 {
         System.out.println(x);
         System.out.println("over");
 
+    }
+
+    static void t9() {
+        System.out.println(topla(11, 4));
+        System.out.println(System.getProperty("os.name"));
+    }
+
+    static int topla(int a, int b) {
+        int var = 0;
+        for (int i = 0; i < 10000000; i++) {
+            var += a + b;
+        }
+        return var;
     }
 }
