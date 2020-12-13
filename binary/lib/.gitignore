@@ -1,3 +1,5 @@
 *
 !.gitignore
 !README.md
+!build.sh
+!build.bat
