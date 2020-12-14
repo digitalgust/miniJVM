@@ -32,7 +32,7 @@ goto :eof
 rem ==============================================================
 :jvm_compile
     set SRCFILES=
-    @for /f "delims=" %%i in ('@dir /S /B %2\*.c ^| @find /V "sljit"') do (@set SRCFILES=!SRCFILES! %%i)
+    @for /f "delims=" %%i in ('@dir /S /B %2\*.c ^| @find /V "sljit" ^| @find /V "cmake-"') do (@set SRCFILES=!SRCFILES! %%i)
     rem echo %SRCFILES%
     %GCCHOME%\bin\gcc  -o %1 -I%2\jvm -I%2\utils\ -I%2\utils\sljit\ -I%2\utils\https\ -I%2\utils\https\mbedtls\include\ -L%GCCLIBDIR%  %SRCFILES% %2\utils\sljit\sljitLir.c  -lpthread -lm -lws2_32 
     move %1 %3
@@ -40,7 +40,7 @@ goto :eof
 
 :gui_compile
     set SRCFILES=
-    @for /f "delims=" %%i in ('@dir /S /B %2\*.c') do (@set SRCFILES=!SRCFILES! %%i)
+    @for /f "delims=" %%i in ('@dir /S /B %2\*.c ^| @find /V "cmake-"') do (@set SRCFILES=!SRCFILES! %%i)
     rem echo %SRCFILES%
     %GCCHOME%\bin\gcc -shared -fPIC -o %1 -I..\minijvm\c\jvm -I%2\ -I%2\deps\include -L%2\deps\lib\%GLFWDIR%  %SRCFILES% -lglfw3 -lopengl32 -mwindows
     move %1 %3
