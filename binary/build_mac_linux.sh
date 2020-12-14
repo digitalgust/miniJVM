@@ -22,7 +22,9 @@ echo "compile mini_jvm"
 CSRC="../minijvm/c"
 #echo ${CSRC}
 #
-SRCLIST=`find ${CSRC} -path "${CSRC}/utils/sljit" -prune -o -name "*.c" -print`
+#
+
+SRCLIST=`find ${CSRC}  -type f  -name "*.c" -not -path "${CSRC}/utils/sljit/*"  -not -path "${CSRC}/cmake-*" -not -path "${CSRC}/.*"`
 #echo ${SRCLIST}
 gcc  -o mini_jvm -I${CSRC}/jvm -I${CSRC}/utils/ -I${CSRC}/utils/sljit/ -I${CSRC}/utils/https/ -I${CSRC}/utils/https/mbedtls/include/ -lpthread -lm -ldl  $SRCLIST ${CSRC}/utils/sljit/sljitLir.c
 
@@ -30,7 +32,7 @@ gcc  -o mini_jvm -I${CSRC}/jvm -I${CSRC}/utils/ -I${CSRC}/utils/sljit/ -I${CSRC}
 echo "compile glfw_gui"
 
 CSRC="../desktop/glfw_gui/c"
-SRCLIST=`find ${CSRC} -name "*.c" -print`
+SRCLIST=`find ${CSRC} -type f -name "*.c"  -not -path "${CSRC}/cmake-*" -not -path "${CSRC}/.*"`
 #
 if [[ $UNAME == *$OSNAME* ]] 
 then
