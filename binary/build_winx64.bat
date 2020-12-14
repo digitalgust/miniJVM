@@ -3,16 +3,16 @@
 set GLFWDIR=win_x64
 set TARGETDIR=win_x64
 set LIBDIR=x86_64-w64-mingw32
-set GCCHOME=D:\TDM-GCC-64
+set GCCHOME=D:\msys64\mingw64
 rem ==============================================================
 
 
-echo [INFO]Build require tdm-gcc , setup gcc home : %GCCHOME%
+echo [INFO]Build require MinGW-w64 , setup gcc home : %GCCHOME%
 if exist  %GCCHOME% (
-    echo [INFO]tdm-gcc found
+    echo [INFO]gcc found
 ) else (
-    echo [ERROR]tdm-gcc not found
-    echo [INFO]Please download tdm-gcc: https://jmeubank.github.io/tdm-gcc/ 
+    echo [ERROR]gcc not found
+    echo [INFO]Please download tdm-gcc: http://mingw-w64.org/ 
     echo [INFO]Change GCCHOME with installed directory
     goto :eof
 )
@@ -27,6 +27,9 @@ echo [INFO]build mini_jvm.exe
 call :jvm_compile mini_jvm.exe ..\minijvm\c %TARGETDIR%
 echo [INFO]build libgui.dll
 call :gui_compile libgui.dll ..\desktop\glfw_gui\c %TARGETDIR%
+
+echo completed.
+pause
 
 goto :eof
 rem ==============================================================
