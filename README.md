@@ -44,6 +44,7 @@
 
 
 ## Changelog:
+   2020.12.  Add build script and release v2.1.   
    2020.10.  Refactor source and remove binary in repository.   
    2020.10.  Https supported.   
    2020.03.  Add xml layout for gui system, add 3D game demo for minijvm, fix jdwp debug for jetbrain idea.               
@@ -58,23 +59,32 @@
    Write java code once , running on all of iOS / Android / MacOSX / Win / Linux platforms   
    There were not essential jar file pre-built, so build these jar file first   
    Develop IDE:  Eclipse, Netbeans or Jetbrain Intelli Idea     
-   * Build maven projects /minijvm/java copy to  **/mobile/assets/resfiles/minijvm_rt.jar**      
-   * Build maven projects /mobile/java/glfm_gui, copy to  **/mobile/assets/resfiles/glfm_gui.jar**       
-   * Build maven projects /mobile/java/ExApp, copy to  **/mobile/assets/resfiles/ExApp.jar**  , Maybe you can change   **/mobile/java/ExApp/src/main/java/test/MyApp.java**    , Add your resource to **/mobile/java/ExApp/src/main/resource/res/** , such as audio or image etc,  Configure **/mobile/java/ExApp/src/main/config.txt** for icon ,version, boot class, etc      
-   * XCode open **/mobile/iosapp** build and install app to Device ,(Require verify app, Setting->General->Device Management->EGLS Technology ltd->Verify App)      
+   * Run script **/mobile/build_jar.sh** or **/mobile/build_jar.bat** to generted jars.     
+    Or
+>>    Build maven projects /minijvm/java copy to  **/mobile/assets/resfiles/minijvm_rt.jar**      
+>>    Build maven projects /mobile/java/glfm_gui, copy to  **/mobile/assets/resfiles/glfm_gui.jar**       
+>>    Build maven projects /mobile/java/ExApp, copy to  **/mobile/assets/resfiles/ExApp.jar**   
+>>    Maybe you can change   **/mobile/java/ExApp/src/main/java/test/MyApp.java**    , Add your resource to **/mobile/java/ExApp/src/main/resource/res/** , such as audio or image etc,  Configure **/mobile/java/ExApp/src/main/config.txt** for icon ,version, boot class, etc   
+   * XCode open **/mobile/iosapp** ,setup developer account in Signing&Capabilities , build and install app to Device , verify app before running app (Setting->General->Device Management->{Developer account}->Verify App->Trust)      
    * Android Studio open **/mobile/androidapp**  build and install app to Android device     
    * AppManager is running, It can start a in-app webserver for upload app, and download app from a website too    
     <div align=center><img width="672" height="398"   src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/appmgr.png"/></div>   
   
   
 ## Build for Windows/Linux/MacOS platform:     
-  There were not essential jar file pre-built, so build these jar file first   
-  * Build java bootstrap classes  **/minijvm/java**  , Maven build jar and copy to /binary/lib/minijvm_rt.jar    
-  * Build gui classes **/desktop/glfw_gui/java** , Maven build jar and copy to /binary/libex/glfw_gui.jar     
-  * Build console test case classes **/test/minijvm_test** , Maven build jar and copy to /binary/libex/minijvm_test.jar     
-  * Build gui test app classes **/mobile/java/ExApp** , Maven built jar and copy to /binary/<platform>/apps/ExApp.jar    
-  * Build gui jni c dynamic library **/desktop/glfw_gui/c** , Cmake build library and copy to /binary/<platform>/libgui.so | libgui.dylib | libgui.dll      
-  * Run test script /binary/<platform>/test.sh | test.bat    
+  There were not essential jar file pre-built, so build these jar file first 
+  * Run script **/binary/build_jar.sh** or **/binary/build_jar.bat** to generted jars     
+   Or   
+>>   Build java bootstrap classes  **/minijvm/java**  , Maven build jar and copy to /binary/lib/minijvm_rt.jar    
+>>   Build gui classes **/desktop/glfw_gui/java** , Maven build jar and copy to /binary/libex/glfw_gui.jar     
+>>   Build console test case classes **/test/minijvm_test** , Maven build jar and copy to /binary/libex/minijvm_test.jar     
+>>   Build gui test app classes **/mobile/java/ExApp** , Maven built jar and copy to /binary/<platform>/apps/ExApp.jar    
+
+  * Run **/binary/build_mac_linux.sh** or **/binary/build_wini686.bat** or  **/binary/build_winx64.bat** to generted binaries    
+    Or 
+>>    Build gui jni c dynamic library /desktop/glfw_gui/c by cmake    
+>>    Build minijvm /minijvm/c by cmake      
+  * Run test script /binary/{platform}/test.sh | test.bat    
  
    
 ## How to Remote debug:  
