@@ -1,5 +1,5 @@
 @echo off
-echo Requirement: jar javac
+echo Requirement: jdk1.8 jar javac
 
 set JAR=jar
 set JAVAC=javac

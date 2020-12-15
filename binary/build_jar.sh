@@ -1,13 +1,17 @@
 
-echo "Requirement: jar javac "
+echo "Requirement: jdk1.8 jar javac "
+
+JAVAC=javac
+JAR=jar
+
 
 function build_jar(){
     rm -rf $3/$1
     mkdir classes 
     find $2/java -name "*.java" >source.txt
-    javac -cp lib/*:libex/* -encoding "utf-8" -d classes @source.txt
+    ${JAVAC} -cp lib/*:libex/* -encoding "utf-8" -d classes @source.txt
     cp -R $2/resource/* classes/
-    jar cf $1 -C classes ./
+    ${JAR} cf $1 -C classes ./
     rm -rf source.txt
     rm -rf classes
     mv $1 $3/
