@@ -1203,7 +1203,7 @@ int sslc_init(SSLC_Entry *entry) {
         ca_inited = 1;
         int ca_len = 0;
         int lenarr[ca_der_count];
-        for (int i = 0; i < ca_der_count; i++) {
+        for (i = 0; i < ca_der_count; i++) {
             char *str = ca_ders[i];
             lenarr[i] = strlen(str);
             ca_len += lenarr[i];
@@ -1214,7 +1214,7 @@ int sslc_init(SSLC_Entry *entry) {
         }
         memset(ca_crt_rsa, 0, ca_crt_rsa_size);
         int p = 0;
-        for (int i = 0; i < ca_der_count; i++) {
+        for (i = 0; i < ca_der_count; i++) {
             memmove(ca_crt_rsa + p, ca_ders[i], lenarr[i]);
             p += lenarr[i];
         }
