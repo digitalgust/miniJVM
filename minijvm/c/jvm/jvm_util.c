@@ -962,12 +962,27 @@ s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms) {
 }
 
 s32 jthread_sleep(Runtime *runtime, s64 ms) {
+    static const s64 PERIOD = 500;
+    s32 ret = 0;
     jthread_block_enter(runtime);
     runtime->thrd_info->thread_status = THREAD_STATUS_SLEEPING;
-    threadSleep(ms);
+    if (ms < PERIOD) {
+        threadSleep(ms);
+    } else {
+        s64 sleeped = 0, remain;
+        while (sleeped < ms) {
+            remain = ms - sleeped;
+            threadSleep(remain < PERIOD ? remain : PERIOD);
+            sleeped += PERIOD;
+            if (runtime->thrd_info->is_interrupt) {
+                ret = 1;
+                break;
+            }
+        }
+    }
     runtime->thrd_info->thread_status = THREAD_STATUS_RUNNING;
     jthread_block_exit(runtime);
-    return 0;
+    return ret;
 }
 
 s32 check_suspend_and_pause(Runtime *runtime) {
@@ -1150,7 +1165,8 @@ void instance_init_with_para(Instance *ins, Runtime *runtime, c8 *methodtype, Ru
     if (ins) {
         Utf8String *methodName = utf8_create_c("<init>");
         Utf8String *methodType = utf8_create_c(methodtype);
-        MethodInfo *mi = find_methodInfo_by_name(ins->mb.clazz->name, methodName, methodType, ins->mb.clazz->jloader, runtime);
+        MethodInfo *mi = find_methodInfo_by_name(ins->mb.clazz->name, methodName, methodType, ins->mb.clazz->jloader,
+                                                 runtime);
         push_ref(runtime->stack, (__refer) ins);
         if (para) {
             s32 i;
@@ -1279,7 +1295,8 @@ Instance *instance_copy(Runtime *runtime, Instance *src, s32 deep_copy) {
             for (i = 0; i < dst->arr_length; i++) {
                 val = jarray_get_field(src, i);
                 if (val) {
-                    val = (intptr_t) instance_copy(runtime, (Instance *) getFieldRefer((__refer) (intptr_t) val), deep_copy);
+                    val = (intptr_t) instance_copy(runtime, (Instance *) getFieldRefer((__refer) (intptr_t) val),
+                                                   deep_copy);
                     jarray_set_field(dst, i, val);
                 }
             }
@@ -1322,11 +1339,13 @@ Instance *insOfJavaLangClass_create_get(Runtime *runtime, JClass *clazz) {
 
 
 JClass *insOfJavaLangClass_get_classHandle(Runtime *runtime, Instance *insOfJavaLangClass) {
-    return (JClass *) (intptr_t) getFieldLong(getInstanceFieldPtr(insOfJavaLangClass, runtime->jvm->shortcut.class_classHandle));
+    return (JClass *) (intptr_t) getFieldLong(
+            getInstanceFieldPtr(insOfJavaLangClass, runtime->jvm->shortcut.class_classHandle));
 }
 
 void insOfJavaLangClass_set_classHandle(Runtime *runtime, Instance *insOfJavaLangClass, JClass *handle) {
-    setFieldLong(getInstanceFieldPtr(insOfJavaLangClass, runtime->jvm->shortcut.class_classHandle), (s64) (intptr_t) handle);
+    setFieldLong(getInstanceFieldPtr(insOfJavaLangClass, runtime->jvm->shortcut.class_classHandle),
+                 (s64) (intptr_t) handle);
 }
 
 void insOfJavaLangClass_hold(JClass *clazz, Runtime *runtime) {
@@ -1335,7 +1354,8 @@ void insOfJavaLangClass_hold(JClass *clazz, Runtime *runtime) {
         if (loader) { //if classloader exists , then hold in java classloader
             runtime->thrd_info->no_pause++;
             push_ref(runtime->stack, loader);
-            push_ref(runtime->stack, clazz->ins_class ? clazz->ins_class : insOfJavaLangClass_create_get(runtime, clazz));
+            push_ref(runtime->stack,
+                     clazz->ins_class ? clazz->ins_class : insOfJavaLangClass_create_get(runtime, clazz));
             s32 ret = execute_method_impl(runtime->jvm->shortcut.classloader_holdClass, runtime);
             if (ret) {
                 print_exception(runtime);
@@ -1560,7 +1580,9 @@ Instance *method_handle_create(Runtime *runtime, MethodInfo *mi, s32 kind) {
         push_ref(para, jstr_methodDesc);
         instance_hold_to_thread(jstr_methodDesc, runtime);
         push_ref(para, mi->_this_class->jloader);
-        instance_init_with_para(mh, runtime, "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/ClassLoader;)V", para);
+        instance_init_with_para(mh, runtime,
+                                "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/ClassLoader;)V",
+                                para);
         stack_destory(para);
         instance_release_from_thread(mh, runtime);
         instance_release_from_thread(jstr_clsName, runtime);
@@ -1605,7 +1627,8 @@ c8 *getFieldPtr_byName_c(Instance *instance, c8 *pclassName, c8 *pfieldName, c8 
 }
 
 
-c8 *getFieldPtr_byName(Instance *instance, Utf8String *clsName, Utf8String *fieldName, Utf8String *fieldType, Runtime *runtime) {
+c8 *getFieldPtr_byName(Instance *instance, Utf8String *clsName, Utf8String *fieldName, Utf8String *fieldType,
+                       Runtime *runtime) {
 
     c8 *ptr = NULL;
     FieldInfo *fi = find_fieldInfo_by_name(clsName, fieldName, fieldType, instance->mb.clazz->jloader, runtime);

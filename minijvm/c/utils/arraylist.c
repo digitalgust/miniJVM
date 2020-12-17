@@ -138,6 +138,13 @@ int arraylist_insert(ArrayList *arraylist, int index, ArrayListValue data) {
     return r;
 }
 
+int arraylist_push_front_unsafe(ArrayList *arraylist, ArrayListValue data) {
+    s32 r;
+    r = _arraylist_insert_impl(arraylist, 0, data);
+
+    return r;
+}
+
 int arraylist_push_front(ArrayList *arraylist, ArrayListValue data) {
     s32 r;
     spin_lock(&arraylist->spinlock);
@@ -263,13 +270,43 @@ ArrayListValue arraylist_get_value(ArrayList *arraylist, int index) {
     return value;
 }
 
-ArrayListValue arraylist_pop_front(ArrayList *arraylist) {
+ArrayListValue arraylist_peek_front(ArrayList *arraylist) {
     ArrayListValue v = NULL;
     spin_lock(&arraylist->spinlock);
     {
         if (arraylist->length > 0) {
             v = arraylist->data[0];
-            arraylist_remove_range(arraylist, 0, 1);
+        }
+    }
+    spin_unlock(&arraylist->spinlock);
+    return v;
+}
+
+ArrayListValue arraylist_pop_front_unsafe(ArrayList *arraylist) {
+    ArrayListValue v = NULL;
+    if (arraylist->length > 0) {
+        v = arraylist->data[0];
+        arraylist_remove_range(arraylist, 0, 1);
+    }
+    return v;
+}
+
+ArrayListValue arraylist_pop_front(ArrayList *arraylist) {
+    ArrayListValue v = NULL;
+    spin_lock(&arraylist->spinlock);
+    {
+        v = arraylist_pop_front_unsafe(arraylist);
+    }
+    spin_unlock(&arraylist->spinlock);
+    return v;
+}
+
+ArrayListValue arraylist_peek_back(ArrayList *arraylist) {
+    ArrayListValue v = NULL;
+    spin_lock(&arraylist->spinlock);
+    {
+        if (arraylist->length > 0) {
+            v = arraylist->data[arraylist->length - 1];
         }
     }
     spin_unlock(&arraylist->spinlock);

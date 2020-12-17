@@ -326,15 +326,12 @@ void jvm_destroy(MiniJVM *jvm) {
     }
     set_jvm_state(jvm, JVM_STATUS_STOPED);
     //waiting for daemon thread terminate
-    s32 i;
-    while (jvm->thread_list->length) {
-        thread_stop_all(jvm);
-        for (i = 0; i < jvm->thread_list->length; i++) {
-            Runtime *r = threadlist_get(jvm, i);
-            if (r) {
-                if (!r->son) {//未在执行jvm指令
-                    thread_unboundle(r);//
-                }
+    thread_stop_all(jvm);
+    Runtime *r;
+    while ((r = arraylist_peek_back(jvm->thread_list)) != NULL) {
+        if (r) {
+            if (!r->son) {//未在执行jvm指令
+                thread_unboundle(r);//
             }
         }
         threadSleep(20);
@@ -451,7 +448,8 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
                 print_exception(runtime);
             }
 #if _JVM_DEBUG_LOG_LEVEL > 0
-            jvm_printf("[INFO]main thread over %llx , return %d , spent : %lld\n", (s64) (intptr_t) runtime->thrd_info->jthread, ret, (currentTimeMillis() - start));
+            jvm_printf("[INFO]main thread over %llx , return %d , spent : %lld\n",
+                       (s64) (intptr_t) runtime->thrd_info->jthread, ret, (currentTimeMillis() - start));
 #endif
 
 #if _JVM_DEBUG_PROFILE

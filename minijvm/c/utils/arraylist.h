@@ -137,7 +137,7 @@ void arraylist_destory(ArrayList *arraylist);
  *                       if it was not possible to allocate more memory
  *                       for the new entry.
  */
-
+int arraylist_push_back_unsafe(ArrayList *arraylist, ArrayListValue data);
 
 int arraylist_push_back(ArrayList *arraylist, ArrayListValue data);
 
@@ -145,6 +145,7 @@ int arraylist_push_back(ArrayList *arraylist, ArrayListValue data);
 int arraylist_remove(ArrayList *arraylist, ArrayListValue data);
 
 int arraylist_remove_unsafe(ArrayList *arraylist, ArrayListValue data);
+
 /**
  * Prepend a value to the beginning of an ArrayList.
  *
@@ -154,6 +155,7 @@ int arraylist_remove_unsafe(ArrayList *arraylist, ArrayListValue data);
  *                       if it was not possible to allocate more memory
  *                       for the new entry.
  */
+int arraylist_push_front_unsafe(ArrayList *arraylist, ArrayListValue data);
 
 int arraylist_push_front(ArrayList *arraylist, ArrayListValue data);
 
@@ -208,13 +210,17 @@ ArrayListValue arraylist_get_value_unsafe(ArrayList *arraylist, int index);
 
 ArrayListValue arraylist_get_value(ArrayList *arraylist, int index);
 
+ArrayListValue arraylist_pop_back_unsafe(ArrayList *arraylist);
+
 ArrayListValue arraylist_pop_back(ArrayList *arraylist);
+
+ArrayListValue arraylist_pop_front_unsafe(ArrayList *arraylist);
 
 ArrayListValue arraylist_pop_front(ArrayList *arraylist);
 
-int arraylist_push_back_unsafe(ArrayList *arraylist, ArrayListValue data);
+ArrayListValue arraylist_peek_front(ArrayList *arraylist);
 
-ArrayListValue arraylist_pop_back_unsafe(ArrayList *arraylist);
+ArrayListValue arraylist_peek_back(ArrayList *arraylist);
 
 /**
  * Remove all entries from an ArrayList.
