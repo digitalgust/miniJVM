@@ -5,10 +5,10 @@
  */
 package org.mini.glfm;
 
+import org.mini.glfw.Glfw;
 import org.mini.gui.GCallBack;
 
 /**
- *
  * @author gust
  */
 public class Glfm {
@@ -130,11 +130,11 @@ public class Glfm {
     }
 
     public static void glfmSetDisplayConfig(long display,
-            int preferredAPI,
-            int colorFormat,
-            int depthFormat,
-            int stencilFormat,
-            int multisample) {
+                                            int preferredAPI,
+                                            int colorFormat,
+                                            int depthFormat,
+                                            int stencilFormat,
+                                            int multisample) {
 
     }
 
@@ -150,22 +150,77 @@ public class Glfm {
         return null;
     }
 
-    public static long glfmPlayVideo(long display, String uris, String mimeType){
+    public static long glfmPlayVideo(long display, String uris, String mimeType) {
         return 0;
     }
 
-    public static void glfmStartVideo(long display, long handle){
+    public static void glfmStartVideo(long display, long handle) {
 
     }
 
-    public static void glfmStopVideo(long display, long handle){
+    public static void glfmStopVideo(long display, long handle) {
 
     }
 
-    public static void glfmPauseVideo(long display, long handle){
+    public static void glfmPauseVideo(long display, long handle) {
 
     }
 
+    public static void glfmSetUserInterfaceOrientation(long display, int allowedOrientations) {
+
+    }
+
+    public static int glfmGetUserInterfaceOrientation(long display) {
+        return GLFMUserInterfaceOrientationAny;
+    }
+
+    public static void glfmSetMultitouchEnabled(long display, boolean multitouchEnabled) {
+
+    }
+
+    public static boolean glfmGetMultitouchEnabled(long display) {
+        return false;
+    }
+
+    public static int glfmGetDisplayWidth(long display) {
+        return Glfw.glfwGetWindowWidth(display);
+    }
+
+    public static int glfmGetDisplayHeight(long display) {
+        return Glfw.glfwGetWindowHeight(display);
+    }
+
+    public static double glfmGetDisplayScale(long display) {
+        return Glfw.glfwGetFramebufferWidth(display) / Glfw.glfwGetWindowWidth(display);
+    }
+
+    public static void glfmGetDisplayChromeInsets(long display, double[] top_right_bottom_left) {
+
+    }
+
+    public static int glfmGetDisplayChrome(long display) {
+        return GLFMUserInterfaceChromeNavigation;
+    }
+
+    public static void glfmSetDisplayChrome(long display, int uiChrome) {
+
+    }
+
+    public static int glfmGetRenderingAPI(long display) {
+        return GLFMRenderingAPIOpenGLES3;
+    }
+
+    public static boolean glfmHasTouch(long display) {
+        return false;
+    }
+
+    public static void glfmSetMouseCursor(long display, int mouseCursor) {
+
+    }
+
+    public static boolean glfmExtensionSupported(String extension) {
+        return false;
+    }
 
 
 }
