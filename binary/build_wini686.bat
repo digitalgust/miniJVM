@@ -12,7 +12,7 @@ if exist  %GCCHOME% (
     echo [INFO]gcc found
 ) else (
     echo [ERROR]gcc not found
-    echo [INFO]Please download tdm-gcc: http://mingw-w64.org/ 
+    echo [INFO]Please download gcc: http://mingw-w64.org/ 
     echo [INFO]Change GCCHOME with installed directory
     goto :eof
 )

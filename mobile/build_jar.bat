@@ -25,7 +25,7 @@ goto :eof
     del /Q/S/F %3\%1
     md classes 
     dir /S /B %2\java\*.java > source.txt
-    echo %4 %5
+    @echo %4 %5
     %JAVAC% -bootclasspath %4 -cp %5 -encoding "utf-8"   -d classes @source.txt
     xcopy /E %2\resource\* classes\
     %JAR% cf %1 -C classes .\
