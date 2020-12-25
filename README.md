@@ -316,7 +316,7 @@ public class MyApp extends GApplication {
 
 ## Third liberies   
 
-###Janino java compiler
+* ### Janino java compiler
 Project:   [Janino](http://janino-compiler.github.io/janino/)       
 Janino is a super-small, super-fast Java compiler.   
 Janino can not only compile a set of source files to a set of class files like JAVAC, but also compile a Java expression, a block, a class body, one .java file or a set of .java files in memory, load the bytecode and execute it directly in the same JVM.   
@@ -327,14 +327,13 @@ Download jars :
     #compile /binary/res/BpDeepTest.java
     mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/janino.jar:../libex/commons-compiler.jar   org.codehaus.janino.Compiler  ../res/BpDeepTest.java
 ```
-###Luaj
+* ### Luaj
 Project:   [Luaj](https://github.com/luaj/luaj)   
 miniJVM adapted : [Luaj minijvm]  https://github.com/digitalgust/minijvm_third_lib
 Lightweight, fast, Java-centric Lua interpreter written for JME and JSE, with string, table, package, math, io, os, debug, coroutine & luajava libraries, JSR-223 bindings, all metatags, weak tables and unique direct lua-to-java-bytecode compiling.   
 Download jars :    
 [luaj.jar](https://github.com/digitalgust/digitalgust.github.io/blob/main/lib/luaj.jar?raw=true)    
 ```
-    #compile /binary/res/BpDeepTest.java
     mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/luaj.jar Sample
 ```
 
