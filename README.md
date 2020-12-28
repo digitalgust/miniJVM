@@ -98,25 +98,6 @@
   Then you can setup breakpoint or pause mini_jvm and watch variable's value   
   
 
-
-## How to use Embed java compiler in mini_jvm:  
-   The third compiler [Janino](http://janino-compiler.github.io/janino/)     
-   Download and build it to  /binary/libex/janino.jar  and   /binary/libex/commons-compiler.jar    
-   Type compile command :  
-```
-#win:
-mini_jvm -bootclasspath ../lib/minijvm_rt.jar  -cp ../libex/janino.jar;../libex/commons-compiler.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
-#posix:
-./mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/janino.jar:../libex/commons-compiler.jar org.codehaus.janino.Compiler  ../res/BpDeepTest.java
-```
-
-Janino compiler is not the full java compiler, see [limitation](http://janino-compiler.github.io/janino/#limitations) , like :
-```
-List<String> list=new ArrayList(); 
-list.add("abc");
-String s=(String)list.get(0);//can't ignore (String) cast qualifier.   
-```   
-   
 ## Project based miniJVM:   
    [Awtk-minijvm](https://github.com/zlgopen/awtk-minijvm)  :[AWTK](https://github.com/zlgopen/awtk) cross platform native ui bind to minijvm   
    [LWJGUI-Mobile](https://github.com/orange451/LWJGUI-Mobile) : java LWJGL UI library        
@@ -135,20 +116,20 @@ String s=(String)list.get(0);//can't ignore (String) cast qualifier.
    [Glad](https://github.com/Dav1dde/glad)  :for replace openGL/GLES head file   
    [Glfw](https://github.com/glfw/glfw)  :for pc cross platform GUI   
    [Dirent](https://github.com/tronkko/dirent)  :for linux style on win vc file and directory access    
-   [Tinycthread](https://github.com/tinycthread/tinycthread)  :for cross platform thread   
-   [JRegex](https://github.com/digitalgust/minijvm_third_lib/tree/master/jregex)  :for java String regex match     
+   [Tinycthread](https://github.com/tinycthread/tinycthread)  :for cross platform thread    
+   [JRegex](https://github.com/digitalgust/minijvm_third_lib/tree/master/jregex)  :for java String regex match        
    [Janino](http://janino-compiler.github.io/janino/)  :for compile java source file     
-   [MiniAudio](https://github.com/dr-soft/miniaudio)  :for java audio playback and capture   
-   [Sljit](https://github.com/zherczeg/sljit)  :Platform independent low-level JIT compiler   
-   [Mbedtls](https://github.com/ARMmbed/mbedtls)  :Https support by mbedtls
-   [Avian](https://github.com/ReadyTalk/avian)  :referenced java api    
+   [MiniAudio](https://github.com/dr-soft/miniaudio)  :for java audio playback and capture    
+   [Sljit](https://github.com/zherczeg/sljit)  :Platform independent low-level JIT compiler      
+   [Mbedtls](https://github.com/ARMmbed/mbedtls)  :Https support by mbedtls    
+   [Avian](https://github.com/ReadyTalk/avian)  :referenced java api     
    
 
 ## Development IDE usage:  
-  C / ObjC:   JetBrains CLion ,Xcode ,Virtual studio .  
-  Swift :    XCode  .  
-  Java :    Jetbrain Idea, Netbeans  ,jdk  .  
-  Android :  Android Studio .
+  C / ObjC:   JetBrains CLion ,Xcode ,Virtual studio   
+  Swift :    XCode    
+  Java :    Jetbrain Idea, Netbeans   
+  Android :  Android Studio 
 
  
 ## Build GUI application, depend on OpenGL or OpenGLES     
@@ -319,22 +300,28 @@ public class MyApp extends GApplication {
 * ### Janino java compiler
 Project:   [Janino](http://janino-compiler.github.io/janino/)       
 Janino is a super-small, super-fast Java compiler.   
-Janino can not only compile a set of source files to a set of class files like JAVAC, but also compile a Java expression, a block, a class body, one .java file or a set of .java files in memory, load the bytecode and execute it directly in the same JVM.   
+Janino can not only compile a set of source files to a set of class files like JAVAC, but also compile a Java expression, a block, a class body, one .java file or a set of .java files in memory, load the bytecode and execute it directly in the same JVM.
+Janino compiler is not the full java compiler, see [limitation](http://janino-compiler.github.io/janino/#limitations) , like :
+```
+List<String> list=new ArrayList();
+list.add("abc");
+String s=(String)list.get(0);//can't ignore (String) cast qualifier.
+```
 Download jars :    
 [janino.jar](https://github.com/digitalgust/digitalgust.github.io/blob/main/lib/janino.jar?raw=true)    
 [commons-compiler.jar](https://github.com/digitalgust/digitalgust.github.io/blob/main/lib/commons-compiler.jar?raw=true)    
 ```
-    #compile /binary/res/BpDeepTest.java
-    mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/janino.jar:../libex/commons-compiler.jar   org.codehaus.janino.Compiler  ../res/BpDeepTest.java
+#compile /binary/res/BpDeepTest.java
+mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/janino.jar:../libex/commons-compiler.jar   org.codehaus.janino.Compiler  ../res/BpDeepTest.java
 ```
 * ### Luaj
 Project:   [Luaj](https://github.com/luaj/luaj)   
 miniJVM adapted : [Luaj minijvm]  https://github.com/digitalgust/minijvm_third_lib
-Lightweight, fast, Java-centric Lua interpreter written for JME and JSE, with string, table, package, math, io, os, debug, coroutine & luajava libraries, JSR-223 bindings, all metatags, weak tables and unique direct lua-to-java-bytecode compiling.   
+Lightweight, fast, Java-centric Lua interpreter written for JME and JSE, with string, table, package, math, io, os, debug, coroutine & luajava libraries, JSR-223 bindings, all metatags, weak tables and unique direct lua-to-java-bytecode compiling.
 Download jars :    
 [luaj.jar](https://github.com/digitalgust/digitalgust.github.io/blob/main/lib/luaj.jar?raw=true)    
 ```
-    mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/luaj.jar Sample
+mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/luaj.jar Sample
 ```
 
 
