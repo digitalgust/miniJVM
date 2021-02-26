@@ -5,7 +5,7 @@ android {
         config {
             keyAlias 'key0'
             keyPassword '123456'
-            storeFile file('D:/SOURCE/mini_jvm/mobile/androidapp/minijvm_key.jks')
+            storeFile file('%rootDir%/minijvm_key.jks')
             storePassword '123456'
         }
     }
