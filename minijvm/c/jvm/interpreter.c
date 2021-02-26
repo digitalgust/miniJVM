@@ -3380,7 +3380,7 @@ s32 execute_method_impl_jdwp(MethodInfo *method, Runtime *pruntime) {
                             sp = stack->sp;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
-                            jvm_printf("multianewarray  [%llx] type:%s , count:%d  \n", (s64) (intptr_t) ins, utf8_cstr(desc), count);
+                            jvm_printf("multianewarray  [%llx] type:%s , count:%d  \n", (s64) (intptr_t) ins, utf8_cstr(ustr), count);
 #endif
                             (sp++)->rvalue = ins;
                             ip += 4;
