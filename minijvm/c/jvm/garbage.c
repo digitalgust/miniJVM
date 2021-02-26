@@ -269,7 +269,7 @@ s32 _gc_thread_run(void *para) {
             _garbage_collect(collector);
             collector->lastgc = cur_mil;
         } else {
-            threadSleep(10);
+            threadSleep(100);
         }
     }
     collector->_garbage_thread_status = GARBAGE_THREAD_DEAD;

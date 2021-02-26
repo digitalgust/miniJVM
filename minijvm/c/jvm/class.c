@@ -388,7 +388,7 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
             }
         }
 #if _JVM_DEBUG_LOG_LEVEL > 2
-        jvm_printf("hold class %s\n", utf8_cstr(clazz->name));
+        //jvm_printf("hold class %s\n", utf8_cstr(clazz->name));
 #endif
         clazz->status = CLASS_STATUS_CLINITED;
     }

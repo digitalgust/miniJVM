@@ -461,7 +461,19 @@ static inline int _optimize_inline_setter(JClass *clazz, s32 cmrIdx, Runtime *ru
     return RUNTIME_STATUS_NORMAL;
 }
 
+s32 execute_method_impl_jdwp(MethodInfo *method, Runtime *pruntime);
+
 s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
+    if (pruntime->jvm->jdwp_enable) {
+#define JDWP_ENABLE
+        return execute_method_impl_jdwp(method, pruntime);
+    } else {
+#undef JDWP_ENABLE
+        return execute_method_impl_jdwp(method, pruntime);
+    }
+}
+
+s32 execute_method_impl_jdwp(MethodInfo *method, Runtime *pruntime) {
     //shared local var for opcode
     Instance *ins;
     s32 idx;
@@ -494,7 +506,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
     JClass *clazz;
     register u8 *ip;
     register StackEntry *sp;
-    u8 cur_inst;
 
     //start
     ret = RUNTIME_STATUS_NORMAL;
@@ -584,9 +595,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                 do {
-                    cur_inst = *ip;
-
-                    if (jvm->jdwp_enable) {
+#ifdef JDWP_ENABLE
+                    //if (jvm->jdwp_enable) {
                         //breakpoint
                         stack->sp = sp;
                         runtime->pc = ip;
@@ -601,7 +611,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
                         sp = stack->sp;
                         check_gc_pause(-1);
-                    }
+                    //}
+#endif
 
 
 #if _JVM_DEBUG_PROFILE
@@ -613,7 +624,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #ifdef __JVM_DEBUG__
                     s64 inst_pc = runtime->pc - ca->code;
 #endif
-                    switch (cur_inst) {
+                    switch (*ip) {
 
                         case op_nop: {
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -764,7 +775,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_ldc:
                         case op_ldc_w: {
-                            if (cur_inst == op_ldc) {
+                            if (*ip == op_ldc) {
                                 idx = ip[1];
                                 ip += 2;
                             } else {
@@ -3252,6 +3263,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_monitorenter: {
                             ins = (--sp)->rvalue;
                             stack->sp = sp;
+                            if (!ins)goto label_null_throw;
                             jthread_lock(&ins->mb, runtime);
                             sp = stack->sp;
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -3266,6 +3278,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_monitorexit: {
                             ins = (--sp)->rvalue;
                             stack->sp = sp;
+                            if (!ins)goto label_null_throw;
                             jthread_unlock(&ins->mb, runtime);
                             sp = stack->sp;
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -3284,8 +3297,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("wide  \n");
 #endif
                             ip++;
-                            cur_inst = *ip;
-                            switch (cur_inst) {
+                            switch (*ip) {
                                 case op_iload:
                                 case op_fload: {
                                     (sp++)->ivalue = localvar[*((u16 *) (ip + 1))].ivalue;

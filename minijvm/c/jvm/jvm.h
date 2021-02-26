@@ -27,7 +27,7 @@ extern "C" {
 
 //=======================  micro define  =============================
 //_JVM_DEBUG  01=thread info, 02=garage&jit info  , 03=class load, 04=method call,  06=all bytecode
-#define _JVM_DEBUG_LOG_LEVEL 01
+#define _JVM_DEBUG_LOG_LEVEL 02
 #define _JVM_DEBUG_LOG_TO_FILE 0
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_PROFILE 0
@@ -405,7 +405,7 @@ typedef union _Long2Double {
 
 #define GARBAGE_OVERLOAD_DEFAULT 90  // overload of max heap size ,will active garbage collection
 #define GARBAGE_PERIOD_MS_DEFAULT 10 * 60 * 1000
-#define MAX_HEAP_SIZE_DEFAULT  100 * 1024 * 1024
+#define MAX_HEAP_SIZE_DEFAULT  200 * 1024 * 1024
 #define MAX_STACK_SIZE_DEFAULT 4096
 
 //#define HARD_LIMIT
