@@ -461,19 +461,9 @@ static inline int _optimize_inline_setter(JClass *clazz, s32 cmrIdx, Runtime *ru
     return RUNTIME_STATUS_NORMAL;
 }
 
-s32 execute_method_impl_jdwp(MethodInfo *method, Runtime *pruntime);
 
 s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
-    if (pruntime->jvm->jdwp_enable) {
-#define JDWP_ENABLE
-        return execute_method_impl_jdwp(method, pruntime);
-    } else {
-#undef JDWP_ENABLE
-        return execute_method_impl_jdwp(method, pruntime);
-    }
-}
 
-s32 execute_method_impl_jdwp(MethodInfo *method, Runtime *pruntime) {
     //shared local var for opcode
     Instance *ins;
     s32 idx;
@@ -595,7 +585,7 @@ s32 execute_method_impl_jdwp(MethodInfo *method, Runtime *pruntime) {
 
 
                 do {
-#ifdef JDWP_ENABLE
+#if _JVM_JDWP_ENABLE
                     //if (jvm->jdwp_enable) {
                         //breakpoint
                         stack->sp = sp;
@@ -616,6 +606,7 @@ s32 execute_method_impl_jdwp(MethodInfo *method, Runtime *pruntime) {
 
 
 #if _JVM_DEBUG_PROFILE
+                    u8 cur_inst = *ip;
                     s64 spent = 0;
                     s64 start_at = nanoTime();
 #endif

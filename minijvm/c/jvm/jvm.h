@@ -31,6 +31,8 @@ extern "C" {
 #define _JVM_DEBUG_LOG_TO_FILE 0
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_PROFILE 0
+#define _JVM_JDWP_ENABLE 0
+
 //#pragma GCC diagnostic error "-Wframe-larger-than="
 
 #if __JVM_OS_VS__ || __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__

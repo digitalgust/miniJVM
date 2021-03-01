@@ -66,7 +66,7 @@ void profile_print() {
     for (i = 0; i < INST_COUNT; i++) {
         ProfileDetail *pd = &profile_instructs[i];
         jvm_printf("%2x %15lld %8d %8lld %s\n",
-                   i | 0xffffff00, pd->cost, pd->count, pd->count ? (pd->cost / pd->count) : 0, inst_name[i]);
+                   i | 0xffffff00, pd->cost, pd->count, pd->count ? (pd->cost / pd->count) : 0, INST_NAME[i]);
     }
 }
 
@@ -240,6 +240,10 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     if (!jvm) {
         jvm_printf("jvm not found.");
         return -1;
+    }
+
+    if (jvm->jdwp_enable && !_JVM_JDWP_ENABLE) {
+        jvm_printf("[WARN]jvm set jdwp enable, please set _JVM_JDWP_ENABLE with 1 in jvm.h and recompile \n");
     }
 
     signal(SIGABRT, _on_jvm_sig);
@@ -437,10 +441,12 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
             jvm_printf("\n[INFO]main thread start\n");
 #endif
             //调用主方法
-            if (jvm->jdwp_enable) {
-                if (jvm->jdwp_suspend_on_start)jthread_suspend(runtime);
-                jvm_printf("[JDWP]waiting for jdwp(port:%s) debug client connected...\n", JDWP_TCP_PORT);
-            }//jdwp 会启动调试器
+            if (_JVM_JDWP_ENABLE) {
+                if (jvm->jdwp_enable) {
+                    if (jvm->jdwp_suspend_on_start)jthread_suspend(runtime);
+                    jvm_printf("[JDWP]waiting for jdwp(port:%s) debug client connected...\n", JDWP_TCP_PORT);
+                }//jdwp 会启动调试器
+            }
             runtime->method = NULL;
             runtime->clazz = clazz;
             ret = execute_method(m, runtime);
