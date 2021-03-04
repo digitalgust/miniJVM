@@ -529,7 +529,7 @@ public class GTextBox extends GTextObject {
                 }
             }
         };
-        Timer timer = getTimer();
+        Timer timer = GForm.timer;
         if (timer != null) {
             timer.schedule(task, 0, inertiaPeriod);
         }

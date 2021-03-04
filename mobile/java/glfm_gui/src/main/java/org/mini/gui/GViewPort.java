@@ -316,7 +316,7 @@ public class GViewPort extends GContainer {
                 }
             };
         }
-        Timer timer = getTimer();
+        Timer timer = GForm.timer;
         if (timer != null) {
             timer.schedule(task, 0, (long) inertiaPeriod);
         }

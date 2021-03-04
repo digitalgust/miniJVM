@@ -98,8 +98,11 @@ public class GCmdHandler {
                 GForm.timer.schedule(new TimerTask() {
                     @Override
                     public void run() {
-                        curShowMessage = null;
-                        GForm.flush();
+                        try {
+                            curShowMessage = null;
+                            GForm.flush();
+                        } catch (Exception e) {
+                        }
                     }
                 }, 1500);
             }

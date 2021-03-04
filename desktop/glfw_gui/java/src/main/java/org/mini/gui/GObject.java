@@ -6,10 +6,12 @@
 package org.mini.gui;
 
 import org.mini.gui.event.GActionListener;
+import org.mini.gui.event.GAppActiveListener;
 import org.mini.gui.event.GFocusChangeListener;
 import org.mini.nanovg.Nanovg;
 
 import java.util.Timer;
+import java.util.TimerTask;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
 
@@ -102,12 +104,22 @@ abstract public class GObject {
         return false;
     }
 
-    public Timer getTimer() {
-        GForm form = getForm();
-        if (form != null) {
-            return form.timer;
+    public void schedule(TimerTask task, long delay, long period) {
+        if (GForm.timer != null) {
+            getForm().setActiveListener(active -> {
+
+            });
+            GForm.timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    try {
+                        task.run();
+                    } catch (Exception e) {
+                        cancel();//cancel this ,not task
+                    }
+                }
+            }, delay, period);
         }
-        return null;
     }
 
     public boolean paint(long ctx) {

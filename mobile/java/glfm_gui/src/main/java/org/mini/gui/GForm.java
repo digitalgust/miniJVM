@@ -21,7 +21,7 @@ import static org.mini.nanovg.Nanovg.*;
  */
 public class GForm extends GPanel {
 
-    final static Timer timer = new Timer(true);//用于更新画面，UI系统采取按需刷新的原则
+    final protected static Timer timer = new Timer(true);//用于更新画面，UI系统采取按需刷新的原则
 
     static GCmdHandler cmdHandler = new GCmdHandler();
     private boolean inited = false;
@@ -151,15 +151,6 @@ public class GForm extends GPanel {
         }
     }
 
-    TimerTask tt_OnTouch = new TimerTask() {
-        public void run() {
-            flush();
-        }
-    };
-
-    void tt_setupOnTouch() {
-        timer.schedule(tt_OnTouch, 0L);//, (long) (1000 / fpsExpect));
-    }
 
 
     public void onPhotoPicked(int uid, String url, byte[] data) {

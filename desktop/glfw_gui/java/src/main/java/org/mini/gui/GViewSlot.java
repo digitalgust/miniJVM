@@ -143,7 +143,7 @@ public class GViewSlot extends GViewPort {
             GObject curGo = getElementsImpl().get(current);
             if (curGo != null && go != null) {
                 SlotSwaper swaper = new SlotSwaper(this, curGo, go, timeInMils);
-                getForm().getTimer().schedule(swaper, 0, (long) 16);
+                GForm.timer.schedule(swaper, 0, (long) 16);
                 this.current = getElementsImpl().indexOf(go);
             }
         }
