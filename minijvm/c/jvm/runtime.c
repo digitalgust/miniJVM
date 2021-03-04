@@ -168,7 +168,9 @@ s64 getInstructPointer(Runtime *runtime) {
 void getRuntimeStack(Runtime *runtime, Utf8String *ustr) {
     s32 i, imax;
     utf8_append_c(ustr, "Exception threw: ");
-    utf8_append(ustr, (runtime->stack->sp - 1)->ins->mb.clazz->name);
+    Instance *ins = (runtime->stack->sp - 1)->ins;
+    if (ins)utf8_append(ustr, ins->mb.clazz->name);
+    else utf8_append_c(ustr, "null");
     utf8_pushback(ustr, '\n');
     for (i = 0, imax = runtime->thrd_info->stacktrack->length; i < imax; i++) {
         utf8_append_c(ustr, "    at ");
