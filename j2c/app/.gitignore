@@ -1,0 +1,12 @@
+.DS_Store
+.idea
+
+Thumbs.db
+
+target
+build
+dist
+generted/classes
+generted/c
+
+cmake*

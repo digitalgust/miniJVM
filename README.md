@@ -44,6 +44,7 @@
 
 
 ## Changelog:
+   2021.03.  Add j2c module, it 's a tool for convert minijvm java source code to c source code ,  then build it as native application , support desktop and mobile platform .   
    2020.12.  Add build script and release v2.1.   
    2020.10.  Refactor source and remove binary in repository.   
    2020.10.  Https supported.   
@@ -343,6 +344,11 @@ mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/luaj.jar Sample
 >>
 >> desktop/   
 >>> glfw_gui/------ desktop computer gui/audio native module   
+>>
+>> j2c/        
+>>> app/----------- native support source.    
+>>> build/--------- build files for platforms.    
+>>> translator/---- tool for convert minijvm java source to c source.    
 >>
 >> mobile/        
 >>> c/------------- java native lib, glfm framework, gui jni, glfmapp    

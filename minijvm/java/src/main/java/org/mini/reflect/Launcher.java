@@ -135,7 +135,7 @@ public class Launcher {
      * @return
      */
     static public URL getFileUrl(String sourceName, String[] paths) {
-        URL url = null;
+
         while (sourceName.startsWith("/")) sourceName = sourceName.substring(1);
         for (String s : paths) {
             if (s != null && s.length() > 0) {
@@ -147,7 +147,8 @@ public class Launcher {
                             String fn = files[i];
                             if (fn != null && fn.equals(sourceName)) {
                                 String us = "jar:file:" + f.getAbsolutePath() + "!/" + sourceName;
-                                url = new URL(us);
+                                URL url = new URL(us);
+                                return url;
                             }
                         }
                     } catch (Exception e) {
@@ -158,8 +159,8 @@ public class Launcher {
                     if (cf.exists()) {
                         try {
                             String us = "file:" + cf.getAbsolutePath();
-                            System.out.println(us);
-                            url = new URL(us);
+                            //System.out.println(us);
+                            return new URL(us);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -167,6 +168,6 @@ public class Launcher {
                 }
             }
         }
-        return url;
+        return null;
     }
 }

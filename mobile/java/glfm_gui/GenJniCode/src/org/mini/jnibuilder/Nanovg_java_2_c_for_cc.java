@@ -23,7 +23,7 @@ public class Nanovg_java_2_c_for_cc {
         gt.buildC();
     }
 
-    String[] path = {"src/main/java/org/mini/nanovg/Nanovg.java", "org.mini.nanovg.Nanovg", "org/mini/nanovg/Nanovg", "../../../../java2llvm/app/gui/jni_nanovg.c"};
+    String[] path = {"src/main/java/org/mini/nanovg/Nanovg.java", "org.mini.nanovg.Nanovg", "org/mini/nanovg/Nanovg", "../../../j2c/app/gui/jni_nanovg.c"};
 
     String[] ignore_list = {"",
             "",};

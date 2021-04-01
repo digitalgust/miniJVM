@@ -189,6 +189,9 @@ public abstract class ClassLoader {
         URL url = null;
         if (parent != null) {
             url = parent.getResource(path);
+            if (url == null) {
+                url = RefNative.findResource0(this, path);//for j2c find resource
+            }
         }
 
         if (url == null) {
@@ -240,6 +243,7 @@ public abstract class ClassLoader {
 
     /**
      * called by vm
+     *
      * @param c
      */
     private void holdClass(Class c) {

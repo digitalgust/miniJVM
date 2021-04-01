@@ -540,6 +540,13 @@ s32 org_mini_reflect_vm_RefNative_findLoadedClass0(Runtime *runtime, JClass *cla
     return 0;
 }
 
+s32 org_mini_reflect_vm_RefNative_findResource0(Runtime *runtime, JClass *clazz) {
+
+    push_ref(runtime->stack, NULL);
+
+    return 0;
+}
+
 s32 org_mini_reflect_vm_RefNative_initNativeClassLoader(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     Instance *jloader = localvar_getRefer(runtime->localvar, pos++);
@@ -1378,6 +1385,7 @@ static java_native_method METHODS_REFLECT_TABLE[] = {
         {"org/mini/reflect/vm/RefNative",  "getCallerClass",           "()Ljava/lang/Class;",                                                              org_mini_reflect_vm_RefNative_getCallerClass},
         {"org/mini/reflect/vm/RefNative",  "defineClass",              "(Ljava/lang/ClassLoader;Ljava/lang/String;[BII)Ljava/lang/Class;",                 org_mini_reflect_vm_RefNative_defineClass},
         {"org/mini/reflect/vm/RefNative",  "findLoadedClass0",         "(Ljava/lang/ClassLoader;Ljava/lang/String;)Ljava/lang/Class;",                     org_mini_reflect_vm_RefNative_findLoadedClass0},
+        {"org/mini/reflect/vm/RefNative",  "findResource0",            "(Ljava/lang/ClassLoader;Ljava/lang/String;)Ljava/net/URL;",                        org_mini_reflect_vm_RefNative_findResource0},
         {"org/mini/reflect/vm/RefNative",  "initNativeClassLoader",    "(Ljava/lang/ClassLoader;Ljava/lang/ClassLoader;)V",                                org_mini_reflect_vm_RefNative_initNativeClassLoader},
         {"org/mini/reflect/vm/RefNative",  "destroyNativeClassLoader", "(Ljava/lang/ClassLoader;)V",                                                       org_mini_reflect_vm_RefNative_destroyNativeClassLoader},
         {"org/mini/reflect/vm/RefNative",  "addJarToClasspath",        "(Ljava/lang/String;)V",                                                            org_mini_reflect_vm_RefNative_addJarToClasspath},

@@ -537,10 +537,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             }
             ip = ca->code;
             runtime->pc = ip;
-            thrd_info = runtime->thrd_info;
             localvar_init(runtime, ca->max_locals, method->para_slots);
-            localvar = runtime->localvar;
-            sp = runtime->stack->sp;
 
 
             if (method->is_sync)_synchronized_lock_method(method, runtime);
@@ -583,6 +580,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     }
                 }
 
+                thrd_info = runtime->thrd_info;
+                localvar = runtime->localvar;
+                sp = runtime->stack->sp;
 
                 do {
 #if _JVM_JDWP_ENABLE

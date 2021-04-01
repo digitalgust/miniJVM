@@ -23,7 +23,7 @@ public class GL_java_2_c_for_cc {
         gt.buildC();
     }
 
-    String[] path = {"src/main/java/org/mini/gl/GL.java", "org.mini.gl.GL", "org/mini/gl/GL", "../../../../java2llvm/app/gui/jni_gl.c"};
+    String[] path = {"src/main/java/org/mini/gl/GL.java", "org.mini.gl.GL", "org/mini/gl/GL", "../../../j2c/app/gui/jni_gl.c"};
 
     String[] ignore_list = {"",
             "",};

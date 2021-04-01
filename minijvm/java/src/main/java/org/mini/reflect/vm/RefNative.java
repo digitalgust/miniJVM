@@ -5,6 +5,8 @@
  */
 package org.mini.reflect.vm;
 
+import java.net.URL;
+
 /**
  * @author gust
  */
@@ -55,6 +57,7 @@ public class RefNative {
 
     public static native Class findLoadedClass0(ClassLoader loader, String name);
 
+    public static native URL findResource0(ClassLoader loader, String path);
     //
     //
     public static native long heap_calloc(int capacity);
