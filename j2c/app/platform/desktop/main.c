@@ -27,10 +27,10 @@ s32 main(int argc, const char *argv[]) {
         utf8_append_c(mainClassName, (c8 *) argv[1]);
     } else {
         utf8_clear(mainClassName);
-        utf8_append_c(mainClassName, "test.HelloWorld");
+//        utf8_append_c(mainClassName, "test.HelloWorld");
 //        utf8_append_c(mainClassName, "test.Foo1");
 //        utf8_append_c(mainClassName, "test.Foo2");
-//        utf8_append_c(mainClassName, "test.Foo3");
+        utf8_append_c(mainClassName, "test.Foo3");
 //        utf8_append_c(mainClassName, "test.ThreadDaemon");
 //        utf8_append_c(mainClassName, "test.SpecTest");
 //        utf8_append_c(mainClassName, "test.MultiThread");

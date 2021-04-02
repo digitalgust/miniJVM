@@ -4,7 +4,6 @@
 Thumbs.db
 
 target
-build
 dist
 
 cmake-build-debug

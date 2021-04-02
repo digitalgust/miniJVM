@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "jstring_print:native_std.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "jstr-&gt;value_0-&gt;prop.as_u16_arr[jstr-&gt;offset_1 + i]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "Java_org_mini_reflect_ReflectMethod_mapMethod__J_V:native_std.c">
+      </ContextState>
+      <ContextState
+         contextName = "Java_org_mini_gui_GButton__init___Ljava_lang_String_2FFFF_V:org.mini.gui.GButton.c">
+      </ContextState>
+      <ContextState
+         contextName = "_callback_touch:jni_glfm.c">
+      </ContextState>
+      <ContextState
+         contextName = "Java_java_lang_Class_getEnumConstantsShared____3Ljava_lang_Object_2:java.lang.Class.c">
+      </ContextState>
+      <ContextState
+         contextName = "Java_org_mini_gl_GL_glShaderSource__II_3_3B_3II_V:jni_gl.c">
+      </ContextState>
+      <ContextState
+         contextName = "Java_org_mini_json_JsonParser_deserial__Ljava_lang_String_2Ljava_lang_Class_2_Ljava_lang_Object_2:org.mini.json.JsonParser.c">
+      </ContextState>
+      <ContextState
+         contextName = "Java_org_mini_g3d_core_gltf2_loader_data_GLTF_getDirectByteBuffer__Ljava_lang_String_2_Ljava_nio_ByteBuffer_2:org.mini.g3d.core.gltf2.loader.data.GLTF.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "rstack[sp+1].ins-&gt;prop.as_c8_arr[10]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "Java_java_lang_Class_getMethods____3Ljava_lang_reflect_Method_2:java.lang.Class.c">
+      </ContextState>
+      <ContextState
+         contextName = "_garbage_copy_refer_thread:garbage.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "*(frame-&gt;spPtr)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "Java_org_mini_gui_GButton_isBlack___3F_Z:org.mini.gui.GButton.c">
+      </ContextState>
+      <ContextState
+         contextName = "Java_org_mini_nanovg_Nanovg_nvgRGBAf__FFFF__3F:jni_nanovg.c">
+      </ContextState>
+      <ContextState
+         contextName = "Java_com_sun_cldc_io_ResourceInputStream_open__Ljava_lang_String_2__3B:native_std.c">
+      </ContextState>
+      <ContextState
+         contextName = "Java_java_lang_Class_getSuperclass___Ljava_lang_Class_2:native_std.c">
+      </ContextState>
+      <ContextState
+         contextName = "Java_org_mini_reflect_ReflectClass_mapReference__J_V:native_std.c">
+      </ContextState>
+      <ContextState
+         contextName = "Java_org_mini_json_JsonParser_parse__Ljava_lang_String_2I_Lorg_mini_json_JsonParser_00024JsonCell_2:org.mini.json.JsonParser.c">
+      </ContextState>
+      <ContextState
+         contextName = "class_clinit:jvm.c">
+      </ContextState>
+      <ContextState
+         contextName = "Java_org_mini_gui_GObject__init____V:org.mini.gui.GObject.c">
+      </ContextState>
+      <ContextState
+         contextName = "Java_org_mini_reflect_DirectMemObj_copyTo__ILjava_lang_Object_2II_V:org.mini.reflect.DirectMemObj.c">
+      </ContextState>
+      <ContextState
+         contextName = "Java_java_lang_Class_isArray___Z:native_std.c">
+      </ContextState>
+      <ContextState
+         contextName = "parseMethodPara:jassist.c">
+      </ContextState>
+      <ContextState
+         contextName = "Java_org_mini_g3d_core_gltf2_loader_data_GLTFTexture_setSampler__I_V:org.mini.g3d.core.gltf2.loader.data.GLTFTexture.c">
+      </ContextState>
+      <ContextState
+         contextName = "Java_org_mini_reflect_ReflectMethod_getMethodParaType__Ljava_lang_String_2__3Ljava_lang_reflect_Type_2:org.mini.reflect.ReflectMethod.c">
+      </ContextState>
+      <ContextState
+         contextName = "Java_org_mini_nanovg_Nanovg_nvgRGBA__BBBB__3F:jni_nanovg.c">
+      </ContextState>
+      <ContextState
+         contextName = "Java_java_lang_Class_isEnum___Z:java.lang.Class.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "(JClass*)p0-&gt;classHandle_6">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "Java_org_mini_glfm_Glfm_glfmSetCallBack__JLorg_mini_glfm_GlfmCallBack_2_V:jni_glfm.c">
+      </ContextState>
+      <ContextState
+         contextName = "Java_org_mini_gui_GDefaultStyle_getTextFontColor____3F:org.mini.gui.GDefaultStyle.c">
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>

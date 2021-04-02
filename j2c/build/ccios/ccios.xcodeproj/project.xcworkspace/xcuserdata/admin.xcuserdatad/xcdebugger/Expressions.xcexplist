@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "Java_org_mini_fs_InnerFile_loadFS___3BLorg_mini_fs_InnerFileStat_2_I:native_std.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "utf8_cstr(filepath)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>

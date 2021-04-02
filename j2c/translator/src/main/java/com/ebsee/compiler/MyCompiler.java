@@ -90,6 +90,11 @@ public class MyCompiler {
             //getting the compiler object
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
+            if (compiler == null) {
+                System.out.println("[ERROR]Please using jdk 1.8 run translator ,instead jre.");
+                System.exit(1);
+            }
+
             StandardJavaFileManager manager = compiler.getStandardFileManager(null, null, null);
 
             Iterable<? extends JavaFileObject> files = manager.getJavaFileObjectsFromFiles(srcList);
