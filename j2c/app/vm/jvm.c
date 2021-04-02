@@ -761,11 +761,13 @@ void jthread_bound(JThreadRuntime *runtime) {
     Utf8String *ustr = utf8_create();
     tss_set(TLS_KEY_UTF8STR_CACHE, ustr);
     jthread_prepar(runtime);
-    JObject *jthread = runtime->jthread ? runtime->jthread : new_instance_with_name(runtime, STR_JAVA_LANG_THREAD);
-    gc_refer_hold(jthread);
-    instance_init(runtime, jthread);
-    jthread_set_stackFrame(jthread, runtime);
-    runtime->jthread = jthread;
+    if (!runtime->jthread) {
+        JObject *jthread = runtime->jthread ? runtime->jthread : new_instance_with_name(runtime, STR_JAVA_LANG_THREAD);
+        gc_refer_hold(jthread);
+        instance_init(runtime, jthread);
+        runtime->jthread = jthread;
+        jthread_set_stackFrame(jthread, runtime);
+    }
     arraylist_push_back(g_jvm->thread_list, runtime);
     runtime->thread_status = THREAD_STATUS_RUNNING;
 }
