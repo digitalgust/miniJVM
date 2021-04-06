@@ -24,7 +24,7 @@
   * Take photo from Camera or Album   
   * Save and Load file from mobile storage    
   * Api compatible with miniJVM desktop platform,  app can running on desktop platform   
-  * Compile minijvm java source code to C boost performance.  Source on [java2c](https://github.com/digitalgust/java2c) .  
+  * Translate minijvm java source to C improve performance.    
 
 ## MiniJVM gui Demo
 
