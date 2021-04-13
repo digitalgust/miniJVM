@@ -335,7 +335,7 @@ public final class Util {
 
     public static String getMethodRawName(String className, String methodName, String signature) {
         StringBuilder result = new StringBuilder();
-        result.append("Java");
+        result.append("func");
         result.append('.');
         result.append(className);
         result.append('.');
@@ -352,6 +352,31 @@ public final class Util {
 
     public static String getMethodDeclare(String className, String methodName, JSignature sig) {
         return sig.getResult() + " " + getMethodRawName(className, methodName, sig.javaSignature) + "(" + sig.getCTypeArgsString() + ")";
+    }
+
+    public static String getBridgeMethodName(Method method) {
+        return getBridgeMethodName(method.getClassFile().getThisClassName(), method.getMethodName(), method.getDescriptor());
+    }
+
+    public static String getBridgeMethodName(String className, String methodName, String signature) {
+        StringBuilder result = new StringBuilder();
+        result.append("bridge");
+        result.append('.');
+        result.append(className);
+        result.append('.');
+        result.append(methodName);
+        result.append('.');
+        result.append('.');
+        result.append(signature.substring(signature.indexOf('(') + 1, signature.indexOf(')')));
+        result.append('.');
+        result.append(signature.substring(signature.indexOf(')') + 1));
+        String s = result.toString();
+        s = regulString(s);
+        return s;
+    }
+
+    public static String getBridgeMethodDeclare(String className, String methodName, String sig) {
+        return "void " + getBridgeMethodName(className, methodName, sig) + "(" + STR_RUNTIME_TYPE_NAME + " *runtime, __refer ins, ParaItem *para, ParaItem *ret)";
     }
 
     public static String class2structDefine(String className) {

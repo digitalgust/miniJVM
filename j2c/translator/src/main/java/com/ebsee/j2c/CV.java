@@ -123,6 +123,7 @@ public class CV extends ClassVisitor {
                 ps.println(method.getExceptionTable());
                 method.out(this.ps);
             }
+            method.outBridge(this.ps);
         }
 
         for (String s : assistFunc) {

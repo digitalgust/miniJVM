@@ -23,7 +23,7 @@ public class AssistLLVM {
     static final String FUNC_METHOD_ENTER = "method_enter";
     static final String FUNC_METHOD_EXIT = "method_exit";
     static final String FUNC_GET_STACKFRAME_EXCEPTION = "get_stackframe_exception";
-    static final String FUNC_FIND_EXCEPTION_HANDLER_INDEX = "find_exception_handler_index";
+    static final String FUNC_FIND_EXCEPTION_HANDLER_INDEX = "find_exception_handler";
     static final String FUNC_CHECKCAST = "checkcast";
     static final String FUNC_INSTANCE_OF = "instance_of_classname_index";
     static final String FUNC_CHECK_SUSPEND_AND_PAUSE = "check_suspend_and_pause";
@@ -128,12 +128,13 @@ public class AssistLLVM {
         if (!outFileDir.exists()) {
             outFileDir.mkdirs();
         }
-        PrintStream ps = new PrintStream(new File(cPath, outFileName));
+        File outfile = new File(cPath, outFileName);
+        PrintStream ps = new PrintStream(outfile);
         CV cv = new CV(ps);
 
         // read class
         String fn = classesPath + className.replace('.', '/') + ".class";
-        System.out.println("class convert to c:" + fn);
+        System.out.println("class convert to c:" + outfile);
         InputStream is = new FileInputStream(fn);
         ClassReader cr = new ClassReader(is);
         cr.accept(cv, 0);
@@ -194,7 +195,7 @@ public class AssistLLVM {
 
             i = 0;
             ps.println("const s32 g_methods_count = " + methodraw.size() + ";");
-            ps.println("//index, name, desc, signature_name, class_name, bytecode, access, max_stack, max_local, func_ptr, exception");
+            ps.println("//index, name, desc, signature_name, class_name, bytecode, access, max_stack, max_local, func_ptr, func_bridge, exception");
             ps.println("MethodRaw g_methods[] = {");
             for (String s : methodraw) {
                 ps.println(s + " // " + i++);
@@ -287,6 +288,32 @@ public class AssistLLVM {
                 {"java.lang.String", "count", "I", "count_in_string"},
                 {"java.lang.String", "offset", "I", "offset_in_string"},
                 {"java.lang.Class", "classHandle", "J", "classHandle_in_class"},
+                {"org.mini.reflect.ReflectMethod", "methodId", "J", "methodId_in_reflectmethod"},
+
+//                {"java.lang.Class", "modifiers", "I", "modifiers_in_class"},
+//                {"java.lang.Class", "constructors", "[Ljava/lang/reflect/Constructor;", "constructors_in_class"},
+//                {"java.lang.Class", "fields", "[Ljava/lang/reflect/Field;", "fields_in_class"},
+//                {"java.lang.Class", "methods", "[Ljava/lang/reflect/Method;", "methods_in_class"},
+//                {"java.lang.reflect.Method", "methodHandle", "J", "methodHandle_in_method"},
+//                {"java.lang.reflect.Method", "clazz", "Ljava/lang/Class;", "clazz_in_method"},
+//                {"java.lang.reflect.Method", "name", "Ljava/lang/String;", "name_in_method"},
+//                {"java.lang.reflect.Method", "desc", "Ljava/lang/String;", "desc_in_method"},
+//                {"java.lang.reflect.Method", "signature", "Ljava/lang/String;", "signature_in_method"},
+//                {"java.lang.reflect.Field", "fieldHandle", "J", "fieldHandle_in_field"},
+//                {"java.lang.reflect.Field", "clazz", "Ljava/lang/Class;", "clazz_in_field"},
+//                {"java.lang.reflect.Field", "name", "Ljava/lang/String;", "name_in_field"},
+//                {"java.lang.reflect.Field", "desc", "Ljava/lang/String;", "desc_in_field"},
+//                {"java.lang.reflect.Field", "signature", "Ljava/lang/String;", "signature_in_field"},
+
+                {"java.lang.Boolean", "value", "Z", "value_in_boolean"},
+                {"java.lang.Byte", "value", "B", "value_in_byte"},
+                {"java.lang.Short", "value", "S", "value_in_short"},
+                {"java.lang.Character", "value", "C", "value_in_character"},
+                {"java.lang.Integer", "value", "I", "value_in_integer"},
+                {"java.lang.Long", "value", "J", "value_in_long"},
+                {"java.lang.Float", "value", "F", "value_in_float"},
+                {"java.lang.Double", "value", "D", "value_in_double"},
+
                 {"java.lang.Thread", "stackFrame", "J", "stackFrame_in_thread"},
                 {"java.lang.StackTraceElement", "declaringClass", "Ljava/lang/String;", "declaringClass_in_stacktraceelement"},
                 {"java.lang.StackTraceElement", "methodName", "Ljava/lang/String;", "methodName_in_stacktraceelement"},
@@ -423,7 +450,11 @@ public class AssistLLVM {
             nativemethod.add(m);
         }
         methodinfo += rawName;
-        methodinfo += ",";
+        methodinfo += ", ";
+        declares.add("extern " + Util.getBridgeMethodDeclare(className, m.getMethodName(), sig.getJavaSignature()) + ";");
+        methodinfo += Util.getBridgeMethodName(className, m.getMethodName(), sig.getJavaSignature());
+        methodinfo += ", ";
+
         if (m.isNative()) {
             methodinfo += "NULL";
         } else {

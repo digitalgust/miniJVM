@@ -12,9 +12,9 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         String jsrcPath = "../../minijvm/java/src/main/java/"
-//                + File.pathSeparator + "../../test/minijvm_test/src/main/java/"//
-                + File.pathSeparator + "../../mobile/java/glfm_gui/src/main/java"//
-                + File.pathSeparator + "../../mobile/java/ExApp/src/main/java"//
+                + File.pathSeparator + "../../test/minijvm_test/src/main/java/"//
+//                + File.pathSeparator + "../../mobile/java/glfm_gui/src/main/java"//
+//                + File.pathSeparator + "../../mobile/java/ExApp/src/main/java"//
 //                + File.pathSeparator + "../../../g3d/src/main/java/"//
                 ;
         String classesPath = "../app/generted/classes/";

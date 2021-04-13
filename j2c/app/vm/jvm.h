@@ -97,6 +97,7 @@ typedef struct _MethodRaw MethodRaw;
 typedef struct _ClassRaw ClassRaw;
 typedef union _StackItem StackItem;
 typedef union _RStackItem RStackItem;
+typedef union _ParaItem ParaItem;
 typedef struct _ThreadLock ThreadLock;
 typedef struct _InstProp InstProp;
 typedef struct _MethodInfo MethodInfo;
@@ -175,6 +176,7 @@ struct _FieldRaw {//name, signature_name, class_name, access, offset_ins, static
     u16 offset_ins;
 };
 
+typedef void (*func_bridge)(JThreadRuntime *runtime, __refer ins, ParaItem *para, ParaItem *ret);
 
 struct _MethodRaw {
     s32 index;
@@ -187,6 +189,7 @@ struct _MethodRaw {
     s16 max_stack;
     s16 max_local;
     __refer func_ptr;
+    func_bridge bridge_ptr;
     ExceptionTable *extable;
 };
 
@@ -400,6 +403,16 @@ struct _ProCache {
     MethodRaw *java_lang_string_init_C_raw;
 };
 
+union _ParaItem {
+    s32 i;
+    u32 u;
+    s64 j;
+    f32 f;
+    f64 d;
+    JObject *ins;
+    __refer obj;
+};
+
 extern Jvm *g_jvm;
 extern ProCache g_procache;
 //=================================  extern ====================================
@@ -569,7 +582,7 @@ s32 instance_of_classname_index(JObject *jobj, s32 classNameIdx);
 
 s32 checkcast(JObject *jobj, s32 classNameIdx);
 
-__refer find_exception_handler_index(JThreadRuntime *runtime, LabelTable *labtable, __refer notfoundHandlerLabel);
+__refer find_exception_handler(JThreadRuntime *runtime, LabelTable *labtable, __refer notfoundHandlerLabel);
 
 void throw_exception(JThreadRuntime *runtime, JObject *jobj);
 

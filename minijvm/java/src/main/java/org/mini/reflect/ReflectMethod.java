@@ -89,61 +89,8 @@ public class ReflectMethod {
         if ((accessFlags & RConst.ACC_PRIVATE) != 0) {
             throw new IllegalAccessException();
         }
-        long[] argslong = new long[paras.length];
 
-        for (int i = 0; i < paras.length; i++) {
-            switch (paras[i].charAt(0)) {
-                case 'S':
-                    argslong[i] = ((Short) args[i]);
-                    break;
-                case 'C':
-                    argslong[i] = ((Character) args[i]);
-                    break;
-                case 'B':
-                    argslong[i] = ((Byte) args[i]);
-                    break;
-                case 'I':
-                    argslong[i] = ((Integer) args[i]);
-                    break;
-                case 'F':
-                    argslong[i] = Float.floatToIntBits(((Float) args[i]));
-                    break;
-                case 'Z':
-                    argslong[i] = ((Boolean) args[i]) ? 1 : 0;
-                    break;
-                case 'D':
-                    argslong[i] = Double.doubleToLongBits(((Double) args[i]));
-                    break;
-                case 'J':
-                    argslong[i] = ((Long) args[i]);
-                    break;
-                default:
-                    argslong[i] = RefNative.obj2id(args[i]);
-                    break;
-            }
-        }
-        DataWrap result = invokeMethod(methodId, obj, argslong);//todo result would be gc
-        char rtype = descriptor.charAt(descriptor.indexOf(')') + 1);
-        switch (rtype) {
-            case 'S':
-                return ((short) result.nv);
-            case 'C':
-                return ((char) result.nv);
-            case 'B':
-                return ((byte) result.nv);
-            case 'I':
-                return ((int) result.nv);
-            case 'F':
-                return Float.intBitsToFloat((int) result.nv);
-            case 'Z':
-                return (result.nv != 0);
-            case 'D':
-                return Double.longBitsToDouble((long) result.nv);
-            case 'J':
-                return result.nv;
-            default:
-                return result.ov;
-        }
+        return invokeMethod(obj, args);
     }
 
     public static Class<?>[] getMethodPara(ClassLoader loader, String descriptor) {
@@ -247,7 +194,7 @@ public class ReflectMethod {
 
     final native void mapMethod(long mid);
 
-    native DataWrap invokeMethod(long mid, Object ins, long[] args_long);
+    native Object invokeMethod(Object ins, Object... args);
 
     public static native long findMethod0(ClassLoader cloader, String className, String methodName, String methodSignature);
 

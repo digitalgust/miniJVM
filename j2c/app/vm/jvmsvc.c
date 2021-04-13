@@ -210,7 +210,7 @@ inline void throw_exception(JThreadRuntime *runtime, JObject *jobj) {
     runtime->exception = jobj;
 }
 
-inline __refer find_exception_handler_index(JThreadRuntime *runtime, LabelTable *labtable, __refer notfoundHandlerLabel) {
+inline __refer find_exception_handler(JThreadRuntime *runtime, LabelTable *labtable, __refer notfoundHandlerLabel) {
     StackFrame *cur = runtime->tail;
     MethodRaw *methodRaw = &g_methods[cur->methodRawIndex];
     ExceptionTable *extable = methodRaw->extable;
