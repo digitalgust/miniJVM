@@ -214,8 +214,9 @@ inline __refer find_exception_handler(JThreadRuntime *runtime, LabelTable *labta
     StackFrame *cur = runtime->tail;
     MethodRaw *methodRaw = &g_methods[cur->methodRawIndex];
     ExceptionTable *extable = methodRaw->extable;
-    s32 rise = cur->bytecodeIndex;
+    if (!extable)return notfoundHandlerLabel;
 
+    s32 rise = cur->bytecodeIndex;
     s32 i;
     __refer *labels = labtable->labels;
 //    for (i = 0; i < cur->labtable->size; i++) {

@@ -63,11 +63,13 @@ public class AssistLLVM {
     static String jsrcPath;
     static String classesPath;
     static String csrcPath;
+    static String[][] microDefFields;
 
-    static public void convert(String pjsrcPath, String pclassesPath, String pcsrcPath) throws IOException {
+    static public void convert(String pjsrcPath, String pclassesPath, String pcsrcPath, String[][] pmicroDefFields) throws IOException {
         jsrcPath = pjsrcPath;
         classesPath = pclassesPath;
         csrcPath = pcsrcPath;
+        microDefFields = pmicroDefFields;
 
 
         javaSrc2class(jsrcPath, classesPath);
@@ -283,52 +285,15 @@ public class AssistLLVM {
             ps.println("typedef " + Util.getStaticFieldStructType(pair[0]) + " " + pair[1] + ";");
         }
 
-        String[][] fieldArr = {
-                {"java.lang.String", "value", "[C", "value_in_string"},
-                {"java.lang.String", "count", "I", "count_in_string"},
-                {"java.lang.String", "offset", "I", "offset_in_string"},
-                {"java.lang.Class", "classHandle", "J", "classHandle_in_class"},
-                {"org.mini.reflect.ReflectMethod", "methodId", "J", "methodId_in_reflectmethod"},
-
-//                {"java.lang.Class", "modifiers", "I", "modifiers_in_class"},
-//                {"java.lang.Class", "constructors", "[Ljava/lang/reflect/Constructor;", "constructors_in_class"},
-//                {"java.lang.Class", "fields", "[Ljava/lang/reflect/Field;", "fields_in_class"},
-//                {"java.lang.Class", "methods", "[Ljava/lang/reflect/Method;", "methods_in_class"},
-//                {"java.lang.reflect.Method", "methodHandle", "J", "methodHandle_in_method"},
-//                {"java.lang.reflect.Method", "clazz", "Ljava/lang/Class;", "clazz_in_method"},
-//                {"java.lang.reflect.Method", "name", "Ljava/lang/String;", "name_in_method"},
-//                {"java.lang.reflect.Method", "desc", "Ljava/lang/String;", "desc_in_method"},
-//                {"java.lang.reflect.Method", "signature", "Ljava/lang/String;", "signature_in_method"},
-//                {"java.lang.reflect.Field", "fieldHandle", "J", "fieldHandle_in_field"},
-//                {"java.lang.reflect.Field", "clazz", "Ljava/lang/Class;", "clazz_in_field"},
-//                {"java.lang.reflect.Field", "name", "Ljava/lang/String;", "name_in_field"},
-//                {"java.lang.reflect.Field", "desc", "Ljava/lang/String;", "desc_in_field"},
-//                {"java.lang.reflect.Field", "signature", "Ljava/lang/String;", "signature_in_field"},
-
-                {"java.lang.Boolean", "value", "Z", "value_in_boolean"},
-                {"java.lang.Byte", "value", "B", "value_in_byte"},
-                {"java.lang.Short", "value", "S", "value_in_short"},
-                {"java.lang.Character", "value", "C", "value_in_character"},
-                {"java.lang.Integer", "value", "I", "value_in_integer"},
-                {"java.lang.Long", "value", "J", "value_in_long"},
-                {"java.lang.Float", "value", "F", "value_in_float"},
-                {"java.lang.Double", "value", "D", "value_in_double"},
-
-                {"java.lang.Thread", "stackFrame", "J", "stackFrame_in_thread"},
-                {"java.lang.StackTraceElement", "declaringClass", "Ljava/lang/String;", "declaringClass_in_stacktraceelement"},
-                {"java.lang.StackTraceElement", "methodName", "Ljava/lang/String;", "methodName_in_stacktraceelement"},
-                {"java.lang.StackTraceElement", "fileName", "Ljava/lang/String;", "fileName_in_stacktraceelement"},
-                {"java.lang.StackTraceElement", "lineNumber", "I", "lineNumber_in_stacktraceelement"},
-                {"java.lang.StackTraceElement", "parent", "Ljava/lang/StackTraceElement;", "parent_in_stacktraceelement"},
-                {"java.lang.StackTraceElement", "declaringClazz", "Ljava/lang/Class;", "declaringClazz_in_stacktraceelement"},
-        };
         ps.println("// define filed name ");
-        for (String[] pair : fieldArr) {
-            Field field = ClassManger.findField(pair[0].replace('.', '/'), pair[1], pair[2]);
-            if (field == null) {
-                System.out.println("field not found:" + pair[0] + " " + pair[1] + " " + pair[2]);
+        if (microDefFields != null) {
+            for (String[] pair : microDefFields) {
+                Field field = ClassManger.findField(pair[0].replace('.', '/'), pair[1], pair[2]);
+                if (field == null) {
+                    System.out.println("field not found:" + pair[0] + " " + pair[1] + " " + pair[2]);
+                }
+                ps.println("#define " + pair[3] + " " + Util.getFieldVarName(field));
             }
-            ps.println("#define " + pair[3] + " " + Util.getFieldVarName(field));
         }
 
     }
@@ -455,7 +420,11 @@ public class AssistLLVM {
         methodinfo += Util.getBridgeMethodName(className, m.getMethodName(), sig.getJavaSignature());
         methodinfo += ", ";
 
-        if (m.isNative()) {
+        int exTabLen = 0;
+        if (m.getCodeAttribute() != null) {
+            exTabLen = m.getCodeAttribute().getExceptionTableLength();
+        }
+        if (m.isNative() || exTabLen == 0) {
             methodinfo += "NULL";
         } else {
             String extabName = Util.getExceptionTableRawName(className, m.getMethodName(), sig);

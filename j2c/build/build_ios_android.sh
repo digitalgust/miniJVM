@@ -31,7 +31,7 @@ if [ ! ${JAVA_HOME} ] ;then
     echo "JDK and JAVA_HOME env var set required"
 else
     echo "JAVA_HOME=${JAVA_HOME}"
-    ${JAVA_HOME}/bin/java -cp tools/translator.jar com.ebsee.j2c.Main ../../minijvm/java/src/main/java/:../../mobile/java/glfm_gui/src/main/java:../../mobile/java/ExApp/src/main/java ../app/generted/classes/ ../app/generted/c/
+    ${JAVA_HOME}/bin/java -cp tools/translator.jar com.ebsee.Main ../../minijvm/java/src/main/java/:../../mobile/java/glfm_gui/src/main/java:../../mobile/java/ExApp/src/main/java ../app/generted/classes/ ../app/generted/c/
 fi
 
 echo "[INFO]Generted c source , open /j2c/build/ccios/ccios.xcodeproj in Xcode or /j2c/build/ccandroid in Android Studio."

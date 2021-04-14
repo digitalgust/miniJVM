@@ -4,6 +4,7 @@ import com.ebsee.classparser.ClassFile;
 import com.ebsee.classparser.Field;
 import com.ebsee.classparser.Method;
 
+import java.io.File;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
@@ -619,4 +620,17 @@ public final class Util {
         return className.replace("/", "$") + "$" + implMethodName;
     }
 
+
+    public static boolean deleteTree(File f) {
+        if (f.isDirectory()) {
+            File[] files = f.listFiles();
+            for (File sf : files) {
+                //System.out.println("file:" + sf.getAbsolutePath());
+                deleteTree(sf);
+            }
+        }
+        boolean s = f.delete();
+        //System.out.println("delete " + f.getAbsolutePath() + " state:" + s);
+        return s;
+    }
 }

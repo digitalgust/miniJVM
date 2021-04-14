@@ -1240,6 +1240,7 @@ public class MV extends MethodVisitor {
         String rawName = Util.getExceptionTableRawName(this.cv.className, this.methodName, signature);
 
         int size = exceptionTables.size();
+        if (size == 0) return "";
         StringBuilder sb = new StringBuilder();
         String arrName = "arr_" + rawName;
         sb.append(getExceptionItemType()).append(" ").append(arrName).append("[] = {\n");

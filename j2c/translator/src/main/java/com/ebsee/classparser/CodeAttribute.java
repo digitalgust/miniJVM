@@ -195,4 +195,10 @@ public class CodeAttribute extends Attribute {
     public byte[] getCode() {
         return code;
     }
+
+    public int getExceptionTableLength() {
+        return exceptionTableLength;
+    }
+
+
 }
