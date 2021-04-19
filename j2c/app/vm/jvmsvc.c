@@ -75,6 +75,14 @@ JObject *new_instance_with_class(JThreadRuntime *runtime, JClass *clazz) {
     return new_instance_with_classraw(runtime, clazz->raw);
 }
 
+JObject *new_instance_with_classraw_index_and_init(JThreadRuntime *runtime, s32 classIndex) {
+    JObject *jobj = new_instance_with_classraw_index(runtime, classIndex);
+    gc_refer_hold(jobj);
+    instance_init(runtime, jobj);
+    gc_refer_release(jobj);
+    return jobj;
+}
+
 
 s32 jobject_destroy(JObject *ins) {
     jthreadlock_destory(&ins->prop);

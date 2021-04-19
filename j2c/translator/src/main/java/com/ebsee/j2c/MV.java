@@ -469,10 +469,24 @@ public class MV extends MethodVisitor {
                 break;
             // =============================================== DIV ==
             case Opcodes.IDIV: // 108
+                add("if (!stack[sp - 1].i) {");
+                add("    rstack[sp++].obj = " + AssistLLVM.FUNC_NEW_INSTANCE_WITH_RAWINDEX_AND_INIT + "(runtime, " + AssistLLVM.getClassIndex(CLASS_JAVA_LANG_ARITHMETIC_EXCEPTION) + ");");
+                add("    __frame->bytecodeIndex = " + curLabel.getOffsetInMethod() + ";");
+                add("    __frame->lineNo = " + curLineNo + ";");
+                add("    " + AssistLLVM.FUNC_THROW_EXCEPTION + "(runtime, rstack[sp - 1].obj);");
+                add("    goto " + EXCEPTION_HANDLER + ";");
+                add("}");
                 add("stack[sp - 2].i = stack[sp - 2].i / stack[sp - 1].i; ");
                 add("--sp;");
                 break;
             case Opcodes.LDIV: // 109
+                add("if (!stack[sp - 2].j) {");
+                add("    rstack[sp++].obj = " + AssistLLVM.FUNC_NEW_INSTANCE_WITH_RAWINDEX_AND_INIT + "(runtime, " + AssistLLVM.getClassIndex(CLASS_JAVA_LANG_ARITHMETIC_EXCEPTION) + ");");
+                add("    __frame->bytecodeIndex = " + curLabel.getOffsetInMethod() + ";");
+                add("    __frame->lineNo = " + curLineNo + ";");
+                add("    " + AssistLLVM.FUNC_THROW_EXCEPTION + "(runtime, rstack[sp - 1].obj);");
+                add("    goto " + EXCEPTION_HANDLER + ";");
+                add("}");
                 add("stack[sp - 4].j = stack[sp - 4].j / stack[sp - 2].j; ");
                 add("sp -= 2;");
                 break;
@@ -678,7 +692,7 @@ public class MV extends MethodVisitor {
             case Opcodes.ARRAYLENGTH: {// 190
                 comment("arraylength  label  " + curLabel); //
                 add("if (!rstack[sp - 1].obj) {");
-                add("    rstack[sp - 1].obj = " + AssistLLVM.FUNC_NEW_INSTANCE_WITH_RAWINDEX + "(runtime, " + AssistLLVM.getClassIndex(CLASS_JAVA_LANG_NULL_POINTER_EXCEPTION) + ");");
+                add("    rstack[sp++].obj = " + AssistLLVM.FUNC_NEW_INSTANCE_WITH_RAWINDEX_AND_INIT + "(runtime, " + AssistLLVM.getClassIndex(CLASS_JAVA_LANG_NULL_POINTER_EXCEPTION) + ");");
                 add("    __frame->bytecodeIndex = " + curLabel.getOffsetInMethod() + ";");
                 add("    __frame->lineNo = " + curLineNo + ";");
                 add("    " + AssistLLVM.FUNC_THROW_EXCEPTION + "(runtime, rstack[sp - 1].obj);");
@@ -800,7 +814,7 @@ public class MV extends MethodVisitor {
                 add("{");
                 add("    s32 cast_r = " + AssistLLVM.FUNC_CHECKCAST + "(rstack[sp - 1].obj, " + AssistLLVM.getStrIndex(className) + ");");
                 add("    if(!cast_r){");
-                add("        rstack[sp++].obj = " + AssistLLVM.FUNC_NEW_INSTANCE_WITH_RAWINDEX + "(runtime, " + AssistLLVM.getClassIndex(CLASS_JAVA_LANG_CLASS_CAST_EXCEPTION) + ");");
+                add("        rstack[sp++].obj = " + AssistLLVM.FUNC_NEW_INSTANCE_WITH_RAWINDEX_AND_INIT + "(runtime, " + AssistLLVM.getClassIndex(CLASS_JAVA_LANG_CLASS_CAST_EXCEPTION) + ");");
                 add("        __frame->bytecodeIndex = " + curLabel.getOffsetInMethod() + ";");
                 add("        __frame->lineNo = " + curLineNo + ";");
                 add("        " + AssistLLVM.FUNC_THROW_EXCEPTION + "(runtime, rstack[sp - 1].obj);");
@@ -1456,7 +1470,7 @@ public class MV extends MethodVisitor {
         if (!m.isStatic()) {
             add("    " + Util.STR_JOBJECT_TYPE_NAME + " *__ins = rstack[sp + 0].ins;");
             add("    if (!__ins) {");
-            add("        rstack[sp++].obj = " + AssistLLVM.FUNC_NEW_INSTANCE_WITH_RAWINDEX + "(runtime, " + AssistLLVM.getClassIndex(CLASS_JAVA_LANG_NULL_POINTER_EXCEPTION) + ");");
+            add("        rstack[sp++].obj = " + AssistLLVM.FUNC_NEW_INSTANCE_WITH_RAWINDEX_AND_INIT + "(runtime, " + AssistLLVM.getClassIndex(CLASS_JAVA_LANG_NULL_POINTER_EXCEPTION) + ");");
             add("        __frame->bytecodeIndex = " + curLabel.getOffsetInMethod() + ";//" + curLabel);
             add("        __frame->lineNo = " + curLineNo + ";");
             add("        " + AssistLLVM.FUNC_THROW_EXCEPTION + "(runtime, rstack[sp - 1].obj);");
@@ -1526,7 +1540,7 @@ public class MV extends MethodVisitor {
         add("    sp -= " + argsSlotSize + ";");
         add("    " + Util.STR_JOBJECT_TYPE_NAME + " *__ins = rstack[sp + 0].ins;");
         add("    if (!__ins) {");
-        add("        rstack[sp++].obj = " + AssistLLVM.FUNC_NEW_INSTANCE_WITH_RAWINDEX + "(runtime, " + AssistLLVM.getClassIndex(CLASS_JAVA_LANG_NULL_POINTER_EXCEPTION) + ");");
+        add("        rstack[sp++].obj = " + AssistLLVM.FUNC_NEW_INSTANCE_WITH_RAWINDEX_AND_INIT + "(runtime, " + AssistLLVM.getClassIndex(CLASS_JAVA_LANG_NULL_POINTER_EXCEPTION) + ");");
         add("        __frame->bytecodeIndex = " + curLabel.getOffsetInMethod() + ";//" + curLabel);
         add("        __frame->lineNo = " + curLineNo + ";");
         add("        " + AssistLLVM.FUNC_THROW_EXCEPTION + "(runtime, rstack[sp - 1].obj);");
@@ -1664,13 +1678,13 @@ public class MV extends MethodVisitor {
         add("    s32 idx = stack[--sp].i;");
         add("    " + STR_JARRAY_TYPE_NAME + " *arr = rstack[--sp].obj;");
         add("    if (!arr) {");
-        add("        rstack[sp++].obj = " + AssistLLVM.FUNC_NEW_INSTANCE_WITH_RAWINDEX + "(runtime, " + AssistLLVM.getClassIndex(CLASS_JAVA_LANG_NULL_POINTER_EXCEPTION) + ");");
+        add("        rstack[sp++].obj = " + AssistLLVM.FUNC_NEW_INSTANCE_WITH_RAWINDEX_AND_INIT + "(runtime, " + AssistLLVM.getClassIndex(CLASS_JAVA_LANG_NULL_POINTER_EXCEPTION) + ");");
         add("        __frame->bytecodeIndex = " + curLabel.getOffsetInMethod() + ";");
         add("        __frame->lineNo = " + curLineNo + ";");
         add("        " + AssistLLVM.FUNC_THROW_EXCEPTION + "(runtime, rstack[sp - 1].obj);");
         add("        goto " + EXCEPTION_HANDLER + ";");
         add("    } else if (idx < 0 || idx >= arr->prop.arr_length) {");
-        add("        rstack[sp++].obj = " + AssistLLVM.FUNC_NEW_INSTANCE_WITH_RAWINDEX + "(runtime, " + AssistLLVM.getClassIndex(CLASS_JAVA_LANG_ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION) + ");");
+        add("        rstack[sp++].obj = " + AssistLLVM.FUNC_NEW_INSTANCE_WITH_RAWINDEX_AND_INIT + "(runtime, " + AssistLLVM.getClassIndex(CLASS_JAVA_LANG_ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION) + ");");
         add("        __frame->bytecodeIndex = " + curLabel.getOffsetInMethod() + ";");
         add("        __frame->lineNo = " + curLineNo + ";");
         add("        " + AssistLLVM.FUNC_THROW_EXCEPTION + "(runtime, rstack[sp - 1].obj);");
@@ -1690,13 +1704,13 @@ public class MV extends MethodVisitor {
         add("    s32 idx = stack[--sp].i;");
         add("    " + STR_JARRAY_TYPE_NAME + " *arr = rstack[--sp].obj;");
         add("    if (!arr) {");
-        add("        rstack[sp++].obj = " + AssistLLVM.FUNC_NEW_INSTANCE_WITH_RAWINDEX + "(runtime, " + AssistLLVM.getClassIndex(CLASS_JAVA_LANG_NULL_POINTER_EXCEPTION) + ");");
+        add("        rstack[sp++].obj = " + AssistLLVM.FUNC_NEW_INSTANCE_WITH_RAWINDEX_AND_INIT + "(runtime, " + AssistLLVM.getClassIndex(CLASS_JAVA_LANG_NULL_POINTER_EXCEPTION) + ");");
         add("        __frame->bytecodeIndex = " + curLabel.getOffsetInMethod() + ";");
         add("        __frame->lineNo = " + curLineNo + ";");
         add("        " + AssistLLVM.FUNC_THROW_EXCEPTION + "(runtime, rstack[sp - 1].obj);");
         add("        goto " + EXCEPTION_HANDLER + ";");
         add("    } else if (idx < 0 || idx >= arr->prop.arr_length) {");
-        add("        rstack[sp++].obj = " + AssistLLVM.FUNC_NEW_INSTANCE_WITH_RAWINDEX + "(runtime, " + AssistLLVM.getClassIndex(CLASS_JAVA_LANG_ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION) + ");");
+        add("        rstack[sp++].obj = " + AssistLLVM.FUNC_NEW_INSTANCE_WITH_RAWINDEX_AND_INIT + "(runtime, " + AssistLLVM.getClassIndex(CLASS_JAVA_LANG_ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION) + ");");
         add("        __frame->bytecodeIndex = " + curLabel.getOffsetInMethod() + ";");
         add("        __frame->lineNo = " + curLineNo + ";");
         add("        " + AssistLLVM.FUNC_THROW_EXCEPTION + "(runtime, rstack[sp - 1].obj);");
@@ -1740,11 +1754,11 @@ public class MV extends MethodVisitor {
         add(insert++, "StackItem local[" + max_local + "] = {0};");
         add(insert++, "RStackItem rlocal[" + max_local + "] = {0};");
         localValue = "&rlocal[0]";
-        add(insert++, "StackItem stack[" + max_stack + "] = {0};");
+        add(insert++, "StackItem stack[" + max_stack + "]/* = {0}*/;");
         add(insert++, "RStackItem rstack[" + max_stack + "] = {0};");
-        add(insert++, "s32 sp=0;");
+        add(insert++, "s32 sp = 0;");
         stackValue = "&rstack[0]";
-        spPtrValue = "&sp";
+        spPtrValue = "NULL";//"&sp";
 
         if (!canSkipCodeTrack()) {
             add(insert++, "StackFrame *__frame = " + AssistLLVM.FUNC_METHOD_ENTER

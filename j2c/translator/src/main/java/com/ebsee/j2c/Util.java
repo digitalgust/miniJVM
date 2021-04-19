@@ -463,12 +463,15 @@ public final class Util {
                 return "";
             } else {
                 ClassFile c = ClassManger.getClassFile(className);
-                StringJoiner joiner = new StringJoiner("; ", "{", ";}");
+                StringJoiner joiner = new StringJoiner("; ", "{", "}");
+                int staticVarCnt = 0;
                 for (Field f : c.getFields()) {
                     if ((f.getAccessFlags() & Modifier.STATIC) != 0) {
                         joiner.add(getJavaSignatureCtype(f.getDescriptor()) + " " + getFieldVarName(f));
+                        staticVarCnt++;
                     }
                 }
+                if (staticVarCnt > 0) joiner.add(" ");
                 String s = getStaticFieldStructType(className) + " " + joiner + ";";
                 return s;
             }

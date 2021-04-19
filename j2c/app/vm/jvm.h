@@ -602,6 +602,8 @@ JObject *new_instance_with_name(JThreadRuntime *runtime, c8 *className);
 
 JObject *new_instance_with_class(JThreadRuntime *runtime, JClass *clazz);
 
+JObject *new_instance_with_classraw_index_and_init(JThreadRuntime *runtime, s32 classIndex);
+
 void instance_init(JThreadRuntime *runtime, JObject *ins);
 
 InstProp *instance_copy(JThreadRuntime *runtime, InstProp *src, s32 deep_copy);

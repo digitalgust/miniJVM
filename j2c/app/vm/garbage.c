@@ -673,7 +673,7 @@ s32 _garbage_copy_refer_thread(JThreadRuntime *pruntime) {
         while (frame) {
             RStackItem *rstack = frame->rstack;
             if (rstack) {
-                for (j = 0, size = *frame->spPtr; j < size; j++) {
+                for (j = 0, size = get_methodraw_by_index(frame->methodRawIndex)->max_stack; j < size; j++) {
                     if (rstack[j].obj) {
                         //jvm_printf("rstack :%llx\n",(s64)(intptr_t)rstack[j].obj);
                         arraylist_push_back_unsafe(g_jvm->collector->runtime_refer_copy, rstack[j].obj);

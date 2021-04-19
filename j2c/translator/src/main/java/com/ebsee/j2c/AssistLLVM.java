@@ -16,6 +16,7 @@ public class AssistLLVM {
     static final String INDEX_TEMP = "\0index\0";
     static final String FUNC_CONSTRUCT_STRING_WITH_UTF_INDEX = "construct_string_with_utfraw_index";
     static final String FUNC_NEW_INSTANCE_WITH_RAWINDEX = "new_instance_with_classraw_index";
+    static final String FUNC_NEW_INSTANCE_WITH_RAWINDEX_AND_INIT = "new_instance_with_classraw_index_and_init";
     static final String FUNC_MULTI_ARRAY_CREATE = "multi_array_create";
     static final String FUNC_THROW_EXCEPTION = "throw_exception";
     static final String FUNC_JTHREAD_LOCK = "jthread_lock";
