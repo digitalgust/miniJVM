@@ -149,7 +149,6 @@ struct _LabelTable {
 struct _ExceptionItem {
     s32 startIdxOfBC;
     s32 endIdxOfBC;
-    s32 handlerLab;
     s32 exceptionClassName;
 };
 
@@ -582,7 +581,7 @@ s32 instance_of_classname_index(JObject *jobj, s32 classNameIdx);
 
 s32 checkcast(JObject *jobj, s32 classNameIdx);
 
-__refer find_exception_handler(JThreadRuntime *runtime, LabelTable *labtable, __refer notfoundHandlerLabel);
+s32 find_exception_handler_index(JThreadRuntime *runtime);
 
 void throw_exception(JThreadRuntime *runtime, JObject *jobj);
 

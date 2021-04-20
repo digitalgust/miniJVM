@@ -142,9 +142,9 @@ public class CV extends ClassVisitor {
     public String constructVMTable(String className) {
         Map<String, List<Method>> map = ClassManger.getMethodTree(className);
 
-        if (className.equals("java/lang/String")) {
-            int debug = 1;
-        }
+//        if (className.equals("java/lang/String")) {
+//            int debug = 1;
+//        }
         StringBuilder sb = new StringBuilder();
         String arrName = "arr_" + Util.getVMTableName(className);
         int i = 0;

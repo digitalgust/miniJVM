@@ -218,15 +218,14 @@ inline void throw_exception(JThreadRuntime *runtime, JObject *jobj) {
     runtime->exception = jobj;
 }
 
-inline __refer find_exception_handler(JThreadRuntime *runtime, LabelTable *labtable, __refer notfoundHandlerLabel) {
+s32 find_exception_handler_index(JThreadRuntime *runtime) {
     StackFrame *cur = runtime->tail;
     MethodRaw *methodRaw = &g_methods[cur->methodRawIndex];
     ExceptionTable *extable = methodRaw->extable;
-    if (!extable)return notfoundHandlerLabel;
+    if (!extable)return -1;//no handler
 
     s32 rise = cur->bytecodeIndex;
     s32 i;
-    __refer *labels = labtable->labels;
 //    for (i = 0; i < cur->labtable->size; i++) {
 //        printf("%d %llx\n", i, (intptr_t) labels[i]);
 //    }
@@ -244,14 +243,14 @@ inline __refer find_exception_handler(JThreadRuntime *runtime, LabelTable *labta
             runtime->exception = NULL;
             cur->bytecodeIndex = 0;
             cur->lineNo = -1;
-            return labels[extable->exception[i].handlerLab];
+            return i;
         }
     }
     arraylist_push_back(runtime->stacktrack, (__refer) (intptr_t) cur->methodRawIndex);
     arraylist_push_back(runtime->lineNo, (__refer) (intptr_t) cur->lineNo);
     //the last item is the default handler
     //printf("why not found handler\n");
-    return notfoundHandlerLabel;
+    return -1;
 }
 
 inline s32 exception_check_print(JThreadRuntime *runtime) {

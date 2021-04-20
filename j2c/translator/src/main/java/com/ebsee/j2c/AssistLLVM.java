@@ -24,7 +24,7 @@ public class AssistLLVM {
     static final String FUNC_METHOD_ENTER = "method_enter";
     static final String FUNC_METHOD_EXIT = "method_exit";
     static final String FUNC_GET_STACKFRAME_EXCEPTION = "get_stackframe_exception";
-    static final String FUNC_FIND_EXCEPTION_HANDLER_INDEX = "find_exception_handler";
+    static final String FUNC_FIND_EXCEPTION_HANDLER_INDEX = "find_exception_handler_index";
     static final String FUNC_CHECKCAST = "checkcast";
     static final String FUNC_INSTANCE_OF = "instance_of_classname_index";
     static final String FUNC_CHECK_SUSPEND_AND_PAUSE = "check_suspend_and_pause";

@@ -1238,9 +1238,20 @@ public class MV extends MethodVisitor {
         if (!canSkipCodeTrack()) {
             addUsedLabel(EXCEPTION_HANDLER);
             add(EXCEPTION_HANDLER + ":");
-            String call = AssistLLVM.FUNC_FIND_EXCEPTION_HANDLER_INDEX + "(runtime, &" + Util.getLabelTableRawName() + ", &&" + EXCEPTION_HANDLER_NOT_FOUND + ")";
 
-            add("goto  *" + call + ";");
+//            String call = AssistLLVM.FUNC_FIND_EXCEPTION_HANDLER_INDEX + "(runtime, &" + Util.getLabelTableRawName() + ", &&" + EXCEPTION_HANDLER_NOT_FOUND + ")";
+//            add("goto  *" + call + ";");
+            String call = AssistLLVM.FUNC_FIND_EXCEPTION_HANDLER_INDEX + "(runtime)";
+            add("switch (" + call + ") {");
+            int count = 0;
+            for (ExceptionItem item : exceptionTables) {
+                add("    case " + count + " : goto " + item.handlerLabel.toString() + ";");
+                count++;
+            }
+            add("    default: goto " + EXCEPTION_HANDLER_NOT_FOUND + ";");
+            add("}");
+
+
             addUsedLabel(EXCEPTION_HANDLER_NOT_FOUND);
             add(EXCEPTION_HANDLER_NOT_FOUND + ":");
             String rtype = signature.getResult();
@@ -1262,10 +1273,7 @@ public class MV extends MethodVisitor {
         for (ExceptionItem item : exceptionTables) {
             sb.append("    { ").append(item.startLabel.getOffsetInMethod());
             sb.append(", ").append(item.endLabel.getOffsetInMethod());
-            sb.append(", ").append(getLabelIndex(item.handlerLabel.toString()));
-            if (item.exceptionClassName == null) {
-                int debug = 1;
-            }
+//            sb.append(", ").append(getLabelIndex(item.handlerLabel.toString()));
             int classIndex = item.exceptionClassName == null ? -1 : AssistLLVM.getStrIndex(item.exceptionClassName);
             sb.append(", ").append(classIndex);
             sb.append("}");
@@ -1281,23 +1289,24 @@ public class MV extends MethodVisitor {
     }
 
     public String getLabelTable() {
-        String arrName = "arr_" + Util.getLabelTableRawName();
-        StringBuilder sb = new StringBuilder();
-        sb.append("static __refer ").append(arrName);
-        sb.append("[] = {");
-        int count = 0;
-        for (String s : usedLabels) {
-            sb.append("&&").append(s);
-            if (count < usedLabels.size() - 1) {
-                sb.append(", ");
-            }
-            count++;
-        }
-        sb.append("};\n");
-        String tbName = "" + Util.getLabelTableRawName();
-        sb.append("static ").append(Util.getLabelTableType()).append(' ').append(tbName);
-        sb.append(" = {").append(usedLabels.size()).append(", ").append(arrName).append("};\n");
-        return sb.toString();
+        return "";
+//        String arrName = "arr_" + Util.getLabelTableRawName();
+//        StringBuilder sb = new StringBuilder();
+//        sb.append("static __refer ").append(arrName);
+//        sb.append("[] = {");
+//        int count = 0;
+//        for (String s : usedLabels) {
+//            sb.append("&&").append(s);
+//            if (count < usedLabels.size() - 1) {
+//                sb.append(", ");
+//            }
+//            count++;
+//        }
+//        sb.append("};\n");
+//        String tbName = "" + Util.getLabelTableRawName();
+//        sb.append("static ").append(Util.getLabelTableType()).append(' ').append(tbName);
+//        sb.append(" = {").append(usedLabels.size()).append(", ").append(arrName).append("};\n");
+//        return sb.toString();
     }
 
 
