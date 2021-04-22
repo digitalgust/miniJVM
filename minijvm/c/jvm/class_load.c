@@ -1613,9 +1613,9 @@ void _class_optimize(JClass *clazz) {
         //for gc iterator fast
         if (isDataReferByIndex(fi->datatype_idx)) {
             if (fi->access_flags & ACC_STATIC) {
-                arraylist_push_back_unsafe(clazz->staticFieldPtrIndex, (__refer) (intptr_t) i);
+                arraylist_push_back_unsafe(clazz->staticFieldPtrIndex, fi);
             } else {
-                arraylist_push_back_unsafe(clazz->insFieldPtrIndex, (__refer) (intptr_t) i);
+                arraylist_push_back_unsafe(clazz->insFieldPtrIndex, fi);
             }
         }
 

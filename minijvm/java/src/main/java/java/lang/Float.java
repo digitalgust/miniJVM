@@ -49,19 +49,19 @@ public final class Float extends Number implements Comparable<Float> {
      * The positive infinity of type <code>float</code>. It is equal to the
      * value returned by <code>Float.intBitsToFloat(0x7f800000)</code>.
      */
-    public static final float POSITIVE_INFINITY = 1.0f / 0.0f;
+    public static final float POSITIVE_INFINITY = Float.intBitsToFloat(0x7f800000);//1.0f / 0.0f;
 
     /**
      * The negative infinity of type <code>float</code>. It is equal to the
      * value returned by <code>Float.intBitsToFloat(0xff800000)</code>.
      */
-    public static final float NEGATIVE_INFINITY = -1.0f / 0.0f;
+    public static final float NEGATIVE_INFINITY = Float.intBitsToFloat(0xff800000);//-1.0f / 0.0f;
 
     /**
      * The Not-a-Number (NaN) value of type <code>float</code>. It is equal to
      * the value returned by <code>Float.intBitsToFloat(0x7fc00000)</code>.
      */
-    public static final float NaN = 0.0f / 0.0f;
+    public static final float NaN = Float.intBitsToFloat(0x7fc00000);//0.0f / 0.0f;
 
     /**
      * The largest positive value of type <code>float</code>. It is equal to the

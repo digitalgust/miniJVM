@@ -55,11 +55,9 @@ public class SpecTest {
 
     static void _wait_for_gc() {
 
-//        int cnt = RefNative.getGarbageMarkCounter();
-//        while (RefNative.getGarbageMarkCounter() == cnt) {//cnt ++ when next gc
         try {
             System.gc();
-            Thread.sleep(100);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

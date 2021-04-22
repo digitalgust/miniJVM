@@ -238,10 +238,11 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
         jvm_runtime_cache->launcher_loadClass = find_methodInfo_by_name_c(STR_CLASS_ORG_MINI_REFLECT_LAUNCHER, "loadClass", "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/Class;", NULL, runtime);
         jvm_runtime_cache->launcher_getSystemClassLoader = find_methodInfo_by_name_c(STR_CLASS_ORG_MINI_REFLECT_LAUNCHER, "getSystemClassLoader", "()Ljava/lang/ClassLoader;", NULL, runtime);
     } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_REF_REFERENCE)) {
-        jvm_runtime_cache->reference = clazz;
         jvm_runtime_cache->reference_target = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_REF_REFERENCE, "target", STR_INS_JAVA_LANG_OBJECT, NULL, runtime);
-        jvm_runtime_cache->reference_target->is_weak_target = 1;//mark as weakreference.target field
+        jvm_runtime_cache->reference_target->is_ref_target = 1;//mark as weakreference.target field
         jvm_runtime_cache->reference_vmEnqueneReference = find_methodInfo_by_name_c(STR_CLASS_JAVA_LANG_REF_REFERENCE, "vmEnqueneReference", "(Ljava/lang/ref/Reference;)V", NULL, runtime);
+    } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE)) {
+        jvm_runtime_cache->weakreference = clazz;
     } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_CLASSLOADER)) {
         jvm_runtime_cache->classloader_holdClass = find_methodInfo_by_name_c(STR_CLASS_JAVA_LANG_CLASSLOADER, "holdClass", "(Ljava/lang/Class;)V", NULL, runtime);
     }

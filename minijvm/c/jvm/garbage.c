@@ -269,7 +269,7 @@ s32 _gc_thread_run(void *para) {
             _garbage_collect(collector);
             collector->lastgc = cur_mil;
         } else {
-            threadSleep(100);
+            threadSleep(1000);
         }
     }
     collector->_garbage_thread_status = GARBAGE_THREAD_DEAD;
@@ -355,7 +355,7 @@ s64 _garbage_collect(GcCollector *collector) {
                     }
                 }
                 //process weakreference
-                if (GCFLAG_REFERENCE_GET(curmb->gcflag)) {//is weakreference
+                if (GCFLAG_WEAKREFERENCE_GET(curmb->gcflag)) {//is weakreference
                     Instance *target = getFieldRefer(getInstanceFieldPtr((Instance *) curmb, jvm->shortcut.reference_target));
                     //jvm_printf("weak reference : %llx %s, %d\n", (s64) (intptr_t) curmb, utf8_cstr(target->mb.clazz->name), curmb->garbage_mark);
                     if (target && target->mb.garbage_mark != collector->mark_cnt) {
@@ -366,7 +366,6 @@ s64 _garbage_collect(GcCollector *collector) {
             }
         }
     }
-    gc_move_objs_thread_2_gc(collector->runtime);// maybe someone new object in finalize...
 
 //    jvm_printf("garbage_finalize %lld\n", (currentTimeMillis() - time));
 //    time = currentTimeMillis();
@@ -452,6 +451,8 @@ s32 _gc_pause_the_world(MiniJVM *jvm) {
         }
 
     }
+    gc_move_objs_thread_2_gc(collector->runtime);// maybe someone new object in finalize...
+
     return 0;
 }
 
@@ -577,8 +578,8 @@ static inline void _gc_instance_mark(Instance *ins, u8 flag_cnt) {
         FieldPool *fp = &clazz->fieldPool;
         ArrayList *fiList = clazz->insFieldPtrIndex;
         for (i = 0, len = fiList->length; i < len; i++) {
-            FieldInfo *fi = &fp->field[(s32) (intptr_t) arraylist_get_value_unsafe(fiList, i)];
-            if (fi->is_weak_target)continue;//skip weakreference target mark, but others mark need
+            FieldInfo *fi = arraylist_get_value_unsafe(fiList, i);
+            if (fi->is_ref_target && GCFLAG_WEAKREFERENCE_GET(ins->mb.gcflag)) continue;//skip weakreference target mark, but others mark need
             c8 *ptr = getInstanceFieldPtr(ins, fi);
             if (ptr) {
                 __refer ref = getFieldRefer(ptr);
@@ -617,7 +618,7 @@ static inline void _gc_class_mark(JClass *clazz, u8 flag_cnt) {
         FieldPool *fp = &clazz->fieldPool;
         ArrayList *fiList = clazz->staticFieldPtrIndex;
         for (i = 0, len = fiList->length; i < len; i++) {
-            FieldInfo *fi = &fp->field[(s32) (intptr_t) arraylist_get_value_unsafe(fiList, i)];
+            FieldInfo *fi = arraylist_get_value_unsafe(fiList, i);
             c8 *ptr = getStaticFieldPtr(fi);
             if (ptr) {
                 __refer ref = getFieldRefer(ptr);
@@ -726,8 +727,8 @@ void gc_obj_reg(Runtime *runtime, __refer ref) {
         }
         ti->objs_heap_of_thread += mb->heap_size;
 
-        if (instance_of((Instance *) mb, runtime->jvm->shortcut.reference)) {
-            GCFLAG_REFERENCE_SET(mb->gcflag);
+        if (instance_of((Instance *) mb, runtime->jvm->shortcut.weakreference)) {
+            GCFLAG_WEAKREFERENCE_SET(mb->gcflag);
         }
 
 #ifdef HARD_LIMIT

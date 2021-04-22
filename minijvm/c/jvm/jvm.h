@@ -465,6 +465,7 @@ extern c8 *STR_CLASS_JAVA_LANG_THREAD;
 extern c8 *STR_CLASS_JAVA_LANG_CLASS;
 extern c8 *STR_CLASS_JAVA_LANG_CLASSLOADER;
 extern c8 *STR_CLASS_JAVA_LANG_REF_REFERENCE;
+extern c8 *STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE;
 extern c8 *STR_CLASS_JAVA_LANG_STACKTRACE;
 extern c8 *STR_CLASS_JAVA_LANG_THROWABLE;
 extern c8 *STR_CLASS_JAVA_LANG_INVOKE_METHODTYPE;
@@ -622,9 +623,9 @@ void profile_print();
 #define GCFLAG_FINALIZED_SET(reg_v) (reg_v = (0x40 | reg_v))
 #define GCFLAG_FINALIZED_GET(reg_v) (0x40 & reg_v)
 #define GCFLAG_FINALIZED_CLEAR(reg_v) (reg_v = (0xBF & reg_v))
-#define GCFLAG_REFERENCE_SET(reg_v) (reg_v = (0x20 | reg_v))
-#define GCFLAG_REFERENCE_GET(reg_v) (0x20 & reg_v)
-#define GCFLAG_REFERENCE_CLEAR(reg_v) (reg_v = (0xDF & reg_v))
+#define GCFLAG_WEAKREFERENCE_SET(reg_v) (reg_v = (0x20 | reg_v))
+#define GCFLAG_WEAKREFERENCE_GET(reg_v) (0x20 & reg_v)
+#define GCFLAG_WEAKREFERENCE_CLEAR(reg_v) (reg_v = (0xDF & reg_v))
 #define GCFLAG_CHECK_SET(reg_v) (reg_v = (0x10 | reg_v))
 #define GCFLAG_CHECK_GET(reg_v) (0x10 & reg_v)
 #define GCFLAG_CHECK_CLEAR(reg_v) (reg_v = ((~0x10) & reg_v))
@@ -918,7 +919,7 @@ struct _FieldInfo {
     u8 isrefer;
     u8 datatype_bytes;
     u8 isvolatile;
-    u8 is_weak_target;
+    u8 is_ref_target;
 };
 
 typedef struct _FieldPool {
@@ -1754,7 +1755,7 @@ typedef struct _ShortCut {
     //
     MethodInfo *reference_vmEnqueneReference;
     FieldInfo *reference_target;
-    JClass *reference;
+    JClass *weakreference;
     //
     MethodInfo *classloader_holdClass;
     //
