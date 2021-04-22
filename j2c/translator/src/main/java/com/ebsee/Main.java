@@ -27,6 +27,8 @@ public class Main {
             {"java.lang.Float", "value", "F", "value_in_float"},
             {"java.lang.Double", "value", "D", "value_in_double"},
 
+            {"java.lang.ref.WeakReference", "target", "Ljava/lang/Object;", "target_in_weakreference"},
+
             {"java.lang.Thread", "stackFrame", "J", "stackFrame_in_thread"},
             {"java.lang.StackTraceElement", "declaringClass", "Ljava/lang/String;", "declaringClass_in_stacktraceelement"},
             {"java.lang.StackTraceElement", "methodName", "Ljava/lang/String;", "methodName_in_stacktraceelement"},

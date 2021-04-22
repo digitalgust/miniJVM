@@ -8,7 +8,6 @@
 
 #include "jvmtype.h"
 #include "utf8string.h"
-#include "jni.h"
 #include "bytebuf.h"
 //=====================================================================
 
@@ -96,8 +95,8 @@ typedef struct _FieldRaw FieldRaw;
 typedef struct _MethodRaw MethodRaw;
 typedef struct _ClassRaw ClassRaw;
 typedef union _StackItem StackItem;
-typedef union _RStackItem RStackItem;
 typedef union _ParaItem ParaItem;
+typedef union _RStackItem RStackItem;
 typedef struct _ThreadLock ThreadLock;
 typedef struct _InstProp InstProp;
 typedef struct _MethodInfo MethodInfo;
@@ -192,7 +191,7 @@ struct _MethodRaw {
     ExceptionTable *extable;
 };
 
-typedef void (*finalize_func_t)();
+typedef void (*finalize_func_t)(JThreadRuntime *runtime, __refer jobj);
 
 
 struct _ClassRaw {
@@ -210,7 +209,7 @@ struct _ClassRaw {
     s32 ins_size;
     s32 vmtable_size;
     VMTable *vmtable;
-    finalize_func_t finalize;
+    __refer finalize_method;
     __refer static_fields;
 };
 
@@ -242,13 +241,14 @@ struct _InstProp {
         f32 *as_f32_arr;
         f64 *as_f64_arr;
     };
-    InstProp *local_next;
-    s32 local_ref_count;
+    s32 heap_size;
     s32 arr_length;
     u8 arr_type;
     u8 garbage_mark;
     u8 garbage_reg;
     u8 type;
+    u8 is_weakreference;
+    u8 is_finalized;
 };
 
 
@@ -273,7 +273,7 @@ struct _FieldInfo {
     u8 is_static;
     u8 is_private;
     u8 is_refer;
-    u8 na;
+    u8 is_ref_target;
 };
 
 struct _JClass {
@@ -317,9 +317,9 @@ struct _StackFrame {
 //    JThreadRuntime *runtime;
     //MethodInfo *methodInfo;
     StackFrame *next;
-    RStackItem *rstack;
-    s32 *spPtr;
-    RStackItem *rlocal;
+    const RStackItem *rstack;
+    const s32 *spPtr;
+    const RStackItem *rlocal;
 
     //
     s32 bytecodeIndex;
@@ -342,6 +342,7 @@ struct _JThreadRuntime {
     InstProp *tmp_holder;//for jni hold java object
     InstProp *objs_header;//link to new instance, until garbage accept
     InstProp *objs_tailer;//link to last instance, until garbage accept
+    s64 objs_heap_of_thread;// heap use for objs_header, if translate to gc ,the var need clear to 0
 
     u8 volatile suspend_count;//for jdwp suspend ,>0 suspend, ==0 resume
     u8 volatile no_pause;  //can't pause when clinit
@@ -365,8 +366,8 @@ struct _GcCollectorType {
     InstProp *header, *tmp_header, *tmp_tailer;
     s64 obj_count;
     //
-    s64 GARBAGE_PERIOD_MS;
-    s64 MAX_HEAP_SIZE;
+    s64 garbage_collect_period_ms;
+    s64 max_heap_size;
     //
     thrd_t _garbage_thread;//垃圾回收线程
     ThreadLock garbagelock;
@@ -375,17 +376,18 @@ struct _GcCollectorType {
     //
     ArrayList *runtime_refer_copy;
     //
-    s64 heap_size;
+    s64 obj_heap_size;
+    s64 lastgc;//last gc at mills
+
     s64 _garbage_count;
     u8 _garbage_thread_status;
-    u8 flag_refer;
+    u8 mark_cnt;
     u8 isgc;
     s16 exit_flag;
     s16 exit_code;
 };
 
 struct _Jvm {
-    JNIEnv env;
     Hashtable *classes;
     ArrayList *thread_list;
     GcCollector *collector;
@@ -503,7 +505,7 @@ s32 utf8_2_unicode(c8 *pInput, u16 *arr, s32 limit);
 
 int unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 u16arr_len);
 
-void jthread_bound(JThreadRuntime *runtime);
+JThreadRuntime *jthread_bound(JThreadRuntime *runtime);
 
 void jthread_unbound(JThreadRuntime *runtime);
 
@@ -585,6 +587,8 @@ s32 find_exception_handler_index(JThreadRuntime *runtime);
 
 void throw_exception(JThreadRuntime *runtime, JObject *jobj);
 
+JObject *construct_and_throw_exception(JThreadRuntime *runtime, s32 classrawIndex, s32 bytecodeIndex, s32 lineNo);
+
 //StackFrame *method_enter(JThreadRuntime *runtime, s32 methodRawIndex, LabelTable *labtable, RStackItem *stack, RStackItem *local, s32 *spPtr);
 //
 //void method_exit(JThreadRuntime *runtime);
@@ -632,15 +636,18 @@ void jclass_set_classHandle(JObject *jobj, JClass *clazz);
 void jclass_init_insOfClass(JThreadRuntime *runtime, JObject *jobj);
 
 void jstring_debug_print(JObject *jobj, c8 *appendix);
+
+JObject *weakreference_get_target(JThreadRuntime *runtime, JObject *jobj);
+
+void weakref_vmreferenceenqueue(JThreadRuntime *runtime, JObject *jobj);
 //=====================================================================
 
-static inline StackFrame *method_enter(JThreadRuntime *runtime, s32 methodRawIndex, RStackItem *stack, RStackItem *local, s32 *spPtr) {
+static inline StackFrame *method_enter(JThreadRuntime *runtime, s32 methodRawIndex, const RStackItem *stack, const RStackItem *local, const s32 *spPtr) {
 
     StackFrame *cur;
     if (runtime->cache) {
         cur = runtime->cache;
         runtime->cache = cur->next;
-        memset(cur, 0, sizeof(StackFrame));
     } else {
         cur = stackframe_create();
     }

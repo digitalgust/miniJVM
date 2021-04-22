@@ -264,9 +264,6 @@ JClass *get_class_by_nameIndex(s32 index) {
 }
 
 void classes_put(JClass *clazz) {
-    if (utf8_equals_c(clazz->name, "java/lang/Thread")) {
-        s32 debug = 1;
-    }
     hashtable_put(g_jvm->classes, clazz->name, clazz);
 }
 

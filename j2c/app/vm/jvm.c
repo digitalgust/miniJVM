@@ -1,9 +1,5 @@
-#include <errno.h>
 #include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
 
 
 #include "jvm.h"
@@ -15,12 +11,8 @@ c8 *STR_JAVA_LANG_OBJECT = "java/lang/Object";
 c8 *STR_JAVA_LANG_STRING = "java/lang/String";
 c8 *STR_JAVA_LANG_THREAD = "java/lang/Thread";
 c8 *STR_JAVA_LANG_INTEGER = "java/lang/Integer";
-c8 *STR_JAVA_IO_EOF_EXCEPTION = "java/io/EOFException";
-c8 *STR_JAVA_IO_IO_EXCEPTION = "java/io/IOException";
-c8 *STR_JAVA_IO_FILE_NOT_FOUND_EXCEPTION = "java/lang/FileNotFoundException";
 c8 *STR_JAVA_LANG_OUT_OF_MEMORY_ERROR = "java/io/OutOfMemoryError";
 c8 *STR_JAVA_LANG_VIRTUAL_MACHINE_ERROR = "java/io/VirtualMachineError";
-c8 *STR_JAVA_LANG_NO_CLASS_DEF_FOUND_ERROR = "java/io/NoClassDefFoundError";
 c8 *STR_JAVA_LANG_CLASS_NOT_FOUND_EXCEPTION = "java/lang/ClassNotFoundException";
 c8 *STR_JAVA_LANG_ARITHMETIC_EXCEPTION = "java/lang/ArithmeticException";
 c8 *STR_JAVA_LANG_NULL_POINTER_EXCEPTION = "java/lang/NullPointerException";
@@ -47,9 +39,9 @@ FieldInfo *fieldinfo_create_with_raw(FieldRaw *fieldRaw) {
     FieldInfo *field = jvm_calloc(sizeof(JClass));
     field->raw = fieldRaw;
     field->name = get_utf8str(&g_strings[fieldRaw->name]);
-    if (utf8_equals_c(field->name, "out")) {
-        int debug = 1;
-    }
+//    if (utf8_equals_c(field->name, "out")) {
+//        int debug = 1;
+//    }
     field->desc = get_utf8str(&g_strings[fieldRaw->desc_name]);
     field->signature = fieldRaw->signature_name < 0 ? NULL : get_utf8str(&g_strings[fieldRaw->signature_name]);
     field->offset_ins = fieldRaw->offset_ins;
@@ -167,9 +159,6 @@ JClass *jclass_create_with_raw(ClassRaw *classRaw) {
     clazz->source_name = get_utf8str(&g_strings[classRaw->source_name]);
     clazz->signature = classRaw->signature_name < 0 ? NULL : get_utf8str(&g_strings[classRaw->signature_name]);
 
-    if (utf8_equals_c(clazz->name, "java/lang/System")) {
-        int debug = 1;
-    }
     clazz->prop.members = classRaw->static_fields;
     clazz->raw = classRaw;
     classRaw->clazz = clazz;
@@ -210,6 +199,11 @@ JClass *jclass_create_with_raw(ClassRaw *classRaw) {
             FieldRaw *fieldRaw = &g_fields[index];
             FieldInfo *field = fieldinfo_create_with_raw(fieldRaw);
             field->clazz = clazz;
+            if (utf8_equals_c(clazz->name, "java/lang/ref/Reference")) {
+                if (utf8_equals_c(field->name, "target")) {
+                    field->is_ref_target = 1;
+                }
+            }
             arraylist_push_back(clazz->fields, field);
         } else {
             break;
@@ -325,9 +319,6 @@ void class_clinit(JThreadRuntime *runtime, Utf8String *className) {
         if (methodRaw) {
             class_clinit_func_t func = (class_clinit_func_t) methodRaw->func_ptr;
             func(runtime);
-            if (runtime->tail) {
-                s32 debug = 1;
-            }
             exception_check_print(runtime);
             //jvm_printf("clinit :%s\n", utf8_cstr(clazz->name));
         }
@@ -467,6 +458,10 @@ void class_prepar(JClass *clazz) {
 }
 
 Jvm *jvm_create(c8 *bootclasspath, c8 *classpath) {
+    //tsl
+    tss_create(&TLS_KEY_JTHREADRUNTIME, NULL);
+    tss_create(&TLS_KEY_UTF8STR_CACHE, NULL);
+
     Jvm *jvm = jvm_calloc(sizeof(Jvm));
     jvm->classes = hashtable_create(UNICODE_STR_HASH_FUNC, UNICODE_STR_EQUALS_FUNC);
     jvm->thread_list = arraylist_create(32);
@@ -484,10 +479,6 @@ Jvm *jvm_create(c8 *bootclasspath, c8 *classpath) {
     fill_procache();
     garbage_start();
 
-
-    //tsl
-    tss_create(&TLS_KEY_JTHREADRUNTIME, NULL);
-    tss_create(&TLS_KEY_UTF8STR_CACHE, NULL);
 
     return jvm;
 }
@@ -744,7 +735,6 @@ s32 jthread_run(__refer p) {
 
 JThreadRuntime *jthread_start(JObject *jthread) {
 
-//    MethodInfo *method = find_methodInfo_by_name(utf8_cstr(jthread->prop.clazz->name), "run", "()V");
     MethodRaw *method = find_methodraw(utf8_cstr(jthread->prop.clazz->name), "run", "()V");
 
     JThreadRuntime *runtime = jthreadruntime_create();
@@ -756,8 +746,12 @@ JThreadRuntime *jthread_start(JObject *jthread) {
     return runtime;
 }
 
-void jthread_bound(JThreadRuntime *runtime) {
-    tss_set(TLS_KEY_JTHREADRUNTIME, runtime);
+JThreadRuntime *jthread_bound(JThreadRuntime *runtime) {
+    if (!runtime) {
+        runtime = jthreadruntime_create();
+    }
+    s32 ret = tss_set(TLS_KEY_JTHREADRUNTIME, runtime);
+    JThreadRuntime *r = tss_get(TLS_KEY_JTHREADRUNTIME);
     Utf8String *ustr = utf8_create();
     tss_set(TLS_KEY_UTF8STR_CACHE, ustr);
     jthread_prepar(runtime);
@@ -770,6 +764,7 @@ void jthread_bound(JThreadRuntime *runtime) {
     }
     arraylist_push_back(g_jvm->thread_list, runtime);
     runtime->thread_status = THREAD_STATUS_RUNNING;
+    return runtime;
 }
 
 void jthread_unbound(JThreadRuntime *runtime) {
@@ -798,18 +793,14 @@ s32 jvm_run_main(Utf8String *mainClass) {
     c8 *methodName = "main";
     c8 *signature = "([Ljava/lang/String;)V";
     MethodRaw *method = find_methodraw(utf8_cstr(mainClass), methodName, signature);
-//    MethodInfo *method = find_methodInfo_by_name(utf8_cstr(mainClass), methodName, signature);
     if (method) {
         JThreadRuntime *runtime = jthreadruntime_create();
         runtime->exec = method;
-        //thrd_create(&runtime->thread, jthread_run, runtime);
         runtime->thread = thrd_current();
         jthread_run(runtime);
     } else {
         jvm_printf("[ERROR]can not found %s.%s%s\n", utf8_cstr(mainClass), methodName, signature);
     }
-    //
-    //
     //printf("threads count %d\n", g_jvm->thread_list->length);
     s32 i;
     while (g_jvm->thread_list->length) {

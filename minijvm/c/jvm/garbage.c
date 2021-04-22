@@ -727,10 +727,6 @@ void gc_obj_reg(Runtime *runtime, __refer ref) {
         }
         ti->objs_heap_of_thread += mb->heap_size;
 
-        if (instance_of((Instance *) mb, runtime->jvm->shortcut.weakreference)) {
-            GCFLAG_WEAKREFERENCE_SET(mb->gcflag);
-        }
-
 #ifdef HARD_LIMIT
         //HARD_LIMIT define will limit heap use alaways less than MAX_HEAP_SIZE
         //but the performance down

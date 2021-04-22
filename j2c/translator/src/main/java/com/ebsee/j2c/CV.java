@@ -85,8 +85,10 @@ public class CV extends ClassVisitor {
         AssistLLVM.getClassIndex(className);
         AssistLLVM.addDefine(Util.class2structDefine(className));
         String staticStruct = Util.classStatic2structDefine(className);
-        AssistLLVM.addDefine(staticStruct);
-        AssistLLVM.addDefine(Util.getStaticFieldExternalDeclare(className));
+        if (Util.getClassStaticFieldCount(className) > 0) {
+            AssistLLVM.addDefine(staticStruct);
+            AssistLLVM.addDefine(Util.getStaticFieldExternalDeclare(className));
+        }
 
         this.ps.println("// CLASS: " + this.className + " extends " + this.superName);
         this.ps.println("#include \"metadata.h\"");
@@ -155,16 +157,20 @@ public class CV extends ClassVisitor {
             sb.append("__refer ").append(arrName).append("_from_").append(Util.regulString(key));
 
             sb.append("[] = {\n");
-            for (int j = 0; j < methodSize; j++) {
-                Method m = methods.get(j);
-                String cName = m.getClassFile().getThisClassName();
-                Util.getClassStructTypePtr(cName);
-                sb.append("    ").append(Util.getMethodRawName(m));
+            if (methodSize > 0) {
+                for (int j = 0; j < methodSize; j++) {
+                    Method m = methods.get(j);
+                    String cName = m.getClassFile().getThisClassName();
+                    Util.getClassStructTypePtr(cName);
+                    sb.append("    ").append(Util.getMethodRawName(m));
 
-                if (j < methodSize - 1) {
-                    sb.append(",");
+                    if (j < methodSize - 1) {
+                        sb.append(",");
+                    }
+                    sb.append("  //").append(j).append('\n');
                 }
-                sb.append("  //").append(j).append('\n');
+            } else {
+                sb.append("    NULL\n");
             }
             sb.append("};\n");
             i++;

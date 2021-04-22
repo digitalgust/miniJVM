@@ -56,4 +56,6 @@ public abstract class Reference<T> {
             referent.enqueue();
         }
     }
+
+    native void markItAsWeak(boolean weak);
 }

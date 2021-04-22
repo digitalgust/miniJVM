@@ -1311,6 +1311,13 @@ s32 java_lang_System_getNativeProperties(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+s32 java_lang_ref_Reference_markItAsWeak(Runtime *runtime, JClass *clazz) {
+    Instance *weak = (Instance *) localvar_getRefer(runtime->localvar, 0);
+    s32 isweak = localvar_getInt(runtime->localvar, 1);
+    if (isweak)GCFLAG_WEAKREFERENCE_SET(weak->mb.gcflag);
+    return 0;
+}
+
 static java_native_method METHODS_STD_TABLE[] = {
         {"com/sun/cldc/io/ConsoleOutputStream", "write",                  "(I)V",                                                          com_sun_cldc_io_ConsoleOutputStream_write},
         {"com/sun/cldc/io/ConsoleInputStream",  "read",                   "()I",                                                           com_sun_cldc_io_ConsoleInputStream_read},
@@ -1384,6 +1391,7 @@ static java_native_method METHODS_STD_TABLE[] = {
         {"java/lang/Throwable",                 "buildStackElement",      "()Ljava/lang/StackTraceElement;",                               java_io_Throwable_buildStackElement},
         {"java/io/PrintStream",                 "printImpl",              "(Ljava/lang/String;)V",                                         java_io_PrintStream_printImpl},
         {"java/lang/System",                    "getNativeProperties",    "()[Ljava/lang/String;",                                         java_lang_System_getNativeProperties},
+        {"java/lang/ref/Reference",             "markItAsWeak",           "(Z)V",                                                          java_lang_ref_Reference_markItAsWeak},
 };
 
 

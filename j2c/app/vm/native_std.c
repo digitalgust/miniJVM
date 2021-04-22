@@ -54,6 +54,16 @@ void jclass_init_insOfClass(JThreadRuntime *runtime, JObject *jobj) {
     java_lang_Class *ins = (java_lang_Class *) jobj;
     func_java_lang_Class__init____V(runtime, ins);
 }
+
+JObject *weakreference_get_target(JThreadRuntime *runtime, JObject *jobj) {
+    struct java_lang_ref_WeakReference *ins = (struct java_lang_ref_WeakReference *) jobj;
+    return (JObject *) ins->target_in_weakreference;
+}
+
+void weakref_vmreferenceenqueue(JThreadRuntime *runtime, JObject *jobj) {
+    func_java_lang_ref_Reference_vmEnqueneReference__Ljava_lang_ref_Reference_2_V(runtime, (struct java_lang_ref_Reference *) jobj);
+}
+
 //----------------------------------------------------------------
 //----------------------------------------------------------------
 
@@ -776,7 +786,7 @@ void func_java_lang_Runtime_exitInternal__I_V(JThreadRuntime *runtime, struct ja
 }
 
 s64 func_java_lang_Runtime_freeMemory___J(JThreadRuntime *runtime, struct java_lang_Runtime *p0) {
-    return g_jvm->collector->MAX_HEAP_SIZE - g_jvm->collector->heap_size;
+    return g_jvm->collector->max_heap_size - g_jvm->collector->obj_heap_size;
 }
 
 void func_java_lang_Runtime_gc___V(JThreadRuntime *runtime, struct java_lang_Runtime *p0) {
@@ -784,7 +794,7 @@ void func_java_lang_Runtime_gc___V(JThreadRuntime *runtime, struct java_lang_Run
 }
 
 s64 func_java_lang_Runtime_totalMemory___J(JThreadRuntime *runtime, struct java_lang_Runtime *p0) {
-    return g_jvm->collector->MAX_HEAP_SIZE;
+    return g_jvm->collector->max_heap_size;
 }
 
 
@@ -981,7 +991,7 @@ void func_java_lang_System_loadLibrary0___3B_V(JThreadRuntime *runtime, JArray *
             if (!f) {
                 jvm_printf(note2, onload);
             } else {
-                f(&g_jvm->env);
+                f(NULL);
             }
         }
 
@@ -1029,16 +1039,7 @@ void func_java_lang_Thread_interrupt0___V(JThreadRuntime *runtime, struct java_l
 }
 
 s8 func_java_lang_Thread_isAlive___Z(JThreadRuntime *runtime, struct java_lang_Thread *p0) {
-    s32 i, imax;
-    spin_lock(&g_jvm->thread_list->spinlock);
-    for (i = 0, imax = g_jvm->thread_list->length; i < imax; i++) {
-        JThreadRuntime *runtime = arraylist_get_value_unsafe(g_jvm->thread_list, i);
-        if (runtime->jthread == (__refer) p0) {
-            return runtime->thread_status != THREAD_STATUS_DEAD;
-        }
-    }
-    spin_unlock(&g_jvm->thread_list->spinlock);
-    return 0;
+    return runtime->thread_status != THREAD_STATUS_DEAD;
 }
 
 void func_java_lang_Thread_setContextClassLoader0__Ljava_lang_ClassLoader_2_V(JThreadRuntime *runtime, struct java_lang_Thread *p0, struct java_lang_ClassLoader *p1) {
@@ -1638,6 +1639,10 @@ s32 func_org_mini_net_SocketNative_writeByte___3BI_I(JThreadRuntime *runtime, JA
         ret = -1;
     }
     return ret;
+}
+
+void func_java_lang_ref_Reference_markItAsWeak__Z_V(JThreadRuntime *runtime, struct java_lang_ref_Reference *p0, s8 p1) {
+    p0->prop.is_weakreference = p1;
 }
 
 void func_org_mini_reflect_DirectMemObj_copyFrom0__ILjava_lang_Object_2II_V(JThreadRuntime *runtime, struct org_mini_reflect_DirectMemObj *p0, s32 p1, struct java_lang_Object *p2, s32 p3, s32 p4) {

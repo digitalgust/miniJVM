@@ -6,7 +6,9 @@ import com.ebsee.classparser.Method;
 
 import java.io.File;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringJoiner;
 
 
 public final class Util {
@@ -439,6 +441,7 @@ public final class Util {
             } else {
                 ClassFile c = ClassManger.getClassFile(className);
                 StringJoiner joiner = new StringJoiner(", ", "{", "}");
+                int staticVarCnt = 0;
                 for (Field f : c.getFields()) {
                     if ((f.getAccessFlags() & Modifier.STATIC) != 0) {
                         if (isRefer_by_Jtype(f.getDescriptor())) {
@@ -446,14 +449,42 @@ public final class Util {
                         } else {
                             joiner.add("0");
                         }
+                        staticVarCnt++;
                     }
                 }
-                String s = getStaticFieldStructType(className) + " " + getStaticFieldStructVarName(className) + " = " + joiner + ";";
-                return s;
+                if (staticVarCnt > 0) {
+                    String s = getStaticFieldStructType(className) + " " + getStaticFieldStructVarName(className) + " = " + joiner + ";";
+                    return s;
+                } else {
+                    return "";
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
             return className + " is unknown";
+        }
+    }
+
+    public static int getClassStaticFieldCount(String className) {
+        try {
+            if (className.startsWith("[")) {
+                return 0;
+            } else {
+                ClassFile c = ClassManger.getClassFile(className);
+                StringJoiner joiner = new StringJoiner("; ", "{", "}");
+                int staticVarCnt = 0;
+                for (Field f : c.getFields()) {
+                    if ((f.getAccessFlags() & Modifier.STATIC) != 0) {
+                        joiner.add(getJavaSignatureCtype(f.getDescriptor()) + " " + getFieldVarName(f));
+                        staticVarCnt++;
+                    }
+                }
+                if (staticVarCnt > 0) return staticVarCnt;
+                return 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
         }
     }
 

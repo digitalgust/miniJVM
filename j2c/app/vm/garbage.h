@@ -56,7 +56,7 @@ void garbage_collector_destory(GcCollector *);
 
 void garbage_start();
 
-s64 garbage_collect();
+s64 _garbage_collect();
 
 InstProp *gc_is_alive(__refer obj);
 

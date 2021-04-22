@@ -124,7 +124,7 @@ public class JSignature {
 
     public String getMethodType() {
         StringBuilder sb = new StringBuilder();
-        sb.append(Util.STR_RUNTIME_TYPE_NAME).append(" *runtime");
+        sb.append(Util.STR_RUNTIME_TYPE_NAME).append(" *");
         for (int i = 0, imax = args.size(); i < imax; i++) {
             sb.append(",");
             String s = args.get(i);

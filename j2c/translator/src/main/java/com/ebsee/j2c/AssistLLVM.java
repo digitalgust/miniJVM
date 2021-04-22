@@ -19,6 +19,7 @@ public class AssistLLVM {
     static final String FUNC_NEW_INSTANCE_WITH_RAWINDEX_AND_INIT = "new_instance_with_classraw_index_and_init";
     static final String FUNC_MULTI_ARRAY_CREATE = "multi_array_create";
     static final String FUNC_THROW_EXCEPTION = "throw_exception";
+    static final String FUNC_CONSTRUCT_AND_THROW_EXCEPTION = "construct_and_throw_exception";
     static final String FUNC_JTHREAD_LOCK = "jthread_lock";
     static final String FUNC_JTHREAD_UNLOCK = "jthread_unlock";
     static final String FUNC_METHOD_ENTER = "method_enter";
@@ -566,7 +567,8 @@ public class AssistLLVM {
         Method finalizeM = ClassManger.findFinalizeMethod(className);
         classinfo += finalizeM == null ? "NULL" : Util.getMethodRawName(finalizeM.getClassFile().getThisClassName(), finalizeM.getMethodName(), finalizeM.getDescriptor());
         classinfo += ", ";
-        classinfo += "&" + Util.getStaticFieldStructVarName(className);
+        int staticVarCnt = Util.getClassStaticFieldCount(className);
+        classinfo += staticVarCnt > 0 ? "&" + Util.getStaticFieldStructVarName(className) : "NULL";
         classinfo += "},";
         classinfo += "// ";
 
