@@ -182,7 +182,7 @@ void _callback_notify(GLFMDisplay *window, const c8 *key, const c8 *val) {
 
 /* ==============================   jni glfm =================================*/
 
-void Java_org_mini_glfm_Glfm_glfmSetCallBack__JLorg_mini_glfm_GlfmCallBack_2_V(JThreadRuntime *runtime, s64 p0, struct org_mini_glfm_GlfmCallBack *p2) {
+void func_org_mini_glfm_Glfm_glfmSetCallBack__JLorg_mini_glfm_GlfmCallBack_2_V(JThreadRuntime *runtime, s64 p0, struct org_mini_glfm_GlfmCallBack *p2) {
     s32 pos = 0;
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     pos += 2;
@@ -298,7 +298,7 @@ void Java_org_mini_glfm_Glfm_glfmSetCallBack__JLorg_mini_glfm_GlfmCallBack_2_V(J
 }
 
 
-void Java_org_mini_glfm_Glfm_glfmSetDisplayConfig__JIIIII_V(JThreadRuntime *runtime, s64 p0, s32 p2, s32 p3, s32 p4, s32 p5, s32 p6) {//
+void func_org_mini_glfm_Glfm_glfmSetDisplayConfig__JIIIII_V(JThreadRuntime *runtime, s64 p0, s32 p2, s32 p3, s32 p4, s32 p5, s32 p6) {//
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     s32 preferredAPI = p2;
     s32 colorFormat = p3;
@@ -311,51 +311,51 @@ void Java_org_mini_glfm_Glfm_glfmSetDisplayConfig__JIIIII_V(JThreadRuntime *runt
 
 }
 
-void Java_org_mini_glfm_Glfm_glfmSetUserInterfaceOrientation__JI_V(JThreadRuntime *runtime, s64 p0, s32 p2) {
+void func_org_mini_glfm_Glfm_glfmSetUserInterfaceOrientation__JI_V(JThreadRuntime *runtime, s64 p0, s32 p2) {
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     s32 allowedOrientations = p2;
     glfmSetUserInterfaceOrientation(window, allowedOrientations);
 }
 
 
-s32 Java_org_mini_glfm_Glfm_glfmGetUserInterfaceOrientation__J_I(JThreadRuntime *runtime, s64 p0) {
+s32 func_org_mini_glfm_Glfm_glfmGetUserInterfaceOrientation__J_I(JThreadRuntime *runtime, s64 p0) {
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     return glfmGetUserInterfaceOrientation(window);
 }
 
 
-void Java_org_mini_glfm_Glfm_glfmSetMultitouchEnabled__JZ_V(JThreadRuntime *runtime, s64 p0, s32 p2) {
+void func_org_mini_glfm_Glfm_glfmSetMultitouchEnabled__JZ_V(JThreadRuntime *runtime, s64 p0, s32 p2) {
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     glfmSetMultitouchEnabled(window, p2);
 }
 
 
-s32 Java_org_mini_glfm_Glfm_glfmGetMultitouchEnabled__J_Z(JThreadRuntime *runtime, s64 p0) {
+s32 func_org_mini_glfm_Glfm_glfmGetMultitouchEnabled__J_Z(JThreadRuntime *runtime, s64 p0) {
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     return glfmGetMultitouchEnabled(window);
 }
 
 
-s32 Java_org_mini_glfm_Glfm_glfmGetDisplayWidth__J_I(JThreadRuntime *runtime, s64 p0) {
+s32 func_org_mini_glfm_Glfm_glfmGetDisplayWidth__J_I(JThreadRuntime *runtime, s64 p0) {
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     s32 w, h;
     glfmGetDisplaySize(window, &w, &h);
     return w;
 }
 
-s32 Java_org_mini_glfm_Glfm_glfmGetDisplayHeight__J_I(JThreadRuntime *runtime, s64 p0) {
+s32 func_org_mini_glfm_Glfm_glfmGetDisplayHeight__J_I(JThreadRuntime *runtime, s64 p0) {
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     s32 w, h;
     glfmGetDisplaySize(window, &w, &h);
     return h;
 }
 
-f64 Java_org_mini_glfm_Glfm_glfmGetDisplayScale__J_D(JThreadRuntime *runtime, s64 p0) {
+f64 func_org_mini_glfm_Glfm_glfmGetDisplayScale__J_D(JThreadRuntime *runtime, s64 p0) {
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     return glfmGetDisplayScale(window);
 }
 
-void Java_org_mini_glfm_Glfm_glfmGetDisplayChromeInsets__J_3D_V(JThreadRuntime *runtime, s64 p0, JArray *p2) {
+void func_org_mini_glfm_Glfm_glfmGetDisplayChromeInsets__J_3D_V(JThreadRuntime *runtime, s64 p0, JArray *p2) {
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     JObject *r = p2;
     if (r != NULL && r->prop.arr_length >= 4) {
@@ -364,37 +364,37 @@ void Java_org_mini_glfm_Glfm_glfmGetDisplayChromeInsets__J_3D_V(JThreadRuntime *
     }
 }
 
-s32 Java_org_mini_glfm_Glfm_glfmGetDisplayChrome__J_I(JThreadRuntime *runtime, s64 p0) {
+s32 func_org_mini_glfm_Glfm_glfmGetDisplayChrome__J_I(JThreadRuntime *runtime, s64 p0) {
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     return glfmGetDisplayChrome(window);
 }
 
 
-void Java_org_mini_glfm_Glfm_glfmSetDisplayChrome__JI_V(JThreadRuntime *runtime, s64 p0, s32 p2) {
+void func_org_mini_glfm_Glfm_glfmSetDisplayChrome__JI_V(JThreadRuntime *runtime, s64 p0, s32 p2) {
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     glfmSetDisplayChrome(window, p2);
 }
 
 
-s32 Java_org_mini_glfm_Glfm_glfmGetRenderingAPI__J_I(JThreadRuntime *runtime, s64 p0) {
+s32 func_org_mini_glfm_Glfm_glfmGetRenderingAPI__J_I(JThreadRuntime *runtime, s64 p0) {
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     return glfmGetRenderingAPI(window);
 }
 
 
-s32 Java_org_mini_glfm_Glfm_glfmHasTouch__J_Z(JThreadRuntime *runtime, s64 p0) {
+s32 func_org_mini_glfm_Glfm_glfmHasTouch__J_Z(JThreadRuntime *runtime, s64 p0) {
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     return glfmHasTouch(window);
 }
 
 
-void Java_org_mini_glfm_Glfm_glfmSetMouseCursor__JI_V(JThreadRuntime *runtime, s64 p0, s32 p2) {
+void func_org_mini_glfm_Glfm_glfmSetMouseCursor__JI_V(JThreadRuntime *runtime, s64 p0, s32 p2) {
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     glfmSetMouseCursor(window, p2);
 }
 
 
-s32 Java_org_mini_glfm_Glfm_glfmExtensionSupported__Ljava_lang_String_2_Z(JThreadRuntime *runtime, struct java_lang_String *p0) {
+s32 func_org_mini_glfm_Glfm_glfmExtensionSupported__Ljava_lang_String_2_Z(JThreadRuntime *runtime, struct java_lang_String *p0) {
     Utf8String *ustr = utf8_create();
     jstring_2_utf8(p0, ustr);
     s32 ret = glfmExtensionSupported(utf8_cstr(ustr));
@@ -403,53 +403,53 @@ s32 Java_org_mini_glfm_Glfm_glfmExtensionSupported__Ljava_lang_String_2_Z(JThrea
 }
 
 
-s32 Java_org_mini_glfm_Glfm_glfmGetKeyboardVisible__J_Z(JThreadRuntime *runtime, s64 p0) {
+s32 func_org_mini_glfm_Glfm_glfmGetKeyboardVisible__J_Z(JThreadRuntime *runtime, s64 p0) {
     return glfmIsKeyboardVisible((__refer) (intptr_t) p0);
 }
 
 
-void Java_org_mini_glfm_Glfm_glfmSetKeyboardVisible__JZ_V(JThreadRuntime *runtime, s64 p0, s32 p2) {
+void func_org_mini_glfm_Glfm_glfmSetKeyboardVisible__JZ_V(JThreadRuntime *runtime, s64 p0, s32 p2) {
     glfmSetKeyboardVisible((__refer) (intptr_t) p0, p2);
 }
 
 
-struct java_lang_String *Java_org_mini_glfm_Glfm_glfmGetResRoot___Ljava_lang_String_2(JThreadRuntime *runtime) {
+struct java_lang_String *func_org_mini_glfm_Glfm_glfmGetResRoot___Ljava_lang_String_2(JThreadRuntime *runtime) {
     JObject *jstr = createJavaString(runtime, glfmGetResRoot());
     return (struct java_lang_String *) jstr;
 }
 
-struct java_lang_String *Java_org_mini_glfm_Glfm_glfmGetSaveRoot___Ljava_lang_String_2(JThreadRuntime *runtime) {
+struct java_lang_String *func_org_mini_glfm_Glfm_glfmGetSaveRoot___Ljava_lang_String_2(JThreadRuntime *runtime) {
     JObject *jstr = createJavaString(runtime, glfmGetSaveRoot());
     return (struct java_lang_String *) jstr;
 }
 
-struct java_lang_String *Java_org_mini_glfm_Glfm_glfmGetClipBoardContent___Ljava_lang_String_2(JThreadRuntime *runtime) {
+struct java_lang_String *func_org_mini_glfm_Glfm_glfmGetClipBoardContent___Ljava_lang_String_2(JThreadRuntime *runtime) {
     JObject *jstr = createJavaString(runtime, getClipBoardContent());
     return (struct java_lang_String *) jstr;
 }
 
-void Java_org_mini_glfm_Glfm_glfmSetClipBoardContent__Ljava_lang_String_2_V(JThreadRuntime *runtime, struct java_lang_String *p0) {
+void func_org_mini_glfm_Glfm_glfmSetClipBoardContent__Ljava_lang_String_2_V(JThreadRuntime *runtime, struct java_lang_String *p0) {
     Utf8String *ustr = utf8_create();
     jstring_2_utf8(p0, ustr);
     setClipBoardContent(utf8_cstr(ustr));
     utf8_destory(ustr);
 }
 
-void Java_org_mini_glfm_Glfm_glfmPickPhotoAlbum__JII_V(JThreadRuntime *runtime, s64 p0, s32 p2, s32 p3) {
+void func_org_mini_glfm_Glfm_glfmPickPhotoAlbum__JII_V(JThreadRuntime *runtime, s64 p0, s32 p2, s32 p3) {
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     s32 uid = p2;
     s32 type = p3;
     pickPhotoAlbum(window, uid, type);
 }
 
-void Java_org_mini_glfm_Glfm_glfmPickPhotoCamera__JII_V(JThreadRuntime *runtime, s64 p0, s32 p2, s32 p3) {
+void func_org_mini_glfm_Glfm_glfmPickPhotoCamera__JII_V(JThreadRuntime *runtime, s64 p0, s32 p2, s32 p3) {
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     s32 uid = p2;
     s32 type = p3;
     pickPhotoCamera(window, uid, type);
 }
 
-void Java_org_mini_glfm_Glfm_glfmImageCrop__JILjava_lang_String_2IIII_V(JThreadRuntime *runtime, s64 p0, s32 p2, struct java_lang_String *p3, s32 p4, s32 p5, s32 p6, s32 p7) {
+void func_org_mini_glfm_Glfm_glfmImageCrop__JILjava_lang_String_2IIII_V(JThreadRuntime *runtime, s64 p0, s32 p2, struct java_lang_String *p3, s32 p4, s32 p5, s32 p6, s32 p7) {
     GLFMDisplay *window = p0;
     s32 uid = p2;
     JObject *jstr = p3;
@@ -464,7 +464,7 @@ void Java_org_mini_glfm_Glfm_glfmImageCrop__JILjava_lang_String_2IIII_V(JThreadR
 }
 
 
-s64 Java_org_mini_glfm_Glfm_glfmPlayVideo__JLjava_lang_String_2Ljava_lang_String_2_J(JThreadRuntime *runtime, s64 p0, struct java_lang_String *p2, struct java_lang_String *p3) {
+s64 func_org_mini_glfm_Glfm_glfmPlayVideo__JLjava_lang_String_2Ljava_lang_String_2_J(JThreadRuntime *runtime, s64 p0, struct java_lang_String *p2, struct java_lang_String *p3) {
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     JObject *jstr = p2;
     JObject *jstrMime = p3;
@@ -478,19 +478,19 @@ s64 Java_org_mini_glfm_Glfm_glfmPlayVideo__JLjava_lang_String_2Ljava_lang_String
     return (s64) (intptr_t) panel;
 }
 
-void Java_org_mini_glfm_Glfm_glfmStartVideo__JJ_V(JThreadRuntime *runtime, s64 p0, s64 p2) {
+void func_org_mini_glfm_Glfm_glfmStartVideo__JJ_V(JThreadRuntime *runtime, s64 p0, s64 p2) {
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     void *panel = (__refer) (intptr_t) p2;
     startVideo(window, panel);
 }
 
-void Java_org_mini_glfm_Glfm_glfmPauseVideo__JJ_V(JThreadRuntime *runtime, s64 p0, s64 p2) {
+void func_org_mini_glfm_Glfm_glfmPauseVideo__JJ_V(JThreadRuntime *runtime, s64 p0, s64 p2) {
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     void *panel = (__refer) (intptr_t) p2;
     pauseVideo(window, panel);
 }
 
-void Java_org_mini_glfm_Glfm_glfmStopVideo__JJ_V(JThreadRuntime *runtime, s64 p0, s64 p2) {
+void func_org_mini_glfm_Glfm_glfmStopVideo__JJ_V(JThreadRuntime *runtime, s64 p0, s64 p2) {
     GLFMDisplay *window = (__refer) (intptr_t) p0;
     void *panel = (__refer) (intptr_t) p2;
     stopVideo(window, panel);
@@ -498,7 +498,7 @@ void Java_org_mini_glfm_Glfm_glfmStopVideo__JJ_V(JThreadRuntime *runtime, s64 p0
 
 /* ==============================   jni utils =================================*/
 
-JArray *Java_org_mini_nanovg_Gutil_f2b___3F_3B__3B(JThreadRuntime *runtime, JArray *p0, JArray *p1) {
+JArray *func_org_mini_nanovg_Gutil_f2b___3F_3B__3B(JThreadRuntime *runtime, JArray *p0, JArray *p1) {
     JObject *farr = p0;
     JObject *barr = p1;
     if (farr->prop.arr_length == barr->prop.arr_length * 4) {
@@ -516,7 +516,7 @@ static inline void vec_add(JArray *ra, JArray *aa, JArray *ba) {
         r[i] = a[i] + b[i];
 }
 
-JArray *Java_org_mini_nanovg_Gutil_vec_1add___3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2) {
+JArray *func_org_mini_nanovg_Gutil_vec_1add___3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2) {
     JArray *ra = p0;
     JArray *aa = p1;
     JArray *ba = p2;
@@ -533,7 +533,7 @@ static inline void vec_sub(JArray *ra, JArray *aa, JArray *ba) {
         r[i] = a[i] - b[i];
 }
 
-JArray *Java_org_mini_nanovg_Gutil_vec_1sub___3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2) {
+JArray *func_org_mini_nanovg_Gutil_vec_1sub___3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2) {
     vec_sub(p0, p1, p2);
     return p0;
 }
@@ -548,7 +548,7 @@ static inline float vec_mul_inner(JArray *aa, JArray *ba) {
     return r;
 }
 
-f32 Java_org_mini_nanovg_Gutil_vec_1mul_1inner___3F_3F_F(JThreadRuntime *runtime, JArray *p0, JArray *p1) {
+f32 func_org_mini_nanovg_Gutil_vec_1mul_1inner___3F_3F_F(JThreadRuntime *runtime, JArray *p0, JArray *p1) {
     float r = vec_mul_inner(p0, p1);
     return r;
 }
@@ -561,7 +561,7 @@ void vec_scale(JArray *ra, JArray *aa, float f) {
         r[i] = a[i] * f;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_vec_1scale___3F_3FF__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, f32 p2) {
+JArray *func_org_mini_nanovg_Gutil_vec_1scale___3F_3FF__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, f32 p2) {
     vec_scale(p0, p1, p2);
     return p0;
 }
@@ -570,18 +570,18 @@ float vec_len(JArray *ra) {
     return (float) sqrt(vec_mul_inner(ra, ra));
 }
 
-f32 Java_org_mini_nanovg_Gutil_vec_1len___3F_F(JThreadRuntime *runtime, JArray *p0) {
+f32 func_org_mini_nanovg_Gutil_vec_1len___3F_F(JThreadRuntime *runtime, JArray *p0) {
     f32 f = vec_len(p0);
     return f;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_vec_1normal___3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1) {
+JArray *func_org_mini_nanovg_Gutil_vec_1normal___3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1) {
     float k = 1.f / vec_len(p1);
     vec_scale(p0, p1, k);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_vec_1reflect___3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2) {
+JArray *func_org_mini_nanovg_Gutil_vec_1reflect___3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2) {
     GLfloat *r = (GLfloat *) p0->prop.as_f32_arr;
     GLfloat *a = (GLfloat *) p1->prop.as_f32_arr;
     GLfloat *b = (GLfloat *) p2->prop.as_f32_arr;
@@ -592,7 +592,7 @@ JArray *Java_org_mini_nanovg_Gutil_vec_1reflect___3F_3F_3F__3F(JThreadRuntime *r
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_vec4_1slerp___3F_3F_3FF__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2, f32 p3) {
+JArray *func_org_mini_nanovg_Gutil_vec4_1slerp___3F_3F_3FF__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2, f32 p3) {
     GLfloat *r = (GLfloat *) p0->prop.as_f32_arr;
     GLfloat *a = (GLfloat *) p1->prop.as_f32_arr;
     GLfloat *b = (GLfloat *) p2->prop.as_f32_arr;
@@ -600,14 +600,14 @@ JArray *Java_org_mini_nanovg_Gutil_vec4_1slerp___3F_3F_3FF__3F(JThreadRuntime *r
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_vec4_1from_1mat4x4___3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1) {
+JArray *func_org_mini_nanovg_Gutil_vec4_1from_1mat4x4___3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1) {
     GLfloat *r = (GLfloat *) p0->prop.as_f32_arr;
     GLfloat *a = (GLfloat *) p1->prop.as_f32_arr;
     quat_from_mat4x4(r, a);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_vec_1mul_1cross___3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2) {
+JArray *func_org_mini_nanovg_Gutil_vec_1mul_1cross___3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2) {
     GLfloat *r = (GLfloat *) p0->prop.as_f32_arr;
     GLfloat *a = (GLfloat *) p1->prop.as_f32_arr;
     GLfloat *b = (GLfloat *) p2->prop.as_f32_arr;
@@ -618,130 +618,130 @@ JArray *Java_org_mini_nanovg_Gutil_vec_1mul_1cross___3F_3F_3F__3F(JThreadRuntime
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1identity___3F__3F(JThreadRuntime *runtime, JArray *p0) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1identity___3F__3F(JThreadRuntime *runtime, JArray *p0) {
     mat4x4_identity((vec4 *) p0->prop.as_f32_arr);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1dup___3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1dup___3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1) {
     mat4x4_dup((vec4 *) p0->prop.as_f32_arr, (vec4 *) p1->prop.as_f32_arr);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1row___3F_3FI__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, s32 p2) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1row___3F_3FI__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, s32 p2) {
     mat4x4_row((GLfloat *) p0->prop.as_f32_arr, (vec4 *) p1->prop.as_f32_arr, p2);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1col___3F_3FI__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, s32 p2) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1col___3F_3FI__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, s32 p2) {
     mat4x4_col((GLfloat *) p0->prop.as_f32_arr, (vec4 *) p1->prop.as_f32_arr, p2);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1transpose___3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1transpose___3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1) {
     mat4x4_transpose((vec4 *) p0->prop.as_f32_arr, (vec4 *) p1->prop.as_f32_arr);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1add___3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1add___3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2) {
     mat4x4_add((vec4 *) p0->prop.as_f32_arr, (vec4 *) p1->prop.as_f32_arr, (vec4 *) p2->prop.as_f32_arr);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1sub___3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1sub___3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2) {
     mat4x4_sub((vec4 *) (vec4 *) p0->prop.as_f32_arr, (vec4 *) p1->prop.as_f32_arr, (vec4 *) p2->prop.as_f32_arr);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1mul___3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1mul___3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2) {
     mat4x4_mul((vec4 *) p0->prop.as_f32_arr, (vec4 *) p1->prop.as_f32_arr, (vec4 *) p2->prop.as_f32_arr);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1mul_1vec4___3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1mul_1vec4___3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2) {
     mat4x4_mul_vec4((GLfloat *) p0->prop.as_f32_arr, (vec4 *) p1->prop.as_f32_arr, (GLfloat *) p2->prop.as_f32_arr);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1from_1vec3_1mul_1outer___3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1from_1vec3_1mul_1outer___3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2) {
     mat4x4_from_vec3_mul_outer((vec4 *) p0->prop.as_f32_arr, (GLfloat *) p1->prop.as_f32_arr,
                                (GLfloat *) p2->prop.as_f32_arr);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1translate___3FFFF__3F(JThreadRuntime *runtime, JArray *p0, f32 p1, f32 p2, f32 p3) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1translate___3FFFF__3F(JThreadRuntime *runtime, JArray *p0, f32 p1, f32 p2, f32 p3) {
     mat4x4_translate((vec4 *) p0->prop.as_f32_arr, p1, p2, p3);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1translate_1in_1place___3FFFF__3F(JThreadRuntime *runtime, JArray *p0, f32 p1, f32 p2, f32 p3) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1translate_1in_1place___3FFFF__3F(JThreadRuntime *runtime, JArray *p0, f32 p1, f32 p2, f32 p3) {
     mat4x4_translate_in_place((vec4 *) p0->prop.as_f32_arr, p1, p2, p3);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1scale___3F_3FF__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, f32 p2) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1scale___3F_3FF__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, f32 p2) {
     mat4x4_scale((vec4 *) p0->prop.as_f32_arr, (vec4 *) p1->prop.as_f32_arr, p2);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1scale_1aniso___3F_3FFFF__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, f32 p2, f32 p3, f32 p4) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1scale_1aniso___3F_3FFFF__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, f32 p2, f32 p3, f32 p4) {
     mat4x4_scale_aniso((vec4 *) p0->prop.as_f32_arr, (vec4 *) p1->prop.as_f32_arr, p2, p3, p4);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1rotate___3F_3FFFFF__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, f32 p2, f32 p3, f32 p4, f32 p5) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1rotate___3F_3FFFFF__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, f32 p2, f32 p3, f32 p4, f32 p5) {
     mat4x4_rotate((vec4 *) p0->prop.as_f32_arr, (vec4 *) p1->prop.as_f32_arr, p2, p3, p4, p5);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1rotateX___3F_3FF__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, f32 p2) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1rotateX___3F_3FF__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, f32 p2) {
     mat4x4_rotate_X((vec4 *) p0->prop.as_f32_arr, (vec4 *) p1->prop.as_f32_arr, p2);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1rotateY___3F_3FF__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, f32 p2) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1rotateY___3F_3FF__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, f32 p2) {
     mat4x4_rotate_Y((vec4 *) p0->prop.as_f32_arr, (vec4 *) p1->prop.as_f32_arr, p2);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1rotateZ___3F_3FF__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, f32 p2) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1rotateZ___3F_3FF__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, f32 p2) {
     mat4x4_rotate_Z((vec4 *) p0->prop.as_f32_arr, (vec4 *) p1->prop.as_f32_arr, p2);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1invert___3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1invert___3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1) {
     mat4x4_invert((vec4 *) p0->prop.as_f32_arr, (vec4 *) p1->prop.as_f32_arr);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1orthonormalize___3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1orthonormalize___3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1) {
     mat4x4_orthonormalize((vec4 *) p0->prop.as_f32_arr, (vec4 *) p1->prop.as_f32_arr);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1ortho___3FFFFFFF__3F(JThreadRuntime *runtime, JArray *p0, f32 p1, f32 p2, f32 p3, f32 p4, f32 p5, f32 p6) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1ortho___3FFFFFFF__3F(JThreadRuntime *runtime, JArray *p0, f32 p1, f32 p2, f32 p3, f32 p4, f32 p5, f32 p6) {
     mat4x4_ortho((vec4 *) p0->prop.as_f32_arr, p1, p2, p3, p4, p5, p6);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1frustum___3FFFFFFF__3F(JThreadRuntime *runtime, JArray *p0, f32 p1, f32 p2, f32 p3, f32 p4, f32 p5, f32 p6) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1frustum___3FFFFFFF__3F(JThreadRuntime *runtime, JArray *p0, f32 p1, f32 p2, f32 p3, f32 p4, f32 p5, f32 p6) {
     mat4x4_frustum((vec4 *) p0->prop.as_f32_arr, p1, p2, p3, p4, p5, p6);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1perspective___3FFFFF__3F(JThreadRuntime *runtime, JArray *p0, f32 p1, f32 p2, f32 p3, f32 p4) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1perspective___3FFFFF__3F(JThreadRuntime *runtime, JArray *p0, f32 p1, f32 p2, f32 p3, f32 p4) {
     mat4x4_perspective((vec4 *) p0->prop.as_f32_arr, p1, p2, p3, p4);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1look_1at___3F_3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2, JArray *p3) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1look_1at___3F_3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2, JArray *p3) {
     mat4x4_look_at((vec4 *) p0->prop.as_f32_arr, (float *) p1->prop.as_f32_arr,
                    (float *) p2->prop.as_f32_arr,
                    (float *) p3->prop.as_f32_arr);
     return p0;
 }
 
-JArray *Java_org_mini_nanovg_Gutil_mat4x4_1trans_1rotate_1scale___3F_3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2, JArray *p3) {
+JArray *func_org_mini_nanovg_Gutil_mat4x4_1trans_1rotate_1scale___3F_3F_3F_3F__3F(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2, JArray *p3) {
     mat4x4_trans_rotate_scale((vec4 *) p0->prop.as_f32_arr, (float *) p1->prop.as_f32_arr,
                               (float *) p2->prop.as_f32_arr,
                               (float *) p3->prop.as_f32_arr);

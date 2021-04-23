@@ -9,21 +9,21 @@
 #include "jvm.h"
 #include "media.h"
 
-void Java_org_mini_gl_GL_glActiveTexture__I_V(JThreadRuntime *runtime, s32 ptexture) {
+void func_org_mini_gl_GL_glActiveTexture__I_V(JThreadRuntime *runtime, s32 ptexture) {
     
 
     glActiveTexture((GLenum)ptexture);
     
     
 }
-void Java_org_mini_gl_GL_glAttachShader__II_V(JThreadRuntime *runtime, s32 pprogram, s32 pshader) {
+void func_org_mini_gl_GL_glAttachShader__II_V(JThreadRuntime *runtime, s32 pprogram, s32 pshader) {
     
 
     glAttachShader((GLuint)pprogram, (GLuint)pshader);
     
     
 }
-void Java_org_mini_gl_GL_glBindAttribLocation__II_3B_V(JThreadRuntime *runtime, s32 pprogram, s32 pindex, JArray *pname) {
+void func_org_mini_gl_GL_glBindAttribLocation__II_3B_V(JThreadRuntime *runtime, s32 pprogram, s32 pindex, JArray *pname) {
     
     s32 offset_pname = 0;    __refer ptr_pname = (__refer)(intptr_t) offset_pname;
     if(pname) {
@@ -35,70 +35,70 @@ void Java_org_mini_gl_GL_glBindAttribLocation__II_3B_V(JThreadRuntime *runtime, 
     
     
 }
-void Java_org_mini_gl_GL_glBindBuffer__II_V(JThreadRuntime *runtime, s32 ptarget, s32 pbuffer) {
+void func_org_mini_gl_GL_glBindBuffer__II_V(JThreadRuntime *runtime, s32 ptarget, s32 pbuffer) {
     
 
     glBindBuffer((GLenum)ptarget, (GLuint)pbuffer);
     
     
 }
-void Java_org_mini_gl_GL_glBindFramebuffer__II_V(JThreadRuntime *runtime, s32 ptarget, s32 pframebuffer) {
+void func_org_mini_gl_GL_glBindFramebuffer__II_V(JThreadRuntime *runtime, s32 ptarget, s32 pframebuffer) {
     
 
     glBindFramebuffer((GLenum)ptarget, (GLuint)pframebuffer);
     
     
 }
-void Java_org_mini_gl_GL_glBindRenderbuffer__II_V(JThreadRuntime *runtime, s32 ptarget, s32 prenderbuffer) {
+void func_org_mini_gl_GL_glBindRenderbuffer__II_V(JThreadRuntime *runtime, s32 ptarget, s32 prenderbuffer) {
     
 
     glBindRenderbuffer((GLenum)ptarget, (GLuint)prenderbuffer);
     
     
 }
-void Java_org_mini_gl_GL_glBindTexture__II_V(JThreadRuntime *runtime, s32 ptarget, s32 ptexture) {
+void func_org_mini_gl_GL_glBindTexture__II_V(JThreadRuntime *runtime, s32 ptarget, s32 ptexture) {
     
 
     glBindTexture((GLenum)ptarget, (GLuint)ptexture);
     
     
 }
-void Java_org_mini_gl_GL_glBlendColor__FFFF_V(JThreadRuntime *runtime, f32 pred, f32 pgreen, f32 pblue, f32 palpha) {
+void func_org_mini_gl_GL_glBlendColor__FFFF_V(JThreadRuntime *runtime, f32 pred, f32 pgreen, f32 pblue, f32 palpha) {
     
 
     glBlendColor((GLfloat)pred, (GLfloat)pgreen, (GLfloat)pblue, (GLfloat)palpha);
     
     
 }
-void Java_org_mini_gl_GL_glBlendEquation__I_V(JThreadRuntime *runtime, s32 pmode) {
+void func_org_mini_gl_GL_glBlendEquation__I_V(JThreadRuntime *runtime, s32 pmode) {
     
 
     glBlendEquation((GLenum)pmode);
     
     
 }
-void Java_org_mini_gl_GL_glBlendEquationSeparate__II_V(JThreadRuntime *runtime, s32 pmodeRGB, s32 pmodeAlpha) {
+void func_org_mini_gl_GL_glBlendEquationSeparate__II_V(JThreadRuntime *runtime, s32 pmodeRGB, s32 pmodeAlpha) {
     
 
     glBlendEquationSeparate((GLenum)pmodeRGB, (GLenum)pmodeAlpha);
     
     
 }
-void Java_org_mini_gl_GL_glBlendFunc__II_V(JThreadRuntime *runtime, s32 psfactor, s32 pdfactor) {
+void func_org_mini_gl_GL_glBlendFunc__II_V(JThreadRuntime *runtime, s32 psfactor, s32 pdfactor) {
     
 
     glBlendFunc((GLenum)psfactor, (GLenum)pdfactor);
     
     
 }
-void Java_org_mini_gl_GL_glBlendFuncSeparate__IIII_V(JThreadRuntime *runtime, s32 psfactorRGB, s32 pdfactorRGB, s32 psfactorAlpha, s32 pdfactorAlpha) {
+void func_org_mini_gl_GL_glBlendFuncSeparate__IIII_V(JThreadRuntime *runtime, s32 psfactorRGB, s32 pdfactorRGB, s32 psfactorAlpha, s32 pdfactorAlpha) {
     
 
     glBlendFuncSeparate((GLenum)psfactorRGB, (GLenum)pdfactorRGB, (GLenum)psfactorAlpha, (GLenum)pdfactorAlpha);
     
     
 }
-void Java_org_mini_gl_GL_glBufferData__IJLjava_lang_Object_2II_V(JThreadRuntime *runtime, s32 ptarget, s64 psize, struct java_lang_Object *pdata, s32 offset_pdata, s32 pusage) {
+void func_org_mini_gl_GL_glBufferData__IJLjava_lang_Object_2II_V(JThreadRuntime *runtime, s32 ptarget, s64 psize, struct java_lang_Object *pdata, s32 offset_pdata, s32 pusage) {
     
     __refer ptr_pdata = (__refer)(intptr_t) offset_pdata;
     if(pdata) {
@@ -110,7 +110,7 @@ void Java_org_mini_gl_GL_glBufferData__IJLjava_lang_Object_2II_V(JThreadRuntime 
     
     
 }
-void Java_org_mini_gl_GL_glBufferSubData__IJJLjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 ptarget, s64 poffset, s64 psize, struct java_lang_Object *pdata, s32 offset_pdata) {
+void func_org_mini_gl_GL_glBufferSubData__IJJLjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 ptarget, s64 poffset, s64 psize, struct java_lang_Object *pdata, s32 offset_pdata) {
     
     __refer ptr_pdata = (__refer)(intptr_t) offset_pdata;
     if(pdata) {
@@ -122,56 +122,56 @@ void Java_org_mini_gl_GL_glBufferSubData__IJJLjava_lang_Object_2I_V(JThreadRunti
     
     
 }
-s32 Java_org_mini_gl_GL_glCheckFramebufferStatus__I_I(JThreadRuntime *runtime, s32 ptarget) {
+s32 func_org_mini_gl_GL_glCheckFramebufferStatus__I_I(JThreadRuntime *runtime, s32 ptarget) {
     
 
     GLenum _re_val = glCheckFramebufferStatus((GLenum)ptarget);
     return *((s32*)&_re_val);
     
 }
-void Java_org_mini_gl_GL_glClear__I_V(JThreadRuntime *runtime, s32 pmask) {
+void func_org_mini_gl_GL_glClear__I_V(JThreadRuntime *runtime, s32 pmask) {
     
 
     glClear((GLbitfield)pmask);
     
     
 }
-void Java_org_mini_gl_GL_glClearColor__FFFF_V(JThreadRuntime *runtime, f32 pred, f32 pgreen, f32 pblue, f32 palpha) {
+void func_org_mini_gl_GL_glClearColor__FFFF_V(JThreadRuntime *runtime, f32 pred, f32 pgreen, f32 pblue, f32 palpha) {
     
 
     glClearColor((GLfloat)pred, (GLfloat)pgreen, (GLfloat)pblue, (GLfloat)palpha);
     
     
 }
-void Java_org_mini_gl_GL_glClearDepthf__F_V(JThreadRuntime *runtime, f32 pd) {
+void func_org_mini_gl_GL_glClearDepthf__F_V(JThreadRuntime *runtime, f32 pd) {
     
 
     glClearDepthf((GLfloat)pd);
     
     
 }
-void Java_org_mini_gl_GL_glClearStencil__I_V(JThreadRuntime *runtime, s32 ps) {
+void func_org_mini_gl_GL_glClearStencil__I_V(JThreadRuntime *runtime, s32 ps) {
     
 
     glClearStencil((GLint)ps);
     
     
 }
-void Java_org_mini_gl_GL_glColorMask__IIII_V(JThreadRuntime *runtime, s32 pred, s32 pgreen, s32 pblue, s32 palpha) {
+void func_org_mini_gl_GL_glColorMask__IIII_V(JThreadRuntime *runtime, s32 pred, s32 pgreen, s32 pblue, s32 palpha) {
     
 
     glColorMask((GLboolean)pred, (GLboolean)pgreen, (GLboolean)pblue, (GLboolean)palpha);
     
     
 }
-void Java_org_mini_gl_GL_glCompileShader__I_V(JThreadRuntime *runtime, s32 pshader) {
+void func_org_mini_gl_GL_glCompileShader__I_V(JThreadRuntime *runtime, s32 pshader) {
     
 
     glCompileShader((GLuint)pshader);
     
     
 }
-void Java_org_mini_gl_GL_glCompressedTexImage2D__IIIIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pinternalformat, s32 pwidth, s32 pheight, s32 pborder, s32 pimageSize, struct java_lang_Object *pdata, s32 offset_pdata) {
+void func_org_mini_gl_GL_glCompressedTexImage2D__IIIIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pinternalformat, s32 pwidth, s32 pheight, s32 pborder, s32 pimageSize, struct java_lang_Object *pdata, s32 offset_pdata) {
     
     __refer ptr_pdata = (__refer)(intptr_t) offset_pdata;
     if(pdata) {
@@ -183,7 +183,7 @@ void Java_org_mini_gl_GL_glCompressedTexImage2D__IIIIIIILjava_lang_Object_2I_V(J
     
     
 }
-void Java_org_mini_gl_GL_glCompressedTexSubImage2D__IIIIIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pxoffset, s32 pyoffset, s32 pwidth, s32 pheight, s32 pformat, s32 pimageSize, struct java_lang_Object *pdata, s32 offset_pdata) {
+void func_org_mini_gl_GL_glCompressedTexSubImage2D__IIIIIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pxoffset, s32 pyoffset, s32 pwidth, s32 pheight, s32 pformat, s32 pimageSize, struct java_lang_Object *pdata, s32 offset_pdata) {
     
     __refer ptr_pdata = (__refer)(intptr_t) offset_pdata;
     if(pdata) {
@@ -195,42 +195,42 @@ void Java_org_mini_gl_GL_glCompressedTexSubImage2D__IIIIIIIILjava_lang_Object_2I
     
     
 }
-void Java_org_mini_gl_GL_glCopyTexImage2D__IIIIIIII_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pinternalformat, s32 px, s32 py, s32 pwidth, s32 pheight, s32 pborder) {
+void func_org_mini_gl_GL_glCopyTexImage2D__IIIIIIII_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pinternalformat, s32 px, s32 py, s32 pwidth, s32 pheight, s32 pborder) {
     
 
     glCopyTexImage2D((GLenum)ptarget, (GLint)plevel, (GLenum)pinternalformat, (GLint)px, (GLint)py, (GLsizei)pwidth, (GLsizei)pheight, (GLint)pborder);
     
     
 }
-void Java_org_mini_gl_GL_glCopyTexSubImage2D__IIIIIIII_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pxoffset, s32 pyoffset, s32 px, s32 py, s32 pwidth, s32 pheight) {
+void func_org_mini_gl_GL_glCopyTexSubImage2D__IIIIIIII_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pxoffset, s32 pyoffset, s32 px, s32 py, s32 pwidth, s32 pheight) {
     
 
     glCopyTexSubImage2D((GLenum)ptarget, (GLint)plevel, (GLint)pxoffset, (GLint)pyoffset, (GLint)px, (GLint)py, (GLsizei)pwidth, (GLsizei)pheight);
     
     
 }
-s32 Java_org_mini_gl_GL_glCreateProgram___I(JThreadRuntime *runtime) {
+s32 func_org_mini_gl_GL_glCreateProgram___I(JThreadRuntime *runtime) {
     
 
     GLuint _re_val = glCreateProgram();
     return *((s32*)&_re_val);
     
 }
-s32 Java_org_mini_gl_GL_glCreateShader__I_I(JThreadRuntime *runtime, s32 ptype) {
+s32 func_org_mini_gl_GL_glCreateShader__I_I(JThreadRuntime *runtime, s32 ptype) {
     
 
     GLuint _re_val = glCreateShader((GLenum)ptype);
     return *((s32*)&_re_val);
     
 }
-void Java_org_mini_gl_GL_glCullFace__I_V(JThreadRuntime *runtime, s32 pmode) {
+void func_org_mini_gl_GL_glCullFace__I_V(JThreadRuntime *runtime, s32 pmode) {
     
 
     glCullFace((GLenum)pmode);
     
     
 }
-void Java_org_mini_gl_GL_glDeleteBuffers__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *pbuffers, s32 offset_pbuffers) {
+void func_org_mini_gl_GL_glDeleteBuffers__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *pbuffers, s32 offset_pbuffers) {
     
     __refer ptr_pbuffers = (__refer)(intptr_t) offset_pbuffers;
     if(pbuffers) {
@@ -242,7 +242,7 @@ void Java_org_mini_gl_GL_glDeleteBuffers__I_3II_V(JThreadRuntime *runtime, s32 p
     
     
 }
-void Java_org_mini_gl_GL_glDeleteFramebuffers__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *pframebuffers, s32 offset_pframebuffers) {
+void func_org_mini_gl_GL_glDeleteFramebuffers__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *pframebuffers, s32 offset_pframebuffers) {
     
     __refer ptr_pframebuffers = (__refer)(intptr_t) offset_pframebuffers;
     if(pframebuffers) {
@@ -254,14 +254,14 @@ void Java_org_mini_gl_GL_glDeleteFramebuffers__I_3II_V(JThreadRuntime *runtime, 
     
     
 }
-void Java_org_mini_gl_GL_glDeleteProgram__I_V(JThreadRuntime *runtime, s32 pprogram) {
+void func_org_mini_gl_GL_glDeleteProgram__I_V(JThreadRuntime *runtime, s32 pprogram) {
     
 
     glDeleteProgram((GLuint)pprogram);
     
     
 }
-void Java_org_mini_gl_GL_glDeleteRenderbuffers__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *prenderbuffers, s32 offset_prenderbuffers) {
+void func_org_mini_gl_GL_glDeleteRenderbuffers__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *prenderbuffers, s32 offset_prenderbuffers) {
     
     __refer ptr_prenderbuffers = (__refer)(intptr_t) offset_prenderbuffers;
     if(prenderbuffers) {
@@ -273,14 +273,14 @@ void Java_org_mini_gl_GL_glDeleteRenderbuffers__I_3II_V(JThreadRuntime *runtime,
     
     
 }
-void Java_org_mini_gl_GL_glDeleteShader__I_V(JThreadRuntime *runtime, s32 pshader) {
+void func_org_mini_gl_GL_glDeleteShader__I_V(JThreadRuntime *runtime, s32 pshader) {
     
 
     glDeleteShader((GLuint)pshader);
     
     
 }
-void Java_org_mini_gl_GL_glDeleteTextures__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *ptextures, s32 offset_ptextures) {
+void func_org_mini_gl_GL_glDeleteTextures__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *ptextures, s32 offset_ptextures) {
     
     __refer ptr_ptextures = (__refer)(intptr_t) offset_ptextures;
     if(ptextures) {
@@ -292,56 +292,56 @@ void Java_org_mini_gl_GL_glDeleteTextures__I_3II_V(JThreadRuntime *runtime, s32 
     
     
 }
-void Java_org_mini_gl_GL_glDepthFunc__I_V(JThreadRuntime *runtime, s32 pfunc) {
+void func_org_mini_gl_GL_glDepthFunc__I_V(JThreadRuntime *runtime, s32 pfunc) {
     
 
     glDepthFunc((GLenum)pfunc);
     
     
 }
-void Java_org_mini_gl_GL_glDepthMask__I_V(JThreadRuntime *runtime, s32 pflag) {
+void func_org_mini_gl_GL_glDepthMask__I_V(JThreadRuntime *runtime, s32 pflag) {
     
 
     glDepthMask((GLboolean)pflag);
     
     
 }
-void Java_org_mini_gl_GL_glDepthRangef__FF_V(JThreadRuntime *runtime, f32 pn, f32 pf) {
+void func_org_mini_gl_GL_glDepthRangef__FF_V(JThreadRuntime *runtime, f32 pn, f32 pf) {
     
 
     glDepthRangef((GLfloat)pn, (GLfloat)pf);
     
     
 }
-void Java_org_mini_gl_GL_glDetachShader__II_V(JThreadRuntime *runtime, s32 pprogram, s32 pshader) {
+void func_org_mini_gl_GL_glDetachShader__II_V(JThreadRuntime *runtime, s32 pprogram, s32 pshader) {
     
 
     glDetachShader((GLuint)pprogram, (GLuint)pshader);
     
     
 }
-void Java_org_mini_gl_GL_glDisable__I_V(JThreadRuntime *runtime, s32 pcap) {
+void func_org_mini_gl_GL_glDisable__I_V(JThreadRuntime *runtime, s32 pcap) {
     
 
     glDisable((GLenum)pcap);
     
     
 }
-void Java_org_mini_gl_GL_glDisableVertexAttribArray__I_V(JThreadRuntime *runtime, s32 pindex) {
+void func_org_mini_gl_GL_glDisableVertexAttribArray__I_V(JThreadRuntime *runtime, s32 pindex) {
     
 
     glDisableVertexAttribArray((GLuint)pindex);
     
     
 }
-void Java_org_mini_gl_GL_glDrawArrays__III_V(JThreadRuntime *runtime, s32 pmode, s32 pfirst, s32 pcount) {
+void func_org_mini_gl_GL_glDrawArrays__III_V(JThreadRuntime *runtime, s32 pmode, s32 pfirst, s32 pcount) {
     
 
     glDrawArrays((GLenum)pmode, (GLint)pfirst, (GLsizei)pcount);
     
     
 }
-void Java_org_mini_gl_GL_glDrawElements__IIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 pmode, s32 pcount, s32 ptype, struct java_lang_Object *pindices, s32 offset_pindices) {
+void func_org_mini_gl_GL_glDrawElements__IIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 pmode, s32 pcount, s32 ptype, struct java_lang_Object *pindices, s32 offset_pindices) {
     
     __refer ptr_pindices = (__refer)(intptr_t) offset_pindices;
     if(pindices) {
@@ -353,56 +353,56 @@ void Java_org_mini_gl_GL_glDrawElements__IIILjava_lang_Object_2I_V(JThreadRuntim
     
     
 }
-void Java_org_mini_gl_GL_glEnable__I_V(JThreadRuntime *runtime, s32 pcap) {
+void func_org_mini_gl_GL_glEnable__I_V(JThreadRuntime *runtime, s32 pcap) {
     
 
     glEnable((GLenum)pcap);
     
     
 }
-void Java_org_mini_gl_GL_glEnableVertexAttribArray__I_V(JThreadRuntime *runtime, s32 pindex) {
+void func_org_mini_gl_GL_glEnableVertexAttribArray__I_V(JThreadRuntime *runtime, s32 pindex) {
     
 
     glEnableVertexAttribArray((GLuint)pindex);
     
     
 }
-void Java_org_mini_gl_GL_glFinish___V(JThreadRuntime *runtime) {
+void func_org_mini_gl_GL_glFinish___V(JThreadRuntime *runtime) {
     
 
     glFinish();
     
     
 }
-void Java_org_mini_gl_GL_glFlush___V(JThreadRuntime *runtime) {
+void func_org_mini_gl_GL_glFlush___V(JThreadRuntime *runtime) {
     
 
     glFlush();
     
     
 }
-void Java_org_mini_gl_GL_glFramebufferRenderbuffer__IIII_V(JThreadRuntime *runtime, s32 ptarget, s32 pattachment, s32 prenderbuffertarget, s32 prenderbuffer) {
+void func_org_mini_gl_GL_glFramebufferRenderbuffer__IIII_V(JThreadRuntime *runtime, s32 ptarget, s32 pattachment, s32 prenderbuffertarget, s32 prenderbuffer) {
     
 
     glFramebufferRenderbuffer((GLenum)ptarget, (GLenum)pattachment, (GLenum)prenderbuffertarget, (GLuint)prenderbuffer);
     
     
 }
-void Java_org_mini_gl_GL_glFramebufferTexture2D__IIIII_V(JThreadRuntime *runtime, s32 ptarget, s32 pattachment, s32 ptextarget, s32 ptexture, s32 plevel) {
+void func_org_mini_gl_GL_glFramebufferTexture2D__IIIII_V(JThreadRuntime *runtime, s32 ptarget, s32 pattachment, s32 ptextarget, s32 ptexture, s32 plevel) {
     
 
     glFramebufferTexture2D((GLenum)ptarget, (GLenum)pattachment, (GLenum)ptextarget, (GLuint)ptexture, (GLint)plevel);
     
     
 }
-void Java_org_mini_gl_GL_glFrontFace__I_V(JThreadRuntime *runtime, s32 pmode) {
+void func_org_mini_gl_GL_glFrontFace__I_V(JThreadRuntime *runtime, s32 pmode) {
     
 
     glFrontFace((GLenum)pmode);
     
     
 }
-void Java_org_mini_gl_GL_glGenBuffers__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *pbuffers, s32 offset_pbuffers) {
+void func_org_mini_gl_GL_glGenBuffers__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *pbuffers, s32 offset_pbuffers) {
     
     __refer ptr_pbuffers = (__refer)(intptr_t) offset_pbuffers;
     if(pbuffers) {
@@ -414,14 +414,14 @@ void Java_org_mini_gl_GL_glGenBuffers__I_3II_V(JThreadRuntime *runtime, s32 pn, 
     
     
 }
-void Java_org_mini_gl_GL_glGenerateMipmap__I_V(JThreadRuntime *runtime, s32 ptarget) {
+void func_org_mini_gl_GL_glGenerateMipmap__I_V(JThreadRuntime *runtime, s32 ptarget) {
     
 
     glGenerateMipmap((GLenum)ptarget);
     
     
 }
-void Java_org_mini_gl_GL_glGenFramebuffers__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *pframebuffers, s32 offset_pframebuffers) {
+void func_org_mini_gl_GL_glGenFramebuffers__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *pframebuffers, s32 offset_pframebuffers) {
     
     __refer ptr_pframebuffers = (__refer)(intptr_t) offset_pframebuffers;
     if(pframebuffers) {
@@ -433,7 +433,7 @@ void Java_org_mini_gl_GL_glGenFramebuffers__I_3II_V(JThreadRuntime *runtime, s32
     
     
 }
-void Java_org_mini_gl_GL_glGenRenderbuffers__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *prenderbuffers, s32 offset_prenderbuffers) {
+void func_org_mini_gl_GL_glGenRenderbuffers__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *prenderbuffers, s32 offset_prenderbuffers) {
     
     __refer ptr_prenderbuffers = (__refer)(intptr_t) offset_prenderbuffers;
     if(prenderbuffers) {
@@ -445,7 +445,7 @@ void Java_org_mini_gl_GL_glGenRenderbuffers__I_3II_V(JThreadRuntime *runtime, s3
     
     
 }
-void Java_org_mini_gl_GL_glGenTextures__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *ptextures, s32 offset_ptextures) {
+void func_org_mini_gl_GL_glGenTextures__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *ptextures, s32 offset_ptextures) {
     
     __refer ptr_ptextures = (__refer)(intptr_t) offset_ptextures;
     if(ptextures) {
@@ -457,7 +457,7 @@ void Java_org_mini_gl_GL_glGenTextures__I_3II_V(JThreadRuntime *runtime, s32 pn,
     
     
 }
-void Java_org_mini_gl_GL_glGetActiveAttrib__III_3II_3II_3II_3B_V(JThreadRuntime *runtime, s32 pprogram, s32 pindex, s32 pbufSize, JArray *plength, s32 offset_plength, JArray *psize, s32 offset_psize, JArray *ptype, s32 offset_ptype, JArray *pname) {
+void func_org_mini_gl_GL_glGetActiveAttrib__III_3II_3II_3II_3B_V(JThreadRuntime *runtime, s32 pprogram, s32 pindex, s32 pbufSize, JArray *plength, s32 offset_plength, JArray *psize, s32 offset_psize, JArray *ptype, s32 offset_ptype, JArray *pname) {
     
     __refer ptr_plength = (__refer)(intptr_t) offset_plength;
     if(plength) {
@@ -484,7 +484,7 @@ void Java_org_mini_gl_GL_glGetActiveAttrib__III_3II_3II_3II_3B_V(JThreadRuntime 
     
     
 }
-void Java_org_mini_gl_GL_glGetActiveUniform__III_3II_3II_3II_3B_V(JThreadRuntime *runtime, s32 pprogram, s32 pindex, s32 pbufSize, JArray *plength, s32 offset_plength, JArray *psize, s32 offset_psize, JArray *ptype, s32 offset_ptype, JArray *pname) {
+void func_org_mini_gl_GL_glGetActiveUniform__III_3II_3II_3II_3B_V(JThreadRuntime *runtime, s32 pprogram, s32 pindex, s32 pbufSize, JArray *plength, s32 offset_plength, JArray *psize, s32 offset_psize, JArray *ptype, s32 offset_ptype, JArray *pname) {
     
     __refer ptr_plength = (__refer)(intptr_t) offset_plength;
     if(plength) {
@@ -511,7 +511,7 @@ void Java_org_mini_gl_GL_glGetActiveUniform__III_3II_3II_3II_3B_V(JThreadRuntime
     
     
 }
-void Java_org_mini_gl_GL_glGetAttachedShaders__II_3II_3II_V(JThreadRuntime *runtime, s32 pprogram, s32 pmaxCount, JArray *pcount, s32 offset_pcount, JArray *pshaders, s32 offset_pshaders) {
+void func_org_mini_gl_GL_glGetAttachedShaders__II_3II_3II_V(JThreadRuntime *runtime, s32 pprogram, s32 pmaxCount, JArray *pcount, s32 offset_pcount, JArray *pshaders, s32 offset_pshaders) {
     
     __refer ptr_pcount = (__refer)(intptr_t) offset_pcount;
     if(pcount) {
@@ -528,7 +528,7 @@ void Java_org_mini_gl_GL_glGetAttachedShaders__II_3II_3II_V(JThreadRuntime *runt
     
     
 }
-s32 Java_org_mini_gl_GL_glGetAttribLocation__I_3B_I(JThreadRuntime *runtime, s32 pprogram, JArray *pname) {
+s32 func_org_mini_gl_GL_glGetAttribLocation__I_3B_I(JThreadRuntime *runtime, s32 pprogram, JArray *pname) {
     
     s32 offset_pname = 0;    __refer ptr_pname = (__refer)(intptr_t) offset_pname;
     if(pname) {
@@ -540,7 +540,7 @@ s32 Java_org_mini_gl_GL_glGetAttribLocation__I_3B_I(JThreadRuntime *runtime, s32
     return *((s32*)&_re_val);
     
 }
-void Java_org_mini_gl_GL_glGetBooleanv__I_3II_V(JThreadRuntime *runtime, s32 ppname, JArray *pdata, s32 offset_pdata) {
+void func_org_mini_gl_GL_glGetBooleanv__I_3II_V(JThreadRuntime *runtime, s32 ppname, JArray *pdata, s32 offset_pdata) {
     
     __refer ptr_pdata = (__refer)(intptr_t) offset_pdata;
     if(pdata) {
@@ -552,7 +552,7 @@ void Java_org_mini_gl_GL_glGetBooleanv__I_3II_V(JThreadRuntime *runtime, s32 ppn
     
     
 }
-void Java_org_mini_gl_GL_glGetBufferParameteriv__II_3II_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetBufferParameteriv__II_3II_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -564,14 +564,14 @@ void Java_org_mini_gl_GL_glGetBufferParameteriv__II_3II_V(JThreadRuntime *runtim
     
     
 }
-s32 Java_org_mini_gl_GL_glGetError___I(JThreadRuntime *runtime) {
+s32 func_org_mini_gl_GL_glGetError___I(JThreadRuntime *runtime) {
     
 
     GLenum _re_val = glGetError();
     return *((s32*)&_re_val);
     
 }
-void Java_org_mini_gl_GL_glGetFloatv__I_3FI_V(JThreadRuntime *runtime, s32 ppname, JArray *pdata, s32 offset_pdata) {
+void func_org_mini_gl_GL_glGetFloatv__I_3FI_V(JThreadRuntime *runtime, s32 ppname, JArray *pdata, s32 offset_pdata) {
     
     __refer ptr_pdata = (__refer)(intptr_t) offset_pdata;
     if(pdata) {
@@ -583,7 +583,7 @@ void Java_org_mini_gl_GL_glGetFloatv__I_3FI_V(JThreadRuntime *runtime, s32 ppnam
     
     
 }
-void Java_org_mini_gl_GL_glGetFramebufferAttachmentParameteriv__III_3II_V(JThreadRuntime *runtime, s32 ptarget, s32 pattachment, s32 ppname, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetFramebufferAttachmentParameteriv__III_3II_V(JThreadRuntime *runtime, s32 ptarget, s32 pattachment, s32 ppname, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -595,7 +595,7 @@ void Java_org_mini_gl_GL_glGetFramebufferAttachmentParameteriv__III_3II_V(JThrea
     
     
 }
-void Java_org_mini_gl_GL_glGetIntegerv__I_3II_V(JThreadRuntime *runtime, s32 ppname, JArray *pdata, s32 offset_pdata) {
+void func_org_mini_gl_GL_glGetIntegerv__I_3II_V(JThreadRuntime *runtime, s32 ppname, JArray *pdata, s32 offset_pdata) {
     
     __refer ptr_pdata = (__refer)(intptr_t) offset_pdata;
     if(pdata) {
@@ -607,7 +607,7 @@ void Java_org_mini_gl_GL_glGetIntegerv__I_3II_V(JThreadRuntime *runtime, s32 ppn
     
     
 }
-void Java_org_mini_gl_GL_glGetProgramiv__II_3II_V(JThreadRuntime *runtime, s32 pprogram, s32 ppname, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetProgramiv__II_3II_V(JThreadRuntime *runtime, s32 pprogram, s32 ppname, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -619,7 +619,7 @@ void Java_org_mini_gl_GL_glGetProgramiv__II_3II_V(JThreadRuntime *runtime, s32 p
     
     
 }
-void Java_org_mini_gl_GL_glGetProgramInfoLog__II_3II_3B_V(JThreadRuntime *runtime, s32 pprogram, s32 pbufSize, JArray *plength, s32 offset_plength, JArray *pinfoLog) {
+void func_org_mini_gl_GL_glGetProgramInfoLog__II_3II_3B_V(JThreadRuntime *runtime, s32 pprogram, s32 pbufSize, JArray *plength, s32 offset_plength, JArray *pinfoLog) {
     
     __refer ptr_plength = (__refer)(intptr_t) offset_plength;
     if(plength) {
@@ -636,7 +636,7 @@ void Java_org_mini_gl_GL_glGetProgramInfoLog__II_3II_3B_V(JThreadRuntime *runtim
     
     
 }
-void Java_org_mini_gl_GL_glGetRenderbufferParameteriv__II_3II_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetRenderbufferParameteriv__II_3II_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -648,7 +648,7 @@ void Java_org_mini_gl_GL_glGetRenderbufferParameteriv__II_3II_V(JThreadRuntime *
     
     
 }
-void Java_org_mini_gl_GL_glGetShaderiv__II_3II_V(JThreadRuntime *runtime, s32 pshader, s32 ppname, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetShaderiv__II_3II_V(JThreadRuntime *runtime, s32 pshader, s32 ppname, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -660,7 +660,7 @@ void Java_org_mini_gl_GL_glGetShaderiv__II_3II_V(JThreadRuntime *runtime, s32 ps
     
     
 }
-void Java_org_mini_gl_GL_glGetShaderInfoLog__II_3II_3B_V(JThreadRuntime *runtime, s32 pshader, s32 pbufSize, JArray *plength, s32 offset_plength, JArray *pinfoLog) {
+void func_org_mini_gl_GL_glGetShaderInfoLog__II_3II_3B_V(JThreadRuntime *runtime, s32 pshader, s32 pbufSize, JArray *plength, s32 offset_plength, JArray *pinfoLog) {
     
     __refer ptr_plength = (__refer)(intptr_t) offset_plength;
     if(plength) {
@@ -677,7 +677,7 @@ void Java_org_mini_gl_GL_glGetShaderInfoLog__II_3II_3B_V(JThreadRuntime *runtime
     
     
 }
-void Java_org_mini_gl_GL_glGetShaderPrecisionFormat__II_3II_3II_V(JThreadRuntime *runtime, s32 pshadertype, s32 pprecisiontype, JArray *prange, s32 offset_prange, JArray *pprecision, s32 offset_pprecision) {
+void func_org_mini_gl_GL_glGetShaderPrecisionFormat__II_3II_3II_V(JThreadRuntime *runtime, s32 pshadertype, s32 pprecisiontype, JArray *prange, s32 offset_prange, JArray *pprecision, s32 offset_pprecision) {
     
     __refer ptr_prange = (__refer)(intptr_t) offset_prange;
     if(prange) {
@@ -694,7 +694,7 @@ void Java_org_mini_gl_GL_glGetShaderPrecisionFormat__II_3II_3II_V(JThreadRuntime
     
     
 }
-void Java_org_mini_gl_GL_glGetShaderSource__II_3II_3B_V(JThreadRuntime *runtime, s32 pshader, s32 pbufSize, JArray *plength, s32 offset_plength, JArray *psource) {
+void func_org_mini_gl_GL_glGetShaderSource__II_3II_3B_V(JThreadRuntime *runtime, s32 pshader, s32 pbufSize, JArray *plength, s32 offset_plength, JArray *psource) {
     
     __refer ptr_plength = (__refer)(intptr_t) offset_plength;
     if(plength) {
@@ -711,7 +711,7 @@ void Java_org_mini_gl_GL_glGetShaderSource__II_3II_3B_V(JThreadRuntime *runtime,
     
     
 }
-JArray * Java_org_mini_gl_GL_glGetString__I__3B(JThreadRuntime *runtime, s32 pname) {
+JArray * func_org_mini_gl_GL_glGetString__I__3B(JThreadRuntime *runtime, s32 pname) {
     
 
     const GLubyte* _re_val = glGetString((GLenum)pname);
@@ -727,7 +727,7 @@ JArray * Java_org_mini_gl_GL_glGetString__I__3B(JThreadRuntime *runtime, s32 pna
     }
     
 }
-void Java_org_mini_gl_GL_glGetTexParameterfv__II_3FI_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetTexParameterfv__II_3FI_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -739,7 +739,7 @@ void Java_org_mini_gl_GL_glGetTexParameterfv__II_3FI_V(JThreadRuntime *runtime, 
     
     
 }
-void Java_org_mini_gl_GL_glGetTexParameteriv__II_3II_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetTexParameteriv__II_3II_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -751,7 +751,7 @@ void Java_org_mini_gl_GL_glGetTexParameteriv__II_3II_V(JThreadRuntime *runtime, 
     
     
 }
-void Java_org_mini_gl_GL_glGetUniformfv__II_3FI_V(JThreadRuntime *runtime, s32 pprogram, s32 plocation, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetUniformfv__II_3FI_V(JThreadRuntime *runtime, s32 pprogram, s32 plocation, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -763,7 +763,7 @@ void Java_org_mini_gl_GL_glGetUniformfv__II_3FI_V(JThreadRuntime *runtime, s32 p
     
     
 }
-void Java_org_mini_gl_GL_glGetUniformiv__II_3II_V(JThreadRuntime *runtime, s32 pprogram, s32 plocation, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetUniformiv__II_3II_V(JThreadRuntime *runtime, s32 pprogram, s32 plocation, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -775,7 +775,7 @@ void Java_org_mini_gl_GL_glGetUniformiv__II_3II_V(JThreadRuntime *runtime, s32 p
     
     
 }
-s32 Java_org_mini_gl_GL_glGetUniformLocation__I_3B_I(JThreadRuntime *runtime, s32 pprogram, JArray *pname) {
+s32 func_org_mini_gl_GL_glGetUniformLocation__I_3B_I(JThreadRuntime *runtime, s32 pprogram, JArray *pname) {
     
     s32 offset_pname = 0;    __refer ptr_pname = (__refer)(intptr_t) offset_pname;
     if(pname) {
@@ -787,7 +787,7 @@ s32 Java_org_mini_gl_GL_glGetUniformLocation__I_3B_I(JThreadRuntime *runtime, s3
     return *((s32*)&_re_val);
     
 }
-void Java_org_mini_gl_GL_glGetVertexAttribfv__II_3FI_V(JThreadRuntime *runtime, s32 pindex, s32 ppname, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetVertexAttribfv__II_3FI_V(JThreadRuntime *runtime, s32 pindex, s32 ppname, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -799,7 +799,7 @@ void Java_org_mini_gl_GL_glGetVertexAttribfv__II_3FI_V(JThreadRuntime *runtime, 
     
     
 }
-void Java_org_mini_gl_GL_glGetVertexAttribiv__II_3II_V(JThreadRuntime *runtime, s32 pindex, s32 ppname, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetVertexAttribiv__II_3II_V(JThreadRuntime *runtime, s32 pindex, s32 ppname, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -811,98 +811,98 @@ void Java_org_mini_gl_GL_glGetVertexAttribiv__II_3II_V(JThreadRuntime *runtime, 
     
     
 }
-void Java_org_mini_gl_GL_glGetVertexAttribPointerv__II_3Ljava_lang_Object_2_V(JThreadRuntime *runtime, s32 pindex, s32 ppname, JArray *ppointer) {
+void func_org_mini_gl_GL_glGetVertexAttribPointerv__II_3Ljava_lang_Object_2_V(JThreadRuntime *runtime, s32 pindex, s32 ppname, JArray *ppointer) {
     
 
     glGetVertexAttribPointerv((GLuint)pindex, (GLenum)ppname, (void**)(ppointer->prop.as_obj_arr));
     
     
 }
-void Java_org_mini_gl_GL_glHint__II_V(JThreadRuntime *runtime, s32 ptarget, s32 pmode) {
+void func_org_mini_gl_GL_glHint__II_V(JThreadRuntime *runtime, s32 ptarget, s32 pmode) {
     
 
     glHint((GLenum)ptarget, (GLenum)pmode);
     
     
 }
-s32 Java_org_mini_gl_GL_glIsBuffer__I_I(JThreadRuntime *runtime, s32 pbuffer) {
+s32 func_org_mini_gl_GL_glIsBuffer__I_I(JThreadRuntime *runtime, s32 pbuffer) {
     
 
     GLboolean _re_val = glIsBuffer((GLuint)pbuffer);
     return *((s32*)&_re_val);
     
 }
-s32 Java_org_mini_gl_GL_glIsEnabled__I_I(JThreadRuntime *runtime, s32 pcap) {
+s32 func_org_mini_gl_GL_glIsEnabled__I_I(JThreadRuntime *runtime, s32 pcap) {
     
 
     GLboolean _re_val = glIsEnabled((GLenum)pcap);
     return *((s32*)&_re_val);
     
 }
-s32 Java_org_mini_gl_GL_glIsFramebuffer__I_I(JThreadRuntime *runtime, s32 pframebuffer) {
+s32 func_org_mini_gl_GL_glIsFramebuffer__I_I(JThreadRuntime *runtime, s32 pframebuffer) {
     
 
     GLboolean _re_val = glIsFramebuffer((GLuint)pframebuffer);
     return *((s32*)&_re_val);
     
 }
-s32 Java_org_mini_gl_GL_glIsProgram__I_I(JThreadRuntime *runtime, s32 pprogram) {
+s32 func_org_mini_gl_GL_glIsProgram__I_I(JThreadRuntime *runtime, s32 pprogram) {
     
 
     GLboolean _re_val = glIsProgram((GLuint)pprogram);
     return *((s32*)&_re_val);
     
 }
-s32 Java_org_mini_gl_GL_glIsRenderbuffer__I_I(JThreadRuntime *runtime, s32 prenderbuffer) {
+s32 func_org_mini_gl_GL_glIsRenderbuffer__I_I(JThreadRuntime *runtime, s32 prenderbuffer) {
     
 
     GLboolean _re_val = glIsRenderbuffer((GLuint)prenderbuffer);
     return *((s32*)&_re_val);
     
 }
-s32 Java_org_mini_gl_GL_glIsShader__I_I(JThreadRuntime *runtime, s32 pshader) {
+s32 func_org_mini_gl_GL_glIsShader__I_I(JThreadRuntime *runtime, s32 pshader) {
     
 
     GLboolean _re_val = glIsShader((GLuint)pshader);
     return *((s32*)&_re_val);
     
 }
-s32 Java_org_mini_gl_GL_glIsTexture__I_I(JThreadRuntime *runtime, s32 ptexture) {
+s32 func_org_mini_gl_GL_glIsTexture__I_I(JThreadRuntime *runtime, s32 ptexture) {
     
 
     GLboolean _re_val = glIsTexture((GLuint)ptexture);
     return *((s32*)&_re_val);
     
 }
-void Java_org_mini_gl_GL_glLineWidth__F_V(JThreadRuntime *runtime, f32 pwidth) {
+void func_org_mini_gl_GL_glLineWidth__F_V(JThreadRuntime *runtime, f32 pwidth) {
     
 
     glLineWidth((GLfloat)pwidth);
     
     
 }
-void Java_org_mini_gl_GL_glLinkProgram__I_V(JThreadRuntime *runtime, s32 pprogram) {
+void func_org_mini_gl_GL_glLinkProgram__I_V(JThreadRuntime *runtime, s32 pprogram) {
     
 
     glLinkProgram((GLuint)pprogram);
     
     
 }
-void Java_org_mini_gl_GL_glPixelStorei__II_V(JThreadRuntime *runtime, s32 ppname, s32 pparam) {
+void func_org_mini_gl_GL_glPixelStorei__II_V(JThreadRuntime *runtime, s32 ppname, s32 pparam) {
     
 
     glPixelStorei((GLenum)ppname, (GLint)pparam);
     
     
 }
-void Java_org_mini_gl_GL_glPolygonOffset__FF_V(JThreadRuntime *runtime, f32 pfactor, f32 punits) {
+void func_org_mini_gl_GL_glPolygonOffset__FF_V(JThreadRuntime *runtime, f32 pfactor, f32 punits) {
     
 
     glPolygonOffset((GLfloat)pfactor, (GLfloat)punits);
     
     
 }
-void Java_org_mini_gl_GL_glReadPixels__IIIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 px, s32 py, s32 pwidth, s32 pheight, s32 pformat, s32 ptype, struct java_lang_Object *ppixels, s32 offset_ppixels) {
+void func_org_mini_gl_GL_glReadPixels__IIIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 px, s32 py, s32 pwidth, s32 pheight, s32 pformat, s32 ptype, struct java_lang_Object *ppixels, s32 offset_ppixels) {
     
     __refer ptr_ppixels = (__refer)(intptr_t) offset_ppixels;
     if(ppixels) {
@@ -914,35 +914,35 @@ void Java_org_mini_gl_GL_glReadPixels__IIIIIILjava_lang_Object_2I_V(JThreadRunti
     
     
 }
-void Java_org_mini_gl_GL_glReleaseShaderCompiler___V(JThreadRuntime *runtime) {
+void func_org_mini_gl_GL_glReleaseShaderCompiler___V(JThreadRuntime *runtime) {
     
 
     glReleaseShaderCompiler();
     
     
 }
-void Java_org_mini_gl_GL_glRenderbufferStorage__IIII_V(JThreadRuntime *runtime, s32 ptarget, s32 pinternalformat, s32 pwidth, s32 pheight) {
+void func_org_mini_gl_GL_glRenderbufferStorage__IIII_V(JThreadRuntime *runtime, s32 ptarget, s32 pinternalformat, s32 pwidth, s32 pheight) {
     
 
     glRenderbufferStorage((GLenum)ptarget, (GLenum)pinternalformat, (GLsizei)pwidth, (GLsizei)pheight);
     
     
 }
-void Java_org_mini_gl_GL_glSampleCoverage__FI_V(JThreadRuntime *runtime, f32 pvalue, s32 pinvert) {
+void func_org_mini_gl_GL_glSampleCoverage__FI_V(JThreadRuntime *runtime, f32 pvalue, s32 pinvert) {
     
 
     glSampleCoverage((GLfloat)pvalue, (GLboolean)pinvert);
     
     
 }
-void Java_org_mini_gl_GL_glScissor__IIII_V(JThreadRuntime *runtime, s32 px, s32 py, s32 pwidth, s32 pheight) {
+void func_org_mini_gl_GL_glScissor__IIII_V(JThreadRuntime *runtime, s32 px, s32 py, s32 pwidth, s32 pheight) {
     
 
     glScissor((GLint)px, (GLint)py, (GLsizei)pwidth, (GLsizei)pheight);
     
     
 }
-void Java_org_mini_gl_GL_glShaderBinary__I_3IIILjava_lang_Object_2II_V(JThreadRuntime *runtime, s32 pcount, JArray *pshaders, s32 offset_pshaders, s32 pbinaryformat, struct java_lang_Object *pbinary, s32 offset_pbinary, s32 plength) {
+void func_org_mini_gl_GL_glShaderBinary__I_3IIILjava_lang_Object_2II_V(JThreadRuntime *runtime, s32 pcount, JArray *pshaders, s32 offset_pshaders, s32 pbinaryformat, struct java_lang_Object *pbinary, s32 offset_pbinary, s32 plength) {
     
     __refer ptr_pshaders = (__refer)(intptr_t) offset_pshaders;
     if(pshaders) {
@@ -959,7 +959,7 @@ void Java_org_mini_gl_GL_glShaderBinary__I_3IIILjava_lang_Object_2II_V(JThreadRu
     
     
 }
-void Java_org_mini_gl_GL_glShaderSource__II_3_3B_3II_V(JThreadRuntime *runtime, s32 pshader, s32 pcount, JArray *pstring, JArray *plength, s32 offset_plength) {
+void func_org_mini_gl_GL_glShaderSource__II_3_3B_3II_V(JThreadRuntime *runtime, s32 pshader, s32 pcount, JArray *pstring, JArray *plength, s32 offset_plength) {
     
     __refer ptr_pstring[pstring->prop.arr_length];
     s32 i;for(i=0;i<pstring->prop.arr_length;i++){
@@ -976,49 +976,49 @@ void Java_org_mini_gl_GL_glShaderSource__II_3_3B_3II_V(JThreadRuntime *runtime, 
     
     
 }
-void Java_org_mini_gl_GL_glStencilFunc__III_V(JThreadRuntime *runtime, s32 pfunc, s32 pref, s32 pmask) {
+void func_org_mini_gl_GL_glStencilFunc__III_V(JThreadRuntime *runtime, s32 pfunc, s32 pref, s32 pmask) {
     
 
     glStencilFunc((GLenum)pfunc, (GLint)pref, (GLuint)pmask);
     
     
 }
-void Java_org_mini_gl_GL_glStencilFuncSeparate__IIII_V(JThreadRuntime *runtime, s32 pface, s32 pfunc, s32 pref, s32 pmask) {
+void func_org_mini_gl_GL_glStencilFuncSeparate__IIII_V(JThreadRuntime *runtime, s32 pface, s32 pfunc, s32 pref, s32 pmask) {
     
 
     glStencilFuncSeparate((GLenum)pface, (GLenum)pfunc, (GLint)pref, (GLuint)pmask);
     
     
 }
-void Java_org_mini_gl_GL_glStencilMask__I_V(JThreadRuntime *runtime, s32 pmask) {
+void func_org_mini_gl_GL_glStencilMask__I_V(JThreadRuntime *runtime, s32 pmask) {
     
 
     glStencilMask((GLuint)pmask);
     
     
 }
-void Java_org_mini_gl_GL_glStencilMaskSeparate__II_V(JThreadRuntime *runtime, s32 pface, s32 pmask) {
+void func_org_mini_gl_GL_glStencilMaskSeparate__II_V(JThreadRuntime *runtime, s32 pface, s32 pmask) {
     
 
     glStencilMaskSeparate((GLenum)pface, (GLuint)pmask);
     
     
 }
-void Java_org_mini_gl_GL_glStencilOp__III_V(JThreadRuntime *runtime, s32 pfail, s32 pzfail, s32 pzpass) {
+void func_org_mini_gl_GL_glStencilOp__III_V(JThreadRuntime *runtime, s32 pfail, s32 pzfail, s32 pzpass) {
     
 
     glStencilOp((GLenum)pfail, (GLenum)pzfail, (GLenum)pzpass);
     
     
 }
-void Java_org_mini_gl_GL_glStencilOpSeparate__IIII_V(JThreadRuntime *runtime, s32 pface, s32 psfail, s32 pdpfail, s32 pdppass) {
+void func_org_mini_gl_GL_glStencilOpSeparate__IIII_V(JThreadRuntime *runtime, s32 pface, s32 psfail, s32 pdpfail, s32 pdppass) {
     
 
     glStencilOpSeparate((GLenum)pface, (GLenum)psfail, (GLenum)pdpfail, (GLenum)pdppass);
     
     
 }
-void Java_org_mini_gl_GL_glTexImage2D__IIIIIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pinternalformat, s32 pwidth, s32 pheight, s32 pborder, s32 pformat, s32 ptype, struct java_lang_Object *ppixels, s32 offset_ppixels) {
+void func_org_mini_gl_GL_glTexImage2D__IIIIIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pinternalformat, s32 pwidth, s32 pheight, s32 pborder, s32 pformat, s32 ptype, struct java_lang_Object *ppixels, s32 offset_ppixels) {
     
     __refer ptr_ppixels = (__refer)(intptr_t) offset_ppixels;
     if(ppixels) {
@@ -1030,14 +1030,14 @@ void Java_org_mini_gl_GL_glTexImage2D__IIIIIIIILjava_lang_Object_2I_V(JThreadRun
     
     
 }
-void Java_org_mini_gl_GL_glTexParameterf__IIF_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, f32 pparam) {
+void func_org_mini_gl_GL_glTexParameterf__IIF_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, f32 pparam) {
     
 
     glTexParameterf((GLenum)ptarget, (GLenum)ppname, (GLfloat)pparam);
     
     
 }
-void Java_org_mini_gl_GL_glTexParameterfv__II_3FI_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glTexParameterfv__II_3FI_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -1049,14 +1049,14 @@ void Java_org_mini_gl_GL_glTexParameterfv__II_3FI_V(JThreadRuntime *runtime, s32
     
     
 }
-void Java_org_mini_gl_GL_glTexParameteri__III_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, s32 pparam) {
+void func_org_mini_gl_GL_glTexParameteri__III_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, s32 pparam) {
     
 
     glTexParameteri((GLenum)ptarget, (GLenum)ppname, (GLint)pparam);
     
     
 }
-void Java_org_mini_gl_GL_glTexParameteriv__II_3II_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glTexParameteriv__II_3II_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -1068,7 +1068,7 @@ void Java_org_mini_gl_GL_glTexParameteriv__II_3II_V(JThreadRuntime *runtime, s32
     
     
 }
-void Java_org_mini_gl_GL_glTexSubImage2D__IIIIIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pxoffset, s32 pyoffset, s32 pwidth, s32 pheight, s32 pformat, s32 ptype, struct java_lang_Object *ppixels, s32 offset_ppixels) {
+void func_org_mini_gl_GL_glTexSubImage2D__IIIIIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pxoffset, s32 pyoffset, s32 pwidth, s32 pheight, s32 pformat, s32 ptype, struct java_lang_Object *ppixels, s32 offset_ppixels) {
     
     __refer ptr_ppixels = (__refer)(intptr_t) offset_ppixels;
     if(ppixels) {
@@ -1080,14 +1080,14 @@ void Java_org_mini_gl_GL_glTexSubImage2D__IIIIIIIILjava_lang_Object_2I_V(JThread
     
     
 }
-void Java_org_mini_gl_GL_glUniform1f__IF_V(JThreadRuntime *runtime, s32 plocation, f32 pv0) {
+void func_org_mini_gl_GL_glUniform1f__IF_V(JThreadRuntime *runtime, s32 plocation, f32 pv0) {
     
 
     glUniform1f((GLint)plocation, (GLfloat)pv0);
     
     
 }
-void Java_org_mini_gl_GL_glUniform1fv__II_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniform1fv__II_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1099,14 +1099,14 @@ void Java_org_mini_gl_GL_glUniform1fv__II_3FI_V(JThreadRuntime *runtime, s32 plo
     
     
 }
-void Java_org_mini_gl_GL_glUniform1i__II_V(JThreadRuntime *runtime, s32 plocation, s32 pv0) {
+void func_org_mini_gl_GL_glUniform1i__II_V(JThreadRuntime *runtime, s32 plocation, s32 pv0) {
     
 
     glUniform1i((GLint)plocation, (GLint)pv0);
     
     
 }
-void Java_org_mini_gl_GL_glUniform1iv__II_3II_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniform1iv__II_3II_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1118,14 +1118,14 @@ void Java_org_mini_gl_GL_glUniform1iv__II_3II_V(JThreadRuntime *runtime, s32 plo
     
     
 }
-void Java_org_mini_gl_GL_glUniform2f__IFF_V(JThreadRuntime *runtime, s32 plocation, f32 pv0, f32 pv1) {
+void func_org_mini_gl_GL_glUniform2f__IFF_V(JThreadRuntime *runtime, s32 plocation, f32 pv0, f32 pv1) {
     
 
     glUniform2f((GLint)plocation, (GLfloat)pv0, (GLfloat)pv1);
     
     
 }
-void Java_org_mini_gl_GL_glUniform2fv__II_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniform2fv__II_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1137,14 +1137,14 @@ void Java_org_mini_gl_GL_glUniform2fv__II_3FI_V(JThreadRuntime *runtime, s32 plo
     
     
 }
-void Java_org_mini_gl_GL_glUniform2i__III_V(JThreadRuntime *runtime, s32 plocation, s32 pv0, s32 pv1) {
+void func_org_mini_gl_GL_glUniform2i__III_V(JThreadRuntime *runtime, s32 plocation, s32 pv0, s32 pv1) {
     
 
     glUniform2i((GLint)plocation, (GLint)pv0, (GLint)pv1);
     
     
 }
-void Java_org_mini_gl_GL_glUniform2iv__II_3II_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniform2iv__II_3II_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1156,14 +1156,14 @@ void Java_org_mini_gl_GL_glUniform2iv__II_3II_V(JThreadRuntime *runtime, s32 plo
     
     
 }
-void Java_org_mini_gl_GL_glUniform3f__IFFF_V(JThreadRuntime *runtime, s32 plocation, f32 pv0, f32 pv1, f32 pv2) {
+void func_org_mini_gl_GL_glUniform3f__IFFF_V(JThreadRuntime *runtime, s32 plocation, f32 pv0, f32 pv1, f32 pv2) {
     
 
     glUniform3f((GLint)plocation, (GLfloat)pv0, (GLfloat)pv1, (GLfloat)pv2);
     
     
 }
-void Java_org_mini_gl_GL_glUniform3fv__II_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniform3fv__II_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1175,14 +1175,14 @@ void Java_org_mini_gl_GL_glUniform3fv__II_3FI_V(JThreadRuntime *runtime, s32 plo
     
     
 }
-void Java_org_mini_gl_GL_glUniform3i__IIII_V(JThreadRuntime *runtime, s32 plocation, s32 pv0, s32 pv1, s32 pv2) {
+void func_org_mini_gl_GL_glUniform3i__IIII_V(JThreadRuntime *runtime, s32 plocation, s32 pv0, s32 pv1, s32 pv2) {
     
 
     glUniform3i((GLint)plocation, (GLint)pv0, (GLint)pv1, (GLint)pv2);
     
     
 }
-void Java_org_mini_gl_GL_glUniform3iv__II_3II_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniform3iv__II_3II_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1194,14 +1194,14 @@ void Java_org_mini_gl_GL_glUniform3iv__II_3II_V(JThreadRuntime *runtime, s32 plo
     
     
 }
-void Java_org_mini_gl_GL_glUniform4f__IFFFF_V(JThreadRuntime *runtime, s32 plocation, f32 pv0, f32 pv1, f32 pv2, f32 pv3) {
+void func_org_mini_gl_GL_glUniform4f__IFFFF_V(JThreadRuntime *runtime, s32 plocation, f32 pv0, f32 pv1, f32 pv2, f32 pv3) {
     
 
     glUniform4f((GLint)plocation, (GLfloat)pv0, (GLfloat)pv1, (GLfloat)pv2, (GLfloat)pv3);
     
     
 }
-void Java_org_mini_gl_GL_glUniform4fv__II_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniform4fv__II_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1213,14 +1213,14 @@ void Java_org_mini_gl_GL_glUniform4fv__II_3FI_V(JThreadRuntime *runtime, s32 plo
     
     
 }
-void Java_org_mini_gl_GL_glUniform4i__IIIII_V(JThreadRuntime *runtime, s32 plocation, s32 pv0, s32 pv1, s32 pv2, s32 pv3) {
+void func_org_mini_gl_GL_glUniform4i__IIIII_V(JThreadRuntime *runtime, s32 plocation, s32 pv0, s32 pv1, s32 pv2, s32 pv3) {
     
 
     glUniform4i((GLint)plocation, (GLint)pv0, (GLint)pv1, (GLint)pv2, (GLint)pv3);
     
     
 }
-void Java_org_mini_gl_GL_glUniform4iv__II_3II_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniform4iv__II_3II_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1232,7 +1232,7 @@ void Java_org_mini_gl_GL_glUniform4iv__II_3II_V(JThreadRuntime *runtime, s32 plo
     
     
 }
-void Java_org_mini_gl_GL_glUniformMatrix2fv__III_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, s32 ptranspose, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniformMatrix2fv__III_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, s32 ptranspose, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1244,7 +1244,7 @@ void Java_org_mini_gl_GL_glUniformMatrix2fv__III_3FI_V(JThreadRuntime *runtime, 
     
     
 }
-void Java_org_mini_gl_GL_glUniformMatrix3fv__III_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, s32 ptranspose, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniformMatrix3fv__III_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, s32 ptranspose, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1256,7 +1256,7 @@ void Java_org_mini_gl_GL_glUniformMatrix3fv__III_3FI_V(JThreadRuntime *runtime, 
     
     
 }
-void Java_org_mini_gl_GL_glUniformMatrix4fv__III_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, s32 ptranspose, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniformMatrix4fv__III_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, s32 ptranspose, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1268,28 +1268,28 @@ void Java_org_mini_gl_GL_glUniformMatrix4fv__III_3FI_V(JThreadRuntime *runtime, 
     
     
 }
-void Java_org_mini_gl_GL_glUseProgram__I_V(JThreadRuntime *runtime, s32 pprogram) {
+void func_org_mini_gl_GL_glUseProgram__I_V(JThreadRuntime *runtime, s32 pprogram) {
     
 
     glUseProgram((GLuint)pprogram);
     
     
 }
-void Java_org_mini_gl_GL_glValidateProgram__I_V(JThreadRuntime *runtime, s32 pprogram) {
+void func_org_mini_gl_GL_glValidateProgram__I_V(JThreadRuntime *runtime, s32 pprogram) {
     
 
     glValidateProgram((GLuint)pprogram);
     
     
 }
-void Java_org_mini_gl_GL_glVertexAttrib1f__IF_V(JThreadRuntime *runtime, s32 pindex, f32 px) {
+void func_org_mini_gl_GL_glVertexAttrib1f__IF_V(JThreadRuntime *runtime, s32 pindex, f32 px) {
     
 
     glVertexAttrib1f((GLuint)pindex, (GLfloat)px);
     
     
 }
-void Java_org_mini_gl_GL_glVertexAttrib1fv__I_3FI_V(JThreadRuntime *runtime, s32 pindex, JArray *pv, s32 offset_pv) {
+void func_org_mini_gl_GL_glVertexAttrib1fv__I_3FI_V(JThreadRuntime *runtime, s32 pindex, JArray *pv, s32 offset_pv) {
     
     __refer ptr_pv = (__refer)(intptr_t) offset_pv;
     if(pv) {
@@ -1301,14 +1301,14 @@ void Java_org_mini_gl_GL_glVertexAttrib1fv__I_3FI_V(JThreadRuntime *runtime, s32
     
     
 }
-void Java_org_mini_gl_GL_glVertexAttrib2f__IFF_V(JThreadRuntime *runtime, s32 pindex, f32 px, f32 py) {
+void func_org_mini_gl_GL_glVertexAttrib2f__IFF_V(JThreadRuntime *runtime, s32 pindex, f32 px, f32 py) {
     
 
     glVertexAttrib2f((GLuint)pindex, (GLfloat)px, (GLfloat)py);
     
     
 }
-void Java_org_mini_gl_GL_glVertexAttrib2fv__I_3FI_V(JThreadRuntime *runtime, s32 pindex, JArray *pv, s32 offset_pv) {
+void func_org_mini_gl_GL_glVertexAttrib2fv__I_3FI_V(JThreadRuntime *runtime, s32 pindex, JArray *pv, s32 offset_pv) {
     
     __refer ptr_pv = (__refer)(intptr_t) offset_pv;
     if(pv) {
@@ -1320,14 +1320,14 @@ void Java_org_mini_gl_GL_glVertexAttrib2fv__I_3FI_V(JThreadRuntime *runtime, s32
     
     
 }
-void Java_org_mini_gl_GL_glVertexAttrib3f__IFFF_V(JThreadRuntime *runtime, s32 pindex, f32 px, f32 py, f32 pz) {
+void func_org_mini_gl_GL_glVertexAttrib3f__IFFF_V(JThreadRuntime *runtime, s32 pindex, f32 px, f32 py, f32 pz) {
     
 
     glVertexAttrib3f((GLuint)pindex, (GLfloat)px, (GLfloat)py, (GLfloat)pz);
     
     
 }
-void Java_org_mini_gl_GL_glVertexAttrib3fv__I_3FI_V(JThreadRuntime *runtime, s32 pindex, JArray *pv, s32 offset_pv) {
+void func_org_mini_gl_GL_glVertexAttrib3fv__I_3FI_V(JThreadRuntime *runtime, s32 pindex, JArray *pv, s32 offset_pv) {
     
     __refer ptr_pv = (__refer)(intptr_t) offset_pv;
     if(pv) {
@@ -1339,14 +1339,14 @@ void Java_org_mini_gl_GL_glVertexAttrib3fv__I_3FI_V(JThreadRuntime *runtime, s32
     
     
 }
-void Java_org_mini_gl_GL_glVertexAttrib4f__IFFFF_V(JThreadRuntime *runtime, s32 pindex, f32 px, f32 py, f32 pz, f32 pw) {
+void func_org_mini_gl_GL_glVertexAttrib4f__IFFFF_V(JThreadRuntime *runtime, s32 pindex, f32 px, f32 py, f32 pz, f32 pw) {
     
 
     glVertexAttrib4f((GLuint)pindex, (GLfloat)px, (GLfloat)py, (GLfloat)pz, (GLfloat)pw);
     
     
 }
-void Java_org_mini_gl_GL_glVertexAttrib4fv__I_3FI_V(JThreadRuntime *runtime, s32 pindex, JArray *pv, s32 offset_pv) {
+void func_org_mini_gl_GL_glVertexAttrib4fv__I_3FI_V(JThreadRuntime *runtime, s32 pindex, JArray *pv, s32 offset_pv) {
     
     __refer ptr_pv = (__refer)(intptr_t) offset_pv;
     if(pv) {
@@ -1358,7 +1358,7 @@ void Java_org_mini_gl_GL_glVertexAttrib4fv__I_3FI_V(JThreadRuntime *runtime, s32
     
     
 }
-void Java_org_mini_gl_GL_glVertexAttribPointer__IIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 pindex, s32 psize, s32 ptype, s32 pnormalized, s32 pstride, struct java_lang_Object *ppointer, s32 offset_ppointer) {
+void func_org_mini_gl_GL_glVertexAttribPointer__IIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 pindex, s32 psize, s32 ptype, s32 pnormalized, s32 pstride, struct java_lang_Object *ppointer, s32 offset_ppointer) {
     
     __refer ptr_ppointer = (__refer)(intptr_t) offset_ppointer;
     if(ppointer) {
@@ -1370,21 +1370,21 @@ void Java_org_mini_gl_GL_glVertexAttribPointer__IIIIILjava_lang_Object_2I_V(JThr
     
     
 }
-void Java_org_mini_gl_GL_glViewport__IIII_V(JThreadRuntime *runtime, s32 px, s32 py, s32 pwidth, s32 pheight) {
+void func_org_mini_gl_GL_glViewport__IIII_V(JThreadRuntime *runtime, s32 px, s32 py, s32 pwidth, s32 pheight) {
     
 
     glViewport((GLint)px, (GLint)py, (GLsizei)pwidth, (GLsizei)pheight);
     
     
 }
-void Java_org_mini_gl_GL_glReadBuffer__I_V(JThreadRuntime *runtime, s32 psrc) {
+void func_org_mini_gl_GL_glReadBuffer__I_V(JThreadRuntime *runtime, s32 psrc) {
     
 
     glReadBuffer((GLenum)psrc);
     
     
 }
-void Java_org_mini_gl_GL_glDrawRangeElements__IIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 pmode, s32 pstart, s32 pend, s32 pcount, s32 ptype, struct java_lang_Object *pindices, s32 offset_pindices) {
+void func_org_mini_gl_GL_glDrawRangeElements__IIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 pmode, s32 pstart, s32 pend, s32 pcount, s32 ptype, struct java_lang_Object *pindices, s32 offset_pindices) {
     
     __refer ptr_pindices = (__refer)(intptr_t) offset_pindices;
     if(pindices) {
@@ -1396,7 +1396,7 @@ void Java_org_mini_gl_GL_glDrawRangeElements__IIIIILjava_lang_Object_2I_V(JThrea
     
     
 }
-void Java_org_mini_gl_GL_glTexImage3D__IIIIIIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pinternalformat, s32 pwidth, s32 pheight, s32 pdepth, s32 pborder, s32 pformat, s32 ptype, struct java_lang_Object *ppixels, s32 offset_ppixels) {
+void func_org_mini_gl_GL_glTexImage3D__IIIIIIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pinternalformat, s32 pwidth, s32 pheight, s32 pdepth, s32 pborder, s32 pformat, s32 ptype, struct java_lang_Object *ppixels, s32 offset_ppixels) {
     
     __refer ptr_ppixels = (__refer)(intptr_t) offset_ppixels;
     if(ppixels) {
@@ -1408,7 +1408,7 @@ void Java_org_mini_gl_GL_glTexImage3D__IIIIIIIIILjava_lang_Object_2I_V(JThreadRu
     
     
 }
-void Java_org_mini_gl_GL_glTexSubImage3D__IIIIIIIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pxoffset, s32 pyoffset, s32 pzoffset, s32 pwidth, s32 pheight, s32 pdepth, s32 pformat, s32 ptype, struct java_lang_Object *ppixels, s32 offset_ppixels) {
+void func_org_mini_gl_GL_glTexSubImage3D__IIIIIIIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pxoffset, s32 pyoffset, s32 pzoffset, s32 pwidth, s32 pheight, s32 pdepth, s32 pformat, s32 ptype, struct java_lang_Object *ppixels, s32 offset_ppixels) {
     
     __refer ptr_ppixels = (__refer)(intptr_t) offset_ppixels;
     if(ppixels) {
@@ -1420,14 +1420,14 @@ void Java_org_mini_gl_GL_glTexSubImage3D__IIIIIIIIIILjava_lang_Object_2I_V(JThre
     
     
 }
-void Java_org_mini_gl_GL_glCopyTexSubImage3D__IIIIIIIII_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pxoffset, s32 pyoffset, s32 pzoffset, s32 px, s32 py, s32 pwidth, s32 pheight) {
+void func_org_mini_gl_GL_glCopyTexSubImage3D__IIIIIIIII_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pxoffset, s32 pyoffset, s32 pzoffset, s32 px, s32 py, s32 pwidth, s32 pheight) {
     
 
     glCopyTexSubImage3D((GLenum)ptarget, (GLint)plevel, (GLint)pxoffset, (GLint)pyoffset, (GLint)pzoffset, (GLint)px, (GLint)py, (GLsizei)pwidth, (GLsizei)pheight);
     
     
 }
-void Java_org_mini_gl_GL_glCompressedTexImage3D__IIIIIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pinternalformat, s32 pwidth, s32 pheight, s32 pdepth, s32 pborder, s32 pimageSize, struct java_lang_Object *pdata, s32 offset_pdata) {
+void func_org_mini_gl_GL_glCompressedTexImage3D__IIIIIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pinternalformat, s32 pwidth, s32 pheight, s32 pdepth, s32 pborder, s32 pimageSize, struct java_lang_Object *pdata, s32 offset_pdata) {
     
     __refer ptr_pdata = (__refer)(intptr_t) offset_pdata;
     if(pdata) {
@@ -1439,7 +1439,7 @@ void Java_org_mini_gl_GL_glCompressedTexImage3D__IIIIIIIILjava_lang_Object_2I_V(
     
     
 }
-void Java_org_mini_gl_GL_glCompressedTexSubImage3D__IIIIIIIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pxoffset, s32 pyoffset, s32 pzoffset, s32 pwidth, s32 pheight, s32 pdepth, s32 pformat, s32 pimageSize, struct java_lang_Object *pdata, s32 offset_pdata) {
+void func_org_mini_gl_GL_glCompressedTexSubImage3D__IIIIIIIIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 ptarget, s32 plevel, s32 pxoffset, s32 pyoffset, s32 pzoffset, s32 pwidth, s32 pheight, s32 pdepth, s32 pformat, s32 pimageSize, struct java_lang_Object *pdata, s32 offset_pdata) {
     
     __refer ptr_pdata = (__refer)(intptr_t) offset_pdata;
     if(pdata) {
@@ -1451,7 +1451,7 @@ void Java_org_mini_gl_GL_glCompressedTexSubImage3D__IIIIIIIIIILjava_lang_Object_
     
     
 }
-void Java_org_mini_gl_GL_glGenQueries__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *pids, s32 offset_pids) {
+void func_org_mini_gl_GL_glGenQueries__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *pids, s32 offset_pids) {
     
     __refer ptr_pids = (__refer)(intptr_t) offset_pids;
     if(pids) {
@@ -1463,7 +1463,7 @@ void Java_org_mini_gl_GL_glGenQueries__I_3II_V(JThreadRuntime *runtime, s32 pn, 
     
     
 }
-void Java_org_mini_gl_GL_glDeleteQueries__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *pids, s32 offset_pids) {
+void func_org_mini_gl_GL_glDeleteQueries__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *pids, s32 offset_pids) {
     
     __refer ptr_pids = (__refer)(intptr_t) offset_pids;
     if(pids) {
@@ -1475,28 +1475,28 @@ void Java_org_mini_gl_GL_glDeleteQueries__I_3II_V(JThreadRuntime *runtime, s32 p
     
     
 }
-s32 Java_org_mini_gl_GL_glIsQuery__I_I(JThreadRuntime *runtime, s32 pid) {
+s32 func_org_mini_gl_GL_glIsQuery__I_I(JThreadRuntime *runtime, s32 pid) {
     
 
     GLboolean _re_val = glIsQuery((GLuint)pid);
     return *((s32*)&_re_val);
     
 }
-void Java_org_mini_gl_GL_glBeginQuery__II_V(JThreadRuntime *runtime, s32 ptarget, s32 pid) {
+void func_org_mini_gl_GL_glBeginQuery__II_V(JThreadRuntime *runtime, s32 ptarget, s32 pid) {
     
 
     glBeginQuery((GLenum)ptarget, (GLuint)pid);
     
     
 }
-void Java_org_mini_gl_GL_glEndQuery__I_V(JThreadRuntime *runtime, s32 ptarget) {
+void func_org_mini_gl_GL_glEndQuery__I_V(JThreadRuntime *runtime, s32 ptarget) {
     
 
     glEndQuery((GLenum)ptarget);
     
     
 }
-void Java_org_mini_gl_GL_glGetQueryiv__II_3II_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetQueryiv__II_3II_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -1508,7 +1508,7 @@ void Java_org_mini_gl_GL_glGetQueryiv__II_3II_V(JThreadRuntime *runtime, s32 pta
     
     
 }
-void Java_org_mini_gl_GL_glGetQueryObjectuiv__II_3II_V(JThreadRuntime *runtime, s32 pid, s32 ppname, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetQueryObjectuiv__II_3II_V(JThreadRuntime *runtime, s32 pid, s32 ppname, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -1520,21 +1520,21 @@ void Java_org_mini_gl_GL_glGetQueryObjectuiv__II_3II_V(JThreadRuntime *runtime, 
     
     
 }
-s32 Java_org_mini_gl_GL_glUnmapBuffer__I_I(JThreadRuntime *runtime, s32 ptarget) {
+s32 func_org_mini_gl_GL_glUnmapBuffer__I_I(JThreadRuntime *runtime, s32 ptarget) {
     
 
     GLboolean _re_val = glUnmapBuffer((GLenum)ptarget);
     return *((s32*)&_re_val);
     
 }
-void Java_org_mini_gl_GL_glGetBufferPointerv__II_3Ljava_lang_Object_2_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, JArray *pparams) {
+void func_org_mini_gl_GL_glGetBufferPointerv__II_3Ljava_lang_Object_2_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, JArray *pparams) {
     
 
     glGetBufferPointerv((GLenum)ptarget, (GLenum)ppname, (void**)(pparams->prop.as_obj_arr));
     
     
 }
-void Java_org_mini_gl_GL_glDrawBuffers__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *pbufs, s32 offset_pbufs) {
+void func_org_mini_gl_GL_glDrawBuffers__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *pbufs, s32 offset_pbufs) {
     
     __refer ptr_pbufs = (__refer)(intptr_t) offset_pbufs;
     if(pbufs) {
@@ -1546,7 +1546,7 @@ void Java_org_mini_gl_GL_glDrawBuffers__I_3II_V(JThreadRuntime *runtime, s32 pn,
     
     
 }
-void Java_org_mini_gl_GL_glUniformMatrix2x3fv__III_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, s32 ptranspose, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniformMatrix2x3fv__III_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, s32 ptranspose, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1558,7 +1558,7 @@ void Java_org_mini_gl_GL_glUniformMatrix2x3fv__III_3FI_V(JThreadRuntime *runtime
     
     
 }
-void Java_org_mini_gl_GL_glUniformMatrix3x2fv__III_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, s32 ptranspose, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniformMatrix3x2fv__III_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, s32 ptranspose, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1570,7 +1570,7 @@ void Java_org_mini_gl_GL_glUniformMatrix3x2fv__III_3FI_V(JThreadRuntime *runtime
     
     
 }
-void Java_org_mini_gl_GL_glUniformMatrix2x4fv__III_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, s32 ptranspose, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniformMatrix2x4fv__III_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, s32 ptranspose, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1582,7 +1582,7 @@ void Java_org_mini_gl_GL_glUniformMatrix2x4fv__III_3FI_V(JThreadRuntime *runtime
     
     
 }
-void Java_org_mini_gl_GL_glUniformMatrix4x2fv__III_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, s32 ptranspose, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniformMatrix4x2fv__III_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, s32 ptranspose, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1594,7 +1594,7 @@ void Java_org_mini_gl_GL_glUniformMatrix4x2fv__III_3FI_V(JThreadRuntime *runtime
     
     
 }
-void Java_org_mini_gl_GL_glUniformMatrix3x4fv__III_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, s32 ptranspose, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniformMatrix3x4fv__III_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, s32 ptranspose, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1606,7 +1606,7 @@ void Java_org_mini_gl_GL_glUniformMatrix3x4fv__III_3FI_V(JThreadRuntime *runtime
     
     
 }
-void Java_org_mini_gl_GL_glUniformMatrix4x3fv__III_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, s32 ptranspose, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniformMatrix4x3fv__III_3FI_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, s32 ptranspose, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1618,49 +1618,49 @@ void Java_org_mini_gl_GL_glUniformMatrix4x3fv__III_3FI_V(JThreadRuntime *runtime
     
     
 }
-void Java_org_mini_gl_GL_glBlitFramebuffer__IIIIIIIIII_V(JThreadRuntime *runtime, s32 psrcX0, s32 psrcY0, s32 psrcX1, s32 psrcY1, s32 pdstX0, s32 pdstY0, s32 pdstX1, s32 pdstY1, s32 pmask, s32 pfilter) {
+void func_org_mini_gl_GL_glBlitFramebuffer__IIIIIIIIII_V(JThreadRuntime *runtime, s32 psrcX0, s32 psrcY0, s32 psrcX1, s32 psrcY1, s32 pdstX0, s32 pdstY0, s32 pdstX1, s32 pdstY1, s32 pmask, s32 pfilter) {
     
 
     glBlitFramebuffer((GLint)psrcX0, (GLint)psrcY0, (GLint)psrcX1, (GLint)psrcY1, (GLint)pdstX0, (GLint)pdstY0, (GLint)pdstX1, (GLint)pdstY1, (GLbitfield)pmask, (GLenum)pfilter);
     
     
 }
-void Java_org_mini_gl_GL_glRenderbufferStorageMultisample__IIIII_V(JThreadRuntime *runtime, s32 ptarget, s32 psamples, s32 pinternalformat, s32 pwidth, s32 pheight) {
+void func_org_mini_gl_GL_glRenderbufferStorageMultisample__IIIII_V(JThreadRuntime *runtime, s32 ptarget, s32 psamples, s32 pinternalformat, s32 pwidth, s32 pheight) {
     
 
     glRenderbufferStorageMultisample((GLenum)ptarget, (GLsizei)psamples, (GLenum)pinternalformat, (GLsizei)pwidth, (GLsizei)pheight);
     
     
 }
-void Java_org_mini_gl_GL_glFramebufferTextureLayer__IIIII_V(JThreadRuntime *runtime, s32 ptarget, s32 pattachment, s32 ptexture, s32 plevel, s32 player) {
+void func_org_mini_gl_GL_glFramebufferTextureLayer__IIIII_V(JThreadRuntime *runtime, s32 ptarget, s32 pattachment, s32 ptexture, s32 plevel, s32 player) {
     
 
     glFramebufferTextureLayer((GLenum)ptarget, (GLenum)pattachment, (GLuint)ptexture, (GLint)plevel, (GLint)player);
     
     
 }
-s64 Java_org_mini_gl_GL_glMapBufferRange__IJJI_J(JThreadRuntime *runtime, s32 ptarget, s64 poffset, s64 plength, s32 paccess) {
+s64 func_org_mini_gl_GL_glMapBufferRange__IJJI_J(JThreadRuntime *runtime, s32 ptarget, s64 poffset, s64 plength, s32 paccess) {
     
 
     void* _re_val = glMapBufferRange((GLenum)ptarget, (GLintptr)poffset, (GLsizeiptr)plength, (GLbitfield)paccess);
     return *((s64*)&_re_val);
     
 }
-void Java_org_mini_gl_GL_glFlushMappedBufferRange__IJJ_V(JThreadRuntime *runtime, s32 ptarget, s64 poffset, s64 plength) {
+void func_org_mini_gl_GL_glFlushMappedBufferRange__IJJ_V(JThreadRuntime *runtime, s32 ptarget, s64 poffset, s64 plength) {
     
 
     glFlushMappedBufferRange((GLenum)ptarget, (GLintptr)poffset, (GLsizeiptr)plength);
     
     
 }
-void Java_org_mini_gl_GL_glBindVertexArray__I_V(JThreadRuntime *runtime, s32 parray) {
+void func_org_mini_gl_GL_glBindVertexArray__I_V(JThreadRuntime *runtime, s32 parray) {
     
 
     glBindVertexArray((GLuint)parray);
     
     
 }
-void Java_org_mini_gl_GL_glDeleteVertexArrays__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *parrays, s32 offset_parrays) {
+void func_org_mini_gl_GL_glDeleteVertexArrays__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *parrays, s32 offset_parrays) {
     
     __refer ptr_parrays = (__refer)(intptr_t) offset_parrays;
     if(parrays) {
@@ -1672,7 +1672,7 @@ void Java_org_mini_gl_GL_glDeleteVertexArrays__I_3II_V(JThreadRuntime *runtime, 
     
     
 }
-void Java_org_mini_gl_GL_glGenVertexArrays__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *parrays, s32 offset_parrays) {
+void func_org_mini_gl_GL_glGenVertexArrays__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *parrays, s32 offset_parrays) {
     
     __refer ptr_parrays = (__refer)(intptr_t) offset_parrays;
     if(parrays) {
@@ -1684,14 +1684,14 @@ void Java_org_mini_gl_GL_glGenVertexArrays__I_3II_V(JThreadRuntime *runtime, s32
     
     
 }
-s32 Java_org_mini_gl_GL_glIsVertexArray__I_I(JThreadRuntime *runtime, s32 parray) {
+s32 func_org_mini_gl_GL_glIsVertexArray__I_I(JThreadRuntime *runtime, s32 parray) {
     
 
     GLboolean _re_val = glIsVertexArray((GLuint)parray);
     return *((s32*)&_re_val);
     
 }
-void Java_org_mini_gl_GL_glGetIntegeri_1v__II_3II_V(JThreadRuntime *runtime, s32 ptarget, s32 pindex, JArray *pdata, s32 offset_pdata) {
+void func_org_mini_gl_GL_glGetIntegeri_1v__II_3II_V(JThreadRuntime *runtime, s32 ptarget, s32 pindex, JArray *pdata, s32 offset_pdata) {
     
     __refer ptr_pdata = (__refer)(intptr_t) offset_pdata;
     if(pdata) {
@@ -1703,35 +1703,35 @@ void Java_org_mini_gl_GL_glGetIntegeri_1v__II_3II_V(JThreadRuntime *runtime, s32
     
     
 }
-void Java_org_mini_gl_GL_glBeginTransformFeedback__I_V(JThreadRuntime *runtime, s32 pprimitiveMode) {
+void func_org_mini_gl_GL_glBeginTransformFeedback__I_V(JThreadRuntime *runtime, s32 pprimitiveMode) {
     
 
     glBeginTransformFeedback((GLenum)pprimitiveMode);
     
     
 }
-void Java_org_mini_gl_GL_glEndTransformFeedback___V(JThreadRuntime *runtime) {
+void func_org_mini_gl_GL_glEndTransformFeedback___V(JThreadRuntime *runtime) {
     
 
     glEndTransformFeedback();
     
     
 }
-void Java_org_mini_gl_GL_glBindBufferRange__IIIJJ_V(JThreadRuntime *runtime, s32 ptarget, s32 pindex, s32 pbuffer, s64 poffset, s64 psize) {
+void func_org_mini_gl_GL_glBindBufferRange__IIIJJ_V(JThreadRuntime *runtime, s32 ptarget, s32 pindex, s32 pbuffer, s64 poffset, s64 psize) {
     
 
     glBindBufferRange((GLenum)ptarget, (GLuint)pindex, (GLuint)pbuffer, (GLintptr)poffset, (GLsizeiptr)psize);
     
     
 }
-void Java_org_mini_gl_GL_glBindBufferBase__III_V(JThreadRuntime *runtime, s32 ptarget, s32 pindex, s32 pbuffer) {
+void func_org_mini_gl_GL_glBindBufferBase__III_V(JThreadRuntime *runtime, s32 ptarget, s32 pindex, s32 pbuffer) {
     
 
     glBindBufferBase((GLenum)ptarget, (GLuint)pindex, (GLuint)pbuffer);
     
     
 }
-void Java_org_mini_gl_GL_glTransformFeedbackVaryings__II_3_3BI_V(JThreadRuntime *runtime, s32 pprogram, s32 pcount, JArray *pvaryings, s32 pbufferMode) {
+void func_org_mini_gl_GL_glTransformFeedbackVaryings__II_3_3BI_V(JThreadRuntime *runtime, s32 pprogram, s32 pcount, JArray *pvaryings, s32 pbufferMode) {
     
     __refer ptr_pvaryings[pvaryings->prop.arr_length];
     s32 i;for(i=0;i<pvaryings->prop.arr_length;i++){
@@ -1743,7 +1743,7 @@ void Java_org_mini_gl_GL_glTransformFeedbackVaryings__II_3_3BI_V(JThreadRuntime 
     
     
 }
-void Java_org_mini_gl_GL_glGetTransformFeedbackVarying__III_3II_3II_3II_3B_V(JThreadRuntime *runtime, s32 pprogram, s32 pindex, s32 pbufSize, JArray *plength, s32 offset_plength, JArray *psize, s32 offset_psize, JArray *ptype, s32 offset_ptype, JArray *pname) {
+void func_org_mini_gl_GL_glGetTransformFeedbackVarying__III_3II_3II_3II_3B_V(JThreadRuntime *runtime, s32 pprogram, s32 pindex, s32 pbufSize, JArray *plength, s32 offset_plength, JArray *psize, s32 offset_psize, JArray *ptype, s32 offset_ptype, JArray *pname) {
     
     __refer ptr_plength = (__refer)(intptr_t) offset_plength;
     if(plength) {
@@ -1770,7 +1770,7 @@ void Java_org_mini_gl_GL_glGetTransformFeedbackVarying__III_3II_3II_3II_3B_V(JTh
     
     
 }
-void Java_org_mini_gl_GL_glVertexAttribIPointer__IIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 pindex, s32 psize, s32 ptype, s32 pstride, struct java_lang_Object *ppointer, s32 offset_ppointer) {
+void func_org_mini_gl_GL_glVertexAttribIPointer__IIIILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 pindex, s32 psize, s32 ptype, s32 pstride, struct java_lang_Object *ppointer, s32 offset_ppointer) {
     
     __refer ptr_ppointer = (__refer)(intptr_t) offset_ppointer;
     if(ppointer) {
@@ -1782,7 +1782,7 @@ void Java_org_mini_gl_GL_glVertexAttribIPointer__IIIILjava_lang_Object_2I_V(JThr
     
     
 }
-void Java_org_mini_gl_GL_glGetVertexAttribIiv__II_3II_V(JThreadRuntime *runtime, s32 pindex, s32 ppname, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetVertexAttribIiv__II_3II_V(JThreadRuntime *runtime, s32 pindex, s32 ppname, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -1794,7 +1794,7 @@ void Java_org_mini_gl_GL_glGetVertexAttribIiv__II_3II_V(JThreadRuntime *runtime,
     
     
 }
-void Java_org_mini_gl_GL_glGetVertexAttribIuiv__II_3II_V(JThreadRuntime *runtime, s32 pindex, s32 ppname, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetVertexAttribIuiv__II_3II_V(JThreadRuntime *runtime, s32 pindex, s32 ppname, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -1806,21 +1806,21 @@ void Java_org_mini_gl_GL_glGetVertexAttribIuiv__II_3II_V(JThreadRuntime *runtime
     
     
 }
-void Java_org_mini_gl_GL_glVertexAttribI4i__IIIII_V(JThreadRuntime *runtime, s32 pindex, s32 px, s32 py, s32 pz, s32 pw) {
+void func_org_mini_gl_GL_glVertexAttribI4i__IIIII_V(JThreadRuntime *runtime, s32 pindex, s32 px, s32 py, s32 pz, s32 pw) {
     
 
     glVertexAttribI4i((GLuint)pindex, (GLint)px, (GLint)py, (GLint)pz, (GLint)pw);
     
     
 }
-void Java_org_mini_gl_GL_glVertexAttribI4ui__IIIII_V(JThreadRuntime *runtime, s32 pindex, s32 px, s32 py, s32 pz, s32 pw) {
+void func_org_mini_gl_GL_glVertexAttribI4ui__IIIII_V(JThreadRuntime *runtime, s32 pindex, s32 px, s32 py, s32 pz, s32 pw) {
     
 
     glVertexAttribI4ui((GLuint)pindex, (GLuint)px, (GLuint)py, (GLuint)pz, (GLuint)pw);
     
     
 }
-void Java_org_mini_gl_GL_glVertexAttribI4iv__I_3II_V(JThreadRuntime *runtime, s32 pindex, JArray *pv, s32 offset_pv) {
+void func_org_mini_gl_GL_glVertexAttribI4iv__I_3II_V(JThreadRuntime *runtime, s32 pindex, JArray *pv, s32 offset_pv) {
     
     __refer ptr_pv = (__refer)(intptr_t) offset_pv;
     if(pv) {
@@ -1832,7 +1832,7 @@ void Java_org_mini_gl_GL_glVertexAttribI4iv__I_3II_V(JThreadRuntime *runtime, s3
     
     
 }
-void Java_org_mini_gl_GL_glVertexAttribI4uiv__I_3II_V(JThreadRuntime *runtime, s32 pindex, JArray *pv, s32 offset_pv) {
+void func_org_mini_gl_GL_glVertexAttribI4uiv__I_3II_V(JThreadRuntime *runtime, s32 pindex, JArray *pv, s32 offset_pv) {
     
     __refer ptr_pv = (__refer)(intptr_t) offset_pv;
     if(pv) {
@@ -1844,7 +1844,7 @@ void Java_org_mini_gl_GL_glVertexAttribI4uiv__I_3II_V(JThreadRuntime *runtime, s
     
     
 }
-void Java_org_mini_gl_GL_glGetUniformuiv__II_3II_V(JThreadRuntime *runtime, s32 pprogram, s32 plocation, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetUniformuiv__II_3II_V(JThreadRuntime *runtime, s32 pprogram, s32 plocation, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -1856,7 +1856,7 @@ void Java_org_mini_gl_GL_glGetUniformuiv__II_3II_V(JThreadRuntime *runtime, s32 
     
     
 }
-s32 Java_org_mini_gl_GL_glGetFragDataLocation__I_3B_I(JThreadRuntime *runtime, s32 pprogram, JArray *pname) {
+s32 func_org_mini_gl_GL_glGetFragDataLocation__I_3B_I(JThreadRuntime *runtime, s32 pprogram, JArray *pname) {
     
     s32 offset_pname = 0;    __refer ptr_pname = (__refer)(intptr_t) offset_pname;
     if(pname) {
@@ -1868,35 +1868,35 @@ s32 Java_org_mini_gl_GL_glGetFragDataLocation__I_3B_I(JThreadRuntime *runtime, s
     return *((s32*)&_re_val);
     
 }
-void Java_org_mini_gl_GL_glUniform1ui__II_V(JThreadRuntime *runtime, s32 plocation, s32 pv0) {
+void func_org_mini_gl_GL_glUniform1ui__II_V(JThreadRuntime *runtime, s32 plocation, s32 pv0) {
     
 
     glUniform1ui((GLint)plocation, (GLuint)pv0);
     
     
 }
-void Java_org_mini_gl_GL_glUniform2ui__III_V(JThreadRuntime *runtime, s32 plocation, s32 pv0, s32 pv1) {
+void func_org_mini_gl_GL_glUniform2ui__III_V(JThreadRuntime *runtime, s32 plocation, s32 pv0, s32 pv1) {
     
 
     glUniform2ui((GLint)plocation, (GLuint)pv0, (GLuint)pv1);
     
     
 }
-void Java_org_mini_gl_GL_glUniform3ui__IIII_V(JThreadRuntime *runtime, s32 plocation, s32 pv0, s32 pv1, s32 pv2) {
+void func_org_mini_gl_GL_glUniform3ui__IIII_V(JThreadRuntime *runtime, s32 plocation, s32 pv0, s32 pv1, s32 pv2) {
     
 
     glUniform3ui((GLint)plocation, (GLuint)pv0, (GLuint)pv1, (GLuint)pv2);
     
     
 }
-void Java_org_mini_gl_GL_glUniform4ui__IIIII_V(JThreadRuntime *runtime, s32 plocation, s32 pv0, s32 pv1, s32 pv2, s32 pv3) {
+void func_org_mini_gl_GL_glUniform4ui__IIIII_V(JThreadRuntime *runtime, s32 plocation, s32 pv0, s32 pv1, s32 pv2, s32 pv3) {
     
 
     glUniform4ui((GLint)plocation, (GLuint)pv0, (GLuint)pv1, (GLuint)pv2, (GLuint)pv3);
     
     
 }
-void Java_org_mini_gl_GL_glUniform1uiv__II_3II_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniform1uiv__II_3II_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1908,7 +1908,7 @@ void Java_org_mini_gl_GL_glUniform1uiv__II_3II_V(JThreadRuntime *runtime, s32 pl
     
     
 }
-void Java_org_mini_gl_GL_glUniform2uiv__II_3II_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniform2uiv__II_3II_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1920,7 +1920,7 @@ void Java_org_mini_gl_GL_glUniform2uiv__II_3II_V(JThreadRuntime *runtime, s32 pl
     
     
 }
-void Java_org_mini_gl_GL_glUniform3uiv__II_3II_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniform3uiv__II_3II_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1932,7 +1932,7 @@ void Java_org_mini_gl_GL_glUniform3uiv__II_3II_V(JThreadRuntime *runtime, s32 pl
     
     
 }
-void Java_org_mini_gl_GL_glUniform4uiv__II_3II_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glUniform4uiv__II_3II_V(JThreadRuntime *runtime, s32 plocation, s32 pcount, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1944,7 +1944,7 @@ void Java_org_mini_gl_GL_glUniform4uiv__II_3II_V(JThreadRuntime *runtime, s32 pl
     
     
 }
-void Java_org_mini_gl_GL_glClearBufferiv__II_3II_V(JThreadRuntime *runtime, s32 pbuffer, s32 pdrawbuffer, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glClearBufferiv__II_3II_V(JThreadRuntime *runtime, s32 pbuffer, s32 pdrawbuffer, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1956,7 +1956,7 @@ void Java_org_mini_gl_GL_glClearBufferiv__II_3II_V(JThreadRuntime *runtime, s32 
     
     
 }
-void Java_org_mini_gl_GL_glClearBufferuiv__II_3II_V(JThreadRuntime *runtime, s32 pbuffer, s32 pdrawbuffer, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glClearBufferuiv__II_3II_V(JThreadRuntime *runtime, s32 pbuffer, s32 pdrawbuffer, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1968,7 +1968,7 @@ void Java_org_mini_gl_GL_glClearBufferuiv__II_3II_V(JThreadRuntime *runtime, s32
     
     
 }
-void Java_org_mini_gl_GL_glClearBufferfv__II_3FI_V(JThreadRuntime *runtime, s32 pbuffer, s32 pdrawbuffer, JArray *pvalue, s32 offset_pvalue) {
+void func_org_mini_gl_GL_glClearBufferfv__II_3FI_V(JThreadRuntime *runtime, s32 pbuffer, s32 pdrawbuffer, JArray *pvalue, s32 offset_pvalue) {
     
     __refer ptr_pvalue = (__refer)(intptr_t) offset_pvalue;
     if(pvalue) {
@@ -1980,14 +1980,14 @@ void Java_org_mini_gl_GL_glClearBufferfv__II_3FI_V(JThreadRuntime *runtime, s32 
     
     
 }
-void Java_org_mini_gl_GL_glClearBufferfi__IIFI_V(JThreadRuntime *runtime, s32 pbuffer, s32 pdrawbuffer, f32 pdepth, s32 pstencil) {
+void func_org_mini_gl_GL_glClearBufferfi__IIFI_V(JThreadRuntime *runtime, s32 pbuffer, s32 pdrawbuffer, f32 pdepth, s32 pstencil) {
     
 
     glClearBufferfi((GLenum)pbuffer, (GLint)pdrawbuffer, (GLfloat)pdepth, (GLint)pstencil);
     
     
 }
-JArray * Java_org_mini_gl_GL_glGetStringi__II__3B(JThreadRuntime *runtime, s32 pname, s32 pindex) {
+JArray * func_org_mini_gl_GL_glGetStringi__II__3B(JThreadRuntime *runtime, s32 pname, s32 pindex) {
     
 
     const GLubyte* _re_val = glGetStringi((GLenum)pname, (GLuint)pindex);
@@ -2003,14 +2003,14 @@ JArray * Java_org_mini_gl_GL_glGetStringi__II__3B(JThreadRuntime *runtime, s32 p
     }
     
 }
-void Java_org_mini_gl_GL_glCopyBufferSubData__IIJJJ_V(JThreadRuntime *runtime, s32 preadTarget, s32 pwriteTarget, s64 preadOffset, s64 pwriteOffset, s64 psize) {
+void func_org_mini_gl_GL_glCopyBufferSubData__IIJJJ_V(JThreadRuntime *runtime, s32 preadTarget, s32 pwriteTarget, s64 preadOffset, s64 pwriteOffset, s64 psize) {
     
 
     glCopyBufferSubData((GLenum)preadTarget, (GLenum)pwriteTarget, (GLintptr)preadOffset, (GLintptr)pwriteOffset, (GLsizeiptr)psize);
     
     
 }
-void Java_org_mini_gl_GL_glGetUniformIndices__II_3_3B_3II_V(JThreadRuntime *runtime, s32 pprogram, s32 puniformCount, JArray *puniformNames, JArray *puniformIndices, s32 offset_puniformIndices) {
+void func_org_mini_gl_GL_glGetUniformIndices__II_3_3B_3II_V(JThreadRuntime *runtime, s32 pprogram, s32 puniformCount, JArray *puniformNames, JArray *puniformIndices, s32 offset_puniformIndices) {
     
     __refer ptr_puniformNames[puniformNames->prop.arr_length];
     s32 i;for(i=0;i<puniformNames->prop.arr_length;i++){
@@ -2027,7 +2027,7 @@ void Java_org_mini_gl_GL_glGetUniformIndices__II_3_3B_3II_V(JThreadRuntime *runt
     
     
 }
-void Java_org_mini_gl_GL_glGetActiveUniformsiv__II_3III_3II_V(JThreadRuntime *runtime, s32 pprogram, s32 puniformCount, JArray *puniformIndices, s32 offset_puniformIndices, s32 ppname, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetActiveUniformsiv__II_3III_3II_V(JThreadRuntime *runtime, s32 pprogram, s32 puniformCount, JArray *puniformIndices, s32 offset_puniformIndices, s32 ppname, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_puniformIndices = (__refer)(intptr_t) offset_puniformIndices;
     if(puniformIndices) {
@@ -2044,7 +2044,7 @@ void Java_org_mini_gl_GL_glGetActiveUniformsiv__II_3III_3II_V(JThreadRuntime *ru
     
     
 }
-s32 Java_org_mini_gl_GL_glGetUniformBlockIndex__I_3B_I(JThreadRuntime *runtime, s32 pprogram, JArray *puniformBlockName) {
+s32 func_org_mini_gl_GL_glGetUniformBlockIndex__I_3B_I(JThreadRuntime *runtime, s32 pprogram, JArray *puniformBlockName) {
     
     s32 offset_puniformBlockName = 0;    __refer ptr_puniformBlockName = (__refer)(intptr_t) offset_puniformBlockName;
     if(puniformBlockName) {
@@ -2056,7 +2056,7 @@ s32 Java_org_mini_gl_GL_glGetUniformBlockIndex__I_3B_I(JThreadRuntime *runtime, 
     return *((s32*)&_re_val);
     
 }
-void Java_org_mini_gl_GL_glGetActiveUniformBlockiv__III_3II_V(JThreadRuntime *runtime, s32 pprogram, s32 puniformBlockIndex, s32 ppname, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetActiveUniformBlockiv__III_3II_V(JThreadRuntime *runtime, s32 pprogram, s32 puniformBlockIndex, s32 ppname, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -2068,7 +2068,7 @@ void Java_org_mini_gl_GL_glGetActiveUniformBlockiv__III_3II_V(JThreadRuntime *ru
     
     
 }
-void Java_org_mini_gl_GL_glGetActiveUniformBlockName__III_3II_3B_V(JThreadRuntime *runtime, s32 pprogram, s32 puniformBlockIndex, s32 pbufSize, JArray *plength, s32 offset_plength, JArray *puniformBlockName) {
+void func_org_mini_gl_GL_glGetActiveUniformBlockName__III_3II_3B_V(JThreadRuntime *runtime, s32 pprogram, s32 puniformBlockIndex, s32 pbufSize, JArray *plength, s32 offset_plength, JArray *puniformBlockName) {
     
     __refer ptr_plength = (__refer)(intptr_t) offset_plength;
     if(plength) {
@@ -2085,21 +2085,21 @@ void Java_org_mini_gl_GL_glGetActiveUniformBlockName__III_3II_3B_V(JThreadRuntim
     
     
 }
-void Java_org_mini_gl_GL_glUniformBlockBinding__III_V(JThreadRuntime *runtime, s32 pprogram, s32 puniformBlockIndex, s32 puniformBlockBinding) {
+void func_org_mini_gl_GL_glUniformBlockBinding__III_V(JThreadRuntime *runtime, s32 pprogram, s32 puniformBlockIndex, s32 puniformBlockBinding) {
     
 
     glUniformBlockBinding((GLuint)pprogram, (GLuint)puniformBlockIndex, (GLuint)puniformBlockBinding);
     
     
 }
-void Java_org_mini_gl_GL_glDrawArraysInstanced__IIII_V(JThreadRuntime *runtime, s32 pmode, s32 pfirst, s32 pcount, s32 pinstancecount) {
+void func_org_mini_gl_GL_glDrawArraysInstanced__IIII_V(JThreadRuntime *runtime, s32 pmode, s32 pfirst, s32 pcount, s32 pinstancecount) {
     
 
     glDrawArraysInstanced((GLenum)pmode, (GLint)pfirst, (GLsizei)pcount, (GLsizei)pinstancecount);
     
     
 }
-void Java_org_mini_gl_GL_glDrawElementsInstanced__IIILjava_lang_Object_2II_V(JThreadRuntime *runtime, s32 pmode, s32 pcount, s32 ptype, struct java_lang_Object *pindices, s32 offset_pindices, s32 pinstancecount) {
+void func_org_mini_gl_GL_glDrawElementsInstanced__IIILjava_lang_Object_2II_V(JThreadRuntime *runtime, s32 pmode, s32 pcount, s32 ptype, struct java_lang_Object *pindices, s32 offset_pindices, s32 pinstancecount) {
     
     __refer ptr_pindices = (__refer)(intptr_t) offset_pindices;
     if(pindices) {
@@ -2111,42 +2111,42 @@ void Java_org_mini_gl_GL_glDrawElementsInstanced__IIILjava_lang_Object_2II_V(JTh
     
     
 }
-s64 Java_org_mini_gl_GL_glFenceSync__II_J(JThreadRuntime *runtime, s32 pcondition, s32 pflags) {
+s64 func_org_mini_gl_GL_glFenceSync__II_J(JThreadRuntime *runtime, s32 pcondition, s32 pflags) {
     
 
     GLsync _re_val = glFenceSync((GLenum)pcondition, (GLbitfield)pflags);
     return *((s64*)&_re_val);
     
 }
-s32 Java_org_mini_gl_GL_glIsSync__J_I(JThreadRuntime *runtime, s64 psync) {
+s32 func_org_mini_gl_GL_glIsSync__J_I(JThreadRuntime *runtime, s64 psync) {
     
 
     GLboolean _re_val = glIsSync((GLsync)psync);
     return *((s32*)&_re_val);
     
 }
-void Java_org_mini_gl_GL_glDeleteSync__J_V(JThreadRuntime *runtime, s64 psync) {
+void func_org_mini_gl_GL_glDeleteSync__J_V(JThreadRuntime *runtime, s64 psync) {
     
 
     glDeleteSync((GLsync)psync);
     
     
 }
-s32 Java_org_mini_gl_GL_glClientWaitSync__JIJ_I(JThreadRuntime *runtime, s64 psync, s32 pflags, s64 ptimeout) {
+s32 func_org_mini_gl_GL_glClientWaitSync__JIJ_I(JThreadRuntime *runtime, s64 psync, s32 pflags, s64 ptimeout) {
     
 
     GLenum _re_val = glClientWaitSync((GLsync)psync, (GLbitfield)pflags, (GLuint64)ptimeout);
     return *((s32*)&_re_val);
     
 }
-void Java_org_mini_gl_GL_glWaitSync__JIJ_V(JThreadRuntime *runtime, s64 psync, s32 pflags, s64 ptimeout) {
+void func_org_mini_gl_GL_glWaitSync__JIJ_V(JThreadRuntime *runtime, s64 psync, s32 pflags, s64 ptimeout) {
     
 
     glWaitSync((GLsync)psync, (GLbitfield)pflags, (GLuint64)ptimeout);
     
     
 }
-void Java_org_mini_gl_GL_glGetInteger64v__I_3JI_V(JThreadRuntime *runtime, s32 ppname, JArray *pdata, s32 offset_pdata) {
+void func_org_mini_gl_GL_glGetInteger64v__I_3JI_V(JThreadRuntime *runtime, s32 ppname, JArray *pdata, s32 offset_pdata) {
     
     __refer ptr_pdata = (__refer)(intptr_t) offset_pdata;
     if(pdata) {
@@ -2158,7 +2158,7 @@ void Java_org_mini_gl_GL_glGetInteger64v__I_3JI_V(JThreadRuntime *runtime, s32 p
     
     
 }
-void Java_org_mini_gl_GL_glGetSynciv__JII_3II_3II_V(JThreadRuntime *runtime, s64 psync, s32 ppname, s32 pcount, JArray *plength, s32 offset_plength, JArray *pvalues, s32 offset_pvalues) {
+void func_org_mini_gl_GL_glGetSynciv__JII_3II_3II_V(JThreadRuntime *runtime, s64 psync, s32 ppname, s32 pcount, JArray *plength, s32 offset_plength, JArray *pvalues, s32 offset_pvalues) {
     
     __refer ptr_plength = (__refer)(intptr_t) offset_plength;
     if(plength) {
@@ -2175,7 +2175,7 @@ void Java_org_mini_gl_GL_glGetSynciv__JII_3II_3II_V(JThreadRuntime *runtime, s64
     
     
 }
-void Java_org_mini_gl_GL_glGetInteger64i_1v__II_3JI_V(JThreadRuntime *runtime, s32 ptarget, s32 pindex, JArray *pdata, s32 offset_pdata) {
+void func_org_mini_gl_GL_glGetInteger64i_1v__II_3JI_V(JThreadRuntime *runtime, s32 ptarget, s32 pindex, JArray *pdata, s32 offset_pdata) {
     
     __refer ptr_pdata = (__refer)(intptr_t) offset_pdata;
     if(pdata) {
@@ -2187,7 +2187,7 @@ void Java_org_mini_gl_GL_glGetInteger64i_1v__II_3JI_V(JThreadRuntime *runtime, s
     
     
 }
-void Java_org_mini_gl_GL_glGetBufferParameteri64v__II_3JI_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetBufferParameteri64v__II_3JI_V(JThreadRuntime *runtime, s32 ptarget, s32 ppname, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -2199,7 +2199,7 @@ void Java_org_mini_gl_GL_glGetBufferParameteri64v__II_3JI_V(JThreadRuntime *runt
     
     
 }
-void Java_org_mini_gl_GL_glGenSamplers__I_3II_V(JThreadRuntime *runtime, s32 pcount, JArray *psamplers, s32 offset_psamplers) {
+void func_org_mini_gl_GL_glGenSamplers__I_3II_V(JThreadRuntime *runtime, s32 pcount, JArray *psamplers, s32 offset_psamplers) {
     
     __refer ptr_psamplers = (__refer)(intptr_t) offset_psamplers;
     if(psamplers) {
@@ -2211,7 +2211,7 @@ void Java_org_mini_gl_GL_glGenSamplers__I_3II_V(JThreadRuntime *runtime, s32 pco
     
     
 }
-void Java_org_mini_gl_GL_glDeleteSamplers__I_3II_V(JThreadRuntime *runtime, s32 pcount, JArray *psamplers, s32 offset_psamplers) {
+void func_org_mini_gl_GL_glDeleteSamplers__I_3II_V(JThreadRuntime *runtime, s32 pcount, JArray *psamplers, s32 offset_psamplers) {
     
     __refer ptr_psamplers = (__refer)(intptr_t) offset_psamplers;
     if(psamplers) {
@@ -2223,28 +2223,28 @@ void Java_org_mini_gl_GL_glDeleteSamplers__I_3II_V(JThreadRuntime *runtime, s32 
     
     
 }
-s32 Java_org_mini_gl_GL_glIsSampler__I_I(JThreadRuntime *runtime, s32 psampler) {
+s32 func_org_mini_gl_GL_glIsSampler__I_I(JThreadRuntime *runtime, s32 psampler) {
     
 
     GLboolean _re_val = glIsSampler((GLuint)psampler);
     return *((s32*)&_re_val);
     
 }
-void Java_org_mini_gl_GL_glBindSampler__II_V(JThreadRuntime *runtime, s32 punit, s32 psampler) {
+void func_org_mini_gl_GL_glBindSampler__II_V(JThreadRuntime *runtime, s32 punit, s32 psampler) {
     
 
     glBindSampler((GLuint)punit, (GLuint)psampler);
     
     
 }
-void Java_org_mini_gl_GL_glSamplerParameteri__III_V(JThreadRuntime *runtime, s32 psampler, s32 ppname, s32 pparam) {
+void func_org_mini_gl_GL_glSamplerParameteri__III_V(JThreadRuntime *runtime, s32 psampler, s32 ppname, s32 pparam) {
     
 
     glSamplerParameteri((GLuint)psampler, (GLenum)ppname, (GLint)pparam);
     
     
 }
-void Java_org_mini_gl_GL_glSamplerParameteriv__II_3II_V(JThreadRuntime *runtime, s32 psampler, s32 ppname, JArray *pparam, s32 offset_pparam) {
+void func_org_mini_gl_GL_glSamplerParameteriv__II_3II_V(JThreadRuntime *runtime, s32 psampler, s32 ppname, JArray *pparam, s32 offset_pparam) {
     
     __refer ptr_pparam = (__refer)(intptr_t) offset_pparam;
     if(pparam) {
@@ -2256,14 +2256,14 @@ void Java_org_mini_gl_GL_glSamplerParameteriv__II_3II_V(JThreadRuntime *runtime,
     
     
 }
-void Java_org_mini_gl_GL_glSamplerParameterf__IIF_V(JThreadRuntime *runtime, s32 psampler, s32 ppname, f32 pparam) {
+void func_org_mini_gl_GL_glSamplerParameterf__IIF_V(JThreadRuntime *runtime, s32 psampler, s32 ppname, f32 pparam) {
     
 
     glSamplerParameterf((GLuint)psampler, (GLenum)ppname, (GLfloat)pparam);
     
     
 }
-void Java_org_mini_gl_GL_glSamplerParameterfv__II_3FI_V(JThreadRuntime *runtime, s32 psampler, s32 ppname, JArray *pparam, s32 offset_pparam) {
+void func_org_mini_gl_GL_glSamplerParameterfv__II_3FI_V(JThreadRuntime *runtime, s32 psampler, s32 ppname, JArray *pparam, s32 offset_pparam) {
     
     __refer ptr_pparam = (__refer)(intptr_t) offset_pparam;
     if(pparam) {
@@ -2275,7 +2275,7 @@ void Java_org_mini_gl_GL_glSamplerParameterfv__II_3FI_V(JThreadRuntime *runtime,
     
     
 }
-void Java_org_mini_gl_GL_glGetSamplerParameteriv__II_3II_V(JThreadRuntime *runtime, s32 psampler, s32 ppname, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetSamplerParameteriv__II_3II_V(JThreadRuntime *runtime, s32 psampler, s32 ppname, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -2287,7 +2287,7 @@ void Java_org_mini_gl_GL_glGetSamplerParameteriv__II_3II_V(JThreadRuntime *runti
     
     
 }
-void Java_org_mini_gl_GL_glGetSamplerParameterfv__II_3FI_V(JThreadRuntime *runtime, s32 psampler, s32 ppname, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetSamplerParameterfv__II_3FI_V(JThreadRuntime *runtime, s32 psampler, s32 ppname, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {
@@ -2299,21 +2299,21 @@ void Java_org_mini_gl_GL_glGetSamplerParameterfv__II_3FI_V(JThreadRuntime *runti
     
     
 }
-void Java_org_mini_gl_GL_glVertexAttribDivisor__II_V(JThreadRuntime *runtime, s32 pindex, s32 pdivisor) {
+void func_org_mini_gl_GL_glVertexAttribDivisor__II_V(JThreadRuntime *runtime, s32 pindex, s32 pdivisor) {
     
 
     glVertexAttribDivisor((GLuint)pindex, (GLuint)pdivisor);
     
     
 }
-void Java_org_mini_gl_GL_glBindTransformFeedback__II_V(JThreadRuntime *runtime, s32 ptarget, s32 pid) {
+void func_org_mini_gl_GL_glBindTransformFeedback__II_V(JThreadRuntime *runtime, s32 ptarget, s32 pid) {
     
 
     glBindTransformFeedback((GLenum)ptarget, (GLuint)pid);
     
     
 }
-void Java_org_mini_gl_GL_glDeleteTransformFeedbacks__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *pids, s32 offset_pids) {
+void func_org_mini_gl_GL_glDeleteTransformFeedbacks__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *pids, s32 offset_pids) {
     
     __refer ptr_pids = (__refer)(intptr_t) offset_pids;
     if(pids) {
@@ -2325,7 +2325,7 @@ void Java_org_mini_gl_GL_glDeleteTransformFeedbacks__I_3II_V(JThreadRuntime *run
     
     
 }
-void Java_org_mini_gl_GL_glGenTransformFeedbacks__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *pids, s32 offset_pids) {
+void func_org_mini_gl_GL_glGenTransformFeedbacks__I_3II_V(JThreadRuntime *runtime, s32 pn, JArray *pids, s32 offset_pids) {
     
     __refer ptr_pids = (__refer)(intptr_t) offset_pids;
     if(pids) {
@@ -2337,28 +2337,28 @@ void Java_org_mini_gl_GL_glGenTransformFeedbacks__I_3II_V(JThreadRuntime *runtim
     
     
 }
-s32 Java_org_mini_gl_GL_glIsTransformFeedback__I_I(JThreadRuntime *runtime, s32 pid) {
+s32 func_org_mini_gl_GL_glIsTransformFeedback__I_I(JThreadRuntime *runtime, s32 pid) {
     
 
     GLboolean _re_val = glIsTransformFeedback((GLuint)pid);
     return *((s32*)&_re_val);
     
 }
-void Java_org_mini_gl_GL_glPauseTransformFeedback___V(JThreadRuntime *runtime) {
+void func_org_mini_gl_GL_glPauseTransformFeedback___V(JThreadRuntime *runtime) {
     
 
     glPauseTransformFeedback();
     
     
 }
-void Java_org_mini_gl_GL_glResumeTransformFeedback___V(JThreadRuntime *runtime) {
+void func_org_mini_gl_GL_glResumeTransformFeedback___V(JThreadRuntime *runtime) {
     
 
     glResumeTransformFeedback();
     
     
 }
-void Java_org_mini_gl_GL_glGetProgramBinary__II_3II_3IILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 pprogram, s32 pbufSize, JArray *plength, s32 offset_plength, JArray *pbinaryFormat, s32 offset_pbinaryFormat, struct java_lang_Object *pbinary, s32 offset_pbinary) {
+void func_org_mini_gl_GL_glGetProgramBinary__II_3II_3IILjava_lang_Object_2I_V(JThreadRuntime *runtime, s32 pprogram, s32 pbufSize, JArray *plength, s32 offset_plength, JArray *pbinaryFormat, s32 offset_pbinaryFormat, struct java_lang_Object *pbinary, s32 offset_pbinary) {
     
     __refer ptr_plength = (__refer)(intptr_t) offset_plength;
     if(plength) {
@@ -2380,7 +2380,7 @@ void Java_org_mini_gl_GL_glGetProgramBinary__II_3II_3IILjava_lang_Object_2I_V(JT
     
     
 }
-void Java_org_mini_gl_GL_glProgramBinary__IILjava_lang_Object_2II_V(JThreadRuntime *runtime, s32 pprogram, s32 pbinaryFormat, struct java_lang_Object *pbinary, s32 offset_pbinary, s32 plength) {
+void func_org_mini_gl_GL_glProgramBinary__IILjava_lang_Object_2II_V(JThreadRuntime *runtime, s32 pprogram, s32 pbinaryFormat, struct java_lang_Object *pbinary, s32 offset_pbinary, s32 plength) {
     
     __refer ptr_pbinary = (__refer)(intptr_t) offset_pbinary;
     if(pbinary) {
@@ -2392,14 +2392,14 @@ void Java_org_mini_gl_GL_glProgramBinary__IILjava_lang_Object_2II_V(JThreadRunti
     
     
 }
-void Java_org_mini_gl_GL_glProgramParameteri__III_V(JThreadRuntime *runtime, s32 pprogram, s32 ppname, s32 pvalue) {
+void func_org_mini_gl_GL_glProgramParameteri__III_V(JThreadRuntime *runtime, s32 pprogram, s32 ppname, s32 pvalue) {
     
 
     glProgramParameteri((GLuint)pprogram, (GLenum)ppname, (GLint)pvalue);
     
     
 }
-void Java_org_mini_gl_GL_glInvalidateFramebuffer__II_3II_V(JThreadRuntime *runtime, s32 ptarget, s32 pnumAttachments, JArray *pattachments, s32 offset_pattachments) {
+void func_org_mini_gl_GL_glInvalidateFramebuffer__II_3II_V(JThreadRuntime *runtime, s32 ptarget, s32 pnumAttachments, JArray *pattachments, s32 offset_pattachments) {
     
     __refer ptr_pattachments = (__refer)(intptr_t) offset_pattachments;
     if(pattachments) {
@@ -2411,7 +2411,7 @@ void Java_org_mini_gl_GL_glInvalidateFramebuffer__II_3II_V(JThreadRuntime *runti
     
     
 }
-void Java_org_mini_gl_GL_glInvalidateSubFramebuffer__II_3IIIIII_V(JThreadRuntime *runtime, s32 ptarget, s32 pnumAttachments, JArray *pattachments, s32 offset_pattachments, s32 px, s32 py, s32 pwidth, s32 pheight) {
+void func_org_mini_gl_GL_glInvalidateSubFramebuffer__II_3IIIIII_V(JThreadRuntime *runtime, s32 ptarget, s32 pnumAttachments, JArray *pattachments, s32 offset_pattachments, s32 px, s32 py, s32 pwidth, s32 pheight) {
     
     __refer ptr_pattachments = (__refer)(intptr_t) offset_pattachments;
     if(pattachments) {
@@ -2423,21 +2423,21 @@ void Java_org_mini_gl_GL_glInvalidateSubFramebuffer__II_3IIIIII_V(JThreadRuntime
     
     
 }
-void Java_org_mini_gl_GL_glTexStorage2D__IIIII_V(JThreadRuntime *runtime, s32 ptarget, s32 plevels, s32 pinternalformat, s32 pwidth, s32 pheight) {
+void func_org_mini_gl_GL_glTexStorage2D__IIIII_V(JThreadRuntime *runtime, s32 ptarget, s32 plevels, s32 pinternalformat, s32 pwidth, s32 pheight) {
     
 
     glTexStorage2D((GLenum)ptarget, (GLsizei)plevels, (GLenum)pinternalformat, (GLsizei)pwidth, (GLsizei)pheight);
     
     
 }
-void Java_org_mini_gl_GL_glTexStorage3D__IIIIII_V(JThreadRuntime *runtime, s32 ptarget, s32 plevels, s32 pinternalformat, s32 pwidth, s32 pheight, s32 pdepth) {
+void func_org_mini_gl_GL_glTexStorage3D__IIIIII_V(JThreadRuntime *runtime, s32 ptarget, s32 plevels, s32 pinternalformat, s32 pwidth, s32 pheight, s32 pdepth) {
     
 
     glTexStorage3D((GLenum)ptarget, (GLsizei)plevels, (GLenum)pinternalformat, (GLsizei)pwidth, (GLsizei)pheight, (GLsizei)pdepth);
     
     
 }
-void Java_org_mini_gl_GL_glGetInternalformativ__IIII_3II_V(JThreadRuntime *runtime, s32 ptarget, s32 pinternalformat, s32 ppname, s32 pcount, JArray *pparams, s32 offset_pparams) {
+void func_org_mini_gl_GL_glGetInternalformativ__IIII_3II_V(JThreadRuntime *runtime, s32 ptarget, s32 pinternalformat, s32 ppname, s32 pcount, JArray *pparams, s32 offset_pparams) {
     
     __refer ptr_pparams = (__refer)(intptr_t) offset_pparams;
     if(pparams) {

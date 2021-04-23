@@ -28,7 +28,7 @@
 
 
 
-s32 Java_org_mini_nanovg_Nanovg_stbtt_1InitFont__J_3BI_I(JThreadRuntime *runtime, s64 pinfo, JArray *pdata2, s32 pfontstart) {
+s32 func_org_mini_nanovg_Nanovg_stbtt_1InitFont__J_3BI_I(JThreadRuntime *runtime, s64 pinfo, JArray *pdata2, s32 pfontstart) {
     
     __refer ptr_pdata2 = pdata2?pdata2->prop.as_s8_arr:NULL;
 
@@ -37,7 +37,7 @@ s32 Java_org_mini_nanovg_Nanovg_stbtt_1InitFont__J_3BI_I(JThreadRuntime *runtime
     
 }
 
-f32 Java_org_mini_nanovg_Nanovg_stbtt_1ScaleForPixelHeight__JF_F(JThreadRuntime *runtime, s64 pinfo, f32 ppixels) {
+f32 func_org_mini_nanovg_Nanovg_stbtt_1ScaleForPixelHeight__JF_F(JThreadRuntime *runtime, s64 pinfo, f32 ppixels) {
     
 
     return (f32)stbtt_ScaleForPixelHeight((const stbtt_fontinfo*/*ptr*/)pinfo, (float)ppixels);
@@ -45,7 +45,7 @@ f32 Java_org_mini_nanovg_Nanovg_stbtt_1ScaleForPixelHeight__JF_F(JThreadRuntime 
     
 }
 
-void Java_org_mini_nanovg_Nanovg_stbtt_1GetFontVMetrics__J_3I_3I_3I_V(JThreadRuntime *runtime, s64 pinfo, JArray *pascent, JArray *pdescent, JArray *plineGap) {
+void func_org_mini_nanovg_Nanovg_stbtt_1GetFontVMetrics__J_3I_3I_3I_V(JThreadRuntime *runtime, s64 pinfo, JArray *pascent, JArray *pdescent, JArray *plineGap) {
     
     __refer ptr_pascent = pascent?pascent->prop.as_s8_arr:NULL;
     __refer ptr_pdescent = pdescent?pdescent->prop.as_s8_arr:NULL;
@@ -56,7 +56,7 @@ void Java_org_mini_nanovg_Nanovg_stbtt_1GetFontVMetrics__J_3I_3I_3I_V(JThreadRun
     
 }
 
-void Java_org_mini_nanovg_Nanovg_stbtt_1GetCodepointBitmapBox__JIFF_3I_3I_3I_3I_V(JThreadRuntime *runtime, s64 pfont, s32 pcodepoint, f32 pscale_x, f32 pscale_y, JArray *pix0, JArray *piy0, JArray *pix1, JArray *piy1) {
+void func_org_mini_nanovg_Nanovg_stbtt_1GetCodepointBitmapBox__JIFF_3I_3I_3I_3I_V(JThreadRuntime *runtime, s64 pfont, s32 pcodepoint, f32 pscale_x, f32 pscale_y, JArray *pix0, JArray *piy0, JArray *pix1, JArray *piy1) {
     
     __refer ptr_pix0 = pix0?pix0->prop.as_s8_arr:NULL;
     __refer ptr_piy0 = piy0?piy0->prop.as_s8_arr:NULL;
@@ -68,7 +68,7 @@ void Java_org_mini_nanovg_Nanovg_stbtt_1GetCodepointBitmapBox__JIFF_3I_3I_3I_3I_
     
 }
 
-void Java_org_mini_nanovg_Nanovg_stbtt_1MakeCodepointBitmapOffset__J_3BIIIIFFI_V(JThreadRuntime *runtime, s64 pinfo, JArray *poutput, s32 poutput_offset, s32 pout_w, s32 pout_h, s32 pout_stride, f32 pscale_x, f32 pscale_y, s32 pcodepoint) {
+void func_org_mini_nanovg_Nanovg_stbtt_1MakeCodepointBitmapOffset__J_3BIIIIFFI_V(JThreadRuntime *runtime, s64 pinfo, JArray *poutput, s32 poutput_offset, s32 pout_w, s32 pout_h, s32 pout_stride, f32 pscale_x, f32 pscale_y, s32 pcodepoint) {
     
     __refer ptr_poutput = poutput?poutput->prop.as_s8_arr:NULL;
 
@@ -77,7 +77,7 @@ void Java_org_mini_nanovg_Nanovg_stbtt_1MakeCodepointBitmapOffset__J_3BIIIIFFI_V
     
 }
 
-void Java_org_mini_nanovg_Nanovg_stbtt_1GetCodepointHMetrics__JI_3I_3I_V(JThreadRuntime *runtime, s64 pinfo, s32 pcodepoint, JArray *padvanceWidth, JArray *pleftSideBearing) {
+void func_org_mini_nanovg_Nanovg_stbtt_1GetCodepointHMetrics__JI_3I_3I_V(JThreadRuntime *runtime, s64 pinfo, s32 pcodepoint, JArray *padvanceWidth, JArray *pleftSideBearing) {
     
     __refer ptr_padvanceWidth = padvanceWidth?padvanceWidth->prop.as_s8_arr:NULL;
     __refer ptr_pleftSideBearing = pleftSideBearing?pleftSideBearing->prop.as_s8_arr:NULL;
@@ -87,7 +87,7 @@ void Java_org_mini_nanovg_Nanovg_stbtt_1GetCodepointHMetrics__JI_3I_3I_V(JThread
     
 }
 
-s32 Java_org_mini_nanovg_Nanovg_stbtt_1GetCodepointKernAdvance__JII_I(JThreadRuntime *runtime, s64 pinfo, s32 pch1, s32 pch2) {
+s32 func_org_mini_nanovg_Nanovg_stbtt_1GetCodepointKernAdvance__JII_I(JThreadRuntime *runtime, s64 pinfo, s32 pch1, s32 pch2) {
     
 
     int _re_val = stbtt_GetCodepointKernAdvance((const stbtt_fontinfo*/*ptr*/)pinfo, (int)pch1, (int)pch2);
@@ -95,7 +95,7 @@ s32 Java_org_mini_nanovg_Nanovg_stbtt_1GetCodepointKernAdvance__JII_I(JThreadRun
     
 }
 
-JArray * Java_org_mini_nanovg_Nanovg_stbtt_1MakeFontInfo____3B(JThreadRuntime *runtime) {
+JArray * func_org_mini_nanovg_Nanovg_stbtt_1MakeFontInfo____3B(JThreadRuntime *runtime) {
     
 
     struct stbtt_fontinfo/*none_ptr*/ _re_val = stbtt_MakeFontInfo();
@@ -112,7 +112,7 @@ JArray * Java_org_mini_nanovg_Nanovg_stbtt_1MakeFontInfo____3B(JThreadRuntime *r
     
 }
 
-s8 Java_org_mini_nanovg_Nanovg_access_1mem__J_B(JThreadRuntime *runtime, s64 pptr) {
+s8 func_org_mini_nanovg_Nanovg_access_1mem__J_B(JThreadRuntime *runtime, s64 pptr) {
     
 
     return (s8)access_mem((stbi_uc*/*ptr*/)pptr);
@@ -120,7 +120,7 @@ s8 Java_org_mini_nanovg_Nanovg_access_1mem__J_B(JThreadRuntime *runtime, s64 ppt
     
 }
 
-s32 Java_org_mini_nanovg_Nanovg_stbi_1write_1png___3BIIIJI_I(JThreadRuntime *runtime, JArray *pfilename, s32 pw, s32 ph, s32 pcomp, s64 pdata, s32 pstride_in_bytes) {
+s32 func_org_mini_nanovg_Nanovg_stbi_1write_1png___3BIIIJI_I(JThreadRuntime *runtime, JArray *pfilename, s32 pw, s32 ph, s32 pcomp, s64 pdata, s32 pstride_in_bytes) {
     
     __refer ptr_pfilename = pfilename?pfilename->prop.as_s8_arr:NULL;
 
@@ -129,7 +129,7 @@ s32 Java_org_mini_nanovg_Nanovg_stbi_1write_1png___3BIIIJI_I(JThreadRuntime *run
     
 }
 
-s32 Java_org_mini_nanovg_Nanovg_stbi_1write_1bmp___3BIIIJ_I(JThreadRuntime *runtime, JArray *pfilename, s32 pw, s32 ph, s32 pcomp, s64 pdata) {
+s32 func_org_mini_nanovg_Nanovg_stbi_1write_1bmp___3BIIIJ_I(JThreadRuntime *runtime, JArray *pfilename, s32 pw, s32 ph, s32 pcomp, s64 pdata) {
     
     __refer ptr_pfilename = pfilename?pfilename->prop.as_s8_arr:NULL;
 
@@ -138,7 +138,7 @@ s32 Java_org_mini_nanovg_Nanovg_stbi_1write_1bmp___3BIIIJ_I(JThreadRuntime *runt
     
 }
 
-s32 Java_org_mini_nanovg_Nanovg_stbi_1write_1tga___3BIIIJ_I(JThreadRuntime *runtime, JArray *pfilename, s32 pw, s32 ph, s32 pcomp, s64 pdata) {
+s32 func_org_mini_nanovg_Nanovg_stbi_1write_1tga___3BIIIJ_I(JThreadRuntime *runtime, JArray *pfilename, s32 pw, s32 ph, s32 pcomp, s64 pdata) {
     
     __refer ptr_pfilename = pfilename?pfilename->prop.as_s8_arr:NULL;
 
@@ -147,7 +147,7 @@ s32 Java_org_mini_nanovg_Nanovg_stbi_1write_1tga___3BIIIJ_I(JThreadRuntime *runt
     
 }
 
-s64 Java_org_mini_nanovg_Nanovg_stbi_1load___3B_3I_3I_3II_J(JThreadRuntime *runtime, JArray *pfilename, JArray *px, JArray *py, JArray *pcomp, s32 preq_comp) {
+s64 func_org_mini_nanovg_Nanovg_stbi_1load___3B_3I_3I_3II_J(JThreadRuntime *runtime, JArray *pfilename, JArray *px, JArray *py, JArray *pcomp, s32 preq_comp) {
     
     __refer ptr_pfilename = pfilename?pfilename->prop.as_s8_arr:NULL;
     __refer ptr_px = px?px->prop.as_s8_arr:NULL;
@@ -159,7 +159,7 @@ s64 Java_org_mini_nanovg_Nanovg_stbi_1load___3B_3I_3I_3II_J(JThreadRuntime *runt
     
 }
 
-s64 Java_org_mini_nanovg_Nanovg_stbi_1load_1from_1memory__JI_3I_3I_3II_J(JThreadRuntime *runtime, s64 pbuffer, s32 plen, JArray *px, JArray *py, JArray *pcomp, s32 preq_comp) {
+s64 func_org_mini_nanovg_Nanovg_stbi_1load_1from_1memory__JI_3I_3I_3II_J(JThreadRuntime *runtime, s64 pbuffer, s32 plen, JArray *px, JArray *py, JArray *pcomp, s32 preq_comp) {
     
     __refer ptr_px = px?px->prop.as_s8_arr:NULL;
     __refer ptr_py = py?py->prop.as_s8_arr:NULL;
@@ -170,7 +170,7 @@ s64 Java_org_mini_nanovg_Nanovg_stbi_1load_1from_1memory__JI_3I_3I_3II_J(JThread
     
 }
 
-void Java_org_mini_nanovg_Nanovg_stbi_1image_1free__J_V(JThreadRuntime *runtime, s64 pretval_from_stbi_load) {
+void func_org_mini_nanovg_Nanovg_stbi_1image_1free__J_V(JThreadRuntime *runtime, s64 pretval_from_stbi_load) {
     
 
     stbi_image_free((void*/*ptr*/)pretval_from_stbi_load);
@@ -178,7 +178,7 @@ void Java_org_mini_nanovg_Nanovg_stbi_1image_1free__J_V(JThreadRuntime *runtime,
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgBeginFrame__JIIF_V(JThreadRuntime *runtime, s64 pctx, s32 pwindowWidth, s32 pwindowHeight, f32 pdevicePixelRatio) {
+void func_org_mini_nanovg_Nanovg_nvgBeginFrame__JIIF_V(JThreadRuntime *runtime, s64 pctx, s32 pwindowWidth, s32 pwindowHeight, f32 pdevicePixelRatio) {
     
 
     nvgBeginFrame((NVGcontext*/*ptr*/)pctx, (int)pwindowWidth, (int)pwindowHeight, (float)pdevicePixelRatio);
@@ -186,7 +186,7 @@ void Java_org_mini_nanovg_Nanovg_nvgBeginFrame__JIIF_V(JThreadRuntime *runtime, 
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgCancelFrame__J_V(JThreadRuntime *runtime, s64 pctx) {
+void func_org_mini_nanovg_Nanovg_nvgCancelFrame__J_V(JThreadRuntime *runtime, s64 pctx) {
     
 
     nvgCancelFrame((NVGcontext*/*ptr*/)pctx);
@@ -194,7 +194,7 @@ void Java_org_mini_nanovg_Nanovg_nvgCancelFrame__J_V(JThreadRuntime *runtime, s6
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgEndFrame__J_V(JThreadRuntime *runtime, s64 pctx) {
+void func_org_mini_nanovg_Nanovg_nvgEndFrame__J_V(JThreadRuntime *runtime, s64 pctx) {
     
 
     nvgEndFrame((NVGcontext*/*ptr*/)pctx);
@@ -202,7 +202,7 @@ void Java_org_mini_nanovg_Nanovg_nvgEndFrame__J_V(JThreadRuntime *runtime, s64 p
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgGlobalCompositeOperation__JI_V(JThreadRuntime *runtime, s64 pctx, s32 pop) {
+void func_org_mini_nanovg_Nanovg_nvgGlobalCompositeOperation__JI_V(JThreadRuntime *runtime, s64 pctx, s32 pop) {
     
 
     nvgGlobalCompositeOperation((NVGcontext*/*ptr*/)pctx, (int)pop);
@@ -210,7 +210,7 @@ void Java_org_mini_nanovg_Nanovg_nvgGlobalCompositeOperation__JI_V(JThreadRuntim
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgGlobalCompositeBlendFunc__JII_V(JThreadRuntime *runtime, s64 pctx, s32 psfactor, s32 pdfactor) {
+void func_org_mini_nanovg_Nanovg_nvgGlobalCompositeBlendFunc__JII_V(JThreadRuntime *runtime, s64 pctx, s32 psfactor, s32 pdfactor) {
     
 
     nvgGlobalCompositeBlendFunc((NVGcontext*/*ptr*/)pctx, (int)psfactor, (int)pdfactor);
@@ -218,7 +218,7 @@ void Java_org_mini_nanovg_Nanovg_nvgGlobalCompositeBlendFunc__JII_V(JThreadRunti
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgGlobalCompositeBlendFuncSeparate__JIIII_V(JThreadRuntime *runtime, s64 pctx, s32 psrcRGB, s32 pdstRGB, s32 psrcAlpha, s32 pdstAlpha) {
+void func_org_mini_nanovg_Nanovg_nvgGlobalCompositeBlendFuncSeparate__JIIII_V(JThreadRuntime *runtime, s64 pctx, s32 psrcRGB, s32 pdstRGB, s32 psrcAlpha, s32 pdstAlpha) {
     
 
     nvgGlobalCompositeBlendFuncSeparate((NVGcontext*/*ptr*/)pctx, (int)psrcRGB, (int)pdstRGB, (int)psrcAlpha, (int)pdstAlpha);
@@ -226,7 +226,7 @@ void Java_org_mini_nanovg_Nanovg_nvgGlobalCompositeBlendFuncSeparate__JIIII_V(JT
     
 }
 
-JArray * Java_org_mini_nanovg_Nanovg_nvgRGB__BBB__3F(JThreadRuntime *runtime, s8 pr, s8 pg, s8 pb) {
+JArray * func_org_mini_nanovg_Nanovg_nvgRGB__BBB__3F(JThreadRuntime *runtime, s8 pr, s8 pg, s8 pb) {
     
 
     NVGcolor/*none_ptr*/ _re_val = nvgRGB((unsigned char)pr, (unsigned char)pg, (unsigned char)pb);
@@ -243,7 +243,7 @@ JArray * Java_org_mini_nanovg_Nanovg_nvgRGB__BBB__3F(JThreadRuntime *runtime, s8
     
 }
 
-JArray * Java_org_mini_nanovg_Nanovg_nvgRGBf__FFF__3F(JThreadRuntime *runtime, f32 pr, f32 pg, f32 pb) {
+JArray * func_org_mini_nanovg_Nanovg_nvgRGBf__FFF__3F(JThreadRuntime *runtime, f32 pr, f32 pg, f32 pb) {
     
 
     NVGcolor/*none_ptr*/ _re_val = nvgRGBf((float)pr, (float)pg, (float)pb);
@@ -260,7 +260,7 @@ JArray * Java_org_mini_nanovg_Nanovg_nvgRGBf__FFF__3F(JThreadRuntime *runtime, f
     
 }
 
-JArray * Java_org_mini_nanovg_Nanovg_nvgRGBA__BBBB__3F(JThreadRuntime *runtime, s8 pr, s8 pg, s8 pb, s8 pa) {
+JArray * func_org_mini_nanovg_Nanovg_nvgRGBA__BBBB__3F(JThreadRuntime *runtime, s8 pr, s8 pg, s8 pb, s8 pa) {
     
 
     NVGcolor/*none_ptr*/ _re_val = nvgRGBA((unsigned char)pr, (unsigned char)pg, (unsigned char)pb, (unsigned char)pa);
@@ -277,7 +277,7 @@ JArray * Java_org_mini_nanovg_Nanovg_nvgRGBA__BBBB__3F(JThreadRuntime *runtime, 
     
 }
 
-JArray * Java_org_mini_nanovg_Nanovg_nvgRGBAf__FFFF__3F(JThreadRuntime *runtime, f32 pr, f32 pg, f32 pb, f32 pa) {
+JArray * func_org_mini_nanovg_Nanovg_nvgRGBAf__FFFF__3F(JThreadRuntime *runtime, f32 pr, f32 pg, f32 pb, f32 pa) {
     
 
     NVGcolor/*none_ptr*/ _re_val = nvgRGBAf((float)pr, (float)pg, (float)pb, (float)pa);
@@ -294,7 +294,7 @@ JArray * Java_org_mini_nanovg_Nanovg_nvgRGBAf__FFFF__3F(JThreadRuntime *runtime,
     
 }
 
-JArray * Java_org_mini_nanovg_Nanovg_nvgLerpRGBA___3F_3FF__3F(JThreadRuntime *runtime, JArray *pc0, JArray *pc1, f32 pu) {
+JArray * func_org_mini_nanovg_Nanovg_nvgLerpRGBA___3F_3FF__3F(JThreadRuntime *runtime, JArray *pc0, JArray *pc1, f32 pu) {
     
     __refer ptr_pc0 = pc0?pc0->prop.as_s8_arr:NULL;
     __refer ptr_pc1 = pc1?pc1->prop.as_s8_arr:NULL;
@@ -313,7 +313,7 @@ JArray * Java_org_mini_nanovg_Nanovg_nvgLerpRGBA___3F_3FF__3F(JThreadRuntime *ru
     
 }
 
-JArray * Java_org_mini_nanovg_Nanovg_nvgTransRGBA___3FB__3F(JThreadRuntime *runtime, JArray *pc0, s8 pa) {
+JArray * func_org_mini_nanovg_Nanovg_nvgTransRGBA___3FB__3F(JThreadRuntime *runtime, JArray *pc0, s8 pa) {
     
     __refer ptr_pc0 = pc0?pc0->prop.as_s8_arr:NULL;
 
@@ -331,7 +331,7 @@ JArray * Java_org_mini_nanovg_Nanovg_nvgTransRGBA___3FB__3F(JThreadRuntime *runt
     
 }
 
-JArray * Java_org_mini_nanovg_Nanovg_nvgTransRGBAf___3FF__3F(JThreadRuntime *runtime, JArray *pc0, f32 pa) {
+JArray * func_org_mini_nanovg_Nanovg_nvgTransRGBAf___3FF__3F(JThreadRuntime *runtime, JArray *pc0, f32 pa) {
     
     __refer ptr_pc0 = pc0?pc0->prop.as_s8_arr:NULL;
 
@@ -349,7 +349,7 @@ JArray * Java_org_mini_nanovg_Nanovg_nvgTransRGBAf___3FF__3F(JThreadRuntime *run
     
 }
 
-JArray * Java_org_mini_nanovg_Nanovg_nvgHSL__FFF__3F(JThreadRuntime *runtime, f32 ph, f32 ps, f32 pl) {
+JArray * func_org_mini_nanovg_Nanovg_nvgHSL__FFF__3F(JThreadRuntime *runtime, f32 ph, f32 ps, f32 pl) {
     
 
     NVGcolor/*none_ptr*/ _re_val = nvgHSL((float)ph, (float)ps, (float)pl);
@@ -366,7 +366,7 @@ JArray * Java_org_mini_nanovg_Nanovg_nvgHSL__FFF__3F(JThreadRuntime *runtime, f3
     
 }
 
-JArray * Java_org_mini_nanovg_Nanovg_nvgHSLA__FFFB__3F(JThreadRuntime *runtime, f32 ph, f32 ps, f32 pl, s8 pa) {
+JArray * func_org_mini_nanovg_Nanovg_nvgHSLA__FFFB__3F(JThreadRuntime *runtime, f32 ph, f32 ps, f32 pl, s8 pa) {
     
 
     NVGcolor/*none_ptr*/ _re_val = nvgHSLA((float)ph, (float)ps, (float)pl, (unsigned char)pa);
@@ -383,7 +383,7 @@ JArray * Java_org_mini_nanovg_Nanovg_nvgHSLA__FFFB__3F(JThreadRuntime *runtime, 
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgSave__J_V(JThreadRuntime *runtime, s64 pctx) {
+void func_org_mini_nanovg_Nanovg_nvgSave__J_V(JThreadRuntime *runtime, s64 pctx) {
     
 
     nvgSave((NVGcontext*/*ptr*/)pctx);
@@ -391,7 +391,7 @@ void Java_org_mini_nanovg_Nanovg_nvgSave__J_V(JThreadRuntime *runtime, s64 pctx)
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgRestore__J_V(JThreadRuntime *runtime, s64 pctx) {
+void func_org_mini_nanovg_Nanovg_nvgRestore__J_V(JThreadRuntime *runtime, s64 pctx) {
     
 
     nvgRestore((NVGcontext*/*ptr*/)pctx);
@@ -399,7 +399,7 @@ void Java_org_mini_nanovg_Nanovg_nvgRestore__J_V(JThreadRuntime *runtime, s64 pc
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgReset__J_V(JThreadRuntime *runtime, s64 pctx) {
+void func_org_mini_nanovg_Nanovg_nvgReset__J_V(JThreadRuntime *runtime, s64 pctx) {
     
 
     nvgReset((NVGcontext*/*ptr*/)pctx);
@@ -407,7 +407,7 @@ void Java_org_mini_nanovg_Nanovg_nvgReset__J_V(JThreadRuntime *runtime, s64 pctx
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgShapeAntiAlias__JI_V(JThreadRuntime *runtime, s64 pctx, s32 penabled) {
+void func_org_mini_nanovg_Nanovg_nvgShapeAntiAlias__JI_V(JThreadRuntime *runtime, s64 pctx, s32 penabled) {
     
 
     nvgShapeAntiAlias((NVGcontext*/*ptr*/)pctx, (int)penabled);
@@ -415,7 +415,7 @@ void Java_org_mini_nanovg_Nanovg_nvgShapeAntiAlias__JI_V(JThreadRuntime *runtime
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgStrokeColor__J_3F_V(JThreadRuntime *runtime, s64 pctx, JArray *pcolor) {
+void func_org_mini_nanovg_Nanovg_nvgStrokeColor__J_3F_V(JThreadRuntime *runtime, s64 pctx, JArray *pcolor) {
     
     __refer ptr_pcolor = pcolor?pcolor->prop.as_s8_arr:NULL;
 
@@ -424,7 +424,7 @@ void Java_org_mini_nanovg_Nanovg_nvgStrokeColor__J_3F_V(JThreadRuntime *runtime,
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgStrokePaint__J_3B_V(JThreadRuntime *runtime, s64 pctx, JArray *ppaint) {
+void func_org_mini_nanovg_Nanovg_nvgStrokePaint__J_3B_V(JThreadRuntime *runtime, s64 pctx, JArray *ppaint) {
     
     __refer ptr_ppaint = ppaint?ppaint->prop.as_s8_arr:NULL;
 
@@ -433,7 +433,7 @@ void Java_org_mini_nanovg_Nanovg_nvgStrokePaint__J_3B_V(JThreadRuntime *runtime,
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgFillColor__J_3F_V(JThreadRuntime *runtime, s64 pctx, JArray *pcolor) {
+void func_org_mini_nanovg_Nanovg_nvgFillColor__J_3F_V(JThreadRuntime *runtime, s64 pctx, JArray *pcolor) {
     
     __refer ptr_pcolor = pcolor?pcolor->prop.as_s8_arr:NULL;
 
@@ -442,7 +442,7 @@ void Java_org_mini_nanovg_Nanovg_nvgFillColor__J_3F_V(JThreadRuntime *runtime, s
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgFillPaint__J_3B_V(JThreadRuntime *runtime, s64 pctx, JArray *ppaint) {
+void func_org_mini_nanovg_Nanovg_nvgFillPaint__J_3B_V(JThreadRuntime *runtime, s64 pctx, JArray *ppaint) {
     
     __refer ptr_ppaint = ppaint?ppaint->prop.as_s8_arr:NULL;
 
@@ -451,7 +451,7 @@ void Java_org_mini_nanovg_Nanovg_nvgFillPaint__J_3B_V(JThreadRuntime *runtime, s
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgMiterLimit__JF_V(JThreadRuntime *runtime, s64 pctx, f32 plimit) {
+void func_org_mini_nanovg_Nanovg_nvgMiterLimit__JF_V(JThreadRuntime *runtime, s64 pctx, f32 plimit) {
     
 
     nvgMiterLimit((NVGcontext*/*ptr*/)pctx, (float)plimit);
@@ -459,7 +459,7 @@ void Java_org_mini_nanovg_Nanovg_nvgMiterLimit__JF_V(JThreadRuntime *runtime, s6
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgStrokeWidth__JF_V(JThreadRuntime *runtime, s64 pctx, f32 psize) {
+void func_org_mini_nanovg_Nanovg_nvgStrokeWidth__JF_V(JThreadRuntime *runtime, s64 pctx, f32 psize) {
     
 
     nvgStrokeWidth((NVGcontext*/*ptr*/)pctx, (float)psize);
@@ -467,7 +467,7 @@ void Java_org_mini_nanovg_Nanovg_nvgStrokeWidth__JF_V(JThreadRuntime *runtime, s
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgLineCap__JI_V(JThreadRuntime *runtime, s64 pctx, s32 pcap) {
+void func_org_mini_nanovg_Nanovg_nvgLineCap__JI_V(JThreadRuntime *runtime, s64 pctx, s32 pcap) {
     
 
     nvgLineCap((NVGcontext*/*ptr*/)pctx, (int)pcap);
@@ -475,7 +475,7 @@ void Java_org_mini_nanovg_Nanovg_nvgLineCap__JI_V(JThreadRuntime *runtime, s64 p
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgLineJoin__JI_V(JThreadRuntime *runtime, s64 pctx, s32 pjoin) {
+void func_org_mini_nanovg_Nanovg_nvgLineJoin__JI_V(JThreadRuntime *runtime, s64 pctx, s32 pjoin) {
     
 
     nvgLineJoin((NVGcontext*/*ptr*/)pctx, (int)pjoin);
@@ -483,7 +483,7 @@ void Java_org_mini_nanovg_Nanovg_nvgLineJoin__JI_V(JThreadRuntime *runtime, s64 
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgGlobalAlpha__JF_V(JThreadRuntime *runtime, s64 pctx, f32 palpha) {
+void func_org_mini_nanovg_Nanovg_nvgGlobalAlpha__JF_V(JThreadRuntime *runtime, s64 pctx, f32 palpha) {
     
 
     nvgGlobalAlpha((NVGcontext*/*ptr*/)pctx, (float)palpha);
@@ -491,7 +491,7 @@ void Java_org_mini_nanovg_Nanovg_nvgGlobalAlpha__JF_V(JThreadRuntime *runtime, s
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgResetTransform__J_V(JThreadRuntime *runtime, s64 pctx) {
+void func_org_mini_nanovg_Nanovg_nvgResetTransform__J_V(JThreadRuntime *runtime, s64 pctx) {
     
 
     nvgResetTransform((NVGcontext*/*ptr*/)pctx);
@@ -499,7 +499,7 @@ void Java_org_mini_nanovg_Nanovg_nvgResetTransform__J_V(JThreadRuntime *runtime,
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgTransform__JFFFFFF_V(JThreadRuntime *runtime, s64 pctx, f32 pa, f32 pb, f32 pc, f32 pd, f32 pe, f32 pf) {
+void func_org_mini_nanovg_Nanovg_nvgTransform__JFFFFFF_V(JThreadRuntime *runtime, s64 pctx, f32 pa, f32 pb, f32 pc, f32 pd, f32 pe, f32 pf) {
     
 
     nvgTransform((NVGcontext*/*ptr*/)pctx, (float)pa, (float)pb, (float)pc, (float)pd, (float)pe, (float)pf);
@@ -507,7 +507,7 @@ void Java_org_mini_nanovg_Nanovg_nvgTransform__JFFFFFF_V(JThreadRuntime *runtime
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgTranslate__JFF_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py) {
+void func_org_mini_nanovg_Nanovg_nvgTranslate__JFF_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py) {
     
 
     nvgTranslate((NVGcontext*/*ptr*/)pctx, (float)px, (float)py);
@@ -515,7 +515,7 @@ void Java_org_mini_nanovg_Nanovg_nvgTranslate__JFF_V(JThreadRuntime *runtime, s6
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgRotate__JF_V(JThreadRuntime *runtime, s64 pctx, f32 pangle) {
+void func_org_mini_nanovg_Nanovg_nvgRotate__JF_V(JThreadRuntime *runtime, s64 pctx, f32 pangle) {
     
 
     nvgRotate((NVGcontext*/*ptr*/)pctx, (float)pangle);
@@ -523,7 +523,7 @@ void Java_org_mini_nanovg_Nanovg_nvgRotate__JF_V(JThreadRuntime *runtime, s64 pc
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgSkewX__JF_V(JThreadRuntime *runtime, s64 pctx, f32 pangle) {
+void func_org_mini_nanovg_Nanovg_nvgSkewX__JF_V(JThreadRuntime *runtime, s64 pctx, f32 pangle) {
     
 
     nvgSkewX((NVGcontext*/*ptr*/)pctx, (float)pangle);
@@ -531,7 +531,7 @@ void Java_org_mini_nanovg_Nanovg_nvgSkewX__JF_V(JThreadRuntime *runtime, s64 pct
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgSkewY__JF_V(JThreadRuntime *runtime, s64 pctx, f32 pangle) {
+void func_org_mini_nanovg_Nanovg_nvgSkewY__JF_V(JThreadRuntime *runtime, s64 pctx, f32 pangle) {
     
 
     nvgSkewY((NVGcontext*/*ptr*/)pctx, (float)pangle);
@@ -539,7 +539,7 @@ void Java_org_mini_nanovg_Nanovg_nvgSkewY__JF_V(JThreadRuntime *runtime, s64 pct
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgScale__JFF_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py) {
+void func_org_mini_nanovg_Nanovg_nvgScale__JFF_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py) {
     
 
     nvgScale((NVGcontext*/*ptr*/)pctx, (float)px, (float)py);
@@ -547,7 +547,7 @@ void Java_org_mini_nanovg_Nanovg_nvgScale__JFF_V(JThreadRuntime *runtime, s64 pc
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgCurrentTransform__J_3F_V(JThreadRuntime *runtime, s64 pctx, JArray *pxform) {
+void func_org_mini_nanovg_Nanovg_nvgCurrentTransform__J_3F_V(JThreadRuntime *runtime, s64 pctx, JArray *pxform) {
     
     __refer ptr_pxform = pxform?pxform->prop.as_s8_arr:NULL;
 
@@ -556,7 +556,7 @@ void Java_org_mini_nanovg_Nanovg_nvgCurrentTransform__J_3F_V(JThreadRuntime *run
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgTransformIdentity___3F_V(JThreadRuntime *runtime, JArray *pdst) {
+void func_org_mini_nanovg_Nanovg_nvgTransformIdentity___3F_V(JThreadRuntime *runtime, JArray *pdst) {
     
     __refer ptr_pdst = pdst?pdst->prop.as_s8_arr:NULL;
 
@@ -565,7 +565,7 @@ void Java_org_mini_nanovg_Nanovg_nvgTransformIdentity___3F_V(JThreadRuntime *run
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgTransformTranslate___3FFF_V(JThreadRuntime *runtime, JArray *pdst, f32 ptx, f32 pty) {
+void func_org_mini_nanovg_Nanovg_nvgTransformTranslate___3FFF_V(JThreadRuntime *runtime, JArray *pdst, f32 ptx, f32 pty) {
     
     __refer ptr_pdst = pdst?pdst->prop.as_s8_arr:NULL;
 
@@ -574,7 +574,7 @@ void Java_org_mini_nanovg_Nanovg_nvgTransformTranslate___3FFF_V(JThreadRuntime *
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgTransformScale___3FFF_V(JThreadRuntime *runtime, JArray *pdst, f32 psx, f32 psy) {
+void func_org_mini_nanovg_Nanovg_nvgTransformScale___3FFF_V(JThreadRuntime *runtime, JArray *pdst, f32 psx, f32 psy) {
     
     __refer ptr_pdst = pdst?pdst->prop.as_s8_arr:NULL;
 
@@ -583,7 +583,7 @@ void Java_org_mini_nanovg_Nanovg_nvgTransformScale___3FFF_V(JThreadRuntime *runt
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgTransformRotate___3FF_V(JThreadRuntime *runtime, JArray *pdst, f32 pa) {
+void func_org_mini_nanovg_Nanovg_nvgTransformRotate___3FF_V(JThreadRuntime *runtime, JArray *pdst, f32 pa) {
     
     __refer ptr_pdst = pdst?pdst->prop.as_s8_arr:NULL;
 
@@ -592,7 +592,7 @@ void Java_org_mini_nanovg_Nanovg_nvgTransformRotate___3FF_V(JThreadRuntime *runt
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgTransformSkewX___3FF_V(JThreadRuntime *runtime, JArray *pdst, f32 pa) {
+void func_org_mini_nanovg_Nanovg_nvgTransformSkewX___3FF_V(JThreadRuntime *runtime, JArray *pdst, f32 pa) {
     
     __refer ptr_pdst = pdst?pdst->prop.as_s8_arr:NULL;
 
@@ -601,7 +601,7 @@ void Java_org_mini_nanovg_Nanovg_nvgTransformSkewX___3FF_V(JThreadRuntime *runti
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgTransformSkewY___3FF_V(JThreadRuntime *runtime, JArray *pdst, f32 pa) {
+void func_org_mini_nanovg_Nanovg_nvgTransformSkewY___3FF_V(JThreadRuntime *runtime, JArray *pdst, f32 pa) {
     
     __refer ptr_pdst = pdst?pdst->prop.as_s8_arr:NULL;
 
@@ -610,7 +610,7 @@ void Java_org_mini_nanovg_Nanovg_nvgTransformSkewY___3FF_V(JThreadRuntime *runti
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgTransformMultiply___3F_3F_V(JThreadRuntime *runtime, JArray *pdst, JArray *psrc) {
+void func_org_mini_nanovg_Nanovg_nvgTransformMultiply___3F_3F_V(JThreadRuntime *runtime, JArray *pdst, JArray *psrc) {
     
     __refer ptr_pdst = pdst?pdst->prop.as_s8_arr:NULL;
     __refer ptr_psrc = psrc?psrc->prop.as_s8_arr:NULL;
@@ -620,7 +620,7 @@ void Java_org_mini_nanovg_Nanovg_nvgTransformMultiply___3F_3F_V(JThreadRuntime *
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgTransformPremultiply___3F_3F_V(JThreadRuntime *runtime, JArray *pdst, JArray *psrc) {
+void func_org_mini_nanovg_Nanovg_nvgTransformPremultiply___3F_3F_V(JThreadRuntime *runtime, JArray *pdst, JArray *psrc) {
     
     __refer ptr_pdst = pdst?pdst->prop.as_s8_arr:NULL;
     __refer ptr_psrc = psrc?psrc->prop.as_s8_arr:NULL;
@@ -630,7 +630,7 @@ void Java_org_mini_nanovg_Nanovg_nvgTransformPremultiply___3F_3F_V(JThreadRuntim
     
 }
 
-s32 Java_org_mini_nanovg_Nanovg_nvgTransformInverse___3F_3F_I(JThreadRuntime *runtime, JArray *pdst, JArray *psrc) {
+s32 func_org_mini_nanovg_Nanovg_nvgTransformInverse___3F_3F_I(JThreadRuntime *runtime, JArray *pdst, JArray *psrc) {
     
     __refer ptr_pdst = pdst?pdst->prop.as_s8_arr:NULL;
     __refer ptr_psrc = psrc?psrc->prop.as_s8_arr:NULL;
@@ -640,7 +640,7 @@ s32 Java_org_mini_nanovg_Nanovg_nvgTransformInverse___3F_3F_I(JThreadRuntime *ru
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgTransformPoint___3F_3F_3FFF_V(JThreadRuntime *runtime, JArray *pdstx, JArray *pdsty, JArray *pxform, f32 psrcx, f32 psrcy) {
+void func_org_mini_nanovg_Nanovg_nvgTransformPoint___3F_3F_3FFF_V(JThreadRuntime *runtime, JArray *pdstx, JArray *pdsty, JArray *pxform, f32 psrcx, f32 psrcy) {
     
     __refer ptr_pdstx = pdstx?pdstx->prop.as_s8_arr:NULL;
     __refer ptr_pdsty = pdsty?pdsty->prop.as_s8_arr:NULL;
@@ -651,7 +651,7 @@ void Java_org_mini_nanovg_Nanovg_nvgTransformPoint___3F_3F_3FFF_V(JThreadRuntime
     
 }
 
-f32 Java_org_mini_nanovg_Nanovg_nvgDegToRad__F_F(JThreadRuntime *runtime, f32 pdeg) {
+f32 func_org_mini_nanovg_Nanovg_nvgDegToRad__F_F(JThreadRuntime *runtime, f32 pdeg) {
     
 
     return (f32)nvgDegToRad((float)pdeg);
@@ -659,7 +659,7 @@ f32 Java_org_mini_nanovg_Nanovg_nvgDegToRad__F_F(JThreadRuntime *runtime, f32 pd
     
 }
 
-f32 Java_org_mini_nanovg_Nanovg_nvgRadToDeg__F_F(JThreadRuntime *runtime, f32 prad) {
+f32 func_org_mini_nanovg_Nanovg_nvgRadToDeg__F_F(JThreadRuntime *runtime, f32 prad) {
     
 
     return (f32)nvgRadToDeg((float)prad);
@@ -667,7 +667,7 @@ f32 Java_org_mini_nanovg_Nanovg_nvgRadToDeg__F_F(JThreadRuntime *runtime, f32 pr
     
 }
 
-s32 Java_org_mini_nanovg_Nanovg_nvgCreateImage__J_3BI_I(JThreadRuntime *runtime, s64 pctx, JArray *pfilename, s32 pimageFlags) {
+s32 func_org_mini_nanovg_Nanovg_nvgCreateImage__J_3BI_I(JThreadRuntime *runtime, s64 pctx, JArray *pfilename, s32 pimageFlags) {
     
     __refer ptr_pfilename = pfilename?pfilename->prop.as_s8_arr:NULL;
 
@@ -676,7 +676,7 @@ s32 Java_org_mini_nanovg_Nanovg_nvgCreateImage__J_3BI_I(JThreadRuntime *runtime,
     
 }
 
-s32 Java_org_mini_nanovg_Nanovg_nvgCreateImageMem__JI_3BI_I(JThreadRuntime *runtime, s64 pctx, s32 pimageFlags, JArray *pdata, s32 pndata) {
+s32 func_org_mini_nanovg_Nanovg_nvgCreateImageMem__JI_3BI_I(JThreadRuntime *runtime, s64 pctx, s32 pimageFlags, JArray *pdata, s32 pndata) {
     
     __refer ptr_pdata = pdata?pdata->prop.as_s8_arr:NULL;
 
@@ -685,7 +685,7 @@ s32 Java_org_mini_nanovg_Nanovg_nvgCreateImageMem__JI_3BI_I(JThreadRuntime *runt
     
 }
 
-s32 Java_org_mini_nanovg_Nanovg_nvgCreateImageRGBA__JIII_3B_I(JThreadRuntime *runtime, s64 pctx, s32 pw, s32 ph, s32 pimageFlags, JArray *pdata) {
+s32 func_org_mini_nanovg_Nanovg_nvgCreateImageRGBA__JIII_3B_I(JThreadRuntime *runtime, s64 pctx, s32 pw, s32 ph, s32 pimageFlags, JArray *pdata) {
     
     __refer ptr_pdata = pdata?pdata->prop.as_s8_arr:NULL;
 
@@ -694,7 +694,7 @@ s32 Java_org_mini_nanovg_Nanovg_nvgCreateImageRGBA__JIII_3B_I(JThreadRuntime *ru
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgUpdateImage__JI_3B_V(JThreadRuntime *runtime, s64 pctx, s32 pimage, JArray *pdata) {
+void func_org_mini_nanovg_Nanovg_nvgUpdateImage__JI_3B_V(JThreadRuntime *runtime, s64 pctx, s32 pimage, JArray *pdata) {
     
     __refer ptr_pdata = pdata?pdata->prop.as_s8_arr:NULL;
 
@@ -703,7 +703,7 @@ void Java_org_mini_nanovg_Nanovg_nvgUpdateImage__JI_3B_V(JThreadRuntime *runtime
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgImageSize__JI_3I_3I_V(JThreadRuntime *runtime, s64 pctx, s32 pimage, JArray *pw, JArray *ph) {
+void func_org_mini_nanovg_Nanovg_nvgImageSize__JI_3I_3I_V(JThreadRuntime *runtime, s64 pctx, s32 pimage, JArray *pw, JArray *ph) {
     
     __refer ptr_pw = pw?pw->prop.as_s8_arr:NULL;
     __refer ptr_ph = ph?ph->prop.as_s8_arr:NULL;
@@ -713,7 +713,7 @@ void Java_org_mini_nanovg_Nanovg_nvgImageSize__JI_3I_3I_V(JThreadRuntime *runtim
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgDeleteImage__JI_V(JThreadRuntime *runtime, s64 pctx, s32 pimage) {
+void func_org_mini_nanovg_Nanovg_nvgDeleteImage__JI_V(JThreadRuntime *runtime, s64 pctx, s32 pimage) {
     
 
     nvgDeleteImage((NVGcontext*/*ptr*/)pctx, (int)pimage);
@@ -721,7 +721,7 @@ void Java_org_mini_nanovg_Nanovg_nvgDeleteImage__JI_V(JThreadRuntime *runtime, s
     
 }
 
-JArray * Java_org_mini_nanovg_Nanovg_nvgLinearGradient__JFFFF_3F_3F__3B(JThreadRuntime *runtime, s64 pctx, f32 psx, f32 psy, f32 pex, f32 pey, JArray *picol, JArray *pocol) {
+JArray * func_org_mini_nanovg_Nanovg_nvgLinearGradient__JFFFF_3F_3F__3B(JThreadRuntime *runtime, s64 pctx, f32 psx, f32 psy, f32 pex, f32 pey, JArray *picol, JArray *pocol) {
     
     __refer ptr_picol = picol?picol->prop.as_s8_arr:NULL;
     __refer ptr_pocol = pocol?pocol->prop.as_s8_arr:NULL;
@@ -740,7 +740,7 @@ JArray * Java_org_mini_nanovg_Nanovg_nvgLinearGradient__JFFFF_3F_3F__3B(JThreadR
     
 }
 
-JArray * Java_org_mini_nanovg_Nanovg_nvgBoxGradient__JFFFFFF_3F_3F__3B(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, f32 pw, f32 ph, f32 pr, f32 pf, JArray *picol, JArray *pocol) {
+JArray * func_org_mini_nanovg_Nanovg_nvgBoxGradient__JFFFFFF_3F_3F__3B(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, f32 pw, f32 ph, f32 pr, f32 pf, JArray *picol, JArray *pocol) {
     
     __refer ptr_picol = picol?picol->prop.as_s8_arr:NULL;
     __refer ptr_pocol = pocol?pocol->prop.as_s8_arr:NULL;
@@ -759,7 +759,7 @@ JArray * Java_org_mini_nanovg_Nanovg_nvgBoxGradient__JFFFFFF_3F_3F__3B(JThreadRu
     
 }
 
-JArray * Java_org_mini_nanovg_Nanovg_nvgRadialGradient__JFFFF_3F_3F__3B(JThreadRuntime *runtime, s64 pctx, f32 pcx, f32 pcy, f32 pinr, f32 poutr, JArray *picol, JArray *pocol) {
+JArray * func_org_mini_nanovg_Nanovg_nvgRadialGradient__JFFFF_3F_3F__3B(JThreadRuntime *runtime, s64 pctx, f32 pcx, f32 pcy, f32 pinr, f32 poutr, JArray *picol, JArray *pocol) {
     
     __refer ptr_picol = picol?picol->prop.as_s8_arr:NULL;
     __refer ptr_pocol = pocol?pocol->prop.as_s8_arr:NULL;
@@ -778,7 +778,7 @@ JArray * Java_org_mini_nanovg_Nanovg_nvgRadialGradient__JFFFF_3F_3F__3B(JThreadR
     
 }
 
-JArray * Java_org_mini_nanovg_Nanovg_nvgImagePattern__JFFFFFIF__3B(JThreadRuntime *runtime, s64 pctx, f32 pox, f32 poy, f32 pex, f32 pey, f32 pangle, s32 pimage, f32 palpha) {
+JArray * func_org_mini_nanovg_Nanovg_nvgImagePattern__JFFFFFIF__3B(JThreadRuntime *runtime, s64 pctx, f32 pox, f32 poy, f32 pex, f32 pey, f32 pangle, s32 pimage, f32 palpha) {
     
 
     NVGpaint/*none_ptr*/ _re_val = nvgImagePattern((NVGcontext*/*ptr*/)pctx, (float)pox, (float)poy, (float)pex, (float)pey, (float)pangle, (int)pimage, (float)palpha);
@@ -795,7 +795,7 @@ JArray * Java_org_mini_nanovg_Nanovg_nvgImagePattern__JFFFFFIF__3B(JThreadRuntim
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgScissor__JFFFF_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, f32 pw, f32 ph) {
+void func_org_mini_nanovg_Nanovg_nvgScissor__JFFFF_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, f32 pw, f32 ph) {
     
 
     nvgScissor((NVGcontext*/*ptr*/)pctx, (float)px, (float)py, (float)pw, (float)ph);
@@ -803,7 +803,7 @@ void Java_org_mini_nanovg_Nanovg_nvgScissor__JFFFF_V(JThreadRuntime *runtime, s6
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgIntersectScissor__JFFFF_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, f32 pw, f32 ph) {
+void func_org_mini_nanovg_Nanovg_nvgIntersectScissor__JFFFF_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, f32 pw, f32 ph) {
     
 
     nvgIntersectScissor((NVGcontext*/*ptr*/)pctx, (float)px, (float)py, (float)pw, (float)ph);
@@ -811,7 +811,7 @@ void Java_org_mini_nanovg_Nanovg_nvgIntersectScissor__JFFFF_V(JThreadRuntime *ru
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgResetScissor__J_V(JThreadRuntime *runtime, s64 pctx) {
+void func_org_mini_nanovg_Nanovg_nvgResetScissor__J_V(JThreadRuntime *runtime, s64 pctx) {
     
 
     nvgResetScissor((NVGcontext*/*ptr*/)pctx);
@@ -819,7 +819,7 @@ void Java_org_mini_nanovg_Nanovg_nvgResetScissor__J_V(JThreadRuntime *runtime, s
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgBeginPath__J_V(JThreadRuntime *runtime, s64 pctx) {
+void func_org_mini_nanovg_Nanovg_nvgBeginPath__J_V(JThreadRuntime *runtime, s64 pctx) {
     
 
     nvgBeginPath((NVGcontext*/*ptr*/)pctx);
@@ -827,7 +827,7 @@ void Java_org_mini_nanovg_Nanovg_nvgBeginPath__J_V(JThreadRuntime *runtime, s64 
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgMoveTo__JFF_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py) {
+void func_org_mini_nanovg_Nanovg_nvgMoveTo__JFF_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py) {
     
 
     nvgMoveTo((NVGcontext*/*ptr*/)pctx, (float)px, (float)py);
@@ -835,7 +835,7 @@ void Java_org_mini_nanovg_Nanovg_nvgMoveTo__JFF_V(JThreadRuntime *runtime, s64 p
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgLineTo__JFF_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py) {
+void func_org_mini_nanovg_Nanovg_nvgLineTo__JFF_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py) {
     
 
     nvgLineTo((NVGcontext*/*ptr*/)pctx, (float)px, (float)py);
@@ -843,7 +843,7 @@ void Java_org_mini_nanovg_Nanovg_nvgLineTo__JFF_V(JThreadRuntime *runtime, s64 p
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgBezierTo__JFFFFFF_V(JThreadRuntime *runtime, s64 pctx, f32 pc1x, f32 pc1y, f32 pc2x, f32 pc2y, f32 px, f32 py) {
+void func_org_mini_nanovg_Nanovg_nvgBezierTo__JFFFFFF_V(JThreadRuntime *runtime, s64 pctx, f32 pc1x, f32 pc1y, f32 pc2x, f32 pc2y, f32 px, f32 py) {
     
 
     nvgBezierTo((NVGcontext*/*ptr*/)pctx, (float)pc1x, (float)pc1y, (float)pc2x, (float)pc2y, (float)px, (float)py);
@@ -851,7 +851,7 @@ void Java_org_mini_nanovg_Nanovg_nvgBezierTo__JFFFFFF_V(JThreadRuntime *runtime,
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgQuadTo__JFFFF_V(JThreadRuntime *runtime, s64 pctx, f32 pcx, f32 pcy, f32 px, f32 py) {
+void func_org_mini_nanovg_Nanovg_nvgQuadTo__JFFFF_V(JThreadRuntime *runtime, s64 pctx, f32 pcx, f32 pcy, f32 px, f32 py) {
     
 
     nvgQuadTo((NVGcontext*/*ptr*/)pctx, (float)pcx, (float)pcy, (float)px, (float)py);
@@ -859,7 +859,7 @@ void Java_org_mini_nanovg_Nanovg_nvgQuadTo__JFFFF_V(JThreadRuntime *runtime, s64
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgArcTo__JFFFFF_V(JThreadRuntime *runtime, s64 pctx, f32 px1, f32 py1, f32 px2, f32 py2, f32 pradius) {
+void func_org_mini_nanovg_Nanovg_nvgArcTo__JFFFFF_V(JThreadRuntime *runtime, s64 pctx, f32 px1, f32 py1, f32 px2, f32 py2, f32 pradius) {
     
 
     nvgArcTo((NVGcontext*/*ptr*/)pctx, (float)px1, (float)py1, (float)px2, (float)py2, (float)pradius);
@@ -867,7 +867,7 @@ void Java_org_mini_nanovg_Nanovg_nvgArcTo__JFFFFF_V(JThreadRuntime *runtime, s64
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgClosePath__J_V(JThreadRuntime *runtime, s64 pctx) {
+void func_org_mini_nanovg_Nanovg_nvgClosePath__J_V(JThreadRuntime *runtime, s64 pctx) {
     
 
     nvgClosePath((NVGcontext*/*ptr*/)pctx);
@@ -875,7 +875,7 @@ void Java_org_mini_nanovg_Nanovg_nvgClosePath__J_V(JThreadRuntime *runtime, s64 
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgPathWinding__JI_V(JThreadRuntime *runtime, s64 pctx, s32 pdir) {
+void func_org_mini_nanovg_Nanovg_nvgPathWinding__JI_V(JThreadRuntime *runtime, s64 pctx, s32 pdir) {
     
 
     nvgPathWinding((NVGcontext*/*ptr*/)pctx, (int)pdir);
@@ -883,7 +883,7 @@ void Java_org_mini_nanovg_Nanovg_nvgPathWinding__JI_V(JThreadRuntime *runtime, s
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgArc__JFFFFFI_V(JThreadRuntime *runtime, s64 pctx, f32 pcx, f32 pcy, f32 pr, f32 pa0, f32 pa1, s32 pdir) {
+void func_org_mini_nanovg_Nanovg_nvgArc__JFFFFFI_V(JThreadRuntime *runtime, s64 pctx, f32 pcx, f32 pcy, f32 pr, f32 pa0, f32 pa1, s32 pdir) {
     
 
     nvgArc((NVGcontext*/*ptr*/)pctx, (float)pcx, (float)pcy, (float)pr, (float)pa0, (float)pa1, (int)pdir);
@@ -891,7 +891,7 @@ void Java_org_mini_nanovg_Nanovg_nvgArc__JFFFFFI_V(JThreadRuntime *runtime, s64 
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgRect__JFFFF_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, f32 pw, f32 ph) {
+void func_org_mini_nanovg_Nanovg_nvgRect__JFFFF_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, f32 pw, f32 ph) {
     
 
     nvgRect((NVGcontext*/*ptr*/)pctx, (float)px, (float)py, (float)pw, (float)ph);
@@ -899,7 +899,7 @@ void Java_org_mini_nanovg_Nanovg_nvgRect__JFFFF_V(JThreadRuntime *runtime, s64 p
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgRoundedRect__JFFFFF_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, f32 pw, f32 ph, f32 pr) {
+void func_org_mini_nanovg_Nanovg_nvgRoundedRect__JFFFFF_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, f32 pw, f32 ph, f32 pr) {
     
 
     nvgRoundedRect((NVGcontext*/*ptr*/)pctx, (float)px, (float)py, (float)pw, (float)ph, (float)pr);
@@ -907,7 +907,7 @@ void Java_org_mini_nanovg_Nanovg_nvgRoundedRect__JFFFFF_V(JThreadRuntime *runtim
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgRoundedRectVarying__JFFFFFFFF_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, f32 pw, f32 ph, f32 pradTopLeft, f32 pradTopRight, f32 pradBottomRight, f32 pradBottomLeft) {
+void func_org_mini_nanovg_Nanovg_nvgRoundedRectVarying__JFFFFFFFF_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, f32 pw, f32 ph, f32 pradTopLeft, f32 pradTopRight, f32 pradBottomRight, f32 pradBottomLeft) {
     
 
     nvgRoundedRectVarying((NVGcontext*/*ptr*/)pctx, (float)px, (float)py, (float)pw, (float)ph, (float)pradTopLeft, (float)pradTopRight, (float)pradBottomRight, (float)pradBottomLeft);
@@ -915,7 +915,7 @@ void Java_org_mini_nanovg_Nanovg_nvgRoundedRectVarying__JFFFFFFFF_V(JThreadRunti
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgEllipse__JFFFF_V(JThreadRuntime *runtime, s64 pctx, f32 pcx, f32 pcy, f32 prx, f32 pry) {
+void func_org_mini_nanovg_Nanovg_nvgEllipse__JFFFF_V(JThreadRuntime *runtime, s64 pctx, f32 pcx, f32 pcy, f32 prx, f32 pry) {
     
 
     nvgEllipse((NVGcontext*/*ptr*/)pctx, (float)pcx, (float)pcy, (float)prx, (float)pry);
@@ -923,7 +923,7 @@ void Java_org_mini_nanovg_Nanovg_nvgEllipse__JFFFF_V(JThreadRuntime *runtime, s6
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgCircle__JFFF_V(JThreadRuntime *runtime, s64 pctx, f32 pcx, f32 pcy, f32 pr) {
+void func_org_mini_nanovg_Nanovg_nvgCircle__JFFF_V(JThreadRuntime *runtime, s64 pctx, f32 pcx, f32 pcy, f32 pr) {
     
 
     nvgCircle((NVGcontext*/*ptr*/)pctx, (float)pcx, (float)pcy, (float)pr);
@@ -931,7 +931,7 @@ void Java_org_mini_nanovg_Nanovg_nvgCircle__JFFF_V(JThreadRuntime *runtime, s64 
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgFill__J_V(JThreadRuntime *runtime, s64 pctx) {
+void func_org_mini_nanovg_Nanovg_nvgFill__J_V(JThreadRuntime *runtime, s64 pctx) {
     
 
     nvgFill((NVGcontext*/*ptr*/)pctx);
@@ -939,7 +939,7 @@ void Java_org_mini_nanovg_Nanovg_nvgFill__J_V(JThreadRuntime *runtime, s64 pctx)
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgStroke__J_V(JThreadRuntime *runtime, s64 pctx) {
+void func_org_mini_nanovg_Nanovg_nvgStroke__J_V(JThreadRuntime *runtime, s64 pctx) {
     
 
     nvgStroke((NVGcontext*/*ptr*/)pctx);
@@ -947,7 +947,7 @@ void Java_org_mini_nanovg_Nanovg_nvgStroke__J_V(JThreadRuntime *runtime, s64 pct
     
 }
 
-s32 Java_org_mini_nanovg_Nanovg_nvgCreateFont__J_3B_3B_I(JThreadRuntime *runtime, s64 pctx, JArray *pname, JArray *pfilename) {
+s32 func_org_mini_nanovg_Nanovg_nvgCreateFont__J_3B_3B_I(JThreadRuntime *runtime, s64 pctx, JArray *pname, JArray *pfilename) {
     
     __refer ptr_pname = pname?pname->prop.as_s8_arr:NULL;
     __refer ptr_pfilename = pfilename?pfilename->prop.as_s8_arr:NULL;
@@ -957,7 +957,7 @@ s32 Java_org_mini_nanovg_Nanovg_nvgCreateFont__J_3B_3B_I(JThreadRuntime *runtime
     
 }
 
-s32 Java_org_mini_nanovg_Nanovg_nvgCreateFontMem__J_3B_3BII_I(JThreadRuntime *runtime, s64 pctx, JArray *pname, JArray *pdata, s32 pndata, s32 pfreeData) {
+s32 func_org_mini_nanovg_Nanovg_nvgCreateFontMem__J_3B_3BII_I(JThreadRuntime *runtime, s64 pctx, JArray *pname, JArray *pdata, s32 pndata, s32 pfreeData) {
     
     __refer ptr_pname = pname?pname->prop.as_s8_arr:NULL;
     __refer ptr_pdata = pdata?pdata->prop.as_s8_arr:NULL;
@@ -967,7 +967,7 @@ s32 Java_org_mini_nanovg_Nanovg_nvgCreateFontMem__J_3B_3BII_I(JThreadRuntime *ru
     
 }
 
-s32 Java_org_mini_nanovg_Nanovg_nvgFindFont__J_3B_I(JThreadRuntime *runtime, s64 pctx, JArray *pname) {
+s32 func_org_mini_nanovg_Nanovg_nvgFindFont__J_3B_I(JThreadRuntime *runtime, s64 pctx, JArray *pname) {
     
     __refer ptr_pname = pname?pname->prop.as_s8_arr:NULL;
 
@@ -976,7 +976,7 @@ s32 Java_org_mini_nanovg_Nanovg_nvgFindFont__J_3B_I(JThreadRuntime *runtime, s64
     
 }
 
-s32 Java_org_mini_nanovg_Nanovg_nvgAddFallbackFontId__JII_I(JThreadRuntime *runtime, s64 pctx, s32 pbaseFont, s32 pfallbackFont) {
+s32 func_org_mini_nanovg_Nanovg_nvgAddFallbackFontId__JII_I(JThreadRuntime *runtime, s64 pctx, s32 pbaseFont, s32 pfallbackFont) {
     
 
     int _re_val = nvgAddFallbackFontId((NVGcontext*/*ptr*/)pctx, (int)pbaseFont, (int)pfallbackFont);
@@ -984,7 +984,7 @@ s32 Java_org_mini_nanovg_Nanovg_nvgAddFallbackFontId__JII_I(JThreadRuntime *runt
     
 }
 
-s32 Java_org_mini_nanovg_Nanovg_nvgAddFallbackFont__J_3B_3B_I(JThreadRuntime *runtime, s64 pctx, JArray *pbaseFont, JArray *pfallbackFont) {
+s32 func_org_mini_nanovg_Nanovg_nvgAddFallbackFont__J_3B_3B_I(JThreadRuntime *runtime, s64 pctx, JArray *pbaseFont, JArray *pfallbackFont) {
     
     __refer ptr_pbaseFont = pbaseFont?pbaseFont->prop.as_s8_arr:NULL;
     __refer ptr_pfallbackFont = pfallbackFont?pfallbackFont->prop.as_s8_arr:NULL;
@@ -994,7 +994,7 @@ s32 Java_org_mini_nanovg_Nanovg_nvgAddFallbackFont__J_3B_3B_I(JThreadRuntime *ru
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgFontSize__JF_V(JThreadRuntime *runtime, s64 pctx, f32 psize) {
+void func_org_mini_nanovg_Nanovg_nvgFontSize__JF_V(JThreadRuntime *runtime, s64 pctx, f32 psize) {
     
 
     nvgFontSize((NVGcontext*/*ptr*/)pctx, (float)psize);
@@ -1002,7 +1002,7 @@ void Java_org_mini_nanovg_Nanovg_nvgFontSize__JF_V(JThreadRuntime *runtime, s64 
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgFontBlur__JF_V(JThreadRuntime *runtime, s64 pctx, f32 pblur) {
+void func_org_mini_nanovg_Nanovg_nvgFontBlur__JF_V(JThreadRuntime *runtime, s64 pctx, f32 pblur) {
     
 
     nvgFontBlur((NVGcontext*/*ptr*/)pctx, (float)pblur);
@@ -1010,7 +1010,7 @@ void Java_org_mini_nanovg_Nanovg_nvgFontBlur__JF_V(JThreadRuntime *runtime, s64 
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgTextLetterSpacing__JF_V(JThreadRuntime *runtime, s64 pctx, f32 pspacing) {
+void func_org_mini_nanovg_Nanovg_nvgTextLetterSpacing__JF_V(JThreadRuntime *runtime, s64 pctx, f32 pspacing) {
     
 
     nvgTextLetterSpacing((NVGcontext*/*ptr*/)pctx, (float)pspacing);
@@ -1018,7 +1018,7 @@ void Java_org_mini_nanovg_Nanovg_nvgTextLetterSpacing__JF_V(JThreadRuntime *runt
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgTextLineHeight__JF_V(JThreadRuntime *runtime, s64 pctx, f32 plineHeight) {
+void func_org_mini_nanovg_Nanovg_nvgTextLineHeight__JF_V(JThreadRuntime *runtime, s64 pctx, f32 plineHeight) {
     
 
     nvgTextLineHeight((NVGcontext*/*ptr*/)pctx, (float)plineHeight);
@@ -1026,7 +1026,7 @@ void Java_org_mini_nanovg_Nanovg_nvgTextLineHeight__JF_V(JThreadRuntime *runtime
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgTextAlign__JI_V(JThreadRuntime *runtime, s64 pctx, s32 palign) {
+void func_org_mini_nanovg_Nanovg_nvgTextAlign__JI_V(JThreadRuntime *runtime, s64 pctx, s32 palign) {
     
 
     nvgTextAlign((NVGcontext*/*ptr*/)pctx, (int)palign);
@@ -1034,7 +1034,7 @@ void Java_org_mini_nanovg_Nanovg_nvgTextAlign__JI_V(JThreadRuntime *runtime, s64
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgFontFaceId__JI_V(JThreadRuntime *runtime, s64 pctx, s32 pfont) {
+void func_org_mini_nanovg_Nanovg_nvgFontFaceId__JI_V(JThreadRuntime *runtime, s64 pctx, s32 pfont) {
     
 
     nvgFontFaceId((NVGcontext*/*ptr*/)pctx, (int)pfont);
@@ -1042,7 +1042,7 @@ void Java_org_mini_nanovg_Nanovg_nvgFontFaceId__JI_V(JThreadRuntime *runtime, s6
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgFontFace__J_3B_V(JThreadRuntime *runtime, s64 pctx, JArray *pfont) {
+void func_org_mini_nanovg_Nanovg_nvgFontFace__J_3B_V(JThreadRuntime *runtime, s64 pctx, JArray *pfont) {
     
     __refer ptr_pfont = pfont?pfont->prop.as_s8_arr:NULL;
 
@@ -1051,7 +1051,7 @@ void Java_org_mini_nanovg_Nanovg_nvgFontFace__J_3B_V(JThreadRuntime *runtime, s6
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgTextMetrics__J_3F_3F_3F_V(JThreadRuntime *runtime, s64 pctx, JArray *pascender, JArray *pdescender, JArray *plineh) {
+void func_org_mini_nanovg_Nanovg_nvgTextMetrics__J_3F_3F_3F_V(JThreadRuntime *runtime, s64 pctx, JArray *pascender, JArray *pdescender, JArray *plineh) {
     
     __refer ptr_pascender = pascender?pascender->prop.as_s8_arr:NULL;
     __refer ptr_pdescender = pdescender?pdescender->prop.as_s8_arr:NULL;
@@ -1062,7 +1062,7 @@ void Java_org_mini_nanovg_Nanovg_nvgTextMetrics__J_3F_3F_3F_V(JThreadRuntime *ru
     
 }
 
-s64 Java_org_mini_nanovg_Nanovg_nvgCreateGLES3__I_J(JThreadRuntime *runtime, s32 pflags) {
+s64 func_org_mini_nanovg_Nanovg_nvgCreateGLES3__I_J(JThreadRuntime *runtime, s32 pflags) {
     
 
     NVGcontext*/*ptr*/ _re_val = nvgCreateGLES3((int)pflags);
@@ -1070,7 +1070,7 @@ s64 Java_org_mini_nanovg_Nanovg_nvgCreateGLES3__I_J(JThreadRuntime *runtime, s32
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgDeleteGLES3__J_V(JThreadRuntime *runtime, s64 pctx) {
+void func_org_mini_nanovg_Nanovg_nvgDeleteGLES3__J_V(JThreadRuntime *runtime, s64 pctx) {
     
 
     nvgDeleteGLES3((NVGcontext*/*ptr*/)pctx);
@@ -1078,7 +1078,7 @@ void Java_org_mini_nanovg_Nanovg_nvgDeleteGLES3__J_V(JThreadRuntime *runtime, s6
     
 }
 
-s32 Java_org_mini_nanovg_Nanovg_nvglCreateImageFromHandleGLES3__JIIII_I(JThreadRuntime *runtime, s64 pctx, s32 ptextureId, s32 pw, s32 ph, s32 pflags) {
+s32 func_org_mini_nanovg_Nanovg_nvglCreateImageFromHandleGLES3__JIIII_I(JThreadRuntime *runtime, s64 pctx, s32 ptextureId, s32 pw, s32 ph, s32 pflags) {
     
 
     int _re_val = nvglCreateImageFromHandleGLES3((NVGcontext*/*ptr*/)pctx, (GLuint)ptextureId, (int)pw, (int)ph, (int)pflags);
@@ -1086,7 +1086,7 @@ s32 Java_org_mini_nanovg_Nanovg_nvglCreateImageFromHandleGLES3__JIIII_I(JThreadR
     
 }
 
-s32 Java_org_mini_nanovg_Nanovg_nvglImageHandleGLES3__JI_I(JThreadRuntime *runtime, s64 pctx, s32 pimage) {
+s32 func_org_mini_nanovg_Nanovg_nvglImageHandleGLES3__JI_I(JThreadRuntime *runtime, s64 pctx, s32 pimage) {
     
 
     GLuint _re_val = nvglImageHandleGLES3((NVGcontext*/*ptr*/)pctx, (int)pimage);
@@ -1094,7 +1094,7 @@ s32 Java_org_mini_nanovg_Nanovg_nvglImageHandleGLES3__JI_I(JThreadRuntime *runti
     
 }
 
-s64 Java_org_mini_nanovg_Nanovg_nvgCreateNVGtextRow__I_J(JThreadRuntime *runtime, s32 pcount) {
+s64 func_org_mini_nanovg_Nanovg_nvgCreateNVGtextRow__I_J(JThreadRuntime *runtime, s32 pcount) {
     
 
     struct NVGtextRow*/*ptr*/ _re_val = nvgCreateNVGtextRow((int)pcount);
@@ -1102,7 +1102,7 @@ s64 Java_org_mini_nanovg_Nanovg_nvgCreateNVGtextRow__I_J(JThreadRuntime *runtime
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgDeleteNVGtextRow__J_V(JThreadRuntime *runtime, s64 pval) {
+void func_org_mini_nanovg_Nanovg_nvgDeleteNVGtextRow__J_V(JThreadRuntime *runtime, s64 pval) {
     
 
     nvgDeleteNVGtextRow((struct NVGtextRow*/*ptr*/)pval);
@@ -1110,7 +1110,7 @@ void Java_org_mini_nanovg_Nanovg_nvgDeleteNVGtextRow__J_V(JThreadRuntime *runtim
     
 }
 
-f32 Java_org_mini_nanovg_Nanovg_nvgNVGtextRow_1width__JI_F(JThreadRuntime *runtime, s64 pptr, s32 pindex) {
+f32 func_org_mini_nanovg_Nanovg_nvgNVGtextRow_1width__JI_F(JThreadRuntime *runtime, s64 pptr, s32 pindex) {
     
 
     return (f32)nvgNVGtextRow_width((struct NVGtextRow*/*ptr*/)pptr, (int)pindex);
@@ -1118,7 +1118,7 @@ f32 Java_org_mini_nanovg_Nanovg_nvgNVGtextRow_1width__JI_F(JThreadRuntime *runti
     
 }
 
-s64 Java_org_mini_nanovg_Nanovg_nvgNVGtextRow_1start__JI_J(JThreadRuntime *runtime, s64 pptr, s32 pindex) {
+s64 func_org_mini_nanovg_Nanovg_nvgNVGtextRow_1start__JI_J(JThreadRuntime *runtime, s64 pptr, s32 pindex) {
     
 
     void*/*ptr*/ _re_val = nvgNVGtextRow_start((struct NVGtextRow*/*ptr*/)pptr, (int)pindex);
@@ -1126,7 +1126,7 @@ s64 Java_org_mini_nanovg_Nanovg_nvgNVGtextRow_1start__JI_J(JThreadRuntime *runti
     
 }
 
-s64 Java_org_mini_nanovg_Nanovg_nvgNVGtextRow_1end__JI_J(JThreadRuntime *runtime, s64 pptr, s32 pindex) {
+s64 func_org_mini_nanovg_Nanovg_nvgNVGtextRow_1end__JI_J(JThreadRuntime *runtime, s64 pptr, s32 pindex) {
     
 
     void*/*ptr*/ _re_val = nvgNVGtextRow_end((struct NVGtextRow*/*ptr*/)pptr, (int)pindex);
@@ -1134,7 +1134,7 @@ s64 Java_org_mini_nanovg_Nanovg_nvgNVGtextRow_1end__JI_J(JThreadRuntime *runtime
     
 }
 
-s64 Java_org_mini_nanovg_Nanovg_nvgNVGtextRow_1next__JI_J(JThreadRuntime *runtime, s64 pptr, s32 pindex) {
+s64 func_org_mini_nanovg_Nanovg_nvgNVGtextRow_1next__JI_J(JThreadRuntime *runtime, s64 pptr, s32 pindex) {
     
 
     void*/*ptr*/ _re_val = nvgNVGtextRow_next((struct NVGtextRow*/*ptr*/)pptr, (int)pindex);
@@ -1142,7 +1142,7 @@ s64 Java_org_mini_nanovg_Nanovg_nvgNVGtextRow_1next__JI_J(JThreadRuntime *runtim
     
 }
 
-s64 Java_org_mini_nanovg_Nanovg_nvgCreateNVGglyphPosition__I_J(JThreadRuntime *runtime, s32 pcount) {
+s64 func_org_mini_nanovg_Nanovg_nvgCreateNVGglyphPosition__I_J(JThreadRuntime *runtime, s32 pcount) {
     
 
     struct NVGglyphPosition*/*ptr*/ _re_val = nvgCreateNVGglyphPosition((int)pcount);
@@ -1150,7 +1150,7 @@ s64 Java_org_mini_nanovg_Nanovg_nvgCreateNVGglyphPosition__I_J(JThreadRuntime *r
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgDeleteNVGglyphPosition__J_V(JThreadRuntime *runtime, s64 pval) {
+void func_org_mini_nanovg_Nanovg_nvgDeleteNVGglyphPosition__J_V(JThreadRuntime *runtime, s64 pval) {
     
 
     nvgDeleteNVGglyphPosition((struct NVGglyphPosition*/*ptr*/)pval);
@@ -1158,7 +1158,7 @@ void Java_org_mini_nanovg_Nanovg_nvgDeleteNVGglyphPosition__J_V(JThreadRuntime *
     
 }
 
-f32 Java_org_mini_nanovg_Nanovg_nvgNVGglyphPosition_1x__JI_F(JThreadRuntime *runtime, s64 pptr, s32 pcount) {
+f32 func_org_mini_nanovg_Nanovg_nvgNVGglyphPosition_1x__JI_F(JThreadRuntime *runtime, s64 pptr, s32 pcount) {
     
 
     return (f32)nvgNVGglyphPosition_x((struct NVGglyphPosition*/*ptr*/)pptr, (int)pcount);
@@ -1166,7 +1166,7 @@ f32 Java_org_mini_nanovg_Nanovg_nvgNVGglyphPosition_1x__JI_F(JThreadRuntime *run
     
 }
 
-f32 Java_org_mini_nanovg_Nanovg_nvgTextJni__JFF_3BII_F(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, JArray *pstring, s32 pstart, s32 pend) {
+f32 func_org_mini_nanovg_Nanovg_nvgTextJni__JFF_3BII_F(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, JArray *pstring, s32 pstart, s32 pend) {
     
     __refer ptr_pstring = pstring?pstring->prop.as_s8_arr:NULL;
 
@@ -1175,7 +1175,7 @@ f32 Java_org_mini_nanovg_Nanovg_nvgTextJni__JFF_3BII_F(JThreadRuntime *runtime, 
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgTextBoxJni__JFFF_3BII_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, f32 pbreakRowWidth, JArray *pstring, s32 pstart, s32 pend) {
+void func_org_mini_nanovg_Nanovg_nvgTextBoxJni__JFFF_3BII_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, f32 pbreakRowWidth, JArray *pstring, s32 pstart, s32 pend) {
     
     __refer ptr_pstring = pstring?pstring->prop.as_s8_arr:NULL;
 
@@ -1184,7 +1184,7 @@ void Java_org_mini_nanovg_Nanovg_nvgTextBoxJni__JFFF_3BII_V(JThreadRuntime *runt
     
 }
 
-f32 Java_org_mini_nanovg_Nanovg_nvgTextBoundsJni__JFF_3BII_3F_F(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, JArray *pstring, s32 pstart, s32 pend, JArray *pbounds) {
+f32 func_org_mini_nanovg_Nanovg_nvgTextBoundsJni__JFF_3BII_3F_F(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, JArray *pstring, s32 pstart, s32 pend, JArray *pbounds) {
     
     __refer ptr_pstring = pstring?pstring->prop.as_s8_arr:NULL;
     __refer ptr_pbounds = pbounds?pbounds->prop.as_s8_arr:NULL;
@@ -1194,7 +1194,7 @@ f32 Java_org_mini_nanovg_Nanovg_nvgTextBoundsJni__JFF_3BII_3F_F(JThreadRuntime *
     
 }
 
-void Java_org_mini_nanovg_Nanovg_nvgTextBoxBoundsJni__JFFF_3BII_3F_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, f32 pbreakRowWidth, JArray *pstring, s32 pstart, s32 pend, JArray *pbounds) {
+void func_org_mini_nanovg_Nanovg_nvgTextBoxBoundsJni__JFFF_3BII_3F_V(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, f32 pbreakRowWidth, JArray *pstring, s32 pstart, s32 pend, JArray *pbounds) {
     
     __refer ptr_pstring = pstring?pstring->prop.as_s8_arr:NULL;
     __refer ptr_pbounds = pbounds?pbounds->prop.as_s8_arr:NULL;
@@ -1204,7 +1204,7 @@ void Java_org_mini_nanovg_Nanovg_nvgTextBoxBoundsJni__JFFF_3BII_3F_V(JThreadRunt
     
 }
 
-s32 Java_org_mini_nanovg_Nanovg_nvgTextBreakLinesJni__J_3BIIFJI_I(JThreadRuntime *runtime, s64 pctx, JArray *pstring, s32 pstart, s32 pend, f32 pbreakRowWidth, s64 prows, s32 pmaxRows) {
+s32 func_org_mini_nanovg_Nanovg_nvgTextBreakLinesJni__J_3BIIFJI_I(JThreadRuntime *runtime, s64 pctx, JArray *pstring, s32 pstart, s32 pend, f32 pbreakRowWidth, s64 prows, s32 pmaxRows) {
     
     __refer ptr_pstring = pstring?pstring->prop.as_s8_arr:NULL;
 
@@ -1213,7 +1213,7 @@ s32 Java_org_mini_nanovg_Nanovg_nvgTextBreakLinesJni__J_3BIIFJI_I(JThreadRuntime
     
 }
 
-s32 Java_org_mini_nanovg_Nanovg_nvgTextGlyphPositionsJni__JFF_3BIIJI_I(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, JArray *pstring, s32 pstart, s32 pend, s64 ppositions, s32 pmaxPositions) {
+s32 func_org_mini_nanovg_Nanovg_nvgTextGlyphPositionsJni__JFF_3BIIJI_I(JThreadRuntime *runtime, s64 pctx, f32 px, f32 py, JArray *pstring, s32 pstart, s32 pend, s64 ppositions, s32 pmaxPositions) {
     
     __refer ptr_pstring = pstring?pstring->prop.as_s8_arr:NULL;
 

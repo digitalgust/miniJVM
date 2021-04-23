@@ -138,7 +138,7 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uin
 //jni
 //==========================================================================================
 
-s64 Java_org_mini_media_MiniAL_ma_1context_1init___J(JThreadRuntime *runtime) {
+s64 func_org_mini_media_MiniAL_ma_1context_1init___J(JThreadRuntime *runtime) {
 
     ma_context *handle_context = jvm_calloc(sizeof(ma_context));
     if (ma_context_init(NULL, 0, NULL, handle_context) != MA_SUCCESS) {
@@ -148,14 +148,14 @@ s64 Java_org_mini_media_MiniAL_ma_1context_1init___J(JThreadRuntime *runtime) {
     }
 }
 
-void Java_org_mini_media_MiniAL_ma_1context_1uninit__J_V(JThreadRuntime *runtime, s64 p0) {
+void func_org_mini_media_MiniAL_ma_1context_1uninit__J_V(JThreadRuntime *runtime, s64 p0) {
 
     if (p0)ma_context_uninit((__refer) (intptr_t) p0);
     jvm_free((__refer) (intptr_t) p0);
 }
 
 
-s64 Java_org_mini_media_MiniAL_ma_1decoder_1init_1file___3BIII_J(JThreadRuntime *runtime, JArray *p0, s32 p1, s32 p2, s32 p3) {
+s64 func_org_mini_media_MiniAL_ma_1decoder_1init_1file___3BIII_J(JThreadRuntime *runtime, JArray *p0, s32 p1, s32 p2, s32 p3) {
     s32 format = p1;
     s32 channels = p2;
     s32 sampleRate = p3;
@@ -172,7 +172,7 @@ s64 Java_org_mini_media_MiniAL_ma_1decoder_1init_1file___3BIII_J(JThreadRuntime 
 }
 
 
-s64 Java_org_mini_media_MiniAL_ma_1decoder_1init_1memory___3BIII_J(JThreadRuntime *runtime, JArray *p0, s32 p1, s32 p2, s32 p3) {
+s64 func_org_mini_media_MiniAL_ma_1decoder_1init_1memory___3BIII_J(JThreadRuntime *runtime, JArray *p0, s32 p1, s32 p2, s32 p3) {
     s32 format = p1;
     s32 channels = p2;
     s32 sampleRate = p3;
@@ -188,7 +188,7 @@ s64 Java_org_mini_media_MiniAL_ma_1decoder_1init_1memory___3BIII_J(JThreadRuntim
     }
 }
 
-void Java_org_mini_media_MiniAL_ma_1decoder_1get_1para__J_3I_V(JThreadRuntime *runtime, s64 p0, JArray *p2) {
+void func_org_mini_media_MiniAL_ma_1decoder_1get_1para__J_3I_V(JThreadRuntime *runtime, s64 p0, JArray *p2) {
     ma_decoder *handle_decoder = (__refer) (intptr_t) p0;
     if (handle_decoder && p2->prop.arr_length >= 3) {
         p2->prop.as_s32_arr[0] = handle_decoder->outputFormat;
@@ -197,7 +197,7 @@ void Java_org_mini_media_MiniAL_ma_1decoder_1get_1para__J_3I_V(JThreadRuntime *r
     }
 }
 
-s32 Java_org_mini_media_MiniAL_ma_1decoder_1read__JIJ_I(JThreadRuntime *runtime, s64 p0, s32 p2, s64 p3) {
+s32 func_org_mini_media_MiniAL_ma_1decoder_1read__JIJ_I(JThreadRuntime *runtime, s64 p0, s32 p2, s64 p3) {
     ma_decoder *handle_decoder = (__refer) (intptr_t) p0;
     s32 frameCount = p2;
     __refer pSamples = (__refer) (intptr_t) p3;
@@ -211,7 +211,7 @@ s32 Java_org_mini_media_MiniAL_ma_1decoder_1read__JIJ_I(JThreadRuntime *runtime,
     }
 }
 
-void Java_org_mini_media_MiniAL_ma_1decoder_1uninit__J_V(JThreadRuntime *runtime, s64 p0) {
+void func_org_mini_media_MiniAL_ma_1decoder_1uninit__J_V(JThreadRuntime *runtime, s64 p0) {
     ma_decoder *handle_decoder = (__refer) (intptr_t) p0;
 
     if (handle_decoder)ma_decoder_uninit(handle_decoder);
@@ -243,7 +243,7 @@ void setupCallback(JThreadRuntime *runtime) {
 
 }
 
-s64 Java_org_mini_media_MiniAL_ma_1device_1init__JIJIII_J(JThreadRuntime *runtime, s64 p0, s32 p2, s64 p3, s32 p5, s32 p6, s32 p7) {
+s64 func_org_mini_media_MiniAL_ma_1device_1init__JIJIII_J(JThreadRuntime *runtime, s64 p0, s32 p2, s64 p3, s32 p5, s32 p6, s32 p7) {
 
     ma_context *handle_context = (__refer) (intptr_t) p0;
     s32 deviceType = p2;
@@ -272,24 +272,24 @@ s64 Java_org_mini_media_MiniAL_ma_1device_1init__JIJIII_J(JThreadRuntime *runtim
     }
 }
 
-void Java_org_mini_media_MiniAL_ma_1device_1uninit__J_V(JThreadRuntime *runtime, s64 p0) {
+void func_org_mini_media_MiniAL_ma_1device_1uninit__J_V(JThreadRuntime *runtime, s64 p0) {
     __refer handle_device = (__refer) (intptr_t) p0;
 
     ma_device_uninit(handle_device);
     jvm_free(handle_device);
 }
 
-void Java_org_mini_media_MiniAL_ma_1device_1start__J_V(JThreadRuntime *runtime, s64 p0) {
+void func_org_mini_media_MiniAL_ma_1device_1start__J_V(JThreadRuntime *runtime, s64 p0) {
     __refer handle_device = (__refer) (intptr_t) p0;
     ma_device_start(handle_device);
 }
 
-void Java_org_mini_media_MiniAL_ma_1device_1stop__J_V(JThreadRuntime *runtime, s64 p0) {
+void func_org_mini_media_MiniAL_ma_1device_1stop__J_V(JThreadRuntime *runtime, s64 p0) {
     __refer handle_device = (__refer) (intptr_t) p0;
     ma_device_stop(handle_device);
 }
 
-s32 Java_org_mini_media_MiniAL_ma_1device_1is_1started__J_I(JThreadRuntime *runtime, s64 p0) {
+s32 func_org_mini_media_MiniAL_ma_1device_1is_1started__J_I(JThreadRuntime *runtime, s64 p0) {
     __refer handle_device = (__refer) (intptr_t) p0;
     ma_bool32 r = ma_device_is_started(handle_device);
     return (s32) (intptr_t) r;
