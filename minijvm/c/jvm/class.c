@@ -234,6 +234,42 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
         jvm_runtime_cache->dmo_length = fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ, "typeDesc", "C", NULL, runtime);
         jvm_runtime_cache->dmo_desc = fi;
+    } else if (utf8_equals_c(clazz->name, STR_CLASS_ORG_MINI_REFLECT_REFLECTMETHOD)) {
+        FieldInfo *fi;
+        fi = find_fieldInfo_by_name_c(STR_CLASS_ORG_MINI_REFLECT_REFLECTMETHOD, "methodId", "J", NULL, runtime);
+        jvm_runtime_cache->reflm_methodId = fi;
+    } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_BOOLEAN)) {
+        jvm_runtime_cache->booleanclass = clazz;
+        jvm_runtime_cache->boolean_value = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_BOOLEAN, "value", "Z", NULL, runtime);
+        jvm_runtime_cache->boolean_valueOf = find_methodInfo_by_name_c(STR_CLASS_JAVA_LANG_BOOLEAN, "valueOf", "(Z)Ljava/lang/Boolean;", NULL, runtime);
+    } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_BYTE)) {
+        jvm_runtime_cache->byteclass = clazz;
+        jvm_runtime_cache->byte_value = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_BYTE, "value", "B", NULL, runtime);
+        jvm_runtime_cache->byte_valueOf = find_methodInfo_by_name_c(STR_CLASS_JAVA_LANG_BYTE, "valueOf", "(B)Ljava/lang/Byte;", NULL, runtime);
+    } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_SHORT)) {
+        jvm_runtime_cache->shortclass = clazz;
+        jvm_runtime_cache->short_value = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_SHORT, "value", "S", NULL, runtime);
+        jvm_runtime_cache->short_valueOf = find_methodInfo_by_name_c(STR_CLASS_JAVA_LANG_SHORT, "valueOf", "(S)Ljava/lang/Short;", NULL, runtime);
+    } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_CHARACTER)) {
+        jvm_runtime_cache->characterclass = clazz;
+        jvm_runtime_cache->character_value = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_CHARACTER, "value", "C", NULL, runtime);
+        jvm_runtime_cache->character_valueOf = find_methodInfo_by_name_c(STR_CLASS_JAVA_LANG_CHARACTER, "valueOf", "(C)Ljava/lang/Character;", NULL, runtime);
+    } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_INTEGER)) {
+        jvm_runtime_cache->intclass = clazz;
+        jvm_runtime_cache->int_value = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_INTEGER, "value", "I", NULL, runtime);
+        jvm_runtime_cache->int_valueOf = find_methodInfo_by_name_c(STR_CLASS_JAVA_LANG_INTEGER, "valueOf", "(I)Ljava/lang/Integer;", NULL, runtime);
+    } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_LONG)) {
+        jvm_runtime_cache->longclass = clazz;
+        jvm_runtime_cache->long_value = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_LONG, "value", "J", NULL, runtime);
+        jvm_runtime_cache->long_valueOf = find_methodInfo_by_name_c(STR_CLASS_JAVA_LANG_LONG, "valueOf", "(J)Ljava/lang/Long;", NULL, runtime);
+    } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_FLOAT)) {
+        jvm_runtime_cache->floatclass = clazz;
+        jvm_runtime_cache->float_value = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_FLOAT, "value", "F", NULL, runtime);
+        jvm_runtime_cache->float_valueOf = find_methodInfo_by_name_c(STR_CLASS_JAVA_LANG_FLOAT, "valueOf", "(F)Ljava/lang/Float;", NULL, runtime);
+    } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_DOUBLE)) {
+        jvm_runtime_cache->doubleclass = clazz;
+        jvm_runtime_cache->double_value = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_DOUBLE, "value", "D", NULL, runtime);
+        jvm_runtime_cache->double_valueOf = find_methodInfo_by_name_c(STR_CLASS_JAVA_LANG_DOUBLE, "valueOf", "(D)Ljava/lang/Double;", NULL, runtime);
     } else if (utf8_equals_c(clazz->name, STR_CLASS_ORG_MINI_REFLECT_LAUNCHER)) {
         jvm_runtime_cache->launcher_loadClass = find_methodInfo_by_name_c(STR_CLASS_ORG_MINI_REFLECT_LAUNCHER, "loadClass", "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/Class;", NULL, runtime);
         jvm_runtime_cache->launcher_getSystemClassLoader = find_methodInfo_by_name_c(STR_CLASS_ORG_MINI_REFLECT_LAUNCHER, "getSystemClassLoader", "()Ljava/lang/ClassLoader;", NULL, runtime);

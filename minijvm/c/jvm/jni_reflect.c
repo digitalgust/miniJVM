@@ -858,12 +858,10 @@ s32 org_mini_reflect_ReflectMethod_mapMethod(Runtime *runtime, JClass *clazz) {
 
 
 s32 org_mini_reflect_ReflectMethod_invokeMethod(Runtime *runtime, JClass *clazz) {
+    ShortCut *shortcut = &runtime->jvm->shortcut;
     s32 pos = 0;
-    Instance *method_ins = (Instance *) localvar_getRefer(runtime->localvar, pos++);
-    Long2Double l2d;
-    l2d.l = l2d.l = localvar_getLong(runtime->localvar, pos);
-    pos += 2;
-    MethodInfo *methodInfo = (__refer) (intptr_t) l2d.l;
+    Instance *reflect_ins = (Instance *) localvar_getRefer(runtime->localvar, pos++);
+    MethodInfo *methodInfo = (__refer) (intptr_t) getFieldLong(getInstanceFieldPtr(reflect_ins, shortcut->reflm_methodId));
     Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, pos++);
     Instance *argsArr = (Instance *) localvar_getRefer(runtime->localvar, pos++);
     s32 ret = 0;
@@ -873,18 +871,46 @@ s32 org_mini_reflect_ReflectMethod_invokeMethod(Runtime *runtime, JClass *clazz)
         }
         s32 i;
         for (i = 0; i < argsArr->arr_length; i++) {
-            s64 val = jarray_get_field(argsArr, i);
+            Instance *p = (__refer) (intptr_t) jarray_get_field(argsArr, i);
             switch (utf8_char_at(methodInfo->paraType, i)) {
                 case '4': {
+                    s32 val;
+                    if (p->mb.clazz == shortcut->booleanclass) {
+                        c8 *ptr = getInstanceFieldPtr(p, shortcut->boolean_value);
+                        val = getFieldByte(ptr);
+                    } else if (p->mb.clazz == shortcut->byteclass) {
+                        c8 *ptr = getInstanceFieldPtr(p, shortcut->byte_value);
+                        val = getFieldByte(ptr);
+                    } else if (p->mb.clazz == shortcut->shortclass) {
+                        c8 *ptr = getInstanceFieldPtr(p, shortcut->short_value);
+                        val = getFieldShort(ptr);
+                    } else if (p->mb.clazz == shortcut->characterclass) {
+                        c8 *ptr = getInstanceFieldPtr(p, shortcut->character_value);
+                        val = getFieldChar(ptr);
+                    } else if (p->mb.clazz == shortcut->intclass) {
+                        c8 *ptr = getInstanceFieldPtr(p, shortcut->int_value);
+                        val = getFieldInt(ptr);
+                    } else if (p->mb.clazz == shortcut->floatclass) {
+                        c8 *ptr = getInstanceFieldPtr(p, shortcut->float_value);
+                        val = getFieldInt(ptr);
+                    }
                     push_int(runtime->stack, (s32) val);
                     break;
                 }
                 case '8': {
+                    s64 val;
+                    if (p->mb.clazz == shortcut->longclass) {
+                        c8 *ptr = getInstanceFieldPtr(p, shortcut->long_value);
+                        val = getFieldLong(ptr);
+                    } else if (p->mb.clazz == shortcut->doubleclass) {
+                        c8 *ptr = getInstanceFieldPtr(p, shortcut->double_value);
+                        val = getFieldLong(ptr);
+                    }
                     push_long(runtime->stack, val);
                     break;
                 }
                 case 'R': {
-                    push_ref(runtime->stack, (__refer) (intptr_t) val);
+                    push_ref(runtime->stack, p);
                     break;
                 }
             }
@@ -892,29 +918,47 @@ s32 org_mini_reflect_ReflectMethod_invokeMethod(Runtime *runtime, JClass *clazz)
         ret = execute_method_impl(methodInfo, runtime);
         if (ret == RUNTIME_STATUS_NORMAL) {
             utf8_char ch = utf8_char_at(methodInfo->returnType, 0);
-            c8 *clsName = "org/mini/reflect/DataWrap";
-            JClass *dwcl = classes_load_get_c(NULL, clsName, runtime);
-            Instance *result = instance_create(runtime, dwcl);
-            instance_hold_to_thread(result, runtime);
-            instance_init(result, runtime);
-
-            if (ch == 'V') {
-            } else if (isDataReferByTag(ch)) {
-                __refer ov = pop_ref(runtime->stack);
-                c8 *ptr = getFieldPtr_byName_c(result, clsName, "ov", STR_INS_JAVA_LANG_OBJECT, runtime);
-                setFieldRefer(ptr, ov);
-            } else {
-                s64 nv;
-                if (isData8ByteByTag(ch)) {
-                    nv = pop_long(runtime->stack);
-                } else {
-                    nv = pop_int(runtime->stack);
+            switch (ch) {
+                case 'I': {
+                    execute_method(shortcut->int_valueOf, runtime);//boxing double to Double
+                    break;
                 }
-                c8 *ptr = getFieldPtr_byName_c(result, clsName, "nv", "J", runtime);
-                setFieldLong(ptr, nv);
+                case 'J': {
+                    execute_method(shortcut->long_valueOf, runtime);//boxing double to Double
+                    break;
+                }
+                case 'B': {
+                    execute_method(shortcut->byte_valueOf, runtime);//boxing double to Double
+                    break;
+                }
+                case 'S': {
+                    execute_method(shortcut->short_valueOf, runtime);//boxing double to Double
+                    break;
+                }
+                case 'C': {
+                    execute_method(shortcut->character_valueOf, runtime);//boxing double to Double
+                    break;
+                }
+                case 'F': {
+                    execute_method(shortcut->float_valueOf, runtime);//boxing double to Double
+                    break;
+                }
+                case 'D': {
+                    execute_method(shortcut->double_valueOf, runtime);//boxing double to Double
+                    break;
+                }
+                case 'Z': {
+                    execute_method(shortcut->boolean_valueOf, runtime);//boxing double to Double
+                    break;
+                }
+                case 'V': {
+                    push_ref(runtime->stack, NULL);
+                    break;
+                }
+                default: {// L   [
+                    //do nothing
+                }
             }
-            instance_release_from_thread(result, runtime);
-            push_ref(runtime->stack, result);
         } else {
             print_exception(runtime);
         }
@@ -1412,7 +1456,7 @@ static java_native_method METHODS_REFLECT_TABLE[] = {
         {"org/mini/reflect/ReflectField",  "getFieldVal",              "(Ljava/lang/Object;J)J",                                                           org_mini_reflect_ReflectField_getFieldVal},
         {"org/mini/reflect/ReflectField",  "setFieldVal",              "(Ljava/lang/Object;JJ)V",                                                          org_mini_reflect_ReflectField_setFieldVal},
         {"org/mini/reflect/ReflectMethod", "mapMethod",                "(J)V",                                                                             org_mini_reflect_ReflectMethod_mapMethod},
-        {"org/mini/reflect/ReflectMethod", "invokeMethod",             "(JLjava/lang/Object;[J)Lorg/mini/reflect/DataWrap;",                               org_mini_reflect_ReflectMethod_invokeMethod},
+        {"org/mini/reflect/ReflectMethod", "invokeMethod",             "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;",                        org_mini_reflect_ReflectMethod_invokeMethod},
         {"org/mini/reflect/ReflectMethod", "findMethod0",              "(Ljava/lang/ClassLoader;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)J", org_mini_reflect_ReflectMethod_findMethod0},
         {"org/mini/reflect/StackFrame",    "mapRuntime",               "(J)V",                                                                             org_mini_reflect_StackFrame_mapRuntime},
         {"org/mini/reflect/ReflectArray",  "mapArray",                 "(Ljava/lang/Object;)V",                                                            org_mini_reflect_ReflectArray_mapArray},
