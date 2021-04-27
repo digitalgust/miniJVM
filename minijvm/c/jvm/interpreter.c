@@ -3976,6 +3976,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     label_exception_handle:
                     // there is exception handle, but not error/interrupt handle
                     runtime->pc = ip;
+                    stack->sp = sp;
                     ret = RUNTIME_STATUS_EXCEPTION;
                     if (exception_handle(runtime->stack, runtime)) {
                         ret = RUNTIME_STATUS_NORMAL;
