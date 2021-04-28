@@ -31,7 +31,7 @@ extern "C" {
 #define _JVM_DEBUG_LOG_TO_FILE 0
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_PROFILE 0
-#define _JVM_JDWP_ENABLE 01
+#define _JVM_JDWP_ENABLE 0
 
 //#pragma GCC diagnostic error "-Wframe-larger-than="
 
@@ -457,9 +457,16 @@ enum {
 
 extern char *STRS_CLASS_EXCEPTION[];
 
-extern c8 *STR_CLASS_JAVA_LANG_INTEGER;
 extern c8 *STR_CLASS_JAVA_LANG_STRING;
 extern c8 *STR_CLASS_JAVA_LANG_STRINGBUILDER;
+extern c8 *STR_CLASS_JAVA_LANG_BOOLEAN;
+extern c8 *STR_CLASS_JAVA_LANG_BYTE;
+extern c8 *STR_CLASS_JAVA_LANG_CHARACTER;
+extern c8 *STR_CLASS_JAVA_LANG_SHORT;
+extern c8 *STR_CLASS_JAVA_LANG_INTEGER;
+extern c8 *STR_CLASS_JAVA_LANG_LONG;
+extern c8 *STR_CLASS_JAVA_LANG_DOUBLE;
+extern c8 *STR_CLASS_JAVA_LANG_FLOAT;
 extern c8 *STR_CLASS_JAVA_LANG_OBJECT;
 extern c8 *STR_CLASS_JAVA_LANG_THREAD;
 extern c8 *STR_CLASS_JAVA_LANG_CLASS;
@@ -473,6 +480,7 @@ extern c8 *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLE;
 extern c8 *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLES_LOOKUP;
 extern c8 *STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ;
 extern c8 *STR_CLASS_ORG_MINI_REFLECT_LAUNCHER;
+extern c8 *STR_CLASS_ORG_MINI_REFLECT_REFLECTMETHOD;
 
 extern c8 *STR_FIELD_STACKFRAME;
 extern c8 *STR_FIELD_NAME;
@@ -1747,6 +1755,34 @@ typedef struct _ShortCut {
     FieldInfo *dmo_memAddr;
     FieldInfo *dmo_length;
     FieldInfo *dmo_desc;
+
+    FieldInfo *reflm_methodId;
+
+    //for boxing and unboxing
+    FieldInfo *boolean_value;
+    FieldInfo *byte_value;
+    FieldInfo *short_value;
+    FieldInfo *character_value;
+    FieldInfo *int_value;
+    FieldInfo *long_value;
+    FieldInfo *float_value;
+    FieldInfo *double_value;
+    JClass *booleanclass;
+    JClass *byteclass;
+    JClass *shortclass;
+    JClass *characterclass;
+    JClass *intclass;
+    JClass *longclass;
+    JClass *floatclass;
+    JClass *doubleclass;
+    MethodInfo *boolean_valueOf;
+    MethodInfo *byte_valueOf;
+    MethodInfo *short_valueOf;
+    MethodInfo *character_valueOf;
+    MethodInfo *int_valueOf;
+    MethodInfo *long_valueOf;
+    MethodInfo *float_valueOf;
+    MethodInfo *double_valueOf;
 
     //
     MethodInfo *launcher_loadClass;
