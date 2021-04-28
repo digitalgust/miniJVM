@@ -111,7 +111,7 @@ public class Thread implements Runnable {
     private char name[];
 
     /*  save top runtime   */
-    private long stackFrame;
+    private long stackFrame = createStackFrame();
     /**
      * The minimum priority that a thread can have.
      */
@@ -132,6 +132,7 @@ public class Thread implements Runnable {
     /* Whether or not the thread is a daemon thread. */
     private boolean daemon = false;
 
+    private native long createStackFrame();
     /**
      * Returns a reference to the currently executing <code>Thread</code>
      * object.

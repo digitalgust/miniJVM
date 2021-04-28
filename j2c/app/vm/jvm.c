@@ -634,12 +634,14 @@ s32 jthread_suspend(JThreadRuntime *runtime) {
     return 0;
 }
 
-void jthread_block_enter(JThreadRuntime *runtime) {
+u8 jthread_block_enter(JThreadRuntime *runtime) {
+    u8 s = runtime->thread_status;
     runtime->thread_status = THREAD_STATUS_BLOCKED;
+    return s;
 }
 
-void jthread_block_exit(JThreadRuntime *runtime) {
-    runtime->thread_status = THREAD_STATUS_RUNNING;
+void jthread_block_exit(JThreadRuntime *runtime, u8 state) {
+    runtime->thread_status = state;//THREAD_STATUS_RUNNING;
     check_suspend_and_pause(runtime);
 }
 
@@ -657,8 +659,7 @@ s32 jthread_waitTime(InstProp *mb, JThreadRuntime *runtime, s64 waitms) {
     if (!mb->thread_lock) {
         jthreadlock_create(mb);
     }
-    jthread_block_enter(runtime);
-    runtime->thread_status = THREAD_STATUS_BLOCKED;
+    u8 s = jthread_block_enter(runtime);
     if (waitms) {
         waitms += currentTimeMillis();
         struct timespec t;
@@ -669,17 +670,14 @@ s32 jthread_waitTime(InstProp *mb, JThreadRuntime *runtime, s64 waitms) {
     } else {
         cnd_wait(&mb->thread_lock->thread_cond, &mb->thread_lock->mutex_lock);
     }
-    runtime->thread_status = THREAD_STATUS_RUNNING;
-    jthread_block_exit(runtime);
+    jthread_block_exit(runtime, s);
     return 0;
 }
 
 s32 jthread_sleep(JThreadRuntime *runtime, s64 ms) {
-    jthread_block_enter(runtime);
-    runtime->thread_status = THREAD_STATUS_BLOCKED;
+    u8 s = jthread_block_enter(runtime);
     threadSleep(ms);
-    runtime->thread_status = THREAD_STATUS_RUNNING;
-    jthread_block_exit(runtime);
+    jthread_block_exit(runtime, s);
     return 0;
 }
 
@@ -703,10 +701,10 @@ s32 jthread_prepar(JThreadRuntime *runtime) {
     utf8_append_c(ustr, STR_JAVA_LANG_THREAD);
     class_clinit(runtime, ustr);
     utf8_clear(ustr);
-    if (!runtime->jthread) {
-        JObject *jthread = new_jthread(runtime);
-        runtime->jthread = jthread;
-    }
+//    if (!runtime->jthread) {
+//        JObject *jthread = new_jthread(runtime);
+//        runtime->jthread = jthread;
+//    }
 
 
     utf8_destory(ustr);
@@ -737,11 +735,10 @@ JThreadRuntime *jthread_start(JObject *jthread) {
 
     MethodRaw *method = find_methodraw(utf8_cstr(jthread->prop.clazz->name), "run", "()V");
 
-    JThreadRuntime *runtime = jthreadruntime_create();
+    JThreadRuntime *runtime = jthread_get_stackFrame(jthread);
     runtime->jthread = jthread;
     runtime->exec = method;
     runtime->thread_status = THREAD_STATUS_NEW;
-    jthread_set_stackFrame(jthread, runtime);
     thrd_create(&runtime->thread, jthread_run, runtime);
     return runtime;
 }
@@ -751,17 +748,22 @@ JThreadRuntime *jthread_bound(JThreadRuntime *runtime) {
         runtime = jthreadruntime_create();
     }
     s32 ret = tss_set(TLS_KEY_JTHREADRUNTIME, runtime);
-    JThreadRuntime *r = tss_get(TLS_KEY_JTHREADRUNTIME);
     Utf8String *ustr = utf8_create();
     tss_set(TLS_KEY_UTF8STR_CACHE, ustr);
     jthread_prepar(runtime);
     if (!runtime->jthread) {
-        JObject *jthread = runtime->jthread ? runtime->jthread : new_instance_with_name(runtime, STR_JAVA_LANG_THREAD);
-        gc_refer_hold(jthread);
-        instance_init(runtime, jthread);
-        runtime->jthread = jthread;
-        jthread_set_stackFrame(jthread, runtime);
+        runtime->jthread = new_instance_with_name(runtime, STR_JAVA_LANG_THREAD);
+        gc_refer_hold(runtime->jthread);
+        instance_init(runtime, runtime->jthread);
+        JThreadRuntime *r = jthread_get_stackFrame(runtime->jthread);
+        if (r) {
+            gc_move_refer_thread_2_gc(r);
+            jthreadruntime_destroy(r);
+        }
+        jthread_set_stackFrame(runtime->jthread, runtime);
     }
+
+
     arraylist_push_back(g_jvm->thread_list, runtime);
     runtime->thread_status = THREAD_STATUS_RUNNING;
     return runtime;

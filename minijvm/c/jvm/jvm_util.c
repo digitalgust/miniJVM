@@ -737,11 +737,11 @@ void invoke_deepth(Runtime *runtime) {
 
 //===============================    java 线程  ==================================
 
-s32 jthread_init(Instance *jthread, Runtime *runtime) {
-    jthread_set_stackframe_value(runtime->jvm, jthread, runtime);
+s32 jthread_init(MiniJVM *jvm, Instance *jthread) {
+    Runtime *runtime = jthread_get_stackframe_value(jvm, jthread);
+
     runtime->clazz = jthread->mb.clazz;
     runtime->thrd_info->jthread = jthread;
-    runtime->thrd_info->thread_status = THREAD_STATUS_RUNNING;
     threadlist_add(runtime);
     return 0;
 }
@@ -799,11 +799,11 @@ s32 jthread_run(void *para) {
 }
 
 thrd_t jthread_start(Instance *ins, Runtime *parent) {//
-    Runtime *runtime = runtime_create(parent->jvm);
+    Runtime *runtime = jthread_get_stackframe_value(parent->jvm, ins);
     runtime->thrd_info->jthread = ins;
     runtime->thrd_info->context_classloader = parent->thrd_info->context_classloader;//copy context classloader
 
-    jthread_init(ins, runtime);
+    jthread_init(runtime->jvm, ins);
     thrd_create(&runtime->thrd_info->pthread, jthread_run, runtime);
     return runtime->thrd_info->pthread;
 }
@@ -944,6 +944,7 @@ s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms) {
     }
     jthread_block_enter(runtime);
     runtime->thrd_info->curThreadLock = mb;
+    u8 thread_status = runtime->thrd_info->thread_status;
     runtime->thrd_info->thread_status = THREAD_STATUS_WAIT;
     if (waitms) {
         waitms += currentTimeMillis();
@@ -955,7 +956,7 @@ s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms) {
     } else {
         cnd_wait(&mb->thread_lock->thread_cond, &mb->thread_lock->mutex_lock);
     }
-    runtime->thrd_info->thread_status = THREAD_STATUS_RUNNING;
+    runtime->thrd_info->thread_status = thread_status;
     runtime->thrd_info->curThreadLock = NULL;
     jthread_block_exit(runtime);
     return 0;
@@ -965,6 +966,7 @@ s32 jthread_sleep(Runtime *runtime, s64 ms) {
     static const s64 PERIOD = 500;
     s32 ret = 0;
     jthread_block_enter(runtime);
+    u8 thread_status = runtime->thrd_info->thread_status;
     runtime->thrd_info->thread_status = THREAD_STATUS_SLEEPING;
     if (ms < PERIOD) {
         threadSleep(ms);
@@ -980,7 +982,7 @@ s32 jthread_sleep(Runtime *runtime, s64 ms) {
             }
         }
     }
-    runtime->thrd_info->thread_status = THREAD_STATUS_RUNNING;
+    runtime->thrd_info->thread_status = thread_status;
     jthread_block_exit(runtime);
     return ret;
 }

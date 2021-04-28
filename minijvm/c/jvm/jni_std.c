@@ -1049,6 +1049,22 @@ s32 java_lang_Thread_currentThread(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+s32 java_lang_Thread_createStackFrame(Runtime *runtime, JClass *clazz) {
+    RuntimeStack *stack = runtime->stack;
+
+    Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, 0);
+
+    Runtime *r = runtime_create(runtime->jvm);
+    jthread_set_stackframe_value(runtime->jvm, ins, r);
+    push_long(stack, (s64) (intptr_t) r);
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    invoke_deepth(runtime);
+    jvm_printf("java_lang_Thread_createStackFrame \n");
+#endif
+
+    return 0;
+}
+
 s32 java_lang_Thread_yield(Runtime *runtime, JClass *clazz) {
     jthread_yield(runtime);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1088,7 +1104,7 @@ s32 java_lang_Thread_isAlive(Runtime *runtime, JClass *clazz) {
     Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, 0);
     Runtime *rt = jthread_get_stackframe_value(runtime->jvm, ins);
     if (rt)
-        push_int(stack, runtime->thrd_info->thread_status != THREAD_STATUS_ZOMBIE);
+        push_int(stack, rt->thrd_info->thread_status != THREAD_STATUS_ZOMBIE);
     else
         push_int(stack, 0);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1378,6 +1394,7 @@ static java_native_method METHODS_STD_TABLE[] = {
         {"java/lang/System",                    "getProperty0",           "(Ljava/lang/String;)Ljava/lang/String;",                        java_lang_System_getProperty0},
         {"java/lang/System",                    "setProperty0",           "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",      java_lang_System_setProperty0},
         {"java/lang/Thread",                    "currentThread",          "()Ljava/lang/Thread;",                                          java_lang_Thread_currentThread},
+        {"java/lang/Thread",                    "createStackFrame",       "()J",                                                           java_lang_Thread_createStackFrame},
         {"java/lang/Thread",                    "yield",                  "()V",                                                           java_lang_Thread_yield},
         {"java/lang/Thread",                    "sleep",                  "(J)V",                                                          java_lang_Thread_sleep},
         {"java/lang/Thread",                    "start",                  "()V",                                                           java_lang_Thread_start},

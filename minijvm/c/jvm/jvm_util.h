@@ -243,7 +243,7 @@ JavaThreadInfo *threadinfo_create(void);
 
 void threadinfo_destory(JavaThreadInfo *threadInfo);
 
-s32 jthread_init(Instance *jthread, Runtime *runtime);
+s32 jthread_init(MiniJVM *jvm, Instance *jthread);
 
 s32 jthread_dispose(Instance *jthread, Runtime *runtime);
 

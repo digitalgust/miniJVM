@@ -183,13 +183,13 @@ void _callback_notify(GLFMDisplay *window, const c8 *key, const c8 *val) {
 /* ==============================   jni glfm =================================*/
 
 void func_org_mini_glfm_Glfm_glfmSetCallBack__JLorg_mini_glfm_GlfmCallBack_2_V(JThreadRuntime *runtime, s64 p0, struct org_mini_glfm_GlfmCallBack *p2) {
-    s32 pos = 0;
+
     GLFMDisplay *window = (__refer) (intptr_t) p0;
-    pos += 2;
-    refers.glfm_callback = p2;
 
     //this object not refered by jvm , so needs to hold by jni manaul
     if (refers.glfm_callback) instance_release_from_thread(refers.glfm_callback, runtime);
+    refers.glfm_callback = p2;
+
     //instance_hold_to_thread(refers.glfm_callback, runtime);
     gc_refer_hold(refers.glfm_callback);
 

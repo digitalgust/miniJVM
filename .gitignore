@@ -2,9 +2,9 @@
 .idea
 
 Thumbs.db
-
+/build
 target
-build
+
 dist
 
 cmake-build-debug

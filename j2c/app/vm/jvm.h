@@ -527,9 +527,9 @@ s32 jthread_notifyAll(InstProp *mb);
 
 s32 jthread_waitTime(InstProp *mb, JThreadRuntime *runtime, s64 waitms);
 
-void jthread_block_enter(JThreadRuntime *runtime);
+u8 jthread_block_enter(JThreadRuntime *runtime);
 
-void jthread_block_exit(JThreadRuntime *runtime);
+void jthread_block_exit(JThreadRuntime *runtime, u8 state);
 
 void thread_lock_dispose(ThreadLock *lock);
 
@@ -630,6 +630,8 @@ s32 sys_properties_load();
 //require jni implementation
 
 void jthread_set_stackFrame(JObject *jobj, JThreadRuntime *runtime);
+
+JThreadRuntime *jthread_get_stackFrame(JObject *jobj);
 
 void jclass_set_classHandle(JObject *jobj, JClass *clazz);
 

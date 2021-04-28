@@ -45,6 +45,12 @@ void jthread_set_stackFrame(JObject *jobj, JThreadRuntime *runtime) {
     jthread->stackFrame_in_thread = (s64) (intptr_t) runtime;
 }
 
+JThreadRuntime *jthread_get_stackFrame(JObject *jobj) {
+    java_lang_Thread *jthread = (java_lang_Thread *) jobj;
+    return (__refer) (intptr_t) jthread->stackFrame_in_thread;
+}
+
+
 void jclass_set_classHandle(JObject *jobj, JClass *clazz) {
     java_lang_Class *ins = (java_lang_Class *) jobj;
     ins->classHandle_in_class = (s64) (intptr_t) clazz;
@@ -1025,6 +1031,12 @@ s32 func_java_lang_Thread_activeCount___I(JThreadRuntime *runtime) {
     return g_jvm->thread_list->length;
 }
 
+s64 func_java_lang_Thread_createStackFrame___J(JThreadRuntime *runtime, struct java_lang_Thread *p0) {
+    JThreadRuntime *r = jthreadruntime_create();
+    jthread_set_stackFrame(p0, r);
+    return (s64) (intptr_t) r;
+}
+
 struct java_lang_Thread *func_java_lang_Thread_currentThread___Ljava_lang_Thread_2(JThreadRuntime *runtime) {
     return (__refer) runtime->jthread;
 }
@@ -1039,7 +1051,8 @@ void func_java_lang_Thread_interrupt0___V(JThreadRuntime *runtime, struct java_l
 }
 
 s8 func_java_lang_Thread_isAlive___Z(JThreadRuntime *runtime, struct java_lang_Thread *p0) {
-    return runtime->thread_status != THREAD_STATUS_DEAD;
+    JThreadRuntime *tr = (JThreadRuntime *) (intptr_t) p0->stackFrame_in_thread;
+    return tr->thread_status == THREAD_STATUS_RUNNING;
 }
 
 void func_java_lang_Thread_setContextClassLoader0__Ljava_lang_ClassLoader_2_V(JThreadRuntime *runtime, struct java_lang_Thread *p0, struct java_lang_ClassLoader *p1) {
@@ -1060,7 +1073,7 @@ void func_java_lang_Thread_sleep__J_V(JThreadRuntime *runtime, s64 t) {
 }
 
 void func_java_lang_Thread_start___V(JThreadRuntime *runtime, struct java_lang_Thread *p0) {
-    p0->stackFrame_in_thread = (s64) (intptr_t) jthread_start((JObject *) p0);
+    jthread_start((JObject *) p0);
 }
 
 void func_java_lang_Thread_yield___V(JThreadRuntime *runtime) {
@@ -1390,9 +1403,9 @@ JArray *func_org_mini_net_SocketNative_accept0___3B__3B(JThreadRuntime *runtime,
         gc_refer_hold(cltarr);
         s32 ret = 0;
         while (1) {
-            jthread_block_enter(runtime);
+            u8 s = jthread_block_enter(runtime);
             ret = mbedtls_net_accept(ctx, &cltsock->contex, NULL, 0, NULL);
-            jthread_block_exit(runtime);
+            jthread_block_exit(runtime, s);
             if (runtime->is_interrupt) {//vm notify thread destroy
                 ret = -1;
                 break;
@@ -1426,10 +1439,10 @@ s32 func_org_mini_net_SocketNative_bind0___3B_3B_3BI_I(JThreadRuntime *runtime, 
 
     VmSock *vmsock = (VmSock *) vmarr->prop.as_c8_arr;
     mbedtls_net_context *ctx = &vmsock->contex;
-    jthread_block_enter(runtime);
+    u8 s = jthread_block_enter(runtime);
     s32 ret = mbedtls_net_bind(ctx, strlen(host->prop.as_c8_arr) == 0 ? NULL : host->prop.as_c8_arr, port->prop.as_c8_arr, proto);
     if (ret >= 0)ret = mbedtls_net_set_nonblock(ctx);//set as non_block , for vm destroy
-    jthread_block_exit(runtime);
+    jthread_block_exit(runtime, s);
 
     return ret < 0 ? -1 : 0;
 }
@@ -1449,9 +1462,9 @@ s32 func_org_mini_net_SocketNative_connect0___3B_3B_3BI_I(JThreadRuntime *runtim
 
     VmSock *vmsock = (VmSock *) vmarr->prop.as_c8_arr;
     mbedtls_net_context *ctx = &vmsock->contex;
-    jthread_block_enter(runtime);
+    u8 s = jthread_block_enter(runtime);
     s32 ret = mbedtls_net_connect(ctx, host->prop.as_c8_arr, port->prop.as_c8_arr, proto);
-    jthread_block_exit(runtime);
+    jthread_block_exit(runtime, s);
     return ret < 0 ? -1 : 0;
 }
 
@@ -1524,12 +1537,12 @@ JArray *func_org_mini_net_SocketNative_host2ip___3B__3B(JThreadRuntime *runtime,
 
 
 JArray *func_org_mini_net_SocketNative_open0____3B(JThreadRuntime *runtime) {
-    jthread_block_enter(runtime);
+    u8 s = jthread_block_enter(runtime);
     s32 arrlen = sizeof(VmSock);
     JArray *vmarr = multi_array_create_by_typename(runtime, &arrlen, 1, "[B");
     mbedtls_net_context *ctx = &((VmSock *) vmarr->prop.as_c8_arr)->contex;
     mbedtls_net_init(ctx);
-    jthread_block_exit(runtime);
+    jthread_block_exit(runtime, s);
     return vmarr;
 }
 
@@ -1541,9 +1554,9 @@ s32 func_org_mini_net_SocketNative_readBuf___3B_3BII_I(JThreadRuntime *runtime, 
 
     VmSock *vmsock = (VmSock *) vmarr->prop.as_c8_arr;
 
-    jthread_block_enter(runtime);
+    u8 s = jthread_block_enter(runtime);
     s32 ret = sock_recv(vmsock, (u8 *) jbyte_arr->prop.as_c8_arr + offset, count, runtime);
-    jthread_block_exit(runtime);
+    jthread_block_exit(runtime, s);
     return ret;
 }
 
@@ -1552,9 +1565,9 @@ s32 func_org_mini_net_SocketNative_readByte___3B_I(JThreadRuntime *runtime, JArr
 
     VmSock *vmsock = (VmSock *) vmarr->prop.as_c8_arr;
     u8 b = 0;
-    jthread_block_enter(runtime);
+    u8 s = jthread_block_enter(runtime);
     s32 ret = sock_recv(vmsock, &b, 1, runtime);
-    jthread_block_exit(runtime);
+    jthread_block_exit(runtime, s);
     return ret < 0 ? ret : (u8) b;
 
 }
@@ -1611,9 +1624,9 @@ s32 func_org_mini_net_SocketNative_writeBuf___3B_3BII_I(JThreadRuntime *runtime,
 
     VmSock *vmsock = (VmSock *) vmarr->prop.as_c8_arr;
     mbedtls_net_context *ctx = &vmsock->contex;
-    jthread_block_enter(runtime);
+    u8 s = jthread_block_enter(runtime);
     s32 ret = mbedtls_net_send(ctx, (const u8 *) jbyte_arr->prop.as_c8_arr + offset, count);
-    jthread_block_exit(runtime);
+    jthread_block_exit(runtime, s);
     if (ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
         ret = 0;
     } else if (ret < 0) {
@@ -1630,9 +1643,9 @@ s32 func_org_mini_net_SocketNative_writeByte___3BI_I(JThreadRuntime *runtime, JA
 
     VmSock *vmsock = (VmSock *) vmarr->prop.as_c8_arr;
     mbedtls_net_context *ctx = &vmsock->contex;
-    jthread_block_enter(runtime);
+    u8 s = jthread_block_enter(runtime);
     s32 ret = mbedtls_net_send(ctx, &b, 1);
-    jthread_block_exit(runtime);
+    jthread_block_exit(runtime, s);
     if (ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
         ret = 0;
     } else if (ret < 0) {
@@ -1992,7 +2005,7 @@ s64 func_org_mini_reflect_ReflectMethod_findMethod0__Ljava_lang_ClassLoader_2Lja
 }
 
 
-struct java_lang_Object* func_org_mini_reflect_ReflectMethod_invokeMethod__Ljava_lang_Object_2_3Ljava_lang_Object_2_Ljava_lang_Object_2(JThreadRuntime *runtime, struct org_mini_reflect_ReflectMethod* p0, struct java_lang_Object* p1, JArray * p2){
+struct java_lang_Object *func_org_mini_reflect_ReflectMethod_invokeMethod__Ljava_lang_Object_2_3Ljava_lang_Object_2_Ljava_lang_Object_2(JThreadRuntime *runtime, struct org_mini_reflect_ReflectMethod *p0, struct java_lang_Object *p1, JArray *p2) {
     MethodInfo *mi = (__refer) (intptr_t) p0->methodId_in_reflectmethod;
     s32 len = p2->prop.arr_length;
     ParaItem para[len], ret;
