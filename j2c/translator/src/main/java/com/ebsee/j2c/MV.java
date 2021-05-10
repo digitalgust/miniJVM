@@ -1736,12 +1736,14 @@ public class MV extends MethodVisitor {
         int insert = 0;
         add(insert++, getLabelTable());
 
-        max_local += 2;
-        max_stack += 2;//may throw exception
+        max_stack += 1;//may throw exception
+        int locals = max_local > signature.getSlotSizeofArgs() ? max_local : signature.getSlotSizeofArgs();
         String stackValue = "NULL", localValue = "NULL", spPtrValue = "NULL";
-        add(insert++, "StackItem local[" + max_local + "] = {0};");
-        add(insert++, "RStackItem rlocal[" + max_local + "] = {0};");
-        localValue = "&rlocal[0]";
+        if (locals > 0) {
+            add(insert++, "StackItem local[" + locals + "] = {0};");
+            add(insert++, "RStackItem rlocal[" + locals + "] = {0};");
+            localValue = "&rlocal[0]";
+        }
         add(insert++, "StackItem stack[" + max_stack + "]/* = {0}*/;");
         add(insert++, "RStackItem rstack[" + max_stack + "] = {0};");
         add(insert++, "s32 sp = 0;");

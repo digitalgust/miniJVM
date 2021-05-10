@@ -156,9 +156,9 @@ public class ClassManger {
         if (className.startsWith("[")) {
             list = getImplementMethodTable(Util.CLASS_JAVA_LANG_OBJECT);
         } else {
-            if (className.equals(("java/util/ArrayList"))) {
-                int debug = 1;
-            }
+//            if (className.equals(("java/util/ArrayList"))) {
+//                int debug = 1;
+//            }
             list = new ArrayList<>();
             getInterfaceMethods(className, list);
             getClassMethods(className, list);
@@ -276,9 +276,6 @@ public class ClassManger {
                     }
                 }
             }
-//            if (cname.equals("java/util/List") && methodName.equals("forEach")) {
-//                int debug = 1;
-//            }
             for (String iname : cf.getInterfaceClasses()) {
                 FindResult r = findVirtualMethod(iname, methodName, descript);
                 if (r != null) return r;
@@ -289,7 +286,7 @@ public class ClassManger {
             else cname = null;
         }
         return null;
-        //throw new RuntimeException("method not found:" + cname + "." + methodName + descript);
+//        throw new RuntimeException("method not found:" + className + "." + methodName + descript);
     }
 
     public static Method findMethod(String className, String methodName, String descript) {
