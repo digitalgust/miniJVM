@@ -14,8 +14,10 @@
   * Minimal bootstrap classlib    
   * Support embedded java source compiler(janino compiler)   
   * Jit support     
-  *  Low latency  java garbage collection    
+  * Low latency  java garbage collection    
   * Java remote debug supported, JDWP Spec   
+  * Translate minijvm classes to C source code to improve performance.    
+
   
 ## iOS/Android Platform Extended Features:  
   * OpenGL ES 2.0 / 3.0   
@@ -24,7 +26,6 @@
   * Take photo from Camera or Album   
   * Save and Load file from mobile storage    
   * Api compatible with miniJVM desktop platform,  app can running on desktop platform   
-  * Translate minijvm java source to C improve performance.    
 
 ## MiniJVM gui Demo
 
@@ -345,7 +346,7 @@ mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/luaj.jar Sample
 >> desktop/   
 >>> glfw_gui/------ desktop computer gui/audio native module   
 >>
->> j2c/        
+>> j2c/------------ java to c translator.    
 >>> app/----------- native support source.    
 >>> build/--------- build files for platforms.    
 >>> translator/---- tool for convert minijvm java source to c source.    
