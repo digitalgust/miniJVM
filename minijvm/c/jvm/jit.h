@@ -4,6 +4,10 @@
 
 #ifndef MINI_JVM_JIT_H
 #define MINI_JVM_JIT_H
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "jvm.h"
 #include "jvm_util.h"
 
@@ -56,4 +60,7 @@ void construct_jit(MethodInfo *method, Runtime *runtime);
 
 void jit_set_exception_jump_addr(Runtime* runtime, CodeAttribute *ca, s32 index);
 
+#ifdef __cplusplus
+}
+#endif
 #endif //MINI_JVM_JIT_H

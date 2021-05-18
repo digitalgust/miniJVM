@@ -6,11 +6,12 @@
 #define MINI_JVM_PAIRLIST_H
 
 
-#include "d_type.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "d_type.h"
 
 typedef struct _Pair {
     union {

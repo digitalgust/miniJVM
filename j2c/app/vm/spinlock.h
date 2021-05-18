@@ -5,7 +5,9 @@
 
 #ifndef MINI_JVM_SPINLOCK_H
 #define MINI_JVM_SPINLOCK_H
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 //======================= spinlock =============================
 
 #include "tinycthread.h"
@@ -76,6 +78,8 @@ static inline int spin_unlock(volatile spinlock_t *lock) {
     return 0;
 }
 
-
+#ifdef __cplusplus
+};
+#endif
 
 #endif //MINI_JVM_SPINLOCK_H

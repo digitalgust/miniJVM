@@ -5,14 +5,13 @@
 #ifndef MINI_JVM_UTIL_H
 #define MINI_JVM_UTIL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "jvm.h"
 #include "jdwp.h"
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define NANO_2_SEC_SCALE 1000000000
 #define NANO_2_MILLS_SCALE 1000000
@@ -53,7 +52,7 @@ s32 sys_properties_load(MiniJVM *jvm);
 
 void sys_properties_dispose(MiniJVM *jvm);
 
-void sys_properties_set_c(MiniJVM *jvm, c8 *key, c8 *val);
+void sys_properties_set_c(MiniJVM *jvm, c8 const *key, c8 const *val);
 
 void instance_release_from_thread(Instance *ref, Runtime *runtime);
 
@@ -68,7 +67,7 @@ void printDumpOfClasses(void);
 
 Instance *exception_create(s32 exception_type, Runtime *runtime);
 
-Instance *exception_create_str(s32 exception_type, Runtime *runtime, c8 *errmsg);
+Instance *exception_create_str(s32 exception_type, Runtime *runtime, c8 const *errmsg);
 
 Instance *method_type_create(Runtime *runtime, Instance *jloader, Utf8String *desc);
 
@@ -159,7 +158,7 @@ static inline f64 getFieldDouble(c8 *ptr) {
 
 s32 getLineNumByIndex(CodeAttribute *ca, s32 offset);
 
-s32 _loadFileContents(c8 *file, ByteBuf *buf);
+s32 _loadFileContents(c8 const *file, ByteBuf *buf);
 
 ByteBuf *load_file_from_classpath(PeerClassLoader *cloader, Utf8String *path);
 
@@ -178,7 +177,7 @@ void insOfJavaLangClass_hold(JClass *clazz, Runtime *runtime);
 
 Instance *jstring_create(Utf8String *src, Runtime *runtime);
 
-Instance *jstring_create_cstr(c8 *cstr, Runtime *runtime);
+Instance *jstring_create_cstr(c8 const *cstr, Runtime *runtime);
 
 void jstring_set_count(Instance *jstr, s32 count, Runtime *runtime);
 
@@ -379,17 +378,17 @@ void jarray_set_field(Instance *arr, s32 index, s64 val);
 
 s64 jarray_get_field(Instance *arr, s32 index);
 
-c8 *getFieldPtr_byName_c(Instance *instance, c8 *pclassName, c8 *pfieldName, c8 *pfieldType, Runtime *runtime);
+c8 *getFieldPtr_byName_c(Instance *instance, c8 const*pclassName, c8 const*pfieldName, c8 const*pfieldType, Runtime *runtime);
 
 c8 *getFieldPtr_byName(Instance *instance, Utf8String *clsName, Utf8String *fieldName, Utf8String *fieldType, Runtime *runtime);
 
-JClass *classes_get_c(MiniJVM *jvm, Instance *jloader, c8 *clsName);
+JClass *classes_get_c(MiniJVM *jvm, Instance *jloader, c8 const*clsName);
 
 JClass *classes_get(MiniJVM *jvm, Instance *jloader, Utf8String *clsName);
 
 JClass *classes_load_get_without_resolve(Instance *jloader, Utf8String *ustr, Runtime *runtime);
 
-JClass *classes_load_get_c(Instance *jloader, c8 *pclassName, Runtime *runtime);
+JClass *classes_load_get_c(Instance *jloader, c8 const*pclassName, Runtime *runtime);
 
 s32 classes_put(MiniJVM *jvm, JClass *clazz);
 

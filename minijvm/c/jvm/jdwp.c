@@ -339,7 +339,7 @@ void jdwppacket_write_long(JdwpPacket *packet, s64 val) {
     packet->writePos += 8;
 }
 
-void jdwppacket_write_buf(JdwpPacket *packet, c8 *val, s32 len) {
+void jdwppacket_write_buf(JdwpPacket *packet, c8 const*val, s32 len) {
     jdwppacket_ensureCapacity(packet, len);
     memcpy(packet->data + packet->writePos, val, len);
     packet->writePos += len;

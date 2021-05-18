@@ -39,7 +39,7 @@ void utf8_destory(Utf8String *uni_str) {
 }
 
 
-Utf8String *utf8_create_c(char *str) {
+Utf8String *utf8_create_c(char const *str) {
     Utf8String *uni_str = utf8_create();
     utf8_append_c(uni_str, str);
     return uni_str;
@@ -57,7 +57,7 @@ Utf8String *utf8_create_part(Utf8String *str, int start, int len) {
     return uni_str;
 }
 
-Utf8String *utf8_create_part_c(char *str, int start, int len) {
+Utf8String *utf8_create_part_c(char const *str, int start, int len) {
     Utf8String *uni_str = utf8_create();
     int i;
     for (i = 0; i < len; i++) {
@@ -86,7 +86,7 @@ void utf8_append_part(Utf8String *a1, Utf8String *a2, int start, int len) {
     a1->length += len;
 }
 
-void utf8_append_c(Utf8String *a1, char *a2) {
+void utf8_append_c(Utf8String *a1, char const *a2) {
     int i = 0;
     for (i = 0;; i++) {
         char ch = a2[i];
@@ -95,7 +95,7 @@ void utf8_append_c(Utf8String *a1, char *a2) {
     }
 }
 
-void utf8_append_data(Utf8String *a1, char *a2, s32 size) {
+void utf8_append_data(Utf8String *a1, char const *a2, s32 size) {
     int i = 0;
     for (i = 0; i < size; i++) {
         char ch = a2[i];
@@ -158,7 +158,7 @@ s64 utf8_aton(Utf8String *sp, int n) {
     return v;
 }
 
-void utf8_append_part_c(Utf8String *a1, unsigned char *a2, int start, int len) {
+void utf8_append_part_c(Utf8String *a1, unsigned char const *a2, int start, int len) {
     int i = 0;
     for (i = start; i < len; i++) {
         char ch = a2[i];
@@ -174,7 +174,7 @@ void utf8_substring(Utf8String *a1, int start, int end) {
     utf8_remove_range(a1, 0, start);
 }
 
-char *utf8_cstr(Utf8String *a1) {
+char const *utf8_cstr(Utf8String *a1) {
     _utf8_space_require(a1, 1);
     a1->data[a1->length] = 0;
     return (char *) &(a1->data[0]);
@@ -182,7 +182,7 @@ char *utf8_cstr(Utf8String *a1) {
 
 //----------------------------    indexof     -----------------------------
 
-static inline int _utf8_indexof_pos_impl(Utf8String *a1, char *a2, int count2, int a1_pos) {
+static inline int _utf8_indexof_pos_impl(Utf8String *a1, char const *a2, int count2, int a1_pos) {
 
     int i = 0;
     for (i = a1_pos; i < a1->length; i++) {
@@ -216,7 +216,7 @@ int utf8_indexof(Utf8String *a1, Utf8String *a2) {
     return utf8_indexof_pos(a1, a2, 0);
 }
 
-int utf8_indexof_pos_c(Utf8String *a1, char *a2, int a1_pos) {
+int utf8_indexof_pos_c(Utf8String *a1, char const *a2, int a1_pos) {
     if (a1 == NULL || a2 == NULL)return -1; //无法查找
     if (a1_pos >= a1->length || a1_pos < 0)return -1;
     int count2 = strlen(a2);
@@ -224,12 +224,12 @@ int utf8_indexof_pos_c(Utf8String *a1, char *a2, int a1_pos) {
     return _utf8_indexof_pos_impl(a1, a2, count2, a1_pos);
 }
 
-int utf8_indexof_c(Utf8String *a1, char *a2) {
+int utf8_indexof_c(Utf8String *a1, char const *a2) {
     return utf8_indexof_pos_c(a1, a2, 0);
 }
 
 
-static inline int _utf8_last_indexof_pos_impl(Utf8String *a1, char *a2, int count2, int a1_rightpos) {
+static inline int _utf8_last_indexof_pos_impl(Utf8String *a1, char const *a2, int count2, int a1_rightpos) {
 
     int i = 0;
     for (i = a1_rightpos; i > -1; i--) {
@@ -266,7 +266,7 @@ int utf8_last_indexof(Utf8String *a1, Utf8String *a2) {
     return utf8_last_indexof_pos(a1, a2, a1->length - 1);
 }
 
-int utf8_last_indexof_pos_c(Utf8String *a1, char *a2, int a1_rightpos) {
+int utf8_last_indexof_pos_c(Utf8String *a1, char const *a2, int a1_rightpos) {
     if (a1 == NULL || a2 == NULL)return -1; //无法查找
     if (a1_rightpos >= a1->length || a1_rightpos < 0)return -1;
     int count2 = strlen(a2);
@@ -275,7 +275,7 @@ int utf8_last_indexof_pos_c(Utf8String *a1, char *a2, int a1_rightpos) {
     return index;
 }
 
-int utf8_last_indexof_c(Utf8String *a1, char *a2) {
+int utf8_last_indexof_c(Utf8String *a1, char const *a2) {
     if (a1 == NULL || a2 == NULL)return -1; //无法查找
     int count2 = strlen(a2);
     if (count2 == 0)return a1->length;
@@ -283,7 +283,39 @@ int utf8_last_indexof_c(Utf8String *a1, char *a2) {
 }
 
 
-static inline void _utf8_replace_impl(Utf8String *a1, char *a2, int count2, char *a3, int count3) {
+void utf8_split_get_part(Utf8String *a1, char const *splitor, int index, Utf8String *result) {
+    int i = 0, count = 0, prePos = 0;
+    int count2 = strlen(splitor);
+    for (i = 0; i < a1->length; i++) {
+        utf8_char ch = a1->data[i];
+        if (ch == splitor[0]) {
+            int match = 1; //标识
+            int j = 0;
+            for (j = 1; j < count2; j++) {
+                if (i + j >= a1->length)return; //超界
+
+                if (splitor[j] != a1->data[i + j]) {//不匹配
+                    match = 0;
+                    break;
+                }
+            }
+            if (count == index) {
+                break;
+            }
+            if (match) {
+                count++;
+                prePos = i + j;
+            }
+        }
+    }
+    if (count == index) {
+        utf8_append_part(result, a1, prePos, i - prePos);
+    }
+    return;
+}
+
+
+static inline void _utf8_replace_impl(Utf8String *a1, char const *a2, int count2, char const *a3, int count3) {
     Utf8String *tmps = utf8_create();
     utf8_append(tmps, a1);
     utf8_clear(a1);
@@ -311,7 +343,7 @@ void utf8_replace(Utf8String *a1, Utf8String *a2, Utf8String *a3) {
     _utf8_replace_impl(a1, (char *) a2->data, a2->length, (char *) a3->data, a3->length);
 }
 
-void utf8_replace_c(Utf8String *a1, char *a2, char *a3) {
+void utf8_replace_c(Utf8String *a1, char const *a2, char const *a3) {
     if (a1 == NULL || a2 == NULL || a3 == NULL)return;
     int count2 = strlen(a2);
     int count3 = strlen(a3);
@@ -341,7 +373,7 @@ int utf8_equals(Utf8String *a1, Utf8String *a2) {
     return 0;
 }
 
-int utf8_equals_c(Utf8String *a1, char *a2) {
+int utf8_equals_c(Utf8String *a1, char const *a2) {
     if (a1 && a2) {
         return _utf8_equals_impl(a1->data, a1->length, (utf8_char *) a2, strlen(a2));
     }

@@ -108,7 +108,7 @@ void thread_lock_dispose(ThreadLock *lock) {
 }
 
 
-s32 find_global_string_index(c8 *str) {
+s32 find_global_string_index(c8 const *str) {
     s32 len = strlen(str);
     s32 i, j;
     for (i = 0; i < g_strings_count; i++) {
@@ -147,7 +147,7 @@ Utf8String *get_utf8str_by_utfraw_index(s32 index) {
     return get_utf8str(utfraw);
 }
 
-ClassRaw *find_classraw(c8 *className) {
+ClassRaw *find_classraw(c8 const *className) {
 
     s32 classNameIndex = find_global_string_index(className);
     if (classNameIndex < 0) {
@@ -168,7 +168,7 @@ MethodRaw *get_methodraw_by_index(s32 index) {
 }
 
 
-MethodRaw *find_methodraw(c8 *className, c8 *methodName, c8 *signature) {
+MethodRaw *find_methodraw(c8 const *className, c8 const *methodName, c8 const *signature) {
 
     s32 classNameIndex = find_global_string_index(className);
     if (classNameIndex < 0) {
@@ -214,7 +214,7 @@ MethodInfo *get_methodinfo_by_rawindex(s32 methodRawIndex) {
     return NULL;
 }
 
-MethodInfo *find_methodInfo_by_name(c8 *clsName, c8 *methodName, c8 *methodType) {
+MethodInfo *find_methodInfo_by_name(c8 const *clsName, c8 const *methodName, c8 const *methodType) {
     MethodInfo *mi = NULL;
     JClass *other = classes_get_c(clsName);
 
@@ -250,7 +250,7 @@ MethodInfo *find_methodInfo_by_name(c8 *clsName, c8 *methodName, c8 *methodType)
 }
 
 
-JClass *get_class_by_name_c(c8 *name) {
+JClass *get_class_by_name_c(c8 const *name) {
     return classes_get_c(name);
 }
 
@@ -323,7 +323,7 @@ int unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 u16arr_len) {
  * @param ustr in
  * @param arr out
  */
-s32 utf8_2_unicode(c8 *pInput, u16 *arr, s32 limit) {
+s32 utf8_2_unicode(c8 const *pInput, u16 *arr, s32 limit) {
     int outputSize = 0; //记录转换后的Unicode字符串的字节数
 
     char *tmp = (c8 *) arr; //临时变量，用于遍历输出字符串
@@ -641,7 +641,7 @@ s32 parseMethodPara(Utf8String *methodType, Utf8String *out) {
 }
 
 
-s32 _loadFileContents(c8 *file, ByteBuf *buf) {
+s32 _loadFileContents(c8 const *file, ByteBuf *buf) {
 
     FILE *pFile;
     long lSize;

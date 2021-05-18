@@ -6,23 +6,23 @@
 #include "garbage.h"
 #include "bytebuf.h"
 
-c8 *STR_JAVA_LANG_CLASS = "java/lang/Class";
-c8 *STR_JAVA_LANG_OBJECT = "java/lang/Object";
-c8 *STR_JAVA_LANG_STRING = "java/lang/String";
-c8 *STR_JAVA_LANG_THREAD = "java/lang/Thread";
-c8 *STR_JAVA_LANG_INTEGER = "java/lang/Integer";
-c8 *STR_JAVA_LANG_OUT_OF_MEMORY_ERROR = "java/io/OutOfMemoryError";
-c8 *STR_JAVA_LANG_VIRTUAL_MACHINE_ERROR = "java/io/VirtualMachineError";
-c8 *STR_JAVA_LANG_CLASS_NOT_FOUND_EXCEPTION = "java/lang/ClassNotFoundException";
-c8 *STR_JAVA_LANG_ARITHMETIC_EXCEPTION = "java/lang/ArithmeticException";
-c8 *STR_JAVA_LANG_NULL_POINTER_EXCEPTION = "java/lang/NullPointerException";
-c8 *STR_JAVA_LANG_NO_SUCH_METHOD_EXCEPTION = "java/lang/NoSuchMethodException";
-c8 *STR_JAVA_LANG_NO_SUCH_FIELD_EXCEPTION = "java/lang/NoSuchFieldException";
-c8 *STR_JAVA_LANG_ILLEGAL_ARGUMENT_EXCEPTION = "java/lang/IllegalArgumentException";
-c8 *STR_JAVA_LANG_CLASS_CAST_EXCEPTION = "java/lang/ClassCastException";
-c8 *STR_JAVA_LANG_ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION = "java/lang/ArrayIndexOutOfBoundsException";
-c8 *STR_JAVA_LANG_INSTANTIATION_EXCEPTION = "java/lang/InstantiationException";
-c8 *STR_JAVA_LANG_STACKTRACEELEMENT = "java/lang/StackTraceElement";
+c8 const *STR_JAVA_LANG_CLASS = "java/lang/Class";
+c8 const *STR_JAVA_LANG_OBJECT = "java/lang/Object";
+c8 const *STR_JAVA_LANG_STRING = "java/lang/String";
+c8 const *STR_JAVA_LANG_THREAD = "java/lang/Thread";
+c8 const *STR_JAVA_LANG_INTEGER = "java/lang/Integer";
+c8 const *STR_JAVA_LANG_OUT_OF_MEMORY_ERROR = "java/io/OutOfMemoryError";
+c8 const *STR_JAVA_LANG_VIRTUAL_MACHINE_ERROR = "java/io/VirtualMachineError";
+c8 const *STR_JAVA_LANG_CLASS_NOT_FOUND_EXCEPTION = "java/lang/ClassNotFoundException";
+c8 const *STR_JAVA_LANG_ARITHMETIC_EXCEPTION = "java/lang/ArithmeticException";
+c8 const *STR_JAVA_LANG_NULL_POINTER_EXCEPTION = "java/lang/NullPointerException";
+c8 const *STR_JAVA_LANG_NO_SUCH_METHOD_EXCEPTION = "java/lang/NoSuchMethodException";
+c8 const *STR_JAVA_LANG_NO_SUCH_FIELD_EXCEPTION = "java/lang/NoSuchFieldException";
+c8 const *STR_JAVA_LANG_ILLEGAL_ARGUMENT_EXCEPTION = "java/lang/IllegalArgumentException";
+c8 const *STR_JAVA_LANG_CLASS_CAST_EXCEPTION = "java/lang/ClassCastException";
+c8 const *STR_JAVA_LANG_ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION = "java/lang/ArrayIndexOutOfBoundsException";
+c8 const *STR_JAVA_LANG_INSTANTIATION_EXCEPTION = "java/lang/InstantiationException";
+c8 const *STR_JAVA_LANG_STACKTRACEELEMENT = "java/lang/StackTraceElement";
 
 //=====================================================================
 //define variable
@@ -240,7 +240,7 @@ JClass *classes_get(Utf8String *className) {
     return clazz;
 }
 
-JClass *classes_get_c(c8 *className) {
+JClass *classes_get_c(c8 const *className) {
     Utf8String *cache = tss_get(TLS_KEY_UTF8STR_CACHE);
     utf8_clear(cache);
     utf8_append_c(cache, className);

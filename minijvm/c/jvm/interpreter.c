@@ -95,12 +95,12 @@ void _null_throw_exception(RuntimeStack *stack, Runtime *runtime) {
     push_ref(stack, (__refer) exception);
 }
 
-void _nosuchmethod_check_exception(c8 *mn, RuntimeStack *stack, Runtime *runtime) {
+void _nosuchmethod_check_exception(c8 const *mn, RuntimeStack *stack, Runtime *runtime) {
     Instance *exception = exception_create_str(JVM_EXCEPTION_NOSUCHMETHOD, runtime, mn);
     push_ref(stack, (__refer) exception);
 }
 
-void _nosuchfield_check_exception(c8 *mn, RuntimeStack *stack, Runtime *runtime) {
+void _nosuchfield_check_exception(c8 const *mn, RuntimeStack *stack, Runtime *runtime) {
     Instance *exception = exception_create_str(JVM_EXCEPTION_NOSUCHFIELD, runtime, mn);
     push_ref(stack, (__refer) exception);
 }
@@ -488,7 +488,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
     //local var for control
     MiniJVM *jvm;
     s32 ret;
-    c8 *err_msg;
+    c8 const *err_msg;
     Runtime *runtime;
     JavaThreadInfo *thrd_info;
     RuntimeStack *stack;

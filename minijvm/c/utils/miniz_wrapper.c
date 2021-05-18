@@ -2,11 +2,11 @@
 #include "miniz_wrapper.h"
 
 
-s32 zip_loadfile(char *jarpath, char *filename, ByteBuf *buf) {
+s32 zip_loadfile(char const *jarpath, char const *filename, ByteBuf *buf) {
     int file_index = 0;
     mz_zip_archive zipArchive = {0};
     mz_zip_archive_file_stat file_stat = {0};
-    
+
     //skit the first '/'
     if (filename && filename[0] == '/') {
         filename += 1;
@@ -37,7 +37,7 @@ s32 zip_loadfile(char *jarpath, char *filename, ByteBuf *buf) {
 }
 
 
-s32 zip_savefile_mem(char *jarpath, char *filename, char *buf, int size) {
+s32 zip_savefile_mem(char const *jarpath, char const *filename, char const *buf, int size) {
     int file_index = 0;
     mz_zip_archive zipArchive = {0};
     mz_zip_archive_file_stat file_stat = {0};
@@ -65,7 +65,7 @@ s32 zip_savefile_mem(char *jarpath, char *filename, char *buf, int size) {
 }
 
 
-s32 zip_savefile(char *jarpath, char *filename, ByteBuf *buf) {
+s32 zip_savefile(char const *jarpath, char const *filename, ByteBuf *buf) {
     return zip_savefile_mem(jarpath, filename, buf->buf, buf->wp);
 }
 

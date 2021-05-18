@@ -21,7 +21,7 @@ void print_ptr(s64 v) {
 }
 
 void print_mem(void *ptr, s32 size) {
-    c8 *start = ptr;
+    c8 *start = (c8 *) ptr;
     c8 *end = start + size;
     s32 i = 0;
     while (start < end) {
@@ -40,7 +40,7 @@ s32 func_ptr_size() {
 JObject *new_instance_with_classraw(JThreadRuntime *runtime, ClassRaw *raw) {
     s32 insSize = raw->ins_size;
     //printf("ins size :%d\n", insSize);
-    JObject *ins = jvm_calloc(insSize);
+    JObject *ins = (JObject *) jvm_calloc(insSize);
     ins->prop.heap_size = insSize;
     if (!raw->clazz) {
         class_clinit(runtime, get_utf8str_by_utfraw_index(raw->name));
@@ -67,7 +67,7 @@ JObject *new_instance_with_nameindex(JThreadRuntime *runtime, s32 classNameIndex
     return new_instance_with_classraw(runtime, raw);
 }
 
-JObject *new_instance_with_name(JThreadRuntime *runtime, c8 *className) {
+JObject *new_instance_with_name(JThreadRuntime *runtime, c8 const *className) {
     ClassRaw *raw = find_classraw(className);
     return new_instance_with_classraw(runtime, raw);
 }
@@ -106,13 +106,13 @@ JObject *construct_string_with_utfraw_index(JThreadRuntime *runtime, s32 utfInde
     return ins;
 }
 
-JObject *construct_string_with_cstr(JThreadRuntime *runtime, c8 *str) {
+JObject *construct_string_with_cstr(JThreadRuntime *runtime, c8 const *str) {
     if (!str)return NULL;
     s32 c8len = strlen(str);
     return construct_string_with_cstr_and_size(runtime, str, c8len);
 }
 
-JObject *construct_string_with_cstr_and_size(JThreadRuntime *runtime, c8 *str, s32 size) {
+JObject *construct_string_with_cstr_and_size(JThreadRuntime *runtime, c8 const *str, s32 size) {
     if (!str)return NULL;
 
     JClass *clazz = g_procache.java_lang_string_raw->clazz;
@@ -121,7 +121,7 @@ JObject *construct_string_with_cstr_and_size(JThreadRuntime *runtime, c8 *str, s
     }
     JObject *ins = new_instance_with_class(runtime, clazz);
 
-    u16 *buf = jvm_calloc(size * data_type_bytes[DATATYPE_JCHAR]);
+    u16 *buf = (u16 *) jvm_calloc(size * data_type_bytes[DATATYPE_JCHAR]);
     s32 u16len = utf8_2_unicode(str, buf, size);
     JArray *carr = multi_array_create_by_typename(runtime, &u16len, 1, "[C");
     carr->prop.arr_length = u16len;
@@ -149,8 +149,8 @@ static JArray *multi_array_create_impl(JThreadRuntime *runtime, s32 *dimm, s32 d
     s32 cellBytes = data_type_bytes[getDataTypeIndex(typetag)];
     if (cellBytes != 0 && deep == dimm_count - 1) {// none object array
         s32 totalBytes = arr_len * cellBytes + sizeof(JArray);
-        JArray *arr = jvm_calloc(totalBytes);
-        arr->prop.heap_size=totalBytes;
+        JArray *arr = (JArray *) jvm_calloc(totalBytes);
+        arr->prop.heap_size = totalBytes;
         arr->prop.clazz = clazz;
         arr->vm_table = g_procache.java_lang_object_raw->vmtable;
         arr->prop.type = INS_TYPE_ARRAY;
@@ -162,8 +162,8 @@ static JArray *multi_array_create_impl(JThreadRuntime *runtime, s32 *dimm, s32 d
     } else {
         deep++;
         s32 totalBytes = arr_len * sizeof(char *) + sizeof(JArray);
-        JArray *arr = jvm_calloc(totalBytes);
-        arr->prop.heap_size=totalBytes;
+        JArray *arr = (JArray *) jvm_calloc(totalBytes);
+        arr->prop.heap_size = totalBytes;
         arr->prop.clazz = cell_class;
         arr->vm_table = g_procache.java_lang_object_raw->vmtable;
         arr->prop.type = INS_TYPE_ARRAY;
@@ -180,8 +180,8 @@ static JArray *multi_array_create_impl(JThreadRuntime *runtime, s32 *dimm, s32 d
     }
 }
 
-JArray *multi_array_create_by_typename(JThreadRuntime *runtime, s32 *dimm, s32 dimm_count, c8 *type_name) {  // create array  [[[Ljava/lang/Object;  para: [3,2,1],3,[Ljava/lang/String;
-    Utf8String *cache = tss_get(TLS_KEY_UTF8STR_CACHE);
+JArray *multi_array_create_by_typename(JThreadRuntime *runtime, s32 *dimm, s32 dimm_count, c8 const *type_name) {  // create array  [[[Ljava/lang/Object;  para: [3,2,1],3,[Ljava/lang/String;
+    Utf8String *cache = (Utf8String *) tss_get(TLS_KEY_UTF8STR_CACHE);
     utf8_clear(cache);
     utf8_append_c(cache, type_name);
     return multi_array_create_impl(runtime, dimm, dimm_count, 0, array_class_create_get(cache));
@@ -313,7 +313,7 @@ InstProp *instance_copy(JThreadRuntime *runtime, InstProp *src, s32 deep_copy) {
     } else if (src->type == INS_TYPE_ARRAY) {
         ins_len = src->arr_length * data_type_bytes[src->arr_type] + sizeof(JArray);
     }
-    InstProp *dst = jvm_malloc(ins_len);
+    InstProp *dst = (InstProp *) jvm_malloc(ins_len);
     //memcpy(dst, src, sizeof(ins_len));
     dst->type = src->type;
     dst->thread_lock = NULL;
@@ -332,11 +332,11 @@ InstProp *instance_copy(JThreadRuntime *runtime, InstProp *src, s32 deep_copy) {
                 while (clazz) {
                     ArrayList *fiList = clazz->fields;
                     for (i = 0, len = fiList->length; i < len; i++) {
-                        FieldInfo *fi = arraylist_get_value_unsafe(fiList, i);
+                        FieldInfo *fi = (FieldInfo *) arraylist_get_value_unsafe(fiList, i);
                         if (!fi->is_static && fi->is_refer) {
                             __refer ref = *((__refer *) (((c8 *) src) + fi->offset_ins));
                             if (ref) {
-                                InstProp *new_ins = instance_copy(runtime, ref, deep_copy);
+                                InstProp *new_ins = (InstProp *) instance_copy(runtime, (InstProp *) (ref), deep_copy);
                                 *((__refer *) (((c8 *) dst) + fi->offset_ins)) = new_ins;
                             }
                         }
@@ -357,7 +357,7 @@ InstProp *instance_copy(JThreadRuntime *runtime, InstProp *src, s32 deep_copy) {
             for (i = 0; i < dst->arr_length; i++) {
                 ref = src->as_obj_arr[i];
                 if (ref) {
-                    InstProp *new_ins = instance_copy(runtime, ref, deep_copy);
+                    InstProp *new_ins = (InstProp *) instance_copy(runtime, (InstProp *) (ref), deep_copy);
                     dst->as_obj_arr[i] = new_ins;
                 }
             }

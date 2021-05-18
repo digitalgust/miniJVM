@@ -1,5 +1,5 @@
-/* -*- mode: c; tab-width: 2; indent-tabs-mode: nil; -*-
-Copyright (c) 2012 Marcus Geelnard
+/* -*- mode: vm; tab-width: 2; indent-tabs-mode: nil; -*-
+Copyright (vm) 2012 Marcus Geelnard
 
 This software is provided 'as-is', without any express or implied
 warranty. In no event will the authors be held liable for any damages
@@ -24,6 +24,9 @@ freely, subject to the following restrictions:
 #ifndef _TINYCTHREAD_H_
 #define _TINYCTHREAD_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
 * @file
 * @mainpage TinyCThread API Reference
@@ -438,6 +441,8 @@ void *tss_get(tss_t key);
 */
 int tss_set(tss_t key, void *val);
 
-
+#ifdef __cplusplus
+};
+#endif
 #endif /* _TINYTHREAD_H_ */
 

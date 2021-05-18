@@ -4,6 +4,9 @@
 
 #ifndef MINI_JVM_BYTEBUF_H
 #define MINI_JVM_BYTEBUF_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include  "d_type.h"
 
@@ -36,4 +39,7 @@ void bytebuf_expand(ByteBuf *bf, u32 size);
 
 s32 bytebuf_chkread(ByteBuf *bf, u32 pos);
 
+#ifdef __cplusplus
+};
+#endif
 #endif //MINI_JVM_BYTEBUF_H

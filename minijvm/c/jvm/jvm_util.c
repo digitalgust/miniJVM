@@ -24,7 +24,7 @@ static s64 nano_sec_start_at = 0;
  * =============================== JClass ==============================
  */
 
-JClass *classes_get_c(MiniJVM *jvm, Instance *jloader, c8 *clsName) {
+JClass *classes_get_c(MiniJVM *jvm, Instance *jloader, c8 const *clsName) {
     Utf8String *ustr = utf8_create_c(clsName);
     JClass *clazz = classes_get(jvm, jloader, ustr);
     utf8_destory(ustr);
@@ -65,7 +65,7 @@ JClass *classes_load_get_without_resolve(Instance *jloader, Utf8String *ustr, Ru
     return cl;
 }
 
-JClass *classes_load_get_c(Instance *jloader, c8 *pclassName, Runtime *runtime) {
+JClass *classes_load_get_c(Instance *jloader, c8 const *pclassName, Runtime *runtime) {
     Utf8String *ustr = utf8_create_c(pclassName);
     JClass *clazz = classes_load_get(jloader, ustr, runtime);
     utf8_destory(ustr);
@@ -329,7 +329,7 @@ void vm_share_notifyall(MiniJVM *jvm) {
  * @param arr out
  */
 s32 utf8_2_unicode(Utf8String *ustr, u16 *arr) {
-    char *pInput = utf8_cstr(ustr);
+    char const *pInput = utf8_cstr(ustr);
 
     int outputSize = 0; //记录转换后的Unicode字符串的字节数
 
@@ -587,7 +587,7 @@ s32 isDataReferByIndex(s32 index) {
 }
 
 
-void sys_properties_set_c(MiniJVM *jvm, c8 *key, c8 *val) {
+void sys_properties_set_c(MiniJVM *jvm, c8 const *key, c8 const *val) {
     Utf8String *ukey = utf8_create_c(key);
     Utf8String *uval = utf8_create_c(val);
 #if __JVM_OS_MAC__ || __JVM_OS_LINUX__
@@ -1393,7 +1393,7 @@ Instance *jstring_create(Utf8String *src, Runtime *runtime) {
     return jstring;
 }
 
-Instance *jstring_create_cstr(c8 *cstr, Runtime *runtime) {
+Instance *jstring_create_cstr(c8 const *cstr, Runtime *runtime) {
     if (!cstr)return NULL;
     Utf8String *ustr = utf8_create_part_c(cstr, 0, strlen(cstr));
     Instance *jstr = jstring_create(ustr, runtime);
@@ -1522,7 +1522,7 @@ Instance *exception_create(s32 exception_type, Runtime *runtime) {
     return ins;
 }
 
-Instance *exception_create_str(s32 exception_type, Runtime *runtime, c8 *errmsg) {
+Instance *exception_create_str(s32 exception_type, Runtime *runtime, c8 const *errmsg) {
 #if _JVM_DEBUG_LOG_LEVEL > 5
     jvm_printf("create exception : %s\n", STRS_CLASS_EXCEPTION[exception_type]);
 #endif
@@ -1614,7 +1614,7 @@ Instance *method_handles_lookup_create(Runtime *runtime, JClass *caller) {
 
 
 
-c8 *getFieldPtr_byName_c(Instance *instance, c8 *pclassName, c8 *pfieldName, c8 *pfieldType, Runtime *runtime) {
+c8 *getFieldPtr_byName_c(Instance *instance, c8 const *pclassName, c8 const *pfieldName, c8 const *pfieldType, Runtime *runtime) {
     Utf8String *clsName = utf8_create_c(pclassName);
     //Class *clazz = classes_get(clsName);
 
@@ -1814,7 +1814,7 @@ void referarr_2_jlongarr(ReferArr *ref_arr, Instance *jlong_arr) {
 /**
  * load file less than 4G bytes
  */
-s32 _loadFileContents(c8 *file, ByteBuf *buf) {
+s32 _loadFileContents(c8 const *file, ByteBuf *buf) {
 
     FILE *pFile;
     long lSize;

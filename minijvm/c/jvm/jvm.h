@@ -3,6 +3,11 @@
 #define G_JVM_H
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 
 //
 #include <stdio.h>
@@ -19,11 +24,6 @@
 #include "../utils/pairlist.h"
 #include "../utils/bytebuf.h"
 #include "../utils/hashset.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 
 //=======================  micro define  =============================
 //_JVM_DEBUG  01=thread info, 02=garage&jit info  , 03=class load, 04=method call,  06=all bytecode
@@ -457,48 +457,48 @@ enum {
 
 extern char *STRS_CLASS_EXCEPTION[];
 
-extern c8 *STR_CLASS_JAVA_LANG_STRING;
-extern c8 *STR_CLASS_JAVA_LANG_STRINGBUILDER;
-extern c8 *STR_CLASS_JAVA_LANG_BOOLEAN;
-extern c8 *STR_CLASS_JAVA_LANG_BYTE;
-extern c8 *STR_CLASS_JAVA_LANG_CHARACTER;
-extern c8 *STR_CLASS_JAVA_LANG_SHORT;
-extern c8 *STR_CLASS_JAVA_LANG_INTEGER;
-extern c8 *STR_CLASS_JAVA_LANG_LONG;
-extern c8 *STR_CLASS_JAVA_LANG_DOUBLE;
-extern c8 *STR_CLASS_JAVA_LANG_FLOAT;
-extern c8 *STR_CLASS_JAVA_LANG_OBJECT;
-extern c8 *STR_CLASS_JAVA_LANG_THREAD;
-extern c8 *STR_CLASS_JAVA_LANG_CLASS;
-extern c8 *STR_CLASS_JAVA_LANG_CLASSLOADER;
-extern c8 *STR_CLASS_JAVA_LANG_REF_REFERENCE;
-extern c8 *STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE;
-extern c8 *STR_CLASS_JAVA_LANG_STACKTRACE;
-extern c8 *STR_CLASS_JAVA_LANG_THROWABLE;
-extern c8 *STR_CLASS_JAVA_LANG_INVOKE_METHODTYPE;
-extern c8 *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLE;
-extern c8 *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLES_LOOKUP;
-extern c8 *STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ;
-extern c8 *STR_CLASS_ORG_MINI_REFLECT_LAUNCHER;
-extern c8 *STR_CLASS_ORG_MINI_REFLECT_REFLECTMETHOD;
+extern c8 const *STR_CLASS_JAVA_LANG_STRING;
+extern c8 const *STR_CLASS_JAVA_LANG_STRINGBUILDER;
+extern c8 const *STR_CLASS_JAVA_LANG_BOOLEAN;
+extern c8 const *STR_CLASS_JAVA_LANG_BYTE;
+extern c8 const *STR_CLASS_JAVA_LANG_CHARACTER;
+extern c8 const *STR_CLASS_JAVA_LANG_SHORT;
+extern c8 const *STR_CLASS_JAVA_LANG_INTEGER;
+extern c8 const *STR_CLASS_JAVA_LANG_LONG;
+extern c8 const *STR_CLASS_JAVA_LANG_DOUBLE;
+extern c8 const *STR_CLASS_JAVA_LANG_FLOAT;
+extern c8 const *STR_CLASS_JAVA_LANG_OBJECT;
+extern c8 const *STR_CLASS_JAVA_LANG_THREAD;
+extern c8 const *STR_CLASS_JAVA_LANG_CLASS;
+extern c8 const *STR_CLASS_JAVA_LANG_CLASSLOADER;
+extern c8 const *STR_CLASS_JAVA_LANG_REF_REFERENCE;
+extern c8 const *STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE;
+extern c8 const *STR_CLASS_JAVA_LANG_STACKTRACE;
+extern c8 const *STR_CLASS_JAVA_LANG_THROWABLE;
+extern c8 const *STR_CLASS_JAVA_LANG_INVOKE_METHODTYPE;
+extern c8 const *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLE;
+extern c8 const *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLES_LOOKUP;
+extern c8 const *STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ;
+extern c8 const *STR_CLASS_ORG_MINI_REFLECT_LAUNCHER;
+extern c8 const *STR_CLASS_ORG_MINI_REFLECT_REFLECTMETHOD;
 
-extern c8 *STR_FIELD_STACKFRAME;
-extern c8 *STR_FIELD_NAME;
-extern c8 *STR_FIELD_VALUE;
-extern c8 *STR_FIELD_COUNT;
-extern c8 *STR_FIELD_OFFSET;
+extern c8 const *STR_FIELD_STACKFRAME;
+extern c8 const *STR_FIELD_NAME;
+extern c8 const *STR_FIELD_VALUE;
+extern c8 const *STR_FIELD_COUNT;
+extern c8 const *STR_FIELD_OFFSET;
 
-extern c8 *STR_FIELD_CLASSHANDLE;
-extern c8 *STR_FIELD_CLASSLOADER;
+extern c8 const *STR_FIELD_CLASSHANDLE;
+extern c8 const *STR_FIELD_CLASSLOADER;
 
-extern c8 *STR_METHOD_CLINIT;
-extern c8 *STR_METHOD_FINALIZE;
+extern c8 const *STR_METHOD_CLINIT;
+extern c8 const *STR_METHOD_FINALIZE;
 
-extern c8 *STR_INS_JAVA_LANG_STRING;
-extern c8 *STR_INS_JAVA_LANG_THREAD;
-extern c8 *STR_INS_JAVA_LANG_CLASS;
-extern c8 *STR_INS_JAVA_LANG_OBJECT;
-extern c8 *STR_INS_JAVA_LANG_STACKTRACEELEMENT;
+extern c8 const *STR_INS_JAVA_LANG_STRING;
+extern c8 const *STR_INS_JAVA_LANG_THREAD;
+extern c8 const *STR_INS_JAVA_LANG_CLASS;
+extern c8 const *STR_INS_JAVA_LANG_OBJECT;
+extern c8 const *STR_INS_JAVA_LANG_STACKTRACEELEMENT;
 
 enum {
     METHOD_INVOKE_DYNAMIC,
@@ -1195,11 +1195,11 @@ MethodInfo *find_methodInfo_by_methodref(JClass *clazz, s32 method_ref, Runtime 
 
 MethodInfo *find_methodInfo_by_name(Utf8String *clsName, Utf8String *methodName, Utf8String *methodType, Instance *jloader, Runtime *runtime);
 
-MethodInfo *find_methodInfo_by_name_c(c8 *pclsName, c8 *pmethodName, c8 *pmethodType, Instance *jloader, Runtime *runtime);
+MethodInfo *find_methodInfo_by_name_c(c8 const *pclsName, c8 const *pmethodName, c8 const *pmethodType, Instance *jloader, Runtime *runtime);
 
 FieldInfo *find_fieldInfo_by_fieldref(JClass *clazz, s32 field_ref, Runtime *runtime);
 
-FieldInfo *find_fieldInfo_by_name_c(c8 *pclsName, c8 *pfieldName, c8 *pfieldType, Instance *jloader, Runtime *runtime);
+FieldInfo *find_fieldInfo_by_name_c(c8 const *pclsName, c8 const *pfieldName, c8 const *pfieldType, Instance *jloader, Runtime *runtime);
 
 FieldInfo *find_fieldInfo_by_name(Utf8String *clsName, Utf8String *fieldName, Utf8String *fieldType, Instance *jloader, Runtime *runtime);
 
@@ -1541,9 +1541,9 @@ s32 _jarray_check_exception(Instance *arr, s32 index, Runtime *runtime);
 
 void _null_throw_exception(RuntimeStack *stack, Runtime *runtime);
 
-void _nosuchmethod_check_exception(c8 *mn, RuntimeStack *stack, Runtime *runtime);
+void _nosuchmethod_check_exception(c8 const *mn, RuntimeStack *stack, Runtime *runtime);
 
-void _nosuchfield_check_exception(c8 *mn, RuntimeStack *stack, Runtime *runtime);
+void _nosuchfield_check_exception(c8 const *mn, RuntimeStack *stack, Runtime *runtime);
 
 void _arrithmetic_throw_exception(RuntimeStack *stack, Runtime *runtime);
 
@@ -1561,9 +1561,9 @@ typedef struct _JavaNativeMethod {
     java_native_fun func_pointer;
 } java_native_method;
 
-java_native_method *find_native_method(MiniJVM *jvm, c8 *cls_name, c8 *method_name, c8 *method_type);
+java_native_method *find_native_method(MiniJVM *jvm, c8 const *cls_name, c8 const *method_name, c8 const *method_type);
 
-s32 invoke_native_method(MiniJVM *jvm, Runtime *runtime, JClass *p, c8 *cls_name, c8 *method_name, c8 *type);
+s32 invoke_native_method(MiniJVM *jvm, Runtime *runtime, JClass *p, c8 const *cls_name, c8 const *method_name, c8 const *type);
 
 
 typedef struct _JavaNativeLib {
@@ -1650,15 +1650,15 @@ struct _JNIENV {
 
     Utf8String *(*utf8_create)();
 
-    Utf8String *(*utf8_create_part_c)(char *str, int start, int len);
+    Utf8String *(*utf8_create_part_c)(char const *str, int start, int len);
 
-    char *(*utf8_cstr)(Utf8String *a1);
+    char const *(*utf8_cstr)(Utf8String *a1);
 
     void (*utf8_destory)(Utf8String *);
 
     Instance *(*jstring_create)(Utf8String *src, Runtime *runtime);
 
-    Instance *(*jstring_create_cstr)(c8 *cstr, Runtime *runtime);
+    Instance *(*jstring_create_cstr)(c8 const *cstr, Runtime *runtime);
 
     s32 (*jstring_2_utf8)(Instance *jstr, Utf8String *utf8, Runtime *runtime);
 

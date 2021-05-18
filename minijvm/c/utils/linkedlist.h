@@ -40,12 +40,12 @@
  */
 
 
-#include "spinlock.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include "spinlock.h"
 /**
  * Represents an entry in a doubly-linked list.  The empty list is
  * represented by a NULL pointer. To initialise a new doubly linked

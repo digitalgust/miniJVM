@@ -46,48 +46,48 @@ char *STRS_CLASS_EXCEPTION[] = {
         "java.lang.InstantiationException",
 };
 
-c8 *STR_CLASS_JAVA_LANG_BOOLEAN = "java/lang/Boolean";
-c8 *STR_CLASS_JAVA_LANG_BYTE = "java/lang/Byte";
-c8 *STR_CLASS_JAVA_LANG_SHORT = "java/lang/Short";
-c8 *STR_CLASS_JAVA_LANG_CHARACTER = "java/lang/Character";
-c8 *STR_CLASS_JAVA_LANG_INTEGER = "java/lang/Integer";
-c8 *STR_CLASS_JAVA_LANG_LONG = "java/lang/Long";
-c8 *STR_CLASS_JAVA_LANG_FLOAT = "java/lang/Float";
-c8 *STR_CLASS_JAVA_LANG_DOUBLE = "java/lang/Double";
-c8 *STR_CLASS_JAVA_LANG_STRING = "java/lang/String";
-c8 *STR_CLASS_JAVA_LANG_STRINGBUILDER = "java/lang/StringBuilder";
-c8 *STR_CLASS_JAVA_LANG_OBJECT = "java/lang/Object";
-c8 *STR_CLASS_JAVA_LANG_THREAD = "java/lang/Thread";
-c8 *STR_CLASS_JAVA_LANG_CLASS = "java/lang/Class";
-c8 *STR_CLASS_JAVA_LANG_CLASSLOADER = "java/lang/ClassLoader";
-c8 *STR_CLASS_JAVA_LANG_REF_REFERENCE = "java/lang/ref/Reference";
-c8 *STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE = "java/lang/ref/WeakReference";
-c8 *STR_CLASS_JAVA_LANG_INVOKE_METHODTYPE = "java/lang/invoke/MethodType";
-c8 *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLE = "java/lang/invoke/MethodHandle";
-c8 *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLES_LOOKUP = "java/lang/invoke/MethodHandles$Lookup";
-c8 *STR_CLASS_JAVA_LANG_STACKTRACE = "java/lang/StackTraceElement";
-c8 *STR_CLASS_JAVA_LANG_THROWABLE = "java/lang/Throwable";
-c8 *STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ = "org/mini/reflect/DirectMemObj";
-c8 *STR_CLASS_ORG_MINI_REFLECT_LAUNCHER = "org/mini/reflect/Launcher";
-c8 *STR_CLASS_ORG_MINI_REFLECT_REFLECTMETHOD = "org/mini/reflect/ReflectMethod";
+c8 const *STR_CLASS_JAVA_LANG_BOOLEAN = "java/lang/Boolean";
+c8 const *STR_CLASS_JAVA_LANG_BYTE = "java/lang/Byte";
+c8 const *STR_CLASS_JAVA_LANG_SHORT = "java/lang/Short";
+c8 const *STR_CLASS_JAVA_LANG_CHARACTER = "java/lang/Character";
+c8 const *STR_CLASS_JAVA_LANG_INTEGER = "java/lang/Integer";
+c8 const *STR_CLASS_JAVA_LANG_LONG = "java/lang/Long";
+c8 const *STR_CLASS_JAVA_LANG_FLOAT = "java/lang/Float";
+c8 const *STR_CLASS_JAVA_LANG_DOUBLE = "java/lang/Double";
+c8 const *STR_CLASS_JAVA_LANG_STRING = "java/lang/String";
+c8 const *STR_CLASS_JAVA_LANG_STRINGBUILDER = "java/lang/StringBuilder";
+c8 const *STR_CLASS_JAVA_LANG_OBJECT = "java/lang/Object";
+c8 const *STR_CLASS_JAVA_LANG_THREAD = "java/lang/Thread";
+c8 const *STR_CLASS_JAVA_LANG_CLASS = "java/lang/Class";
+c8 const *STR_CLASS_JAVA_LANG_CLASSLOADER = "java/lang/ClassLoader";
+c8 const *STR_CLASS_JAVA_LANG_REF_REFERENCE = "java/lang/ref/Reference";
+c8 const *STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE = "java/lang/ref/WeakReference";
+c8 const *STR_CLASS_JAVA_LANG_INVOKE_METHODTYPE = "java/lang/invoke/MethodType";
+c8 const *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLE = "java/lang/invoke/MethodHandle";
+c8 const *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLES_LOOKUP = "java/lang/invoke/MethodHandles$Lookup";
+c8 const *STR_CLASS_JAVA_LANG_STACKTRACE = "java/lang/StackTraceElement";
+c8 const *STR_CLASS_JAVA_LANG_THROWABLE = "java/lang/Throwable";
+c8 const *STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ = "org/mini/reflect/DirectMemObj";
+c8 const *STR_CLASS_ORG_MINI_REFLECT_LAUNCHER = "org/mini/reflect/Launcher";
+c8 const *STR_CLASS_ORG_MINI_REFLECT_REFLECTMETHOD = "org/mini/reflect/ReflectMethod";
 
-c8 *STR_FIELD_STACKFRAME = "stackFrame";
-c8 *STR_FIELD_NAME = "name";
-c8 *STR_FIELD_VALUE = "value";
-c8 *STR_FIELD_COUNT = "count";
-c8 *STR_FIELD_OFFSET = "offset";
+c8 const *STR_FIELD_STACKFRAME = "stackFrame";
+c8 const *STR_FIELD_NAME = "name";
+c8 const *STR_FIELD_VALUE = "value";
+c8 const *STR_FIELD_COUNT = "count";
+c8 const *STR_FIELD_OFFSET = "offset";
 
-c8 *STR_FIELD_CLASSHANDLE = "classHandle";
-c8 *STR_FIELD_CLASSLOADER = "classLoader";
+c8 const *STR_FIELD_CLASSHANDLE = "classHandle";
+c8 const *STR_FIELD_CLASSLOADER = "classLoader";
 
-c8 *STR_METHOD_CLINIT = "<clinit>";
-c8 *STR_METHOD_FINALIZE = "finalize";
+c8 const *STR_METHOD_CLINIT = "<clinit>";
+c8 const *STR_METHOD_FINALIZE = "finalize";
 
-c8 *STR_INS_JAVA_LANG_STRING = "Ljava/lang/String;";
-c8 *STR_INS_JAVA_LANG_THREAD = "Ljava/lang/Thread;";
-c8 *STR_INS_JAVA_LANG_CLASS = "Ljava/lang/Class;";
-c8 *STR_INS_JAVA_LANG_OBJECT = "Ljava/lang/Object;";
-c8 *STR_INS_JAVA_LANG_STACKTRACEELEMENT = "Ljava/lang/StackTraceElement;";
+c8 const *STR_INS_JAVA_LANG_STRING = "Ljava/lang/String;";
+c8 const *STR_INS_JAVA_LANG_THREAD = "Ljava/lang/Thread;";
+c8 const *STR_INS_JAVA_LANG_CLASS = "Ljava/lang/Class;";
+c8 const *STR_INS_JAVA_LANG_OBJECT = "Ljava/lang/Object;";
+c8 const *STR_INS_JAVA_LANG_STACKTRACEELEMENT = "Ljava/lang/StackTraceElement;";
 
 
 c8 *INST_NAME[] = {

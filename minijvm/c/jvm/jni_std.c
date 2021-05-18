@@ -1412,7 +1412,7 @@ static java_native_method METHODS_STD_TABLE[] = {
 };
 
 
-java_native_method *find_native_method(MiniJVM *jvm, c8 *cls_name, c8 *method_name, c8 *method_type) {
+java_native_method *find_native_method(MiniJVM *jvm, c8 const *cls_name, c8 const *method_name, c8 const *method_type) {
     s32 i, j;
     for (j = 0; j < jvm->native_libs->length; j++) {
         JavaNativeLib *lib = arraylist_get_value(jvm->native_libs, j);
@@ -1426,7 +1426,7 @@ java_native_method *find_native_method(MiniJVM *jvm, c8 *cls_name, c8 *method_na
     return 0;
 }
 
-s32 invoke_native_method(MiniJVM *jvm, Runtime *runtime, JClass *p, c8 *cls_name, c8 *method_name, c8 *method_type) {
+s32 invoke_native_method(MiniJVM *jvm, Runtime *runtime, JClass *p, c8 const *cls_name, c8 const *method_name, c8 const *method_type) {
     java_native_method *method = find_native_method(jvm, cls_name, method_name, method_type);
     if (method != 0) {
 #if _JVM_DEBUG_LOG_LEVEL > 5

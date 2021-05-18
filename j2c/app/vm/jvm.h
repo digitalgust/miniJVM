@@ -1,6 +1,10 @@
 #ifndef RUNNER_H
 #define RUNNER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -110,27 +114,27 @@ typedef struct _Jvm Jvm;
 typedef struct _ProCache ProCache;
 
 //
-extern c8 *STR_JAVA_LANG_OBJECT;
-extern c8 *STR_JAVA_LANG_CLASS;
-extern c8 *STR_JAVA_LANG_STRING;
-extern c8 *STR_JAVA_LANG_THREAD;
-extern c8 *STR_JAVA_LANG_INTEGER;
-extern c8 *STR_JAVA_IO_EOF_EXCEPTION;
-extern c8 *STR_JAVA_IO_IO_EXCEPTION;
-extern c8 *STR_JAVA_IO_FILE_NOT_FOUND_EXCEPTION;
-extern c8 *STR_JAVA_LANG_OUT_OF_MEMORY_ERROR;
-extern c8 *STR_JAVA_LANG_VIRTUAL_MACHINE_ERROR;
-extern c8 *STR_JAVA_LANG_NO_CLASS_DEF_FOUND_ERROR;
-extern c8 *STR_JAVA_LANG_CLASS_NOT_FOUND_EXCEPTION;
-extern c8 *STR_JAVA_LANG_ARITHMETIC_EXCEPTION;
-extern c8 *STR_JAVA_LANG_NULL_POINTER_EXCEPTION;
-extern c8 *STR_JAVA_LANG_NO_SUCH_METHOD_EXCEPTION;
-extern c8 *STR_JAVA_LANG_NO_SUCH_FIELD_EXCEPTION;
-extern c8 *STR_JAVA_LANG_ILLEGAL_ARGUMENT_EXCEPTION;
-extern c8 *STR_JAVA_LANG_CLASS_CAST_EXCEPTION;
-extern c8 *STR_JAVA_LANG_ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION;
-extern c8 *STR_JAVA_LANG_INSTANTIATION_EXCEPTION;
-extern c8 *STR_JAVA_LANG_STACKTRACEELEMENT;
+extern c8 const *STR_JAVA_LANG_OBJECT;
+extern c8 const *STR_JAVA_LANG_CLASS;
+extern c8 const *STR_JAVA_LANG_STRING;
+extern c8 const *STR_JAVA_LANG_THREAD;
+extern c8 const *STR_JAVA_LANG_INTEGER;
+extern c8 const *STR_JAVA_IO_EOF_EXCEPTION;
+extern c8 const *STR_JAVA_IO_IO_EXCEPTION;
+extern c8 const *STR_JAVA_IO_FILE_NOT_FOUND_EXCEPTION;
+extern c8 const *STR_JAVA_LANG_OUT_OF_MEMORY_ERROR;
+extern c8 const *STR_JAVA_LANG_VIRTUAL_MACHINE_ERROR;
+extern c8 const *STR_JAVA_LANG_NO_CLASS_DEF_FOUND_ERROR;
+extern c8 const *STR_JAVA_LANG_CLASS_NOT_FOUND_EXCEPTION;
+extern c8 const *STR_JAVA_LANG_ARITHMETIC_EXCEPTION;
+extern c8 const *STR_JAVA_LANG_NULL_POINTER_EXCEPTION;
+extern c8 const *STR_JAVA_LANG_NO_SUCH_METHOD_EXCEPTION;
+extern c8 const *STR_JAVA_LANG_NO_SUCH_FIELD_EXCEPTION;
+extern c8 const *STR_JAVA_LANG_ILLEGAL_ARGUMENT_EXCEPTION;
+extern c8 const *STR_JAVA_LANG_CLASS_CAST_EXCEPTION;
+extern c8 const *STR_JAVA_LANG_ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION;
+extern c8 const *STR_JAVA_LANG_INSTANTIATION_EXCEPTION;
+extern c8 const *STR_JAVA_LANG_STACKTRACEELEMENT;
 
 //=================================  raw ====================================
 
@@ -463,31 +467,31 @@ s32 jthread_resume(JThreadRuntime *runtime);
 
 int jvm_printf(const char *format, ...);
 
-ClassRaw *find_classraw(c8 *className);
+ClassRaw *find_classraw(c8 const *className);
 
 MethodRaw *get_methodraw_by_index(s32 index);
 
-MethodRaw *find_methodraw(c8 *className, c8 *methodName, c8 *signature);
+MethodRaw *find_methodraw(c8 const *className, c8 const *methodName, c8 const *signature);
 
 MethodInfo *get_methodinfo_by_rawindex(s32 methodRawIndex);
 
-MethodInfo *find_methodInfo_by_name(c8 *clsName, c8 *methodName, c8 *methodType);
+MethodInfo *find_methodInfo_by_name(c8 const *clsName, c8 const *methodName, c8 const *methodType);
 
 Utf8String *get_utf8str(UtfRaw *utfraw);
 
 Utf8String *get_utf8str_by_utfraw_index(s32 index);
 
-s32 find_global_string_index(c8 *str);
+s32 find_global_string_index(c8 const *str);
 
 void classes_put(JClass *clazz);
 
 JClass *classes_get(Utf8String *className);
 
-JClass *classes_get_c(c8 *className);
+JClass *classes_get_c(c8 const *className);
 
 JClass *get_class_by_name(Utf8String *name);
 
-JClass *get_class_by_name_c(c8 *name);
+JClass *get_class_by_name_c(c8 const *name);
 
 JClass *get_class_by_nameIndex(s32 index);
 
@@ -501,7 +505,7 @@ StackFrame *stackframe_create();
 
 void stackframe_destroy(StackFrame *stackframe);
 
-s32 utf8_2_unicode(c8 *pInput, u16 *arr, s32 limit);
+s32 utf8_2_unicode(c8 const *pInput, u16 *arr, s32 limit);
 
 int unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 u16arr_len);
 
@@ -575,7 +579,7 @@ ByteBuf *load_file_from_classpath(Utf8String *path);
 
 JArray *multi_array_create(JThreadRuntime *runtime, s32 *dimm, s32 dimm_count, JClass *clazz);  // create array  [[[Ljava/lang/Object;  para: [3,2,1],3,8
 
-JArray *multi_array_create_by_typename(JThreadRuntime *runtime, s32 *dimm, s32 dimm_count, c8 *type_name);
+JArray *multi_array_create_by_typename(JThreadRuntime *runtime, s32 *dimm, s32 dimm_count, c8 const *type_name);
 
 s32 jarray_destroy(JArray *arr);
 
@@ -601,7 +605,7 @@ JObject *new_instance_with_classraw(JThreadRuntime *runtime, ClassRaw *raw);
 
 JObject *new_instance_with_nameindex(JThreadRuntime *runtime, s32 classNameIndex);
 
-JObject *new_instance_with_name(JThreadRuntime *runtime, c8 *className);
+JObject *new_instance_with_name(JThreadRuntime *runtime, c8 const *className);
 
 JObject *new_instance_with_class(JThreadRuntime *runtime, JClass *clazz);
 
@@ -615,11 +619,11 @@ s32 jobject_destroy(JObject *ins);
 
 JObject *construct_string_with_utfraw_index(JThreadRuntime *runtime, s32 utfIndex);
 
-JObject *construct_string_with_cstr(JThreadRuntime *runtime, c8 *str);
+JObject *construct_string_with_cstr(JThreadRuntime *runtime, c8 const *str);
 
 JObject *construct_string_with_ustr(JThreadRuntime *runtime, Utf8String *str);
 
-JObject *construct_string_with_cstr_and_size(JThreadRuntime *runtime, c8 *str, s32 size);
+JObject *construct_string_with_cstr_and_size(JThreadRuntime *runtime, c8 const *str, s32 size);
 
 void check_suspend_and_pause(JThreadRuntime *runtime);
 
@@ -696,5 +700,8 @@ static inline void method_exit(JThreadRuntime *runtime) {
     runtime->cache = cur;
 }
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif //RUNNER_H

@@ -1033,7 +1033,7 @@ s32 func_java_lang_Thread_activeCount___I(JThreadRuntime *runtime) {
 
 s64 func_java_lang_Thread_createStackFrame___J(JThreadRuntime *runtime, struct java_lang_Thread *p0) {
     JThreadRuntime *r = jthreadruntime_create();
-    jthread_set_stackFrame(p0, r);
+    jthread_set_stackFrame((JObject *) p0, r);
     return (s64) (intptr_t) r;
 }
 

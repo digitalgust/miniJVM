@@ -510,7 +510,7 @@ FieldInfo *find_fieldInfo_by_fieldref(JClass *clazz, s32 field_ref, Runtime *run
     return find_fieldInfo_by_name(clsName, fieldName, type, clazz->jloader, runtime);
 }
 
-FieldInfo *find_fieldInfo_by_name_c(c8 *pclsName, c8 *pfieldName, c8 *pfieldType, Instance *jloader, Runtime *runtime) {
+FieldInfo *find_fieldInfo_by_name_c(c8 const *pclsName, c8 const *pfieldName, c8 const *pfieldType, Instance *jloader, Runtime *runtime) {
     Utf8String *clsName = utf8_create_c(pclsName);
     Utf8String *fieldName = utf8_create_c(pfieldName);
     Utf8String *fieldType = utf8_create_c(pfieldType);
@@ -586,7 +586,7 @@ MethodInfo *find_methodInfo_by_methodref(JClass *clazz, s32 method_ref, Runtime 
     return find_methodInfo_by_name(clsName, methodName, methodType, clazz->jloader, runtime);
 }
 
-MethodInfo *find_methodInfo_by_name_c(c8 *pclsName, c8 *pmethodName, c8 *pmethodType, Instance *jloader, Runtime *runtime) {
+MethodInfo *find_methodInfo_by_name_c(c8 const *pclsName, c8 const *pmethodName, c8 const *pmethodType, Instance *jloader, Runtime *runtime) {
     Utf8String *clsName = utf8_create_c(pclsName);
     Utf8String *methodName = utf8_create_c(pmethodName);
     Utf8String *methodType = utf8_create_c(pmethodType);

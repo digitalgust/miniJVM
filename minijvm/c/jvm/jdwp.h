@@ -6,12 +6,12 @@
 #define MINI_JVM_JDWP_H
 
 
-#include "jvm.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include "jvm.h"
 //=============================      error   ==============================================
 enum {
     JDWP_ERROR_INVALID_TAG = 500, //object type id or class tag

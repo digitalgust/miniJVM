@@ -39,11 +39,11 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #ifndef ALGORITHM_ARRAYLIST_H
 #define ALGORITHM_ARRAYLIST_H
 
-#include "spinlock.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "spinlock.h"
 
 /**
  * A value to be stored in an @ref ArrayList.
@@ -239,7 +239,7 @@ void arraylist_sort(ArrayList *arraylist, ArrayListCompareFunc compare_func);
 void arraylist_iter_safe(ArrayList *arraylist, ArrayListIteratorFunc func, void *para);
 
 #ifdef __cplusplus
-}
+};
 #endif
 
 #endif /* #ifndef ALGORITHM_ARRAYLIST_H */
