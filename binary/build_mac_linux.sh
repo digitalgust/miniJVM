@@ -1,4 +1,4 @@
-
+#!/bin/sh
 
 
 #${GCCHOME} setup as: /usr/bin/gcc

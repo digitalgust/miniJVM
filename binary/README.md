@@ -15,7 +15,10 @@ yum -y install java-1.8.0-openjdk gcc mesa-libGL-devel libXi-devel libXcursor-de
    Install Xcode and cli tools.
 
 *   Windows install :    
-   Download gcc: https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/8.1.0/threads-posix/sjlj/x86_64-8.1.0-release-posix-sjlj-rt_v6-rev0.7z     
+   Download win x64 gcc:     
+   https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/8.1.0/threads-posix/sjlj/x86_64-8.1.0-release-posix-sjlj-rt_v6-rev0.7z     
+   Download win i686 gcc:     
+   https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/8.1.0/threads-posix/sjlj/i686-8.1.0-release-posix-sjlj-rt_v6-rev0.7z    
    Change GCCHOME in build_winXXX.bat with install gcc path.    
    Download and install jdk 1.8 or later    
     
@@ -48,7 +51,7 @@ build_jar.bat
 
 ## 4. Run test
 
-Enter macos or centos_x64 or winxxx    
+Enter macos or centos_x64(Ubuntu) or winxxx    
 
 Run test.sh or test.bat    
 

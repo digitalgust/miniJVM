@@ -1,3 +1,4 @@
+#!/bin/sh
 
 echo "Requirement: jdk1.8 jar javac "
 
