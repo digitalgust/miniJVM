@@ -5,7 +5,7 @@ JAVAC=javac
 JAR=jar
 
 
-function build_jar(){
+build_jar(){
     rm -rf $3/$1
     mkdir classes 
     find $2/java -name "*.java" >source.txt
