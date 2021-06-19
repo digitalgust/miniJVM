@@ -1904,8 +1904,9 @@ JClass *load_class(Instance *jloader, Utf8String *pClassName, Runtime *runtime) 
                         tmpclazz = insOfJavaLangClass_get_classHandle(runtime, ins_of_clazz);
                     }
                 } else {
+                    jvm_printf("class not found:%s\n", utf8_cstr(clsName));
                     print_exception(runtime);
-                    Instance *ins = pop_ref(runtime->stack);
+                    //Instance *ins = pop_ref(runtime->stack);
                     //jvm_printf("load class exception:%s\n", utf8_cstr(ins->mb.clazz->name));
                 }
                 runtime->thrd_info->no_pause--;

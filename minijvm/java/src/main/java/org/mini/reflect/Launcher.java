@@ -22,6 +22,7 @@ public class Launcher {
             super(p);
             String s = System.getProperty("java.class.path");
             paths = s.split(File.pathSeparator);
+            //for (String ps : paths) System.out.println("AppCL:" + ps);
         }
 
         @Override
@@ -31,7 +32,7 @@ public class Launcher {
             String classname = name.replace('.', File.separatorChar) + ".class";
             byte[] classData = Launcher.getFileData(classname, paths);
             if (classData == null) {
-                throw new ClassNotFoundException();
+                throw new ClassNotFoundException(name);
             } else {
                 return defineClass(name, classData, 0, classData.length);
             }
@@ -52,6 +53,7 @@ public class Launcher {
         public ExtClassLoader(ClassLoader parent) {
             String s = System.getProperty("sun.boot.class.path");
             paths = s.split(File.pathSeparator);
+            //for (String ps : paths) System.out.println("ExtCL:" + ps);
         }
 
         protected Class findClass(String name) throws ClassNotFoundException {
