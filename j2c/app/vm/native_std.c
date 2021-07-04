@@ -1080,8 +1080,8 @@ void func_java_lang_Thread_yield___V(JThreadRuntime *runtime) {
     jthread_yield();
 }
 
-struct java_lang_StackTraceElement *func_java_lang_Throwable_buildStackElement___Ljava_lang_StackTraceElement_2(JThreadRuntime *runtime, struct java_lang_Throwable *p0) {
-    return (__refer) buildStackElement(runtime, runtime->tail);
+struct java_lang_StackTraceElement* func_java_lang_Throwable_buildStackElement__Ljava_lang_Thread_2_Ljava_lang_StackTraceElement_2(JThreadRuntime *runtime, struct java_lang_Thread* p0){
+    return (__refer) buildStackElement(runtime, ((JThreadRuntime *)(intptr_t)p0->stackFrame_in_thread)->tail);
 }
 
 JArray *func_org_mini_crypt_XorCrypt_decrypt___3B_3B__3B(JThreadRuntime *runtime, JArray *p0, JArray *p1) {

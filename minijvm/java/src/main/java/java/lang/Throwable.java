@@ -83,7 +83,7 @@ public class Throwable {
      * WARNING: this must be the second variable. Native code saves some
      * indication of the stack backtrace in this slot.
      */
-    private transient Object backtrace = buildStackElement();//
+    private transient Object backtrace = buildStackElement(Thread.currentThread());//
 
     /**
      * Constructs a new <code>Throwable</code> with <code>null</code> as its
@@ -167,16 +167,24 @@ public class Throwable {
      */
     private List<Throwable> suppressedExceptions = SUPPRESSED_SENTINEL;
 
-    /** Message for trying to suppress a null exception. */
+    /**
+     * Message for trying to suppress a null exception.
+     */
     private static final String NULL_CAUSE_MESSAGE = "Cannot suppress a null exception.";
 
-    /** Message for trying to suppress oneself. */
+    /**
+     * Message for trying to suppress oneself.
+     */
     private static final String SELF_SUPPRESSION_MESSAGE = "Self-suppression not permitted";
 
-    /** Caption  for labeling causative exception stack traces */
+    /**
+     * Caption  for labeling causative exception stack traces
+     */
     private static final String CAUSE_CAPTION = "Caused by: ";
 
-    /** Caption for labeling suppressed exception stack traces */
+    /**
+     * Caption for labeling suppressed exception stack traces
+     */
     private static final String SUPPRESSED_CAPTION = "Suppressed: ";
 
     /**
@@ -195,13 +203,13 @@ public class Throwable {
      * exception is usually caught and then the second exception is
      * thrown in response.  In other words, there is a causal
      * connection between the two exceptions.
-     *
+     * <p>
      * In contrast, there are situations where two independent
      * exceptions can be thrown in sibling code blocks, in particular
      * in the {@code try} block of a {@code try}-with-resources
      * statement and the compiler-generated {@code finally} block
      * which closes the resource.
-     *
+     * <p>
      * In these situations, only one of the thrown exceptions can be
      * propagated.  In the {@code try}-with-resources statement, when
      * there are two such exceptions, the exception originating from
@@ -223,10 +231,10 @@ public class Throwable {
      * multiple sibling exceptions and only one can be propagated.
      *
      * @param exception the exception to be added to the list of
-     *        suppressed exceptions
+     *                  suppressed exceptions
      * @throws IllegalArgumentException if {@code exception} is this
-     *         throwable; a throwable cannot suppress itself.
-     * @throws NullPointerException if {@code exception} is {@code null}
+     *                                  throwable; a throwable cannot suppress itself.
+     * @throws NullPointerException     if {@code exception} is {@code null}
      * @since 1.7
      */
     public final synchronized void addSuppressed(Throwable exception) {
@@ -251,7 +259,7 @@ public class Throwable {
      * Returns an array containing all of the exceptions that were
      * suppressed, typically by the {@code try}-with-resources
      * statement, in order to deliver this exception.
-     *
+     * <p>
      * If no exceptions were suppressed or {@linkplain
      * #Throwable(String, Throwable, boolean, boolean) suppression is
      * disabled}, an empty array is returned.  This method is
@@ -259,7 +267,7 @@ public class Throwable {
      * calls to this method.
      *
      * @return an array containing all of the exceptions that were
-     *         suppressed to deliver this exception.
+     * suppressed to deliver this exception.
      * @since 1.7
      */
     public final synchronized Throwable[] getSuppressed() {
@@ -269,6 +277,7 @@ public class Throwable {
         else
             return suppressedExceptions.toArray(EMPTY_THROWABLE_ARRAY);
     }
+
     /**
      * Prints this <code>Throwable</code> and its backtrace to the standard
      * error stream. This method prints a stack trace for this
@@ -294,10 +303,14 @@ public class Throwable {
     }
 
     public StackTraceElement[] getStackTrace() {
+        return getStackTrace((StackTraceElement) backtrace);
+    }
 
-        if (backtrace != null) {
+    static StackTraceElement[] getStackTrace(StackTraceElement stackTraceElement) {
+
+        if (stackTraceElement != null) {
             int count = 0;
-            StackTraceElement sf = (StackTraceElement) backtrace;
+            StackTraceElement sf = stackTraceElement;
             while (sf != null) {
                 try {
                     Class clazz = Class.forName(sf.getClassName(), false, sf.getDeclaringClass().getClassLoader());
@@ -309,7 +322,7 @@ public class Throwable {
                 sf = sf.parent;
             }
             StackTraceElement[] arr = new StackTraceElement[count];
-            sf = (StackTraceElement) backtrace;
+            sf = (StackTraceElement) stackTraceElement;
             count = 0;
             while (sf != null) {
                 try {
@@ -350,7 +363,7 @@ public class Throwable {
         return stack.toString();
     }
 
-    private native StackTraceElement buildStackElement();
+    static native StackTraceElement buildStackElement(Thread t);
 
     /* The given object must have a void println(char[]) method */
     //private native void printStackTrace0(Object s);

@@ -1281,12 +1281,18 @@ Instance *buildStackElement(Runtime *runtime, Runtime *target) {
 
 s32 java_io_Throwable_buildStackElement(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
-    Instance *tmps = (Instance *) localvar_getRefer(runtime->localvar, 0);
+    Instance *ins_thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("java_io_Throwable_buildStackElement %s \n", utf8_cstr(tmps->mb.clazz->name));
 #endif
-    Instance *ins = buildStackElement(runtime, runtime->parent);
+    Instance *ins = NULL;
+    if (ins_thread) {
+        Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, ins_thread);
+        if (trun->thrd_info->is_suspend || trun->thrd_info->is_blocking) {
+            ins = buildStackElement(runtime, getLastSon(trun));
+        }
+    }
     push_ref(stack, ins);
     return 0;
 }
@@ -1405,7 +1411,7 @@ static java_native_method METHODS_STD_TABLE[] = {
         {"java/lang/Thread",                    "setContextClassLoader0", "(Ljava/lang/ClassLoader;)V",                                    java_lang_Thread_setContextClassLoader0},
         {"java/lang/Thread",                    "getContextClassLoader0", "()Ljava/lang/ClassLoader;",                                     java_lang_Thread_getContextClassLoader0},
         {"java/lang/Throwable",                 "printStackTrace0",       "",                                                              java_io_Throwable_printStackTrace0},
-        {"java/lang/Throwable",                 "buildStackElement",      "()Ljava/lang/StackTraceElement;",                               java_io_Throwable_buildStackElement},
+        {"java/lang/Throwable",                 "buildStackElement",      "(Ljava/lang/Thread;)Ljava/lang/StackTraceElement;",             java_io_Throwable_buildStackElement},
         {"java/io/PrintStream",                 "printImpl",              "(Ljava/lang/String;)V",                                         java_io_PrintStream_printImpl},
         {"java/lang/System",                    "getNativeProperties",    "()[Ljava/lang/String;",                                         java_lang_System_getNativeProperties},
         {"java/lang/ref/Reference",             "markItAsWeak",           "(Z)V",                                                          java_lang_ref_Reference_markItAsWeak},

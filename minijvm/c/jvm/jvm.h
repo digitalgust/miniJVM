@@ -27,11 +27,11 @@ extern "C" {
 
 //=======================  micro define  =============================
 //_JVM_DEBUG  01=thread info, 02=garage&jit info  , 03=class load, 04=method call,  06=all bytecode
-#define _JVM_DEBUG_LOG_LEVEL 02
+#define _JVM_DEBUG_LOG_LEVEL 01
 #define _JVM_DEBUG_LOG_TO_FILE 0
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_PROFILE 0
-#define _JVM_JDWP_ENABLE 0
+#define _JVM_JDWP_ENABLE 01
 
 //#pragma GCC diagnostic error "-Wframe-larger-than="
 

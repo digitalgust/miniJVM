@@ -133,6 +133,7 @@ public class Thread implements Runnable {
     private boolean daemon = false;
 
     private native long createStackFrame();
+
     /**
      * Returns a reference to the currently executing <code>Thread</code>
      * object.
@@ -388,7 +389,7 @@ public class Thread implements Runnable {
     public ClassLoader getContextClassLoader() {
         return getContextClassLoader0();
     }
-    
+
     /**
      * Returns the identifier of this Thread.  The thread ID is a positive
      * <tt>long</tt> number generated when this thread was created.
@@ -421,4 +422,8 @@ public class Thread implements Runnable {
 
     private native void interrupt0();
 
+    //Returns an array of stack trace elements representing the stack dump of this thread.
+    public StackTraceElement[] getStackTrace() {
+        return Throwable.getStackTrace(Throwable.buildStackElement(this));
+    }
 }
