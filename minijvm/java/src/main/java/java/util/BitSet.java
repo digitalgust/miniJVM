@@ -136,6 +136,14 @@ public class BitSet implements Serializable, Cloneable {
     }
   }
 
+  public void set(int bitIndex, boolean value) {
+    if (value)
+      set(bitIndex);
+    else
+      clear(bitIndex);
+  }
+
+
   public void clear(int index) {
     int pos = longPosition(index);
     if (pos < bits.length) {
