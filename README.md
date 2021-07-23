@@ -372,4 +372,4 @@ mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/luaj.jar Sample
 License:	MIT
 
 
-Gust , digitalgust@163.com , works at EGLS ltd. EGLS is a game development and distribution company .
+Gust , digitalgust@163.com .
