@@ -31,10 +31,10 @@
 
   <div align=center><img width="224" height="398" src="/screenshot/demo.gif"/><img width="224" height="398" src="/screenshot/g3d.gif"/></div>
 
-  * Instant Message app  Demo , source on :https://github.com/digitalgust/BiBiX     
-  * BiBiX binary can be download from : http://bb.egls.cn:8080/down/BiBiX.jar     
-  * 3D game app Demo, source on :https://github.com/digitalgust/g3d     
-  * G3D binary can be download from : http://bb.egls.cn:8080/down/g3d.jar     
+  * Instant Message app  Demo , [Source](https://github.com/digitalgust/BiBiX)     
+  * BiBiX binary can be download from : [BiBiX.jar](http://www.ebsee.com:40080/down/g3d.jar)        
+  * 3D game app Demo, [Source](https://github.com/digitalgust/g3d)     
+  * G3D binary can be download from : [g3d.jar](http://www.ebsee.com:40080/down/g3d.jar)    
   * Mobile platform : First build and install AppManager for iOS /mobile/iosapp , Or build and install for Android /mobile/androidapp ,then download demo in AppManager and run these app     
   * Desktop computer: /binary/win_64  , /binary/macos , /binary/win32 , /binary/centos_x64   run test.sh 
 
