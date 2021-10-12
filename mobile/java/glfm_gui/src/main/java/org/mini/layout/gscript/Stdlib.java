@@ -209,7 +209,7 @@ public class Stdlib
     private DataType def(Interpreter inp, Vector para) {
         String name = ((Str) Interpreter.vPopBack(para)).getVal();
         DataType dt = (DataType) Interpreter.vPopBack(para);
-        inp.putGlobalVar(name, dt);
+        inp.putGlobalVar(name.toLowerCase(), dt);
         return null;
     }
 
@@ -221,7 +221,7 @@ public class Stdlib
      */
     private Bool isDef(Interpreter inp, Vector para) {
         String name = ((Str) Interpreter.vPopBack(para)).getVal();
-        if (inp.getGlobalVar(name) == null) {
+        if (inp.getGlobalVar(name.toLowerCase()) == null) {
             return new Bool(false);
         }
         return new Bool(true);
