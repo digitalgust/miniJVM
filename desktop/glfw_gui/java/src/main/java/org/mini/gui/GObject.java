@@ -6,11 +6,10 @@
 package org.mini.gui;
 
 import org.mini.gui.event.GActionListener;
-import org.mini.gui.event.GAppActiveListener;
 import org.mini.gui.event.GFocusChangeListener;
+import org.mini.gui.event.GStateChangeListener;
 import org.mini.nanovg.Nanovg;
 
-import java.util.Timer;
 import java.util.TimerTask;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
@@ -37,7 +36,7 @@ abstract public class GObject {
     public static final int HEIGHT = 3;
 
     volatile static int flush;
-    static boolean paintDebug;
+    static boolean paintDebug = false;
 
     protected GContainer parent;
 
@@ -52,6 +51,8 @@ abstract public class GObject {
     protected GActionListener actionListener;
 
     protected GFocusChangeListener focusListener;
+
+    protected GStateChangeListener stateChangeListener;
 
 
     protected boolean visible = true;
@@ -474,6 +475,22 @@ abstract public class GObject {
     void doFocusGot(GObject oldgo) {
         if (focusListener != null) {
             focusListener.focusGot(oldgo);
+        }
+    }
+
+
+    public GStateChangeListener getStateChangeListener() {
+        return stateChangeListener;
+    }
+
+    public void setStateChangeListener(GStateChangeListener stateChangeListener) {
+        this.stateChangeListener = stateChangeListener;
+    }
+
+
+    void doStateChanged(GObject go) {
+        if (stateChangeListener != null) {
+            stateChangeListener.onStateChange(go);
         }
     }
 

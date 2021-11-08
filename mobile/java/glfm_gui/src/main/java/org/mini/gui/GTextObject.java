@@ -8,7 +8,6 @@ package org.mini.gui;
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.gui.event.GFocusChangeListener;
-import org.mini.gui.event.GStateChangeListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +48,6 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     protected StringBuilder textsb = new StringBuilder();
     protected byte[] text_arr;
 
-    protected GStateChangeListener stateChangeListener;
 
 
     protected boolean selectMode = false;
@@ -73,7 +71,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         }
         onSetText(text);
         text_arr = null;
-        doStateChange();
+        doStateChanged(this);
     }
 
     public String getText() {
@@ -83,14 +81,14 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     public void insertTextByIndex(int index, char ch) {
         textsb.insert(index, ch);
         text_arr = null;
-        doStateChange();
+        doStateChanged(this);
         putInUndo(UserAction.ADD, "" + ch, index);
     }
 
     public void insertTextByIndex(int index, String str) {
         textsb.insert(index, str);
         text_arr = null;
-        doStateChange();
+        doStateChanged(this);
         putInUndo(UserAction.ADD, str, index);
     }
 
@@ -98,7 +96,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         char ch = textsb.charAt(index);
         textsb.deleteCharAt(index);
         text_arr = null;
-        doStateChange();
+        doStateChanged(this);
         putInUndo(UserAction.DEL, "" + ch, index);
     }
 
@@ -106,7 +104,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         String str = textsb.substring(start, end);
         textsb.delete(start, end);
         text_arr = null;
-        doStateChange();
+        doStateChanged(this);
         putInUndo(UserAction.DEL, str, start);
     }
 
@@ -115,7 +113,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         String str = textsb.toString();
         textsb.setLength(0);
         text_arr = null;
-        doStateChange();
+        doStateChanged(this);
         putInUndo(UserAction.DEL, str, 0);
     }
 
@@ -251,27 +249,6 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     public void setEditable(boolean editable) {
         this.enable = editable;
     }
-
-    /**
-     * @return the stateChangeListener
-     */
-    public GStateChangeListener getStateChangeListener() {
-        return stateChangeListener;
-    }
-
-    /**
-     * @param stateChangeListener the stateChangeListener to set
-     */
-    public void setStateChangeListener(GStateChangeListener stateChangeListener) {
-        this.stateChangeListener = stateChangeListener;
-    }
-
-    void doStateChange() {
-        if (this.stateChangeListener != null) {
-            this.stateChangeListener.onStateChange(this);
-        }
-    }
-
 
     public void putInUndo(int mod, String t, int caretIndex) {
         undoQ.add(new UserAction(mod, t, caretIndex));

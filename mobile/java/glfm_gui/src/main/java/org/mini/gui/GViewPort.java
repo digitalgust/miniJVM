@@ -330,6 +330,14 @@ public class GViewPort extends GContainer {
     }
 
     @Override
+    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+        super.mouseButtonEvent(button, pressed, x, y);
+        if (!pressed) {
+            dragDirection = DIR_NODEF;
+        }
+    }
+
+    @Override
     public boolean dragEvent(float dx, float dy, float x, float y) {
         GObject found = findByXY(x, y);
         if (found instanceof GMenu) {

@@ -57,11 +57,11 @@ public abstract class XObject {
 
 
     public XContainer getRoot() {
-        XContainer p = parent;
-        while (p.parent != null) {
-            p = p.parent;
+        if (parent == null) {
+            if (this instanceof XContainer) return (XContainer) this;
+            else return null;
         }
-        return p;
+        return parent.getRoot();
     }
 
     public Interpreter getInterpreter(String scriptContainerName) {
@@ -367,9 +367,10 @@ public abstract class XObject {
 
     /**
      * XFrame and XMenu is float gobject
+     *
      * @return
      */
-    protected boolean isFloatUi(){
+    protected boolean isFloatUi() {
         return false;
     }
 

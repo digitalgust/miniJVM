@@ -22,6 +22,7 @@ abstract public class GContainer extends GObject {
     protected final List<GObject> elements = new ArrayList();
     private final List<GChildrenListener> childrenListeners = new ArrayList();
     protected GObject focus;
+    float[] visableArea = new float[4];
 
     public abstract float getInnerX();
 
@@ -42,6 +43,26 @@ abstract public class GContainer extends GObject {
         float absy = getY();
         return x >= absx && x <= absx + getW()
                 && y >= absy && y <= absy + getH();
+    }
+
+    public float[] getVisableArea() {
+        float x1 = getX();
+        float y1 = getY();
+        float x2 = x1 + getW();
+        float y2 = y1 + getH();
+        if (parent != null) {
+            float[] parentVA = parent.getVisableArea();
+            visableArea[0] = x1 > parentVA[0] ? x1 : parentVA[0];
+            visableArea[1] = y1 > parentVA[1] ? y1 : parentVA[1];
+            visableArea[2] = x2 < parentVA[2] ? x2 : parentVA[2];
+            visableArea[3] = y2 < parentVA[3] ? y2 : parentVA[3];
+        } else {
+            visableArea[0] = x1;
+            visableArea[1] = y1;
+            visableArea[2] = x2;
+            visableArea[3] = y2;
+        }
+        return visableArea;
     }
 
     //
@@ -302,38 +323,26 @@ abstract public class GContainer extends GObject {
         if (!nko.isVisible()) {
             return;
         }
-        float x, y, w, h;
-//        if (nko instanceof GContainer) {
-//            GContainer c = (GContainer) nko;
-//            x = c.getX();
-//            y = c.getY();
-//            w = c.getW();
-//            h = c.getH();
-//
-//        } else {
-        x = nko.getX();
-        y = nko.getY();
-        w = nko.getW();
-        h = nko.getH();
-//        }
 
         nvgSave(ctx);
 //        Nanovg.nvgReset(ctx);
-        Nanovg.nvgScissor(ctx, x, y, w, h);
-        float vx = this.getX();
-        float vy = this.getY();
-        float vw = this.getW();
-        float vh = this.getH();
-        if (vx + vw <= x || vx >= x + w || vy >= y + h || vy + vh <= y) {
+        float[] va = getVisableArea();//left-top , right-bottom
+        float vx = nko.getX();
+        float vy = nko.getY();
+        float vw = nko.getW();
+        float vh = nko.getH();
+        if (va[2] <= va[0] || va[3] <= va[1] || vx + vw <= va[0] || vx >= va[2] || vy >= va[3] || vy + vh <= va[1]) {
+            //out of visable area
         } else {
-            Nanovg.nvgIntersectScissor(ctx, vx, vy, vw, vh);
+
+            Nanovg.nvgScissor(ctx, va[0], va[1], va[2] - va[0], va[3] - va[1]);
 
             nko.paint(ctx);
 
             if (paintDebug && (focus == nko)) {
-                Nanovg.nvgScissor(ctx, x, y, w, h);
+                Nanovg.nvgScissor(ctx, vx, vy, vw, vh);
                 Nanovg.nvgBeginPath(ctx);
-                Nanovg.nvgRect(ctx, x + 1, y + 1, w - 2, h - 2);
+                Nanovg.nvgRect(ctx, vx + 1, vy + 1, vw - 2, vh - 2);
                 Nanovg.nvgStrokeColor(ctx, Nanovg.nvgRGBA((byte) 255, (byte) 0, (byte) 0, (byte) 255));
                 Nanovg.nvgStroke(ctx);
 

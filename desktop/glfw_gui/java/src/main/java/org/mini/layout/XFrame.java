@@ -48,6 +48,13 @@ public class XFrame
         return XML_NAME;
     }
 
+    protected int getTrialViewH() {
+        int tmpViewH = super.getTrialViewH();
+        if (tmpViewH != XDef.NODEF) {
+            return tmpViewH - (int) GFrame.TITLE_HEIGHT;
+        }
+        return tmpViewH;
+    }
 
     protected void preAlignVertical() {
         super.preAlignVertical();

@@ -9,7 +9,6 @@ import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
-import org.mini.gui.event.GStateChangeListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,8 +48,6 @@ public class GList extends GContainer implements GFocusChangeListener {
     protected float left, top, width, height;
     //
     protected final List<Integer> outOffilterList = new ArrayList();//if a item in this list , it would show dark text color
-
-    GStateChangeListener stateChangeListener;
 
     /**
      *
@@ -527,7 +524,7 @@ public class GList extends GContainer implements GFocusChangeListener {
                 if (selectIndex >= 0) {
                     GListItem gli = (GListItem) getItem(selectIndex);
                     GToolkit.drawImage(vg, gli.img, x + pad, y + h * 0.5f - thumb / 2, thumb, thumb, false, 1.0f);
-                    GToolkit.drawTextLine(vg, x + (gli.img == null ? 0 : thumb) + pad + pad, y + h / 2, w - (thumb + pad + pad), thumb, gli.getText(), GList.this.fontSize, GList.this.color, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+                    GToolkit.drawTextLine(vg, x + (gli.img == null ? 0 : thumb) + pad + pad, y + h / 2, gli.getText(), GList.this.fontSize, GList.this.color, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
                 }
             }
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
@@ -599,14 +596,6 @@ public class GList extends GContainer implements GFocusChangeListener {
             flush();
         }
 
-    }
-
-    public GStateChangeListener getStateChangeListener() {
-        return stateChangeListener;
-    }
-
-    public void setStateChangeListener(GStateChangeListener stateChangeListener) {
-        this.stateChangeListener = stateChangeListener;
     }
 
 

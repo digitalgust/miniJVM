@@ -148,6 +148,19 @@ public class GToolkit {
         return bond;
     }
 
+    public static float[] getFontBoundle(long vg, byte[] fontName, float fontSize) {
+        float[] bond = new float[4];
+        nvgSave(vg);
+        nvgFontSize(vg, fontSize);
+        nvgFontFace(vg, fontName);
+        nvgTextBoundsJni(vg, 0f, 0f, FONT_GLYPH_TEMPLATE, 0, FONT_GLYPH_TEMPLATE.length, bond);
+        bond[GObject.WIDTH] -= bond[GObject.LEFT];
+        bond[GObject.HEIGHT] -= bond[GObject.TOP];
+        bond[GObject.LEFT] = bond[GObject.TOP] = 0;
+        nvgRestore(vg);
+        return bond;
+    }
+
     /**
      * 风格
      */
@@ -253,7 +266,7 @@ public class GToolkit {
         byte[] b = toUtf8(s);
         nvgFontSize(vg, fontSize);
         nvgFontFace(vg, font);
-        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_LEFT);
+        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
         nvgTextBoxBoundsJni(vg, 0, 0, width, b, 0, b.length, bond);
         bond[GObject.WIDTH] -= bond[GObject.LEFT];
         bond[GObject.HEIGHT] -= bond[GObject.TOP];
@@ -261,7 +274,7 @@ public class GToolkit {
         return bond;
     }
 
-    public static void drawTextLine(long vg, float tx, float ty, float pw, float ph, String s, float fontSize, float[] color, int align) {
+    public static void drawTextLine(long vg, float tx, float ty, String s, float fontSize, float[] color, int align) {
         if (s == null) {
             return;
         }
@@ -271,6 +284,21 @@ public class GToolkit {
         nvgFillColor(vg, color);
         byte[] b = toUtf8(s);
         Nanovg.nvgTextJni(vg, tx, ty, b, 0, b.length);
+    }
+
+    public static void drawTextLineTopLeft(long vg, float tx, float ty, float pw, float ph, String s, float fontSize, float[] color) {
+        if (s == null) {
+            return;
+        }
+        nvgSave(vg);
+        nvgScissor(vg, tx, ty, pw, ph);
+        nvgFontSize(vg, fontSize);
+        nvgFontFace(vg, GToolkit.getFontWord());
+        nvgTextAlign(vg, NVG_ALIGN_TOP | NVG_ALIGN_LEFT);
+        nvgFillColor(vg, color);
+        byte[] b = toUtf8(s);
+        Nanovg.nvgTextJni(vg, tx, ty, b, 0, b.length);
+        nvgRestore(vg);
     }
 
 

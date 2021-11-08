@@ -2,6 +2,7 @@ package org.mini.layout;
 
 import org.mini.gui.GObject;
 import org.mini.gui.GViewSlot;
+import org.mini.gui.event.GStateChangeListener;
 
 /**
  * <viewslot>
@@ -10,7 +11,7 @@ import org.mini.gui.GViewSlot;
  * </viewslot>
  */
 
-public class XViewSlot extends XContainer {
+public class XViewSlot extends XContainer implements GStateChangeListener {
     static public final String XML_NAME = "viewslot";
 
     protected int scroll = GViewSlot.SCROLL_MODE_HORIZONTAL;
@@ -57,18 +58,11 @@ public class XViewSlot extends XContainer {
     }
 
     void align() {
-        viewSlot.clear();
-        for (int i = 0; i < children.size(); i++) {
-            XObject xo = children.get(i);
-            GObject go = xo.getGui();
-            if (go != null) viewSlot.add(i, go, parseMoveMode(xo.moveMode));
+        super.align();
+        for (int i = 0; i < viewSlot.getElementSize(); i++) {
+            viewSlot.setSlotMoveMode(i, parseMoveMode(children.get(i).moveMode));
         }
-        for (int i = 0; i < children.size(); i++) {
-            XObject xo = children.get(i);
-            if (xo instanceof XContainer) {
-                ((XContainer) xo).align();
-            }
-        }
+        viewSlot.reSizeChildren();
     }
 
     @Override
@@ -82,15 +76,24 @@ public class XViewSlot extends XContainer {
             initGui();
             viewSlot.setLocation(x, y);
             viewSlot.setSize(width, height);
+            viewSlot.setStateChangeListener(this);
+
         } else {
             viewSlot.setLocation(x, y);
             viewSlot.setSize(width, height);
-            viewSlot.clear();
-            for (int i = 0; i < children.size(); i++) {
-                XObject xo = children.get(i);
-                GObject go = xo.getGui();
-                if (go != null) viewSlot.add(i, go, parseMoveMode(xo.moveMode));
+            for (int i = 0; i < viewSlot.getElementSize(); i++) {
+                viewSlot.setSlotMoveMode(i, parseMoveMode(children.get(i).moveMode));
             }
+            viewSlot.reSizeChildren();
+        }
+
+    }
+
+    @Override
+    public void onStateChange(GObject gobj) {
+        XContainer root = getRoot();
+        if (root != null && root.getEventHandler() != null) {
+            root.getEventHandler().onStateChange(gobj, null);
         }
     }
 }

@@ -7,7 +7,6 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
-import org.mini.gui.event.GStateChangeListener;
 
 import java.util.List;
 
@@ -20,7 +19,7 @@ import static org.mini.nanovg.Nanovg.*;
  */
 public class GFrame extends GContainer {
 
-    static final float TITLE_HEIGHT = 30.f, PAD = 2.f;
+    public static final float TITLE_HEIGHT = 30.f, PAD = 2.f;
 
     protected String title;
     protected byte[] title_arr;
@@ -33,7 +32,7 @@ public class GFrame extends GContainer {
 
     protected int frameMode;
     protected boolean closable = true;
-    protected GStateChangeListener stateChangeListener;
+
 
     public GFrame() {
         this("", (float) 0, (float) 0, (float) 300, (float) 200);
@@ -103,9 +102,7 @@ public class GFrame extends GContainer {
     public void close() {
         if (parent != null) {
             parent.removeImpl(this);
-            if (stateChangeListener != null) {
-                stateChangeListener.onStateChange(this);
-            }
+            doStateChanged(this);
         }
     }
 
@@ -369,15 +366,6 @@ public class GFrame extends GContainer {
 
     public void clear() {
         view.clearImpl();
-    }
-
-
-    public GStateChangeListener getStateChangeListener() {
-        return stateChangeListener;
-    }
-
-    public void setStateChangeListener(GStateChangeListener stateChangeListener) {
-        this.stateChangeListener = stateChangeListener;
     }
 
 

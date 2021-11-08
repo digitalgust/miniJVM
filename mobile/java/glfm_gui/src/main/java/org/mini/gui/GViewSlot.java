@@ -61,6 +61,9 @@ public class GViewSlot extends GViewPort {
     }
 
     public void add(int index, GObject go, int moveMode) {
+        if(getElements().contains(go)){
+            return;
+        }
         super.addImpl(index, go);
         if (scrollMode == SCROLL_MODE_HORIZONTAL) {
             go.setLocation(index * getW(), 0);
@@ -76,9 +79,26 @@ public class GViewSlot extends GViewPort {
         reSize();
     }
 
+    /**
+     * WARNING:  multithread will fail
+     */
+    public void reSizeChildren(){
+        for(int i=0;i<props.size();i++){
+            GObject go=getElements().get(i);
+            go.setSize(getW(), getH());
+            if (scrollMode == SCROLL_MODE_HORIZONTAL) {
+                go.setLocation(i * getW(), 0);
+            } else {
+                go.setLocation(0, i * getH());
+            }
+        }
+        super.reSize();
+    }
+
     public void remove(int index) {
         props.remove(index);
         super.removeImpl(index);
+        reSizeChildren();
         if (props.size() > 0) {
             showSlot(index > 0 ? index - 1 : 0);
         }
@@ -145,6 +165,8 @@ public class GViewSlot extends GViewPort {
                 SlotSwaper swaper = new SlotSwaper(this, curGo, go, timeInMils);
                 GForm.timer.schedule(swaper, 0, (long) 16);
                 this.current = getElementsImpl().indexOf(go);
+                //notify
+                doStateChanged(this);
             }
         }
     }
