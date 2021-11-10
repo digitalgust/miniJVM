@@ -370,8 +370,26 @@ public abstract class XObject {
      *
      * @return
      */
-    protected boolean isFloatUi() {
+    protected boolean isFreeObj() {
         return false;
+    }
+
+    /**
+     * tr in table and attribute is <tr h="float"></tr>
+     *
+     * @return
+     */
+    protected boolean isHfloat() {
+        return hfloat;
+    }
+
+    /**
+     * tr in table and attribute is <td w="float"></tr>
+     *
+     * @return
+     */
+    protected boolean isVfloat() {
+        return vfloat;
     }
 
     public abstract GObject getGui();

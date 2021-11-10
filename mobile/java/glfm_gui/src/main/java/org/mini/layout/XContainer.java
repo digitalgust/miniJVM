@@ -113,7 +113,7 @@ public abstract class XContainer
         for (int i = 0; i < children.size(); i++) {
             XObject xo = children.get(i);
             xo.preAlignVertical();
-            if (!xo.isFloatUi()) {//  float ui need not layout in it's parent
+            if (!xo.isFreeObj()) {//  free obj need not layout in it's parent, eg: frame menu
                 curRowW = xo.width + dx;
                 if (curRowW > viewW || xo instanceof XBr) {
                     dy += curRowH;
@@ -264,34 +264,34 @@ public abstract class XContainer
         }
     }
 
-    void setRootSize(int guiRootW, int guiRootH) {
+    void setParentSize(int parentW, int parentH) {
         resetBoundle();
         if (width == XDef.NODEF) {
             if (raw_widthPercent == XDef.NODEF) {
-                width = guiRootW;
+                width = parentW;
             } else {
-                width = (guiRootW * raw_widthPercent / 100);
+                width = (parentW * raw_widthPercent / 100);
             }
         }
         if (height == XDef.NODEF) {
             if (raw_heightPercent == XDef.NODEF) {
-                height = guiRootH;
+                height = parentH;
             } else {
-                height = (guiRootH * raw_heightPercent / 100);
+                height = (parentH * raw_heightPercent / 100);
             }
         }
         if (x == XDef.NODEF) {
             if (raw_xPercent == XDef.NODEF) {
                 x = 0;
             } else {
-                x = (guiRootW * raw_xPercent / 100);
+                x = (parentW * raw_xPercent / 100);
             }
         }
         if (y == XDef.NODEF) {
             if (raw_yPercent == XDef.NODEF) {
                 y = 0;
             } else {
-                y = (guiRootH * raw_yPercent / 100);
+                y = (parentH * raw_yPercent / 100);
             }
         }
 
@@ -300,7 +300,7 @@ public abstract class XContainer
     }
 
 
-    public void build(int guiRootW, int guiRootH, XEventHandler eventHandler) {
+    public void build(int parentW, int parentH, XEventHandler eventHandler) {
 
         if (eventHandler == null) {
             this.eventHandler = new XEventHandler();
@@ -308,7 +308,7 @@ public abstract class XContainer
             this.eventHandler = eventHandler;
         }
 
-        setRootSize(guiRootW, guiRootH);
+        setParentSize(parentW, parentH);
 
         preAlignHorizontal();
         preAlignVertical();
@@ -318,12 +318,12 @@ public abstract class XContainer
     }
 
 
-    public void reSize(int guiRootW, int guiRootH) {
+    public void reSize(int parentW, int parentH) {
         int tx = x;
         int ty = y;
         resetBoundle();
         removeListenerFromContainer();
-        setRootSize(guiRootW, guiRootH);
+        setParentSize(parentW, parentH);
 
         preAlignHorizontal();
         preAlignVertical();

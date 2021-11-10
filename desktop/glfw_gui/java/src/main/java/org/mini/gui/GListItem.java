@@ -58,6 +58,7 @@ public class GListItem extends GObject {
     }
 
     int mouseX, mouseY;
+    int draged = 0;//拖动事件次数
 
     @Override
     public void touchEvent(int touchid, int phase, int x, int y) {
@@ -65,13 +66,17 @@ public class GListItem extends GObject {
             case Glfm.GLFMTouchPhaseBegan:
                 mouseX = x;
                 mouseY = y;
+                draged = 0;
                 break;
             case Glfm.GLFMTouchPhaseMoved:
                 break;
             case Glfm.GLFMTouchPhaseEnded:
-                if (Math.abs(y - mouseY) < list.list_item_heigh && Math.abs(x - mouseX) < list.list_item_heigh) {
-                    select();
+                if (draged < 3) { //防拖动后触发点击
+                    if (Math.abs(y - mouseY) < list.list_item_heigh && Math.abs(x - mouseX) < list.list_item_heigh) {
+                        select();
+                    }
                 }
+                draged = 0;
                 break;
             default:
                 break;
@@ -79,12 +84,22 @@ public class GListItem extends GObject {
 
     }
 
+    public boolean dragEvent(float dx, float dy, float x, float y) {
+        draged++;
+        return false;
+    }
+
+
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         if (pressed) {
             mouseY = y;
+            draged = 0;
         } else if (Math.abs(y - mouseY) < list.list_item_heigh) {
-            select();
+            if (draged < 3) {
+                select();
+            }
+            draged = 0;
         }
     }
 

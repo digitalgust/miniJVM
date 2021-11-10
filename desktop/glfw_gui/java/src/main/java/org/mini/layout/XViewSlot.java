@@ -57,9 +57,16 @@ public class XViewSlot extends XContainer implements GStateChangeListener {
         return mode;
     }
 
+
     void align() {
         super.align();
-        for (int i = 0; i < viewSlot.getElementSize(); i++) {
+        for (int i = 0; i < children.size(); i++) {
+            XObject xo = children.get(i);
+            xo.raw_widthPercent = 100;
+            xo.raw_heightPercent = 100;
+            if (xo instanceof XContainer) {
+                ((XContainer) xo).reSize(this.viewW, this.viewH);
+            }
             viewSlot.setSlotMoveMode(i, parseMoveMode(children.get(i).moveMode));
         }
         viewSlot.reSizeChildren();

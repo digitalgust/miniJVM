@@ -12,7 +12,8 @@ import org.mini.nanovg.Nanovg;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mini.nanovg.Nanovg.nvgSave;
+import static org.mini.gui.GToolkit.nvgRGBA;
+import static org.mini.nanovg.Nanovg.*;
 
 /**
  * @author gust
@@ -283,6 +284,7 @@ abstract public class GContainer extends GObject {
     @Override
     public boolean paint(long ctx) {
         try {
+
             synchronized (elements) {
 //                //更新所有UI组件
 

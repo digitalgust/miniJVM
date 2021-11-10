@@ -39,6 +39,13 @@ public class XTr
 
 
         int size = children.size();
+        if (size == 1) {
+            XObject xo = children.get(0);
+            if (xo.raw_widthPercent == XDef.NODEF && xo.raw_width == XDef.NODEF) {
+                xo.raw_widthPercent = 100;
+            }
+        }
+
         int totalPixer = 0;
         int nodefCount = 0;
         for (int i = 0; i < size; i++) {
@@ -54,13 +61,13 @@ public class XTr
         //for avg
         int tdw = viewW / size;//avg
         //for nodef
+        int totalPixer1 = 0;
         int nodefTdW = nodefCount == 0 ? 0 : ((viewW - totalPixer) / nodefCount);
         for (int i = 0; i < size; i++) {
             XTd td = (XTd) children.get(i);
             //if over parent.width
             if (totalPixer > viewW) {
                 td.viewW = td.width = tdw;
-                td.x = tdw * i;
             } else {
                 if (td.width == XDef.NODEF) {
                     if (td.raw_widthPercent == XDef.NODEF) {
@@ -70,6 +77,8 @@ public class XTr
                     }
                 }
             }
+            td.x = totalPixer1;
+            totalPixer1 += td.width;
             td.preAlignHorizontal();
         }
     }

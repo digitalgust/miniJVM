@@ -388,7 +388,11 @@ public class GToolkit {
      * @return
      */
     static public GFrame getConfirmFrame(String title, String msg, String left, GActionListener leftListener, String right, GActionListener rightListener) {
-        GFrame frame = new GFrame(title, 0, 0, 300, 300);
+        return getConfirmFrame(title, msg, left, leftListener, right, rightListener, 300, 250);
+    }
+
+    static public GFrame getConfirmFrame(String title, String msg, String left, GActionListener leftListener, String right, GActionListener rightListener, float width, float height) {
+        GFrame frame = new GFrame(title, 0, 0, width, height);
         frame.setFront(true);
         frame.setFocusListener(new GFocusChangeListener() {
             @Override
@@ -404,21 +408,22 @@ public class GToolkit {
         });
 
         GContainer gp = frame.getView();
-        float x = 10, y = 10, w = gp.getW() - 20;
+        float x = 10, y = 10, w = gp.getW() - 20, h = gp.getH() - 40;
 
-        GTextBox tbox = new GTextBox(msg, "", x, y, w, 210);
+        GTextBox tbox = new GTextBox(msg, "", x, y, w, h);
         tbox.setEditable(false);
         gp.add(tbox);
-        y += 215;
+        y += h + 10;
 
+        float btnWidth = w * .5f;
         if (left != null) {
-            GButton leftBtn = new GButton(left, x, y, 135, 28);
+            GButton leftBtn = new GButton(left, x, y, btnWidth, 28);
             leftBtn.setBgColor(128, 16, 8, 255);
             gp.add(leftBtn);
             leftBtn.setActionListener(leftListener);
         }
 
-        GButton rightBtn = new GButton(right == null ? GLanguage.getString("Cancel") : right, x + 145, y, 135, 28);
+        GButton rightBtn = new GButton(right == null ? GLanguage.getString("Cancel") : right, btnWidth + 10, y, btnWidth, 28);
         gp.add(rightBtn);
         rightBtn.setActionListener(rightListener == null ? (GActionListener) gobj -> frame.close() : rightListener);
 
@@ -426,7 +431,11 @@ public class GToolkit {
     }
 
     static public GFrame getMsgFrame(String title, String msg) {
-        final GFrame frame = new GFrame(title, 0, 0, 300, 300);
+        return getMsgFrame(title, msg, 300, 250);
+    }
+
+    static public GFrame getMsgFrame(String title, String msg, float width, float height) {
+        final GFrame frame = new GFrame(title, 0, 0, width, height);
         frame.setFront(true);
         frame.setFocusListener(new GFocusChangeListener() {
             @Override
@@ -442,14 +451,15 @@ public class GToolkit {
         });
 
         GContainer gp = frame.getView();
-        float x = 10, y = 10, w = gp.getW() - 20;
+        float x = 10, y = 10, w = gp.getW() - 20, h = gp.getH() - 50;
 
-        GTextBox tbox = new GTextBox(msg, "", x, y, w, 210);
+        GTextBox tbox = new GTextBox(msg, "", x, y, w, h);
         tbox.setEditable(false);
         gp.add(tbox);
-        y += 215;
+        y += h + 10;
 
-        GButton leftBtn = new GButton("Ok", x, y, 280, 28);
+        float btnWidth = w * .5f;
+        GButton leftBtn = new GButton("Ok", x + btnWidth * .5f, y, btnWidth, 28);
         leftBtn.setBgColor(128, 16, 8, 255);
         gp.add(leftBtn);
         leftBtn.setActionListener(gobj -> frame.close());
@@ -470,10 +480,14 @@ public class GToolkit {
     }
 
     public static GFrame getListFrame(String title, String[] strs, GImage[] imgs, boolean multiSelect, String buttonText, GActionListener buttonListener, GActionListener itemListener) {
-        float pad = 2, btnW = 80, btnH = 28;
+        return getListFrame(title, strs, imgs, multiSelect, buttonText, buttonListener, itemListener, 300, 420);
+    }
+
+    public static GFrame getListFrame(String title, String[] strs, GImage[] imgs, boolean multiSelect, String buttonText, GActionListener buttonListener, GActionListener itemListener, float width, float height) {
+        float pad = 2, btnW, btnH = 28;
         float y = pad;
 
-        GFrame frame = new GFrame(title, 0, 0, 300, 420);
+        GFrame frame = new GFrame(title, 0, 0, width, height);
 
         frame.setFront(true);
         frame.setFocusListener(new GFocusChangeListener() {
@@ -488,9 +502,10 @@ public class GToolkit {
         });
         GContainer view = frame.getView();
 
-        GTextField search = new GTextField("", "search", pad, y, view.getW(), 30);
+        GTextField search = new GTextField("", "search", pad, y, view.getW() - pad * 2, 30);
         search.setName("search");
         search.setBoxStyle(GTextField.BOX_STYLE_SEARCH);
+
         view.add(search);
         y += 30 + pad;
 
@@ -500,11 +515,20 @@ public class GToolkit {
         glist.setShowMode(GList.MODE_MULTI_SHOW);
         glist.setSelectMode(multiSelect ? GList.MODE_MULTI_SELECT : GList.MODE_SINGLE_SELECT);
 
-        frame.getView().add(glist);
-        y += h + pad;
+        search.setStateChangeListener(gobj -> {
+            GTextObject so = (GTextObject) gobj;
+            String str = so.getText();
+            if (glist != null) {
+                glist.filterLabelWithKey(str);
+                //System.out.println("key=" + str);
+            }
+        });
 
+        view.add(glist);
+        y += h + pad;
+        btnW = view.getW() * .5f - pad;
         if (multiSelect) {
-            GCheckBox chbox = new GCheckBox(GLanguage.getString("SeleAll"), false, pad, y, view.getW() * .5f, btnH);
+            GCheckBox chbox = new GCheckBox(GLanguage.getString("SeleAll"), false, pad, y, btnW, btnH);
             view.add(chbox);
             chbox.setActionListener(gobj -> {
                 if (((GCheckBox) gobj).isChecked()) {
@@ -514,6 +538,7 @@ public class GToolkit {
                 }
             });
         }
+
 
         GButton btn = new GButton(buttonText == null ? GLanguage.getString("Ok") : buttonText, (view.getW() - btnW - pad), y, btnW, btnH);
         btn.setName("perform");
@@ -530,9 +555,13 @@ public class GToolkit {
     }
 
     public static GFrame getInputFrame(String title, String msg, String defaultValue, String inputHint, String leftLabel, GActionListener leftListener, String rightLabel, GActionListener rightListener) {
+        return getInputFrame(title, msg, defaultValue, inputHint, leftLabel, leftListener, rightLabel, rightListener, 300, 200);
+    }
 
-        int x = 8, y = 10;
-        GFrame frame = new GFrame(title, 50, 50, 300, 200);
+    public static GFrame getInputFrame(String title, String msg, String defaultValue, String inputHint, String leftLabel, GActionListener leftListener, String rightLabel, GActionListener rightListener, float width, float height) {
+
+        int x = 10, y = 30;
+        GFrame frame = new GFrame(title, 0, 0, width, height);
         frame.setFront(true);
         frame.setFocusListener(new GFocusChangeListener() {
             @Override
@@ -545,25 +574,28 @@ public class GToolkit {
             }
         });
         GContainer view = frame.getView();
+        float contentWidth;
+        contentWidth = view.getW() - 20;
+        float buttonWidth = contentWidth * .5f - 10;
 
-        GLabel lb1 = new GLabel(msg, x, y, 280, 50);
+        GLabel lb1 = new GLabel(msg, x, y, contentWidth, y);
         lb1.setShowMode(GLabel.MODE_MULTI_SHOW);
         view.add(lb1);
 
         y += 55;
-        GTextField input = new GTextField(defaultValue == null ? "" : defaultValue, inputHint, x, y, 280, 28);
+        GTextField input = new GTextField(defaultValue == null ? "" : defaultValue, inputHint, x, y, contentWidth, 28);
         input.setName("input");
         view.add(input);
         y += 35;
-        GLabel lb_state = new GLabel("", x, y, 280, 20);
+        GLabel lb_state = new GLabel("", x, y, contentWidth, 20);
         lb_state.setName("state");
         view.add(lb_state);
         y += 25;
 
-        GButton cancelbtn = new GButton(leftLabel == null ? GLanguage.getString("Cancel") : leftLabel, x, y, 135, 28);
+        GButton cancelbtn = new GButton(leftLabel == null ? GLanguage.getString("Cancel") : leftLabel, x, y, buttonWidth, 28);
         view.add(cancelbtn);
 
-        GButton okbtn = new GButton(rightLabel == null ? GLanguage.getString("Ok") : rightLabel, x + 145, y, 135, 28);
+        GButton okbtn = new GButton(rightLabel == null ? GLanguage.getString("Ok") : rightLabel, x + buttonWidth + 20, y, buttonWidth, 28);
         okbtn.setBgColor(0, 96, 128, 255);
         view.add(okbtn);
 
@@ -589,9 +621,13 @@ public class GToolkit {
         return frame;
     }
 
-    public static GList getListMenu(String[] strs, GImage[] imgs, GActionListener[] listener) {
+    public static GList getListMenu(String[] strs, GImage[] imgs, GActionListener[] listeners) {
+        return getListMenu(strs, imgs, listeners, 150, 120);
+    }
 
-        GList list = new GList(0, 0, 150, 120);
+    public static GList getListMenu(String[] strs, GImage[] imgs, GActionListener[] listeners, float width, float height) {
+
+        GList list = new GList(0, 0, width, height);
         list.setShowMode(GList.MODE_MULTI_SHOW);
         list.setBgColor(GToolkit.getStyle().getFrameBackground());
         list.setFocusListener(new GFocusChangeListener() {
@@ -609,17 +645,17 @@ public class GToolkit {
 
         list.setItems(imgs, strs);
         GListItem[] items = list.getItems();
-        if (listener != null) {
+        if (listeners != null) {
             for (int i = 0, imax = items.length; i < imax; i++) {
-                items[i].setActionListener(listener[i]);
+                items[i].setActionListener(listeners[i]);
             }
         }
+        list.setSize(width, height);
         int size = items.length;
         if (size > 8) {
             size = 8;
         }
-        list.setSize(200, size * list.list_item_heigh);
-        list.setInnerSize(200, size * list.list_item_heigh);
+//        list.setInnerSize(200, size * list.list_item_heigh);
         list.setFront(true);
 
         return list;

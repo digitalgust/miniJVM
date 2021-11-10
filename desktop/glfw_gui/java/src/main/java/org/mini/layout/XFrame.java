@@ -108,7 +108,7 @@ public class XFrame
         }
     }
 
-    protected boolean isFloatUi() {
+    protected boolean isFreeObj() {
         return true;
     }
 

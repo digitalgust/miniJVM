@@ -176,9 +176,7 @@ public class GViewPort extends GContainer {
         }
         this.boundle[WIDTH] = maxX - minX;
         this.boundle[HEIGHT] = maxY - minY;
-        if (this instanceof GViewSlot) {
-            int debug = 1;
-        }
+
         if (boundle[WIDTH] <= viewBoundle[WIDTH]) {
             boundle[LEFT] = viewBoundle[LEFT];
         }

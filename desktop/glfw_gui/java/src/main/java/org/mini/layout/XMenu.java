@@ -104,7 +104,7 @@ public class XMenu extends XObject implements GActionListener {
     }
 
 
-    protected boolean isFloatUi(){
+    protected boolean isFreeObj(){
         return true;
     }
 

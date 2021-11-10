@@ -166,11 +166,27 @@ public class GFrame extends GContainer {
         }
     }
 
+    void validLocation() { //ensure frame close bar in screen
+        if (getX() < 0) {
+            setLocation(0, getY());
+        }
+        if (getY() < 0) {
+            setLocation(getX(), 0);
+        }
+        if (getX() > GCallBack.getInstance().getDeviceWidth() - 40) {
+            setLocation(GCallBack.getInstance().getDeviceWidth() - 40, getY());
+        }
+        if (getY() > GCallBack.getInstance().getDeviceHeight() - 30) {
+            setLocation(getX(), GCallBack.getInstance().getDeviceHeight() - 30);
+        }
+    }
+
     @Override
     public void onAdd(GObject obj) {
         super.onAdd(obj);
         if (parent != null) {
             parent.setFocus(this);
+            validLocation();
         }
     }
 
@@ -182,6 +198,7 @@ public class GFrame extends GContainer {
         float h = getH();
         drawWindow(vg, title, x, y, w, h);
         super.paint(vg);
+        validLocation();
         return true;
     }
 
@@ -289,6 +306,7 @@ public class GFrame extends GContainer {
 
         if (dragFrame) {
             move(dx, dy);
+            validLocation();
             return true;
         } else {
             return super.dragEvent(dx, dy, x, y);

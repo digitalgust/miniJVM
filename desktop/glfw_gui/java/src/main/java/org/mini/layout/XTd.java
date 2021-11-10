@@ -22,7 +22,7 @@ public class XTd
 
             int tx = x;
             int ty = y;
-            reSize(width, height);
+            reSize(parent.getTrialViewW(), parentTrialViewH);
             x = tx;
             y = ty;
             getGui().setLocation(x, y);

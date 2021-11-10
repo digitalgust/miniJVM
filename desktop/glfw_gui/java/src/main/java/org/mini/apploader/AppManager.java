@@ -29,7 +29,8 @@ public class AppManager extends GApplication {
     static final String APP_DELETE_BTN = "APP_DELETE_BTN";
 
     static final String STR_EXIT = "Exit";
-    static final String STR_TITLE = "APP MANAGER";
+    static final String STR_SETTING = "Setting";
+    static final String STR_TITLE = "Application Manager";
     static final String STR_START_WEB_SRV_FOR_UPLOAD = "Lan webserver for upload jar";
     static final String STR_DOWN_APP_FROM_WEB = "Download app from website:";
     static final String STR_DOWNLOAD = "Download";
@@ -56,6 +57,7 @@ public class AppManager extends GApplication {
     static final String STR_DARK_STYLE = "Dark appearance";
 
     static {
+        GLanguage.addString(STR_SETTING, new String[]{STR_SETTING, "设置", "设置"});
         GLanguage.addString(STR_EXIT, new String[]{STR_EXIT, "退出", "退出"});
         GLanguage.addString(STR_TITLE, new String[]{STR_TITLE, "APP 管理器", "APP 管理器"});
         GLanguage.addString(STR_START_WEB_SRV_FOR_UPLOAD, new String[]{STR_START_WEB_SRV_FOR_UPLOAD, "启动Web服务器上传", "啟動Web伺服器上傳"});
@@ -140,6 +142,12 @@ public class AppManager extends GApplication {
 
                 GForm.hideKeyboard();
                 GLanguage.setCurLang(AppLoader.getDefaultLang());
+
+                if(AppLoader.getGuiStyle()==0){
+                    GToolkit.setStyle(new GStyleBright());
+                }else{
+                    GToolkit.setStyle(new GStyleDark());
+                }
 
                 setPickListener((uid, url, data) -> {
                     if (data == null && url != null) {
@@ -236,6 +244,8 @@ public class AppManager extends GApplication {
                 hc.start();
             } else if ("BT_BACK".equals(name)) {
                 mainPanelShowLeft();
+            } else if ("BT_BACK1".equals(name)) {
+                mainSlot.moveTo(0, 0);
             } else if ("BT_STARTWEB".equals(name)) {
                 GButton uploadbtn = (GButton) gobj;
                 GLabel uploadLab = (GLabel) mgrForm.findByName("LAB_WEBSRV");
@@ -291,6 +301,8 @@ public class AppManager extends GApplication {
                         mainPanelShowLeft();
                     }
                 }
+            } else if ("BT_SETTING".equals(name)) {
+                mainSlot.moveTo(2, 0);
             } else if ("LI_ENG".equals(name)) {
                 GLanguage.setCurLang(GLanguage.ID_ENG);
                 AppLoader.setDefaultLang(GLanguage.ID_ENG);
@@ -305,10 +317,12 @@ public class AppManager extends GApplication {
                 AppManager.getInstance().active();
             } else if ("LI_BRIGHT".equals(name)) {
                 GToolkit.setStyle(new GStyleBright());
+                AppLoader.setGuiStyle(0);
                 instance = new AppManager();
                 active();
             } else if ("LI_DARK".equals(name)) {
                 GToolkit.setStyle(new GStyleDark());
+                AppLoader.setGuiStyle(1);
                 instance = new AppManager();
                 active();
             }
