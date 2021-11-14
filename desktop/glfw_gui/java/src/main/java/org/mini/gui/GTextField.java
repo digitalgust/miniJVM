@@ -133,6 +133,11 @@ public class GTextField extends GTextObject {
     }
 
     @Override
+    public void setFlyable(boolean flyable) {
+        if (flyable) System.out.println(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
+    }
+
+    @Override
     public void clickEvent(int button, int x, int y) {
         if (isInArea(x, y)) {
             doSelectAll();

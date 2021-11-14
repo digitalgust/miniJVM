@@ -114,6 +114,11 @@ public class GLabel extends GObject {
     public boolean paint(long vg) {
         float x = getX();
         float y = getY();
+        return paintFlying(vg, x, y);
+    }
+
+    @Override
+    boolean paintFlying(long vg, float x, float y) {
         float w = getW();
         float h = getH();
 
@@ -130,7 +135,7 @@ public class GLabel extends GObject {
         //NVG_NOTUSED(w);
         nvgFontSize(vg, fontSize);
         nvgFontFace(vg, GToolkit.getFontWord());
-        nvgFillColor(vg, enable?color:disabledColor);
+        nvgFillColor(vg, enable ? color : disabledColor);
 
         nvgTextAlign(vg, align);
         if (text_arr != null) {
@@ -156,7 +161,7 @@ public class GLabel extends GObject {
     void drawMultiText(long vg, float x, float y, float w, float h) {
 
         nvgFontSize(vg, fontSize);
-        nvgFillColor(vg, enable?color:disabledColor);
+        nvgFillColor(vg, enable ? (isFlying() ? flyingColor : color) : disabledColor);
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextMetrics(vg, null, null, lineh);
 

@@ -18,6 +18,7 @@ public class GImageItem extends GObject {
 
     protected GImage img;
     protected float alpha = 1.f;
+    protected float alphaFly = alpha * .5f;
     protected boolean drawBorder = true;
 
     public GImageItem() {
@@ -33,6 +34,10 @@ public class GImageItem extends GObject {
 
         float x = getX();
         float y = getY();
+        return paintFlying(vg, x, y);
+    }
+
+    boolean paintFlying(long vg, float x, float y) {
         float w = getW();
         float h = getH();
         if (img == null) {
@@ -53,6 +58,10 @@ public class GImageItem extends GObject {
             ix = -(iw - w) * 0.5f;
             iy = 0;
         }
+        float a = alpha;
+        if (getForm().getFlyingObject() == this) {
+            a = alphaFly;
+        }
         if (drawBorder) {
             if (img == null) {
                 return true;
@@ -60,7 +69,7 @@ public class GImageItem extends GObject {
 
             byte[] shadowPaint, imgPaint;
 
-            imgPaint = nvgImagePattern(vg, x + ix + 2, y + iy + 2, iw - 4, ih - 4, 0.0f / 180.0f * (float) Math.PI, img.getTexture(vg), alpha);
+            imgPaint = nvgImagePattern(vg, x + ix + 2, y + iy + 2, iw - 4, ih - 4, 0.0f / 180.0f * (float) Math.PI, img.getTexture(vg), a);
             nvgBeginPath(vg);
             nvgRoundedRect(vg, x, y, w, h, 5);
             nvgFillPaint(vg, imgPaint);
@@ -81,7 +90,7 @@ public class GImageItem extends GObject {
             nvgStroke(vg);
         } else {
 
-            byte[] imgPaint = nvgImagePattern(vg, x + ix + 1, y + iy + 1, iw - 2, ih - 2, 0.0f / 180.0f * (float) Math.PI, img.getTexture(vg), alpha);
+            byte[] imgPaint = nvgImagePattern(vg, x + ix + 1, y + iy + 1, iw - 2, ih - 2, 0.0f / 180.0f * (float) Math.PI, img.getTexture(vg), a);
             nvgBeginPath(vg);
             nvgRoundedRect(vg, x, y, w, h, 0);
             nvgFillPaint(vg, imgPaint);
@@ -102,6 +111,7 @@ public class GImageItem extends GObject {
      */
     public void setAlpha(float alpha) {
         this.alpha = alpha;
+        this.alphaFly = alpha * .5f;
     }
 
     /**

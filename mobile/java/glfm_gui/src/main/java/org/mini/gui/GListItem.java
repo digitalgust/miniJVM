@@ -128,7 +128,7 @@ public class GListItem extends GObject {
         if (list.isOutOfFilter(getIndex())) {
             outOfFilter = true;
         }
-        float pad = 5;
+        float pad = 2;
         float ix, iy, iw, ih;
         float thumb = list.list_item_heigh - pad;
         int[] imgw = {0}, imgh = {0};

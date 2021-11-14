@@ -37,10 +37,10 @@ public class GList extends GContainer implements GFocusChangeListener {
     GListPopWindow popWin;
     protected float[] lineh = {0f};
     protected float list_image_size = 28;
-    protected float list_item_heigh = 40;
+    protected float list_item_heigh = 36;
     protected float list_rows_max = 7;
     protected float list_rows_min = 3;
-    protected float pad = 5;
+    protected float pad = 2;
     protected int scrollbarWidth = 20;
 
     protected boolean showScrollbar = false;
@@ -450,6 +450,12 @@ public class GList extends GContainer implements GFocusChangeListener {
         changeCurPanel();
     }
 
+
+    @Override
+    public void setFlyable(boolean flyable) {
+        if (flyable) System.out.println(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
+    }
+
     /**
      * @param vg
      * @return
@@ -530,7 +536,7 @@ public class GList extends GContainer implements GFocusChangeListener {
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
             nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
-            nvgTextJni(vg, x + w - pad * 3, y + h * 0.5f, preicon_arr, 0, preicon_arr.length);
+            nvgTextJni(vg, x + w - 12, y + h * 0.5f, preicon_arr, 0, preicon_arr.length);
         }
     };
 

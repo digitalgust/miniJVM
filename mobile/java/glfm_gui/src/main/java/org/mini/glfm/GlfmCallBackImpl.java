@@ -221,6 +221,14 @@ public class GlfmCallBackImpl extends GCallBack {
         gform.flush();
     }
 
+    public int getTouchOrMouseX() {
+        return mouseX;
+    }
+
+    public int getTouchOrMouseY() {
+        return mouseY;
+    }
+
     @Override
     public boolean onTouch(long display, int touch, int phase, double x, double y) {
         GForm form = this.gform;

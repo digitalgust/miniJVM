@@ -107,7 +107,7 @@ abstract public class FileSystemImpl extends org.mini.fs.FileSystem {
     public long getLastModifiedTime(File f) {
         InnerFileStat ifa = new InnerFileStat();
         InnerFile.loadFS(SocketNative.toCStyle(f.getPath()), ifa);
-        return ifa.st_mtime;
+        return ifa.st_mtime * 1000;
     }
 
     @Override

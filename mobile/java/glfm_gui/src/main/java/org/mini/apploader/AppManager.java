@@ -14,6 +14,7 @@ import org.mini.layout.XViewSlot;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.List;
 
 /**
@@ -46,6 +47,7 @@ public class AppManager extends GApplication {
     static final String STR_VERSION = "Version: ";
     static final String STR_UPGRADE_URL = "Upgrade url: ";
     static final String STR_FILE_SIZE = "File size: ";
+    static final String STR_FILE_DATE = "File date: ";
     static final String STR_DESC = "Description: ";
     static final String STR_SERVER_STARTED = "Webserver started";
     static final String STR_SERVER_STOPED = "Webserver stoped";
@@ -75,6 +77,7 @@ public class AppManager extends GApplication {
         GLanguage.addString(STR_VERSION, new String[]{STR_VERSION, "版本: ", "版本: "});
         GLanguage.addString(STR_UPGRADE_URL, new String[]{STR_UPGRADE_URL, "升级地址: ", "升級地址: "});
         GLanguage.addString(STR_FILE_SIZE, new String[]{STR_FILE_SIZE, "文件大小: ", "文件大小: "});
+        GLanguage.addString(STR_FILE_SIZE, new String[]{STR_FILE_SIZE, "文件日期: ", "文件日期: "});
         GLanguage.addString(STR_DESC, new String[]{STR_DESC, "描述: ", "描述: "});
         GLanguage.addString(STR_SERVER_STARTED, new String[]{STR_SERVER_STARTED, "服务器已启动", "伺服器已啟動"});
         GLanguage.addString(STR_SERVER_STOPED, new String[]{STR_SERVER_STOPED, "服务器已停止", "伺服器已停止"});
@@ -138,14 +141,14 @@ public class AppManager extends GApplication {
                 final GCallBack ccb = GCallBack.getInstance();
                 devW = ccb.getDeviceWidth();
                 devH = ccb.getDeviceHeight();
-                //System.out.println("devW , devH " + devW + " , " + devH);
+                System.out.println("devW :" + devW + ", devH  :" + devH);
 
                 GForm.hideKeyboard();
                 GLanguage.setCurLang(AppLoader.getDefaultLang());
 
-                if(AppLoader.getGuiStyle()==0){
+                if (AppLoader.getGuiStyle() == 0) {
                     GToolkit.setStyle(new GStyleBright());
-                }else{
+                } else {
                     GToolkit.setStyle(new GStyleDark());
                 }
 
@@ -402,9 +405,14 @@ public class AppManager extends GApplication {
         nameLab.setText(AppLoader.getApplicationName(appName));
         //
         GTextBox descLab = (GTextBox) contentView.findByName(APP_DESC_LABEL);
-
+        String dStr = "-";
+        long d = AppLoader.getApplicationFileDate(appName);
+        if (d > 0) {
+            dStr = getDateString(d);
+        }
         String txt = GLanguage.getString(STR_VERSION) + "\n  " + AppLoader.getApplicationVersion(appName) + "\n"
                 + GLanguage.getString(STR_FILE_SIZE) + "\n  " + AppLoader.getApplicationFileSize(appName) + "\n"
+                + GLanguage.getString(STR_FILE_DATE) + "\n  " + dStr + "\n"
                 + GLanguage.getString(STR_UPGRADE_URL) + "\n  " + AppLoader.getApplicationUpgradeurl(appName) + "\n"
                 + GLanguage.getString(STR_DESC) + "\n  " + AppLoader.getApplicationDesc(appName) + "\n";
         descLab.setText(txt);
@@ -427,4 +435,27 @@ public class AppManager extends GApplication {
         mainSlot.moveTo(1, 200);
     }
 
+    public static String getDateString(long millis) {
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(millis);
+        int year = c.get(Calendar.YEAR);
+        int month = c.get(Calendar.MONTH) + 1;
+        int dayInMonth = c.get(Calendar.DAY_OF_MONTH);
+        int hour = c.get(Calendar.HOUR_OF_DAY);
+        int minute = c.get(Calendar.MINUTE);
+        int seconds = c.get(Calendar.SECOND);
+        String ret = String.valueOf(year);
+        ret += "-";
+        ret += month < 10 ? "0" + month : String.valueOf(month);
+        ret += "-";
+        ret += dayInMonth < 10 ? "0" + dayInMonth : String.valueOf(dayInMonth);
+        ret += " ";
+        ret += hour < 10 ? "0" + hour : String.valueOf(hour);
+        ret += ":";
+        ret += minute < 10 ? "0" + hour : String.valueOf(minute);
+        ret += ":";
+        ret += seconds < 10 ? "0" + hour : String.valueOf(seconds);
+        return ret;
+
+    }
 }

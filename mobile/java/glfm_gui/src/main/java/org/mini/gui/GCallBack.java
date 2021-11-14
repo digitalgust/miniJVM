@@ -109,6 +109,9 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
 
     public abstract float getFps();
 
+    public abstract int getTouchOrMouseX();
+
+    public abstract int getTouchOrMouseY();
 
     //============================== glfm
     @Override

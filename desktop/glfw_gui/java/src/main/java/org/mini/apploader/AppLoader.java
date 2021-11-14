@@ -253,6 +253,15 @@ public class AppLoader {
         return -1;
     }
 
+    public static long getApplicationFileDate(String jarName) {
+        String path = getAppJarPath(jarName);
+        File f = new File(path);
+        if (f.exists()) {
+            return f.lastModified();
+        }
+        return -1;
+    }
+
     static String getAppConfig(String jarName, String key) {
         try {
             String jarFullPath = getAppJarPath(jarName);

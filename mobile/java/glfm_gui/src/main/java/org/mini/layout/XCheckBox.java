@@ -53,8 +53,9 @@ public class XCheckBox
         }
     }
 
-    public void parse(KXmlParser parser) throws Exception {
-        super.parse(parser);
+    @Override
+    public void parse(KXmlParser parser, XmlExtAssist assist) throws Exception {
+        super.parse(parser, assist);
         String tmps;
         tmps = parser.nextText(); //得到文本
         setText(tmps);

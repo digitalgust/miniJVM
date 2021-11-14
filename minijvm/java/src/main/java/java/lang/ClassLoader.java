@@ -19,6 +19,18 @@ import java.security.ProtectionDomain;
 import java.util.*;
 
 
+/**
+ * Classloader 本JVM实现了 和ORACLE类似的两亲委托类加载机制，
+ * 并由Thread.setContextClassLoader(),实现基于Classloader的应用加载机制，
+ * 如Tomcat的webapp， 加载时，所有class都由某一个Classloader应用实例加载，应用退出时，
+ * 此classloader加载的所有类都会卸载。
+ * 由于先前类库设计过程中的一个BUG，父加载器（SystemClassloader）加载的类A的有一静态容器A.c，
+ * 子加载器(StandalongGuiAppClassLoader)加载的类B(1)的对象实例B(1)ins存入A.c，
+ * 同时StandalongGuiAppClassLoader加载的类B(2)也向A.c存入了B(2)ins，
+ * 获取A.c时，结果包含了B(1)ins，导致不同类加载器的类和实例混淆
+ * 为解决这类问题，则A中不能有静态容器A.c,改变设计
+ *
+ */
 public abstract class ClassLoader {
 
 

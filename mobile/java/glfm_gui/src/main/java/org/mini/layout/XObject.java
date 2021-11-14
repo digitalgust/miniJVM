@@ -1,10 +1,11 @@
 package org.mini.layout;
 
 import org.mini.gui.GObject;
+import org.mini.gui.event.GFlyListener;
 import org.mini.layout.gscript.Interpreter;
 import org.mini.layout.xmlpull.KXmlParser;
 
-public abstract class XObject {
+public abstract class XObject implements GFlyListener {
 
     //used for align
     protected int x = XDef.NODEF, y = XDef.NODEF, width = XDef.NODEF, height = XDef.NODEF;
@@ -21,6 +22,8 @@ public abstract class XObject {
     protected boolean hidden = false; //是否显示
 
     protected boolean enable = true; //是否显示
+
+    protected boolean fly = false; //是否可飞
 
     protected boolean frontest = false; //始终最前端显示
 
@@ -81,7 +84,7 @@ public abstract class XObject {
      * @param parser KXmlParser
      * @throws Exception
      */
-    public void parse(KXmlParser parser) throws Exception {
+    public void parse(KXmlParser parser, XmlExtAssist assist) throws Exception {
 
         //iterator attribute
         int attCount = parser.getAttributeCount();
@@ -102,6 +105,8 @@ public abstract class XObject {
             cmd = attValue;
         } else if (attName.equals("cmd")) {
             cmd = attValue;
+        } else if (attName.equals("fly")) {
+            fly = "0".equals(attValue) ? false : true;
         } else if (attName.equals("hidden")) {
             hidden = "0".equals(attValue) ? false : true;
         } else if (attName.equals("enable")) {
@@ -172,6 +177,10 @@ public abstract class XObject {
             gui.setXmlAgent(this);
             gui.setFront(frontest);
             gui.setBack(backest);
+            gui.setFlyable(fly);
+            if (fly) {
+                gui.setFlyListener(this);
+            }
             if (color != null) {
                 gui.setColor(color);
             }
@@ -399,5 +408,16 @@ public abstract class XObject {
     protected abstract void createGui();
 
 
+    public void flyBegin(GObject gObject, float x, float y) {
+        getRoot().getEventHandler().flyBegin(gObject, x, y);
+    }
+
+    public void flying(GObject gObject, float x, float y) {
+        getRoot().getEventHandler().flying(gObject, x, y);
+    }
+
+    public void flyEnd(GObject gObject, float x, float y) {
+        getRoot().getEventHandler().flyEnd(gObject, x, y);
+    }
 }
 

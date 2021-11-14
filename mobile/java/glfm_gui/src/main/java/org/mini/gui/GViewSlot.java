@@ -61,7 +61,7 @@ public class GViewSlot extends GViewPort {
     }
 
     public void add(int index, GObject go, int moveMode) {
-        if(getElements().contains(go)){
+        if (getElements().contains(go)) {
             return;
         }
         super.addImpl(index, go);
@@ -82,9 +82,9 @@ public class GViewSlot extends GViewPort {
     /**
      * WARNING:  multithread will fail
      */
-    public void reSizeChildren(){
-        for(int i=0;i<props.size();i++){
-            GObject go=getElements().get(i);
+    public void reSizeChildren() {
+        for (int i = 0; i < props.size(); i++) {
+            GObject go = getElements().get(i);
             go.setSize(getW(), getH());
             if (scrollMode == SCROLL_MODE_HORIZONTAL) {
                 go.setLocation(i * getW(), 0);
@@ -288,9 +288,14 @@ public class GViewSlot extends GViewPort {
         super.touchEvent(touchid, phase, x, y);
     }
 
+    @Override
+    public void setFlyable(boolean flyable) {
+        if (flyable) System.out.println(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
+    }
+
     public boolean dragEvent(float dx, float dy, float x, float y) {
 
-        GObject found = findByXY(x, y);
+        GObject found = findSonByXY(x, y);
         if (found instanceof GMenu) {
             return found.dragEvent(dx, dy, x, y);
         }
@@ -344,7 +349,7 @@ public class GViewSlot extends GViewPort {
     @Override
     public boolean inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
 
-        GObject go = findByXY(x1, y1);
+        GObject go = findSonByXY(x1, y1);
         if (go != null) {
             if (go.inertiaEvent(x1, y1, x2, y2, moveTime)) {
                 return true;

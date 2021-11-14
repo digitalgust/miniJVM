@@ -12,8 +12,7 @@ import org.mini.nanovg.Nanovg;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mini.gui.GToolkit.nvgRGBA;
-import static org.mini.nanovg.Nanovg.*;
+import static org.mini.nanovg.Nanovg.nvgSave;
 
 /**
  * @author gust
@@ -198,7 +197,7 @@ abstract public class GContainer extends GObject {
      * @param y
      * @return
      */
-    public GObject findByXY(float x, float y) {
+    GObject findSonByXY(float x, float y) {
         GObject front = null, mid = null, back = null, menu = null;
         synchronized (elements) {
             for (int i = 0; i < elements.size(); i++) {
@@ -217,6 +216,34 @@ abstract public class GContainer extends GObject {
             }
         }
         return front != null ? front : (mid != null ? mid : back);
+    }
+
+    /**
+     * find the frontest uiobject, son of son of son ...
+     *
+     * @param x
+     * @param y
+     * @return
+     */
+    public GObject findByXY(float x, float y) {
+        synchronized (elements) {
+            for (int i = 0; i < elements.size(); i++) {
+                GObject nko = elements.get(i);
+                if (nko.isInArea(x, y)) {
+                    if (nko instanceof GContainer) {
+                        GObject re = ((GContainer) nko).findByXY(x, y);
+                        if (re != null) {
+                            return re;
+                        } else {
+                            return nko;
+                        }
+                    } else {
+                        return nko;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -383,7 +410,7 @@ abstract public class GContainer extends GObject {
         if (!isEnable()) {
             return;
         }
-        GObject found = findByXY(x, y);
+        GObject found = findSonByXY(x, y);
         if (found instanceof GMenu) {
             if (!((GMenu) found).isContextMenu()) {
                 setFocus(null);
@@ -435,7 +462,7 @@ abstract public class GContainer extends GObject {
         if (!isEnable()) {
             return false;
         }
-        setFocus(findByXY(x, y));
+        setFocus(findSonByXY(x, y));
         if (focus != null && focus.isInArea(x, y)) {
             return focus.scrollEvent(scrollX, scrollY, x, y);
         }
@@ -461,7 +488,7 @@ abstract public class GContainer extends GObject {
         if (focus != null) {
             return focus.dragEvent(dx, dy, x, y);
         }
-        GObject found = findByXY(x, y);
+        GObject found = findSonByXY(x, y);
         if (found instanceof GMenu) {
             return found.dragEvent(dx, dy, x, y);
         } else if (found != null && found.isFront()) {
@@ -496,7 +523,7 @@ abstract public class GContainer extends GObject {
         if (!isEnable()) {
             return;
         }
-        GObject found = findByXY(x, y);
+        GObject found = findSonByXY(x, y);
         if (found instanceof GMenu) {
             if (!((GMenu) found).isContextMenu()) {
                 setFocus(null);
@@ -538,7 +565,7 @@ abstract public class GContainer extends GObject {
         if (!isEnable()) {
             return;
         }
-        GObject found = findByXY(x, y);
+        GObject found = findSonByXY(x, y);
         if (found instanceof GMenu) {
             if (!((GMenu) found).isContextMenu()) {
                 setFocus(null);

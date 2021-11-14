@@ -3,7 +3,9 @@
         <table w="98%" h="100%">
             <tr>
                 <td>
-                    <label w="80%"></label><button name="BT_SETTING" w="20%" h="30" >{Setting}&gt;</button><br/>
+                    <label w="80%"></label>
+                    <button name="BT_SETTING" w="20%" h="30">{Setting}&gt;</button>
+                    <br/>
                     <label w="100%" h="30" align="hcenter,vcenter">{Application Manager}</label>
                     <input name="INPUT_SEARCH" w="100%" h="30" style="search" hint="Search application"></input>
                 </td>

@@ -5,12 +5,13 @@
  */
 package org.mini.gui;
 
+import org.mini.glfm.Glfm;
+import org.mini.glfw.Glfw;
 import org.mini.gui.event.*;
 import org.mini.nanovg.Gutil;
 import org.mini.nanovg.Nanovg;
 
 import java.util.Timer;
-import java.util.TimerTask;
 
 import static org.mini.gl.GL.*;
 import static org.mini.gui.GToolkit.nvgRGBA;
@@ -31,6 +32,7 @@ public class GForm extends GPanel {
     protected long vg; //nk contex
     protected GCallBack callback;
     protected float pxRatio;
+    protected GObject flyingObject;
     //
     //
 
@@ -120,6 +122,7 @@ public class GForm extends GPanel {
             Nanovg.nvgResetScissor(vg);
             Nanovg.nvgScissor(vg, 0, 0, winWidth, winHeight);
             paint(vg);
+            paintFlyingObject(vg);
             cmdHandler.update(this);
             nvgEndFrame(vg);
 
@@ -151,7 +154,14 @@ public class GForm extends GPanel {
         }
     }
 
+    void paintFlyingObject(long vg) {
+        if (flyingObject != null) {
+            int x = callback.getTouchOrMouseX();
+            int y = callback.getTouchOrMouseY();
+            flyingObject.paintFlying(vg, x - flyingObject.flyOffsetX, y - flyingObject.flyOffsetY);
+        }
 
+    }
 
     public void onPhotoPicked(int uid, String url, byte[] data) {
         if (pickListener != null) {
@@ -225,6 +235,33 @@ public class GForm extends GPanel {
             sizeChangeListener.onSizeChange(width, height);
         }
     }
+
+    @Override
+    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+        if (button == Glfw.GLFW_MOUSE_BUTTON_1 && !pressed) {
+            if (flyingObject != null) {
+                flyingObject.doFlyEnd();
+                setFlyingObject(null);
+            }
+        }
+        super.mouseButtonEvent(button, pressed, x, y);
+    }
+
+    public void touchEvent(int touchid, int phase, int x, int y) {
+        if (phase == Glfm.GLFMTouchPhaseEnded) {
+            flyingObject.doFlyEnd();
+        }
+        super.touchEvent(touchid, phase, x, y);
+    }
+
+    public GObject getFlyingObject() {
+        return flyingObject;
+    }
+
+    public void setFlyingObject(GObject flyingObject) {
+        this.flyingObject = flyingObject;
+    }
+
 
     /**
      * @return the activeListener

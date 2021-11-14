@@ -81,6 +81,11 @@ public class GScrollBar extends GObject {
     }
 
     @Override
+    public void setFlyable(boolean flyable) {
+        if (flyable) System.out.println(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
+    }
+
+    @Override
     public boolean scrollEvent(float dx, float dy, float x, float y) {
         return dragEvent(dx, dy, x, y);
     }

@@ -21,7 +21,8 @@ public class XBr
     }
 
 
-    public void parse(KXmlParser parser) throws Exception {
+    @Override
+    public void parse(KXmlParser parser, XmlExtAssist assist) throws Exception {
         toEndTag(parser, XML_NAME);
     }
 

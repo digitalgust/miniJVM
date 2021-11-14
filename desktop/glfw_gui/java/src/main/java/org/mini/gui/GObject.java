@@ -6,6 +6,7 @@
 package org.mini.gui;
 
 import org.mini.gui.event.GActionListener;
+import org.mini.gui.event.GFlyListener;
 import org.mini.gui.event.GFocusChangeListener;
 import org.mini.gui.event.GStateChangeListener;
 import org.mini.nanovg.Nanovg;
@@ -38,6 +39,14 @@ abstract public class GObject {
     volatile static int flush;
     static boolean paintDebug = false;
 
+    /**
+     * drag gobject move out of it's boundle
+     * if gobject need drag action self ,like select text in textbox ,then it can't dragfly
+     * //是否可以被鼠标拖到组件自己之外的坐标处,比如在文本框中选中文本需要拖动，则文本框组件无法dragfly
+     */
+    protected boolean flyable = false;
+    int flyOffsetX, flyOffsetY;
+
     protected GContainer parent;
 
     protected float[] boundle = new float[4];
@@ -45,6 +54,7 @@ abstract public class GObject {
     protected float[] bgColor;
     protected float[] color;
     protected float[] disabledColor;
+    protected float[] flyingColor;
 
     protected float fontSize;
 
@@ -54,6 +64,7 @@ abstract public class GObject {
 
     protected GStateChangeListener stateChangeListener;
 
+    protected GFlyListener flyListener;
 
     protected boolean visible = true;
 
@@ -123,6 +134,10 @@ abstract public class GObject {
         }
     }
 
+    boolean paintFlying(long vg, float x, float y) {
+        return true;
+    }
+
     public boolean paint(long ctx) {
         return true;
     }
@@ -143,6 +158,20 @@ abstract public class GObject {
     }
 
     public boolean dragEvent(float dx, float dy, float x, float y) {
+        if (flyable) {
+            GForm form = getForm();
+            if (form != null) {
+                GObject f = form.getFlyingObject();
+                if (f == null) {
+                    form.setFlyingObject(this);
+                    flyOffsetX = (int) (x - getX());
+                    flyOffsetY = (int) (y - getY());
+                    doFlyBegin();
+                } else if (f == this) {
+                    doFlying();
+                }
+            }
+        }
         return false;
     }
 
@@ -296,6 +325,7 @@ abstract public class GObject {
      */
     public void setColor(int r, int g, int b, int a) {
         color = Nanovg.nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);
+        flyingColor = Nanovg.nvgRGBA((byte) r, (byte) g, (byte) b, (byte) (a / 2));
         a = a - 48;
         if (a < 0) a = 16;
         disabledColor = Nanovg.nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);
@@ -303,6 +333,7 @@ abstract public class GObject {
 
     public void setColor(float[] color) {
         this.color = color;
+        flyingColor = Nanovg.nvgRGBAf(color[0], color[1], color[2], color[3] * .5f);
         float a = color[3];
         a -= 0.125f;
         if (a < 0) a = .0625f;
@@ -354,14 +385,7 @@ abstract public class GObject {
 
 
     public GForm getForm() {
-        GObject go = this;
-        while (!(go instanceof GForm)) {
-            if (go == null) {
-                return null;
-            }
-            go = go.getParent();
-        }
-        return (GForm) go;
+        return GCallBack.getInstance().getForm();
     }
 
     public GFrame getFrame() {
@@ -504,5 +528,43 @@ abstract public class GObject {
 
     public String getText() {
         return this.text;
+    }
+
+    public boolean isFlyable() {
+        return flyable;
+    }
+
+    public void setFlyable(boolean flyable) {
+        this.flyable = flyable;
+    }
+
+    public void setFlyListener(GFlyListener flyListener) {
+        this.flyListener = flyListener;
+    }
+
+    public GFlyListener getFlyListener() {
+        return flyListener;
+    }
+
+    void doFlyBegin() {
+        if (flyListener != null && flyable) {
+            flyListener.flyBegin(this, GCallBack.getInstance().getTouchOrMouseX(), GCallBack.getInstance().getTouchOrMouseY());
+        }
+    }
+
+    void doFlyEnd() {
+        if (flyListener != null && flyable) {
+            flyListener.flyEnd(this, GCallBack.getInstance().getTouchOrMouseX(), GCallBack.getInstance().getTouchOrMouseY());
+        }
+    }
+
+    void doFlying() {
+        if (flyListener != null && flyable) {
+            flyListener.flying(this, GCallBack.getInstance().getTouchOrMouseX(), GCallBack.getInstance().getTouchOrMouseY());
+        }
+    }
+
+    public boolean isFlying() {
+        return getForm() != null && getForm().getFlyingObject() == this;
     }
 }

@@ -216,6 +216,14 @@ public class GlfwCallBackImpl extends GCallBack {
         gform.flush();
     }
 
+    public int getTouchOrMouseX() {
+        return mouseX;
+    }
+
+    public int getTouchOrMouseY() {
+        return mouseY;
+    }
+
     @Override
     public void mouseButton(long window, int button, boolean pressed) {
         if (gform == null) {
@@ -307,7 +315,7 @@ public class GlfwCallBackImpl extends GCallBack {
         return true;
     }
 
-    private void reloadWindow(){
+    private void reloadWindow() {
         winWidth = Glfw.glfwGetWindowWidth(display);
         winHeight = Glfw.glfwGetWindowHeight(display);
         fbWidth = glfwGetFramebufferWidth(display);

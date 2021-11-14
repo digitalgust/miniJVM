@@ -302,6 +302,11 @@ public class GFrame extends GContainer {
     }
 
     @Override
+    public void setFlyable(boolean flyable) {
+        if (flyable) System.out.println(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
+    }
+
+    @Override
     public boolean dragEvent(float dx, float dy, float x, float y) {
 
         if (dragFrame) {

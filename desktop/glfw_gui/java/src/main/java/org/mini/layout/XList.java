@@ -77,8 +77,9 @@ public class XList extends XObject implements GStateChangeListener {
      * @param parser KXmlParser
      * @throws Exception
      */
-    public void parse(KXmlParser parser) throws Exception {
-        super.parse(parser);
+    @Override
+    public void parse(KXmlParser parser, XmlExtAssist assist) throws Exception {
+        super.parse(parser, assist);
         int depth = parser.getDepth();
 
         //得到域

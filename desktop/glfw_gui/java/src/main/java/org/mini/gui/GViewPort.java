@@ -223,7 +223,7 @@ public class GViewPort extends GContainer {
 
     @Override
     public boolean inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
-        GObject go = findByXY(x1, y1);
+        GObject go = findSonByXY(x1, y1);
         if (go != null) {
             if (go.inertiaEvent(x1, y1, x2, y2, moveTime)) {
                 return true;
@@ -328,6 +328,11 @@ public class GViewPort extends GContainer {
     }
 
     @Override
+    public void setFlyable(boolean flyable) {
+        if (flyable) System.out.println(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
+    }
+
+    @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         super.mouseButtonEvent(button, pressed, x, y);
         if (!pressed) {
@@ -337,7 +342,7 @@ public class GViewPort extends GContainer {
 
     @Override
     public boolean dragEvent(float dx, float dy, float x, float y) {
-        GObject found = findByXY(x, y);
+        GObject found = findSonByXY(x, y);
         if (found instanceof GMenu) {
             return found.dragEvent(dx, dy, x, y);
         }

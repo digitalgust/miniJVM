@@ -408,22 +408,22 @@ public class GToolkit {
         });
 
         GContainer gp = frame.getView();
-        float x = 10, y = 10, w = gp.getW() - 20, h = gp.getH() - 40;
+        float x = 10, y = 5, w = gp.getW() - 20, h = gp.getH() - 50;
 
         GTextBox tbox = new GTextBox(msg, "", x, y, w, h);
         tbox.setEditable(false);
         gp.add(tbox);
-        y += h + 10;
+        y += h + 5;
 
         float btnWidth = w * .5f;
         if (left != null) {
-            GButton leftBtn = new GButton(left, x, y, btnWidth, 28);
+            GButton leftBtn = new GButton(left, x, y, btnWidth, 30);
             leftBtn.setBgColor(128, 16, 8, 255);
             gp.add(leftBtn);
             leftBtn.setActionListener(leftListener);
         }
 
-        GButton rightBtn = new GButton(right == null ? GLanguage.getString("Cancel") : right, btnWidth + 10, y, btnWidth, 28);
+        GButton rightBtn = new GButton(right == null ? GLanguage.getString("Cancel") : right, btnWidth + 10, y, btnWidth, 30);
         gp.add(rightBtn);
         rightBtn.setActionListener(rightListener == null ? (GActionListener) gobj -> frame.close() : rightListener);
 
