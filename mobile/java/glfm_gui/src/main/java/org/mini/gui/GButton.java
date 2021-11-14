@@ -92,9 +92,15 @@ public class GButton extends GObject {
      * @param vg
      * @return
      */
+    @Override
     public boolean paint(long vg) {
         float x = getX();
         float y = getY();
+        return paintFlying(vg, x, y);
+    }
+
+    @Override
+    boolean paintFlying(long vg, float x, float y) {
         float w = getW();
         float h = getH();
 
@@ -145,7 +151,7 @@ public class GButton extends GObject {
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         nvgFillColor(vg, GToolkit.getStyle().getTextShadowColor());
         nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw * 0.25f, y + h * 0.5f + 1 + move, text_arr, 0, text_arr.length);
-        nvgFillColor(vg, enable ? color : disabledColor);
+        nvgFillColor(vg, enable ? (isFlying() ? flyingColor : color) : disabledColor);
         nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw * 0.25f, y + h * 0.5f + move, text_arr, 0, text_arr.length);
 
         return true;

@@ -54,6 +54,7 @@ abstract public class GObject {
     protected float[] bgColor;
     protected float[] color;
     protected float[] disabledColor;
+    protected float[] flyingColor;
 
     protected float fontSize;
 
@@ -131,6 +132,18 @@ abstract public class GObject {
                 }
             }, delay, period);
         }
+    }
+
+    public GObject findParentByName(String name) {
+        if (name == null) return null;
+        if (parent != null) {
+            if (name.equals(parent.getName())) {
+                return parent;
+            } else {
+                return parent.findParentByName(name);
+            }
+        }
+        return null;
     }
 
     boolean paintFlying(long vg, float x, float y) {
@@ -324,6 +337,7 @@ abstract public class GObject {
      */
     public void setColor(int r, int g, int b, int a) {
         color = Nanovg.nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);
+        flyingColor = Nanovg.nvgRGBA((byte) r, (byte) g, (byte) b, (byte) (a / 2));
         a = a - 48;
         if (a < 0) a = 16;
         disabledColor = Nanovg.nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);
@@ -331,6 +345,7 @@ abstract public class GObject {
 
     public void setColor(float[] color) {
         this.color = color;
+        flyingColor = Nanovg.nvgRGBAf(color[0], color[1], color[2], color[3] * .5f);
         float a = color[3];
         a -= 0.125f;
         if (a < 0) a = .0625f;
@@ -559,5 +574,9 @@ abstract public class GObject {
         if (flyListener != null && flyable) {
             flyListener.flying(this, GCallBack.getInstance().getTouchOrMouseX(), GCallBack.getInstance().getTouchOrMouseY());
         }
+    }
+
+    public boolean isFlying() {
+        return getForm() != null && getForm().getFlyingObject() == this;
     }
 }

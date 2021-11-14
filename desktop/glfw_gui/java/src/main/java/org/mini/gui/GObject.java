@@ -134,6 +134,18 @@ abstract public class GObject {
         }
     }
 
+    public GObject findParentByName(String name) {
+        if (name == null) return null;
+        if (parent != null) {
+            if (name.equals(parent.getName())) {
+                return parent;
+            } else {
+                return parent.findParentByName(name);
+            }
+        }
+        return null;
+    }
+
     boolean paintFlying(long vg, float x, float y) {
         return true;
     }

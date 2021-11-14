@@ -480,7 +480,7 @@ public class GToolkit {
     }
 
     public static GFrame getListFrame(String title, String[] strs, GImage[] imgs, boolean multiSelect, String buttonText, GActionListener buttonListener, GActionListener itemListener) {
-        return getListFrame(title, strs, imgs, multiSelect, buttonText, buttonListener, itemListener, 300, 420);
+        return getListFrame(title, strs, imgs, multiSelect, buttonText, buttonListener, itemListener, 300, 250);
     }
 
     public static GFrame getListFrame(String title, String[] strs, GImage[] imgs, boolean multiSelect, String buttonText, GActionListener buttonListener, GActionListener itemListener, float width, float height) {

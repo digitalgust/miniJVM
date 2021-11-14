@@ -249,7 +249,10 @@ public class GForm extends GPanel {
 
     public void touchEvent(int touchid, int phase, int x, int y) {
         if (phase == Glfm.GLFMTouchPhaseEnded) {
-            flyingObject.doFlyEnd();
+            if (flyingObject != null) {
+                flyingObject.doFlyEnd();
+                setFlyingObject(null);
+            }
         }
         super.touchEvent(touchid, phase, x, y);
     }
