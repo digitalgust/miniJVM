@@ -955,6 +955,9 @@ public class GToolkit {
     static WeakHashMap<String, GImage> imageCache = new WeakHashMap<>();
 
     static public GImage getCachedImageFromJar(String filepath) {
+        if (filepath == null || "".equals(filepath.trim())) {
+            return null;
+        }
         GImage img = imageCache.get(filepath);
         if (img == null) {
             img = GImage.createImageFromJar(filepath);

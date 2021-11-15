@@ -59,6 +59,8 @@ public class XLabel
             onClick = XUtil.getField(attValue, 0);
         } else if (attName.equals("addon")) {
             addon = Integer.parseInt(attValue);
+        } else if (attName.equals("fontsize")) {
+            fontSize = Integer.parseInt(attValue);
         }
     }
 
@@ -90,6 +92,7 @@ public class XLabel
     protected void createGui() {
         if (label == null) {
             label = new GLabel(text, x, y, width, height);
+            label.setFontSize(fontSize);
             initGui();
             label.setActionListener(this);
             label.setAlign(align);

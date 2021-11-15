@@ -238,23 +238,23 @@ public class GForm extends GPanel {
 
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+        super.mouseButtonEvent(button, pressed, x, y);
         if (button == Glfw.GLFW_MOUSE_BUTTON_1 && !pressed) {
             if (flyingObject != null) {
                 flyingObject.doFlyEnd();
                 setFlyingObject(null);
             }
         }
-        super.mouseButtonEvent(button, pressed, x, y);
     }
 
     public void touchEvent(int touchid, int phase, int x, int y) {
+        super.touchEvent(touchid, phase, x, y);
         if (phase == Glfm.GLFMTouchPhaseEnded) {
             if (flyingObject != null) {
                 flyingObject.doFlyEnd();
                 setFlyingObject(null);
             }
         }
-        super.touchEvent(touchid, phase, x, y);
     }
 
     public GObject getFlyingObject() {

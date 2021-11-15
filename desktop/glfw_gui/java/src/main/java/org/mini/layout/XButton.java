@@ -46,12 +46,14 @@ public class XButton
             addon = Integer.parseInt(attValue);
         } else if (attName.equals("emoji")) {
             emoji = (char) Integer.parseInt(attValue, 16);
+        } else if (attName.equals("fontsize")) {
+            fontSize = Integer.parseInt(attValue);
         }
     }
 
     @Override
     public void parse(KXmlParser parser, XmlExtAssist assist) throws Exception {
-        super.parse(parser,assist);
+        super.parse(parser, assist);
         String tmps;
         tmps = parser.nextText(); //得到文本
         setText(tmps);
@@ -91,6 +93,7 @@ public class XButton
     protected void createGui() {
         if (button == null) {
             button = new GButton(text, x, y, width, height);
+            button.setFontSize(fontSize);
             initGui();
             button.setActionListener(this);
             button.setIcon(emoji);
