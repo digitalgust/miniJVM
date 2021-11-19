@@ -25,6 +25,7 @@ public class GListItem extends GObject {
     }
 
 
+    @Override
     public GContainer getParent() {
         return list;
     }
@@ -158,7 +159,7 @@ public class GListItem extends GObject {
             }
             GToolkit.drawImage(vg, img, tx, ty, thumb, thumb, !outOfFilter, outOfFilter ? 0.5f : 0.8f);
         }
-        float[] c = outOfFilter ? GToolkit.getStyle().getHintFontColor() : enable ? list.color : list.disabledColor;
+        float[] c = outOfFilter ? GToolkit.getStyle().getHintFontColor() : enable ? getColor() : disabledColor;
         GToolkit.drawTextLine(vg, tx + (img == null ? 0 : thumb) + pad, ty + thumb / 2, getText(), list.fontSize, c, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         return true;
     }

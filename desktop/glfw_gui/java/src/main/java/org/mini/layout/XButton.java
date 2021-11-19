@@ -17,7 +17,6 @@ public class XButton
     //
     protected String pic;
     protected String onClick;
-    protected int fontSize = XDef.DEFAULT_FONT_SIZE;
     protected int addon = XDef.SPACING_BUTTON_ADD;
     protected char emoji = 0;
 
@@ -46,8 +45,6 @@ public class XButton
             addon = Integer.parseInt(attValue);
         } else if (attName.equals("emoji")) {
             emoji = (char) Integer.parseInt(attValue, 16);
-        } else if (attName.equals("fontsize")) {
-            fontSize = Integer.parseInt(attValue);
         }
     }
 
@@ -93,7 +90,6 @@ public class XButton
     protected void createGui() {
         if (button == null) {
             button = new GButton(text, x, y, width, height);
-            button.setFontSize(fontSize);
             initGui();
             button.setActionListener(this);
             button.setIcon(emoji);

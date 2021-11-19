@@ -16,7 +16,6 @@ public class XLabel
 
     static public final String XML_NAME = "label";
     // 当前绘制颜色
-    protected int fontSize = XDef.DEFAULT_FONT_SIZE;
     protected String onClick;
     protected int align = GGraphics.LEFT | GGraphics.TOP;
     protected int addon = XDef.SPACING_LABEL_ADD;
@@ -59,8 +58,6 @@ public class XLabel
             onClick = XUtil.getField(attValue, 0);
         } else if (attName.equals("addon")) {
             addon = Integer.parseInt(attValue);
-        } else if (attName.equals("fontsize")) {
-            fontSize = Integer.parseInt(attValue);
         }
     }
 
@@ -92,7 +89,6 @@ public class XLabel
     protected void createGui() {
         if (label == null) {
             label = new GLabel(text, x, y, width, height);
-            label.setFontSize(fontSize);
             initGui();
             label.setActionListener(this);
             label.setAlign(align);

@@ -7,6 +7,7 @@ package org.mini.gui;
 
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
+import org.mini.layout.XObject;
 import org.mini.nanovg.Nanovg;
 import org.mini.reflect.ReflectArray;
 
@@ -86,6 +87,11 @@ public class GToolkit {
         }
         return null;
     }
+    /**
+     * ----------------------------------------------------------------
+     *      font
+     * ----------------------------------------------------------------
+     */
 
     /**
      * 字体部分
@@ -160,6 +166,11 @@ public class GToolkit {
         nvgRestore(vg);
         return bond;
     }
+    /**
+     * ----------------------------------------------------------------
+     *      style
+     * ----------------------------------------------------------------
+     */
 
     /**
      * 风格
@@ -176,6 +187,12 @@ public class GToolkit {
     public static void setStyle(GStyle style) {
         defaultStyle = style;
     }
+
+    /**
+     * ----------------------------------------------------------------
+     *      draw
+     * ----------------------------------------------------------------
+     */
 
     /**
      * 光标
@@ -304,15 +321,18 @@ public class GToolkit {
 
     public static void drawText(long vg, float x, float y, float w, float h, String s) {
 
-        drawText(vg, x, y, w, h, s, GToolkit.getStyle().getTextFontSize(), GToolkit.getStyle().getTextFontColor());
+        drawTextWithShadow(vg, x, y, w, h, s, GToolkit.getStyle().getTextFontSize(), GToolkit.getStyle().getTextFontColor(), null);
     }
 
     public static void drawText(long vg, float x, float y, float w, float h, String s, float fontSize, float[] color) {
+        drawTextWithShadow(vg, x, y, w, h, s, fontSize, color, null);
+    }
+
+    public static void drawTextWithShadow(long vg, float x, float y, float w, float h, String s, float fontSize, float[] color, float[] shadowColor) {
         if (s == null) {
             return;
         }
         nvgFontSize(vg, fontSize);
-        nvgFillColor(vg, color);
         nvgFontFace(vg, GToolkit.getFontWord());
 
         byte[] text_arr = toUtf8(s);
@@ -320,7 +340,11 @@ public class GToolkit {
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 
         if (text_arr != null) {
-
+            if (shadowColor != null) {
+                nvgFillColor(vg, shadowColor);
+                nvgTextBoxJni(vg, x + 1, y + 1, w - 1, text_arr, 0, text_arr.length);
+            }
+            nvgFillColor(vg, color);
             nvgTextBoxJni(vg, x, y, w, text_arr, 0, text_arr.length);
         }
     }
@@ -375,6 +399,11 @@ public class GToolkit {
             nvgStroke(vg);
         }
     }
+    /**
+     * ----------------------------------------------------------------
+     *      frame
+     * ----------------------------------------------------------------
+     */
 
     /**
      * return a frame to confirm msg
@@ -560,7 +589,7 @@ public class GToolkit {
 
     public static GFrame getInputFrame(String title, String msg, String defaultValue, String inputHint, String leftLabel, GActionListener leftListener, String rightLabel, GActionListener rightListener, float width, float height) {
 
-        int x = 10, y = 30;
+        int x = 10, y = 15;
         GFrame frame = new GFrame(title, 0, 0, width, height);
         frame.setFront(true);
         frame.setFocusListener(new GFocusChangeListener() {
@@ -582,7 +611,7 @@ public class GToolkit {
         lb1.setShowMode(GLabel.MODE_MULTI_SHOW);
         view.add(lb1);
 
-        y += 55;
+        y += 45;
         GTextField input = new GTextField(defaultValue == null ? "" : defaultValue, inputHint, x, y, contentWidth, 28);
         input.setName("input");
         view.add(input);
@@ -799,25 +828,47 @@ public class GToolkit {
         }
     }
 
-    public static void setAttachment(String name, Object o) {
-        if (name == null || o == null) return;
+    public static void setAttachment(String compName, Object o) {
+        if (compName == null || o == null) return;
         GForm form = GCallBack.getInstance().getForm();
-        GObject go = form.findByName(name);
+        GObject go = form.findByName(compName);
         if (go != null) {
             go.setAttachment(o);
         }
     }
 
-    public static Object getAttachment(String name) {
-        if (name != null) {
+    public static Object getAttachment(String compName) {
+        if (compName != null) {
             GForm form = GCallBack.getInstance().getForm();
-            GObject go = form.findByName(name);
+            GObject go = form.findByName(compName);
             if (go != null) {
                 return go.getAttachment();
             }
         }
         return null;
     }
+
+    public static void setEnable(String compName, boolean enable) {
+        GForm form = GCallBack.getInstance().getForm();
+        GObject eitem = form.findByName(compName);
+        if (eitem != null) {
+            ((XObject) eitem.getXmlAgent()).setEnable(enable);
+        }
+    }
+
+    public static void setText(String compName, String text) {
+        GForm form = GCallBack.getInstance().getForm();
+        GObject eitem = form.findByName(compName);
+        if (eitem != null) {
+            ((XObject) eitem.getXmlAgent()).setText(text);
+        }
+    }
+
+    /**
+     * ----------------------------------------------------------------
+     * EditMenu
+     * ----------------------------------------------------------------
+     */
 
     private static EditMenu editMenu;
 
@@ -950,7 +1001,9 @@ public class GToolkit {
     }
 
     /**
-     * --------------------------------    image cache    --------------------------------
+     * ----------------------------------------------------------------
+     * image cache
+     * ----------------------------------------------------------------
      */
     static WeakHashMap<String, GImage> imageCache = new WeakHashMap<>();
 

@@ -15,7 +15,6 @@ public class XCheckBox
 
     static public final String XML_NAME = "checkbox";
     // 当前绘制颜色
-    protected int fontSize = XDef.DEFAULT_FONT_SIZE;
     protected boolean selected = true;
     protected String onClick;
 

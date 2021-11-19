@@ -20,6 +20,8 @@ public class GImageItem extends GObject {
     protected float alpha = 1.f;
     protected float alphaFly = alpha * .5f;
     protected boolean drawBorder = true;
+    protected float[] shadowColor;
+
 
     public GImageItem() {
 
@@ -27,6 +29,14 @@ public class GImageItem extends GObject {
 
     public GImageItem(GImage img) {
         this.img = img;
+    }
+
+    @Override
+    public void setText(String text) {
+        super.setText(text);
+        if (fontSize == 0) setFontSize(GToolkit.getStyle().getTextFontSize());
+        if (getColor() == null) setColor(GToolkit.getStyle().getTextFontColor());
+        shadowColor = GToolkit.getStyle().getTextShadowColor();
     }
 
 
@@ -95,6 +105,9 @@ public class GImageItem extends GObject {
             nvgRoundedRect(vg, x, y, w, h, 0);
             nvgFillPaint(vg, imgPaint);
             nvgFill(vg);
+        }
+        if (getText() != null) {
+            GToolkit.drawTextWithShadow(vg, x + 3, y + 3, w - 6, h - 6, getText(), getFontSize(), getColor(), shadowColor);
         }
         return true;
     }

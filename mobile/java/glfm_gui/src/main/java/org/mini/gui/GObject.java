@@ -9,6 +9,7 @@ import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFlyListener;
 import org.mini.gui.event.GFocusChangeListener;
 import org.mini.gui.event.GStateChangeListener;
+import org.mini.layout.XObject;
 import org.mini.nanovg.Nanovg;
 
 import java.util.TimerTask;
@@ -134,11 +135,11 @@ abstract public class GObject {
         }
     }
 
-    public GObject findParentByName(String name) {
+    public <T extends GObject> T findParentByName(String name) {
         if (name == null) return null;
         if (parent != null) {
             if (name.equals(parent.getName())) {
-                return parent;
+                return (T) parent;
             } else {
                 return parent.findParentByName(name);
             }
@@ -235,8 +236,8 @@ abstract public class GObject {
         return boundle;
     }
 
-    public GContainer getParent() {
-        return parent;
+    public <T extends GContainer> T getParent() {
+        return (T) parent;
     }
 
     public void setParent(GContainer p) {
@@ -442,8 +443,8 @@ abstract public class GObject {
     /**
      * @return the attachment
      */
-    public Object getAttachment() {
-        return attachment;
+    public <T extends Object> T getAttachment() {
+        return (T) attachment;
     }
 
     /**
@@ -454,8 +455,8 @@ abstract public class GObject {
     }
 
 
-    public Object getXmlAgent() {
-        return xmlAgent;
+    public <T extends XObject> T getXmlAgent() {
+        return (T) xmlAgent;
     }
 
     public void setXmlAgent(Object xmlAgent) {

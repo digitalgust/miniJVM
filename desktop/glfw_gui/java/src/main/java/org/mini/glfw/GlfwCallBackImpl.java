@@ -197,23 +197,33 @@ public class GlfwCallBackImpl extends GCallBack {
 
     @Override
     public void key(long window, int key, int scancode, int action, int mods) {
-        if (gform == null) {
-            return;
+        try {
+            if (gform == null) {
+                return;
+            }
+            if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+                glfwSetWindowShouldClose(window, GLFW_TRUE);
+            }
+            gform.keyEventGlfw(key, scancode, action, mods);
+            gform.flush();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+
         }
-        if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-            glfwSetWindowShouldClose(window, GLFW_TRUE);
-        }
-        gform.keyEventGlfw(key, scancode, action, mods);
-        gform.flush();
     }
 
     @Override
     public void character(long window, char character) {
-        if (gform == null) {
-            return;
+        try {
+            if (gform == null) {
+                return;
+            }
+            gform.characterEvent(character);
+            gform.flush();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+
         }
-        gform.characterEvent(character);
-        gform.flush();
     }
 
     public int getTouchOrMouseX() {
@@ -226,134 +236,174 @@ public class GlfwCallBackImpl extends GCallBack {
 
     @Override
     public void mouseButton(long window, int button, boolean pressed) {
-        if (gform == null) {
-            return;
-        }
-        if (window == display) {
-            switch (button) {
-                case Glfw.GLFW_MOUSE_BUTTON_1: {//left
-                    if (pressed) {
-                        drag = true;
-                        hoverX = mouseX;
-                        hoverY = mouseY;
-                    } else {
-                        drag = false;
+        try {
+            if (gform == null) {
+                return;
+            }
+            if (window == display) {
+                switch (button) {
+                    case Glfw.GLFW_MOUSE_BUTTON_1: {//left
+                        if (pressed) {
+                            drag = true;
+                            hoverX = mouseX;
+                            hoverY = mouseY;
+                        } else {
+                            drag = false;
+                        }
+                        break;
                     }
-                    break;
-                }
-                case Glfw.GLFW_MOUSE_BUTTON_2: {//right
-                    if (pressed) {
-                        drag = true;
-                        hoverX = mouseX;
-                        hoverY = mouseY;
-                        //gform.longTouchedEvent(mouseX, mouseY);
-                    } else {
-                        drag = false;
+                    case Glfw.GLFW_MOUSE_BUTTON_2: {//right
+                        if (pressed) {
+                            drag = true;
+                            hoverX = mouseX;
+                            hoverY = mouseY;
+                            //gform.longTouchedEvent(mouseX, mouseY);
+                        } else {
+                            drag = false;
+                        }
+                        break;
                     }
-                    break;
+                    case Glfw.GLFW_MOUSE_BUTTON_3: {//middle
+                        break;
+                    }
                 }
-                case Glfw.GLFW_MOUSE_BUTTON_3: {//middle
-                    break;
+                gform.mouseButtonEvent(button, pressed, mouseX, mouseY);
+                //click event
+                long cur = System.currentTimeMillis();
+                if (pressed) {
+                    if ((cur - mouseLastPressed < CLICK_PERIOD) && (this.button == button)) {
+                        clickCount++;
+                    } else {
+                        clickCount = 0;
+                    }
+                    this.button = button;
+                    mouseLastPressed = cur;
+                }
+                if (!pressed) {
+                    if (clickCount > 0) {
+                        gform.clickEvent(button, mouseX, mouseY);
+                        clickCount = 0;
+                    }
                 }
             }
-            gform.mouseButtonEvent(button, pressed, mouseX, mouseY);
-            //click event
-            long cur = System.currentTimeMillis();
-            if (pressed) {
-                if ((cur - mouseLastPressed < CLICK_PERIOD) && (this.button == button)) {
-                    clickCount++;
-                } else {
-                    clickCount = 0;
-                }
-                this.button = button;
-                mouseLastPressed = cur;
-            }
-            if (!pressed) {
-                if (clickCount > 0) {
-                    gform.clickEvent(button, mouseX, mouseY);
-                    clickCount = 0;
-                }
-            }
+            gform.flush();
+            //System.out.println("flushed");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+
         }
-        gform.flush();
-        //System.out.println("flushed");
     }
 
     @Override
     public void scroll(long window, double scrollX, double scrollY) {
-        if (gform == null) {
-            return;
+        try {
+            if (gform == null) {
+                return;
+            }
+            gform.scrollEvent((float) scrollX, (float) scrollY, mouseX, mouseY);
+            gform.flush();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+
         }
-        gform.scrollEvent((float) scrollX, (float) scrollY, mouseX, mouseY);
-        gform.flush();
     }
 
     @Override
     public void cursorPos(long window, int x, int y) {
-        if (gform == null) {
-            return;
-        }
-        if (display == window) {
-            mouseX = x;
-            mouseY = y;
-            gform.cursorPosEvent(x, y);
-            if (drag) {
-                gform.dragEvent(x - hoverX, y - hoverY, x, y);
-                hoverX = mouseX;
-                hoverY = mouseY;
+        try {
+            if (gform == null) {
+                return;
             }
-            gform.flush();
+            if (display == window) {
+                mouseX = x;
+                mouseY = y;
+                gform.cursorPosEvent(x, y);
+                if (drag) {
+                    gform.dragEvent(x - hoverX, y - hoverY, x, y);
+                    hoverX = mouseX;
+                    hoverY = mouseY;
+                }
+                gform.flush();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+
         }
     }
 
     @Override
     public boolean windowClose(long window) {
-        if (gform == null) {
-            return true;
+        try {
+            if (gform == null) {
+                return true;
+            }
+            gform.flush();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+
         }
-        gform.flush();
         return true;
     }
 
     private void reloadWindow() {
-        winWidth = Glfw.glfwGetWindowWidth(display);
-        winHeight = Glfw.glfwGetWindowHeight(display);
-        fbWidth = glfwGetFramebufferWidth(display);
-        fbHeight = glfwGetFramebufferHeight(display);
-        // Calculate pixel ration for hi-dpi devices.
-        pxRatio = (float) fbWidth / (float) winWidth;
+        try {
+            winWidth = Glfw.glfwGetWindowWidth(display);
+            winHeight = Glfw.glfwGetWindowHeight(display);
+            fbWidth = glfwGetFramebufferWidth(display);
+            fbHeight = glfwGetFramebufferHeight(display);
+            // Calculate pixel ration for hi-dpi devices.
+            pxRatio = (float) fbWidth / (float) winWidth;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+
+        }
     }
 
     @Override
     public void windowSize(long window, int width, int height) {
-        reloadWindow();
+        try {
+            reloadWindow();
 
-        if (gform == null) {
-            return;
+            if (gform == null) {
+                return;
+            }
+            gform.setSize(width, height);
+            gform.onSizeChange(width, height);
+            gform.flush();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+
         }
-        gform.setSize(width, height);
-        gform.onSizeChange(width, height);
-        gform.flush();
     }
 
     @Override
     public void framebufferSize(long window, int x, int y) {
-        if (gform == null) {
-            return;
+        try {
+            if (gform == null) {
+                return;
+            }
+            gform.getBoundle()[WIDTH] = x;
+            gform.getBoundle()[HEIGHT] = y;
+            reloadWindow();
+            gform.flush();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+
         }
-        gform.getBoundle()[WIDTH] = x;
-        gform.getBoundle()[HEIGHT] = y;
-        reloadWindow();
-        gform.flush();
     }
 
     @Override
     public void drop(long window, int count, String[] paths) {
-        if (gform == null) {
-            return;
+        try {
+            if (gform == null) {
+                return;
+            }
+            gform.dropEvent(count, paths);
+            gform.flush();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+
         }
-        gform.dropEvent(count, paths);
-        gform.flush();
     }
 
     public void error(int error, String description) {

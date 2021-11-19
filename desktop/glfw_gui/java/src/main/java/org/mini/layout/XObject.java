@@ -33,6 +33,8 @@ public abstract class XObject implements GFlyListener {
 
     protected String text = null; //文本
 
+    protected int fontSize = XDef.DEFAULT_FONT_SIZE;
+
     protected String cmd = null;
 
     protected String attachment = null;
@@ -110,7 +112,7 @@ public abstract class XObject implements GFlyListener {
         } else if (attName.equals("hidden")) {
             hidden = "0".equals(attValue) ? false : true;
         } else if (attName.equals("enable")) {
-            hidden = "0".equals(attValue) ? false : true;
+            enable = "0".equals(attValue) ? false : true;
         } else if (attName.equals("move")) { // viewslot move mode
             moveMode = attValue;
         } else if (attName.equals("w")) {
@@ -164,6 +166,8 @@ public abstract class XObject implements GFlyListener {
             frontest = "0".equals(attValue) ? false : true;
         } else if (attName.equals("back")) {
             backest = "0".equals(attValue) ? false : true;
+        } else if (attName.equals("fontsize")) {
+            fontSize = Integer.parseInt(attValue);
         }
     }
 
@@ -173,6 +177,7 @@ public abstract class XObject implements GFlyListener {
             gui.setEnable(enable);
             gui.setName(name);
             gui.setText(text);
+            gui.setFontSize(fontSize);
             gui.setAttachment(attachment);
             gui.setXmlAgent(this);
             gui.setFront(frontest);

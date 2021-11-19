@@ -169,7 +169,7 @@ abstract public class GContainer extends GObject {
         }
     }
 
-    public GObject findByName(String name) {
+    public <T extends GObject> T findByName(String name) {
         if (name == null) {
             return null;
         }
@@ -177,12 +177,12 @@ abstract public class GContainer extends GObject {
             for (int i = 0, imax = elements.size(); i < imax; i++) {
                 GObject go = elements.get(i);
                 if (name.equals(go.name)) {
-                    return go;
+                    return (T) go;
                 }
                 if (go instanceof GContainer) {
                     GObject sub = ((GContainer) go).findByName(name);
                     if (sub != null) {
-                        return sub;
+                        return (T) sub;
                     }
                 }
             }
@@ -197,14 +197,14 @@ abstract public class GContainer extends GObject {
      * @param y
      * @return
      */
-    GObject findSonByXY(float x, float y) {
+    <T extends GObject> T findSonByXY(float x, float y) {
         GObject front = null, mid = null, back = null, menu = null;
         synchronized (elements) {
             for (int i = 0; i < elements.size(); i++) {
                 GObject nko = elements.get(i);
                 if (nko.isInArea(x, y)) {
                     if (nko instanceof GMenu) {
-                        return nko;
+                        return (T) nko;
                     } else if (nko.isFront()) {
                         front = nko;
                     } else if (nko.isBack()) {
@@ -215,7 +215,7 @@ abstract public class GContainer extends GObject {
                 }
             }
         }
-        return front != null ? front : (mid != null ? mid : back);
+        return front != null ? (T) front : (mid != null ? (T) mid : (T) back);
     }
 
     /**
@@ -225,7 +225,7 @@ abstract public class GContainer extends GObject {
      * @param y
      * @return
      */
-    public GObject findByXY(float x, float y) {
+    public <T extends GObject> T findByXY(float x, float y) {
         synchronized (elements) {
             for (int i = 0; i < elements.size(); i++) {
                 GObject nko = elements.get(i);
@@ -233,12 +233,12 @@ abstract public class GContainer extends GObject {
                     if (nko instanceof GContainer) {
                         GObject re = ((GContainer) nko).findByXY(x, y);
                         if (re != null) {
-                            return re;
+                            return (T) re;
                         } else {
-                            return nko;
+                            return (T) nko;
                         }
                     } else {
-                        return nko;
+                        return (T) nko;
                     }
                 }
             }
@@ -249,8 +249,8 @@ abstract public class GContainer extends GObject {
     /**
      * @return the focus
      */
-    public GObject getFocus() {
-        return focus;
+    public <T extends GObject> T getFocus() {
+        return (T) focus;
     }
 
     /**

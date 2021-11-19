@@ -18,6 +18,12 @@ import static org.mini.nanovg.Gutil.toUtf8;
 import static org.mini.nanovg.Nanovg.*;
 
 /**
+ * GList 有两种外观，
+ * 第一种是单行模式 MODE_SINGLE_SHOW，未点击时会显示 normalPanel,点击时会弹出一个下拉菜单popWin供选取
+ * 第二种是多行模式，多行模式直接显示popWin
+ * <p>
+ * popWin包含一个ViewPort(popView)和一个滚动条 scrollBar
+ *
  * @author gust
  */
 public class GList extends GContainer implements GFocusChangeListener {
@@ -49,6 +55,8 @@ public class GList extends GContainer implements GFocusChangeListener {
     //
     protected final List<Integer> outOffilterList = new ArrayList();//if a item in this list , it would show dark text color
 
+    GFocusChangeListener userFocusListener;//由自己代理用户的listener
+
     /**
      *
      */
@@ -75,7 +83,7 @@ public class GList extends GContainer implements GFocusChangeListener {
         popWin = new GListPopWindow();
         popWin.addImpl(scrollBar);
         popWin.addImpl(popView);
-        setFocusListener(this);
+        super.setFocusListener(this);
         setScrollBar(false);
         sizeAdjust();
         changeCurPanel();
@@ -84,6 +92,17 @@ public class GList extends GContainer implements GFocusChangeListener {
 
         setFontSize(GToolkit.getStyle().getTextFontSize());
         setColor(GToolkit.getStyle().getTextFontColor());
+    }
+
+    @Override
+    public void setFocusListener(GFocusChangeListener focusListener) {
+        //throw new RuntimeException("GList not support GFocusChangeListener");
+        userFocusListener = focusListener;
+    }
+
+    @Override
+    public GFocusChangeListener getFocusListener() {
+        return userFocusListener;
     }
 
     @Override
@@ -344,6 +363,8 @@ public class GList extends GContainer implements GFocusChangeListener {
         selected.clear();
         if (i >= 0 && i < popView.getElementsImpl().size()) {
             selected.add(i);
+            float scrollY = (float) i / getElementSize();
+            popView.setScrollY(scrollY);
         }
     }
 
@@ -442,12 +463,14 @@ public class GList extends GContainer implements GFocusChangeListener {
 
     @Override
     public void focusGot(GObject go) {
+        if (userFocusListener != null) userFocusListener.focusGot(go);
     }
 
     @Override
     public void focusLost(GObject go) {
         pulldown = false;
         changeCurPanel();
+        if (userFocusListener != null) userFocusListener.focusLost(go);
     }
 
 
