@@ -1289,9 +1289,9 @@ s32 java_io_Throwable_buildStackElement(Runtime *runtime, JClass *clazz) {
     Instance *ins = NULL;
     if (ins_thread) {
         Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, ins_thread);
-        if (trun->thrd_info->is_suspend || trun->thrd_info->is_blocking) {
-            ins = buildStackElement(runtime, getLastSon(trun));
-        }
+        //if (trun->thrd_info->is_suspend || trun->thrd_info->is_blocking) {
+        ins = buildStackElement(runtime, getLastSon(trun));
+        //}
     }
     push_ref(stack, ins);
     return 0;
