@@ -5,7 +5,6 @@
  */
 package org.mini.apploader;
 
-import org.mini.gui.GApplication;
 import org.mini.gui.GCallBack;
 import org.mini.gui.GForm;
 import org.mini.gui.GLanguage;
@@ -324,6 +323,7 @@ public class AppLoader {
                 app = (GApplication) c.newInstance();
                 app.setSaveRoot(getAppDataPath(jarName));
                 GCallBack.getInstance().setApplication(app);
+                app.onStart();
             }
 
         } catch (Exception ex) {

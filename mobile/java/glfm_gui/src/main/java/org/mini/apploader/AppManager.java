@@ -57,6 +57,7 @@ public class AppManager extends GApplication {
     static final String STR_OPEN_APP_FAIL = "Open app failed";
     static final String STR_BRIGHT_STYLE = "Bright appearance";
     static final String STR_DARK_STYLE = "Dark appearance";
+    static final String STR_MESSAGE = "Message";
 
     static {
         GLanguage.addString(STR_SETTING, new String[]{STR_SETTING, "设置", "设置"});
@@ -87,6 +88,7 @@ public class AppManager extends GApplication {
         GLanguage.addString(STR_OPEN_APP_FAIL, new String[]{STR_OPEN_APP_FAIL, "打开应用失败", "打開應用失敗"});
         GLanguage.addString(STR_BRIGHT_STYLE, new String[]{STR_BRIGHT_STYLE, "浅色外观", "淺色外觀"});
         GLanguage.addString(STR_DARK_STYLE, new String[]{STR_DARK_STYLE, "深色外观", "深色外觀"});
+        GLanguage.addString(STR_MESSAGE, new String[]{STR_MESSAGE, "信息", "信息"});
     }
 
     static AppManager instance = new AppManager();
@@ -97,7 +99,6 @@ public class AppManager extends GApplication {
 
     GViewSlot mainSlot;
 
-    GPanel mangePanel;
     //
     GList appList;
     GViewPort contentView;
@@ -105,6 +106,10 @@ public class AppManager extends GApplication {
     AppmEventHandler eventHandler;
 
     MiniHttpServer webServer;
+
+    GTextBox logBox;
+
+    GStyle style;
 
     //
     static final int PICK_PHOTO = 101, PICK_CAMERA = 102, PICK_QR = 103, PICK_HEAD = 104;
@@ -116,16 +121,13 @@ public class AppManager extends GApplication {
     }
 
     public void active() {
-//        if (GCallBack.getInstance().getApplication() != this) {
-//            preApp = GCallBack.getInstance().getApplication();
-//        }
         if (webServer != null) {
             webServer.stopServer();
         }
-        GApplication app = GCallBack.getInstance().getApplication();
-        if (app != null) {
-            app.close();
+        if (style == null) {
+            style = GToolkit.getStyle();
         }
+        GToolkit.setStyle(style);
         GCallBack.getInstance().setApplication(this);
         reloadAppList();
     }
@@ -215,7 +217,7 @@ public class AppManager extends GApplication {
         mainSlot = (GViewSlot) (container.getGui());
         appList = (GList) mainSlot.findByName("LIST_APP");
         contentView = (GViewPort) mainSlot.findByName("VP_CONTENT");
-        mangePanel = (GPanel) mainSlot.findByName("PAN_MGR");
+        logBox = mainSlot.findByName("INPUT_LOG");
         GList langList = (GList) mainSlot.findByName("LIST_LANG");
         langList.setSelectedIndex(AppLoader.getDefaultLang());
         GList styleList = (GList) mainSlot.findByName("LIST_STYLE");
@@ -243,7 +245,7 @@ public class AppManager extends GApplication {
                 GTextObject downtextfd = (GTextObject) mgrForm.findByName("INPUT_URL");
                 String url = downtextfd.getText();
 
-                MiniHttpClient hc = new MiniHttpClient(url, getDownloadCallback());
+                MiniHttpClient hc = new MiniHttpClient(url, cltLogger, getDownloadCallback());
                 hc.start();
             } else if ("BT_BACK".equals(name)) {
                 mainPanelShowLeft();
@@ -258,20 +260,26 @@ public class AppManager extends GApplication {
                 if (uploadbtn.getText().equals(GLanguage.getString(STR_STOP))) {
                     uploadbtn.setText(GLanguage.getString(STR_START));
                     uploadLab.setText(GLanguage.getString(STR_START_WEB_SRV_FOR_UPLOAD));
-                    GForm.addMessage(GLanguage.getString(STR_SERVER_STOPED));
+                    String s = GLanguage.getString(STR_SERVER_STOPED);
+                    GForm.addMessage(s);
+                    log(s);
                 } else {
-                    webServer = new MiniHttpServer();
+                    webServer = new MiniHttpServer(MiniHttpServer.DEFAULT_PORT, srvLogger);
                     webServer.setUploadCompletedHandle(files -> {
                         for (MiniHttpServer.UploadFile f : files) {
                             AppLoader.addApp(f.filename, f.data);
-                            GForm.addMessage(GLanguage.getString(STR_UPLOAD_FILE) + " " + f.filename);
+                            String s = GLanguage.getString(STR_UPLOAD_FILE) + " " + f.filename + " " + f.data.length;
+                            GForm.addMessage(s);
+                            log(s);
                         }
                         reloadAppList();
                     });
                     webServer.start();
                     uploadbtn.setText(GLanguage.getString(STR_STOP));
                     uploadLab.setText(GLanguage.getString(STR_WEB_LISTEN_ON) + webServer.getPort());
-                    GForm.addMessage(GLanguage.getString(STR_SERVER_STARTED));
+                    String s = GLanguage.getString(STR_SERVER_STARTED);
+                    GForm.addMessage(s);
+                    log(s);
                 }
             } else if ("APP_RUN_BTN".equals(name)) {
                 if (curSelectedItem != null) {
@@ -290,7 +298,7 @@ public class AppManager extends GApplication {
                     if (appName != null) {
                         String url = AppLoader.getApplicationUpgradeurl(appName);
                         if (url != null) {
-                            MiniHttpClient hc = new MiniHttpClient(url, getDownloadCallback());
+                            MiniHttpClient hc = new MiniHttpClient(url, cltLogger, getDownloadCallback());
                             hc.start();
                         }
                     }
@@ -347,7 +355,7 @@ public class AppManager extends GApplication {
 
     MiniHttpClient.DownloadCompletedHandle getDownloadCallback() {
         return (url, data) -> {
-            //System.out.println("download success " + url + " ,size: " + data.length);
+            log("Download success " + url + " ,size: " + data.length);
             GForm.addMessage((data == null ? GLanguage.getString(STR_FAIL) : GLanguage.getString(STR_SUCCESS)) + " " + GLanguage.getString(STR_DOWNLOAD) + " " + url);
             String jarName = null;
             if (url.lastIndexOf('/') > 0) {
@@ -433,6 +441,34 @@ public class AppManager extends GApplication {
 
     void mainPanelShowRight() {
         mainSlot.moveTo(1, 200);
+    }
+
+
+    MiniHttpServer.SrvLogger srvLogger = new MiniHttpServer.SrvLogger() {
+        @Override
+        void log(String s) {
+            AppManager.log(s);
+        }
+    };
+
+    MiniHttpClient.CltLogger cltLogger = new MiniHttpClient.CltLogger() {
+        @Override
+        void log(String s) {
+            AppManager.log(s);
+        }
+    };
+
+    /**
+     * @param s
+     */
+    public static void log(String s) {
+        GTextBox box = getInstance().logBox;
+        if (box != null) {
+            box.setCaretIndex(box.getText().length());
+            Calendar c = Calendar.getInstance();
+            box.insertTextAtCaret("\n" + getDateString(c.getTimeInMillis()) + " " + s);
+            box.setScroll(1.f);
+        }
     }
 
     public static String getDateString(long millis) {

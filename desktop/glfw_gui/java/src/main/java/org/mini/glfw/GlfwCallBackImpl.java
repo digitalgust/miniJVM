@@ -8,7 +8,7 @@ package org.mini.glfw;
 
 import org.mini.apploader.AppLoader;
 import org.mini.apploader.Sync;
-import org.mini.gui.GApplication;
+import org.mini.apploader.GApplication;
 import org.mini.gui.GCallBack;
 import org.mini.gui.GObject;
 import org.mini.gui.GToolkit;

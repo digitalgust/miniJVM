@@ -24,7 +24,15 @@ public class MiniHttpServer extends Thread {
 
     boolean exit = false;
 
+    public static final int DEFAULT_PORT = 8088;
+    public static final SrvLogger DEFAULT_LOGGER = new SrvLogger() {
+        @Override
+        void log(String s) {
+            System.out.println(s);
+        }
+    };
     int port = 8088;
+    SrvLogger logger = DEFAULT_LOGGER;
 
     String header = "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n";
     String responseText = header + "<html>\n"
@@ -44,10 +52,16 @@ public class MiniHttpServer extends Thread {
             + "</html>";
 
     public MiniHttpServer() {
+        this(DEFAULT_PORT, DEFAULT_LOGGER);
     }
 
-    public MiniHttpServer(int port) {
+    public MiniHttpServer(int port, SrvLogger log) {
         this.port = port;
+        if (log != null) this.logger = log;
+    }
+
+    abstract static public class SrvLogger {
+        abstract void log(String s);
     }
 
     public class RequestHandle extends Thread {
@@ -99,6 +113,7 @@ public class MiniHttpServer extends Thread {
                             break;
                         }
                     }
+                    logger.log("Received http data " + baos.size());
                 }
                 // 如果是form提交数据
                 String contentType = getContentType();
@@ -480,7 +495,7 @@ public class MiniHttpServer extends Thread {
     public void run() {
         try {
             srvsock = new ServerSocket(port);
-            System.out.println("server socket listen " + port + " ...");
+            logger.log("server socket listen " + port + " ...");
             while (!exit) {
                 try {
                     Socket cltsock;
@@ -491,7 +506,7 @@ public class MiniHttpServer extends Thread {
                         e.printStackTrace();
                         break;
                     }
-                    System.out.println("accepted client socket:" + cltsock);
+                    logger.log("accepted client socket:" + cltsock);
 
                     RequestHandle handler = new RequestHandle(cltsock);
                     handler.start();
@@ -499,7 +514,7 @@ public class MiniHttpServer extends Thread {
                     e.printStackTrace();
                 }
             }
-            System.out.println("server " + port + " closed");
+            logger.log("server " + port + " closed");
             srvsock.close();
         } catch (Exception e) {
             e.printStackTrace();

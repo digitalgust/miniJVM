@@ -49,7 +49,6 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     protected byte[] text_arr;
 
 
-
     protected boolean selectMode = false;
 
 
@@ -126,6 +125,8 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     abstract void resetSelect();
 
     abstract void setCaretIndex(int caretIndex);
+
+    abstract public int getCaretIndex();
 
     public void doSelectText() {
 

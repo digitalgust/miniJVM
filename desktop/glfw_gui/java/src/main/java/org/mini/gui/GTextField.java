@@ -319,10 +319,14 @@ public class GTextField extends GTextObject {
         return text_pos.length - 1;
     }
 
+    public int getCaretIndex() {
+        return caretIndex;
+    }
+
     /**
      * @param caretIndex the caretIndex to set
      */
-    void setCaretIndex(int caretIndex) {
+    public void setCaretIndex(int caretIndex) {
         if (caretIndex < 0) {
             caretIndex = 0;
         } else if (caretIndex > textsb.length()) {

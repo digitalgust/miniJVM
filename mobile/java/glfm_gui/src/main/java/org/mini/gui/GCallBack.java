@@ -5,6 +5,7 @@
  */
 package org.mini.gui;
 
+import org.mini.apploader.GApplication;
 import org.mini.glfm.GlfmCallBack;
 import org.mini.glfw.GlfwCallback;
 
@@ -43,9 +44,6 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
 
     public void setApplication(GApplication app) {
         if (app != null) {
-            if (gapp != null) {
-                gapp.close();
-            }
             gapp = app;
             gform = app.getForm();
         }

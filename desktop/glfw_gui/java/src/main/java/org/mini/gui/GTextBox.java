@@ -565,7 +565,7 @@ public class GTextBox extends GTextObject {
         return true;
     }
 
-    boolean setScroll(float p) {
+    public boolean setScroll(float p) {
         float tmp = scroll;
         scroll = p;
         if (scroll > 1) {
@@ -663,9 +663,21 @@ public class GTextBox extends GTextObject {
     }
 
     /**
+     * @return
+     */
+    public int getCaretIndex() {
+        return caretIndex;
+    }
+
+    /**
      * @param caretIndex the caretIndex to set
      */
-    void setCaretIndex(int caretIndex) {
+    public void setCaretIndex(int caretIndex) {
+        if (caretIndex < 0) {
+            caretIndex = 0;
+        } else if (caretIndex > textsb.length()) {
+            caretIndex = textsb.length();
+        }
         this.caretIndex = caretIndex;
     }
 

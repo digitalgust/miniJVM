@@ -36,36 +36,30 @@
             <input name="APP_DESC_LABEL" multiline="1" edit="0" w="100%" h="150"></input>
         </viewport>
     </panel>
-    <panel name="PAN_MGR" w="100%" h="100%" move="fixed" align="hcenter,top">
-        <table w="98%" h="100%">
-            <tr>
-                <td>
-                    <button name="BT_BACK1" h="30" addon="10">&lt;{Back}</button>
-                    <label w="100%" h="30" align="hcenter,vcenter">{Setting}</label>
-                    <list name="LIST_LANG" w="100%">
-                        <li name="LI_ENG">English</li>
-                        <li name="LI_CHS">简体中文</li>
-                        <li name="LI_CHT">繁體中文</li>
-                    </list>
-                    <br/>
-                    <list name="LIST_STYLE" w="100%">
-                        <li name="LI_BRIGHT" selected="1">{Bright appearance}</li>
-                        <li name="LI_DARK">{Dark appearance}</li>
-                    </list>
-                    <label w="100%" h="30" align="left,vcenter">{Download app from website:}</label>
-                    <input name="INPUT_URL" w="80%" h="30" hint="application jar url">
-                        http://www.ebsee.com:40080/down/BiBiX.jar
-                    </input>
-                    <button name="BT_DOWN" w="20%" h="30">{Download}</button>
-                    <label name="LAB_WEBSRV" w="80%" h="30" align="left,vcenter">{Lan webserver for upload jar}</label>
-                    <button name="BT_STARTWEB" w="20%" h="30">{Start}</button>
-                </td>
-            </tr>
-            <tr h="float">
-                <td>
-
-                </td>
-            </tr>
-        </table>
+    <panel w="100%" h="100%" move="fixed" align="hcenter,top">
+        <viewport name="PAN_SETTING" w="98%" h="100%">
+            <button name="BT_BACK1" h="30" addon="10">&lt;{Back}</button>
+            <label w="100%" h="30" align="hcenter,vcenter">{Setting}</label>
+            <list name="LIST_LANG" w="100%">
+                <li name="LI_ENG">English</li>
+                <li name="LI_CHS">简体中文</li>
+                <li name="LI_CHT">繁體中文</li>
+            </list>
+            <br/>
+            <list name="LIST_STYLE" w="100%">
+                <li name="LI_BRIGHT" selected="1">{Bright appearance}</li>
+                <li name="LI_DARK">{Dark appearance}</li>
+            </list>
+            <label w="100%" h="30" align="left,vcenter">{Download app from website:}</label>
+            <input name="INPUT_URL" w="80%" h="30" hint="application jar url">
+                http://www.ebsee.com:40080/down/BiBiX.jar
+            </input>
+            <button name="BT_DOWN" w="20%" h="30">{Download}</button>
+            <label name="LAB_WEBSRV" w="80%" h="30" align="left,vcenter">{Lan webserver for upload jar}</label>
+            <button name="BT_STARTWEB" w="20%" h="30">{Start}</button>
+            <br/>
+            <input name="INPUT_LOG" w="100%" h="100" edit="0" multiline="1">{Message}</input>
+            <label></label>
+        </viewport>
     </panel>
 </viewslot>

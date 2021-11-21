@@ -20,11 +20,23 @@ public class MiniHttpClient extends Thread {
     DownloadCompletedHandle handle;
     boolean exit;
     HttpConnection c = null;
+    CltLogger logger;
+    public static final MiniHttpClient.CltLogger DEFAULT_LOGGER = new CltLogger() {
+        @Override
+        void log(String s) {
+            System.out.println(s);
+        }
+    };
 
-    public MiniHttpClient(final String url, final DownloadCompletedHandle handle) {
+    public MiniHttpClient(final String url, CltLogger logger, final DownloadCompletedHandle handle) {
         this.url = url;
         this.handle = handle;
         exit = false;
+        if (logger != null) this.logger = logger;
+    }
+
+    abstract static public class CltLogger {
+        abstract void log(String s);
     }
 
     public void stopNow() {
@@ -43,7 +55,7 @@ public class MiniHttpClient extends Thread {
         DataInputStream dis = null;
         byte[] data;
         try {
-            System.out.println("http url:" + url);
+            logger.log("http url:" + url);
             c = (HttpConnection) Connector.open(url);
             int rescode = c.getResponseCode();
             if (rescode == 200) {
@@ -67,8 +79,8 @@ public class MiniHttpClient extends Thread {
                 }
             } else if (rescode == 301 || rescode == 302) {
                 String redirect = c.getHeaderField("Location");
-                System.out.println("redirect:" + redirect);
-                MiniHttpClient hc = new MiniHttpClient(redirect, handle);
+                logger.log("redirect:" + redirect);
+                MiniHttpClient hc = new MiniHttpClient(redirect, logger, handle);
                 hc.start();
             } else {
                 if (handle != null) {
