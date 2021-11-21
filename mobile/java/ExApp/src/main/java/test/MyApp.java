@@ -1,6 +1,7 @@
 package test;
 
 import org.mini.apploader.AppManager;
+import org.mini.apploader.GApplication;
 import org.mini.gui.*;
 import org.mini.layout.UITemplate;
 import org.mini.layout.XContainer;
@@ -46,7 +47,7 @@ public class MyApp extends GApplication {
                         }
                         break;
                     case "MI_EXIT":
-                        AppManager.getInstance().active();
+                        close();
                         break;
                     case "BT_CANCEL":
                         gframe.close();

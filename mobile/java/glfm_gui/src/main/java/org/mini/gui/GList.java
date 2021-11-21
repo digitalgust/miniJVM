@@ -11,6 +11,7 @@ import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
@@ -459,6 +460,11 @@ public class GList extends GContainer implements GFocusChangeListener {
             }
         }
 
+    }
+
+    public void sort(Comparator<? super GObject> c) {
+        popView.getElements().sort(c);
+        sizeAdjust();
     }
 
     @Override

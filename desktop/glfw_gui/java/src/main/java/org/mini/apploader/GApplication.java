@@ -28,7 +28,6 @@ public abstract class GApplication {
         System.out.println("Closed app : " + this);
         onClose();
         AppManager.getInstance().active();
-        new RuntimeException().printStackTrace();
     }
 
     public final void notifyCurrentFormChanged() {
