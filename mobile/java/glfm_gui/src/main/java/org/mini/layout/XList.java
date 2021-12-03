@@ -42,6 +42,7 @@ public class XList extends XObject implements GStateChangeListener {
     protected Vector items = new Vector();
     protected boolean multiLine = false;
     protected boolean multiSelect = false;
+    protected boolean scrollbar = false;
     protected int itemheight = XDef.DEFAULT_LIST_HEIGHT;
 
     protected GList list;
@@ -65,6 +66,8 @@ public class XList extends XObject implements GStateChangeListener {
             multiLine = "0".equals(attValue) ? false : true;
         } else if (attName.equals("multiselect")) {
             multiSelect = "0".equals(attValue) ? false : true;
+        } else if (attName.equals("scroll")) {
+            scrollbar = "0".equals(attValue) ? false : true;
         } else if (attName.equals("itemh")) {
             itemheight = Integer.parseInt(attValue);
         }
@@ -135,6 +138,7 @@ public class XList extends XObject implements GStateChangeListener {
             list.setShowMode(multiLine ? GList.MODE_MULTI_SHOW : GList.MODE_SINGLE_SHOW);
             list.setSelectMode(multiSelect ? GList.MODE_MULTI_SELECT : GList.MODE_SINGLE_SELECT);
             list.setItemHeight(itemheight);
+            list.setScrollBar(scrollbar);
             list.setStateChangeListener(this);
             int selected = -1, selectCount = 0;
             for (int i = 0; i < items.size(); i++) {

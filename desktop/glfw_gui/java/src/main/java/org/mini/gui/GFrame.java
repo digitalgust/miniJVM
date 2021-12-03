@@ -167,8 +167,8 @@ public class GFrame extends GContainer {
     }
 
     void validLocation() { //ensure frame close bar in screen
-        if (getX() < 0) {
-            setLocation(0, getY());
+        if (getX() < -(getW() - 40)) {
+            setLocation(-(getW() - 40), getY());
         }
         if (getY() < 0) {
             setLocation(getX(), 0);

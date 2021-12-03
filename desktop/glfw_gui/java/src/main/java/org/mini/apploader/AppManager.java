@@ -468,6 +468,7 @@ public class AppManager extends GApplication {
             Calendar c = Calendar.getInstance();
             box.insertTextAtCaret("\n" + getDateString(c.getTimeInMillis()) + " " + s);
             box.setScroll(1.f);
+            box.flush();
         }
     }
 

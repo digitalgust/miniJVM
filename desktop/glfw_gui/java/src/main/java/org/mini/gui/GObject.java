@@ -75,7 +75,7 @@ abstract public class GObject {
 
     protected boolean back = false;
 
-    protected boolean fixedLocation;
+    protected boolean fixedLocation = false;
 
     protected String name;
 
@@ -494,6 +494,10 @@ abstract public class GObject {
     }
 
     public boolean isMenu() {
+        return false;
+    }
+
+    public boolean isContextMenu() {
         return false;
     }
 

@@ -672,18 +672,31 @@ public class GToolkit {
             }
         });
 
+        GActionListener common = new GActionListener() {
+            GActionListener[] actions = listeners;
+
+            @Override
+            public void action(GObject gobj) {
+                list.getParent().remove(list);
+                int i = list.getSelectedIndex();
+                if (actions != null && actions.length > i) {
+                    actions[i].action(gobj);
+                }
+            }
+        };
+
         list.setItems(imgs, strs);
         GListItem[] items = list.getItems();
         if (listeners != null) {
             for (int i = 0, imax = items.length; i < imax; i++) {
-                items[i].setActionListener(listeners[i]);
+                items[i].setActionListener(common);
             }
         }
         list.setSize(width, height);
-        int size = items.length;
-        if (size > 8) {
-            size = 8;
-        }
+//        int size = items.length;
+//        if (size > 8) {
+//            size = 8;
+//        }
 //        list.setInnerSize(200, size * list.list_item_heigh);
         list.setFront(true);
 
@@ -826,6 +839,29 @@ public class GToolkit {
         if (go != null) {
             form.remove(go);
         }
+    }
+
+    public static void showAlignedFrame(GObject gobj, int align_mod) {
+        GForm form = GCallBack.getInstance().getForm();
+        if (form == null) {
+            System.out.println("warning: added to form can be set align");
+            return;
+        }
+        if ((align_mod & GGraphics.LEFT) != 0) {
+            gobj.setLocation(0, gobj.getY());
+        } else if ((align_mod & GGraphics.RIGHT) != 0) {
+            gobj.setLocation(form.getDeviceWidth() - gobj.getW(), gobj.getY());
+        } else if ((align_mod & GGraphics.HCENTER) != 0) {
+            gobj.setLocation((form.getDeviceWidth() - gobj.getW()) * .5f, gobj.getY());
+        }
+        if ((align_mod & GGraphics.TOP) != 0) {
+            gobj.setLocation(gobj.getX(), 0);
+        } else if ((align_mod & GGraphics.BOTTOM) != 0) {
+            gobj.setLocation(gobj.getX(), form.getDeviceHeight() - gobj.getH());
+        } else if ((align_mod & GGraphics.HCENTER) != 0) {
+            gobj.setLocation(gobj.getX(), (form.getDeviceHeight() - gobj.getH()) * .5f);
+        }
+        form.add(gobj);
     }
 
     public static void setAttachment(String compName, Object o) {

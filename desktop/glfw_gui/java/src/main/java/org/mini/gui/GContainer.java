@@ -203,7 +203,7 @@ abstract public class GContainer extends GObject {
             for (int i = 0; i < elements.size(); i++) {
                 GObject nko = elements.get(i);
                 if (nko.isInArea(x, y)) {
-                    if (nko instanceof GMenu) {
+                    if (nko.isMenu()) {
                         return (T) nko;
                     } else if (nko.isFront()) {
                         front = nko;
@@ -257,7 +257,7 @@ abstract public class GContainer extends GObject {
      * @param go
      */
     public void setFocus(GObject go) {
-        if (go instanceof GMenu) {
+        if (go != null && go.isContextMenu()) {
             return;
         }
         if (this.focus != go) {
@@ -411,14 +411,14 @@ abstract public class GContainer extends GObject {
             return;
         }
         GObject found = findSonByXY(x, y);
-        if (found instanceof GMenu) {
-            if (!((GMenu) found).isContextMenu()) {
-                setFocus(null);
-            }
+        if (found != null && found.isMenu()) {
+//            if (!found.isContextMenu()) {
+//                setFocus(null);
+//            }
             found.mouseButtonEvent(button, pressed, x, y);
             return;
         } else if (found instanceof GFrame) {//this fix frame may not be active
-            setFocus(found);
+            if (pressed) setFocus(found);
             found.mouseButtonEvent(button, pressed, x, y);
             return;
         }
@@ -489,7 +489,7 @@ abstract public class GContainer extends GObject {
             return focus.dragEvent(dx, dy, x, y);
         }
         GObject found = findSonByXY(x, y);
-        if (found instanceof GMenu) {
+        if (found != null && found.isMenu()) {
             return found.dragEvent(dx, dy, x, y);
         } else if (found != null && found.isFront()) {
             return found.dragEvent(dx, dy, x, y);
@@ -524,8 +524,8 @@ abstract public class GContainer extends GObject {
             return;
         }
         GObject found = findSonByXY(x, y);
-        if (found instanceof GMenu) {
-            if (!((GMenu) found).isContextMenu()) {
+        if (found != null && found.isMenu()) {
+            if (!found.isContextMenu()) {
                 setFocus(null);
             }
             found.touchEvent(touchid, phase, x, y);
@@ -566,8 +566,8 @@ abstract public class GContainer extends GObject {
             return;
         }
         GObject found = findSonByXY(x, y);
-        if (found instanceof GMenu) {
-            if (!((GMenu) found).isContextMenu()) {
+        if (found != null && found.isMenu()) {
+            if (!found.isContextMenu()) {
                 setFocus(null);
             }
             found.longTouchedEvent(x, y);

@@ -27,7 +27,7 @@ import static org.mini.nanovg.Nanovg.*;
  *
  * @author gust
  */
-public class GList extends GContainer implements GFocusChangeListener {
+public class GList extends GContainer {
     public static final int MODE_MULTI_SHOW = 1, MODE_SINGLE_SHOW = 2;
     public static final int MODE_MULTI_SELECT = 4, MODE_SINGLE_SELECT = 8;
 
@@ -56,7 +56,6 @@ public class GList extends GContainer implements GFocusChangeListener {
     //
     protected final List<Integer> outOffilterList = new ArrayList();//if a item in this list , it would show dark text color
 
-    GFocusChangeListener userFocusListener;//由自己代理用户的listener
 
     /**
      *
@@ -84,7 +83,7 @@ public class GList extends GContainer implements GFocusChangeListener {
         popWin = new GListPopWindow();
         popWin.addImpl(scrollBar);
         popWin.addImpl(popView);
-        super.setFocusListener(this);
+        popWin.setFocusListener(popWin);
         setScrollBar(false);
         sizeAdjust();
         changeCurPanel();
@@ -93,17 +92,6 @@ public class GList extends GContainer implements GFocusChangeListener {
 
         setFontSize(GToolkit.getStyle().getTextFontSize());
         setColor(GToolkit.getStyle().getTextFontColor());
-    }
-
-    @Override
-    public void setFocusListener(GFocusChangeListener focusListener) {
-        //throw new RuntimeException("GList not support GFocusChangeListener");
-        userFocusListener = focusListener;
-    }
-
-    @Override
-    public GFocusChangeListener getFocusListener() {
-        return userFocusListener;
     }
 
     @Override
@@ -119,10 +107,6 @@ public class GList extends GContainer implements GFocusChangeListener {
         setSize(w, h);
     }
 
-    private void switchAppearanceSize(float w, float h) {
-        super.setSize(w, h);
-        sizeAdjust();
-    }
 
     public void setScrollBar(boolean show) {
         this.showScrollbar = show;
@@ -258,10 +242,7 @@ public class GList extends GContainer implements GFocusChangeListener {
             if (itemcount > list_rows_max) {
                 popH = list_rows_max * list_item_heigh;
             }
-
-            popWin.setLocation(0, 0);
             popWin.setSize(width, popH);
-
         }
 
         reAlignItems();
@@ -284,36 +265,39 @@ public class GList extends GContainer implements GFocusChangeListener {
     }
 
     void changeCurPanel() {
-        int itemcount = popView.elements.size();
         super.clearImpl();
-
-        if (showMode == MODE_MULTI_SHOW) {
-            setLocation(left, top);
-            switchAppearanceSize(width, height);
-            super.addImpl(popWin);
-        } else if (pulldown && itemcount > 0) {
-            float popH = itemcount * list_item_heigh;
-            if (itemcount < list_rows_min) {
-                popH = list_rows_min * list_item_heigh;
-            }
-            if (itemcount > list_rows_max) {
-                popH = list_rows_max * list_item_heigh;
-            }
-            float popY = 0;
-            if (popH > parent.getH()) {// small than frame height
-                popY = parent.getY();
-            } else if (top + popH < parent.getH()) {
-                popY = top;
-            } else {
-                popY = parent.getH() - popH;
-            }
-            setLocation(left, popY);
-            switchAppearanceSize(popWin.getW(), popWin.getH());
-            super.addImpl(popWin);
-        } else {
-            setLocation(left, top);
-            switchAppearanceSize(width, height);
+        if (showMode == MODE_SINGLE_SHOW) {
             super.addImpl(normalPanel);
+            //pop list in form
+            int itemcount = popView.elements.size();
+            if (pulldown) {
+                super.addImpl(normalPanel);
+                GForm form = getForm();
+                if (form != null) {
+                    float popY = getY() + normalPanel.getH();
+                    float popH = itemcount * list_item_heigh;
+                    if (itemcount < list_rows_min) {
+                        popH = list_rows_min * list_item_heigh;
+                    }
+                    if (itemcount > list_rows_max) {
+                        popH = list_rows_max * list_item_heigh;
+                    }
+                    if (popY + popH > form.getDeviceHeight()) {
+                        popH = form.getDeviceHeight() - popY;
+                    }
+                    popWin.setLocation(getX(), popY);
+                    popWin.setSize(popWin.getW(), popH);
+                    form.add(popWin);
+                    form.setFocus(popWin);
+                }
+            } else {
+                GForm form = getForm();
+                if (form != null) {
+                    form.remove(popWin);
+                }
+            }
+        } else {
+            super.addImpl(popWin);
         }
     }
 
@@ -467,18 +451,6 @@ public class GList extends GContainer implements GFocusChangeListener {
         sizeAdjust();
     }
 
-    @Override
-    public void focusGot(GObject go) {
-        if (userFocusListener != null) userFocusListener.focusGot(go);
-    }
-
-    @Override
-    public void focusLost(GObject go) {
-        pulldown = false;
-        changeCurPanel();
-        if (userFocusListener != null) userFocusListener.focusLost(go);
-    }
-
 
     @Override
     public void setFlyable(boolean flyable) {
@@ -511,10 +483,12 @@ public class GList extends GContainer implements GFocusChangeListener {
         public void touchEvent(int touchid, int phase, int x, int y) {
 
             if (phase == Glfm.GLFMTouchPhaseEnded) {
-                if (!pulldown) {
+                if (pulldown) {
+                    pulldown = false;
+                } else {
                     pulldown = true;
-                    GList.this.changeCurPanel();
                 }
+                GList.this.changeCurPanel();
             }
             super.touchEvent(touchid, phase, x, y);
 
@@ -523,10 +497,12 @@ public class GList extends GContainer implements GFocusChangeListener {
         @Override
         public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
             if (pressed && button == Glfw.GLFW_MOUSE_BUTTON_1) {
-                if (!pulldown) {
+                if (pulldown) {
+                    pulldown = false;
+                } else {
                     pulldown = true;
-                    GList.this.changeCurPanel();
                 }
+                GList.this.changeCurPanel();
             }
             super.mouseButtonEvent(button, pressed, x, y);
         }
@@ -601,11 +577,15 @@ public class GList extends GContainer implements GFocusChangeListener {
             return true;
         }
 
+        @Override
+        public void setScrollY(float sy) {
+            super.setScrollY(sy);
+            scrollBar.setPos(sy);
+        }
     };
 
 
-    class GListPopWindow extends GPanel {
-
+    class GListPopWindow extends GPanel implements GFocusChangeListener {
 
         @Override
         public void setSize(float width, float height) {
@@ -618,6 +598,21 @@ public class GList extends GContainer implements GFocusChangeListener {
             scrollBar.setSize(20, height);
         }
 
+        @Override
+        public boolean isMenu() {
+            if (showMode == MODE_SINGLE_SHOW) return true;
+            return false;
+        }
+
+        @Override
+        public void focusGot(GObject go) {
+        }
+
+        @Override
+        public void focusLost(GObject go) {
+            pulldown = false;
+            changeCurPanel();
+        }
     }
 
     ;

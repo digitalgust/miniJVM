@@ -109,13 +109,15 @@ public class GListItem extends GObject {
     }
 
     void select() {
-        int index = getIndex();
-        list.select(index);
-        list.pulldown = false;
-        list.changeCurPanel();
-        list.doStateChanged(list);
-        flush();
-        doAction();
+        if(enable) {
+            int index = getIndex();
+            list.select(index);
+            list.pulldown = false;
+            list.changeCurPanel();
+            list.doStateChanged(list);
+            flush();
+            doAction();
+        }
     }
 
     @Override

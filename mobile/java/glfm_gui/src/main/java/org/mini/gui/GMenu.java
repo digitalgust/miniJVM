@@ -158,6 +158,7 @@ public class GMenu extends GPanel {
     /**
      * @return the contextMenu
      */
+    @Override
     public boolean isContextMenu() {
         return contextMenu;
     }

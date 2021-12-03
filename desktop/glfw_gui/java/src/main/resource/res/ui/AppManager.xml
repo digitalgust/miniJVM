@@ -23,7 +23,7 @@
         <viewport name="VP_CONTENT" w="98%" h="100%">
             <button name="BT_BACK" h="30" addon="10">&lt;{Back}</button>
             <label name="APP_NAME_LABEL" w="100%" h="35" align="hcenter,vcenter"></label>
-            <img name="APP_ICON_ITEM" pic="/res/appmgr.png" w="128" h="128"></img>
+            <img name="APP_ICON_ITEM" pic="/res/appmgr.png" w="128" h="128"  border="1" fontsize="10" ></img>
             <br/>
             <br/>
             <button name="APP_RUN_BTN" w="100%" h="35">{Run}</button>
