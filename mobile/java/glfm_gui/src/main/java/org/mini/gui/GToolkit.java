@@ -744,10 +744,10 @@ public class GToolkit {
             @Override
             public void longTouchedEvent(int x, int y) {
                 GList menu = new GList();
-                GListItem item = menu.addItems(null, GLanguage.getString("Save to album"));
+                GListItem item = menu.addItem(null, GLanguage.getString("Save to album"));
                 item.setActionListener((GObject gobj) -> {
                 });
-                item = menu.addItems(null, GLanguage.getString("Cancel"));
+                item = menu.addItem(null, GLanguage.getString("Cancel"));
                 item.setActionListener((GObject gobj) -> {
                     if (gobj.getForm() != null) {
                         gobj.getForm().remove(menu);

@@ -161,7 +161,7 @@ public class GList extends GContainer {
         preicon = icon;
     }
 
-    public GListItem addItems(GImage img, String lab) {
+    public GListItem addItem(GImage img, String lab) {
         GListItem gli = new GListItem(img, lab);
         add(gli);
         return gli;
@@ -307,7 +307,7 @@ public class GList extends GContainer {
         }
         int len = imgs == null ? labs.length : imgs.length;
         for (int i = 0; i < len; i++) {
-            addItems(imgs == null ? null : imgs[i], labs == null ? null : labs[i]);
+            addItem(imgs == null ? null : imgs[i], labs == null ? null : labs[i]);
         }
         sizeAdjust();
     }
@@ -342,6 +342,14 @@ public class GList extends GContainer {
             return selected.get(0);
         }
         return -1;
+    }
+
+
+    public GListItem getSelectedItem() {
+        if (selected.size() > 0) {
+            return (GListItem) getElements().get(selected.get(0));
+        }
+        return null;
     }
 
     public void setSelectedIndex(int i) {
