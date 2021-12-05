@@ -1,7 +1,7 @@
 /*
  GLFM
  https://github.com/brackeen/glfm
- Copyright (c) 2014-2017 David Brackeen
+ Copyright (c) 2014-2021 David Brackeen
  
  This software is provided 'as-is', without any express or implied warranty.
  In no event will the authors be held liable for any damages arising from the
@@ -89,19 +89,26 @@
   #endif
 #endif
 
+#ifdef __GNUC__
+#define GLFM_DEPRECATED __attribute__ ((deprecated))
+#else
+#define GLFM_DEPRECATED
+#endif
+
 #include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// MARK: Enums
+// MARK: - Enums
 
 typedef enum {
     GLFMRenderingAPIOpenGLES2,
     GLFMRenderingAPIOpenGLES3,
     GLFMRenderingAPIOpenGLES31,
     GLFMRenderingAPIOpenGLES32,
+    GLFMRenderingAPIMetal,
 } GLFMRenderingAPI;
 
 typedef enum {
@@ -125,6 +132,12 @@ typedef enum {
     GLFMMultisample4X,
 } GLFMMultisample;
 
+typedef enum {
+    GLFMSwapBehaviorPlatformDefault,
+    GLFMSwapBehaviorBufferDestroyed,
+    GLFMSwapBehaviorBufferPreserved,
+} GLFMSwapBehavior;
+
 /// GLFMUserInterfaceChrome defines whether system UI chrome (status bar, navigation bar) is shown.
 /// This value is ignored on Emscripten.
 /// GLFMUserInterfaceChromeNavigation (default)
@@ -145,10 +158,27 @@ typedef enum {
 } GLFMUserInterfaceChrome;
 
 typedef enum {
-    GLFMUserInterfaceOrientationAny,
-    GLFMUserInterfaceOrientationPortrait,
-    GLFMUserInterfaceOrientationLandscape,
-} GLFMUserInterfaceOrientation;
+    GLFMInterfaceOrientationUnknown = 0,
+    GLFMInterfaceOrientationPortrait = (1 << 0),
+    GLFMInterfaceOrientationPortraitUpsideDown = (1 << 1),
+    GLFMInterfaceOrientationLandscapeLeft = (1 << 2),
+    GLFMInterfaceOrientationLandscapeRight = (1 << 3),
+    GLFMInterfaceOrientationLandscape = (GLFMInterfaceOrientationLandscapeLeft |
+                                         GLFMInterfaceOrientationLandscapeRight),
+    GLFMInterfaceOrientationAll = (GLFMInterfaceOrientationPortrait |
+                                   GLFMInterfaceOrientationPortraitUpsideDown |
+                                   GLFMInterfaceOrientationLandscapeLeft |
+                                   GLFMInterfaceOrientationLandscapeRight),
+    GLFMInterfaceOrientationAllButUpsideDown = (GLFMInterfaceOrientationPortrait |
+                                                GLFMInterfaceOrientationLandscapeLeft |
+                                                GLFMInterfaceOrientationLandscapeRight),
+} GLFMInterfaceOrientation;
+
+typedef enum {
+    GLFMUserInterfaceOrientationAny GLFM_DEPRECATED = GLFMInterfaceOrientationAll,
+    GLFMUserInterfaceOrientationPortrait GLFM_DEPRECATED = GLFMInterfaceOrientationPortrait,
+    GLFMUserInterfaceOrientationLandscape GLFM_DEPRECATED = GLFMInterfaceOrientationLandscape,
+} GLFMUserInterfaceOrientation GLFM_DEPRECATED;
 
 typedef enum {
     GLFMTouchPhaseHover,
@@ -168,15 +198,26 @@ typedef enum {
 } GLFMMouseCursor;
 
 typedef enum {
+    GLFMMouseWheelDeltaPixel,
+    GLFMMouseWheelDeltaLine,
+    GLFMMouseWheelDeltaPage
+} GLFMMouseWheelDeltaType;
+
+typedef enum {
     GLFMKeyBackspace = 0x08,
     GLFMKeyTab = 0x09,
     GLFMKeyEnter = 0x0d,
     GLFMKeyEscape = 0x1b,
     GLFMKeySpace = 0x20,
+    GLFMKeyPageUp = 0x21,
+    GLFMKeyPageDown = 0x22,
+    GLFMKeyEnd = 0x23,
+    GLFMKeyHome = 0x24,
     GLFMKeyLeft = 0x25,
     GLFMKeyUp = 0x26,
     GLFMKeyRight = 0x27,
     GLFMKeyDown = 0x28,
+    GLFMKeyDelete = 0x2E,
     GLFMKeyNavBack = 0x1000,
     GLFMKeyNavMenu = 0x1001,
     GLFMKeyNavSelect = 0x1002,
@@ -197,20 +238,30 @@ typedef enum {
 } GLFMKeyAction;
 
 typedef enum {
-    GLFMPickupTypeNoDef = 0,
-    GLFMPickupTypeImage = 1,
-    GLFMPickupTypeVideo = 2,
-} GLFMMediaPickup;
+    GLFMSensorAccelerometer, // Events are a vector in G's
+    GLFMSensorMagnetometer, // Events are a vector in microteslas
+    GLFMSensorGyroscope, // Events are a vector in radians/sec
+    GLFMSensorRotationMatrix, // Events are a rotation matrix
+} GLFMSensor;
 
-// MARK: Structs and function pointers
+typedef enum {
+    GLFMHapticFeedbackLight,
+    GLFMHapticFeedbackMedium,
+    GLFMHapticFeedbackHeavy,
+} GLFMHapticFeedbackStyle;
+
+// MARK: - Structs and function pointers
 
 typedef struct GLFMDisplay GLFMDisplay;
 
 /// Function pointer returned from glfmGetProcAddress
 typedef void (*GLFMProc)(void);
 
-/// Main loop callback function. The frame time is in seconds, and is not related to wall time.
-typedef void (*GLFMMainLoopFunc)(GLFMDisplay *display, double frameTime);
+/// Render callback function.
+typedef void (*GLFMRenderFunc)(GLFMDisplay *display);
+
+/// Deprecated. Use GLFMRenderFunc
+typedef void (*GLFMMainLoopFunc)(GLFMDisplay *display, double frameTime) GLFM_DEPRECATED;
 
 /// Callback function for mouse or touch events. The (x,y) values are in pixels.
 /// The function should return true if the event was handled, and false otherwise.
@@ -225,9 +276,18 @@ typedef bool (*GLFMKeyFunc)(GLFMDisplay *display, GLFMKey keyCode, GLFMKeyAction
 /// Callback function for character input events.
 typedef void (*GLFMCharFunc)(GLFMDisplay *display, const char *utf8, int modifiers);
 
+/// Callback function for mouse wheel input events. The viewport (x,y) values are in pixels.
+/// The function should return true if the event was handled, and false otherwise.
+typedef bool (*GLFMMouseWheelFunc)(GLFMDisplay *display, double x, double y,
+                                   GLFMMouseWheelDeltaType deltaType,
+                                   double deltaX, double deltaY, double deltaZ);
+
 /// Callback function for keyboard visibility, in pixels.
 typedef void (*GLFMKeyboardVisibilityChangedFunc)(GLFMDisplay *display, bool visible,
                                                   double x, double y, double width, double height);
+
+typedef void (*GLFMOrientationChangedFunc)(GLFMDisplay *display,
+                                           GLFMInterfaceOrientation orientation);
 
 /// Callback when the surface could not be created.
 typedef void (*GLFMSurfaceErrorFunc)(GLFMDisplay *display, const char *message);
@@ -238,22 +298,43 @@ typedef void (*GLFMSurfaceCreatedFunc)(GLFMDisplay *display, int width, int heig
 /// Callback function when the OpenGL surface is resized (or rotated).
 typedef void (*GLFMSurfaceResizedFunc)(GLFMDisplay *display, int width, int height);
 
+/// Callback function to notify that the surface needs to be redrawn.
+typedef void (*GLFMSurfaceRefreshFunc)(GLFMDisplay *display);
+
 /// Callback function when the OpenGL surface is destroyed.
 typedef void (*GLFMSurfaceDestroyedFunc)(GLFMDisplay *display);
 
-/// Callback function when the system recieves a low memory warning.
+/// Callback function when the system receives a low memory warning.
 typedef void (*GLFMMemoryWarningFunc)(GLFMDisplay *display);
 
 typedef void (*GLFMAppFocusFunc)(GLFMDisplay *display, bool focused);
 
-
+//gust add begin
 typedef void (*GLFMPhotoPickedFunc)(GLFMDisplay *display, int uid, const char *uri, char *data,
                                     int size);
 
 typedef void (*GLFMNotifyFunc)(GLFMDisplay *display,const char *key, const char *value);
-    
-    
-// MARK: Functions
+//gust add end
+
+// Use event.vector for all sensors except for GLFMSensorRotationMatrix, which uses event.matrix
+typedef struct {
+    GLFMSensor sensor;
+    double timestamp;
+    union {
+        struct {
+            double x, y, z;
+        } vector;
+        struct {
+            double m00, m01, m02;
+            double m10, m11, m12;
+            double m20, m21, m22;
+        } matrix;
+    };
+} GLFMSensorEvent;
+
+typedef void (*GLFMSensorFunc)(GLFMDisplay *display, GLFMSensorEvent event);
+
+// MARK: - Functions
 
 /// Main entry point for the app, where the display can be initialized and the GLFMMainLoopFunc
 /// can be set.
@@ -275,18 +356,34 @@ void glfmSetUserData(GLFMDisplay *display, void *userData);
 
 void *glfmGetUserData(GLFMDisplay *display);
 
-/// Sets the allowed user interface orientations
+/// Swap buffers. This function should be called at the end of the GLFMRenderFunc if any
+/// content was rendered.
+/// On Emscripten, this function does nothing. Buffer swapping happens automatically if any
+/// OpenGL calls were made.
+/// When using the Metal rendering API, this function does nothing. Presenting the Metal drawable
+/// must happen in application code.
+void glfmSwapBuffers(GLFMDisplay *display);
+
+/// Deprecated. Use glfmGetSupportedInterfaceOrientation
+GLFMUserInterfaceOrientation glfmGetUserInterfaceOrientation(GLFMDisplay *display) GLFM_DEPRECATED;
+
+/// Deprecated. Use glfmSetSupportedInterfaceOrientation
 void glfmSetUserInterfaceOrientation(GLFMDisplay *display,
-                                     GLFMUserInterfaceOrientation allowedOrientations);
+                                     GLFMUserInterfaceOrientation supportedOrientations) GLFM_DEPRECATED;
 
-/// Returns the allowed user interface orientations
-GLFMUserInterfaceOrientation glfmGetUserInterfaceOrientation(GLFMDisplay *display);
+/// Returns the supported user interface orientations. Default is GLFMInterfaceOrientationAll.
+/// Actualy support may be limited by the device or platform.
+GLFMInterfaceOrientation glfmGetSupportedInterfaceOrientation(GLFMDisplay *display);
 
-/// Sets whether multitouch input is enabled. By default, multitouch is disabled.
-void glfmSetMultitouchEnabled(GLFMDisplay *display, bool multitouchEnabled);
+/// Sets the supported user interface orientations. Typical values are GLFMInterfaceOrientationAll,
+/// GLFMInterfaceOrientationPortrait, or GLFMInterfaceOrientationLandscape.
+/// Actualy support may be limited by the device or platform.
+void glfmSetSupportedInterfaceOrientation(GLFMDisplay *display, GLFMInterfaceOrientation supportedOrientations);
 
-/// Gets whether multitouch input is enabled. By default, multitouch is disabled.
-bool glfmGetMultitouchEnabled(GLFMDisplay *display);
+/// Gets the current user interface orientation. Returns either GLFMInterfaceOrientationPortrait,
+/// GLFMInterfaceOrientationPortraitUpsideDown, GLFMInterfaceOrientationLandscapeRight,
+/// GLFMInterfaceOrientationLandscapeLeft, or GLFMInterfaceOrientationUnknown.
+GLFMInterfaceOrientation glfmGetInterfaceOrientation(GLFMDisplay *display);
 
 /// Gets the display size, in pixels.
 void glfmGetDisplaySize(GLFMDisplay *display, int *width, int *height);
@@ -311,11 +408,13 @@ void glfmSetDisplayChrome(GLFMDisplay *display, GLFMUserInterfaceChrome uiChrome
 /// created. Defaults to GLFMRenderingAPIOpenGLES2.
 GLFMRenderingAPI glfmGetRenderingAPI(GLFMDisplay *display);
 
-/// Gets whether the display has touch capabilities.
-bool glfmHasTouch(GLFMDisplay *display);
+/// Sets the swap behavior for newly created surfaces. Currently only supported on
+/// Android. In order to take effect, the behavior should be set before the surface
+/// is created, preferable at the very beginning of the glfmMain function.
+void glfmSetSwapBehavior(GLFMDisplay *display, GLFMSwapBehavior behavior);
 
-/// Sets the mouse cursor (only on platforms with a mouse)
-void glfmSetMouseCursor(GLFMDisplay *display, GLFMMouseCursor mouseCursor);
+/// Returns the swap buffer behavior.
+GLFMSwapBehavior glfmGetSwapBehavior(GLFMDisplay *display);
 
 /// Checks if a named OpenGL extension is supported
 bool glfmExtensionSupported(const char *extension);
@@ -323,38 +422,70 @@ bool glfmExtensionSupported(const char *extension);
 /// Gets the address of the specified function.
 GLFMProc glfmGetProcAddress(const char *functionName);
 
+/// Gets the value of the highest precision time available, in seconds.
+/// The time should not be considered related to wall-clock time.
+double glfmGetTime(void);
+
+// MARK: - Callback functions
+
 /// Sets the function to call before each frame is displayed.
-void glfmSetMainLoopFunc(GLFMDisplay *display, GLFMMainLoopFunc mainLoopFunc);
+/// This function is called at regular intervals (typically 60fps).
+/// Applications will typically render in this callback. If the application rendered any content,
+/// the application should call glfmSwapBuffers() before returning. If the application did
+/// not render content, it should return without calling glfmSwapBuffers().
+GLFMRenderFunc glfmSetRenderFunc(GLFMDisplay *display, GLFMRenderFunc renderFunc);
 
-/// Sets the function to call when a mouse or touch event occurs.
-void glfmSetTouchFunc(GLFMDisplay *display, GLFMTouchFunc touchFunc);
-
-/// Sets the function to call when a key event occurs.
-/// Note, on iOS, only pressed events are sent (no repeated or released events) and with no
-/// modifiers.
-void glfmSetKeyFunc(GLFMDisplay *display, GLFMKeyFunc keyFunc);
-
-/// Sets the function to call when character input events occur.
-void glfmSetCharFunc(GLFMDisplay *display, GLFMCharFunc charFunc);
+/// Deprecated. Use glfmSetRenderFunc.
+/// If this function is set, glfmSwapBuffers() is always called after calling the GLFMMainLoopFunc.
+GLFMMainLoopFunc glfmSetMainLoopFunc(GLFMDisplay *display, GLFMMainLoopFunc mainLoopFunc) GLFM_DEPRECATED;
 
 /// Sets the function to call when the surface could not be created.
 /// For example, the browser does not support WebGL.
-void glfmSetSurfaceErrorFunc(GLFMDisplay *display, GLFMSurfaceErrorFunc surfaceErrorFunc);
+GLFMSurfaceErrorFunc glfmSetSurfaceErrorFunc(GLFMDisplay *display,
+                                             GLFMSurfaceErrorFunc surfaceErrorFunc);
 
 /// Sets the function to call when the surface was created.
-void glfmSetSurfaceCreatedFunc(GLFMDisplay *display, GLFMSurfaceCreatedFunc surfaceCreatedFunc);
+GLFMSurfaceCreatedFunc glfmSetSurfaceCreatedFunc(GLFMDisplay *display,
+                                                 GLFMSurfaceCreatedFunc surfaceCreatedFunc);
 
 /// Sets the function to call when the surface was resized (or rotated).
-void glfmSetSurfaceResizedFunc(GLFMDisplay *display, GLFMSurfaceResizedFunc surfaceResizedFunc);
+GLFMSurfaceResizedFunc glfmSetSurfaceResizedFunc(GLFMDisplay *display,
+                                                 GLFMSurfaceResizedFunc surfaceResizedFunc);
+
+/// Sets the function to call to notify that the surface needs to be redrawn (for example,
+/// when returning from the background, or when the device was rotated).
+/// This callback is called immediately before calling the GLFMRenderFunc.
+GLFMSurfaceRefreshFunc glfmSetSurfaceRefreshFunc(GLFMDisplay *display,
+                                                 GLFMSurfaceRefreshFunc surfaceRefreshFunc);
 
 /// Sets the function to call when the surface was destroyed. For example, OpenGL context loss.
 /// All OpenGL resources should be deleted in this call.
-void glfmSetSurfaceDestroyedFunc(GLFMDisplay *display,
-                                 GLFMSurfaceDestroyedFunc surfaceDestroyedFunc);
+GLFMSurfaceDestroyedFunc glfmSetSurfaceDestroyedFunc(GLFMDisplay *display,
+                                                     GLFMSurfaceDestroyedFunc surfaceDestroyedFunc);
 
-void glfmSetMemoryWarningFunc(GLFMDisplay *display, GLFMMemoryWarningFunc lowMemoryFunc);
+GLFMMemoryWarningFunc glfmSetMemoryWarningFunc(GLFMDisplay *display, GLFMMemoryWarningFunc lowMemoryFunc);
 
-void glfmSetAppFocusFunc(GLFMDisplay *display, GLFMAppFocusFunc focusFunc);
+/// Sets the function to call when the app loses or gains focus (goes into the background or returns
+/// from the background). On Emscripten, this function is called when switching browser tabs and
+/// before the page is unloaded.
+GLFMAppFocusFunc glfmSetAppFocusFunc(GLFMDisplay *display, GLFMAppFocusFunc focusFunc);
+
+// MARK: - Input functions
+
+/// Sets whether multitouch input is enabled. By default, multitouch is disabled.
+void glfmSetMultitouchEnabled(GLFMDisplay *display, bool multitouchEnabled);
+
+/// Gets whether multitouch input is enabled. By default, multitouch is disabled.
+bool glfmGetMultitouchEnabled(GLFMDisplay *display);
+
+/// Gets whether the display has touch capabilities.
+bool glfmHasTouch(GLFMDisplay *display);
+
+/// Checks if a sensor is available (always returns false on Emscripten)
+bool glfmIsSensorAvailable(GLFMDisplay *display, GLFMSensor sensor);
+
+/// Sets the mouse cursor (only on platforms with a mouse)
+void glfmSetMouseCursor(GLFMDisplay *display, GLFMMouseCursor mouseCursor);
 
 /// Requests to show or hide the onscreen virtual keyboard. On Emscripten, this function does
 /// nothing.
@@ -364,13 +495,74 @@ void glfmSetKeyboardVisible(GLFMDisplay *display, bool visible);
 bool glfmIsKeyboardVisible(GLFMDisplay *display);
 
 /// Sets the function to call when the virtual keyboard changes visibility or changes bounds.
-void glfmSetKeyboardVisibilityChangedFunc(GLFMDisplay *display,
-                                          GLFMKeyboardVisibilityChangedFunc visibilityChangedFunc);
+GLFMKeyboardVisibilityChangedFunc
+glfmSetKeyboardVisibilityChangedFunc(GLFMDisplay *display,
+                                     GLFMKeyboardVisibilityChangedFunc visibilityChangedFunc);
 
-void glfmSetPhotoPickedFunc(GLFMDisplay *display, GLFMPhotoPickedFunc photoPickedFunc);
-    
-void glfmSetNotifyFunc(GLFMDisplay *display, GLFMNotifyFunc notifyFunc);
+GLFMOrientationChangedFunc glfmSetOrientationChangedFunc(GLFMDisplay *display,
+                                                         GLFMOrientationChangedFunc orientationChangedFunc);
 
+/// Sets the function to call when a mouse or touch event occurs.
+GLFMTouchFunc glfmSetTouchFunc(GLFMDisplay *display, GLFMTouchFunc touchFunc);
+
+/// Sets the function to call when a key event occurs.
+/// Note, on iOS, only pressed events are sent (no repeated or released events) and with no
+/// modifiers.
+GLFMKeyFunc glfmSetKeyFunc(GLFMDisplay *display, GLFMKeyFunc keyFunc);
+
+/// Sets the function to call when character input events occur.
+GLFMCharFunc glfmSetCharFunc(GLFMDisplay *display, GLFMCharFunc charFunc);
+
+/// Sets the function to call when the mouse wheel is moved.
+/// Only enabled on Emscripten.
+GLFMMouseWheelFunc glfmSetMouseWheelFunc(GLFMDisplay *display, GLFMMouseWheelFunc mouseWheelFunc);
+
+/// Sets the function to call when the sensor events occur for a particular sensor.
+/// If the sensor is not available, this function does nothing.
+/// This function automatically enables events for the sensor; to disable, set the callback to NULL.
+/// Callbacks are automatically disabled when the app is inactive.
+GLFMSensorFunc glfmSetSensorFunc(GLFMDisplay *display, GLFMSensor sensor, GLFMSensorFunc sensorFunc);
+
+// MARK: - Haptics
+
+/// Returns true if the device supports haptic feedback.
+/// On iOS, this function returns true if the device supports haptic feedback (iPhone 7 or newer) and the device is running iOS 13 or newer.
+/// On Emscripten, this function always return false.
+bool glfmIsHapticFeedbackSupported(GLFMDisplay *display);
+
+/// Performs haptic feedback.
+/// On Emscripten, this function does nothing.
+void glfmPerformHapticFeedback(GLFMDisplay *display, GLFMHapticFeedbackStyle style);
+
+// MARK: - Platform-specific functions
+
+/// Returns true if this is an iOS device that supports Metal, false otherwise
+bool glfmIsMetalSupported(GLFMDisplay *display);
+
+/// Returns a (MTKView *) instance, or NULL if Metal is not available.
+/// This will only return a valid reference after the surface was created.
+void *glfmGetMetalView(GLFMDisplay *display);
+
+#if defined(__APPLE__)
+
+/// Returns the (UIViewController *) instance used to display content.
+void *glfmGetUIViewController(GLFMDisplay *display);
+
+#endif
+
+#if defined(GLFM_PLATFORM_ANDROID)
+
+#include <android/native_activity.h>
+
+ANativeActivity *glfmAndroidGetActivity(void);
+
+#endif // GLFM_PLATFORM_ANDROID
+
+//================================== defined by gust======================
+
+typedef void (*GLFMPhotoPickedFunc)(GLFMDisplay *display, int uid, const char *uri, char *data,
+                                    int size);
+typedef void (*GLFMNotifyFunc)(GLFMDisplay *display,const char *key, const char *value);
 
 const char *glfmGetResRoot();
 
@@ -395,17 +587,14 @@ void startVideo(GLFMDisplay *display, void *videoPanel);
 void pauseVideo(GLFMDisplay *display, void *videoPanel);
 
 void stopVideo(GLFMDisplay *display, void *videoPanel);
-    
+
 const char* glfmGetUUID();
 
-#if defined(GLFM_PLATFORM_ANDROID)
+void glfmSetPhotoPickedFunc(GLFMDisplay *display, GLFMPhotoPickedFunc photoPickedFunc);
 
-#include <android/native_activity.h>
+void glfmSetNotifyFunc(GLFMDisplay *display, GLFMNotifyFunc notifyFunc);
 
-ANativeActivity *glfmAndroidGetActivity(void);
-
-#endif // GLFM_PLATFORM_ANDROID
-
+//==========================================================================
 #ifdef __cplusplus
 }
 #endif
