@@ -7,7 +7,6 @@ package org.mini.gui;
 
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
-import org.mini.layout.XObject;
 import org.mini.nanovg.Nanovg;
 import org.mini.reflect.ReflectArray;
 
@@ -342,7 +341,7 @@ public class GToolkit {
         if (text_arr != null) {
             if (shadowColor != null) {
                 nvgFillColor(vg, shadowColor);
-                nvgTextBoxJni(vg, x + 1, y + 1, w - 1, text_arr, 0, text_arr.length);
+                nvgTextBoxJni(vg, x + 1, y + 1, w, text_arr, 0, text_arr.length);
             }
             nvgFillColor(vg, color);
             nvgTextBoxJni(vg, x, y, w, text_arr, 0, text_arr.length);
@@ -864,7 +863,7 @@ public class GToolkit {
         form.add(gobj);
     }
 
-    public static void setAttachment(String compName, Object o) {
+    public static void setCompAttachment(String compName, Object o) {
         if (compName == null || o == null) return;
         GForm form = GCallBack.getInstance().getForm();
         GObject go = form.findByName(compName);
@@ -873,7 +872,7 @@ public class GToolkit {
         }
     }
 
-    public static Object getAttachment(String compName) {
+    public static Object getCompAttachment(String compName) {
         if (compName != null) {
             GForm form = GCallBack.getInstance().getForm();
             GObject go = form.findByName(compName);
@@ -884,21 +883,66 @@ public class GToolkit {
         return null;
     }
 
-    public static void setEnable(String compName, boolean enable) {
+    public static Boolean getCompEnable(String compName) {
+        if (compName == null) return false;
         GForm form = GCallBack.getInstance().getForm();
         GObject eitem = form.findByName(compName);
         if (eitem != null) {
-            ((XObject) eitem.getXmlAgent()).setEnable(enable);
+            return eitem.isEnable();
+        }
+        return null;
+    }
+
+    public static void setCompEnable(String compName, boolean enable) {
+        if (compName == null) return;
+        GForm form = GCallBack.getInstance().getForm();
+        GObject eitem = form.findByName(compName);
+        if (eitem != null) {
+            eitem.setEnable(enable);
         }
     }
 
-    public static void setText(String compName, String text) {
+
+    public static String getCompText(String compName) {
+        if (compName == null) return null;
         GForm form = GCallBack.getInstance().getForm();
         GObject eitem = form.findByName(compName);
         if (eitem != null) {
-            ((XObject) eitem.getXmlAgent()).setText(text);
+            return eitem.getText();
+        }
+        return null;
+    }
+
+
+    public static void setCompText(String compName, String text) {
+        if (compName == null) return;
+        GForm form = GCallBack.getInstance().getForm();
+        GObject eitem = form.findByName(compName);
+        if (eitem != null) {
+            eitem.setText(text);
         }
     }
+
+
+    public static GImage getCompImage(String compName) {
+        if (compName == null) return null;
+        GForm form = GCallBack.getInstance().getForm();
+        GObject eitem = form.findByName(compName);
+        if (eitem != null && eitem instanceof GImageItem) {
+            ((GImageItem) eitem).getImg();
+        }
+        return null;
+    }
+
+    public static void setCompImage(String compName, String jarPicPath) {
+        if (compName == null) return;
+        GForm form = GCallBack.getInstance().getForm();
+        GObject eitem = form.findByName(compName);
+        if (eitem != null && eitem instanceof GImageItem) {
+            ((GImageItem) eitem).setImg(getCachedImageFromJar(jarPicPath));
+        }
+    }
+
 
     /**
      * ----------------------------------------------------------------

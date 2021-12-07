@@ -20,6 +20,8 @@ public class GViewPort extends GContainer {
     protected float scrollx;
     protected float scrolly;
 
+    protected boolean slideDirectionLimit = true;
+
 
     @Override
     public void setLocation(float x, float y) {
@@ -353,7 +355,7 @@ public class GViewPort extends GContainer {
         if (focus != null && focus.dragEvent(dx, dy, x, y)) {
             return true;
         }
-        reSize();
+        //reSize();
         float dw = getOutOfViewWidth();
         float dh = getOutOfViewHeight();
         if (dw == 0 && dh == 0) {
@@ -368,12 +370,18 @@ public class GViewPort extends GContainer {
         }
         float odx = (dw == 0) ? 0.f : (float) dx / dw;
         float ody = (dh == 0) ? 0.f : (float) dy / dh;
-        if (dragDirection == DIR_X) {
-            return movePercentX(odx);
-        } else if (dragDirection == DIR_Y) {
-            return movePercentY(ody);
+        if (isSlideDirectionLimit()) {
+            if (dragDirection == DIR_X) {
+                return movePercentX(odx);
+            } else if (dragDirection == DIR_Y) {
+                return movePercentY(ody);
+            } else {
+                return false;
+            }
         } else {
-            return false;
+            boolean rx = movePercentX(odx);
+            boolean ry = movePercentY(ody);
+            return rx || ry;
         }
     }
 
@@ -447,6 +455,14 @@ public class GViewPort extends GContainer {
 
     float getOutOfViewWidth() {
         return boundle[WIDTH] - viewBoundle[WIDTH];
+    }
+
+    public boolean isSlideDirectionLimit() {
+        return slideDirectionLimit;
+    }
+
+    public void setSlideDirectionLimit(boolean slideDirectionLimit) {
+        this.slideDirectionLimit = slideDirectionLimit;
     }
 
 }
