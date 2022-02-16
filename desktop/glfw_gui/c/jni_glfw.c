@@ -1132,6 +1132,17 @@ int org_mini_glfw_Glfw_glfwSetWindowTitle(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+int org_mini_glfw_Glfw_glfwSetWindowSize(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    s32 w = env->localvar_getInt(runtime->localvar, pos++);
+    s32 h = env->localvar_getInt(runtime->localvar, pos++);
+    glfwSetWindowSize(window, w, h);
+    return 0;
+}
+
 /* ==============================   jni gl =================================*/
 
 
@@ -1194,6 +1205,7 @@ static java_native_method method_glfw_table[] = {
         {"org/mini/glfw/Glfw",    "glfwGetClipboardString",     "(J)Ljava/lang/String;",            org_mini_glfw_Glfw_glfwGetClipboardString},
         {"org/mini/glfw/Glfw",    "glfwSetClipboardString",     "(JLjava/lang/String;)V",           org_mini_glfw_Glfw_glfwSetClipboardString},
         {"org/mini/glfw/Glfw",    "glfwSetWindowTitle",         "(JLjava/lang/String;)V",           org_mini_glfw_Glfw_glfwSetWindowTitle},
+        {"org/mini/glfw/Glfw",    "glfwSetWindowSize",         "(JII)V",                           org_mini_glfw_Glfw_glfwSetWindowSize},
 
 };
 
