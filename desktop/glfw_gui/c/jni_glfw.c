@@ -1001,6 +1001,13 @@ int org_mini_glfw_Glfw_glfwPollEvents(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+int org_mini_glfw_Glfw_glfwWaitEvents(Runtime *runtime, JClass *clazz) {
+    refers.runtime = runtime;
+    glfwWaitEvents();
+    refers.runtime = NULL;
+    return 0;
+}
+
 int org_mini_glfw_Glfw_glfwSetWindowShouldClose(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
@@ -1055,6 +1062,26 @@ int org_mini_glfw_Glfw_glfwGetFramebufferHeight(Runtime *runtime, JClass *clazz)
     s32 w, h;
     glfwGetFramebufferSize(window, &w, &h);
     env->push_int(runtime->stack, h);
+    return 0;
+}
+
+int org_mini_glfw_Glfw_glfwGetWindowX(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    s32 x, y;
+    glfwGetWindowSize(window, &x, &y);
+    env->push_int(runtime->stack, y);
+    return 0;
+}
+
+int org_mini_glfw_Glfw_glfwGetWindowY(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    s32 x, y;
+    glfwGetWindowSize(window, &x, &y);
+    env->push_int(runtime->stack, y);
     return 0;
 }
 
@@ -1143,6 +1170,207 @@ int org_mini_glfw_Glfw_glfwSetWindowSize(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+int org_mini_glfw_Glfw_glfwShowWindow(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    glfwShowWindow(window);
+    return 0;
+}
+
+int org_mini_glfw_Glfw_glfwHideWindow(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    glfwHideWindow(window);
+    return 0;
+}
+
+int org_mini_glfw_Glfw_glfwRestoreWindow(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    glfwRestoreWindow(window);
+    return 0;
+}
+
+int org_mini_glfw_Glfw_glfwIconifyWindow(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    glfwIconifyWindow(window);
+    return 0;
+}
+
+int org_mini_glfw_Glfw_glfwGetWindowMonitor(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    s64 mon = glfwGetWindowMonitor(window);
+    env->push_long(runtime->stack, mon);
+    return 0;
+}
+
+int org_mini_glfw_Glfw_glfwGetWindowParam(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    s32 atti = env->localvar_getInt(runtime->localvar, pos++);
+    s32 atto = glfwGetWindowAttrib(window, atti);
+    env->push_int(runtime->stack, atto);
+    return 0;
+}
+
+int org_mini_glfw_Glfw_glfwGetInputMode(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    s32 i = env->localvar_getInt(runtime->localvar, pos++);
+    s32 o = glfwGetInputMode(window, i);
+    env->push_int(runtime->stack, o);
+    return 0;
+}
+
+int org_mini_glfw_Glfw_glfwSetInputMode(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    s32 i = env->localvar_getInt(runtime->localvar, pos++);
+    s32 v = env->localvar_getInt(runtime->localvar, pos++);
+    glfwSetInputMode(window, i, v);
+    return 0;
+}
+
+int org_mini_glfw_Glfw_glfwGetKey(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    s32 i = env->localvar_getInt(runtime->localvar, pos++);
+    s32 o = glfwGetKey(window, i);
+    env->push_int(runtime->stack, o);
+    return 0;
+}
+
+int org_mini_glfw_Glfw_glfwGetMouseButton(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    s32 i = env->localvar_getInt(runtime->localvar, pos++);
+    s32 o = glfwGetMouseButton(window, i);
+    env->push_int(runtime->stack, o);
+    return 0;
+}
+
+int org_mini_glfw_Glfw_glfwGetCursorPosX(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    s32 x, y;
+    glfwGetCursorPos(window, &x, &y);
+    env->push_int(runtime->stack, x);
+    return 0;
+}
+
+int org_mini_glfw_Glfw_glfwGetCursorPosY(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    s32 x, y;
+    glfwGetCursorPos(window, &x, &y);
+    env->push_int(runtime->stack, y);
+    return 0;
+}
+
+int org_mini_glfw_Glfw_glfwSetCursorPos(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    s32 x = env->localvar_getInt(runtime->localvar, pos++);
+    s32 y = env->localvar_getInt(runtime->localvar, pos++);
+    glfwSetCursorPos(window, x, y);
+    return 0;
+}
+
+
+int org_mini_glfw_Glfw_glfwGetJoystickAxes(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    s32 jid = env->localvar_getInt(runtime->localvar, pos++);
+    Instance *farr = env->localvar_getRefer(runtime->localvar, pos++);
+    int count;
+    f32 *buf = glfwGetJoystickAxes(jid, &count);
+    if (farr && buf) {
+        s32 i;
+        for (i = 0; i < count && i < farr->arr_length; i++) {
+            *((f32 *) (farr->arr_body) + i) = buf[i];
+        }
+    }
+    env->push_int(runtime->stack, count);
+    return 0;
+}
+
+int org_mini_glfw_Glfw_glfwGetJoystickButtons(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    s32 jid = env->localvar_getInt(runtime->localvar, pos++);
+    Instance *farr = env->localvar_getRefer(runtime->localvar, pos++);
+    int count;
+    s8 *buf = glfwGetJoystickButtons(jid, &count);
+    if (farr && buf) {
+        s32 i;
+        for (i = 0; i < count && i < farr->arr_length; i++) {
+            *((s8 *) (farr->arr_body) + i) = buf[i];
+        }
+    }
+    env->push_int(runtime->stack, count);
+    return 0;
+}
+
+int org_mini_glfw_Glfw_glfwGetJoystickName(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    s32 jid = env->localvar_getInt(runtime->localvar, pos++);
+    c8 *cstr = (c8 *) glfwGetJoystickName(jid);
+    if (cstr) {
+        Utf8String *ustr = env->utf8_create_part_c(cstr, 0, strlen(cstr));
+        Instance *jstr = env->jstring_create(ustr, runtime);
+        env->utf8_destory(ustr);
+        env->push_ref(runtime->stack, jstr);
+    } else {
+        env->push_ref(runtime->stack, NULL);
+    }
+    return 0;
+}
+
+int org_mini_glfw_Glfw_glfwGetCurrentContext(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    s64 win = glfwGetCurrentContext();
+    env->push_long(runtime->stack, win);
+    return 0;
+}
+
+
+int org_mini_glfw_Glfw_glfwExtensionSupported(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    Instance *jstr = env->localvar_getRefer(runtime->localvar, pos++);
+    Utf8String *ustr = env->utf8_create();
+    env->jstring_2_utf8(jstr, ustr, runtime);
+    s32 v = glfwExtensionSupported(env->utf8_cstr(ustr));
+    env->utf8_destory(ustr);
+    env->push_int(runtime->stack, v);
+    return 0;
+}
+
 /* ==============================   jni gl =================================*/
 
 
@@ -1193,19 +1421,40 @@ static java_native_method method_glfw_table[] = {
         {"org/mini/glfw/Glfw",    "glfwTerminate",              "()V",                              org_mini_glfw_Glfw_glfwTerminate},
         {"org/mini/glfw/Glfw",    "glfwWindowHint",             "(II)V",                            org_mini_glfw_Glfw_glfwWindowHint},
         {"org/mini/glfw/Glfw",    "glfwPollEvents",             "()V",                              org_mini_glfw_Glfw_glfwPollEvents},
+        {"org/mini/glfw/Glfw",    "glfwWaitEvents",             "()V",                              org_mini_glfw_Glfw_glfwWaitEvents},
         {"org/mini/glfw/Glfw",    "glfwSetWindowShouldClose",   "(JI)V",                            org_mini_glfw_Glfw_glfwSetWindowShouldClose},
         {"org/mini/glfw/Glfw",    "glfwMakeContextCurrentJni",  "(J)V",                             org_mini_glfw_Glfw_glfwMakeContextCurrentJni},
         {"org/mini/glfw/Glfw",    "glfwSwapInterval",           "(I)V",                             org_mini_glfw_Glfw_glfwSwapInterval},
         {"org/mini/glfw/Glfw",    "glfwSwapBuffers",            "(J)V",                             org_mini_glfw_Glfw_glfwSwapBuffers},
         {"org/mini/glfw/Glfw",    "glfwGetFramebufferWidth",    "(J)I",                             org_mini_glfw_Glfw_glfwGetFramebufferWidth},
         {"org/mini/glfw/Glfw",    "glfwGetFramebufferHeight",   "(J)I",                             org_mini_glfw_Glfw_glfwGetFramebufferHeight},
+        {"org/mini/glfw/Glfw",    "glfwGetWindowX",             "(J)I",                             org_mini_glfw_Glfw_glfwGetWindowX},
+        {"org/mini/glfw/Glfw",    "glfwGetWindowY",             "(J)I",                             org_mini_glfw_Glfw_glfwGetWindowY},
         {"org/mini/glfw/Glfw",    "glfwGetWindowWidth",         "(J)I",                             org_mini_glfw_Glfw_glfwGetWindowWidth},
         {"org/mini/glfw/Glfw",    "glfwGetWindowHeight",        "(J)I",                             org_mini_glfw_Glfw_glfwGetWindowHeight},
         {"org/mini/glfw/Glfw",    "glfwSetWindowAspectRatio",   "(JII)V",                           org_mini_glfw_Glfw_glfwSetWindowAspectRatio},
         {"org/mini/glfw/Glfw",    "glfwGetClipboardString",     "(J)Ljava/lang/String;",            org_mini_glfw_Glfw_glfwGetClipboardString},
         {"org/mini/glfw/Glfw",    "glfwSetClipboardString",     "(JLjava/lang/String;)V",           org_mini_glfw_Glfw_glfwSetClipboardString},
         {"org/mini/glfw/Glfw",    "glfwSetWindowTitle",         "(JLjava/lang/String;)V",           org_mini_glfw_Glfw_glfwSetWindowTitle},
-        {"org/mini/glfw/Glfw",    "glfwSetWindowSize",         "(JII)V",                           org_mini_glfw_Glfw_glfwSetWindowSize},
+        {"org/mini/glfw/Glfw",    "glfwSetWindowSize",          "(JII)V",                           org_mini_glfw_Glfw_glfwSetWindowSize},
+        {"org/mini/glfw/Glfw",    "glfwShowWindow",             "(J)V",                             org_mini_glfw_Glfw_glfwShowWindow},
+        {"org/mini/glfw/Glfw",    "glfwHideWindow",             "(J)V",                             org_mini_glfw_Glfw_glfwHideWindow},
+        {"org/mini/glfw/Glfw",    "glfwRestoreWindow",          "(J)V",                             org_mini_glfw_Glfw_glfwRestoreWindow},
+        {"org/mini/glfw/Glfw",    "glfwIconifyWindow",          "(J)V",                             org_mini_glfw_Glfw_glfwIconifyWindow},
+        {"org/mini/glfw/Glfw",    "glfwGetWindowMonitor",       "(J)J",                             org_mini_glfw_Glfw_glfwGetWindowMonitor},
+        {"org/mini/glfw/Glfw",    "glfwGetWindowParam",         "(JI)I",                            org_mini_glfw_Glfw_glfwGetWindowParam},
+        {"org/mini/glfw/Glfw",    "glfwGetInputMode",           "(JI)I",                            org_mini_glfw_Glfw_glfwGetInputMode},
+        {"org/mini/glfw/Glfw",    "glfwSetInputMode",           "(JII)V",                           org_mini_glfw_Glfw_glfwSetInputMode},
+        {"org/mini/glfw/Glfw",    "glfwGetKey",                 "(JI)Z",                            org_mini_glfw_Glfw_glfwGetKey},
+        {"org/mini/glfw/Glfw",    "glfwGetMouseButton",         "(JI)Z",                            org_mini_glfw_Glfw_glfwGetMouseButton},
+        {"org/mini/glfw/Glfw",    "glfwGetCursorPosX",          "(J)I",                             org_mini_glfw_Glfw_glfwGetCursorPosX},
+        {"org/mini/glfw/Glfw",    "glfwGetCursorPosY",          "(J)I",                             org_mini_glfw_Glfw_glfwGetCursorPosY},
+        {"org/mini/glfw/Glfw",    "glfwSetCursorPos",           "(JII)V",                           org_mini_glfw_Glfw_glfwSetCursorPos},
+        {"org/mini/glfw/Glfw",    "glfwGetJoystickAxes",        "(I[F)I",                           org_mini_glfw_Glfw_glfwGetJoystickAxes},
+        {"org/mini/glfw/Glfw",    "glfwGetJoystickButtons",     "(I[B)I",                           org_mini_glfw_Glfw_glfwGetJoystickButtons},
+        {"org/mini/glfw/Glfw",    "glfwGetJoystickName",        "(I)Ljava/lang/String;",            org_mini_glfw_Glfw_glfwGetJoystickName},
+        {"org/mini/glfw/Glfw",    "glfwGetCurrentContext",      "()J",                              org_mini_glfw_Glfw_glfwGetCurrentContext},
+        {"org/mini/glfw/Glfw",    "glfwExtensionSupported",     "(Ljava/lang/String;)Z",            org_mini_glfw_Glfw_glfwExtensionSupported},
 
 };
 

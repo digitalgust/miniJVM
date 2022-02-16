@@ -1707,7 +1707,7 @@ public class Glfw {
     /*
 		glfwSetCursorPos((GLFWwindow*)window, x, y);
      */
-    public static native int glfwGetJoystickParam(int joy, int param);
+    //public static native int glfwGetJoystickParam(int joy, int param);
 
     /*
 		return glfwGetJoystickParam(joy, param);
