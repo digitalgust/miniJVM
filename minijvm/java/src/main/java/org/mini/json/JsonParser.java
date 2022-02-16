@@ -19,11 +19,6 @@ public class JsonParser<T> {
     ClassLoader classLoader;
 
     public JsonParser() {
-        this(ClassLoader.getSystemClassLoader());
-    }
-
-    public JsonParser(ClassLoader cl) {
-        this.classLoader = cl;
 
         SimpleModule module = new SimpleModule();
         module.addDeserializer(java.util.List.class, new StdDeserializer(null) {
@@ -358,6 +353,9 @@ public class JsonParser<T> {
                 if (sb.length() == 0) {
                     break;
                 }
+                if (sb.charAt(0) != '"') {
+                    throw new RuntimeException("[JSON]error: field name need quotation ,eg \"myname\"");
+                }
                 String name = sb.substring(1, sb.length() - 1);
                 //:
                 pos = getNext(s, pos, sb);
@@ -536,6 +534,8 @@ public class JsonParser<T> {
 
 
     public final T deserial(String s, Class clazz) {
+        if (clazz == null) throw new RuntimeException("Class can't null");
+        classLoader = clazz.getClassLoader();
         JsonCell json = parse(s, 0);
         return (T) map2obj(json, clazz, null);
     }

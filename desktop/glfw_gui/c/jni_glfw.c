@@ -1206,7 +1206,7 @@ int org_mini_glfw_Glfw_glfwGetWindowMonitor(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
-    s64 mon = glfwGetWindowMonitor(window);
+    s64 mon = (s64) (intptr_t) glfwGetWindowMonitor(window);
     env->push_long(runtime->stack, mon);
     return 0;
 }
@@ -1271,9 +1271,9 @@ int org_mini_glfw_Glfw_glfwGetCursorPosX(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
-    s32 x, y;
-    glfwGetCursorPos(window, &x, &y);
-    env->push_int(runtime->stack, x);
+    Long2Double x, y;
+    glfwGetCursorPos(window, &x.d, &y.d);
+    env->push_int(runtime->stack, (s32) x.l);
     return 0;
 }
 
@@ -1282,9 +1282,9 @@ int org_mini_glfw_Glfw_glfwGetCursorPosY(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
-    s32 x, y;
-    glfwGetCursorPos(window, &x, &y);
-    env->push_int(runtime->stack, y);
+    Long2Double x, y;
+    glfwGetCursorPos(window, &x.d, &y.d);
+    env->push_int(runtime->stack, (s32) y.l);
     return 0;
 }
 
@@ -1306,7 +1306,7 @@ int org_mini_glfw_Glfw_glfwGetJoystickAxes(Runtime *runtime, JClass *clazz) {
     s32 jid = env->localvar_getInt(runtime->localvar, pos++);
     Instance *farr = env->localvar_getRefer(runtime->localvar, pos++);
     int count;
-    f32 *buf = glfwGetJoystickAxes(jid, &count);
+    f32 *buf = (f32 *) glfwGetJoystickAxes(jid, &count);
     if (farr && buf) {
         s32 i;
         for (i = 0; i < count && i < farr->arr_length; i++) {
@@ -1323,11 +1323,11 @@ int org_mini_glfw_Glfw_glfwGetJoystickButtons(Runtime *runtime, JClass *clazz) {
     s32 jid = env->localvar_getInt(runtime->localvar, pos++);
     Instance *farr = env->localvar_getRefer(runtime->localvar, pos++);
     int count;
-    s8 *buf = glfwGetJoystickButtons(jid, &count);
+    u8 *buf = (u8 *) glfwGetJoystickButtons(jid, &count);
     if (farr && buf) {
         s32 i;
         for (i = 0; i < count && i < farr->arr_length; i++) {
-            *((s8 *) (farr->arr_body) + i) = buf[i];
+            *((u8 *) (farr->arr_body) + i) = buf[i];
         }
     }
     env->push_int(runtime->stack, count);
@@ -1353,7 +1353,7 @@ int org_mini_glfw_Glfw_glfwGetJoystickName(Runtime *runtime, JClass *clazz) {
 int org_mini_glfw_Glfw_glfwGetCurrentContext(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
-    s64 win = glfwGetCurrentContext();
+    s64 win = (s64) (intptr_t) glfwGetCurrentContext();
     env->push_long(runtime->stack, win);
     return 0;
 }
