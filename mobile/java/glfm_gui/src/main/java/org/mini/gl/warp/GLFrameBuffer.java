@@ -5,7 +5,9 @@
  */
 package org.mini.gl.warp;
 
-import org.mini.gui.*;
+import org.mini.gui.GCmd;
+import org.mini.gui.GForm;
+import org.mini.gui.GImage;
 import org.mini.nanovg.Nanovg;
 
 import static org.mini.gl.GL.*;

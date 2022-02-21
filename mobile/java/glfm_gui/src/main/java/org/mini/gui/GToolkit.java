@@ -376,7 +376,7 @@ public class GToolkit {
             iy = 0;
         }
 
-        imgPaint = nvgImagePattern(vg, px + ix + 1, py + iy + 1, iw - 2, ih - 2, 0.0f / 180.0f * (float) Math.PI, img.getTexture(vg), alpha);
+        imgPaint = nvgImagePattern(vg, px + ix + 1, py + iy + 1, iw - 2, ih - 2, 0.0f / 180.0f * (float) Math.PI, img.getNvgTextureId(vg), alpha);
         nvgBeginPath(vg);
         nvgRoundedRect(vg, px, py, pw, ph, border ? 5f : 0f);
         nvgFillPaint(vg, imgPaint);
@@ -698,6 +698,7 @@ public class GToolkit {
 //        }
 //        list.setInnerSize(200, size * list.list_item_heigh);
         list.setFront(true);
+        list.setName("listmenu");
 
         return list;
     }

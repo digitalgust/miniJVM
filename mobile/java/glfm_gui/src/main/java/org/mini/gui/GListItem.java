@@ -147,7 +147,7 @@ public class GListItem extends GObject {
         }
 
         if (img != null) {
-            nvgImageSize(vg, img.getTexture(vg), imgw, imgh);
+            nvgImageSize(vg, img.getNvgTextureId(vg), imgw, imgh);
             if (imgw[0] < imgh[0]) {
                 iw = thumb;
                 ih = iw * (float) imgh[0] / (float) imgw[0];

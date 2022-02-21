@@ -28,7 +28,7 @@ public class GLShadowMapping {
     public long cost;
 
 
-    static class Cleaner implements Runnable {
+    static class GLShadowMappingCleaner implements Runnable {
         public int[] rendertext = {0};
         int[] fboobj = {0};
 
@@ -87,7 +87,7 @@ public class GLShadowMapping {
 
     public void finalize() {
         //Don't reference to this instance
-        Cleaner attachment = new Cleaner();
+        GLShadowMappingCleaner attachment = new GLShadowMappingCleaner();
         attachment.rendertext[0] = rendertex[0];
         attachment.fboobj[0] = fbo[0];
         GForm.addCmd(new GCmd(GCmd.GCMD_RUN_CODE, attachment));

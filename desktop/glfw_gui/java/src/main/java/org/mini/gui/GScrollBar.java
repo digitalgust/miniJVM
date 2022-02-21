@@ -195,7 +195,7 @@ public class GScrollBar extends GObject {
         knob = nvgLinearGradient(vg, x, cy - kr, x, cy + kr, nvgRGBA(255, 255, 255, 16), nvgRGBA(0, 0, 0, 16));
         nvgBeginPath(vg);
         nvgCircle(vg, x + (int) (pos * w), cy, kr - 1);
-        nvgFillColor(vg, nvgRGBA(40, 43, 48, 255));
+        nvgFillColor(vg, GToolkit.getStyle().getBackgroundColor());
         nvgFill(vg);
         nvgFillPaint(vg, knob);
         nvgFill(vg);
@@ -239,16 +239,10 @@ public class GScrollBar extends GObject {
         nvgBeginPath(vg);
 //        nvgCircle(vg, x + (int) (pos * w), cx, kr - 1);
         nvgCircle(vg, cx, y + (int) (pos * h), kr - 1);
-        nvgFillColor(vg, nvgRGBA(40, 43, 48, 255));
+        nvgFillColor(vg, GToolkit.getStyle().getBackgroundColor());
         nvgFill(vg);
         nvgFillPaint(vg, knob);
         nvgFill(vg);
-
-        nvgBeginPath(vg);
-//        nvgCircle(vg, x + (int) (pos * w), cx, kr - 0.5f);
-        nvgCircle(vg, cx, y + (int) (pos * h), kr - 0.5f);
-        nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 92));
-        nvgStroke(vg);
 
     }
 

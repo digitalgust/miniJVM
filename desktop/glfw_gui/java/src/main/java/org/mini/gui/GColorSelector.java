@@ -11,9 +11,10 @@ import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Nanovg.*;
 
 /**
+ * not implementation completed
  * @author gust
  */
-public class GColorSelector extends GObject {
+class GColorSelector extends GObject {
 
     protected String text;
     protected float curAngel;

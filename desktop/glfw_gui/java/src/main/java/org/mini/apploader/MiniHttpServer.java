@@ -31,7 +31,7 @@ public class MiniHttpServer extends Thread {
             System.out.println(s);
         }
     };
-    int port = 8088;
+    int port = DEFAULT_PORT;
     SrvLogger logger = DEFAULT_LOGGER;
 
     String header = "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n";
@@ -42,6 +42,7 @@ public class MiniHttpServer extends Thread {
             + "</head>\n"
             + "<body text='#000000' topmargin='10'>\n"
             + "<br>\n"
+            + "Please select miniJVM application *.jar to upload.<br>\n"
             + "<form name='form1' method='post' action='' enctype='multipart/form-data'>\n"
             + "  \n"
             + "    Choice a file： <br>\n"

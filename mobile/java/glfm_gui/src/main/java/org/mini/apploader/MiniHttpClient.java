@@ -20,13 +20,13 @@ public class MiniHttpClient extends Thread {
     DownloadCompletedHandle handle;
     boolean exit;
     HttpConnection c = null;
-    CltLogger logger;
     public static final MiniHttpClient.CltLogger DEFAULT_LOGGER = new CltLogger() {
         @Override
         void log(String s) {
             System.out.println(s);
         }
     };
+    CltLogger logger = DEFAULT_LOGGER;
 
     public MiniHttpClient(final String url, CltLogger logger, final DownloadCompletedHandle handle) {
         this.url = url;

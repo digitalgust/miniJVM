@@ -410,6 +410,10 @@ public abstract class XContainer
             XMenu xmenu = new XMenu(parent);
             xmenu.parse(parser, assist);
             return (xmenu);
+        } else if (tagName.equals(XSwitcher.XML_NAME)) { //switcher
+            XSwitcher xswitcher = new XSwitcher(parent);
+            xswitcher.parse(parser, assist);
+            return (xswitcher);
         } else if (tagName.equals(XPanel.XML_NAME)) { //panel
             XPanel panel = new XPanel(parent);
             panel.parse(parser, assist);
