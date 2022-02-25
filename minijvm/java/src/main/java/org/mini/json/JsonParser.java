@@ -47,7 +47,11 @@ public class JsonParser<T> {
                 JsonMap<String, JsonCell> jsonMap = (JsonMap) p;
                 for (String key : jsonMap.keySet()) {
                     try {
-                        map.put(key, map2obj(jsonMap.get(key), Class.forName(className, true, classLoader), childType));
+                        Object ins = map2obj(jsonMap.get(key), Class.forName(className, true, classLoader), childType);
+                        if (ins instanceof Polymorphic) {
+                            ins = map2obj(jsonMap.get(key), ((Polymorphic) ins).getType(), childType);
+                        }
+                        map.put(key, ins);
                     } catch (ClassNotFoundException e) {
                         e.printStackTrace();
                     }
@@ -68,6 +72,12 @@ public class JsonParser<T> {
         this.classLoader = classLoader;
     }
 
+    /**
+     * 多态实现
+     */
+    public interface Polymorphic {
+        Class getType();
+    }
 
     public interface JsonCell {
         int TYPE_MAP = 0;
@@ -354,7 +364,7 @@ public class JsonParser<T> {
                     break;
                 }
                 if (sb.charAt(0) != '"') {
-                    throw new RuntimeException("[JSON]error: field name need quotation ,eg \"myname\"");
+                    throw new RuntimeException("[JSON]error: field name need quotation : " + s);
                 }
                 String name = sb.substring(1, sb.length() - 1);
                 //:
@@ -476,7 +486,9 @@ public class JsonParser<T> {
                                 e.printStackTrace();
                             }
                         } else {
-                            System.out.println("[JSON]warn :" + clazz.getName() + " field '" + fieldName + "' setter not found.");
+                            if (!(ins instanceof Polymorphic)) {
+                                System.out.println("[JSON]warn :" + clazz.getName() + " field '" + fieldName + "' setter not found.");
+                            }
                         }
                     }
                     return ins;
@@ -513,6 +525,9 @@ public class JsonParser<T> {
                         Collection collection = (Collection) clazz.newInstance();
                         for (JsonCell cell : list) {
                             Object ins = map2obj(cell, Class.forName(className, true, classLoader), typevar);
+                            if (ins instanceof Polymorphic) {
+                                ins = map2obj(cell, ((Polymorphic) ins).getType(), typevar);
+                            }
                             collection.add(ins);
                         }
                         return collection;
@@ -527,6 +542,7 @@ public class JsonParser<T> {
 
             }
         } catch (Exception e) {
+            System.err.println("error on parse " + clazz.toString() + " , str:" + json.toString());
             e.printStackTrace();
         }
         return null;
