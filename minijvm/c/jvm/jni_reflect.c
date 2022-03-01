@@ -63,11 +63,8 @@ s32 org_mini_reflect_vm_RefNative_getClasses(Runtime *runtime, JClass *clazz) {
     MiniJVM *jvm = runtime->jvm;
     spin_lock(&jvm->lock_cloader);
     {
-        s32 i, count = 0;
-        for (i = 0; i < jvm->classloaders->length; i++) {
-            PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
-            count += pcl->classes->entries;
-        }
+        s32 i, count;
+        count = classes_loaded_count_unsafe(jvm);
         jarr = jarray_create_by_type_name(runtime, count, ustr);
         for (i = 0; i < jvm->classloaders->length; i++) {
             PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);

@@ -24,6 +24,15 @@ static s64 nano_sec_start_at = 0;
  * =============================== JClass ==============================
  */
 
+s32 classes_loaded_count_unsafe(MiniJVM *jvm) {
+    s32 i, count = 0;
+    for (i = 0; i < jvm->classloaders->length; i++) {
+        PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
+        count += pcl->classes->entries;
+    }
+    return count;
+}
+
 JClass *classes_get_c(MiniJVM *jvm, Instance *jloader, c8 const *clsName) {
     Utf8String *ustr = utf8_create_c(clsName);
     JClass *clazz = classes_get(jvm, jloader, ustr);

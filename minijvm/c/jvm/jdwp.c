@@ -339,7 +339,7 @@ void jdwppacket_write_long(JdwpPacket *packet, s64 val) {
     packet->writePos += 8;
 }
 
-void jdwppacket_write_buf(JdwpPacket *packet, c8 const*val, s32 len) {
+void jdwppacket_write_buf(JdwpPacket *packet, c8 const *val, s32 len) {
     jdwppacket_ensureCapacity(packet, len);
     memcpy(packet->data + packet->writePos, val, len);
     packet->writePos += len;
@@ -1486,14 +1486,8 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 MiniJVM *jvm = jdwpserver->jvm;
                 spin_lock(&jvm->lock_cloader);
                 {
-                    s32 i, count = 0;
-                    for (i = 0; i < jvm->classloaders->length; i++) {
-                        PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
-                        JClass *cl = classes_get(jdwpserver->jvm, pcl->jloader, signature);
-                        if (cl != NULL) {
-                            count++;
-                        }
-                    }
+                    s32 i, count;
+                    count = classes_loaded_count_unsafe(jdwpserver->jvm);
                     jdwppacket_write_int(res, count);
                     for (i = 0; i < jvm->classloaders->length; i++) {
                         PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
@@ -1522,11 +1516,8 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 MiniJVM *jvm = jdwpserver->jvm;
                 spin_lock(&jvm->lock_cloader);
                 {
-                    s32 i, count = 0;
-                    for (i = 0; i < jvm->classloaders->length; i++) {
-                        PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
-                        count += pcl->classes->entries;
-                    }
+                    s32 i, count;
+                    count = classes_loaded_count_unsafe(jdwpserver->jvm);
                     jdwppacket_write_int(res, count);
                     for (i = 0; i < jvm->classloaders->length; i++) {
                         PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
@@ -1742,11 +1733,8 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 MiniJVM *jvm = jdwpserver->jvm;
                 spin_lock(&jvm->lock_cloader);
                 {
-                    s32 i, count = 0;
-                    for (i = 0; i < jvm->classloaders->length; i++) {
-                        PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
-                        count += pcl->classes->entries;
-                    }
+                    s32 i, count;
+                    count = classes_loaded_count_unsafe(jdwpserver->jvm);
                     jdwppacket_write_int(res, count);
                     for (i = 0; i < jvm->classloaders->length; i++) {
                         PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
@@ -2411,8 +2399,32 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             }
 //set 14
             case JDWP_CMD_ClassLoaderReference_VisibleClasses: {//14.1
-                jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
-                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                //VisibleClasses Command
+                //The list contains each reference type defined by this loader and any types for which loading was delegated by this class loader to another class loader.
+                //
+                Instance *classLoader = jdwppacket_read_refer(req);
+                MiniJVM *jvm = jdwpserver->jvm;
+                PeerClassLoader *pcl = classLoaders_find_by_instance(jvm, classLoader);
+                if (pcl) {
+                    spin_lock(&jvm->lock_cloader);
+                    {
+                        jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                        jdwppacket_write_int(res, pcl->classes->entries);
+                        HashtableIterator hti;
+                        hashtable_iterate(pcl->classes, &hti);
+                        for (; hashtable_iter_has_more(&hti);) {
+                            Utf8String *k = hashtable_iter_next_key(&hti);
+                            JClass *cl = hashtable_get(pcl->classes, k);
+
+                            jdwppacket_write_byte(res, getClassType(cl));
+                            jdwppacket_write_refer(res, cl);
+                        }
+
+                    }
+                    spin_unlock(&jvm->lock_cloader);
+                } else {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS_LOADER);
+                }
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }

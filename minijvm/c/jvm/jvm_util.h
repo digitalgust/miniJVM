@@ -396,6 +396,8 @@ JClass *classes_load_get(Instance *jloader, Utf8String *pclassName, Runtime *run
 
 JClass *primitive_class_create_get(Runtime *runtime, Utf8String *ustr);
 
+s32 classes_loaded_count_unsafe(MiniJVM *jvm);
+
 
 #ifdef __cplusplus
 }
