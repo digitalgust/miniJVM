@@ -587,20 +587,20 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                 do {
 #if _JVM_JDWP_ENABLE
                     //if (jvm->jdwp_enable) {
-                        //breakpoint
-                        stack->sp = sp;
-                        runtime->pc = ip;
-                        if (method->breakpoint) {
-                            jdwp_check_breakpoint(runtime);
-                        }
-                        //debug step
-                        if (thrd_info->jdwp_step->active) {//单步状态
-                            thrd_info->jdwp_step->bytecode_count++;
-                            jdwp_check_debug_step(runtime);
+                    //breakpoint
+                    stack->sp = sp;
+                    runtime->pc = ip;
+                    if (method->breakpoint) {
+                        jdwp_check_breakpoint(runtime);
+                    }
+                    //debug step
+                    if (thrd_info->jdwp_step->active) {//单步状态
+                        thrd_info->jdwp_step->bytecode_count++;
+                        jdwp_check_debug_step(runtime);
 
-                        }
-                        sp = stack->sp;
-                        check_gc_pause(-1);
+                    }
+                    sp = stack->sp;
+                    check_gc_pause(-1);
                     //}
 #endif
 
@@ -1674,91 +1674,109 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_fdiv: {
-                            --sp;
-                            (sp - 1)->fvalue /= (sp - 0)->fvalue;
+                            if (!(sp - 1)->fvalue) {
+                                goto label_arrithmetic_throw;
+                            } else {
+                                --sp;
+                                (sp - 1)->fvalue /= (sp - 0)->fvalue;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
-                            invoke_deepth(runtime);
-                            jvm_printf("fdiv:  %f\n", (sp - 1)->fvalue);
+                                invoke_deepth(runtime);
+                                jvm_printf("fdiv:  %f\n", (sp - 1)->fvalue);
 #endif
-                            ip++;
-
+                                ip++;
+                            }
                             break;
                         }
 
                         case op_ddiv: {
-                            --sp;
-                            --sp;
-                            (sp - 2)->dvalue /= (sp - 0)->dvalue;
+                            if (!(sp - 2)->dvalue) {
+                                goto label_arrithmetic_throw;
+                            } else {
+                                --sp;
+                                --sp;
+                                (sp - 2)->dvalue /= (sp - 0)->dvalue;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
-                            invoke_deepth(runtime);
-                            jvm_printf("ddiv:  %lf\n", (sp - 2)->dvalue);
+                                invoke_deepth(runtime);
+                                jvm_printf("ddiv:  %lf\n", (sp - 2)->dvalue);
 #endif
-                            ip++;
-
+                                ip++;
+                            }
                             break;
                         }
 
 
                         case op_irem: {
-                            --sp;
-                            (sp - 1)->ivalue %= (sp - 0)->ivalue;
+                            if (!(sp - 1)->ivalue) {
+                                goto label_arrithmetic_throw;
+                            } else {
+                                --sp;
+                                (sp - 1)->ivalue %= (sp - 0)->ivalue;
 #if _JVM_DEBUG_LOG_LEVEL > 5
-                            invoke_deepth(runtime);
-                            jvm_printf("irem:  %d\n", (sp - 1)->ivalue);
+                                invoke_deepth(runtime);
+                                jvm_printf("irem:  %d\n", (sp - 1)->ivalue);
 #endif
-                            ip++;
-
+                                ip++;
+                            }
                             break;
                         }
 
 
                         case op_lrem: {
-                            --sp;
-                            --sp;
-                            (sp - 2)->lvalue %= (sp - 0)->lvalue;
+                            if (!(sp - 2)->lvalue) {
+                                goto label_arrithmetic_throw;
+                            } else {
+                                --sp;
+                                --sp;
+                                (sp - 2)->lvalue %= (sp - 0)->lvalue;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
-                            invoke_deepth(runtime);
-                            jvm_printf("lrem:  %lld\n", (sp - 2)->lvalue);
+                                invoke_deepth(runtime);
+                                jvm_printf("lrem:  %lld\n", (sp - 2)->lvalue);
 #endif
-                            ip++;
-
+                                ip++;
+                            }
                             break;
                         }
 
 
                         case op_frem: {
-                            --sp;
-                            fval1 = (sp - 0)->fvalue;
-                            fval2 = (sp - 1)->fvalue;
-                            f32 v = fval2 - ((int) (fval2 / fval1) * fval1);
+                            if (!(sp - 1)->fvalue) {
+                                goto label_arrithmetic_throw;
+                            } else {
+                                --sp;
+                                fval1 = (sp - 0)->fvalue;
+                                fval2 = (sp - 1)->fvalue;
+                                f32 v = fval2 - ((int) (fval2 / fval1) * fval1);
 #if _JVM_DEBUG_LOG_LEVEL > 5
-                            invoke_deepth(runtime);
-                            jvm_printf("frem:  %f\n", (sp - 1)->fvalue);
+                                invoke_deepth(runtime);
+                                jvm_printf("frem:  %f\n", (sp - 1)->fvalue);
 #endif
-                            (sp - 1)->fvalue = v;
-                            ip++;
-
+                                (sp - 1)->fvalue = v;
+                                ip++;
+                            }
                             break;
                         }
 
 
                         case op_drem: {
-                            --sp;
-                            --sp;
-                            dval1 = (sp - 0)->dvalue;
-                            dval2 = (sp - 2)->dvalue;
-                            f64 v = dval2 - ((s64) (dval2 / dval1) * dval1);;
+                            if (!(sp - 2)->dvalue) {
+                                goto label_arrithmetic_throw;
+                            } else {
+                                --sp;
+                                --sp;
+                                dval1 = (sp - 0)->dvalue;
+                                dval2 = (sp - 2)->dvalue;
+                                f64 v = dval2 - ((s64) (dval2 / dval1) * dval1);;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
-                            invoke_deepth(runtime);
-                            jvm_printf("drem:  %lf\n", (sp - 2)->dvalue);
+                                invoke_deepth(runtime);
+                                jvm_printf("drem:  %lf\n", (sp - 2)->dvalue);
 #endif
-                            (sp - 2)->dvalue = v;
-                            ip++;
-
+                                (sp - 2)->dvalue = v;
+                                ip++;
+                            }
                             break;
                         }
 

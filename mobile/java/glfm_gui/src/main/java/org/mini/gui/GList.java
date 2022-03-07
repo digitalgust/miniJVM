@@ -600,7 +600,9 @@ public class GList extends GContainer {
             super.setSize(width, height);
 
             popView.setLocation(0, 0);
-            popView.setSize(width - scrollbarWidth, height);
+            float w = width - scrollbarWidth;
+            if (w < 1) w = 1;
+            popView.setSize(w, height);
 
             scrollBar.setLocation(width - scrollbarWidth, 0);
             scrollBar.setSize(20, height);

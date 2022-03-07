@@ -106,8 +106,8 @@ public class GViewPort extends GContainer {
     @Override
     public void setInnerLocation(float x, float y) {
         super.setLocation(x, y);
-        setScrollX(-x / getOutOfViewWidth());
-        setScrollY(-y / getOutOfViewHeight());
+        if (getOutOfViewWidth() > 0) setScrollX(-x / getOutOfViewWidth());
+        if (getOutOfViewHeight() > 0) setScrollY(-y / getOutOfViewHeight());
     }
 
     @Override
