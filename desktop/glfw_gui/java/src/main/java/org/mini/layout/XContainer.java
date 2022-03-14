@@ -9,6 +9,7 @@ import org.mini.layout.gscript.Lib;
 import org.mini.layout.xmlpull.KXmlParser;
 import org.mini.layout.xmlpull.XmlPullParser;
 import org.mini.nanovg.Gutil;
+import org.mini.nanovg.Nanovg;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -22,7 +23,7 @@ public abstract class XContainer
 
     ArrayList<XObject> children = new ArrayList<>();
     ArrayList<XObject> hiddens = new ArrayList<>();
-    public int align = GGraphics.LEFT | GGraphics.TOP;
+    public int align = Nanovg.NVG_ALIGN_LEFT | Nanovg.NVG_ALIGN_TOP;
     private int depth = -1;
     // 脚本引擎
     private Interpreter inp;// 脚本引擎
@@ -192,9 +193,9 @@ public abstract class XContainer
             int rightPix = (viewW - sumWidth);
             int hcenterPix = rightPix / 2;
             for (XObject xo : crow) {
-                if ((align & GGraphics.HCENTER) != 0) {
+                if ((align & Nanovg.NVG_ALIGN_CENTER) != 0) {
                     xo.x += hcenterPix;
-                } else if ((align & GGraphics.RIGHT) != 0) {
+                } else if ((align & Nanovg.NVG_ALIGN_RIGHT) != 0) {
                     xo.x += rightPix;
                 }
             }
@@ -205,9 +206,9 @@ public abstract class XContainer
         for (List<XObject> crow : rows) {
             boolean rowHasFloatObj = false;
             for (XObject xo : crow) {
-                if ((align & GGraphics.VCENTER) != 0) {
+                if ((align & Nanovg.NVG_ALIGN_MIDDLE) != 0) {
                     xo.y += vcenterPix;
-                } else if ((align & GGraphics.BOTTOM) != 0) {
+                } else if ((align & Nanovg.NVG_ALIGN_BOTTOM) != 0) {
                     xo.y += bottomPix;
                 }
                 if (xo.getGui() != null) xo.getGui().setLocation(xo.x, xo.y);

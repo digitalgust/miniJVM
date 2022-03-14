@@ -7,6 +7,7 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
+import org.mini.nanovg.Nanovg;
 
 import java.util.List;
 
@@ -150,18 +151,18 @@ public class GFrame extends GContainer {
             System.out.println("warning: added to form can be set align");
             return;
         }
-        if ((align_mod & GGraphics.LEFT) != 0) {
+        if ((align_mod & Nanovg.NVG_ALIGN_LEFT) != 0) {
             move(-getX(), 0);
-        } else if ((align_mod & GGraphics.RIGHT) != 0) {
+        } else if ((align_mod & Nanovg.NVG_ALIGN_RIGHT) != 0) {
             move(getForm().getDeviceWidth() - (getX() + getW()), 0);
-        } else if ((align_mod & GGraphics.HCENTER) != 0) {
+        } else if ((align_mod & Nanovg.NVG_ALIGN_CENTER) != 0) {
             move(getForm().getDeviceWidth() / 2 - (getX() + getW() / 2), 0);
         }
-        if ((align_mod & GGraphics.TOP) != 0) {
+        if ((align_mod & Nanovg.NVG_ALIGN_TOP) != 0) {
             move(0, -getY());
-        } else if ((align_mod & GGraphics.BOTTOM) != 0) {
+        } else if ((align_mod & Nanovg.NVG_ALIGN_BOTTOM) != 0) {
             move(0, getForm().getDeviceHeight() - (getY() + getH()));
-        } else if ((align_mod & GGraphics.HCENTER) != 0) {
+        } else if ((align_mod & Nanovg.NVG_ALIGN_CENTER) != 0) {
             move(0, getForm().getDeviceHeight() / 2 - (getY() + getH() / 2));
         }
     }

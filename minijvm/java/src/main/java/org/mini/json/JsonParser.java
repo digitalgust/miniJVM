@@ -1,6 +1,5 @@
 package org.mini.json;
 
-import java.io.FileInputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -168,8 +167,10 @@ public class JsonParser<T> {
                 return Long.decode(numStr);
             } else if (clazz == Double.class || clazz == double.class) {
                 return Double.valueOf(numStr);
-            } else if (clazz == Short.class || clazz == Short.class) {
+            } else if (clazz == Short.class || clazz == short.class) {
                 return Short.decode(numStr);
+            } else if (clazz == Byte.class || clazz == byte.class) {
+                return Byte.decode(numStr);
             } else if (clazz == Character.class || clazz == char.class) {
                 return Character.valueOf(numStr.charAt(0));
             } else if (clazz == Boolean.class || clazz == boolean.class) {
@@ -414,7 +415,7 @@ public class JsonParser<T> {
         String mName = "set" + name.substring(0, 1).toUpperCase() + name.substring(1);
         Method[] methods = clazz.getMethods();
         for (Method m : methods) {
-            if (m.getName().equals(mName)) {
+            if (m.getName().equals(mName) && m.getParameterTypes().length == 1) {
                 return m;
             }
         }
@@ -568,17 +569,17 @@ public class JsonParser<T> {
     }
 
 
-    static public final void main(String[] args) throws Exception {
-        //serial
-        FileInputStream fis = new FileInputStream("a.json");
-        byte[] fb = new byte[fis.available()];
-        fis.read(fb, 0, fb.length);
-        fis.close();
-        String s = new String(fb, "utf-8");
-        Object obj = new JsonParser().parse(s, 0);
-
-
-        System.out.println(obj);
-    }
+//    static public final void main(String[] args) throws Exception {
+//        //serial
+//        FileInputStream fis = new FileInputStream("a.json");
+//        byte[] fb = new byte[fis.available()];
+//        fis.read(fb, 0, fb.length);
+//        fis.close();
+//        String s = new String(fb, "utf-8");
+//        Object obj = new JsonParser().parse(s, 0);
+//
+//
+//        System.out.println(obj);
+//    }
 }
 

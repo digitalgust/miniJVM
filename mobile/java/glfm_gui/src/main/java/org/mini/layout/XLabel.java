@@ -7,6 +7,7 @@ import org.mini.gui.event.GActionListener;
 import org.mini.layout.gscript.Interpreter;
 import org.mini.layout.gscript.Str;
 import org.mini.layout.xmlpull.KXmlParser;
+import org.mini.nanovg.Nanovg;
 
 /**
  *
@@ -17,7 +18,7 @@ public class XLabel
     static public final String XML_NAME = "label";
     // 当前绘制颜色
     protected String onClick;
-    protected int align = GGraphics.LEFT | GGraphics.TOP;
+    protected int align = Nanovg.NVG_ALIGN_LEFT | Nanovg.NVG_ALIGN_TOP;
     protected int addon = XDef.SPACING_LABEL_ADD;
 
     GLabel label;

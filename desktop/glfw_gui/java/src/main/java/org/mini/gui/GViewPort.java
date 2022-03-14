@@ -185,9 +185,11 @@ public class GViewPort extends GContainer {
         if (boundle[HEIGHT] <= viewBoundle[HEIGHT]) {
             boundle[TOP] = viewBoundle[TOP];
         }
-
-        setScrollY(posY / (maxY - minY));
-        setScrollX(posX / (maxX - minX));
+//        if ((maxY - minY) == 0) {
+//            int debug = 1;
+//        }
+        if (maxY - minY != 0) setScrollY(posY / (maxY - minY));
+        if (maxX - minX != 0) setScrollX(posX / (maxX - minX));
     }
 
     boolean touched;

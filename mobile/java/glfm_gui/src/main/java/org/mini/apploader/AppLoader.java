@@ -356,7 +356,8 @@ public class AppLoader {
             saveProp(APP_INFO_FILE, appinfo);
             saveProp(APP_LIST_FILE, applist);
         } catch (Exception exception) {
-            exception.printStackTrace();
+            //exception.printStackTrace();
+            System.out.println("[INFO] " + exception.getMessage());
         }
     }
 

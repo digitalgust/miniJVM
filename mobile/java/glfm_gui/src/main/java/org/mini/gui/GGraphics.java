@@ -16,13 +16,13 @@ import static org.mini.nanovg.Nanovg.*;
  */
 public class GGraphics {
 
-    public static final int LEFT = NVG_ALIGN_LEFT;
-    public static final int HCENTER = NVG_ALIGN_CENTER;
-    public static final int RIGHT = NVG_ALIGN_RIGHT;
-    public static final int TOP = NVG_ALIGN_TOP;
-    public static final int VCENTER = NVG_ALIGN_MIDDLE;
-    public static final int BOTTOM = NVG_ALIGN_BOTTOM;
-    public static final int BASELINE = NVG_ALIGN_BASELINE;
+    public static final int HCENTER = 1;
+    public static final int VCENTER = 2;
+    public static final int LEFT = 4;
+    public static final int RIGHT = 8;
+    public static final int TOP = 16;
+    public static final int BOTTOM = 32;
+    public static final int BASELINE = 64;
 
     protected GCanvas canvas;
     protected long vg;
@@ -128,9 +128,39 @@ public class GGraphics {
         nvgStroke(vg);
     }
 
+    private int j2meAnchorToNanovg(int j2meNanchor) {
+        int r = 0;
+        if ((j2meNanchor & 0x01) != 0) {
+            r |= NVG_ALIGN_CENTER;
+        }
+        if ((j2meNanchor & 0x02) != 0) {
+            r |= NVG_ALIGN_MIDDLE;
+        }
+        if ((j2meNanchor & 0x04) != 0) {
+            r |= NVG_ALIGN_LEFT;
+        }
+        if ((j2meNanchor & 0x08) != 0) {
+            r |= NVG_ALIGN_RIGHT;
+        }
+        if ((j2meNanchor & 0x10) != 0) {
+            r |= NVG_ALIGN_TOP;
+        }
+        if ((j2meNanchor & 0x20) != 0) {
+            r |= NVG_ALIGN_BOTTOM;
+        }
+        if ((j2meNanchor & 0x40) != 0) {
+            r |= NVG_ALIGN_BASELINE;
+        }
+        if (j2meNanchor == 0) {
+            r = NVG_ALIGN_LEFT | NVG_ALIGN_TOP;
+        }
+        return r;
+    }
+
     public void drawString(String str, int x, int y, int anchor) {
         x += canvas.getX();
         y += canvas.getY();
+        anchor = j2meAnchorToNanovg(anchor);
         nvgTextAlign(vg, anchor);
 
         byte[] ba = Gutil.toUtf8(str);
@@ -143,7 +173,7 @@ public class GGraphics {
     }
 
     public void drawSubstring(String str, int offset, int len, int x, int y, int anchor) {
-
+        anchor = j2meAnchorToNanovg(anchor);
         x += canvas.getX();
         y += canvas.getY();
         nvgTextAlign(vg, anchor);
@@ -156,6 +186,7 @@ public class GGraphics {
     }
 
     public void drawChar(char character, int x, int y, int anchor) {
+        anchor = j2meAnchorToNanovg(anchor);
         x += canvas.getX();
         y += canvas.getY();
         nvgTextAlign(vg, anchor);
@@ -164,6 +195,7 @@ public class GGraphics {
     }
 
     public void drawChars(char[] data, int offset, int length, int x, int y, int anchor) {
+        anchor = j2meAnchorToNanovg(anchor);
         x += canvas.getX();
         y += canvas.getY();
         nvgTextAlign(vg, anchor);

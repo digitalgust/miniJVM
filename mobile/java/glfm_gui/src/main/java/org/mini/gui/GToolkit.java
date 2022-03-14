@@ -847,18 +847,18 @@ public class GToolkit {
             System.out.println("warning: added to form can be set align");
             return;
         }
-        if ((align_mod & GGraphics.LEFT) != 0) {
+        if ((align_mod & Nanovg.NVG_ALIGN_LEFT) != 0) {
             gobj.setLocation(0, gobj.getY());
-        } else if ((align_mod & GGraphics.RIGHT) != 0) {
+        } else if ((align_mod & Nanovg.NVG_ALIGN_RIGHT) != 0) {
             gobj.setLocation(form.getDeviceWidth() - gobj.getW(), gobj.getY());
-        } else if ((align_mod & GGraphics.HCENTER) != 0) {
+        } else if ((align_mod & Nanovg.NVG_ALIGN_CENTER) != 0) {
             gobj.setLocation((form.getDeviceWidth() - gobj.getW()) * .5f, gobj.getY());
         }
-        if ((align_mod & GGraphics.TOP) != 0) {
+        if ((align_mod & Nanovg.NVG_ALIGN_TOP) != 0) {
             gobj.setLocation(gobj.getX(), 0);
-        } else if ((align_mod & GGraphics.BOTTOM) != 0) {
+        } else if ((align_mod & Nanovg.NVG_ALIGN_BOTTOM) != 0) {
             gobj.setLocation(gobj.getX(), form.getDeviceHeight() - gobj.getH());
-        } else if ((align_mod & GGraphics.HCENTER) != 0) {
+        } else if ((align_mod & Nanovg.NVG_ALIGN_CENTER) != 0) {
             gobj.setLocation(gobj.getX(), (form.getDeviceHeight() - gobj.getH()) * .5f);
         }
         form.add(gobj);

@@ -9,6 +9,7 @@ import org.mini.gui.GCallBack;
 import org.mini.gui.GGraphics;
 import org.mini.gui.GObject;
 import org.mini.gui.GToolkit;
+import org.mini.nanovg.Nanovg;
 
 import java.io.*;
 
@@ -150,25 +151,25 @@ public class XUtil {
 
     public static int parseAlign(String align) {
         if (align.equalsIgnoreCase("left")) {
-            return GGraphics.LEFT;
+            return Nanovg.NVG_ALIGN_LEFT;
         }
         if (align.equalsIgnoreCase("hcenter")) {
-            return GGraphics.HCENTER;
+            return Nanovg.NVG_ALIGN_CENTER;
         }
         if (align.equalsIgnoreCase("right")) {
-            return GGraphics.RIGHT;
+            return Nanovg.NVG_ALIGN_RIGHT;
         }
         if (align.equalsIgnoreCase("top")) {
-            return GGraphics.TOP;
+            return Nanovg.NVG_ALIGN_TOP;
         }
         if (align.equalsIgnoreCase("vcenter")) {
-            return GGraphics.VCENTER;
+            return Nanovg.NVG_ALIGN_MIDDLE;
         }
         if (align.equalsIgnoreCase("bottom")) {
-            return GGraphics.BOTTOM;
+            return Nanovg.NVG_ALIGN_BOTTOM;
         }
         if (align.equalsIgnoreCase("center")) {
-            return GGraphics.HCENTER | GGraphics.VCENTER;
+            return Nanovg.NVG_ALIGN_CENTER | Nanovg.NVG_ALIGN_MIDDLE;
         }
         return 0;
     }
