@@ -5,7 +5,7 @@
  */
 package org.mini.gui;
 
-import org.mini.nanovg.Gutil;
+import org.mini.glwrap.GLUtil;
 import org.mini.nanovg.Nanovg;
 
 import java.io.File;
@@ -125,7 +125,7 @@ public class GImage {
         img.data = data;
         img.image_init_flag = imageflag;
         int[] whd = {0, 0, 0};
-        Gutil.image_get_size(data, whd);
+        GLUtil.image_get_size(data, whd);
         img.w[0] = whd[0];
         img.h[0] = whd[1];
         return img;

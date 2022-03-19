@@ -1,20 +1,18 @@
 package test;
 
 import org.mini.gl.GL;
+import org.mini.gl.GLMath;
 import org.mini.glfw.Glfw;
-import org.mini.nanovg.Gutil;
 
 import static org.mini.gl.GL.*;
-import static org.mini.nanovg.Gutil.vec_mul_cross;
-import static org.mini.nanovg.Gutil.vec_sub;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+
 /**
- *
  * @author gust
  */
 public class TestGL {
@@ -66,51 +64,51 @@ public class TestGL {
     }
 
     byte[] mask = new byte[]{
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, //   这是最下面的一行
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, //   这是最下面的一行
 
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x03, (byte) 0x80, (byte) 0x01, (byte) 0xC0, //   麻
+            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x03, (byte) 0x80, (byte) 0x01, (byte) 0xC0, //   麻
 
-        (byte) 0x06, (byte) 0xC0, (byte) 0x03, (byte) 0x60, //   烦
+            (byte) 0x06, (byte) 0xC0, (byte) 0x03, (byte) 0x60, //   烦
 
-        (byte) 0x04, (byte) 0x60, (byte) 0x06, (byte) 0x20, //   的
+            (byte) 0x04, (byte) 0x60, (byte) 0x06, (byte) 0x20, //   的
 
-        (byte) 0x04, (byte) 0x30, (byte) 0x0C, (byte) 0x20, //   初
+            (byte) 0x04, (byte) 0x30, (byte) 0x0C, (byte) 0x20, //   初
 
-        (byte) 0x04, (byte) 0x18, (byte) 0x18, (byte) 0x20, //   始
+            (byte) 0x04, (byte) 0x18, (byte) 0x18, (byte) 0x20, //   始
 
-        (byte) 0x04, (byte) 0x0C, (byte) 0x30, (byte) 0x20, //   化
+            (byte) 0x04, (byte) 0x0C, (byte) 0x30, (byte) 0x20, //   化
 
-        (byte) 0x04, (byte) 0x06, (byte) 0x60, (byte) 0x20, //   ，
+            (byte) 0x04, (byte) 0x06, (byte) 0x60, (byte) 0x20, //   ，
 
-        (byte) 0x44, (byte) 0x03, (byte) 0xC0, (byte) 0x22, //   不
+            (byte) 0x44, (byte) 0x03, (byte) 0xC0, (byte) 0x22, //   不
 
-        (byte) 0x44, (byte) 0x01, (byte) 0x80, (byte) 0x22, //   建
+            (byte) 0x44, (byte) 0x01, (byte) 0x80, (byte) 0x22, //   建
 
-        (byte) 0x44, (byte) 0x01, (byte) 0x80, (byte) 0x22, //   议
+            (byte) 0x44, (byte) 0x01, (byte) 0x80, (byte) 0x22, //   议
 
-        (byte) 0x44, (byte) 0x01, (byte) 0x80, (byte) 0x22, //   使
+            (byte) 0x44, (byte) 0x01, (byte) 0x80, (byte) 0x22, //   使
 
-        (byte) 0x44, (byte) 0x01, (byte) 0x80, (byte) 0x22, //   用
+            (byte) 0x44, (byte) 0x01, (byte) 0x80, (byte) 0x22, //   用
 
-        (byte) 0x44, (byte) 0x01, (byte) 0x80, (byte) 0x22,
-        (byte) 0x44, (byte) 0x01, (byte) 0x80, (byte) 0x22,
-        (byte) 0x66, (byte) 0x01, (byte) 0x80, (byte) 0x66,
-        (byte) 0x33, (byte) 0x01, (byte) 0x80, (byte) 0xCC,
-        (byte) 0x19, (byte) 0x81, (byte) 0x81, (byte) 0x98,
-        (byte) 0x0C, (byte) 0xC1, (byte) 0x83, (byte) 0x30,
-        (byte) 0x07, (byte) 0xE1, (byte) 0x87, (byte) 0xE0,
-        (byte) 0x03, (byte) 0x3F, (byte) 0xFC, (byte) 0xC0,
-        (byte) 0x03, (byte) 0x31, (byte) 0x8C, (byte) 0xC0,
-        (byte) 0x03, (byte) 0x3F, (byte) 0xFC, (byte) 0xC0,
-        (byte) 0x06, (byte) 0x64, (byte) 0x26, (byte) 0x60,
-        (byte) 0x0C, (byte) 0xCC, (byte) 0x33, (byte) 0x30,
-        (byte) 0x18, (byte) 0xCC, (byte) 0x33, (byte) 0x18,
-        (byte) 0x10, (byte) 0xC4, (byte) 0x23, (byte) 0x08,
-        (byte) 0x10, (byte) 0x63, (byte) 0xC6, (byte) 0x08,
-        (byte) 0x10, (byte) 0x30, (byte) 0x0C, (byte) 0x08,
-        (byte) 0x10, (byte) 0x18, (byte) 0x18, (byte) 0x08,
-        (byte) 0x10, (byte) 0x00, (byte) 0x00, (byte) 0x08 // 这是最上面的一行
+            (byte) 0x44, (byte) 0x01, (byte) 0x80, (byte) 0x22,
+            (byte) 0x44, (byte) 0x01, (byte) 0x80, (byte) 0x22,
+            (byte) 0x66, (byte) 0x01, (byte) 0x80, (byte) 0x66,
+            (byte) 0x33, (byte) 0x01, (byte) 0x80, (byte) 0xCC,
+            (byte) 0x19, (byte) 0x81, (byte) 0x81, (byte) 0x98,
+            (byte) 0x0C, (byte) 0xC1, (byte) 0x83, (byte) 0x30,
+            (byte) 0x07, (byte) 0xE1, (byte) 0x87, (byte) 0xE0,
+            (byte) 0x03, (byte) 0x3F, (byte) 0xFC, (byte) 0xC0,
+            (byte) 0x03, (byte) 0x31, (byte) 0x8C, (byte) 0xC0,
+            (byte) 0x03, (byte) 0x3F, (byte) 0xFC, (byte) 0xC0,
+            (byte) 0x06, (byte) 0x64, (byte) 0x26, (byte) 0x60,
+            (byte) 0x0C, (byte) 0xCC, (byte) 0x33, (byte) 0x30,
+            (byte) 0x18, (byte) 0xCC, (byte) 0x33, (byte) 0x18,
+            (byte) 0x10, (byte) 0xC4, (byte) 0x23, (byte) 0x08,
+            (byte) 0x10, (byte) 0x63, (byte) 0xC6, (byte) 0x08,
+            (byte) 0x10, (byte) 0x30, (byte) 0x0C, (byte) 0x08,
+            (byte) 0x10, (byte) 0x18, (byte) 0x18, (byte) 0x08,
+            (byte) 0x10, (byte) 0x00, (byte) 0x00, (byte) 0x08 // 这是最上面的一行
     };
 
     float Pi = 3.1415926f;
@@ -183,6 +181,7 @@ public class TestGL {
         }
         GL.glEnd();
     }
+
     int day = 200; // day的变化：从0到359
     int w, h;
     float[] projection = new float[16], view = new float[16];
@@ -197,7 +196,7 @@ public class TestGL {
 //        gluPerspective(75, 1, 1, 400000000);
         GL.glViewport(0, 0, (int) w, (int) h);
         GL.glMatrixMode(GL.GL_PROJECTION);
-        Gutil.mat4x4_perspective(projection,
+        GLMath.mat4x4_perspective(projection,
                 1.5f,
                 (float) w / (float) h,
                 1.f, 400000000f);
@@ -211,10 +210,11 @@ public class TestGL {
             float[] eye = {0.f, 0.f, 200000000f};
             float[] center = {0.f, 0.f, 0.f};
             float[] up = {0.f, -1.f, 0.f};
-            Gutil.mat4x4_look_at(view, eye, center, up);
+            GLMath.mat4x4_look_at(view, eye, center, up);
         }
         GL.glLoadMatrixf(view, 0);
     }
+
     float[] sun_light_position = {0.0f, 0.0f, 0.0f, 1.0f};
     float[] sun_light_ambient = {0.0f, 0.0f, 0.0f, 1.0f};
     float[] sun_light_diffuse = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -292,7 +292,7 @@ public class TestGL {
         float[] tmp0 = {0, 0, 0};
         float[] tmp1 = {0, 0, 0};
         float[] tmp2 = {0, 0, 0};
-        vec_mul_cross(tmp2, vec_sub(tmp0, p1, p0), vec_sub(tmp1, p2, p1));
+        GLMath.vec_mul_cross(tmp2, GLMath.vec_sub(tmp0, p1, p0), GLMath.vec_sub(tmp1, p2, p1));
         //Gutil.vec_normal(tmp0, tmp2);
         tmp0[0] = tmp2[0];
         tmp0[1] = tmp2[1];

@@ -12,7 +12,7 @@ import org.mini.nanovg.Nanovg;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static org.mini.nanovg.Gutil.toUtf8;
+import static org.mini.glwrap.GLUtil.toUtf8;
 import static org.mini.nanovg.Nanovg.*;
 
 /**

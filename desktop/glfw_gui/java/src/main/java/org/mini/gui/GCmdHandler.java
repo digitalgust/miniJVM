@@ -6,7 +6,7 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
-import org.mini.nanovg.Gutil;
+import org.mini.glwrap.GLUtil;
 import org.mini.nanovg.Nanovg;
 
 import java.util.ArrayList;
@@ -94,7 +94,7 @@ public class GCmdHandler {
     void update(GForm form) {
         if (curShowMessage == null) {
             if (message.size() > 0) {
-                curShowMessage = Gutil.toUtf8(message.remove(0));
+                curShowMessage = GLUtil.toUtf8(message.remove(0));
                 GForm.timer.schedule(new TimerTask() {
                     @Override
                     public void run() {

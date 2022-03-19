@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.mini.gl.warp;
+package org.mini.glwrap;
 
 import org.mini.gui.GCmd;
 import org.mini.gui.GForm;
@@ -19,8 +19,8 @@ import static org.mini.gl.GL.*;
  */
 public class GLShadowMapping {
 
-    int texture_w = 512;
-    int texture_h = 512;
+    int texture_w;
+    int texture_h;
     int[] fbo = {0};        // FBO对象的句柄
     int[] rendertex = {0};        // 纹理对象的句柄
     int[] curFrameBuffer = {0};

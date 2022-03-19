@@ -1,7 +1,7 @@
 package test;
 
 import org.mini.gl.GL;
-import org.mini.nanovg.Gutil;
+import org.mini.glwrap.GLUtil;
 
 import static org.mini.gl.GL.*;
 import static org.mini.glfw.Glfw.*;
@@ -98,7 +98,7 @@ public class Shader1 {
         //编译顶点着色器
         int vertexShader;
         vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, new byte[][]{Gutil.toUtf8(vss)}, null, 0);
+        glShaderSource(vertexShader, 1, new byte[][]{GLUtil.toUtf8(vss)}, null, 0);
         glCompileShader(vertexShader);
         int success;
         GL.glGetShaderiv(vertexShader, GL.GL_COMPILE_STATUS, return_val, 0);
@@ -113,7 +113,7 @@ public class Shader1 {
 
         int fragmentShader;
         fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, new byte[][]{Gutil.toUtf8(fss)}, null, 0);
+        glShaderSource(fragmentShader, 1, new byte[][]{GLUtil.toUtf8(fss)}, null, 0);
         glCompileShader(fragmentShader);
         GL.glGetShaderiv(fragmentShader, GL.GL_COMPILE_STATUS, return_val, 0);
         if (return_val[0] == GL_FALSE) {

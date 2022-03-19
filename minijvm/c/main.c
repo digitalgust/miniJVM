@@ -68,13 +68,20 @@ int main(int argc, char **argv) {
         }
     } else {
         bootclasspath = "../../binary/lib/minijvm_rt.jar";
-        jdwp = 0;
+        jdwp = 01;
+
+
+//        bootclasspath = "../../../orange451/minijvm_rt/target/minijvm_rt.jar";
+//        jdwp = 01;
+//        classpath = "../../binary/libex/joml-1.9.25.jar;../../../orange451/minijvm_extras/target/minijvm_extras-1.0-SNAPSHOT.jar;../../../orange451/glfw_gui/target/glfw_gui-1.0-SNAPSHOT.jar;../../../orange451/JadeFX/target/JadeFX-1.0-SNAPSHOT.jar;../../../orange451/ExApp/target/ExApp-1.0-SNAPSHOT.jar;./";
+//        main_name = "test.PurpleApp";
+
 
         //test for graphics
-//        classpath = "../../binary/libex/glfw_gui.jar;./";
+        classpath = "../../binary/libex/glfw_gui.jar;./";
 //        main_name = "test.Gears";
 //        main_name = "test.TestGL";
-//        main_name = "test.AppManagerTest";
+        main_name = "test.AppManagerTest";
 //        main_name = "test.RenderTexure";
 //        main_name = "test.Alpha";
 //        main_name = "test.Light";
@@ -87,22 +94,22 @@ int main(int argc, char **argv) {
 
 //        classpath = "../../binary/libex/jni_test.jar;./";
 //        main_name = "test/JniTest";
-
 //        classpath = "../../binary/libex/luaj.jar;./";
 //        main_name = "Sample";
 
 
 
-        classpath = "../../binary/libex/minijvm_test.jar;./";
+//        classpath = "../../binary/libex/minijvm_test.jar;./";
 //        main_name = "test.HelloWorld";
 //        main_name = "test.Foo1";
 //        main_name = "test.Foo2";
 //        main_name = "test.Foo3";
+//        main_name = "test.ThreadDaemon";
 //        main_name = "test.SpecTest";
 //        main_name = "test.MultiThread";
 //        main_name = "test.ExecuteSpeed";
 //        main_name = "test.TestFile";
-        main_name = "test.HttpServer";
+//        main_name = "test.HttpServer";
 //        main_name = "test.BpDeepTest";
 //        main_name = "test.ReflectTest";
 //        main_name = "test.LambdaTest";
@@ -113,6 +120,13 @@ int main(int argc, char **argv) {
 //        classpath = "../../binary/libex/janino.jar;../../binary/libex/commons-compiler.jar";
 //        main_name = "org.codehaus.janino.Compiler";
 //        arraylist_push_back(java_para,"../../binary/res/BpDeepTest.java");
+
+//        classpath = "../../binary/libex/awtk_gui.jar:../../binary/libex/awtk_demos.jar";
+//        main_name = "DemoBasic";
+//        main_name = "DemoButton";
+
+//        classpath = "../../binary/libex/luncher.jar:";
+//        main_name = "org.luaj.vm2.lib.jme.TestLuaJ";
 
     }
     MiniJVM *jvm = jvm_create();

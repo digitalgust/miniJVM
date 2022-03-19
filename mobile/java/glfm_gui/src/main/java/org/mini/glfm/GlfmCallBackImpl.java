@@ -387,7 +387,7 @@ public class GlfmCallBackImpl extends GCallBack {
     @Override
     public void destroy() {
         if (vg != 0) {
-            Nanovg.nvgDeleteGLES3(vg);
+            Nanovg.nvgDeleteGL3(vg);
         }
     }
 

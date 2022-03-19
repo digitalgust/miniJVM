@@ -1,14 +1,13 @@
 package org.mini.layout;
 
 import org.mini.gui.GContainer;
-import org.mini.gui.GGraphics;
 import org.mini.gui.GObject;
 import org.mini.gui.event.GChildrenListener;
 import org.mini.layout.gscript.Interpreter;
 import org.mini.layout.gscript.Lib;
 import org.mini.layout.xmlpull.KXmlParser;
 import org.mini.layout.xmlpull.XmlPullParser;
-import org.mini.nanovg.Gutil;
+import org.mini.glwrap.GLUtil;
 import org.mini.nanovg.Nanovg;
 
 import java.io.ByteArrayInputStream;
@@ -554,7 +553,7 @@ public abstract class XContainer
 
     public static XObject parseXml(String uiStr, XmlExtAssist assist) {
         try {
-            ByteArrayInputStream bais = new ByteArrayInputStream(Gutil.toUtf8(uiStr));
+            ByteArrayInputStream bais = new ByteArrayInputStream(GLUtil.toUtf8(uiStr));
             XObject xobj = parseXml(bais, assist);
             return xobj;
         } catch (Exception ex) {

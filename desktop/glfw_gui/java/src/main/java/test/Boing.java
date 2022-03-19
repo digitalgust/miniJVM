@@ -3,8 +3,8 @@ package test;
 import static java.lang.Math.atan2;
 import java.util.Random;
 import org.mini.gl.GL;
+import org.mini.gl.GLMath;
 import org.mini.glfw.Glfw;
-import org.mini.nanovg.Gutil;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -394,7 +394,7 @@ public class Boing {
 
         GL.glViewport(0, 0, (int) w, (int) h);
         GL.glMatrixMode(GL.GL_PROJECTION);
-        Gutil.mat4x4_perspective(projection,
+        GLMath.mat4x4_perspective(projection,
                 2.f * (float) atan2(RADIUS, 200.f),
                 (float) w / (float) h,
                 1.f, VIEW_SCENE_DIST);
@@ -405,7 +405,7 @@ public class Boing {
             float[] eye = {0.f, 0.f, VIEW_SCENE_DIST};
             float[] center = {0.f, 0.f, 0.f};
             float[] up = {0.f, -1.f, 0.f};
-            Gutil.mat4x4_look_at(view, eye, center, up);
+            GLMath.mat4x4_look_at(view, eye, center, up);
         }
         GL.glLoadMatrixf(view, 0);
     }

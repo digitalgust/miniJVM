@@ -1,8 +1,9 @@
 package test;
 
 import org.mini.gl.GL;
+import org.mini.gl.GLMath;
 import org.mini.gui.GToolkit;
-import org.mini.nanovg.Gutil;
+import org.mini.glwrap.GLUtil;
 
 import static org.mini.gl.GL.*;
 import static org.mini.glfw.Glfw.*;
@@ -160,7 +161,7 @@ public class Shader2 {
         //编译顶点着色器
         int vertexShader;
         vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, new byte[][]{Gutil.toUtf8(vss)}, null, 0);
+        glShaderSource(vertexShader, 1, new byte[][]{GLUtil.toUtf8(vss)}, null, 0);
         glCompileShader(vertexShader);
         int success;
         GL.glGetShaderiv(vertexShader, GL.GL_COMPILE_STATUS, return_val, 0);
@@ -175,7 +176,7 @@ public class Shader2 {
 
         int fragmentShader;
         fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, new byte[][]{Gutil.toUtf8(fss)}, null, 0);
+        glShaderSource(fragmentShader, 1, new byte[][]{GLUtil.toUtf8(fss)}, null, 0);
         glCompileShader(fragmentShader);
         GL.glGetShaderiv(fragmentShader, GL.GL_COMPILE_STATUS, return_val, 0);
         if (return_val[0] == GL_FALSE) {
@@ -235,12 +236,12 @@ public class Shader2 {
 
 
         int[] whd = {0, 0, 0};
-        texture1[0] = Gutil.gl_image_load(GToolkit.readFileFromJar("/res/logo128.png"), whd);
+        texture1[0] = GLUtil.gl_image_load(GToolkit.readFileFromJar("/res/logo128.png"), whd);
         // ===================
         // Texture 2
         // ===================
 
-        texture2[0] = Gutil.gl_image_load(GToolkit.readFileFromJar("/res/head.png"), whd);
+        texture2[0] = GLUtil.gl_image_load(GToolkit.readFileFromJar("/res/head.png"), whd);
 
         glEnable(GL_DEPTH_TEST);
 
@@ -259,12 +260,12 @@ public class Shader2 {
         // Bind Textures using texture units
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1[0]);
-        glUniform1i(glGetUniformLocation(ourShader, Gutil.toUtf8("ourTexture1")), 0);
-        Gutil.checkGlError("gl_paint 1.3");
+        glUniform1i(glGetUniformLocation(ourShader, GLUtil.toUtf8("ourTexture1")), 0);
+        GLUtil.checkGlError("gl_paint 1.3");
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2[0]);
-        glUniform1i(glGetUniformLocation(ourShader, Gutil.toUtf8("ourTexture2")), 1);
-        Gutil.checkGlError("gl_paint 1.5");
+        glUniform1i(glGetUniformLocation(ourShader, GLUtil.toUtf8("ourTexture2")), 1);
+        GLUtil.checkGlError("gl_paint 1.5");
 
 
         // Camera/View transformation
@@ -272,20 +273,20 @@ public class Shader2 {
         float radius = 10.0f;
         float camX = (float) Math.sin(glfwGetTime()) * radius;
         float camZ = (float) Math.cos(glfwGetTime()) * radius;
-        Gutil.mat4x4_look_at(view
+        GLMath.mat4x4_look_at(view
                 , new float[]{camX, 0.0f, camZ}
                 , new float[]{0.0f, 0.0f, 0.0f}
                 , new float[]{0.0f, 1.0f, 0.0f});
         //view = glm::lookAt (glm::vec3 (camX, 0.0f, camZ),glm::vec3 (0.0f, 0.0f, 0.0f),glm::vec3 (0.0f, 1.0f, 0.0f));
         // Projection
         float[] projection = new float[16];
-        Gutil.mat4x4_perspective(projection
+        GLMath.mat4x4_perspective(projection
                 , 45.0f, (float) WIDTH / (float) HEIGHT, 0.1f, 100.0f);
         //projection = glm::perspective (45.0f, (GLfloat) WIDTH / (GLfloat) HEIGHT, 0.1f, 100.0f);
         // Get the uniform locations
-        int modelLoc = glGetUniformLocation(ourShader, Gutil.toUtf8("model"));
-        int viewLoc = glGetUniformLocation(ourShader, Gutil.toUtf8("view"));
-        int projLoc = glGetUniformLocation(ourShader, Gutil.toUtf8("projection"));
+        int modelLoc = glGetUniformLocation(ourShader, GLUtil.toUtf8("model"));
+        int viewLoc = glGetUniformLocation(ourShader, GLUtil.toUtf8("view"));
+        int projLoc = glGetUniformLocation(ourShader, GLUtil.toUtf8("projection"));
         // Pass the matrices to the shader
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view, 0);
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, projection, 0);
@@ -296,9 +297,9 @@ public class Shader2 {
         glBindVertexArray(VAO[0]);
         for (int i = 0; i < 10; i++) {
             // Calculate the model matrix for each object and pass it to shader before drawing
-            Gutil.mat4x4_translate(model, cubePositions[i][0], cubePositions[i][1], cubePositions[i][2]);
+            GLMath.mat4x4_translate(model, cubePositions[i][0], cubePositions[i][1], cubePositions[i][2]);
             float angle = 52.1f * 1;
-            Gutil.mat4x4_rotate(modelr, model, 1.0f, 0.3f, 0.5f, angle);
+            GLMath.mat4x4_rotate(modelr, model, 1.0f, 0.3f, 0.5f, angle);
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model, 0);
 
             glDrawArrays(GL_TRIANGLES, 0, 36);

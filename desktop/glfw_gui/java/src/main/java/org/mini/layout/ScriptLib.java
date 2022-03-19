@@ -35,6 +35,8 @@ public class ScriptLib extends Lib {
         methodNames.put("showSlot".toLowerCase(), 12);//
         methodNames.put("getImg".toLowerCase(), 13);//
         methodNames.put("setImg".toLowerCase(), 14);//
+        methodNames.put("getAttachment".toLowerCase(), 15);//
+        methodNames.put("setAttachment".toLowerCase(), 16);//
     }
 
     ;
@@ -84,6 +86,10 @@ public class ScriptLib extends Lib {
                 return getImg(para);
             case 14:
                 return setImg(para);
+            case 15:
+                return getAttachment(para);
+            case 16:
+                return setAttachment(para);
             default:
         }
         return null;
@@ -319,7 +325,6 @@ public class ScriptLib extends Lib {
                 if (xo instanceof XImageItem) {
                     XImageItem xi = ((XImageItem) xo);
                     xi.setPic(img);
-
                 }
             }
         }
@@ -336,6 +341,21 @@ public class ScriptLib extends Lib {
                 text = xi.getPic();
             }
         }
+        return new Str(text);
+    }
+
+    public DataType setAttachment(Vector para) {
+        String compont = ((Str) Interpreter.vPopBack(para)).getVal();
+        if (compont != null) {
+            String str = ((Str) Interpreter.vPopBack(para)).getVal();
+            GToolkit.setCompAttachment(compont, str);
+        }
+        return null;
+    }
+
+    public DataType getAttachment(Vector para) {
+        String compont = ((Str) Interpreter.vPopBack(para)).getVal();
+        String text = (String) GToolkit.getCompAttachment(compont);
         return new Str(text);
     }
 }

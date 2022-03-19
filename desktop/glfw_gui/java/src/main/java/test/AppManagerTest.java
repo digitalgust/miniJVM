@@ -16,7 +16,8 @@ public class AppManagerTest  {
 
     public static void main(String[] args) {
         GCallBack ccb = GCallBack.getInstance();
-        ccb.init(800, 600);//window size
+        ccb.init(700, 320);//window size  568 320
+        //ccb.init(812, 375);//ip 12 pro max
 
         AppManager.getInstance().active();
 

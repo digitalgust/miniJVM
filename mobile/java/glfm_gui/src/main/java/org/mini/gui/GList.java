@@ -15,7 +15,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
-import static org.mini.nanovg.Gutil.toUtf8;
+import static org.mini.glwrap.GLUtil.toUtf8;
 import static org.mini.nanovg.Nanovg.*;
 
 /**

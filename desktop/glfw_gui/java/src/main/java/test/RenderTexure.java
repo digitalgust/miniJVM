@@ -7,7 +7,7 @@ package test;
 
 import org.mini.gl.GL;
 import org.mini.glfw.Glfw;
-import org.mini.nanovg.Gutil;
+import org.mini.glwrap.GLUtil;
 
 import static org.mini.gl.GL.*;
 import static org.mini.glfw.Glfw.*;
@@ -39,7 +39,7 @@ public class RenderTexure {
         if (win != 0) {
             Glfw.glfwSetCallback(win, new CallBack());
             Glfw.glfwMakeContextCurrent(win);
-            Gutil.printGlVersion();
+            GLUtil.printGlVersion();
 //            Glfw.glfwSwapInterval(1);
 
             w = Glfw.glfwGetFramebufferWidth(win);

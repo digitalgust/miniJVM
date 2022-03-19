@@ -14,7 +14,7 @@ import java.io.InputStream;
 import java.util.Hashtable;
 import java.util.WeakHashMap;
 
-import static org.mini.nanovg.Gutil.toUtf8;
+import static org.mini.glwrap.GLUtil.toUtf8;
 import static org.mini.nanovg.Nanovg.*;
 
 /**
@@ -165,6 +165,12 @@ public class GToolkit {
         nvgRestore(vg);
         return bond;
     }
+
+    public static byte[] getDefaultFont() {
+        return FontHolder.font_word;
+    }
+
+
     /**
      * ----------------------------------------------------------------
      *      style
@@ -275,6 +281,10 @@ public class GToolkit {
 
     public static float[] getTextBoundle(long vg, String s, float width) {
         return getTextBoundle(vg, s, width, GToolkit.getStyle().getTitleFontSize(), GToolkit.getFontWord());
+    }
+
+    public static float[] getTextBoundle(long vg, String s, float width, float fontSize) {
+        return getTextBoundle(vg, s, width, fontSize, GToolkit.getFontWord());
     }
 
     public static float[] getTextBoundle(long vg, String s, float width, float fontSize, byte[] font) {
@@ -944,6 +954,12 @@ public class GToolkit {
         }
     }
 
+    public static GObject getComponent(String compName) {
+        if (compName == null) return null;
+        GForm form = GCallBack.getInstance().getForm();
+        GObject eitem = form.findByName(compName);
+        return eitem;
+    }
 
     /**
      * ----------------------------------------------------------------

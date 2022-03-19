@@ -8,7 +8,7 @@ package org.mini.gui;
 import org.mini.glfm.Glfm;
 import org.mini.nanovg.Nanovg;
 
-import static org.mini.nanovg.Gutil.toUtf8;
+import static org.mini.glwrap.GLUtil.toUtf8;
 import static org.mini.nanovg.Nanovg.*;
 
 /**

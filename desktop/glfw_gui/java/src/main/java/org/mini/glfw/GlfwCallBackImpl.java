@@ -12,7 +12,7 @@ import org.mini.apploader.GApplication;
 import org.mini.gui.GCallBack;
 import org.mini.gui.GObject;
 import org.mini.gui.GToolkit;
-import org.mini.nanovg.Gutil;
+import org.mini.glwrap.GLUtil;
 
 import java.io.File;
 
@@ -116,7 +116,7 @@ public class GlfwCallBackImpl extends GCallBack {
         glfwWindowHint(GLFW_DEPTH_BITS, 16);
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 
-        display = Glfw.glfwCreateWindow(winWidth, winHeight, Gutil.toUtf8(""), 0, 0);
+        display = Glfw.glfwCreateWindow(winWidth, winHeight, GLUtil.toUtf8(""), 0, 0);
         if (display == 0) {
             glfwTerminate();
             System.exit(1);

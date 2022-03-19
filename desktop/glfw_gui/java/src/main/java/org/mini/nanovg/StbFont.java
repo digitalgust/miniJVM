@@ -6,6 +6,7 @@
 package org.mini.nanovg;
 
 import org.mini.gl.GL;
+import org.mini.glwrap.GLUtil;
 import org.mini.gui.GImage;
 import org.mini.gui.GToolkit;
 
@@ -151,7 +152,7 @@ public class StbFont {
             x += kern * scale;
         }
         //NK.stbi_write_png("./out.png\000".getBytes(), pic_width, pic_height, 1, GToolkit.getArrayDataPtr(bitmap), pic_width);
-        int tex = Gutil.genTexture2D(bitmap, pic_width, pic_height, GL.GL_R8, GL.GL_RED);
+        int tex = GLUtil.genTexture2D(bitmap, pic_width, pic_height, GL.GL_R8, GL.GL_RED);
         width_height[0] = pic_width;
         width_height[1] = pic_height;
         return tex;

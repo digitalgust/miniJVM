@@ -11,6 +11,11 @@ public class Nanovg {
     public static void nvgDeleteGL3(long pctx) {
         Nanovg.nvgDeleteGLES3(pctx);
     }
+
+    public static int nvglImageHandleGL3(long pctx, int pimage) {
+        return Nanovg.nvglImageHandleGLES3(pctx, pimage);
+    }
+
     
     public static final int NVG_CCW = 1;
     public static final int NVG_CW = 2;

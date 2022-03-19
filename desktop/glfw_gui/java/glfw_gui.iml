@@ -9,7 +9,7 @@
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="module-library">
-      <library name="Maven: org.minijvm:minijvm_rt:1.0">
+      <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../../../binary/lib/minijvm_rt.jar!/" />
         </CLASSES>
@@ -19,5 +19,14 @@
     </orderEntry>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
+    <orderEntry type="module-library">
+      <library name="Maven: org.minijvm:minijvm_rt:1.0">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../binary/lib/minijvm_rt.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

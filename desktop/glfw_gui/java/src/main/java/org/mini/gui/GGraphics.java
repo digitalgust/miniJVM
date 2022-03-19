@@ -5,7 +5,7 @@
  */
 package org.mini.gui;
 
-import org.mini.nanovg.Gutil;
+import org.mini.glwrap.GLUtil;
 import org.mini.nanovg.StbFont;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
@@ -163,7 +163,7 @@ public class GGraphics {
         anchor = j2meAnchorToNanovg(anchor);
         nvgTextAlign(vg, anchor);
 
-        byte[] ba = Gutil.toUtf8(str);
+        byte[] ba = GLUtil.toUtf8(str);
         if (ba == null || ba.length <= 0) {
             return;
         }
@@ -178,7 +178,7 @@ public class GGraphics {
         y += canvas.getY();
         nvgTextAlign(vg, anchor);
         str = str.substring(offset, len);
-        byte[] b = Gutil.toUtf8(str);
+        byte[] b = GLUtil.toUtf8(str);
         if (b == null || b.length <= 0) {
             return;
         }
@@ -190,7 +190,7 @@ public class GGraphics {
         x += canvas.getX();
         y += canvas.getY();
         nvgTextAlign(vg, anchor);
-        byte[] b = Gutil.toUtf8(character + "");
+        byte[] b = GLUtil.toUtf8(character + "");
         nvgTextJni(vg, x, y, b, 0, b.length);
     }
 

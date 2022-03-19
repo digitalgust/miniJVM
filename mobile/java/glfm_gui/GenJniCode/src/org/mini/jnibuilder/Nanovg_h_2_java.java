@@ -43,7 +43,11 @@ public class Nanovg_h_2_java {
                     "    public static void nvgDeleteGL3(long pctx) {\n" +
                     "        Nanovg.nvgDeleteGLES3(pctx);\n" +
                     "    }\n" +
-                    ""
+                    "\n" +
+                    "    public static int nvglImageHandleGL3(long pctx, int pimage) {\n" +
+                    "        return Nanovg.nvglImageHandleGLES3(pctx, pimage);\n" +
+                    "    }\n" +
+                    "\n"
                     + "    \n"
                     + "${FIELDS}\n"
                     + "${METHODS}\n"
