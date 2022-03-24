@@ -32,6 +32,7 @@ public class AppLoader {
     static final String TMP_DIR = "/tmp/";
     static final String EXAMPLE_APP_FILE = "ExApp.jar";
     static final String KEY_BOOT = "boot";
+    static final String KEY_DOWNLOADURL = "downloadurl";
     static final String KEY_LANGUAGE = "language";
     static final String KEY_GUISTYLE = "guistyle";
     static Properties appinfo = new Properties();
@@ -147,6 +148,16 @@ public class AppLoader {
 
     public static void setBootApp(String jarName) {
         appinfo.put(KEY_BOOT, jarName);
+        saveProp(APP_INFO_FILE, appinfo);
+    }
+
+    public static String getDownloadUrl() {
+        String defaultApp = appinfo.getProperty(KEY_DOWNLOADURL);
+        return defaultApp;
+    }
+
+    public static void setDownloadUrl(String downloadUrl) {
+        appinfo.put(KEY_DOWNLOADURL, downloadUrl);
         saveProp(APP_INFO_FILE, appinfo);
     }
 

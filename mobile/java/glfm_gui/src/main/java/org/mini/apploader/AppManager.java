@@ -226,6 +226,9 @@ public class AppManager extends GApplication {
         } else {
             styleList.setSelectedIndex(1);
         }
+        String url = AppLoader.getDownloadUrl();
+        System.out.println("downloadurl=" + url);
+        if (url != null) GToolkit.setCompText(mainSlot, "INPUT_URL", url);
 
         mgrForm.setSizeChangeListener((width, height) -> container.reSize(width, height));
         reloadAppList();
@@ -242,8 +245,8 @@ public class AppManager extends GApplication {
                 mainPanelShowLeft();
                 reloadAppList();
             } else if ("BT_DOWN".equals(name)) {
-                GTextObject downtextfd = (GTextObject) mgrForm.findByName("INPUT_URL");
-                String url = downtextfd.getText();
+                String url = GToolkit.getCompText("INPUT_URL");
+                AppLoader.setDownloadUrl(url);
 
                 MiniHttpClient hc = new MiniHttpClient(url, cltLogger, getDownloadCallback());
                 hc.start();

@@ -55,7 +55,7 @@ public class GLShadowMapping {
         // 创建纹理
         glGenTextures(rendertex.length, rendertex, 0);
         glBindTexture(GL_TEXTURE_2D, rendertex[0]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, texture_w, texture_h, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, null, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, texture_w, texture_h, 0, GL_DEPTH_COMPONENT,/*ios restrict*/ GL_UNSIGNED_SHORT, null, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -112,6 +112,7 @@ public class GLShadowMapping {
 
     public void begin() {
         cost = System.currentTimeMillis();
+        //save current
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, curFrameBuffer, 0);
         // 绑定渲染到纹理
         glBindFramebuffer(GL_FRAMEBUFFER, fbo[0]);
@@ -121,6 +122,7 @@ public class GLShadowMapping {
     }
 
     public void end() {
+        //restore preview
         glBindFramebuffer(GL_FRAMEBUFFER, curFrameBuffer[0]);
         cost = System.currentTimeMillis() - cost;
     }

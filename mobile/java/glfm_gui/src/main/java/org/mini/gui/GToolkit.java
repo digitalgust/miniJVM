@@ -874,19 +874,42 @@ public class GToolkit {
         form.add(gobj);
     }
 
+    /**
+     * set component attachment by compName
+     * find component from form
+     *
+     * @param compName
+     * @param o
+     */
     public static void setCompAttachment(String compName, Object o) {
-        if (compName == null || o == null) return;
         GForm form = GCallBack.getInstance().getForm();
-        GObject go = form.findByName(compName);
+        setCompAttachment(form, compName, o);
+    }
+
+    /**
+     * set component attachment by compName
+     * find component from parent
+     *
+     * @param parent
+     * @param compName
+     * @param o
+     */
+    public static void setCompAttachment(GContainer parent, String compName, Object o) {
+        if (compName == null || o == null || parent == null) return;
+        GObject go = parent.findByName(compName);
         if (go != null) {
             go.setAttachment(o);
         }
     }
 
     public static Object getCompAttachment(String compName) {
-        if (compName != null) {
-            GForm form = GCallBack.getInstance().getForm();
-            GObject go = form.findByName(compName);
+        GForm form = GCallBack.getInstance().getForm();
+        return getCompAttachment(form, compName);
+    }
+
+    public static Object getCompAttachment(GContainer parent, String compName) {
+        if (compName != null || parent == null) {
+            GObject go = parent.findByName(compName);
             if (go != null) {
                 return go.getAttachment();
             }
@@ -895,9 +918,13 @@ public class GToolkit {
     }
 
     public static Boolean getCompEnable(String compName) {
-        if (compName == null) return false;
         GForm form = GCallBack.getInstance().getForm();
-        GObject eitem = form.findByName(compName);
+        return getCompEnable(form, compName);
+    }
+
+    public static Boolean getCompEnable(GContainer parent, String compName) {
+        if (compName == null || parent == null) return false;
+        GObject eitem = parent.findByName(compName);
         if (eitem != null) {
             return eitem.isEnable();
         }
@@ -905,9 +932,13 @@ public class GToolkit {
     }
 
     public static void setCompEnable(String compName, boolean enable) {
-        if (compName == null) return;
         GForm form = GCallBack.getInstance().getForm();
-        GObject eitem = form.findByName(compName);
+        setCompEnable(form, compName, enable);
+    }
+
+    public static void setCompEnable(GContainer parent, String compName, boolean enable) {
+        if (compName == null || parent == null) return;
+        GObject eitem = parent.findByName(compName);
         if (eitem != null) {
             eitem.setEnable(enable);
         }
@@ -915,9 +946,13 @@ public class GToolkit {
 
 
     public static String getCompText(String compName) {
-        if (compName == null) return null;
         GForm form = GCallBack.getInstance().getForm();
-        GObject eitem = form.findByName(compName);
+        return getCompText(form, compName);
+    }
+
+    public static String getCompText(GContainer parent, String compName) {
+        if (compName == null || parent == null) return null;
+        GObject eitem = parent.findByName(compName);
         if (eitem != null) {
             return eitem.getText();
         }
@@ -926,19 +961,26 @@ public class GToolkit {
 
 
     public static void setCompText(String compName, String text) {
-        if (compName == null) return;
         GForm form = GCallBack.getInstance().getForm();
-        GObject eitem = form.findByName(compName);
+        setCompText(form, compName, text);
+    }
+
+    public static void setCompText(GContainer parent, String compName, String text) {
+        if (compName == null || parent == null) return;
+        GObject eitem = parent.findByName(compName);
         if (eitem != null) {
             eitem.setText(text);
         }
     }
 
-
     public static GImage getCompImage(String compName) {
-        if (compName == null) return null;
         GForm form = GCallBack.getInstance().getForm();
-        GObject eitem = form.findByName(compName);
+        return getCompImage(form, compName);
+    }
+
+    public static GImage getCompImage(GContainer parent, String compName) {
+        if (compName == null || parent == null) return null;
+        GObject eitem = parent.findByName(compName);
         if (eitem != null && eitem instanceof GImageItem) {
             ((GImageItem) eitem).getImg();
         }
@@ -946,18 +988,39 @@ public class GToolkit {
     }
 
     public static void setCompImage(String compName, String jarPicPath) {
-        if (compName == null) return;
         GForm form = GCallBack.getInstance().getForm();
-        GObject eitem = form.findByName(compName);
+        setCompImage(form, compName, jarPicPath);
+    }
+
+    public static void setCompImage(GContainer parent, String compName, String jarPicPath) {
+        if (compName == null || parent == null) return;
+        GObject eitem = parent.findByName(compName);
         if (eitem != null && eitem instanceof GImageItem) {
             ((GImageItem) eitem).setImg(getCachedImageFromJar(jarPicPath));
         }
     }
 
-    public static GObject getComponent(String compName) {
-        if (compName == null) return null;
+    public static void setCompImage(String compName, GImage img) {
         GForm form = GCallBack.getInstance().getForm();
-        GObject eitem = form.findByName(compName);
+        setCompImage(form, compName, img);
+    }
+
+    public static void setCompImage(GContainer parent, String compName, GImage img) {
+        if (compName == null || parent == null) return;
+        GObject eitem = parent.findByName(compName);
+        if (eitem != null && eitem instanceof GImageItem) {
+            ((GImageItem) eitem).setImg(img);
+        }
+    }
+
+    public static GObject getComponent(String compName) {
+        GForm form = GCallBack.getInstance().getForm();
+        return getComponent(form, compName);
+    }
+
+    public static GObject getComponent(GContainer parent, String compName) {
+        if (compName == null || parent == null) return null;
+        GObject eitem = parent.findByName(compName);
         return eitem;
     }
 

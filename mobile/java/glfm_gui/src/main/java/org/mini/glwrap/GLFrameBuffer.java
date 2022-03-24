@@ -112,6 +112,7 @@ public class GLFrameBuffer {
 
     public void begin() {
         cost = System.currentTimeMillis();
+        //save current
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, curFrameBuffer, 0);
         // 绑定渲染到纹理
         glBindFramebuffer(GL_FRAMEBUFFER, fbo[0]);

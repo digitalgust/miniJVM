@@ -72,19 +72,28 @@ public class GImageItem extends GObject {
         if (getForm().getFlyingObject() == this) {
             a = alphaFly;
         }
-        if (drawBorder) {
-            if (img == null) {
-                return true;
+
+        //画图
+        if (img != null) {
+            if (drawBorder) {
+                byte[] imgPaint;
+                imgPaint = nvgImagePattern(vg, x + ix + 2, y + iy + 2, iw - 4, ih - 4, 0.0f / 180.0f * (float) Math.PI, img.getNvgTextureId(vg), a);
+                nvgBeginPath(vg);
+                nvgRoundedRect(vg, x, y, w, h, 5);
+                nvgFillPaint(vg, imgPaint);
+                nvgFill(vg);
+            } else {
+                byte[] imgPaint = nvgImagePattern(vg, x + ix + 1, y + iy + 1, iw - 2, ih - 2, 0.0f / 180.0f * (float) Math.PI, img.getNvgTextureId(vg), a);
+                nvgBeginPath(vg);
+                nvgRoundedRect(vg, x, y, w, h, 0);
+                nvgFillPaint(vg, imgPaint);
+                nvgFill(vg);
             }
+        }
+        //画框
+        if (drawBorder) {
 
-            byte[] shadowPaint, imgPaint;
-
-            imgPaint = nvgImagePattern(vg, x + ix + 2, y + iy + 2, iw - 4, ih - 4, 0.0f / 180.0f * (float) Math.PI, img.getNvgTextureId(vg), a);
-            nvgBeginPath(vg);
-            nvgRoundedRect(vg, x, y, w, h, 5);
-            nvgFillPaint(vg, imgPaint);
-            nvgFill(vg);
-
+            byte[] shadowPaint;
             shadowPaint = nvgBoxGradient(vg, x, y, w, h, 5, 3, nvgRGBA(0, 0, 0, 128), nvgRGBA(0, 0, 0, 0));
             nvgBeginPath(vg);
             nvgRect(vg, x - 5, y - 5, w + 10, h + 10);
@@ -98,14 +107,8 @@ public class GImageItem extends GObject {
             nvgStrokeWidth(vg, 1.0f);
             nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 192));
             nvgStroke(vg);
-        } else {
-
-            byte[] imgPaint = nvgImagePattern(vg, x + ix + 1, y + iy + 1, iw - 2, ih - 2, 0.0f / 180.0f * (float) Math.PI, img.getNvgTextureId(vg), a);
-            nvgBeginPath(vg);
-            nvgRoundedRect(vg, x, y, w, h, 0);
-            nvgFillPaint(vg, imgPaint);
-            nvgFill(vg);
         }
+        //画字
         if (getText() != null) {
             GToolkit.drawTextWithShadow(vg, x + 3, y + 3, w - 6, h - 6, getText(), getFontSize(), getColor(), shadowColor);
         }
