@@ -232,6 +232,7 @@ public class GTextField extends GTextObject {
 
     @Override
     public void touchEvent(int touchid, int phase, int x, int y) {
+        if (touchid != Glfw.GLFW_MOUSE_BUTTON_1) return;
         int rx = (int) (x - parent.getInnerX());
         int ry = (int) (y - parent.getInnerY());
         if (isInBoundle(boundle, rx, ry)) {

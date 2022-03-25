@@ -158,7 +158,7 @@ bool _callback_touch(GLFMDisplay *window, s32 touch, GLFMTouchPhase phase, f64 x
             return env->pop_int(runtime->stack);
         }
     }
-    return 0;
+    return 1;
 }
 
 

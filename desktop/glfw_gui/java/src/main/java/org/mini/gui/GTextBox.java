@@ -348,6 +348,7 @@ public class GTextBox extends GTextObject {
 
     @Override
     public void touchEvent(int touchid, int phase, int x, int y) {
+        if (touchid != Glfw.GLFW_MOUSE_BUTTON_1) return;
         if (isInArea(x, y)) {
             switch (phase) {
                 case Glfm.GLFMTouchPhaseBegan: {
@@ -551,7 +552,7 @@ public class GTextBox extends GTextObject {
     }
 
     @Override
-    public boolean dragEvent(float dx, float dy, float x, float y) {
+    public boolean dragEvent(int button, float dx, float dy, float x, float y) {
         if (mouseDrag) {
             return true;
         }

@@ -85,7 +85,7 @@ public class GListItem extends GObject {
 
     }
 
-    public boolean dragEvent(float dx, float dy, float x, float y) {
+    public boolean dragEvent(int button, float dx, float dy, float x, float y) {
         draged++;
         return false;
     }

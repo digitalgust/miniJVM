@@ -6,6 +6,7 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
+import org.mini.glfw.Glfw;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Nanovg.*;
@@ -87,12 +88,12 @@ public class GScrollBar extends GObject {
 
     @Override
     public boolean scrollEvent(float dx, float dy, float x, float y) {
-        return dragEvent(dx, dy, x, y);
+        return dragEvent(Glfw.GLFW_MOUSE_BUTTON_1, dx, dy, x, y);
     }
 
     @Override
-    public boolean dragEvent(float dx, float dy, float x, float y) {
-        if (draged) {
+    public boolean dragEvent(int button, float dx, float dy, float x, float y) {
+        if (draged && button == Glfw.GLFW_MOUSE_BUTTON_1) {
             return true;
         }
         return false;

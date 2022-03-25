@@ -480,19 +480,19 @@ abstract public class GContainer extends GObject {
     }
 
     @Override
-    public boolean dragEvent(float dx, float dy, float x, float y) {
+    public boolean dragEvent(int button, float dx, float dy, float x, float y) {
         if (!isEnable()) {
             return false;
         }
 
         if (focus != null) {
-            return focus.dragEvent(dx, dy, x, y);
+            return focus.dragEvent(button, dx, dy, x, y);
         }
         GObject found = findSonByXY(x, y);
         if (found != null && found.isMenu()) {
-            return found.dragEvent(dx, dy, x, y);
+            return found.dragEvent(button, dx, dy, x, y);
         } else if (found != null && found.isFront()) {
-            return found.dragEvent(dx, dy, x, y);
+            return found.dragEvent(button, dx, dy, x, y);
         }
         return false;
     }

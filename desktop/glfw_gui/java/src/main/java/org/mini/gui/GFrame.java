@@ -279,7 +279,7 @@ public class GFrame extends GContainer {
                 if (pressed) {
                     if (closable && isInBoundle(close_boundle, x, y)) {
                         close();
-                    } else if (title_panel.isInArea(x, y)) {
+                    } else if (title_panel.isInArea(x, y) && button == Glfw.GLFW_MOUSE_BUTTON_1) {
                         dragFrame = true;
                     }
 
@@ -308,14 +308,15 @@ public class GFrame extends GContainer {
     }
 
     @Override
-    public boolean dragEvent(float dx, float dy, float x, float y) {
+    public boolean dragEvent(int button, float dx, float dy, float x, float y) {
 
-        if (dragFrame) {
+        if (dragFrame && button == Glfw.GLFW_MOUSE_BUTTON_1) {
             move(dx, dy);
             validLocation();
+
             return true;
         } else {
-            return super.dragEvent(dx, dy, x, y);
+            return super.dragEvent(button, dx, dy, x, y);
         }
     }
 

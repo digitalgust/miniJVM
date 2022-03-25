@@ -182,6 +182,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
 
     @Override
     public void touchEvent(int touchid, int phase, int x, int y) {
+        if (touchid != Glfw.GLFW_MOUSE_BUTTON_1) return;
         if (isInArea(x, y)) {
             switch (phase) {
                 case Glfm.GLFMTouchPhaseBegan: {

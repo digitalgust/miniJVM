@@ -489,7 +489,7 @@ public class GList extends GContainer {
 
         @Override
         public void touchEvent(int touchid, int phase, int x, int y) {
-
+            if (touchid != Glfw.GLFW_MOUSE_BUTTON_1) return;
             if (phase == Glfm.GLFMTouchPhaseEnded) {
                 if (pulldown) {
                     pulldown = false;

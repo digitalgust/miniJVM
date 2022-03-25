@@ -7,6 +7,7 @@ package org.mini.glfm;
 
 import org.mini.apploader.AppLoader;
 import org.mini.apploader.Sync;
+import org.mini.glfw.Glfw;
 import org.mini.gui.GCallBack;
 import org.mini.gui.GForm;
 import org.mini.gui.GObject;
@@ -25,7 +26,10 @@ public class GlfmCallBackImpl extends GCallBack {
     int fbWidth, fbHeight;
     float pxRatio;
 
-    public int mouseX, mouseY, lastX, lastY;
+    public int[] mouseX = new int[Glfm.MAX_SIMULTANEOUS_TOUCHES],
+            mouseY = new int[Glfm.MAX_SIMULTANEOUS_TOUCHES],
+            lastX = new int[Glfm.MAX_SIMULTANEOUS_TOUCHES],
+            lastY = new int[Glfm.MAX_SIMULTANEOUS_TOUCHES];
     long mouseLastPressed;
     int LONG_TOUCH_TIME = 350;
     int LONG_TOUCH_MAX_DISTANCE = 5;//
@@ -187,6 +191,7 @@ public class GlfmCallBackImpl extends GCallBack {
         init();
         AppLoader.onSurfaceCreated();
         System.out.println("onSurfaceCreated " + width + "," + height + "," + pxRatio);
+        Glfm.glfmSetMultitouchEnabled(display, true);
     }
 
     @Override
@@ -222,11 +227,11 @@ public class GlfmCallBackImpl extends GCallBack {
     }
 
     public int getTouchOrMouseX() {
-        return mouseX;
+        return mouseX[0];
     }
 
     public int getTouchOrMouseY() {
-        return mouseY;
+        return mouseY[0];
     }
 
     @Override
@@ -235,19 +240,19 @@ public class GlfmCallBackImpl extends GCallBack {
         if (form == null) {
             return true;
         }
+        touch += Glfw.GLFW_MOUSE_BUTTON_1; //convert touchid to mouse button
 
         x /= Glfm.glfmGetDisplayScale(display);
         y /= Glfm.glfmGetDisplayScale(display);
-        lastX = mouseX;
-        lastY = mouseY;
-        mouseX = (int) x;
-        mouseY = (int) y;
+        lastX[touch] = mouseX[touch];
+        lastY[touch] = mouseY[touch];
+        mouseX[touch] = (int) x;
+        mouseY[touch] = (int) y;
 
         long cur = System.currentTimeMillis();
         //
         boolean long_touched = false;
-//        System.out.println("   touch=" + touch + "   phase=" + phase + "   x=" + x + "   y=" + y);
-//            System.out.println("display=" + display + "   win=" + win);
+        //System.out.println("   touch=" + touch + "   phase=" + phase + "   x=" + x + "   y=" + y + "display=" + display + "   win=" + form);
         if (this.display == display) {
 
             switch (phase) {
@@ -277,7 +282,7 @@ public class GlfmCallBackImpl extends GCallBack {
                     break;
                 }
                 case Glfm.GLFMTouchPhaseMoved: {//
-                    form.dragEvent(mouseX - lastX, mouseY - lastY, mouseX, mouseY);
+                    form.dragEvent(touch, mouseX[touch] - lastX[touch], mouseY[touch] - lastY[touch], mouseX[touch], mouseY[touch]);
                     long cost = System.currentTimeMillis() - moveStartAt;
                     if (cost > INERTIA_MAX_MILLS) {//reset
                         moveStartX = x;
@@ -293,10 +298,10 @@ public class GlfmCallBackImpl extends GCallBack {
 
             //click event
             if (long_touched) {
-                form.longTouchedEvent(mouseX, mouseY);
+                form.longTouchedEvent(mouseX[touch], mouseY[touch]);
                 long_touched = false;
             }
-            form.touchEvent(touch, phase, mouseX, mouseY);
+            form.touchEvent(touch, phase, mouseX[touch], mouseY[touch]);
         }
         GObject.flush();
         return true;

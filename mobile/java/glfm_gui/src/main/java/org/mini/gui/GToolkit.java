@@ -5,6 +5,7 @@
  */
 package org.mini.gui;
 
+import org.mini.glfw.Glfw;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
 import org.mini.nanovg.Nanovg;
@@ -779,6 +780,7 @@ public class GToolkit {
 
             @Override
             public void touchEvent(int touchid, int phase, int x, int y) {
+                if (touchid != Glfw.GLFW_MOUSE_BUTTON_1) return;
                 if (listener != null) {
                     listener.action(this);
                 } else {

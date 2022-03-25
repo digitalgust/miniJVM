@@ -40,7 +40,8 @@ public class GlfwCallBackImpl extends GCallBack {
     int CLICK_PERIOD = 200;
 
     boolean drag;
-    int hoverX, hoverY;//mouse 
+    int hoverX, hoverY;//mouse
+    int buttonOnDrag;
 
     long vg;
 
@@ -247,6 +248,7 @@ public class GlfwCallBackImpl extends GCallBack {
                             drag = true;
                             hoverX = mouseX;
                             hoverY = mouseY;
+                            buttonOnDrag = button;
                         } else {
                             drag = false;
                         }
@@ -257,6 +259,7 @@ public class GlfwCallBackImpl extends GCallBack {
                             drag = true;
                             hoverX = mouseX;
                             hoverY = mouseY;
+                            buttonOnDrag = button;
                             //gform.longTouchedEvent(mouseX, mouseY);
                         } else {
                             drag = false;
@@ -319,7 +322,7 @@ public class GlfwCallBackImpl extends GCallBack {
                 mouseY = y;
                 gform.cursorPosEvent(x, y);
                 if (drag) {
-                    gform.dragEvent(x - hoverX, y - hoverY, x, y);
+                    gform.dragEvent(buttonOnDrag, x - hoverX, y - hoverY, x, y);
                     hoverX = mouseX;
                     hoverY = mouseY;
                 }

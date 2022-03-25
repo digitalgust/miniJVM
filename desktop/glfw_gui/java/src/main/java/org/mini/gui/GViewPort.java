@@ -345,16 +345,16 @@ public class GViewPort extends GContainer {
     }
 
     @Override
-    public boolean dragEvent(float dx, float dy, float x, float y) {
+    public boolean dragEvent(int button, float dx, float dy, float x, float y) {
         GObject found = findSonByXY(x, y);
         if (found instanceof GMenu) {
-            return found.dragEvent(dx, dy, x, y);
+            return found.dragEvent(button, dx, dy, x, y);
         }
 
         if (focus == null) {
             setFocus(found);
         }
-        if (focus != null && focus.dragEvent(dx, dy, x, y)) {
+        if (focus != null && focus.dragEvent(button, dx, dy, x, y)) {
             return true;
         }
         //reSize();

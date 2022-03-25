@@ -6,7 +6,6 @@
 package org.mini.glfm;
 
 /**
- *
  * @author gust
  */
 public class Glfm {
@@ -14,6 +13,9 @@ public class Glfm {
     static {
         System.setProperty("gui.driver", "org.mini.glfm.GlfmCallBackImpl");
     }
+
+    public static final int //
+            MAX_SIMULTANEOUS_TOUCHES = 10;
 
     public static final int //
             GLFMRenderingAPIOpenGLES2 = 0,
@@ -106,7 +108,7 @@ public class Glfm {
 
     public static native void glfmSetCallBack(long display, GlfmCallBack app);
 
-/// Init the display condifuration. Should only be called in glfmMain.
+    /// Init the display condifuration. Should only be called in glfmMain.
 /// If the device does not support the preferred rendering API, the next available rendering API is
 /// chosen (OpenGL ES 3.0 if OpenGL ES 3.1 is not available, and OpenGL ES 2.0 if OpenGL ES 3.0 is
 /// not available). Call glfmGetRenderingAPI in the GLFMSurfaceCreatedFunc to see which rendering
@@ -118,11 +120,11 @@ public class Glfm {
 //                          GLFMStencilFormat stencilFormat,
 //                          GLFMMultisample multisample);
     public static native void glfmSetDisplayConfig(long display,
-            int preferredAPI,
-            int colorFormat,
-            int depthFormat,
-            int stencilFormat,
-            int multisample);
+                                                   int preferredAPI,
+                                                   int colorFormat,
+                                                   int depthFormat,
+                                                   int stencilFormat,
+                                                   int multisample);
 
     public static native void glfmSetUserInterfaceOrientation(long display, int allowedOrientations);
 

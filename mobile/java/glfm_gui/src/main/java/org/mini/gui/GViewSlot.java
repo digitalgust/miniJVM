@@ -231,6 +231,8 @@ public class GViewSlot extends GViewPort {
 
 
     public void touchedOrMouseClicked(int touchid, int phase, int x, int y) {
+        if (touchid != Glfw.GLFW_MOUSE_BUTTON_1) return;//
+
         switch (phase) {
             case Glfm.GLFMTouchPhaseBegan: {
                 touched = true;
@@ -284,7 +286,7 @@ public class GViewSlot extends GViewPort {
     }
 
     public void touchEvent(int touchid, int phase, int x, int y) {
-        touchedOrMouseClicked(0, phase, x, y);
+        touchedOrMouseClicked(touchid, phase, x, y);
         super.touchEvent(touchid, phase, x, y);
     }
 
@@ -293,19 +295,20 @@ public class GViewSlot extends GViewPort {
         if (flyable) System.out.println(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
     }
 
-    public boolean dragEvent(float dx, float dy, float x, float y) {
+    public boolean dragEvent(int button, float dx, float dy, float x, float y) {
 
         GObject found = findSonByXY(x, y);
         if (found instanceof GMenu) {
-            return found.dragEvent(dx, dy, x, y);
+            return found.dragEvent(button, dx, dy, x, y);
         }
 
         if (focus == null) {
             setFocus(found);
         }
-        if (focus != null && focus.dragEvent(dx, dy, x, y)) {
+        if (focus != null && focus.dragEvent(button, dx, dy, x, y)) {
             return true;
         }
+        if (button != Glfw.GLFW_MOUSE_BUTTON_1) return false;//only response to left button or the first button
         //System.out.println("drag " + x + "," + y + "," + dx + "," + dy);
         reSize();
         float dw = getOutOfViewWidth();
