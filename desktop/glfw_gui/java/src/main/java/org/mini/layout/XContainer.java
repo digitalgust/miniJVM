@@ -70,15 +70,12 @@ public abstract class XContainer
      * @return
      */
     public Interpreter getInp() {
-        if (inp == null) {
-            inp = new Interpreter();
-            inp.loadFromString(" ");
-            inp.reglib(new ScriptLib(this));
-        }
-        return inp;
+        GContainer gui = (GContainer) getGui();
+        gui.setScript(inp);
+        return gui.getScript();
     }
 
-    public void regScriptLib(ScriptLib lib) {
+    public void regScriptLib(GuiScriptLib lib) {
         getInp().reglib(lib);
     }
 
@@ -439,7 +436,7 @@ public abstract class XContainer
             String scode = parser.getText();
             parent.inp = new Interpreter();
             parent.inp.loadFromString(scode);// 装入代码
-            parent.inp.reglib(new ScriptLib(parent));
+            parent.inp.reglib(new GuiScriptLib());
             if (assist != null) {
                 for (Lib lib : assist.getExtScriptLibs()) {
                     parent.inp.reglib(lib);

@@ -31,6 +31,7 @@ public class Stdlib
         methodNames.put("valueof", 12); // 转换字符串为数值
         methodNames.put("idxof", 13);// 子串在母串的位置        idxof("abc","a")  结果0
         methodNames.put("substr", 14); // 截子串        substr("abcde",1,4)      结果"bcd"
+        methodNames.put("split", 15); // 截子串        substr("abcde",1,4)      结果"bcd"
     }
 
     ;
@@ -74,6 +75,8 @@ public class Stdlib
                 return idxof(para);
             case 14:
                 return substr(para);
+            case 15:
+                return split(para);
         }
         return null;
     }
@@ -273,5 +276,25 @@ public class Stdlib
             }
         }
         return new Str(sb.toString());
+    }
+
+
+    /**
+     * 拆字符串
+     *
+     * @param para
+     * @return
+     */
+    private Array split(Vector para) {
+        String s = ((Str) Interpreter.vPopBack(para)).getVal();
+        String splitor = ((Str) Interpreter.vPopBack(para)).getVal();
+        String[] ss = s.split(splitor);
+        int[] dim = new int[]{ss.length};
+        Array arr = new Array(dim);
+        for (int i = 0; i < ss.length; i++) {
+            dim[0] = i;
+            arr.setValue(dim, new Str(ss[i]));
+        }
+        return arr;
     }
 }

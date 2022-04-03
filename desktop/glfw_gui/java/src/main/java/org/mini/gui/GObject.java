@@ -81,7 +81,9 @@ abstract public class GObject {
 
     protected String text;
 
-    protected Object attachment;
+    protected Object attachment;//用户自定义数据
+
+    private String cmd;//类似attachment 用于附加String类型用户数据
 
     protected Object xmlAgent;
 
@@ -583,5 +585,13 @@ abstract public class GObject {
 
     public boolean isFlying() {
         return getForm() != null && getForm().getFlyingObject() == this;
+    }
+
+    public void setCmd(String cmd) {
+        this.cmd = cmd;
+    }
+
+    public String getCmd() {
+        return this.cmd;
     }
 }

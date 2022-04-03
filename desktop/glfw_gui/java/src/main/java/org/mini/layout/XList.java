@@ -31,11 +31,10 @@ public class XList extends XObject implements GStateChangeListener {
                 Interpreter inp = xlist.getRoot().getInp();
                 // 执行脚本
                 if (inp != null) {
-                    inp.putGlobalVar("cmd", new Str(cmd));
                     inp.callSub(onClick);
                 }
             }
-            xlist.getRoot().getEventHandler().action(gobj, cmd);
+            xlist.getRoot().getEventHandler().action(gobj, gobj.getCmd());
         }
     }
 
@@ -152,6 +151,7 @@ public class XList extends XObject implements GStateChangeListener {
                 gli.setAttachment(item.attachment);
                 gli.setActionListener(item);
                 gli.setEnable(enable);
+                gli.setCmd(item.cmd);
                 list.add(gli);
                 if (item.selected) {
                     selectCount++;
@@ -182,6 +182,6 @@ public class XList extends XObject implements GStateChangeListener {
 
     @Override
     public void onStateChange(GObject gobj) {
-        getRoot().getEventHandler().onStateChange(gobj, null);
+        getRoot().getEventHandler().onStateChange(gobj, gobj.getCmd());
     }
 }

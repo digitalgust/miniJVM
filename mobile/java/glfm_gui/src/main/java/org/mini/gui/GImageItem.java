@@ -105,7 +105,7 @@ public class GImageItem extends GObject {
             nvgBeginPath(vg);
             nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, 3.5f);
             nvgStrokeWidth(vg, 1.0f);
-            nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 192));
+            nvgStrokeColor(vg, getColor());
             nvgStroke(vg);
         }
         //画字

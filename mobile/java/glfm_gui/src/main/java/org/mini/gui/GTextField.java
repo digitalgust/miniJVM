@@ -107,6 +107,11 @@ public class GTextField extends GTextObject {
                         resetSelect();
                         GToolkit.disposeEditMenu();
                     }
+                    if (isInBoundle(reset_boundle, rx, ry)) {
+                        deleteAll();
+                        resetSelect();
+                        if (GToolkit.getEditMenu() != null) GToolkit.getEditMenu().dispose();
+                    }
                 }
 
             } else if (button == Glfw.GLFW_MOUSE_BUTTON_2) {

@@ -23,6 +23,16 @@ abstract public class GContainer extends GObject {
     private final List<GChildrenListener> childrenListeners = new ArrayList();
     protected GObject focus;
     float[] visableArea = new float[4];
+    private Object script;
+
+
+    public <T extends Object> T getScript() {
+        return (T) script;
+    }
+
+    public void setScript(Object script) {
+        this.script = script;
+    }
 
     public abstract float getInnerX();
 

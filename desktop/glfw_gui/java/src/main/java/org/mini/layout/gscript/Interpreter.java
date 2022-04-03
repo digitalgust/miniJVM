@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Locale;
 import java.util.Vector;
 //import main.Util;
 
@@ -341,6 +342,7 @@ public class Interpreter {
      * @param value
      */
     public void putGlobalVar(String varName, DataType value) {
+        varName = varName.toLowerCase();
         globalVar.put(varName, value);
     }
 
@@ -351,6 +353,7 @@ public class Interpreter {
      * @return
      */
     public Object getGlobalVar(String varName) {
+        varName = varName.toLowerCase();
         return globalVar.get(varName);
     }
 
@@ -1007,6 +1010,7 @@ public class Interpreter {
             , T_ARR = 8 //数组指针，非数组
             , T_LOGSYM = 16 //逻辑符号
             , T_OBJ = 32; //对象
+
     DataType calcExpr(Expression stat, Hashtable varList) throws Exception {
 
         //Vector expr = parseInstruct(exprStr); //分解表达式

@@ -401,11 +401,11 @@ public class GList extends GContainer {
     void select(int index) {
         if (selectMode == MODE_SINGLE_SELECT) {
             selected.clear();
-            selected.add(new Integer(index));
+            selected.add(Integer.valueOf(index));
         } else if (selected.contains(index)) {
-            selected.remove(new Integer(index));
+            selected.remove(Integer.valueOf(index));
         } else {
-            selected.add(new Integer(index));
+            selected.add(Integer.valueOf(index));
         }
     }
 

@@ -55,6 +55,7 @@ public class GFrame extends GContainer {
         title_panel.setLocation(1, 1);
         title_panel.setSize(width - PAD, TITLE_HEIGHT);
         addImpl(title_panel);
+        setBgColor(GToolkit.getStyle().getFrameBackground());
     }
 
     @Override
@@ -211,7 +212,7 @@ public class GFrame extends GContainer {
         // Window
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x, y, w, h, cornerRadius);
-        nvgFillColor(vg, GToolkit.getStyle().getFrameBackground());
+        nvgFillColor(vg, bgColor);
         nvgFill(vg);
 
         // Drop shadow

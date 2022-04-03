@@ -359,6 +359,72 @@ public class GToolkit {
         }
     }
 
+    public static void drawImageFrame(long vg, GImage img, int imgCols, int imgRows, int frameIndex, float px, float py, float pw, float ph) {
+        drawImageFrame(vg, img, imgCols, imgRows, frameIndex, px, py, pw, ph, false, 0, 1.0f);
+    }
+
+    /**
+     * 用于画很多行列帧组成的图片中的一帧
+     *
+     * @param vg
+     * @param img
+     * @param imgCols    图片有多少列
+     * @param imgRows    图片有多少行
+     * @param frameIndex 画第几个图片
+     * @param px
+     * @param py
+     * @param pw
+     * @param ph
+     * @param border
+     * @param alpha
+     */
+    public static void drawImageFrame(long vg, GImage img, int imgCols, int imgRows, int frameIndex, float px, float py, float pw, float ph, boolean border, float radius, float alpha) {
+        if (img == null) {
+            return;
+        }
+        Nanovg.nvgSave(vg);
+        if (radius < 0) radius = 0;
+        int frameCol = frameIndex % imgCols;
+        int frameRow = frameIndex / imgCols;
+
+        float drawX = px - pw * frameCol;
+        float drawY = py - ph * frameRow;
+        float drawW = pw * imgCols;
+        float drawH = ph * imgRows;
+        Nanovg.nvgScissor(vg, px, py, pw, ph);
+
+        if (border) {
+            drawX += 1;
+            drawY += 1;
+            drawW -= 2;
+            drawH -= 2;
+        }
+        byte[] imgPaint = nvgImagePattern(vg, drawX, drawY, drawW, drawH, 0.0f / 180.0f * (float) Math.PI, img.getNvgTextureId(vg), alpha);
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, px, py, pw, ph, radius + (border ? 1 : 0));
+        nvgFillPaint(vg, imgPaint);
+        nvgFill(vg);
+
+        if (border) {
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, px, py, pw, ph, radius);
+            nvgStrokeWidth(vg, 1.0f);
+            nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 192));
+            nvgStroke(vg);
+        }
+        Nanovg.nvgRestore(vg);
+    }
+
+    /**
+     * 画图
+     *
+     * @param vg
+     * @param img
+     * @param px
+     * @param py
+     * @param pw
+     * @param ph
+     */
     public static void drawImage(long vg, GImage img, float px, float py, float pw, float ph) {
         drawImage(vg, img, px, py, pw, ph, true, 1.f);
     }
@@ -500,6 +566,7 @@ public class GToolkit {
         float btnWidth = w * .5f;
         GButton leftBtn = new GButton("Ok", x + btnWidth * .5f, y, btnWidth, 28);
         leftBtn.setBgColor(128, 16, 8, 255);
+        leftBtn.setName("MSG_FRAME_OK");
         gp.add(leftBtn);
         leftBtn.setActionListener(gobj -> frame.close());
 
@@ -599,7 +666,7 @@ public class GToolkit {
 
     public static GFrame getInputFrame(String title, String msg, String defaultValue, String inputHint, String leftLabel, GActionListener leftListener, String rightLabel, GActionListener rightListener, float width, float height) {
 
-        int x = 10, y = 15;
+        float x = 10, y;
         GFrame frame = new GFrame(title, 0, 0, width, height);
         frame.setFront(true);
         frame.setFocusListener(new GFocusChangeListener() {
@@ -615,28 +682,30 @@ public class GToolkit {
         GContainer view = frame.getView();
         float contentWidth;
         contentWidth = view.getW() - 20;
+        y = view.getH();
+
         float buttonWidth = contentWidth * .5f - 10;
-
-        GLabel lb1 = new GLabel(msg, x, y, contentWidth, y);
-        lb1.setShowMode(GLabel.MODE_MULTI_SHOW);
-        view.add(lb1);
-
-        y += 45;
-        GTextField input = new GTextField(defaultValue == null ? "" : defaultValue, inputHint, x, y, contentWidth, 28);
-        input.setName("input");
-        view.add(input);
-        y += 35;
-        GLabel lb_state = new GLabel("", x, y, contentWidth, 20);
-        lb_state.setName("state");
-        view.add(lb_state);
-        y += 25;
-
+        y -= 35f;
         GButton cancelbtn = new GButton(leftLabel == null ? GLanguage.getString("Cancel") : leftLabel, x, y, buttonWidth, 28);
         view.add(cancelbtn);
 
         GButton okbtn = new GButton(rightLabel == null ? GLanguage.getString("Ok") : rightLabel, x + buttonWidth + 20, y, buttonWidth, 28);
         okbtn.setBgColor(0, 96, 128, 255);
         view.add(okbtn);
+        y -= 35;
+        GTextField input = new GTextField(defaultValue == null ? "" : defaultValue, inputHint, x, y, contentWidth, 28);
+        input.setName("input");
+        view.add(input);
+
+        y -= 25;
+        GLabel lb_state = new GLabel("", x, y, contentWidth, 20);
+        lb_state.setName("state");
+        view.add(lb_state);
+
+        y = 10;
+        GLabel lb1 = new GLabel(msg, x, y, contentWidth, y);
+        lb1.setShowMode(GLabel.MODE_MULTI_SHOW);
+        view.add(lb1);
 
         if (rightListener != null) {
             okbtn.setActionListener(rightListener);
@@ -904,12 +973,12 @@ public class GToolkit {
         }
     }
 
-    public static Object getCompAttachment(String compName) {
+    public static <T extends Object> T getCompAttachment(String compName) {
         GForm form = GCallBack.getInstance().getForm();
         return getCompAttachment(form, compName);
     }
 
-    public static Object getCompAttachment(GContainer parent, String compName) {
+    public static <T extends Object> T getCompAttachment(GContainer parent, String compName) {
         if (compName != null || parent == null) {
             GObject go = parent.findByName(compName);
             if (go != null) {
@@ -975,6 +1044,33 @@ public class GToolkit {
         }
     }
 
+    public static String getCompCmd(String compName) {
+        GForm form = GCallBack.getInstance().getForm();
+        return getCompCmd(form, compName);
+    }
+
+    public static String getCompCmd(GContainer parent, String compName) {
+        if (compName == null || parent == null) return null;
+        GObject eitem = parent.findByName(compName);
+        if (eitem != null) {
+            return eitem.getCmd();
+        }
+        return null;
+    }
+
+    public static void setCompCmd(String compName, String text) {
+        GForm form = GCallBack.getInstance().getForm();
+        setCompCmd(form, compName, text);
+    }
+
+    public static void setCompCmd(GContainer parent, String compName, String text) {
+        if (compName == null || parent == null) return;
+        GObject eitem = parent.findByName(compName);
+        if (eitem != null) {
+            eitem.setCmd(text);
+        }
+    }
+
     public static GImage getCompImage(String compName) {
         GForm form = GCallBack.getInstance().getForm();
         return getCompImage(form, compName);
@@ -1015,15 +1111,36 @@ public class GToolkit {
         }
     }
 
-    public static GObject getComponent(String compName) {
+    public static <T extends GObject> T getComponent(String compName) {
         GForm form = GCallBack.getInstance().getForm();
         return getComponent(form, compName);
     }
 
-    public static GObject getComponent(GContainer parent, String compName) {
+    public static <T extends GObject> T getComponent(GContainer parent, String compName) {
         if (compName == null || parent == null) return null;
-        GObject eitem = parent.findByName(compName);
+        T eitem = parent.findByName(compName);
         return eitem;
+    }
+
+
+    public static GActionListener getCompActionListener(String compName) {
+        if (compName == null) return null;
+        GForm form = GCallBack.getInstance().getForm();
+        GObject eitem = form.findByName(compName);
+        if (eitem != null) {
+            return eitem.getActionListener();
+        }
+        return null;
+    }
+
+
+    public static void setCompActionListener(String compName, GActionListener listener) {
+        if (compName == null) return;
+        GForm form = GCallBack.getInstance().getForm();
+        GObject eitem = form.findByName(compName);
+        if (eitem != null) {
+            eitem.setActionListener(listener);
+        }
     }
 
     /**

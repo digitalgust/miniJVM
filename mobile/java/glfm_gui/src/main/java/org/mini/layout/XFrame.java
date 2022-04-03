@@ -130,7 +130,6 @@ public class XFrame
             Interpreter inp = getRoot().getInp();
             // 执行脚本
             if (inp != null) {
-                inp.putGlobalVar("cmd", new Str(cmd));
                 inp.callSub(onClose);
             }
         }

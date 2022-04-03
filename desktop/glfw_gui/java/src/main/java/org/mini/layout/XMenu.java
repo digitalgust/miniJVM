@@ -147,7 +147,7 @@ public class XMenu extends XObject implements GActionListener {
 
     @Override
     public void action(GObject gobj) {
-        getRoot().getEventHandler().action(gobj, null);
+        getRoot().getEventHandler().action(gobj, gobj.getCmd());
     }
 
 }

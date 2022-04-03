@@ -104,7 +104,7 @@ public abstract class XObject implements GFlyListener {
         if (attName.equals("name")) { // 标题
             name = attValue;
         } else if (attName.equals("attachment")) {
-            cmd = attValue;
+            attachment = attValue;
         } else if (attName.equals("cmd")) {
             cmd = attValue;
         } else if (attName.equals("fly")) {
@@ -149,19 +149,25 @@ public abstract class XObject implements GFlyListener {
                 raw_y = Integer.parseInt(attValue);
             }
         } else if (attName.equals("bgcolor")) {
-            bgColor = new float[4];
-            int c = (int) Long.parseLong(attValue, 16);
-            bgColor[0] = ((c >> 24) & 0xff) / 255f;
-            bgColor[1] = ((c >> 16) & 0xff) / 255f;
-            bgColor[2] = ((c >> 8) & 0xff) / 255f;
-            bgColor[3] = ((c >> 0) & 0xff) / 255f;
+            try {
+                int c = (int) Long.parseLong(attValue, 16);
+                bgColor = new float[4];
+                bgColor[0] = ((c >> 24) & 0xff) / 255f;
+                bgColor[1] = ((c >> 16) & 0xff) / 255f;
+                bgColor[2] = ((c >> 8) & 0xff) / 255f;
+                bgColor[3] = ((c >> 0) & 0xff) / 255f;
+            } catch (Exception e) {
+            }
         } else if (attName.equals("color")) {
-            color = new float[4];
-            int c = (int) Long.parseLong(attValue, 16);
-            color[0] = ((c >> 24) & 0xff) / 255f;
-            color[1] = ((c >> 16) & 0xff) / 255f;
-            color[2] = ((c >> 8) & 0xff) / 255f;
-            color[3] = ((c >> 0) & 0xff) / 255f;
+            try {
+                int c = (int) Long.parseLong(attValue, 16);
+                color = new float[4];
+                color[0] = ((c >> 24) & 0xff) / 255f;
+                color[1] = ((c >> 16) & 0xff) / 255f;
+                color[2] = ((c >> 8) & 0xff) / 255f;
+                color[3] = ((c >> 0) & 0xff) / 255f;
+            } catch (Exception e) {
+            }
         } else if (attName.equals("front")) {
             frontest = "0".equals(attValue) ? false : true;
         } else if (attName.equals("back")) {
@@ -179,6 +185,7 @@ public abstract class XObject implements GFlyListener {
             gui.setText(text);
             gui.setFontSize(fontSize);
             gui.setAttachment(attachment);
+            gui.setCmd(cmd);
             gui.setXmlAgent(this);
             gui.setFront(frontest);
             gui.setBack(backest);

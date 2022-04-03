@@ -41,11 +41,10 @@ public class XLabel
             Interpreter inp = getRoot().getInp();
             // 执行脚本
             if (inp != null) {
-                inp.putGlobalVar("cmd", new Str(cmd));
                 inp.callSub(onClick);
             }
         }
-        getRoot().getEventHandler().action(gobj, cmd);
+        getRoot().getEventHandler().action(gobj, gobj.getCmd());
     }
 
     protected void parseMoreAttribute(String attName, String attValue) {
