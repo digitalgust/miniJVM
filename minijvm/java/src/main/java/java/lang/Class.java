@@ -124,8 +124,7 @@ public final class Class<T> {
         return forName(className, true, c == null ? null : c.getClassLoader());
     }
 
-    public static native Class<?> forName(String className, boolean resolve, ClassLoader loader)
-            throws ClassNotFoundException;
+    public static native Class<?> forName(String className, boolean resolve, ClassLoader loader) throws ClassNotFoundException;
 
     /**
      * Creates a new instance of a class.
@@ -140,8 +139,7 @@ public final class Class<T> {
      *                                other reason.
      * @since JDK1.0
      */
-    public native T newInstance()
-            throws InstantiationException, IllegalAccessException;
+    public native T newInstance() throws InstantiationException, IllegalAccessException;
 
     /**
      * Determines if the specified <code>Object</code> is assignment-compatible
@@ -413,8 +411,7 @@ public final class Class<T> {
         // An enum must both directly extend java.lang.Enum and have
         // the ENUM bit set; classes for specialized enum constants
         // don't do the former.
-        return (this.getModifiers() & ENUM) != 0
-                && this.getSuperclass() == java.lang.Enum.class;
+        return (this.getModifiers() & ENUM) != 0 && this.getSuperclass() == java.lang.Enum.class;
     }
 
     /**
@@ -467,8 +464,7 @@ public final class Class<T> {
         if (enumConstantDirectory == null) {
             T[] universe = getEnumConstantsShared();
             if (universe == null) {
-                throw new IllegalArgumentException(
-                        getName() + " is not an enum type");
+                throw new IllegalArgumentException(getName() + " is not an enum type");
             }
             Map<String, T> m = new HashMap<>(2 * universe.length);
             for (T constant : universe) {
@@ -519,15 +515,13 @@ public final class Class<T> {
         ReflectMethod[] rms = refClass.getMethods();
         int mcount = 0;
         for (int i = 0, imax = rms.length; i < imax; i++) {
-            if (rms[i].methodName.charAt(0) != '<'
-                    && (rms[i].accessFlags & (RConst.ACC_PUBLIC)) != 0) {
+            if (rms[i].methodName.charAt(0) != '<' && (rms[i].accessFlags & (RConst.ACC_PUBLIC)) != 0) {
                 mcount++;
             }
         }
         Method[] ms = new Method[mcount];
         for (int i = 0, j = 0, imax = rms.length; i < imax; i++) {
-            if (rms[i].methodName.charAt(0) != '<'
-                    && (rms[i].accessFlags & (RConst.ACC_PUBLIC)) != 0) {
+            if (rms[i].methodName.charAt(0) != '<' && (rms[i].accessFlags & (RConst.ACC_PUBLIC)) != 0) {
                 ms[j] = new Method(this, rms[i]);
                 j++;
             }
@@ -668,7 +662,12 @@ public final class Class<T> {
             } else if ("[D".equals(n)) {
                 return double.class;
             }
-            String objname = n.substring(n.indexOf("[L") + 2, n.length() - 1);
+            String objname;
+            if (n.charAt(1) == '[') { // [[I
+                objname = n.substring(1);
+            } else {
+                objname = n.substring(n.indexOf("[L") + 2, n.length() - 1);
+            }
             try {
                 return Class.forName(objname, false, getClassLoader());
             } catch (Exception e) {
@@ -705,7 +704,7 @@ public final class Class<T> {
         }
     }
 
-    public ReflectClass getRefClass(){
+    public ReflectClass getRefClass() {
         checkRefectClassLoaded();
         return refClass;
     }

@@ -503,7 +503,7 @@ public class JsonParser<T> {
                     if (clazz.isArray()) {
                         String typevar = types;
                         if (typevar.indexOf('[') > 0) {
-                            typevar = typevar.substring(0, typevar.indexOf('['));
+                            typevar = typevar.substring(0, typevar.lastIndexOf('['));
                         }
 
                         Object array = Array.newInstance(clazz.getComponentType(), list.size());
