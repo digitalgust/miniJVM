@@ -1,11 +1,14 @@
 package org.mini.layout;
 
+import org.mini.gui.GContainer;
 import org.mini.gui.GObject;
+import org.mini.gui.GuiScriptLib;
 import org.mini.gui.event.GFlyListener;
-import org.mini.layout.gscript.Interpreter;
+import org.mini.gui.gscript.Interpreter;
+import org.mini.gui.gscript.Lib;
 import org.mini.layout.xmlpull.KXmlParser;
 
-public abstract class XObject implements GFlyListener {
+public abstract class XObject {
 
     //used for align
     protected int x = XDef.NODEF, y = XDef.NODEF, width = XDef.NODEF, height = XDef.NODEF;
@@ -47,6 +50,20 @@ public abstract class XObject implements GFlyListener {
 
     protected float[] color;
 
+    // 脚本引擎
+    protected String script;// 脚本
+
+    protected String onClinkScript = null; //click exec
+
+    protected String onStateChangeScript = null; //state change exec
+
+    //
+
+    XmlExtAssist assist;
+
+    /**
+     * @param xc
+     */
     public XObject(XContainer xc) {
         parent = xc;
     }
@@ -67,17 +84,6 @@ public abstract class XObject implements GFlyListener {
             else return null;
         }
         return parent.getRoot();
-    }
-
-    public Interpreter getInterpreter(String scriptContainerName) {
-        XContainer scriptHolder = getRoot();
-        if (scriptContainerName != null) {
-            XObject xobj = getRoot().find(scriptContainerName);
-            if (xobj instanceof XContainer && ((XContainer) xobj).getInp() != null) {
-                scriptHolder = (XContainer) xobj;
-            }
-        }
-        return scriptHolder.getInp();
     }
 
     /**
@@ -107,6 +113,10 @@ public abstract class XObject implements GFlyListener {
             attachment = attValue;
         } else if (attName.equals("cmd")) {
             cmd = attValue;
+        } else if (attName.equals("onclick")) {
+            onClinkScript = attValue;
+        } else if (attName.equals("onchange")) {
+            onStateChangeScript = attValue;
         } else if (attName.equals("fly")) {
             fly = "0".equals(attValue) ? false : true;
         } else if (attName.equals("hidden")) {
@@ -186,18 +196,36 @@ public abstract class XObject implements GFlyListener {
             gui.setFontSize(fontSize);
             gui.setAttachment(attachment);
             gui.setCmd(cmd);
-            gui.setXmlAgent(this);
             gui.setFront(frontest);
             gui.setBack(backest);
             gui.setFlyable(fly);
+            gui.setOnClinkScript(onClinkScript);
+            gui.setOnStateChangeScript(onStateChangeScript);
             if (fly) {
-                gui.setFlyListener(this);
+                gui.setFlyListener(getRoot().getEventHandler());
             }
             if (color != null) {
                 gui.setColor(color);
             }
             if (bgColor != null) {
                 gui.setBgColor(bgColor);
+            }
+
+            if (gui instanceof GContainer) {
+
+                GContainer container = (GContainer) gui;
+                if (container != null && script != null) {
+                    container.loadScript(script);// 装入代码
+                    Interpreter inp = container.getInterpreter();
+                    if (inp != null) {
+                        inp.reglib(new GuiScriptLib());
+                        if (assist != null) {
+                            for (Lib lib : assist.getExtScriptLibs()) {
+                                inp.reglib(lib);
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -413,7 +441,7 @@ public abstract class XObject implements GFlyListener {
         return vfloat;
     }
 
-    public abstract GObject getGui();
+    public abstract <T extends GObject> T getGui();
 
     protected abstract String getXmlTag();
 

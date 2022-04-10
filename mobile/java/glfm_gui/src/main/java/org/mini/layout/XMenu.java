@@ -7,7 +7,7 @@ import org.mini.layout.xmlpull.XmlPullParser;
 
 import java.util.Vector;
 
-public class XMenu extends XObject implements GActionListener {
+public class XMenu extends XObject {
     static public final String XML_NAME = "menu";
 
     static class MenuItem {
@@ -132,7 +132,7 @@ public class XMenu extends XObject implements GActionListener {
                     img = GToolkit.getCachedImageFromJar(item.pic);
                 }
                 GMenuItem gli = menu.addItem(item.text, img);
-                gli.setActionListener(this);
+                gli.setActionListener(getRoot().getEventHandler());
                 gli.setName(item.name);
                 gli.setAttachment(item.attachment);
                 gli.setEnable(enable);
@@ -143,11 +143,6 @@ public class XMenu extends XObject implements GActionListener {
             menu.setLocation(x, y);
             menu.setSize(width, height);
         }
-    }
-
-    @Override
-    public void action(GObject gobj) {
-        getRoot().getEventHandler().action(gobj, gobj.getCmd());
     }
 
 }

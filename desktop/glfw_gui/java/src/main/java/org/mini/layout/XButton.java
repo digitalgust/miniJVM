@@ -3,20 +3,18 @@ package org.mini.layout;
 import org.mini.gui.GButton;
 import org.mini.gui.GObject;
 import org.mini.gui.event.GActionListener;
-import org.mini.layout.gscript.Interpreter;
-import org.mini.layout.gscript.Str;
+import org.mini.gui.gscript.Interpreter;
 import org.mini.layout.xmlpull.KXmlParser;
 
 /**
  *
  */
 public class XButton
-        extends XObject implements GActionListener {
+        extends XObject {
 
     static public final String XML_NAME = "button";
     //
     protected String pic;
-    protected String onClick;
     protected int addon = XDef.SPACING_BUTTON_ADD;
     protected char emoji = 0;
 
@@ -39,8 +37,6 @@ public class XButton
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("pic")) {
             pic = attValue;
-        } else if (attName.equals("onclick")) {
-            onClick = XUtil.getField(attValue, 0);
         } else if (attName.equals("addon")) {
             addon = Integer.parseInt(attValue);
         } else if (attName.equals("emoji")) {
@@ -55,18 +51,6 @@ public class XButton
         tmps = parser.nextText(); //得到文本
         setText(tmps);
         toEndTag(parser, getXmlTag());
-    }
-
-    @Override
-    public void action(GObject gobj) {
-        if (onClick != null) {
-            Interpreter inp = getRoot().getInp();
-            // 执行脚本
-            if (inp != null) {
-                inp.callSub(onClick);
-            }
-        }
-        getRoot().getEventHandler().action(gobj, gobj.getCmd());
     }
 
 
@@ -90,8 +74,8 @@ public class XButton
         if (button == null) {
             button = new GButton(text, x, y, width, height);
             initGui();
-            button.setActionListener(this);
             button.setIcon(emoji);
+            button.setActionListener(getRoot().getEventHandler());
         } else {
             button.setLocation(x, y);
             button.setSize(width, height);

@@ -1,6 +1,6 @@
-package org.mini.layout.gscript;
+package org.mini.gui.gscript;
 
-import java.util.HashMap;
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Random;
 import java.util.Vector;
@@ -12,26 +12,30 @@ import java.util.Vector;
  * @author not attributable
  * @version 1.0
  */
-public class Stdlib
-        extends Lib {
+public class Stdlib extends Lib {
 
     {
-        methodNames.put("print", 0); // 向控制台输出字符串
-        methodNames.put("min", 1);// 求最小值
-        methodNames.put("max", 2); // 求最大值
-        methodNames.put("arrlen", 3); // 求数组大小
-        methodNames.put("abs", 4); // 求取对值
-        methodNames.put("random", 5); // 得到一个随机数
-        methodNames.put("mod", 6);// 取余
-        methodNames.put("println", 7); // 输出回车
-        methodNames.put("strlen", 8); // 字符串长度
-        methodNames.put("equals", 9); // 字符串比较
-        methodNames.put("def", 10); // 存入全局变量
-        methodNames.put("isdef", 11); // 是否存在某全局变量
-        methodNames.put("valueof", 12); // 转换字符串为数值
-        methodNames.put("idxof", 13);// 子串在母串的位置        idxof("abc","a")  结果0
-        methodNames.put("substr", 14); // 截子串        substr("abcde",1,4)      结果"bcd"
-        methodNames.put("split", 15); // 截子串        substr("abcde",1,4)      结果"bcd"
+        methodNames.put("print".toLowerCase(), 0); // 向控制台输出字符串
+        methodNames.put("min".toLowerCase(), 1);// 求最小值
+        methodNames.put("max".toLowerCase(), 2); // 求最大值
+        methodNames.put("arrlen".toLowerCase(), 3); // 求数组大小
+        methodNames.put("abs".toLowerCase(), 4); // 求取对值
+        methodNames.put("random".toLowerCase(), 5); // 得到一个随机数
+        methodNames.put("mod".toLowerCase(), 6);// 取余
+        methodNames.put("println".toLowerCase(), 7); // 输出回车
+        methodNames.put("strlen".toLowerCase(), 8); // 字符串长度
+        methodNames.put("equals".toLowerCase(), 9); // 字符串比较
+        methodNames.put("def".toLowerCase(), 10); // 存入全局变量
+        methodNames.put("isdef".toLowerCase(), 11); // 是否存在某全局变量
+        methodNames.put("valueof".toLowerCase(), 12); // 转换字符串为数值
+        methodNames.put("idxof".toLowerCase(), 13);// 子串在母串的位置        idxof("abc","a")  结果0
+        methodNames.put("substr".toLowerCase(), 14); // 截子串        substr("abcde",1,4)      结果"bcd"
+        methodNames.put("split".toLowerCase(), 15); // 截子串        substr("abcde",1,4)      结果"bcd"
+        methodNames.put("base64enc".toLowerCase(), 16); //   base64编码
+        methodNames.put("base64dec".toLowerCase(), 17); //   base64解码
+        methodNames.put("isnull".toLowerCase(), 18); //   Obj 类型是否为空
+        methodNames.put("getobjfield".toLowerCase(), 19);
+        methodNames.put("setobjfield".toLowerCase(), 20);
     }
 
     ;
@@ -77,6 +81,16 @@ public class Stdlib
                 return substr(para);
             case 15:
                 return split(para);
+            case 16:
+                return base64enc(para);
+            case 17:
+                return base64dec(para);
+            case 18:
+                return isnull(para);
+            case 19:
+                return getObjField(para);
+            case 20:
+                return setObjField(para);
         }
         return null;
     }
@@ -296,5 +310,113 @@ public class Stdlib
             arr.setValue(dim, new Str(ss[i]));
         }
         return arr;
+    }
+
+
+    private DataType base64enc(Vector para) {
+        try {
+            String str = ((Str) (Interpreter.vPopBack(para))).getVal();
+            byte[] b = str.getBytes("utf-8");
+            String s = javax.cldc.io.Base64.encode(b, 0, b.length);
+            return new Str(s);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType base64dec(Vector para) {
+        try {
+            String str = ((Str) (Interpreter.vPopBack(para))).getVal();
+            byte[] b = javax.cldc.io.Base64.decode(str);
+            String s = new String(b, "utf-8");
+            return new Str(s);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    private DataType isnull(Vector para) {
+        DataType d = Interpreter.vPopBack(para);
+        if (d instanceof Obj) {
+            if (((Obj) d).isNull()) {
+                return new Bool(true);
+            } else {
+                return new Bool(false);
+            }
+        }
+        return new Bool(true);
+    }
+
+
+    private DataType getObjField(Vector para) {
+        try {
+            Obj obj = (Obj) Interpreter.vPopBack(para);
+            String fieldName = ((Str) (Interpreter.vPopBack(para))).getVal();
+
+            Class c = obj.getVal().getClass();
+            Field field = null;
+            while (field == null) {
+                try {
+                    field = c.getField(fieldName);
+                } catch (Exception e) {
+                }
+                c = c.getSuperclass();
+                if (c == null) {
+                    break;
+                }
+            }
+            if (field != null) {
+                Object val = field.get(obj.getVal());
+                return new Str(val.toString());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    private DataType setObjField(Vector para) {
+        try {
+            Obj obj = (Obj) Interpreter.vPopBack(para);
+            String fieldName = ((Str) (Interpreter.vPopBack(para))).getVal();
+            DataType val = Interpreter.vPopBack(para);
+
+            Class c = obj.getVal().getClass();
+            Field field = null;
+            while (field == null) {
+                try {
+                    field = c.getField(fieldName);
+                } catch (Exception e) {
+                }
+                c = c.getSuperclass();
+                if (c == null) {
+                    break;
+                }
+            }
+            if (field != null) {
+                switch (val.type) {
+                    case DataType.DTYPE_INT:
+                        field.set(obj.getVal(), ((Int) val).getVal());
+                        break;
+                    case DataType.DTYPE_STR:
+                        field.set(obj.getVal(), ((Str) val).getVal());
+                        break;
+                    case DataType.DTYPE_BOOL:
+                        field.set(obj.getVal(), ((Bool) val).getVal());
+                        break;
+                    default:
+                        System.out.println("not support in setObjField " + fieldName);
+                        break;
+                }
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

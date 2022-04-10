@@ -7,6 +7,7 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
+import org.mini.gui.gscript.Interpreter;
 import org.mini.nanovg.Nanovg;
 
 import java.util.List;
@@ -33,6 +34,8 @@ public class GFrame extends GContainer {
 
     protected int frameMode;
     protected boolean closable = true;
+    protected String onCloseScript;
+    protected String onInitScript;
 
 
     public GFrame() {
@@ -394,5 +397,53 @@ public class GFrame extends GContainer {
         view.clearImpl();
     }
 
+
+    public String getOnCloseScript() {
+        return onCloseScript;
+    }
+
+    public String getOnInitScript() {
+        return onInitScript;
+    }
+
+    public void setOnCloseScript(String onCloseScript) {
+        this.onCloseScript = onCloseScript;
+    }
+
+    public void setOnInitScript(String onInitScript) {
+        this.onInitScript = onInitScript;
+    }
+
+    @Override
+    public void init() {
+        super.init();
+        if (onInitScript != null) {
+            Interpreter inp = parseInpByCall(onInitScript);
+            String funcName = parseInstByCall(onInitScript);
+            if (inp != null && funcName != null) {
+                try {
+                    inp.callSub(funcName);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        if (onCloseScript != null) {
+            Interpreter inp = parseInpByCall(onCloseScript);
+            String funcName = parseInstByCall(onCloseScript);
+            if (inp != null && funcName != null) {
+                try {
+                    inp.callSub(funcName);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
 }

@@ -2,10 +2,9 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.mini.layout;
+package org.mini.gui;
 
-import org.mini.gui.*;
-import org.mini.layout.gscript.*;
+import org.mini.gui.gscript.*;
 import org.mini.nanovg.Nanovg;
 
 import java.util.Vector;
@@ -255,9 +254,11 @@ public class GuiScriptLib extends Lib {
     }
 
     public DataType getCmd(Vector para) {
-        String text = "";
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
-        text = GToolkit.getCompCmd(compont);
+        String text = GToolkit.getCompCmd(compont);
+        if (text == null) {
+            text = "";
+        }
         return new Str(text);
     }
 

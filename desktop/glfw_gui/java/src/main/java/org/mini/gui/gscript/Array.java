@@ -1,4 +1,4 @@
-package org.mini.layout.gscript;
+package org.mini.gui.gscript;
 
 /**
  * 自定义数组 Array that define myself <p>Title: </p> <p>Description: </p>

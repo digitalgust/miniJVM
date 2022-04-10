@@ -237,7 +237,7 @@ public class AppManager extends GApplication {
 
     class AppmEventHandler extends XEventHandler {
         @Override
-        public void action(GObject gobj, String cmd) {
+        public void action(GObject gobj) {
             String name = gobj.getName();
             if ("APP_DELETE_BTN".equals(name)) {
                 String appName = curSelectedItem.getLabel();

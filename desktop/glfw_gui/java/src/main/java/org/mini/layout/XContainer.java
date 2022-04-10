@@ -2,9 +2,10 @@ package org.mini.layout;
 
 import org.mini.gui.GContainer;
 import org.mini.gui.GObject;
+import org.mini.gui.GuiScriptLib;
 import org.mini.gui.event.GChildrenListener;
-import org.mini.layout.gscript.Interpreter;
-import org.mini.layout.gscript.Lib;
+import org.mini.gui.gscript.Interpreter;
+import org.mini.gui.gscript.Lib;
 import org.mini.layout.xmlpull.KXmlParser;
 import org.mini.layout.xmlpull.XmlPullParser;
 import org.mini.glwrap.GLUtil;
@@ -14,18 +15,17 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 
 public abstract class XContainer
-        extends XObject implements GChildrenListener {
+        extends XObject {
     static public final String SCRIPT_XML_NAME = "script"; // 脚本代码
 
     ArrayList<XObject> children = new ArrayList<>();
     ArrayList<XObject> hiddens = new ArrayList<>();
     public int align = Nanovg.NVG_ALIGN_LEFT | Nanovg.NVG_ALIGN_TOP;
     private int depth = -1;
-    // 脚本引擎
-    private Interpreter inp;// 脚本引擎
 
     protected XEventHandler eventHandler;
 
@@ -62,21 +62,6 @@ public abstract class XContainer
 
     public XEventHandler getEventHandler() {
         return eventHandler;
-    }
-
-    /**
-     * get and new script interpreter
-     *
-     * @return
-     */
-    public Interpreter getInp() {
-        GContainer gui = (GContainer) getGui();
-        gui.setScript(inp);
-        return gui.getScript();
-    }
-
-    public void regScriptLib(GuiScriptLib lib) {
-        getInp().reglib(lib);
     }
 
     /**
@@ -220,34 +205,6 @@ public abstract class XContainer
 
     }
 
-    private void addListenerToContainer() {
-        GContainer gc = (GContainer) getGui();
-        if (gc != null) {
-            gc.addChildrenListener(this);
-        }
-        for (int i = 0; i < children.size(); i++) {
-            XObject xo = children.get(i);
-            if (xo instanceof XContainer) {
-                XContainer xc = (XContainer) xo;
-                xc.addListenerToContainer();
-            }
-        }
-    }
-
-    private void removeListenerFromContainer() {
-        GContainer gc = (GContainer) getGui();
-        if (gc != null) {
-            gc.removeChildrenListener(this);
-        }
-        for (int i = 0; i < children.size(); i++) {
-            XObject xo = children.get(i);
-            if (xo instanceof XContainer) {
-                XContainer xc = (XContainer) xo;
-                xc.removeListenerFromContainer();
-            }
-        }
-    }
-
     void setParentSize(int parentW, int parentH) {
         resetBoundle();
         if (width == XDef.NODEF) {
@@ -298,7 +255,6 @@ public abstract class XContainer
         preAlignVertical();
 
         align();
-        addListenerToContainer();
     }
 
 
@@ -306,14 +262,12 @@ public abstract class XContainer
         int tx = x;
         int ty = y;
         resetBoundle();
-        removeListenerFromContainer();
         setParentSize(parentW, parentH);
 
         preAlignHorizontal();
         preAlignVertical();
 
         align();
-        addListenerToContainer();
         x = tx;
         y = ty;
         getGui().setLocation(x, y);
@@ -434,16 +388,8 @@ public abstract class XContainer
         } else if (tagName.equals(SCRIPT_XML_NAME)) {
             parser.next();
             String scode = parser.getText();
-            parent.inp = new Interpreter();
-            parent.inp.loadFromString(scode);// 装入代码
-            parent.inp.reglib(new GuiScriptLib());
-            if (assist != null) {
-                for (Lib lib : assist.getExtScriptLibs()) {
-                    parent.inp.reglib(lib);
-                }
-            }
+            parent.script = scode;
             parent.toEndTag(parser, tagName); // 跳过结束符
-
         } else {
             boolean found = false;
             if (assist != null) {
@@ -533,6 +479,7 @@ public abstract class XContainer
             parser.nextTag();
 
             XObject xobj = parseSon(parser, null, assist);
+            xobj.assist = assist;
 
             parser.next();
             parser.require(XmlPullParser.END_DOCUMENT, null, null);
@@ -560,31 +507,9 @@ public abstract class XContainer
         return null;
     }
 
-    //===================================================================
-    //         if any GObject add to GContainer
-    //         the xsystem would be collective action
-    //===================================================================
 
-    @Override
-    public void onChildAdd(GObject child) {
-        Object obj = child.getXmlAgent();
-        if (child.getXmlAgent() instanceof XObject) {
-            XObject xobj = (XObject) obj;
-            xobj.setParent(this);
-            children.add(xobj);
-            color = null;
-        }
+    public XmlExtAssist getAssist() {
+        return assist;
     }
-
-    @Override
-    public void onChildRemove(GObject child) {
-        Object obj = child.getXmlAgent();
-        if (child.getXmlAgent() instanceof XObject) {
-            XObject xobj = (XObject) obj;
-            xobj.setParent(null);
-            children.remove(xobj);
-        }
-    }
-
 
 }

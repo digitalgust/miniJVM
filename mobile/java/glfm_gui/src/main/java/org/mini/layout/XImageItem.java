@@ -5,11 +5,10 @@ import org.mini.gui.GImageItem;
 import org.mini.gui.GObject;
 import org.mini.gui.GToolkit;
 import org.mini.gui.event.GActionListener;
-import org.mini.layout.gscript.Interpreter;
-import org.mini.layout.gscript.Str;
+import org.mini.gui.gscript.Interpreter;
 import org.mini.layout.xmlpull.KXmlParser;
 
-public class XImageItem extends XObject implements GActionListener {
+public class XImageItem extends XObject {
     static public final String XML_NAME = "img"; //xml tag名
     protected String pic;
     protected int img_w = XDef.DEFAULT_COMPONENT_HEIGHT, img_h = XDef.DEFAULT_COMPONENT_HEIGHT;
@@ -42,7 +41,7 @@ public class XImageItem extends XObject implements GActionListener {
         } else if (attName.equals("border")) {
             border = "0".equals(attValue) ? false : true;
         } else if (attName.equals("onclick")) {
-            onClick = XUtil.getField(attValue, 0);
+            onClick = attValue;
         } else if (attName.equals("alpha")) {
             alpha = (float) Integer.parseInt(attValue) / 255;
         }
@@ -55,18 +54,6 @@ public class XImageItem extends XObject implements GActionListener {
         tmps = parser.nextText(); //得到文本
         setText(tmps);
         toEndTag(parser, getXmlTag());
-    }
-
-    @Override
-    public void action(GObject gobj) {
-        if (onClick != null) {
-            Interpreter inp = getRoot().getInp();
-            // 执行脚本
-            if (inp != null) {
-                inp.callSub(onClick);
-            }
-        }
-        getRoot().getEventHandler().action(gobj, gobj.getCmd());
     }
 
     protected int getDefaultWidth(int parentViewW) {
@@ -87,7 +74,7 @@ public class XImageItem extends XObject implements GActionListener {
             imgItem.setSize(width, height);
             imgItem.setAlpha(alpha);
             imgItem.setDrawBorder(border);
-            imgItem.setActionListener(this);
+            imgItem.setActionListener(getRoot().getEventHandler());
         } else {
             imgItem.setLocation(x, y);
             imgItem.setSize(width, height);

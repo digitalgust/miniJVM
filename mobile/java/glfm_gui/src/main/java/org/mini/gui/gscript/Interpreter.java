@@ -1,4 +1,4 @@
-package org.mini.layout.gscript;
+package org.mini.gui.gscript;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.Locale;
 import java.util.Vector;
 //import main.Util;
 
@@ -45,27 +44,13 @@ import java.util.Vector;
  */
 public class Interpreter {
 
-    static final String[] STRS_RESERVED = {
-            "if", "else", "eif", "while", "loop", "sub", "ret", "", "", ""
-    };
+    static final String[] STRS_RESERVED = {"if", "else", "eif", "while", "loop", "sub", "ret", "", "", ""};
     static private final String STR_SYMBOL = "+-*/><()=, []:&|!\'";
     static private final String STR_NUMERIC = "0123456789";
     //关键字代码
-    static final int NOT_KEYWORD = -1,
-            KEYWORD_IF = 0,
-            KEYWORD_ELSE = 1,
-            KEYWORD_ENDIF = 2,
-            KEYWORD_WHILE = 3,
-            KEYWORD_LOOP = 4,
-            KEYWORD_SUB = 5,
-            KEYWORD_RET = 6,
-            KEYWORD_CALL = 7,
-            KEYWORD_SET_VAR = 8,
-            KEYWORD_SET_ARR = 9;
+    static final int NOT_KEYWORD = -1, KEYWORD_IF = 0, KEYWORD_ELSE = 1, KEYWORD_ENDIF = 2, KEYWORD_WHILE = 3, KEYWORD_LOOP = 4, KEYWORD_SUB = 5, KEYWORD_RET = 6, KEYWORD_CALL = 7, KEYWORD_SET_VAR = 8, KEYWORD_SET_ARR = 9;
     public static final int ERR_ILLEGAL = 0, ERR_VAR = 1, ERR_TYPE_INVALID = 2, ERR_NOSUB = 3, ERR_NO_VAR = 4, ERR_PARA_CALC = 5, ERR_PAESEPARA = 6, ERR_NO_SRC = 7, ERR_OPSYMB = 8, ERR_ARR_OUT = 9;
-    public static final String[] STRS_ERR = {
-            " Illegal statment ,", " Invalid variable name ", " Data type error ", " No such method ", " No such variable ", " Method parameter error ", " Parameter count error ", " Code not load yet ", " Operation symbol error  ", " Array out of bounds  "
-    };
+    public static final String[] STRS_ERR = {" Illegal statment ,", " Invalid variable name ", " Data type error ", " No such method ", " No such variable ", " Method parameter error ", " Parameter count error ", " Code not load yet ", " Operation symbol error  ", " Array out of bounds  "};
     //源码字符串数组
     //private Vector srcCode;
     private Statement[] srcCompiled;
@@ -77,6 +62,30 @@ public class Interpreter {
     //系统过程及扩充过程列表 ,extend method lib
     private Vector extSubList = new Vector();
 
+
+    private Vector<Hashtable> localVarCache = new Vector<>();
+
+
+    /**
+     * 取得一个缓存的变量表
+     *
+     * @return
+     */
+    private Hashtable getCachedTable() {
+        if (localVarCache.isEmpty()) {
+            return new Hashtable();
+        }
+        return localVarCache.remove(localVarCache.size() - 1);
+    }
+
+    private void putCachedTable(Hashtable vartable) {
+        if (vartable != null) {
+            vartable.clear();
+            localVarCache.add(vartable);
+        }
+    }
+
+
     /**
      * 构造方法
      */
@@ -86,7 +95,11 @@ public class Interpreter {
     /**
      * 初始化类
      */
-    private void init() {
+    private void init() {//init localvar table cache
+        for (int i = 0; i < 3; i++) {
+            localVarCache.add(new Hashtable());
+        }
+
         srcCompiled = null;
         //脚本中过程首地址
         subAddr.clear();
@@ -377,7 +390,7 @@ public class Interpreter {
      * @param instrucPointer int
      * @return Object
      */
-    private DataType _sub(Vector paraStack, int instrucPointer) {
+    private DataType exec(Vector paraStack, int instrucPointer) {
 
         int ip = instrucPointer; //运行行号
         //构建变量表
@@ -387,104 +400,127 @@ public class Interpreter {
             localVar = globalVar; //顶级方法的局部变量为全局变量
             isTopCall = false;
         } else {
-            localVar = new Hashtable(); //非顶级调用，则是局部方法
+            localVar = getCachedTable(); //非顶级调用，则是局部方法
         }
+        try {
+            long calls = System.currentTimeMillis();
 
-        //把参数放进列表
-//        if (bolo.CompilerCfg.isProfile) {
-//			debug.Profile.instance.begin("subname");
-//		}
-        long calls = System.currentTimeMillis();
-
-        //把过程调用的参数放入localVar
-        Statement pstat = srcCompiled[ip];
-        if (pstat != null && pstat.type == KEYWORD_SUB) {
-            StatementSub psubstat = (StatementSub) pstat;
-            for (int i = 0, j = psubstat.cell.para.length; i < j; i++) {
-                DataType pp = (DataType) (paraStack.isEmpty() ? null : paraStack.elementAt(j - i - 1));
-                if (pp != null) {
-                    ExprCellVar var = (ExprCellVar) (psubstat.cell.para[i].cells[0]);
-                    (localVar).put(var.varName, pp);
-                } else {
-                    errout(ip, STRS_ERR[ERR_PAESEPARA]);
+            //把过程调用的参数放入localVar
+            Statement pstat = srcCompiled[ip];
+            if (pstat != null && pstat.type == KEYWORD_SUB) {
+                StatementSub psubstat = (StatementSub) pstat;
+                for (int i = 0, j = psubstat.cell.para.length; i < j; i++) {
+                    DataType pp = (DataType) (paraStack.isEmpty() ? null : paraStack.elementAt(j - i - 1));
+                    if (pp != null) {
+                        ExprCellVar var = (ExprCellVar) (psubstat.cell.para[i].cells[0]);
+                        (localVar).put(var.varName, pp);
+                    } else {
+                        errout(ip, STRS_ERR[ERR_PAESEPARA]);
+                    }
                 }
+                ip++; //跳到下一行
             }
-            ip++; //跳到下一行
-        }
-        calls = System.currentTimeMillis() - calls;
+            calls = System.currentTimeMillis() - calls;
 //        System.out.println(calls);
 //        if (bolo.CompilerCfg.isProfile) {
 //			debug.Profile.instance.end("subname");
 //		}
-        calls = System.currentTimeMillis();
-        while (ip < srcCompiled.length) {
-            try {
-                //String instruct = srcCode[ip];
-                Statement stat = srcCompiled[ip];
+            calls = System.currentTimeMillis();
+            while (ip < srcCompiled.length) {
+                try {
+                    //String instruct = srcCode[ip];
+                    Statement stat = srcCompiled[ip];
 
-                //System.out.println(ip + " " + stat.src);
-                int keywordCode = stat.type;
-                if (keywordCode >= 0) { //是关键字语句
-                    switch (keywordCode) {
-                        case KEYWORD_WHILE://循环
-                        {
-                            StatementWhile pstatWhile = (StatementWhile) stat;
-                            Bool wpdt = (Bool) calcExpr(pstatWhile.expr, localVar);
-                            if (wpdt.getVal() == false) { //如果为假，则查else或endif
-                                if (pstatWhile.ip_loop != -1) {
-                                    ip = pstatWhile.ip_loop;
+                    //System.out.println(ip + " " + stat.src);
+                    int keywordCode = stat.type;
+                    if (keywordCode >= 0) { //是关键字语句
+                        switch (keywordCode) {
+                            case KEYWORD_WHILE://循环
+                            {
+                                StatementWhile pstatWhile = (StatementWhile) stat;
+                                Bool wpdt = (Bool) calcExpr(pstatWhile.expr, localVar);
+                                if (wpdt.getVal() == false) { //如果为假，则查else或endif
+                                    if (pstatWhile.ip_loop != -1) {
+                                        ip = pstatWhile.ip_loop;
+                                    } else {
+                                        int countWhile = 1;
+                                        for (int i = ip + 1; i < srcCompiled.length; i++) {
+                                            Statement tmpst = srcCompiled[i];
+                                            if (tmpst.type == KEYWORD_WHILE) {
+                                                countWhile++;
+                                            } else if (tmpst.type == KEYWORD_LOOP) {
+                                                countWhile--;
+                                            }
+                                            //跳转
+                                            if (tmpst.type == KEYWORD_LOOP && countWhile == 0) {
+                                                ip = i;
+                                                pstatWhile.ip_loop = (short) ip;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                break;
+                            }
+                            case KEYWORD_LOOP:
+                                StatementLoop sl = (StatementLoop) stat;
+                                if (sl.ip_while != -1) {
+                                    ip = sl.ip_while;
                                 } else {
                                     int countWhile = 1;
-                                    for (int i = ip + 1; i < srcCompiled.length; i++) {
-                                        Statement tmpst = srcCompiled[i];
-                                        if (tmpst.type == KEYWORD_WHILE) {
-                                            countWhile++;
-                                        } else if (tmpst.type == KEYWORD_LOOP) {
+                                    for (int i = ip - 1; i > 0; --i) {
+                                        Statement tmp = srcCompiled[i];
+                                        if (tmp.type == KEYWORD_WHILE) {
                                             countWhile--;
+                                        } else if (tmp.type == KEYWORD_LOOP) {
+                                            countWhile++;
                                         }
                                         //跳转
-                                        if (tmpst.type == KEYWORD_LOOP
-                                                && countWhile == 0) {
-                                            ip = i;
-                                            pstatWhile.ip_loop = (short) ip;
+                                        if (tmp.type == KEYWORD_WHILE && countWhile == 0) {
+                                            ip = i - 1;
+                                            sl.ip_while = (short) ip;
                                             break;
                                         }
                                     }
                                 }
-                            }
-                            break;
-                        }
-                        case KEYWORD_LOOP:
-                            StatementLoop sl = (StatementLoop) stat;
-                            if (sl.ip_while != -1) {
-                                ip = sl.ip_while;
-                            } else {
-                                int countWhile = 1;
-                                for (int i = ip - 1; i > 0; --i) {
-                                    Statement tmp = srcCompiled[i];
-                                    if (tmp.type == KEYWORD_WHILE) {
-                                        countWhile--;
-                                    } else if (tmp.type == KEYWORD_LOOP) {
-                                        countWhile++;
-                                    }
-                                    //跳转
-                                    if (tmp.type == KEYWORD_WHILE && countWhile == 0) {
-                                        ip = i - 1;
-                                        sl.ip_while = (short) ip;
-                                        break;
+                                break;
+                            case KEYWORD_IF: //if分支
+                                StatementIf pstatIf = (StatementIf) stat;
+
+                                Bool ib = (Bool) calcExpr(pstatIf.expr, localVar);
+                                if (ib.getVal() == false) { //如果为假，则查else或endif
+                                    if (pstatIf.ip_else != -1) {
+                                        ip = pstatIf.ip_else;
+                                    } else if (pstatIf.ip_endif != -1) {
+                                        ip = pstatIf.ip_endif;
+                                    } else {
+                                        int countIf = 1;
+                                        for (int i = ip + 1; i < srcCompiled.length; i++) {
+                                            Statement tmpst = srcCompiled[i];
+                                            if (tmpst.type == KEYWORD_IF) {
+                                                countIf++;
+                                            } else if (tmpst.type == KEYWORD_ENDIF) {
+                                                countIf--;
+                                            }
+
+                                            //跳转
+                                            if (tmpst.type == KEYWORD_ELSE && countIf == 1) {
+                                                ip = i;
+                                                pstatIf.ip_else = (short) ip;
+                                                break;
+                                            } else if (tmpst.type == KEYWORD_ENDIF && countIf == 0) {
+                                                ip = i;
+                                                pstatIf.ip_endif = (short) ip;
+                                                break;
+                                            }
+                                        }
                                     }
                                 }
-                            }
-                            break;
-                        case KEYWORD_IF: //if分支
-                            StatementIf pstatIf = (StatementIf) stat;
-
-                            Bool ib = (Bool) calcExpr(pstatIf.expr, localVar);
-                            if (ib.getVal() == false) { //如果为假，则查else或endif
-                                if (pstatIf.ip_else != -1) {
-                                    ip = pstatIf.ip_else;
-                                } else if (pstatIf.ip_endif != -1) {
-                                    ip = pstatIf.ip_endif;
+                                break;
+                            case KEYWORD_ELSE:
+                                StatementElse pstatElse = (StatementElse) stat;
+                                if (pstatElse.ip_endif != -1) {
+                                    ip = pstatElse.ip_endif;
                                 } else {
                                     int countIf = 1;
                                     for (int i = ip + 1; i < srcCompiled.length; i++) {
@@ -494,89 +530,66 @@ public class Interpreter {
                                         } else if (tmpst.type == KEYWORD_ENDIF) {
                                             countIf--;
                                         }
-
                                         //跳转
-                                        if (tmpst.type == KEYWORD_ELSE
-                                                && countIf == 1) {
+                                        if (tmpst.type == KEYWORD_ENDIF && countIf == 0) {
                                             ip = i;
-                                            pstatIf.ip_else = (short) ip;
-                                            break;
-                                        } else if (tmpst.type == KEYWORD_ENDIF
-                                                && countIf == 0) {
-                                            ip = i;
-                                            pstatIf.ip_endif = (short) ip;
+                                            pstatElse.ip_endif = (short) ip;
                                             break;
                                         }
                                     }
                                 }
+                                break;
+                            case KEYWORD_CALL: {
+                                StatementCall pstatCall = (StatementCall) stat;
+                                callSub(pstatCall.cell, localVar);
+
+                                break;
                             }
-                            break;
-                        case KEYWORD_ELSE:
-                            StatementElse pstatElse = (StatementElse) stat;
-                            if (pstatElse.ip_endif != -1) {
-                                ip = pstatElse.ip_endif;
-                            } else {
-                                int countIf = 1;
-                                for (int i = ip + 1; i < srcCompiled.length; i++) {
-                                    Statement tmpst = srcCompiled[i];
-                                    if (tmpst.type == KEYWORD_IF) {
-                                        countIf++;
-                                    } else if (tmpst.type == KEYWORD_ENDIF) {
-                                        countIf--;
-                                    }
-                                    //跳转
-                                    if (tmpst.type == KEYWORD_ENDIF
-                                            && countIf == 0) {
-                                        ip = i;
-                                        pstatElse.ip_endif = (short) ip;
-                                        break;
-                                    }
-                                }
+                            case KEYWORD_SET_VAR: {
+                                StatementSetVar pstatVar = (StatementSetVar) stat;
+                                _setVar(pstatVar, localVar);
+                                break;
                             }
-                            break;
-                        case KEYWORD_CALL: {
-                            StatementCall pstatCall = (StatementCall) stat;
-                            callSub(pstatCall.cell, localVar);
+                            case KEYWORD_ENDIF: {
+                                break;
+                            }
 
-                            break;
-                        }
-                        case KEYWORD_SET_VAR: {
-                            StatementSetVar pstatVar = (StatementSetVar) stat;
-                            _setVar(pstatVar, localVar);
-                            break;
-                        }
-                        case KEYWORD_ENDIF: {
-                            break;
-                        }
+                            case KEYWORD_SET_ARR: {
+                                StatementSetArr pstatArr = (StatementSetArr) stat;
+                                _setArr(pstatArr, localVar);
+                                break;
+                            }
 
-                        case KEYWORD_SET_ARR: {
-                            StatementSetArr pstatArr = (StatementSetArr) stat;
-                            _setArr(pstatArr, localVar);
-                            break;
-                        }
-
-                        case KEYWORD_SUB:
-                            return null;
-                        case KEYWORD_RET: //过程结束
-                            StatementRet pstatRet = (StatementRet) stat;
-                            if (pstatRet.expr != null) {
-                                return calcExpr(pstatRet.expr, localVar);
-                            } else {
+                            case KEYWORD_SUB:
                                 return null;
-                            }
+                            case KEYWORD_RET: //过程结束
+                                StatementRet pstatRet = (StatementRet) stat;
+                                if (pstatRet.expr != null) {
+                                    return calcExpr(pstatRet.expr, localVar);
+                                } else {
+                                    return null;
+                                }
+                        }
+                    } else {
+                        errout(ip, STRS_ERR[ERR_ILLEGAL]);
                     }
-                } else {
-                    errout(ip, STRS_ERR[ERR_ILLEGAL]);
+                } catch (Exception ex) {
+                    errout(ip, STRS_ERR[ERR_ILLEGAL] + ex.getMessage());
+                    ex.printStackTrace();
+                    break;
                 }
-            } catch (Exception ex) {
-                errout(ip, STRS_ERR[ERR_ILLEGAL] + ex.getMessage());
-                ex.printStackTrace();
-                break;
+                //指针自动加一
+                ip++;
+            } //end while
+            calls = System.currentTimeMillis() - calls;
+
+
+        } catch (Exception e) {
+        } finally {
+            if (localVar != globalVar) {
+                putCachedTable(localVar);
             }
-            //指针自动加一
-            ip++;
-        } //end while
-        calls = System.currentTimeMillis() - calls;
+        }
         return null;
     }
 
@@ -1511,7 +1524,7 @@ public class Interpreter {
      */
     private DataType callSub(ExprCellCall cell, Hashtable varList) throws Exception {
         if (cell == null) {
-            return _sub(null, 0);
+            return exec(null, 0);
         } else {
             Vector paraStack = new Vector(); //参数栈
             for (int i = 0; i < cell.para.length; i++) {
@@ -1530,7 +1543,7 @@ public class Interpreter {
             Object addr = subAddr.get(subName);
             if (addr != null) {
                 int ip = (int) ((Int) addr).getVal(); //得到过程行号
-                return _sub(paraStack, ip); //过程调用
+                return exec(paraStack, ip); //过程调用
             } else {
                 //查找系统标准过程和用户扩充过程表
                 for (int i = 0; i < extSubList.size(); i++) {

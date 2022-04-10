@@ -5,7 +5,7 @@ import org.mini.gui.event.GStateChangeListener;
 import org.mini.layout.xmlpull.KXmlParser;
 
 public class XTextInput
-        extends XObject implements GStateChangeListener {
+        extends XObject {
 
     static public final String XML_NAME = "input";
 
@@ -92,7 +92,7 @@ public class XTextInput
             }
             initGui();
             textInput.setEnable(enable);
-            textInput.setStateChangeListener(this);
+            textInput.setStateChangeListener(getRoot().getEventHandler());
             textInput.setEditable(edit);
         } else {
             textInput.setLocation(x, y);
@@ -100,8 +100,4 @@ public class XTextInput
         }
     }
 
-    @Override
-    public void onStateChange(GObject gobj) {
-        getRoot().getEventHandler().onStateChange(gobj, null);
-    }
 }

@@ -2,23 +2,21 @@ package org.mini.layout;
 
 import org.mini.gui.GFrame;
 import org.mini.gui.GObject;
-import org.mini.gui.event.GStateChangeListener;
-import org.mini.layout.gscript.Interpreter;
-import org.mini.layout.gscript.Str;
 
 
 /**
  *
  */
 public class XFrame
-        extends XContainer implements GStateChangeListener {
+        extends XContainer {
 
     static public final String XML_NAME = "frame";
 
     protected GFrame frame;
 
     protected String title;
-    protected String onClose;
+    protected String onCloseScript;
+    protected String onInitScript;
     boolean closable = true;
 
 
@@ -40,7 +38,9 @@ public class XFrame
         } else if (attName.equals("title")) {
             title = attValue;
         } else if (attName.equals("onclose")) {
-            onClose = attValue;
+            onCloseScript = attValue;
+        } else if (attName.equals("oninit")) {
+            onInitScript = attValue;
         }
     }
 
@@ -102,6 +102,8 @@ public class XFrame
             initGui();
             frame.setClosable(closable);
             frame.setFront(true);
+            frame.setOnCloseScript(onCloseScript);
+            frame.setOnInitScript(onInitScript);
         } else {
             frame.setLocation(x, y);
             frame.setSize(width, height);
@@ -123,16 +125,4 @@ public class XFrame
     public void cancel() {
     }
 
-
-    @Override
-    public void onStateChange(GObject gobj) {
-        if (onClose != null) {
-            Interpreter inp = getRoot().getInp();
-            // 执行脚本
-            if (inp != null) {
-                inp.callSub(onClose);
-            }
-        }
-        getRoot().getEventHandler().onStateChange(gobj, cmd);
-    }
 }

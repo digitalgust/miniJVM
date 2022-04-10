@@ -3,17 +3,16 @@ package org.mini.layout;
 import org.mini.gui.*;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GStateChangeListener;
-import org.mini.layout.gscript.Interpreter;
-import org.mini.layout.gscript.Str;
+import org.mini.gui.gscript.Interpreter;
 import org.mini.layout.xmlpull.KXmlParser;
 import org.mini.layout.xmlpull.XmlPullParser;
 
 import java.util.Vector;
 
-public class XList extends XObject implements GStateChangeListener {
+public class XList extends XObject {
     static public final String XML_NAME = "list";
 
-    protected static class ListItem implements GActionListener {
+    protected static class ListItem {
         static public final String XML_NAME = "li";
 
         XList xlist;
@@ -24,18 +23,6 @@ public class XList extends XObject implements GStateChangeListener {
         String attachment;
         String onClick;
         boolean selected;
-
-        @Override
-        public void action(GObject gobj) {
-            if (onClick != null) {
-                Interpreter inp = xlist.getRoot().getInp();
-                // 执行脚本
-                if (inp != null) {
-                    inp.callSub(onClick);
-                }
-            }
-            xlist.getRoot().getEventHandler().action(gobj, gobj.getCmd());
-        }
     }
 
     protected Vector items = new Vector();
@@ -138,7 +125,7 @@ public class XList extends XObject implements GStateChangeListener {
             list.setSelectMode(multiSelect ? GList.MODE_MULTI_SELECT : GList.MODE_SINGLE_SELECT);
             list.setItemHeight(itemheight);
             list.setScrollBar(scrollbar);
-            list.setStateChangeListener(this);
+            list.setStateChangeListener(getRoot().getEventHandler());
             int selected = -1, selectCount = 0;
             for (int i = 0; i < items.size(); i++) {
                 ListItem item = (ListItem) items.elementAt(i);
@@ -149,7 +136,7 @@ public class XList extends XObject implements GStateChangeListener {
                 GListItem gli = new GListItem(img, item.text);
                 gli.setName(item.name);
                 gli.setAttachment(item.attachment);
-                gli.setActionListener(item);
+                gli.setActionListener(getRoot().getEventHandler());
                 gli.setEnable(enable);
                 gli.setCmd(item.cmd);
                 list.add(gli);
@@ -179,9 +166,4 @@ public class XList extends XObject implements GStateChangeListener {
         }
     }
 
-
-    @Override
-    public void onStateChange(GObject gobj) {
-        getRoot().getEventHandler().onStateChange(gobj, gobj.getCmd());
-    }
 }

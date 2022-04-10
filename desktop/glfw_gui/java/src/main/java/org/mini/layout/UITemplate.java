@@ -33,27 +33,27 @@ public class UITemplate {
      */
     private String[] variable;
 
-    public static void main(String[] args) {
-        String uistr = "<frame title='{TITLE}'></frame>";
-        UITemplate uit = new UITemplate(uistr);
-        uit.setVar("TITLE", "This is title");
-        String result = uit.parse();
-        System.out.println(result);
-        //then result would be : <frame title='This is title'></frame>
-        String s;
-        s = "b";
-        switch (s) {
-            case "a":
-                s += "2";
-                break;
-            case "b":
-                s += "3";
-                break;
-        }
-        System.out.println(s);
-        System.out.println((int) Long.parseLong("801010ff",16));
-        //System.out.println(Integer.parseUnsignedInt("801010ff",16));
-    }
+//    public static void main(String[] args) {
+//        String uistr = "<frame title='{TITLE}'></frame>";
+//        UITemplate uit = new UITemplate(uistr);
+//        uit.setVar("TITLE", "This is title");
+//        String result = uit.parse();
+//        System.out.println(result);
+//        //then result would be : <frame title='This is title'></frame>
+//        String s;
+//        s = "b";
+//        switch (s) {
+//            case "a":
+//                s += "2";
+//                break;
+//            case "b":
+//                s += "3";
+//                break;
+//        }
+//        System.out.println(s);
+//        System.out.println((int) Long.parseLong("801010ff",16));
+//        //System.out.println(Integer.parseUnsignedInt("801010ff",16));
+//    }
 
     /**
      * @param data

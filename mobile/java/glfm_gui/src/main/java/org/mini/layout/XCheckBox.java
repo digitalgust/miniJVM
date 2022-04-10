@@ -3,20 +3,18 @@ package org.mini.layout;
 import org.mini.gui.GCheckBox;
 import org.mini.gui.GObject;
 import org.mini.gui.event.GActionListener;
-import org.mini.layout.gscript.Interpreter;
-import org.mini.layout.gscript.Str;
+import org.mini.gui.gscript.Interpreter;
 import org.mini.layout.xmlpull.KXmlParser;
 
 /**
  *
  */
 public class XCheckBox
-        extends XObject implements GActionListener {
+        extends XObject {
 
     static public final String XML_NAME = "checkbox";
     // 当前绘制颜色
     protected boolean selected = true;
-    protected String onClick;
 
     protected GCheckBox checkBox;
 
@@ -30,18 +28,6 @@ public class XCheckBox
 
     public String getXmlTag() {
         return XML_NAME;
-    }
-
-    @Override
-    public void action(GObject gobj) {
-        if (onClick != null) {
-            Interpreter inp = getRoot().getInp();
-            // 执行脚本
-            if (inp != null) {
-                inp.callSub(onClick);
-            }
-        }
-        getRoot().getEventHandler().action(gobj, gobj.getCmd());
     }
 
     protected void parseMoreAttribute(String attName, String attValue) {
@@ -78,7 +64,7 @@ public class XCheckBox
         if (checkBox == null) {
             checkBox = new GCheckBox(text, false, x, y, width, height);
             initGui();
-            checkBox.setActionListener(this);
+            checkBox.setActionListener(getRoot().getEventHandler());
             checkBox.setChecked(selected);
         } else {
             checkBox.setLocation(x, y);

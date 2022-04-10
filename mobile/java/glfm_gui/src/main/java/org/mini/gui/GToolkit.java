@@ -59,21 +59,23 @@ public class GToolkit {
         try {
 
             InputStream is = GCallBack.getInstance().getResourceAsStream(path);
-            int av = is.available();
-            if (is != null && av >= 0) {
-                byte[] b = new byte[av];
-                int r, read = 0;
-                while (read < av) {
-                    r = is.read(b, read, av - read);
-                    read += r;
+            if (is != null) {
+                int av = is.available();
+
+                if (av >= 0) {
+                    byte[] b = new byte[av];
+                    int r, read = 0;
+                    while (read < av) {
+                        r = is.read(b, read, av - read);
+                        read += r;
+                    }
+                    return b;
                 }
-                return b;
-            } else {
-                System.out.println("load from jar fail : " + path);
             }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+        System.out.println("load from jar fail : " + path);
         return null;
     }
 
@@ -1027,7 +1029,7 @@ public class GToolkit {
         if (eitem != null) {
             return eitem.getText();
         }
-        return null;
+        return "";
     }
 
 
@@ -1055,7 +1057,7 @@ public class GToolkit {
         if (eitem != null) {
             return eitem.getCmd();
         }
-        return null;
+        return "";
     }
 
     public static void setCompCmd(String compName, String text) {
@@ -1080,7 +1082,7 @@ public class GToolkit {
         if (compName == null || parent == null) return null;
         GObject eitem = parent.findByName(compName);
         if (eitem != null && eitem instanceof GImageItem) {
-            ((GImageItem) eitem).getImg();
+            return ((GImageItem) eitem).getImg();
         }
         return null;
     }

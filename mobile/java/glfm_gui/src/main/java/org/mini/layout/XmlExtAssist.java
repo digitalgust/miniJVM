@@ -1,6 +1,6 @@
 package org.mini.layout;
 
-import org.mini.layout.gscript.Lib;
+import org.mini.gui.gscript.Lib;
 
 import java.util.Vector;
 

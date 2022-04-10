@@ -1,4 +1,4 @@
-package org.mini.layout.gscript;
+package org.mini.gui.gscript;
 
 public class Str extends DataType {
 

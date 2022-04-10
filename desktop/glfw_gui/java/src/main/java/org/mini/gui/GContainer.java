@@ -7,6 +7,7 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.gui.event.GChildrenListener;
+import org.mini.gui.gscript.Interpreter;
 import org.mini.nanovg.Nanovg;
 
 import java.util.ArrayList;
@@ -23,15 +24,39 @@ abstract public class GContainer extends GObject {
     private final List<GChildrenListener> childrenListeners = new ArrayList();
     protected GObject focus;
     float[] visableArea = new float[4];
-    private Object script;
 
+    //脚本相关
+    private Interpreter interpreter;// 脚本引擎,用于对GUI组件进行修改
 
-    public <T extends Object> T getScript() {
-        return (T) script;
+    @Override
+    public Interpreter getInterpreter() {
+        return getInterpreter(null);
     }
 
-    public void setScript(Object script) {
-        this.script = script;
+    @Override
+    public Interpreter getInterpreter(String containerName) {
+        if (containerName == null) {
+            if (interpreter != null) {
+                return interpreter;
+            } else {
+                return parent == null ? null : parent.getInterpreter();
+            }
+        } else {
+            if (containerName.equals(name) && interpreter != null) {
+                return interpreter;
+            } else {
+                return parent == null ? null : parent.getInterpreter(containerName);
+            }
+        }
+    }
+
+    public void setInterpreter(Interpreter interpreter) {
+        this.interpreter = interpreter;
+    }
+
+    public void loadScript(String scriptStr) {
+        interpreter = new Interpreter();
+        interpreter.loadFromString(scriptStr);
     }
 
     public abstract float getInnerX();
@@ -51,8 +76,7 @@ abstract public class GContainer extends GObject {
     public boolean isInArea(float x, float y) {
         float absx = getX();
         float absy = getY();
-        return x >= absx && x <= absx + getW()
-                && y >= absy && y <= absy + getH();
+        return x >= absx && x <= absx + getW() && y >= absy && y <= absy + getH();
     }
 
     public float[] getVisableArea() {

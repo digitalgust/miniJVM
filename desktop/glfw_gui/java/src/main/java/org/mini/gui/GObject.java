@@ -9,7 +9,7 @@ import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFlyListener;
 import org.mini.gui.event.GFocusChangeListener;
 import org.mini.gui.event.GStateChangeListener;
-import org.mini.layout.XObject;
+import org.mini.gui.gscript.Interpreter;
 import org.mini.nanovg.Nanovg;
 
 import java.util.TimerTask;
@@ -85,7 +85,14 @@ abstract public class GObject {
 
     private String cmd;//类似attachment 用于附加String类型用户数据
 
-    protected Object xmlAgent;
+    //脚本触发器
+    /**
+     * two call formate:
+     * framename.fun(1,2)  'assignment Interpreter by parent component name
+     * fun(1,2)            'not assignment, it will find the first Interpreter of parents
+     */
+    private String onClinkScript;
+    private String onStateChangeScript;
 
     /**
      *
@@ -223,15 +230,13 @@ abstract public class GObject {
     }
 
     public static boolean isInBoundle(float[] bound, float x, float y) {
-        return x >= bound[LEFT] && x <= bound[LEFT] + bound[WIDTH]
-                && y >= bound[TOP] && y <= bound[TOP] + bound[HEIGHT];
+        return x >= bound[LEFT] && x <= bound[LEFT] + bound[WIDTH] && y >= bound[TOP] && y <= bound[TOP] + bound[HEIGHT];
     }
 
     public boolean isInArea(float x, float y) {
         float absx = getX();
         float absy = getY();
-        return x >= absx && x <= absx + getW()
-                && y >= absy && y <= absy + getH();
+        return x >= absx && x <= absx + getW() && y >= absy && y <= absy + getH();
     }
 
     public float[] getBoundle() {
@@ -456,15 +461,6 @@ abstract public class GObject {
         this.attachment = attachment;
     }
 
-
-    public <T extends XObject> T getXmlAgent() {
-        return (T) xmlAgent;
-    }
-
-    public void setXmlAgent(Object xmlAgent) {
-        this.xmlAgent = xmlAgent;
-    }
-
     /**
      * @return the front
      */
@@ -505,6 +501,18 @@ abstract public class GObject {
 
     void doAction() {
         if (actionListener != null && enable) {
+            if (onClinkScript != null) {
+                Interpreter inp = parseInpByCall(onClinkScript);
+                String funcName = parseInstByCall(onClinkScript);
+                if (inp != null && funcName != null) {
+                    try {
+                        inp.callSub(funcName);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
             actionListener.action(this);
         }
     }
@@ -530,9 +538,19 @@ abstract public class GObject {
         this.stateChangeListener = stateChangeListener;
     }
 
-
     void doStateChanged(GObject go) {
         if (stateChangeListener != null) {
+            if (onStateChangeScript != null) {
+                Interpreter inp = parseInpByCall(onStateChangeScript);
+                String funcName = parseInstByCall(onStateChangeScript);
+                if (inp != null && funcName != null) {
+                    try {
+                        inp.callSub(funcName);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
             stateChangeListener.onStateChange(go);
         }
     }
@@ -594,4 +612,75 @@ abstract public class GObject {
     public String getCmd() {
         return this.cmd;
     }
+
+
+    //================================  script   =====================================
+
+    /**
+     * @param funcCall
+     * @return
+     */
+    protected Interpreter parseInpByCall(String funcCall) {
+        Interpreter inp = null;
+        //two call formate:
+        // framename.fun(1,2)
+        // fun(1,2)
+        int leftQ = funcCall.indexOf('(');
+        int point = funcCall.indexOf('.');
+        if (leftQ > 0) {
+            if (point >= 0 && point < leftQ) {
+                String containerName = funcCall.substring(0, point);
+                inp = getInterpreter(containerName);
+            } else {
+                inp = getInterpreter();
+            }
+        }
+        return inp;
+    }
+
+    protected String parseInstByCall(String funcCall) {
+        String funcName = null;
+        //two call formate:
+        // framename.fun(1,2)
+        // fun(1,2)
+        int leftQ = funcCall.indexOf('(');
+        int point = funcCall.indexOf('.');
+        if (leftQ > 0) {
+            if (point >= 0 && point < leftQ) {
+                funcName = funcCall.substring(point + 1);
+            } else {
+                funcName = funcCall;
+            }
+        }
+        return funcName;
+    }
+
+
+    public void setOnClinkScript(String onClinkScript) {
+        this.onClinkScript = onClinkScript;
+    }
+
+    public void setOnStateChangeScript(String onStateChangeScript) {
+        this.onStateChangeScript = onStateChangeScript;
+    }
+
+    public String getOnClinkScript() {
+        return onClinkScript;
+    }
+
+    public String getOnStateChangeScript() {
+        return onStateChangeScript;
+    }
+
+    public Interpreter getInterpreter() {
+        return getInterpreter(null);
+    }
+
+    public Interpreter getInterpreter(String containerName) {
+        if (parent == null) return null;
+        if (containerName == null) return parent.getInterpreter();
+        return parent.getInterpreter(containerName);
+    }
+    //================================    =====================================
+
 }

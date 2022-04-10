@@ -11,7 +11,7 @@ import org.mini.gui.event.GStateChangeListener;
  * </viewslot>
  */
 
-public class XViewSlot extends XContainer implements GStateChangeListener {
+public class XViewSlot extends XContainer {
     static public final String XML_NAME = "viewslot";
 
     protected int scroll = GViewSlot.SCROLL_MODE_HORIZONTAL;
@@ -83,7 +83,7 @@ public class XViewSlot extends XContainer implements GStateChangeListener {
             initGui();
             viewSlot.setLocation(x, y);
             viewSlot.setSize(width, height);
-            viewSlot.setStateChangeListener(this);
+            viewSlot.setStateChangeListener(getRoot().getEventHandler());
 
         } else {
             viewSlot.setLocation(x, y);
@@ -96,11 +96,4 @@ public class XViewSlot extends XContainer implements GStateChangeListener {
 
     }
 
-    @Override
-    public void onStateChange(GObject gobj) {
-        XContainer root = getRoot();
-        if (root != null && root.getEventHandler() != null) {
-            root.getEventHandler().onStateChange(gobj, null);
-        }
-    }
 }

@@ -1,11 +1,9 @@
 package org.mini.layout;
 
-import org.mini.gui.GGraphics;
 import org.mini.gui.GLabel;
 import org.mini.gui.GObject;
 import org.mini.gui.event.GActionListener;
-import org.mini.layout.gscript.Interpreter;
-import org.mini.layout.gscript.Str;
+import org.mini.gui.gscript.Interpreter;
 import org.mini.layout.xmlpull.KXmlParser;
 import org.mini.nanovg.Nanovg;
 
@@ -13,7 +11,7 @@ import org.mini.nanovg.Nanovg;
  *
  */
 public class XLabel
-        extends XObject implements GActionListener {
+        extends XObject {
 
     static public final String XML_NAME = "label";
     // 当前绘制颜色
@@ -35,17 +33,6 @@ public class XLabel
         return XML_NAME;
     }
 
-    @Override
-    public void action(GObject gobj) {
-        if (onClick != null) {
-            Interpreter inp = getRoot().getInp();
-            // 执行脚本
-            if (inp != null) {
-                inp.callSub(onClick);
-            }
-        }
-        getRoot().getEventHandler().action(gobj, gobj.getCmd());
-    }
 
     protected void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
@@ -55,7 +42,7 @@ public class XLabel
                 align |= XUtil.parseAlign(s);
             }
         } else if (attName.equals("onclick")) {
-            onClick = XUtil.getField(attValue, 0);
+            onClick = attValue;
         } else if (attName.equals("addon")) {
             addon = Integer.parseInt(attValue);
         }
@@ -90,7 +77,7 @@ public class XLabel
         if (label == null) {
             label = new GLabel(text, x, y, width, height);
             initGui();
-            label.setActionListener(this);
+            label.setActionListener(getRoot().getEventHandler());
             label.setAlign(align);
             label.setShowMode(GLabel.MODE_MULTI_SHOW);
 
