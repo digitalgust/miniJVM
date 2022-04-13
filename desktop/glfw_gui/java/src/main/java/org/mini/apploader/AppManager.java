@@ -214,13 +214,13 @@ public class AppManager extends GApplication {
         eventHandler = new AppmEventHandler();
         XContainer container = (XViewSlot) XContainer.parseXml(uit.parse());
         container.build((int) devW, (int) (devH), eventHandler);
-        mainSlot = (GViewSlot) (container.getGui());
-        appList = (GList) mainSlot.findByName("LIST_APP");
-        contentView = (GViewPort) mainSlot.findByName("VP_CONTENT");
+        mainSlot = container.getGui();
+        appList = mainSlot.findByName("LIST_APP");
+        contentView = mainSlot.findByName("VP_CONTENT");
         logBox = mainSlot.findByName("INPUT_LOG");
-        GList langList = (GList) mainSlot.findByName("LIST_LANG");
+        GList langList = mainSlot.findByName("LIST_LANG");
         langList.setSelectedIndex(AppLoader.getDefaultLang());
-        GList styleList = (GList) mainSlot.findByName("LIST_STYLE");
+        GList styleList = mainSlot.findByName("LIST_STYLE");
         if (GToolkit.getStyle() instanceof GStyleBright) {
             styleList.setSelectedIndex(0);
         } else {

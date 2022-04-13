@@ -92,7 +92,6 @@ public class XTextInput
             }
             initGui();
             textInput.setEnable(enable);
-            textInput.setStateChangeListener(getRoot().getEventHandler());
             textInput.setEditable(edit);
         } else {
             textInput.setLocation(x, y);

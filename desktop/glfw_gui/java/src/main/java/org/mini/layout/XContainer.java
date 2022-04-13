@@ -115,7 +115,10 @@ public abstract class XContainer
         for (int i = 0; i < children.size(); i++) {
             XObject xo = children.get(i);
             GObject go = xo.getGui();
-            if (go != null) ((GContainer) getGui()).add(go);
+            if (go != null) {
+                GContainer gc = getGui();
+                gc.add(go);
+            }
         }
     }
 

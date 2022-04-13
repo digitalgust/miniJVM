@@ -1,6 +1,7 @@
 package org.mini.layout;
 
 import org.mini.gui.GContainer;
+import org.mini.gui.GLayout;
 import org.mini.gui.GObject;
 import org.mini.gui.GuiScriptLib;
 import org.mini.gui.event.GFlyListener;
@@ -8,7 +9,7 @@ import org.mini.gui.gscript.Interpreter;
 import org.mini.gui.gscript.Lib;
 import org.mini.layout.xmlpull.KXmlParser;
 
-public abstract class XObject {
+public abstract class XObject implements GLayout {
 
     //used for align
     protected int x = XDef.NODEF, y = XDef.NODEF, width = XDef.NODEF, height = XDef.NODEF;
@@ -68,13 +69,34 @@ public abstract class XObject {
         parent = xc;
     }
 
+    @Override
     public XContainer getParent() {
         return parent;
     }
 
 
-    public void setParent(XContainer parent) {
-        this.parent = parent;
+    @Override
+    public void setParent(GLayout p) {
+        if (p != null) {
+            if (p instanceof XContainer) {
+                XContainer xc = (XContainer) p;
+                if (!xc.children.contains(this)) {
+                    xc.children.add(this);
+                }
+                this.parent = xc;
+            }else{
+                System.out.println("error ============");
+            }
+        } else {
+            if (this.parent != null) {
+                this.parent.children.remove(this);
+            }
+            this.parent = null;
+        }
+    }
+
+    public void reSize(int parentW, int parentH) {
+
     }
 
 
@@ -190,6 +212,7 @@ public abstract class XObject {
     public void initGui() {
         GObject gui = getGui();
         if (gui != null) {
+            gui.setLayout(this);
             gui.setEnable(enable);
             gui.setName(name);
             gui.setText(text);
@@ -200,6 +223,8 @@ public abstract class XObject {
             gui.setBack(backest);
             gui.setFlyable(fly);
             gui.setOnClinkScript(onClinkScript);
+            gui.setActionListener(getRoot().getEventHandler());
+            gui.setStateChangeListener(getRoot().getEventHandler());
             gui.setOnStateChangeScript(onStateChangeScript);
             if (fly) {
                 gui.setFlyListener(getRoot().getEventHandler());

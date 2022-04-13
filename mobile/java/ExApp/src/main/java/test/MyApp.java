@@ -38,7 +38,8 @@ public class MyApp extends GApplication {
 
         //build gui with event handler
         xc.build(screenW, screenH, new XEventHandler() {
-            public void action(GObject gobj, String cmd) {
+            @Override
+            public void action(GObject gobj) {
                 String name = gobj.getName();
                 switch (name) {
                     case "MI_OPENFRAME":
@@ -66,8 +67,8 @@ public class MyApp extends GApplication {
         //process Hori screen or Vert screen
         //if screen size changed ,then ui will resized relative
         form.setSizeChangeListener((width, height) -> {
-            if (gframe != null && gframe.getXmlAgent() != null) {
-                ((XContainer) form.getXmlAgent()).reSize(width, height);
+            if (gframe != null && gframe.getLayout() != null) {
+                form.getLayout().reSize(width, height);
                 gframe.align(GGraphics.HCENTER | GGraphics.VCENTER);
             }
         });

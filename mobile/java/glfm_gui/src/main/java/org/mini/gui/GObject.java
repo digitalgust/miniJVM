@@ -84,6 +84,7 @@ abstract public class GObject {
     protected Object attachment;//用户自定义数据
 
     private String cmd;//类似attachment 用于附加String类型用户数据
+    protected GLayout layout;
 
     //脚本触发器
     /**
@@ -682,5 +683,14 @@ abstract public class GObject {
         return parent.getInterpreter(containerName);
     }
     //================================    =====================================
+
+
+    public GLayout getLayout() {
+        return layout;
+    }
+
+    public void setLayout(GLayout layout) {
+        this.layout = layout;
+    }
 
 }

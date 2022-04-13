@@ -165,7 +165,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     @Override
     public void focusGot(GObject go) {
         if (enable) {
-            GForm.showKeyboard();
+            GForm.showKeyboard(this);
         }
     }
 

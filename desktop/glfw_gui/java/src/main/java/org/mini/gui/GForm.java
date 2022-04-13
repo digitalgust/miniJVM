@@ -33,6 +33,10 @@ public class GForm extends GPanel {
     protected GCallBack callback;
     protected float pxRatio;
     protected GObject flyingObject;
+
+    //键盘弹出,使form 向上移动
+    float keyboardPopTranslateFormY;
+    protected GObject editObject;
     //
     //
 
@@ -184,9 +188,24 @@ public class GForm extends GPanel {
     }
 
     public void KeyboardPopEvent(boolean visible, float x, float y, float w, float h) {
+        if (visible) {
+            if (editObject != null) {
+                float objbtn = editObject.getY() + editObject.getH();
+                float obj2scrbtn = getH() - objbtn;
+                if (h > obj2scrbtn) {
+                    float trans = h - obj2scrbtn;
+                    this.setLocation(getX(), getY() - trans);
+                    keyboardPopTranslateFormY += trans;//多次弹出
+                }
+            }
+        } else {
+            this.setLocation(getX(), getY() + keyboardPopTranslateFormY);
+            keyboardPopTranslateFormY = 0;
+        }
         if (keyshowListener != null) {
             keyshowListener.keyboardShow(visible, x, y, w, h);
         }
+        flush();
     }
 
     public GSizeChangeListener getSizeChangeListener() {
@@ -309,7 +328,13 @@ public class GForm extends GPanel {
         cmdHandler.addCmd(GCmd.GCMD_SHOW_KEYBOARD);
     }
 
+    public static void showKeyboard(GTextObject editObj) {
+        GCallBack.getInstance().getForm().editObject = editObj;
+        cmdHandler.addCmd(GCmd.GCMD_SHOW_KEYBOARD);
+    }
+
     public static void hideKeyboard() {
+        GCallBack.getInstance().getForm().editObject = null;
         cmdHandler.addCmd(GCmd.GCMD_HIDE_KEYBOARD);
     }
 

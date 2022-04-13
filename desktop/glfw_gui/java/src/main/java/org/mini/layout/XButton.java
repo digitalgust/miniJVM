@@ -75,7 +75,6 @@ public class XButton
             button = new GButton(text, x, y, width, height);
             initGui();
             button.setIcon(emoji);
-            button.setActionListener(getRoot().getEventHandler());
         } else {
             button.setLocation(x, y);
             button.setSize(width, height);

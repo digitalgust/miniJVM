@@ -171,18 +171,25 @@ public class GFrame extends GContainer {
         }
     }
 
-    void validLocation() { //ensure frame close bar in screen
+    /**
+     * ensure frame close bar in form ,not in screen
+     * because form maybe translate on keyboard popup
+     */
+    void validLocation() {
+        GForm form = GCallBack.getInstance().getForm();
+        if (form == null) return;
+
         if (getX() < -(getW() - 40)) {
             setLocation(-(getW() - 40), getY());
         }
-        if (getY() < 0) {
+        if (getY() < form.getY()) {
             setLocation(getX(), 0);
         }
-        if (getX() > GCallBack.getInstance().getDeviceWidth() - 40) {
-            setLocation(GCallBack.getInstance().getDeviceWidth() - 40, getY());
+        if (getX() > form.getX() + form.getW() - 40) {
+            setLocation(form.getX() + form.getW() - 40, getY());
         }
-        if (getY() > GCallBack.getInstance().getDeviceHeight() - 30) {
-            setLocation(getX(), GCallBack.getInstance().getDeviceHeight() - 30);
+        if (getY() > form.getY() + form.getH() - 30) {
+            setLocation(getX(), form.getY() + form.getH() - 30);
         }
     }
 
@@ -302,7 +309,7 @@ public class GFrame extends GContainer {
         if (isInArea(x, y)) {
             super.mouseButtonEvent(button, pressed, x, y);
         } else {
-            view.setFocus(null);
+            //view.setFocus(null);// x,y not in FrameArea when  popup keyboard
         }
     }
 

@@ -1,5 +1,6 @@
 package org.mini.gui.gscript;
 
+import java.util.Locale;
 import java.util.Vector;
 
 /* 
@@ -100,7 +101,7 @@ class ExprCellVar extends ExprCell {
 
     ExprCellVar(String pvarname, Interpreter inp) {
         type = (ExprCell.EXPR_CELL_VAR);
-        varName = pvarname;
+        varName = pvarname.toLowerCase();
     }
 
     public String toString() {

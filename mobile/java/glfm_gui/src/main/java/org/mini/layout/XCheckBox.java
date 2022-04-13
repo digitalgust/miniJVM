@@ -64,7 +64,6 @@ public class XCheckBox
         if (checkBox == null) {
             checkBox = new GCheckBox(text, false, x, y, width, height);
             initGui();
-            checkBox.setActionListener(getRoot().getEventHandler());
             checkBox.setChecked(selected);
         } else {
             checkBox.setLocation(x, y);

@@ -55,7 +55,6 @@ public class XSwitcher
         if (switcher == null) {
             switcher = new GSwitcher();
             initGui();
-            switcher.setActionListener(getRoot().getEventHandler());
         } else {
             switcher.setLocation(x, y);
             switcher.setSize(width, height);

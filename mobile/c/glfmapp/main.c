@@ -47,7 +47,7 @@ void glfmMain(GLFMDisplay *display) {
         jvm_printf("[ERROR] jvm create error.\n");
         return;
     }
-    refers.jvm->jdwp_enable = 0; //set to 1 if enable jdwp for java debug
+    refers.jvm->jdwp_enable = 01; //set to 1 if enable jdwp for java debug
     refers.jvm->jdwp_suspend_on_start = 0;
     s32 ret = jvm_init(refers.jvm, utf8_cstr(bootclasspath), utf8_cstr(classpath));
     if(ret){

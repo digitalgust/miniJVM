@@ -66,6 +66,7 @@ public class AppLoader {
             setBootApp(EXAMPLE_APP_FILE);
             bootApp = EXAMPLE_APP_FILE;
         }
+        bootApp = "block the setup bootapp auto boot";
         runApp(bootApp);
     }
 

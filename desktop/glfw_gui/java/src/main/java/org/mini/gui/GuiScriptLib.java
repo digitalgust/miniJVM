@@ -40,6 +40,7 @@ public class GuiScriptLib extends Lib {
         methodNames.put("setAttachInt".toLowerCase(), 19);//
         methodNames.put("setBgColorHexStr".toLowerCase(), 20);//  set background color
         methodNames.put("setColorHexStr".toLowerCase(), 21);//  set background color
+        methodNames.put("getListIdx".toLowerCase(), 22);//  set background color
     }
 
     ;
@@ -103,6 +104,8 @@ public class GuiScriptLib extends Lib {
                 return setBgColorHexStr(para);
             case 21:
                 return setColorHexStr(para);
+            case 22:
+                return getListIdx(para);
             default:
         }
         return null;
@@ -342,4 +345,16 @@ public class GuiScriptLib extends Lib {
         Integer val = GToolkit.getCompAttachment(compont);
         return new Int(val == null ? 0 : val.intValue());
     }
+
+
+    public DataType getListIdx(Vector para) {
+        String compont = ((Str) Interpreter.vPopBack(para)).getVal();
+        GObject gobj = GToolkit.getComponent(compont);
+        int selectIndex = -1;
+        if (gobj != null && gobj instanceof GList) {
+            selectIndex = ((GList) gobj).getSelectedIndex();
+        }
+        return new Int(selectIndex);
+    }
+
 }

@@ -36,6 +36,8 @@ public class Stdlib extends Lib {
         methodNames.put("isnull".toLowerCase(), 18); //   Obj 类型是否为空
         methodNames.put("getobjfield".toLowerCase(), 19);
         methodNames.put("setobjfield".toLowerCase(), 20);
+        methodNames.put("trim".toLowerCase(), 21);//字符串去空格
+        methodNames.put("str2int".toLowerCase(), 22);//字符串转int
     }
 
     ;
@@ -91,6 +93,10 @@ public class Stdlib extends Lib {
                 return getObjField(para);
             case 20:
                 return setObjField(para);
+            case 21:
+                return trim(para);
+            case 22:
+                return str2int(para);
         }
         return null;
     }
@@ -414,6 +420,30 @@ public class Stdlib extends Lib {
                 }
 
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    private DataType trim(Vector para) {
+        try {
+            String str = ((Str) (Interpreter.vPopBack(para))).getVal();
+            return new Str(str.trim());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    private DataType str2int(Vector para) {
+        try {
+            String str = ((Str) (Interpreter.vPopBack(para))).getVal();
+            str = str.trim();
+            int i = Integer.parseInt(str);
+            return new Int(i);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -83,7 +83,6 @@ public class XViewSlot extends XContainer {
             initGui();
             viewSlot.setLocation(x, y);
             viewSlot.setSize(width, height);
-            viewSlot.setStateChangeListener(getRoot().getEventHandler());
 
         } else {
             viewSlot.setLocation(x, y);

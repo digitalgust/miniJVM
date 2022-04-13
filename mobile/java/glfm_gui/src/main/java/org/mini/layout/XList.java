@@ -125,7 +125,6 @@ public class XList extends XObject {
             list.setSelectMode(multiSelect ? GList.MODE_MULTI_SELECT : GList.MODE_SINGLE_SELECT);
             list.setItemHeight(itemheight);
             list.setScrollBar(scrollbar);
-            list.setStateChangeListener(getRoot().getEventHandler());
             int selected = -1, selectCount = 0;
             for (int i = 0; i < items.size(); i++) {
                 ListItem item = (ListItem) items.elementAt(i);

@@ -1,4 +1,4 @@
-<viewslot w="100%" h="100%" scroll="h">
+<viewslot w="100%" h="100%" scroll="h" name="SLOT_MGR">
     <panel name="PAN_MGR" w="100%" h="100%" move="fixed" align="hcenter,top">
         <table w="98%" h="100%">
             <tr>

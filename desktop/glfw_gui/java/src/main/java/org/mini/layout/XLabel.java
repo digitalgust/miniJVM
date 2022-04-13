@@ -77,7 +77,6 @@ public class XLabel
         if (label == null) {
             label = new GLabel(text, x, y, width, height);
             initGui();
-            label.setActionListener(getRoot().getEventHandler());
             label.setAlign(align);
             label.setShowMode(GLabel.MODE_MULTI_SHOW);
 
