@@ -17,6 +17,8 @@ public abstract class GStyle {
 
     public abstract float[] getBackgroundColor();
 
+    public abstract float[] getListBackgroundColor();
+
     public abstract float[] getPopBackgroundColor();
 
     public abstract float getTextFontSize();

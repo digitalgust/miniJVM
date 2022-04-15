@@ -11,6 +11,7 @@ import org.mini.gui.gscript.Interpreter;
 import org.mini.nanovg.Nanovg;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import static org.mini.nanovg.Nanovg.nvgSave;
@@ -106,6 +107,11 @@ abstract public class GContainer extends GObject {
     //  GFrame can't direct add children in it , GList too
     //
 
+    /**
+     * lock it when modify the list
+     *
+     * @return
+     */
     public List<GObject> getElements() {
         return getElementsImpl();
     }
@@ -377,6 +383,11 @@ abstract public class GContainer extends GObject {
             }
 
         } catch (Exception e) {
+//            System.out.println(this);
+//            System.out.println(this.getFrame());
+//            for (Iterator<GObject> it = elements.listIterator(); it.hasNext(); ) {
+//                System.out.println("--" + it.next());
+//            }
             e.printStackTrace();
         }
         return true;

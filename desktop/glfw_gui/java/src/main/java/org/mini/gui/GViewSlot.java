@@ -106,8 +106,11 @@ public class GViewSlot extends GViewPort {
     }
 
     public void remove(GObject go) {
-        int index = getElements().indexOf(go);
-        remove(index);
+        List<GObject> list = getElements();
+        synchronized (list) {
+            int index = getElements().indexOf(go);
+            remove(index);
+        }
     }
 
     public void clear() {

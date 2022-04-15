@@ -122,6 +122,11 @@ public class GList extends GContainer {
         list_image_size = h - 12;
     }
 
+    /**
+     * lock the list when modify it
+     *
+     * @return
+     */
     public List<GObject> getItemList() {
         return popView.getElementsImpl();
     }
@@ -206,7 +211,11 @@ public class GList extends GContainer {
         return items;
     }
 
-
+    /**
+     * lock the list when modify it
+     *
+     * @return
+     */
     public List<GObject> getElements() {
         return popView.getElementsImpl();
     }
@@ -316,7 +325,7 @@ public class GList extends GContainer {
         this.showMode = m;
 
         if (showMode == MODE_MULTI_SHOW) {
-            setBgColor(GToolkit.getStyle().getBackgroundColor());
+            setBgColor(GToolkit.getStyle().getListBackgroundColor());
         } else {
             setBgColor(GToolkit.getStyle().getPopBackgroundColor());
         }
@@ -455,7 +464,10 @@ public class GList extends GContainer {
     }
 
     public void sort(Comparator<? super GObject> c) {
-        popView.getElements().sort(c);
+        List<GObject> list = popView.getElements();
+        synchronized (list) {
+            list.sort(c);
+        }
         sizeAdjust();
     }
 

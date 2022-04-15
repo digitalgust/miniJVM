@@ -557,7 +557,7 @@ abstract public class GObject {
     }
 
     public String toString() {
-        return super.toString() + "(" + boundle[LEFT] + "," + boundle[TOP] + "," + boundle[WIDTH] + "," + boundle[HEIGHT] + ")";
+        return super.toString() + "|" + name + "|" + text + "(" + boundle[LEFT] + "," + boundle[TOP] + "," + boundle[WIDTH] + "," + boundle[HEIGHT] + ")";
     }
 
     public void setText(String text) {

@@ -13,6 +13,7 @@ import org.mini.reflect.ReflectArray;
 
 import java.io.InputStream;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.WeakHashMap;
 
 import static org.mini.glwrap.GLUtil.toUtf8;
@@ -856,9 +857,12 @@ public class GToolkit {
                     listener.action(this);
                 } else {
                     if (getForm() != null) {
-                        if (getElements().isEmpty()) {//no menu
-                            getForm().remove(this);
-                            //System.out.println("picture removed");
+                        List<GObject> list = getElements();
+                        synchronized (list) {
+                            if (getElements().isEmpty()) {//no menu
+                                getForm().remove(this);
+                                //System.out.println("picture removed");
+                            }
                         }
                     }
                 }

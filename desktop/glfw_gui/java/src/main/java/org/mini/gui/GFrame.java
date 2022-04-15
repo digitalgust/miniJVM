@@ -372,6 +372,11 @@ public class GFrame extends GContainer {
     }
 
 
+    /**
+     * lock the list when modify it
+     *
+     * @return
+     */
     public List<GObject> getElements() {
         return view.getElementsImpl();
     }

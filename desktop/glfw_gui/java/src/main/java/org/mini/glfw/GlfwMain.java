@@ -1,18 +1,15 @@
-package test;
+package org.mini.glfw;
 
 import org.mini.apploader.AppManager;
 import org.mini.gui.GCallBack;
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 /**
+ * GUI main
  *
  * @author gust
  */
-public class AppManagerTest  {
+public class GlfwMain {
 
     public static void main(String[] args) {
         GCallBack ccb = GCallBack.getInstance();

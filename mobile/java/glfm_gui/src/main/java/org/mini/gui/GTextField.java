@@ -55,6 +55,7 @@ public class GTextField extends GTextObject {
         setSize(width, height);
         reset_boundle = new float[]{left + width - height, top, height, height};
         setFocusListener(this);
+        setColor(GToolkit.getStyle().getTextFontColor());
     }
 
 
@@ -519,7 +520,7 @@ public class GTextField extends GTextObject {
                 GToolkit.drawRect(vg, selStartX, wordy - lineh[0] * .5f, selEndX - selStartX, lineh[0], GToolkit.getStyle().getSelectedColor());
 
             }
-            nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
+            nvgFillColor(vg, getColor());
             Nanovg.nvgScissor(vg, text_show_area_x, y, text_show_area_w, h);
             Nanovg.nvgIntersectScissor(vg, parent.getX(), parent.getY(), parent.getW(), parent.getH());
             nvgTextJni(vg, wordx, wordy, text_arr, 0, text_arr.length);

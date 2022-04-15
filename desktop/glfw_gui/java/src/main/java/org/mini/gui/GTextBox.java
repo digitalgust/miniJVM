@@ -67,6 +67,7 @@ public class GTextBox extends GTextObject {
         setLocation(left, top);
         setSize(width, height);
         setFocusListener(this);
+        setColor(GToolkit.getStyle().getTextFontColor());
     }
 
 
@@ -875,7 +876,7 @@ public class GTextBox extends GTextObject {
                                     }
 
                                 }
-                                nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
+                                nvgFillColor(vg, getColor());
                                 nvgTextJni(vg, dx, dy, local_arr, byte_starti, byte_endi);
 
                             }

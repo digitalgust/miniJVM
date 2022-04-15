@@ -39,8 +39,10 @@ public class GuiScriptLib extends Lib {
         methodNames.put("getAttachInt".toLowerCase(), 18);//
         methodNames.put("setAttachInt".toLowerCase(), 19);//
         methodNames.put("setBgColorHexStr".toLowerCase(), 20);//  set background color
-        methodNames.put("setColorHexStr".toLowerCase(), 21);//  set background color
-        methodNames.put("getListIdx".toLowerCase(), 22);//  set background color
+        methodNames.put("setColorHexStr".toLowerCase(), 21);//  set color
+        methodNames.put("getListIdx".toLowerCase(), 22);//
+        methodNames.put("setImgAlphaStr".toLowerCase(), 23);//
+        methodNames.put("setEnable".toLowerCase(), 24);//
     }
 
     ;
@@ -106,6 +108,10 @@ public class GuiScriptLib extends Lib {
                 return setColorHexStr(para);
             case 22:
                 return getListIdx(para);
+            case 23:
+                return setImgAlphaStr(para);
+            case 24:
+                return setEnable(para);
             default:
         }
         return null;
@@ -355,6 +361,34 @@ public class GuiScriptLib extends Lib {
             selectIndex = ((GList) gobj).getSelectedIndex();
         }
         return new Int(selectIndex);
+    }
+
+    private DataType setImgAlphaStr(Vector para) {
+        String compont = ((Str) Interpreter.vPopBack(para)).getVal();
+        GObject gobj = GToolkit.getComponent(compont);
+        if (gobj != null) {
+            String alphaStr = ((Str) Interpreter.vPopBack(para)).getVal();
+            try {
+                float alpha = Float.parseFloat(alphaStr);
+                if (gobj instanceof GImageItem) {
+                    ((GImageItem) gobj).setAlpha(alpha);
+                }
+//                else if (gobj instanceof GListItem) {
+//                    ((GListItem) gobj).setAlpha(alpha);
+//                } else if (gobj instanceof GMenuItem) {
+//                    ((GMenuItem) gobj).setAlpha(alpha);
+//                }
+            } catch (Exception e) {
+            }
+        }
+        return null;
+    }
+
+    private DataType setEnable(Vector para) {
+        String compont = ((Str) Interpreter.vPopBack(para)).getVal();
+        boolean enable = ((Bool) Interpreter.vPopBack(para)).getVal();
+        GToolkit.setCompEnable(compont, enable);
+        return null;
     }
 
 }

@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
         classpath = "../../binary/libex/glfw_gui.jar;./";
 //        main_name = "test.Gears";
 //        main_name = "test.TestGL";
-        main_name = "test.AppManagerTest";
+        main_name = "org.mini.glfw.GlfwMain";
 //        main_name = "test.RenderTexure";
 //        main_name = "test.Alpha";
 //        main_name = "test.Light";
@@ -130,15 +130,15 @@ int main(int argc, char **argv) {
 
     }
     MiniJVM *jvm = jvm_create();
-    if(jvm!=NULL) {
+    if (jvm != NULL) {
         jvm->jdwp_enable = jdwp;
         jvm->jdwp_suspend_on_start = 0;
         jvm->max_heap_size = maxheap;//25*1024*1024;//
 
         ret = jvm_init(jvm, bootclasspath, classpath);
-        if(ret){
+        if (ret) {
             jvm_printf("[ERROR]minijvm init error.\n");
-        }else {
+        } else {
             ret = call_main(jvm, main_name, java_para);
         }
         arraylist_destory(java_para);
