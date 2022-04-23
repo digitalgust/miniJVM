@@ -197,11 +197,11 @@ class Expression {
                 s = s.substring(1, s.length() - 1);
                 String ws = s;
                 Str pst = new Str(ws);
-                pst.setMutable(false);
+                pst.setRecyclable(false);
                 tgt.add(new ExprCellDataType(pst, inp));
             } else if (inp.isSymbol(s.charAt(0))) {
                 Symb psyt = new Symb(s);
-                psyt.setMutable(false);
+                psyt.setRecyclable(false);
                 if (psyt.getVal() == psyt.NONE) {
                     //错误的符号，需处理
                     throw new Exception(Interpreter.STRS_ERR[Interpreter.ERR_ILLEGAL]);
@@ -210,7 +210,7 @@ class Expression {
                 }
             } else if (inp.isNumeric(s.charAt(0))) {//是数字
                 Int pit = new Int(s);
-                pit.setMutable(false);
+                pit.setRecyclable(false);
                 tgt.add(new ExprCellDataType(pit, inp));
             } else if (inp.isSubCall(s)) {//是过调用
                 tgt.add(new ExprCellCall(s, inp));
@@ -218,7 +218,7 @@ class Expression {
                 tgt.add(new ExprCellArr(s, inp));
             } else if (Bool.isBool(s)) {//是BOOL值
                 Bool pbt = new Bool(s);
-                pbt.setMutable(false);
+                pbt.setRecyclable(false);
                 tgt.add(new ExprCellDataType(pbt, inp));
             } else {//是变量
                 tgt.add(new ExprCellVar(s, inp));

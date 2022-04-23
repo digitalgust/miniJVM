@@ -25,8 +25,8 @@ import java.util.*;
  * 20090705 修正了数组赋值时，没有判定变量是局部变量或是全局变量 <br/>
  * 20090721 修正了数组取值，增加了嵌套维数a[b[a+b]] <br/>
  * 20110819 添加预编译处理过程,加快执行速度<br/>
- * 20130720 修改了数值类型为整型<br/>
- *
+ * 20130720 修改了数值类型为长整型<br/>
+ * 20220424 添加数据回收系统,使整个运算过程中,尽可能不创建新的对象实例.减小GC压力
  * <p>
  * Title: </p>
  * <p>
@@ -112,9 +112,9 @@ public class Interpreter {
         return i;
     }
 
-    private void putCachedInt(DataType v) {
+    public void putCachedInt(DataType v) {
         if (intCache.size() > MAX_CACHE_SIZE || v == null) return;//防内存泄漏
-        if (v.isMutable() && v.type == DataType.DTYPE_INT) {
+        if (v.isRecyclable() && v.type == DataType.DTYPE_INT) {
             intCache.add((Int) v);
         }
     }
@@ -130,7 +130,7 @@ public class Interpreter {
 
     public void putCachedBool(DataType v) {
         if (boolCache.size() > MAX_CACHE_SIZE || v == null) return;
-        if (v.isMutable() && v.type == DataType.DTYPE_BOOL) {
+        if (v.isRecyclable() && v.type == DataType.DTYPE_BOOL) {
             boolCache.add((Bool) v);
         }
     }
@@ -146,7 +146,7 @@ public class Interpreter {
 
     public void putCachedStr(DataType v) {
         if (strCache.size() > MAX_CACHE_SIZE || v == null) return;
-        if (v.isMutable() && v.type == DataType.DTYPE_STR) {
+        if (v.isRecyclable() && v.type == DataType.DTYPE_STR) {
             ((Str) v).setVal(null);
             strCache.add((Str) v);
         }
@@ -154,7 +154,7 @@ public class Interpreter {
 
     public void putCachedDataType(DataType v) {
         if (v == null) return;
-        if (v.isMutable()) {
+        if (v.isRecyclable()) {
             if (v.type == DataType.DTYPE_INT) {
                 putCachedInt(v);
             } else if (v.type == DataType.DTYPE_BOOL) {
@@ -431,7 +431,7 @@ public class Interpreter {
      */
     public void putGlobalVar(String varName, DataType value) {
         if (value == null) return;
-        value.setMutable(false);
+        value.setRecyclable(false);
         varName = varName.toLowerCase();
         globalVar.put(varName, value);
     }
@@ -490,7 +490,7 @@ public class Interpreter {
                     DataType pp = (paraStack.isEmpty() ? null : paraStack.get(j - i - 1));
                     if (pp != null) {
                         ExprCellVar var = (ExprCellVar) (psubstat.cell.para[i].cells[0]);
-                        pp.setMutable(false);
+                        pp.setRecyclable(false);
                         (localVar).put(var.varName, pp);
                     } else {
                         errout(ip, STRS_ERR[ERR_PAESEPARA]);
@@ -670,7 +670,7 @@ public class Interpreter {
                 for (int i = 0; i < keylist.size(); i++) {
                     String key = keylist.get(i);
                     DataType dt = localVar.get(key);
-                    dt.setMutable(true);
+                    dt.setRecyclable(true);
                     putCachedDataType(dt);
                 }
                 //回收局部变量表
@@ -1065,7 +1065,7 @@ public class Interpreter {
 
         }
         if (value.type == DataType.DTYPE_BOOL || value.type == DataType.DTYPE_INT) {
-            if (value.isMutable()) {
+            if (value.isRecyclable()) {
                 throw new RuntimeException("can not be mutable data ");
             }
         }
@@ -1083,14 +1083,14 @@ public class Interpreter {
         //格式化表达式
         String varName = stat.varName;
         DataType nValue = evalExpr(stat.expr, varTable);
-        nValue.setMutable(false);
+        nValue.setRecyclable(false);
 
         if (nValue != null) {
             DataType oldValue = varTable.get(varName);
             if (oldValue != null) {
                 if (oldValue.type == nValue.type) {
                     varTable.put(varName, nValue);
-                    oldValue.setMutable(true);
+                    oldValue.setRecyclable(true);
                     putCachedDataType(oldValue);
                 } else {
                     throw new Exception(STRS_ERR[ERR_TYPE_INVALID]);
@@ -1100,7 +1100,7 @@ public class Interpreter {
                 if (oldValue1 != null) {
                     if (oldValue1.type == nValue.type) {
                         globalVar.put(varName, nValue);
-                        oldValue1.setMutable(true);
+                        oldValue1.setRecyclable(true);
                         putCachedDataType(oldValue1);
                     } else {
                         throw new Exception(STRS_ERR[ERR_TYPE_INVALID]);
@@ -1375,9 +1375,9 @@ public class Interpreter {
 
     private void evalExprNumImpl(ArrayList<DataType> expr) {
         if (expr.size() == 1) { //单独变量
-            if ((expr.get(0)).isMutable()) return;
+            if ((expr.get(0)).isRecyclable()) return;//如果是不可回收的变量,说明这个变量要么是在变量表中,要么是在statement中
             Int element1 = vPopFront(expr);
-            Int val = getCachedInt(element1.getVal());
+            Int val = getCachedInt(element1.getVal());//复制一个可回收的值
             vPushBack(expr, val);
             return;
         } else { //表达式
@@ -1491,7 +1491,7 @@ public class Interpreter {
     private void evalExprLgcImpl(ArrayList<DataType> expr) {
         //计算逻辑表达式
         if (expr.size() == 1) { //单独变量
-            if ((expr.get(0)).isMutable()) return;
+            if ((expr.get(0)).isRecyclable()) return;
             DataType element1 = vPopFront(expr);
             vPushBack(expr, getCachedBool(((Bool) element1).getVal()));
             putCachedBool(element1);
@@ -1738,7 +1738,7 @@ public class Interpreter {
         if (arr != null && arr.type == DataType.DTYPE_ARRAY) {
             DataType dt = (arr).getValue(dimPara); //取值
             if (dt.type == DataType.DTYPE_BOOL || dt.type == DataType.DTYPE_INT) {
-                if (dt.isMutable()) {
+                if (dt.isRecyclable()) {
                     throw new RuntimeException("can not be mutable data in arr");
                 }
             }

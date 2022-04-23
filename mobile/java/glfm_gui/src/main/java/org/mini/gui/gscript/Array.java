@@ -87,8 +87,8 @@ public class Array extends DataType {
             if (arr.deepth == 1) {
                 //if(i>arr.elements.length)throw new Exception(Interpreter.STRS_ERR[Interpreter.ERR_ARR_OUT]);
                 DataType old = arr.elements[pos[i]];
-                old.setMutable(true);
-                value.setMutable(false);
+                old.setRecyclable(true);
+                value.setRecyclable(false);
                 arr.elements[pos[i]] = (DataType) value;
                 return old;
             } else {

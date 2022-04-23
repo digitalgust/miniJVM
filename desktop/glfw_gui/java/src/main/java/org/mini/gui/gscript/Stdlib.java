@@ -40,7 +40,6 @@ public class Stdlib extends Lib {
         methodNames.put("str2int".toLowerCase(), 22);//字符串转int
     }
 
-    Interpreter inp;
 
     /**
      * @return
@@ -49,55 +48,54 @@ public class Stdlib extends Lib {
         return methodNames;
     }
 
-    public DataType call(Interpreter inp, ArrayList para, int methodID) {
-        this.inp = inp;
+    public DataType call(Interpreter inp, ArrayList<DataType> para, int methodID) {
         switch (methodID) {
             case 0:
-                return print(para);
+                return print(inp, para);
             case 1:
-                return min(para);
+                return min(inp, para);
             case 2:
-                return max(para);
+                return max(inp, para);
             case 3:
-                return arrlen(para);
+                return arrlen(inp, para);
             case 4:
-                return abs(para);
+                return abs(inp, para);
             case 5:
-                return random();
+                return random(inp);
             case 6:
-                return mod(para);
+                return mod(inp, para);
             case 7:
-                return println(para);
+                return println(inp, para);
             case 8:
-                return strlen(para);
+                return strlen(inp, para);
             case 9:
-                return equals(para);
+                return equals(inp, para);
             case 10:
                 return def(inp, para);
             case 11:
                 return isDef(inp, para);
             case 12:
-                return valueOf(para);
+                return valueOf(inp, para);
             case 13:
-                return idxof(para);
+                return idxof(inp, para);
             case 14:
-                return substr(para);
+                return substr(inp, para);
             case 15:
-                return split(para);
+                return split(inp, para);
             case 16:
-                return base64enc(para);
+                return base64enc(inp, para);
             case 17:
-                return base64dec(para);
+                return base64dec(inp, para);
             case 18:
-                return isnull(para);
+                return isnull(inp, para);
             case 19:
-                return getObjField(para);
+                return getObjField(inp, para);
             case 20:
-                return setObjField(para);
+                return setObjField(inp, para);
             case 21:
-                return trim(para);
+                return trim(inp, para);
             case 22:
-                return str2int(para);
+                return str2int(inp, para);
         }
         return null;
     }
@@ -108,7 +106,7 @@ public class Stdlib extends Lib {
      * @param para String
      * @return Object
      */
-    private DataType print(ArrayList para) {
+    private DataType print(Interpreter inp, ArrayList<DataType> para) {
         DataType dt = Interpreter.vPopBack(para);//不一定是Str类型
         String s = dt.getString();
         System.out.print(s);
@@ -122,7 +120,7 @@ public class Stdlib extends Lib {
      * @param para String
      * @return Object
      */
-    private DataType println(ArrayList para) {
+    private DataType println(Interpreter inp, ArrayList<DataType> para) {
         DataType dt = (DataType) Interpreter.vPopBack(para);
         String s = dt == null ? null : dt.getString();
         if (s == null) {
@@ -140,7 +138,7 @@ public class Stdlib extends Lib {
      * @param para int
      * @return Integer
      */
-    private Int min(ArrayList para) {
+    private Int min(Interpreter inp, ArrayList<DataType> para) {
         long x = ((Int) Interpreter.vPopBack(para)).getVal();
         long y = ((Int) Interpreter.vPopBack(para)).getVal();
         return inp.getCachedInt(x > y ? y : x);
@@ -152,7 +150,7 @@ public class Stdlib extends Lib {
      * @param para int
      * @return Integer
      */
-    private Int max(ArrayList para) {
+    private Int max(Interpreter inp, ArrayList<DataType> para) {
         long x = ((Int) Interpreter.vPopBack(para)).getVal();
         long y = ((Int) Interpreter.vPopBack(para)).getVal();
         return inp.getCachedInt(x > y ? x : y);
@@ -164,7 +162,7 @@ public class Stdlib extends Lib {
      * @param para int
      * @return Integer
      */
-    private Int arrlen(ArrayList<DataType> para) {
+    private Int arrlen(Interpreter inp, ArrayList<DataType> para) {
         Array arr = Interpreter.vPopBack(para);
         return inp.getCachedInt(arr.elements.length);
     }
@@ -175,7 +173,7 @@ public class Stdlib extends Lib {
      * @param para int
      * @return Integer
      */
-    private Int abs(ArrayList para) {
+    private Int abs(Interpreter inp, ArrayList<DataType> para) {
         long x = ((Int) Interpreter.vPopBack(para)).getVal();
         return inp.getCachedInt(Math.abs(x));
     }
@@ -188,7 +186,7 @@ public class Stdlib extends Lib {
      *
      * @return int 返回一个正数
      */
-    public DataType random() {
+    public DataType random(Interpreter inp) {
         return inp.getCachedInt(random.nextInt());
     }
 
@@ -198,7 +196,7 @@ public class Stdlib extends Lib {
      * @param para int
      * @return gscript.Int
      */
-    private Int mod(ArrayList para) {
+    private Int mod(Interpreter inp, ArrayList<DataType> para) {
         long x = ((Int) Interpreter.vPopBack(para)).getVal();
         long y = ((Int) Interpreter.vPopBack(para)).getVal();
         return inp.getCachedInt(x % y);
@@ -210,7 +208,7 @@ public class Stdlib extends Lib {
      * @param para int
      * @return Integer
      */
-    private Int strlen(ArrayList para) {
+    private Int strlen(Interpreter inp, ArrayList<DataType> para) {
         String s = Interpreter.vPopBack(para).toString();
         return inp.getCachedInt(s.length());
     }
@@ -221,7 +219,7 @@ public class Stdlib extends Lib {
      * @param para int
      * @return gscript.Int
      */
-    private Bool equals(ArrayList para) {
+    private Bool equals(Interpreter inp, ArrayList<DataType> para) {
         String x = ((Str) Interpreter.vPopBack(para)).getVal();
         String y = ((Str) Interpreter.vPopBack(para)).getVal();
         return inp.getCachedBool(x.equals(y));
@@ -233,7 +231,7 @@ public class Stdlib extends Lib {
      * @param para int
      * @return gscript.Int
      */
-    private DataType def(Interpreter inp, ArrayList para) {
+    private DataType def(Interpreter inp, ArrayList<DataType> para) {
         String name = ((Str) Interpreter.vPopBack(para)).getVal();
         DataType dt = (DataType) Interpreter.vPopBack(para);
         inp.putGlobalVar(name.toLowerCase(), dt);
@@ -246,7 +244,7 @@ public class Stdlib extends Lib {
      * @param para int
      * @return gscript.Int
      */
-    private Bool isDef(Interpreter inp, ArrayList para) {
+    private Bool isDef(Interpreter inp, ArrayList<DataType> para) {
         String name = ((Str) Interpreter.vPopBack(para)).getVal();
         if (inp.getGlobalVar(name.toLowerCase()) == null) {
             return inp.getCachedBool(false);
@@ -260,7 +258,7 @@ public class Stdlib extends Lib {
      * @param para int
      * @return gscript.Int
      */
-    private Int valueOf(ArrayList para) {
+    private Int valueOf(Interpreter inp, ArrayList<DataType> para) {
         String s = ((Str) Interpreter.vPopBack(para)).getVal();
         if (s != null && !"".equals(s)) {
             return new Int(Integer.parseInt(s));
@@ -274,7 +272,7 @@ public class Stdlib extends Lib {
      * @param para
      * @return
      */
-    private Int idxof(ArrayList para) {
+    private Int idxof(Interpreter inp, ArrayList<DataType> para) {
         String m = ((Str) Interpreter.vPopBack(para)).getVal();
         String sub = ((Str) Interpreter.vPopBack(para)).getVal();
         if (m != null && sub != null) {
@@ -289,7 +287,7 @@ public class Stdlib extends Lib {
      * @param para
      * @return
      */
-    private Str substr(ArrayList para) {
+    private Str substr(Interpreter inp, ArrayList<DataType> para) {
         String s = ((Str) Interpreter.vPopBack(para)).getVal();
         int a = (int) ((Int) Interpreter.vPopBack(para)).getVal();
         int b = (int) ((Int) Interpreter.vPopBack(para)).getVal();
@@ -309,7 +307,7 @@ public class Stdlib extends Lib {
      * @param para
      * @return
      */
-    private Array split(ArrayList para) {
+    private Array split(Interpreter inp, ArrayList<DataType> para) {
         String s = ((Str) Interpreter.vPopBack(para)).getVal();
         String splitor = ((Str) Interpreter.vPopBack(para)).getVal();
         String[] ss = s.split(splitor);
@@ -323,7 +321,7 @@ public class Stdlib extends Lib {
     }
 
 
-    private DataType base64enc(ArrayList para) {
+    private DataType base64enc(Interpreter inp, ArrayList<DataType> para) {
         try {
             String str = ((Str) (Interpreter.vPopBack(para))).getVal();
             byte[] b = str.getBytes("utf-8");
@@ -335,7 +333,7 @@ public class Stdlib extends Lib {
         return null;
     }
 
-    private DataType base64dec(ArrayList para) {
+    private DataType base64dec(Interpreter inp, ArrayList<DataType> para) {
         try {
             String str = ((Str) (Interpreter.vPopBack(para))).getVal();
             byte[] b = javax.cldc.io.Base64.decode(str);
@@ -348,7 +346,7 @@ public class Stdlib extends Lib {
     }
 
 
-    private DataType isnull(ArrayList para) {
+    private DataType isnull(Interpreter inp, ArrayList<DataType> para) {
         DataType d = Interpreter.vPopBack(para);
         if (d instanceof Obj) {
             if (((Obj) d).isNull()) {
@@ -361,7 +359,7 @@ public class Stdlib extends Lib {
     }
 
 
-    private DataType getObjField(ArrayList para) {
+    private DataType getObjField(Interpreter inp, ArrayList<DataType> para) {
         try {
             Obj obj = (Obj) Interpreter.vPopBack(para);
             String fieldName = ((Str) (Interpreter.vPopBack(para))).getVal();
@@ -389,7 +387,7 @@ public class Stdlib extends Lib {
     }
 
 
-    private DataType setObjField(ArrayList para) {
+    private DataType setObjField(Interpreter inp, ArrayList<DataType> para) {
         try {
             Obj obj = (Obj) Interpreter.vPopBack(para);
             String fieldName = ((Str) (Interpreter.vPopBack(para))).getVal();
@@ -431,7 +429,7 @@ public class Stdlib extends Lib {
     }
 
 
-    private DataType trim(ArrayList para) {
+    private DataType trim(Interpreter inp, ArrayList<DataType> para) {
         try {
             String str = ((Str) (Interpreter.vPopBack(para))).getVal();
             return inp.getCachedStr(str.trim());
@@ -442,7 +440,7 @@ public class Stdlib extends Lib {
     }
 
 
-    private DataType str2int(ArrayList para) {
+    private DataType str2int(Interpreter inp, ArrayList<DataType> para) {
         try {
             String str = ((Str) (Interpreter.vPopBack(para))).getVal();
             str = str.trim();

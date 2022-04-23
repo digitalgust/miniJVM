@@ -12,7 +12,7 @@ public class Str extends DataType {
     public Str(String s, boolean mutable) {
         type = DTYPE_STR;
         value = s;
-        setMutable(mutable);
+        setRecyclable(mutable);
     }
 
     public void setVal(String s) {

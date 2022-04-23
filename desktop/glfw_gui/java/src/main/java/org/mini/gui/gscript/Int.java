@@ -16,7 +16,7 @@ public class Int extends DataType {
     public Int(long i, boolean mutable) {
         type = DTYPE_INT;
         value = i;
-        this.setMutable(mutable);
+        this.setRecyclable(mutable);
     }
 
     public int getValAsInt() {
@@ -28,7 +28,7 @@ public class Int extends DataType {
     }
 
     public void setVal(long i) {
-        if (isMutable()) {
+        if (isRecyclable()) {
             value = i;
         } else {
             throw new RuntimeException("var is immutable");

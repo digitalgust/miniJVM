@@ -39,5 +39,5 @@ abstract public class Lib {
      * @param methodID int
      * @return Object
      */
-    abstract public DataType call(Interpreter inp, ArrayList para, int methodID);
+    abstract public DataType call(Interpreter inp, ArrayList<DataType> para, int methodID);
 }

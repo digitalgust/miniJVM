@@ -13,14 +13,14 @@ abstract public class DataType {
 
     //此变量是否可变, 在源码中(Statemenu.ExprCell)的 或者赋值给变量的 不可变,
     // 运算过程中的都可变
-    private boolean mutable = true;
+    private boolean recyclable = true;
 
-    public boolean isMutable() {
-        return mutable;
+    public boolean isRecyclable() {
+        return recyclable;
     }
 
-    public void setMutable(boolean m) {
-        mutable = m;
+    public void setRecyclable(boolean m) {
+        recyclable = m;
     }
 
 

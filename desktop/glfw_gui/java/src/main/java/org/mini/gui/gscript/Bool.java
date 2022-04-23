@@ -11,7 +11,7 @@ public class Bool extends DataType {
         } else {
             value = false;
         }
-        this.setMutable(true);
+        this.setRecyclable(true);
     }
 
     public Bool(boolean b) {
@@ -21,11 +21,11 @@ public class Bool extends DataType {
     public Bool(boolean b, boolean mutable) {
         type = DTYPE_BOOL;
         value = b;
-        this.setMutable(mutable);
+        this.setRecyclable(mutable);
     }
 
     public void setVal(boolean b) {
-        if (isMutable()) {
+        if (isRecyclable()) {
             value = b;
         } else {
             throw new RuntimeException("var is immutable");
