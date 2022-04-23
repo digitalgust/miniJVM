@@ -9,40 +9,44 @@ package org.mini.gui.gscript;
  */
 public class Array extends DataType {
 
-    byte deepth = 0;
+    int deepth = 0;
     DataType[] elements;
 
     /**
      * 构造方法 Construction
      *
-     * @param dimSize int[]
+     * @param dim int[]
      */
-    public Array(int[] dimSize) {
+    public Array(int[] dim) {
         type = DTYPE_ARRAY;
-        init(dimSize);
+        init(dim, 0);
+    }
+
+    public Array(int[] dim, int dimIndex) {
+        type = DTYPE_ARRAY;
+        init(dim, dimIndex);
     }
 
     /**
      * 初始化数组 initial the array
      *
-     * @param dimSize int[]
+     * @param dim int[]
      */
-    private void init(int[] dimSize) {
+    private void init(int[] dim, int dimIndex) {
 
-        this.deepth = (byte) dimSize.length;
-        int len = dimSize[0]; //取出这一维数组的长度
+        this.deepth = dim.length - dimIndex;
+        int len = dim[dimIndex]; //取出这一维数组的长度
 
         if (deepth > 1) {
-            int[] newDimSize = new int[deepth - 1];
-            System.arraycopy(dimSize, 1, newDimSize, 0, deepth - 1);
+            dimIndex++;
             elements = new Array[len];
-            for (int i = 0; i < ((Array[]) elements).length; i++) { //初始化下层
-                elements[i] = new Array(newDimSize);
+            for (int i = 0; i < elements.length; i++) { //初始化下层
+                elements[i] = new Array(dim, dimIndex);
             }
         } else {
             elements = new DataType[len];
             for (int i = 0; i < len; i++) {
-                elements[i] = new Int(0);
+                elements[i] = new Int(0, false);
             }
         }
 
@@ -73,21 +77,25 @@ public class Array extends DataType {
     /**
      * 设值 set value by postion that int[]{3,2} like return arr[3][2]
      *
-     * @param pos int[]
+     * @param pos   int[]
      * @param value Object
      */
-    public void setValue(int[] pos, DataType value) //throws Exception
+    public DataType setValue(int[] pos, DataType value) //throws Exception
     {
         Array arr = this;
         for (int i = 0; i < pos.length; i++) {
             if (arr.deepth == 1) {
                 //if(i>arr.elements.length)throw new Exception(Interpreter.STRS_ERR[Interpreter.ERR_ARR_OUT]);
-
+                DataType old = arr.elements[pos[i]];
+                old.setMutable(true);
+                value.setMutable(false);
                 arr.elements[pos[i]] = (DataType) value;
+                return old;
             } else {
                 arr = (Array) arr.elements[pos[i]];
             }
         }
+        return null;
     }
 
     public String getString() {

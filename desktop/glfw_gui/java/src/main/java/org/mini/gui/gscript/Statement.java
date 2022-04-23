@@ -1,9 +1,9 @@
 package org.mini.gui.gscript;
 
-import java.util.Locale;
-import java.util.Vector;
 
-/* 
+import java.util.ArrayList;
+
+/*
  * File:   Statement.h
  * Author: gust
  *
@@ -26,7 +26,7 @@ class ExprCellCall extends ExprCell {
     String subName;
     Expression[] para;
 
-    public void parseCallPara(String inst, Vector paraList, Interpreter inp) {
+    public void parseCallPara(String inst, ArrayList paraList, Interpreter inp) {
         //查找脚本中的过程
         subName = inp.getFirstWord(inst);
         String paraVal = inst.substring(inst.indexOf('(') + 1);
@@ -34,20 +34,20 @@ class ExprCellCall extends ExprCell {
         if (paraVal.length() != 0) { //分解参数
 
             //用现成的拆分功能，把多个参数拆出来
-            Vector sValue = inp.parseInstruct(paraVal);
+            ArrayList sValue = inp.parseInstruct(paraVal);
             while (!sValue.isEmpty()) {
 
                 //解析出每个表达式串，以','为分隔符
                 StringBuffer exprStr = new StringBuffer();
                 while (!sValue.isEmpty()) {
-                    String tmps = (String) sValue.elementAt(0);
-                    sValue.removeElementAt(0);
+                    String tmps = (String) sValue.get(0);
+                    sValue.remove(0);
                     if (",".equals(tmps)) {
                         break; //分隔符时中断
                     }
                     exprStr.append(tmps);
                 }
-                paraList.addElement(exprStr.toString());
+                paraList.add(exprStr.toString());
             } //end while
 
         }
@@ -56,7 +56,7 @@ class ExprCellCall extends ExprCell {
 
     ExprCellCall(String inst, Interpreter inp) throws Exception {
         type = (ExprCell.EXPR_CELL_CALL);
-        Vector tmppara = new Vector();
+        ArrayList tmppara = new ArrayList();
 
         parseCallPara(inst, tmppara, inp);
 
@@ -65,7 +65,7 @@ class ExprCellCall extends ExprCell {
         para = new Expression[paralen];
         if (paralen > 0) {
             for (int i = 0; i < paralen; i++) {
-                para[i] = new Expression((String) tmppara.elementAt(i), inp);
+                para[i] = new Expression((String) tmppara.get(i), inp);
             }
         }
     }
@@ -116,8 +116,9 @@ class ExprCellArr extends ExprCell {
 
     String arrName;
     Expression[] para;
+    ThreadLocal<int[]> dimPos;
 
-    void parseArr(String arrs, Vector paraList, Interpreter inp) throws Exception {
+    void parseArr(String arrs, ArrayList paraList, Interpreter inp) throws Exception {
         //取得数组的名字
         arrName = (inp.getFirstWord(arrs)).toLowerCase();
 
@@ -134,7 +135,7 @@ class ExprCellArr extends ExprCell {
             } else if (ch == ']') {
                 leftQ--;
                 if (leftQ == 0) {
-                    paraList.addElement(sb.toString());
+                    paraList.add(sb.toString());
                     sb.setLength(0);
                 } else {
                     sb.append(ch);
@@ -151,19 +152,24 @@ class ExprCellArr extends ExprCell {
             //msgOut(ERR_STRS[ERR_ILLEGAL]);
             //return t_ilist();
         }
-
     }
 
     ExprCellArr(String src, Interpreter inp) throws Exception {
         type = (ExprCell.EXPR_CELL_ARR);
-        Vector tmppara = new Vector();
+        ArrayList tmppara = new ArrayList();
         parseArr(src, tmppara, inp);
         //拆分表达式
         int paralen = tmppara.size();
         para = new Expression[paralen];
         for (int i = 0; i < paralen; i++) {
-            para[i] = new Expression((String) tmppara.elementAt(i), inp);
+            para[i] = new Expression((String) tmppara.get(i), inp);
         }
+        dimPos = new ThreadLocal() {
+            @Override
+            public int[] initialValue() {
+                return new int[para.length];
+            }
+        };
     }
 
     public String toString() {
@@ -181,37 +187,41 @@ class Expression {
 
     Expression(String statement, Interpreter inp) throws Exception {
 
-        Vector tgt = new Vector();
-        Vector src = inp.parseInstruct(statement);
+        ArrayList tgt = new ArrayList();
+        ArrayList src = inp.parseInstruct(statement);
 
         for (int i = 0; i < src.size(); i++) {
 
-            String s = (String) src.elementAt(i);
+            String s = (String) src.get(i);
             if (s.charAt(0) == '"') {// 是字符串
                 s = s.substring(1, s.length() - 1);
                 String ws = s;
                 Str pst = new Str(ws);
-                tgt.addElement(new ExprCellDataType(pst, inp));
+                pst.setMutable(false);
+                tgt.add(new ExprCellDataType(pst, inp));
             } else if (inp.isSymbol(s.charAt(0))) {
                 Symb psyt = new Symb(s);
+                psyt.setMutable(false);
                 if (psyt.getVal() == psyt.NONE) {
                     //错误的符号，需处理
                     throw new Exception(Interpreter.STRS_ERR[Interpreter.ERR_ILLEGAL]);
                 } else {
-                    tgt.addElement(new ExprCellDataType(psyt, inp));
+                    tgt.add(new ExprCellDataType(psyt, inp));
                 }
             } else if (inp.isNumeric(s.charAt(0))) {//是数字
                 Int pit = new Int(s);
-                tgt.addElement(new ExprCellDataType(pit, inp));
+                pit.setMutable(false);
+                tgt.add(new ExprCellDataType(pit, inp));
             } else if (inp.isSubCall(s)) {//是过调用
-                tgt.addElement(new ExprCellCall(s, inp));
+                tgt.add(new ExprCellCall(s, inp));
             } else if (inp.isArr(s)) {//是数组
-                tgt.addElement(new ExprCellArr(s, inp));
+                tgt.add(new ExprCellArr(s, inp));
             } else if (Bool.isBool(s)) {//是BOOL值
                 Bool pbt = new Bool(s);
-                tgt.addElement(new ExprCellDataType(pbt, inp));
+                pbt.setMutable(false);
+                tgt.add(new ExprCellDataType(pbt, inp));
             } else {//是变量
-                tgt.addElement(new ExprCellVar(s, inp));
+                tgt.add(new ExprCellVar(s, inp));
             }
         }
 
@@ -219,7 +229,7 @@ class Expression {
         cells = new ExprCell[cellslen];
         if (cellslen > 0) {
             for (int i = 0; i < cellslen; i++) {
-                cells[i] = (ExprCell) tgt.elementAt(i);
+                cells[i] = (ExprCell) tgt.get(i);
             }
         }
 
@@ -382,11 +392,11 @@ class StatementSetArr extends Statement {
 
     StatementSetArr(String src, Interpreter inp) throws Exception {
         type = (Interpreter.KEYWORD_SET_ARR);
-        Vector stackTmp = inp.parseInstruct(src);
+        ArrayList stackTmp = inp.parseInstruct(src);
         if (!stackTmp.isEmpty()) {
-            String leftStr = (String) stackTmp.elementAt(0);
+            String leftStr = (String) stackTmp.get(0);
             //leftStr.print();
-            stackTmp.removeElementAt(0);
+            stackTmp.remove(0);
 
             dimCell = new ExprCellArr(leftStr, inp);
         }

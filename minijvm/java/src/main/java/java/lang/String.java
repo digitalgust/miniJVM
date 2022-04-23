@@ -110,6 +110,8 @@ public final class String implements Comparable<String>, CharSequence {
 
     private static Map<String, String> internMap = new HashMap<>();
 
+    int hash;
+
     /**
      * Initializes a newly created <code>String</code> object so that it
      * represents an empty character sequence.
@@ -154,14 +156,14 @@ public final class String implements Comparable<String>, CharSequence {
      * contents of the subarray are copied; subsequent modification of the
      * character array does not affect the newly created string.
      *
-     * @param value array that is the source of characters.
+     * @param value  array that is the source of characters.
      * @param offset the initial offset.
-     * @param count the length.
-     * @exception IndexOutOfBoundsException if the <code>offset</code> and
-     * <code>count</code> arguments index characters outside the bounds of the
-     * <code>value</code> array.
-     * @exception NullPointerException if <code>value</code> is
-     * <code>null</code>.
+     * @param count  the length.
+     * @throws IndexOutOfBoundsException if the <code>offset</code> and
+     *                                   <code>count</code> arguments index characters outside the bounds of the
+     *                                   <code>value</code> array.
+     * @throws NullPointerException      if <code>value</code> is
+     *                                   <code>null</code>.
      */
     public String(char value[], int offset, int count) {
         if (offset < 0) {
@@ -206,12 +208,11 @@ public final class String implements Comparable<String>, CharSequence {
      * equal to the length of the subarray.
      *
      * @param bytes The bytes to be converted into characters
-     * @param off Index of the first byte to convert
-     * @param len Number of bytes to convert
-     * @param enc The name of a character encoding
-     *
-     * @exception UnsupportedEncodingException If the named encoding is not
-     * supported
+     * @param off   Index of the first byte to convert
+     * @param len   Number of bytes to convert
+     * @param enc   The name of a character encoding
+     * @throws UnsupportedEncodingException If the named encoding is not
+     *                                      supported
      * @since JDK1.1
      */
     public String(byte bytes[], int off, int len, String enc)
@@ -226,10 +227,9 @@ public final class String implements Comparable<String>, CharSequence {
      * equal to the length of the byte array.
      *
      * @param bytes The bytes to be converted into characters
-     * @param enc The name of a supported character encoding
-     *
-     * @exception UnsupportedEncodingException If the named encoding is not
-     * supported
+     * @param enc   The name of a supported character encoding
+     * @throws UnsupportedEncodingException If the named encoding is not
+     *                                      supported
      * @since JDK1.1
      */
     public String(byte bytes[], String enc)
@@ -244,8 +244,8 @@ public final class String implements Comparable<String>, CharSequence {
      * not be equal to the length of the subarray.
      *
      * @param bytes The bytes to be converted into characters
-     * @param off Index of the first byte to convert
-     * @param len Number of bytes to convert
+     * @param off   Index of the first byte to convert
+     * @param len   Number of bytes to convert
      * @since JDK1.1
      */
     public String(byte bytes[], int off, int len) {
@@ -310,8 +310,8 @@ public final class String implements Comparable<String>, CharSequence {
      * @param index the index of the character.
      * @return the character at the specified index of this string. The first
      * character is at index <code>0</code>.
-     * @exception IndexOutOfBoundsException if the <code>index</code> argument
-     * is negative or not less than the length of this string.
+     * @throws IndexOutOfBoundsException if the <code>index</code> argument
+     *                                   is negative or not less than the length of this string.
      */
     public char charAt(int index) {
         if ((index < 0) || (index >= count)) {
@@ -342,17 +342,17 @@ public final class String implements Comparable<String>, CharSequence {
      * </pre></blockquote>
      *
      * @param srcBegin index of the first character in the string to copy.
-     * @param srcEnd index after the last character in the string to copy.
-     * @param dst the destination array.
+     * @param srcEnd   index after the last character in the string to copy.
+     * @param dst      the destination array.
      * @param dstBegin the start offset in the destination array.
-     * @exception IndexOutOfBoundsException If any of the following is true:
-     * <ul><li><code>srcBegin</code> is negative.
-     * <li><code>srcBegin</code> is greater than <code>srcEnd</code>
-     * <li><code>srcEnd</code> is greater than the length of this string
-     * <li><code>dstBegin</code> is negative
-     * <li><code>dstBegin+(srcEnd-srcBegin)</code> is larger than
-     * <code>dst.length</code></ul>
-     * @exception NullPointerException if <code>dst</code> is <code>null</code>
+     * @throws IndexOutOfBoundsException If any of the following is true:
+     *                                   <ul><li><code>srcBegin</code> is negative.
+     *                                   <li><code>srcBegin</code> is greater than <code>srcEnd</code>
+     *                                   <li><code>srcEnd</code> is greater than the length of this string
+     *                                   <li><code>dstBegin</code> is negative
+     *                                   <li><code>dstBegin+(srcEnd-srcBegin)</code> is larger than
+     *                                   <code>dst.length</code></ul>
+     * @throws NullPointerException      if <code>dst</code> is <code>null</code>
      */
     public void getChars(int srcBegin, int srcEnd, char dst[], int dstBegin) {
         if (srcBegin < 0) {
@@ -374,9 +374,8 @@ public final class String implements Comparable<String>, CharSequence {
      *
      * @param enc A character-encoding name
      * @return The resultant byte array
-     *
-     * @exception UnsupportedEncodingException If the named encoding is not
-     * supported
+     * @throws UnsupportedEncodingException If the named encoding is not
+     *                                      supported
      * @since JDK1.1
      */
     public byte[] getBytes(String enc) throws UnsupportedEncodingException {
@@ -401,7 +400,7 @@ public final class String implements Comparable<String>, CharSequence {
      * characters as this object.
      *
      * @param anObject the object to compare this <code>String</code> against.
-     * @return  <code>true</code> if the <code>String </code>are equal;
+     * @return <code>true</code> if the <code>String </code>are equal;
      * <code>false</code> otherwise.
      * @see java.lang.String#compareTo(java.lang.String)
      * @see java.lang.String#equalsIgnoreCase(java.lang.String)
@@ -433,8 +432,8 @@ public final class String implements Comparable<String>, CharSequence {
      * each character produces the same result.</ul>
      *
      * @param anotherString the <code>String</code> to compare this
-     * <code>String</code> against.
-     * @return  <code>true</code> if the argument is not <code>null</code> and
+     *                      <code>String</code> against.
+     * @return <code>true</code> if the argument is not <code>null</code> and
      * the <code>String</code>s are equal, ignoring case; <code>false</code>
      * otherwise.
      * @see #equals(Object)
@@ -485,8 +484,8 @@ public final class String implements Comparable<String>, CharSequence {
      * lexicographically less than the string argument; and a value greater than
      * <code>0</code> if this string is lexicographically greater than the
      * string argument.
-     * @exception java.lang.NullPointerException if <code>anotherString</code>
-     * is <code>null</code>.
+     * @throws java.lang.NullPointerException if <code>anotherString</code>
+     *                                        is <code>null</code>.
      */
     public int compareTo(String anotherString) {
         int len1 = count;
@@ -557,20 +556,20 @@ public final class String implements Comparable<String>, CharSequence {
      * </ul>
      *
      * @param ignoreCase if <code>true</code>, ignore case when comparing
-     * characters.
-     * @param toffset the starting offset of the subregion in this string.
-     * @param other the string argument.
-     * @param ooffset the starting offset of the subregion in the string
-     * argument.
-     * @param len the number of characters to compare.
-     * @return  <code>true</code> if the specified subregion of this string
+     *                   characters.
+     * @param toffset    the starting offset of the subregion in this string.
+     * @param other      the string argument.
+     * @param ooffset    the starting offset of the subregion in the string
+     *                   argument.
+     * @param len        the number of characters to compare.
+     * @return <code>true</code> if the specified subregion of this string
      * matches the specified subregion of the string argument;
      * <code>false</code> otherwise. Whether the matching is exact or case
      * insensitive depends on the <code>ignoreCase</code> argument.
      */
     public boolean regionMatches(boolean ignoreCase,
-            int toffset,
-            String other, int ooffset, int len) {
+                                 int toffset,
+                                 String other, int ooffset, int len) {
         char ta[] = value;
         int to = offset + toffset;
         int tlim = offset + count;
@@ -615,9 +614,9 @@ public final class String implements Comparable<String>, CharSequence {
      * Tests if this string starts with the specified prefix beginning at the
      * specified index.
      *
-     * @param prefix the prefix.
+     * @param prefix  the prefix.
      * @param toffset where to begin looking in the string.
-     * @return  <code>true</code> if the character sequence represented by the
+     * @return <code>true</code> if the character sequence represented by the
      * argument is a prefix of the substring of this object starting at index
      * <code>toffset</code>; <code>false</code> otherwise. The result is
      * <code>false</code> if <code>toffset</code> is negative or greater than
@@ -625,9 +624,8 @@ public final class String implements Comparable<String>, CharSequence {
      * the same as the result of the expression      <pre>
      *          this.subString(toffset).startsWith(prefix)
      * </pre>
-     *
-     * @exception java.lang.NullPointerException if <code>prefix</code> is
-     * <code>null</code>.
+     * @throws java.lang.NullPointerException if <code>prefix</code> is
+     *                                        <code>null</code>.
      */
     public boolean startsWith(String prefix, int toffset) {
         char ta[] = value;
@@ -652,14 +650,14 @@ public final class String implements Comparable<String>, CharSequence {
      * Tests if this string starts with the specified prefix.
      *
      * @param prefix the prefix.
-     * @return  <code>true</code> if the character sequence represented by the
+     * @return <code>true</code> if the character sequence represented by the
      * argument is a prefix of the character sequence represented by this
      * string; <code>false</code> otherwise. Note also that <code>true</code>
      * will be returned if the argument is an empty string or is equal to this
      * <code>String</code> object as determined by the {@link #equals(Object)}
      * method.
-     * @exception java.lang.NullPointerException if <code>prefix</code> is
-     * <code>null</code>.
+     * @throws java.lang.NullPointerException if <code>prefix</code> is
+     *                                        <code>null</code>.
      * @since JDK1.0
      */
     public boolean startsWith(String prefix) {
@@ -670,14 +668,14 @@ public final class String implements Comparable<String>, CharSequence {
      * Tests if this string ends with the specified suffix.
      *
      * @param suffix the suffix.
-     * @return  <code>true</code> if the character sequence represented by the
+     * @return <code>true</code> if the character sequence represented by the
      * argument is a suffix of the character sequence represented by this
      * object; <code>false</code> otherwise. Note that the result will be
      * <code>true</code> if the argument is the empty string or is equal to this
      * <code>String</code> object as determined by the {@link #equals(Object)}
      * method.
-     * @exception java.lang.NullPointerException if <code>suffix</code> is
-     * <code>null</code>.
+     * @throws java.lang.NullPointerException if <code>suffix</code> is
+     *                                        <code>null</code>.
      */
     public boolean endsWith(String suffix) {
         return startsWith(suffix, count - suffix.count);
@@ -697,13 +695,16 @@ public final class String implements Comparable<String>, CharSequence {
      * @return a hash code value for this object.
      */
     public int hashCode() {
-        int h = 0;
-        int off = offset;
-        char val[] = value;
-        int len = count;
+        int h = hash;
+        if (h == 0 && value.length > 0) {
+            int off = offset;
+            char val[] = value;
+            int len = count;
 
-        for (int i = 0; i < len; i++) {
-            h = 31 * h + val[off++];
+            for (int i = 0; i < len; i++) {
+                h = 31 * h + val[off++];
+            }
+            hash = h;
         }
         return h;
     }
@@ -752,7 +753,7 @@ public final class String implements Comparable<String>, CharSequence {
      * the same effect as if it were equal to the length of this string:
      * <code>-1</code> is returned.
      *
-     * @param ch a character.
+     * @param ch        a character.
      * @param fromIndex the index to start the search from.
      * @return the index of the first occurrence of the character in the
      * character sequence represented by this object that is greater than or
@@ -799,13 +800,13 @@ public final class String implements Comparable<String>, CharSequence {
      * (this.charAt(k) == ch) && (k <= fromIndex)
      * </pre></blockquote> is true.
      *
-     * @param ch a character.
+     * @param ch        a character.
      * @param fromIndex the index to start the search from. There is no
-     * restriction on the value of <code>fromIndex</code>. If it is greater than
-     * or equal to the length of this string, it has the same effect as if it
-     * were equal to one less than the length of this string: this entire string
-     * may be searched. If it is negative, it has the same effect as if it were
-     * -1: -1 is returned.
+     *                  restriction on the value of <code>fromIndex</code>. If it is greater than
+     *                  or equal to the length of this string, it has the same effect as if it
+     *                  were equal to one less than the length of this string: this entire string
+     *                  may be searched. If it is negative, it has the same effect as if it were
+     *                  -1: -1 is returned.
      * @return the index of the last occurrence of the character in the
      * character sequence represented by this object that is less than or equal
      * to <code>fromIndex</code>, or <code>-1</code> if the character does not
@@ -837,8 +838,8 @@ public final class String implements Comparable<String>, CharSequence {
      * then the index of the first character of the first such substring is
      * returned; if it does not occur as a substring, <code>-1</code> is
      * returned.
-     * @exception java.lang.NullPointerException if <code>str</code> is
-     * <code>null</code>.
+     * @throws java.lang.NullPointerException if <code>str</code> is
+     *                                        <code>null</code>.
      */
     public int indexOf(String str) {
         return indexOf(str, 0);
@@ -859,15 +860,15 @@ public final class String implements Comparable<String>, CharSequence {
      * the same effect as if it were equal to the length of this string:
      * <code>-1</code> is returned.
      *
-     * @param str the substring to search for.
+     * @param str       the substring to search for.
      * @param fromIndex the index to start the search from.
      * @return If the string argument occurs as a substring within this object
      * at a starting index no smaller than <code>fromIndex</code>, then the
      * index of the first character of the first such substring is returned. If
      * it does not occur as a substring starting at <code>fromIndex</code> or
      * beyond, <code>-1</code> is returned.
-     * @exception java.lang.NullPointerException if <code>str</code> is
-     * <code>null</code>
+     * @throws java.lang.NullPointerException if <code>str</code> is
+     *                                        <code>null</code>
      */
     public int indexOf(String str, int fromIndex) {
         char v1[] = value;
@@ -948,7 +949,7 @@ public final class String implements Comparable<String>, CharSequence {
      * </pre></blockquote>
      * If no such value of <i>k</i> exists, then -1 is returned.
      *
-     * @param str the substring to search for.
+     * @param str       the substring to search for.
      * @param fromIndex the index to start the search from.
      * @return the index within this string of the last occurrence of the
      * specified substring.
@@ -963,20 +964,20 @@ public final class String implements Comparable<String>, CharSequence {
      * character array being searched, and the target is the string being
      * searched for.
      *
-     * @param source the characters being searched.
+     * @param source       the characters being searched.
      * @param sourceOffset offset of the source string.
-     * @param sourceCount count of the source string.
-     * @param target the characters being searched for.
+     * @param sourceCount  count of the source string.
+     * @param target       the characters being searched for.
      * @param targetOffset offset of the target string.
-     * @param targetCount count of the target string.
-     * @param fromIndex the index to begin searching from.
+     * @param targetCount  count of the target string.
+     * @param fromIndex    the index to begin searching from.
      */
     static int lastIndexOf(char[] source, int sourceOffset, int sourceCount,
-            char[] target, int targetOffset, int targetCount,
-            int fromIndex) {
+                           char[] target, int targetOffset, int targetCount,
+                           int fromIndex) {
         /*
-	 * Check arguments; return immediately where possible. For
-	 * consistency, don't check for null str.
+         * Check arguments; return immediately where possible. For
+         * consistency, don't check for null str.
          */
         int rightIndex = sourceCount - targetCount;
         if (fromIndex < 0) {
@@ -1031,8 +1032,8 @@ public final class String implements Comparable<String>, CharSequence {
      *
      * @param beginIndex the beginning index, inclusive.
      * @return the specified substring.
-     * @exception IndexOutOfBoundsException if <code>beginIndex</code> is
-     * negative or larger than the length of this <code>String</code> object.
+     * @throws IndexOutOfBoundsException if <code>beginIndex</code> is
+     *                                   negative or larger than the length of this <code>String</code> object.
      */
     public String substring(int beginIndex) {
         return substring(beginIndex, count);
@@ -1051,12 +1052,12 @@ public final class String implements Comparable<String>, CharSequence {
      * </pre></blockquote>
      *
      * @param beginIndex the beginning index, inclusive.
-     * @param endIndex the ending index, exclusive.
+     * @param endIndex   the ending index, exclusive.
      * @return the specified substring.
-     * @exception IndexOutOfBoundsException if the <code>beginIndex</code> is
-     * negative, or <code>endIndex</code> is larger than the length of this
-     * <code>String</code> object, or <code>beginIndex</code> is larger than
-     * <code>endIndex</code>.
+     * @throws IndexOutOfBoundsException if the <code>beginIndex</code> is
+     *                                   negative, or <code>endIndex</code> is larger than the length of this
+     *                                   <code>String</code> object, or <code>beginIndex</code> is larger than
+     *                                   <code>endIndex</code>.
      */
     public String substring(int beginIndex, int endIndex) {
         if (beginIndex < 0) {
@@ -1088,11 +1089,11 @@ public final class String implements Comparable<String>, CharSequence {
      * </pre></blockquote>
      *
      * @param str the <code>String</code> that is concatenated to the end of
-     * this <code>String</code>.
+     *            this <code>String</code>.
      * @return a string that represents the concatenation of this object's
      * characters followed by the string argument's characters.
-     * @exception java.lang.NullPointerException if <code>str</code> is
-     * <code>null</code>.
+     * @throws java.lang.NullPointerException if <code>str</code> is
+     *                                        <code>null</code>.
      */
     public String concat(String str) {
         int otherLen = str.length();
@@ -1364,17 +1365,17 @@ public final class String implements Comparable<String>, CharSequence {
      * modification of the character array does not affect the newly created
      * string.
      *
-     * @param data the character array.
+     * @param data   the character array.
      * @param offset the initial offset into the value of the
-     * <code>String</code>.
-     * @param count the length of the value of the <code>String</code>.
+     *               <code>String</code>.
+     * @param count  the length of the value of the <code>String</code>.
      * @return a newly allocated string representing the sequence of characters
      * contained in the subarray of the character array argument.
-     * @exception NullPointerException if <code>data</code> is
-     * <code>null</code>.
-     * @exception IndexOutOfBoundsException if <code>offset</code> is negative,
-     * or <code>count</code> is negative, or <code>offset+count</code> is larger
-     * than <code>data.length</code>.
+     * @throws NullPointerException      if <code>data</code> is
+     *                                   <code>null</code>.
+     * @throws IndexOutOfBoundsException if <code>offset</code> is negative,
+     *                                   or <code>count</code> is negative, or <code>offset+count</code> is larger
+     *                                   than <code>data.length</code>.
      */
     public static String valueOf(char data[], int offset, int count) {
         return new String(data, offset, count);
@@ -1511,7 +1512,7 @@ public final class String implements Comparable<String>, CharSequence {
      */
     public native String intern0();
 
-//    public String[] split(String splitor) {
+    //    public String[] split(String splitor) {
 //        return split(splitor, 0);
 //    }
 //

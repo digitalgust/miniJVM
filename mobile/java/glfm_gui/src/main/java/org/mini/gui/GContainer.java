@@ -351,29 +351,29 @@ abstract public class GContainer extends GObject {
     @Override
     public boolean paint(long ctx) {
         try {
-
             synchronized (elements) {
-//                //更新所有UI组件
+                //更新所有UI组件
 
                 if (focus != null && (focus instanceof GFrame || focus instanceof GList)) {
                     elements.remove(focus);
                     elements.add(focus);
                 }
-                for (int i = 0, imax = elements.size(); i < imax; i++) {
+                //在遍历过程中,其他线程无法修改容器,但可能会有本线程在paint过程中添加或删除组件,因此要每个循环取size
+                for (int i = 0; i < elements.size(); i++) {
                     GObject nko = elements.get(i);
                     if (nko.isBack()) {
                         drawObj(ctx, nko);
                         continue;
                     }
                 }
-                for (int i = 0, imax = elements.size(); i < imax; i++) {
+                for (int i = 0; i < elements.size(); i++) {
                     GObject nko = elements.get(i);
                     if (!nko.isBack() && !nko.isMenu()) {
                         drawObj(ctx, nko);
                         continue;
                     }
                 }
-                for (int i = 0, imax = elements.size(); i < imax; i++) {
+                for (int i = 0; i < elements.size(); i++) {
                     GObject nko = elements.get(i);
                     if (nko.isMenu()) {
                         drawObj(ctx, nko);
@@ -383,6 +383,7 @@ abstract public class GContainer extends GObject {
             }
 
         } catch (Exception e) {
+//            System.out.println("paint thread " + Thread.currentThread());
 //            System.out.println(this);
 //            System.out.println(this.getFrame());
 //            for (Iterator<GObject> it = elements.listIterator(); it.hasNext(); ) {

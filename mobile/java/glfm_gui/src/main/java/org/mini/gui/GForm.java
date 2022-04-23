@@ -342,6 +342,10 @@ public class GForm extends GPanel {
         cmdHandler.addCmd(cmd);
     }
 
+    public static void setMsgBarColor(float[] msgBarColor) {
+        cmdHandler.setMsgBarColor(msgBarColor);
+    }
+
     public float getRatio() {
         return pxRatio;
     }

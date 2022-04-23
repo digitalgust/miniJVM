@@ -1,8 +1,6 @@
 package org.mini.gui.gscript;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 
 abstract public class Lib {
     protected Map<String, Integer> methodNames = new HashMap<>();
@@ -41,5 +39,5 @@ abstract public class Lib {
      * @param methodID int
      * @return Object
      */
-    abstract public DataType call(Interpreter inp, Vector para, int methodID);
+    abstract public DataType call(Interpreter inp, ArrayList para, int methodID);
 }

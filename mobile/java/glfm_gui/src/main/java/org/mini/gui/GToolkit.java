@@ -567,7 +567,7 @@ public class GToolkit {
         y += h + 10;
 
         float btnWidth = w * .5f;
-        GButton leftBtn = new GButton("Ok", x + btnWidth * .5f, y, btnWidth, 28);
+        GButton leftBtn = new GButton(GLanguage.getString("Ok"), x + btnWidth * .5f, y, btnWidth, 28);
         leftBtn.setBgColor(128, 16, 8, 255);
         leftBtn.setName("MSG_FRAME_OK");
         gp.add(leftBtn);
@@ -1132,7 +1132,13 @@ public class GToolkit {
     public static GActionListener getCompActionListener(String compName) {
         if (compName == null) return null;
         GForm form = GCallBack.getInstance().getForm();
-        GObject eitem = form.findByName(compName);
+        return getCompActionListener(form, compName);
+    }
+
+
+    public static GActionListener getCompActionListener(GContainer parent, String compName) {
+        if (compName == null || parent == null) return null;
+        GObject eitem = parent.findByName(compName);
         if (eitem != null) {
             return eitem.getActionListener();
         }
@@ -1143,7 +1149,13 @@ public class GToolkit {
     public static void setCompActionListener(String compName, GActionListener listener) {
         if (compName == null) return;
         GForm form = GCallBack.getInstance().getForm();
-        GObject eitem = form.findByName(compName);
+        setCompActionListener(form, compName, listener);
+    }
+
+
+    public static void setCompActionListener(GContainer parent, String compName, GActionListener listener) {
+        if (compName == null || parent == null) return;
+        GObject eitem = parent.findByName(compName);
         if (eitem != null) {
             eitem.setActionListener(listener);
         }

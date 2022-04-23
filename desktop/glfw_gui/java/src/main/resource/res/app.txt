@@ -1,0 +1,84 @@
+sub main()
+    '测变量赋值、表达式计算、内部方法调用
+    a=2
+    b=5
+    i=0
+    while(i<20000)
+        y  = - (m (a,b*a)*a-b- (1-10)+16/8)+-12
+        i=i+1
+    loop
+    println ("a="+a+" b="+b+" i="+i+" y="+y)
+
+'   '测循环、测字符串
+'   notemsg[8]
+'   println("arrlen(notemsg)="+arrlen(notemsg))
+'   notemsg[0]="it's one"
+'   notemsg[1]=2
+'   notemsg[2]=true
+'   notemsg[3]="it's four"
+'   notemsg[4]="it's five"
+'   notemsg[5]="it's six"
+'   notemsg[6]="it's seven"
+'   notemsg[7]="it's eight"
+
+'   i=0
+'   while(i<arrlen(notemsg))
+'       println(notemsg[i])
+'       i=i+1
+'   loop
+
+
+'   '测循环嵌套及分支
+'   map[10][10]
+'   i=0
+'   while(i<arrlen(map))
+'       j=0
+'       while(j<arrlen(map[i]))
+'           map[i][j]=i*arrlen(map[i])+j
+'           if(map[i][j]<10) '如果小于10在数字前加0字符对齐
+'               s="0"
+'           else
+'               s=""
+'           eif
+'           print(s+map[i][j]+",")
+'           j=j+1
+'       loop
+'       println()
+'       i=i+1
+'   loop
+
+'   '测多维数组
+'   test[2][2][2][2]
+
+'   test[1][1][1][1]=10
+'   println(test[1][1][1][1])
+
+'   println(test)
+'   '测外部方法调用
+'   r=random()
+'   println(r)
+'   println(abs(r))
+'   println(mod(abs(r),5))
+
+'   '测动态数组
+'   b=3
+'   arr [ m ( 2 , 3 ) ] [ b ]
+'   println("b="+b)
+'   println(arrlen(arr))
+'   println(arrlen(arr[0]))
+'   println("arr[3][2]="+arr[3][2])
+
+'   d(b)
+'   println("b="+b)
+ret
+
+
+'内部方法
+sub m(x, y)
+    'println ( "x="+x)
+    'println ( "y="+y)
+ret x+y
+
+sub d(a)
+    a=5
+ret

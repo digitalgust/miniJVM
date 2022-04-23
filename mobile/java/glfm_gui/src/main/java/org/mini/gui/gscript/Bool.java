@@ -11,15 +11,25 @@ public class Bool extends DataType {
         } else {
             value = false;
         }
+        this.setMutable(true);
     }
 
     public Bool(boolean b) {
+        this(b, true);
+    }
+
+    public Bool(boolean b, boolean mutable) {
         type = DTYPE_BOOL;
         value = b;
+        this.setMutable(mutable);
     }
 
     public void setVal(boolean b) {
-        value = b;
+        if (isMutable()) {
+            value = b;
+        } else {
+            throw new RuntimeException("var is immutable");
+        }
     }
 
     public boolean getVal() {

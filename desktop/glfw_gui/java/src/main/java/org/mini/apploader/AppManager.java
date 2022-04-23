@@ -128,6 +128,7 @@ public class AppManager extends GApplication {
             style = GToolkit.getStyle();
         }
         GToolkit.setStyle(style);
+        GForm.setMsgBarColor(GCmdHandler.DEFAULT_MSG_BAR_COLOR);
         GCallBack.getInstance().setApplication(this);
         reloadAppList();
     }

@@ -7,7 +7,7 @@ package org.mini.gui;
 import org.mini.gui.gscript.*;
 import org.mini.nanovg.Nanovg;
 
-import java.util.Vector;
+import java.util.ArrayList;
 
 
 /**
@@ -60,7 +60,7 @@ public class GuiScriptLib extends Lib {
      * @param methodID
      * @return
      */
-    public DataType call(Interpreter inp, Vector para, int methodID) {
+    public DataType call(Interpreter inp, ArrayList para, int methodID) {
         switch (methodID) {
             case 0:
                 return setBgColor(para);
@@ -127,15 +127,15 @@ public class GuiScriptLib extends Lib {
     // -------------------------------------------------------------------------
 
 
-    public DataType setBgColor(Vector para) {
+    public DataType setBgColor(ArrayList para) {
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
         GObject gobj = GToolkit.getComponent(compont);
         if (gobj != null) {
             float[] color;
-            int r = ((Int) Interpreter.vPopBack(para)).getVal();
-            int g = ((Int) Interpreter.vPopBack(para)).getVal();
-            int b = ((Int) Interpreter.vPopBack(para)).getVal();
-            int a = ((Int) Interpreter.vPopBack(para)).getVal();
+            int r = ((Int) Interpreter.vPopBack(para)).getValAsInt();
+            int g = ((Int) Interpreter.vPopBack(para)).getValAsInt();
+            int b = ((Int) Interpreter.vPopBack(para)).getValAsInt();
+            int a = ((Int) Interpreter.vPopBack(para)).getValAsInt();
             color = Nanovg.nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);
             gobj.setBgColor(color);
 
@@ -144,14 +144,14 @@ public class GuiScriptLib extends Lib {
         return null;
     }
 
-    public DataType setColor(Vector para) {
+    public DataType setColor(ArrayList para) {
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
         GObject gobj = GToolkit.getComponent(compont);
         if (gobj != null) {
-            int r = ((Int) Interpreter.vPopBack(para)).getVal();
-            int g = ((Int) Interpreter.vPopBack(para)).getVal();
-            int b = ((Int) Interpreter.vPopBack(para)).getVal();
-            int a = ((Int) Interpreter.vPopBack(para)).getVal();
+            int r = ((Int) Interpreter.vPopBack(para)).getValAsInt();
+            int g = ((Int) Interpreter.vPopBack(para)).getValAsInt();
+            int b = ((Int) Interpreter.vPopBack(para)).getValAsInt();
+            int a = ((Int) Interpreter.vPopBack(para)).getValAsInt();
             float[] color = Nanovg.nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);
 
             gobj.setColor(color);
@@ -159,7 +159,7 @@ public class GuiScriptLib extends Lib {
         return null;
     }
 
-    public DataType setBgColorHexStr(Vector para) {
+    public DataType setBgColorHexStr(ArrayList para) {
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
         GObject gobj = GToolkit.getComponent(compont);
         if (gobj != null) {
@@ -175,7 +175,7 @@ public class GuiScriptLib extends Lib {
         return null;
     }
 
-    public DataType setColorHexStr(Vector para) {
+    public DataType setColorHexStr(ArrayList para) {
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
         GObject gobj = GToolkit.getComponent(compont);
         if (gobj != null) {
@@ -192,24 +192,24 @@ public class GuiScriptLib extends Lib {
     }
 
 
-    public DataType setText(Vector para) {
+    public DataType setText(ArrayList para) {
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
         String text = ((Str) Interpreter.vPopBack(para)).getVal();
         GToolkit.setCompText(compont, text);
         return null;
     }
 
-    public DataType getText(Vector para) {
+    public DataType getText(ArrayList para) {
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
         String text = GToolkit.getCompText(compont);
         return new Str(text == null ? "" : text);
     }
 
-    public DataType setLocation(Vector para) {
+    public DataType setLocation(ArrayList para) {
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
 
-        int x = ((Int) Interpreter.vPopBack(para)).getVal();
-        int y = ((Int) Interpreter.vPopBack(para)).getVal();
+        int x = ((Int) Interpreter.vPopBack(para)).getValAsInt();
+        int y = ((Int) Interpreter.vPopBack(para)).getValAsInt();
         GObject gobj = GToolkit.getComponent(compont);
         if (gobj != null) {
             gobj.setLocation(x, y);
@@ -218,10 +218,10 @@ public class GuiScriptLib extends Lib {
         return null;
     }
 
-    public DataType setSize(Vector para) {
+    public DataType setSize(ArrayList para) {
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
-        int w = ((Int) Interpreter.vPopBack(para)).getVal();
-        int h = ((Int) Interpreter.vPopBack(para)).getVal();
+        int w = ((Int) Interpreter.vPopBack(para)).getValAsInt();
+        int h = ((Int) Interpreter.vPopBack(para)).getValAsInt();
         GObject gobj = GToolkit.getComponent(compont);
         if (gobj != null) {
             gobj.setSize(w, h);
@@ -233,7 +233,7 @@ public class GuiScriptLib extends Lib {
     static int[] ARRAY_POS_0 = {0};
     static int[] ARRAY_POS_1 = {1};
 
-    public DataType getLocation(Vector para) {
+    public DataType getLocation(ArrayList para) {
         Array array = new Array(new int[]{2});
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
         GObject go = GToolkit.getComponent(compont);
@@ -244,7 +244,7 @@ public class GuiScriptLib extends Lib {
         return array;
     }
 
-    public DataType getSize(Vector para) {
+    public DataType getSize(ArrayList para) {
         Array array = new Array(new int[]{2});
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
         GObject go = GToolkit.getComponent(compont);
@@ -255,14 +255,14 @@ public class GuiScriptLib extends Lib {
         return array;
     }
 
-    public DataType setCmd(Vector para) {
+    public DataType setCmd(ArrayList para) {
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
         String cmd = ((Str) Interpreter.vPopBack(para)).getVal();
         GToolkit.setCompCmd(compont, cmd);
         return null;
     }
 
-    public DataType getCmd(Vector para) {
+    public DataType getCmd(ArrayList para) {
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
         String text = GToolkit.getCompCmd(compont);
         if (text == null) {
@@ -271,14 +271,14 @@ public class GuiScriptLib extends Lib {
         return new Str(text);
     }
 
-    public DataType close(Vector para) {
+    public DataType close(ArrayList para) {
         Str p1 = (Str) Interpreter.vPopBack(para);
         String compont = p1 != null ? p1.getVal() : null;
         GToolkit.closeFrame(compont);
         return null;
     }
 
-    public DataType getCurSlot(Vector para) {
+    public DataType getCurSlot(ArrayList para) {
         Int val = new Int(0);
         Str p1 = (Str) Interpreter.vPopBack(para);
         String compont = p1 != null ? p1.getVal() : null;
@@ -290,11 +290,11 @@ public class GuiScriptLib extends Lib {
         return val;
     }
 
-    public DataType showSlot(Vector para) {
+    public DataType showSlot(ArrayList para) {
         Str p1 = (Str) Interpreter.vPopBack(para);
         String compont = p1 != null ? p1.getVal() : null;
         GObject go = GToolkit.getComponent(compont);
-        int slot = ((Int) Interpreter.vPopBack(para)).getVal();
+        int slot = ((Int) Interpreter.vPopBack(para)).getValAsInt();
         Int time = ((Int) Interpreter.vPopBack(para));
         if (go instanceof GViewSlot) {
             ((GViewSlot) go).moveTo(slot, time == null ? 200 : time.getVal());
@@ -303,14 +303,14 @@ public class GuiScriptLib extends Lib {
     }
 
 
-    public DataType setImgPath(Vector para) {
+    public DataType setImgPath(ArrayList para) {
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
         String img = ((Str) Interpreter.vPopBack(para)).getVal();
         GToolkit.setCompImage(compont, img);
         return null;
     }
 
-    public DataType setImg(Vector para) {
+    public DataType setImg(ArrayList para) {
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
         Object img = ((Obj) Interpreter.vPopBack(para)).getVal();
         if (img instanceof GImage) {
@@ -319,41 +319,41 @@ public class GuiScriptLib extends Lib {
         return null;
     }
 
-    public DataType getImg(Vector para) {
+    public DataType getImg(ArrayList para) {
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
         GImage img = GToolkit.getCompImage(compont);
         return new Obj(img);
     }
 
-    public DataType setAttachStr(Vector para) {
+    public DataType setAttachStr(ArrayList para) {
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
         String str = ((Str) Interpreter.vPopBack(para)).getVal();
         GToolkit.setCompAttachment(compont, str);
         return null;
     }
 
-    public DataType getAttachStr(Vector para) {
+    public DataType getAttachStr(ArrayList para) {
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
         String text = GToolkit.getCompAttachment(compont);
         return new Str(text);
     }
 
 
-    public DataType setAttachInt(Vector para) {
+    public DataType setAttachInt(ArrayList para) {
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
-        int val = ((Int) Interpreter.vPopBack(para)).getVal();
+        int val = ((Int) Interpreter.vPopBack(para)).getValAsInt();
         GToolkit.setCompAttachment(compont, Integer.valueOf(val));
         return null;
     }
 
-    public DataType getAttachInt(Vector para) {
+    public DataType getAttachInt(ArrayList para) {
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
         Integer val = GToolkit.getCompAttachment(compont);
         return new Int(val == null ? 0 : val.intValue());
     }
 
 
-    public DataType getListIdx(Vector para) {
+    public DataType getListIdx(ArrayList para) {
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
         GObject gobj = GToolkit.getComponent(compont);
         int selectIndex = -1;
@@ -363,7 +363,7 @@ public class GuiScriptLib extends Lib {
         return new Int(selectIndex);
     }
 
-    private DataType setImgAlphaStr(Vector para) {
+    private DataType setImgAlphaStr(ArrayList para) {
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
         GObject gobj = GToolkit.getComponent(compont);
         if (gobj != null) {
@@ -384,7 +384,7 @@ public class GuiScriptLib extends Lib {
         return null;
     }
 
-    private DataType setEnable(Vector para) {
+    private DataType setEnable(ArrayList para) {
         String compont = ((Str) Interpreter.vPopBack(para)).getVal();
         boolean enable = ((Bool) Interpreter.vPopBack(para)).getVal();
         GToolkit.setCompEnable(compont, enable);

@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
  * @author Gust
  */
 public class GLanguage {

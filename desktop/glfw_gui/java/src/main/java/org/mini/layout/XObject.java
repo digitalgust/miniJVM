@@ -84,7 +84,7 @@ public abstract class XObject implements GLayout {
                     xc.children.add(this);
                 }
                 this.parent = xc;
-            }else{
+            } else {
                 System.out.println("error ============");
             }
         } else {
@@ -181,25 +181,9 @@ public abstract class XObject implements GLayout {
                 raw_y = Integer.parseInt(attValue);
             }
         } else if (attName.equals("bgcolor")) {
-            try {
-                int c = (int) Long.parseLong(attValue, 16);
-                bgColor = new float[4];
-                bgColor[0] = ((c >> 24) & 0xff) / 255f;
-                bgColor[1] = ((c >> 16) & 0xff) / 255f;
-                bgColor[2] = ((c >> 8) & 0xff) / 255f;
-                bgColor[3] = ((c >> 0) & 0xff) / 255f;
-            } catch (Exception e) {
-            }
+            bgColor = parseHexColor(attValue);
         } else if (attName.equals("color")) {
-            try {
-                int c = (int) Long.parseLong(attValue, 16);
-                color = new float[4];
-                color[0] = ((c >> 24) & 0xff) / 255f;
-                color[1] = ((c >> 16) & 0xff) / 255f;
-                color[2] = ((c >> 8) & 0xff) / 255f;
-                color[3] = ((c >> 0) & 0xff) / 255f;
-            } catch (Exception e) {
-            }
+            color = parseHexColor(attValue);
         } else if (attName.equals("front")) {
             frontest = "0".equals(attValue) ? false : true;
         } else if (attName.equals("back")) {
@@ -207,6 +191,20 @@ public abstract class XObject implements GLayout {
         } else if (attName.equals("fontsize")) {
             fontSize = Integer.parseInt(attValue);
         }
+    }
+
+    protected float[] parseHexColor(String hexColor) {
+        try {
+            int c = (int) Long.parseLong(hexColor, 16);
+            float[] color = new float[4];
+            color[0] = ((c >> 24) & 0xff) / 255f;
+            color[1] = ((c >> 16) & 0xff) / 255f;
+            color[2] = ((c >> 8) & 0xff) / 255f;
+            color[3] = ((c >> 0) & 0xff) / 255f;
+            return color;
+        } catch (Exception e) {
+        }
+        return null;
     }
 
     public void initGui() {

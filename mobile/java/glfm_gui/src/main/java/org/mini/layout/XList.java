@@ -23,6 +23,7 @@ public class XList extends XObject {
         String attachment;
         String onClick;
         boolean selected;
+        float[] color;
     }
 
     protected Vector items = new Vector();
@@ -83,6 +84,7 @@ public class XList extends XObject {
                     item.name = parser.getAttributeValue(null, "name");
                     item.pic = parser.getAttributeValue(null, "pic");
                     item.cmd = parser.getAttributeValue(null, "cmd");
+                    item.color = parseHexColor(parser.getAttributeValue(null, "color"));
                     item.onClick = parser.getAttributeValue(null, "onclick");
                     item.attachment = parser.getAttributeValue(null, "attachment");
                     String tmp1 = parser.getAttributeValue(null, "selected");
@@ -138,6 +140,10 @@ public class XList extends XObject {
                 gli.setActionListener(getRoot().getEventHandler());
                 gli.setEnable(enable);
                 gli.setCmd(item.cmd);
+                gli.setOnClinkScript(item.onClick);
+                if (item.color != null) {
+                    gli.setColor(item.color);
+                }
                 list.add(gli);
                 if (item.selected) {
                     selectCount++;

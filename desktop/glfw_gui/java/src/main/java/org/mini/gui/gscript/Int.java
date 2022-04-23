@@ -10,20 +10,29 @@ public class Int extends DataType {
     }
 
     public Int(long i) {
+        this(i, true);
+    }
+
+    public Int(long i, boolean mutable) {
         type = DTYPE_INT;
         value = i;
+        this.setMutable(mutable);
     }
 
-    public long getValLong() {
-        return value;
-    }
-    
-    public int getVal(){
-        return (int)value;
+    public int getValAsInt() {
+        return (int) value;
     }
 
-    public void setVal(int i) {
-        value = i;
+    public long getVal() {
+        return (int) value;
+    }
+
+    public void setVal(long i) {
+        if (isMutable()) {
+            value = i;
+        } else {
+            throw new RuntimeException("var is immutable");
+        }
     }
 
     public String getString() {

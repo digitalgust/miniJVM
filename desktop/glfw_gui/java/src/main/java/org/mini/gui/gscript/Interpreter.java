@@ -4,9 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Vector;
+import java.util.*;
 //import main.Util;
 
 /**
@@ -52,39 +50,120 @@ public class Interpreter {
     public static final int ERR_ILLEGAL = 0, ERR_VAR = 1, ERR_TYPE_INVALID = 2, ERR_NOSUB = 3, ERR_NO_VAR = 4, ERR_PARA_CALC = 5, ERR_PAESEPARA = 6, ERR_NO_SRC = 7, ERR_OPSYMB = 8, ERR_ARR_OUT = 9;
     public static final String[] STRS_ERR = {" Illegal statment ,", " Invalid variable name ", " Data type error ", " No such method ", " No such variable ", " Method parameter error ", " Parameter count error ", " Code not load yet ", " Operation symbol error  ", " Array out of bounds  "};
     //源码字符串数组
-    //private Vector srcCode;
+    //private ArrayList srcCode;
     private Statement[] srcCompiled;
     //变量范围控制
     private boolean isTopCall; //是否是顶级调用
-    private Hashtable globalVar = new Hashtable(); //全局变量
+    private LocalVarsMap<String, DataType> globalVar = new LocalVarsMap(); //全局变量
     //脚本中过程首地址  ,sub address in script
-    private Hashtable subAddr = new Hashtable();
+    private HashMap<String, Int> subAddr = new HashMap();
     //系统过程及扩充过程列表 ,extend method lib
-    private Vector extSubList = new Vector();
+    private ArrayList<Lib> extSubList = new ArrayList();
 
 
-    private Vector<Hashtable> localVarCache = new Vector<>();
-
+    static final int MAX_CACHE_SIZE = 512;
+    private List<LocalVarsMap> varsMapCache = new ArrayList();
+    private List<ArrayList> listCache = new ArrayList<>();
+    private List<Int> intCache = new ArrayList<>();
+    private List<Bool> boolCache = new ArrayList<>();
+    private List<Str> strCache = new ArrayList<>();
 
     /**
      * 取得一个缓存的变量表
      *
      * @return
      */
-    private Hashtable getCachedTable() {
-        if (localVarCache.isEmpty()) {
-            return new Hashtable();
+    private LocalVarsMap getCachedTable() {
+        if (varsMapCache.isEmpty()) {
+            return new LocalVarsMap();
         }
-        return localVarCache.remove(localVarCache.size() - 1);
+        return varsMapCache.remove(varsMapCache.size() - 1);
     }
 
-    private void putCachedTable(Hashtable vartable) {
-        if (vartable != null) {
-            vartable.clear();
-            localVarCache.add(vartable);
+    private void putCachedTable(LocalVarsMap v) {
+        v.clear();
+        varsMapCache.add(v);
+    }
+
+    private ArrayList getCachedVector() {
+        if (listCache.isEmpty()) {
+            return new ArrayList();
+        }
+        return listCache.remove(listCache.size() - 1);
+    }
+
+    private void putCachedVector(ArrayList v) {
+        v.clear();
+        listCache.add(v);
+    }
+
+    /**
+     * 减少内存分配,尽可能使用缓存
+     *
+     * @param v
+     * @return
+     */
+    public Int getCachedInt(long v) {
+        if (intCache.isEmpty()) {
+            return new Int(v);
+        }
+        Int i = intCache.remove(intCache.size() - 1);
+        i.setVal(v);
+        return i;
+    }
+
+    private void putCachedInt(DataType v) {
+        if (intCache.size() > MAX_CACHE_SIZE || v == null) return;//防内存泄漏
+        if (v.isMutable() && v.type == DataType.DTYPE_INT) {
+            intCache.add((Int) v);
         }
     }
 
+    public Bool getCachedBool(boolean v) {
+        if (boolCache.isEmpty()) {
+            return new Bool(v);
+        }
+        Bool b = boolCache.remove(boolCache.size() - 1);
+        b.setVal(v);
+        return b;
+    }
+
+    public void putCachedBool(DataType v) {
+        if (boolCache.size() > MAX_CACHE_SIZE || v == null) return;
+        if (v.isMutable() && v.type == DataType.DTYPE_BOOL) {
+            boolCache.add((Bool) v);
+        }
+    }
+
+    public Str getCachedStr(String v) {
+        if (strCache.isEmpty()) {
+            return new Str(v);
+        }
+        Str b = strCache.remove(strCache.size() - 1);
+        b.setVal(v);
+        return b;
+    }
+
+    public void putCachedStr(DataType v) {
+        if (strCache.size() > MAX_CACHE_SIZE || v == null) return;
+        if (v.isMutable() && v.type == DataType.DTYPE_STR) {
+            ((Str) v).setVal(null);
+            strCache.add((Str) v);
+        }
+    }
+
+    public void putCachedDataType(DataType v) {
+        if (v == null) return;
+        if (v.isMutable()) {
+            if (v.type == DataType.DTYPE_INT) {
+                putCachedInt(v);
+            } else if (v.type == DataType.DTYPE_BOOL) {
+                putCachedBool(v);
+            } else if (v.type == DataType.DTYPE_STR) {
+                putCachedStr(v);
+            }
+        }
+    }
 
     /**
      * 构造方法
@@ -96,15 +175,11 @@ public class Interpreter {
      * 初始化类
      */
     private void init() {//init localvar table cache
-        for (int i = 0; i < 3; i++) {
-            localVarCache.add(new Hashtable());
-        }
-
         srcCompiled = null;
         //脚本中过程首地址
         subAddr.clear();
         //系统过程及扩充过程列表
-        extSubList.removeAllElements();
+        extSubList.clear();
         //初始化全局变量表
         globalVar.clear();
 //        //初始化解析
@@ -167,7 +242,7 @@ public class Interpreter {
         //转换为String数组
         ByteArrayOutputStream line = new ByteArrayOutputStream();
         //StringBuffer sb = new StringBuffer();
-        Vector srcCode = new Vector();
+        ArrayList srcCode = new ArrayList();
         srcCompiled = new Statement[lineCount];
         lineCount = 0;
         for (int i = 0; i < srcBytes.length; i++) {
@@ -177,7 +252,7 @@ public class Interpreter {
                     //String s = new String(line.toByteArray(), "GB2312"); //j2se使用
                     s = s.trim();
                     if (s.length() > 0) {
-                        srcCode.addElement(s);
+                        srcCode.add(s);
                     }
                 } catch (Exception ex1) {
                 }
@@ -205,8 +280,8 @@ public class Interpreter {
         init();
 
         int dquodation = 0;
-        StringBuffer line = new StringBuffer();
-        Vector v = new Vector();
+        StringBuilder line = new StringBuilder();
+        ArrayList v = new ArrayList();
         for (int i = 0, len = code.length(); i < len; i++) {
             char ch = code.charAt(i);
             if (ch == '"') {
@@ -215,37 +290,40 @@ public class Interpreter {
             if ((dquodation % 2) == 0 && (ch == ';' || ch == '\n')) {
                 String s = line.toString().trim();
                 if (s.length() > 0) {
-                    v.addElement(s);
+                    v.add(s);
                 }
                 line.setLength(0);
             } else {
                 line.append(ch);
             }
         }
+        //fix lost the last line
+        String s = line.toString().trim();
+        if (s.length() != 0) v.add(s);
         preProcess(v);
     }
 
     public Lib getLib() {
-        return (Lib) extSubList.elementAt(0);
+        return (Lib) extSubList.get(0);
     }
 
     public void removeLib(Lib lib) {
-        extSubList.removeElement(lib);
+        extSubList.remove(lib);
     }
 
     /**
      * 预处理
      */
-    private void preProcess(Vector srcCode) {
+    private void preProcess(ArrayList srcCode) {
         //预处理
         for (int i = 0; i < srcCode.size(); ) {
             //校验是否有空串
-            if (srcCode.elementAt(i) == null) {
-                srcCode.removeElementAt(i);
+            if (srcCode.get(i) == null) {
+                srcCode.remove(i);
                 continue;
             }
             //去掉注释
-            String el = (String) srcCode.elementAt(i);
+            String el = (String) srcCode.get(i);
             if (el.indexOf('\'') >= 0) {
                 int dqCount = 0; //双引号计数
                 for (int m = 0; m < el.length(); m++) {
@@ -260,22 +338,22 @@ public class Interpreter {
             }
             el = el.trim();
             if (el.length() <= 0) {
-                srcCode.removeElementAt(i);
+                srcCode.remove(i);
                 continue;
             }
-            srcCode.setElementAt(el, i);
+            srcCode.set(i, el);
             i++;
         }
         srcCompiled = new Statement[srcCode.size()];
         for (int i = 0; i < srcCode.size(); i++) {
             try {
-                String sc = (String) srcCode.elementAt(i);
+                String sc = (String) srcCode.get(i);
                 Statement st = Statement.parseInstruct(sc, this);
                 srcCompiled[i] = st;
                 st.src = sc;
                 //System.out.println(i + " " + sc);
             } catch (Exception e) {
-                errout(i, STRS_ERR[ERR_ILLEGAL] + srcCode.elementAt(i));
+                errout(i, STRS_ERR[ERR_ILLEGAL] + srcCode.get(i));
                 e.printStackTrace();
                 break;
             }
@@ -283,7 +361,7 @@ public class Interpreter {
             //找过程起始行号
             if (srcCompiled[i].type == KEYWORD_SUB) {
                 StatementSub ss = (StatementSub) srcCompiled[i];
-                subAddr.put(ss.cell.subName, new Int(i)); //放入过程表中
+                subAddr.put(ss.cell.subName, new Int(i, false)); //放入过程表中
             }
         }
     }
@@ -298,10 +376,10 @@ public class Interpreter {
     }
 
     /**
-     * @param env Hashtable
+     * @param env HashMap
      * @return Object
      */
-    public Object start(Hashtable env) {
+    public DataType start(HashMap env) {
         //变量范围控制
         isTopCall = true; //是否是顶级调用
         //开始执行代码
@@ -312,15 +390,10 @@ public class Interpreter {
             } else {
                 //如果环境变量存在
                 if (env != null) {
-                    for (Enumeration e = env.keys(); e.hasMoreElements(); ) {
-                        Object key = e.nextElement();
-                        Object val = env.get(key);
-                        key = ((String) key).toLowerCase();
-                        globalVar.put(key, val);
-                    }
+                    globalVar.putAll(env);
                 }
                 //执行脚本
-                return callSub(null, null);
+                return callSub("main()");
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -334,13 +407,15 @@ public class Interpreter {
      * @param instract
      * @return
      */
-    public Object callSub(String instract) {
+    public DataType callSub(String instract) {
         try {
             Statement pstat = Statement.parseInstruct(instract, this);
             if (pstat.type == KEYWORD_CALL) {
                 StatementCall pstatCall = (StatementCall) pstat;
-                Hashtable ht = new Hashtable();
-                return callSub(pstatCall.cell, ht);
+                LocalVarsMap ht = getCachedTable();
+                DataType o = callSub(pstatCall.cell, ht);
+                putCachedTable(ht);
+                return o;
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -355,6 +430,8 @@ public class Interpreter {
      * @param value
      */
     public void putGlobalVar(String varName, DataType value) {
+        if (value == null) return;
+        value.setMutable(false);
         varName = varName.toLowerCase();
         globalVar.put(varName, value);
     }
@@ -376,7 +453,7 @@ public class Interpreter {
      * @param lib Lib
      */
     public void reglib(Lib lib) {
-        extSubList.addElement(lib);
+        extSubList.add(lib);
     }
 
     //--------------------------------------------------------------------------
@@ -386,15 +463,15 @@ public class Interpreter {
     /**
      * 过程解析,脚本执行体
      *
-     * @param paraStack      Hashtable
+     * @param paraStack      LocalVarsMap
      * @param instrucPointer int
      * @return Object
      */
-    private DataType exec(Vector paraStack, int instrucPointer) {
+    private DataType exec(ArrayList<DataType> paraStack, int instrucPointer) {
 
         int ip = instrucPointer; //运行行号
         //构建变量表
-        Hashtable localVar; //本方法的变量表,键是变量名，值是变量值
+        LocalVarsMap<String, DataType> localVar; //本方法的变量表,键是变量名，值是变量值
         //把当前方法的变量表压入stack
         if (isTopCall) {
             localVar = globalVar; //顶级方法的局部变量为全局变量
@@ -410,9 +487,10 @@ public class Interpreter {
             if (pstat != null && pstat.type == KEYWORD_SUB) {
                 StatementSub psubstat = (StatementSub) pstat;
                 for (int i = 0, j = psubstat.cell.para.length; i < j; i++) {
-                    DataType pp = (DataType) (paraStack.isEmpty() ? null : paraStack.elementAt(j - i - 1));
+                    DataType pp = (paraStack.isEmpty() ? null : paraStack.get(j - i - 1));
                     if (pp != null) {
                         ExprCellVar var = (ExprCellVar) (psubstat.cell.para[i].cells[0]);
+                        pp.setMutable(false);
                         (localVar).put(var.varName, pp);
                     } else {
                         errout(ip, STRS_ERR[ERR_PAESEPARA]);
@@ -421,10 +499,6 @@ public class Interpreter {
                 ip++; //跳到下一行
             }
             calls = System.currentTimeMillis() - calls;
-//        System.out.println(calls);
-//        if (bolo.CompilerCfg.isProfile) {
-//			debug.Profile.instance.end("subname");
-//		}
             calls = System.currentTimeMillis();
             while (ip < srcCompiled.length) {
                 try {
@@ -438,7 +512,7 @@ public class Interpreter {
                             case KEYWORD_WHILE://循环
                             {
                                 StatementWhile pstatWhile = (StatementWhile) stat;
-                                Bool wpdt = (Bool) calcExpr(pstatWhile.expr, localVar);
+                                Bool wpdt = (Bool) evalExpr(pstatWhile.expr, localVar);
                                 if (wpdt.getVal() == false) { //如果为假，则查else或endif
                                     if (pstatWhile.ip_loop != -1) {
                                         ip = pstatWhile.ip_loop;
@@ -460,6 +534,7 @@ public class Interpreter {
                                         }
                                     }
                                 }
+                                putCachedBool(wpdt);
                                 break;
                             }
                             case KEYWORD_LOOP:
@@ -487,7 +562,7 @@ public class Interpreter {
                             case KEYWORD_IF: //if分支
                                 StatementIf pstatIf = (StatementIf) stat;
 
-                                Bool ib = (Bool) calcExpr(pstatIf.expr, localVar);
+                                Bool ib = (Bool) evalExpr(pstatIf.expr, localVar);
                                 if (ib.getVal() == false) { //如果为假，则查else或endif
                                     if (pstatIf.ip_else != -1) {
                                         ip = pstatIf.ip_else;
@@ -516,6 +591,7 @@ public class Interpreter {
                                         }
                                     }
                                 }
+                                putCachedBool(ib);
                                 break;
                             case KEYWORD_ELSE:
                                 StatementElse pstatElse = (StatementElse) stat;
@@ -541,8 +617,10 @@ public class Interpreter {
                                 break;
                             case KEYWORD_CALL: {
                                 StatementCall pstatCall = (StatementCall) stat;
-                                callSub(pstatCall.cell, localVar);
-
+                                DataType re = callSub(pstatCall.cell, localVar);
+                                if (re != null) {
+                                    putCachedDataType(re);
+                                }
                                 break;
                             }
                             case KEYWORD_SET_VAR: {
@@ -560,15 +638,15 @@ public class Interpreter {
                                 break;
                             }
 
-                            case KEYWORD_SUB:
+                            case KEYWORD_SUB://程序遇到sub关键字,则说明当前方法结束
                                 return null;
                             case KEYWORD_RET: //过程结束
                                 StatementRet pstatRet = (StatementRet) stat;
+                                DataType re = null;
                                 if (pstatRet.expr != null) {
-                                    return calcExpr(pstatRet.expr, localVar);
-                                } else {
-                                    return null;
+                                    re = evalExpr(pstatRet.expr, localVar);
                                 }
+                                return re;
                         }
                     } else {
                         errout(ip, STRS_ERR[ERR_ILLEGAL]);
@@ -587,6 +665,15 @@ public class Interpreter {
         } catch (Exception e) {
         } finally {
             if (localVar != globalVar) {
+                //回收局部变量
+                List<String> keylist = localVar.getKeylist();
+                for (int i = 0; i < keylist.size(); i++) {
+                    String key = keylist.get(i);
+                    DataType dt = localVar.get(key);
+                    dt.setMutable(true);
+                    putCachedDataType(dt);
+                }
+                //回收局部变量表
                 putCachedTable(localVar);
             }
         }
@@ -605,7 +692,7 @@ public class Interpreter {
      */
     String getFirstWord(String instruct) {
         instruct = instruct.trim();
-        StringBuffer tsb = new StringBuffer();
+        StringBuilder tsb = new StringBuilder();
         for (int i = 0; i < instruct.length(); i++) {
             if (isSymbol(instruct.charAt(i))) {
                 break;
@@ -732,21 +819,21 @@ public class Interpreter {
      * 解析指令
      *
      * @param s String
-     * @return Vector
+     * @return ArrayList
      * @throws Exception
      */
-    Vector parseInstruct(String s) {
+    ArrayList parseInstruct(String s) {
 //    	if(!stack.isEmpty()){
 //    		return stack;
 //    	}
-        Vector stack = new Vector();
+        ArrayList stack = new ArrayList();
 //    	if (bolo.CompilerCfg.isProfile) {
 //			debug.Profile.instance.begin("parse");
 //		}
 
         int len = s.length();
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 
         for (int i = 0; i < s.length(); i++) {
             char ch = s.charAt(i);
@@ -837,7 +924,7 @@ public class Interpreter {
                 }
             }
             //添加项目到栈中
-            stack.addElement(sb.toString());
+            stack.add(sb.toString());
             sb.setLength(0);
         }
 //        if (bolo.CompilerCfg.isProfile) {
@@ -934,34 +1021,34 @@ public class Interpreter {
         }
     }
 
-    static public final DataType vPopFront(Vector v) {
+    static public final <T extends DataType> T vPopFront(ArrayList<DataType> v) {
         if (v.size() <= 0) {
             return null;
         }
-        DataType o = (DataType) v.firstElement();
+        DataType o = v.get(0);
         if (v.size() > 0) {
-            v.removeElementAt(0);
+            v.remove(0);
         }
-        return o;
+        return (T) o;
     }
 
-    static public final DataType vPopBack(Vector v) {
+    static public final <T extends DataType> T vPopBack(ArrayList<DataType> v) {
         if (v.size() <= 0) {
             return null;
         }
-        DataType o = (DataType) v.lastElement();
+        DataType o = v.get(v.size() - 1);
         if (v.size() > 0) {
-            v.removeElementAt(v.size() - 1);
+            v.remove(v.size() - 1);
         }
-        return o;
+        return (T) o;
     }
 
-    static public final void vPushFront(Vector v, DataType o) {
-        v.insertElementAt(o, 0);
+    static public final void vPushFront(ArrayList v, DataType o) {
+        v.add(0, o);
     }
 
-    static public final void vPushBack(Vector v, DataType o) {
-        v.addElement(o);
+    static public final void vPushBack(ArrayList v, DataType o) {
+        v.add(o);
     }
 
     /**
@@ -971,46 +1058,56 @@ public class Interpreter {
      * @param localVar Stack
      * @return Object
      */
-    private DataType _getVar(String name, Hashtable localVar) {
-        name = name.toLowerCase();
-        DataType value = (DataType) localVar.get(name);
+    private <T extends DataType> T _getVar(String name, LocalVarsMap<String, DataType> localVar) {
+        DataType value = localVar.get(name);
         if (value == null) {
-            value = (DataType) globalVar.get(name);
+            value = globalVar.get(name);
+
         }
-        return value;
+        if (value.type == DataType.DTYPE_BOOL || value.type == DataType.DTYPE_INT) {
+            if (value.isMutable()) {
+                throw new RuntimeException("can not be mutable data ");
+            }
+        }
+        return (T) value;
     }
 
     /**
      * 赋值操作
      *
-     * @param stat    String
-     * @param varList Stack
+     * @param stat     String
+     * @param varTable Stack
      * @throws Exception
      */
-    private void _setVar(StatementSetVar stat, Hashtable varList) throws Exception {
+    private void _setVar(StatementSetVar stat, LocalVarsMap<String, DataType> varTable) throws Exception {
         //格式化表达式
         String varName = stat.varName;
-
-        DataType nValue = calcExpr(stat.expr, varList);
+        DataType nValue = evalExpr(stat.expr, varTable);
+        nValue.setMutable(false);
 
         if (nValue != null) {
-            DataType varValue = (DataType) varList.get(varName);
-            DataType varValue1 = (DataType) globalVar.get(varName);
-
-            if (varValue != null) {
-                if (varValue.type == nValue.type) {
-                    varList.put(varName, nValue);
-                } else {
-                    throw new Exception(STRS_ERR[ERR_TYPE_INVALID]);
-                }
-            } else if (varValue1 != null) {
-                if (varValue1.type == nValue.type) {
-                    globalVar.put(varName, nValue);
+            DataType oldValue = varTable.get(varName);
+            if (oldValue != null) {
+                if (oldValue.type == nValue.type) {
+                    varTable.put(varName, nValue);
+                    oldValue.setMutable(true);
+                    putCachedDataType(oldValue);
                 } else {
                     throw new Exception(STRS_ERR[ERR_TYPE_INVALID]);
                 }
             } else {
-                varList.put(varName, nValue);
+                DataType oldValue1 = globalVar.get(varName);
+                if (oldValue1 != null) {
+                    if (oldValue1.type == nValue.type) {
+                        globalVar.put(varName, nValue);
+                        oldValue1.setMutable(true);
+                        putCachedDataType(oldValue1);
+                    } else {
+                        throw new Exception(STRS_ERR[ERR_TYPE_INVALID]);
+                    }
+                } else {
+                    varTable.put(varName, nValue);
+                }
             }
         }
     }
@@ -1024,15 +1121,16 @@ public class Interpreter {
             , T_LOGSYM = 16 //逻辑符号
             , T_OBJ = 32; //对象
 
-    DataType calcExpr(Expression stat, Hashtable varList) throws Exception {
+    DataType evalExpr(Expression stat, LocalVarsMap<String, DataType> varTable) throws Exception {
 
-        //Vector expr = parseInstruct(exprStr); //分解表达式
-        Vector expr = preCalc(stat, varList); //求变量和过程调用的值
+        //ArrayList expr = parseInstruct(exprStr); //分解表达式
+        ArrayList<DataType> expr = getCachedVector();
+        evaluationCell(stat, varTable, expr); //求变量和过程调用的值
 
         int cType = 0, cType1 = 0; //默认为算术运算
 
         for (int i = 0; i < expr.size(); i++) {
-            DataType o = (DataType) expr.elementAt(i);
+            DataType o = expr.get(i);
             //串类型
             if (isStr(o)) {
                 cType |= T_STR;
@@ -1073,26 +1171,24 @@ public class Interpreter {
             case T_NUM:
 
                 //左递归运算
-                while (expr.size() > 1) { //当只一个单元时停止
-                    calcExprNumImpl(expr);
-                }
+                evalExprNum(expr);
                 resultDt = vPopBack(expr);
                 break;
             case T_STR:
-                calcExprStrImpl(expr);
+                evalExprStr(expr);
                 resultDt = vPopBack(expr);
 
                 break;
             case T_LOG: //分解逻辑表达式与算术表达式，主要是把算术表达式先于逻辑运算求值
             {
                 //下两个变量用于逻辑表达式求值过程
-                Vector log_dElem = new Vector(); //逻辑
-                Vector ari_dElem = new Vector(); //算术
+                ArrayList log_dElem = getCachedVector(); //逻辑
+                ArrayList ari_dElem = getCachedVector(); //算术
 
                 while (expr.size() > 0) {
                     DataType pdt = vPopFront(expr);
 
-                    ari_dElem.removeAllElements();
+                    ari_dElem.clear();
                     if (isSymb(pdt)) {
                         Symb pst = (Symb) pdt;
                         if (pst.isCompOp()) { //以比较逻辑运算符进行拆分
@@ -1121,10 +1217,8 @@ public class Interpreter {
                                 vPushFront(ari_dElem, pdt2);
                             } //end while
                             //运算出算术表达式
-                            while (ari_dElem.size() > 1) {
-                                calcExprNumImpl(ari_dElem);
-                                //放入逻辑表达式中
-                            }
+                            evalExprNum(ari_dElem);
+                            //放入逻辑表达式中
                             if (ari_dElem.size() > 0) {
                                 vPushBack(log_dElem, vPopFront(ari_dElem));
                             }
@@ -1135,7 +1229,7 @@ public class Interpreter {
                     vPushBack(log_dElem, pdt);
 
                     //再找比较逻辑运算符后面的元素
-                    ari_dElem.removeAllElements();
+                    ari_dElem.clear();
                     if (isSymb(pdt)) {
 
                         if (((Symb) pdt).isCompOp()) { //以比较逻辑运算符进行拆分
@@ -1166,10 +1260,7 @@ public class Interpreter {
                                 vPushBack(ari_dElem, pdt2);
                             } //end while
                             //运算出算术表达式
-                            while (ari_dElem.size() > 1) {
-                                calcExprNumImpl(ari_dElem);
-                                //放入逻辑表达式中
-                            }
+                            evalExprNum(ari_dElem);
                             if (ari_dElem.size() > 0) {
                                 vPushBack(log_dElem, vPopFront(ari_dElem));
                             }
@@ -1178,11 +1269,13 @@ public class Interpreter {
                 } //end while
 
                 //逻辑表达式求值
-                while (log_dElem.size() > 1) {
-                    calcExprLgcImpl(log_dElem);
-                }
+                evalExprLgc(log_dElem);
+
                 resultDt = vPopBack(log_dElem);
 
+                //
+                putCachedVector(log_dElem);
+                putCachedVector(ari_dElem);
             }
             break;
             case T_ARR:
@@ -1197,21 +1290,20 @@ public class Interpreter {
 
                 //出错，需处理
                 throw new Exception(STRS_ERR[ERR_ILLEGAL]);
-
         }
+        putCachedVector(expr);
         return resultDt;
     }
 
     /**
      * 求出表达式中变量和过程调用的值
      *
-     * @param expr    Stack
-     * @param varList Hashtable
+     * @param expr     Stack
+     * @param varTable LocalVarsMap
      * @return Stack
      * @throws Exception
      */
-    private Vector preCalc(Expression expr, Hashtable varList) throws Exception {
-        Vector tgt = new Vector();
+    private void evaluationCell(Expression expr, LocalVarsMap<String, DataType> varTable, ArrayList<DataType> tgt) throws Exception {
 
         for (int i = 0, len = expr.cells.length; i < len; i++) {
             ExprCell cell = expr.cells[i];
@@ -1220,77 +1312,53 @@ public class Interpreter {
             switch (cell.type) {
                 case ExprCell.EXPR_CELL_DATATYPE: {// 是字符串
                     ExprCellDataType celldt = (ExprCellDataType) cell;
-                    DataType pdt = clone4calc(celldt.pit);
-                    tgt.addElement(pdt);
+                    tgt.add(celldt.pit);
                     break;
                 }
                 case ExprCell.EXPR_CELL_VAR: {//是变量
                     ExprCellVar cellv = (ExprCellVar) cell;
-                    DataType pdt = _getVar(cellv.varName, varList);
+                    DataType pdt = _getVar(cellv.varName, varTable);
                     if (pdt == null) {
                         //无变量，需处理
                         throw new Exception(STRS_ERR[ERR_NO_VAR] + cellv.varName);
                     } else {
-                        tgt.addElement(pdt);
+                        tgt.add(pdt);
                     }
                     break;
                 }
-                case ExprCell.EXPR_CELL_CALL: {//是过调用
+                case ExprCell.EXPR_CELL_CALL: {//是过程调用
                     ExprCellCall cellc = (ExprCellCall) cell;
-                    DataType pTmp = callSub(cellc, varList);
+                    DataType pTmp = callSub(cellc, varTable);
                     if (pTmp != null) {
-                        tgt.addElement(pTmp);
+                        tgt.add(pTmp);
                     }
                     break;
                 }
                 case ExprCell.EXPR_CELL_ARR: {//是数组
                     ExprCellArr cella = (ExprCellArr) cell;
-                    tgt.addElement(_getArr(cella, varList));
+                    tgt.add(_getArr(cella, varTable));
                     break;
                 }
             }
         }
-        return tgt;
     }
 
-    /**
-     * 复制简单数据类型
-     *
-     * @param dt
-     * @return
-     * @throws Exception
-     */
-    private DataType clone4calc(DataType dt) throws Exception {
-        switch (dt.type) {
-            case DataType.DTYPE_INT:
-                return new Int(((Int) dt).getVal());
-            case DataType.DTYPE_SYMB:
-                return dt;
-            case DataType.DTYPE_STR:
-                return new Str(((Str) dt).getVal());
-            case DataType.DTYPE_BOOL:
-                return new Bool(((Bool) dt).getVal());
-            case DataType.DTYPE_OBJ:
-                return new Obj(((Obj) dt).getVal());
-            default:
-                throw new Exception();
-        }
-    }
 
     /**
      * 字符串运算,只支持连接操作
      *
      * @param expr Stack
      */
-    private void calcExprStrImpl(Vector expr) {
-        StringBuffer sb = new StringBuffer();
+    private void evalExprStr(ArrayList<DataType> expr) {
+        StringBuilder sb = new StringBuilder();
         while (expr.size() > 0) { //不停的运算
             DataType ts = vPopFront(expr); //这里有可能是integer型,不能用强制转换
             if (ts.type != DataType.DTYPE_SYMB) { //如果不是符号
                 sb.append((ts).getString());
             }
+            putCachedDataType(ts);
         }
-        vPushFront(expr, new Str(sb.toString()));
+        vPushFront(expr, getCachedStr(sb.toString()));
     }
 
     /**
@@ -1298,99 +1366,113 @@ public class Interpreter {
      *
      * @param expr Stack
      */
-    private void calcExprNumImpl(Vector expr) {
+    private void evalExprNum(ArrayList expr) {
+        do {
+            evalExprNumImpl(expr);
+        } while (expr.size() > 1);
+
+    }
+
+    private void evalExprNumImpl(ArrayList<DataType> expr) {
         if (expr.size() == 1) { //单独变量
+            if ((expr.get(0)).isMutable()) return;
+            Int element1 = vPopFront(expr);
+            Int val = getCachedInt(element1.getVal());
+            vPushBack(expr, val);
             return;
         } else { //表达式
             //按优先级进行计算,优先级如下：() 取负(正)值  */ + - %
             DataType element1 = vPopFront(expr);
             if (element1.type == DataType.DTYPE_SYMB) {
-                if (((Symb) element1).getVal() == Symb.LP) {
-                    calcExprNumImpl(expr);
+                if (((Symb) element1).getVal() == Symb.LP) {// (
+                    evalExprNumImpl(expr);
                     DataType element2 = vPopFront(expr);
                     DataType element3 = vPopFront(expr);
-                    if (element3.type == DataType.DTYPE_SYMB && ((Symb) element3).getVal() == Symb.RP) { //扔掉反括号
+                    if (element3.type == DataType.DTYPE_SYMB && ((Symb) element3).getVal() == Symb.RP) { // (num)    扔掉反括号
                         vPushFront(expr, element2);
-                    } else { //括号中如果仍未计算完成,则继续
+                    } else { // (...             括号中如果仍未计算完成,则继续
                         vPushFront(expr, element3);
                         vPushFront(expr, element2);
                         vPushFront(expr, element1);
-                        calcExprNumImpl(expr); //再算括号中的内容
+                        evalExprNumImpl(expr); //再算括号中的内容
                     }
                 } else //取正值
-                    if (((Symb) element1).getVal() == Symb.ADD) {
-                        calcExprNumImpl(expr);
+                    if (((Symb) element1).getVal() == Symb.ADD) {// +
+                        evalExprNumImpl(expr);
                     } else //取负值
-                        if (((Symb) element1).getVal() == Symb.SUB) {
+                        if (((Symb) element1).getVal() == Symb.SUB) {// -
                             DataType element2 = vPopFront(expr);
-                            if (element2.type == DataType.DTYPE_INT) { //立即数
-                                element2 = new Int(-((Int) element2).getVal());
+                            if (element2.type == DataType.DTYPE_INT) { // -num       立即数
+                                Int val = getCachedInt(-((Int) element2).getVal());
+                                vPushFront(expr, val);
+                                putCachedInt(element2);
+                            } else { // -...      表达式
                                 vPushFront(expr, element2);
-                            } else { //表达式
-                                vPushFront(expr, element2);
-                                calcExprNumImpl(expr);
+                                evalExprNumImpl(expr);
                                 vPushFront(expr, element1);
-                                calcExprNumImpl(expr);
+                                evalExprNumImpl(expr);
                             }
                         }
-            } else //是数字
-                if (element1.type == DataType.DTYPE_INT) {
-                    Symb element2 = (Symb) vPopFront(expr); //应是操作符
-                    DataType element3 = vPopFront(expr); // 可能是操作数或操作符
-                    //四则运算
-                    if ((element2).getVal() == Symb.MUL || (element2).getVal() == Symb.DIV) {
-                        if (element3.type == DataType.DTYPE_INT) {
-                            long n1 = ((Int) element1).getVal();
-                            long n2 = ((Int) element3).getVal();
-                            Int val = new Int((element2).getVal() == Symb.MUL ? n1 * n2 : n1 / n2);
-                            vPushFront(expr, val);
-                        } else {
-                            vPushFront(expr, element3);
-                            calcExprNumImpl(expr);
-                            vPushFront(expr, element2);
-                            vPushFront(expr, element1);
-                            calcExprNumImpl(expr);
-                        }
-                    } else if ((element2).getVal() == Symb.ADD || (element2).getVal() == Symb.SUB) {
-
-                        boolean calc = false;
-                        if (element3.type == DataType.DTYPE_INT) {
-                            if (expr.size() == 0) { //无更多操作符和操作数时计算
-                                calc = true;
-                            } else {
-                                DataType element4 = vPopFront(expr);
-                                if (element4 != null) {
-                                    if (((Symb) element4).getVal() != Symb.MUL && ((Symb) element4).getVal() != Symb.DIV) {
-                                        calc = true;
-                                    }
-                                    vPushFront(expr, element4);
-                                }
-                            }
-                        }
-                        if (calc) {
-                            long n1 = ((Int) element1).getVal();
-                            long n2 = ((Int) element3).getVal();
-                            Int val = new Int((element2).getVal() == Symb.ADD ? n1 + n2 : n1 - n2);
-                            vPushFront(expr, val);
-                        } else {
-                            //先算右边的表达式
-                            vPushFront(expr, element3); //放回去
-                            calcExprNumImpl(expr); //计算
-
-                            vPushFront(expr, element2);
-                            vPushFront(expr, element1);
-                            calcExprNumImpl(expr);
-                        }
-                    } else if (element2.getVal() == Symb.RP) { //是右括号
-                        if (element3 != null) {
-                            vPushFront(expr, element3);
-                        }
+            } else if (element1.type == DataType.DTYPE_INT) {// num   是数字
+                Symb element2 = vPopFront(expr); //应是操作符
+                DataType element3 = vPopFront(expr); // 可能是操作数或操作符
+                //四则运算
+                if ((element2).getVal() == Symb.MUL || (element2).getVal() == Symb.DIV) { // num*/
+                    if (element3.type == DataType.DTYPE_INT) {//num */ num
+                        long n1 = ((Int) element1).getVal();
+                        long n2 = ((Int) element3).getVal();
+                        Int val = getCachedInt((element2).getVal() == Symb.MUL ? n1 * n2 : n1 / n2);
+                        putCachedInt(element1);
+                        putCachedInt(element3);
+                        vPushFront(expr, val);
+                    } else {  // num */ ...
+                        vPushFront(expr, element3);
+                        evalExprNumImpl(expr);
                         vPushFront(expr, element2);
                         vPushFront(expr, element1);
-                        return;
+                        evalExprNumImpl(expr);
                     }
+                } else if ((element2).getVal() == Symb.ADD || (element2).getVal() == Symb.SUB) { // num +-
 
+                    boolean calc = false;
+                    if (element3.type == DataType.DTYPE_INT) { //   num +- num
+                        if (expr.size() == 0) { //    无更多操作符和操作数时计算
+                            calc = true;
+                        } else { // num +- num ...
+                            DataType element4 = vPopFront(expr);
+                            if (element4 != null) { // num +- num */
+                                if (((Symb) element4).getVal() != Symb.MUL && ((Symb) element4).getVal() != Symb.DIV) {
+                                    calc = true;
+                                }
+                                vPushFront(expr, element4);
+                            }
+                        }
+                    }
+                    if (calc) {
+                        long n1 = ((Int) element1).getVal();
+                        long n2 = ((Int) element3).getVal();
+                        Int val = getCachedInt((element2).getVal() == Symb.ADD ? n1 + n2 : n1 - n2);
+                        putCachedInt(element1);
+                        putCachedInt(element3);
+                        vPushFront(expr, val);
+                    } else {
+                        //先算右边的表达式
+                        vPushFront(expr, element3); //放回去
+                        evalExprNumImpl(expr); //计算
+
+                        vPushFront(expr, element2);
+                        vPushFront(expr, element1);
+                        evalExprNumImpl(expr);
+                    }
+                } else if (element2.getVal() == Symb.RP) { // num)   是右括号
+                    if (element3 != null) {
+                        vPushFront(expr, element3);
+                    }
+                    vPushFront(expr, element2);
+                    vPushFront(expr, element1);
+                    return;
                 }
+            }
         }
     }
 
@@ -1399,46 +1481,58 @@ public class Interpreter {
      *
      * @param expr Stack
      */
-    private void calcExprLgcImpl(Vector expr) {
+    private void evalExprLgc(ArrayList expr) {
+        do {
+            evalExprLgcImpl(expr);
+        } while (expr.size() > 1);
+
+    }
+
+    private void evalExprLgcImpl(ArrayList<DataType> expr) {
         //计算逻辑表达式
         if (expr.size() == 1) { //单独变量
+            if ((expr.get(0)).isMutable()) return;
+            DataType element1 = vPopFront(expr);
+            vPushBack(expr, getCachedBool(((Bool) element1).getVal()));
+            putCachedBool(element1);
             return;
         } else { //表达式
             //按优先级进行计算,优先级如下：() 取负(正)值  */ + - %
             DataType element1 = vPopFront(expr);
             if (element1.type == DataType.DTYPE_SYMB) { //括号
-                if (((Symb) element1).getVal() == Symb.LP) {
-                    calcExprLgcImpl(expr);
+                if (((Symb) element1).getVal() == Symb.LP) {// (
+                    evalExprLgcImpl(expr);
                     DataType element2 = vPopFront(expr);
                     DataType element3 = vPopFront(expr);
-                    if (element3.type == DataType.DTYPE_SYMB && ((Symb) element3).getVal() == Symb.RP) { //扔掉反括号
+                    if (element3.type == DataType.DTYPE_SYMB && ((Symb) element3).getVal() == Symb.RP) { // (dtype)  扔掉反括号
                         vPushFront(expr, element2);
-                    } else { //括号中如果仍未计算完成,则继续
+                    } else { //括号中如果仍未计算完成,则继续   //(dtype...
                         vPushFront(expr, element3);
                         vPushFront(expr, element2);
                         vPushFront(expr, element1);
-                        calcExprLgcImpl(expr); //再算括号中的内容
+                        evalExprLgcImpl(expr); //再算括号中的内容
                     }
-                } else if (((Symb) element1).getVal() == Symb.NOT) { //取反
+                } else if (((Symb) element1).getVal() == Symb.NOT) { //  !  取反
                     DataType element2 = vPopFront(expr);
-                    if (element2.type == DataType.DTYPE_BOOL) { //立即数
-                        element2 = new Bool(!((Bool) element2).getVal());
+                    if (element2.type == DataType.DTYPE_BOOL) { // !bool    立即数
+                        Bool val = getCachedBool(!((Bool) element2).getVal());
+                        vPushFront(expr, val);
+                        putCachedBool(element2);
+                    } else { // !(  表达式
                         vPushFront(expr, element2);
-                    } else { //表达式
-                        vPushFront(expr, element2);
-                        calcExprLgcImpl(expr);
+                        evalExprLgcImpl(expr);
                         vPushFront(expr, element1);
-                        calcExprLgcImpl(expr);
+                        evalExprLgcImpl(expr);
                     }
                 }
-            } else if (element1.type == DataType.DTYPE_INT) { //><=
+            } else if (element1.type == DataType.DTYPE_INT) { // num ><=
                 long n1, n2;
 
                 n1 = ((Int) element1).getVal();
 
                 DataType element2 = vPopFront(expr);
                 //应是操作符
-                Object element3 = vPopFront(expr); // 操作数或操作符 >= <=
+                Int element3 = vPopFront(expr); // 操作数或操作符 >= <=
 
                 Symb operator = (Symb) element2;
                 n2 = ((Int) element3).getVal();
@@ -1457,30 +1551,34 @@ public class Interpreter {
                 } else if (operator.getVal() == Symb.EQU) {
                     result = n1 == n2;
                 }
-                vPushFront(expr, new Bool(result));
-            } else if (element1.type == DataType.DTYPE_BOOL) { //&|
-                Symb element2 = (Symb) vPopFront(expr); //应是操作符
+                vPushFront(expr, getCachedBool(result));
+                putCachedInt(element1);
+                putCachedInt(element3);
+            } else if (element1.type == DataType.DTYPE_BOOL) { // bool
+                Symb element2 = vPopFront(expr); //应是操作符
                 DataType element3 = vPopFront(expr); // 操作数或操作符 >= <=
-                if (element2.getVal() == Symb.AND) {
-                    if (element3.type == DataType.DTYPE_BOOL) {
+                if (element2.getVal() == Symb.AND) {// bool &
+                    if (element3.type == DataType.DTYPE_BOOL) { //bool & bool
                         boolean result = ((Bool) element1).getVal() && ((Bool) element3).getVal();
-                        vPushFront(expr, new Bool(result));
-                    } else {
+                        vPushFront(expr, getCachedBool(result));
+                        putCachedBool(element1);
+                        putCachedBool(element3);
+                    } else { // bool & ...
                         vPushFront(expr, element3);
-                        calcExprLgcImpl(expr);
+                        evalExprLgcImpl(expr);
                         vPushFront(expr, element2);
                         vPushFront(expr, element1);
-                        calcExprLgcImpl(expr);
+                        evalExprLgcImpl(expr);
                     }
-                } else if (element2.getVal() == Symb.OR) {
+                } else if (element2.getVal() == Symb.OR) {// bool |
                     boolean calc = false;
-                    if (element3.type == DataType.DTYPE_BOOL) {
+                    if (element3.type == DataType.DTYPE_BOOL) { // bool | bool
                         if (expr.size() == 0) {
                             calc = true;
-                        } else {
+                        } else { //bool | ...
                             DataType element4 = vPopFront(expr); // 操作数或操作符 >= <=
                             if (element4.type == DataType.DTYPE_SYMB) {
-                                if (((Symb) element4).getVal() != Symb.AND) {
+                                if (((Symb) element4).getVal() != Symb.AND) {// bool | bool (
                                     calc = true;
                                 }
                             }
@@ -1489,16 +1587,18 @@ public class Interpreter {
                     }
                     if (calc) {
                         boolean result = ((Bool) element1).getVal() || ((Bool) element3).getVal();
-                        vPushFront(expr, new Bool(result));
+                        vPushFront(expr, getCachedBool(result));
+                        putCachedBool(element1);
+                        putCachedBool(element3);
                     } else {
                         vPushFront(expr, element3);
-                        calcExprLgcImpl(expr);
+                        evalExprLgcImpl(expr);
                         vPushFront(expr, element2);
                         vPushFront(expr, element1);
-                        calcExprLgcImpl(expr);
+                        evalExprLgcImpl(expr);
                     }
 
-                } else if (element2.getVal() == Symb.RP) { //是右括号
+                } else if (element2.getVal() == Symb.RP) { // bool)  是右括号
                     if (element3 != null) {
                         vPushFront(expr, element3);
                     }
@@ -1517,20 +1617,19 @@ public class Interpreter {
     /**
      * 过程调用 写在脚本中的参数，a(p1,p2,p3) 在传递的vector中 p3,p2,p1 的顺序排列
      *
-     * @param cell    String
-     * @param varList Hashtable
+     * @param cell     String
+     * @param varTable LocalVarsMap
      * @return Object
      * @throws Exception
      */
-    private DataType callSub(ExprCellCall cell, Hashtable varList) throws Exception {
+    private DataType callSub(ExprCellCall cell, LocalVarsMap varTable) throws Exception {
         if (cell == null) {
             return exec(null, 0);
         } else {
-            Vector paraStack = new Vector(); //参数栈
+            ArrayList paraStack = getCachedVector(); //参数栈
             for (int i = 0; i < cell.para.length; i++) {
                 //计算表达式的值
-                DataType v = null;
-                v = calcExpr(cell.para[i], varList);
+                DataType v = evalExpr(cell.para[i], varTable);
                 if (v != null) {
                     vPushFront(paraStack, v); //参数入栈
                 } else {
@@ -1543,17 +1642,19 @@ public class Interpreter {
             Object addr = subAddr.get(subName);
             if (addr != null) {
                 int ip = (int) ((Int) addr).getVal(); //得到过程行号
-                return exec(paraStack, ip); //过程调用
+                DataType re = exec(paraStack, ip); //过程调用
+                putCachedVector(paraStack);
+                return re;
             } else {
                 //查找系统标准过程和用户扩充过程表
                 for (int i = 0; i < extSubList.size(); i++) {
-                    Lib ext = (Lib) extSubList.elementAt(i);
+                    Lib ext = (Lib) extSubList.get(i);
                     int mID = ext.getMethodID(subName);
                     if (mID >= 0) {
 
                         //调用外部过程
                         DataType re = ext.call(this, paraStack, mID);
-
+                        putCachedVector(paraStack);
                         return re;
                     }
                 }
@@ -1571,16 +1672,16 @@ public class Interpreter {
     /**
      * 解析数组参数 比如 arrName[a+b][35-4],arrName[b[4]]
      *
-     * @param arrStr  String
-     * @param varList Hashtable
+     * @param arrStr   String
+     * @param varTable LocalVarsMap
      * @return Stack 反回 a+b , 35-4
      * @throws Exception
      */
-    private int[] parseArrayPos(ExprCellArr arrStr, Hashtable varList) throws Exception {
+    private int[] parseArrayPos(ExprCellArr arrStr, LocalVarsMap varTable) throws Exception {
         int len = arrStr.para.length;
-        int[] stack = new int[len];
+        int[] stack = arrStr.dimPos.get();
         for (int i = 0; i < len; i++) {
-            DataType dt = calcExpr(arrStr.para[i], varList);
+            DataType dt = evalExpr(arrStr.para[i], varTable);
             if (dt.type != DataType.DTYPE_INT) { //数组维数只能是数值型
                 throw new Exception(STRS_ERR[ERR_TYPE_INVALID]);
             }
@@ -1592,28 +1693,29 @@ public class Interpreter {
     /**
      * 创建数组变量或赋值 语句是：arr[6] 或 arr[3+2][2] 或 arr[3][2] 或arr[1][2]=3
      *
-     * @param stat    String
-     * @param varList Hashtable
+     * @param stat     String
+     * @param varTable LocalVarsMap
      * @throws Exception
      */
-    private void _setArr(StatementSetArr stat, Hashtable varList) throws Exception {
+    private void _setArr(StatementSetArr stat, LocalVarsMap<String, DataType> varTable) throws Exception {
 
         String arrName = stat.dimCell.arrName; //取得数组的名字
         arrName = arrName.toLowerCase();
-        int[] dimPara = parseArrayPos(stat.dimCell, varList); //分解参数
+        int[] dimPara = parseArrayPos(stat.dimCell, varTable); //分解参数
 
         if (stat.expr == null) { //创建
 
             //创建数组对象，放入变量表
             Array arr = new Array(dimPara);
-            varList.put(arrName, arr); //放入变量表中
+            varTable.put(arrName, arr); //放入变量表中
         } else { //赋值
-            DataType arr = (DataType) varList.get(arrName);
+            DataType arr = varTable.get(arrName);
             if (arr == null) {
-                arr = (DataType) globalVar.get(arrName);
+                arr = globalVar.get(arrName);
             }
             if (arr != null && arr.type == DataType.DTYPE_ARRAY) {
-                ((Array) arr).setValue(dimPara, calcExpr(stat.expr, varList)); //赋值
+                DataType old = ((Array) arr).setValue(dimPara, evalExpr(stat.expr, varTable)); //赋值
+                putCachedDataType(old);
             }
         }
     }
@@ -1621,20 +1723,26 @@ public class Interpreter {
     /**
      * 取数组的值
      *
-     * @param arrExpr String
-     * @param varList Hashtable
+     * @param arrExpr  String
+     * @param varTable LocalVarsMap
      * @return Object
      * @throws Exception
      */
-    private DataType _getArr(ExprCellArr arrExpr, Hashtable varList) throws Exception {
+    private DataType _getArr(ExprCellArr arrExpr, LocalVarsMap<String, DataType> varTable) throws Exception {
 
         String arrName = arrExpr.arrName; //取得数组的名字
 
-        int[] dimPara = parseArrayPos(arrExpr, varList); //分解参数
+        int[] dimPara = parseArrayPos(arrExpr, varTable); //分解参数
 
-        DataType arr = (DataType) _getVar(arrName, varList);
+        Array arr = _getVar(arrName, varTable);
         if (arr != null && arr.type == DataType.DTYPE_ARRAY) {
-            return ((Array) arr).getValue(dimPara); //取值
+            DataType dt = (arr).getValue(dimPara); //取值
+            if (dt.type == DataType.DTYPE_BOOL || dt.type == DataType.DTYPE_INT) {
+                if (dt.isMutable()) {
+                    throw new RuntimeException("can not be mutable data in arr");
+                }
+            }
+            return dt;
         }
         return null;
     }

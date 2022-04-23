@@ -3,7 +3,7 @@ package org.mini.gui.gscript;
 import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Random;
-import java.util.Vector;
+import java.util.ArrayList;
 
 /**
  * 标准方法库 standard method lib <p>Title: </p> <p>Description: </p> <p>Copyright:
@@ -40,7 +40,7 @@ public class Stdlib extends Lib {
         methodNames.put("str2int".toLowerCase(), 22);//字符串转int
     }
 
-    ;
+    Interpreter inp;
 
     /**
      * @return
@@ -49,7 +49,8 @@ public class Stdlib extends Lib {
         return methodNames;
     }
 
-    public DataType call(Interpreter inp, Vector para, int methodID) {
+    public DataType call(Interpreter inp, ArrayList para, int methodID) {
+        this.inp = inp;
         switch (methodID) {
             case 0:
                 return print(para);
@@ -107,9 +108,11 @@ public class Stdlib extends Lib {
      * @param para String
      * @return Object
      */
-    private DataType print(Vector para) {
-        String s = ((DataType) (Interpreter.vPopBack(para))).getString();
+    private DataType print(ArrayList para) {
+        DataType dt = Interpreter.vPopBack(para);//不一定是Str类型
+        String s = dt.getString();
         System.out.print(s);
+        inp.putCachedDataType(dt);
         return null;
     }
 
@@ -119,7 +122,7 @@ public class Stdlib extends Lib {
      * @param para String
      * @return Object
      */
-    private DataType println(Vector para) {
+    private DataType println(ArrayList para) {
         DataType dt = (DataType) Interpreter.vPopBack(para);
         String s = dt == null ? null : dt.getString();
         if (s == null) {
@@ -127,6 +130,7 @@ public class Stdlib extends Lib {
         } else {
             System.out.println(s);
         }
+        inp.putCachedDataType(dt);
         return null;
     }
 
@@ -136,10 +140,10 @@ public class Stdlib extends Lib {
      * @param para int
      * @return Integer
      */
-    private Int min(Vector para) {
+    private Int min(ArrayList para) {
         long x = ((Int) Interpreter.vPopBack(para)).getVal();
         long y = ((Int) Interpreter.vPopBack(para)).getVal();
-        return new Int(x > y ? y : x);
+        return inp.getCachedInt(x > y ? y : x);
     }
 
     /**
@@ -148,10 +152,10 @@ public class Stdlib extends Lib {
      * @param para int
      * @return Integer
      */
-    private Int max(Vector para) {
+    private Int max(ArrayList para) {
         long x = ((Int) Interpreter.vPopBack(para)).getVal();
         long y = ((Int) Interpreter.vPopBack(para)).getVal();
-        return new Int(x > y ? x : y);
+        return inp.getCachedInt(x > y ? x : y);
     }
 
     /**
@@ -160,9 +164,9 @@ public class Stdlib extends Lib {
      * @param para int
      * @return Integer
      */
-    private Int arrlen(Vector para) {
-        Array arr = (Array) Interpreter.vPopBack(para);
-        return new Int(arr.elements.length);
+    private Int arrlen(ArrayList<DataType> para) {
+        Array arr = Interpreter.vPopBack(para);
+        return inp.getCachedInt(arr.elements.length);
     }
 
     /**
@@ -171,9 +175,9 @@ public class Stdlib extends Lib {
      * @param para int
      * @return Integer
      */
-    private Int abs(Vector para) {
+    private Int abs(ArrayList para) {
         long x = ((Int) Interpreter.vPopBack(para)).getVal();
-        return new Int(Math.abs(x));
+        return inp.getCachedInt(Math.abs(x));
     }
 
     //随机数基石
@@ -184,8 +188,8 @@ public class Stdlib extends Lib {
      *
      * @return int 返回一个正数
      */
-    public static DataType random() {
-        return new Int(random.nextInt());
+    public DataType random() {
+        return inp.getCachedInt(random.nextInt());
     }
 
     /**
@@ -194,10 +198,10 @@ public class Stdlib extends Lib {
      * @param para int
      * @return gscript.Int
      */
-    private Int mod(Vector para) {
+    private Int mod(ArrayList para) {
         long x = ((Int) Interpreter.vPopBack(para)).getVal();
         long y = ((Int) Interpreter.vPopBack(para)).getVal();
-        return (new Int(x % y));
+        return inp.getCachedInt(x % y);
     }
 
     /**
@@ -206,9 +210,9 @@ public class Stdlib extends Lib {
      * @param para int
      * @return Integer
      */
-    private Int strlen(Vector para) {
+    private Int strlen(ArrayList para) {
         String s = Interpreter.vPopBack(para).toString();
-        return new Int(s.length());
+        return inp.getCachedInt(s.length());
     }
 
     /**
@@ -217,10 +221,10 @@ public class Stdlib extends Lib {
      * @param para int
      * @return gscript.Int
      */
-    private Bool equals(Vector para) {
+    private Bool equals(ArrayList para) {
         String x = ((Str) Interpreter.vPopBack(para)).getVal();
         String y = ((Str) Interpreter.vPopBack(para)).getVal();
-        return new Bool(x.equals(y));
+        return inp.getCachedBool(x.equals(y));
     }
 
     /**
@@ -229,7 +233,7 @@ public class Stdlib extends Lib {
      * @param para int
      * @return gscript.Int
      */
-    private DataType def(Interpreter inp, Vector para) {
+    private DataType def(Interpreter inp, ArrayList para) {
         String name = ((Str) Interpreter.vPopBack(para)).getVal();
         DataType dt = (DataType) Interpreter.vPopBack(para);
         inp.putGlobalVar(name.toLowerCase(), dt);
@@ -242,12 +246,12 @@ public class Stdlib extends Lib {
      * @param para int
      * @return gscript.Int
      */
-    private Bool isDef(Interpreter inp, Vector para) {
+    private Bool isDef(Interpreter inp, ArrayList para) {
         String name = ((Str) Interpreter.vPopBack(para)).getVal();
         if (inp.getGlobalVar(name.toLowerCase()) == null) {
-            return new Bool(false);
+            return inp.getCachedBool(false);
         }
-        return new Bool(true);
+        return inp.getCachedBool(true);
     }
 
     /**
@@ -256,12 +260,12 @@ public class Stdlib extends Lib {
      * @param para int
      * @return gscript.Int
      */
-    private Int valueOf(Vector para) {
+    private Int valueOf(ArrayList para) {
         String s = ((Str) Interpreter.vPopBack(para)).getVal();
         if (s != null && !"".equals(s)) {
             return new Int(Integer.parseInt(s));
         }
-        return new Int(0);
+        return inp.getCachedInt(0);
     }
 
     /**
@@ -270,13 +274,13 @@ public class Stdlib extends Lib {
      * @param para
      * @return
      */
-    private Int idxof(Vector para) {
+    private Int idxof(ArrayList para) {
         String m = ((Str) Interpreter.vPopBack(para)).getVal();
         String sub = ((Str) Interpreter.vPopBack(para)).getVal();
         if (m != null && sub != null) {
-            return new Int(m.indexOf(sub));
+            return inp.getCachedInt(m.indexOf(sub));
         }
-        return new Int(-1);
+        return inp.getCachedInt(-1);
     }
 
     /**
@@ -285,7 +289,7 @@ public class Stdlib extends Lib {
      * @param para
      * @return
      */
-    private Str substr(Vector para) {
+    private Str substr(ArrayList para) {
         String s = ((Str) Interpreter.vPopBack(para)).getVal();
         int a = (int) ((Int) Interpreter.vPopBack(para)).getVal();
         int b = (int) ((Int) Interpreter.vPopBack(para)).getVal();
@@ -295,7 +299,7 @@ public class Stdlib extends Lib {
                 sb.append(s.charAt(i));
             }
         }
-        return new Str(sb.toString());
+        return inp.getCachedStr(sb.toString());
     }
 
 
@@ -305,7 +309,7 @@ public class Stdlib extends Lib {
      * @param para
      * @return
      */
-    private Array split(Vector para) {
+    private Array split(ArrayList para) {
         String s = ((Str) Interpreter.vPopBack(para)).getVal();
         String splitor = ((Str) Interpreter.vPopBack(para)).getVal();
         String[] ss = s.split(splitor);
@@ -313,30 +317,30 @@ public class Stdlib extends Lib {
         Array arr = new Array(dim);
         for (int i = 0; i < ss.length; i++) {
             dim[0] = i;
-            arr.setValue(dim, new Str(ss[i]));
+            arr.setValue(dim, inp.getCachedStr(ss[i]));
         }
         return arr;
     }
 
 
-    private DataType base64enc(Vector para) {
+    private DataType base64enc(ArrayList para) {
         try {
             String str = ((Str) (Interpreter.vPopBack(para))).getVal();
             byte[] b = str.getBytes("utf-8");
             String s = javax.cldc.io.Base64.encode(b, 0, b.length);
-            return new Str(s);
+            return inp.getCachedStr(s);
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    private DataType base64dec(Vector para) {
+    private DataType base64dec(ArrayList para) {
         try {
             String str = ((Str) (Interpreter.vPopBack(para))).getVal();
             byte[] b = javax.cldc.io.Base64.decode(str);
             String s = new String(b, "utf-8");
-            return new Str(s);
+            return inp.getCachedStr(s);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -344,20 +348,20 @@ public class Stdlib extends Lib {
     }
 
 
-    private DataType isnull(Vector para) {
+    private DataType isnull(ArrayList para) {
         DataType d = Interpreter.vPopBack(para);
         if (d instanceof Obj) {
             if (((Obj) d).isNull()) {
-                return new Bool(true);
+                return inp.getCachedBool(true);
             } else {
-                return new Bool(false);
+                return inp.getCachedBool(false);
             }
         }
-        return new Bool(true);
+        return inp.getCachedBool(true);
     }
 
 
-    private DataType getObjField(Vector para) {
+    private DataType getObjField(ArrayList para) {
         try {
             Obj obj = (Obj) Interpreter.vPopBack(para);
             String fieldName = ((Str) (Interpreter.vPopBack(para))).getVal();
@@ -376,7 +380,7 @@ public class Stdlib extends Lib {
             }
             if (field != null) {
                 Object val = field.get(obj.getVal());
-                return new Str(val.toString());
+                return inp.getCachedStr(val.toString());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -385,7 +389,7 @@ public class Stdlib extends Lib {
     }
 
 
-    private DataType setObjField(Vector para) {
+    private DataType setObjField(ArrayList para) {
         try {
             Obj obj = (Obj) Interpreter.vPopBack(para);
             String fieldName = ((Str) (Interpreter.vPopBack(para))).getVal();
@@ -427,10 +431,10 @@ public class Stdlib extends Lib {
     }
 
 
-    private DataType trim(Vector para) {
+    private DataType trim(ArrayList para) {
         try {
             String str = ((Str) (Interpreter.vPopBack(para))).getVal();
-            return new Str(str.trim());
+            return inp.getCachedStr(str.trim());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -438,12 +442,12 @@ public class Stdlib extends Lib {
     }
 
 
-    private DataType str2int(Vector para) {
+    private DataType str2int(ArrayList para) {
         try {
             String str = ((Str) (Interpreter.vPopBack(para))).getVal();
             str = str.trim();
             int i = Integer.parseInt(str);
-            return new Int(i);
+            return inp.getCachedInt(i);
         } catch (Exception e) {
             e.printStackTrace();
         }
