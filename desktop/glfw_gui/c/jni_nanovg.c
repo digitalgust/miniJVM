@@ -2102,7 +2102,7 @@ int org_mini_nanovg_Nanovg_nvgTextJni(Runtime *runtime, JClass *clazz) {
     s32 pstart = env->localvar_getInt(runtime->localvar, pos++);
     s32 pend = env->localvar_getInt(runtime->localvar, pos++);
 
-    f32 ret_value = (f32)nvgTextJni((NVGcontext*/*ptr*/)(pctx), (float)px.f, (float)py.f, (const char*)(ptr_pstring), (int)pstart, (int)pend);
+    f32 ret_value = (f32)nvgTextJni((NVGcontext*/*ptr*/)(pctx), (float)px.f, (float)py.f, (const char*)(ptr_pstring), (int)pstart, (int)pend-1);
     env->push_float(runtime->stack, ret_value);
     
     return 0;
