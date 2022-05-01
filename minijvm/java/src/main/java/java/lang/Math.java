@@ -444,4 +444,6 @@ public final strictfp class Math {
     public static native double atan2(double y, double x);
 
     public static native double pow(double a, double b);
+
+    public static native double random();
 }
