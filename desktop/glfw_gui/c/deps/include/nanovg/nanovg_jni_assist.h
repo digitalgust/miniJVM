@@ -246,7 +246,7 @@ NUTIL_API int nvgTextGlyphPositionsJni(NVGcontext* ctx, float x, float y, const 
 
 */
 float nvgTextJni(NVGcontext *ctx, float x, float y, const char *string, int start, int end) {
-    return nvgText(ctx, x, y, string + start, string + end);
+    return nvgText(ctx, x, y, string + start, string + end - 1);
 }
 
 void nvgTextBoxJni(NVGcontext *ctx, float x, float y, float breakRowWidth, const char *string, int start, int end) {
