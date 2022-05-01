@@ -1,4 +1,5 @@
-
+#define FALSE 0
+#define TRUE 1
 
 #include <time.h>
 #include "garbage.h"
@@ -15,6 +16,8 @@
 #include <rpc.h>
 
 #endif
+
+u32 is_random_init = FALSE;
 
 s32 com_sun_cldc_io_ConsoleOutputStream_write(Runtime *runtime, JClass *clazz) {
     s16 ch = localvar_getInt(runtime->localvar, 1);
@@ -352,10 +355,12 @@ s32 java_lang_Math_random(Runtime *runtime, JClass *clazz) {
     f64 r = 0.0f;
     s32 i;
     s32 times = 0;
-    srand((u32) time(0));
-    times = rand() % 100;
-    for (i = 0; i < times; i++)
-        r = ((f64) rand() / (f64) RAND_MAX);
+    if (!is_random_init)
+    { // Setting seed only necessary once.
+      srand((u32) time(0));
+      is_random_init = TRUE;
+    }
+    r = ((f64) rand() / (f64) RAND_MAX);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("java_lang_Math_random r = %f\n", r);
@@ -1361,7 +1366,7 @@ static java_native_method METHODS_STD_TABLE[] = {
         {"java/lang/Float",                     "floatToIntBits",         "(F)I",                                                          java_lang_Float_floatToIntBits},
         {"java/lang/Float",                     "intBitsToFloat",         "(I)F",                                                          java_lang_Float_intBitsToFloat},
         {"java/lang/Math",                      "exp",                    "(D)D",                                                          java_lang_Math_exp},
-        {"java/lang/Math",                      "random",                 "",                                                              java_lang_Math_random},
+        {"java/lang/Math",                      "random",                 "()D",                                                           java_lang_Math_random},
         {"java/lang/Math",                      "sin",                    "(D)D",                                                          java_lang_Math_sin},
         {"java/lang/Math",                      "cos",                    "(D)D",                                                          java_lang_Math_cos},
         {"java/lang/Math",                      "tan",                    "(D)D",                                                          java_lang_Math_tan},
