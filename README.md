@@ -27,6 +27,10 @@
   * Save and Load file from mobile storage    
   * Api compatible with miniJVM desktop platform,  app can running on desktop platform   
 
+## MiniJVM on Web:
+   MiniJVM on web build by Starcommander. [Source](https://github.com/Starcommander/miniJVM)
+   [MiniJVM Web demo](https://java-on-web.org/examples/)    
+
 ## MiniJVM gui Demo
 
   <div align=center><img width="224" height="398" src="/screenshot/demo.gif"/><img width="224" height="398" src="/screenshot/g3d.gif"/></div>
@@ -105,6 +109,7 @@
    [LWJGUI-Mobile](https://github.com/orange451/LWJGUI-Mobile) : java LWJGL UI library        
    [BiBiX](https://github.com/digitalgust/BiBiX) : java instantial messager        
    [G3d](https://github.com/digitalgust/g3d) : java 3d game demo        
+   [MiniJVM web demo](https://java-on-web.org/examples/) :  miniJVM on web demo        
 
 
 
@@ -221,6 +226,7 @@ Java source file MyApp.java
 package test;
 
 import org.mini.apploader.AppManager;
+import org.mini.apploader.GApplication;
 import org.mini.gui.*;
 import org.mini.layout.UITemplate;
 import org.mini.layout.XContainer;
@@ -249,7 +255,7 @@ public class MyApp extends GApplication {
         UITemplate uit = new UITemplate(xmlStr);
         UITemplate.getVarMap().put("Cancel", "CANCEL"); //replace keywork in xml
         UITemplate.getVarMap().put("Change", "Change");
-        UITemplate.getVarMap().put("Test", "test");
+        UITemplate.getVarMap().put("Test", "Test");
         UITemplate.getVarMap().put("Exit", "QUIT");
         XContainer xc = (XContainer) XContainer.parseXml(uit.parse());
         int screenW = GCallBack.getInstance().getDeviceWidth();
@@ -257,7 +263,8 @@ public class MyApp extends GApplication {
 
         //build gui with event handler
         xc.build(screenW, screenH, new XEventHandler() {
-            public void action(GObject gobj, String cmd) {
+            @Override
+            public void action(GObject gobj) {
                 String name = gobj.getName();
                 switch (name) {
                     case "MI_OPENFRAME":
@@ -266,7 +273,7 @@ public class MyApp extends GApplication {
                         }
                         break;
                     case "MI_EXIT":
-                        AppManager.getInstance().active();
+                        close();
                         break;
                     case "BT_CANCEL":
                         gframe.close();
@@ -285,8 +292,8 @@ public class MyApp extends GApplication {
         //process Hori screen or Vert screen
         //if screen size changed ,then ui will resized relative
         form.setSizeChangeListener((width, height) -> {
-            if (gframe != null && gframe.getXmlAgent() != null) {
-                ((XContainer) form.getXmlAgent()).reSize(width, height);
+            if (gframe != null && gframe.getLayout() != null) {
+                form.getLayout().reSize(width, height);
                 gframe.align(GGraphics.HCENTER | GGraphics.VCENTER);
             }
         });
@@ -334,6 +341,8 @@ mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/luaj.jar Sample
   <div align=center><img width="433" height="336" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/mac.png"/></div> 
   * Linux mini_jvm gui    
   <div align=center><img width="433" height="336" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/centos.png"/></div>
+  * Web mini_jvm gui    
+  <div align=center><img width="433" height="336" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/web-glfw.png"/></div>
 
 
 ## Directories: 
