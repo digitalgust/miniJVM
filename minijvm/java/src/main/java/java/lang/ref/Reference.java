@@ -57,5 +57,4 @@ public abstract class Reference<T> {
         }
     }
 
-    native void markItAsWeak(boolean weak);
 }

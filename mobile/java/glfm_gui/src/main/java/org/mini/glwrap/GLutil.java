@@ -83,6 +83,7 @@ public class GLUtil {
         long raw_data_handle = Nanovg.stbi_load_from_memory(ptr + start, len, x, y, n, 0);
         if (raw_data_handle == 0) {
             System.out.println("ERROR: failed to load image from file content start:" + start + ", size:" + len);
+            new Exception().printStackTrace();
             return null;
         }
         w_h_d[0] = x[0];

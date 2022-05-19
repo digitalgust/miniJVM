@@ -5,18 +5,15 @@ abstract public class GOpenGLPanel extends GPanel {
 
     protected boolean inited = false;
 
-    GCmd cmd = new GCmd(GCmd.GCMD_RUN_CODE, new Runnable() {
-        @Override
-        public void run() {
-            if (!inited) {
-                gl_panel_init();
-                inited = true;
-            }
-            gl_paint();
+    GCmd cmd = new GCmd(() -> {
+        if (!inited) {
+            gl_panel_init();
+            inited = true;
         }
+        gl_paint();
     });
 
-    public GOpenGLPanel(){
+    public GOpenGLPanel() {
         this(0f, 0f, 1f, 1f);
     }
 
@@ -37,6 +34,13 @@ abstract public class GOpenGLPanel extends GPanel {
 
     private void gl_panel_init() {
         gl_init();
+    }
+
+    protected void finalize() {
+        GForm.addCmd(new GCmd(() -> {
+            gl_destroy();
+            System.out.println("GOpenGLPanel clean success");
+        }));
     }
 
     public void setGlRendereredImg(GImage img) {

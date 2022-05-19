@@ -6,7 +6,6 @@
 package org.mini.gui;
 
 /**
- *
  * @author Gust
  */
 public class GCmd {
@@ -28,5 +27,10 @@ public class GCmd {
     public GCmd(int cmdId, Object att) {
         this.cmdId = cmdId;
         this.attachment = att;
+    }
+
+    public GCmd(Runnable work) {
+        this.cmdId = GCMD_RUN_CODE;
+        this.attachment = work;
     }
 }

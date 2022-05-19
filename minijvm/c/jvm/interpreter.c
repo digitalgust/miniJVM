@@ -3177,7 +3177,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                             stack->sp = sp;
                             if (!other) {//cache to speed
-                                other = array_class_get_by_name(runtime, class_get_utf8_string(clazz, idx));
+                                other = array_class_get_by_name(runtime, runtime->clazz->jloader, class_get_utf8_string(clazz, idx));
                                 pairlist_put(clazz->arr_class_type, (__refer) (intptr_t) idx, other);
                             }
                             ins = jarray_create_by_class(runtime, count, other);
@@ -4019,6 +4019,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     if (!spent) spent = nanoTime() - start_at;
                     profile_put(cur_inst, spent, 1);
 #endif
+                    if (runtime->thrd_info->is_interrupt) {
+                        int debug = 1;
+                    }
                     break;
 
                 } while (1);//end while

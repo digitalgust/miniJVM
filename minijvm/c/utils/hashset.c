@@ -30,9 +30,9 @@ static void _hashset_free_entry(Hashset *set, HashsetEntry *entry) {
 }
 
 void _hashset_clear_pool(Hashset *set) {
-    s32 i;
-    for (i = 0; i < set->entry_pool->length; i++) {
-        ArrayListValue val = arraylist_get_value(set->entry_pool, i);
+    ArrayListValue val;
+    while (set->entry_pool->length) {
+        val = arraylist_pop_back_unsafe(set->entry_pool);
         jvm_free(val);
     }
 }

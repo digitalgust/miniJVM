@@ -2897,7 +2897,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 JClass *arr_class = pairlist_get(clazz->arr_class_type, (__refer) (intptr_t) idx);
 
                 if (!arr_class) {//cache to speed
-                    arr_class = array_class_get_by_name(runtime, class_get_utf8_string(clazz, idx));
+                    arr_class = array_class_get_by_name(runtime, runtime->clazz->jloader, class_get_utf8_string(clazz, idx));
                     pairlist_put(clazz->arr_class_type, (__refer) (intptr_t) idx, arr_class);
                 }
 

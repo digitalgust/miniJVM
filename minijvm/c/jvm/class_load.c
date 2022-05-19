@@ -1848,14 +1848,13 @@ JClass *class_parse(Instance *loader, ByteBuf *bytebuf, Runtime *runtime) {
 
         if (iret == 0) {
             classes_put(runtime->jvm, tmpclazz);
-
             class_prepar(loader, tmpclazz, runtime);
-            gc_obj_hold(runtime->jvm->collector, tmpclazz);
 
 #if _JVM_DEBUG_LOG_LEVEL > 2
             jvm_printf("load class (%016llx load %016llx):  %s \n", (s64) (intptr_t) loader, (s64) (intptr_t) tmpclazz, utf8_cstr(tmpclazz->name));
 #endif
         } else {
+            classes_remove(runtime->jvm, tmpclazz);
             class_destory(tmpclazz);
             tmpclazz = NULL;
         }
@@ -1873,7 +1872,7 @@ JClass *load_class(Instance *jloader, Utf8String *pClassName, Runtime *runtime) 
     JClass *tmpclazz = classes_get(jvm, jloader, clsName);
 
     if (utf8_indexof_c(clsName, "[") == 0) {
-        tmpclazz = array_class_create_get(runtime, clsName);
+        tmpclazz = array_class_create_get(runtime, jloader, clsName);
     }
     if (!tmpclazz) {
         ByteBuf *bytebuf = NULL;

@@ -253,13 +253,4 @@ public abstract class ClassLoader {
         return null;
     }
 
-    /**
-     * called by vm
-     *
-     * @param c
-     */
-    private void holdClass(Class c) {
-        holderClasses.add(c);
-    }
-
 }

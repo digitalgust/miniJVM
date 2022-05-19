@@ -12,8 +12,6 @@ void _gc_get_obj_name(GcCollector *collector, void *memblock, Utf8String *name);
 
 void _garbage_clear(GcCollector *collector);
 
-void _gc_destory_memobj(MemoryBlock *mb);
-
 void _gc_copy_objs(MiniJVM *jvm);
 
 s32 _gc_big_search(GcCollector *collector);
@@ -24,7 +22,7 @@ s32 _gc_resume_the_world(MiniJVM *jvm);
 
 s32 _gc_wait_thread_suspend(MiniJVM *jvm, Runtime *runtime);
 
-void _gc_mark_object(__refer ref, u8 flag_cnt);
+void _gc_mark_object(GcCollector *collector, __refer ref, u8 flag_cnt);
 
 s32 _gc_copy_objs_from_thread(Runtime *pruntime);
 
@@ -118,8 +116,21 @@ void _garbage_clear(GcCollector *collector) {
     //解除所有引用关系后，回收全部对象
     while (_garbage_collect(collector));//collect instance
 
-    classloaders_destroy_all(jvm);
+#if _JVM_DEBUG_LOG_LEVEL > 1
+    jvm_printf("[INFO]objs size :%lld\n", collector->obj_count);
+    jvm_printf("[INFO]clear class static field \n");
+#endif
+    hashset_clear(collector->objs_holder);
+    classloaders_clear_all_static(jvm);
     while (_garbage_collect(collector));//collect classes
+
+#if _JVM_DEBUG_LOG_LEVEL > 1
+    jvm_printf("[INFO]objs size :%lld\n", collector->obj_count);
+    jvm_printf("[INFO]clear boot classes \n");
+#endif
+    classloader_remove_all_class(jvm->boot_classloader);
+    while (_garbage_collect(collector));//collect classes
+    classloaders_destroy_all(jvm);
 
     //
 #if _JVM_DEBUG_LOG_LEVEL > 1
@@ -338,6 +349,9 @@ s64 _garbage_collect(GcCollector *collector) {
     //
 
 
+    MemoryBlock *head = NULL;//find all finalize obj and weak obj
+    MemoryBlock *tail = NULL;
+
     MemoryBlock *nextmb = collector->header;
     MemoryBlock *curmb, *prevmb = NULL;
     //finalize
@@ -350,7 +364,12 @@ s64 _garbage_collect(GcCollector *collector) {
                 if (curmb->clazz->finalizeMethod) {// there is a method called finalize
                     if (curmb->garbage_mark != collector->mark_cnt && !GCFLAG_FINALIZED_GET(curmb->gcflag)) {
                         instance_finalize((Instance *) curmb, collector->runtime);
-                        _gc_mark_object(curmb, collector->mark_cnt);//mark next collect it
+                        if (!head) {
+                            head = tail = curmb;
+                        } else {
+                            curmb->tmp_next = head;
+                            head = curmb;
+                        }
                         GCFLAG_FINALIZED_SET(curmb->gcflag);
                     }
                 }
@@ -360,10 +379,23 @@ s64 _garbage_collect(GcCollector *collector) {
                     //jvm_printf("weak reference : %llx %s, %d\n", (s64) (intptr_t) curmb, utf8_cstr(target->mb.clazz->name), curmb->garbage_mark);
                     if (target && target->mb.garbage_mark != collector->mark_cnt) {
                         instance_of_reference_enqueue((Instance *) curmb, collector->runtime);
-                        _gc_mark_object(curmb, collector->mark_cnt);//mark next collect it
+                        if (!head) {
+                            head = tail = curmb;
+                        } else {
+                            curmb->tmp_next = head;
+                            head = curmb;
+                        }
                     }
                 }
             }
+        }
+
+        //re mark these obj
+        nextmb = head;
+        while (nextmb) {
+            curmb = nextmb;
+            nextmb = curmb->tmp_next;
+            _gc_mark_object(collector, curmb, collector->mark_cnt);//mark it collect on next time
         }
     }
 
@@ -388,7 +420,17 @@ s64 _garbage_collect(GcCollector *collector) {
             jvm_printf("X: %s[%llx]\n", utf8_cstr(sus), (s64) (intptr_t) curmb);
             utf8_destory(sus);
 #endif
-            _gc_destory_memobj(curmb);
+            if (curmb->type == MEM_TYPE_CLASS) {
+                classes_remove(collector->jvm, (JClass *) curmb);
+            }
+            if (curmb->clazz->is_jcloader) {
+                PeerClassLoader *pcl = classLoaders_find_by_instance(jvm, (Instance *) curmb);
+                if (pcl) {
+                    classloaders_remove(jvm, pcl);
+                    classloader_destory(pcl);
+                }
+            }
+            memoryblock_destory(curmb);
             if (prevmb)prevmb->next = nextmb;
             else collector->header = nextmb;
             del++;
@@ -411,12 +453,6 @@ s64 _garbage_collect(GcCollector *collector) {
 #endif
     collector->isgc = 0;
     return del;
-}
-
-
-void _gc_destory_memobj(MemoryBlock *mb) {
-    memoryblock_destory((Instance *) mb);
-
 }
 
 
@@ -498,18 +534,26 @@ s32 _gc_wait_thread_suspend(MiniJVM *jvm, Runtime *runtime) {
  * @return ret
  */
 s32 _gc_big_search(GcCollector *collector) {
+    //thread stack frame mark
     s32 i, len;
     for (i = 0, len = collector->runtime_refer_copy->length; i < len; i++) {
         __refer r = arraylist_get_value(collector->runtime_refer_copy, i);
-        _gc_mark_object(r, collector->mark_cnt);
+        _gc_mark_object(collector, r, collector->mark_cnt);
     }
 
+    //holder mark
     HashsetIterator hi;
     hashset_iterate(collector->objs_holder, &hi);
     while (hashset_iter_has_more(&hi)) {
         HashsetKey k = hashset_iter_next_key(&hi);
-
-        _gc_mark_object(k, collector->mark_cnt);
+        _gc_mark_object(collector, k, collector->mark_cnt);
+    }
+    //bootclassloader mark
+    HashtableIterator hti;
+    hashtable_iterate(collector->jvm->boot_classloader->classes, &hti);
+    while (hashtable_iter_has_more(&hti)) {
+        HashtableValue v = hashtable_iter_next_value(&hti);
+        _gc_mark_object(collector, v, collector->mark_cnt);
     }
 
     return 0;
@@ -571,7 +615,7 @@ s32 _gc_copy_objs_from_thread(Runtime *pruntime) {
 }
 
 
-static inline void _gc_instance_mark(Instance *ins, u8 flag_cnt) {
+static inline void _gc_instance_mark(GcCollector *collector, Instance *ins, u8 flag_cnt) {
     s32 i, len;
     JClass *clazz = ins->mb.clazz;
     while (clazz) {
@@ -579,20 +623,36 @@ static inline void _gc_instance_mark(Instance *ins, u8 flag_cnt) {
         ArrayList *fiList = clazz->insFieldPtrIndex;
         for (i = 0, len = fiList->length; i < len; i++) {
             FieldInfo *fi = arraylist_get_value_unsafe(fiList, i);
+            if (utf8_equals_c(fi->name, "reflectionFrameBuffer")) {
+                s32 debug = 1;
+            }
             if (fi->is_ref_target && GCFLAG_WEAKREFERENCE_GET(ins->mb.gcflag)) continue;//skip weakreference target mark, but others mark need
             c8 *ptr = getInstanceFieldPtr(ins, fi);
             if (ptr) {
                 __refer ref = getFieldRefer(ptr);
-                if (ref)_gc_mark_object(ref, flag_cnt);
+                if (ref)_gc_mark_object(collector, ref, flag_cnt);
+            }
+            _gc_mark_object(collector, fi->_this_class, flag_cnt);
+        }
+        _gc_mark_object(collector, clazz, flag_cnt);//keep class and classloader alive
+        clazz = getSuperClass(clazz);
+    }
+
+    if (GCFLAG_JLOADER_GET(ins->mb.gcflag)) {//if the instance is created from java.lang.ClassLoader
+        PeerClassLoader *pcl = classLoaders_find_by_instance(collector->jvm, ins);
+        if (pcl) {// pcl maybe finalized
+            HashtableIterator hi;
+            hashtable_iterate(pcl->classes, &hi);
+            while (hashtable_iter_has_more(&hi)) {
+                HashtableValue v = hashtable_iter_next_value(&hi);
+                _gc_mark_object(collector, v, flag_cnt);
             }
         }
-        _gc_mark_object(clazz->ins_class, flag_cnt);//keep class and classloader alive
-        clazz = getSuperClass(clazz);
     }
 }
 
 
-static inline void _gc_jarray_mark(Instance *arr, u8 flag_cnt) {
+static inline void _gc_jarray_mark(GcCollector *collector, Instance *arr, u8 flag_cnt) {
     if (arr && arr->mb.type == MEM_TYPE_ARR) {
 //        if (utf8_equals_c(arr->mb.clazz->name, "[[D")) {
 //            jvm_printf("check %llx\n", (s64) (intptr_t) arr);
@@ -601,7 +661,7 @@ static inline void _gc_jarray_mark(Instance *arr, u8 flag_cnt) {
             s32 i;
             for (i = 0; i < arr->arr_length; i++) {//把所有引用去除，否则不会垃圾回收
                 s64 val = jarray_get_field(arr, i);
-                if (val)_gc_mark_object((__refer) (intptr_t) val, flag_cnt);
+                if (val)_gc_mark_object(collector, (__refer) (intptr_t) val, flag_cnt);
             }
         }
     }
@@ -612,7 +672,7 @@ static inline void _gc_jarray_mark(Instance *arr, u8 flag_cnt) {
  * mark class static field is used
  * @param clazz class
  */
-static inline void _gc_class_mark(JClass *clazz, u8 flag_cnt) {
+static inline void _gc_class_mark(GcCollector *collector, JClass *clazz, u8 flag_cnt) {
     s32 i, len;
     if (clazz->field_static) {
         FieldPool *fp = &clazz->fieldPool;
@@ -622,9 +682,15 @@ static inline void _gc_class_mark(JClass *clazz, u8 flag_cnt) {
             c8 *ptr = getStaticFieldPtr(fi);
             if (ptr) {
                 __refer ref = getFieldRefer(ptr);
-                _gc_mark_object(ref, flag_cnt);
+                _gc_mark_object(collector, ref, flag_cnt);
             }
         }
+    }
+    if (clazz->ins_class) {
+        _gc_mark_object(collector, clazz->ins_class, flag_cnt);
+    }
+    if (clazz->jloader) {
+        _gc_mark_object(collector, clazz->jloader, flag_cnt);
     }
 }
 
@@ -634,20 +700,20 @@ static inline void _gc_class_mark(JClass *clazz, u8 flag_cnt) {
  * @param ref addr
  */
 
-void _gc_mark_object(__refer ref, u8 flag_cnt) {
+void _gc_mark_object(GcCollector *collector, __refer ref, u8 flag_cnt) {
     if (ref) {
         MemoryBlock *mb = (MemoryBlock *) ref;
         if (flag_cnt != mb->garbage_mark) {
             mb->garbage_mark = flag_cnt;
             switch (mb->type) {
                 case MEM_TYPE_INS:
-                    _gc_instance_mark((Instance *) mb, flag_cnt);
+                    _gc_instance_mark(collector, (Instance *) mb, flag_cnt);
                     break;
                 case MEM_TYPE_ARR:
-                    _gc_jarray_mark((Instance *) mb, flag_cnt);
+                    _gc_jarray_mark(collector, (Instance *) mb, flag_cnt);
                     break;
                 case MEM_TYPE_CLASS:
-                    _gc_class_mark((JClass *) mb, flag_cnt);
+                    _gc_class_mark(collector, (JClass *) mb, flag_cnt);
                     break;
             }
         }

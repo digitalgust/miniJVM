@@ -44,11 +44,15 @@ JClass *classes_get(MiniJVM *jvm, Instance *jloader, Utf8String *clsName) {
     JClass *cl = NULL;
     if (clsName) {
         PeerClassLoader *pcl = jloader ? classLoaders_find_by_instance(jvm, jloader) : jvm->boot_classloader;
-        cl = hashtable_get(pcl->classes, clsName);
-        if (!cl) {
-            if (jloader) {
-                cl = classes_get(jvm, pcl->parent, clsName);
+        if (pcl) {
+            cl = hashtable_get(pcl->classes, clsName);
+            if (!cl) {
+                if (jloader) {
+                    cl = classes_get(jvm, pcl->parent, clsName);
+                }
             }
+        } else {
+            jvm_printf("classloader has removed too early, class:%s\n", utf8_cstr(clsName));
         }
     }
     return cl;
@@ -91,9 +95,21 @@ JClass *classes_load_get(Instance *jloader, Utf8String *ustr, Runtime *runtime) 
 
 s32 classes_put(MiniJVM *jvm, JClass *clazz) {
     if (clazz) {
-        //jvm_printf("sys_classloader %d : %s\n", sys_classloader->classes->entries, utf8_cstr(clazz->name));
+        //jvm_printf("PUT in classloader %s <- %s\n", clazz->jloader ? utf8_cstr(clazz->jloader->mb.clazz->name) : "NULL", utf8_cstr(clazz->name));
         PeerClassLoader *pcl = classLoaders_find_by_instance(jvm, clazz->jloader);
         hashtable_put(pcl->classes, clazz->name, clazz);
+        return 0;
+    }
+    return -1;
+}
+
+s32 classes_remove(MiniJVM *jvm, JClass *clazz) {
+    if (clazz) {
+        //jvm_printf("PUT in classloader %s <- %s\n", clazz->jloader ? utf8_cstr(clazz->jloader->mb.clazz->name) : "NULL", utf8_cstr(clazz->name));
+        PeerClassLoader *pcl = classLoaders_find_by_instance(jvm, clazz->jloader);
+        if (pcl) {
+            hashtable_remove(pcl->classes, clazz->name, 0);
+        }
         return 0;
     }
     return -1;
@@ -103,44 +119,67 @@ JClass *primitive_class_create_get(Runtime *runtime, Utf8String *ustr) {
     MiniJVM *jvm = runtime->jvm;
     JClass *cl = classes_get(jvm, NULL, ustr);
     if (!cl) {
+        Utf8String *typename = utf8_create_copy(ustr);
         vm_share_lock(jvm);
         cl = class_create(runtime);
-        cl->name = ustr;
-        cl->primitive = 1;
+        cl->name = typename;
+        cl->is_primitive = 1;
+        cl->jloader = NULL;//system classloader
         classes_put(jvm, cl);
-        gc_obj_hold(jvm->collector, cl);
+//        gc_obj_hold(jvm->collector, cl);
         vm_share_unlock(jvm);
-    } else {
-        utf8_destory(ustr);
-    }
-    if (!cl->ins_class) {
-        cl->ins_class = insOfJavaLangClass_create_get(runtime, cl);
+#if _JVM_DEBUG_LOG_LEVEL > 2
+        jvm_printf("load class (%016llx load %016llx):  %s \n", (s64) (intptr_t) NULL, (s64) (intptr_t) cl, utf8_cstr(cl->name));
+#endif
     }
     return cl;
 }
 
-JClass *array_class_create_get(Runtime *runtime, Utf8String *desc) {
+JClass *arraytype_get_by_desc(Runtime *runtime, Instance *jloader, Utf8String *desc) {
     if (desc && desc->length && utf8_char_at(desc, 0) == '[') {
-        PeerClassLoader *cloader = runtime->jvm->boot_classloader;
-        MiniJVM *jvm = cloader->jvm;
-        JClass *clazz = hashtable_get(cloader->classes, desc);
+        Utf8String *typename = utf8_create_copy(desc);
+        JClass *typec = NULL;
+        while (utf8_char_at(typename, 0) == '[') {
+            utf8_remove(typename, 0);
+        }
+        if (utf8_char_at(typename, 0) == 'L') {//class:  Ljava/lang/Object;
+            utf8_remove(typename, 0);//remove "L"
+            utf8_remove(typename, typename->length - 1);//remove ";"
+            typec = classes_load_get(jloader, typename, runtime);
+        } else {//primitive : I
+            c8 *cname = getDataTypeFullName(utf8_char_at(typename, 0));
+            utf8_clear(typename);
+            utf8_append_c(typename, cname);
+            typec = primitive_class_create_get(runtime, typename);
+        }
+        utf8_destory(typename);
+        return typec;
+    }
+    return NULL;
+}
+
+JClass *array_class_create_get(Runtime *runtime, Instance *jloader, Utf8String *desc) {
+    if (desc && desc->length && utf8_char_at(desc, 0) == '[') {
+        MiniJVM *jvm = runtime->jvm;
+        JClass *clazz = classes_get(jvm, jloader, desc);
         if (!clazz) {
             vm_share_lock(jvm);
-            clazz = hashtable_get(cloader->classes, desc);//maybe other thread created
+            clazz = classes_get(jvm, jloader, desc);//maybe other thread created
             if (!clazz) {
                 clazz = class_create(runtime);
                 clazz->mb.arr_type_index = getDataTypeIndex(utf8_char_at(desc, 1));
                 clazz->name = utf8_create_copy(desc);
                 clazz->superclass = classes_get_c(jvm, NULL, STR_CLASS_JAVA_LANG_OBJECT);
-                classes_put(jvm, clazz);
-                gc_obj_hold(jvm->collector, clazz);
                 //this arrayclass need to set loader with element type
-                //JClass *typec=classes_load_get();
-                //clazz->jloader=typec;
+                JClass *typec = arraytype_get_by_desc(runtime, jloader, desc);
+                clazz->jloader = typec->jloader;
 
-#if _JVM_DEBUG_LOG_LEVEL > 5
-                jvm_printf("load class:  %s \n", utf8_cstr(desc));
+//                gc_obj_hold(jvm->collector, clazz);
+                classes_put(jvm, clazz);
+#if _JVM_DEBUG_LOG_LEVEL > 2
+                jvm_printf("load class (%016llx load %016llx):  %s \n", (s64) (intptr_t) clazz->jloader, (s64) (intptr_t) clazz, utf8_cstr(clazz->name));
 #endif
+
 
             }
             vm_share_unlock(jvm);
@@ -165,7 +204,7 @@ JClass *array_class_get_by_index(Runtime *runtime, s32 typeIdx) {
     if (cache->array_classes[typeIdx] == NULL) {
         Utf8String *ustr = utf8_create_c("[");
         utf8_insert(ustr, ustr->length, getDataTypeTag(typeIdx));
-        clazz = cache->array_classes[typeIdx] = array_class_create_get(runtime, ustr);
+        clazz = cache->array_classes[typeIdx] = array_class_create_get(runtime, NULL, ustr);
         utf8_destory(ustr);
     } else {
         clazz = cache->array_classes[typeIdx];
@@ -186,7 +225,7 @@ JClass *array_class_get_by_index(Runtime *runtime, s32 typeIdx) {
  * @param name
  * @return
  */
-JClass *array_class_get_by_name(Runtime *runtime, Utf8String *name) {
+JClass *array_class_get_by_name(Runtime *runtime, Instance *jloader, Utf8String *name) {
     JClass *clazz = NULL;
     if (name) {
         Utf8String *ustr = utf8_create_c("[");
@@ -201,7 +240,7 @@ JClass *array_class_get_by_name(Runtime *runtime, Utf8String *name) {
         } else {
             utf8_append(ustr, name);
         }
-        clazz = array_class_create_get(runtime, ustr);
+        clazz = array_class_create_get(runtime, jloader, ustr);
         utf8_destory(ustr);
 
     }
@@ -1043,7 +1082,7 @@ Instance *jarray_create_by_type_index(Runtime *runtime, s32 count, s32 typeIdx) 
 
 Instance *jarray_create_by_type_name(Runtime *runtime, s32 count, Utf8String *name) {
     JClass *clazz = NULL;
-    clazz = array_class_get_by_name(runtime, name);
+    clazz = array_class_get_by_name(runtime, runtime->clazz->jloader, name);
     Instance *arr = jarray_create_by_class(runtime, count, clazz);
     return arr;
 }
@@ -1070,7 +1109,7 @@ Instance *jarray_multi_create(Runtime *runtime, s32 *dim, s32 dim_size, Utf8Stri
     if (len == -1) {
         return NULL;
     }
-    JClass *cl = array_class_create_get(runtime, pdesc);
+    JClass *cl = array_class_create_get(runtime, runtime->clazz->jloader, pdesc);
     Instance *arr = jarray_create_by_class(runtime, len, cl);
     Utf8String *desc = utf8_create_part(pdesc, 1, pdesc->length - 1);
 
@@ -1158,6 +1197,11 @@ Instance *instance_create(Runtime *runtime, JClass *clazz) {
     ins->mb.type = MEM_TYPE_INS;
     ins->mb.clazz = clazz;
     ins->mb.heap_size = insSize;
+    if (clazz->is_jcloader) {
+        GCFLAG_JLOADER_SET(ins->mb.gcflag);
+    } else if (clazz->is_weakref) {
+        GCFLAG_WEAKREFERENCE_SET(ins->mb.gcflag);
+    }
 
     ins->obj_fields = ((c8 *) (&ins[0])) + instance_base_size();//jvm_calloc(clazz->field_instance_len);
 //    jvm_printf("%s\n", utf8_cstr(clazz->name));
@@ -1341,7 +1385,6 @@ Instance *insOfJavaLangClass_create_get(Runtime *runtime, JClass *clazz) {
             instance_init(ins, runtime);
             clazz->ins_class = ins;
             insOfJavaLangClass_set_classHandle(runtime, ins, clazz);
-            insOfJavaLangClass_hold(clazz, runtime);
             return ins;
         }
     }
@@ -1357,25 +1400,6 @@ JClass *insOfJavaLangClass_get_classHandle(Runtime *runtime, Instance *insOfJava
 void insOfJavaLangClass_set_classHandle(Runtime *runtime, Instance *insOfJavaLangClass, JClass *handle) {
     setFieldLong(getInstanceFieldPtr(insOfJavaLangClass, runtime->jvm->shortcut.class_classHandle),
                  (s64) (intptr_t) handle);
-}
-
-void insOfJavaLangClass_hold(JClass *clazz, Runtime *runtime) {
-    if (clazz) {
-        Instance *loader = clazz->jloader;
-        if (loader) { //if classloader exists , then hold in java classloader
-            runtime->thrd_info->no_pause++;
-            push_ref(runtime->stack, loader);
-            push_ref(runtime->stack,
-                     clazz->ins_class ? clazz->ins_class : insOfJavaLangClass_create_get(runtime, clazz));
-            s32 ret = execute_method_impl(runtime->jvm->shortcut.classloader_holdClass, runtime);
-            if (ret) {
-                print_exception(runtime);
-            }
-            runtime->thrd_info->no_pause--;
-        } else { //hold in systemclassloader
-            gc_obj_hold(runtime->jvm->collector, clazz->ins_class);
-        }
-    }
 }
 
 //===============================    实例化字符串  ==================================

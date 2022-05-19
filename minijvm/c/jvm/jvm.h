@@ -634,9 +634,9 @@ void profile_print();
 #define GCFLAG_WEAKREFERENCE_SET(reg_v) (reg_v = (0x20 | reg_v))
 #define GCFLAG_WEAKREFERENCE_GET(reg_v) (0x20 & reg_v)
 #define GCFLAG_WEAKREFERENCE_CLEAR(reg_v) (reg_v = (0xDF & reg_v))
-#define GCFLAG_CHECK_SET(reg_v) (reg_v = (0x10 | reg_v))
-#define GCFLAG_CHECK_GET(reg_v) (0x10 & reg_v)
-#define GCFLAG_CHECK_CLEAR(reg_v) (reg_v = ((~0x10) & reg_v))
+#define GCFLAG_JLOADER_SET(reg_v) (reg_v = (0x10 | reg_v))
+#define GCFLAG_JLOADER_GET(reg_v) (0x10 & reg_v)
+#define GCFLAG_JLOADER_CLEAR(reg_v) (reg_v = ((~0x10) & reg_v))
 
 typedef struct _MemoryBlock {
 
@@ -648,7 +648,7 @@ typedef struct _MemoryBlock {
     s32 heap_size;//objsize of jclass or jarray or jclass , but not memoryblock
     u8 type;//type of array or object runtime,class
     u8 garbage_mark;
-    u8 gcflag;
+    u8 gcflag; //flag for weak / finalize / reg / classloader
     u8 arr_type_index;
 } MemoryBlock;
 
@@ -669,6 +669,8 @@ PeerClassLoader *classloader_create(MiniJVM *jvm);
 
 PeerClassLoader *classloader_create_with_path(MiniJVM *jvm, c8 *path);
 
+void classloaders_clear_all_static(MiniJVM *jvm);
+
 void classloaders_destroy_all(MiniJVM *jvm);
 
 void classloader_release_class_static_field(PeerClassLoader *class_loader);
@@ -676,6 +678,8 @@ void classloader_release_class_static_field(PeerClassLoader *class_loader);
 void classloader_destory(PeerClassLoader *class_loader);
 
 void classloader_add_jar_path(PeerClassLoader *class_loader, Utf8String *jar_path);
+
+void classloader_remove_all_class(PeerClassLoader *class_loader);
 
 void classloaders_remove(MiniJVM *jvm, PeerClassLoader *pcl);
 
@@ -1028,7 +1032,9 @@ struct _ClassType {
 
     //
     s8 status;
-    u8 primitive;//primitive data type int/long/short/char/short/byte/float/double
+    u8 is_primitive;//primitive data type int/long/short/char/short/byte/float/double
+    u8 is_jcloader;//is java classoader
+    u8 is_weakref;//
 };
 
 
@@ -1077,7 +1083,7 @@ u8 instance_of(Instance *ins, JClass *other);
 
 u8 isSonOfInterface(JClass *clazz, JClass *son, Runtime *runtime);
 
-u8 assignable_from(JClass *clazzSon, JClass *clazzSuper);
+u8 assignable_from(JClass *clazzParent, JClass *clazzSon);
 
 void class_clear_refer(PeerClassLoader *cloader, JClass *clazz);
 
@@ -1793,7 +1799,6 @@ typedef struct _ShortCut {
     FieldInfo *reference_target;
     JClass *weakreference;
     //
-    MethodInfo *classloader_holdClass;
     //
     JClass *array_classes[DATATYPE_COUNT];
 } ShortCut;
@@ -1822,7 +1827,7 @@ struct _MiniJVM {
     ShortCut shortcut;
 
     JdwpServer *jdwpserver;
-    s32 jdwp_enable;
+    s32 jdwp_enable;// 0:disable java debug , 1:enable java debug and disable jit
     s32 jdwp_suspend_on_start;
     s64 max_heap_size;
     s32 heap_overload_percent;

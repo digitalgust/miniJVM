@@ -279,9 +279,20 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
         jvm_runtime_cache->reference_vmEnqueneReference = find_methodInfo_by_name_c(STR_CLASS_JAVA_LANG_REF_REFERENCE, "vmEnqueneReference", "(Ljava/lang/ref/Reference;)V", NULL, runtime);
     } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE)) {
         jvm_runtime_cache->weakreference = clazz;
-    } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_CLASSLOADER)) {
-        jvm_runtime_cache->classloader_holdClass = find_methodInfo_by_name_c(STR_CLASS_JAVA_LANG_CLASSLOADER, "holdClass", "(Ljava/lang/Class;)V", NULL, runtime);
     }
+    // mark class if it is son of classloader
+    if (!utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_CLASSLOADER)) {
+        JClass *cl_clazz = classes_get_c(runtime->jvm, NULL, STR_CLASS_JAVA_LANG_CLASSLOADER);
+        if (assignable_from(cl_clazz, clazz)) {
+            clazz->is_jcloader = 1;
+        }
+    }
+    //mark class if it's son of weakreference
+    JClass *weak_clazz = classes_get_c(runtime->jvm, NULL, STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE);
+    if (assignable_from(weak_clazz, clazz)) {
+        clazz->is_weakref = 1;
+    }
+
 //    jvm_printf("prepared: %s\n", utf8_cstr(clazz->name));
 
     clazz->status = CLASS_STATUS_PREPARED;
@@ -463,13 +474,13 @@ u8 isSonOfInterface(JClass *clazz, JClass *son, Runtime *runtime) {
     return 0;
 }
 
-u8 assignable_from(JClass *clazzSon, JClass *clazzSuper) {
+u8 assignable_from(JClass *clazzParent, JClass *clazzSon) {
 
-    while (clazzSuper) {
-        if (clazzSon == clazzSuper) {
+    while (clazzSon) {
+        if (clazzParent == clazzSon) {
             return 1;
         }
-        clazzSuper = getSuperClass(clazzSuper);
+        clazzSon = getSuperClass(clazzSon);
     }
     return 0;
 }

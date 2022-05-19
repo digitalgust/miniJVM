@@ -187,7 +187,7 @@ s32 java_lang_Class_isArray(Runtime *runtime, JClass *clazz) {
 s32 java_lang_Class_isPrimitive(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     JClass *cl = insOfJavaLangClass_get_classHandle(runtime, (Instance *) localvar_getRefer(runtime->localvar, 0));
-    if (cl->mb.clazz->primitive) {
+    if (cl->mb.clazz->is_primitive) {
         push_int(stack, 1);
     } else {
         push_int(stack, 0);
@@ -242,7 +242,9 @@ s32 java_lang_Class_getPrimitiveClass(Runtime *runtime, JClass *clazz) {
         Utf8String *ustr = utf8_create();
         jstring_2_utf8(jstr, ustr, runtime);
         JClass *cl = primitive_class_create_get(runtime, ustr);
-        push_ref(stack, cl->ins_class);
+        Instance *ins = insOfJavaLangClass_create_get(runtime, cl);
+        utf8_destory(ustr);
+        push_ref(stack, ins);
     } else {
         push_ref(stack, NULL);
     }
@@ -355,10 +357,9 @@ s32 java_lang_Math_random(Runtime *runtime, JClass *clazz) {
     f64 r = 0.0f;
     s32 i;
     s32 times = 0;
-    if (!is_random_init)
-    { // Setting seed only necessary once.
-      srand((u32) time(0));
-      is_random_init = TRUE;
+    if (!is_random_init) { // Setting seed only necessary once.
+        srand((u32) time(0));
+        is_random_init = TRUE;
     }
     r = ((f64) rand() / (f64) RAND_MAX);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1150,6 +1151,8 @@ s32 java_lang_Thread_interrupt0(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, 0);
 
+    Runtime *rt_thread = jthread_get_stackframe_value(runtime->jvm, ins);
+    rt_thread->thrd_info->is_interrupt = 1;
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("java_lang_Thread_interrupt0 \n");
@@ -1338,12 +1341,6 @@ s32 java_lang_System_getNativeProperties(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-s32 java_lang_ref_Reference_markItAsWeak(Runtime *runtime, JClass *clazz) {
-    Instance *weak = (Instance *) localvar_getRefer(runtime->localvar, 0);
-    s32 isweak = localvar_getInt(runtime->localvar, 1);
-    if (isweak)GCFLAG_WEAKREFERENCE_SET(weak->mb.gcflag);
-    return 0;
-}
 
 static java_native_method METHODS_STD_TABLE[] = {
         {"com/sun/cldc/io/ConsoleOutputStream", "write",                  "(I)V",                                                          com_sun_cldc_io_ConsoleOutputStream_write},
@@ -1419,7 +1416,6 @@ static java_native_method METHODS_STD_TABLE[] = {
         {"java/lang/Throwable",                 "buildStackElement",      "(Ljava/lang/Thread;)Ljava/lang/StackTraceElement;",             java_io_Throwable_buildStackElement},
         {"java/io/PrintStream",                 "printImpl",              "(Ljava/lang/String;)V",                                         java_io_PrintStream_printImpl},
         {"java/lang/System",                    "getNativeProperties",    "()[Ljava/lang/String;",                                         java_lang_System_getNativeProperties},
-        {"java/lang/ref/Reference",             "markItAsWeak",           "(Z)V",                                                          java_lang_ref_Reference_markItAsWeak},
 };
 
 

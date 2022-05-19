@@ -281,7 +281,7 @@ s32 org_mini_reflect_ReflectArray_newArray(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     JClass *cl = insOfJavaLangClass_get_classHandle(runtime, (Instance *) localvar_getRefer(runtime->localvar, pos++));
     s32 count = localvar_getInt(runtime->localvar, pos++);
-    if (cl->mb.clazz->primitive) {
+    if (cl->mb.clazz->is_primitive) {
         u8 t = getDataTypeTagByName(cl->name);
         s32 typeIndex = getDataTypeIndex(t);
         Instance *arr = jarray_create_by_type_index(runtime, count, typeIndex);
@@ -302,7 +302,7 @@ s32 org_mini_reflect_ReflectArray_multiNewArray(Runtime *runtime, JClass *clazz)
     JClass *cl = insOfJavaLangClass_get_classHandle(runtime, (Instance *) localvar_getRefer(runtime->localvar, pos++));
     Instance *dimarr = localvar_getRefer(runtime->localvar, pos++);
     Utf8String *desc = utf8_create();
-    if (cl->primitive) {
+    if (cl->is_primitive) {
         utf8_insert(desc, 0, getDataTypeTagByName(cl->name));
     } else if (cl->mb.arr_type_index) {
         utf8_append(desc, cl->name);
@@ -569,16 +569,9 @@ s32 org_mini_reflect_vm_RefNative_destroyNativeClassLoader(Runtime *runtime, JCl
     Instance *jloader = localvar_getRefer(runtime->localvar, pos++);
     Instance *parent = localvar_getRefer(runtime->localvar, pos++);
 
+    //do nothing ,all process processed by gc
     MiniJVM *jvm = runtime->jvm;
-
     PeerClassLoader *cloader = classLoaders_find_by_instance(jvm, jloader);
-    cloader->jloader = jloader;
-    cloader->parent = parent;
-
-
-    classloaders_remove(jvm, cloader);
-    classloader_destory(cloader);
-
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
     jvm_printf("org_mini_reflect_vm_RefNative_destroyNativeClassLoader \n");

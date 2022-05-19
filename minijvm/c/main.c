@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
         }
     } else {
         bootclasspath = "../../binary/lib/minijvm_rt.jar";
-        jdwp = 01;
+        jdwp = 01;  // 0:disable java debug , 1:enable java debug and disable jit
 
 
 //        bootclasspath = "../../../orange451/minijvm_rt/target/minijvm_rt.jar";

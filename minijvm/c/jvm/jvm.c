@@ -119,6 +119,10 @@ void classloader_destory(PeerClassLoader *class_loader) {
     jvm_free(class_loader);
 }
 
+void classloader_remove_all_class(PeerClassLoader *class_loader) {
+    hashtable_clear(class_loader->classes);
+}
+
 void classloader_release_class_static_field(PeerClassLoader *class_loader) {
     HashtableIterator hti;
     hashtable_iterate(class_loader->classes, &hti);
@@ -194,6 +198,19 @@ PeerClassLoader *classLoaders_find_by_instance(MiniJVM *jvm, Instance *jloader) 
     return r;
 }
 
+void classloaders_clear_all_static(MiniJVM *jvm) {
+    spin_lock(&jvm->lock_cloader);
+    {
+        s32 i;
+        for (i = 0; i < jvm->classloaders->length; i++) {
+            PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
+            //release class static field
+            classloader_release_class_static_field(pcl);
+        }
+    }
+    spin_unlock(&jvm->lock_cloader);
+}
+
 void classloaders_destroy_all(MiniJVM *jvm) {
 
     spin_lock(&jvm->lock_cloader);
@@ -202,7 +219,6 @@ void classloaders_destroy_all(MiniJVM *jvm) {
         for (i = 0; i < jvm->classloaders->length; i++) {
             PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
             //release class static field
-            classloader_release_class_static_field(pcl);
             classloader_destory(pcl);
         }
     }

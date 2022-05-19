@@ -6,6 +6,7 @@
 package org.mini.apploader;
 
 import org.mini.gui.GCallBack;
+import org.mini.gui.GCmd;
 import org.mini.gui.GForm;
 
 /**
@@ -26,8 +27,15 @@ public abstract class GApplication {
 
     public final void close() {
         System.out.println("Closed app : " + this);
-        onClose();
+        try {
+            onClose();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         AppManager.getInstance().active();
+        GForm.addCmd(new GCmd(() -> {
+            Thread.currentThread().setContextClassLoader(null);
+        }));
     }
 
     public final void notifyCurrentFormChanged() {

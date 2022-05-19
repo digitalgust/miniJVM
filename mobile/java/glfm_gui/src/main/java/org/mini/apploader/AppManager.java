@@ -344,7 +344,8 @@ public class AppManager extends GApplication {
         }
 
 
-        public void onStateChange(GObject gobj, String cmd) {
+        @Override
+        public void onStateChange(GObject gobj) {
             String name = gobj.getName();
             if ("INPUT_SEARCH".equals(name)) {
                 GTextObject search = (GTextObject) gobj;
