@@ -78,8 +78,7 @@ void class_clear_refer(PeerClassLoader *cloader, JClass *clazz) {
                 }
             }
         }
-        if (clazz->field_static)jvm_free(clazz->field_static);
-        clazz->field_static = NULL;
+
     }
     ArrayList *utf8list = clazz->constantPool.utf8CP;
     for (i = 0, len = utf8list->length; i < len; i++) {
@@ -162,7 +161,9 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
 
     //静态变量分配
     clazz->field_static_len = static_len;
-    clazz->field_static = jvm_calloc(clazz->field_static_len);
+    if (clazz->field_static_len) {
+        clazz->field_static = jvm_calloc(clazz->field_static_len);
+    }
 
 
     //生成实例变量模板

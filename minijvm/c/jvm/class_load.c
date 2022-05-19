@@ -1934,6 +1934,7 @@ s32 _DESTORY_CLASS(JClass *clazz) {
     _class_field_info_destory(clazz);
     _class_constant_pool_destory(clazz);
     _class_attribute_info_destory(clazz);
+    if (clazz->field_static)jvm_free(clazz->field_static);
     clazz->field_static = NULL;
     if (clazz->constant_item_ptr)jvm_free(clazz->constant_item_ptr);
     clazz->constant_item_ptr = NULL;

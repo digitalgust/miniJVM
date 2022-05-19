@@ -4019,9 +4019,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     if (!spent) spent = nanoTime() - start_at;
                     profile_put(cur_inst, spent, 1);
 #endif
-                    if (runtime->thrd_info->is_interrupt) {
-                        int debug = 1;
-                    }
                     break;
 
                 } while (1);//end while

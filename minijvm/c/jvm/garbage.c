@@ -623,9 +623,7 @@ static inline void _gc_instance_mark(GcCollector *collector, Instance *ins, u8 f
         ArrayList *fiList = clazz->insFieldPtrIndex;
         for (i = 0, len = fiList->length; i < len; i++) {
             FieldInfo *fi = arraylist_get_value_unsafe(fiList, i);
-            if (utf8_equals_c(fi->name, "reflectionFrameBuffer")) {
-                s32 debug = 1;
-            }
+
             if (fi->is_ref_target && GCFLAG_WEAKREFERENCE_GET(ins->mb.gcflag)) continue;//skip weakreference target mark, but others mark need
             c8 *ptr = getInstanceFieldPtr(ins, fi);
             if (ptr) {
