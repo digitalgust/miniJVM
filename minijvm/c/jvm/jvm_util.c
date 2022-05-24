@@ -1767,7 +1767,7 @@ s64 threadSleep(s64 ms) {
 
 void instance_hold_to_thread(Instance *ins, Runtime *runtime) {
     if (runtime && ins) {
-        ins->mb.tmp_next = runtime->thrd_info->tmp_holder;
+        ins->mb.hold_next = runtime->thrd_info->tmp_holder;
         runtime->thrd_info->tmp_holder = (MemoryBlock *) ins;
     }
 }
@@ -1776,21 +1776,21 @@ void instance_release_from_thread(Instance *ins, Runtime *runtime) {
     if (runtime && ins) {
         MemoryBlock *ref = (MemoryBlock *) ins;
         if (ref == runtime->thrd_info->tmp_holder) {
-            runtime->thrd_info->tmp_holder = ref->tmp_next;
+            runtime->thrd_info->tmp_holder = ref->hold_next;
             return;
         }
         MemoryBlock *next, *pre;
         pre = runtime->thrd_info->tmp_holder;
         if (pre) {
-            next = pre->tmp_next;
+            next = pre->hold_next;
 
             while (next) {
                 if (ref == next) {
-                    pre->tmp_next = next->tmp_next;
+                    pre->hold_next = next->hold_next;
                     return;
                 }
                 pre = next;
-                next = next->tmp_next;
+                next = next->hold_next;
             }
         }
     }

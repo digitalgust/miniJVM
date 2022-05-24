@@ -36,6 +36,32 @@ s32 zip_loadfile(char const *jarpath, char const *filename, ByteBuf *buf) {
     return ret;
 }
 
+s32 zip_get_file_index(char const *jarpath, char const *filename) {
+    int file_index = 0;
+    mz_zip_archive zipArchive = {0};
+    mz_zip_archive_file_stat file_stat = {0};
+
+    //skit the first '/'
+    if (filename && filename[0] == '/') {
+        filename += 1;
+    }
+
+    int ret = 0;
+    if (mz_zip_reader_init_file(&zipArchive, jarpath, 0) == MZ_FALSE) {//
+        ret = -1;
+    } else {
+
+        file_index = mz_zip_reader_locate_file(&zipArchive, filename, NULL, 0);//
+        if (!mz_zip_reader_file_stat(&zipArchive, file_index, &file_stat)) {
+            ret = -1;
+        } else {
+            ret = file_index;
+        }
+    }
+    mz_zip_reader_end(&zipArchive);
+    return ret;
+}
+
 
 s32 zip_savefile_mem(char const *jarpath, char const *filename, char const *buf, int size) {
     int file_index = 0;

@@ -11,6 +11,8 @@ extern "C" {
 
 s32 zip_loadfile(char const *jarpath, char const *filename, ByteBuf *buf);
 
+s32 zip_get_file_index(char const *jarpath, char const *filename);
+
 s32 zip_savefile(char const *jarpath, char const *filename, ByteBuf *buf);
 
 s32 zip_savefile_mem(char const *jarpath, char const *filename, char const *buf, int size);

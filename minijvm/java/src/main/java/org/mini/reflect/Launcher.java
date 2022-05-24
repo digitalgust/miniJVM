@@ -144,14 +144,11 @@ public class Launcher {
                 File f = new File(s);
                 if (f.isFile()) {
                     try {
-                        String[] files = Zip.listFiles0(f.getAbsolutePath());
-                        for (int i = 0, imax = files.length; i < imax; i++) {
-                            String fn = files[i];
-                            if (fn != null && fn.equals(sourceName)) {
-                                String us = "jar:file:" + f.getAbsolutePath() + "!/" + sourceName;
-                                URL url = new URL(us);
-                                return url;
-                            }
+                        boolean exist = Zip.isEntryExist(f.getAbsolutePath(), sourceName);
+                        if (exist) {
+                            String us = "jar:file:" + f.getAbsolutePath() + "!/" + sourceName;
+                            URL url = new URL(us);
+                            return url;
                         }
                     } catch (Exception e) {
                         e.printStackTrace();

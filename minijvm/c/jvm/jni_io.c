@@ -1611,6 +1611,21 @@ s32 org_mini_fs_InnerFile_delete0(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+s32 org_mini_zip_ZipFile_getEntryIndex(Runtime *runtime, JClass *clazz) {
+    Instance *zip_path_arr = localvar_getRefer(runtime->localvar, 0);
+    Instance *name_arr = localvar_getRefer(runtime->localvar, 1);
+    s32 ret = -1;
+    if (zip_path_arr && name_arr) {
+        ret = zip_get_file_index(zip_path_arr->arr_body, name_arr->arr_body);
+    }
+    push_int(runtime->stack, ret);
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    invoke_deepth(runtime);
+    jvm_printf("org_mini_zip_ZipFile_getEntryIndex  \n");
+#endif
+    return 0;
+}
+
 s32 org_mini_zip_ZipFile_getEntry0(Runtime *runtime, JClass *clazz) {
     Instance *zip_path_arr = localvar_getRefer(runtime->localvar, 0);
     Instance *name_arr = localvar_getRefer(runtime->localvar, 1);
@@ -1861,6 +1876,7 @@ static java_native_method METHODS_IO_TABLE[] = {
         {"org/mini/fs/InnerFile",     "getTmpDir",            "()Ljava/lang/String;",             org_mini_fs_InnerFile_getTmpDir},
         {"org/mini/zip/Zip",          "getEntry0",            "([B[B)[B",                         org_mini_zip_ZipFile_getEntry0},
         {"org/mini/zip/Zip",          "putEntry0",            "([B[B[B)I",                        org_mini_zip_ZipFile_putEntry0},
+        {"org/mini/zip/Zip",          "getEntryIndex",        "([B[B)I",                          org_mini_zip_ZipFile_getEntryIndex},
         {"org/mini/zip/Zip",          "fileCount0",           "([B)I",                            org_mini_zip_ZipFile_fileCount0},
         {"org/mini/zip/Zip",          "listFiles0",           "([B)[Ljava/lang/String;",          org_mini_zip_ZipFile_listFiles0},
         {"org/mini/zip/Zip",          "isDirectory0",         "([BI)I",                           org_mini_zip_ZipFile_isDirectory0},

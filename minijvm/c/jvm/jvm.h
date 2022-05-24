@@ -33,6 +33,14 @@ extern "C" {
 #define _JVM_DEBUG_PROFILE 0
 #define _JVM_JDWP_ENABLE 01
 
+
+
+#define GARBAGE_OVERLOAD_DEFAULT 90  // overload of max heap size ,will active garbage collection
+#define GARBAGE_PERIOD_MS_DEFAULT 10 * 60 * 1000
+#define MAX_HEAP_SIZE_DEFAULT  200 * 1024 * 1024
+#define MAX_STACK_SIZE_DEFAULT 4096
+
+
 //#pragma GCC diagnostic error "-Wframe-larger-than="
 
 #if __JVM_OS_VS__ || __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__
@@ -405,11 +413,6 @@ typedef union _Long2Double {
 } Long2Double;
 #endif
 
-#define GARBAGE_OVERLOAD_DEFAULT 90  // overload of max heap size ,will active garbage collection
-#define GARBAGE_PERIOD_MS_DEFAULT 10 * 60 * 1000
-#define MAX_HEAP_SIZE_DEFAULT  200 * 1024 * 1024
-#define MAX_STACK_SIZE_DEFAULT 4096
-
 //#define HARD_LIMIT
 
 
@@ -642,7 +645,8 @@ typedef struct _MemoryBlock {
 
     JClass *clazz;
     struct _MemoryBlock *next; //reg for gc
-    struct _MemoryBlock *tmp_next;  //hold by thread
+    struct _MemoryBlock *hold_next;  //hold by thread
+    struct _MemoryBlock *tmp_next;  //for gc finalize
     ThreadLock *volatile thread_lock;
 
     s32 heap_size;//objsize of jclass or jarray or jclass , but not memoryblock

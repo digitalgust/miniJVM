@@ -127,10 +127,18 @@ public class GForm extends GPanel {
             Nanovg.nvgScissor(vg, 0, 0, winWidth, winHeight);
             paint(vg);
             paintFlyingObject(vg);
-            cmdHandler.update(this);
+            try {
+                cmdHandler.paint(this);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             nvgEndFrame(vg);
 
-            cmdHandler.process(this);
+            try {
+                cmdHandler.process(this);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             //
         } catch (Exception e) {
             e.printStackTrace();

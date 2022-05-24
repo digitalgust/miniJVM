@@ -3,7 +3,6 @@ package java.util.zip;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Vector;
 import org.mini.zip.Zip;
@@ -38,7 +37,7 @@ public class ZipFile {
     //返回 ZIP 文件条目的枚举。 
 
     public Enumeration<? extends ZipEntry> entries() {
-        String[] fns = Zip.listFiles0(zipFileName);
+        String[] fns = Zip.listFiles(zipFileName);
         if (files == null) {
             files = new Vector();
             for (String s : fns) {

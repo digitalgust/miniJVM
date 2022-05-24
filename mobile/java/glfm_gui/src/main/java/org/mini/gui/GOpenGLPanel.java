@@ -7,10 +7,18 @@ abstract public class GOpenGLPanel extends GPanel {
 
     GCmd cmd = new GCmd(() -> {
         if (!inited) {
-            gl_panel_init();
+            try {
+                gl_panel_init();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             inited = true;
         }
-        gl_paint();
+        try {
+            gl_paint();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     });
 
     public GOpenGLPanel() {
@@ -38,7 +46,11 @@ abstract public class GOpenGLPanel extends GPanel {
 
     protected void finalize() {
         GForm.addCmd(new GCmd(() -> {
-            gl_destroy();
+            try {
+                gl_destroy();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             System.out.println("GOpenGLPanel clean success");
         }));
     }

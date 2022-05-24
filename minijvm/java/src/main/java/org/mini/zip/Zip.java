@@ -8,11 +8,10 @@ package org.mini.zip;
 import java.io.UnsupportedEncodingException;
 
 /**
- *
  * byte[] b = javax.mini.zip.Zip.getEntry("../lib/minijvm_rt.jar",
  * "sys.properties"); for (int i = 0; i < b.length; i++) {
  * System.out.print((char) b[i]); }
- *
+ * <p>
  * Zip.putEntry("../tmp.zip", "aaa/sys.properties", b);
  *
  * @author Gust
@@ -39,8 +38,20 @@ public class Zip {
         return null;
     }
 
+    public static boolean isEntryExist(String zipFile, String name) {
+        try {
+            String z = zipFile + "\0";
+            byte[] zpath = z.getBytes("utf-8");
+            String n = name + "\0";
+            byte[] npath = n.getBytes("utf-8");
+            return getEntryIndex(zpath, npath) >= 0;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return false;
+    }
+
     /**
-     *
      * save file to zip File
      *
      * @param zipFile
@@ -73,7 +84,7 @@ public class Zip {
         return 0;
     }
 
-    public static String[] listFiles0(String zipFile) {
+    public static String[] listFiles(String zipFile) {
         try {
             String z = zipFile + "\0";
             byte[] zpath = z.getBytes("utf-8");
@@ -108,6 +119,8 @@ public class Zip {
     static native byte[] getEntry0(byte[] zippath, byte[] path);
 
     static native int putEntry0(byte[] zippath, byte[] path, byte[] contents);
+
+    static native int getEntryIndex(byte[] zippath, byte[] path);
 
     static native int fileCount0(byte[] zippath);
 
