@@ -366,6 +366,10 @@ s64 _garbage_collect(GcCollector *collector) {
                         instance_finalize((Instance *) curmb, collector->runtime);
                         if (!head) {
                             head = tail = curmb;
+//                            if (curmb->tmp_next) {
+//                                s32 debug = 1;
+//                            }
+                            curmb->tmp_next = NULL;
                         } else {
                             curmb->tmp_next = head;
                             head = curmb;
@@ -381,6 +385,10 @@ s64 _garbage_collect(GcCollector *collector) {
                         instance_of_reference_enqueue((Instance *) curmb, collector->runtime);
                         if (!head) {
                             head = tail = curmb;
+//                            if (curmb->tmp_next) {
+//                                s32 debug = 1;
+//                            }
+                            curmb->tmp_next = NULL;
                         } else {
                             curmb->tmp_next = head;
                             head = curmb;
@@ -593,6 +601,16 @@ s32 _gc_copy_objs_from_thread(Runtime *pruntime) {
 
     Runtime *runtime = pruntime;
     RuntimeStack *stack = runtime->stack;
+
+//    jvm_printf("stack:%llx:", (s64) (intptr_t) stack);
+//    s32 j;
+//    for (j = stack_size(stack); j < stack->max_size; j++) {
+//        if ((stack->store + j)->rvalue) {
+//            jvm_printf("%d->%llx,", j, (s64) (intptr_t) (stack->store + j)->rvalue);
+//        }
+//    }
+//    jvm_printf("\n");
+
     //reset free stack space
     memset(stack->sp, 0, sizeof(StackEntry) * (stack->max_size - stack_size(stack)));
 
@@ -607,7 +625,7 @@ s32 _gc_copy_objs_from_thread(Runtime *pruntime) {
     MemoryBlock *next = runtime->thrd_info->tmp_holder;
     for (; next;) {
         arraylist_push_back_unsafe(collector->runtime_refer_copy, next);
-        next = next->tmp_next;
+        next = next->hold_next;
     }
 
     //jvm_printf("[%llx] notified\n", (s64) (intptr_t) pruntime->threadInfo->jthread);
