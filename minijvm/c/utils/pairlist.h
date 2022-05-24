@@ -6,7 +6,6 @@
 #define MINI_JVM_PAIRLIST_H
 
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -70,7 +69,7 @@ static inline intptr_t pairlist_getl(Pairlist *list, intptr_t left) {
 static inline s32 pairlist_put(Pairlist *list, __refer left, __refer right) {
     if (list->count >= list->_alloced) {//空间不足
         s32 newSize = list->_alloced << 1;
-        void *p = jvm_realloc(list->ptr, (newSize << 1) * (sizeof(__refer) << 1));
+        void *p = jvm_realloc(list->ptr, newSize * sizeof(Pair));
         list->_alloced = newSize;
         list->ptr = p;
     }
