@@ -507,8 +507,8 @@ s32 execute_method(MethodInfo *method, Runtime *runtime) {
     if (!runtime || !method) {
         return RUNTIME_STATUS_ERROR;
     }
-    jthread_block_exit(runtime);
+    //jthread_block_exit(runtime);
     s32 ret = execute_method_impl(method, runtime);
-    jthread_block_enter(runtime);
+    //jthread_block_enter(runtime);// comment it ,it cause jthread enter fake blocking state, call_bc-> call_native-> call_bc->(here error)
     return ret;
 }

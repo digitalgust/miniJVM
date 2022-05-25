@@ -39,7 +39,8 @@ struct _GcCollectorType {
     //
     u8 _garbage_thread_status;
     u8 mark_cnt;
-    u8 isgc;
+    volatile u8 isgc;
+    volatile u8 isworldstoped;
     s16 exit_flag;
     s16 exit_code;
 };

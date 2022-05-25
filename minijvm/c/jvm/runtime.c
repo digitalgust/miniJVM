@@ -131,6 +131,17 @@ void runtime_destory(Runtime *runtime) {
     runtime_destory_inl(runtime);
 }
 
+void print_runtime_stack(Runtime *r) {
+    if (!r)return;
+    Runtime *trun = getLastSon(r);
+    jvm_printf("call stack:\n");
+    while (trun) {
+        if (!trun->parent)break;
+        if (trun->method)jvm_printf("    %s.%s\n", utf8_cstr(trun->method->_this_class->name), utf8_cstr(trun->method->name));
+        trun = trun->parent;
+    }
+}
+
 s32 getRuntimeDepth(Runtime *top) {
     top = top->thrd_info->top_runtime;
     s32 deep = 0;

@@ -43,6 +43,7 @@ public class GuiScriptLib extends Lib {
         methodNames.put("getListIdx".toLowerCase(), 22);//
         methodNames.put("setImgAlphaStr".toLowerCase(), 23);//
         methodNames.put("setEnable".toLowerCase(), 24);//
+        methodNames.put("setListIdx".toLowerCase(), 25);//
     }
 
     ;
@@ -112,6 +113,8 @@ public class GuiScriptLib extends Lib {
                 return setImgAlphaStr(inp, para);
             case 24:
                 return setEnable(inp, para);
+            case 25:
+                return setListIdx(inp, para);
             default:
         }
         return null;
@@ -442,6 +445,24 @@ public class GuiScriptLib extends Lib {
             selectIndex = ((GList) gobj).getSelectedIndex();
         }
         return inp.getCachedInt(selectIndex);
+    }
+
+
+    public DataType setListIdx(Interpreter inp, ArrayList<DataType> para) {
+        Str str = Interpreter.vPopBack(para);
+        String compont = str.getVal();
+        inp.putCachedStr(str);
+        Int idxInt = Interpreter.vPopBack(para);
+        int idx = idxInt.getValAsInt();
+        inp.putCachedInt(idxInt);
+        GObject gobj = GToolkit.getComponent(compont);
+        if (gobj != null && gobj instanceof GList) {
+            GList list = (GList) gobj;
+            if (idx >= 0 && idx < list.getElements().size()) {
+                list.setSelectedIndex(idx);
+            }
+        }
+        return null;
     }
 
     private DataType setImgAlphaStr(Interpreter inp, ArrayList<DataType> para) {

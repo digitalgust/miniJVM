@@ -1239,7 +1239,7 @@ struct _JavaThreadInfo {
     u16 volatile no_pause;  //can't pause when clinit
     u8 volatile thread_status;
     u8 volatile is_suspend;
-    u8 volatile is_blocking;
+    u8 volatile is_blocking;// some of native method will enter blocking state
     u8 is_interrupt;
 
     thrd_t pthread;
@@ -1277,6 +1277,7 @@ typedef struct _StackEntry {
 struct _StackFrame {
     StackEntry *store;
     StackEntry *sp;
+    StackEntry *gc_clean;
     s32 max_size;
 };
 
@@ -1475,6 +1476,8 @@ Runtime *getTopRuntime(Runtime *runtime);
 s64 getInstructPointer(Runtime *runtime);
 
 void getRuntimeStack(Runtime *runtime, Utf8String *ustr);
+
+void print_runtime_stack(Runtime *r);
 
 s32 getRuntimeDepth(Runtime *top);
 

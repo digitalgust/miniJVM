@@ -313,6 +313,7 @@ s64 _garbage_collect(GcCollector *collector) {
             jvm_printf("gc canceled ");
             return -1;
         }
+        collector->isworldstoped = 1;
         //jvm_printf("garbage_pause_the_world %lld\n", (currentTimeMillis() - time));
         //time = currentTimeMillis();
         if (collector->tmp_header) {
@@ -338,6 +339,7 @@ s64 _garbage_collect(GcCollector *collector) {
         //jvm_printf("garbage_big_search %lld\n", (currentTimeMillis() - time));
         //time = currentTimeMillis();
 
+        collector->isworldstoped = 0;
         _gc_resume_the_world(jvm);
     }
     vm_share_unlock(jvm);
@@ -523,8 +525,18 @@ s32 _gc_resume_the_world(MiniJVM *jvm) {
 
 
 s32 _gc_wait_thread_suspend(MiniJVM *jvm, Runtime *runtime) {
+#if _JVM_DEBUG_LOG_LEVEL > 1
+    if (runtime->thrd_info->is_blocking) {
+        s32 debug = 1;
+        Runtime *r = getLastSon(runtime);
+        jvm_printf("blocking on: %s.%s\n", utf8_cstr(r->method->_this_class->name), utf8_cstr(r->method->name));
+        if (!(utf8_equals_c(r->method->name, "wait") || utf8_equals_c(r->method->name, "sleep"))) {
+            s32 debug = 1;
+        }
+    }
+#endif
     while (!(runtime->thrd_info->is_suspend) &&
-           !(runtime->thrd_info->is_blocking)) { // if a native method blocking , must set thread status is wait before enter native method
+           !(runtime->thrd_info->is_blocking)) { //
         vm_share_notifyall(jvm);
         vm_share_timedwait(jvm, 1);
         if (jvm->collector->_garbage_thread_status != GARBAGE_THREAD_NORMAL) {
@@ -612,6 +624,7 @@ s32 _gc_copy_objs_from_thread(Runtime *pruntime) {
 //    jvm_printf("\n");
 
     //reset free stack space
+    stack->gc_clean = stack->sp;
     memset(stack->sp, 0, sizeof(StackEntry) * (stack->max_size - stack_size(stack)));
 
     s32 i, imax;

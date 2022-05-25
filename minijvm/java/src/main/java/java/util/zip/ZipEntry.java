@@ -8,7 +8,6 @@ package java.util.zip;
 import org.mini.zip.Zip;
 
 /**
- *
  * @author Gust
  */
 public class ZipEntry {

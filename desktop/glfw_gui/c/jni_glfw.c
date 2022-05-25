@@ -1041,7 +1041,9 @@ int org_mini_glfw_Glfw_glfwSwapBuffers(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     GLFWwindow *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
+    env->jthread_block_enter(runtime);//swapbuffers may spent long times , it will blocking gc STW
     glfwSwapBuffers(window);
+    env->jthread_block_exit(runtime);
     return 0;
 }
 

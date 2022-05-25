@@ -3,6 +3,7 @@
 #include "jvm.h"
 #include "jvm_util.h"
 #include "jit.h"
+#include "garbage.h"
 
 
 /* ==================================opcode implementation =============================*/
@@ -601,6 +602,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     }
                     sp = stack->sp;
                     check_gc_pause(-1);
+#if _JVM_DEBUG_LOG_LEVEL > 1
+                    if (jvm->collector->isworldstoped) {
+                        jvm_printf("[ERROR] world stoped, but thread is running: %llx\n", (s64) (intptr_t) runtime->thrd_info->jthread);
+                    }
+#endif
                     //}
 #endif
 

@@ -3,31 +3,28 @@ package java.util.zip;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Enumeration;
 import java.util.Vector;
+
 import org.mini.zip.Zip;
 
 public class ZipFile {
 
     String zipFileName;
-    Vector<ZipEntry> files;
 
     //打开供阅读的 ZIP 文件，由指定的 File 对象给出。 
     public ZipFile(File file) {
         zipFileName = file.getAbsolutePath();
-        entries();
     }
     //打开新的 ZipFile 以使用指定模式从指定 File 对象读取。 
 
     public ZipFile(File file, int mode) {
         zipFileName = file.getAbsolutePath();
-        entries();
     }
-    //打开 ZIP 文件进行阅读。 
 
     public ZipFile(String name) {
         zipFileName = name;
-        entries();
     }
 
     //关闭 ZIP 文件。 
@@ -37,13 +34,12 @@ public class ZipFile {
     //返回 ZIP 文件条目的枚举。 
 
     public Enumeration<? extends ZipEntry> entries() {
+        Vector<ZipEntry> files;
         String[] fns = Zip.listFiles(zipFileName);
-        if (files == null) {
-            files = new Vector();
-            for (String s : fns) {
-                ZipEntry entry = new ZipEntry(s);
-                files.add(entry);
-            }
+        files = new Vector();
+        for (String s : fns) {
+            ZipEntry entry = new ZipEntry(s);
+            files.add(entry);
         }
         return files.elements();
     }
@@ -58,10 +54,11 @@ public class ZipFile {
         if (entryName == null) {
             return null;
         }
-        for (ZipEntry ze : files) {
-            if (entryName.equals(ze.name)) {
-                return ze;
-            }
+        while (entryName.startsWith("/")) entryName = entryName.substring(1);
+        boolean exist = Zip.isEntryExist(zipFileName, entryName);
+        if (exist) {
+            ZipEntry entry = new ZipEntry(entryName);
+            return entry;
         }
         return null;
     }
