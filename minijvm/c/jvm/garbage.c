@@ -525,11 +525,11 @@ s32 _gc_resume_the_world(MiniJVM *jvm) {
 
 
 s32 _gc_wait_thread_suspend(MiniJVM *jvm, Runtime *runtime) {
-#if _JVM_DEBUG_LOG_LEVEL > 1
+#if _JVM_DEBUG_LOG_LEVEL > 2
     if (runtime->thrd_info->is_blocking) {
         s32 debug = 1;
         Runtime *r = getLastSon(runtime);
-        jvm_printf("blocking on: %s.%s\n", utf8_cstr(r->method->_this_class->name), utf8_cstr(r->method->name));
+        jvm_printf("STW blocking on: %s.%s\n", utf8_cstr(r->method->_this_class->name), utf8_cstr(r->method->name));
         if (!(utf8_equals_c(r->method->name, "wait") || utf8_equals_c(r->method->name, "sleep"))) {
             s32 debug = 1;
         }

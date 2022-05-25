@@ -3007,7 +3007,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     stack->sp = sp;
                                     m = find_instance_methodInfo_by_name(ins, cmr->name, cmr->descriptor, runtime);
                                     sp = stack->sp;
-                                    pairlist_put(cmr->virtual_methods, ins->mb.clazz, m);//放入缓存，以便下次直接调用
+                                    spin_lock(&jvm->lock_cloader);
+                                    {
+                                        pairlist_put(cmr->virtual_methods, ins->mb.clazz, m);//放入缓存，以便下次直接调用
+                                    }
+                                    spin_unlock(&jvm->lock_cloader);
                                 }
 
                                 if (!m) {
@@ -3097,7 +3101,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     stack->sp = sp;
                                     m = find_instance_methodInfo_by_name(ins, cmr->name, cmr->descriptor, runtime);
                                     sp = stack->sp;
-                                    pairlist_put(cmr->virtual_methods, ins->mb.clazz, m);//放入缓存，以便下次直接调用
+                                    spin_lock(&jvm->lock_cloader);
+                                    {
+                                        pairlist_put(cmr->virtual_methods, ins->mb.clazz, m);//放入缓存，以便下次直接调用
+                                    }
+                                    spin_unlock(&jvm->lock_cloader);
                                 }
                                 if (!m) {
                                     err_msg = utf8_cstr(cmr->name);
@@ -3184,7 +3192,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             stack->sp = sp;
                             if (!other) {//cache to speed
                                 other = array_class_get_by_name(runtime, runtime->clazz->jloader, class_get_utf8_string(clazz, idx));
-                                pairlist_put(clazz->arr_class_type, (__refer) (intptr_t) idx, other);
+                                spin_lock(&jvm->lock_cloader);
+                                {
+                                    pairlist_put(clazz->arr_class_type, (__refer) (intptr_t) idx, other);
+                                }
+                                spin_unlock(&jvm->lock_cloader);
                             }
                             ins = jarray_create_by_class(runtime, count, other);
                             sp = stack->sp;

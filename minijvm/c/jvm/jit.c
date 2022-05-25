@@ -1065,7 +1065,11 @@ s32 invokevirtual(Runtime *runtime, s32 idx) {
         MethodInfo *m = (MethodInfo *) pairlist_get(cmr->virtual_methods, ins->mb.clazz);
         if (!m) {
             m = find_instance_methodInfo_by_name(ins, cmr->name, cmr->descriptor, runtime);
-            pairlist_put(cmr->virtual_methods, ins->mb.clazz, m);//放入缓存，以便下次直接调用
+            spin_lock(&runtime->jvm->lock_cloader);
+            {
+                pairlist_put(cmr->virtual_methods, ins->mb.clazz, m);//放入缓存，以便下次直接调用
+            }
+            spin_unlock(&runtime->jvm->lock_cloader);
         }
 
         if (!m) {
@@ -2898,7 +2902,11 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
                 if (!arr_class) {//cache to speed
                     arr_class = array_class_get_by_name(runtime, runtime->clazz->jloader, class_get_utf8_string(clazz, idx));
-                    pairlist_put(clazz->arr_class_type, (__refer) (intptr_t) idx, arr_class);
+                    spin_lock(&runtime->jvm->lock_cloader);
+                    {
+                        pairlist_put(clazz->arr_class_type, (__refer) (intptr_t) idx, arr_class);
+                    }
+                    spin_unlock(&runtime->jvm->lock_cloader);
                 }
 
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
