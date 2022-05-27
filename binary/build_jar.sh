@@ -50,14 +50,13 @@ build_jar(){
     find $2/java -name "*.java" >source.txt
 
     v="$(jdk_version)"
-    v3=$(echo $v | bc)
+    v3=$((10#${v}))
     if [ $v3 > 8 ]; then
         ${JAVAC} --release 8 -cp $4:$5 -encoding "utf-8" -d classes @source.txt
     else
         ${JAVAC} -bootclasspath $4 -cp $5 -encoding "utf-8" -d classes @source.txt
     fi
 
-    ${JAVAC} --release 8 -cp $4:$5 -encoding "utf-8" -d classes @source.txt
     cp -R $2/resource/* classes/
     ${JAR} cf $1 -C classes ./
     rm -rf source.txt
