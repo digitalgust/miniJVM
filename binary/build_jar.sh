@@ -50,8 +50,8 @@ build_jar(){
     find $2/java -name "*.java" >source.txt
 
     v="$(jdk_version)"
-    v3=$((10#${v}))
-    if [ $v3 > 8 ]; then
+    v3="$((10#${v}*1))"
+    if [[ ${v3} -gt 8 ]]; then
         ${JAVAC} --release 8 -cp $4:$5 -encoding "utf-8" -d classes @source.txt
     else
         ${JAVAC} -bootclasspath $4 -cp $5 -encoding "utf-8" -d classes @source.txt
@@ -65,6 +65,11 @@ build_jar(){
 }
 
 
+v="$(jdk_version)"
+v3="$((10#${v}*1))"
+echo "java version: ${v3}"
+
+
 mkdir lib
 mkdir libex
 
@@ -76,5 +81,4 @@ $(build_jar glfw_gui.jar ../desktop/glfw_gui/java/src/main libex "lib/minijvm_rt
 
 echo "build libex/minijvm_test.jar"
 $(build_jar minijvm_test.jar ../test/minijvm_test/src/main libex "lib/minijvm_rt.jar" ".")
-
 
