@@ -13,7 +13,7 @@ if exist  %GCCHOME% (
 ) else (
     echo [ERROR]gcc not found
     echo [INFO]http://mingw-w64.org/ 
-    echo [INFO]Please download gcc: https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/8.1.0/threads-posix/sjlj/x86_64-8.1.0-release-posix-sjlj-rt_v6-rev0.7z
+    echo [INFO]Please download gcc: https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/installer/mingw-w64-install.exe
     echo [INFO]Change GCCHOME with installed directory
     goto :eof
 )
