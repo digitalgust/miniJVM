@@ -39,7 +39,6 @@
 		459A79C323A32B19007C85C6 /* jit.c in Sources */ = {isa = PBXBuildFile; fileRef = 459A79C123A32B18007C85C6 /* jit.c */; };
 		459A79EA23A32B29007C85C6 /* sljitLir.c in Sources */ = {isa = PBXBuildFile; fileRef = 459A79D523A32B29007C85C6 /* sljitLir.c */; };
 		45EAB02820DCDC2300896201 /* pcallstack.m in Sources */ = {isa = PBXBuildFile; fileRef = 45EAB02720DCDC2300896201 /* pcallstack.m */; };
-		45ECB7A3206D01C700CF9E7F /* libjnitest.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45ECB79C206D017900CF9E7F /* libjnitest.dylib */; };
 		45ECB7A4206D01CC00CF9E7F /* libgui.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45ECB79E206D017A00CF9E7F /* libgui.dylib */; };
 		45F99794253B6AAE0053E7A0 /* version_features.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F9974D253B6AAB0053E7A0 /* version_features.c */; };
 		45F99795253B6AAE0053E7A0 /* x509write_csr.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F9974E253B6AAB0053E7A0 /* x509write_csr.c */; };
@@ -126,7 +125,6 @@
 				4523723C20C94B9300156C58 /* lib in CopyFiles */,
 				4523723B20C94B8B00156C58 /* res in CopyFiles */,
 				45ECB7A4206D01CC00CF9E7F /* libgui.dylib in CopyFiles */,
-				45ECB7A3206D01C700CF9E7F /* libjnitest.dylib in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -186,7 +184,6 @@
 		459A79CC23A32B29007C85C6 /* sljitLir.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sljitLir.h; sourceTree = "<group>"; };
 		459A79D523A32B29007C85C6 /* sljitLir.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitLir.c; sourceTree = "<group>"; };
 		45EAB02720DCDC2300896201 /* pcallstack.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = pcallstack.m; sourceTree = "<group>"; };
-		45ECB79C206D017900CF9E7F /* libjnitest.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libjnitest.dylib; path = ../../binary/macos/libjnitest.dylib; sourceTree = "<group>"; };
 		45ECB79E206D017A00CF9E7F /* libgui.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgui.dylib; path = ../../binary/macos/libgui.dylib; sourceTree = "<group>"; };
 		45F99748253B6A9E0053E7A0 /* ca_cert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ca_cert.h; path = https/ca_cert.h; sourceTree = "<group>"; };
 		45F9974D253B6AAB0053E7A0 /* version_features.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = version_features.c; path = https/mbedtls/library/version_features.c; sourceTree = "<group>"; };
@@ -354,7 +351,6 @@
 				4523723A20C8ECA500156C58 /* res */,
 				4523723920C8EC8C00156C58 /* lib */,
 				45ECB79E206D017A00CF9E7F /* libgui.dylib */,
-				45ECB79C206D017900CF9E7F /* libjnitest.dylib */,
 				457248E02020AAC600349683 /* jvm_macos */,
 				457248DF2020AAC600349683 /* Products */,
 				457249322020AFAA00349683 /* Frameworks */,

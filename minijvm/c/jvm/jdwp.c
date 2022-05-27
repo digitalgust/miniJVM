@@ -73,6 +73,7 @@ s32 jdwp_thread_listener(void *para) {
         JdwpClient *client = jdwp_client_create(jdwpserver);
         s32 ret = mbedtls_net_accept(&jdwpserver->srvsock, &client->sockfd, NULL, 0, NULL);
         if (ret < 0) {
+            jdwp_client_destory(client);
             jdwpserver->exit = 1;
             break;
         }
@@ -80,7 +81,7 @@ s32 jdwp_thread_listener(void *para) {
         mbedtls_net_set_nonblock(&client->sockfd);
         jdwp_put_client(jdwpserver->clients, client);
     }
-
+    jdwpserver->mode &= ~JDWP_MODE_LISTEN;
     return 0;
 }
 
@@ -100,7 +101,7 @@ s32 jdwp_thread_dispacher(void *para) {
         }
         threadSleep(20);
     }
-
+    srv->mode &= ~JDWP_MODE_DISPATCH;
     return 0;
 }
 
@@ -131,11 +132,11 @@ s32 jdwp_start_server(MiniJVM *jvm) {
 s32 jdwp_stop_server(MiniJVM *jvm) {
     if (!jvm->jdwp_enable)return 0;
     JdwpServer *jdwpserver = jvm->jdwpserver;
-    while (jdwpserver->mode != JDWP_MODE_LISTEN + JDWP_MODE_DISPATCH) {
-        threadSleep(10);
-    }
     jdwpserver->exit = 1;
     mbedtls_net_free(&jdwpserver->srvsock);
+    while (jdwpserver->mode != 0) {
+        threadSleep(10);
+    }
     s32 i;
     //
     for (i = 0; i < jdwpserver->clients->length; i++) {

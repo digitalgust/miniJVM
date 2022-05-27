@@ -21,7 +21,7 @@ int call_jvm(char* app_path) {
         char path[512];
         memset(&path,0,512);
         strcat(path,app_path);
-        strcat(path,"/libex/luaj.jar");
+        strcat(path,"/libex/glfw_gui.jar");
         strcat(path,";");
         strcat(path,app_path);
         strcat(path,"/libex/minijvm_test.jar");
@@ -29,10 +29,11 @@ int call_jvm(char* app_path) {
 
         ArrayList * java_para=arraylist_create(0);
     MiniJVM *jvm=jvm_create();
+    jvm->jdwp_enable = 1;
     ret = jvm_init(jvm, bootstrappath, path);
     //ret = call_main(jvm, "test/HttpServer", java_para);
     //ret = call_main(jvm, "test/BpDeepTest", java_para);
-    ret = call_main(jvm, "test.SpecTest", java_para);
+    ret = call_main(jvm, "org.mini.glfw.GlfwMain", java_para);
     //ret = call_main(jvm, "test/ReflectTest", java_para);
     //ret = call_main(jvm, "test/LambdaTest", java_para);
         arraylist_destory(java_para);

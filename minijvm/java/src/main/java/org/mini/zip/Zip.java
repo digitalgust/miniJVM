@@ -44,11 +44,24 @@ public class Zip {
             byte[] zpath = z.getBytes("utf-8");
             String n = name + "\0";
             byte[] npath = n.getBytes("utf-8");
-            return getEntryIndex(zpath, npath) >= 0;
+            return getEntryIndex0(zpath, npath) >= 0;
         } catch (Exception ex) {
             ex.printStackTrace();
         }
         return false;
+    }
+
+    public static long getEntrySize(String zipFile, String name) {
+        try {
+            String z = zipFile + "\0";
+            byte[] zpath = z.getBytes("utf-8");
+            String n = name + "\0";
+            byte[] npath = n.getBytes("utf-8");
+            return getEntrySize0(zpath, npath);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return -1;
     }
 
     /**
@@ -120,7 +133,9 @@ public class Zip {
 
     static native int putEntry0(byte[] zippath, byte[] path, byte[] contents);
 
-    static native int getEntryIndex(byte[] zippath, byte[] path);
+    static native int getEntryIndex0(byte[] zippath, byte[] path);
+
+    static native long getEntrySize0(byte[] zippath, byte[] path);
 
     static native int fileCount0(byte[] zippath);
 
