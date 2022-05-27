@@ -341,6 +341,10 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     gc_move_objs_thread_2_gc(runtime);
     runtime_destory(runtime);
     runtime = NULL;
+
+    //启动垃圾回收
+    gc_resume(jvm->collector);
+
 #if _JVM_DEBUG_LOG_LEVEL > 0
     jvm_printf("[INFO]jvm inited\n");
 #endif

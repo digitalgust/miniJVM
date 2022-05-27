@@ -76,9 +76,6 @@ s32 gc_create(MiniJVM *jvm) {
     s32 rc = thrd_create(&collector->garbage_thread, _gc_thread_run, collector);
     if (rc != thrd_success) {
         jvm_printf("ERROR: garbage thread can't create is %d\n", rc);
-    } else {
-        //启动垃圾回收
-        gc_resume(collector);
     }
     return 0;
 }
