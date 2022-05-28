@@ -17,7 +17,7 @@ void JNI_OnLoad_mini(MiniJVM *jvm) {
     env->native_reg_lib(jvm, ptr_GlfmFuncTable(), count_GlfmFuncTable());
     env->native_reg_lib(jvm, ptr_GLFuncTable(), count_GLFuncTable());
     env->native_reg_lib(jvm, ptr_NanovgFuncTable(), count_NanovgFuncTable());
-    env->native_reg_lib(jvm, ptr_MiniALFuncTable(), count_MiniALFuncTable());
+    env->native_reg_lib(jvm, ptr_MiniAudioFuncTable(), count_MiniAudioFuncTable());
 }
 
 void JNI_OnUnload_mini(MiniJVM *jvm) {

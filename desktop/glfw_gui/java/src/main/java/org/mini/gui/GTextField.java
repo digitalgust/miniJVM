@@ -167,7 +167,14 @@ public class GTextField extends GTextObject {
                             deleteTextByIndex(caretIndex);
                         }
                     }
+                } else if (key == Glfw.GLFW_KEY_ENTER) {
+                    if (actionListener != null) {
+                        doAction();
+                    } else if (unionObj != null) {
+                        unionObj.doAction();
+                    }
                 }
+
                 if ((mods & Glfw.GLFW_MOD_CONTROL) != 0) {
                     switch (key) {
                         case Glfw.GLFW_KEY_C: {
@@ -261,8 +268,22 @@ public class GTextField extends GTextObject {
 
     @Override
     public void characterEvent(String str, int mods) {
-        insertTextByIndex(caretIndex, str);
-        setCaretIndex(caretIndex + str.length());
+        if (enable) {
+            boolean containEnter = false;
+            if (str.indexOf('\n') >= 0) {
+                str = str.replace("\n", "");
+                containEnter = true;
+            }
+            insertTextByIndex(caretIndex, str);
+            setCaretIndex(caretIndex + str.length());
+            if (containEnter) {
+                if (actionListener != null) {
+                    doAction();
+                } else if (unionObj != null) {
+                    unionObj.doAction();
+                }
+            }
+        }
     }
 
     /**
@@ -271,34 +292,18 @@ public class GTextField extends GTextObject {
     @Override
     public void characterEvent(char character) {
         if (enable) {
-            if (character != '\n' && character != '\r' && textsb.length() < text_max) {
-                insertTextByIndex(caretIndex, character);
-                setCaretIndex(caretIndex + 1);
-            }
-        }
-    }
-
-    @Override
-    public void keyEventGlfm(int key, int action, int mods) {
-
-        if (action == Glfm.GLFMKeyActionPressed || action == Glfm.GLFMKeyActionRepeated) {
-            if (enable) {
-                switch (key) {
-                    case Glfm.GLFMKeyBackspace: {
-                        if (textsb.length() > 0 && caretIndex > 0) {
-                            int[] selectFromTo = getSelected();
-                            if (selectFromTo != null) {
-                                deleteSelectedText();
-                                text_arr = null;
-                            } else {
-                                setCaretIndex(caretIndex - 1);
-                                deleteTextByIndex(caretIndex);
-                            }
-                        }
-                    }
+            if (character != '\n') {
+                if (character != '\r' && textsb.length() < text_max) {
+                    insertTextByIndex(caretIndex, character);
+                    setCaretIndex(caretIndex + 1);
+                }
+            } else {
+                if (actionListener != null) {
+                    doAction();
+                } else if (unionObj != null) {
+                    unionObj.doAction();
                 }
             }
-
         }
     }
 

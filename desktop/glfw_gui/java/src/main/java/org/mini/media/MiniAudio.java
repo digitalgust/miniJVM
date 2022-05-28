@@ -11,7 +11,7 @@ import org.mini.glfw.Glfw;
  *
  * @author Gust
  */
-public class MiniAL {
+public class MiniAudio {
 
     static {
         Glfw.loadLib();

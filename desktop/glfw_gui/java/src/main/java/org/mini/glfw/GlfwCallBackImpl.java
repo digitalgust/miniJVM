@@ -156,14 +156,14 @@ public class GlfwCallBackImpl extends GCallBack {
                     glfwSwapBuffers(display);
                 }
                 glfwPollEvents();
-//                count++;
-//                now = System.currentTimeMillis();
-//                if (now - last > 1000) {
-//                    //System.out.println("fps:" + count);
-//                    fps = count;
-//                    last = now;
-//                    count = 0;
-//                }
+                count++;
+                now = System.currentTimeMillis();
+                if (now - last > 1000) {
+                    //System.out.println("fps:" + count);
+                    fps = count;
+                    last = now;
+                    count = 0;
+                }
 //
 //                cost = now - startAt;
 //                if (cost < 1000 / fpsExpect) {
@@ -317,6 +317,10 @@ public class GlfwCallBackImpl extends GCallBack {
             if (gform == null) {
                 return;
             }
+            //form maybe translate when keyboard popup
+            x += gform.getX();
+            y += gform.getY();
+
             if (display == window) {
                 mouseX = x;
                 mouseY = y;

@@ -667,7 +667,7 @@ s32 java_lang_String_replace0(Runtime *runtime, JClass *clazz) {
 
     s32 src_count = jstring_get_count(src, runtime);
     s32 dst_count = jstring_get_count(dst, runtime);
-    if (count == 0 || src == NULL || dst == NULL || src_count == 0 || dst_count == 0) {
+    if (count == 0 || src == NULL || dst == NULL || src_count == 0) {
         Instance *jchar_arr = jarray_create_by_type_index(runtime, count, DATATYPE_JCHAR);
         memcpy((c8 *) jchar_arr->arr_body, (c8 *) &value[offset], count * sizeof(u16));
         push_ref(stack, jchar_arr);

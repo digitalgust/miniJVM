@@ -164,7 +164,7 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uin
 //jni
 //==========================================================================================
 
-int org_mini_media_MiniAL_ma_context_init(Runtime *runtime, JClass *clazz) {
+int org_mini_media_MiniAudio_ma_context_init(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
 
     ma_context *handle_context = env->jvm_calloc(sizeof(ma_context));
@@ -177,7 +177,7 @@ int org_mini_media_MiniAL_ma_context_init(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-int org_mini_media_MiniAL_ma_context_uninit(Runtime *runtime, JClass *clazz) {
+int org_mini_media_MiniAudio_ma_context_uninit(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     ma_context *
@@ -191,7 +191,7 @@ int org_mini_media_MiniAL_ma_context_uninit(Runtime *runtime, JClass *clazz) {
 }
 
 
-int org_mini_media_MiniAL_ma_decoder_init_file(Runtime *runtime, JClass *clazz) {
+int org_mini_media_MiniAudio_ma_decoder_init_file(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     Instance *path = env->localvar_getRefer(runtime->localvar, pos++);
@@ -213,7 +213,7 @@ int org_mini_media_MiniAL_ma_decoder_init_file(Runtime *runtime, JClass *clazz) 
 }
 
 
-int org_mini_media_MiniAL_ma_decoder_init_memory(Runtime *runtime, JClass *clazz) {
+int org_mini_media_MiniAudio_ma_decoder_init_memory(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     Instance *data = env->localvar_getRefer(runtime->localvar, pos++);
@@ -234,7 +234,7 @@ int org_mini_media_MiniAL_ma_decoder_init_memory(Runtime *runtime, JClass *clazz
     return 0;
 }
 
-int org_mini_media_MiniAL_ma_decoder_get_para(Runtime *runtime, JClass *clazz) {
+int org_mini_media_MiniAudio_ma_decoder_get_para(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     ma_decoder *handle_decoder = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
@@ -248,7 +248,7 @@ int org_mini_media_MiniAL_ma_decoder_get_para(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-int org_mini_media_MiniAL_ma_decoder_read(Runtime *runtime, JClass *clazz) {
+int org_mini_media_MiniAudio_ma_decoder_read(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     ma_decoder *handle_decoder = (__refer) (intptr_t)
@@ -270,7 +270,7 @@ int org_mini_media_MiniAL_ma_decoder_read(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-int org_mini_media_MiniAL_ma_decoder_uninit(Runtime *runtime, JClass *clazz) {
+int org_mini_media_MiniAudio_ma_decoder_uninit(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     ma_decoder *
@@ -330,7 +330,7 @@ void setupCallback(Runtime *runtime, JClass *clazz) {
 
 }
 
-int org_mini_media_MiniAL_ma_device_init(Runtime *runtime, JClass *clazz) {
+int org_mini_media_MiniAudio_ma_device_init(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
 
@@ -369,7 +369,7 @@ int org_mini_media_MiniAL_ma_device_init(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-int org_mini_media_MiniAL_ma_device_uninit(Runtime *runtime, JClass *clazz) {
+int org_mini_media_MiniAudio_ma_device_uninit(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     __refer
@@ -382,7 +382,7 @@ int org_mini_media_MiniAL_ma_device_uninit(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-int org_mini_media_MiniAL_ma_device_start(Runtime *runtime, JClass *clazz) {
+int org_mini_media_MiniAudio_ma_device_start(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     __refer
@@ -394,7 +394,7 @@ int org_mini_media_MiniAL_ma_device_start(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-int org_mini_media_MiniAL_ma_device_stop(Runtime *runtime, JClass *clazz) {
+int org_mini_media_MiniAudio_ma_device_stop(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     __refer
@@ -406,7 +406,7 @@ int org_mini_media_MiniAL_ma_device_stop(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-int org_mini_media_MiniAL_ma_device_is_started(Runtime *runtime, JClass *clazz) {
+int org_mini_media_MiniAudio_ma_device_is_started(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     __refer
@@ -421,24 +421,24 @@ int org_mini_media_MiniAL_ma_device_is_started(Runtime *runtime, JClass *clazz) 
 
 static java_native_method method_minial_table[] = {
 
-        {"org/mini/media/MiniAL", "ma_context_init",        "()J",       org_mini_media_MiniAL_ma_context_init},
-        {"org/mini/media/MiniAL", "ma_context_uninit",      "(J)V",      org_mini_media_MiniAL_ma_context_uninit},
-        {"org/mini/media/MiniAL", "ma_decoder_init_file",   "([BIII)J",  org_mini_media_MiniAL_ma_decoder_init_file},
-        {"org/mini/media/MiniAL", "ma_decoder_init_memory", "([BIII)J",  org_mini_media_MiniAL_ma_decoder_init_memory},
-        {"org/mini/media/MiniAL", "ma_decoder_get_para",    "(J[I)V",    org_mini_media_MiniAL_ma_decoder_get_para},
-        {"org/mini/media/MiniAL", "ma_decoder_read",        "(JIJ)I",    org_mini_media_MiniAL_ma_decoder_read},
-        {"org/mini/media/MiniAL", "ma_decoder_uninit",      "(J)V",      org_mini_media_MiniAL_ma_decoder_uninit},
-        {"org/mini/media/MiniAL", "ma_device_init",         "(JIJIII)J", org_mini_media_MiniAL_ma_device_init},
-        {"org/mini/media/MiniAL", "ma_device_uninit",       "(J)V",      org_mini_media_MiniAL_ma_device_uninit},
-        {"org/mini/media/MiniAL", "ma_device_start",        "(J)V",      org_mini_media_MiniAL_ma_device_start},
-        {"org/mini/media/MiniAL", "ma_device_stop",         "(J)V",      org_mini_media_MiniAL_ma_device_stop},
-        {"org/mini/media/MiniAL", "ma_device_is_started",   "(J)I",      org_mini_media_MiniAL_ma_device_is_started},
+        {"org/mini/media/MiniAudio", "ma_context_init",        "()J",       org_mini_media_MiniAudio_ma_context_init},
+        {"org/mini/media/MiniAudio", "ma_context_uninit",      "(J)V",      org_mini_media_MiniAudio_ma_context_uninit},
+        {"org/mini/media/MiniAudio", "ma_decoder_init_file",   "([BIII)J",  org_mini_media_MiniAudio_ma_decoder_init_file},
+        {"org/mini/media/MiniAudio", "ma_decoder_init_memory", "([BIII)J",  org_mini_media_MiniAudio_ma_decoder_init_memory},
+        {"org/mini/media/MiniAudio", "ma_decoder_get_para",    "(J[I)V",    org_mini_media_MiniAudio_ma_decoder_get_para},
+        {"org/mini/media/MiniAudio", "ma_decoder_read",        "(JIJ)I",    org_mini_media_MiniAudio_ma_decoder_read},
+        {"org/mini/media/MiniAudio", "ma_decoder_uninit",      "(J)V",      org_mini_media_MiniAudio_ma_decoder_uninit},
+        {"org/mini/media/MiniAudio", "ma_device_init",         "(JIJIII)J", org_mini_media_MiniAudio_ma_device_init},
+        {"org/mini/media/MiniAudio", "ma_device_uninit",       "(J)V",      org_mini_media_MiniAudio_ma_device_uninit},
+        {"org/mini/media/MiniAudio", "ma_device_start",        "(J)V",      org_mini_media_MiniAudio_ma_device_start},
+        {"org/mini/media/MiniAudio", "ma_device_stop",         "(J)V",      org_mini_media_MiniAudio_ma_device_stop},
+        {"org/mini/media/MiniAudio", "ma_device_is_started",   "(J)I",      org_mini_media_MiniAudio_ma_device_is_started},
 };
 
-s32 count_MiniALFuncTable() {
+s32 count_MiniAudioFuncTable() {
     return sizeof(method_minial_table) / sizeof(java_native_method);
 }
 
-__refer ptr_MiniALFuncTable() {
+__refer ptr_MiniAudioFuncTable() {
     return &method_minial_table[0];
 }

@@ -210,6 +210,55 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         super.longTouchedEvent(x, y);
     }
 
+
+    @Override
+    public void keyEventGlfm(int key, int action, int mods) {
+        int glfwAction = 0;
+        if (action == Glfm.GLFMKeyActionPressed) {
+            glfwAction = Glfw.GLFW_PRESS;
+        } else if (action == Glfm.GLFMKeyActionRepeated) {
+            glfwAction = Glfw.GLFW_REPEAT;
+        } else if (action == Glfm.GLFMKeyActionReleased) {
+            glfwAction = Glfw.GLFW_RELEASE;
+        }
+        int glfwKey = Glfw.GLFW_KEY_UNKNOWN;
+        switch (key) {
+            case Glfm.GLFMKeyBackspace: {
+                glfwKey = Glfw.GLFW_KEY_BACKSPACE;
+                break;
+            }
+            case Glfm.GLFMKeyEnter: {
+                glfwKey = Glfw.GLFW_KEY_ENTER;
+                break;
+            } //move key
+            case Glfm.GLFMKeyLeft: {
+                glfwKey = Glfw.GLFW_KEY_LEFT;
+                break;
+            }
+            case Glfm.GLFMKeyRight: {
+                glfwKey = Glfw.GLFW_KEY_RIGHT;
+                break;
+            }
+            case Glfm.GLFMKeyUp: {
+                glfwKey = Glfw.GLFW_KEY_UP;
+                break;
+            }
+            case Glfm.GLFMKeyDown: {
+                glfwKey = Glfw.GLFW_KEY_DOWN;
+                break;
+            }
+        }
+        int glfwMod = 0;
+        if ((mods & Glfm.GLFMKeyModifierCtrl) != 0) {
+            glfwMod = glfwMod | Glfw.GLFW_MOD_CONTROL;
+        } else if ((mods & Glfm.GLFMKeyModifierShift) != 0) {
+            glfwMod = glfwMod | Glfw.GLFW_MOD_SHIFT;
+        } else if ((mods & Glfm.GLFMKeyModifierAlt) != 0) {
+            glfwMod = glfwMod | Glfw.GLFW_MOD_ALT;
+        }
+        keyEventGlfw(glfwKey, -1, glfwAction, glfwMod);
+    }
+
     static public boolean isEditMenuShown() {
         if (GToolkit.getEditMenu() == null) {
             return false;

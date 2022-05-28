@@ -22,16 +22,16 @@ public class AudioDecoder {
 
     public AudioDecoder(String path, int format, int channels, int sampleRate) {
         byte[] b = toUtf8(path);
-        handle_decoder = MiniAL.ma_decoder_init_file(b, format, channels, sampleRate);
-        MiniAL.ma_decoder_get_para(handle_decoder, para);
+        handle_decoder = MiniAudio.ma_decoder_init_file(b, format, channels, sampleRate);
+        MiniAudio.ma_decoder_get_para(handle_decoder, para);
     }
 
     public AudioDecoder(byte[] data, int format, int channels, int sampleRate) {
         if (data == null) {
             throw new NullPointerException();
         }
-        handle_decoder = MiniAL.ma_decoder_init_memory(data, format, channels, sampleRate);
-        MiniAL.ma_decoder_get_para(handle_decoder, para);
+        handle_decoder = MiniAudio.ma_decoder_init_memory(data, format, channels, sampleRate);
+        MiniAudio.ma_decoder_get_para(handle_decoder, para);
     }
 
     public int getFormat() {
@@ -48,14 +48,14 @@ public class AudioDecoder {
 
     public void finalize() {
         if (handle_decoder != 0) {
-            MiniAL.ma_decoder_uninit(handle_decoder);
+            MiniAudio.ma_decoder_uninit(handle_decoder);
             handle_decoder = 0;
         }
 
     }
 
     public int decode(AudioDevice dev, int frameCount, long pSample) {
-        return MiniAL.ma_decoder_read(handle_decoder, frameCount, pSample);
+        return MiniAudio.ma_decoder_read(handle_decoder, frameCount, pSample);
     }
 
     /**

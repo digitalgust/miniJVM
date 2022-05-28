@@ -75,11 +75,11 @@ public class AudioDevice {
 
     final void init() {
         checkThread();
-        handle_context = MiniAL.ma_context_init();
+        handle_context = MiniAudio.ma_context_init();
         if (handle_context == 0) {
             throw new RuntimeException("MiniAL: init context error");
         }
-        handle_device = MiniAL.ma_device_init(handle_context, deviceType, 0, format, channels, sampleRate);
+        handle_device = MiniAudio.ma_device_init(handle_context, deviceType, 0, format, channels, sampleRate);
         if (handle_device == 0) {
             throw new RuntimeException("MiniAL: init device error");
         } else {
@@ -90,19 +90,19 @@ public class AudioDevice {
 
     public void start() {
         checkThread();
-        MiniAL.ma_device_start(handle_device);
+        MiniAudio.ma_device_start(handle_device);
     }
 
     public void stop() {
         checkThread();
-        if (MiniAL.ma_device_is_started(handle_device) == 1) {
-            MiniAL.ma_device_stop(handle_device);
+        if (MiniAudio.ma_device_is_started(handle_device) == 1) {
+            MiniAudio.ma_device_stop(handle_device);
             //System.out.println("audio init " + Long.toHexString(handle_device));
         }
     }
 
     public boolean isStarted() {
-        return MiniAL.ma_device_is_started(handle_device) == 1;
+        return MiniAudio.ma_device_is_started(handle_device) == 1;
     }
 
     //cant call start stop in callback thread
@@ -120,11 +120,11 @@ public class AudioDevice {
     public void destory() {
         //System.out.println("audio finalize : " + Long.toHexString(handle_device));
         if (handle_device != 0) {
-            MiniAL.ma_device_uninit(handle_device);
+            MiniAudio.ma_device_uninit(handle_device);
             handle_device = 0;
         }
         if (handle_context != 0) {
-            MiniAL.ma_context_uninit(handle_context);
+            MiniAudio.ma_context_uninit(handle_context);
             handle_context = 0;
         }
     }

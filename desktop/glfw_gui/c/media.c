@@ -17,7 +17,7 @@ void JNI_OnLoad(MiniJVM *jvm) {
     refers.runtime_list = env->pairlist_create(10);
 
     env->native_reg_lib(jvm, ptr_GlfwFuncTable(), count_GlfwFuncTable());
-    env->native_reg_lib(jvm, ptr_MiniALFuncTable(), count_MiniALFuncTable());
+    env->native_reg_lib(jvm, ptr_MiniAudioFuncTable(), count_MiniAudioFuncTable());
     env->native_reg_lib(jvm, ptr_GLFuncTable(), count_GLFuncTable());
     env->native_reg_lib(jvm, ptr_NutilFuncTable(), count_NutilFuncTable());
 }
@@ -25,7 +25,7 @@ void JNI_OnLoad(MiniJVM *jvm) {
 void JNI_OnUnload(MiniJVM *jvm) {
     JniEnv *env = jvm->env;
     env->native_remove_lib(jvm, ptr_GlfwFuncTable());
-    env->native_remove_lib(jvm, ptr_MiniALFuncTable());
+    env->native_remove_lib(jvm, ptr_MiniAudioFuncTable());
     env->native_remove_lib(jvm, ptr_GLFuncTable());
     env->native_remove_lib(jvm, ptr_NutilFuncTable());
 }

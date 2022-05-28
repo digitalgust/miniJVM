@@ -27,9 +27,9 @@ __refer ptr_NanovgFuncTable();
 s32 count_NanovgFuncTable();
 
 
-__refer ptr_MiniALFuncTable();
+__refer ptr_MiniAudioFuncTable();
 
-s32 count_MiniALFuncTable();
+s32 count_MiniAudioFuncTable();
 
 //
 Runtime *getRuntimeCurThread(JniEnv *env);

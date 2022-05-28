@@ -27,9 +27,9 @@ __refer ptr_NutilFuncTable();
 
 s32 count_NutilFuncTable();
 
-__refer ptr_MiniALFuncTable();
+__refer ptr_MiniAudioFuncTable();
 
-s32 count_MiniALFuncTable();
+s32 count_MiniAudioFuncTable();
 
 //
 Runtime *getRuntimeCurThread(JniEnv *env);

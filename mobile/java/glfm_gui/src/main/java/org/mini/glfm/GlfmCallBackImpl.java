@@ -170,14 +170,14 @@ public class GlfmCallBackImpl extends GCallBack {
                 }
             }
             //
-//            count++;
-//            now = System.currentTimeMillis();
-//            if (now - last > 1000) {
-//                //System.out.println("fps:" + count);
-//                fps = count;
-//                last = now;
-//                count = 0;
-//            }
+            count++;
+            now = System.currentTimeMillis();
+            if (now - last > 1000) {
+                //System.out.println("fps:" + count);
+                fps = count;
+                last = now;
+                count = 0;
+            }
 //
 //            cost = now - startAt;
             Sync.sync((int) fpsExpect);
@@ -244,6 +244,11 @@ public class GlfmCallBackImpl extends GCallBack {
 
         x /= Glfm.glfmGetDisplayScale(display);
         y /= Glfm.glfmGetDisplayScale(display);
+
+        //form maybe translate when keyboard popup
+        x += gform.getX();
+        y += gform.getY();
+
         lastX[touch] = mouseX[touch];
         lastY[touch] = mouseY[touch];
         mouseX[touch] = (int) x;

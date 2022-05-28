@@ -9,6 +9,7 @@ import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
+import org.mini.gui.event.GStateChangeListener;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -80,10 +81,10 @@ public class GList extends GContainer {
         //
         scrollBar = new GScrollBar(0, GScrollBar.VERTICAL, 0, 0, scrollbarWidth, 100);
         scrollBar.setActionListener(new ScrollBarActionListener());
+        scrollBar.setStateChangeListener(new ScrollBarStateChangeListener());
         popWin = new GListPopWindow();
         popWin.addImpl(scrollBar);
         popWin.addImpl(popView);
-        popWin.setFocusListener(popWin);
         setScrollBar(false);
         sizeAdjust();
         changeCurPanel();
@@ -244,13 +245,7 @@ public class GList extends GContainer {
             popWin.setSize(width, height);
 
         } else {
-            float popH = itemcount * list_item_heigh;
-            if (itemcount < list_rows_min) {
-                popH = list_rows_min * list_item_heigh;
-            }
-            if (itemcount > list_rows_max) {
-                popH = list_rows_max * list_item_heigh;
-            }
+            float popH = getPopWinH();
             popWin.setSize(width, popH);
         }
 
@@ -280,20 +275,15 @@ public class GList extends GContainer {
             //pop list in form
             int itemcount = popView.elements.size();
             if (pulldown) {
-                super.addImpl(normalPanel);
                 GForm form = getForm();
                 if (form != null) {
-                    float popY = getY() + normalPanel.getH();
-                    float popH = itemcount * list_item_heigh;
-                    if (itemcount < list_rows_min) {
-                        popH = list_rows_min * list_item_heigh;
+                    float popY, popH;
+                    if (normalPanel.getY() > form.getY() + form.getDeviceHeight() / 2) {
+                        popY = 0f;
+                    } else {
+                        popY = getY() + normalPanel.getH();
                     }
-                    if (itemcount > list_rows_max) {
-                        popH = list_rows_max * list_item_heigh;
-                    }
-                    if (popY + popH > form.getDeviceHeight()) {
-                        popH = form.getDeviceHeight() - popY;
-                    }
+                    popH = getPopWinH();
                     popWin.setLocation(getX(), popY);
                     popWin.setSize(popWin.getW(), popH);
                     form.add(popWin);
@@ -308,6 +298,38 @@ public class GList extends GContainer {
         } else {
             super.addImpl(popWin);
         }
+    }
+
+    private float getPopWinH() {
+        float popY, popH;
+        GForm form = getForm();
+        int itemcount = popView.elements.size();
+        if (normalPanel.getY() > form.getY() + form.getDeviceHeight() / 2) {
+            popY = 0f;
+            popH = itemcount * list_item_heigh;
+            if (itemcount < list_rows_min) {
+                popH = list_rows_min * list_item_heigh;
+            }
+            if (itemcount > list_rows_max) {
+                popH = list_rows_max * list_item_heigh;
+            }
+            if (popY + popH > normalPanel.getY()) {
+                popH = normalPanel.getY() - popY;
+            }
+        } else {
+            popY = getY() + normalPanel.getH();
+            popH = itemcount * list_item_heigh;
+            if (itemcount < list_rows_min) {
+                popH = list_rows_min * list_item_heigh;
+            }
+            if (itemcount > list_rows_max) {
+                popH = list_rows_max * list_item_heigh;
+            }
+            if (popH > form.getY() + form.getDeviceHeight() - popY) {
+                popH = form.getY() + form.getDeviceHeight() - popY;
+            }
+        }
+        return popH - 10f;
     }
 
     public void setItems(GImage[] imgs, String[] labs) {
@@ -497,18 +519,31 @@ public class GList extends GContainer {
     /**
      *
      */
-    GPanel normalPanel = new GPanel() {
+    NormalPanel normalPanel = new NormalPanel();
+    PopWinFocusHandler focusHandler = new PopWinFocusHandler();
 
+    class PopWinFocusHandler implements GFocusChangeListener {
+        @Override
+        public void focusGot(GObject go) {
+        }
+
+        @Override
+        public void focusLost(GObject newgo) {
+            pulldown = false;
+            changeCurPanel();
+            popWin.setFocusListener(null);
+        }
+    }
+
+    class NormalPanel extends GPanel {
         @Override
         public void touchEvent(int touchid, int phase, int x, int y) {
             if (touchid != Glfw.GLFW_MOUSE_BUTTON_1) return;
-            if (phase == Glfm.GLFMTouchPhaseEnded) {
-                if (pulldown) {
-                    pulldown = false;
-                } else {
-                    pulldown = true;
-                }
+            if (phase == Glfm.GLFMTouchPhaseBegan) {
+            } else if (phase == Glfm.GLFMTouchPhaseEnded) {
+                pulldown = !pulldown;
                 GList.this.changeCurPanel();
+//                popWin.setFocusListener(focusHandler);
             }
             super.touchEvent(touchid, phase, x, y);
 
@@ -516,13 +551,12 @@ public class GList extends GContainer {
 
         @Override
         public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
-            if (pressed && button == Glfw.GLFW_MOUSE_BUTTON_1) {
-                if (pulldown) {
-                    pulldown = false;
-                } else {
-                    pulldown = true;
+            if (button == Glfw.GLFW_MOUSE_BUTTON_1) {
+                if (pressed) {
+                } else if (!pressed) {
+                    pulldown = !pulldown;
+                    GList.this.changeCurPanel();
                 }
-                GList.this.changeCurPanel();
             }
             super.mouseButtonEvent(button, pressed, x, y);
         }
@@ -563,13 +597,30 @@ public class GList extends GContainer {
             nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
             nvgTextJni(vg, x + w - 12, y + h * 0.5f, preicon_arr, 0, preicon_arr.length);
         }
-    };
+    }
+
+    ;
 
     /**
      *
      */
     protected GViewPort popView = new GViewPort() {
+        @Override
+        public void setScrollY(float sy) {
+            super.setScrollY(sy);
+            scrollBar.setPos(sy);
+        }
 
+        @Override
+        boolean movePercentY(float dy) {
+            boolean ret = super.movePercentY(dy);
+            scrollBar.setPos(scrolly);
+            return ret;
+        }
+    };
+
+
+    class GListPopWindow extends GPanel {
         @Override
         public boolean paint(long vg) {
             float x = getX();
@@ -577,35 +628,12 @@ public class GList extends GContainer {
             float w = getW();
             float h = getH();
 
-            GToolkit.drawRect(vg, x, y, w, h, GList.this.getBgColor());
+            GToolkit.drawRoundedRect(vg, x, y, w, h, 3.5f, GList.this.getBgColor());
 
             super.paint(vg);
 
-//            // Hide fades
-//            byte[] fadePaint;
-//            fadePaint = nvgLinearGradient(vg, x, y, x, y + 6, nvgRGBA(20, 20, 20, 192), nvgRGBA(30, 30, 30, 0));
-//            nvgBeginPath(vg);
-//            nvgRect(vg, x + 2, y, w - 4, 6);
-//            nvgFillPaint(vg, fadePaint);
-//            nvgFill(vg);
-//
-//            fadePaint = nvgLinearGradient(vg, x, y + h, x, y + h - 6, nvgRGBA(20, 20, 20, 192), nvgRGBA(30, 30, 30, 0));
-//            nvgBeginPath(vg);
-//            nvgRect(vg, x + 2, y + h - 6, w - 4, 6);
-//            nvgFillPaint(vg, fadePaint);
-//            nvgFill(vg);
             return true;
         }
-
-        @Override
-        public void setScrollY(float sy) {
-            super.setScrollY(sy);
-            scrollBar.setPos(sy);
-        }
-    };
-
-
-    class GListPopWindow extends GPanel implements GFocusChangeListener {
 
         @Override
         public void setSize(float width, float height) {
@@ -626,15 +654,6 @@ public class GList extends GContainer {
             return false;
         }
 
-        @Override
-        public void focusGot(GObject go) {
-        }
-
-        @Override
-        public void focusLost(GObject go) {
-            pulldown = false;
-            changeCurPanel();
-        }
     }
 
     ;
@@ -650,5 +669,14 @@ public class GList extends GContainer {
 
     }
 
+    class ScrollBarStateChangeListener implements GStateChangeListener {
 
+        @Override
+        public void onStateChange(GObject gobj) {
+            popView.setScrollY(((GScrollBar) gobj).getPos());
+            sizeAdjust();
+            flush();
+        }
+
+    }
 }
