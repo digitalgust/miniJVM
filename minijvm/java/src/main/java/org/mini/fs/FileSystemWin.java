@@ -6,7 +6,6 @@
 package org.mini.fs;
 
 /**
- *
  * @author gust
  */
 public class FileSystemWin extends FileSystemImpl {
@@ -20,6 +19,9 @@ public class FileSystemWin extends FileSystemImpl {
 
     @Override
     public boolean isAbsolute(String path) {
+        if (path.length() == 0) {
+            return false;
+        }
         if (path.charAt(0) == getSeparator()) {
             return true;
         }

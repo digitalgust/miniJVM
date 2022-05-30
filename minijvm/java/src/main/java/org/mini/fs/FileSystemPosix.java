@@ -8,7 +8,6 @@ package org.mini.fs;
 import java.io.File;
 
 /**
- *
  * @author gust
  */
 public class FileSystemPosix extends FileSystemImpl {
@@ -22,6 +21,9 @@ public class FileSystemPosix extends FileSystemImpl {
 
     @Override
     public boolean isAbsolute(String path) {
+        if (path.length() == 0) {
+            return false;
+        }
         if (path.charAt(0) == getSeparator()) {
             return true;
         }
