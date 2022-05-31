@@ -12,9 +12,7 @@ import org.mini.nanovg.Nanovg;
 import org.mini.reflect.ReflectArray;
 
 import java.io.InputStream;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.WeakHashMap;
+import java.util.*;
 
 import static org.mini.glwrap.GLUtil.toUtf8;
 import static org.mini.nanovg.Nanovg.*;
@@ -1301,30 +1299,81 @@ public class GToolkit {
      * ----------------------------------------------------------------
      * image cache
      * ----------------------------------------------------------------
+     * <p>
+     * 缓存图象系统, 采用weakhashmap, 自动管理图象资源
+     * 当imagecache中的key没有强引用时,其value(图象)会被自动回收
      */
-    static WeakHashMap<String, GImage> imageCache = new WeakHashMap<>();
+    static Map<String, GImage> imageCache = Collections.synchronizedMap(new WeakHashMap<>());
 
+    /**
+     * 从缓存中取得图象,如果缓存中没有,则加载
+     *
+     * @param filepath
+     * @return
+     */
     static public GImage getCachedImageFromJar(String filepath) {
+        return getCachedImageFromJar(filepath, null);
+    }
+
+    /**
+     * 返回 图像并且返回此图象的holder, 如果此holder不被GC销毁,此图象也不会被销毁
+     *
+     * @param filepath
+     * @param holder
+     * @return
+     */
+    static public GImage getCachedImageFromJar(String filepath, GAttachable holder) {
         if (filepath == null || "".equals(filepath.trim())) {
             return null;
         }
+        filepath = new String(filepath);//for holder,must new
         GImage img = imageCache.get(filepath);
         if (img == null) {
             img = GImage.createImageFromJar(filepath);
-            imageCache.put(filepath, img);
+            if (img != null) {
+                if (holder != null) holder.setAttachment(filepath);
+                imageCache.put(filepath, img);
+            }
+            System.out.println("load image cache " + filepath + " " + img);
         } else {
             //System.out.println("hit image from cache " + filepath);
+            if (holder != null) {
+                for (Map.Entry e : imageCache.entrySet()) {
+                    if (filepath.equals(e.getKey())) { //虽然两个字符串字面相同,但不是同一对象
+                        holder.setAttachment(e.getKey());
+                    }
+                }
+            }
         }
         return img;
     }
 
     static public GImage getCachedImageFromFile(String filepath) {
+        return getCachedImageFromFile(filepath, null);
+    }
+
+    static public GImage getCachedImageFromFile(String filepath, GAttachable holder) {
+        if (filepath == null || "".equals(filepath.trim())) {
+            return null;
+        }
+        filepath = new String(filepath);//for holder,must new
         GImage img = imageCache.get(filepath);
         if (img == null) {
+            System.out.println("load image cache " + filepath);
             img = GImage.createImage(filepath);
-            imageCache.put(filepath, img);
+            if (img != null) {
+                if (holder != null) holder.setAttachment(filepath);
+                imageCache.put(filepath, img);
+            }
         } else {
             //System.out.println("hit image from cache " + filepath);
+            if (holder != null) {
+                for (Map.Entry e : imageCache.entrySet()) {
+                    if (filepath.equals(e.getKey())) { //虽然两个字符串字面相同,但不是同一对象
+                        holder.setAttachment(e.getKey());
+                    }
+                }
+            }
         }
         return img;
     }

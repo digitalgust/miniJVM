@@ -543,7 +543,7 @@ public class GList extends GContainer {
             } else if (phase == Glfm.GLFMTouchPhaseEnded) {
                 pulldown = !pulldown;
                 GList.this.changeCurPanel();
-//                popWin.setFocusListener(focusHandler);
+                //popWin.setFocusListener(focusHandler);
             }
             super.touchEvent(touchid, phase, x, y);
 

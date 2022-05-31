@@ -19,7 +19,7 @@ import static org.mini.gui.GToolkit.nvgRGBA;
 /**
  * @author gust
  */
-abstract public class GObject {
+abstract public class GObject implements GAttachable {
 
     //
     public static final int ALIGN_H_FULL = 1;

@@ -22,7 +22,7 @@ import java.io.InputStream;
  *
  * @author gust
  */
-public class GImage {
+public class GImage implements GAttachable {
 
     protected int nvg_texture = -1;
     int[] w = {0};
@@ -31,6 +31,8 @@ public class GImage {
     private byte[] data; //source from image data
     private int gl_texture = -1; //source from gl texture id
     private int image_init_flag;
+    //
+    Object attachment;
 
 
     private GImage() {
@@ -207,7 +209,18 @@ public class GImage {
     public void finalize() {
         try {
             GForm.deleteImage(nvg_texture);
+            System.out.println("finalize image " + this);
         } catch (Throwable e) {
         }
+    }
+
+    @Override
+    public void setAttachment(Object attachment) {
+        this.attachment = attachment;
+    }
+
+    @Override
+    public <T extends Object> T getAttachment() {
+        return (T) attachment;
     }
 }
