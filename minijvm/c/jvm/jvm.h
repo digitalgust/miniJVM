@@ -1068,6 +1068,8 @@ void _class_optimize(JClass *clazz);
 
 void class_clinit(JClass *clazz, Runtime *runtime);
 
+void class_clear_cached_virtualmethod(MiniJVM *jvm, JClass *tgt);
+
 void printClassFileFormat(
 
         ClassFileFormat *cff

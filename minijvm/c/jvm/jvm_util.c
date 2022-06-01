@@ -109,6 +109,7 @@ s32 classes_remove(MiniJVM *jvm, JClass *clazz) {
         PeerClassLoader *pcl = classLoaders_find_by_instance(jvm, clazz->jloader);
         if (pcl) {
             hashtable_remove(pcl->classes, clazz->name, 0);
+            class_clear_cached_virtualmethod(jvm, clazz);
         }
         return 0;
     }

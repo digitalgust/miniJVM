@@ -444,6 +444,43 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
     runtime->thrd_info->no_pause--;
     vm_share_unlock(runtime->jvm);
 }
+
+
+void class_clear_cached_virtualmethod(MiniJVM *jvm, JClass *tgt) {
+    s32 i;
+    HashtableIterator hti;
+    PeerClassLoader *pcl = classLoaders_find_by_instance(jvm, tgt->jloader);//tgt->peerclassloader
+    while ((pcl = classLoaders_find_by_instance(jvm, pcl->parent)) != NULL) {
+        hashtable_iterate(pcl->classes, &hti);
+        for (; hashtable_iter_has_more(&hti);) {
+            JClass *clazz = hashtable_iter_next_value(&hti);
+            for (i = 0; i < clazz->constantPool.methodRef->length; i++) {
+                ConstantMethodRef *cmr = (ConstantMethodRef *) arraylist_get_value(clazz->constantPool.methodRef, i);
+                if (cmr->virtual_methods) {
+#if _JVM_DEBUG_LOG_LEVEL > 2
+                    if (pairlist_get(cmr->virtual_methods, tgt)) {
+                        jvm_printf("virtual method clear %s in %s.%s\n", utf8_cstr(tgt->name), utf8_cstr(cmr->clsName), utf8_cstr(cmr->name));
+                    }
+#endif
+                    pairlist_remove(cmr->virtual_methods, tgt);
+                }
+            }
+            for (i = 0; i < clazz->constantPool.interfaceMethodRef->length; i++) {
+                ConstantMethodRef *cmr = (ConstantMethodRef *) arraylist_get_value(clazz->constantPool.methodRef, i);
+                if (cmr->virtual_methods) {
+#if _JVM_DEBUG_LOG_LEVEL > 2
+                    if (pairlist_get(cmr->virtual_methods, tgt)) {
+                       jvm_printf("virtual method clear %s in %s.%s\n", utf8_cstr(tgt->name), utf8_cstr(cmr->clsName), utf8_cstr(cmr->name));
+                     }
+#endif
+                    pairlist_remove(cmr->virtual_methods, tgt);
+                }
+            }
+        }
+        if (pcl == jvm->boot_classloader)break;
+    }
+}
+
 //===============================    实例化相关  ==================================
 
 u8 instance_of(Instance *ins, JClass *other) {
