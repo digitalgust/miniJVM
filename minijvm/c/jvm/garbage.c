@@ -532,8 +532,9 @@ s32 _gc_wait_thread_suspend(MiniJVM *jvm, Runtime *runtime) {
         }
     }
 #endif
-    while (!(runtime->thrd_info->is_suspend) &&
-           !(runtime->thrd_info->is_blocking)) { //
+    while (!(runtime->thrd_info->is_suspend ||  //执行字节码时,检测到suspend_count不为0时,暂停节字码执行,并设is_suspend=1
+             runtime->thrd_info->is_blocking)  //执行一些IO等待时,jni会设is_blocking为1
+            ) { //
         vm_share_notifyall(jvm);
         vm_share_timedwait(jvm, 1);
         if (jvm->collector->_garbage_thread_status != GARBAGE_THREAD_NORMAL) {
