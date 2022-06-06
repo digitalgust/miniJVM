@@ -52,7 +52,7 @@
             </list>
             <label w="100%" h="30" align="left,vcenter">{Download app from website:}</label>
             <input name="INPUT_URL" w="80%" h="30" hint="application jar url">
-                http://www.ebsee.com:40080/down/BiBiX.jar
+                http://www.ebsee.com:40080/down/bibi.jar
             </input>
             <button name="BT_DOWN" w="20%" h="30">{Download}</button>
             <label name="LAB_WEBSRV" w="80%" h="30" align="left,vcenter">{Lan webserver for upload jar}</label>

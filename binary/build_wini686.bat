@@ -3,7 +3,7 @@
 set GLFWDIR=win_i686
 set TARGETDIR=win32
 set LIBDIR=i686-w64-mingw32
-set GCCHOME=D:\mingw-w64\i686-8.1.0-posix-sjlj-rt_v6-rev0
+set GCCHOME=D:\mingw32
 rem ==============================================================
 
 
@@ -13,7 +13,7 @@ if exist  %GCCHOME% (
 ) else (
     echo [ERROR]gcc not found
     echo [INFO]http://mingw-w64.org/ 
-    echo [INFO]Please download gcc: https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/installer/mingw-w64-install.exe
+    echo [INFO]Please download gcc: https://github.com/digitalgust/mingw-w64/releases/download/release/i686-8.1.0-release-posix-dwarf-rt_v6-rev0.7z
     echo [INFO]Change GCCHOME with installed directory
     goto :eof
 )
