@@ -1523,7 +1523,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                     jdwppacket_write_int(res, count);
                     for (i = 0; i < jvm->classloaders->length; i++) {
                         PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
-                        JClass *cl = classes_get(jdwpserver->jvm, pcl->jloader, signature);
+                        JClass *cl = hashtable_get(pcl->classes, signature);
                         if (cl != NULL) {
                             jdwppacket_write_byte(res, getClassType(cl));
                             jdwppacket_write_refer(res, cl);
