@@ -483,6 +483,8 @@ void event_on_breakpoint(JdwpServer *jdwpserver, Runtime *breakpoint_runtime);
 
 void event_on_class_prepare(JdwpServer *jdwpserver, Runtime *runtime, JClass *clazz);
 
+void event_on_class_unload(JdwpServer *jdwpserver, JClass *clazz);
+
 void event_on_thread_death(JdwpServer *jdwpserver, Instance *jthread);
 
 void event_on_thread_start(JdwpServer *jdwpserver, Instance *jthread);

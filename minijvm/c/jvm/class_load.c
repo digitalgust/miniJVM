@@ -1845,16 +1845,17 @@ JClass *class_parse(Instance *loader, ByteBuf *bytebuf, Runtime *runtime) {
         tmpclazz->jloader = loader;
 
         s32 iret = tmpclazz->_load_class_from_bytes(tmpclazz, bytebuf);//load file
+        MiniJVM *jvm = runtime->jvm;
 
         if (iret == 0) {
-            classes_put(runtime->jvm, tmpclazz);
+            classes_put(jvm, tmpclazz);
             class_prepar(loader, tmpclazz, runtime);
-
+            if (jvm->jdwp_enable && jvm->jdwpserver && tmpclazz)event_on_class_prepare(jvm->jdwpserver, runtime, tmpclazz);
 #if _JVM_DEBUG_LOG_LEVEL > 2
             jvm_printf("load class (%016llx load %016llx):  %s \n", (s64) (intptr_t) loader, (s64) (intptr_t) tmpclazz, utf8_cstr(tmpclazz->name));
 #endif
         } else {
-            classes_remove(runtime->jvm, tmpclazz);
+            classes_remove(jvm, tmpclazz);
             class_destory(tmpclazz);
             tmpclazz = NULL;
         }
@@ -1911,7 +1912,6 @@ JClass *load_class(Instance *jloader, Utf8String *pClassName, Runtime *runtime) 
                 runtime->thrd_info->no_pause--;
             }
         }
-        if (jvm->jdwp_enable && jvm->jdwpserver && tmpclazz)event_on_class_prepare(jvm->jdwpserver, runtime, tmpclazz);
     }
 #if _JVM_DEBUG_LOG_LEVEL > 2
     if (!tmpclazz) {

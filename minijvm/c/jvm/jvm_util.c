@@ -108,6 +108,7 @@ s32 classes_remove(MiniJVM *jvm, JClass *clazz) {
         //jvm_printf("PUT in classloader %s <- %s\n", clazz->jloader ? utf8_cstr(clazz->jloader->mb.clazz->name) : "NULL", utf8_cstr(clazz->name));
         PeerClassLoader *pcl = classLoaders_find_by_instance(jvm, clazz->jloader);
         if (pcl) {
+            if (jvm->jdwp_enable)event_on_class_unload(jvm->jdwpserver, clazz);
             hashtable_remove(pcl->classes, clazz->name, 0);
             class_clear_cached_virtualmethod(jvm, clazz);
         }
@@ -127,6 +128,7 @@ JClass *primitive_class_create_get(Runtime *runtime, Utf8String *ustr) {
         cl->is_primitive = 1;
         cl->jloader = NULL;//system classloader
         classes_put(jvm, cl);
+        if (jvm->jdwp_enable && jvm->jdwpserver && cl)event_on_class_prepare(jvm->jdwpserver, runtime, cl);
 //        gc_obj_hold(jvm->collector, cl);
         vm_share_unlock(jvm);
 #if _JVM_DEBUG_LOG_LEVEL > 2
@@ -177,6 +179,7 @@ JClass *array_class_create_get(Runtime *runtime, Instance *jloader, Utf8String *
 
 //                gc_obj_hold(jvm->collector, clazz);
                 classes_put(jvm, clazz);
+                if (jvm->jdwp_enable && jvm->jdwpserver && clazz)event_on_class_prepare(jvm->jdwpserver, runtime, clazz);
 #if _JVM_DEBUG_LOG_LEVEL > 2
                 jvm_printf("load class (%016llx load %016llx):  %s \n", (s64) (intptr_t) clazz->jloader, (s64) (intptr_t) clazz, utf8_cstr(clazz->name));
 #endif

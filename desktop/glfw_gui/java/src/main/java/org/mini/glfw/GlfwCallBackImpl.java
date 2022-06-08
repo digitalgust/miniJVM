@@ -386,6 +386,7 @@ public class GlfwCallBackImpl extends GCallBack {
     @Override
     public void framebufferSize(long window, int x, int y) {
         try {
+            reloadWindow();
             if (gform == null) {
                 return;
             }

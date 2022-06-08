@@ -425,7 +425,11 @@ s32 jdwp_read_fully(JdwpClient *client, c8 *buf, s32 need) {
         got += len;
         if (got == need)break;
         len = mbedtls_net_recv(&client->sockfd, (u8 *) buf + got, need - got);
-        if (len == -2)len = 0;
+        if (len == MBEDTLS_ERR_SSL_WANT_READ)len = 0;
+        else if (len < 0) {
+            jvm_printf("[JDWP]%read error %x\n", len);
+            client->closed = 1;
+        }
     }
     if (len == -1)return len;
     return got;
@@ -468,7 +472,7 @@ JdwpPacket *jdwp_readpacket(JdwpClient *client) {
                 s32 len = mbedtls_net_recv(&client->sockfd, (u8 *) client->rcvp->data + 4 + client->rcvp->_rcv_len,
                                            client->rcvp->_req_len - client->rcvp->_rcv_len);
                 if (len == MBEDTLS_ERR_SSL_WANT_READ)len = 0;
-                if (len == -1)client->closed = 1;
+                if (len < 0)client->closed = 1;
                 client->rcvp->_rcv_len += len;
                 if (client->rcvp->_rcv_len == client->rcvp->_req_len) {
                     JdwpPacket *p = client->rcvp;
@@ -880,6 +884,23 @@ void event_on_vmstart(JdwpServer *jdwpserver, Instance *jthread) {
     jdwp_packet_put(jdwpserver, req);
 }
 
+static void send_class_prepare(JdwpServer *jdwpserver, Runtime *runtime, JClass *clazz, EventSet *set, Utf8String *str) {
+    JdwpPacket *req = jdwppacket_create();
+    jdwppacket_set_id(req, jdwpserver->jdwp_eventset_commandid++);
+    jdwppacket_set_cmd(req, JDWP_CMD_Event_Composite);
+    jdwppacket_write_byte(req, set->suspendPolicy);
+    jdwppacket_write_int(req, 1);
+    jdwppacket_write_byte(req, set->eventKind);
+    jdwppacket_write_int(req, set->requestId);
+    jdwppacket_write_refer(req, runtime ? runtime->thrd_info->jthread : NULL);
+    jdwppacket_write_byte(req, getClassType(clazz));
+    jdwppacket_write_refer(req, clazz);
+    jdwppacket_write_utf(req, str);
+    jdwppacket_write_int(req, getClassStatus(clazz));
+    jdwp_packet_put(jdwpserver, req);
+    //jvm_printf("[JDWP]class prepare: %s\n", utf8_cstr(str));
+}
+
 void event_on_class_prepare(JdwpServer *jdwpserver, Runtime *runtime, JClass *clazz) {
     //post event
 
@@ -908,27 +929,15 @@ void event_on_class_prepare(JdwpServer *jdwpserver, Runtime *runtime, JClass *cl
                             classNameMatch = utf8_indexof(clazz->name, prefix) >= 0;
                         }
                         if (classNameMatch) {
+                            send_class_prepare(jdwpserver, runtime, clazz, set, str);
                             if (set->suspendPolicy != JDWP_SUSPENDPOLICY_NONE) {
                                 if (runtime)jthread_suspend(runtime);
                             }
-                            JdwpPacket *req = jdwppacket_create();
-                            jdwppacket_set_id(req, jdwpserver->jdwp_eventset_commandid++);
-                            jdwppacket_set_cmd(req, JDWP_CMD_Event_Composite);
-                            jdwppacket_write_byte(req, set->suspendPolicy);
-                            jdwppacket_write_int(req, 1);
-                            jdwppacket_write_byte(req, set->eventKind);
-                            jdwppacket_write_int(req, set->requestId);
-                            jdwppacket_write_refer(req, runtime ? runtime->thrd_info->jthread : NULL);
-                            jdwppacket_write_byte(req, getClassType(clazz));
-                            jdwppacket_write_refer(req, clazz);
-                            jdwppacket_write_utf(req, str);
-                            jdwppacket_write_int(req, getClassStatus(clazz));
-                            jdwp_packet_put(jdwpserver, req);
-                            //jvm_printf("class prepare: %s\n", utf8_cstr(ei.signature));
                         }
                     }
                 }
-
+            } else {
+                send_class_prepare(jdwpserver, runtime, clazz, set, str);
             }
         }
     }
@@ -936,8 +945,30 @@ void event_on_class_prepare(JdwpServer *jdwpserver, Runtime *runtime, JClass *cl
     mtx_unlock(&jdwpserver->event_sets_lock);
 }
 
-void event_on_class_unload(Runtime *runtime, JClass *clazz) {
+void event_on_class_unload(JdwpServer *jdwpserver, JClass *clazz) {
+    Utf8String *str = utf8_create();
+    getClassSignature(clazz, str);
+    mtx_lock(&jdwpserver->event_sets_lock);
 
+    Pair *pair = (Pair *) jdwpserver->event_sets->ptr;
+    Pair *end = pair + jdwpserver->event_sets->count;
+    for (; pair < end; pair++) {
+        EventSet *set = (EventSet *) pair->right;
+        if (set->eventKind == JDWP_EVENTKIND_CLASS_UNLOAD) {
+            JdwpPacket *req = jdwppacket_create();
+            jdwppacket_set_id(req, jdwpserver->jdwp_eventset_commandid++);
+            jdwppacket_set_cmd(req, JDWP_CMD_Event_Composite);
+            jdwppacket_write_byte(req, set->suspendPolicy);
+            jdwppacket_write_int(req, 1);
+            jdwppacket_write_byte(req, set->eventKind);
+            jdwppacket_write_int(req, set->requestId);
+            jdwppacket_write_utf(req, str);
+            jdwp_packet_put(jdwpserver, req);
+            //jvm_printf("[JDWP]class unload: %s\n", utf8_cstr(str));
+        }
+    }
+    mtx_unlock(&jdwpserver->event_sets_lock);
+    utf8_destory(str);
 }
 
 void event_on_thread_start(JdwpServer *jdwpserver, Instance *jthread) {
@@ -1224,7 +1255,7 @@ s16 jdwp_eventset_set(JdwpServer *jdwpserver, EventSet *set) {
                     Utf8String *k = hashtable_iter_next_key(&hti);
                     JClass *cl = hashtable_get(jdwpserver->jvm->boot_classloader->classes, k);
 
-                    event_on_class_prepare(jdwpserver, NULL, cl);
+                    //event_on_class_prepare(jdwpserver, NULL, cl);
                 }
                 break;
             }
@@ -1498,7 +1529,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                             jdwppacket_write_refer(res, cl);
                             jdwppacket_write_int(res, getClassStatus(cl));
 
-                            event_on_class_prepare(jdwpserver, NULL, cl);
+                            //event_on_class_prepare(jdwpserver, NULL, cl);
                         }
                     }
                 }
