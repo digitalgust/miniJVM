@@ -903,72 +903,76 @@ static void send_class_prepare(JdwpServer *jdwpserver, Runtime *runtime, JClass 
 
 void event_on_class_prepare(JdwpServer *jdwpserver, Runtime *runtime, JClass *clazz) {
     //post event
+    if (jdwpserver) {
+        Utf8String *str = utf8_create();
+        getClassSignature(clazz, str);
 
-    Utf8String *str = utf8_create();
-    getClassSignature(clazz, str);
 
-
-    mtx_lock(&jdwpserver->event_sets_lock);
-    Pair *pair = (Pair *) jdwpserver->event_sets->ptr;
-    Pair *end = pair + jdwpserver->event_sets->count;
-    for (; pair < end; pair++) {
-        EventSet *set = (EventSet *) pair->right;
-        if (set->eventKind == JDWP_EVENTKIND_CLASS_PREPARE) {
-            if (set->modifiers > 0) {
-                s32 i;
-                for (i = 0; i < set->modifiers; i++) {
-                    s32 classNameMatch = 0;
-                    EventSetMod *mod = &set->mods[i];
-                    if (5 == mod->mod_type) {
-                        Utf8String *cpattern = set->mods[i].classPattern;
-                        s32 starPos = utf8_indexof_c(cpattern, "*");
-                        if (starPos < 0) {
-                            classNameMatch = utf8_equals(set->mods[i].classPattern, clazz->name);
-                        } else {
-                            Utf8String *prefix = utf8_create_part(cpattern, 0, starPos);
-                            classNameMatch = utf8_indexof(clazz->name, prefix) >= 0;
-                        }
-                        if (classNameMatch) {
-                            send_class_prepare(jdwpserver, runtime, clazz, set, str);
-                            if (set->suspendPolicy != JDWP_SUSPENDPOLICY_NONE) {
-                                if (runtime)jthread_suspend(runtime);
+        mtx_lock(&jdwpserver->event_sets_lock);
+        Pair *pair = (Pair *) jdwpserver->event_sets->ptr;
+        Pair *end = pair + jdwpserver->event_sets->count;
+        for (; pair < end; pair++) {
+            EventSet *set = (EventSet *) pair->right;
+            if (set->eventKind == JDWP_EVENTKIND_CLASS_PREPARE) {
+                if (set->modifiers > 0) {
+                    s32 i;
+                    for (i = 0; i < set->modifiers; i++) {
+                        s32 classNameMatch = 0;
+                        EventSetMod *mod = &set->mods[i];
+                        if (5 == mod->mod_type) {
+                            Utf8String *cpattern = set->mods[i].classPattern;
+                            s32 starPos = utf8_indexof_c(cpattern, "*");
+                            if (starPos < 0) {
+                                classNameMatch = utf8_equals(set->mods[i].classPattern, clazz->name);
+                            } else {
+                                Utf8String *prefix = utf8_create_part(cpattern, 0, starPos);
+                                classNameMatch = utf8_indexof(clazz->name, prefix) >= 0;
+                            }
+                            if (classNameMatch) {
+                                send_class_prepare(jdwpserver, runtime, clazz, set, str);
+                                if (set->suspendPolicy != JDWP_SUSPENDPOLICY_NONE) {
+                                    if (runtime)jthread_suspend(runtime);
+                                }
                             }
                         }
                     }
+                } else {
+                    send_class_prepare(jdwpserver, runtime, clazz, set, str);
                 }
-            } else {
-                send_class_prepare(jdwpserver, runtime, clazz, set, str);
             }
         }
+        utf8_destory(str);
+        mtx_unlock(&jdwpserver->event_sets_lock);
     }
-    utf8_destory(str);
-    mtx_unlock(&jdwpserver->event_sets_lock);
 }
 
 void event_on_class_unload(JdwpServer *jdwpserver, JClass *clazz) {
-    Utf8String *str = utf8_create();
-    getClassSignature(clazz, str);
-    mtx_lock(&jdwpserver->event_sets_lock);
+    if (jdwpserver) {
+        Utf8String *str = utf8_create();
 
-    Pair *pair = (Pair *) jdwpserver->event_sets->ptr;
-    Pair *end = pair + jdwpserver->event_sets->count;
-    for (; pair < end; pair++) {
-        EventSet *set = (EventSet *) pair->right;
-        if (set->eventKind == JDWP_EVENTKIND_CLASS_UNLOAD) {
-            JdwpPacket *req = jdwppacket_create();
-            jdwppacket_set_id(req, jdwpserver->jdwp_eventset_commandid++);
-            jdwppacket_set_cmd(req, JDWP_CMD_Event_Composite);
-            jdwppacket_write_byte(req, set->suspendPolicy);
-            jdwppacket_write_int(req, 1);
-            jdwppacket_write_byte(req, set->eventKind);
-            jdwppacket_write_int(req, set->requestId);
-            jdwppacket_write_utf(req, str);
-            jdwp_packet_put(jdwpserver, req);
-            //jvm_printf("[JDWP]class unload: %s\n", utf8_cstr(str));
+        getClassSignature(clazz, str);
+        mtx_lock(&jdwpserver->event_sets_lock);
+
+        Pair *pair = (Pair *) jdwpserver->event_sets->ptr;
+        Pair *end = pair + jdwpserver->event_sets->count;
+        for (; pair < end; pair++) {
+            EventSet *set = (EventSet *) pair->right;
+            if (set->eventKind == JDWP_EVENTKIND_CLASS_UNLOAD) {
+                JdwpPacket *req = jdwppacket_create();
+                jdwppacket_set_id(req, jdwpserver->jdwp_eventset_commandid++);
+                jdwppacket_set_cmd(req, JDWP_CMD_Event_Composite);
+                jdwppacket_write_byte(req, set->suspendPolicy);
+                jdwppacket_write_int(req, 1);
+                jdwppacket_write_byte(req, set->eventKind);
+                jdwppacket_write_int(req, set->requestId);
+                jdwppacket_write_utf(req, str);
+                jdwp_packet_put(jdwpserver, req);
+                //jvm_printf("[JDWP]class unload: %s\n", utf8_cstr(str));
+            }
         }
+        mtx_unlock(&jdwpserver->event_sets_lock);
+        utf8_destory(str);
     }
-    mtx_unlock(&jdwpserver->event_sets_lock);
-    utf8_destory(str);
 }
 
 void event_on_thread_start(JdwpServer *jdwpserver, Instance *jthread) {

@@ -1046,8 +1046,9 @@ s32 check_suspend_and_pause(Runtime *runtime) {
         vm_share_lock(jvm);
         threadInfo->is_suspend = 1;
         while (threadInfo->suspend_count) {
-            vm_share_notifyall(jvm);
+            vm_share_notify(jvm);
             vm_share_timedwait(jvm, 20);
+            thrd_yield();
         }
         threadInfo->is_suspend = 0;
         //jvm_printf(".");

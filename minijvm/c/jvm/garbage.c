@@ -536,7 +536,7 @@ s32 _gc_wait_thread_suspend(MiniJVM *jvm, Runtime *runtime) {
              runtime->thrd_info->is_blocking)  //执行一些IO等待时,jni会设is_blocking为1
             ) { //
         vm_share_notifyall(jvm);
-        vm_share_timedwait(jvm, 1);
+        vm_share_timedwait(jvm, 20);
         if (jvm->collector->_garbage_thread_status != GARBAGE_THREAD_NORMAL) {
             return -1;
         }
