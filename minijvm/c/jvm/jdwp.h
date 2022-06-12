@@ -6,12 +6,12 @@
 #define MINI_JVM_JDWP_H
 
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "jvm.h"
+
 //=============================      error   ==============================================
 enum {
     JDWP_ERROR_INVALID_TAG = 500, //object type id or class tag
@@ -342,6 +342,7 @@ typedef struct _EventSetMod {
 } EventSetMod;
 
 typedef struct _EventSet {
+    JdwpClient *client;
     s32 requestId;
     c8 eventKind;
     c8 suspendPolicy;

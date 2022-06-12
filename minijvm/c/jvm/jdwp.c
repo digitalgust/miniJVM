@@ -45,13 +45,17 @@ void jdwp_send_packets(JdwpClient *client);
 
 void event_on_debug_step(JdwpServer *jdwpserver, Runtime *step_runtime);
 
+EventSet *jdwp_eventset_create(JdwpServer *jdwpserver, JdwpClient *client, JdwpPacket *req);
+
 void jdwp_eventset_destory(EventSet *set);
+
+void jdwp_eventset_remove_on_client_close(JdwpServer *jdwpserver, JdwpClient *client);
 
 void jdwppacket_destory(JdwpPacket *packet);
 
 JdwpClient *jdwp_client_create(JdwpServer *jdwpserver);
 
-void jdwp_client_destory(JdwpClient *client);
+void jdwp_client_destory(JdwpServer *jdpwserver, JdwpClient *client);
 
 void resume_all_thread(MiniJVM *jvm);
 
@@ -73,7 +77,7 @@ s32 jdwp_thread_listener(void *para) {
         JdwpClient *client = jdwp_client_create(jdwpserver);
         s32 ret = mbedtls_net_accept(&jdwpserver->srvsock, &client->sockfd, NULL, 0, NULL);
         if (ret < 0) {
-            jdwp_client_destory(client);
+            jdwp_client_destory(jdwpserver, client);
             jdwpserver->exit = 1;
             break;
         }
@@ -86,22 +90,22 @@ s32 jdwp_thread_listener(void *para) {
 }
 
 s32 jdwp_thread_dispacher(void *para) {
-    JdwpServer *srv = (JdwpServer *) para;
-    srv->mode |= JDWP_MODE_DISPATCH;
+    JdwpServer *jdwpserver = (JdwpServer *) para;
+    jdwpserver->mode |= JDWP_MODE_DISPATCH;
     s32 i;
-    while (!srv->exit) {
-        for (i = 0; i < srv->clients->length; i++) {
-            JdwpClient *client = arraylist_get_value(srv->clients, i);
-            jdwp_client_process(srv, client);
+    while (!jdwpserver->exit) {
+        for (i = 0; i < jdwpserver->clients->length; i++) {
+            JdwpClient *client = arraylist_get_value(jdwpserver->clients, i);
+            jdwp_client_process(jdwpserver, client);
             jdwp_send_packets(client);
             if (client->closed) {
-                jdwp_client_destory(client);
-                arraylist_remove(srv->clients, client);
+                jdwp_client_destory(jdwpserver, client);
+                arraylist_remove(jdwpserver->clients, client);
             }
         }
         threadSleep(20);
     }
-    srv->mode &= ~JDWP_MODE_DISPATCH;
+    jdwpserver->mode &= ~JDWP_MODE_DISPATCH;
     return 0;
 }
 
@@ -141,7 +145,7 @@ s32 jdwp_stop_server(MiniJVM *jvm) {
     //
     for (i = 0; i < jdwpserver->clients->length; i++) {
         JdwpClient *client = arraylist_get_value(jdwpserver->clients, i);
-        jdwp_client_destory(client);
+        jdwp_client_destory(jdwpserver, client);
     }
     arraylist_destory(jdwpserver->clients);
     //
@@ -188,7 +192,7 @@ JdwpClient *jdwp_client_create(JdwpServer *jdwpserver) {
     return client;
 }
 
-void jdwp_client_destory(JdwpClient *client) {
+void jdwp_client_destory(JdwpServer *jdwpserver, JdwpClient *client) {
     if (client->rcvp) {
         jdwppacket_destory(client->rcvp);
     }
@@ -201,6 +205,9 @@ void jdwp_client_destory(JdwpClient *client) {
     }
     hashset_destory(client->temp_obj_holder);
     client->temp_obj_holder = NULL;
+
+    jdwp_eventset_remove_on_client_close(jdwpserver, client);
+
     jvm_free(client);
 }
 
@@ -1137,8 +1144,9 @@ s32 jdwp_set_debug_step(JdwpServer *jdwpserver, s32 setOrClear, Instance *jthrea
     return JDWP_ERROR_NONE;
 }
 
-EventSet *jdwp_create_eventset(JdwpServer *jdwpserver, JdwpPacket *req) {
+EventSet *jdwp_eventset_create(JdwpServer *jdwpserver, JdwpClient *client, JdwpPacket *req) {
     EventSet *set = jvm_calloc(sizeof(EventSet));
+    set->client = client;
     set->requestId = jdwpserver->jdwp_eventset_requestid++;
     set->eventKind = jdwppacket_read_byte(req);
     set->suspendPolicy = jdwppacket_read_byte(req);
@@ -1382,6 +1390,20 @@ s16 jdwp_eventset_clear(JdwpServer *jdwpserver, s32 id) {
     jdwp_eventset_remove(jdwpserver, id);
     jdwp_eventset_destory(set);
     return JDWP_ERROR_NONE;
+}
+
+void jdwp_eventset_remove_on_client_close(JdwpServer *jdwpserver, JdwpClient *client) {
+    mtx_lock(&jdwpserver->event_sets_lock);
+    s32 i;
+    for (i = 0; i < jdwpserver->event_sets->count; i++) {
+        Pair pair = pairlist_get_pair(jdwpserver->event_sets, i);
+        EventSet *set = (EventSet *) pair.right;
+        if (set->client == client) {
+            jdwp_eventset_clear(jdwpserver, set->requestId);//here is removed the event in jdwpserver->event_sets
+            i--;
+        }
+    }
+    mtx_unlock(&jdwpserver->event_sets_lock);
 }
 
 
@@ -2466,7 +2488,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             }
 //set 15
             case JDWP_CMD_EventRequest_Set: {//15.1
-                EventSet *eventSet = jdwp_create_eventset(jdwpserver, req);
+                EventSet *eventSet = jdwp_eventset_create(jdwpserver, client, req);
                 jdwp_eventset_put(jdwpserver, eventSet);
                 s16 ret = jdwp_eventset_set(jdwpserver, eventSet);
 
