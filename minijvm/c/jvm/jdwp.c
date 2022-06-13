@@ -61,6 +61,8 @@ void resume_all_thread(MiniJVM *jvm);
 
 void suspend_all_thread(MiniJVM *jvm);
 
+s32 is_class_exists(MiniJVM *jvm, JClass *clazz);
+
 //==================================================    server    ==================================================
 
 void jdwp_put_client(ArrayList *clients, JdwpClient *client) {
@@ -1334,8 +1336,10 @@ s16 jdwp_eventset_clear(JdwpServer *jdwpserver, s32 id) {
                 for (i = 0; i < set->modifiers; i++) {
                     EventSetMod *mod = &set->mods[i];
                     if (7 == mod->mod_type) {
-                        jdwp_set_breakpoint(JDWP_EVENTSET_CLEAR, mod->loc.classID, mod->loc.methodID,
-                                            mod->loc.execIndex);
+                        //maybe class has unloaded
+                        if (is_class_exists(jdwpserver->jvm, mod->loc.classID)) {
+                            jdwp_set_breakpoint(JDWP_EVENTSET_CLEAR, mod->loc.classID, mod->loc.methodID, mod->loc.execIndex);
+                        }
                     }
                 }
                 break;
@@ -1406,6 +1410,29 @@ void jdwp_eventset_remove_on_client_close(JdwpServer *jdwpserver, JdwpClient *cl
     mtx_unlock(&jdwpserver->event_sets_lock);
 }
 
+s32 is_class_exists(MiniJVM *jvm, JClass *clazz) {
+    s32 exist = 0;
+    spin_lock(&jvm->lock_cloader);
+    {
+        s32 i, count;
+        count = classes_loaded_count_unsafe(jvm);
+        for (i = 0; i < jvm->classloaders->length; i++) {
+            PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
+            HashtableIterator hti;
+            hashtable_iterate(pcl->classes, &hti);
+            for (; hashtable_iter_has_more(&hti);) {
+                JClass *cl = hashtable_iter_next_value(&hti);
+                if (cl == clazz) {
+                    exist = 1;
+                    break;
+                }
+            }
+            if (exist)break;
+        }
+    }
+    spin_unlock(&jvm->lock_cloader);
+    return exist;
+}
 
 void invoke_method(s32 call_mode, JdwpPacket *req, JdwpPacket *res, JdwpClient *client) {
 
