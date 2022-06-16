@@ -1083,7 +1083,10 @@ void event_on_debug_step(JdwpServer *jdwpserver, Runtime *step_runtime) {
     mtx_unlock(&jdwpserver->event_sets_lock);
 }
 
-s32 jdwp_set_breakpoint(s32 setOrClear, JClass *clazz, MethodInfo *methodInfo, s64 execIndex) {
+s32 jdwp_set_breakpoint(JdwpServer *jdwpserver, s32 setOrClear, JClass *clazz, MethodInfo *methodInfo, s64 execIndex) {
+    if (!is_class_exists(jdwpserver->jvm, clazz)) {
+        return JDWP_ERROR_INVALID_CLASS;
+    }
     if (!methodInfo->breakpoint) {
         methodInfo->breakpoint = pairlist_create(4);
     }
@@ -1219,6 +1222,7 @@ void jdwp_eventset_destory(EventSet *set) {
 }
 
 s16 jdwp_eventset_set(JdwpServer *jdwpserver, EventSet *set) {
+    s16 ret = JDWP_ERROR_NONE;
     if (set) {
         switch (set->eventKind) {
             case JDWP_EVENTKIND_VM_DISCONNECTED: {
@@ -1245,7 +1249,7 @@ s16 jdwp_eventset_set(JdwpServer *jdwpserver, EventSet *set) {
                 for (i = 0; i < set->modifiers; i++) {
                     EventSetMod *mod = &set->mods[i];
                     if (mod->mod_type == 7) {
-                        jdwp_set_breakpoint(JDWP_EVENTSET_SET, mod->loc.classID, mod->loc.methodID, mod->loc.execIndex);
+                        ret = jdwp_set_breakpoint(jdwpserver, JDWP_EVENTSET_SET, mod->loc.classID, mod->loc.methodID, mod->loc.execIndex);
                     }
                 }
                 break;
@@ -1305,10 +1309,12 @@ s16 jdwp_eventset_set(JdwpServer *jdwpserver, EventSet *set) {
             }
         }
     }
-    return JDWP_ERROR_NONE;
+    return ret;
 }
 
 s16 jdwp_eventset_clear(JdwpServer *jdwpserver, s32 id) {
+    s16 ret = JDWP_ERROR_NONE;
+
     EventSet *set = jdwp_eventset_get(jdwpserver, id);
     if (set) {
         switch (set->eventKind) {
@@ -1337,9 +1343,7 @@ s16 jdwp_eventset_clear(JdwpServer *jdwpserver, s32 id) {
                     EventSetMod *mod = &set->mods[i];
                     if (7 == mod->mod_type) {
                         //maybe class has unloaded
-                        if (is_class_exists(jdwpserver->jvm, mod->loc.classID)) {
-                            jdwp_set_breakpoint(JDWP_EVENTSET_CLEAR, mod->loc.classID, mod->loc.methodID, mod->loc.execIndex);
-                        }
+                        ret = jdwp_set_breakpoint(jdwpserver, JDWP_EVENTSET_CLEAR, mod->loc.classID, mod->loc.methodID, mod->loc.execIndex);
                     }
                 }
                 break;
@@ -1393,7 +1397,7 @@ s16 jdwp_eventset_clear(JdwpServer *jdwpserver, s32 id) {
     }
     jdwp_eventset_remove(jdwpserver, id);
     jdwp_eventset_destory(set);
-    return JDWP_ERROR_NONE;
+    return ret;
 }
 
 void jdwp_eventset_remove_on_client_close(JdwpServer *jdwpserver, JdwpClient *client) {
@@ -1852,95 +1856,116 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
 
             case JDWP_CMD_ReferenceType_Signature: {//2.1
                 JClass *ref = jdwppacket_read_refer(req);
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
-
-                Utf8String *str = utf8_create();
-                getClassSignature(ref, str);
-                jdwppacket_write_utf(res, str);
+                if (is_class_exists(jdwpserver->jvm, ref)) {
+                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                    Utf8String *str = utf8_create();
+                    getClassSignature(ref, str);
+                    jdwppacket_write_utf(res, str);
+                    utf8_destory(str);
+                } else {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
+                }
                 jdwp_packet_put(jdwpserver, res);
                 //jvm_printf("[JDWP]ReferenceType_Signature:%llx , %s \n", (s64) (intptr_t) ref, utf8_cstr(str));
-                utf8_destory(str);
                 break;
             }
             case JDWP_CMD_ReferenceType_ClassLoader: {//2.2
                 JClass *ref = jdwppacket_read_refer(req);
-
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
-
-                jdwppacket_write_refer(res, ref->jloader);
+                if (is_class_exists(jdwpserver->jvm, ref)) {
+                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                    jdwppacket_write_refer(res, ref->jloader);
+                } else {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
+                }
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
             case JDWP_CMD_ReferenceType_Modifiers: {//2.3
                 JClass *ref = jdwppacket_read_refer(req);
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
-
-                jdwppacket_write_int(res, ref->cff.access_flags);
+                if (is_class_exists(jdwpserver->jvm, ref)) {
+                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                    jdwppacket_write_int(res, ref->cff.access_flags);
+                } else {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
+                }
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
             case JDWP_CMD_ReferenceType_Fields: {//2.4
                 JClass *ref = jdwppacket_read_refer(req);
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                s32 len = ref->fieldPool.field_used;
-                jdwppacket_write_int(res, len);
-                s32 i;
-                for (i = 0; i < len; i++) {
-                    ////jvm_printf("[JDWP]method[" + i + "]" + ref.methods[i]);
-                    jdwppacket_write_refer(res, &ref->fieldPool.field[i]);
-                    jdwppacket_write_utf(res, ref->fieldPool.field[i].name);
-                    jdwppacket_write_utf(res, ref->fieldPool.field[i].descriptor);
-                    jdwppacket_write_int(res, ref->fieldPool.field[i].access_flags);
+                if (is_class_exists(jdwpserver->jvm, ref)) {
+                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                    s32 len = ref->fieldPool.field_used;
+                    jdwppacket_write_int(res, len);
+                    s32 i;
+                    for (i = 0; i < len; i++) {
+                        ////jvm_printf("[JDWP]method[" + i + "]" + ref.methods[i]);
+                        jdwppacket_write_refer(res, &ref->fieldPool.field[i]);
+                        jdwppacket_write_utf(res, ref->fieldPool.field[i].name);
+                        jdwppacket_write_utf(res, ref->fieldPool.field[i].descriptor);
+                        jdwppacket_write_int(res, ref->fieldPool.field[i].access_flags);
+                    }
+                } else {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
                 }
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
             case JDWP_CMD_ReferenceType_Methods: {//2.5
                 JClass *ref = jdwppacket_read_refer(req);
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                s32 len = ref->methodPool.method_used;
-                jdwppacket_write_int(res, len);
-                s32 i;
-                for (i = 0; i < len; i++) {
-                    ////jvm_printf("[JDWP]method[" + i + "]" + ref.methods[i]);
-                    jdwppacket_write_refer(res, &ref->methodPool.method[i]);
-                    jdwppacket_write_utf(res, ref->methodPool.method[i].name);
-                    jdwppacket_write_utf(res, ref->methodPool.method[i].descriptor);
-                    jdwppacket_write_int(res, ref->methodPool.method[i].access_flags);
+                if (is_class_exists(jdwpserver->jvm, ref)) {
+                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                    s32 len = ref->methodPool.method_used;
+                    jdwppacket_write_int(res, len);
+                    s32 i;
+                    for (i = 0; i < len; i++) {
+                        ////jvm_printf("[JDWP]method[" + i + "]" + ref.methods[i]);
+                        jdwppacket_write_refer(res, &ref->methodPool.method[i]);
+                        jdwppacket_write_utf(res, ref->methodPool.method[i].name);
+                        jdwppacket_write_utf(res, ref->methodPool.method[i].descriptor);
+                        jdwppacket_write_int(res, ref->methodPool.method[i].access_flags);
+                    }
+                } else {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
                 }
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
             case JDWP_CMD_ReferenceType_GetValues: {//2.6
-                gc_pause(jdwpserver->jvm->collector);
-                Runtime *runtime = runtime_create(jdwpserver->jvm);
                 JClass *ref = jdwppacket_read_refer(req);
-                s32 fields = jdwppacket_read_int(req);
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                jdwppacket_write_int(res, fields);
-                s32 i;
-                for (i = 0; i < fields; i++) {
-                    FieldInfo *fi = jdwppacket_read_refer(req);
-                    ValueType vt;
-                    vt.type = getJdwpTag(fi->descriptor);
-                    c8 *ptr = getStaticFieldPtr(fi);
-                    vt.value = getPtrValue(vt.type, ptr);
-                    writeValueType(res, &vt);
+                if (is_class_exists(jdwpserver->jvm, ref)) {
+                    gc_pause(jdwpserver->jvm->collector);
+                    Runtime *runtime = runtime_create(jdwpserver->jvm);
+                    s32 fields = jdwppacket_read_int(req);
+                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                    jdwppacket_write_int(res, fields);
+                    s32 i;
+                    for (i = 0; i < fields; i++) {
+                        FieldInfo *fi = jdwppacket_read_refer(req);
+                        ValueType vt;
+                        vt.type = getJdwpTag(fi->descriptor);
+                        c8 *ptr = getStaticFieldPtr(fi);
+                        vt.value = getPtrValue(vt.type, ptr);
+                        writeValueType(res, &vt);
+                    }
+
+                    gc_move_objs_thread_2_gc(runtime);
+                    runtime_destory(runtime);
+                    gc_resume(jdwpserver->jvm->collector);
+                } else {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
                 }
                 jdwp_packet_put(jdwpserver, res);
-
-                gc_move_objs_thread_2_gc(runtime);
-                runtime_destory(runtime);
-                gc_resume(jdwpserver->jvm->collector);
                 break;
             }
             case JDWP_CMD_ReferenceType_SourceFile: {//2.7
                 JClass *ref = jdwppacket_read_refer(req);
-
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
-
-                jdwppacket_write_utf(res, ref->source);
-                //jvm_printf("[JDWP]ReferenceType_SourceFile:%s\n", utf8_cstr(ref->source));
+                if (is_class_exists(jdwpserver->jvm, ref)) {
+                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                    jdwppacket_write_utf(res, ref->source);
+                } else {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
+                }
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
@@ -1952,33 +1977,40 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             }
             case JDWP_CMD_ReferenceType_Status: {//2.9
                 JClass *ref = jdwppacket_read_refer(req);
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                jdwppacket_write_int(res, getClassStatus(ref));
-                //jvm_printf("[JDWP]JDWP_CMD_ReferenceType_Status:%s\n", utf8_cstr(ref->name));
+                if (is_class_exists(jdwpserver->jvm, ref)) {
+                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                    jdwppacket_write_int(res, getClassStatus(ref));
+                } else {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
+                }
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
             case JDWP_CMD_ReferenceType_Interfaces: {//2.10
                 JClass *ref = jdwppacket_read_refer(req);
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                s32 len = ref->interfacePool.clasz_used;
-                jdwppacket_write_int(res, len);
-                s32 i;
-                for (i = 0; i < len; i++) {
-                    JClass *cl = classes_get(jdwpserver->jvm, ref->jloader, ref->interfacePool.clasz[i].name);
-                    jdwppacket_write_refer(res, cl);
+                if (is_class_exists(jdwpserver->jvm, ref)) {
+                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                    s32 len = ref->interfacePool.clasz_used;
+                    jdwppacket_write_int(res, len);
+                    s32 i;
+                    for (i = 0; i < len; i++) {
+                        JClass *cl = classes_get(jdwpserver->jvm, ref->jloader, ref->interfacePool.clasz[i].name);
+                        jdwppacket_write_refer(res, cl);
+                    }
+                } else {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
                 }
-                //jvm_printf("[JDWP]ReferenceType_Interfaces:%s\n", utf8_cstr(ref->name));
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
             case JDWP_CMD_ReferenceType_ClassObject: {//2.11
                 JClass *ref = jdwppacket_read_refer(req);
-
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
-
-                jdwppacket_write_refer(res, ref);
-                //jvm_printf("[JDWP]ReferenceType_ClassObject:%s\n", utf8_cstr(ref->name));
+                if (is_class_exists(jdwpserver->jvm, ref)) {
+                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                    jdwppacket_write_refer(res, ref);
+                } else {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
+                }
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
@@ -1989,64 +2021,76 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             }
             case JDWP_CMD_ReferenceType_SignatureWithGeneric: {//2.13
                 JClass *ref = jdwppacket_read_refer(req);
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                if (is_class_exists(jdwpserver->jvm, ref)) {
+                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
 
-                Utf8String *str = utf8_create();
-                getClassSignature(ref, str);
-                jdwppacket_write_utf(res, str);
-                utf8_clear(str);
-                jdwppacket_write_utf(res, str);
+                    Utf8String *str = utf8_create();
+                    getClassSignature(ref, str);
+                    jdwppacket_write_utf(res, str);
+                    utf8_clear(str);
+                    jdwppacket_write_utf(res, str);
+                    utf8_destory(str);
+                } else {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
+                }
                 jdwp_packet_put(jdwpserver, res);
                 //jvm_printf("[JDWP]JDWP_CMD_ReferenceType_SignatureWithGeneric:%llx , %s \n", (s64) (intptr_t) ref, utf8_cstr(str));
-                utf8_destory(str);
                 break;
             }
             case JDWP_CMD_ReferenceType_FieldsWithGeneric: {//2.14
                 JClass *ref = jdwppacket_read_refer(req);
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                s32 len = ref->fieldPool.field_used;
-                jdwppacket_write_int(res, len);
-                Utf8String *ustr = utf8_create();
-                s32 i;
-                for (i = 0; i < len; i++) {
-                    jdwppacket_write_refer(res, &ref->fieldPool.field[i]);
-                    jdwppacket_write_utf(res, ref->fieldPool.field[i].name);
-                    jdwppacket_write_utf(res, ref->fieldPool.field[i].descriptor);
-                    jdwppacket_write_utf(res, ustr);
-                    jdwppacket_write_int(res, ref->fieldPool.field[i].access_flags);
+                if (is_class_exists(jdwpserver->jvm, ref)) {
+                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                    s32 len = ref->fieldPool.field_used;
+                    jdwppacket_write_int(res, len);
+                    Utf8String *ustr = utf8_create();
+                    s32 i;
+                    for (i = 0; i < len; i++) {
+                        jdwppacket_write_refer(res, &ref->fieldPool.field[i]);
+                        jdwppacket_write_utf(res, ref->fieldPool.field[i].name);
+                        jdwppacket_write_utf(res, ref->fieldPool.field[i].descriptor);
+                        jdwppacket_write_utf(res, ustr);
+                        jdwppacket_write_int(res, ref->fieldPool.field[i].access_flags);
+                    }
+                    utf8_destory(ustr);
+                } else {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
                 }
-                utf8_destory(ustr);
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
             case JDWP_CMD_ReferenceType_MethodsWithGeneric: {//2.15
                 JClass *ref = jdwppacket_read_refer(req);
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                s32 len = ref->methodPool.method_used;
-                jdwppacket_write_int(res, len);
-                Utf8String *ustr = utf8_create();
-                s32 i;
-                for (i = 0; i < len; i++) {
-                    jdwppacket_write_refer(res, &ref->methodPool.method[i]);
-                    jdwppacket_write_utf(res, ref->methodPool.method[i].name);
-                    jdwppacket_write_utf(res, ref->methodPool.method[i].descriptor);
-                    jdwppacket_write_utf(res, ustr);
-                    jdwppacket_write_int(res, ref->methodPool.method[i].access_flags);
+                if (is_class_exists(jdwpserver->jvm, ref)) {
+                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                    s32 len = ref->methodPool.method_used;
+                    jdwppacket_write_int(res, len);
+                    Utf8String *ustr = utf8_create();
+                    s32 i;
+                    for (i = 0; i < len; i++) {
+                        jdwppacket_write_refer(res, &ref->methodPool.method[i]);
+                        jdwppacket_write_utf(res, ref->methodPool.method[i].name);
+                        jdwppacket_write_utf(res, ref->methodPool.method[i].descriptor);
+                        jdwppacket_write_utf(res, ustr);
+                        jdwppacket_write_int(res, ref->methodPool.method[i].access_flags);
+                    }
+                    utf8_destory(ustr);
+                } else {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
                 }
-                utf8_destory(ustr);
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
 //set 3
 
             case JDWP_CMD_ClassType_Superclass: {//3.1
-                __refer refType = jdwppacket_read_refer(req);
-                JClass *ref = (JClass *) (refType);
-
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
-
-                jdwppacket_write_refer(res, getSuperClass(ref));
-                //jvm_printf("[JDWP]JDWP_CMD_ClassType_Superclass:%s\n", utf8_cstr(ref->name));
+                JClass *ref = jdwppacket_read_refer(req);
+                if (is_class_exists(jdwpserver->jvm, ref)) {
+                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                    jdwppacket_write_refer(res, getSuperClass(ref));
+                } else {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
+                }
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
@@ -2081,21 +2125,25 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             case JDWP_CMD_Method_LineTable: {//6.1
                 __refer refType = jdwppacket_read_refer(req);
                 JClass *ref = (JClass *) (refType);
-                MethodInfo *method = jdwppacket_read_refer(req);
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                CodeAttribute *ca = getCodeAttribute(method);
-                if (method->is_native) {
-                    jdwppacket_write_long(res, -1);
-                    jdwppacket_write_long(res, -1);
+                if (is_class_exists(jdwpserver->jvm, ref)) {
+                    MethodInfo *method = jdwppacket_read_refer(req);
+                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                    CodeAttribute *ca = getCodeAttribute(method);
+                    if (method->is_native) {
+                        jdwppacket_write_long(res, -1);
+                        jdwppacket_write_long(res, -1);
+                    } else {
+                        jdwppacket_write_long(res, 0);
+                        jdwppacket_write_long(res, ca->code_length);
+                    }
+                    jdwppacket_write_int(res, ca->line_number_table_length);
+                    s32 i;
+                    for (i = 0; i < ca->line_number_table_length; i++) {
+                        jdwppacket_write_long(res, ca->line_number_table[i].start_pc);
+                        jdwppacket_write_int(res, ca->line_number_table[i].line_number);
+                    }
                 } else {
-                    jdwppacket_write_long(res, 0);
-                    jdwppacket_write_long(res, ca->code_length);
-                }
-                jdwppacket_write_int(res, ca->line_number_table_length);
-                s32 i;
-                for (i = 0; i < ca->line_number_table_length; i++) {
-                    jdwppacket_write_long(res, ca->line_number_table[i].start_pc);
-                    jdwppacket_write_int(res, ca->line_number_table[i].line_number);
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
                 }
                 jdwp_packet_put(jdwpserver, res);
                 break;
@@ -2103,21 +2151,25 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             case JDWP_CMD_Method_VariableTable: {//6.2
                 __refer refType = jdwppacket_read_refer(req);
                 JClass *ref = (JClass *) (refType);
-                MethodInfo *method = jdwppacket_read_refer(req);
-                CodeAttribute *ca = getCodeAttribute(method);
-                jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                jdwppacket_write_int(res, method->para_slots);  //slot count
-                jdwppacket_write_int(res, ca->local_var_table_length);// para count
-                s32 i;
-                for (i = 0; i < ca->local_var_table_length; i++) {
-                    LocalVarTable *tab = &ca->local_var_table[i];
-                    jdwppacket_write_long(res, tab->start_pc);
-                    jdwppacket_write_utf(res, class_get_utf8_string(ref, tab->name_index));
-                    jdwppacket_write_utf(res, class_get_utf8_string(ref, tab->descriptor_index));
-                    jdwppacket_write_int(res, tab->length);
-                    jdwppacket_write_int(res, tab->index);
+                if (is_class_exists(jdwpserver->jvm, ref)) {
+                    MethodInfo *method = jdwppacket_read_refer(req);
+                    CodeAttribute *ca = getCodeAttribute(method);
+                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                    jdwppacket_write_int(res, method->para_slots);  //slot count
+                    jdwppacket_write_int(res, ca->local_var_table_length);// para count
+                    s32 i;
+                    for (i = 0; i < ca->local_var_table_length; i++) {
+                        LocalVarTable *tab = &ca->local_var_table[i];
+                        jdwppacket_write_long(res, tab->start_pc);
+                        jdwppacket_write_utf(res, class_get_utf8_string(ref, tab->name_index));
+                        jdwppacket_write_utf(res, class_get_utf8_string(ref, tab->descriptor_index));
+                        jdwppacket_write_int(res, tab->length);
+                        jdwppacket_write_int(res, tab->index);
+                    }
+                    //jvm_printf("[JDWP]Method_VariableTable:\n");
+                } else {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
                 }
-                //jvm_printf("[JDWP]Method_VariableTable:\n");
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }

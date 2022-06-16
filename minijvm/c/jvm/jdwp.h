@@ -477,8 +477,7 @@ Runtime *jdwp_get_runtime(JdwpServer *srv);
 
 s32 jdwp_is_ignore_sync(JdwpServer *srv);
 
-s32 jdwp_set_breakpoint(s32 setOrClear, JClass *clazz, MethodInfo *methodInfo, s64 execIndex);
-
+s32 jdwp_set_breakpoint(JdwpServer *jdwpserver, s32 setOrClear, JClass *clazz, MethodInfo *methodInfo, s64 execIndex);
 
 void event_on_breakpoint(JdwpServer *jdwpserver, Runtime *breakpoint_runtime);
 
