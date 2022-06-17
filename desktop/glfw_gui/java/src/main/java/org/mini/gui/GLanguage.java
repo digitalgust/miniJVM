@@ -22,7 +22,14 @@ public class GLanguage {
 
     static int cur_lang = ID_ENG;
 
+    /**
+     * api range language strings
+     */
     static {
+        initGuiSrings();
+    }
+
+    static private void initGuiSrings() {
         addStringInner("SeleAll", new String[]{"SeleAll", "全选", "全選"});
         addStringInner("Copy", new String[]{"Copy", "复制", "復制"});
         addStringInner("Select", new String[]{"Select", "选择", "選擇"});
@@ -67,4 +74,7 @@ public class GLanguage {
         return ss[langType];
     }
 
+    static public void clear() {
+        ext.clear();
+    }
 }

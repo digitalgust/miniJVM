@@ -59,7 +59,7 @@ public class AppManager extends GApplication {
     static final String STR_DARK_STYLE = "Dark appearance";
     static final String STR_MESSAGE = "Message";
 
-    static {
+    static private void regStrings() {
         GLanguage.addString(STR_SETTING, new String[]{STR_SETTING, "设置", "设置"});
         GLanguage.addString(STR_EXIT, new String[]{STR_EXIT, "退出", "退出"});
         GLanguage.addString(STR_TITLE, new String[]{STR_TITLE, "APP 管理器", "APP 管理器"});
@@ -129,6 +129,8 @@ public class AppManager extends GApplication {
         }
         GToolkit.setStyle(style);
         GForm.setMsgBarColor(GCmdHandler.DEFAULT_MSG_BAR_COLOR);
+        regStrings();
+        GLanguage.setCurLang(AppLoader.getDefaultLang());
         GCallBack.getInstance().setApplication(this);
         reloadAppList();
     }
@@ -147,6 +149,7 @@ public class AppManager extends GApplication {
                 System.out.println("devW :" + devW + ", devH  :" + devH);
 
                 GForm.hideKeyboard();
+                regStrings();
                 GLanguage.setCurLang(AppLoader.getDefaultLang());
 
                 if (AppLoader.getGuiStyle() == 0) {

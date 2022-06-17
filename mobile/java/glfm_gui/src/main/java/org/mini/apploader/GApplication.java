@@ -8,6 +8,7 @@ package org.mini.apploader;
 import org.mini.gui.GCallBack;
 import org.mini.gui.GCmd;
 import org.mini.gui.GForm;
+import org.mini.gui.GLanguage;
 
 /**
  * @author Gust
@@ -32,6 +33,7 @@ public abstract class GApplication {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        GLanguage.clear();
         AppManager.getInstance().active();
         GForm.addCmd(new GCmd(() -> {
             Thread.currentThread().setContextClassLoader(null);
