@@ -686,7 +686,7 @@ MethodInfo *find_methodInfo_by_name(Utf8String *clsName, Utf8String *methodName,
         other = getSuperClass(other);
         if (sonIsInterface && !(other->cff.access_flags & ACC_INTERFACE)) {//interface can not find method from java.lang.Object
             other = NULL;
-        }0
+        }
     }
     return mi;
 }
