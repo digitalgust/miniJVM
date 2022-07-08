@@ -311,7 +311,7 @@ public class GToolkit {
         nvgTextAlign(vg, align);
         nvgFillColor(vg, color);
         byte[] b = toUtf8(s);
-        Nanovg.nvgTextJni(vg, tx, ty, b, 0, b.length);
+        Nanovg.nvgTextJni(vg, tx, ty + 1.5f, b, 0, b.length);
     }
 
     public static void drawTextLineTopLeft(long vg, float tx, float ty, float pw, float ph, String s, float fontSize, float[] color) {
@@ -325,7 +325,7 @@ public class GToolkit {
         nvgTextAlign(vg, NVG_ALIGN_TOP | NVG_ALIGN_LEFT);
         nvgFillColor(vg, color);
         byte[] b = toUtf8(s);
-        Nanovg.nvgTextJni(vg, tx, ty, b, 0, b.length);
+        Nanovg.nvgTextJni(vg, tx, ty + 1.5f, b, 0, b.length);
         nvgRestore(vg);
     }
 
@@ -353,10 +353,10 @@ public class GToolkit {
         if (text_arr != null) {
             if (shadowColor != null) {
                 nvgFillColor(vg, shadowColor);
-                nvgTextBoxJni(vg, x + 1, y + 1, w, text_arr, 0, text_arr.length);
+                nvgTextBoxJni(vg, x + 1, y + 2, w, text_arr, 0, text_arr.length);
             }
             nvgFillColor(vg, color);
-            nvgTextBoxJni(vg, x, y, w, text_arr, 0, text_arr.length);
+            nvgTextBoxJni(vg, x, y + 1, w, text_arr, 0, text_arr.length);
         }
     }
 

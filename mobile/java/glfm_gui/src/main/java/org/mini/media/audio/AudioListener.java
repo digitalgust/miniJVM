@@ -3,13 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.mini.media;
+package org.mini.media.audio;
 
 /**
  *
  * @author Gust
  */
-public interface AudioCallback {
+public interface AudioListener {
 
     void onCapture(int millSecond, byte[] data);
     

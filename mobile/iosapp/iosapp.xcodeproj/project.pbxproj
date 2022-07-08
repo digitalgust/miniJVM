@@ -147,8 +147,6 @@
 		451F26BC23A24ADE00F99984 /* sljitProtExecAllocator.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitProtExecAllocator.c; sourceTree = "<group>"; };
 		451F26BD23A24ADE00F99984 /* sljitNativeSPARC_32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeSPARC_32.c; sourceTree = "<group>"; };
 		452AD04323F9645D0069A699 /* nanovg_jni_assist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nanovg_jni_assist.h; sourceTree = "<group>"; };
-		4535FA2421944E4200B888BA /* dr_mp3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dr_mp3.h; sourceTree = "<group>"; };
-		4535FA2521944E4200B888BA /* dr_flac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dr_flac.h; sourceTree = "<group>"; };
 		4535FA2721944F7300B888BA /* jni_minial.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = jni_minial.m; sourceTree = "<group>"; };
 		457AFCAE23C84C53002F5E34 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
 		457AFCB023C84F89002F5E34 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
@@ -410,8 +408,6 @@
 			isa = PBXGroup;
 			children = (
 				45F65EB9224E343800390C0D /* miniaudio.h */,
-				4535FA2421944E4200B888BA /* dr_mp3.h */,
-				4535FA2521944E4200B888BA /* dr_flac.h */,
 			);
 			path = minial;
 			sourceTree = "<group>";

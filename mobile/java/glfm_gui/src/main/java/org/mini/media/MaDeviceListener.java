@@ -11,11 +11,11 @@ import org.mini.reflect.DirectMemObj;
  *
  * @author Gust
  */
-public interface DeviceListener {
+public interface MaDeviceListener {
 
-    void onCapture(AudioDevice pDevice, int frameCount, DirectMemObj dmo);
+    void onCapture(MaDevice pDevice, int frameCount, DirectMemObj dmo);
 
-    int onPlayback(AudioDevice pDevice, int frameCount, DirectMemObj dmo);
+    int onPlayback(MaDevice pDevice, int frameCount, DirectMemObj dmo);
 
-    void onStop(AudioDevice pDevice);
+    void onStop(MaDevice pDevice);
 }

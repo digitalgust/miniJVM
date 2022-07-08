@@ -344,7 +344,7 @@ public class AppLoader {
             if (app == null || GCallBack.getInstance().getForm() == null) {
                 app = AppManager.getInstance();
                 AppManager.getInstance().active();
-                GForm.addMessage(GLanguage.getString(AppManager.STR_OPEN_APP_FAIL) + ": " + jarName);
+                //GForm.addMessage(GLanguage.getString(AppManager.STR_OPEN_APP_FAIL) + ": " + jarName);
             }
         }
         return app;
