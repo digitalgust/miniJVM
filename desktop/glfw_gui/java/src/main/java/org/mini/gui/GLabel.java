@@ -72,6 +72,15 @@ public class GLabel extends GObject {
         preicon = icon;
     }
 
+    float oldX, oldY;
+
+    private boolean validAction(float releaseX, float releaseY) {
+        if (releaseX >= oldX && releaseX <= oldX + getW() && releaseY >= oldY && releaseY < oldY + getH()) {
+            return true;
+        }
+        return false;
+    }
+
 
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
@@ -79,9 +88,11 @@ public class GLabel extends GObject {
             if (pressed) {
                 this.pressed = true;
                 parent.setFocus(this);
+                oldX = getX();
+                oldY = getY();
             } else {
                 this.pressed = false;
-                doAction();
+                if (validAction(x, y)) doAction();
             }
         }
     }
@@ -98,8 +109,10 @@ public class GLabel extends GObject {
         if (isInArea(x, y)) {
             if (phase == Glfm.GLFMTouchPhaseBegan) {
                 pressed = true;
+                oldX = getX();
+                oldY = getY();
             } else if (phase == Glfm.GLFMTouchPhaseEnded) {
-                doAction();
+                if (validAction(x, y)) doAction();
                 pressed = false;
             } else if (!isInArea(x, y)) {
                 pressed = false;

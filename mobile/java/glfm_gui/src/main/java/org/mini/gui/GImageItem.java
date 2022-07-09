@@ -159,14 +159,24 @@ public class GImageItem extends GObject {
     }
 
     boolean bt_pressed;
+    float oldX, oldY;
+
+    private boolean validAction(float releaseX, float releaseY) {
+        if (releaseX >= oldX && releaseX <= oldX + getW() && releaseY >= oldY && releaseY < oldY + getH()) {
+            return true;
+        }
+        return false;
+    }
 
     @Override
     public void touchEvent(int touchid, int phase, int x, int y) {
         if (isInArea(x, y)) {
             if (phase == Glfm.GLFMTouchPhaseBegan) {
                 bt_pressed = true;
+                oldX = getX();
+                oldY = getY();
             } else if (phase == Glfm.GLFMTouchPhaseEnded) {
-                doAction();
+                if (validAction(x, y)) doAction();
                 bt_pressed = false;
             } else if (!isInArea(x, y)) {
                 bt_pressed = false;
@@ -179,8 +189,10 @@ public class GImageItem extends GObject {
             if (button == Glfw.GLFW_MOUSE_BUTTON_1) {//left
                 if (pressed) {
                     bt_pressed = true;
+                    oldX = getX();
+                    oldY = getY();
                 } else {
-                    doAction();
+                    if (validAction(x, y)) doAction();
                     bt_pressed = false;
                 }
             }

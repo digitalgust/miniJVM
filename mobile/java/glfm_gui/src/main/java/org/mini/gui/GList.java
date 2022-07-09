@@ -288,6 +288,7 @@ public class GList extends GContainer {
                     popWin.setSize(popWin.getW(), popH);
                     form.add(popWin);
                     form.setFocus(popWin);
+                    popWin.setFocusListener(focusHandler);
                 }
             } else {
                 GForm form = getForm();
@@ -531,19 +532,24 @@ public class GList extends GContainer {
         public void focusLost(GObject newgo) {
             pulldown = false;
             changeCurPanel();
-            popWin.setFocusListener(null);
+            //popWin.setFocusListener(null);
         }
     }
+
+    boolean pressed;
 
     class NormalPanel extends GPanel {
         @Override
         public void touchEvent(int touchid, int phase, int x, int y) {
             if (touchid != Glfw.GLFW_MOUSE_BUTTON_1) return;
             if (phase == Glfm.GLFMTouchPhaseBegan) {
+                pressed = true;
             } else if (phase == Glfm.GLFMTouchPhaseEnded) {
-                pulldown = !pulldown;
-                GList.this.changeCurPanel();
-                //popWin.setFocusListener(focusHandler);
+                if (pressed) {
+                    pulldown = !pulldown;
+                    GList.this.changeCurPanel();
+                    pressed = false;
+                }
             }
             super.touchEvent(touchid, phase, x, y);
 
@@ -553,9 +559,12 @@ public class GList extends GContainer {
         public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
             if (button == Glfw.GLFW_MOUSE_BUTTON_1) {
                 if (pressed) {
+                    pressed = true;
                 } else if (!pressed) {
-                    pulldown = !pulldown;
-                    GList.this.changeCurPanel();
+                    if (pressed) {
+                        pulldown = !pulldown;
+                        GList.this.changeCurPanel();
+                    }
                 }
             }
             super.mouseButtonEvent(button, pressed, x, y);

@@ -113,7 +113,7 @@ public class Glfm {
 
     }
 
-    public static boolean glfmGetKeyboardVisible(long display) {
+    public static boolean glfmIsKeyboardVisible(long display) {
         return true;
     }
 

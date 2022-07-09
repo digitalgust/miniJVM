@@ -246,8 +246,8 @@ public class GlfmCallBackImpl extends GCallBack {
         y /= Glfm.glfmGetDisplayScale(display);
 
         //form maybe translate when keyboard popup
-        x += gform.getX();
-        y += gform.getY();
+//        x += gform.getX();
+//        y += gform.getY();
 
         lastX[touch] = mouseX[touch];
         lastY[touch] = mouseY[touch];

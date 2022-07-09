@@ -362,7 +362,7 @@ public class GFrame extends GContainer {
         if (isInArea(x, y)) {
             super.touchEvent(touchid, phase, x, y);
         } else {
-            view.setFocus(null);
+            if (phase == Glfm.GLFMTouchPhaseBegan) view.setFocus(null);
         }
     }
 

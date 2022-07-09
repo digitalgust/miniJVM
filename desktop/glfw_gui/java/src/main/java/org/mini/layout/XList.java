@@ -27,7 +27,7 @@ public class XList extends XObject {
     }
 
     protected Vector items = new Vector();
-    protected boolean multiLine = false;
+    protected boolean multiLine = true;
     protected boolean multiSelect = false;
     protected boolean scrollbar = false;
     protected int itemheight = XDef.DEFAULT_LIST_HEIGHT;

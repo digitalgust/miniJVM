@@ -187,6 +187,9 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
             switch (phase) {
                 case Glfm.GLFMTouchPhaseBegan: {
                     touched = true;
+                    if (enable && !Glfm.glfmIsKeyboardVisible(GCallBack.getInstance().getDisplay())) {
+                        GForm.showKeyboard(this);
+                    }
                     break;
                 }
                 case Glfm.GLFMTouchPhaseEnded: {

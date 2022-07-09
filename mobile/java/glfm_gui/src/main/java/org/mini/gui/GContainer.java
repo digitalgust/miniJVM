@@ -415,10 +415,11 @@ abstract public class GContainer extends GObject {
             nko.paint(ctx);
 
             if (paintDebug && (focus == nko)) {
+                float[] c = Nanovg.nvgRGBA((byte) 255, (byte) 0, (byte) 0, (byte) 255);
                 Nanovg.nvgScissor(ctx, vx, vy, vw, vh);
                 Nanovg.nvgBeginPath(ctx);
                 Nanovg.nvgRect(ctx, vx + 1, vy + 1, vw - 2, vh - 2);
-                Nanovg.nvgStrokeColor(ctx, Nanovg.nvgRGBA((byte) 255, (byte) 0, (byte) 0, (byte) 255));
+                Nanovg.nvgStrokeColor(ctx, c);
                 Nanovg.nvgStroke(ctx);
 
                 Nanovg.nvgBeginPath(ctx);
@@ -426,6 +427,8 @@ abstract public class GContainer extends GObject {
                 Nanovg.nvgStrokeColor(ctx, Nanovg.nvgRGBA((byte) 0, (byte) 0, (byte) 255, (byte) 255));
                 Nanovg.nvgStroke(ctx);
 
+                String s = nko.getX() + "," + nko.getY() + "," + nko.getW() + "," + nko.getH();
+                GToolkit.drawTextLine(ctx, nko.getX(), nko.getY(), s, 12, c, Nanovg.NVG_ALIGN_LEFT | Nanovg.NVG_ALIGN_TOP);
             }
         }
         Nanovg.nvgRestore(ctx);
@@ -577,7 +580,7 @@ abstract public class GContainer extends GObject {
             found.touchEvent(touchid, phase, x, y);
             return;
         } else if (found instanceof GFrame) {//this fix frame may not be active
-            setFocus(found);
+            if (phase == Glfm.GLFMTouchPhaseBegan) setFocus(found);
             found.touchEvent(touchid, phase, x, y);
             return;
         }

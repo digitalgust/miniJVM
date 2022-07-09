@@ -40,13 +40,13 @@
         <viewport name="PAN_SETTING" w="98%" h="100%">
             <button name="BT_BACK1" h="30" addon="10">&lt;{Back}</button>
             <label w="100%" h="30" align="hcenter,vcenter">{Setting}</label>
-            <list name="LIST_LANG" w="100%">
+            <list name="LIST_LANG" w="100%" multiline="0">
                 <li name="LI_ENG">English</li>
                 <li name="LI_CHS">简体中文</li>
                 <li name="LI_CHT">繁體中文</li>
             </list>
             <br/>
-            <list name="LIST_STYLE" w="100%">
+            <list name="LIST_STYLE" w="100%" multiline="0">
                 <li name="LI_BRIGHT" selected="1">{Bright appearance}</li>
                 <li name="LI_DARK">{Dark appearance}</li>
             </list>

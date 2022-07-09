@@ -58,26 +58,26 @@ public class GListItem extends GObject {
         setText(label);
     }
 
-    int mouseX, mouseY;
-    int draged = 0;//拖动事件次数
+    float oldX, oldY;
+
+    private boolean validAction(float releaseX, float releaseY) {
+        if (releaseX >= oldX && releaseX <= oldX + getW() && releaseY >= oldY && releaseY < oldY + getH()) {
+            return true;
+        }
+        return false;
+    }
 
     @Override
     public void touchEvent(int touchid, int phase, int x, int y) {
         switch (phase) {
             case Glfm.GLFMTouchPhaseBegan:
-                mouseX = x;
-                mouseY = y;
-                draged = 0;
+                oldX = getX();
+                oldY = getY();
                 break;
             case Glfm.GLFMTouchPhaseMoved:
                 break;
             case Glfm.GLFMTouchPhaseEnded:
-                if (draged < 3) { //防拖动后触发点击
-                    if (Math.abs(y - mouseY) < list.list_item_heigh && Math.abs(x - mouseX) < list.list_item_heigh) {
-                        select();
-                    }
-                }
-                draged = 0;
+                if (validAction(x, y)) select();
                 break;
             default:
                 break;
@@ -86,7 +86,6 @@ public class GListItem extends GObject {
     }
 
     public boolean dragEvent(int button, float dx, float dy, float x, float y) {
-        draged++;
         return false;
     }
 
@@ -94,13 +93,10 @@ public class GListItem extends GObject {
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         if (pressed) {
-            mouseY = y;
-            draged = 0;
-        } else if (Math.abs(y - mouseY) < list.list_item_heigh) {
-            if (draged < 3) {
-                select();
-            }
-            draged = 0;
+            oldX = getX();
+            oldY = getY();
+        } else {
+            if (validAction(x, y)) select();
         }
     }
 
@@ -109,7 +105,7 @@ public class GListItem extends GObject {
     }
 
     void select() {
-        if(enable) {
+        if (enable) {
             int index = getIndex();
             list.select(index);
             list.pulldown = false;

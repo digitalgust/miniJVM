@@ -156,7 +156,7 @@ public class Glfm {
 
     public static native void glfmSetKeyboardVisible(long display, boolean visible);
 
-    public static native boolean glfmGetKeyboardVisible(long display);
+    public static native boolean glfmIsKeyboardVisible(long display);
 
     public static native String glfmGetResRoot();
 

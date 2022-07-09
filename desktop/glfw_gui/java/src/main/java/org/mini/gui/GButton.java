@@ -21,6 +21,14 @@ public class GButton extends GObject {
     protected char preicon;
     protected byte[] preicon_arr;
     protected boolean bt_pressed = false;
+    float oldX, oldY;
+
+    private boolean validAction(float releaseX, float releaseY) {
+        if (releaseX >= oldX && releaseX <= oldX + getW() && releaseY >= oldY && releaseY < oldY + getH()) {
+            return true;
+        }
+        return false;
+    }
 
     public GButton() {
         this(null, 0f, 0f, 1f, 1f);
@@ -60,9 +68,11 @@ public class GButton extends GObject {
             if (pressed) {
                 bt_pressed = true;
                 parent.setFocus(this);
+                oldX = getX();
+                oldY = getY();
             } else {
                 bt_pressed = false;
-                doAction();
+                if (validAction(x, y)) doAction();
             }
         }
     }
@@ -79,8 +89,10 @@ public class GButton extends GObject {
         if (isInArea(x, y)) {
             if (phase == Glfm.GLFMTouchPhaseBegan) {
                 bt_pressed = true;
+                oldX = getX();
+                oldY = getY();
             } else if (phase == Glfm.GLFMTouchPhaseEnded) {
-                doAction();
+                if (validAction(x, y)) doAction();
                 bt_pressed = false;
             } else if (!isInArea(x, y)) {
                 bt_pressed = false;

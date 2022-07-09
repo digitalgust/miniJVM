@@ -288,6 +288,7 @@ public class GList extends GContainer {
                     popWin.setSize(popWin.getW(), popH);
                     form.add(popWin);
                     form.setFocus(popWin);
+                    popWin.setFocusListener(focusHandler);
                 }
             } else {
                 GForm form = getForm();
@@ -521,6 +522,7 @@ public class GList extends GContainer {
      */
     NormalPanel normalPanel = new NormalPanel();
     PopWinFocusHandler focusHandler = new PopWinFocusHandler();
+    boolean isPressed;
 
     class PopWinFocusHandler implements GFocusChangeListener {
         @Override
@@ -531,7 +533,7 @@ public class GList extends GContainer {
         public void focusLost(GObject newgo) {
             pulldown = false;
             changeCurPanel();
-            popWin.setFocusListener(null);
+            //popWin.setFocusListener(null);
         }
     }
 
@@ -540,10 +542,13 @@ public class GList extends GContainer {
         public void touchEvent(int touchid, int phase, int x, int y) {
             if (touchid != Glfw.GLFW_MOUSE_BUTTON_1) return;
             if (phase == Glfm.GLFMTouchPhaseBegan) {
+                isPressed = true;
             } else if (phase == Glfm.GLFMTouchPhaseEnded) {
-                pulldown = !pulldown;
-                GList.this.changeCurPanel();
-                //popWin.setFocusListener(focusHandler);
+                if (isPressed) {
+                    pulldown = !pulldown;
+                    GList.this.changeCurPanel();
+                    isPressed = false;
+                }
             }
             super.touchEvent(touchid, phase, x, y);
 
@@ -553,9 +558,13 @@ public class GList extends GContainer {
         public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
             if (button == Glfw.GLFW_MOUSE_BUTTON_1) {
                 if (pressed) {
-                } else if (!pressed) {
-                    pulldown = !pulldown;
-                    GList.this.changeCurPanel();
+                    isPressed = true;
+                } else {
+                    if (isPressed) {
+                        pulldown = !pulldown;
+                        GList.this.changeCurPanel();
+                        isPressed = false;
+                    }
                 }
             }
             super.mouseButtonEvent(button, pressed, x, y);
