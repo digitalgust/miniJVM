@@ -522,6 +522,7 @@ public class GList extends GContainer {
      */
     NormalPanel normalPanel = new NormalPanel();
     PopWinFocusHandler focusHandler = new PopWinFocusHandler();
+    boolean isPressed;
 
     class PopWinFocusHandler implements GFocusChangeListener {
         @Override
@@ -536,19 +537,17 @@ public class GList extends GContainer {
         }
     }
 
-    boolean pressed;
-
     class NormalPanel extends GPanel {
         @Override
         public void touchEvent(int touchid, int phase, int x, int y) {
             if (touchid != Glfw.GLFW_MOUSE_BUTTON_1) return;
             if (phase == Glfm.GLFMTouchPhaseBegan) {
-                pressed = true;
+                isPressed = true;
             } else if (phase == Glfm.GLFMTouchPhaseEnded) {
-                if (pressed) {
+                if (isPressed) {
                     pulldown = !pulldown;
                     GList.this.changeCurPanel();
-                    pressed = false;
+                    isPressed = false;
                 }
             }
             super.touchEvent(touchid, phase, x, y);
@@ -559,11 +558,12 @@ public class GList extends GContainer {
         public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
             if (button == Glfw.GLFW_MOUSE_BUTTON_1) {
                 if (pressed) {
-                    pressed = true;
-                } else if (!pressed) {
-                    if (pressed) {
+                    isPressed = true;
+                } else {
+                    if (isPressed) {
                         pulldown = !pulldown;
                         GList.this.changeCurPanel();
+                        isPressed = false;
                     }
                 }
             }
