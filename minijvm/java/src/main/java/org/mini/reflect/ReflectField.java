@@ -82,11 +82,21 @@ public class ReflectField {
                 break;
             }
             case '4': {
-                setFieldVal(object, fieldId, (Integer) val);
+                if (type == RConst.TAG_FLOAT) {
+                    float fv = ((Float) val).floatValue();
+                    setFieldVal(object, fieldId, Float.floatToIntBits(fv));
+                } else {
+                    setFieldVal(object, fieldId, (Integer) val);
+                }
                 break;
             }
             case '8': {
-                setFieldVal(object, fieldId, (Long) val);
+                if (type == RConst.TAG_FLOAT) {
+                    double dv = ((Double) val).doubleValue();
+                    setFieldVal(object, fieldId, Double.doubleToLongBits(dv));
+                } else {
+                    setFieldVal(object, fieldId, (Long) val);
+                }
                 break;
             }
             case 'R': {
@@ -107,16 +117,23 @@ public class ReflectField {
                     return getFieldVal(object, fieldId) != 0;
                 }
                 return ((byte) getFieldVal(object, fieldId));
-
             case '2':
                 if (type == RConst.TAG_CHAR) {
                     return ((char) getFieldVal(object, fieldId));
                 }
                 return ((short) getFieldVal(object, fieldId));
             case '4':
-                return ((int) getFieldVal(object, fieldId));
+                int iv = ((int) getFieldVal(object, fieldId));
+                if (type == RConst.TAG_FLOAT) {
+                    return Float.intBitsToFloat(iv);
+                }
+                return iv;
             case '8':
-                return getFieldVal(object, fieldId);
+                long lv = getFieldVal(object, fieldId);
+                if (type == RConst.TAG_DOUBLE) {
+                    return Double.longBitsToDouble(lv);
+                }
+                return lv;
             case 'R': {
                 return RefNative.id2obj(getFieldVal(object, fieldId));
             }

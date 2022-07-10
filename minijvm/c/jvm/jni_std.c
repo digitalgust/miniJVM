@@ -141,7 +141,7 @@ s32 java_lang_Class_isAssignableFrom(Runtime *runtime, JClass *clazz) {
     JClass *c0 = insOfJavaLangClass_get_classHandle(runtime, (Instance *) localvar_getRefer(runtime->localvar, 0));
     JClass *c1 = insOfJavaLangClass_get_classHandle(runtime, (Instance *) localvar_getRefer(runtime->localvar, 1));
 
-    if (assignable_from(c1, c0)) {
+    if (assignable_from(c0, c1)) {
         push_int(stack, 1);
     } else {
         push_int(stack, 0);

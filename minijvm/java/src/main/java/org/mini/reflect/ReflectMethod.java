@@ -82,6 +82,11 @@ public class ReflectMethod {
         if (obj == null && ((accessFlags & RConst.ACC_STATIC) == 0)) {//none static method but obj is null
             throw new NullPointerException();
         }
+        if (obj != null) {
+            if (!clazzObj.isAssignableFrom(obj.getClass())) {
+                throw new IllegalArgumentException("instance type error:" + obj.getClass() + " expected:" + clazzObj);
+            }
+        }
         Class[] pc = getParameterTypes();
         if (args.length != paras.length) {
             throw new IllegalArgumentException();
