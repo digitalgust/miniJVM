@@ -525,18 +525,44 @@ int org_mini_media_MiniAudio_ma_engine_get_sample_rate(Runtime *runtime, JClass 
     env->push_int(runtime->stack, r);
     return 0;
 }
+
 int org_mini_media_MiniAudio_ma_engine_get_format(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     ma_engine *handle_engine = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
 
-    ma_device *dev=ma_engine_get_device(handle_engine);
-    if(dev) {
+    ma_device *dev = ma_engine_get_device(handle_engine);
+    if (dev) {
         s32 r = dev->playback.format;
         env->push_int(runtime->stack, r);
-    }else{
+    } else {
         env->push_int(runtime->stack, ma_format_unknown);
+    }
+    return 0;
+}
+
+int org_mini_media_MiniAudio_ma_engine_set_volume(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    ma_engine *handle_engine = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    Int2Float v;
+    v.i = env->localvar_getInt(runtime->localvar, pos++);
+    ma_engine_set_volume(handle_engine, v.f);
+    return 0;
+}
+
+int org_mini_media_MiniAudio_ma_engine_get_volume(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    ma_engine *handle_engine = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    if (handle_engine) {
+        f32 v = ma_node_output_bus_get_volume(ma_node_graph_get_endpoint(&handle_engine->nodeGraph));
+        env->push_float(runtime->stack, v);
+    } else {
+        env->push_float(runtime->stack, 0.0);
     }
     return 0;
 }
@@ -797,6 +823,16 @@ int org_mini_media_MiniAudio_ma_sound_set_spatialization_enabled(Runtime *runtim
     return 0;
 }
 
+int org_mini_media_MiniAudio_ma_sound_set_attenuation_model(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    ma_sound *handle_sound = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    s32 atten = env->localvar_getInt(runtime->localvar, pos++);
+    ma_sound_set_attenuation_model(handle_sound, atten);
+    return 0;
+}
+
 int org_mini_media_MiniAudio_ma_sound_start(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
@@ -871,6 +907,8 @@ static java_native_method method_minial_table[] = {
         {"org/mini/media/MiniAudio", "ma_engine_get_channels",              "(J)I",      org_mini_media_MiniAudio_ma_engine_get_channels},
         {"org/mini/media/MiniAudio", "ma_engine_get_sample_rate",           "(J)I",      org_mini_media_MiniAudio_ma_engine_get_sample_rate},
         {"org/mini/media/MiniAudio", "ma_engine_get_format",                "(J)I",      org_mini_media_MiniAudio_ma_engine_get_format},
+        {"org/mini/media/MiniAudio", "ma_engine_set_volume",                "(JF)V",     org_mini_media_MiniAudio_ma_engine_set_volume},
+        {"org/mini/media/MiniAudio", "ma_engine_get_volume",                "(J)F",      org_mini_media_MiniAudio_ma_engine_get_volume},
         {"org/mini/media/MiniAudio", "ma_engine_listener_set_position",     "(JIFFF)V",  org_mini_media_MiniAudio_ma_engine_listener_set_position},
         {"org/mini/media/MiniAudio", "ma_engine_listener_set_direction",    "(JIFFF)V",  org_mini_media_MiniAudio_ma_engine_listener_set_direction},
         {"org/mini/media/MiniAudio", "ma_engine_listener_set_world_up",     "(JIFFF)V",  org_mini_media_MiniAudio_ma_engine_listener_set_world_up},
@@ -888,6 +926,7 @@ static java_native_method method_minial_table[] = {
         {"org/mini/media/MiniAudio", "ma_sound_set_looping",                "(JZ)V",     org_mini_media_MiniAudio_ma_sound_set_looping},
         {"org/mini/media/MiniAudio", "ma_sound_is_looping",                 "(J)Z",      org_mini_media_MiniAudio_ma_sound_is_looping},
         {"org/mini/media/MiniAudio", "ma_sound_set_spatialization_enabled", "(JZ)V",     org_mini_media_MiniAudio_ma_sound_set_spatialization_enabled},
+        {"org/mini/media/MiniAudio", "ma_sound_set_attenuation_model",      "(JI)V",     org_mini_media_MiniAudio_ma_sound_set_attenuation_model},
         {"org/mini/media/MiniAudio", "ma_sound_start",                      "(J)I",      org_mini_media_MiniAudio_ma_sound_start},
         {"org/mini/media/MiniAudio", "ma_sound_stop",                       "(J)I",      org_mini_media_MiniAudio_ma_sound_stop},
         {"org/mini/media/MiniAudio", "ma_sound_is_playing",                 "(J)Z",      org_mini_media_MiniAudio_ma_sound_is_playing},

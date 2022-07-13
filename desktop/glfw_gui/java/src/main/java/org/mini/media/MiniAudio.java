@@ -30,6 +30,12 @@ public class MiniAudio {
             ma_device_type_duplex = mal_device_type_playback | mal_device_type_capture;
 
     public static final int //
+            ma_attenuation_model_none = 0,          /* No distance attenuation and no spatialization. */
+            ma_attenuation_model_inverse = 1,       /* Equivalent to OpenAL's AL_INVERSE_DISTANCE_CLAMPED. */
+            ma_attenuation_model_linear = 2,        /* Linear attenuation. Equivalent to OpenAL's AL_LINEAR_DISTANCE_CLAMPED. */
+            ma_attenuation_model_exponential = 3    /* Exponential attenuation. Equivalent to OpenAL's AL_EXPONENT_DISTANCE_CLAMPED. */;
+
+    public static final int //
             MA_SOUND_FLAG_STREAM = 0x00000001,   /* MA_RESOURCE_MANAGER_DATA_SOURCE_FLAG_STREAM */
             MA_SOUND_FLAG_DECODE = 0x00000002,   /* MA_RESOURCE_MANAGER_DATA_SOURCE_FLAG_DECODE */
             MA_SOUND_FLAG_ASYNC = 0x00000004,   /* MA_RESOURCE_MANAGER_DATA_SOURCE_FLAG_ASYNC */
@@ -160,6 +166,10 @@ public class MiniAudio {
 
     public static native int ma_engine_get_format(long handle_engine);
 
+    public static native void ma_engine_set_volume(long handle_sound, float v);
+
+    public static native float ma_engine_get_volume(long handle_sound);
+
     public static native void ma_engine_listener_set_position(long handle_engine, int listenerIdx, float x, float y, float z);
 
     public static native void ma_engine_listener_set_direction(long handle_engine, int listenerIdx, float x, float y, float z);
@@ -193,6 +203,8 @@ public class MiniAudio {
     public static native boolean ma_sound_is_looping(long handle_sound);
 
     public static native void ma_sound_set_spatialization_enabled(long handle_sound, boolean enable);
+
+    public static native void ma_sound_set_attenuation_model(long handle_sound, int attenuationMode);
 
     public static native int ma_sound_start(long handle_sound);
 

@@ -60,6 +60,15 @@ public class MaEngine extends MaNativeObject {
         MiniAudio.ma_engine_stop(handle);
     }
 
+
+    public void setVolume(float v) {
+        MiniAudio.ma_engine_set_volume(handle, v);
+    }
+
+    public float getVolume() {
+        return MiniAudio.ma_engine_get_volume(handle);
+    }
+
     @Override
     public void finalize() {
         System.out.println("clean " + this + " " + handle);

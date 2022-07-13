@@ -44,6 +44,10 @@ public class GuiScriptLib extends Lib {
         methodNames.put("setImgAlphaStr".toLowerCase(), 23);//
         methodNames.put("setEnable".toLowerCase(), 24);//
         methodNames.put("setListIdx".toLowerCase(), 25);//
+        methodNames.put("setCheckBox".toLowerCase(), 26);//
+        methodNames.put("getCheckBox".toLowerCase(), 27);//
+        methodNames.put("setScrollBar".toLowerCase(), 28);//
+        methodNames.put("getScrollBar".toLowerCase(), 29);//
     }
 
     ;
@@ -115,6 +119,14 @@ public class GuiScriptLib extends Lib {
                 return setEnable(inp, para);
             case 25:
                 return setListIdx(inp, para);
+            case 26:
+                return setCheckBox(inp, para);
+            case 27:
+                return getCheckBox(inp, para);
+            case 28:
+                return setScrollBar(inp, para);
+            case 29:
+                return getScrollBar(inp, para);
             default:
         }
         return null;
@@ -501,4 +513,58 @@ public class GuiScriptLib extends Lib {
         return null;
     }
 
+    private DataType setCheckBox(Interpreter inp, ArrayList<DataType> para) {
+        Str str = Interpreter.vPopBack(para);
+        String compont = str.getVal();
+        inp.putCachedStr(str);
+        Bool ebool = Interpreter.vPopBack(para);
+        boolean checked = ebool.getVal();
+        GObject gobj = GToolkit.getComponent(compont);
+        if (gobj != null && gobj instanceof GCheckBox) {
+            ((GCheckBox) gobj).setChecked(checked);
+        }
+        inp.putCachedBool(ebool);
+        return null;
+    }
+
+    private DataType getCheckBox(Interpreter inp, ArrayList<DataType> para) {
+        Str str = Interpreter.vPopBack(para);
+        String compont = str.getVal();
+        inp.putCachedStr(str);
+        GObject gobj = GToolkit.getComponent(compont);
+        boolean checked = false;
+        if (gobj != null && gobj instanceof GCheckBox) {
+            checked = ((GCheckBox) gobj).isChecked();
+        }
+        return inp.getCachedBool(checked);
+    }
+
+
+    private DataType setScrollBar(Interpreter inp, ArrayList<DataType> para) {
+        Str str = Interpreter.vPopBack(para);
+        String compont = str.getVal();
+        inp.putCachedStr(str);
+        Obj val = Interpreter.vPopBack(para);
+        float fv = (Float) val.getVal();
+        GObject gobj = GToolkit.getComponent(compont);
+        if (gobj != null && gobj instanceof GScrollBar) {
+            ((GScrollBar) gobj).setPos(fv);
+        }
+        inp.putCachedDataType(val);
+        return null;
+    }
+
+    private DataType getScrollBar(Interpreter inp, ArrayList<DataType> para) {
+        Str str = Interpreter.vPopBack(para);
+        String compont = str.getVal();
+        inp.putCachedStr(str);
+        GObject gobj = GToolkit.getComponent(compont);
+        Float val;
+        if (gobj != null && gobj instanceof GScrollBar) {
+            val = ((GScrollBar) gobj).getPos();
+        } else {
+            val = Float.valueOf(0);
+        }
+        return new Obj(val);
+    }
 }

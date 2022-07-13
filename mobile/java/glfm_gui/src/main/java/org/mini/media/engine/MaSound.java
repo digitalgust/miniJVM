@@ -69,6 +69,10 @@ public class MaSound extends MaNativeObject {
         MiniAudio.ma_sound_set_spatialization_enabled(handle, enable);
     }
 
+    public void setAttenuationModel(int mode) {
+        MiniAudio.ma_sound_set_attenuation_model(handle, mode);
+    }
+
     public void setVolume(float v) {
         MiniAudio.ma_sound_set_volume(handle, v);
     }

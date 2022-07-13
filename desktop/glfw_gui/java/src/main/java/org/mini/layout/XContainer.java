@@ -340,6 +340,10 @@ public abstract class XContainer
             XCheckBox xbox = new XCheckBox(parent);
             xbox.parse(parser, assist);
             return (xbox);
+        } else if (tagName.equals(XScrollBar.XML_NAME)) { //scrollbar
+            XScrollBar bar = new XScrollBar(parent);
+            bar.parse(parser, assist);
+            return (bar);
         } else if (tagName.equals(XTextInput.XML_NAME)) { //textinput
             XTextInput xinput = new XTextInput(parent);
             xinput.parse(parser, assist);

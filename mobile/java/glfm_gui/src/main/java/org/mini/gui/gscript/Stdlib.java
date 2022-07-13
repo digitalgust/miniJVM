@@ -1,6 +1,10 @@
 package org.mini.gui.gscript;
 
+import org.mini.reflect.ReflectClass;
+import org.mini.reflect.ReflectMethod;
+
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Random;
 import java.util.ArrayList;
@@ -38,6 +42,7 @@ public class Stdlib extends Lib {
         methodNames.put("setobjfield".toLowerCase(), 20);
         methodNames.put("trim".toLowerCase(), 21);//字符串去空格
         methodNames.put("str2int".toLowerCase(), 22);//字符串转int
+        methodNames.put("invokejava".toLowerCase(), 23);//执行对象方法
     }
 
 
@@ -96,6 +101,8 @@ public class Stdlib extends Lib {
                 return trim(inp, para);
             case 22:
                 return str2int(inp, para);
+            case 23:
+                return invokejava(inp, para);
         }
         return null;
     }
@@ -361,10 +368,10 @@ public class Stdlib extends Lib {
 
     private DataType getObjField(Interpreter inp, ArrayList<DataType> para) {
         try {
-            Obj obj = (Obj) Interpreter.vPopBack(para);
+            Obj ins = (Obj) Interpreter.vPopBack(para);
             String fieldName = ((Str) (Interpreter.vPopBack(para))).getVal();
 
-            Class c = obj.getVal().getClass();
+            Class c = ins.getVal().getClass();
             Field field = null;
             while (field == null) {
                 try {
@@ -377,9 +384,34 @@ public class Stdlib extends Lib {
                 }
             }
             if (field != null) {
-                Object val = field.get(obj.getVal());
-                return inp.getCachedStr(val.toString());
+                Class fc = field.getType();
+                if (fc == String.class) {
+                    String val = (String) field.get(ins.getVal());
+                    return inp.getCachedStr(val);
+                } else if (fc == int.class) {
+                    int val = field.getInt(ins.getVal());
+                    return inp.getCachedInt(val);
+                } else if (fc == long.class) {
+                    long val = field.getLong(ins.getVal());
+                    return inp.getCachedInt(val);
+                } else if (fc == byte.class) {
+                    byte val = field.getByte(ins.getVal());
+                    return inp.getCachedInt(val);
+                } else if (fc == short.class) {
+                    short val = field.getShort(ins.getVal());
+                    return inp.getCachedInt(val);
+                } else if (fc == char.class) {
+                    char val = field.getChar(ins.getVal());
+                    return inp.getCachedInt(val);
+                } else if (fc == boolean.class) {
+                    boolean val = field.getBoolean(ins.getVal());
+                    return inp.getCachedBool(val);
+                } else {//include float double and others
+                    Object val = field.get(ins.getVal());
+                    return new Obj(val);
+                }
             }
+            throw new RuntimeException("error can not found field:" + fieldName);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -389,11 +421,11 @@ public class Stdlib extends Lib {
 
     private DataType setObjField(Interpreter inp, ArrayList<DataType> para) {
         try {
-            Obj obj = (Obj) Interpreter.vPopBack(para);
+            Obj ins = (Obj) Interpreter.vPopBack(para);
             String fieldName = ((Str) (Interpreter.vPopBack(para))).getVal();
             DataType val = Interpreter.vPopBack(para);
 
-            Class c = obj.getVal().getClass();
+            Class c = ins.getVal().getClass();
             Field field = null;
             while (field == null) {
                 try {
@@ -406,21 +438,130 @@ public class Stdlib extends Lib {
                 }
             }
             if (field != null) {
-                switch (val.type) {
-                    case DataType.DTYPE_INT:
-                        field.set(obj.getVal(), ((Int) val).getVal());
-                        break;
-                    case DataType.DTYPE_STR:
-                        field.set(obj.getVal(), ((Str) val).getVal());
-                        break;
-                    case DataType.DTYPE_BOOL:
-                        field.set(obj.getVal(), ((Bool) val).getVal());
-                        break;
-                    default:
-                        System.out.println("not support in setObjField " + fieldName);
-                        break;
+                Class fc = field.getType();
+                if (fc == String.class) {
+                    field.set(ins.getVal(), ((Str) val).getVal());
+                } else if (fc == int.class) {
+                    field.setInt(ins.getVal(), ((Int) val).getValAsInt());
+                } else if (fc == long.class) {
+                    field.setLong(ins.getVal(), ((Int) val).getVal());
+                } else if (fc == byte.class) {
+                    field.setByte(ins.getVal(), (byte) ((Int) val).getVal());
+                } else if (fc == short.class) {
+                    field.setShort(ins.getVal(), (short) ((Int) val).getVal());
+                } else if (fc == char.class) {
+                    field.setChar(ins.getVal(), (char) ((Int) val).getVal());
+                } else if (fc == boolean.class) {
+                    field.setBoolean(ins.getVal(), ((Bool) val).getVal());
+                } else if (fc == float.class) {
+                    if (val.type == DataType.DTYPE_OBJ) {
+                        Obj objv = (Obj) val;
+                        if (objv.getVal() instanceof Float) {
+                            field.setFloat(ins.getVal(), ((Float) objv.getVal()).floatValue());
+                        }
+                    }
+                } else if (fc == double.class) {
+                    if (val.type == DataType.DTYPE_OBJ) {
+                        Obj objv = (Obj) val;
+                        if (objv.getVal() instanceof Double) {
+                            field.setDouble(ins.getVal(), ((Float) objv.getVal()).doubleValue());
+                        }
+                    }
+                } else {
+                    if (val.type == DataType.DTYPE_OBJ) {
+                        Obj objv = (Obj) val;
+                        if (objv.getVal().getClass() == (fc)) {
+                            field.set(ins.getVal(), ((Float) objv.getVal()).doubleValue());
+                        }
+                    }
                 }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
+    private DataType tranlateValue(Interpreter inp, Class fc, Object value) {
+        if (fc == String.class) {
+            return inp.getCachedStr((String) value);
+        } else if (fc == int.class) {
+            return inp.getCachedInt(((Integer) value).intValue());
+        } else if (fc == long.class) {
+            return inp.getCachedInt(((Long) value).longValue());
+        } else if (fc == byte.class) {
+            return inp.getCachedInt(((Byte) value).byteValue());
+        } else if (fc == short.class) {
+            return inp.getCachedInt(((Short) value).shortValue());
+        } else if (fc == char.class) {
+            return inp.getCachedInt(((Character) value).charValue());
+        } else if (fc == boolean.class) {
+            return inp.getCachedBool(((Boolean) value).booleanValue());
+        } else {//include float double and others
+            return new Obj(value);
+        }
+    }
+
+    private DataType invokejava(Interpreter inp, ArrayList<DataType> para) {
+        try {
+            Object ins = ((Obj) Interpreter.vPopBack(para)).getVal();
+            String javaFunc = ((Str) (Interpreter.vPopBack(para))).getVal();
+            Class c = ins.getClass();
+            String name = javaFunc.substring(0, javaFunc.indexOf('('));
+            String desc = javaFunc.substring(javaFunc.indexOf('('));
+            Class[] types = ReflectMethod.getMethodPara(c.getClassLoader(), desc);
+
+            Object[] javaPara = new Object[para.size()];
+            for (int i = 0; i < para.size(); i++) {
+                DataType dt = Interpreter.vPopBack(para);
+                if (dt.type == DataType.DTYPE_INT) {
+                    long dtv = ((Int) dt).getVal();
+                    if (types[i] == int.class) {
+                        javaPara[i] = (int) dtv;
+                    } else if (types[i] == long.class) {
+                        javaPara[i] = dtv;
+                    } else if (types[i] == short.class) {
+                        javaPara[i] = (short) dtv;
+                    } else if (types[i] == char.class) {
+                        javaPara[i] = (char) dtv;
+                    } else if (types[i] == byte.class) {
+                        javaPara[i] = (byte) dtv;
+                    }
+                } else if (dt.type == DataType.DTYPE_STR) {
+                    javaPara[i] = ((Str) dt).getVal();
+                } else if (dt.type == DataType.DTYPE_BOOL) {
+                    javaPara[i] = ((Bool) dt).getVal();
+                } else if (dt.type == DataType.DTYPE_OBJ) {
+                    javaPara[i] = ((Obj) dt).getVal();
+                }
+            }
+
+            Method m = c.getMethod(name, types);
+            if (m != null) {
+                Object ret = m.invoke(ins, javaPara);
+
+                Class retType = m.getReturnType();
+                if (retType != Void.TYPE) {
+                    if (retType == String.class) {
+                        return inp.getCachedStr((String) ret);
+                    } else if (retType == int.class) {
+                        return inp.getCachedInt(((Integer) ret).intValue());
+                    } else if (retType == long.class) {
+                        return inp.getCachedInt(((Long) ret).longValue());
+                    } else if (retType == byte.class) {
+                        return inp.getCachedInt(((Byte) ret).byteValue());
+                    } else if (retType == short.class) {
+                        return inp.getCachedInt(((Short) ret).shortValue());
+                    } else if (retType == char.class) {
+                        return inp.getCachedInt(((Character) ret).charValue());
+                    } else if (retType == boolean.class) {
+                        return inp.getCachedBool(((Boolean) ret).booleanValue());
+                    } else {//include float double and others
+                        return new Obj(ret);
+                    }
+                }
+            } else {
+                throw new RuntimeException("Method not found:" + javaFunc);
             }
         } catch (Exception e) {
             e.printStackTrace();
