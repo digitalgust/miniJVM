@@ -273,10 +273,10 @@ public class GList extends GContainer {
                 GForm form = getForm();
                 if (form != null) {
                     float popY, popH;
-                    if (normalPanel.getY() > form.getY() + form.getDeviceHeight() / 2) {
-                        popY = 0f;
-                    } else {
-                        popY = getY() + normalPanel.getH();
+                    popY = getY() + normalPanel.getH();
+                    popH = getPopWinH();
+                    if (popY + popH > form.getY() + form.getH()) {
+                        popY = form.getY() + form.getH() - popH;
                     }
                     popH = getPopWinH();
                     popWin.setLocation(getX(), popY);

@@ -2,6 +2,7 @@ package org.mini.layout;
 
 import org.mini.gui.GForm;
 import org.mini.gui.GObject;
+import org.mini.layout.xmlpull.KXmlParser;
 
 public class XForm extends XContainer {
     static public final String XML_NAME = "form";
@@ -9,6 +10,16 @@ public class XForm extends XContainer {
 
     public XForm(XContainer xc) {
         super(xc);
+    }
+
+    @Override
+    public void parse(KXmlParser parser, XmlExtAssist assist) throws Exception {
+        form = new GForm(null);//GForm做特殊处理,因为所有其他组件都依赖于他,所以放入assist中
+        this.assist = assist;
+        assist.setForm(form);
+
+        super.parse(parser, assist);
+        initGui();
     }
 
     @Override

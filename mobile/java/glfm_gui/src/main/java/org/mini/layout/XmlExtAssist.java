@@ -12,7 +12,7 @@ public class XmlExtAssist {
     GForm form;
 
     public XmlExtAssist(GForm form) {
-        if (form == null) throw new RuntimeException("Form can not be null");
+        //if (form == null) throw new RuntimeException("Form can not be null");
         this.form = form;
     }
 

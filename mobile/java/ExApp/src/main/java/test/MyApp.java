@@ -6,6 +6,8 @@ import org.mini.gui.*;
 import org.mini.layout.UITemplate;
 import org.mini.layout.XContainer;
 import org.mini.layout.XEventHandler;
+import org.mini.layout.XmlExtAssist;
+import org.mini.nanovg.Nanovg;
 
 /**
  * @author gust
@@ -32,7 +34,7 @@ public class MyApp extends GApplication {
         UITemplate.getVarMap().put("Change", "Change");
         UITemplate.getVarMap().put("Test", "Test");
         UITemplate.getVarMap().put("Exit", "QUIT");
-        XContainer xc = (XContainer) XContainer.parseXml(uit.parse());
+        XContainer xc = (XContainer) XContainer.parseXml(uit.parse(), new XmlExtAssist(null));
         int screenW = GCallBack.getInstance().getDeviceWidth();
         int screenH = GCallBack.getInstance().getDeviceHeight();
 
@@ -48,7 +50,7 @@ public class MyApp extends GApplication {
                         }
                         break;
                     case "MI_EXIT":
-                        close();
+                        closeApp();
                         break;
                     case "BT_CANCEL":
                         gframe.close();
@@ -59,9 +61,9 @@ public class MyApp extends GApplication {
             public void onStateChange(GObject gobj, String cmd) {
             }
         });
-        form = (GForm) xc.getGui();
-        gframe = (GFrame) form.findByName("FRAME_TEST");
-        if (gframe != null) gframe.align(GGraphics.HCENTER | GGraphics.VCENTER);
+        form = xc.getGui();
+        gframe = form.findByName("FRAME_TEST");
+        if (gframe != null) gframe.align(Nanovg.NVG_ALIGN_CENTER | Nanovg.NVG_ALIGN_MIDDLE);
         menu = (GMenu) form.findByName("MENU_MAIN");
 
         //process Hori screen or Vert screen
@@ -69,7 +71,7 @@ public class MyApp extends GApplication {
         form.setSizeChangeListener((width, height) -> {
             if (gframe != null && gframe.getLayout() != null) {
                 form.getLayout().reSize(width, height);
-                gframe.align(GGraphics.HCENTER | GGraphics.VCENTER);
+                gframe.align(Nanovg.NVG_ALIGN_CENTER | Nanovg.NVG_ALIGN_MIDDLE);
             }
         });
         return form;

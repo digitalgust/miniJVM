@@ -11,9 +11,9 @@
         ]]>
     </script>
 
-    <frame name="FRAME_TEST" w="80%" h="500" align="top,hcenter" title="WINDOW">
-        <label name="LAB_HELP" w="100%" h="30" align="hcenter,vcenter">Help text:</label>
-        <input w="100%" h="395" multiline="1" edit="0"><![CDATA[
+    <frame name="FRAME_TEST" w="80%" h="300" align="top,hcenter" title="WINDOW">
+        <label name="LAB_HELP" w="100%" h="30" align="left,vcenter">Help text:</label>
+        <input w="100%" h="200" multiline="1" edit="0"><![CDATA[
             This app is an example of mini_jvm, Threre are a menu and a frame .
             Touch the 'Exit to AppManager' , you will enter the AppManager, AppManager manage all app, it can upload ,download , delete app.
             1. DOWNLOAD : Put your jar in a website , then input the url of jar in AppManager, Touch 'Download' ,it would download the jar ,then update the app list.
@@ -25,8 +25,8 @@
             ]]>
         </input>
         <br/>
-        <button name="BT_SCRIPT" h="40" onclick="change()">{Change}</button>
-        <button name="BT_CANCEL" h="40">{Cancel}</button>
+        <button name="BT_SCRIPT" h="30" onclick="change()">{Change}</button>
+        <button name="BT_CANCEL" h="30">{Cancel}</button>
         <br/>
     </frame>
 
