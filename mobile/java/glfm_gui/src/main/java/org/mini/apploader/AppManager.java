@@ -78,7 +78,7 @@ public class AppManager extends GApplication {
         GLanguage.addString(STR_VERSION, new String[]{STR_VERSION, "版本: ", "版本: "});
         GLanguage.addString(STR_UPGRADE_URL, new String[]{STR_UPGRADE_URL, "升级地址: ", "升級地址: "});
         GLanguage.addString(STR_FILE_SIZE, new String[]{STR_FILE_SIZE, "文件大小: ", "文件大小: "});
-        GLanguage.addString(STR_FILE_SIZE, new String[]{STR_FILE_SIZE, "文件日期: ", "文件日期: "});
+        GLanguage.addString(STR_FILE_DATE, new String[]{STR_FILE_DATE, "文件日期: ", "文件日期: "});
         GLanguage.addString(STR_DESC, new String[]{STR_DESC, "描述: ", "描述: "});
         GLanguage.addString(STR_SERVER_STARTED, new String[]{STR_SERVER_STARTED, "服务器已启动", "伺服器已啟動"});
         GLanguage.addString(STR_SERVER_STOPED, new String[]{STR_SERVER_STOPED, "服务器已停止", "伺服器已停止"});

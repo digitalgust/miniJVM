@@ -23,6 +23,8 @@ public class GLabel extends GObject {
 
     int align = NVG_ALIGN_LEFT | NVG_ALIGN_TOP;
 
+    public static final int TEXT_BOUND_DEC = 10;// diff with nvgTextBoxBound
+
     public static final int MODE_MULTI_SHOW = 1, MODE_SINGLE_SHOW = 2;
     int showMode = MODE_SINGLE_SHOW;
 
@@ -164,15 +166,12 @@ public class GLabel extends GObject {
             } else if ((align & Nanovg.NVG_ALIGN_BOTTOM) != 0) {
                 dy += h;
             }
-            nvgTextJni(vg, dx, dy, text_arr, 0, text_arr.length);
+            nvgTextJni(vg, dx, dy + 2, text_arr, 0, text_arr.length);
         }
 
     }
 
     void drawMultiText(long vg, float x, float y, float w, float h) {
-        if (getText().startsWith("1.")) {
-            int debug = 1;
-        }
 
         nvgFontSize(vg, getFontSize());
         nvgFillColor(vg, enable ? (isFlying() ? getFlyingColor() : getColor()) : getDisabledColor());
@@ -190,7 +189,7 @@ public class GLabel extends GObject {
         }
 
         if (text_arr != null) {
-            nvgTextBoxJni(vg, dx, dy, w, text_arr, 0, text_arr.length);
+            nvgTextBoxJni(vg, dx, dy + 2, w - TEXT_BOUND_DEC, text_arr, 0, text_arr.length);
         }
     }
 

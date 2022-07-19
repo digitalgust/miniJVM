@@ -13,8 +13,7 @@ import org.mini.nanovg.Nanovg;
 
 import java.io.*;
 
-import static org.mini.nanovg.Nanovg.nvgFontFace;
-import static org.mini.nanovg.Nanovg.nvgFontSize;
+import static org.mini.nanovg.Nanovg.*;
 
 /**
  * @author gust
@@ -134,6 +133,7 @@ public class XUtil {
      */
     public static int measureHeight(int width, String str, int fontSize) {
         long vg = GCallBack.getInstance().getNvContext();
+        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
         nvgFontSize(vg, fontSize);
         nvgFontFace(vg, GToolkit.getFontWord());
         float[] boundle = GToolkit.getTextBoundle(vg, str, width);

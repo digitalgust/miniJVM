@@ -61,17 +61,14 @@ public class XLabel
 
 
     protected int getDefaultWidth(int parentViewW) {
-        if (getText().startsWith("1.")) {
-            int debug = 1;
-        }
-        int w = XUtil.measureWidth(parentViewW, text, fontSize);
+        int w = XUtil.measureWidth(parentViewW - GLabel.TEXT_BOUND_DEC, text, fontSize);
         w = w + addon;
-        return w;
+        return w + GLabel.TEXT_BOUND_DEC;
     }
 
     protected int getDefaultHeight(int parentViewH) {
         if (multiLine) {
-            return XUtil.measureHeight(viewW, text, fontSize);
+            return XUtil.measureHeight(viewW - GLabel.TEXT_BOUND_DEC, text, fontSize);
         } else {
             return XDef.DEFAULT_COMPONENT_HEIGHT;
         }

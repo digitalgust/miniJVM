@@ -5,6 +5,8 @@
  */
 package org.mini.layout;
 
+import org.mini.gui.GToolkit;
+
 /**
  * @author gust
  */
@@ -20,6 +22,10 @@ public class XDef {
 
     public static final int DEFAULT_COMPONENT_HEIGHT = 30;
     public static final int DEFAULT_LIST_HEIGHT = 40;
-    public static final int DEFAULT_FONT_SIZE = 18;
+    public static int DEFAULT_FONT_SIZE;
+
+    static {
+        DEFAULT_FONT_SIZE = (int) GToolkit.getStyle().getTextFontSize();
+    }
 
 }

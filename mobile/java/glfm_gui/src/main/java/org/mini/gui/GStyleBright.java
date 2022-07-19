@@ -14,12 +14,12 @@ public class GStyleBright extends GStyle {
 
     @Override
     public float getTextFontSize() {
-        return 18f;
+        return 16f;
     }
 
     @Override
     public float getTitleFontSize() {
-        return 20f;
+        return 18f;
     }
 
     @Override

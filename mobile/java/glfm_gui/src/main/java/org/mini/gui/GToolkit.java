@@ -5,6 +5,7 @@
  */
 package org.mini.gui;
 
+import org.mini.gl.GL;
 import org.mini.glfw.Glfw;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
@@ -295,10 +296,11 @@ public class GToolkit {
         nvgFontSize(vg, fontSize);
         nvgFontFace(vg, font);
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-        nvgTextBoxBoundsJni(vg, 0, 0, width, b, 0, b.length, bond);
+        nvgTextBoxBoundsJni(vg, 0, 0, width - GLabel.TEXT_BOUND_DEC, b, 0, b.length, bond);
         bond[GObject.WIDTH] -= bond[GObject.LEFT];
         bond[GObject.HEIGHT] -= bond[GObject.TOP];
         bond[GObject.LEFT] = bond[GObject.TOP] = 0;
+        bond[GObject.WIDTH] += GLabel.TEXT_BOUND_DEC;
         return bond;
     }
 
