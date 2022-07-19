@@ -91,8 +91,6 @@ public class GList extends GContainer {
 
         setShowMode(MODE_SINGLE_SHOW);
 
-        setFontSize(GToolkit.getStyle().getTextFontSize());
-        setColor(GToolkit.getStyle().getTextFontColor());
     }
 
     @Override
@@ -347,12 +345,6 @@ public class GList extends GContainer {
     public void setShowMode(int m) {
         this.showMode = m;
 
-        if (showMode == MODE_MULTI_SHOW) {
-            setBgColor(GToolkit.getStyle().getListBackgroundColor());
-        } else {
-            setBgColor(GToolkit.getStyle().getPopBackgroundColor());
-        }
-
         sizeAdjust();
         changeCurPanel();
     }
@@ -598,7 +590,7 @@ public class GList extends GContainer {
                 if (selectIndex >= 0) {
                     GListItem gli = (GListItem) getItem(selectIndex);
                     GToolkit.drawImage(vg, gli.img, x + pad, y + h * 0.5f - thumb / 2, thumb, thumb, false, 1.0f);
-                    GToolkit.drawTextLine(vg, x + (gli.img == null ? 0 : thumb) + pad + pad, y + h / 2, gli.getText(), GList.this.fontSize, GList.this.color, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+                    GToolkit.drawTextLine(vg, x + (gli.img == null ? 0 : thumb) + pad + pad, y + h / 2, gli.getText(), GList.this.getFontSize(), GList.this.getColor(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
                 }
             }
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
@@ -637,7 +629,14 @@ public class GList extends GContainer {
             float w = getW();
             float h = getH();
 
-            GToolkit.drawRoundedRect(vg, x, y, w, h, 3.5f, GList.this.getBgColor());
+            float[] bg;
+            if (showMode == MODE_MULTI_SHOW) {
+                bg = GToolkit.getStyle().getListBackgroundColor();
+            } else {
+                bg = GToolkit.getStyle().getPopBackgroundColor();
+            }
+
+            GToolkit.drawRoundedRect(vg, x, y, w, h, 3.5f, bg);
 
             super.paint(vg);
 

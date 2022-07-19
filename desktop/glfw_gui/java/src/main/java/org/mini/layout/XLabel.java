@@ -2,8 +2,6 @@ package org.mini.layout;
 
 import org.mini.gui.GLabel;
 import org.mini.gui.GObject;
-import org.mini.gui.event.GActionListener;
-import org.mini.gui.gscript.Interpreter;
 import org.mini.layout.xmlpull.KXmlParser;
 import org.mini.nanovg.Nanovg;
 
@@ -15,9 +13,9 @@ public class XLabel
 
     static public final String XML_NAME = "label";
     // 当前绘制颜色
-    protected String onClick;
     protected int align = Nanovg.NVG_ALIGN_LEFT | Nanovg.NVG_ALIGN_TOP;
     protected int addon = XDef.SPACING_LABEL_ADD;
+    protected boolean multiLine = false;
 
     GLabel label;
 
@@ -41,10 +39,10 @@ public class XLabel
             for (String s : attValue.split(",")) {
                 align |= XUtil.parseAlign(s);
             }
-        } else if (attName.equals("onclick")) {
-            onClick = attValue;
         } else if (attName.equals("addon")) {
             addon = Integer.parseInt(attValue);
+        } else if (attName.equals("multiline")) {
+            multiLine = "0".equals(attValue) ? false : true;
         }
     }
 
@@ -63,14 +61,20 @@ public class XLabel
 
 
     protected int getDefaultWidth(int parentViewW) {
+        if (getText().startsWith("1.")) {
+            int debug = 1;
+        }
         int w = XUtil.measureWidth(parentViewW, text, fontSize);
         w = w + addon;
         return w;
     }
 
     protected int getDefaultHeight(int parentViewH) {
-//        return XUtil.measureHeight(viewW, text, fontSize);
-        return XDef.DEFAULT_COMPONENT_HEIGHT;
+        if (multiLine) {
+            return XUtil.measureHeight(viewW, text, fontSize);
+        } else {
+            return XDef.DEFAULT_COMPONENT_HEIGHT;
+        }
     }
 
     protected void createGui() {
@@ -78,7 +82,7 @@ public class XLabel
             label = new GLabel(text, x, y, width, height);
             initGui();
             label.setAlign(align);
-            label.setShowMode(GLabel.MODE_MULTI_SHOW);
+            label.setShowMode(multiLine ? GLabel.MODE_MULTI_SHOW : GLabel.MODE_SINGLE_SHOW);
 
         } else {
             label.setLocation(x, y);

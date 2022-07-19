@@ -55,7 +55,6 @@ public class GTextField extends GTextObject {
         setSize(width, height);
         reset_boundle = new float[]{left + width - height, top, height, height};
         setFocusListener(this);
-        setColor(GToolkit.getStyle().getTextFontColor());
     }
 
 

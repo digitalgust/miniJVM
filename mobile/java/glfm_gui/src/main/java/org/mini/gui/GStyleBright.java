@@ -8,7 +8,6 @@ package org.mini.gui;
 import static org.mini.gui.GToolkit.nvgRGBA;
 
 /**
- *
  * @author gust
  */
 public class GStyleBright extends GStyle {
@@ -28,7 +27,7 @@ public class GStyleBright extends GStyle {
         return 35f;
     }
 
-    float[] textFontColor = nvgRGBA(0x60, 0x60, 0x60, 0xff);
+    float[] textFontColor = nvgRGBA(0x0, 0x0, 0x0, 0x80);
 
     @Override
     public float[] getTextFontColor() {
@@ -115,5 +114,17 @@ public class GStyleBright extends GStyle {
     @Override
     public float[] getPopBackgroundColor() {
         return popBackgroundColor;
+    }
+
+    float[] highColor = nvgRGBA(0xff, 0xff, 0xff, 0xd0);//0x006080ff
+
+    public float[] getHighColor() {
+        return highColor;
+    }
+
+    float[] lowColor = nvgRGBA(0xff, 0xff, 0xff, 0x80);//0x801010ff
+
+    public float[] getLowColor() {
+        return lowColor;
     }
 }

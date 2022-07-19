@@ -8,7 +8,6 @@ package org.mini.gui;
 import static org.mini.gui.GToolkit.nvgRGBA;
 
 /**
- *
  * @author gust
  */
 public class GStyleDark extends GStyle {
@@ -116,4 +115,17 @@ public class GStyleDark extends GStyle {
     public float[] getPopBackgroundColor() {
         return popBackgroundColor;
     }
+
+    float[] highColor = nvgRGBA(0xff, 0xff, 0xff, 0x80);//
+
+    public float[] getHighColor() {
+        return highColor;
+    }
+
+    float[] lowColor = nvgRGBA(0x80, 0x80, 0x80, 0x80);//0x006080ff
+
+    public float[] getLowColor() {
+        return lowColor;
+    }
+
 }

@@ -1,6 +1,5 @@
 package org.mini.gui.gscript;
 
-import org.mini.reflect.ReflectClass;
 import org.mini.reflect.ReflectMethod;
 
 import java.lang.reflect.Field;
@@ -43,6 +42,8 @@ public class Stdlib extends Lib {
         methodNames.put("trim".toLowerCase(), 21);//字符串去空格
         methodNames.put("str2int".toLowerCase(), 22);//字符串转int
         methodNames.put("invokejava".toLowerCase(), 23);//执行对象方法
+        methodNames.put("getbit".toLowerCase(), 24);//取整数第n位,返回bool
+        methodNames.put("setbit".toLowerCase(), 25);//设整数第n位
     }
 
 
@@ -103,6 +104,10 @@ public class Stdlib extends Lib {
                 return str2int(inp, para);
             case 23:
                 return invokejava(inp, para);
+            case 24:
+                return getbit(inp, para);
+            case 25:
+                return setbit(inp, para);
         }
         return null;
     }
@@ -587,6 +592,44 @@ public class Stdlib extends Lib {
             str = str.trim();
             int i = Integer.parseInt(str);
             return inp.getCachedInt(i);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType getbit(Interpreter inp, ArrayList<DataType> para) {
+        try {
+            Int si = Interpreter.vPopBack(para);
+            Int sbit = Interpreter.vPopBack(para);
+            long i = si.getVal();
+            int bitPos = sbit.getValAsInt();
+            inp.putCachedInt(si);
+            inp.putCachedInt(sbit);
+            return inp.getCachedBool(((i >> bitPos) & 1) == 1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    private DataType setbit(Interpreter inp, ArrayList<DataType> para) {
+        try {
+            Int si = Interpreter.vPopBack(para);
+            Int sbit = Interpreter.vPopBack(para);
+            Bool set = Interpreter.vPopBack(para);
+            long i = si.getVal();
+            int bitPos = sbit.getValAsInt();
+            inp.putCachedInt(sbit);
+            inp.putCachedBool(set);
+
+            i &= ~(1 << bitPos);
+            if (set.getVal()) {
+                i |= 1 << bitPos;
+            }
+            si.setVal(i);
+            return si;
         } catch (Exception e) {
             e.printStackTrace();
         }

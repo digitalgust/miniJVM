@@ -225,7 +225,7 @@ public class AppManager extends GApplication {
         GList langList = mainSlot.findByName("LIST_LANG");
         langList.setSelectedIndex(AppLoader.getDefaultLang());
         GList styleList = mainSlot.findByName("LIST_STYLE");
-        if (GToolkit.getStyle() instanceof GStyleBright) {
+        if (AppLoader.getGuiStyle() == 0) {
             styleList.setSelectedIndex(0);
         } else {
             styleList.setSelectedIndex(1);
@@ -337,12 +337,12 @@ public class AppManager extends GApplication {
                 GToolkit.setStyle(new GStyleBright());
                 AppLoader.setGuiStyle(0);
                 instance = new AppManager();
-                active();
+                //active();
             } else if ("LI_DARK".equals(name)) {
                 GToolkit.setStyle(new GStyleDark());
                 AppLoader.setGuiStyle(1);
                 instance = new AppManager();
-                active();
+                //active();
             }
         }
 

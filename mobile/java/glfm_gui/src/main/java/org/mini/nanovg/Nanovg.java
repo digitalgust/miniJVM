@@ -92,11 +92,11 @@ public class Nanovg {
     public static native void stbtt_GetCodepointHMetrics(long pinfo, int pcodepoint, int[] padvanceWidth, int[] pleftSideBearing); //const stbtt_fontinfo*/*ptr*/,int,int*,int*, //void
     public static native int stbtt_GetCodepointKernAdvance(long pinfo, int pch1, int pch2); //const stbtt_fontinfo*/*ptr*/,int,int, //int
     public static native byte[]  stbtt_MakeFontInfo(); // //struct stbtt_fontinfo/*none_ptr*/ 
-    public static native byte access_mem(long pptr); //stbi_uc*/*ptr*/, //stbi_uc
     public static native int stbi_write_png(byte[] pfilename, int pw, int ph, int pcomp, long pdata, int pstride_in_bytes); //char const*,int,int,int,const void*/*ptr*/,int, //int
     public static native int stbi_write_bmp(byte[] pfilename, int pw, int ph, int pcomp, long pdata); //char const*,int,int,int,const void*/*ptr*/, //int
     public static native int stbi_write_tga(byte[] pfilename, int pw, int ph, int pcomp, long pdata); //char const*,int,int,int,const void*/*ptr*/, //int
     public static native long  stbi_load(byte[] pfilename, int[] px, int[] py, int[] pcomp, int preq_comp); //char const*,int*,int*,int*,int, //stbi_uc*/*ptr*/ 
+    public static native byte access_mem(long pptr); //stbi_uc*/*ptr*/, //stbi_uc
     public static native long  stbi_load_from_memory(long pbuffer, int plen, int[] px, int[] py, int[] pcomp, int preq_comp); //stbi_uc const*/*ptr*/,int,int*,int*,int*,int, //stbi_uc*/*ptr*/ 
     public static native void stbi_image_free(long pretval_from_stbi_load); //void*/*ptr*/, //void
     public static native void nvgBeginFrame(long pctx, int pwindowWidth, int pwindowHeight, float pdevicePixelRatio); //NVGcontext*/*ptr*/,int,int,float, //void

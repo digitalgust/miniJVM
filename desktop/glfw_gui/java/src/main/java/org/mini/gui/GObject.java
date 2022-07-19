@@ -52,12 +52,12 @@ abstract public class GObject implements GAttachable {
 
     protected float[] boundle = new float[4];
 
-    protected float[] bgColor;
-    protected float[] color;
-    protected float[] disabledColor;
-    protected float[] flyingColor;
+    private float[] bgColor;
+    private float[] color;
+    private float[] disabledColor;
+    private float[] flyingColor;
 
-    protected float fontSize;
+    private float fontSize = -1;
 
     protected GActionListener actionListener;
 
@@ -310,6 +310,7 @@ abstract public class GObject implements GAttachable {
      * @return the bgColor
      */
     public float[] getBgColor() {
+        if (bgColor == null) return GToolkit.getStyle().getBackgroundColor();
         return bgColor;
     }
 
@@ -335,6 +336,7 @@ abstract public class GObject implements GAttachable {
      * @return the color
      */
     public float[] getColor() {
+        if (color == null) return GToolkit.getStyle().getTextFontColor();
         return color;
     }
 
@@ -346,26 +348,33 @@ abstract public class GObject implements GAttachable {
      */
     public void setColor(int r, int g, int b, int a) {
         color = Nanovg.nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);
-        flyingColor = Nanovg.nvgRGBA((byte) r, (byte) g, (byte) b, (byte) (a / 2));
-        a = a - 48;
-        if (a < 0) a = 16;
-        disabledColor = Nanovg.nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);
     }
 
     public void setColor(float[] color) {
         this.color = color;
-        flyingColor = Nanovg.nvgRGBAf(color[0], color[1], color[2], color[3] * .5f);
-        float a = color[3];
-        a -= 0.125f;
-        if (a < 0) a = .0625f;
-        disabledColor = Nanovg.nvgRGBAf(color[0], color[1], color[2], a);
     }
 
     public void setColor(int rgba) {
         setColor(nvgRGBA(rgba));
     }
 
+    public float[] getDisabledColor() {
+        if (disabledColor == null) {
+            return GToolkit.getStyle().getDisabledTextFontColor();
+        }
+        return disabledColor;
+    }
+
+    public float[] getFlyingColor() {
+        if (flyingColor == null) {
+            flyingColor = getColor();
+            flyingColor[3] /= 2;
+        }
+        return flyingColor;
+    }
+
     public float getFontSize() {
+        if (fontSize <= 0) return GToolkit.getStyle().getTextFontSize();
         return fontSize;
     }
 

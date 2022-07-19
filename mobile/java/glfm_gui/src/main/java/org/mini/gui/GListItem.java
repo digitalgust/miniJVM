@@ -20,8 +20,6 @@ public class GListItem extends GObject {
     public GListItem(GImage img, String lab) {
         this.img = img;
         setText(lab);
-        setFontSize(GToolkit.getStyle().getTextFontSize());
-        setColor(GToolkit.getStyle().getTextFontColor());
     }
 
 
@@ -157,8 +155,8 @@ public class GListItem extends GObject {
             }
             GToolkit.drawImage(vg, img, tx, ty, thumb, thumb, !outOfFilter, outOfFilter ? 0.5f : 0.8f);
         }
-        float[] c = outOfFilter ? GToolkit.getStyle().getHintFontColor() : enable ? getColor() : disabledColor;
-        GToolkit.drawTextLine(vg, tx + (img == null ? 0 : thumb) + pad, ty + thumb / 2, getText(), list.fontSize, c, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        float[] c = outOfFilter ? GToolkit.getStyle().getHintFontColor() : enable ? getColor() : getDisabledColor();
+        GToolkit.drawTextLine(vg, tx + (img == null ? 0 : thumb) + pad, ty + thumb / 2, getText(), list.getFontSize(), c, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         return true;
     }
 

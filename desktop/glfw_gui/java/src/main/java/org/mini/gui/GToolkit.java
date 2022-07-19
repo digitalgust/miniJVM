@@ -182,17 +182,17 @@ public class GToolkit {
     /**
      * 风格
      */
-    static GStyle defaultStyle;
+    static GStyleInner defaultStyle;
 
     public static GStyle getStyle() {
         if (defaultStyle == null) {
-            defaultStyle = new GStyleBright(); //new GStyleBlack();//
+            defaultStyle = new GStyleInner(new GStyleBright());
         }
         return defaultStyle;
     }
 
     public static void setStyle(GStyle style) {
-        defaultStyle = style;
+        defaultStyle.set(style);
     }
 
     /**
@@ -282,7 +282,7 @@ public class GToolkit {
     }
 
     public static float[] getTextBoundle(long vg, String s, float width) {
-        return getTextBoundle(vg, s, width, GToolkit.getStyle().getTitleFontSize(), GToolkit.getFontWord());
+        return getTextBoundle(vg, s, width, GToolkit.getStyle().getTextFontSize(), GToolkit.getFontWord());
     }
 
     public static float[] getTextBoundle(long vg, String s, float width, float fontSize) {
@@ -303,18 +303,28 @@ public class GToolkit {
     }
 
     public static void drawTextLine(long vg, float tx, float ty, String s, float fontSize, float[] color, int align) {
+        drawTextLineWithShadow(vg, tx, ty, s, fontSize, color, align, null);
+    }
+
+    public static void drawTextLineWithShadow(long vg, float tx, float ty, String s, float fontSize, float[] color, int align, float[] shadowColor) {
         if (s == null) {
             return;
         }
         nvgFontSize(vg, fontSize);
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextAlign(vg, align);
-        nvgFillColor(vg, color);
         byte[] b = toUtf8(s);
+        if (shadowColor != null) {
+            nvgFontBlur(vg, 3);
+            nvgFillColor(vg, color);
+            Nanovg.nvgTextJni(vg, tx, ty + 1.5f, b, 0, b.length);
+            nvgFontBlur(vg, 0);
+        }
+        nvgFillColor(vg, color);
         Nanovg.nvgTextJni(vg, tx, ty + 1.5f, b, 0, b.length);
     }
 
-    public static void drawTextLineTopLeft(long vg, float tx, float ty, float pw, float ph, String s, float fontSize, float[] color) {
+    public static void drawTextLineInBoundle(long vg, float tx, float ty, float pw, float ph, String s, float fontSize, float[] color) {
         if (s == null) {
             return;
         }
@@ -352,8 +362,10 @@ public class GToolkit {
 
         if (text_arr != null) {
             if (shadowColor != null) {
+                nvgFontBlur(vg, 3);
                 nvgFillColor(vg, shadowColor);
                 nvgTextBoxJni(vg, x + 1, y + 2, w, text_arr, 0, text_arr.length);
+                nvgFontBlur(vg, 0);
             }
             nvgFillColor(vg, color);
             nvgTextBoxJni(vg, x, y + 1, w, text_arr, 0, text_arr.length);

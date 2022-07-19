@@ -42,9 +42,6 @@ public class GButton extends GObject {
         setText(text);
         setLocation(left, top);
         setSize(width, height);
-        setBgColor(0, 0, 0, 0);
-        setColor(GToolkit.getStyle().getTextFontColor());
-        setFontSize(GToolkit.getStyle().getTextFontSize());
     }
 
 
@@ -123,13 +120,13 @@ public class GButton extends GObject {
         float move = 0;
         if (bt_pressed) {
             move = 1;
-            bg = nvgLinearGradient(vg, x, y + h, x, y, nvgRGBA(255, 255, 255, isBlack(bgColor) ? 16 : 32), nvgRGBA(0, 0, 0, isBlack(bgColor) ? 16 : 32));
+            bg = nvgLinearGradient(vg, x, y + h, x, y, nvgRGBA(255, 255, 255, 0x10), nvgRGBA(0, 0, 0, 0x10));
         } else {
-            bg = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(255, 255, 255, isBlack(bgColor) ? 16 : 32), nvgRGBA(0, 0, 0, isBlack(bgColor) ? 16 : 32));
+            bg = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(255, 255, 255, 0x10), nvgRGBA(0, 0, 0, 0x10));
         }
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, cornerRadius - 1);
-        nvgFillColor(vg, bgColor);
+        nvgFillColor(vg, getBgColor());
         nvgFill(vg);
         nvgFillPaint(vg, bg);
         nvgFill(vg);
@@ -139,7 +136,7 @@ public class GButton extends GObject {
         nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 48));
         nvgStroke(vg);
 
-        nvgFontSize(vg, fontSize);
+        nvgFontSize(vg, getFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
         tw = nvgTextBoundsJni(vg, 0, 0, text_arr, 0, text_arr.length, null);
         if (preicon != 0) {
@@ -158,12 +155,14 @@ public class GButton extends GObject {
             nvgTextJni(vg, x + w * 0.5f - tw * 0.5f - iw * 0.5f, y + h * 0.5f + move, preicon_arr, 0, preicon_arr.length);
         }
 
-        nvgFontSize(vg, fontSize);
+        nvgFontSize(vg, getFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        nvgFontBlur(vg, 1f);
         nvgFillColor(vg, GToolkit.getStyle().getTextShadowColor());
-        nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw * 0.25f, y + h * 0.5f + 1 + move, text_arr, 0, text_arr.length);
-        nvgFillColor(vg, enable ? (isFlying() ? flyingColor : color) : disabledColor);
+        nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw * 0.25f, y + h * 0.5f + move, text_arr, 0, text_arr.length);
+        nvgFontBlur(vg, 0);
+        nvgFillColor(vg, enable ? (isFlying() ? getFlyingColor() : getColor()) : getDisabledColor());
         nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw * 0.25f, y + h * 0.5f + move, text_arr, 0, text_arr.length);
 
         return true;

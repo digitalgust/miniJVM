@@ -38,8 +38,6 @@ public class GLabel extends GObject {
         setText(text);
         setLocation(left, top);
         setSize(width, height);
-        setColor(GToolkit.getStyle().getTextFontColor());
-        setFontSize(GToolkit.getStyle().getTextFontSize());
     }
 
 
@@ -146,9 +144,9 @@ public class GLabel extends GObject {
 
     void drawLine(long vg, float x, float y, float w, float h) {
         //NVG_NOTUSED(w);
-        nvgFontSize(vg, fontSize);
+        nvgFontSize(vg, getFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
-        nvgFillColor(vg, enable ? color : disabledColor);
+        nvgFillColor(vg, enable ? getColor() : getDisabledColor());
 
         nvgTextAlign(vg, align);
         if (text_arr != null) {
@@ -172,9 +170,12 @@ public class GLabel extends GObject {
     }
 
     void drawMultiText(long vg, float x, float y, float w, float h) {
+        if (getText().startsWith("1.")) {
+            int debug = 1;
+        }
 
-        nvgFontSize(vg, fontSize);
-        nvgFillColor(vg, enable ? (isFlying() ? flyingColor : color) : disabledColor);
+        nvgFontSize(vg, getFontSize());
+        nvgFillColor(vg, enable ? (isFlying() ? getFlyingColor() : getColor()) : getDisabledColor());
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextMetrics(vg, null, null, lineh);
 
@@ -185,7 +186,7 @@ public class GLabel extends GObject {
         if ((align & Nanovg.NVG_ALIGN_MIDDLE) != 0) {
             dy += lineh[0];
         } else if ((align & Nanovg.NVG_ALIGN_BOTTOM) != 0) {
-            dy += fontSize;
+            dy += getFontSize();
         }
 
         if (text_arr != null) {

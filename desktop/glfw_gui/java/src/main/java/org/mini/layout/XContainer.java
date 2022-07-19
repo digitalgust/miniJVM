@@ -2,10 +2,6 @@ package org.mini.layout;
 
 import org.mini.gui.GContainer;
 import org.mini.gui.GObject;
-import org.mini.gui.GuiScriptLib;
-import org.mini.gui.event.GChildrenListener;
-import org.mini.gui.gscript.Interpreter;
-import org.mini.gui.gscript.Lib;
 import org.mini.layout.xmlpull.KXmlParser;
 import org.mini.layout.xmlpull.XmlPullParser;
 import org.mini.glwrap.GLUtil;
@@ -15,7 +11,6 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 
 public abstract class XContainer
@@ -368,8 +363,8 @@ public abstract class XContainer
             XMenu xmenu = new XMenu(parent);
             xmenu.parse(parser, assist);
             return (xmenu);
-        } else if (tagName.equals(XSwitcher.XML_NAME)) { //switcher
-            XSwitcher xswitcher = new XSwitcher(parent);
+        } else if (tagName.equals(XSwitch.XML_NAME)) { //switcher
+            XSwitch xswitcher = new XSwitch(parent);
             xswitcher.parse(parser, assist);
             return (xswitcher);
         } else if (tagName.equals(XPanel.XML_NAME)) { //panel

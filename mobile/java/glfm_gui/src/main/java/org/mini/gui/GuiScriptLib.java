@@ -5,6 +5,7 @@
 package org.mini.gui;
 
 import org.mini.gui.gscript.*;
+import org.mini.layout.*;
 import org.mini.nanovg.Nanovg;
 
 import java.util.ArrayList;
@@ -22,10 +23,6 @@ public class GuiScriptLib extends Lib {
         methodNames.put("setColor".toLowerCase(), 1);//  set background color
         methodNames.put("setText".toLowerCase(), 2);//  set text
         methodNames.put("getText".toLowerCase(), 3);//  get text
-        methodNames.put("setLocation".toLowerCase(), 4);//
-        methodNames.put("setSize".toLowerCase(), 5);//
-        methodNames.put("getLocation".toLowerCase(), 6);//
-        methodNames.put("getSize".toLowerCase(), 7);//
         methodNames.put("setCmd".toLowerCase(), 8);//
         methodNames.put("getCmd".toLowerCase(), 9);//
         methodNames.put("close".toLowerCase(), 10);//  close frame
@@ -48,6 +45,16 @@ public class GuiScriptLib extends Lib {
         methodNames.put("getCheckBox".toLowerCase(), 27);//
         methodNames.put("setScrollBar".toLowerCase(), 28);//
         methodNames.put("getScrollBar".toLowerCase(), 29);//
+        methodNames.put("setSwitch".toLowerCase(), 30);//
+        methodNames.put("getSwitch".toLowerCase(), 31);//
+        methodNames.put("getX".toLowerCase(), 32);//
+        methodNames.put("getY".toLowerCase(), 33);//
+        methodNames.put("getW".toLowerCase(), 34);//
+        methodNames.put("getH".toLowerCase(), 35);//
+        methodNames.put("setXY".toLowerCase(), 36);//
+        methodNames.put("setWH".toLowerCase(), 37);//
+        methodNames.put("loadXmlUI".toLowerCase(), 38);//
+
     }
 
     ;
@@ -75,14 +82,6 @@ public class GuiScriptLib extends Lib {
                 return setText(inp, para);
             case 3:
                 return getText(inp, para);
-            case 4:
-                return setLocation(inp, para);
-            case 5:
-                return setSize(inp, para);
-            case 6:
-                return getLocation(inp, para);
-            case 7:
-                return getSize(inp, para);
             case 8:
                 return setCmd(inp, para);
             case 9:
@@ -127,6 +126,24 @@ public class GuiScriptLib extends Lib {
                 return setScrollBar(inp, para);
             case 29:
                 return getScrollBar(inp, para);
+            case 30:
+                return setSwitch(inp, para);
+            case 31:
+                return getSwitch(inp, para);
+            case 32:
+                return getX(inp, para);
+            case 33:
+                return getY(inp, para);
+            case 34:
+                return getW(inp, para);
+            case 35:
+                return getH(inp, para);
+            case 36:
+                return setXY(inp, para);
+            case 37:
+                return setWH(inp, para);
+            case 38:
+                return loadXmlUI(inp, para);
             default:
         }
         return null;
@@ -252,7 +269,7 @@ public class GuiScriptLib extends Lib {
         return inp.getCachedStr(text == null ? "" : text);
     }
 
-    public DataType setLocation(Interpreter inp, ArrayList<DataType> para) {
+    public DataType setXY(Interpreter inp, ArrayList<DataType> para) {
         Str str = Interpreter.vPopBack(para);
         String compont = str.getVal();
         inp.putCachedStr(str);
@@ -271,7 +288,7 @@ public class GuiScriptLib extends Lib {
         return null;
     }
 
-    public DataType setSize(Interpreter inp, ArrayList<DataType> para) {
+    public DataType setWH(Interpreter inp, ArrayList<DataType> para) {
         Str str = Interpreter.vPopBack(para);
         String compont = str.getVal();
         inp.putCachedStr(str);
@@ -289,33 +306,76 @@ public class GuiScriptLib extends Lib {
     }
 
 
-    static int[] ARRAY_POS_0 = {0};
-    static int[] ARRAY_POS_1 = {1};
-
-    public DataType getLocation(Interpreter inp, ArrayList<DataType> para) {
-        Array array = new Array(new int[]{2});
-        Str str = Interpreter.vPopBack(para);
-        String compont = str.getVal();
-        inp.putCachedStr(str);
-        GObject go = GToolkit.getComponent(compont);
-        if (go != null) {
-            array.setValue(ARRAY_POS_0, inp.getCachedInt((int) go.getLocationLeft()));
-            array.setValue(ARRAY_POS_1, inp.getCachedInt((int) go.getLocationTop()));
+    /**
+     * if no parameter , return form x
+     * else return componet
+     *
+     * @param inp
+     * @param para
+     * @return
+     */
+    public DataType getX(Interpreter inp, ArrayList<DataType> para) {
+        int left = (int) GCallBack.getInstance().getForm().getLocationLeft();
+        if (!para.isEmpty()) {
+            Str str = Interpreter.vPopBack(para);
+            String compont = str.getVal();
+            inp.putCachedStr(str);
+            GObject go = GToolkit.getComponent(compont);
+            if (go != null) {
+                left = (int) go.getLocationLeft();
+            } else {
+                left = -1;
+            }
         }
-        return array;
+        return inp.getCachedInt(left);
     }
 
-    public DataType getSize(Interpreter inp, ArrayList<DataType> para) {
-        Array array = new Array(new int[]{2});
-        Str str = Interpreter.vPopBack(para);
-        String compont = str.getVal();
-        inp.putCachedStr(str);
-        GObject go = GToolkit.getComponent(compont);
-        if (go != null) {
-            array.setValue(ARRAY_POS_0, inp.getCachedInt((int) go.getW()));
-            array.setValue(ARRAY_POS_1, inp.getCachedInt((int) go.getH()));
+    public DataType getY(Interpreter inp, ArrayList<DataType> para) {
+        int top = (int) GCallBack.getInstance().getForm().getLocationTop();
+        if (!para.isEmpty()) {
+            Str str = Interpreter.vPopBack(para);
+            String compont = str.getVal();
+            inp.putCachedStr(str);
+            GObject go = GToolkit.getComponent(compont);
+            if (go != null) {
+                top = (int) go.getLocationTop();
+            } else {
+                top = -1;
+            }
         }
-        return array;
+        return inp.getCachedInt(top);
+    }
+
+    public DataType getW(Interpreter inp, ArrayList<DataType> para) {
+        int w = (int) GCallBack.getInstance().getForm().getW();
+        if (!para.isEmpty()) {
+            Str str = Interpreter.vPopBack(para);
+            String compont = str.getVal();
+            inp.putCachedStr(str);
+            GObject go = GToolkit.getComponent(compont);
+            if (go != null) {
+                w = (int) go.getW();
+            } else {
+                w = -1;
+            }
+        }
+        return inp.getCachedInt(w);
+    }
+
+    public DataType getH(Interpreter inp, ArrayList<DataType> para) {
+        int h = (int) GCallBack.getInstance().getForm().getH();
+        if (!para.isEmpty()) {
+            Str str = Interpreter.vPopBack(para);
+            String compont = str.getVal();
+            inp.putCachedStr(str);
+            GObject go = GToolkit.getComponent(compont);
+            if (go != null) {
+                h = (int) go.getH();
+            } else {
+                h = -1;
+            }
+        }
+        return inp.getCachedInt(h);
     }
 
     public DataType setCmd(Interpreter inp, ArrayList<DataType> para) {
@@ -567,4 +627,62 @@ public class GuiScriptLib extends Lib {
         }
         return new Obj(val);
     }
+
+    private DataType setSwitch(Interpreter inp, ArrayList<DataType> para) {
+        Str str = Interpreter.vPopBack(para);
+        String compont = str.getVal();
+        inp.putCachedStr(str);
+        Bool ebool = Interpreter.vPopBack(para);
+        boolean checked = ebool.getVal();
+        GObject gobj = GToolkit.getComponent(compont);
+        if (gobj != null && gobj instanceof GSwitch) {
+            ((GSwitch) gobj).setSwitcher(checked);
+        }
+        inp.putCachedBool(ebool);
+        return null;
+    }
+
+    private DataType getSwitch(Interpreter inp, ArrayList<DataType> para) {
+        Str str = Interpreter.vPopBack(para);
+        String compont = str.getVal();
+        inp.putCachedStr(str);
+        GObject gobj = GToolkit.getComponent(compont);
+        boolean checked = false;
+        if (gobj != null && gobj instanceof GSwitch) {
+            checked = ((GSwitch) gobj).getSwitcher();
+        }
+        return inp.getCachedBool(checked);
+    }
+
+    private DataType loadXmlUI(Interpreter inp, ArrayList<DataType> para) {
+        Str str = Interpreter.vPopBack(para);
+        String uipath = str.getVal();
+        inp.putCachedStr(str);
+        XmlExtAssist xmlExtAssist = null;
+        if (!para.isEmpty()) {
+            Obj sobj = inp.vPopBack(para);
+            if (sobj.getVal() != null && sobj.getVal() instanceof XmlExtAssist) {
+                xmlExtAssist = (XmlExtAssist) sobj.getVal();
+            }
+        }
+        XEventHandler eventHandler = null;
+        if (!para.isEmpty()) {
+            Obj sobj = inp.vPopBack(para);
+            if (sobj.getVal() != null && sobj.getVal() instanceof XEventHandler) {
+                eventHandler = (XEventHandler) sobj.getVal();
+            }
+        }
+
+        String xmlStr = GToolkit.readFileFromJarAsString(uipath, "utf-8");
+        UITemplate uit = new UITemplate(xmlStr);
+        String s = uit.parse();
+        //System.out.println(s);
+        XObject xobj = XContainer.parseXml(s, xmlExtAssist);
+        if (xobj instanceof XContainer) {
+            ((XContainer) xobj).build(GCallBack.getInstance().getDeviceWidth(), GCallBack.getInstance().getDeviceHeight(), eventHandler);
+        }
+        GToolkit.showFrame(xobj.getGui());
+        return null;
+    }
+
 }

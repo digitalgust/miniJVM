@@ -143,9 +143,7 @@ public class XUtil {
     public static int measureWidth(int width, String str, int fontSize) {
         //if (true) return str.length() * fontSize;
         long vg = GCallBack.getInstance().getNvContext();
-        nvgFontSize(vg, fontSize);
-        nvgFontFace(vg, GToolkit.getFontWord());
-        float[] boundle = GToolkit.getTextBoundle(vg, str, width);
+        float[] boundle = GToolkit.getTextBoundle(vg, str, width, fontSize, GToolkit.getFontWord());
         return (int) (boundle[GObject.WIDTH] - boundle[GObject.LEFT] + 1f);
     }
 

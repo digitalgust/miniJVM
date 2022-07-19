@@ -13,22 +13,22 @@ import static org.mini.nanovg.Nanovg.*;
 /**
  * @author gust
  */
-public class GSwitcher extends GObject {
+public class GSwitch extends GObject {
 
     protected String text;
     protected boolean switcher;
     static public final float DEFAULT_WIDTH = 50f;
     static public final float DEFAULT_HEIGHT = 30f;
 
-    public GSwitcher() {
+    public GSwitch() {
         this(false, 0f, 0f, DEFAULT_WIDTH, DEFAULT_HEIGHT);
     }
 
-    public GSwitcher(boolean sw, int left, int top, int width, int height) {
+    public GSwitch(boolean sw, int left, int top, int width, int height) {
         this(sw, (float) left, top, width, height);
     }
 
-    public GSwitcher(boolean sw, float left, float top, float width, float height) {
+    public GSwitch(boolean sw, float left, float top, float width, float height) {
         this.switcher = sw;
         setLocation(left, top);
         setSize(width, height);
@@ -97,29 +97,29 @@ public class GSwitcher extends GObject {
         float dy = h * .5f;
         byte[] bg, knob;
 
-        float[] back1 = switcher ? nvgRGBA(0, 128, 0, 32) : nvgRGBA(0, 0, 0, 32);
-        float[] back2 = switcher ? nvgRGBA(0, 138, 0, 128) : nvgRGBA(0, 0, 0, 128);
+        float[] back1 = nvgRGBA(0, 0, 0, 32);
+        float[] back2 = nvgRGBA(0, 0, 0, 128);
         // Slot
-        bg = nvgBoxGradient(vg, x, y, w, h, r, r, back1, back2);
+        bg = nvgBoxGradient(vg, x, y, w, h, r, 3.0f, back1, back2);
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x, y, w, h, r);
         nvgFillPaint(vg, bg);
         nvgFill(vg);
 
         // Knob Shadow
-        bg = nvgRadialGradient(vg, x + dx, y + dy, r - 1, r - 1, nvgRGBA(0, 0, 0, 64), nvgRGBA(0, 0, 0, 0));
+        bg = nvgRadialGradient(vg, x + dx, y + dy, r - 4, r - 4, nvgRGBA(0, 0, 0, 0x30), nvgRGBA(0, 0, 0, 0x00));
         nvgBeginPath(vg);
         //nvgRect(vg, x, y, w, h);
-        nvgCircle(vg, x + dx, y + dy, r - 2);
+        nvgCircle(vg, x + dx, y + dy, r - 3);
         nvgPathWinding(vg, NVG_HOLE);
         nvgFillPaint(vg, bg);
         nvgFill(vg);
 
         // Knob
-        knob = nvgLinearGradient(vg, x + dx + 1, y + dy + 1, r - 3, r - 3, nvgRGBA(255, 255, 255, 16), nvgRGBA(0, 0, 0, 16));
+        knob = nvgLinearGradient(vg, x + dx + 1, y + dy + 1, r - 3, r - 3, nvgRGBA(255, 255, 255, 0x30), nvgRGBA(0, 0, 0, 16));
         nvgBeginPath(vg);
-        nvgCircle(vg, x + dx, y + dy, r - 3);
-        nvgFillColor(vg, GToolkit.getStyle().getBackgroundColor());
+        nvgCircle(vg, x + dx, y + dy, r - 5);
+        nvgFillColor(vg, switcher ? GToolkit.getStyle().getHighColor() : GToolkit.getStyle().getLowColor());
         nvgFill(vg);
         nvgFillPaint(vg, knob);
         nvgFill(vg);

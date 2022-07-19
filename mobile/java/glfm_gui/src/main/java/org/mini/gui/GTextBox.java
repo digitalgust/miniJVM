@@ -67,7 +67,6 @@ public class GTextBox extends GTextObject {
         setLocation(left, top);
         setSize(width, height);
         setFocusListener(this);
-        setColor(GToolkit.getStyle().getTextFontColor());
     }
 
 
