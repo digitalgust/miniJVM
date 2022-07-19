@@ -7,10 +7,6 @@ public class XForm extends XContainer {
     static public final String XML_NAME = "form";
     GForm form;
 
-    public XForm() {
-        super(null);
-    }
-
     public XForm(XContainer xc) {
         super(xc);
     }
@@ -27,7 +23,7 @@ public class XForm extends XContainer {
 
     protected void createGui() {
         if (form == null) {
-            form = new GForm();
+            form = new GForm(getAssist().getForm());
             initGui();
             form.setLocation(x, y);
             form.setSize(width, height);

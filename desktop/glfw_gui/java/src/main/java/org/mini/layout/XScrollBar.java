@@ -17,11 +17,6 @@ public class XScrollBar
 
     protected GScrollBar scrollBar;
 
-
-    public XScrollBar() {
-        super(null);
-    }
-
     public XScrollBar(XContainer xc) {
         super((xc));
     }
@@ -65,7 +60,7 @@ public class XScrollBar
 
     protected void createGui() {
         if (scrollBar == null) {
-            scrollBar = new GScrollBar(value, mode, x, y, width, height);
+            scrollBar = new GScrollBar(getAssist().getForm(), value, mode, x, y, width, height);
             initGui();
         } else {
             scrollBar.setLocation(x, y);

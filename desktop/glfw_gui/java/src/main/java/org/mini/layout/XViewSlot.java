@@ -18,10 +18,6 @@ public class XViewSlot extends XContainer {
 
     protected GViewSlot viewSlot;
 
-    public XViewSlot() {
-        super(null);
-    }
-
     public XViewSlot(XContainer xc) {
         super(xc);
     }
@@ -79,7 +75,7 @@ public class XViewSlot extends XContainer {
 
     protected void createGui() {
         if (viewSlot == null) {
-            viewSlot = new GViewSlot(x, y, width, height, scroll);
+            viewSlot = new GViewSlot(getAssist().getForm(), x, y, width, height, scroll);
             initGui();
             viewSlot.setLocation(x, y);
             viewSlot.setSize(width, height);

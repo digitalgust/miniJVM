@@ -6,16 +6,15 @@
 package org.mini.apploader;
 
 import org.mini.gui.*;
-import org.mini.layout.UITemplate;
-import org.mini.layout.XContainer;
-import org.mini.layout.XEventHandler;
-import org.mini.layout.XViewSlot;
+import org.mini.layout.*;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Gust
@@ -93,7 +92,8 @@ public class AppManager extends GApplication {
 
     static AppManager instance = new AppManager();
 
-//    GApplication preApp;
+    //    GApplication preApp;
+    Map<String, GApplication> apps = new HashMap<>();
 
     GForm mgrForm;
 
@@ -137,7 +137,8 @@ public class AppManager extends GApplication {
 
     @Override
     public GForm getForm() {
-        mgrForm = new GForm() {
+        if (mgrForm != null) return mgrForm;
+        mgrForm = new GForm(null) {
 
             @Override
             public void init() {
@@ -148,7 +149,7 @@ public class AppManager extends GApplication {
                 devH = ccb.getDeviceHeight();
                 System.out.println("devW :" + devW + ", devH  :" + devH);
 
-                GForm.hideKeyboard();
+                GForm.hideKeyboard(this);
                 regStrings();
                 GLanguage.setCurLang(AppLoader.getDefaultLang());
 
@@ -194,15 +195,14 @@ public class AppManager extends GApplication {
                         }
                     }
                 });
-
-                add(getMainSlot());
+                add(getMainSlot(this));
 
             }
         };
         return mgrForm;
     }
 
-    GViewSlot getMainSlot() {
+    GViewSlot getMainSlot(GForm form) {
 
         String xmlStr = "";
         try {
@@ -216,7 +216,7 @@ public class AppManager extends GApplication {
         }
 
         eventHandler = new AppmEventHandler();
-        XContainer container = (XViewSlot) XContainer.parseXml(uit.parse());
+        XContainer container = (XViewSlot) XContainer.parseXml(uit.parse(), new XmlExtAssist(form));
         container.build((int) devW, (int) (devH), eventHandler);
         mainSlot = container.getGui();
         appList = mainSlot.findByName("LIST_APP");
@@ -249,7 +249,7 @@ public class AppManager extends GApplication {
                 mainPanelShowLeft();
                 reloadAppList();
             } else if ("BT_DOWN".equals(name)) {
-                String url = GToolkit.getCompText("INPUT_URL");
+                String url = GToolkit.getCompText(mgrForm, "INPUT_URL");
                 AppLoader.setDownloadUrl(url);
 
                 MiniHttpClient hc = new MiniHttpClient(url, cltLogger, getDownloadCallback());
@@ -292,7 +292,16 @@ public class AppManager extends GApplication {
                 if (curSelectedItem != null) {
                     String appName = curSelectedItem.getLabel();
                     if (appName != null) {
-                        AppLoader.runApp(appName);
+                        GApplication app = apps.get(appName);
+                        if (app != null && app.getState() != AppState.STATE_CLOSED) {
+                            GCallBack.getInstance().setApplication(app);
+                            app.resumeApp();
+                        } else {
+                            app = AppLoader.runApp(appName);
+                            if (app != AppManager.this) {
+                                apps.put(appName, app);
+                            }
+                        }
                     }
                 }
             } else if ("APP_SET_BOOT_BTN".equals(name)) {
@@ -395,7 +404,7 @@ public class AppManager extends GApplication {
                     if (iconBytes != null) {
                         img = GImage.createImage(iconBytes);
                     }
-                    GListItem item = new GListItem(img, appName) {
+                    GListItem item = new GListItem(mgrForm, img, appName) {
                         public boolean paint(long vg) {
                             super.paint(vg);
                             if (getLabel() != null && getLabel().equals(AppLoader.getBootApp())) {
@@ -417,10 +426,10 @@ public class AppManager extends GApplication {
     }
 
     void updateContentViewInfo(String appName) {
-        GLabel nameLab = (GLabel) contentView.findByName(APP_NAME_LABEL);
+        GLabel nameLab = contentView.findByName(APP_NAME_LABEL);
         nameLab.setText(AppLoader.getApplicationName(appName));
         //
-        GTextBox descLab = (GTextBox) contentView.findByName(APP_DESC_LABEL);
+        GTextBox descLab = contentView.findByName(APP_DESC_LABEL);
         String dStr = "-";
         long d = AppLoader.getApplicationFileDate(appName);
         if (d > 0) {
@@ -434,7 +443,7 @@ public class AppManager extends GApplication {
         descLab.setText(txt);
 
         //re set image
-        GImageItem icon = (GImageItem) contentView.findByName(APP_ICON_ITEM);
+        GImageItem icon = contentView.findByName(APP_ICON_ITEM);
         if (curSelectedItem != null) icon.setImg(curSelectedItem.getImg());
         contentView.reSize();
     }
@@ -476,7 +485,7 @@ public class AppManager extends GApplication {
             Calendar c = Calendar.getInstance();
             box.insertTextAtCaret("\n" + getDateString(c.getTimeInMillis()) + " " + s);
             box.setScroll(1.f);
-            box.flush();
+            GForm.flush();
         }
     }
 

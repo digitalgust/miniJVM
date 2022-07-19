@@ -19,7 +19,7 @@ import static org.mini.glwrap.GLUtil.toUtf8;
  */
 public abstract class GTextObject extends GObject implements GFocusChangeListener {
     //for keyboard union action
-    static GObject defaultUnionObj = new GObject() {
+    GObject defaultUnionObj = new GObject(form) {
     };
     protected GObject unionObj = defaultUnionObj;//if this object exists, the keyboard not disappear
 
@@ -51,6 +51,10 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
 
     protected boolean selectMode = false;
 
+
+    protected GTextObject(GForm form) {
+        super(form);
+    }
 
     public void setHint(String hint) {
         this.hint = hint;
@@ -140,7 +144,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         String s = getSelectedText();
         if (s != null) {
             Glfm.glfmSetClipBoardContent(s);
-            Glfw.glfwSetClipboardString(getForm().getWinContext(), s);
+            Glfw.glfwSetClipboardString(GCallBack.getInstance().getDisplay(), s);
         }
     }
 
@@ -153,7 +157,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         deleteSelectedText();
         String s = Glfm.glfmGetClipBoardContent();
         if (s == null) {
-            s = Glfw.glfwGetClipboardString(getForm().getWinContext());
+            s = Glfw.glfwGetClipboardString(GCallBack.getInstance().getDisplay());
         }
         if (s != null) {
             insertTextAtCaret(s);
@@ -172,7 +176,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     @Override
     public void focusLost(GObject newgo) {
         if (newgo != unionObj && newgo != this) {
-            GForm.hideKeyboard();
+            GForm.hideKeyboard(form);
         }
         GToolkit.disposeEditMenu();
         touched = false;
@@ -194,9 +198,6 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
                 }
                 case Glfm.GLFMTouchPhaseEnded: {
                     if (touched) {
-                        if (getForm() != null && enable) {
-                            //System.out.println("touched textobject");
-                        }
                         touched = false;
                     }
                     break;

@@ -28,15 +28,12 @@ public class GLabel extends GObject {
     public static final int MODE_MULTI_SHOW = 1, MODE_SINGLE_SHOW = 2;
     int showMode = MODE_SINGLE_SHOW;
 
-    public GLabel() {
-        this("", 0f, 0f, 1f, 1f);
+    public GLabel(GForm form) {
+        this(form, "", 0f, 0f, 1f, 1f);
     }
 
-    public GLabel(String text, int left, int top, int width, int height) {
-        this(text, (float) left, top, width, height);
-    }
-
-    public GLabel(String text, float left, float top, float width, float height) {
+    public GLabel(GForm form, String text, float left, float top, float width, float height) {
+        super(form);
         setText(text);
         setLocation(left, top);
         setSize(width, height);

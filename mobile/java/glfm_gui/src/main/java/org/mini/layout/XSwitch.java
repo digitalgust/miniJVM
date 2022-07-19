@@ -11,10 +11,6 @@ public class XSwitch
     GSwitch switcher;
     protected String onClick;
 
-    public XSwitch() {
-        super(null);
-    }
-
     public XSwitch(XContainer xc) {
         super(xc);
     }
@@ -51,7 +47,7 @@ public class XSwitch
 
     protected void createGui() {
         if (switcher == null) {
-            switcher = new GSwitch();
+            switcher = new GSwitch(getAssist().getForm());
             initGui();
         } else {
             switcher.setLocation(x, y);

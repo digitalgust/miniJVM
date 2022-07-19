@@ -14,7 +14,6 @@ import static org.mini.glwrap.GLUtil.toUtf8;
 import static org.mini.nanovg.Nanovg.*;
 
 /**
- *
  * @author Gust
  */
 public class GMenuItem extends GObject {
@@ -27,7 +26,8 @@ public class GMenuItem extends GObject {
 
     protected int redPoint;
 
-    GMenuItem(String t, GImage i, GMenu _parent) {
+    GMenuItem(GForm form, String t, GImage i, GMenu _parent) {
+        super(form);
         text = t;
         img = i;
         parent = _parent;

@@ -14,15 +14,12 @@ public class GCanvas extends GPanel {
 
     protected GGraphics g;
 
-    public GCanvas() {
-
+    public GCanvas(GForm form) {
+        this(form, 0, 0, 0, 0);
     }
 
-    public GCanvas(int x, int y, int w, int h) {
-        this((float) x, y, w, h);
-    }
-
-    public GCanvas(float x, float y, float w, float h) {
+    public GCanvas(GForm form, float x, float y, float w, float h) {
+        super(form);
         setLocation(x, y);
         setSize(w, h);
     }

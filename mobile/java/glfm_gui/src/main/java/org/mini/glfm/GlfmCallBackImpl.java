@@ -78,6 +78,11 @@ public class GlfmCallBackImpl extends GCallBack {
         return instance;
     }
 
+    @Override
+    protected void onFormSet(GForm form) {
+        onSurfaceResize(display, getDeviceWidth(), getDeviceHeight());
+    }
+
     private GlfmCallBackImpl() {
     }
 
@@ -161,10 +166,14 @@ public class GlfmCallBackImpl extends GCallBack {
     public void mainLoop(long display, double frameTime) {
         try {
 //            startAt = System.currentTimeMillis();
+            if (gapp == null) {
+                return;
+            }
+            gform = gapp.getForm();
             if (!gform.isInited()) {
                 gform.init();
             }
-            if (GObject.flushReq()) {
+            if (GForm.flushReq()) {
                 if (gform != null) {
                     gform.display(vg);
                 }
@@ -308,7 +317,7 @@ public class GlfmCallBackImpl extends GCallBack {
             }
             form.touchEvent(touch, phase, mouseX[touch], mouseY[touch]);
         }
-        GObject.flush();
+        GForm.flush();
         return true;
     }
 

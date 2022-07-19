@@ -30,15 +30,12 @@ public class GButton extends GObject {
         return false;
     }
 
-    public GButton() {
-        this(null, 0f, 0f, 1f, 1f);
+    public GButton(GForm form) {
+        this(form, null, 0f, 0f, 1f, 1f);
     }
 
-    public GButton(String text, int left, int top, int width, int height) {
-        this(text, (float) left, top, width, height);
-    }
-
-    public GButton(String text, float left, float top, float width, float height) {
+    public GButton(GForm form, String text, float left, float top, float width, float height) {
+        super(form);
         setText(text);
         setLocation(left, top);
         setSize(width, height);

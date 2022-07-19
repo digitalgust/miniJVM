@@ -8,10 +8,6 @@ public class XBr
         extends XObject {
     static public final String XML_NAME = "br";
 
-    public XBr() {
-        super(null);
-    }
-
     public XBr(XContainer xc) {
         super(xc);
     }

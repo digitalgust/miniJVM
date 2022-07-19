@@ -335,13 +335,13 @@ public class AppLoader {
                 app = (GApplication) c.newInstance();
                 app.setSaveRoot(getAppDataPath(jarName));
                 GCallBack.getInstance().setApplication(app);
-                app.onStart();
+                app.startApp();
             }
 
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {
-            if (app == null || GCallBack.getInstance().getForm() == null) {
+            if (app == null) {
                 app = AppManager.getInstance();
                 AppManager.getInstance().active();
                 //GForm.addMessage(GLanguage.getString(AppManager.STR_OPEN_APP_FAIL) + ": " + jarName);

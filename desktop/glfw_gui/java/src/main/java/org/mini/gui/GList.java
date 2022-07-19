@@ -61,15 +61,12 @@ public class GList extends GContainer {
     /**
      *
      */
-    public GList() {
-        this(0f, 0f, 1f, 1f);
+    public GList(GForm form) {
+        this(form, 0f, 0f, 1f, 1f);
     }
 
-    public GList(int left, int top, int width, int height) {
-        this((float) left, top, width, height);
-    }
-
-    public GList(float left, float top, float width, float height) {
+    public GList(GForm form, float left, float top, float width, float height) {
+        super(form);
         this.left = left;
         this.top = top;
         this.width = width;
@@ -79,10 +76,10 @@ public class GList extends GContainer {
         setSize(width, height);
 
         //
-        scrollBar = new GScrollBar(0, GScrollBar.VERTICAL, 0, 0, scrollbarWidth, 100);
+        scrollBar = new GScrollBar(form, 0, GScrollBar.VERTICAL, 0, 0, scrollbarWidth, 100);
         scrollBar.setActionListener(new ScrollBarActionListener());
         scrollBar.setStateChangeListener(new ScrollBarStateChangeListener());
-        popWin = new GListPopWindow();
+        popWin = new GListPopWindow(form);
         popWin.addImpl(scrollBar);
         popWin.addImpl(popView);
         setScrollBar(false);
@@ -166,7 +163,7 @@ public class GList extends GContainer {
     }
 
     public GListItem addItem(GImage img, String lab) {
-        GListItem gli = new GListItem(img, lab);
+        GListItem gli = new GListItem(form, img, lab);
         add(gli);
         return gli;
     }
@@ -253,7 +250,7 @@ public class GList extends GContainer {
         normalPanel.setSize(width, height);
 
         scrollBar.setPos(popView.scrolly);
-        flush();
+        GForm.flush();
     }
 
     public void reAlignItems() {
@@ -512,7 +509,7 @@ public class GList extends GContainer {
     /**
      *
      */
-    NormalPanel normalPanel = new NormalPanel();
+    NormalPanel normalPanel = new NormalPanel(form);
     PopWinFocusHandler focusHandler = new PopWinFocusHandler();
     boolean isPressed;
 
@@ -530,6 +527,10 @@ public class GList extends GContainer {
     }
 
     class NormalPanel extends GPanel {
+        public NormalPanel(GForm form) {
+            super(form);
+        }
+
         @Override
         public void touchEvent(int touchid, int phase, int x, int y) {
             if (touchid != Glfw.GLFW_MOUSE_BUTTON_1) return;
@@ -605,7 +606,7 @@ public class GList extends GContainer {
     /**
      *
      */
-    protected GViewPort popView = new GViewPort() {
+    protected GViewPort popView = new GViewPort(form) {
         @Override
         public void setScrollY(float sy) {
             super.setScrollY(sy);
@@ -622,6 +623,10 @@ public class GList extends GContainer {
 
 
     class GListPopWindow extends GPanel {
+        public GListPopWindow(GForm form) {
+            super(form);
+        }
+
         @Override
         public boolean paint(long vg) {
             float x = getX();
@@ -672,7 +677,7 @@ public class GList extends GContainer {
         public void action(GObject gobj) {
             popView.setScrollY(((GScrollBar) gobj).getPos());
             sizeAdjust();
-            flush();
+            GForm.flush();
         }
 
     }
@@ -683,7 +688,7 @@ public class GList extends GContainer {
         public void onStateChange(GObject gobj) {
             popView.setScrollY(((GScrollBar) gobj).getPos());
             sizeAdjust();
-            flush();
+            GForm.flush();
         }
 
     }

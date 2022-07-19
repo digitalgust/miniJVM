@@ -40,15 +40,12 @@ public class GTextField extends GTextObject {
 
     protected float wordShowOffsetX = 0.f;
 
-    public GTextField() {
-        this("", "", 0f, 0f, 1f, 1f);
+    public GTextField(GForm form) {
+        this(form, "", "", 0f, 0f, 1f, 1f);
     }
 
-    public GTextField(String text, String hint, int left, int top, int width, int height) {
-        this(text, hint, (float) left, top, width, height);
-    }
-
-    public GTextField(String text, String hint, float left, float top, float width, float height) {
+    public GTextField(GForm form, String text, String hint, float left, float top, float width, float height) {
+        super(form);
         setText(text);
         setHint(hint);
         setLocation(left, top);

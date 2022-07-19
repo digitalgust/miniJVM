@@ -24,15 +24,12 @@ public class GScrollBar extends GObject {
     protected float radius = 8;
     protected float[] line_boundle = new float[4];
 
-    public GScrollBar() {
-        this(0f, HORIZONTAL, 0f, 0f, 1f, 1f);
+    public GScrollBar(GForm form) {
+        this(form, 0f, HORIZONTAL, 0f, 0f, 1f, 1f);
     }
 
-    public GScrollBar(float pos, int mode, int left, int top, int width, int height) {
-        this(pos, mode, (float) left, top, width, height);
-    }
-
-    public GScrollBar(float pos, int mode, float left, float top, float width, float height) {
+    public GScrollBar(GForm form, float pos, int mode, float left, float top, float width, float height) {
+        super(form);
         this.pos = pos;
         this.mode = mode;
         setLocation(left, top);

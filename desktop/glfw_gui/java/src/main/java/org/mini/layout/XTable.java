@@ -4,10 +4,6 @@ public class XTable
         extends XPanel {
     static public final String XML_NAME = "table";
 
-    public XTable() {
-        super(null);
-    }
-
     public XTable(XContainer xc) {
         super(xc);
     }

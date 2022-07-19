@@ -20,10 +20,6 @@ public class XButton
 
     protected GButton button;
 
-    public XButton() {
-        super(null);
-    }
-
     public XButton(XContainer xc) {
         super(xc);
     }
@@ -72,7 +68,7 @@ public class XButton
 
     protected void createGui() {
         if (button == null) {
-            button = new GButton(text, x, y, width, height);
+            button = new GButton(getAssist().getForm(), text, x, y, width, height);
             initGui();
             button.setIcon(emoji);
         } else {

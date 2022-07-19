@@ -17,7 +17,8 @@ public class GListItem extends GObject {
     protected GImage img;
     protected GList list;
 
-    public GListItem(GImage img, String lab) {
+    public GListItem(GForm form, GImage img, String lab) {
+        super(form);
         this.img = img;
         setText(lab);
     }
@@ -109,7 +110,7 @@ public class GListItem extends GObject {
             list.pulldown = false;
             list.changeCurPanel();
             list.doStateChanged(list);
-            flush();
+            GForm.flush();
             doAction();
         }
     }

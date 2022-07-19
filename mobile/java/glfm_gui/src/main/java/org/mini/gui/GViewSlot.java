@@ -44,11 +44,12 @@ public class GViewSlot extends GViewPort {
 
     protected float dragBeginX, dragBeginY;
 
-    public GViewSlot(float w, float h, int scrollMod) {
-        this(0, 0, w, h, scrollMod);
+    public GViewSlot(GForm form, float w, float h, int scrollMod) {
+        this(form, 0, 0, w, h, scrollMod);
     }
 
-    public GViewSlot(float x, float y, float w, float h, int scrollMod) {
+    public GViewSlot(GForm form, float x, float y, float w, float h, int scrollMod) {
+        super(form);
         setSize(w, h);
         scrollMode = scrollMod;
     }
@@ -226,7 +227,7 @@ public class GViewSlot extends GViewPort {
                 }
                 slots.setInnerLocation(curX, curY);
                 //System.out.println("==slot(" + slots.getInnerX() + "," + slots.getInnerY() + "), from:" + from + "to:" + to + ")");
-                from.flush();
+                GForm.flush();
             } catch (Exception e) {
                 e.printStackTrace();
             }

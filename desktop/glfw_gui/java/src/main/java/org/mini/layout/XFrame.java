@@ -20,13 +20,6 @@ public class XFrame
     boolean closable = true;
 
 
-    /**
-     *
-     */
-    public XFrame() {
-        super(null);
-    }
-
     public XFrame(XContainer parent) {
         super(parent);
     }
@@ -98,7 +91,7 @@ public class XFrame
 
     protected void createGui() {
         if (frame == null) {
-            frame = new GFrame(title, x, y, width, height);
+            frame = new GFrame(getAssist().getForm(), title, x, y, width, height);
             initGui();
             frame.setClosable(closable);
             frame.setFront(true);

@@ -24,10 +24,6 @@ public class XMenu extends XObject {
 
     protected GMenu menu;
 
-    public XMenu() {
-        super(null);
-    }
-
     public XMenu(XContainer xc) {
         super(xc);
     }
@@ -123,7 +119,7 @@ public class XMenu extends XObject {
 
     protected void createGui() {
         if (menu == null) {
-            menu = new GMenu(x, y, width, height);
+            menu = new GMenu(getAssist().getForm(), x, y, width, height);
             initGui();
             for (int i = 0; i < items.size(); i++) {
                 MenuItem item = (MenuItem) items.elementAt(i);

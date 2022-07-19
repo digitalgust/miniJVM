@@ -5,7 +5,6 @@
  */
 package org.mini.gui;
 
-import org.mini.gl.GL;
 import org.mini.glfw.Glfw;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
@@ -507,12 +506,12 @@ public class GToolkit {
      * @param rightListener
      * @return
      */
-    static public GFrame getConfirmFrame(String title, String msg, String left, GActionListener leftListener, String right, GActionListener rightListener) {
-        return getConfirmFrame(title, msg, left, leftListener, right, rightListener, 300, 250);
+    static public GFrame getConfirmFrame(GForm form, String title, String msg, String left, GActionListener leftListener, String right, GActionListener rightListener) {
+        return getConfirmFrame(form, title, msg, left, leftListener, right, rightListener, 300, 250);
     }
 
-    static public GFrame getConfirmFrame(String title, String msg, String left, GActionListener leftListener, String right, GActionListener rightListener, float width, float height) {
-        GFrame frame = new GFrame(title, 0, 0, width, height);
+    static public GFrame getConfirmFrame(GForm form, String title, String msg, String left, GActionListener leftListener, String right, GActionListener rightListener, float width, float height) {
+        GFrame frame = new GFrame(form, title, 0, 0, width, height);
         frame.setFront(true);
         frame.setFocusListener(new GFocusChangeListener() {
             @Override
@@ -530,32 +529,32 @@ public class GToolkit {
         GContainer gp = frame.getView();
         float x = 10, y = 5, w = gp.getW() - 20, h = gp.getH() - 50;
 
-        GTextBox tbox = new GTextBox(msg, "", x, y, w, h);
+        GTextBox tbox = new GTextBox(form, msg, "", x, y, w, h);
         tbox.setEditable(false);
         gp.add(tbox);
         y += h + 5;
 
         float btnWidth = w * .5f;
         if (left != null) {
-            GButton leftBtn = new GButton(left, x, y, btnWidth, 30);
+            GButton leftBtn = new GButton(form, left, x, y, btnWidth, 30);
             leftBtn.setBgColor(128, 16, 8, 255);
             gp.add(leftBtn);
             leftBtn.setActionListener(leftListener);
         }
 
-        GButton rightBtn = new GButton(right == null ? GLanguage.getString("Cancel") : right, btnWidth + 10, y, btnWidth, 30);
+        GButton rightBtn = new GButton(form, right == null ? GLanguage.getString("Cancel") : right, btnWidth + 10, y, btnWidth, 30);
         gp.add(rightBtn);
         rightBtn.setActionListener(rightListener == null ? (GActionListener) gobj -> frame.close() : rightListener);
 
         return frame;
     }
 
-    static public GFrame getMsgFrame(String title, String msg) {
-        return getMsgFrame(title, msg, 300, 250);
+    static public GFrame getMsgFrame(GForm form, String title, String msg) {
+        return getMsgFrame(form, title, msg, 300, 250);
     }
 
-    static public GFrame getMsgFrame(String title, String msg, float width, float height) {
-        final GFrame frame = new GFrame(title, 0, 0, width, height);
+    static public GFrame getMsgFrame(GForm form, String title, String msg, float width, float height) {
+        final GFrame frame = new GFrame(form, title, 0, 0, width, height);
         frame.setFront(true);
         frame.setFocusListener(new GFocusChangeListener() {
             @Override
@@ -573,13 +572,13 @@ public class GToolkit {
         GContainer gp = frame.getView();
         float x = 10, y = 10, w = gp.getW() - 20, h = gp.getH() - 50;
 
-        GTextBox tbox = new GTextBox(msg, "", x, y, w, h);
+        GTextBox tbox = new GTextBox(form, msg, "", x, y, w, h);
         tbox.setEditable(false);
         gp.add(tbox);
         y += h + 10;
 
         float btnWidth = w * .5f;
-        GButton leftBtn = new GButton(GLanguage.getString("Ok"), x + btnWidth * .5f, y, btnWidth, 28);
+        GButton leftBtn = new GButton(form, GLanguage.getString("Ok"), x + btnWidth * .5f, y, btnWidth, 28);
         leftBtn.setBgColor(128, 16, 8, 255);
         leftBtn.setName("MSG_FRAME_OK");
         gp.add(leftBtn);
@@ -596,19 +595,19 @@ public class GToolkit {
      * @param itemListener
      * @return
      */
-    public static GFrame getListFrame(String title, String[] strs, GImage[] imgs, GActionListener buttonListener, GActionListener itemListener) {
-        return getListFrame(title, strs, imgs, false, null, buttonListener, itemListener);
+    public static GFrame getListFrame(GForm form, String title, String[] strs, GImage[] imgs, GActionListener buttonListener, GActionListener itemListener) {
+        return getListFrame(form, title, strs, imgs, false, null, buttonListener, itemListener);
     }
 
-    public static GFrame getListFrame(String title, String[] strs, GImage[] imgs, boolean multiSelect, String buttonText, GActionListener buttonListener, GActionListener itemListener) {
-        return getListFrame(title, strs, imgs, multiSelect, buttonText, buttonListener, itemListener, 300, 250);
+    public static GFrame getListFrame(GForm form, String title, String[] strs, GImage[] imgs, boolean multiSelect, String buttonText, GActionListener buttonListener, GActionListener itemListener) {
+        return getListFrame(form, title, strs, imgs, multiSelect, buttonText, buttonListener, itemListener, 300, 250);
     }
 
-    public static GFrame getListFrame(String title, String[] strs, GImage[] imgs, boolean multiSelect, String buttonText, GActionListener buttonListener, GActionListener itemListener, float width, float height) {
+    public static GFrame getListFrame(GForm form, String title, String[] strs, GImage[] imgs, boolean multiSelect, String buttonText, GActionListener buttonListener, GActionListener itemListener, float width, float height) {
         float pad = 2, btnW, btnH = 28;
         float y = pad;
 
-        GFrame frame = new GFrame(title, 0, 0, width, height);
+        GFrame frame = new GFrame(form, title, 0, 0, width, height);
 
         frame.setFront(true);
         frame.setFocusListener(new GFocusChangeListener() {
@@ -623,7 +622,7 @@ public class GToolkit {
         });
         GContainer view = frame.getView();
 
-        GTextField search = new GTextField("", "search", pad, y, view.getW() - pad * 2, 30);
+        GTextField search = new GTextField(form, "", "search", pad, y, view.getW() - pad * 2, 30);
         search.setName("search");
         search.setBoxStyle(GTextField.BOX_STYLE_SEARCH);
 
@@ -631,7 +630,7 @@ public class GToolkit {
         y += 30 + pad;
 
         float h = view.getH() - y - 30 - pad * 4;
-        GList glist = new GList(0, y, view.getW(), h);
+        GList glist = new GList(form, 0, y, view.getW(), h);
         glist.setName("list");
         glist.setShowMode(GList.MODE_MULTI_SHOW);
         glist.setSelectMode(multiSelect ? GList.MODE_MULTI_SELECT : GList.MODE_SINGLE_SELECT);
@@ -649,7 +648,7 @@ public class GToolkit {
         y += h + pad;
         btnW = view.getW() * .5f - pad;
         if (multiSelect) {
-            GCheckBox chbox = new GCheckBox(GLanguage.getString("SeleAll"), false, pad, y, btnW, btnH);
+            GCheckBox chbox = new GCheckBox(form, GLanguage.getString("SeleAll"), false, pad, y, btnW, btnH);
             view.add(chbox);
             chbox.setActionListener(gobj -> {
                 if (((GCheckBox) gobj).isChecked()) {
@@ -661,7 +660,7 @@ public class GToolkit {
         }
 
 
-        GButton btn = new GButton(buttonText == null ? GLanguage.getString("Ok") : buttonText, (view.getW() - btnW - pad), y, btnW, btnH);
+        GButton btn = new GButton(form, buttonText == null ? GLanguage.getString("Ok") : buttonText, (view.getW() - btnW - pad), y, btnW, btnH);
         btn.setName("perform");
         frame.getView().add(btn);
         btn.setActionListener(buttonListener);
@@ -675,14 +674,14 @@ public class GToolkit {
         return frame;
     }
 
-    public static GFrame getInputFrame(String title, String msg, String defaultValue, String inputHint, String leftLabel, GActionListener leftListener, String rightLabel, GActionListener rightListener) {
-        return getInputFrame(title, msg, defaultValue, inputHint, leftLabel, leftListener, rightLabel, rightListener, 300, 200);
+    public static GFrame getInputFrame(GForm form, String title, String msg, String defaultValue, String inputHint, String leftLabel, GActionListener leftListener, String rightLabel, GActionListener rightListener) {
+        return getInputFrame(form, title, msg, defaultValue, inputHint, leftLabel, leftListener, rightLabel, rightListener, 300, 200);
     }
 
-    public static GFrame getInputFrame(String title, String msg, String defaultValue, String inputHint, String leftLabel, GActionListener leftListener, String rightLabel, GActionListener rightListener, float width, float height) {
+    public static GFrame getInputFrame(GForm form, String title, String msg, String defaultValue, String inputHint, String leftLabel, GActionListener leftListener, String rightLabel, GActionListener rightListener, float width, float height) {
 
         float x = 10, y;
-        GFrame frame = new GFrame(title, 0, 0, width, height);
+        GFrame frame = new GFrame(form, title, 0, 0, width, height);
         frame.setFront(true);
         frame.setFocusListener(new GFocusChangeListener() {
             @Override
@@ -701,24 +700,24 @@ public class GToolkit {
 
         float buttonWidth = contentWidth * .5f - 10;
         y -= 35f;
-        GButton cancelbtn = new GButton(leftLabel == null ? GLanguage.getString("Cancel") : leftLabel, x, y, buttonWidth, 28);
+        GButton cancelbtn = new GButton(form, leftLabel == null ? GLanguage.getString("Cancel") : leftLabel, x, y, buttonWidth, 28);
         view.add(cancelbtn);
 
-        GButton okbtn = new GButton(rightLabel == null ? GLanguage.getString("Ok") : rightLabel, x + buttonWidth + 20, y, buttonWidth, 28);
+        GButton okbtn = new GButton(form, rightLabel == null ? GLanguage.getString("Ok") : rightLabel, x + buttonWidth + 20, y, buttonWidth, 28);
         okbtn.setBgColor(0, 96, 128, 255);
         view.add(okbtn);
         y -= 35;
-        GTextField input = new GTextField(defaultValue == null ? "" : defaultValue, inputHint, x, y, contentWidth, 28);
+        GTextField input = new GTextField(form, defaultValue == null ? "" : defaultValue, inputHint, x, y, contentWidth, 28);
         input.setName("input");
         view.add(input);
 
         y -= 25;
-        GLabel lb_state = new GLabel("", x, y, contentWidth, 20);
+        GLabel lb_state = new GLabel(form, "", x, y, contentWidth, 20);
         lb_state.setName("state");
         view.add(lb_state);
 
         y = 10;
-        GLabel lb1 = new GLabel(msg, x, y, contentWidth, y);
+        GLabel lb1 = new GLabel(form, msg, x, y, contentWidth, y);
         lb1.setShowMode(GLabel.MODE_MULTI_SHOW);
         view.add(lb1);
 
@@ -744,13 +743,13 @@ public class GToolkit {
         return frame;
     }
 
-    public static GList getListMenu(String[] strs, GImage[] imgs, GActionListener[] listeners) {
-        return getListMenu(strs, imgs, listeners, 150, 120);
+    public static GList getListMenu(GForm form, String[] strs, GImage[] imgs, GActionListener[] listeners) {
+        return getListMenu(form, strs, imgs, listeners, 150, 120);
     }
 
-    public static GList getListMenu(String[] strs, GImage[] imgs, GActionListener[] listeners, float width, float height) {
+    public static GList getListMenu(GForm form, String[] strs, GImage[] imgs, GActionListener[] listeners, float width, float height) {
 
-        GList list = new GList(0, 0, width, height);
+        GList list = new GList(form, 0, 0, width, height);
         list.setShowMode(GList.MODE_MULTI_SHOW);
         list.setBgColor(GToolkit.getStyle().getFrameBackground());
         list.setFocusListener(new GFocusChangeListener() {
@@ -798,9 +797,9 @@ public class GToolkit {
         return list;
     }
 
-    public static GMenu getMenu(String[] strs, GImage[] imgs, GActionListener[] listener) {
+    public static GMenu getMenu(GForm form, String[] strs, GImage[] imgs, GActionListener[] listener) {
 
-        GMenu menu = new GMenu(0, 0, 150, 120);
+        GMenu menu = new GMenu(form, 0, 0, 150, 120);
         menu.setFocusListener(new GFocusChangeListener() {
             @Override
             public void focusGot(GObject oldgo) {
@@ -833,12 +832,12 @@ public class GToolkit {
 
     public static GViewPort getImageView(GForm form, GImage img, GActionListener listener) {
 
-        GViewPort view = new GViewPort() {
+        GViewPort view = new GViewPort(form) {
             GImage image = img;
 
             @Override
             public void longTouchedEvent(int x, int y) {
-                GList menu = new GList();
+                GList menu = new GList(form);
                 GListItem item = menu.addItem(null, GLanguage.getString("Save to album"));
                 item.setActionListener((GObject gobj) -> {
                 });
@@ -919,21 +918,20 @@ public class GToolkit {
 
     public static void showFrame(GObject gobj) {
         if (gobj == null) return;
-        GForm form = GCallBack.getInstance().getForm();
+        GForm form = gobj.getForm();
         gobj.setLocation(form.getW() / 2 - gobj.getW() / 2, form.getH() / 2 - gobj.getH() / 2);
         form.add(gobj);
     }
 
     public static void showFrame(GObject gobj, float x, float y) {
         if (gobj == null) return;
-        GForm form = GCallBack.getInstance().getForm();
+        GForm form = gobj.getForm();
         gobj.setLocation(x, y);
         form.add(gobj);
     }
 
-    public static void closeFrame(String frameName) {
+    public static void closeFrame(GForm form, String frameName) {
         if (frameName == null) return;
-        GForm form = GCallBack.getInstance().getForm();
         GObject go = form.findByName(frameName);
         if (go != null) {
             form.remove(go);
@@ -941,7 +939,8 @@ public class GToolkit {
     }
 
     public static void showAlignedFrame(GObject gobj, int align_mod) {
-        GForm form = GCallBack.getInstance().getForm();
+        if (gobj == null) return;
+        GForm form = gobj.getForm();
         if (form == null) {
             System.out.println("warning: added to form can be set align");
             return;
@@ -963,17 +962,6 @@ public class GToolkit {
         form.add(gobj);
     }
 
-    /**
-     * set component attachment by compName
-     * find component from form
-     *
-     * @param compName
-     * @param o
-     */
-    public static void setCompAttachment(String compName, Object o) {
-        GForm form = GCallBack.getInstance().getForm();
-        setCompAttachment(form, compName, o);
-    }
 
     /**
      * set component attachment by compName
@@ -991,11 +979,6 @@ public class GToolkit {
         }
     }
 
-    public static <T extends Object> T getCompAttachment(String compName) {
-        GForm form = GCallBack.getInstance().getForm();
-        return getCompAttachment(form, compName);
-    }
-
     public static <T extends Object> T getCompAttachment(GContainer parent, String compName) {
         if (compName != null || parent == null) {
             GObject go = parent.findByName(compName);
@@ -1004,11 +987,6 @@ public class GToolkit {
             }
         }
         return null;
-    }
-
-    public static Boolean getCompEnable(String compName) {
-        GForm form = GCallBack.getInstance().getForm();
-        return getCompEnable(form, compName);
     }
 
     public static Boolean getCompEnable(GContainer parent, String compName) {
@@ -1020,11 +998,6 @@ public class GToolkit {
         return null;
     }
 
-    public static void setCompEnable(String compName, boolean enable) {
-        GForm form = GCallBack.getInstance().getForm();
-        setCompEnable(form, compName, enable);
-    }
-
     public static void setCompEnable(GContainer parent, String compName, boolean enable) {
         if (compName == null || parent == null) return;
         GObject eitem = parent.findByName(compName);
@@ -1033,11 +1006,6 @@ public class GToolkit {
         }
     }
 
-
-    public static String getCompText(String compName) {
-        GForm form = GCallBack.getInstance().getForm();
-        return getCompText(form, compName);
-    }
 
     public static String getCompText(GContainer parent, String compName) {
         if (compName == null || parent == null) return null;
@@ -1049,22 +1017,12 @@ public class GToolkit {
     }
 
 
-    public static void setCompText(String compName, String text) {
-        GForm form = GCallBack.getInstance().getForm();
-        setCompText(form, compName, text);
-    }
-
     public static void setCompText(GContainer parent, String compName, String text) {
         if (compName == null || parent == null) return;
         GObject eitem = parent.findByName(compName);
         if (eitem != null) {
             eitem.setText(text);
         }
-    }
-
-    public static String getCompCmd(String compName) {
-        GForm form = GCallBack.getInstance().getForm();
-        return getCompCmd(form, compName);
     }
 
     public static String getCompCmd(GContainer parent, String compName) {
@@ -1076,22 +1034,12 @@ public class GToolkit {
         return "";
     }
 
-    public static void setCompCmd(String compName, String text) {
-        GForm form = GCallBack.getInstance().getForm();
-        setCompCmd(form, compName, text);
-    }
-
     public static void setCompCmd(GContainer parent, String compName, String text) {
         if (compName == null || parent == null) return;
         GObject eitem = parent.findByName(compName);
         if (eitem != null) {
             eitem.setCmd(text);
         }
-    }
-
-    public static GImage getCompImage(String compName) {
-        GForm form = GCallBack.getInstance().getForm();
-        return getCompImage(form, compName);
     }
 
     public static GImage getCompImage(GContainer parent, String compName) {
@@ -1103,22 +1051,12 @@ public class GToolkit {
         return null;
     }
 
-    public static void setCompImage(String compName, String jarPicPath) {
-        GForm form = GCallBack.getInstance().getForm();
-        setCompImage(form, compName, jarPicPath);
-    }
-
     public static void setCompImage(GContainer parent, String compName, String jarPicPath) {
         if (compName == null || parent == null) return;
         GObject eitem = parent.findByName(compName);
         if (eitem != null && eitem instanceof GImageItem) {
             ((GImageItem) eitem).setImg(getCachedImageFromJar(jarPicPath));
         }
-    }
-
-    public static void setCompImage(String compName, GImage img) {
-        GForm form = GCallBack.getInstance().getForm();
-        setCompImage(form, compName, img);
     }
 
     public static void setCompImage(GContainer parent, String compName, GImage img) {
@@ -1129,22 +1067,10 @@ public class GToolkit {
         }
     }
 
-    public static <T extends GObject> T getComponent(String compName) {
-        GForm form = GCallBack.getInstance().getForm();
-        return getComponent(form, compName);
-    }
-
     public static <T extends GObject> T getComponent(GContainer parent, String compName) {
         if (compName == null || parent == null) return null;
         T eitem = parent.findByName(compName);
         return eitem;
-    }
-
-
-    public static GActionListener getCompActionListener(String compName) {
-        if (compName == null) return null;
-        GForm form = GCallBack.getInstance().getForm();
-        return getCompActionListener(form, compName);
     }
 
 
@@ -1156,14 +1082,6 @@ public class GToolkit {
         }
         return null;
     }
-
-
-    public static void setCompActionListener(String compName, GActionListener listener) {
-        if (compName == null) return;
-        GForm form = GCallBack.getInstance().getForm();
-        setCompActionListener(form, compName, listener);
-    }
-
 
     public static void setCompActionListener(GContainer parent, String compName, GActionListener listener) {
         if (compName == null || parent == null) return;
@@ -1195,8 +1113,8 @@ public class GToolkit {
         boolean shown = false;
         GTextObject text;
 
-        public EditMenu(int left, int top, int width, int height) {
-            super(left, top, width, height);
+        public EditMenu(GForm form, float left, float top, float width, float height) {
+            super(form, left, top, width, height);
         }
 
         @Override
@@ -1251,7 +1169,7 @@ public class GToolkit {
         my -= focus.getForm().getY();
 
         if (editMenu == null) {
-            editMenu = new EditMenu((int) mx, (int) my, (int) menuW, (int) menuH);
+            editMenu = new EditMenu(focus.getForm(), mx, my, menuW, menuH);
             editMenu.setFront(true);
             GMenuItem item;
 

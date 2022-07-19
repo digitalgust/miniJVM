@@ -26,6 +26,7 @@ public class GForm extends GPanel {
 
     static GCmdHandler cmdHandler = new GCmdHandler();
     private boolean inited = false;
+    public static byte flush = 3;
 
     protected String title;
     protected long display; //glfw display
@@ -46,7 +47,8 @@ public class GForm extends GPanel {
     protected GNotifyListener notifyListener;
     protected GSizeChangeListener sizeChangeListener;
 
-    public GForm() {
+    public GForm(GForm form) {
+        super(form);
         callback = GCallBack.getInstance();
 
         display = callback.getDisplay();
@@ -165,6 +167,21 @@ public class GForm extends GPanel {
             Nanovg.nvgTextJni(vg, dx, dy, b, 0, b.length);
         }
     }
+
+
+    static synchronized public void flush() {
+        GForm.flush = 3;
+        //in android may flush before paint,so the menu not shown
+    }
+
+    static synchronized public boolean flushReq() {
+        if (GForm.flush > 0) {
+            GForm.flush--;
+            return true;
+        }
+        return false;
+    }
+
 
     void paintFlyingObject(long vg) {
         if (flyingObject != null) {
@@ -337,12 +354,12 @@ public class GForm extends GPanel {
     }
 
     public static void showKeyboard(GTextObject editObj) {
-        GCallBack.getInstance().getForm().editObject = editObj;
+        editObj.form.editObject = editObj;
         cmdHandler.addCmd(GCmd.GCMD_SHOW_KEYBOARD);
     }
 
-    public static void hideKeyboard() {
-        GCallBack.getInstance().getForm().editObject = null;
+    public static void hideKeyboard(GForm form) {
+        form.editObject = null;
         cmdHandler.addCmd(GCmd.GCMD_HIDE_KEYBOARD);
     }
 

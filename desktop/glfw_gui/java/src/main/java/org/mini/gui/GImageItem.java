@@ -22,11 +22,12 @@ public class GImageItem extends GObject {
     protected boolean drawBorder = true;
 
 
-    public GImageItem() {
-
+    public GImageItem(GForm form) {
+        this(form, null);
     }
 
-    public GImageItem(GImage img) {
+    public GImageItem(GForm form, GImage img) {
+        super(form);
         this.img = img;
     }
 

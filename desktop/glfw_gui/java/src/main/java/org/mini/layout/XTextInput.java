@@ -83,10 +83,10 @@ public class XTextInput
     protected void createGui() {
         if (textInput == null) {
             if (multiLine) {
-                textInput = new GTextBox(getText(), hint, x, y, width, height);
+                textInput = new GTextBox(getAssist().getForm(),getText(), hint, x, y, width, height);
 
             } else {
-                textInput = new GTextField(getText(), hint, x, y, width, height);
+                textInput = new GTextField(getAssist().getForm(),getText(), hint, x, y, width, height);
                 ((GTextField) textInput).setBoxStyle(style);
                 ((GTextField) textInput).setPasswordMode(password);
             }

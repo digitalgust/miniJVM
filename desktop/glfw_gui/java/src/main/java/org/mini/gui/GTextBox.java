@@ -52,16 +52,12 @@ public class GTextBox extends GTextObject {
     //
     protected boolean mouseDrag;
 
-    public GTextBox() {
-        this("", "", 0f, 0f, 1f, 1f);
+    public GTextBox(GForm form) {
+        this(form, "", "", 0f, 0f, 1f, 1f);
     }
 
-    public GTextBox(String text, String hint, int left, int top, int width, int height) {
-        this(text, hint, (float) left, top, width, height);
-
-    }
-
-    public GTextBox(String text, String hint, float left, float top, float width, float height) {
+    public GTextBox(GForm form, String text, String hint, float left, float top, float width, float height) {
+        super(form);
         setText(text);
         setHint(hint);
         setLocation(left, top);
@@ -523,7 +519,7 @@ public class GTextBox extends GTextObject {
                     if (dh > 0) {
                         setScroll(scroll - (float) speed / dh);
                     }
-                    flush();
+                    GForm.flush();
                     if (count++ > maxMoveCount) {
                         try {
                             this.cancel();

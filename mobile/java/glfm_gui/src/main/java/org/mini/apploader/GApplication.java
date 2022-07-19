@@ -14,6 +14,11 @@ import org.mini.gui.GLanguage;
  * @author Gust
  */
 public abstract class GApplication {
+    public enum AppState {
+        STATE_INITED, STATE_STARTED, STATE_PAUSEED, STATE_CLOSED,
+    }
+
+    private AppState state = AppState.STATE_INITED;
 
     String saveRootPath;
 
@@ -25,8 +30,25 @@ public abstract class GApplication {
         return saveRootPath;
     }
 
+    public AppState getState() {
+        return state;
+    }
 
-    public final void close() {
+    public void setState(AppState state) {
+        this.state = state;
+    }
+
+    public final void startApp() {
+        setState(AppState.STATE_STARTED);
+        try {
+            onStart();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public final void closeApp() {
+        if (getState() == AppState.STATE_CLOSED) return;
         System.out.println("Closed app : " + this);
         try {
             onClose();
@@ -38,10 +60,28 @@ public abstract class GApplication {
         GForm.addCmd(new GCmd(() -> {
             Thread.currentThread().setContextClassLoader(null);
         }));
+        setState(AppState.STATE_CLOSED);
     }
 
-    public final void notifyCurrentFormChanged() {
-        GCallBack.getInstance().notifyCurrentFormChanged(this);
+    public final void pauseApp() {
+        if (getState() == AppState.STATE_PAUSEED || getState() == AppState.STATE_CLOSED) return;
+        setState(AppState.STATE_PAUSEED);
+        try {
+            onPause();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        AppManager.getInstance().active();
+    }
+
+    public final void resumeApp() {
+        if (getState() != AppState.STATE_PAUSEED) return;
+        setState(AppState.STATE_STARTED);
+        try {
+            onResume();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**

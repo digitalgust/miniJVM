@@ -34,10 +34,6 @@ public class XList extends XObject {
 
     protected GList list;
 
-    public XList() {
-        super(null);
-    }
-
     public XList(XContainer xc) {
         super(xc);
     }
@@ -121,7 +117,7 @@ public class XList extends XObject {
 
     protected void createGui() {
         if (list == null) {
-            list = new GList(x, y, width, height);
+            list = new GList(getAssist().getForm(), x, y, width, height);
             initGui();
             list.setShowMode(multiLine ? GList.MODE_MULTI_SHOW : GList.MODE_SINGLE_SHOW);
             list.setSelectMode(multiSelect ? GList.MODE_MULTI_SELECT : GList.MODE_SINGLE_SELECT);
@@ -134,7 +130,7 @@ public class XList extends XObject {
                 if (item.pic != null) {
                     img = GToolkit.getCachedImageFromJar(item.pic);
                 }
-                GListItem gli = new GListItem(img, item.text);
+                GListItem gli = new GListItem(getAssist().getForm(), img, item.text);
                 gli.setName(item.name);
                 gli.setAttachment(item.attachment);
                 gli.setActionListener(getRoot().getEventHandler());

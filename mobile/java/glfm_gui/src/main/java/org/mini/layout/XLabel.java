@@ -19,10 +19,6 @@ public class XLabel
 
     GLabel label;
 
-    public XLabel() {
-        super(null);
-    }
-
     public XLabel(XContainer xc) {
         super((xc));
     }
@@ -76,7 +72,7 @@ public class XLabel
 
     protected void createGui() {
         if (label == null) {
-            label = new GLabel(text, x, y, width, height);
+            label = new GLabel(getAssist().getForm(), text, x, y, width, height);
             initGui();
             label.setAlign(align);
             label.setShowMode(multiLine ? GLabel.MODE_MULTI_SHOW : GLabel.MODE_SINGLE_SHOW);

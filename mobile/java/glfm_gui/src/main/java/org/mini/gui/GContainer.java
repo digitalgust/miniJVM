@@ -29,6 +29,10 @@ abstract public class GContainer extends GObject {
     //脚本相关
     private Interpreter interpreter;// 脚本引擎,用于对GUI组件进行修改
 
+    protected GContainer(GForm form) {
+        super(form);
+    }
+
     @Override
     public Interpreter getInterpreter() {
         return getInterpreter(null);

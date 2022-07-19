@@ -17,10 +17,6 @@ public class XImageItem extends XObject {
     protected boolean border;
     protected float alpha = 1.f;
 
-    public XImageItem() {
-        super(null);
-    }
-
     public XImageItem(XContainer xc) {
         super(xc);
     }
@@ -68,7 +64,7 @@ public class XImageItem extends XObject {
     protected void createGui() {
         if (imgItem == null) {
             GImage img = GToolkit.getCachedImageFromJar(pic);
-            imgItem = new GImageItem(img);
+            imgItem = new GImageItem(getAssist().getForm(), img);
             initGui();
             imgItem.setLocation(x, y);
             imgItem.setSize(width, height);

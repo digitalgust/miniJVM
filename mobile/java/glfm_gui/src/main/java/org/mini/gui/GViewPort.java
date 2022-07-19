@@ -22,6 +22,10 @@ public class GViewPort extends GContainer {
 
     protected boolean slideDirectionLimit = true;
 
+    public GViewPort(GForm form) {
+        super(form);
+    }
+
 
     @Override
     public void setLocation(float x, float y) {
@@ -265,7 +269,7 @@ public class GViewPort extends GContainer {
                             tmpScrollY -= vec;
                             //System.out.println("dy:" + ((float) speedY / dh));
                         }
-                        flush();
+                        GForm.flush();
                         if (count++ > maxMoveCount || tmpScrollY < 0 || tmpScrollY > 1) {
                             try {
                                 this.cancel();
@@ -305,7 +309,7 @@ public class GViewPort extends GContainer {
                             tmpScrollX -= vec;
                             //System.out.println("dx:" + ((float) speedX / dw));
                         }
-                        flush();
+                        GForm.flush();
                         if (count++ > maxMoveCount || tmpScrollX < 0 || tmpScrollX > 1) {
                             try {
                                 this.cancel();

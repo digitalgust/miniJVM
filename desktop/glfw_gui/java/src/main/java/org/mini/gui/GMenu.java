@@ -26,15 +26,12 @@ public class GMenu extends GPanel {
      */
     protected boolean contextMenu = false;
 
-    public GMenu() {
-        this(0f, 0f, 1f, 1f);
+    public GMenu(GForm form) {
+        this(form, 0f, 0f, 1f, 1f);
     }
 
-    public GMenu(int left, int top, int width, int height) {
-        this((float) left, top, width, height);
-    }
-
-    public GMenu(float left, float top, float width, float height) {
+    public GMenu(GForm form, float left, float top, float width, float height) {
+        super(form);
         setLocation(left, top);
         setSize(width, height);
     }
@@ -57,13 +54,13 @@ public class GMenu extends GPanel {
     }
 
     public GMenuItem addItem(int index, String itemTag, GImage img) {
-        GMenuItem item = new GMenuItem(itemTag, img, GMenu.this);
+        GMenuItem item = new GMenuItem(form, itemTag, img, GMenu.this);
         addImpl(index, item);
         return item;
     }
 
     public GMenuItem addItem(String itemTag, GImage img) {
-        GMenuItem item = new GMenuItem(itemTag, img, GMenu.this);
+        GMenuItem item = new GMenuItem(form, itemTag, img, GMenu.this);
         addImpl(item);
         return item;
     }

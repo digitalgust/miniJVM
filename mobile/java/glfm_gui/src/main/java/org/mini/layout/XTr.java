@@ -5,10 +5,6 @@ public class XTr
 
     static public final String XML_NAME = "tr";
 
-    public XTr() {
-        super(null);
-    }
-
     public XTr(XContainer xc) {
         super(xc);
     }

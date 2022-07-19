@@ -20,15 +20,12 @@ public class GSwitch extends GObject {
     static public final float DEFAULT_WIDTH = 50f;
     static public final float DEFAULT_HEIGHT = 30f;
 
-    public GSwitch() {
-        this(false, 0f, 0f, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+    public GSwitch(GForm form) {
+        this(form, false, 0f, 0f, DEFAULT_WIDTH, DEFAULT_HEIGHT);
     }
 
-    public GSwitch(boolean sw, int left, int top, int width, int height) {
-        this(sw, (float) left, top, width, height);
-    }
-
-    public GSwitch(boolean sw, float left, float top, float width, float height) {
+    public GSwitch(GForm form, boolean sw, float left, float top, float width, float height) {
+        super(form);
         this.switcher = sw;
         setLocation(left, top);
         setSize(width, height);
@@ -41,7 +38,7 @@ public class GSwitch extends GObject {
 
     public void setSwitcher(boolean p) {
         switcher = p;
-        flush();
+        GForm.flush();
     }
 
     @Override

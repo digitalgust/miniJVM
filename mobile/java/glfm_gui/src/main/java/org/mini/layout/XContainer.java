@@ -25,10 +25,6 @@ public abstract class XContainer
     protected XEventHandler eventHandler;
 
 
-    public XContainer() {
-        super(null);
-    }
-
     public XContainer(XContainer parent) {
         super(parent);
     }
@@ -468,10 +464,6 @@ public abstract class XContainer
      *
      * @param is InputStream
      */
-    public static XObject parseXml(InputStream is) throws Exception {
-        return parseXml(is, null);
-    }
-
     public static XObject parseXml(InputStream is, XmlExtAssist assist) throws Exception {
         try {
             //parse xml
@@ -493,12 +485,11 @@ public abstract class XContainer
         return null;
     }
 
-    public static XObject parseXml(String uiStr) {
-        return parseXml(uiStr, null);
-    }
 
     public static XObject parseXml(String uiStr, XmlExtAssist assist) {
         try {
+            if (assist == null) throw new RuntimeException("XmlExtAssist can not be null");
+
             ByteArrayInputStream bais = new ByteArrayInputStream(GLUtil.toUtf8(uiStr));
             XObject xobj = parseXml(bais, assist);
             return xobj;
@@ -507,11 +498,6 @@ public abstract class XContainer
             ex.printStackTrace();
         }
         return null;
-    }
-
-
-    public XmlExtAssist getAssist() {
-        return assist;
     }
 
 }

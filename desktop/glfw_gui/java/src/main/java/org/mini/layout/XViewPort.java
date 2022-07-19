@@ -7,10 +7,6 @@ public class XViewPort extends XContainer {
     static public final String XML_NAME = "viewport";
     protected GViewPort viewPort;
 
-    public XViewPort() {
-        super(null);
-    }
-
     public XViewPort(XContainer xc) {
         super(xc);
     }
@@ -27,7 +23,7 @@ public class XViewPort extends XContainer {
 
     protected void createGui() {
         if (viewPort == null) {
-            viewPort = new GViewPort();
+            viewPort = new GViewPort(getAssist().getForm());
             initGui();
             viewPort.setLocation(x, y);
             viewPort.setSize(width, height);

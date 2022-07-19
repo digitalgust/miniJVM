@@ -11,10 +11,6 @@ public class XPanel extends XContainer {
 
     protected GPanel panel;
 
-    public XPanel() {
-        super(null);
-    }
-
     public XPanel(XContainer xc) {
         super(xc);
     }
@@ -33,7 +29,7 @@ public class XPanel extends XContainer {
 
     protected void createGui() {
         if (panel == null) {
-            panel = new GPanel(x, y, width, height)
+            panel = new GPanel(getAssist().getForm(),x, y, width, height)
 //            {
 //                public boolean paint(long vg) {
 //                    Nanovg.nvgScissor(vg, getX(), getY(), width, height);

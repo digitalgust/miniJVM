@@ -10,15 +10,12 @@ package org.mini.gui;
  */
 public class GPanel extends GContainer {
 
-    public GPanel() {
-        this(0f, 0f, 1f, 1f);
+    public GPanel(GForm form) {
+        this(form, 0f, 0f, 1f, 1f);
     }
 
-    public GPanel(int left, int top, int width, int height) {
-        this((float) left, top, width, height);
-    }
-
-    public GPanel(float left, float top, float width, float height) {
+    public GPanel(GForm form, float left, float top, float width, float height) {
+        super(form);
         setLocation(left, top);
         setSize(width, height);
     }

@@ -29,8 +29,8 @@ public class GFrame extends GContainer {
     protected byte[] close_arr = {(byte) 0xe2, (byte) 0x9d, (byte) 0x8e, 0};
     protected float[] close_boundle = new float[4];
 
-    protected GViewPort view = new GViewPort();
-    protected GPanel title_panel = new GPanel();
+    protected GViewPort view = new GViewPort(form);
+    protected GPanel title_panel = new GPanel(form);
 
     protected int frameMode;
     protected boolean closable = true;
@@ -38,15 +38,12 @@ public class GFrame extends GContainer {
     protected String onInitScript;
 
 
-    public GFrame() {
-        this("", (float) 0, (float) 0, (float) 300, (float) 200);
+    public GFrame(GForm form) {
+        this(form, "", (float) 0, (float) 0, (float) 300, (float) 200);
     }
 
-    public GFrame(String title, int left, int top, int width, int height) {
-        this(title, (float) left, top, width, height);
-    }
-
-    public GFrame(String title, float left, float top, float width, float height) {
+    public GFrame(GForm form, String title, float left, float top, float width, float height) {
+        super(form);
         setTitle(title);
         setLocation(left, top);
         setSize(width, height);
@@ -145,9 +142,6 @@ public class GFrame extends GContainer {
         this.closable = closable;
     }
 
-    public GForm getForm() {
-        return (GForm) parent;
-    }
 
     public void align(int align_mod) {
         if (getForm() == null) {
@@ -175,8 +169,6 @@ public class GFrame extends GContainer {
      * because form maybe translate on keyboard popup
      */
     void validLocation() {
-        GForm form = GCallBack.getInstance().getForm();
-        if (form == null) return;
 
         if (getX() < -(getW() - 40)) {
             setLocation(-(getW() - 40), getY());

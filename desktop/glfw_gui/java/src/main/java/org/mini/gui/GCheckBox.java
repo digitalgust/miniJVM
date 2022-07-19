@@ -21,15 +21,12 @@ public class GCheckBox extends GObject {
     protected boolean checked;
     protected byte[] preicon_arr = toUtf8("" + ICON_CHECK);
 
-    public GCheckBox() {
-        this("", false, 0f, 0f, 1f, 1f);
+    public GCheckBox(GForm form) {
+        this(form, "", false, 0f, 0f, 1f, 1f);
     }
 
-    public GCheckBox(String text, boolean checked, int left, int top, int width, int height) {
-        this(text, checked, (float) left, top, width, height);
-    }
-
-    public GCheckBox(String text, boolean checked, float left, float top, float width, float height) {
+    public GCheckBox(GForm form, String text, boolean checked, float left, float top, float width, float height) {
+        super(form);
         setText(text);
         this.checked = checked;
         setLocation(left, top);

@@ -12,6 +12,7 @@ import static org.mini.nanovg.Nanovg.*;
 
 /**
  * not implementation completed
+ *
  * @author gust
  */
 class GColorSelector extends GObject {
@@ -24,15 +25,12 @@ class GColorSelector extends GObject {
     protected float r_big, r_small;
     protected float selectX, selectY;
 
-    public GColorSelector() {
-        this(0f, 0f, 0f, 1f, 1f);
+    public GColorSelector(GForm form) {
+        this(form, 0f, 0f, 0f, 1f, 1f);
     }
 
-    public GColorSelector(float pos, int left, int top, int width, int height) {
-        this(pos, (float) left, top, width, height);
-    }
-
-    public GColorSelector(float pos, float left, float top, float width, float height) {
+    public GColorSelector(GForm form, float pos, float left, float top, float width, float height) {
+        super(form);
         this.curAngel = pos;
         setLocation(left, top);
         setSize(width, height);

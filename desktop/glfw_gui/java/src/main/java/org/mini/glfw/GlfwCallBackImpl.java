@@ -8,11 +8,10 @@ package org.mini.glfw;
 
 import org.mini.apploader.AppLoader;
 import org.mini.apploader.Sync;
-import org.mini.apploader.GApplication;
-import org.mini.gui.GCallBack;
-import org.mini.gui.GObject;
-import org.mini.gui.GToolkit;
 import org.mini.glwrap.GLUtil;
+import org.mini.gui.GCallBack;
+import org.mini.gui.GForm;
+import org.mini.gui.GToolkit;
 
 import java.io.File;
 
@@ -146,12 +145,16 @@ public class GlfwCallBackImpl extends GCallBack {
         long startAt, cost;
         while (!glfwWindowShouldClose(display)) {
             try {
+                if (gapp == null) {
+                    return;
+                }
+                gform = gapp.getForm();
 //                startAt = System.currentTimeMillis();
                 if (!gform.isInited()) {
                     gform.init();
                 }
                 //user define contents
-                if (GObject.flushReq()) {
+                if (GForm.flushReq()) {
                     gform.display(vg);
                     glfwSwapBuffers(display);
                 }
@@ -206,7 +209,7 @@ public class GlfwCallBackImpl extends GCallBack {
                 glfwSetWindowShouldClose(window, GLFW_TRUE);
             }
             gform.keyEventGlfw(key, scancode, action, mods);
-            gform.flush();
+            GForm.flush();
         } catch (Exception ex) {
             ex.printStackTrace();
 
@@ -393,7 +396,7 @@ public class GlfwCallBackImpl extends GCallBack {
             gform.getBoundle()[WIDTH] = x;
             gform.getBoundle()[HEIGHT] = y;
             reloadWindow();
-            gform.flush();
+            GForm.flush();
         } catch (Exception ex) {
             ex.printStackTrace();
 
@@ -453,10 +456,14 @@ public class GlfwCallBackImpl extends GCallBack {
         return new File("./").getAbsolutePath();
     }
 
+    /**
+     * 当窗口从一种分辨率进入另一种分辨率时,会重设form
+     *
+     * @param form
+     */
     @Override
-    public GApplication getApplication() {
-        return gapp;
+    protected void onFormSet(GForm form) {
+        windowSize(display, getDeviceWidth(), getDeviceHeight());
     }
-
 
 }

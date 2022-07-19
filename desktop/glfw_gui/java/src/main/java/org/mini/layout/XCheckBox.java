@@ -18,10 +18,6 @@ public class XCheckBox
 
     protected GCheckBox checkBox;
 
-    public XCheckBox() {
-        super(null);
-    }
-
     public XCheckBox(XContainer xc) {
         super((xc));
     }
@@ -62,7 +58,7 @@ public class XCheckBox
 
     protected void createGui() {
         if (checkBox == null) {
-            checkBox = new GCheckBox(text, false, x, y, width, height);
+            checkBox = new GCheckBox(getAssist().getForm(),text, false, x, y, width, height);
             initGui();
             checkBox.setChecked(selected);
         } else {

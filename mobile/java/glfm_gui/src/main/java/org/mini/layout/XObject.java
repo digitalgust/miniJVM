@@ -1,9 +1,6 @@
 package org.mini.layout;
 
-import org.mini.gui.GContainer;
-import org.mini.gui.GLayout;
-import org.mini.gui.GObject;
-import org.mini.gui.GuiScriptLib;
+import org.mini.gui.*;
 import org.mini.gui.event.GFlyListener;
 import org.mini.gui.gscript.Interpreter;
 import org.mini.gui.gscript.Lib;
@@ -241,7 +238,7 @@ public abstract class XObject implements GLayout {
                     container.loadScript(script);// 装入代码
                     Interpreter inp = container.getInterpreter();
                     if (inp != null) {
-                        inp.reglib(new GuiScriptLib());
+                        inp.reglib(new GuiScriptLib(getAssist().getForm()));
                         if (assist != null) {
                             for (Lib lib : assist.getExtScriptLibs()) {
                                 inp.reglib(lib);
@@ -471,16 +468,22 @@ public abstract class XObject implements GLayout {
     protected abstract void createGui();
 
 
-    public void flyBegin(GObject gObject, float x, float y) {
-        getRoot().getEventHandler().flyBegin(gObject, x, y);
-    }
+//    public void flyBegin(GObject gObject, float x, float y) {
+//        getRoot().getEventHandler().flyBegin(gObject, x, y);
+//    }
+//
+//    public void flying(GObject gObject, float x, float y) {
+//        getRoot().getEventHandler().flying(gObject, x, y);
+//    }
+//
+//    public void flyEnd(GObject gObject, float x, float y) {
+//        getRoot().getEventHandler().flyEnd(gObject, x, y);
+//    }
 
-    public void flying(GObject gObject, float x, float y) {
-        getRoot().getEventHandler().flying(gObject, x, y);
-    }
 
-    public void flyEnd(GObject gObject, float x, float y) {
-        getRoot().getEventHandler().flyEnd(gObject, x, y);
+    public XmlExtAssist getAssist() {
+        if (assist == null) return parent.getAssist();
+        return assist;
     }
 }
 

@@ -3,16 +3,16 @@ package org.mini.gui;
 abstract public class GOpenGLPanel extends GPanel {
     protected GImage glRendereredImg;
 
-    protected boolean inited = false;
+    protected boolean glinited = false;
 
     GCmd cmd = new GCmd(() -> {
-        if (!inited) {
+        if (!glinited) {
             try {
                 gl_panel_init();
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            inited = true;
+            glinited = true;
         }
         try {
             gl_paint();
@@ -21,15 +21,12 @@ abstract public class GOpenGLPanel extends GPanel {
         }
     });
 
-    public GOpenGLPanel() {
-        this(0f, 0f, 1f, 1f);
+    public GOpenGLPanel(GForm form) {
+        this(form, 0f, 0f, 1f, 1f);
     }
 
-    public GOpenGLPanel(int left, int top, int width, int height) {
-        this((float) left, top, width, height);
-    }
-
-    public GOpenGLPanel(float left, float top, float width, float height) {
+    public GOpenGLPanel(GForm form, float left, float top, float width, float height) {
+        super(form);
         setLocation(left, top);
         setSize(width, height);
     }
@@ -64,7 +61,7 @@ abstract public class GOpenGLPanel extends GPanel {
     }
 
     public boolean isGLInited() {
-        return inited;
+        return glinited;
     }
 
     public boolean paint(long vg) {
@@ -72,7 +69,7 @@ abstract public class GOpenGLPanel extends GPanel {
         if (glRendereredImg != null) {
             GToolkit.drawImage(vg, glRendereredImg, getX(), getY(), getW(), getH(), false, 1.f);
         }
-        GObject.flush();
+        GForm.flush();
 
         return super.paint(vg);
     }

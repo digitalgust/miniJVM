@@ -37,7 +37,7 @@ abstract public class GObject implements GAttachable {
     public static final int WIDTH = 2;
     public static final int HEIGHT = 3;
 
-    volatile static int flush;
+    GForm form;
     static boolean paintDebug = false;
 
     /**
@@ -95,6 +95,15 @@ abstract public class GObject implements GAttachable {
     private String onClinkScript;
     private String onStateChangeScript;
 
+    protected GObject(GForm form) {
+        if (this instanceof GForm) {//只有GForm可以传空进来
+            this.form = (GForm) this;
+        } else {
+            if (form == null) throw new RuntimeException("Form can not be null");
+            this.form = form;
+        }
+    }
+
     /**
      *
      */
@@ -105,12 +114,6 @@ abstract public class GObject implements GAttachable {
     public void destroy() {
     }
 
-
-    static synchronized public void flush() {
-        flush = 3;
-        //in android may flush before paint,so the menu not shown
-    }
-
     public void setFixed(boolean fixed) {
         fixedLocation = fixed;
     }
@@ -119,13 +122,6 @@ abstract public class GObject implements GAttachable {
         return fixedLocation;
     }
 
-    static synchronized public boolean flushReq() {
-        if (flush > 0) {
-            flush--;
-            return true;
-        }
-        return false;
-    }
 
     public void schedule(TimerTask task, long delay, long period) {
         if (GForm.timer != null) {
@@ -415,7 +411,7 @@ abstract public class GObject implements GAttachable {
 
 
     public GForm getForm() {
-        return GCallBack.getInstance().getForm();
+        return form;
     }
 
     public GFrame getFrame() {
