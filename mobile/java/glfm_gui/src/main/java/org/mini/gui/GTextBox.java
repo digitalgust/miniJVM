@@ -872,7 +872,7 @@ public class GTextBox extends GTextObject {
 
                                 }
                                 nvgFillColor(vg, getColor());
-                                nvgTextJni(vg, dx, dy, local_arr, byte_starti, byte_endi);
+                                nvgTextJni(vg, dx, dy + 1, local_arr, byte_starti, byte_endi);
 
                             }
                             dy += lineH;

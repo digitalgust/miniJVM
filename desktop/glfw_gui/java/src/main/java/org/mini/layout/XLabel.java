@@ -59,7 +59,9 @@ public class XLabel
     protected int getDefaultWidth(int parentViewW) {
         int w = XUtil.measureWidth(parentViewW - GLabel.TEXT_BOUND_DEC, text, fontSize);
         w = w + addon;
-        return w + GLabel.TEXT_BOUND_DEC;
+        w += GLabel.TEXT_BOUND_DEC;
+        if (w > parentViewW) w = parentViewW;
+        return w;
     }
 
     protected int getDefaultHeight(int parentViewH) {

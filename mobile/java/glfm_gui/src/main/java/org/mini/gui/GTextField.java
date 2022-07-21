@@ -398,6 +398,12 @@ public class GTextField extends GTextObject {
         selectMode = true;
     }
 
+    @Override
+    public void deleteAll() {
+        super.deleteAll();
+        caretIndex = 0;
+    }
+
     /**
      * @param vg
      * @return

@@ -9,7 +9,7 @@ public class XSwitch
     static public final String XML_NAME = "switch";
 
     GSwitch switcher;
-    protected String onClick;
+    protected boolean selected = true;
 
     public XSwitch(XContainer xc) {
         super(xc);
@@ -29,13 +29,13 @@ public class XSwitch
         toEndTag(parser, XML_NAME);
     }
 
+
     protected void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
-        if (attName.equals("onclick")) {
-            onClick = attValue;
+        if (attName.equals("selected")) {
+            selected = "0".equals(attValue) ? false : true;
         }
     }
-
 
     protected int getDefaultWidth(int parentViewW) {
         return (int) GSwitch.DEFAULT_WIDTH;
@@ -47,7 +47,7 @@ public class XSwitch
 
     protected void createGui() {
         if (switcher == null) {
-            switcher = new GSwitch(getAssist().getForm());
+            switcher = new GSwitch(getAssist().getForm(), selected, x, y, width, height);
             initGui();
         } else {
             switcher.setLocation(x, y);
