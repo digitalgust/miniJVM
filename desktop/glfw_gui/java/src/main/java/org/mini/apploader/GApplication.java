@@ -5,10 +5,7 @@
  */
 package org.mini.apploader;
 
-import org.mini.gui.GCallBack;
-import org.mini.gui.GCmd;
-import org.mini.gui.GForm;
-import org.mini.gui.GLanguage;
+import org.mini.gui.*;
 
 /**
  * @author Gust
@@ -21,6 +18,12 @@ public abstract class GApplication {
     private AppState state = AppState.STATE_INITED;
 
     String saveRootPath;
+    GStyle oldStyle;
+    GStyle myStyle;
+
+    void setOldStyle(GStyle style) {
+        oldStyle = style;
+    }
 
     public final void setSaveRoot(String path) {
         saveRootPath = path;
@@ -56,6 +59,7 @@ public abstract class GApplication {
             e.printStackTrace();
         }
         GLanguage.clear();
+        GToolkit.setStyle(oldStyle);
         AppManager.getInstance().active();
         GForm.addCmd(new GCmd(() -> {
             Thread.currentThread().setContextClassLoader(null);
@@ -66,6 +70,8 @@ public abstract class GApplication {
     public final void pauseApp() {
         if (getState() == AppState.STATE_PAUSEED || getState() == AppState.STATE_CLOSED) return;
         setState(AppState.STATE_PAUSEED);
+        myStyle = GToolkit.getStyle();
+        GToolkit.setStyle(oldStyle);
         try {
             onPause();
         } catch (Exception e) {
@@ -77,6 +83,8 @@ public abstract class GApplication {
     public final void resumeApp() {
         if (getState() != AppState.STATE_PAUSEED) return;
         setState(AppState.STATE_STARTED);
+        oldStyle = GToolkit.getStyle();
+        GToolkit.setStyle(myStyle);
         try {
             onResume();
         } catch (Exception e) {

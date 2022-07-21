@@ -635,11 +635,7 @@ public class GList extends GContainer {
             float h = getH();
 
             float[] bg;
-            if (showMode == MODE_MULTI_SHOW) {
-                bg = GToolkit.getStyle().getListBackgroundColor();
-            } else {
-                bg = GToolkit.getStyle().getPopBackgroundColor();
-            }
+            bg = GToolkit.getStyle().getListBackgroundColor();
 
             GToolkit.drawRoundedRect(vg, x, y, w, h, 3.5f, bg);
 

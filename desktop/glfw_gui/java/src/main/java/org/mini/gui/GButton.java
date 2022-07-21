@@ -39,6 +39,7 @@ public class GButton extends GObject {
         setText(text);
         setLocation(left, top);
         setSize(width, height);
+        setBgColor(GColorSelector.TRANSPARENT);
     }
 
 

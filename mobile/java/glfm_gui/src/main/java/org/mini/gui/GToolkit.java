@@ -192,7 +192,8 @@ public class GToolkit {
     }
 
     public static void setStyle(GStyle style) {
-        defaultStyle.set(style);
+        if (style == null) return;
+        defaultStyle = new GStyleInner(style);//copy every times
     }
 
     /**

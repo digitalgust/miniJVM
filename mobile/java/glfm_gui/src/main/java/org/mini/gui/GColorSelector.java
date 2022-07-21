@@ -17,6 +17,26 @@ import static org.mini.nanovg.Nanovg.*;
  */
 class GColorSelector extends GObject {
 
+    public static final float[] RED = new float[]{0xff, 0x00, 0x00, 0xff};
+    public static final float[] GREEN = new float[]{0x00, 0xff, 0x00, 0xff};
+    public static final float[] BLUE = new float[]{0x00, 0x00, 0xff, 0xff};
+    public static final float[] YELLOW = new float[]{0xff, 0xff, 0x00, 0xff};
+    public static final float[] PURPLE = new float[]{0xff, 0x00, 0xff, 0xff};
+    public static final float[] CYAN = new float[]{0x00, 0xff, 0xff, 0xff};
+    public static final float[] WHITE = new float[]{0xff, 0xff, 0xff, 0xff};
+    public static final float[] BLACK = new float[]{0x00, 0x00, 0x00, 0xff};
+    public static final float[] GRAY = new float[]{0x80, 0x80, 0x80, 0xff};
+    public static final float[] TRANSPARENT = new float[]{0x00, 0x00, 0x00, 0x00};
+    public static final float[] RED_HALF = new float[]{0xff, 0x00, 0x00, 0x80};
+    public static final float[] GREEN_HALF = new float[]{0x00, 0xff, 0x00, 0x80};
+    public static final float[] BLUE_HALF = new float[]{0x00, 0x00, 0xff, 0x80};
+    public static final float[] YELLOW_HALF = new float[]{0xff, 0xff, 0x00, 0x80};
+    public static final float[] PURPLE_HALF = new float[]{0xff, 0x00, 0xff, 0x80};
+    public static final float[] CYAN_HALF = new float[]{0x00, 0xff, 0xff, 0x80};
+    public static final float[] WHITE_HALF = new float[]{0xff, 0xff, 0xff, 0x80};
+    public static final float[] BLACK_HALF = new float[]{0x00, 0x00, 0x00, 0x80};
+    public static final float[] GRAY_HALF = new float[]{0x80, 0x80, 0x80, 0x80};
+
     protected String text;
     protected float curAngel;
     protected float oldAngel;

@@ -5,9 +5,7 @@
  */
 package org.mini.apploader;
 
-import org.mini.gui.GCallBack;
-import org.mini.gui.GForm;
-import org.mini.gui.GLanguage;
+import org.mini.gui.*;
 import org.mini.zip.Zip;
 
 import java.io.File;
@@ -329,10 +327,11 @@ public class AppLoader {
     public static GApplication runApp(String jarName) {
         GApplication app = null;
         try {
-
+            GStyle oldStyle = GToolkit.getStyle();
             Class c = getApplicationClass(jarName);
             if (c != null) {
                 app = (GApplication) c.newInstance();
+                app.setOldStyle(oldStyle);
                 app.setSaveRoot(getAppDataPath(jarName));
                 GCallBack.getInstance().setApplication(app);
                 app.startApp();

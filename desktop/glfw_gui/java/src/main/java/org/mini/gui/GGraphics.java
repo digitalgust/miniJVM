@@ -16,6 +16,7 @@ import static org.mini.nanovg.Nanovg.*;
  */
 public class GGraphics {
 
+    //compartiable with j2me
     public static final int HCENTER = 1;
     public static final int VCENTER = 2;
     public static final int LEFT = 4;
@@ -26,7 +27,6 @@ public class GGraphics {
 
     protected GCanvas canvas;
     protected long vg;
-    protected StbFont font;
 
     int curColor = 0;
     byte r, g, b, a;

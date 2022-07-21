@@ -109,8 +109,6 @@ public class AppManager extends GApplication {
 
     GTextBox logBox;
 
-    GStyle style;
-
     //
     static final int PICK_PHOTO = 101, PICK_CAMERA = 102, PICK_QR = 103, PICK_HEAD = 104;
 
@@ -124,10 +122,6 @@ public class AppManager extends GApplication {
         if (webServer != null) {
             webServer.stopServer();
         }
-        if (style == null) {
-            style = GToolkit.getStyle();
-        }
-        GToolkit.setStyle(style);
         GForm.setMsgBarColor(GCmdHandler.DEFAULT_MSG_BAR_COLOR);
         regStrings();
         GLanguage.setCurLang(AppLoader.getDefaultLang());
