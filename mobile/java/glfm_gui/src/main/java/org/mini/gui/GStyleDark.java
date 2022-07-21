@@ -102,14 +102,14 @@ public class GStyleDark extends GStyle {
         return backgroundColor;
     }
 
-    float[] listBackgroundColor = nvgRGBA(0x30, 0x30, 0x30, 0xc0);
+    float[] listBackgroundColor = nvgRGBA(0x30, 0x30, 0x30, 0x30);
 
     @Override
     public float[] getListBackgroundColor() {
         return listBackgroundColor;
     }
 
-    float[] popBackgroundColor = nvgRGBA(0x10, 0x10, 0x10, 0xff);
+    float[] popBackgroundColor = nvgRGBA(0x30, 0x30, 0x30, 0xd0);
 
     @Override
     public float[] getPopBackgroundColor() {

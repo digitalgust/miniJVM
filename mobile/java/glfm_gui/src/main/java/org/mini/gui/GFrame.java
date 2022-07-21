@@ -151,16 +151,16 @@ public class GFrame extends GContainer {
         if ((align_mod & Nanovg.NVG_ALIGN_LEFT) != 0) {
             move(-getX(), 0);
         } else if ((align_mod & Nanovg.NVG_ALIGN_RIGHT) != 0) {
-            move(getForm().getDeviceWidth() - (getX() + getW()), 0);
+            move(getForm().getW() - (getX() + getW()), 0);
         } else if ((align_mod & Nanovg.NVG_ALIGN_CENTER) != 0) {
-            move(getForm().getDeviceWidth() / 2 - (getX() + getW() / 2), 0);
+            move(getForm().getW() / 2 - (getX() + getW() / 2), 0);
         }
         if ((align_mod & Nanovg.NVG_ALIGN_TOP) != 0) {
             move(0, -getY());
         } else if ((align_mod & Nanovg.NVG_ALIGN_BOTTOM) != 0) {
-            move(0, getForm().getDeviceHeight() - (getY() + getH()));
+            move(0, getForm().getH() - (getY() + getH()));
         } else if ((align_mod & Nanovg.NVG_ALIGN_CENTER) != 0) {
-            move(0, getForm().getDeviceHeight() / 2 - (getY() + getH() / 2));
+            move(0, getForm().getH() / 2 - (getY() + getH() / 2));
         }
     }
 

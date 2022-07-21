@@ -508,7 +508,7 @@ public class GToolkit {
      * @return
      */
     static public GFrame getConfirmFrame(GForm form, String title, String msg, String left, GActionListener leftListener, String right, GActionListener rightListener) {
-        return getConfirmFrame(form, title, msg, left, leftListener, right, rightListener, 300, 250);
+        return getConfirmFrame(form, title, msg, left, leftListener, right, rightListener, 300, form.getH() * .6f);
     }
 
     static public GFrame getConfirmFrame(GForm form, String title, String msg, String left, GActionListener leftListener, String right, GActionListener rightListener, float width, float height) {
@@ -551,7 +551,7 @@ public class GToolkit {
     }
 
     static public GFrame getMsgFrame(GForm form, String title, String msg) {
-        return getMsgFrame(form, title, msg, 300, 250);
+        return getMsgFrame(form, title, msg, 300, form.getH() * .6f);
     }
 
     static public GFrame getMsgFrame(GForm form, String title, String msg, float width, float height) {
@@ -949,16 +949,16 @@ public class GToolkit {
         if ((align_mod & Nanovg.NVG_ALIGN_LEFT) != 0) {
             gobj.setLocation(0, gobj.getY());
         } else if ((align_mod & Nanovg.NVG_ALIGN_RIGHT) != 0) {
-            gobj.setLocation(form.getDeviceWidth() - gobj.getW(), gobj.getY());
+            gobj.setLocation(form.getW() - gobj.getW(), gobj.getY());
         } else if ((align_mod & Nanovg.NVG_ALIGN_CENTER) != 0) {
-            gobj.setLocation((form.getDeviceWidth() - gobj.getW()) * .5f, gobj.getY());
+            gobj.setLocation((form.getW() - gobj.getW()) * .5f, gobj.getY());
         }
         if ((align_mod & Nanovg.NVG_ALIGN_TOP) != 0) {
             gobj.setLocation(gobj.getX(), 0);
         } else if ((align_mod & Nanovg.NVG_ALIGN_BOTTOM) != 0) {
-            gobj.setLocation(gobj.getX(), form.getDeviceHeight() - gobj.getH());
+            gobj.setLocation(gobj.getX(), form.getH() - gobj.getH());
         } else if ((align_mod & Nanovg.NVG_ALIGN_CENTER) != 0) {
-            gobj.setLocation(gobj.getX(), (form.getDeviceHeight() - gobj.getH()) * .5f);
+            gobj.setLocation(gobj.getX(), (form.getH() - gobj.getH()) * .5f);
         }
         form.add(gobj);
     }
@@ -1157,15 +1157,15 @@ public class GToolkit {
         float mx = x - menuW / 2;
         if (mx < 10) {
             mx = 10;
-        } else if (mx + menuW > focus.getForm().getDeviceWidth()) {
-            mx = focus.getForm().getDeviceWidth() - menuW;
+        } else if (mx + menuW > focus.getForm().getW()) {
+            mx = focus.getForm().getW() - menuW;
         }
         mx -= focus.getForm().getX();
         float my = y - 20 - menuH;
         if (my < 20) {
             my = y + 10;
-        } else if (my + menuH > focus.getForm().getDeviceHeight()) {
-            my = focus.getForm().getDeviceHeight() - menuH;
+        } else if (my + menuH > focus.getForm().getH()) {
+            my = focus.getForm().getH() - menuH;
         }
         my -= focus.getForm().getY();
 

@@ -122,7 +122,6 @@ public class AppManager extends GApplication {
         if (webServer != null) {
             webServer.stopServer();
         }
-        GForm.setMsgBarColor(GCmdHandler.DEFAULT_MSG_BAR_COLOR);
         regStrings();
         GLanguage.setCurLang(AppLoader.getDefaultLang());
         GCallBack.getInstance().setApplication(this);
@@ -327,25 +326,24 @@ public class AppManager extends GApplication {
             } else if ("LI_ENG".equals(name)) {
                 GLanguage.setCurLang(GLanguage.ID_ENG);
                 AppLoader.setDefaultLang(GLanguage.ID_ENG);
+                mgrForm = null;
                 AppManager.getInstance().active();
             } else if ("LI_CHS".equals(name)) {
                 GLanguage.setCurLang(GLanguage.ID_CHN);
                 AppLoader.setDefaultLang(GLanguage.ID_CHN);
+                mgrForm = null;
                 AppManager.getInstance().active();
             } else if ("LI_CHT".equals(name)) {
                 GLanguage.setCurLang(GLanguage.ID_CHT);
                 AppLoader.setDefaultLang(GLanguage.ID_CHT);
+                mgrForm = null;
                 AppManager.getInstance().active();
             } else if ("LI_BRIGHT".equals(name)) {
                 GToolkit.setStyle(new GStyleBright());
                 AppLoader.setGuiStyle(0);
-                instance = new AppManager();
-                //active();
             } else if ("LI_DARK".equals(name)) {
                 GToolkit.setStyle(new GStyleDark());
                 AppLoader.setGuiStyle(1);
-                instance = new AppManager();
-                //active();
             }
         }
 

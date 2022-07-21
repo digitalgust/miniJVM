@@ -20,6 +20,7 @@ public abstract class GApplication {
     String saveRootPath;
     GStyle oldStyle;
     GStyle myStyle;
+    int myLang;
 
     void setOldStyle(GStyle style) {
         oldStyle = style;
@@ -72,6 +73,7 @@ public abstract class GApplication {
         setState(AppState.STATE_PAUSEED);
         myStyle = GToolkit.getStyle();
         GToolkit.setStyle(oldStyle);
+        myLang = AppLoader.getDefaultLang();
         try {
             onPause();
         } catch (Exception e) {
@@ -85,6 +87,7 @@ public abstract class GApplication {
         setState(AppState.STATE_STARTED);
         oldStyle = GToolkit.getStyle();
         GToolkit.setStyle(myStyle);
+        GLanguage.setCurLang(myLang);
         try {
             onResume();
         } catch (Exception e) {

@@ -25,8 +25,6 @@ import static org.mini.nanovg.Nanovg.*;
  */
 public class GCmdHandler {
 
-    public static float[] DEFAULT_MSG_BAR_COLOR = {1.0f, 1.0f, 1.0f, 1.0f};
-    float[] msgBarColor = DEFAULT_MSG_BAR_COLOR;
 
     final static List<GCmd> cmds = Collections.synchronizedList(new ArrayList());
 
@@ -112,16 +110,16 @@ public class GCmdHandler {
         } else {
             long vg = form.getNvContext();
             float pad = 20;
-            float panW = form.callback.getDeviceWidth() - pad * 2;
+            float panW = form.getW() - pad * 2;
             float[] bond = new float[4];
             nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
             nvgFontFace(vg, GToolkit.getFontWord());
             nvgTextAlign(vg, Nanovg.NVG_ALIGN_TOP | Nanovg.NVG_ALIGN_LEFT);
             Nanovg.nvgTextBoxBoundsJni(vg, 0, 0, panW, curShowMessage, 0, curShowMessage.length, bond);
 
-            GToolkit.drawRoundedRect(vg, pad * .5f, pad * .5f, panW + pad, bond[GObject.HEIGHT] - bond[GObject.TOP] + pad, 5, msgBarColor);
+            GToolkit.drawRoundedRect(vg, pad * .5f, pad * .5f, panW + pad, bond[GObject.HEIGHT] - bond[GObject.TOP] + pad, 5, GToolkit.getStyle().getTextFontColor());
 
-            nvgFillColor(vg, Nanovg.nvgRGBf(0.f, 0.f, 0.f));
+            nvgFillColor(vg, GToolkit.getStyle().getBackgroundColor());
             Nanovg.nvgTextBoxJni(vg, pad, pad, panW, curShowMessage, 0, curShowMessage.length);
         }
     }
@@ -131,7 +129,5 @@ public class GCmdHandler {
         return cmds.size();
     }
 
-    public void setMsgBarColor(float[] msgBarColor) {
-        this.msgBarColor = msgBarColor;
-    }
+
 }

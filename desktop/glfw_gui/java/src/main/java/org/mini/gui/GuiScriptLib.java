@@ -680,7 +680,7 @@ public class GuiScriptLib extends Lib {
         //System.out.println(s);
         XObject xobj = XContainer.parseXml(s, xmlExtAssist);
         if (xobj instanceof XContainer) {
-            ((XContainer) xobj).build(GCallBack.getInstance().getDeviceWidth(), GCallBack.getInstance().getDeviceHeight(), eventHandler);
+            ((XContainer) xobj).build((int) form.getW(), (int) form.getH(), eventHandler);
         }
         GToolkit.showFrame(xobj.getGui());
         return null;

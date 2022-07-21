@@ -300,7 +300,7 @@ public class GList extends GContainer {
         float popY, popH;
         GForm form = getForm();
         int itemcount = popView.elements.size();
-        if (normalPanel.getY() > form.getY() + form.getDeviceHeight() / 2) {
+        if (normalPanel.getY() > form.getY() + form.getH() / 2) {
             popY = 0f;
             popH = itemcount * list_item_heigh;
             if (itemcount < list_rows_min) {
@@ -321,8 +321,8 @@ public class GList extends GContainer {
             if (itemcount > list_rows_max) {
                 popH = list_rows_max * list_item_heigh;
             }
-            if (popH > form.getY() + form.getDeviceHeight() - popY) {
-                popH = form.getY() + form.getDeviceHeight() - popY;
+            if (popH > form.getY() + form.getH() - popY) {
+                popH = form.getY() + form.getH() - popY;
             }
         }
         return popH - 10f;
@@ -635,8 +635,11 @@ public class GList extends GContainer {
             float h = getH();
 
             float[] bg;
-            bg = GToolkit.getStyle().getListBackgroundColor();
-
+            if (showMode == MODE_MULTI_SHOW) {
+                bg = GToolkit.getStyle().getListBackgroundColor();
+            } else {
+                bg = GToolkit.getStyle().getPopBackgroundColor();
+            }
             GToolkit.drawRoundedRect(vg, x, y, w, h, 3.5f, bg);
 
             super.paint(vg);
