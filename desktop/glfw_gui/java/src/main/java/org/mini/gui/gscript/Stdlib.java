@@ -41,9 +41,10 @@ public class Stdlib extends Lib {
         methodNames.put("setobjfield".toLowerCase(), 20);
         methodNames.put("trim".toLowerCase(), 21);//字符串去空格
         methodNames.put("str2int".toLowerCase(), 22);//字符串转int
-        methodNames.put("invokejava".toLowerCase(), 23);//执行对象方法
-        methodNames.put("getbit".toLowerCase(), 24);//取整数第n位,返回bool
-        methodNames.put("setbit".toLowerCase(), 25);//设整数第n位
+        methodNames.put("invokeJava".toLowerCase(), 23);//执行对象方法
+        methodNames.put("invokeStatic".toLowerCase(), 24);//执行对象方法
+        methodNames.put("getbit".toLowerCase(), 25);//取整数第n位,返回bool
+        methodNames.put("setbit".toLowerCase(), 26);//设整数第n位
     }
 
 
@@ -103,10 +104,12 @@ public class Stdlib extends Lib {
             case 22:
                 return str2int(inp, para);
             case 23:
-                return invokejava(inp, para);
+                return invokeJava(inp, para);
             case 24:
-                return getbit(inp, para);
+                return invokeStatic(inp, para);
             case 25:
+                return getbit(inp, para);
+            case 26:
                 return setbit(inp, para);
         }
         return null;
@@ -507,14 +510,8 @@ public class Stdlib extends Lib {
         }
     }
 
-    private DataType invokejava(Interpreter inp, ArrayList<DataType> para) {
+    private DataType invokeImpl(Interpreter inp, ArrayList<DataType> para, Class c, String name, Class[] types, Object instance) {
         try {
-            Object ins = ((Obj) Interpreter.vPopBack(para)).getVal();
-            String javaFunc = ((Str) (Interpreter.vPopBack(para))).getVal();
-            Class c = ins.getClass();
-            String name = javaFunc.substring(0, javaFunc.indexOf('('));
-            String desc = javaFunc.substring(javaFunc.indexOf('('));
-            Class[] types = ReflectMethod.getMethodPara(c.getClassLoader(), desc);
 
             Object[] javaPara = new Object[para.size()];
             for (int i = 0; i < para.size(); i++) {
@@ -543,7 +540,7 @@ public class Stdlib extends Lib {
 
             Method m = c.getMethod(name, types);
             if (m != null) {
-                Object ret = m.invoke(ins, javaPara);
+                Object ret = m.invoke(instance, javaPara);
 
                 Class retType = m.getReturnType();
                 if (retType != Void.TYPE) {
@@ -566,12 +563,39 @@ public class Stdlib extends Lib {
                     }
                 }
             } else {
-                throw new RuntimeException("Method not found:" + javaFunc);
+                throw new RuntimeException("Method not found:" + name);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private DataType invokeJava(Interpreter inp, ArrayList<DataType> para) {
+        Object ins = ((Obj) Interpreter.vPopBack(para)).getVal();
+        String javaFunc = ((Str) (Interpreter.vPopBack(para))).getVal();
+        Class c = ins.getClass();
+        String name = javaFunc.substring(0, javaFunc.indexOf('('));
+        String desc = javaFunc.substring(javaFunc.indexOf('('));
+        Class[] types = ReflectMethod.getMethodPara(c.getClassLoader(), desc);
+
+        return invokeImpl(inp, para, c, name, types, ins);
+    }
+
+    private DataType invokeStatic(Interpreter inp, ArrayList<DataType> para) {
+        String className = ((Str) Interpreter.vPopBack(para)).getVal();
+        String javaFunc = ((Str) (Interpreter.vPopBack(para))).getVal();
+        Class c = null;
+        try {
+            c = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("class not found:" + className);
+        }
+        String name = javaFunc.substring(0, javaFunc.indexOf('('));
+        String desc = javaFunc.substring(javaFunc.indexOf('('));
+        Class[] types = ReflectMethod.getMethodPara(c.getClassLoader(), desc);
+
+        return invokeImpl(inp, para, c, name, types, null);
     }
 
 

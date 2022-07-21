@@ -169,6 +169,7 @@ public class GlfmCallBackImpl extends GCallBack {
             if (gapp == null) {
                 return;
             }
+            Thread.currentThread().setContextClassLoader(gapp.getClass().getClassLoader());//there were be an app pause and the other app setup
             gform = gapp.getForm();
             if (!gform.isInited()) {
                 gform.init();

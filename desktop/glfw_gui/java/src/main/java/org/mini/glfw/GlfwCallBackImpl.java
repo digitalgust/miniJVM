@@ -148,6 +148,7 @@ public class GlfwCallBackImpl extends GCallBack {
                 if (gapp == null) {
                     return;
                 }
+                Thread.currentThread().setContextClassLoader(gapp.getClass().getClassLoader());
                 gform = gapp.getForm();
 //                startAt = System.currentTimeMillis();
                 if (!gform.isInited()) {

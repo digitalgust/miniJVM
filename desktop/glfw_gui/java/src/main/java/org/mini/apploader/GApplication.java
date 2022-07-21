@@ -21,6 +21,7 @@ public abstract class GApplication {
     GStyle oldStyle;
     GStyle myStyle;
     int myLang;
+    ClassLoader myClassLoader;
 
     void setOldStyle(GStyle style) {
         oldStyle = style;
@@ -73,7 +74,7 @@ public abstract class GApplication {
         setState(AppState.STATE_PAUSEED);
         myStyle = GToolkit.getStyle();
         GToolkit.setStyle(oldStyle);
-        myLang = AppLoader.getDefaultLang();
+        myLang = GLanguage.getCurLang();
         try {
             onPause();
         } catch (Exception e) {

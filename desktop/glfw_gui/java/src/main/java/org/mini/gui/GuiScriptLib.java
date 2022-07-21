@@ -54,6 +54,7 @@ public class GuiScriptLib extends Lib {
         methodNames.put("setXY".toLowerCase(), 36);//
         methodNames.put("setWH".toLowerCase(), 37);//
         methodNames.put("loadXmlUI".toLowerCase(), 38);//
+        methodNames.put("uiExist".toLowerCase(), 39);//
 
     }
 
@@ -145,6 +146,8 @@ public class GuiScriptLib extends Lib {
                 return setWH(inp, para);
             case 38:
                 return loadXmlUI(inp, para);
+            case 39:
+                return uiExist(inp, para);
             default:
         }
         return null;
@@ -686,4 +689,15 @@ public class GuiScriptLib extends Lib {
         return null;
     }
 
+    public DataType uiExist(Interpreter inp, ArrayList<DataType> para) {
+        boolean w = false;
+        if (!para.isEmpty()) {
+            Str str = Interpreter.vPopBack(para);
+            String compont = str.getVal();
+            inp.putCachedStr(str);
+            GObject go = GToolkit.getComponent(form, compont);
+            w = (go != null);
+        }
+        return inp.getCachedBool(w);
+    }
 }
