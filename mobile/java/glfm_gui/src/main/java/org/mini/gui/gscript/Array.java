@@ -22,7 +22,7 @@ public class Array extends DataType {
         init(dim, 0);
     }
 
-    public Array(int[] dim, int dimIndex) {
+    Array(int[] dim, int dimIndex) {
         type = DTYPE_ARRAY;
         init(dim, dimIndex);
     }

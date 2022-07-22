@@ -62,37 +62,38 @@ public class Interpreter {
 
 
     static final int MAX_CACHE_SIZE = 512;
-    private List<LocalVarsMap> varsMapCache = new ArrayList();
-    private List<ArrayList> listCache = new ArrayList<>();
-    private List<Int> intCache = new ArrayList<>();
-    private List<Bool> boolCache = new ArrayList<>();
-    private List<Str> strCache = new ArrayList<>();
+    static private List<LocalVarsMap> varsMapCache = new ArrayList();
+    static private List<ArrayList> listCache = new ArrayList<>();
+    static private List<Int> intCache = new ArrayList<>();
+    static private List<Bool> boolCache = new ArrayList<>();
+    static private List<Str> strCache = new ArrayList<>();
+    static private List<Obj> objCache = new ArrayList<>();
 
     /**
      * 取得一个缓存的变量表
      *
      * @return
      */
-    private LocalVarsMap getCachedTable() {
+    private synchronized LocalVarsMap getCachedTable() {
         if (varsMapCache.isEmpty()) {
             return new LocalVarsMap();
         }
         return varsMapCache.remove(varsMapCache.size() - 1);
     }
 
-    private void putCachedTable(LocalVarsMap v) {
+    private static synchronized void putCachedTable(LocalVarsMap v) {
         v.clear();
         varsMapCache.add(v);
     }
 
-    private ArrayList getCachedVector() {
+    private static synchronized ArrayList getCachedVector() {
         if (listCache.isEmpty()) {
             return new ArrayList();
         }
         return listCache.remove(listCache.size() - 1);
     }
 
-    private void putCachedVector(ArrayList v) {
+    private synchronized void putCachedVector(ArrayList v) {
         v.clear();
         listCache.add(v);
     }
@@ -103,7 +104,7 @@ public class Interpreter {
      * @param v
      * @return
      */
-    public Int getCachedInt(long v) {
+    public static synchronized Int getCachedInt(long v) {
         if (intCache.isEmpty()) {
             return new Int(v);
         }
@@ -112,14 +113,14 @@ public class Interpreter {
         return i;
     }
 
-    public void putCachedInt(DataType v) {
+    private static synchronized void putCachedInt(Int v) {
         if (intCache.size() > MAX_CACHE_SIZE || v == null) return;//防内存泄漏
-        if (v.isRecyclable() && v.type == DataType.DTYPE_INT) {
+        if (v.isRecyclable()) {
             intCache.add((Int) v);
         }
     }
 
-    public Bool getCachedBool(boolean v) {
+    public static synchronized Bool getCachedBool(boolean v) {
         if (boolCache.isEmpty()) {
             return new Bool(v);
         }
@@ -128,14 +129,14 @@ public class Interpreter {
         return b;
     }
 
-    public void putCachedBool(DataType v) {
+    private static synchronized void putCachedBool(Bool v) {
         if (boolCache.size() > MAX_CACHE_SIZE || v == null) return;
-        if (v.isRecyclable() && v.type == DataType.DTYPE_BOOL) {
+        if (v.isRecyclable()) {
             boolCache.add((Bool) v);
         }
     }
 
-    public Str getCachedStr(String v) {
+    public static synchronized Str getCachedStr(String v) {
         if (strCache.isEmpty()) {
             return new Str(v);
         }
@@ -144,25 +145,144 @@ public class Interpreter {
         return b;
     }
 
-    public void putCachedStr(DataType v) {
+    private static synchronized void putCachedStr(Str v) {
         if (strCache.size() > MAX_CACHE_SIZE || v == null) return;
-        if (v.isRecyclable() && v.type == DataType.DTYPE_STR) {
+        if (v.isRecyclable()) {
             ((Str) v).setVal(null);
             strCache.add((Str) v);
         }
     }
 
-    public void putCachedDataType(DataType v) {
+    public static synchronized Obj getCachedObj(Object v) {
+        if (objCache.isEmpty()) {
+            return new Obj(v);
+        }
+        Obj b = objCache.remove(objCache.size() - 1);
+        b.setVal(v);
+        return b;
+    }
+
+    private static synchronized void putCachedObj(Obj v) {
+        if (objCache.size() > MAX_CACHE_SIZE || v == null) return;
+        if (v.isRecyclable()) {
+            ((Obj) v).setVal(null);
+            objCache.add((Obj) v);
+        }
+    }
+
+    public static synchronized void putCachedData(DataType v) {
         if (v == null) return;
         if (v.isRecyclable()) {
             if (v.type == DataType.DTYPE_INT) {
-                putCachedInt(v);
+                putCachedInt((Int) v);
             } else if (v.type == DataType.DTYPE_BOOL) {
-                putCachedBool(v);
+                putCachedBool((Bool) v);
             } else if (v.type == DataType.DTYPE_STR) {
-                putCachedStr(v);
+                putCachedStr((Str) v);
+            } else if (v.type == DataType.DTYPE_OBJ) {
+                putCachedObj((Obj) v);
             }
         }
+    }
+
+//    static public synchronized final String popFrontStr(ArrayList<DataType> v) {
+//        Str str = popFront(v);
+//        String s = str.getVal();
+//        putCachedData(str);
+//        return s;
+//    }
+//
+//    static public synchronized final int popFrontInt(ArrayList<DataType> v) {
+//        Int str = popFront(v);
+//        int s = (int) str.getVal();
+//        putCachedData(str);
+//        return s;
+//    }
+//
+//    static public synchronized final long popFrontLong(ArrayList<DataType> v) {
+//        Int str = popFront(v);
+//        long s = str.getVal();
+//        putCachedData(str);
+//        return s;
+//    }
+//
+//    static public synchronized final boolean popFrontBool(ArrayList<DataType> v) {
+//        Bool str = popFront(v);
+//        boolean s = str.getVal();
+//        putCachedData(str);
+//        return s;
+//    }
+//
+//    static public synchronized final Object popFrontObject(ArrayList<DataType> v) {
+//        Obj str = popFront(v);
+//        Object s = str.getVal();
+//        putCachedData(str);
+//        return s;
+//    }
+
+    static public synchronized final String popBackStr(ArrayList<DataType> v) {
+        Str str = popBack(v);
+        String s = str.getVal();
+        putCachedData(str);
+        return s;
+    }
+
+    static public synchronized final int popBackInt(ArrayList<DataType> v) {
+        Int str = popBack(v);
+        int s = (int) str.getVal();
+        putCachedData(str);
+        return s;
+    }
+
+    static public synchronized final long popBackLong(ArrayList<DataType> v) {
+        Int str = popBack(v);
+        long s = str.getVal();
+        putCachedData(str);
+        return s;
+    }
+
+    static public synchronized final boolean popBackBool(ArrayList<DataType> v) {
+        Bool str = popBack(v);
+        boolean s = str.getVal();
+        putCachedData(str);
+        return s;
+    }
+
+    static public synchronized final Object popBackObject(ArrayList<DataType> v) {
+        Obj str = popBack(v);
+        Object s = str.getVal();
+        putCachedData(str);
+        return s;
+    }
+
+    static public synchronized final <T extends DataType> T popFront(ArrayList<DataType> v) {
+        if (v.size() <= 0) {
+            return null;
+        }
+        DataType o = v.get(0);
+        if (v.size() > 0) {
+            v.remove(0);
+        }
+        return (T) o;
+    }
+
+    static public synchronized final <T extends DataType> T popBack(ArrayList<DataType> v) {
+        if (v.size() <= 0) {
+            return null;
+        }
+        DataType o = v.get(v.size() - 1);
+        if (v.size() > 0) {
+            v.remove(v.size() - 1);
+        }
+        return (T) o;
+    }
+
+    static public synchronized final void pushFront(ArrayList v, DataType o) {
+        v.add(0, o);
+    }
+
+    static public synchronized final void pushBack(ArrayList v, DataType o) {
+        v.add(o);
     }
 
     /**
@@ -453,6 +573,7 @@ public class Interpreter {
      * @param lib Lib
      */
     public void reglib(Lib lib) {
+        if (lib == null) return;
         extSubList.add(lib);
     }
 
@@ -619,7 +740,7 @@ public class Interpreter {
                                 StatementCall pstatCall = (StatementCall) stat;
                                 DataType re = callSub(pstatCall.cell, localVar);
                                 if (re != null) {
-                                    putCachedDataType(re);
+                                    putCachedData(re);
                                 }
                                 break;
                             }
@@ -671,7 +792,7 @@ public class Interpreter {
                     String key = keylist.get(i);
                     DataType dt = localVar.get(key);
                     dt.setRecyclable(true);
-                    putCachedDataType(dt);
+                    putCachedData(dt);
                 }
                 //回收局部变量表
                 putCachedTable(localVar);
@@ -1021,36 +1142,6 @@ public class Interpreter {
         }
     }
 
-    static public final <T extends DataType> T vPopFront(ArrayList<DataType> v) {
-        if (v.size() <= 0) {
-            return null;
-        }
-        DataType o = v.get(0);
-        if (v.size() > 0) {
-            v.remove(0);
-        }
-        return (T) o;
-    }
-
-    static public final <T extends DataType> T vPopBack(ArrayList<DataType> v) {
-        if (v.size() <= 0) {
-            return null;
-        }
-        DataType o = v.get(v.size() - 1);
-        if (v.size() > 0) {
-            v.remove(v.size() - 1);
-        }
-        return (T) o;
-    }
-
-    static public final void vPushFront(ArrayList v, DataType o) {
-        v.add(0, o);
-    }
-
-    static public final void vPushBack(ArrayList v, DataType o) {
-        v.add(o);
-    }
-
     /**
      * 在变量列表v中查找变量
      *
@@ -1091,7 +1182,7 @@ public class Interpreter {
                 if (oldValue.type == nValue.type) {
                     varTable.put(varName, nValue);
                     oldValue.setRecyclable(true);
-                    putCachedDataType(oldValue);
+                    putCachedData(oldValue);
                 } else {
                     throw new Exception(STRS_ERR[ERR_TYPE_INVALID]);
                 }
@@ -1101,7 +1192,7 @@ public class Interpreter {
                     if (oldValue1.type == nValue.type) {
                         globalVar.put(varName, nValue);
                         oldValue1.setRecyclable(true);
-                        putCachedDataType(oldValue1);
+                        putCachedData(oldValue1);
                     } else {
                         throw new Exception(STRS_ERR[ERR_TYPE_INVALID]);
                     }
@@ -1172,11 +1263,11 @@ public class Interpreter {
 
                 //左递归运算
                 evalExprNum(expr);
-                resultDt = vPopBack(expr);
+                resultDt = popBack(expr);
                 break;
             case T_STR:
                 evalExprStr(expr);
-                resultDt = vPopBack(expr);
+                resultDt = popBack(expr);
 
                 break;
             case T_LOG: //分解逻辑表达式与算术表达式，主要是把算术表达式先于逻辑运算求值
@@ -1186,7 +1277,7 @@ public class Interpreter {
                 ArrayList ari_dElem = getCachedVector(); //算术
 
                 while (expr.size() > 0) {
-                    DataType pdt = vPopFront(expr);
+                    DataType pdt = popFront(expr);
 
                     ari_dElem.clear();
                     if (isSymb(pdt)) {
@@ -1197,7 +1288,7 @@ public class Interpreter {
                             //从后向前找,如：3-(1+4)<>0  从<>处找到3-(1+4)
                             int rightQ = 0; //右括号计数
                             while (log_dElem.size() > 0) {
-                                DataType pdt2 = vPopBack(log_dElem);
+                                DataType pdt2 = popBack(log_dElem);
                                 if (isSymb(pdt2)) {
 
                                     if (((Symb) pdt2).getVal() == Symb.RP) {
@@ -1207,26 +1298,26 @@ public class Interpreter {
                                     if (((Symb) pdt2).isLogicOp() //如果遇另一个
                                             || (((Symb) pdt2).getVal() == Symb.LP && rightQ == 0) //当遇到左括号且括号计数为0时
                                     ) {
-                                        vPushBack(log_dElem, pdt2); //放回去
+                                        pushBack(log_dElem, pdt2); //放回去
                                         break;
                                     }
                                     if (((Symb) pdt2).getVal() == Symb.LP) {
                                         rightQ--; //右括号-1
                                     }
                                 }
-                                vPushFront(ari_dElem, pdt2);
+                                pushFront(ari_dElem, pdt2);
                             } //end while
                             //运算出算术表达式
                             evalExprNum(ari_dElem);
                             //放入逻辑表达式中
                             if (ari_dElem.size() > 0) {
-                                vPushBack(log_dElem, vPopFront(ari_dElem));
+                                pushBack(log_dElem, popFront(ari_dElem));
                             }
                         }
                     } //end if是符号
 
                     //插入表达式元素
-                    vPushBack(log_dElem, pdt);
+                    pushBack(log_dElem, pdt);
 
                     //再找比较逻辑运算符后面的元素
                     ari_dElem.clear();
@@ -1238,7 +1329,7 @@ public class Interpreter {
                             //从后向前找,如：3-(1+4)<>0  从<>处找到3-(1+4)
                             int leftQ = 0; //左括号计数
                             while (expr.size() > 0) {
-                                DataType pdt2 = vPopFront(expr);
+                                DataType pdt2 = popFront(expr);
                                 if (isSymb(pdt2)) {
 
                                     Symb pst2 = (Symb) pdt2;
@@ -1250,19 +1341,19 @@ public class Interpreter {
                                     if (pst2.isLogicOp() //如果遇另一个
                                             || (opType == Symb.RP && leftQ == 0) //当遇到左括号且括号计数为0时
                                     ) {
-                                        vPushFront(expr, pdt2); //放回去
+                                        pushFront(expr, pdt2); //放回去
                                         break;
                                     }
                                     if (opType == Symb.RP) {
                                         leftQ--; //左括号-1
                                     }
                                 }
-                                vPushBack(ari_dElem, pdt2);
+                                pushBack(ari_dElem, pdt2);
                             } //end while
                             //运算出算术表达式
                             evalExprNum(ari_dElem);
                             if (ari_dElem.size() > 0) {
-                                vPushBack(log_dElem, vPopFront(ari_dElem));
+                                pushBack(log_dElem, popFront(ari_dElem));
                             }
                         }
                     } //end if是符号
@@ -1271,7 +1362,7 @@ public class Interpreter {
                 //逻辑表达式求值
                 evalExprLgc(log_dElem);
 
-                resultDt = vPopBack(log_dElem);
+                resultDt = popBack(log_dElem);
 
                 //
                 putCachedVector(log_dElem);
@@ -1279,11 +1370,11 @@ public class Interpreter {
             }
             break;
             case T_ARR:
-                resultDt = vPopBack(expr);
+                resultDt = popBack(expr);
 
                 break;
             case T_OBJ:
-                resultDt = vPopBack(expr);
+                resultDt = popBack(expr);
 
                 break;
             default:
@@ -1352,13 +1443,13 @@ public class Interpreter {
     private void evalExprStr(ArrayList<DataType> expr) {
         StringBuilder sb = new StringBuilder();
         while (expr.size() > 0) { //不停的运算
-            DataType ts = vPopFront(expr); //这里有可能是integer型,不能用强制转换
+            DataType ts = popFront(expr); //这里有可能是integer型,不能用强制转换
             if (ts.type != DataType.DTYPE_SYMB) { //如果不是符号
                 sb.append((ts).getString());
             }
-            putCachedDataType(ts);
+            putCachedData(ts);
         }
-        vPushFront(expr, getCachedStr(sb.toString()));
+        pushFront(expr, getCachedStr(sb.toString()));
     }
 
     /**
@@ -1376,24 +1467,24 @@ public class Interpreter {
     private void evalExprNumImpl(ArrayList<DataType> expr) {
         if (expr.size() == 1) { //单独变量
             if ((expr.get(0)).isRecyclable()) return;//如果是不可回收的变量,说明这个变量要么是在变量表中,要么是在statement中
-            Int element1 = vPopFront(expr);
+            Int element1 = popFront(expr);
             Int val = getCachedInt(element1.getVal());//复制一个可回收的值
-            vPushBack(expr, val);
+            pushBack(expr, val);
             return;
         } else { //表达式
             //按优先级进行计算,优先级如下：() 取负(正)值  */ + - %
-            DataType element1 = vPopFront(expr);
+            DataType element1 = popFront(expr);
             if (element1.type == DataType.DTYPE_SYMB) {
                 if (((Symb) element1).getVal() == Symb.LP) {// (
                     evalExprNumImpl(expr);
-                    DataType element2 = vPopFront(expr);
-                    DataType element3 = vPopFront(expr);
+                    DataType element2 = popFront(expr);
+                    DataType element3 = popFront(expr);
                     if (element3.type == DataType.DTYPE_SYMB && ((Symb) element3).getVal() == Symb.RP) { // (num)    扔掉反括号
-                        vPushFront(expr, element2);
+                        pushFront(expr, element2);
                     } else { // (...             括号中如果仍未计算完成,则继续
-                        vPushFront(expr, element3);
-                        vPushFront(expr, element2);
-                        vPushFront(expr, element1);
+                        pushFront(expr, element3);
+                        pushFront(expr, element2);
+                        pushFront(expr, element1);
                         evalExprNumImpl(expr); //再算括号中的内容
                     }
                 } else //取正值
@@ -1401,35 +1492,35 @@ public class Interpreter {
                         evalExprNumImpl(expr);
                     } else //取负值
                         if (((Symb) element1).getVal() == Symb.SUB) {// -
-                            DataType element2 = vPopFront(expr);
+                            DataType element2 = popFront(expr);
                             if (element2.type == DataType.DTYPE_INT) { // -num       立即数
                                 Int val = getCachedInt(-((Int) element2).getVal());
-                                vPushFront(expr, val);
-                                putCachedInt(element2);
+                                pushFront(expr, val);
+                                putCachedInt((Int) element2);
                             } else { // -...      表达式
-                                vPushFront(expr, element2);
+                                pushFront(expr, element2);
                                 evalExprNumImpl(expr);
-                                vPushFront(expr, element1);
+                                pushFront(expr, element1);
                                 evalExprNumImpl(expr);
                             }
                         }
             } else if (element1.type == DataType.DTYPE_INT) {// num   是数字
-                Symb element2 = vPopFront(expr); //应是操作符
-                DataType element3 = vPopFront(expr); // 可能是操作数或操作符
+                Symb element2 = popFront(expr); //应是操作符
+                DataType element3 = popFront(expr); // 可能是操作数或操作符
                 //四则运算
                 if ((element2).getVal() == Symb.MUL || (element2).getVal() == Symb.DIV) { // num*/
                     if (element3.type == DataType.DTYPE_INT) {//num */ num
                         long n1 = ((Int) element1).getVal();
                         long n2 = ((Int) element3).getVal();
                         Int val = getCachedInt((element2).getVal() == Symb.MUL ? n1 * n2 : n1 / n2);
-                        putCachedInt(element1);
-                        putCachedInt(element3);
-                        vPushFront(expr, val);
+                        putCachedInt((Int) element1);
+                        putCachedInt((Int) element3);
+                        pushFront(expr, val);
                     } else {  // num */ ...
-                        vPushFront(expr, element3);
+                        pushFront(expr, element3);
                         evalExprNumImpl(expr);
-                        vPushFront(expr, element2);
-                        vPushFront(expr, element1);
+                        pushFront(expr, element2);
+                        pushFront(expr, element1);
                         evalExprNumImpl(expr);
                     }
                 } else if ((element2).getVal() == Symb.ADD || (element2).getVal() == Symb.SUB) { // num +-
@@ -1439,12 +1530,12 @@ public class Interpreter {
                         if (expr.size() == 0) { //    无更多操作符和操作数时计算
                             calc = true;
                         } else { // num +- num ...
-                            DataType element4 = vPopFront(expr);
+                            DataType element4 = popFront(expr);
                             if (element4 != null) { // num +- num */
                                 if (((Symb) element4).getVal() != Symb.MUL && ((Symb) element4).getVal() != Symb.DIV) {
                                     calc = true;
                                 }
-                                vPushFront(expr, element4);
+                                pushFront(expr, element4);
                             }
                         }
                     }
@@ -1452,24 +1543,24 @@ public class Interpreter {
                         long n1 = ((Int) element1).getVal();
                         long n2 = ((Int) element3).getVal();
                         Int val = getCachedInt((element2).getVal() == Symb.ADD ? n1 + n2 : n1 - n2);
-                        putCachedInt(element1);
-                        putCachedInt(element3);
-                        vPushFront(expr, val);
+                        putCachedInt((Int) element1);
+                        putCachedInt((Int) element3);
+                        pushFront(expr, val);
                     } else {
                         //先算右边的表达式
-                        vPushFront(expr, element3); //放回去
+                        pushFront(expr, element3); //放回去
                         evalExprNumImpl(expr); //计算
 
-                        vPushFront(expr, element2);
-                        vPushFront(expr, element1);
+                        pushFront(expr, element2);
+                        pushFront(expr, element1);
                         evalExprNumImpl(expr);
                     }
                 } else if (element2.getVal() == Symb.RP) { // num)   是右括号
                     if (element3 != null) {
-                        vPushFront(expr, element3);
+                        pushFront(expr, element3);
                     }
-                    vPushFront(expr, element2);
-                    vPushFront(expr, element1);
+                    pushFront(expr, element2);
+                    pushFront(expr, element1);
                     return;
                 }
             }
@@ -1492,36 +1583,36 @@ public class Interpreter {
         //计算逻辑表达式
         if (expr.size() == 1) { //单独变量
             if ((expr.get(0)).isRecyclable()) return;
-            DataType element1 = vPopFront(expr);
-            vPushBack(expr, getCachedBool(((Bool) element1).getVal()));
-            putCachedBool(element1);
+            DataType element1 = popFront(expr);
+            pushBack(expr, getCachedBool(((Bool) element1).getVal()));
+            putCachedBool((Bool) element1);
             return;
         } else { //表达式
             //按优先级进行计算,优先级如下：() 取负(正)值  */ + - %
-            DataType element1 = vPopFront(expr);
+            DataType element1 = popFront(expr);
             if (element1.type == DataType.DTYPE_SYMB) { //括号
                 if (((Symb) element1).getVal() == Symb.LP) {// (
                     evalExprLgcImpl(expr);
-                    DataType element2 = vPopFront(expr);
-                    DataType element3 = vPopFront(expr);
+                    DataType element2 = popFront(expr);
+                    DataType element3 = popFront(expr);
                     if (element3.type == DataType.DTYPE_SYMB && ((Symb) element3).getVal() == Symb.RP) { // (dtype)  扔掉反括号
-                        vPushFront(expr, element2);
+                        pushFront(expr, element2);
                     } else { //括号中如果仍未计算完成,则继续   //(dtype...
-                        vPushFront(expr, element3);
-                        vPushFront(expr, element2);
-                        vPushFront(expr, element1);
+                        pushFront(expr, element3);
+                        pushFront(expr, element2);
+                        pushFront(expr, element1);
                         evalExprLgcImpl(expr); //再算括号中的内容
                     }
                 } else if (((Symb) element1).getVal() == Symb.NOT) { //  !  取反
-                    DataType element2 = vPopFront(expr);
+                    DataType element2 = popFront(expr);
                     if (element2.type == DataType.DTYPE_BOOL) { // !bool    立即数
-                        Bool val = getCachedBool(!((Bool) element2).getVal());
-                        vPushFront(expr, val);
-                        putCachedBool(element2);
+                        boolean val = ((Bool) element2).getVal();
+                        ((Bool) element2).setVal(!val);
+                        pushFront(expr, element2);
                     } else { // !(  表达式
-                        vPushFront(expr, element2);
+                        pushFront(expr, element2);
                         evalExprLgcImpl(expr);
-                        vPushFront(expr, element1);
+                        pushFront(expr, element1);
                         evalExprLgcImpl(expr);
                     }
                 }
@@ -1530,9 +1621,9 @@ public class Interpreter {
 
                 n1 = ((Int) element1).getVal();
 
-                DataType element2 = vPopFront(expr);
+                DataType element2 = popFront(expr);
                 //应是操作符
-                Int element3 = vPopFront(expr); // 操作数或操作符 >= <=
+                Int element3 = popFront(expr); // 操作数或操作符 >= <=
 
                 Symb operator = (Symb) element2;
                 n2 = ((Int) element3).getVal();
@@ -1551,23 +1642,23 @@ public class Interpreter {
                 } else if (operator.getVal() == Symb.EQU) {
                     result = n1 == n2;
                 }
-                vPushFront(expr, getCachedBool(result));
-                putCachedInt(element1);
+                pushFront(expr, getCachedBool(result));
+                putCachedInt((Int) element1);
                 putCachedInt(element3);
             } else if (element1.type == DataType.DTYPE_BOOL) { // bool
-                Symb element2 = vPopFront(expr); //应是操作符
-                DataType element3 = vPopFront(expr); // 操作数或操作符 >= <=
+                Symb element2 = popFront(expr); //应是操作符
+                DataType element3 = popFront(expr); // 操作数或操作符 >= <=
                 if (element2.getVal() == Symb.AND) {// bool &
                     if (element3.type == DataType.DTYPE_BOOL) { //bool & bool
                         boolean result = ((Bool) element1).getVal() && ((Bool) element3).getVal();
-                        vPushFront(expr, getCachedBool(result));
-                        putCachedBool(element1);
-                        putCachedBool(element3);
+                        pushFront(expr, getCachedBool(result));
+                        putCachedBool((Bool) element1);
+                        putCachedBool((Bool) element3);
                     } else { // bool & ...
-                        vPushFront(expr, element3);
+                        pushFront(expr, element3);
                         evalExprLgcImpl(expr);
-                        vPushFront(expr, element2);
-                        vPushFront(expr, element1);
+                        pushFront(expr, element2);
+                        pushFront(expr, element1);
                         evalExprLgcImpl(expr);
                     }
                 } else if (element2.getVal() == Symb.OR) {// bool |
@@ -1576,34 +1667,34 @@ public class Interpreter {
                         if (expr.size() == 0) {
                             calc = true;
                         } else { //bool | ...
-                            DataType element4 = vPopFront(expr); // 操作数或操作符 >= <=
+                            DataType element4 = popFront(expr); // 操作数或操作符 >= <=
                             if (element4.type == DataType.DTYPE_SYMB) {
                                 if (((Symb) element4).getVal() != Symb.AND) {// bool | bool (
                                     calc = true;
                                 }
                             }
-                            vPushFront(expr, element4);
+                            pushFront(expr, element4);
                         }
                     }
                     if (calc) {
                         boolean result = ((Bool) element1).getVal() || ((Bool) element3).getVal();
-                        vPushFront(expr, getCachedBool(result));
-                        putCachedBool(element1);
-                        putCachedBool(element3);
+                        pushFront(expr, getCachedBool(result));
+                        putCachedBool((Bool) element1);
+                        putCachedBool((Bool) element3);
                     } else {
-                        vPushFront(expr, element3);
+                        pushFront(expr, element3);
                         evalExprLgcImpl(expr);
-                        vPushFront(expr, element2);
-                        vPushFront(expr, element1);
+                        pushFront(expr, element2);
+                        pushFront(expr, element1);
                         evalExprLgcImpl(expr);
                     }
 
                 } else if (element2.getVal() == Symb.RP) { // bool)  是右括号
                     if (element3 != null) {
-                        vPushFront(expr, element3);
+                        pushFront(expr, element3);
                     }
-                    vPushFront(expr, element2);
-                    vPushFront(expr, element1);
+                    pushFront(expr, element2);
+                    pushFront(expr, element1);
                     return;
                 }
 
@@ -1631,7 +1722,7 @@ public class Interpreter {
                 //计算表达式的值
                 DataType v = evalExpr(cell.para[i], varTable);
                 if (v != null) {
-                    vPushFront(paraStack, v); //参数入栈
+                    pushFront(paraStack, v); //参数入栈
                 } else {
                     throw new Exception(STRS_ERR[ERR_PAESEPARA]);
                 }
@@ -1648,7 +1739,7 @@ public class Interpreter {
             } else {
                 //查找系统标准过程和用户扩充过程表
                 for (int i = 0; i < extSubList.size(); i++) {
-                    Lib ext = (Lib) extSubList.get(i);
+                    Lib ext = extSubList.get(i);
                     int mID = ext.getMethodID(subName);
                     if (mID >= 0) {
 
@@ -1715,7 +1806,7 @@ public class Interpreter {
             }
             if (arr != null && arr.type == DataType.DTYPE_ARRAY) {
                 DataType old = ((Array) arr).setValue(dimPara, evalExpr(stat.expr, varTable)); //赋值
-                putCachedDataType(old);
+                putCachedData(old);
             }
         }
     }

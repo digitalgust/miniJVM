@@ -4,16 +4,16 @@ public class Int extends DataType {
 
     private long value = 0;
 
-    public Int(String s) {
+    Int(String s) {
         type = DTYPE_INT;
         value = Long.parseLong(s);
     }
 
-    public Int(long i) {
+    Int(long i) {
         this(i, true);
     }
 
-    public Int(long i, boolean mutable) {
+    Int(long i, boolean mutable) {
         type = DTYPE_INT;
         value = i;
         this.setRecyclable(mutable);

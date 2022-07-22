@@ -4,7 +4,7 @@ public class Obj extends DataType {
 
     private Object value = null;
 
-    public Obj(Object s) {
+    Obj(Object s) {
         type = DTYPE_OBJ;
         value = s;
     }

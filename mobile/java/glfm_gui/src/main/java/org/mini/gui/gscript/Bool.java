@@ -4,7 +4,7 @@ public class Bool extends DataType {
 
     private boolean value = false;
 
-    public Bool(String s) {
+    Bool(String s) {
         type = DTYPE_BOOL;
         if (s.toLowerCase().equals("true")) {
             value = true;
@@ -14,11 +14,11 @@ public class Bool extends DataType {
         this.setRecyclable(true);
     }
 
-    public Bool(boolean b) {
+    Bool(boolean b) {
         this(b, true);
     }
 
-    public Bool(boolean b, boolean mutable) {
+    Bool(boolean b, boolean mutable) {
         type = DTYPE_BOOL;
         value = b;
         this.setRecyclable(mutable);

@@ -48,6 +48,9 @@ public class Stdlib extends Lib {
     }
 
 
+    //随机数基石
+    private static Random random = new Random(); //定义一个随机值
+
     /**
      * @return
      */
@@ -58,59 +61,59 @@ public class Stdlib extends Lib {
     public DataType call(Interpreter inp, ArrayList<DataType> para, int methodID) {
         switch (methodID) {
             case 0:
-                return print(inp, para);
+                return print(para);
             case 1:
-                return min(inp, para);
+                return min(para);
             case 2:
-                return max(inp, para);
+                return max(para);
             case 3:
-                return arrlen(inp, para);
+                return arrlen(para);
             case 4:
-                return abs(inp, para);
+                return abs(para);
             case 5:
-                return random(inp);
+                return random(para);
             case 6:
-                return mod(inp, para);
+                return mod(para);
             case 7:
-                return println(inp, para);
+                return println(para);
             case 8:
-                return strlen(inp, para);
+                return strlen(para);
             case 9:
-                return equals(inp, para);
+                return equals(para);
             case 10:
                 return def(inp, para);
             case 11:
                 return isDef(inp, para);
             case 12:
-                return valueOf(inp, para);
+                return valueOf(para);
             case 13:
-                return idxof(inp, para);
+                return idxof(para);
             case 14:
-                return substr(inp, para);
+                return substr(para);
             case 15:
-                return split(inp, para);
+                return split(para);
             case 16:
-                return base64enc(inp, para);
+                return base64enc(para);
             case 17:
-                return base64dec(inp, para);
+                return base64dec(para);
             case 18:
-                return isnull(inp, para);
+                return isnull(para);
             case 19:
-                return getObjField(inp, para);
+                return getObjField(para);
             case 20:
-                return setObjField(inp, para);
+                return setObjField(para);
             case 21:
-                return trim(inp, para);
+                return trim(para);
             case 22:
-                return str2int(inp, para);
+                return str2int(para);
             case 23:
-                return invokeJava(inp, para);
+                return invokeJava(para);
             case 24:
-                return invokeStatic(inp, para);
+                return invokeStatic(para);
             case 25:
-                return getbit(inp, para);
+                return getbit(para);
             case 26:
-                return setbit(inp, para);
+                return setbit(para);
         }
         return null;
     }
@@ -121,11 +124,10 @@ public class Stdlib extends Lib {
      * @param para String
      * @return Object
      */
-    private DataType print(Interpreter inp, ArrayList<DataType> para) {
-        DataType dt = Interpreter.vPopBack(para);//不一定是Str类型
-        String s = dt.getString();
-        System.out.print(s);
-        inp.putCachedDataType(dt);
+    private DataType print(ArrayList<DataType> para) {
+        DataType dt = Interpreter.popBack(para);//不一定是Str类型
+        System.out.print(dt.getString());
+        Interpreter.putCachedData(dt);
         return null;
     }
 
@@ -135,15 +137,15 @@ public class Stdlib extends Lib {
      * @param para String
      * @return Object
      */
-    private DataType println(Interpreter inp, ArrayList<DataType> para) {
-        DataType dt = (DataType) Interpreter.vPopBack(para);
+    private DataType println(ArrayList<DataType> para) {
+        DataType dt = Interpreter.popBack(para);
         String s = dt == null ? null : dt.getString();
+        Interpreter.putCachedData(dt);
         if (s == null) {
             System.out.println();
         } else {
             System.out.println(s);
         }
-        inp.putCachedDataType(dt);
         return null;
     }
 
@@ -153,10 +155,10 @@ public class Stdlib extends Lib {
      * @param para int
      * @return Integer
      */
-    private Int min(Interpreter inp, ArrayList<DataType> para) {
-        long x = ((Int) Interpreter.vPopBack(para)).getVal();
-        long y = ((Int) Interpreter.vPopBack(para)).getVal();
-        return inp.getCachedInt(x > y ? y : x);
+    private Int min(ArrayList<DataType> para) {
+        long x = Interpreter.popBackLong(para);
+        long y = Interpreter.popBackLong(para);
+        return Interpreter.getCachedInt(x > y ? y : x);
     }
 
     /**
@@ -165,10 +167,10 @@ public class Stdlib extends Lib {
      * @param para int
      * @return Integer
      */
-    private Int max(Interpreter inp, ArrayList<DataType> para) {
-        long x = ((Int) Interpreter.vPopBack(para)).getVal();
-        long y = ((Int) Interpreter.vPopBack(para)).getVal();
-        return inp.getCachedInt(x > y ? x : y);
+    private Int max(ArrayList<DataType> para) {
+        long x = Interpreter.popBackLong(para);
+        long y = Interpreter.popBackLong(para);
+        return Interpreter.getCachedInt(x > y ? x : y);
     }
 
     /**
@@ -177,9 +179,9 @@ public class Stdlib extends Lib {
      * @param para int
      * @return Integer
      */
-    private Int arrlen(Interpreter inp, ArrayList<DataType> para) {
-        Array arr = Interpreter.vPopBack(para);
-        return inp.getCachedInt(arr.elements.length);
+    private Int arrlen(ArrayList<DataType> para) {
+        Array arr = Interpreter.popBack(para);
+        return Interpreter.getCachedInt(arr.elements.length);
     }
 
     /**
@@ -188,21 +190,19 @@ public class Stdlib extends Lib {
      * @param para int
      * @return Integer
      */
-    private Int abs(Interpreter inp, ArrayList<DataType> para) {
-        long x = ((Int) Interpreter.vPopBack(para)).getVal();
-        return inp.getCachedInt(Math.abs(x));
+    private Int abs(ArrayList<DataType> para) {
+        long x = Interpreter.popBackLong(para);
+        return Interpreter.getCachedInt(Math.abs(x));
     }
 
-    //随机数基石
-    private static Random random = new Random(); //定义一个随机值
 
     /**
      * 产生一个随机数，这个数一定是正数
      *
      * @return int 返回一个正数
      */
-    public DataType random(Interpreter inp) {
-        return inp.getCachedInt(random.nextInt());
+    public DataType random(ArrayList<DataType> para) {
+        return Interpreter.getCachedInt(random.nextInt());
     }
 
     /**
@@ -211,10 +211,10 @@ public class Stdlib extends Lib {
      * @param para int
      * @return gscript.Int
      */
-    private Int mod(Interpreter inp, ArrayList<DataType> para) {
-        long x = ((Int) Interpreter.vPopBack(para)).getVal();
-        long y = ((Int) Interpreter.vPopBack(para)).getVal();
-        return inp.getCachedInt(x % y);
+    private Int mod(ArrayList<DataType> para) {
+        long x = Interpreter.popBackLong(para);
+        long y = Interpreter.popBackLong(para);
+        return Interpreter.getCachedInt(x % y);
     }
 
     /**
@@ -223,9 +223,9 @@ public class Stdlib extends Lib {
      * @param para int
      * @return Integer
      */
-    private Int strlen(Interpreter inp, ArrayList<DataType> para) {
-        String s = Interpreter.vPopBack(para).toString();
-        return inp.getCachedInt(s.length());
+    private Int strlen(ArrayList<DataType> para) {
+        String s = Interpreter.popBackStr(para);
+        return Interpreter.getCachedInt(s.length());
     }
 
     /**
@@ -234,10 +234,10 @@ public class Stdlib extends Lib {
      * @param para int
      * @return gscript.Int
      */
-    private Bool equals(Interpreter inp, ArrayList<DataType> para) {
-        String x = ((Str) Interpreter.vPopBack(para)).getVal();
-        String y = ((Str) Interpreter.vPopBack(para)).getVal();
-        return inp.getCachedBool(x.equals(y));
+    private Bool equals(ArrayList<DataType> para) {
+        String x = Interpreter.popBackStr(para);
+        String y = Interpreter.popBackStr(para);
+        return Interpreter.getCachedBool(x.equals(y));
     }
 
     /**
@@ -247,8 +247,8 @@ public class Stdlib extends Lib {
      * @return gscript.Int
      */
     private DataType def(Interpreter inp, ArrayList<DataType> para) {
-        String name = ((Str) Interpreter.vPopBack(para)).getVal();
-        DataType dt = (DataType) Interpreter.vPopBack(para);
+        String name = Interpreter.popBackStr(para);
+        DataType dt = Interpreter.popBack(para);
         inp.putGlobalVar(name.toLowerCase(), dt);
         return null;
     }
@@ -260,11 +260,11 @@ public class Stdlib extends Lib {
      * @return gscript.Int
      */
     private Bool isDef(Interpreter inp, ArrayList<DataType> para) {
-        String name = ((Str) Interpreter.vPopBack(para)).getVal();
+        String name = Interpreter.popBackStr(para);
         if (inp.getGlobalVar(name.toLowerCase()) == null) {
-            return inp.getCachedBool(false);
+            return Interpreter.getCachedBool(false);
         }
-        return inp.getCachedBool(true);
+        return Interpreter.getCachedBool(true);
     }
 
     /**
@@ -273,12 +273,12 @@ public class Stdlib extends Lib {
      * @param para int
      * @return gscript.Int
      */
-    private Int valueOf(Interpreter inp, ArrayList<DataType> para) {
-        String s = ((Str) Interpreter.vPopBack(para)).getVal();
+    private Int valueOf(ArrayList<DataType> para) {
+        String s = Interpreter.popBackStr(para);
         if (s != null && !"".equals(s)) {
-            return new Int(Integer.parseInt(s));
+            return Interpreter.getCachedInt(Integer.parseInt(s));
         }
-        return inp.getCachedInt(0);
+        return Interpreter.getCachedInt(0);
     }
 
     /**
@@ -287,13 +287,13 @@ public class Stdlib extends Lib {
      * @param para
      * @return
      */
-    private Int idxof(Interpreter inp, ArrayList<DataType> para) {
-        String m = ((Str) Interpreter.vPopBack(para)).getVal();
-        String sub = ((Str) Interpreter.vPopBack(para)).getVal();
+    private Int idxof(ArrayList<DataType> para) {
+        String m = Interpreter.popBackStr(para);
+        String sub = Interpreter.popBackStr(para);
         if (m != null && sub != null) {
-            return inp.getCachedInt(m.indexOf(sub));
+            return Interpreter.getCachedInt(m.indexOf(sub));
         }
-        return inp.getCachedInt(-1);
+        return Interpreter.getCachedInt(-1);
     }
 
     /**
@@ -302,17 +302,17 @@ public class Stdlib extends Lib {
      * @param para
      * @return
      */
-    private Str substr(Interpreter inp, ArrayList<DataType> para) {
-        String s = ((Str) Interpreter.vPopBack(para)).getVal();
-        int a = (int) ((Int) Interpreter.vPopBack(para)).getVal();
-        int b = (int) ((Int) Interpreter.vPopBack(para)).getVal();
+    private Str substr(ArrayList<DataType> para) {
+        String s = Interpreter.popBackStr(para);
+        int a = (int) Interpreter.popBackLong(para);
+        int b = (int) Interpreter.popBackLong(para);
         StringBuffer sb = new StringBuffer();
         for (int i = a; i < b; i++) {
             if (i < s.length()) {
                 sb.append(s.charAt(i));
             }
         }
-        return inp.getCachedStr(sb.toString());
+        return Interpreter.getCachedStr(sb.toString());
     }
 
 
@@ -322,38 +322,38 @@ public class Stdlib extends Lib {
      * @param para
      * @return
      */
-    private Array split(Interpreter inp, ArrayList<DataType> para) {
-        String s = ((Str) Interpreter.vPopBack(para)).getVal();
-        String splitor = ((Str) Interpreter.vPopBack(para)).getVal();
+    private Array split(ArrayList<DataType> para) {
+        String s = Interpreter.popBackStr(para);
+        String splitor = Interpreter.popBackStr(para);
         String[] ss = s.split(splitor);
         int[] dim = new int[]{ss.length};
         Array arr = new Array(dim);
         for (int i = 0; i < ss.length; i++) {
             dim[0] = i;
-            arr.setValue(dim, inp.getCachedStr(ss[i]));
+            arr.setValue(dim, Interpreter.getCachedStr(ss[i]));
         }
         return arr;
     }
 
 
-    private DataType base64enc(Interpreter inp, ArrayList<DataType> para) {
+    private DataType base64enc(ArrayList<DataType> para) {
         try {
-            String str = ((Str) (Interpreter.vPopBack(para))).getVal();
+            String str = Interpreter.popBackStr(para);
             byte[] b = str.getBytes("utf-8");
             String s = javax.cldc.io.Base64.encode(b, 0, b.length);
-            return inp.getCachedStr(s);
+            return Interpreter.getCachedStr(s);
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    private DataType base64dec(Interpreter inp, ArrayList<DataType> para) {
+    private DataType base64dec(ArrayList<DataType> para) {
         try {
-            String str = ((Str) (Interpreter.vPopBack(para))).getVal();
+            String str = Interpreter.popBackStr(para);
             byte[] b = javax.cldc.io.Base64.decode(str);
             String s = new String(b, "utf-8");
-            return inp.getCachedStr(s);
+            return Interpreter.getCachedStr(s);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -361,25 +361,22 @@ public class Stdlib extends Lib {
     }
 
 
-    private DataType isnull(Interpreter inp, ArrayList<DataType> para) {
-        DataType d = Interpreter.vPopBack(para);
-        if (d instanceof Obj) {
-            if (((Obj) d).isNull()) {
-                return inp.getCachedBool(true);
-            } else {
-                return inp.getCachedBool(false);
-            }
+    private DataType isnull(ArrayList<DataType> para) {
+        Object d = Interpreter.popBackObject(para);
+        if (d == null) {
+            return Interpreter.getCachedBool(true);
+        } else {
+            return Interpreter.getCachedBool(false);
         }
-        return inp.getCachedBool(true);
     }
 
 
-    private DataType getObjField(Interpreter inp, ArrayList<DataType> para) {
+    private DataType getObjField(ArrayList<DataType> para) {
         try {
-            Obj ins = (Obj) Interpreter.vPopBack(para);
-            String fieldName = ((Str) (Interpreter.vPopBack(para))).getVal();
+            Object ins = Interpreter.popBackObject(para);
+            String fieldName = Interpreter.popBackStr(para);
 
-            Class c = ins.getVal().getClass();
+            Class c = ins.getClass();
             Field field = null;
             while (field == null) {
                 try {
@@ -394,29 +391,29 @@ public class Stdlib extends Lib {
             if (field != null) {
                 Class fc = field.getType();
                 if (fc == String.class) {
-                    String val = (String) field.get(ins.getVal());
-                    return inp.getCachedStr(val);
+                    String val = (String) field.get(ins);
+                    return Interpreter.getCachedStr(val);
                 } else if (fc == int.class) {
-                    int val = field.getInt(ins.getVal());
-                    return inp.getCachedInt(val);
+                    int val = field.getInt(ins);
+                    return Interpreter.getCachedInt(val);
                 } else if (fc == long.class) {
-                    long val = field.getLong(ins.getVal());
-                    return inp.getCachedInt(val);
+                    long val = field.getLong(ins);
+                    return Interpreter.getCachedInt(val);
                 } else if (fc == byte.class) {
-                    byte val = field.getByte(ins.getVal());
-                    return inp.getCachedInt(val);
+                    byte val = field.getByte(ins);
+                    return Interpreter.getCachedInt(val);
                 } else if (fc == short.class) {
-                    short val = field.getShort(ins.getVal());
-                    return inp.getCachedInt(val);
+                    short val = field.getShort(ins);
+                    return Interpreter.getCachedInt(val);
                 } else if (fc == char.class) {
-                    char val = field.getChar(ins.getVal());
-                    return inp.getCachedInt(val);
+                    char val = field.getChar(ins);
+                    return Interpreter.getCachedInt(val);
                 } else if (fc == boolean.class) {
-                    boolean val = field.getBoolean(ins.getVal());
-                    return inp.getCachedBool(val);
+                    boolean val = field.getBoolean(ins);
+                    return Interpreter.getCachedBool(val);
                 } else {//include float double and others
-                    Object val = field.get(ins.getVal());
-                    return new Obj(val);
+                    Object val = field.get(ins);
+                    return Interpreter.getCachedObj(val);
                 }
             }
             throw new RuntimeException("error can not found field:" + fieldName);
@@ -427,13 +424,13 @@ public class Stdlib extends Lib {
     }
 
 
-    private DataType setObjField(Interpreter inp, ArrayList<DataType> para) {
+    private DataType setObjField(ArrayList<DataType> para) {
         try {
-            Obj ins = (Obj) Interpreter.vPopBack(para);
-            String fieldName = ((Str) (Interpreter.vPopBack(para))).getVal();
-            DataType val = Interpreter.vPopBack(para);
+            Object ins = Interpreter.popBackObject(para);
+            String fieldName = Interpreter.popBackStr(para);
+            DataType val = Interpreter.popBack(para);
 
-            Class c = ins.getVal().getClass();
+            Class c = ins.getClass();
             Field field = null;
             while (field == null) {
                 try {
@@ -448,38 +445,38 @@ public class Stdlib extends Lib {
             if (field != null) {
                 Class fc = field.getType();
                 if (fc == String.class) {
-                    field.set(ins.getVal(), ((Str) val).getVal());
+                    field.set(ins, ((Str) val).getVal());
                 } else if (fc == int.class) {
-                    field.setInt(ins.getVal(), ((Int) val).getValAsInt());
+                    field.setInt(ins, ((Int) val).getValAsInt());
                 } else if (fc == long.class) {
-                    field.setLong(ins.getVal(), ((Int) val).getVal());
+                    field.setLong(ins, ((Int) val).getVal());
                 } else if (fc == byte.class) {
-                    field.setByte(ins.getVal(), (byte) ((Int) val).getVal());
+                    field.setByte(ins, (byte) ((Int) val).getVal());
                 } else if (fc == short.class) {
-                    field.setShort(ins.getVal(), (short) ((Int) val).getVal());
+                    field.setShort(ins, (short) ((Int) val).getVal());
                 } else if (fc == char.class) {
-                    field.setChar(ins.getVal(), (char) ((Int) val).getVal());
+                    field.setChar(ins, (char) ((Int) val).getVal());
                 } else if (fc == boolean.class) {
-                    field.setBoolean(ins.getVal(), ((Bool) val).getVal());
+                    field.setBoolean(ins, ((Bool) val).getVal());
                 } else if (fc == float.class) {
                     if (val.type == DataType.DTYPE_OBJ) {
                         Obj objv = (Obj) val;
                         if (objv.getVal() instanceof Float) {
-                            field.setFloat(ins.getVal(), ((Float) objv.getVal()).floatValue());
+                            field.setFloat(ins, ((Float) objv.getVal()).floatValue());
                         }
                     }
                 } else if (fc == double.class) {
                     if (val.type == DataType.DTYPE_OBJ) {
                         Obj objv = (Obj) val;
                         if (objv.getVal() instanceof Double) {
-                            field.setDouble(ins.getVal(), ((Float) objv.getVal()).doubleValue());
+                            field.setDouble(ins, ((Double) objv.getVal()).doubleValue());
                         }
                     }
                 } else {
                     if (val.type == DataType.DTYPE_OBJ) {
                         Obj objv = (Obj) val;
                         if (objv.getVal().getClass() == (fc)) {
-                            field.set(ins.getVal(), ((Float) objv.getVal()).doubleValue());
+                            field.set(ins, objv.getVal());
                         }
                     }
                 }
@@ -490,32 +487,13 @@ public class Stdlib extends Lib {
         return null;
     }
 
-    private DataType tranlateValue(Interpreter inp, Class fc, Object value) {
-        if (fc == String.class) {
-            return inp.getCachedStr((String) value);
-        } else if (fc == int.class) {
-            return inp.getCachedInt(((Integer) value).intValue());
-        } else if (fc == long.class) {
-            return inp.getCachedInt(((Long) value).longValue());
-        } else if (fc == byte.class) {
-            return inp.getCachedInt(((Byte) value).byteValue());
-        } else if (fc == short.class) {
-            return inp.getCachedInt(((Short) value).shortValue());
-        } else if (fc == char.class) {
-            return inp.getCachedInt(((Character) value).charValue());
-        } else if (fc == boolean.class) {
-            return inp.getCachedBool(((Boolean) value).booleanValue());
-        } else {//include float double and others
-            return new Obj(value);
-        }
-    }
 
-    private DataType invokeImpl(Interpreter inp, ArrayList<DataType> para, Class c, String name, Class[] types, Object instance) {
+    private DataType invokeImpl(ArrayList<DataType> para, Class c, String name, Class[] types, Object instance) {
         try {
 
             Object[] javaPara = new Object[para.size()];
             for (int i = 0; i < para.size(); i++) {
-                DataType dt = Interpreter.vPopBack(para);
+                DataType dt = Interpreter.popBack(para);
                 if (dt.type == DataType.DTYPE_INT) {
                     long dtv = ((Int) dt).getVal();
                     if (types[i] == int.class) {
@@ -545,21 +523,21 @@ public class Stdlib extends Lib {
                 Class retType = m.getReturnType();
                 if (retType != Void.TYPE) {
                     if (retType == String.class) {
-                        return inp.getCachedStr((String) ret);
+                        return Interpreter.getCachedStr((String) ret);
                     } else if (retType == int.class) {
-                        return inp.getCachedInt(((Integer) ret).intValue());
+                        return Interpreter.getCachedInt(((Integer) ret).intValue());
                     } else if (retType == long.class) {
-                        return inp.getCachedInt(((Long) ret).longValue());
+                        return Interpreter.getCachedInt(((Long) ret).longValue());
                     } else if (retType == byte.class) {
-                        return inp.getCachedInt(((Byte) ret).byteValue());
+                        return Interpreter.getCachedInt(((Byte) ret).byteValue());
                     } else if (retType == short.class) {
-                        return inp.getCachedInt(((Short) ret).shortValue());
+                        return Interpreter.getCachedInt(((Short) ret).shortValue());
                     } else if (retType == char.class) {
-                        return inp.getCachedInt(((Character) ret).charValue());
+                        return Interpreter.getCachedInt(((Character) ret).charValue());
                     } else if (retType == boolean.class) {
-                        return inp.getCachedBool(((Boolean) ret).booleanValue());
+                        return Interpreter.getCachedBool(((Boolean) ret).booleanValue());
                     } else {//include float double and others
-                        return new Obj(ret);
+                        return Interpreter.getCachedObj(ret);
                     }
                 }
             } else {
@@ -571,20 +549,20 @@ public class Stdlib extends Lib {
         return null;
     }
 
-    private DataType invokeJava(Interpreter inp, ArrayList<DataType> para) {
-        Object ins = ((Obj) Interpreter.vPopBack(para)).getVal();
-        String javaFunc = ((Str) (Interpreter.vPopBack(para))).getVal();
+    private DataType invokeJava(ArrayList<DataType> para) {
+        Object ins = Interpreter.popBackObject(para);
+        String javaFunc = Interpreter.popBackStr(para);
         Class c = ins.getClass();
         String name = javaFunc.substring(0, javaFunc.indexOf('('));
         String desc = javaFunc.substring(javaFunc.indexOf('('));
         Class[] types = ReflectMethod.getMethodPara(c.getClassLoader(), desc);
 
-        return invokeImpl(inp, para, c, name, types, ins);
+        return invokeImpl(para, c, name, types, ins);
     }
 
-    private DataType invokeStatic(Interpreter inp, ArrayList<DataType> para) {
-        String className = ((Str) Interpreter.vPopBack(para)).getVal();
-        String javaFunc = ((Str) (Interpreter.vPopBack(para))).getVal();
+    private DataType invokeStatic(ArrayList<DataType> para) {
+        String className = Interpreter.popBackStr(para);
+        String javaFunc = Interpreter.popBackStr(para);
         Class c = null;
         try {
             c = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
@@ -595,14 +573,14 @@ public class Stdlib extends Lib {
         String desc = javaFunc.substring(javaFunc.indexOf('('));
         Class[] types = ReflectMethod.getMethodPara(c.getClassLoader(), desc);
 
-        return invokeImpl(inp, para, c, name, types, null);
+        return invokeImpl(para, c, name, types, null);
     }
 
 
-    private DataType trim(Interpreter inp, ArrayList<DataType> para) {
+    private DataType trim(ArrayList<DataType> para) {
         try {
-            String str = ((Str) (Interpreter.vPopBack(para))).getVal();
-            return inp.getCachedStr(str.trim());
+            String str = Interpreter.popBackStr(para);
+            return Interpreter.getCachedStr(str.trim());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -610,27 +588,23 @@ public class Stdlib extends Lib {
     }
 
 
-    private DataType str2int(Interpreter inp, ArrayList<DataType> para) {
+    private DataType str2int(ArrayList<DataType> para) {
         try {
-            String str = ((Str) (Interpreter.vPopBack(para))).getVal();
+            String str = Interpreter.popBackStr(para);
             str = str.trim();
             int i = Integer.parseInt(str);
-            return inp.getCachedInt(i);
+            return Interpreter.getCachedInt(i);
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    private DataType getbit(Interpreter inp, ArrayList<DataType> para) {
+    private DataType getbit(ArrayList<DataType> para) {
         try {
-            Int si = Interpreter.vPopBack(para);
-            Int sbit = Interpreter.vPopBack(para);
-            long i = si.getVal();
-            int bitPos = sbit.getValAsInt();
-            inp.putCachedInt(si);
-            inp.putCachedInt(sbit);
-            return inp.getCachedBool(((i >> bitPos) & 1) == 1);
+            long i = Interpreter.popBackLong(para);
+            int bitPos = Interpreter.popBackInt(para);
+            return Interpreter.getCachedBool(((i >> bitPos) & 1) == 1);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -638,22 +612,16 @@ public class Stdlib extends Lib {
     }
 
 
-    private DataType setbit(Interpreter inp, ArrayList<DataType> para) {
+    private DataType setbit(ArrayList<DataType> para) {
         try {
-            Int si = Interpreter.vPopBack(para);
-            Int sbit = Interpreter.vPopBack(para);
-            Bool set = Interpreter.vPopBack(para);
-            long i = si.getVal();
-            int bitPos = sbit.getValAsInt();
-            inp.putCachedInt(sbit);
-            inp.putCachedBool(set);
-
+            long i = Interpreter.popBackLong(para);
+            int bitPos = Interpreter.popBackInt(para);
+            boolean set = Interpreter.popBackBool(para);
             i &= ~(1 << bitPos);
-            if (set.getVal()) {
+            if (set) {
                 i |= 1 << bitPos;
             }
-            si.setVal(i);
-            return si;
+            return Interpreter.getCachedInt(i);
         } catch (Exception e) {
             e.printStackTrace();
         }

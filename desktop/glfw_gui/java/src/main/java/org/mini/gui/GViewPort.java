@@ -6,6 +6,7 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
+import org.mini.glfw.Glfw;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -331,8 +332,10 @@ public class GViewPort extends GContainer {
 
     @Override
     public boolean scrollEvent(float dx, float dy, float x, float y) {
-        return super.scrollEvent(dx, dy, x, y);
-        //return dragEvent(dx, dy, x, y);
+        boolean b = super.scrollEvent(dx, dy, x, y);
+        if (b) return b;
+
+        return dragEvent(Glfw.GLFW_MOUSE_BUTTON_1, dx, dy, x, y);
     }
 
     @Override

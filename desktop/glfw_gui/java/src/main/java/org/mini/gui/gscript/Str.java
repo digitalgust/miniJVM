@@ -4,12 +4,12 @@ public class Str extends DataType {
 
     private String value = null;
 
-    public Str(String s) {
+    Str(String s) {
         this(s, true);
 
     }
 
-    public Str(String s, boolean mutable) {
+    Str(String s, boolean mutable) {
         type = DTYPE_STR;
         value = s;
         setRecyclable(mutable);
