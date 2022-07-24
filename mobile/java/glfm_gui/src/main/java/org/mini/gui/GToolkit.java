@@ -751,8 +751,8 @@ public class GToolkit {
     public static GList getListMenu(GForm form, String[] strs, GImage[] imgs, GActionListener[] listeners, float width, float height) {
 
         GList list = new GList(form, 0, 0, width, height);
+        list.setBgColor(getStyle().getPopBackgroundColor());
         list.setShowMode(GList.MODE_MULTI_SHOW);
-        list.setBgColor(GToolkit.getStyle().getFrameBackground());
         list.setFocusListener(new GFocusChangeListener() {
             @Override
             public void focusGot(GObject oldgo) {

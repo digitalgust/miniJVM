@@ -116,6 +116,11 @@ public class GList extends GContainer {
     public void setItemHeight(float h) {
         list_item_heigh = h;
         list_image_size = h - 12;
+        for (int i = 0; i < getElementSize(); i++) {
+            GListItem item = getItem(i);
+            item.setSize(item.getW(), h);
+        }
+        sizeAdjust();
     }
 
     /**
@@ -639,6 +644,9 @@ public class GList extends GContainer {
                 bg = GToolkit.getStyle().getListBackgroundColor();
             } else {
                 bg = GToolkit.getStyle().getPopBackgroundColor();
+            }
+            if (GList.this.bgColor != null) {
+                bg = GList.this.bgColor;
             }
             GToolkit.drawRoundedRect(vg, x, y, w, h, 3.5f, bg);
 

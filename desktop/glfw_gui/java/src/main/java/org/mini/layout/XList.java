@@ -24,6 +24,7 @@ public class XList extends XObject {
         String onClick;
         boolean selected;
         float[] color;
+        int preicon;
     }
 
     protected Vector items = new Vector();
@@ -85,6 +86,13 @@ public class XList extends XObject {
                     item.attachment = parser.getAttributeValue(null, "attachment");
                     String tmp1 = parser.getAttributeValue(null, "selected");
                     item.selected = ("1".equals(tmp1)) ? true : false;
+                    try {
+                        String pi = parser.getAttributeValue(null, "preicon");
+                        if (pi != null) {
+                            item.preicon = (int) Long.parseLong(pi, 16);
+                        }
+                    } catch (Exception e) {
+                    }
                     String tmp2 = parser.nextText();
                     item.text = tmp2 == null ? "" : tmp2;
                     items.add(item);
@@ -137,6 +145,7 @@ public class XList extends XObject {
                 gli.setEnable(enable);
                 gli.setCmd(item.cmd);
                 gli.setOnClinkScript(item.onClick);
+                gli.setPreIcon(item.preicon);
                 if (item.color != null) {
                     gli.setColor(item.color);
                 }

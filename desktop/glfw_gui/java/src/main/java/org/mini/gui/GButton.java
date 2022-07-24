@@ -7,6 +7,8 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 
+import java.io.ByteArrayOutputStream;
+
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.glwrap.GLUtil.toUtf8;
 import static org.mini.nanovg.Nanovg.*;
@@ -18,7 +20,7 @@ public class GButton extends GObject {
 
     protected String text;
     protected byte[] text_arr;
-    protected char preicon;
+    protected int preicon;
     protected byte[] preicon_arr;
     protected boolean bt_pressed = false;
     float oldX, oldY;
@@ -52,9 +54,12 @@ public class GButton extends GObject {
         return this.text;
     }
 
-    public void setIcon(char icon) {
-        preicon = icon;
-        preicon_arr = toUtf8("" + preicon);
+    public void setPreIcon(int utf8Icon) {
+        if (utf8Icon == 0) return;
+        preicon = utf8Icon;
+        ByteArrayOutputStream baos = utf32ToBytes(utf8Icon, null);
+        baos.write(0);// c style string end
+        preicon_arr = baos.toByteArray();
     }
 
     @Override

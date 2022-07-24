@@ -2,8 +2,6 @@ package org.mini.layout;
 
 import org.mini.gui.GButton;
 import org.mini.gui.GObject;
-import org.mini.gui.event.GActionListener;
-import org.mini.gui.gscript.Interpreter;
 import org.mini.layout.xmlpull.KXmlParser;
 
 /**
@@ -16,7 +14,6 @@ public class XButton
     //
     protected String pic;
     protected int addon = XDef.SPACING_BUTTON_ADD;
-    protected char emoji = 0;
 
     protected GButton button;
 
@@ -35,8 +32,6 @@ public class XButton
             pic = attValue;
         } else if (attName.equals("addon")) {
             addon = Integer.parseInt(attValue);
-        } else if (attName.equals("emoji")) {
-            emoji = (char) Integer.parseInt(attValue, 16);
         }
     }
 
@@ -70,7 +65,7 @@ public class XButton
         if (button == null) {
             button = new GButton(getAssist().getForm(), text, x, y, width, height);
             initGui();
-            button.setIcon(emoji);
+            button.setPreIcon(preicon);
         } else {
             button.setLocation(x, y);
             button.setSize(width, height);

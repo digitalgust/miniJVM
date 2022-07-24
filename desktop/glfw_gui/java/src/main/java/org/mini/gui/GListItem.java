@@ -7,6 +7,9 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 
+import java.io.ByteArrayOutputStream;
+
+import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Nanovg.*;
 
 /**
@@ -14,6 +17,7 @@ import static org.mini.nanovg.Nanovg.*;
  */
 public class GListItem extends GObject {
 
+    protected byte[] preicon_arr;
     protected GImage img;
     protected GList list;
 
@@ -41,6 +45,13 @@ public class GListItem extends GObject {
      */
     public void setImg(GImage img) {
         this.img = img;
+    }
+
+    public void setPreIcon(int utf8Icon) {
+        if (utf8Icon == 0) return;
+        ByteArrayOutputStream baos = utf32ToBytes(utf8Icon, null);
+        baos.write(0);// c style string end
+        preicon_arr = baos.toByteArray();
     }
 
     /**
@@ -127,9 +138,9 @@ public class GListItem extends GObject {
             outOfFilter = true;
         }
         float pad = 2;
-        float ix, iy, iw, ih;
+//        float ix, iy, iw, ih;
+//        int[] imgw = {0}, imgh = {0};
         float thumb = list.list_item_heigh - pad;
-        int[] imgw = {0}, imgh = {0};
 
         float tx, ty;
         tx = x + pad;
@@ -142,22 +153,28 @@ public class GListItem extends GObject {
         }
 
         if (img != null) {
-            nvgImageSize(vg, img.getNvgTextureId(vg), imgw, imgh);
-            if (imgw[0] < imgh[0]) {
-                iw = thumb;
-                ih = iw * (float) imgh[0] / (float) imgw[0];
-                ix = 0;
-                iy = -(ih - thumb) * 0.5f;
-            } else {
-                ih = thumb;
-                iw = ih * (float) imgw[0] / (float) imgh[0];
-                ix = -(iw - thumb) * 0.5f;
-                iy = 0;
-            }
+//            nvgImageSize(vg, img.getNvgTextureId(vg), imgw, imgh);
+//            if (imgw[0] < imgh[0]) {
+//                iw = thumb;
+//                ih = iw * (float) imgh[0] / (float) imgw[0];
+//                ix = 0;
+//                iy = -(ih - thumb) * 0.5f;
+//            } else {
+//                ih = thumb;
+//                iw = ih * (float) imgw[0] / (float) imgh[0];
+//                ix = -(iw - thumb) * 0.5f;
+//                iy = 0;
+//            }
             GToolkit.drawImage(vg, img, tx, ty, thumb, thumb, !outOfFilter, outOfFilter ? 0.5f : 0.8f);
+        } else if (preicon_arr != null) {
+            nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
+            nvgFontFace(vg, GToolkit.getFontIcon());
+            nvgFillColor(vg, nvgRGBA(255, 255, 255, 96));
+            nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+            nvgTextJni(vg, x + thumb * 0.5f, y + thumb * 0.5f, preicon_arr, 0, preicon_arr.length);
         }
         float[] c = outOfFilter ? GToolkit.getStyle().getHintFontColor() : enable ? getColor() : getDisabledColor();
-        GToolkit.drawTextLine(vg, tx + (img == null ? 0 : thumb) + pad, ty + thumb / 2, getText(), list.getFontSize(), c, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        GToolkit.drawTextLine(vg, tx + ((img == null && preicon_arr == null) ? 0 : thumb) + pad, ty + thumb / 2, getText(), list.getFontSize(), c, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         return true;
     }
 

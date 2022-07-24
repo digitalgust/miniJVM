@@ -1,7 +1,6 @@
 package org.mini.layout;
 
 import org.mini.gui.*;
-import org.mini.gui.event.GFlyListener;
 import org.mini.gui.gscript.Interpreter;
 import org.mini.gui.gscript.Lib;
 import org.mini.layout.xmlpull.KXmlParser;
@@ -35,6 +34,8 @@ public abstract class XObject implements GLayout {
     protected String text = null; //文本
 
     protected int fontSize = XDef.DEFAULT_FONT_SIZE;
+
+    protected int preicon = 0;
 
     protected String cmd = null;
 
@@ -187,6 +188,8 @@ public abstract class XObject implements GLayout {
             backest = "0".equals(attValue) ? false : true;
         } else if (attName.equals("fontsize")) {
             fontSize = Integer.parseInt(attValue);
+        } else if (attName.equals("preicon")) {
+            preicon = (int) Long.parseLong(attValue, 16);
         }
     }
 

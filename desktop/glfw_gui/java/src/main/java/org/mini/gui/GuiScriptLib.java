@@ -55,6 +55,7 @@ public class GuiScriptLib extends Lib {
         methodNames.put("setWH".toLowerCase(), 37);//
         methodNames.put("loadXmlUI".toLowerCase(), 38);//
         methodNames.put("uiExist".toLowerCase(), 39);//
+        methodNames.put("getListText".toLowerCase(), 40);//
 
     }
 
@@ -147,6 +148,8 @@ public class GuiScriptLib extends Lib {
                 return loadXmlUI(para);
             case 39:
                 return uiExist(para);
+            case 40:
+                return getListText(para);
             default:
         }
         return null;
@@ -428,6 +431,17 @@ public class GuiScriptLib extends Lib {
             selectIndex = ((GList) gobj).getSelectedIndex();
         }
         return Interpreter.getCachedInt(selectIndex);
+    }
+
+
+    public DataType getListText(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(form, compont);
+        String selectText = "";
+        if (gobj != null && gobj instanceof GList && ((GList) gobj).getSelectedIndex() >= 0) {
+            selectText = ((GList) gobj).getSelectedItem().getText();
+        }
+        return Interpreter.getCachedStr(selectText);
     }
 
 

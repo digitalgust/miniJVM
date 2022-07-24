@@ -12,6 +12,7 @@ import org.mini.gui.event.GStateChangeListener;
 import org.mini.gui.gscript.Interpreter;
 import org.mini.nanovg.Nanovg;
 
+import java.io.ByteArrayOutputStream;
 import java.util.TimerTask;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
@@ -52,10 +53,10 @@ abstract public class GObject implements GAttachable {
 
     protected float[] boundle = new float[4];
 
-    private float[] bgColor;
-    private float[] color;
-    private float[] disabledColor;
-    private float[] flyingColor;
+    protected float[] bgColor;
+    protected float[] color;
+    protected float[] disabledColor;
+    protected float[] flyingColor;
 
     private float fontSize = -1;
 
@@ -698,4 +699,15 @@ abstract public class GObject implements GAttachable {
         this.layout = layout;
     }
 
+
+    protected ByteArrayOutputStream utf32ToBytes(int pchar, ByteArrayOutputStream baos) {
+        if (baos == null) {
+            baos = new ByteArrayOutputStream();
+        }
+        for (int i = 3; i >= 0; i--) {
+            byte b = (byte) (pchar >> (i * 8));
+            if (b != 0) baos.write(b);
+        }
+        return baos;
+    }
 }
