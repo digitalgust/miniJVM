@@ -44,6 +44,8 @@ public class GImageItem extends GObject {
         return paintFlying(vg, x, y);
     }
 
+    int[] imgw = {0}, imgh = {0};
+
     boolean paintFlying(long vg, float x, float y) {
         float w = getW();
         float h = getH();
@@ -51,7 +53,6 @@ public class GImageItem extends GObject {
             return true;
         }
         float ix, iy, iw, ih;
-        int[] imgw = {0}, imgh = {0};
 
         nvgImageSize(vg, img.getNvgTextureId(vg), imgw, imgh);
         if (imgw[0] < imgh[0]) {
@@ -107,7 +108,7 @@ public class GImageItem extends GObject {
         }
         //画字
         if (getText() != null) {
-            GToolkit.drawTextWithShadow(vg, x + 3, y + 3, w - 6, h - 6, getText(), getFontSize(), getColor(), GToolkit.getStyle().getTextShadowColor());
+            GToolkit.drawTextWithShadow(vg, x + 3, y + 3, w - 6, h - 6, getText(), getFontSize(), getColor(), GToolkit.getStyle().getTextShadowColor(), 1f);
         }
         return true;
     }

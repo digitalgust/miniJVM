@@ -305,10 +305,10 @@ public class GToolkit {
     }
 
     public static void drawTextLine(long vg, float tx, float ty, String s, float fontSize, float[] color, int align) {
-        drawTextLineWithShadow(vg, tx, ty, s, fontSize, color, align, null);
+        drawTextLineWithShadow(vg, tx, ty, s, fontSize, color, align, null, 0);
     }
 
-    public static void drawTextLineWithShadow(long vg, float tx, float ty, String s, float fontSize, float[] color, int align, float[] shadowColor) {
+    public static void drawTextLineWithShadow(long vg, float tx, float ty, String s, float fontSize, float[] color, int align, float[] shadowColor, float shadowBlur) {
         if (s == null) {
             return;
         }
@@ -317,7 +317,7 @@ public class GToolkit {
         nvgTextAlign(vg, align);
         byte[] b = toUtf8(s);
         if (shadowColor != null) {
-            nvgFontBlur(vg, 3);
+            nvgFontBlur(vg, shadowBlur);
             nvgFillColor(vg, color);
             Nanovg.nvgTextJni(vg, tx, ty + 1.5f, b, 0, b.length);
             nvgFontBlur(vg, 0);
@@ -344,14 +344,14 @@ public class GToolkit {
 
     public static void drawText(long vg, float x, float y, float w, float h, String s) {
 
-        drawTextWithShadow(vg, x, y, w, h, s, GToolkit.getStyle().getTextFontSize(), GToolkit.getStyle().getTextFontColor(), null);
+        drawTextWithShadow(vg, x, y, w, h, s, GToolkit.getStyle().getTextFontSize(), GToolkit.getStyle().getTextFontColor(), null, 0);
     }
 
     public static void drawText(long vg, float x, float y, float w, float h, String s, float fontSize, float[] color) {
-        drawTextWithShadow(vg, x, y, w, h, s, fontSize, color, null);
+        drawTextWithShadow(vg, x, y, w, h, s, fontSize, color, null, 0);
     }
 
-    public static void drawTextWithShadow(long vg, float x, float y, float w, float h, String s, float fontSize, float[] color, float[] shadowColor) {
+    public static void drawTextWithShadow(long vg, float x, float y, float w, float h, String s, float fontSize, float[] color, float[] shadowColor, float shadowBlur) {
         if (s == null) {
             return;
         }
@@ -364,7 +364,7 @@ public class GToolkit {
 
         if (text_arr != null) {
             if (shadowColor != null) {
-                nvgFontBlur(vg, 3);
+                nvgFontBlur(vg, shadowBlur);
                 nvgFillColor(vg, shadowColor);
                 nvgTextBoxJni(vg, x + 1, y + 2, w, text_arr, 0, text_arr.length);
                 nvgFontBlur(vg, 0);
@@ -1111,7 +1111,6 @@ public class GToolkit {
 
     static public class EditMenu extends GMenu {
 
-        boolean shown = false;
         GTextObject text;
 
         public EditMenu(GForm form, float left, float top, float width, float height) {
@@ -1135,6 +1134,7 @@ public class GToolkit {
                     text.resetSelect();
                     text.selectMode = false;
                 }
+                form = null;
             }
             //System.out.println("edit menu dispose");
         }
@@ -1175,54 +1175,35 @@ public class GToolkit {
             GMenuItem item;
 
             item = editMenu.addItem(GLanguage.getString("Select"), null);
-            item.setActionListener(new GActionListener() {
-                @Override
-                public void action(GObject gobj) {
-                    editMenu.text.doSelectText();
-                }
-            });
+            item.setActionListener(gobj -> editMenu.text.doSelectText());
             item = editMenu.addItem(GLanguage.getString("Copy"), null);
-            item.setActionListener(new GActionListener() {
-                @Override
-                public void action(GObject gobj) {
-                    editMenu.text.doCopyClipBoard();
-                    editMenu.dispose();
-                }
+            item.setActionListener(gobj -> {
+                editMenu.text.doCopyClipBoard();
+                editMenu.dispose();
             });
             item = editMenu.addItem(GLanguage.getString("Paste"), null);
-            item.setActionListener(new GActionListener() {
-                @Override
-                public void action(GObject gobj) {
-                    if (editMenu.text.enable) {
-                        editMenu.text.doPasteClipBoard();
-                    }
-                    editMenu.dispose();
+            item.setActionListener(gobj -> {
+                if (editMenu.text.enable) {
+                    editMenu.text.doPasteClipBoard();
                 }
+                editMenu.dispose();
             });
             item = editMenu.addItem(GLanguage.getString("Cut"), null);
-            item.setActionListener(new GActionListener() {
-                @Override
-                public void action(GObject gobj) {
-                    if (editMenu.text.enable) {
-                        editMenu.text.doCut();
-                    }
-                    editMenu.dispose();
+            item.setActionListener(gobj -> {
+                if (editMenu.text.enable) {
+                    editMenu.text.doCut();
                 }
+                editMenu.dispose();
             });
             item = editMenu.addItem(GLanguage.getString("SeleAll"), null);
-            item.setActionListener(new GActionListener() {
-                @Override
-                public void action(GObject gobj) {
-                    editMenu.text.doSelectAll();
-                }
-            });
+            item.setActionListener(gobj -> editMenu.text.doSelectAll());
 
             editMenu.setFixed(true);
             editMenu.setContextMenu(true);
         }
+        editMenu.form = focus.getForm();
         editMenu.text = focus;
         editMenu.setLocation(mx, my);
-        //editMenu.move(mx - editMenu.getX(), my - editMenu.getY());
 
         focus.getForm().add(editMenu);
         //System.out.println("edit menu show");

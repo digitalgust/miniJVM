@@ -171,7 +171,7 @@ public class GListItem extends GObject {
             nvgFontFace(vg, GToolkit.getFontIcon());
             nvgFillColor(vg, nvgRGBA(255, 255, 255, 96));
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-            nvgTextJni(vg, x + thumb * 0.5f, y + thumb * 0.5f, preicon_arr, 0, preicon_arr.length);
+            nvgTextJni(vg, x + thumb * 0.5f, y + thumb * 0.5f + 2, preicon_arr, 0, preicon_arr.length);
         }
         float[] c = outOfFilter ? GToolkit.getStyle().getHintFontColor() : enable ? getColor() : getDisabledColor();
         GToolkit.drawTextLine(vg, tx + ((img == null && preicon_arr == null) ? 0 : thumb) + pad, ty + thumb / 2, getText(), list.getFontSize(), c, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);

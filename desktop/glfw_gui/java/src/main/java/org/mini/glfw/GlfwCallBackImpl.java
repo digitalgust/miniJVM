@@ -157,6 +157,7 @@ public class GlfwCallBackImpl extends GCallBack {
                 //user define contents
                 if (GForm.flushReq()) {
                     gform.display(vg);
+                    //GToolkit.drawText(vg, 0, 0, 200, 30, mouseX + " , " + mouseY);
                     glfwSwapBuffers(display);
                 }
                 glfwPollEvents();
