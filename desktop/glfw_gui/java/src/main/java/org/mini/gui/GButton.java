@@ -20,7 +20,7 @@ public class GButton extends GObject {
 
     protected String text;
     protected byte[] text_arr;
-    protected int preicon;
+    protected String preicon;
     protected byte[] preicon_arr;
     protected boolean bt_pressed = false;
     float oldX, oldY;
@@ -54,12 +54,10 @@ public class GButton extends GObject {
         return this.text;
     }
 
-    public void setPreIcon(int utf8Icon) {
-        if (utf8Icon == 0) return;
-        preicon = utf8Icon;
-        ByteArrayOutputStream baos = utf32ToBytes(utf8Icon, null);
-        baos.write(0);// c style string end
-        preicon_arr = baos.toByteArray();
+    public void setPreIcon(String preicon) {
+        if (preicon == null || preicon.trim().length() == 0) return;
+        this.preicon = preicon;
+        preicon_arr = toUtf8(preicon);
     }
 
     @Override
@@ -139,10 +137,11 @@ public class GButton extends GObject {
         nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 48));
         nvgStroke(vg);
 
+        float[] textColor = enable ? (isFlying() ? getFlyingColor() : getColor()) : getDisabledColor();
         nvgFontSize(vg, getFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
         tw = nvgTextBoundsJni(vg, 0, 0, text_arr, 0, text_arr.length, null);
-        if (preicon != 0) {
+        if (preicon != null) {
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
 
@@ -150,10 +149,10 @@ public class GButton extends GObject {
             //iw += h * 0.15f;
         }
 
-        if (preicon != 0) {
+        if (preicon != null) {
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
-            nvgFillColor(vg, nvgRGBA(255, 255, 255, 96));
+            nvgFillColor(vg, textColor);
             nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
             nvgTextJni(vg, x + w * 0.5f - tw * 0.5f - iw * 0.5f, y + h * 0.5f + move, preicon_arr, 0, preicon_arr.length);
         }
@@ -161,12 +160,12 @@ public class GButton extends GObject {
         nvgFontSize(vg, getFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        nvgFontBlur(vg, 1f);
+        nvgFontBlur(vg, 2f);
         nvgFillColor(vg, GToolkit.getStyle().getTextShadowColor());
-        nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw * 0.25f, y + h * 0.5f + move, text_arr, 0, text_arr.length);
+        nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw * 0.25f, y + h * 0.5f + move + 1.5f, text_arr, 0, text_arr.length);
         nvgFontBlur(vg, 0);
-        nvgFillColor(vg, enable ? (isFlying() ? getFlyingColor() : getColor()) : getDisabledColor());
-        nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw * 0.25f, y + h * 0.5f + move, text_arr, 0, text_arr.length);
+        nvgFillColor(vg, textColor);
+        nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw * 0.25f, y + h * 0.5f + move + 1.5f, text_arr, 0, text_arr.length);
 
         return true;
     }

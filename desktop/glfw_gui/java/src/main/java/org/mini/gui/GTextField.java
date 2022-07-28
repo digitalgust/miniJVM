@@ -25,8 +25,8 @@ public class GTextField extends GTextObject {
     protected int text_max = 256;
     protected int boxStyle = BOX_STYLE_EDIT;
     //
-    protected byte[] search_arr = {(byte) 0xe2, (byte) 0x8c, (byte) 0xa8, 0};
-    protected byte[] reset_arr = toUtf8("" + ICON_CIRCLED_CROSS);
+    protected byte[] search_arr = toUtf8(ICON_SEARCH);
+    protected byte[] reset_arr = toUtf8(ICON_CIRCLED_CROSS);
     //
     protected float[] lineh = {0};
     protected short[] text_pos;
@@ -153,22 +153,35 @@ public class GTextField extends GTextObject {
         }
         if (action == Glfw.GLFW_PRESS || action == Glfw.GLFW_REPEAT) {
             if (enable) {
-                if (key == Glfw.GLFW_KEY_BACKSPACE) {
-                    if (textsb.length() > 0 && caretIndex > 0) {
-                        int[] selectFromTo = getSelected();
-                        if (selectFromTo != null) {
-                            deleteSelectedText();
-                        } else {
-                            setCaretIndex(caretIndex - 1);
-                            deleteTextByIndex(caretIndex);
+                switch (key) {
+                    case Glfw.GLFW_KEY_BACKSPACE:
+                        if (textsb.length() > 0 && caretIndex > 0) {
+                            int[] selectFromTo = getSelected();
+                            if (selectFromTo != null) {
+                                deleteSelectedText();
+                            } else {
+                                setCaretIndex(caretIndex - 1);
+                                deleteTextByIndex(caretIndex);
+                            }
                         }
-                    }
-                } else if (key == Glfw.GLFW_KEY_ENTER) {
-                    if (actionListener != null) {
-                        doAction();
-                    } else if (unionObj != null) {
-                        unionObj.doAction();
-                    }
+                        break;
+                    case Glfw.GLFW_KEY_ENTER:
+                        if (actionListener != null) {
+                            doAction();
+                        } else if (unionObj != null) {
+                            unionObj.doAction();
+                        }
+                        break;
+                    case Glfw.GLFW_KEY_DELETE:
+                        if (textsb.length() > caretIndex) {
+                            int[] selectFromTo = getSelected();
+                            if (selectFromTo != null) {
+                                deleteSelectedText();
+                            } else {
+                                deleteTextByIndex(caretIndex);
+                            }
+                        }
+                        break;
                 }
 
                 if ((mods & Glfw.GLFW_MOD_CONTROL) != 0) {
@@ -382,7 +395,7 @@ public class GTextField extends GTextObject {
     @Override
     public void insertTextAtCaret(String str) {
         insertTextByIndex(caretIndex, str);
-        setCaretIndex(caretIndex + str.length());
+        setCaretIndex(caretIndex + textsb.length());
     }
 
     @Override

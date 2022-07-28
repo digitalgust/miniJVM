@@ -35,7 +35,7 @@ public abstract class XObject implements GLayout {
 
     protected int fontSize = XDef.DEFAULT_FONT_SIZE;
 
-    protected int preicon = 0;
+    protected String preicon;
 
     protected String cmd = null;
 
@@ -189,7 +189,7 @@ public abstract class XObject implements GLayout {
         } else if (attName.equals("fontsize")) {
             fontSize = Integer.parseInt(attValue);
         } else if (attName.equals("preicon")) {
-            preicon = (int) Long.parseLong(attValue, 16);
+            preicon = attValue;
         }
     }
 

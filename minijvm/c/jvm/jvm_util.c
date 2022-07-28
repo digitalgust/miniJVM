@@ -380,90 +380,156 @@ void vm_share_notifyall(MiniJVM *jvm) {
  * @param ustr in
  * @param arr out
  */
+
+
+s32 enc_get_utf8_size(const c8 *pInput) {
+    u8 c = *((u8 *) pInput);
+    //printf("---c=%c---\n", c);
+    if (c < 0x80) return 1;                // 0xxxxxxx 返回0
+    if (c >= 0x80 && c < 0xC0) return -1;     // 10xxxxxx 返回-1
+    if (c >= 0xC0 && c < 0xE0) return 2;      // 110xxxxx 返回2
+    if (c >= 0xE0 && c < 0xF0) return 3;      // 1110xxxx 返回3
+    if (c >= 0xF0 && c < 0xF8) return 4;      // 11110xxx 返回4
+    if (c >= 0xF8 && c < 0xFC) return 5;      // 111110xx 返回5
+    if (c >= 0xFC) return 6;                // 1111110x 返回6
+    return 0;
+}
+
+//https://yuncode.net/code/c_5715d18940eb269
+
+/**
+ *
+ * @param ustr
+ * @param arr
+ * @return
+ */
 s32 utf8_2_unicode(Utf8String *ustr, u16 *arr) {
-    char const *pInput = utf8_cstr(ustr);
-
+    c8 const *pInput = utf8_cstr(ustr);
+    //assert(pInput != NULL && Unic != NULL);
     int outputSize = 0; //记录转换后的Unicode字符串的字节数
+    // b1 表示UTF-8编码的pInput中的高字节, b2 表示次高字节, ...
+    c8 b1, b2, b3, b4, b5, b6;
+    s32 codepoint = 0;
+    c8 *pOutput = (c8 *) &codepoint;
 
-    char *tmp = (c8 *) arr; //临时变量，用于遍历输出字符串
     while (*pInput) {
-        if (*pInput > 0x00 && *pInput <= 0x7F) //处理单字节UTF8字符（英文字母、数字）
-        {
-            *tmp = *pInput;
-            pInput++;
-            tmp++;
-            *tmp = 0; //小端法表示，在高地址填补0
-            tmp++;
-        } else if (((*pInput) & 0xE0) == 0xC0) //处理双字节UTF8字符
-        {
-            char high = *pInput;
-            pInput++;
-            char low = *pInput;
-            pInput++;
+        //*Unic = 0x0; // 把 *Unic 初始化为全零
+        int utfbytes = enc_get_utf8_size(pInput);
+        //printf("%d", utfbytes);
+        codepoint = 0;
+        switch (utfbytes) {
+            case 1:
+                *pOutput = *pInput;
+                *(pOutput + 1) = 0;
+                *arr = (u16) codepoint;
+                arr++;
+                break;
 
-            if ((low & 0xC0) != 0x80)  //检查是否为合法的UTF8字符表示
-            {
-                return -1; //如果不是则报错
-            }
+            case 2:
+                b1 = *pInput;
+                b2 = *(pInput + 1);
+                if ((b2 & 0xc0) != 0x80)
+                    return -1;
+                *pOutput = (b1 << 6) + (b2 & 0x3F);
+                *(pOutput + 1) = (b1 >> 2) & 0x07;
+                *arr = (u16) codepoint;
+                arr++;
+                break;
 
-            *tmp = (high << 6) + (low & 0x3F);
-            tmp++;
-            *tmp = (high >> 2) & 0x07;
-            tmp++;
-        } else if (((*pInput) & 0xF0) == 0xE0) //处理三字节UTF8字符
-        {
-            char high = *pInput;
-            pInput++;
-            char middle = *pInput;
-            pInput++;
-            char low = *pInput;
-            pInput++;
-            if (((middle & 0xC0) != 0x80) || ((low & 0xC0) != 0x80)) {
+            case 3:
+                b1 = *pInput;
+                b2 = *(pInput + 1);
+                b3 = *(pInput + 2);
+                if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80))
+                    return -1;
+                *pOutput = (b2 << 6) + (b3 & 0x3F);
+                *(pOutput + 1) = (b1 << 4) + ((b2 >> 2) & 0x0F);
+                *arr = (u16) codepoint;
+                arr++;
+                break;
+
+            case 4:
+                b1 = *pInput;
+                b2 = *(pInput + 1);
+                b3 = *(pInput + 2);
+                b4 = *(pInput + 3);
+                if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80)
+                    || ((b4 & 0xC0) != 0x80))
+                    return -1;
+                *pOutput = (b3 << 6) + (b4 & 0x3F);
+                *(pOutput + 1) = (b2 << 4) + ((b3 >> 2) & 0x0F);
+                *(pOutput + 2) = ((b1 << 2) & 0x1C) + ((b2 >> 4) & 0x03);
+                break;
+
+            case 5:
+                b1 = *pInput;
+                b2 = *(pInput + 1);
+                b3 = *(pInput + 2);
+                b4 = *(pInput + 3);
+                b5 = *(pInput + 4);
+                if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80)
+                    || ((b4 & 0xC0) != 0x80) || ((b5 & 0xC0) != 0x80))
+                    return -1;
+                *pOutput = (b4 << 6) + (b5 & 0x3F);
+                *(pOutput + 1) = (b3 << 4) + ((b4 >> 2) & 0x0F);
+                *(pOutput + 2) = (b2 << 2) + ((b3 >> 4) & 0x03);
+                *(pOutput + 3) = (b1 << 6);
+                break;
+
+            case 6:
+                b1 = *pInput;
+                b2 = *(pInput + 1);
+                b3 = *(pInput + 2);
+                b4 = *(pInput + 3);
+                b5 = *(pInput + 4);
+                b6 = *(pInput + 5);
+                if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80)
+                    || ((b4 & 0xC0) != 0x80) || ((b5 & 0xC0) != 0x80)
+                    || ((b6 & 0xC0) != 0x80))
+                    return -1;
+                *pOutput = (b5 << 6) + (b6 & 0x3F);
+                *(pOutput + 1) = (b5 << 4) + ((b6 >> 2) & 0x0F);
+                *(pOutput + 2) = (b3 << 2) + ((b4 >> 4) & 0x03);
+                *(pOutput + 3) = ((b1 << 6) & 0x40) + (b2 & 0x3F);
+                break;
+
+            default:
                 return -1;
-            }
-
-            *tmp = (middle << 6) + (low & 0x7F);
-            tmp++;
-            *tmp = (high << 4) + ((middle >> 2) & 0x0F);
-            tmp++;
-        } else if (((*pInput) & 0xF8) == 0xF0) //处理四字节UTF8字符
-        {
-            Int2Float i2f;
-            i2f.c0 = *pInput;
-            pInput++;
-            i2f.c1 = *pInput;
-            pInput++;
-            i2f.c2 = *pInput;
-            pInput++;
-            i2f.c3 = *pInput;
-            pInput++;
-            if (((i2f.c1 & 0xC0) != 0x80) || ((i2f.c2 & 0xC0) != 0x80) || ((i2f.c3 & 0xC0) != 0x80)) {
-                return -1;
-            }
-            i2f.c0 = (c8) (i2f.c0 << 5) >> 5;
-            i2f.c1 = (c8) (i2f.c1 << 2) >> 2;
-            i2f.c2 = (c8) (i2f.c2 << 2) >> 2;
-            i2f.c3 = (c8) (i2f.c3 << 2) >> 2;
-            s32 code = i2f.c3 + (i2f.c2 << 6) + (i2f.c1 << 12) + (i2f.c0 << 18);
-            //jchar 两字节表示不下， 得使用双jchar,这里简易处理，替换成了空格
-            *tmp = ' ';
-            tmp++;
-            *tmp = 0;
-            tmp++;
-        } else //对于其他字节数的UTF8字符不进行处理
-        {
-            return -1;
+                break;
         }
-        outputSize += 1;
+        if (utfbytes >= 4) {
+            codepoint -= 0x10000;
+            u16 c1 = codepoint >> 10;
+            *arr = (u16) (0xD800 | (c1 & 0x3ff));
+            arr++;
+            *arr = (u16) (0xDC00 | (codepoint & 0x3ff));
+            arr++;
+            outputSize += 2;
+        } else {
+            outputSize++;
+        }
+
+        pInput += utfbytes;
     }
     return outputSize;
 }
 
-int unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 totalSize) {
+
+s32 unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 totalSize) {
     s32 i;
-    s32 utf_len = 0;
     for (i = 0; i < totalSize; i++) {
         s32 unic = jchar_arr[i];
+        if (unic >= 0xd800 && unic <= 0xdbff) {
+            if (i + 1 < totalSize) {
+                int c1 = jchar_arr[i + 1];
+                if (c1 >= 0xdc00 && c1 <= 0xdfff) {
+                    i++;
+                    int lead = unic & 0x3ff;
+                    int trail = c1 & 0x3ff;
+                    unic = (lead << 10) | trail | 0x10000;
+                }
+            }
+        }
 
         if (unic <= 0x0000007F) {
             // * U-00000000 - U-0000007F:  0xxxxxxx
@@ -505,9 +571,8 @@ int unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 totalSize) {
             utf8_pushback(ustr, (unic & 0x3F) | 0x80);
 
         }
-        utf_len++;
     }
-    return i;
+    return ustr->length;
 }
 
 /**

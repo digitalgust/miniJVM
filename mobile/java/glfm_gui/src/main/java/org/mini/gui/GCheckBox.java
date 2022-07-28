@@ -19,7 +19,7 @@ public class GCheckBox extends GObject {
     protected String text;
     protected byte[] text_arr;
     protected boolean checked;
-    protected byte[] preicon_arr = toUtf8("" + ICON_CHECK);
+    protected byte[] preicon_arr = toUtf8(ICON_CHECK);
 
     public GCheckBox(GForm form) {
         this(form, "", false, 0f, 0f, 1f, 1f);

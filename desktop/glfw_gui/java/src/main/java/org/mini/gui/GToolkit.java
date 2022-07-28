@@ -101,18 +101,18 @@ public class GToolkit {
 
     public static class FontHolder {
 
-        static byte[] font_word = toUtf8("word"), font_icon = toUtf8("icon"), font_emoji = toUtf8("emoji");
+        static byte[] font_word = toUtf8("word"), font_icon = toUtf8("icon");
         static int font_word_handle, font_icon_handle, font_emoji_handle;
         static boolean fontLoaded = false;
         static byte[] data_word;
         static byte[] data_icon;
-        static byte[] data_emoji;
 
         public static synchronized void loadFont(long vg) {
             if (fontLoaded) {
                 return;
             }
-            data_word = readFileFromJar("/res/NotoSansCJKsc-Medium.otf");
+            data_word = readFileFromJar("/res/NotoEmoji+NotoSansCJKSC-Regular.ttf");
+//            data_word = readFileFromJar("/res/out.ttf");
             font_word_handle = Nanovg.nvgCreateFontMem(vg, font_word, data_word, data_word.length, 0);
             if (font_word_handle == -1) {
                 System.out.println("Could not add font.\n");
@@ -122,11 +122,6 @@ public class GToolkit {
             data_icon = readFileFromJar("/res/entypo.ttf");
             font_icon_handle = Nanovg.nvgCreateFontMem(vg, font_icon, data_icon, data_icon.length, 0);
             if (font_icon_handle == -1) {
-                System.out.println("Could not add font.\n");
-            }
-            data_emoji = readFileFromJar("/res/emoji.ttf");
-            font_emoji_handle = Nanovg.nvgCreateFontMem(vg, font_emoji, data_emoji, data_emoji.length, 0);
-            if (font_emoji_handle == -1) {
                 System.out.println("Could not add font.\n");
             }
 
@@ -140,10 +135,6 @@ public class GToolkit {
 
     public static byte[] getFontIcon() {
         return FontHolder.font_icon;
-    }
-
-    public static byte[] getFontEmoji() {
-        return FontHolder.font_emoji;
     }
 
     public static float[] getFontBoundle(long vg) {
@@ -1151,37 +1142,44 @@ public class GToolkit {
         if (focus == null || focus.getForm() == null) {
             return;
         }
+        GForm gform = focus.getForm();
 
         float menuH = 40, menuW = 300;
 
         float mx = x - menuW / 2;
         if (mx < 10) {
             mx = 10;
-        } else if (mx + menuW > focus.getForm().getW()) {
-            mx = focus.getForm().getW() - menuW;
+        } else if (mx + menuW > gform.getW()) {
+            mx = gform.getW() - menuW;
         }
-        mx -= focus.getForm().getX();
+        mx -= gform.getX();
         float my = y - 20 - menuH;
         if (my < 20) {
             my = y + 10;
-        } else if (my + menuH > focus.getForm().getH()) {
-            my = focus.getForm().getH() - menuH;
+        } else if (my + menuH > gform.getH()) {
+            my = gform.getH() - menuH;
         }
-        my -= focus.getForm().getY();
+        my -= gform.getY();
 
         if (editMenu == null) {
-            editMenu = new EditMenu(focus.getForm(), mx, my, menuW, menuH);
+            editMenu = new EditMenu(gform, mx, my, menuW, menuH);
             editMenu.setFront(true);
             GMenuItem item;
 
             item = editMenu.addItem(GLanguage.getString("Select"), null);
-            item.setActionListener(gobj -> editMenu.text.doSelectText());
+            item.setName("EDITMENUCTX_SELECT");
+            item.setActionListener(gobj -> {
+                editMenu.text.doSelectText();
+                setCompEnable(editMenu, "EDITMENUCTX_COPY", true);
+            });
             item = editMenu.addItem(GLanguage.getString("Copy"), null);
+            item.setName("EDITMENUCTX_COPY");
             item.setActionListener(gobj -> {
                 editMenu.text.doCopyClipBoard();
                 editMenu.dispose();
             });
             item = editMenu.addItem(GLanguage.getString("Paste"), null);
+            item.setName("EDITMENUCTX_PASTE");
             item.setActionListener(gobj -> {
                 if (editMenu.text.enable) {
                     editMenu.text.doPasteClipBoard();
@@ -1189,6 +1187,7 @@ public class GToolkit {
                 editMenu.dispose();
             });
             item = editMenu.addItem(GLanguage.getString("Cut"), null);
+            item.setName("EDITMENUCTX_CUT");
             item.setActionListener(gobj -> {
                 if (editMenu.text.enable) {
                     editMenu.text.doCut();
@@ -1196,16 +1195,32 @@ public class GToolkit {
                 editMenu.dispose();
             });
             item = editMenu.addItem(GLanguage.getString("SeleAll"), null);
-            item.setActionListener(gobj -> editMenu.text.doSelectAll());
+            item.setName("EDITMENUCTX_SELECTALL");
+            item.setActionListener(gobj -> {
+                editMenu.text.doSelectAll();
+                setCompEnable(editMenu, "EDITMENUCTX_COPY", true);
+            });
 
             editMenu.setFixed(true);
             editMenu.setContextMenu(true);
         }
-        editMenu.form = focus.getForm();
+        if (focus.isEditable()) {
+            setCompEnable(editMenu, "EDITMENUCTX_PASTE", true);
+            setCompEnable(editMenu, "EDITMENUCTX_CUT", true);
+        } else {
+            setCompEnable(editMenu, "EDITMENUCTX_PASTE", false);
+            setCompEnable(editMenu, "EDITMENUCTX_CUT", false);
+        }
+//        if (focus.selectMode) {
+//            setCompEnable(editMenu, "EDITMENUCTX_COPY", true);
+//        } else {
+//            setCompEnable(editMenu, "EDITMENUCTX_COPY", false);
+//        }
+        editMenu.form = gform;
         editMenu.text = focus;
         editMenu.setLocation(mx, my);
 
-        focus.getForm().add(editMenu);
+        gform.add(editMenu);
         //System.out.println("edit menu show");
     }
 

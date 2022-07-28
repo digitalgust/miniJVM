@@ -182,7 +182,7 @@ public final class String implements Comparable<String>, CharSequence {
         System.arraycopy(value, offset, this.value, 0, count);
     }
 
-    public String(int[] val, int offset, int count) {
+    public String(int[] codePoints, int offset, int count) {
         if (offset < 0) {
             throw new StringIndexOutOfBoundsException(offset);
         }
@@ -190,15 +190,48 @@ public final class String implements Comparable<String>, CharSequence {
             throw new StringIndexOutOfBoundsException(count);
         }
         // Note: offset or count might be near -1>>>1.
-        if (offset > value.length - count) {
+        if (offset > codePoints.length - count) {
             throw new StringIndexOutOfBoundsException(offset + count);
         }
 
-        this.value = new char[count];
-        this.count = count;
+        int expansion = 0;
+        int margin = 1;
+        char[] v = new char[count + margin];
+        int x = offset;
+        int j = 0;
         for (int i = 0; i < count; i++) {
-            value[i] = (char) val[offset + i];
+            int c = codePoints[x++];
+            if (c < 0) {
+                throw new IllegalArgumentException();
+            }
+            if (margin <= 0 && (j + 1) >= v.length) {
+                if (expansion == 0) {
+                    expansion = (((-margin + 1) * count) << 10) / i;
+                    expansion >>= 10;
+                    if (expansion <= 0) {
+                        expansion = 1;
+                    }
+                } else {
+                    expansion *= 2;
+                }
+                char[] tmp = new char[Math.min(v.length + expansion, count * 2)];
+                margin = (tmp.length - v.length) - (count - i);
+                System.arraycopy(v, 0, tmp, 0, j);
+                v = tmp;
+            }
+            if (c < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+                v[j++] = (char) c;
+            } else if (c <= Character.MAX_CODE_POINT) {
+                Character.toSurrogates(c, v, j);
+                j += 2;
+                margin--;
+            } else {
+                throw new IllegalArgumentException();
+            }
         }
+        this.offset = 0;
+        this.value = v;
+        this.count = j;
     }
 
     /**
@@ -1585,9 +1618,28 @@ public final class String implements Comparable<String>, CharSequence {
         return result;
     }
 
-    public int codePointAt(int pos) {
-        return charAt(pos);
+    public int codePointAt(int index) {
+        if ((index < 0) || (index >= count)) {
+            throw new StringIndexOutOfBoundsException(index);
+        }
+        return Character.codePointAtImpl(value, offset + index, offset + count);
     }
+
+    public int codePointBefore(int index) {
+        int i = index - 1;
+        if ((i < 0) || (i >= count)) {
+            throw new StringIndexOutOfBoundsException(index);
+        }
+        return Character.codePointBeforeImpl(value, offset + index, offset);
+    }
+
+    public int codePointCount(int beginIndex, int endIndex) {
+        if (beginIndex < 0 || endIndex > count || beginIndex > endIndex) {
+            throw new IndexOutOfBoundsException();
+        }
+        return Character.codePointCountImpl(value, offset + beginIndex, endIndex - beginIndex);
+    }
+
 
     public boolean isEmpty() {
         return count == 0;

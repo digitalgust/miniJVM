@@ -4,7 +4,7 @@
             <tr>
                 <td>
                     <label w="80%"></label>
-                    <button name="BT_SETTING" w="20%" h="30">{Setting}&gt;</button>
+                    <button name="BT_SETTING" w="20%" h="30" preicon="⚙">{Setting}</button>
                     <br/>
                     <label w="100%" h="30" align="hcenter,vcenter">{Application Manager}</label>
                     <input name="INPUT_SEARCH" w="100%" h="30" style="search" hint="Search application"></input>
@@ -21,9 +21,9 @@
 
     <panel w="100%" h="100%" move="left" align="hcenter,top">
         <viewport name="VP_CONTENT" w="98%" h="100%">
-            <button name="BT_BACK" h="30" addon="10">&lt;{Back}</button>
+            <button name="BT_BACK" h="30" addon="30" preicon="">{Back}</button>
             <label name="APP_NAME_LABEL" w="100%" h="35" align="hcenter,vcenter"></label>
-            <img name="APP_ICON_ITEM" pic="/res/appmgr.png" w="128" h="128"  border="1" fontsize="10" ></img>
+            <img name="APP_ICON_ITEM" pic="/res/appmgr.png" w="128" h="128" border="1" fontsize="10"></img>
             <br/>
             <br/>
             <button name="APP_RUN_BTN" w="100%" h="35">{Run}</button>
@@ -38,7 +38,7 @@
     </panel>
     <panel w="100%" h="100%" move="fixed" align="hcenter,top">
         <viewport name="PAN_SETTING" w="98%" h="100%">
-            <button name="BT_BACK1" h="30" addon="10">&lt;{Back}</button>
+            <button name="BT_BACK1" h="30" addon="30" preicon="">{Back}</button>
             <label w="100%" h="30" align="hcenter,vcenter">{Setting}</label>
             <list name="LIST_LANG" w="100%" multiline="0">
                 <li name="LI_ENG">English</li>

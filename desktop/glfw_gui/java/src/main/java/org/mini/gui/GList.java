@@ -32,8 +32,8 @@ public class GList extends GContainer {
     public static final int MODE_MULTI_SHOW = 1, MODE_SINGLE_SHOW = 2;
     public static final int MODE_MULTI_SELECT = 4, MODE_SINGLE_SELECT = 8;
 
-    protected char preicon;
-    protected byte[] preicon_arr = toUtf8("" + ICON_CHEVRON_RIGHT);
+    protected String preicon;
+    protected byte[] preicon_arr = toUtf8(ICON_CHEVRON_RIGHT);
     protected List<Integer> selected = new ArrayList();
     protected boolean pulldown;
     //
@@ -163,8 +163,10 @@ public class GList extends GContainer {
         return getBoundle();
     }
 
-    public void setIcon(char icon) {
-        preicon = icon;
+    public void setPreIcon(String preicon) {
+        if (preicon == null || preicon.trim().length() == 0) return;
+        this.preicon = preicon;
+        preicon_arr = toUtf8(preicon);
     }
 
     public GListItem addItem(GImage img, String lab) {

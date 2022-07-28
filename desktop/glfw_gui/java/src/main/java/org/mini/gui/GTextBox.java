@@ -8,6 +8,7 @@ package org.mini.gui;
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.nanovg.Nanovg;
+import org.mini.util.CodePointBuilder;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -156,6 +157,8 @@ public class GTextBox extends GTextObject {
                     if (selectEnd == -1 || selectStart == selectEnd) {
                         resetSelect();
                         GToolkit.disposeEditMenu();
+                    } else {
+                        selectMode = true;
                     }
                 }
             } else if (button == Glfw.GLFW_MOUSE_BUTTON_2) {
@@ -239,7 +242,7 @@ public class GTextBox extends GTextObject {
                             if (selectFromTo != null) {
                                 deleteSelectedText();
                             } else {
-                                deleteTextByIndex(caretIndex + 1);
+                                deleteTextByIndex(caretIndex);
                             }
                         }
                         break;
@@ -315,28 +318,44 @@ public class GTextBox extends GTextObject {
                 }
                 case Glfw.GLFW_KEY_UP: {
                     int[] pos = getCaretPosFromArea();
-                    if (pos[1] < getY() + lineh[0] * 2) {
-                        setScroll(scroll - lineh[0] / (totalTextHeight - showAreaHeight));
-                    }
                     if (pos != null) {
+                        if (pos[1] < getY() + lineh[0] * 2) {
+                            setScroll(scroll - lineh[0] / (totalTextHeight - showAreaHeight));
+                        }
                         int cart = getCaretIndexFromArea(pos[0], pos[1] - (int) lineh[0]);
                         if (cart >= 0) {
                             setCaretIndex(cart);
+                        }
+                    } else {
+                        for (int i = area_detail.length - 1; i >= 0; i--) {
+                            if (area_detail[i] != null) {
+                                int c = area_detail[i][AREA_LINE_START_AT];
+                                setCaretIndex(c);
+                                break;
+                            }
                         }
                     }
                     break;
                 }
                 case Glfw.GLFW_KEY_DOWN: {
                     int[] pos = getCaretPosFromArea();
-                    if (pos[1] > getY() + getH() - lineh[0] * 2) {
-                        setScroll(scroll + lineh[0] / (totalTextHeight - showAreaHeight));
-                    }
                     if (pos != null) {
+                        if (pos[1] > getY() + getH() - lineh[0] * 2) {
+                            setScroll(scroll + lineh[0] / (totalTextHeight - showAreaHeight));
+                        }
                         int cart = getCaretIndexFromArea(pos[0], pos[1] + (int) lineh[0]);
                         if (cart >= 0) {
                             setCaretIndex(cart);
                         }
 
+                    } else {
+                        for (int i = 0; i < area_detail.length; i++) {
+                            if (area_detail[i] != null) {
+                                int c = area_detail[i][AREA_LINE_START_AT];
+                                setCaretIndex(c);
+                                break;
+                            }
+                        }
                     }
                     break;
                 }
@@ -619,7 +638,7 @@ public class GTextBox extends GTextObject {
     @Override
     public void insertTextAtCaret(String str) {
         insertTextByIndex(caretIndex, str);
-        setCaretIndex(caretIndex + str.length());
+        setCaretIndex(caretIndex + textsb.length());
     }
 
     @Override
@@ -635,15 +654,15 @@ public class GTextBox extends GTextObject {
         }
 
         for (int i = caretIndex - 1; i >= 0 && i < txtLen; i--) {
-            char ch = textsb.charAt(i);
-            if (ch > 128 || ch <= ' ' || i == 0) {
-                selectStart = i;
+            int ch = textsb.codePointAt(i);
+            if (ch > 128 || (!Character.isLetterOrDigit(ch) && ch != '_') || i == 0) {
+                selectStart = i + 1;
                 break;
             }
         }
         for (int i = caretIndex + 1; i < txtLen; i++) {
-            char ch = textsb.charAt(i);
-            if (ch > 128 || ch <= ' ' || i == txtLen - 1) {
+            int ch = textsb.codePointAt(i);
+            if (ch > 128 || (!Character.isLetterOrDigit(ch) && ch != '_') || i == txtLen - 1) {
                 selectEnd = i;
                 break;
             }
@@ -788,13 +807,13 @@ public class GTextBox extends GTextObject {
 
                                 if (char_at == 0) {
                                     //取得本行之前字符串长度
-                                    String preStrs = new String(local_arr, 0, byte_starti, "utf-8");
+                                    CodePointBuilder preStrs = new CodePointBuilder(local_arr, 0, byte_starti, "utf-8");
                                     char_at = preStrs.length();
 
                                 }
                                 //把当前行从字节数组转成字符串
-                                String curRowStrs = "";
-                                curRowStrs = new String(local_arr, byte_starti, byte_endi - byte_starti, "utf-8");
+                                CodePointBuilder curRowStrs;
+                                curRowStrs = new CodePointBuilder(local_arr, byte_starti, byte_endi - byte_starti, "utf-8");
                                 //计算字符串起止位置
                                 char_starti = char_at;
                                 char_endi = char_at + curRowStrs.length() - 1;
@@ -844,7 +863,7 @@ public class GTextBox extends GTextObject {
                                             draw = true;
                                         }
                                         if (draw) {
-                                            GToolkit.drawCaret(vg, caretx, dy, 1, lineH, false);
+                                            GToolkit.drawCaret(vg, caretx, dy, 2, lineH, false);
                                         }
                                     }
 

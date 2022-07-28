@@ -9,6 +9,7 @@ import org.mini.glfm.Glfm;
 
 import java.io.ByteArrayOutputStream;
 
+import static org.mini.glwrap.GLUtil.toUtf8;
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Nanovg.*;
 
@@ -18,6 +19,8 @@ import static org.mini.nanovg.Nanovg.*;
 public class GListItem extends GObject {
 
     protected byte[] preicon_arr;
+    protected String preicon;
+
     protected GImage img;
     protected GList list;
 
@@ -47,11 +50,10 @@ public class GListItem extends GObject {
         this.img = img;
     }
 
-    public void setPreIcon(int utf8Icon) {
-        if (utf8Icon == 0) return;
-        ByteArrayOutputStream baos = utf32ToBytes(utf8Icon, null);
-        baos.write(0);// c style string end
-        preicon_arr = baos.toByteArray();
+    public void setPreIcon(String preicon) {
+        if (preicon == null || preicon.trim().length() == 0) return;
+        this.preicon = preicon;
+        preicon_arr = toUtf8(preicon);
     }
 
     /**
@@ -151,6 +153,7 @@ public class GListItem extends GObject {
         } else {
             GToolkit.drawRect(vg, tx, ty, w - (pad * 2), list.list_item_heigh - pad, GToolkit.getStyle().getUnselectedColor());
         }
+        float[] c = outOfFilter ? GToolkit.getStyle().getHintFontColor() : enable ? getColor() : getDisabledColor();
 
         if (img != null) {
 //            nvgImageSize(vg, img.getNvgTextureId(vg), imgw, imgh);
@@ -169,11 +172,10 @@ public class GListItem extends GObject {
         } else if (preicon_arr != null) {
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
-            nvgFillColor(vg, nvgRGBA(255, 255, 255, 96));
+            nvgFillColor(vg, c);
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
             nvgTextJni(vg, x + thumb * 0.5f, y + thumb * 0.5f + 2, preicon_arr, 0, preicon_arr.length);
         }
-        float[] c = outOfFilter ? GToolkit.getStyle().getHintFontColor() : enable ? getColor() : getDisabledColor();
         GToolkit.drawTextLine(vg, tx + ((img == null && preicon_arr == null) ? 0 : thumb) + pad, ty + thumb / 2, getText(), list.getFontSize(), c, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         return true;
     }

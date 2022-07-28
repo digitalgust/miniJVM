@@ -8,6 +8,7 @@ package org.mini.gui;
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.gui.event.GFocusChangeListener;
+import org.mini.util.CodePointBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +46,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
 
     protected String hint;
     protected byte[] hint_arr;
-    protected StringBuilder textsb = new StringBuilder();
+    protected CodePointBuilder textsb = new CodePointBuilder();
     protected byte[] text_arr;
 
 
@@ -81,11 +82,13 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         return textsb.toString();
     }
 
-    public void insertTextByIndex(int index, char ch) {
-        textsb.insert(index, ch);
+    public void insertTextByIndex(int index, int ch) {
+        textsb.insertCodePoint(index, ch);
         text_arr = null;
         doStateChanged(this);
-        putInUndo(UserAction.ADD, "" + ch, index);
+        StringBuilder undo = new StringBuilder();
+        undo.appendCodePoint(ch);
+        putInUndo(UserAction.ADD, undo.toString(), index);
     }
 
     public void insertTextByIndex(int index, String str) {
@@ -96,11 +99,13 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     }
 
     public void deleteTextByIndex(int index) {
-        char ch = textsb.charAt(index);
-        textsb.deleteCharAt(index);
+        int ch = textsb.codePointAt(index);
+        textsb.deleteCodePointAt(index);
         text_arr = null;
         doStateChanged(this);
-        putInUndo(UserAction.DEL, "" + ch, index);
+        StringBuilder undo = new StringBuilder();
+        undo.appendCodePoint(ch);
+        putInUndo(UserAction.DEL, undo.toString(), index);
     }
 
     public void deleteTextRange(int start, int end) {
@@ -354,7 +359,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         UserAction action = getUndo();
         if (action != null) {
             if (action.addOrDel == UserAction.ADD) {
-                textsb.delete(action.caretIndex, action.caretIndex + action.txt.length());
+                textsb.delete(action.caretIndex, action.caretIndex + action.txt.codePointCount(0, action.txt.length()));
             } else {
                 textsb.insert(action.caretIndex, action.txt);
             }
@@ -370,7 +375,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
             if (action.addOrDel == UserAction.ADD) {
                 textsb.insert(action.caretIndex, action.txt);
             } else {
-                textsb.delete(action.caretIndex, action.caretIndex + action.txt.length());
+                textsb.delete(action.caretIndex, action.caretIndex + action.txt.codePointCount(0, action.txt.length()));
             }
             setCaretIndex(action.caretIndex);
             putInUndo(action);

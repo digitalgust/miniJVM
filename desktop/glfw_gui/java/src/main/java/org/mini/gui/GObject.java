@@ -26,12 +26,12 @@ abstract public class GObject implements GAttachable {
     public static final int ALIGN_H_FULL = 1;
     public static final int ALIGN_V_FULL = 2;
 
-    public static char ICON_SEARCH = (char) 0x1F50D;
-    public static char ICON_CIRCLED_CROSS = 0x2716;
-    public static char ICON_CHEVRON_RIGHT = 0xE75E;
-    public static char ICON_CHECK = 0x2713;
-    public static char ICON_LOGIN = 0xE740;
-    public static char ICON_TRASH = 0xE729;
+    public static String ICON_SEARCH = "\uD83D\uDD0D";
+    public static String ICON_CIRCLED_CROSS = "\u2716";
+    public static String ICON_CHEVRON_RIGHT = "\uE75E";
+    public static String ICON_CHECK = "\u2713";
+    public static String ICON_LOGIN = "\uE740";
+    public static String ICON_TRASH = "\uE729";
     //
     public static final int LEFT = 0;
     public static final int TOP = 1;

@@ -113,8 +113,8 @@ public class StringBuilder implements Appendable {
      * capacity specified by the <code>length</code> argument.
      *
      * @param length the initial capacity.
-     * @exception NegativeArraySizeException if the <code>length</code> argument
-     * is less than <code>0</code>.
+     * @throws NegativeArraySizeException if the <code>length</code> argument
+     *                                    is less than <code>0</code>.
      */
     public StringBuilder(int length) {
         value = new char[length];
@@ -215,7 +215,7 @@ public class StringBuilder implements Appendable {
      * character sequence is the same as the character at index <i>k</i> in the
      * old sequence if <i>k</i> is less than the length of the old character
      * sequence; otherwise, it is the null character <code>'\u0000'</code>.
-     *
+     * <p>
      * In other words, if the <code>newLength</code> argument is less than the
      * current length of the string buffer, the string buffer is truncated to
      * contain exactly the number of characters given by the
@@ -230,8 +230,8 @@ public class StringBuilder implements Appendable {
      * <code>0</code>.
      *
      * @param newLength the new length of the buffer.
-     * @exception IndexOutOfBoundsException if the <code>newLength</code>
-     * argument is negative.
+     * @throws IndexOutOfBoundsException if the <code>newLength</code>
+     *                                   argument is negative.
      * @see java.lang.StringBuilder#length()
      */
     public void setLength(int newLength) {
@@ -277,8 +277,8 @@ public class StringBuilder implements Appendable {
      *
      * @param index the index of the desired character.
      * @return the character at the specified index of this string buffer.
-     * @exception IndexOutOfBoundsException if <code>index</code> is negative or
-     * greater than or equal to <code>length()</code>.
+     * @throws IndexOutOfBoundsException if <code>index</code> is negative or
+     *                                   greater than or equal to <code>length()</code>.
      * @see java.lang.StringBuilder#length()
      */
     public char charAt(int index) {
@@ -302,21 +302,21 @@ public class StringBuilder implements Appendable {
      * </pre></blockquote>
      *
      * @param srcBegin start copying at this offset in the string buffer.
-     * @param srcEnd stop copying at this offset in the string buffer.
-     * @param dst the array to copy the data into.
+     * @param srcEnd   stop copying at this offset in the string buffer.
+     * @param dst      the array to copy the data into.
      * @param dstBegin offset into <code>dst</code>.
-     * @exception NullPointerException if <code>dst</code> is <code>null</code>.
-     * @exception IndexOutOfBoundsException if any of the following is true:
-     * <ul>
-     * <li><code>srcBegin</code> is negative
-     * <li><code>dstBegin</code> is negative
-     * <li>the <code>srcBegin</code> argument is greater than the
-     * <code>srcEnd</code> argument.
-     * <li><code>srcEnd</code> is greater than <code>this.length()</code>, the
-     * current length of this string buffer.
-     * <li><code>dstBegin+srcEnd-srcBegin</code> is greater than
-     * <code>dst.length</code>
-     * </ul>
+     * @throws NullPointerException      if <code>dst</code> is <code>null</code>.
+     * @throws IndexOutOfBoundsException if any of the following is true:
+     *                                   <ul>
+     *                                   <li><code>srcBegin</code> is negative
+     *                                   <li><code>dstBegin</code> is negative
+     *                                   <li>the <code>srcBegin</code> argument is greater than the
+     *                                   <code>srcEnd</code> argument.
+     *                                   <li><code>srcEnd</code> is greater than <code>this.length()</code>, the
+     *                                   current length of this string buffer.
+     *                                   <li><code>dstBegin+srcEnd-srcBegin</code> is greater than
+     *                                   <code>dst.length</code>
+     *                                   </ul>
      */
     public void getChars(int srcBegin, int srcEnd, char dst[], int dstBegin) {
         if (srcBegin < 0) {
@@ -342,9 +342,9 @@ public class StringBuilder implements Appendable {
      * less than the length of this string buffer.
      *
      * @param index the index of the character to modify.
-     * @param ch the new character.
-     * @exception IndexOutOfBoundsException if <code>index</code> is negative or
-     * greater than or equal to <code>length()</code>.
+     * @param ch    the new character.
+     * @throws IndexOutOfBoundsException if <code>index</code> is negative or
+     *                                   greater than or equal to <code>length()</code>.
      * @see java.lang.StringBuilder#length()
      */
     public void setCharAt(int index, char ch) {
@@ -447,13 +447,13 @@ public class StringBuilder implements Appendable {
      * <code>len</code>.
      * <p>
      * The overall effect is exactly as if the arguments were converted to a
-     * string by the method {@link String#valueOf(char[],int,int)} and the
+     * string by the method {@link String#valueOf(char[], int, int)} and the
      * characters of that string were then {@link #append(String) appended} to
      * this <code>StringBuilder</code> object.
      *
-     * @param str the characters to be appended.
+     * @param str    the characters to be appended.
      * @param offset the index of the first character to append.
-     * @param len the number of characters to append.
+     * @param len    the number of characters to append.
      * @return a reference to this <code>StringBuilder</code> object.
      */
     public StringBuilder append(char str[], int offset, int len) {
@@ -586,11 +586,11 @@ public class StringBuilder implements Appendable {
      * <code>start</code> is equal to <code>end</code>, no changes are made.
      *
      * @param start The beginning index, inclusive.
-     * @param end The ending index, exclusive.
+     * @param end   The ending index, exclusive.
      * @return This string buffer.
-     * @exception StringIndexOutOfBoundsException if <code>start</code> is
-     * negative, greater than <code>length()</code>, or greater than
-     * <code>end</code>.
+     * @throws StringIndexOutOfBoundsException if <code>start</code> is
+     *                                         negative, greater than <code>length()</code>, or greater than
+     *                                         <code>end</code>.
      * @since JDK1.2
      */
     public StringBuilder delete(int start, int end) {
@@ -622,8 +622,8 @@ public class StringBuilder implements Appendable {
      *
      * @param index Index of character to remove
      * @return This string buffer.
-     * @exception StringIndexOutOfBoundsException if the <code>index</code> is
-     * negative or greater than or equal to <code>length()</code>.
+     * @throws StringIndexOutOfBoundsException if the <code>index</code> is
+     *                                         negative or greater than or equal to <code>length()</code>.
      * @since JDK1.2
      */
     public StringBuilder deleteCharAt(int index) {
@@ -650,9 +650,9 @@ public class StringBuilder implements Appendable {
      * less than or equal to the length of this string buffer.
      *
      * @param offset the offset.
-     * @param obj an <code>Object</code>.
+     * @param obj    an <code>Object</code>.
      * @return a reference to this <code>StringBuilder</code> object.
-     * @exception StringIndexOutOfBoundsException if the offset is invalid.
+     * @throws StringIndexOutOfBoundsException if the offset is invalid.
      * @see java.lang.String#valueOf(java.lang.Object)
      * @see java.lang.StringBuilder#insert(int, java.lang.String)
      * @see java.lang.StringBuilder#length()
@@ -687,9 +687,9 @@ public class StringBuilder implements Appendable {
      * less than or equal to the length of this string buffer.
      *
      * @param offset the offset.
-     * @param str a string.
+     * @param str    a string.
      * @return a reference to this <code>StringBuilder</code> object.
-     * @exception StringIndexOutOfBoundsException if the offset is invalid.
+     * @throws StringIndexOutOfBoundsException if the offset is invalid.
      * @see java.lang.StringBuilder#length()
      */
     public StringBuilder insert(int offset, String str) {
@@ -723,14 +723,14 @@ public class StringBuilder implements Appendable {
      * <p>
      * The overall effect is exactly as if the argument were converted to a
      * string by the method {@link String#valueOf(char[])} and the characters of
-     * that string were then {@link #insert(int,String) inserted} into this
+     * that string were then {@link #insert(int, String) inserted} into this
      * <code>StringBuilder</code> object at the position indicated by
      * <code>offset</code>.
      *
      * @param offset the offset.
-     * @param str a character array.
+     * @param str    a character array.
      * @return a reference to this <code>StringBuilder</code> object.
-     * @exception StringIndexOutOfBoundsException if the offset is invalid.
+     * @throws StringIndexOutOfBoundsException if the offset is invalid.
      */
     public StringBuilder insert(int offset, char str[]) {
         if ((offset < 0) || (offset > count)) {
@@ -761,9 +761,9 @@ public class StringBuilder implements Appendable {
      * less than or equal to the length of this string buffer.
      *
      * @param offset the offset.
-     * @param b a <code>boolean</code>.
+     * @param b      a <code>boolean</code>.
      * @return a reference to this <code>StringBuilder</code> object.
-     * @exception StringIndexOutOfBoundsException if the offset is invalid.
+     * @throws StringIndexOutOfBoundsException if the offset is invalid.
      * @see java.lang.String#valueOf(boolean)
      * @see java.lang.StringBuilder#insert(int, java.lang.String)
      * @see java.lang.StringBuilder#length()
@@ -790,9 +790,9 @@ public class StringBuilder implements Appendable {
      * less than or equal to the length of this string buffer.
      *
      * @param offset the offset.
-     * @param c a <code>char</code>.
+     * @param c      a <code>char</code>.
      * @return a reference to this <code>StringBuilder</code> object.
-     * @exception IndexOutOfBoundsException if the offset is invalid.
+     * @throws IndexOutOfBoundsException if the offset is invalid.
      * @see java.lang.StringBuilder#length()
      */
     public StringBuilder insert(int offset, char c) {
@@ -820,9 +820,9 @@ public class StringBuilder implements Appendable {
      * less than or equal to the length of this string buffer.
      *
      * @param offset the offset.
-     * @param i an <code>int</code>.
+     * @param i      an <code>int</code>.
      * @return a reference to this <code>StringBuilder</code> object.
-     * @exception StringIndexOutOfBoundsException if the offset is invalid.
+     * @throws StringIndexOutOfBoundsException if the offset is invalid.
      * @see java.lang.String#valueOf(int)
      * @see java.lang.StringBuilder#insert(int, java.lang.String)
      * @see java.lang.StringBuilder#length()
@@ -844,9 +844,9 @@ public class StringBuilder implements Appendable {
      * less than or equal to the length of this string buffer.
      *
      * @param offset the offset.
-     * @param l a <code>long</code>.
+     * @param l      a <code>long</code>.
      * @return a reference to this <code>StringBuilder</code> object.
-     * @exception StringIndexOutOfBoundsException if the offset is invalid.
+     * @throws StringIndexOutOfBoundsException if the offset is invalid.
      * @see java.lang.String#valueOf(long)
      * @see java.lang.StringBuilder#insert(int, java.lang.String)
      * @see java.lang.StringBuilder#length()
@@ -867,9 +867,9 @@ public class StringBuilder implements Appendable {
      * less than or equal to the length of this string buffer.
      *
      * @param offset the offset.
-     * @param f a <code>float</code>.
+     * @param f      a <code>float</code>.
      * @return a reference to this <code>StringBuilder</code> object.
-     * @exception StringIndexOutOfBoundsException if the offset is invalid.
+     * @throws StringIndexOutOfBoundsException if the offset is invalid.
      * @see java.lang.String#valueOf(float)
      * @see java.lang.StringBuilder#insert(int, java.lang.String)
      * @see java.lang.StringBuilder#length()
@@ -891,9 +891,9 @@ public class StringBuilder implements Appendable {
      * less than or equal to the length of this string buffer.
      *
      * @param offset the offset.
-     * @param d a <code>double</code>.
+     * @param d      a <code>double</code>.
      * @return a reference to this <code>StringBuilder</code> object.
-     * @exception StringIndexOutOfBoundsException if the offset is invalid.
+     * @throws StringIndexOutOfBoundsException if the offset is invalid.
      * @see java.lang.String#valueOf(double)
      * @see java.lang.StringBuilder#insert(int, java.lang.String)
      * @see java.lang.StringBuilder#length()
@@ -998,7 +998,26 @@ public class StringBuilder implements Appendable {
     }
 
     public StringBuilder appendCodePoint(int codePoint) {
-        return append((char) codePoint);
+        final int count = this.count;
+
+        if (Character.isBmpCodePoint(codePoint)) {
+            ensureCapacity(count + 1);
+            value[count] = (char) codePoint;
+            this.count = count + 1;
+        } else if (Character.isValidCodePoint(codePoint)) {
+            ensureCapacity(count + 2);
+            Character.toSurrogates(codePoint, value, count);
+            this.count = count + 2;
+        } else {
+            throw new IllegalArgumentException();
+        }
+        return this;
     }
 
+    public int codePointAt(int index) {
+        if ((index < 0) || (index >= count)) {
+            throw new StringIndexOutOfBoundsException(index);
+        }
+        return Character.codePointAtImpl(value, index, count);
+    }
 }

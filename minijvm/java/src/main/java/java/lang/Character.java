@@ -52,16 +52,16 @@ import com.sun.cldc.i18n.uclc.*;
 
 /*
  * Implementation note:
- * 
- * The character property and case conversion facilities 
+ *
+ * The character property and case conversion facilities
  * provided by the CLDC reference implementation can be
- * extended by overriding an implementation class called 
+ * extended by overriding an implementation class called
  * DefaultCaseConverter.  Refer to the end of this file
  * for details.
  */
 public final class Character implements Comparable<Character> {
     //type of bytes
-    public static final int   BYTES = 2;
+    public static final int BYTES = 2;
 
     /**
      * The minimum radix available for conversion to and from Strings.
@@ -146,7 +146,7 @@ public final class Character implements Comparable<Character> {
      * <code>char</code> value as this object.
      *
      * @param obj the object to compare with.
-     * @return  <code>true</code> if the objects are the same; <code>false</code>
+     * @return <code>true</code> if the objects are the same; <code>false</code>
      * otherwise.
      */
     public boolean equals(Object obj) {
@@ -187,7 +187,7 @@ public final class Character implements Comparable<Character> {
      * &#92;u00FE &#92;u00FF
      *
      * @param ch the character to be tested.
-     * @return  <code>true</code> if the character is lowercase;
+     * @return <code>true</code> if the character is lowercase;
      * <code>false</code> otherwise.
      * @since JDK1.0
      */
@@ -216,7 +216,7 @@ public final class Character implements Comparable<Character> {
      * &#92;u00D9 &#92;u00DA &#92;u00DB &#92;u00DC &#92;u00DD &#92;u00DE
      *
      * @param ch the character to be tested.
-     * @return  <code>true</code> if the character is uppercase;
+     * @return <code>true</code> if the character is uppercase;
      * <code>false</code> otherwise.
      * @see java.lang.Character#isLowerCase(char)
      * @see java.lang.Character#toUpperCase(char)
@@ -234,7 +234,7 @@ public final class Character implements Comparable<Character> {
      * Determines if the specified character is a digit.
      *
      * @param ch the character to be tested.
-     * @return  <code>true</code> if the character is a digit; <code>false</code>
+     * @return <code>true</code> if the character is a digit; <code>false</code>
      * otherwise.
      * @since JDK1.0
      */
@@ -292,7 +292,7 @@ public final class Character implements Comparable<Character> {
      * Returns the numeric value of the character <code>ch</code> in the
      * specified radix.
      *
-     * @param ch the character to be converted.
+     * @param ch    the character to be converted.
      * @param radix the radix.
      * @return the numeric value represented by the character in the specified
      * radix.
@@ -307,11 +307,11 @@ public final class Character implements Comparable<Character> {
      * Implementation note:
      *
      * The code below allows the default case converter class
-     * to be overridden by defining a system property called 
+     * to be overridden by defining a system property called
      * "java.lang.Character.caseConverter".
      *
      * By default, the system only supports the ISO Latin-1
-     * range of characters for character properties and 
+     * range of characters for character properties and
      * case conversion.
      */
     static DefaultCaseConverter cc;
@@ -825,294 +825,294 @@ public final class Character implements Comparable<Character> {
         public static final UnicodeBlock BASIC_LATIN
                 = new UnicodeBlock("BASIC_LATIN"),
                 LATIN_1_SUPPLEMENT
-                = new UnicodeBlock("LATIN_1_SUPPLEMENT"),
+                        = new UnicodeBlock("LATIN_1_SUPPLEMENT"),
                 LATIN_EXTENDED_A
-                = new UnicodeBlock("LATIN_EXTENDED_A"),
+                        = new UnicodeBlock("LATIN_EXTENDED_A"),
                 LATIN_EXTENDED_B
-                = new UnicodeBlock("LATIN_EXTENDED_B"),
+                        = new UnicodeBlock("LATIN_EXTENDED_B"),
                 IPA_EXTENSIONS
-                = new UnicodeBlock("IPA_EXTENSIONS"),
+                        = new UnicodeBlock("IPA_EXTENSIONS"),
                 SPACING_MODIFIER_LETTERS
-                = new UnicodeBlock("SPACING_MODIFIER_LETTERS"),
+                        = new UnicodeBlock("SPACING_MODIFIER_LETTERS"),
                 COMBINING_DIACRITICAL_MARKS
-                = new UnicodeBlock("COMBINING_DIACRITICAL_MARKS"),
+                        = new UnicodeBlock("COMBINING_DIACRITICAL_MARKS"),
                 GREEK
-                = new UnicodeBlock("GREEK"),
+                        = new UnicodeBlock("GREEK"),
                 CYRILLIC
-                = new UnicodeBlock("CYRILLIC"),
+                        = new UnicodeBlock("CYRILLIC"),
                 ARMENIAN
-                = new UnicodeBlock("ARMENIAN"),
+                        = new UnicodeBlock("ARMENIAN"),
                 HEBREW
-                = new UnicodeBlock("HEBREW"),
+                        = new UnicodeBlock("HEBREW"),
                 ARABIC
-                = new UnicodeBlock("ARABIC"),
+                        = new UnicodeBlock("ARABIC"),
                 DEVANAGARI
-                = new UnicodeBlock("DEVANAGARI"),
+                        = new UnicodeBlock("DEVANAGARI"),
                 BENGALI
-                = new UnicodeBlock("BENGALI"),
+                        = new UnicodeBlock("BENGALI"),
                 GURMUKHI
-                = new UnicodeBlock("GURMUKHI"),
+                        = new UnicodeBlock("GURMUKHI"),
                 GUJARATI
-                = new UnicodeBlock("GUJARATI"),
+                        = new UnicodeBlock("GUJARATI"),
                 ORIYA
-                = new UnicodeBlock("ORIYA"),
+                        = new UnicodeBlock("ORIYA"),
                 TAMIL
-                = new UnicodeBlock("TAMIL"),
+                        = new UnicodeBlock("TAMIL"),
                 TELUGU
-                = new UnicodeBlock("TELUGU"),
+                        = new UnicodeBlock("TELUGU"),
                 KANNADA
-                = new UnicodeBlock("KANNADA"),
+                        = new UnicodeBlock("KANNADA"),
                 MALAYALAM
-                = new UnicodeBlock("MALAYALAM"),
+                        = new UnicodeBlock("MALAYALAM"),
                 THAI
-                = new UnicodeBlock("THAI"),
+                        = new UnicodeBlock("THAI"),
                 LAO
-                = new UnicodeBlock("LAO"),
+                        = new UnicodeBlock("LAO"),
                 TIBETAN
-                = new UnicodeBlock("TIBETAN"),
+                        = new UnicodeBlock("TIBETAN"),
                 GEORGIAN
-                = new UnicodeBlock("GEORGIAN"),
+                        = new UnicodeBlock("GEORGIAN"),
                 HANGUL_JAMO
-                = new UnicodeBlock("HANGUL_JAMO"),
+                        = new UnicodeBlock("HANGUL_JAMO"),
                 LATIN_EXTENDED_ADDITIONAL
-                = new UnicodeBlock("LATIN_EXTENDED_ADDITIONAL"),
+                        = new UnicodeBlock("LATIN_EXTENDED_ADDITIONAL"),
                 GREEK_EXTENDED
-                = new UnicodeBlock("GREEK_EXTENDED"),
+                        = new UnicodeBlock("GREEK_EXTENDED"),
                 GENERAL_PUNCTUATION
-                = new UnicodeBlock("GENERAL_PUNCTUATION"),
+                        = new UnicodeBlock("GENERAL_PUNCTUATION"),
                 SUPERSCRIPTS_AND_SUBSCRIPTS
-                = new UnicodeBlock("SUPERSCRIPTS_AND_SUBSCRIPTS"),
+                        = new UnicodeBlock("SUPERSCRIPTS_AND_SUBSCRIPTS"),
                 CURRENCY_SYMBOLS
-                = new UnicodeBlock("CURRENCY_SYMBOLS"),
+                        = new UnicodeBlock("CURRENCY_SYMBOLS"),
                 COMBINING_MARKS_FOR_SYMBOLS
-                = new UnicodeBlock("COMBINING_MARKS_FOR_SYMBOLS"),
+                        = new UnicodeBlock("COMBINING_MARKS_FOR_SYMBOLS"),
                 LETTERLIKE_SYMBOLS
-                = new UnicodeBlock("LETTERLIKE_SYMBOLS"),
+                        = new UnicodeBlock("LETTERLIKE_SYMBOLS"),
                 NUMBER_FORMS
-                = new UnicodeBlock("NUMBER_FORMS"),
+                        = new UnicodeBlock("NUMBER_FORMS"),
                 ARROWS
-                = new UnicodeBlock("ARROWS"),
+                        = new UnicodeBlock("ARROWS"),
                 MATHEMATICAL_OPERATORS
-                = new UnicodeBlock("MATHEMATICAL_OPERATORS"),
+                        = new UnicodeBlock("MATHEMATICAL_OPERATORS"),
                 MISCELLANEOUS_TECHNICAL
-                = new UnicodeBlock("MISCELLANEOUS_TECHNICAL"),
+                        = new UnicodeBlock("MISCELLANEOUS_TECHNICAL"),
                 CONTROL_PICTURES
-                = new UnicodeBlock("CONTROL_PICTURES"),
+                        = new UnicodeBlock("CONTROL_PICTURES"),
                 OPTICAL_CHARACTER_RECOGNITION
-                = new UnicodeBlock("OPTICAL_CHARACTER_RECOGNITION"),
+                        = new UnicodeBlock("OPTICAL_CHARACTER_RECOGNITION"),
                 ENCLOSED_ALPHANUMERICS
-                = new UnicodeBlock("ENCLOSED_ALPHANUMERICS"),
+                        = new UnicodeBlock("ENCLOSED_ALPHANUMERICS"),
                 BOX_DRAWING
-                = new UnicodeBlock("BOX_DRAWING"),
+                        = new UnicodeBlock("BOX_DRAWING"),
                 BLOCK_ELEMENTS
-                = new UnicodeBlock("BLOCK_ELEMENTS"),
+                        = new UnicodeBlock("BLOCK_ELEMENTS"),
                 GEOMETRIC_SHAPES
-                = new UnicodeBlock("GEOMETRIC_SHAPES"),
+                        = new UnicodeBlock("GEOMETRIC_SHAPES"),
                 MISCELLANEOUS_SYMBOLS
-                = new UnicodeBlock("MISCELLANEOUS_SYMBOLS"),
+                        = new UnicodeBlock("MISCELLANEOUS_SYMBOLS"),
                 DINGBATS
-                = new UnicodeBlock("DINGBATS"),
+                        = new UnicodeBlock("DINGBATS"),
                 CJK_SYMBOLS_AND_PUNCTUATION
-                = new UnicodeBlock("CJK_SYMBOLS_AND_PUNCTUATION"),
+                        = new UnicodeBlock("CJK_SYMBOLS_AND_PUNCTUATION"),
                 HIRAGANA
-                = new UnicodeBlock("HIRAGANA"),
+                        = new UnicodeBlock("HIRAGANA"),
                 KATAKANA
-                = new UnicodeBlock("KATAKANA"),
+                        = new UnicodeBlock("KATAKANA"),
                 BOPOMOFO
-                = new UnicodeBlock("BOPOMOFO"),
+                        = new UnicodeBlock("BOPOMOFO"),
                 HANGUL_COMPATIBILITY_JAMO
-                = new UnicodeBlock("HANGUL_COMPATIBILITY_JAMO"),
+                        = new UnicodeBlock("HANGUL_COMPATIBILITY_JAMO"),
                 KANBUN
-                = new UnicodeBlock("KANBUN"),
+                        = new UnicodeBlock("KANBUN"),
                 ENCLOSED_CJK_LETTERS_AND_MONTHS
-                = new UnicodeBlock("ENCLOSED_CJK_LETTERS_AND_MONTHS"),
+                        = new UnicodeBlock("ENCLOSED_CJK_LETTERS_AND_MONTHS"),
                 CJK_COMPATIBILITY
-                = new UnicodeBlock("CJK_COMPATIBILITY"),
+                        = new UnicodeBlock("CJK_COMPATIBILITY"),
                 CJK_UNIFIED_IDEOGRAPHS
-                = new UnicodeBlock("CJK_UNIFIED_IDEOGRAPHS"),
+                        = new UnicodeBlock("CJK_UNIFIED_IDEOGRAPHS"),
                 HANGUL_SYLLABLES
-                = new UnicodeBlock("HANGUL_SYLLABLES"),
+                        = new UnicodeBlock("HANGUL_SYLLABLES"),
                 SURROGATES_AREA
-                = new UnicodeBlock("SURROGATES_AREA"),
+                        = new UnicodeBlock("SURROGATES_AREA"),
                 PRIVATE_USE_AREA
-                = new UnicodeBlock("PRIVATE_USE_AREA"),
+                        = new UnicodeBlock("PRIVATE_USE_AREA"),
                 CJK_COMPATIBILITY_IDEOGRAPHS
-                = new UnicodeBlock("CJK_COMPATIBILITY_IDEOGRAPHS"),
+                        = new UnicodeBlock("CJK_COMPATIBILITY_IDEOGRAPHS"),
                 ALPHABETIC_PRESENTATION_FORMS
-                = new UnicodeBlock("ALPHABETIC_PRESENTATION_FORMS"),
+                        = new UnicodeBlock("ALPHABETIC_PRESENTATION_FORMS"),
                 ARABIC_PRESENTATION_FORMS_A
-                = new UnicodeBlock("ARABIC_PRESENTATION_FORMS_A"),
+                        = new UnicodeBlock("ARABIC_PRESENTATION_FORMS_A"),
                 COMBINING_HALF_MARKS
-                = new UnicodeBlock("COMBINING_HALF_MARKS"),
+                        = new UnicodeBlock("COMBINING_HALF_MARKS"),
                 CJK_COMPATIBILITY_FORMS
-                = new UnicodeBlock("CJK_COMPATIBILITY_FORMS"),
+                        = new UnicodeBlock("CJK_COMPATIBILITY_FORMS"),
                 SMALL_FORM_VARIANTS
-                = new UnicodeBlock("SMALL_FORM_VARIANTS"),
+                        = new UnicodeBlock("SMALL_FORM_VARIANTS"),
                 ARABIC_PRESENTATION_FORMS_B
-                = new UnicodeBlock("ARABIC_PRESENTATION_FORMS_B"),
+                        = new UnicodeBlock("ARABIC_PRESENTATION_FORMS_B"),
                 HALFWIDTH_AND_FULLWIDTH_FORMS
-                = new UnicodeBlock("HALFWIDTH_AND_FULLWIDTH_FORMS"),
+                        = new UnicodeBlock("HALFWIDTH_AND_FULLWIDTH_FORMS"),
                 SPECIALS
-                = new UnicodeBlock("SPECIALS");
+                        = new UnicodeBlock("SPECIALS");
 
         private static final char blockStarts[] = {
-            '\u0000',
-            '\u0080',
-            '\u0100',
-            '\u0180',
-            '\u0250',
-            '\u02B0',
-            '\u0300',
-            '\u0370',
-            '\u0400',
-            '\u0500', // unassigned
-            '\u0530',
-            '\u0590',
-            '\u0600',
-            '\u0700', // unassigned
-            '\u0900',
-            '\u0980',
-            '\u0A00',
-            '\u0A80',
-            '\u0B00',
-            '\u0B80',
-            '\u0C00',
-            '\u0C80',
-            '\u0D00',
-            '\u0D80', // unassigned
-            '\u0E00',
-            '\u0E80',
-            '\u0F00',
-            '\u0FC0', // unassigned
-            '\u10A0',
-            '\u1100',
-            '\u1200', // unassigned
-            '\u1E00',
-            '\u1F00',
-            '\u2000',
-            '\u2070',
-            '\u20A0',
-            '\u20D0',
-            '\u2100',
-            '\u2150',
-            '\u2190',
-            '\u2200',
-            '\u2300',
-            '\u2400',
-            '\u2440',
-            '\u2460',
-            '\u2500',
-            '\u2580',
-            '\u25A0',
-            '\u2600',
-            '\u2700',
-            '\u27C0', // unassigned
-            '\u3000',
-            '\u3040',
-            '\u30A0',
-            '\u3100',
-            '\u3130',
-            '\u3190',
-            '\u3200',
-            '\u3300',
-            '\u3400', // unassigned
-            '\u4E00',
-            '\uA000', // unassigned
-            '\uAC00',
-            '\uD7A4', // unassigned
-            '\uD800',
-            '\uE000',
-            '\uF900',
-            '\uFB00',
-            '\uFB50',
-            '\uFE00', // unassigned
-            '\uFE20',
-            '\uFE30',
-            '\uFE50',
-            '\uFE70',
-            '\uFEFF', // special
-            '\uFF00',
-            '\uFFF0'
+                '\u0000',
+                '\u0080',
+                '\u0100',
+                '\u0180',
+                '\u0250',
+                '\u02B0',
+                '\u0300',
+                '\u0370',
+                '\u0400',
+                '\u0500', // unassigned
+                '\u0530',
+                '\u0590',
+                '\u0600',
+                '\u0700', // unassigned
+                '\u0900',
+                '\u0980',
+                '\u0A00',
+                '\u0A80',
+                '\u0B00',
+                '\u0B80',
+                '\u0C00',
+                '\u0C80',
+                '\u0D00',
+                '\u0D80', // unassigned
+                '\u0E00',
+                '\u0E80',
+                '\u0F00',
+                '\u0FC0', // unassigned
+                '\u10A0',
+                '\u1100',
+                '\u1200', // unassigned
+                '\u1E00',
+                '\u1F00',
+                '\u2000',
+                '\u2070',
+                '\u20A0',
+                '\u20D0',
+                '\u2100',
+                '\u2150',
+                '\u2190',
+                '\u2200',
+                '\u2300',
+                '\u2400',
+                '\u2440',
+                '\u2460',
+                '\u2500',
+                '\u2580',
+                '\u25A0',
+                '\u2600',
+                '\u2700',
+                '\u27C0', // unassigned
+                '\u3000',
+                '\u3040',
+                '\u30A0',
+                '\u3100',
+                '\u3130',
+                '\u3190',
+                '\u3200',
+                '\u3300',
+                '\u3400', // unassigned
+                '\u4E00',
+                '\uA000', // unassigned
+                '\uAC00',
+                '\uD7A4', // unassigned
+                '\uD800',
+                '\uE000',
+                '\uF900',
+                '\uFB00',
+                '\uFB50',
+                '\uFE00', // unassigned
+                '\uFE20',
+                '\uFE30',
+                '\uFE50',
+                '\uFE70',
+                '\uFEFF', // special
+                '\uFF00',
+                '\uFFF0'
         };
 
         private static final UnicodeBlock blocks[] = {
-            BASIC_LATIN,
-            LATIN_1_SUPPLEMENT,
-            LATIN_EXTENDED_A,
-            LATIN_EXTENDED_B,
-            IPA_EXTENSIONS,
-            SPACING_MODIFIER_LETTERS,
-            COMBINING_DIACRITICAL_MARKS,
-            GREEK,
-            CYRILLIC,
-            null,
-            ARMENIAN,
-            HEBREW,
-            ARABIC,
-            null,
-            DEVANAGARI,
-            BENGALI,
-            GURMUKHI,
-            GUJARATI,
-            ORIYA,
-            TAMIL,
-            TELUGU,
-            KANNADA,
-            MALAYALAM,
-            null,
-            THAI,
-            LAO,
-            TIBETAN,
-            null,
-            GEORGIAN,
-            HANGUL_JAMO,
-            null,
-            LATIN_EXTENDED_ADDITIONAL,
-            GREEK_EXTENDED,
-            GENERAL_PUNCTUATION,
-            SUPERSCRIPTS_AND_SUBSCRIPTS,
-            CURRENCY_SYMBOLS,
-            COMBINING_MARKS_FOR_SYMBOLS,
-            LETTERLIKE_SYMBOLS,
-            NUMBER_FORMS,
-            ARROWS,
-            MATHEMATICAL_OPERATORS,
-            MISCELLANEOUS_TECHNICAL,
-            CONTROL_PICTURES,
-            OPTICAL_CHARACTER_RECOGNITION,
-            ENCLOSED_ALPHANUMERICS,
-            BOX_DRAWING,
-            BLOCK_ELEMENTS,
-            GEOMETRIC_SHAPES,
-            MISCELLANEOUS_SYMBOLS,
-            DINGBATS,
-            null,
-            CJK_SYMBOLS_AND_PUNCTUATION,
-            HIRAGANA,
-            KATAKANA,
-            BOPOMOFO,
-            HANGUL_COMPATIBILITY_JAMO,
-            KANBUN,
-            ENCLOSED_CJK_LETTERS_AND_MONTHS,
-            CJK_COMPATIBILITY,
-            null,
-            CJK_UNIFIED_IDEOGRAPHS,
-            null,
-            HANGUL_SYLLABLES,
-            null,
-            SURROGATES_AREA,
-            PRIVATE_USE_AREA,
-            CJK_COMPATIBILITY_IDEOGRAPHS,
-            ALPHABETIC_PRESENTATION_FORMS,
-            ARABIC_PRESENTATION_FORMS_A,
-            null,
-            COMBINING_HALF_MARKS,
-            CJK_COMPATIBILITY_FORMS,
-            SMALL_FORM_VARIANTS,
-            ARABIC_PRESENTATION_FORMS_B,
-            SPECIALS,
-            HALFWIDTH_AND_FULLWIDTH_FORMS,
-            SPECIALS
+                BASIC_LATIN,
+                LATIN_1_SUPPLEMENT,
+                LATIN_EXTENDED_A,
+                LATIN_EXTENDED_B,
+                IPA_EXTENSIONS,
+                SPACING_MODIFIER_LETTERS,
+                COMBINING_DIACRITICAL_MARKS,
+                GREEK,
+                CYRILLIC,
+                null,
+                ARMENIAN,
+                HEBREW,
+                ARABIC,
+                null,
+                DEVANAGARI,
+                BENGALI,
+                GURMUKHI,
+                GUJARATI,
+                ORIYA,
+                TAMIL,
+                TELUGU,
+                KANNADA,
+                MALAYALAM,
+                null,
+                THAI,
+                LAO,
+                TIBETAN,
+                null,
+                GEORGIAN,
+                HANGUL_JAMO,
+                null,
+                LATIN_EXTENDED_ADDITIONAL,
+                GREEK_EXTENDED,
+                GENERAL_PUNCTUATION,
+                SUPERSCRIPTS_AND_SUBSCRIPTS,
+                CURRENCY_SYMBOLS,
+                COMBINING_MARKS_FOR_SYMBOLS,
+                LETTERLIKE_SYMBOLS,
+                NUMBER_FORMS,
+                ARROWS,
+                MATHEMATICAL_OPERATORS,
+                MISCELLANEOUS_TECHNICAL,
+                CONTROL_PICTURES,
+                OPTICAL_CHARACTER_RECOGNITION,
+                ENCLOSED_ALPHANUMERICS,
+                BOX_DRAWING,
+                BLOCK_ELEMENTS,
+                GEOMETRIC_SHAPES,
+                MISCELLANEOUS_SYMBOLS,
+                DINGBATS,
+                null,
+                CJK_SYMBOLS_AND_PUNCTUATION,
+                HIRAGANA,
+                KATAKANA,
+                BOPOMOFO,
+                HANGUL_COMPATIBILITY_JAMO,
+                KANBUN,
+                ENCLOSED_CJK_LETTERS_AND_MONTHS,
+                CJK_COMPATIBILITY,
+                null,
+                CJK_UNIFIED_IDEOGRAPHS,
+                null,
+                HANGUL_SYLLABLES,
+                null,
+                SURROGATES_AREA,
+                PRIVATE_USE_AREA,
+                CJK_COMPATIBILITY_IDEOGRAPHS,
+                ALPHABETIC_PRESENTATION_FORMS,
+                ARABIC_PRESENTATION_FORMS_A,
+                null,
+                COMBINING_HALF_MARKS,
+                CJK_COMPATIBILITY_FORMS,
+                SMALL_FORM_VARIANTS,
+                ARABIC_PRESENTATION_FORMS_B,
+                SPECIALS,
+                HALFWIDTH_AND_FULLWIDTH_FORMS,
+                SPECIALS
         };
 
         /**
@@ -1211,8 +1211,17 @@ public final class Character implements Comparable<Character> {
     }
 
     public static char[] toChars(int codePoint) {
-        return new char[]{(char) codePoint};
+        if (codePoint < 0 || codePoint > MAX_CODE_POINT) {
+            throw new IllegalArgumentException();
+        }
+        if (codePoint < MIN_SUPPLEMENTARY_CODE_POINT) {
+            return new char[]{(char) codePoint};
+        }
+        char[] result = new char[2];
+        toSurrogates(codePoint, result, 0);
+        return result;
     }
+
 
     public static int charCount(int c) {
         return 1;
@@ -1222,36 +1231,140 @@ public final class Character implements Comparable<Character> {
         if (index >= limit || limit < 0 || limit > a.length) {
             throw new IndexOutOfBoundsException();
         }
-        return a[index];
+        return codePointAtImpl(a, index, limit);
     }
 
     public static int codePointAt(char[] a, int index) {
-        if (index < 0 || index > a.length) {
-            throw new IndexOutOfBoundsException();
-        }
-        return a[index];
+        return codePointAtImpl(a, index, a.length);
     }
 
     public static int codePointAt(CharSequence seq, int index) {
-        return seq.charAt(index);
+        char c1 = seq.charAt(index++);
+        if (isHighSurrogate(c1)) {
+            if (index < seq.length()) {
+                char c2 = seq.charAt(index);
+                if (isLowSurrogate(c2)) {
+                    return toCodePoint(c1, c2);
+                }
+            }
+        }
+        return c1;
     }
+
+    static int codePointAtImpl(char[] a, int index, int limit) {
+        char c1 = a[index++];
+        if (isHighSurrogate(c1)) {
+            if (index < limit) {
+                char c2 = a[index];
+                if (isLowSurrogate(c2)) {
+                    return toCodePoint(c1, c2);
+                }
+            }
+        }
+        return c1;
+    }
+
 
     public static int codePointBefore(char[] a, int index, int start) {
         if (index <= start || start < 0 || start >= a.length) {
             throw new IndexOutOfBoundsException();
         }
-        return a[--index];
+        return codePointBeforeImpl(a, index, start);
     }
 
     public static int codePointBefore(char[] a, int index) {
-        if (index < 0 || index > a.length) {
-            throw new IndexOutOfBoundsException();
-        }
-        return a[--index];
+        return codePointBeforeImpl(a, index, 0);
     }
 
     public static int codePointBefore(CharSequence seq, int index) {
-        return seq.charAt(--index);
+        char c2 = seq.charAt(--index);
+        if (isLowSurrogate(c2)) {
+            if (index > 0) {
+                char c1 = seq.charAt(--index);
+                if (isHighSurrogate(c1)) {
+                    return toCodePoint(c1, c2);
+                }
+            }
+        }
+        return c2;
+    }
+
+    static int codePointBeforeImpl(char[] a, int index, int start) {
+        char c2 = a[--index];
+        if (isLowSurrogate(c2)) {
+            if (index > start) {
+                char c1 = a[--index];
+                if (isHighSurrogate(c1)) {
+                    return toCodePoint(c1, c2);
+                }
+            }
+        }
+        return c2;
+    }
+
+    public static int toCodePoint(char high, char low) {
+        return ((high - MIN_HIGH_SURROGATE) << 10)
+                + (low - MIN_LOW_SURROGATE) + MIN_SUPPLEMENTARY_CODE_POINT;
+    }
+
+    public static int codePointCount(CharSequence seq, int beginIndex, int endIndex) {
+        int length = seq.length();
+        if (beginIndex < 0 || endIndex > length || beginIndex > endIndex) {
+            throw new IndexOutOfBoundsException();
+        }
+        int n = 0;
+        for (int i = beginIndex; i < endIndex; ) {
+            n++;
+            if (isHighSurrogate(seq.charAt(i++))) {
+                if (i < endIndex && isLowSurrogate(seq.charAt(i))) {
+                    i++;
+                }
+            }
+        }
+        return n;
+    }
+
+    public static int codePointCount(char[] a, int offset, int count) {
+        if (count > a.length - offset || offset < 0 || count < 0) {
+            throw new IndexOutOfBoundsException();
+        }
+        return codePointCountImpl(a, offset, count);
+    }
+
+    static int codePointCountImpl(char[] a, int offset, int count) {
+        int endIndex = offset + count;
+        int n = 0;
+        for (int i = offset; i < endIndex; ) {
+            n++;
+            if (isHighSurrogate(a[i++])) {
+                if (i < endIndex && isLowSurrogate(a[i])) {
+                    i++;
+                }
+            }
+        }
+        return n;
+    }
+
+    static void toSurrogates(int codePoint, char[] dst, int index) {
+        int offset = codePoint - MIN_SUPPLEMENTARY_CODE_POINT;
+        dst[index + 1] = (char) ((offset & 0x3ff) + MIN_LOW_SURROGATE);
+        dst[index] = (char) ((offset >>> 10) + MIN_HIGH_SURROGATE);
+    }
+
+
+    public static boolean isBmpCodePoint(int codePoint) {
+        return codePoint >>> 16 == 0;
+        // Optimized form of:
+        //     codePoint >= MIN_VALUE && codePoint <= MAX_VALUE
+        // We consistently use logical shift (>>>) to facilitate
+        // additional runtime optimizations.
+    }
+
+    public static boolean isValidCodePoint(int codePoint) {
+        // Optimized form of:
+        //     codePoint >= MIN_CODE_POINT && codePoint <= MAX_CODE_POINT
+        int plane = codePoint >>> 16;
+        return plane < ((MAX_CODE_POINT + 1) >>> 16);
     }
 
     public static boolean isLetter(char ch) {
@@ -1299,11 +1412,11 @@ public final class Character implements Comparable<Character> {
     }
 
     public static boolean isHighSurrogate(char ch) {
-        return false;
+        return ch >= MIN_HIGH_SURROGATE && ch < (MAX_HIGH_SURROGATE + 1);
     }
 
     public static boolean isLowSurrogate(char ch) {
-        return false;
+        return ch >= MIN_LOW_SURROGATE && ch < (MAX_LOW_SURROGATE + 1);
     }
 
     public static boolean isUnicodeIdentifierStart(char ch) {
