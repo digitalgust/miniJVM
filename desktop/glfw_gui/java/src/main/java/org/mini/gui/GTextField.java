@@ -154,25 +154,27 @@ public class GTextField extends GTextObject {
         if (action == Glfw.GLFW_PRESS || action == Glfw.GLFW_REPEAT) {
             if (enable) {
                 switch (key) {
-                    case Glfw.GLFW_KEY_BACKSPACE:
-                        if (textsb.length() > 0 && caretIndex > 0) {
-                            int[] selectFromTo = getSelected();
-                            if (selectFromTo != null) {
-                                deleteSelectedText();
-                            } else {
+                    case Glfw.GLFW_KEY_BACKSPACE: {
+                        int[] selectFromTo = getSelected();
+                        if (selectFromTo != null) {
+                            deleteSelectedText();
+                        } else {
+                            if (textsb.length() > 0 && caretIndex > 0) {
                                 setCaretIndex(caretIndex - 1);
                                 deleteTextByIndex(caretIndex);
                             }
                         }
                         break;
-                    case Glfw.GLFW_KEY_ENTER:
+                    }
+                    case Glfw.GLFW_KEY_ENTER: {
                         if (actionListener != null) {
                             doAction();
                         } else if (unionObj != null) {
                             unionObj.doAction();
                         }
                         break;
-                    case Glfw.GLFW_KEY_DELETE:
+                    }
+                    case Glfw.GLFW_KEY_DELETE: {
                         if (textsb.length() > caretIndex) {
                             int[] selectFromTo = getSelected();
                             if (selectFromTo != null) {
@@ -182,6 +184,7 @@ public class GTextField extends GTextObject {
                             }
                         }
                         break;
+                    }
                 }
 
                 if ((mods & Glfw.GLFW_MOD_CONTROL) != 0) {

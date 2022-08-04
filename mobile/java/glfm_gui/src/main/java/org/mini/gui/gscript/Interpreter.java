@@ -1607,8 +1607,8 @@ public class Interpreter {
                     DataType element2 = popFront(expr);
                     if (element2.type == DataType.DTYPE_BOOL) { // !bool    立即数
                         boolean val = ((Bool) element2).getVal();
-                        ((Bool) element2).setVal(!val);
-                        pushFront(expr, element2);
+                        Bool tmp = getCachedBool(!val);
+                        pushFront(expr, tmp);
                     } else { // !(  表达式
                         pushFront(expr, element2);
                         evalExprLgcImpl(expr);

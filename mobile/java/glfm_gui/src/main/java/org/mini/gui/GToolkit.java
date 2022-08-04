@@ -529,7 +529,7 @@ public class GToolkit {
         float btnWidth = w * .5f;
         if (left != null) {
             GButton leftBtn = new GButton(form, left, x, y, btnWidth, 30);
-            leftBtn.setBgColor(128, 16, 8, 255);
+            //leftBtn.setBgColor(128, 16, 8, 255);
             gp.add(leftBtn);
             leftBtn.setActionListener(leftListener);
         }
@@ -571,7 +571,7 @@ public class GToolkit {
 
         float btnWidth = w * .5f;
         GButton leftBtn = new GButton(form, GLanguage.getString("Ok"), x + btnWidth * .5f, y, btnWidth, 28);
-        leftBtn.setBgColor(128, 16, 8, 255);
+        //leftBtn.setBgColor(128, 16, 8, 255);
         leftBtn.setName("MSG_FRAME_OK");
         gp.add(leftBtn);
         leftBtn.setActionListener(gobj -> frame.close());
@@ -696,7 +696,7 @@ public class GToolkit {
         view.add(cancelbtn);
 
         GButton okbtn = new GButton(form, rightLabel == null ? GLanguage.getString("Ok") : rightLabel, x + buttonWidth + 20, y, buttonWidth, 28);
-        okbtn.setBgColor(0, 96, 128, 255);
+        //okbtn.setBgColor(0, 96, 128, 255);
         view.add(okbtn);
         y -= 35;
         GTextField input = new GTextField(form, defaultValue == null ? "" : defaultValue, inputHint, x, y, contentWidth, 28);

@@ -44,13 +44,13 @@ abstract public class GContainer extends GObject {
             if (interpreter != null) {
                 return interpreter;
             } else {
-                return parent == null ? null : parent.getInterpreter();
+                return getParent() == null ? null : getParent().getInterpreter();
             }
         } else {
             if (containerName.equals(name) && interpreter != null) {
                 return interpreter;
             } else {
-                return parent == null ? null : parent.getInterpreter(containerName);
+                return getParent() == null ? null : getParent().getInterpreter(containerName);
             }
         }
     }
@@ -64,19 +64,35 @@ abstract public class GContainer extends GObject {
         interpreter.loadFromString(scriptStr);
     }
 
-    public abstract float getInnerX();
 
-    public abstract float getInnerY();
+    public float getInnerX() {
+        return getX();
+    }
 
-    public abstract float getInnerW();
+    public float getInnerY() {
+        return getY();
+    }
 
-    public abstract float getInnerH();
+    public float getInnerW() {
+        return getW();
+    }
 
-    public abstract void setInnerLocation(float x, float y);
+    public float getInnerH() {
+        return getH();
+    }
 
-    public abstract void setInnerSize(float x, float y);
+    public void setInnerLocation(float x, float y) {
+        setLocation(x, y);
+    }
 
-    public abstract float[] getInnerBoundle();
+    public void setInnerSize(float x, float y) {
+        setSize(x, y);
+    }
+
+    public float[] getInnerBoundle() {
+        return getBoundle();
+    }
+
 
     public boolean isInArea(float x, float y) {
         float absx = getX();

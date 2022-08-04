@@ -56,6 +56,8 @@ public class GuiScriptLib extends Lib {
         methodNames.put("loadXmlUI".toLowerCase(), 38);//
         methodNames.put("uiExist".toLowerCase(), 39);//
         methodNames.put("getListText".toLowerCase(), 40);//
+        methodNames.put("showBar".toLowerCase(), 41);//
+        methodNames.put("showMsg".toLowerCase(), 42);//
 
     }
 
@@ -150,6 +152,10 @@ public class GuiScriptLib extends Lib {
                 return uiExist(para);
             case 40:
                 return getListText(para);
+            case 41:
+                return showBar(para);
+            case 42:
+                return showMsg(para);
             default:
         }
         return null;
@@ -273,12 +279,12 @@ public class GuiScriptLib extends Lib {
      * @return
      */
     public DataType getX(ArrayList<DataType> para) {
-        int left = (int) form.getLocationLeft();
+        int left = (int) form.getX();
         if (!para.isEmpty()) {
             String compont = Interpreter.popBackStr(para);
             GObject go = GToolkit.getComponent(form, compont);
             if (go != null) {
-                left = (int) go.getLocationLeft();
+                left = (int) go.getX();
             } else {
                 left = -1;
             }
@@ -287,12 +293,12 @@ public class GuiScriptLib extends Lib {
     }
 
     public DataType getY(ArrayList<DataType> para) {
-        int top = (int) form.getLocationTop();
+        int top = (int) form.getY();
         if (!para.isEmpty()) {
             String compont = Interpreter.popBackStr(para);
             GObject go = GToolkit.getComponent(form, compont);
             if (go != null) {
-                top = (int) go.getLocationTop();
+                top = (int) go.getY();
             } else {
                 top = -1;
             }
@@ -586,5 +592,18 @@ public class GuiScriptLib extends Lib {
             w = (go != null);
         }
         return Interpreter.getCachedBool(w);
+    }
+
+
+    public DataType showBar(ArrayList<DataType> para) {
+        String msg = Interpreter.popBackStr(para);
+        GForm.addMessage(msg);
+        return null;
+    }
+
+    public DataType showMsg(ArrayList<DataType> para) {
+        String msg = Interpreter.popBackStr(para);
+        GToolkit.getMsgFrame(form, GLanguage.getString("Message"), msg);
+        return null;
     }
 }

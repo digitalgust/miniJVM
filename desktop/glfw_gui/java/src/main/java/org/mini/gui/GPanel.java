@@ -22,38 +22,10 @@ public class GPanel extends GContainer {
 
 
     @Override
-    public float getInnerX() {
-        return getX();
+    public boolean paint(long ctx) {
+        if (bgColor != null) {
+            GToolkit.drawRect(ctx, getX(), getY(), getW(), getH(), bgColor);
+        }
+        return super.paint(ctx);
     }
-
-    @Override
-    public float getInnerY() {
-        return getY();
-    }
-
-    @Override
-    public float getInnerW() {
-        return getW();
-    }
-
-    @Override
-    public float getInnerH() {
-        return getH();
-    }
-
-    @Override
-    public void setInnerLocation(float x, float y) {
-        setLocation(x, y);
-    }
-
-    @Override
-    public void setInnerSize(float x, float y) {
-        setSize(x, y);
-    }
-
-    @Override
-    public float[] getInnerBoundle() {
-        return getBoundle();
-    }
-
 }

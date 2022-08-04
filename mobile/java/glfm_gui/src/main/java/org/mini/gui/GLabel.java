@@ -131,7 +131,10 @@ public class GLabel extends GObject {
     boolean paintFlying(long vg, float x, float y) {
         float w = getW();
         float h = getH();
-
+        
+        if (bgColor != null) {
+            GToolkit.drawRect(vg, getX(), getY(), getW(), getH(), bgColor);
+        }
 
         if (showMode == MODE_MULTI_SHOW) {
             drawMultiText(vg, x, y, w, h);

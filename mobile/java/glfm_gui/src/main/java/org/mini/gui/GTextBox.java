@@ -225,11 +225,11 @@ public class GTextBox extends GTextObject {
             if (enable) {
                 switch (key) {
                     case Glfw.GLFW_KEY_BACKSPACE: {
-                        if (textsb.length() > 0 && caretIndex > 0) {
-                            int[] selectFromTo = getSelected();
-                            if (selectFromTo != null) {
-                                deleteSelectedText();
-                            } else {
+                        int[] selectFromTo = getSelected();
+                        if (selectFromTo != null) {
+                            deleteSelectedText();
+                        } else {
+                            if (textsb.length() > 0 && caretIndex > 0) {
                                 setCaretIndex(caretIndex - 1);
                                 deleteTextByIndex(caretIndex);
                             }

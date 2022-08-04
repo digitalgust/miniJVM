@@ -15,7 +15,7 @@ import static org.mini.nanovg.Nanovg.*;
 /**
  * @author Gust
  */
-public class GMenu extends GPanel {
+public class GMenu extends GContainer {
 
     protected float[] lineh = new float[1];
     protected int selectedIndex = -1;
@@ -113,7 +113,7 @@ public class GMenu extends GPanel {
         //background
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x + 1f, y + 1f, w - 2, h - 2, cornerRadius - 0.5f);
-        nvgFillColor(vg, GToolkit.getStyle().getPopBackgroundColor());
+        nvgFillColor(vg, this.bgColor != null ? bgColor : GToolkit.getStyle().getPopBackgroundColor());
         nvgFill(vg);
 
         //渐变

@@ -10,7 +10,7 @@ import static org.mini.nanovg.Nanovg.*;
 /**
  * @author gust
  */
-public class GCanvas extends GPanel {
+public class GCanvas extends GContainer {
 
     protected GGraphics g;
 

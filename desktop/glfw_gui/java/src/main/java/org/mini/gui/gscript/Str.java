@@ -16,7 +16,11 @@ public class Str extends DataType {
     }
 
     public void setVal(String s) {
-        value = s;
+        if (isRecyclable()) {
+            value = s;
+        } else {
+            throw new RuntimeException("var is immutable");
+        }
     }
 
     public String getVal() {

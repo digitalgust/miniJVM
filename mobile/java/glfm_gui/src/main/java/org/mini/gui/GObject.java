@@ -684,9 +684,9 @@ abstract public class GObject implements GAttachable {
     }
 
     public Interpreter getInterpreter(String containerName) {
-        if (parent == null) return null;
-        if (containerName == null) return parent.getInterpreter();
-        return parent.getInterpreter(containerName);
+        if (getParent() == null) return null;
+        if (containerName == null) return getParent().getInterpreter();
+        return getParent().getInterpreter(containerName);
     }
     //================================    =====================================
 

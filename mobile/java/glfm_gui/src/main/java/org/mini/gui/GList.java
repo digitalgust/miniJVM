@@ -533,7 +533,7 @@ public class GList extends GContainer {
         }
     }
 
-    class NormalPanel extends GPanel {
+    class NormalPanel extends GContainer {
         public NormalPanel(GForm form) {
             super(form);
         }
@@ -629,7 +629,7 @@ public class GList extends GContainer {
     };
 
 
-    class GListPopWindow extends GPanel {
+    class GListPopWindow extends GContainer {
         public GListPopWindow(GForm form) {
             super(form);
         }

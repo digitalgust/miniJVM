@@ -39,6 +39,7 @@ public class GLanguage {
         addStringInner("Cancel", new String[]{"Cancel", "取消", "取消"});
         addStringInner("Ok", new String[]{"Ok", "确定", "確認"});
         addStringInner("Save to album", new String[]{"Save to album", "存入相册", "存入相冊"});
+        addStringInner("Message", new String[]{"Message", "消息", "訊息"});
     }
 
     static public void setCurLang(int langType) {
