@@ -23,8 +23,10 @@ import static org.mini.gui.GToolkit.nvgRGBA;
 abstract public class GObject implements GAttachable {
 
     //
-    public static final int ALIGN_H_FULL = 1;
-    public static final int ALIGN_V_FULL = 2;
+    public static final byte LAYER_BACK = 2,
+            LAYER_NORMAL = 4,
+            LAYER_FRONT = 6,
+            LAYER_MENU_OR_POPUP = 8;
 
     public static String ICON_SEARCH = "\uD83D\uDD0D";
     public static String ICON_CIRCLED_CROSS = "\u2716";
@@ -72,9 +74,7 @@ abstract public class GObject implements GAttachable {
 
     protected boolean enable = true;
 
-    protected boolean front = false;
-
-    protected boolean back = false;
+    protected byte layer = LAYER_NORMAL;
 
     protected boolean fixedLocation = false;
 
@@ -472,34 +472,34 @@ abstract public class GObject implements GAttachable {
      * @return the front
      */
     public boolean isFront() {
-        return front;
+        return layer == LAYER_FRONT;
     }
 
     /**
      * @param front the front to set
      */
     public void setFront(boolean front) {
-        this.front = front;
-        if (front) this.back = false;
+        this.layer = front ? LAYER_FRONT : LAYER_NORMAL;
+        if (parent != null) parent.reLayer();
     }
 
     /**
      * @return the front
      */
     public boolean isBack() {
-        return back;
+        return layer == LAYER_BACK;
     }
 
     /**
      * @param back the front to set
      */
     public void setBack(boolean back) {
-        this.back = back;
-        if (back) this.front = false;
+        this.layer = back ? LAYER_BACK : LAYER_NORMAL;
+        if (parent != null) parent.reLayer();
     }
 
     public boolean isMenu() {
-        return false;
+        return layer == LAYER_MENU_OR_POPUP;
     }
 
     public boolean isContextMenu() {

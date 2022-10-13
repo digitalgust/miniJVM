@@ -32,6 +32,7 @@ public class GMenu extends GContainer {
 
     public GMenu(GForm form, float left, float top, float width, float height) {
         super(form);
+        layer = LAYER_MENU_OR_POPUP;
         setLocation(left, top);
         setSize(width, height);
     }
@@ -47,10 +48,6 @@ public class GMenu extends GContainer {
     public void setSize(float w, float h) {
         super.setSize(w, h);
         reAlign();
-    }
-
-    public boolean isMenu() {
-        return true;
     }
 
     public GMenuItem addItem(int index, String itemTag, GImage img) {

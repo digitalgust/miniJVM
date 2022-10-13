@@ -11,7 +11,6 @@ import org.mini.gui.gscript.Interpreter;
 import org.mini.nanovg.Nanovg;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import static org.mini.nanovg.Nanovg.nvgSave;
@@ -260,7 +259,7 @@ abstract public class GContainer extends GObject {
     <T extends GObject> T findSonByXY(float x, float y) {
         GObject front = null, mid = null, back = null, menu = null;
         synchronized (elements) {
-            for (int i = 0; i < elements.size(); i++) {
+            for (int i = 0, imax = elements.size(); i < imax; i++) {
                 GObject nko = elements.get(i);
                 if (nko.isInArea(x, y)) {
                     if (nko.isMenu()) {
@@ -333,6 +332,7 @@ abstract public class GContainer extends GObject {
             if (focus != null) {
                 focus.doFocusGot(old);
             }
+            if (go instanceof GFrame) reLayerFocus();
         }
     }
 
@@ -345,6 +345,7 @@ abstract public class GContainer extends GObject {
     }
 
     public void onAdd(GObject obj) {
+        reLayer();
         for (GChildrenListener l : childrenListeners) {
             try {
                 l.onChildAdd(obj);
@@ -355,6 +356,7 @@ abstract public class GContainer extends GObject {
     }
 
     public void onRemove(GObject obj) {
+        reLayer();
         for (GChildrenListener l : childrenListeners) {
             try {
                 l.onChildRemove(obj);
@@ -368,37 +370,68 @@ abstract public class GContainer extends GObject {
 
     }
 
+    protected void reLayer() {
+        synchronized (elements) {
+            //更新所有UI组件
+
+            int size = elements.size();
+            for (int i = 0; i < size; i++) {
+                for (int j = i + 1; j < size; j++) {
+                    GObject a = elements.get(i);
+                    GObject b = elements.get(j);
+                    if (a.layer > b.layer) {
+                        elements.set(i, b);
+                        elements.set(j, a);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 把focus排在同级的最后面
+     */
+    protected void reLayerFocus() {
+        synchronized (elements) {
+            //更新所有UI组件
+            if (focus != null) {
+                int flayer = focus.layer;
+                int oldPos = -1;
+                int newPos = -1;
+                GObject swapGo = null;
+                int size = elements.size();
+                for (int i = size - 1; i >= 0; i--) {
+                    GObject a = elements.get(i);
+                    if (a.layer > flayer) {
+                        continue;
+                    }
+                    if (a.layer == flayer && swapGo == null) {
+                        newPos = i;
+                        swapGo = a;
+                    }
+                    if (a == focus) {
+                        oldPos = i;
+                        break;
+                    }
+                }
+                //对掉位置
+                if (oldPos >= 0 && newPos >= 0) {
+                    elements.set(newPos, focus);
+                    elements.set(oldPos, swapGo);
+                }
+            }
+        }
+    }
+
     @Override
     public boolean paint(long ctx) {
         try {
             synchronized (elements) {
                 //更新所有UI组件
-
-                if (focus != null && (focus instanceof GFrame || focus instanceof GList)) {
-                    elements.remove(focus);
-                    elements.add(focus);
-                }
                 //在遍历过程中,其他线程无法修改容器,但可能会有本线程在paint过程中添加或删除组件,因此要每个循环取size
-                for (int i = 0; i < elements.size(); i++) {
+                for (int i = 0, imax = elements.size(); i < imax; i++) {
                     GObject nko = elements.get(i);
-                    if (nko.isBack()) {
-                        drawObj(ctx, nko);
-                        continue;
-                    }
-                }
-                for (int i = 0; i < elements.size(); i++) {
-                    GObject nko = elements.get(i);
-                    if (!nko.isBack() && !nko.isMenu()) {
-                        drawObj(ctx, nko);
-                        continue;
-                    }
-                }
-                for (int i = 0; i < elements.size(); i++) {
-                    GObject nko = elements.get(i);
-                    if (nko.isMenu()) {
-                        drawObj(ctx, nko);
-                        continue;
-                    }
+                    drawObj(ctx, nko);
                 }
             }
 
@@ -481,9 +514,6 @@ abstract public class GContainer extends GObject {
         }
         GObject found = findSonByXY(x, y);
         if (found != null && found.isMenu()) {
-//            if (!found.isContextMenu()) {
-//                setFocus(null);
-//            }
             found.mouseButtonEvent(button, pressed, x, y);
             return;
         } else if (found instanceof GFrame) {//this fix frame may not be active
@@ -594,9 +624,6 @@ abstract public class GContainer extends GObject {
         }
         GObject found = findSonByXY(x, y);
         if (found != null && found.isMenu()) {
-//            if (!found.isContextMenu()) {
-//                setFocus(null);
-//            }
             found.touchEvent(touchid, phase, x, y);
             return;
         } else if (found instanceof GFrame) {//this fix frame may not be active

@@ -11,6 +11,7 @@ import org.mini.gui.event.GFocusChangeListener;
 import org.mini.nanovg.Nanovg;
 import org.mini.reflect.ReflectArray;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.*;
 
@@ -81,6 +82,41 @@ public class GToolkit {
     public static String readFileFromJarAsString(String path, String encode) {
         try {
             byte[] cont = readFileFromJar(path);
+            String s = new String(cont, encode);
+            return s;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    public static byte[] readFileFromFile(String path) {
+        try {
+
+            InputStream is = new FileInputStream(path);
+            if (is != null) {
+                int av = is.available();
+
+                if (av >= 0) {
+                    byte[] b = new byte[av];
+                    int r, read = 0;
+                    while (read < av) {
+                        r = is.read(b, read, av - read);
+                        read += r;
+                    }
+                    return b;
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        System.out.println("load from file fail : " + path);
+        return null;
+    }
+
+    public static String readFileFromFileAsString(String path, String encode) {
+        try {
+            byte[] cont = readFileFromFile(path);
             String s = new String(cont, encode);
             return s;
         } catch (Exception ex) {
@@ -839,7 +875,6 @@ public class GToolkit {
                         gobj.getForm().remove(menu);
                     }
                 });
-                menu.setFront(true);
                 add(menu);
             }
 
@@ -884,8 +919,6 @@ public class GToolkit {
             }
         });
 
-        view.setFront(true);
-
         float imgW = img.getWidth();
         float imgH = img.getHeight();
 
@@ -913,6 +946,7 @@ public class GToolkit {
         GForm form = gobj.getForm();
         gobj.setLocation(form.getW() / 2 - gobj.getW() / 2, form.getH() / 2 - gobj.getH() / 2);
         form.add(gobj);
+        form.setFocus(gobj);
     }
 
     public static void showFrame(GObject gobj, float x, float y) {
@@ -920,6 +954,7 @@ public class GToolkit {
         GForm form = gobj.getForm();
         gobj.setLocation(x, y);
         form.add(gobj);
+        form.setFocus(gobj);
     }
 
     public static void closeFrame(GForm form, String frameName) {
@@ -1163,7 +1198,6 @@ public class GToolkit {
 
         if (editMenu == null) {
             editMenu = new EditMenu(gform, mx, my, menuW, menuH);
-            editMenu.setFront(true);
             GMenuItem item;
 
             item = editMenu.addItem(GLanguage.getString("Select"), null);

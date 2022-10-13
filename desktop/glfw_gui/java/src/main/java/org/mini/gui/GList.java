@@ -632,6 +632,7 @@ public class GList extends GContainer {
     class GListPopWindow extends GContainer {
         public GListPopWindow(GForm form) {
             super(form);
+            layer = LAYER_MENU_OR_POPUP;
         }
 
         @Override
@@ -669,13 +670,6 @@ public class GList extends GContainer {
             scrollBar.setLocation(width - scrollbarWidth, 0);
             scrollBar.setSize(20, height);
         }
-
-        @Override
-        public boolean isMenu() {
-            if (showMode == MODE_SINGLE_SHOW) return true;
-            return false;
-        }
-
     }
 
     ;

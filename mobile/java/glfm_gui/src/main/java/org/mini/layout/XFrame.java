@@ -94,7 +94,6 @@ public class XFrame
             frame = new GFrame(getAssist().getForm(), title, x, y, width, height);
             initGui();
             frame.setClosable(closable);
-            frame.setFront(true);
             frame.setOnCloseScript(onCloseScript);
             frame.setOnInitScript(onInitScript);
         } else {
