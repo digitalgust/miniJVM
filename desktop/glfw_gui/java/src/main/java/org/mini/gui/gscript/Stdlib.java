@@ -491,8 +491,8 @@ public class Stdlib extends Lib {
     private DataType invokeImpl(ArrayList<DataType> para, Class c, String name, Class[] types, Object instance) {
         try {
 
-            Object[] javaPara = new Object[para.size()];
-            for (int i = 0; i < para.size(); i++) {
+            Object[] javaPara = new Object[types.length];
+            for (int i = 0; i < types.length; i++) {
                 DataType dt = Interpreter.popBack(para);
                 if (dt.type == DataType.DTYPE_INT) {
                     long dtv = ((Int) dt).getVal();

@@ -281,14 +281,12 @@ public class GToolkit {
     }
 
     public static void drawCircle(long vg, float x, float y, float r, float[] color, boolean fill) {
+        nvgBeginPath(vg);
+        nvgCircle(vg, x, y, r);
         if (fill) {
-            nvgBeginPath(vg);
-            nvgCircle(vg, x, y, r);
             nvgFillColor(vg, color);
             nvgFill(vg);
         } else {
-            nvgBeginPath(vg);
-            nvgCircle(vg, x, y, r);
             nvgStrokeColor(vg, color);
             nvgStrokeWidth(vg, 1.0f);
             nvgStroke(vg);
@@ -296,10 +294,20 @@ public class GToolkit {
     }
 
     public static void drawRect(long vg, float x, float y, float w, float h, float[] color) {
+        drawRect(vg, x, y, w, h, color, true);
+    }
+
+    public static void drawRect(long vg, float x, float y, float w, float h, float[] color, boolean fill) {
         nvgBeginPath(vg);
-        nvgFillColor(vg, color);
         nvgRect(vg, x, y, w, h);
-        nvgFill(vg);
+        if (fill) {
+            nvgFillColor(vg, color);
+            nvgFill(vg);
+        } else {
+            nvgStrokeColor(vg, color);
+            nvgStrokeWidth(vg, 1.0f);
+            nvgStroke(vg);
+        }
     }
 
     public static void drawRoundedRect(long vg, float x, float y, float w, float h, float r, float[] color) {
