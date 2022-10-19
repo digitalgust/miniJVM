@@ -48,7 +48,7 @@ add_executable(mini_jvm ${SOURCE_FILES} main.c)
 TARGET_LINK_LIBRARIES(mini_jvm pthread m)
 #Set link library.
 IF (APPLE)
-    SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../../binary/macos)
+    SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../../binary/mac_x64)
 ELSEIF (UNIX)
     TARGET_LINK_LIBRARIES(mini_jvm dl)
     SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../../binary/centos_x64)

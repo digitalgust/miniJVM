@@ -4,14 +4,23 @@
 #${GCCHOME} setup as: /usr/bin/gcc
 GCC=gcc
 OSNAME="Darwin"
+MACARM="arm64"
 UNAME=`uname -a`
 
 if [[ $UNAME == *$OSNAME* ]] 
 then
-    echo "Mac"
-    BINDIR="macos"
-    LIBDIR="mac"
+  if [[ $UNAME == *$MACARM* ]] 
+  then
+    echo "Mac ARM64"
+    BINDIR="mac_arm64"
+    LIBDIR="mac_arm"
     LIBFILE="libgui.dylib"
+  else
+    echo "Mac X64"
+    BINDIR="mac_x64"
+    LIBDIR="mac_x64"
+    LIBFILE="libgui.dylib"
+  fi
 else
     echo "Linux"
     echo "UBUNTU lib install : sudo apt-get install openjdk-8-jdk gcc libxi-dev libxcursor-dev libxrandr-dev libgl1-mesa-dev libxinerama-dev"
