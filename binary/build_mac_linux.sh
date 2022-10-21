@@ -13,7 +13,7 @@ then
   then
     echo "Mac ARM64"
     BINDIR="mac_arm64"
-    LIBDIR="mac_arm"
+    LIBDIR="mac_arm64"
     LIBFILE="libgui.dylib"
   else
     echo "Mac X64"
