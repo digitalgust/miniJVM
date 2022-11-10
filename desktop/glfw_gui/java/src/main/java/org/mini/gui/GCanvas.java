@@ -26,13 +26,12 @@ public class GCanvas extends GContainer {
 
 
     public boolean paint(long vg) {
-        if (g == null) {
-            g = new GGraphics(this, vg);
-        }
+        g = getGraphics();
         nvgSave(vg);
         super.paint(vg);
         nvgFontSize(vg, g.getFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
+        g.setClip(g.getClipX() + (int) this.getX(), g.getClipY() + (int) this.getY(), g.getClipWidth(), g.getClipHeight());
         paint(g);
         nvgRestore(vg);
         return true;
@@ -51,6 +50,13 @@ public class GCanvas extends GContainer {
     }
 
     public GGraphics getGraphics() {
+        if (g == null) {
+            synchronized (this) {
+                if (g == null) {
+                    g = new GGraphics(this, GCallBack.getInstance().getNvContext());
+                }
+            }
+        }
         return g;
     }
 }

@@ -6,7 +6,6 @@
 package org.mini.gui;
 
 import org.mini.glwrap.GLUtil;
-import org.mini.nanovg.StbFont;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Nanovg.*;
@@ -24,6 +23,23 @@ public class GGraphics {
     public static final int TOP = 16;
     public static final int BOTTOM = 32;
     public static final int BASELINE = 64;
+
+    //Causes the Sprite to appear reflected about its vertical center.
+    public static final int TRANS_MIRROR = 2;
+    //Causes the Sprite to appear reflected about its vertical center and then rotated clockwise by 180 degrees.
+    public static final int TRANS_MIRROR_ROT180 = 1;
+    //Causes the Sprite to appear reflected about its vertical center and then rotated clockwise by 270 degrees.
+    public static final int TRANS_MIRROR_ROT270 = 4;
+    //Causes the Sprite to appear reflected about its vertical center and then rotated clockwise by 90 degrees.
+    public static final int TRANS_MIRROR_ROT90 = 7;
+    //No transform is applied to the Sprite.
+    public static final int TRANS_NONE = 0;
+    //Causes the Sprite to appear rotated clockwise by 180 degrees.
+    public static final int TRANS_ROT180 = 6;
+    //Causes the Sprite to appear rotated clockwise by 270 degrees.
+    public static final int TRANS_ROT270 = 3;
+    //Causes the Sprite to appear rotated clockwise by 90 degrees.
+    public static final int TRANS_ROT90 = 5;
 
     protected GCanvas canvas;
     protected long vg;
@@ -120,10 +136,11 @@ public class GGraphics {
         nvgStroke(vg);
     }
 
-    public void drawRect(int x1, int y1, int w, int h) {
+    public void drawRect(int x1, int y1, int w1, int h1) {
         x1 += canvas.getX();
         y1 += canvas.getY();
-        nvgRoundedRect(vg, x1, y1, w, h, 0);
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, x1, y1, w1, h1, 0);
         nvgStrokeColor(vg, nvgRGBA(r, g, b, a));
         nvgStroke(vg);
     }
@@ -237,13 +254,24 @@ public class GGraphics {
     }
 
     public void drawImage(GImage img, int x, int y, int anchor) {
+        if (img == null) return;
         drawImage(img, x, y, img.getWidth(), img.getHeight(), anchor);
     }
 
     public void drawImage(GImage img, int x, int y, int w, int h, int anchor) {
-
+        if (img == null) return;
         x += canvas.getX();
         y += canvas.getY();
+        if ((anchor & RIGHT) != 0) {
+            x -= img.getWidth();
+        } else if ((anchor & HCENTER) != 0) {
+            x -= img.getWidth() / 2;
+        }
+        if ((anchor & BOTTOM) != 0) {
+            y -= img.getHeight();
+        } else if ((anchor & VCENTER) != 0) {
+            y -= img.getHeight() / 2;
+        }
 
         byte[] imgPaint = nvgImagePattern(vg, x, y, w, h, 0.0f / 180.0f * (float) Math.PI, img.getNvgTextureId(vg), 1f);
         nvgBeginPath(vg);
@@ -253,12 +281,152 @@ public class GGraphics {
     }
 
     public void drawRegion(GImage src, int x_src, int y_src, int width, int height, int transform, int x_dest, int y_dest, int anchor) {
-        x_src += canvas.getX();
-        y_src += canvas.getY();
+        if (src == null || width == 0 || height == 0) {
+            return;
+        }
+        if (x_src < 0 || y_src < 0 || x_src + width > src.getWidth() || y_src + height > src.getHeight()) {
+            return;
+        }
 
         x_dest += canvas.getX();
         y_dest += canvas.getY();
+
+        final int imgw = src.getWidth();
+        final int imgh = src.getHeight();
+
+        float clipX, clipY, clipW, clipH;
+        clipX = x_dest;
+        clipY = y_dest;
+        clipW = width;
+        clipH = height;
+        float ix = 0f, iy = 0f, iw = imgw;
+        float px = 0f, py = 0f, pw = 0f, ph = 0f;
+        float rot = 0f;
+        switch (transform) {
+            case TRANS_NONE:
+                px = x_dest - x_src;
+                py = y_dest - y_src;
+                pw = imgw;
+                ph = imgh;
+                ix = px;
+                iy = py;
+                clipW = width;
+                clipH = height;
+                break;
+            case TRANS_ROT90:
+                px = x_dest - (imgh - y_src - height);
+                py = y_dest - x_src;
+                pw = imgh;
+                ph = imgw;
+                rot = 90f;
+                ix = px + imgh;
+                iy = py;
+                clipW = height;
+                clipH = width;
+                break;
+            case TRANS_ROT180:
+                px = x_dest - (imgw - x_src - width);
+                py = y_dest - (imgh - y_src - height);
+                pw = imgw;
+                ph = imgh;
+                rot = 180f;
+                ix = px + imgw;
+                iy = py + imgh;
+                clipW = width;
+                clipH = height;
+                break;
+            case TRANS_ROT270:
+                px = x_dest - y_src;
+                py = y_dest - (imgw - x_src - width);
+                pw = imgh;
+                ph = imgw;
+                rot = 270f;
+                ix = px;
+                iy = py + imgw;
+                clipW = height;
+                clipH = width;
+                break;
+            case TRANS_MIRROR:
+                px = x_dest - (imgw - x_src - width);
+                py = y_dest - y_src;
+                pw = imgw;
+                ph = imgh;
+                ix = px + imgw;
+                iy = py;
+                iw = -imgw;
+                clipW = width;
+                clipH = height;
+                break;
+            case TRANS_MIRROR_ROT90:
+                px = x_dest - (imgh - y_src - height);
+                py = y_dest - (imgw - x_src - width);
+                pw = imgh;
+                ph = imgw;
+                rot = 90f;
+                ix = px + imgh;
+                iy = py + imgw;
+                iw = -imgw;
+                clipW = height;
+                clipH = width;
+                break;
+            case TRANS_MIRROR_ROT180:
+                px = x_dest - x_src;
+                py = y_dest - (imgh - y_src - height);
+                pw = imgw;
+                ph = imgh;
+                rot = 180f;
+                iw = -imgw;
+                ix = px;
+                iy = py + imgh;
+                clipW = width;
+                clipH = height;
+                break;
+            case TRANS_MIRROR_ROT270:
+                px = x_dest - y_src;
+                py = y_dest - x_src;
+                pw = imgh;
+                ph = imgw;
+                rot = 270f;
+                iw = -imgw;
+                ix = px;
+                iy = py;
+                clipW = height;
+                clipH = width;
+                break;
+            default:
+                throw new IllegalArgumentException("IllegalArgumentException");
+        }
+
+        if ((anchor & RIGHT) != 0) {
+            px -= clipW;
+            ix -= clipW;
+            clipX -= clipW;
+        } else if ((anchor & HCENTER) != 0) {
+            px -= clipW / 2;
+            ix -= clipW / 2;
+            clipX -= clipW / 2;
+        }
+        if ((anchor & BOTTOM) != 0) {
+            py -= clipH;
+            iy -= clipH;
+            clipY -= clipH;
+        } else if ((anchor & VCENTER) != 0) {
+            py -= clipH / 2;
+            iy -= clipH / 2;
+            clipY -= clipH / 2;
+        }
+
+        nvgSave(vg);
+        nvgScissor(vg, clipX, clipY, clipW, clipH);
+        byte[] imgPaint = nvgImagePattern(vg, ix, iy, iw, imgh, rot / 180.0f * (float) Math.PI, src.getNvgTextureId(vg), 1f);
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, px, py, pw, ph, 0);
+        nvgFillPaint(vg, imgPaint);
+        nvgFill(vg);
+        nvgRestore(vg);
+
     }
+
 
     public void drawRGB(int[] rgbData, int offset, int scanlength, int x, int y, int width, int height, boolean processAlpha) {
         x += canvas.getX();
@@ -304,7 +472,7 @@ public class GGraphics {
         clipY = y;
         clipW = w;
         clipH = h;
-        nvgScissor(vg, x, y, w, h);
+        nvgScissor(vg, x + (int) canvas.getX(), y + (int) canvas.getY(), w, h);
     }
 
     public int getClipX() {
@@ -322,6 +490,5 @@ public class GGraphics {
     public int getClipHeight() {
         return clipH;
     }
-
 
 }
