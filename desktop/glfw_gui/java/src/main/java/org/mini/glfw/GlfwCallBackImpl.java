@@ -152,7 +152,7 @@ public class GlfwCallBackImpl extends GCallBack {
                 gform = gapp.getForm();
 //                startAt = System.currentTimeMillis();
                 if (!gform.isInited()) {
-                    gform.init();
+                    gform.__init();
                 }
                 //user define contents
                 if (GForm.flushReq()) {

@@ -31,7 +31,7 @@ public class GCanvas extends GContainer {
         super.paint(vg);
         nvgFontSize(vg, g.getFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
-        g.setClip(g.getClipX() + (int) this.getX(), g.getClipY() + (int) this.getY(), g.getClipWidth(), g.getClipHeight());
+        g.setClip(0, 0, (int) getW(), (int) getH());
         paint(g);
         nvgRestore(vg);
         return true;

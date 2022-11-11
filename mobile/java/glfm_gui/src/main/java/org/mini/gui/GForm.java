@@ -99,10 +99,9 @@ public class GForm extends GContainer {
         return inited;
     }
 
-    @Override
-    public void init() {
-
+    public void __init() {
         inited = true;
+        init();
     }
 
     public void display(long vg) {

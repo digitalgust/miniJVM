@@ -177,6 +177,7 @@ public class GGraphics {
     public void drawString(String str, int x, int y, int anchor) {
         x += canvas.getX();
         y += canvas.getY();
+        nvgFontSize(vg, fontSize);
         anchor = j2meAnchorToNanovg(anchor);
         nvgTextAlign(vg, anchor);
 
@@ -193,6 +194,7 @@ public class GGraphics {
         anchor = j2meAnchorToNanovg(anchor);
         x += canvas.getX();
         y += canvas.getY();
+        nvgFontSize(vg, fontSize);
         nvgTextAlign(vg, anchor);
         str = str.substring(offset, len);
         byte[] b = GLUtil.toUtf8(str);
@@ -206,6 +208,7 @@ public class GGraphics {
         anchor = j2meAnchorToNanovg(anchor);
         x += canvas.getX();
         y += canvas.getY();
+        nvgFontSize(vg, fontSize);
         nvgTextAlign(vg, anchor);
         byte[] b = GLUtil.toUtf8(character + "");
         nvgTextJni(vg, x, y, b, 0, b.length);
@@ -215,6 +218,7 @@ public class GGraphics {
         anchor = j2meAnchorToNanovg(anchor);
         x += canvas.getX();
         y += canvas.getY();
+        nvgFontSize(vg, fontSize);
         nvgTextAlign(vg, anchor);
         String s = new String(data, offset, length);
         drawString(s, x, y, anchor);
