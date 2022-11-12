@@ -15,7 +15,8 @@ import static org.mini.nanovg.Nanovg.*;
  */
 public class GGraphics {
 
-    //compartiable with j2me
+    //these constants are compartiable with j2me
+
     public static final int HCENTER = 1;
     public static final int VCENTER = 2;
     public static final int LEFT = 4;
@@ -41,6 +42,9 @@ public class GGraphics {
     //Causes the Sprite to appear rotated clockwise by 90 degrees.
     public static final int TRANS_ROT90 = 5;
 
+    public static final int SOLID = 0;
+    public static final int DOTTED = 1;
+
     protected GCanvas canvas;
     protected long vg;
 
@@ -48,6 +52,7 @@ public class GGraphics {
     byte r, g, b, a;
     float fontSize = GToolkit.getStyle().getTextFontSize();
     int clipX, clipY, clipW, clipH;
+    int strokeStyle;
 
     public GGraphics(GCanvas canvas, long context) {
         this.canvas = canvas;
@@ -100,6 +105,17 @@ public class GGraphics {
         nvgFill(vg);
     }
 
+    public void fillRoundRect(int x, int y, int width, int height, int arcWidth, int arcHeight) {
+
+        x += canvas.getX();
+        y += canvas.getY();
+
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, x, y, width, height, (arcWidth + arcHeight) / 2);
+        nvgFillColor(vg, nvgRGBA(r, g, b, a));
+        nvgFill(vg);
+    }
+
     public void fillArc(int x, int y, int width, int height, int startAngle, int arcAngle) {
         x += canvas.getX();
         y += canvas.getY();
@@ -141,6 +157,16 @@ public class GGraphics {
         y1 += canvas.getY();
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x1, y1, w1, h1, 0);
+        nvgStrokeColor(vg, nvgRGBA(r, g, b, a));
+        nvgStroke(vg);
+    }
+
+    public void drawRoundRect(int x, int y, int width, int height, int arcWidth, int arcHeight) {
+
+        x += canvas.getX();
+        y += canvas.getY();
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, x, y, width, height, (arcWidth + arcHeight) / 2);
         nvgStrokeColor(vg, nvgRGBA(r, g, b, a));
         nvgStroke(vg);
     }
@@ -432,25 +458,57 @@ public class GGraphics {
     }
 
 
+    /**
+     * Notice: the rgbData is ABGR format
+     * IMPORTANT : This mehod maybe copy large mount of data when the area is big, so it's slow sometimes.
+     *
+     * @param rgbData
+     * @param offset
+     * @param scanlength
+     * @param x
+     * @param y
+     * @param width
+     * @param height
+     * @param processAlpha
+     */
     public void drawRGB(int[] rgbData, int offset, int scanlength, int x, int y, int width, int height, boolean processAlpha) {
-        x += canvas.getX();
-        y += canvas.getY();
+        ImageMutable rgbImg = (ImageMutable) GImage.createImageMutable(width, height);
+        rgbImg.setPix(rgbData, offset, scanlength, 0, 0, width, height);
+        rgbImg.updateImage();
+        drawImage(rgbImg, x, y, LEFT | TOP);
     }
 
     public int getColor() {
         return curColor;
     }
 
+    /**
+     * not implementation
+     *
+     * @param x_src
+     * @param y_src
+     * @param width
+     * @param height
+     * @param x_dest
+     * @param y_dest
+     * @param anchor
+     */
     public void copyArea(int x_src, int y_src, int width, int height, int x_dest, int y_dest, int anchor) {
         x_src += canvas.getX();
         y_src += canvas.getY();
 
         x_dest += canvas.getX();
         y_dest += canvas.getY();
+
+        throw new RuntimeException("Not implementation");
     }
 
     public void clipRect(int x, int y, int width, int height) {
-        setClip(x, y, width, height);
+        clipX = clipX > x ? clipX : x;
+        clipY = clipY > x ? clipY : y;
+        clipW = clipX + clipW < clipX + width ? clipW : width;
+        clipH = clipY + clipH < clipY + height ? clipH : height;
+        setClip(clipX, clipY, clipW, clipH);
     }
 
     public void translate(int x, int y) {
@@ -495,4 +553,15 @@ public class GGraphics {
         return clipH;
     }
 
+    public void setStrokeStyle(int style) {
+        strokeStyle = style;
+    }
+
+    public int getStrokeStyle() {
+        return strokeStyle;
+    }
+
+    public void setGrayScale(int value) {
+
+    }
 }

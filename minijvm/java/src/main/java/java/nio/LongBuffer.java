@@ -19,8 +19,9 @@ public abstract class LongBuffer
         this.readOnly = false;
     }
 
-    protected LongBuffer(boolean readOnly) {
+    protected LongBuffer(boolean readOnly, int cap) {
         this.readOnly = readOnly;
+        this.capacity = this.limit = cap;
     }
 
     public static LongBuffer allocate(int capacity) {

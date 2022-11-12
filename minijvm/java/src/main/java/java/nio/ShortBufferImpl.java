@@ -18,7 +18,7 @@ class ShortBufferImpl extends ShortBuffer {
     int arrayOffset;
 
     ShortBufferImpl(short[] array, int offset, int length, boolean readOnly) {
-        super(readOnly);
+        super(readOnly, length);
 
         this.array = array;
         this.arrayOffset = offset;

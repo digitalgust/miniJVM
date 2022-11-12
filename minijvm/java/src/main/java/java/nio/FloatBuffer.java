@@ -19,8 +19,9 @@ public abstract class FloatBuffer
         this.readOnly = false;
     }
 
-    protected FloatBuffer(boolean readOnly) {
+    protected FloatBuffer(boolean readOnly, int cap) {
         this.readOnly = readOnly;
+        this.capacity = this.limit = cap;
     }
 
     public static FloatBuffer allocate(int capacity) {

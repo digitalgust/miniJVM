@@ -18,7 +18,7 @@ class IntBufferImpl extends IntBuffer {
     int arrayOffset;
 
     IntBufferImpl(int[] array, int offset, int length, boolean readOnly) {
-        super(readOnly);
+        super(readOnly, length);
 
         this.array = array;
         this.arrayOffset = offset;

@@ -19,8 +19,9 @@ public abstract class ShortBuffer
         this.readOnly = false;
     }
 
-    protected ShortBuffer(boolean readOnly) {
+    protected ShortBuffer(boolean readOnly, int cap) {
         this.readOnly = readOnly;
+        this.capacity = this.limit = cap;
     }
 
     public static ShortBuffer allocate(int capacity) {

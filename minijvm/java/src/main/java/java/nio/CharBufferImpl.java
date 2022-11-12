@@ -18,7 +18,7 @@ class CharBufferImpl extends CharBuffer {
     int arrayOffset;
 
     CharBufferImpl(char[] array, int offset, int length, boolean readOnly) {
-        super(readOnly);
+        super(readOnly, length);
 
         this.array = array;
         this.arrayOffset = offset;

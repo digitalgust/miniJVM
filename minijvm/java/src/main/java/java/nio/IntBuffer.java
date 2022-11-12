@@ -15,8 +15,9 @@ public abstract class IntBuffer
         implements Comparable<IntBuffer> {
     private final boolean readOnly;
 
-    protected IntBuffer(boolean readOnly) {
+    protected IntBuffer(boolean readOnly, int cap) {
         this.readOnly = readOnly;
+        this.capacity = this.limit = cap;
     }
 
     public static IntBuffer allocate(int capacity) {

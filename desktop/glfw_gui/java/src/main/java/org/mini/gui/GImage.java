@@ -15,47 +15,19 @@ import java.io.InputStream;
 
 /**
  * GImage is a wrap of nvg_texture
- * <p>
- * 装入图片文件或使用纹理图片生成一个GImage对象 load image or generate nvg_texture GImage
- * 注意 这不是GL的纹理ID
- * it's not the OPENGL textureid.
+ * GImage may be an immutable image or a mutable image
  *
  * @author gust
  */
-public class GImage implements GAttachable {
+public abstract class GImage implements GAttachable {
 
-    protected int nvg_texture = -1;
-    int[] w = {0};
-    int[] h = {0};
-    //
-    private byte[] data; //source from image data
-    private int gl_texture = -1; //source from gl texture id
-    private int image_init_flag;
     //
     Object attachment;
 
 
-    private GImage() {
+    protected GImage() {
     }
 
-    /**
-     * this method MUST BE call by gl thread
-     */
-    synchronized private void initimg() {
-        if (nvg_texture == -1) {
-            long vg = GCallBack.getInstance().getNvContext();
-            if (data != null) {
-                nvg_texture = Nanovg.nvgCreateImageMem(vg, image_init_flag, data, data.length);
-                Nanovg.nvgImageSize(vg, nvg_texture, w, h);
-                data = null;
-                gl_texture = Nanovg.nvglImageHandleGL3(vg, nvg_texture);
-                //System.out.println("image created with data , nvg: " + nvg_texture + " gl:" + gl_texture);
-            } else if (gl_texture != -1) {
-                nvg_texture = Nanovg.nvglCreateImageFromHandleGL3(vg, gl_texture, w[0], h[0], image_init_flag);
-                //System.out.println("image created with gltexture , nvg: " + nvg_texture + " gl:" + gl_texture);
-            }
-        }
-    }
 
     static public GImage createImage(int gl_textureid, int w, int h) {
 
@@ -77,7 +49,7 @@ public class GImage implements GAttachable {
      * @return
      */
     static public GImage createImage(int gl_textureid, int w, int h, int imageflag) {
-        GImage img = new GImage();
+        ImageImmutable img = new ImageImmutable();
         img.gl_texture = gl_textureid;
         img.w[0] = w;
         img.h[0] = h;
@@ -123,7 +95,7 @@ public class GImage implements GAttachable {
         if (data == null) {
             return null;
         }
-        GImage img = new GImage();
+        ImageImmutable img = new ImageImmutable();
         img.data = data;
         img.image_init_flag = imageflag;
         int[] whd = {0, 0, 0};
@@ -155,42 +127,30 @@ public class GImage implements GAttachable {
         return null;
     }
 
-    public int getWidth() {
-        return w[0];
+    static public GImage createImageMutable(int width, int height) {
+        ImageMutable img = new ImageMutable(width, height);
+        return img;
     }
 
-    public int getHeight() {
-        return h[0];
+    static public GImage createImageMutable(int width, int height, int imageflag) {
+        ImageMutable img = new ImageMutable(width, height, imageflag);
+        return img;
     }
 
-//    public int getBitDepth() {
-//        return w_h_d[2];
-//    }
+    public abstract int getWidth();
+
+    public abstract int getHeight();
+
 
     /**
      * MUST call by gl thread
      *
      * @return
      */
-    public int getNvgTextureId() {
-        if (nvg_texture == -1) {
-            initimg();
-        }
-        return nvg_texture;
-    }
+    public abstract int getNvgTextureId();
 
-    /**
-     * MUST call by gl thread
-     *
-     * @return
-     */
 
-    public int getNvgTextureId(long vg) {
-        if (nvg_texture == -1) {
-            initimg();
-        }
-        return nvg_texture;
-    }
+    public abstract int getNvgTextureId(long vg);
 
     /**
      * MUST call by gl thread
@@ -198,21 +158,7 @@ public class GImage implements GAttachable {
      * @return
      */
 
-    public int getGLTextureId() {
-        if (nvg_texture == -1) {
-            initimg();
-        }
-        return gl_texture;
-    }
-
-    @Override
-    public void finalize() {
-        try {
-            GForm.deleteImage(nvg_texture);
-            System.out.println("finalize image " + this);
-        } catch (Throwable e) {
-        }
-    }
+    public abstract int getGLTextureId();
 
     @Override
     public void setAttachment(Object attachment) {

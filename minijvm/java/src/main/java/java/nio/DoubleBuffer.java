@@ -19,8 +19,9 @@ public abstract class DoubleBuffer
         this.readOnly = false;
     }
 
-    protected DoubleBuffer(boolean readOnly) {
+    protected DoubleBuffer(boolean readOnly, int cap) {
         this.readOnly = readOnly;
+        this.capacity = this.limit = cap;
     }
 
     public static DoubleBuffer allocate(int capacity) {

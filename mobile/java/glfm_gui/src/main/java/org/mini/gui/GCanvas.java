@@ -12,7 +12,7 @@ import static org.mini.nanovg.Nanovg.*;
  */
 public class GCanvas extends GContainer {
 
-    protected GGraphics g;
+    private GGraphics g;
 
     public GCanvas(GForm form) {
         this(form, 0, 0, 0, 0);
@@ -59,4 +59,15 @@ public class GCanvas extends GContainer {
         }
         return g;
     }
+
+//    ImageMutable getRgbData() {
+//        if (rgbData == null) {
+//            synchronized (this) {
+//                if (rgbData == null) {
+//                    rgbData = (ImageMutable) GImage.createImageMutable(getWidth(), getHeight());
+//                }
+//            }
+//        }
+//        return rgbData;
+//    }
 }

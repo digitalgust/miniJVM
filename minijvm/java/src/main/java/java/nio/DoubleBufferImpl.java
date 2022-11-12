@@ -18,7 +18,7 @@ class DoubleBufferImpl extends DoubleBuffer {
     int arrayOffset;
 
     DoubleBufferImpl(double[] array, int offset, int length, boolean readOnly) {
-        super(readOnly);
+        super(readOnly,length);
 
         this.array = array;
         this.arrayOffset = offset;

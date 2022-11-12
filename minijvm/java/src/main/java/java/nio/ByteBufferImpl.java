@@ -369,7 +369,7 @@ class ByteBufferImpl extends ByteBuffer {
 
     @Override
     public ShortBuffer asShortBuffer() {
-        return new ShortBuffer() {
+        return new ShortBuffer(ByteBufferImpl.this.readonly, array.length / Short.BYTES) {
 
             @Override
             public ShortBuffer asReadOnlyBuffer() {
@@ -378,13 +378,18 @@ class ByteBufferImpl extends ByteBuffer {
 
             @Override
             public ShortBuffer slice() {
-                return ByteBufferImpl.this.slice().asShortBuffer();
+                int pos = ByteBufferImpl.this.position;
+                ByteBufferImpl.this.position(this.position * Short.BYTES);
+                ShortBuffer ib = ByteBufferImpl.this.slice().asShortBuffer();
+                ByteBufferImpl.this.position(pos);
+                return ib;
             }
 
             @Override
             protected void doPut(int pos, short value) {
-                ByteBufferImpl.this.putShort(pos * 2, value);
+                RefNative.heap_put_short(ByteBufferImpl.this.address + ByteBufferImpl.this.baseOffset, pos * Short.BYTES, value);
             }
+
 
             @Override
             public ShortBuffer put(short[] src, int pos, int length) {
@@ -393,15 +398,14 @@ class ByteBufferImpl extends ByteBuffer {
                 } else if (pos < 0 || pos >= src.length || pos + length > src.length) {
                     throw new IndexOutOfBoundsException();
                 }
-                for (int i = pos; i < pos + length; i++) {
-                    ByteBufferImpl.this.putShort(src[i]);
-                }
+                RefNative.heap_copy(ReflectArray.getBodyPtr(src), pos * Short.BYTES, ByteBufferImpl.this.address + ByteBufferImpl.this.baseOffset, position * Short.BYTES, length * Short.BYTES);
+                position += length;
                 return this;
             }
 
             @Override
             protected short doGet(int pos) {
-                return ByteBufferImpl.this.getShort(pos * 2);
+                return RefNative.heap_get_short(ByteBufferImpl.this.address, pos * Short.BYTES);
             }
 
             @Override
@@ -409,11 +413,12 @@ class ByteBufferImpl extends ByteBuffer {
                 if (dst == null) {
                     throw new NullPointerException();
                 } else if (pos < 0 || pos >= dst.length || pos + length > dst.length) {
+                    throw new ArrayIndexOutOfBoundsException("dst");
+                } else if (position + length > capacity) {
                     throw new IndexOutOfBoundsException();
                 }
-                for (int i = pos; i < pos + length; i++) {
-                    dst[i] = ByteBufferImpl.this.getShort();
-                }
+                RefNative.heap_copy(ByteBufferImpl.this.address, position * Short.BYTES, ReflectArray.getBodyPtr(dst), pos * Short.BYTES, length * Short.BYTES);
+                position += length;
                 return this;
             }
         };
@@ -421,7 +426,7 @@ class ByteBufferImpl extends ByteBuffer {
 
     @Override
     public CharBuffer asCharBuffer() {
-        return new CharBuffer() {
+        return new CharBuffer(ByteBufferImpl.this.readonly, array.length / Character.BYTES) {
 
             @Override
             public CharBuffer asReadOnlyBuffer() {
@@ -430,13 +435,18 @@ class ByteBufferImpl extends ByteBuffer {
 
             @Override
             public CharBuffer slice() {
-                return ByteBufferImpl.this.slice().asCharBuffer();
+                int pos = ByteBufferImpl.this.position;
+                ByteBufferImpl.this.position(this.position * Character.BYTES);
+                CharBuffer ib = ByteBufferImpl.this.slice().asCharBuffer();
+                ByteBufferImpl.this.position(pos);
+                return ib;
             }
 
             @Override
             protected void doPut(int pos, char value) {
-                ByteBufferImpl.this.putChar(pos * 2, value);
+                RefNative.heap_put_short(ByteBufferImpl.this.address + ByteBufferImpl.this.baseOffset, pos * Character.BYTES, (short) value);
             }
+
 
             @Override
             public CharBuffer put(char[] src, int pos, int length) {
@@ -445,15 +455,14 @@ class ByteBufferImpl extends ByteBuffer {
                 } else if (pos < 0 || pos >= src.length || pos + length > src.length) {
                     throw new IndexOutOfBoundsException();
                 }
-                for (int i = pos; i < pos + length; i++) {
-                    ByteBufferImpl.this.putChar(src[i]);
-                }
+                RefNative.heap_copy(ReflectArray.getBodyPtr(src), pos * Character.BYTES, ByteBufferImpl.this.address + ByteBufferImpl.this.baseOffset, position * Character.BYTES, length * Character.BYTES);
+                position += length;
                 return this;
             }
 
             @Override
             protected char doGet(int pos) {
-                return ByteBufferImpl.this.getChar(pos * 2);
+                return (char) RefNative.heap_get_short(ByteBufferImpl.this.address, pos * Character.BYTES);
             }
 
             @Override
@@ -461,11 +470,12 @@ class ByteBufferImpl extends ByteBuffer {
                 if (dst == null) {
                     throw new NullPointerException();
                 } else if (pos < 0 || pos >= dst.length || pos + length > dst.length) {
+                    throw new ArrayIndexOutOfBoundsException("dst");
+                } else if (position + length > capacity) {
                     throw new IndexOutOfBoundsException();
                 }
-                for (int i = pos; i < pos + length; i++) {
-                    dst[i] = ByteBufferImpl.this.getChar();
-                }
+                RefNative.heap_copy(ByteBufferImpl.this.address, position * Character.BYTES, ReflectArray.getBodyPtr(dst), pos * Character.BYTES, length * Character.BYTES);
+                position += length;
                 return this;
             }
         };
@@ -473,7 +483,7 @@ class ByteBufferImpl extends ByteBuffer {
 
     @Override
     public DoubleBuffer asDoubleBuffer() {
-        return new DoubleBuffer() {
+        return new DoubleBuffer(ByteBufferImpl.this.readonly, array.length / Double.BYTES) {
 
             @Override
             public DoubleBuffer asReadOnlyBuffer() {
@@ -482,12 +492,16 @@ class ByteBufferImpl extends ByteBuffer {
 
             @Override
             public DoubleBuffer slice() {
-                return ByteBufferImpl.this.slice().asDoubleBuffer();
+                int pos = ByteBufferImpl.this.position;
+                ByteBufferImpl.this.position(this.position * Double.BYTES);
+                DoubleBuffer ib = ByteBufferImpl.this.slice().asDoubleBuffer();
+                ByteBufferImpl.this.position(pos);
+                return ib;
             }
 
             @Override
             protected void doPut(int pos, double value) {
-                ByteBufferImpl.this.putDouble(pos * 8, value);
+                RefNative.heap_put_double(ByteBufferImpl.this.address + ByteBufferImpl.this.baseOffset, pos * Double.BYTES, value);
             }
 
             @Override
@@ -497,15 +511,14 @@ class ByteBufferImpl extends ByteBuffer {
                 } else if (pos < 0 || pos >= src.length || pos + length > src.length) {
                     throw new IndexOutOfBoundsException();
                 }
-                for (int i = pos; i < pos + length; i++) {
-                    ByteBufferImpl.this.putDouble(src[i]);
-                }
+                RefNative.heap_copy(ReflectArray.getBodyPtr(src), pos * Double.BYTES, ByteBufferImpl.this.address + ByteBufferImpl.this.baseOffset, position * Double.BYTES, length * Double.BYTES);
+                position += length;
                 return this;
             }
 
             @Override
             protected double doGet(int pos) {
-                return ByteBufferImpl.this.getDouble(pos * 8);
+                return RefNative.heap_get_double(ByteBufferImpl.this.address, pos * Double.BYTES);
             }
 
             @Override
@@ -513,11 +526,12 @@ class ByteBufferImpl extends ByteBuffer {
                 if (dst == null) {
                     throw new NullPointerException();
                 } else if (pos < 0 || pos >= dst.length || pos + length > dst.length) {
+                    throw new ArrayIndexOutOfBoundsException("dst");
+                } else if (position + length > capacity) {
                     throw new IndexOutOfBoundsException();
                 }
-                for (int i = pos; i < pos + length; i++) {
-                    dst[i] = ByteBufferImpl.this.getDouble();
-                }
+                RefNative.heap_copy(ByteBufferImpl.this.address, position * Double.BYTES, ReflectArray.getBodyPtr(dst), pos * Double.BYTES, length * Double.BYTES);
+                position += length;
                 return this;
             }
         };
@@ -525,7 +539,7 @@ class ByteBufferImpl extends ByteBuffer {
 
     @Override
     public FloatBuffer asFloatBuffer() {
-        return new FloatBuffer() {
+        return new FloatBuffer(ByteBufferImpl.this.readonly, array.length / Float.BYTES) {
 
             @Override
             public FloatBuffer asReadOnlyBuffer() {
@@ -534,13 +548,18 @@ class ByteBufferImpl extends ByteBuffer {
 
             @Override
             public FloatBuffer slice() {
-                return ByteBufferImpl.this.slice().asFloatBuffer();
+                int pos = ByteBufferImpl.this.position;
+                ByteBufferImpl.this.position(this.position * Float.BYTES);
+                FloatBuffer ib = ByteBufferImpl.this.slice().asFloatBuffer();
+                ByteBufferImpl.this.position(pos);
+                return ib;
             }
 
             @Override
             protected void doPut(int pos, float value) {
-                ByteBufferImpl.this.putFloat(pos * 4, value);
+                RefNative.heap_put_float(ByteBufferImpl.this.address + ByteBufferImpl.this.baseOffset, pos * Float.BYTES, value);
             }
+
 
             @Override
             public FloatBuffer put(float[] src, int pos, int length) {
@@ -549,15 +568,14 @@ class ByteBufferImpl extends ByteBuffer {
                 } else if (pos < 0 || pos >= src.length || pos + length > src.length) {
                     throw new IndexOutOfBoundsException();
                 }
-                for (int i = pos; i < pos + length; i++) {
-                    ByteBufferImpl.this.putFloat(src[i]);
-                }
+                RefNative.heap_copy(ReflectArray.getBodyPtr(src), pos * Float.BYTES, ByteBufferImpl.this.address + ByteBufferImpl.this.baseOffset, position * Float.BYTES, length * Float.BYTES);
+                position += length;
                 return this;
             }
 
             @Override
             protected float doGet(int pos) {
-                return ByteBufferImpl.this.getFloat(pos * 4);
+                return RefNative.heap_get_float(ByteBufferImpl.this.address, pos * Float.BYTES);
             }
 
             @Override
@@ -565,11 +583,12 @@ class ByteBufferImpl extends ByteBuffer {
                 if (dst == null) {
                     throw new NullPointerException();
                 } else if (pos < 0 || pos >= dst.length || pos + length > dst.length) {
+                    throw new ArrayIndexOutOfBoundsException("dst");
+                } else if (position + length > capacity) {
                     throw new IndexOutOfBoundsException();
                 }
-                for (int i = pos; i < pos + length; i++) {
-                    dst[i] = ByteBufferImpl.this.getFloat();
-                }
+                RefNative.heap_copy(ByteBufferImpl.this.address, position * Float.BYTES, ReflectArray.getBodyPtr(dst), pos * Float.BYTES, length * Float.BYTES);
+                position += length;
                 return this;
             }
         };
@@ -577,7 +596,7 @@ class ByteBufferImpl extends ByteBuffer {
 
     @Override
     public IntBuffer asIntBuffer() {
-        return new IntBuffer(false) {
+        return new IntBuffer(ByteBufferImpl.this.readonly, array.length / Integer.BYTES) {
 
             @Override
             public IntBuffer asReadOnlyBuffer() {
@@ -586,12 +605,16 @@ class ByteBufferImpl extends ByteBuffer {
 
             @Override
             public IntBuffer slice() {
-                return ByteBufferImpl.this.slice().asIntBuffer();
+                int pos = ByteBufferImpl.this.position;
+                ByteBufferImpl.this.position(this.position * Integer.BYTES);
+                IntBuffer ib = ByteBufferImpl.this.slice().asIntBuffer();
+                ByteBufferImpl.this.position(pos);
+                return ib;
             }
 
             @Override
             protected void doPut(int pos, int value) {
-                ByteBufferImpl.this.putInt(pos * 4, value);
+                RefNative.heap_put_int(ByteBufferImpl.this.address + ByteBufferImpl.this.baseOffset, pos * Integer.BYTES, value);
             }
 
             @Override
@@ -601,15 +624,14 @@ class ByteBufferImpl extends ByteBuffer {
                 } else if (pos < 0 || pos >= src.length || pos + length > src.length) {
                     throw new IndexOutOfBoundsException();
                 }
-                for (int i = pos; i < pos + length; i++) {
-                    ByteBufferImpl.this.putInt(src[i]);
-                }
+                RefNative.heap_copy(ReflectArray.getBodyPtr(src), pos * Integer.BYTES, ByteBufferImpl.this.address + ByteBufferImpl.this.baseOffset, position * Integer.BYTES, length * Integer.BYTES);
+                position += length;
                 return this;
             }
 
             @Override
             protected int doGet(int pos) {
-                return ByteBufferImpl.this.getInt(pos * 4);
+                return RefNative.heap_get_int(ByteBufferImpl.this.address, pos * Integer.BYTES);
             }
 
             @Override
@@ -617,11 +639,12 @@ class ByteBufferImpl extends ByteBuffer {
                 if (dst == null) {
                     throw new NullPointerException();
                 } else if (pos < 0 || pos >= dst.length || pos + length > dst.length) {
+                    throw new ArrayIndexOutOfBoundsException("dst");
+                } else if (position + length > capacity) {
                     throw new IndexOutOfBoundsException();
                 }
-                for (int i = pos; i < pos + length; i++) {
-                    dst[i] = ByteBufferImpl.this.getInt();
-                }
+                RefNative.heap_copy(ByteBufferImpl.this.address, position * Integer.BYTES, ReflectArray.getBodyPtr(dst), pos * Integer.BYTES, length * Integer.BYTES);
+                position += length;
                 return this;
             }
         };
@@ -629,7 +652,7 @@ class ByteBufferImpl extends ByteBuffer {
 
     @Override
     public LongBuffer asLongBuffer() {
-        return new LongBuffer() {
+        return new LongBuffer(ByteBufferImpl.this.readonly, array.length / Long.BYTES) {
 
             @Override
             public LongBuffer asReadOnlyBuffer() {
@@ -638,12 +661,16 @@ class ByteBufferImpl extends ByteBuffer {
 
             @Override
             public LongBuffer slice() {
-                return ByteBufferImpl.this.slice().asLongBuffer();
+                int pos = ByteBufferImpl.this.position;
+                ByteBufferImpl.this.position(this.position * Long.BYTES);
+                LongBuffer ib = ByteBufferImpl.this.slice().asLongBuffer();
+                ByteBufferImpl.this.position(pos);
+                return ib;
             }
 
             @Override
             protected void doPut(int pos, long value) {
-                ByteBufferImpl.this.putLong(pos * 8, value);
+                RefNative.heap_put_long(ByteBufferImpl.this.address + ByteBufferImpl.this.baseOffset, pos * Long.BYTES, value);
             }
 
             @Override
@@ -653,15 +680,14 @@ class ByteBufferImpl extends ByteBuffer {
                 } else if (pos < 0 || pos >= src.length || pos + length > src.length) {
                     throw new IndexOutOfBoundsException();
                 }
-                for (int i = pos; i < pos + length; i++) {
-                    ByteBufferImpl.this.putLong(src[i]);
-                }
+                RefNative.heap_copy(ReflectArray.getBodyPtr(src), pos * Long.BYTES, ByteBufferImpl.this.address + ByteBufferImpl.this.baseOffset, position * Long.BYTES, length * Long.BYTES);
+                position += length;
                 return this;
             }
 
             @Override
             protected long doGet(int pos) {
-                return ByteBufferImpl.this.getLong(pos * 8);
+                return RefNative.heap_get_long(ByteBufferImpl.this.address, pos * Long.BYTES);
             }
 
             @Override
@@ -669,11 +695,12 @@ class ByteBufferImpl extends ByteBuffer {
                 if (dst == null) {
                     throw new NullPointerException();
                 } else if (pos < 0 || pos >= dst.length || pos + length > dst.length) {
+                    throw new ArrayIndexOutOfBoundsException("dst");
+                } else if (position + length > capacity) {
                     throw new IndexOutOfBoundsException();
                 }
-                for (int i = pos; i < pos + length; i++) {
-                    dst[i] = ByteBufferImpl.this.getLong();
-                }
+                RefNative.heap_copy(ByteBufferImpl.this.address, position * Long.BYTES, ReflectArray.getBodyPtr(dst), pos * Long.BYTES, length * Long.BYTES);
+                position += length;
                 return this;
             }
         };
