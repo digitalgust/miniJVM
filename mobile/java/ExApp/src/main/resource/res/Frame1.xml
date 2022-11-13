@@ -1,0 +1,56 @@
+<frame name="FRAME1" w="80%" h="70%" title="FRAME1" oninit="onOpen()">
+    <script>
+        <![CDATA[
+
+            sub onOpen()
+                'print("FRAME1 is open")
+                func1("FRAME1","OPEN")
+            ret
+
+            ]]>
+    </script>
+
+    <table w="100%" h="100%">
+        <tr w="100%" h="60%">
+            <td w="50%" h="100%">
+                <table h="100%">
+                    <tr h="30">
+                        <td h="100%">
+                            <label w="100%" align="center">Member List</label>
+                        </td>
+                    </tr>
+                    <tr h="float">
+                        <td>
+                            <list name="NPCCLAN_LIST" w="100%" h="100%" multiline="1" scroll="1" itemh="25">
+                                <li>Jack</li>
+                                <li>Tom</li>
+                            </list>
+                        </td>
+                    </tr>
+                    <tr h="30">
+                        <td>
+                            <button name="NPCCLAN_PREV" w="30%">Preview</button>
+                            <label name="NPCCLAN_PAGE" w="40%" align="center"></label>
+                            <button name="NPCCLAN_NEXT" w="30%">Next</button>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td w="50%">
+                <label w="100%" h="25" align="center">New</label>
+                <label w="30%" h="25" align="left,vcenter">Name:</label>
+                <input w="70%" h="25" name="NPCCLAN_NAME">Rose</input>
+                <input w="100%" h="60" multiline="1" name="NPCCLAN_DESC" hint="Input text here"></input>
+                <br/>
+                <button name="NPCCLAN_APPL" w="100%" h="30">Application</button>
+            </td>
+        </tr>
+        <tr w="100%" h="float">
+            <td>
+                <test.ext.XCustomList name="CUSTLIST" w="100%" h="100%">
+                </test.ext.XCustomList>
+            </td>
+        </tr>
+    </table>
+
+</frame>

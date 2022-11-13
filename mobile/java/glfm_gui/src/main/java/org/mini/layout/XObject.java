@@ -1,6 +1,9 @@
 package org.mini.layout;
 
-import org.mini.gui.*;
+import org.mini.gui.GContainer;
+import org.mini.gui.GLayout;
+import org.mini.gui.GObject;
+import org.mini.gui.GuiScriptLib;
 import org.mini.gui.gscript.Interpreter;
 import org.mini.gui.gscript.Lib;
 import org.mini.layout.xmlpull.KXmlParser;
@@ -207,7 +210,7 @@ public abstract class XObject implements GLayout {
         return null;
     }
 
-    public void initGui() {
+    public final void initGuiMore() {
         GObject gui = getGui();
         if (gui != null) {
             gui.setLayout(this);
@@ -468,20 +471,9 @@ public abstract class XObject implements GLayout {
 
     protected abstract String getXmlTag();
 
-    protected abstract void createGui();
+    protected abstract void createAndSetGui();
 
-
-//    public void flyBegin(GObject gObject, float x, float y) {
-//        getRoot().getEventHandler().flyBegin(gObject, x, y);
-//    }
-//
-//    public void flying(GObject gObject, float x, float y) {
-//        getRoot().getEventHandler().flying(gObject, x, y);
-//    }
-//
-//    public void flyEnd(GObject gObject, float x, float y) {
-//        getRoot().getEventHandler().flyEnd(gObject, x, y);
-//    }
+    protected abstract <T extends GObject> T createGuiImpl();
 
 
     public XmlExtAssist getAssist() {

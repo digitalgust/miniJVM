@@ -61,10 +61,14 @@ public class XButton
     }
 
 
-    protected void createGui() {
+    protected <T extends GObject> T createGuiImpl() {
+        return (T) new GButton(getAssist().getForm(), text, x, y, width, height);
+    }
+
+    protected void createAndSetGui() {
         if (button == null) {
-            button = new GButton(getAssist().getForm(), text, x, y, width, height);
-            initGui();
+            button = createGuiImpl();
+            initGuiMore();
             button.setPreIcon(preicon);
         } else {
             button.setLocation(x, y);

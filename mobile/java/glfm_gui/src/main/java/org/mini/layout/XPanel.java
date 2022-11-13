@@ -3,8 +3,6 @@ package org.mini.layout;
 import org.mini.gui.GObject;
 import org.mini.gui.GPanel;
 
-import java.util.Random;
-
 public class XPanel extends XContainer {
     static public final String XML_NAME = "panel";
 
@@ -25,21 +23,15 @@ public class XPanel extends XContainer {
         return panel;
     }
 
-    Random random = new Random();
 
-    protected void createGui() {
+    protected <T extends GObject> T createGuiImpl() {
+        return (T) new GPanel(getAssist().getForm(), x, y, width, height);
+    }
+
+    protected void createAndSetGui() {
         if (panel == null) {
-            panel = new GPanel(getAssist().getForm(),x, y, width, height)
-//            {
-//                public boolean paint(long vg) {
-//                    Nanovg.nvgScissor(vg, getX(), getY(), width, height);
-//                    GToolkit.drawRect(vg, getX(), getY(), width, height, new float[]{random.nextFloat(), random.nextFloat(), 0.2f, 0.5f});
-//                    super.paint(vg);
-//                    return true;
-//                }
-//            }
-            ;
-            initGui();
+            panel = createGuiImpl();
+            initGuiMore();
         } else {
             panel.setLocation(x, y);
             panel.setSize(width, height);

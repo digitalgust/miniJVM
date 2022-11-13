@@ -2,7 +2,6 @@ package org.mini.layout;
 
 import org.mini.gui.GObject;
 import org.mini.gui.GViewSlot;
-import org.mini.gui.event.GStateChangeListener;
 
 /**
  * <viewslot>
@@ -73,10 +72,14 @@ public class XViewSlot extends XContainer {
         return viewSlot;
     }
 
-    protected void createGui() {
+    protected <T extends GObject> T createGuiImpl() {
+        return (T) new GViewSlot(getAssist().getForm(), x, y, width, height, scroll);
+    }
+
+    protected void createAndSetGui() {
         if (viewSlot == null) {
-            viewSlot = new GViewSlot(getAssist().getForm(), x, y, width, height, scroll);
-            initGui();
+            viewSlot = createGuiImpl();
+            initGuiMore();
             viewSlot.setLocation(x, y);
             viewSlot.setSize(width, height);
 

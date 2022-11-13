@@ -19,7 +19,7 @@ public class XForm extends XContainer {
         assist.setForm(form);
 
         super.parse(parser, assist);
-        initGui();
+        initGuiMore();
     }
 
     @Override
@@ -32,10 +32,15 @@ public class XForm extends XContainer {
         return form;
     }
 
-    protected void createGui() {
+    protected <T extends GObject> T createGuiImpl() {
+        return (T) new GForm(getAssist().getForm());
+    }
+
+
+    protected void createAndSetGui() {
         if (form == null) {
-            form = new GForm(getAssist().getForm());
-            initGui();
+            form = createGuiImpl();
+            initGuiMore();
             form.setLocation(x, y);
             form.setSize(width, height);
         } else {

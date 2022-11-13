@@ -1,6 +1,5 @@
 package test;
 
-import org.mini.apploader.AppManager;
 import org.mini.apploader.GApplication;
 import org.mini.gui.*;
 import org.mini.layout.UITemplate;
@@ -8,6 +7,8 @@ import org.mini.layout.XContainer;
 import org.mini.layout.XEventHandler;
 import org.mini.layout.XmlExtAssist;
 import org.mini.nanovg.Nanovg;
+import test.ext.ExScriptLib;
+import test.ext.GCustomList;
 
 /**
  * @author gust
@@ -43,11 +44,28 @@ public class MyApp extends GApplication {
             @Override
             public void action(GObject gobj) {
                 String name = gobj.getName();
+                if (name == null) return;
                 switch (name) {
                     case "MI_OPENFRAME":
                         if (form.findByName("FRAME_TEST") == null) {
                             form.add(gframe);
                         }
+                        break;
+                    case "MI_OPENFRAME1":
+                        XmlExtAssist assist = new XmlExtAssist(form);
+                        assist.registerGUI("test.ext.XCustomList");
+                        assist.addExtScriptLib(new ExScriptLib());
+                        String xmlStr = GToolkit.readFileFromJarAsString("/res/Frame1.xml", "utf-8");
+                        UITemplate uit = new UITemplate(xmlStr);
+                        XContainer xc = (XContainer) XContainer.parseXml(uit.parse(), assist);
+                        xc.build((int) form.getW(), (int) form.getH(), this);
+                        GFrame f1 = xc.getGui();
+                        GToolkit.closeFrame(form, f1.getName());
+                        GToolkit.showFrame(f1);
+
+                        GCustomList customList = GToolkit.getComponent(f1, "CUSTLIST");
+                        customList.addItem(null, "CustomList Item1");
+                        customList.addItem(null, "CustomList Item2");
                         break;
                     case "MI_EXIT":
                         closeApp();

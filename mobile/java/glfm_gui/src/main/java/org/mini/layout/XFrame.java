@@ -86,13 +86,17 @@ public class XFrame
      * @return
      */
     protected int getDiff_ViewH2Height() {
-        return 34;
+        return 4;
     }
 
-    protected void createGui() {
+    protected <T extends GObject> T createGuiImpl() {
+        return (T) new GFrame(getAssist().getForm(), title, x, y, width, height);
+    }
+
+    protected void createAndSetGui() {
         if (frame == null) {
-            frame = new GFrame(getAssist().getForm(), title, x, y, width, height);
-            initGui();
+            frame = createGuiImpl();
+            initGuiMore();
             frame.setClosable(closable);
             frame.setOnCloseScript(onCloseScript);
             frame.setOnInitScript(onInitScript);

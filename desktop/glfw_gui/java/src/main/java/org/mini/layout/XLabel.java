@@ -72,10 +72,14 @@ public class XLabel
         }
     }
 
-    protected void createGui() {
+    protected <T extends GObject> T createGuiImpl() {
+        return (T) new GLabel(getAssist().getForm(), text, x, y, width, height);
+    }
+
+    protected void createAndSetGui() {
         if (label == null) {
-            label = new GLabel(getAssist().getForm(), text, x, y, width, height);
-            initGui();
+            label = createGuiImpl();
+            initGuiMore();
             label.setAlign(align);
             label.setShowMode(multiLine ? GLabel.MODE_MULTI_SHOW : GLabel.MODE_SINGLE_SHOW);
 

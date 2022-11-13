@@ -2,8 +2,6 @@ package org.mini.layout;
 
 import org.mini.gui.GCheckBox;
 import org.mini.gui.GObject;
-import org.mini.gui.event.GActionListener;
-import org.mini.gui.gscript.Interpreter;
 import org.mini.layout.xmlpull.KXmlParser;
 
 /**
@@ -56,10 +54,14 @@ public class XCheckBox
         return XUtil.measureHeight(viewW, text, fontSize);
     }
 
-    protected void createGui() {
+    protected <T extends GObject> T createGuiImpl() {
+        return (T) new GCheckBox(getAssist().getForm(), text, false, x, y, width, height);
+    }
+
+    protected void createAndSetGui() {
         if (checkBox == null) {
-            checkBox = new GCheckBox(getAssist().getForm(),text, false, x, y, width, height);
-            initGui();
+            checkBox = createGuiImpl();
+            initGuiMore();
             checkBox.setChecked(selected);
         } else {
             checkBox.setLocation(x, y);

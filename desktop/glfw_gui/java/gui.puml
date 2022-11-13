@@ -1,0 +1,101 @@
+@startuml
+class org.mini.gui.ImageImmutable {
+}
+class org.mini.gui.GForm {
+}
+class org.mini.gui.GImageItem {
+}
+class org.mini.gui.GFrame {
+}
+class org.mini.gui.GViewPort {
+}
+class org.mini.gui.GListItem {
+}
+class org.mini.gui.GTextBox {
+}
+class org.mini.gui.GColorSelector {
+}
+class org.mini.gui.GMenu {
+}
+class org.mini.gui.GList {
+}
+abstract class org.mini.gui.GContainer {
+}
+class org.mini.gui.GLabel {
+}
+class org.mini.gui.GCheckBox {
+}
+class org.mini.gui.GTextField {
+}
+class org.mini.gui.GSwitch {
+}
+interface org.mini.gui.GAttachable {
+}
+class org.mini.gui.GViewSlot {
+}
+class org.mini.gui.GScrollBar {
+}
+abstract class org.mini.gui.GImage {
+}
+class org.mini.gui.GButton {
+}
+class org.mini.gui.GPanel {
+}
+class org.mini.gui.ImageMutable {
+}
+abstract class org.mini.gui.GObject {
+}
+class org.mini.gui.GCanvas {
+}
+abstract class org.mini.gui.GOpenGLPanel {
+}
+class org.mini.gui.GMenuItem {
+}
+class org.mini.gui.GToolkit {
+}
+class org.mini.gui.GToolkit.EditMenu {
+}
+abstract class org.mini.gui.GTextObject {
+}
+abstract class org.mini.gui.GStyle {
+}
+class org.mini.gui.GStyleDark {
+}
+class org.mini.gui.GStyleBright {
+}
+class org.mini.gui.GStyleInner {
+}
+
+
+org.mini.gui.GImage <|-- org.mini.gui.ImageImmutable
+org.mini.gui.GStyle <|-- org.mini.gui.GStyleInner
+org.mini.gui.GToolkit +.. org.mini.gui.GToolkit.EditMenu
+org.mini.gui.GMenu <|-- org.mini.gui.GToolkit.EditMenu
+org.mini.gui.GContainer <|-- org.mini.gui.GForm
+org.mini.gui.GObject <|-- org.mini.gui.GImageItem
+org.mini.gui.GContainer <|-- org.mini.gui.GFrame
+org.mini.gui.GContainer <|-- org.mini.gui.GViewPort
+org.mini.gui.GObject <|-- org.mini.gui.GListItem
+org.mini.gui.GStyle <|-- org.mini.gui.GStyleBright
+org.mini.gui.GTextObject <|-- org.mini.gui.GTextBox
+org.mini.gui.GObject <|-- org.mini.gui.GColorSelector
+org.mini.gui.GObject <|-- org.mini.gui.GMenuItem
+org.mini.gui.GContainer <|-- org.mini.gui.GList
+org.mini.gui.GObject <|-- org.mini.gui.GLabel
+org.mini.gui.GObject <|-- org.mini.gui.GCheckBox
+org.mini.gui.GTextObject <|-- org.mini.gui.GTextField
+org.mini.gui.GObject <|-- org.mini.gui.GSwitch
+org.mini.gui.GViewPort <|-- org.mini.gui.GViewSlot
+org.mini.gui.GObject <|-- org.mini.gui.GTextObject
+org.mini.gui.GObject <|-- org.mini.gui.GScrollBar
+org.mini.gui.GContainer <|-- org.mini.gui.GMenu
+org.mini.gui.GAttachable <|.. org.mini.gui.GImage
+org.mini.gui.GObject <|-- org.mini.gui.GButton
+org.mini.gui.GContainer <|-- org.mini.gui.GPanel
+org.mini.gui.GObject <|-- org.mini.gui.GContainer
+org.mini.gui.GImage <|-- org.mini.gui.ImageMutable
+org.mini.gui.GAttachable <|.. org.mini.gui.GObject
+org.mini.gui.GStyle <|-- org.mini.gui.GStyleDark
+org.mini.gui.GContainer <|-- org.mini.gui.GCanvas
+org.mini.gui.GContainer <|-- org.mini.gui.GOpenGLPanel
+@enduml

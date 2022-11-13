@@ -1,14 +1,15 @@
 package org.mini.layout;
 
+import org.mini.glwrap.GLUtil;
 import org.mini.gui.GContainer;
 import org.mini.gui.GObject;
 import org.mini.layout.xmlpull.KXmlParser;
 import org.mini.layout.xmlpull.XmlPullParser;
-import org.mini.glwrap.GLUtil;
 import org.mini.nanovg.Nanovg;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -89,7 +90,7 @@ public abstract class XContainer
                     totalH = dy + curRowH;
                 }
             }
-            xo.createGui();
+            xo.createAndSetGui();
 
         }
         if (height == XDef.NODEF) {
@@ -102,7 +103,7 @@ public abstract class XContainer
             viewH = height - getDiff_ViewH2Height();
         }
 
-        createGui();
+        createAndSetGui();
         for (int i = 0; i < children.size(); i++) {
             XObject xo = children.get(i);
             GObject go = xo.getGui();
@@ -195,7 +196,7 @@ public abstract class XContainer
     }
 
 
-    protected void createGui() {
+    protected void createAndSetGui() {
 
     }
 
@@ -395,10 +396,9 @@ public abstract class XContainer
                     if (s.equals(tagName)) {
                         try {
                             Class clazz = Class.forName(s, true, Thread.currentThread().getContextClassLoader());
-                            XObject xobj = (XObject) clazz.newInstance();
-                            xobj.setParent(parent);
+                            Constructor con = clazz.getConstructor(XContainer.class);
+                            XObject xobj = (XObject) con.newInstance(parent);
                             xobj.parse(parser, assist);
-                            found = true;
                             return (xobj);
                         } catch (Exception e) {
                             e.printStackTrace();

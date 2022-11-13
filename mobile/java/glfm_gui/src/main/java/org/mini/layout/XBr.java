@@ -31,8 +31,12 @@ public class XBr
     }
 
 
+    protected <T extends GObject> T createGuiImpl() {
+        return null;
+    }
+
     @Override
-    protected void createGui() {
+    protected void createAndSetGui() {
 
     }
 

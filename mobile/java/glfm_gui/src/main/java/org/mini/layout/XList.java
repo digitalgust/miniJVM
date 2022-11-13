@@ -1,9 +1,6 @@
 package org.mini.layout;
 
 import org.mini.gui.*;
-import org.mini.gui.event.GActionListener;
-import org.mini.gui.event.GStateChangeListener;
-import org.mini.gui.gscript.Interpreter;
 import org.mini.layout.xmlpull.KXmlParser;
 import org.mini.layout.xmlpull.XmlPullParser;
 
@@ -120,10 +117,14 @@ public class XList extends XObject {
         return list;
     }
 
-    protected void createGui() {
+    protected <T extends GObject> T createGuiImpl() {
+        return (T) new GList(getAssist().getForm(), x, y, width, height);
+    }
+
+    protected void createAndSetGui() {
         if (list == null) {
-            list = new GList(getAssist().getForm(), x, y, width, height);
-            initGui();
+            list = createGuiImpl();
+            initGuiMore();
             list.setShowMode(multiLine ? GList.MODE_MULTI_SHOW : GList.MODE_SINGLE_SHOW);
             list.setSelectMode(multiSelect ? GList.MODE_MULTI_SELECT : GList.MODE_SINGLE_SELECT);
             list.setItemHeight(itemheight);

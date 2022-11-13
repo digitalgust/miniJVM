@@ -45,10 +45,14 @@ public class XSwitch
         return (int) GSwitch.DEFAULT_HEIGHT;
     }
 
-    protected void createGui() {
+    protected <T extends GObject> T createGuiImpl() {
+        return (T) new GSwitch(getAssist().getForm(), selected, x, y, width, height);
+    }
+
+    protected void createAndSetGui() {
         if (switcher == null) {
-            switcher = new GSwitch(getAssist().getForm(), selected, x, y, width, height);
-            initGui();
+            switcher = createGuiImpl();
+            initGuiMore();
         } else {
             switcher.setLocation(x, y);
             switcher.setSize(width, height);

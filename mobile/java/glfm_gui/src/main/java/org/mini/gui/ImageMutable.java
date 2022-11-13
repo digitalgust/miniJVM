@@ -113,6 +113,7 @@ public class ImageMutable extends GImage {
     }
 
     public void updateImage() {
+        getNvgTextureId();
         Nanovg.nvgUpdateImage(GCallBack.getInstance().getNvContext(), nvg_texture, data.array());
     }
 

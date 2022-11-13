@@ -4,8 +4,6 @@ import org.mini.gui.GImage;
 import org.mini.gui.GImageItem;
 import org.mini.gui.GObject;
 import org.mini.gui.GToolkit;
-import org.mini.gui.event.GActionListener;
-import org.mini.gui.gscript.Interpreter;
 import org.mini.layout.xmlpull.KXmlParser;
 
 public class XImageItem extends XObject {
@@ -60,12 +58,16 @@ public class XImageItem extends XObject {
         return img_h;
     }
 
+    protected <T extends GObject> T createGuiImpl() {
+        GImage img = GToolkit.getCachedImageFromJar(pic);
+        return (T) new GImageItem(getAssist().getForm(), img);
+    }
+
     @Override
-    protected void createGui() {
+    protected void createAndSetGui() {
         if (imgItem == null) {
-            GImage img = GToolkit.getCachedImageFromJar(pic);
-            imgItem = new GImageItem(getAssist().getForm(), img);
-            initGui();
+            imgItem = createGuiImpl();
+            initGuiMore();
             imgItem.setLocation(x, y);
             imgItem.setSize(width, height);
             imgItem.setAlpha(alpha);

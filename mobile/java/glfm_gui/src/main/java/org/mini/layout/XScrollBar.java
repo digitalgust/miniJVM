@@ -58,10 +58,14 @@ public class XScrollBar
         return XUtil.measureHeight(viewW, text, fontSize);
     }
 
-    protected void createGui() {
+    protected <T extends GObject> T createGuiImpl() {
+        return (T) new GScrollBar(getAssist().getForm(), value, mode, x, y, width, height);
+    }
+
+    protected void createAndSetGui() {
         if (scrollBar == null) {
-            scrollBar = new GScrollBar(getAssist().getForm(), value, mode, x, y, width, height);
-            initGui();
+            scrollBar = createGuiImpl();
+            initGuiMore();
         } else {
             scrollBar.setLocation(x, y);
             scrollBar.setSize(width, height);

@@ -1,7 +1,6 @@
 package org.mini.layout;
 
 import org.mini.gui.*;
-import org.mini.gui.event.GStateChangeListener;
 import org.mini.layout.xmlpull.KXmlParser;
 
 public class XTextInput
@@ -80,17 +79,23 @@ public class XTextInput
         return textInput;
     }
 
-    protected void createGui() {
-        if (textInput == null) {
-            if (multiLine) {
-                textInput = new GTextBox(getAssist().getForm(),getText(), hint, x, y, width, height);
+    protected <T extends GObject> T createGuiImpl() {
+        if (multiLine) {
+            return (T) new GTextBox(getAssist().getForm(), getText(), hint, x, y, width, height);
+        } else {
+            return (T) new GTextField(getAssist().getForm(), getText(), hint, x, y, width, height);
+        }
+    }
 
-            } else {
-                textInput = new GTextField(getAssist().getForm(),getText(), hint, x, y, width, height);
+    protected void createAndSetGui() {
+        if (textInput == null) {
+            textInput = createGuiImpl();
+            if (!multiLine) {
+                textInput = createGuiImpl();
                 ((GTextField) textInput).setBoxStyle(style);
                 ((GTextField) textInput).setPasswordMode(password);
             }
-            initGui();
+            initGuiMore();
             textInput.setEnable(enable);
             textInput.setEditable(edit);
         } else {

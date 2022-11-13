@@ -32,6 +32,7 @@
 
     <menu name="MENU_MAIN" x="0" y="90%" w="100%" h="10%" fixed="1">
         <mi name="MI_OPENFRAME" pic="/res/hello.png">{Test}</mi>
+        <mi name="MI_OPENFRAME1" pic="/res/hello.png">Frame1</mi>
         <mi name="MI_EXIT" pic="/res/appmgr.png">{Exit}</mi>
     </menu>
 </form>

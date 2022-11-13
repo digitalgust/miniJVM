@@ -21,10 +21,14 @@ public class XViewPort extends XContainer {
         return viewPort;
     }
 
-    protected void createGui() {
+    protected <T extends GObject> T createGuiImpl() {
+        return (T) new GViewPort(getAssist().getForm());
+    }
+
+    protected void createAndSetGui() {
         if (viewPort == null) {
-            viewPort = new GViewPort(getAssist().getForm());
-            initGui();
+            viewPort = createGuiImpl();
+            initGuiMore();
             viewPort.setLocation(x, y);
             viewPort.setSize(width, height);
         } else {

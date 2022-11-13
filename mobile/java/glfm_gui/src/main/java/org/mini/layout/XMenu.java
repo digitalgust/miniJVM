@@ -1,7 +1,6 @@
 package org.mini.layout;
 
 import org.mini.gui.*;
-import org.mini.gui.event.GActionListener;
 import org.mini.layout.xmlpull.KXmlParser;
 import org.mini.layout.xmlpull.XmlPullParser;
 
@@ -117,10 +116,14 @@ public class XMenu extends XObject {
         return menu;
     }
 
-    protected void createGui() {
+    protected <T extends GObject> T createGuiImpl() {
+        return (T) new GMenu(getAssist().getForm(), x, y, width, height);
+    }
+
+    protected void createAndSetGui() {
         if (menu == null) {
-            menu = new GMenu(getAssist().getForm(), x, y, width, height);
-            initGui();
+            menu = createGuiImpl();
+            initGuiMore();
             for (int i = 0; i < items.size(); i++) {
                 MenuItem item = (MenuItem) items.elementAt(i);
                 GImage img = null;
