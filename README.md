@@ -5,13 +5,13 @@
 
 Develop iOS Android app in java, Cross platform java virtual machine , the minimal jvm .
 
-[Features](#linkfeatures)
-[Architecture](#linkarch)
-[Build for iOS/Android platform](#linkbuildmobile)
-[Build for Windows/Linux/MacOS platform](#linkbuilddesktop)
-[How to debug source](#linkdebug)
-[Using miniJVM in project](#linkembed)
-[Documentation](#dochome)
+[Features](#linkfeatures)    
+[Architecture](#linkarch)    
+[Build for iOS/Android platform](#linkbuildmobile)     
+[Build for Windows/Linux/MacOS platform](#linkbuilddesktop)     
+[How to debug source](#linkdebug)    
+[Using miniJVM in project](#linkembed)    
+[Documentation](#dochome)    
 
 <span id="linkfeatures"/>   
 
@@ -48,7 +48,7 @@ MiniJVM on web build by Starcommander. [Source](https://github.com/Starcommander
 
 ## MiniJVM gui Demo
 
-  <div align=center><img width="224" height="398" src="/screenshot/demo.gif"/><img width="224" height="398" src="/screenshot/g3d.gif"/></div>
+  <div align=center><img width="224" height="398" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/demo.gif"/><img width="224" height="398" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/g3d.gif"/></div>
 
 * Instant Message app Demo , [Source](https://github.com/digitalgust/BiBiX)
 * 3D game app Demo, [Source](https://github.com/digitalgust/g3d)
@@ -349,7 +349,7 @@ mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/luaj.jar Sample
 
 * ### Outline
 
-<div align=center><img width="600" height="160" src="/screenshot/doc_gui_arch.png"/></div>
+<div align=center><img width="600" height="160" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/doc_gui_arch.png"/></div>
 
 
 
@@ -398,7 +398,7 @@ public class MyApp0 extends GApplication {
 ``` 
 
 This is a simplest app, override getForm() to export a GForm to AppManager, Device show the form ,and trans events (Keyboard/Mouse/TouchScreen/etc) to the form.
-<div align=center><img width="300" height="150" src="/screenshot/doc_gui_form.jpg"/></div>
+<div align=center><img width="300" height="150" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/doc_gui_form.jpg"/></div>
 
 
 [< Back](#dochome)
@@ -480,7 +480,7 @@ There is a frame show on the form. Attributes:
 **title**: String , the frame's title.        
 **onclose**: String , the script function call, this function must in the frame's script partion.        
 **oninit**: String , the script function call, this function must in the frame's script partion.
-<div align=center><img width="300" height="150" src="/screenshot/doc_gui_frame.jpg"/></div>
+<div align=center><img width="300" height="150" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/doc_gui_frame.jpg"/></div>
 
 
 [< Back](#dochome)
@@ -531,7 +531,7 @@ How to active the menu item?
 ```
 
 in the XEventHandler, on Test Button touched or clicked ,then do something.
-<div align=center><img width="300" height="150" src="/screenshot/doc_gui_menu.jpg"/></div>
+<div align=center><img width="300" height="150" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/doc_gui_menu.jpg"/></div>
 
 
 [< Back](#dochome)
@@ -971,7 +971,7 @@ public class MyApp extends GApplication {
 
 ```
 
-<div align=center><img width="224" height="398" src="/screenshot/doc_gui_example.jpg"/></div>
+<div align=center><img width="224" height="398" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/doc_gui_example.jpg"/></div>
 
 [< Back](#dochome)
 
@@ -1057,7 +1057,7 @@ All UI containers support the following three layout methods, which can be mixed
 
 ```
 
-<div align=center><img width="500" height="261" src="/screenshot/doc_gui_tablelayout.jpg"/></div>
+<div align=center><img width="500" height="261" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/doc_gui_tablelayout.jpg"/></div>
 
 
 [< Back](#dochome)
