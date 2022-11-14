@@ -1,6 +1,6 @@
 package org.mini.gui;
 
-abstract public class GOpenGLPanel extends GContainer {
+abstract public class GOpenGLPanel extends GPanel {
     protected GImage glRendereredImg;
 
     protected boolean glinited = false;

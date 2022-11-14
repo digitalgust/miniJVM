@@ -1,0 +1,9 @@
+<form name="FORM_MAIN" w="100%" h="100%">
+    <script>
+    </script>
+    <test.ext.XSimplePanel name="GLP_SIMPLE" x="0" y="0%" w="100%" h="90%" align="top,left"></test.ext.XSimplePanel>
+
+    <menu name="MENU_MAIN" x="0" y="90%" w="100%" h="10%" fixed="1">
+        <mi name="MI_EXIT">Exit</mi>
+    </menu>
+</form>

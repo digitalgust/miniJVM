@@ -44,7 +44,7 @@ Develop iOS Android app in java, Cross platform java virtual machine , the minim
 ## MiniJVM on Web
 
 MiniJVM on web build by Starcommander. [Source](https://github.com/Starcommander/miniJVM)
-[MiniJVM Web demo](https://java-on-web.org/examples/)
+[Web demo](https://java-on-web.org/examples/)
 
 <span id="linkdemo"/>
 
@@ -65,13 +65,13 @@ MiniJVM on web build by Starcommander. [Source](https://github.com/Starcommander
 
 ## Changelog:
 
-2022.11. Add documentation.
+2022.11. Add documentation.    
 2021.03. Add j2c module, it 's a tool for convert minijvm java source code to c source code , then build it as native application , support desktop and mobile platform .   
 2020.12. Add build script and release v2.1.   
 2020.10. Refactor source and remove binary in repository.   
 2020.10. Https supported.   
 2020.03. Add xml layout for gui system, add 3D game demo for minijvm, fix jdwp debug for jetbrain idea.               
-2019.12. Bind cross platform awtk ui system , see [awtk-minijvm](https://github.com/digitalgust/miniJVM/tree/master/desktop/awtk_gui)   
+2019.12. Bind cross-platform awtk ui system , see [awtk-minijvm](https://github.com/digitalgust/miniJVM/tree/master/desktop/awtk_gui)   
 2019.12. Jit enabled, it based on sljit project   
 2019.10. Jit is developing   
 2018.12. Optimize performance     
@@ -83,7 +83,7 @@ MiniJVM on web build by Starcommander. [Source](https://github.com/Starcommander
 
 Write java code once , running on all of iOS / Android / MacOSX / Win / Linux platforms   
 There were not essential jar file pre-built, so build these jar file first   
-Develop IDE:  Eclipse, Netbeans or Jetbrain Intelli Idea
+Develop IDE:  Eclipse, Netbeans or JetBrains Intelli Idea
 
 1. Run script **/binary/build_jar.sh** or **/binary/build_jar.bat** to generted jars.     
    Or
@@ -339,6 +339,7 @@ mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/luaj.jar Sample
   * [GUI Scriptlib api](#docscriptguilib)   
   * [Extention library](#docscriptextlib)   
 * [Example](#docexample)
+* [Example Game](#docexamplegame)
 
 [Audio](#docaudio)
 
@@ -352,19 +353,20 @@ mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/luaj.jar Sample
 
    <div align=center><img width="600" height="160" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/doc_gui_arch.png"/></div>
 
-   * All GUI application is extends class GApplication, it contains a GForm. and starts by AppManager.
-   * Visible UI component is a GObject.
-   * GForm is an OS window or a phone screen, a top visible UI component.
-   * GFrame is a window GContainer ,can be close, drag it move.
-   * All UI components are children of GContainer.
-   * GContainer can be son of other GContainer.
-   * Set a GStyle for all GObject by GToolkit.setStyle().
-   * There are two methods to new a GObject , one is manual create an object, the other write in a XML file.
-   * GUI XML layout like HTML, and there is a script like javascript for HTML.
-   * iOS/Android system based on GLFM  (/mobile/iosapp/ , /mobile/androidapp/)
-   * Window system based on GLFW   (/desktop/glfw_gui/)
-   * GUI rendering based on Nanovg
+   * Visible UI components are inherited from GObject.
+   * All GUI application are extends class GApplication, GApplication contains a GForm, and starts by AppManager.
+   * GForm is a panels of OS window or phone screen, a bottom visible UI container.
+   * GFrame is an internal closable and movable window container.
+   * All UI components are placed in a GContainer.
+   * GContainer can be a child of another GContainer.
+   * Set a GStyle for all components to change appearance.    
+   * There are two methods to new a GObject , one is manual create an object, the other is added a node to XML file.   
+   * GUI XML layout like HTML, and there is a simple script like javascript for HTML.    
+   * iOS/Android system based on GLFM  (/mobile/iosapp/ , /mobile/androidapp/)    
+   * Desktop window system based on GLFW   (/desktop/glfw_gui/)
+   * GUI rendering by Nanovg
    * OpenGL 3.3 for desktop and OpenGLES 3.0 for mobile
+   * The UI consists of two parts, one is compiled into a dynamic link library by the jni native function, and the native function is compiled together with the JVM on the mobile phone, and the other part is the java api.    
 
 
 [< Back](#dochome)
@@ -401,7 +403,7 @@ miniJVM 本身并不包含图形系统，为便于开发，依附于VM建立了�
 这些jar应用，在jar中必须包含一个config.txt的文件，用于描述此应用的一些属性，比如启动类，图标，更新地址等。   
 -->
 
-JVM itself does not contain a graphics system. For desktop and mobile phone, a graphics framework based on OpenGL/GLES is established attached to the JVM.
+miniJVM core does not contain a graphics system. For desktop and mobile phone, a graphics framework based on OpenGL/GLES is established attached to the JVM.
 This system will enter the graphical interface of AppManager after starting the VM. This application manager is managing more applications developed by java.
 It can be installing and deleting applications, etc. The way of installing applications include downloading jars, or uploading jars.
 These jars applications must contain a config.txt file in the jar, which is used to describe some properties of this application, such as startup class, icon, update address, etc.
@@ -571,7 +573,7 @@ If not specify the "h" height, the default height is Text width add 30pix.
 Attributes:   
 **onclick**: String , the script function call, this function must in the frame's script partion.    
 **addon**: int , specify an int value for increase button's width, the default value is 30pix, in pixels.     
-**preicon**: utf8 char , an emoji char as icon front of the text.     
+**preicon**: utf8 emoji char , as icon front of the text.     
 
 [< Back](#dochome)
 
@@ -729,7 +731,7 @@ Attributes:
 </viewslot>
 ```
 
-GViewSlot is a multi-slot container. Each slot is a fullsize container. Only one slot can be visible at once. It can be switched to another slot by dragging and dropping. There are three slots in the above example. One is a ViewPort, the second is a Panel, and the third is a table. Each container has a "move" attribute whose value indicates which direction it can slide.    
+GViewSlot is a multi-slot container. Each slot is a fullsize container. Only one slot is visible at once. It can be switched to another slot by dragging and dropping. There are three slots in the above example. One is a ViewPort, the second is a Panel, and the third is a table. Each container has a "move" attribute whose value indicates which direction it can slide.    
 If not specify the "w" width, the default width is parent's width.   
 If not specify the "h" height, the default height is parent's height.
 
@@ -743,7 +745,7 @@ Attributes:
 * ### GTextBox GTextField
 
 ```
-<input name="WRITE_BOX" w="100%" h="20%" multiline="1" edit=1>default text</input>
+<input name="WRITE_BOX" w="100%" h="20%" multiline="1" edit="1">default text</input>
 ```
 
 If not specify the "w" width, the default width is image width.   
@@ -983,7 +985,7 @@ GLanguage.setCurLang(GLanguage.ID_CHN); //more options : ID_ENG , ID_CHT
 //If you need to add more languages, you can add more elements to the array, such as
 GLanguage.addString("More", new String[]{"More", "更多", "更多", "もっと"});
 
-GLanguage.setCurLang(3); //that 4 indicate the third data of array
+GLanguage.setCurLang(3); //that 3 is array index
 ```
 
 
@@ -1133,7 +1135,7 @@ public class GStyleGolden extends GStyle {
 
 * ### Layout
 
-  All UI containers support the following three layout methods, which can be mixed. In XML, flow layout and table layout are usually used at the same time. Layout is just a concept, and the code does not need to specify which layout to use. The layout manager automatically layout according to the description in XML.
+  All UI containers support the following three layouts. In XML, flow layout and table layout are usually simultaneously exist. Layout is just a concept, we do not need to specify which layout to use anywhere. The layout manager automatically layout according to the description in XML.
 
   [< Back](#dochome)
 
@@ -1152,7 +1154,7 @@ public class GStyleGolden extends GStyle {
   frame.getView().add(but);
   ```
 
-[< Back](#dochome)
+  [< Back](#dochome)
 
 
 <span id="doclayoutflow"/>   
@@ -1162,7 +1164,7 @@ public class GStyleGolden extends GStyle {
 
   If need force a line break, can use &lt;br/&gt; to break row.
 
-[< Back](#dochome)
+  [< Back](#dochome)
 
 
 <span id="doclayouttable"/>   
@@ -1213,7 +1215,7 @@ public class GStyleGolden extends GStyle {
 <div align=center><img width="500" height="261" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/doc_gui_tablelayout.jpg"/></div>
 
 
-[< Back](#dochome)
+  [< Back](#dochome)
 
 
 
@@ -1221,7 +1223,7 @@ public class GStyleGolden extends GStyle {
 
 * ### Script
 
-A simple scripting system is embedded in XML, and scripts can process UI component or services for applications. This script is similar to what javascript for HTML.    
+A simple scripting system is embedded in XML, and scripts can modify UI component or services for applications. This script is similar to what javascript for HTML.    
 The script can be extended as a bridge between the script and the java system.
 
 XML node &lt;script&gt; can be place in any GContainer components, if a button has "onclick" attribute, the button find it's parent's script, if it's parent no script exists, then find the grandparent, until found .
@@ -1252,7 +1254,7 @@ XML node &lt;script&gt; can be place in any GContainer components, if a button h
 
 ```
 
-On the button BT_CHANGE clicked, the script function change() would be call, the func change the label LAB_HELP text and color.   
+When the button BT_CHANGE clicked, the script function "change()" would be call, the func change the label "LAB_HELP" text and color.   
 Script onOpen() would be called when the frame is openning.
 
 [< Back](#dochome)
@@ -1593,6 +1595,30 @@ public class MyApp extends GApplication {
 ```
 
 <div align=center><img width="112" height="199" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/doc_gui_example.jpg"/></div>
+
+
+[< Back](#dochome)
+
+<span id="docexamplegame"/>    
+
+## Example Game
+
+```
+public class SimplePanel extends GOpenGLPanel {
+
+    public void gl_paint(){
+    }
+
+    public void gl_init(){
+    }
+
+    public void gl_destroy(){
+    }
+
+}
+```
+Game Example is placed /mobile/java/ExGame   
+<div align=center><img width="112" height="199" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/doc_gui_opengl.jpg"/></div>
 
 
 [< Back](#dochome)
