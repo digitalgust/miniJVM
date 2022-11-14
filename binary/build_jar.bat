@@ -16,6 +16,21 @@ call :build_jar glfw_gui.jar ..\desktop\glfw_gui\java\src\main libex "lib\minijv
 echo build libex\minijvm_test.jar
 call :build_jar minijvm_test.jar ..\test\minijvm_test\src\main libex "lib\minijvm_rt.jar" "."
 
+echo Build MOBILE jars
+mkdir ..\mobile\assets
+mkdir ..\mobile\assets\resfiles
+
+echo build assets\resfiles\minijvm_rt.jar
+call :build_jar minijvm_rt.jar ..\minijvm\java\src\main ..\mobile\assets\resfiles  "" ""
+
+echo build assets\resfiles\glfm_gui.jar
+call :build_jar glfm_gui.jar ..\mobile\java\glfm_gui\src\main ..\mobile\assets\resfiles "..\mobile\assets\resfiles\minijvm_rt.jar" ""
+
+echo build assets\resfiles\ExApp.jar
+call :build_jar ExApp.jar ...\mobile\java\ExApp\src\main ..\mobile\assets\resfiles "..\mobile\assets\resfiles\minijvm_rt.jar" "..\mobile\assets\resfiles\glfm_gui.jar"
+
+
+
 echo completed.
 pause
 goto :eof 

@@ -65,6 +65,7 @@ MiniJVM on web build by Starcommander. [Source](https://github.com/Starcommander
 
 ## Changelog:
 
+2022.11. Add documentation.
 2021.03. Add j2c module, it 's a tool for convert minijvm java source code to c source code , then build it as native application , support desktop and mobile platform .   
 2020.12. Add build script and release v2.1.   
 2020.10. Refactor source and remove binary in repository.   
@@ -84,7 +85,7 @@ Write java code once , running on all of iOS / Android / MacOSX / Win / Linux pl
 There were not essential jar file pre-built, so build these jar file first   
 Develop IDE:  Eclipse, Netbeans or Jetbrain Intelli Idea
 
-1. Run script **/mobile/build_jar.sh** or **/mobile/build_jar.bat** to generted jars.     
+1. Run script **/binary/build_jar.sh** or **/binary/build_jar.bat** to generted jars.     
    Or
 
 > Build maven projects /minijvm/java copy to  **/mobile/assets/resfiles/minijvm_rt.jar**      
@@ -306,7 +307,7 @@ mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/luaj.jar Sample
 
 # Documentation
 
-[GUI Components](#docgui)
+[GUI Components (java)](#docgui)
 
 * [Outline](#docoutline)
 * [GApplication](#docgapplication)
@@ -459,7 +460,7 @@ public class MyApp2 extends GApplication {
 
 ```
 
-The MyApp2 same as MyApp0. Show a form but there is nothing in the form.
+The MyApp2 same as MyApp0. Show a form but there is nothing in the form.    
 
 [< Back](#dochome)
 
@@ -475,8 +476,9 @@ The MyApp2 same as MyApp0. Show a form but there is nothing in the form.
 </form>
 ```
 
-There is a frame show on the form. Attributes:   
-**closable**: 1: the frame can be close. 0:can't close it.        
+There is a frame show on the form.     
+Attributes:   
+**closable**: 1: the frame can be closed. 0:can't close it.        
 **title**: String , the frame's title.        
 **onclose**: String , the script function call, this function must in the frame's script partion.        
 **oninit**: String , the script function call, this function must in the frame's script partion.
@@ -546,12 +548,12 @@ in the XEventHandler, on Test Button touched or clicked ,then do something.
 ```
 
 If not specify the "w" width, the default width is Text width add addon.   
-If not specify the "h" height, the default height is Text width add 30pix.
+If not specify the "h" height, the default height is Text width add 30pix.   
 
 Attributes:   
-**onclick**: String , the script function call, this function must in the frame's script partion.
-**addon**: int , specify an int value for increase button's width, the default value is 30pix, in pixels.
-**preicon**: utf8 char , an emoji char as icon front of the text.
+**onclick**: String , the script function call, this function must in the frame's script partion.    
+**addon**: int , specify an int value for increase button's width, the default value is 30pix, in pixels.     
+**preicon**: utf8 char , an emoji char as icon front of the text.     
 
 [< Back](#dochome)
 
@@ -568,10 +570,10 @@ If not specify the "w" width, the default width is Text width add addon.
 If not specify the "h" height, the default height is Text width add 30pix.
 
 Attributes:   
-**align**: String , value: left, hcenter, right, top, hcenter, bottom, bottom, center. "center" is "hcenter,hcenter"   
-**onclick**: String , the script function call, this function must in the frame's script partion.
-**addon**: int , specify an int value for increase button's width, the default value is 30pix, in pixels.
-**multiline**: int , 1: show multiple row text, if h is ignore ,the lable height is multiple line text total height. 0: single line text.
+**align**: String , value: left, hcenter, right, top, hcenter, bottom, bottom, center. "center" is "hcenter,hcenter"      
+**onclick**: String , the script function call, this function must in the frame's script partion.     
+**addon**: int , specify an int value for increase button's width, the default value is 30pix, in pixels.    
+**multiline**: int , 1: show multiple row text, if h is ignore ,the lable height is multiple line text total height. 0: single line text.    
 
 [< Back](#dochome)
 
@@ -588,8 +590,8 @@ If not specify the "w" width, the default width is Text width add 30pix.
 If not specify the "h" height, the default height is Text width add 30pix.
 
 Attributes:   
-**selected**: int , 1: the checkbox is selected. 0: not selected   
-**onclick**: String , the script function call, this function must in the frame's script partion.
+**selected**: int , 1: the checkbox is selected. 0: not selected    
+**onclick**: String , the script function call, this function must in the frame's script partion.    
 
 [< Back](#dochome)
 
@@ -602,11 +604,11 @@ Attributes:
 ```
 
 If not specify the "w" width, the default width is Text width add 30pix.   
-If not specify the "h" height, the default height is Text width add 30pix.
+If not specify the "h" height, the default height is Text width add 30pix.   
 
 Attributes:   
-**value**: float , 0.0f ~ 1.0f, percent of slider position   
-**scroll**: h: HORIZONTAL layout the scrollbar; v: VERTICAL layout the scrollbar.
+**value**: float , 0.0f ~ 1.0f, percent of slider position    
+**scroll**: h: HORIZONTAL layout the scrollbar; v: VERTICAL layout the scrollbar.    
 
 [< Back](#dochome)
 
@@ -619,13 +621,13 @@ Attributes:
 ```
 
 If not specify the "w" width, the default width is image width.   
-If not specify the "h" height, the default height is image height.
+If not specify the "h" height, the default height is image height.  
 
 Attributes:   
-**fly**: int , 1: the image item can be drag. 0: fixed and can not be drag   
-**pic**: String , the path of image in jar.
-**border**: int , 1: draw a round rectanger out of the image. 0: no border  
-**alpha**: float , 0.0f - 1.0f: draw image with alpha
+**fly**: int , 1: the image item can be drag. 0: fixed and can not be drag    
+**pic**: String , the path of image in jar.   
+**border**: int , 1: draw a round rectanger out of the image. 0: no border   
+**alpha**: float , 0.0f - 1.0f: draw image with alpha   
 
 [< Back](#dochome)
 
@@ -642,17 +644,17 @@ Attributes:
 
 GList is a multiple rows or single row with popup list.    
 If not specify the "w" width, the default width is parent's width .   
-If not specify the "h" height, the default height : multiline=1 that is items count multiply 40pix; multiline=0 that's 40pix.
+If not specify the "h" height, the default height : multiline=1 that is items count multiply 40pix; multiline=0 that's 40pix.   
 
 Attributes of GList:   
 **scroll**: int , 1: the scrollbar is visible. 0: invisible   
 **multiline**: int , 1: the list is multiple row mod. 0: single row mod, when click the list would popup pulldown list   
-**multiselect**: int , 1: the select mod is multiple select mode . 0: select one menu item at once
+**multiselect**: int , 1: the select mod is multiple select mode . 0: select one menu item at once   
 
 Attributes of GListItem:   
-**pic**: String , the path of image in jar.
-**selected**: int , 1: the menu item is selected. 0: not selected
-**preicon**: utf8 char , an emoji char as icon front of the text. if pic is not null, then the preicon invisible
+**pic**: String , the path of image in jar    
+**selected**: int , 1: the menu item is selected. 0: not selected    
+**preicon**: utf8 char , an emoji char as icon front of the text. if pic is not null, then the preicon invisible    
 
 [< Back](#dochome)
 
@@ -682,7 +684,7 @@ Attributes:
 
 GViewPort is a scalable panel, the width and height will be automatic scale ，if child is add or remove    
 If not specify the "w" width, the default width is parent's width.   
-If not specify the "h" height, the default height is parent's height.
+If not specify the "h" height, the default height is parent's height.  
 
 Attributes:
 
@@ -709,12 +711,12 @@ Attributes:
 </viewslot>
 ```
 
-GViewSlot is a multi-slot container. Each slot is a container. Only one slot can be visible at once. It can be switched to another slot by dragging and dropping. There are three slots in the above example. One is a ViewPort, the second is a Panel, and the third is a table. Each container has a "move" attribute whose value indicates which direction it can slide.    
+GViewSlot is a multi-slot container. Each slot is a fullsize container. Only one slot can be visible at once. It can be switched to another slot by dragging and dropping. There are three slots in the above example. One is a ViewPort, the second is a Panel, and the third is a table. Each container has a "move" attribute whose value indicates which direction it can slide.    
 If not specify the "w" width, the default width is parent's width.   
 If not specify the "h" height, the default height is parent's height.
 
 Attributes:   
-**scroll**: h: the viewslot sliding direction is HORIZONTAL. v: VERTICAL
+**scroll**: h: the viewslot sliding direction is HORIZONTAL. v: VERTICAL   
 
 [< Back](#dochome)
 
@@ -732,10 +734,10 @@ If not specify the "h" height, the default height is image height.
 Attributes:   
 **multiline**: int , 1: multiple row input box. 0: single row input field   
 **edit**: int , 1: edit enable. 0: edit disable   
-**style**: search : the search style   
+**style**: search : the search style, ignored in multiline mode    
 **hint**: String : hint string in the input area,if text is inputed ,the hint invisible    
-**union**: String : another UI component name, the input box don't lost focus when union component clicked   
-**password**: int , 1: input text is hidden with *, 0: not password input
+**union**: String : another UI component name, the input box doesn't lost focus when union component clicked, this is important on phone device, if the input component's focus losted then the keyboard would hide .    
+**password**: int , 1: input text is hidden with *, 0: not password input   
 
 [< Back](#dochome)
 
@@ -743,7 +745,7 @@ Attributes:
 
 * ### Custom UI Component
 
-Customized components can be extended to meet requests, and customized components can also be directly layout in the xml UI.
+Customized components can be extended to meet requirements, and customized components can also be directly layout in the xml UI.
 
 ```
 <test.ext.XCustomList name="CUSTLIST" w="100%" h="100%">
@@ -826,7 +828,7 @@ Many of UI component are supports these attribute, excepted GMenuItem and GListI
 <tr></td><td>cmd</td><td>same as attachment, attach a String to the UI component, it's invisible</td><td>attachment="more info here"</td></tr>
 <tr></td><td>onclick</td><td>call script function when the UI component is clicked or touched, the function must in parents of this component</td><td>onclick="submit()"</td></tr>
 <tr></td><td>onchange</td><td>call script function when the UI component state is changed, the function must in parents of this component</td><td>onchange="onChange()"</td></tr>
-<tr></td><td>fly</td><td>whether or not the UI component can be drag to move</td><td>fly="0"</td></tr>
+<tr></td><td>fly</td><td>whether or not the UI component can be drag to move, Implemente flyBegin(), flying(), flyEnd() events handler in XEventHandler.</td><td>fly="0"</td></tr>
 <tr></td><td>hidden</td><td>whether or not hidden the UI component </td><td>hidden="0"</td></tr>
 <tr></td><td>enable</td><td>enable or disable the UI component </td><td>enable="1"</td></tr>
 <tr></td><td>move</td><td>the UI component as child of GViewSlot, the value describe sliding direction<br/>value: left/right/up/down</td><td>move="left,right"<br/>move="up,down"</td></tr>
@@ -839,6 +841,94 @@ Many of UI component are supports these attribute, excepted GMenuItem and GListI
 <tr></td><td>fontsize</td><td>set the UI component text font size<br/>value range: 0-1000</td><td>h="10"<br/>fontsize="18"</td></tr>
 <tr></td><td>preicon</td><td>set the UI component preview icon char<br/>value type: emoji char</td><td>h="10"<br/>preicon="✉"</td></tr>
 </table>
+
+[< Back](#dochome)
+
+<span id="docevents"/>    
+
+* ### Events
+An event example:
+```
+GButton bt = new GButton(form, "exit", 0, 0, 100, 20);
+frame.add(bt);
+bt.setActionListener(new GActionListener() {
+    @Override
+    public void action(GObject gObject) {
+        closeApp();
+    }
+});
+```
+
+**GActionListener**    
+When mouse clicked or touched a UI component, the event be call, para gobj is the clicked component.   
+void action(GObject gobj);    
+Responses by:   
+All components.
+
+**GStateChangeListener**    
+void onStateChange(GObject gobj);    
+When a UI component state changed, the event be cal.    
+Responses by:    
+GFrame closed   
+GList selected an item   
+ScrollBar slider moved   
+GTextBox/GTextField text changed   
+GViewSlot slot changed   
+
+**GFlyListener**    
+When draging a UI component to move, the event be call    
+public void flyBegin(GObject gObject, float x, float y);   
+public void flying(GObject gObject, float x, float y);   
+public void flyEnd(GObject gObject, float x, float y);   
+Responses by:   
+All components.   
+
+**GChildrenListener**    
+When a UI component add to or remove from it's parents, the event be call     
+void onChildAdd(GObject child);   
+void onChildRemove(GObject child);   
+Responses by:   
+All GContainer components.
+
+**GFocusChangeListener**    
+When a UI component gain focus or lost focus, the event be call     
+void focusGot(GObject oldgo);    
+void focusLost(GObject newgo);     
+Responses by:   
+All components.
+
+**GAppActiveListener**    
+When app has actived, the event be call     
+void focusGot(GObject oldgo);    
+void focusLost(GObject newgo);     
+Responses by:   
+When GApplication has actived.
+
+**GKeyboardShowListener**    
+When keyboard popup, the event be call     
+void keyboardShow(boolean show, float x, float y, float w, float h);       
+Responses by:   
+GForm
+
+**GNotifyListener**    
+An native async notify, like that iOS notify the application device UUID     
+void onNotify(String key, String val);      
+Responses by:   
+GForm
+
+**GPhotoPickedListener**    
+When iOS and Android pick an image or video finished     
+void onPicked(int uid, String url, byte[] data);      
+Responses by:   
+GForm
+
+**GSizeChangeListener**    
+When OS changed the window size or mobile phone screen changes horizontal and vertical      
+void onPicked(int uid, String url, byte[] data);      
+Responses by:   
+GForm
+
+
 
 [< Back](#dochome)
 
