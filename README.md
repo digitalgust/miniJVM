@@ -1,6 +1,8 @@
 ![](/screenshot/mini_jvm_64.png)  
 [![Build Status](https://travis-ci.org/digitalgust/miniJVM.svg?branch=master)](https://travis-ci.org/digitalgust/miniJVM)
 
+<span id="linkhome"/>   
+
 # miniJVM
 
 Develop iOS Android app in java, Cross platform java virtual machine , the minimal jvm .
@@ -15,7 +17,7 @@ Develop iOS Android app in java, Cross platform java virtual machine , the minim
 
 <span id="linkfeatures"/>   
 
-## Features:
+## Features
 
 * Jvm Build pass: iOS / Android / mingw-w64 32|64bit / MSVC 32|64bit / MacOS / Linux
 * No dependence Library
@@ -30,16 +32,16 @@ Develop iOS Android app in java, Cross platform java virtual machine , the minim
 
 <span id="linkmobilefeatures"/>
 
-## iOS/Android Platform Extended Features:
+## iOS/Android Platform Extended Features
 
 * OpenGL ES 3.0
-* Swing like gui lib, XML gui layout(html like)
-* Audio Playback and Capture
+* Swing like gui lib, HTML like XML layout
+* Audio/Video Playback and Capture
 * Take photo from Camera or Album
 * Save and Load file from mobile device
 * Api compatible with miniJVM desktop platform, app can running on desktop platform
 
-## MiniJVM on Web:
+## MiniJVM on Web
 
 MiniJVM on web build by Starcommander. [Source](https://github.com/Starcommander/miniJVM)
 [MiniJVM Web demo](https://java-on-web.org/examples/)
@@ -48,12 +50,10 @@ MiniJVM on web build by Starcommander. [Source](https://github.com/Starcommander
 
 ## MiniJVM gui Demo
 
-  <div align=center><img width="224" height="398" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/demo.gif"/><img width="224" height="398" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/g3d.gif"/></div>
+  <div align=center><img width="112" height="199" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/demo.gif"/><img width="112" height="199" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/g3d.gif"/></div>
 
 * Instant Message app Demo , [Source](https://github.com/digitalgust/BiBiX)
 * 3D game app Demo, [Source](https://github.com/digitalgust/g3d)
-* Mobile platform : First build and install AppManager for iOS /mobile/iosapp , Or build and install for Android /mobile/androidapp ,then download demo in AppManager and run these app
-* Desktop computer: /binary/win_64 , /binary/macos , /binary/win32 , /binary/centos_x64 run test.sh
 
 <span id="linkarch"/>
 
@@ -88,40 +88,38 @@ Develop IDE:  Eclipse, Netbeans or Jetbrain Intelli Idea
 1. Run script **/binary/build_jar.sh** or **/binary/build_jar.bat** to generted jars.     
    Or
 
-> Build maven projects /minijvm/java copy to  **/mobile/assets/resfiles/minijvm_rt.jar**      
-> Build maven projects /mobile/java/glfm_gui, copy to  **/mobile/assets/resfiles/glfm_gui.jar**       
-> Build maven projects /mobile/java/ExApp, copy to  **/mobile/assets/resfiles/ExApp.jar**   
-> Maybe you can change   **/mobile/java/ExApp/src/main/java/test/MyApp.java**    , Add your resource to **/mobile/java/ExApp/src/main/resource/res/** , such as audio or image etc, Configure **/mobile/java/ExApp/src/main/config.txt** for icon ,version, boot class, etc
+   > Build maven projects /minijvm/java copy to  **/mobile/assets/resfiles/minijvm_rt.jar**      
+   > Build maven projects /mobile/java/glfm_gui, copy to  **/mobile/assets/resfiles/glfm_gui.jar**       
+   > Build maven projects /mobile/java/ExApp, copy to  **/mobile/assets/resfiles/ExApp.jar**   
+   > Maybe you can change   **/mobile/java/ExApp/src/main/java/test/MyApp.java**    , Add your resource to **/mobile/java/ExApp/src/main/resource/res/** , such as audio or image etc, Configure **/mobile/java/ExApp/src/main/config.txt** for icon ,version, boot class, etc
 
 2. XCode open **/mobile/iosapp** ,setup developer account in Signing&Capabilities , build and install app to Device , verify app before running app (Setting->General->Device Management->{Developer account}->Verify App->Trust)
 3. Android Studio open **/mobile/androidapp**  build and install app to Android device
-4. AppManager is running, It can start a in-app webserver for upload app, and download app from a website too
+4. The AppManager is running   
 
-  <div align=center><img width="672" height="398"   src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/appmgr.png"/></div>
+  <div align=center><img width="340" height="250"   src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/appmgr.png"/></div>
 
 <span id="linkbuilddesktop"/>
 
-## Build for Windows/Linux/MacOS platform:
+## Build for Windows/Linux/MacOS platform
 
 1. Run script **/binary/build_jar.sh** or **/binary/build_jar.bat** to generted jars     
-   Or
-
-> Build java bootstrap classes  **/minijvm/java**  , Maven build jar and copy to /binary/lib/minijvm_rt.jar    
-> Build gui classes **/desktop/glfw_gui/java** , Maven build jar and copy to /binary/libex/glfw_gui.jar     
-> Build console test case classes **/test/minijvm_test** , Maven build jar and copy to /binary/libex/minijvm_test.jar     
-> Build gui test app classes **/mobile/java/ExApp** , Maven built jar and copy to /binary/{platform}/apps/ExApp.jar
+   Or   
+   > Build java bootstrap classes  **/minijvm/java**  , Maven build jar and copy to /binary/lib/minijvm_rt.jar    
+   > Build gui classes **/desktop/glfw_gui/java** , Maven build jar and copy to /binary/libex/glfw_gui.jar     
+   > Build console test case classes **/test/minijvm_test** , Maven build jar and copy to /binary/libex/minijvm_test.jar     
+   > Build gui test app classes **/mobile/java/ExApp** , Maven built jar and copy to /binary/{platform}/apps/ExApp.jar
 
 2. Run **/binary/build_mac_linux.sh** or **/binary/build_wini686.bat** or  **/binary/build_winx64.bat** to generted binaries    
-   Or
-
-> Build gui jni c dynamic library /desktop/glfw_gui/c by cmake    
-> Build minijvm /minijvm/c by cmake
+   Or   
+   > Build gui jni c dynamic library /desktop/glfw_gui/c by cmake    
+   > Build minijvm /minijvm/c by cmake
 
 3. Run test script /binary/{platform}/test.sh | test.bat
 
 <span id="linkdebug"/>
 
-## How to debug source:
+## How to debug source
 
 Almost all Java IDEs support remote debugging. The IDE connects to the debug port of the miniJVM through TCP, and then enters the debugging state. The miniJVM has two options, one is to enable the debugging function, and the other is to wait for the IDE to connect to the debug port after the VM is started, and execute the bytecode only after that. These two options need to be setup before initializing the VM.    
 These two options defined in jvm.h
@@ -150,7 +148,8 @@ struct _MiniJVM {
    **Netbeans** :  menu Debug -> connect to Debugger, Connector : SocketAttach , host is your mini_jvm running on the host and port, ex. "localhost:8000" , Timeout: 10000
 4. Then you can set breakpoints and pause vm and watch variables
 
-## Project based miniJVM:
+
+## Project based miniJVM
 
 [Awtk-minijvm](https://github.com/zlgopen/awtk-minijvm)  :[AWTK](https://github.com/zlgopen/awtk) cross platform native ui bind to minijvm   
 [LWJGUI-Mobile](https://github.com/orange451/LWJGUI-Mobile) : java LWJGL UI library        
@@ -160,7 +159,7 @@ struct _MiniJVM {
 
 <span id="linkref"/>
 
-## Referenced project and technology:
+## miniJVM referenced project and technology
 
 [Oracle CLDC](http://www.oracle.com/technetwork/java/cldc-141990.html)  :referenced cldc api     
 [OpenJDK](https://openjdk.java.net/) : referenced java api    
@@ -179,19 +178,13 @@ struct _MiniJVM {
 [Mbedtls](https://github.com/ARMmbed/mbedtls)  :Https support by mbedtls    
 [Avian](https://github.com/ReadyTalk/avian)  :referenced java api
 
-## Development IDE usage:
+## Development IDE usage
 
-C / ObjC:   JetBrains CLion ,Xcode ,Virtual studio   
+C / ObjC:   JetBrains CLion, Xcode, Virtual studio   
 Swift :    XCode    
-Java :    Jetbrain Idea, Netbeans   
+Java :     Jetbrain Idea, Netbeans   
 Android :  Android Studio
 
-## Build GUI application, depend on OpenGL or OpenGLES
-
-* iOS/Android system build with GLFM  (/mobile/iosapp/ , /mobile/androidapp/)
-* Window system build with GLFW   (/desktop/glfw_gui/)
-* GUI build with Nanovg
-* Based on OpenGL 3.3 and OpenGLES 3.0 as default
 
 <span id="linkembed"/>
 
@@ -226,7 +219,7 @@ int main(int argc, char **argv) {
 }
 ```
 
-## Third liberies
+## Third liberies   
 
 * ### Janino java compiler
 
@@ -260,54 +253,59 @@ Lightweight, fast, Java-centric Lua interpreter written for JME and JSE, with st
 mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/luaj.jar Sample
 ```
 
-## Screen shot   :
+## Screen shot   
 
-* Windows mini_jvm gui
+<table>
+<tr>
+<td>  Windows mini_jvm gui
+  <div align=center><img width="210" height="160" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/win.png"/></div>
 
-  <div align=center><img width="433" height="336" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/win.png"/></div>
-  * Macos mini_jvm gui    
-  <div align=center><img width="433" height="336" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/mac.png"/></div> 
-  * Linux mini_jvm gui    
-  <div align=center><img width="433" height="336" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/centos.png"/></div>
-  * Web mini_jvm gui    
-  <div align=center><img width="433" height="336" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/web-glfw.png"/></div>
+</td>
+<td>  Macos mini_jvm gui    
+  <div align=center><img width="210" height="160" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/mac.png"/></div> 
 
-## Directories:
+</td>
+<td>  Linux mini_jvm gui    
+  <div align=center><img width="210" height="160" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/centos.png"/></div>
 
-> /
->> binary/-------- minijvm binary  for build(win32/win64/mac/linux/android/ios)  
-> > minijvm/
->>> c/------------ minijvm c source    
-> > > java/--------- minijvm runtime library
->>
->> desktop/
->>> glfw_gui/------ desktop computer gui/audio native module
->>
->> j2c/------------ java to c translator.
->>> app/----------- native support source.    
-> > > build/--------- build files for platforms.    
-> > > translator/---- tool for convert minijvm java source to c source.
->>
->> mobile/
->>> c/------------- java native lib, glfm framework, gui jni, glfmapp    
-> > > java/glfm_gui-- mobile platform native gui lib    
-> > > java/ExApp----- java app entry point    
-> > > iosapp/-------- iOS launcher     
-> > > androidapp/---- Android launcher     
-> > > assets/resfiles/- mobile app resource, font files, jar files ,pic ,audio etc.
->>
->> test/
->>> jni_test/------ jni example    
-> > > jvm_ios/------ ios swift test project       
-> > > jvm_macos/---- macosX test project      
-> > > jvm_vs/------- windows virtual studio test project      
-> > > minijvm_test/-- test case of **/minijvm/java**
+</td>
+<td>  Web mini_jvm gui    
+  <div align=center><img width="210" height="160" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/web-glfw.png"/></div>
+</td>
+</tr>
+</table>
+
+<span id="linkdir"/>    
+
+## Directorie struct   
+
+```
+.
+├── binary              miniJVM binary  for build(win32/win64/mac/linux/
+├── desktop
+│   ├── awtk_gui        open source gui frame awtk jni
+│   └── glfw_gui        desktop openGL, glfw, miniaudio, native module
+├── j2c                 miniJVM java source translate to c tools
+│   ├── app
+│   └── translator
+├── minijvm             Core source
+│   ├── c               miniJVM c source 
+│   └── java            miniJVM runtime library
+├── mobile
+│   ├── androidapp      Android launcher
+│   ├── assets          mobile app resource, font files, jar files ,pic ,audio etc.
+│   ├── c               mobile native lib, openGLES, glfm framework, gui jni, glfmapp
+│   ├── iosapp          iOS launcher
+│   └── java            mobile java lib, GUI, AppManager, app example
+├── screenshot
+└── test                miniJVM test case 
+```
 
 <span id="dochome"/>    
 
 # Documentation
 
-[GUI Components (java)](#docgui)
+[GUI Framework (java)](#docgui)
 
 * [Outline](#docoutline)
 * [GApplication](#docgapplication)
@@ -325,52 +323,49 @@ mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/luaj.jar Sample
 * [GViewPort](#docgviewport)
 * [GViewSlot](#docgviewslot)
 * [GTextBox GTextField](#docgtextinput)
-* [Custom UI Component](#doccustom)
-* [XML Component common attributes](#docattrib)
+* [Custom UI Component](#doccustom)   
+* [XML Component common attributes](#docattrib)   
+* [Events](#docevents)   
+* [Template](#doctemplate)   
+* [MultiLanguage](#docmultilang)   
+* [Style](#docstyle)   
+* [Layout](#doclayout)
+  * [XY layout](#doclayoutxy)   
+  * [XML flow layout](#doclayoutflow)   
+  * [XML table layout](#doclayouttable)
+* [Script](#docscript)   
+  * [Syntax](#docscriptsyntax)   
+  * [Stdlib api](#docscriptstdlib)   
+  * [GUI Scriptlib api](#docscriptguilib)   
+  * [Extention library](#docscriptextlib)   
 * [Example](#docexample)
 
-[GUI layout](#doclayout)
-
-* [XY layout](#doclayoutxy)
-* [XML flow layout](#doclayoutflow)
-* [XML table layout](#doclayouttable)
-
-[GUI script](#docscript)
-
-* [Syntax](#docscriptsyntax)
-* [Stdlib api](#docscriptstdlib)
-* [GUI Scriptlib api](#docscriptguilib)
-* [Extention library](#docscriptextlib)
+[Audio](#docaudio)
 
 <span id="docgui"/>
 
-## GUI Component
+## GUI Framework
 
 <span id="docoutline"/>
 
 * ### Outline
 
-<div align=center><img width="600" height="160" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/doc_gui_arch.png"/></div>
+   <div align=center><img width="600" height="160" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/doc_gui_arch.png"/></div>
 
+   * All GUI application is extends class GApplication, it contains a GForm. and starts by AppManager.
+   * Visible UI component is a GObject.
+   * GForm is an OS window or a phone screen, a top visible UI component.
+   * GFrame is a window GContainer ,can be close, drag it move.
+   * All UI components are children of GContainer.
+   * GContainer can be son of other GContainer.
+   * Set a GStyle for all GObject by GToolkit.setStyle().
+   * There are two methods to new a GObject , one is manual create an object, the other write in a XML file.
+   * GUI XML layout like HTML, and there is a script like javascript for HTML.
+   * iOS/Android system based on GLFM  (/mobile/iosapp/ , /mobile/androidapp/)
+   * Window system based on GLFW   (/desktop/glfw_gui/)
+   * GUI rendering based on Nanovg
+   * OpenGL 3.3 for desktop and OpenGLES 3.0 for mobile
 
-
-GApplication is a GUI application, it MUST contain a GForm. it starts by AppManager.
-
-Visible UI component is a GObject.
-
-GForm is an OS window or a phone screen, a top visible UI component.
-
-GFrame is a window GContainer ,can be close, drag it move.
-
-All UI components are son of GContainer.
-
-GContainer can be son of other GContainer.
-
-Set a GStyle for all GObject by GToolkit.setStyle().
-
-There are two methods to new a GObject , one is manual new an object, the other is XML layout.
-
-GUI XML layout like html, and there is a script like javascript for html.
 
 [< Back](#dochome)
 
@@ -397,8 +392,31 @@ public class MyApp0 extends GApplication {
     }
 }
 ``` 
+This is a simplest app, override getForm() to export a GForm to AppManager, Device show the form ,and post events (Keyboard/Mouse/TouchScreen/etc) to the form.
 
-This is a simplest app, override getForm() to export a GForm to AppManager, Device show the form ,and trans events (Keyboard/Mouse/TouchScreen/etc) to the form.
+<!--
+miniJVM 本身并不包含图形系统，为便于开发，依附于VM建立了一套基于OpenGL/GLES 的图形框架，
+这套系统会在启动VM后，进入AppManager的图形界面，这个应用管理器负责管理更多的java开发的应用，
+包括安装应用，删除应用等功能，其安装应用的方式有下载jar的方式安装，或上传jar的方式，
+这些jar应用，在jar中必须包含一个config.txt的文件，用于描述此应用的一些属性，比如启动类，图标，更新地址等。   
+-->
+
+JVM itself does not contain a graphics system. For desktop and mobile phone, a graphics framework based on OpenGL/GLES is established attached to the JVM.
+This system will enter the graphical interface of AppManager after starting the VM. This application manager is managing more applications developed by java.
+It can be installing and deleting applications, etc. The way of installing applications include downloading jars, or uploading jars.
+These jars applications must contain a config.txt file in the jar, which is used to describe some properties of this application, such as startup class, icon, update address, etc.
+
+config.txt
+```
+name=ExApp
+app=test.MyApp
+icon=/res/hello.png
+desc=  Mobile app develop example.\n  you can upgrade it.
+version=1.0.4
+upgradeurl=https://github.com/digitalgust/miniJVM/raw/master/mobile/assets/resfiles/ExApp.jar
+```
+
+
 <div align=center><img width="300" height="150" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/doc_gui_form.jpg"/></div>
 
 
@@ -928,6 +946,519 @@ void onPicked(int uid, String url, byte[] data);
 Responses by:   
 GForm
 
+[< Back](#dochome)
+
+<span id="doctemplate"/>    
+
+* ### Template
+
+Each XML UI file is a template, and some keywords in these templates can be replaced, which is useful in multi-language development.   
+The keywords in the curly braces in the example below will be replaced during parsing.   
+```
+<frame name="FRAME_TEST" w="80%" h="80%" bgcolor="{FRAME_BGCOLOR}" title="{FRAME_TITLE}">
+</frame>
+```
+Parse code:    
+```
+String xmlStr = GToolkit.readFileFromJarAsString("/res/MyForm.xml", "utf-8");
+UITemplate uit = new UITemplate(xmlStr);
+UITemplate.getVarMap().put("FRAME_TITLE", "Detail"); //replace keywork in xml
+UITemplate.getVarMap().put("FRAME_BGCOLOR", "80303030"); //replace keywork in xml
+XContainer xc = (XContainer) XContainer.parseXml(uit.parse());
+```
+
+[< Back](#dochome)
+
+<span id="docmultilang"/>    
+
+* ### MultiLanguage
+```
+//Add multilanguage words to the system
+GLanguage.addString("Start", new String[]{"Start", "启动", "啟動"});
+GLanguage.addString("Stop", new String[]{"Stop", "停止", "停止"});
+
+//set the default language
+GLanguage.setCurLang(GLanguage.ID_CHN); //more options : ID_ENG , ID_CHT
+
+//If you need to add more languages, you can add more elements to the array, such as
+GLanguage.addString("More", new String[]{"More", "更多", "更多", "もっと"});
+
+GLanguage.setCurLang(3); //that 4 indicate the third data of array
+```
+
+
+[< Back](#dochome)
+
+<span id="docstyle"/>    
+
+* ### Style
+The GUI system can set a variety of color appearance. By default, two appearance of light and dark are provided. Users can customize other color schemes.
+
+```
+GToolkit.setStyle(new GStyleBright());
+GToolkit.setStyle(new GStyleDark());  // Or set to customize style
+```
+Customize appearance
+
+```
+import org.mini.gui.GStyle;
+import static org.mini.gui.GToolkit.nvgRGBA;
+
+public class GStyleGolden extends GStyle {
+
+    @Override
+    public float getTextFontSize() {
+        return 16f;
+    }
+
+    @Override
+    public float getTitleFontSize() {
+        return 18f;
+    }
+
+    @Override
+    public float getIconFontSize() {
+        return 35f;
+    }
+
+    float[] textFontColor = nvgRGBA(237, 217, 158, 0xc0);
+
+    @Override
+    public float[] getTextFontColor() {
+        return textFontColor;
+    }
+
+    float[] textShadowColor = nvgRGBA(0, 0, 0, 0xb0);
+
+    @Override
+    public float[] getTextShadowColor() {
+        return textShadowColor;
+    }
+
+    float[] disabledTextFontColor = nvgRGBA(0x60, 0x60, 0x60, 0x80);
+
+    @Override
+    public float[] getDisabledTextFontColor() {
+        return disabledTextFontColor;
+    }
+
+    float[] frameBackground = nvgRGBA(0x20, 0x20, 0x20, 0xff);
+
+    @Override
+    public float[] getFrameBackground() {
+        return frameBackground;
+    }
+
+    float[] frameTitleColor = nvgRGBA(0xd0, 0xd0, 0xd0, 0xff);
+
+    @Override
+    public float[] getFrameTitleColor() {
+        return frameTitleColor;
+    }
+
+    float[] hintFontColor = nvgRGBA(0xff, 0xff, 0xff, 64);
+
+    @Override
+    public float[] getHintFontColor() {
+        return hintFontColor;
+    }
+
+    float[] editBackground = nvgRGBA(0x00, 0x00, 0x00, 0x20);
+
+    @Override
+    public float[] getEditBackground() {
+        return editBackground;
+    }
+
+    @Override
+    public float getIconFontWidth() {
+        return 18;
+    }
+
+    float[] selectedColor = nvgRGBA(0x80, 0xff, 0x80, 0x40);
+
+    @Override
+    public float[] getSelectedColor() {
+        return selectedColor;
+    }
+
+    float[] unselectedColor = nvgRGBA(0x80, 0x80, 0x80, 0x10);
+
+    @Override
+    public float[] getUnselectedColor() {
+        return unselectedColor;
+    }
+
+    float[] backgroundColor = nvgRGBA(0x30, 0x20, 0x15, 0xff);
+
+    @Override
+    public float[] getBackgroundColor() {
+        return backgroundColor;
+    }
+
+    float[] listBackgroundColor = nvgRGBA(0x30, 0x20, 0x15, 0x30);
+
+    @Override
+    public float[] getListBackgroundColor() {
+        return listBackgroundColor;
+    }
+
+    float[] popBackgroundColor = nvgRGBA(0x10, 0x10, 0x10, 0xc0);
+
+    @Override
+    public float[] getPopBackgroundColor() {
+        return popBackgroundColor;
+    }
+
+    float[] highColor = nvgRGBA(0xff, 0xff, 0xff, 0x80);//
+
+    public float[] getHighColor() {
+        return highColor;
+    }
+
+    float[] lowColor = nvgRGBA(0x80, 0x80, 0x80, 0x80);//0x006080ff
+
+    public float[] getLowColor() {
+        return lowColor;
+    }
+
+}
+
+```
+
+[< Back](#dochome)
+
+
+<span id="doclayout"/>   
+
+* ### Layout
+
+  All UI containers support the following three layout methods, which can be mixed. In XML, flow layout and table layout are usually used at the same time. Layout is just a concept, and the code does not need to specify which layout to use. The layout manager automatically layout according to the description in XML.
+
+  [< Back](#dochome)
+
+
+   <span id="doclayoutxy"/>   
+
+* #### XY layout
+
+  Manual init a GUI component, and specify fixed position. Example:
+
+  ```
+  GFrame frame=new GFrame(form);
+  GLabel lab = new GLabel(form, "This is a label", 20, 20, 100, 20);
+  frame.getView().add(lab);
+  GButton but = new GButton(form, "Submit", 20, 100, 100, 20);
+  frame.getView().add(but);
+  ```
+
+[< Back](#dochome)
+
+
+<span id="doclayoutflow"/>   
+
+* #### XML flow layout
+  The flow layout does not specify the fixed position of the UI components, and the components are arranged in rows. If the next UI component cannot be accommodated in current row, the component will be placed in a new row. The row height is the height of the highest component in this row.
+
+  If need force a line break, can use &lt;br/&gt; to break row.
+
+[< Back](#dochome)
+
+
+<span id="doclayouttable"/>   
+
+* #### XML table layout
+  The table layout is the same as the HTML table, TABLE represents an area, TR represents a row, TD represents a column in a row, and another TABLE can be nested in TD. If the table has multiple rows, the height of one TR can be scalable, and the height attribute is h="float", that is, the table height is subtracted from the height of other rows, and the remaining height is the height of the scalable TR. If there are multiple columns in a row of the table, the width of one TD can be scalable. The width attribute is w="float". The width of this TR is subtracted from the sum of the widths of other TD, and the remaining width is the width of the scalable TD.
+
+```
+        <table w="100%" h="100%">
+            <tr h="100%">
+                <td w="50%" h="100%">
+                    <table h="100%">
+                        <tr h="30">
+                            <td h="100%">
+                                <label w="100%" align="center">Member List</label>
+                            </td>
+                        </tr>
+                        <tr h="float">
+                            <td>
+                                <list name="NPCCLAN_LIST" w="100%" h="100%" multiline="1" itemh="25">
+                                    <li>Jack</li>
+                                    <li>Tom</li>
+                                </list>
+                            </td>
+                        </tr>
+                        <tr h="30">
+                            <td>
+                                <button name="NPCCLAN_PREV" w="30%">Preview</button>
+                                <label name="NPCCLAN_PAGE" w="40%" align="center"></label>
+                                <button name="NPCCLAN_NEXT" w="30%">Next</button>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td w="50%">
+                    <label w="100%" align="center">Detail</label>
+                    <label w="30%" align="left,vcenter">Name:</label>
+                    <label w="70%" align="left,vcenter" name="NPCCLAN_NAME">NPCCLAN_NAME</label>
+                    <label w="100%" h="80" multiline="1" name="NPCCLAN_DESC">NPCCLAN_DESC</label>
+                    <br/>
+                    <button name="NPCCLAN_APPL" w="100%">Application</button>
+                </td>
+            </tr>
+        </table>
+
+```
+
+<div align=center><img width="500" height="261" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/doc_gui_tablelayout.jpg"/></div>
+
+
+[< Back](#dochome)
+
+
+
+<span id="docscript"/>   
+
+* ### Script
+
+A simple scripting system is embedded in XML, and scripts can process UI component or services for applications. This script is similar to what javascript for HTML.    
+The script can be extended as a bridge between the script and the java system.
+
+XML node &lt;script&gt; can be place in any GContainer components, if a button has "onclick" attribute, the button find it's parent's script, if it's parent no script exists, then find the grandparent, until found .
+
+```
+    <frame name="FRAME_TEST" w="80%" h="70%" title="WINDOW" oninit="onOpen()">
+        <script>
+            <![CDATA[
+
+            sub onOpen()
+                print("FRAME_TEST is open")
+            ret
+
+            sub change()
+                red=mod(random(),255)
+                green=mod(random(),255)
+                blue=mod(random(),255)
+                setColor("LAB_HELP",red,green,blue,255)
+                setText("LAB_HELP","Only a test")
+            ret
+
+            ]]>
+        </script>
+
+        <label name="LAB_HELP" w="50%" align="left,vcenter">TEXT NOW</label>
+        <button name="BT_CHANGE" w="50%" onclick="change()">Change Color</button>
+    </frame>    
+
+```
+
+On the button BT_CHANGE clicked, the script function change() would be call, the func change the label LAB_HELP text and color.   
+Script onOpen() would be called when the frame is openning.
+
+[< Back](#dochome)
+
+
+<span id="docscriptsyntax"/>   
+
+* #### Script Syntax
+
+```
+' this is comment 
+' Variable names are NOT case sensitive
+a = 3        'define variable a as Int and set value to 3 , this Int is 64bit Int
+b = "ABC"    'define variable b as Str and set value to "ABC"
+c = true     'define variable c as Bool and set value to true
+
+arr[2][10]      'define variable arr as 2 dim Array and set array length [2][10]
+arr[0][0] = 5
+arr[0][1] = "CDE"
+arr[0][2] = false
+
+'operator ex
+a = (a + 7) * min(a, 5) - 15 / 3 
+b = "Hellow" + " world" + 100 + true
+c = (7 > 6) | (a = 3) & (!c)
+
+'branch statment
+if(a > 5)
+    b="great than five"
+else
+    b="less than or equals five" 
+eif
+
+' loop statment
+i = 0
+while(i < 3)
+    print(i+" ")
+loop
+
+' function call
+a = sum(5, 7)
+p(a)
+
+'function define
+'function names are NOT case sensitive
+sub sum(x, y)
+ret x+y           ' return value x+y 
+
+sub p(v)
+    println(v)
+ret               ' No value return
+
+```
+
+[< Back](#dochome)
+
+
+<span id="docscriptstdlib"/>   
+
+* #### Stdlib api
+
+<table>
+<tr><td>Return Type</td><td>call</td><td>function</td></tr>
+
+<tr><td>Int</td><td>arrlen(arr)</td><td>return array arr length </td></tr>
+<tr><td>Int</td><td>abs(a)</td><td>return a&lt;0?-a:a</td></tr>
+<tr><td>Str</td><td>base64enc("ABCD")</td><td>return base64 encoded of "ABCD"</td></tr>
+<tr><td>Str</td><td>base64dec("QUJDRA==")</td><td>return base64 decoded of "QUJDRA=="</td></tr>
+<tr><td>void</td><td>def("varname",2)</td><td>Define a globe variable varname, and set as Int 2 </td></tr>
+<tr><td>Bool</td><td>equals(str1,str2)</td><td>if str1 equals str2 return true, else false</td></tr>
+<tr><td>Int</td><td>getbit(1000,1)</td><td>return 0 or 1, get bit index 1 of number 1000</td></tr>
+<tr><td>Bool/Str/Int/Obj</td><td>getobjfield(sound,"effectVolume")</td><td>return java Object sound field "effectVolume" value</td></tr>
+<tr><td>Bool</td><td>isDef("varname")</td><td>Whether or not defined a globe variable varname </td></tr>
+<tr><td>Int</td><td>idxof("ABCD", "CD")</td><td>return index of "CD" in "ABCD", this case is 2</td></tr>
+<tr><td>Bool</td><td>isnull(var)</td><td>determine var is null, var type limited: Str or Obj</td></tr>
+<tr><td>Bool/Str/Int/Obj/void</td><td>invokejava(sound,"setSoundOpen(Z)V",true)</td><td>call java Object sound method "setSoundOpen(Z)V" , 1 parameter, no return<br/>invokejava(smgr,"addUser(Lcom.lba.user.Admin;I)Z",user1,30) ,2 para,the firstis  user1 , an object of class com.lba.user.Admin, the second para 30 is int type.</td></tr>
+<tr><td>Bool/Str/Int/Obj/void</td><td>invokeStatic("com.lba.user.Admin","check()V")</td><td>call class com.lba.user.Admin method "check()V" , 0 parameter, no return</td></tr>
+<tr><td>Int</td><td>min(a,b)</td><td>return a&lt;b?a:b </td></tr>
+<tr><td>Int</td><td>max(a,b)</td><td>return a&gt;b?a:b </td></tr>
+<tr><td>Int</td><td>mod(a, b)</td><td>return a % b</td></tr>
+<tr><td>void</td><td>print("ABC")</td><td>print a string</td></tr>
+<tr><td>void</td><td>println()<br/>println("ABC"+3)</td><td>print a newline ; print a string with newline</td></tr>
+<tr><td>Int</td><td>random()</td><td>return Int value may be negative</td></tr>
+<tr><td>Int</td><td>strlen(str)</td><td>return string length</td></tr>
+<tr><td>Str</td><td>substr("ABCD", 0, 3)</td><td>return sub string of "ABCD", start at 0, end at 3, this case return "ABC"</td></tr>
+<tr><td>Array</td><td>split("A-BC-D", "-")</td><td>return splited string array , this case return ["A","BC","D"]</td></tr>
+<tr><td>void</td><td>setObjField(sound,"effectVolume", 10)</td><td>set java Object sound field "effectVolume" value</td></tr>
+<tr><td>Int</td><td>str2int("7")</td><td>Convert String to Int ,same as valueOf(Str)</td></tr>
+<tr><td>Int</td><td>setbit(1000,5,0)</td><td>the number 1000, set bit index 5 to 0</td></tr>
+<tr><td>Str</td><td>trim(" ABC ")</td><td>return trim String , this case is "ABC"</td></tr>
+<tr><td>Int</td><td>valueOf("7")</td><td>Convert String to Int </td></tr>
+</table>
+
+[< Back](#dochome)
+
+
+<span id="docscriptguilib"/>   
+
+* #### GUI Scriptlib api
+
+<table>
+<tr><td>Return Type</td><td>call</td><td>function</td></tr>
+<tr><td>void</td><td>setBgColor("COMP1",r,g,b,a)</td><td>set component background color</td></tr>
+<tr><td>void</td><td>setColor("COMP1",r,g,b,a)</td><td>set component text color</td></tr>
+<tr><td>void</td><td>setBgColorHexStr("COMP1","00ff00ff")</td><td>set component background color, color format is RGBA</td></tr>
+<tr><td>void</td><td>setColorHexStr("COMP1","00ff00ff")</td><td>set component text color, color format is RGBA</td></tr>
+<tr><td>void</td><td>setText("COMP1","new string")</td><td>set component text String</td></tr>
+<tr><td>Str</td><td>getText("COMP1")</td><td>return component text</td></tr>
+<tr><td>void</td><td>setXY("COMP1",x,y)</td><td>set component position to x,y</td></tr>
+<tr><td>void</td><td>setWH("COMP1",w,h)</td><td>set component Width,Height to w,h</td></tr>
+<tr><td>Int</td><td>getX("COMP1")<br/>getX()</td><td>get component position x, if no component specified, return form x</td></tr>
+<tr><td>Int</td><td>getY("COMP1")<br/>getY()</td><td>get component position y, if no component specified, return form y</td></tr>
+<tr><td>Int</td><td>getW("COMP1")<br/>getW()</td><td>get component position w, if no component specified, return form w</td></tr>
+<tr><td>Int</td><td>getH("COMP1")<br/>getH()</td><td>get component position h, if no component specified, return form h</td></tr>
+<tr><td>Str</td><td>getCmd("COMP1")</td><td>get component command string</td></tr>
+<tr><td>void</td><td>setCmd("COMP1","command str")</td><td>set component command to the second parameter</td></tr>
+<tr><td>void</td><td>close("FRAME1")</td><td>close GFrame that specified name</td></tr>
+<tr><td>Int</td><td>getCurSlot("VIEWSLOT1")</td><td>get current slot of GViewSlot that specified name</td></tr>
+<tr><td>void</td><td>showSlot("VIEWSLOT1",2,100)</td><td>set current slot of GViewSlot to 2, move animation 200ms</td></tr>
+<tr><td>void</td><td>setImgPath("COMP1","/res/test.png")</td><td>set GImageItem image to "/res/test.png"</td></tr>
+<tr><td>void</td><td>setImg("COMP1",gimageObj)</td><td>set GImageItem image to java GImage object</td></tr>
+<tr><td>Obj</td><td>getImg("COMP1",gimageObj)</td><td>get GImageItem image to Obj type</td></tr>
+<tr><td>void</td><td>setAttachStr("COMP1","a string")</td><td>attach the String to specify component</td></tr>
+<tr><td>Str</td><td>getAttachStr("COMP1")</td><td>return the attachment as String from specify component</td></tr>
+<tr><td>void</td><td>setAttachInt("COMP1","a string")</td><td>attach the Int to specify component</td></tr>
+<tr><td>Int</td><td>getAttachInt("COMP1")</td><td>return the attachment as Int from specify component</td></tr>
+<tr><td>Int</td><td>getListIdx("List1")</td><td>return the current selected index of specify GList </td></tr>
+<tr><td>Str</td><td>getListText("List1")</td><td>return the selected item text of specify GList </td></tr>
+<tr><td>void</td><td>setListIdx("List1",2)</td><td>set the specify GList selected item to 2</td></tr>
+<tr><td>void</td><td>setImgAlphaStr("List1","0.5")</td><td>set the specify GImageItem image alpha to 0.5, NOTICE the second parameter is String</td></tr>
+<tr><td>void</td><td>setEnable("COMP1",true)</td><td>set the specify component active or not</td></tr>
+<tr><td>void</td><td>setCheckBox("CHKBOX1",true)</td><td>set the specify GCheckBox status to true or false</td></tr>
+<tr><td>Bool</td><td>getCheckBox("CHKBOX1")</td><td>return the specify GCheckBox status</td></tr>
+<tr><td>void</td><td>setScrollBar("SCRBAR1",floatObj)</td><td>set the specify GScrollBar to Float obj</td></tr>
+<tr><td>Obj</td><td>getScrollBar("SCRBAR1")</td><td>return the specify GScrollBar value</td></tr>
+<tr><td>void</td><td>setSwitch("SWH1",true)</td><td>set the specify GSwitch status to true or false</td></tr>
+<tr><td>Bool</td><td>getSwitch("SWH1")</td><td>return the specify GSwitch status</td></tr>
+<tr><td>void</td><td>loadXmlUI("/res/accounts.xml",getXmlAssist(),getEventHandler())</td><td>load xml with path String,XmlExtAssist(option),XEventHandler(option)</td></tr>
+<tr><td>Bool</td><td>uiExist("COMP1")</td><td>Determine specify component is exists</td></tr>
+<tr><td>void</td><td>showBar("a message")</td><td>show top bar message</td></tr>
+<tr><td>void</td><td>showMsg("a message")</td><td>show a GFrame with message</td></tr>
+</table>
+
+[< Back](#dochome)
+
+<span id="docscriptextlib"/>   
+
+* #### Extention library
+
+The extension function library inherit from Lib. register the extension function library before parsing the XML UI.
+
+```
+    XmlExtAssist assist = new XmlExtAssist(form);
+    assist.registerGUI("test.ext.XCustomList");
+    assist.addExtScriptLib(new ExScriptLib());
+    String xmlStr = GToolkit.readFileFromJarAsString("/res/Frame1.xml", "utf-8");
+    UITemplate uit = new UITemplate(xmlStr);
+    XContainer xc = (XContainer) XContainer.parseXml(uit.parse(), assist);
+    xc.build((int) form.getW(), (int) form.getH(), this);
+    GFrame f1 = xc.getGui();
+
+```
+
+The extention library.
+
+```
+package test.ext;
+
+import org.mini.gui.gscript.DataType;
+import org.mini.gui.gscript.Interpreter;
+import org.mini.gui.gscript.Lib;
+
+import java.util.ArrayList;
+
+public class ExScriptLib extends Lib {
+
+    {
+        methodNames.put("func1".toLowerCase(), 0);//
+        methodNames.put("func2".toLowerCase(), 1);//
+    }
+
+    public DataType call(Interpreter inp, ArrayList<DataType> para, int methodID) {
+        switch (methodID) {
+            case 0:
+                return func1(para);
+            case 1:
+                return func2(para);
+        }
+        return null;
+    }
+
+    public DataType func1(ArrayList<DataType> para) {
+        String str1 = Interpreter.popBackStr(para);
+        String str2 = Interpreter.popBackStr(para);
+        System.out.println(str1);
+        System.out.println(str2);
+        return null;
+    }
+
+    public DataType func2(ArrayList<DataType> para) {
+        int a = Interpreter.popBackInt(para);
+        int b = Interpreter.popBackInt(para);
+        return Interpreter.getCachedInt(a + b);
+    }
+}
+```
 
 
 [< Back](#dochome)
@@ -1061,342 +1592,61 @@ public class MyApp extends GApplication {
 
 ```
 
-<div align=center><img width="224" height="398" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/doc_gui_example.jpg"/></div>
-
-[< Back](#dochome)
-
-
-<span id="doclayout"/>   
-
-## GUI Layout
-
-All UI containers support the following three layout methods, which can be mixed. In XML, flow layout and table layout are usually used at the same time. Layout is just a concept, and the code does not need to specify which layout to use. The layout manager automatically layout according to the description in XML.
-
-[< Back](#dochome)
-
-
-<span id="doclayoutxy"/>   
-
-* ### XY layout
-
-  Manual init a GUI component, and specify fixed position. Example:
-
-```
-        GFrame frame=new GFrame(form);
-        GLabel lab = new GLabel(form, "This is a label", 20, 20, 100, 20);
-        frame.getView().add(lab);
-        GButton but = new GButton(form, "Submit", 20, 100, 100, 20);
-        frame.getView().add(but);
-```
-
-[< Back](#dochome)
-
-
-<span id="doclayoutflow"/>   
-
-* ### XML flow layout
-  The flow layout does not specify the fixed position of the UI components, and the components are arranged in rows. If the next UI component cannot be accommodated in current row, the component will be placed in a new row. The row height is the height of the highest component in this row.
-
-  If need force a line break, can use <br/> to break row.
-
-[< Back](#dochome)
-
-
-<span id="doclayouttable"/>   
-
-* ### XML table layout
-  The table layout is the same as the HTML table, TABLE represents an area, TR represents a row, TD represents a column in a row, and another TABLE can be nested in TD. If the table has multiple rows, the height of one TR can be scalable, and the height attribute is h="float", that is, the table height is subtracted from the height of other rows, and the remaining height is the height of the scalable TR. If there are multiple columns in a row of the table, the width of one TD can be scalable. The width attribute is w="float". The width of this TR is subtracted from the sum of the widths of other TD, and the remaining width is the width of the scalable TD.
-
-```
-        <table w="100%" h="100%">
-            <tr h="100%">
-                <td w="50%" h="100%">
-                    <table h="100%">
-                        <tr h="30">
-                            <td h="100%">
-                                <label w="100%" align="center">Member List</label>
-                            </td>
-                        </tr>
-                        <tr h="float">
-                            <td>
-                                <list name="NPCCLAN_LIST" w="100%" h="100%" multiline="1" itemh="25">
-                                    <li>Jack</li>
-                                    <li>Tom</li>
-                                </list>
-                            </td>
-                        </tr>
-                        <tr h="30">
-                            <td>
-                                <button name="NPCCLAN_PREV" w="30%">Preview</button>
-                                <label name="NPCCLAN_PAGE" w="40%" align="center"></label>
-                                <button name="NPCCLAN_NEXT" w="30%">Next</button>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-                <td w="50%">
-                    <label w="100%" align="center">Detail</label>
-                    <label w="30%" align="left,vcenter">Name:</label>
-                    <label w="70%" align="left,vcenter" name="NPCCLAN_NAME">NPCCLAN_NAME</label>
-                    <label w="100%" h="80" multiline="1" name="NPCCLAN_DESC">NPCCLAN_DESC</label>
-                    <br/>
-                    <button name="NPCCLAN_APPL" w="100%">Application</button>
-                </td>
-            </tr>
-        </table>
-
-```
-
-<div align=center><img width="500" height="261" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/doc_gui_tablelayout.jpg"/></div>
+<div align=center><img width="112" height="199" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/doc_gui_example.jpg"/></div>
 
 
 [< Back](#dochome)
 
+<span id="docaudio"/>    
 
+## Audio
 
-<span id="docscript"/>   
-
-## GUI Script
-
-A simple scripting system is embedded in XML, and scripts can process UI component or applications. This script is similar to what javascript for HTML.    
-The script can be extended to enhance the interaction between the script and the java system.
+Audio is based on open source soft miniaudio.
 
 ```
-    <frame name="FRAME_TEST" w="80%" h="70%" title="WINDOW" oninit="onOpen()">
-        <script>
-            <![CDATA[
+    //init a miniaudio engine
+    MaEngine maEngine = new MaEngine();
 
-            sub onOpen()
-                print("FRAME_TEST is open")
-            ret
+    public void startBgm(String pathInJar) {
+        byte[] audio = GToolkit.readFileFromJar(pathInJar);
+        if (audio != null) {
+            stopBgm();
+            MaSound bgm;
 
-            sub change()
-                red=mod(random(),255)
-                green=mod(random(),255)
-                blue=mod(random(),255)
-                setColor("LAB_HELP",red,green,blue,255)
-                setText("LAB_HELP","Only a test")
-            ret
-
-            ]]>
-        </script>
-
-        <label name="LAB_HELP" w="50%" align="left,vcenter">TEXT NOW</label>
-        <button name="BT_CHANGE" w="50%" onclick="change()">Change Color</button>
-    </frame>    
-
-```
-
-On the button BT_CHANGE clicked, the script function change() would be call, the func change the label LAB_HELP text and color.   
-Script onOpen() would be called when the frame is openning.
-
-[< Back](#dochome)
-
-
-<span id="docscriptsyntax"/>   
-
-* ### Script Syntax
-
-```
-' this is comment 
-' Variable names are NOT case sensitive
-a = 3        'define variable a as Int and set value to 3 , this Int is 64bit Int
-b = "ABC"    'define variable b as Str and set value to "ABC"
-c = true     'define variable c as Bool and set value to true
-
-arr[2][10]      'define variable arr as 2 dim Array and set array length [2][10]
-arr[0][0] = 5
-arr[0][1] = "CDE"
-arr[0][2] = false
-
-'operator ex
-a = (a + 7) * min(a, 5) - 15 / 3 
-b = "Hellow" + " world" + 100 + true
-c = (7 > 6) | (a = 3) & (!c)
-
-'branch statment
-if(a > 5)
-    b="great than five"
-else
-    b="less than or equals five" 
-eif
-
-' loop statment
-i = 0
-while(i < 3)
-    print(i+" ")
-loop
-
-' function call
-a = sum(5, 7)
-p(a)
-
-'function define
-'function names are NOT case sensitive
-sub sum(x, y)
-ret x+y           ' return value x+y 
-
-sub p(v)
-    println(v)
-ret               ' No value return
-
-```
-
-[< Back](#dochome)
-
-
-<span id="docscriptstdlib"/>   
-
-* ### Stdlib api
-
-<table>
-<tr><td>Return Type</td><td>call</td><td>function</td></tr>
-
-<tr><td>Int</td><td>arrlen(arr)</td><td>return array arr length </td></tr>
-<tr><td>Int</td><td>abs(a)</td><td>return a&lt;0?-a:a</td></tr>
-<tr><td>Str</td><td>base64enc("ABCD")</td><td>return base64 encoded of "ABCD"</td></tr>
-<tr><td>Str</td><td>base64dec("QUJDRA==")</td><td>return base64 decoded of "QUJDRA=="</td></tr>
-<tr><td>void</td><td>def("varname",2)</td><td>Define a globe variable varname, and set as Int 2 </td></tr>
-<tr><td>Bool</td><td>equals(str1,str2)</td><td>if str1 equals str2 return true, else false</td></tr>
-<tr><td>Int</td><td>getbit(1000,1)</td><td>return 0 or 1, get bit index 1 of number 1000</td></tr>
-<tr><td>Bool/Str/Int/Obj</td><td>getobjfield(sound,"effectVolume")</td><td>return java Object sound field "effectVolume" value</td></tr>
-<tr><td>Bool</td><td>isDef("varname")</td><td>Whether or not defined a globe variable varname </td></tr>
-<tr><td>Int</td><td>idxof("ABCD", "CD")</td><td>return index of "CD" in "ABCD", this case is 2</td></tr>
-<tr><td>Bool</td><td>isnull(var)</td><td>determine var is null, var type limited: Str or Obj</td></tr>
-<tr><td>Bool/Str/Int/Obj/void</td><td>invokejava(sound,"setSoundOpen(Z)V",true)</td><td>call java Object sound method "setSoundOpen(Z)V" , 1 parameter, no return<br/>invokejava(smgr,"addUser(Lcom.lba.user.Admin;I)Z",user1,30) ,2 para,the firstis  user1 , an object of class com.lba.user.Admin, the second para 30 is int type.</td></tr>
-<tr><td>Bool/Str/Int/Obj/void</td><td>invokeStatic("com.lba.user.Admin","check()V")</td><td>call class com.lba.user.Admin method "check()V" , 0 parameter, no return</td></tr>
-<tr><td>Int</td><td>min(a,b)</td><td>return a&lt;b?a:b </td></tr>
-<tr><td>Int</td><td>max(a,b)</td><td>return a&gt;b?a:b </td></tr>
-<tr><td>Int</td><td>mod(a, b)</td><td>return a % b</td></tr>
-<tr><td>void</td><td>print("ABC")</td><td>print a string</td></tr>
-<tr><td>void</td><td>println()<br/>println("ABC"+3)</td><td>print a newline ; print a string with newline</td></tr>
-<tr><td>Int</td><td>random()</td><td>return Int value may be negative</td></tr>
-<tr><td>Int</td><td>strlen(str)</td><td>return string length</td></tr>
-<tr><td>Str</td><td>substr("ABCD", 0, 3)</td><td>return sub string of "ABCD", start at 0, end at 3, this case return "ABC"</td></tr>
-<tr><td>Array</td><td>split("A-BC-D", "-")</td><td>return splited string array , this case return ["A","BC","D"]</td></tr>
-<tr><td>void</td><td>setObjField(sound,"effectVolume", 10)</td><td>set java Object sound field "effectVolume" value</td></tr>
-<tr><td>Int</td><td>str2int("7")</td><td>Convert String to Int ,same as valueOf(Str)</td></tr>
-<tr><td>Int</td><td>setbit(1000,5,0)</td><td>the number 1000, set bit index 5 to 0</td></tr>
-<tr><td>Str</td><td>trim(" ABC ")</td><td>return trim String , this case is "ABC"</td></tr>
-<tr><td>Int</td><td>valueOf("7")</td><td>Convert String to Int </td></tr>
-</table>
-
-[< Back](#dochome)
-
-
-<span id="docscriptguilib"/>   
-
-* ### GUI Scriptlib api
-
-<table>
-<tr><td>Return Type</td><td>call</td><td>function</td></tr>
-<tr><td>void</td><td>setBgColor("COMP1",r,g,b,a)</td><td>set component background color</td></tr>
-<tr><td>void</td><td>setColor("COMP1",r,g,b,a)</td><td>set component text color</td></tr>
-<tr><td>void</td><td>setBgColorHexStr("COMP1","00ff00ff")</td><td>set component background color, color format is RGBA</td></tr>
-<tr><td>void</td><td>setColorHexStr("COMP1","00ff00ff")</td><td>set component text color, color format is RGBA</td></tr>
-<tr><td>void</td><td>setText("COMP1","new string")</td><td>set component text String</td></tr>
-<tr><td>Str</td><td>getText("COMP1")</td><td>return component text</td></tr>
-<tr><td>void</td><td>setXY("COMP1",x,y)</td><td>set component position to x,y</td></tr>
-<tr><td>void</td><td>setWH("COMP1",w,h)</td><td>set component Width,Height to w,h</td></tr>
-<tr><td>Int</td><td>getX("COMP1")<br/>getX()</td><td>get component position x, if no component specified, return form x</td></tr>
-<tr><td>Int</td><td>getY("COMP1")<br/>getY()</td><td>get component position y, if no component specified, return form y</td></tr>
-<tr><td>Int</td><td>getW("COMP1")<br/>getW()</td><td>get component position w, if no component specified, return form w</td></tr>
-<tr><td>Int</td><td>getH("COMP1")<br/>getH()</td><td>get component position h, if no component specified, return form h</td></tr>
-<tr><td>Str</td><td>getCmd("COMP1")</td><td>get component command string</td></tr>
-<tr><td>void</td><td>setCmd("COMP1","command str")</td><td>set component command to the second parameter</td></tr>
-<tr><td>void</td><td>close("FRAME1")</td><td>close GFrame that specified name</td></tr>
-<tr><td>Int</td><td>getCurSlot("VIEWSLOT1")</td><td>get current slot of GViewSlot that specified name</td></tr>
-<tr><td>void</td><td>showSlot("VIEWSLOT1",2,100)</td><td>set current slot of GViewSlot to 2, move animation 200ms</td></tr>
-<tr><td>void</td><td>setImgPath("COMP1","/res/test.png")</td><td>set GImageItem image to "/res/test.png"</td></tr>
-<tr><td>void</td><td>setImg("COMP1",gimageObj)</td><td>set GImageItem image to java GImage object</td></tr>
-<tr><td>Obj</td><td>getImg("COMP1",gimageObj)</td><td>get GImageItem image to Obj type</td></tr>
-<tr><td>void</td><td>setAttachStr("COMP1","a string")</td><td>attach the String to specify component</td></tr>
-<tr><td>Str</td><td>getAttachStr("COMP1")</td><td>return the attachment as String from specify component</td></tr>
-<tr><td>void</td><td>setAttachInt("COMP1","a string")</td><td>attach the Int to specify component</td></tr>
-<tr><td>Int</td><td>getAttachInt("COMP1")</td><td>return the attachment as Int from specify component</td></tr>
-<tr><td>Int</td><td>getListIdx("List1")</td><td>return the current selected index of specify GList </td></tr>
-<tr><td>Str</td><td>getListText("List1")</td><td>return the selected item text of specify GList </td></tr>
-<tr><td>void</td><td>setListIdx("List1",2)</td><td>set the specify GList selected item to 2</td></tr>
-<tr><td>void</td><td>setImgAlphaStr("List1","0.5")</td><td>set the specify GImageItem image alpha to 0.5, NOTICE the second parameter is String</td></tr>
-<tr><td>void</td><td>setEnable("COMP1",true)</td><td>set the specify component active or not</td></tr>
-<tr><td>void</td><td>setCheckBox("CHKBOX1",true)</td><td>set the specify GCheckBox status to true or false</td></tr>
-<tr><td>Bool</td><td>getCheckBox("CHKBOX1")</td><td>return the specify GCheckBox status</td></tr>
-<tr><td>void</td><td>setScrollBar("SCRBAR1",floatObj)</td><td>set the specify GScrollBar to Float obj</td></tr>
-<tr><td>Obj</td><td>getScrollBar("SCRBAR1")</td><td>return the specify GScrollBar value</td></tr>
-<tr><td>void</td><td>setSwitch("SWH1",true)</td><td>set the specify GSwitch status to true or false</td></tr>
-<tr><td>Bool</td><td>getSwitch("SWH1")</td><td>return the specify GSwitch status</td></tr>
-<tr><td>void</td><td>loadXmlUI("/res/accounts.xml",getXmlAssist(),getEventHandler())</td><td>load xml with path String,XmlExtAssist(option),XEventHandler(option)</td></tr>
-<tr><td>Bool</td><td>uiExist("COMP1")</td><td>Determine specify component is exists</td></tr>
-<tr><td>void</td><td>showBar("a message")</td><td>show top bar message</td></tr>
-<tr><td>void</td><td>showMsg("a message")</td><td>show a GFrame with message</td></tr>
-</table>
-
-[< Back](#dochome)
-
-<span id="docscriptextlib"/>   
-
-* ### Extention library
-
-The extension function library inherit from Lib. register the extension function library before parsing the XML UI.
-
-```
-    XmlExtAssist assist = new XmlExtAssist(form);
-    assist.registerGUI("test.ext.XCustomList");
-    assist.addExtScriptLib(new ExScriptLib());
-    String xmlStr = GToolkit.readFileFromJarAsString("/res/Frame1.xml", "utf-8");
-    UITemplate uit = new UITemplate(xmlStr);
-    XContainer xc = (XContainer) XContainer.parseXml(uit.parse(), assist);
-    xc.build((int) form.getW(), (int) form.getH(), this);
-    GFrame f1 = xc.getGui();
-
-```
-
-The extention library.
-
-```
-package test.ext;
-
-import org.mini.gui.gscript.DataType;
-import org.mini.gui.gscript.Interpreter;
-import org.mini.gui.gscript.Lib;
-
-import java.util.ArrayList;
-
-public class ExScriptLib extends Lib {
-
-    {
-        methodNames.put("func1".toLowerCase(), 0);//
-        methodNames.put("func2".toLowerCase(), 1);//
-    }
-
-    public DataType call(Interpreter inp, ArrayList<DataType> para, int methodID) {
-        switch (methodID) {
-            case 0:
-                return func1(para);
-            case 1:
-                return func2(para);
+            MaDecoder decoder = new MaDecoder(audio);
+            bgm = new MaSound(maEngine, decoder, MiniAudio.MA_SOUND_FLAG_STREAM | MiniAudio.MA_SOUND_FLAG_ASYNC);
+            bgm.setVolume(bgmVolume);
+            bgm.setSpatialization(false);
+            bgm.setLooping(true);
+            bgm.setFadeIn(1000, bgmVolume);
+            bgm.start();
         }
-        return null;
     }
-
-    public DataType func1(ArrayList<DataType> para) {
-        String str1 = Interpreter.popBackStr(para);
-        String str2 = Interpreter.popBackStr(para);
-        System.out.println(str1);
-        System.out.println(str2);
-        return null;
+    
+    //like openAL
+    public void play(String audioPath, float x, float y, float z) {
+        if (!soundOpen) {
+            return;
+        }
+        MaSound snd = getMaSound(audioPath);
+        if (snd != null) {
+            snd.setSpatialization(true);// support 3d audio
+            snd.setAttenuationModel(MiniAudio.ma_attenuation_model_linear);
+            snd.setMinDistance(minDistance);
+            snd.setMaxDistance(maxDistance);
+            snd.setPosition(x, y, z);
+            snd.start();
+        }
     }
-
-    public DataType func2(ArrayList<DataType> para) {
-        int a = Interpreter.popBackInt(para);
-        int b = Interpreter.popBackInt(para);
-        return Interpreter.getCachedInt(a + b);
-    }
-}
 ```
+
+
+[< Back](#linkhome)
+
+<span id="linklicense"/>    
 
 ## License
 
 License:    MIT
 
-Gust , digitalgust@163.com .
+Gust , digitalgust@163.com .   
