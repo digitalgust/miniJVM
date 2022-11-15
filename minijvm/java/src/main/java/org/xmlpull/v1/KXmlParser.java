@@ -20,7 +20,7 @@
 
 // Contributors: Paul Hackenberger (unterminated entity handling in relaxed mode)
 
-package org.mini.layout.xmlpull;
+package org.xmlpull.v1;
 
 import java.io.IOException;
 import java.io.InputStream;

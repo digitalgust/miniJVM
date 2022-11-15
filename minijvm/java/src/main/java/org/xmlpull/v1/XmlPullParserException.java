@@ -1,7 +1,7 @@
 /* -*-             c-basic-offset: 4; indent-tabs-mode: nil; -*-  //------100-columns-wide------>|*/
 // for license please see accompanying LICENSE.txt file (available also at http://www.xmlpull.org/)
 
-package org.mini.layout.xmlpull;
+package org.xmlpull.v1;
 
 /**
  * This exception is thrown to signal XML Pull Parser related faults.
@@ -12,9 +12,6 @@ public class XmlPullParserException extends Exception {
     protected Throwable detail;
     protected int row = -1;
     protected int column = -1;
-
-    /*    public XmlPullParserException() {
-          }*/
 
     public XmlPullParserException(String s) {
         super(s);
@@ -61,7 +58,7 @@ public class XmlPullParserException extends Exception {
     */
 
     //NOTE: code that prints this and detail is difficult in J2ME
-	public void printStackTrace() {
+    public void printStackTrace() {
         if (detail == null) {
             super.printStackTrace();
         } else {

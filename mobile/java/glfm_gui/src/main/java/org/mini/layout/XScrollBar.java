@@ -2,7 +2,7 @@ package org.mini.layout;
 
 import org.mini.gui.GObject;
 import org.mini.gui.GScrollBar;
-import org.mini.layout.xmlpull.KXmlParser;
+import org.xmlpull.v1.KXmlParser;
 
 /**
  *

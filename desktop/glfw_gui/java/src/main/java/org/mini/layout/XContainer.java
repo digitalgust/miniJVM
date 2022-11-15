@@ -3,8 +3,8 @@ package org.mini.layout;
 import org.mini.glwrap.GLUtil;
 import org.mini.gui.GContainer;
 import org.mini.gui.GObject;
-import org.mini.layout.xmlpull.KXmlParser;
-import org.mini.layout.xmlpull.XmlPullParser;
+import org.xmlpull.v1.KXmlParser;
+import org.xmlpull.v1.XmlPullParser;
 import org.mini.nanovg.Nanovg;
 
 import java.io.ByteArrayInputStream;
@@ -366,6 +366,10 @@ public abstract class XContainer
             return (xswitcher);
         } else if (tagName.equals(XPanel.XML_NAME)) { //panel
             XPanel panel = new XPanel(parent);
+            panel.parse(parser, assist);
+            return (panel);
+        } else if (tagName.equals(XCanvas.XML_NAME)) { //canvas
+            XPanel panel = new XCanvas(parent);
             panel.parse(parser, assist);
             return (panel);
         } else if (tagName.equals(XViewPort.XML_NAME)) { //viewport

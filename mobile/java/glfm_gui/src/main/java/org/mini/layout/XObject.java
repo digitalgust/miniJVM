@@ -6,7 +6,7 @@ import org.mini.gui.GObject;
 import org.mini.gui.GuiScriptLib;
 import org.mini.gui.gscript.Interpreter;
 import org.mini.gui.gscript.Lib;
-import org.mini.layout.xmlpull.KXmlParser;
+import org.xmlpull.v1.KXmlParser;
 
 public abstract class XObject implements GLayout {
 

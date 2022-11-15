@@ -2,7 +2,7 @@ package org.mini.layout;
 
 import org.mini.gui.GLabel;
 import org.mini.gui.GObject;
-import org.mini.layout.xmlpull.KXmlParser;
+import org.xmlpull.v1.KXmlParser;
 import org.mini.nanovg.Nanovg;
 
 /**
