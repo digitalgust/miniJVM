@@ -1618,7 +1618,7 @@ public class SimplePanel extends GOpenGLPanel {
 }
 ```
 Game Example is placed /mobile/java/ExGame   
-<div align=center><img width="112" height="199" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/doc_gui_opengl.jpg"/></div>
+<div align=center><img width="400" height="203" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/screenshot/doc_gui_opengl.jpg"/></div>
 
 
 [< Back](#dochome)
