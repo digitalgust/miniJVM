@@ -935,7 +935,7 @@ void _gen_exception_new(struct sljit_compiler *C, s32 exception_type) {
     _gen_save_sp_ip(C);
     sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R0, 0, SLJIT_IMM, exception_type);
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-    sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(S32) | SLJIT_ARG2(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(exception_create));
+    sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(UW) | SLJIT_ARG1(S32) | SLJIT_ARG2(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(exception_create));
     _gen_load_sp_ip(C);
     _gen_stack_push_ref(C, SLJIT_RETURN_REG, 0);
 }
@@ -1169,7 +1169,7 @@ void gen_jit_suspend_check_func() {
         }
         label_not_interrupted = sljit_emit_label(C);
         sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-        sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(check_suspend_and_pause));
+        sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(UW) | SLJIT_ARG1(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(check_suspend_and_pause));
 
         _gen_load_sp_ip(C);
         sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_R2);
@@ -1193,13 +1193,14 @@ void gen_jit_suspend_check_func() {
 
 s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime *runtime) {
 #if JIT_DEBUG
-    if ((utf8_equals_c(method->_this_class->name, "java/lang/ClassLoader")
-         && utf8_equals_c(method->descriptor, "(Ljava/lang/String;Z)Ljava/lang/Class;")
-         && utf8_equals_c(method->name, "loadClass"))
-        ||
-        (utf8_equals_c(method->_this_class->name, "java/lang/ClassLoader")
-         && utf8_equals_c(method->descriptor, "(Ljava/lang/String;)Ljava/lang/Class;")
-         && utf8_equals_c(method->name, "loadClass"))
+    if (
+//            (utf8_equals_c(method->_this_class->name, "java/lang/ClassLoader")
+//             && utf8_equals_c(method->descriptor, "(Ljava/lang/String;Z)Ljava/lang/Class;")
+//             && utf8_equals_c(method->name, "loadClass"))
+//            ||
+            (utf8_equals_c(method->_this_class->name, "com/ebsee/shl/main/GamePanel")
+             && utf8_equals_c(method->descriptor, "(J)V")
+             && utf8_equals_c(method->name, "paint_title"))
             ) {
         int debug = 1;
 
@@ -2861,7 +2862,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                     _gen_save_sp_ip(C);
                     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
                     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_IMM, (sljit_sw) other);
-                    sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(instance_create));
+                    sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(UW) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(instance_create));
                     _gen_load_sp_ip(C);
                     _gen_stack_push_ref(C, SLJIT_RETURN_REG, 0);
                 } else {
@@ -3009,7 +3010,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
                 _gen_stack_pop_ref(C, SLJIT_R0, 0);
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(VOID) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(jthread_lock));
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(jthread_lock));
 
                 _gen_ip_modify_imm(C, 1);
                 ip++;
@@ -3023,7 +3024,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
                 _gen_stack_pop_ref(C, SLJIT_R0, 0);
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(VOID) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(jthread_unlock));
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(jthread_unlock));
 
                 _gen_ip_modify_imm(C, 1);
                 ip++;
@@ -3152,9 +3153,9 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_IMM, (sljit_sw) desc);
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_IMM, count);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(VOID) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(multiarray));
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW) | SLJIT_ARG3(S32), SLJIT_IMM, SLJIT_FUNC_OFFSET(multiarray));
                 _gen_load_sp_ip(C);
-                _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_RETURN_REG, 0, SLJIT_IMM, 0, JVM_EXCEPTION_NULLPOINTER, 0);
+                _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_RETURN_REG, 0, SLJIT_IMM, RUNTIME_STATUS_EXCEPTION, JVM_EXCEPTION_NULLPOINTER, 0);
 
                 _gen_ip_modify_imm(C, 4);
                 ip += 4;

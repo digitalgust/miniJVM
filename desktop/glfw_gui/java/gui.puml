@@ -96,6 +96,6 @@ org.mini.gui.GObject <|-- org.mini.gui.GContainer
 org.mini.gui.GImage <|-- org.mini.gui.ImageMutable
 org.mini.gui.GAttachable <|.. org.mini.gui.GObject
 org.mini.gui.GStyle <|-- org.mini.gui.GStyleDark
-org.mini.gui.GContainer <|-- org.mini.gui.GCanvas
+org.mini.gui.GPanel <|-- org.mini.gui.GCanvas
 org.mini.gui.GPanel <|-- org.mini.gui.GOpenGLPanel
 @enduml
