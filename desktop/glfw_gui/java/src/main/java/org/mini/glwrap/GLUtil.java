@@ -21,11 +21,10 @@ import static org.mini.nanovg.Nanovg.stbi_load;
 public class GLUtil {
 
 
-
     static public void printMat4(float[] mat4) {
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
-                System.out.print(" " + mat4[i * 4 + j]);
+                System.out.print(((i == 0 && j == 0) ? " " : ", ") + mat4[i * 4 + j]);
             }
             System.out.println();
         }

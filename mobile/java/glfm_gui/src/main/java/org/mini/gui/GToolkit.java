@@ -586,7 +586,7 @@ public class GToolkit {
     }
 
     static public GFrame getMsgFrame(GForm form, String title, String msg) {
-        return getMsgFrame(form, title, msg, 300, form.getH() * .6f);
+        return getMsgFrame(form, title, msg, 300f, 200f);
     }
 
     static public GFrame getMsgFrame(GForm form, String title, String msg, float width, float height) {

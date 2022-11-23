@@ -151,6 +151,9 @@ public class ImageMutable extends GImage {
         return heigh;
     }
 
+    public ByteBuffer getData() {
+        return data;
+    }
 
     /**
      * MUST call by gl thread

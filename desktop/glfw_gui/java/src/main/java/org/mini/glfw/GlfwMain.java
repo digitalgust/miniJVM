@@ -20,7 +20,7 @@ public class GlfwMain {
 //        inp.callSub("main()");
 
         GCallBack ccb = GCallBack.getInstance();
-        ccb.init(700, 320);//window size  568 320
+        ccb.init(1280, 960);//window size  568 320
         //ccb.init(812, 375);//ip 12 pro max
 
         AppManager.getInstance().active();

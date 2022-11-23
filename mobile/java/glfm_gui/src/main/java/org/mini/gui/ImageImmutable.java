@@ -30,6 +30,7 @@ public class ImageImmutable extends GImage {
     //
     byte[] data; //source from image data
     int gl_texture = -1; //source from gl texture id
+    boolean gc = true; //if gimage created by gl_texture, it can't be release;
     int image_init_flag;
     //
     Object attachment;
@@ -108,8 +109,10 @@ public class ImageImmutable extends GImage {
     @Override
     public void finalize() {
         try {
-            GForm.deleteImage(nvg_texture);
-            System.out.println("finalize image " + this);
+            if (gc) {
+                GForm.deleteImage(nvg_texture);
+                System.out.println("finalize image " + this);
+            }
         } catch (Throwable e) {
         }
     }

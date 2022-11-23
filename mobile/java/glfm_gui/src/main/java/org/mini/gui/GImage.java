@@ -54,6 +54,7 @@ public abstract class GImage implements GAttachable {
         img.w[0] = w;
         img.h[0] = h;
         img.image_init_flag = imageflag;
+        img.gc = false;
         return img;
     }
 
