@@ -62,8 +62,21 @@ public class MiniHttpClient extends Thread {
                 int len = (int) c.getLength();
                 dis = c.openDataInputStream();
                 if (len > 0) {
+
+                    int part10percent = len / 10;
+                    int p = 1;
+
                     data = new byte[len];
-                    dis.readFully(data);
+                    int read = 0;
+                    while (read < len) {
+                        read += dis.read(data, read, len - read);
+
+                        if (len / part10percent > p) {
+                            p++;
+                            logger.log("Download http data " + p + "0%");
+                        }
+                    }
+
                 } else {
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     int ch;

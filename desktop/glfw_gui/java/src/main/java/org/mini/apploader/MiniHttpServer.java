@@ -5,6 +5,9 @@
  */
 package org.mini.apploader;
 
+import org.mini.reflect.ReflectArray;
+import org.mini.reflect.vm.RefNative;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -34,8 +37,8 @@ public class MiniHttpServer extends Thread {
     int port = DEFAULT_PORT;
     SrvLogger logger = DEFAULT_LOGGER;
 
-    String header = "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n";
-    String responseText = header + "<html>\n"
+    static final String header = "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n";
+    static final String responseText = header + "<html>\n"
             + "<head>\n"
             + "<title>Upload jar</title>\n"
             + "<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>\n"
@@ -65,8 +68,8 @@ public class MiniHttpServer extends Thread {
         abstract void log(String s);
     }
 
-    public class RequestHandle extends Thread {
-
+    static class RequestHandle extends Thread {
+        MiniHttpServer server;
         Socket cltsock;
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         private final HashMap<String, String> headerValues = new HashMap();
@@ -75,7 +78,8 @@ public class MiniHttpServer extends Thread {
         /**
          * @param sock
          */
-        public RequestHandle(Socket sock) {
+        public RequestHandle(MiniHttpServer server, Socket sock) {
+            this.server = server;
             this.cltsock = sock;
         }
 
@@ -105,6 +109,9 @@ public class MiniHttpServer extends Thread {
                 baos.reset();
                 int contentLength = getContentLength();
                 if (contentLength != -1) {
+                    int part10percent = contentLength / 10;
+                    int p = 1;
+
                     byte[] b = new byte[4096];
                     int read;
                     while ((read = in.read(b)) != -1) {
@@ -113,8 +120,13 @@ public class MiniHttpServer extends Thread {
                         if (baos.size() == contentLength) {
                             break;
                         }
+
+                        if (contentLength / part10percent > p) {
+                            p++;
+                            server.logger.log("Received http data " + p + "0%");
+                        }
                     }
-                    logger.log("Received http data " + baos.size());
+                    server.logger.log("Received http data " + baos.size());
                 }
                 // 如果是form提交数据
                 String contentType = getContentType();
@@ -130,21 +142,21 @@ public class MiniHttpServer extends Thread {
                             parser.parseData(this, tmpb);
                             //
                             try {
-                                if (uploadCompletedHandle != null) {
-                                    uploadCompletedHandle.onCompleted(parser.getFiles());
+                                if (server.uploadCompletedHandle != null) {
+                                    server.uploadCompletedHandle.onCompleted(parser.getFiles());
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
                         } catch (Exception e) {
                         }
-                        baos.reset();
+                        baos = new ByteArrayOutputStream();
                     }
 
                 }
                 //
                 OutputStream out = cltsock.getOutputStream();
-                String sbuf = responseText;
+                String sbuf = server.responseText;
                 int sent = 0;
                 while ((sent) < sbuf.length()) {
                     out.write(sbuf.charAt(sent));
@@ -272,7 +284,7 @@ public class MiniHttpServer extends Thread {
         }
     }
 
-    public class MultipartFormData {
+    static class MultipartFormData {
 
         final static String BOUNDARY_TAG = "boundary";
         final static String DISPOSITION_TAG = "content-disposition";
@@ -306,6 +318,14 @@ public class MiniHttpServer extends Thread {
                     return;
                 }
                 String boundary = ct.substring(ct.indexOf("=") + 1);
+                try {
+                    FileOutputStream fos = new FileOutputStream("tmp.dat");
+                    fos.write(data);
+                    fos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
 
                 byte[] tmpb = null;
                 while ((tmpb = creader.readUntil(boundary)) != null) {
@@ -374,7 +394,7 @@ public class MiniHttpServer extends Thread {
                 if (fileName != null) { //是文件
                     //get filename from path
                     fileName = fileName.replace('\\', '/');
-                    fileName = fileName.indexOf('/') > 0 ? fileName.substring(fileName.indexOf('/') + 1) : fileName;
+                    fileName = fileName.indexOf('/') > 0 ? fileName.substring(fileName.lastIndexOf('/') + 1) : fileName;
                     //
                     UploadFile uf = new UploadFile();
                     uf.data = b;
@@ -420,14 +440,16 @@ public class MiniHttpServer extends Thread {
             }
 
             String readLine() {
-                int tmppos = MiniHttpServer.binSearch(data, key0, pos);
+                long dataAddr = ReflectArray.getBodyPtr(data);
+                long keyAddr = ReflectArray.getBodyPtr(key0);
+                int tmppos = RefNative.heap_bin_search(dataAddr + pos, data.length - pos, keyAddr, key0.length);//MiniHttpServer.binSearch(data, key0, pos);
                 if (tmppos < 0) {
                     return null;
                 }
                 String line = null;
                 try {
-                    line = new String(data, pos, tmppos - pos, FORM_DECODE);
-                    pos = tmppos + key0.length;
+                    line = new String(data, pos, tmppos, FORM_DECODE);
+                    pos += tmppos + key0.length;
                 } catch (UnsupportedEncodingException ex) {
                     return null;
                 }
@@ -439,20 +461,26 @@ public class MiniHttpServer extends Thread {
                 if (pos >= data.length) {
                     return null;
                 }
-                String bound_spit = "--" + boundary + "\r\n";
-                String bound_end = "--" + boundary + "--";
-                int boundLen = bound_spit.length();
-                int nextpos = MiniHttpServer.binSearch(data, bound_spit.getBytes(), pos);
-                int endpos = MiniHttpServer.binSearch(data, bound_end.getBytes(), pos);
+
+                byte[] bound_split = ("--" + boundary + "\r\n").getBytes();
+                byte[] bound_end = ("--" + boundary + "--").getBytes();
+
+                long dataAddr = ReflectArray.getBodyPtr(data);
+                long splitAddr = ReflectArray.getBodyPtr(bound_split);
+                long endAddr = ReflectArray.getBodyPtr(bound_end);
+
+                int boundLen = bound_split.length;
+                int nextpos = RefNative.heap_bin_search(dataAddr + pos, data.length - pos, splitAddr, bound_split.length);//MiniHttpServer.binSearch(data, bound_split.getBytes(), pos);
                 if (nextpos < 0) {
+                    int endpos = RefNative.heap_bin_search(dataAddr + pos, data.length - pos, endAddr, bound_end.length);//MiniHttpServer.binSearch(data, bound_end.getBytes(), pos);
                     if (endpos > 0) { //如果下个块就是尾巴,则读到尾
-                        boundLen = bound_end.length();
+                        boundLen = bound_end.length;
                         nextpos = endpos;
                     } else {
                         return null;
                     }
                 }
-                int len = nextpos - pos;
+                int len = nextpos;
                 int start = pos;
                 pos += len + boundLen;
                 if (len >= key0.length) {
@@ -477,7 +505,7 @@ public class MiniHttpServer extends Thread {
     /**
      * 收到的文件
      */
-    public class UploadFile {
+    static class UploadFile {
 
         public String type;
         public String filename;
@@ -509,7 +537,7 @@ public class MiniHttpServer extends Thread {
                     }
                     logger.log("accepted client socket:" + cltsock);
 
-                    RequestHandle handler = new RequestHandle(cltsock);
+                    RequestHandle handler = new RequestHandle(this, cltsock);
                     handler.start();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -563,12 +591,14 @@ public class MiniHttpServer extends Thread {
         if (src == null || key == null || src.length == 0 || key.length == 0 || startPos >= src.length) {
             return -1;
         }
+        int keyLastPos = key.length - 1;
         for (int i = startPos, iLen = src.length - key.length; i <= iLen; i++) {
-            if (src[i] == key[0]) {
+            if (src[i] == key[0] && src[i + keyLastPos] == key[keyLastPos]) {
                 boolean march = true;
-                for (int j = 1; j < key.length; j++) {
+                for (int j = 1; j < keyLastPos; j++) {
                     if (src[i + j] != key[j]) {
                         march = false;
+                        break;
                     }
                 }
                 if (march) {

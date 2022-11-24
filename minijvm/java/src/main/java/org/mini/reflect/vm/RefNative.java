@@ -58,6 +58,7 @@ public class RefNative {
     public static native Class findLoadedClass0(ClassLoader loader, String name);
 
     public static native URL findResource0(ClassLoader loader, String path);
+
     //
     //
     public static native long heap_calloc(int capacity);
@@ -93,6 +94,8 @@ public class RefNative {
     public static native Object heap_get_ref(long memAddr, int pos);
 
     public static native void heap_copy(long srcMemAddr, int srcPos, long destMemAddr, int destPos, int length);
+
+    public static native int heap_bin_search(long srcMemAddr, int srcLen, long keyMemAddr, int keyLen);
 
     public static native int heap_endian();
 
