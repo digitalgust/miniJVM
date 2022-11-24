@@ -27,7 +27,7 @@ echo build assets\resfiles\glfm_gui.jar
 call :build_jar glfm_gui.jar ..\mobile\java\glfm_gui\src\main ..\mobile\assets\resfiles "..\mobile\assets\resfiles\minijvm_rt.jar" ""
 
 echo build assets\resfiles\ExApp.jar
-call :build_jar ExApp.jar ...\mobile\java\ExApp\src\main ..\mobile\assets\resfiles "..\mobile\assets\resfiles\minijvm_rt.jar" "..\mobile\assets\resfiles\glfm_gui.jar"
+call :build_jar ExApp.jar ..\mobile\java\ExApp\src\main ..\mobile\assets\resfiles "..\mobile\assets\resfiles\minijvm_rt.jar" "..\mobile\assets\resfiles\glfm_gui.jar"
 
 
 
