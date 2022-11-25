@@ -6,7 +6,7 @@
 package org.mini.glfm;
 
 /**
- *
+ * callback
  * @author gust
  */
 public interface GlfmCallBack {
@@ -41,5 +41,7 @@ public interface GlfmCallBack {
     public void onPhotoPicked(long display, int uid, String url, byte[] data);
 
     public void onNotify(long display, String key, String val);
+
+    public void onOrientationChanged(long display, int orientation);
 
 }

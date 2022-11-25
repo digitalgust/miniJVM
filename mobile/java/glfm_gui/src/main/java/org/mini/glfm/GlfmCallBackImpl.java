@@ -390,6 +390,9 @@ public class GlfmCallBackImpl extends GCallBack {
         gform.onNotify(key, val);
     }
 
+    @Override
+    public void onOrientationChanged(long display, int orientation) {
+    }
 
     public String getAppSaveRoot() {
         return Glfm.glfmGetSaveRoot();

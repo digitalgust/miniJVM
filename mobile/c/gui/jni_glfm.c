@@ -249,7 +249,7 @@ _callback_photo_picked(GLFMDisplay *window, s32 uid, const c8 *url, c8 *data, s3
     }
 }
 
-void _callback_notify(GLFMDisplay *window, const c8* key, const c8* val) {
+void _callback_notify(GLFMDisplay *window, const c8 *key, const c8 *val) {
     gladLoadGLES2Loader(glfmGetProcAddress);
     if (refers._callback_surface_created) {
         Runtime *runtime = getRuntimeCurThread(refers.env);
@@ -260,13 +260,29 @@ void _callback_notify(GLFMDisplay *window, const c8* key, const c8* val) {
         env->push_ref(runtime->stack, insKey);
         Instance *insVal = createJavaString(runtime, val);
         env->push_ref(runtime->stack, insVal);
-        
+
         s32 ret = env->execute_method(refers._callback_notify, runtime);
         if (ret) {
             env->print_exception(runtime);
         }
     }
 }
+
+void _callback_orientation_changed(GLFMDisplay *window, GLFMInterfaceOrientation orientation) {
+    if (refers._callback_surface_resized) {
+        Runtime *runtime = getRuntimeCurThread(refers.env);
+        JniEnv *env = refers.env;
+        env->push_ref(runtime->stack, refers.glfm_callback);
+        env->push_long(runtime->stack, (s64) (intptr_t) window);
+        env->push_int(runtime->stack, orientation);
+
+        s32 ret = env->execute_method(refers._callback_orientation_changed, runtime);
+        if (ret) {
+            env->print_exception(runtime);
+        }
+    }
+}
+
 /* ==============================   jni glfm =================================*/
 
 int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
@@ -296,6 +312,7 @@ int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
     glfmSetKeyboardVisibilityChangedFunc(window, _callback_keyboard_visible);
     glfmSetPhotoPickedFunc(window, _callback_photo_picked);
     glfmSetNotifyFunc(window, _callback_notify);
+    glfmSetOrientationChangedFunc(window, _callback_orientation_changed);
 
 
     Instance *jloader = clazz->jloader;
@@ -422,22 +439,33 @@ int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_photo_picked = env->find_methodInfo_by_name(
-                                                                     refers.glfm_callback->mb.clazz->name, name, type, jloader, runtime);
+                refers.glfm_callback->mb.clazz->name, name, type, jloader, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
-    
+
     {
         name_s = "onNotify";
         type_s = "(JLjava/lang/String;Ljava/lang/String;)V";
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
         refers._callback_notify = env->find_methodInfo_by_name(
-                                                                     refers.glfm_callback->mb.clazz->name, name, type, jloader, runtime);
+                refers.glfm_callback->mb.clazz->name, name, type, jloader, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
     }
-    
+
+    {
+        name_s = "onOrientationChanged";
+        type_s = "(JI)V";
+        Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
+        Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
+        refers._callback_orientation_changed = env->find_methodInfo_by_name(
+                refers.glfm_callback->mb.clazz->name, name, type, jloader, runtime);
+        env->utf8_destory(name);
+        env->utf8_destory(type);
+    }
+
     return 0;
 }
 
@@ -459,23 +487,32 @@ int org_mini_glfm_Glfm_glfmSetDisplayConfig(Runtime *runtime, JClass *clazz) {//
     return 0;
 }
 
-int org_mini_glfm_Glfm_glfmSetUserInterfaceOrientation(Runtime *runtime, JClass *clazz) {
+int org_mini_glfm_Glfm_glfmSetSupportedInterfaceOrientation(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
     s32 allowedOrientations = env->localvar_getInt(runtime->localvar, pos++);
-    glfmSetUserInterfaceOrientation(window, allowedOrientations);
+    glfmSetSupportedInterfaceOrientation(window, allowedOrientations);
     return 0;
 }
 
 
-int org_mini_glfm_Glfm_glfmGetUserInterfaceOrientation(Runtime *runtime, JClass *clazz) {
+int org_mini_glfm_Glfm_glfmGetInterfaceOrientation(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
-    env->push_ref(runtime->stack, glfmGetUserInterfaceOrientation(window));
+    env->push_int(runtime->stack, glfmGetInterfaceOrientation(window));
+    return 0;
+}
+
+int org_mini_glfm_Glfm_glfmGetSupportedInterfaceOrientation(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    env->push_int(runtime->stack, glfmGetSupportedInterfaceOrientation(window));
     return 0;
 }
 
@@ -657,9 +694,9 @@ int org_mini_glfm_Glfm_glfmSetClipBoardContent(Runtime *runtime, JClass *clazz) 
 
 int org_mini_glfm_Glfm_glfmPickPhotoAlbum(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
-    s32 pos=0;
+    s32 pos = 0;
     GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
-    pos+=2;
+    pos += 2;
     s32 uid = env->localvar_getInt(runtime->localvar, pos++);
     s32 type = env->localvar_getInt(runtime->localvar, pos++);
     pickPhotoAlbum(window, uid, type);
@@ -668,9 +705,9 @@ int org_mini_glfm_Glfm_glfmPickPhotoAlbum(Runtime *runtime, JClass *clazz) {
 
 int org_mini_glfm_Glfm_glfmPickPhotoCamera(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
-    s32 pos=0;
+    s32 pos = 0;
     GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
-    pos+=2;
+    pos += 2;
     s32 uid = env->localvar_getInt(runtime->localvar, pos++);
     s32 type = env->localvar_getInt(runtime->localvar, pos++);
     pickPhotoCamera(window, uid, type);
@@ -679,9 +716,9 @@ int org_mini_glfm_Glfm_glfmPickPhotoCamera(Runtime *runtime, JClass *clazz) {
 
 int org_mini_glfm_Glfm_glfmImageCrop(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
-    s32 pos=0;
+    s32 pos = 0;
     GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
-    pos+=2;
+    pos += 2;
     s32 uid = env->localvar_getInt(runtime->localvar, pos++);
     Instance *jstr = env->localvar_getRefer(runtime->localvar, pos++);
     Utf8String *ustr = utf8_create();
@@ -690,7 +727,7 @@ int org_mini_glfm_Glfm_glfmImageCrop(Runtime *runtime, JClass *clazz) {
     s32 y = env->localvar_getInt(runtime->localvar, pos++);
     s32 w = env->localvar_getInt(runtime->localvar, pos++);
     s32 h = env->localvar_getInt(runtime->localvar, pos++);
-    imageCrop(window, uid, utf8_cstr(ustr),x, y, w, h);
+    imageCrop(window, uid, utf8_cstr(ustr), x, y, w, h);
     utf8_destory(ustr);
     return 0;
 }
@@ -698,9 +735,9 @@ int org_mini_glfm_Glfm_glfmImageCrop(Runtime *runtime, JClass *clazz) {
 
 int org_mini_glfm_Glfm_glfmPlayVideo(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
-    s32 pos=0;
+    s32 pos = 0;
     GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
-    pos+=2;
+    pos += 2;
     Instance *jstr = env->localvar_getRefer(runtime->localvar, pos++);
     Instance *jstrMime = env->localvar_getRefer(runtime->localvar, pos++);
     Utf8String *ustr = env->utf8_create();
@@ -710,39 +747,39 @@ int org_mini_glfm_Glfm_glfmPlayVideo(Runtime *runtime, JClass *clazz) {
     void *panel = playVideo(window, env->utf8_cstr(ustr), env->utf8_cstr(ustrMime));
     env->utf8_destory(ustr);
     env->utf8_destory(ustrMime);
-    env->push_long(runtime->stack, (s64)(intptr_t)panel);
+    env->push_long(runtime->stack, (s64) (intptr_t) panel);
     return 0;
 }
 
 int org_mini_glfm_Glfm_glfmStartVideo(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
-    s32 pos=0;
+    s32 pos = 0;
     GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
-    pos+=2;
+    pos += 2;
     void *panel = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
-    pos+=2;
+    pos += 2;
     startVideo(window, panel);
     return 0;
 }
 
 int org_mini_glfm_Glfm_glfmPauseVideo(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
-    s32 pos=0;
+    s32 pos = 0;
     GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
-    pos+=2;
+    pos += 2;
     void *panel = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
-    pos+=2;
+    pos += 2;
     pauseVideo(window, panel);
     return 0;
 }
 
 int org_mini_glfm_Glfm_glfmStopVideo(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
-    s32 pos=0;
+    s32 pos = 0;
     GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
-    pos+=2;
+    pos += 2;
     void *panel = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
-    pos+=2;
+    pos += 2;
     stopVideo(window, panel);
     return 0;
 }
@@ -1232,71 +1269,72 @@ int org_mini_glfw_utils_Gutil_mat4x4_trans_rotate_scale(Runtime *runtime, JClass
 }
 
 static java_native_method method_glfm_table[] = {
-        {"org/mini/gl/GLMath", "f2b",                             "([F[B)[B",                                 org_mini_glfm_utils_Gutil_f2b},
-        {"org/mini/gl/GLMath", "vec_add",                         "([F[F[F)[F",                               org_mini_glfm_utils_Gutil_vec_add},
-        {"org/mini/gl/GLMath", "vec_sub",                         "([F[F[F)[F",                               org_mini_glfm_utils_Gutil_vec_sub},
-        {"org/mini/gl/GLMath", "vec_scale",                       "([F[FF)[F",                                org_mini_glfm_utils_Gutil_vec_scale},
-        {"org/mini/gl/GLMath", "vec_mul_inner",                   "([F[F)[F",                                 org_mini_glfm_utils_Gutil_vec_mul_inner},
-        {"org/mini/gl/GLMath", "vec_len",                         "([F)F",                                    org_mini_glfm_utils_Gutil_vec_len},
-        {"org/mini/gl/GLMath", "vec_normal",                      "([F[F)[F",                                 org_mini_glfm_utils_Gutil_vec_normal},
-        {"org/mini/gl/GLMath", "vec_mul_cross",                   "([F[F[F)[F",                               org_mini_glfm_utils_Gutil_vec_mul_cross},
-        {"org/mini/gl/GLMath", "vec_reflect",                     "([F[F[F)[F",                               org_mini_glfm_utils_Gutil_vec_reflect},
-        {"org/mini/gl/GLMath", "vec4_slerp",                      "([F[F[FF)[F",                              org_mini_glfw_utils_Gutil_vec4_slerp},
-        {"org/mini/gl/GLMath", "vec4_from_mat4x4",                "([F[F[FF)[F",                              org_mini_glfw_utils_Gutil_vec4_from_mat4x4},
-        {"org/mini/gl/GLMath", "mat4x4_identity",                 "([F)[F",                                   org_mini_glfm_utils_Gutil_mat4x4_identity},
-        {"org/mini/gl/GLMath", "mat4x4_dup",                      "([F[F)[F",                                 org_mini_glfm_utils_Gutil_mat4x4_dup},
-        {"org/mini/gl/GLMath", "mat4x4_row",                      "([F[FI)[F",                                org_mini_glfm_utils_Gutil_mat4x4_row},
-        {"org/mini/gl/GLMath", "mat4x4_col",                      "([F[FI)[F",                                org_mini_glfm_utils_Gutil_mat4x4_col},
-        {"org/mini/gl/GLMath", "mat4x4_transpose",                "([F[F)[F",                                 org_mini_glfm_utils_Gutil_mat4x4_transpose},
-        {"org/mini/gl/GLMath", "mat4x4_add",                      "([F[F[F)[F",                               org_mini_glfm_utils_Gutil_mat4x4_add},
-        {"org/mini/gl/GLMath", "mat4x4_sub",                      "([F[F[F)[F",                               org_mini_glfm_utils_Gutil_mat4x4_sub},
-        {"org/mini/gl/GLMath", "mat4x4_mul",                      "([F[F[F)[F",                               org_mini_glfm_utils_Gutil_mat4x4_mul},
-        {"org/mini/gl/GLMath", "mat4x4_mul_vec4",                 "([F[F[F)[F",                               org_mini_glfm_utils_Gutil_mat4x4_mul_vec4},
-        {"org/mini/gl/GLMath", "mat4x4_from_vec3_mul_outer",      "([F[F[F)[F",                               org_mini_glfm_utils_Gutil_mat4x4_from_vec3_mul_outer},
-        {"org/mini/gl/GLMath", "mat4x4_translate",                "([FFFF)[F",                                org_mini_glfm_utils_Gutil_mat4x4_translate},
-        {"org/mini/gl/GLMath", "mat4x4_translate_in_place",       "([FFFF)[F",                                org_mini_glfm_utils_Gutil_mat4x4_translate_in_place},
-        {"org/mini/gl/GLMath", "mat4x4_scale",                    "([F[FF)[F",                                org_mini_glfm_utils_Gutil_mat4x4_scale},
-        {"org/mini/gl/GLMath", "mat4x4_scale_aniso",              "([F[FFFF)[F",                              org_mini_glfm_utils_Gutil_mat4x4_scale_aniso},
-        {"org/mini/gl/GLMath", "mat4x4_rotate",                   "([F[FFFFF)[F",                             org_mini_glfm_utils_Gutil_mat4x4_rotate},
-        {"org/mini/gl/GLMath", "mat4x4_rotateX",                  "([F[FF)[F",                                org_mini_glfm_utils_Gutil_mat4x4_rotateX},
-        {"org/mini/gl/GLMath", "mat4x4_rotateY",                  "([F[FF)[F",                                org_mini_glfm_utils_Gutil_mat4x4_rotateY},
-        {"org/mini/gl/GLMath", "mat4x4_rotateZ",                  "([F[FF)[F",                                org_mini_glfm_utils_Gutil_mat4x4_rotateZ},
-        {"org/mini/gl/GLMath", "mat4x4_invert",                   "([F[F)[F",                                 org_mini_glfm_utils_Gutil_mat4x4_invert},
-        {"org/mini/gl/GLMath", "mat4x4_orthonormalize",           "([F[F)[F",                                 org_mini_glfm_utils_Gutil_mat4x4_orthonormalize},
-        {"org/mini/gl/GLMath", "mat4x4_ortho",                    "([FFFFFFF)[F",                             org_mini_glfm_utils_Gutil_mat4x4_ortho},
-        {"org/mini/gl/GLMath", "mat4x4_frustum",                  "([FFFFFFF)[F",                             org_mini_glfm_utils_Gutil_mat4x4_frustum},
-        {"org/mini/gl/GLMath", "mat4x4_perspective",              "([FFFFF)[F",                               org_mini_glfm_utils_Gutil_mat4x4_perspective},
-        {"org/mini/gl/GLMath", "mat4x4_look_at",                  "([F[F[F[F)[F",                             org_mini_glfm_utils_Gutil_mat4x4_look_at},
-        {"org/mini/gl/GLMath", "mat4x4_trans_rotate_scale",       "([F[F[F[F)[F",                             org_mini_glfw_utils_Gutil_mat4x4_trans_rotate_scale},
-        {"org/mini/glfm/Glfm", "glfmSetCallBack",                 "(JLorg/mini/glfm/GlfmCallBack;)V",         org_mini_glfm_Glfm_glfmSetCallBack},
-        {"org/mini/glfm/Glfm", "glfmSetDisplayConfig",            "(JIIIII)V",                                org_mini_glfm_Glfm_glfmSetDisplayConfig},
-        {"org/mini/glfm/Glfm", "glfmSetUserInterfaceOrientation", "(JI)V",                                    org_mini_glfm_Glfm_glfmSetUserInterfaceOrientation},
-        {"org/mini/glfm/Glfm", "glfmGetUserInterfaceOrientation", "(J)I",                                     org_mini_glfm_Glfm_glfmGetUserInterfaceOrientation},
-        {"org/mini/glfm/Glfm", "glfmSetMultitouchEnabled",        "(JZ)V",                                    org_mini_glfm_Glfm_glfmSetMultitouchEnabled},
-        {"org/mini/glfm/Glfm", "glfmGetMultitouchEnabled",        "(J)Z",                                     org_mini_glfm_Glfm_glfmGetMultitouchEnabled},
-        {"org/mini/glfm/Glfm", "glfmGetDisplayWidth",             "(J)I",                                     org_mini_glfm_Glfm_glfmGetDisplayWidth},
-        {"org/mini/glfm/Glfm", "glfmGetDisplayHeight",            "(J)I",                                     org_mini_glfm_Glfm_glfmGetDisplayHeight},
-        {"org/mini/glfm/Glfm", "glfmGetDisplayScale",             "(J)D",                                     org_mini_glfm_Glfm_glfmGetDisplayScale},
-        {"org/mini/glfm/Glfm", "glfmGetDisplayChromeInsets",      "(J[D)V",                                   org_mini_glfm_Glfm_glfmGetDisplayChromeInsets},
-        {"org/mini/glfm/Glfm", "glfmGetDisplayChrome",            "(J)I",                                     org_mini_glfm_Glfm_glfmGetDisplayChrome},
-        {"org/mini/glfm/Glfm", "glfmSetDisplayChrome",            "(JI)V",                                    org_mini_glfm_Glfm_glfmSetDisplayChrome},
-        {"org/mini/glfm/Glfm", "glfmGetRenderingAPI",             "(J)I",                                     org_mini_glfm_Glfm_glfmGetRenderingAPI},
-        {"org/mini/glfm/Glfm", "glfmHasTouch",                    "(J)Z",                                     org_mini_glfm_Glfm_glfmHasTouch},
-        {"org/mini/glfm/Glfm", "glfmSetMouseCursor",              "(JI)V",                                    org_mini_glfm_Glfm_glfmSetMouseCursor},
-        {"org/mini/glfm/Glfm", "glfmExtensionSupported",          "(Ljava/lang/String;)Z",                    org_mini_glfm_Glfm_glfmExtensionSupported},
-        {"org/mini/glfm/Glfm", "glfmSetKeyboardVisible",          "(JZ)V",                                    org_mini_glfm_Glfm_glfmSetKeyboardVisible},
-        {"org/mini/glfm/Glfm", "glfmIsKeyboardVisible",           "(J)Z",                                     org_mini_glfm_Glfm_glfmIsKeyboardVisible},
-        {"org/mini/glfm/Glfm", "glfmGetResRoot",                  "()Ljava/lang/String;",                     org_mini_glfm_Glfm_glfmGetResRoot},
-        {"org/mini/glfm/Glfm", "glfmGetSaveRoot",                 "()Ljava/lang/String;",                     org_mini_glfm_Glfm_glfmGetSaveRoot},
-        {"org/mini/glfm/Glfm", "glfmGetClipBoardContent",         "()Ljava/lang/String;",                     org_mini_glfm_Glfm_glfmGetClipBoardContent},
-        {"org/mini/glfm/Glfm", "glfmSetClipBoardContent",         "(Ljava/lang/String;)V",                    org_mini_glfm_Glfm_glfmSetClipBoardContent},
-        {"org/mini/glfm/Glfm", "glfmPickPhotoAlbum",              "(JII)V",                                   org_mini_glfm_Glfm_glfmPickPhotoAlbum},
-        {"org/mini/glfm/Glfm", "glfmPickPhotoCamera",             "(JII)V",                                   org_mini_glfm_Glfm_glfmPickPhotoCamera},
-        {"org/mini/glfm/Glfm", "glfmImageCrop",                   "(JILjava/lang/String;IIII)V",              org_mini_glfm_Glfm_glfmImageCrop},
-        {"org/mini/glfm/Glfm", "glfmPlayVideo",                   "(JLjava/lang/String;Ljava/lang/String;)J", org_mini_glfm_Glfm_glfmPlayVideo},
-        {"org/mini/glfm/Glfm", "glfmPauseVideo",                  "(JJ)V",                                    org_mini_glfm_Glfm_glfmPauseVideo},
-        {"org/mini/glfm/Glfm", "glfmStopVideo",                   "(JJ)V",                                    org_mini_glfm_Glfm_glfmStopVideo},
-        {"org/mini/glfm/Glfm", "glfmStartVideo",                  "(JJ)V",                                    org_mini_glfm_Glfm_glfmStartVideo},
+        {"org/mini/gl/GLMath", "f2b",                                  "([F[B)[B",                                 org_mini_glfm_utils_Gutil_f2b},
+        {"org/mini/gl/GLMath", "vec_add",                              "([F[F[F)[F",                               org_mini_glfm_utils_Gutil_vec_add},
+        {"org/mini/gl/GLMath", "vec_sub",                              "([F[F[F)[F",                               org_mini_glfm_utils_Gutil_vec_sub},
+        {"org/mini/gl/GLMath", "vec_scale",                            "([F[FF)[F",                                org_mini_glfm_utils_Gutil_vec_scale},
+        {"org/mini/gl/GLMath", "vec_mul_inner",                        "([F[F)[F",                                 org_mini_glfm_utils_Gutil_vec_mul_inner},
+        {"org/mini/gl/GLMath", "vec_len",                              "([F)F",                                    org_mini_glfm_utils_Gutil_vec_len},
+        {"org/mini/gl/GLMath", "vec_normal",                           "([F[F)[F",                                 org_mini_glfm_utils_Gutil_vec_normal},
+        {"org/mini/gl/GLMath", "vec_mul_cross",                        "([F[F[F)[F",                               org_mini_glfm_utils_Gutil_vec_mul_cross},
+        {"org/mini/gl/GLMath", "vec_reflect",                          "([F[F[F)[F",                               org_mini_glfm_utils_Gutil_vec_reflect},
+        {"org/mini/gl/GLMath", "vec4_slerp",                           "([F[F[FF)[F",                              org_mini_glfw_utils_Gutil_vec4_slerp},
+        {"org/mini/gl/GLMath", "vec4_from_mat4x4",                     "([F[F[FF)[F",                              org_mini_glfw_utils_Gutil_vec4_from_mat4x4},
+        {"org/mini/gl/GLMath", "mat4x4_identity",                      "([F)[F",                                   org_mini_glfm_utils_Gutil_mat4x4_identity},
+        {"org/mini/gl/GLMath", "mat4x4_dup",                           "([F[F)[F",                                 org_mini_glfm_utils_Gutil_mat4x4_dup},
+        {"org/mini/gl/GLMath", "mat4x4_row",                           "([F[FI)[F",                                org_mini_glfm_utils_Gutil_mat4x4_row},
+        {"org/mini/gl/GLMath", "mat4x4_col",                           "([F[FI)[F",                                org_mini_glfm_utils_Gutil_mat4x4_col},
+        {"org/mini/gl/GLMath", "mat4x4_transpose",                     "([F[F)[F",                                 org_mini_glfm_utils_Gutil_mat4x4_transpose},
+        {"org/mini/gl/GLMath", "mat4x4_add",                           "([F[F[F)[F",                               org_mini_glfm_utils_Gutil_mat4x4_add},
+        {"org/mini/gl/GLMath", "mat4x4_sub",                           "([F[F[F)[F",                               org_mini_glfm_utils_Gutil_mat4x4_sub},
+        {"org/mini/gl/GLMath", "mat4x4_mul",                           "([F[F[F)[F",                               org_mini_glfm_utils_Gutil_mat4x4_mul},
+        {"org/mini/gl/GLMath", "mat4x4_mul_vec4",                      "([F[F[F)[F",                               org_mini_glfm_utils_Gutil_mat4x4_mul_vec4},
+        {"org/mini/gl/GLMath", "mat4x4_from_vec3_mul_outer",           "([F[F[F)[F",                               org_mini_glfm_utils_Gutil_mat4x4_from_vec3_mul_outer},
+        {"org/mini/gl/GLMath", "mat4x4_translate",                     "([FFFF)[F",                                org_mini_glfm_utils_Gutil_mat4x4_translate},
+        {"org/mini/gl/GLMath", "mat4x4_translate_in_place",            "([FFFF)[F",                                org_mini_glfm_utils_Gutil_mat4x4_translate_in_place},
+        {"org/mini/gl/GLMath", "mat4x4_scale",                         "([F[FF)[F",                                org_mini_glfm_utils_Gutil_mat4x4_scale},
+        {"org/mini/gl/GLMath", "mat4x4_scale_aniso",                   "([F[FFFF)[F",                              org_mini_glfm_utils_Gutil_mat4x4_scale_aniso},
+        {"org/mini/gl/GLMath", "mat4x4_rotate",                        "([F[FFFFF)[F",                             org_mini_glfm_utils_Gutil_mat4x4_rotate},
+        {"org/mini/gl/GLMath", "mat4x4_rotateX",                       "([F[FF)[F",                                org_mini_glfm_utils_Gutil_mat4x4_rotateX},
+        {"org/mini/gl/GLMath", "mat4x4_rotateY",                       "([F[FF)[F",                                org_mini_glfm_utils_Gutil_mat4x4_rotateY},
+        {"org/mini/gl/GLMath", "mat4x4_rotateZ",                       "([F[FF)[F",                                org_mini_glfm_utils_Gutil_mat4x4_rotateZ},
+        {"org/mini/gl/GLMath", "mat4x4_invert",                        "([F[F)[F",                                 org_mini_glfm_utils_Gutil_mat4x4_invert},
+        {"org/mini/gl/GLMath", "mat4x4_orthonormalize",                "([F[F)[F",                                 org_mini_glfm_utils_Gutil_mat4x4_orthonormalize},
+        {"org/mini/gl/GLMath", "mat4x4_ortho",                         "([FFFFFFF)[F",                             org_mini_glfm_utils_Gutil_mat4x4_ortho},
+        {"org/mini/gl/GLMath", "mat4x4_frustum",                       "([FFFFFFF)[F",                             org_mini_glfm_utils_Gutil_mat4x4_frustum},
+        {"org/mini/gl/GLMath", "mat4x4_perspective",                   "([FFFFF)[F",                               org_mini_glfm_utils_Gutil_mat4x4_perspective},
+        {"org/mini/gl/GLMath", "mat4x4_look_at",                       "([F[F[F[F)[F",                             org_mini_glfm_utils_Gutil_mat4x4_look_at},
+        {"org/mini/gl/GLMath", "mat4x4_trans_rotate_scale",            "([F[F[F[F)[F",                             org_mini_glfw_utils_Gutil_mat4x4_trans_rotate_scale},
+        {"org/mini/glfm/Glfm", "glfmSetCallBack",                      "(JLorg/mini/glfm/GlfmCallBack;)V",         org_mini_glfm_Glfm_glfmSetCallBack},
+        {"org/mini/glfm/Glfm", "glfmSetDisplayConfig",                 "(JIIIII)V",                                org_mini_glfm_Glfm_glfmSetDisplayConfig},
+        {"org/mini/glfm/Glfm", "glfmSetSupportedInterfaceOrientation", "(JI)V",                                    org_mini_glfm_Glfm_glfmSetSupportedInterfaceOrientation},
+        {"org/mini/glfm/Glfm", "glfmGetInterfaceOrientation",          "(J)I",                                     org_mini_glfm_Glfm_glfmGetInterfaceOrientation},
+        {"org/mini/glfm/Glfm", "glfmGetSupportedInterfaceOrientation", "(J)I",                                     org_mini_glfm_Glfm_glfmGetSupportedInterfaceOrientation},
+        {"org/mini/glfm/Glfm", "glfmSetMultitouchEnabled",             "(JZ)V",                                    org_mini_glfm_Glfm_glfmSetMultitouchEnabled},
+        {"org/mini/glfm/Glfm", "glfmGetMultitouchEnabled",             "(J)Z",                                     org_mini_glfm_Glfm_glfmGetMultitouchEnabled},
+        {"org/mini/glfm/Glfm", "glfmGetDisplayWidth",                  "(J)I",                                     org_mini_glfm_Glfm_glfmGetDisplayWidth},
+        {"org/mini/glfm/Glfm", "glfmGetDisplayHeight",                 "(J)I",                                     org_mini_glfm_Glfm_glfmGetDisplayHeight},
+        {"org/mini/glfm/Glfm", "glfmGetDisplayScale",                  "(J)D",                                     org_mini_glfm_Glfm_glfmGetDisplayScale},
+        {"org/mini/glfm/Glfm", "glfmGetDisplayChromeInsets",           "(J[D)V",                                   org_mini_glfm_Glfm_glfmGetDisplayChromeInsets},
+        {"org/mini/glfm/Glfm", "glfmGetDisplayChrome",                 "(J)I",                                     org_mini_glfm_Glfm_glfmGetDisplayChrome},
+        {"org/mini/glfm/Glfm", "glfmSetDisplayChrome",                 "(JI)V",                                    org_mini_glfm_Glfm_glfmSetDisplayChrome},
+        {"org/mini/glfm/Glfm", "glfmGetRenderingAPI",                  "(J)I",                                     org_mini_glfm_Glfm_glfmGetRenderingAPI},
+        {"org/mini/glfm/Glfm", "glfmHasTouch",                         "(J)Z",                                     org_mini_glfm_Glfm_glfmHasTouch},
+        {"org/mini/glfm/Glfm", "glfmSetMouseCursor",                   "(JI)V",                                    org_mini_glfm_Glfm_glfmSetMouseCursor},
+        {"org/mini/glfm/Glfm", "glfmExtensionSupported",               "(Ljava/lang/String;)Z",                    org_mini_glfm_Glfm_glfmExtensionSupported},
+        {"org/mini/glfm/Glfm", "glfmSetKeyboardVisible",               "(JZ)V",                                    org_mini_glfm_Glfm_glfmSetKeyboardVisible},
+        {"org/mini/glfm/Glfm", "glfmIsKeyboardVisible",                "(J)Z",                                     org_mini_glfm_Glfm_glfmIsKeyboardVisible},
+        {"org/mini/glfm/Glfm", "glfmGetResRoot",                       "()Ljava/lang/String;",                     org_mini_glfm_Glfm_glfmGetResRoot},
+        {"org/mini/glfm/Glfm", "glfmGetSaveRoot",                      "()Ljava/lang/String;",                     org_mini_glfm_Glfm_glfmGetSaveRoot},
+        {"org/mini/glfm/Glfm", "glfmGetClipBoardContent",              "()Ljava/lang/String;",                     org_mini_glfm_Glfm_glfmGetClipBoardContent},
+        {"org/mini/glfm/Glfm", "glfmSetClipBoardContent",              "(Ljava/lang/String;)V",                    org_mini_glfm_Glfm_glfmSetClipBoardContent},
+        {"org/mini/glfm/Glfm", "glfmPickPhotoAlbum",                   "(JII)V",                                   org_mini_glfm_Glfm_glfmPickPhotoAlbum},
+        {"org/mini/glfm/Glfm", "glfmPickPhotoCamera",                  "(JII)V",                                   org_mini_glfm_Glfm_glfmPickPhotoCamera},
+        {"org/mini/glfm/Glfm", "glfmImageCrop",                        "(JILjava/lang/String;IIII)V",              org_mini_glfm_Glfm_glfmImageCrop},
+        {"org/mini/glfm/Glfm", "glfmPlayVideo",                        "(JLjava/lang/String;Ljava/lang/String;)J", org_mini_glfm_Glfm_glfmPlayVideo},
+        {"org/mini/glfm/Glfm", "glfmPauseVideo",                       "(JJ)V",                                    org_mini_glfm_Glfm_glfmPauseVideo},
+        {"org/mini/glfm/Glfm", "glfmStopVideo",                        "(JJ)V",                                    org_mini_glfm_Glfm_glfmStopVideo},
+        {"org/mini/glfm/Glfm", "glfmStartVideo",                       "(JJ)V",                                    org_mini_glfm_Glfm_glfmStartVideo},
 
 };
 

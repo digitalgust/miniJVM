@@ -5,6 +5,7 @@
  */
 package org.mini.apploader;
 
+import org.mini.glfm.Glfm;
 import org.mini.gui.*;
 import org.mini.layout.*;
 
@@ -125,6 +126,8 @@ public class AppManager extends GApplication {
         regStrings();
         GLanguage.setCurLang(AppLoader.getDefaultLang());
         GCallBack.getInstance().setApplication(this);
+        Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationPortrait);
+
         reloadAppList();
     }
 

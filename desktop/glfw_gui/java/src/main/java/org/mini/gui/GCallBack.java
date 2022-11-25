@@ -6,6 +6,7 @@
 package org.mini.gui;
 
 import org.mini.apploader.GApplication;
+import org.mini.glfm.Glfm;
 import org.mini.glfm.GlfmCallBack;
 import org.mini.glfw.GlfwCallback;
 
@@ -168,6 +169,12 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
     public void onNotify(long display, String key, String val) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+    @Override
+    public void onOrientationChanged(long display, int orientation) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
 
     //============================== glfw
     @Override

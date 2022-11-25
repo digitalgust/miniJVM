@@ -6,7 +6,7 @@
 package org.mini.glfm;
 
 /**
- *
+ * callback
  * @author gust
  */
 public interface GlfmCallBack {
@@ -42,4 +42,5 @@ public interface GlfmCallBack {
 
     public void onNotify(long display, String key, String val);
 
+    public void onOrientationChanged(long display, int orientation);
 }

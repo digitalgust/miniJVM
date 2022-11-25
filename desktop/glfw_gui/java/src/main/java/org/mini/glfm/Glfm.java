@@ -41,9 +41,27 @@ public class Glfm {
             GLFMUserInterfaceChromeFullscreen = 2;
 
     public static final int //
-            GLFMUserInterfaceOrientationAny = 0,
-            GLFMUserInterfaceOrientationPortrait = 1,
-            GLFMUserInterfaceOrientationLandscape = 2;
+            GLFMInterfaceOrientationUnknown = 0,
+            GLFMInterfaceOrientationPortrait = (1 << 0),
+            GLFMInterfaceOrientationPortraitUpsideDown = (1 << 1),
+            GLFMInterfaceOrientationLandscapeLeft = (1 << 2),
+            GLFMInterfaceOrientationLandscapeRight = (1 << 3),
+            GLFMInterfaceOrientationLandscape = (GLFMInterfaceOrientationLandscapeLeft |
+                    GLFMInterfaceOrientationLandscapeRight),
+            GLFMInterfaceOrientationAll = (GLFMInterfaceOrientationPortrait |
+                    GLFMInterfaceOrientationPortraitUpsideDown |
+                    GLFMInterfaceOrientationLandscapeLeft |
+                    GLFMInterfaceOrientationLandscapeRight),
+            GLFMInterfaceOrientationAllButUpsideDown = (GLFMInterfaceOrientationPortrait |
+                    GLFMInterfaceOrientationLandscapeLeft |
+                    GLFMInterfaceOrientationLandscapeRight);
+
+    @Deprecated
+    public static final int //
+            GLFMUserInterfaceOrientationAny = GLFMInterfaceOrientationAll,
+            GLFMUserInterfaceOrientationPortrait = GLFMInterfaceOrientationPortrait,
+            GLFMUserInterfaceOrientationLandscape = GLFMInterfaceOrientationLandscape;
+
 
     public static final int //
             GLFMTouchPhaseHover = 0,
@@ -166,12 +184,34 @@ public class Glfm {
 
     }
 
+    @Deprecated
     public static void glfmSetUserInterfaceOrientation(long display, int allowedOrientations) {
+        glfmSetSupportedInterfaceOrientation(display, allowedOrientations);
+    }
+
+    @Deprecated
+    public static int glfmGetUserInterfaceOrientation(long display) {
+        return glfmGetSupportedInterfaceOrientation(display);
+    }
+
+    /// Returns the supported user interface orientations. Default is GLFMInterfaceOrientationAll.
+/// Actualy support may be limited by the device or platform.
+    public static int glfmGetSupportedInterfaceOrientation(long display) {
+        return GLFMInterfaceOrientationAll;
+    }
+
+    /// Sets the supported user interface orientations. Typical values are GLFMInterfaceOrientationAll,
+/// GLFMInterfaceOrientationPortrait, or GLFMInterfaceOrientationLandscape.
+/// Actualy support may be limited by the device or platform.
+    public static void glfmSetSupportedInterfaceOrientation(long display, int supportedOrientations) {
 
     }
 
-    public static int glfmGetUserInterfaceOrientation(long display) {
-        return GLFMUserInterfaceOrientationAny;
+    /// Gets the current user interface orientation. Returns either GLFMInterfaceOrientationPortrait,
+/// GLFMInterfaceOrientationPortraitUpsideDown, GLFMInterfaceOrientationLandscapeRight,
+/// GLFMInterfaceOrientationLandscapeLeft, or GLFMInterfaceOrientationUnknown.
+    public static int glfmGetInterfaceOrientation(long display) {
+        return GLFMInterfaceOrientationAll;
     }
 
     public static void glfmSetMultitouchEnabled(long display, boolean multitouchEnabled) {
