@@ -5,6 +5,7 @@
  */
 package org.mini.apploader;
 
+import org.mini.glfm.Glfm;
 import org.mini.gui.*;
 import org.mini.zip.Zip;
 
@@ -243,6 +244,14 @@ public class AppLoader {
             v = "";
         }
         return v;
+    }
+
+    public static String getApplicationOrientation(String jarName) {
+        String v = getAppConfig(jarName, "orientation");
+        if (v == null) {
+            v = "v";
+        }
+        return v.toLowerCase();
     }
 
     public static String getApplicationUpgradeurl(String jarName) {

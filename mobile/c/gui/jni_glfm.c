@@ -570,6 +570,7 @@ int org_mini_glfm_Glfm_glfmGetDisplayChromeInsets(Runtime *runtime, JClass *claz
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
     GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos+=2;
     Instance *r = env->localvar_getRefer(runtime->localvar, pos++);
     if (r != NULL && r->arr_length >= 4) {
         glfmGetDisplayChromeInsets(window, &((f64 *) r->arr_body)[0], &((f64 *) r->arr_body)[1],

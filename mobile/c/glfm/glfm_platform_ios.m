@@ -1876,42 +1876,6 @@ void glfmSetSupportedInterfaceOrientation(GLFMDisplay *display, GLFMInterfaceOri
                     [vc dismissViewControllerAnimated:NO completion:NULL];
                 }];
             }
-            
-            NSNumber *orientation = nil;
-            GLFMInterfaceOrientation orientations = supportedOrientations;
-            BOOL portraitRequested = (orientations & (GLFMInterfaceOrientationPortrait | GLFMInterfaceOrientationPortraitUpsideDown)) != 0;
-            BOOL landscapeRequested = (orientations & GLFMInterfaceOrientationLandscape) != 0;
-            BOOL isTablet = [[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad;
-            if (portraitRequested && landscapeRequested) {
-                if (isTablet) {
-                    orientation = [NSNumber numberWithInt:UIInterfaceOrientationMaskAll];
-                } else {
-                    orientation = [NSNumber numberWithInt:UIInterfaceOrientationMaskAllButUpsideDown];
-                }
-            } else if (landscapeRequested) {
-                orientation = [NSNumber numberWithInt:UIInterfaceOrientationMaskLandscapeLeft];
-            } else {
-                if (isTablet) {
-                    orientation = [NSNumber numberWithInt:(UIInterfaceOrientationMask)(UIInterfaceOrientationMaskPortrait |
-                            UIInterfaceOrientationMaskPortraitUpsideDown)];
-                } else {
-                    orientation = [NSNumber numberWithInt:UIInterfaceOrientationMaskPortrait];
-                }
-            }
-
-            // iOS16以下
-//            NSNumber *orientation = [NSNumber numberWithInt:UIInterfaceOrientationLandscapeRight];
-//            if((supportedOrientations & GLFMInterfaceOrientationLandscapeLeft) != 0){
-//                supportedOrientations = [NSNumber numberWithInt:UIInterfaceOrientationLandscapeLeft];
-//            }
-            [[UIDevice currentDevice] setValue:orientation forKey:@"orientation"];
-
-
-            // iOS16以下
-//            NSNumber *orientationPortrait = [NSNumber numberWithInt:UIInterfaceOrientationPortrait];
-//            [[UIDevice currentDevice] setValue:orientationPortrait forKey:@"orientation"];
-
-
         }
     }
 }
