@@ -104,6 +104,8 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
 
     public abstract int getTouchOrMouseY();
 
+    public abstract void getInsets(float[] top_right_bottom_left);
+
     //============================== glfm
     @Override
     public void mainLoop(long display, double frameTime) {

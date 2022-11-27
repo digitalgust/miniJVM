@@ -506,7 +506,7 @@ abstract public class GObject implements GAttachable {
         return false;
     }
 
-    void doAction() {
+    protected void doAction() {
         if (actionListener != null && enable) {
             if (onClinkScript != null) {
                 Interpreter inp = parseInpByCall(onClinkScript);

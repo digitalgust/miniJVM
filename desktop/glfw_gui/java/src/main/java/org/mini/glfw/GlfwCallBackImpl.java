@@ -153,6 +153,7 @@ public class GlfwCallBackImpl extends GCallBack {
 //                startAt = System.currentTimeMillis();
                 if (!gform.isInited()) {
                     gform.__init();
+                    gapp.startApp();
                 }
                 //user define contents
                 if (GForm.flushReq()) {
@@ -449,6 +450,9 @@ public class GlfwCallBackImpl extends GCallBack {
     }
 
     //==============================
+    public void getInsets(float[] top_right_bottom_left) {
+    }
+
     @Override
     public String getAppSaveRoot() {
         return new File("./").getAbsolutePath();

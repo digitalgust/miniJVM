@@ -30,6 +30,8 @@ public class GCmdHandler {
 
     final static List<String> message = new ArrayList();
     static byte[] curShowMessage;
+    float[] insets = new float[4];
+    float[] bond = new float[4];
 
     public void addCmd(GCmd cmd) {
         cmds.add(cmd);
@@ -111,16 +113,16 @@ public class GCmdHandler {
             long vg = form.getNvContext();
             float pad = 20;
             float panW = form.getW() - pad * 2;
-            float[] bond = new float[4];
+            GCallBack.getInstance().getInsets(insets);
             nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
             nvgFontFace(vg, GToolkit.getFontWord());
             nvgTextAlign(vg, Nanovg.NVG_ALIGN_TOP | Nanovg.NVG_ALIGN_LEFT);
             Nanovg.nvgTextBoxBoundsJni(vg, 0, 0, panW, curShowMessage, 0, curShowMessage.length, bond);
 
-            GToolkit.drawRoundedRect(vg, pad * .5f, pad * .5f, panW + pad, bond[GObject.HEIGHT] - bond[GObject.TOP] + pad, 5, GToolkit.getStyle().getTextFontColor());
+            GToolkit.drawRoundedRect(vg, pad * .5f, insets[0] + pad * .5f, panW + pad, bond[GObject.HEIGHT] - bond[GObject.TOP] + pad, 5, GToolkit.getStyle().getTextFontColor());
 
             nvgFillColor(vg, GToolkit.getStyle().getBackgroundColor());
-            Nanovg.nvgTextBoxJni(vg, pad, pad, panW, curShowMessage, 0, curShowMessage.length);
+            Nanovg.nvgTextBoxJni(vg, pad, insets[0] + pad, panW, curShowMessage, 0, curShowMessage.length);
         }
     }
 

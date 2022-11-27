@@ -5,7 +5,6 @@
  */
 package org.mini.apploader;
 
-import org.mini.glfm.Glfm;
 import org.mini.gui.*;
 import org.mini.zip.Zip;
 
@@ -343,7 +342,7 @@ public class AppLoader {
                 app.setOldStyle(oldStyle);
                 app.setSaveRoot(getAppDataPath(jarName));
                 GCallBack.getInstance().setApplication(app);
-                app.startApp();
+                app.setJarName(jarName);
             }
 
         } catch (Exception ex) {

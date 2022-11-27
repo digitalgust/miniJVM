@@ -5,6 +5,7 @@
  */
 package org.mini.gui;
 
+import org.mini.apploader.GApplication;
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.gui.event.*;

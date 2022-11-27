@@ -37,7 +37,7 @@
                         <br/>
                         <button name="APP_RUN_BTN" w="100%" h="35">{Run}</button>
                         <br/>
-                        <button name="APP_SET_BOOT_BTN" w="100%" h="35">{Put on top}</button>
+                        <button name="APP_STOP_BTN" w="100%" h="35">{Stop}</button>
                         <br/>
                         <button name="APP_UPGRADE_BTN" w="100%" h="35">{upgrade}</button>
                         <br/>

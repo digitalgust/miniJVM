@@ -88,7 +88,7 @@ public class MiniHttpClient extends Thread {
 
                 }
                 if (handle != null) {
-                    handle.onCompleted(url, data);
+                    handle.onCompleted(this, url, data);
                 }
             } else if (rescode == 301 || rescode == 302) {
                 String redirect = c.getHeaderField("Location");
@@ -97,13 +97,13 @@ public class MiniHttpClient extends Thread {
                 hc.start();
             } else {
                 if (handle != null) {
-                    handle.onCompleted(url, null);
+                    handle.onCompleted(this, url, null);
                 }
             }
         } catch (Exception e) {
             //e.printStackTrace();
             if (handle != null) {
-                handle.onCompleted(url, null);
+                handle.onCompleted(this, url, null);
             }
         } finally {
             try {
@@ -120,7 +120,7 @@ public class MiniHttpClient extends Thread {
 
     public interface DownloadCompletedHandle {
 
-        void onCompleted(String url, byte[] data);
+        void onCompleted(MiniHttpClient client, String url, byte[] data);
     }
 
 }

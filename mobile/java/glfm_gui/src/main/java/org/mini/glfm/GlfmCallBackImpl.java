@@ -24,6 +24,7 @@ public class GlfmCallBackImpl extends GCallBack {
     long display;
     int winWidth, winHeight;
     int fbWidth, fbHeight;
+    double[] insetsDouble = {0, 0, 0, 0};
     float pxRatio;
 
     public int[] mouseX = new int[Glfm.MAX_SIMULTANEOUS_TOUCHES],
@@ -173,6 +174,7 @@ public class GlfmCallBackImpl extends GCallBack {
             gform = gapp.getForm();
             if (!gform.isInited()) {
                 gform.__init();
+                gapp.startApp();
             }
             if (GForm.flushReq()) {
                 if (gform != null) {
@@ -202,6 +204,7 @@ public class GlfmCallBackImpl extends GCallBack {
         AppLoader.onSurfaceCreated();
         System.out.println("onSurfaceCreated " + width + "," + height + "," + pxRatio);
         Glfm.glfmSetMultitouchEnabled(display, true);
+        Glfm.glfmGetDisplayChromeInsets(display, insetsDouble);
     }
 
     @Override
@@ -336,6 +339,8 @@ public class GlfmCallBackImpl extends GCallBack {
         winWidth = (int) (fbWidth / pxRatio);
         winHeight = (int) (fbHeight / pxRatio);
 
+        Glfm.glfmGetDisplayChromeInsets(display, insetsDouble);
+
         if (gform == null) {
             return;
         }
@@ -392,6 +397,15 @@ public class GlfmCallBackImpl extends GCallBack {
 
     @Override
     public void onOrientationChanged(long display, int orientation) {
+    }
+
+    public void getInsets(float[] top_right_bottom_left) {
+        if (top_right_bottom_left != null) {
+            top_right_bottom_left[0] = (float) (insetsDouble[0] / pxRatio);
+            top_right_bottom_left[1] = (float) (insetsDouble[1] / pxRatio);
+            top_right_bottom_left[2] = (float) (insetsDouble[2] / pxRatio);
+            top_right_bottom_left[3] = (float) (insetsDouble[3] / pxRatio);
+        }
     }
 
     public String getAppSaveRoot() {

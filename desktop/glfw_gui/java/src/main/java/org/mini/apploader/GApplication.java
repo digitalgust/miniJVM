@@ -22,6 +22,15 @@ public abstract class GApplication {
     GStyle myStyle;
     int myLang;
     ClassLoader myClassLoader;
+    String jarName;
+
+    void setJarName(String jarName) {
+        this.jarName = jarName;
+    }
+
+    String getJarName() {
+        return jarName;
+    }
 
     void setOldStyle(GStyle style) {
         oldStyle = style;
@@ -62,6 +71,7 @@ public abstract class GApplication {
         }
         GLanguage.clear();
         GToolkit.setStyle(oldStyle);
+        AppManager.getInstance().removeRunningApp(this);
         AppManager.getInstance().active();
         GForm.addCmd(new GCmd(() -> {
             Thread.currentThread().setContextClassLoader(null);
