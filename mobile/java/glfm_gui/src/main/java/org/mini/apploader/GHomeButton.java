@@ -4,7 +4,7 @@ import org.mini.glfm.Glfm;
 import org.mini.gui.*;
 import org.mini.gui.event.GActionListener;
 
-public class GFloatButton extends GPanel implements GActionListener {
+public class GHomeButton extends GPanel implements GActionListener {
     public static final float DEF_X = 16f, DEF_Y = 40f;
     public static final float DEF_W = 32f, DEF_H = 32f;
     public static final float ICON_WH = 8f, PAD = 0f;
@@ -18,9 +18,9 @@ public class GFloatButton extends GPanel implements GActionListener {
     boolean drag = false;
     boolean moved = false;// is moved the button
 
-    public GFloatButton(GForm form) {
+    public GHomeButton(GForm form) {
         super(form, DEF_X, DEF_Y, DEF_W, DEF_H);
-        layer = LAYER_FRONT;
+        layer = LAYER_INNER;
         setActionListener(this);
     }
 

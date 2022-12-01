@@ -20,7 +20,7 @@ import static org.mini.nanovg.Nanovg.nvgSave;
  */
 abstract public class GContainer extends GObject {
 
-    protected final List<GObject> elements = new ArrayList();
+    protected final ChildList<GObject> elements = new ChildList();
     private final List<GChildrenListener> childrenListeners = new ArrayList();
     protected GObject focus;
     float[] visableArea = new float[4];

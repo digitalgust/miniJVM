@@ -105,7 +105,7 @@ public class AppManager extends GApplication {
     GViewPort contentView;
     GListItem curSelectedItem;
     AppmEventHandler eventHandler;
-    GFloatButton floatButton;
+    GHomeButton floatButton;
 
     MiniHttpServer webServer;
     List<MiniHttpClient> httpClients = new ArrayList<>();
@@ -234,7 +234,7 @@ public class AppManager extends GApplication {
                 return true;
             }
         };
-        floatButton = new GFloatButton(mgrForm);
+        floatButton = new GHomeButton(mgrForm);
         mgrForm.add(floatButton);
         return mgrForm;
     }
@@ -555,7 +555,7 @@ public class AppManager extends GApplication {
         mainSlot.moveTo(1, 200);
     }
 
-    GFloatButton getFloatButton() {
+    GHomeButton getFloatButton() {
         return floatButton;
     }
 

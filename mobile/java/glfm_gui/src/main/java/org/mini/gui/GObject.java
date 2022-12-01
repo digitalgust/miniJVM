@@ -26,7 +26,8 @@ abstract public class GObject implements GAttachable {
     public static final byte LAYER_BACK = 2,
             LAYER_NORMAL = 4,
             LAYER_FRONT = 6,
-            LAYER_MENU_OR_POPUP = 8;
+            LAYER_MENU_OR_POPUP = 8,
+            LAYER_INNER = 10;
 
     public static String ICON_SEARCH = "\uD83D\uDD0D";
     public static String ICON_CIRCLED_CROSS = "\u2716";
@@ -699,6 +700,9 @@ abstract public class GObject implements GAttachable {
         this.layout = layout;
     }
 
+    byte getLayer() {
+        return layer;
+    }
 
     protected ByteArrayOutputStream utf32ToBytes(int pchar, ByteArrayOutputStream baos) {
         if (baos == null) {
