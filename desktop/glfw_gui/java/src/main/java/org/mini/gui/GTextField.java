@@ -286,6 +286,7 @@ public class GTextField extends GTextObject {
                 str = str.replace("\n", "");
                 containEnter = true;
             }
+            deleteSelectedText();
             insertTextByIndex(caretIndex, str);
             setCaretIndex(caretIndex + str.length());
             if (containEnter) {
@@ -306,6 +307,7 @@ public class GTextField extends GTextObject {
         if (enable) {
             if (character != '\n') {
                 if (character != '\r' && textsb.length() < text_max) {
+                    deleteSelectedText();
                     insertTextByIndex(caretIndex, character);
                     setCaretIndex(caretIndex + 1);
                 }

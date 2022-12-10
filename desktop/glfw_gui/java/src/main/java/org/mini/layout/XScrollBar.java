@@ -49,13 +49,13 @@ public class XScrollBar
 //----------------------------------------------------------------------------
 
     protected int getDefaultWidth(int parentViewW) {
-        int w = XUtil.measureWidth(parentViewW, text, fontSize);
-        viewW = width = w + XDef.SPACING_CHECKBOX_ADD;
+        int w = mode == GScrollBar.HORIZONTAL ? XDef.DEFAULT_SCROLLBAR_LENGTH : XDef.DEFAULT_COMPONENT_HEIGHT;
         return w;
     }
 
     protected int getDefaultHeight(int parentViewH) {
-        return XUtil.measureHeight(viewW, text, fontSize);
+        int h = mode == GScrollBar.VERTICAL ? XDef.DEFAULT_SCROLLBAR_LENGTH : XDef.DEFAULT_COMPONENT_HEIGHT;
+        return h;
     }
 
     protected <T extends GObject> T createGuiImpl() {

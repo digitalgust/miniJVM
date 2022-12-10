@@ -148,13 +148,19 @@ public class GlfwCallBackImpl extends GCallBack {
                 if (gapp == null) {
                     return;
                 }
-                Thread.currentThread().setContextClassLoader(gapp.getClass().getClassLoader());
-                gform = gapp.getForm();
-//                startAt = System.currentTimeMillis();
-                if (!gform.isInited()) {
-                    gform.__init();
-                    gapp.startApp();
+                try {
+                    Thread.currentThread().setContextClassLoader(gapp.getClass().getClassLoader());
+                    gform = gapp.getForm();
+                    if (!gform.isInited()) {
+                        gform.__init();
+                        gapp.startApp();
+                    }
+                } catch (Exception e) {
+                    gapp.closeApp();
+                    GForm.addMessage("Init error: " + e.getMessage());
+                    e.printStackTrace();
                 }
+//                startAt = System.currentTimeMillis();
                 //user define contents
                 if (GForm.flushReq()) {
                     gform.display(vg);
@@ -382,7 +388,7 @@ public class GlfwCallBackImpl extends GCallBack {
                 return;
             }
             gform.setSize(width, height);
-            gform.onSizeChange(width, height);
+            gform.onDeviceSizeChanged(width, height);
             gform.flush();
         } catch (Exception ex) {
             ex.printStackTrace();

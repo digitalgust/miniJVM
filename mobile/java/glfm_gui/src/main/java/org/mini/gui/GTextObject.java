@@ -18,7 +18,7 @@ import static org.mini.glwrap.GLUtil.toUtf8;
 /**
  * @author Gust
  */
-public abstract class GTextObject extends GObject implements GFocusChangeListener {
+public abstract class GTextObject extends GContainer implements GFocusChangeListener {
     //for keyboard union action
     GObject defaultUnionObj = new GObject(form) {
     };
@@ -51,6 +51,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
 
 
     protected boolean selectMode = false;
+    protected boolean editable = true;
 
 
     protected GTextObject(GForm form) {
@@ -82,7 +83,12 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
         return textsb.toString();
     }
 
+    public int getTextSize() {
+        return textsb.length();
+    }
+
     public void insertTextByIndex(int index, int ch) {
+        if(!editable)return;
         textsb.insertCodePoint(index, ch);
         text_arr = null;
         doStateChanged(this);
@@ -92,6 +98,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     }
 
     public void insertTextByIndex(int index, String str) {
+        if(!editable)return;
         textsb.insert(index, str);
         text_arr = null;
         doStateChanged(this);
@@ -99,6 +106,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     }
 
     public void deleteTextByIndex(int index) {
+        if(!editable)return;
         int ch = textsb.codePointAt(index);
         textsb.deleteCodePointAt(index);
         text_arr = null;
@@ -109,6 +117,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     }
 
     public void deleteTextRange(int start, int end) {
+        if(!editable)return;
         String str = textsb.substring(start, end);
         textsb.delete(start, end);
         text_arr = null;
@@ -118,6 +127,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
 
 
     public void deleteAll() {
+        if(!editable)return;
         String str = textsb.toString();
         textsb.setLength(0);
         text_arr = null;
@@ -154,11 +164,13 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     }
 
     public void doCut() {
+        if(!editable)return;
         doCopyClipBoard();
         deleteSelectedText();
     }
 
     public void doPasteClipBoard() {
+        if(!editable)return;
         deleteSelectedText();
         String s = Glfm.glfmGetClipBoardContent();
         if (s == null) {
@@ -173,7 +185,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
 
     @Override
     public void focusGot(GObject go) {
-        if (enable) {
+        if (editable) {
             GForm.showKeyboard(this);
         }
     }
@@ -196,7 +208,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
             switch (phase) {
                 case Glfm.GLFMTouchPhaseBegan: {
                     touched = true;
-                    if (enable && !Glfm.glfmIsKeyboardVisible(GCallBack.getInstance().getDisplay())) {
+                    if (editable && !Glfm.glfmIsKeyboardVisible(GCallBack.getInstance().getDisplay())) {
                         GForm.showKeyboard(this);
                     }
                     break;
@@ -222,6 +234,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
 
     @Override
     public void keyEventGlfm(int key, int action, int mods) {
+        super.keyEventGlfm(key,action,mods);
         int glfwAction = 0;
         if (action == Glfm.GLFMKeyActionPressed) {
             glfwAction = Glfw.GLFW_PRESS;
@@ -300,14 +313,14 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
      * @return the editable
      */
     public boolean isEditable() {
-        return enable;
+        return editable;
     }
 
     /**
      * @param editable the editable to set
      */
     public void setEditable(boolean editable) {
-        this.enable = editable;
+        this.editable = editable;
     }
 
     public void putInUndo(int mod, String t, int caretIndex) {
@@ -356,6 +369,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     }
 
     public void undo() {
+        if(!editable)return;
         UserAction action = getUndo();
         if (action != null) {
             if (action.addOrDel == UserAction.ADD) {
@@ -370,6 +384,7 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
     }
 
     public void redo() {
+        if(!editable)return;
         UserAction action = getRedo();
         if (action != null) {
             if (action.addOrDel == UserAction.ADD) {
@@ -381,5 +396,9 @@ public abstract class GTextObject extends GObject implements GFocusChangeListene
             putInUndo(action);
             text_arr = null;
         }
+    }
+
+    public void setScrollBar(boolean enable) {
+
     }
 }

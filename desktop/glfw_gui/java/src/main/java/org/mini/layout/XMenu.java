@@ -13,8 +13,12 @@ public class XMenu extends XObject {
         static public final String XML_NAME = "mi";
         String name;
         String attachment;
+        String cmd;
         String text;
         String pic;
+        String onClick;
+        float[] color;
+        String preicon;
     }
 
     protected Vector items = new Vector();
@@ -64,7 +68,14 @@ public class XMenu extends XObject {
 
                     item.name = parser.getAttributeValue(null, "name");
                     item.pic = parser.getAttributeValue(null, "pic");
+                    item.color = parseHexColor(parser.getAttributeValue(null, "color"));
                     item.attachment = parser.getAttributeValue(null, "attachment");
+                    item.onClick = parser.getAttributeValue(null, "onclick");
+                    item.cmd = parser.getAttributeValue(null, "cmd");
+                    try {
+                        item.preicon = parser.getAttributeValue(null, "preicon");
+                    } catch (Exception e) {
+                    }
                     String tmp = parser.nextText();
                     item.text = tmp.length() == 0 ? null : tmp;
                     items.add(item);
@@ -135,6 +146,9 @@ public class XMenu extends XObject {
                 gli.setName(item.name);
                 gli.setAttachment(item.attachment);
                 gli.setEnable(enable);
+                gli.setCmd(item.cmd);
+                gli.setColor(item.color);
+                gli.setOnClinkScript(item.onClick);
             }
             menu.setContextMenu(contextMenu);
             menu.setFixed(fixed);

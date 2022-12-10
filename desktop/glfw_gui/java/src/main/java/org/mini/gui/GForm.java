@@ -5,7 +5,6 @@
  */
 package org.mini.gui;
 
-import org.mini.apploader.GApplication;
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.gui.event.*;
@@ -46,7 +45,6 @@ public class GForm extends GContainer {
     protected GKeyboardShowListener keyshowListener;
     protected GAppActiveListener activeListener;
     protected GNotifyListener notifyListener;
-    protected GSizeChangeListener sizeChangeListener;
 
     public GForm(GForm form) {
         super(form);
@@ -233,15 +231,6 @@ public class GForm extends GContainer {
         flush();
     }
 
-    public GSizeChangeListener getSizeChangeListener() {
-        return sizeChangeListener;
-    }
-
-    public void setSizeChangeListener(GSizeChangeListener sizeChangeListener) {
-        this.sizeChangeListener = sizeChangeListener;
-    }
-
-
     /**
      * @return the keyshowListener
      */
@@ -268,13 +257,13 @@ public class GForm extends GContainer {
         flush();
     }
 
-    public void onNotify(String key, String val) {
+    public void onDeviceNotify(String key, String val) {
         if (notifyListener != null) {
             notifyListener.onNotify(key, val);
         }
     }
 
-    public void onSizeChange(int width, int height) {
+    public void onDeviceSizeChanged(int width, int height) {
         if (sizeChangeListener != null) {
             sizeChangeListener.onSizeChange(width, height);
         }

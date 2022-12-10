@@ -11,7 +11,7 @@ public class GHomeButton extends GPanel implements GActionListener {
 
     GImage butImg = GImage.createImageFromJar("/res/ui/home.png");
     GImage downImg = GImage.createImageFromJar("/res/ui/yellow.png");
-//    GImage uploadImg = GImage.createImageFromJar("/res/ui/green.png");
+    //    GImage uploadImg = GImage.createImageFromJar("/res/ui/green.png");
 //    GImage msgImg = GImage.createImageFromJar("/res/ui/red.png");
     GImage srvImg = GImage.createImageFromJar("/res/ui/blue.png");
 
@@ -20,6 +20,9 @@ public class GHomeButton extends GPanel implements GActionListener {
 
     public GHomeButton(GForm form) {
         super(form, DEF_X, DEF_Y, DEF_W, DEF_H);
+        int saveX = AppLoader.getHomeIconX();
+        int saveY = AppLoader.getHomeIconY();
+        setLocation(saveX, saveY);
         layer = LAYER_INNER;
         setActionListener(this);
     }
@@ -70,6 +73,8 @@ public class GHomeButton extends GPanel implements GActionListener {
             if (getY() + getH() > GCallBack.getInstance().getDeviceHeight()) {
                 boundle[TOP] = GCallBack.getInstance().getDeviceHeight() - getH();
             }
+            AppLoader.setHomeIconX((int) getX());
+            AppLoader.setHomeIconY((int) getY());
             return true;
         }
         return super.dragEvent(button, dx, dy, x, y);

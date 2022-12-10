@@ -20,38 +20,17 @@ import static org.mini.nanovg.Nanovg.*;
  * @author gust
  */
 public class GTextBox extends GTextObject {
-    //
-    static final int AREA_CHAR_POS_START = 7;//额外增加slot数量
-    static final int AREA_LINE_START_AT = 4;//字符串起点位置
-    static final int AREA_LINE_END_AT = 5;//字符终点位置
-    static final int AREA_ROW_NO = 6;//行号
-    static final int AREA_X = LEFT;
-    static final int AREA_Y = TOP;
-    static final int AREA_W = WIDTH;
-    static final int AREA_H = HEIGHT;
 
     //
-    protected float[] lineh = {0};
-    protected int caretIndex;//光标在字符串中的位置
-//    protected boolean caretAtEnd;//光标在哪行,可能在上一行尾,也可能在下行行首
 
+    protected GScrollBar scrollBar;//滚动条
+    protected EditArea editArea;//编辑区
 
-    protected int selectStart = -1;//选取开始
-    protected int selectEnd = -1;//选取结束
-    protected boolean adjustSelStart = true;//是修改选择起点还是终点
-    protected boolean selectAdjusted;//在选取状态下,如果点击了,但是没有修改位置,取消选取状态
+    static final int SCROLLBAR_WIDTH = 20;
 
-    protected int totalRows;//字符串总行数，动态计算出
-    protected int showRows;//可显示行数
-
-    protected short[][] area_detail;
-    protected int scrollDelta;
-    protected float scroll = 0;//0-1 区间,描述窗口滚动条件位置, 滚动符0-1分别对应文本顶部超出显示区域的高度百分比
-    protected float totalTextHeight;//字符串总高度
-    protected float showAreaHeight;//显示区域高度
-
-    //
-    protected boolean mouseDrag;
+    protected int curCaretRow;
+    protected int curCaretCol;
+    protected boolean showCaretPos = false;
 
     public GTextBox(GForm form) {
         this(form, "", "", 0f, 0f, 1f, 1f);
@@ -59,78 +38,81 @@ public class GTextBox extends GTextObject {
 
     public GTextBox(GForm form, String text, String hint, float left, float top, float width, float height) {
         super(form);
+        editArea = new EditArea(this, form, left, top, width - SCROLLBAR_WIDTH, height);
+        add(editArea);
+        scrollBar = new GScrollBar(form, editArea.scroll, GScrollBar.VERTICAL, getW() - SCROLLBAR_WIDTH, 0, SCROLLBAR_WIDTH, getH());
+        scrollBar.setStateChangeListener(gobj -> {
+            editArea.scroll = scrollBar.getPos();
+        });
+
         setText(text);
         setHint(hint);
         setLocation(left, top);
         setSize(width, height);
         setFocusListener(this);
+
+        reAlign();
     }
 
+    public void setScrollBar(boolean enableScrollBar) {
+        if (enableScrollBar) {
+            add(scrollBar);
+        } else {
+            remove(scrollBar);
+        }
+        reAlign();
+    }
 
-    boolean isInArea(short[] bound, float x, float y) {
-        return x >= bound[LEFT] && x <= bound[LEFT] + bound[WIDTH]
-                && y >= bound[TOP] && y <= bound[TOP] + bound[HEIGHT];
+    @Override
+    public void setSize(float w, float h) {
+        super.setSize(w, h);
+        reAlign();
+    }
+
+    @Override
+    public void reAlign() {
+        super.reAlign();
+        if (contains(scrollBar)) {
+            editArea.setLocation(0, 0);
+            editArea.setSize(getW() - SCROLLBAR_WIDTH, getH());
+            scrollBar.setLocation(getW() - SCROLLBAR_WIDTH, 0);
+            scrollBar.setSize(SCROLLBAR_WIDTH, getH());
+        } else {
+            editArea.setLocation(0, 0);
+            editArea.setSize(getW(), getH());
+        }
+
+    }
+
+    public int getCurCaretRow() {
+        return curCaretRow;
+    }
+
+    public int getCurCaretCol() {
+        return curCaretCol;
+    }
+
+    public boolean isShowCaretPos() {
+        return showCaretPos;
+    }
+
+    public void setShowCaretPos(boolean showCaretPos) {
+        this.showCaretPos = showCaretPos;
+    }
+
+    boolean boxIsFocus() {
+        return parent.getFocus() == this;
     }
 
     @Override
     void onSetText(String text) {
         if (text != null) {
-            caretIndex = text.length();
+            setCaretIndex(text.length());
         } else {
-            caretIndex = 0;
+            setCaretIndex(0);
         }
         resetSelect();
-        area_detail = null;
-    }
-
-    /**
-     * 返回指定位置所在字符串中的位置
-     *
-     * @param x
-     * @param y
-     * @return
-     */
-    int getCaretIndexFromArea(int x, int y) {
-        if (area_detail != null) {
-            for (short[] detail : area_detail) {
-                if (detail != null) {
-                    if (x >= detail[LEFT] && x <= detail[LEFT] + getW()
-                            && y >= detail[TOP] && y <= detail[TOP] + detail[HEIGHT]) {
-                        for (int i = AREA_CHAR_POS_START, imax = detail.length; i < imax; i++) {
-                            float x0 = detail[i];
-                            float x1 = (i + 1 < imax) ? detail[i + 1] : x0;
-                            if (x < (x0 + (x1 - x0) / 2)) {
-                                return detail[AREA_LINE_START_AT] + (i - AREA_CHAR_POS_START);
-                            }
-                        }
-                        return detail[AREA_LINE_END_AT] + 1;
-                    }
-                }
-            }
-        }
-        return -1;
-    }
-
-    /**
-     * 返回光标当前所在的x,y坐标,及行号,数组下标
-     *
-     * @return
-     */
-    int[] getCaretPosFromArea() {
-        if (area_detail != null) {
-            int i = 0;
-            for (short[] detail : area_detail) {
-                if (detail != null) {
-                    if (caretIndex >= detail[AREA_LINE_START_AT] && caretIndex <= detail[AREA_LINE_END_AT] + 1) {
-                        int idx = caretIndex - detail[AREA_LINE_START_AT] + AREA_CHAR_POS_START;
-                        int x = caretIndex <= detail[AREA_LINE_END_AT] ? detail[idx] : detail[detail.length - 1];
-                        return new int[]{x + (int) lineh[0] / 2, detail[AREA_Y] + (int) lineh[0] / 2, detail[AREA_ROW_NO], i};
-                    }
-                }
-                i++;
-            }
-        }
-        return null;
+        editArea.area_detail = null;
     }
 
     @Override
@@ -138,536 +120,101 @@ public class GTextBox extends GTextObject {
         if (flyable) System.out.println(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
     }
 
-    @Override
-    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
-        if (isInArea(x, y)) {
-            if (button == Glfw.GLFW_MOUSE_BUTTON_1) {
-                if (pressed) {
-                    int caret = getCaretIndexFromArea(x, y);
-                    if (caret >= 0) {
-                        setCaretIndex(caret);
-                        resetSelect();
-                        selectStart = caret;
-                        mouseDrag = true;
-                    } else {
-                        GToolkit.disposeEditMenu();
-                    }
-                } else {
-                    mouseDrag = false;
-                    if (selectEnd == -1 || selectStart == selectEnd) {
-                        resetSelect();
-                        GToolkit.disposeEditMenu();
-                    } else {
-                        selectMode = true;
-                    }
-                }
-            } else if (button == Glfw.GLFW_MOUSE_BUTTON_2) {
-                if (pressed) {
-
-                } else {
-                    GToolkit.callEditMenu(this, x, y);
-                }
-            }
-
-        }
-    }
-
-    @Override
-    public void clickEvent(int button, int x, int y) {
-        if (isInArea(x, y)) {
-            int caret = getCaretIndexFromArea(x, y);
-            if (caret >= 0) {
-                setCaretIndex(caret);
-                resetSelect();
-                mouseDrag = false;
-            }
-            doSelectText();
-        }
-    }
-
-    @Override
-    public void cursorPosEvent(int x, int y) {
-        if (isInArea(x, y)) {
-            if (mouseDrag) {
-                int caret = getCaretIndexFromArea(x, y);
-                if (caret >= 0) {
-                    selectEnd = caret;
-                }
-            }
-        }
-    }
-
-    /**
-     * @param character
-     */
-    @Override
-    public void characterEvent(char character) {
-        if (parent.getFocus() != this) {
-            return;
-        }
-        int[] selectFromTo = getSelected();
-        if (selectFromTo != null) {
-            deleteSelectedText();
-        }
-        if (enable) {
-            insertTextByIndex(caretIndex, character);
-            caretIndex++;
-        }
-    }
-
-    @Override
-    public void keyEventGlfw(int key, int scanCode, int action, int mods) {
-        if (parent.getFocus() != this) {
-            return;
-        }
-        if (action == Glfw.GLFW_PRESS || action == Glfw.GLFW_REPEAT) {
-            //edit key
-            if (enable) {
-                switch (key) {
-                    case Glfw.GLFW_KEY_BACKSPACE: {
-                        int[] selectFromTo = getSelected();
-                        if (selectFromTo != null) {
-                            deleteSelectedText();
-                        } else {
-                            if (textsb.length() > 0 && caretIndex > 0) {
-                                setCaretIndex(caretIndex - 1);
-                                deleteTextByIndex(caretIndex);
-                            }
-                        }
-                        break;
-                    }
-                    case Glfw.GLFW_KEY_DELETE: {
-                        if (textsb.length() > caretIndex) {
-                            int[] selectFromTo = getSelected();
-                            if (selectFromTo != null) {
-                                deleteSelectedText();
-                            } else {
-                                deleteTextByIndex(caretIndex);
-                            }
-                        }
-                        break;
-                    }
-                    case Glfw.GLFW_KEY_ENTER: {
-                        String txt = getText();
-                        if (txt != null && txt.length() > 0) {
-                            int[] selectFromTo = getSelected();
-                            if (selectFromTo != null) {
-                                deleteSelectedText();
-                            }
-                            setCaretIndex(caretIndex + 1);
-                            insertTextByIndex(caretIndex, '\n');
-                        }
-                        break;
-                    }
-                    case Glfw.GLFW_KEY_C: {
-                        if ((mods & Glfw.GLFW_MOD_CONTROL) != 0) {
-                            String s = getSelectedText();
-                            Glfw.glfwSetClipboardString(winContext, s);
-                            Glfm.glfmSetClipBoardContent(s);
-                        }
-                        break;
-                    }
-                    case Glfw.GLFW_KEY_V: {
-                        if ((mods & Glfw.GLFW_MOD_CONTROL) != 0) {
-                            String s = Glfw.glfwGetClipboardString(winContext);
-                            if (s == null) s = Glfm.glfmGetClipBoardContent();
-                            if (s != null) {
-                                deleteSelectedText();
-                                insertTextAtCaret(s);
-                            }
-                        }
-                        break;
-                    }
-                    case Glfw.GLFW_KEY_A: {
-                        if ((mods & Glfw.GLFW_MOD_CONTROL) != 0) {
-                            doSelectAll();
-                        }
-                        break;
-                    }
-                    case Glfw.GLFW_KEY_X: {
-                        if ((mods & Glfw.GLFW_MOD_CONTROL) != 0) {
-                            deleteSelectedText();
-                        }
-                        break;
-                    }
-                    case Glfw.GLFW_KEY_Z: {
-                        if ((mods & Glfw.GLFW_MOD_CONTROL) != 0 && (mods & Glfw.GLFW_MOD_SHIFT) != 0) {
-                            redo();
-                        } else if ((mods & Glfw.GLFW_MOD_CONTROL) != 0) {
-                            undo();
-                        }
-                        break;
-                    }
-                }
-            }
-
-            //move key
-            switch (key) {
-
-                case Glfw.GLFW_KEY_LEFT: {
-                    if (textsb.length() > 0 && caretIndex > 0) {
-                        setCaretIndex(caretIndex - 1);
-                    }
-                    break;
-                }
-                case Glfw.GLFW_KEY_RIGHT: {
-                    if (textsb.length() > caretIndex) {
-                        setCaretIndex(caretIndex + 1);
-                    }
-                    break;
-                }
-                case Glfw.GLFW_KEY_UP: {
-                    int[] pos = getCaretPosFromArea();
-                    if (pos != null) {
-                        if (pos[1] < getY() + lineh[0] * 2) {
-                            setScroll(scroll - lineh[0] / (totalTextHeight - showAreaHeight));
-                        }
-                        int cart = getCaretIndexFromArea(pos[0], pos[1] - (int) lineh[0]);
-                        if (cart >= 0) {
-                            setCaretIndex(cart);
-                        }
-                    } else {
-                        for (int i = area_detail.length - 1; i >= 0; i--) {
-                            if (area_detail[i] != null) {
-                                int c = area_detail[i][AREA_LINE_START_AT];
-                                setCaretIndex(c);
-                                break;
-                            }
-                        }
-                    }
-                    break;
-                }
-                case Glfw.GLFW_KEY_DOWN: {
-                    int[] pos = getCaretPosFromArea();
-                    if (pos != null) {
-                        if (pos[1] > getY() + getH() - lineh[0] * 2) {
-                            setScroll(scroll + lineh[0] / (totalTextHeight - showAreaHeight));
-                        }
-                        int cart = getCaretIndexFromArea(pos[0], pos[1] + (int) lineh[0]);
-                        if (cart >= 0) {
-                            setCaretIndex(cart);
-                        }
-
-                    } else {
-                        for (int i = 0; i < area_detail.length; i++) {
-                            if (area_detail[i] != null) {
-                                int c = area_detail[i][AREA_LINE_START_AT];
-                                setCaretIndex(c);
-                                break;
-                            }
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-    }
-
-    @Override
-    public void touchEvent(int touchid, int phase, int x, int y) {
-        if (touchid != Glfw.GLFW_MOUSE_BUTTON_1) return;
-        if (isInArea(x, y)) {
-            switch (phase) {
-                case Glfm.GLFMTouchPhaseBegan: {
-                    int caret = getCaretIndexFromArea(x, y);
-                    if (selectMode) {
-                        selectAdjusted = false;
-                        if (Math.abs(caret - selectStart) < Math.abs(caret - selectEnd)) {
-                            adjustSelStart = true;
-                        } else {
-                            adjustSelStart = false;
-                        }
-                    } else if (caret >= 0) {
-                        setCaretIndex(caret);
-                    }       //
-                    if (task != null) {
-                        task.cancel();
-                        task = null;
-                    }
-                    break;
-                }
-                case Glfm.GLFMTouchPhaseEnded: {
-                    if (selectMode) {
-                        if (selectStart != -1) {
-                            GToolkit.callEditMenu(this, x, y);
-                        }
-                    }
-                    break;
-                }
-                case Glfm.GLFMTouchPhaseMoved: {
-                    if (selectMode) {
-                        int caret = getCaretIndexFromArea(x, y);
-                        int mid = selectStart + (selectEnd - selectStart) / 2;
-                        if (adjustSelStart) {
-                            if (caret < mid) {
-                                selectStart = caret;
-
-                            }
-                        } else if (caret > mid) {
-                            selectEnd = caret;
-                            setCaretIndex(selectEnd);
-                        }
-                        selectAdjusted = true;
-                    }
-                    break;
-                }
-                default:
-                    break;
-            }
-        }
-        super.touchEvent(touchid, phase, x, y);
-    }
-
-    /**
-     * @param str
-     * @param mods
-     */
-    @Override
-    public void characterEvent(String str, int mods) {
-
-        int[] selectFromTo = getSelected();
-        if (selectFromTo != null) {
-            deleteSelectedText();
-        }
-        System.out.println("input :" + (int) str.charAt(0));
-        insertTextAtCaret(str);
-    }
-
-    @Override
-    public void keyEventGlfm(int key, int action, int mods) {
-
-        if (action == Glfm.GLFMKeyActionPressed || action == Glfm.GLFMKeyActionRepeated) {
-            switch (key) {
-                case Glfm.GLFMKeyBackspace: {
-                    if (enable) {
-                        if (textsb.length() > 0 && caretIndex > 0) {
-                            int[] selectFromTo = getSelected();
-                            if (selectFromTo != null) {
-                                deleteSelectedText();
-                            } else {
-                                setCaretIndex(caretIndex - 1);
-                                deleteTextByIndex(caretIndex);
-                            }
-                        }
-                    }
-                    break;
-                }
-                case Glfm.GLFMKeyEnter: {
-                    String txt = getText();
-                    if (enable) {
-                        if (txt != null && txt.length() > 0) {
-                            int[] selectFromTo = getSelected();
-                            if (selectFromTo != null) {
-                                deleteSelectedText();
-                            }
-                            setCaretIndex(caretIndex + 1);
-                            insertTextByIndex(caretIndex, '\n');
-                        }
-                    }
-                    break;
-                }
-                case Glfm.GLFMKeyLeft: {
-                    if (textsb.length() > 0 && caretIndex > 0) {
-                        setCaretIndex(caretIndex - 1);
-                    }
-                    break;
-                }
-                case Glfm.GLFMKeyRight: {
-                    if (textsb.length() > caretIndex) {
-                        setCaretIndex(caretIndex + 1);
-                    }
-                    break;
-                }
-                case Glfm.GLFMKeyUp: {
-                    int[] pos = getCaretPosFromArea();
-                    setScroll(scroll - lineh[0] / (totalTextHeight - showAreaHeight));
-
-                    if (pos != null) {
-                        int cart = getCaretIndexFromArea(pos[0], pos[1] - (int) lineh[0]);
-                        if (cart >= 0) {
-                            setCaretIndex(cart);
-                        }
-                    }
-                    break;
-                }
-                case Glfm.GLFMKeyDown: {
-                    int[] pos = getCaretPosFromArea();
-                    setScroll(scroll + lineh[0] / (totalTextHeight - showAreaHeight));
-                    if (pos != null) {
-                        int cart = getCaretIndexFromArea(pos[0], pos[1] + (int) lineh[0]);
-                        if (cart >= 0) {
-                            setCaretIndex(cart);
-                        }
-
-                    }
-                    break;
-                }
-            }
-        }
-    }
-
-    //每多长时间进行一次惯性动作
-    long inertiaPeriod = 16;
-    //总共做多少次操作
-    long maxMoveCount = 120;
-    //惯性任务
-    TimerTask task;
-
-    @Override
-    public boolean inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
-        if (scroll >= 1 || scroll <= 0) {
-            return false;
-        }
-        double dx = x2 - x1;
-        final double dy = y2 - y1;
-        scrollDelta = 0;
-        //System.out.println("inertia time: " + moveTime + " , count: " + maxMoveCount + " pos: x1,y1,x2,y2 = " + x1 + "," + y1 + "," + x2 + "," + y2);
-        task = new TimerTask() {
-            //惯性速度
-            double speed = dy / (moveTime / inertiaPeriod);
-            //阴力
-            double resistance = speed / maxMoveCount;
-            //
-            int count = 0;
-
-            @Override
-            public void run() {
-                try {
-                    speed -= resistance;//速度和阴力抵消为0时,退出滑动
-                    //System.out.println("count :" + count + "    inertia :" + speed + "    resistance :" + resistance);
-
-                    float dh = getOutOfShowAreaHeight();
-                    if (dh > 0) {
-                        setScroll(scroll - (float) speed / dh);
-                    }
-                    GForm.flush();
-                    if (count++ > maxMoveCount) {
-                        try {
-                            this.cancel();
-                        } catch (Exception e) {
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-        Timer timer = GForm.timer;
-        if (timer != null) {
-            timer.schedule(task, 0, inertiaPeriod);
-        }
-        return true;
-    }
-
-    @Override
-    public boolean scrollEvent(float scrollX, float scrollY, float x, float y) {
-        float dh = getOutOfShowAreaHeight();
-        if (dh > 0) {
-            return setScroll(scroll - (float) scrollY / dh);
-        }
-        return true;
-    }
-
-    @Override
-    public boolean dragEvent(int button, float dx, float dy, float x, float y) {
-        if (mouseDrag) {
-            return true;
-        }
-        if (selectMode) {
-            return false;
-        }
-        float dh = getOutOfShowAreaHeight();
-        if (dh > 0) {
-            setScroll(scroll - (float) dy / dh);
-        }
-        return true;
-    }
-
     public boolean setScroll(float p) {
-        float tmp = scroll;
-        scroll = p;
-        if (scroll > 1) {
-            scroll = 1.f;
+        if (p > 1.f) {
+            p = 1.f;
         }
-        if (scroll < 0) {
-            scroll = 0.f;
+        if (p < 0) {
+            p = 0.f;
         }
-        return tmp != scroll;
-    }
-
-    float getOutOfShowAreaHeight() {
-        float dh = totalTextHeight - showAreaHeight;
-        return dh < 0 ? 0 : dh;
+        float tmp = editArea.scroll;
+        editArea.scroll = p;
+        return tmp != editArea.scroll;
     }
 
     @Override
     public void deleteSelectedText() {
-        int[] sarr = getSelected();
-        if (sarr == null || sarr[0] == -1 || sarr[1] == -1) {
+        if (!isSelected()) {
             return;
         }
-        setCaretIndex(sarr[0]);
-        deleteTextRange(sarr[0], sarr[1]);
+        setCaretIndex(getSelectBegin());
+        deleteTextRange(getSelectBegin(), getSelectEnd());
         resetSelect();
     }
 
     @Override
     void resetSelect() {
-        selectStart = selectEnd = -1;
+        editArea.selFirst = editArea.selSecond = -1;
     }
 
-    int[] getSelected() {
-        int select1 = 0, select2 = 0;
-        if (selectStart != -1 && selectEnd != -1) {
-            select1 = selectStart > selectEnd ? selectEnd : selectStart;
-            select2 = selectStart < selectEnd ? selectEnd : selectStart;
-            return new int[]{select1, select2};
+
+    boolean isSelected() {
+        if (editArea.selFirst != -1 && editArea.selSecond != -1) {
+            return true;
+        } else {
+            return false;
         }
-        return null;
+    }
+
+    int getSelectBegin() {
+        int select1 = 0;
+        if (editArea.selFirst != -1 && editArea.selSecond != -1) {
+            select1 = editArea.selFirst > editArea.selSecond ? editArea.selSecond : editArea.selFirst;
+            return select1;
+        }
+        return -1;
+    }
+
+    int getSelectEnd() {
+        int select2 = 0;
+        if (editArea.selFirst != -1 && editArea.selSecond != -1) {
+            select2 = editArea.selFirst < editArea.selSecond ? editArea.selSecond : editArea.selFirst;
+            return select2;
+        }
+        return -1;
     }
 
     @Override
     public String getSelectedText() {
-        int[] sarr = getSelected();
-        if (sarr == null || sarr[0] == -1 || sarr[1] == -1) {
+        if (!isSelected()) {
             return null;
         }
-        return textsb.substring(sarr[0], sarr[1]);
+        return textsb.substring(getSelectBegin(), getSelectEnd());
     }
 
     @Override
     public void insertTextAtCaret(String str) {
-        insertTextByIndex(caretIndex, str);
-        setCaretIndex(caretIndex + textsb.length());
+        insertTextByIndex(editArea.caretIndex, str);
+        setCaretIndex(editArea.caretIndex + textsb.length());
     }
 
     @Override
     public void doSelectText() {
-        if (caretIndex <= 0) {
-            caretIndex = 0;
-            selectStart = 0;
+        if (editArea.caretIndex <= 0) {
+            setCaretIndex(0);
+            editArea.selFirst = 0;
         }
         int txtLen = textsb.length();
-        if (caretIndex >= txtLen) {
-            caretIndex = txtLen;
-            selectEnd = txtLen;
+        if (editArea.caretIndex >= txtLen) {
+            setCaretIndex(txtLen);
+            editArea.selSecond = txtLen;
         }
 
-        for (int i = caretIndex - 1; i >= 0 && i < txtLen; i--) {
+        for (int i = editArea.caretIndex - 1; i >= 0 && i < txtLen; i--) {
             int ch = textsb.codePointAt(i);
             if (ch > 128 || (!Character.isLetterOrDigit(ch) && ch != '_') || i == 0) {
-                selectStart = i + 1;
+                editArea.selFirst = i + 1;
                 break;
             }
         }
-        for (int i = caretIndex + 1; i < txtLen; i++) {
+        for (int i = editArea.caretIndex + 1; i < txtLen; i++) {
             int ch = textsb.codePointAt(i);
             if (ch > 128 || (!Character.isLetterOrDigit(ch) && ch != '_') || i == txtLen - 1) {
-                selectEnd = i;
+                editArea.selSecond = i;
                 break;
             }
         }
-        setCaretIndex(selectEnd);
+        setCaretIndex(editArea.selSecond);
         selectMode = true;
 //        String s=textsb.substring(selectStart,selectEnd);
 //        System.out.println("select :"+s);
@@ -675,8 +222,8 @@ public class GTextBox extends GTextObject {
 
     @Override
     public void doSelectAll() {
-        selectStart = 0;
-        selectEnd = textsb.length();
+        editArea.selFirst = 0;
+        editArea.selSecond = textsb.length();
         selectMode = true;
     }
 
@@ -684,7 +231,7 @@ public class GTextBox extends GTextObject {
      * @return
      */
     public int getCaretIndex() {
-        return caretIndex;
+        return editArea.caretIndex;
     }
 
     /**
@@ -696,225 +243,775 @@ public class GTextBox extends GTextObject {
         } else if (caretIndex > textsb.length()) {
             caretIndex = textsb.length();
         }
-        this.caretIndex = caretIndex;
+        editArea.caretIndex = caretIndex;
     }
 
-    /**
-     * @param vg
-     * @return
-     */
-    @Override
-    public boolean paint(long vg) {
-        float x = getX();
-        float y = getY();
-        float w = getW();
-        float h = getH();
-        drawTextBox(vg, x, y, w, h);
-        return true;
-    }
+    class EditArea extends GObject {
+        //
+        static final int AREA_CHAR_POS_START = 7;//额外增加slot数量
+        static final int AREA_LINE_START_AT = 4;//字符串起点位置
+        static final int AREA_LINE_END_AT = 5;//字符终点位置
+        static final int AREA_ROW_NO = 6;//行号
+        static final int AREA_X = LEFT;
+        static final int AREA_Y = TOP;
+        static final int AREA_W = WIDTH;
+        static final int AREA_H = HEIGHT;
 
-    void drawTextBox(long vg, float x, float y, float w, float h) {
-        GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h);
-        nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
-        nvgFontFace(vg, GToolkit.getFontWord());
-        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+        protected int totalRows;//字符串总行数，动态计算出
+        protected int showRows;//可显示行数
 
-        //字高
-        nvgTextMetrics(vg, null, null, lineh);
-        float lineH = lineh[0];
+        protected short[][] area_detail;
+        protected int scrollDelta;
+        protected float scroll = 0;//0-1 区间,描述窗口滚动条件位置, 滚动符0-1分别对应文本顶部超出显示区域的高度百分比
+        protected float totalTextHeight;//字符串总高度
+        protected float showAreaHeight;//显示区域高度
 
-        float[] text_area = new float[]{x + 5f, y + 5f, w - 10f, h - 10f};
-        float dx = text_area[LEFT];
-        float dy = text_area[TOP];
+        //
+        protected float[] lineh = {0};
+        protected int caretIndex;//光标在字符串中的位置
+        protected boolean mouseDrag;
 
-        //sometime the field text_arr and area_detail may set as null by other thread when paint
-        byte[] local_arr = this.text_arr;
-        short[][] local_detail = this.area_detail;
+        protected int selFirst = -1;//选取开始
+        protected int selSecond = -1;//选取结束
+        protected boolean adjustSelStart = true;//是修改选择起点还是终点
+        protected boolean selectAdjusted;//在选取状态下,如果点击了,但是没有修改位置,取消选取状态
+        GTextBox tbox;
 
-        //画文本或提示
-        if ((getText() == null || getText().length() <= 0) && parent.getFocus() != this) {
-            nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
-            nvgTextJni(vg, dx, dy, hint_arr, 0, hint_arr.length);
-        } else {//编辑中
-            int topShowRow = 0;//显示区域第一行的行号
+        protected EditArea(GTextBox tbox, GForm form, float left, float top, float width, float height) {
+            super(form);
+            this.tbox = tbox;
+            setLocation(left, top);
+            setSize(width, height);
+        }
 
-            if (local_arr == null) {//文字被修改过
-                local_arr = toUtf8(textsb.toString());
-                this.text_arr = local_arr;
-                showRows = Math.round(text_area[HEIGHT] / lineH) + 2;
-                showAreaHeight = text_area[HEIGHT];
 
-                //用于存放屏墓中各行的一些位置信息
-                local_detail = new short[showRows][];
-                this.area_detail = local_detail;
-
-                float[] bond = new float[4];
-                Nanovg.nvgTextBoxBoundsJni(vg, 0, 0, text_area[WIDTH], local_arr, 0, local_arr.length, bond);
-                totalRows = Math.round((bond[HEIGHT] - bond[TOP]) / lineH);
-                totalTextHeight = bond[HEIGHT];
-            }
-            //
-            float dh = scroll * (totalTextHeight - showAreaHeight);
-            dh = dh < 0 ? 0 : dh;
-            dy -= dh;
-            topShowRow = (int) (dh / lineH) - 1;
-            //
-            int posCount = 100;
-            int rowCount = 10;
-            long rowsHandle = nvgCreateNVGtextRow(rowCount);
-            long glyphsHandle = nvgCreateNVGglyphPosition(posCount);
-            int nrows, i, char_count;
-            float caretx = 0;
-
-            Nanovg.nvgScissor(vg, text_area[LEFT], text_area[TOP], text_area[WIDTH], text_area[HEIGHT]);
-            Nanovg.nvgIntersectScissor(vg, parent.getX(), parent.getY(), parent.getW(), parent.getH());
-            //需要恢复现场
-            try {
-
-                //取选取的起始和终止位置
-                int[] selectFromTo = getSelected();
-
-                // The text break API can be used to fill a large buffer of rows,
-                // or to iterate over the text just few lines (or just one) at a time.
-                // The "next" variable of the last returned item tells where to continue.
-                //取UTF8字符串的内存地址，供NATIVE API调用
-                long ptr = GToolkit.getArrayDataPtr(local_arr);
-                int start = 0;
-                int end = local_arr.length - 1;
-
-                int char_at = 0;
-                int char_starti, char_endi;
-
-                int row_index = 0;
-
-                if (end - start == 0) {
-                    GToolkit.drawCaret(vg, dx, dy, 1, lineH, false);
-                } else {//通过nvgTextBreakLinesJni进行断行
-
-                    for (int li = 0; li < local_detail.length; li++) local_detail[li] = null;
-                    while ((nrows = nvgTextBreakLinesJni(vg, local_arr, start, end, text_area[WIDTH], rowsHandle, rowCount)) != 0) {
-
-                        //循环绘制行
-                        for (i = 0; i < nrows; i++) {
-//                        if (area_row_index >= topShowRowLocal && area_row_index < topShowRowLocal + showRows) {
-                            if (dy + lineH >= text_area[TOP] && dy < text_area[TOP] + text_area[HEIGHT]) {
-                                //取得第i 行的行宽
-                                float row_width = Nanovg.nvgNVGtextRow_width(rowsHandle, i);
-
-                                //返回 i 行的起始和结束位置
-                                int byte_starti = (int) (Nanovg.nvgNVGtextRow_start(rowsHandle, i) - ptr);
-                                int byte_endi = (int) (Nanovg.nvgNVGtextRow_end(rowsHandle, i) - ptr);
-
-                                if (char_at == 0) {
-                                    //取得本行之前字符串长度
-                                    CodePointBuilder preStrs = new CodePointBuilder(local_arr, 0, byte_starti, "utf-8");
-                                    char_at = preStrs.length();
-
-                                }
-                                //把当前行从字节数组转成字符串
-                                CodePointBuilder curRowStrs;
-                                curRowStrs = new CodePointBuilder(local_arr, byte_starti, byte_endi - byte_starti, "utf-8");
-                                //计算字符串起止位置
-                                char_starti = char_at;
-                                char_endi = char_at + curRowStrs.length() - 1;
-
-                                caretx = dx;
-                                //取得i行的各个字符的具体位置，结果存入glyphs
-                                char_count = nvgTextGlyphPositionsJni(vg, dx, dy, local_arr, byte_starti, byte_endi, glyphsHandle, posCount);
-                                int curRow = row_index - topShowRow;
-
-                                if (curRow < 0 || curRow >= local_detail.length) {
-
-                                } else {
-                                    //把这些信息存下来，用于在点击的时候找到点击了文本的哪个位置
-                                    //前面存固定信息
-                                    local_detail[curRow] = new short[AREA_CHAR_POS_START + char_count];
-                                    local_detail[curRow][AREA_X] = (short) dx;
-                                    local_detail[curRow][AREA_Y] = (short) dy;
-                                    local_detail[curRow][AREA_W] = (short) text_area[WIDTH];
-                                    local_detail[curRow][AREA_H] = (short) lineH;
-                                    local_detail[curRow][AREA_LINE_START_AT] = (short) char_starti;
-                                    local_detail[curRow][AREA_LINE_END_AT] = (short) char_endi;
-                                    local_detail[curRow][AREA_ROW_NO] = (short) row_index;
-                                    //后面把每个char的位置存下来
-                                    for (int j = 0; j < char_count; j++) {
-                                        //取第 j 个字符的X座标
-                                        float x0 = nvgNVGglyphPosition_x(glyphsHandle, j);
-                                        local_detail[curRow][AREA_CHAR_POS_START + j] = (short) x0;
-                                    }
-
-                                    //计算下一行开始
-                                    char_at = char_at + curRowStrs.length();
-
-                                    if (parent.getFocus() == this) {
-                                        boolean draw = false;
-                                        if (caretIndex >= char_starti && caretIndex <= char_endi) {
-                                            caretx = local_detail[curRow][AREA_CHAR_POS_START + (caretIndex - char_starti)];
-                                            draw = true;
-                                            if (caretIndex != 0 && caretIndex - char_starti == 0) {//光标移到行首时，只显示在上一行行尾
-                                                draw = false;
-                                            }
-                                        } else if (caretIndex == char_endi + 1) {
-                                            caretx = dx + row_width;
-                                            if (caretx >= text_area[LEFT] + text_area[WIDTH]) caretx = text_area[LEFT] + text_area[WIDTH] - 2;
-                                            draw = true;
-                                        } else if (char_count == 0) {
-                                            caretx = dx;
-                                            draw = true;
-                                        }
-                                        if (draw) {
-                                            GToolkit.drawCaret(vg, caretx, dy, 2, lineH, false);
-                                        }
-                                    }
-
-                                    if (selectFromTo != null) {
-                                        int sel_start = selectFromTo[0];
-                                        int sel_end = selectFromTo[1];
-                                        float drawSelX = dx, drawSelW = row_width;
-                                        //本行有选择起点
-                                        if (sel_start > char_starti && sel_start <= char_endi) {
-                                            int pos = sel_start - local_detail[curRow][AREA_LINE_START_AT];
-                                            drawSelX = local_detail[curRow][AREA_CHAR_POS_START + pos];
-                                            drawSelW = row_width - (drawSelX - local_detail[curRow][AREA_CHAR_POS_START]);
-                                        }
-                                        //本行有选择终点
-                                        if (sel_end > char_starti && sel_end <= char_endi + 1) {
-                                            int pos = selectFromTo[1] - local_detail[curRow][AREA_LINE_START_AT];
-                                            if (pos >= char_count) {//the last char
-                                                drawSelW = local_detail[curRow][AREA_CHAR_POS_START] + row_width - drawSelX;
-                                            } else {
-                                                drawSelW = local_detail[curRow][AREA_CHAR_POS_START + pos] - drawSelX;
-                                            }
-                                        }
-
-                                        if (sel_start >= char_endi + 1 || sel_end <= char_starti) {
-                                            //此行没有起点和终点
-                                        } else {
-                                            //此行有起点或终点,或在起终点之间的整行
-                                            GToolkit.drawRect(vg, drawSelX, dy, drawSelW, lineH, GToolkit.getStyle().getSelectedColor());
-                                        }
-
-                                    }
-                                    nvgFillColor(vg, getColor());
-                                    nvgTextJni(vg, dx, dy + 1, local_arr, byte_starti, byte_endi);
+        /**
+         * 返回指定位置所在字符串中的位置
+         *
+         * @param x
+         * @param y
+         * @return
+         */
+        int getCaretIndexFromArea(int x, int y) {
+            if (editArea.area_detail != null) {
+                for (short[] detail : editArea.area_detail) {
+                    if (detail != null) {
+                        if (x >= detail[LEFT] && x <= detail[LEFT] + getW() && y >= detail[TOP] && y <= detail[TOP] + detail[HEIGHT]) {
+                            for (int i = AREA_CHAR_POS_START, imax = detail.length; i < imax; i++) {
+                                float x0 = detail[i];
+                                float x1 = (i + 1 < imax) ? detail[i + 1] : x0;
+                                if (x < (x0 + (x1 - x0) / 2)) {
+                                    return detail[AREA_LINE_START_AT] + (i - AREA_CHAR_POS_START);
                                 }
                             }
-                            dy += lineH;
-                            row_index++;
+                            return detail[AREA_LINE_END_AT] + 1;
                         }
-
-                        long next = Nanovg.nvgNVGtextRow_next(rowsHandle, nrows - 1);
-                        start = (int) (next - ptr);
                     }
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
+            return -1;
+        }
 
-            Nanovg.nvgDeleteNVGtextRow(rowsHandle);
-            Nanovg.nvgDeleteNVGglyphPosition(glyphsHandle);
 
+        /**
+         * 返回光标当前所在的x,y坐标,及行号,数组下标
+         *
+         * @return
+         */
+        int[] getCaretPosFromArea() {
+            if (area_detail != null) {
+                int i = 0;
+                for (short[] detail : area_detail) {
+                    if (detail != null) {
+                        if (caretIndex >= detail[AREA_LINE_START_AT] && caretIndex <= detail[AREA_LINE_END_AT] + 1) {
+                            int idx = caretIndex - detail[AREA_LINE_START_AT] + AREA_CHAR_POS_START;
+                            int x = caretIndex <= detail[AREA_LINE_END_AT] ? detail[idx] : detail[detail.length - 1];
+                            return new int[]{x + (int) lineh[0] / 2, detail[AREA_Y] + (int) lineh[0] / 2, detail[AREA_ROW_NO], i};
+                        }
+                    }
+                    i++;
+                }
+            }
+            return null;
+        }
+
+        float getOutOfShowAreaHeight() {
+            float dh = totalTextHeight - showAreaHeight;
+            return dh < 0 ? 0 : dh;
+        }
+
+        @Override
+        public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+            super.mouseButtonEvent(button, pressed, x, y);
+
+            if (isInArea(x, y)) {
+                if (button == Glfw.GLFW_MOUSE_BUTTON_1) {
+                    if (pressed) {
+                        int caret = getCaretIndexFromArea(x, y);
+                        if (caret >= 0) {
+                            setCaretIndex(caret);
+                            resetSelect();
+                            selFirst = caret;
+                            mouseDrag = true;
+                        } else {
+                            GToolkit.disposeEditMenu();
+                        }
+                    } else {
+                        mouseDrag = false;
+                        if (selSecond == -1 || selFirst == selSecond) {
+                            resetSelect();
+                            GToolkit.disposeEditMenu();
+                        } else {
+                            selectMode = true;
+                        }
+                    }
+                } else if (button == Glfw.GLFW_MOUSE_BUTTON_2) {
+                    if (pressed) {
+
+                    } else {
+                        GToolkit.callEditMenu(tbox, x, y);
+                    }
+                }
+
+            }
+        }
+
+        @Override
+        public void clickEvent(int button, int x, int y) {
+            super.clickEvent(button, x, y);
+            if (isInArea(x, y)) {
+                int caret = getCaretIndexFromArea(x, y);
+                if (caret >= 0) {
+                    setCaretIndex(caret);
+                    resetSelect();
+                    mouseDrag = false;
+                }
+                doSelectText();
+            }
+        }
+
+        @Override
+        public void cursorPosEvent(int x, int y) {
+            super.cursorPosEvent(x, y);
+            if (isInArea(x, y)) {
+                if (mouseDrag) {
+                    int caret = getCaretIndexFromArea(x, y);
+                    if (caret >= 0) {
+                        selSecond = caret;
+                    }
+                }
+            }
+        }
+
+        /**
+         * @param character
+         */
+        @Override
+        public void characterEvent(char character) {
+            if (tbox.getFocus() != this) {
+                return;
+            }
+            deleteSelectedText();
+            if (enable) {
+                insertTextByIndex(caretIndex, character);
+                setCaretIndex(getCaretIndex() + 1);
+            }
+        }
+
+        @Override
+        public void keyEventGlfw(int key, int scanCode, int action, int mods) {
+            if (tbox.getFocus() != this) {
+                return;
+            }
+            if (action == Glfw.GLFW_PRESS || action == Glfw.GLFW_REPEAT) {
+                //edit key
+                if (enable) {
+                    switch (key) {
+                        case Glfw.GLFW_KEY_BACKSPACE: {
+                            if (isSelected()) {
+                                deleteSelectedText();
+                            } else {
+                                if (textsb.length() > 0 && caretIndex > 0) {
+                                    setCaretIndex(caretIndex - 1);
+                                    deleteTextByIndex(caretIndex);
+                                }
+                            }
+                            break;
+                        }
+                        case Glfw.GLFW_KEY_DELETE: {
+                            if (textsb.length() > caretIndex) {
+                                if (isSelected()) {
+                                    deleteSelectedText();
+                                } else {
+                                    deleteTextByIndex(caretIndex);
+                                }
+                            }
+                            break;
+                        }
+                        case Glfw.GLFW_KEY_ENTER: {
+                            String txt = getText();
+                            if (txt != null && txt.length() > 0) {
+                                if (isSelected()) {
+                                    deleteSelectedText();
+                                }
+                                setCaretIndex(caretIndex + 1);
+                                insertTextByIndex(caretIndex, '\n');
+                            }
+                            break;
+                        }
+                        case Glfw.GLFW_KEY_C: {
+                            if ((mods & Glfw.GLFW_MOD_CONTROL) != 0) {
+                                String s = getSelectedText();
+                                Glfw.glfwSetClipboardString(winContext, s);
+                                Glfm.glfmSetClipBoardContent(s);
+                            }
+                            break;
+                        }
+                        case Glfw.GLFW_KEY_V: {
+                            if ((mods & Glfw.GLFW_MOD_CONTROL) != 0) {
+                                String s = Glfw.glfwGetClipboardString(winContext);
+                                if (s == null) s = Glfm.glfmGetClipBoardContent();
+                                if (s != null) {
+                                    deleteSelectedText();
+                                    insertTextAtCaret(s);
+                                }
+                            }
+                            break;
+                        }
+                        case Glfw.GLFW_KEY_A: {
+                            if ((mods & Glfw.GLFW_MOD_CONTROL) != 0) {
+                                doSelectAll();
+                            }
+                            break;
+                        }
+                        case Glfw.GLFW_KEY_X: {
+                            if ((mods & Glfw.GLFW_MOD_CONTROL) != 0) {
+                                deleteSelectedText();
+                            }
+                            break;
+                        }
+                        case Glfw.GLFW_KEY_Z: {
+                            if ((mods & Glfw.GLFW_MOD_CONTROL) != 0 && (mods & Glfw.GLFW_MOD_SHIFT) != 0) {
+                                redo();
+                            } else if ((mods & Glfw.GLFW_MOD_CONTROL) != 0) {
+                                undo();
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                //move key
+                switch (key) {
+
+                    case Glfw.GLFW_KEY_LEFT: {
+                        if (textsb.length() > 0 && caretIndex > 0) {
+                            setCaretIndex(caretIndex - 1);
+                        }
+                        break;
+                    }
+                    case Glfw.GLFW_KEY_RIGHT: {
+                        if (textsb.length() > caretIndex) {
+                            setCaretIndex(caretIndex + 1);
+                        }
+                        break;
+                    }
+                    case Glfw.GLFW_KEY_UP: {
+                        int[] pos = getCaretPosFromArea();
+                        if (pos != null) {
+                            if (pos[1] < getY() + lineh[0] * 2) {
+                                setScroll(scroll - lineh[0] / (totalTextHeight - showAreaHeight));
+                            }
+                            int cart = getCaretIndexFromArea(pos[0], pos[1] - (int) lineh[0]);
+                            if (cart >= 0) {
+                                setCaretIndex(cart);
+                            }
+                        } else {
+                            for (int i = area_detail.length - 1; i >= 0; i--) {
+                                if (area_detail[i] != null) {
+                                    int c = area_detail[i][AREA_LINE_START_AT];
+                                    setCaretIndex(c);
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    }
+                    case Glfw.GLFW_KEY_DOWN: {
+                        int[] pos = getCaretPosFromArea();
+                        if (pos != null) {
+                            if (pos[1] > getY() + getH() - lineh[0] * 2) {
+                                setScroll(scroll + lineh[0] / (totalTextHeight - showAreaHeight));
+                            }
+                            int cart = getCaretIndexFromArea(pos[0], pos[1] + (int) lineh[0]);
+                            if (cart >= 0) {
+                                setCaretIndex(cart);
+                            }
+
+                        } else {
+                            for (int i = 0; i < area_detail.length; i++) {
+                                if (area_detail[i] != null) {
+                                    int c = area_detail[i][AREA_LINE_START_AT];
+                                    setCaretIndex(c);
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void touchEvent(int touchid, int phase, int x, int y) {
+            super.touchEvent(touchid, phase, x, y);
+
+            if (touchid != Glfw.GLFW_MOUSE_BUTTON_1) return;
+            if (isInArea(x, y)) {
+                switch (phase) {
+                    case Glfm.GLFMTouchPhaseBegan: {
+                        int caret = getCaretIndexFromArea(x, y);
+                        if (selectMode) {
+                            selectAdjusted = false;
+                            if (Math.abs(caret - selFirst) < Math.abs(caret - selSecond)) {
+                                adjustSelStart = true;
+                            } else {
+                                adjustSelStart = false;
+                            }
+                        } else if (caret >= 0) {
+                            setCaretIndex(caret);
+                        }       //
+                        if (task != null) {
+                            task.cancel();
+                            task = null;
+                        }
+                        break;
+                    }
+                    case Glfm.GLFMTouchPhaseEnded: {
+                        if (selectMode) {
+                            if (selFirst != -1) {
+                                GToolkit.callEditMenu(tbox, x, y);
+                            }
+                        }
+                        break;
+                    }
+                    case Glfm.GLFMTouchPhaseMoved: {
+                        if (selectMode) {
+                            int caret = getCaretIndexFromArea(x, y);
+                            int mid = selFirst + (selSecond - selFirst) / 2;
+                            if (adjustSelStart) {
+                                if (caret < mid) {
+                                    selFirst = caret;
+                                }
+                            } else if (caret > mid) {
+                                selSecond = caret;
+                                setCaretIndex(selSecond);
+                            }
+                            selectAdjusted = true;
+                        }
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+        }
+
+        /**
+         * @param str
+         * @param mods
+         */
+        @Override
+        public void characterEvent(String str, int mods) {
+
+            if (isSelected()) {
+                deleteSelectedText();
+            }
+            System.out.println("input :" + (int) str.charAt(0));
+            insertTextAtCaret(str);
+        }
+
+        @Override
+        public void keyEventGlfm(int key, int action, int mods) {
+
+            if (action == Glfm.GLFMKeyActionPressed || action == Glfm.GLFMKeyActionRepeated) {
+                switch (key) {
+                    case Glfm.GLFMKeyBackspace: {
+                        if (enable) {
+                            if (textsb.length() > 0 && caretIndex > 0) {
+                                if (isSelected()) {
+                                    deleteSelectedText();
+                                } else {
+                                    setCaretIndex(caretIndex - 1);
+                                    deleteTextByIndex(caretIndex);
+                                }
+                            }
+                        }
+                        break;
+                    }
+                    case Glfm.GLFMKeyEnter: {
+                        String txt = getText();
+                        if (enable) {
+                            if (txt != null && txt.length() > 0) {
+                                if (isSelected()) {
+                                    deleteSelectedText();
+                                }
+                                setCaretIndex(caretIndex + 1);
+                                insertTextByIndex(caretIndex, '\n');
+                            }
+                        }
+                        break;
+                    }
+                    case Glfm.GLFMKeyLeft: {
+                        if (textsb.length() > 0 && caretIndex > 0) {
+                            setCaretIndex(caretIndex - 1);
+                        }
+                        break;
+                    }
+                    case Glfm.GLFMKeyRight: {
+                        if (textsb.length() > caretIndex) {
+                            setCaretIndex(caretIndex + 1);
+                        }
+                        break;
+                    }
+                    case Glfm.GLFMKeyUp: {
+                        int[] pos = getCaretPosFromArea();
+                        setScroll(scroll - lineh[0] / (totalTextHeight - showAreaHeight));
+
+                        if (pos != null) {
+                            int cart = getCaretIndexFromArea(pos[0], pos[1] - (int) lineh[0]);
+                            if (cart >= 0) {
+                                setCaretIndex(cart);
+                            }
+                        }
+                        break;
+                    }
+                    case Glfm.GLFMKeyDown: {
+                        int[] pos = getCaretPosFromArea();
+                        setScroll(scroll + lineh[0] / (totalTextHeight - showAreaHeight));
+                        if (pos != null) {
+                            int cart = getCaretIndexFromArea(pos[0], pos[1] + (int) lineh[0]);
+                            if (cart >= 0) {
+                                setCaretIndex(cart);
+                            }
+
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        //每多长时间进行一次惯性动作
+        long inertiaPeriod = 16;
+        //总共做多少次操作
+        long maxMoveCount = 120;
+        //惯性任务
+        TimerTask task;
+
+        @Override
+        public boolean inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
+            if (scroll >= 1 || scroll <= 0) {
+                return false;
+            }
+            double dx = x2 - x1;
+            final double dy = y2 - y1;
+            scrollDelta = 0;
+            //System.out.println("inertia time: " + moveTime + " , count: " + maxMoveCount + " pos: x1,y1,x2,y2 = " + x1 + "," + y1 + "," + x2 + "," + y2);
+            task = new TimerTask() {
+                //惯性速度
+                double speed = dy / (moveTime / inertiaPeriod);
+                //阴力
+                double resistance = speed / maxMoveCount;
+                //
+                int count = 0;
+
+                @Override
+                public void run() {
+                    try {
+                        speed -= resistance;//速度和阴力抵消为0时,退出滑动
+                        //System.out.println("count :" + count + "    inertia :" + speed + "    resistance :" + resistance);
+
+                        float dh = getOutOfShowAreaHeight();
+                        if (dh > 0) {
+                            setScroll(scroll - (float) speed / dh);
+                        }
+                        GForm.flush();
+                        if (count++ > maxMoveCount) {
+                            try {
+                                this.cancel();
+                            } catch (Exception e) {
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            Timer timer = GForm.timer;
+            if (timer != null) {
+                timer.schedule(task, 0, inertiaPeriod);
+            }
+            return true;
+        }
+
+        @Override
+        public boolean scrollEvent(float scrollX, float scrollY, float x, float y) {
+            float dh = getOutOfShowAreaHeight();
+            if (dh > 0) {
+                return setScroll(scroll - (float) scrollY / dh);
+            }
+            return true;
+        }
+
+        @Override
+        public boolean dragEvent(int button, float dx, float dy, float x, float y) {
+            if (super.dragEvent(button, dx, dy, x, y)) {
+                return true;
+            }
+            if (mouseDrag) {
+                return true;
+            }
+            if (selectMode) {
+                return false;
+            }
+            float dh = getOutOfShowAreaHeight();
+            if (dh > 0) {
+                setScroll(scroll - (float) dy / dh);
+            }
+            return true;
+        }
+
+        /**
+         * @param vg
+         * @return
+         */
+        @Override
+        public boolean paint(long vg) {
+            float x = getX();
+            float y = getY();
+            float w = getW();
+            float h = getH();
+            drawTextBox(vg, x, y, w, h);
+            return super.paint(vg);
+        }
+
+        void drawTextBox(long vg, float x, float y, float w, float h) {
+            GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h);
+            nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
+            nvgFontFace(vg, GToolkit.getFontWord());
+            nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+
+            //字高
+            nvgTextMetrics(vg, null, null, lineh);
+            float lineH = lineh[0];
+
+            float[] text_area = new float[]{x + 5f, y + 5f, w - 10f, h - 10f};
+            float dx = text_area[LEFT];
+            float dy = text_area[TOP];
+
+            //sometime the field text_arr and area_detail may set as null by other thread when paint
+            byte[] local_arr = tbox.text_arr;
+            short[][] local_detail = this.area_detail;
+
+            //画文本或提示
+            if ((textsb == null || textsb.length() <= 0) && !boxIsFocus()) {
+                nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
+                nvgTextJni(vg, dx, dy, hint_arr, 0, hint_arr.length);
+            } else {//编辑中
+                int topShowRow = 0;//显示区域第一行的行号
+
+                if (local_arr == null) {//文字被修改过
+                    local_arr = toUtf8(textsb.toString());
+                    tbox.text_arr = local_arr;
+                    showRows = Math.round(text_area[HEIGHT] / lineH) + 2;
+                    showAreaHeight = text_area[HEIGHT];
+
+                    //用于存放屏墓中各行的一些位置信息
+                    local_detail = new short[showRows][];
+                    this.area_detail = local_detail;
+
+                    float[] bond = new float[4];
+                    Nanovg.nvgTextBoxBoundsJni(vg, 0, 0, text_area[WIDTH], local_arr, 0, local_arr.length, bond);
+                    totalRows = Math.round((bond[HEIGHT] - bond[TOP]) / lineH);
+                    totalTextHeight = bond[HEIGHT];
+                }
+                //
+                float dh = scroll * (totalTextHeight - showAreaHeight);
+                dh = dh < 0 ? 0 : dh;
+                dy -= dh;
+                topShowRow = (int) (dh / lineH) - 1;
+                //
+                int posCount = 400;
+                int rowCount = 5;
+                long rowsHandle = nvgCreateNVGtextRow(rowCount);
+                long glyphsHandle = nvgCreateNVGglyphPosition(posCount);
+                int nrows, i, char_count;
+                float caretx = 0;
+
+                Nanovg.nvgScissor(vg, text_area[LEFT], text_area[TOP], text_area[WIDTH], text_area[HEIGHT]);
+                Nanovg.nvgIntersectScissor(vg, tbox.getX(), tbox.getY(), tbox.getW(), tbox.getH());
+                //需要恢复现场
+                try {
+
+                    //取选取的起始和终止位置
+
+                    // The text break API can be used to fill a large buffer of rows,
+                    // or to iterate over the text just few lines (or just one) at a time.
+                    // The "next" variable of the last returned item tells where to continue.
+                    //取UTF8字符串的内存地址，供NATIVE API调用
+                    long ptr = GToolkit.getArrayDataPtr(local_arr);
+                    int start = 0;
+                    int end = local_arr.length - 1;
+
+                    int char_at = 0;
+                    int char_starti, char_endi;
+
+                    int row_index = 0;
+
+                    if (end - start == 0) {
+                        GToolkit.drawCaret(vg, dx, dy, 1, lineH, false);
+                    } else {//通过nvgTextBreakLinesJni进行断行
+
+                        for (int li = 0; li < local_detail.length; li++) local_detail[li] = null;
+                        /**
+                         * nvgTextBreakLinesJni 断行后，包括起点和终点字符在本行
+                         */
+                        while ((nrows = nvgTextBreakLinesJni(vg, local_arr, start, end, text_area[WIDTH], rowsHandle, rowCount)) != 0) {
+
+                            //循环绘制行
+                            for (i = 0; i < nrows; i++) {
+//                        if (area_row_index >= topShowRowLocal && area_row_index < topShowRowLocal + showRows) {
+                                if (dy + lineH >= text_area[TOP] && dy < text_area[TOP] + text_area[HEIGHT]) {
+                                    //取得第i 行的行宽
+                                    float row_width = Nanovg.nvgNVGtextRow_width(rowsHandle, i);
+
+                                    //返回 i 行的起始和结束位置
+                                    int byte_starti = (int) (Nanovg.nvgNVGtextRow_start(rowsHandle, i) - ptr);
+                                    int byte_endi = (int) (Nanovg.nvgNVGtextRow_end(rowsHandle, i) - ptr);
+
+                                    //save herer
+                                    if (char_at == 0) {
+                                        //取得本行之前字符串长度
+                                        CodePointBuilder preStrs = new CodePointBuilder(local_arr, 0, byte_starti, "utf-8");
+                                        char_at = preStrs.length();
+
+                                    }
+                                    //把当前行从字节数组转成字符串
+                                    CodePointBuilder curRowStrs;
+                                    curRowStrs = new CodePointBuilder(local_arr, byte_starti, byte_endi - byte_starti + 1, "utf-8");
+                                    //计算字符串起止位置
+                                    char_starti = char_at;
+                                    char_endi = char_at + curRowStrs.length() - 1;
+
+                                    caretx = dx;
+                                    //取得i行的各个字符的具体位置，结果存入glyphs
+                                    char_count = curRowStrs.length();
+                                    /**
+                                     *  nvgTextGlyphPositionsJni 包含起点字符，但不包含终点字符
+                                     */
+                                    int c_count = nvgTextGlyphPositionsJni(vg, dx, dy, local_arr, byte_starti, byte_endi + 1, glyphsHandle, posCount);
+                                    int curRow = row_index - topShowRow;
+
+                                    if (curRow < 0 || curRow >= local_detail.length) {
+
+                                    } else {
+                                        //把这些信息存下来，用于在点击的时候找到点击了文本的哪个位置
+                                        //前面存固定信息
+                                        local_detail[curRow] = new short[AREA_CHAR_POS_START + char_count];
+                                        local_detail[curRow][AREA_X] = (short) dx;
+                                        local_detail[curRow][AREA_Y] = (short) dy;
+                                        local_detail[curRow][AREA_W] = (short) text_area[WIDTH];
+                                        local_detail[curRow][AREA_H] = (short) lineH;
+                                        local_detail[curRow][AREA_LINE_START_AT] = (short) char_starti;
+                                        local_detail[curRow][AREA_LINE_END_AT] = (short) char_endi;
+                                        local_detail[curRow][AREA_ROW_NO] = (short) row_index;
+                                        //后面把每个char的位置存下来
+                                        for (int j = 0; j < char_count; j++) {
+                                            //取第 j 个字符的X座标
+                                            float x0 = nvgNVGglyphPosition_x(glyphsHandle, j);
+                                            local_detail[curRow][AREA_CHAR_POS_START + j] = (short) x0;
+                                        }
+
+                                        //计算下一行开始
+                                        char_at = char_at + curRowStrs.length();
+
+                                        if (tbox.getFocus() == this) {
+                                            boolean draw = false;
+                                            if (caretIndex > char_starti && caretIndex <= char_endi) {
+                                                caretx = local_detail[curRow][AREA_CHAR_POS_START + (caretIndex - char_starti)];
+                                                draw = true;
+//                                                if (caretIndex != 0 && caretIndex - char_starti == 0) {//光标移到行首时，只显示在上一行行尾
+//                                                    draw = false;
+//                                                }
+                                            } else if (caretIndex == char_endi + 1) {
+                                                caretx = dx + row_width;
+                                                if (caretx >= text_area[LEFT] + text_area[WIDTH]) caretx = text_area[LEFT] + text_area[WIDTH] - 2;
+                                                draw = true;
+                                            } /*else if (char_count == 0) {
+                                                caretx = dx;
+                                                draw = true;
+                                            }*/
+                                            if (draw) {
+                                                curCaretRow = curRow + topShowRow;
+                                                curCaretCol = caretIndex - char_starti;
+                                                GToolkit.drawCaret(vg, caretx, dy, 2, lineH, false);
+                                            }
+                                        }
+
+                                        if (isSelected()) {
+                                            int sel_start = getSelectBegin();
+                                            int sel_end = getSelectEnd();
+                                            float drawSelX = dx, drawSelW = row_width;
+                                            //本行有选择起点
+                                            if (sel_start > char_starti && sel_start <= char_endi) {
+                                                int pos = sel_start - local_detail[curRow][AREA_LINE_START_AT];
+                                                drawSelX = local_detail[curRow][AREA_CHAR_POS_START + pos];
+                                                drawSelW = row_width - (drawSelX - local_detail[curRow][AREA_CHAR_POS_START]);
+                                            }
+                                            //本行有选择终点
+                                            if (sel_end > char_starti && sel_end <= char_endi + 1) {
+                                                int pos = sel_end - local_detail[curRow][AREA_LINE_START_AT];
+                                                if (pos >= char_count) {//the last char
+                                                    drawSelW = local_detail[curRow][AREA_CHAR_POS_START] + row_width - drawSelX;
+                                                } else {
+                                                    drawSelW = local_detail[curRow][AREA_CHAR_POS_START + pos] - drawSelX;
+                                                }
+                                            }
+
+                                            if (sel_start >= char_endi + 1 || sel_end <= char_starti) {
+                                                //此行没有起点和终点
+                                            } else {
+                                                //此行有起点或终点,或在起终点之间的整行
+                                                GToolkit.drawRect(vg, drawSelX, dy, drawSelW, lineH, GToolkit.getStyle().getSelectedColor());
+                                            }
+
+                                        }
+                                        nvgFillColor(vg, getColor());
+                                        nvgTextJni(vg, dx, dy + 1, local_arr, byte_starti, byte_endi);
+                                    }
+                                }
+                                dy += lineH;
+                                row_index++;
+                            }
+
+                            long next = Nanovg.nvgNVGtextRow_next(rowsHandle, nrows - 1);
+                            start = (int) (next - ptr);
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                Nanovg.nvgDeleteNVGtextRow(rowsHandle);
+                Nanovg.nvgDeleteNVGglyphPosition(glyphsHandle);
+
+            }
+            if (showCaretPos) {
+                String info = curCaretRow + ":" + curCaretCol;
+                GToolkit.drawTextLine(vg, getX() + getW() * .5f, getY() + getH() - lineH, info, 12f, getColor(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+            }
         }
     }
-
 }

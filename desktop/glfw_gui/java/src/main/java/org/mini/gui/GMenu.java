@@ -78,7 +78,7 @@ public class GMenu extends GContainer {
         reAlign();
     }
 
-    private void reAlign() {
+    public void reAlign() {
         int size = elements.size();
         if (size > 0) {
             float item_w = getW() / size;

@@ -108,6 +108,7 @@ public class GScrollBar extends GObject {
             } else {
                 draged = false;
                 doAction();
+                doStateChanged(this);
             }
         }
     }
@@ -116,13 +117,9 @@ public class GScrollBar extends GObject {
     public void cursorPosEvent(int x, int y) {
         int rx = (int) (x - getX());
         int ry = (int) (y - getY());
-        if (isInBoundle(line_boundle, rx, ry)) {
-            if (draged) {
-                pos = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
-                doStateChanged(this);
-            }
-        } else {
-            //draged = false;
+        if (draged) {
+            pos = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
+            doStateChanged(this);
         }
     }
 
@@ -145,6 +142,7 @@ public class GScrollBar extends GObject {
                 case Glfm.GLFMTouchPhaseEnded:
                     draged = false;
                     doAction();
+                    doStateChanged(this);
                     break;
                 default:
                     break;

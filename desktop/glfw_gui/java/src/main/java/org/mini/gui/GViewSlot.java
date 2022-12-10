@@ -5,7 +5,6 @@ import org.mini.glfw.Glfw;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.TimerTask;
 
 /**
@@ -78,7 +77,7 @@ public class GViewSlot extends GViewPort {
                 moveMode & (MOVE_LEFT | MOVE_RIGHT) :
                 moveMode & (MOVE_UP | MOVE_DOWN);
         props.add(index, prop);
-        reSize();
+        reAlign();
     }
 
     /**
@@ -94,7 +93,7 @@ public class GViewSlot extends GViewPort {
                 go.setLocation(0, i * getH());
             }
         }
-        super.reSize();
+        super.reAlign();
     }
 
     public void remove(int index) {
@@ -147,6 +146,7 @@ public class GViewSlot extends GViewPort {
             float x = scrollMode == SCROLL_MODE_HORIZONTAL ? -slot * getW() : 0;
             float y = scrollMode == SCROLL_MODE_VERTICAL ? -slot * getH() : 0;
             setInnerLocation(x, y);
+            this.current = slot;
         }
     }
 
@@ -315,7 +315,7 @@ public class GViewSlot extends GViewPort {
         }
         if (button != Glfw.GLFW_MOUSE_BUTTON_1) return false;//only response to left button or the first button
         //System.out.println("drag " + x + "," + y + "," + dx + "," + dy);
-        reSize();
+        reAlign();
         float dw = getOutOfViewWidth();
         float dh = getOutOfViewHeight();
         if (dw == 0 && dh == 0) {

@@ -5,10 +5,7 @@
  */
 package org.mini.gui;
 
-import org.mini.gui.event.GActionListener;
-import org.mini.gui.event.GFlyListener;
-import org.mini.gui.event.GFocusChangeListener;
-import org.mini.gui.event.GStateChangeListener;
+import org.mini.gui.event.*;
 import org.mini.gui.gscript.Interpreter;
 import org.mini.nanovg.Nanovg;
 
@@ -70,6 +67,8 @@ abstract public class GObject implements GAttachable {
     protected GStateChangeListener stateChangeListener;
 
     protected GFlyListener flyListener;
+
+    protected GSizeChangeListener sizeChangeListener;
 
     protected boolean visible = true;
 
@@ -253,17 +252,12 @@ abstract public class GObject implements GAttachable {
     public void setLocation(float x, float y) {
         boundle[LEFT] = x;
         boundle[TOP] = y;
-        if (parent != null) {
-            parent.reSize();
-        }
     }
 
     public void setSize(float w, float h) {
         boundle[WIDTH] = w;
         boundle[HEIGHT] = h;
-        if (parent != null) {
-            parent.reSize();
-        }
+        doSizeChanged(w, h);
     }
 
     public float getLocationLeft() {
@@ -299,9 +293,6 @@ abstract public class GObject implements GAttachable {
     public void move(float dx, float dy) {
         boundle[LEFT] += dx;
         boundle[TOP] += dy;
-        if (parent != null) {
-            parent.reSize();
-        }
     }
 
     /**
@@ -537,6 +528,19 @@ abstract public class GObject implements GAttachable {
         }
     }
 
+    void doSizeChanged(float dw, float dh) {
+        if (sizeChangeListener != null) {
+            sizeChangeListener.onSizeChange((int) dw, (int) dh);
+        }
+    }
+
+    public GSizeChangeListener getSizeChangeListener() {
+        return sizeChangeListener;
+    }
+
+    public void setSizeChangeListener(GSizeChangeListener sizeChangeListener) {
+        this.sizeChangeListener = sizeChangeListener;
+    }
 
     public GStateChangeListener getStateChangeListener() {
         return stateChangeListener;

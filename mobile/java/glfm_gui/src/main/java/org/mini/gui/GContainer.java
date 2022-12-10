@@ -366,7 +366,7 @@ abstract public class GContainer extends GObject {
         }
     }
 
-    public void reSize() {
+    public void reAlign() {
 
     }
 

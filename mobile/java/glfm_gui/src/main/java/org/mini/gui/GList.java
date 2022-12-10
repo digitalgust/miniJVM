@@ -31,6 +31,8 @@ import static org.mini.nanovg.Nanovg.*;
 public class GList extends GContainer {
     public static final int MODE_MULTI_SHOW = 1, MODE_SINGLE_SHOW = 2;
     public static final int MODE_MULTI_SELECT = 4, MODE_SINGLE_SELECT = 8;
+    public static final float ITEM_HEIGH_DEFAULT = 36f;
+    public static final float ITEM_IMG_H_DEFAULT = 28f;
 
     protected String preicon;
     protected byte[] preicon_arr = toUtf8(ICON_CHEVRON_RIGHT);
@@ -44,8 +46,8 @@ public class GList extends GContainer {
     protected GScrollBar scrollBar;
     GListPopWindow popWin;
     protected float[] lineh = {0f};
-    protected float list_image_size = 28;
-    protected float list_item_heigh = 36;
+    protected float list_image_size = ITEM_IMG_H_DEFAULT;
+    protected float list_item_heigh = ITEM_HEIGH_DEFAULT;
     protected float list_rows_max = 7;
     protected float list_rows_min = 3;
     protected float pad = 2;
@@ -632,7 +634,7 @@ public class GList extends GContainer {
     class GListPopWindow extends GContainer {
         public GListPopWindow(GForm form) {
             super(form);
-            layer = LAYER_MENU_OR_POPUP;
+//            layer = LAYER_MENU_OR_POPUP;
         }
 
         @Override
@@ -690,7 +692,7 @@ public class GList extends GContainer {
         @Override
         public void onStateChange(GObject gobj) {
             popView.setScrollY(((GScrollBar) gobj).getPos());
-            sizeAdjust();
+            //sizeAdjust();
             GForm.flush();
         }
 

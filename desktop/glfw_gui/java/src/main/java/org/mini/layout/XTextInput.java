@@ -11,6 +11,7 @@ public class XTextInput
     protected boolean multiLine = false;
     protected boolean edit = true;
     protected boolean password = false;
+    protected boolean scrollbar = false;
     protected int style = GTextField.BOX_STYLE_EDIT;
     protected String hint = "";
     protected String union = null;
@@ -42,6 +43,8 @@ public class XTextInput
             union = attValue;
         } else if (attName.equals("password")) {
             password = "0".equals(attValue) ? false : true;
+        } else if (attName.equals("scroll")) {
+            scrollbar = "0".equals(attValue) ? false : true;
         }
     }
 
@@ -98,6 +101,7 @@ public class XTextInput
             initGuiMore();
             textInput.setEnable(enable);
             textInput.setEditable(edit);
+            textInput.setScrollBar(scrollbar);
         } else {
             textInput.setLocation(x, y);
             textInput.setSize(width, height);

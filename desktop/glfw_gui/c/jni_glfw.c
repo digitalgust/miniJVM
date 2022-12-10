@@ -87,7 +87,7 @@ static void _callback_drop(GLFWwindow *window, s32 count, const c8 **cstrs) {
         env->push_int(refers.runtime->stack, count);
         c8 *STR_JAVA_LANG_STRING = "java/lang/String";
         Utf8String *cls = env->utf8_create_part_c(STR_JAVA_LANG_STRING, 0, strlen(STR_JAVA_LANG_STRING));
-        Instance *jstrs = env->jarray_create_by_type_name(refers.runtime, count, cls);
+        Instance *jstrs = env->jarray_create_by_type_name(refers.runtime, count, cls, NULL);
         env->utf8_destory(cls);
         s32 i;
         for (i = 0; i < count; i++) {

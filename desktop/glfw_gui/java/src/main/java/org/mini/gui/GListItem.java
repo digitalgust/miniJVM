@@ -16,7 +16,7 @@ import static org.mini.nanovg.Nanovg.*;
 /**
  * @author Gust
  */
-public class GListItem extends GObject {
+public class GListItem extends GContainer {
 
     protected byte[] preicon_arr;
     protected String preicon;

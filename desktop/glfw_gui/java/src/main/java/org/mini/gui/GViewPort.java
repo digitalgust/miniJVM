@@ -32,21 +32,14 @@ public class GViewPort extends GContainer {
     public void setLocation(float x, float y) {
         viewBoundle[LEFT] = x;
         viewBoundle[TOP] = y;
-        if (parent != null) {
-            parent.reSize();
-        }
-//        setInnerLocation(x, y);
+        reAlign();
     }
 
     @Override
     public void setSize(float w, float h) {
         viewBoundle[WIDTH] = w;
         viewBoundle[HEIGHT] = h;
-        if (parent != null) {
-            parent.reSize();
-        }
-//        setInnerSize(w, h);
-        reSize();
+        reAlign();
     }
 
     @Override
@@ -131,25 +124,22 @@ public class GViewPort extends GContainer {
         boundle[TOP] += dy;
         viewBoundle[LEFT] += dx;
         viewBoundle[TOP] += dy;
-        if (parent != null) {
-            parent.reSize();
-        }
     }
 
     @Override
     public void onAdd(GObject obj) {
         super.onAdd(obj);
-        reSize();
+        reAlign();
     }
 
     @Override
     public void onRemove(GObject obj) {
         super.onRemove(obj);
-        reSize();
+        reAlign();
     }
 
     @Override
-    public void reSize() {
+    public void reAlign() {
         float posY = scrolly * (maxY - minY);
         float posX = scrollx * (maxX - minX);
 

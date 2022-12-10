@@ -2673,11 +2673,16 @@ int nvgTextBreakLines(NVGcontext* ctx, const char* string, const char* end, floa
 				type = NVG_SPACE;
 				break;
 			case 10:		// \n
-				type = pcodepoint == 13 ? NVG_SPACE : NVG_NEWLINE;
+//				type = pcodepoint == 13 ? NVG_SPACE : NVG_NEWLINE;
+                type = NVG_NEWLINE;
 				break;
-			case 13:		// \r
-				type = pcodepoint == 10 ? NVG_SPACE : NVG_NEWLINE;
+			case 13:		// \n
+//				type = pcodepoint == 13 ? NVG_SPACE : NVG_NEWLINE;
+                type = NVG_SPACE;
 				break;
+//			case 13:		// \r
+//				type = pcodepoint == 10 ? NVG_SPACE : NVG_NEWLINE;
+//				break;
 			case 0x0085:	// NEL
 				type = NVG_NEWLINE;
 				break;
@@ -2714,97 +2719,107 @@ int nvgTextBreakLines(NVGcontext* ctx, const char* string, const char* end, floa
 			rowEnd = NULL;
 			rowWidth = 0;
 			rowMinX = rowMaxX = 0;
-		}
+		} else {
 
-			if (rowStart == NULL) {
-				// Skip white space until the beginning of the line
-				//if (type == NVG_CHAR || type == NVG_CJK_CHAR) {
-					// The current char is the row so far
-					rowStartX = iter.x;
-					rowStart = iter.str;
-					rowEnd = iter.next;
-					rowWidth = iter.nextx - rowStartX;
-					rowMinX = q.x0 - rowStartX;
-					rowMaxX = q.x1 - rowStartX;
-					wordStart = iter.str;
-					wordStartX = iter.x;
-					wordMinX = q.x0 - rowStartX;
-					// Set null break point
-					breakEnd = rowStart;
-					breakWidth = 0.0;
-					breakMaxX = 0.0;
-				//}
-			} else {
-				float nextWidth = iter.nextx - rowStartX;
+            if (rowStart == NULL) {
+                // Skip white space until the beginning of the line
+                //if (type == NVG_CHAR || type == NVG_CJK_CHAR) {
+                // The current char is the row so far
+                rowStartX = iter.x;
+                rowStart = iter.str;
+                rowEnd = iter.next;
+                rowWidth = iter.nextx - rowStartX;
+                rowMinX = q.x0 - rowStartX;
+                rowMaxX = q.x1 - rowStartX;
+                wordStart = iter.str;
+                wordStartX = iter.x;
+                wordMinX = q.x0 - rowStartX;
+                // Set null break point
+                breakEnd = rowStart;
+                breakWidth = 0.0;
+                breakMaxX = 0.0;
+                //}
+            } else {
+                float nextWidth = iter.nextx - rowStartX;
 
-				// track last non-white space character
-				if (type == NVG_CHAR || type == NVG_CJK_CHAR || type == NVG_SPACE || type == NVG_NEWLINE) {
-					rowEnd = iter.next;
-					rowWidth = iter.nextx - rowStartX;
-					rowMaxX = q.x1 - rowStartX;
-				}
-				// track last end of a word
-				if ((type == NVG_SPACE) || type == NVG_CJK_CHAR) {
-					breakEnd = iter.next;
-					breakWidth = iter.nextx - rowStartX;
-					breakMaxX = q.x1 - rowStartX;
-				}
-				// track last beginning of a word
-				if ((ptype == NVG_SPACE && (type == NVG_CHAR || type == NVG_CJK_CHAR)) || type == NVG_CJK_CHAR) {
-					wordStart = iter.str;
-					wordStartX = iter.x;
-					wordMinX = q.x0 - rowStartX;
-				}
+                // track last non-white space character
+                if (type == NVG_CHAR || type == NVG_CJK_CHAR || type == NVG_SPACE || type == NVG_NEWLINE) {
+                    rowEnd = iter.next;
+                    rowWidth = iter.nextx - rowStartX;
+                    rowMaxX = q.x1 - rowStartX;
+                }
+                // track last end of a word
+                if ((type == NVG_SPACE) || type == NVG_CJK_CHAR) {
+                    breakEnd = iter.next;
+                    breakWidth = iter.nextx - rowStartX;
+                    breakMaxX = q.x1 - rowStartX;
+                }
+                // track last beginning of a word
+                if ((ptype == NVG_SPACE && (type == NVG_CHAR || type == NVG_CJK_CHAR)) || type == NVG_CJK_CHAR) {
+                    wordStart = iter.str;
+                    wordStartX = iter.x;
+                    wordMinX = q.x0 - rowStartX;
+                }
 
-				// Break to new line when a character is beyond break width.
-				if (nextWidth > breakRowWidth) {
-					// The run length is too long, need to break to new line.
-					if (breakEnd == rowStart) {
-						// The current word is longer than the row length, just break it from here.
-						rows[nrows].start = rowStart;
-						rows[nrows].end = iter.str;
-						rows[nrows].width = rowWidth * invscale;
-						rows[nrows].minx = rowMinX * invscale;
-						rows[nrows].maxx = rowMaxX * invscale;
-						rows[nrows].next = iter.str;
-						nrows++;
-						if (nrows >= maxRows)
-							return nrows;
-						rowStartX = iter.x;
-						rowStart = iter.str;
-						rowEnd = iter.next;
-						rowWidth = iter.nextx - rowStartX;
-						rowMinX = q.x0 - rowStartX;
-						rowMaxX = q.x1 - rowStartX;
-						wordStart = iter.str;
-						wordStartX = iter.x;
-						wordMinX = q.x0 - rowStartX;
-					} else {
-						// Break the line from the end of the last word, and start new line from the beginning of the new.
-						rows[nrows].start = rowStart;
-						rows[nrows].end = wordStart;
-						rows[nrows].width = breakWidth * invscale;
-						rows[nrows].minx = rowMinX * invscale;
-						rows[nrows].maxx = breakMaxX * invscale;
-						rows[nrows].next = wordStart;
-						nrows++;
-						if (nrows >= maxRows)
-							return nrows;
-						// Update row
-						rowStartX = wordStartX;
-						rowStart = wordStart;
-						rowEnd = iter.next;
-						rowWidth = iter.nextx - rowStartX;
-						rowMinX = wordMinX;
-						rowMaxX = q.x1 - rowStartX;
-					}
-					// Set null break point
-					breakEnd = rowStart;
-					breakWidth = 0.0;
-					breakMaxX = 0.0;
-				}
-			}
-		
+                // Break to new line when a character is beyond break width.
+                if (nextWidth > breakRowWidth) {
+                    // The run length is too long, need to break to new line.
+                    if (breakEnd == rowStart) {
+                        // The current word is longer than the row length, just break it from here.
+                        rows[nrows].start = rowStart;
+                        rows[nrows].end = iter.str;
+                        rows[nrows].width = rowWidth * invscale;
+                        rows[nrows].minx = rowMinX * invscale;
+                        rows[nrows].maxx = rowMaxX * invscale;
+                        rows[nrows].next = iter.next; //gust new row charAt,dont same as rows[].end
+                        nrows++;
+                        if (nrows >= maxRows)
+                            return nrows;
+//                        rowStartX = iter.x;
+//                        rowStart = iter.str;
+//                        rowEnd = iter.next;
+//                        rowWidth = iter.nextx - rowStartX;
+//                        rowMinX = q.x0 - rowStartX;
+//                        rowMaxX = q.x1 - rowStartX;
+//                        wordStart = iter.str;
+//                        wordStartX = iter.x;
+//                        wordMinX = q.x0 - rowStartX;
+
+                        // Set null break point            //gust set as a new row begin, ignore cur char
+                        breakEnd = rowStart;
+                        breakWidth = 0.0;
+                        breakMaxX = 0.0;
+                        // Indicate to skip the white space at the beginning of the row.
+                        rowStart = NULL;
+                        rowEnd = NULL;
+                        rowWidth = 0;
+                        rowMinX = rowMaxX = 0;
+                    } else {
+                        // Break the line from the end of the last word, and start new line from the beginning of the new.
+                        rows[nrows].start = rowStart;
+                        rows[nrows].end = wordStart - 1;//gust modify contains end position char
+                        rows[nrows].width = breakWidth * invscale;
+                        rows[nrows].minx = rowMinX * invscale;
+                        rows[nrows].maxx = breakMaxX * invscale;
+                        rows[nrows].next = wordStart;
+                        nrows++;
+                        if (nrows >= maxRows)
+                            return nrows;
+                        // Update row
+                        rowStartX = wordStartX;
+                        rowStart = wordStart;
+                        rowEnd = iter.next;
+                        rowWidth = iter.nextx - rowStartX;
+                        rowMinX = wordMinX;
+                        rowMaxX = q.x1 - rowStartX;
+                    }
+                    // Set null break point
+                    breakEnd = rowStart;
+                    breakWidth = 0.0;
+                    breakMaxX = 0.0;
+                }
+            }
+        }
 
 
 		pcodepoint = iter.codepoint;

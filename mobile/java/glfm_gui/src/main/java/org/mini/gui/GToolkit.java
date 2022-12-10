@@ -543,7 +543,7 @@ public class GToolkit {
      * @return
      */
     static public GFrame getConfirmFrame(GForm form, String title, String msg, String left, GActionListener leftListener, String right, GActionListener rightListener) {
-        return getConfirmFrame(form, title, msg, left, leftListener, right, rightListener, 300, form.getH() * .6f);
+        return getConfirmFrame(form, title, msg, left, leftListener, right, rightListener, 300f, 200f);
     }
 
     static public GFrame getConfirmFrame(GForm form, String title, String msg, String left, GActionListener leftListener, String right, GActionListener rightListener, float width, float height) {

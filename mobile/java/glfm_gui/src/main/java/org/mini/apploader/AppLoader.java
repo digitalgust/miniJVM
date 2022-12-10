@@ -8,14 +8,13 @@ package org.mini.apploader;
 import org.mini.gui.*;
 import org.mini.zip.Zip;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * @author gust
@@ -33,6 +32,8 @@ public class AppLoader {
     static final String KEY_DOWNLOADURL = "downloadurl";
     static final String KEY_LANGUAGE = "language";
     static final String KEY_GUISTYLE = "guistyle";
+    static final String KEY_HOMEICON_X = "homeiconx";
+    static final String KEY_HOMEICON_Y = "homeicony";
     static Properties appinfo = new Properties();
     static Properties applist = new Properties();
 
@@ -190,6 +191,37 @@ public class AppLoader {
         saveProp(APP_INFO_FILE, appinfo);
     }
 
+
+    public static int getHomeIconX() {
+        String langstr = appinfo.getProperty(KEY_HOMEICON_X);
+        int v = 0;//
+        try {
+            v = Integer.parseInt(langstr.trim());
+        } catch (Exception e) {
+        }
+        return v;
+    }
+
+    public static void setHomeIconX(int x) {
+        appinfo.put(KEY_HOMEICON_X, "" + x);
+        saveProp(APP_INFO_FILE, appinfo);
+    }
+
+    public static int getHomeIconY() {
+        String langstr = appinfo.getProperty(KEY_HOMEICON_Y);
+        int v = 0;//
+        try {
+            v = Integer.parseInt(langstr.trim());
+        } catch (Exception e) {
+        }
+        return v;
+    }
+
+    public static void setHomeIconY(int y) {
+        appinfo.put(KEY_HOMEICON_Y, "" + y);
+        saveProp(APP_INFO_FILE, appinfo);
+    }
+
     public static boolean isJarExists(String jarName) {
         File f = new File(getAppJarPath(jarName));
         return f.exists();
@@ -201,7 +233,23 @@ public class AppLoader {
             if (className != null && className.length() > 0) {
                 //System.out.println("className:" + className);
 
-                StandalongGuiAppClassLoader sgacl = new StandalongGuiAppClassLoader(getAppJarPath(jarName), ClassLoader.getSystemClassLoader());
+                String extractedJarsPath = getAppDataPath(jarName) + "/lib";
+                File[] files = new File(extractedJarsPath).listFiles(new FileFilter() {
+                    @Override
+                    public boolean accept(File file) {
+                        return file.getName().endsWith(".jar");
+                    }
+                });
+                int filesCnt = (files != null ? files.length : 0);
+                String[] paths = new String[filesCnt + 1];
+                if (filesCnt > 0) {
+                    for (int i = 0; i < filesCnt; i++) {
+                        paths[i] = files[i].getAbsolutePath();
+                    }
+                }
+                paths[paths.length - 1] = getAppJarPath(jarName);
+
+                StandalongGuiAppClassLoader sgacl = new StandalongGuiAppClassLoader(paths, ClassLoader.getSystemClassLoader());
                 Thread.currentThread().setContextClassLoader(sgacl);
                 Class c = sgacl.loadClass(className);
 
@@ -391,9 +439,32 @@ public class AppLoader {
                 fos.close();
                 saveProp(APP_INFO_FILE, appinfo);
                 saveProp(APP_LIST_FILE, applist);
+                extractFatJar(jarName);
             }
         } catch (Exception exception) {
             exception.printStackTrace();
+        }
+    }
+
+    static private void extractFatJar(String jarName) {
+        try {
+            String fatPath = getAppJarPath(jarName);
+            String[] fns = Zip.listFiles(fatPath);
+            String libdir = getAppDataPath(jarName) + "/lib";
+            File libfile = new File(libdir);
+            libfile.mkdirs();
+            for (int i = 0; i < fns.length; i++) {
+                String name = fns[i];
+                if (name.startsWith("lib/") && name.endsWith(".jar")) {
+                    byte[] bytes = Zip.getEntry(fatPath, name);
+                    String exjar = libdir + "/" + name.substring(name.lastIndexOf('/'));
+                    FileOutputStream fos = new FileOutputStream(exjar);
+                    fos.write(bytes);
+                    fos.close();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

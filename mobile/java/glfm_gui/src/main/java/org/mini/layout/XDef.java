@@ -22,6 +22,7 @@ public class XDef {
 
     public static final int DEFAULT_COMPONENT_HEIGHT = 30;
     public static final int DEFAULT_LIST_HEIGHT = 40;
+    public static final int DEFAULT_SCROLLBAR_LENGTH = 80;
     public static int DEFAULT_FONT_SIZE;
 
     static {

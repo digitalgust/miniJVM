@@ -9,9 +9,7 @@ import org.mini.glfm.Glfm;
 import org.mini.gui.*;
 import org.mini.layout.*;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -115,6 +113,9 @@ public class AppManager extends GApplication {
     GImage runningImg = GImage.createImageFromJar("/res/ui/green.png");
 
     GTextBox logBox;
+    static PrintStream systemOutDefault = System.out;
+    static PrintStream systemErrDefault = System.err;
+    static InputStream systemInDefault = System.in;
 
     //the app would launch after Orientation set success
     Runnable delayLauncher = null;
@@ -134,6 +135,9 @@ public class AppManager extends GApplication {
 //        }
         if (GCallBack.getInstance().getApplication() == this) return;
 
+        System.setOut(systemOutDefault);
+        System.setErr(systemErrDefault);
+        System.setIn(systemInDefault);
         regStrings();
         GLanguage.setCurLang(AppLoader.getDefaultLang());
         GCallBack.getInstance().setApplication(this);
@@ -540,7 +544,7 @@ public class AppManager extends GApplication {
         //re set image
         GImageItem icon = contentView.findByName(APP_ICON_ITEM);
         if (curSelectedItem != null) icon.setImg(curSelectedItem.getImg());
-        contentView.reSize();
+        contentView.reAlign();
     }
 
     void mainPanelShowLeft() {

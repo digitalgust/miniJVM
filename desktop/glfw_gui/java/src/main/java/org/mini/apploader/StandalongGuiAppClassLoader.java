@@ -2,15 +2,15 @@ package org.mini.apploader;
 
 import org.mini.reflect.Launcher;
 
-import java.io.File;
 import java.net.URL;
 
 public class StandalongGuiAppClassLoader extends ClassLoader {
-    String[] jarPath = new String[1];
+    String[] jarPath;
 
-    public StandalongGuiAppClassLoader(String jarPath, ClassLoader parentCL) {
+    public StandalongGuiAppClassLoader(String[] jarPath, ClassLoader parentCL) {
         super(parentCL);
-        this.jarPath[0] = jarPath;
+        this.jarPath = jarPath;
+
     }
 
 

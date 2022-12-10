@@ -170,11 +170,17 @@ public class GlfmCallBackImpl extends GCallBack {
             if (gapp == null) {
                 return;
             }
-            Thread.currentThread().setContextClassLoader(gapp.getClass().getClassLoader());//there were be an app pause and the other app setup
-            gform = gapp.getForm();
-            if (!gform.isInited()) {
-                gform.__init();
-                gapp.startApp();
+            try {
+                Thread.currentThread().setContextClassLoader(gapp.getClass().getClassLoader());//there were be an app pause and the other app setup
+                gform = gapp.getForm();
+                if (!gform.isInited()) {
+                    gform.__init();
+                    gapp.startApp();
+                }
+            } catch (Exception e) {
+                gapp.closeApp();
+                GForm.addMessage("Init error : " + e.getMessage());
+                e.printStackTrace();
             }
             if (GForm.flushReq()) {
                 if (gform != null) {
@@ -347,7 +353,7 @@ public class GlfmCallBackImpl extends GCallBack {
         //System.out.println(width + "," + height + "," + pxRatio);
         //System.out.println(winWidth + "," + winHeight);
         gform.setSize(winWidth, winHeight);
-        gform.onSizeChange(winWidth, winHeight);
+        gform.onDeviceSizeChanged(winWidth, winHeight);
         gform.flush();
     }
 
@@ -392,7 +398,7 @@ public class GlfmCallBackImpl extends GCallBack {
         if (gform == null) {
             return;
         }
-        gform.onNotify(key, val);
+        gform.onDeviceNotify(key, val);
     }
 
     @Override
