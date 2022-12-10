@@ -27,6 +27,9 @@
 package java.io;
 
 import org.mini.fs.FileSystem;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -1197,4 +1200,26 @@ public class File implements Comparable {
      */
     private static final long serialVersionUID = 301077366599181567L;
 
+    private static String slashify(String path, boolean isDirectory) {
+        String p = path;
+        if (File.separatorChar != '/')
+            p = p.replace(File.separatorChar, '/');
+        if (!p.startsWith("/"))
+            p = "/" + p;
+        if (!p.endsWith("/") && isDirectory)
+            p = p + "/";
+        return p;
+    }
+
+    public URI toURI() {
+        try {
+            File f = getAbsoluteFile();
+            String sp = slashify(f.getPath(), f.isDirectory());
+            if (sp.startsWith("//"))
+                sp = "//" + sp;
+            return new URI("file", null, sp, null);
+        } catch (URISyntaxException x) {
+            throw new Error(x);         // Can't happen
+        }
+    }
 }

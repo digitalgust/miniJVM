@@ -15,7 +15,6 @@ public class ZipEntry {
     String name;
     byte[] contents;
     String comment;
-    boolean isDir;
     //使用指定名称创建新的 ZIP 条目。 
 
     public ZipEntry(String name) {
@@ -26,7 +25,6 @@ public class ZipEntry {
     public ZipEntry(ZipEntry e) {
         this.name = e.name;
         this.contents = e.contents;
-        this.isDir = e.isDir;
     }
 
     void load(String zipFile) {
@@ -82,7 +80,7 @@ public class ZipEntry {
 
     //如果为目录条目，则返回 true。 
     public boolean isDirectory() {
-        return isDir;
+        return name.endsWith("/");
     }
     //为条目设置可选的注释字符串。 
 

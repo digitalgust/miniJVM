@@ -1526,4 +1526,16 @@ public final class Character implements Comparable<Character> {
         return toTitleCase((char) ch);
     }
 
+    public static char forDigit(int digit, int radix) {
+        if ((digit >= radix) || (digit < 0)) {
+            return '\0';
+        }
+        if ((radix < MIN_RADIX) || (radix > MAX_RADIX)) {
+            return '\0';
+        }
+        if (digit < 10) {
+            return (char) ('0' + digit);
+        }
+        return (char) ('a' - 10 + digit);
+    }
 }

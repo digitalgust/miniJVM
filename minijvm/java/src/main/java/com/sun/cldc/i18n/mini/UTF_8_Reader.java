@@ -159,7 +159,14 @@ public class UTF_8_Reader extends com.sun.cldc.i18n.StreamReader {
         int b1, b2, b3, b4, b5, b6;
         int codepoint;
 
-        while ((b1 = in.read()) >= 0) {
+        while (true) {
+            b1 = in.read();
+            if (b1 < 0) {
+                if (outputSize == 0) {
+                    outputSize = -1;
+                }
+                break;
+            }
             int utfbytes = enc_get_utf8_size((byte) b1);
             codepoint = 0;
             switch (utfbytes) {

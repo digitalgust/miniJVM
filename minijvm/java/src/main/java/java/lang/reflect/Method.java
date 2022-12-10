@@ -69,7 +69,7 @@ public class Method<T> extends AccessibleObject implements Member {
 
     public Object invoke(Object obj, Object... args)
             throws IllegalAccessException,
-            IllegalArgumentException {
+            IllegalArgumentException, InvocationTargetException {
         return refMethod.invoke(obj, args);
     }
 
@@ -204,5 +204,9 @@ public class Method<T> extends AccessibleObject implements Member {
 
     public Type getGenericReturnType() {
         return refMethod.getGenericReturnType();
+    }
+
+    public Class<?>[] getExceptionTypes() {
+        return refMethod.getExceptionTypes();
     }
 }

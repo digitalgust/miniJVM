@@ -10,7 +10,9 @@
 
 package java.net;
 
-public class MalformedURLException extends Exception {
+import java.io.IOException;
+
+public class MalformedURLException extends IOException {
   public MalformedURLException(String message) {
     super(message);
   }

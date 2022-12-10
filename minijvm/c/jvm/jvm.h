@@ -34,7 +34,6 @@ extern "C" {
 #define _JVM_JDWP_ENABLE 01
 
 
-
 #define GARBAGE_OVERLOAD_DEFAULT 90  // overload of max heap size ,will active garbage collection
 #define GARBAGE_PERIOD_MS_DEFAULT 10 * 60 * 1000
 #define MAX_HEAP_SIZE_DEFAULT  200 * 1024 * 1024
@@ -962,6 +961,7 @@ struct _MethodInfo {
     s16 para_slots;
     s16 para_count_with_this;
     s16 return_slots;
+    s16 exceptions_index_in_attributes;
     //
     u16 access_flags;
     u16 name_index;
@@ -1687,7 +1687,7 @@ struct _JNIENV {
 
     void (*referarr_2_jlongarr)(ReferArr *ref_arr, Instance *jlong_arr);
 
-    Instance *(*jarray_create_by_type_name)(Runtime *runtime, s32 count, Utf8String *type);
+    Instance *(*jarray_create_by_type_name)(Runtime *runtime, s32 count, Utf8String *type, Instance *jloader);
 
     Instance *(*jarray_create_by_type_index)(Runtime *runtime, s32 count, s32 typeIdx);
 

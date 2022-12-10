@@ -65,7 +65,7 @@ s32 org_mini_reflect_vm_RefNative_getClasses(Runtime *runtime, JClass *clazz) {
     {
         s32 i, count;
         count = classes_loaded_count_unsafe(jvm);
-        jarr = jarray_create_by_type_name(runtime, count, ustr);
+        jarr = jarray_create_by_type_name(runtime, count, ustr, NULL);
         for (i = 0; i < jvm->classloaders->length; i++) {
             PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
             HashtableIterator hti;
@@ -287,7 +287,7 @@ s32 org_mini_reflect_ReflectArray_newArray(Runtime *runtime, JClass *clazz) {
         Instance *arr = jarray_create_by_type_index(runtime, count, typeIndex);
         push_ref(runtime->stack, arr);
     } else {
-        Instance *arr = jarray_create_by_type_name(runtime, count, cl->name);
+        Instance *arr = jarray_create_by_type_name(runtime, count, cl->name, cl->jloader);
         push_ref(runtime->stack, arr);
     }
 
@@ -344,7 +344,7 @@ void _list_iter_getthread(ArrayListValue value, void *para) {
 s32 org_mini_reflect_vm_RefNative_getThreads(Runtime *runtime, JClass *clazz) {
 //    garbage_thread_lock();
     Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_THREAD);
-    Instance *jarr = jarray_create_by_type_name(runtime, runtime->jvm->thread_list->length, ustr);
+    Instance *jarr = jarray_create_by_type_name(runtime, runtime->jvm->thread_list->length, ustr, NULL);
     utf8_destory(ustr);
 
     struct _ListGetThreadPara para;
@@ -829,7 +829,7 @@ s32 org_mini_reflect_ReflectMethod_mapMethod(Runtime *runtime, JClass *clazz) {
                 if (ptr) {
                     Utf8String *ustr = utf8_create_c(table_type);
                     utf8_substring(ustr, 1, ustr->length);
-                    Instance *jarr = jarray_create_by_type_name(runtime, ca->local_var_table_length, ustr);
+                    Instance *jarr = jarray_create_by_type_name(runtime, ca->local_var_table_length, ustr, NULL);
                     setFieldRefer(ptr, jarr);
                     utf8_destory(ustr);
                     for (i = 0; i < ca->local_var_table_length; i++) {
@@ -961,7 +961,7 @@ s32 org_mini_reflect_StackFrame_mapRuntime(Runtime *runtime, JClass *clazz) {
     int pos = 0;
     Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, pos++);
     Long2Double l2d;
-    l2d.l = l2d.l = localvar_getLong(runtime->localvar, pos);
+    l2d.l = localvar_getLong(runtime->localvar, pos);
     pos += 2;
     Runtime *target = (__refer) (intptr_t) l2d.l;
     if (ins && target) {
@@ -1012,6 +1012,33 @@ s32 org_mini_reflect_ReflectMethod_findMethod0(Runtime *runtime, JClass *clazz) 
     utf8_destory(ustr_methodName);
     utf8_destory(ustr_methodDesc);
     push_long(runtime->stack, (s64) (intptr_t) mi);
+    return 0;
+}
+
+s32 org_mini_reflect_ReflectMethod_getExceptionTypes0(Runtime *runtime, JClass *clazz) {
+    int pos = 0;
+    Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, pos++);
+    Long2Double l2d;
+    l2d.l = localvar_getLong(runtime->localvar, pos);
+    pos += 2;
+    MethodInfo *m = l2d.r;
+    JClass *cl = m->_this_class;
+    u16 *info = (u16 *) m->attributes[m->exceptions_index_in_attributes].info;
+    s32 len = info[0];
+    Utf8String *ustr = utf8_create_c(STR_INS_JAVA_LANG_CLASS);
+    Instance *jarr = jarray_create_by_type_name(runtime, len, ustr, cl->jloader);
+    utf8_destory(ustr);
+
+    s32 i;
+    for (i = 0; i < len; i++) {
+        ConstantClassRef *ccr = class_get_constant_classref(cl, info[i + 1]);
+        JClass *other = classes_load_get(cl->jloader, class_get_constant_utf8(cl, ccr->stringIndex)->utfstr, runtime);
+        if (other) {
+            Instance *cins = insOfJavaLangClass_create_get(runtime, other);
+            jarray_set_field(jarr, i, (s64) (intptr_t) cins);
+        }
+    }
+    push_ref(runtime->stack, jarr);
     return 0;
 }
 
@@ -1483,6 +1510,7 @@ static java_native_method METHODS_REFLECT_TABLE[] = {
         {"org/mini/reflect/ReflectField",  "setFieldVal",              "(Ljava/lang/Object;JJ)V",                                                          org_mini_reflect_ReflectField_setFieldVal},
         {"org/mini/reflect/ReflectMethod", "mapMethod",                "(J)V",                                                                             org_mini_reflect_ReflectMethod_mapMethod},
         {"org/mini/reflect/ReflectMethod", "invokeMethod",             "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;",                        org_mini_reflect_ReflectMethod_invokeMethod},
+        {"org/mini/reflect/ReflectMethod", "getExceptionTypes0",       "(J)[Ljava/lang/Class;",                                                            org_mini_reflect_ReflectMethod_getExceptionTypes0},
         {"org/mini/reflect/ReflectMethod", "findMethod0",              "(Ljava/lang/ClassLoader;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)J", org_mini_reflect_ReflectMethod_findMethod0},
         {"org/mini/reflect/StackFrame",    "mapRuntime",               "(J)V",                                                                             org_mini_reflect_StackFrame_mapRuntime},
         {"org/mini/reflect/ReflectArray",  "mapArray",                 "(Ljava/lang/Object;)V",                                                            org_mini_reflect_ReflectArray_mapArray},

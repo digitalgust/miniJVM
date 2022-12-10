@@ -27,6 +27,8 @@
 
 package java.io;
 
+import java.util.Locale;
+
 /**
  * A <code>PrintStream</code> adds functionality to another output stream,
  * namely the ability to print representations of various data values
@@ -507,5 +509,15 @@ public class PrintStream extends OutputStream {
         }
     }
 
+
+    public PrintStream printf(String format, Object... args) {
+        String s = String.format(format, args);
+        print(s);
+        return this;
+    }
+
+    public PrintStream printf(Locale l, String format, Object... args) {
+        return printf(format, args);
+    }
 }
 

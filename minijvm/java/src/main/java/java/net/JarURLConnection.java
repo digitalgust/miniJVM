@@ -11,12 +11,25 @@
 package java.net;
 
 import java.io.IOException;
-import java.util.zip.ZipFile;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 public abstract class JarURLConnection extends URLConnection {
   public JarURLConnection(URL url) {
     super(url);
   }
 
-  public abstract ZipFile getJarFile() throws IOException;
+  /**
+   * Returns the URL for the Jar file for this connection.
+   *
+   * @return the URL for the Jar file for this connection.
+   */
+  public URL getJarFileURL() {
+    return url;
+  }
+
+
+  public abstract JarEntry getJarEntry() throws IOException ;
+
+  public abstract JarFile getJarFile() throws IOException;
 }

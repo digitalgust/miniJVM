@@ -70,13 +70,13 @@ public final class System {
      * @see java.io.PrintStream#println(java.lang.Object)
      * @see java.io.PrintStream#println(java.lang.String)
      */
-    public final static PrintStream out = getOutput();
+    public static PrintStream out = getOutput();
 
     private static PrintStream getOutput() {
         return new PrintStream(new com.sun.cldc.io.ConsoleOutputStream());
     }
 
-    public final static InputStream in = new com.sun.cldc.io.ConsoleInputStream();
+    public static InputStream in = new com.sun.cldc.io.ConsoleInputStream();
     /**
      * The "standard" error output stream. This stream is already open and ready
      * to accept output data.
@@ -89,7 +89,19 @@ public final class System {
      * been redirected to a file or other destination that is typically not
      * continuously monitored.
      */
-    public final static PrintStream err = out;
+    public static PrintStream err = out;
+
+    public static void setIn(InputStream in) {
+        System.in = in;
+    }
+
+    public static void setOut(PrintStream out) {
+        System.out = out;
+    }
+
+    public static void setErr(PrintStream err) {
+        System.err = err;
+    }
 
     /**
      * Returns the current time in milliseconds.

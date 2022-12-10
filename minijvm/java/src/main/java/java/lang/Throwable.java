@@ -31,6 +31,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * The <code>Throwable</code> class is the superclass of all errors and
@@ -111,6 +112,20 @@ public class Throwable {
         this.cause = cause;
     }
 
+    public synchronized Throwable getCause() {
+        return (cause == this ? null : cause);
+    }
+
+    public synchronized Throwable initCause(Throwable cause) {
+        if (this.cause != this)
+            throw new IllegalStateException("Can't overwrite cause with " +
+                    Objects.toString(cause, "a null"), this);
+        if (cause == this)
+            throw new IllegalArgumentException("Self-causation not permitted", this);
+        this.cause = cause;
+        return this;
+    }
+
     /**
      * Returns the error message string of this <code>Throwable</code> object.
      *
@@ -123,9 +138,6 @@ public class Throwable {
         return detailMessage;
     }
 
-    public Throwable getCause() {
-        return cause;
-    }
 
     /**
      * Returns a short description of this <code>Throwable</code> object. If

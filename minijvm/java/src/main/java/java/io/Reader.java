@@ -41,6 +41,7 @@ package java.io;
  */
 
 public abstract class Reader {
+    char cb[] = new char[1];
 
     /**
      * The object used to synchronize operations on this stream.  For
@@ -86,7 +87,6 @@ public abstract class Reader {
      * @exception  IOException  If an I/O error occurs
      */
     public int read() throws IOException {
-        char cb[] = new char[1];
         if (read(cb, 0, 1) == -1)
             return -1;
         else

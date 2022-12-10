@@ -88,7 +88,7 @@ public abstract class Charset
         return defaultCharset;
     }
 
-    static Charset forName(String cname) {
+    public static Charset forName(String cname) {
         Charset c = null;
         if (cname != null) {
 

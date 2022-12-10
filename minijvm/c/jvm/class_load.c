@@ -1686,6 +1686,19 @@ void _class_optimize(JClass *clazz) {
                 s2c.c1 = ptr->attributes[j].info[0];
                 s2c.c0 = ptr->attributes[j].info[1];
                 ptr->signature = class_get_utf8_string(clazz, s2c.us);
+            } else if (utf8_equals_c(attname, "Exceptions") == 1) {
+                Short2Char s2c;
+                s2c.c1 = ptr->attributes[j].info[0];
+                s2c.c0 = ptr->attributes[j].info[1];
+                ((u16 *) ptr->attributes[j].info)[0] = s2c.us;
+                s32 cnt = s2c.us;
+                s32 k;
+                for (k = 1; k < cnt + 1; k++) {
+                    s2c.c1 = ptr->attributes[j].info[k * 2 + 0];
+                    s2c.c0 = ptr->attributes[j].info[k * 2 + 1];
+                    ((u16 *) ptr->attributes[j].info)[k] = s2c.us;
+                }
+                ptr->exceptions_index_in_attributes = j;
             }
         }
     }

@@ -1150,9 +1150,9 @@ Instance *jarray_create_by_type_index(Runtime *runtime, s32 count, s32 typeIdx) 
     return arr;
 }
 
-Instance *jarray_create_by_type_name(Runtime *runtime, s32 count, Utf8String *name) {
+Instance *jarray_create_by_type_name(Runtime *runtime, s32 count, Utf8String *name, Instance *jloader) {
     JClass *clazz = NULL;
-    clazz = array_class_get_by_name(runtime, runtime->clazz->jloader, name);
+    clazz = array_class_get_by_name(runtime, jloader, name);
     Instance *arr = jarray_create_by_class(runtime, count, clazz);
     return arr;
 }
@@ -1454,6 +1454,7 @@ Instance *insOfJavaLangClass_create_get(Runtime *runtime, JClass *clazz) {
             Instance *ins = instance_create(runtime, java_lang_class);
             instance_init(ins, runtime);
             clazz->ins_class = ins;
+            setFieldRefer(getInstanceFieldPtr(ins, runtime->jvm->shortcut.class_classLoader), clazz->jloader);
             insOfJavaLangClass_set_classHandle(runtime, ins, clazz);
             return ins;
         }

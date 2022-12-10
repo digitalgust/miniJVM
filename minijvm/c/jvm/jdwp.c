@@ -1113,6 +1113,7 @@ s32 jdwp_set_debug_step(JdwpServer *jdwpserver, s32 setOrClear, Instance *jthrea
      * 由于方法调用层级不同，则runtime的son的层级不同，由此控制虚机方法step_into ,step_out
      */
     Runtime *r = jthread_get_stackframe_value(jdwpserver->jvm, jthread);
+    if (!r)return JDWP_ERROR_INVALID_THREAD;
     Runtime *last = getLastSon(r);
     JdwpStep *step = r->thrd_info->jdwp_step;
     if (setOrClear) {

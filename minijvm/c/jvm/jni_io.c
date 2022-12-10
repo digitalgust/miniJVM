@@ -1469,7 +1469,7 @@ s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
 
             s32 i;
             Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
-            Instance *jarr = jarray_create_by_type_name(runtime, files->length, ustr);
+            Instance *jarr = jarray_create_by_type_name(runtime, files->length, ustr, NULL);
             utf8_destory(ustr);
             for (i = 0; i < files->length; i++) {
                 __refer ref = arraylist_get_value(files, i);
@@ -1670,8 +1670,8 @@ s32 org_mini_zip_ZipFile_putEntry0(Runtime *runtime, JClass *clazz) {
     Instance *name_arr = localvar_getRefer(runtime->localvar, 1);
     Instance *content_arr = localvar_getRefer(runtime->localvar, 2);
     s32 ret = -1;
-    if (zip_path_arr && name_arr && content_arr) {
-        zip_savefile_mem(zip_path_arr->arr_body, name_arr->arr_body, content_arr->arr_body, content_arr->arr_length);
+    if (zip_path_arr && name_arr) {
+        zip_savefile_mem(zip_path_arr->arr_body, name_arr->arr_body, content_arr ? content_arr->arr_body : NULL, content_arr ? content_arr->arr_length : 0);
         ret = 0;
     }
     push_int(runtime->stack, ret);
@@ -1704,7 +1704,7 @@ s32 org_mini_zip_ZipFile_listFiles0(Runtime *runtime, JClass *clazz) {
         ArrayList *list = zip_get_filenames(zip_path_arr->arr_body);
         if (list) {
             Utf8String *clustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
-            Instance *jarr = jarray_create_by_type_name(runtime, list->length, clustr);
+            Instance *jarr = jarray_create_by_type_name(runtime, list->length, clustr, NULL);
             utf8_destory(clustr);
             instance_hold_to_thread(jarr, runtime);
             s32 i;

@@ -110,6 +110,10 @@ public class ReflectMethod {
         return paras_class;
     }
 
+    public Class<?>[] getExceptionTypes() {
+        return getExceptionTypes0(methodId);
+    }
+
     static class TypeMethodImpl implements Type {
         String name;
 
@@ -197,7 +201,9 @@ public class ReflectMethod {
                 + lines;
     }
 
-    final native void mapMethod(long mid);
+    native void mapMethod(long mid);
+
+    native Class<?>[] getExceptionTypes0(long mid);
 
     native Object invokeMethod(Object ins, Object... args);
 

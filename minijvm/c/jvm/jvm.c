@@ -316,6 +316,7 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     sys_properties_load(jvm);
     sys_properties_set_c(jvm, "java.class.path", p_classpath);
     sys_properties_set_c(jvm, "sun.boot.class.path", p_bootclasspath);
+    sys_properties_set_c(jvm, "java.class.version", "52.0");
 
     //启动调试器
     jdwp_start_server(jvm);
@@ -397,7 +398,7 @@ s32 call_main(MiniJVM *jvm, c8 *p_mainclass, ArrayList *java_para) {
     //准备参数
     s32 count = java_para ? java_para->length : 0;
     Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
-    Instance *arr = jarray_create_by_type_name(runtime, count, ustr);
+    Instance *arr = jarray_create_by_type_name(runtime, count, ustr, NULL);
     instance_hold_to_thread(arr, runtime);
     utf8_destory(ustr);
     int i;

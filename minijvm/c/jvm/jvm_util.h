@@ -357,7 +357,7 @@ static inline void runtime_clear_stacktrack(Runtime *runtime) {
 
 Instance *jarray_create_by_class(Runtime *runtime, s32 count, JClass *clazz);
 
-Instance *jarray_create_by_type_name(Runtime *runtime, s32 count, Utf8String *name);
+Instance *jarray_create_by_type_name(Runtime *runtime, s32 count, Utf8String *name, Instance *jloader);
 
 Instance *jarray_create_by_type_index(Runtime *runtime, s32 count, s32 typeIdx);
 

@@ -79,4 +79,20 @@ public class Package {
   public boolean isSealed(URL url) {
     return sealed.equals(url);
   }
+
+  static Package getPackage(Class<?> c) {
+    String name = c.getName();
+    int i = name.lastIndexOf('.');
+    if (i != -1) {
+      name = name.substring(0, i);
+      ClassLoader cl = c.getClassLoader();
+      if (cl != null) {
+        return cl.getPackage(name);
+      } else {
+        return new Package(name, null, null, null, null, null, null, null, null);
+      }
+    } else {
+      return null;
+    }
+  }
 }

@@ -38,6 +38,12 @@ public final class URL {
     }
   }
 
+    public URL(String protocol, String host, String file)
+            throws MalformedURLException {
+        handler = findHandler(protocol);
+        set(protocol, host, -1, file, null);
+    }
+
   public String toString() {
     return handler.toExternalForm(this);
   }
@@ -61,11 +67,11 @@ public final class URL {
   public String getRef() {
     return ref;
   }
-  
+
   public String getPath() {
     return path;
   }
-  
+
   public String getQuery() {
     return query;
   }
@@ -106,7 +112,7 @@ public final class URL {
     this.port = port;
     this.file = file;
     this.ref = ref;
-    
+
     int q = file == null ? -1 : file.lastIndexOf('?');
     if (q != -1) {
       this.query = file.substring(q + 1);

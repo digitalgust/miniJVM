@@ -2704,10 +2704,9 @@ public class Collections {
                  * Ensure that we don't get an ArrayStoreException even if
                  * s.toArray returns an array of something other than Object
                  */
-                Object[] dest =new Object[source.length];
-//                        (CheckedEntry.class.isInstance(
-//                    source.getClass().getComponentType()) ? source :
-//                                 new Object[source.length]);
+                Object[] dest = (CheckedEntry.class.isInstance(
+                    source.getClass().getComponentType()) ? source :
+                                 new Object[source.length]);
 
                 for (int i = 0; i < source.length; i++)
                     dest[i] = new CheckedEntry<K,V>((Map.Entry<K,V>)source[i],
@@ -3547,5 +3546,12 @@ public class Collections {
                 return i.next();
             }
         };
+    }
+
+    public static <T> ArrayList<T> list(Enumeration<T> e) {
+        ArrayList<T> l = new ArrayList();
+        while (e.hasMoreElements())
+            l.add(e.nextElement());
+        return l;
     }
 }

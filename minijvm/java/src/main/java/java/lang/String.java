@@ -401,6 +401,10 @@ public final class String implements Comparable<String>, CharSequence {
                 srcEnd - srcBegin);
     }
 
+    void getChars(char dst[], int dstBegin) {
+        System.arraycopy(value, offset, dst, dstBegin, count);
+    }
+
     /**
      * Convert this <code>String</code> into bytes according to the specified
      * character encoding, storing the result into a new byte array.

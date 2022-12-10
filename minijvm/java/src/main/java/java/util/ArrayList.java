@@ -316,15 +316,15 @@ public class ArrayList<E> extends AbstractList<E>
      * @throws ArrayStoreException if the runtime type of a is not a supertype
      *         of the runtime type of every element in this list.
      */
-    public <T> T[] toArray(T[] a) {
-        if (a.length < size)
-            // Make a new array of a's runtime type, but my contents:
-            return (T[]) Arrays.copyOf(elementData, size, a.getClass());
-        System.arraycopy(elementData, 0, a, 0, size);
-        if (a.length > size)
-            a[size] = null;
-        return a;
-    }
+	public <T> T[] toArray(T[] a) {
+		if (a.length < size)
+			a = (T[])java.lang.reflect.Array.
+					newInstance(a.getClass().getComponentType(), size);
+		System.arraycopy(elementData, 0, a, 0, size);
+		if (a.length > size)
+			a[size] = null;
+		return a;
+	}
 
     // Positional Access Operations
 

@@ -12,7 +12,7 @@ package java.util.jar;
 
 import java.util.zip.ZipEntry;
 
-public abstract class JarEntry extends ZipEntry {
+public class JarEntry extends ZipEntry {
     public JarEntry(String name) {
         super(name);
     }

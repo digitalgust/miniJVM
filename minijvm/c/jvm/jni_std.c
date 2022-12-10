@@ -235,6 +235,30 @@ s32 java_lang_Class_getSuperclass(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+s32 java_lang_Class_getInterfaces(Runtime *runtime, JClass *clazz) {
+    RuntimeStack *stack = runtime->stack;
+    JClass *cl = insOfJavaLangClass_get_classHandle(runtime, (Instance *) localvar_getRefer(runtime->localvar, 0));
+    s32 len = cl ? cl->interfacePool.clasz_used : 0;
+    Utf8String *ustr = utf8_create_c(STR_INS_JAVA_LANG_CLASS);
+    Instance *jarr = jarray_create_by_type_name(runtime, len, ustr, cl->jloader);
+    utf8_destory(ustr);
+    s32 i;
+    for (i = 0; i < len; i++) {
+        ConstantClassRef *ccr = (cl->interfacePool.clasz + i);
+        JClass *other = classes_load_get(cl->jloader, class_get_constant_utf8(cl, ccr->stringIndex)->utfstr, runtime);
+        if (other) {
+            Instance *cins = insOfJavaLangClass_create_get(runtime, other);
+            jarray_set_field(jarr, i, (s64) (intptr_t) cins);
+        }
+    }
+    push_ref(stack, jarr);
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    invoke_deepth(runtime);
+    jvm_printf("java_lang_Class_getInterfaces\n");
+#endif
+    return 0;
+}
+
 s32 java_lang_Class_getPrimitiveClass(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     Instance *jstr = localvar_getRefer(runtime->localvar, 0);
@@ -1311,7 +1335,7 @@ s32 java_lang_System_getNativeProperties(Runtime *runtime, JClass *clazz) {
     Hashtable *sys_prop = runtime->jvm->sys_prop;
     s32 size = (s32) sys_prop->entries;
     Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
-    Instance *jarr = jarray_create_by_type_name(runtime, size, ustr);
+    Instance *jarr = jarray_create_by_type_name(runtime, size, ustr, NULL);
     instance_hold_to_thread(jarr, runtime);
 
     s32 i = 0;
@@ -1356,6 +1380,7 @@ static java_native_method METHODS_STD_TABLE[] = {
         {"java/lang/Class",                     "isPrimitive",            "()Z",                                                           java_lang_Class_isPrimitive},
         {"java/lang/Class",                     "getName0",               "()Ljava/lang/String;",                                          java_lang_Class_getName0},
         {"java/lang/Class",                     "getSuperclass",          "()Ljava/lang/Class;",                                           java_lang_Class_getSuperclass},
+        {"java/lang/Class",                     "getInterfaces",          "()[Ljava/lang/Class;",                                          java_lang_Class_getInterfaces},
         {"java/lang/Class",                     "getPrimitiveClass",      "(Ljava/lang/String;)Ljava/lang/Class;",                         java_lang_Class_getPrimitiveClass},
         {"java/lang/Class",                     "getComponentType",       "()Ljava/lang/Class;",                                           java_lang_Class_getComponentType},
         {"java/lang/Double",                    "doubleToLongBits",       "(D)J",                                                          java_lang_Double_doubleToLongBits},

@@ -10,17 +10,11 @@
 
 package org.mini.urlhandler;
 
-import java.net.URL;
-import java.net.MalformedURLException;
-import java.net.URLStreamHandler;
-import java.net.JarURLConnection;
-import java.net.URLConnection;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.jar.JarFile;
+import java.net.*;
 import java.util.jar.JarEntry;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+import java.util.jar.JarFile;
 
 public class JarHandler extends URLStreamHandler {
   protected URLConnection openConnection(URL url) {
@@ -47,8 +41,8 @@ public class JarHandler extends URLStreamHandler {
   }
 
   private static class MyJarURLConnection extends JarURLConnection {
-    private final ZipFile file;
-    private final ZipEntry entry;
+    private final JarFile file;
+    private final JarEntry entry;
 
     public MyJarURLConnection(URL url) {
       super(url);
@@ -57,7 +51,7 @@ public class JarHandler extends URLStreamHandler {
       int index = s.indexOf("!/");
 
       try {
-        this.file = new ZipFile(new URL(s.substring(0, index)).getFile());
+        this.file = new JarFile(new URL(s.substring(0, index)).getFile());
         this.entry = this.file.getEntry(s.substring(index + 2));
       } catch (MalformedURLException e) {
         throw new RuntimeException(e);
@@ -66,7 +60,12 @@ public class JarHandler extends URLStreamHandler {
       }
     }
 
-    public ZipFile getJarFile() throws IOException {
+    @Override
+    public JarEntry getJarEntry() throws IOException {
+      return entry;
+    }
+
+    public JarFile getJarFile() throws IOException {
       return file;
     }
 

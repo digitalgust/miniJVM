@@ -1020,4 +1020,24 @@ public class StringBuilder implements Appendable {
         }
         return Character.codePointAtImpl(value, index, count);
     }
+
+
+    public StringBuilder replace(int start, int end, String str) {
+        if (start < 0)
+            throw new StringIndexOutOfBoundsException(start);
+        if (end > count)
+            end = count;
+        if (start > end)
+            throw new StringIndexOutOfBoundsException("start > end");
+
+        int len = str.length();
+        int newCount = count + len - (end - start);
+        if (newCount > value.length)
+            expandCapacity(newCount);
+
+        System.arraycopy(value, end, value, start + len, count - end);
+        str.getChars(value, start);
+        count = newCount;
+        return this;
+    }
 }

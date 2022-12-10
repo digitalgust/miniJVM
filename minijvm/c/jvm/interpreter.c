@@ -149,6 +149,19 @@ s32 invokedynamic_prepare(Runtime *runtime, BootstrapMethod *bootMethod, Constan
     //                   MethodHandle implMethod,
     //                   MethodType instantiatedMethodType
     //                   )
+    //          public static CallSite altMetafactory(
+    //                   MethodHandles.Lookup caller,
+    //                   String invokedName,
+    //                   MethodType invokedType,
+    //                   MethodType methodType,
+    //                   MethodHandle methodImplementation,
+    //                   MethodType instantiatedMethodType,
+    //                   int flags,
+    //                   int markerInterfaceCount,  // IF flags has MARKERS set
+    //                   Class... markerInterfaces, // IF flags has MARKERS set
+    //                   int bridgeCount,           // IF flags has BRIDGES set
+    //                   MethodType... bridges      // IF flags has BRIDGES set
+    //                 )
     //
     //          to generate Lambda Class implementation specify interface
     //          and new a callsite
@@ -170,33 +183,80 @@ s32 invokedynamic_prepare(Runtime *runtime, BootstrapMethod *bootMethod, Constan
 
     //other bootMethod parameter
 
+    //if bootMethod->num_bootstrap_arguments <= 3 call metafactory, if >3 call altMetafactory.
+    Instance *more_args = NULL;
+    s32 args_cnt = bootMethod->num_bootstrap_arguments;
+    static const s32 ALT_PARA = 3;
+    if (args_cnt > ALT_PARA) {
+        Utf8String *ustr = utf8_create_c(STR_INS_JAVA_LANG_OBJECT);
+        more_args = jarray_create_by_type_name(runtime, args_cnt, ustr, clazz->jloader);
+        utf8_destory(ustr);
+
+        push_ref(stack, more_args);
+    }
     s32 i;
-    for (i = 0; i < bootMethod->num_bootstrap_arguments; i++) {
+    for (i = 0; i < args_cnt; i++) {
         ConstantItem *item = class_get_constant_item(clazz, bootMethod->bootstrap_arguments[i]);
         switch (item->tag) {
             case CONSTANT_METHOD_TYPE: {
                 ConstantMethodType *cmt = (ConstantMethodType *) item;
                 Utf8String *arg = class_get_constant_utf8(clazz, cmt->descriptor_index)->utfstr;
                 Instance *mt = method_type_create(runtime, clazz->jloader, arg);
-                push_ref(stack, mt);
+                if (args_cnt <= ALT_PARA) {
+                    push_ref(stack, mt);
+                } else {
+                    jarray_set_field(more_args, i, (s64) (intptr_t) mt);
+                }
                 break;
             }
             case CONSTANT_STRING_REF: {
                 ConstantStringRef *csr = (ConstantStringRef *) item;
                 Utf8String *arg = class_get_constant_utf8(clazz, csr->stringIndex)->utfstr;
                 Instance *spec = jstring_create(arg, runtime);
-                push_ref(stack, spec);
+                if (args_cnt <= ALT_PARA) {
+                    push_ref(stack, spec);
+                } else {
+                    jarray_set_field(more_args, i, (s64) (intptr_t) spec);
+                }
                 break;
             }
             case CONSTANT_METHOD_HANDLE: {
                 ConstantMethodHandle *cmh = (ConstantMethodHandle *) item;
                 MethodInfo *mip = find_methodInfo_by_methodref(clazz, cmh->reference_index, runtime);
                 Instance *mh = method_handle_create(runtime, mip, cmh->reference_kind);
-                push_ref(stack, mh);
+                if (args_cnt <= ALT_PARA) {
+                    push_ref(stack, mh);
+                } else {
+                    jarray_set_field(more_args, i, (s64) (intptr_t) mh);
+                }
+                break;
+            }
+            case CONSTANT_INTEGER: {
+                ConstantInteger *ci = (ConstantInteger *) item;
+                push_int(stack, ci->value);
+                s32 ret = execute_method_impl(runtime->jvm->shortcut.int_valueOf, runtime);
+                if (ret != RUNTIME_STATUS_NORMAL) {
+                    _null_throw_exception(stack, runtime);
+                    return RUNTIME_STATUS_EXCEPTION;
+                }
+                if (args_cnt <= ALT_PARA) {
+                } else {
+                    Instance *ins = pop_ref(stack);
+                    jarray_set_field(more_args, i, (s64) (intptr_t) ins);
+                }
                 break;
             }
             default: {
-                jvm_printf("invokedynamic para parse error.");
+                jvm_printf("invokedynamic para parse error. para type: %d", item->tag);
+
+                if (args_cnt <= ALT_PARA) {
+                    StackEntry entry;
+                    entry.lvalue = 0;
+                    entry.rvalue = NULL;
+                    push_entry(stack, &entry);
+                } else {
+                    jarray_set_field(more_args, i, 0);
+                }
             }
         }
 

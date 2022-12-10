@@ -29,6 +29,8 @@ package java.io;
 
 import com.sun.cldc.i18n.*;
 
+import java.nio.charset.Charset;
+
 /**
  * An InputStreamReader is a bridge from byte streams to character streams: 
  * It reads bytes and translates them into characters.
@@ -77,6 +79,12 @@ public class InputStreamReader extends Reader {
         throws UnsupportedEncodingException
     {
         in = Helper.getStreamReader(is, enc);
+    }
+
+
+    public InputStreamReader(InputStream is, Charset charset)
+            throws UnsupportedEncodingException {
+        in = Helper.getStreamReader(is, charset.name());
     }
 
     /** 

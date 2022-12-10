@@ -10,11 +10,14 @@
 
 package java.util.jar;
 
+import org.mini.zip.Zip;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
-import java.util.zip.ZipFile;
+import java.util.Vector;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class JarFile extends ZipFile {
     public JarFile(String name) throws IOException {
@@ -25,4 +28,24 @@ public class JarFile extends ZipFile {
         super(file);
     }
 
+    public JarEntry getEntry(String entryName) {
+        ZipEntry ze = super.getEntry(entryName);
+        if (ze == null) return null;
+        return new JarEntry(ze.getName());
+    }
+
+    public JarEntry getJarEntry(String name) {
+        return (JarEntry)getEntry(name);
+    }
+
+    public Enumeration<JarEntry> entries() {
+        Vector<JarEntry> files;
+        String[] fns = Zip.listFiles(zipFileName);
+        files = new Vector();
+        for (String s : fns) {
+            JarEntry entry = new JarEntry(s);
+            files.add(entry);
+        }
+        return files.elements();
+    }
 }

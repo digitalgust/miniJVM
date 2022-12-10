@@ -13,9 +13,7 @@ package java.net;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class URLConnection {
   protected final URL url;
@@ -99,4 +97,18 @@ public abstract class URLConnection {
   public Map<String,List<String>> getHeaderFields() {
     return Collections.emptyMap();
   }
+
+    public long getHeaderFieldDate(String name, long Default) {
+        String value = getHeaderField(name);
+        try {
+            Calendar cal = Calendar.getInstance();
+            return Date.parse(value);
+        } catch (Exception e) {
+        }
+        return Default;
+    }
+
+    public long getLastModified() {
+        return getHeaderFieldDate("last-modified", 0);
+    }
 }

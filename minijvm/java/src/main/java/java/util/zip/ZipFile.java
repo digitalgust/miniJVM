@@ -2,6 +2,7 @@ package java.util.zip;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
@@ -11,24 +12,24 @@ import org.mini.zip.Zip;
 
 public class ZipFile {
 
-    String zipFileName;
+    protected String zipFileName;
 
     //打开供阅读的 ZIP 文件，由指定的 File 对象给出。 
-    public ZipFile(File file) {
+    public ZipFile(File file) throws IOException {
         zipFileName = file.getAbsolutePath();
     }
     //打开新的 ZipFile 以使用指定模式从指定 File 对象读取。 
 
-    public ZipFile(File file, int mode) {
+    public ZipFile(File file, int mode) throws IOException {
         zipFileName = file.getAbsolutePath();
     }
 
-    public ZipFile(String name) {
+    public ZipFile(String name) throws IOException {
         zipFileName = name;
     }
 
     //关闭 ZIP 文件。 
-    public void close() {
+    public void close() throws IOException {
 
     }
     //返回 ZIP 文件条目的枚举。 
@@ -64,7 +65,7 @@ public class ZipFile {
     }
     //返回输入流以读取指定 ZIP 文件条目的内容。 
 
-    public InputStream getInputStream(ZipEntry entry) {
+    public InputStream getInputStream(ZipEntry entry) throws IOException {
         entry.load(zipFileName);
         return new ByteArrayInputStream(entry.contents);
     }

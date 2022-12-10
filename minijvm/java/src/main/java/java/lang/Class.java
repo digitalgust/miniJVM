@@ -32,9 +32,7 @@ import org.mini.reflect.ReflectMethod;
 import org.mini.reflect.vm.RConst;
 import org.mini.reflect.vm.RefNative;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,7 +63,8 @@ import java.util.Map;
  * @version 12/17/01 (CLDC 1.1)
  * @since JDK1.0, CLDC 1.0
  */
-public final class Class<T> {
+public final class Class<T> implements java.io.Serializable,
+        java.lang.reflect.GenericDeclaration, java.lang.reflect.Type {
 
     private static final int ANNOTATION = 0x00002000;
     private static final int ENUM = 0x00004000;
@@ -707,5 +706,20 @@ public final class Class<T> {
     public ReflectClass getRefClass() {
         checkRefectClassLoaded();
         return refClass;
+    }
+
+    public Package getPackage() {
+        return Package.getPackage(this);
+    }
+
+    public java.security.ProtectionDomain getProtectionDomain() {
+        return null;
+    }
+
+    public native Class[] getInterfaces();
+
+    @Override
+    public TypeVariable<?>[] getTypeParameters() {
+        return new TypeVariable[0];
     }
 }
