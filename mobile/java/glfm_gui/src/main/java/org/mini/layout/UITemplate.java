@@ -166,7 +166,7 @@ public class UITemplate {
         if (vars != null)
             result = vars.get(v);
         if (result == null) {
-            return v;
+            return "";
         }
         return result;
     }
