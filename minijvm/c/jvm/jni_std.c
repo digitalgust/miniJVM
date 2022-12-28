@@ -1260,6 +1260,13 @@ s32 java_io_Throwable_printStackTrace0(Runtime *runtime, JClass *clazz) {
 
 Instance *buildStackElement(Runtime *runtime, Runtime *target) {
     JClass *clazz = classes_load_get_c(NULL, STR_CLASS_JAVA_LANG_STACKTRACE, target);
+
+    //ignore exception <init> stackframe
+    JClass *throwable = classes_load_get_c(NULL, STR_CLASS_JAVA_LANG_THROWABLE, target);
+    while (assignable_from(throwable, target->clazz)) {
+        target = target->parent;
+    }
+
     if (clazz) {
         ShortCut *shortcut = &runtime->jvm->shortcut;
         Instance *ins = instance_create(runtime, clazz);
