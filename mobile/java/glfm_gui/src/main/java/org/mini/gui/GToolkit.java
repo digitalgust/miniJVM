@@ -1187,6 +1187,8 @@ public class GToolkit {
         }
         GForm gform = focus.getForm();
 
+        x -= gform.getX();
+        y -= gform.getY();
         float menuH = 40, menuW = 300;
 
         float mx = x - menuW / 2;
@@ -1195,14 +1197,14 @@ public class GToolkit {
         } else if (mx + menuW > gform.getW()) {
             mx = gform.getW() - menuW;
         }
-        mx -= gform.getX();
+        mx += gform.getX();
         float my = y - 20 - menuH;
         if (my < 20) {
             my = y + 10;
         } else if (my + menuH > gform.getH()) {
             my = gform.getH() - menuH;
         }
-        my -= gform.getY();
+        my += gform.getY();
 
         if (editMenu == null) {
             editMenu = new EditMenu(gform, mx, my, menuW, menuH);

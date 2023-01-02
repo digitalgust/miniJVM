@@ -383,6 +383,7 @@ public class AppLoader {
     public static GApplication runApp(String jarName) {
         GApplication app = null;
         try {
+            extractFatJar(jarName); //extract dependence lib
             GStyle oldStyle = GToolkit.getStyle();
             Class c = getApplicationClass(jarName);
             if (c != null) {

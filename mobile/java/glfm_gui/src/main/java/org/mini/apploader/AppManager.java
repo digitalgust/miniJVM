@@ -20,20 +20,21 @@ public class AppManager extends GApplication {
     static final String APP_NAME_LABEL = "APP_NAME_LABEL";
     static final String APP_ICON_ITEM = "APP_ICON_ITEM";
     static final String APP_RUN_BTN = "APP_RUN_BTN";
+    static final String APP_STOP_BTN = "APP_STOP_BTN";
     static final String APP_DESC_LABEL = "APP_DESC_LABEL";
     static final String APP_UPGRADE_BTN = "APP_UPGRADE_BTN";
     static final String APP_DELETE_BTN = "APP_DELETE_BTN";
 
     static final String STR_EXIT = "Exit";
     static final String STR_SETTING = "Setting";
-    static final String STR_TITLE = "Metaverse Plugin Manager";
+    static final String STR_TITLE = "Plugin Manager";
     static final String STR_START_WEB_SRV_FOR_UPLOAD = "Lan webserver for upload plugin";
     static final String STR_DOWN_APP_FROM_WEB = "Download plugin from website:";
     static final String STR_DOWNLOAD = "Download";
     static final String STR_START = "Start";
     static final String STR_STOP = "Stop";
     static final String STR_WEB_LISTEN_ON = "Lan webserver on:";
-    static final String STR_APP_LIST = "Metaverse plugin list : ";
+    static final String STR_APP_LIST = "Plugin list : ";
     static final String STR_BACK = "Back";
     static final String STR_RUN = "Run";
     static final String STR_SET_AS_BOOT = "Put on top";
@@ -101,7 +102,7 @@ public class AppManager extends GApplication {
     //
     GList appList;
     GViewPort contentView;
-    GListItem curSelectedItem;
+    String curSelectedJarName;
     AppmEventHandler eventHandler;
     GHomeButton floatButton;
 
@@ -143,6 +144,9 @@ public class AppManager extends GApplication {
         GCallBack.getInstance().setApplication(this);
         Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationPortrait);
         Glfm.glfmSetDisplayChrome(GCallBack.getInstance().getDisplay(), Glfm.GLFMUserInterfaceChromeNavigationAndStatusBar);
+        if (curSelectedJarName != null) {
+            updateContentViewInfo(curSelectedJarName);
+        }
 
         reloadAppList();
     }
@@ -298,8 +302,8 @@ public class AppManager extends GApplication {
             switch (name) {
                 case "APP_DELETE_BTN":
                     String jarName;
-                    if (curSelectedItem != null) {
-                        jarName = curSelectedItem.getAttachment();
+                    if (curSelectedJarName != null) {
+                        jarName = curSelectedJarName;
                         if (jarName != null) {
                             GFrame confirmFrame = GToolkit.getConfirmFrame(mgrForm, GLanguage.getString(STR_MESSAGE), GLanguage.getString(STR_CONFIRM_DELETE), GLanguage.getString(STR_DELETE), okgobj -> {
                                 AppLoader.removeApp(jarName);
@@ -358,9 +362,10 @@ public class AppManager extends GApplication {
                     }
                     break;
                 case "APP_RUN_BTN":
-                    if (curSelectedItem != null) {
-                        jarName = curSelectedItem.getAttachment();
-                        curSelectedItem.setColor(RUNNING_ITEM_COLOR);
+                    if (curSelectedJarName != null) {
+                        jarName = curSelectedJarName;
+                        GListItem gli = getGListItemByAttachment(curSelectedJarName);
+                        gli.setColor(RUNNING_ITEM_COLOR);
                         String orientation = AppLoader.getApplicationOrientation(jarName);
                         if (orientation.equals("h")) {
                             Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationLandscapeLeft);
@@ -371,7 +376,7 @@ public class AppManager extends GApplication {
                         delayLauncher = new Runnable() {
                             @Override
                             public void run() {
-                                String jarName = curSelectedItem.getAttachment();
+                                String jarName = curSelectedJarName;
                                 if (jarName != null) {
                                     GApplication app = runningApps.get(jarName);
                                     if (app != null && app.getState() != AppState.STATE_CLOSED) {
@@ -382,6 +387,7 @@ public class AppManager extends GApplication {
                                         if (app != AppManager.this) {
                                             runningApps.put(jarName, app);
                                             app.getForm().add(AppManager.getInstance().getFloatButton());
+                                            updateContentViewInfo(jarName);
                                         }
                                     }
                                 }
@@ -390,21 +396,24 @@ public class AppManager extends GApplication {
                     }
                     break;
                 case "APP_STOP_BTN":
-                    if (curSelectedItem != null) {
+                    if (curSelectedJarName != null) {
                         //AppLoader.setBootApp(curSelectedItem.getAttachment());
-                        GApplication app = runningApps.get(curSelectedItem.getAttachment());
+                        jarName = curSelectedJarName;
+                        GApplication app = runningApps.get(jarName);
                         if (app != null) {
                             app.closeApp();
                             GForm.addMessage(GLanguage.getString(STR_SUCCESS));
-                            curSelectedItem.setColor(GToolkit.getStyle().getTextFontColor());
+                            GListItem gli = getGListItemByAttachment(curSelectedJarName);
+                            gli.setColor(null);
+                            updateContentViewInfo(jarName);
                         } else {
                             GForm.addMessage(GLanguage.getString(STR_APP_NOT_RUNNING));
                         }
                     }
                     break;
                 case "APP_UPGRADE_BTN":
-                    if (curSelectedItem != null) {
-                        jarName = curSelectedItem.getAttachment();
+                    if (curSelectedJarName != null) {
+                        jarName = curSelectedJarName;
                         if (jarName != null) {
                             url = AppLoader.getApplicationUpgradeurl(jarName);
                             if (url != null) {
@@ -518,7 +527,7 @@ public class AppManager extends GApplication {
                     }
                     appList.add(item);
                     item.setActionListener(gobj -> {
-                        curSelectedItem = (GListItem) gobj;
+                        curSelectedJarName = ((GListItem) gobj).getAttachment();
                         updateContentViewInfo(appName);
                         mainPanelShowRight();
                     });
@@ -528,29 +537,48 @@ public class AppManager extends GApplication {
         GForm.flush();
     }
 
-    void updateContentViewInfo(String appName) {
+    void updateContentViewInfo(String jarName) {
         GLabel nameLab = contentView.findByName(APP_NAME_LABEL);
-        nameLab.setText(AppLoader.getApplicationName(appName));
+        nameLab.setText(AppLoader.getApplicationName(jarName));
         //
         GTextBox descLab = contentView.findByName(APP_DESC_LABEL);
         String dStr = "-";
-        long d = AppLoader.getApplicationFileDate(appName);
+        long d = AppLoader.getApplicationFileDate(jarName);
         if (d > 0) {
             dStr = getDateString(d);
         }
-        String txt = GLanguage.getString(STR_VERSION) + "\n  " + AppLoader.getApplicationVersion(appName) + "\n" + GLanguage.getString(STR_FILE_SIZE) + "\n  " + AppLoader.getApplicationFileSize(appName) + "\n" + GLanguage.getString(STR_FILE_DATE) + "\n  " + dStr + "\n" + GLanguage.getString(STR_UPGRADE_URL) + "\n  " + AppLoader.getApplicationUpgradeurl(appName) + "\n" + GLanguage.getString(STR_DESC) + "\n  " + AppLoader.getApplicationDesc(appName) + "\n";
+        String txt = GLanguage.getString(STR_VERSION) + "\n  " + AppLoader.getApplicationVersion(jarName) + "\n" + GLanguage.getString(STR_FILE_SIZE) + "\n  " + AppLoader.getApplicationFileSize(jarName) + "\n" + GLanguage.getString(STR_FILE_DATE) + "\n  " + dStr + "\n" + GLanguage.getString(STR_UPGRADE_URL) + "\n  " + AppLoader.getApplicationUpgradeurl(jarName) + "\n" + GLanguage.getString(STR_DESC) + "\n  " + AppLoader.getApplicationDesc(jarName) + "\n";
         descLab.setText(txt);
+
+        GButton stop = contentView.findByName(APP_STOP_BTN);
+        if (runningApps.get(jarName) != null) {
+            stop.setEnable(true);
+        } else {
+            stop.setEnable(false);
+        }
 
         //re set image
         GImageItem icon = contentView.findByName(APP_ICON_ITEM);
-        if (curSelectedItem != null) icon.setImg(curSelectedItem.getImg());
+        GListItem gli = getGListItemByAttachment(curSelectedJarName);
+        if (gli != null) icon.setImg(gli.getImg());
         contentView.reAlign();
     }
 
+    GListItem getGListItemByAttachment(String jarName) {
+        if (jarName == null) return null;
+        List<GObject> items = appList.getItemList();
+        for (int i = 0; i < items.size(); i++) {
+            if (jarName.equals(items.get(i).getAttachment())) {
+                return (GListItem) items.get(i);
+            }
+        }
+        return null;
+    }
+
     void mainPanelShowLeft() {
-        if (curSelectedItem != null) {
+        if (curSelectedJarName != null) {
             appList.setSelectedIndex(-1);
-            curSelectedItem = null;
+            curSelectedJarName = null;
         }
         mainSlot.moveTo(0, 200);
     }

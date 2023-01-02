@@ -1,5 +1,5 @@
 <table name="ROOT_PAN">
-    <tr  h="{STATEBAR_HEIGHT}" w="100%">
+    <tr h="{STATEBAR_HEIGHT}" w="100%">
         <td>
             <label w="100%"></label>
         </td>
@@ -14,7 +14,7 @@
                                 <label w="75%"></label>
                                 <button name="BT_SETTING" w="25%" h="30" preicon="⚙">{Setting}</button>
                                 <br/>
-                                <label w="100%" h="30" align="hcenter,vcenter">{Metaverse Plugin Manager}</label>
+                                <label w="100%" h="30" align="hcenter,vcenter">{Plugin Manager}</label>
                                 <input name="INPUT_SEARCH" w="100%" h="30" style="search" hint="Search plugin"></input>
                                 <br/>
                             </td>
