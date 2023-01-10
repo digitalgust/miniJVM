@@ -387,7 +387,7 @@ public abstract class Calendar {
     public static synchronized Calendar getInstance() {
         try {
             // Obtain the calendar implementation class
-            Class clazz = Class.forName("com.sun.microedition.util.mini.CalendarImpl");
+            Class clazz = Class.forName("com.sun.microedition.util.j2me.CalendarImpl");
 
             // Construct a new instance
             return (Calendar)clazz.newInstance();

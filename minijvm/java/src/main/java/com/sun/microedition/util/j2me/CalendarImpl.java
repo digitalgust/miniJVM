@@ -26,7 +26,7 @@
 
 
 
-package com.sun.microedition.util.mini;
+package com.sun.microedition.util.j2me;
 
 import java.util.*;
 import java.lang.*;
