@@ -61,7 +61,7 @@ package org.mini.net.http;
  * read/write on those streams.
  *
  */
-import javax.cldc.io.*;
+import javax.microedition.io.*;
 import java.io.*;
 
 /**

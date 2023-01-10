@@ -26,16 +26,14 @@
 
 package org.mini.net.socket;
 
-import com.sun.cldc.io.ConnectionBaseInterface;
+import com.sun.microedition.io.ConnectionBaseInterface;
 import org.mini.net.SocketNative;
 
-import javax.cldc.io.Connection;
-import javax.cldc.io.Connector;
-import javax.cldc.io.SocketConnection;
+import javax.microedition.io.Connection;
+import javax.microedition.io.Connector;
+import javax.microedition.io.SocketConnection;
 import java.io.*;
 import java.net.SocketTimeoutException;
-
-import static org.mini.fs.InnerFile.available0;
 
 /**
  * Connection to the J2ME socket API.

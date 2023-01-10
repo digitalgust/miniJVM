@@ -33,7 +33,7 @@ import java.io.OutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 
-import javax.cldc.io.StreamConnection;
+import javax.microedition.io.StreamConnection;
 
 /**
  * This class implements the necessary functionality

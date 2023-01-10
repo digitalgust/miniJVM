@@ -4,9 +4,9 @@ package org.mini.net.https;
 import org.mini.net.SocketNative;
 import org.mini.net.http.Properties;
 
-import javax.cldc.io.HttpsConnection;
-import javax.cldc.io.SecurityInfo;
-import javax.cldc.io.StreamConnection;
+import javax.microedition.io.HttpsConnection;
+import javax.microedition.io.SecurityInfo;
+import javax.microedition.io.StreamConnection;
 import java.io.*;
 import java.nio.ByteBuffer;
 

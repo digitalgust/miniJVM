@@ -27,7 +27,7 @@
 
 package java.io;
 
-import com.sun.cldc.i18n.*;
+import com.sun.microedition.i18n.*;
 
 import java.nio.charset.Charset;
 

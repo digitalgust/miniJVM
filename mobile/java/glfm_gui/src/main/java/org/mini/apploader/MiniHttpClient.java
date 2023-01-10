@@ -5,8 +5,8 @@
  */
 package org.mini.apploader;
 
-import javax.cldc.io.Connector;
-import javax.cldc.io.HttpConnection;
+import javax.microedition.io.Connector;
+import javax.microedition.io.HttpConnection;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;

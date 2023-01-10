@@ -1,7 +1,7 @@
 package org.mini.util;
 
 
-import com.sun.cldc.i18n.Helper;
+import com.sun.microedition.i18n.Helper;
 
 import java.util.Arrays;
 

@@ -340,7 +340,7 @@ public class Stdlib extends Lib {
         try {
             String str = Interpreter.popBackStr(para);
             byte[] b = str.getBytes("utf-8");
-            String s = javax.cldc.io.Base64.encode(b, 0, b.length);
+            String s = javax.microedition.io.Base64.encode(b, 0, b.length);
             return Interpreter.getCachedStr(s);
         } catch (Exception e) {
             e.printStackTrace();
@@ -351,7 +351,7 @@ public class Stdlib extends Lib {
     private DataType base64dec(ArrayList<DataType> para) {
         try {
             String str = Interpreter.popBackStr(para);
-            byte[] b = javax.cldc.io.Base64.decode(str);
+            byte[] b = javax.microedition.io.Base64.decode(str);
             String s = new String(b, "utf-8");
             return Interpreter.getCachedStr(s);
         } catch (Exception e) {

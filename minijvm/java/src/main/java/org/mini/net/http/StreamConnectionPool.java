@@ -56,7 +56,7 @@ import java.io.DataOutputStream;
 
 import java.util.Vector;
 import java.util.Enumeration;
-import javax.cldc.io.StreamConnection;
+import javax.microedition.io.StreamConnection;
 
 
 /**

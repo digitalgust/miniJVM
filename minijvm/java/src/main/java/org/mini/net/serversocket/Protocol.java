@@ -26,12 +26,13 @@
 
 package org.mini.net.serversocket;
 
-import com.sun.cldc.io.ConnectionBaseInterface;
+import com.sun.microedition.io.ConnectionBaseInterface;
 import org.mini.net.SocketNative;
 
-import javax.cldc.io.Connection;
-import javax.cldc.io.Connector;
-import javax.cldc.io.ServerSocketConnection;
+import javax.microedition.io.Connection;
+import javax.microedition.io.Connector;
+import javax.microedition.io.ServerSocketConnection;
+import javax.microedition.io.SocketConnection;
 import java.io.IOException;
 
 
@@ -123,7 +124,7 @@ public class Protocol implements ConnectionBaseInterface, ServerSocketConnection
      * @throws IOException if an I/O error occurs when creating the input
      *                     stream
      */
-    synchronized public javax.cldc.io.SocketConnection accept()
+    synchronized public SocketConnection accept()
             throws IOException {
 
         org.mini.net.socket.Protocol con;

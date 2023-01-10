@@ -19,7 +19,7 @@ public class GHomeButton extends GPanel implements GActionListener {
     boolean moved = false;// is moved the button
 
     public GHomeButton(GForm form) {
-        super(form, DEF_X, DEF_Y, DEF_W, DEF_H);
+        super(form, form.getW() * .5f, form.getH() * .5f, DEF_W, DEF_H);
         int saveX = AppLoader.getHomeIconX();
         int saveY = AppLoader.getHomeIconY();
         setLocation(saveX, saveY);
