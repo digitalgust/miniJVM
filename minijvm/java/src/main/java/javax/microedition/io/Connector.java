@@ -29,7 +29,7 @@
 package javax.microedition.io;
 
 import java.io.*;
-import com.sun.microedition.io.*;
+import com.sun.cldc.io.*;
 
 /**
  * This class is factory for creating new Connection objects.

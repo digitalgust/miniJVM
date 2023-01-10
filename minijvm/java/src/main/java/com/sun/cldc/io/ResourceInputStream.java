@@ -25,7 +25,7 @@
  */
 
 
-package com.sun.microedition.io;
+package com.sun.cldc.io;
 
 import java.io.*;
 import java.util.*;

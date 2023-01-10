@@ -26,7 +26,7 @@
 
 
 
-package com.sun.microedition.i18n.mini;
+package com.sun.cldc.i18n.j2me;
 /** 
  * Character conversion base class
  */

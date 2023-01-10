@@ -25,14 +25,14 @@
  */
 
 
-package com.sun.microedition.i18n.mini;
+package com.sun.cldc.i18n.j2me;
 
 import java.io.*;
 
 /**
  * Reader for UTF-8 encoded input streams.
  */
-public class UTF_8_Reader extends com.sun.microedition.i18n.StreamReader {
+public class UTF_8_Reader extends com.sun.cldc.i18n.StreamReader {
     /**
      * signals that no byte is available, but not the end of stream
      */

@@ -26,7 +26,7 @@
 
 package java.lang;
 
-import com.sun.microedition.i18n.uclc.*;
+import com.sun.cldc.i18n.uclc.*;
 
 /**
  * The Character class wraps a value of the primitive type <code>char</code> in
@@ -328,7 +328,7 @@ public final class Character implements Comparable<Character> {
             /* Get the default encoding name */
             ccName = System.getProperty("java.lang.Character.caseConverter");
             if (ccName == null) {
-                ccName = "com.sun.microedition.i18n.uclc.DefaultCaseConverter";
+                ccName = "com.sun.cldc.i18n.uclc.DefaultCaseConverter";
             }
 
             /* Using the decoder names lookup a class to implement the reader */

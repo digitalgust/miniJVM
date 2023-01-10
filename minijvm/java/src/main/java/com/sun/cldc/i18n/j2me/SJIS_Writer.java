@@ -25,32 +25,19 @@
  */
 
 
-package com.sun.microedition.io;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+package com.sun.cldc.i18n.j2me;
 
 /**
- *
- * @author gust
+ * SJIS character encoded Writer.
  */
-public class ConsoleInputStream extends InputStream {
-
-    @Override
-    public native int read() throws IOException;
-
-    public String readLine() {
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            int ch = 0;
-            while ((ch = read()) != '\n') {
-                baos.write(ch);
-            }
-            String s = new String(baos.toByteArray(), "utf-8");
-            return s;
-        } catch (Exception ex) {
-        }
-        return "";
+public class SJIS_Writer extends Gen_Writer {
+    /**
+     * Constructor for SJIS Writer.
+     * @exception ClassNotFoundException is thrown if the conversion
+     * class is not available
+     */
+    public SJIS_Writer() throws ClassNotFoundException {
+        super("SJIS");
     }
 }

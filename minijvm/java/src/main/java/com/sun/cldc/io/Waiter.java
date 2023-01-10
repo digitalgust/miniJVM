@@ -25,19 +25,10 @@
  */
 
 
+package com.sun.cldc.io;
 
-package com.sun.microedition.i18n.mini;
+public class Waiter {
 
-/**
- * SJIS character encoded Writer.
- */
-public class SJIS_Writer extends Gen_Writer {
-    /**
-     * Constructor for SJIS Writer.
-     * @exception ClassNotFoundException is thrown if the conversion
-     * class is not available
-     */
-    public SJIS_Writer() throws ClassNotFoundException {
-        super("SJIS");
-    }
+    public native static void waitForIO();
 }
+

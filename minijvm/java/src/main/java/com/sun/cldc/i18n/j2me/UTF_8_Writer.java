@@ -25,7 +25,7 @@
  */
 
 
-package com.sun.microedition.i18n.mini;
+package com.sun.cldc.i18n.j2me;
 
 import java.io.*;
 
@@ -37,7 +37,7 @@ import java.io.*;
  * between U+D800 and U+DFFF. Additionally, the UTF-8 writer does not
  * support any character that requires 4 or more UTF-8 encoded bytes.
  */
-public class UTF_8_Writer extends com.sun.microedition.i18n.StreamWriter {
+public class UTF_8_Writer extends com.sun.cldc.i18n.StreamWriter {
 
     /**
      * Write a portion of an array of characters.

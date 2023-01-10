@@ -25,22 +25,32 @@
  */
 
 
+package com.sun.cldc.io;
 
-package com.sun.microedition.io;
-
-import java.io.OutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
-public class ConsoleOutputStream extends OutputStream {
+/**
+ *
+ * @author gust
+ */
+public class ConsoleInputStream extends InputStream {
 
-    /**
-     * Writes the specified byte to this output stream.
-     *
-     * @param      b   the <code>byte</code>.
-     * @exception  IOException  if an I/O error occurs. In particular,
-     *             an <code>IOException</code> may be thrown if the
-     *             output stream has been closed.
-     */
-     public native synchronized void write(int c) throws IOException;
+    @Override
+    public native int read() throws IOException;
+
+    public String readLine() {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            int ch = 0;
+            while ((ch = read()) != '\n') {
+                baos.write(ch);
+            }
+            String s = new String(baos.toByteArray(), "utf-8");
+            return s;
+        } catch (Exception ex) {
+        }
+        return "";
+    }
 }
-

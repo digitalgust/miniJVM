@@ -30,7 +30,7 @@
 package javax.microedition.io;
 
 
-import com.sun.microedition.io.ConnectionBaseInterface;
+import com.sun.cldc.io.ConnectionBaseInterface;
 
 import java.io.*;
 

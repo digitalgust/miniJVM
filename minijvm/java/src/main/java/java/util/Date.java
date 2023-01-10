@@ -182,7 +182,7 @@ public class Date {
      * @since CLDC 1.1
      */
     public String toString() {
-        return com.sun.microedition.util.j2me.CalendarImpl.toString(calendar);
+        return com.sun.cldc.util.j2me.CalendarImpl.toString(calendar);
     }
 
 

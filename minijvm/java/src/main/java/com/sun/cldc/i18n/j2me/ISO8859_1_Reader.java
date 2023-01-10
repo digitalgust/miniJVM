@@ -26,66 +26,67 @@
 
 
 
-package com.sun.microedition.i18n.mini;
+package com.sun.cldc.i18n.j2me;
 
 import java.io.*;
-import com.sun.microedition.i18n.*;
+import com.sun.cldc.i18n.*;
 
 /**
- * Default J2ME class for output stream writers.
+ * Default J2ME class for input stream readers
  *
  * @author  Nik Shaylor, Antero Taivalsaari
  * @version 1.0 10/18/99
  * @version 1.1 03/29/02
  */
-public class ISO8859_1_Writer extends StreamWriter {
+
+public class ISO8859_1_Reader extends StreamReader {
+
+    private static int BBUF_LEN = 128;
 
     /**
-     * Write a single character.
+     * Read a single character.
      *
      * @exception  IOException  If an I/O error occurs
      */
-    synchronized public void write(int c) throws IOException {
-        if (c > 255) {
-            c = '?'; // was --> throw new RuntimeException("Unknown character "+c);
-        }
-        out.write(c);
+    synchronized public int read() throws IOException {
+        return in.read();
     }
 
     /**
-     * Write a portion of an array of characters.
-     *
-     * @param  cbuf  Buffer of characters to be written
-     * @param  off   Offset from which to start reading characters
-     * @param  len   Number of characters to be written
+     * Read characters into a portion of an array.
      *
      * @exception  IOException  If an I/O error occurs
      */
-    synchronized public void write(char cbuf[], int off, int len) throws IOException {
-        while (len-- > 0) {
-            write(cbuf[off++]);
+    synchronized public int read(char cbuf[], int off, int len) 
+        throws IOException {
+
+        // Allocate a private buffer to speed up reading
+        int bbuflen = (len > BBUF_LEN) ? BBUF_LEN : len;
+        byte bbuf[] = new byte[bbuflen];
+
+        int count = 0;
+        while (count < len) {
+            int nbytes = len - count;
+            if (nbytes > bbuflen) nbytes = bbuflen;
+            nbytes = in.read(bbuf, 0, nbytes);
+
+            if (nbytes == -1) {
+                return (count == 0) ? -1 : count;
+            }
+
+            for (int i = 0; i < nbytes; i++) {
+                cbuf[off++] = (char)(bbuf[i] & 0xFF);
+            }
+
+            count += nbytes;
         }
+        return len;
     }
 
     /**
-     * Write a portion of a string.
-     *
-     * @param  str  String to be written
-     * @param  off  Offset from which to start reading characters
-     * @param  len  Number of characters to be written
-     *
-     * @exception  IOException  If an I/O error occurs
+     * Get the size in chars of an array of bytes
      */
-    synchronized public void write(String str, int off, int len) throws IOException {
-        for (int i = 0 ; i < len ; i++) {
-            write(str.charAt(off + i));
-        }
-    }
-
-    /**
-     * Get the size in bytes of an array of chars
-     */
-    public int sizeOf(char[] array, int offset, int length) {
+    public int sizeOf(byte[] array, int offset, int length) {
         return length;
     }
 

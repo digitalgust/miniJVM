@@ -26,18 +26,21 @@
 
 
 
-package com.sun.microedition.i18n.mini;
-/**
- * MS932 character encoded Writer.
- */
+package com.sun.cldc.io;
 
-public class MS932_Writer extends Gen_Writer {
-    /**
-     * Constructor for MS932 Writer.
-     * @exception ClassNotFoundException is thrown if the conversion
-     * class is not available
-     */
-    public MS932_Writer() throws ClassNotFoundException {
-        super("MS932");
-    }
+import javax.microedition.io.Connection;
+import java.io.*;
+
+/**
+ * Base class for Connection protocols.
+ *
+ * @author  Nik Shaylor
+ * @version 1.1 2/21/2000
+ */
+public interface ConnectionBaseInterface {
+
+    public Connection openPrim(String name, int mode, boolean timeouts)
+        throws IOException;
+
 }
+

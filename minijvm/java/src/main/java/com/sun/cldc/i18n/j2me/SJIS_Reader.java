@@ -26,17 +26,18 @@
 
 
 
-package com.sun.microedition.i18n.mini;
+package com.sun.cldc.i18n.j2me;
+
 /**
- * EUC_JP character encoded Reader.
+ * SJIS character encoded Reader.
  */
-public class EUC_JP_Reader extends Gen_Reader {
+public class SJIS_Reader extends Gen_Reader {
     /**
-     * Constructor for EUC_JP Reader.
+     * Constructor for SJIS Reader.
      * @exception ClassNotFoundException is thrown if the conversion
      * class is not available
      */
-    public EUC_JP_Reader() throws ClassNotFoundException {
-        super("EUC_JP");
+    public SJIS_Reader() throws ClassNotFoundException {
+        super("SJIS");
     }
 }

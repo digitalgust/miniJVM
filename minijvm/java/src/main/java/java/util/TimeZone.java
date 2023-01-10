@@ -27,7 +27,7 @@
 
 package java.util;
 
-import com.sun.microedition.util.j2me.TimeZoneImpl;
+import com.sun.cldc.util.j2me.TimeZoneImpl;
 
 /**
  * <code>TimeZone</code> represents a time zone offset, and also figures 
@@ -160,7 +160,7 @@ public abstract class TimeZone {
     public static synchronized TimeZone getDefault() {
         if ( defaultZone == null ) {
             try {
-                Class clazz = Class.forName("com.sun.microedition.util.j2me.TimeZoneImpl");
+                Class clazz = Class.forName("com.sun.cldc.util.j2me.TimeZoneImpl");
 
                 // Construct a new TimeZoneImpl instance
                 defaultZone = (TimeZoneImpl)clazz.newInstance();

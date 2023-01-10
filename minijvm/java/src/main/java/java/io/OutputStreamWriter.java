@@ -27,7 +27,7 @@
 
 package java.io;
 
-import com.sun.microedition.i18n.*;
+import com.sun.cldc.i18n.*;
 
 /**
  * An OutputStreamWriter is a bridge from character streams to byte streams:

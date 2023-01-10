@@ -26,18 +26,21 @@
 
 
 
-package com.sun.microedition.i18n.mini;
-/**
- * MS932 character encoded Reader.
- */
+package com.sun.cldc.io;
 
-public class MS932_Reader extends Gen_Reader {
+import java.io.OutputStream;
+import java.io.IOException;
+
+public class ConsoleOutputStream extends OutputStream {
+
     /**
-     * Constructor for MS932 Reader.
-     * @exception ClassNotFoundException is thrown if the conversion
-     * class is not available
+     * Writes the specified byte to this output stream.
+     *
+     * @param      b   the <code>byte</code>.
+     * @exception  IOException  if an I/O error occurs. In particular,
+     *             an <code>IOException</code> may be thrown if the
+     *             output stream has been closed.
      */
-    public MS932_Reader() throws ClassNotFoundException {
-        super("MS932");
-    }
+     public native synchronized void write(int c) throws IOException;
 }
+

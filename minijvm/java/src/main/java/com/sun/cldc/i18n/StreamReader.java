@@ -26,7 +26,7 @@
 
 
 
-package com.sun.microedition.i18n;
+package com.sun.cldc.i18n;
 
 import java.io.*;
 

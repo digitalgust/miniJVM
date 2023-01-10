@@ -25,10 +25,19 @@
  */
 
 
-package com.sun.microedition.io;
 
-public class Waiter {
+package com.sun.cldc.i18n.j2me;
+/**
+ * MS932 character encoded Writer.
+ */
 
-    public native static void waitForIO();
+public class MS932_Writer extends Gen_Writer {
+    /**
+     * Constructor for MS932 Writer.
+     * @exception ClassNotFoundException is thrown if the conversion
+     * class is not available
+     */
+    public MS932_Writer() throws ClassNotFoundException {
+        super("MS932");
+    }
 }
-

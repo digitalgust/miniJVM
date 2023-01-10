@@ -26,7 +26,7 @@
 
 
 
-package com.sun.microedition.i18n;
+package com.sun.cldc.i18n;
 
 import java.io.*;
 
@@ -105,7 +105,6 @@ public class Helper {
     /**
      * Get a reader for an InputStream
      *
-     * @param  is              The input stream the reader is for
      * @param  name            The name of the decoder
      * @return                 A new reader for the stream
      * @exception UnsupportedEncodingException  If the encoding is not known
@@ -123,7 +122,7 @@ public class Helper {
             String className;
 
             /* Get the reader class name */
-            className = "com.sun.microedition.i18n.mini" + '.' + name + "_Reader";
+            className = "com.sun.cldc.i18n.j2me" + '.' + name + "_Reader";
 
             /* Using the decoder names lookup a class to implement the reader */
             Class clazz = Class.forName(className);
@@ -187,7 +186,6 @@ public class Helper {
     /**
      * Get a writer for an OutputStream
      *
-     * @param  os              The output stream the reader is for
      * @param  name            The name of the decoder
      * @return                 A new writer for the stream
      * @exception UnsupportedEncodingException  If the encoding is not known
@@ -205,7 +203,7 @@ public class Helper {
             String className;
 
             /* Get the writer class name */
-            className = "com.sun.microedition.i18n.mini" + '.' + name +"_Writer";
+            className = "com.sun.cldc.i18n.j2me" + '.' + name +"_Writer";
 
             /* Using the decoder names lookup a class to implement the writer */
             Class clazz = Class.forName(className);

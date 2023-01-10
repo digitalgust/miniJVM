@@ -26,7 +26,7 @@
 
 package java.lang;
 
-import com.sun.microedition.i18n.Helper;
+import com.sun.cldc.i18n.Helper;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Formatter;

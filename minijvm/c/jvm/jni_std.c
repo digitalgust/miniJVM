@@ -19,27 +19,27 @@
 
 u32 is_random_init = FALSE;
 
-s32 com_sun_microedition_io_ConsoleOutputStream_write(Runtime *runtime, JClass *clazz) {
+s32 com_sun_cldc_io_ConsoleOutputStream_write(Runtime *runtime, JClass *clazz) {
     s16 ch = localvar_getInt(runtime->localvar, 1);
     fprintf(stdout, "%c", ch);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
-    jvm_printf("com_sun_microedition_io_ConsoleOutputStream_write\n");
+    jvm_printf("com_sun_cldc_io_ConsoleOutputStream_write\n");
 #endif
     return 0;
 }
 
-s32 com_sun_microedition_io_ConsoleInputStream_read(Runtime *runtime, JClass *clazz) {
+s32 com_sun_cldc_io_ConsoleInputStream_read(Runtime *runtime, JClass *clazz) {
     s32 ch = getchar();
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
-    jvm_printf("com_sun_microedition_io_ConsoleInputStream_read\n");
+    jvm_printf("com_sun_cldc_io_ConsoleInputStream_read\n");
 #endif
     push_int(runtime->stack, ch);
     return 0;
 }
 
-s32 com_sun_microedition_io_ResourceInputStream_open(Runtime *runtime, JClass *clazz) {
+s32 com_sun_cldc_io_ResourceInputStream_open(Runtime *runtime, JClass *clazz) {
     Instance *jstr = localvar_getRefer(runtime->localvar, 0);
     Utf8String *path = utf8_create();
     jstring_2_utf8(jstr, path, runtime);
@@ -56,7 +56,7 @@ s32 com_sun_microedition_io_ResourceInputStream_open(Runtime *runtime, JClass *c
     utf8_destory(path);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
-    jvm_printf("com_sun_microedition_io_ConsoleInputStream_read\n");
+    jvm_printf("com_sun_cldc_io_ConsoleInputStream_read\n");
 #endif
     return 0;
 }
@@ -1374,10 +1374,10 @@ s32 java_lang_System_getNativeProperties(Runtime *runtime, JClass *clazz) {
 
 
 static java_native_method METHODS_STD_TABLE[] = {
-        {"com/sun/microedition/io/ConsoleOutputStream", "write",                  "(I)V",                                                          com_sun_microedition_io_ConsoleOutputStream_write},
-        {"com/sun/microedition/io/ConsoleInputStream",  "read",                   "()I",                                                           com_sun_microedition_io_ConsoleInputStream_read},
-        {"com/sun/microedition/io/ResourceInputStream", "open",                   "(Ljava/lang/String;)[B",                                        com_sun_microedition_io_ResourceInputStream_open},
-//        {"com/sun/microedition/io/Waiter",              "waitForIO",       "",         com_sun_microedition_io_ResourceInputStream_waitForIO},
+        {"com/sun/cldc/io/ConsoleOutputStream", "write",                  "(I)V",                                                          com_sun_cldc_io_ConsoleOutputStream_write},
+        {"com/sun/cldc/io/ConsoleInputStream",  "read",                   "()I",                                                           com_sun_cldc_io_ConsoleInputStream_read},
+        {"com/sun/cldc/io/ResourceInputStream", "open",                   "(Ljava/lang/String;)[B",                                        com_sun_cldc_io_ResourceInputStream_open},
+//        {"com/sun/cldc/io/Waiter",              "waitForIO",       "",         com_sun_cldc_io_ResourceInputStream_waitForIO},
         {"java/lang/Class",                             "forName",                "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;", java_lang_Class_forName},
         {"java/lang/Class",                             "newInstance",            "()Ljava/lang/Object;",                                          java_lang_Class_newInstance},
         {"java/lang/Class",                             "isInstance",             "(Ljava/lang/Object;)Z",                                         java_lang_Class_isInstance},

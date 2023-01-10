@@ -26,7 +26,7 @@
 
 
 
-package com.sun.microedition.i18n.uclc;
+package com.sun.cldc.i18n.uclc;
 
 /**
  * Default class converting the case of characters.

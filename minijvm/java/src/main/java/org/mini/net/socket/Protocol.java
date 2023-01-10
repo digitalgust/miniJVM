@@ -26,7 +26,7 @@
 
 package org.mini.net.socket;
 
-import com.sun.microedition.io.ConnectionBaseInterface;
+import com.sun.cldc.io.ConnectionBaseInterface;
 import org.mini.net.SocketNative;
 
 import javax.microedition.io.Connection;

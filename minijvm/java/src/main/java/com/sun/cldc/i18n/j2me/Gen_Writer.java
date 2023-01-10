@@ -26,10 +26,10 @@
 
 
 
-package com.sun.microedition.i18n.mini;
+package com.sun.cldc.i18n.j2me;
 
 import java.io.*;
-import com.sun.microedition.i18n.*;
+import com.sun.cldc.i18n.*;
 /**
  * Generic interface for stream conversion writing of 
  * specific character encoded input streams.

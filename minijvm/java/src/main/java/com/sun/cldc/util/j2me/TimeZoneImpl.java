@@ -26,7 +26,7 @@
 
 
 
-package com.sun.microedition.util.j2me;
+package com.sun.cldc.util.j2me;
 
 import java.util.*;
 
@@ -334,7 +334,7 @@ public class TimeZoneImpl extends TimeZone {
     public synchronized TimeZone getInstance(String ID) {
         if (ID == null) {
             if (HOME_ID == null) {
-                HOME_ID = System.getProperty("com.sun.microedition.util.mini.TimeZoneImpl.timezone");
+                HOME_ID = System.getProperty("com.sun.cldc.util.j2me.TimeZoneImpl.timezone");
                 if (HOME_ID == null)
                     HOME_ID = "UTC";
             }

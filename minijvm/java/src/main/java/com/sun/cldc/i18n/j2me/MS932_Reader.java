@@ -26,18 +26,18 @@
 
 
 
-package com.sun.microedition.i18n.mini;
-
+package com.sun.cldc.i18n.j2me;
 /**
- * EUC_JP character encoded Writer.
+ * MS932 character encoded Reader.
  */
-public class EUC_JP_Writer extends Gen_Writer {
+
+public class MS932_Reader extends Gen_Reader {
     /**
-     * Constructor for EUC_JP Writer.
+     * Constructor for MS932 Reader.
      * @exception ClassNotFoundException is thrown if the conversion
      * class is not available
      */
-    public EUC_JP_Writer() throws ClassNotFoundException {
-        super("EUC_JP");
+    public MS932_Reader() throws ClassNotFoundException {
+        super("MS932");
     }
 }

@@ -73,10 +73,10 @@ public final class System {
     public static PrintStream out = getOutput();
 
     private static PrintStream getOutput() {
-        return new PrintStream(new com.sun.microedition.io.ConsoleOutputStream());
+        return new PrintStream(new com.sun.cldc.io.ConsoleOutputStream());
     }
 
-    public static InputStream in = new com.sun.microedition.io.ConsoleInputStream();
+    public static InputStream in = new com.sun.cldc.io.ConsoleInputStream();
     /**
      * The "standard" error output stream. This stream is already open and ready
      * to accept output data.
