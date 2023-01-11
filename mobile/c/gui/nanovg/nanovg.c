@@ -2554,11 +2554,11 @@ void nvgTextBox(NVGcontext* ctx, float x, float y, float breakRowWidth, const ch
 		for (i = 0; i < nrows; i++) {
 			NVGtextRow* row = &rows[i];
 			if (haling & NVG_ALIGN_LEFT)
-				nvgText(ctx, x, y, row->start, row->end);
+				nvgText(ctx, x, y, row->start, row->end+1);
 			else if (haling & NVG_ALIGN_CENTER)
-				nvgText(ctx, x + breakRowWidth*0.5f - row->width*0.5f, y, row->start, row->end);
+				nvgText(ctx, x + breakRowWidth*0.5f - row->width*0.5f, y, row->start, row->end+1);
 			else if (haling & NVG_ALIGN_RIGHT)
-				nvgText(ctx, x + breakRowWidth - row->width, y, row->start, row->end);
+				nvgText(ctx, x + breakRowWidth - row->width, y, row->start, row->end+1);
 			y += lineh * state->lineHeight;
 		}
 		string = rows[nrows-1].next;
@@ -2699,6 +2699,10 @@ int nvgTextBreakLines(NVGcontext* ctx, const char* string, const char* end, floa
 				break;
 		}
 
+		//gust 说明:
+		//row.start 包含start位置的字符
+		//row.end   包含end位置的字符
+		//row.next  一定是 row.end+1 位置上的字符
 		if (type == NVG_NEWLINE) {
 			// Always handle new lines.
 			rows[nrows].start = rowStart != NULL ? rowStart : iter.str;
