@@ -15,7 +15,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.*;
 
-import static org.mini.glwrap.GLUtil.toUtf8;
+import static org.mini.glwrap.GLUtil.toCstyleBytes;
 import static org.mini.nanovg.Nanovg.*;
 
 /**
@@ -133,44 +133,30 @@ public class GToolkit {
     /**
      * 字体部分
      */
-    static byte[] FONT_GLYPH_TEMPLATE = toUtf8("正");
+    static byte[] FONT_GLYPH_TEMPLATE = toCstyleBytes("正");
 
     public static class FontHolder {
 
-        static byte[] font_word = toUtf8("word"), font_icon = toUtf8("icon");
-        static int font_word_handle, font_icon_handle, font_emoji_handle;
         static boolean fontLoaded = false;
-        static byte[] data_word;
-        static byte[] data_icon;
+        static GFont word, icon;
 
         public static synchronized void loadFont(long vg) {
             if (fontLoaded) {
                 return;
             }
-            data_word = readFileFromJar("/res/NotoEmoji+NotoSansCJKSC-Regular.ttf");
-//            data_word = readFileFromJar("/res/out.ttf");
-            font_word_handle = Nanovg.nvgCreateFontMem(vg, font_word, data_word, data_word.length, 0);
-            if (font_word_handle == -1) {
-                System.out.println("Could not add font.\n");
-            }
-            nvgAddFallbackFontId(vg, font_word_handle, font_word_handle);
-
-            data_icon = readFileFromJar("/res/entypo.ttf");
-            font_icon_handle = Nanovg.nvgCreateFontMem(vg, font_icon, data_icon, data_icon.length, 0);
-            if (font_icon_handle == -1) {
-                System.out.println("Could not add font.\n");
-            }
+            word = GFont.getFont("word", "/res/NotoEmoji+NotoSansCJKSC-Regular.ttf");
+            icon = GFont.getFont("icon", "/res/entypo.ttf");
 
             fontLoaded = true;
         }
     }
 
     public static byte[] getFontWord() {
-        return FontHolder.font_word;
+        return FontHolder.word.getFontName();
     }
 
     public static byte[] getFontIcon() {
-        return FontHolder.font_icon;
+        return FontHolder.icon.getFontName();
     }
 
     public static float[] getFontBoundle(long vg) {
@@ -196,7 +182,7 @@ public class GToolkit {
     }
 
     public static byte[] getDefaultFont() {
-        return FontHolder.font_word;
+        return FontHolder.word.getFontName();
     }
 
 
@@ -272,7 +258,7 @@ public class GToolkit {
         nvgFontSize(vg, r * 2 - 4);
         nvgFillColor(vg, RED_POINT_FRONT);
         nvgFontFace(vg, GToolkit.getFontWord());
-        byte[] text_arr = toUtf8(text);
+        byte[] text_arr = toCstyleBytes(text);
         nvgTextAlign(vg, Nanovg.NVG_ALIGN_CENTER | Nanovg.NVG_ALIGN_MIDDLE);
         if (text_arr != null) {
             Nanovg.nvgTextJni(vg, x, y + 1, text_arr, 0, text_arr.length);
@@ -327,7 +313,7 @@ public class GToolkit {
 
     public static float[] getTextBoundle(long vg, String s, float width, float fontSize, byte[] font) {
         float[] bond = new float[4];
-        byte[] b = toUtf8(s);
+        byte[] b = toCstyleBytes(s);
         nvgFontSize(vg, fontSize);
         nvgFontFace(vg, font);
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
@@ -350,7 +336,7 @@ public class GToolkit {
         nvgFontSize(vg, fontSize);
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextAlign(vg, align);
-        byte[] b = toUtf8(s);
+        byte[] b = toCstyleBytes(s);
         if (shadowColor != null) {
             nvgFontBlur(vg, shadowBlur);
             nvgFillColor(vg, color);
@@ -371,7 +357,7 @@ public class GToolkit {
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextAlign(vg, NVG_ALIGN_TOP | NVG_ALIGN_LEFT);
         nvgFillColor(vg, color);
-        byte[] b = toUtf8(s);
+        byte[] b = toCstyleBytes(s);
         Nanovg.nvgTextJni(vg, tx, ty + 1.5f, b, 0, b.length);
         nvgRestore(vg);
     }
@@ -393,7 +379,7 @@ public class GToolkit {
         nvgFontSize(vg, fontSize);
         nvgFontFace(vg, GToolkit.getFontWord());
 
-        byte[] text_arr = toUtf8(s);
+        byte[] text_arr = toCstyleBytes(s);
 
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 

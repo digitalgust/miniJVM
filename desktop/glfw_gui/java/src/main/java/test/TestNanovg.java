@@ -32,7 +32,7 @@ import static org.mini.glfw.Glfw.glfwSwapBuffers;
 import static org.mini.glfw.Glfw.glfwTerminate;
 import static org.mini.glfw.Glfw.glfwWindowHint;
 import static org.mini.glfw.Glfw.glfwWindowShouldClose;
-import static org.mini.glwrap.GLUtil.toUtf8;
+import static org.mini.glwrap.GLUtil.toCstyleBytes;
 import org.mini.gui.GToolkit;
 import static org.mini.glfw.Glfw.glfwGetFramebufferWidth;
 import static org.mini.glfw.Glfw.glfwGetFramebufferHeight;
@@ -245,24 +245,24 @@ public class TestNanovg {
 
         }
         int font;
-        font = nvgCreateFont(vg, fontname, toUtf8("../../binary/res/wqymhei.ttc\000"));
+        font = nvgCreateFont(vg, fontname, toCstyleBytes("../../binary/res/wqymhei.ttc\000"));
         if (font == -1) {
             System.out.println("Could not add font.\n");
         }
         nvgAddFallbackFontId(vg, font, font);
 
-        font = nvgCreateFont(vg, iconname, toUtf8("../../binary/res/entypo.ttf\000"));
+        font = nvgCreateFont(vg, iconname, toCstyleBytes("../../binary/res/entypo.ttf\000"));
         if (font == -1) {
             System.out.println("Could not add font.\n");
         }
-        font = nvgCreateFont(vg, emojiname, toUtf8("../../binary/res/NotoEmoji-Regular.ttf\000"));
+        font = nvgCreateFont(vg, emojiname, toCstyleBytes("../../binary/res/NotoEmoji-Regular.ttf\000"));
         if (font == -1) {
             System.out.println("Could not add font.\n");
         }
     }
 
     byte[] cpToUTF8(int ch) {
-        return toUtf8("" + (char) ch);
+        return toCstyleBytes("" + (char) ch);
     }
 
     void display() {
@@ -377,7 +377,7 @@ public class TestNanovg {
 
         nvgFontBlur(vg, 2);
         nvgFillColor(vg, nvgRGBA(0, 0, 0, 128));
-        byte[] b1 = toUtf8(title);
+        byte[] b1 = toCstyleBytes(title);
         nvgTextJni(vg, x + w / 2, y + 16 + 1, b1, 0, b1.length);
 
         nvgFontBlur(vg, 0);
@@ -415,7 +415,7 @@ public class TestNanovg {
         nvgFillColor(vg, nvgRGBA(255, 255, 255, 32));
 
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        byte[] b2 = toUtf8(text);
+        byte[] b2 = toCstyleBytes(text);
         nvgTextJni(vg, x + h * 1.05f, y + h * 0.5f, b2, 0, b2.length);
 
         nvgFontSize(vg, h * 1.3f);
@@ -446,7 +446,7 @@ public class TestNanovg {
         nvgFontFace(vg, fontname);
         nvgFillColor(vg, nvgRGBA(255, 255, 255, 160));
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        byte[] b1 = toUtf8(text);
+        byte[] b1 = toCstyleBytes(text);
         nvgTextJni(vg, x + h * 0.3f, y + h * 0.5f, b1, 0, b1.length);
 
         nvgFontSize(vg, h * 1.3f);
@@ -465,7 +465,7 @@ public class TestNanovg {
         nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
 
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        byte[] b1 = toUtf8(text);
+        byte[] b1 = toCstyleBytes(text);
         nvgTextJni(vg, x, y + h * 0.5f, b1, 0, b1.length);
     }
 
@@ -492,7 +492,7 @@ public class TestNanovg {
         nvgFontFace(vg, fontname);
         nvgFillColor(vg, nvgRGBA(255, 255, 255, 64));
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        byte[] b1 = toUtf8(text);
+        byte[] b1 = toCstyleBytes(text);
         nvgTextJni(vg, x + h * 0.3f, y + h * 0.5f, b1, 0, b1.length);
     }
 
@@ -502,7 +502,7 @@ public class TestNanovg {
 
         drawEditBoxBase(vg, x, y, w, h);
 
-        byte[] b1 = toUtf8(units);
+        byte[] b1 = toCstyleBytes(units);
         uw = nvgTextBoundsJni(vg, 0f, 0f, b1, 0, b1.length, null);
 
         nvgFontSize(vg, 18.0f);
@@ -515,7 +515,7 @@ public class TestNanovg {
         nvgFontFace(vg, fontname);
         nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
         nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
-        byte[] b2 = toUtf8(text);
+        byte[] b2 = toCstyleBytes(text);
         nvgTextJni(vg, x + w - uw - h * 0.5f, y + h * 0.5f, b2, 0, b2.length);
     }
 
@@ -528,7 +528,7 @@ public class TestNanovg {
         nvgFillColor(vg, nvgRGBA(255, 255, 255, 160));
 
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        byte[] b2 = toUtf8(text);
+        byte[] b2 = toCstyleBytes(text);
         nvgTextJni(vg, x + 28, y + h * 0.5f, b2, 0, b2.length);
 
         bg = nvgBoxGradient(vg, x + 1, y + (int) (h * 0.5f) - 9 + 1, 18, 18, 3, 3, nvgRGBA(0, 0, 0, 32), nvgRGBA(0, 0, 0, 92));
@@ -568,7 +568,7 @@ public class TestNanovg {
 
         nvgFontSize(vg, 20.0f);
         nvgFontFace(vg, fontname);
-        byte[] b2 = toUtf8(text);
+        byte[] b2 = toCstyleBytes(text);
         tw = nvgTextBoundsJni(vg, 0, 0, b2, 0, b2.length, null);
         byte[] b3 = cpToUTF8(preicon);
         if (preicon != 0) {
@@ -1162,7 +1162,7 @@ public class TestNanovg {
         // The text break API can be used to fill a large buffer of rows,
         // or to iterate over the text just few lines (or just one) at a time.
         // The "next" variable of the last returned item tells where to continue.
-        byte[] text_arr = toUtf8(text);
+        byte[] text_arr = toCstyleBytes(text);
         long ptr = GToolkit.getArrayDataPtr(text_arr);
         int start = 0;
         int end = text_arr.length;
@@ -1212,7 +1212,7 @@ public class TestNanovg {
             start = (int) (next - ptr);
         }
         if (gutter != 0) {
-            byte[] gutter_arr = toUtf8("" + gutter);
+            byte[] gutter_arr = toCstyleBytes("" + gutter);
             nvgFontSize(vg, 13.0f);
             nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
 
@@ -1233,7 +1233,7 @@ public class TestNanovg {
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
         nvgTextLineHeight(vg, 1.2f);
 
-        byte[] b2 = toUtf8("Hover your mouse over the text to see calculated caret position.");
+        byte[] b2 = toCstyleBytes("Hover your mouse over the text to see calculated caret position.");
         nvgTextBoxBoundsJni(vg, x, y, 150, b2, 0, b2.length, bounds);
 
         // Fade the tooltip out when close to it.

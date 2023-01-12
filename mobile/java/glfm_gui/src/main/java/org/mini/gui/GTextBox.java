@@ -13,7 +13,7 @@ import org.mini.util.CodePointBuilder;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static org.mini.glwrap.GLUtil.toUtf8;
+import static org.mini.glwrap.GLUtil.toCstyleBytes;
 import static org.mini.nanovg.Nanovg.*;
 
 /**
@@ -826,7 +826,7 @@ public class GTextBox extends GTextObject {
                 int topShowRow = 0;//显示区域第一行的行号
 
                 if (local_arr == null) {//文字被修改过
-                    local_arr = toUtf8(textsb.toString());
+                    local_arr = toCstyleBytes(textsb.toString());
                     tbox.text_arr = local_arr;
                     showRows = Math.round(text_area[HEIGHT] / lineH) + 2;
                     showAreaHeight = text_area[HEIGHT];

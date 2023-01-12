@@ -5,7 +5,7 @@
  */
 package org.mini.media;
 
-import static org.mini.glwrap.GLUtil.toUtf8;
+import static org.mini.glwrap.GLUtil.toCstyleBytes;
 
 /**
  * @author Gust
@@ -21,13 +21,13 @@ public class MaDecoder extends MaDataSource {
     byte[] audioData;
 
     public MaDecoder(String path) {
-        byte[] b = toUtf8(path);
+        byte[] b = toCstyleBytes(path);
         handle = MiniAudio.ma_decoder_init_file(b);
         MiniAudio.ma_decoder_get_para(handle, para);
     }
 
     public MaDecoder(String path, int format, int channels, int sampleRate) {
-        byte[] b = toUtf8(path);
+        byte[] b = toCstyleBytes(path);
         handle = MiniAudio.ma_decoder_init_file_ex(b, format, channels, sampleRate);
         MiniAudio.ma_decoder_get_para(handle, para);
     }

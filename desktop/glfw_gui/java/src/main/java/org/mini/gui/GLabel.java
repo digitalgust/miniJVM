@@ -8,7 +8,7 @@ package org.mini.gui;
 import org.mini.glfm.Glfm;
 import org.mini.nanovg.Nanovg;
 
-import static org.mini.glwrap.GLUtil.toUtf8;
+import static org.mini.glwrap.GLUtil.toCstyleBytes;
 import static org.mini.nanovg.Nanovg.*;
 
 /**
@@ -58,7 +58,7 @@ public class GLabel extends GObject {
 
     public void setText(String text) {
         this.text = text;
-        text_arr = toUtf8(text);
+        text_arr = toCstyleBytes(text);
     }
 
     public String getText() {

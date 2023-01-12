@@ -1,10 +1,9 @@
 package org.mini.media.engine;
 
-import org.mini.media.MaDevice;
 import org.mini.media.MaNativeObject;
 import org.mini.media.MiniAudio;
 
-import static org.mini.glwrap.GLUtil.toUtf8;
+import static org.mini.glwrap.GLUtil.toCstyleBytes;
 
 public class MaEngine extends MaNativeObject {
     int format;
@@ -34,7 +33,7 @@ public class MaEngine extends MaNativeObject {
 
     public void playSound(String filepath) {
         if (filepath == null) return;
-        MiniAudio.ma_engine_play_sound(handle, toUtf8(filepath));
+        MiniAudio.ma_engine_play_sound(handle, toCstyleBytes(filepath));
     }
 
     public void setListenerPosition(int listener, float x, float y, float z) {

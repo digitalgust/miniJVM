@@ -32,14 +32,11 @@ public class GLUtil {
     }
 
 
-    public static byte[] toUtf8(String s) {
+    public static byte[] toCstyleBytes(String s) {
         if (s == null) {
             return null;
         }
-        int pos = s.lastIndexOf('\000');
-        if (pos >= 0 && pos == s.length() - 1) {
-
-        } else {
+        if (s.length() == 0 || s.charAt(s.length() - 1) != '\000') {
             s += '\000';
         }
         byte[] barr = null;
@@ -51,7 +48,7 @@ public class GLUtil {
     }
 
 
-    public static String fromUtf8(byte[] bytes) {
+    public static String fromCstyleBytes(byte[] bytes) {
         if (bytes == null) {
             return null;
         }
@@ -96,7 +93,7 @@ public class GLUtil {
 
     public static byte[] image_parse_from_file_path(String filename, int[] w_h_d) {
         int[] x = {0}, y = {0}, n = {0};
-        byte[] fb = toUtf8(filename);
+        byte[] fb = toCstyleBytes(filename);
         long raw_data_handle = stbi_load(fb, x, y, n, 4);
         if (raw_data_handle == 0) {
             System.out.println("ERROR: failed to load image: " + filename);

@@ -10,7 +10,7 @@ import org.mini.glfw.Glfw;
 import org.mini.nanovg.Nanovg;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
-import static org.mini.glwrap.GLUtil.toUtf8;
+import static org.mini.glwrap.GLUtil.toCstyleBytes;
 import static org.mini.nanovg.Nanovg.*;
 
 /**
@@ -22,11 +22,11 @@ public class GTextField extends GTextObject {
     static public final int BOX_STYLE_SEARCH = 1;
 
     protected float[] reset_boundle;
-    protected int text_max = 256;
+    protected int text_max = 400;
     protected int boxStyle = BOX_STYLE_EDIT;
     //
-    protected byte[] search_arr = toUtf8(ICON_SEARCH);
-    protected byte[] reset_arr = toUtf8(ICON_CIRCLED_CROSS);
+    protected byte[] search_arr = toCstyleBytes(ICON_SEARCH);
+    protected byte[] reset_arr = toCstyleBytes(ICON_CIRCLED_CROSS);
     //
     protected float[] lineh = {0};
     protected short[] text_pos;
@@ -469,7 +469,7 @@ public class GTextField extends GTextObject {
                     text_arr[i] = '*';
                 }
             } else {
-                text_arr = toUtf8(textsb.toString());
+                text_arr = toCstyleBytes(textsb.toString());
             }
         }
         float wordx = x + FONT_WIDTH * leftIcons;

@@ -4,7 +4,7 @@ import org.mini.media.MaDataSource;
 import org.mini.media.MaNativeObject;
 import org.mini.media.MiniAudio;
 
-import static org.mini.glwrap.GLUtil.toUtf8;
+import static org.mini.glwrap.GLUtil.toCstyleBytes;
 import static org.mini.media.MiniAudio.MA_SOUND_FLAG_DECODE;
 
 public class MaSound extends MaNativeObject {
@@ -17,7 +17,7 @@ public class MaSound extends MaNativeObject {
         }
 
         this.engine = engine;
-        handle = MiniAudio.ma_sound_init_from_file(engine.getHandle(), toUtf8(filePath), MA_SOUND_FLAG_DECODE, 0, 0);
+        handle = MiniAudio.ma_sound_init_from_file(engine.getHandle(), toCstyleBytes(filePath), MA_SOUND_FLAG_DECODE, 0, 0);
     }
 
     public MaSound(MaEngine engine, MaSound src) {

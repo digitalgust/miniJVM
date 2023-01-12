@@ -7,9 +7,7 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 
-import java.io.ByteArrayOutputStream;
-
-import static org.mini.glwrap.GLUtil.toUtf8;
+import static org.mini.glwrap.GLUtil.toCstyleBytes;
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Nanovg.*;
 
@@ -53,7 +51,7 @@ public class GListItem extends GContainer {
     public void setPreIcon(String preicon) {
         if (preicon == null || preicon.trim().length() == 0) return;
         this.preicon = preicon;
-        preicon_arr = toUtf8(preicon);
+        preicon_arr = toCstyleBytes(preicon);
     }
 
     /**

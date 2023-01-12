@@ -66,7 +66,7 @@ public class Shader {
     int loadShader(int shaderType, String shaderStr) {
         int[] return_val = {0};
         int fragment_shader = glCreateShader(shaderType);
-        glShaderSource(fragment_shader, 1, new byte[][]{GLUtil.toUtf8(shaderStr)}, null, 0);
+        glShaderSource(fragment_shader, 1, new byte[][]{GLUtil.toCstyleBytes(shaderStr)}, null, 0);
         glCompileShader(fragment_shader);
         GL.glGetShaderiv(fragment_shader, GL.GL_COMPILE_STATUS, return_val, 0);
         if (return_val[0] == GL_FALSE) {

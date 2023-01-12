@@ -8,7 +8,7 @@ package org.mini.gui;
 import org.mini.glfm.Glfm;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
-import static org.mini.glwrap.GLUtil.toUtf8;
+import static org.mini.glwrap.GLUtil.toCstyleBytes;
 import static org.mini.nanovg.Nanovg.*;
 
 /**
@@ -19,7 +19,7 @@ public class GCheckBox extends GObject {
     protected String text;
     protected byte[] text_arr;
     protected boolean checked;
-    protected byte[] preicon_arr = toUtf8(ICON_CHECK);
+    protected byte[] preicon_arr = toCstyleBytes(ICON_CHECK);
 
     public GCheckBox(GForm form) {
         this(form, "", false, 0f, 0f, 1f, 1f);
@@ -36,7 +36,7 @@ public class GCheckBox extends GObject {
 
     public void setText(String text) {
         this.text = text;
-        text_arr = toUtf8(text);
+        text_arr = toCstyleBytes(text);
     }
 
     public String getText() {

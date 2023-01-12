@@ -13,7 +13,7 @@ import org.mini.util.CodePointBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mini.glwrap.GLUtil.toUtf8;
+import static org.mini.glwrap.GLUtil.toCstyleBytes;
 
 /**
  * @author Gust
@@ -60,7 +60,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
 
     public void setHint(String hint) {
         this.hint = hint;
-        hint_arr = toUtf8(hint);
+        hint_arr = toCstyleBytes(hint);
     }
 
     public String getHint() {

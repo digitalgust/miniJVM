@@ -494,7 +494,7 @@ public abstract class XContainer
         try {
             if (assist == null) throw new RuntimeException("XmlExtAssist can not be null");
 
-            ByteArrayInputStream bais = new ByteArrayInputStream(GLUtil.toUtf8(uiStr));
+            ByteArrayInputStream bais = new ByteArrayInputStream(GLUtil.toCstyleBytes(uiStr));
             XObject xobj = parseXml(bais, assist);
             return xobj;
         } catch (Exception ex) {

@@ -13,7 +13,7 @@ import org.mini.nanovg.Nanovg;
 import java.util.List;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
-import static org.mini.glwrap.GLUtil.toUtf8;
+import static org.mini.glwrap.GLUtil.toCstyleBytes;
 import static org.mini.nanovg.Nanovg.*;
 
 /**
@@ -108,7 +108,7 @@ public class GFrame extends GContainer {
     }
 
     public void setTitle(String title) {
-        title_arr = toUtf8(title);
+        title_arr = toCstyleBytes(title);
         this.title = title;
     }
 

@@ -163,7 +163,7 @@ public class Shader2 {
         //编译顶点着色器
         int vertexShader;
         vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, new byte[][]{GLUtil.toUtf8(vss)}, null, 0);
+        glShaderSource(vertexShader, 1, new byte[][]{GLUtil.toCstyleBytes(vss)}, null, 0);
         glCompileShader(vertexShader);
         int success;
         GL.glGetShaderiv(vertexShader, GL.GL_COMPILE_STATUS, return_val, 0);
@@ -178,7 +178,7 @@ public class Shader2 {
 
         int fragmentShader;
         fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, new byte[][]{GLUtil.toUtf8(fss)}, null, 0);
+        glShaderSource(fragmentShader, 1, new byte[][]{GLUtil.toCstyleBytes(fss)}, null, 0);
         glCompileShader(fragmentShader);
         GL.glGetShaderiv(fragmentShader, GL.GL_COMPILE_STATUS, return_val, 0);
         if (return_val[0] == GL_FALSE) {
@@ -260,11 +260,11 @@ public class Shader2 {
         // Bind Textures using texture units
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1[0]);
-        glUniform1i(glGetUniformLocation(ourShader, GLUtil.toUtf8("ourTexture1")), 0);
+        glUniform1i(glGetUniformLocation(ourShader, GLUtil.toCstyleBytes("ourTexture1")), 0);
         GLUtil.checkGlError("gl_paint 1.3");
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2[0]);
-        glUniform1i(glGetUniformLocation(ourShader, GLUtil.toUtf8("ourTexture2")), 1);
+        glUniform1i(glGetUniformLocation(ourShader, GLUtil.toCstyleBytes("ourTexture2")), 1);
         GLUtil.checkGlError("gl_paint 1.5");
 
 
@@ -284,9 +284,9 @@ public class Shader2 {
                 , 45.0f, (float) WIDTH / (float) HEIGHT, 0.1f, 100.0f);
         //projection = glm::perspective (45.0f, (GLfloat) WIDTH / (GLfloat) HEIGHT, 0.1f, 100.0f);
         // Get the uniform locations
-        int modelLoc = glGetUniformLocation(ourShader, GLUtil.toUtf8("model"));
-        int viewLoc = glGetUniformLocation(ourShader, GLUtil.toUtf8("view"));
-        int projLoc = glGetUniformLocation(ourShader, GLUtil.toUtf8("projection"));
+        int modelLoc = glGetUniformLocation(ourShader, GLUtil.toCstyleBytes("model"));
+        int viewLoc = glGetUniformLocation(ourShader, GLUtil.toCstyleBytes("view"));
+        int projLoc = glGetUniformLocation(ourShader, GLUtil.toCstyleBytes("projection"));
         // Pass the matrices to the shader
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view, 0);
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, projection, 0);
@@ -670,7 +670,7 @@ public class Shader2 {
         GLMath.mat4x4_perspective(projectionMatrix.mat, 30.0f, ((float) fbWidth) / fbHeight, 0.1f, 10.0f);
         GLMath.mat4x4_mul(projectionMatrix.mat, projectionMatrix.mat, modelTransformMatrix.mat);
 
-        int fullTransformMatrixLocation = glGetUniformLocation(programID, GLUtil.toUtf8("fullTransformMatrix"));
+        int fullTransformMatrixLocation = glGetUniformLocation(programID, GLUtil.toCstyleBytes("fullTransformMatrix"));
         glUniformMatrix4fv(fullTransformMatrixLocation, 1, GL_FALSE, projectionMatrix.mat, 0);
         GLUtil.checkGlError("disp 1.5");
 
@@ -691,7 +691,7 @@ public class Shader2 {
         GLMath.mat4x4_rotate(modelTransformMatrix.mat, modelTransformMatrix.mat, 0.0f, 1.0f, 0.0f, 54f);
         GLMath.mat4x4_perspective(projectionMatrix.mat, 30.0f, ((float) fbWidth) / fbHeight, 0.1f, 10.0f);
         GLMath.mat4x4_mul(projectionMatrix.mat, projectionMatrix.mat, modelTransformMatrix.mat);
-        fullTransformMatrixLocation = glGetUniformLocation(programID, GLUtil.toUtf8("fullTransformMatrix"));
+        fullTransformMatrixLocation = glGetUniformLocation(programID, GLUtil.toCstyleBytes("fullTransformMatrix"));
         glUniformMatrix4fv(fullTransformMatrixLocation, 1, GL_FALSE, projectionMatrix.mat, 0);
         glDrawElements(GL_TRIANGLES, shape.indices.length, GL_UNSIGNED_SHORT, null, 0);
 

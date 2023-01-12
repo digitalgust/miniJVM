@@ -97,7 +97,7 @@ public class GCmdHandler {
     void paint(GForm form) {
         if (curShowMessage == null) {
             if (message.size() > 0) {
-                curShowMessage = GLUtil.toUtf8(message.remove(0));
+                curShowMessage = GLUtil.toCstyleBytes(message.remove(0));
                 GForm.timer.schedule(new TimerTask() {
                     @Override
                     public void run() {

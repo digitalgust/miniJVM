@@ -16,7 +16,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
-import static org.mini.glwrap.GLUtil.toUtf8;
+import static org.mini.glwrap.GLUtil.toCstyleBytes;
 import static org.mini.nanovg.Nanovg.*;
 
 /**
@@ -35,7 +35,7 @@ public class GList extends GContainer {
     public static final float ITEM_IMG_H_DEFAULT = 28f;
 
     protected String preicon;
-    protected byte[] preicon_arr = toUtf8(ICON_CHEVRON_RIGHT);
+    protected byte[] preicon_arr = toCstyleBytes(ICON_CHEVRON_RIGHT);
     protected List<Integer> selected = new ArrayList();
     protected boolean pulldown;
     //
@@ -168,7 +168,7 @@ public class GList extends GContainer {
     public void setPreIcon(String preicon) {
         if (preicon == null || preicon.trim().length() == 0) return;
         this.preicon = preicon;
-        preicon_arr = toUtf8(preicon);
+        preicon_arr = toCstyleBytes(preicon);
     }
 
     public GListItem addItem(GImage img, String lab) {

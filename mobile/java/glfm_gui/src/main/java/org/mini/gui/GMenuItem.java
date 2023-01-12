@@ -10,7 +10,7 @@ import org.mini.glfw.Glfw;
 import org.mini.nanovg.Nanovg;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
-import static org.mini.glwrap.GLUtil.toUtf8;
+import static org.mini.glwrap.GLUtil.toCstyleBytes;
 import static org.mini.nanovg.Nanovg.*;
 
 /**
@@ -160,7 +160,7 @@ public class GMenuItem extends GObject {
         }
         //画文字
         if (text != null) {
-            byte[] b = toUtf8(text);
+            byte[] b = toCstyleBytes(text);
             nvgFillColor(vg, GToolkit.getStyle().getTextShadowColor());
             Nanovg.nvgTextJni(vg, txt_x + 1, txt_y + 1, b, 0, b.length);
             nvgFillColor(vg, enable ? getColor() : getDisabledColor());

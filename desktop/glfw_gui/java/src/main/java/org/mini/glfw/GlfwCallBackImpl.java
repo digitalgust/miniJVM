@@ -116,7 +116,7 @@ public class GlfwCallBackImpl extends GCallBack {
         glfwWindowHint(GLFW_DEPTH_BITS, 16);
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 
-        display = Glfw.glfwCreateWindow(winWidth, winHeight, GLUtil.toUtf8(""), 0, 0);
+        display = Glfw.glfwCreateWindow(winWidth, winHeight, GLUtil.toCstyleBytes(""), 0, 0);
         if (display == 0) {
             glfwTerminate();
             System.exit(1);

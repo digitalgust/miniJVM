@@ -45,17 +45,18 @@ public class GGraphics {
     public static final int SOLID = 0;
     public static final int DOTTED = 1;
 
-    protected GCanvas canvas;
+    protected GObject master;
     protected long vg;
 
     int curColor = 0;
     byte r, g, b, a;
-    float fontSize = GToolkit.getStyle().getTextFontSize();
+    //    float fontSize = GToolkit.getStyle().getTextFontSize();
     int clipX, clipY, clipW, clipH;
     int strokeStyle;
+    GFont font = GFont.getDefaultFont();
 
-    public GGraphics(GCanvas canvas, long context) {
-        this.canvas = canvas;
+    public GGraphics(GObject master, long context) {
+        this.master = master;
         vg = context;
     }
 
@@ -63,8 +64,8 @@ public class GGraphics {
         return vg;
     }
 
-    public GCanvas getCanvas() {
-        return canvas;
+    public GObject getMaster() {
+        return master;
     }
 
     public void setColor(int pr, int pg, int pb) {
@@ -96,8 +97,8 @@ public class GGraphics {
 
     public void fillRect(int x, int y, int w, int h) {
 
-        x += canvas.getX();
-        y += canvas.getY();
+        x += master.getX();
+        y += master.getY();
 
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x, y, w, h, 0);
@@ -107,8 +108,8 @@ public class GGraphics {
 
     public void fillRoundRect(int x, int y, int width, int height, int arcWidth, int arcHeight) {
 
-        x += canvas.getX();
-        y += canvas.getY();
+        x += master.getX();
+        y += master.getY();
 
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x, y, width, height, (arcWidth + arcHeight) / 2);
@@ -117,8 +118,8 @@ public class GGraphics {
     }
 
     public void fillArc(int x, int y, int width, int height, int startAngle, int arcAngle) {
-        x += canvas.getX();
-        y += canvas.getY();
+        x += master.getX();
+        y += master.getY();
         nvgBeginPath(vg);
         nvgFillColor(vg, nvgRGBA(r, g, b, a));
         nvgArc(vg, x, y, width / 2, (float) (startAngle * Math.PI / 180), (float) (arcAngle * Math.PI / 180), NVG_CW);
@@ -130,8 +131,8 @@ public class GGraphics {
 
     public void drawArc(int x, int y, int width, int height, int startAngle, int arcAngle) {
 
-        x += canvas.getX();
-        y += canvas.getY();
+        x += master.getX();
+        y += master.getY();
         nvgBeginPath(vg);
         nvgArc(vg, x, y, width / 2, (float) (startAngle * Math.PI / 180), (float) (arcAngle * Math.PI / 180), NVG_CW);
         nvgClosePath(vg);
@@ -140,10 +141,10 @@ public class GGraphics {
 
     public void drawLine(int x1, int y1, int x2, int y2) {
 
-        x1 += canvas.getX();
-        y1 += canvas.getY();
-        x2 += canvas.getX();
-        y2 += canvas.getY();
+        x1 += master.getX();
+        y1 += master.getY();
+        x2 += master.getX();
+        y2 += master.getY();
 
         nvgStrokeColor(vg, nvgRGBA(r, g, b, a));
         nvgBeginPath(vg);
@@ -153,8 +154,8 @@ public class GGraphics {
     }
 
     public void drawRect(int x1, int y1, int w1, int h1) {
-        x1 += canvas.getX();
-        y1 += canvas.getY();
+        x1 += master.getX();
+        y1 += master.getY();
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x1, y1, w1, h1, 0);
         nvgStrokeColor(vg, nvgRGBA(r, g, b, a));
@@ -163,8 +164,8 @@ public class GGraphics {
 
     public void drawRoundRect(int x, int y, int width, int height, int arcWidth, int arcHeight) {
 
-        x += canvas.getX();
-        y += canvas.getY();
+        x += master.getX();
+        y += master.getY();
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x, y, width, height, (arcWidth + arcHeight) / 2);
         nvgStrokeColor(vg, nvgRGBA(r, g, b, a));
@@ -201,13 +202,14 @@ public class GGraphics {
     }
 
     public void drawString(String str, int x, int y, int anchor) {
-        x += canvas.getX();
-        y += canvas.getY();
-        nvgFontSize(vg, fontSize);
+        x += master.getX();
+        y += master.getY();
+        nvgFontFace(vg, font.getFontName());
+        nvgFontSize(vg, font.getSize());
         anchor = j2meAnchorToNanovg(anchor);
         nvgTextAlign(vg, anchor);
 
-        byte[] ba = GLUtil.toUtf8(str);
+        byte[] ba = GLUtil.toCstyleBytes(str);
         if (ba == null || ba.length <= 0) {
             return;
         }
@@ -218,12 +220,13 @@ public class GGraphics {
 
     public void drawSubstring(String str, int offset, int len, int x, int y, int anchor) {
         anchor = j2meAnchorToNanovg(anchor);
-        x += canvas.getX();
-        y += canvas.getY();
-        nvgFontSize(vg, fontSize);
+        x += master.getX();
+        y += master.getY();
+        nvgFontFace(vg, font.getFontName());
+        nvgFontSize(vg, font.getSize());
         nvgTextAlign(vg, anchor);
         str = str.substring(offset, len);
-        byte[] b = GLUtil.toUtf8(str);
+        byte[] b = GLUtil.toCstyleBytes(str);
         if (b == null || b.length <= 0) {
             return;
         }
@@ -232,31 +235,33 @@ public class GGraphics {
 
     public void drawChar(char character, int x, int y, int anchor) {
         anchor = j2meAnchorToNanovg(anchor);
-        x += canvas.getX();
-        y += canvas.getY();
-        nvgFontSize(vg, fontSize);
+        x += master.getX();
+        y += master.getY();
+        nvgFontFace(vg, font.getFontName());
+        nvgFontSize(vg, font.getSize());
         nvgTextAlign(vg, anchor);
-        byte[] b = GLUtil.toUtf8(character + "");
+        byte[] b = GLUtil.toCstyleBytes(character + "");
         nvgTextJni(vg, x, y, b, 0, b.length);
     }
 
     public void drawChars(char[] data, int offset, int length, int x, int y, int anchor) {
         anchor = j2meAnchorToNanovg(anchor);
-        x += canvas.getX();
-        y += canvas.getY();
-        nvgFontSize(vg, fontSize);
+        x += master.getX();
+        y += master.getY();
+        nvgFontFace(vg, font.getFontName());
+        nvgFontSize(vg, font.getSize());
         nvgTextAlign(vg, anchor);
         String s = new String(data, offset, length);
         drawString(s, x, y, anchor);
     }
 
     public void fillTriangle(int x1, int y1, int x2, int y2, int x3, int y3) {
-        x1 += canvas.getX();
-        y1 += canvas.getY();
-        x2 += canvas.getX();
-        y2 += canvas.getY();
-        x3 += canvas.getX();
-        y3 += canvas.getY();
+        x1 += master.getX();
+        y1 += master.getY();
+        x2 += master.getX();
+        y2 += master.getY();
+        x3 += master.getX();
+        y3 += master.getY();
         nvgFillColor(vg, nvgRGBA(r, g, b, a));
         nvgBeginPath(vg);
         nvgMoveTo(vg, x1, y1);
@@ -268,12 +273,12 @@ public class GGraphics {
     }
 
     public void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3) {
-        x1 += canvas.getX();
-        y1 += canvas.getY();
-        x2 += canvas.getX();
-        y2 += canvas.getY();
-        x3 += canvas.getX();
-        y3 += canvas.getY();
+        x1 += master.getX();
+        y1 += master.getY();
+        x2 += master.getX();
+        y2 += master.getY();
+        x3 += master.getX();
+        y3 += master.getY();
         nvgStrokeColor(vg, nvgRGBA(r, g, b, a));
         nvgBeginPath(vg);
         nvgMoveTo(vg, x1, y1);
@@ -290,8 +295,8 @@ public class GGraphics {
 
     public void drawImage(GImage img, int x, int y, int w, int h, int anchor) {
         if (img == null) return;
-        x += canvas.getX();
-        y += canvas.getY();
+        x += master.getX();
+        y += master.getY();
         if ((anchor & RIGHT) != 0) {
             x -= img.getWidth();
         } else if ((anchor & HCENTER) != 0) {
@@ -318,8 +323,8 @@ public class GGraphics {
             return;
         }
 
-        x_dest += canvas.getX();
-        y_dest += canvas.getY();
+        x_dest += master.getX();
+        y_dest += master.getY();
 
         final int imgw = src.getWidth();
         final int imgh = src.getHeight();
@@ -494,11 +499,11 @@ public class GGraphics {
      * @param anchor
      */
     public void copyArea(int x_src, int y_src, int width, int height, int x_dest, int y_dest, int anchor) {
-        x_src += canvas.getX();
-        y_src += canvas.getY();
+        x_src += master.getX();
+        y_src += master.getY();
 
-        x_dest += canvas.getX();
-        y_dest += canvas.getY();
+        x_dest += master.getX();
+        y_dest += master.getY();
 
         throw new RuntimeException("Not implementation");
     }
@@ -519,14 +524,14 @@ public class GGraphics {
      * @return the fontSize
      */
     public float getFontSize() {
-        return fontSize;
+        return font.getSize();
     }
 
     /**
      * @param fontSize the fontSize to set
      */
     public void setFontSize(float fontSize) {
-        this.fontSize = fontSize;
+        this.font.setFontSize(fontSize);
     }
 
     public void setClip(int x, int y, int w, int h) {
@@ -534,7 +539,7 @@ public class GGraphics {
         clipY = y;
         clipW = w;
         clipH = h;
-        nvgScissor(vg, x + (int) canvas.getX(), y + (int) canvas.getY(), w, h);
+        nvgScissor(vg, x + (int) master.getX(), y + (int) master.getY(), w, h);
     }
 
     public int getClipX() {
