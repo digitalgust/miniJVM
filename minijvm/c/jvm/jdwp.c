@@ -105,7 +105,7 @@ s32 jdwp_thread_dispacher(void *para) {
                 arraylist_remove(jdwpserver->clients, client);
             }
         }
-        threadSleep(20);
+        threadSleep(10);
     }
     jdwpserver->mode &= ~JDWP_MODE_DISPATCH;
     return 0;

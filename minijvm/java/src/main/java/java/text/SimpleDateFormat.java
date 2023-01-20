@@ -30,6 +30,11 @@ public class SimpleDateFormat {
     }
   }
 
+  public final String format(Date date) {
+    return format(date, new StringBuffer(),
+            DontCareFieldPosition.INSTANCE).toString();
+  }
+
   public StringBuffer format(Date date, StringBuffer buffer, FieldPosition position) {
     Calendar calendar = Calendar.getInstance();
     calendar.setTime(date);

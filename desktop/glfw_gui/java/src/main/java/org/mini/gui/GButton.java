@@ -136,23 +136,20 @@ public class GButton extends GObject {
         nvgStroke(vg);
 
         float[] textColor = enable ? (isFlying() ? getFlyingColor() : getColor()) : getDisabledColor();
-        nvgFontSize(vg, getFontSize());
-        nvgFontFace(vg, GToolkit.getFontWord());
-        tw = nvgTextBoundsJni(vg, 0, 0, text_arr, 0, text_arr.length, null);
+        if (text.length() > 0) {
+            nvgFontSize(vg, getFontSize());
+            nvgFontFace(vg, GToolkit.getFontWord());
+            tw = nvgTextBoundsJni(vg, 0, 0, text_arr, 0, text_arr.length, null);
+        }
         if (preicon != null) {
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
 
             iw = nvgTextBoundsJni(vg, 0, 0, preicon_arr, 0, preicon_arr.length, null);
-            //iw += h * 0.15f;
-        }
 
-        if (preicon != null) {
-            nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
-            nvgFontFace(vg, GToolkit.getFontIcon());
             nvgFillColor(vg, textColor);
-            nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-            nvgTextJni(vg, x + w * 0.5f - tw * 0.5f - iw * 0.5f, y + h * 0.5f + move, preicon_arr, 0, preicon_arr.length);
+            nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+            nvgTextJni(vg, x + w * 0.5f - tw * 0.5f, y + h * 0.5f + move, preicon_arr, 0, preicon_arr.length);
         }
 
         nvgFontSize(vg, getFontSize());

@@ -89,7 +89,9 @@ public class Launcher {
      * @throws ClassNotFoundException
      */
     static Class<?> loadClass(String name, ClassLoader classLoader) throws ClassNotFoundException {
-        return (classLoader == null ? getSystemClassLoader() : classLoader).loadClass(name);
+        name = name.replace('/', '.');
+        Class<?> c = (classLoader == null ? getSystemClassLoader() : classLoader).loadClass(name);
+        return c;
     }
 
     /**

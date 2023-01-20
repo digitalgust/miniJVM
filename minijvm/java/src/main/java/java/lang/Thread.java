@@ -426,4 +426,8 @@ public class Thread implements Runnable {
     public StackTraceElement[] getStackTrace() {
         return Throwable.getStackTrace(Throwable.buildStackElement(this));
     }
+
+    public static void dumpStack() {
+        new Exception("Stack trace").printStackTrace();
+    }
 }

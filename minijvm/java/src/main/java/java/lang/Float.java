@@ -43,7 +43,7 @@ package java.lang;
  */
 public final class Float extends Number implements Comparable<Float> {
     //type of bytes
-    public static final int   BYTES = 4;
+    public static final int BYTES = 4;
 
     /**
      * The positive infinity of type <code>float</code>. It is equal to the
@@ -74,12 +74,12 @@ public final class Float extends Number implements Comparable<Float> {
      * the value returned by <code>Float.intBitsToFloat(0x1)</code>.
      */
     public static final float MIN_VALUE = 1.40129846432481707e-45f;
-    
+
     public static final int MAX_EXPONENT = 127;
-    
+
     public static final int MIN_EXPONENT = -126;
-    
-    public static final Class<Float>     TYPE = (Class<Float>) Class.getPrimitiveClass("float");
+
+    public static final Class<Float> TYPE = (Class<Float>) Class.getPrimitiveClass("float");
 
     /**
      * Returns a String representation for the specified float value. The
@@ -172,8 +172,8 @@ public final class Float extends Number implements Comparable<Float> {
      * @param s the string to be parsed.
      * @return a newly constructed <code>Float</code> initialized to the value
      * represented by the <code>String</code> argument.
-     * @exception NumberFormatException if the string does not contain a
-     * parsable number.
+     * @throws NumberFormatException if the string does not contain a
+     *                               parsable number.
      */
     public static Float valueOf(String s) throws NumberFormatException {
         return new Float(FloatingDecimal.readJavaFormatString(s).floatValue());
@@ -189,8 +189,8 @@ public final class Float extends Number implements Comparable<Float> {
      *
      * @param s the string to be parsed.
      * @return the float value represented by the string argument.
-     * @exception NumberFormatException if the string does not contain a
-     * parsable float.
+     * @throws NumberFormatException if the string does not contain a
+     *                               parsable float.
      * @since JDK1.2
      */
     public static float parseFloat(String s) throws NumberFormatException {
@@ -202,7 +202,7 @@ public final class Float extends Number implements Comparable<Float> {
      * value.
      *
      * @param v the value to be tested.
-     * @return  <code>true</code> if the argument is NaN; <code>false</code>
+     * @return <code>true</code> if the argument is NaN; <code>false</code>
      * otherwise.
      */
     static public boolean isNaN(float v) {
@@ -213,7 +213,7 @@ public final class Float extends Number implements Comparable<Float> {
      * Returns true if the specified number is infinitely large in magnitude.
      *
      * @param v the value to be tested.
-     * @return  <code>true</code> if the argument is positive infinity or
+     * @return <code>true</code> if the argument is positive infinity or
      * negative infinity; <code>false</code> otherwise.
      */
     static public boolean isInfinite(float v) {
@@ -233,6 +233,10 @@ public final class Float extends Number implements Comparable<Float> {
      */
     public Float(float value) {
         this.value = value;
+    }
+
+    public Float(String s) throws NumberFormatException {
+        this.value = Float.parseFloat(s);
     }
 
     /**
@@ -262,10 +266,11 @@ public final class Float extends Number implements Comparable<Float> {
         this(valueOf(s).floatValue());
     }
      */
+
     /**
      * Returns true if this <code>Float</code> value is Not-a-Number (NaN).
      *
-     * @return  <code>true</code> if the value represented by this object is NaN;
+     * @return <code>true</code> if the value represented by this object is NaN;
      * <code>false</code> otherwise.
      */
     public boolean isNaN() {
@@ -275,7 +280,7 @@ public final class Float extends Number implements Comparable<Float> {
     /**
      * Returns true if this Float value is infinitely large in magnitude.
      *
-     * @return  <code>true</code> if the value represented by this object is
+     * @return <code>true</code> if the value represented by this object is
      * positive infinity or negative infinity; <code>false</code> otherwise.
      */
     public boolean isInfinite() {
@@ -397,7 +402,7 @@ public final class Float extends Number implements Comparable<Float> {
      * This definition allows hashtables to operate properly.
      *
      * @param obj the object to be compared
-     * @return  <code>true</code> if the objects are the same; <code>false</code>
+     * @return <code>true</code> if the objects are the same; <code>false</code>
      * otherwise.
      * @see java.lang.Float#floatToIntBits(float)
      */
@@ -433,10 +438,6 @@ public final class Float extends Number implements Comparable<Float> {
      */
     public static native int floatToIntBits(float value);
 
-    public static int floatToRawIntBits(float value) {
-        int result = floatToIntBits(value);
-        return result;
-    }
     /**
      * Returns the bit representation of a single-float value. The result is a
      * representation of the floating-point argument according to the IEEE 754
@@ -465,9 +466,12 @@ public final class Float extends Number implements Comparable<Float> {
      * @param value a floating-point number.
      * @return the bits that represent the floating-point number.
      */
-    /* REMOVED from CLDC
-    public static native int floatToRawIntBits(float value);
-     */
+    // REMOVED from CLDC
+    public static int floatToRawIntBits(float value) {
+        return floatToIntBits(value);
+    }
+
+
     /**
      * Returns the single-float corresponding to a given bit representation. The
      * argument is considered to be a representation of a floating-point value
@@ -546,6 +550,7 @@ public final class Float extends Number implements Comparable<Float> {
                  1));                          // (0.0, -0.0) or (NaN, !NaN)
     }
      */
+
     /**
      * Compares this Float to another Object. If the Object is a Float, this
      * function behaves like <code>compareTo(Float)</code>. Otherwise, it throws
@@ -558,8 +563,8 @@ public final class Float extends Number implements Comparable<Float> {
      * a Float numerically greater than this Float; and a value greater than
      * <code>0</code> if the argument is a Float numerically less than this
      * Float.
-     * @exception <code>ClassCastException</code> if the argument is not a
-     * <code>Float</code>.
+     * @throws <code>ClassCastException</code> if the argument is not a
+     *                                         <code>Float</code>.
      * @see java.lang.Comparable
      * @since 1.2
      */
@@ -580,28 +585,28 @@ public final class Float extends Number implements Comparable<Float> {
      *    new Float(f1).compareTo(new Float(f2))
      * </pre>
      *
-     * @param   f1        the first <code>float</code> to compare.
-     * @param   f2        the second <code>float</code> to compare.
-     * @return  the value <code>0</code> if <code>f1</code> is
-     *		numerically equal to <code>f2</code>; a value less than
-     *          <code>0</code> if <code>f1</code> is numerically less than
-     *		<code>f2</code>; and a value greater than <code>0</code>
-     *		if <code>f1</code> is numerically greater than
-     *		<code>f2</code>.
-     * @since 1.4 
+     * @param f1 the first <code>float</code> to compare.
+     * @param f2 the second <code>float</code> to compare.
+     * @return the value <code>0</code> if <code>f1</code> is
+     * numerically equal to <code>f2</code>; a value less than
+     * <code>0</code> if <code>f1</code> is numerically less than
+     * <code>f2</code>; and a value greater than <code>0</code>
+     * if <code>f1</code> is numerically greater than
+     * <code>f2</code>.
+     * @since 1.4
      */
     public static int compare(float f1, float f2) {
-       if (f1 < f2)
-            return -1;		 // Neither val is NaN, thisVal is smaller
+        if (f1 < f2)
+            return -1;         // Neither val is NaN, thisVal is smaller
         if (f1 > f2)
-            return 1;		 // Neither val is NaN, thisVal is larger
+            return 1;         // Neither val is NaN, thisVal is larger
 
         int thisBits = Float.floatToIntBits(f1);
         int anotherBits = Float.floatToIntBits(f2);
 
-        return (thisBits == anotherBits ?  0 : // Values are equal
+        return (thisBits == anotherBits ? 0 : // Values are equal
                 (thisBits < anotherBits ? -1 : // (-0.0, 0.0) or (!NaN, NaN)
-                 1));                          // (0.0, -0.0) or (NaN, !NaN)
+                        1));                          // (0.0, -0.0) or (NaN, !NaN)
     }
 
 }

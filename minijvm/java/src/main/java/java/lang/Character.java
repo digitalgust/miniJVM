@@ -1538,4 +1538,8 @@ public final class Character implements Comparable<Character> {
         }
         return (char) ('a' - 10 + digit);
     }
+
+    public static String toString(char c) {
+        return String.valueOf(c);
+    }
 }

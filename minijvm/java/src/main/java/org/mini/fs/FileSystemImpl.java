@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- *
  * @author gust
  */
 abstract public class FileSystemImpl extends org.mini.fs.FileSystem {
@@ -41,7 +40,9 @@ abstract public class FileSystemImpl extends org.mini.fs.FileSystem {
     abstract String getRegexParentTag();
 
     private String removeParentTag(String path) {
-        path = path.replaceAll(getRegexParentTag(), "");
+        while (path.indexOf(getSeparator() + "..") >= 0) {
+            path = path.replaceAll(getRegexParentTag(), "");
+        }
 
         return path;
     }
@@ -56,7 +57,9 @@ abstract public class FileSystemImpl extends org.mini.fs.FileSystem {
         path = path.replace(PARENT_DIR + getSeparator(), "\uffff\uffff\uffff");
         path = path.replace(CUR_DIR + getSeparator(), "");  //remove all "./" to ""
         path = path.replace("\uffff\uffff\uffff", PARENT_DIR + getSeparator());
-
+        if (path.length() > 1 && path.lastIndexOf(getSeparator()) == path.length() - 1) {//remove last char if it's '/'
+            path = path.substring(0, path.length() - 1);
+        }
         return path;
     }
 
@@ -67,6 +70,7 @@ abstract public class FileSystemImpl extends org.mini.fs.FileSystem {
         }
         path = removeParentTag(path);
         path = normalize(path);
+        path = path.replace(getSeparator() + ".", "");
         return path;
     }
 
@@ -209,8 +213,8 @@ abstract public class FileSystemImpl extends org.mini.fs.FileSystem {
         }
         return null;
     }
-    
-    
+
+
     @Override
     public char getSeparator() {
         return System.getProperty("file.separator").charAt(0);

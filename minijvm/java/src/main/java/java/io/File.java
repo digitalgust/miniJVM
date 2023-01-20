@@ -48,7 +48,7 @@ import java.util.Random;
  * or <code>"\\"</code> for a Win32 UNC pathname, and
  * <li> A sequence of zero or more string <em>names</em>.
  * </ol>
- *
+ * <p>
  * Each name in an abstract pathname except for the last denotes a directory;
  * the last name may denote either a directory or a file. The <em>empty</em>
  * abstract pathname has no prefix and an empty name sequence.
@@ -102,8 +102,8 @@ import java.util.Random;
  * created, the abstract pathname represented by a <code>File</code> object will
  * never change.
  *
- * @version 1.98, 03/22/01
  * @author unascribed
+ * @version 1.98, 03/22/01
  * @since JDK1.0
  */
 public class File implements Comparable {
@@ -173,11 +173,15 @@ public class File implements Comparable {
     public static final String pathSeparator = "" + pathSeparatorChar;
 
     /* -- Constructors -- */
+
     /**
      * Internal constructor for already-normalized pathname strings.
      */
     private File(String pathname, int prefixLength) {
-        this.path = pathname;
+        if (pathname == null) {
+            throw new NullPointerException();
+        }
+        this.path = fs.normalize(pathname);
         this.prefixLength = prefixLength;
     }
 
@@ -188,7 +192,7 @@ public class File implements Comparable {
      *
      * @param pathname A pathname string
      * @throws NullPointerException If the <code>pathname</code> argument is
-     * <code>null</code>
+     *                              <code>null</code>
      */
     public File(String pathname) {
         if (pathname == null) {
@@ -204,6 +208,7 @@ public class File implements Comparable {
        directory defined by the FileSystem.getDefaultParent method.  On Unix
        this default is "/", while on Win32 it is "\\".  This is required for
        compatibility with the original behavior of this class. */
+
     /**
      * Creates a new <code>File</code> instance from a parent pathname string
      * and a child pathname string.
@@ -227,7 +232,7 @@ public class File implements Comparable {
      * pathname is resolved against the parent.
      *
      * @param parent The parent pathname string
-     * @param child The child pathname string
+     * @param child  The child pathname string
      * @throws NullPointerException If <code>child</code> is <code>null</code>
      */
     public File(String parent, String child) {
@@ -271,7 +276,7 @@ public class File implements Comparable {
      * pathname is resolved against the parent.
      *
      * @param parent The parent abstract pathname
-     * @param child The child pathname string
+     * @param child  The child pathname string
      * @throws NullPointerException If <code>child</code> is <code>null</code>
      */
     public File(File parent, String child) {
@@ -293,6 +298,7 @@ public class File implements Comparable {
     }
 
     /* -- Path-component accessors -- */
+
     /**
      * Returns the name of the file or directory denoted by this abstract
      * pathname. This is just the last name in the pathname's name sequence. If
@@ -324,14 +330,22 @@ public class File implements Comparable {
      * parent
      */
     public String getParent() {
-        int index = path.lastIndexOf(separatorChar);
+        String p = null;
+        try {
+            p = getCanonicalPath();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        int index = p.lastIndexOf(separatorChar);
         if (index < prefixLength) {
-            if ((prefixLength > 0) && (path.length() > prefixLength)) {
-                return path.substring(0, prefixLength);
+            if ((prefixLength > 0) && (p.length() > prefixLength)) {
+                return p.substring(0, prefixLength);
             }
             return null;
+        } else if (index == 0) {
+            return p.substring(0, 1);
         }
-        return path.substring(0, index);
+        return p.substring(0, index);
     }
 
     /**
@@ -347,7 +361,6 @@ public class File implements Comparable {
      * @return The abstract pathname of the parent directory named by this
      * abstract pathname, or <code>null</code> if this pathname does not name a
      * parent
-     *
      * @since 1.2
      */
     public File getParentFile() {
@@ -370,6 +383,7 @@ public class File implements Comparable {
     }
 
     /* -- Path operations -- */
+
     /**
      * Tests whether this abstract pathname is absolute. The definition of
      * absolute pathname is system dependent. On UNIX systems, a pathname is
@@ -377,7 +391,7 @@ public class File implements Comparable {
      * is absolute if its prefix is a drive specifier followed by
      * <code>"\\"</code>, or if its prefix is <code>"\\"</code>.
      *
-     * @return  <code>true</code> if this abstract pathname is absolute,
+     * @return <code>true</code> if this abstract pathname is absolute,
      * <code>false</code> otherwise
      */
     public boolean isAbsolute() {
@@ -401,7 +415,6 @@ public class File implements Comparable {
      *
      * @return The absolute pathname string denoting the same file or directory
      * as this abstract pathname
-     *
      * @see java.io.File#isAbsolute()
      */
     public String getAbsolutePath() {
@@ -414,7 +427,6 @@ public class File implements Comparable {
      *
      * @return The absolute abstract pathname denoting the same file or
      * directory as this abstract pathname
-     *
      * @since 1.2
      */
     public File getAbsoluteFile() {
@@ -446,10 +458,8 @@ public class File implements Comparable {
      *
      * @return The canonical pathname string denoting the same file or directory
      * as this abstract pathname
-     *
      * @throws IOException If an I/O error occurs, which is possible because the
-     * construction of the canonical pathname may require filesystem queries
-     *
+     *                     construction of the canonical pathname may require filesystem queries
      * @since JDK1.1
      */
     public String getCanonicalPath() throws IOException {
@@ -462,10 +472,8 @@ public class File implements Comparable {
      *
      * @return The canonical pathname string denoting the same file or directory
      * as this abstract pathname
-     *
      * @throws IOException If an I/O error occurs, which is possible because the
-     * construction of the canonical pathname may require filesystem queries
-     *
+     *                     construction of the canonical pathname may require filesystem queries
      * @since 1.2
      */
     public File getCanonicalFile() throws IOException {
@@ -497,17 +505,17 @@ public class File implements Comparable {
     }
 
     /* -- Attribute accessors -- */
+
     /**
      * Tests whether the application can read the file denoted by this abstract
      * pathname.
      *
-     * @return  <code>true</code> if and only if the file specified by this
+     * @return <code>true</code> if and only if the file specified by this
      * abstract pathname exists <em>and</em> can be read by the application;
      * <code>false</code> otherwise
-     *
      * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkRead}</code> method denies read access to
-     * the file
+     *                           java.lang.SecurityManager#checkRead}</code> method denies read access to
+     *                           the file
      */
     public boolean canRead() {
         return fs.checkAccess(this, false);
@@ -517,14 +525,13 @@ public class File implements Comparable {
      * Tests whether the application can modify to the file denoted by this
      * abstract pathname.
      *
-     * @return  <code>true</code> if and only if the file system actually
+     * @return <code>true</code> if and only if the file system actually
      * contains a file denoted by this abstract pathname <em>and</em>
      * the application is allowed to write to the file; <code>false</code>
      * otherwise.
-     *
      * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkWrite}</code> method denies write access
-     * to the file
+     *                           java.lang.SecurityManager#checkWrite}</code> method denies write access
+     *                           to the file
      */
     public boolean canWrite() {
         return fs.checkAccess(this, true);
@@ -533,12 +540,11 @@ public class File implements Comparable {
     /**
      * Tests whether the file denoted by this abstract pathname exists.
      *
-     * @return  <code>true</code> if and only if the file denoted by this
+     * @return <code>true</code> if and only if the file denoted by this
      * abstract pathname exists; <code>false</code> otherwise
-     *
      * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkRead}</code> method denies read access to
-     * the file
+     *                           java.lang.SecurityManager#checkRead}</code> method denies read access to
+     *                           the file
      */
     public boolean exists() {
         return ((fs.getBooleanAttributes(this) & FileSystem.BA_EXISTS) != 0);
@@ -550,10 +556,9 @@ public class File implements Comparable {
      * @return <code>true</code> if and only if the file denoted by this
      * abstract pathname exists <em>and</em> is a directory; <code>false</code>
      * otherwise
-     *
      * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkRead}</code> method denies read access to
-     * the file
+     *                           java.lang.SecurityManager#checkRead}</code> method denies read access to
+     *                           the file
      */
     public boolean isDirectory() {
         return ((fs.getBooleanAttributes(this) & FileSystem.BA_DIRECTORY)
@@ -566,13 +571,12 @@ public class File implements Comparable {
      * addition, satisfies other system-dependent criteria. Any non-directory
      * file created by a Java application is guaranteed to be a normal file.
      *
-     * @return  <code>true</code> if and only if the file denoted by this
+     * @return <code>true</code> if and only if the file denoted by this
      * abstract pathname exists <em>and</em> is a normal file;
      * <code>false</code> otherwise
-     *
      * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkRead}</code> method denies read access to
-     * the file
+     *                           java.lang.SecurityManager#checkRead}</code> method denies read access to
+     *                           the file
      */
     public boolean isFile() {
         return ((fs.getBooleanAttributes(this) & FileSystem.BA_REGULAR) != 0);
@@ -585,14 +589,12 @@ public class File implements Comparable {
      * period character (<code>'.'</code>). On Win32 systems, a file is
      * considered to be hidden if it has been marked as such in the filesystem.
      *
-     * @return  <code>true</code> if and only if the file denoted by this
+     * @return <code>true</code> if and only if the file denoted by this
      * abstract pathname is hidden according to the conventions of the
      * underlying platform
-     *
      * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkRead}</code> method denies read access to
-     * the file
-     *
+     *                           java.lang.SecurityManager#checkRead}</code> method denies read access to
+     *                           the file
      * @since 1.2
      */
     public boolean isHidden() {
@@ -607,10 +609,9 @@ public class File implements Comparable {
      * modified, measured in milliseconds since the epoch (00:00:00 GMT, January
      * 1, 1970), or <code>0L</code> if the file does not exist or if an I/O
      * error occurs
-     *
      * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkRead}</code> method denies read access to
-     * the file
+     *                           java.lang.SecurityManager#checkRead}</code> method denies read access to
+     *                           the file
      */
     public long lastModified() {
         return fs.getLastModifiedTime(this);
@@ -621,16 +622,16 @@ public class File implements Comparable {
      *
      * @return The length, in bytes, of the file denoted by this abstract
      * pathname, or <code>0L</code> if the file does not exist
-     *
      * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkRead}</code> method denies read access to
-     * the file
+     *                           java.lang.SecurityManager#checkRead}</code> method denies read access to
+     *                           the file
      */
     public long length() {
         return fs.getLength(this);
     }
 
     /* -- File operations -- */
+
     /**
      * Atomically creates a new, empty file named by this abstract pathname if
      * and only if a file with this name does not yet exist. The check for the
@@ -641,15 +642,12 @@ public class File implements Comparable {
      * therefore serve as the basis for a simple but reliable cooperative
      * file-locking protocol.
      *
-     * @return  <code>true</code> if the named file does not exist and was
+     * @return <code>true</code> if the named file does not exist and was
      * successfully created; <code>false</code> if the named file already exists
-     *
-     * @throws IOException If an I/O error occurred
-     *
+     * @throws IOException       If an I/O error occurred
      * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkWrite}</code> method denies write access
-     * to the file
-     *
+     *                           java.lang.SecurityManager#checkWrite}</code> method denies write access
+     *                           to the file
      * @since 1.2
      */
     public boolean createNewFile() throws IOException {
@@ -657,8 +655,8 @@ public class File implements Comparable {
     }
 
     public static File createTempFile(String prefix,
-            String suffix,
-            File directory)
+                                      String suffix,
+                                      File directory)
             throws IOException {
         if (directory != null) {
             if (directory.exists()) {
@@ -679,7 +677,7 @@ public class File implements Comparable {
     }
 
     public static File createTempFile(String prefix,
-            String suffix)
+                                      String suffix)
             throws IOException {
         return createTempFile(prefix, suffix, fs.getTempDir());
     }
@@ -689,12 +687,11 @@ public class File implements Comparable {
      * pathname denotes a directory, then the directory must be empty in order
      * to be deleted.
      *
-     * @return  <code>true</code> if and only if the file or directory is
+     * @return <code>true</code> if and only if the file or directory is
      * successfully deleted; <code>false</code> otherwise
-     *
      * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkDelete}</code> method denies delete access
-     * to the file
+     *                           java.lang.SecurityManager#checkDelete}</code> method denies delete access
+     *                           to the file
      */
     public boolean delete() {
         return fs.delete(this);
@@ -711,11 +708,9 @@ public class File implements Comparable {
      * request. This method should therefore be used with care.
      *
      * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkDelete}</code> method denies delete access
-     * to the file
-     *
+     *                           java.lang.SecurityManager#checkDelete}</code> method denies delete access
+     *                           to the file
      * @see #delete
-     *
      * @since 1.2
      */
     public void deleteOnExit() {
@@ -742,10 +737,9 @@ public class File implements Comparable {
      * directory denoted by this abstract pathname. The array will be empty if
      * the directory is empty. Returns <code>null</code> if this abstract
      * pathname does not denote a directory, or if an I/O error occurs.
-     *
      * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkRead}</code> method denies read access to
-     * the directory
+     *                           java.lang.SecurityManager#checkRead}</code> method denies read access to
+     *                           the directory
      */
     public String[] list() {
         return fs.list(this);
@@ -765,17 +759,15 @@ public class File implements Comparable {
      * that it denotes.
      *
      * @param filter A filename filter
-     *
      * @return An array of strings naming the files and directories in the
      * directory denoted by this abstract pathname that were accepted by the
      * given <code>filter</code>. The array will be empty if the directory is
      * empty or if no names were accepted by the filter. Returns
      * <code>null</code> if this abstract pathname does not denote a directory,
      * or if an I/O error occurs.
-     *
      * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkRead}</code> method denies read access to
-     * the directory
+     *                           java.lang.SecurityManager#checkRead}</code> method denies read access to
+     *                           the directory
      */
     public String[] list(FilenameFilter filter) {
         String names[] = list();
@@ -816,11 +808,9 @@ public class File implements Comparable {
      * in the directory denoted by this abstract pathname. The array will be
      * empty if the directory is empty. Returns <code>null</code> if this
      * abstract pathname does not denote a directory, or if an I/O error occurs.
-     *
      * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkRead}</code> method denies read access to
-     * the directory
-     *
+     *                           java.lang.SecurityManager#checkRead}</code> method denies read access to
+     *                           the directory
      * @since 1.2
      */
     public File[] listFiles() {
@@ -850,16 +840,13 @@ public class File implements Comparable {
      * the directory that it denotes.
      *
      * @param filter A filename filter
-     *
      * @return An array of abstract pathnames denoting the files and directories
      * in the directory denoted by this abstract pathname. The array will be
      * empty if the directory is empty. Returns <code>null</code> if this
      * abstract pathname does not denote a directory, or if an I/O error occurs.
-     *
      * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkRead}</code> method denies read access to
-     * the directory
-     *
+     *                           java.lang.SecurityManager#checkRead}</code> method denies read access to
+     *                           the directory
      * @since 1.2
      */
     public File[] listFiles(FilenameFilter filter) {
@@ -889,16 +876,13 @@ public class File implements Comparable {
      * invoked on the pathname.
      *
      * @param filter A filename filter
-     *
      * @return An array of abstract pathnames denoting the files and directories
      * in the directory denoted by this abstract pathname. The array will be
      * empty if the directory is empty. Returns <code>null</code> if this
      * abstract pathname does not denote a directory, or if an I/O error occurs.
-     *
      * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkRead}</code> method denies read access to
-     * the directory
-     *
+     *                           java.lang.SecurityManager#checkRead}</code> method denies read access to
+     *                           the directory
      * @since 1.2
      */
     public File[] listFiles(FileFilter filter) {
@@ -919,12 +903,11 @@ public class File implements Comparable {
     /**
      * Creates the directory named by this abstract pathname.
      *
-     * @return  <code>true</code> if and only if the directory was created;
+     * @return <code>true</code> if and only if the directory was created;
      * <code>false</code> otherwise
-     *
      * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkWrite}</code> method does not permit the
-     * named directory to be created
+     *                           java.lang.SecurityManager#checkWrite}</code> method does not permit the
+     *                           named directory to be created
      */
     public boolean mkdir() {
         return fs.createDirectory(this);
@@ -936,12 +919,11 @@ public class File implements Comparable {
      * fails it may have succeeded in creating some of the necessary parent
      * directories.
      *
-     * @return  <code>true</code> if and only if the directory was created, along
+     * @return <code>true</code> if and only if the directory was created, along
      * with all necessary parent directories; <code>false</code> otherwise
-     *
      * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkWrite}</code> method does not permit the
-     * named directory and all necessary parent directories and to be created
+     *                           java.lang.SecurityManager#checkWrite}</code> method does not permit the
+     *                           named directory and all necessary parent directories and to be created
      */
     public boolean mkdirs() {
         if (exists()) {
@@ -958,16 +940,13 @@ public class File implements Comparable {
      * Renames the file denoted by this abstract pathname.
      *
      * @param dest The new abstract pathname for the named file
-     *
-     * @return  <code>true</code> if and only if the renaming succeeded;
+     * @return <code>true</code> if and only if the renaming succeeded;
      * <code>false</code> otherwise
-     *
-     * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkWrite}</code> method denies write access
-     * to either the old or new pathnames
-     *
+     * @throws SecurityException    If a security manager exists and its <code>{@link
+     *                              java.lang.SecurityManager#checkWrite}</code> method denies write access
+     *                              to either the old or new pathnames
      * @throws NullPointerException If parameter <code>dest</code> is
-     * <code>null</code>
+     *                              <code>null</code>
      */
     public boolean renameTo(File dest) {
         return fs.rename(this, dest);
@@ -986,17 +965,13 @@ public class File implements Comparable {
      * truncated) <code>time</code> argument that was passed to this method.
      *
      * @param time The new last-modified time, measured in milliseconds since
-     * the epoch (00:00:00 GMT, January 1, 1970)
-     *
+     *             the epoch (00:00:00 GMT, January 1, 1970)
      * @return <code>true</code> if and only if the operation succeeded;
      * <code>false</code> otherwise
-     *
      * @throws IllegalArgumentException If the argument is negative
-     *
-     * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkWrite}</code> method denies write access
-     * to the named file
-     *
+     * @throws SecurityException        If a security manager exists and its <code>{@link
+     *                                  java.lang.SecurityManager#checkWrite}</code> method denies write access
+     *                                  to the named file
      * @since 1.2
      */
     public boolean setLastModified(long time) {
@@ -1015,11 +990,9 @@ public class File implements Comparable {
      *
      * @return <code>true</code> if and only if the operation succeeded;
      * <code>false</code> otherwise
-     *
      * @throws SecurityException If a security manager exists and its <code>{@link
-     *          java.lang.SecurityManager#checkWrite}</code> method denies write access
-     * to the named file
-     *
+     *                           java.lang.SecurityManager#checkWrite}</code> method denies write access
+     *                           to the named file
      * @since 1.2
      */
     public boolean setReadOnly() {
@@ -1027,6 +1000,7 @@ public class File implements Comparable {
     }
 
     /* -- Filesystem interface -- */
+
     /**
      * List the available filesystem roots.
      *
@@ -1068,7 +1042,6 @@ public class File implements Comparable {
      * @return An array of <code>File</code> objects denoting the available
      * filesystem roots, or <code>null</code> if the set of roots could not be
      * determined. The array will be empty if there are no filesystem roots.
-     *
      * @since 1.2
      */
     public static File[] listRoots() {
@@ -1076,6 +1049,7 @@ public class File implements Comparable {
     }
 
     /* -- Basic infrastructure -- */
+
     /**
      * Compares two abstract pathnames lexicographically. The ordering defined
      * by this method depends upon the underlying system. On UNIX systems,
@@ -1083,13 +1057,11 @@ public class File implements Comparable {
      * it is not.
      *
      * @param pathname The abstract pathname to be compared to this abstract
-     * pathname
-     *
+     *                 pathname
      * @return Zero if the argument is equal to this abstract pathname, a value
      * less than zero if this abstract pathname is lexicographically less than
      * the argument, or a value greater than zero if this abstract pathname is
      * lexicographically greater than the argument
-     *
      * @since 1.2
      */
     public int compareTo(File pathname) {
@@ -1104,16 +1076,13 @@ public class File implements Comparable {
      * compared to abstract pathnames.
      *
      * @param o The <code>Object</code> to be compared to this abstract pathname
-     *
      * @return If the argument is an abstract pathname, returns zero if the
      * argument is equal to this abstract pathname, a value less than zero if
      * this abstract pathname is lexicographically less than the argument, or a
      * value greater than zero if this abstract pathname is lexicographically
      * greater than the argument
-     *
-     * @throws  <code>ClassCastException</code> if the argument is not an
-     * abstract pathname
-     *
+     * @throws <code>ClassCastException</code> if the argument is not an
+     *                                         abstract pathname
      * @see java.lang.Comparable
      * @since 1.2
      */
@@ -1130,8 +1099,7 @@ public class File implements Comparable {
      * significant in comparing pathnames; on Win32 systems it is not.
      *
      * @param obj The object to be compared with this abstract pathname
-     *
-     * @return  <code>true</code> if and only if the objects are the same;
+     * @return <code>true</code> if and only if the objects are the same;
      * <code>false</code> otherwise
      */
     public boolean equals(Object obj) {

@@ -56,6 +56,7 @@ public class AppManager extends GApplication {
     static final String STR_MESSAGE = "Message";
     static final String STR_CONFIRM_DELETE = "Do you confirm to delete the plugin ";
     static final String STR_APP_NOT_RUNNING = "Plugin is not running ";
+    static final String STR_INSTALL_FROM_LOCAL = "Install plugin from local file:";
 
     static private void regStrings() {
         GLanguage.addString(STR_SETTING, new String[]{STR_SETTING, "设置", "设置"});
@@ -89,6 +90,7 @@ public class AppManager extends GApplication {
         GLanguage.addString(STR_MESSAGE, new String[]{STR_MESSAGE, "信息", "信息"});
         GLanguage.addString(STR_CONFIRM_DELETE, new String[]{STR_CONFIRM_DELETE, "您要删除组件吗", "您要刪除組件嗎"});
         GLanguage.addString(STR_APP_NOT_RUNNING, new String[]{STR_APP_NOT_RUNNING, "组件没有运行", "組件沒有運行"});
+        GLanguage.addString(STR_INSTALL_FROM_LOCAL, new String[]{STR_INSTALL_FROM_LOCAL, "选取文件安装", "選取檔案安裝"});
     }
 
     static AppManager instance = new AppManager();
@@ -365,7 +367,7 @@ public class AppManager extends GApplication {
                     if (curSelectedJarName != null) {
                         jarName = curSelectedJarName;
                         GListItem gli = getGListItemByAttachment(curSelectedJarName);
-                        gli.setColor(RUNNING_ITEM_COLOR);
+
                         String orientation = AppLoader.getApplicationOrientation(jarName);
                         if (orientation.equals("h")) {
                             Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationLandscapeLeft);
@@ -388,6 +390,10 @@ public class AppManager extends GApplication {
                                             runningApps.put(jarName, app);
                                             app.getForm().add(AppManager.getInstance().getFloatButton());
                                             updateContentViewInfo(jarName);
+                                            gli.setColor(RUNNING_ITEM_COLOR);
+                                        } else {
+                                            GForm.addMessage(GLanguage.getString(AppManager.STR_OPEN_APP_FAIL) + ": " + jarName);
+//                                            GForm.addMessage("Can't found startup class ,it setup in config.txt in jar root");
                                         }
                                     }
                                 }
@@ -424,7 +430,32 @@ public class AppManager extends GApplication {
                         }
                     }
                     break;
-
+                case "BT_LOCALFILE":
+                    GFrame chooser = GToolkit.getFileChooser(mgrForm, STR_INSTALL_FROM_LOCAL, null, new FileFilter() {
+                        @Override
+                        public boolean accept(File file) {
+                            return file.isDirectory() || file.getName().endsWith(".jar");
+                        }
+                    }, mgrForm.getDeviceWidth(), mgrForm.getDeviceHeight(), gobj1 -> {
+                        File f = gobj1.getAttachment();
+                        String fullpath = f.getAbsolutePath();
+                        String path = fullpath;
+                        int idx = path.lastIndexOf(File.separator);
+                        if (idx >= 0) {
+                            path = path.substring(idx + 1);
+                            idx = path.indexOf(".jar");
+                            if (idx >= 0) {
+                                path = path.substring(0, idx);
+                            }
+                        }
+                        if (path.length() >= 0) {
+                            AppLoader.addApp(path, fullpath);
+                            GForm.addMessage(GLanguage.getString(STR_SUCCESS) + " " + fullpath);
+                            reloadAppList();
+                        }
+                    }, null);
+                    mgrForm.add(chooser);
+                    break;
                 case "BT_SETTING":
                     mainSlot.moveTo(2, 0);
                     break;
@@ -521,6 +552,9 @@ public class AppManager extends GApplication {
                             return true;
                         }
                     };
+                    if (img == null) {
+                        item.setPreIcon("\uD83C\uDFAB");
+                    }
                     item.setAttachment(appName);
                     if (runningApps.get(appName) != null) {
                         item.setColor(RUNNING_ITEM_COLOR);

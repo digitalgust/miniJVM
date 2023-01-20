@@ -174,27 +174,24 @@ public class GGraphics {
 
     private int j2meAnchorToNanovg(int j2meNanchor) {
         int r = 0;
-        if ((j2meNanchor & 0x01) != 0) {
+        if ((j2meNanchor & HCENTER) != 0) {
             r |= NVG_ALIGN_CENTER;
-        }
-        if ((j2meNanchor & 0x02) != 0) {
-            r |= NVG_ALIGN_MIDDLE;
-        }
-        if ((j2meNanchor & 0x04) != 0) {
+        } else if ((j2meNanchor & LEFT) != 0) {
             r |= NVG_ALIGN_LEFT;
-        }
-        if ((j2meNanchor & 0x08) != 0) {
+        } else if ((j2meNanchor & RIGHT) != 0) {
             r |= NVG_ALIGN_RIGHT;
         }
-        if ((j2meNanchor & 0x10) != 0) {
+
+        if ((j2meNanchor & VCENTER) != 0) {
+            r |= NVG_ALIGN_MIDDLE;
+        } else if ((j2meNanchor & TOP) != 0) {
             r |= NVG_ALIGN_TOP;
-        }
-        if ((j2meNanchor & 0x20) != 0) {
+        } else if ((j2meNanchor & BOTTOM) != 0) {
             r |= NVG_ALIGN_BOTTOM;
-        }
-        if ((j2meNanchor & 0x40) != 0) {
+        } else if ((j2meNanchor & BASELINE) != 0) {
             r |= NVG_ALIGN_BASELINE;
         }
+
         if (j2meNanchor == 0) {
             r = NVG_ALIGN_LEFT | NVG_ALIGN_TOP;
         }

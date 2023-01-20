@@ -5,12 +5,15 @@
  */
 package org.mini.gui;
 
+import org.mini.apploader.AppLoader;
 import org.mini.glfw.Glfw;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
 import org.mini.nanovg.Nanovg;
 import org.mini.reflect.ReflectArray;
 
+import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.*;
@@ -511,22 +514,11 @@ public class GToolkit {
             nvgStroke(vg);
         }
     }
-    /**
-     * ----------------------------------------------------------------
-     *      frame
-     * ----------------------------------------------------------------
-     */
 
     /**
-     * return a frame to confirm msg
-     *
-     * @param title
-     * @param msg
-     * @param left
-     * @param leftListener
-     * @param right
-     * @param rightListener
-     * @return
+     * ----------------------------------------------------------------
+     * getConfirmFrame
+     * ----------------------------------------------------------------
      */
     static public GFrame getConfirmFrame(GForm form, String title, String msg, String left, GActionListener leftListener, String right, GActionListener rightListener) {
         return getConfirmFrame(form, title, msg, left, leftListener, right, rightListener, 300f, 200f);
@@ -561,12 +553,18 @@ public class GToolkit {
             GButton leftBtn = new GButton(form, left, x, y, btnWidth, 30);
             //leftBtn.setBgColor(128, 16, 8, 255);
             gp.add(leftBtn);
-            leftBtn.setActionListener(leftListener);
+            leftBtn.setActionListener(gobj -> {
+                if (leftListener != null) leftListener.action(gobj);
+                gobj.getFrame().close();
+            });
         }
 
         GButton rightBtn = new GButton(form, right == null ? GLanguage.getString("Cancel") : right, btnWidth + 10, y, btnWidth, 30);
         gp.add(rightBtn);
-        rightBtn.setActionListener(rightListener == null ? (GActionListener) gobj -> frame.close() : rightListener);
+        rightBtn.setActionListener(gobj -> {
+            if (rightListener != null) rightListener.action(gobj);
+            gobj.getFrame().close();
+        });
 
         return frame;
     }
@@ -610,12 +608,227 @@ public class GToolkit {
     }
 
     /**
-     * @param title
-     * @param strs
-     * @param imgs
-     * @param buttonListener
-     * @param itemListener
-     * @return
+     * ----------------------------------------------------------------
+     * FileChooser
+     * ----------------------------------------------------------------
+     */
+
+    static public GFrame getFileChooser(GForm form, String title, String path, FileFilter filter, float width, float height, GActionListener openAction, GActionListener cancelAction) {
+        return getFileChooser(form, title, path, filter, false, width, height, openAction, cancelAction);
+    }
+
+    static public GFrame getFileChooser(GForm form, String title, String path, FileFilter filter, boolean multiSelect, float width, float height, GActionListener openAction, GActionListener cancelAction) {
+        final GFrame frame = new GFrame(form, title, 0, 0, width, height);
+        frame.setFront(true);
+
+        if (path == null || path.length() == 0) {
+            path = AppLoader.getProperty("filechooserpath");
+        }
+        File file = new File(path);
+        if (!file.exists()) {
+            file = new File(GCallBack.getInstance().getApplication().getSaveRoot());
+        }
+
+        GContainer gp = frame.getView();
+        float x = 10f, y = 10f, w = gp.getW() - 20f;
+        float btnH = 25f;
+        float pad = 3f;
+
+        float btnW = 30f;
+        GButton upBtn = new GButton(form, "", x, y, btnW, btnH);
+        upBtn.setPreIcon("⬆");
+        upBtn.setName("GTOOLKIT_FILECHOOSER_UP");
+        gp.add(upBtn);
+
+        float labX = x + btnW + pad;
+        float labW = w - 3 * (btnW + pad);
+        GLabel pathLabel = new GLabel(form, file.getAbsolutePath(), labX, y, labW, btnH);
+        pathLabel.setName("GTOOLKIT_FILECHOOSER_PATH");
+        gp.add(pathLabel);
+
+        float delX = labX + labW + pad;
+        GButton delBtn = new GButton(form, "", delX, y, btnW, btnH);
+        delBtn.setPreIcon("\uE729");
+        delBtn.setName("GTOOLKIT_FILECHOOSER_DEL");
+        gp.add(delBtn);
+        delBtn.setActionListener(gobj -> {
+
+            GFrame confirm = getConfirmFrame(form,
+                    GLanguage.getString("Message"),
+                    GLanguage.getString("Do you sure delete : ") + pathLabel.getText(),
+                    GLanguage.getString("Ok"),
+                    gobj1 -> {
+                        AppLoader.deleteTree(new File(pathLabel.getText()));
+                        chooserRefresh(upBtn);
+                    },
+                    GLanguage.getString("Cancel"),
+                    null);
+            GToolkit.showFrame(confirm);
+        });
+
+        GButton newBtn = new GButton(form, "", delX + btnW + pad, y, btnW, btnH);
+        newBtn.setPreIcon("⊕");
+        newBtn.setName("GTOOLKIT_FILECHOOSER_NEW");
+        gp.add(newBtn);
+        newBtn.setActionListener(gobj -> {
+
+            GFrame confirm = getInputFrame(form,
+                    GLanguage.getString("New"),
+                    GLanguage.getString("Create new folder : "),
+                    "",
+                    "Folder Name",
+                    GLanguage.getString("Cancel"),
+                    null,
+                    GLanguage.getString("Ok"),
+                    gobj1 -> {
+                        GButton up = GToolkit.getComponent(gobj.getFrame(), "GTOOLKIT_FILECHOOSER_UP");
+                        if (up != null) {
+                            File f = up.getAttachment();
+                            System.out.println(f.getAbsolutePath());
+                            System.out.println(GToolkit.getCompText(form, "input"));
+                            f = new File(f.getAbsolutePath() + File.separator + GToolkit.getCompText(form, "input"));
+                            System.out.println(f.getAbsolutePath());
+                            if (f.mkdirs()) {
+                                chooserRefresh(upBtn);
+                            }
+                        }
+                    });
+            GToolkit.showFrame(confirm);
+        });
+
+        y += btnH + pad;
+        btnH = gp.getH() - 20f - (btnH + pad) * 2f;
+        GList list = new GList(form, x, y, w, btnH);
+        list.setShowMode(GList.MODE_MULTI_SHOW);
+        if (multiSelect) list.setSelectMode(GList.MODE_MULTI_SELECT);
+        list.setName("GTOOLKIT_FILECHOOSER_FILELIST");
+        list.setAttachment(filter);
+        list.setScrollBar(true);
+        chooserAddFilesToList(file, filter, list);
+        gp.add(list);
+
+        y += btnH + pad;
+        btnH = 25f;
+        float btnWidth = w * .5f;
+        GButton okBtn = new GButton(form, GLanguage.getString("Ok"), x + w * .5f, y, btnWidth, btnH);
+        okBtn.setName("GTOOLKIT_FILECHOOSER_OK");
+        gp.add(okBtn);
+        okBtn.setActionListener(gobj -> {
+            if (openAction != null) openAction.action(gobj);
+            gobj.getFrame().close();
+        });
+
+        GButton cancelBtn = new GButton(form, GLanguage.getString("Cancel"), x, y, btnWidth, btnH);
+        cancelBtn.setName("GTOOLKIT_FILECHOOSER_CANCEL");
+        gp.add(cancelBtn);
+        cancelBtn.setActionListener(gobj -> {
+            if (cancelAction != null) cancelAction.action(gobj);
+            gobj.getFrame().close();
+        });
+
+        upBtn.setAttachment(file);
+        upBtn.setActionListener(gobj -> {
+            File f = gobj.getAttachment();
+            f = f.getParentFile();
+            gobj.setAttachment(f);
+            pathLabel.setText(f.getAbsolutePath());
+            chooserRefresh(upBtn);
+        });
+
+        return frame;
+    }
+
+    private static void chooserRefresh(GObject gobj) {
+        GButton up = GToolkit.getComponent(gobj.getFrame(), "GTOOLKIT_FILECHOOSER_UP");
+        GList list = GToolkit.getComponent(gobj.getFrame(), "GTOOLKIT_FILECHOOSER_FILELIST");
+
+        File f = up.getAttachment();
+        while (!f.exists()) {
+            f = f.getParentFile();
+        }
+        up.setAttachment(f);
+        chooserAddFilesToList(f, list.getAttachment(), list);
+        AppLoader.setProperty("filechooserpath", f.getAbsolutePath());
+    }
+
+    private static GActionListener fileChooserItemListener = gobj -> {
+        File f = gobj.getAttachment();
+        GList list = GToolkit.getComponent(gobj.getFrame(), "GTOOLKIT_FILECHOOSER_FILELIST");
+
+        if (f.isDirectory()) {
+            if (list != null) {
+                chooserAddFilesToList(f, list.getAttachment(), list);
+            }
+            GButton upBtn = GToolkit.getComponent(gobj.getFrame(), "GTOOLKIT_FILECHOOSER_UP");
+            if (upBtn != null) {
+                AppLoader.setProperty("filechooserpath", f.getAbsolutePath());
+                upBtn.setAttachment(f);
+            }
+        }
+        GLabel lab = GToolkit.getComponent(gobj.getFrame(), "GTOOLKIT_FILECHOOSER_PATH");
+        if (lab != null) {
+            lab.setText(f.getAbsolutePath());
+        }
+
+        setChooserResult(gobj);
+    };
+
+    private static void setChooserResult(GObject listItem) {
+        GList list = GToolkit.getComponent(listItem.getFrame(), "GTOOLKIT_FILECHOOSER_FILELIST");
+
+        GButton okbtn = GToolkit.getComponent(listItem.getFrame(), "GTOOLKIT_FILECHOOSER_OK");
+        if (okbtn != null) {
+            //single select
+            if (list.getSelectMode() == GList.MODE_SINGLE_SELECT) {
+                File f = listItem.getAttachment();
+                okbtn.setAttachment(f);
+            } else {// multiple select
+                int[] selectIndecis = list.getSelectedIndices();
+                File[] files = new File[selectIndecis.length];
+                for (int i = 0; i < files.length; i++) {
+                    files[i] = list.getItem(selectIndecis[i]).getAttachment();
+                }
+            }
+        }
+    }
+
+    private static void chooserAddFilesToList(File dir, FileFilter filter, GList list) {
+        File[] files = dir.listFiles(filter);
+        Arrays.sort(files, (f1, f2) -> {
+
+            int i = 0;
+            if (f1.isDirectory() && f2.isDirectory()) {
+                i = f1.getName().toLowerCase().compareTo(f2.getName().toLowerCase());
+            } else if (f1.isDirectory()) {
+                i = -1;
+            } else if (f2.isDirectory()) {
+                i = 1;
+            } else {
+                i = f1.getName().toLowerCase().compareTo(f2.getName().toLowerCase());
+            }
+            return i;
+        });
+
+        list.clear();
+        for (int i = 0; i < files.length; i++) {
+            File file = files[i];
+            GListItem item = list.addItem(null, file.getName() + " | " + file.length() + " | " + new Date(file.lastModified()));
+            if (file.isDirectory()) {
+                item.setPreIcon("\uD83D\uDCC1");
+            } else {
+                item.setPreIcon("\uD83D\uDCC4");
+            }
+            item.setAttachment(file);
+            item.setActionListener(fileChooserItemListener);
+        }
+
+    }
+
+
+    /**
+     * ----------------------------------------------------------------
+     * getListFrame
+     * ----------------------------------------------------------------
      */
     public static GFrame getListFrame(GForm form, String title, String[] strs, GImage[] imgs, GActionListener buttonListener, GActionListener itemListener) {
         return getListFrame(form, title, strs, imgs, false, null, buttonListener, itemListener);
@@ -685,7 +898,12 @@ public class GToolkit {
         GButton btn = new GButton(form, buttonText == null ? GLanguage.getString("Ok") : buttonText, (view.getW() - btnW - pad), y, btnW, btnH);
         btn.setName("perform");
         frame.getView().add(btn);
-        btn.setActionListener(buttonListener);
+        btn.setActionListener(gobj -> {
+            if (buttonListener != null) {
+                buttonListener.action(gobj);
+            }
+            gobj.getFrame().close();
+        });
         //
         glist.setItems(imgs, strs);
         if (itemListener != null) {
@@ -696,6 +914,11 @@ public class GToolkit {
         return frame;
     }
 
+    /**
+     * ----------------------------------------------------------------
+     * getInputFrame
+     * ----------------------------------------------------------------
+     */
     public static GFrame getInputFrame(GForm form, String title, String msg, String defaultValue, String inputHint, String leftLabel, GActionListener leftListener, String rightLabel, GActionListener rightListener) {
         return getInputFrame(form, title, msg, defaultValue, inputHint, leftLabel, leftListener, rightLabel, rightListener, 300, 200);
     }
@@ -743,28 +966,30 @@ public class GToolkit {
         lb1.setShowMode(GLabel.MODE_MULTI_SHOW);
         view.add(lb1);
 
-        if (rightListener != null) {
-            okbtn.setActionListener(rightListener);
-        } else {
-            okbtn.setActionListener((GObject gobj) -> {
-                if (gobj.getFrame() != null) {
-                    gobj.getFrame().close();
+        okbtn.setActionListener((GObject gobj) -> {
+            if (gobj.getFrame() != null) {
+                if (rightListener != null) {
+                    rightListener.action(gobj);
                 }
-            });
-        }
+                gobj.getFrame().close();
+            }
+        });
 
-        if (leftListener != null) {
-            cancelbtn.setActionListener(leftListener);
-        } else {
-            cancelbtn.setActionListener((GObject gobj) -> {
-                if (gobj.getFrame() != null) {
-                    gobj.getFrame().close();
-                }
-            });
-        }
+        cancelbtn.setActionListener((GObject gobj) -> {
+            if (leftListener != null) {
+                leftListener.action(gobj);
+            }
+            gobj.getFrame().close();
+        });
+
         return frame;
     }
 
+    /**
+     * ----------------------------------------------------------------
+     * getListMenu
+     * ----------------------------------------------------------------
+     */
     public static GList getListMenu(GForm form, String[] strs, GImage[] imgs, GActionListener[] listeners) {
         return getListMenu(form, strs, imgs, listeners, 150, 120);
     }
@@ -819,6 +1044,11 @@ public class GToolkit {
         return list;
     }
 
+    /**
+     * ----------------------------------------------------------------
+     * getMenu
+     * ----------------------------------------------------------------
+     */
     public static GMenu getMenu(GForm form, String[] strs, GImage[] imgs, GActionListener[] listener) {
 
         GMenu menu = new GMenu(form, 0, 0, 150, 120);
@@ -852,6 +1082,11 @@ public class GToolkit {
         return menu;
     }
 
+    /**
+     * ----------------------------------------------------------------
+     * getImageView
+     * ----------------------------------------------------------------
+     */
     public static GViewPort getImageView(GForm form, GImage img, GActionListener listener) {
 
         GViewPort view = new GViewPort(form) {

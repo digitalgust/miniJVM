@@ -65,8 +65,8 @@ public class AppLoader {
             setBootApp(EXAMPLE_APP_FILE);
             bootApp = EXAMPLE_APP_FILE;
         }
-        bootApp = "block the setup bootapp auto boot";
-        runApp(bootApp);
+//        bootApp = "block the setup bootapp auto boot";
+//        runApp(bootApp);
     }
 
     static void checkDir() {
@@ -219,6 +219,15 @@ public class AppLoader {
 
     public static void setHomeIconY(int y) {
         appinfo.put(KEY_HOMEICON_Y, "" + y);
+        saveProp(APP_INFO_FILE, appinfo);
+    }
+
+    public static String getProperty(String key) {
+        return appinfo.getProperty(key);
+    }
+
+    public static void setProperty(String key, String val) {
+        appinfo.setProperty(key, val);
         saveProp(APP_INFO_FILE, appinfo);
     }
 
@@ -486,7 +495,7 @@ public class AppLoader {
     }
 
 
-    static void deleteTree(File f) {
+    public static boolean deleteTree(File f) {
         if (f.isDirectory()) {
             File[] files = f.listFiles();
             for (File sf : files) {
@@ -496,5 +505,6 @@ public class AppLoader {
         }
         boolean s = f.delete();
         //System.out.println("delete " + f.getAbsolutePath() + " state:" + s);
+        return s;
     }
 }

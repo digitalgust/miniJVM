@@ -10,58 +10,48 @@
 
 package java.net;
 
-import java.io.File;
+import org.mini.reflect.Launcher;
 
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.ByteArrayOutputStream;
 
 public class URLClassLoader extends ClassLoader {
 
-  private final File jarFile;
+    URL[] urls;
+    private final String[] paths;
 
-  public URLClassLoader(URL[] urls, ClassLoader parent) {
-    super(parent);
-    if(urls.length != 1) {
-      throw new UnsupportedOperationException();
+    public URLClassLoader(URL[] urls) {
+        this(urls, Thread.currentThread().getContextClassLoader());
     }
-    if(!urls[0].getProtocol().equals("file")) {
-      throw new UnsupportedOperationException(urls[0].getProtocol());
-    }
-    this.jarFile = new File(urls[0].getFile());
-  }
 
 
-  protected Class findClass(String name) throws ClassNotFoundException {
-    try {
-      InputStream stream = getResourceAsStream(name.replace(".", "/") + ".class");
-      if(stream == null) {
-        throw new ClassNotFoundException("couldn't find class " + name);
-      }
-      byte[] buf = new byte[2048];
-      ByteArrayOutputStream mem = new ByteArrayOutputStream();
-      try {
-        int size;
-        while((size = stream.read(buf, 0, buf.length)) > 0) {
-          mem.write(buf, 0, size);
+    public URLClassLoader(URL[] urls, ClassLoader parent) {
+        super(parent);
+        this.urls = urls;
+
+        paths = new String[urls.length];
+        for (int i = 0; i < urls.length; i++) {
+            if (!urls[i].getProtocol().equals("file")) {
+                throw new UnsupportedOperationException(urls[i].getProtocol());
+            }
+            this.paths[i] = urls[i].getFile();
         }
-        byte[] data = mem.toByteArray();
-        return defineClass(name, data, 0, data.length);
-      } finally {
-        stream.close();
-      }
-    } catch(IOException e) {
-      throw new ClassNotFoundException("couldn't find class " + name, e);
     }
-  }
 
-  public URL getResource(String path) {
-    try {
-      return new URL("jar:file:" + jarFile.getAbsolutePath() + "!/" + path);
-    } catch(MalformedURLException e) {
-      throw new RuntimeException(e);
+    @Override
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+
+        // 加载D盘根目录下指定类名的class
+        String classname = name.replace('.', '/') + ".class";
+        byte[] classData = Launcher.getFileData(classname, paths);
+        if (classData == null) {
+            throw new ClassNotFoundException();
+        } else {
+            return defineClass(name, classData, 0, classData.length);
+        }
     }
-  }
 
+    protected URL findResource(String path) {
+        URL url = Launcher.getFileUrl(path, paths);
+        return url;
+    }
 
 }

@@ -66,8 +66,11 @@
                         </input>
                         <button name="BT_DOWN" w="25%" h="30">{Download}</button>
                         <label w="100%" h="20"></label>
-                        <label name="LAB_WEBSRV" w="80%" h="30" align="left,vcenter">{Lan webserver for upload plugin}</label>
-                        <button name="BT_STARTWEB" w="20%" h="30">{Start}</button>
+                        <label w="75%" h="30" align="left,vcenter">{Install plugin from local file:}</label>
+                        <button name="BT_LOCALFILE" w="25%" h="30">{Select File}</button>
+                        <label w="100%" h="20"></label>
+                        <label name="LAB_WEBSRV" w="75%" h="30" align="left,vcenter">{Lan webserver for upload plugin}</label>
+                        <button name="BT_STARTWEB" w="25%" h="30">{Start}</button>
                         <label w="100%" h="20"></label>
                         <br/>
                         <input name="INPUT_LOG" w="100%" h="200" edit="0" multiline="1">{Message}</input>

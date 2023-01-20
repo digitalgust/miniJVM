@@ -12,7 +12,7 @@ public class GFont {
     byte[] fontName;
     int font_handle;
 
-    private static GFont defaultFont = new GFont(GToolkit.getStyle().getTextFontSize());
+    private static GFont defaultFont;
 
     private GFont(float fontSize) {
         this.size = fontSize;
@@ -36,6 +36,9 @@ public class GFont {
     }
 
     public static GFont getDefaultFont() {
+        if (defaultFont == null) {
+            defaultFont = GToolkit.FontHolder.word;
+        }
         return defaultFont;
     }
 
