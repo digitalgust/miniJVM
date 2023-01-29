@@ -395,6 +395,7 @@ public class AppManager extends GApplication {
                                             GForm.addMessage(GLanguage.getString(AppManager.STR_OPEN_APP_FAIL) + ": " + jarName);
 //                                            GForm.addMessage("Can't found startup class ,it setup in config.txt in jar root");
                                         }
+                                        floatButton.checkLocation();
                                     }
                                 }
                             }

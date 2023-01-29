@@ -65,8 +65,8 @@ public class AppLoader {
             setBootApp(EXAMPLE_APP_FILE);
             bootApp = EXAMPLE_APP_FILE;
         }
-//        bootApp = "block the setup bootapp auto boot";
-//        runApp(bootApp);
+        bootApp = null;//"block the setup bootapp auto boot";
+        runApp(bootApp);
     }
 
     static void checkDir() {
@@ -392,22 +392,24 @@ public class AppLoader {
     public static GApplication runApp(String jarName) {
         GApplication app = null;
         try {
-            extractFatJar(jarName); //extract dependence lib
-            GStyle oldStyle = GToolkit.getStyle();
-            Class c = getApplicationClass(jarName);
-            if (c != null) {
-                app = (GApplication) c.newInstance();
-                app.setOldStyle(oldStyle);
-                app.setSaveRoot(getAppDataPath(jarName));
-                GCallBack.getInstance().setApplication(app);
-                app.setJarName(jarName);
+            if (jarName != null) {
+                extractFatJar(jarName); //extract dependence lib
+                GStyle oldStyle = GToolkit.getStyle();
+                Class c = getApplicationClass(jarName);
+                if (c != null) {
+                    app = (GApplication) c.newInstance();
+                    app.setOldStyle(oldStyle);
+                    app.setSaveRoot(getAppDataPath(jarName));
+                    GCallBack.getInstance().setApplication(app);
+                    app.setJarName(jarName);
+                }
             }
-
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {
             if (app == null) {
                 app = AppManager.getInstance();
+                app.setSaveRoot(getAppDataPath("Home"));
                 AppManager.getInstance().active();
                 //GForm.addMessage(GLanguage.getString(AppManager.STR_OPEN_APP_FAIL) + ": " + jarName);
             }

@@ -23,8 +23,37 @@ public class GHomeButton extends GPanel implements GActionListener {
         int saveX = AppLoader.getHomeIconX();
         int saveY = AppLoader.getHomeIconY();
         setLocation(saveX, saveY);
+        checkLocation();
         layer = LAYER_INNER;
         setActionListener(this);
+    }
+
+
+    void checkLocation() {
+        GForm form = GCallBack.getInstance().getApplication().getForm();
+        int oldx = (int) getX();
+        int oldy = (int) getY();
+
+        double[] inset = new double[4];
+        Glfm.glfmGetDisplayChromeInsets(form.getWinContext(), inset);
+        double ratio = GCallBack.getInstance().getDeviceRatio();
+
+        int tx = oldx, ty = oldy;
+        int top = (int) (inset[0] / ratio);
+        int bt = (int) (inset[2] / ratio);
+        if (oldy < top) ty = top;
+        if (oldy + DEF_H > form.getDeviceHeight() - bt) ty = (int) (form.getDeviceHeight() - bt - DEF_H);
+
+        int right = (int) (inset[1] / ratio);
+        int left = (int) (inset[3] / ratio);
+        if (oldx < left) tx = left;
+        if (oldx + DEF_W > form.getDeviceWidth() - right) tx = (int) (form.getDeviceWidth() - right - DEF_W);
+
+        if (tx != oldx || ty != oldy) {
+            setLocation(tx, ty);
+            AppLoader.setHomeIconX(tx);
+            AppLoader.setHomeIconY(ty);
+        }
     }
 
     @Override
@@ -58,6 +87,7 @@ public class GHomeButton extends GPanel implements GActionListener {
     public boolean dragEvent(int button, float dx, float dy, float x, float y) {
         if (drag) {
             move(dx, dy);
+            checkLocation();
             if (Math.abs(dx) > 2.f || Math.abs(dy) > 2) {
                 moved = true;
             }

@@ -634,6 +634,9 @@ public class GToolkit {
         if (path == null || path.length() == 0) {
             path = AppLoader.getProperty("filechooserpath");
         }
+        if (path == null) {
+            path = "./";
+        }
         File file = new File(path);
         if (!file.exists()) {
             file = new File(GCallBack.getInstance().getApplication().getSaveRoot());
@@ -641,9 +644,30 @@ public class GToolkit {
 
         GContainer gp = frame.getView();
         float x = 10f, y = 10f, w = gp.getW() - 20f;
-        float btnH = 25f;
+        float btnH;
         float pad = 3f;
 
+        btnH = 30f;
+        float btnWidth = w * .5f;
+        GButton okBtn = new GButton(form, GLanguage.getString("Ok"), x + w * .5f, y, btnWidth, btnH);
+        okBtn.setName("GTOOLKIT_FILECHOOSER_OK");
+        gp.add(okBtn);
+        okBtn.setActionListener(gobj -> {
+            if (openAction != null) openAction.action(gobj);
+            gobj.getFrame().close();
+        });
+
+        GButton cancelBtn = new GButton(form, GLanguage.getString("Cancel"), x, y, btnWidth, btnH);
+        cancelBtn.setName("GTOOLKIT_FILECHOOSER_CANCEL");
+        gp.add(cancelBtn);
+        cancelBtn.setActionListener(gobj -> {
+            if (cancelAction != null) cancelAction.action(gobj);
+            gobj.getFrame().close();
+        });
+
+
+        y += btnH + pad;
+        btnH = 25f;
         float btnW = 30f;
         GButton upBtn = new GButton(form, "", x, y, btnW, btnH);
         upBtn.setPreIcon("⬆");
@@ -652,8 +676,9 @@ public class GToolkit {
 
         float labX = x + btnW + pad;
         float labW = w - 3 * (btnW + pad);
-        GLabel pathLabel = new GLabel(form, file.getAbsolutePath(), labX, y, labW, btnH);
+        GTextField pathLabel = new GTextField(form, file.getAbsolutePath(), "", labX, y, labW, btnH);
         pathLabel.setName("GTOOLKIT_FILECHOOSER_PATH");
+        pathLabel.setEditable(false);
         gp.add(pathLabel);
 
         float delX = labX + labW + pad;
@@ -717,24 +742,6 @@ public class GToolkit {
         chooserAddFilesToList(file, filter, list);
         gp.add(list);
 
-        y += btnH + pad;
-        btnH = 25f;
-        float btnWidth = w * .5f;
-        GButton okBtn = new GButton(form, GLanguage.getString("Ok"), x + w * .5f, y, btnWidth, btnH);
-        okBtn.setName("GTOOLKIT_FILECHOOSER_OK");
-        gp.add(okBtn);
-        okBtn.setActionListener(gobj -> {
-            if (openAction != null) openAction.action(gobj);
-            gobj.getFrame().close();
-        });
-
-        GButton cancelBtn = new GButton(form, GLanguage.getString("Cancel"), x, y, btnWidth, btnH);
-        cancelBtn.setName("GTOOLKIT_FILECHOOSER_CANCEL");
-        gp.add(cancelBtn);
-        cancelBtn.setActionListener(gobj -> {
-            if (cancelAction != null) cancelAction.action(gobj);
-            gobj.getFrame().close();
-        });
 
         upBtn.setAttachment(file);
         upBtn.setActionListener(gobj -> {
@@ -775,7 +782,7 @@ public class GToolkit {
                 upBtn.setAttachment(f);
             }
         }
-        GLabel lab = GToolkit.getComponent(gobj.getFrame(), "GTOOLKIT_FILECHOOSER_PATH");
+        GTextField lab = GToolkit.getComponent(gobj.getFrame(), "GTOOLKIT_FILECHOOSER_PATH");
         if (lab != null) {
             lab.setText(f.getAbsolutePath());
         }
