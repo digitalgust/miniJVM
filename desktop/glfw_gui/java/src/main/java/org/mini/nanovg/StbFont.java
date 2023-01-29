@@ -13,27 +13,29 @@ import org.mini.gui.GToolkit;
 import static org.mini.nanovg.Nanovg.*;
 
 /**
+ * STB FONT can't work , because nanovg changed STBTT_malloc STBTT_free
+ *
  * warp stb_truetype.h - v0.6c - public domain ,
  * <p/>
  * authored from 2009-2012 by Sean Barrett / RAD Game Tools
  *
  * @author gust
  */
-public class StbFont {
+class StbFont {
 
-    byte[] fontBuffer;
+    byte[] fontData;
     byte[] fontInfo;
 
     public StbFont(String fontPath) {
         if (fontPath == null) {
-            fontBuffer = GToolkit.getFontWord();
+            fontData = GToolkit.FontHolder.getFont("word").getData();
         } else {
-            fontBuffer = GToolkit.readFileFromJar(fontPath);
+            fontData = GToolkit.readFileFromJar(fontPath);
         }
         /* prepare font */
         fontInfo = stbtt_MakeFontInfo();
         long infoPtr = GToolkit.getArrayDataPtr(fontInfo);
-        if (stbtt_InitFont(infoPtr, fontBuffer, 0) == 0) {
+        if (stbtt_InitFont(infoPtr, fontData, 0) == 0) {
             System.out.println("load font failed: " + fontPath);
         }
 
@@ -44,7 +46,7 @@ public class StbFont {
     }
 
     public byte[] getFontBytes() {
-        return fontBuffer;
+        return fontData;
     }
 
     public int getWidth(String word, int fontSize) {
@@ -78,6 +80,72 @@ public class StbFont {
         }
         return x;
     }
+
+    public int getWidth(char ch, int fontSize) {
+        long infoPtr = GToolkit.getArrayDataPtr(fontInfo);
+        /* calculate font scaling */
+        float scale = stbtt_ScaleForPixelHeight(infoPtr, fontSize);
+
+        int x = 0;
+
+//        int[] ascent = {0}, descent = {0}, lineGap = {0};
+//        stbtt_GetFontVMetrics(infoPtr, ascent, descent, lineGap);
+//
+//        ascent[0] *= scale;
+//        descent[0] *= scale;
+
+        int[] ax = {0}, bx = {0};
+        /* how wide is this character */
+        stbtt_GetCodepointHMetrics(infoPtr, ch, ax, bx);
+        x += ax[0] * scale;
+        return x;
+    }
+
+    public void renderToBitmp(char ch, int fontSize, byte[] bitmap, int bitmapWidth, int[] widthAndHeight) {
+        if (bitmap == null) {
+            throw new RuntimeException("byte[] bitmap can't be null, need store font dot matrix");
+        }
+        if (widthAndHeight == null || widthAndHeight.length < 2) {
+            throw new RuntimeException("int[] widthAndHeight need 2 lenth array, store width and height");
+        }
+        int imageHeight = bitmap.length / bitmapWidth;
+
+        long infoPtr = GToolkit.getArrayDataPtr(fontInfo);
+        /* calculate font scaling */
+        float scale = stbtt_ScaleForPixelHeight(infoPtr, fontSize);
+
+        int x = 0;
+
+        int[] ascent = {0}, descent = {0}, lineGap = {0};
+        stbtt_GetFontVMetrics(infoPtr, ascent, descent, lineGap);
+
+        ascent[0] *= scale;
+        descent[0] *= scale;
+
+        int[] ax = {0}, bx = {0};
+        int[] c_x1 = {0}, c_y1 = {0}, c_x2 = {0}, c_y2 = {0};
+
+        /* get bounding box for character (may be offset to account for chars that dip above or below the line */
+        stbtt_GetCodepointBitmapBox(infoPtr, ch, scale, scale, c_x1, c_y1, c_x2, c_y2);
+
+        /* compute y (different characters have different heights */
+        int y = ascent[0] + c_y1[0];
+        if (y < 0) {
+            y = 0;
+        }
+
+        /* render character (stride and offset is important here) */
+        int byteOffset = 0;
+        stbtt_MakeCodepointBitmapOffset(infoPtr, bitmap, byteOffset, c_x2[0] - c_x1[0], c_y2[0] - c_y1[0], bitmapWidth, scale, scale, ch);
+
+        /* how wide is this character */
+        stbtt_GetCodepointHMetrics(infoPtr, ch, ax, bx);
+        x += ax[0] * scale;
+
+        widthAndHeight[0] = x;
+        widthAndHeight[1] = y;
+    }
+
 
     static int[] PIC_WIDTH = {16, 32, 64, 128, 256, 512, 1024};
 

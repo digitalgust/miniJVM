@@ -8,6 +8,8 @@ package test;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+
+import org.mini.glfw.Glfw;
 import org.mini.gui.GToolkit;
 import static org.mini.nanovg.Nanovg.stbi_write_png;
 import static org.mini.nanovg.Nanovg.stbtt_GetCodepointBitmapBox;
@@ -26,8 +28,7 @@ import static org.mini.nanovg.Nanovg.stbtt_ScaleForPixelHeight;
 public class TrueTypeFont {
 
     static {
-        System.setProperty("java.library.path", "../../jni_gui/cmake-build-debug/");
-        System.loadLibrary("gui");
+        Glfw.loadLib();
     }
 
     public static void main(String[] args) {
@@ -42,25 +43,8 @@ public class TrueTypeFont {
         /* load font file */
         int size;
 
-        File fontFile = new File("./wqymhei.ttc");
-        //    FILE* fontFile = fopen("../font/cmunrm.ttf", "rb");
-        size = (int) fontFile.length();
-        /* how long is the file ? */
 
-        fontBuffer = new byte[size];
-        FileInputStream fis;
-        try {
-            fis = new FileInputStream(fontFile);
-            int read = 0;
-
-            while (read < size) {
-                read += fis.read(fontBuffer, read, size - read);
-            }
-            System.out.println("read=" + read);
-            fis.close();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+        fontBuffer = GToolkit.readFileFromJar("/res/NotoEmoji+NotoSansCJKSC-Regular.ttf");
         /* prepare font */
         info = stbtt_MakeFontInfo();
         long infoPtr = GToolkit.getArrayDataPtr(info);

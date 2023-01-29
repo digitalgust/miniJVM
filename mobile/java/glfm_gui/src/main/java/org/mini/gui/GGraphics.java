@@ -48,12 +48,12 @@ public class GGraphics {
     protected GObject master;
     protected long vg;
 
-    int curColor = 0;
-    byte r, g, b, a;
+    protected int curColor = 0;
+    protected byte r, g, b, a;
     //    float fontSize = GToolkit.getStyle().getTextFontSize();
-    int clipX, clipY, clipW, clipH;
-    int strokeStyle;
-    GFont font = GFont.getDefaultFont();
+    protected int clipX, clipY, clipW, clipH;
+    protected int strokeStyle;
+    protected GFont font = GFont.getDefaultFont();
 
     public GGraphics(GObject master, long context) {
         this.master = master;

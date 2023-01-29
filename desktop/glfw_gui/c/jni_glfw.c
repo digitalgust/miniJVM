@@ -733,6 +733,208 @@ int org_mini_glfw_utils_Gutil_mat4x4_trans_rotate_scale(Runtime *runtime, JClass
 }
 
 
+s32 org_mini_glfw_utils_Gutil_img_fill(Runtime *runtime, JClass *clazz) {
+    static const s32 BYTES_PER_PIXEL = 4;
+    s32 pos = 0;
+    Instance *canvasArr = localvar_getRefer(runtime->localvar, pos++);
+    if (!canvasArr)return 0;
+    u8 *canvas = (u8 *) canvasArr->arr_body;
+    s32 offset = localvar_getInt(runtime->localvar, pos++);
+    offset *= BYTES_PER_PIXEL;
+    s32 len = localvar_getInt(runtime->localvar, pos++);
+    len *= BYTES_PER_PIXEL;
+    Int2Float argb;//argb.c3--a  argb.c2--b   argb.c1--g  argb.c0--r
+    argb.i = localvar_getInt(runtime->localvar, pos++);
+
+    if (canvasArr->arr_length < offset || len == 0 || argb.c3 == 0) {
+        //
+    } else {
+        if (offset + len > canvasArr->arr_length)len = canvasArr->arr_length - offset;
+
+        u8 a = argb.c3;
+        u8 b = argb.c2;
+        u8 g = argb.c1;
+        u8 r = argb.c0;
+        float falpha = ((f32) a) / 0xff;
+        //
+        if (a == 0xff) {//alpha = 1.0
+            for (int i = offset; i < offset + len; i += BYTES_PER_PIXEL) {
+                canvas[i + 0] = b;//r
+                canvas[i + 1] = g;//g
+                canvas[i + 2] = r;//b
+                canvas[i + 3] = a;//a
+            }
+        } else {
+            for (int i = offset; i < offset + len; i += BYTES_PER_PIXEL) {
+                canvas[i + 0] = b * falpha + (1.0f - falpha) * canvas[i + 0];
+                canvas[i + 1] = g * falpha + (1.0f - falpha) * canvas[i + 1];
+                canvas[i + 2] = r * falpha + (1.0f - falpha) * canvas[i + 2];
+            }
+        }
+    }
+    return 0;
+}
+
+typedef struct Point2d {
+    f32 x;
+    f32 y;
+} Point2d;
+
+typedef struct Bound2d {
+    s32 x;
+    s32 y;
+    s32 w;
+    s32 h;
+} Bound2d;
+
+typedef struct Box2d {
+    s32 x1;
+    s32 y1;
+    s32 x2;
+    s32 y2;
+} Box2d;
+
+s32 org_mini_glfw_utils_Gutil_img_draw(Runtime *runtime, JClass *clazz) {
+    static const s32 CELL_BYTES = 4;
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    Instance *canvasArr = localvar_getRefer(runtime->localvar, pos++);
+    s32 canvasWidth = localvar_getInt(runtime->localvar, pos++);
+    Instance *imgArr = localvar_getRefer(runtime->localvar, pos++);
+    s32 imgWidth = localvar_getInt(runtime->localvar, pos++);
+    Bound2d clip;
+    clip.x = localvar_getInt(runtime->localvar, pos++);
+    clip.y = localvar_getInt(runtime->localvar, pos++);
+    clip.w = localvar_getInt(runtime->localvar, pos++);
+    clip.h = localvar_getInt(runtime->localvar, pos++);
+
+    Int2Float i2f;
+    i2f.i = localvar_getInt(runtime->localvar, pos++);
+    f32 M00 = i2f.f;
+    i2f.i = localvar_getInt(runtime->localvar, pos++);
+    f32 M01 = i2f.f;
+    i2f.i = localvar_getInt(runtime->localvar, pos++);
+    f32 M02 = i2f.f;
+    i2f.i = localvar_getInt(runtime->localvar, pos++);
+    f32 M10 = i2f.f;
+    i2f.i = localvar_getInt(runtime->localvar, pos++);
+    f32 M11 = i2f.f;
+    i2f.i = localvar_getInt(runtime->localvar, pos++);
+    f32 M12 = i2f.f;
+
+    i2f.i = localvar_getInt(runtime->localvar, pos++);
+    f32 alpha = i2f.f;
+    s32 isBitmapFontDraw = localvar_getInt(runtime->localvar, pos++);
+    Int2Float fontRGB;
+    fontRGB.i = localvar_getInt(runtime->localvar, pos++);
+
+//    u8 a = fontRGB.c3;
+//    u8 b = fontRGB.c2;
+//    u8 g = fontRGB.c1;
+//    u8 r = fontRGB.c0;
+
+    s32 process = 0;
+    if (!canvasArr || !imgArr || alpha == 0.f || canvasWidth == 0 || imgWidth == 0 || clip.w == 0 || clip.h == 0) {
+        //do nothing
+    } else {
+        u8 *canvas = (u8 *) canvasArr->arr_body;
+        u8 *img = (u8 *) imgArr->arr_body;
+        s32 canvasHeight = canvasArr->arr_length / CELL_BYTES / canvasWidth;
+        s32 imgHeight = imgArr->arr_length / CELL_BYTES / imgWidth;
+
+        //fix clip in canvas range
+        if (clip.x < 0)clip.x = 0;
+        if (clip.y < 0)clip.y = 0;
+        if (clip.x + clip.w > canvasWidth)clip.w = canvasWidth - clip.x;
+        if (clip.y + clip.h > canvasHeight)clip.h = canvasHeight - clip.y;
+
+        //effecient draw , only loop in clip rectange
+        if (M00 == 1.0f && M11 == 1.0f && M01 == 0.0f && M10 == 0.0f) {//no scale , no rotate
+            Bound2d translatedImg;
+            translatedImg.x = M02;
+            translatedImg.y = M12;
+            translatedImg.w = imgWidth;
+            translatedImg.h = imgHeight;
+
+            //calc clip and image intersection
+            Box2d intersection;
+            intersection.x1 = clip.x > translatedImg.x ? clip.x : translatedImg.x;
+            intersection.y1 = clip.y > translatedImg.y ? clip.y : translatedImg.y;
+            intersection.x2 = clip.x + clip.w < translatedImg.x + translatedImg.w ? clip.x + clip.w : translatedImg.x + translatedImg.w;
+            intersection.y2 = clip.y + clip.h < translatedImg.y + translatedImg.h ? clip.y + clip.h : translatedImg.y + translatedImg.h;
+
+            if (intersection.x1 > canvasWidth || intersection.x2 < 0 || intersection.y1 > canvasHeight || intersection.y2 < 0) {
+                //do nothing
+            } else {
+                //calc area to draw in image
+                Box2d imgArea;
+                imgArea.x1 = intersection.x1 - M02;
+                imgArea.x2 = intersection.x2 - M02;
+                imgArea.y1 = intersection.y1 - M12;
+                imgArea.y2 = intersection.y2 - M12;
+
+                s32 imgRowBytes = imgWidth * CELL_BYTES;
+                s32 cvsRowBytes = canvasWidth * CELL_BYTES;
+
+                for (s32 imgy = imgArea.y1, canvasy = intersection.y1; imgy < imgArea.y2; imgy++, canvasy++) {
+                    s32 imgRowByteStart = imgy * imgRowBytes;
+                    s32 cvsRowByteStart = canvasy * cvsRowBytes;
+                    for (s32 imgx = imgArea.x1, canvasx = intersection.x1; imgx < imgArea.x2; imgx++, canvasx++) {
+                        s32 imgColByteStart = imgRowByteStart + imgx * CELL_BYTES;
+                        u8 b = isBitmapFontDraw ? fontRGB.c2 : img[imgColByteStart + 0];
+                        u8 g = isBitmapFontDraw ? fontRGB.c1 : img[imgColByteStart + 1];
+                        u8 r = isBitmapFontDraw ? fontRGB.c0 : img[imgColByteStart + 2];
+                        u8 a = img[imgColByteStart + 3];
+
+                        f32 falpha = (f32) a / 0xff;
+                        s32 cvsColByteStart = cvsRowByteStart + canvasx * CELL_BYTES;
+                        canvas[cvsColByteStart + 0] = b * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 0];
+                        canvas[cvsColByteStart + 1] = g * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 1];
+                        canvas[cvsColByteStart + 2] = r * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 2];
+                        canvas[cvsColByteStart + 3] = a * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 3];
+                    }
+                }
+                process = 1;
+            }
+        }
+
+        //translate , rotate , scale draw, loop full image
+        if (!process) {
+            u8 *canvas = (u8 *) canvasArr->arr_body;
+
+            s32 imgRowBytes = imgWidth * CELL_BYTES;
+            s32 cvsRowBytes = canvasWidth * CELL_BYTES;
+            for (s32 imgy = 0; imgy < imgHeight; imgy++) {
+                s32 imgRowByteStart = imgy * imgRowBytes;
+                for (s32 imgx = 0; imgx < imgWidth; imgx++) {
+                    s32 dx = round(imgx * M00 + imgy * M01 + M02);
+                    s32 dy = round(imgx * M10 + imgy * M11 + M12);
+                    if (dx >= clip.x && dx < clip.x + clip.w && dy >= clip.y && dy < clip.y + clip.h) {
+                        s32 imgColByteStart = imgRowByteStart + imgx * CELL_BYTES;
+                        u8 b = isBitmapFontDraw ? fontRGB.c2 : img[imgColByteStart + 0];
+                        u8 g = isBitmapFontDraw ? fontRGB.c1 : img[imgColByteStart + 1];
+                        u8 r = isBitmapFontDraw ? fontRGB.c0 : img[imgColByteStart + 2];
+                        u8 a = img[imgColByteStart + 3];
+                        f32 falpha = (f32) a / 0xff;
+                        s32 cvsColByteStart = dy * cvsRowBytes + dx * CELL_BYTES;
+                        canvas[cvsColByteStart + 0] = b * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 0];
+                        canvas[cvsColByteStart + 1] = g * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 1];
+                        canvas[cvsColByteStart + 2] = r * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 2];
+                        canvas[cvsColByteStart + 3] = a * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 3];
+                    }
+                }
+            }
+            process = 1;
+        }
+    }
+    if (process) {
+        env->push_int(runtime->stack, 0);// success
+    } else {
+        env->push_int(runtime->stack, 1);// failer
+    }
+    return 0;
+}
+
 /* ==============================   jni glfw =================================*/
 
 int org_mini_glfw_Glfw_glfwSetCallback(Runtime *runtime, JClass *clazz) {
@@ -1413,50 +1615,52 @@ static java_native_method method_glfw_table[] = {
         {"org/mini/gl/GLMath", "mat4x4_perspective",         "([FFFFF)[F",                       org_mini_glfw_utils_Gutil_mat4x4_perspective},
         {"org/mini/gl/GLMath", "mat4x4_look_at",             "([F[F[F[F)[F",                     org_mini_glfw_utils_Gutil_mat4x4_look_at},
         {"org/mini/gl/GLMath", "mat4x4_trans_rotate_scale",  "([F[F[F[F)[F",                     org_mini_glfw_utils_Gutil_mat4x4_trans_rotate_scale},
-        {"org/mini/glfw/Glfw",  "glfwGetTime",                "()D",                              org_mini_glfw_Glfw_glfwGetTime},
-        {"org/mini/glfw/Glfw",  "glfwSetTime",                "(D)V",                             org_mini_glfw_Glfw_glfwSetTime},
-        {"org/mini/glfw/Glfw",  "glfwCreateWindow",           "(II[BJJ)J",                        org_mini_glfw_Glfw_glfwCreateWindow},
-        {"org/mini/glfw/Glfw",  "glfwDestroyWindow",          "(J)V",                             org_mini_glfw_Glfw_glfwDestroyWindow},
-        {"org/mini/glfw/Glfw",  "glfwWindowShouldClose",      "(J)Z",                             org_mini_glfw_Glfw_glfwWindowShouldClose},
-        {"org/mini/glfw/Glfw",  "glfwSetCallback",            "(JLorg/mini/glfw/GlfwCallback;)V", org_mini_glfw_Glfw_glfwSetCallback},
-        {"org/mini/glfw/Glfw",  "glfwInitJni",                "()Z",                              org_mini_glfw_Glfw_glfwInitJni},
-        {"org/mini/glfw/Glfw",  "glfwTerminate",              "()V",                              org_mini_glfw_Glfw_glfwTerminate},
-        {"org/mini/glfw/Glfw",  "glfwWindowHint",             "(II)V",                            org_mini_glfw_Glfw_glfwWindowHint},
-        {"org/mini/glfw/Glfw",  "glfwPollEvents",             "()V",                              org_mini_glfw_Glfw_glfwPollEvents},
-        {"org/mini/glfw/Glfw",  "glfwWaitEvents",             "()V",                              org_mini_glfw_Glfw_glfwWaitEvents},
-        {"org/mini/glfw/Glfw",  "glfwSetWindowShouldClose",   "(JI)V",                            org_mini_glfw_Glfw_glfwSetWindowShouldClose},
-        {"org/mini/glfw/Glfw",  "glfwMakeContextCurrentJni",  "(J)V",                             org_mini_glfw_Glfw_glfwMakeContextCurrentJni},
-        {"org/mini/glfw/Glfw",  "glfwSwapInterval",           "(I)V",                             org_mini_glfw_Glfw_glfwSwapInterval},
-        {"org/mini/glfw/Glfw",  "glfwSwapBuffers",            "(J)V",                             org_mini_glfw_Glfw_glfwSwapBuffers},
-        {"org/mini/glfw/Glfw",  "glfwGetFramebufferWidth",    "(J)I",                             org_mini_glfw_Glfw_glfwGetFramebufferWidth},
-        {"org/mini/glfw/Glfw",  "glfwGetFramebufferHeight",   "(J)I",                             org_mini_glfw_Glfw_glfwGetFramebufferHeight},
-        {"org/mini/glfw/Glfw",  "glfwGetWindowX",             "(J)I",                             org_mini_glfw_Glfw_glfwGetWindowX},
-        {"org/mini/glfw/Glfw",  "glfwGetWindowY",             "(J)I",                             org_mini_glfw_Glfw_glfwGetWindowY},
-        {"org/mini/glfw/Glfw",  "glfwGetWindowWidth",         "(J)I",                             org_mini_glfw_Glfw_glfwGetWindowWidth},
-        {"org/mini/glfw/Glfw",  "glfwGetWindowHeight",        "(J)I",                             org_mini_glfw_Glfw_glfwGetWindowHeight},
-        {"org/mini/glfw/Glfw",  "glfwSetWindowAspectRatio",   "(JII)V",                           org_mini_glfw_Glfw_glfwSetWindowAspectRatio},
-        {"org/mini/glfw/Glfw",  "glfwGetClipboardString",     "(J)Ljava/lang/String;",            org_mini_glfw_Glfw_glfwGetClipboardString},
-        {"org/mini/glfw/Glfw",  "glfwSetClipboardString",     "(JLjava/lang/String;)V",           org_mini_glfw_Glfw_glfwSetClipboardString},
-        {"org/mini/glfw/Glfw",  "glfwSetWindowTitle",         "(JLjava/lang/String;)V",           org_mini_glfw_Glfw_glfwSetWindowTitle},
-        {"org/mini/glfw/Glfw",  "glfwSetWindowSize",          "(JII)V",                           org_mini_glfw_Glfw_glfwSetWindowSize},
-        {"org/mini/glfw/Glfw",  "glfwShowWindow",             "(J)V",                             org_mini_glfw_Glfw_glfwShowWindow},
-        {"org/mini/glfw/Glfw",  "glfwHideWindow",             "(J)V",                             org_mini_glfw_Glfw_glfwHideWindow},
-        {"org/mini/glfw/Glfw",  "glfwRestoreWindow",          "(J)V",                             org_mini_glfw_Glfw_glfwRestoreWindow},
-        {"org/mini/glfw/Glfw",  "glfwIconifyWindow",          "(J)V",                             org_mini_glfw_Glfw_glfwIconifyWindow},
-        {"org/mini/glfw/Glfw",  "glfwGetWindowMonitor",       "(J)J",                             org_mini_glfw_Glfw_glfwGetWindowMonitor},
-        {"org/mini/glfw/Glfw",  "glfwGetWindowParam",         "(JI)I",                            org_mini_glfw_Glfw_glfwGetWindowParam},
-        {"org/mini/glfw/Glfw",  "glfwGetInputMode",           "(JI)I",                            org_mini_glfw_Glfw_glfwGetInputMode},
-        {"org/mini/glfw/Glfw",  "glfwSetInputMode",           "(JII)V",                           org_mini_glfw_Glfw_glfwSetInputMode},
-        {"org/mini/glfw/Glfw",  "glfwGetKey",                 "(JI)Z",                            org_mini_glfw_Glfw_glfwGetKey},
-        {"org/mini/glfw/Glfw",  "glfwGetMouseButton",         "(JI)Z",                            org_mini_glfw_Glfw_glfwGetMouseButton},
-        {"org/mini/glfw/Glfw",  "glfwGetCursorPosX",          "(J)I",                             org_mini_glfw_Glfw_glfwGetCursorPosX},
-        {"org/mini/glfw/Glfw",  "glfwGetCursorPosY",          "(J)I",                             org_mini_glfw_Glfw_glfwGetCursorPosY},
-        {"org/mini/glfw/Glfw",  "glfwSetCursorPos",           "(JII)V",                           org_mini_glfw_Glfw_glfwSetCursorPos},
-        {"org/mini/glfw/Glfw",  "glfwGetJoystickAxes",        "(I[F)I",                           org_mini_glfw_Glfw_glfwGetJoystickAxes},
-        {"org/mini/glfw/Glfw",  "glfwGetJoystickButtons",     "(I[B)I",                           org_mini_glfw_Glfw_glfwGetJoystickButtons},
-        {"org/mini/glfw/Glfw",  "glfwGetJoystickName",        "(I)Ljava/lang/String;",            org_mini_glfw_Glfw_glfwGetJoystickName},
-        {"org/mini/glfw/Glfw",  "glfwGetCurrentContext",      "()J",                              org_mini_glfw_Glfw_glfwGetCurrentContext},
-        {"org/mini/glfw/Glfw",  "glfwExtensionSupported",     "(Ljava/lang/String;)Z",            org_mini_glfw_Glfw_glfwExtensionSupported},
+        {"org/mini/gl/GLMath", "img_fill",                   "([BIII)V",                         org_mini_glfw_utils_Gutil_img_fill},
+        {"org/mini/gl/GLMath", "img_draw",                   "([BI[BIIIIIFFFFFFFZI)I",           org_mini_glfw_utils_Gutil_img_draw},
+        {"org/mini/glfw/Glfw", "glfwGetTime",                "()D",                              org_mini_glfw_Glfw_glfwGetTime},
+        {"org/mini/glfw/Glfw", "glfwSetTime",                "(D)V",                             org_mini_glfw_Glfw_glfwSetTime},
+        {"org/mini/glfw/Glfw", "glfwCreateWindow",           "(II[BJJ)J",                        org_mini_glfw_Glfw_glfwCreateWindow},
+        {"org/mini/glfw/Glfw", "glfwDestroyWindow",          "(J)V",                             org_mini_glfw_Glfw_glfwDestroyWindow},
+        {"org/mini/glfw/Glfw", "glfwWindowShouldClose",      "(J)Z",                             org_mini_glfw_Glfw_glfwWindowShouldClose},
+        {"org/mini/glfw/Glfw", "glfwSetCallback",            "(JLorg/mini/glfw/GlfwCallback;)V", org_mini_glfw_Glfw_glfwSetCallback},
+        {"org/mini/glfw/Glfw", "glfwInitJni",                "()Z",                              org_mini_glfw_Glfw_glfwInitJni},
+        {"org/mini/glfw/Glfw", "glfwTerminate",              "()V",                              org_mini_glfw_Glfw_glfwTerminate},
+        {"org/mini/glfw/Glfw", "glfwWindowHint",             "(II)V",                            org_mini_glfw_Glfw_glfwWindowHint},
+        {"org/mini/glfw/Glfw", "glfwPollEvents",             "()V",                              org_mini_glfw_Glfw_glfwPollEvents},
+        {"org/mini/glfw/Glfw", "glfwWaitEvents",             "()V",                              org_mini_glfw_Glfw_glfwWaitEvents},
+        {"org/mini/glfw/Glfw", "glfwSetWindowShouldClose",   "(JI)V",                            org_mini_glfw_Glfw_glfwSetWindowShouldClose},
+        {"org/mini/glfw/Glfw", "glfwMakeContextCurrentJni",  "(J)V",                             org_mini_glfw_Glfw_glfwMakeContextCurrentJni},
+        {"org/mini/glfw/Glfw", "glfwSwapInterval",           "(I)V",                             org_mini_glfw_Glfw_glfwSwapInterval},
+        {"org/mini/glfw/Glfw", "glfwSwapBuffers",            "(J)V",                             org_mini_glfw_Glfw_glfwSwapBuffers},
+        {"org/mini/glfw/Glfw", "glfwGetFramebufferWidth",    "(J)I",                             org_mini_glfw_Glfw_glfwGetFramebufferWidth},
+        {"org/mini/glfw/Glfw", "glfwGetFramebufferHeight",   "(J)I",                             org_mini_glfw_Glfw_glfwGetFramebufferHeight},
+        {"org/mini/glfw/Glfw", "glfwGetWindowX",             "(J)I",                             org_mini_glfw_Glfw_glfwGetWindowX},
+        {"org/mini/glfw/Glfw", "glfwGetWindowY",             "(J)I",                             org_mini_glfw_Glfw_glfwGetWindowY},
+        {"org/mini/glfw/Glfw", "glfwGetWindowWidth",         "(J)I",                             org_mini_glfw_Glfw_glfwGetWindowWidth},
+        {"org/mini/glfw/Glfw", "glfwGetWindowHeight",        "(J)I",                             org_mini_glfw_Glfw_glfwGetWindowHeight},
+        {"org/mini/glfw/Glfw", "glfwSetWindowAspectRatio",   "(JII)V",                           org_mini_glfw_Glfw_glfwSetWindowAspectRatio},
+        {"org/mini/glfw/Glfw", "glfwGetClipboardString",     "(J)Ljava/lang/String;",            org_mini_glfw_Glfw_glfwGetClipboardString},
+        {"org/mini/glfw/Glfw", "glfwSetClipboardString",     "(JLjava/lang/String;)V",           org_mini_glfw_Glfw_glfwSetClipboardString},
+        {"org/mini/glfw/Glfw", "glfwSetWindowTitle",         "(JLjava/lang/String;)V",           org_mini_glfw_Glfw_glfwSetWindowTitle},
+        {"org/mini/glfw/Glfw", "glfwSetWindowSize",          "(JII)V",                           org_mini_glfw_Glfw_glfwSetWindowSize},
+        {"org/mini/glfw/Glfw", "glfwShowWindow",             "(J)V",                             org_mini_glfw_Glfw_glfwShowWindow},
+        {"org/mini/glfw/Glfw", "glfwHideWindow",             "(J)V",                             org_mini_glfw_Glfw_glfwHideWindow},
+        {"org/mini/glfw/Glfw", "glfwRestoreWindow",          "(J)V",                             org_mini_glfw_Glfw_glfwRestoreWindow},
+        {"org/mini/glfw/Glfw", "glfwIconifyWindow",          "(J)V",                             org_mini_glfw_Glfw_glfwIconifyWindow},
+        {"org/mini/glfw/Glfw", "glfwGetWindowMonitor",       "(J)J",                             org_mini_glfw_Glfw_glfwGetWindowMonitor},
+        {"org/mini/glfw/Glfw", "glfwGetWindowParam",         "(JI)I",                            org_mini_glfw_Glfw_glfwGetWindowParam},
+        {"org/mini/glfw/Glfw", "glfwGetInputMode",           "(JI)I",                            org_mini_glfw_Glfw_glfwGetInputMode},
+        {"org/mini/glfw/Glfw", "glfwSetInputMode",           "(JII)V",                           org_mini_glfw_Glfw_glfwSetInputMode},
+        {"org/mini/glfw/Glfw", "glfwGetKey",                 "(JI)Z",                            org_mini_glfw_Glfw_glfwGetKey},
+        {"org/mini/glfw/Glfw", "glfwGetMouseButton",         "(JI)Z",                            org_mini_glfw_Glfw_glfwGetMouseButton},
+        {"org/mini/glfw/Glfw", "glfwGetCursorPosX",          "(J)I",                             org_mini_glfw_Glfw_glfwGetCursorPosX},
+        {"org/mini/glfw/Glfw", "glfwGetCursorPosY",          "(J)I",                             org_mini_glfw_Glfw_glfwGetCursorPosY},
+        {"org/mini/glfw/Glfw", "glfwSetCursorPos",           "(JII)V",                           org_mini_glfw_Glfw_glfwSetCursorPos},
+        {"org/mini/glfw/Glfw", "glfwGetJoystickAxes",        "(I[F)I",                           org_mini_glfw_Glfw_glfwGetJoystickAxes},
+        {"org/mini/glfw/Glfw", "glfwGetJoystickButtons",     "(I[B)I",                           org_mini_glfw_Glfw_glfwGetJoystickButtons},
+        {"org/mini/glfw/Glfw", "glfwGetJoystickName",        "(I)Ljava/lang/String;",            org_mini_glfw_Glfw_glfwGetJoystickName},
+        {"org/mini/glfw/Glfw", "glfwGetCurrentContext",      "()J",                              org_mini_glfw_Glfw_glfwGetCurrentContext},
+        {"org/mini/glfw/Glfw", "glfwExtensionSupported",     "(Ljava/lang/String;)Z",            org_mini_glfw_Glfw_glfwExtensionSupported},
 
 };
 

@@ -1432,6 +1432,30 @@ s32 org_mini_reflect_vm_RefNative_heap_bin_search(Runtime *runtime, JClass *claz
     return 0;
 }
 
+s32 org_mini_reflect_vm_RefNative_heap_fill(Runtime *runtime, JClass *clazz) {
+    s32 pos = 0;
+    c8 *src = (__refer) (intptr_t) localvar_getLong(runtime->localvar, pos);
+    pos += 2;
+    s32 srclen = localvar_getInt(runtime->localvar, pos);
+    pos++;
+    c8 *val = (__refer) (intptr_t) localvar_getLong(runtime->localvar, pos);
+    pos += 2;
+    s32 vallen = localvar_getInt(runtime->localvar, pos);
+    pos++;
+
+    if (src == NULL || val == NULL || srclen <= 0 || vallen <= 0) {
+        //
+    } else {
+        for (int i = 0; i < srclen;) {
+            for (int j = 0; j < vallen; j++) {
+                *(src + i) = *(val + j);
+                i++;
+            }
+        }
+    }
+    return 0;
+}
+
 s32 org_mini_reflect_vm_RefNative_heap_little_endian(Runtime *runtime, JClass *clazz) {
     push_int(runtime->stack, __JVM_LITTLE_ENDIAN__);
     return 0;
@@ -1503,6 +1527,7 @@ static java_native_method METHODS_REFLECT_TABLE[] = {
         {"org/mini/reflect/vm/RefNative",  "heap_get_ref",             "(JI)Ljava/lang/Object;",                                                           org_mini_reflect_vm_RefNative_heap_get_ref},
         {"org/mini/reflect/vm/RefNative",  "heap_copy",                "(JIJII)V",                                                                         org_mini_reflect_vm_RefNative_heap_copy},
         {"org/mini/reflect/vm/RefNative",  "heap_bin_search",          "(JIJI)I",                                                                          org_mini_reflect_vm_RefNative_heap_bin_search},
+        {"org/mini/reflect/vm/RefNative",  "heap_fill",                "(JIJI)V",                                                                          org_mini_reflect_vm_RefNative_heap_fill},
         {"org/mini/reflect/vm/RefNative",  "heap_endian",              "()I",                                                                              org_mini_reflect_vm_RefNative_heap_little_endian},
         {"org/mini/reflect/ReflectClass",  "mapClass",                 "(J)V",                                                                             org_mini_reflect_ReflectClass_mapClass},
         {"org/mini/reflect/ReflectField",  "mapField",                 "(J)V",                                                                             org_mini_reflect_ReflectField_mapField},

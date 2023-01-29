@@ -128,14 +128,14 @@ public abstract class GImage implements GAttachable {
         return null;
     }
 
-    static public GImage createImageMutable(int width, int height) {
+    static public <T extends GImage> T createImageMutable(int width, int height) {
         ImageMutable img = new ImageMutable(width, height);
-        return img;
+        return (T) img;
     }
 
-    static public GImage createImageMutable(int width, int height, int imageflag) {
+    static public <T extends GImage> T createImageMutable(int width, int height, int imageflag) {
         ImageMutable img = new ImageMutable(width, height, imageflag);
-        return img;
+        return (T) img;
     }
 
     public abstract int getWidth();

@@ -77,4 +77,8 @@ public class GFont {
     public void setFontSize(float fontSize) {
         this.size = fontSize;
     }
+
+    public byte[] getData() {
+        return data;
+    }
 }

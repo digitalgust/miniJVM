@@ -152,6 +152,16 @@ public class GToolkit {
 
             fontLoaded = true;
         }
+
+        public static GFont getFont(String name) {
+            switch (name) {
+                case "word":
+                    return word;
+                case "icon":
+                    return icon;
+            }
+            return word;
+        }
     }
 
     public static byte[] getFontWord() {

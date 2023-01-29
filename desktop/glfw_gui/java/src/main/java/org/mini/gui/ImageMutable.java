@@ -5,7 +5,7 @@ import org.mini.nanovg.Nanovg;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
-import static org.mini.nanovg.Nanovg.*;
+import static org.mini.gui.GToolkit.nvgRGBA;
 
 
 /**
@@ -14,13 +14,14 @@ import static org.mini.nanovg.Nanovg.*;
  */
 
 public class ImageMutable extends GImage {
-    static final int BIT_PER_PIXEL = 4;
+    static final int BYTE_PER_PIXEL = 4;
     ByteBuffer data;
     IntBuffer shadow;
     int width, heigh;
     int image_init_flag;
     int gl_texture = -1; //source from gl texture id
     int nvg_texture = -1;
+    GGraphics g;
 
     public ImageMutable(int w, int h) {
         this(w, h, 0);
@@ -33,8 +34,13 @@ public class ImageMutable extends GImage {
         this.width = w;
         this.heigh = h;
         image_init_flag = imageflag;
-        data = ByteBuffer.allocate(w * h * BIT_PER_PIXEL);
+        data = ByteBuffer.allocate(w * h * BYTE_PER_PIXEL);
         shadow = data.asIntBuffer();
+    }
+
+    public int getPix(int row, int col) {
+        int pos = (row * width + col);
+        return shadow.get(pos);
     }
 
     public void setPix(int row, int col, int ABGR) {
@@ -49,7 +55,7 @@ public class ImageMutable extends GImage {
         if (pos + 3 > data.capacity()) {
             throw new IndexOutOfBoundsException("pos:" + pos);
         }
-        shadow.put(pos, (a << 24) | (b << 16) | (g << 8) | r);
+        shadow.put(pos, ((a & 0xff) << 24) | ((b & 0xff) << 16) | ((g & 0xff) << 8) | (r & 0xff));
     }
 
     public void setPix(int[] rgbData, int offset, int scanlength, int x, int y, int w, int h) {
@@ -170,7 +176,7 @@ public class ImageMutable extends GImage {
 
 
     @Override
-    public void finalize() {
+    protected void finalize() {
         try {
             GForm.deleteImage(nvg_texture);
         } catch (Throwable e) {

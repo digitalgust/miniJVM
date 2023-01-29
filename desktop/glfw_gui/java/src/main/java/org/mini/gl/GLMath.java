@@ -93,4 +93,59 @@ public class GLMath {
 
     static public native float[] mat4x4_trans_rotate_scale(float[] rm, float[] vec3_trans, float[] vec4_rotate, float[] vec3_scale);
 
+    /**
+     * ----------------------------------------
+     * 2d image process
+     * <p>
+     *     imgCanvas is 4byte image , argb align
+     * ----------------------------------------
+     */
+
+    /**
+     * fill imgCanvas with argb , start position at fillOffset ,total fill pixels
+     *
+     * @param imgCanvas
+     * @param fillOffset
+     * @param fillPixels
+     * @param argb
+     * @return
+     */
+    static public native void img_fill(byte[] imgCanvas, int fillOffset, int fillPixels, int argb);
+
+    /**
+     * Draw img to imgCanvas,
+     * limit in clipX,clipY,clipW,clipH
+     * image transform M00,M01,M02(translateX),M10,M11,M12(translateY)
+     * [ x']   [  m00  m01  m02  ] [ x ]   [ m00x + m01y + m02 ]
+     * [ y'] = [  m10  m11  m12  ] [ y ] = [ m10x + m11y + m12 ]
+     * [ 1 ]   [   0    0    1   ] [ 1 ]   [         1         ]
+     * <p>
+     * if return is not 0, error
+     *
+     * @param imgCanvas
+     * @param canvasWidth
+     * @param img
+     * @param imgWidth
+     * @param clipX
+     * @param clipY
+     * @param clipW
+     * @param clipH
+     * @param transformM00
+     * @param transformM01
+     * @param transformM02
+     * @param transformM10
+     * @param transformM11
+     * @param transformM12
+     * @param alpha        image alpha
+     * @param bitmapFont   whether draw bitmap font
+     * @param fontRGB      if(bitmapFont==true) using fontRGB replace bitmapRGB
+     * @return if not 0 error
+     */
+    static public native int img_draw(byte[] imgCanvas, int canvasWidth,
+                                      byte[] img, int imgWidth,
+                                      int clipX, int clipY, int clipW, int clipH,
+                                      float transformM00, float transformM01, float transformM02, float transformM10, float transformM11, float transformM12,
+                                      float alpha,
+                                      boolean bitmapFont, int fontRGB);
+
 }

@@ -13,7 +13,7 @@ public class GlfwMain {
 
     public static void main(String[] args) {
         System.out.println("para[0] : window width, para[1] window height");
-        int w = 1024, h = 768;
+        int w = 640, h = 480;
         if (args.length >= 2) {
             try {
                 w = Integer.parseInt(args[0]);
