@@ -10,6 +10,10 @@ set(CMAKE_C_STANDARD 99)
 
 #option(MINI_JVM_BUILD_LIB "Build the mini_jvm library" OFF)
 
+IF (MSVC)
+    add_compile_options("/utf-8")
+ENDIF ()
+
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
     ADD_DEFINITIONS(-D_DEBUG -D__JVM_DEBUG__)
     message("this is a debug compile")
@@ -31,7 +35,12 @@ MESSAGE(STATUS "platform: ${CMAKE_SYSTEM_NAME}")
 
 #if (MINI_JVM_BUILD_LIB)
 add_library(mini_jvm_lib SHARED ${SOURCE_FILES})
+
+IF (MSVC)
+ELSE ()
 TARGET_LINK_LIBRARIES(mini_jvm_lib pthread m)
+ENDIF ()
+
 #Set link library.
 IF (APPLE)
 ELSEIF (UNIX)
@@ -45,7 +54,12 @@ ENDIF ()
 #else ()
 
 add_executable(mini_jvm ${SOURCE_FILES} main.c)
+
+IF (MSVC)
+ELSE ()
 TARGET_LINK_LIBRARIES(mini_jvm pthread m)
+ENDIF ()
+
 #Set link library.
 IF (APPLE)
     SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../../binary/macos)
