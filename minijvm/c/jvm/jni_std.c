@@ -1323,10 +1323,6 @@ Instance *buildStackElement(Runtime *runtime, Runtime *target) {
 s32 java_io_Throwable_buildStackElement(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     Instance *ins_thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
-#if _JVM_DEBUG_LOG_LEVEL > 5
-    invoke_deepth(runtime);
-    jvm_printf("java_io_Throwable_buildStackElement %s \n", utf8_cstr(tmps->mb.clazz->name));
-#endif
     Instance *ins = NULL;
     if (ins_thread) {
         Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, ins_thread);
