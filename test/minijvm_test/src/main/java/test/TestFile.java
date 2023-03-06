@@ -7,26 +7,16 @@ package test;
 
 import com.sun.cldc.i18n.StreamReader;
 import com.sun.cldc.i18n.StreamWriter;
-import com.sun.cldc.i18n.mini.UTF_8_Reader;
-import com.sun.cldc.i18n.mini.UTF_8_Writer;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
+import com.sun.cldc.i18n.j2me.UTF_8_Reader;
+import com.sun.cldc.i18n.j2me.UTF_8_Writer;
+import org.mini.zip.Zip;
+
+import java.io.*;
 import java.util.Enumeration;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import org.mini.zip.Zip;
 
 /**
  *

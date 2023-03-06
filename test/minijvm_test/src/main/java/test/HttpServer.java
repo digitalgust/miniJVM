@@ -5,10 +5,10 @@
  */
 package test;
 
-import javax.cldc.io.Connector;
-import javax.cldc.io.ContentConnection;
-import javax.cldc.io.ServerSocketConnection;
-import javax.cldc.io.SocketConnection;
+import javax.microedition.io.Connector;
+import javax.microedition.io.ContentConnection;
+import javax.microedition.io.ServerSocketConnection;
+import javax.microedition.io.SocketConnection;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
