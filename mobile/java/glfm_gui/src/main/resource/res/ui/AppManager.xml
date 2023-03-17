@@ -62,7 +62,7 @@
                         <label w="100%" h="20"></label>
                         <label w="100%" h="30" align="left,vcenter">{Download plugin from website:}</label>
                         <input name="INPUT_URL" w="75%" h="30" hint="application jar url">
-                            http://www.ebsee.com:40080/down/bibi.jar
+                            https://raw.githubusercontent.com/digitalgust/plugin4minijvm/main/plugins/ExGame.jar
                         </input>
                         <button name="BT_DOWN" w="25%" h="30">{Download}</button>
                         <label w="100%" h="20"></label>

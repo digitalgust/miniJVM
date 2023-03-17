@@ -3,6 +3,7 @@ package test.ext;
 import org.mini.gl.GL;
 import org.mini.gl.GLMath;
 import org.mini.glwrap.GLFrameBuffer;
+import org.mini.glwrap.GLUtil;
 import org.mini.gui.GForm;
 import org.mini.gui.GOpenGLPanel;
 import org.mini.gui.GToolkit;
@@ -11,7 +12,7 @@ import static org.mini.gl.GL.*;
 import static org.mini.gl.GLMath.mat4x4_rotate;
 import static org.mini.gl.GLMath.mat4x4_translate;
 import static org.mini.glwrap.GLUtil.gl_image_load;
-import static org.mini.glwrap.GLUtil.toUtf8;
+import static org.mini.glwrap.GLUtil.*;
 
 //https://blog.csdn.net/qq_35294564/article/details/86288352
 
@@ -31,7 +32,7 @@ public class SimplePanel extends GOpenGLPanel {
         //编译顶点着色器
         int vertexShader;
         vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, new byte[][]{toUtf8(vss)}, null, 0);
+        glShaderSource(vertexShader, 1, new byte[][]{toCstyleBytes(vss)}, null, 0);
         glCompileShader(vertexShader);
         int success;
         GL.glGetShaderiv(vertexShader, GL.GL_COMPILE_STATUS, return_val, 0);
@@ -46,7 +47,7 @@ public class SimplePanel extends GOpenGLPanel {
 
         int fragmentShader;
         fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, new byte[][]{toUtf8(fss)}, null, 0);
+        glShaderSource(fragmentShader, 1, new byte[][]{GLUtil.toCstyleBytes(fss)}, null, 0);
         glCompileShader(fragmentShader);
         GL.glGetShaderiv(fragmentShader, GL.GL_COMPILE_STATUS, return_val, 0);
         if (return_val[0] == GL_FALSE) {
@@ -260,11 +261,11 @@ public class SimplePanel extends GOpenGLPanel {
         // Bind Textures using texture units
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1[0]);
-        int location = glGetUniformLocation(ourShader, toUtf8("ourTexture1"));
+        int location = glGetUniformLocation(ourShader, toCstyleBytes("ourTexture1"));
         glUniform1i(location, 0);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2[0]);
-        location = glGetUniformLocation(ourShader, toUtf8("ourTexture2"));
+        location = glGetUniformLocation(ourShader, toCstyleBytes("ourTexture2"));
         glUniform1i(location, 1);
 
 
@@ -284,9 +285,9 @@ public class SimplePanel extends GOpenGLPanel {
         //projection = glm::perspective (45.0f, (GLfloat) WIDTH / (GLfloat) HEIGHT, 0.1f, 100.0f);
         GLMath.mat4x4_perspective(projection, 45.0f, getW() / getH(), 0.1f, 100.0f);
         // Get the uniform locations
-        int modelLoc = glGetUniformLocation(ourShader, toUtf8("model"));
-        int viewLoc = glGetUniformLocation(ourShader, toUtf8("view"));
-        int projLoc = glGetUniformLocation(ourShader, toUtf8("projection"));
+        int modelLoc = glGetUniformLocation(ourShader, toCstyleBytes("model"));
+        int viewLoc = glGetUniformLocation(ourShader, toCstyleBytes("view"));
+        int projLoc = glGetUniformLocation(ourShader, toCstyleBytes("projection"));
         // Pass the matrices to the shader
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view, 0);
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, projection, 0);

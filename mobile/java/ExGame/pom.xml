@@ -73,8 +73,8 @@
                                         <include name="${project.artifactId}.jar"/>
                                     </fileset>
                                 </copy>
-                                <mkdir dir="/Library/WebServer/Documents"/>
-                                <copy todir="/Library/WebServer/Documents" overwrite="true">
+                                <mkdir dir="${basedir}/../../../../plugin4minijvm/plugins/"/>
+                                <copy todir="${basedir}/../../../../plugin4minijvm/plugins/" overwrite="true">
                                     <fileset dir="${project.build.directory}" erroronmissingdir="false">
                                         <include name="${project.artifactId}.jar"/>
                                     </fileset>

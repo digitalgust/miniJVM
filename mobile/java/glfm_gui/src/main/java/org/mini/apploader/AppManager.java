@@ -57,11 +57,12 @@ public class AppManager extends GApplication {
     static final String STR_CONFIRM_DELETE = "Do you confirm to delete the plugin ";
     static final String STR_APP_NOT_RUNNING = "Plugin is not running ";
     static final String STR_INSTALL_FROM_LOCAL = "Install plugin from local file:";
+    static final String STR_SELECT_FILE = "Select File";
 
     static private void regStrings() {
         GLanguage.addString(STR_SETTING, new String[]{STR_SETTING, "设置", "设置"});
         GLanguage.addString(STR_EXIT, new String[]{STR_EXIT, "退出", "退出"});
-        GLanguage.addString(STR_TITLE, new String[]{STR_TITLE, "元宇宙组件管理器", "元宇宙組件管理器"});
+        GLanguage.addString(STR_TITLE, new String[]{STR_TITLE, "组件管理器", "組件管理器"});
         GLanguage.addString(STR_START_WEB_SRV_FOR_UPLOAD, new String[]{STR_START_WEB_SRV_FOR_UPLOAD, "启动Web服务器上传", "啟動Web伺服器上傳"});
         GLanguage.addString(STR_DOWN_APP_FROM_WEB, new String[]{STR_DOWN_APP_FROM_WEB, "从网站下载组件", "從網站下載組件"});
         GLanguage.addString(STR_DOWNLOAD, new String[]{STR_DOWNLOAD, "下载", "下載"});
@@ -91,6 +92,7 @@ public class AppManager extends GApplication {
         GLanguage.addString(STR_CONFIRM_DELETE, new String[]{STR_CONFIRM_DELETE, "您要删除组件吗", "您要刪除組件嗎"});
         GLanguage.addString(STR_APP_NOT_RUNNING, new String[]{STR_APP_NOT_RUNNING, "组件没有运行", "組件沒有運行"});
         GLanguage.addString(STR_INSTALL_FROM_LOCAL, new String[]{STR_INSTALL_FROM_LOCAL, "选取文件安装", "選取檔案安裝"});
+        GLanguage.addString(STR_SELECT_FILE, new String[]{STR_SELECT_FILE, "选取", "選取"});
     }
 
     static AppManager instance = new AppManager();

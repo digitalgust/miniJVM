@@ -1,6 +1,6 @@
-name=ExApp
+name=ExGame
 app=test.MyGame
 icon=/res/hello.png
 desc=  Mobile app develop example.\n  you can upgrade it.
 version=1.0.4
-upgradeurl=https://github.com/digitalgust/miniJVM/raw/master/mobile/assets/resfiles/ExGame.jar
+upgradeurl=https://raw.githubusercontent.com/digitalgust/plugin4minijvm/main/plugins/ExGame.jar
