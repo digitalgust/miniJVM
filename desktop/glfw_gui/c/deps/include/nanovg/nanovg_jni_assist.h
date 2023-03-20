@@ -251,26 +251,31 @@ float nvgTextJni(NVGcontext *ctx, float x, float y, const char *string, int star
 }
 
 void nvgTextBoxJni(NVGcontext *ctx, float x, float y, float breakRowWidth, const char *string, int start, int end) {
+    if (end > 0 && string[end - 1] == 0) { end--; }
     nvgTextBox(ctx, x, y, breakRowWidth, string + start, string + end);
 }
 
 float nvgTextBoundsJni(NVGcontext *ctx, float x, float y, const char *string, int start, int end, float *bounds) {
+    if (end > 0 && string[end - 1] == 0) { end--; }
     return nvgTextBounds(ctx, x, y, string + start, string + end, bounds);
 }
 
 void nvgTextBoxBoundsJni(NVGcontext *ctx, float x, float y, float breakRowWidth, const char *string, int start, int end,
                          float *bounds) {
+    if (end > 0 && string[end - 1] == 0) { end--; }
     nvgTextBoxBounds(ctx, x, y, breakRowWidth, string + start, string + end, bounds);
 }
 
 
 int nvgTextBreakLinesJni(NVGcontext *ctx, const char *string, int start, int end, float breakRowWidth, NVGtextRow *rows,
                          int maxRows) {
+    if (end > 0 && string[end - 1] == 0) { end--; }
     return nvgTextBreakLines(ctx, string + start, string + end, breakRowWidth, rows, maxRows);
 }
 
 int nvgTextGlyphPositionsJni(NVGcontext *ctx, float x, float y, const char *string, int start, int end,
                              NVGglyphPosition *positions, int maxPositions) {
+    if (end > 0 && string[end - 1] == 0) { end--; }
     return nvgTextGlyphPositions(ctx, x, y, string + start, string + end, positions, maxPositions);
 }
 
