@@ -1255,7 +1255,7 @@ int org_mini_glfm_utils_Gutil_mat4x4_look_at(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-int org_mini_glfw_utils_Gutil_mat4x4_trans_rotate_scale(Runtime *runtime, JClass *clazz) {
+int org_mini_glfm_utils_Gutil_mat4x4_trans_rotate_scale(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     int pos = 0;
     Instance *r = env->localvar_getRefer(runtime->localvar, pos++);
@@ -1270,7 +1270,7 @@ int org_mini_glfw_utils_Gutil_mat4x4_trans_rotate_scale(Runtime *runtime, JClass
 }
 
 
-s32 org_mini_glfw_utils_Gutil_img_fill(Runtime *runtime, JClass *clazz) {
+s32 org_mini_glfm_utils_Gutil_img_fill(Runtime *runtime, JClass *clazz) {
     static const s32 BYTES_PER_PIXEL = 4;
     s32 pos = 0;
     Instance *canvasArr = localvar_getRefer(runtime->localvar, pos++);
@@ -1294,15 +1294,16 @@ s32 org_mini_glfw_utils_Gutil_img_fill(Runtime *runtime, JClass *clazz) {
         u8 r = argb.c0;
         float falpha = ((f32) a) / 0xff;
         //
+        s32 i;
         if (a == 0xff) {//alpha = 1.0
-            for (int i = offset; i < offset + len; i += BYTES_PER_PIXEL) {
+            for (i = offset; i < offset + len; i += BYTES_PER_PIXEL) {
                 canvas[i + 0] = b;//r
                 canvas[i + 1] = g;//g
                 canvas[i + 2] = r;//b
                 canvas[i + 3] = a;//a
             }
         } else {
-            for (int i = offset; i < offset + len; i += BYTES_PER_PIXEL) {
+            for (i = offset; i < offset + len; i += BYTES_PER_PIXEL) {
                 canvas[i + 0] = b * falpha + (1.0f - falpha) * canvas[i + 0];
                 canvas[i + 1] = g * falpha + (1.0f - falpha) * canvas[i + 1];
                 canvas[i + 2] = r * falpha + (1.0f - falpha) * canvas[i + 2];
@@ -1331,7 +1332,7 @@ typedef struct Box2d {
     s32 y2;
 } Box2d;
 
-s32 org_mini_glfw_utils_Gutil_img_draw(Runtime *runtime, JClass *clazz) {
+s32 org_mini_glfm_utils_Gutil_img_draw(Runtime *runtime, JClass *clazz) {
     static const s32 CELL_BYTES = 4;
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
@@ -1413,10 +1414,12 @@ s32 org_mini_glfw_utils_Gutil_img_draw(Runtime *runtime, JClass *clazz) {
                 s32 imgRowBytes = imgWidth * CELL_BYTES;
                 s32 cvsRowBytes = canvasWidth * CELL_BYTES;
 
-                for (s32 imgy = imgArea.y1, canvasy = intersection.y1; imgy < imgArea.y2; imgy++, canvasy++) {
+                s32 imgy, canvasy;
+                for (imgy = imgArea.y1, canvasy = intersection.y1; imgy < imgArea.y2; imgy++, canvasy++) {
                     s32 imgRowByteStart = imgy * imgRowBytes;
                     s32 cvsRowByteStart = canvasy * cvsRowBytes;
-                    for (s32 imgx = imgArea.x1, canvasx = intersection.x1; imgx < imgArea.x2; imgx++, canvasx++) {
+                    s32 imgx, canvasx;
+                    for (imgx = imgArea.x1, canvasx = intersection.x1; imgx < imgArea.x2; imgx++, canvasx++) {
                         s32 imgColByteStart = imgRowByteStart + imgx * CELL_BYTES;
                         u8 b = isBitmapFontDraw ? fontRGB.c2 : img[imgColByteStart + 0];
                         u8 g = isBitmapFontDraw ? fontRGB.c1 : img[imgColByteStart + 1];
@@ -1441,9 +1444,10 @@ s32 org_mini_glfw_utils_Gutil_img_draw(Runtime *runtime, JClass *clazz) {
 
             s32 imgRowBytes = imgWidth * CELL_BYTES;
             s32 cvsRowBytes = canvasWidth * CELL_BYTES;
-            for (s32 imgy = 0; imgy < imgHeight; imgy++) {
+            s32 imgy, imgx;
+            for (imgy = 0; imgy < imgHeight; imgy++) {
                 s32 imgRowByteStart = imgy * imgRowBytes;
-                for (s32 imgx = 0; imgx < imgWidth; imgx++) {
+                for (imgx = 0; imgx < imgWidth; imgx++) {
                     s32 dx = round(imgx * M00 + imgy * M01 + M02);
                     s32 dy = round(imgx * M10 + imgy * M11 + M12);
                     if (dx >= clip.x && dx < clip.x + clip.w && dy >= clip.y && dy < clip.y + clip.h) {
@@ -1509,9 +1513,9 @@ static java_native_method method_glfm_table[] = {
         {"org/mini/gl/GLMath", "mat4x4_frustum",                       "([FFFFFFF)[F",                             org_mini_glfm_utils_Gutil_mat4x4_frustum},
         {"org/mini/gl/GLMath", "mat4x4_perspective",                   "([FFFFF)[F",                               org_mini_glfm_utils_Gutil_mat4x4_perspective},
         {"org/mini/gl/GLMath", "mat4x4_look_at",                       "([F[F[F[F)[F",                             org_mini_glfm_utils_Gutil_mat4x4_look_at},
-        {"org/mini/gl/GLMath", "mat4x4_trans_rotate_scale",            "([F[F[F[F)[F",                             org_mini_glfw_utils_Gutil_mat4x4_trans_rotate_scale},
-        {"org/mini/gl/GLMath", "img_fill",                             "([BIII)V",                                 org_mini_glfw_utils_Gutil_img_fill},
-        {"org/mini/gl/GLMath", "img_draw",                             "([BI[BIIIIIFFFFFFFZI)I",                   org_mini_glfw_utils_Gutil_img_draw},
+        {"org/mini/gl/GLMath", "mat4x4_trans_rotate_scale",            "([F[F[F[F)[F",                             org_mini_glfm_utils_Gutil_mat4x4_trans_rotate_scale},
+        {"org/mini/gl/GLMath", "img_fill",                             "([BIII)V",                                 org_mini_glfm_utils_Gutil_img_fill},
+        {"org/mini/gl/GLMath", "img_draw",                             "([BI[BIIIIIFFFFFFFZI)I",                   org_mini_glfm_utils_Gutil_img_draw},
         {"org/mini/glfm/Glfm", "glfmSetCallBack",                      "(JLorg/mini/glfm/GlfmCallBack;)V",         org_mini_glfm_Glfm_glfmSetCallBack},
         {"org/mini/glfm/Glfm", "glfmSetDisplayConfig",                 "(JIIIII)V",                                org_mini_glfm_Glfm_glfmSetDisplayConfig},
         {"org/mini/glfm/Glfm", "glfmSetSupportedInterfaceOrientation", "(JI)V",                                    org_mini_glfm_Glfm_glfmSetSupportedInterfaceOrientation},

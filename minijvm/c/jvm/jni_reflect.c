@@ -1411,11 +1411,12 @@ s32 org_mini_reflect_vm_RefNative_heap_bin_search(Runtime *runtime, JClass *claz
     if (src == NULL || key == NULL || srclen <= 0 || keylen <= 0) {
         //
     } else {
-        int keyLastPos = keylen - 1;
-        for (int i = 0, iLen = srclen - keylen; i <= iLen; i++) {
+        s32 keyLastPos = keylen - 1;
+        s32 i, iLen, j;
+        for (i = 0, iLen = srclen - keylen; i <= iLen; i++) {
             if (src[i] == key[0] && src[i + keyLastPos] == key[keyLastPos]) {
                 s32 march = 1;
-                for (int j = 1; j < keyLastPos; j++) {
+                for (j = 1; j < keyLastPos; j++) {
                     if (src[i + j] != key[j]) {
                         march = 0;
                         break;
@@ -1446,8 +1447,9 @@ s32 org_mini_reflect_vm_RefNative_heap_fill(Runtime *runtime, JClass *clazz) {
     if (src == NULL || val == NULL || srclen <= 0 || vallen <= 0) {
         //
     } else {
-        for (int i = 0; i < srclen;) {
-            for (int j = 0; j < vallen; j++) {
+        s32 i, j;
+        for (i = 0; i < srclen;) {
+            for (j = 0; j < vallen; j++) {
                 *(src + i) = *(val + j);
                 i++;
             }
