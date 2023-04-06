@@ -72,7 +72,7 @@ void jdwp_put_client(ArrayList *clients, JdwpClient *client) {
 s32 jdwp_thread_listener(void *para) {
     JdwpServer *jdwpserver = (JdwpServer *) para;
     mbedtls_net_init(&jdwpserver->srvsock);
-    mbedtls_net_bind(&jdwpserver->srvsock, NULL, jdwpserver->port, MBEDTLS_NET_PROTO_TCP);
+    mbedtls_net_bind(&jdwpserver->srvsock, jdwpserver->ip, jdwpserver->port, MBEDTLS_NET_PROTO_TCP);
     jdwpserver->mode |= JDWP_MODE_LISTEN;
 
     while (!jdwpserver->exit) {
@@ -119,7 +119,7 @@ s32 jdwp_start_server(MiniJVM *jvm) {
     if (!jvm->jdwp_enable)return 0;
     JdwpServer *jdwpserver = jvm_calloc(sizeof(JdwpServer));
     jdwpserver->jvm = jvm;
-    jdwpserver->ip = NULL;//bind to all ip
+    jdwpserver->ip = "0.0.0.0";//bind to all ip
     jdwpserver->port = (c8 *) JDWP_TCP_PORT;
     jdwpserver->exit = 0;
     jdwpserver->clients = arraylist_create(0);
