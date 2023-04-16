@@ -38,6 +38,8 @@ public class GTextField extends GTextObject {
 
     protected boolean password = false;//是否密码字段
 
+    protected boolean resetEnable = true;
+
     protected float wordShowOffsetX = 0.f;
 
     public GTextField(GForm form) {
@@ -81,6 +83,15 @@ public class GTextField extends GTextObject {
         return password;
     }
 
+
+    public void setResetEnable(boolean resetEnable) {
+        this.resetEnable = resetEnable;
+    }
+
+    public boolean isResetEnable() {
+        return resetEnable;
+    }
+
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         int rx = (int) (x - parent.getInnerX());
@@ -105,8 +116,10 @@ public class GTextField extends GTextObject {
                         GToolkit.disposeEditMenu();
                     }
                     if (isInBoundle(reset_boundle, rx, ry)) {
-                        deleteAll();
-                        resetSelect();
+                        if (isResetEnable()) {
+                            deleteAll();
+                            resetSelect();
+                        }
                         if (GToolkit.getEditMenu() != null) GToolkit.getEditMenu().dispose();
                     }
                 }
@@ -263,8 +276,10 @@ public class GTextField extends GTextObject {
         if (isInBoundle(boundle, rx, ry)) {
             if (phase == Glfm.GLFMTouchPhaseEnded) {
                 if (isInBoundle(reset_boundle, rx, ry)) {
-                    deleteAll();
-                    resetSelect();
+                    if (isResetEnable()) {
+                        deleteAll();
+                        resetSelect();
+                    }
                     if (GToolkit.getEditMenu() != null) GToolkit.getEditMenu().dispose();
                 } else {
                     if (selectMode) {
@@ -450,11 +465,13 @@ public class GTextField extends GTextObject {
             GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h);
         }
 
-        nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
-        nvgFontFace(vg, GToolkit.getFontIcon());
-        nvgFillColor(vg, nvgRGBA(255, 255, 255, 32));
-        nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-        nvgTextJni(vg, x + w - h * 0.55f, y + h * 0.55f, reset_arr, 0, reset_arr.length);
+        if (isResetEnable()) {
+            nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
+            nvgFontFace(vg, GToolkit.getFontIcon());
+            nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
+            nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+            nvgTextJni(vg, x + w - h * 0.55f, y + h * 0.55f, reset_arr, 0, reset_arr.length);
+        }
 
         nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
@@ -499,7 +516,7 @@ public class GTextField extends GTextObject {
                 text_pos = new short[char_count];
                 float caretx = 0;
                 float text_show_area_right = text_show_area_x + text_show_area_w;
-                int leftShowCharIdx = Integer.MIN_VALUE, rightShowCharIdx = Integer.MAX_VALUE;
+                int leftShowCharIdx = 0, rightShowCharIdx = textsb.length();
                 //确定每个char的位置
                 for (int j = 0; j < char_count; j++) {
                     //取第 j 个字符的X座标
@@ -531,7 +548,7 @@ public class GTextField extends GTextObject {
                 }
 
                 if (parent.getFocus() == this) {
-                    GToolkit.drawCaret(vg, caretx, wordy - 0.5f * lineh[0], 1, lineh[0], false);
+                    GToolkit.drawCaret(vg, caretx - 1, wordy - 0.5f * lineh[0], 2, lineh[0], false);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -541,6 +558,9 @@ public class GTextField extends GTextObject {
             if (selectStart != -1 && selectEnd != -1) {
                 float selStartX = getPosXByIndex(selectStart);
                 float selEndX = getPosXByIndex(selectEnd);
+                if (selStartX > text_show_area_x + text_show_area_w) {
+                    selStartX = text_show_area_x + text_show_area_w;
+                }
 
                 GToolkit.drawRect(vg, selStartX, wordy - lineh[0] * .5f, selEndX - selStartX, lineh[0], GToolkit.getStyle().getSelectedColor());
 

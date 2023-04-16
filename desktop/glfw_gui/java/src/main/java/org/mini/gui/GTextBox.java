@@ -372,8 +372,8 @@ public class GTextBox extends GTextObject {
                             if (isSelected()) {
                                 deleteSelectedText();
                             }
-                            setCaretIndex(caretIndex + 1);
                             insertTextByIndex(caretIndex, '\n');
+                            setCaretIndex(caretIndex + 1);
                         }
                         break;
                     }
@@ -874,7 +874,7 @@ public class GTextBox extends GTextObject {
                     int row_index = 0;
 
                     if (end - start == 0) {
-                        GToolkit.drawCaret(vg, dx, dy, 1, lineH, false);
+                        GToolkit.drawCaret(vg, dx, dy, 2, lineH, false);
                     } else {//通过nvgTextBreakLinesJni进行断行
 
                         for (int li = 0; li < local_detail.length; li++) local_detail[li] = null;
@@ -950,7 +950,8 @@ public class GTextBox extends GTextObject {
 //                                                }
                                             } else if (caretIndex == char_endi + 1) {
                                                 caretx = dx + row_width;
-                                                if (caretx >= text_area[LEFT] + text_area[WIDTH]) caretx = text_area[LEFT] + text_area[WIDTH] - 2;
+                                                if (caretx >= text_area[LEFT] + text_area[WIDTH])
+                                                    caretx = text_area[LEFT] + text_area[WIDTH] - 2;
                                                 draw = true;
                                             } else if (caretIndex == 0 && char_starti == 0) {//特殊情况
                                                 caretx = dx;
@@ -959,7 +960,7 @@ public class GTextBox extends GTextObject {
                                             if (draw) {
                                                 curCaretRow = curRow + topShowRow;
                                                 curCaretCol = caretIndex - char_starti;
-                                                GToolkit.drawCaret(vg, caretx, dy, 2, lineH, false);
+                                                GToolkit.drawCaret(vg, caretx - 1, dy, 2, lineH, false);
                                             }
                                         }
 

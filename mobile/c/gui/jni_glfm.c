@@ -1276,10 +1276,10 @@ s32 org_mini_glfm_utils_Gutil_img_fill(Runtime *runtime, JClass *clazz) {
     Instance *canvasArr = localvar_getRefer(runtime->localvar, pos++);
     if (!canvasArr)return 0;
     u8 *canvas = (u8 *) canvasArr->arr_body;
-    s32 offset = localvar_getInt(runtime->localvar, pos++);
-    offset *= BYTES_PER_PIXEL;
-    s32 len = localvar_getInt(runtime->localvar, pos++);
-    len *= BYTES_PER_PIXEL;
+    s32 ioffset = localvar_getInt(runtime->localvar, pos++);
+    s32 offset = ioffset * BYTES_PER_PIXEL;
+    s32 ilen = localvar_getInt(runtime->localvar, pos++);
+    s32 len = ilen * BYTES_PER_PIXEL;
     Int2Float argb;//argb.c3--a  argb.c2--b   argb.c1--g  argb.c0--r
     argb.i = localvar_getInt(runtime->localvar, pos++);
 
@@ -1292,18 +1292,21 @@ s32 org_mini_glfm_utils_Gutil_img_fill(Runtime *runtime, JClass *clazz) {
         u8 b = argb.c2;
         u8 g = argb.c1;
         u8 r = argb.c0;
-        float falpha = ((f32) a) / 0xff;
         //
-        s32 i;
-        if (a == 0xff) {//alpha = 1.0
-            for (i = offset; i < offset + len; i += BYTES_PER_PIXEL) {
-                canvas[i + 0] = b;//r
-                canvas[i + 1] = g;//g
-                canvas[i + 2] = r;//b
-                canvas[i + 3] = a;//a
-            }
+        s32 i, imax;
+        if (a == 0) {
+            //do nothing
+        } else if (a == 0xff) {//alpha = 1.0
+            Int2Float color;
+            color.c3 = a;
+            color.c2 = r;
+            color.c1 = g;
+            color.c0 = b;
+            s32 *icanvas = (s32 *) canvas;
+            for (i = ioffset, imax = ioffset + ilen; i < imax; i++)icanvas[i] = color.i;
         } else {
-            for (i = offset; i < offset + len; i += BYTES_PER_PIXEL) {
+            f32 falpha = ((f32) a) / 0xff;
+            for (i = offset, imax = offset + len; i < imax; i += BYTES_PER_PIXEL) {
                 canvas[i + 0] = b * falpha + (1.0f - falpha) * canvas[i + 0];
                 canvas[i + 1] = g * falpha + (1.0f - falpha) * canvas[i + 1];
                 canvas[i + 2] = r * falpha + (1.0f - falpha) * canvas[i + 2];
@@ -1403,6 +1406,7 @@ s32 org_mini_glfm_utils_Gutil_img_draw(Runtime *runtime, JClass *clazz) {
 
             if (intersection.x1 > canvasWidth || intersection.x2 < 0 || intersection.y1 > canvasHeight || intersection.y2 < 0) {
                 //do nothing
+                process=1;
             } else {
                 //calc area to draw in image
                 Box2d imgArea;
@@ -1421,17 +1425,36 @@ s32 org_mini_glfm_utils_Gutil_img_draw(Runtime *runtime, JClass *clazz) {
                     s32 imgx, canvasx;
                     for (imgx = imgArea.x1, canvasx = intersection.x1; imgx < imgArea.x2; imgx++, canvasx++) {
                         s32 imgColByteStart = imgRowByteStart + imgx * CELL_BYTES;
-                        u8 b = isBitmapFontDraw ? fontRGB.c2 : img[imgColByteStart + 0];
-                        u8 g = isBitmapFontDraw ? fontRGB.c1 : img[imgColByteStart + 1];
-                        u8 r = isBitmapFontDraw ? fontRGB.c0 : img[imgColByteStart + 2];
-                        u8 a = img[imgColByteStart + 3];
+                        u8 b, g, r, a;
+                        a = img[imgColByteStart + 3];
+                        if (a == 0) {
+                            continue;
+                        }
 
-                        f32 falpha = (f32) a / 0xff;
-                        s32 cvsColByteStart = cvsRowByteStart + canvasx * CELL_BYTES;
-                        canvas[cvsColByteStart + 0] = b * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 0];
-                        canvas[cvsColByteStart + 1] = g * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 1];
-                        canvas[cvsColByteStart + 2] = r * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 2];
-                        canvas[cvsColByteStart + 3] = a * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 3];
+                        if (isBitmapFontDraw) {
+                            b = fontRGB.c2;
+                            g = fontRGB.c1;
+                            r = fontRGB.c0;
+                        } else {
+                            b = img[imgColByteStart + 0];
+                            g = img[imgColByteStart + 1];
+                            r = img[imgColByteStart + 2];
+                        }
+                        if (a == 0xff) {
+                            s32 cvsColByteStart = cvsRowByteStart + canvasx * CELL_BYTES;
+                            canvas[cvsColByteStart + 0] = b;
+                            canvas[cvsColByteStart + 1] = g;
+                            canvas[cvsColByteStart + 2] = r;
+                            canvas[cvsColByteStart + 3] = a;
+//                            *((s32 *) (canvas + cvsColByteStart)) = *((s32 *) (img + imgColByteStart));
+                        } else {
+                            f32 falpha = (f32) a / 0xff;
+                            s32 cvsColByteStart = cvsRowByteStart + canvasx * CELL_BYTES;
+                            canvas[cvsColByteStart + 0] = b * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 0];
+                            canvas[cvsColByteStart + 1] = g * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 1];
+                            canvas[cvsColByteStart + 2] = r * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 2];
+                            canvas[cvsColByteStart + 3] = a * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 3];
+                        }
                     }
                 }
                 process = 1;
@@ -1452,16 +1475,26 @@ s32 org_mini_glfm_utils_Gutil_img_draw(Runtime *runtime, JClass *clazz) {
                     s32 dy = round(imgx * M10 + imgy * M11 + M12);
                     if (dx >= clip.x && dx < clip.x + clip.w && dy >= clip.y && dy < clip.y + clip.h) {
                         s32 imgColByteStart = imgRowByteStart + imgx * CELL_BYTES;
+                        u8 a = img[imgColByteStart + 3];
+                        if (a == 0) {
+                            continue;
+                        }
                         u8 b = isBitmapFontDraw ? fontRGB.c2 : img[imgColByteStart + 0];
                         u8 g = isBitmapFontDraw ? fontRGB.c1 : img[imgColByteStart + 1];
                         u8 r = isBitmapFontDraw ? fontRGB.c0 : img[imgColByteStart + 2];
-                        u8 a = img[imgColByteStart + 3];
-                        f32 falpha = (f32) a / 0xff;
                         s32 cvsColByteStart = dy * cvsRowBytes + dx * CELL_BYTES;
-                        canvas[cvsColByteStart + 0] = b * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 0];
-                        canvas[cvsColByteStart + 1] = g * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 1];
-                        canvas[cvsColByteStart + 2] = r * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 2];
-                        canvas[cvsColByteStart + 3] = a * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 3];
+                        if (a == 0xff) {
+                            canvas[cvsColByteStart + 0] = b;
+                            canvas[cvsColByteStart + 1] = g;
+                            canvas[cvsColByteStart + 2] = r;
+                            canvas[cvsColByteStart + 3] = a;
+                        } else {
+                            f32 falpha = (f32) a / 0xff;
+                            canvas[cvsColByteStart + 0] = b * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 0];
+                            canvas[cvsColByteStart + 1] = g * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 1];
+                            canvas[cvsColByteStart + 2] = r * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 2];
+                            canvas[cvsColByteStart + 3] = a * falpha + (1.0f - falpha) * canvas[cvsColByteStart + 3];
+                        }
                     }
                 }
             }

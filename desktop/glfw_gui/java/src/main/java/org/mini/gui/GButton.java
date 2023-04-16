@@ -66,11 +66,17 @@ public class GButton extends GObject {
                 parent.setFocus(this);
                 oldX = getX();
                 oldY = getY();
+                doStateChanged(this);
             } else {
-                bt_pressed = false;
                 if (validAction(x, y)) doAction();
+                bt_pressed = false;
+                doStateChanged(this);
             }
         }
+    }
+
+    public boolean isPressed() {
+        return bt_pressed;
     }
 
     @Override
@@ -157,10 +163,10 @@ public class GButton extends GObject {
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         nvgFontBlur(vg, 2f);
         nvgFillColor(vg, GToolkit.getStyle().getTextShadowColor());
-        nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw * 0.25f, y + h * 0.5f + move + 1.5f, text_arr, 0, text_arr.length);
+        nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw, y + h * 0.5f + move + 1.5f, text_arr, 0, text_arr.length);
         nvgFontBlur(vg, 0);
         nvgFillColor(vg, textColor);
-        nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw * 0.25f, y + h * 0.5f + move + 1.5f, text_arr, 0, text_arr.length);
+        nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw, y + h * 0.5f + move + 1.5f, text_arr, 0, text_arr.length);
 
         return true;
     }

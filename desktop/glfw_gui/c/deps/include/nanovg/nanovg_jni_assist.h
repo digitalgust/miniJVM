@@ -275,7 +275,7 @@ int nvgTextBreakLinesJni(NVGcontext *ctx, const char *string, int start, int end
 
 int nvgTextGlyphPositionsJni(NVGcontext *ctx, float x, float y, const char *string, int start, int end,
                              NVGglyphPosition *positions, int maxPositions) {
-    if (end > 0 && string[end - 1] == 0) { end--; }
+    //if (end > 0 && string[end - 1] == 0) { end--; } //disable line ,for need the last char right pos
     return nvgTextGlyphPositions(ctx, x, y, string + start, string + end, positions, maxPositions);
 }
 

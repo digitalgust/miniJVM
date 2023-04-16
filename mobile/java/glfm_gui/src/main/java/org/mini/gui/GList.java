@@ -269,6 +269,7 @@ public class GList extends GContainer {
             go.setSize(popView.getW() - pad * 2, list_item_heigh);
             i++;
         }
+        popView.reAlign();
         //selected.clear();
     }
 

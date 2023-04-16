@@ -648,8 +648,9 @@ public class GToolkit {
         float pad = 3f;
 
         btnH = 30f;
-        float btnWidth = w * .5f;
-        GButton okBtn = new GButton(form, GLanguage.getString("Ok"), x + w * .5f, y, btnWidth, btnH);
+        float btnWidth = w * .25f;
+        GButton okBtn = new GButton(form, GLanguage.getString("Ok"), x + w * .75f, y, btnWidth, btnH);
+        okBtn.setPreIcon("✓");
         okBtn.setName("GTOOLKIT_FILECHOOSER_OK");
         gp.add(okBtn);
         okBtn.setActionListener(gobj -> {
@@ -658,6 +659,7 @@ public class GToolkit {
         });
 
         GButton cancelBtn = new GButton(form, GLanguage.getString("Cancel"), x, y, btnWidth, btnH);
+        cancelBtn.setPreIcon("\uE712");
         cancelBtn.setName("GTOOLKIT_FILECHOOSER_CANCEL");
         gp.add(cancelBtn);
         cancelBtn.setActionListener(gobj -> {
