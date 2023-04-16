@@ -4,7 +4,7 @@
     <groupId>io.github.digitalgust</groupId>
     <artifactId>glfm_gui</artifactId>
     <name>${project.groupId}:${project.artifactId}</name>
-    <version>1.0</version>
+    <version>1.0.1</version>
     <description>miniJVM mobile platform gui library</description>
     <url>https://github.com/digitalgust/miniJVM</url>
 
