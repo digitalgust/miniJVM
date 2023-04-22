@@ -1213,6 +1213,12 @@ public class GToolkit {
         }
     }
 
+    public static void closeFrame(GObject gobj) {
+        if (gobj == null) return;
+        GForm form = gobj.getForm();
+        form.remove(gobj);
+    }
+
     public static void showAlignedFrame(GObject gobj, int align_mod) {
         if (gobj == null) return;
         GForm form = gobj.getForm();

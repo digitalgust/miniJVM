@@ -76,8 +76,10 @@ public class GMenuItem extends GObject {
             if (pressed && button == Glfw.GLFW_MOUSE_BUTTON_1) {
                 touched = true;
                 doAction();
+                doStateChanged(this);
             } else if (!pressed && button == Glfw.GLFW_MOUSE_BUTTON_1) {
                 touched = false;
+                doStateChanged(this);
             }
         }
 
@@ -88,12 +90,18 @@ public class GMenuItem extends GObject {
         if (isInArea(x, y)) {
             if (phase == Glfm.GLFMTouchPhaseBegan) {
                 touched = true;
+                doStateChanged(this);
             } else if (phase == Glfm.GLFMTouchPhaseEnded) {
                 touched = false;
                 doAction();
+                doStateChanged(this);
             }
         }
 
+    }
+
+    public boolean isPressed() {
+        return touched;
     }
 
     public boolean paint(long vg) {

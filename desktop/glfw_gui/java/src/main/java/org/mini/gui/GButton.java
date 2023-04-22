@@ -93,11 +93,14 @@ public class GButton extends GObject {
                 bt_pressed = true;
                 oldX = getX();
                 oldY = getY();
+                doStateChanged(this);
             } else if (phase == Glfm.GLFMTouchPhaseEnded) {
                 if (validAction(x, y)) doAction();
                 bt_pressed = false;
+                doStateChanged(this);
             } else if (!isInArea(x, y)) {
                 bt_pressed = false;
+                doStateChanged(this);
             }
         }
     }
