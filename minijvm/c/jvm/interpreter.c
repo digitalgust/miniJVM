@@ -2661,7 +2661,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_jsr: {
                             offset = *((s16 *) (ip + 1));
-                            (sp++)->lvalue = (s64) (intptr_t) (ip + 3);
+                            (sp++)->rvalue = (ip + 3);
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("jsr: %d\n", offset);
@@ -2672,7 +2672,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_ret: {
-                            __returnaddress addr = (__refer) (intptr_t) localvar[(u8) ip[1]].lvalue;
+                            __returnaddress addr = (__refer) (intptr_t) localvar[(u8) ip[1]].rvalue;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
@@ -3524,7 +3524,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_jsr_w: {
 
                             offset = *((s32 *) (ip + 1));
-                            (sp++)->lvalue = (s64) (intptr_t) (ip + 3);
+                            (sp++)->rvalue = (ip + 3);
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("jsr_w: %d\n", offset);
