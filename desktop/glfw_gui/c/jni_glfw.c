@@ -736,12 +736,14 @@ int org_mini_glfw_utils_Gutil_mat4x4_trans_rotate_scale(Runtime *runtime, JClass
 s32 org_mini_glfw_utils_Gutil_img_fill(Runtime *runtime, JClass *clazz) {
     static const s32 BYTES_PER_PIXEL = 4;
     s32 pos = 0;
-    Instance *canvasArr = localvar_getRefer(runtime->localvar, pos++);
+    Instance *canvasArr = localvar_getRefer(runtime->localvar, pos++);// byte array
     if (!canvasArr)return 0;
     u8 *canvas = (u8 *) canvasArr->arr_body;
     s32 ioffset = localvar_getInt(runtime->localvar, pos++);
-    s32 offset = ioffset * BYTES_PER_PIXEL;
     s32 ilen = localvar_getInt(runtime->localvar, pos++);
+    if (ioffset < 0)ioffset = 0;
+    if (ioffset + ilen > canvasArr->arr_length / BYTES_PER_PIXEL)ilen = canvasArr->arr_length / BYTES_PER_PIXEL - ioffset;
+    s32 offset = ioffset * BYTES_PER_PIXEL;
     s32 len = ilen * BYTES_PER_PIXEL;
     Int2Float argb;//argb.c3--a  argb.c2--b   argb.c1--g  argb.c0--r
     argb.i = localvar_getInt(runtime->localvar, pos++);
@@ -749,8 +751,6 @@ s32 org_mini_glfw_utils_Gutil_img_fill(Runtime *runtime, JClass *clazz) {
     if (canvasArr->arr_length < offset || len == 0 || argb.c3 == 0) {
         //
     } else {
-        if (offset + len > canvasArr->arr_length)len = canvasArr->arr_length - offset;
-
         u8 a = argb.c3;
         u8 b = argb.c2;
         u8 g = argb.c1;
@@ -869,7 +869,7 @@ s32 org_mini_glfw_utils_Gutil_img_draw(Runtime *runtime, JClass *clazz) {
 
             if (intersection.x1 > canvasWidth || intersection.x2 < 0 || intersection.y1 > canvasHeight || intersection.y2 < 0) {
                 //do nothing
-                process=1;
+                process = 1;
             } else {
                 //calc area to draw in image
                 Box2d imgArea;
