@@ -316,7 +316,7 @@ public class GlfwCallBackImpl extends GCallBack {
             if (gform == null) {
                 return;
             }
-            gform.scrollEvent((float) scrollX, (float) scrollY, mouseX, mouseY);
+            gform.scrollEvent((float) scrollX * 10, (float) scrollY * 10, mouseX, mouseY);
             gform.flush();
         } catch (Exception ex) {
             ex.printStackTrace();

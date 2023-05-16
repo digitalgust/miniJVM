@@ -446,10 +446,10 @@ public class AppManager extends GApplication {
                         int idx = path.lastIndexOf(File.separator);
                         if (idx >= 0) {
                             path = path.substring(idx + 1);
-                            idx = path.indexOf(".jar");
-                            if (idx >= 0) {
-                                path = path.substring(0, idx);
-                            }
+//                            idx = path.indexOf(".jar");
+//                            if (idx >= 0) {
+//                                path = path.substring(0, idx);
+//                            }
                         }
                         if (path.length() >= 0) {
                             AppLoader.addApp(path, fullpath);
