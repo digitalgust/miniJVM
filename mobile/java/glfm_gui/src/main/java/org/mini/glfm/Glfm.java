@@ -107,6 +107,17 @@ public class Glfm {
             GLFMKeyActionRepeated = 1,
             GLFMKeyActionReleased = 2;
 
+    public static int //
+            GLFMHapticFeedbackLight = 0,
+            GLFMHapticFeedbackMedium = 1,
+            GLFMHapticFeedbackHeavy = 2;
+    public static int //
+            GLFMSensorAccelerometer=0, // Events are a vector in G's
+            GLFMSensorMagnetometer=1, // Events are a vector in microteslas
+            GLFMSensorGyroscope=2, // Events are a vector in radians/sec
+            GLFMSensorRotationMatrix=3 // Events are a rotation matrix
+    ;
+
     /**
      * photo pick
      */
@@ -142,6 +153,16 @@ public class Glfm {
                                                    int depthFormat,
                                                    int stencilFormat,
                                                    int multisample);
+
+    public static native void glfmSwapBuffers(long display);
+
+    public static native boolean glfmIsHapticFeedbackSupported(long display);
+
+    public static native void glfmPerformHapticFeedback(long display, int style);
+
+    public static native boolean glfmIsMetalSupported(long display);
+
+    public static native long glfmGetMetalView(long display);
 
     @Deprecated
     public static void glfmSetUserInterfaceOrientation(long display, int allowedOrientations) {

@@ -7,12 +7,22 @@ package org.mini.glfm;
 
 /**
  * callback
+ *
  * @author gust
  */
 public interface GlfmCallBack {
 
-    //void onFrame(GLFMDisplay *display, double frameTime)
-    public void mainLoop(long display, double frameTime);
+    //Deprecated by glfm, alter by render and glfmSwapBuffers
+    //subst in c layer,
+    @Deprecated
+    void mainLoop(long display, double frameTime);
+
+    //     Render callback function.
+    //    typedef void (*GLFMRenderFunc)(GLFMDisplay *display);
+    default void onRender(long display) {
+        mainLoop(display, 0);
+        Glfm.glfmSwapBuffers(display);
+    }
 
     //bool onTouch(GLFMDisplay *display, int touch, GLFMTouchPhase phase, double x, double y)
     public boolean onTouch(long display, int touch, int phase, double x, double y);

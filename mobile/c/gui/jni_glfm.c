@@ -93,15 +93,14 @@ static void _callback_character(GLFMDisplay *window, const char *utf8, int modif
     }
 }
 
-static void _callback_mainloop(GLFMDisplay *window, f64 frameTime) {
-    if (refers._callback_mainloop) {
+static void _callback_render(GLFMDisplay *window, f64 frameTime) {
+    if (refers._callback_render) {
         Runtime *runtime = getRuntimeCurThread(refers.env);
         JniEnv *env = refers.env;
         env->push_ref(runtime->stack, refers.glfm_callback);
         env->push_long(runtime->stack, (s64) (intptr_t) window);
-        env->push_double(runtime->stack, frameTime);
 
-        s32 ret = env->execute_method(refers._callback_mainloop, runtime);
+        s32 ret = env->execute_method(refers._callback_render, runtime);
         if (ret) {
             env->print_exception(runtime);
         }
@@ -299,7 +298,7 @@ int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
     env->garbage_refer_hold(runtime->jvm->collector, refers.glfm_callback);
 
 
-    glfmSetMainLoopFunc(window, _callback_mainloop);
+    glfmSetRenderFunc(window, _callback_render);
     glfmSetKeyFunc(window, _callback_key);
     glfmSetCharFunc(window, _callback_character);
     glfmSetAppFocusFunc(window, _callback_app_focus);
@@ -348,11 +347,11 @@ int org_mini_glfm_Glfm_glfmSetCallBack(Runtime *runtime, JClass *clazz) {
         env->utf8_destory(type);
     }
     {
-        name_s = "mainLoop";
-        type_s = "(JD)V";
+        name_s = "onRender";//glfm changed :from mainloop to onRender
+        type_s = "(J)V";
         Utf8String *name = env->utf8_create_part_c(name_s, 0, strlen(name_s));
         Utf8String *type = env->utf8_create_part_c(type_s, 0, strlen(type_s));
-        refers._callback_mainloop = env->find_methodInfo_by_name(
+        refers._callback_render = env->find_methodInfo_by_name(
                 refers.glfm_callback->mb.clazz->name, name, type, jloader, runtime);
         env->utf8_destory(name);
         env->utf8_destory(type);
@@ -484,6 +483,55 @@ int org_mini_glfm_Glfm_glfmSetDisplayConfig(Runtime *runtime, JClass *clazz) {//
     glfmSetDisplayConfig(window, preferredAPI, colorFormat, depthFormat, stencilFormat,
                          multisample);
 
+    return 0;
+}
+
+int org_mini_glfm_Glfm_glfmSwapBuffers(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFMDisplay *window = (__refer)((intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos));
+    pos += 2;
+    glfmSwapBuffers(window);
+    return 0;
+}
+
+int org_mini_glfm_Glfm_glfmIsHapticFeedbackSupported(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFMDisplay *window = (__refer)((intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos));
+    pos += 2;
+    s32 r = glfmIsHapticFeedbackSupported(window);
+    env->push_int(runtime->stack, r);
+    return 0;
+}
+
+int org_mini_glfm_Glfm_glfmPerformHapticFeedback(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFMDisplay *window = (__refer)((intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos));
+    pos += 2;
+    s32 style = env->localvar_getInt(runtime->localvar, pos++);
+    glfmPerformHapticFeedback(window, style);
+    return 0;
+}
+
+int org_mini_glfm_Glfm_glfmIsMetalSupported(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFMDisplay *window = (__refer)((intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos));
+    pos += 2;
+    s32 r = glfmIsMetalSupported(window);
+    env->push_int(runtime->stack, r);
+    return 0;
+}
+
+int org_mini_glfm_Glfm_glfmGetMetalView(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFMDisplay *window = (__refer)((intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos));
+    pos += 2;
+    s64 view = (s64)((intptr_t) glfmGetMetalView(window));
+    env->push_long(runtime->stack, view);
     return 0;
 }
 
@@ -1551,6 +1599,11 @@ static java_native_method method_glfm_table[] = {
         {"org/mini/gl/GLMath", "img_draw",                             "([BI[BIIIIIFFFFFFFZI)I",                   org_mini_glfm_utils_Gutil_img_draw},
         {"org/mini/glfm/Glfm", "glfmSetCallBack",                      "(JLorg/mini/glfm/GlfmCallBack;)V",         org_mini_glfm_Glfm_glfmSetCallBack},
         {"org/mini/glfm/Glfm", "glfmSetDisplayConfig",                 "(JIIIII)V",                                org_mini_glfm_Glfm_glfmSetDisplayConfig},
+        {"org/mini/glfm/Glfm", "glfmSwapBuffers",                      "(J)V",                                     org_mini_glfm_Glfm_glfmSwapBuffers},
+        {"org/mini/glfm/Glfm", "glfmIsHapticFeedbackSupported",        "(J)Z",                                     org_mini_glfm_Glfm_glfmIsHapticFeedbackSupported},
+        {"org/mini/glfm/Glfm", "glfmPerformHapticFeedback",            "(JI)V",                                    org_mini_glfm_Glfm_glfmPerformHapticFeedback},
+        {"org/mini/glfm/Glfm", "glfmIsMetalSupported",                 "(J)Z",                                     org_mini_glfm_Glfm_glfmIsMetalSupported},
+        {"org/mini/glfm/Glfm", "glfmGetMetalView",                     "(J)J",                                     org_mini_glfm_Glfm_glfmGetMetalView},
         {"org/mini/glfm/Glfm", "glfmSetSupportedInterfaceOrientation", "(JI)V",                                    org_mini_glfm_Glfm_glfmSetSupportedInterfaceOrientation},
         {"org/mini/glfm/Glfm", "glfmGetInterfaceOrientation",          "(J)I",                                     org_mini_glfm_Glfm_glfmGetInterfaceOrientation},
         {"org/mini/glfm/Glfm", "glfmGetSupportedInterfaceOrientation", "(J)I",                                     org_mini_glfm_Glfm_glfmGetSupportedInterfaceOrientation},

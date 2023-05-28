@@ -42,7 +42,7 @@ struct _GlobeRefer {
     MethodInfo *_callback_surface_error;
     MethodInfo *_callback_key;
     MethodInfo *_callback_character;
-    MethodInfo *_callback_mainloop;
+    MethodInfo *_callback_render;
     MethodInfo *_callback_memory_warning;
     MethodInfo *_callback_keyboard_visible;
     MethodInfo *_callback_touch;

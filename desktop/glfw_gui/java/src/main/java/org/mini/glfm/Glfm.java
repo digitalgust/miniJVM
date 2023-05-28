@@ -104,6 +104,18 @@ public class Glfm {
             GLFMKeyActionRepeated = 1,
             GLFMKeyActionReleased = 2;
 
+    public static int //
+            GLFMHapticFeedbackLight = 0,
+            GLFMHapticFeedbackMedium = 1,
+            GLFMHapticFeedbackHeavy = 2;
+    public static int //
+            GLFMSensorAccelerometer = 0, // Events are a vector in G's
+            GLFMSensorMagnetometer = 1, // Events are a vector in microteslas
+            GLFMSensorGyroscope = 2, // Events are a vector in radians/sec
+            GLFMSensorRotationMatrix = 3 // Events are a rotation matrix
+                    ;
+
+
     /**
      * photo pick
      */
@@ -155,6 +167,26 @@ public class Glfm {
                                             int multisample) {
 
     }
+
+    public static void glfmSwapBuffers(long display) {
+    }
+
+    public static boolean glfmIsHapticFeedbackSupported(long display) {
+        return false;
+    }
+
+    public static void glfmPerformHapticFeedback(long display, int style) {
+
+    }
+
+    public static boolean glfmIsMetalSupported(long display) {
+        return false;
+    }
+
+    public static long glfmGetMetalView(long display) {
+        return 0;
+    }
+
 
     public static void glfmSetCallBack(long display, GCallBack app) {
 
