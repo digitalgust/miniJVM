@@ -164,7 +164,7 @@ public class GlfmCallBackImpl extends GCallBack {
     }
 
     @Override
-    public void mainLoop(long display, double frameTime) {
+    public void onRender(long display) {
         try {
 //            startAt = System.currentTimeMillis();
             if (gapp == null) {
@@ -198,6 +198,7 @@ public class GlfmCallBackImpl extends GCallBack {
             }
 //
 //            cost = now - startAt;
+            Glfm.glfmSwapBuffers(display);
             Sync.sync((int) fpsExpect);
         } catch (Exception e) {
             e.printStackTrace();
