@@ -1,8 +1,9 @@
 package org.mini.glfw;
 
 public class Glfw {
-    
-    public static void loadLib(){}
+
+    public static void loadLib() {
+    }
 
     /**
      * The major version number of the GLFW library. This is incremented when
@@ -736,7 +737,7 @@ public class Glfw {
      * <li>An OpenGL extension loader library that assumes it knows which
      * context creation API is used on a given platform may fail if you change
      * this hint. This can be resolved by having it load via
-     * {@link #glfwGetProcAddress GetProcAddress}, which always uses the
+     * {glfwGetProcAddress GetProcAddress}, which always uses the
      * selected API.</li>
      * </ul></div>
      *
@@ -825,4 +826,64 @@ public class Glfw {
         return null;
     }
 
+    public static void glfwSetWindowTitle(long window, String title) {
+    }
+
+    public static boolean glfwInit() {
+        return true;
+    }
+
+    public static void glfwWindowHint(int target, int hint) {
+
+    }
+
+    public static long glfwCreateWindow(int width, int height, byte[] title, long monitor, long share) {
+        return 0;
+    }
+
+    public static void glfwTerminate() {
+
+    }
+
+    public static void glfwSetCallback(long window, GlfwCallback javaCallback) {
+
+    }
+
+    public static void glfwMakeContextCurrent(long window) {
+
+    }
+
+    public static void glfwSwapInterval(int interval) {
+
+    }
+
+    public static boolean glfwWindowShouldClose(long window) {
+        return true;
+    }
+
+    public static void glfwSetWindowShouldClose(long window, int value) {
+
+    }
+
+    public static void glfwSwapBuffers(long window) {
+    }
+
+    public static void glfwPollEvents() {
+    }
+
+    public static int glfwGetWindowWidth(long window) {
+        return 1;
+    }
+
+    public static int glfwGetWindowHeight(long window) {
+        return 1;
+    }
+
+    public static int glfwGetFramebufferWidth(long window) {
+        return 1;
+    }
+
+    public static int glfwGetFramebufferHeight(long window) {
+        return 1;
+    }
 }

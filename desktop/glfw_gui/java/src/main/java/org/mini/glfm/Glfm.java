@@ -6,12 +6,14 @@
 package org.mini.glfm;
 
 import org.mini.glfw.Glfw;
-import org.mini.gui.GCallBack;
 
 /**
  * @author gust
  */
 public class Glfm {
+
+    public static final int //
+            MAX_SIMULTANEOUS_TOUCHES = 10;
 
     public static final int //
             GLFMRenderingAPIOpenGLES2 = 0,
@@ -188,7 +190,7 @@ public class Glfm {
     }
 
 
-    public static void glfmSetCallBack(long display, GCallBack app) {
+    public static void glfmSetCallBack(long display, GlfmCallBack app) {
 
     }
 

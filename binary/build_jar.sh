@@ -79,6 +79,9 @@ $(build_jar minijvm_rt.jar ../minijvm/java/src/main lib "." ".")
 echo "build libex/glfw_gui.jar"
 $(build_jar glfw_gui.jar ../desktop/glfw_gui/java/src/main libex "lib/minijvm_rt.jar" ".")
 
+echo "build libex/xgui.jar"
+$(build_jar xgui.jar ../extlib/xgui/src/main libex "lib/minijvm_rt.jar" "libex/glfw_gui.jar")
+
 echo "build libex/minijvm_test.jar"
 $(build_jar minijvm_test.jar ../test/minijvm_test/src/main libex "lib/minijvm_rt.jar" ".")
 
@@ -92,5 +95,12 @@ $(build_jar minijvm_rt.jar ../minijvm/java/src/main ../mobile/assets/resfiles ".
 echo "build ../mobile/assets/resfiles/glfm_gui.jar"
 $(build_jar glfm_gui.jar ../mobile/java/glfm_gui/src/main ../mobile/assets/resfiles "../mobile/assets/resfiles/minijvm_rt.jar" ".")
 
+echo "build ../mobile/assets/resfiles/xgui.jar"
+$(build_jar xgui.jar ../extlib/xgui/src/main ../mobile/assets/resfiles "../mobile/assets/resfiles/minijvm_rt.jar" "../mobile/assets/resfiles/glfm_gui.jar:")
+
 echo "build ../mobile/assets/resfiles/ExApp.jar"
-$(build_jar ExApp.jar ../mobile/java/ExApp/src/main ../mobile/assets/resfiles "../mobile/assets/resfiles/minijvm_rt.jar" "../mobile/assets/resfiles/glfm_gui.jar")
+$(build_jar ExApp.jar ../mobile/java/ExApp/src/main ../mobile/assets/resfiles "../mobile/assets/resfiles/minijvm_rt.jar" "../mobile/assets/resfiles/glfm_gui.jar:../mobile/assets/resfiles/xgui.jar")
+
+
+
+

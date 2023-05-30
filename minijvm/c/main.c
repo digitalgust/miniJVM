@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
 
 
         //test for graphics
-        classpath = "../../binary/libex/glfw_gui.jar;./";
+        classpath = "../../binary/libex/glfw_gui.jar;../../binary/libex/xgui.jar;./";
 //        main_name = "test.Gears";
 //        main_name = "test.TestGL";
         main_name = "org.mini.glfw.GlfwMain";

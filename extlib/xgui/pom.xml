@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <!--    https://s01.oss.sonatype.org/-->
     <!--    mvn clean install deploy -P release-->
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.github.digitalgust</groupId>
-    <artifactId>glfm_gui</artifactId>
+    <artifactId>xgui</artifactId>
     <name>${project.groupId}:${project.artifactId}</name>
     <version>1.1.0</version>
     <description>miniJVM mobile platform gui library</description>
@@ -131,51 +132,76 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
-    
+
 
     <dependencies>
-<!--        <dependency>-->
-<!--            <groupId>org.minijvm</groupId>  -->
-<!--            <artifactId>minijvm_rt</artifactId>   -->
-<!--            <version>1.0</version>-->
-<!--            <scope>system</scope> -->
-<!--            <systemPath>${basedir}/../../assets/resfiles/minijvm_rt.jar</systemPath> -->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>io.github.digitalgust</groupId>
+            <artifactId>glfw_gui_loc</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/../../binary/libex/glfw_gui.jar</systemPath>
+        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>io.github.digitalgust</groupId>-->
+        <!--            <artifactId>glfm_gui_loc</artifactId>-->
+        <!--            <version>1.0</version>-->
+        <!--            <scope>system</scope>-->
+        <!--            <systemPath>${basedir}/../../mobile/assets/resfiles/glfm_gui.jar</systemPath>-->
+        <!--        </dependency>-->
+
         <dependency>
             <groupId>io.github.digitalgust</groupId>
             <artifactId>minijvm_rt</artifactId>
             <version>1.0</version>
         </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>io.github.digitalgust</groupId>-->
+        <!--            <artifactId>glfw_gui</artifactId>-->
+        <!--            <version>1.1.0</version>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>io.github.digitalgust</groupId>-->
+        <!--            <artifactId>glfm_gui</artifactId>-->
+        <!--            <version>1.1.0</version>-->
+        <!--        </dependency>-->
     </dependencies>
-    
+
     <build>
         <finalName>${project.artifactId}</finalName>
         <plugins>
-            <plugin>   
-                <artifactId>maven-antrun-plugin</artifactId>    
-                <executions>       
-                    <execution>         
-                        <phase>package</phase>        
-                        <goals>            
-                            <goal>run</goal>        
-                        </goals>             
-                        <configuration>       
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
                             <tasks>
                                 <!--  copy to binary lib dir -->
-                                <mkdir dir="../../assets/resfiles"/>        
-                                <copy todir="../../assets/resfiles/" overwrite="true" > 
+                                <mkdir dir="../../mobile/assets/resfiles"/>
+                                <copy todir="../../mobile/assets/resfiles/" overwrite="true">
                                     <fileset dir="${project.build.directory}" erroronmissingdir="false">
                                         <include name="${project.artifactId}.jar"/>
                                     </fileset>
-                                </copy>        
-                            </tasks>        
-                        </configuration>        
-                    </execution>    
-                </executions>  
-            </plugin>   
+                                </copy>
+                                <!--  copy to binary lib dir -->
+                                <mkdir dir="../../binary/libex/"/>
+                                <copy todir="../../binary/libex/" overwrite="true">
+                                    <fileset dir="${project.build.directory}" erroronmissingdir="false">
+                                        <include name="${project.artifactId}.jar"/>
+                                    </fileset>
+                                </copy>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
-        
-            
+
+
         <resources>
             <resource>
                 <directory>src/main/resource</directory>
@@ -187,7 +213,5 @@
         </resources>
 
 
-        
-        
     </build>
 </project>
