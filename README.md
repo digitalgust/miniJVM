@@ -408,7 +408,7 @@ This system will enter the graphical interface of AppManager after starting the 
 It can be installing and deleting applications, etc. The way of installing applications include downloading jars, or uploading jars.
 These jars applications must contain a config.txt file in the jar, which is used to describe some properties of this application, such as startup class, icon, update address, etc.
 
-config.txt
+config.txt file in jar root directory
 ```
 name=ExApp
 app=test.MyApp
@@ -416,6 +416,15 @@ icon=/res/hello.png
 desc=  Mobile app develop example.\n  you can upgrade it.
 version=1.0.4
 upgradeurl=https://github.com/digitalgust/miniJVM/raw/master/mobile/assets/resfiles/ExApp.jar
+```
+
+maven dependency:
+```
+        <dependency>
+            <groupId>io.github.digitalgust</groupId>
+            <artifactId>xgui</artifactId>
+            <version>1.1.0</version>
+        </dependency>
 ```
 
 
