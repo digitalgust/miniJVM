@@ -13,17 +13,10 @@
 
 
     <dependencies>
-
         <dependency>
             <groupId>io.github.digitalgust</groupId>
-            <artifactId>minijvm_rt</artifactId>
-            <version>1.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.github.digitalgust</groupId>
-            <artifactId>glfm_gui</artifactId>
-            <version>1.0</version>
+            <artifactId>xgui</artifactId>
+            <version>1.1.0</version>
         </dependency>
     </dependencies>
 
@@ -41,26 +34,26 @@
                         <configuration>
                             <tasks>
                                 <!--  copy to binary lib dir -->
-                                <mkdir dir="../../assets/resfiles"/>
-                                <copy todir="../../assets/resfiles/" overwrite="true">
-                                    <fileset dir="${project.build.directory}" erroronmissingdir="false">
-                                        <include name="${project.artifactId}.jar"/>
-                                    </fileset>
-                                </copy>
+<!--                                <mkdir dir="../../assets/resfiles"/>-->
+<!--                                <copy todir="../../assets/resfiles/" overwrite="true">-->
+<!--                                    <fileset dir="${project.build.directory}" erroronmissingdir="false">-->
+<!--                                        <include name="${project.artifactId}.jar"/>-->
+<!--                                    </fileset>-->
+<!--                                </copy>-->
 
-                                <mkdir dir="${basedir}/../../../miniJVM/binary/mac_x64/apps/"/>
-                                <copy todir="${basedir}/../../../binary/mac_x64/apps/" overwrite="true" >
-                                    <fileset dir="${project.build.directory}" erroronmissingdir="false">
-                                        <include name="${project.artifactId}.jar"/>
-                                    </fileset>
-                                </copy>
+<!--                                <mkdir dir="${basedir}/../../../miniJVM/binary/mac_x64/apps/"/>-->
+<!--                                <copy todir="${basedir}/../../../binary/mac_x64/apps/" overwrite="true" >-->
+<!--                                    <fileset dir="${project.build.directory}" erroronmissingdir="false">-->
+<!--                                        <include name="${project.artifactId}.jar"/>-->
+<!--                                    </fileset>-->
+<!--                                </copy>-->
 
-                                <mkdir dir="${basedir}/../../../../plugin4minijvm/plugins/"/>
-                                <copy todir="${basedir}/../../../../plugin4minijvm/plugins/" overwrite="true" >
-                                    <fileset dir="${project.build.directory}" erroronmissingdir="false">
-                                        <include name="${project.artifactId}.jar"/>
-                                    </fileset>
-                                </copy>
+<!--                                <mkdir dir="${basedir}/../../../../plugin4minijvm/plugins/"/>-->
+<!--                                <copy todir="${basedir}/../../../../plugin4minijvm/plugins/" overwrite="true" >-->
+<!--                                    <fileset dir="${project.build.directory}" erroronmissingdir="false">-->
+<!--                                        <include name="${project.artifactId}.jar"/>-->
+<!--                                    </fileset>-->
+<!--                                </copy>-->
                             </tasks>
                         </configuration>
                     </execution>

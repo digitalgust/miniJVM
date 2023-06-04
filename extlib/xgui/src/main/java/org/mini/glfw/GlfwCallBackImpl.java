@@ -176,7 +176,7 @@ public class GlfwCallBackImpl extends GCallBack {
                 }
 
                 cost = now - startAt;
-                System.out.println(cost);
+                //System.out.println(cost);
                 if (cost < 1000 / fpsExpect) {
                     Thread.sleep((long) (1000 / fpsExpect - cost));
                 }
