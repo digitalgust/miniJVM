@@ -58,6 +58,9 @@ public class GuiScriptLib extends Lib {
         methodNames.put("getListText".toLowerCase(), 40);//
         methodNames.put("showBar".toLowerCase(), 41);//
         methodNames.put("showMsg".toLowerCase(), 42);//
+        methodNames.put("insertText".toLowerCase(), 43);//
+        methodNames.put("deleteText".toLowerCase(), 44);//
+        methodNames.put("getCaretPos".toLowerCase(), 45);//
 
     }
 
@@ -156,6 +159,12 @@ public class GuiScriptLib extends Lib {
                 return showBar(para);
             case 42:
                 return showMsg(para);
+            case 43:
+                return insertText(para);
+            case 44:
+                return deleteText(para);
+            case 45:
+                return getCaretPos(para);
             default:
         }
         return null;
@@ -605,5 +614,38 @@ public class GuiScriptLib extends Lib {
         String msg = Interpreter.popBackStr(para);
         GToolkit.getMsgFrame(form, GLanguage.getString("Message"), msg);
         return null;
+    }
+
+
+    private DataType insertText(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(form, compont);
+        int pos = Interpreter.popBackInt(para);
+        String str = Interpreter.popBackStr(para);
+        if (gobj != null && gobj instanceof GTextObject) {
+            ((GTextObject) gobj).insertTextByIndex(pos, str);
+        }
+        return null;
+    }
+
+    private DataType deleteText(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(form, compont);
+        int pos = Interpreter.popBackInt(para);
+        int pos1 = Interpreter.popBackInt(para);
+        if (gobj != null && gobj instanceof GTextObject) {
+            ((GTextObject) gobj).deleteTextRange(pos, pos1);
+        }
+        return null;
+    }
+
+    private DataType getCaretPos(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(form, compont);
+        int index = 0;
+        if (gobj != null && gobj instanceof GTextObject) {
+            index = ((GTextObject) gobj).getCaretIndex();
+        }
+        return Interpreter.getCachedInt(index);
     }
 }

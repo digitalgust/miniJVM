@@ -180,6 +180,8 @@ public class GTextBox extends GTextObject {
         int select2 = 0;
         if (this.selFirst != -1 && this.selSecond != -1) {
             select2 = this.selFirst < this.selSecond ? this.selSecond : this.selFirst;
+            int len = textsb.length();
+            if (select2 > len) select2 = len;
             return select2;
         }
         return -1;
