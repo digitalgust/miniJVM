@@ -56,6 +56,7 @@ extern "C" {
 #else
 
 #include <dirent.h>
+#include "ctype.h"
 
 #endif
 
