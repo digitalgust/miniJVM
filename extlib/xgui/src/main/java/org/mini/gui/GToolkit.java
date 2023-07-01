@@ -695,7 +695,9 @@ public class GToolkit {
                     GLanguage.getString("Do you sure delete : ") + pathLabel.getText(),
                     GLanguage.getString("Ok"),
                     gobj1 -> {
-                        AppLoader.deleteTree(new File(pathLabel.getText()));
+                        File f = new File(pathLabel.getText());
+                        AppLoader.deleteTree(f);
+                        pathLabel.setText(f == null ? "" : f.getParent());
                         chooserRefresh(upBtn);
                     },
                     GLanguage.getString("Cancel"),
@@ -721,10 +723,7 @@ public class GToolkit {
                         GButton up = GToolkit.getComponent(gobj.getFrame(), "GTOOLKIT_FILECHOOSER_UP");
                         if (up != null) {
                             File f = up.getAttachment();
-                            System.out.println(f.getAbsolutePath());
-                            System.out.println(GToolkit.getCompText(form, "input"));
                             f = new File(f.getAbsolutePath() + File.separator + GToolkit.getCompText(form, "input"));
-                            System.out.println(f.getAbsolutePath());
                             if (f.mkdirs()) {
                                 chooserRefresh(upBtn);
                             }

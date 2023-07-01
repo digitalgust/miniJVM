@@ -1287,7 +1287,7 @@ void conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
 
 s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src) {
     s32 os_utf8 = 0;
-#ifdef __JVM_OS_MAC__ || __JVM_OS_LINUX__
+#if __JVM_OS_MAC__ || __JVM_OS_LINUX__
     os_utf8 = 1;
 #endif
     
