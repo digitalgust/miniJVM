@@ -350,10 +350,13 @@ public class AppManager extends GApplication {
                         webServer = new MiniHttpServer(MiniHttpServer.DEFAULT_PORT, srvLogger);
                         webServer.setUploadCompletedHandle(files -> {
                             for (MiniHttpServer.UploadFile f : files) {
-                                AppLoader.addApp(f.filename, f.data);
                                 String s = GLanguage.getString(STR_UPLOAD_FILE) + " " + f.filename + " " + f.data.length;
-                                GForm.addMessage(s);
-                                log(s);
+                                if (AppLoader.addApp(f.filename, f.data)) {
+                                    GForm.addMessage(s + " " + GLanguage.getString(STR_SUCCESS));
+                                    log(s);
+                                } else {
+                                    GForm.addMessage(s + " " + GLanguage.getString(STR_FAIL));
+                                }
                             }
                             reloadAppList();
                         });
@@ -442,20 +445,21 @@ public class AppManager extends GApplication {
                         }
                     }, mgrForm.getDeviceWidth(), mgrForm.getDeviceHeight(), gobj1 -> {
                         File f = gobj1.getAttachment();
-                        String fullpath = f.getAbsolutePath();
-                        String path = fullpath;
-                        int idx = path.lastIndexOf(File.separator);
-                        if (idx >= 0) {
-                            path = path.substring(idx + 1);
-//                            idx = path.indexOf(".jar");
-//                            if (idx >= 0) {
-//                                path = path.substring(0, idx);
-//                            }
-                        }
-                        if (path.length() >= 0) {
-                            AppLoader.addApp(path, fullpath);
-                            GForm.addMessage(GLanguage.getString(STR_SUCCESS) + " " + fullpath);
-                            reloadAppList();
+                        if (f.isFile()) {
+                            String fullpath = f.getAbsolutePath();
+                            String path = fullpath;
+                            int idx = path.lastIndexOf(File.separator);
+                            if (idx >= 0) {
+                                path = path.substring(idx + 1);
+                            }
+                            if (path.length() >= 0) {
+                                if (AppLoader.addApp(path, fullpath)) {
+                                    GForm.addMessage(GLanguage.getString(STR_SUCCESS) + " " + fullpath);
+                                    reloadAppList();
+                                } else {
+                                    GForm.addMessage(GLanguage.getString(STR_FAIL) + " " + fullpath);
+                                }
+                            }
                         }
                     }, null);
                     mgrForm.add(chooser);

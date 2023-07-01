@@ -634,7 +634,7 @@ public class GToolkit {
         if (path == null || path.length() == 0) {
             path = AppLoader.getProperty("filechooserpath");
         }
-        if (path == null) {
+        if (path == null || "".equals(path)) {
             path = "./";
         }
         File file = new File(path);
@@ -670,7 +670,7 @@ public class GToolkit {
 
         y += btnH + pad;
         btnH = 25f;
-        float btnW = 30f;
+        float btnW = 40f;
         GButton upBtn = new GButton(form, "", x, y, btnW, btnH);
         upBtn.setPreIcon("⬆");
         upBtn.setName("GTOOLKIT_FILECHOOSER_UP");
@@ -748,10 +748,12 @@ public class GToolkit {
         upBtn.setAttachment(file);
         upBtn.setActionListener(gobj -> {
             File f = gobj.getAttachment();
-            f = f.getParentFile();
-            gobj.setAttachment(f);
-            pathLabel.setText(f.getAbsolutePath());
-            chooserRefresh(upBtn);
+            if (f != null) {//the parent of roots is null , parents of /
+                f = f.getParentFile();
+                gobj.setAttachment(f);
+                pathLabel.setText(f == null ? "" : f.getAbsolutePath());
+                chooserRefresh(upBtn);
+            }
         });
 
         return frame;
@@ -762,12 +764,19 @@ public class GToolkit {
         GList list = GToolkit.getComponent(gobj.getFrame(), "GTOOLKIT_FILECHOOSER_FILELIST");
 
         File f = up.getAttachment();
-        while (!f.exists()) {
+        //System.out.println("=====" + (f == null ? f : f.toString() + f.exists()));
+        while (f != null && !f.exists()) {
+            if (f.getAbsolutePath().equals("/") || f.getAbsolutePath().equals("\\")) {//posix
+                break;
+            }
+            if (f.getAbsolutePath().endsWith(":\\")) {
+                break;
+            }
             f = f.getParentFile();
         }
         up.setAttachment(f);
         chooserAddFilesToList(f, list.getAttachment(), list);
-        AppLoader.setProperty("filechooserpath", f.getAbsolutePath());
+        AppLoader.setProperty("filechooserpath", "");
     }
 
     private static GActionListener fileChooserItemListener = gobj -> {
@@ -812,7 +821,7 @@ public class GToolkit {
     }
 
     private static void chooserAddFilesToList(File dir, FileFilter filter, GList list) {
-        File[] files = dir.listFiles(filter);
+        File[] files = dir == null ? File.listRoots() : dir.listFiles(filter);
         Arrays.sort(files, (f1, f2) -> {
 
             int i = 0;
@@ -831,7 +840,9 @@ public class GToolkit {
         list.clear();
         for (int i = 0; i < files.length; i++) {
             File file = files[i];
-            GListItem item = list.addItem(null, file.getName() + " | " + file.length() + " | " + new Date(file.lastModified()));
+            String lab = file.getName();
+            if (lab.length() == 0) lab = file.getPath();
+            GListItem item = list.addItem(null, lab + "   | " + file.length() + " | " + new Date(file.lastModified()));
             if (file.isDirectory()) {
                 item.setPreIcon("\uD83D\uDCC1");
             } else {

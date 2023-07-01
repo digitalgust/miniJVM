@@ -237,7 +237,7 @@ public class InnerFile {
 
     public static native int loadFS(byte[] filePath, InnerFileStat fd);
 
-    public static native int getcwd(byte[] pathbuf);
+    public static native String getcwd();
 
     public static native int mkdir0(byte[] pathbuf);
 
@@ -270,6 +270,6 @@ public class InnerFile {
     public static native int setLength0(long fileHandle, long len);
     
     public static native String getTmpDir();
-    
 
+    public static native String listWinDrivers();
 }

@@ -4,6 +4,7 @@
 
 #include <sys/stat.h>
 #include <string.h>   // NULL and possibly memcpy, memset
+#include <locale.h>
 #include "jvm.h"
 #include "garbage.h"
 #include "jvm_util.h"
@@ -119,6 +120,10 @@ size_t strlcpy(char *dst, const char *src, size_t siz) {
 #include <Ws2tcpip.h>
 #include <stdio.h>
 
+
+//------------------------------------------------------------------------------------
+//                              Network
+//------------------------------------------------------------------------------------
 
 /*%
  * WARNING: Don't even consider trying to compile this on a system where
@@ -680,28 +685,6 @@ s32 host_2_ip(c8 *hostname, char *buf, s32 buflen) {
 }
 
 
-s32 isDir(Utf8String *path) {
-    struct stat buf;
-    stat(utf8_cstr(path), &buf);
-    s32 a = S_ISDIR(buf.st_mode);
-    return a;
-}
-
-Utf8String *getTmpDir() {
-    Utf8String *tmps = utf8_create();
-#if __JVM_OS_MINGW__ || __JVM_OS_VS__
-    c8 buf[128];
-    s32 len = GetTempPath(128, buf);
-    utf8_append_data(tmps, buf, len);
-#else
-
-#ifndef P_tmpdir
-#define P_tmpdir "/tmp"
-#endif
-    utf8_append_c(tmps, P_tmpdir);
-#endif
-    return tmps;
-}
 //=================================  native  ====================================
 
 
@@ -1160,13 +1143,177 @@ s32 org_mini_net_SocketNative_sslc_write(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+//------------------------------------------------------------------------------------
+//                              File
+//------------------------------------------------------------------------------------
+
+s32 isDir(Utf8String *path) {
+    struct stat buf;
+    stat(utf8_cstr(path), &buf);
+    s32 a = S_ISDIR(buf.st_mode);
+    return a;
+}
+
+Utf8String *getTmpDir() {
+    Utf8String *tmps = utf8_create();
+#if __JVM_OS_MINGW__ || __JVM_OS_VS__
+    c8 buf[1024];
+    s32 len = GetTempPath(1024, buf);
+    utf8_append_data(tmps, buf, len);
+#else
+
+#ifndef P_tmpdir
+#define P_tmpdir "/tmp"
+#endif
+    utf8_append_c(tmps, P_tmpdir);
+#endif
+    return tmps;
+}
+
+//gpt
+s32 is_ascii(const c8 *str) {
+    while (*str) {
+        if (!isascii(*str)) {
+            return 0;
+        }
+        str++;
+    }
+    return 1;
+}
+
+//gpt
+int is_utf8(const c8 *string) {
+    const unsigned char *bytes = (const unsigned char *) string;
+    while (*bytes) {
+        if ((// ASCII
+                    // 0xxxxxxx
+                    *bytes & 0x80) == 0x00) {
+            bytes += 1;
+            continue;
+        } else if ((// 2-byte
+                           // 110xxxxx 10xxxxxx
+                           *bytes & 0xE0) == 0xC0) {
+            if ((bytes[1] & 0xC0) != 0x80)
+                return 0;
+            bytes += 2;
+        } else if ((// 3-byte
+                           // 1110xxxx 10xxxxxx 10xxxxxx
+                           *bytes & 0xF0) == 0xE0) {
+            if ((bytes[1] & 0xC0) != 0x80 || (bytes[2] & 0xC0) != 0x80)
+                return 0;
+            bytes += 3;
+        } else if ((// 4-byte
+                           // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+                           *bytes & 0xF8) == 0xF0) {
+            if ((bytes[1] & 0xC0) != 0x80 || (bytes[2] & 0xC0) != 0x80 ||
+                (bytes[3] & 0xC0) != 0x80)
+                return 0;
+            bytes += 4;
+        } else {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+s32 is_platform_encoding_utf8() {
+    s32 ret = 0;
+    setlocale(LC_CTYPE, "");
+    char *locstr = setlocale(LC_CTYPE, NULL);
+    Utf8String *utfs = utf8_create_c(locstr);
+    utf8_lowercase(utfs);
+    if (utf8_indexof_c(utfs, "utf-8") >= 0) {
+        ret = 1;
+    } else if (utf8_indexof_c(utfs, "utf8") >= 0) {
+        ret = 1;
+    }
+    utf8_destory(utfs);
+    setlocale(LC_ALL, "C");
+    return ret;
+}
+
+s32 conv_platform_encoding_2_unicode(ByteBuf *dst, const c8 *src) {
+    setlocale(LC_ALL, "");
+    s32 len = (s32) strlen(src);
+    bytebuf_expand(dst, len * sizeof(wchar_t));
+    int read = mbstowcs((wchar_t *) dst->buf, src, len);
+    setlocale(LC_ALL, "C");
+    return read;
+}
+
+
+s32 conv_unicode_2_platform_encoding(ByteBuf *dst, const u16 *src, s32 srcLen) {
+    setlocale(LC_ALL, "");
+    s32 len = 0;
+    if (sizeof(wchar_t) == 2) {
+        len = wcstombs(NULL, (wchar_t *) src, srcLen);
+    } else {
+        wchar_t *wstr = jvm_calloc(srcLen * sizeof(wchar_t));
+        for (s32 i = 0; i < srcLen; i++) {
+            wstr[i] = src[i];
+        }
+        len = wcstombs(NULL, wstr, srcLen);
+        jvm_free(wstr);
+    }
+    bytebuf_expand(dst, len + 2);//for write '\0'
+    wcstombs(dst->buf, (wchar_t *) src, len);
+    dst->buf[len] = '\0';
+    setlocale(LC_ALL, "C");
+    return len;
+}
+
+void conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
+    if (!is_platform_encoding_utf8()) {
+        if (is_utf8(src)) {
+            utf8_append_c(dst, src);
+        } else {
+            ByteBuf *bb = bytebuf_create(0);
+            s32 ulen = conv_platform_encoding_2_unicode(bb, src);
+            if (sizeof(wchar_t) == 2) {
+                unicode_2_utf8((u16 *) bb->buf, dst, ulen);
+            } else {
+                u16 *str2bytes = jvm_calloc(ulen * 2);
+                for (s32 i = 0; i < ulen; i++) {
+                    str2bytes[i] = (u16) ((wchar_t *) bb->buf)[i];
+                }
+                unicode_2_utf8(str2bytes, dst, ulen);
+                jvm_free(str2bytes);
+            }
+            bytebuf_destory(bb);
+        }
+    }
+}
+
+s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src) {
+    if (!is_platform_encoding_utf8()) {
+        if (!is_ascii(utf8_cstr(src))) {
+            u16 *arr = jvm_calloc(src->length * sizeof(u16) + 2);
+            s32 len = utf8_2_unicode(src, arr);
+            s32 plen = conv_unicode_2_platform_encoding(dst, arr, len);
+            jvm_free(arr);
+            return plen;
+        }
+    }
+    bytebuf_expand(dst, src->length + 4);
+    memcpy(dst->buf, src->data, src->length);
+    dst->buf[src->length] = 0;
+    return src->length;
+}
+
 
 s32 org_mini_fs_InnerFile_openFile(Runtime *runtime, JClass *clazz) {
     Instance *name_arr = localvar_getRefer(runtime->localvar, 0);
     Instance *mode_arr = localvar_getRefer(runtime->localvar, 1);
     if (name_arr) {
-        FILE *fd = fopen(name_arr->arr_body, mode_arr->arr_body);
+        Utf8String *filepath = utf8_create_c(name_arr->arr_body);
+        ByteBuf *platformPath = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(platformPath, filepath);
+
+        FILE *fd = fopen(platformPath->buf, mode_arr->arr_body);
         push_long(runtime->stack, (s64) (intptr_t) fd);
+
+        bytebuf_destory(platformPath);
+        utf8_destory(filepath);
     } else {
         push_long(runtime->stack, 0);
     }
@@ -1402,7 +1549,10 @@ s32 org_mini_fs_InnerFile_loadFS(Runtime *runtime, JClass *clazz) {
     if (name_arr) {
         Utf8String *filepath = utf8_create_part_c(name_arr->arr_body, 0, name_arr->arr_length);
         struct stat buf;
-        ret = stat(utf8_cstr(filepath), &buf);
+        ByteBuf *platformPath = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(platformPath, filepath);
+
+        ret = stat(platformPath->buf, &buf);
         s32 a = S_ISDIR(buf.st_mode);
         if (ret == 0) {
             c8 *className = "org/mini/fs/InnerFileStat";
@@ -1432,6 +1582,8 @@ s32 org_mini_fs_InnerFile_loadFS(Runtime *runtime, JClass *clazz) {
             ptr = getFieldPtr_byName_c(fd, className, "exists", "Z", runtime);
             setFieldByte(ptr, 1);
         }
+
+        bytebuf_destory(platformPath);
         utf8_destory(filepath);
     }
     push_int(runtime->stack, ret);
@@ -1450,7 +1602,9 @@ s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
         ArrayList *files = arraylist_create(0);
         DIR *dirp;
         struct dirent *dp;
-        dirp = opendir(utf8_cstr(filepath)); //打开目录指针
+        ByteBuf *platformPath = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(platformPath, filepath);
+        dirp = opendir(platformPath->buf); //打开目录指针
         if (dirp) {
             while ((dp = readdir(dirp)) != NULL) { //通过目录指针读目录
                 if (strcmp(dp->d_name, ".") == 0) {
@@ -1459,7 +1613,9 @@ s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
                 if (strcmp(dp->d_name, "..") == 0) {
                     continue;
                 }
-                Utf8String *ustr = utf8_create_c(dp->d_name);
+//                Utf8String *ustr = utf8_create_c(dp->d_name);
+                Utf8String *ustr = utf8_create();
+                conv_platform_encoding_2_utf8(ustr, dp->d_name);//
                 Instance *jstr = jstring_create(ustr, runtime);
                 instance_hold_to_thread(jstr, runtime);
                 utf8_destory(ustr);
@@ -1480,6 +1636,7 @@ s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
         } else {
             push_ref(runtime->stack, NULL);
         }
+        bytebuf_destory(platformPath);
         arraylist_destory(files);
         utf8_destory(filepath);
     } else {
@@ -1492,14 +1649,47 @@ s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-s32 org_mini_fs_InnerFile_getcwd(Runtime *runtime, JClass *clazz) {
-    Instance *path_arr = localvar_getRefer(runtime->localvar, 0);
-    if (path_arr) {
-        __refer ret = getcwd(path_arr->arr_body, path_arr->arr_length);
-        push_int(runtime->stack, ret == path_arr->arr_body ? 0 : -1);
-    } else {
-        push_int(runtime->stack, -1);
+s32 org_mini_fs_InnerFile_listWinDrivers(Runtime *runtime, JClass *clazz) {
+#if  defined(__JVM_OS_MAC__) || defined(__JVM_OS_LINUX__)
+
+    push_ref(runtime->stack, NULL);
+
+#else
+
+#define MAX_PATH_BUF_LEN 120
+    DWORD mydrives = MAX_PATH_BUF_LEN;// buffer length
+    c8 lpBuffer[MAX_PATH_BUF_LEN];// buffer for drive string storage
+    DWORD fillLen = GetLogicalDriveStrings(mydrives, lpBuffer);
+
+    lpBuffer[fillLen] = '\0';
+    for (int i = 0; i < fillLen; i++) {
+        if (lpBuffer[i] == 0) {
+            lpBuffer[i] = 0x20;
+        }
     }
+    Instance *jstr = jstring_create_cstr(lpBuffer, runtime);
+    push_ref(runtime->stack, jstr);
+#endif
+    return 0;
+}
+
+s32 org_mini_fs_InnerFile_getcwd(Runtime *runtime, JClass *clazz) {
+    ByteBuf *platformPath = bytebuf_create(1024);
+
+    __refer ret = getcwd(platformPath->buf, platformPath->_alloc_size);
+    if (ret) {
+        Utf8String *filepath = utf8_create();
+        conv_platform_encoding_2_utf8(filepath, platformPath->buf);
+
+        Instance *jstr = jstring_create(filepath, runtime);
+        push_ref(runtime->stack, jstr);
+
+        utf8_destory(filepath);
+    } else {
+        push_ref(runtime->stack, NULL);
+    }
+
+    bytebuf_destory(platformPath);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_getcwd  \n");
@@ -1511,8 +1701,15 @@ s32 org_mini_fs_InnerFile_chmod(Runtime *runtime, JClass *clazz) {
     Instance *path_arr = localvar_getRefer(runtime->localvar, 0);
     s32 mode = localvar_getInt(runtime->localvar, 1);
     if (path_arr) {
-        s32 ret = chmod(path_arr->arr_body, mode);
+        Utf8String *filepath = utf8_create_c(path_arr->arr_body);
+        ByteBuf *platformPath = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(platformPath, filepath);
+
+        s32 ret = chmod(platformPath->buf, mode);
         push_int(runtime->stack, ret);
+
+        bytebuf_destory(platformPath);
+        utf8_destory(filepath);
     } else {
         push_int(runtime->stack, -1);
     }
@@ -1527,8 +1724,20 @@ s32 org_mini_fs_InnerFile_rename0(Runtime *runtime, JClass *clazz) {
     Instance *old_arr = localvar_getRefer(runtime->localvar, 0);
     Instance *new_arr = localvar_getRefer(runtime->localvar, 1);
     if (old_arr && new_arr) {
-        s32 ret = rename(old_arr->arr_body, new_arr->arr_body);
+        Utf8String *filepath = utf8_create_c(old_arr->arr_body);
+        ByteBuf *oldPath = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(oldPath, filepath);
+        utf8_clear(filepath);
+        utf8_append_c(filepath, new_arr->arr_body);
+        ByteBuf *newPath = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(newPath, filepath);
+
+        s32 ret = rename(oldPath->buf, newPath->buf);
         push_int(runtime->stack, ret);
+
+        bytebuf_destory(oldPath);
+        bytebuf_destory(newPath);
+        utf8_destory(filepath);
     } else {
         push_int(runtime->stack, -1);
     }
@@ -1542,9 +1751,14 @@ s32 org_mini_fs_InnerFile_rename0(Runtime *runtime, JClass *clazz) {
 s32 org_mini_fs_InnerFile_getTmpDir(Runtime *runtime, JClass *clazz) {
     Utf8String *tdir = getTmpDir();
     if (tdir) {
-        Instance *jstr = jstring_create(tdir, runtime);
-        utf8_destory(tdir);
+        Utf8String *utf8 = utf8_create();
+        conv_platform_encoding_2_utf8(utf8, utf8_cstr(tdir));
+
+        Instance *jstr = jstring_create(utf8, runtime);
         push_ref(runtime->stack, jstr);
+
+        utf8_destory(utf8);
+        utf8_destory(tdir);
     } else {
         push_ref(runtime->stack, NULL);
     }
@@ -1559,12 +1773,19 @@ s32 org_mini_fs_InnerFile_mkdir0(Runtime *runtime, JClass *clazz) {
     Instance *path_arr = localvar_getRefer(runtime->localvar, 0);
     s32 ret = -1;
     if (path_arr) {
+        Utf8String *filepath = utf8_create_c(path_arr->arr_body);
+        ByteBuf *platformPath = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(platformPath, filepath);
+
 #if __JVM_OS_MINGW__ || __JVM_OS_VS__
-        ret = mkdir(path_arr->arr_body);
+        ret = mkdir(platformPath->buf);
 #else
-        ret = mkdir(path_arr->arr_body, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        ret = mkdir(platformPath->buf, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 #endif
         push_int(runtime->stack, ret);
+
+        bytebuf_destory(platformPath);
+        utf8_destory(filepath);
     } else {
         push_int(runtime->stack, ret);
     }
@@ -1592,15 +1813,22 @@ s32 org_mini_fs_InnerFile_delete0(Runtime *runtime, JClass *clazz) {
     Instance *path_arr = localvar_getRefer(runtime->localvar, 0);
     s32 ret = -1;
     if (path_arr) {
+        Utf8String *filepath = utf8_create_c(path_arr->arr_body);
+        ByteBuf *platformPath = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(platformPath, filepath);
+
         struct stat buf;
-        stat(path_arr->arr_body, &buf);
+        stat(platformPath->buf, &buf);
         s32 a = S_ISDIR(buf.st_mode);
         if (a) {
-            ret = rmdir(path_arr->arr_body);
+            ret = rmdir(platformPath->buf);
         } else {
-            ret = remove(path_arr->arr_body);
+            ret = remove(platformPath->buf);
         }
         push_int(runtime->stack, ret);
+
+        bytebuf_destory(platformPath);
+        utf8_destory(filepath);
     } else {
         push_int(runtime->stack, ret);
     }
@@ -1611,12 +1839,28 @@ s32 org_mini_fs_InnerFile_delete0(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+//------------------------------------------------------------------------------------
+//                              Zip
+//------------------------------------------------------------------------------------
+
 s32 org_mini_zip_ZipFile_getEntryIndex0(Runtime *runtime, JClass *clazz) {
     Instance *zip_path_arr = localvar_getRefer(runtime->localvar, 0);
     Instance *name_arr = localvar_getRefer(runtime->localvar, 1);
     s32 ret = -1;
     if (zip_path_arr && name_arr) {
-        ret = zip_get_file_index(zip_path_arr->arr_body, name_arr->arr_body);
+        Utf8String *filepath = utf8_create_c(zip_path_arr->arr_body);
+        ByteBuf *zip_path = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(zip_path, filepath);
+        utf8_clear(filepath);
+        utf8_append_c(filepath, name_arr->arr_body);
+        ByteBuf *name = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(name, filepath);
+
+        ret = zip_get_file_index(zip_path->buf, name->buf);
+
+        bytebuf_destory(zip_path);
+        bytebuf_destory(name);
+        utf8_destory(filepath);
     }
     push_int(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1631,7 +1875,19 @@ s32 org_mini_zip_ZipFile_getEntrySize0(Runtime *runtime, JClass *clazz) {
     Instance *name_arr = localvar_getRefer(runtime->localvar, 1);
     s32 ret = -1;
     if (zip_path_arr && name_arr) {
-        ret = zip_get_file_unzip_size(zip_path_arr->arr_body, name_arr->arr_body);
+        Utf8String *filepath = utf8_create_c(zip_path_arr->arr_body);
+        ByteBuf *zip_path = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(zip_path, filepath);
+        utf8_clear(filepath);
+        utf8_append_c(filepath, name_arr->arr_body);
+        ByteBuf *name = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(name, filepath);
+
+        ret = zip_get_file_unzip_size(zip_path->buf, name->buf);
+
+        bytebuf_destory(zip_path);
+        bytebuf_destory(name);
+        utf8_destory(filepath);
     }
     push_long(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1646,14 +1902,26 @@ s32 org_mini_zip_ZipFile_getEntry0(Runtime *runtime, JClass *clazz) {
     Instance *name_arr = localvar_getRefer(runtime->localvar, 1);
     s32 ret = -1;
     if (zip_path_arr && name_arr) {
-        s64 filesize = zip_get_file_unzip_size(zip_path_arr->arr_body, name_arr->arr_body);
+        Utf8String *filepath = utf8_create_c(zip_path_arr->arr_body);
+        ByteBuf *zip_path = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(zip_path, filepath);
+        utf8_clear(filepath);
+        utf8_append_c(filepath, name_arr->arr_body);
+        ByteBuf *name = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(name, filepath);
+
+        s64 filesize = zip_get_file_unzip_size(zip_path->buf, name->buf);
         if (filesize >= 0) {
             Instance *arr = jarray_create_by_type_index(runtime, (s32) filesize, DATATYPE_BYTE);
-            ret = zip_loadfile_to_mem(zip_path_arr->arr_body, name_arr->arr_body, arr->arr_body, filesize);
+            ret = zip_loadfile_to_mem(zip_path->buf, name->buf, arr->arr_body, filesize);
             if (ret == 0) {
                 push_ref(runtime->stack, arr);
             }
         }
+
+        bytebuf_destory(zip_path);
+        bytebuf_destory(name);
+        utf8_destory(filepath);
     }
     if (ret) {
         push_ref(runtime->stack, NULL);
@@ -1671,8 +1939,20 @@ s32 org_mini_zip_ZipFile_putEntry0(Runtime *runtime, JClass *clazz) {
     Instance *content_arr = localvar_getRefer(runtime->localvar, 2);
     s32 ret = -1;
     if (zip_path_arr && name_arr) {
-        zip_savefile_mem(zip_path_arr->arr_body, name_arr->arr_body, content_arr ? content_arr->arr_body : NULL, content_arr ? content_arr->arr_length : 0);
+        Utf8String *filepath = utf8_create_c(zip_path_arr->arr_body);
+        ByteBuf *zip_path = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(zip_path, filepath);
+        utf8_clear(filepath);
+        utf8_append_c(filepath, name_arr->arr_body);
+        ByteBuf *name = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(name, filepath);
+
+        zip_savefile_mem(zip_path->buf, name->buf, content_arr ? content_arr->arr_body : NULL, content_arr ? content_arr->arr_length : 0);
         ret = 0;
+
+        bytebuf_destory(zip_path);
+        bytebuf_destory(name);
+        utf8_destory(filepath);
     }
     push_int(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1687,7 +1967,14 @@ s32 org_mini_zip_ZipFile_fileCount0(Runtime *runtime, JClass *clazz) {
 
     s32 ret = 0;
     if (zip_path_arr) {
-        ret = zip_filecount(zip_path_arr->arr_body);
+        Utf8String *filepath = utf8_create_c(zip_path_arr->arr_body);
+        ByteBuf *zip_path = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(zip_path, filepath);
+
+        ret = zip_filecount(zip_path->buf);
+
+        bytebuf_destory(zip_path);
+        utf8_destory(filepath);
     }
     push_int(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1701,7 +1988,11 @@ s32 org_mini_zip_ZipFile_listFiles0(Runtime *runtime, JClass *clazz) {
     Instance *zip_path_arr = localvar_getRefer(runtime->localvar, 0);
     s32 ret = -1;
     if (zip_path_arr) {
-        ArrayList *list = zip_get_filenames(zip_path_arr->arr_body);
+        Utf8String *filepath = utf8_create_c(zip_path_arr->arr_body);
+        ByteBuf *zip_path = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(zip_path, filepath);
+
+        ArrayList *list = zip_get_filenames(zip_path->buf);
         if (list) {
             Utf8String *clustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
             Instance *jarr = jarray_create_by_type_name(runtime, list->length, clustr, NULL);
@@ -1718,6 +2009,9 @@ s32 org_mini_zip_ZipFile_listFiles0(Runtime *runtime, JClass *clazz) {
             push_ref(runtime->stack, jarr);
             ret = 0;
         }
+
+        bytebuf_destory(zip_path);
+        utf8_destory(filepath);
     }
     if (ret == -1) {
         push_ref(runtime->stack, NULL);
@@ -1734,7 +2028,14 @@ s32 org_mini_zip_ZipFile_isDirectory0(Runtime *runtime, JClass *clazz) {
     s32 index = localvar_getInt(runtime->localvar, 1);
     s32 ret = -1;
     if (zip_path_arr) {
-        ret = zip_is_directory(zip_path_arr->arr_body, index);
+        Utf8String *filepath = utf8_create_c(zip_path_arr->arr_body);
+        ByteBuf *zip_path = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(zip_path, filepath);
+
+        ret = zip_is_directory(zip_path->buf, index);
+
+        bytebuf_destory(zip_path);
+        utf8_destory(filepath);
     }
 
     push_int(runtime->stack, ret);
@@ -1881,13 +2182,14 @@ static java_native_method METHODS_IO_TABLE[] = {
         {"org/mini/fs/InnerFile",     "flush0",               "(J)I",                             org_mini_fs_InnerFile_flush0},
         {"org/mini/fs/InnerFile",     "loadFS",               "([BLorg/mini/fs/InnerFileStat;)I", org_mini_fs_InnerFile_loadFS},
         {"org/mini/fs/InnerFile",     "listDir",              "([B)[Ljava/lang/String;",          org_mini_fs_InnerFile_listDir},
-        {"org/mini/fs/InnerFile",     "getcwd",               "([B)I",                            org_mini_fs_InnerFile_getcwd},
+        {"org/mini/fs/InnerFile",     "getcwd",               "()Ljava/lang/String;",             org_mini_fs_InnerFile_getcwd},
         {"org/mini/fs/InnerFile",     "chmod",                "([BI)I",                           org_mini_fs_InnerFile_chmod},
         {"org/mini/fs/InnerFile",     "mkdir0",               "([B)I",                            org_mini_fs_InnerFile_mkdir0},
         {"org/mini/fs/InnerFile",     "getOS",                "()I",                              org_mini_fs_InnerFile_getOS},
         {"org/mini/fs/InnerFile",     "delete0",              "([B)I",                            org_mini_fs_InnerFile_delete0},
         {"org/mini/fs/InnerFile",     "rename0",              "([B[B)I",                          org_mini_fs_InnerFile_rename0},
         {"org/mini/fs/InnerFile",     "getTmpDir",            "()Ljava/lang/String;",             org_mini_fs_InnerFile_getTmpDir},
+        {"org/mini/fs/InnerFile",     "listWinDrivers",       "()Ljava/lang/String;",             org_mini_fs_InnerFile_listWinDrivers},
         {"org/mini/zip/Zip",          "getEntry0",            "([B[B)[B",                         org_mini_zip_ZipFile_getEntry0},
         {"org/mini/zip/Zip",          "putEntry0",            "([B[B[B)I",                        org_mini_zip_ZipFile_putEntry0},
         {"org/mini/zip/Zip",          "getEntryIndex0",       "([B[B)I",                          org_mini_zip_ZipFile_getEntryIndex0},

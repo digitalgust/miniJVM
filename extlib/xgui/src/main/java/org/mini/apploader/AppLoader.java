@@ -25,6 +25,7 @@ public class AppLoader {
     static final String APP_LIST_FILE = "/applist.properties";
     static final String APP_CONFIG = "config.txt";
     static final String APP_DIR = "/apps/";
+    static final String APP_FILE_EXT = ".jar";
     static final String APP_DATA_DIR = "/appdata/";
     static final String TMP_DIR = "/tmp/";
     static final String EXAMPLE_APP_FILE = "ExApp.jar";
@@ -81,6 +82,8 @@ public class AppLoader {
             f.mkdirs();
         }
 
+        reloadAppList();
+
         f = new File(GCallBack.getInstance().getAppSaveRoot() + APP_DATA_DIR);
         if (!f.exists()) {
             f.mkdirs();
@@ -95,13 +98,25 @@ public class AppLoader {
         }
     }
 
+    static public void reloadAppList() {
+        File f = new File(GCallBack.getInstance().getAppSaveRoot() + APP_DIR);
+
+        //reload all jar
+        applist.clear();
+        File[] jars = f.listFiles(pathname -> pathname.getName().endsWith(APP_FILE_EXT));
+        for (File file : jars) {
+            applist.put(file.getName(), "");
+        }
+    }
+
     static public String getTmpDirPath() {
         return GCallBack.getInstance().getAppSaveRoot() + TMP_DIR;
     }
 
     static public String getAppJarPath(String jarName) {
         String s = GCallBack.getInstance().getAppSaveRoot() + APP_DIR + jarName;
-        return s;
+        File f = new File(s);
+        return f.getAbsolutePath();
     }
 
     static public String getAppDataPath(String jarName) {
@@ -423,9 +438,8 @@ public class AppLoader {
         return app;
     }
 
-    public static void addApp(String jarName, String srcJarFullPath) {
+    public static boolean addApp(String jarName, String srcJarFullPath) {
         try {
-            applist.put(jarName, "");
             //copy file
             //System.out.println("copy from: " + jarPath + "  to :" + getAppJarPath(jarName));
             FileInputStream fis = new FileInputStream(srcJarFullPath);
@@ -438,30 +452,38 @@ public class AppLoader {
             fis.close();
             fos.close();
 
+            reloadAppList();
+
             saveProp(APP_INFO_FILE, appinfo);
             saveProp(APP_LIST_FILE, applist);
+            return true;
         } catch (Exception exception) {
             //exception.printStackTrace();
             System.out.println("[INFO] " + exception.getMessage());
         }
+        return false;
     }
 
-    public static void addApp(String jarName, byte[] jarData) {
+    public static boolean addApp(String jarName, byte[] jarData) {
         try {
             if (jarName != null && jarData != null && jarData.length > 0) {
-                applist.put(jarName, "");
                 //copy file
                 //System.out.println("add from: " + jarData.length + "  to :" + getAppJarPath(jarName));
                 FileOutputStream fos = new FileOutputStream(getAppJarPath(jarName));
                 fos.write(jarData);
                 fos.close();
+
+                reloadAppList();
+
                 saveProp(APP_INFO_FILE, appinfo);
                 saveProp(APP_LIST_FILE, applist);
                 extractFatJar(jarName);
+                return true;
             }
         } catch (Exception exception) {
             exception.printStackTrace();
         }
+        return false;
     }
 
     static private void extractFatJar(String jarName) {

@@ -308,11 +308,11 @@ public class File implements Comparable {
      * pathname, or the empty string if this pathname's name sequence is empty
      */
     public String getName() {
-        int index = path.lastIndexOf(separatorChar);
-        if (index < prefixLength) {
+        int last = path.lastIndexOf(separatorChar);
+        if (last < prefixLength) {
             return path.substring(prefixLength);
         }
-        return path.substring(index + 1);
+        return path.substring(last + 1);
     }
 
     /**
@@ -336,16 +336,22 @@ public class File implements Comparable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        int index = p.lastIndexOf(separatorChar);
-        if (index < prefixLength) {
+        int last = p.lastIndexOf(separatorChar);
+        if (last < prefixLength) {
             if ((prefixLength > 0) && (p.length() > prefixLength)) {
                 return p.substring(0, prefixLength);
             }
             return null;
-        } else if (index == 0) {
+        } else if (last == 0) {
             return p.substring(0, 1);
         }
-        return p.substring(0, index);
+        int first = p.indexOf(separatorChar);
+        if (first == last) {
+            if (last == p.length() - 1) return null; // c:\ -> null
+            else return p.substring(0, last + 1);    //c:\a -> c:\
+        }
+        return p.substring(0, last);
+
     }
 
     /**

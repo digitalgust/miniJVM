@@ -20,13 +20,9 @@ abstract public class FileSystemImpl extends org.mini.fs.FileSystem {
 
     @Override
     public String getDefaultParent() {
-        byte[] pathbuf = new byte[512];
-        InnerFile.getcwd(pathbuf);
-        int size = 0;
-        while (pathbuf[size] != 0) {
-            size++;
-        }
-        return new String(pathbuf, 0, size);
+        String p = InnerFile.getcwd();
+        if (p == null) return "";
+        else return p;
     }
 
     abstract boolean isAbsolute(String path);
@@ -63,7 +59,7 @@ abstract public class FileSystemImpl extends org.mini.fs.FileSystem {
         return path;
     }
 
-    private String getFullPath(String path) {
+    protected String getFullPath(String path) {
         String parent = getDefaultParent();
         if (!isAbsolute(path)) {
             path = parent + getSeparator() + path;    //   replace   "/tmp/abc/../a.txt" to "/tmp/a.txt"

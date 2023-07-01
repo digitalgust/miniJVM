@@ -5,6 +5,8 @@
  */
 package org.mini.fs;
 
+import java.io.File;
+
 /**
  * @author gust
  */
@@ -14,6 +16,7 @@ public class FileSystemWin extends FileSystemImpl {
     public String normalize(String path) {
         path = path.replace('/', getSeparator());
         path = super.normalize(path);
+        if (path.endsWith(":")) path += File.separator;
         return path;
     }
 
@@ -41,5 +44,26 @@ public class FileSystemWin extends FileSystemImpl {
             return 2;
         }
         return 0;
+    }
+
+    @Override
+    public File[] listRoots() {
+        String str = InnerFile.listWinDrivers();
+        if (str == null) {
+            return super.listRoots();
+        } else {
+            String[] strs = str.split(" ");
+            File[] files = new File[strs.length];
+            for (int i = 0; i < files.length; i++) {
+                files[i] = new File(strs[i]);
+            }
+            return files;
+        }
+    }
+
+    protected String getFullPath(String path) {
+        String p = super.getFullPath(path);
+        if (p.endsWith(":")) p += File.separator;
+        return p;
     }
 }
