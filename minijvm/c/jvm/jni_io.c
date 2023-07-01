@@ -1219,7 +1219,7 @@ int is_utf8(const c8 *string) {
 
 s32 is_platform_encoding_utf8() {
     s32 ret = 0;
-    setlocale(LC_CTYPE, "");
+    setlocale(LC_ALL, "");
     char *locstr = setlocale(LC_CTYPE, NULL);
     Utf8String *utfs = utf8_create_c(locstr);
     utf8_lowercase(utfs);
@@ -1286,7 +1286,12 @@ void conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
 }
 
 s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src) {
-    if (!is_platform_encoding_utf8()) {
+    s32 os_utf8 = 0;
+#ifdef __JVM_OS_MAC__ || __JVM_OS_LINUX__
+    os_utf8 = 1;
+#endif
+    
+    if (!is_platform_encoding_utf8() && !os_utf8) {
         if (!is_ascii(utf8_cstr(src))) {
             u16 *arr = jvm_calloc(src->length * sizeof(u16) + 2);
             s32 len = utf8_2_unicode(src, arr);
