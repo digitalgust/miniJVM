@@ -780,6 +780,24 @@ s32 sys_properties_load(MiniJVM *jvm) {
     sys_properties_set_c(jvm, "line.separator", "\r\n");
 #endif
 
+#if defined(__x86_64__) || defined(__amd64__) || defined(_M_X64)
+    sys_properties_set_c(jvm, "os.arch", "x86_64");
+#elif defined(__i386__) || defined(__i486__) || defined(__i586__) || defined(__i686__) || defined(_M_IX86)
+    sys_properties_set_c(jvm, "os.arch", "i386");
+#elif defined(__ia64__)
+    sys_properties_set_c(jvm, "os.arch", "ia64");
+#elif defined(__arm__)
+    sys_properties_set_c(jvm, "os.arch", "arm");
+#elif defined(__thumb__)
+    sys_properties_set_c(jvm, "os.arch", "thumb");
+#elif defined(__mips__)
+    sys_properties_set_c(jvm, "os.arch", "mips");
+#elif defined(__alpha__)
+    sys_properties_set_c(jvm, "os.arch", "alpha");
+#else
+    sys_properties_set_c(jvm, "os.arch", "unknow");
+#endif
+
 
     return 0;
 }
