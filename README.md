@@ -13,7 +13,7 @@ Develop iOS Android app in java, Cross platform java virtual machine , the minim
 [Build for Windows/Linux/MacOS platform](#linkbuilddesktop)     
 [How to debug source](#linkdebug)    
 [Using miniJVM in project](#linkembed)    
-[Documentation] (https://github.com/digitalgust/miniJVM/tree/master/doc/api.md)    
+[Documentation](https://github.com/digitalgust/miniJVM/tree/master/doc/api.md)    
 [License](#linklicense)    
 
 <span id="linkfeatures"/>   
@@ -66,6 +66,7 @@ MiniJVM on web build by Starcommander. [Source](https://github.com/Starcommander
 
 ## Changelog:
 
+2023.09. Rebound the glfw and glfm graphics jni and separated the GUI java class into the xgui package .    
 2022.11. Add documentation.    
 2021.03. Add j2c module, it 's a tool for convert minijvm java source code to c source code , then build it as native application , support desktop and mobile platform .   
 2020.12. Add build script and release v2.1.   
