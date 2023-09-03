@@ -34,7 +34,7 @@ MESSAGE(STATUS "platform: ${CMAKE_SYSTEM_NAME}")
 
 
 #if (MINI_JVM_BUILD_LIB)
-#add_library(mini_jvm_lib SHARED ${SOURCE_FILES})
+add_library(mini_jvm_lib SHARED ${SOURCE_FILES})
 
 IF (MSVC)
 ELSE ()

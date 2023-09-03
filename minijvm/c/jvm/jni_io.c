@@ -126,6 +126,7 @@ size_t strlcpy(char *dst, const char *src, size_t siz) {
 //                              Network
 //------------------------------------------------------------------------------------
 
+#ifndef InetNtopA
 /*%
  * WARNING: Don't even consider trying to compile this on a system where
  * sizeof(int) < 4.  sizeof(int) > 4 is fine; all the world's not a VAX.
@@ -276,7 +277,9 @@ static char *inet_ntop6(const unsigned char *src, char *dst, socklen_t size) {
     strcpy(dst, tmp);
     return (dst);
 }
+#endif
 
+#ifndef InetPtonA
 /*%
  * WARNING: Don't even consider trying to compile this on a system where
  * sizeof(int) < 4.  sizeof(int) > 4 is fine; all the world's not a VAX.
@@ -456,7 +459,7 @@ static int inet_pton6(const char *src, u_char *dst) {
     memcpy(dst, tmp, NS_IN6ADDRSZ);
     return (1);
 }
-
+#endif
 
 /*------------------------------------------
     MAIN  -  tester
