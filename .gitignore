@@ -17,3 +17,4 @@ cmake-build-release
 /desktop/jni_gui/java/target/
 /desktop/awtk
 /desktop/awtk_gui
+/binary/tmp

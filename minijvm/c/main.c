@@ -5,7 +5,7 @@
  */
 
 /*
- * File:   test.c
+ * File:   main.c
  * Author: gust
  *
  * Created on 2017年7月19日, 下午3:14
@@ -23,14 +23,92 @@
  */
 int main(int argc, char **argv) {
 
-    char *bootclasspath = NULL;
-    char *classpath = NULL;
-    char *main_name = NULL;
+    c8 *bootclasspath = NULL;
+    c8 *classpath = NULL;
+    c8 *main_name = NULL;
+    s32 main_set = 0;
     ArrayList *java_para = arraylist_create(0);
     s32 jdwp = 0;
     s64 maxheap = MAX_HEAP_SIZE_DEFAULT;
     s32 ret;
-    //  mini_jvm   -Xmx16M -bootclasspath ../../binary/lib/minijvm_rt.jar -cp ../../binary/lib/minijvm_test.jar;./ test/Foo1 999
+    Utf8String *bootcp = utf8_create();
+    Utf8String *cp = utf8_create();
+
+    //get startup dir
+    Utf8String *startup_dir = utf8_create_c(argv[0]);
+#if __JVM_OS_VS__ || __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__
+    utf8_replace_c(startup_dir, "\\", "/");
+#endif
+    s32 dpos = utf8_last_indexof_c(startup_dir, "/");
+    if (dpos > 0)utf8_substring(startup_dir, 0, dpos);
+    utf8_append_c(startup_dir, "/");
+    jvm_printf("App dir:%s\n", utf8_cstr(startup_dir));
+
+    //default value
+    {
+        utf8_append(bootcp, startup_dir);
+        utf8_append_c(bootcp, "../lib/minijvm_rt.jar");
+        bootclasspath = (c8 *) utf8_cstr(bootcp);
+        jdwp = 01;  // 0:disable java debug , 1:enable java debug and disable jit
+
+        //test for graphics
+        utf8_append(cp, startup_dir);
+        utf8_append_c(cp, "../libex/glfw_gui.jar;");
+        utf8_append(cp, startup_dir);
+        utf8_append_c(cp, "../libex/xgui.jar;");
+        utf8_append_c(cp, "./");
+        classpath = (c8 *) utf8_cstr(cp);
+        main_name = "org.mini.glfw.GlfwMain";
+
+        //test case
+//        utf8_append(cp, startup_dir);
+//        utf8_append_c(cp, "../libex/minijvm_test.jar;");
+//        utf8_append_c(cp, "./");
+//        classpath = (c8 *) utf8_cstr(cp);
+//        main_name = "test.HelloWorld";
+//        main_name = "test.Foo1";
+//        main_name = "test.Foo2";
+//        main_name = "test.Foo3";
+//        main_name = "test.ThreadDaemon";
+//        main_name = "test.SpecTest";
+//        main_name = "test.MultiThread";
+//        main_name = "test.ExecuteSpeed";
+//        main_name = "test.TestFile";
+//        main_name = "test.HttpServer";
+//        main_name = "test.BpDeepTest";
+//        main_name = "test.ReflectTest";
+//        main_name = "test.LambdaTest";
+//        main_name = "test.NioBufferTest";
+
+        //compiler test
+//        utf8_append(cp, startup_dir);
+//        utf8_append_c(cp, "../libex/janino.jar;");
+//        utf8_append(cp, startup_dir);
+//        utf8_append_c(cp, "../libex/commons-compiler.jar;");
+//        classpath = (c8 *) utf8_cstr(cp);
+//        main_name = "org.codehaus.janino.Compiler";
+//        arraylist_push_back(java_para,"../res/BpDeepTest.java");
+
+        //test awtk
+//        utf8_append(cp, startup_dir);
+//        utf8_append_c(cp, "../libex/awtk_gui.jar;");
+//        utf8_append(cp, startup_dir);
+//        utf8_append_c(cp, "../libex/awtk_demos.jar;");
+//        utf8_append_c(cp, "./");
+//        classpath = (c8 *) utf8_cstr(cp);
+//        main_name = "DemoBasic";
+//        main_name = "DemoButton";
+
+        //test luaj
+//        utf8_append(cp, startup_dir);
+//        utf8_append_c(cp, "../libex/luncher.jar;");
+//        utf8_append_c(cp, "./");
+//        classpath = (c8 *) utf8_cstr(cp);
+//        main_name = "org.luaj.vm2.lib.jme.TestLuaJ";
+
+    }
+
+    //  mini_jvm   -Xmx16M -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/minijvm_test.jar;./ test/Foo1 999
     if (argc > 1) {
         s32 i;
         for (i = 1; i < argc; i++) {
@@ -60,75 +138,15 @@ int main(int argc, char **argv) {
                 } else
                     jvm_printf("skiped argv: %s", argv[i]);
                 //other jvm para
-            } else if (main_name == NULL) {
+            } else if (main_set == 0) {
                 main_name = argv[i];
+                main_set = 1;
             } else {
                 arraylist_push_back(java_para, argv[i]);
             }
         }
-    } else {
-        bootclasspath = "../../binary/lib/minijvm_rt.jar";
-        jdwp = 01;  // 0:disable java debug , 1:enable java debug and disable jit
-
-
-//        bootclasspath = "../../../orange451/minijvm_rt/target/minijvm_rt.jar";
-//        jdwp = 01;
-//        classpath = "../../binary/libex/joml-1.9.25.jar;../../../orange451/minijvm_extras/target/minijvm_extras-1.0-SNAPSHOT.jar;../../../orange451/glfw_gui/target/glfw_gui-1.0-SNAPSHOT.jar;../../../orange451/JadeFX/target/JadeFX-1.0-SNAPSHOT.jar;../../../orange451/ExApp/target/ExApp-1.0-SNAPSHOT.jar;./";
-//        main_name = "test.PurpleApp";
-
-
-        //test for graphics
-        classpath = "../../binary/libex/glfw_gui.jar;../../binary/libex/xgui.jar;./";
-//        main_name = "test.Gears";
-//        main_name = "test.TestGL";
-        main_name = "org.mini.glfw.GlfwMain";
-//        main_name = "test.RenderTexure";
-//        main_name = "test.Alpha";
-//        main_name = "test.Light";
-//        main_name = "test.Shader";
-//        main_name = "test.Shader1";
-//        main_name = "test.Shader2";
-//        main_name = "test.Boing";
-//        main_name = "test.TestNanovg";
-
-
-//        classpath = "../../binary/libex/jni_test.jar;./";
-//        main_name = "test/JniTest";
-//        classpath = "../../binary/libex/luaj.jar;./";
-//        main_name = "Sample";
-
-
-
-//        classpath = "../../binary/libex/minijvm_test.jar;./";
-//        main_name = "test.HelloWorld";
-//        main_name = "test.Foo1";
-//        main_name = "test.Foo2";
-//        main_name = "test.Foo3";
-//        main_name = "test.ThreadDaemon";
-//        main_name = "test.SpecTest";
-//        main_name = "test.MultiThread";
-//        main_name = "test.ExecuteSpeed";
-//        main_name = "test.TestFile";
-//        main_name = "test.HttpServer";
-//        main_name = "test.BpDeepTest";
-//        main_name = "test.ReflectTest";
-//        main_name = "test.LambdaTest";
-//        main_name = "test.NioBufferTest";
-
-
-
-//        classpath = "../../binary/libex/janino.jar;../../binary/libex/commons-compiler.jar";
-//        main_name = "org.codehaus.janino.Compiler";
-//        arraylist_push_back(java_para,"../../binary/res/BpDeepTest.java");
-
-//        classpath = "../../binary/libex/awtk_gui.jar:../../binary/libex/awtk_demos.jar";
-//        main_name = "DemoBasic";
-//        main_name = "DemoButton";
-
-//        classpath = "../../binary/libex/luncher.jar:";
-//        main_name = "org.luaj.vm2.lib.jme.TestLuaJ";
-
     }
+
     MiniJVM *jvm = jvm_create();
     if (jvm != NULL) {
         jvm->jdwp_enable = jdwp;
@@ -141,10 +159,14 @@ int main(int argc, char **argv) {
         } else {
             ret = call_main(jvm, main_name, java_para);
         }
-        arraylist_destory(java_para);
         jvm_destroy(jvm);
     }
     //getchar();
+
+    utf8_destory(startup_dir);
+    utf8_destory(bootcp);
+    utf8_destory(cp);
+    arraylist_destory(java_para);
     return ret;
 }
 

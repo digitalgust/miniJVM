@@ -1905,6 +1905,8 @@ JClass *load_class(Instance *jloader, Utf8String *pClassName, Runtime *runtime) 
 //                }
 
                 runtime->thrd_info->no_pause++;
+                utf8_clear(clsName);
+                utf8_append(clsName, pClassName);
                 utf8_replace_c(clsName, "/", ".");
                 Instance *jstr = jstring_create(pClassName, runtime);
                 push_ref(runtime->stack, jstr);

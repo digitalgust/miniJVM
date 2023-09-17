@@ -58,14 +58,18 @@ s32 org_mini_reflect_vm_RefNative_getClasses(Runtime *runtime, JClass *clazz) {
 
     Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_CLASS);
     Instance *jarr = NULL;
-    utf8_destory(ustr);
 
     MiniJVM *jvm = runtime->jvm;
-    spin_lock(&jvm->lock_cloader);
+    s32 i, count;
+    vm_share_lock(jvm);
     {
-        s32 i, count;
-        count = classes_loaded_count_unsafe(jvm);
+        spin_lock(&jvm->lock_cloader);
+        {
+            count = classes_loaded_count_unsafe(jvm);
+        }
+        spin_unlock(&jvm->lock_cloader);
         jarr = jarray_create_by_type_name(runtime, count, ustr, NULL);
+        utf8_destory(ustr);
         for (i = 0; i < jvm->classloaders->length; i++) {
             PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
             HashtableIterator hti;
@@ -77,7 +81,7 @@ s32 org_mini_reflect_vm_RefNative_getClasses(Runtime *runtime, JClass *clazz) {
             }
         }
     }
-    spin_unlock(&jvm->lock_cloader);
+    vm_share_unlock(jvm);
     push_ref(runtime->stack, jarr);//先放入栈，再关联回收器，防止多线程回收
 
 #if _JVM_DEBUG_LOG_LEVEL > 5

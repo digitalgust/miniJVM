@@ -33,7 +33,6 @@ SET(SOURCE_FILES ${SOURCE_JVM} ${SOURCE_UTILS} ${SOURCE_HTTPS} ${SOURCE_TLS} ${S
 MESSAGE(STATUS "platform: ${CMAKE_SYSTEM_NAME}")
 
 
-#if (MINI_JVM_BUILD_LIB)
 add_library(mini_jvm_lib SHARED ${SOURCE_FILES})
 
 IF (MSVC)
@@ -41,7 +40,7 @@ ELSE ()
 TARGET_LINK_LIBRARIES(mini_jvm_lib pthread m)
 ENDIF ()
 
-#Set link library.
+
 IF (APPLE)
 ELSEIF (UNIX)
     TARGET_LINK_LIBRARIES(mini_jvm_lib dl)
@@ -51,7 +50,7 @@ ELSEIF (MINGW)
     elseif (CMAKE_SIZEOF_VOID_P EQUAL 8)
     endif ()
 ENDIF ()
-#else ()
+
 
 add_executable(mini_jvm ${SOURCE_FILES} main.c)
 
@@ -75,7 +74,8 @@ ELSEIF (MINGW)
     endif ()
 ENDIF ()
 
-#endif ()
+SET(EXECUTABLE_TMP_PATH ${PROJECT_SOURCE_DIR}/../../binary/tmp)
+add_custom_command(TARGET mini_jvm COMMAND ${CMAKE_COMMAND} -E make_directory ${EXECUTABLE_TMP_PATH})
 
 
 function(copyfile pathsrc pathtgt)
@@ -85,12 +85,11 @@ function(copyfile pathsrc pathtgt)
     endif ()
 endfunction()
 
-copyfile("${PROJECT_SOURCE_DIR}/../../javalib/dist/minijvm_rt.jar" "${PROJECT_SOURCE_DIR}/../../binary/lib/minijvm_rt.jar")
-copyfile("${PROJECT_SOURCE_DIR}/../../javalib/dist/minijvm_rt.jar" "${PROJECT_SOURCE_DIR}/../../mobile/assets/resfiles/minijvm_rt.jar")
-copyfile("${PROJECT_SOURCE_DIR}/../../ex_lib/jni_gui/java/dist/glfw_gui.jar" "${PROJECT_SOURCE_DIR}/../../binary/lib/glfw_gui.jar")
-copyfile("${PROJECT_SOURCE_DIR}/../../ex_lib/luaj/dist/luaj.jar" "${PROJECT_SOURCE_DIR}/../../binary/lib/luaj.jar")
-copyfile("${PROJECT_SOURCE_DIR}/../../test/javalib_test/dist/minijvm_test.jar" "${PROJECT_SOURCE_DIR}/../../binary/lib/minijvm_test.jar")
-#copyfile("${PROJECT_SOURCE_DIR}/../../../../javaSrc/g3d/dist/g3d.jar" "${PROJECT_SOURCE_DIR}/../../binary/lib/g3d.jar")
+#copyfile("${PROJECT_SOURCE_DIR}/../java/target/minijvm_rt.jar" "${PROJECT_SOURCE_DIR}/../../binary/lib/minijvm_rt.jar")
+#copyfile("${PROJECT_SOURCE_DIR}/../java/target/minijvm_rt.jar" "${PROJECT_SOURCE_DIR}/../../mobile/assets/resfiles/minijvm_rt.jar")
+#copyfile("${PROJECT_SOURCE_DIR}/../../extlib/jni_gui/java/dist/glfw_gui.jar" "${PROJECT_SOURCE_DIR}/../../binary/libex/glfw_gui.jar")
+#copyfile("${PROJECT_SOURCE_DIR}/../../extlib/luaj/dist/luaj.jar" "${PROJECT_SOURCE_DIR}/../../binary/libex/luaj.jar")
+#copyfile("${PROJECT_SOURCE_DIR}/../../test/minijvm_test/target/minijvm_test.jar" "${PROJECT_SOURCE_DIR}/../../binary/libex/minijvm_test.jar")
 
 
 

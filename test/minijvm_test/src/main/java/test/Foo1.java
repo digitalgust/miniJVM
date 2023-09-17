@@ -317,14 +317,19 @@ public class Foo1 {
 
         public MyClassLoader(String jarPath) {
             super(null);
-            paths[0] = jarPath;
+            paths[0] = new File(jarPath).getAbsolutePath();
+            System.out.println("class path = " + paths[0]);
         }
 
         @Override
         protected Class<?> findClass(String name) throws ClassNotFoundException {
 
             // 加载D盘根目录下指定类名的class
-            String classname = name.replace('.', File.separatorChar) + ".class";
+            if (!name.startsWith("/")) {
+                name = "/" + name;
+            }
+            String classname = name.replace('.', '/') + ".class";
+            System.out.println("class name:" + classname);
             byte[] classData = getFileData(classname, paths);
             if (classData == null) {
                 throw new ClassNotFoundException();
@@ -445,14 +450,15 @@ public class Foo1 {
 //            if (f.exists()) {
 //                URL url = new URL(f.getAbsolutePath());
 //            }
-            MyClassLoader mycl = new MyClassLoader("/Users/Gust/Documents/GitHub/miniJVM/binary/libex/glfw_gui.jar");
+            MyClassLoader mycl = new MyClassLoader("../libex/glfw_gui.jar");
+            String cn = "org.mini.glfw.Glfw";
             Thread.currentThread().setContextClassLoader(mycl);
-            Class c = mycl.loadClass("test.Ball");
-            System.out.println("loadClass:" + c);
+            Class c = mycl.loadClass(cn);
+            System.out.println("MyClassLoader loadClass:" + c);
             try {
-                c = Class.forName("test.Ball", false, mycl);
+                c = Class.forName(cn, false, mycl);
                 System.out.println("MyClassLoader Class.forName:" + c);
-                c = Class.forName("test.Ball");
+                c = Class.forName(cn);
                 System.out.println("SysClassLoader Class.forName:" + c);
             } catch (Exception e) {
                 e.printStackTrace();
