@@ -127,6 +127,7 @@ size_t strlcpy(char *dst, const char *src, size_t siz) {
 //------------------------------------------------------------------------------------
 
 #ifndef InetNtopA
+
 /*%
  * WARNING: Don't even consider trying to compile this on a system where
  * sizeof(int) < 4.  sizeof(int) > 4 is fine; all the world's not a VAX.
@@ -277,9 +278,11 @@ static char *inet_ntop6(const unsigned char *src, char *dst, socklen_t size) {
     strcpy(dst, tmp);
     return (dst);
 }
+
 #endif
 
 #ifndef InetPtonA
+
 /*%
  * WARNING: Don't even consider trying to compile this on a system where
  * sizeof(int) < 4.  sizeof(int) > 4 is fine; all the world's not a VAX.
@@ -459,6 +462,7 @@ static int inet_pton6(const char *src, u_char *dst) {
     memcpy(dst, tmp, NS_IN6ADDRSZ);
     return (1);
 }
+
 #endif
 
 /*------------------------------------------
@@ -1259,6 +1263,9 @@ s32 conv_unicode_2_platform_encoding(ByteBuf *dst, const u16 *src, s32 srcLen) {
         len = wcstombs(NULL, wstr, srcLen);
         jvm_free(wstr);
     }
+    if (len < 0) {
+        return len;
+    }
     bytebuf_expand(dst, len + 2);//for write '\0'
     wcstombs(dst->buf, (wchar_t *) src, len);
     dst->buf[len] = '\0';
@@ -1293,7 +1300,7 @@ s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src) {
 #if __JVM_OS_MAC__ || __JVM_OS_LINUX__
     os_utf8 = 1;
 #endif
-    
+
     if (!is_platform_encoding_utf8() && !os_utf8) {
         if (!is_ascii(utf8_cstr(src))) {
             u16 *arr = jvm_calloc(src->length * sizeof(u16) + 2);
@@ -1554,53 +1561,58 @@ s32 org_mini_fs_InnerFile_flush0(Runtime *runtime, JClass *clazz) {
 s32 org_mini_fs_InnerFile_loadFS(Runtime *runtime, JClass *clazz) {
     Instance *name_arr = localvar_getRefer(runtime->localvar, 0);
     Instance *fd = localvar_getRefer(runtime->localvar, 1);
-    s32 ret = -1;
+    s32 ret = RUNTIME_STATUS_NORMAL;
     if (name_arr) {
         Utf8String *filepath = utf8_create_part_c(name_arr->arr_body, 0, name_arr->arr_length);
         struct stat buf;
         ByteBuf *platformPath = bytebuf_create(0);
-        conv_utf8_2_platform_encoding(platformPath, filepath);
+        s32 len = conv_utf8_2_platform_encoding(platformPath, filepath);
+        if (len < 0) {
+            Instance *exception = exception_create(JVM_EXCEPTION_ILLEGALARGUMENT, runtime);
+            push_ref(runtime->stack, (__refer) exception);
+            ret = RUNTIME_STATUS_EXCEPTION;
+        } else {
+            s32 state = stat(platformPath->buf, &buf);
+            s32 a = S_ISDIR(buf.st_mode);
+            if (state == 0) {
+                c8 *className = "org/mini/fs/InnerFileStat";
+                c8 *ptr;
+                ptr = getFieldPtr_byName_c(fd, className, "st_dev", "I", runtime);
+                setFieldInt(ptr, buf.st_dev);
+                ptr = getFieldPtr_byName_c(fd, className, "st_ino", "S", runtime);
+                setFieldShort(ptr, buf.st_ino);
+                ptr = getFieldPtr_byName_c(fd, className, "st_mode", "S", runtime);
+                setFieldShort(ptr, buf.st_mode);
+                ptr = getFieldPtr_byName_c(fd, className, "st_nlink", "S", runtime);
+                setFieldShort(ptr, buf.st_nlink);
+                ptr = getFieldPtr_byName_c(fd, className, "st_uid", "S", runtime);
+                setFieldShort(ptr, buf.st_uid);
+                ptr = getFieldPtr_byName_c(fd, className, "st_gid", "S", runtime);
+                setFieldShort(ptr, buf.st_gid);
+                ptr = getFieldPtr_byName_c(fd, className, "st_rdev", "S", runtime);
+                setFieldShort(ptr, buf.st_rdev);
+                ptr = getFieldPtr_byName_c(fd, className, "st_size", "J", runtime);
+                setFieldLong(ptr, buf.st_size);
+                ptr = getFieldPtr_byName_c(fd, className, "st_atime", "J", runtime);
+                setFieldLong(ptr, buf.st_atime);
+                ptr = getFieldPtr_byName_c(fd, className, "st_mtime", "J", runtime);
+                setFieldLong(ptr, buf.st_mtime);
+                ptr = getFieldPtr_byName_c(fd, className, "st_ctime", "J", runtime);
+                setFieldLong(ptr, buf.st_ctime);
+                ptr = getFieldPtr_byName_c(fd, className, "exists", "Z", runtime);
+                setFieldByte(ptr, 1);
+            }
 
-        ret = stat(platformPath->buf, &buf);
-        s32 a = S_ISDIR(buf.st_mode);
-        if (ret == 0) {
-            c8 *className = "org/mini/fs/InnerFileStat";
-            c8 *ptr;
-            ptr = getFieldPtr_byName_c(fd, className, "st_dev", "I", runtime);
-            setFieldInt(ptr, buf.st_dev);
-            ptr = getFieldPtr_byName_c(fd, className, "st_ino", "S", runtime);
-            setFieldShort(ptr, buf.st_ino);
-            ptr = getFieldPtr_byName_c(fd, className, "st_mode", "S", runtime);
-            setFieldShort(ptr, buf.st_mode);
-            ptr = getFieldPtr_byName_c(fd, className, "st_nlink", "S", runtime);
-            setFieldShort(ptr, buf.st_nlink);
-            ptr = getFieldPtr_byName_c(fd, className, "st_uid", "S", runtime);
-            setFieldShort(ptr, buf.st_uid);
-            ptr = getFieldPtr_byName_c(fd, className, "st_gid", "S", runtime);
-            setFieldShort(ptr, buf.st_gid);
-            ptr = getFieldPtr_byName_c(fd, className, "st_rdev", "S", runtime);
-            setFieldShort(ptr, buf.st_rdev);
-            ptr = getFieldPtr_byName_c(fd, className, "st_size", "J", runtime);
-            setFieldLong(ptr, buf.st_size);
-            ptr = getFieldPtr_byName_c(fd, className, "st_atime", "J", runtime);
-            setFieldLong(ptr, buf.st_atime);
-            ptr = getFieldPtr_byName_c(fd, className, "st_mtime", "J", runtime);
-            setFieldLong(ptr, buf.st_mtime);
-            ptr = getFieldPtr_byName_c(fd, className, "st_ctime", "J", runtime);
-            setFieldLong(ptr, buf.st_ctime);
-            ptr = getFieldPtr_byName_c(fd, className, "exists", "Z", runtime);
-            setFieldByte(ptr, 1);
+            bytebuf_destory(platformPath);
+            utf8_destory(filepath);
+            push_int(runtime->stack, state);
         }
-
-        bytebuf_destory(platformPath);
-        utf8_destory(filepath);
     }
-    push_int(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_loadFD  \n");
 #endif
-    return 0;
+    return ret;
 }
 
 s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
