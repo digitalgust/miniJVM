@@ -359,13 +359,21 @@ void jvm_destroy(MiniJVM *jvm) {
     set_jvm_state(jvm, JVM_STATUS_STOPED);
     //waiting for daemon thread terminate
     thread_stop_all(jvm);
-    Runtime *r;
-    while ((r = arraylist_peek_back(jvm->thread_list)) != NULL) {
-        if (r) {
-            if (!r->son) {//未在执行jvm指令
-                thread_unboundle(r);//
-            }
-        }
+
+    //thread terminated ,it unboundle itself, so need not unboundle here
+//    Runtime *r;
+//    while ((r = arraylist_peek_back(jvm->thread_list)) != NULL) {
+//        if (r) {
+//            if (!r->son) {//未在执行jvm指令
+//                thread_unboundle(r);//
+//            }
+//        }
+//        threadSleep(20);
+//    }
+#if _JVM_DEBUG_LOG_LEVEL > 0
+    jvm_printf("[INFO]waitting for thread terminate\n");
+#endif
+    while (jvm->thread_list->length) {
         threadSleep(20);
     }
 

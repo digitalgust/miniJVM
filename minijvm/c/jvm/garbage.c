@@ -430,7 +430,10 @@ s64 _garbage_collect(GcCollector *collector) {
             if (curmb->type == MEM_TYPE_CLASS) {
                 classes_remove(collector->jvm, (JClass *) curmb);
             }
-            if (curmb->clazz->is_jcloader) {
+            if (GCFLAG_JLOADER_GET(curmb->gcflag)) {// curmb->class maybe destroyed, when gc_estory() called
+#if _JVM_DEBUG_GARBAGE_DUMP
+                jvm_printf("X: [%llx] classloader\n", (s64) (intptr_t) curmb);
+#endif
                 PeerClassLoader *pcl = classLoaders_find_by_instance(jvm, (Instance *) curmb);
                 if (pcl) {
                     classloaders_remove(jvm, pcl);

@@ -56,14 +56,14 @@ int main(int argc, char **argv) {
         utf8_append_c(cp, "../libex/glfw_gui.jar;");
         utf8_append(cp, startup_dir);
         utf8_append_c(cp, "../libex/xgui.jar;");
-        utf8_append_c(cp, "./");
+        utf8_append_c(cp, "./;");
         classpath = (c8 *) utf8_cstr(cp);
         main_name = "org.mini.glfw.GlfwMain";
 
         //test case
 //        utf8_append(cp, startup_dir);
 //        utf8_append_c(cp, "../libex/minijvm_test.jar;");
-//        utf8_append_c(cp, "./");
+//        utf8_append_c(cp, "./;");
 //        classpath = (c8 *) utf8_cstr(cp);
 //        main_name = "test.HelloWorld";
 //        main_name = "test.Foo1";
@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
 //        utf8_append_c(cp, "../libex/awtk_gui.jar;");
 //        utf8_append(cp, startup_dir);
 //        utf8_append_c(cp, "../libex/awtk_demos.jar;");
-//        utf8_append_c(cp, "./");
+//        utf8_append_c(cp, "./;");
 //        classpath = (c8 *) utf8_cstr(cp);
 //        main_name = "DemoBasic";
 //        main_name = "DemoButton";
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
         //test luaj
 //        utf8_append(cp, startup_dir);
 //        utf8_append_c(cp, "../libex/luncher.jar;");
-//        utf8_append_c(cp, "./");
+//        utf8_append_c(cp, "./;");
 //        classpath = (c8 *) utf8_cstr(cp);
 //        main_name = "org.luaj.vm2.lib.jme.TestLuaJ";
 
