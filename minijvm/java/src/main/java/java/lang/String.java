@@ -112,12 +112,14 @@ public final class String implements Comparable<String>, CharSequence {
 
     int hash;
 
+    static final int DEFAULT_CAP = 32;
+
     /**
      * Initializes a newly created <code>String</code> object so that it
      * represents an empty character sequence.
      */
     public String() {
-        value = new char[0];
+        value = new char[DEFAULT_CAP];
     }
 
     /**

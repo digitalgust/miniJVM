@@ -1505,8 +1505,11 @@ Instance *jstring_create(Utf8String *src, Runtime *runtime) {
     u16 *buf = jvm_calloc(src->length * DATA_TYPE_BYTES[DATATYPE_JCHAR]);
     s32 len = utf8_2_unicode(src, buf);
     if (len >= 0) {//可能解析出错
-        Instance *arr = jarray_create_by_type_index(runtime, len, DATATYPE_JCHAR);//u16 type is 5
-        setFieldRefer(ptr, (__refer) arr);//设置数组
+        Instance *arr = jstring_get_value_array(jstring, runtime);
+        if (!arr || arr->arr_length < len) {
+            arr = jarray_create_by_type_index(runtime, len, DATATYPE_JCHAR);//u16 type is 5
+            setFieldRefer(ptr, (__refer) arr);//设置数组
+        }
         memcpy(arr->arr_body, buf, len * DATA_TYPE_BYTES[DATATYPE_JCHAR]);
     }
     jvm_free(buf);
