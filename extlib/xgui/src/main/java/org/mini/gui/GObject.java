@@ -255,9 +255,11 @@ abstract public class GObject implements GAttachable {
     }
 
     public void setSize(float w, float h) {
-        boundle[WIDTH] = w;
-        boundle[HEIGHT] = h;
-        doSizeChanged(w, h);
+        if (boundle[WIDTH] != w || boundle[HEIGHT] != h) {
+            boundle[WIDTH] = w;
+            boundle[HEIGHT] = h;
+            doSizeChanged(w, h);
+        }
     }
 
     public float getLocationLeft() {

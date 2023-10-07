@@ -151,7 +151,8 @@ public class AppManager extends GApplication {
         if (curSelectedJarName != null) {
             updateContentViewInfo(curSelectedJarName);
         }
-
+        mgrForm.setSize(GCallBack.getInstance().getDeviceWidth(), GCallBack.getInstance().getDeviceHeight());
+        if (mainSlot != null) mainSlot.moveTo(0, 0);
         reloadAppList();
     }
 
