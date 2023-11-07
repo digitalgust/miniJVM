@@ -32,6 +32,7 @@ extern "C" {
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_PROFILE 0
 #define _JVM_JDWP_ENABLE 01
+#define _JVM_DEBUG_GARBAGE 0
 
 
 #define GARBAGE_OVERLOAD_DEFAULT 90  // overload of max heap size ,will active garbage collection

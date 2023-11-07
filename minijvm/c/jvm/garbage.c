@@ -311,20 +311,26 @@ s64 _garbage_collect(GcCollector *collector) {
             return -1;
         }
         collector->isworldstoped = 1;
-        //jvm_printf("garbage_pause_the_world %lld\n", (currentTimeMillis() - time));
-        //time = currentTimeMillis();
+#if _JVM_DEBUG_GARBAGE
+        jvm_printf("garbage_move_cache %lld\n", (currentTimeMillis() - time));
+        time = currentTimeMillis();
+#endif
         if (collector->tmp_header) {
             collector->tmp_tailer->next = collector->header;//接起来
             collector->header = collector->tmp_header;
             collector->tmp_header = NULL;
             collector->tmp_tailer = NULL;
         }
-        //jvm_printf("garbage_move_cache %lld\n", (currentTimeMillis() - time));
-        //time = currentTimeMillis();
+#if _JVM_DEBUG_GARBAGE
+        jvm_printf("garbage_move_cache %lld\n", (currentTimeMillis() - time));
+        time = currentTimeMillis();
+#endif
         _gc_copy_objs(jvm);
         //
-        //jvm_printf("garbage_copy_refer %lld\n", (currentTimeMillis() - time));
-        //time = currentTimeMillis();
+#if _JVM_DEBUG_GARBAGE
+        jvm_printf("garbage_copy_refer %lld\n", (currentTimeMillis() - time));
+        time = currentTimeMillis();
+#endif
         //real GC start
         //
         collector->mark_cnt++;
@@ -333,17 +339,23 @@ s64 _garbage_collect(GcCollector *collector) {
         }
         _gc_big_search(collector);
         //
-        //jvm_printf("garbage_big_search %lld\n", (currentTimeMillis() - time));
-        //time = currentTimeMillis();
+#if _JVM_DEBUG_GARBAGE
+        jvm_printf("garbage_big_search %lld\n", (currentTimeMillis() - time));
+        time = currentTimeMillis();
+#endif
 
         collector->isworldstoped = 0;
         _gc_resume_the_world(jvm);
     }
     vm_share_unlock(jvm);
 
-//    jvm_printf("garbage_resume_the_world %lld\n", (currentTimeMillis() - time));
+#if _JVM_DEBUG_GARBAGE
+    jvm_printf("garbage_resume_the_world %lld\n", (currentTimeMillis() - time));
+#endif
 
+#if _JVM_DEBUG_LOG_LEVEL > 1
     s64 time_stopWorld = currentTimeMillis() - start;
+#endif
     time = currentTimeMillis();
     //
 
@@ -406,8 +418,10 @@ s64 _garbage_collect(GcCollector *collector) {
         }
     }
 
-//    jvm_printf("garbage_finalize %lld\n", (currentTimeMillis() - time));
-//    time = currentTimeMillis();
+#if _JVM_DEBUG_GARBAGE
+    jvm_printf("garbage_finalize %lld\n", (currentTimeMillis() - time));
+    time = currentTimeMillis();
+#endif
     //clear
     nextmb = collector->header;
     prevmb = NULL;
