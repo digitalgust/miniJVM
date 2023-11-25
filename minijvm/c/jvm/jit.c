@@ -1239,7 +1239,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
     void *genfunc;
 
     /* Start a context(function entry), have 2 arguments, discuss later */
-    sljit_emit_enter(C, 0, SLJIT_ARGS2(W, P, P), 3, 3, 3, 3, LOCAL_COUNT * sizeof(sljit_sw));
+    sljit_emit_enter(C, 0, SLJIT_ARGS2(W, P, P), 3, 3, 3, 0, LOCAL_COUNT * sizeof(sljit_sw));
 
     /* SLJIT_SP is the init address of local var */
     //arr[LOCAL_METHOD]= (S0)MethodInfo *method

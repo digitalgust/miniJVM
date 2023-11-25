@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
         utf8_append(bootcp, startup_dir);
         utf8_append_c(bootcp, "../lib/minijvm_rt.jar");
         bootclasspath = (c8 *) utf8_cstr(bootcp);
-        jdwp = 01;  // 0:disable java debug , 1:enable java debug and disable jit
+        jdwp = 0;  // 0:disable java debug , 1:enable java debug and disable jit
 
         //test for graphics
         utf8_append(cp, startup_dir);
