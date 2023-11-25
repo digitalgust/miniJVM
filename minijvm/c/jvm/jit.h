@@ -20,6 +20,9 @@ extern "C" {
 #define JIT_COMPILE_EXEC_COUNT 500
 #define JIT_DEBUG 0
 
+#define SLJIT_CONFIG_AUTO 1
+#define JIT_CODE_DUMP 0
+
 enum {
     LOCAL_METHOD = 0,
     LOCAL_RUNTIME,

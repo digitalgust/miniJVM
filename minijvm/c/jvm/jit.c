@@ -23,6 +23,7 @@
 #define REGISTER_LOCALVAR SLJIT_S1
 #define REGISTER_IP SLJIT_S2
 
+#undef VOID
 //------------------------  declare ----------------------------
 
 static thread_suspend_check_func check_suspend;
@@ -115,7 +116,7 @@ static void _debug_gen_print_reg(struct sljit_compiler *C) {
     sljit_emit_op1(C, SLJIT_MOV, SLJIT_MEM0(), (sljit_sw) &c, SLJIT_R2, 0);
 
     //sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_SP), 0);
-    sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(VOID) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW) | SLJIT_ARG3(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(print_reg));
+    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3V(W, W, W), SLJIT_IMM, SLJIT_FUNC_ADDR(print_reg));
 
     //restore r0,r1,r2
     sljit_emit_op1(C, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM0(), (sljit_sw) &a);
@@ -131,7 +132,7 @@ static void _debug_gen_print_freg(struct sljit_compiler *C) {
     sljit_emit_fop1(C, SLJIT_MOV_F32, SLJIT_MEM0(), (sljit_sw) &c, SLJIT_FR2, 0);
 
     //sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_SP), 0);
-    sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(VOID) | SLJIT_ARG1(F32) | SLJIT_ARG2(F32) | SLJIT_ARG3(F32), SLJIT_IMM, SLJIT_FUNC_OFFSET(print_freg));
+    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3V(F32, F32, F32), SLJIT_IMM, SLJIT_FUNC_ADDR(print_freg));
 
     //restore fr0,fr1,fr2
     sljit_emit_fop1(C, SLJIT_MOV_F32, SLJIT_FR0, 0, SLJIT_MEM0(), (sljit_sw) &a);
@@ -147,7 +148,7 @@ static void _debug_gen_print_dreg(struct sljit_compiler *C) {
     sljit_emit_fop1(C, SLJIT_MOV_F64, SLJIT_MEM0(), (sljit_sw) &c, SLJIT_FR2, 0);
 
     //sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_SP), 0);
-    sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(VOID) | SLJIT_ARG1(F64) | SLJIT_ARG2(F64) | SLJIT_ARG3(F64), SLJIT_IMM, SLJIT_FUNC_OFFSET(print_dreg));
+    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3V(F64, F64, F64), SLJIT_IMM, SLJIT_FUNC_ADDR(print_dreg));
 
     //restore fr0,fr1,fr2
     sljit_emit_fop1(C, SLJIT_MOV_F64, SLJIT_FR0, 0, SLJIT_MEM0(), (sljit_sw) &a);
@@ -165,7 +166,7 @@ static void _debug_gen_print_stack(struct sljit_compiler *C) {
     sljit_emit_op1(C, SLJIT_MOV, SLJIT_R0, 0, REGISTER_SP, 0);
     sljit_emit_op1(C, SLJIT_MOV, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
     sljit_emit_op1(C, SLJIT_MOV, SLJIT_R2, 0, REGISTER_IP, 0);
-    sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(VOID) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW) | SLJIT_ARG3(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(print_stack));
+    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3V(W, W, W), SLJIT_IMM, SLJIT_FUNC_ADDR(print_stack));
 
     //restore r0,r1,r2
     sljit_emit_op1(C, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM0(), (sljit_sw) &a);
@@ -183,7 +184,7 @@ static void _debug_gen_print_callstack(struct sljit_compiler *C) {
 
     _gen_save_sp_ip(C);
     sljit_emit_op1(C, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-    sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(VOID) | SLJIT_ARG1(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(print_callstack));
+    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS1V(P), SLJIT_IMM, SLJIT_FUNC_ADDR(print_callstack));
 
     //restore r0,r1,r2
     sljit_emit_op1(C, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM0(), (sljit_sw) &a);
@@ -202,7 +203,7 @@ static void dump_code(void *code, sljit_uw len) {
 
 #if __JVM_ARCH_64__
 #if __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__
-    system("D:\\msys64\\mingw64\\bin\\objdump.exe -b binary -m l1om -D d:/tmp/slj_dump");
+    system("D:\\mingw64\\bin\\objdump.exe -b binary -m l1om -D d:/tmp/slj_dump");
 #elif __JVM_OS_MAC__
     system("/usr/local/Cellar/binutils/2.34/bin/objdump -b binary -m l1om -D /tmp/slj_dump");
 #else
@@ -516,7 +517,7 @@ void _gen_arr_load(struct sljit_compiler *C, s32 datatype) {
     _gen_stack_peek_ref(C, 0, SLJIT_R0, 0);
     _gen_stack_peek_int(C, 1, SLJIT_R1, 0);
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-    sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(UW) | SLJIT_ARG2(S32) | SLJIT_ARG3(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(_jarray_check_exception));
+    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3(32, P, 32, P), SLJIT_IMM, SLJIT_FUNC_ADDR(_jarray_check_exception));
     _gen_load_sp_ip(C);
     _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_RETURN_REG, 0, SLJIT_IMM, RUNTIME_STATUS_EXCEPTION, -1, 0);
 
@@ -588,7 +589,7 @@ void _gen_arr_store(struct sljit_compiler *C, s32 datatype) {
     _gen_stack_peek_ref(C, 0, SLJIT_R0, 0);//arr
     _gen_stack_peek_int(C, 1, SLJIT_R1, 0);//index
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-    sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(UW) | SLJIT_ARG2(S32) | SLJIT_ARG3(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(_jarray_check_exception));
+    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3(32, P, 32, P), SLJIT_IMM, SLJIT_FUNC_ADDR(_jarray_check_exception));
     _gen_load_sp_ip(C);
     _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_RETURN_REG, 0, SLJIT_IMM, RUNTIME_STATUS_EXCEPTION, -1, 0);
 
@@ -752,7 +753,7 @@ void _gen_icmp_op1(struct sljit_compiler *C, MethodInfo *method, u8 *ip, s32 cod
     sljit_set_label(jump_true, label_true);
 }
 
-void _gen_icmp_op2(struct sljit_compiler *C, MethodInfo *method, u8 *ip, s32 code_idx, sljit_s32 flag_type) {
+void _gen_icmp_op2(struct sljit_compiler *C, MethodInfo *method, u8 *ip, s32 code_idx, sljit_s32 test_type) {
     s32 offset = *((s16 *) (ip + 1));
     s32 jumpto = code_idx + offset;
     struct sljit_label *label = (__refer) pairlist_getl(method->pos_2_label, jumpto);
@@ -764,23 +765,24 @@ void _gen_icmp_op2(struct sljit_compiler *C, MethodInfo *method, u8 *ip, s32 cod
     _gen_stack_peek_int(C, -2, SLJIT_R1, 0);
     _gen_stack_size_modify(C, -2);
 
-    //flag_type : SLJIT_SET_SIG_LESS
-    sljit_emit_op2(C, SLJIT_SUB | flag_type, SLJIT_UNUSED, 0, SLJIT_R1, 0, SLJIT_R0, 0);
-    sljit_s32 test_type = 0;
-    switch (flag_type) {
-        case SLJIT_SET_SIG_GREATER:
-            test_type = SLJIT_SIG_GREATER;
+    sljit_s32 flag_set = 0;
+    switch (test_type) {
+        case SLJIT_SIG_GREATER:
+            flag_set = SLJIT_SET_SIG_GREATER;
             break;
-        case SLJIT_SET_SIG_GREATER_EQUAL:
-            test_type = SLJIT_SIG_GREATER_EQUAL;
+        case SLJIT_SIG_GREATER_EQUAL:
+            flag_set = SLJIT_SET_SIG_GREATER_EQUAL;
             break;
-        case SLJIT_SET_SIG_LESS:
-            test_type = SLJIT_SIG_LESS;
+        case SLJIT_SIG_LESS:
+            flag_set = SLJIT_SET_SIG_LESS;
             break;
-        case SLJIT_SET_SIG_LESS_EQUAL:
-            test_type = SLJIT_SIG_LESS_EQUAL;
+        case SLJIT_SIG_LESS_EQUAL:
+            flag_set = SLJIT_SET_SIG_LESS_EQUAL;
             break;
     }
+    //flag_set : SLJIT_SET_SIG_LESS
+    sljit_emit_op2u(C, SLJIT_SUB | flag_set, SLJIT_R1, 0, SLJIT_R0, 0);
+
     sljit_emit_op_flags(C, SLJIT_MOV, SLJIT_R2, 0, test_type);
 
     struct sljit_jump *jump_if_true, *jump_out, *jump_away;
@@ -898,13 +900,13 @@ void _gen_parilist_get(struct sljit_compiler *C, Pairlist *list) {
 //
 //    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_STACK);
 //    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-//    sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(VOID) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(_null_throw_exception));
+//    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2V(P,P), SLJIT_IMM, SLJIT_FUNC_ADDR(_null_throw_exception));
 //    struct sljit_jump *jump_to_exception_handle = sljit_emit_jump(C, SLJIT_JUMP);
 //
 //    //R0=stack,R1=runtime
 //    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_STACK);
 //    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-//    sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(exception_handle));
+//    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32,P,P), SLJIT_IMM, SLJIT_FUNC_ADDR(exception_handle));
 //    struct sljit_jump *throw_2_parent_jump = sljit_emit_cmp(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 0);
 //    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * 3);
 //    sljit_emit_op1(C, SLJIT_MOV_P, REGISTER_IP, 0, SLJIT_MEM1(SLJIT_R0), SLJIT_OFFSETOF(Runtime, pc));
@@ -917,7 +919,7 @@ void _gen_parilist_get(struct sljit_compiler *C, Pairlist *list) {
 //    struct sljit_label *label_ins_not_null = sljit_emit_label(C);
 //    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw) cmr->virtual_methods);
 //    sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_R2), SLJIT_OFFSETOF(MemoryBlock, clazz));
-//    sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(UW) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(pairlist_get));
+//    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(P,P,P), SLJIT_IMM, SLJIT_FUNC_ADDR(pairlist_get));
 //    struct sljit_jump *method_found_jump = sljit_emit_cmp(C, SLJIT_NOT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 0);
 //
 //    struct sljit_label *label_method_found = sljit_emit_label(C);
@@ -935,7 +937,7 @@ void _gen_exception_new(struct sljit_compiler *C, s32 exception_type) {
     _gen_save_sp_ip(C);
     sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R0, 0, SLJIT_IMM, exception_type);
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-    sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(UW) | SLJIT_ARG1(S32) | SLJIT_ARG2(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(exception_create));
+    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(W, 32, P), SLJIT_IMM, SLJIT_FUNC_ADDR(exception_create));
     _gen_load_sp_ip(C);
     _gen_stack_push_ref(C, SLJIT_RETURN_REG, 0);
 }
@@ -945,7 +947,7 @@ void _gen_exception_handle(struct sljit_compiler *C) {
     //R0=stack,R1=runtime
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_STACK);
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-    sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(exception_handle));
+    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, P), SLJIT_IMM, SLJIT_FUNC_ADDR(exception_handle));
     _gen_load_sp_ip(C);
 
     struct sljit_jump *jump_found_handle, *jump_out, *jump_away;
@@ -1026,7 +1028,7 @@ void _gen_jdwp(struct sljit_compiler *C) {
 
 void _gen_jump_to_suspend_check(struct sljit_compiler *C, int offset) {
     if (offset < 0)
-        sljit_emit_ijump(C, SLJIT_FAST_CALL, SLJIT_IMM, SLJIT_FUNC_OFFSET(check_suspend));
+        sljit_emit_ijump(C, SLJIT_FAST_CALL, SLJIT_IMM, SLJIT_FUNC_ADDR(check_suspend));
 }
 
 //------------------------------  inst impl  ----------------------
@@ -1054,6 +1056,10 @@ s32 multiarray(Runtime *runtime, Utf8String *desc, s32 count) {
 
 
 s32 invokevirtual(Runtime *runtime, s32 idx) {
+    if (utf8_equals_c(runtime->method->_this_class->name, "org/mini/json/JsonParser")
+        && utf8_equals_c(runtime->method->name, "map2obj")) {
+        s32 debug = 1;
+    }
     s32 ret = 0;
     ConstantMethodRef *cmr = class_get_constant_method_ref(runtime->clazz, idx);
     RuntimeStack *stack = runtime->stack;
@@ -1137,7 +1143,7 @@ void gen_jit_suspend_check_func() {
     struct sljit_compiler *C = sljit_create_compiler(NULL, NULL);
     sljit_set_context(C, 0, 0, 3, 3, 3, 3, LOCAL_COUNT * sizeof(sljit_sw));
 
-    sljit_emit_fast_enter(C, SLJIT_R2, 0);
+    sljit_emit_op_dst(C, SLJIT_FAST_ENTER, SLJIT_R2, 0);
 
     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_THREADINFO);
     sljit_emit_op1(C, SLJIT_MOV_U16, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_R0), SLJIT_OFFSETOF(JavaThreadInfo, suspend_count));
@@ -1169,7 +1175,7 @@ void gen_jit_suspend_check_func() {
         }
         label_not_interrupted = sljit_emit_label(C);
         sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-        sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(UW) | SLJIT_ARG1(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(check_suspend_and_pause));
+        sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS1(32, P), SLJIT_IMM, SLJIT_FUNC_ADDR(check_suspend_and_pause));
 
         _gen_load_sp_ip(C);
         sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_R2);
@@ -1232,8 +1238,8 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
     void *genfunc;
 
-    /* Start a context(function entry), have 3 arguments, discuss later */
-    sljit_emit_enter(C, 0, SLJIT_ARG1(SW) | SLJIT_ARG2(SW), 3, 3, 3, 3, LOCAL_COUNT * sizeof(sljit_sw));
+    /* Start a context(function entry), have 2 arguments, discuss later */
+    sljit_emit_enter(C, 0, SLJIT_ARGS2(W, P, P), 3, 3, 3, 3, LOCAL_COUNT * sizeof(sljit_sw));
 
     /* SLJIT_SP is the init address of local var */
     //arr[LOCAL_METHOD]= (S0)MethodInfo *method
@@ -1377,7 +1383,10 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                         break;
                     }
                     case CONSTANT_CLASS: {
-                        JClass *cl = classes_get(runtime->jvm, clazz->jloader, class_get_constant_classref(clazz, index)->name);
+                        JClass *cl = classes_load_get(clazz->jloader, class_get_constant_classref(clazz, index)->name, runtime);
+                        if (!cl->ins_class) {
+                            cl->ins_class = insOfJavaLangClass_create_get(runtime, cl);
+                        }
                         //push_ref(stack, cl->ins_class);
                         _gen_stack_push_ref(C, SLJIT_IMM, (sljit_sw) cl->ins_class);
                         break;
@@ -1859,7 +1868,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             case op_frem: {
                 _gen_stack_peek_float(C, -1, SLJIT_FR0, 0);
                 _gen_stack_peek_float(C, -2, SLJIT_FR1, 0);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(F32) | SLJIT_ARG1(F32) | SLJIT_ARG2(F32), SLJIT_IMM, SLJIT_FUNC_OFFSET(frem));
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(F32, F32, F32), SLJIT_IMM, SLJIT_FUNC_ADDR(frem));
                 _gen_stack_set_float(C, -2, SLJIT_FR0, 0);
                 _gen_stack_size_modify(C, -1);
                 _gen_ip_modify_imm(C, 1);
@@ -1869,7 +1878,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             case op_drem: {
                 _gen_stack_peek_double(C, -2, SLJIT_FR0, 0);
                 _gen_stack_peek_double(C, -4, SLJIT_FR1, 0);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(F64) | SLJIT_ARG1(F64) | SLJIT_ARG2(F64), SLJIT_IMM, SLJIT_FUNC_OFFSET(drem_1));
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(F64, F64, F64), SLJIT_IMM, SLJIT_FUNC_ADDR(drem_1));
                 _gen_stack_set_double(C, -4, SLJIT_FR0, 0);
                 _gen_stack_size_modify(C, -2);
                 _gen_ip_modify_imm(C, 1);
@@ -1878,7 +1887,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             }
             case op_ineg: {
                 _gen_stack_peek_int(C, -1, SLJIT_R0, 0);
-                sljit_emit_op1(C, SLJIT_NEG, SLJIT_R0, 0, SLJIT_R0, 0);
+                sljit_emit_op2(C, SLJIT_SUB32, SLJIT_R0, 0, SLJIT_IMM, 0, SLJIT_R0, 0);
                 _gen_stack_set_int(C, -1, SLJIT_R0, 0);
 
                 _gen_ip_modify_imm(C, 1);
@@ -1887,7 +1896,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             }
             case op_lneg: {
                 _gen_stack_peek_long(C, -2, SLJIT_R0, 0);
-                sljit_emit_op1(C, SLJIT_NEG, SLJIT_R0, 0, SLJIT_R0, 0);
+                sljit_emit_op2(C, SLJIT_SUB, SLJIT_R0, 0, SLJIT_IMM, 0, SLJIT_R0, 0);
                 _gen_stack_set_long(C, -2, SLJIT_R0, 0);
 
                 _gen_ip_modify_imm(C, 1);
@@ -2166,16 +2175,17 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 _gen_stack_peek_long(C, -2, SLJIT_R0, 0);
                 _gen_stack_peek_long(C, -4, SLJIT_R1, 0);
 //
-//                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(SW) | SLJIT_ARG2(SW), SLJIT_IMM, SLJIT_FUNC_OFFSET(lcmp));
+//                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(S32,W,W), SLJIT_IMM, SLJIT_FUNC_ADDR(lcmp));
 //                _gen_stack_set_int(C, -4, SLJIT_RETURN_REG, 0);
 //                _gen_stack_size_modify(C, -3);
 
-                sljit_emit_op2(C, SLJIT_SUB | SLJIT_SET_SIG_GREATER, SLJIT_UNUSED, 0, SLJIT_R0, 0, SLJIT_R1, 0);
-                sljit_emit_cmov(C, SLJIT_SIG_GREATER, SLJIT_R2, SLJIT_IMM, -1);
-                sljit_emit_op2(C, SLJIT_SUB | SLJIT_SET_SIG_LESS, SLJIT_UNUSED, 0, SLJIT_R0, 0, SLJIT_R1, 0);
-                sljit_emit_cmov(C, SLJIT_SIG_LESS, SLJIT_R2, SLJIT_IMM, 1);
-                sljit_emit_op2(C, SLJIT_SUB | SLJIT_SET_Z, SLJIT_UNUSED, 0, SLJIT_R0, 0, SLJIT_R1, 0);
-                sljit_emit_cmov(C, SLJIT_EQUAL, SLJIT_R2, SLJIT_IMM, 0);
+                sljit_emit_op2(C, SLJIT_XOR, SLJIT_R2, 0, SLJIT_R2, 0, SLJIT_R2, 0);
+                sljit_emit_op2u(C, SLJIT_SUB | SLJIT_SET_SIG_GREATER, SLJIT_R0, 0, SLJIT_R1, 0);
+                sljit_emit_select(C, SLJIT_SIG_GREATER, SLJIT_R2, SLJIT_IMM, -1, SLJIT_R2);
+                sljit_emit_op2u(C, SLJIT_SUB | SLJIT_SET_SIG_LESS, SLJIT_R0, 0, SLJIT_R1, 0);
+                sljit_emit_select(C, SLJIT_SIG_LESS, SLJIT_R2, SLJIT_IMM, 1, SLJIT_R2);
+                sljit_emit_op2u(C, SLJIT_SUB | SLJIT_SET_Z, SLJIT_R0, 0, SLJIT_R1, 0);
+                sljit_emit_select(C, SLJIT_EQUAL, SLJIT_R2, SLJIT_IMM, 0, SLJIT_R2);
                 _gen_stack_set_int(C, -4, SLJIT_R2, 0);
                 _gen_stack_size_modify(C, -3);
 
@@ -2188,7 +2198,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 _gen_stack_peek_float(C, -1, SLJIT_FR0, 0);
                 _gen_stack_peek_float(C, -2, SLJIT_FR1, 0);
                 sljit_emit_op1(C, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, cur_inst);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(S32) | SLJIT_ARG2(F32) | SLJIT_ARG3(F32), SLJIT_IMM, SLJIT_FUNC_OFFSET(fcmp));
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3(32, 32, F32, F32), SLJIT_IMM, SLJIT_FUNC_ADDR(fcmp));
                 _gen_stack_set_int(C, -2, SLJIT_R0, 0);
                 _gen_stack_size_modify(C, -1);
 
@@ -2201,7 +2211,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 _gen_stack_peek_double(C, -2, SLJIT_FR0, 0);
                 _gen_stack_peek_double(C, -4, SLJIT_FR1, 0);
                 sljit_emit_op1(C, SLJIT_MOV, SLJIT_R0, 0, SLJIT_IMM, cur_inst);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(S32) | SLJIT_ARG2(F64) | SLJIT_ARG3(F64), SLJIT_IMM, SLJIT_FUNC_OFFSET(dcmp));
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3(32, 32, F64, F64), SLJIT_IMM, SLJIT_FUNC_ADDR(dcmp));
                 _gen_stack_set_int(C, -4, SLJIT_R0, 0);
                 _gen_stack_size_modify(C, -3);
                 _gen_ip_modify_imm(C, 1);
@@ -2263,25 +2273,25 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 break;
             }
             case op_if_icmplt: {
-                _gen_icmp_op2(C, method, ip, code_idx, SLJIT_SET_SIG_LESS);
+                _gen_icmp_op2(C, method, ip, code_idx, SLJIT_SIG_LESS);
                 _gen_ip_modify_imm(C, 3);
                 ip += 3;
                 break;
             }
             case op_if_icmpge: {
-                _gen_icmp_op2(C, method, ip, code_idx, SLJIT_SET_SIG_GREATER_EQUAL);
+                _gen_icmp_op2(C, method, ip, code_idx, SLJIT_SIG_GREATER_EQUAL);
                 _gen_ip_modify_imm(C, 3);
                 ip += 3;
                 break;
             }
             case op_if_icmpgt: {
-                _gen_icmp_op2(C, method, ip, code_idx, SLJIT_SET_SIG_GREATER);
+                _gen_icmp_op2(C, method, ip, code_idx, SLJIT_SIG_GREATER);
                 _gen_ip_modify_imm(C, 3);
                 ip += 3;
                 break;
             }
             case op_if_icmple: {
-                _gen_icmp_op2(C, method, ip, code_idx, SLJIT_SET_SIG_LESS_EQUAL);
+                _gen_icmp_op2(C, method, ip, code_idx, SLJIT_SIG_LESS_EQUAL);
                 _gen_ip_modify_imm(C, 3);
                 ip += 3;
                 break;
@@ -2361,6 +2371,8 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 //                    offset = *((s32 *) (ip + pos));     // branch to entry in table
                 //                }
                 // =====================================================================
+                sljit_emit_op2(C, SLJIT_XOR, SLJIT_R0, 0, SLJIT_R0, 0, SLJIT_R0, 0);
+                sljit_emit_op2(C, SLJIT_XOR, SLJIT_R1, 0, SLJIT_R1, 0, SLJIT_R1, 0);
                 _gen_stack_pop_int(C, SLJIT_R0, 0);
                 sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R1, 0, SLJIT_IMM, (sljit_s32) low);
 
@@ -2432,6 +2444,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 //       }
                 // =====================================================================
 
+                sljit_emit_op2(C, SLJIT_XOR, SLJIT_R2, 0, SLJIT_R2, 0, SLJIT_R2, 0);
                 _gen_stack_pop_int(C, SLJIT_R2, 0);
                 sljit_emit_op1(C, SLJIT_MOV, SLJIT_R1, 0, SLJIT_IMM, (sljit_sw) st->table);
                 sljit_emit_op2(C, SLJIT_ADD, SLJIT_R0, 0, SLJIT_R1, 0, SLJIT_IMM, (sljit_sw)
@@ -2445,7 +2458,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 struct sljit_jump *jump_to_end_loop = sljit_emit_cmp(C, SLJIT_EQUAL, SLJIT_R1, 0, SLJIT_R0, 0);
                 //body
                 {
-                    jump_to_not_equal = sljit_emit_cmp(C, SLJIT_NOT_EQUAL32, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R1), SLJIT_OFFSETOF(struct V2PTable, value));
+                    jump_to_not_equal = sljit_emit_cmp(C, SLJIT_NOT_EQUAL | SLJIT_32, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R1), SLJIT_OFFSETOF(struct V2PTable, value));
                     {//found left
                         sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_R1), SLJIT_OFFSETOF(struct V2PTable, bc_pos));
                         sljit_emit_op2(C, SLJIT_SUB, SLJIT_R2, 0, SLJIT_R2, 0, SLJIT_IMM, code_idx);
@@ -2780,7 +2793,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 //s32 _gen_invokevirtual(Runtime *runtime, u16 idx)
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
                 sljit_emit_op1(C, SLJIT_MOV_U16, SLJIT_R1, 0, SLJIT_IMM, *((u16 *) (ip + 1)));
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(UW) | SLJIT_ARG2(S32), SLJIT_IMM, SLJIT_FUNC_OFFSET(invokevirtual));
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, 32), SLJIT_IMM, SLJIT_FUNC_ADDR(invokevirtual));
                 _gen_load_sp_ip(C);
                 _gen_exception_check_throw_handle(C, SLJIT_NOT_EQUAL, SLJIT_RETURN_REG, 0, SLJIT_IMM, RUNTIME_STATUS_NORMAL, -1, 0);
 
@@ -2805,7 +2818,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 //R0 = method
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw) m);
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(execute_method_impl));
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, P), SLJIT_IMM, SLJIT_FUNC_ADDR(execute_method_impl));
                 _gen_load_sp_ip(C);
                 _gen_exception_check_throw_handle(C, SLJIT_NOT_EQUAL, SLJIT_RETURN_REG, 0, SLJIT_IMM, RUNTIME_STATUS_NORMAL, -1, 0);
 
@@ -2832,7 +2845,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 //R0 = method
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw) m);
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(execute_method_impl));
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, P), SLJIT_IMM, SLJIT_FUNC_ADDR(execute_method_impl));
                 _gen_load_sp_ip(C);
                 _gen_exception_check_throw_handle(C, SLJIT_NOT_EQUAL, SLJIT_RETURN_REG, 0, SLJIT_IMM, RUNTIME_STATUS_NORMAL, -1, 0);
 
@@ -2862,7 +2875,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                     _gen_save_sp_ip(C);
                     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
                     sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_IMM, (sljit_sw) other);
-                    sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(UW) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(instance_create));
+                    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(P, P, P), SLJIT_IMM, SLJIT_FUNC_ADDR(instance_create));
                     _gen_load_sp_ip(C);
                     _gen_stack_push_ref(C, SLJIT_RETURN_REG, 0);
                 } else {
@@ -2886,7 +2899,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
                 _gen_stack_peek_int(C, -1, SLJIT_R1, 0);
                 sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R2, 0, SLJIT_IMM, typeIdx);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(UW) | SLJIT_ARG1(UW) | SLJIT_ARG2(S32) | SLJIT_ARG3(S32), SLJIT_IMM, SLJIT_FUNC_OFFSET(jarray_create_by_type_index));
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3(P, P, 32, 32), SLJIT_IMM, SLJIT_FUNC_ADDR(jarray_create_by_type_index));
                 _gen_load_sp_ip(C);
                 _gen_stack_set_ref(C, -1, SLJIT_RETURN_REG, 0);
 
@@ -2913,7 +2926,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
                 _gen_stack_peek_int(C, -1, SLJIT_R1, 0);
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_IMM, (sljit_sw) arr_class);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(UW) | SLJIT_ARG1(UW) | SLJIT_ARG2(S32) | SLJIT_ARG3(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(jarray_create_by_class));
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3(P, P, 32, P), SLJIT_IMM, SLJIT_FUNC_ADDR(jarray_create_by_class));
                 _gen_load_sp_ip(C);
                 _gen_stack_set_ref(C, -1, SLJIT_RETURN_REG, 0);
 
@@ -2963,7 +2976,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
                 _gen_stack_peek_ref(C, -1, SLJIT_R1, 0);
                 sljit_emit_op1(C, SLJIT_MOV_S32, SLJIT_R2, 0, SLJIT_IMM, typeIdx);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW) | SLJIT_ARG3(S32), SLJIT_IMM, SLJIT_FUNC_OFFSET(checkcast));
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3(32, P, P, 32), SLJIT_IMM, SLJIT_FUNC_ADDR(checkcast));
                 _gen_load_sp_ip(C);
                 _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_RETURN_REG, 0, SLJIT_IMM, 0, JVM_EXCEPTION_CLASSCAST, -1);
 
@@ -2992,7 +3005,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_IMM, (sljit_sw) other);
                 _gen_stack_peek_ref(C, -1, SLJIT_R1, 0);
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW) | SLJIT_ARG3(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(instanceof));
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3(32, P, P, P), SLJIT_IMM, SLJIT_FUNC_ADDR(instanceof));
                 _gen_load_sp_ip(C);
                 _gen_stack_set_int(C, -1, SLJIT_RETURN_REG, 0);
 
@@ -3010,7 +3023,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
                 _gen_stack_pop_ref(C, SLJIT_R0, 0);
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(jthread_lock));
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, P), SLJIT_IMM, SLJIT_FUNC_ADDR(jthread_lock));
 
                 _gen_ip_modify_imm(C, 1);
                 ip++;
@@ -3024,7 +3037,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
                 _gen_stack_pop_ref(C, SLJIT_R0, 0);
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW), SLJIT_IMM, SLJIT_FUNC_OFFSET(jthread_unlock));
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, P), SLJIT_IMM, SLJIT_FUNC_ADDR(jthread_unlock));
 
                 _gen_ip_modify_imm(C, 1);
                 ip++;
@@ -3147,13 +3160,13 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 //
 //                _gen_stack_pop_ref(C, SLJIT_R0, 0);
 //                sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-//                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(VOID) | SLJIT_ARG1(SW) | SLJIT_ARG2(SW), SLJIT_IMM, SLJIT_FUNC_OFFSET(jarray_multi_create));
+//                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2V(W,W), SLJIT_IMM, SLJIT_FUNC_ADDR(jarray_multi_create));
 
                 _gen_save_sp_ip(C);
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_IMM, (sljit_sw) desc);
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R2, 0, SLJIT_IMM, count);
-                sljit_emit_icall(C, SLJIT_CALL, SLJIT_RET(S32) | SLJIT_ARG1(UW) | SLJIT_ARG2(UW) | SLJIT_ARG3(S32), SLJIT_IMM, SLJIT_FUNC_OFFSET(multiarray));
+                sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS3(32, P, P, 32), SLJIT_IMM, SLJIT_FUNC_ADDR(multiarray));
                 _gen_load_sp_ip(C);
                 _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_RETURN_REG, 0, SLJIT_IMM, RUNTIME_STATUS_EXCEPTION, JVM_EXCEPTION_NULLPOINTER, 0);
 
@@ -3234,7 +3247,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             }
         }
         //garbage stop world detect
-        //sljit_emit_ijump(C, SLJIT_FAST_CALL, SLJIT_IMM, SLJIT_FUNC_OFFSET(check_suspend));
+        //sljit_emit_ijump(C, SLJIT_FAST_CALL, SLJIT_IMM, SLJIT_FUNC_ADDR(check_suspend));
 
 #if JIT_DEBUG
         _gen_save_sp_ip(C);
@@ -3339,7 +3352,12 @@ void construct_jit(MethodInfo *method, Runtime *runtime) {
     if (ca->jit.state == JIT_GEN_SUCCESS) {
         int debug = 1;
     }
-    //if (ca->jit.state == JIT_GEN_SUCCESS)dump_code(ca->jit.func, ca->jit.len);
+#if(JIT_CODE_DUMP)
+    if (utf8_equals_c(runtime->method->_this_class->name, "org/mini/json/JsonParser")
+        && utf8_equals_c(runtime->method->name, "<init>")) {
+        if (ca->jit.state == JIT_GEN_SUCCESS)dump_code(ca->jit.func, ca->jit.len);
+    }
+#endif
     sljit_free_compiler(C);
 }
 
