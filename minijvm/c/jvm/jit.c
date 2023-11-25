@@ -1141,7 +1141,7 @@ static s32 instanceof(JClass *other, Instance *ins, Runtime *runtime) {
 
 void gen_jit_suspend_check_func() {
     struct sljit_compiler *C = sljit_create_compiler(NULL, NULL);
-    sljit_set_context(C, 0, 0, 3, 3, 3, 3, LOCAL_COUNT * sizeof(sljit_sw));
+    sljit_set_context(C, 0, 0, 3, 3, 3, 0, LOCAL_COUNT * sizeof(sljit_sw));
 
     sljit_emit_op_dst(C, SLJIT_FAST_ENTER, SLJIT_R2, 0);
 
