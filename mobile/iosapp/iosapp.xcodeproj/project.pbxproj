@@ -115,6 +115,7 @@
 		45F996F9253B69E40053E7A0 /* threading.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F996B2253B69E40053E7A0 /* threading.c */; };
 		45F996FA253B69E40053E7A0 /* timing.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F996B3253B69E40053E7A0 /* timing.c */; };
 		45F9982E253D2B6D0053E7A0 /* ssl_client.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F9982D253D2B6D0053E7A0 /* ssl_client.c */; };
+		59FD74132B17A33D0038C2A6 /* sljitLir.c in Sources */ = {isa = PBXBuildFile; fileRef = 59FD74122B17A33D0038C2A6 /* sljitLir.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -123,29 +124,6 @@
 		4517C54E254C60E100F03459 /* jni_std.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jni_std.c; sourceTree = "<group>"; };
 		451F269F23A248D300F99984 /* jit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jit.c; sourceTree = "<group>"; };
 		451F26A023A248D300F99984 /* jit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jit.h; sourceTree = "<group>"; };
-		451F26A723A24ADE00F99984 /* sljitNativePPC_64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativePPC_64.c; sourceTree = "<group>"; };
-		451F26A823A24ADE00F99984 /* sljitNativeARM_64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeARM_64.c; sourceTree = "<group>"; };
-		451F26A923A24ADE00F99984 /* sljitNativeTILEGX-encoder.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "sljitNativeTILEGX-encoder.c"; sourceTree = "<group>"; };
-		451F26AA23A24ADE00F99984 /* sljitNativeX86_common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeX86_common.c; sourceTree = "<group>"; };
-		451F26AB23A24ADE00F99984 /* sljitNativeSPARC_common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeSPARC_common.c; sourceTree = "<group>"; };
-		451F26AC23A24ADE00F99984 /* sljitNativePPC_common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativePPC_common.c; sourceTree = "<group>"; };
-		451F26AD23A24ADE00F99984 /* sljitNativeX86_64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeX86_64.c; sourceTree = "<group>"; };
-		451F26AE23A24ADE00F99984 /* sljitLir.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sljitLir.h; sourceTree = "<group>"; };
-		451F26AF23A24ADE00F99984 /* sljitNativeMIPS_64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeMIPS_64.c; sourceTree = "<group>"; };
-		451F26B023A24ADE00F99984 /* sljitExecAllocator.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitExecAllocator.c; sourceTree = "<group>"; };
-		451F26B123A24ADE00F99984 /* sljitNativeARM_32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeARM_32.c; sourceTree = "<group>"; };
-		451F26B223A24ADE00F99984 /* sljitConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sljitConfig.h; sourceTree = "<group>"; };
-		451F26B323A24ADE00F99984 /* sljitNativeTILEGX_64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeTILEGX_64.c; sourceTree = "<group>"; };
-		451F26B423A24ADE00F99984 /* sljitNativePPC_32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativePPC_32.c; sourceTree = "<group>"; };
-		451F26B523A24ADE00F99984 /* sljitUtils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitUtils.c; sourceTree = "<group>"; };
-		451F26B623A24ADE00F99984 /* sljitNativeMIPS_common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeMIPS_common.c; sourceTree = "<group>"; };
-		451F26B723A24ADE00F99984 /* sljitLir.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitLir.c; sourceTree = "<group>"; };
-		451F26B823A24ADE00F99984 /* sljitNativeARM_T2_32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeARM_T2_32.c; sourceTree = "<group>"; };
-		451F26B923A24ADE00F99984 /* sljitNativeMIPS_32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeMIPS_32.c; sourceTree = "<group>"; };
-		451F26BA23A24ADE00F99984 /* sljitNativeX86_32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeX86_32.c; sourceTree = "<group>"; };
-		451F26BB23A24ADE00F99984 /* sljitConfigInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sljitConfigInternal.h; sourceTree = "<group>"; };
-		451F26BC23A24ADE00F99984 /* sljitProtExecAllocator.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitProtExecAllocator.c; sourceTree = "<group>"; };
-		451F26BD23A24ADE00F99984 /* sljitNativeSPARC_32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitNativeSPARC_32.c; sourceTree = "<group>"; };
 		452AD04323F9645D0069A699 /* nanovg_jni_assist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nanovg_jni_assist.h; sourceTree = "<group>"; };
 		4535FA2721944F7300B888BA /* jni_minial.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = jni_minial.m; sourceTree = "<group>"; };
 		457AFCAE23C84C53002F5E34 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
@@ -361,6 +339,9 @@
 		45F99740253B6A070053E7A0 /* cipher_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cipher_internal.h; path = https/mbedtls/include/mbedtls/cipher_internal.h; sourceTree = "<group>"; };
 		45F9982C253D2B6D0053E7A0 /* ssl_client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ssl_client.h; path = https/ssl_client.h; sourceTree = "<group>"; };
 		45F9982D253D2B6D0053E7A0 /* ssl_client.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ssl_client.c; path = https/ssl_client.c; sourceTree = "<group>"; };
+		5907F36F2B17A8CB007C7B0D /* sljitLir.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sljitLir.h; sourceTree = "<group>"; };
+		5907F3702B17A8D7007C7B0D /* sljitConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sljitConfig.h; sourceTree = "<group>"; };
+		59FD74122B17A33D0038C2A6 /* sljitLir.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitLir.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -377,29 +358,9 @@
 		451F26A623A24ADE00F99984 /* sljit */ = {
 			isa = PBXGroup;
 			children = (
-				451F26A723A24ADE00F99984 /* sljitNativePPC_64.c */,
-				451F26A823A24ADE00F99984 /* sljitNativeARM_64.c */,
-				451F26A923A24ADE00F99984 /* sljitNativeTILEGX-encoder.c */,
-				451F26AA23A24ADE00F99984 /* sljitNativeX86_common.c */,
-				451F26AB23A24ADE00F99984 /* sljitNativeSPARC_common.c */,
-				451F26AC23A24ADE00F99984 /* sljitNativePPC_common.c */,
-				451F26AD23A24ADE00F99984 /* sljitNativeX86_64.c */,
-				451F26AE23A24ADE00F99984 /* sljitLir.h */,
-				451F26AF23A24ADE00F99984 /* sljitNativeMIPS_64.c */,
-				451F26B023A24ADE00F99984 /* sljitExecAllocator.c */,
-				451F26B123A24ADE00F99984 /* sljitNativeARM_32.c */,
-				451F26B223A24ADE00F99984 /* sljitConfig.h */,
-				451F26B323A24ADE00F99984 /* sljitNativeTILEGX_64.c */,
-				451F26B423A24ADE00F99984 /* sljitNativePPC_32.c */,
-				451F26B523A24ADE00F99984 /* sljitUtils.c */,
-				451F26B623A24ADE00F99984 /* sljitNativeMIPS_common.c */,
-				451F26B723A24ADE00F99984 /* sljitLir.c */,
-				451F26B823A24ADE00F99984 /* sljitNativeARM_T2_32.c */,
-				451F26B923A24ADE00F99984 /* sljitNativeMIPS_32.c */,
-				451F26BA23A24ADE00F99984 /* sljitNativeX86_32.c */,
-				451F26BB23A24ADE00F99984 /* sljitConfigInternal.h */,
-				451F26BC23A24ADE00F99984 /* sljitProtExecAllocator.c */,
-				451F26BD23A24ADE00F99984 /* sljitNativeSPARC_32.c */,
+				5907F3702B17A8D7007C7B0D /* sljitConfig.h */,
+				5907F36F2B17A8CB007C7B0D /* sljitLir.h */,
+				59FD74122B17A33D0038C2A6 /* sljitLir.c */,
 			);
 			path = sljit;
 			sourceTree = "<group>";
@@ -986,6 +947,7 @@
 				45F996DA253B69E40053E7A0 /* x509.c in Sources */,
 				4517C550254C60E100F03459 /* jni_reflect.c in Sources */,
 				45F996C7253B69E40053E7A0 /* bignum.c in Sources */,
+				59FD74132B17A33D0038C2A6 /* sljitLir.c in Sources */,
 				45F996D1253B69E40053E7A0 /* ecdsa.c in Sources */,
 				45F996C3253B69E40053E7A0 /* ssl_cookie.c in Sources */,
 				45F996EE253B69E40053E7A0 /* platform.c in Sources */,
@@ -1121,12 +1083,11 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = M978JH97JT;
-				"HEADER_SEARCH_PATHS[arch=*]" = (
+				HEADER_SEARCH_PATHS = (
 					../c/glfm/,
 					../c/gui/,
 					../../minijvm/c/jvm,
 					"../../minijvm/c/utils/**",
-					../../minijvm/c/utils/sljit,
 				);
 				INFOPLIST_FILE = iosapp/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
@@ -1153,12 +1114,11 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = M978JH97JT;
-				"HEADER_SEARCH_PATHS[arch=*]" = (
+				HEADER_SEARCH_PATHS = (
 					../c/glfm/,
 					../c/gui/,
 					../../minijvm/c/jvm,
 					"../../minijvm/c/utils/**",
-					../../minijvm/c/uitls/sljit,
 				);
 				INFOPLIST_FILE = iosapp/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;

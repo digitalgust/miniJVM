@@ -21,8 +21,11 @@ int call_jvm(char* app_path) {
         char path[512];
         memset(&path,0,512);
         strcat(path,app_path);
-        strcat(path,"/libex/glfw_gui.jar");
-        strcat(path,";");
+    strcat(path,"/libex/glfw_gui.jar");
+    strcat(path,";");
+    strcat(path,app_path);
+    strcat(path,"/libex/xgui.jar");
+    strcat(path,";");
         strcat(path,app_path);
         strcat(path,"/libex/minijvm_test.jar");
         printf("classpath: %s\n",path);

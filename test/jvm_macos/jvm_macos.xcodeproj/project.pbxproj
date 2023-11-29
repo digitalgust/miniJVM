@@ -111,6 +111,7 @@
 		45F997D9253B6AAE0053E7A0 /* md2.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F99792253B6AAE0053E7A0 /* md2.c */; };
 		45F997DA253B6AAE0053E7A0 /* ssl_cache.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F99793253B6AAE0053E7A0 /* ssl_cache.c */; };
 		45F9982A253D2B360053E7A0 /* ssl_client.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F99829253D2B360053E7A0 /* ssl_client.c */; };
+		5907F3732B17B0D5007C7B0D /* libgui.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5907F3712B17AFC4007C7B0D /* libgui.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -120,6 +121,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 16;
 			files = (
+				5907F3732B17B0D5007C7B0D /* libgui.dylib in CopyFiles */,
 				4581C6FE226DBEE100E88538 /* libex in CopyFiles */,
 				4523723C20C94B9300156C58 /* lib in CopyFiles */,
 				4523723B20C94B8B00156C58 /* res in CopyFiles */,
@@ -182,7 +184,6 @@
 		459A79CC23A32B29007C85C6 /* sljitLir.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sljitLir.h; sourceTree = "<group>"; };
 		459A79D523A32B29007C85C6 /* sljitLir.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitLir.c; sourceTree = "<group>"; };
 		45EAB02720DCDC2300896201 /* pcallstack.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = pcallstack.m; sourceTree = "<group>"; };
-		45ECB79E206D017A00CF9E7F /* libgui.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgui.dylib; path = ../../binary/macos/libgui.dylib; sourceTree = "<group>"; };
 		45F99748253B6A9E0053E7A0 /* ca_cert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ca_cert.h; path = https/ca_cert.h; sourceTree = "<group>"; };
 		45F9974D253B6AAB0053E7A0 /* version_features.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = version_features.c; path = https/mbedtls/library/version_features.c; sourceTree = "<group>"; };
 		45F9974E253B6AAB0053E7A0 /* x509write_csr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = x509write_csr.c; path = https/mbedtls/library/x509write_csr.c; sourceTree = "<group>"; };
@@ -326,6 +327,7 @@
 		45F99820253B6ABE0053E7A0 /* pkcs5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pkcs5.h; path = https/mbedtls/include/mbedtls/pkcs5.h; sourceTree = "<group>"; };
 		45F99828253D2B360053E7A0 /* ssl_client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ssl_client.h; path = https/ssl_client.h; sourceTree = "<group>"; };
 		45F99829253D2B360053E7A0 /* ssl_client.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ssl_client.c; path = https/ssl_client.c; sourceTree = "<group>"; };
+		5907F3712B17AFC4007C7B0D /* libgui.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgui.dylib; path = ../../binary/mac_x64/libgui.dylib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -348,7 +350,7 @@
 				4581C5D6226DAA3500E88538 /* c */,
 				4523723A20C8ECA500156C58 /* res */,
 				4523723920C8EC8C00156C58 /* lib */,
-				45ECB79E206D017A00CF9E7F /* libgui.dylib */,
+				5907F3712B17AFC4007C7B0D /* libgui.dylib */,
 				457248E02020AAC600349683 /* jvm_macos */,
 				457248DF2020AAC600349683 /* Products */,
 				457249322020AFAA00349683 /* Frameworks */,

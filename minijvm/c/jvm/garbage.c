@@ -269,6 +269,7 @@ s32 _gc_thread_run(void *para) {
             break;
         }
         if (collector->_garbage_thread_status == GARBAGE_THREAD_PAUSE) {
+            threadSleep(1000);
             continue;
         }
 
