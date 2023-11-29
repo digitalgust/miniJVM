@@ -4080,7 +4080,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         runtime_clear_stacktrack(runtime);
                     } else {
                         arraylist_push_back(runtime->thrd_info->stacktrack, method);
-                        arraylist_push_back(runtime->thrd_info->lineNo, (__refer) (intptr_t) getLineNumByIndex(ca, runtime->pc - ca->code));
+                        arraylist_push_back(runtime->thrd_info->lineNo, (__refer) (intptr_t) getLineNumByIndex(ca, (s32) (runtime->pc - ca->code)));
                         break;
                     }
                     sp = stack->sp;

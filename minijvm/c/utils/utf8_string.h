@@ -102,7 +102,7 @@ static inline utf8_char utf8_char_at(Utf8String *a1, int pos) {
 
 int UNICODE_STR_EQUALS_FUNC(HashtableValue value1, HashtableValue value2);
 
-u64 UNICODE_STR_HASH_FUNC(HashtableKey kmer);
+s64 UNICODE_STR_HASH_FUNC(HashtableKey kmer);
 
 unsigned long _utf8_hashCode(Utf8String *ustr);
 

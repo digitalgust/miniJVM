@@ -135,6 +135,14 @@ public class Thread implements Runnable {
     private native long createStackFrame();
 
     /**
+     * The argument supplied to the current call to
+     * java.util.concurrent.locks.LockSupport.park.
+     * Set by (private) java.util.concurrent.locks.LockSupport.setBlocker
+     * Accessed using java.util.concurrent.locks.LockSupport.getBlocker
+     */
+    volatile Object parkBlocker;
+
+    /**
      * Returns a reference to the currently executing <code>Thread</code>
      * object.
      *
@@ -167,6 +175,24 @@ public class Thread implements Runnable {
      * @see java.lang.Object#notify()
      */
     public static native void sleep(long millis) throws InterruptedException;
+
+    public static void sleep(long millis, int nanos)
+            throws InterruptedException {
+        if (millis < 0) {
+            throw new IllegalArgumentException("timeout value is negative");
+        }
+
+        if (nanos < 0 || nanos > 999999) {
+            throw new IllegalArgumentException(
+                    "nanosecond timeout value out of range");
+        }
+
+        if (nanos >= 500000 || (nanos != 0 && millis == 0)) {
+            millis++;
+        }
+
+        sleep(millis);
+    }
 
     /**
      * Initialize a Thread.
@@ -345,8 +371,52 @@ public class Thread implements Runnable {
      */
     public synchronized final void join() throws InterruptedException {
         while (isAlive()) {
-            wait(1000);
+            wait(100);
         }
+    }
+
+    public final synchronized void join(long millis)
+            throws InterruptedException {
+        long base = System.currentTimeMillis();
+        long now = 0;
+
+        if (millis < 0) {
+            throw new IllegalArgumentException("timeout value is negative");
+        }
+
+        if (millis == 0) {
+            while (isAlive()) {
+                wait(0);
+            }
+        } else {
+            while (isAlive()) {
+                long delay = millis - now;
+                if (delay <= 0) {
+                    break;
+                }
+                wait(delay);
+                now = System.currentTimeMillis() - base;
+            }
+        }
+    }
+
+    public final synchronized void join(long millis, int nanos)
+            throws InterruptedException {
+
+        if (millis < 0) {
+            throw new IllegalArgumentException("timeout value is negative");
+        }
+
+        if (nanos < 0 || nanos > 999999) {
+            throw new IllegalArgumentException(
+                    "nanosecond timeout value out of range");
+        }
+
+        if (nanos >= 500000 || (nanos != 0 && millis == 0)) {
+            millis++;
+        }
+
+        join(millis);
     }
 
     /**

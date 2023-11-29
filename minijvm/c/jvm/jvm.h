@@ -1228,6 +1228,7 @@ struct _JavaThreadInfo {
     Instance *jthread;
     Instance *context_classloader;
     Runtime *top_runtime;
+    MemoryBlock pack;
     MemoryBlock *tmp_holder;//for jni hold java object
     MemoryBlock *objs_header;//link to new instance, until garbage accept
     MemoryBlock *objs_tailer;//link to last instance, until garbage accept
@@ -1242,6 +1243,7 @@ struct _JavaThreadInfo {
     u16 volatile no_pause;  //can't pause when clinit
     u8 volatile thread_status;
     u8 volatile is_suspend;
+    u8 volatile is_unparked;
     u8 volatile is_blocking;// some of native method will enter blocking state
     u8 is_interrupt;
 

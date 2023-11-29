@@ -26,6 +26,7 @@ public class ReflectField {
     public short accessFlags;
     public byte type;
     char bytesTag; //'1','2','4','8','R'
+    public long fieldOffset;
 
     public ReflectField(ReflectClass c, long fid) {
         if (fid == 0) {

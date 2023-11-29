@@ -85,7 +85,7 @@ static void print_stack(s64 a, s64 b, s64 c) {
     Runtime *runtime = (__refer) (intptr_t) b;
     CodeAttribute *ca = runtime->method->converted_code;
     s32 offset = (s32) (c - (s64) (intptr_t) ca->code);
-    s32 size = (runtime->stack->sp - runtime->stack->store);
+    s32 size = (s32) (runtime->stack->sp - runtime->stack->store);
     printf("[%d]====", size);
     s32 i, imax;
     s32 MAX = 10;
@@ -1327,7 +1327,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             case op_fconst_2: {
                 // push_float(stack, value);
                 Int2Float i2f;
-                i2f.f = cur_inst - op_fconst_0;
+                i2f.f = (f32) (cur_inst - op_fconst_0);
                 _gen_stack_push_int(C, SLJIT_IMM, i2f.i);
                 _gen_ip_modify_imm(C, 1);
                 ip++;
@@ -3318,7 +3318,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
         }
     }
 
-    ca->jit.len = sljit_get_generated_code_size(C);
+    ca->jit.len = (s32) sljit_get_generated_code_size(C);
 
     //Execute code
     ca->jit.func = (jit_func) genfunc;

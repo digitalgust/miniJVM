@@ -395,7 +395,7 @@ int UNICODE_STR_EQUALS_FUNC(HashtableValue value1, HashtableValue value2) {
     return utf8_equals(value1, value2) == 1;
 }
 
-u64 UNICODE_STR_HASH_FUNC(HashtableKey kmer) {
+s64 UNICODE_STR_HASH_FUNC(HashtableKey kmer) {
     return _utf8_hashCode(kmer);
 }
 

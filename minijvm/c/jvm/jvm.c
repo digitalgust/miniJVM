@@ -144,10 +144,10 @@ void classloader_add_jar_path(PeerClassLoader *class_loader, Utf8String *jar_pat
         }
         c8 ch = utf8_char_at(jar_path, i++);
         if (i == jar_path->length) {
-            if (ch != ';' && ch != ':')utf8_insert(tmp, tmp->length, ch);
-            ch = ';';
+            if (ch != PATHSEPARATOR)utf8_insert(tmp, tmp->length, ch);
+            ch = PATHSEPARATOR;
         }
-        if (ch == ';' || ch == ':') {
+        if (ch == PATHSEPARATOR) {
             if (utf8_last_indexof_c(tmp, "/") == tmp->length - 1) {
                 utf8_remove(tmp, tmp->length - 1);
             }

@@ -53,6 +53,8 @@ extern "C" {
 
 #if __JVM_OS_VS__
 #include "../utils/dirent_win.h"
+#include <direct.h>
+#include <io.h>
 #else
 
 #include <dirent.h>
@@ -668,7 +670,7 @@ s32 host_2_ip(c8 *hostname, char *buf, s32 buflen) {
 
     s = getaddrinfo(hostname, NULL, &hints, &result);
     if (s != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
+        jvm_printf("getaddrinfo: %s\n", gai_strerror(s));
         return -1;
     }
 
@@ -1510,7 +1512,7 @@ s32 org_mini_fs_InnerFile_setLength0(Runtime *runtime, JClass *clazz) {
     s64 filelen = l2d.l;
     s32 ret = 0;
     if (fd) {
-        long pos;
+        s64 pos;
         ret = fseek(fd, 0, SEEK_END);
         if (!ret) {
             ret = ftell(fd);
@@ -1524,7 +1526,7 @@ s32 org_mini_fs_InnerFile_setLength0(Runtime *runtime, JClass *clazz) {
 #endif
                 } else {
                     u8 d = 0;
-                    s32 i, imax = filelen - pos;
+                    s64 i, imax = filelen - pos;
                     for (i = 0; i < imax; i++) {
                         fwrite(&d, 1, 1, fd);
                     }
@@ -1683,7 +1685,8 @@ s32 org_mini_fs_InnerFile_listWinDrivers(Runtime *runtime, JClass *clazz) {
     DWORD fillLen = GetLogicalDriveStrings(mydrives, lpBuffer);
 
     lpBuffer[fillLen] = '\0';
-    for (int i = 0; i < fillLen; i++) {
+    s64 i;
+    for (i = 0; i < fillLen; i++) {
         if (lpBuffer[i] == 0) {
             lpBuffer[i] = 0x20;
         }
@@ -1894,7 +1897,7 @@ s32 org_mini_zip_ZipFile_getEntryIndex0(Runtime *runtime, JClass *clazz) {
 s32 org_mini_zip_ZipFile_getEntrySize0(Runtime *runtime, JClass *clazz) {
     Instance *zip_path_arr = localvar_getRefer(runtime->localvar, 0);
     Instance *name_arr = localvar_getRefer(runtime->localvar, 1);
-    s32 ret = -1;
+    s64 ret = -1;
     if (zip_path_arr && name_arr) {
         Utf8String *filepath = utf8_create_c(zip_path_arr->arr_body);
         ByteBuf *zip_path = bytebuf_create(0);

@@ -1751,7 +1751,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             }
             case JDWP_CMD_VirtualMachine_DisposeObjects: {//1.14
                 s32 requests = jdwppacket_read_int(req);
-                s32 i;
+//                s32 i;
 //                for (i = 0; i < requests; i++) {
 //                    __refer ins = jdwppacket_read_refer(req);
 //                    memoryblock_destory(ins);
@@ -2547,7 +2547,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                     spin_lock(&jvm->lock_cloader);
                     {
                         jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                        jdwppacket_write_int(res, pcl->classes->entries);
+                        jdwppacket_write_int(res, (s32) (pcl->classes->entries));
                         HashtableIterator hti;
                         hashtable_iterate(pcl->classes, &hti);
                         for (; hashtable_iter_has_more(&hti);) {

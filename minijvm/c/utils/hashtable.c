@@ -28,7 +28,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 static s32 HASH_TABLE_DEFAULT_SIZE = 16;
 
-static int hash_table_allocate_table(Hashtable *hash_table, u64 size) {
+static int hash_table_allocate_table(Hashtable *hash_table, s64 size) {
     if (size) {
         hash_table->table = jvm_calloc((unsigned int) size *
                                        sizeof(HashtableEntry *));
@@ -38,8 +38,8 @@ static int hash_table_allocate_table(Hashtable *hash_table, u64 size) {
 }
 
 
-u64 DEFAULT_HASH_FUNC(HashtableKey kmer) {
-    return ((u64) (intptr_t) kmer) >> 4;
+s64 DEFAULT_HASH_FUNC(HashtableKey kmer) {
+    return ((s64) (intptr_t) kmer) >> 4;
 }
 
 int DEFAULT_HASH_EQUALS_FUNC(HashtableValue value1, HashtableValue value2) {
@@ -96,7 +96,7 @@ Hashtable *hashtable_create(HashtableHashFunc hash_func,
 void hashtable_destory(Hashtable *hash_table) {
     HashtableEntry *rover;
     HashtableEntry *next;
-    u64 i;
+    s64 i;
     spin_lock(&hash_table->spinlock);
     {
         for (i = 0; i < hash_table->table_size; ++i) {
@@ -120,7 +120,7 @@ void hashtable_destory(Hashtable *hash_table) {
 void hashtable_clear(Hashtable *hash_table) {
     HashtableEntry *rover;
     HashtableEntry *next;
-    u64 i;
+    s64 i;
     spin_lock(&hash_table->spinlock);
     {
         for (i = 0; i < hash_table->table_size; ++i) {
@@ -157,7 +157,7 @@ void hashtable_register_free_functions(Hashtable *hash_table,
 int hashtable_put(Hashtable *hash_table, HashtableKey key, HashtableValue value) {
     HashtableEntry *rover;
     HashtableEntry *newentry;
-    u64 index;
+    s64 index;
     int success = 0;
 
     spin_lock(&hash_table->spinlock);
@@ -205,7 +205,7 @@ int hashtable_put(Hashtable *hash_table, HashtableKey key, HashtableValue value)
 
 HashtableValue hashtable_get(Hashtable *hash_table, HashtableKey key) {
     HashtableEntry *rover;
-    u64 index;
+    s64 index;
     HashtableValue value = HASH_NULL;
 
     spin_lock(&hash_table->spinlock);
@@ -230,7 +230,7 @@ int hashtable_remove(Hashtable *hash_table, HashtableKey key, int resize) {
     HashtableEntry *rover;
     HashtableEntry *pre;
     HashtableEntry *next;
-    u64 index;
+    s64 index;
     int success = 0;
     spin_lock(&hash_table->spinlock);
     {
@@ -260,12 +260,12 @@ int hashtable_remove(Hashtable *hash_table, HashtableKey key, int resize) {
     return success;
 }
 
-u64 hashtable_num_entries(Hashtable *hash_table) {
+s64 hashtable_num_entries(Hashtable *hash_table) {
     return hash_table->entries;
 }
 
 void hashtable_iterate(Hashtable *hash_table, HashtableIterator *iterator) {
-    u64 chain;
+    s64 chain;
     iterator->hash_table = hash_table;
     iterator->next_entry = NULL;
     for (chain = 0; chain < hash_table->table_size; ++chain) {
@@ -285,7 +285,7 @@ int hashtable_iter_has_more(HashtableIterator *iterator) {
 HashtableEntry *hashtable_iter_next_entry(HashtableIterator *iterator) {
     HashtableEntry *current_entry;
     Hashtable *hash_table;
-    u64 chain;
+    s64 chain;
 
     hash_table = iterator->hash_table;
 
@@ -343,13 +343,13 @@ void hashtable_iter_safe(Hashtable *hash_table, HashtableIteratorFunc func, void
     spin_unlock(&hash_table->spinlock);
 }
 
-int hashtable_resize(Hashtable *hash_table, u64 size) {
+int hashtable_resize(Hashtable *hash_table, s64 size) {
     HashtableEntry **old_table;
-    u64 old_table_size;
+    s64 old_table_size;
     HashtableEntry *rover;
     HashtableEntry *next;
-    u64 index;
-    u64 i;
+    s64 index;
+    s64 i;
 
 
     if (size) {

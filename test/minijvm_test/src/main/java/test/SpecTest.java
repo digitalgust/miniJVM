@@ -73,7 +73,7 @@ public class SpecTest {
             public static final int POS_B = 23;
             public static final int POS_C = 14;
         }
-        int i = 0x100401d;
+        int i = 0x100401d;  //ldc
         //System.out.println("Lua.MASK_B=" + Lua.MASK_B + "Lua.MASK_C=" + Lua.MASK_C);
 
         int m = Lua.MASK_B | Lua.MASK_C;
@@ -82,7 +82,7 @@ public class SpecTest {
 
         int b = (2 << Lua.POS_B) | (1 << Lua.POS_C);
         if (a != b) {
-            printerr("iand");
+            printerr("iand ldc");
         }
     }
 
@@ -593,7 +593,7 @@ public class SpecTest {
         }
         short s = (short) i;
         if (s != 0xffff8080) {
-            printerr("i2s");
+            printerr("i2s sipush");
         }
         byte b = (byte) i;
         if (b != 0xffffff80) {

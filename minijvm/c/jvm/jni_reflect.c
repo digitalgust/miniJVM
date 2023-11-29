@@ -135,7 +135,7 @@ s32 org_mini_reflect_vm_RefNative_setLocalVal(Runtime *runtime, JClass *clazz) {
     Long2Double l2d;
     l2d.l = l2d.l = localvar_getLong(runtime->localvar, pos);
     pos += 2;
-    Runtime *r = (Runtime *) (__refer) (intptr_t) l2d.l;
+    Runtime *r = (__refer) (intptr_t) l2d.l;
     s32 slot = localvar_getInt(runtime->localvar, pos++);
     u8 type = (u8) localvar_getInt(runtime->localvar, pos++);
 
@@ -169,7 +169,7 @@ s32 org_mini_reflect_vm_RefNative_getLocalVal(Runtime *runtime, JClass *clazz) {
     Long2Double l2d;
     l2d.l = l2d.l = localvar_getLong(runtime->localvar, pos);
     pos += 2;
-    Runtime *r = (Runtime *) (__refer) (intptr_t) l2d.l;
+    Runtime *r = (__refer) (intptr_t) l2d.l;
     s32 slot = localvar_getInt(runtime->localvar, pos++);
     Instance *valuetype = localvar_getRefer(runtime->localvar, pos++);
 
@@ -207,7 +207,7 @@ s32 org_mini_reflect_ReflectField_getFieldVal(Runtime *runtime, JClass *clazz) {
     pos++;
     l2d.l = l2d.l = localvar_getLong(runtime->localvar, pos);
     pos += 2;
-    FieldInfo *fi = (FieldInfo *) (__refer) (intptr_t) l2d.l;
+    FieldInfo *fi = (__refer) (intptr_t) l2d.l;
 
     c8 *fptr;
     if (fi->access_flags & ACC_STATIC) {
@@ -250,7 +250,7 @@ s32 org_mini_reflect_ReflectField_setFieldVal(Runtime *runtime, JClass *clazz) {
     pos++;
     l2d.l = l2d.l = localvar_getLong(runtime->localvar, pos);
     pos += 2;
-    FieldInfo *fi = (FieldInfo *) (__refer) (intptr_t) l2d.l;
+    FieldInfo *fi = (__refer) (intptr_t) l2d.l;
     s64 val = localvar_getLong(runtime->localvar, pos);
 
     c8 *fptr;
@@ -733,6 +733,11 @@ s32 org_mini_reflect_ReflectField_mapField(Runtime *runtime, JClass *clazz) {
         //
         ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_FIELD, "type", "B", runtime);
         if (ptr)setFieldByte(ptr, (s8) utf8_char_at(fieldInfo->descriptor, 0));
+        //
+        ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_FIELD, "fieldOffset", "J", runtime);
+        if (ptr) {
+            setFieldLong(ptr, (s64) (intptr_t) ptr);
+        }
     }
     return 0;
 }
@@ -1107,7 +1112,7 @@ s32 org_mini_reflect_DirectMemObj_setVal(Runtime *runtime, JClass *clazz) {
     ShortCut *jvm_runtime_cache = &runtime->jvm->shortcut;
     __refer memAddr = getFieldRefer(getInstanceFieldPtr(dmo, jvm_runtime_cache->dmo_memAddr));
     s32 len = getFieldInt(getInstanceFieldPtr(dmo, jvm_runtime_cache->dmo_length));
-    c8 desc = getFieldChar(getInstanceFieldPtr(dmo, jvm_runtime_cache->dmo_desc));
+    c8 desc = (c8) getFieldChar(getInstanceFieldPtr(dmo, jvm_runtime_cache->dmo_desc));
 
     s32 ret = 0;
     if (memAddr && index >= 0 && index < len) {
@@ -1153,7 +1158,7 @@ s32 org_mini_reflect_DirectMemObj_getVal(Runtime *runtime, JClass *clazz) {
     ShortCut *jvm_runtime_cache = &runtime->jvm->shortcut;
     __refer memAddr = getFieldRefer(getInstanceFieldPtr(dmo, jvm_runtime_cache->dmo_memAddr));
     s32 len = getFieldInt(getInstanceFieldPtr(dmo, jvm_runtime_cache->dmo_length));
-    c8 desc = getFieldChar(getInstanceFieldPtr(dmo, jvm_runtime_cache->dmo_desc));
+    c8 desc = (c8) getFieldChar(getInstanceFieldPtr(dmo, jvm_runtime_cache->dmo_desc));
 
     s32 ret = 0;
     if (memAddr && index >= 0 && index < len) {
@@ -1467,24 +1472,154 @@ s32 org_mini_reflect_vm_RefNative_heap_little_endian(Runtime *runtime, JClass *c
     return 0;
 }
 
-s32 org_mini_reflect_DirectMemObj_objectFieldOffset(Runtime *runtime, JClass *clazz) {
+s32 com_misc_Unsafe_objectFieldOffset(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
+    Instance *unsafe = localvar_getRefer(runtime->localvar, pos);
+    pos++;
     FieldInfo *fi = (__refer) (intptr_t) localvar_getLong(runtime->localvar, pos);
-    push_long(runtime->stack, fi ? -1 : (s64) (intptr_t) fi->offset_instance);
+    push_long(runtime->stack, !fi ? -1 : (s64) (intptr_t)
+            fi->offset_instance);
     return 0;
 }
 
-s32 org_mini_reflect_DirectMemObj_staticFieldOffset(Runtime *runtime, JClass *clazz) {
+s32 com_misc_Unsafe_staticFieldOffset(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
+    Instance *unsafe = localvar_getRefer(runtime->localvar, pos);
+    pos++;
     FieldInfo *fi = (__refer) (intptr_t) localvar_getLong(runtime->localvar, pos);
-    push_long(runtime->stack, fi && (fi->access_flags & ACC_STATIC) ? -1 : (s64) (intptr_t) fi->offset);
+    push_long(runtime->stack, !fi || !(fi->access_flags & ACC_STATIC) ? -1 : (s64) (intptr_t)
+            fi->offset);
     return 0;
 }
 
-s32 org_mini_reflect_DirectMemObj_objectFieldBase(Runtime *runtime, JClass *clazz) {
+s32 com_misc_Unsafe_objectFieldBase(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
+    Instance *unsafe = localvar_getRefer(runtime->localvar, pos);
+    pos++;
     Instance *ins = localvar_getRefer(runtime->localvar, pos);
-    push_long(runtime->stack, ins ? -1 : (s64) (intptr_t) ins->arr_body);
+    push_long(runtime->stack, ins ? -1 : (s64) (intptr_t) ins->obj_fields);
+    return 0;
+}
+
+s32 com_misc_Unsafe_compareAndSwapInt(Runtime *runtime, JClass *clazz) {
+    s32 pos = 0;
+    Instance *unsafe = localvar_getRefer(runtime->localvar, pos);
+    pos++;
+    Instance *ins = localvar_getRefer(runtime->localvar, pos);
+    pos++;
+    s64 offset = localvar_getLong(runtime->localvar, pos);
+    pos += 2;
+    s32 oldv = localvar_getInt(runtime->localvar, pos);
+    pos++;
+    s32 newv = localvar_getInt(runtime->localvar, pos);
+    if (!ins || offset < 0) {
+        Instance *ex = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
+        push_ref(runtime->stack, ex);
+        return RUNTIME_STATUS_EXCEPTION;
+    } else {
+        c8 *src = (c8 *) (ins ? ins->arr_body : NULL) + offset;
+        s32 *src32 = (s32 *) src;
+        s32 ret = __sync_bool_compare_and_swap(src32, oldv, newv);
+        push_int(runtime->stack, ret);
+        return 0;
+    }
+}
+
+s32 com_misc_Unsafe_compareAndSwapLong(Runtime *runtime, JClass *clazz) {
+    s32 pos = 0;
+    Instance *unsafe = localvar_getRefer(runtime->localvar, pos);
+    pos++;
+    Instance *ins = localvar_getRefer(runtime->localvar, pos);
+    pos++;
+    s64 offset = localvar_getLong(runtime->localvar, pos);
+    pos += 2;
+    s64 oldv = localvar_getLong(runtime->localvar, pos);
+    pos += 2;
+    s64 newv = localvar_getLong(runtime->localvar, pos);
+    if (!ins || offset < 0) {
+        Instance *ex = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
+        push_ref(runtime->stack, ex);
+        return RUNTIME_STATUS_EXCEPTION;
+    } else {
+        c8 *src = (c8 *) (ins ? ins->arr_body : NULL) + offset;
+#if __JVM_ARCH_64__
+        s32 ret = (s32) __sync_bool_compare_and_swap64((s64 *) src, oldv, newv);
+#else
+        s32 ret = __sync_bool_compare_and_swap((s64 *) src, oldv, newv);
+#endif
+        push_int(runtime->stack, ret);
+        return 0;
+    }
+}
+
+s32 com_misc_Unsafe_compareAndSwapObject(Runtime *runtime, JClass *clazz) {
+    s32 pos = 0;
+    Instance *unsafe = localvar_getRefer(runtime->localvar, pos);
+    pos++;
+    Instance *ins = localvar_getRefer(runtime->localvar, pos);
+    pos++;
+    s64 offset = localvar_getLong(runtime->localvar, pos);
+    pos += 2;
+    __refer oldv = localvar_getRefer(runtime->localvar, pos);
+    pos++;
+    __refer newv = localvar_getRefer(runtime->localvar, pos);
+    if (!ins || offset < 0) {
+        Instance *ex = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
+        push_ref(runtime->stack, ex);
+        return RUNTIME_STATUS_EXCEPTION;
+    } else {
+        c8 *src = (c8 *) (ins ? ins->arr_body : NULL) + offset;
+        s32 ret = 0;
+        if (sizeof(__refer) == 8) {
+            ret = __sync_bool_compare_and_swap64((s64 *) src, (s64) (intptr_t) oldv, (s64) (intptr_t) newv);
+        } else {
+            ret = __sync_bool_compare_and_swap((s32 *) src, (s32) (intptr_t) oldv, (s32) (intptr_t) newv);
+        }
+        push_int(runtime->stack, ret);
+        return 0;
+    }
+}
+
+s32 com_misc_Unsafe_pack(Runtime *runtime, JClass *clazz) {
+    s32 pos = 0;
+    Instance *unsafe = localvar_getRefer(runtime->localvar, pos);
+    pos++;
+    s32 absolute = localvar_getInt(runtime->localvar, pos);
+    pos++;
+    s64 time = localvar_getLong(runtime->localvar, pos);
+    pos += 2;
+
+    if (time < NANO_2_MILLS_SCALE)time = NANO_2_MILLS_SCALE;
+    s64 waitmills = absolute ? (time - currentTimeMillis()) : time / NANO_2_MILLS_SCALE;
+
+    Runtime *rt = runtime;// current thread
+    jthread_lock(&rt->thrd_info->pack, rt);
+    if (rt->thrd_info->is_unparked) {
+        rt->thrd_info->is_unparked = 0;
+    } else {
+        rt->thrd_info->is_unparked = 0;
+        //jvm_printf("++++++pack %llx  %d\n", (s64) (intptr_t) &runtime->thrd_info->pack.thread_lock->thread_cond, (s32) waitmills);
+        jthread_waitTime(&rt->thrd_info->pack, rt, waitmills);
+    }
+    jthread_unlock(&rt->thrd_info->pack, rt);
+    return 0;
+}
+
+s32 com_misc_Unsafe_unpack(Runtime *runtime, JClass *clazz) {
+    s32 pos = 0;
+    Instance *unsafe = localvar_getRefer(runtime->localvar, pos);
+    pos++;
+    Instance *thrd = localvar_getRefer(runtime->localvar, pos);
+    pos++;
+
+    Runtime *rt = jthread_get_stackframe_value(runtime->jvm, thrd);
+    jthread_lock(&rt->thrd_info->pack, rt);
+    if (rt && rt->thrd_info->thread_status != THREAD_STATUS_ZOMBIE) {
+        rt->thrd_info->is_unparked = 1;
+        jthread_notify(&rt->thrd_info->pack, rt);
+        //jvm_printf("----unpack %llx \n", (s64) (intptr_t) &rt->thrd_info->pack.thread_lock->thread_cond);
+    }
+    jthread_unlock(&rt->thrd_info->pack, rt);
     return 0;
 }
 
@@ -1554,9 +1689,14 @@ static java_native_method METHODS_REFLECT_TABLE[] = {
         {"org/mini/reflect/DirectMemObj",  "getVal",                   "(I)J",                                                                             org_mini_reflect_DirectMemObj_getVal},
         {"org/mini/reflect/DirectMemObj",  "copyTo0",                  "(ILjava/lang/Object;II)V",                                                         org_mini_reflect_DirectMemObj_copyTo0},
         {"org/mini/reflect/DirectMemObj",  "copyFrom0",                "(ILjava/lang/Object;II)V",                                                         org_mini_reflect_DirectMemObj_copyFrom0},
-        {"sun/misc/Unsafe",                "objectFieldOffset",        "(J)J",                                                                             org_mini_reflect_DirectMemObj_objectFieldOffset},
-        {"sun/misc/Unsafe",                "objectFieldBase",          "(Ljava/lang/Object;)J",                                                            org_mini_reflect_DirectMemObj_objectFieldBase},
-        {"sun/misc/Unsafe",                "staticFieldOffset",        "(J)J",                                                                             org_mini_reflect_DirectMemObj_staticFieldOffset},
+        {"sun/misc/Unsafe",                "objectFieldOffset",        "(J)J",                                                                             com_misc_Unsafe_objectFieldOffset},
+        {"sun/misc/Unsafe",                "objectFieldBase",          "(Ljava/lang/Object;)J",                                                            com_misc_Unsafe_objectFieldBase},
+        {"sun/misc/Unsafe",                "staticFieldOffset",        "(J)J",                                                                             com_misc_Unsafe_staticFieldOffset},
+        {"sun/misc/Unsafe",                "compareAndSwapInt",        "(Ljava/lang/Object;JII)Z",                                                         com_misc_Unsafe_compareAndSwapInt},
+        {"sun/misc/Unsafe",                "compareAndSwapLong",       "(Ljava/lang/Object;JJJ)Z",                                                         com_misc_Unsafe_compareAndSwapLong},
+        {"sun/misc/Unsafe",                "compareAndSwapObject",     "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z",                       com_misc_Unsafe_compareAndSwapObject},
+        {"sun/misc/Unsafe",                "park",                     "(ZJ)V",                                                                            com_misc_Unsafe_pack},
+        {"sun/misc/Unsafe",                "unpark",                   "(Ljava/lang/Object;)V",                                                            com_misc_Unsafe_unpack},
 
 };
 

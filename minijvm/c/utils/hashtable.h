@@ -91,7 +91,7 @@ typedef void *HashtableValue;
 struct _HashtableIterator {
     Hashtable *hash_table;
     HashtableEntry *next_entry;
-    u64 next_chain;
+    s64 next_chain;
 };
 
 /**
@@ -109,7 +109,7 @@ struct _HashtableIterator {
  * @return       The hash value.
  */
 
-typedef u64 (*HashtableHashFunc)(HashtableKey value);
+typedef s64 (*HashtableHashFunc)(HashtableKey value);
 
 /**
  * Function used to compare two keys for equality.
@@ -146,12 +146,12 @@ struct _HashtableEntry {
 
 struct _Hashtable {
     HashtableEntry **table;
-    u64 table_size;
+    s64 table_size;
     HashtableHashFunc hash_func;
     HashtableEqualFunc equal_func;
     HashtableKeyFreeFunc key_free_func;
     HashtableValueFreeFunc value_free_func;
-    u64 entries;
+    s64 entries;
     spinlock_t spinlock;
 };
 
@@ -171,7 +171,7 @@ Hashtable *hashtable_create(HashtableHashFunc hash_func,
                             HashtableEqualFunc equal_func);
 
 
-u64 DEFAULT_HASH_FUNC(HashtableKey kmer);
+s64 DEFAULT_HASH_FUNC(HashtableKey kmer);
 
 int DEFAULT_HASH_EQUALS_FUNC(HashtableValue value1, HashtableValue value2);
 
@@ -244,7 +244,7 @@ int hashtable_remove(Hashtable *hash_table, HashtableKey key, int resize);
  * @return                    The number of entries in the hash table.
  */
 
-u64 hashtable_num_entries(Hashtable *hash_table);
+s64 hashtable_num_entries(Hashtable *hash_table);
 
 /**
  * Initialise a @ref HashtableIterator to iterate over a hash table.
@@ -294,7 +294,7 @@ HashtableKey hashtable_iter_next_key(HashtableIterator *iterator);
 
 void hashtable_iter_safe(Hashtable *hash_table, HashtableIteratorFunc func, void *para);
 
-int hashtable_resize(Hashtable *hash_table, u64 size);
+int hashtable_resize(Hashtable *hash_table, s64 size);
 
 #ifdef __cplusplus
 }

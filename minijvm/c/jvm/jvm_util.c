@@ -28,7 +28,7 @@ s32 classes_loaded_count_unsafe(MiniJVM *jvm) {
     s32 i, count = 0;
     for (i = 0; i < jvm->classloaders->length; i++) {
         PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
-        count += pcl->classes->entries;
+        count += (s32) pcl->classes->entries;
     }
     return count;
 }
@@ -1091,6 +1091,7 @@ s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms) {
     } else {
         cnd_wait(&mb->thread_lock->thread_cond, &mb->thread_lock->mutex_lock);
     }
+    //jvm_printf("!!!!!wake: %llx   \n", (s64) (intptr_t) (&mb->thread_lock->thread_cond));
     runtime->thrd_info->thread_status = thread_status;
     runtime->thrd_info->curThreadLock = NULL;
     jthread_block_exit(runtime);
@@ -1819,6 +1820,7 @@ JavaThreadInfo *threadinfo_create() {
 void threadinfo_destory(JavaThreadInfo *threadInfo) {
     arraylist_destory(threadInfo->lineNo);
     arraylist_destory(threadInfo->stacktrack);
+    jthreadlock_destory(&threadInfo->pack);
     jvm_free(threadInfo->jdwp_step);
     spin_destroy(&threadInfo->lock);
     jvm_free(threadInfo);

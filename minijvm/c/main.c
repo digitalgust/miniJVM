@@ -167,6 +167,8 @@ int main(int argc, char **argv) {
     utf8_destory(bootcp);
     utf8_destory(cp);
     arraylist_destory(java_para);
+    fflush(stdout);
+    fflush(stderr);
     return ret;
 }
 

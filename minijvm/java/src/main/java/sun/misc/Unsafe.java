@@ -316,9 +316,9 @@ public final class Unsafe {
 
     public native boolean compareAndSwapObject(Object o, long offset, Object old, Object new_);
 
-//    public native void park(boolean absolute, long time);
-//
-//    public native void unpark(Object target);
+    public native void park(boolean absolute, long time);
+
+    public native void unpark(Object target);
 
 
 }

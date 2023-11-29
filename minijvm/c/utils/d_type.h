@@ -72,7 +72,11 @@
 #endif
 
 
-
+#if __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__ || __JVM_OS_VS__
+    #define PATHSEPARATOR ';'
+#else
+    #define PATHSEPARATOR ':'
+#endif
 //compile
 #define __C99
 //libary option : -lpthread -lws2_32
