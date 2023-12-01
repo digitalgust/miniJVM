@@ -24,7 +24,7 @@ Develop iOS Android app in java, Cross platform java virtual machine , the minim
 * No dependence Library
 * Minimal memory footprint
 * Minimal binary, embedded jvm
-* Minimal bootstrap classlib
+* Minimal bootstrap classlib , So the classes is **NOT FULL** of jdk 1.8     
 * Support java source compiler(janino compiler)
 * Jit support
 * Low latency java garbage collection
