@@ -115,7 +115,6 @@
 		45F996F9253B69E40053E7A0 /* threading.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F996B2253B69E40053E7A0 /* threading.c */; };
 		45F996FA253B69E40053E7A0 /* timing.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F996B3253B69E40053E7A0 /* timing.c */; };
 		45F9982E253D2B6D0053E7A0 /* ssl_client.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F9982D253D2B6D0053E7A0 /* ssl_client.c */; };
-		59FD74132B17A33D0038C2A6 /* sljitLir.c in Sources */ = {isa = PBXBuildFile; fileRef = 59FD74122B17A33D0038C2A6 /* sljitLir.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -340,8 +339,6 @@
 		45F9982C253D2B6D0053E7A0 /* ssl_client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ssl_client.h; path = https/ssl_client.h; sourceTree = "<group>"; };
 		45F9982D253D2B6D0053E7A0 /* ssl_client.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ssl_client.c; path = https/ssl_client.c; sourceTree = "<group>"; };
 		5907F36F2B17A8CB007C7B0D /* sljitLir.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sljitLir.h; sourceTree = "<group>"; };
-		5907F3702B17A8D7007C7B0D /* sljitConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sljitConfig.h; sourceTree = "<group>"; };
-		59FD74122B17A33D0038C2A6 /* sljitLir.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sljitLir.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -358,9 +355,7 @@
 		451F26A623A24ADE00F99984 /* sljit */ = {
 			isa = PBXGroup;
 			children = (
-				5907F3702B17A8D7007C7B0D /* sljitConfig.h */,
 				5907F36F2B17A8CB007C7B0D /* sljitLir.h */,
-				59FD74122B17A33D0038C2A6 /* sljitLir.c */,
 			);
 			path = sljit;
 			sourceTree = "<group>";
@@ -947,7 +942,6 @@
 				45F996DA253B69E40053E7A0 /* x509.c in Sources */,
 				4517C550254C60E100F03459 /* jni_reflect.c in Sources */,
 				45F996C7253B69E40053E7A0 /* bignum.c in Sources */,
-				59FD74132B17A33D0038C2A6 /* sljitLir.c in Sources */,
 				45F996D1253B69E40053E7A0 /* ecdsa.c in Sources */,
 				45F996C3253B69E40053E7A0 /* ssl_cookie.c in Sources */,
 				45F996EE253B69E40053E7A0 /* platform.c in Sources */,
