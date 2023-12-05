@@ -1,5 +1,6 @@
 ![](/doc/img/mini_jvm_64.png)  
 [![Build Status](https://travis-ci.org/digitalgust/miniJVM.svg?branch=master)](https://travis-ci.org/digitalgust/miniJVM)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fdigitalgust%2FminiJVM.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fdigitalgust%2FminiJVM?ref=badge_shield)
 
 <span id="linkhome"/>   
 
@@ -318,3 +319,6 @@ mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/luaj.jar Sample
 License:    MIT
 
 Gust , digitalgust@163.com .   
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fdigitalgust%2FminiJVM.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fdigitalgust%2FminiJVM?ref=badge_large)
