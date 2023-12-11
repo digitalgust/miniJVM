@@ -61,16 +61,16 @@ int main(int argc, char **argv) {
         main_name = "org.mini.glfw.GlfwMain";
 
         //test case
-        utf8_append(cp, startup_dir);
-        utf8_append_c(cp, "../libex/minijvm_test.jar;");
-        utf8_append_c(cp, "./;");
-        classpath = (c8 *) utf8_cstr(cp);
+//        utf8_append(cp, startup_dir);
+//        utf8_append_c(cp, "../libex/minijvm_test.jar;");
+//        utf8_append_c(cp, "./;");
+//        classpath = (c8 *) utf8_cstr(cp);
 //        main_name = "test.HelloWorld";
 //        main_name = "test.Foo1";
 //        main_name = "test.Foo2";
 //        main_name = "test.Foo3";
 //        main_name = "test.ThreadDaemon";
-        main_name = "test.SpecTest";
+//        main_name = "test.SpecTest";
 //        main_name = "test.MultiThread";
 //        main_name = "test.ExecuteSpeed";
 //        main_name = "test.TestFile";

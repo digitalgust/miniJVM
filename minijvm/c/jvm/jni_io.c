@@ -1259,7 +1259,8 @@ s32 conv_unicode_2_platform_encoding(ByteBuf *dst, const u16 *src, s32 srcLen) {
         len = wcstombs(NULL, (wchar_t *) src, srcLen);
     } else {
         wchar_t *wstr = jvm_calloc(srcLen * sizeof(wchar_t));
-        for (s32 i = 0; i < srcLen; i++) {
+        s32 i;
+        for (i = 0; i < srcLen; i++) {
             wstr[i] = src[i];
         }
         len = wcstombs(NULL, wstr, srcLen);
@@ -1286,7 +1287,8 @@ void conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
                 unicode_2_utf8((u16 *) bb->buf, dst, ulen);
             } else {
                 u16 *str2bytes = jvm_calloc(ulen * 2);
-                for (s32 i = 0; i < ulen; i++) {
+                s32 i;
+                for (i = 0; i < ulen; i++) {
                     str2bytes[i] = (u16) ((wchar_t *) bb->buf)[i];
                 }
                 unicode_2_utf8(str2bytes, dst, ulen);
