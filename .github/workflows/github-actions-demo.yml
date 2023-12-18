@@ -22,8 +22,13 @@ jobs:
       - run:  cmake -DCOVERALLS=ON -DCMAKE_BUILD_TYPE=Debug ${{ github.workspace }}/minijvm/c 
       - run:  cmake --build . 
       - run:  cmake --build . --target mini_jvm
+      - run:  ls -l
+
+      - name : bash script build
       - run:  cd ..
+      - run:  ls -l
       - run:  cd binary
+      - run:  ls -l
       - run:  ./build_jar.sh
       - run:  ./build_mac_linux.sh
       - run:  cd centos_x64
