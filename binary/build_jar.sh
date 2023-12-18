@@ -8,7 +8,7 @@ JAR=jar
 
 # returns the JDK version.
 # 8 for 1.8.0_nn, 9 for 9-ea etc, and "no_java" for undetected
-function jdk_version() {
+function jdk_version {
   local result
   local java_cmd
   if [[ -n $(type -p java) ]]
@@ -44,7 +44,7 @@ function jdk_version() {
 
 
 
-function build_jar(){
+function build_jar {
     rm -rf $3/$1
     mkdir classes 
     find $2/java -name "*.java" >source.txt
