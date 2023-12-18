@@ -17,4 +17,8 @@ jobs:
 #          ls ${{ github.workspace }}
 #      - run: echo "🍏 This job's status is ${{ job.status }}."
 
-      - run:  cmake -DCOVERALLS=ON -DCMAKE_BUILD_TYPE=Debug ./minijvm/c && cmake --build . && cmake --build . --target mini_jvm
+      - run:  mkdir build
+      - run:  cd build
+      - run:  cmake -DCOVERALLS=ON -DCMAKE_BUILD_TYPE=Debug ${{ github.repository }}/minijvm/c 
+      - run:  cmake --build . 
+      - run:  cmake --build . --target mini_jvm
