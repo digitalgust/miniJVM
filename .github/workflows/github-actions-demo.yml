@@ -17,7 +17,7 @@ jobs:
           ls ${{ github.workspace }}
       - run: echo "🍏 This job's status is ${{ job.status }}."
 
-      - run:  mkdir build
+      - run:  mkdir ${{ github.workspace }}/build
       - run:  cd build
       - run:  cmake -DCOVERALLS=ON -DCMAKE_BUILD_TYPE=Debug ${{ github.workspace }}/minijvm/c 
       - run:  cmake --build . 
@@ -27,12 +27,12 @@ jobs:
       - run:  ls -l
       - name: Run build jar
         run: |
-          cd binary
+          cd ${{ github.workspace }}/binary
           sh build_jar.sh
         working-directory: ${{ github.workspace }}/binary
       - name: Run build bin
         run: |
-          cd binary
+          cd ${{ github.workspace }}/binary
           sh build_mac_linux.sh
         working-directory: ${{ github.workspace }}/binary
       
