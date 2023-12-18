@@ -24,7 +24,7 @@ jobs:
       - run:  cmake --build . --target mini_jvm
       - run:  ls -l
 
-      - name : bash script build
+      - name: bash script build
       - run:  cd ..
       - run:  ls -l
       - run:  cd binary
