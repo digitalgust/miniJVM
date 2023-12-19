@@ -14,11 +14,11 @@ jdk_version () {
   if [[ -n $(type -p java) ]]
   then
     java_cmd=java
-  elif [[ (-n "$JAVA_HOME") && (-x "$JAVA_HOME/bin/java") ]]
+  elif [[ (-x "$JAVA_HOME/bin/java") ]]
   then
     java_cmd="$JAVA_HOME/bin/java"
   fi
-  local IFS=$'\n'
+  IFS=$'\n'
   # remove \r for Cygwin
   lines=$("$java_cmd" -Xms32M -Xmx32M -version 2>&1 | tr '\r' '\n')
   if [[ -z $java_cmd ]]
