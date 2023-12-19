@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 echo "Requirement: jdk1.8+ jar javac "
 
@@ -9,8 +9,8 @@ JAR=jar
 # returns the JDK version.
 # 8 for 1.8.0_nn, 9 for 9-ea etc, and "no_java" for undetected
 jdk_version () {
-  local result
-  local java_cmd
+  result=0
+  java_cmd=0
   if [[ -n $(type -p java) ]]
   then
     java_cmd=java
@@ -20,7 +20,7 @@ jdk_version () {
   fi
   local IFS=$'\n'
   # remove \r for Cygwin
-  local lines=$("$java_cmd" -Xms32M -Xmx32M -version 2>&1 | tr '\r' '\n')
+  lines=$("$java_cmd" -Xms32M -Xmx32M -version 2>&1 | tr '\r' '\n')
   if [[ -z $java_cmd ]]
   then
     result=no_java
@@ -28,7 +28,7 @@ jdk_version () {
     for line in $lines; do
       if [[ (-z $result) && ($line = *"version \""*) ]]
       then
-        local ver=$(echo $line | sed -e 's/.*version "\(.*\)"\(.*\)/\1/; 1q')
+        ver=$(echo $line | sed -e 's/.*version "\(.*\)"\(.*\)/\1/; 1q')
         # on macOS, sed doesn't support '?'
         if [[ $ver = "1."* ]]
         then
