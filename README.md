@@ -1,5 +1,5 @@
 ![](/doc/img/mini_jvm_64.png)  
-[![Build Status](https://travis-ci.org/digitalgust/miniJVM.svg?branch=master)](https://travis-ci.org/digitalgust/miniJVM)
+https://github.com/OWNER/REPOSITORY/actions/workflows/WORKFLOW-FILE/badge.svg
 
 <span id="linkhome"/>   
 
