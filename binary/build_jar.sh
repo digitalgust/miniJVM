@@ -9,8 +9,8 @@ JAR=jar
 # returns the JDK version.
 # 8 for 1.8.0_nn, 9 for 9-ea etc, and "no_java" for undetected
 jdk_version () {
-  result=0
-  java_cmd=0
+  result=""
+  java_cmd=""
   if [[ -n $(type -p java) ]]
   then
     java_cmd=java
@@ -100,7 +100,5 @@ $(build_jar xgui.jar ../extlib/xgui/src/main ../mobile/assets/resfiles "../mobil
 
 echo "build ../mobile/assets/resfiles/ExApp.jar"
 $(build_jar ExApp.jar ../mobile/java/ExApp/src/main ../mobile/assets/resfiles "../mobile/assets/resfiles/minijvm_rt.jar" "../mobile/assets/resfiles/glfm_gui.jar:../mobile/assets/resfiles/xgui.jar")
-
-
 
 

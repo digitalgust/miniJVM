@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 
 #${GCCHOME} setup as: /usr/bin/gcc
@@ -47,6 +47,7 @@ echo "compile glfw_gui"
 CSRC="../desktop/glfw_gui/c"
 SRCLIST=`find ${CSRC} -type f -name "*.c"  -not -path "${CSRC}/cmake-*" -not -path "${CSRC}/.*"`
 #
+
 if [[ $UNAME == *$OSNAME* ]] 
 then
     ${GCC} -shared -fPIC -o ${LIBFILE} -I../minijvm/c/jvm -I${CSRC}/ -I${CSRC}/deps/include -L${CSRC}/deps/lib/${LIBDIR} -lpthread -lglfw3 -framework Cocoa -framework IOKit -framework OpenGL -framework CoreFoundation -framework CoreVideo $SRCLIST
