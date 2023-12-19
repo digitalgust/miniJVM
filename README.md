@@ -1,5 +1,5 @@
 ![](/doc/img/mini_jvm_64.png)  
-https://github.com/digitalgust/miniJVM/actions/workflows/WORKFLOW-FILE/badge.svg
+https://github.com/digitalgust/miniJVM/actions/workflows/github-actions-demo.yml/badge.svg
 
 <span id="linkhome"/>   
 
