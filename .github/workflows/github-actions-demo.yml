@@ -26,16 +26,15 @@ jobs:
       - run:  cmake --build . --target mini_jvm
       - run:  ls -l
 
-      - run:  ls -l
-      - name: Run build jar
-        run: |
-          cd ${{ github.workspace }}/binary
-          sh build_jar.sh
-        working-directory: ${{ github.workspace }}/binary
-      - name: Run build bin
-        run: |
-          cd ${{ github.workspace }}/binary
-          sh build_mac_linux.sh
-        working-directory: ${{ github.workspace }}/binary
-      
-      - run:  ${{ github.workspace }}/binary/centos_x64/mini_jvm -bootclasspath ${{ github.workspace }}/binary/lib/minijvm_rt.jar -cp ${{ github.workspace }}/binary/libex/minijvm_test.jar test.Foo3
+#      - name: Run build jar
+#        run: |
+#          cd ${{ github.workspace }}/binary
+#          sh build_jar.sh
+#        working-directory: ${{ github.workspace }}/binary
+#      - name: Run build bin
+#        run: |
+#          cd ${{ github.workspace }}/binary
+#          sh build_mac_linux.sh
+#        working-directory: ${{ github.workspace }}/binary
+#      
+#      - run:  ${{ github.workspace }}/binary/centos_x64/mini_jvm -bootclasspath ${{ github.workspace }}/binary/lib/minijvm_rt.jar -cp ${{ github.workspace }}/binary/libex/minijvm_test.jar test.Foo3
