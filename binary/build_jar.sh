@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 echo "Requirement: jdk1.8+ jar javac "
 
@@ -8,9 +8,9 @@ JAR=jar
 
 # returns the JDK version.
 # 8 for 1.8.0_nn, 9 for 9-ea etc, and "no_java" for undetected
-function jdk_version() {
-  local result
-  local java_cmd
+jdk_version () {
+  result=""
+  java_cmd=""
   if [[ -n $(type -p java) ]]
   then
     java_cmd=java
@@ -18,9 +18,9 @@ function jdk_version() {
   then
     java_cmd="$JAVA_HOME/bin/java"
   fi
-  local IFS=$'\n'
+  IFS=$'\n'
   # remove \r for Cygwin
-  local lines=$("$java_cmd" -Xms32M -Xmx32M -version 2>&1 | tr '\r' '\n')
+  lines=$("$java_cmd" -Xms32M -Xmx32M -version 2>&1 | tr '\r' '\n')
   if [[ -z $java_cmd ]]
   then
     result=no_java
@@ -28,7 +28,7 @@ function jdk_version() {
     for line in $lines; do
       if [[ (-z $result) && ($line = *"version \""*) ]]
       then
-        local ver=$(echo $line | sed -e 's/.*version "\(.*\)"\(.*\)/\1/; 1q')
+        ver=$(echo $line | sed -e 's/.*version "\(.*\)"\(.*\)/\1/; 1q')
         # on macOS, sed doesn't support '?'
         if [[ $ver = "1."* ]]
         then
@@ -44,7 +44,7 @@ function jdk_version() {
 
 
 
-function build_jar(){
+build_jar () {
     rm -rf $3/$1
     mkdir classes 
     find $2/java -name "*.java" >source.txt
@@ -100,7 +100,5 @@ $(build_jar xgui.jar ../extlib/xgui/src/main ../mobile/assets/resfiles "../mobil
 
 echo "build ../mobile/assets/resfiles/ExApp.jar"
 $(build_jar ExApp.jar ../mobile/java/ExApp/src/main ../mobile/assets/resfiles "../mobile/assets/resfiles/minijvm_rt.jar" "../mobile/assets/resfiles/glfm_gui.jar:../mobile/assets/resfiles/xgui.jar")
-
-
 
 

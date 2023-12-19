@@ -1,5 +1,5 @@
 ![](/doc/img/mini_jvm_64.png)  
-[![Build Status](https://travis-ci.org/digitalgust/miniJVM.svg?branch=master)](https://travis-ci.org/digitalgust/miniJVM)
+<img src="https://github.com/digitalgust/miniJVM/actions/workflows/github-actions-demo.yml/badge.svg"/>
 
 <span id="linkhome"/>   
 

@@ -10,6 +10,8 @@ jobs:
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - name: Check out repository code
         uses: actions/checkout@v4
+        with:
+          java-version: '8'
       - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
       - run: echo "🖥️ The workflow is now ready to test your code on the runner."
       - name: List files in the repository
@@ -17,8 +19,22 @@ jobs:
           ls ${{ github.workspace }}
       - run: echo "🍏 This job's status is ${{ job.status }}."
 
-      - run:  mkdir build
+      - run:  mkdir ${{ github.workspace }}/build
       - run:  cd build
       - run:  cmake -DCOVERALLS=ON -DCMAKE_BUILD_TYPE=Debug ${{ github.workspace }}/minijvm/c 
       - run:  cmake --build . 
       - run:  cmake --build . --target mini_jvm
+      - run:  ls -l
+
+#      - name: Run build jar
+#        run: |
+#          cd ${{ github.workspace }}/binary
+#          sh build_jar.sh
+#        working-directory: ${{ github.workspace }}/binary
+#      - name: Run build bin
+#        run: |
+#          cd ${{ github.workspace }}/binary
+#          sh build_mac_linux.sh
+#        working-directory: ${{ github.workspace }}/binary
+#      
+#      - run:  ${{ github.workspace }}/binary/centos_x64/mini_jvm -bootclasspath ${{ github.workspace }}/binary/lib/minijvm_rt.jar -cp ${{ github.workspace }}/binary/libex/minijvm_test.jar test.Foo3
