@@ -98,7 +98,7 @@ static void myKeyboardUpCallback(unsigned char key, int x, int y) {
       free(pre);
 
       pre = old;
-      return
+      return;
     }
     while (pre) {
       if (pre->next && pre->next->key == key) {

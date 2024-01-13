@@ -227,6 +227,8 @@ static java_native_method METHODS_LWJGL_TABLE[] = {
      org_lwjgl_opengl_GL11_glFog_IV},
     {"org/lwjgl/util/glu/GLU", "gluErrorString", "(I)Ljava/lang/String;",
      org_lwjgl_opengl_GL11_gluErrorString_IV},
+    // (I)
+
 };
 
 void reg_lwjgl_native_lib(MiniJVM *jvm) {
