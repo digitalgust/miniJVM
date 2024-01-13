@@ -16,17 +16,8 @@ public class GL11 {
     public static native void glClear(int a1);
     public static native void glFogi(int a1, int a2);
     public static native void glFogf(int a1, float a2);
-    
-    /*
-    GL11.glGetInteger(ILjava/nio/IntBuffer;)V
-    GL11.glFog(ILjava/nio/FloatBuffer;)V
-    GLU.gluPickMatrix(FFFFLjava/nio/IntBuffer;)V
-    GL11.glSelectBuffer(Ljava/nio/IntBuffer;)V
-    */
-}
 
-public class GLU {
-    public static native void gluPerspective(float r, float g, float b, float a4);
-    public static native String gluErrorString(int a1);
-    
+    public static native glGetInteger(int, java.nio.IntBuffer);
+    public static native glFog(int, java/nio/FloatBuffer);
+    public static native glSelectBuffer(java.nio.IntBuffer);
 }
