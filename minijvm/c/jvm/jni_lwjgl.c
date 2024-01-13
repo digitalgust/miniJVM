@@ -1,3 +1,9 @@
+#include "jvm.h"
+#include "jvm_util.h"
+
+#include <GL/gl.h>
+#include <GL/glu.h>
+
 s32 org_lwjgl_opengl_GL11_glGetError_I0(Runtime *runtime, JClass *clazz) {
   RuntimeStack *stack = runtime->stack;
   push_int(stack, 0);
@@ -36,12 +42,22 @@ s32 org_lwjgl_opengl_GL11_glClearColor_IV(Runtime *runtime, JClass *clazz) {
   return 0;
 }
 
+s32 org_lwjgl_opengl_GL11_glClearDepth_IV(Runtime *runtime, JClass *clazz) {
+  RuntimeStack *stack = runtime->stack;
+  Long2Double a1;
+  a1.l = localvar_getLong(runtime->localvar, 0);
+
+  glClearDepth(a1.d);
+  return 0;
+}
+
 s32 org_lwjgl_opengl_GL11_glDepthFunc_IV(Runtime *runtime, JClass *clazz) {
   RuntimeStack *stack = runtime->stack;
   s32 arg1 = localvar_getInt(runtime->localvar, 0);
   glDepthFunc(arg1);
   return 0;
 }
+
 s32 org_lwjgl_opengl_GL11_glMatrixMode_IV(Runtime *runtime, JClass *clazz) {
   RuntimeStack *stack = runtime->stack;
   s32 arg1 = localvar_getInt(runtime->localvar, 0);
@@ -128,22 +144,42 @@ s32 org_lwjgl_opengl_GL11_gluErrorString_IV(Runtime *runtime, JClass *clazz) {
 }
 
 s32 org_lwjgl_opengl_GL11_glGetInteger_IV(Runtime *runtime, JClass *clazz) {
-  // too dumb to implement
+  s32 a1 = localvar_getInt(runtime->localvar, 0);
+  Instance *buffer = localvar_getRefer(runtime->localvar, 1);
+  c8 *pBuffer = getFieldPtr_byName_c(buffer, "java/nio/IntBufferImpl", "array", "[I", runtime);
+  Instance *iAry = getFieldRefer(pBuffer);
+  glGetIntegerv(a1, (GLint *)iAry->arr_body);
 
   return 0;
 }
+
 s32 org_lwjgl_opengl_GL11_gluPickMatrix_IV(Runtime *runtime, JClass *clazz) {
-  // too dumb to implement
+  Int2Float a1, a2, a3, a4;
+  a1.i = localvar_getInt(runtime->localvar, 0);
+  a2.i = localvar_getInt(runtime->localvar, 1);
+  a3.i = localvar_getInt(runtime->localvar, 2);
+  a4.i = localvar_getInt(runtime->localvar, 3);
+  Instance *buffer = localvar_getRefer(runtime->localvar, 4);
+  c8 *pBuffer = getFieldPtr_byName_c(buffer, "java/nio/IntBufferImpl", "array", "[I", runtime);
+  Instance *iAry = getFieldRefer(pBuffer);
+  gluPickMatrix(a1.f, a2.f, a3.f, a4.f, (GLint *)iAry->arr_body);
 
   return 0;
 }
 s32 org_lwjgl_opengl_GL11_glSelectBuffer_IV(Runtime *runtime, JClass *clazz) {
-  // too dumb to implement
+  Instance *buffer = localvar_getRefer(runtime->localvar, 0);
+  c8 *pBuffer = getFieldPtr_byName_c(buffer, "java/nio/IntBufferImpl", "array", "[I", runtime);
+  Instance *iAry = getFieldRefer(pBuffer);
+  glSelectBuffer(iAry->arr_length, (GLuint *)iAry->arr_body);
 
   return 0;
 }
 s32 org_lwjgl_opengl_GL11_glFog_IV(Runtime *runtime, JClass *clazz) {
-  // too dumb to implement
+  s32 a1 = localvar_getInt(runtime->localvar, 0);
+  Instance *buffer = localvar_getRefer(runtime->localvar, 1);
+  c8 *pBuffer = getFieldPtr_byName_c(buffer, "java/nio/FloatBufferImpl", "array", "[F", runtime);
+  Instance *iAry = getFieldRefer(pBuffer);
+  glFogfv(a1, (GLfloat *)iAry->arr_body);
 
   return 0;
 }
@@ -171,11 +207,11 @@ static java_native_method METHODS_LWJGL_TABLE[] = {
      org_lwjgl_opengl_GL11_glTranslatef_IV},
     {"org/lwjgl/opengl/GL11", "glRotatef", "(FFFF)V",
      org_lwjgl_opengl_GL11_glRotatef_IV},
-    {"org/lwjgl/opengl/GLU", "gluPerspective", "(FFFF)V",
+    {"org/lwjgl/util/glu/GLU", "gluPerspective", "(FFFF)V",
      org_lwjgl_opengl_GL11_gluPerspective_IV},
     {"org/lwjgl/opengl/GL11", "glGetInteger", "(ILjava/nio/IntBuffer;)V",
      org_lwjgl_opengl_GL11_glGetInteger_IV},
-    {"org/lwjgl/opengl/GLU", "gluPickMatrix", "(FFFFLjava/nio/IntBuffer;)V",
+    {"org/lwjgl/util/glu/GLU", "gluPickMatrix", "(FFFFLjava/nio/IntBuffer;)V",
      org_lwjgl_opengl_GL11_gluPickMatrix_IV},
     {"org/lwjgl/opengl/GL11", "glSelectBuffer", "(Ljava/nio/IntBuffer;)V",
      org_lwjgl_opengl_GL11_glSelectBuffer_IV},
@@ -189,10 +225,8 @@ static java_native_method METHODS_LWJGL_TABLE[] = {
      org_lwjgl_opengl_GL11_glFogf_IV},
     {"org/lwjgl/opengl/GL11", "glFog", "(ILjava/nio/FloatBuffer;)V",
      org_lwjgl_opengl_GL11_glFog_IV},
-    {"org/lwjgl/opengl/GL11", "glFog", "(I)Ljava/lang/String;",
+    {"org/lwjgl/util/glu/GLU", "gluErrorString", "(I)Ljava/lang/String;",
      org_lwjgl_opengl_GL11_gluErrorString_IV},
-    // (I)
-
 };
 
 void reg_lwjgl_native_lib(MiniJVM *jvm) {
