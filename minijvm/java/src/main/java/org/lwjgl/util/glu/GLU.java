@@ -1,4 +1,4 @@
-package org.lwjgl.opengl;
+package org.lwjgl.util.glu;
 
 public class GLU {
     public static native void gluPerspective(float r, float g, float b, float a4);
