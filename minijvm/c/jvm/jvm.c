@@ -302,6 +302,8 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     reg_std_native_lib(jvm);
     reg_net_native_lib(jvm);
     reg_reflect_native_lib(jvm);
+    reg_lwjgl_native_lib(jvm);
+    reg_lwjgl_util_native_lib(jvm);
 
     //创建jstring 相关容器
     jvm->table_jstring_const = hashtable_create(UNICODE_STR_HASH_FUNC, UNICODE_STR_EQUALS_FUNC);
