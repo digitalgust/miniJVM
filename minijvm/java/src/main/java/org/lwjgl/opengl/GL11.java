@@ -17,7 +17,7 @@ public class GL11 {
     public static native void glFogi(int a1, int a2);
     public static native void glFogf(int a1, float a2);
 
-    public static native glGetInteger(int, java.nio.IntBuffer);
-    public static native glFog(int, java/nio/FloatBuffer);
-    public static native glSelectBuffer(java.nio.IntBuffer);
+    public static native void glGetInteger(int a1, java.nio.IntBuffer a2);
+    public static native void glFog(int a1, java.nio.FloatBuffer a2);
+    public static native void glSelectBuffer(java.nio.IntBuffer a1);
 }

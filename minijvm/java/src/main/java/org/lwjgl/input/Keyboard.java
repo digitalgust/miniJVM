@@ -6,6 +6,6 @@ public class Keyboard {
 
     public static native int getEventKey();
     public static native boolean getEventKeyState();
-    public static native boolean isKeyDown(int);
+    public static native boolean isKeyDown(int key);
     public static native boolean next();
 }

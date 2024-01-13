@@ -1,12 +1,12 @@
 package org.lwjgl.input;
 
 public class Mouse {
-    void create();
-    void destroy();
-    int getDX();
-    int getDY();
-    int getEventButton();
-    boolean getEventButtonState();
-    boolean next();
-    void setGrabbed(boolean);
+    public static native void create();
+    public static native void destroy();
+    public static native int getDX();
+    public static native int getDY();
+    public static native int getEventButton();
+    public static native boolean getEventButtonState();
+    public static native boolean next();
+    public static native void setGrabbed(boolean a1);
 }
