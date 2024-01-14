@@ -5,6 +5,85 @@
 #include <GL/freeglut_std.h>
 #include <GL/glut.h>
 
+const short glut2lwjgl[] = {
+    ['0'] = KEY_0,
+    ['1'] = KEY_1,
+    ['2'] = KEY_2,
+    ['3'] = KEY_3,
+    ['4'] = KEY_4,
+    ['5'] = KEY_5,
+    ['6'] = KEY_6,
+    ['7'] = KEY_7,
+    ['8'] = KEY_8,
+    ['9'] = KEY_9,
+    ['A'] = KEY_A,
+    ['+'] = KEY_ADD,
+    ['\''] = KEY_APOSTROPHE,
+    ['@'] = KEY_AT,
+    ['B'] = KEY_B,
+    [8] = KEY_BACK,
+    ['\\'] = KEY_BACKSLASH,
+    ['C'] = KEY_C,
+    [':'] = KEY_COLON,
+    [','] = KEY_COMMA,
+    ['D'] = KEY_D,
+    [127] = KEY_DELETE,
+    [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_DOWN)] = KEY_DOWN,
+    ['E'] = KEY_E,
+    ['='] = KEY_EQUALS,
+    [27] = KEY_ESCAPE,
+    ['F'] = KEY_F,
+    [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_F1)] = KEY_F1,
+    [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_F10)] = KEY_F10,
+    [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_F11)] = KEY_F11,
+    [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_F12)] = KEY_F12,
+    [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_F2)] = KEY_F2,
+    [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_F3)] = KEY_F3,
+    [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_F4)] = KEY_F4,
+    [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_F5)] = KEY_F5,
+    [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_F6)] = KEY_F6,
+    [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_F7)] = KEY_F7,
+    [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_F8)] = KEY_F8,
+    [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_F9)] = KEY_F9,
+    ['G'] = KEY_G,
+    ['`'] = KEY_GRAVE,
+    ['H'] = KEY_H,
+    [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_HOME)] = KEY_HOME,
+    ['I'] = KEY_I,
+    [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_INSERT)] = KEY_INSERT,
+    ['J'] = KEY_J,
+    ['K'] = KEY_K,
+    ['L'] = KEY_L,
+    ['['] = KEY_LBRACKET,
+    [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_LEFT)] = KEY_LEFT,
+    ['M'] = KEY_M,
+    ['-'] = KEY_MINUS,
+    ['*'] = KEY_MULTIPLY,
+    ['N'] = KEY_N,
+    ['O'] = KEY_O,
+    ['P'] = KEY_P,
+    ['.'] = KEY_PERIOD,
+    ['Q'] = KEY_Q,
+    ['R'] = KEY_R,
+    [']'] = KEY_RBRACKET,
+    ['\r'] = KEY_RETURN,
+    [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_RIGHT)] = KEY_RIGHT,
+    ['S'] = KEY_S,
+    [';'] = KEY_SEMICOLON,
+    ['/'] = KEY_SLASH,
+    [' '] = KEY_SPACE,
+    ['T'] = KEY_T,
+    ['\t'] = KEY_TAB,
+    ['U'] = KEY_U,
+    ['_'] = KEY_UNDERLINE,
+    [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_UP)] = KEY_UP,
+    ['V'] = KEY_V,
+    ['W'] = KEY_W,
+    ['X'] = KEY_X,
+    ['Y'] = KEY_Y,
+    ['Z'] = KEY_Z,
+};
+
 static struct PressedKey {
   int key;
 
@@ -187,6 +266,8 @@ static s32 org_lwjgl_input_Keyboard_create_V0(Runtime *runtime, JClass *clazz) {
   glutKeyboardFunc(myKeyboardCallback);
   glutKeyboardUpFunc(myKeyboardUpCallback);
   glutSpecialFunc(mySpecialCallback);
+
+  return 0;
 }
 
 static s32 org_lwjgl_input_Keyboard_destroy_V0(Runtime *runtime,
@@ -195,20 +276,11 @@ static s32 org_lwjgl_input_Keyboard_destroy_V0(Runtime *runtime,
   glutKeyboardUpFunc(NULL);
   glutSpecialFunc(NULL);
   // TODO: free event buffers!
+
+  return 0;
 }
 
-static s32 org_lwjgl_input_Mouse_create_V0(Runtime *runtime, JClass *clazz) {
-  // glutMouseFunc(myMouseCallback);
-  // glutPassiveMotionFunc(myPassiveMotionCallback);
-}
-
-static s32 org_lwjgl_input_Mouse_destroy_V0(Runtime *runtime,
-                                               JClass *clazz) {
-  glutMouseFunc(NULL);
-  glutPassiveMotionFunc(NULL);
-}
-
-static java_native_method METHODS_LWJGL_UTIL_TABLE[] = {
+static java_native_method METHODS_LWJGL_KEYBOARD_TABLE[] = {
     {"org/lwjgl/input/Keyboard", "create", "()V",
      org_lwjgl_input_Keyboard_create_V0},
     {"org/lwjgl/input/Keyboard", "destroy", "()V",
@@ -223,14 +295,9 @@ static java_native_method METHODS_LWJGL_UTIL_TABLE[] = {
      org_lwjgl_input_Keyboard_getEventCharacter_C0},
     {"org/lwjgl/input/Keyboard", "isKeyDown", "(I)Z",
      org_lwjgl_input_Keyboard_isKeyDown_I1},
-
-    {"org/lwjgl/input/Mouse", "create", "()V",
-     org_lwjgl_input_Mouse_create_V0},
-    {"org/lwjgl/input/Mouse", "destroy", "()V",
-     org_lwjgl_input_Mouse_destroy_V0},
 };
 
-void reg_lwjgl_util_native_lib(MiniJVM *jvm) {
-  native_reg_lib(jvm, METHODS_LWJGL_UTIL_TABLE,
-                 sizeof(METHODS_LWJGL_UTIL_TABLE) / sizeof(java_native_method));
+void reg_lwjgl_keyboard_native_lib(MiniJVM *jvm) {
+  native_reg_lib(jvm, METHODS_LWJGL_KEYBOARD_TABLE,
+                 sizeof(METHODS_LWJGL_KEYBOARD_TABLE) / sizeof(java_native_method));
 }
