@@ -110,6 +110,8 @@ static void mySpecialCallback(int key, int x, int y) {
 
     if (pre)
       g_keyEvents->next = neu;
+    else
+      g_keyEvents = neu;
   }
 
   {
@@ -134,6 +136,8 @@ static void myKeyboardCallback(unsigned char key, int x, int y) {
 
     if (pre)
       g_keyEvents->next = neu;
+    else
+      g_keyEvents = neu;
   }
 
   {
