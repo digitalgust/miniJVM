@@ -1610,6 +1610,8 @@ void reg_reflect_native_lib(MiniJVM *jvm);
 void reg_lwjgl_native_lib(MiniJVM *jvm);
 void reg_lwjgl_keyboard_native_lib(MiniJVM *jvm);
 void reg_lwjgl_mouse_native_lib(MiniJVM *jvm);
+void reg_lwjgl_display_native_lib(MiniJVM *jvm);
+void reg_awt_native_lib(MiniJVM *jvm);
 
 void init_jni_func_table(MiniJVM *jvm);
 

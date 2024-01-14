@@ -306,6 +306,7 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     reg_lwjgl_keyboard_native_lib(jvm);
     reg_lwjgl_mouse_native_lib(jvm);
     reg_lwjgl_display_native_lib(jvm);
+    reg_awt_native_lib(jvm);
 
     //创建jstring 相关容器
     jvm->table_jstring_const = hashtable_create(UNICODE_STR_HASH_FUNC, UNICODE_STR_EQUALS_FUNC);

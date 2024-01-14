@@ -64,14 +64,14 @@ static s32 java_awt_image_BufferedImage_getRGB_AI7(Runtime *runtime,
   return 0;
 }
 
-static java_native_method METHODS_LWJGL_MOUSE_TABLE[] = {
+static java_native_method METHODS_AWT_TABLE[] = {
     {"javax/imageio/ImageIO", "readInternal", "([B[I)[B",
      javax_imageio_ImageIO_readInternal_V0},
     {"java/awt/image/BufferedImage", "getRGB", "(IIII[III)[I",
      java_awt_image_BufferedImage_getRGB_AI7}};
 
-void reg_lwjgl_display_native_lib(MiniJVM *jvm) {
-  native_reg_lib(jvm, METHODS_LWJGL_MOUSE_TABLE,
-                 sizeof(METHODS_LWJGL_MOUSE_TABLE) /
+void reg_awt_native_lib(MiniJVM *jvm) {
+  native_reg_lib(jvm, METHODS_AWT_TABLE,
+                 sizeof(METHODS_AWT_TABLE) /
                      sizeof(java_native_method));
 }
