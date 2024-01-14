@@ -10,6 +10,7 @@ static s32 org_lwjgl_input_Display_create_V0(Runtime *runtime, JClass *clazz) {
   char* argv[1] = {"test"};
   
   glutInit(&argc, argv);
+  glutInitWindowSize(1024, 768);
   g_wnd = glutCreateWindow("lwjgl");
   
   return 0;

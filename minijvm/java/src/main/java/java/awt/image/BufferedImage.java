@@ -8,7 +8,7 @@ public class BufferedImage {
     public int getWidth() { return width; }
     public int getHeight() { return height; }
 
-    public native int[] getRgb(int startX, int startY, int w, int h, int[] rgbArray, int offset, int scansize);
+    public native int[] getRGB(int startX, int startY, int w, int h, int[] rgbArray, int offset, int scansize);
 
     public BufferedImage(int w, int h, int[] rgb) {
         this.width = w;

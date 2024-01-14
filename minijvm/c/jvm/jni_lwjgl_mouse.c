@@ -97,13 +97,14 @@ static s32 org_lwjgl_input_Mouse_getEventButtonState_Z0(Runtime *runtime, JClass
 static s32 org_lwjgl_input_Mouse_next_Z0(Runtime *runtime, JClass *clazz) {
   RuntimeStack *stack = runtime->stack;
   struct MouseEvent *old = g_mouseEvents;
-  g_lastX = old->x;
-  g_lastY = old->y;
 
   if (!old) {
     push_int(stack, 0);
     return 0;
   }
+
+  g_lastX = old->x;
+  g_lastY = old->y;
   g_mouseEvents = g_mouseEvents->next;
   free(old);
 

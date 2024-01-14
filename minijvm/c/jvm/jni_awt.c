@@ -10,23 +10,28 @@ static s32 javax_imageio_ImageIO_readInternal_V0(Runtime *runtime,
   int x, y, comp;
   u8 *bytes = stbi_load_from_memory((u8 *)iAry->arr_body, iAry->arr_length, &x,
                                     &y, &comp, 4);
-  if (comp != 4) {
-    printf("comp != 4\n");
-    return 1;
-  }
-  for (int i = 0; i < x * y * comp; i += comp) {
-    bytes[i] = bytes[i + 3];
-    bytes[i + 1] = bytes[i + 0];
-    bytes[i + 2] = bytes[i + 1];
-    bytes[i + 3] = bytes[i + 2];
+  Instance *rgb = jarray_create_by_type_index(runtime, x * y, DATATYPE_INT);
+
+  if (comp == 4) {
+    for (int i = 0; i < x * y * comp; i += comp) {
+      rgb->arr_body[i] = bytes[i + 3];
+      rgb->arr_body[i + 1] = bytes[i + 0];
+      rgb->arr_body[i + 2] = bytes[i + 1];
+      rgb->arr_body[i + 3] = bytes[i + 2];
+    }
+  } else {
+    for (int i = 0; i < x * y * comp; i += comp) {
+      rgb->arr_body[i] = 1.f;
+      rgb->arr_body[i + 1] = bytes[i + 0];
+      rgb->arr_body[i + 2] = bytes[i + 1];
+      rgb->arr_body[i + 3] = bytes[i + 2];
+    }
   }
 
-  Instance *iSize = localvar_getRefer(runtime->localvar, 0);
+  Instance *iSize = localvar_getRefer(runtime->localvar, 1);
   jarray_set_field(iSize, 0, x);
   jarray_set_field(iSize, 1, y);
 
-  Instance *rgb = jarray_create_by_type_index(runtime, x * y, DATATYPE_INT);
-  memcpy(rgb->arr_body, (void *)bytes, x * y * 4);
   push_ref(runtime->stack, rgb);
 
   return 0;
@@ -43,20 +48,25 @@ static s32 java_awt_image_BufferedImage_getRGB_AI7(Runtime *runtime,
   int offset = localvar_getInt(runtime->localvar, 6);
   int stride = localvar_getInt(runtime->localvar, 7);
 
-  c8 *fptr = getFieldPtr_byName_c(thiz, "java/awt/image/BufferedImage", "rgb", "[I", runtime);
-  c8 *fwptr = getFieldPtr_byName_c(thiz, "java/awt/image/BufferedImage", "width", "I", runtime);
-  c8 *fhptr = getFieldPtr_byName_c(thiz, "java/awt/image/BufferedImage", "height", "I", runtime);
+  c8 *fptr = getFieldPtr_byName_c(thiz, "java/awt/image/BufferedImage", "rgb",
+                                  "[I", runtime);
+  c8 *fwptr = getFieldPtr_byName_c(thiz, "java/awt/image/BufferedImage",
+                                   "width", "I", runtime);
+  c8 *fhptr = getFieldPtr_byName_c(thiz, "java/awt/image/BufferedImage",
+                                   "height", "I", runtime);
   Instance *thizRgb = getFieldRefer(fptr);
   s32 ow = getFieldInt(fwptr);
   s32 oh = getFieldInt(fhptr);
 
   if (!outAry) {
-    outAry = jarray_create_by_type_index(runtime, w * h, DATATYPE_INT);
+    outAry = jarray_create_by_type_index(runtime, stride * h, DATATYPE_INT);
   }
 
   for (int x = 0; x < w; ++x) {
     for (int y = 0; y < h; ++y) {
-      jarray_set_field(outAry, y * stride + x, jarray_get_field(thizRgb, (y + startY) * ow + startX + x));
+      jarray_set_field(
+          outAry, y * stride + x,
+          jarray_get_field(thizRgb, (y + startY) * ow + startX + x));
     }
   }
 
@@ -65,13 +75,12 @@ static s32 java_awt_image_BufferedImage_getRGB_AI7(Runtime *runtime,
 }
 
 static java_native_method METHODS_AWT_TABLE[] = {
-    {"javax/imageio/ImageIO", "readInternal", "([B[I)[B",
+    {"javax/imageio/ImageIO", "readInternal", "([B[I)[I",
      javax_imageio_ImageIO_readInternal_V0},
     {"java/awt/image/BufferedImage", "getRGB", "(IIII[III)[I",
      java_awt_image_BufferedImage_getRGB_AI7}};
 
 void reg_awt_native_lib(MiniJVM *jvm) {
   native_reg_lib(jvm, METHODS_AWT_TABLE,
-                 sizeof(METHODS_AWT_TABLE) /
-                     sizeof(java_native_method));
+                 sizeof(METHODS_AWT_TABLE) / sizeof(java_native_method));
 }
