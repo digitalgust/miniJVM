@@ -5,7 +5,7 @@
 #include <GL/freeglut_std.h>
 #include <GL/glut.h>
 
-const short glut2lwjgl[] = {
+static const short glut2lwjgl[] = {
     ['0'] = KEY_0,
     ['1'] = KEY_1,
     ['2'] = KEY_2,
