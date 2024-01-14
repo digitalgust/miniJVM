@@ -32,27 +32,29 @@ s32 org_lwjgl_opengl_GL11_glShadeModel_IV(Runtime *runtime, JClass *clazz) {
 }
 s32 org_lwjgl_opengl_GL11_glClearColor_IV(Runtime *runtime, JClass *clazz) {
   RuntimeStack *stack = runtime->stack;
+  printf("clear color\n");
   Int2Float a1, a2, a3, a4;
   a1.i = localvar_getInt(runtime->localvar, 0);
   a2.i = localvar_getInt(runtime->localvar, 1);
   a3.i = localvar_getInt(runtime->localvar, 2);
   a4.i = localvar_getInt(runtime->localvar, 3);
-
+  
   glClearColor(a1.f, a2.f, a3.f, a4.f);
   return 0;
 }
 
 s32 org_lwjgl_opengl_GL11_glClearDepth_IV(Runtime *runtime, JClass *clazz) {
   RuntimeStack *stack = runtime->stack;
+  printf("clear depth\n");
   Long2Double a1;
   a1.l = localvar_getLong(runtime->localvar, 0);
-
   glClearDepth(a1.d);
   return 0;
 }
 
 s32 org_lwjgl_opengl_GL11_glDepthFunc_IV(Runtime *runtime, JClass *clazz) {
   RuntimeStack *stack = runtime->stack;
+  printf("depth func\n");
   s32 arg1 = localvar_getInt(runtime->localvar, 0);
   glDepthFunc(arg1);
   return 0;
@@ -60,8 +62,10 @@ s32 org_lwjgl_opengl_GL11_glDepthFunc_IV(Runtime *runtime, JClass *clazz) {
 
 s32 org_lwjgl_opengl_GL11_glMatrixMode_IV(Runtime *runtime, JClass *clazz) {
   RuntimeStack *stack = runtime->stack;
+  printf("matrxi mode\n");
   s32 arg1 = localvar_getInt(runtime->localvar, 0);
   glMatrixMode(arg1);
+  
   return 0;
 }
 s32 org_lwjgl_opengl_GL11_glLoadIdentity_IV(Runtime *runtime, JClass *clazz) {
@@ -76,11 +80,20 @@ s32 org_lwjgl_opengl_GL11_glClear_IV(Runtime *runtime, JClass *clazz) {
   glClear(arg1);
   return 0;
 }
+s32 org_lwjgl_opengl_GL11_glGenLists_IV(Runtime *runtime, JClass *clazz) {
+  RuntimeStack *stack = runtime->stack;
+  s32 arg1 = localvar_getInt(runtime->localvar, 0);
+  int res = glGenLists(arg1);
+  push_int(stack, res);
+  return 0;
+}
 
+// glGenTextures
 s32 org_lwjgl_opengl_GL11_glRenderMode_IV(Runtime *runtime, JClass *clazz) {
   RuntimeStack *stack = runtime->stack;
   s32 arg1 = localvar_getInt(runtime->localvar, 0);
-  glRenderMode(arg1);
+  int res = glRenderMode(arg1);
+  push_int(stack, res);
   return 0;
 }
 
@@ -201,6 +214,8 @@ static java_native_method METHODS_LWJGL_TABLE[] = {
      org_lwjgl_opengl_GL11_glDepthFunc_IV},
     {"org/lwjgl/opengl/GL11", "glMatrixMode", "(I)V",
      org_lwjgl_opengl_GL11_glMatrixMode_IV},
+     {"org/lwjgl/opengl/GL11", "glGenLists", "(I)I",
+     org_lwjgl_opengl_GL11_glGenLists_IV},
     {"org/lwjgl/opengl/GL11", "glLoadIdentity", "()V",
      org_lwjgl_opengl_GL11_glLoadIdentity_IV},
     {"org/lwjgl/opengl/GL11", "glTranslatef", "(FFF)V",
