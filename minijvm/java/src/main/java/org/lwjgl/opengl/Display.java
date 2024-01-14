@@ -325,6 +325,10 @@ public final class Display {
 	public static int setIcon(ByteBuffer[] icons) {
         return 0;
 	}
+	
+	public static boolean isCloseRequested() {
+        return false;
+    }
 
 	/**
 	 * Enable or disable the Display window to be resized.
