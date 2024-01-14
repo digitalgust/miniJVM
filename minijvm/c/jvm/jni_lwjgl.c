@@ -63,6 +63,20 @@ s32 org_lwjgl_opengl_GL11_glClearDepth_IV(Runtime *runtime, JClass *clazz) {
   return 0;
 }
 
+s32 org_lwjgl_opengl_GL11_glOrtho_IV(Runtime *runtime, JClass *clazz) {
+  RuntimeStack *stack = runtime->stack;
+  printf("clear depth\n");
+  Long2Double a1, a2, a3, a4, a5, a6;
+  a1.l = localvar_getLong(runtime->localvar, 0);
+  a2.l = localvar_getLong(runtime->localvar, 1);
+  a3.l = localvar_getLong(runtime->localvar, 2);
+  a4.l = localvar_getLong(runtime->localvar, 3);
+  a5.l = localvar_getLong(runtime->localvar, 4);
+  a6.l = localvar_getLong(runtime->localvar, 5);
+  glOrtho(a1.d, a2.d, a3.d, a4.d, a5.d, a6.d);
+  return 0;
+}
+
 s32 org_lwjgl_opengl_GL11_glDepthFunc_IV(Runtime *runtime, JClass *clazz) {
   RuntimeStack *stack = runtime->stack;
   printf("depth func\n");
@@ -176,16 +190,46 @@ s32 org_lwjgl_opengl_GL11_glFogf_IV(Runtime *runtime, JClass *clazz) {
   glFogf(arg1, a2.f);
   return 0;
 }
+s32 org_lwjgl_opengl_GL11_glLightModel_IV(Runtime *runtime, JClass *clazz) {
+  RuntimeStack *stack = runtime->stack;
+  s32 arg1 = localvar_getInt(runtime->localvar, 0);
+  Instance *buffer = localvar_getRefer(runtime->localvar, 1);
+  c8 *pBuffer = getFieldPtr_byName_c(buffer, "java/nio/FloatBufferImpl", "array", "[I", runtime);
+  Instance *iAry = getFieldRefer(pBuffer);
+  // glGetFloatv(a1, (GLfloat *)iAry->arr_body);
+  glLightModelfv(arg1, (GLfloat *)iAry->arr_body);
+  return 0;
+}
+
+s32 org_lwjgl_opengl_GL11_glAlphaFunc_IV(Runtime *runtime, JClass *clazz) {
+  RuntimeStack *stack = runtime->stack;
+  Int2Float a2;
+  s32 arg1 = localvar_getInt(runtime->localvar, 0);
+  a2.i = localvar_getInt(runtime->localvar, 1);
+  glAlphaFunc(arg1, a2.f);
+  return 0;
+}
 
 s32 org_lwjgl_opengl_GL11_glTranslatef_IV(Runtime *runtime, JClass *clazz) {
   // RuntimeStack *stack = runtime->stack;
-  Int2Float a1, a2, a3, a4;
+  Int2Float a1, a2, a3;
   a1.i = localvar_getInt(runtime->localvar, 0);
   a2.i = localvar_getInt(runtime->localvar, 1);
   a3.i = localvar_getInt(runtime->localvar, 2);
   // a4.i = localvar_getInt(runtime->localvar, 3);
 
   glTranslatef(a1.f, a2.f, a3.f);
+  return 0;
+}
+s32 org_lwjgl_opengl_GL11_glScalef_IV(Runtime *runtime, JClass *clazz) {
+  // RuntimeStack *stack = runtime->stack;
+  Int2Float a1, a2, a3;
+  a1.i = localvar_getInt(runtime->localvar, 0);
+  a2.i = localvar_getInt(runtime->localvar, 1);
+  a3.i = localvar_getInt(runtime->localvar, 2);
+  // a4.i = localvar_getInt(runtime->localvar, 3);
+
+  glScalef(a1.f, a2.f, a3.f);
   return 0;
 }
 
@@ -380,6 +424,8 @@ static java_native_method METHODS_LWJGL_TABLE[] = {
      org_lwjgl_opengl_GL11_glClearColor_IV},
     {"org/lwjgl/opengl/GL11", "glClearDepth", "(D)V",
      org_lwjgl_opengl_GL11_glClearDepth_IV},
+     {"org/lwjgl/opengl/GL11", "glOrtho", "(DDDDDD)V",
+     org_lwjgl_opengl_GL11_glOrtho_IV},
     {"org/lwjgl/opengl/GL11", "glDepthFunc", "(I)V",
      org_lwjgl_opengl_GL11_glDepthFunc_IV},
     {"org/lwjgl/opengl/GL11", "glMatrixMode", "(I)V",
@@ -414,6 +460,8 @@ static java_native_method METHODS_LWJGL_TABLE[] = {
      org_lwjgl_opengl_GL11_glGetInteger_IV},
      {"org/lwjgl/opengl/GL11", "glGetFloat", "(ILjava/nio/FloatBuffer;)V",
      org_lwjgl_opengl_GL11_glGetFloat_IV},
+     {"org/lwjgl/opengl/GL11", "glLightModel", "(ILjava/nio/FloatBuffer;)V",
+     org_lwjgl_opengl_GL11_glLightModel_IV},
      {"org/lwjgl/opengl/GL11", "gluBuild2DMipmaps", "(IIIIIILjava/nio/ByteBuffer;)I",
      org_lwjgl_opengl_GL11_gluBuild2DMipmaps_IV},
     {"org/lwjgl/util/glu/GLU", "gluPickMatrix", "(FFFFLjava/nio/IntBuffer;)V",
@@ -426,6 +474,11 @@ static java_native_method METHODS_LWJGL_TABLE[] = {
      org_lwjgl_opengl_GL11_glClear_IV},
     {"org/lwjgl/opengl/GL11", "glFogi", "(II)V",
      org_lwjgl_opengl_GL11_glFogi_IV},
+     {"org/lwjgl/opengl/GL11", "glAlphaFunc", "(IF)V",
+     org_lwjgl_opengl_GL11_glAlphaFunc_IV},
+     {"org/lwjgl/opengl/GL11", "glScalef", "(FFF)V",
+     org_lwjgl_opengl_GL11_glScalef_IV},
+     
      {"org/lwjgl/opengl/GL11", "glNewList", "(II)V",
      org_lwjgl_opengl_GL11_glNewList_IV},
      {"org/lwjgl/opengl/GL11", "glEndList", "()V",
