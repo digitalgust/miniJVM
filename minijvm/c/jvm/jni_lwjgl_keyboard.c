@@ -6,6 +6,13 @@
 #include <GL/glut.h>
 
 static const short glut2lwjgl[] = {
+    [' '] = KEY_SPACE,
+    ['*'] = KEY_MULTIPLY,
+    ['+'] = KEY_ADD,
+    [','] = KEY_COMMA,
+    ['-'] = KEY_MINUS,
+    ['.'] = KEY_PERIOD,
+    ['/'] = KEY_SLASH,
     ['0'] = KEY_0,
     ['1'] = KEY_1,
     ['2'] = KEY_2,
@@ -16,23 +23,45 @@ static const short glut2lwjgl[] = {
     ['7'] = KEY_7,
     ['8'] = KEY_8,
     ['9'] = KEY_9,
-    ['A'] = KEY_A,
-    ['+'] = KEY_ADD,
-    ['\''] = KEY_APOSTROPHE,
-    ['@'] = KEY_AT,
-    ['B'] = KEY_B,
-    [8] = KEY_BACK,
-    ['\\'] = KEY_BACKSLASH,
-    ['C'] = KEY_C,
     [':'] = KEY_COLON,
-    [','] = KEY_COMMA,
-    ['D'] = KEY_D,
-    [127] = KEY_DELETE,
-    [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_DOWN)] = KEY_DOWN,
-    ['E'] = KEY_E,
+    [';'] = KEY_SEMICOLON,
     ['='] = KEY_EQUALS,
-    [27] = KEY_ESCAPE,
-    ['F'] = KEY_F,
+    ['@'] = KEY_AT,
+    ['a'] = KEY_A,
+    ['b'] = KEY_B,
+    ['c'] = KEY_C,
+    ['d'] = KEY_D,
+    ['e'] = KEY_E,
+    ['f'] = KEY_F,
+    ['g'] = KEY_G,
+    ['h'] = KEY_H,
+    ['i'] = KEY_I,
+    ['j'] = KEY_J,
+    ['k'] = KEY_K,
+    ['l'] = KEY_L,
+    ['m'] = KEY_M,
+    ['n'] = KEY_N,
+    ['o'] = KEY_O,
+    ['p'] = KEY_P,
+    ['q'] = KEY_Q,
+    ['r'] = KEY_R,
+    ['s'] = KEY_S,
+    ['t'] = KEY_T,
+    ['u'] = KEY_U,
+    ['v'] = KEY_V,
+    ['w'] = KEY_W,
+    ['x'] = KEY_X,
+    ['y'] = KEY_Y,
+    ['z'] = KEY_Z,
+    ['['] = KEY_LBRACKET,
+    ['\''] = KEY_APOSTROPHE,
+    ['\\'] = KEY_BACKSLASH,
+    ['\r'] = KEY_RETURN,
+    ['\t'] = KEY_TAB,
+    [']'] = KEY_RBRACKET,
+    ['_'] = KEY_UNDERLINE,
+    ['`'] = KEY_GRAVE,
+    [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_DOWN)] = KEY_DOWN,
     [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_F1)] = KEY_F1,
     [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_F10)] = KEY_F10,
     [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_F11)] = KEY_F11,
@@ -45,43 +74,14 @@ static const short glut2lwjgl[] = {
     [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_F7)] = KEY_F7,
     [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_F8)] = KEY_F8,
     [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_F9)] = KEY_F9,
-    ['G'] = KEY_G,
-    ['`'] = KEY_GRAVE,
-    ['H'] = KEY_H,
     [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_HOME)] = KEY_HOME,
-    ['I'] = KEY_I,
     [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_INSERT)] = KEY_INSERT,
-    ['J'] = KEY_J,
-    ['K'] = KEY_K,
-    ['L'] = KEY_L,
-    ['['] = KEY_LBRACKET,
     [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_LEFT)] = KEY_LEFT,
-    ['M'] = KEY_M,
-    ['-'] = KEY_MINUS,
-    ['*'] = KEY_MULTIPLY,
-    ['N'] = KEY_N,
-    ['O'] = KEY_O,
-    ['P'] = KEY_P,
-    ['.'] = KEY_PERIOD,
-    ['Q'] = KEY_Q,
-    ['R'] = KEY_R,
-    [']'] = KEY_RBRACKET,
-    ['\r'] = KEY_RETURN,
     [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_RIGHT)] = KEY_RIGHT,
-    ['S'] = KEY_S,
-    [';'] = KEY_SEMICOLON,
-    ['/'] = KEY_SLASH,
-    [' '] = KEY_SPACE,
-    ['T'] = KEY_T,
-    ['\t'] = KEY_TAB,
-    ['U'] = KEY_U,
-    ['_'] = KEY_UNDERLINE,
     [(SPECIAL_GLUT_KEY_OFFSET + GLUT_KEY_UP)] = KEY_UP,
-    ['V'] = KEY_V,
-    ['W'] = KEY_W,
-    ['X'] = KEY_X,
-    ['Y'] = KEY_Y,
-    ['Z'] = KEY_Z,
+    [127] = KEY_DELETE,
+    [27] = KEY_ESCAPE,
+    [8] = KEY_BACK,
 };
 
 static struct PressedKey {
@@ -98,7 +98,6 @@ static struct KeyEvent {
 } *g_keyEvents = NULL;
 
 static void mySpecialCallback(int key, int x, int y) {
-  printf("skey = %d\n", key);
   {
     struct KeyEvent *neu = malloc(sizeof(struct KeyEvent));
     neu->type = KEY_EVENT_DOWN;
@@ -125,7 +124,6 @@ static void mySpecialCallback(int key, int x, int y) {
 }
 
 static void myKeyboardCallback(unsigned char key, int x, int y) {
-  printf("key = %d\n", key);
   {
     struct KeyEvent *neu = malloc(sizeof(struct KeyEvent));
     neu->type = KEY_EVENT_DOWN;
@@ -269,7 +267,6 @@ static s32 org_lwjgl_input_Keyboard_isKeyDown_I1(Runtime *runtime,
 };
 
 static s32 org_lwjgl_input_Keyboard_create_V0(Runtime *runtime, JClass *clazz) {
-  printf("keyboard start\n");
   glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);
   glutSpecialFunc(mySpecialCallback);
   glutKeyboardFunc(myKeyboardCallback);
@@ -280,7 +277,6 @@ static s32 org_lwjgl_input_Keyboard_create_V0(Runtime *runtime, JClass *clazz) {
 
 static s32 org_lwjgl_input_Keyboard_destroy_V0(Runtime *runtime,
                                                JClass *clazz) {
-  printf("keyboard end\n");
   glutSetKeyRepeat(GLUT_KEY_REPEAT_DEFAULT);
   glutKeyboardFunc(NULL);
   glutKeyboardUpFunc(NULL);

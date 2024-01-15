@@ -38,8 +38,8 @@ static void myPassiveMotionCallback(int x, int y) {
 }
 
 static void myMouseCallback(int button, int state, int x, int y) {
-  printf("mouse = %d %d %d %d\n", button, state, x, y);
   struct MouseEvent *neu = malloc(sizeof(struct MouseEvent));
+  neu->button = button;
   neu->type = (state == GLUT_DOWN) ? MOUSE_EVENT_DOWN : MOUSE_EVENT_UP;
   neu->x = x;
   neu->y = glutGet(GLUT_WINDOW_HEIGHT) - y;
