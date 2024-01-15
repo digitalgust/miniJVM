@@ -14,17 +14,17 @@ static s32 javax_imageio_ImageIO_readInternal_V0(Runtime *runtime,
 
   if (comp == 4) {
     for (int i = 0; i < x * y * comp; i += comp) {
-      rgb->arr_body[i] = bytes[i + 3];
-      rgb->arr_body[i + 1] = bytes[i + 0];
-      rgb->arr_body[i + 2] = bytes[i + 1];
-      rgb->arr_body[i + 3] = bytes[i + 2];
+      rgb->arr_body[i + 3] = bytes[i + 3];
+      rgb->arr_body[i + 2] = bytes[i + 0];
+      rgb->arr_body[i + 1] = bytes[i + 1];
+      rgb->arr_body[i + 0] = bytes[i + 2];
     }
   } else {
     for (int i = 0; i < x * y * comp; i += comp) {
       rgb->arr_body[i + 3] = 1.f;
-      rgb->arr_body[i + 0] = bytes[i + 0];
+      rgb->arr_body[i + 2] = bytes[i + 0];
       rgb->arr_body[i + 1] = bytes[i + 1];
-      rgb->arr_body[i + 2] = bytes[i + 2];
+      rgb->arr_body[i + 0] = bytes[i + 2];
     }
   }
 
