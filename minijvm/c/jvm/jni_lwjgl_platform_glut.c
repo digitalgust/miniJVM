@@ -137,7 +137,8 @@ static struct KeyEvent {
 
   struct KeyEvent *next;
 } *g_keyEvents = NULL;
-
+static int win_w;
+static int win_h;
 static void mySpecialCallback(int key, int x, int y) {
   {
     struct KeyEvent *neu = malloc(sizeof(struct KeyEvent));
@@ -312,6 +313,11 @@ static s32 org_lwjgl_input_Keyboard_create_V0(Runtime *runtime, JClass *clazz) {
   glutSpecialFunc(mySpecialCallback);
   glutKeyboardFunc(myKeyboardCallback);
   glutKeyboardUpFunc(myKeyboardUpCallback);
+  
+  win_w = glutGet(GLUT_WINDOW_WIDTH);
+  win_h = glutGet(GLUT_WINDOW_HEIGHT);
+  
+  glutWarpPointer(win_w / 2, win_h / 2);
 
   return 0;
 }
@@ -364,7 +370,7 @@ static void myPassiveMotionCallback(int x, int y) {
   struct MouseEvent *neu = malloc(sizeof(struct MouseEvent));
   neu->type = MOUSE_EVENT_PASSIVE;
   neu->x = x;
-  neu->y = glutGet(GLUT_WINDOW_HEIGHT) - y;
+  neu->y = y;
   neu->next = NULL;
 
   struct MouseEvent *pre = g_mouseEvents;
@@ -376,11 +382,28 @@ static void myPassiveMotionCallback(int x, int y) {
   else
     g_mouseEvents = neu;
 
-  const int centerX = glutGet(GLUT_WINDOW_WIDTH)/2;
-  const int centerY = glutGet(GLUT_WINDOW_HEIGHT)/2;
-  if (x != centerX || y != centerY) {
+
+  int deltaX = x - win_w / 2;
+  int deltaY = y - win_h / 2;
+
+  if (deltaX != 0 || deltaY != 0) {
+        glutWarpPointer(win_w / 2, win_h / 2);
+        g_mouseEvents->x = win_w / 2;
+        g_mouseEvents->y = win_h / 2;
+  }/*
+  
+  if (x > centerX*2 || y > centerY*2 || x < 0 || y < 0) {
     glutWarpPointer(centerX, centerY);
   }
+  if ( x < 50 || x > win_w - 50 || (y < 50 || y > win_h - 50)) {  
+      g_lastX = win_w/2;   
+      g_lastY = win_h/2;   
+      glutWarpPointer(win_w/2, win_h/2);
+  }else if (y < 50 || y > win_h - 50) {
+      g_lastX = win_w/2;
+      g_lastY = win_h/2;
+      glutWarpPointer(win_w/2, win_h/2);
+  } */
 }
 
 static void myMouseCallback(int button, int state, int x, int y) {
@@ -388,7 +411,7 @@ static void myMouseCallback(int button, int state, int x, int y) {
   neu->button = button;
   neu->type = (state == GLUT_DOWN) ? MOUSE_EVENT_DOWN : MOUSE_EVENT_UP;
   neu->x = x;
-  neu->y = glutGet(GLUT_WINDOW_HEIGHT) - y;
+  neu->y = y;
   neu->next = NULL;
 
   struct MouseEvent *pre = g_mouseEvents;
@@ -407,7 +430,7 @@ static s32 org_lwjgl_input_Mouse_getDX_I0(Runtime *runtime, JClass *clazz) {
     return 0;
   }
 
-  push_int(runtime->stack, g_mouseEvents->x - g_lastX);
+  push_int(runtime->stack, -(g_mouseEvents->x - g_lastX));
   return 0;
 }
 
@@ -417,7 +440,7 @@ static s32 org_lwjgl_input_Mouse_getDY_I0(Runtime *runtime, JClass *clazz) {
     return 0;
   }
 
-  push_int(runtime->stack, g_mouseEvents->y - g_lastY);
+  push_int(runtime->stack, (g_mouseEvents->y - g_lastY));
   return 0;
 }
 
