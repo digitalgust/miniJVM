@@ -390,20 +390,7 @@ static void myPassiveMotionCallback(int x, int y) {
         glutWarpPointer(win_w / 2, win_h / 2);
         g_mouseEvents->x = win_w / 2;
         g_mouseEvents->y = win_h / 2;
-  }/*
-  
-  if (x > centerX*2 || y > centerY*2 || x < 0 || y < 0) {
-    glutWarpPointer(centerX, centerY);
   }
-  if ( x < 50 || x > win_w - 50 || (y < 50 || y > win_h - 50)) {  
-      g_lastX = win_w/2;   
-      g_lastY = win_h/2;   
-      glutWarpPointer(win_w/2, win_h/2);
-  }else if (y < 50 || y > win_h - 50) {
-      g_lastX = win_w/2;
-      g_lastY = win_h/2;
-      glutWarpPointer(win_w/2, win_h/2);
-  } */
 }
 
 static void myMouseCallback(int button, int state, int x, int y) {

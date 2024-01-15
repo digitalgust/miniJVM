@@ -326,8 +326,15 @@ public final class Display {
         return 0;
 	}
 	
+	public static void setTitle(String newTitle) {
+	}
+	
 	public static boolean isCloseRequested() {
         return false;
+    }
+	
+	public static boolean isActive() {
+        return true;
     }
 
 	/**

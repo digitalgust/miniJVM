@@ -40,6 +40,16 @@ s32 org_lwjgl_opengl_GL11_glEnable_IV(Runtime *runtime, JClass *clazz) {
   return 0;
 }
 
+s32 org_lwjgl_opengl_GL11_glViewport_IV(Runtime *runtime, JClass *clazz) {
+  RuntimeStack *stack = runtime->stack;
+  s32 arg1 = localvar_getInt(runtime->localvar, 0);
+  s32 arg2 = localvar_getInt(runtime->localvar, 1);
+  s32 arg3 = localvar_getInt(runtime->localvar, 2);
+  s32 arg4 = localvar_getInt(runtime->localvar, 3);
+  // glViewport(arg1, arg2, arg3, arg4); //works, but commented *for now*
+  return 0;
+}
+
 s32 org_lwjgl_opengl_GL11_glDisable_IV(Runtime *runtime, JClass *clazz) {
   RuntimeStack *stack = runtime->stack;
   s32 arg1 = localvar_getInt(runtime->localvar, 0);
@@ -554,6 +564,9 @@ static java_native_method METHODS_LWJGL_TABLE[] = {
      org_lwjgl_opengl_GL11_glTranslatef_IV},
     {"org/lwjgl/opengl/GL11", "glRotatef", "(FFFF)V",
      org_lwjgl_opengl_GL11_glRotatef_IV},
+     {"org/lwjgl/opengl/GL11", "glViewport", "(IIII)V",
+     org_lwjgl_opengl_GL11_glViewport_IV},
+     
     {"org/lwjgl/opengl/GL11", "glColor3f", "(FFF)V",
      org_lwjgl_opengl_GL11_glColor3f_IV},
     {"org/lwjgl/opengl/GL11", "glColor4f", "(FFFF)V",

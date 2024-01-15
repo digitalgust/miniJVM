@@ -25,6 +25,7 @@ public class GL11 {
     public static native void glGenTextures(java.nio.IntBuffer a1);
     public static native void glBindTexture(int a1, int a2);
     public static native void glTexParameteri(int a1, int a2, int a3);
+    public static native void glViewport(int a1, int a2, int a3, int a4);
     public static native void glNewList(int a1, int a2);
     public static native void glEndList();
     public static native void glCallList(int a1);
