@@ -87,7 +87,8 @@ public final class BufferUtils {
 	 * @return an IntBuffer
 	 */
 	public static IntBuffer createIntBuffer(int size) {
-		return createByteBuffer(size << 2).asIntBuffer();
+		// return createByteBuffer(size << 2).asIntBuffer();
+		return IntBuffer.allocate(size);
 	}
 
 	/**
@@ -107,7 +108,8 @@ public final class BufferUtils {
 	 * @return a FloatBuffer
 	 */
 	public static FloatBuffer createFloatBuffer(int size) {
-		return createByteBuffer(size << 2).asFloatBuffer();
+		// return createByteBuffer(size << 2).asFloatBuffer();
+		return FloatBuffer.allocate(size);
 	}
 
 	/**

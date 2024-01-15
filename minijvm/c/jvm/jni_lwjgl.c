@@ -278,10 +278,14 @@ s32 org_lwjgl_opengl_GL11_gluErrorString_IV(Runtime *runtime, JClass *clazz) {
 s32 org_lwjgl_opengl_GL11_glGetInteger_IV(Runtime *runtime, JClass *clazz) {
   s32 a1 = localvar_getInt(runtime->localvar, 0);
   Instance *buffer = localvar_getRefer(runtime->localvar, 1);
-  c8 *pBuffer = getFieldPtr_byName_c(buffer, "java/nio/IntBufferImpl", "array",
-                                     "[I", runtime);
-  Instance *iAry = getFieldRefer(pBuffer);
-  glGetIntegerv(a1, (GLint *)iAry->arr_body);
+  c8 *pBuffer = getFieldPtr_byName_c(buffer, "java/nio/Buffer",
+                                     "address", "J", runtime);
+  GLint *f1 = (GLint *)(intptr_t)getFieldLong(pBuffer);
+  if (!f1) {
+    abort();
+    return 0;
+  }
+  glGetIntegerv(a1, f1);
 
   return 0;
 }
@@ -289,36 +293,20 @@ s32 org_lwjgl_opengl_GL11_glGetInteger_IV(Runtime *runtime, JClass *clazz) {
 s32 org_lwjgl_opengl_GL11_glGetFloat_IV(Runtime *runtime, JClass *clazz) {
   s32 a1 = localvar_getInt(runtime->localvar, 0);
   Instance *buffer = localvar_getRefer(runtime->localvar, 1);
-
-  Instance *newAry = jarray_create_by_type_index(runtime, 16, DATATYPE_FLOAT);
-  Int2Float i2fOne = {.f = 0.f};
-  for (int i = 0; i < 16; ++i) {
-    jarray_set_field(newAry, i, i2fOne.i);
+  c8 *pBuffer = getFieldPtr_byName_c(buffer, "java/nio/Buffer",
+                                     "address", "J", runtime);
+  GLfloat *f1 = (GLfloat *)(intptr_t)getFieldLong(pBuffer);
+  if (!f1) {
+    abort();
+    return 0;
   }
-  glGetFloatv(a1, (GLfloat *)newAry->arr_body);
-
-  push_ref(runtime->stack, buffer);
-  push_ref(runtime->stack, newAry);
-  execute_method(find_methodInfo_by_name_c("java/nio/FloatBuffer", "put",
-                                           "([F)Ljava/nio/FloatBuffer;",
-                                           /*clazz->jloader*/ NULL, runtime),
-                 runtime);
-  pop_ref(runtime->stack);
-
-#if 0
-  s32 a1 = localvar_getInt(runtime->localvar, 0);
-  Instance *buffer = localvar_getRefer(runtime->localvar, 1);
-  c8 *pBuffer = getFieldPtr_byName_c(buffer, "java/nio/FloatBufferImpl", "array", "[F", runtime);
-  Instance *iAry = getFieldRefer(pBuffer);
   glGetFloatv(a1, f1);
-  for (int i = 0; (i < iAry->arr_length) && (i < 16); ++i)
-    jarray_set_field(iAry, i, f1[i]);
-#endif
 
   return 0;
 }
 
-s32 org_lwjgl_opengl_GL11_glInterleavedArrays_IV(Runtime *runtime, JClass *clazz) {
+s32 org_lwjgl_opengl_GL11_glInterleavedArrays_IV(Runtime *runtime,
+                                                 JClass *clazz) {
   s32 a1 = localvar_getInt(runtime->localvar, 0);
   s32 a2 = localvar_getInt(runtime->localvar, 1);
   Instance *buffer = localvar_getRefer(runtime->localvar, 2);
@@ -331,13 +319,13 @@ s32 org_lwjgl_opengl_GL11_glInterleavedArrays_IV(Runtime *runtime, JClass *clazz
 }
 
 s32 org_lwjgl_opengl_GL11_glVertexPointer_IV(Runtime *runtime, JClass *clazz) {
-  s32 a1 = localvar_getInt(runtime->localvar, 0);
-  s32 a2 = localvar_getInt(runtime->localvar, 1);
+  s32 size = localvar_getInt(runtime->localvar, 0);
+  s32 stride = localvar_getInt(runtime->localvar, 1);
   Instance *buffer = localvar_getRefer(runtime->localvar, 2);
   c8 *pBuffer = getFieldPtr_byName_c(buffer, "java/nio/FloatBufferImpl",
                                      "array", "[F", runtime);
   Instance *iAry = getFieldRefer(pBuffer);
-  glVertexPointer(a1, GL_FLOAT, a2, (GLfloat *)iAry->arr_body);
+  glVertexPointer(size, GL_FLOAT, stride, (GLfloat *)iAry->arr_body);
 
   return 0;
 }
@@ -382,6 +370,7 @@ s32 org_lwjgl_opengl_GL11_gluPickMatrix_IV(Runtime *runtime, JClass *clazz) {
 
   return 0;
 }
+
 s32 org_lwjgl_opengl_GL11_glSelectBuffer_IV(Runtime *runtime, JClass *clazz) {
   Instance *buffer = localvar_getRefer(runtime->localvar, 0);
   c8 *pBuffer = getFieldPtr_byName_c(buffer, "java/nio/IntBufferImpl", "array",
@@ -564,7 +553,8 @@ static java_native_method METHODS_LWJGL_TABLE[] = {
      org_lwjgl_opengl_GL11_glFog_IV},
     {"org/lwjgl/opengl/GL11", "glVertexPointer", "(IILjava/nio/FloatBuffer;)V",
      org_lwjgl_opengl_GL11_glVertexPointer_IV},
-    {"org/lwjgl/opengl/GL11", "glInterleavedArrays", "(IILjava/nio/FloatBuffer;)V",
+    {"org/lwjgl/opengl/GL11", "glInterleavedArrays",
+     "(IILjava/nio/FloatBuffer;)V",
      org_lwjgl_opengl_GL11_glInterleavedArrays_IV},
     {"org/lwjgl/opengl/GL11", "glTexCoordPointer",
      "(IILjava/nio/FloatBuffer;)V", org_lwjgl_opengl_GL11_glTexCoordPointer_IV},
