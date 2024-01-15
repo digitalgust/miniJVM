@@ -303,8 +303,8 @@ s32 org_lwjgl_opengl_GL11_gluErrorString_IV(Runtime *runtime, JClass *clazz) {
 s32 org_lwjgl_opengl_GL11_glGetInteger_IV(Runtime *runtime, JClass *clazz) {
   s32 a1 = localvar_getInt(runtime->localvar, 0);
   Instance *buffer = localvar_getRefer(runtime->localvar, 1);
-  c8 *pBuffer = getFieldPtr_byName_c(buffer, "java/nio/Buffer",
-                                     "address", "J", runtime);
+  c8 *pBuffer =
+      getFieldPtr_byName_c(buffer, "java/nio/Buffer", "address", "J", runtime);
   GLint *f1 = (GLint *)(intptr_t)getFieldLong(pBuffer);
   if (!f1) {
     abort();
@@ -318,8 +318,8 @@ s32 org_lwjgl_opengl_GL11_glGetInteger_IV(Runtime *runtime, JClass *clazz) {
 s32 org_lwjgl_opengl_GL11_glGetFloat_IV(Runtime *runtime, JClass *clazz) {
   s32 a1 = localvar_getInt(runtime->localvar, 0);
   Instance *buffer = localvar_getRefer(runtime->localvar, 1);
-  c8 *pBuffer = getFieldPtr_byName_c(buffer, "java/nio/Buffer",
-                                     "address", "J", runtime);
+  c8 *pBuffer =
+      getFieldPtr_byName_c(buffer, "java/nio/Buffer", "address", "J", runtime);
   GLfloat *f1 = (GLfloat *)(intptr_t)getFieldLong(pBuffer);
   if (!f1) {
     abort();
@@ -335,10 +335,10 @@ s32 org_lwjgl_opengl_GL11_glInterleavedArrays_IV(Runtime *runtime,
   s32 a1 = localvar_getInt(runtime->localvar, 0);
   s32 a2 = localvar_getInt(runtime->localvar, 1);
   Instance *buffer = localvar_getRefer(runtime->localvar, 2);
-  c8 *pBuffer = getFieldPtr_byName_c(buffer, "java/nio/FloatBufferImpl",
-                                     "array", "[F", runtime);
-  Instance *iAry = getFieldRefer(pBuffer);
-  glInterleavedArrays(a1, a2, (GLfloat *)iAry->arr_body);
+  c8 *pBuffer =
+      getFieldPtr_byName_c(buffer, "java/nio/Buffer", "address", "J", runtime);
+  GLfloat *pAry = (GLfloat *)(intptr_t)getFieldLong(pBuffer);
+  glInterleavedArrays(a1, a2, pAry);
 
   return 0;
 }
@@ -417,11 +417,10 @@ s32 org_lwjgl_opengl_GL11_gluBuild2DMipmaps_IV(Runtime *runtime,
   arg6 = localvar_getInt(runtime->localvar, 5);
 
   Instance *buffer = localvar_getRefer(runtime->localvar, 6);
-  c8 *pBuffer = getFieldPtr_byName_c(buffer, "java/nio/ByteBufferImpl", "array",
-                                     "[B", runtime);
-  Instance *iAry = getFieldRefer(pBuffer);
-  gluBuild2DMipmaps(arg1, arg2, arg3, arg4, arg5, arg6,
-                    (GLuint *)iAry->arr_body);
+  c8 *pBuffer =
+      getFieldPtr_byName_c(buffer, "java/nio/Buffer", "address", "J", runtime);
+  GLuint *pAry = (GLuint *)(intptr_t)getFieldLong(pBuffer);
+  gluBuild2DMipmaps(arg1, arg2, arg3, arg4, arg5, arg6, pAry);
 
   return 0;
 }
@@ -479,27 +478,27 @@ s32 org_lwjgl_opengl_GL11_glBlendFunc_IV(Runtime *runtime, JClass *clazz) {
 s32 org_lwjgl_opengl_GL11_glFog_IV(Runtime *runtime, JClass *clazz) {
   s32 a1 = localvar_getInt(runtime->localvar, 0);
   Instance *buffer = localvar_getRefer(runtime->localvar, 1);
-  c8 *pBuffer = getFieldPtr_byName_c(buffer, "java/nio/FloatBufferImpl",
-                                     "array", "[F", runtime);
-  Instance *iAry = getFieldRefer(pBuffer);
-  glFogfv(a1, (GLfloat *)iAry->arr_body);
+  c8 *pBuffer =
+      getFieldPtr_byName_c(buffer, "java/nio/Buffer", "address", "J", runtime);
+  GLfloat *pAry = (GLfloat *)(intptr_t)getFieldLong(pBuffer);
+  glFogfv(a1, pAry);
 
   return 0;
 }
 
 s32 org_lwjgl_opengl_GL11_glTexCoord2f_V2(Runtime *runtime, JClass *clazz) {
   RuntimeStack *stack = runtime->stack;
-  Int2Float arg1 = { .i = localvar_getInt(runtime->localvar, 0) };
-  Int2Float arg2 = { .i = localvar_getInt(runtime->localvar, 1) };
+  Int2Float arg1 = {.i = localvar_getInt(runtime->localvar, 0)};
+  Int2Float arg2 = {.i = localvar_getInt(runtime->localvar, 1)};
   glTexCoord2f(arg1.f, arg2.f);
   return 0;
 }
 
 s32 org_lwjgl_opengl_GL11_glVertex3f_V3(Runtime *runtime, JClass *clazz) {
   RuntimeStack *stack = runtime->stack;
-  Int2Float arg1 = { .i = localvar_getInt(runtime->localvar, 0) };
-  Int2Float arg2 = { .i = localvar_getInt(runtime->localvar, 1) };
-  Int2Float arg3 = { .i = localvar_getInt(runtime->localvar, 2) };
+  Int2Float arg1 = {.i = localvar_getInt(runtime->localvar, 0)};
+  Int2Float arg2 = {.i = localvar_getInt(runtime->localvar, 1)};
+  Int2Float arg3 = {.i = localvar_getInt(runtime->localvar, 2)};
   glVertex3f(arg1.f, arg2.f, arg3.f);
   return 0;
 }
@@ -615,8 +614,7 @@ static java_native_method METHODS_LWJGL_TABLE[] = {
 
     {"org/lwjgl/opengl/GL11", "glBegin", "(I)V",
      org_lwjgl_opengl_GL11_glBegin_V1},
-    {"org/lwjgl/opengl/GL11", "glEnd", "()V",
-     org_lwjgl_opengl_GL11_glEnd_V0},
+    {"org/lwjgl/opengl/GL11", "glEnd", "()V", org_lwjgl_opengl_GL11_glEnd_V0},
 
     {"org/lwjgl/opengl/GL11", "glTexCoord2f", "(FF)V",
      org_lwjgl_opengl_GL11_glTexCoord2f_V2},

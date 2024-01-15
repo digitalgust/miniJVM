@@ -67,7 +67,7 @@ public final class BufferUtils {
 	 * @return a ShortBuffer
 	 */
 	public static ShortBuffer createShortBuffer(int size) {
-		return createByteBuffer(size << 1).asShortBuffer();
+    return ShortBuffer.allocate(size);
 	}
 
 	/**
@@ -87,7 +87,6 @@ public final class BufferUtils {
 	 * @return an IntBuffer
 	 */
 	public static IntBuffer createIntBuffer(int size) {
-		// return createByteBuffer(size << 2).asIntBuffer();
 		return IntBuffer.allocate(size);
 	}
 
@@ -98,7 +97,7 @@ public final class BufferUtils {
 	 * @return an LongBuffer
 	 */
 	public static LongBuffer createLongBuffer(int size) {
-		return createByteBuffer(size << 3).asLongBuffer();
+		return LongBuffer.allocate(size);
 	}
 
 	/**
@@ -108,7 +107,6 @@ public final class BufferUtils {
 	 * @return a FloatBuffer
 	 */
 	public static FloatBuffer createFloatBuffer(int size) {
-		// return createByteBuffer(size << 2).asFloatBuffer();
 		return FloatBuffer.allocate(size);
 	}
 
@@ -119,7 +117,7 @@ public final class BufferUtils {
 	 * @return a FloatBuffer
 	 */
 	public static DoubleBuffer createDoubleBuffer(int size) {
-		return createByteBuffer(size << 3).asDoubleBuffer();
+		return DoubleBuffer.allocate(size);
 	}
 
 	/**
