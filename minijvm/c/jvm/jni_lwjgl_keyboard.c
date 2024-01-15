@@ -1,3 +1,4 @@
+#if 0
 #include "jvm.h"
 
 #include "glut_keys.h"
@@ -307,3 +308,4 @@ void reg_lwjgl_keyboard_native_lib(MiniJVM *jvm) {
   native_reg_lib(jvm, METHODS_LWJGL_KEYBOARD_TABLE,
                  sizeof(METHODS_LWJGL_KEYBOARD_TABLE) / sizeof(java_native_method));
 }
+#endif
