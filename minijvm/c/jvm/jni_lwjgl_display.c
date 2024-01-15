@@ -1,19 +1,22 @@
 #include "jvm.h"
 
-#include <SDL/SDL.h>
+#include <GL/freeglut_std.h>
+#include <GL/freeglut_ext.h>
+#include <GL/glut.h>
 
 int g_wnd = -1;
-SDL_Surface* screen;
+
+void myDisplayFunc() {}
 
 static s32 org_lwjgl_input_Display_create_V0(Runtime *runtime, JClass *clazz) {
-  SDL_Init(SDL_INIT_VIDEO);
-  SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-  SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-  SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-  SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
-  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+  int argc = 1;
+  char* argv[1] = {"test"};
   
-  screen = SDL_SetVideoMode(1024, 768, 0, SDL_OPENGL);
+  glutInit(&argc, argv);
+  glutInitDisplayMode( GLUT_SINGLE | GLUT_RGB );
+  glutInitWindowSize(1024, 768);
+  g_wnd = glutCreateWindow("lwjgl");
+  glutDisplayFunc(myDisplayFunc);
   
   return 0;
 }
@@ -21,7 +24,8 @@ static s32 org_lwjgl_input_Display_create_V0(Runtime *runtime, JClass *clazz) {
 
 static s32 org_lwjgl_input_Display_update_V0(Runtime *runtime,
                                                JClass *clazz) {
-  SDL_GL_SwapBuffers();
+  glutMainLoopEvent();
+  glutSwapBuffers();
 
   return 0;
 }

@@ -39,7 +39,7 @@ CSRC="../minijvm/c"
 
 SRCLIST=`find ${CSRC}  -type f  -name "*.c" -not -path "${CSRC}/utils/sljit/*"  -not -path "${CSRC}/cmake-*" -not -path "${CSRC}/.*"`
 #echo ${SRCLIST}
-${GCC}  -o mini_jvm -I${CSRC}/jvm -I${CSRC}/utils/ -I${CSRC}/utils/sljit/ -I${CSRC}/utils/https/ -I${CSRC}/utils/https/mbedtls/include/  $SRCLIST ${CSRC}/utils/sljit/sljitLir.c   -pthread  -lpthread -lm -ldl -lglut -lGL -lGLU -lSDL
+${GCC}  -o mini_jvm -I${CSRC}/jvm -I${CSRC}/utils/ -I${CSRC}/utils/sljit/ -I${CSRC}/utils/https/ -I${CSRC}/utils/https/mbedtls/include/  $SRCLIST ${CSRC}/utils/sljit/sljitLir.c   -pthread  -lpthread -lm -ldl -lglut -lGL -lGLU
 
 
 echo "compile glfw_gui"
@@ -52,7 +52,7 @@ if [[ $UNAME == *$OSNAME* ]]
 then
     ${GCC} -shared -fPIC -o ${LIBFILE} -I../minijvm/c/jvm -I${CSRC}/ -I${CSRC}/deps/include -L${CSRC}/deps/lib/${LIBDIR} -lpthread -lglfw3 -framework Cocoa -framework IOKit -framework OpenGL -framework CoreFoundation -framework CoreVideo $SRCLIST
 else
-    ${GCC} -shared -fPIC -o ${LIBFILE} -I../minijvm/c/jvm -I${CSRC}/ -I${CSRC}/deps/include -L${CSRC}/deps/lib/${LIBDIR}   $SRCLIST -pthread -lglfw3 -lX11 -lXi -lpthread -lXcursor -lXrandr -lGL -lXinerama -lSDL
+    ${GCC} -shared -fPIC -o ${LIBFILE} -I../minijvm/c/jvm -I${CSRC}/ -I${CSRC}/deps/include -L${CSRC}/deps/lib/${LIBDIR}   $SRCLIST -pthread -lglfw3 -lX11 -lXi -lpthread -lXcursor -lXrandr -lGL -lXinerama
 fi
 mv mini_jvm ${LIBFILE} ${BINDIR}/
 
