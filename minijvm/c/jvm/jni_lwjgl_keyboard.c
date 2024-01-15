@@ -98,6 +98,7 @@ static struct KeyEvent {
 } *g_keyEvents = NULL;
 
 static void mySpecialCallback(int key, int x, int y) {
+  printf("skey = %d\n", key);
   {
     struct KeyEvent *neu = malloc(sizeof(struct KeyEvent));
     neu->type = KEY_EVENT_DOWN;
@@ -124,6 +125,7 @@ static void mySpecialCallback(int key, int x, int y) {
 }
 
 static void myKeyboardCallback(unsigned char key, int x, int y) {
+  printf("key = %d\n", key);
   {
     struct KeyEvent *neu = malloc(sizeof(struct KeyEvent));
     neu->type = KEY_EVENT_DOWN;
@@ -180,7 +182,7 @@ static void myKeyboardUpCallback(unsigned char key, int x, int y) {
       struct PressedKey *old = pre->next;
       free(pre);
 
-      pre = old;
+      g_pressedKeys = old;
       return;
     }
     while (pre) {
@@ -267,15 +269,19 @@ static s32 org_lwjgl_input_Keyboard_isKeyDown_I1(Runtime *runtime,
 };
 
 static s32 org_lwjgl_input_Keyboard_create_V0(Runtime *runtime, JClass *clazz) {
+  printf("keyboard start\n");
+  glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);
+  glutSpecialFunc(mySpecialCallback);
   glutKeyboardFunc(myKeyboardCallback);
   glutKeyboardUpFunc(myKeyboardUpCallback);
-  glutSpecialFunc(mySpecialCallback);
 
   return 0;
 }
 
 static s32 org_lwjgl_input_Keyboard_destroy_V0(Runtime *runtime,
                                                JClass *clazz) {
+  printf("keyboard end\n");
+  glutSetKeyRepeat(GLUT_KEY_REPEAT_DEFAULT);
   glutKeyboardFunc(NULL);
   glutKeyboardUpFunc(NULL);
   glutSpecialFunc(NULL);

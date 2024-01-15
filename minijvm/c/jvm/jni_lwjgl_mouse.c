@@ -18,7 +18,7 @@ static void myPassiveMotionCallback(int x, int y) {
   struct MouseEvent *neu = malloc(sizeof(struct MouseEvent));
   neu->type = MOUSE_EVENT_PASSIVE;
   neu->x = x;
-  neu->y = y;
+  neu->y = glutGet(GLUT_WINDOW_HEIGHT) - y;
   neu->next = NULL;
 
   struct MouseEvent *pre = g_mouseEvents;
@@ -31,17 +31,18 @@ static void myPassiveMotionCallback(int x, int y) {
     g_mouseEvents = neu;
 
   const int centerX = glutGet(GLUT_WINDOW_WIDTH)/2;
-  const int centerY = glutGet(GLUT_WINDOW_WIDTH)/2;
+  const int centerY = glutGet(GLUT_WINDOW_HEIGHT)/2;
   if (x != centerX || y != centerY) {
     glutWarpPointer(centerX, centerY);
   }
 }
 
 static void myMouseCallback(int button, int state, int x, int y) {
+  printf("mouse = %d %d %d %d\n", button, state, x, y);
   struct MouseEvent *neu = malloc(sizeof(struct MouseEvent));
   neu->type = (state == GLUT_DOWN) ? MOUSE_EVENT_DOWN : MOUSE_EVENT_UP;
   neu->x = x;
-  neu->y = y;
+  neu->y = glutGet(GLUT_WINDOW_HEIGHT) - y;
   neu->next = NULL;
 
   struct MouseEvent *pre = g_mouseEvents;
@@ -114,6 +115,7 @@ static s32 org_lwjgl_input_Mouse_next_Z0(Runtime *runtime, JClass *clazz) {
 
 static s32 org_lwjgl_input_Mouse_setGrabbed_V1(Runtime *runtime, JClass *clazz) {
   g_mouseGrabbed = localvar_getInt(runtime->localvar, 0);
+  glutSetCursor(g_mouseGrabbed ? GLUT_CURSOR_NONE : GLUT_CURSOR_LEFT_ARROW);
   return 0;
 }
 
