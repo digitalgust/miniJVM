@@ -20,6 +20,19 @@ s32 org_lwjgl_opengl_GL11_glGetError_I0(Runtime *runtime, JClass *clazz) {
   return 0;
 }
 
+s32 org_lwjgl_opengl_GL11_glBegin_V1(Runtime *runtime, JClass *clazz) {
+  RuntimeStack *stack = runtime->stack;
+  s32 arg1 = localvar_getInt(runtime->localvar, 0);
+  glBegin(arg1);
+  return 0;
+}
+
+s32 org_lwjgl_opengl_GL11_glEnd_V0(Runtime *runtime, JClass *clazz) {
+  RuntimeStack *stack = runtime->stack;
+  glEnd();
+  return 0;
+}
+
 s32 org_lwjgl_opengl_GL11_glEnable_IV(Runtime *runtime, JClass *clazz) {
   RuntimeStack *stack = runtime->stack;
   s32 arg1 = localvar_getInt(runtime->localvar, 0);
@@ -51,6 +64,18 @@ s32 org_lwjgl_opengl_GL11_glClearColor_IV(Runtime *runtime, JClass *clazz) {
   glClearColor(a1.f, a2.f, a3.f, a4.f);
   return 0;
 }
+
+s32 org_lwjgl_opengl_GL11_glColor3f_IV(Runtime *runtime, JClass *clazz) {
+  RuntimeStack *stack = runtime->stack;
+  Int2Float a1, a2, a3;
+  a1.i = localvar_getInt(runtime->localvar, 0);
+  a2.i = localvar_getInt(runtime->localvar, 1);
+  a3.i = localvar_getInt(runtime->localvar, 2);
+
+  glColor3f(a1.f, a2.f, a3.f);
+  return 0;
+}
+
 s32 org_lwjgl_opengl_GL11_glColor4f_IV(Runtime *runtime, JClass *clazz) {
   RuntimeStack *stack = runtime->stack;
   Int2Float a1, a2, a3, a4;
@@ -450,6 +475,7 @@ s32 org_lwjgl_opengl_GL11_glBlendFunc_IV(Runtime *runtime, JClass *clazz) {
   glBlendFunc(arg1, arg2);
   return 0;
 }
+
 s32 org_lwjgl_opengl_GL11_glFog_IV(Runtime *runtime, JClass *clazz) {
   s32 a1 = localvar_getInt(runtime->localvar, 0);
   Instance *buffer = localvar_getRefer(runtime->localvar, 1);
@@ -458,6 +484,23 @@ s32 org_lwjgl_opengl_GL11_glFog_IV(Runtime *runtime, JClass *clazz) {
   Instance *iAry = getFieldRefer(pBuffer);
   glFogfv(a1, (GLfloat *)iAry->arr_body);
 
+  return 0;
+}
+
+s32 org_lwjgl_opengl_GL11_glTexCoord2f_V2(Runtime *runtime, JClass *clazz) {
+  RuntimeStack *stack = runtime->stack;
+  Int2Float arg1 = { .i = localvar_getInt(runtime->localvar, 0) };
+  Int2Float arg2 = { .i = localvar_getInt(runtime->localvar, 1) };
+  glTexCoord2f(arg1.f, arg2.f);
+  return 0;
+}
+
+s32 org_lwjgl_opengl_GL11_glVertex3f_V3(Runtime *runtime, JClass *clazz) {
+  RuntimeStack *stack = runtime->stack;
+  Int2Float arg1 = { .i = localvar_getInt(runtime->localvar, 0) };
+  Int2Float arg2 = { .i = localvar_getInt(runtime->localvar, 1) };
+  Int2Float arg3 = { .i = localvar_getInt(runtime->localvar, 2) };
+  glVertex3f(arg1.f, arg2.f, arg3.f);
   return 0;
 }
 
@@ -512,6 +555,8 @@ static java_native_method METHODS_LWJGL_TABLE[] = {
      org_lwjgl_opengl_GL11_glTranslatef_IV},
     {"org/lwjgl/opengl/GL11", "glRotatef", "(FFFF)V",
      org_lwjgl_opengl_GL11_glRotatef_IV},
+    {"org/lwjgl/opengl/GL11", "glColor3f", "(FFF)V",
+     org_lwjgl_opengl_GL11_glColor3f_IV},
     {"org/lwjgl/opengl/GL11", "glColor4f", "(FFFF)V",
      org_lwjgl_opengl_GL11_glColor4f_IV},
     {"org/lwjgl/util/glu/GLU", "gluPerspective", "(FFFF)V",
@@ -567,6 +612,16 @@ static java_native_method METHODS_LWJGL_TABLE[] = {
      org_lwjgl_opengl_GL11_glPushMatrix_IV},
     {"org/lwjgl/opengl/GL11", "glPopMatrix", "()V",
      org_lwjgl_opengl_GL11_glPopMatrix_IV},
+
+    {"org/lwjgl/opengl/GL11", "glBegin", "(I)V",
+     org_lwjgl_opengl_GL11_glBegin_V1},
+    {"org/lwjgl/opengl/GL11", "glEnd", "()V",
+     org_lwjgl_opengl_GL11_glEnd_V0},
+
+    {"org/lwjgl/opengl/GL11", "glTexCoord2f", "(FF)V",
+     org_lwjgl_opengl_GL11_glTexCoord2f_V2},
+    {"org/lwjgl/opengl/GL11", "glVertex3f", "(FFF)V",
+     org_lwjgl_opengl_GL11_glVertex3f_V3},
 };
 
 void reg_lwjgl_native_lib(MiniJVM *jvm) {

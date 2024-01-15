@@ -1,6 +1,9 @@
 package org.lwjgl.opengl;
 
 public class GL11 {
+    public static native void glBegin(int a1);
+    public static native void glEnd();
+
     public static native int glGetError();
     public static native void glEnable(int a1);
     public static native void glDisable(int a1);
@@ -30,13 +33,15 @@ public class GL11 {
     public static native void glPushName(int a1);
     public static native void glPopName();
     public static native void glBlendFunc(int a1, int a2);
+    public static native void glColor3f(float r, float g, float b);
     public static native void glColor4f(float r, float g, float b, float a);
     public static native void glAlphaFunc(int a1, float a2);
     public static native void glOrtho(double left, double right, double bottom, double top, double zNear, double zFar);
     public static native void glPushMatrix();
     public static native void glPopMatrix();
-    
-    
+
+    public static native void glTexCoord2f(float x, float y);
+    public static native void glVertex3f(float x, float y, float z);
     public static native void glLightModel(int a1, java.nio.FloatBuffer a2);
     public static native void glGetFloat(int a1, java.nio.FloatBuffer a2);
     public static native void glGetInteger(int a1, java.nio.IntBuffer a2);
