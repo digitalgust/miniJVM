@@ -1607,10 +1607,12 @@ void reg_net_native_lib(MiniJVM *jvm);
 
 void reg_reflect_native_lib(MiniJVM *jvm);
 
+#if !defined(LWJGL_PLATFORM_GLUT) && !defined(LWJGL_PLATFORM_SDL1)
+#define LWJGL_PLATFORM_GLUT
+#endif
+
 void reg_lwjgl_native_lib(MiniJVM *jvm);
-void reg_lwjgl_keyboard_native_lib(MiniJVM *jvm);
-void reg_lwjgl_mouse_native_lib(MiniJVM *jvm);
-void reg_lwjgl_display_native_lib(MiniJVM *jvm);
+void reg_lwjgl_platform_native_lib(MiniJVM *jvm);
 void reg_awt_native_lib(MiniJVM *jvm);
 
 void init_jni_func_table(MiniJVM *jvm);
