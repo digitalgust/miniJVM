@@ -35,7 +35,7 @@ public class FileSystemWin extends FileSystemImpl {
     }
 
     public String getRegexParentTag() {
-        return "\\\\[^\\\\]+\\\\\\.\\.";
+        return "\\\\[^\\\\]+\\\\\\.\\.\\\\";
     }
 
     @Override
