@@ -575,6 +575,7 @@ public class Interpreter {
     public void reglib(Lib lib) {
         if (lib == null) return;
         extSubList.add(lib);
+        lib.setInterpreter(this);
     }
 
     //--------------------------------------------------------------------------
@@ -1740,11 +1741,10 @@ public class Interpreter {
                 //查找系统标准过程和用户扩充过程表
                 for (int i = 0; i < extSubList.size(); i++) {
                     Lib ext = extSubList.get(i);
-                    int mID = ext.getMethodID(subName);
-                    if (mID >= 0) {
-
+                    Func func = ext.getFuncByName(subName);
+                    if (func != null) {
                         //调用外部过程
-                        DataType re = ext.call(this, paraStack, mID);
+                        DataType re = func.run(paraStack);//ext.call(this, paraStack, mID);
                         putCachedVector(paraStack);
                         return re;
                     }
