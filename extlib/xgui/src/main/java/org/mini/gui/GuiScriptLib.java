@@ -17,158 +17,62 @@ import java.util.ArrayList;
  * @author Gust
  */
 public class GuiScriptLib extends Lib {
-
-    {
-        methodNames.put("setBgColor".toLowerCase(), 0);//  set background color
-        methodNames.put("setColor".toLowerCase(), 1);//  set background color
-        methodNames.put("setText".toLowerCase(), 2);//  set text
-        methodNames.put("getText".toLowerCase(), 3);//  get text
-        methodNames.put("setCmd".toLowerCase(), 8);//
-        methodNames.put("getCmd".toLowerCase(), 9);//
-        methodNames.put("close".toLowerCase(), 10);//  close frame
-        methodNames.put("getCurSlot".toLowerCase(), 11);//
-        methodNames.put("showSlot".toLowerCase(), 12);//
-        methodNames.put("getImg".toLowerCase(), 13);//
-        methodNames.put("setImg".toLowerCase(), 14);//
-        methodNames.put("setImgPath".toLowerCase(), 15);//
-        methodNames.put("getAttachStr".toLowerCase(), 16);//
-        methodNames.put("setAttachStr".toLowerCase(), 17);//
-        methodNames.put("getAttachInt".toLowerCase(), 18);//
-        methodNames.put("setAttachInt".toLowerCase(), 19);//
-        methodNames.put("setBgColorHexStr".toLowerCase(), 20);//  set background color
-        methodNames.put("setColorHexStr".toLowerCase(), 21);//  set color
-        methodNames.put("getListIdx".toLowerCase(), 22);//
-        methodNames.put("setImgAlphaStr".toLowerCase(), 23);//
-        methodNames.put("setEnable".toLowerCase(), 24);//
-        methodNames.put("setListIdx".toLowerCase(), 25);//
-        methodNames.put("setCheckBox".toLowerCase(), 26);//
-        methodNames.put("getCheckBox".toLowerCase(), 27);//
-        methodNames.put("setScrollBar".toLowerCase(), 28);//
-        methodNames.put("getScrollBar".toLowerCase(), 29);//
-        methodNames.put("setSwitch".toLowerCase(), 30);//
-        methodNames.put("getSwitch".toLowerCase(), 31);//
-        methodNames.put("getX".toLowerCase(), 32);//
-        methodNames.put("getY".toLowerCase(), 33);//
-        methodNames.put("getW".toLowerCase(), 34);//
-        methodNames.put("getH".toLowerCase(), 35);//
-        methodNames.put("setXY".toLowerCase(), 36);//
-        methodNames.put("setWH".toLowerCase(), 37);//
-        methodNames.put("loadXmlUI".toLowerCase(), 38);//
-        methodNames.put("uiExist".toLowerCase(), 39);//
-        methodNames.put("getListText".toLowerCase(), 40);//
-        methodNames.put("showBar".toLowerCase(), 41);//
-        methodNames.put("showMsg".toLowerCase(), 42);//
-        methodNames.put("insertText".toLowerCase(), 43);//
-        methodNames.put("deleteText".toLowerCase(), 44);//
-        methodNames.put("getCaretPos".toLowerCase(), 45);//
-
-    }
-
-    ;
     GForm form;
+
 
     /**
      *
      */
     public GuiScriptLib(GForm form) {
         this.form = form;
+
+        {
+            methodNames.put("setBgColor".toLowerCase(), this::setBgColor);//  set background color
+            methodNames.put("setColor".toLowerCase(), this::setColor);//  set background color
+            methodNames.put("setText".toLowerCase(), this::setText);//  set text
+            methodNames.put("getText".toLowerCase(), this::getText);//  get text
+            methodNames.put("setCmd".toLowerCase(), this::setCmd);//
+            methodNames.put("getCmd".toLowerCase(), this::getCmd);//
+            methodNames.put("close".toLowerCase(), this::close);//  close frame
+            methodNames.put("getCurSlot".toLowerCase(), this::getCurSlot);//
+            methodNames.put("showSlot".toLowerCase(), this::showSlot);//
+            methodNames.put("getImg".toLowerCase(), this::getImg);//
+            methodNames.put("setImg".toLowerCase(), this::setImg);//
+            methodNames.put("setImgPath".toLowerCase(), this::setImgPath);//
+            methodNames.put("getAttachStr".toLowerCase(), this::getAttachStr);//
+            methodNames.put("setAttachStr".toLowerCase(), this::setAttachStr);//
+            methodNames.put("getAttachInt".toLowerCase(), this::getAttachInt);//
+            methodNames.put("setAttachInt".toLowerCase(), this::setAttachInt);//
+            methodNames.put("setBgColorHexStr".toLowerCase(), this::setBgColorHexStr);//  set background color
+            methodNames.put("setColorHexStr".toLowerCase(), this::setColorHexStr);//  set color
+            methodNames.put("getListIdx".toLowerCase(), this::getListIdx);//
+            methodNames.put("setImgAlphaStr".toLowerCase(), this::setImgAlphaStr);//
+            methodNames.put("setEnable".toLowerCase(), this::setEnable);//
+            methodNames.put("setListIdx".toLowerCase(), this::setListIdx);//
+            methodNames.put("setCheckBox".toLowerCase(), this::setCheckBox);//
+            methodNames.put("getCheckBox".toLowerCase(), this::getCheckBox);//
+            methodNames.put("setScrollBar".toLowerCase(), this::setScrollBar);//
+            methodNames.put("getScrollBar".toLowerCase(), this::getScrollBar);//
+            methodNames.put("setSwitch".toLowerCase(), this::setSwitch);//
+            methodNames.put("getSwitch".toLowerCase(), this::getSwitch);//
+            methodNames.put("getX".toLowerCase(), this::getX);//
+            methodNames.put("getY".toLowerCase(), this::getY);//
+            methodNames.put("getW".toLowerCase(), this::getW);//
+            methodNames.put("getH".toLowerCase(), this::getH);//
+            methodNames.put("setXY".toLowerCase(), this::setXY);//
+            methodNames.put("setWH".toLowerCase(), this::setWH);//
+            methodNames.put("loadXmlUI".toLowerCase(), this::loadXmlUI);//
+            methodNames.put("uiExist".toLowerCase(), this::uiExist);//
+            methodNames.put("getListText".toLowerCase(), this::getListText);//
+            methodNames.put("showBar".toLowerCase(), this::showBar);//
+            methodNames.put("showMsg".toLowerCase(), this::showMsg);//
+            methodNames.put("insertText".toLowerCase(), this::insertText);//
+            methodNames.put("deleteText".toLowerCase(), this::deleteText);//
+            methodNames.put("getCaretPos".toLowerCase(), this::getCaretPos);//
+
+        }
     }
 
-    /**
-     * @param para
-     * @param methodID
-     * @return
-     */
-    public DataType call(Interpreter inp, ArrayList<DataType> para, int methodID) {
-        switch (methodID) {
-            case 0:
-                return setBgColor(para);
-            case 1:
-                return setColor(para);
-            case 2:
-                return setText(para);
-            case 3:
-                return getText(para);
-            case 8:
-                return setCmd(para);
-            case 9:
-                return getCmd(para);
-            case 10:
-                return close(para);
-            case 11:
-                return getCurSlot(para);
-            case 12:
-                return showSlot(para);
-            case 13:
-                return getImg(para);
-            case 14:
-                return setImg(para);
-            case 15:
-                return setImgPath(para);
-            case 16:
-                return getAttachStr(para);
-            case 17:
-                return setAttachStr(para);
-            case 18:
-                return getAttachInt(para);
-            case 19:
-                return setAttachInt(para);
-            case 20:
-                return setBgColorHexStr(para);
-            case 21:
-                return setColorHexStr(para);
-            case 22:
-                return getListIdx(para);
-            case 23:
-                return setImgAlphaStr(para);
-            case 24:
-                return setEnable(para);
-            case 25:
-                return setListIdx(para);
-            case 26:
-                return setCheckBox(para);
-            case 27:
-                return getCheckBox(para);
-            case 28:
-                return setScrollBar(para);
-            case 29:
-                return getScrollBar(para);
-            case 30:
-                return setSwitch(para);
-            case 31:
-                return getSwitch(para);
-            case 32:
-                return getX(para);
-            case 33:
-                return getY(para);
-            case 34:
-                return getW(para);
-            case 35:
-                return getH(para);
-            case 36:
-                return setXY(para);
-            case 37:
-                return setWH(para);
-            case 38:
-                return loadXmlUI(para);
-            case 39:
-                return uiExist(para);
-            case 40:
-                return getListText(para);
-            case 41:
-                return showBar(para);
-            case 42:
-                return showMsg(para);
-            case 43:
-                return insertText(para);
-            case 44:
-                return deleteText(para);
-            case 45:
-                return getCaretPos(para);
-            default:
-        }
-        return null;
-    }
 
     // -------------------------------------------------------------------------
     // inner method

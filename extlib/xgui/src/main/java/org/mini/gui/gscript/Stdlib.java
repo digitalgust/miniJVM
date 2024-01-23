@@ -4,6 +4,7 @@ import org.mini.reflect.ReflectMethod;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.ArrayList;
@@ -17,106 +18,40 @@ import java.util.ArrayList;
  */
 public class Stdlib extends Lib {
 
-    {
-        methodNames.put("print".toLowerCase(), 0); // 向控制台输出字符串
-        methodNames.put("min".toLowerCase(), 1);// 求最小值
-        methodNames.put("max".toLowerCase(), 2); // 求最大值
-        methodNames.put("arrlen".toLowerCase(), 3); // 求数组大小
-        methodNames.put("abs".toLowerCase(), 4); // 求取对值
-        methodNames.put("random".toLowerCase(), 5); // 得到一个随机数
-        methodNames.put("mod".toLowerCase(), 6);// 取余
-        methodNames.put("println".toLowerCase(), 7); // 输出回车
-        methodNames.put("strlen".toLowerCase(), 8); // 字符串长度
-        methodNames.put("equals".toLowerCase(), 9); // 字符串比较
-        methodNames.put("def".toLowerCase(), 10); // 存入全局变量
-        methodNames.put("isdef".toLowerCase(), 11); // 是否存在某全局变量
-        methodNames.put("valueof".toLowerCase(), 12); // 转换字符串为数值
-        methodNames.put("idxof".toLowerCase(), 13);// 子串在母串的位置        idxof("abc","a")  结果0
-        methodNames.put("substr".toLowerCase(), 14); // 截子串        substr("abcde",1,4)      结果"bcd"
-        methodNames.put("split".toLowerCase(), 15); // 截子串        substr("abcde",1,4)      结果"bcd"
-        methodNames.put("base64enc".toLowerCase(), 16); //   base64编码
-        methodNames.put("base64dec".toLowerCase(), 17); //   base64解码
-        methodNames.put("isnull".toLowerCase(), 18); //   Obj 类型是否为空
-        methodNames.put("getobjfield".toLowerCase(), 19);
-        methodNames.put("setobjfield".toLowerCase(), 20);
-        methodNames.put("trim".toLowerCase(), 21);//字符串去空格
-        methodNames.put("str2int".toLowerCase(), 22);//字符串转int
-        methodNames.put("invokeJava".toLowerCase(), 23);//执行对象方法
-        methodNames.put("invokeStatic".toLowerCase(), 24);//执行对象方法
-        methodNames.put("getbit".toLowerCase(), 25);//取整数第n位,返回bool
-        methodNames.put("setbit".toLowerCase(), 26);//设整数第n位
-    }
-
-
     //随机数基石
     private static Random random = new Random(); //定义一个随机值
 
-    /**
-     * @return
-     */
-    public Map<String, Integer> getMethodNames() {
-        return methodNames;
+
+    public Stdlib() {
+        methodNames.put("print".toLowerCase(), this::print); // 向控制台输出字符串
+        methodNames.put("min".toLowerCase(), this::min);// 求最小值
+        methodNames.put("max".toLowerCase(), this::max); // 求最大值
+        methodNames.put("arrlen".toLowerCase(), this::arrlen); // 求数组大小
+        methodNames.put("abs".toLowerCase(), this::abs); // 求取对值
+        methodNames.put("random".toLowerCase(), this::random); // 得到一个随机数
+        methodNames.put("mod".toLowerCase(), this::mod);// 取余
+        methodNames.put("println".toLowerCase(), this::println); // 输出回车
+        methodNames.put("strlen".toLowerCase(), this::strlen); // 字符串长度
+        methodNames.put("equals".toLowerCase(), this::equals); // 字符串比较
+        methodNames.put("def".toLowerCase(), this::def); // 存入全局变量
+        methodNames.put("isdef".toLowerCase(), this::isDef); // 是否存在某全局变量
+        methodNames.put("valueof".toLowerCase(), this::valueOf); // 转换字符串为数值
+        methodNames.put("idxof".toLowerCase(), this::idxof);// 子串在母串的位置        idxof("abc","a")  结果0
+        methodNames.put("substr".toLowerCase(), this::substr); // 截子串        substr("abcde",1,4)      结果"bcd"
+        methodNames.put("split".toLowerCase(), this::split); // 截子串        substr("abcde",1,4)      结果"bcd"
+        methodNames.put("base64enc".toLowerCase(), this::base64enc); //   base64编码
+        methodNames.put("base64dec".toLowerCase(), this::base64dec); //   base64解码
+        methodNames.put("isnull".toLowerCase(), this::isnull); //   Obj 类型是否为空
+        methodNames.put("getobjfield".toLowerCase(), this::getObjField);
+        methodNames.put("setobjfield".toLowerCase(), this::setObjField);
+        methodNames.put("trim".toLowerCase(), this::trim);//字符串去空格
+        methodNames.put("str2int".toLowerCase(), this::str2int);//字符串转int
+        methodNames.put("invokeJava".toLowerCase(), this::invokeJava);//执行对象方法
+        methodNames.put("invokeStatic".toLowerCase(), this::invokeStatic);//执行对象方法
+        methodNames.put("getbit".toLowerCase(), this::getbit);//取整数第n位,返回bool
+        methodNames.put("setbit".toLowerCase(), this::setbit);//设整数第n位
     }
 
-    public DataType call(Interpreter inp, ArrayList<DataType> para, int methodID) {
-        switch (methodID) {
-            case 0:
-                return print(para);
-            case 1:
-                return min(para);
-            case 2:
-                return max(para);
-            case 3:
-                return arrlen(para);
-            case 4:
-                return abs(para);
-            case 5:
-                return random(para);
-            case 6:
-                return mod(para);
-            case 7:
-                return println(para);
-            case 8:
-                return strlen(para);
-            case 9:
-                return equals(para);
-            case 10:
-                return def(inp, para);
-            case 11:
-                return isDef(inp, para);
-            case 12:
-                return valueOf(para);
-            case 13:
-                return idxof(para);
-            case 14:
-                return substr(para);
-            case 15:
-                return split(para);
-            case 16:
-                return base64enc(para);
-            case 17:
-                return base64dec(para);
-            case 18:
-                return isnull(para);
-            case 19:
-                return getObjField(para);
-            case 20:
-                return setObjField(para);
-            case 21:
-                return trim(para);
-            case 22:
-                return str2int(para);
-            case 23:
-                return invokeJava(para);
-            case 24:
-                return invokeStatic(para);
-            case 25:
-                return getbit(para);
-            case 26:
-                return setbit(para);
-        }
-        return null;
-    }
 
     /**
      * 向控制台输出字符串
@@ -124,7 +59,7 @@ public class Stdlib extends Lib {
      * @param para String
      * @return Object
      */
-    private DataType print(ArrayList<DataType> para) {
+    public DataType print(ArrayList<DataType> para) {
         DataType dt = Interpreter.popBack(para);//不一定是Str类型
         System.out.print(dt.getString());
         Interpreter.putCachedData(dt);
@@ -246,7 +181,7 @@ public class Stdlib extends Lib {
      * @param para int
      * @return gscript.Int
      */
-    private DataType def(Interpreter inp, ArrayList<DataType> para) {
+    private DataType def(ArrayList<DataType> para) {
         String name = Interpreter.popBackStr(para);
         DataType dt = Interpreter.popBack(para);
         inp.putGlobalVar(name.toLowerCase(), dt);
@@ -259,7 +194,7 @@ public class Stdlib extends Lib {
      * @param para int
      * @return gscript.Int
      */
-    private Bool isDef(Interpreter inp, ArrayList<DataType> para) {
+    private Bool isDef(ArrayList<DataType> para) {
         String name = Interpreter.popBackStr(para);
         if (inp.getGlobalVar(name.toLowerCase()) == null) {
             return Interpreter.getCachedBool(false);
@@ -627,4 +562,5 @@ public class Stdlib extends Lib {
         }
         return null;
     }
+
 }
