@@ -328,6 +328,8 @@ public class AssistLLVM {
 
             ps.close();
             fos.close();
+
+            System.out.println("Native header gen: " + f.getAbsolutePath());
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("generate clinits.ll error");

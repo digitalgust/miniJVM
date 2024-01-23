@@ -11,12 +11,12 @@ function build_jar(){
     rm -rf $3/$1
     mkdir classes 
     find $2/java -name "*.java" >source.txt
-    ${JAVAC}  -cp $4 -encoding "utf-8" -d classes @source.txt
+    ${JAVA_HOME}/bin/${JAVAC}  -cp $4 -encoding "utf-8" -d classes @source.txt
     if [ -f "$2/resource/" ]
     then 
         cp -R $2/resource/* classes/
     fi
-    ${JAR} cf $1 -C classes ./
+    ${JAVA_HOME}/bin/${JAR} cf $1 -C classes ./
     rm -rf source.txt
     rm -rf classes
     mkdir $3

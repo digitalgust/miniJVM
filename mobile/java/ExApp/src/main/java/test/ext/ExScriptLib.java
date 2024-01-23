@@ -8,19 +8,9 @@ import java.util.ArrayList;
 
 public class ExScriptLib extends Lib {
 
-    {
-        methodNames.put("func1".toLowerCase(), 0);//
-        methodNames.put("func2".toLowerCase(), 1);//
-    }
-
-    public DataType call(Interpreter inp, ArrayList<DataType> para, int methodID) {
-        switch (methodID) {
-            case 0:
-                return func1(para);
-            case 1:
-                return func2(para);
-        }
-        return null;
+    public ExScriptLib() {
+        methodNames.put("func1".toLowerCase(), this::func1);//
+        methodNames.put("func2".toLowerCase(), this::func2);//
     }
 
     public DataType func1(ArrayList<DataType> para) {
