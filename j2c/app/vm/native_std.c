@@ -13,7 +13,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/stat.h>
-
+#include <unistd.h>
+#include <locale.h>
+#include <ctype.h>
 
 #include "jvm.h"
 #include "metadata.h"
@@ -515,36 +517,182 @@ Utf8String *getTmpDir() {
 }
 
 
+//gpt
+s32 is_ascii(const c8 *str) {
+    while (*str) {
+        if (!isascii(*str)) {
+            return 0;
+        }
+        str++;
+    }
+    return 1;
+}
+
+//gpt
+int is_utf8(const c8 *string) {
+    const unsigned char *bytes = (const unsigned char *) string;
+    while (*bytes) {
+        if ((// ASCII
+                    // 0xxxxxxx
+                    *bytes & 0x80) == 0x00) {
+            bytes += 1;
+            continue;
+        } else if ((// 2-byte
+                           // 110xxxxx 10xxxxxx
+                           *bytes & 0xE0) == 0xC0) {
+            if ((bytes[1] & 0xC0) != 0x80)
+                return 0;
+            bytes += 2;
+        } else if ((// 3-byte
+                           // 1110xxxx 10xxxxxx 10xxxxxx
+                           *bytes & 0xF0) == 0xE0) {
+            if ((bytes[1] & 0xC0) != 0x80 || (bytes[2] & 0xC0) != 0x80)
+                return 0;
+            bytes += 3;
+        } else if ((// 4-byte
+                           // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+                           *bytes & 0xF8) == 0xF0) {
+            if ((bytes[1] & 0xC0) != 0x80 || (bytes[2] & 0xC0) != 0x80 ||
+                (bytes[3] & 0xC0) != 0x80)
+                return 0;
+            bytes += 4;
+        } else {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+s32 is_platform_encoding_utf8() {
+    s32 ret = 0;
+    setlocale(LC_ALL, "");
+    char *locstr = setlocale(LC_CTYPE, NULL);
+    Utf8String *utfs = utf8_create_c(locstr);
+    utf8_lowercase(utfs);
+    if (utf8_indexof_c(utfs, "utf-8") >= 0) {
+        ret = 1;
+    } else if (utf8_indexof_c(utfs, "utf8") >= 0) {
+        ret = 1;
+    }
+    utf8_destory(utfs);
+    setlocale(LC_ALL, "C");
+    return ret;
+}
+
+s32 conv_platform_encoding_2_unicode(ByteBuf *dst, const c8 *src) {
+    setlocale(LC_ALL, "");
+    s32 len = (s32) strlen(src);
+    bytebuf_expand(dst, len * sizeof(wchar_t));
+    int read = mbstowcs((wchar_t *) dst->buf, src, len);
+    setlocale(LC_ALL, "C");
+    return read;
+}
+
+
+s32 conv_unicode_2_platform_encoding(ByteBuf *dst, const u16 *src, s32 srcLen) {
+    setlocale(LC_ALL, "");
+    s32 len = 0;
+    if (sizeof(wchar_t) == 2) {
+        len = wcstombs(NULL, (wchar_t *) src, srcLen);
+    } else {
+        wchar_t *wstr = jvm_calloc(srcLen * sizeof(wchar_t));
+        s32 i;
+        for (i = 0; i < srcLen; i++) {
+            wstr[i] = src[i];
+        }
+        len = wcstombs(NULL, wstr, srcLen);
+        jvm_free(wstr);
+    }
+    if (len < 0) {
+        return len;
+    }
+    bytebuf_expand(dst, len + 2);//for write '\0'
+    wcstombs(dst->buf, (wchar_t *) src, len);
+    dst->buf[len] = '\0';
+    setlocale(LC_ALL, "C");
+    return len;
+}
+
+void conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
+    if (!is_platform_encoding_utf8()) {
+        if (is_utf8(src)) {
+            utf8_append_c(dst, src);
+        } else {
+            ByteBuf *bb = bytebuf_create(0);
+            s32 ulen = conv_platform_encoding_2_unicode(bb, src);
+            if (sizeof(wchar_t) == 2) {
+                unicode_2_utf8((u16 *) bb->buf, dst, ulen);
+            } else {
+                u16 *str2bytes = jvm_calloc(ulen * 2);
+                s32 i;
+                for (i = 0; i < ulen; i++) {
+                    str2bytes[i] = (u16) ((wchar_t *) bb->buf)[i];
+                }
+                unicode_2_utf8(str2bytes, dst, ulen);
+                jvm_free(str2bytes);
+            }
+            bytebuf_destory(bb);
+        }
+    }
+}
+
+s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src) {
+    s32 os_utf8 = 0;
+#if __JVM_OS_MAC__ || __JVM_OS_LINUX__
+    os_utf8 = 1;
+#endif
+
+    if (!is_platform_encoding_utf8() && !os_utf8) {
+        if (!is_ascii(utf8_cstr(src))) {
+            u16 *arr = jvm_calloc(src->length * sizeof(u16) + 2);
+            s32 len = utf8_2_unicode(src, arr);
+            s32 plen = conv_unicode_2_platform_encoding(dst, arr, len);
+            jvm_free(arr);
+            return plen;
+        }
+    }
+    bytebuf_expand(dst, src->length + 4);
+    memcpy(dst->buf, src->data, src->length);
+    dst->buf[src->length] = 0;
+    return src->length;
+}
+
 
 
 //=================================  native ====================================
 
 //native methods
-JNIEXPORT s32 JNICALL func_com_sun_cldc_i18n_mini_Conv_byteToChar__I_3BII_3CII_I(JThreadRuntime *runtime, s32 p0, JArray *p1, s32 p2, s32 p3, JArray *p4, s32 p5, s32 p6) {
+s32 func_com_sun_cldc_i18n_j2me_Conv_byteToChar__I_3BII_3CII_I(JThreadRuntime *runtime, s32 p0, JArray *p1, s32 p2, s32 p3, JArray *p4, s32 p5, s32 p6) {
     return 0;
 }
 
-s32 func_com_sun_cldc_i18n_mini_Conv_charToByte__I_3CII_3BII_I(JThreadRuntime *runtime, s32 p0, JArray *p1, s32 p2, s32 p3, JArray *p4, s32 p5, s32 p6) {
+
+s32 func_com_sun_cldc_i18n_j2me_Conv_charToByte__I_3CII_3BII_I(JThreadRuntime *runtime, s32 p0, JArray *p1, s32 p2, s32 p3, JArray *p4, s32 p5, s32 p6) {
     return 0;
 }
 
-s32 func_com_sun_cldc_i18n_mini_Conv_getByteLength__I_3BII_I(JThreadRuntime *runtime, s32 p0, JArray *p1, s32 p2, s32 p3) {
+
+s32 func_com_sun_cldc_i18n_j2me_Conv_getByteLength__I_3BII_I(JThreadRuntime *runtime, s32 p0, JArray *p1, s32 p2, s32 p3) {
     return 0;
 }
 
-s32 func_com_sun_cldc_i18n_mini_Conv_getHandler__Ljava_lang_String_2_I(JThreadRuntime *runtime, struct java_lang_String *p0) {
+
+s32 func_com_sun_cldc_i18n_j2me_Conv_getHandler__Ljava_lang_String_2_I(JThreadRuntime *runtime, struct java_lang_String *p0) {
     return 0;
 }
 
-s32 func_com_sun_cldc_i18n_mini_Conv_getMaxByteLength__I_I(JThreadRuntime *runtime, s32 p0) {
+
+s32 func_com_sun_cldc_i18n_j2me_Conv_getMaxByteLength__I_I(JThreadRuntime *runtime, s32 p0) {
     return 0;
 }
 
-s32 func_com_sun_cldc_i18n_mini_Conv_sizeOfByteInUnicode__I_3BII_I(JThreadRuntime *runtime, s32 p0, JArray *p1, s32 p2, s32 p3) {
+
+s32 func_com_sun_cldc_i18n_j2me_Conv_sizeOfByteInUnicode__I_3BII_I(JThreadRuntime *runtime, s32 p0, JArray *p1, s32 p2, s32 p3) {
     return 0;
 }
 
-s32 func_com_sun_cldc_i18n_mini_Conv_sizeOfUnicodeInByte__I_3CII_I(JThreadRuntime *runtime, s32 p0, JArray *p1, s32 p2, s32 p3) {
+
+s32 func_com_sun_cldc_i18n_j2me_Conv_sizeOfUnicodeInByte__I_3CII_I(JThreadRuntime *runtime, s32 p0, JArray *p1, s32 p2, s32 p3) {
     return 0;
 }
 
@@ -604,6 +752,18 @@ struct java_lang_Class *func_java_lang_Class_forName__Ljava_lang_String_2ZLjava_
         JObject *exception = new_instance_with_name(runtime, STR_JAVA_LANG_NULL_POINTER_EXCEPTION);
         instance_init(runtime, exception);
         throw_exception(runtime, exception);
+    }
+    return NULL;
+}
+
+
+JArray *func_java_lang_Class_getInterfaces____3Ljava_lang_Class_2(JThreadRuntime *runtime, struct java_lang_Class *p0) {
+    JClass *cl = (__refer) (intptr_t) p0->classHandle_in_class;
+    s32 len = cl ? cl->interfaces->length : 0;
+    JArray *jarr = multi_array_create_by_typename(runtime, &len, 1, "Ljava/lang/Class;");
+    s32 i;
+    for (i = 0; i < len; i++) {
+        jarr->prop.as_obj_arr[i] = (__refer) (intptr_t) arraylist_get_value(cl->interfaces, i);
     }
     return NULL;
 }
@@ -747,6 +907,12 @@ f64 func_java_lang_Math_log__D_D(JThreadRuntime *runtime, f64 p0) {
 
 f64 func_java_lang_Math_pow__DD_D(JThreadRuntime *runtime, f64 p0, f64 p1) {
     return pow(p0, p1);
+}
+
+
+f64 func_java_lang_Math_random___D(JThreadRuntime *runtime) {
+    f64 r = ((f64) rand() / (f64) RAND_MAX);
+    return r;
 }
 
 f64 func_java_lang_Math_sin__D_D(JThreadRuntime *runtime, f64 p0) {
@@ -1080,8 +1246,8 @@ void func_java_lang_Thread_yield___V(JThreadRuntime *runtime) {
     jthread_yield();
 }
 
-struct java_lang_StackTraceElement* func_java_lang_Throwable_buildStackElement__Ljava_lang_Thread_2_Ljava_lang_StackTraceElement_2(JThreadRuntime *runtime, struct java_lang_Thread* p0){
-    return (__refer) buildStackElement(runtime, ((JThreadRuntime *)(intptr_t)p0->stackFrame_in_thread)->tail);
+struct java_lang_StackTraceElement *func_java_lang_Throwable_buildStackElement__Ljava_lang_Thread_2_Ljava_lang_StackTraceElement_2(JThreadRuntime *runtime, struct java_lang_Thread *p0) {
+    return (__refer) buildStackElement(runtime, ((JThreadRuntime *) (intptr_t) p0->stackFrame_in_thread)->tail);
 }
 
 JArray *func_org_mini_crypt_XorCrypt_decrypt___3B_3B__3B(JThreadRuntime *runtime, JArray *p0, JArray *p1) {
@@ -1203,6 +1369,22 @@ struct java_lang_String *func_org_mini_fs_InnerFile_getTmpDir___Ljava_lang_Strin
     return NULL;
 }
 
+
+struct java_lang_String *func_org_mini_fs_InnerFile_getcwd___Ljava_lang_String_2(JThreadRuntime *runtime) {
+    ByteBuf *platformPath = bytebuf_create(1024);
+
+    __refer ret = getcwd(platformPath->buf, platformPath->_alloc_size);
+    if (ret) {
+        Utf8String *filepath = utf8_create();
+        conv_platform_encoding_2_utf8(filepath, platformPath->buf);
+
+        JObject *jstr = construct_string_with_cstr(runtime, utf8_cstr(filepath));
+        utf8_destory(filepath);
+        return (struct java_lang_String *) jstr;
+    }
+    return NULL;
+}
+
 s32 func_org_mini_fs_InnerFile_getcwd___3B_I(JThreadRuntime *runtime, JArray *p0) {
     if (p0) {
         __refer ret = getcwd(p0->prop.as_s8_arr, p0->prop.arr_length);
@@ -1249,6 +1431,31 @@ JArray *func_org_mini_fs_InnerFile_listDir___3B__3Ljava_lang_String_2(JThreadRun
     }
     return NULL;
 }
+
+
+struct java_lang_String *func_org_mini_fs_InnerFile_listWinDrivers___Ljava_lang_String_2(JThreadRuntime *runtime) {
+#if  defined(__JVM_OS_MAC__) || defined(__JVM_OS_LINUX__)
+    return NULL;
+#else
+
+#define MAX_PATH_BUF_LEN 120
+    DWORD mydrives = MAX_PATH_BUF_LEN;// buffer length
+    c8 lpBuffer[MAX_PATH_BUF_LEN];// buffer for drive string storage
+    DWORD fillLen = GetLogicalDriveStrings(mydrives, lpBuffer);
+
+    lpBuffer[fillLen] = '\0';
+    s64 i;
+    for (i = 0; i < fillLen; i++) {
+        if (lpBuffer[i] == 0) {
+            lpBuffer[i] = 0x20;
+        }
+    }
+    JObject *jstr = construct_string_with_cstr(runtime,lpBuffer);
+    return (struct java_lang_String *) jstr;
+#endif
+
+}
+
 
 s32 func_org_mini_fs_InnerFile_loadFS___3BLorg_mini_fs_InnerFileStat_2_I(JThreadRuntime *runtime, JArray *p0, struct org_mini_fs_InnerFileStat *p1) {
     s32 ret = -1;
@@ -2086,6 +2293,22 @@ struct java_lang_Object *func_org_mini_reflect_ReflectMethod_invokeMethod__Ljava
 }
 
 
+JArray *func_org_mini_reflect_ReflectMethod_getExceptionTypes0__J__3Ljava_lang_Class_2(JThreadRuntime *runtime, struct org_mini_reflect_ReflectMethod *p0, s64 p1) {
+    MethodInfo *mi = (__refer) (intptr_t) p0->methodId_in_reflectmethod;
+
+    ExceptionTable *extable = mi->raw->extable;
+    s32 len = extable->size;
+    JArray *jarr = multi_array_create_by_typename(runtime, &len, 1, "Ljava/lang/Class;");
+
+    s32 i;
+    for (i = 0; i < len; i++) {
+        JClass *other = get_class_by_nameIndex(extable->exception[i].exceptionClassName);
+        jarr->prop.as_obj_arr[i] = other;
+    }
+
+    return jarr;
+}
+
 void func_org_mini_reflect_ReflectMethod_mapMethod__J_V(JThreadRuntime *runtime, struct org_mini_reflect_ReflectMethod *p0, s64 p1) {
     MethodInfo *methodInfo = (__refer) (intptr_t) p1;
     if (p1) {
@@ -2239,6 +2462,38 @@ JArray *func_org_mini_reflect_vm_RefNative_getThreads____3Ljava_lang_Thread_2(JT
     return jarr;
 }
 
+
+s32 func_org_mini_reflect_vm_RefNative_heap_1bin_1search__JIJI_I(JThreadRuntime *runtime, s64 p0, s32 p2, s64 p3, s32 p5) {
+
+    c8 *src = (__refer) (intptr_t) p0;
+    s32 srclen = p2;
+    c8 *key = (__refer) (intptr_t) p3;
+    s32 keylen = p5;
+
+    if (src == NULL || key == NULL || srclen <= 0 || keylen <= 0) {
+        //
+    } else {
+        s32 keyLastPos = keylen - 1;
+        s32 i, iLen, j;
+        for (i = 0, iLen = srclen - keylen; i <= iLen; i++) {
+            if (src[i] == key[0] && src[i + keyLastPos] == key[keyLastPos]) {
+                s32 march = 1;
+                for (j = 1; j < keyLastPos; j++) {
+                    if (src[i + j] != key[j]) {
+                        march = 0;
+                        break;
+                    }
+                }
+                if (march) {
+                    return i;
+                }
+            }
+        }
+    }
+
+    return -1;
+}
+
 s64 func_org_mini_reflect_vm_RefNative_heap_1calloc__I_J(JThreadRuntime *runtime, s32 p0) {
     return (s64) (intptr_t) jvm_calloc(p0);
 }
@@ -2249,6 +2504,28 @@ void func_org_mini_reflect_vm_RefNative_heap_1copy__JIJII_V(JThreadRuntime *runt
 
 s32 func_org_mini_reflect_vm_RefNative_heap_1endian___I(JThreadRuntime *runtime) {
     return 1;
+}
+
+
+void func_org_mini_reflect_vm_RefNative_heap_1fill__JIJI_V(JThreadRuntime *runtime, s64 p0, s32 p2, s64 p3, s32 p5) {
+    c8 *src = (__refer) (intptr_t) p0;
+    s32 srclen = p2;
+    c8 *val = (__refer) (intptr_t) p3;
+    s32 vallen = p5;
+
+    if (src == NULL || val == NULL || srclen <= 0 || vallen <= 0) {
+        //
+    } else {
+        s32 i, j;
+        for (i = 0; i < srclen;) {
+            for (j = 0; j < vallen; j++) {
+                *(src + i) = *(val + j);
+                i++;
+            }
+        }
+    }
+
+    return;
 }
 
 void func_org_mini_reflect_vm_RefNative_heap_1free__J_V(JThreadRuntime *runtime, s64 p0) {
@@ -2435,6 +2712,54 @@ JArray *func_org_mini_zip_Zip_getEntry0___3B_3B__3B(JThreadRuntime *runtime, JAr
     return jarr;
 }
 
+
+s32 func_org_mini_zip_Zip_getEntryIndex0___3B_3B_I(JThreadRuntime *runtime, JArray *p0, JArray *p1) {
+    JArray *zip_path_arr = p0;
+    JArray *name_arr = p1;
+    s32 ret = -1;
+    if (zip_path_arr && name_arr) {
+        Utf8String *filepath = utf8_create_c(zip_path_arr->prop.as_c8_arr);
+        ByteBuf *zip_path = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(zip_path, filepath);
+        utf8_clear(filepath);
+        utf8_append_c(filepath, name_arr->prop.as_c8_arr);
+        ByteBuf *name = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(name, filepath);
+
+        ret = zip_get_file_index(zip_path->buf, name->buf);
+
+        bytebuf_destory(zip_path);
+        bytebuf_destory(name);
+        utf8_destory(filepath);
+    }
+
+    return ret;
+}
+
+
+s64 func_org_mini_zip_Zip_getEntrySize0___3B_3B_J(JThreadRuntime *runtime, JArray *p0, JArray *p1) {
+    JArray *zip_path_arr = p0;
+    JArray *name_arr = p1;
+    s64 ret = -1;
+    if (zip_path_arr && name_arr) {
+        Utf8String *filepath = utf8_create_c(zip_path_arr->prop.as_c8_arr);
+        ByteBuf *zip_path = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(zip_path, filepath);
+        utf8_clear(filepath);
+        utf8_append_c(filepath, name_arr->prop.as_c8_arr);
+        ByteBuf *name = bytebuf_create(0);
+        conv_utf8_2_platform_encoding(name, filepath);
+
+        ret = zip_get_file_unzip_size(zip_path->buf, name->buf);
+
+        bytebuf_destory(zip_path);
+        bytebuf_destory(name);
+        utf8_destory(filepath);
+    }
+
+    return ret;
+}
+
 s32 func_org_mini_zip_Zip_isDirectory0___3BI_I(JThreadRuntime *runtime, JArray *p0, s32 p1) {
     return zip_is_directory(p0->prop.as_s8_arr, p1);
 }
@@ -2474,17 +2799,70 @@ s32 func_org_mini_zip_Zip_putEntry0___3B_3B_3B_I(JThreadRuntime *runtime, JArray
 
 
 s8 func_sun_misc_Unsafe_compareAndSwapInt__Ljava_lang_Object_2JII_Z(JThreadRuntime *runtime, struct sun_misc_Unsafe *p0, struct java_lang_Object *p1, s64 p2, s32 p4, s32 p5) {
-    return 0;
+    JObject *unsafe = (JObject *) p0;
+    JObject *ins = (JObject *) p1;
+    s64 offset = p2;
+    s32 oldv = p4;
+    s32 newv = p5;
+    if (!ins || offset < 0) {
+        JObject *exception = new_instance_with_name(runtime, STR_JAVA_LANG_NULL_POINTER_EXCEPTION);
+        instance_init(runtime, exception);
+        runtime->exception = exception;
+
+        return 0;
+    } else {
+        c8 *src = (c8 *) (ins ? ins->prop.as_c8_arr : NULL) + offset;
+        s32 *src32 = (s32 *) src;
+        s32 ret = __sync_bool_compare_and_swap(src32, oldv, newv);
+        return ret;
+    }
 }
 
 
 s8 func_sun_misc_Unsafe_compareAndSwapLong__Ljava_lang_Object_2JJJ_Z(JThreadRuntime *runtime, struct sun_misc_Unsafe *p0, struct java_lang_Object *p1, s64 p2, s64 p4, s64 p6) {
-    return 0;
+    JObject *unsafe = (JObject *) p0;
+    JObject *ins = (JObject *) p1;
+    s64 offset = p2;
+    s64 oldv = p4;
+    s64 newv = p6;
+    if (!ins || offset < 0) {
+        JObject *exception = new_instance_with_name(runtime, STR_JAVA_LANG_NULL_POINTER_EXCEPTION);
+        instance_init(runtime, exception);
+        runtime->exception = exception;
+        return 0;
+    } else {
+        c8 *src = (c8 *) (ins ? ins->prop.as_c8_arr : NULL) + offset;
+#if __JVM_ARCH_64__
+        s32 ret = (s32) __sync_bool_compare_and_swap64((s64 *) src, oldv, newv);
+#else
+        s32 ret = __sync_bool_compare_and_swap((s64 *) src, oldv, newv);
+#endif
+        return ret;
+    }
 }
 
 
 s8 func_sun_misc_Unsafe_compareAndSwapObject__Ljava_lang_Object_2JLjava_lang_Object_2Ljava_lang_Object_2_Z(JThreadRuntime *runtime, struct sun_misc_Unsafe *p0, struct java_lang_Object *p1, s64 p2, struct java_lang_Object *p4, struct java_lang_Object *p5) {
-    return 0;
+    JObject *unsafe = (JObject *) p0;
+    JObject *ins = (JObject *) p1;
+    s64 offset = p2;
+    __refer oldv = p4;
+    __refer newv = p5;
+    if (!ins || offset < 0) {
+        JObject *exception = new_instance_with_name(runtime, STR_JAVA_LANG_NULL_POINTER_EXCEPTION);
+        instance_init(runtime, exception);
+        runtime->exception = exception;
+        return 0;
+    } else {
+        c8 *src = (c8 *) (ins ? ins->prop.as_c8_arr : NULL) + offset;
+        s32 ret = 0;
+        if (sizeof(__refer) == 8) {
+            ret = __sync_bool_compare_and_swap64((s64 *) src, (s64) (intptr_t) oldv, (s64) (intptr_t) newv);
+        } else {
+            ret = __sync_bool_compare_and_swap((s32 *) src, (s32) (intptr_t) oldv, (s32) (intptr_t) newv);
+        }
+        return ret;
+    }
 }
 
 
@@ -2494,12 +2872,44 @@ s64 func_sun_misc_Unsafe_getAddress__J_J(JThreadRuntime *runtime, struct sun_mis
 
 
 s64 func_sun_misc_Unsafe_objectFieldBase__Ljava_lang_Object_2_J(JThreadRuntime *runtime, struct sun_misc_Unsafe *p0, struct java_lang_Object *p1) {
-    return 0;
+    JObject *unsafe = (JObject *) p0;
+    JObject *ins = (JObject *) p1;
+
+    return ins ? -1 : (s64) (intptr_t) ins->prop.as_c8_arr;
 }
 
 
 s64 func_sun_misc_Unsafe_objectFieldOffset__J_J(JThreadRuntime *runtime, struct sun_misc_Unsafe *p0, s64 p1) {
-    return 0;
+    JObject *unsafe = (JObject *) p0;
+    FieldInfo *fi = (__refer) (intptr_t) p1;
+    return !fi ? -1 : (s64) (intptr_t) fi->offset_ins;
+}
+
+
+void func_sun_misc_Unsafe_park__ZJ_V(JThreadRuntime *runtime, struct sun_misc_Unsafe *p0, s8 p1, s64 p2) {
+    JObject *unsafe = (JObject *) p0;
+    s32 absolute = p1;
+    s64 time = p2;
+
+    if (time < NANO_2_MILLS_SCALE)time = NANO_2_MILLS_SCALE;
+    s64 waitmills = absolute ? (time - currentTimeMillis()) : time / NANO_2_MILLS_SCALE;
+
+    JThreadRuntime *rt = runtime;// current thread
+    garbage_thread_lock();
+    if (!rt->pack) {
+        rt->pack = new_instance_with_name(runtime, STR_JAVA_LANG_OBJECT);
+    }
+    garbage_thread_unlock();
+    jthread_lock(rt, rt->pack);
+    if (rt->is_unparked) {
+        rt->is_unparked = 0;
+    } else {
+        rt->is_unparked = 0;
+        //jvm_printf("++++++pack %llx  %d\n", (s64) (intptr_t) &runtime->thrd_info->pack.thread_lock->thread_cond, (s32) waitmills);
+        jthread_waitTime(&rt->pack->prop, rt, waitmills);
+    }
+    jthread_unlock(rt, rt->pack);
+    return;
 }
 
 
@@ -2513,6 +2923,20 @@ s64 func_sun_misc_Unsafe_staticFieldOffset__J_J(JThreadRuntime *runtime, struct 
 }
 
 
+void func_sun_misc_Unsafe_unpark__Ljava_lang_Object_2_V(JThreadRuntime *runtime, struct sun_misc_Unsafe *p0, struct java_lang_Object *p1) {
+    JObject *unsafe = (JObject *) p0;
+    java_lang_Thread *thrd = (java_lang_Thread *) p1;
+    JThreadRuntime *rt = (__refer) (intptr_t) thrd->stackFrame_in_thread;
+    jthread_lock(rt, rt->pack);
+    if (rt && rt->thread_status != THREAD_STATUS_DEAD) {
+        rt->is_unparked = 1;
+        jthread_notify(&rt->pack->prop);
+        //jvm_printf("----unpack %llx \n", (s64) (intptr_t) &rt->thrd_info->pack.thread_lock->thread_cond);
+    }
+    jthread_unlock(rt, rt->pack);
+
+    return;
+}
 
 
 

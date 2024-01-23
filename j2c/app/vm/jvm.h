@@ -18,6 +18,13 @@ extern "C" {
 #define PRJ_DEBUG_LEV 2
 #define PRJ_DEBUG_GARBAGE_DUMP 0
 
+
+
+#define NANO_2_SEC_SCALE 1000000000
+#define NANO_2_MILLS_SCALE 1000000
+#define MILL_2_SEC_SCALE 1000
+
+
 enum {
     INS_TYPE_UNINIT = 0,
     INS_TYPE_CLASS,
@@ -356,6 +363,8 @@ struct _JThreadRuntime {
 
 
     spinlock_t lock;
+    JObject *pack;
+    u8 volatile is_unparked;
 
     //exception
     JObject *exception;
@@ -505,7 +514,7 @@ StackFrame *stackframe_create();
 
 void stackframe_destroy(StackFrame *stackframe);
 
-s32 utf8_2_unicode(c8 const *pInput, u16 *arr, s32 limit);
+s32 utf8_2_unicode(Utf8String *ustr, u16 *arr);
 
 int unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 u16arr_len);
 

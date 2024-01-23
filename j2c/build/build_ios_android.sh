@@ -11,12 +11,12 @@ function build_jar(){
     rm -rf $3/$1
     mkdir classes 
     find $2/java -name "*.java" >source.txt
-    ${JAVAC}  -cp $4 -encoding "utf-8" -d classes @source.txt
+    ${JAVA_HOME}/bin/${JAVAC}  -cp $4 -encoding "utf-8" -d classes @source.txt
     if [ -f "$2/resource/" ]
     then 
         cp -R $2/resource/* classes/
     fi
-    ${JAR} cf $1 -C classes ./
+    ${JAVA_HOME}/bin/${JAR} cf $1 -C classes ./
     rm -rf source.txt
     rm -rf classes
     mkdir $3
@@ -31,7 +31,7 @@ if [ ! ${JAVA_HOME} ] ;then
     echo "JDK and JAVA_HOME env var set required"
 else
     echo "JAVA_HOME=${JAVA_HOME}"
-    ${JAVA_HOME}/bin/java -cp tools/translator.jar com.ebsee.Main ../../minijvm/java/src/main/java/:../../mobile/java/glfm_gui/src/main/java:../../mobile/java/ExApp/src/main/java ../app/generted/classes/ ../app/generted/c/
+    ${JAVA_HOME}/bin/java -cp tools/translator.jar com.ebsee.Main ../../minijvm/java/src/main/java/:../../mobile/java/glfm_gui/src/main/java:../../extlib/xgui/src/main/java:../../mobile/java/ExApp/src/main/java ../app/generted/classes/ ../app/generted/c/
 fi
 
 echo "[INFO]Generted c source , open /j2c/build/ccios/ccios.xcodeproj in Xcode or /j2c/build/ccandroid in Android Studio."

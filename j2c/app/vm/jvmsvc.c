@@ -100,7 +100,8 @@ JObject *construct_string_with_utfraw_index(JThreadRuntime *runtime, s32 utfInde
     if (!classraw) {
         return NULL;
     }
-    JObject *ins = construct_string_with_cstr_and_size(runtime, utfRaw->str, utfRaw->utf8_size);
+    Utf8String *ustr = get_utf8str(utfRaw);
+    JObject *ins = construct_string_with_ustr(runtime, ustr);
     utfRaw->jstr = ins;
     gc_refer_hold(ins);
     return ins;
@@ -108,21 +109,29 @@ JObject *construct_string_with_utfraw_index(JThreadRuntime *runtime, s32 utfInde
 
 JObject *construct_string_with_cstr(JThreadRuntime *runtime, c8 const *str) {
     if (!str)return NULL;
-    s32 c8len = strlen(str);
-    return construct_string_with_cstr_and_size(runtime, str, c8len);
+    return construct_string_with_cstr_and_size(runtime, str, strlen(str));
 }
 
 JObject *construct_string_with_cstr_and_size(JThreadRuntime *runtime, c8 const *str, s32 size) {
+    if (!str)return NULL;
+    Utf8String *ustr = utf8_create_c(str);
+    JObject *jstr = construct_string_with_ustr(runtime, ustr);
+    utf8_destory(ustr);
+    return jstr;
+}
+
+JObject *construct_string_with_ustr(JThreadRuntime *runtime, Utf8String *str) {
     if (!str)return NULL;
 
     JClass *clazz = g_procache.java_lang_string_raw->clazz;
     if (!clazz) {
         return NULL;
     }
+    s32 size = str->length;
     JObject *ins = new_instance_with_class(runtime, clazz);
 
     u16 *buf = (u16 *) jvm_calloc(size * data_type_bytes[DATATYPE_JCHAR]);
-    s32 u16len = utf8_2_unicode(str, buf, size);
+    s32 u16len = utf8_2_unicode(str, buf);
     JArray *carr = multi_array_create_by_typename(runtime, &u16len, 1, "[C");
     carr->prop.arr_length = u16len;
     memcpy(carr->prop.as_s8_arr, buf, u16len * data_type_bytes[DATATYPE_JCHAR]);
@@ -133,11 +142,6 @@ JObject *construct_string_with_cstr_and_size(JThreadRuntime *runtime, c8 const *
     exception_check_print(runtime);
     gc_refer_release(ins);
     return ins;
-}
-
-JObject *construct_string_with_ustr(JThreadRuntime *runtime, Utf8String *str) {
-    if (!str)return NULL;
-    return construct_string_with_cstr(runtime, utf8_cstr(str));
 }
 
 

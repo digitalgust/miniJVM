@@ -5,11 +5,17 @@
 #include "arraylist.h"
 #include "utf8string.h"
 
-s32 zip_loadfile(char *jarpath, char *filename, ByteBuf *buf);
+s32 zip_loadfile(char const *jarpath, char const *filename, ByteBuf *buf);
 
-s32 zip_savefile(char *jarpath, char *filename, ByteBuf *buf);
+s32 zip_loadfile_to_mem(char const *jarpath, char const *filename, c8 *buf, s64 bufsize);
 
-s32 zip_savefile_mem(char *jarpath, char *filename, char *buf, int size);
+s64 zip_get_file_unzip_size(char const *jarpath, char const *filename);
+
+s32 zip_get_file_index(char const *jarpath, char const *filename);
+
+s32 zip_savefile(char const *jarpath, char const *filename, ByteBuf *buf);
+
+s32 zip_savefile_mem(char const *jarpath, char const *filename, char const *buf, int size);
 
 ArrayList *zip_get_filenames(char *jarpath);
 

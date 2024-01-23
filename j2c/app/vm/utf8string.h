@@ -64,6 +64,8 @@ void utf8_upcase(Utf8String *a1);
 
 void utf8_append_s64(Utf8String *a1, s64 val, int radix);
 
+void utf8_lowercase(Utf8String *a1);
+
 void utf8_substring(Utf8String *a1, int start, int end);
 
 char const *utf8_cstr(Utf8String *a1);

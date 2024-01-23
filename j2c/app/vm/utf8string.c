@@ -503,3 +503,14 @@ int utf8_index_of(Utf8String *ustr, utf8_char data) {
 
 
 
+void utf8_lowercase(Utf8String *a1) {
+    int i;
+    for (i = 0; i < a1->length; i++) {
+        if (a1->data[i] >= 'A' && a1->data[i] <= 'A') {
+            a1->data[i] = a1->data[i] + ('a' - 'A');
+        }
+    }
+    a1->hash = 0;
+}
+
+
