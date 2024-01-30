@@ -19,7 +19,6 @@ extern "C" {
 #define PRJ_DEBUG_GARBAGE_DUMP 0
 
 
-
 #define NANO_2_SEC_SCALE 1000000000
 #define NANO_2_MILLS_SCALE 1000000
 #define MILL_2_SEC_SCALE 1000
@@ -117,6 +116,7 @@ typedef struct _JObject JObject;
 typedef struct _JObject JArray;
 typedef struct _StackFrame StackFrame;
 typedef struct _GcCollectorType GcCollector;
+typedef struct _PeerClassLoader PeerClassLoader;
 typedef struct _Jvm Jvm;
 typedef struct _ProCache ProCache;
 
@@ -142,6 +142,7 @@ extern c8 const *STR_JAVA_LANG_CLASS_CAST_EXCEPTION;
 extern c8 const *STR_JAVA_LANG_ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION;
 extern c8 const *STR_JAVA_LANG_INSTANTIATION_EXCEPTION;
 extern c8 const *STR_JAVA_LANG_STACKTRACEELEMENT;
+extern c8 const *STR_ORG_MINI_REFLECT_LAUNCHER;
 
 //=================================  raw ====================================
 
@@ -296,6 +297,7 @@ struct _JClass {
     ArrayList *methods;
     ArrayList *fields;
     ArrayList *interfaces;
+    ArrayList *dependent_classes;
     JClass *superclass;
     JClass *array_cell_class;
     JObject *ins_of_Class;
@@ -398,6 +400,14 @@ struct _GcCollectorType {
     u8 isgc;
     s16 exit_flag;
     s16 exit_code;
+};
+
+struct _PeerClassLoader {
+    Jvm *jvm;
+    JObject *jloader;
+    JObject *parent;
+    ArrayList *classpath;
+    //
 };
 
 struct _Jvm {
@@ -584,6 +594,8 @@ void jclass_destroy(JClass *clazz);
 
 JObject *ins_of_Class_create_get(JThreadRuntime *runtime, JClass *clazz);
 
+JObject *jclassloader_get_with_init(JThreadRuntime *runtime);
+
 ByteBuf *load_file_from_classpath(Utf8String *path);
 
 JArray *multi_array_create(JThreadRuntime *runtime, s32 *dimm, s32 dimm_count, JClass *clazz);  // create array  [[[Ljava/lang/Object;  para: [3,2,1],3,8
@@ -648,6 +660,8 @@ JThreadRuntime *jthread_get_stackFrame(JObject *jobj);
 
 void jclass_set_classHandle(JObject *jobj, JClass *clazz);
 
+void jclass_set_classLoader(JObject *jobj, JObject *jloader);
+
 void jclass_init_insOfClass(JThreadRuntime *runtime, JObject *jobj);
 
 void jstring_debug_print(JObject *jobj, c8 *appendix);
@@ -655,6 +669,8 @@ void jstring_debug_print(JObject *jobj, c8 *appendix);
 JObject *weakreference_get_target(JThreadRuntime *runtime, JObject *jobj);
 
 void weakref_vmreferenceenqueue(JThreadRuntime *runtime, JObject *jobj);
+
+JObject *launcher_get_systemClassLoader(JThreadRuntime *runtime);
 //=====================================================================
 
 static inline StackFrame *method_enter(JThreadRuntime *runtime, s32 methodRawIndex, const RStackItem *stack, const RStackItem *local, const s32 *spPtr) {

@@ -1,7 +1,7 @@
 /*
  GLFM
  https://github.com/brackeen/glfm
- Copyright (c) 2014-2019 David Brackeen
+ Copyright (c) 2014-2021 David Brackeen
  
  This software is provided 'as-is', without any express or implied warranty.
  In no event will the authors be held liable for any damages arising from the
@@ -20,11 +20,14 @@
 
 #include "glfm.h"
 
-void setDeviceToken(GLFMDisplay * display, const char *deviceToken);
+#if !defined(GLFM_INCLUDE_METAL)
+#define GLFM_INCLUDE_METAL 1
+#endif
 
 #if defined(GLFM_PLATFORM_IOS) || defined(GLFM_PLATFORM_TVOS)
 
 #import <UIKit/UIKit.h>
+//================================= gust add 1 =======================
 #import <AVFoundation/AVFoundation.h>
 #import <MobileCoreServices/MobileCoreServices.h>
 #import <AssetsLibrary/AssetsLibrary.h>
@@ -35,32 +38,47 @@ void setDeviceToken(GLFMDisplay * display, const char *deviceToken);
 #import <UserNotifications/UserNotifications.h>
 #endif
 
-
-#include <dlfcn.h>
-#include "glfm_platform.h"
-
 #import <notify.h>
 #define NotificationLock CFSTR("com.apple.springboard.lockcomplete")
 #define NotificationChange CFSTR("com.apple.springboard.lockstate")
 #define NotificationPwdUI CFSTR("com.apple.springboard.hasBlankedScreen")
 
-//
-#define MAX_SIMULTANEOUS_TOUCHES 10
 
-void CHECK_GL_ERROR() {do { GLenum error = glGetError();
-    if (error != GL_NO_ERROR)
-{
-    NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__);
-    
-}} while(0);}
+//================================= gust add 1 =======================
 
-#if __has_feature(objc_arc)
-#define GLFM_AUTORELEASE(value) value
-#else
-#define GLFM_AUTORELEASE(value) [value autorelease]
+#if TARGET_OS_IOS
+#import <CoreHaptics/CoreHaptics.h>
+#import <CoreMotion/CoreMotion.h>
+#endif
+#if GLFM_INCLUDE_METAL
+#import <MetalKit/MetalKit.h>
 #endif
 
-@interface GLFMAppDelegate : NSObject <UIApplicationDelegate,UNUserNotificationCenterDelegate>
+#include <dlfcn.h>
+#include "glfm_platform.h"
+
+#define MAX_SIMULTANEOUS_TOUCHES 10
+
+#ifndef NDEBUG
+#define CHECK_GL_ERROR() ((void)0)
+#else
+#define CHECK_GL_ERROR() do { GLenum error = glGetError(); if (error != GL_NO_ERROR) \
+NSLog(@"OpenGL error 0x%04x at glfm_platform_ios.m:%i", error, __LINE__); } while(0)
+#endif
+
+#if __has_feature(objc_arc)
+#define GLFM_RETAIN(value) value
+#define GLFM_AUTORELEASE(value) value
+#define GLFM_RELEASE(value) ((void)0)
+#define GLFM_WEAK __weak
+#else
+#define GLFM_RETAIN(value) [value retain]
+#define GLFM_AUTORELEASE(value) [value autorelease]
+#define GLFM_RELEASE(value) [value release]
+#define GLFM_WEAK __unsafe_unretained
+#endif
+
+@interface GLFMAppDelegate : NSObject <UIApplicationDelegate>
 
 @property(nonatomic, strong) UIWindow *window;
 @property(nonatomic, assign) BOOL active;
@@ -69,7 +87,189 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
 
 #pragma mark - GLFMView
 
-@interface GLFMView : UIView {
+static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFactor, int *width, int *height);
+
+@protocol GLFMView
+
+@property(nonatomic, readonly) GLFMRenderingAPI renderingAPI;
+@property(nonatomic, readonly) int drawableWidth;
+@property(nonatomic, readonly) int drawableHeight;
+@property(nonatomic, assign) BOOL animating;
+@property(nonatomic, copy, nullable) void (^preRenderCallback)(void);
+
+- (void)draw;
+- (void)swapBuffers;
+- (void)requestRefresh;
+
+@end
+
+#if GLFM_INCLUDE_METAL
+
+#pragma mark - GLFMMetalView
+
+@interface GLFMMetalView : MTKView <GLFMView, MTKViewDelegate>
+
+@property(nonatomic, assign) GLFMDisplay *glfmDisplay;
+@property(nonatomic, assign) int drawableWidth;
+@property(nonatomic, assign) int drawableHeight;
+@property(nonatomic, assign) BOOL surfaceCreatedNotified;
+@property(nonatomic, assign) BOOL refreshRequested;
+
+@end
+
+@implementation GLFMMetalView
+
+@synthesize preRenderCallback = _preRenderCallback;
+@dynamic renderingAPI, animating;
+
+- (instancetype)initWithFrame:(CGRect)frame contentScaleFactor:(CGFloat)contentScaleFactor
+                       device:(id<MTLDevice>)device glfmDisplay:(GLFMDisplay *)glfmDisplay {
+    if ((self = [super initWithFrame:frame device:device])) {
+        self.contentScaleFactor = contentScaleFactor;
+        self.delegate = self;
+        self.glfmDisplay = glfmDisplay;
+        self.drawableWidth = (int)self.drawableSize.width;
+        self.drawableHeight = (int)self.drawableSize.height;
+        [self requestRefresh];
+
+        switch (glfmDisplay->colorFormat) {
+            case GLFMColorFormatRGB565:
+                self.colorPixelFormat = MTLPixelFormatB5G6R5Unorm;
+                break;
+            case GLFMColorFormatRGBA8888:
+            default:
+                self.colorPixelFormat = MTLPixelFormatBGRA8Unorm;
+                break;
+        }
+        
+        if (glfmDisplay->depthFormat == GLFMDepthFormatNone &&
+            glfmDisplay->stencilFormat == GLFMStencilFormatNone) {
+            self.depthStencilPixelFormat = MTLPixelFormatInvalid;
+        } else if (glfmDisplay->depthFormat == GLFMDepthFormatNone) {
+            self.depthStencilPixelFormat = MTLPixelFormatStencil8;
+        } else if (glfmDisplay->stencilFormat == GLFMStencilFormatNone) {
+            if (@available(iOS 13, tvOS 13, *)) {
+                if (glfmDisplay->depthFormat == GLFMDepthFormat16) {
+                    self.depthStencilPixelFormat = MTLPixelFormatDepth16Unorm;
+                } else {
+                    self.depthStencilPixelFormat = MTLPixelFormatDepth32Float;
+                }
+            } else {
+                self.depthStencilPixelFormat = MTLPixelFormatDepth32Float;
+            }
+            
+        } else {
+            self.depthStencilPixelFormat = MTLPixelFormatDepth32Float_Stencil8;
+        }
+        
+        self.sampleCount = (glfmDisplay->multisample == GLFMMultisampleNone) ? 1 : 4;
+    }
+    return self;
+}
+
+- (GLFMRenderingAPI)renderingAPI {
+    return GLFMRenderingAPIMetal;
+}
+
+- (BOOL)animating {
+    return !self.paused;
+}
+
+- (void)setAnimating:(BOOL)animating {
+    if (self.animating != animating) {
+        self.paused = !animating;
+        [self requestRefresh];
+    }
+}
+
+- (void)mtkView:(MTKView *)view drawableSizeWillChange:(CGSize)size {
+    
+}
+
+- (void)drawInMTKView:(MTKView *)view {
+    int newDrawableWidth = (int)self.drawableSize.width;
+    int newDrawableHeight = (int)self.drawableSize.height;
+    if (!self.surfaceCreatedNotified) {
+        self.surfaceCreatedNotified = YES;
+        [self requestRefresh];
+
+        self.drawableWidth = newDrawableWidth;
+        self.drawableHeight = newDrawableHeight;
+        if (_glfmDisplay->surfaceCreatedFunc) {
+            _glfmDisplay->surfaceCreatedFunc(_glfmDisplay, self.drawableWidth, self.drawableHeight);
+        }
+    } else if (newDrawableWidth != self.drawableWidth || newDrawableHeight != self.drawableHeight) {
+        [self requestRefresh];
+        self.drawableWidth = newDrawableWidth;
+        self.drawableHeight = newDrawableHeight;
+        if (_glfmDisplay->surfaceResizedFunc) {
+            _glfmDisplay->surfaceResizedFunc(_glfmDisplay, self.drawableWidth, self.drawableHeight);
+        }
+    }
+    
+    if (_preRenderCallback) {
+        _preRenderCallback();
+    }
+    
+    if (self.refreshRequested) {
+        self.refreshRequested = NO;
+        if (_glfmDisplay->surfaceRefreshFunc) {
+            _glfmDisplay->surfaceRefreshFunc(_glfmDisplay);
+        }
+    }
+    
+    if (_glfmDisplay->renderFunc) {
+        _glfmDisplay->renderFunc(_glfmDisplay);
+    }
+}
+
+- (void)swapBuffers {
+    // Do nothing
+}
+
+- (void)requestRefresh {
+    self.refreshRequested = YES;
+}
+
+- (void)layoutSubviews {
+    // First render as soon as safeAreaInsets are set
+    if (!self.surfaceCreatedNotified) {
+        [self requestRefresh];
+        [self draw];
+    }
+}
+
+#if !__has_feature(objc_arc)
+- (void)dealloc {
+    [_preRenderCallback release];
+    [super dealloc];
+}
+#endif
+
+@end
+
+#endif
+
+#pragma mark - GLFMOpenGLView
+
+@interface GLFMOpenGLView : UIView <GLFMView>
+
+@property(nonatomic, assign) GLFMDisplay *glfmDisplay;
+@property(nonatomic, assign) GLFMRenderingAPI renderingAPI;
+@property(nonatomic, strong) CADisplayLink *displayLink;
+@property(nonatomic, strong) EAGLContext *context;
+@property(nonatomic, strong) NSString *colorFormat;
+@property(nonatomic, assign) BOOL preserveBackbuffer;
+@property(nonatomic, assign) NSUInteger depthBits;
+@property(nonatomic, assign) NSUInteger stencilBits;
+@property(nonatomic, assign) BOOL multisampling;
+@property(nonatomic, assign) BOOL surfaceCreatedNotified;
+@property(nonatomic, assign) BOOL surfaceSizeChanged;
+@property(nonatomic, assign) BOOL refreshRequested;
+
+@end
+
+@implementation GLFMOpenGLView {
     GLint _drawableWidth;
     GLint _drawableHeight;
     GLuint _defaultFramebuffer;
@@ -79,45 +279,114 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
     GLuint _msaaRenderbuffer;
 }
 
-@property(nonatomic, strong) EAGLContext *context;
-@property(nonatomic, strong) NSString *colorFormat;
-@property(nonatomic, assign) BOOL preserveBackbuffer;
-@property(nonatomic, assign) NSUInteger depthBits;
-@property(nonatomic, assign) NSUInteger stencilBits;
-@property(nonatomic, assign) BOOL multisampling;
-@property(nonatomic, readonly) NSUInteger drawableWidth;
-@property(nonatomic, readonly) NSUInteger drawableHeight;
-
-- (void)createDrawable;
-- (void)deleteDrawable;
-- (void)prepareRender;
-- (void)finishRender;
-
-@end
-
-@implementation GLFMView
-
-@dynamic drawableWidth, drawableHeight;
+@synthesize preRenderCallback = _preRenderCallback;
+@dynamic drawableWidth, drawableHeight, animating;
 
 + (Class)layerClass {
     return [CAEAGLLayer class];
 }
 
+- (instancetype)initWithFrame:(CGRect)frame contentScaleFactor:(CGFloat)contentScaleFactor
+                  glfmDisplay:(GLFMDisplay *)glfmDisplay {
+    if ((self = [super initWithFrame:frame])) {
+        
+        self.contentScaleFactor = contentScaleFactor;
+        self.glfmDisplay = glfmDisplay;
+        [self requestRefresh];
+        
+        if (glfmDisplay->preferredAPI >= GLFMRenderingAPIOpenGLES3) {
+            self.context = GLFM_AUTORELEASE([[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES3]);
+            self.renderingAPI = GLFMRenderingAPIOpenGLES3;
+        }
+        if (!self.context) {
+            self.context = GLFM_AUTORELEASE([[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2]);
+            self.renderingAPI = GLFMRenderingAPIOpenGLES2;
+        }
+        
+        if (!self.context) {
+            glfm__reportSurfaceError(glfmDisplay, "Failed to create ES context");
+            GLFM_RELEASE(self);
+            return nil;
+        }
+        
+        switch (glfmDisplay->colorFormat) {
+            case GLFMColorFormatRGB565:
+                self.colorFormat = kEAGLColorFormatRGB565;
+                break;
+            case GLFMColorFormatRGBA8888:
+            default:
+                self.colorFormat = kEAGLColorFormatRGBA8;
+                break;
+        }
+        
+        switch (glfmDisplay->depthFormat) {
+            case GLFMDepthFormatNone:
+            default:
+                self.depthBits = 0;
+                break;
+            case GLFMDepthFormat16:
+                self.depthBits = 16;
+                break;
+            case GLFMDepthFormat24:
+                self.depthBits = 24;
+                break;
+        }
+        
+        switch (glfmDisplay->stencilFormat) {
+            case GLFMStencilFormatNone:
+            default:
+                self.stencilBits = 0;
+                break;
+            case GLFMStencilFormat8:
+                self.stencilBits = 8;
+                break;
+        }
+        
+        self.multisampling = glfmDisplay->multisample != GLFMMultisampleNone;
+        
+        [self createDrawable];
+    }
+    return self;
+}
+
 - (void)dealloc {
+    self.animating = NO;
     [self deleteDrawable];
+    if ([EAGLContext currentContext] == self.context) {
+        [EAGLContext setCurrentContext:nil];
+    }
 #if !__has_feature(objc_arc)
     self.context = nil;
     self.colorFormat = nil;
+    [_preRenderCallback release];
     [super dealloc];
 #endif
 }
 
-- (NSUInteger)drawableWidth {
-    return (NSUInteger)_drawableWidth;
+- (int)drawableWidth {
+    return (int)_drawableWidth;
 }
 
-- (NSUInteger)drawableHeight {
-    return (NSUInteger)_drawableHeight;
+- (int)drawableHeight {
+    return (int)_drawableHeight;
+}
+
+- (BOOL)animating {
+    return (self.displayLink != nil);
+}
+
+- (void)setAnimating:(BOOL)animating {
+    if (self.animating != animating) {
+        [self requestRefresh];
+        if (!animating) {
+            [self.displayLink invalidate];
+            self.displayLink = nil;
+        } else {
+            self.displayLink = [CADisplayLink displayLinkWithTarget:self
+                                                           selector:@selector(render:)];
+            [self.displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+        }
+    }
 }
 
 - (void)createDrawable {
@@ -313,208 +582,254 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
     CHECK_GL_ERROR();
 }
 
+- (void)render:(CADisplayLink *)displayLink {
+    if (!self.surfaceCreatedNotified) {
+        self.surfaceCreatedNotified = YES;
+        [self requestRefresh];
+
+        if (_glfmDisplay->surfaceCreatedFunc) {
+            _glfmDisplay->surfaceCreatedFunc(_glfmDisplay, self.drawableWidth, self.drawableHeight);
+        }
+    }
+    
+    if (self.surfaceSizeChanged) {
+        self.surfaceSizeChanged  = NO;
+        [self requestRefresh];
+        if (_glfmDisplay->surfaceResizedFunc) {
+            _glfmDisplay->surfaceResizedFunc(_glfmDisplay, self.drawableWidth, self.drawableHeight);
+        }
+    }
+    
+    if (_preRenderCallback) {
+        _preRenderCallback();
+    }
+    
+    [self prepareRender];
+    if (self.refreshRequested) {
+        self.refreshRequested = NO;
+        if (_glfmDisplay->surfaceRefreshFunc) {
+            _glfmDisplay->surfaceRefreshFunc(_glfmDisplay);
+        }
+    }
+    if (_glfmDisplay->renderFunc) {
+        _glfmDisplay->renderFunc(_glfmDisplay);
+    }
+}
+
+- (void)swapBuffers {
+    [self finishRender];
+}
+
+- (void)draw {
+    if (self.displayLink) {
+        [self render:self.displayLink];
+    }
+}
+
+- (void)requestRefresh {
+    self.refreshRequested = YES;
+}
+
 - (void)layoutSubviews {
-    CGSize size = self.preferredDrawableSize;
-    NSUInteger newDrawableWidth = (NSUInteger)size.width;
-    NSUInteger newDrawableHeight = (NSUInteger)size.height;
+    int newDrawableWidth;
+    int newDrawableHeight;
+    glfm__preferredDrawableSize(self.bounds, self.contentScaleFactor, &newDrawableWidth, &newDrawableHeight);
 
     if (self.drawableWidth != newDrawableWidth || self.drawableHeight != newDrawableHeight) {
         [self deleteDrawable];
         [self createDrawable];
+        self.surfaceSizeChanged = self.surfaceCreatedNotified;
     }
-}
-
-- (CGSize)preferredDrawableSize {
-    NSUInteger newDrawableWidth = (NSUInteger)(self.bounds.size.width * self.contentScaleFactor);
-    NSUInteger newDrawableHeight = (NSUInteger)(self.bounds.size.height * self.contentScaleFactor);
-
-    // On the iPhone 6 when "Display Zoom" is set, the size will be incorrect.
-    if (self.contentScaleFactor == 2.343750) {
-        if (newDrawableWidth == 750 && newDrawableHeight == 1331) {
-            newDrawableHeight = 1334;
-        } else if (newDrawableWidth == 1331 && newDrawableHeight == 750) {
-            newDrawableWidth = 1334;
-        }
+    
+    // First render as soon as safeAreaInsets are set
+    if (!self.surfaceCreatedNotified) {
+        [self requestRefresh];
+        [self draw];
     }
-
-    return CGSizeMake(newDrawableWidth, newDrawableHeight);
 }
 
 @end
 
 #pragma mark - GLFMViewController
 
-@interface GLFMViewController : UIViewController<UIKeyInput, UITextInput, UITextInputTraits, UIImagePickerControllerDelegate,UINavigationControllerDelegate> {
-    const void *activeTouches[MAX_SIMULTANEOUS_TOUCHES];
-}
+@interface GLFMViewController : UIViewController<UIKeyInput, UITextInputTraits, UITextInput/*gust add*/>
 
-@property(nonatomic, strong) EAGLContext *context;
-@property(nonatomic, strong) CADisplayLink *displayLink;
 @property(nonatomic, assign) GLFMDisplay *glfmDisplay;
-@property(nonatomic, assign) CGSize drawableSize;
 @property(nonatomic, assign) BOOL multipleTouchEnabled;
 @property(nonatomic, assign) BOOL keyboardRequested;
 @property(nonatomic, assign) BOOL keyboardVisible;
-@property(nonatomic, assign) BOOL surfaceCreatedNotified;
+
+#if GLFM_INCLUDE_METAL
+@property(nonatomic, strong) id<MTLDevice> metalDevice;
+#endif
+#if TARGET_OS_IOS
+@property(nonatomic, strong) CMMotionManager *motionManager;
+@property(nonatomic, assign) UIInterfaceOrientation orientation;
+#endif
+
+//================================= gust add 2 =======================
 @property(nonatomic, assign) int pickerUid;
 @property(nonatomic, assign) int pickerType;
 @property (nonatomic, retain) NSString *textStore;
 @property (nonatomic, retain) UILabel *inputlabel;
-//@property (nonatomic, retain) UIView *videoPanel;
-//@property (nonatomic, retain) AVPlayer *avplayer;
-
 - (void)takePhotoAction:(int) puid : (int) type;
 - (void)browseAlbum:(int) puid : (int) type;
 + (UIImage *)cropImage:(UIImage *)image inRect:(CGRect)rect;
 + (UIImage *)resizeCropImage:(UIImage *)image toRect:(CGSize)size;
 + (UIImage *)resizeImage:(UIImage *)image toSize:(CGSize)reSize;
+//================================= gust add 2 =======================
+
 @end
 
-@implementation GLFMViewController
+@implementation GLFMViewController {
+    const void *activeTouches[MAX_SIMULTANEOUS_TOUCHES];
+}
 
 - (id)init {
     if ((self = [super init])) {
         [self clearTouches];
         _glfmDisplay = calloc(1, sizeof(GLFMDisplay));
         _glfmDisplay->platformData = (__bridge void *)self;
+        _glfmDisplay->supportedOrientations = GLFMInterfaceOrientationAll;
     }
     return self;
 }
 
-- (BOOL)animating {
-    return (self.displayLink != nil);
-}
-
-- (void)setAnimating:(BOOL)animating {
-    if (self.animating != animating) {
-        if (!animating) {
-            [self.displayLink invalidate];
-            self.displayLink = nil;
-        } else {
-            self.displayLink = [CADisplayLink displayLinkWithTarget:self
-                                                           selector:@selector(render:)];
-            [self.displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
-        }
+#if GLFM_INCLUDE_METAL
+- (id<MTLDevice>)metalDevice {
+    if (!_metalDevice) {
+        self.metalDevice = GLFM_AUTORELEASE(MTLCreateSystemDefaultDevice());
     }
+    return _metalDevice;
 }
+#endif
 
+#if TARGET_OS_IOS
 - (BOOL)prefersStatusBarHidden {
     return _glfmDisplay->uiChrome != GLFMUserInterfaceChromeNavigationAndStatusBar;
 }
 
-- (BOOL)prefersHomeIndicatorAutoHidden {
-    return _glfmDisplay->uiChrome == GLFMUserInterfaceChromeFullscreen;
+- (UIRectEdge)preferredScreenEdgesDeferringSystemGestures {
+    UIRectEdge edges =  UIRectEdgeLeft | UIRectEdgeRight;
+    return _glfmDisplay->uiChrome == GLFMUserInterfaceChromeFullscreen ? UIRectEdgeBottom | edges : edges;
+}
+#endif
+
+- (UIView<GLFMView> *)glfmView {
+    return (UIView<GLFMView> *)self.view;
 }
 
 - (void)loadView {
+    glfmMain(_glfmDisplay);
+
     GLFMAppDelegate *delegate = UIApplication.sharedApplication.delegate;
-    self.view = GLFM_AUTORELEASE([[GLFMView alloc] initWithFrame:delegate.window.bounds]);
+    CGRect frame = delegate.window.bounds;
+    CGFloat scale = [UIScreen mainScreen].nativeScale;
+    UIView<GLFMView> *glfmView = nil;
+    
+#if GLFM_INCLUDE_METAL
+    if (_glfmDisplay->preferredAPI == GLFMRenderingAPIMetal && self.metalDevice) {
+        glfmView = GLFM_AUTORELEASE([[GLFMMetalView alloc] initWithFrame:frame
+                                                       contentScaleFactor:scale
+                                                                   device:self.metalDevice
+                                                              glfmDisplay:_glfmDisplay]);
+    }
+#endif
+    if (!glfmView) {
+        glfmView = GLFM_AUTORELEASE([[GLFMOpenGLView alloc] initWithFrame:frame
+                                                        contentScaleFactor:scale
+                                                               glfmDisplay:_glfmDisplay]);
+    }
+    GLFM_WEAK __typeof(self) weakSelf = self;
+    glfmView.preRenderCallback = ^{
+        [weakSelf preRenderCallback];
+    };
+    self.view = glfmView;
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    self.view.contentScaleFactor = [UIScreen mainScreen].nativeScale;
+//================================= gust add 3 =======================
     self.inputlabel = [[UILabel alloc]initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 30)];
     //self.inputlabel.backgroundColor = [UIColor lightGrayColor ];//设置背景颜色
     self.inputlabel.textColor = [UIColor lightGrayColor];//设置Label上文字的颜色
+//================================= gust add 3 =======================
+
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    GLFMView *view = (GLFMView *)self.view;
-    self.drawableSize = [view preferredDrawableSize];
-
-    glfmMain(_glfmDisplay);
-
-    if (_glfmDisplay->preferredAPI >= GLFMRenderingAPIOpenGLES3) {
-        self.context = GLFM_AUTORELEASE([[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES3]);
-    }
-    if (!self.context) {
-        self.context = GLFM_AUTORELEASE([[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2]);
-    }
-
-    if (!self.context) {
-        _glfmReportSurfaceError(_glfmDisplay, "Failed to create ES context");
-        return;
-    }
-
-    view.context = self.context;
+    GLFMAppDelegate *delegate = UIApplication.sharedApplication.delegate;
+    self.glfmView.animating = delegate.active;
     
-    [self.view addSubview:_inputlabel];
-
 #if TARGET_OS_IOS
-    view.multipleTouchEnabled = self.multipleTouchEnabled;
+    self.view.multipleTouchEnabled = self.multipleTouchEnabled;
+    self.orientation = [[UIApplication sharedApplication] statusBarOrientation];
 
     [self setNeedsStatusBarAppearanceUpdate];
-#endif
 
-    switch (_glfmDisplay->colorFormat) {
-        case GLFMColorFormatRGB565:
-            view.colorFormat = kEAGLColorFormatRGB565;
-            break;
-        case GLFMColorFormatRGBA8888:
-        default:
-            view.colorFormat = kEAGLColorFormatRGBA8;
-            break;
-    }
-
-    switch (_glfmDisplay->depthFormat) {
-        case GLFMDepthFormatNone:
-        default:
-            view.depthBits = 0;
-            break;
-        case GLFMDepthFormat16:
-            view.depthBits = 16;
-            break;
-        case GLFMDepthFormat24:
-            view.depthBits = 24;
-            break;
-    }
-
-    switch (_glfmDisplay->stencilFormat) {
-        case GLFMStencilFormatNone:
-        default:
-            view.stencilBits = 0;
-            break;
-        case GLFMStencilFormat8:
-            view.stencilBits = 8;
-            break;
-    }
-
-    view.multisampling = _glfmDisplay->multisample != GLFMMultisampleNone;
-
-    [view createDrawable];
-
-    if (view.drawableWidth > 0 && view.drawableHeight > 0) {
-        self.drawableSize = CGSizeMake(view.drawableWidth, view.drawableHeight);
-        self.animating = YES;
-    }
-
-#if TARGET_OS_IOS
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(keyboardFrameChanged:)
                                                name:UIKeyboardWillChangeFrameNotification
-                                             object:view.window];
+                                             object:self.view.window];
+    
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(deviceOrientationChanged:)
+                                               name:UIDeviceOrientationDidChangeNotification
+                                             object:self.view.window];
 #endif
 }
 
+#if TARGET_OS_IOS
+//支持旋转
+-(BOOL)shouldAutorotate{
+   return YES;
+}
+
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations {
-    BOOL isTablet = (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad);
-    GLFMUserInterfaceOrientation uiOrientations = _glfmDisplay->allowedOrientations;
-    if (uiOrientations == GLFMUserInterfaceOrientationAny) {
+    GLFMInterfaceOrientation orientations = _glfmDisplay->supportedOrientations;
+    BOOL portraitRequested = (orientations & (GLFMInterfaceOrientationPortrait | GLFMInterfaceOrientationPortraitUpsideDown)) != 0;
+    BOOL landscapeRequested = (orientations & GLFMInterfaceOrientationLandscape) != 0;
+    BOOL isTablet = [[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad;
+    if (portraitRequested && landscapeRequested) {
         if (isTablet) {
             return UIInterfaceOrientationMaskAll;
         } else {
             return UIInterfaceOrientationMaskAllButUpsideDown;
         }
-    } else if (uiOrientations == GLFMUserInterfaceOrientationPortrait) {
+    } else if (landscapeRequested) {
+        // iOS16以下
+        NSNumber *orientation = [NSNumber numberWithInt:GLFMInterfaceOrientationLandscapeLeft];
+//        if((supportedOrientations & GLFMInterfaceOrientationLandscapeLeft) != 0){
+//            supportedOrientations = [NSNumber numberWithInt:UIInterfaceOrientationLandscapeLeft];
+//        }
+        [[UIDevice currentDevice] setValue:orientation forKey:@"orientation"];
+        return UIInterfaceOrientationMaskLandscape;
+    } else {
         if (isTablet) {
             return (UIInterfaceOrientationMask)(UIInterfaceOrientationMaskPortrait |
                     UIInterfaceOrientationMaskPortraitUpsideDown);
         } else {
+            // iOS16以下
+            NSNumber *orientation = [NSNumber numberWithInt:UIInterfaceOrientationPortrait];
+            [[UIDevice currentDevice] setValue:orientation forKey:@"orientation"];
+
             return UIInterfaceOrientationMaskPortrait;
         }
-    } else {
-        return UIInterfaceOrientationMaskLandscape;
     }
 }
+
+- (void)deviceOrientationChanged:(NSNotification *)notification {
+    UIInterfaceOrientation orientation = [[UIApplication sharedApplication] statusBarOrientation];
+    if (self.orientation != orientation) {
+        self.orientation = orientation;
+        if (self.isViewLoaded) {
+            [self.glfmView requestRefresh];
+        }
+        if (_glfmDisplay->orientationChangedFunc) {
+            _glfmDisplay->orientationChangedFunc(_glfmDisplay,
+                                                 glfmGetInterfaceOrientation(_glfmDisplay));
+        }
+    }
+}
+
+#endif
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
@@ -523,80 +838,125 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
     }
 }
 
-- (void)dealloc {
-    [self setAnimating:NO];
-    if ([EAGLContext currentContext] == self.context) {
-        [EAGLContext setCurrentContext:nil];
+- (void)preRenderCallback {
+#if TARGET_OS_IOS
+    [self handleMotionEvents];
+#endif
+}
+
+#if TARGET_OS_IOS
+
+- (CMMotionManager *)motionManager {
+    if (!_motionManager) {
+        self.motionManager = GLFM_AUTORELEASE([CMMotionManager new]);
+        self.motionManager.deviceMotionUpdateInterval = 0.01;
     }
+    return _motionManager;
+}
+
+- (BOOL)isMotionManagerLoaded {
+    return _motionManager != nil;
+}
+
+- (void)handleMotionEvents {
+    if (!self.isMotionManagerLoaded || !self.motionManager.isDeviceMotionActive) {
+        return;
+    }
+    CMDeviceMotion *deviceMotion = self.motionManager.deviceMotion;
+    if (!deviceMotion) {
+        // No readings yet
+        return;
+    }
+    GLFMSensorFunc accelerometerFunc = self.glfmDisplay->sensorFuncs[GLFMSensorAccelerometer];
+    if (accelerometerFunc) {
+        GLFMSensorEvent event = { 0 };
+        event.sensor = GLFMSensorAccelerometer;
+        event.timestamp = deviceMotion.timestamp;
+        event.vector.x = deviceMotion.userAcceleration.x + deviceMotion.gravity.x;
+        event.vector.y = deviceMotion.userAcceleration.y + deviceMotion.gravity.y;
+        event.vector.z = deviceMotion.userAcceleration.z + deviceMotion.gravity.z;
+        accelerometerFunc(self.glfmDisplay, event);
+    }
+    
+    GLFMSensorFunc magnetometerFunc = self.glfmDisplay->sensorFuncs[GLFMSensorMagnetometer];
+    if (magnetometerFunc) {
+        GLFMSensorEvent event = { 0 };
+        event.sensor = GLFMSensorMagnetometer;
+        event.timestamp = deviceMotion.timestamp;
+        event.vector.x = deviceMotion.magneticField.field.x;
+        event.vector.y = deviceMotion.magneticField.field.y;
+        event.vector.z = deviceMotion.magneticField.field.z;
+        magnetometerFunc(self.glfmDisplay, event);
+    }
+    
+    GLFMSensorFunc gyroscopeFunc = self.glfmDisplay->sensorFuncs[GLFMSensorGyroscope];
+    if (gyroscopeFunc) {
+        GLFMSensorEvent event = { 0 };
+        event.sensor = GLFMSensorGyroscope;
+        event.timestamp = deviceMotion.timestamp;
+        event.vector.x = deviceMotion.rotationRate.x;
+        event.vector.y = deviceMotion.rotationRate.y;
+        event.vector.z = deviceMotion.rotationRate.z;
+        gyroscopeFunc(self.glfmDisplay, event);
+    }
+    
+    GLFMSensorFunc rotationFunc = self.glfmDisplay->sensorFuncs[GLFMSensorRotationMatrix];
+    if (rotationFunc) {
+        GLFMSensorEvent event = { 0 };
+        event.sensor = GLFMSensorRotationMatrix;
+        event.timestamp = deviceMotion.timestamp;
+        CMRotationMatrix matrix = deviceMotion.attitude.rotationMatrix;
+        event.matrix.m00 = matrix.m11; event.matrix.m01 = matrix.m12; event.matrix.m02 = matrix.m13;
+        event.matrix.m10 = matrix.m21; event.matrix.m11 = matrix.m22; event.matrix.m12 = matrix.m23;
+        event.matrix.m20 = matrix.m31; event.matrix.m21 = matrix.m32; event.matrix.m22 = matrix.m33;
+        rotationFunc(self.glfmDisplay, event);
+    }
+}
+
+- (void)updateMotionManagerActiveState {
+    BOOL enable = NO;
+    GLFMAppDelegate *delegate = UIApplication.sharedApplication.delegate;
+    if (delegate.active) {
+        for (int i = 0; i < GLFM_NUM_SENSORS; i++) {
+            if (self.glfmDisplay->sensorFuncs[i] != NULL) {
+                enable = YES;
+                break;
+            }
+        }
+    }
+    
+    if (enable && !self.motionManager.deviceMotionActive) {
+        CMAttitudeReferenceFrame referenceFrame;
+        CMAttitudeReferenceFrame availableReferenceFrames = [CMMotionManager availableAttitudeReferenceFrames];
+        if (availableReferenceFrames & CMAttitudeReferenceFrameXMagneticNorthZVertical) {
+            referenceFrame = CMAttitudeReferenceFrameXMagneticNorthZVertical;
+        } else if (availableReferenceFrames & CMAttitudeReferenceFrameXArbitraryCorrectedZVertical) {
+            referenceFrame = CMAttitudeReferenceFrameXArbitraryCorrectedZVertical;
+        } else {
+            referenceFrame = CMAttitudeReferenceFrameXArbitraryZVertical;
+        }
+        [self.motionManager startDeviceMotionUpdatesUsingReferenceFrame:referenceFrame];
+    } else if (!enable && self.isMotionManagerLoaded && self.motionManager.deviceMotionActive) {
+        [self.motionManager stopDeviceMotionUpdates];
+    }
+}
+
+#endif
+
+- (void)dealloc {
     if (_glfmDisplay->surfaceDestroyedFunc) {
         _glfmDisplay->surfaceDestroyedFunc(_glfmDisplay);
     }
     free(_glfmDisplay);
+    self.glfmView.preRenderCallback = nil;
 #if !__has_feature(objc_arc)
-    self.context = nil;
+    self.motionManager = nil;
+#if GLFM_INCLUDE_METAL
+    self.metalDevice = nil;
+#endif
     [super dealloc];
 #endif
 }
-
-- (void)render:(CADisplayLink *)displayLink {
-    GLFMView *view = (GLFMView *)self.view;
-
-    if (!self.surfaceCreatedNotified) {
-        self.surfaceCreatedNotified = YES;
-
-        if (_glfmDisplay->surfaceCreatedFunc) {
-            _glfmDisplay->surfaceCreatedFunc(_glfmDisplay, (int)self.drawableSize.width,
-                                             (int)self.drawableSize.height);
-        }
-    }
-
-    CGSize newDrawableSize = CGSizeMake(view.drawableWidth, view.drawableHeight);
-    if (!CGSizeEqualToSize(self.drawableSize, newDrawableSize)) {
-        self.drawableSize = newDrawableSize;
-        if (_glfmDisplay->surfaceResizedFunc) {
-            _glfmDisplay->surfaceResizedFunc(_glfmDisplay, (int)self.drawableSize.width,
-                                             (int)self.drawableSize.height);
-        }
-    }
-
-    [view prepareRender];
-    if (_glfmDisplay->mainLoopFunc) {
-        _glfmDisplay->mainLoopFunc(_glfmDisplay, displayLink.timestamp);
-    }
-    [view finishRender];
-}
-
-#pragma mark - Action Methods
-- (void)targetAction:(UIButton*)sender
-{
-    switch (sender.tag) {
-        case 555: { //close
-            UIView *videoPanel = sender.superview;
-            AVPlayer *avplayer = [videoPanel.layer valueForKey:@"AVPLAYER"];
-            [avplayer pause];
-                    [videoPanel removeFromSuperview];
-            [[AVPlayerLayer playerLayerWithPlayer:avplayer] removeFromSuperlayer];
-            avplayer = NULL;
-            break;
-        }
-
-        case 557: { //播放
-            UIView *videoPanel = sender.superview;
-            AVPlayer *avplayer = [videoPanel.layer valueForKey:@"AVPLAYER"];
-            [avplayer play];
-            break;
-        }
-        case 556: { //暂停
-            UIView *videoPanel = sender.superview;
-            AVPlayer *avplayer = [videoPanel.layer valueForKey:@"AVPLAYER"];
-            [avplayer pause];
-            break;
-        }
-        default:
-            break;
-    }
-}
-
 
 #pragma mark - UIResponder
 
@@ -757,6 +1117,14 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
         CGRect keyboardFrame = [nsValue CGRectValue];
 
         self.keyboardVisible = CGRectIntersectsRect(self.view.window.frame, keyboardFrame);
+        if (!self.keyboardVisible) {
+            // User hid keyboard (iPad)
+            self.keyboardRequested = NO;
+        }
+        
+        if (self.isViewLoaded) {
+            [self.glfmView requestRefresh];
+        }
 
         if (_glfmDisplay->keyboardVisibilityChangedFunc) {
             // Convert to view coordinates
@@ -815,24 +1183,25 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
 - (NSArray<UIKeyCommand *> *)keyCommands {
     static NSArray<UIKeyCommand *> *keyCommands = NULL;
     if (!keyCommands) {
-        keyCommands = @[ [UIKeyCommand keyCommandWithInput:UIKeyInputUpArrow
-                                             modifierFlags:(UIKeyModifierFlags)0
-                                                    action:@selector(keyPressed:)],
-                         [UIKeyCommand keyCommandWithInput:UIKeyInputDownArrow
-                                             modifierFlags:(UIKeyModifierFlags)0
-                                                    action:@selector(keyPressed:)],
-                         [UIKeyCommand keyCommandWithInput:UIKeyInputLeftArrow
-                                             modifierFlags:(UIKeyModifierFlags)0
-                                                    action:@selector(keyPressed:)],
-                         [UIKeyCommand keyCommandWithInput:UIKeyInputRightArrow
-                                             modifierFlags:(UIKeyModifierFlags)0
-                                                    action:@selector(keyPressed:)],
-                         [UIKeyCommand keyCommandWithInput:UIKeyInputEscape
-                                             modifierFlags:(UIKeyModifierFlags)0
-                                                    action:@selector(keyPressed:)] ];
-#if !__has_feature(objc_arc)
-        [keyCommands retain];
-#endif
+        NSArray<NSString *> *keyInputs = @[
+            UIKeyInputUpArrow, UIKeyInputDownArrow, UIKeyInputLeftArrow, UIKeyInputRightArrow,
+            UIKeyInputEscape, UIKeyInputPageUp, UIKeyInputPageDown,
+        ];
+        if (@available(iOS 13.4, tvOS  13.4, *)) {
+            keyInputs = [keyInputs arrayByAddingObjectsFromArray: @[
+                UIKeyInputHome, UIKeyInputEnd,
+            ]];
+                           
+        }
+        NSMutableArray *mutableKeyCommands = GLFM_AUTORELEASE([NSMutableArray new]);
+        [keyInputs enumerateObjectsUsingBlock:^(NSString *keyInput, NSUInteger idx, BOOL *stop) {
+            (void)idx;
+            (void)stop;
+            [mutableKeyCommands addObject:[UIKeyCommand keyCommandWithInput:keyInput
+                                                              modifierFlags:(UIKeyModifierFlags)0
+                                                                     action:@selector(keyPressed:)]];
+        }];
+        keyCommands = GLFM_RETAIN([mutableKeyCommands copy]);
     }
 
     return keyCommands;
@@ -852,6 +1221,18 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
             keyCode = GLFMKeyRight;
         } else if (key == UIKeyInputEscape) {
             keyCode = GLFMKeyEscape;
+        } else if (key == UIKeyInputPageUp) {
+            keyCode = GLFMKeyPageUp;
+        } else if (key == UIKeyInputPageDown) {
+            keyCode = GLFMKeyPageDown;
+        }
+        
+        if (@available(iOS 13.4, tvOS  13.4, *)) {
+            if (key == UIKeyInputHome) {
+                keyCode = GLFMKeyHome;
+            } else if (key == UIKeyInputEnd) {
+                keyCode = GLFMKeyEnd;
+            }
         }
 
         if (keyCode != 0) {
@@ -901,7 +1282,7 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
 }
 
 - (NSComparisonResult)comparePosition:(nonnull UITextPosition *)position toPosition:(nonnull UITextPosition *)other {
-    
+
     return NSOrderedSame;
 }
 
@@ -964,7 +1345,7 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
 }
 
 - (void)encodeWithCoder:(nonnull NSCoder *)aCoder {
-    
+
 }
 
 + (nonnull instancetype)appearance {
@@ -992,7 +1373,7 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
 }
 
 - (void)traitCollectionDidChange:(nullable UITraitCollection *)previousTraitCollection {
-    
+
 }
 
 - (CGPoint)convertPoint:(CGPoint)point fromCoordinateSpace:(nonnull id<UICoordinateSpace>)coordinateSpace {
@@ -1012,11 +1393,11 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
 }
 
 - (void)didUpdateFocusInContext:(nonnull UIFocusUpdateContext *)context withAnimationCoordinator:(nonnull UIFocusAnimationCoordinator *)coordinator {
-    
+
 }
 
 - (void)setNeedsFocusUpdate {
-    
+
 }
 
 - (BOOL)shouldUpdateFocusInContext:(nonnull UIFocusUpdateContext *)context {
@@ -1024,7 +1405,7 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
 }
 
 - (void)updateFocusIfNeeded {
-    
+
 }
 
 - (nonnull NSArray<id<UIFocusItem>> *)focusItemsInRect:(CGRect)rect {
@@ -1060,7 +1441,7 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
      UIImagePickerControllerSourceTypeSavedPhotosAlbum ->内置相册
      */
     imagePicker.delegate = self;    //设置代理，遵循UINavigationControllerDelegate,UIImagePickerControllerDelegate协议
-    
+
 }
 
 #pragma mark - 访问相册
@@ -1094,7 +1475,7 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
     //NSLog(@"%@",info);  //UIImagePickerControllerMediaType,UIImagePickerControllerOriginalImage,UIImagePickerControllerReferenceURL
     NSString *mediaType = info[@"UIImagePickerControllerMediaType"];
     if ([mediaType isEqualToString:@"public.image"]) {  //判断是否为图片
-        
+
         UIImage *image = [info objectForKey:UIImagePickerControllerOriginalImage];
         if(_pickerType==0){//autofit
             float iw=image.size.width;
@@ -1105,14 +1486,14 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
                 image = [GLFMViewController resizeImage:image toSize:(CGSize)CGSizeMake(iw/scale, ih/scale)];
             }
         }
-        
+
         NSData *data=UIImageJPEGRepresentation(image, 0.75);
         //self.imageShow.image = image;
-        
+
         NSURL *nsurl=[info objectForKey:UIImagePickerControllerReferenceURL];
         NSString *nss=[nsurl path];
         const char* url=[nss UTF8String];
-        
+
         char *cd=(char*)[data bytes];
         int len=(int)[data length];
         _glfmDisplay->pickerFunc(_glfmDisplay, _pickerUid, url, cd, len);
@@ -1152,12 +1533,12 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
                         NSLog(@"当前压缩进度:%f",exportSession.progress);
                     }
                     NSLog(@"%@",exportSession.error);
-                    
+
                 }];
             }
         //}
     }
-  
+
     [picker dismissViewControllerAnimated:YES completion:nil];
 }
 
@@ -1168,19 +1549,19 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
 
 
 +(UIImage *)cropImage:(UIImage *)image inRect:(CGRect)rect{
-    
+
     //将UIImage转换成CGImageRef
     CGImageRef sourceImageRef = [image CGImage];
-    
+
     //按照给定的矩形区域进行剪裁
     CGImageRef newImageRef = CGImageCreateWithImageInRect(sourceImageRef, rect);
-    
+
     //将CGImageRef转换成UIImage
     UIImage *newImage = [UIImage imageWithCGImage:newImageRef];
-    
+
     // 调用这个方法 否则会造成内存泄漏 楼主可以检测下
     CGImageRelease(newImageRef);
-    
+
     //返回剪裁后的图片
     return newImage;
 }
@@ -1191,24 +1572,24 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
  * CGSize size 截取图片的size
  */
 +(UIImage *)resizeCropImage:(UIImage *)image toRect:(CGSize)size{
-    
+
     //被切图片宽比例比高比例小 或者相等，以图片宽进行放大
     if (image.size.width*size.height <= image.size.height*size.width) {
-        
+
         //以被剪裁图片的宽度为基准，得到剪切范围的大小
         CGFloat width  = image.size.width;
         CGFloat height = image.size.width * size.height / size.width;
-        
+
         // 调用剪切方法
         // 这里是以中心位置剪切，也可以通过改变rect的x、y值调整剪切位置
         return [GLFMViewController cropImage:image inRect:CGRectMake(0, (image.size.height -height)/2, width, height)];
-        
+
     }else{ //被切图片宽比例比高比例大，以图片高进行剪裁
-        
+
         // 以被剪切图片的高度为基准，得到剪切范围的大小
         CGFloat width  = image.size.height * size.width / size.height;
         CGFloat height = image.size.height;
-        
+
         // 调用剪切方法
         // 这里是以中心位置剪切，也可以通过改变rect的x、y值调整剪切位置
         return [GLFMViewController cropImage:image inRect:CGRectMake((image.size.width -width)/2, 0, width, height)];
@@ -1217,17 +1598,17 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
 }
 
 + (UIImage *)resizeImage:(UIImage *)image toSize:(CGSize)reSize{
-    
+
     UIGraphicsBeginImageContext(CGSizeMake(reSize.width, reSize.height));
-    
+
     [image drawInRect:CGRectMake(0, 0, reSize.width, reSize.height)];
-    
+
     UIImage *reSizeImage = UIGraphicsGetImageFromCurrentImageContext();
-    
+
     UIGraphicsEndImageContext();
-    
+
     return reSizeImage;
-    
+
 }
 
 @end
@@ -1248,8 +1629,8 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
     }
     self.window.rootViewController = GLFM_AUTORELEASE([[GLFMViewController alloc] init]);
     [self.window makeKeyAndVisible];
-    
-    
+
+
     if (@available(iOS 10.0, *)) {
         //iOS10特有
         UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
@@ -1270,21 +1651,21 @@ void CHECK_GL_ERROR() {do { GLenum error = glGetError();
     }else if (@available(iOS 8.0, *)){
         //iOS8 - iOS10
         [application registerUserNotificationSettings:[UIUserNotificationSettings settingsForTypes:UIUserNotificationTypeAlert | UIUserNotificationTypeSound | UIUserNotificationTypeBadge categories:nil]];
-        
+
     }else {
         //iOS8系统以下
         [application registerForRemoteNotificationTypes:UIRemoteNotificationTypeBadge | UIRemoteNotificationTypeAlert | UIRemoteNotificationTypeSound];
     }
     // 注册获得device Token
     [[UIApplication sharedApplication] registerForRemoteNotifications];
-    
+
     //register lock screen event
     CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, screenLockStateChanged, NotificationLock, NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
     CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, screenLockStateChanged, NotificationChange, NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
 
 
     //setScreenStateCb();
-    
+
     return YES;
 }
 //lock screen
@@ -1295,6 +1676,15 @@ static void screenLockStateChanged(CFNotificationCenterRef center,void* observer
         NSLog(@"locked.");
     } else {
         NSLog(@"lock state changed.");
+    }
+}
+
+//gust {
+void setDeviceToken(GLFMDisplay * display, const char *deviceToken) {
+    static char *key="glfm.device.token";
+
+    if(display->notifyFunc){
+        display->notifyFunc(display,key,deviceToken);
     }
 }
 
@@ -1334,10 +1724,10 @@ didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
     UNNotificationSound *sound = content.sound;  // 推送消息的声音
     NSString *subtitle = content.subtitle;  // 推送消息的副标题
     NSString *title = content.title;  // 推送消息的标题
-    
+
     if([notification.request.trigger isKindOfClass:[UNPushNotificationTrigger class]]) {
         NSLog(@"iOS10 前台收到远程通知:%@", userInfo);
-        
+
     }
     else {
         // 判断为本地通知
@@ -1348,7 +1738,7 @@ didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
 
 // 通知的点击事件
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void(^)(void))completionHandler API_AVAILABLE(ios(10.0)){
-    
+
     NSDictionary * userInfo = response.notification.request.content.userInfo;
     UNNotificationRequest *request = response.notification.request; // 收到推送的请求
     UNNotificationContent *content = request.content; // 收到推送的消息内容
@@ -1359,16 +1749,16 @@ didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
     NSString *title = content.title;  // 推送消息的标题
     if([response.notification.request.trigger isKindOfClass:[UNPushNotificationTrigger class]]) {
         //NSLog(@"iOS10 收到远程通知:%@", userInfo);
-        
+
     }
     else {
         // 判断为本地通知
         //NSLog(@"iOS10 收到本地通知:{\\\\nbody:%@，\\\\ntitle:%@,\\\\nsubtitle:%@,\\\\nbadge：%@，\\\\nsound：%@，\\\\nuserInfo：%@\\\\n}",body,title,subtitle,badge,sound,userInfo);
     }
-    
+
     // Warning: UNUserNotificationCenter delegate received call to -userNotificationCenter:didReceiveNotificationResponse:withCompletionHandler: but the completion handler was never called.
     completionHandler();  // 系统要求执行这个方法
-    
+
 }
 
 - (void)application:(UIApplication *)application
@@ -1380,21 +1770,34 @@ didReceiveRemoteNotification:(NSDictionary *)userInfo {
 didReceiveRemoteNotification:(NSDictionary *)userInfo
 fetchCompletionHandler:
 (void (^)(UIBackgroundFetchResult))completionHandler {
-    
+
     //NSLog(@"iOS7及以上系统，收到通知:%@", userInfo);
     completionHandler(UIBackgroundFetchResultNewData);
 }
+//gust }
 
 - (void)setActive:(BOOL)active {
     if (_active != active) {
         _active = active;
 
         GLFMViewController *vc = (GLFMViewController *)[self.window rootViewController];
-        [vc clearTouches];
-        vc.animating = active;
         if (vc.glfmDisplay && vc.glfmDisplay->focusFunc) {
             vc.glfmDisplay->focusFunc(vc.glfmDisplay, _active);
         }
+        if (vc.isViewLoaded) {
+            if (!active) {
+                // Draw once when entering the background so that a game can show "paused" state.
+                [vc.glfmView requestRefresh];
+                [vc.glfmView draw];
+            }
+            vc.glfmView.animating = active;
+        }
+#if TARGET_OS_IOS
+        if (vc.isMotionManagerLoaded) {
+            [vc updateMotionManagerActiveState];
+        }
+#endif
+        [vc clearTouches];
     }
 }
 
@@ -1437,6 +1840,10 @@ int main(int argc, char *argv[]) {
 
 #pragma mark - GLFM implementation
 
+double glfmGetTime() {
+    return CACurrentMediaTime();
+}
+
 GLFMProc glfmGetProcAddress(const char *functionName) {
     static void *handle = NULL;
     if (!handle) {
@@ -1445,15 +1852,24 @@ GLFMProc glfmGetProcAddress(const char *functionName) {
     return handle ? (GLFMProc)dlsym(handle, functionName) : NULL;
 }
 
-void glfmSetUserInterfaceOrientation(GLFMDisplay *display,
-                                     GLFMUserInterfaceOrientation allowedOrientations) {
+void glfmSwapBuffers(GLFMDisplay *display) {
+    if (display && display->platformData) {
+        GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
+        if (vc.isViewLoaded) {
+            [vc.glfmView swapBuffers];
+        }
+    }
+}
+
+void glfmSetSupportedInterfaceOrientation(GLFMDisplay *display, GLFMInterfaceOrientation supportedOrientations) {
     if (display) {
-        if (display->allowedOrientations != allowedOrientations) {
-            display->allowedOrientations = allowedOrientations;
+        if (display->supportedOrientations != supportedOrientations) {
+            display->supportedOrientations = supportedOrientations;
 
             // HACK: Notify that the value of supportedInterfaceOrientations has changed
             GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
-            if (vc.view.window) {
+            if (vc.isViewLoaded && vc.view.window) {
+                [vc.glfmView requestRefresh];
                 UIViewController *dummyVC = GLFM_AUTORELEASE([[UIViewController alloc] init]);
                 dummyVC.view = GLFM_AUTORELEASE([[UIView alloc] init]);
                 [vc presentViewController:dummyVC animated:NO completion:^{
@@ -1464,11 +1880,52 @@ void glfmSetUserInterfaceOrientation(GLFMDisplay *display,
     }
 }
 
+GLFMInterfaceOrientation glfmGetInterfaceOrientation(GLFMDisplay *display) {
+    (void)display;
+#if TARGET_OS_IOS
+    UIInterfaceOrientation orientation = [[UIApplication sharedApplication] statusBarOrientation];
+    switch (orientation) {
+        case UIInterfaceOrientationPortrait:
+            return GLFMInterfaceOrientationPortrait;
+        case UIInterfaceOrientationPortraitUpsideDown:
+            return GLFMInterfaceOrientationPortraitUpsideDown;
+        case UIInterfaceOrientationLandscapeLeft:
+            return GLFMInterfaceOrientationLandscapeLeft;
+        case UIInterfaceOrientationLandscapeRight:
+            return GLFMInterfaceOrientationLandscapeRight;
+        case UIInterfaceOrientationUnknown: default:
+            return GLFMInterfaceOrientationUnknown;
+    }
+#else
+    return GLFMInterfaceOrientationUnknown;
+#endif
+}
+
+static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFactor, int *width, int *height) {
+    int newDrawableWidth = (int)(bounds.size.width * contentScaleFactor);
+    int newDrawableHeight = (int)(bounds.size.height * contentScaleFactor);
+
+    // On the iPhone 6 when "Display Zoom" is set, the size will be incorrect.
+    if (contentScaleFactor == 2.343750) {
+        if (newDrawableWidth == 750 && newDrawableHeight == 1331) {
+            newDrawableHeight = 1334;
+        } else if (newDrawableWidth == 1331 && newDrawableHeight == 750) {
+            newDrawableWidth = 1334;
+        }
+    }
+    *width = newDrawableWidth;
+    *height = newDrawableHeight;
+}
+
 void glfmGetDisplaySize(GLFMDisplay *display, int *width, int *height) {
     if (display && display->platformData) {
         GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
-        *width = (int)vc.drawableSize.width;
-        *height = (int)vc.drawableSize.height;
+        if (vc.isViewLoaded) {
+            *width = vc.glfmView.drawableWidth;
+            *height = vc.glfmView.drawableHeight;
+        } else {
+            glfm__preferredDrawableSize(UIScreen.mainScreen.bounds, UIScreen.mainScreen.nativeScale, width, height);
+        }
     } else {
         *width = 0;
         *height = 0;
@@ -1476,19 +1933,20 @@ void glfmGetDisplaySize(GLFMDisplay *display, int *width, int *height) {
 }
 
 double glfmGetDisplayScale(GLFMDisplay *display) {
-    if (display && display->platformData) {
-        GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
-        return vc.view.contentScaleFactor;
-    } else {
-        return [UIScreen mainScreen].scale;
-    }
+    (void)display;
+    return [UIScreen mainScreen].nativeScale;
 }
 
 void glfmGetDisplayChromeInsets(GLFMDisplay *display, double *top, double *right, double *bottom,
                                 double *left) {
     if (display && display->platformData) {
         GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
-        if (@available(iOS 11, tvOS 11, *)) {
+        if (!vc.isViewLoaded) {
+            *top = 0.0;
+            *right = 0.0;
+            *bottom = 0.0;
+            *left = 0.0;
+        } else if (@available(iOS 11, tvOS 11, *)) {
             UIEdgeInsets insets = vc.view.safeAreaInsets;
             *top = insets.top * vc.view.contentScaleFactor;
             *right = insets.right * vc.view.contentScaleFactor;
@@ -1496,12 +1954,15 @@ void glfmGetDisplayChromeInsets(GLFMDisplay *display, double *top, double *right
             *left = insets.left * vc.view.contentScaleFactor;
         } else {
 #if TARGET_OS_IOS
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
             if (![vc prefersStatusBarHidden]) {
                 *top = ([UIApplication sharedApplication].statusBarFrame.size.height *
                         vc.view.contentScaleFactor);
             } else {
                 *top = 0.0;
             }
+#pragma clang diagnostic pop
 #else
             *top = 0.0;
 #endif
@@ -1517,13 +1978,16 @@ void glfmGetDisplayChromeInsets(GLFMDisplay *display, double *top, double *right
     }
 }
 
-void _glfmDisplayChromeUpdated(GLFMDisplay *display) {
+void glfm__displayChromeUpdated(GLFMDisplay *display) {
     if (display && display->platformData) {
 #if TARGET_OS_IOS
         GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
+        if (vc.isViewLoaded) {
+            [vc.glfmView requestRefresh];
+        }
         [vc setNeedsStatusBarAppearanceUpdate];
         if (@available(iOS 11, *)) {
-            [vc setNeedsUpdateOfHomeIndicatorAutoHidden];
+            [vc setNeedsUpdateOfScreenEdgesDeferringSystemGestures];
         }
 #endif
     }
@@ -1532,8 +1996,8 @@ void _glfmDisplayChromeUpdated(GLFMDisplay *display) {
 GLFMRenderingAPI glfmGetRenderingAPI(GLFMDisplay *display) {
     if (display && display->platformData) {
         GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
-        if (vc.context.API == kEAGLRenderingAPIOpenGLES3) {
-            return GLFMRenderingAPIOpenGLES3;
+        if (vc.isViewLoaded) {
+            return vc.glfmView.renderingAPI;
         } else {
             return GLFMRenderingAPIOpenGLES2;
         }
@@ -1543,23 +2007,29 @@ GLFMRenderingAPI glfmGetRenderingAPI(GLFMDisplay *display) {
 }
 
 bool glfmHasTouch(GLFMDisplay *display) {
+    (void)display;
     return true;
 }
 
 void glfmSetMouseCursor(GLFMDisplay *display, GLFMMouseCursor mouseCursor) {
+    (void)display;
+    (void)mouseCursor;
     // Do nothing
 }
 
 void glfmSetMultitouchEnabled(GLFMDisplay *display, bool multitouchEnabled) {
-    if (display) {
 #if TARGET_OS_IOS
+    if (display) {
         GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
         vc.multipleTouchEnabled = (BOOL)multitouchEnabled;
         if (vc.isViewLoaded) {
             vc.view.multipleTouchEnabled = (BOOL)multitouchEnabled;
         }
-#endif
     }
+#else
+    (void)display;
+    (void)multitouchEnabled;
+#endif
 }
 
 bool glfmGetMultitouchEnabled(GLFMDisplay *display) {
@@ -1592,39 +2062,137 @@ bool glfmIsKeyboardVisible(GLFMDisplay *display) {
     }
 }
 
+bool glfmIsSensorAvailable(GLFMDisplay *display, GLFMSensor sensor) {
+#if TARGET_OS_IOS
+    if (display) {
+        GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
+        switch (sensor) {
+            case GLFMSensorAccelerometer:
+                return vc.motionManager.deviceMotionAvailable && vc.motionManager.accelerometerAvailable;
+            case GLFMSensorMagnetometer:
+                return vc.motionManager.deviceMotionAvailable && vc.motionManager.magnetometerAvailable;
+            case GLFMSensorGyroscope:
+                return vc.motionManager.deviceMotionAvailable && vc.motionManager.gyroAvailable;
+            case GLFMSensorRotationMatrix:
+                return (vc.motionManager.deviceMotionAvailable &&
+                        ([CMMotionManager availableAttitudeReferenceFrames] & CMAttitudeReferenceFrameXMagneticNorthZVertical));
+        }
+    }
+    return false;
+#else
+    (void)display;
+    (void)sensor;
+    return false;
+#endif
+}
+
+void glfm__sensorFuncUpdated(GLFMDisplay *display) {
+#if TARGET_OS_IOS
+    if (display) {
+        GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
+        [vc updateMotionManagerActiveState];
+    }
+#else
+    (void)display;
+#endif
+}
+
+bool glfmIsHapticFeedbackSupported(GLFMDisplay *display) {
+    (void)display;
+#if TARGET_OS_IOS
+    if (@available(iOS 13, *)) {
+        return [CHHapticEngine capabilitiesForHardware].supportsHaptics;
+    } else {
+        return false;
+    }
+#else
+    return false;
+#endif
+}
+
+void glfmPerformHapticFeedback(GLFMDisplay *display, GLFMHapticFeedbackStyle style) {
+    (void)display;
+#if TARGET_OS_IOS
+    if (@available(iOS 10, *)) {
+        UIImpactFeedbackStyle uiStyle;
+        switch (style) {
+            case GLFMHapticFeedbackLight: default:
+                uiStyle = UIImpactFeedbackStyleLight;
+                break;
+            case GLFMHapticFeedbackMedium:
+                uiStyle = UIImpactFeedbackStyleMedium;
+                break;
+            case GLFMHapticFeedbackHeavy:
+                uiStyle = UIImpactFeedbackStyleHeavy;
+                break;
+        }
+        UIImpactFeedbackGenerator *generator = [[UIImpactFeedbackGenerator alloc] initWithStyle:uiStyle];
+        [generator impactOccurred];
+        GLFM_RELEASE(generator);
+    }
+#else
+    (void)style;
+#endif
+}
+
+// MARK: Platform-specific functions
+
+bool glfmIsMetalSupported(GLFMDisplay *display) {
+#if GLFM_INCLUDE_METAL
+    if (display) {
+        GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
+        return (vc.metalDevice != nil);
+    }
+#endif
+    return false;
+}
+
+void *glfmGetMetalView(GLFMDisplay *display) {
+#if GLFM_INCLUDE_METAL
+    if (display) {
+        GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
+        if (vc.isViewLoaded) {
+            UIView *view = vc.view;
+            if ([view isKindOfClass:[MTKView class]]) {
+                return (__bridge void *)view;
+            }
+        }
+    }
+#endif
+    return NULL;
+}
+
+void *glfmGetUIViewController(GLFMDisplay *display) {
+    if (display) {
+        GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
+        return (__bridge void *)vc;
+    } else {
+        return NULL;
+    }
+}
+
+
+
+
 const char* glfmGetResRoot(){
-    
+
     NSString *resPath= [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@""];
     //printf("respath: %s\n\n",[resPath UTF8String]);
-    
+
     return [resPath UTF8String];
 }
 
 const char* glfmGetSaveRoot(){
-    
+
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
     NSString *cachesDir = [paths objectAtIndex:0];
-    
+
     return [cachesDir UTF8String];
 }
 
 const char* glfmGetUUID(){
     NSString* Identifier = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
     return [Identifier UTF8String];
-}
-
-extern void sys_properties_set_c(char *key, char *val);
-
-void setDeviceToken(GLFMDisplay * display, const char *deviceToken) {
-    static char *key="glfm.device.token";
-    if(deviceToken){
-        sys_properties_set_c(key,deviceToken);
-    }else{
-        sys_properties_set_c(key,"");
-    }
-    if(display->notifyFunc){
-        display->notifyFunc(display,key,deviceToken);
-    }
 }
 
 
@@ -1644,13 +2212,16 @@ const char* getClipBoardContent() {
 
 void setClipBoardContent(const char *str){
     if(!str)return;
-    
+
     NSString *nstr= [[NSString alloc] initWithCString:(const char*)str
                                              encoding:NSUTF8StringEncoding];
     UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
     pasteboard.string = nstr;
 }
 
+const char* getOsName(){
+    return "iOS";
+}
 
 void pickPhotoAlbum(GLFMDisplay *display, int uid, int type){
     if (display) {
@@ -1664,7 +2235,7 @@ void pickPhotoCamera(GLFMDisplay *display, int uid, int type){
         GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
         [vc takePhotoAction:uid:type];
     }
-    
+
 }
 
 void imageCrop(GLFMDisplay *display, int uid, const char *cpath,int x,int y, int width, int height){
@@ -1676,7 +2247,7 @@ void imageCrop(GLFMDisplay *display, int uid, const char *cpath,int x,int y, int
         UIImage *img = [[UIImage alloc] initWithData:data];
         UIImage *image=[GLFMViewController cropImage:(UIImage *)img inRect:(CGRect)CGRectMake(x,y,width,height)];
         NSData *datajpg=UIImageJPEGRepresentation(image, 0.75);
-        
+
         char *cd=(char*)[datajpg bytes];
         int len=(int)[datajpg length];
         display->pickerFunc(display,vc.pickerUid, NULL, cd, len);
@@ -1693,12 +2264,12 @@ void *playVideo(GLFMDisplay *display, char *cpath, char *mimeType) {
         //cpath = "http://vfx.mtime.cn/Video/2019/02/04/mp4/190204084208765161.mp4";
         NSString *nspath = [[NSString alloc] initWithCString:cpath encoding:NSUTF8StringEncoding];
         NSURL *url = [NSURL fileURLWithPath:nspath];
-        
+
         UIView *videoPanel = [[UIView alloc]initWithFrame:CGRectMake(0, 0, vc.view.bounds.size.width, vc.view.bounds.size.height)];
         videoPanel.backgroundColor = [UIColor whiteColor];
-        
+
         NSString * nsMimeType = [[NSString alloc] initWithCString:mimeType encoding:NSUTF8StringEncoding];
-        
+
         AVPlayer * avplayer;
         if(mimeType){
             AVURLAsset * asset = [[AVURLAsset alloc] initWithURL:url options:@{@"AVURLAssetOutOfBandMIMETypeKey": nsMimeType}];
@@ -1715,9 +2286,9 @@ void *playVideo(GLFMDisplay *display, char *cpath, char *mimeType) {
         layer.videoGravity = AVLayerVideoGravityResizeAspect;
         layer.frame = CGRectMake(x, y, w, h-40);
         [videoPanel.layer addSublayer:layer];
-        
+
         videoPanel.frame = CGRectMake(x, y, w, h);
-        
+
         //设置播放暂停按钮
         NSArray *titles = @[@"CLOSE",@"PAUSE",@"PLAY"];
         CGFloat gap = 10.f;
@@ -1737,7 +2308,7 @@ void *playVideo(GLFMDisplay *display, char *cpath, char *mimeType) {
         }
         [vc.view addSubview: videoPanel];
         [avplayer play];
-        
+
         [videoPanel.layer setValue:avplayer forKey:@"AVPLAYER"];
         return (__bridge void *)videoPanel;
     }
@@ -1774,28 +2345,14 @@ void stopVideo(GLFMDisplay *display, void *panel){
         if (avplayer.rate == 0) {
             [avplayer pause];
         }
-    
+
         [videoPanel removeFromSuperview];
         [[AVPlayerLayer playerLayerWithPlayer:avplayer] removeFromSuperlayer];
         avplayer = NULL;
     }
 }
 
-// 获取视频第一帧
-//void getVideoPreViewImage(const char *videopath, Utf8String *imagepath)
-//{
-//    NSURL *path;
-//    AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:path options:nil];
-//    AVAssetImageGenerator *assetGen = [[AVAssetImageGenerator alloc] initWithAsset:asset];
-//
-//    assetGen.appliesPreferredTrackTransform = YES;
-//    CMTime time = CMTimeMakeWithSeconds(0.0, 600);
-//    NSError *error = nil;
-//    CMTime actualTime;
-//    CGImageRef image = [assetGen copyCGImageAtTime:time actualTime:&actualTime error:&error];
-//    UIImage *videoImage = [[UIImage alloc] initWithCGImage:image];
-//    CGImageRelease(image);
-//    return videoImage;
-//}
+
+
 
 #endif

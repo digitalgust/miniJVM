@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.SQLOutput;
 
 /**
  * GImage is a wrap of nvg_texture
@@ -117,11 +118,17 @@ public abstract class GImage implements GAttachable {
             }
             //System.out.println("jar img path: " + filepath);
             InputStream is = GCallBack.getInstance().getResourceAsStream(filepath);
+            //System.out.println("GImage createImageFromJar:" + is);
             if (is != null && is.available() > 0) {
                 byte[] data = new byte[is.available()];
-                is.read(data);
+                int read = 0;
+                while (read < data.length) {
+                    read += is.read(data, read, data.length - read);
+                }
+                //System.out.println("GImage createImageFromJar data read success " + data.length);
                 return createImage(data, imageflag);
             }
+            is.close();
         } catch (IOException ex) {
             ex.printStackTrace();
         }

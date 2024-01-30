@@ -54,7 +54,7 @@ public class GlfmCallBackImpl extends GCallBack {
     long last = System.currentTimeMillis(), now;
     int count = 0;
 
-    static GlfmCallBackImpl instance = new GlfmCallBackImpl();
+//    static GlfmCallBackImpl instance = new GlfmCallBackImpl();
 
     /**
      * the glinit method call by native function, glfmapp/main.c
@@ -75,9 +75,9 @@ public class GlfmCallBackImpl extends GCallBack {
 
     }
 
-    public static GlfmCallBackImpl getInstance() {
-        return instance;
-    }
+//    public static GlfmCallBackImpl getInstance() {
+//        return instance;
+//    }
 
     @Override
     protected void onFormSet(GForm form) {

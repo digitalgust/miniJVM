@@ -138,7 +138,7 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uin
 //jni
 //==========================================================================================
 
-s64 func_org_mini_media_MiniAL_ma_1context_1init___J(JThreadRuntime *runtime) {
+s64 func_org_mini_media_MiniAudio_ma_1context_1init___J(JThreadRuntime *runtime) {
 
     ma_context *handle_context = jvm_calloc(sizeof(ma_context));
     if (ma_context_init(NULL, 0, NULL, handle_context) != MA_SUCCESS) {
@@ -148,14 +148,14 @@ s64 func_org_mini_media_MiniAL_ma_1context_1init___J(JThreadRuntime *runtime) {
     }
 }
 
-void func_org_mini_media_MiniAL_ma_1context_1uninit__J_V(JThreadRuntime *runtime, s64 p0) {
+void func_org_mini_media_MiniAudio_ma_1context_1uninit__J_V(JThreadRuntime *runtime, s64 p0) {
 
     if (p0)ma_context_uninit((__refer) (intptr_t) p0);
     jvm_free((__refer) (intptr_t) p0);
 }
 
 
-s64 func_org_mini_media_MiniAL_ma_1decoder_1init_1file___3BIII_J(JThreadRuntime *runtime, JArray *p0, s32 p1, s32 p2, s32 p3) {
+s64 func_org_mini_media_MiniAudio_ma_1decoder_1init_1file___3BIII_J(JThreadRuntime *runtime, JArray *p0, s32 p1, s32 p2, s32 p3) {
     s32 format = p1;
     s32 channels = p2;
     s32 sampleRate = p3;
@@ -172,7 +172,7 @@ s64 func_org_mini_media_MiniAL_ma_1decoder_1init_1file___3BIII_J(JThreadRuntime 
 }
 
 
-s64 func_org_mini_media_MiniAL_ma_1decoder_1init_1memory___3BIII_J(JThreadRuntime *runtime, JArray *p0, s32 p1, s32 p2, s32 p3) {
+s64 func_org_mini_media_MiniAudio_ma_1decoder_1init_1memory___3BIII_J(JThreadRuntime *runtime, JArray *p0, s32 p1, s32 p2, s32 p3) {
     s32 format = p1;
     s32 channels = p2;
     s32 sampleRate = p3;
@@ -188,7 +188,7 @@ s64 func_org_mini_media_MiniAL_ma_1decoder_1init_1memory___3BIII_J(JThreadRuntim
     }
 }
 
-void func_org_mini_media_MiniAL_ma_1decoder_1get_1para__J_3I_V(JThreadRuntime *runtime, s64 p0, JArray *p2) {
+void func_org_mini_media_MiniAudio_ma_1decoder_1get_1para__J_3I_V(JThreadRuntime *runtime, s64 p0, JArray *p2) {
     ma_decoder *handle_decoder = (__refer) (intptr_t) p0;
     if (handle_decoder && p2->prop.arr_length >= 3) {
         p2->prop.as_s32_arr[0] = handle_decoder->outputFormat;
@@ -197,21 +197,23 @@ void func_org_mini_media_MiniAL_ma_1decoder_1get_1para__J_3I_V(JThreadRuntime *r
     }
 }
 
-s32 func_org_mini_media_MiniAL_ma_1decoder_1read__JIJ_I(JThreadRuntime *runtime, s64 p0, s32 p2, s64 p3) {
+s32 func_org_mini_media_MiniAudio_ma_1decoder_1read__JIJ_I(JThreadRuntime *runtime, s64 p0, s32 p2, s64 p3) {
     ma_decoder *handle_decoder = (__refer) (intptr_t) p0;
     s32 frameCount = p2;
     __refer pSamples = (__refer) (intptr_t) p3;
 
 
     if (handle_decoder) {
-        s32 v = (ma_uint32) ma_decoder_read_pcm_frames(handle_decoder, pSamples, frameCount);
-        return v;
-    } else {
-        return -1;
+        u64 readCount = 0;
+        s32 v = (ma_uint32) ma_decoder_read_pcm_frames(handle_decoder, pSamples, frameCount, &readCount);
+        if (v == MA_SUCCESS) {
+            return (s32) readCount;
+        }
     }
+    return -1;
 }
 
-void func_org_mini_media_MiniAL_ma_1decoder_1uninit__J_V(JThreadRuntime *runtime, s64 p0) {
+void func_org_mini_media_MiniAudio_ma_1decoder_1uninit__J_V(JThreadRuntime *runtime, s64 p0) {
     ma_decoder *handle_decoder = (__refer) (intptr_t) p0;
 
     if (handle_decoder)ma_decoder_uninit(handle_decoder);
@@ -243,7 +245,7 @@ void setupCallback(JThreadRuntime *runtime) {
 
 }
 
-s64 func_org_mini_media_MiniAL_ma_1device_1init__JIJIII_J(JThreadRuntime *runtime, s64 p0, s32 p2, s64 p3, s32 p5, s32 p6, s32 p7) {
+s64 func_org_mini_media_MiniAudio_ma_1device_1init__JIJIII_J(JThreadRuntime *runtime, s64 p0, s32 p2, s64 p3, s32 p5, s32 p6, s32 p7) {
 
     ma_context *handle_context = (__refer) (intptr_t) p0;
     s32 deviceType = p2;
@@ -272,49 +274,425 @@ s64 func_org_mini_media_MiniAL_ma_1device_1init__JIJIII_J(JThreadRuntime *runtim
     }
 }
 
-void func_org_mini_media_MiniAL_ma_1device_1uninit__J_V(JThreadRuntime *runtime, s64 p0) {
+void func_org_mini_media_MiniAudio_ma_1device_1uninit__J_V(JThreadRuntime *runtime, s64 p0) {
     __refer handle_device = (__refer) (intptr_t) p0;
 
     ma_device_uninit(handle_device);
     jvm_free(handle_device);
 }
 
-void func_org_mini_media_MiniAL_ma_1device_1start__J_V(JThreadRuntime *runtime, s64 p0) {
+void func_org_mini_media_MiniAudio_ma_1device_1start__J_V(JThreadRuntime *runtime, s64 p0) {
     __refer handle_device = (__refer) (intptr_t) p0;
     ma_device_start(handle_device);
 }
 
-void func_org_mini_media_MiniAL_ma_1device_1stop__J_V(JThreadRuntime *runtime, s64 p0) {
+void func_org_mini_media_MiniAudio_ma_1device_1stop__J_V(JThreadRuntime *runtime, s64 p0) {
     __refer handle_device = (__refer) (intptr_t) p0;
     ma_device_stop(handle_device);
 }
 
-s32 func_org_mini_media_MiniAL_ma_1device_1is_1started__J_I(JThreadRuntime *runtime, s64 p0) {
+s32 func_org_mini_media_MiniAudio_ma_1device_1is_1started__J_I(JThreadRuntime *runtime, s64 p0) {
     __refer handle_device = (__refer) (intptr_t) p0;
     ma_bool32 r = ma_device_is_started(handle_device);
     return (s32) (intptr_t) r;
 }
 
+
+s64 func_org_mini_media_MiniAudio_ma_1data_1source_1get_1next__J_J(JThreadRuntime *runtime, s64 p0) {
+    ma_data_source *handle_datasource = (__refer) (intptr_t) p0;
+    ma_data_source *handle_datasource_next = ma_data_source_get_next(handle_datasource);
+    return (s64) (intptr_t) handle_datasource_next;
+}
+
+
+void func_org_mini_media_MiniAudio_ma_1data_1source_1set_1next__JJ_V(JThreadRuntime *runtime, s64 p0, s64 p2) {
+    ma_data_source *handle_datasource = (__refer) (intptr_t) p0;
+    ma_data_source *handle_datasource_next = (__refer) (intptr_t) p2;
+    ma_data_source_set_next(handle_datasource, handle_datasource_next);
+}
+
+
+s64 func_org_mini_media_MiniAudio_ma_1decoder_1init_1file___3B_J(JThreadRuntime *runtime, JArray *p0) {
+    JArray *path = p0;
+
+    ma_decoder *handle_decoder = jvm_calloc(sizeof(ma_decoder));
+    if (ma_decoder_init_file(path->prop.as_c8_arr, NULL, handle_decoder) != MA_SUCCESS) {
+        return 0;
+    } else {
+        return (s64) (intptr_t) handle_decoder;
+    }
+}
+
+
+s64 func_org_mini_media_MiniAudio_ma_1decoder_1init_1file_1ex___3BIII_J(JThreadRuntime *runtime, JArray *p0, s32 p1, s32 p2, s32 p3) {
+    JArray *path = p0;
+    s32 format = p1;
+    s32 channels = p2;
+    s32 sampleRate = p3;
+
+    ma_decoder_config mdc = ma_decoder_config_init(format, channels, sampleRate);
+
+    ma_decoder *handle_decoder = jvm_calloc(sizeof(ma_decoder));
+    if (ma_decoder_init_file(path->prop.as_c8_arr, &mdc, handle_decoder) != MA_SUCCESS) {
+        return 0;
+    } else {
+        return (s64) (intptr_t) handle_decoder;
+    }
+}
+
+
+s64 func_org_mini_media_MiniAudio_ma_1decoder_1init_1memory___3B_J(JThreadRuntime *runtime, JArray *p0) {
+
+    JArray *data = p0;
+
+    ma_decoder *handle_decoder = jvm_calloc(sizeof(ma_decoder));
+    if (ma_decoder_init_memory(data->prop.as_c8_arr, data->prop.arr_length, NULL, handle_decoder) != MA_SUCCESS) {
+        return 0;
+    } else {
+        return ((s64) (intptr_t) handle_decoder);
+    }
+
+}
+
+
+s64 func_org_mini_media_MiniAudio_ma_1decoder_1init_1memory_1ex___3BIII_J(JThreadRuntime *runtime, JArray *p0, s32 p1, s32 p2, s32 p3) {
+    JArray *data = p0;
+    s32 format = p1;
+    s32 channels = p2;
+    s32 sampleRate = p3;
+
+
+    ma_decoder_config mdc = ma_decoder_config_init(format, channels, sampleRate);
+
+    ma_decoder *handle_decoder = jvm_calloc(sizeof(ma_decoder));
+    if (ma_decoder_init_memory(data->prop.as_c8_arr, data->prop.arr_length, &mdc, handle_decoder) != MA_SUCCESS) {
+        return 0;
+    } else {
+        return ((s64) (intptr_t) handle_decoder);
+    }
+
+}
+
+
+s32 func_org_mini_media_MiniAudio_ma_1engine_1get_1channels__J_I(JThreadRuntime *runtime, s64 p0) {
+    ma_engine *handle_engine = (__refer) (intptr_t) p0;
+
+    s32 r = ma_engine_get_channels(handle_engine);
+    return r;
+}
+
+
+s32 func_org_mini_media_MiniAudio_ma_1engine_1get_1format__J_I(JThreadRuntime *runtime, s64 p0) {
+    ma_engine *handle_engine = (__refer) (intptr_t) p0;
+
+    ma_device *dev = ma_engine_get_device(handle_engine);
+    if (dev) {
+        return dev->playback.format;
+    } else {
+        return (ma_format_unknown);
+    }
+}
+
+
+s32 func_org_mini_media_MiniAudio_ma_1engine_1get_1sample_1rate__J_I(JThreadRuntime *runtime, s64 p0) {
+    ma_engine *handle_engine = (__refer) (intptr_t) p0;
+
+    return ma_engine_get_sample_rate(handle_engine);
+}
+
+
+f32 func_org_mini_media_MiniAudio_ma_1engine_1get_1volume__J_F(JThreadRuntime *runtime, s64 p0) {
+    ma_engine *handle_engine = (__refer) (intptr_t) p0;
+    if (handle_engine) {
+        return ma_node_output_bus_get_volume(ma_node_graph_get_endpoint(&handle_engine->nodeGraph));
+    } else {
+        return 0.0;
+    }
+}
+
+
+s64 func_org_mini_media_MiniAudio_ma_1engine_1init___J(JThreadRuntime *runtime) {
+    ma_engine *handle_engine = jvm_calloc(sizeof(ma_engine));
+
+    if (ma_engine_init(NULL, handle_engine) != MA_SUCCESS) {
+        jvm_free(handle_engine);
+        return 0;
+    } else {
+        return ((s64) (intptr_t) handle_engine);
+    }
+}
+
+
+void func_org_mini_media_MiniAudio_ma_1engine_1listener_1set_1direction__JIFFF_V(JThreadRuntime *runtime, s64 p0, s32 p2, f32 p3, f32 p4, f32 p5) {
+    ma_engine *handle_engine = (__refer) (intptr_t) p0;
+    s32 listenerIdx = p2;
+    Int2Float forwardX, forwardY, forwardZ;
+    forwardX.f = p3;
+    forwardY.f = p4;
+    forwardZ.f = p5;
+    ma_engine_listener_set_direction(handle_engine, listenerIdx, forwardX.f, forwardY.f, forwardZ.f);
+}
+
+
+void func_org_mini_media_MiniAudio_ma_1engine_1listener_1set_1position__JIFFF_V(JThreadRuntime *runtime, s64 p0, s32 p2, f32 p3, f32 p4, f32 p5) {
+    ma_engine *handle_engine = (__refer) (intptr_t) p0;
+    s32 listenerIdx = p2;
+    Int2Float worldPosX, worldPosY, worldPosZ;
+    worldPosX.f = p3;
+    worldPosY.f = p4;
+    worldPosZ.f = p5;
+    ma_engine_listener_set_position(handle_engine, listenerIdx, worldPosX.f, worldPosY.f, worldPosZ.f);
+}
+
+
+void func_org_mini_media_MiniAudio_ma_1engine_1listener_1set_1world_1up__JIFFF_V(JThreadRuntime *runtime, s64 p0, s32 p2, f32 p3, f32 p4, f32 p5) {
+    ma_engine *handle_engine = (__refer) (intptr_t) p0;
+    s32 listenerIdx = p2;
+    Int2Float x, y, z;
+    x.f = p3;
+    y.f = p4;
+    z.f = p5;
+    ma_engine_listener_set_world_up(handle_engine, listenerIdx, x.f, y.f, z.f);
+}
+
+
+s32 func_org_mini_media_MiniAudio_ma_1engine_1play_1sound__J_3B_I(JThreadRuntime *runtime, s64 p0, JArray *p2) {
+    ma_engine *handle_engine = (__refer) (intptr_t) p0;
+    JArray *path = p2;
+
+    ma_result r = ma_engine_play_sound(handle_engine, path->prop.as_c8_arr, NULL);
+    return r;
+}
+
+
+void func_org_mini_media_MiniAudio_ma_1engine_1set_1volume__JF_V(JThreadRuntime *runtime, s64 p0, f32 p2) {
+    ma_engine *handle_engine = (__refer) (intptr_t) p0;
+    ma_engine_set_volume(handle_engine, p2);
+}
+
+
+s32 func_org_mini_media_MiniAudio_ma_1engine_1start__J_I(JThreadRuntime *runtime, s64 p0) {
+    ma_engine *handle_engine = (__refer) (intptr_t) p0;
+    return ma_engine_start(handle_engine);
+}
+
+
+s32 func_org_mini_media_MiniAudio_ma_1engine_1stop__J_I(JThreadRuntime *runtime, s64 p0) {
+    ma_engine *handle_engine = (__refer) (intptr_t) p0;
+    return ma_engine_stop(handle_engine);
+}
+
+
+void func_org_mini_media_MiniAudio_ma_1engine_1uninit__J_V(JThreadRuntime *runtime, s64 p0) {
+    ma_engine *handle_engine = (__refer) (intptr_t) p0;
+    ma_engine_uninit(handle_engine);
+    jvm_free(handle_engine);
+}
+
+
+s8 func_org_mini_media_MiniAudio_ma_1sound_1at_1end__J_Z(JThreadRuntime *runtime, s64 p0) {
+    ma_sound *handle_sound = (__refer) (intptr_t) p0;
+    if (handle_sound) {
+        ma_bool32 v = ma_sound_at_end(handle_sound);
+        return v;
+    } else {
+        return 0;
+    }
+}
+
+
+void func_org_mini_media_MiniAudio_ma_1sound_1get_1position__J_3F_V(JThreadRuntime *runtime, s64 p0, JArray *p2) {
+    ma_sound *handle_sound = (__refer) (intptr_t) p0;
+    JArray *farr = p2;
+    if (farr && farr->prop.arr_type == DATATYPE_FLOAT && farr->prop.arr_length >= 3) {
+        ma_vec3f position = ma_sound_get_position(handle_sound);
+        farr->prop.as_f32_arr[0] = position.x;
+        farr->prop.as_f32_arr[1] = position.y;
+        farr->prop.as_f32_arr[2] = position.z;
+    }
+    return;
+}
+
+
+f32 func_org_mini_media_MiniAudio_ma_1sound_1get_1volume__J_F(JThreadRuntime *runtime, s64 p0) {
+    ma_sound *handle_sound = (__refer) (intptr_t) p0;
+    if (handle_sound) {
+        return ma_sound_get_volume(handle_sound);
+    } else {
+        return 0.0;
+    }
+}
+
+
+s64 func_org_mini_media_MiniAudio_ma_1sound_1init_1copy__JJIJ_J(JThreadRuntime *runtime, s64 p0, s64 p2, s32 p4, s64 p5) {
+    ma_engine *handle_engine = (__refer) (intptr_t) p0;
+    ma_sound *handle_sound_src = (__refer) (intptr_t) p2;
+    s32 pflag = p4;
+    ma_sound_group *handle_group = (__refer) (intptr_t) p5;
+
+    ma_sound *handle_sound = jvm_calloc(sizeof(ma_sound));
+
+    if (ma_sound_init_copy(handle_engine, handle_sound_src, pflag, handle_group, handle_sound) != MA_SUCCESS) {
+        jvm_free(handle_sound);
+        return 0;
+    } else {
+        return ((s64) (intptr_t) handle_sound);
+    }
+}
+
+
+s64 func_org_mini_media_MiniAudio_ma_1sound_1init_1from_1data_1source__JJIJ_J(JThreadRuntime *runtime, s64 p0, s64 p2, s32 p4, s64 p5) {
+    ma_engine *handle_engine = (__refer) (intptr_t) p0;
+    ma_data_source *handle_datasource = (__refer) (intptr_t) p2;
+    s32 pflag = p4;
+    ma_sound_group *handle_group = (__refer) (intptr_t) p5;
+
+    ma_sound *handle_sound = jvm_calloc(sizeof(ma_sound));
+
+    if (ma_sound_init_from_data_source(handle_engine, handle_datasource, pflag, handle_group, handle_sound) != MA_SUCCESS) {
+        jvm_free(handle_sound);
+        return 0;
+    } else {
+        return ((s64) (intptr_t) handle_sound);
+    }
+}
+
+
+s64 func_org_mini_media_MiniAudio_ma_1sound_1init_1from_1file__J_3BIJJ_J(JThreadRuntime *runtime, s64 p0, JArray *p2, s32 p3, s64 p4, s64 p6) {
+    ma_engine *handle_engine = (__refer) (intptr_t) p0;
+    JArray *path = p2;
+    s32 pflag = p3;
+    ma_sound_group *handle_group = (__refer) (intptr_t) p4;
+    ma_fence *pDoneFence = (__refer) (intptr_t) p6;
+
+    ma_sound *handle_sound = jvm_calloc(sizeof(ma_sound));
+
+    if (ma_sound_init_from_file(handle_engine, path->prop.as_c8_arr, pflag, handle_group, pDoneFence, handle_sound) != MA_SUCCESS) {
+        jvm_free(handle_sound);
+        return 0;
+    } else {
+        return ((s64) (intptr_t) handle_sound);
+    }
+}
+
+
+s8 func_org_mini_media_MiniAudio_ma_1sound_1is_1looping__J_Z(JThreadRuntime *runtime, s64 p0) {
+    ma_sound *handle_sound = (__refer) (intptr_t) p0;
+    if (handle_sound) {
+        ma_bool32 v = ma_sound_is_looping(handle_sound);
+        return v;
+    } else {
+        return 0;
+    }
+}
+
+
+s8 func_org_mini_media_MiniAudio_ma_1sound_1is_1playing__J_Z(JThreadRuntime *runtime, s64 p0) {
+    ma_sound *handle_sound = (__refer) (intptr_t) p0;
+    if (handle_sound) {
+        ma_bool32 v = ma_sound_is_playing(handle_sound);
+        return v;
+    } else {
+        return 0;
+    }
+}
+
+
+void func_org_mini_media_MiniAudio_ma_1sound_1set_1attenuation_1model__JI_V(JThreadRuntime *runtime, s64 p0, s32 p2) {
+    ma_sound *handle_sound = (__refer) (intptr_t) p0;
+    s32 atten = p2;
+    ma_sound_set_attenuation_model(handle_sound, atten);
+}
+
+
+void func_org_mini_media_MiniAudio_ma_1sound_1set_1fade_1in_1milliseconds__JFFJ_V(JThreadRuntime *runtime, s64 p0, f32 p2, f32 p3, s64 p4) {
+    ma_sound *handle_sound = (__refer) (intptr_t) p0;
+    s64 ms = p4;
+    ma_sound_set_fade_in_milliseconds(handle_sound, p2, p3, ms);
+}
+
+
+void func_org_mini_media_MiniAudio_ma_1sound_1set_1looping__JZ_V(JThreadRuntime *runtime, s64 p0, s8 p2) {
+    ma_sound *handle_sound = (__refer) (intptr_t) p0;
+    int iloop = p2;
+    ma_sound_set_looping(handle_sound, iloop);
+}
+
+
+void func_org_mini_media_MiniAudio_ma_1sound_1set_1max_1distance__JF_V(JThreadRuntime *runtime, s64 p0, f32 p2) {
+    ma_sound *handle_sound = (__refer) (intptr_t) p0;
+    ma_sound_set_max_distance(handle_sound, p2);
+}
+
+
+void func_org_mini_media_MiniAudio_ma_1sound_1set_1min_1distance__JF_V(JThreadRuntime *runtime, s64 p0, f32 p2) {
+    ma_sound *handle_sound = (__refer) (intptr_t) p0;
+    ma_sound_set_min_distance(handle_sound, p2);
+}
+
+
+void func_org_mini_media_MiniAudio_ma_1sound_1set_1position__JFFF_V(JThreadRuntime *runtime, s64 p0, f32 p2, f32 p3, f32 p4) {
+    ma_sound *handle_sound = (__refer) (intptr_t) p0;
+
+    ma_sound_set_position(handle_sound, p2, p3, p4);
+}
+
+
+void func_org_mini_media_MiniAudio_ma_1sound_1set_1spatialization_1enabled__JZ_V(JThreadRuntime *runtime, s64 p0, s8 p2) {
+    ma_sound *handle_sound = (__refer) (intptr_t) p0;
+    s32 en = p2;
+    ma_sound_set_spatialization_enabled(handle_sound, en ? MA_TRUE : MA_FALSE);
+}
+
+
+void func_org_mini_media_MiniAudio_ma_1sound_1set_1volume__JF_V(JThreadRuntime *runtime, s64 p0, f32 p2) {
+    ma_sound *handle_sound = (__refer) (intptr_t) p0;
+    ma_sound_set_volume(handle_sound, p2);
+}
+
+
+s32 func_org_mini_media_MiniAudio_ma_1sound_1start__J_I(JThreadRuntime *runtime, s64 p0) {
+    ma_sound *handle_sound = (__refer) (intptr_t) p0;
+
+    ma_result re = ma_sound_start(handle_sound);
+    return re;
+}
+
+
+s32 func_org_mini_media_MiniAudio_ma_1sound_1stop__J_I(JThreadRuntime *runtime, s64 p0) {
+    ma_sound *handle_sound = (__refer) (intptr_t) p0;
+
+    ma_result re = ma_sound_stop(handle_sound);
+    return re;
+}
+
+
+void func_org_mini_media_MiniAudio_ma_1sound_1uninit__J_V(JThreadRuntime *runtime, s64 p0) {
+    ma_sound *handle_sound = (__refer) (intptr_t) p0;
+    ma_sound_uninit(handle_sound);
+    jvm_free(handle_sound);
+}
+
 //static java_native_method method_minial_table[] = {
 //
-//        {"org/mini/media/MiniAL", "ma_context_init",        "()J",      org_mini_media_MiniAL_ma_context_init},
-//        {"org/mini/media/MiniAL", "ma_context_uninit",      "(J)V",     org_mini_media_MiniAL_ma_context_uninit},
-//        {"org/mini/media/MiniAL", "ma_decoder_init_file",   "([BIII)J", org_mini_media_MiniAL_ma_decoder_init_file},
-//        {"org/mini/media/MiniAL", "ma_decoder_init_memory", "([BIII)J", org_mini_media_MiniAL_ma_decoder_init_memory},
-//        {"org/mini/media/MiniAL", "ma_decoder_get_para",    "(J[I)V",    org_mini_media_MiniAL_ma_decoder_get_para},
-//        {"org/mini/media/MiniAL", "ma_decoder_read",        "(JIJ)I",   org_mini_media_MiniAL_ma_decoder_read},
-//        {"org/mini/media/MiniAL", "ma_decoder_uninit",      "(J)V",     org_mini_media_MiniAL_ma_decoder_uninit},
-//        {"org/mini/media/MiniAL", "ma_device_init",         "(JIJIII)J",  org_mini_media_MiniAL_ma_device_init},
-//        {"org/mini/media/MiniAL", "ma_device_uninit",       "(J)V",     org_mini_media_MiniAL_ma_device_uninit},
-//        {"org/mini/media/MiniAL", "ma_device_start",        "(J)V",     org_mini_media_MiniAL_ma_device_start},
-//        {"org/mini/media/MiniAL", "ma_device_stop",         "(J)V",     org_mini_media_MiniAL_ma_device_stop},
-//        {"org/mini/media/MiniAL", "ma_device_is_started",   "(J)I",     org_mini_media_MiniAL_ma_device_is_started},
+//        {"org/mini/media/MiniAudio", "ma_context_init",        "()J",      org_mini_media_MiniAudio_ma_context_init},
+//        {"org/mini/media/MiniAudio", "ma_context_uninit",      "(J)V",     org_mini_media_MiniAudio_ma_context_uninit},
+//        {"org/mini/media/MiniAudio", "ma_decoder_init_file",   "([BIII)J", org_mini_media_MiniAudio_ma_decoder_init_file},
+//        {"org/mini/media/MiniAudio", "ma_decoder_init_memory", "([BIII)J", org_mini_media_MiniAudio_ma_decoder_init_memory},
+//        {"org/mini/media/MiniAudio", "ma_decoder_get_para",    "(J[I)V",    org_mini_media_MiniAudio_ma_decoder_get_para},
+//        {"org/mini/media/MiniAudio", "ma_decoder_read",        "(JIJ)I",   org_mini_media_MiniAudio_ma_decoder_read},
+//        {"org/mini/media/MiniAudio", "ma_decoder_uninit",      "(J)V",     org_mini_media_MiniAudio_ma_decoder_uninit},
+//        {"org/mini/media/MiniAudio", "ma_device_init",         "(JIJIII)J",  org_mini_media_MiniAudio_ma_device_init},
+//        {"org/mini/media/MiniAudio", "ma_device_uninit",       "(J)V",     org_mini_media_MiniAudio_ma_device_uninit},
+//        {"org/mini/media/MiniAudio", "ma_device_start",        "(J)V",     org_mini_media_MiniAudio_ma_device_start},
+//        {"org/mini/media/MiniAudio", "ma_device_stop",         "(J)V",     org_mini_media_MiniAudio_ma_device_stop},
+//        {"org/mini/media/MiniAudio", "ma_device_is_started",   "(J)I",     org_mini_media_MiniAudio_ma_device_is_started},
 //};
 //
-//s32 count_MiniALFuncTable() {
+//s32 count_MiniAudioFuncTable() {
 //    return sizeof(method_minial_table) / sizeof(java_native_method);
 //}
 //
-//__refer ptr_MiniALFuncTable() {
+//__refer ptr_MiniAudioFuncTable() {
 //    return &method_minial_table[0];
 //}

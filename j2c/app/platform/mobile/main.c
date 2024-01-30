@@ -34,7 +34,11 @@ void glfmMain(GLFMDisplay *display) {
     utf8_append_c(bootclasspath, glfmGetResRoot());
     utf8_append_c(bootclasspath, "/resfiles/minijvm_rt.jar");
     utf8_append_c(classpath, glfmGetResRoot());
-    utf8_append_c(classpath, "/resfiles/glfm_gui.jar");
+    utf8_append_c(classpath, "/resfiles/glfm_gui.jar:");
+    utf8_append_c(classpath, glfmGetResRoot());
+    utf8_append_c(classpath, "/resfiles/xgui.jar:");
+    utf8_append_c(classpath, glfmGetResRoot());
+    utf8_append_c(classpath, "/resfiles/ExApp.jar:");
     //jvm_printf("%s\n",utf8_cstr(classpath));
 
     g_jvm = jvm_create(utf8_cstr(bootclasspath),utf8_cstr(classpath));
@@ -59,10 +63,11 @@ void glfmMain(GLFMDisplay *display) {
     MethodRaw *method = find_methodraw(p_classname, p_methodname, p_methodtype);
     runtime->exec = method;
     class_clinit(runtime, get_utf8str_by_utfraw_index(runtime->exec->class_name));
-    
+    exception_check_print(runtime);
 
     void (*func_ptr)(JThreadRuntime *, s64) =method->func_ptr;
     func_ptr(runtime, (s64) (intptr_t) display);
+    exception_check_print(runtime);
 
     jthread_unbound(runtime);
 }

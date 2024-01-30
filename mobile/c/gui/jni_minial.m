@@ -686,6 +686,7 @@ int org_mini_media_MiniAudio_ma_sound_uninit(Runtime *runtime, JClass *clazz) {
     ma_sound *handle_sound = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
     pos += 2;
     ma_sound_uninit(handle_sound);
+    env->jvm_free(handle_sound);
     return 0;
 }
 
