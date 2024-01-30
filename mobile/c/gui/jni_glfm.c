@@ -226,7 +226,7 @@ void _callback_surface_created(GLFMDisplay *window, s32 w, s32 h) {
 void
 _callback_photo_picked(GLFMDisplay *window, s32 uid, const c8 *url, c8 *data, s32 length) {
     gladLoadGLES2Loader(glfmGetProcAddress);
-    if (refers._callback_surface_created) {
+    if (refers._callback_photo_picked) {
         Runtime *runtime = getRuntimeCurThread(refers.env);
         JniEnv *env = refers.env;
         Instance *jstr_url = createJavaString(runtime, url);
@@ -250,7 +250,7 @@ _callback_photo_picked(GLFMDisplay *window, s32 uid, const c8 *url, c8 *data, s3
 
 void _callback_notify(GLFMDisplay *window, const c8 *key, const c8 *val) {
     gladLoadGLES2Loader(glfmGetProcAddress);
-    if (refers._callback_surface_created) {
+    if (refers._callback_notify) {
         Runtime *runtime = getRuntimeCurThread(refers.env);
         JniEnv *env = refers.env;
         env->push_ref(runtime->stack, refers.glfm_callback);
@@ -268,7 +268,7 @@ void _callback_notify(GLFMDisplay *window, const c8 *key, const c8 *val) {
 }
 
 void _callback_orientation_changed(GLFMDisplay *window, GLFMInterfaceOrientation orientation) {
-    if (refers._callback_surface_resized) {
+    if (refers._callback_orientation_changed) {
         Runtime *runtime = getRuntimeCurThread(refers.env);
         JniEnv *env = refers.env;
         env->push_ref(runtime->stack, refers.glfm_callback);
