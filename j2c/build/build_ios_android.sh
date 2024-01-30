@@ -32,8 +32,11 @@ if [ ! ${JAVA_HOME} ] ;then
 else
     echo "JAVA_HOME=${JAVA_HOME}"
     ${JAVA_HOME}/bin/java -cp tools/translator.jar com.ebsee.Main ../../minijvm/java/src/main/java/:../../mobile/java/glfm_gui/src/main/java:../../extlib/xgui/src/main/java:../../mobile/java/ExApp/src/main/java ../app/generted/classes/ ../app/generted/c/
+    #${JAVA_HOME}/bin/java -cp tools/translator.jar com.ebsee.CopyRes ../../minijvm/java/src/main/resource/:../../mobile/assets:../../extlib/xgui/src/main/resource:../../mobile/java/ExApp/src/main/resource  ../app/generted/res/
 fi
 
-echo "[INFO]Generted c source , open /j2c/build/ccios/ccios.xcodeproj in Xcode or /j2c/build/ccandroid in Android Studio."
+cd ../../binary/ && ./build_jar.sh
 
+echo "[INFO]Generted c source , open /j2c/build/ccios/ccios.xcodeproj in Xcode or /j2c/build/ccandroid in Android Studio."
+echo "Success"
 
