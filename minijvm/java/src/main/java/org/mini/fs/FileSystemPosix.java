@@ -31,7 +31,7 @@ public class FileSystemPosix extends FileSystemImpl {
     }
 
     public String getRegexParentTag() {
-        return "/[^/]+/\\.\\.";
+        return "/[^/]+/\\.\\./";
     }
 
     @Override

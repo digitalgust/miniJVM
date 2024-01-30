@@ -1369,9 +1369,10 @@ void _changeBytesOrder(MethodInfo *method) {
     memcpy(ca->bytecode_for_jit, ca->code, ca->code_length);
 
     u8 *mc = ca->code;
-    if (ca->code_length == 5) {//optimize setter eg: void setSize(int size){this.size=size;}
+    if (ca->code_length == 5) {//optimize getter eg: void getSize(){return this.size;}
         u8 mc4 = mc[4];
-        if (mc[1] == op_getfield
+        if (method->para_count_with_this == 1
+            && mc[1] == op_getfield
             && mc[0] == op_aload_0
             && (mc4 >= op_ireturn && mc4 <= op_areturn)) {
             method->is_getter = 1;
@@ -1379,7 +1380,8 @@ void _changeBytesOrder(MethodInfo *method) {
         }
     } else if (ca->code_length == 6) {//optimize setter eg: void setSize(int size){this.size=size;}
         u8 mc1 = mc[1];
-        if (mc[5] == op_return
+        if (method->para_count_with_this == 2
+            && mc[5] == op_return
             && mc[0] == op_aload_0
             && mc[2] == op_putfield
             && (mc1 == op_aload_1 || mc1 == op_dload_1 || mc1 == op_lload_1 || mc1 == op_iload_1 || mc1 == op_fload_1)) {

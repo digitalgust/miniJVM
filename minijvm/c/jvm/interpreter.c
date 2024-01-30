@@ -390,12 +390,12 @@ static inline void _optimize_empty_method_call(MethodInfo *subm, CodeAttribute *
 }
 
 
-static inline int _optimize_inline_getter(JClass *clazz, s32 cmrIdx, Runtime *runtime) {
+static inline int _optimize_inline_getter(JClass *clazz, s32 cfrIdx, Runtime *runtime) {
 
     RuntimeStack *stack = runtime->stack;
-    FieldInfo *fi = class_get_constant_fieldref(clazz, cmrIdx)->fieldInfo;
+    FieldInfo *fi = class_get_constant_fieldref(clazz, cfrIdx)->fieldInfo;
     if (!fi) {
-        ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, cmrIdx);
+        ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, cfrIdx);
         fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
         cfr->fieldInfo = fi;
         if (!fi) {
@@ -445,12 +445,12 @@ static inline int _optimize_inline_getter(JClass *clazz, s32 cmrIdx, Runtime *ru
     return RUNTIME_STATUS_NORMAL;
 }
 
-static inline int _optimize_inline_setter(JClass *clazz, s32 cmrIdx, Runtime *runtime) {
+static inline int _optimize_inline_setter(JClass *clazz, s32 cfrIdx, Runtime *runtime) {
 
     RuntimeStack *stack = runtime->stack;
-    FieldInfo *fi = class_get_constant_fieldref(clazz, cmrIdx)->fieldInfo;
+    FieldInfo *fi = class_get_constant_fieldref(clazz, cfrIdx)->fieldInfo;
     if (!fi) {
-        ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, cmrIdx);
+        ConstantFieldRef *cfr = class_get_constant_fieldref(clazz, cfrIdx);
         fi = find_fieldInfo_by_fieldref(clazz, cfr->item.index, runtime);
         cfr->fieldInfo = fi;
         if (!fi) {
@@ -1740,35 +1740,31 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_fdiv: {
-                            if (!(sp - 1)->fvalue) {
-                                goto label_arrithmetic_throw;
-                            } else {
-                                --sp;
-                                (sp - 1)->fvalue /= (sp - 0)->fvalue;
+                            // there isn't runtime exception throw
+                            // https://github.com/digitalgust/miniJVM/issues/30
+                            --sp;
+                            (sp - 1)->fvalue /= (sp - 0)->fvalue;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
-                                invoke_deepth(runtime);
-                                jvm_printf("fdiv:  %f\n", (sp - 1)->fvalue);
+                            invoke_deepth(runtime);
+                            jvm_printf("fdiv:  %f\n", (sp - 1)->fvalue);
 #endif
-                                ip++;
-                            }
+                            ip++;
                             break;
                         }
 
                         case op_ddiv: {
-                            if (!(sp - 2)->dvalue) {
-                                goto label_arrithmetic_throw;
-                            } else {
-                                --sp;
-                                --sp;
-                                (sp - 2)->dvalue /= (sp - 0)->dvalue;
+                            // there isn't runtime exception throw
+                            // https://github.com/digitalgust/miniJVM/issues/30
+                            --sp;
+                            --sp;
+                            (sp - 2)->dvalue /= (sp - 0)->dvalue;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
-                                invoke_deepth(runtime);
-                                jvm_printf("ddiv:  %lf\n", (sp - 2)->dvalue);
+                            invoke_deepth(runtime);
+                            jvm_printf("ddiv:  %lf\n", (sp - 2)->dvalue);
 #endif
-                                ip++;
-                            }
+                            ip++;
                             break;
                         }
 
@@ -1808,41 +1804,37 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_frem: {
-                            if (!(sp - 1)->fvalue) {
-                                goto label_arrithmetic_throw;
-                            } else {
-                                --sp;
-                                fval1 = (sp - 0)->fvalue;
-                                fval2 = (sp - 1)->fvalue;
-                                f32 v = fval2 - ((int) (fval2 / fval1) * fval1);
+                            // there isn't runtime exception throw
+                            // https://github.com/digitalgust/miniJVM/issues/30
+                            --sp;
+                            fval1 = (sp - 0)->fvalue;
+                            fval2 = (sp - 1)->fvalue;
+                            f32 v = fval2 - ((int) (fval2 / fval1) * fval1);
 #if _JVM_DEBUG_LOG_LEVEL > 5
-                                invoke_deepth(runtime);
-                                jvm_printf("frem:  %f\n", (sp - 1)->fvalue);
+                            invoke_deepth(runtime);
+                            jvm_printf("frem:  %f\n", (sp - 1)->fvalue);
 #endif
-                                (sp - 1)->fvalue = v;
-                                ip++;
-                            }
+                            (sp - 1)->fvalue = v;
+                            ip++;
                             break;
                         }
 
 
                         case op_drem: {
-                            if (!(sp - 2)->dvalue) {
-                                goto label_arrithmetic_throw;
-                            } else {
-                                --sp;
-                                --sp;
-                                dval1 = (sp - 0)->dvalue;
-                                dval2 = (sp - 2)->dvalue;
-                                f64 v = dval2 - ((s64) (dval2 / dval1) * dval1);;
+                            // there isn't runtime exception throw
+                            // https://github.com/digitalgust/miniJVM/issues/30
+                            --sp;
+                            --sp;
+                            dval1 = (sp - 0)->dvalue;
+                            dval2 = (sp - 2)->dvalue;
+                            f64 v = dval2 - ((s64) (dval2 / dval1) * dval1);;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
-                                invoke_deepth(runtime);
-                                jvm_printf("drem:  %lf\n", (sp - 2)->dvalue);
+                            invoke_deepth(runtime);
+                            jvm_printf("drem:  %lf\n", (sp - 2)->dvalue);
 #endif
-                                (sp - 2)->dvalue = v;
-                                ip++;
-                            }
+                            (sp - 2)->dvalue = v;
+                            ip++;
                             break;
                         }
 
