@@ -40,7 +40,7 @@ struct _GlobeRefer {
     MethodInfo *_callback_surface_error;
     MethodInfo *_callback_key;
     MethodInfo *_callback_character;
-    MethodInfo *_callback_mainloop;
+    MethodInfo *_callback_render;
     MethodInfo *_callback_memory_warning;
     MethodInfo *_callback_keyboard_visible;
     MethodInfo *_callback_touch;
@@ -50,7 +50,8 @@ struct _GlobeRefer {
     MethodInfo *_callback_surface_created;
     MethodInfo *_callback_photo_picked;
     MethodInfo *_callback_notify;
-    
+    MethodInfo *_callback_orientation_changed;
+
     //
     MethodInfo *_callback_minial_on_send_frames;
     MethodInfo *_callback_minial_on_recv_frames;

@@ -23,6 +23,7 @@ c8 const *STR_JAVA_LANG_CLASS_CAST_EXCEPTION = "java/lang/ClassCastException";
 c8 const *STR_JAVA_LANG_ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION = "java/lang/ArrayIndexOutOfBoundsException";
 c8 const *STR_JAVA_LANG_INSTANTIATION_EXCEPTION = "java/lang/InstantiationException";
 c8 const *STR_JAVA_LANG_STACKTRACEELEMENT = "java/lang/StackTraceElement";
+c8 const *STR_ORG_MINI_REFLECT_LAUNCHER = "org/mini/reflect/Launcher";
 
 //=====================================================================
 //define variable
@@ -33,6 +34,68 @@ ProCache g_procache;
 //=====================================================================
 
 //=====================================================================
+#if __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__ || __JVM_OS_VS__
+#define PATHSEPARATOR ';'
+#else
+#define PATHSEPARATOR ':'
+#endif
+
+void classloader_add_jar_path(PeerClassLoader *class_loader, Utf8String *jar_path) {
+
+    Utf8String *tmp = NULL;
+    s32 i = 0;
+    while (i < jar_path->length) {
+        if (tmp == NULL) {
+            tmp = utf8_create();
+        }
+        c8 ch = utf8_char_at(jar_path, i++);
+        if (i == jar_path->length) {
+            if (ch != ';' && ch != ':')utf8_insert(tmp, tmp->length, ch);
+            ch = PATHSEPARATOR;
+        }
+        if (ch == PATHSEPARATOR) {
+            if (utf8_last_indexof_c(tmp, "/") == tmp->length - 1) {
+                utf8_remove(tmp, tmp->length - 1);
+            }
+            //check duplicate
+            s32 j;
+            for (j = 0; j < class_loader->classpath->length; j++) {
+                if (utf8_equals(arraylist_get_value(class_loader->classpath, j), tmp)) {
+                    continue;
+                }
+            }
+            arraylist_push_back(class_loader->classpath, tmp);
+            tmp = NULL;
+        } else {
+            utf8_insert(tmp, tmp->length, ch);
+        }
+    }
+}
+
+PeerClassLoader *classloader_create_with_path(Jvm *jvm, c8 *path) {
+    PeerClassLoader *class_loader = jvm_calloc(sizeof(PeerClassLoader));
+
+    class_loader->jvm = jvm;
+    //split classpath
+    class_loader->classpath = arraylist_create(0);
+    Utf8String *g_classpath = utf8_create_c(path);
+    classloader_add_jar_path(class_loader, g_classpath);
+    utf8_destory(g_classpath);
+    //创建类容器
+
+    return class_loader;
+}
+
+void classloader_destory(PeerClassLoader *class_loader) {
+
+    s32 i;
+    for (i = 0; i < class_loader->classpath->length; i++) {
+        utf8_destory(arraylist_get_value(class_loader->classpath, i));
+    }
+    arraylist_destory(class_loader->classpath);
+
+    jvm_free(class_loader);
+}
 
 FieldInfo *fieldinfo_create_with_raw(FieldRaw *fieldRaw) {
 
@@ -87,6 +150,10 @@ JObject *ins_of_Class_create_get(JThreadRuntime *runtime, JClass *clazz) {
             jclass_init_insOfClass(runtime, ins);
             clazz->ins_of_Class = (__refer) ins;
             jclass_set_classHandle(ins, clazz);
+            if (!clazz->primitive) {
+                JObject *jloader = jclassloader_get_with_init(runtime);
+                jclass_set_classLoader(ins, jloader);
+            }
             return (JObject *) ins;
         }
     }
@@ -99,6 +166,7 @@ JClass *_jclass_create_inner() {
     clazz->fields = arraylist_create(0);
     clazz->methods = arraylist_create(0);
     clazz->interfaces = arraylist_create(0);
+    clazz->dependent_classes = arraylist_create(0);
     return clazz;
 }
 
@@ -227,7 +295,8 @@ void jclass_destroy(JClass *clazz) {
         fieldinfo_destroy(arraylist_get_value(clazz->fields, i));
     }
     arraylist_destory(clazz->fields);
-    //if (clazz->ins_of_Class)jobject_destroy(clazz->ins_of_Class);
+
+    arraylist_destory(clazz->dependent_classes);
 
     jvm_free(clazz);
 }
@@ -247,6 +316,24 @@ JClass *classes_get_c(c8 const *className) {
     return classes_get(cache);
 }
 
+JObject *jclassloader_get_with_init(JThreadRuntime *runtime) {
+    garbage_thread_lock();
+    Utf8String *cname = utf8_create_c(STR_ORG_MINI_REFLECT_LAUNCHER);
+
+    JClass *clazz = classes_get(cname);
+    if (!clazz) {
+        class_load(cname);
+    }
+    class_clinit(runtime, cname);
+
+    clazz = classes_get(cname);
+    JObject *jobj = launcher_get_systemClassLoader(runtime);
+
+    utf8_destory(cname);
+    garbage_thread_unlock();
+    return jobj;
+}
+
 
 void class_load(Utf8String *className) {
     garbage_thread_lock();
@@ -260,6 +347,8 @@ void class_load(Utf8String *className) {
             JClass *clazz = jclass_create_with_raw(classRaw);
             classes_put(clazz);
             clazz->status = CLASS_STATUS_LOADED;
+
+            class_prepar(clazz);
             //jvm_printf("load : %s\n", utf8_cstr(className));
         } else {
             jvm_printf("class not found : %s\n", utf8_cstr(className));
@@ -272,47 +361,24 @@ void class_clinit(JThreadRuntime *runtime, Utf8String *className) {
     ClassRaw *classRaw = find_classraw(utf8_cstr(className));
     if (!classRaw)return;
 
+
     garbage_thread_lock();
     runtime->no_pause++;
     //load this
     class_load(className);
     JClass *clazz = classes_get(className);
-    if (clazz->status < CLASS_STATUS_PREPARING) {
-        clazz->status = CLASS_STATUS_PREPARING;
 
-        if (classRaw) {
-            //load dependence classes
-            Utf8String *utf8 = utf8_create();
-            Utf8String *num = utf8_create();
-            s32 i;
-            //parse "[5,7,8]" the num is the class name index
-            UtfRaw *utfRaw = &g_strings[classRaw->depd_arr];
-            utf8_clear(utf8);
-            utf8_append_c(utf8, utfRaw->str);
-            utf8_substring(utf8, utf8_indexof_c(utf8, "[") + 1, utf8_indexof_c(utf8, "]"));
-            for (i = 0;; i++) {
-                utf8_clear(num);
-                utf8_split_get_part(utf8, ",", i, num);
-                if (num->length > 0) {
-                    s32 index = (s32) utf8_aton(num, 10);
-                    Utf8String *dcName = get_utf8str(&g_strings[index]);
-                    JClass *dcClazz = classes_get(dcName);
-                    if (!dcClazz) {
-                        class_clinit(runtime, dcName);
-                    }
-                } else {
-                    break;
-                }
-            }
-            utf8_destory(utf8);
-            utf8_destory(num);
 
-            class_prepar(clazz);
-            clazz->status = CLASS_STATUS_PREPARED;
-        }
-    }
     if (clazz->status < CLASS_STATUS_CLINITING) {
         clazz->status = CLASS_STATUS_CLINITING;//anti reenter
+
+        s32 i;
+        //clinit dependence classes
+        for (i = 0; i < clazz->dependent_classes->length; i++) {
+            JClass *dcClazz = arraylist_get_value(clazz->dependent_classes, i);
+            class_clinit(runtime, dcClazz->name);
+        }
+
         c8 *methodName = "<clinit>";
         c8 *signature = "()V";
         MethodRaw *methodRaw = find_methodraw(utf8_cstr(className), methodName, signature);
@@ -341,7 +407,7 @@ s32 sys_properties_load() {
                                       (HashtableKeyFreeFunc) utf8_destory,
                                       (HashtableValueFreeFunc) utf8_destory);
     Utf8String *ustr = NULL;
-    Utf8String *prop_name = utf8_create_c("./sys.properties");
+    Utf8String *prop_name = utf8_create_c("/sys.properties");
     ByteBuf *buf = load_file_from_classpath(prop_name);
     if (buf) {
         ustr = utf8_create();
@@ -414,47 +480,77 @@ void fill_procache() {
 
 
 void class_prepar(JClass *clazz) {
+    if (clazz->status < CLASS_STATUS_PREPARING) {
+        clazz->status = CLASS_STATUS_PREPARING;
 
-    s32 i;
+        Utf8String *utf8 = utf8_create();
+        Utf8String *num = utf8_create();
+        s32 i;
 
-    Utf8String *utf8 = utf8_create();
-    Utf8String *num = utf8_create();
+        if (clazz->raw) {
+            //load dependence classes
 
-    //interface
-    UtfRaw *utfRaw = &g_strings[clazz->raw->interface_name_arr];
-    utf8_clear(utf8);
-    utf8_append_c(utf8, utfRaw->str);
-    utf8_substring(utf8, utf8_indexof_c(utf8, "[") + 1, utf8_indexof_c(utf8, "]"));
-    for (i = 0;; i++) {
-        utf8_clear(num);
-        utf8_split_get_part(utf8, ",", i, num);
-        if (num->length > 0) {
-            s32 index = atoi(utf8_cstr(num));
-            Utf8String *interfaceName = get_utf8str(&g_strings[index]);
-            JClass *interface = get_class_by_name(interfaceName);
-            if (!interface) {
-                jvm_printf("[ERROR] class not found: %s\n", utf8_cstr(interfaceName));
+            //parse "[5,7,8]" the num is the class name index
+            UtfRaw *utfRaw = &g_strings[clazz->raw->depd_arr];
+            utf8_clear(utf8);
+            utf8_append_c(utf8, utfRaw->str);
+            utf8_substring(utf8, utf8_indexof_c(utf8, "[") + 1, utf8_indexof_c(utf8, "]"));
+            for (i = 0;; i++) {
+                utf8_clear(num);
+                utf8_split_get_part(utf8, ",", i, num);
+                if (num->length > 0) {
+                    s32 index = (s32) utf8_aton(num, 10);
+                    Utf8String *dcName = get_utf8str(&g_strings[index]);
+                    JClass *dcClazz = classes_get(dcName);
+                    if (!dcClazz) {
+                        class_load(dcName);
+                        dcClazz = classes_get(dcName);
+                        arraylist_push_back(clazz->dependent_classes, dcClazz);
+                    }
+                } else {
+                    break;
+                }
             }
-            arraylist_push_back(clazz->interfaces, interface);
-        } else {
-            break;
         }
-    }
-    //super
-    if (clazz->raw->super_name == -1) {
-        clazz->superclass = NULL;
-    } else {
-        ClassRaw *superRaw = find_classraw(g_strings[clazz->raw->super_name].str);
-        Utf8String *superName = get_utf8str(&g_strings[superRaw->name]);
-        JClass *superclass = get_class_by_name(superName);
-        if (!superclass) {
-            superclass = jclass_create_with_raw(superRaw);
-        }
-        clazz->superclass = superclass;
-    }
 
-    utf8_destory(utf8);
-    utf8_destory(num);
+        //interface
+        UtfRaw *utfRaw = &g_strings[clazz->raw->interface_name_arr];
+        utf8_clear(utf8);
+        utf8_append_c(utf8, utfRaw->str);
+        utf8_substring(utf8, utf8_indexof_c(utf8, "[") + 1, utf8_indexof_c(utf8, "]"));
+        for (i = 0;; i++) {
+            utf8_clear(num);
+            utf8_split_get_part(utf8, ",", i, num);
+            if (num->length > 0) {
+                s32 index = atoi(utf8_cstr(num));
+                Utf8String *interfaceName = get_utf8str(&g_strings[index]);
+                JClass *interface = get_class_by_name(interfaceName);
+                if (!interface) {
+                    jvm_printf("[ERROR] class not found: %s\n", utf8_cstr(interfaceName));
+                }
+                arraylist_push_back(clazz->interfaces, interface);
+            } else {
+                break;
+            }
+        }
+        //super
+        if (clazz->raw->super_name == -1) {
+            clazz->superclass = NULL;
+        } else {
+            ClassRaw *superRaw = find_classraw(g_strings[clazz->raw->super_name].str);
+            Utf8String *superName = get_utf8str(&g_strings[superRaw->name]);
+            JClass *superclass = get_class_by_name(superName);
+            if (!superclass) {
+                superclass = jclass_create_with_raw(superRaw);
+            }
+            clazz->superclass = superclass;
+        }
+
+        utf8_destory(utf8);
+        utf8_destory(num);
+
+        clazz->status = CLASS_STATUS_PREPARED;
+    }
 }
 
 Jvm *jvm_create(c8 *bootclasspath, c8 *classpath) {
@@ -467,6 +563,11 @@ Jvm *jvm_create(c8 *bootclasspath, c8 *classpath) {
     jvm->thread_list = arraylist_create(32);
     jvm->collector = garbage_collector_create();
     jvm->classloaders = arraylist_create(4);
+    PeerClassLoader *classLoader = classloader_create_with_path(jvm, bootclasspath);
+    Utf8String *ustr = utf8_create_c(classpath);
+    classloader_add_jar_path(classLoader, ustr);
+    utf8_destory(ustr);
+    arraylist_push_back(jvm->classloaders, classLoader);
     //创建jstring 相关容器
     jvm->table_jstring_const = hashtable_create(UNICODE_STR_HASH_FUNC, UNICODE_STR_EQUALS_FUNC);
     jvm->sys_prop = hashtable_create(UNICODE_STR_HASH_FUNC, UNICODE_STR_EQUALS_FUNC);
@@ -500,6 +601,10 @@ void jvm_destroy(Jvm *jvm) {
     }
     hashtable_destory(jvm->classes);
     arraylist_destory(jvm->thread_list);
+
+    for (i = 0; i < jvm->classloaders->length; i++) {
+        classloader_destory(arraylist_get_value(jvm->classloaders, i));
+    }
     arraylist_destory(jvm->classloaders);
     hashtable_destory(jvm->table_jstring_const);
     hashtable_destory(jvm->sys_prop);
@@ -794,6 +899,7 @@ s32 jvm_run_main(Utf8String *mainClass) {
     utf8_replace_c(mainClass, ".", "/");
     c8 *methodName = "main";
     c8 *signature = "([Ljava/lang/String;)V";
+    class_load(utf8_cstr(mainClass));
     MethodRaw *method = find_methodraw(utf8_cstr(mainClass), methodName, signature);
     if (method) {
         JThreadRuntime *runtime = jthreadruntime_create();

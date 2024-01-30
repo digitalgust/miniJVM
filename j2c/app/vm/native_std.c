@@ -58,6 +58,11 @@ void jclass_set_classHandle(JObject *jobj, JClass *clazz) {
     ins->classHandle_in_class = (s64) (intptr_t) clazz;
 }
 
+void jclass_set_classLoader(JObject *jobj, JObject *jloader) {
+    java_lang_Class *ins = (java_lang_Class *) jobj;
+    ins->classLoader_in_class = (java_lang_ClassLoader *) jloader;
+}
+
 void jclass_init_insOfClass(JThreadRuntime *runtime, JObject *jobj) {
     java_lang_Class *ins = (java_lang_Class *) jobj;
     func_java_lang_Class__init____V(runtime, ins);
@@ -70,6 +75,11 @@ JObject *weakreference_get_target(JThreadRuntime *runtime, JObject *jobj) {
 
 void weakref_vmreferenceenqueue(JThreadRuntime *runtime, JObject *jobj) {
     func_java_lang_ref_Reference_vmEnqueneReference__Ljava_lang_ref_Reference_2_V(runtime, (struct java_lang_ref_Reference *) jobj);
+}
+
+JObject *launcher_get_systemClassLoader(JThreadRuntime *runtime) {
+    struct java_lang_ClassLoader *jloader = static_var_org_mini_reflect_Launcher.systemClassLoader_in_launcher;
+    return (JObject *) jloader;
 }
 
 //----------------------------------------------------------------
@@ -2371,18 +2381,19 @@ struct java_lang_Class *func_org_mini_reflect_vm_RefNative_findLoadedClass0__Lja
 
 struct java_net_URL *func_org_mini_reflect_vm_RefNative_findResource0__Ljava_lang_ClassLoader_2Ljava_lang_String_2_Ljava_net_URL_2(JThreadRuntime *runtime, struct java_lang_ClassLoader *p0, struct java_lang_String *p1) {
     //ignore p0, because classloader is incorrect, this vm no implementation classloader findresource
-    struct java_net_URL *url = NULL;
-    struct java_lang_ClassLoader *jloader = NULL;
-    s32 i;
-    for (i = 0; i < g_jvm->classloaders->length; i++) {
-        jloader = arraylist_get_value(g_jvm->classloaders, i);
-        MethodInfo *mi = find_methodInfo_by_name(utf8_cstr(jloader->prop.clazz->name), "findResource", "(Ljava/lang/String;)Ljava/net/URL;");
-        struct java_net_URL *(*__func_p)(JThreadRuntime *r, struct java_lang_ClassLoader *, struct java_lang_String *) =mi->func_ptr;
-        url = __func_p(runtime, jloader, p1);
-        exception_check_print(runtime);
-        if (url)break;
-    }
-    return url;
+//    struct java_net_URL *url = NULL;
+//    struct java_lang_ClassLoader *jloader = NULL;
+//    s32 i;
+//    for (i = 0; i < g_jvm->classloaders->length; i++) {
+//        jloader = arraylist_get_value(g_jvm->classloaders, i);
+//        MethodInfo *mi = find_methodInfo_by_name(utf8_cstr(jloader->prop.clazz->name), "findResource", "(Ljava/lang/String;)Ljava/net/URL;");
+//        struct java_net_URL *(*__func_p)(JThreadRuntime *r, struct java_lang_ClassLoader *, struct java_lang_String *) =mi->func_ptr;
+//        url = __func_p(runtime, jloader, p1);
+//        exception_check_print(runtime);
+//        if (url)break;
+//    }
+//    return url;
+    return NULL;
 }
 
 struct java_lang_Class *func_org_mini_reflect_vm_RefNative_getBootstrapClassByName__Ljava_lang_String_2_Ljava_lang_Class_2(JThreadRuntime *runtime, struct java_lang_String *p0) {

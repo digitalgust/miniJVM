@@ -3,6 +3,67 @@
    version = "1.0">
    <ContextStates>
       <ContextState
+         contextName = "func_java_lang_Class_forName__Ljava_lang_String_2ZLjava_lang_ClassLoader_2_Ljava_lang_Class_2:native_std.c">
+      </ContextState>
+      <ContextState
+         contextName = "get_methodinfo_by_rawindex:jassist.c">
+      </ContextState>
+      <ContextState
+         contextName = "class_prepar:jvm.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "g_strings[clazz-&gt;raw-&gt;depd_arr]">
+            </PersistentString>
+            <PersistentString
+               value = "g_strings[clazz-&gt;raw-&gt;super_name].str">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "GLOBAL">
+         <PersistentStrings>
+            <PersistentString
+               value = "rstack[2]">
+            </PersistentString>
+            <PersistentString
+               value = "rstack[0]">
+            </PersistentString>
+            <PersistentString
+               value = "rstack[sp]">
+            </PersistentString>
+            <PersistentString
+               value = "rstack[1]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "sys_properties_load:jvm.c">
+      </ContextState>
+      <ContextState
+         contextName = "load_file_from_classpath:jassist.c">
+      </ContextState>
+      <ContextState
+         contextName = "checkcast:jassist.c">
+      </ContextState>
+      <ContextState
+         contextName = "new_instance_with_classraw_index:jvmsvc.c">
+      </ContextState>
+      <ContextState
+         contextName = "getSuperClass:jassist.c">
+      </ContextState>
+      <ContextState
+         contextName = "ins_of_Class_create_get:jvm.c">
+      </ContextState>
+      <ContextState
+         contextName = "jvm_create:jvm.c">
+      </ContextState>
+      <ContextState
+         contextName = "class_clinit:jvm.c">
+      </ContextState>
+      <ContextState
+         contextName = "func_org_mini_gui_GCallBack_getInstance___Lorg_mini_gui_GCallBack_2:org.mini.gui.GCallBack.c">
+      </ContextState>
+      <ContextState
          contextName = "Java_org_mini_fs_InnerFile_loadFS___3BLorg_mini_fs_InnerFileStat_2_I:native_std.c">
          <PersistentStrings>
             <PersistentString

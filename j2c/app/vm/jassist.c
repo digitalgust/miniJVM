@@ -753,18 +753,38 @@ s32 _loadFileContents(c8 const *file, ByteBuf *buf) {
     return 0;
 }
 
+extern s32 isDir(Utf8String *path);
+
 ByteBuf *load_file_from_classpath(Utf8String *path) {
     ByteBuf *bytebuf = NULL;
     s32 i, iret;
-    Utf8String *filepath = utf8_create_copy(path);
+    PeerClassLoader *cloader = arraylist_get_value(g_jvm->classloaders, 0);
+    for (i = 0; i < cloader->classpath->length; i++) {
+        Utf8String *pClassPath = arraylist_get_value(cloader->classpath, i);
+        if (isDir(pClassPath)) { //form file
+            Utf8String *filepath = utf8_create_copy(pClassPath);
+            utf8_pushback(filepath, '/');
+            utf8_append(filepath, path);
 
-    bytebuf = bytebuf_create(16);
-    iret = _loadFileContents(utf8_cstr(filepath), bytebuf);
-    utf8_destory(filepath);
-    //回收
-    if (iret != 0) {
-        bytebuf_destory(bytebuf);
-        bytebuf = NULL;
+            bytebuf = bytebuf_create(16);
+            iret = _loadFileContents(utf8_cstr(filepath), bytebuf);
+            utf8_destory(filepath);
+            //回收
+            if (iret != 0) {
+                bytebuf_destory(bytebuf);
+                bytebuf = NULL;
+            }
+        } else { //from jar
+            bytebuf = bytebuf_create(16);
+            iret = zip_loadfile(utf8_cstr(pClassPath), utf8_cstr(path), bytebuf);
+            //回收
+            if (iret != 0) {
+                bytebuf_destory(bytebuf);
+                bytebuf = NULL;
+            } else {
+                break;
+            }
+        }
     }
     return bytebuf;
 }
