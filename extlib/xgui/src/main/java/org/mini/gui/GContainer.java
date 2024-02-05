@@ -11,6 +11,7 @@ import org.mini.gui.gscript.Interpreter;
 import org.mini.nanovg.Nanovg;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.mini.nanovg.Nanovg.nvgSave;
@@ -20,7 +21,7 @@ import static org.mini.nanovg.Nanovg.nvgSave;
  */
 abstract public class GContainer extends GObject {
 
-    protected final ChildList<GObject> elements = new ChildList();
+    protected final List<GObject> elements = Collections.synchronizedList(new ChildList());
     private final List<GChildrenListener> childrenListeners = new ArrayList();
     protected GObject focus;
     float[] visableArea = new float[4];

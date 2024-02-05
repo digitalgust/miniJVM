@@ -1,8 +1,6 @@
 package org.mini.gui;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.*;
 import java.util.function.Predicate;
 
 class ChildList<T extends GObject> extends ArrayList<T> {
@@ -21,7 +19,8 @@ class ChildList<T extends GObject> extends ArrayList<T> {
 
     @Override
     protected void removeRange(int fromIndex, int toIndex) {
-        if (fromIndex > toIndex || fromIndex < 0 || toIndex > size()) {
+        if (fromIndex > toIndex || fromIndex < 0 || toIndex >= size()) {
+            System.out.println("removeRange error");
             return;
         }
         for (int i = fromIndex; i < toIndex; i++) {
@@ -31,7 +30,7 @@ class ChildList<T extends GObject> extends ArrayList<T> {
 
     @Override
     public boolean remove(Object o) {
-        if (o == null) return false;
+        if (o == null || !(o instanceof GObject)) return false;
         if (((GObject) o).getLayer() == GObject.LAYER_INNER) return false;
         return super.remove(o);
     }
@@ -70,5 +69,94 @@ class ChildList<T extends GObject> extends ArrayList<T> {
         for (int i = size() - 1; i >= 0; i--) {
             remove(i);
         }
+    }
+
+    @Override
+    public T set(int index, T t) {
+        if (get(index).getLayer() == GObject.LAYER_INNER) return null;
+        return super.set(index, t);
+    }
+
+
+    public List<T> subList(int fromIndex, int toIndex) {
+        System.out.println("this container not support subList()");
+        return null;
+    }
+
+//    @Override
+//    public boolean removeAll(Collection<? extends T> c) {
+//        System.out.println("this container not support replaceAll()");
+//        return false;
+//    }
+
+    @Override
+    public boolean retainAll(Collection<?> c) {
+        System.out.println("this container not support retainAll()");
+        return false;
+    }
+
+    @Override
+    public ListIterator<T> listIterator() {
+        System.out.println("this container not support listIterator()");
+        return null;
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+        return new Iterator<T>() {
+            int cursor = 0;
+            int lastRet = -1;
+            int expectedModCount = 0;
+
+            @Override
+            public boolean hasNext() {
+                return this.cursor != ChildList.this.size();
+            }
+
+            @Override
+            public T next() {
+                this.checkForComodification();
+
+                try {
+                    T next;
+                    do {
+                        next = ChildList.this.get(this.cursor);
+                        this.lastRet = this.cursor++;
+                    } while (next.getLayer() == GObject.LAYER_INNER);
+
+                    return next;
+                } catch (IndexOutOfBoundsException var2) {
+                    this.checkForComodification();
+                    throw new NoSuchElementException();
+                }
+            }
+
+            @Override
+            public void remove() {
+                if (this.lastRet == -1) {
+                    throw new IllegalStateException();
+                } else {
+                    this.checkForComodification();
+
+                    try {
+                        ChildList.this.remove(this.lastRet);
+                        if (this.lastRet < this.cursor) {
+                            --this.cursor;
+                        }
+
+                        this.lastRet = -1;
+                        this.expectedModCount = ChildList.this.modCount;
+                    } catch (IndexOutOfBoundsException var2) {
+                        throw new ConcurrentModificationException();
+                    }
+                }
+            }
+
+            final void checkForComodification() {
+                if (ChildList.this.modCount != this.expectedModCount) {
+                    throw new ConcurrentModificationException();
+                }
+            }
+        };
     }
 }
