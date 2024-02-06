@@ -71,13 +71,6 @@ class ChildList<T extends GObject> extends ArrayList<T> {
         }
     }
 
-    @Override
-    public T set(int index, T t) {
-        if (get(index).getLayer() == GObject.LAYER_INNER) return null;
-        return super.set(index, t);
-    }
-
-
     public List<T> subList(int fromIndex, int toIndex) {
         System.out.println("this container not support subList()");
         return null;
@@ -103,10 +96,11 @@ class ChildList<T extends GObject> extends ArrayList<T> {
 
     @Override
     public Iterator<T> iterator() {
+        System.out.println("================" + size() + "  ," + modCount);
         return new Iterator<T>() {
             int cursor = 0;
             int lastRet = -1;
-            int expectedModCount = 0;
+            int expectedModCount = ChildList.this.modCount;
 
             @Override
             public boolean hasNext() {
@@ -115,6 +109,7 @@ class ChildList<T extends GObject> extends ArrayList<T> {
 
             @Override
             public T next() {
+                System.out.println("**************" + size() + "  ," + modCount);
                 this.checkForComodification();
 
                 try {
