@@ -2775,9 +2775,6 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                         }
                     }
                 }
-                if (fi->isvolatile) {
-                    barrier();
-                }
 
                 //ip
                 _gen_ip_modify_imm(C, 3);

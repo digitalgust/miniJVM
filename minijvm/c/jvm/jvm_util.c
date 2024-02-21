@@ -707,12 +707,13 @@ s32 isDataReferByIndex(s32 index) {
 void sys_properties_set_c(MiniJVM *jvm, c8 const *key, c8 const *val) {
     Utf8String *ukey = utf8_create_c(key);
     Utf8String *uval = utf8_create_c(val);
-#if __JVM_OS_MAC__ || __JVM_OS_LINUX__
-    if (utf8_equals_c(ukey, "java.class.path") || utf8_equals_c(ukey, "sun.boot.class.path")) {
-        utf8_replace_c(uval, ";", ":");
-    }
-#elif __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__ || __JVM_OS_VS__
-#endif
+//#if __JVM_OS_MAC__ || __JVM_OS_LINUX__
+//    if (utf8_equals_c(ukey, STR_VM_JAVA_CLASS_PATH) || utf8_equals_c(ukey, STR_VM_SUN_BOOT_CLASS_PATH) || utf8_equals_c(ukey, STR_VM_JAVA_LIBRARY_PATH)) {
+//        utf8_replace_c(uval, ";", ":");
+//    }
+//#elif __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__ || __JVM_OS_VS__
+//#endif
+    //this hashtable has a value destroy function , so just keep putting it in
     hashtable_put(jvm->sys_prop, ukey, uval);
 }
 
@@ -761,21 +762,19 @@ s32 sys_properties_load(MiniJVM *jvm) {
         utf8_destory(ustr);
     }
 
+    sys_properties_set_c(jvm, "path.separator", PATHSEPARATOR);
     //modify os para
 #if __JVM_OS_MAC__
     sys_properties_set_c(jvm, "os.name", "Mac");
-    sys_properties_set_c(jvm, "path.separator", ":");
     sys_properties_set_c(jvm, "file.separator", "/");
     sys_properties_set_c(jvm, "line.separator", "\n");
     sys_properties_set_c(jvm, "XstartOnFirstThread", "1");
 #elif __JVM_OS_LINUX__
     sys_properties_set_c(jvm, "os.name", "Linux");
-    sys_properties_set_c(jvm, "path.separator", ":");
     sys_properties_set_c(jvm, "file.separator", "/");
     sys_properties_set_c(jvm, "line.separator", "\n");
 #elif __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__ || __JVM_OS_VS__
     sys_properties_set_c(jvm, "os.name", "Windows");
-    sys_properties_set_c(jvm, "path.separator", ";");
     sys_properties_set_c(jvm, "file.separator", "\\");
     sys_properties_set_c(jvm, "line.separator", "\r\n");
 #endif

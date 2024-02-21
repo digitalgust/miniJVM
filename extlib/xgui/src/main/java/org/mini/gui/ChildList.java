@@ -96,7 +96,7 @@ class ChildList<T extends GObject> extends ArrayList<T> {
 
     @Override
     public Iterator<T> iterator() {
-        System.out.println("================" + size() + "  ," + modCount);
+        //System.out.println("================" + size() + "  ," + modCount);
         return new Iterator<T>() {
             int cursor = 0;
             int lastRet = -1;
@@ -109,7 +109,7 @@ class ChildList<T extends GObject> extends ArrayList<T> {
 
             @Override
             public T next() {
-                System.out.println("**************" + size() + "  ," + modCount);
+                //System.out.println("**************" + size() + "  ," + modCount);
                 this.checkForComodification();
 
                 try {
