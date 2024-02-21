@@ -44,9 +44,9 @@ extern "C" {
 //#pragma GCC diagnostic error "-Wframe-larger-than="
 
 #if __JVM_OS_VS__ || __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__
-#define barrier() MemoryBarrier()
+#define PATHSEPARATOR ";"
 #else
-#define barrier() __asm__ __volatile__("": : :"memory")
+#define PATHSEPARATOR ":"
 #endif
 
 
@@ -502,6 +502,11 @@ extern c8 const *STR_INS_JAVA_LANG_THREAD;
 extern c8 const *STR_INS_JAVA_LANG_CLASS;
 extern c8 const *STR_INS_JAVA_LANG_OBJECT;
 extern c8 const *STR_INS_JAVA_LANG_STACKTRACEELEMENT;
+
+
+extern c8 const *STR_VM_JAVA_LIBRARY_PATH;
+extern c8 const *STR_VM_SUN_BOOT_CLASS_PATH;
+extern c8 const *STR_VM_JAVA_CLASS_PATH;
 
 enum {
     METHOD_INVOKE_DYNAMIC,
@@ -1829,6 +1834,8 @@ struct _MiniJVM {
     Hashtable *table_jstring_const;//for cache same string
 
     ThreadLock threadlock;
+
+    Utf8String *startup_dir;
 
     ArrayList *native_libs;
     ArrayList *thread_list; //all thread

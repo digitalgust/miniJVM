@@ -53,17 +53,22 @@ int main(int argc, char **argv) {
 
         //test for graphics
         utf8_append(cp, startup_dir);
-        utf8_append_c(cp, "../libex/glfw_gui.jar;");
+        utf8_append_c(cp, "../libex/glfw_gui.jar");
+        utf8_append_c(cp, PATHSEPARATOR);
         utf8_append(cp, startup_dir);
-        utf8_append_c(cp, "../libex/xgui.jar;");
-        utf8_append_c(cp, "./;");
+        utf8_append_c(cp, "../libex/xgui.jar");
+        utf8_append_c(cp, PATHSEPARATOR);
+        utf8_append_c(cp, "./");
+        utf8_append_c(cp, PATHSEPARATOR);
         classpath = (c8 *) utf8_cstr(cp);
         main_name = "org.mini.glfw.GlfwMain";
 
         //test case
 //        utf8_append(cp, startup_dir);
-//        utf8_append_c(cp, "../libex/minijvm_test.jar;");
-//        utf8_append_c(cp, "./;");
+//        utf8_append_c(cp, "../libex/minijvm_test.jar");
+//        utf8_append_c(cp, PATHSEPARATOR);
+//        utf8_append_c(cp, "./");
+//        utf8_append_c(cp, PATHSEPARATOR);
 //        classpath = (c8 *) utf8_cstr(cp);
 //        main_name = "test.HelloWorld";
 //        main_name = "test.Foo1";
@@ -82,27 +87,34 @@ int main(int argc, char **argv) {
 
         //compiler test
 //        utf8_append(cp, startup_dir);
-//        utf8_append_c(cp, "../libex/janino.jar;");
+//        utf8_append_c(cp, "../libex/janino.jar");
+        utf8_append_c(cp, PATHSEPARATOR);
 //        utf8_append(cp, startup_dir);
-//        utf8_append_c(cp, "../libex/commons-compiler.jar;");
+//        utf8_append_c(cp, "../libex/commons-compiler.jar");
+        utf8_append_c(cp, PATHSEPARATOR);
 //        classpath = (c8 *) utf8_cstr(cp);
 //        main_name = "org.codehaus.janino.Compiler";
 //        arraylist_push_back(java_para,"../res/BpDeepTest.java");
 
         //test awtk
 //        utf8_append(cp, startup_dir);
-//        utf8_append_c(cp, "../libex/awtk_gui.jar;");
+//        utf8_append_c(cp, "../libex/awtk_gui.jar");
+        utf8_append_c(cp, PATHSEPARATOR);
 //        utf8_append(cp, startup_dir);
-//        utf8_append_c(cp, "../libex/awtk_demos.jar;");
-//        utf8_append_c(cp, "./;");
+//        utf8_append_c(cp, "../libex/awtk_demos.jar");
+        utf8_append_c(cp, PATHSEPARATOR);
+//        utf8_append_c(cp, "./");
+        utf8_append_c(cp, PATHSEPARATOR);
 //        classpath = (c8 *) utf8_cstr(cp);
 //        main_name = "DemoBasic";
 //        main_name = "DemoButton";
 
         //test luaj
 //        utf8_append(cp, startup_dir);
-//        utf8_append_c(cp, "../libex/luncher.jar;");
-//        utf8_append_c(cp, "./;");
+//        utf8_append_c(cp, "../libex/luncher.jar");
+        utf8_append_c(cp, PATHSEPARATOR);
+//        utf8_append_c(cp, "./");
+        utf8_append_c(cp, PATHSEPARATOR);
 //        classpath = (c8 *) utf8_cstr(cp);
 //        main_name = "org.luaj.vm2.lib.jme.TestLuaJ";
 
@@ -149,6 +161,7 @@ int main(int argc, char **argv) {
 
     MiniJVM *jvm = jvm_create();
     if (jvm != NULL) {
+        jvm->startup_dir = utf8_create_copy(startup_dir);
         jvm->jdwp_enable = jdwp;
         jvm->jdwp_suspend_on_start = 0;
         jvm->max_heap_size = maxheap;//25*1024*1024;//

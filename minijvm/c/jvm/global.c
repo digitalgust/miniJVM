@@ -90,6 +90,11 @@ c8 const *STR_INS_JAVA_LANG_OBJECT = "Ljava/lang/Object;";
 c8 const *STR_INS_JAVA_LANG_STACKTRACEELEMENT = "Ljava/lang/StackTraceElement;";
 
 
+c8 const *STR_VM_JAVA_LIBRARY_PATH = "java.library.path";
+c8 const *STR_VM_SUN_BOOT_CLASS_PATH = "sun.boot.class.path";
+c8 const *STR_VM_JAVA_CLASS_PATH = "java.class.path";
+
+
 c8 *INST_NAME[] = {
         /* 0x00 */ "nop",
         /* 0x01 */ "aconst_null",

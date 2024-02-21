@@ -36,12 +36,12 @@ void glfmMain(GLFMDisplay *display) {
 
     Utf8String *bootclasspath = utf8_create();
     utf8_append_c(bootclasspath, glfmGetResRoot());
-    utf8_append_c(bootclasspath, "/resfiles/minijvm_rt.jar;");
+    utf8_append_c(bootclasspath, "/resfiles/minijvm_rt.jar:");
     Utf8String *classpath = utf8_create();
     utf8_append_c(classpath, glfmGetResRoot());
-    utf8_append_c(classpath, "/resfiles/glfm_gui.jar;");
+    utf8_append_c(classpath, "/resfiles/glfm_gui.jar:");
     utf8_append_c(classpath, glfmGetResRoot());
-    utf8_append_c(classpath, "/resfiles/xgui.jar;");
+    utf8_append_c(classpath, "/resfiles/xgui.jar:");
     //jvm_printf("%s\n",utf8_cstr(classpath));
 
     refers.jvm = jvm_create();

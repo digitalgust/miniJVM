@@ -932,57 +932,74 @@ typedef void (*jni_fun)(__refer);
 s32 java_lang_System_loadLibrary0(Runtime *runtime, JClass *clazz) {
     Instance *name_arr = localvar_getRefer(runtime->localvar, 0);
     if (name_arr && name_arr->arr_length) {
-        Utf8String *lab = utf8_create_c("java.library.path");
-        Utf8String *val = hashtable_get(runtime->jvm->sys_prop, lab);
+        Utf8String *lab = utf8_create_c(STR_VM_JAVA_LIBRARY_PATH);
+        Utf8String *v = hashtable_get(runtime->jvm->sys_prop, lab);
+        Utf8String *paths = utf8_create();
+        if (v) {
+            utf8_append(paths, v);
+            utf8_append_c(paths, PATHSEPARATOR);
+        }
+        if (runtime->jvm->startup_dir) {
+            utf8_append(paths, runtime->jvm->startup_dir);
+        }
+
         Utf8String *libname = utf8_create();
-        if (val) {
-            utf8_append(libname, val);
-        }
-        const c8 *note1 = "lib not found:%s\n";
-        const c8 *note2 = "register function not found:%s\n";
-        const c8 *onload = "JNI_OnLoad";
-        jni_fun f;
-#if defined(__JVM_OS_MINGW__) || defined(__JVM_OS_CYGWIN__) || defined(__JVM_OS_VS__)
-        utf8_append_c(libname, "/lib");
-        utf8_append_c(libname, name_arr->arr_body);
-        utf8_append_c(libname, ".dll");
-        utf8_replace_c(libname, "//", "/");
-        HINSTANCE hInstLibrary = LoadLibrary(utf8_cstr(libname));
-        if (!hInstLibrary) {
-            jvm_printf(note1, utf8_cstr(libname));
-        } else {
-            FARPROC fp = GetProcAddress(hInstLibrary, onload);
-            if (!fp) {
-                jvm_printf(note2, onload);
+        s32 i;
+        for (i = 0;; i++) {
+            utf8_clear(lab);
+            utf8_clear(libname);
+            utf8_split_get_part(paths, PATHSEPARATOR, i, lab);
+            if (lab->length) {
+                utf8_append(libname, lab);
             } else {
-                f = (jni_fun) fp;
-                f(runtime->jvm);
+                break;
             }
-        }
+            const c8 *note1 = "lib not found:%s\n";
+            const c8 *note2 = "register function not found:%s\n";
+            const c8 *onload = "JNI_OnLoad";
+            jni_fun f;
+#if defined(__JVM_OS_MINGW__) || defined(__JVM_OS_CYGWIN__) || defined(__JVM_OS_VS__)
+            utf8_append_c(libname, "/lib");
+            utf8_append_c(libname, name_arr->arr_body);
+            utf8_append_c(libname, ".dll");
+            utf8_replace_c(libname, "//", "/");
+            HINSTANCE hInstLibrary = LoadLibrary(utf8_cstr(libname));
+            if (!hInstLibrary) {
+                jvm_printf(note1, utf8_cstr(libname));
+            } else {
+                FARPROC fp = GetProcAddress(hInstLibrary, onload);
+                if (!fp) {
+                    jvm_printf(note2, onload);
+                } else {
+                    f = (jni_fun) fp;
+                    f(runtime->jvm);
+                }
+            }
 
 #else
-        utf8_append_c(libname, "/lib");
-        utf8_replace_c(libname, "//", "/");
-        utf8_append_c(libname, name_arr->arr_body);
+            utf8_append_c(libname, "/lib");
+            utf8_replace_c(libname, "//", "/");
+            utf8_append_c(libname, name_arr->arr_body);
 #if defined(__JVM_OS_MAC__)
-        utf8_append_c(libname, ".dylib");
+            utf8_append_c(libname, ".dylib");
 #else //__JVM_OS_LINUX__
-        utf8_append_c(libname, ".so");
+            utf8_append_c(libname, ".so");
 #endif
-        __refer lib = dlopen(utf8_cstr(libname), RTLD_LAZY);
-        if (!lib) {
-            jvm_printf(note1, utf8_cstr(libname), dlerror());
-        } else {
-
-            f = dlsym(lib, onload);
-            if (!f) {
-                jvm_printf(note2, onload);
+            __refer lib = dlopen(utf8_cstr(libname), RTLD_LAZY);
+            if (!lib) {
+                jvm_printf(note1, utf8_cstr(libname), dlerror());
             } else {
-                f(runtime->jvm);
+
+                f = dlsym(lib, onload);
+                if (!f) {
+                    jvm_printf(note2, onload);
+                } else {
+                    f(runtime->jvm);
+                }
             }
-        }
 
 #endif
+        }
         utf8_destory(lab);
         utf8_destory(libname);
     }

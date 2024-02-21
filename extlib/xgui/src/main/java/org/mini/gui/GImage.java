@@ -6,13 +6,11 @@
 package org.mini.gui;
 
 import org.mini.glwrap.GLUtil;
-import org.mini.nanovg.Nanovg;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.SQLOutput;
 
 /**
  * GImage is a wrap of nvg_texture

@@ -136,34 +136,18 @@ void classloader_release_class_static_field(PeerClassLoader *class_loader) {
 
 void classloader_add_jar_path(PeerClassLoader *class_loader, Utf8String *jar_path) {
 
-    Utf8String *tmp = NULL;
-    s32 i = 0;
-    while (i < jar_path->length) {
-        if (tmp == NULL) {
-            tmp = utf8_create();
-        }
-        c8 ch = utf8_char_at(jar_path, i++);
-        if (i == jar_path->length) {
-            if (ch != ';' && ch != ':')utf8_insert(tmp, tmp->length, ch);
-            ch = PATHSEPARATOR;
-        }
-        if (ch == PATHSEPARATOR) {
-            if (utf8_last_indexof_c(tmp, "/") == tmp->length - 1) {
-                utf8_remove(tmp, tmp->length - 1);
-            }
-            //check duplicate
-            s32 j;
-            for (j = 0; j < class_loader->classpath->length; j++) {
-                if (utf8_equals(arraylist_get_value(class_loader->classpath, j), tmp)) {
-                    continue;
-                }
-            }
-            arraylist_push_back(class_loader->classpath, tmp);
-            tmp = NULL;
+    Utf8String *libname = utf8_create();
+    s32 i;
+    for (i = 0;; i++) {
+        utf8_split_get_part(jar_path, PATHSEPARATOR, i, libname);
+        if (libname->length) {
+            arraylist_push_back(class_loader->classpath, libname);
+            libname = utf8_create();
         } else {
-            utf8_insert(tmp, tmp->length, ch);
+            break;
         }
     }
+    utf8_destory(libname);
 }
 
 void classloaders_add(MiniJVM *jvm, PeerClassLoader *pcl) {
@@ -280,7 +264,7 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     set_jvm_state(jvm, JVM_STATUS_INITING);
 
     if (!p_classpath) {
-        p_bootclasspath = "./";
+        p_classpath = "./";
     }
 
     //
@@ -314,8 +298,8 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
 
     //装入系统属性
     sys_properties_load(jvm);
-    sys_properties_set_c(jvm, "java.class.path", p_classpath);
-    sys_properties_set_c(jvm, "sun.boot.class.path", p_bootclasspath);
+    sys_properties_set_c(jvm, STR_VM_JAVA_CLASS_PATH, p_classpath);
+    sys_properties_set_c(jvm, STR_VM_SUN_BOOT_CLASS_PATH, p_bootclasspath);
     sys_properties_set_c(jvm, "java.class.version", "52.0");
 
     //启动调试器
@@ -392,6 +376,9 @@ void jvm_destroy(MiniJVM *jvm) {
     jvm_printf("[INFO]jvm destoried\n");
 #endif
     set_jvm_state(jvm, JVM_STATUS_UNKNOW);
+    if (jvm->startup_dir) {
+        utf8_destory(jvm->startup_dir);
+    }
     jvm_free(jvm);
 }
 
