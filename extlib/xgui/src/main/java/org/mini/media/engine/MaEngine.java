@@ -1,5 +1,6 @@
 package org.mini.media.engine;
 
+import org.mini.media.MaDevice;
 import org.mini.media.MaNativeObject;
 import org.mini.media.MiniAudio;
 
@@ -9,6 +10,7 @@ public class MaEngine extends MaNativeObject {
     int format;
     int channels;
     int ratio;
+    long device;
 
     public MaEngine() {
         handle = MiniAudio.ma_engine_init();
@@ -16,6 +18,8 @@ public class MaEngine extends MaNativeObject {
             format = MiniAudio.ma_engine_get_format(handle);
             channels = MiniAudio.ma_engine_get_channels(handle);
             ratio = MiniAudio.ma_engine_get_sample_rate(handle);
+            device = MiniAudio.ma_engine_get_device(handle);
+            MaDevice.putDevice(device);
         }
     }
 
@@ -72,6 +76,7 @@ public class MaEngine extends MaNativeObject {
     public void finalize() {
         System.out.println("clean " + this + " " + handle);
         MiniAudio.ma_engine_uninit(handle);
+        MaDevice.removeDevice(handle);
         handle = 0;
     }
 

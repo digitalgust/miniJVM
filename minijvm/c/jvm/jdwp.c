@@ -105,7 +105,7 @@ s32 jdwp_thread_dispacher(void *para) {
                 arraylist_remove(jdwpserver->clients, client);
             }
         }
-        threadSleep(10);
+        threadSleep(20);
     }
     jdwpserver->mode &= ~JDWP_MODE_DISPATCH;
     return 0;
@@ -1562,7 +1562,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 jdwp_packet_put(jdwpserver, res);
                 utf8_destory(ustr);
                 while (!jvm->thread_list->length) {
-                    threadSleep(10);
+                    threadSleep(20);
                 }
                 Runtime *mainthread = (Runtime *) arraylist_get_value(jdwpserver->jvm->thread_list, 0);
                 if (jdwpserver->jvm->jdwp_suspend_on_start)event_on_vmstart(jdwpserver, mainthread->thrd_info->jthread);
