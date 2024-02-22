@@ -8,6 +8,7 @@ package org.mini.media;
 import org.mini.reflect.DirectMemObj;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -100,6 +101,7 @@ public class MaDevice extends MaNativeObject {
     public void finalize() {
         if (handle != 0) {
             MiniAudio.ma_device_uninit(handle);
+            devices.remove(handle);
             handle = 0;
         }
     }
@@ -117,6 +119,23 @@ public class MaDevice extends MaNativeObject {
                 return 3;
         }
         return 0;
+    }
+
+    public static void putDevice(long deviceHandle) {
+        devices.put(deviceHandle, null);
+    }
+
+    public static void removeDevice(long deviceHandle) {
+        devices.remove(deviceHandle);
+    }
+
+    public static void stopAll() {
+        for (Iterator<Long> it = devices.keySet().iterator(); it.hasNext(); ) {
+            Long deviceHanle = it.next();
+            if (deviceHanle != null) {
+                MiniAudio.ma_device_stop(deviceHanle.longValue());
+            }
+        }
     }
 
     /**

@@ -160,6 +160,8 @@ public class MiniAudio {
 
     public static native int ma_engine_stop(long handle_engine);
 
+    public static native long ma_engine_get_device(long handle_engine);
+
     public static native int ma_engine_get_channels(long handle_engine);
 
     public static native int ma_engine_get_sample_rate(long handle_engine);

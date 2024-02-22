@@ -11,6 +11,8 @@ import org.mini.glwrap.GLUtil;
 import org.mini.gui.GCallBack;
 import org.mini.gui.GForm;
 import org.mini.gui.GToolkit;
+import org.mini.media.MaDevice;
+import org.mini.media.MiniAudio;
 
 import java.io.File;
 
@@ -191,6 +193,7 @@ public class GlfwCallBackImpl extends GCallBack {
     public void destroy() {
         nvgDeleteGL3(vg);
         Glfw.glfwTerminate();
+        MaDevice.stopAll();
         vg = 0;
         System.exit(0);//some thread not exit ,that will continue running
     }

@@ -325,7 +325,7 @@ void setupCallback(Runtime *runtime, JClass *clazz) {
     c8 *type_s;
     c8 *clsname_s;
     if (!refers._callback_minial_on_recv_frames) {
-        clsname_s = "org/mini/media/AudioDevice";
+        clsname_s = "org/mini/media/MADevice";
         name_s = "onReceiveFrames";
         type_s = "(JIJ)V";
         Utf8String *clsname = env->utf8_create_part_c(clsname_s, 0, strlen(clsname_s));
@@ -337,7 +337,7 @@ void setupCallback(Runtime *runtime, JClass *clazz) {
         env->utf8_destory(type);
     }
     if (!refers._callback_minial_on_send_frames) {
-        clsname_s = "org/mini/media/AudioDevice";
+        clsname_s = "org/mini/media/MADevice";
         name_s = "onSendFrames";
         type_s = "(JIJ)I";
         Utf8String *clsname = env->utf8_create_part_c(clsname_s, 0, strlen(clsname_s));
@@ -349,7 +349,7 @@ void setupCallback(Runtime *runtime, JClass *clazz) {
         env->utf8_destory(type);
     }
     if (!refers._callback_minial_on_stop) {
-        clsname_s = "org/mini/media/AudioDevice";
+        clsname_s = "org/mini/media/MADevice";
         name_s = "onStop";
         type_s = "(J)V";
         Utf8String *clsname = env->utf8_create_part_c(clsname_s, 0, strlen(clsname_s));
@@ -501,6 +501,17 @@ int org_mini_media_MiniAudio_ma_engine_stop(Runtime *runtime, JClass *clazz) {
 
     ma_result r = ma_engine_stop(handle_engine);
     env->push_int(runtime->stack, r);
+    return 0;
+}
+
+int org_mini_media_MiniAudio_ma_engine_get_device(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    ma_engine *handle_engine = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+
+    s64 r = (s64) (intptr_t) ma_engine_get_device(handle_engine);
+    env->push_long(runtime->stack, r);
     return 0;
 }
 
@@ -905,6 +916,7 @@ static java_native_method method_minial_table[] = {
         {"org/mini/media/MiniAudio", "ma_engine_play_sound",                "(J[B)I",    org_mini_media_MiniAudio_ma_engine_play_sound},
         {"org/mini/media/MiniAudio", "ma_engine_start",                     "(J)I",      org_mini_media_MiniAudio_ma_engine_start},
         {"org/mini/media/MiniAudio", "ma_engine_stop",                      "(J)I",      org_mini_media_MiniAudio_ma_engine_stop},
+        {"org/mini/media/MiniAudio", "ma_engine_get_device",                "(J)J",      org_mini_media_MiniAudio_ma_engine_get_device},
         {"org/mini/media/MiniAudio", "ma_engine_get_channels",              "(J)I",      org_mini_media_MiniAudio_ma_engine_get_channels},
         {"org/mini/media/MiniAudio", "ma_engine_get_sample_rate",           "(J)I",      org_mini_media_MiniAudio_ma_engine_get_sample_rate},
         {"org/mini/media/MiniAudio", "ma_engine_get_format",                "(J)I",      org_mini_media_MiniAudio_ma_engine_get_format},
