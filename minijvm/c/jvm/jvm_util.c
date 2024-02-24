@@ -999,7 +999,11 @@ s32 jthread_lock(MemoryBlock *mb, Runtime *runtime) { //可能会重入，同一
     //can pause when lock
     while (mtx_trylock(&jtl->mutex_lock) != thrd_success) {
         check_suspend_and_pause(runtime);
-        jthread_yield(runtime);
+        if (runtime->thrd_info->type == THREAD_TYPE_JDWP) {
+            break;
+        }
+        //jthread_yield(runtime);
+        jthread_waitTime(mb, runtime, 20);
     }
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
