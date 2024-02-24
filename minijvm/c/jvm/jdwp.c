@@ -19,7 +19,7 @@ struct _JdwpServer {
     ArrayList *event_packets;
     Pairlist *event_sets;
     mtx_t event_sets_lock;
-    Runtime *runtime_for_hold_obj_only;
+    Runtime *runtime_jdwp;
 
 
     s32 jdwp_eventset_requestid;
@@ -125,7 +125,8 @@ s32 jdwp_start_server(MiniJVM *jvm) {
     jdwpserver->clients = arraylist_create(0);
     jdwpserver->event_packets = arraylist_create(0);
     jdwpserver->event_sets = pairlist_create(32);
-    jdwpserver->runtime_for_hold_obj_only = runtime_create(jvm);
+    jdwpserver->runtime_jdwp = runtime_create(jvm);
+    jdwpserver->runtime_jdwp->thrd_info->type = THREAD_TYPE_JDWP;
     mtx_init(&jdwpserver->event_sets_lock, mtx_recursive);
     jvm->jdwpserver = jdwpserver;
 
@@ -172,7 +173,7 @@ s32 jdwp_stop_server(MiniJVM *jvm) {
     pairlist_destory(jdwpserver->event_sets);
 
     //
-    runtime_destory(jdwpserver->runtime_for_hold_obj_only);
+    runtime_destory(jdwpserver->runtime_jdwp);
     //
     thrd_detach(jdwpserver->pt_listener);
     thrd_detach(jdwpserver->pt_dispacher);
@@ -213,7 +214,7 @@ void jdwp_client_destory(JdwpServer *jdwpserver, JdwpClient *client) {
     jvm_free(client);
 }
 
-void jdwp_client_hold_obj(JdwpClient *client, Runtime *runtime, __refer obj) {
+void jdwp_client_hold_obj(JdwpClient *client, __refer obj) {
     hashset_put(client->temp_obj_holder, obj);
     gc_obj_hold(client->jvm->collector, obj);
 }
@@ -837,7 +838,7 @@ void jdwp_check_debug_step(Runtime *runtime) {
 }
 
 Runtime *jdwp_get_runtime(JdwpServer *srv) {
-    return srv->runtime_for_hold_obj_only;
+    return srv->runtime_jdwp;
 }
 
 s32 jdwp_is_ignore_sync(JdwpServer *srv) {
@@ -1444,7 +1445,7 @@ void invoke_method(s32 call_mode, JdwpPacket *req, JdwpPacket *res, JdwpClient *
     JdwpServer *jdwpserver = client->jdwpserver;
     GcCollector *collector = client->jvm->collector;
     gc_pause(collector);
-    Runtime *runtime = runtime_create(jdwpserver->jvm);
+    Runtime *runtime = jdwp_get_runtime(jdwpserver);
     JClass *clazz;
     Instance *thread;
     Instance *object;
@@ -1504,7 +1505,7 @@ void invoke_method(s32 call_mode, JdwpPacket *req, JdwpPacket *res, JdwpClient *
                 __refer r = pop_ref(runtime->stack);
                 vt.type = getInstanceOfClassTag(r);//recorrect type, may be Arraylist<String>
                 vt.value = (s64) (intptr_t) r;
-                jdwp_client_hold_obj(client, runtime, r);
+                jdwp_client_hold_obj(client, r);
 
 //                            if (vt.type == 's') {
 //                                s32 debug = 1;
@@ -1526,7 +1527,6 @@ void invoke_method(s32 call_mode, JdwpPacket *req, JdwpPacket *res, JdwpClient *
     jdwp_packet_put(jdwpserver, res);
 
     gc_move_objs_thread_2_gc(runtime);
-    runtime_destory(runtime);
     gc_resume(collector);//
 
 }
@@ -1711,11 +1711,10 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             case JDWP_CMD_VirtualMachine_CreateString: {//1.11
                 Utf8String *str = jdwppacket_read_utf(req);
                 gc_pause(jdwpserver->jvm->collector);
-                Runtime *runtime = runtime_create(jdwpserver->jvm);
+                Runtime *runtime = jdwp_get_runtime(jdwpserver);
                 Instance *jstr = jstring_create(str, runtime);
-                jdwp_client_hold_obj(client, runtime, jstr);//防止回收此处需要hold
+                jdwp_client_hold_obj(client, jstr);//防止回收此处需要hold
                 gc_move_objs_thread_2_gc(runtime);
-                runtime_destory(runtime);
                 gc_resume(jdwpserver->jvm->collector);
                 utf8_destory(str);
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
@@ -1936,7 +1935,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 JClass *ref = jdwppacket_read_refer(req);
                 if (is_class_exists(jdwpserver->jvm, ref)) {
                     gc_pause(jdwpserver->jvm->collector);
-                    Runtime *runtime = runtime_create(jdwpserver->jvm);
+                    Runtime *runtime = jdwp_get_runtime(jdwpserver);
                     s32 fields = jdwppacket_read_int(req);
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
                     jdwppacket_write_int(res, fields);
@@ -1951,7 +1950,6 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                     }
 
                     gc_move_objs_thread_2_gc(runtime);
-                    runtime_destory(runtime);
                     gc_resume(jdwpserver->jvm->collector);
                 } else {
                     jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
@@ -2209,7 +2207,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             }
             case JDWP_CMD_ObjectReference_GetValues: {//9.2
                 gc_pause(jdwpserver->jvm->collector);
-                Runtime *runtime = runtime_create(jdwpserver->jvm);
+                Runtime *runtime = jdwp_get_runtime(jdwpserver);
                 Instance *obj = (Instance *) jdwppacket_read_refer(req);
                 JClass *ref = obj->mb.clazz;
                 s32 fields = jdwppacket_read_int(req);
@@ -2227,7 +2225,6 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 jdwp_packet_put(jdwpserver, res);
 
                 gc_move_objs_thread_2_gc(runtime);
-                runtime_destory(runtime);
                 gc_resume(jdwpserver->jvm->collector);
                 break;
             }
@@ -2251,7 +2248,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             case JDWP_CMD_ObjectReference_DisableCollection: {//9.7
                 gc_pause(jdwpserver->jvm->collector);
                 Instance *obj = (Instance *) jdwppacket_read_refer(req);
-                jdwp_client_hold_obj(client, jdwpserver->runtime_for_hold_obj_only, obj);
+                jdwp_client_hold_obj(client, obj);
 
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
                 jdwp_packet_put(jdwpserver, res);
@@ -2283,10 +2280,9 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             case JDWP_CMD_StringReference_Value: {//10.1
                 Instance *jstr = jdwppacket_read_refer(req);
                 Utf8String *ustr = utf8_create();
-                Runtime *runtime = runtime_create(jdwpserver->jvm);
+                Runtime *runtime = jdwp_get_runtime(jdwpserver);
                 jstring_2_utf8(jstr, ustr, runtime);
                 gc_move_objs_thread_2_gc(runtime);
-                runtime_destory(runtime);
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
                 jdwppacket_write_utf(res, ustr);
                 jdwp_packet_put(jdwpserver, res);

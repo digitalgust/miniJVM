@@ -67,7 +67,7 @@ s32 gc_create(MiniJVM *jvm) {
     collector->runtime_refer_copy = arraylist_create(256);
 
     collector->runtime = runtime_create(jvm);
-
+    collector->runtime->thrd_info->type = THREAD_TYPE_GC;
     collector->_garbage_thread_status = GARBAGE_THREAD_PAUSE;
     thread_lock_init(&jvm->threadlock);
 

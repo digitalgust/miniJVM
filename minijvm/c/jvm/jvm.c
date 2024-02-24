@@ -309,6 +309,7 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
 
     //init load thread, string etc
     Runtime *runtime = runtime_create(jvm);
+    runtime->thrd_info->type = THREAD_TYPE_NORMAL;
     Utf8String *clsName = utf8_create_c(STR_CLASS_JAVA_LANG_INTEGER);
     JClass *c = classes_load_get(NULL, clsName, runtime);
     if (!c) {
@@ -388,6 +389,7 @@ s32 call_main(MiniJVM *jvm, c8 *p_mainclass, ArrayList *java_para) {
         return 1;
     }
     Runtime *runtime = runtime_create(jvm);
+    runtime->thrd_info->type = THREAD_TYPE_NORMAL;
     thread_boundle(runtime);
 
     //准备参数
@@ -430,6 +432,7 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
     Runtime *runtime = p_runtime;
     if (!p_runtime) {
         runtime = runtime_create(jvm);
+        runtime->thrd_info->type = THREAD_TYPE_NORMAL;
         thread_boundle(runtime);
     }
 

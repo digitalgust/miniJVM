@@ -458,6 +458,13 @@ enum {
     JVM_EXCEPTION_INSTANTIATION,
 };
 
+enum {
+    THREAD_TYPE_NONE,
+    THREAD_TYPE_NORMAL,
+    THREAD_TYPE_GC,
+    THREAD_TYPE_JDWP,
+};
+
 extern char *STRS_CLASS_EXCEPTION[];
 
 extern c8 const *STR_CLASS_JAVA_LANG_STRING;
@@ -1251,6 +1258,7 @@ struct _JavaThreadInfo {
     u8 volatile is_unparked;
     u8 volatile is_blocking;// some of native method will enter blocking state
     u8 is_interrupt;
+    u8 type;// gc /jdwp /normal
 
     thrd_t pthread;
     //调试器相关字段

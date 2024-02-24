@@ -1104,6 +1104,7 @@ s32 java_lang_Thread_createStackFrame(Runtime *runtime, JClass *clazz) {
     Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, 0);
 
     Runtime *r = runtime_create(runtime->jvm);
+    r->thrd_info->type = THREAD_TYPE_NORMAL;
     jthread_set_stackframe_value(runtime->jvm, ins, r);
     push_long(stack, (s64) (intptr_t) r);
 #if _JVM_DEBUG_LOG_LEVEL > 5
