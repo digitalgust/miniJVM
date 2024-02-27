@@ -88,10 +88,10 @@ int main(int argc, char **argv) {
         //compiler test
 //        utf8_append(cp, startup_dir);
 //        utf8_append_c(cp, "../libex/janino.jar");
-        utf8_append_c(cp, PATHSEPARATOR);
+//        utf8_append_c(cp, PATHSEPARATOR);
 //        utf8_append(cp, startup_dir);
 //        utf8_append_c(cp, "../libex/commons-compiler.jar");
-        utf8_append_c(cp, PATHSEPARATOR);
+//        utf8_append_c(cp, PATHSEPARATOR);
 //        classpath = (c8 *) utf8_cstr(cp);
 //        main_name = "org.codehaus.janino.Compiler";
 //        arraylist_push_back(java_para,"../res/BpDeepTest.java");
@@ -99,12 +99,12 @@ int main(int argc, char **argv) {
         //test awtk
 //        utf8_append(cp, startup_dir);
 //        utf8_append_c(cp, "../libex/awtk_gui.jar");
-        utf8_append_c(cp, PATHSEPARATOR);
+//        utf8_append_c(cp, PATHSEPARATOR);
 //        utf8_append(cp, startup_dir);
 //        utf8_append_c(cp, "../libex/awtk_demos.jar");
-        utf8_append_c(cp, PATHSEPARATOR);
+//        utf8_append_c(cp, PATHSEPARATOR);
 //        utf8_append_c(cp, "./");
-        utf8_append_c(cp, PATHSEPARATOR);
+//        utf8_append_c(cp, PATHSEPARATOR);
 //        classpath = (c8 *) utf8_cstr(cp);
 //        main_name = "DemoBasic";
 //        main_name = "DemoButton";
@@ -112,9 +112,9 @@ int main(int argc, char **argv) {
         //test luaj
 //        utf8_append(cp, startup_dir);
 //        utf8_append_c(cp, "../libex/luncher.jar");
-        utf8_append_c(cp, PATHSEPARATOR);
+//        utf8_append_c(cp, PATHSEPARATOR);
 //        utf8_append_c(cp, "./");
-        utf8_append_c(cp, PATHSEPARATOR);
+//        utf8_append_c(cp, PATHSEPARATOR);
 //        classpath = (c8 *) utf8_cstr(cp);
 //        main_name = "org.luaj.vm2.lib.jme.TestLuaJ";
 

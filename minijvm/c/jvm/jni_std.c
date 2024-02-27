@@ -974,6 +974,7 @@ s32 java_lang_System_loadLibrary0(Runtime *runtime, JClass *clazz) {
                     f = (jni_fun) fp;
                     f(runtime->jvm);
                 }
+                break;
             }
 
 #else
