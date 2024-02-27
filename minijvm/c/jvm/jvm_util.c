@@ -325,7 +325,7 @@ void thread_stop_all(MiniJVM *jvm) {
 void thread_lock_init(ThreadLock *lock) {
     if (lock) {
         cnd_init(&lock->thread_cond);
-        mtx_init(&lock->mutex_lock, mtx_recursive);
+        mtx_init(&lock->mutex_lock, mtx_recursive | mtx_timed);
     }
 }
 
@@ -996,20 +996,28 @@ s32 jthread_lock(MemoryBlock *mb, Runtime *runtime) { //可能会重入，同一
         jthreadlock_create(runtime, mb);
     }
     ThreadLock *jtl = mb->thread_lock;
+    s32 i = 0;
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    s64 waitTime = currentTimeMillis();
+#endif
+    struct timespec t;
+    t.tv_nsec = 5 * NANO_2_MILLS_SCALE;
+    t.tv_sec = 0;
     //can pause when lock
-    while (mtx_trylock(&jtl->mutex_lock) != thrd_success) {
+    while (mtx_timedlock(&jtl->mutex_lock, &t) != thrd_success) {
         check_suspend_and_pause(runtime);
         if (runtime->thrd_info->type == THREAD_TYPE_JDWP) {
             break;
         }
-        //jthread_yield(runtime);
-        jthread_waitTime(mb, runtime, 20);
+        jthread_yield(runtime);
+        i++;
     }
-
 #if _JVM_DEBUG_LOG_LEVEL > 5
-    invoke_deepth(runtime);
-    jvm_printf("  lock: %llx   lock holder: %s \n", (s64) (intptr_t) (runtime->thrd_info->jthread),
-               utf8_cstr(mb->clazz->name));
+    if (i > 0) {
+        waitTime = currentTimeMillis() - waitTime;
+        invoke_deepth(runtime);
+        jvm_printf("  lock holder: %s , lock count: %d waitTime: %lld \n", utf8_cstr(mb->clazz->name), i, waitTime);
+    }
 #endif
     return 0;
 }
@@ -1851,9 +1859,9 @@ s64 nanoTime() {
 s64 threadSleep(s64 ms) {
     //wait time
     struct timespec req;
-    clock_gettime(CLOCK_REALTIME, &req);
-    req.tv_sec += ms / MILL_2_SEC_SCALE;
-    req.tv_nsec += (ms % MILL_2_SEC_SCALE) * NANO_2_MILLS_SCALE;
+    //clock_gettime(CLOCK_REALTIME, &req);
+    req.tv_sec = ms / MILL_2_SEC_SCALE;
+    req.tv_nsec = (ms % MILL_2_SEC_SCALE) * NANO_2_MILLS_SCALE;
     //if notify or notifyall ,the thread is active again, rem record remain wait time
     struct timespec rem;
     rem.tv_sec = 0;

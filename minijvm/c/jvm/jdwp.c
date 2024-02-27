@@ -127,7 +127,7 @@ s32 jdwp_start_server(MiniJVM *jvm) {
     jdwpserver->event_sets = pairlist_create(32);
     jdwpserver->runtime_jdwp = runtime_create(jvm);
     jdwpserver->runtime_jdwp->thrd_info->type = THREAD_TYPE_JDWP;
-    mtx_init(&jdwpserver->event_sets_lock, mtx_recursive);
+    mtx_init(&jdwpserver->event_sets_lock, mtx_recursive | mtx_timed);
     jvm->jdwpserver = jdwpserver;
 
     thrd_create(&jdwpserver->pt_listener, jdwp_thread_listener, jdwpserver);
