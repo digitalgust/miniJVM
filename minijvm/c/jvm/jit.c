@@ -50,7 +50,7 @@ SwitchTable *switchtable_create(Jit *jit, s32 size);
 
 s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime *runtime);
 
-void _gen_jump_to_suspend_check(struct sljit_compiler *C, int offset);
+void _gen_jump_to_suspend_check(struct sljit_compiler *C, s32 offset);
 
 void _gen_save_sp_ip(struct sljit_compiler *C);
 //------------------------  jit util ----------------------------
@@ -1026,7 +1026,7 @@ void _gen_jdwp(struct sljit_compiler *C) {
 //    }
 }
 
-void _gen_jump_to_suspend_check(struct sljit_compiler *C, int offset) {
+void _gen_jump_to_suspend_check(struct sljit_compiler *C, s32 offset) {
     if (offset < 0)
         sljit_emit_ijump(C, SLJIT_FAST_CALL, SLJIT_IMM, SLJIT_FUNC_ADDR(check_suspend));
 }
@@ -1040,7 +1040,7 @@ s32 multiarray(Runtime *runtime, Utf8String *desc, s32 count) {
 #else
     s32 dim[count];
 #endif
-    int i;
+    s32 i;
     for (i = 0; i < count; i++)
         dim[i] = pop_int(stack);
 
@@ -1093,7 +1093,7 @@ s32 invokevirtual(Runtime *runtime, s32 idx) {
 
 
 static float frem(float value1, float value2) {
-    return value2 - ((int) (value2 / value1) * value1);
+    return value2 - ((s32) (value2 / value1) * value1);
 }
 
 static double drem_1(double value1, double value2) {
@@ -1208,7 +1208,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
              && utf8_equals_c(method->descriptor, "(J)V")
              && utf8_equals_c(method->name, "paint_title"))
             ) {
-        int debug = 1;
+        s32 debug = 1;
 
     } else {
         return JIT_GEN_ERROR;
@@ -3347,7 +3347,7 @@ void construct_jit(MethodInfo *method, Runtime *runtime) {
     ca->jit.state = gen_jit_bytecode_func(C, method, runtime);
 
     if (ca->jit.state == JIT_GEN_SUCCESS) {
-        int debug = 1;
+        s32 debug = 1;
     }
 #if(JIT_CODE_DUMP)
     if (utf8_equals_c(runtime->method->_this_class->name, "org/mini/json/JsonParser")

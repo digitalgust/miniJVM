@@ -26,6 +26,7 @@ int main(int argc, char **argv) {
     c8 *bootclasspath = NULL;
     c8 *classpath = NULL;
     c8 *main_name = NULL;
+    s32 print_version = 0;
     s32 main_set = 0;
     ArrayList *java_para = arraylist_create(0);
     s32 jdwp = 0;
@@ -42,8 +43,9 @@ int main(int argc, char **argv) {
     s32 dpos = utf8_last_indexof_c(startup_dir, "/");
     if (dpos > 0)utf8_substring(startup_dir, 0, dpos);
     utf8_append_c(startup_dir, "/");
+#if _JVM_DEBUG_LOG_LEVEL > 0
     jvm_printf("App dir:%s\n", utf8_cstr(startup_dir));
-
+#endif
     //default value
     {
         utf8_append(bootcp, startup_dir);
@@ -126,6 +128,11 @@ int main(int argc, char **argv) {
         for (i = 1; i < argc; i++) {
             if (strcmp(argv[i], "-bootclasspath") == 0) {
                 bootclasspath = argv[i + 1];
+                i++;
+            } else if (strcmp(argv[i], "-version") == 0 || strcmp(argv[i], "--version") == 0) {
+                print_version = 1;
+                classpath = NULL;
+                main_name = "org.mini.vm.PrintVersion";
                 i++;
             } else if (strcmp(argv[i], "-cp") == 0 || strcmp(argv[i], "-classpath") == 0) {
                 classpath = argv[i + 1];

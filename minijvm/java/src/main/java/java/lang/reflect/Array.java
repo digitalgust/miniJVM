@@ -27,7 +27,7 @@
 package java.lang.reflect;
 
 import org.mini.reflect.ReflectArray;
-import org.mini.reflect.vm.RefNative;
+import org.mini.vm.RefNative;
 
 /**
  * The <code>Array</code> class provides static methods to dynamically create

@@ -5,7 +5,7 @@
  */
 package org.mini.reflect;
 
-import org.mini.reflect.vm.RefNative;
+import org.mini.vm.RefNative;
 
 import java.util.ArrayList;
 import java.util.List;

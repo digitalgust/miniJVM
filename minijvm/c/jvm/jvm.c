@@ -213,7 +213,7 @@ void classloaders_destroy_all(MiniJVM *jvm) {
     jvm->classloaders = NULL;
 }
 
-void set_jvm_state(MiniJVM *jvm, int state) {
+void set_jvm_state(MiniJVM *jvm, s32 state) {
     jvm->jvm_state = state;
 }
 
@@ -221,11 +221,11 @@ s32 get_jvm_state(MiniJVM *jvm) {
     return jvm->jvm_state;
 }
 
-void _on_jvm_sig_print(int no) {
+void _on_jvm_sig_print(s32 no) {
     jvm_printf("[SIGNAL]jvm sig:%d  errno: %d , %s\n", no, errno, strerror(errno));
 }
 
-void _on_jvm_sig(int no) {
+void _on_jvm_sig(s32 no) {
     _on_jvm_sig_print(no);
     exit(no);
 }
@@ -320,7 +320,7 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     utf8_append_c(clsName, STR_CLASS_JAVA_LANG_THREAD);
     classes_load_get(NULL, clsName, runtime);
     utf8_clear(clsName);
-    utf8_append_c(clsName, STR_CLASS_ORG_MINI_REFLECT_LAUNCHER);
+    utf8_append_c(clsName, STR_CLASS_SUN_MISC_LAUNCHER);
     classes_load_get(NULL, clsName, runtime);
     //开始装载类
     utf8_destory(clsName);
@@ -398,7 +398,7 @@ s32 call_main(MiniJVM *jvm, c8 *p_mainclass, ArrayList *java_para) {
     Instance *arr = jarray_create_by_type_name(runtime, count, ustr, NULL);
     instance_hold_to_thread(arr, runtime);
     utf8_destory(ustr);
-    int i;
+    s32 i;
     for (i = 0; i < count; i++) {
         Utf8String *utfs = utf8_create_c(arraylist_get_value(java_para, i));
         Instance *jstr = jstring_create(utfs, runtime);
@@ -470,7 +470,9 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
             if (_JVM_JDWP_ENABLE) {
                 if (jvm->jdwp_enable) {
                     if (jvm->jdwp_suspend_on_start)jthread_suspend(runtime);
+#if _JVM_DEBUG_LOG_LEVEL > 0
                     jvm_printf("[JDWP]jdwp listening (port:%s) ...\n", JDWP_TCP_PORT);
+#endif
                 }//jdwp 会启动调试器
             }
             runtime->method = NULL;

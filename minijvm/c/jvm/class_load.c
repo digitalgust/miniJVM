@@ -303,7 +303,7 @@ void *_parseCPInvokeDynamic(JClass *_this, ByteBuf *buf, s32 index) {
 }
 
 s32 _class_constant_pool_destory(JClass *clazz) {
-    int i;
+    s32 i;
     for (i = 0; i < clazz->constant_item_count; i++) {
         ConstantItem *cptr = clazz->constant_item_ptr[i];
         if (cptr) {
@@ -739,7 +739,7 @@ void _changeBytesOrder(MethodInfo *method) {
 //            if (utf8_equals_c(method->name, "test_typecast"))
 //                jvm_printf("%8d, %s\n", pc, inst_name[cur_inst]);
         } else {
-            int debug = 1;
+//            int debug = 1;
         }
         switch (cur_inst) {
             case op_nop:
@@ -1065,7 +1065,7 @@ void _changeBytesOrder(MethodInfo *method) {
                 *((s32 *) addr) = i2c.i;
                 s32 i, key;
 
-                int offset = default_offset;
+                s32 offset = default_offset;
                 for (i = 0; i < n; i++) {
                     i2c.c3 = ip[pos++];
                     i2c.c2 = ip[pos++];
@@ -1418,7 +1418,7 @@ s32 _convert_to_code_attribute(CodeAttribute *ca, AttributeInfo *attr, JClass *c
     ca->exception_table_length = s2c.s;
     s32 bytelen = sizeof(ExceptionTable) * ca->exception_table_length;
     ca->exception_table = jvm_calloc(bytelen);
-    int i;
+    s32 i;
     for (i = 0; i < 4 * ca->exception_table_length; i++) {
         s2c.c1 = attr->info[info_p++];
         s2c.c0 = attr->info[info_p++];
@@ -1540,7 +1540,7 @@ s32 parseMethodPara(Utf8String *methodType, Utf8String *out) {
     Utf8String *para = utf8_create_copy(methodType);
     utf8_substring(para, utf8_indexof_c(para, "(") + 1, utf8_last_indexof_c(para, ")"));
     //从后往前拆分方法参数，从栈中弹出放入本地变量
-    int i = 0;
+    s32 i = 0;
     while (para->length > 0) {
         c8 ch = utf8_char_at(para, 0);
         switch (ch) {
@@ -1877,6 +1877,24 @@ JClass *class_parse(Instance *loader, ByteBuf *bytebuf, Runtime *runtime) {
     }
     return tmpclazz;
 }
+/**
+ * Loads a Java class from the classpath using specified ClassLoader or the bootstrap classloader.
+ *
+ * @param jloader The Instance pointer representing the ClassLoader to use for loading, or NULL for the bootstrap classloader.
+ * @param pClassName The Utf8String containing the fully-qualified name of the class to load.
+ * @param runtime A pointer to the Runtime instance that represents the current execution context.
+ * @return A JClass* pointer to the loaded class on success; NULL if the class could not be found or loaded.
+
+ * This function performs the following steps:
+ * 1. Copies and normalizes the class name (replacing '.' with '/').
+ * 2. Tries to find the class in the JVM's classes map using the given ClassLoader.
+   *   If the class name starts with "[", it creates an array class instead.
+ * 3. If the class is not found, attempts to load the ".class" file from the classpath associated with the ClassLoader.
+ * 4. Parses the loaded bytecode into a JClass structure using `class_parse`.
+ * 5. If loading through ClassLoader fails, and a custom `launcher_loadClass` method is available, calls this method to attempt loading.
+ * 6. Cleans up resources and returns the loaded class, or NULL if the class was not found or could not be loaded.
+ * 7. Logs debug information if the class cannot be found and `_JVM_DEBUG_LOG_LEVEL > 2`.
+ */
 
 JClass *load_class(Instance *jloader, Utf8String *pClassName, Runtime *runtime) {
     if (!pClassName)return NULL;

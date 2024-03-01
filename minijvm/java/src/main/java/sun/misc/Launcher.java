@@ -1,6 +1,6 @@
-package org.mini.reflect;
+package sun.misc;
 
-import org.mini.reflect.vm.RefNative;
+import org.mini.vm.RefNative;
 import org.mini.zip.Zip;
 
 import java.io.File;

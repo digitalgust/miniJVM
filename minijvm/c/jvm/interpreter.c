@@ -271,7 +271,7 @@ s32 invokedynamic_prepare(Runtime *runtime, BootstrapMethod *bootMethod, Constan
     } else {
         s32 ret = execute_method_impl(boot_m, runtime);
         if (ret == RUNTIME_STATUS_NORMAL) {
-            MethodInfo *finder = find_methodInfo_by_name_c("org/mini/reflect/vm/LambdaUtil",
+            MethodInfo *finder = find_methodInfo_by_name_c("org/mini/vm/LambdaUtil",
                                                            "getMethodInfoHandle",
                                                            "(Ljava/lang/invoke/CallSite;)J", NULL,
                                                            runtime);
@@ -390,7 +390,7 @@ static inline void _optimize_empty_method_call(MethodInfo *subm, CodeAttribute *
 }
 
 
-static inline int _optimize_inline_getter(JClass *clazz, s32 cfrIdx, Runtime *runtime) {
+static inline s32 _optimize_inline_getter(JClass *clazz, s32 cfrIdx, Runtime *runtime) {
 
     RuntimeStack *stack = runtime->stack;
     FieldInfo *fi = class_get_constant_fieldref(clazz, cfrIdx)->fieldInfo;
@@ -445,7 +445,7 @@ static inline int _optimize_inline_getter(JClass *clazz, s32 cfrIdx, Runtime *ru
     return RUNTIME_STATUS_NORMAL;
 }
 
-static inline int _optimize_inline_setter(JClass *clazz, s32 cfrIdx, Runtime *runtime) {
+static inline s32 _optimize_inline_setter(JClass *clazz, s32 cfrIdx, Runtime *runtime) {
 
     RuntimeStack *stack = runtime->stack;
     FieldInfo *fi = class_get_constant_fieldref(clazz, cfrIdx)->fieldInfo;
@@ -1809,7 +1809,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             --sp;
                             fval1 = (sp - 0)->fvalue;
                             fval2 = (sp - 1)->fvalue;
-                            f32 v = fval2 - ((int) (fval2 / fval1) * fval1);
+                            f32 v = fval2 - ((s32) (fval2 / fval1) * fval1);
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("frem:  %f\n", (sp - 1)->fvalue);

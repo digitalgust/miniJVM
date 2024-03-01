@@ -26,9 +26,8 @@
 
 package java.lang.reflect;
 
-import org.mini.reflect.ReflectField;
 import org.mini.reflect.ReflectMethod;
-import org.mini.reflect.vm.RConst;
+import org.mini.vm.RConst;
 
 import java.lang.annotation.Annotation;
 

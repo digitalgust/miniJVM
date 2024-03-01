@@ -2,7 +2,7 @@ package java.nio;
 
 
 import org.mini.reflect.ReflectArray;
-import org.mini.reflect.vm.RefNative;
+import org.mini.vm.RefNative;
 
 class ByteBufferImpl extends ByteBuffer {
     protected byte[] array;

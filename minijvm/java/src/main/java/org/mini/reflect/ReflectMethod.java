@@ -5,8 +5,7 @@
  */
 package org.mini.reflect;
 
-import org.mini.reflect.vm.RConst;
-import org.mini.reflect.vm.RefNative;
+import org.mini.vm.RConst;
 
 import java.lang.reflect.Type;
 import java.util.List;

@@ -703,9 +703,9 @@ s32 java_lang_String_replace0(Runtime *runtime, JClass *clazz) {
         u16 *dst_value = (u16 *) jstring_get_value_array(dst, runtime)->arr_body;
 
         ByteBuf *sb = bytebuf_create(count);
-        int i, j;
+        s32 i, j;
         for (i = 0; i < count;) {
-            int index = i + offset;
+            s32 index = i + offset;
             u16 ch = value[index];
             s32 match = 0;
             if (ch == src_value[src_offset] && index + src_count <= offset + count) {

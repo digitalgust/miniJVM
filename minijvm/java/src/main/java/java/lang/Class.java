@@ -29,8 +29,8 @@ package java.lang;
 import org.mini.reflect.ReflectClass;
 import org.mini.reflect.ReflectField;
 import org.mini.reflect.ReflectMethod;
-import org.mini.reflect.vm.RConst;
-import org.mini.reflect.vm.RefNative;
+import org.mini.vm.RConst;
+import org.mini.vm.RefNative;
 
 import java.lang.reflect.*;
 import java.util.HashMap;
