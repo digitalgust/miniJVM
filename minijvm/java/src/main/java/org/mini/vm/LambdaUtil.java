@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.mini.reflect.vm;
+package org.mini.vm;
 
 import org.mini.reflect.ReflectMethod;
 

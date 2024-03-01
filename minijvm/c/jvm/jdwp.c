@@ -580,7 +580,7 @@ s32 getClassType(JClass *clazz) {
 
 
 c8 getSimpleTag(u8 type) {
-    char bytes = '0';
+    c8 bytes = '0';
     switch (type) {
         case JDWP_TAG_BYTE:
         case JDWP_TAG_BOOLEAN:
@@ -642,10 +642,10 @@ void writeValueType(JdwpPacket *res, ValueType *vt) {
             jdwppacket_write_byte(res, (s8) vt->value);
             break;
         case '2':
-            jdwppacket_write_short(res, (short) vt->value);
+            jdwppacket_write_short(res, (s16) vt->value);
             break;
         case '4':
-            jdwppacket_write_int(res, (int) vt->value);
+            jdwppacket_write_int(res, (s32) vt->value);
             break;
         case '8':
             jdwppacket_write_long(res, vt->value);

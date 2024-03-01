@@ -10,7 +10,7 @@
 
 package java.nio;
 
-import org.mini.reflect.vm.RefNative;
+import org.mini.vm.RefNative;
 
 public final class ByteOrder {
     public static final ByteOrder BIG_ENDIAN = new ByteOrder("BIG_ENDIAN");

@@ -9,8 +9,8 @@
    details. */
 package java.lang;
 
-import org.mini.reflect.Launcher;
-import org.mini.reflect.vm.RefNative;
+import sun.misc.Launcher;
+import org.mini.vm.RefNative;
 
 import java.io.IOException;
 import java.io.InputStream;

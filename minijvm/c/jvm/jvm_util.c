@@ -355,7 +355,7 @@ void vm_share_wait(MiniJVM *jvm) {
 
 void vm_share_timedwait(MiniJVM *jvm, s64 ms) {
     struct timespec t;
-    clock_gettime(CLOCK_REALTIME, &t);
+    timespec_get(&t, TIME_UTC);
     t.tv_sec += ms / 1000;
     t.tv_nsec += (ms % 1000) * 1000000;
     s32 ret = cnd_timedwait(&jvm->threadlock.thread_cond, &jvm->threadlock.mutex_lock, &t);
@@ -406,7 +406,7 @@ s32 enc_get_utf8_size(const c8 *pInput) {
 s32 utf8_2_unicode(Utf8String *ustr, u16 *arr) {
     c8 const *pInput = utf8_cstr(ustr);
     //assert(pInput != NULL && Unic != NULL);
-    int outputSize = 0; //记录转换后的Unicode字符串的字节数
+    s32 outputSize = 0; //记录转换后的Unicode字符串的字节数
     // b1 表示UTF-8编码的pInput中的高字节, b2 表示次高字节, ...
     c8 b1, b2, b3, b4, b5, b6;
     s32 codepoint = 0;
@@ -414,7 +414,7 @@ s32 utf8_2_unicode(Utf8String *ustr, u16 *arr) {
 
     while (*pInput) {
         //*Unic = 0x0; // 把 *Unic 初始化为全零
-        int utfbytes = enc_get_utf8_size(pInput);
+        s32 utfbytes = enc_get_utf8_size(pInput);
         //printf("%d", utfbytes);
         codepoint = 0;
         switch (utfbytes) {
@@ -521,11 +521,11 @@ s32 unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 totalSize) {
         s32 unic = jchar_arr[i];
         if (unic >= 0xd800 && unic <= 0xdbff) {
             if (i + 1 < totalSize) {
-                int c1 = jchar_arr[i + 1];
+                s32 c1 = jchar_arr[i + 1];
                 if (c1 >= 0xdc00 && c1 <= 0xdfff) {
                     i++;
-                    int lead = unic & 0x3ff;
-                    int trail = c1 & 0x3ff;
+                    s32 lead = unic & 0x3ff;
+                    s32 trail = c1 & 0x3ff;
                     unic = (lead << 10) | trail | 0x10000;
                 }
             }
@@ -581,7 +581,7 @@ s32 unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 totalSize) {
  * @param size len
  */
 void swap_endian_little_big(u8 *ptr, s32 size) {
-    int i;
+    s32 i;
     for (i = 0; i < size / 2; i++) {
         u8 tmp = ptr[i];
         ptr[i] = ptr[size - 1 - i];
@@ -823,10 +823,10 @@ void close_log() {
 #endif
 }
 
-int jvm_printf(const char *format, ...) {
+s32 jvm_printf(const c8 *format, ...) {
     va_list vp;
     va_start(vp, format);
-    int result = 0;
+    s32 result = 0;
 #if _JVM_DEBUG_LOG_TO_FILE
     if (logfile) {
 
@@ -847,7 +847,7 @@ int jvm_printf(const char *format, ...) {
 
 void invoke_deepth(Runtime *runtime) {
     vm_share_lock(runtime->jvm);
-    int i = 0;
+    s32 i = 0;
     Runtime *r = runtime;
     while (r) {
         i++;
@@ -1218,7 +1218,7 @@ Instance *jarray_multi_create(Runtime *runtime, s32 *dim, s32 dim_size, Utf8Stri
     jvm_printf("multi arr deep :%d  type(%c) arr[%x] size:%d\n", deep, ch, arr, len);
 #endif
     if (ch == '[') {
-        int i;
+        s32 i;
         s64 val;
         for (i = 0; i < len; i++) {
             Instance *elem = jarray_multi_create(runtime, dim, dim_size, desc, deep + 1);
@@ -1577,7 +1577,7 @@ u16 jstring_char_at(Instance *jstr, s32 index, Runtime *runtime) {
 
 s32 jstring_index_of(Instance *jstr, u16 ch, s32 startAt, Runtime *runtime) {
     c8 *fieldPtr = jstring_get_value_ptr(jstr, runtime);
-    Instance *ptr = (Instance *) getFieldRefer(fieldPtr);//char[]数组实例
+    Instance *ptr = (Instance *) getFieldRefer(fieldPtr);//c8[]数组实例
     if (ptr && ptr->arr_body && startAt >= 0) {
         u16 *jchar_arr = (u16 *) ptr->arr_body;
         s32 count = jstring_get_count(jstr, runtime);
@@ -1600,8 +1600,8 @@ s32 jstring_equals(Instance *jstr1, Instance *jstr2, Runtime *runtime) {
     } else if (!jstr2) {
         return 0;
     }
-    Instance *arr1 = jstring_get_value_array(jstr1, runtime);//取得 char[] value
-    Instance *arr2 = jstring_get_value_array(jstr2, runtime);//取得 char[] value
+    Instance *arr1 = jstring_get_value_array(jstr1, runtime);//取得 c8[] value
+    Instance *arr2 = jstring_get_value_array(jstr2, runtime);//取得 c8[] value
     s32 count1 = 0, offset1 = 0, count2 = 0, offset2 = 0;
     //0长度字符串可能value[] 是空值，也可能不是空值但count是0
     if (arr1) {
@@ -1840,14 +1840,14 @@ void threadinfo_destory(JavaThreadInfo *threadInfo) {
 s64 currentTimeMillis() {
 
     struct timespec tv;
-    clock_gettime(CLOCK_REALTIME, &tv);
+    timespec_get(&tv, TIME_UTC);
     return ((s64) tv.tv_sec) * MILL_2_SEC_SCALE + tv.tv_nsec / NANO_2_MILLS_SCALE;
 }
 
 s64 nanoTime() {
 
     struct timespec tv;
-    clock_gettime(CLOCK_REALTIME, &tv);
+    timespec_get(&tv, TIME_UTC);
 
     if (!nano_sec_start_at) {
         nano_sec_start_at = ((s64) tv.tv_sec) * NANO_2_SEC_SCALE + tv.tv_nsec;
@@ -1901,7 +1901,7 @@ void instance_release_from_thread(Instance *ins, Runtime *runtime) {
     }
 }
 
-CStringArr *cstringarr_create(Instance *jstr_arr) { //byte[][] to char**
+CStringArr *cstringarr_create(Instance *jstr_arr) { //byte[][] to c8**
     if (!jstr_arr)return NULL;
     CStringArr *cstr_arr = jvm_calloc(sizeof(CStringArr));
     cstr_arr->arr_length = jstr_arr->arr_length;
@@ -1956,7 +1956,7 @@ s32 _loadFileContents(c8 const *file, ByteBuf *buf) {
 
     FILE *pFile;
     long lSize;
-    char *buffer;
+    c8 *buffer;
     size_t result;
 
     /* 若要一个byte不漏地读入整个文件，只能采用二进制方式打开 */

@@ -1,6 +1,7 @@
 package org.mini.apploader;
 
-import org.mini.reflect.Launcher;
+
+import org.mini.vm.VmUtil;
 
 import java.net.URL;
 
@@ -19,7 +20,7 @@ public class StandalongGuiAppClassLoader extends ClassLoader {
 
         // 加载D盘根目录下指定类名的class
         String classname = name.replace('.', '/') + ".class";
-        byte[] classData = Launcher.getFileData(classname, jarPath);
+        byte[] classData = VmUtil.getFileData(classname, jarPath);
         if (classData == null) {
             throw new ClassNotFoundException();
         } else {
@@ -28,7 +29,7 @@ public class StandalongGuiAppClassLoader extends ClassLoader {
     }
 
     protected URL findResource(String path) {
-        URL url = Launcher.getFileUrl(path, jarPath);
+        URL url = VmUtil.getFileUrl(path, jarPath);
         return url;
     }
 }

@@ -9,11 +9,10 @@
    details. */
 package java.lang.invoke;
 
-import org.mini.reflect.vm.ByteCodeAssembler;
-import org.mini.reflect.vm.ByteCodeAssembler.*;
-import org.mini.reflect.vm.ByteCodeConstantPool;
-import org.mini.reflect.vm.ByteCodeConstantPool.PoolEntry;
-import org.mini.reflect.vm.RefNative;
+import org.mini.vm.ByteCodeAssembler;
+import org.mini.vm.ByteCodeConstantPool;
+import org.mini.vm.ByteCodeConstantPool.PoolEntry;
+import org.mini.vm.RefNative;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -24,8 +23,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.mini.reflect.vm.ByteCodeAssembler.*;
-import static org.mini.reflect.vm.ByteCodeStream.*;
+import static org.mini.vm.ByteCodeAssembler.*;
+import static org.mini.vm.ByteCodeStream.*;
 
 // To understand what this is all about, please read:
 //

@@ -28,7 +28,7 @@ static inline s64 __sync_bool_compare_and_swap64(volatile s64* lock, s64 compara
     if (InterlockedCompareExchange64(lock, exchange, comparand) == comparand)return 1;
     else return 0;
 }
-static inline int __sync_bool_compare_and_swap(volatile int *lock,int comparand, int exchange) {
+static inline s32 __sync_bool_compare_and_swap(volatile s32 *lock,int comparand, s32 exchange) {
     //if *lock == comparand then *lock = exchange  and return old *lock value
     if(InterlockedCompareExchange(lock, exchange, comparand) == comparand)return 1;
     else return 0;
@@ -54,7 +54,7 @@ static inline int spin_lock_count(volatile spinlock_t *lock, s32 count) {
         int i;
         for (i = 0; i < count; i++) {
             // if *lock == 0,then *lock = 1  ,  return true else return false
-            if (lock->owner == thrd_current()) {
+            if (thrd_equal(lock->owner, thrd_current())) {
                 lock->count++;
                 return 0;
             }
@@ -86,7 +86,7 @@ static inline int spin_lock(volatile spinlock_t *lock) {
 //}
 
 static inline int spin_unlock(volatile spinlock_t *lock) {
-    if (lock->owner != thrd_current()) {
+    if (!thrd_equal(lock->owner, thrd_current())) {
         return 1;
     }
     lock->count--;

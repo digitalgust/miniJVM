@@ -28,7 +28,7 @@ s32 DATA_TYPE_BYTES[DATATYPE_COUNT] = {0, 0, 0, 0,
 };
 
 
-char *STRS_CLASS_EXCEPTION[] = {
+c8 *STRS_CLASS_EXCEPTION[] = {
         "java.lang.OutOfMemoryError",
         "java.lang.VirtualMachineError",
         "java.lang.NoClassDefFoundError",
@@ -68,7 +68,7 @@ c8 const *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLES_LOOKUP = "java/lang/invoke/Me
 c8 const *STR_CLASS_JAVA_LANG_STACKTRACE = "java/lang/StackTraceElement";
 c8 const *STR_CLASS_JAVA_LANG_THROWABLE = "java/lang/Throwable";
 c8 const *STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ = "org/mini/reflect/DirectMemObj";
-c8 const *STR_CLASS_ORG_MINI_REFLECT_LAUNCHER = "org/mini/reflect/Launcher";
+c8 const *STR_CLASS_SUN_MISC_LAUNCHER = "sun/misc/Launcher";
 c8 const *STR_CLASS_ORG_MINI_REFLECT_REFLECTMETHOD = "org/mini/reflect/ReflectMethod";
 
 c8 const *STR_FIELD_STACKFRAME = "stackFrame";

@@ -27,7 +27,7 @@
 package java.lang.reflect;
 
 import org.mini.reflect.ReflectMethod;
-import org.mini.reflect.vm.RefNative;
+import org.mini.vm.RefNative;
 
 /**
  * <code>Constructor</code> provides information about, and access to, a single

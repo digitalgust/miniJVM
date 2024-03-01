@@ -22,7 +22,7 @@ s32 isDir(Utf8String *path);
 
 s32 utf8_2_unicode(Utf8String *ustr, u16 *arr);
 
-int unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 totalSize);
+s32 unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 totalSize);
 
 void swap_endian_little_big(u8 *ptr, s32 size);
 
@@ -58,7 +58,7 @@ void instance_release_from_thread(Instance *ref, Runtime *runtime);
 
 void instance_hold_to_thread(Instance *ins, Runtime *runtime);
 
-int jvm_printf(const char *, ...);
+s32 jvm_printf(const c8 *, ...);
 
 void invoke_deepth(Runtime *runtime);
 

@@ -11,12 +11,12 @@ package java.lang.invoke;
 
 import org.mini.reflect.ReflectClass;
 import org.mini.reflect.ReflectMethod;
-import org.mini.reflect.vm.ByteCodeAssembler;
+import org.mini.vm.ByteCodeAssembler;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mini.reflect.vm.ByteCodeAssembler.*;
+import static org.mini.vm.ByteCodeAssembler.*;
 
 public final class MethodType implements java.io.Serializable {
 

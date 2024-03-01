@@ -6,12 +6,10 @@
 package org.mini.fs;
 
 import org.mini.net.SocketNative;
-import org.mini.reflect.vm.RefNative;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 
 /**
  *

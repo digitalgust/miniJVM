@@ -96,9 +96,9 @@ extern "C" {
  * will be copied.  Always NUL terminates (unless siz == 0).
  * Returns strlen(src); if retval >= siz, truncation occurred.
  */
-size_t strlcpy(char *dst, const char *src, size_t siz) {
-    char *d = dst;
-    const char *s = src;
+size_t strlcpy(c8 *dst, const c8 *src, size_t siz) {
+    c8 *d = dst;
+    const c8 *s = src;
     size_t n = siz;
 
     /* Copy as many bytes as will fit */
@@ -135,9 +135,9 @@ size_t strlcpy(char *dst, const char *src, size_t siz) {
  * sizeof(int) < 4.  sizeof(int) > 4 is fine; all the world's not a VAX.
  */
 
-static char *inet_ntop4(const unsigned char *src, char *dst, socklen_t size);
+static c8 *inet_ntop4(const u8 *src, c8 *dst, socklen_t size);
 
-static char *inet_ntop6(const unsigned char *src, char *dst, socklen_t size);
+static c8 *inet_ntop6(const u8 *src, c8 *dst, socklen_t size);
 
 /* char *
  * inet_ntop(af, src, dst, size)
@@ -147,12 +147,12 @@ static char *inet_ntop6(const unsigned char *src, char *dst, socklen_t size);
  * author:
  *	Paul Vixie, 1996.
  */
-char *inet_ntop(int af, const void *src, char *dst, socklen_t size) {
+c8 *inet_ntop(s32 af, const void *src, c8 *dst, socklen_t size) {
     switch (af) {
         case AF_INET:
-            return (inet_ntop4((const unsigned char *) src, dst, size));
+            return (inet_ntop4((const u8 *) src, dst, size));
         case AF_INET6:
-            return (inet_ntop6((const unsigned char *) src, dst, size));
+            return (inet_ntop6((const u8 *) src, dst, size));
         default:
             return (NULL);
     }
@@ -170,10 +170,10 @@ char *inet_ntop(int af, const void *src, char *dst, socklen_t size) {
  * author:
  *	Paul Vixie, 1996.
  */
-static char *inet_ntop4(const unsigned char *src, char *dst, socklen_t size) {
-    static const char fmt[] = "%u.%u.%u.%u";
-    char tmp[sizeof "255.255.255.255"];
-    int l;
+static c8 *inet_ntop4(const u8 *src, c8 *dst, socklen_t size) {
+    static const c8 fmt[] = "%u.%u.%u.%u";
+    c8 tmp[sizeof "255.255.255.255"];
+    s32 l;
 
     l = snprintf(tmp, sizeof(tmp), fmt, src[0], src[1], src[2], src[3]);
     if (l <= 0 || (socklen_t) l >= size) {
@@ -189,7 +189,7 @@ static char *inet_ntop4(const unsigned char *src, char *dst, socklen_t size) {
  * author:
  *	Paul Vixie, 1996.
  */
-static char *inet_ntop6(const unsigned char *src, char *dst, socklen_t size) {
+static c8 *inet_ntop6(const u8 *src, c8 *dst, socklen_t size) {
     /*
      * Note that int32_t and int16_t need only be "at least" large enough
      * to contain a value of the specified size.  On some systems, like
@@ -197,14 +197,14 @@ static char *inet_ntop6(const unsigned char *src, char *dst, socklen_t size) {
      * Keep this in mind if you think this function should have been coded
      * to use pointer overlays.  All the world's not a VAX.
      */
-    char tmp[sizeof "ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255"], *tp;
+    c8 tmp[sizeof "ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255"], *tp;
     struct {
-        int base, len;
+        s32 base, len;
     } best, cur;
 #define NS_IN6ADDRSZ    16
 #define NS_INT16SZ    2
     u_int words[NS_IN6ADDRSZ / NS_INT16SZ];
-    int i;
+    s32 i;
 
     /*
      * Preprocess:
@@ -290,9 +290,9 @@ static char *inet_ntop6(const unsigned char *src, char *dst, socklen_t size) {
  * sizeof(int) < 4.  sizeof(int) > 4 is fine; all the world's not a VAX.
  */
 
-static int inet_pton4(const char *src, u_char *dst);
+static s32 inet_pton4(const c8 *src, u_char *dst);
 
-static int inet_pton6(const char *src, u_char *dst);
+static s32 inet_pton6(const c8 *src, u_char *dst);
 
 /* int
  * inet_pton(af, src, dst)
@@ -305,12 +305,12 @@ static int inet_pton6(const char *src, u_char *dst);
  * author:
  *	Paul Vixie, 1996.
  */
-int inet_pton(int af, const char *src, void *dst) {
+s32 inet_pton(s32 af, const c8 *src, void *dst) {
     switch (af) {
         case AF_INET:
-            return (inet_pton4(src, (unsigned char *) dst));
+            return (inet_pton4(src, (u8 *) dst));
         case AF_INET6:
-            return (inet_pton6(src, (unsigned char *) dst));
+            return (inet_pton6(src, (u8 *) dst));
         default:
             return (-1);
     }
@@ -327,9 +327,9 @@ int inet_pton(int af, const char *src, void *dst) {
  * author:
  *	Paul Vixie, 1996.
  */
-static int inet_pton4(const char *src, u_char *dst) {
-    static const char digits[] = "0123456789";
-    int saw_digit, octets, ch;
+static s32 inet_pton4(const c8 *src, u_char *dst) {
+    static const c8 digits[] = "0123456789";
+    s32 saw_digit, octets, ch;
 #define NS_INADDRSZ    4
     u_char tmp[NS_INADDRSZ], *tp;
 
@@ -337,7 +337,7 @@ static int inet_pton4(const char *src, u_char *dst) {
     octets = 0;
     *(tp = tmp) = 0;
     while ((ch = *src++) != '\0') {
-        const char *pch;
+        const c8 *pch;
 
         if ((pch = strchr(digits, ch)) != NULL) {
             u_int uiNew = *tp * 10 + (pch - digits);
@@ -379,14 +379,14 @@ static int inet_pton4(const char *src, u_char *dst) {
  * author:
  *	Paul Vixie, 1996.
  */
-static int inet_pton6(const char *src, u_char *dst) {
-    static const char xdigits_l[] = "0123456789abcdef",
+static s32 inet_pton6(const c8 *src, u_char *dst) {
+    static const c8 xdigits_l[] = "0123456789abcdef",
             xdigits_u[] = "0123456789ABCDEF";
 #define NS_IN6ADDRSZ    16
 #define NS_INT16SZ    2
     u_char tmp[NS_IN6ADDRSZ], *tp, *endp, *colonp;
-    const char *xdigits, *curtok;
-    int ch, seen_xdigits;
+    const c8 *xdigits, *curtok;
+    s32 ch, seen_xdigits;
     u_int val;
 
     memset((tp = tmp), '\0', NS_IN6ADDRSZ);
@@ -400,7 +400,7 @@ static int inet_pton6(const char *src, u_char *dst) {
     seen_xdigits = 0;
     val = 0;
     while ((ch = *src++) != '\0') {
-        const char *pch;
+        const c8 *pch;
 
         if ((pch = strchr((xdigits = xdigits_l), ch)) == NULL)
             pch = strchr((xdigits = xdigits_u), ch);
@@ -448,8 +448,8 @@ static int inet_pton6(const char *src, u_char *dst) {
          * Since some memmove()'s erroneously fail to handle
          * overlapping regions, we'll do the shift by hand.
          */
-        const int n = tp - colonp;
-        int i;
+        const s32 n = tp - colonp;
+        s32 i;
 
         if (tp == endp)
             return (0);
@@ -531,25 +531,25 @@ s32 sock_option(VmSock *vmsock, s32 opType, s32 opValue, s32 opValue2) {
         }
         case SOCK_OP_TYPE_REUSEADDR: {//
             s32 x = 1;
-            ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_REUSEADDR, (char *) &x, sizeof(x));
+            ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_REUSEADDR, (c8 *) &x, sizeof(x));
             vmsock->reuseaddr = 1;
             break;
         }
         case SOCK_OP_TYPE_RCVBUF: {//缓冲区设置
-            int nVal = opValue;//设置为 opValue K
-            ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVBUF, (const char *) &nVal, sizeof(nVal));
+            s32 nVal = opValue;//设置为 opValue K
+            ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVBUF, (const c8 *) &nVal, sizeof(nVal));
             break;
         }
         case SOCK_OP_TYPE_SNDBUF: {//缓冲区设置
             s32 nVal = opValue;//设置为 opValue K
-            ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_SNDBUF, (const char *) &nVal, sizeof(nVal));
+            ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_SNDBUF, (const c8 *) &nVal, sizeof(nVal));
             break;
         }
         case SOCK_OP_TYPE_TIMEOUT: {
             vmsock->rcv_time_out = opValue;
 #if __JVM_OS_MINGW__ || __JVM_OS_VS__
             s32 nTime = opValue;
-            ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVTIMEO, (const char *) &nTime, sizeof(nTime));
+            ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVTIMEO, (const c8 *) &nTime, sizeof(nTime));
 #else
             struct timeval timeout = {opValue / 1000, (opValue % 1000) * 1000};
             ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
@@ -565,12 +565,12 @@ s32 sock_option(VmSock *vmsock, s32 opType, s32 opValue, s32 opValue2) {
             // 如果m_sLinger.l_onoff=0;则功能和2.)作用相同;
             m_sLinger.l_onoff = opValue;
             m_sLinger.l_linger = opValue2;//(容许逗留的时间为5秒)
-            ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVTIMEO, (const char *) &m_sLinger, sizeof(m_sLinger));
+            ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVTIMEO, (const c8 *) &m_sLinger, sizeof(m_sLinger));
             break;
         }
         case SOCK_OP_TYPE_KEEPALIVE: {
             s32 val = opValue;
-            ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVTIMEO, (const char *) &val, sizeof(val));
+            ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVTIMEO, (const c8 *) &val, sizeof(val));
             break;
         }
     }
@@ -588,7 +588,7 @@ s32 sock_get_option(VmSock *vmsock, s32 opType) {
             u_long flags = 1;
             ret = NO_ERROR == ioctlsocket(vmsock->contex.fd, FIONBIO, &flags);
 #else
-            int flags;
+            s32 flags;
             if ((flags = fcntl(vmsock->contex.fd, F_GETFL, NULL)) < 0) {
                 ret = -1;
             } else {
@@ -650,14 +650,14 @@ s32 sock_get_option(VmSock *vmsock, s32 opType) {
 }
 
 
-s32 host_2_ip(c8 *hostname, char *buf, s32 buflen) {
+s32 host_2_ip(c8 *hostname, c8 *buf, s32 buflen) {
 #if __JVM_OS_VS__ || __JVM_OS_MINGW__
     WSADATA wsaData;
     WSAStartup(MAKEWORD(1, 1), &wsaData);
 #endif  /*  WIN32  */
     struct addrinfo hints;
     struct addrinfo *result, *rp;
-    int s;
+    s32 s;
     struct sockaddr_in *ipv4;
     struct sockaddr_in6 *ipv6;
 
@@ -1010,8 +1010,8 @@ s32 org_mini_net_SocketNative_getSockAddr(Runtime *runtime, JClass *clazz) {
 
         struct sockaddr_in *ipv4 = NULL;
         struct sockaddr_in6 *ipv6 = NULL;
-        char ipAddr[INET6_ADDRSTRLEN];//保存点分十进制的地址
-        int port = -1;
+        c8 ipAddr[INET6_ADDRSTRLEN];//保存点分十进制的地址
+        s32 port = -1;
         if (sock.ss_family == AF_INET) {// IPv4 address
             ipv4 = ((struct sockaddr_in *) &sock);
             port = ipv4->sin_port;
@@ -1045,7 +1045,7 @@ s32 org_mini_net_SocketNative_host2ip(Runtime *runtime, JClass *clazz) {
     Instance *jbyte_arr = NULL;
     if (host) {
 
-        char buf[50];
+        c8 buf[50];
         s32 ret = host_2_ip(host->arr_body, buf, sizeof(buf));
         if (ret >= 0) {
             s32 buflen = strlen(buf);
@@ -1192,8 +1192,8 @@ s32 is_ascii(const c8 *str) {
 }
 
 //gpt
-int is_utf8(const c8 *string) {
-    const unsigned char *bytes = (const unsigned char *) string;
+s32 is_utf8(const c8 *string) {
+    const u8 *bytes = (const u8 *) string;
     while (*bytes) {
         if ((// ASCII
                     // 0xxxxxxx
@@ -1229,7 +1229,7 @@ int is_utf8(const c8 *string) {
 s32 is_platform_encoding_utf8() {
     s32 ret = 0;
     setlocale(LC_ALL, "");
-    char *locstr = setlocale(LC_CTYPE, NULL);
+    c8 *locstr = setlocale(LC_CTYPE, NULL);
     Utf8String *utfs = utf8_create_c(locstr);
     utf8_lowercase(utfs);
     if (utf8_indexof_c(utfs, "utf-8") >= 0) {
@@ -1246,7 +1246,7 @@ s32 conv_platform_encoding_2_unicode(ByteBuf *dst, const c8 *src) {
     setlocale(LC_ALL, "");
     s32 len = (s32) strlen(src);
     bytebuf_expand(dst, len * sizeof(wchar_t));
-    int read = mbstowcs((wchar_t *) dst->buf, src, len);
+    s32 read = mbstowcs((wchar_t *) dst->buf, src, len);
     setlocale(LC_ALL, "C");
     return read;
 }

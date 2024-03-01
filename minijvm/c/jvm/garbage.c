@@ -256,6 +256,22 @@ s64 gc_sum_heap(GcCollector *collector) {
     return hsize;
 }
 //==============================   thread_run() =====================================
+/**
+ * Garbage Collection Thread Function.
+ *
+ * @param para A pointer to the GcCollector instance which provides garbage collection context.
+ * @return 0 on successful termination of the thread.
+
+ * This function implements a dedicated garbage collection thread that performs the following tasks:
+ * 1. Continuously monitors the JVM's heap status and garbage collection parameters.
+   *   It uses `currentTimeMillis()` to track time and `gc_sum_heap` to get current heap usage.
+ * 2. Checks the garbage collector thread's status (`collector->_garbage_thread_status`) and pauses or terminates as needed.
+ * 3. If the specified garbage collection period has elapsed (determined by `jvm->garbage_collect_period_ms`) or the heap usage exceeds a pre-defined threshold (`jvm->max_heap_size * jvm->heap_overload_percent / 100`),
+   *   it initiates a garbage collection cycle with `_garbage_collect`.
+ * 4. Updates the last garbage collection timestamp (`collector->lastgc`) after successfully completing a GC cycle.
+ * 5. Sleeps for 1 second if no garbage collection is required.
+ * 6. When signaled to stop, changes the garbage collector thread status to `GARBAGE_THREAD_DEAD` and exits gracefully using `thrd_exit(0)`.
+ */
 
 s32 _gc_thread_run(void *para) {
     GcCollector *collector = (GcCollector *) para;
@@ -288,11 +304,27 @@ s32 _gc_thread_run(void *para) {
 
 
 /**
- * 查找所有实例，如果发现没有被引用时 mb->garbage_mark ，
- * 去除掉此对象对其他对象的引用，并销毁对象
+ * Executes a full garbage collection cycle.
  *
- * @return ret
+ * @param collector A pointer to the GcCollector instance that manages garbage collection for the JVM.
+ * @return The number of objects deleted during this GC cycle.
+
+ * This function performs a complete garbage collection process, including:
+ * 1. Initiates garbage collection by setting the `isgc` flag and recording the start time.
+ * 2. Pauses the world by stopping all threads and preparing resources for GC using `_gc_pause_the_world`.
+   *   If pausing fails, resumes the world and returns -1.
+ * 3. Merges temporary object lists into the main list and copies references from runtime stacks.
+ * 4. Begins the mark phase with `_gc_big_search`, incrementing the mark counter and marking reachable objects.
+ * 5. Processes finalize methods for eligible objects and enqueues weak references for objects no longer reachable.
+   *   Re-marks these objects for collection on the next cycle.
+ * 6. Clears unreachable objects, updates total memory usage stats, and destroys them.
+ * 7. Updates the count of live objects and heap size after clearing dead objects.
+ * 8. Logs performance metrics related to GC timing.
+ * 9. Resumes the world and unlocks shared resources.
+ * 10. Optionally calls `jvm_squeeze` if MEM_ALLOC_LTALLOC is defined.
+ * 11. Resets the `isgc` flag and returns the number of deleted objects.
  */
+
 s64 _garbage_collect(GcCollector *collector) {
     collector->isgc = 1;
     s64 mem_total = 0, mem_free = 0;
@@ -614,14 +646,19 @@ void _gc_copy_objs(MiniJVM *jvm) {
 }
 
 /**
- * 判定某个对象是否被所有线程的runtime引用
- * 被运行时的栈或局部变量所引用，
- * 这两种情况下，对象是不能被释放的
+ * Copies object references from a thread's runtime stack and temporary holder for garbage collection.
  *
- * @param pruntime son of runtime
- * @return how many marked
- */
+ * @param pruntime A pointer to the Runtime instance representing the current thread.
+ * @return 0 on successful completion.
 
+ * This function performs the following actions:
+ * 1. Retrieves the GcCollector instance associated with the JVM.
+ * 2. Adds the thread's JavaThreadInfo (`pruntime->thrd_info->jthread`) to the collector's runtime reference copy list (`collector->runtime_refer_copy`).
+ * 3. Resets the free stack space by marking the current stack pointer as the clean point, and clears unused stack entries.
+ * 4. Iterates over the stack of the given thread's Runtime and adds each non-null reference value found in the StackEntry to the reference copy list.
+ * 5. Traverses the temporary holder list (`runtime->thrd_info->tmp_holder`) for the thread and adds each MemoryBlock to the reference copy list.
+ * 6. Upon completion, it signals that the references have been copied and are ready for garbage collection.
+ */
 
 s32 _gc_copy_objs_from_thread(Runtime *pruntime) {
     GcCollector *collector = pruntime->jvm->collector;

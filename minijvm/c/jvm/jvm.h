@@ -27,7 +27,7 @@ extern "C" {
 
 //=======================  micro define  =============================
 //_JVM_DEBUG  01=thread info, 02=garage&jit info  , 03=class load, 04=method call,  06=all bytecode
-#define _JVM_DEBUG_LOG_LEVEL 01
+#define _JVM_DEBUG_LOG_LEVEL 0
 #define _JVM_DEBUG_LOG_TO_FILE 0
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_PROFILE 0
@@ -465,7 +465,7 @@ enum {
     THREAD_TYPE_JDWP,
 };
 
-extern char *STRS_CLASS_EXCEPTION[];
+extern c8 *STRS_CLASS_EXCEPTION[];
 
 extern c8 const *STR_CLASS_JAVA_LANG_STRING;
 extern c8 const *STR_CLASS_JAVA_LANG_STRINGBUILDER;
@@ -489,7 +489,7 @@ extern c8 const *STR_CLASS_JAVA_LANG_INVOKE_METHODTYPE;
 extern c8 const *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLE;
 extern c8 const *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLES_LOOKUP;
 extern c8 const *STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ;
-extern c8 const *STR_CLASS_ORG_MINI_REFLECT_LAUNCHER;
+extern c8 const *STR_CLASS_SUN_MISC_LAUNCHER;
 extern c8 const *STR_CLASS_ORG_MINI_REFLECT_REFLECTMETHOD;
 
 extern c8 const *STR_FIELD_STACKFRAME;
@@ -1681,9 +1681,9 @@ struct _JNIENV {
 
     Utf8String *(*utf8_create)();
 
-    Utf8String *(*utf8_create_part_c)(char const *str, int start, int len);
+    Utf8String *(*utf8_create_part_c)(c8 const *str, s32 start, s32 len);
 
-    char const *(*utf8_cstr)(Utf8String *a1);
+    c8 const *(*utf8_cstr)(Utf8String *a1);
 
     void (*utf8_destory)(Utf8String *);
 
@@ -1894,7 +1894,7 @@ s32 execute_method(MethodInfo *method, Runtime *runtime);
 
 s32 get_jvm_state(MiniJVM *jvm);
 
-void set_jvm_state(MiniJVM *jvm, int state);
+void set_jvm_state(MiniJVM *jvm, s32 state);
 
 //=======================   =============================
 
