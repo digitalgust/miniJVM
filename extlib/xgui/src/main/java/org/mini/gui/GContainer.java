@@ -260,10 +260,12 @@ abstract public class GContainer extends GObject {
     <T extends GObject> T findSonByXY(float x, float y) {
         GObject front = null, mid = null, back = null, menu = null;
         synchronized (elements) {
-            for (int i = 0, imax = elements.size(); i < imax; i++) {
+            for (int i = elements.size() - 1; i >= 0; i--) {
                 GObject nko = elements.get(i);
                 if (nko.isInArea(x, y)) {
-                    if (nko.isMenu()) {
+                    if (nko.getLayer() == LAYER_INNER) {
+                        return (T) nko;
+                    } else if (nko.isMenu()) {
                         return (T) nko;
                     } else if (nko.isFront()) {
                         front = nko;
@@ -287,7 +289,7 @@ abstract public class GContainer extends GObject {
      */
     public <T extends GObject> T findByXY(float x, float y) {
         synchronized (elements) {
-            for (int i = 0; i < elements.size(); i++) {
+            for (int i = elements.size() - 1; i >= 0; i--) {
                 GObject nko = elements.get(i);
                 if (nko.isInArea(x, y)) {
                     if (nko instanceof GContainer) {

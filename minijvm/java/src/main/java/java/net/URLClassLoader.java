@@ -10,7 +10,7 @@
 
 package java.net;
 
-import sun.misc.Launcher;
+import org.mini.vm.VmUtil;
 
 
 public class URLClassLoader extends ClassLoader {
@@ -41,7 +41,7 @@ public class URLClassLoader extends ClassLoader {
 
         // 加载D盘根目录下指定类名的class
         String classname = name.replace('.', '/') + ".class";
-        byte[] classData = Launcher.getFileData(classname, paths);
+        byte[] classData = VmUtil.getFileData(classname, paths);
         if (classData == null) {
             throw new ClassNotFoundException();
         } else {
@@ -50,7 +50,7 @@ public class URLClassLoader extends ClassLoader {
     }
 
     protected URL findResource(String path) {
-        URL url = Launcher.getFileUrl(path, paths);
+        URL url = VmUtil.getFileUrl(path, paths);
         return url;
     }
 

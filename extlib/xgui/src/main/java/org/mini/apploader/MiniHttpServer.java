@@ -6,7 +6,7 @@
 package org.mini.apploader;
 
 import org.mini.reflect.ReflectArray;
-import org.mini.reflect.vm.RefNative;
+import org.mini.vm.RefNative;
 
 import java.io.*;
 import java.net.ServerSocket;
