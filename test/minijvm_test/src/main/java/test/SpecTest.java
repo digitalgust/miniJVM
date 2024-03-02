@@ -5,7 +5,7 @@
  */
 package test;
 
-import org.mini.reflect.vm.RefNative;
+import org.mini.vm.RefNative;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
