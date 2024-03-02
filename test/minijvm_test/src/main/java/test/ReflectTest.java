@@ -9,7 +9,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import org.mini.reflect.DirectMemObj;
-import org.mini.reflect.vm.RefNative;
+import org.mini.vm.RefNative;
 
 /**
  *

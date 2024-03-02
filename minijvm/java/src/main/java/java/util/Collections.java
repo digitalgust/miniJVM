@@ -24,21 +24,14 @@
  */
 
 package java.util;
-import java.io.Serializable;
+
+
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.IOException;
+import java.io.Serializable;
 import java.lang.reflect.Array;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.UnaryOperator;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-import sun.misc.SharedSecrets;
+import java.util.function.*;
 
 /**
  * This class consists exclusively of static methods that operate on or return
@@ -1841,7 +1834,7 @@ public class Collections {
         private static final long serialVersionUID = -4858195264774772197L;
 
         /**
-         * A class for the {@link EMPTY_NAVIGABLE_MAP} which needs readResolve
+         * A class for the {@link } which needs readResolve
          * to preserve singleton property.
          *
          * @param <K> type of keys, if there were any, and of bounds
@@ -1862,7 +1855,7 @@ public class Collections {
         }
 
         /**
-         * Singleton for {@link emptyNavigableMap()} which is also immutable.
+         * Singleton for {@link ()} which is also immutable.
          */
         private static final EmptyNavigableMap<?,?> EMPTY_NAVIGABLE_MAP =
                 new EmptyNavigableMap<>();
@@ -1961,7 +1954,7 @@ public class Collections {
      *
      * It is imperative that the user manually synchronize on the returned
      * collection when traversing it via {@link Iterator}, {@link Spliterator}
-     * or {@link Stream}:
+     * or {@link }:
      * <pre>
      *  Collection c = Collections.synchronizedCollection(myCollection);
      *     ...
@@ -5127,7 +5120,6 @@ public class Collections {
 
         private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
             ois.defaultReadObject();
-            SharedSecrets.getJavaOISAccess().checkArray(ois, Object[].class, n);
         }
     }
 
@@ -5448,7 +5440,6 @@ public class Collections {
      * @see Collection#addAll(Collection)
      * @since 1.5
      */
-    @SafeVarargs
     public static <T> boolean addAll(Collection<? super T> c, T... elements) {
         boolean result = false;
         for (T element : elements)
