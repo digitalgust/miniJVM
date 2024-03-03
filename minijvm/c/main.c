@@ -26,7 +26,6 @@ int main(int argc, char **argv) {
     c8 *bootclasspath = NULL;
     c8 *classpath = NULL;
     c8 *main_name = NULL;
-    s32 print_version = 0;
     s32 main_set = 0;
     ArrayList *java_para = arraylist_create(0);
     s32 jdwp = 0;
@@ -42,7 +41,7 @@ int main(int argc, char **argv) {
 #endif
     s32 dpos = utf8_last_indexof_c(startup_dir, "/");
     if (dpos > 0)utf8_substring(startup_dir, 0, dpos);
-    utf8_append_c(startup_dir, "/");
+    if (utf8_char_at(startup_dir, startup_dir->length - 1) != '/')utf8_append_c(startup_dir, "/");
 #if _JVM_DEBUG_LOG_LEVEL > 0
     jvm_printf("App dir:%s\n", utf8_cstr(startup_dir));
 #endif
@@ -51,7 +50,7 @@ int main(int argc, char **argv) {
         utf8_append(bootcp, startup_dir);
         utf8_append_c(bootcp, "../lib/minijvm_rt.jar");
         bootclasspath = (c8 *) utf8_cstr(bootcp);
-        jdwp = 1;  // 0:disable java debug , 1:enable java debug and disable jit
+        jdwp = 0;  // 0:disable java debug , 1:enable java debug and disable jit
 
         //test for graphics
         utf8_append(cp, startup_dir);
@@ -120,7 +119,7 @@ int main(int argc, char **argv) {
 //        classpath = (c8 *) utf8_cstr(cp);
 //        main_name = "org.luaj.vm2.lib.jme.TestLuaJ";
 
-    }
+    }//default args
 
     //  mini_jvm   -Xmx16M -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/minijvm_test.jar;./ test/Foo1 999
     if (argc > 1) {
@@ -129,8 +128,7 @@ int main(int argc, char **argv) {
             if (strcmp(argv[i], "-bootclasspath") == 0) {
                 bootclasspath = argv[i + 1];
                 i++;
-            } else if (strcmp(argv[i], "-version") == 0 || strcmp(argv[i], "--version") == 0) {
-                print_version = 1;
+            } else if (strcmp(argv[i], "-version") == 0) {
                 classpath = NULL;
                 main_name = "org.mini.vm.PrintVersion";
                 i++;
