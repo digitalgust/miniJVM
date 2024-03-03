@@ -29,6 +29,10 @@ call :jvm_compile mini_jvm.exe ..\minijvm\c %TARGETDIR%
 echo [INFO]build libgui.dll
 call :gui_compile libgui.dll ..\desktop\glfw_gui\c %TARGETDIR%
 
+copy %GCCHOME%\bin\libwinpthread*.dll %TARGETDIR%
+copy %GCCHOME%\bin\libgcc*.dll %TARGETDIR%
+copy %GCCHOME%\bin\libstdc*.dll %TARGETDIR%
+
 echo completed.
 pause
 
