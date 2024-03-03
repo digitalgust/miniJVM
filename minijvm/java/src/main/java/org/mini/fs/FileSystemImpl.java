@@ -56,9 +56,19 @@ abstract public class FileSystemImpl extends org.mini.fs.FileSystem {
         while (path.indexOf(ds) >= 0) {
             path = path.replace(ds, ss);
         }
-        path = path.replace(getSeparator() + PARENT_DIR + getSeparator(), "\uffff\uffff\uffff");
-        path = path.replace(getSeparator() + CUR_DIR + getSeparator(), getSeparator() + "");  //remove all "./" to ""
-        path = path.replace("\uffff\uffff\uffff", getSeparator() + PARENT_DIR + getSeparator());
+
+        if (path.endsWith(getSeparator() + CUR_DIR)) { //  "/tmp/abc/."   ->  "/tmp/abc/./"
+            path = path + getSeparator();
+        }
+        // https://github.com/digitalgust/miniJVM/issues/31
+        //   "/tmp/abc/./"   ->  "/tmp/abc"
+        while (path.indexOf(getSeparator() + CUR_DIR + getSeparator()) >= 0) {
+            path = path.replace(getSeparator() + CUR_DIR + getSeparator(), getSeparator() + "");
+        }
+
+//        path = path.replace(getSeparator() + PARENT_DIR + getSeparator(), "\uffff\uffff\uffff");
+//        path = path.replace(getSeparator() + CUR_DIR + getSeparator(), getSeparator() + "");  //remove all "./" to ""
+//        path = path.replace("\uffff\uffff\uffff", getSeparator() + PARENT_DIR + getSeparator());
         if (path.length() > 1 && path.lastIndexOf(getSeparator()) == path.length() - 1) {//remove last char if it's '/'
             path = path.substring(0, path.length() - 1);
         }
@@ -70,15 +80,11 @@ abstract public class FileSystemImpl extends org.mini.fs.FileSystem {
         if (!isAbsolute(path)) {
             path = parent + getSeparator() + path;    //   replace   "/tmp/abc/../a.txt" to "/tmp/a.txt"
         }
-        path = removeParentTag(path);
+        // MUST remove current dir first   /./   ,like "/a/./../b"  -> "/a/../b"
         path = normalize(path);
-        if (path.endsWith(getSeparator() + CUR_DIR)) { //  "/tmp/abc/."   ->  "/tmp/abc/./"
-            path = path + getSeparator();
-        }
-        // https://github.com/digitalgust/miniJVM/issues/31
-        //   "/tmp/abc/./"   ->  "/tmp/abc"
-        path = path.replace(getSeparator() + CUR_DIR + getSeparator(), getSeparator() + "");
 
+        //remove parent tag /../
+        path = removeParentTag(path);
         return path;
     }
 
