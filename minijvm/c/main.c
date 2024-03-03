@@ -41,6 +41,10 @@ int main(int argc, char **argv) {
 #endif
     s32 dpos = utf8_last_indexof_c(startup_dir, "/");
     if (dpos > 0)utf8_substring(startup_dir, 0, dpos);
+    else if (dpos < 0) {
+        utf8_clear(startup_dir);
+        utf8_append_c(startup_dir, "./");
+    }
     if (utf8_char_at(startup_dir, startup_dir->length - 1) != '/')utf8_append_c(startup_dir, "/");
 #if _JVM_DEBUG_LOG_LEVEL > 0
     jvm_printf("App dir:%s\n", utf8_cstr(startup_dir));
