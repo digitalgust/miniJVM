@@ -76,7 +76,7 @@ public class MaEngine extends MaNativeObject {
     public void finalize() {
         System.out.println("clean " + this + " " + handle);
         MiniAudio.ma_engine_uninit(handle);
-        MaDevice.removeDevice(handle);
+        MaDevice.removeDevice(device);
         handle = 0;
     }
 
