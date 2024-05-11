@@ -50,7 +50,7 @@ public class GSwitch extends GObject {
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         if (pressed) {
-            switcher = !switcher;
+            setSwitcher(!switcher);
             doAction();
         } else {
         }
@@ -60,7 +60,7 @@ public class GSwitch extends GObject {
     public void touchEvent(int touchid, int phase, int x, int y) {
         switch (phase) {
             case Glfm.GLFMTouchPhaseBegan:
-                switcher = !switcher;
+                setSwitcher(!switcher);
                 doAction();
                 break;
             case Glfm.GLFMTouchPhaseMoved:
@@ -103,11 +103,12 @@ public class GSwitch extends GObject {
         nvgFillPaint(vg, bg);
         nvgFill(vg);
 
+        float zoom = getH() / 30f; //适应开启按钮大小
         // Knob Shadow
         bg = nvgRadialGradient(vg, x + dx, y + dy, r - 4, r - 4, nvgRGBA(0, 0, 0, 0x30), nvgRGBA(0, 0, 0, 0x00));
         nvgBeginPath(vg);
         //nvgRect(vg, x, y, w, h);
-        nvgCircle(vg, x + dx, y + dy, r - 3);
+        nvgCircle(vg, x + dx, y + dy, r - 3 * zoom);
         nvgPathWinding(vg, NVG_HOLE);
         nvgFillPaint(vg, bg);
         nvgFill(vg);
@@ -115,7 +116,7 @@ public class GSwitch extends GObject {
         // Knob
         knob = nvgLinearGradient(vg, x + dx + 1, y + dy + 1, r - 3, r - 3, nvgRGBA(255, 255, 255, 0x30), nvgRGBA(0, 0, 0, 16));
         nvgBeginPath(vg);
-        nvgCircle(vg, x + dx, y + dy, r - 5);
+        nvgCircle(vg, x + dx, y + dy, r - 5 * zoom);
         nvgFillColor(vg, switcher ? GToolkit.getStyle().getHighColor() : GToolkit.getStyle().getLowColor());
         nvgFill(vg);
         nvgFillPaint(vg, knob);

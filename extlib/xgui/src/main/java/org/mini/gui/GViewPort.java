@@ -21,7 +21,7 @@ public class GViewPort extends GContainer {
     protected float scrollx;
     protected float scrolly;
 
-    protected boolean slideDirectionLimit = true;
+    protected boolean slideDirectionLimit = false;
 
     public GViewPort(GForm form) {
         super(form);
@@ -361,7 +361,7 @@ public class GViewPort extends GContainer {
             return false;
         }
         if (dragDirection == DIR_NODEF) {
-            if (Math.abs(dx) > Math.abs(dy)) {
+            if (Math.abs(dx) > Math.abs(dy) && dw > 0.f) {
                 dragDirection = DIR_X;
             } else {
                 dragDirection = DIR_Y;

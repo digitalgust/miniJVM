@@ -100,17 +100,17 @@ public class GScrollBar extends GObject {
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         int rx = (int) (x - getX());
         int ry = (int) (y - getY());
-        if (isInBoundle(line_boundle, rx, ry)) {
-            if (pressed) {
-                draged = true;
-                parent.setFocus(this);
-                pos = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
-            } else {
-                draged = false;
-                doAction();
-                doStateChanged(this);
-            }
+        //if (isInBoundle(line_boundle, rx, ry)) {
+        if (pressed) {
+            draged = true;
+            parent.setFocus(this);
+            pos = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
+        } else {
+            draged = false;
+            doAction();
+            doStateChanged(this);
         }
+        //}
     }
 
     @Override
@@ -127,27 +127,27 @@ public class GScrollBar extends GObject {
     public void touchEvent(int touchid, int phase, int x, int y) {
         int rx = (int) (x - getX());
         int ry = (int) (y - getY());
-        if (isInBoundle(line_boundle, rx, ry)) {
-            switch (phase) {
-                case Glfm.GLFMTouchPhaseBegan:
-                    draged = true;
+        //if (isInBoundle(line_boundle, rx, ry)) {
+        switch (phase) {
+            case Glfm.GLFMTouchPhaseBegan:
+                draged = true;
+                pos = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
+                break;
+            case Glfm.GLFMTouchPhaseMoved:
+                if (draged) {
                     pos = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
-                    break;
-                case Glfm.GLFMTouchPhaseMoved:
-                    if (draged) {
-                        pos = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
-                        doStateChanged(this);
-                    }
-                    break;
-                case Glfm.GLFMTouchPhaseEnded:
-                    draged = false;
-                    doAction();
                     doStateChanged(this);
-                    break;
-                default:
-                    break;
-            }
+                }
+                break;
+            case Glfm.GLFMTouchPhaseEnded:
+                draged = false;
+                doAction();
+                doStateChanged(this);
+                break;
+            default:
+                break;
         }
+        //}
     }
 
     /**

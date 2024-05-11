@@ -101,7 +101,16 @@ public class GTextField extends GTextObject {
 
                 if (pressed) {
                     int caret = getCaretIndex(x, y);
-                    if (caret >= 0) {
+                    if (shift) {
+                        if (caretIndex == caret) {
+                            selectStart = -1;
+                            selectEnd = -1;
+                        } else {
+                            selectStart = caretIndex;
+                            selectEnd = caret;
+                        }
+                        caretIndex = caret;
+                    } else if (caret >= 0) {
                         setCaretIndex(caret);
                         resetSelect();
                         selectStart = caret;
@@ -131,19 +140,29 @@ public class GTextField extends GTextObject {
                     GToolkit.callEditMenu(this, x, y);
                 }
             }
+        } else {
+            if (mouseDrag) {//在区域外，且鼠标拖拽中，释放按键时，则完成选取
+                if (!pressed) {
+                    mouseDrag = false;
+                }
+            }
         }
     }
 
+    /**
+     * 鼠标拖拽,即便光标在区域外，也会触发
+     *
+     * @param x
+     * @param y
+     */
     @Override
     public void cursorPosEvent(int x, int y) {
-        if (isInArea(x, y)) {
-            if (mouseDrag) {
-                int caret = getCaretIndex(x, y);
-                if (caret >= 0) {
-                    selectEnd = caret;
-                }
-                setCaretIndex(caret);
+        if (mouseDrag) {
+            int caret = getCaretIndex(x, y);
+            if (caret >= 0) {
+                selectEnd = caret;
             }
+            setCaretIndex(caret);
         }
     }
 
@@ -164,6 +183,15 @@ public class GTextField extends GTextObject {
         if (parent.getFocus() != this) {
             return;
         }
+
+        if (key == Glfw.GLFW_KEY_LEFT_SHIFT || key == Glfw.GLFW_KEY_RIGHT_SHIFT) {
+            if (action == Glfw.GLFW_PRESS || action == Glfw.GLFW_REPEAT) {
+                shift = true;
+            } else {
+                shift = false;
+            }
+        }
+
         if (action == Glfw.GLFW_PRESS || action == Glfw.GLFW_REPEAT) {
             if (enable) {
                 switch (key) {
@@ -561,8 +589,13 @@ public class GTextField extends GTextObject {
                 if (selStartX > text_show_area_x + text_show_area_w) {
                     selStartX = text_show_area_x + text_show_area_w;
                 }
+                //修正选 择框的长度，画的时候不会超出显示区域
+                float selW = selEndX - selStartX;
+                if (selStartX + selW > text_show_area_x + text_show_area_w) {
+                    selW = text_show_area_x + text_show_area_w - selStartX;
+                }
 
-                GToolkit.drawRect(vg, selStartX, wordy - lineh[0] * .5f, selEndX - selStartX, lineh[0], GToolkit.getStyle().getSelectedColor());
+                GToolkit.drawRect(vg, selStartX, wordy - lineh[0] * .5f, selW, lineh[0], GToolkit.getStyle().getSelectedColor());
 
             }
             nvgFillColor(vg, getColor());

@@ -23,7 +23,7 @@ abstract public class GContainer extends GObject {
 
     protected final List<GObject> elements = Collections.synchronizedList(new ChildList());
     private final List<GChildrenListener> childrenListeners = new ArrayList();
-    protected GObject focus;
+    protected GObject focus;  //每个容器都有自己的焦点组件，焦点的获得和失去，是在鼠标或点击事件中从form开始逐层获得和失去
     float[] visableArea = new float[4];
 
     //脚本相关
@@ -60,7 +60,9 @@ abstract public class GContainer extends GObject {
     }
 
     public void loadScript(String scriptStr) {
-        interpreter = new Interpreter();
+        if (interpreter == null) {
+            interpreter = new Interpreter();
+        }
         interpreter.loadFromString(scriptStr);
     }
 
@@ -308,6 +310,17 @@ abstract public class GContainer extends GObject {
         return null;
     }
 
+    public GObject getFrontFocus() {
+        if (focus == null) {
+            return this;
+        }
+        if (focus instanceof GContainer) {
+            GContainer gc = (GContainer) focus;
+            return gc.getFrontFocus();
+        }
+        return focus;
+    }
+
     /**
      * @return the focus
      */
@@ -516,16 +529,12 @@ abstract public class GContainer extends GObject {
             return;
         }
         GObject found = findSonByXY(x, y);
-        if (found != null && found.isMenu()) {
-            found.mouseButtonEvent(button, pressed, x, y);
-            return;
-        } else if (found instanceof GFrame) {//this fix frame may not be active
-            if (pressed) setFocus(found);
+        if (found != null && found.isMenu()) {//memu 不影响焦点
             found.mouseButtonEvent(button, pressed, x, y);
             return;
         }
 
-        if (focus != null && focus.isInArea(x, y) && !pressed) {
+        if (focus != null && !pressed) {
             focus.mouseButtonEvent(button, pressed, x, y);
         } else {
             if (pressed) {
@@ -543,7 +552,7 @@ abstract public class GContainer extends GObject {
         if (!isEnable()) {
             return;
         }
-        if (focus != null && focus.isInArea(x, y)) {
+        if (focus != null/* && focus.isInArea(x, y)*/) {
             focus.cursorPosEvent(x, y);
         }
 
@@ -629,13 +638,9 @@ abstract public class GContainer extends GObject {
         if (found != null && found.isMenu()) {
             found.touchEvent(touchid, phase, x, y);
             return;
-        } else if (found instanceof GFrame) {//this fix frame may not be active
-            if (phase == Glfm.GLFMTouchPhaseBegan) setFocus(found);
-            found.touchEvent(touchid, phase, x, y);
-            return;
         }
 
-        if (focus != null && focus.isInArea(x, y) && phase != Glfm.GLFMTouchPhaseBegan) {
+        if (focus != null && phase != Glfm.GLFMTouchPhaseBegan) {
             focus.touchEvent(touchid, phase, x, y);
         } else {
             if (phase == Glfm.GLFMTouchPhaseBegan) {

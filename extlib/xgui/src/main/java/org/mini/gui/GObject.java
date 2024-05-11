@@ -29,6 +29,7 @@ abstract public class GObject implements GAttachable {
     public static String ICON_SEARCH = "\uD83D\uDD0D";
     public static String ICON_CIRCLED_CROSS = "\u2716";
     public static String ICON_CHEVRON_RIGHT = "\uE75E";
+    public static String ICON_CHEVRON_DOWN = "\uE75C";
     public static String ICON_CHECK = "\u2713";
     public static String ICON_LOGIN = "\uE740";
     public static String ICON_TRASH = "\uE729";
@@ -126,9 +127,9 @@ abstract public class GObject implements GAttachable {
 
     public void schedule(TimerTask task, long delay, long period) {
         if (GForm.timer != null) {
-            getForm().setActiveListener(active -> {
-
-            });
+//            getForm().setActiveListener(active -> {
+//
+//            });
             GForm.timer.schedule(new TimerTask() {
                 @Override
                 public void run() {

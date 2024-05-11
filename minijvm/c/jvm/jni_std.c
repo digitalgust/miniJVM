@@ -9,12 +9,12 @@
 
 #if  defined(__JVM_OS_MAC__) || defined(__JVM_OS_LINUX__)
 
-#include <dlfcn.h>
-
 #else
 
 #include <rpc.h>
-
+#include <windows.h>
+#include <tchar.h>
+#include <stdio.h>
 #endif
 
 u32 is_random_init = FALSE;
@@ -679,6 +679,104 @@ s32 java_lang_Runtime_gc(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+s32 java_lang_Runtime_addShutdownHook(Runtime *runtime, JClass *clazz) {
+    Instance *jruntime = (Instance *) localvar_getRefer(runtime->localvar, 0);
+    Instance *jthread = (Instance *) localvar_getRefer(runtime->localvar, 1);
+    runtime->jvm->shutdown_hook = jthread;
+
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    invoke_deepth(runtime);
+    jvm_printf("java_lang_Runtime_addShutdownHook \n");
+#endif
+    return 0;
+}
+
+extern s32 os_execute(Runtime *runtime, Instance *jstrArr, Instance *jlongArr, ArrayList *cstrList, const c8 *cmd);
+
+s32 java_lang_Runtime_exec(Runtime *runtime, JClass *clazz) {
+    RuntimeStack *stack = runtime->stack;
+    Instance *jstrArr = (Instance *) localvar_getRefer(runtime->localvar, 0);//String[] cmdline
+    Instance *jlongArr = (Instance *) localvar_getRefer(runtime->localvar, 1);//long[] process
+
+    s32 i;
+    ArrayList *ustrList = arraylist_create(jstrArr->arr_length);
+    ArrayList *cstrList = arraylist_create(jstrArr->arr_length);
+
+    ByteBuf *buf = bytebuf_create(1024);
+    for (i = 0; i < jstrArr->arr_length; i++) {
+        Instance *jstr = (__refer) (intptr_t) jarray_get_field(jstrArr, i);
+        Utf8String *ustr = utf8_create();
+        jstring_2_utf8(jstr, ustr, runtime);
+        arraylist_push_back(ustrList, ustr);
+        arraylist_push_back(cstrList, (__refer) utf8_cstr(ustr));
+        bytebuf_write_batch(buf, (c8 *) utf8_cstr(ustr), ustr->length);
+        bytebuf_write(buf, ' ');
+    }
+    arraylist_push_back(cstrList, NULL);//
+    bytebuf_write(buf, 0);
+
+    s32 ret = os_execute(runtime, jstrArr, jlongArr, cstrList, buf->buf);
+
+    for (i = 0; i < ustrList->length; i++) {
+        Utf8String *ustr = arraylist_get_value(ustrList, i);
+        utf8_destory(ustr);
+    }
+    arraylist_destory(ustrList);
+    arraylist_destory(cstrList);
+    bytebuf_destory(buf);
+
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    invoke_deepth(runtime);
+    jvm_printf("java_lang_Runtime_exec \n");
+#endif
+    return ret;
+}
+
+extern s32 os_waitfor_process(Runtime *runtime, s64 pid, s64 tid, s32 *pExitCode);
+
+s32 java_lang_Runtime_waitFor(Runtime *runtime, JClass *clazz) {
+    s64 pid = localvar_getLong(runtime->localvar, 0);
+    s64 tid = localvar_getLong(runtime->localvar, 1);
+    if (pid == 0) {
+        exception_throw(JVM_EXCEPTION_ILLEGALARGUMENT, runtime, NULL);
+        return RUNTIME_STATUS_EXCEPTION;
+    }
+
+    s32 exitCode = 0;
+    s32 ret = os_waitfor_process(runtime, pid, tid, &exitCode);
+    push_int(runtime->stack, exitCode);
+
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    invoke_deepth(runtime);
+    jvm_printf("java_lang_Runtime_waitFor \n");
+#endif
+    return ret;
+}
+
+extern s32 os_kill_process(s64 pid);
+
+s32 java_lang_Runtime_kill(Runtime *runtime, JClass *clazz) {
+    s64 pid = localvar_getLong(runtime->localvar, 0);
+    os_kill_process(pid);
+
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    invoke_deepth(runtime);
+    jvm_printf("java_lang_Runtime_kill \n");
+#endif
+    return 0;
+}
+
+s32 java_lang_Runtime_maxMemory(Runtime *runtime, JClass *clazz) {
+
+    push_long(runtime->stack, runtime->jvm->max_heap_size);
+
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    invoke_deepth(runtime);
+    jvm_printf("java_lang_Runtime_maxMemory \n");
+#endif
+    return 0;
+}
+
 s32 java_lang_String_replace0(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     Instance *base = (Instance *) localvar_getRefer(runtime->localvar, 0);
@@ -927,7 +1025,9 @@ s32 java_lang_System_currentTimeMillis(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-typedef void (*jni_fun)(__refer);
+extern s32 os_append_libname(Utf8String *libname, const c8 *lib);
+
+extern s32 os_load_lib_and_init(const c8 *libname, Runtime *runtime);
 
 s32 java_lang_System_loadLibrary0(Runtime *runtime, JClass *clazz) {
     Instance *name_arr = localvar_getRefer(runtime->localvar, 0);
@@ -954,52 +1054,10 @@ s32 java_lang_System_loadLibrary0(Runtime *runtime, JClass *clazz) {
             } else {
                 break;
             }
-            const c8 *note1 = "lib not found:%s\n";
-            const c8 *note2 = "register function not found:%s\n";
-            const c8 *onload = "JNI_OnLoad";
-            jni_fun f;
-#if defined(__JVM_OS_MINGW__) || defined(__JVM_OS_CYGWIN__) || defined(__JVM_OS_VS__)
-            utf8_append_c(libname, "/lib");
-            utf8_append_c(libname, name_arr->arr_body);
-            utf8_append_c(libname, ".dll");
-            utf8_replace_c(libname, "//", "/");
-            HINSTANCE hInstLibrary = LoadLibrary(utf8_cstr(libname));
-            if (!hInstLibrary) {
-                jvm_printf(note1, utf8_cstr(libname));
-            } else {
-                FARPROC fp = GetProcAddress(hInstLibrary, onload);
-                if (!fp) {
-                    jvm_printf(note2, onload);
-                } else {
-                    f = (jni_fun) fp;
-                    f(runtime->jvm);
-                }
-                break;
-            }
-
-#else
-            utf8_append_c(libname, "/lib");
-            utf8_replace_c(libname, "//", "/");
-            utf8_append_c(libname, name_arr->arr_body);
-#if defined(__JVM_OS_MAC__)
-            utf8_append_c(libname, ".dylib");
-#else //__JVM_OS_LINUX__
-            utf8_append_c(libname, ".so");
-#endif
-            __refer lib = dlopen(utf8_cstr(libname), RTLD_LAZY);
-            if (!lib) {
-                jvm_printf(note1, utf8_cstr(libname), dlerror());
-            } else {
-
-                f = dlsym(lib, onload);
-                if (!f) {
-                    jvm_printf(note2, onload);
-                } else {
-                    f(runtime->jvm);
-                }
-            }
-
-#endif
+            os_append_libname(libname, name_arr->arr_body);
+            s32 ret = os_load_lib_and_init(utf8_cstr(libname), runtime);
+            // load success
+            if (ret)break;
         }
         utf8_destory(lab);
         utf8_destory(libname);
@@ -1008,6 +1066,20 @@ s32 java_lang_System_loadLibrary0(Runtime *runtime, JClass *clazz) {
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("java_lang_System_loadLibrary0\n");
+#endif
+
+    return 0;
+}
+
+s32 java_lang_System_load0(Runtime *runtime, JClass *clazz) {
+    Instance *path_arr = localvar_getRefer(runtime->localvar, 0);
+    if (path_arr && path_arr->arr_length) {
+        os_load_lib_and_init(path_arr->arr_body, runtime);
+    }
+
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    invoke_deepth(runtime);
+    jvm_printf("java_lang_System_load0\n");
 #endif
 
     return 0;
@@ -1435,6 +1507,11 @@ static java_native_method METHODS_STD_TABLE[] = {
         {"java/lang/Runtime",                   "freeMemory",             "()J",                                                           java_lang_Runtime_freeMemory},
         {"java/lang/Runtime",                   "totalMemory",            "()J",                                                           java_lang_Runtime_totalMemory},
         {"java/lang/Runtime",                   "gc",                     "()V",                                                           java_lang_Runtime_gc},
+        {"java/lang/Runtime",                   "addShutdownHook",        "(Ljava/lang/Thread;)V",                                         java_lang_Runtime_addShutdownHook},
+        {"java/lang/Runtime",                   "exec",                   "([Ljava/lang/String;[J)V",                                      java_lang_Runtime_exec},
+        {"java/lang/Runtime",                   "waitFor",                "(JJ)I",                                                         java_lang_Runtime_waitFor},
+        {"java/lang/Runtime",                   "kill",                   "(J)V",                                                          java_lang_Runtime_kill},
+        {"java/lang/Runtime",                   "maxMemory",              "()J",                                                           java_lang_Runtime_maxMemory},
         {"java/lang/String",                    "charAt0",                "(I)C",                                                          java_lang_String_charAt0},
         {"java/lang/String",                    "replace0",               "(Ljava/lang/String;Ljava/lang/String;)[C",                      java_lang_String_replace0},
         {"java/lang/String",                    "equals",                 "(Ljava/lang/Object;)Z",                                         java_lang_String_equals},
@@ -1446,6 +1523,7 @@ static java_native_method METHODS_STD_TABLE[] = {
         {"java/lang/System",                    "doubleToString",         "(D)Ljava/lang/String;",                                         java_lang_System_doubleToString},
         {"java/lang/System",                    "currentTimeMillis",      "()J",                                                           java_lang_System_currentTimeMillis},
         {"java/lang/System",                    "loadLibrary0",           "([B)V",                                                         java_lang_System_loadLibrary0},
+        {"java/lang/System",                    "load0",                  "([B)V",                                                         java_lang_System_load0},
         {"java/lang/System",                    "nanoTime",               "()J",                                                           java_lang_System_nanotime},
         {"java/lang/System",                    "identityHashCode",       "(Ljava/lang/Object;)I",                                         java_lang_System_identityHashCode},
         {"java/lang/System",                    "getProperty0",           "(Ljava/lang/String;)Ljava/lang/String;",                        java_lang_System_getProperty0},

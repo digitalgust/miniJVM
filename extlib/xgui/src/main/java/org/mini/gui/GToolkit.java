@@ -309,11 +309,32 @@ public class GToolkit {
         }
     }
 
+    public static void drawRect(long vg, float x, float y, float w, float h, float[] color, float[] bgColor) {
+        nvgBeginPath(vg);
+        nvgRect(vg, x, y, w, h);
+        nvgFillColor(vg, bgColor);
+        nvgFill(vg);
+        nvgStrokeColor(vg, color);
+        nvgStrokeWidth(vg, 1.0f);
+        nvgStroke(vg);
+    }
+
     public static void drawRoundedRect(long vg, float x, float y, float w, float h, float r, float[] color) {
         nvgBeginPath(vg);
         nvgFillColor(vg, color);
         nvgRoundedRect(vg, x, y, w, h, r);
         nvgFill(vg);
+    }
+
+    public static void drawRoundedRect(long vg, float x, float y, float w, float h, float r, float[] color, float[] bgColor) {
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, x, y, w, h, r);
+        nvgFillColor(vg, bgColor);
+        nvgFill(vg);
+        nvgStrokeColor(vg, color);
+        nvgRoundedRect(vg, x, y, w, h, r - 0.5f);
+        nvgStrokeWidth(vg, 1.0f);
+        nvgStroke(vg);
     }
 
     public static float[] getTextBoundle(long vg, String s, float width) {
@@ -565,7 +586,7 @@ public class GToolkit {
             gp.add(leftBtn);
             leftBtn.setActionListener(gobj -> {
                 if (leftListener != null) leftListener.action(gobj);
-                gobj.getFrame().close();
+                else gobj.getFrame().close();
             });
         }
 
@@ -573,7 +594,7 @@ public class GToolkit {
         gp.add(rightBtn);
         rightBtn.setActionListener(gobj -> {
             if (rightListener != null) rightListener.action(gobj);
-            gobj.getFrame().close();
+            else gobj.getFrame().close();
         });
 
         return frame;

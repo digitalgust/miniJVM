@@ -105,13 +105,7 @@ public class FileOutputStream extends OutputStream {
      */
     public FileOutputStream(String name, boolean append)
             throws IOException {
-        fd = new FileDescriptor();
-        if (append) {
-            openAppend(name);
-        } else {
-            open(name);
-        }
-        fd.fd = (int) ((InnerFile.InnerFileOutputStream) ifos).getInnerFile().getFilePointer();
+        open(name, append);
     }
 
     /**
@@ -161,7 +155,11 @@ public class FileOutputStream extends OutputStream {
             throw new NullPointerException();
         }
         fd = fdObj;
-        ((InnerFile.InnerFileOutputStream) ifos).getInnerFile().setFilePointer(fd.fd);
+        try {
+            ifos = new InnerFile(fdObj).getOutputStream(true);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -169,18 +167,12 @@ public class FileOutputStream extends OutputStream {
      *
      * @param name name of file to be opened
      */
-    private void open(String name) throws IOException {
-        ifos = new InnerFile(name).getOutputStream(false);
+    private void open(String name, boolean append) throws IOException {
+        InnerFile f = new InnerFile(name);
+        ifos = f.getOutputStream(append);
+        fd = f.getFD();
     }
 
-    /**
-     * Opens a file, with the specified name, for appending.
-     *
-     * @param name name of file to be opened
-     */
-    private void openAppend(String name) throws IOException {
-        ifos = new InnerFile(name).getOutputStream(true);
-    }
 
     /**
      * Writes the specified byte to this file output stream. Implements the
@@ -267,7 +259,7 @@ public class FileOutputStream extends OutputStream {
      */
     protected void finalize() throws IOException {
         if (fd != null) {
-            if (fd == fd.out || fd == fd.err) {
+            if (fd.fd == fd.out.fd || fd.fd == fd.err.fd) {
                 flush();
             } else {
                 close();

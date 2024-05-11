@@ -296,5 +296,9 @@ public class Glfm {
         return false;
     }
 
+    public static int glfmOpenOtherApp(byte[] cStyleURL, byte[] cStyleMore, int detectAppInstalled) {
+        return 1;
+    }
+
 
 }

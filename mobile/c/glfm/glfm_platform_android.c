@@ -2289,6 +2289,19 @@ void stopVideo(GLFMDisplay *display, void *panel){
 
 }
 
+int openOtherApp(const char *curl, const char *more, int detectAppInstalled){
+    struct android_app *app = platformDataGlobal->app;
+    GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
+    JNIEnv *jni = platformData->jniEnv;
 
+    jstring jstrUrl = (*jni)->NewStringUTF(jni, curl);
+    jstring jstrMore = (*jni)->NewStringUTF(jni, more);
+
+    glfm__callJavaMethodWithArgs(jni, app->activity->clazz, "openOtherApp",
+                                "(Ljava/lang/String;Ljava/lang/String;I)I", Integer, jstrUrl, jstrMore, detectAppInstalled);
+    (*jni)->DeleteLocalRef(jni, jstr);
+    (*jni)->DeleteLocalRef(jni, jstrMore);
+    glfm__clearJavaException()
+}
 
 #endif

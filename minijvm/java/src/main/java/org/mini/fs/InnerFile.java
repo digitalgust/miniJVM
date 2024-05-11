@@ -7,14 +7,12 @@ package org.mini.fs;
 
 import org.mini.net.SocketNative;
 
+import java.io.FileDescriptor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- *
- *
- *
  * <pre>
  *
  *
@@ -71,39 +69,47 @@ import java.io.OutputStream;
  *
  * </pre>
  *
- *
  * @author gust
  */
 public class InnerFile {
 
-    InnerFileStat fd;
+    InnerFileStat fs;
     long filePointer;
     String path;
+    FileDescriptor fd;
     String mode;
+
+    InnerFileOutputStream ifos;
+    InnerFileInputStream ifis;
 
     public InnerFile(String path) {
         this.path = path;
-        fd = new InnerFileStat();
-        int ret = loadFS(SocketNative.toCStyle(path), fd);
+        fs = new InnerFileStat();
+        int ret = loadFS(SocketNative.toCStyle(path), fs);
+    }
+
+    public InnerFile(FileDescriptor fd) {
+        this.path = null;
+        this.fd = fd;
     }
 
     protected InnerFile() {
     }
 
     public boolean isFile() {
-        return fd.isFile();
+        return fs.isFile();
     }
 
     public boolean isDirectory() {
-        return fd.isDirectory();
+        return fs.isDirectory();
     }
 
     public boolean exists() {
-        return fd.exists;
+        return fs.exists;
     }
 
     public long length() {
-        return fd.st_size;
+        return fs.st_size;
     }
 
     public String[] list() {
@@ -111,23 +117,37 @@ public class InnerFile {
     }
 
     public OutputStream getOutputStream(boolean append) throws IOException {
-        if (filePointer != 0) {
-            closeFile(filePointer);
-            filePointer = 0;
+        if (ifos != null) {
+            return ifos;
         }
-        filePointer = openFile(SocketNative.toCStyle(path), append ? SocketNative.toCStyle("a+b") : SocketNative.toCStyle("w+b"));;
+        byte[] mode = append ? SocketNative.toCStyle("a+b") : SocketNative.toCStyle("w+b");
+        if (fd != null) {
+            filePointer = openFD(fd.getFD(), mode);
+        } else {
+            filePointer = openFile(SocketNative.toCStyle(path), mode);
+            int fileno = fileno(filePointer);
+            fd = new FileDescriptor(fileno);
+        }
+        ;
         if (filePointer == 0) {
             throw new IOException("open file error:" + path);
         }
-        return new InnerFileOutputStream(filePointer);
+        ifos = new InnerFileOutputStream(filePointer);
+        return ifos;
     }
 
     public InputStream getInputStream() throws IOException {
-        if (filePointer != 0) {
-            closeFile(filePointer);
-            filePointer = 0;
+        if (ifis != null) {
+            return ifis;
         }
-        filePointer = openFile(SocketNative.toCStyle(path), SocketNative.toCStyle("rb"));
+        byte[] mode = SocketNative.toCStyle("rb");
+        if (fd != null) {
+            filePointer = openFD(fd.getFD(), mode);
+        } else {
+            filePointer = openFile(SocketNative.toCStyle(path), mode);
+            int fileno = fileno(filePointer);
+            fd = new FileDescriptor(fileno);
+        }
         if (filePointer == 0) {
             throw new IOException("open file error:" + path);
         }
@@ -230,6 +250,9 @@ public class InnerFile {
         filePointer = fd;
     }
 
+    public FileDescriptor getFD() {
+        return fd;
+    }
 
     public static native int getOS();
 
@@ -249,6 +272,10 @@ public class InnerFile {
 
     public static native long openFile(byte[] filePath, byte[] mode);
 
+    public static native long openFD(int fd, byte[] mode); //open file descriptor as file
+
+    public static native int fileno(long fileHandle); //get file descriptor
+
     public static native int closeFile(long fileHandle);
 
     public static native int flush0(long fileHandle);
@@ -266,8 +293,9 @@ public class InnerFile {
     public static native int seek0(long fileHandle, long pos);
 
     public static native int setLength0(long fileHandle, long len);
-    
+
     public static native String getTmpDir();
 
     public static native String listWinDrivers();
+
 }

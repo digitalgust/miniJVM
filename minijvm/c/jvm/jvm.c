@@ -338,6 +338,12 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
 }
 
 void jvm_destroy(MiniJVM *jvm) {
+    Runtime *parent = runtime_create(jvm);
+    if (parent && jvm->shutdown_hook) {
+        jthread_start(jvm->shutdown_hook, parent);
+    }
+    runtime_destory(parent);
+    parent = NULL;
     while (threadlist_count_none_daemon(jvm) > 0 && !jvm->collector->exit_flag) {//wait for other thread over ,
         threadSleep(20);
     }
@@ -345,16 +351,6 @@ void jvm_destroy(MiniJVM *jvm) {
     //waiting for daemon thread terminate
     thread_stop_all(jvm);
 
-    //thread terminated ,it unboundle itself, so need not unboundle here
-//    Runtime *r;
-//    while ((r = arraylist_peek_back(jvm->thread_list)) != NULL) {
-//        if (r) {
-//            if (!r->son) {//未在执行jvm指令
-//                thread_unboundle(r);//
-//            }
-//        }
-//        threadSleep(20);
-//    }
 #if _JVM_DEBUG_LOG_LEVEL > 0
     jvm_printf("[INFO]waitting for thread terminate\n");
 #endif

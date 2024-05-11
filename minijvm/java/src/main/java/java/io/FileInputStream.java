@@ -67,9 +67,7 @@ public class FileInputStream extends InputStream {
      * @see java.lang.SecurityManager#checkRead(java.lang.String)
      */
     public FileInputStream(String name) throws IOException {
-        fd = new FileDescriptor();
         open(name);
-        fd.fd = (int) ((InnerFile.InnerFileInputStream) ifis).getInnerFile().getFilePointer();
     }
 
     /**
@@ -122,7 +120,11 @@ public class FileInputStream extends InputStream {
             throw new NullPointerException();
         }
         fd = fdObj;
-        ((InnerFile.InnerFileInputStream) ifis).getInnerFile().setFilePointer(fd.fd);
+        try {
+            ifis = new InnerFile(fdObj).getInputStream();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -131,7 +133,9 @@ public class FileInputStream extends InputStream {
      * @param name the name of the file
      */
     private void open(String name) throws IOException {
-        ifis = new InnerFile(name).getInputStream();
+        InnerFile ifile = new InnerFile(name);
+        ifis = ifile.getInputStream();
+        fd = ifile.getFD();
     }
 
     /**
@@ -249,7 +253,7 @@ public class FileInputStream extends InputStream {
      */
     protected void finalize() throws IOException {
         if (fd != null) {
-            if (fd != fd.in) {
+            if (fd.fd != fd.in.fd) {
                 close();
             }
         }

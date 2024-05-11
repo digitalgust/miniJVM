@@ -42,6 +42,7 @@ package java.io;
  * @since JDK1.0
  */
 public final class FileDescriptor {
+    public static final int FD_NONE = -1;
 
     int fd;
 
@@ -49,10 +50,10 @@ public final class FileDescriptor {
      * Constructs an (invalid) FileDescriptor object.
      */
     public /**/ FileDescriptor() {
-        fd = -1;
+        fd = FD_NONE;
     }
 
-    private /* */ FileDescriptor(int fd) {
+    public /* */ FileDescriptor(int fd) {
         this.fd = fd;
     }
 
@@ -91,7 +92,7 @@ public final class FileDescriptor {
      * <code>false</code> otherwise.
      */
     public boolean valid() {
-        return fd != -1;
+        return fd != FD_NONE;
     }
 
     /**
@@ -122,4 +123,7 @@ public final class FileDescriptor {
     public void sync() throws IOException {
     }
 
+    public int getFD() {
+        return fd;
+    }
 }

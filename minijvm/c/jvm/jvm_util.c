@@ -707,12 +707,6 @@ s32 isDataReferByIndex(s32 index) {
 void sys_properties_set_c(MiniJVM *jvm, c8 const *key, c8 const *val) {
     Utf8String *ukey = utf8_create_c(key);
     Utf8String *uval = utf8_create_c(val);
-//#if __JVM_OS_MAC__ || __JVM_OS_LINUX__
-//    if (utf8_equals_c(ukey, STR_VM_JAVA_CLASS_PATH) || utf8_equals_c(ukey, STR_VM_SUN_BOOT_CLASS_PATH) || utf8_equals_c(ukey, STR_VM_JAVA_LIBRARY_PATH)) {
-//        utf8_replace_c(uval, ";", ":");
-//    }
-//#elif __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__ || __JVM_OS_VS__
-//#endif
     //this hashtable has a value destroy function , so just keep putting it in
     hashtable_put(jvm->sys_prop, ukey, uval);
 }
@@ -1679,6 +1673,12 @@ Instance *exception_create_str(s32 exception_type, Runtime *runtime, c8 const *e
     instance_release_from_thread(ins, runtime);
     stack_destory(para);
     return ins;
+}
+
+
+void exception_throw(s32 exception_type, Runtime *runtime, c8 const *errmsg) {
+    Instance *ex = exception_create_str(exception_type, runtime, errmsg);
+    push_ref(runtime->stack, ex);
 }
 //===============================    lambda  ==================================
 

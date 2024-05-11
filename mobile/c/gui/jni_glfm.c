@@ -833,6 +833,18 @@ int org_mini_glfm_Glfm_glfmStopVideo(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+int org_mini_glfm_Glfm_glfmOpenOtherApp(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    Instance *url = env->localvar_getRefer(runtime->localvar, pos);
+    pos += 1;
+    Instance *more = env->localvar_getRefer(runtime->localvar, pos);
+    pos += 1;
+    s32 detectAppInstalled = env->localvar_getInt(runtime->localvar, pos);
+    s32 ret = openOtherApp(url->arr_body, more->arr_body, detectAppInstalled);
+    env->push_int(runtime->stack, ret);
+    return 0;
+}
 /* ==============================   jni utils =================================*/
 
 int org_mini_glfm_utils_Gutil_f2b(Runtime *runtime, JClass *clazz) {
@@ -1632,6 +1644,7 @@ static java_native_method method_glfm_table[] = {
         {"org/mini/glfm/Glfm", "glfmPauseVideo",                       "(JJ)V",                                    org_mini_glfm_Glfm_glfmPauseVideo},
         {"org/mini/glfm/Glfm", "glfmStopVideo",                        "(JJ)V",                                    org_mini_glfm_Glfm_glfmStopVideo},
         {"org/mini/glfm/Glfm", "glfmStartVideo",                       "(JJ)V",                                    org_mini_glfm_Glfm_glfmStartVideo},
+        {"org/mini/glfm/Glfm", "glfmOpenOtherApp",                     "([B[BI)I",                               org_mini_glfm_Glfm_glfmOpenOtherApp},
 
 };
 
