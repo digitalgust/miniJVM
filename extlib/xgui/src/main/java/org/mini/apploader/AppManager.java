@@ -492,48 +492,6 @@ public class AppManager extends GApplication {
                     GToolkit.setStyle(new GStyleDark());
                     AppLoader.setGuiStyle(1);
                     break;
-                case "BT_RUN":
-                    byte[] urls = GLUtil.toCstyleBytes("weixin://");
-                    byte[] more = GLUtil.toCstyleBytes("");
-                    Glfm.glfmOpenOtherApp(urls, more, 0);
-//                    try {
-//                        Process p = Runtime.getRuntime().exec("echo $(date)>>a.txt");
-//                        Process p = Runtime.getRuntime().exec("ls -l");
-//                        Process p = Runtime.getRuntime().exec("/Users/admin/Documents/GitHub/miniJVM/binary/mac_x64/mini_jvm");
-//                        p.waitFor();
-//                        System.out.println("exitValue:" + p.exitValue());
-//                        InputStream in = p.getInputStream();
-//                        while (true) {
-//                            int b = in.read();
-//                            if (b < 0) {
-//                                break;
-//                            }
-//                            System.out.print((char) b);
-//                        }
-//                        System.out.println();
-//                        in=p.getErrorStream();
-//                        while (true) {
-//                            int b = in.read();
-//                            if (b < 0) {
-//                                break;
-//                            }
-//                            System.out.print((char) b);
-//                        }
-//                        System.out.println();
-//
-//                        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-//                            System.out.println("shutdown hook");
-//                            try {
-//                                Thread.sleep(5000);
-//                            } catch (InterruptedException e) {
-//                                throw new RuntimeException(e);
-//                            }
-//                        }));
-//                    } catch (IOException e) {
-//                        throw new RuntimeException(e);
-//                    } catch (InterruptedException e) {
-//                        throw new RuntimeException(e);
-//                    }
             }
         }
 

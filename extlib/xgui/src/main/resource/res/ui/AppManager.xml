@@ -15,9 +15,6 @@
                                     <tr w="100%">
                                         <td w="float"></td>
                                         <td w="50">
-                                            <button name="BT_RUN" w="50" h="30" preicon="▶"></button>
-                                        </td>
-                                        <td w="50">
                                             <button name="BT_SETTING" w="50" h="30" preicon="⚙"></button>
                                         </td>
                                     </tr>

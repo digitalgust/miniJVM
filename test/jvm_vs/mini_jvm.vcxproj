@@ -173,6 +173,8 @@
     <ClCompile Include="..\..\minijvm\c\jvm\jni_std.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\jvm.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\jvm_util.c" />
+    <ClCompile Include="..\..\minijvm\c\jvm\os_posix.c" />
+    <ClCompile Include="..\..\minijvm\c\jvm\os_win.c" />
     <ClCompile Include="..\..\minijvm\c\jvm\runtime.c" />
     <ClCompile Include="..\..\minijvm\c\main.c" />
     <ClCompile Include="..\..\minijvm\c\utils\arraylist.c" />

@@ -1657,6 +1657,7 @@ Instance *exception_create_str(s32 exception_type, Runtime *runtime, c8 const *e
 #if _JVM_DEBUG_LOG_LEVEL > 5
     jvm_printf("create exception : %s\n", STRS_CLASS_EXCEPTION[exception_type]);
 #endif
+    if (!errmsg)errmsg = " ";
     Utf8String *uerrmsg = utf8_create_c(errmsg);
     Instance *jstr = jstring_create(uerrmsg, runtime);
     instance_hold_to_thread(jstr, runtime);

@@ -9,6 +9,7 @@
 #include <WinSock2.h>
 #include <Ws2tcpip.h>
 #include <wspiapi.h>
+#include <io.h>
 
 #if __JVM_OS_VS__
 #include "../utils/dirent_win.h"
@@ -18,6 +19,26 @@
 #endif
 
 #pragma comment(lib, "Ws2_32.lib")
+
+#include <windows.h>
+#include <stdio.h>
+
+void get_last_error(Utf8String *error_msg) {
+    DWORD errorCode = GetLastError(); // 假设之前调用了某个API并发生了错误
+    LPSTR errorMessage = NULL;
+    DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                  FORMAT_MESSAGE_FROM_SYSTEM |
+                  FORMAT_MESSAGE_IGNORE_INSERTS;
+
+    if (FormatMessageA(flags, NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                       (LPSTR) &errorMessage, 0, NULL) != 0) {
+        printf("Error code %d: %s\n", errorCode, errorMessage);
+        if (error_msg)utf8_append_c(error_msg, errorMessage);
+        LocalFree(errorMessage); // 使用完毕后释放由FormatMessage分配的内存
+    } else {
+        printf("Failed to get error message for error code %d\n", errorCode);
+    }
+}
 
 /**
  * implement clock_gettime windows version same as linux
@@ -63,7 +84,7 @@ void makePipe(HANDLE p[2], Runtime *runtime) {
 
     s32 success = CreatePipe(p, p + 1, &sa, 0);
     if (!success) {
-        exception_throw(JVM_EXCEPTION_IO, runtime, GetLastError());
+        exception_throw(JVM_EXCEPTION_IO, runtime, NULL);
     }
 }
 
@@ -74,7 +95,7 @@ s32 descriptor(HANDLE h, Runtime *runtime) {
 }
 
 
-s32 os_execute(Runtime *runtime, Instance *jstrArr, Instance *jlongArr, ArrayList *cstrList, const c8* cmd) {
+s32 os_execute(Runtime *runtime, Instance *jstrArr, Instance *jlongArr, ArrayList *cstrList, const c8 *cmd) {
 
     HANDLE in[] = {0, 0};
     HANDLE out[] = {0, 0};
@@ -127,12 +148,15 @@ s32 os_execute(Runtime *runtime, Instance *jstrArr, Instance *jlongArr, ArrayLis
                                  &si,
                                  &pi);
 
+
     CloseHandle(in[1]);
     CloseHandle(out[0]);
     CloseHandle(err[1]);
 
     if (!success) {
-        exception_throw(JVM_EXCEPTION_IO, runtime, NULL);
+        Utf8String *cstr = utf8_create();
+        //get_last_error(cstr);
+        exception_throw(JVM_EXCEPTION_IO, runtime, utf8_cstr(cstr));
         return RUNTIME_STATUS_EXCEPTION;
     }
 
@@ -140,26 +164,28 @@ s32 os_execute(Runtime *runtime, Instance *jstrArr, Instance *jlongArr, ArrayLis
     jarray_set_field(jlongArr, 0, pid);
     s64 tid = (s64) (intptr_t) (pi.hThread);
     jarray_set_field(jlongArr, 1, tid);
+    return 0;
 }
 
 s32 os_kill_process(s64 pid) {
-    TerminateProcess(pid, 1);
+    TerminateProcess((HANDLE) (intptr_t) pid, 1);
     return 0;
 }
 
 s32 os_waitfor_process(Runtime *runtime, s64 pid, s64 tid, s32 *pExitCode) {
     DWORD exitCode;
     WaitForSingleObject((__refer) (intptr_t) (pid), INFINITE);
-    BOOL success = GetExitCodeProcess((HANDLE)(pid), &exitCode);
+    BOOL success = GetExitCodeProcess((HANDLE) (pid), &exitCode);
     if (!success) {
         exception_throw(JVM_EXCEPTION_ILLEGALARGUMENT, runtime, NULL);
         return RUNTIME_STATUS_EXCEPTION;
     }
 
-    CloseHandle((HANDLE)(pid));
-    CloseHandle((HANDLE)(tid));
+    CloseHandle((HANDLE) (pid));
+    CloseHandle((HANDLE) (tid));
 
     *pExitCode = exitCode;
+    return 0;
 }
 
 Utf8String *os_get_tmp_dir() {
