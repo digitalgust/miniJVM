@@ -2298,8 +2298,8 @@ int openOtherApp(const char *curl, const char *more, int detectAppInstalled){
     jstring jstrMore = (*jni)->NewStringUTF(jni, more);
 
     glfm__callJavaMethodWithArgs(jni, app->activity->clazz, "openOtherApp",
-                                "(Ljava/lang/String;Ljava/lang/String;I)I", Integer, jstrUrl, jstrMore, detectAppInstalled);
-    (*jni)->DeleteLocalRef(jni, jstr);
+                                "(Ljava/lang/String;Ljava/lang/String;I)I", Int, jstrUrl, jstrMore, detectAppInstalled);
+    (*jni)->DeleteLocalRef(jni, jstrUrl);
     (*jni)->DeleteLocalRef(jni, jstrMore);
     glfm__clearJavaException()
 }
