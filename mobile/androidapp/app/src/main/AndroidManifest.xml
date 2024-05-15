@@ -18,6 +18,7 @@
         android:supportsRtl="true">
         <activity
             android:name=".JvmNativeActivity"
+            android:exported="true"
             android:configChanges="orientation|screenLayout|screenSize|keyboardHidden|keyboard">
             <meta-data
                 android:name="android.app.lib_name"

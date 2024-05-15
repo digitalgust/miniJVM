@@ -6,6 +6,7 @@ import android.app.NativeActivity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -524,6 +525,41 @@ public class JvmNativeActivity extends NativeActivity {
         }
 
         return mediaFile;
+    }
+
+    /**
+     * 检查包是否存在
+     *
+     * @param packname
+     * @return
+     */
+    private boolean checkPackInfo(String packname) {
+        PackageInfo packageInfo = null;
+        try {
+            packageInfo = getPackageManager().getPackageInfo(packname, 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return packageInfo != null;
+    }
+
+    public int openOtherApp(String urls, String more, int detectAppInstalled) {
+        try {
+            if (detectAppInstalled != 0) {
+                if (!checkPackInfo(urls)) {
+                    return 1;
+                }
+            }
+            Intent intent = getPackageManager().getLaunchIntentForPackage(urls);
+            if (intent != null) {
+                intent.putExtra("type", "110");
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                return 0;
+            }
+        } catch (Exception e) {
+        }
+        return 1;
     }
 //=======================================================================================================
 

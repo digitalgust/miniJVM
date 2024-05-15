@@ -1,4 +1,6 @@
-apply plugin: 'com.android.application'
+plugins {
+    id 'com.android.application'
+}
 
 android {
     signingConfigs {
@@ -48,6 +50,7 @@ android {
     sourceSets.main {
         assets.srcDirs = ["../../assets/"]
     }
+    ndkVersion '27.0.11718014 rc1'
 }
 
 dependencies {

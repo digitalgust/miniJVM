@@ -108,7 +108,7 @@ extern "C" {
 
 /* If TIME_UTC is missing, provide it and provide a wrapper for
    timespec_get. */
-#ifndef TIME_UTC
+#if !defined(TIME_UTC) || defined(__ANDROID__)
 #define TIME_UTC 1
 #define _TTHREAD_EMULATE_TIMESPEC_GET_
 
