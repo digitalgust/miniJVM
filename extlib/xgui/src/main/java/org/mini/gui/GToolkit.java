@@ -656,11 +656,11 @@ public class GToolkit {
             path = AppLoader.getProperty("filechooserpath");
         }
         if (path == null || "".equals(path)) {
-            path = "./";
+            path = GCallBack.getInstance().getApplication().getSaveRoot();  //android can't access out of app dir
         }
         File file = new File(path);
         if (!file.exists()) {
-            file = new File(GCallBack.getInstance().getApplication().getSaveRoot());
+            file = new File(".");
         }
 
         GContainer gp = frame.getView();
@@ -690,7 +690,7 @@ public class GToolkit {
 
 
         y += btnH + pad;
-        btnH = 25f;
+        btnH = 35f;
         float btnW = 40f;
         GButton upBtn = new GButton(form, "", x, y, btnW, btnH);
         upBtn.setPreIcon("⬆");
@@ -840,6 +840,9 @@ public class GToolkit {
         }
     }
 
+    static float[] dirColor = new float[]{0.7f, 0.7f, 0.2f, 0.7f};
+    static float[] fileColor = new float[]{0.4f, 0.4f, 0.7f, 0.7f};
+
     private static void chooserAddFilesToList(File dir, FileFilter filter, GList list) {
         File[] files = dir == null ? File.listRoots() : dir.listFiles(filter);
         Arrays.sort(files, (f1, f2) -> {
@@ -865,8 +868,10 @@ public class GToolkit {
             GListItem item = list.addItem(null, lab + "   | " + file.length() + " | " + new Date(file.lastModified()));
             if (file.isDirectory()) {
                 item.setPreIcon("\uD83D\uDCC1");
+                item.setPreiconColor(dirColor);
             } else {
                 item.setPreIcon("\uD83D\uDCC4");
+                item.setPreiconColor(fileColor);
             }
             item.setAttachment(file);
             item.setActionListener(fileChooserItemListener);

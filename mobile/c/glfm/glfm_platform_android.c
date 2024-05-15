@@ -2295,6 +2295,7 @@ int openOtherApp(const char *curl, const char *more, int detectAppInstalled){
     JNIEnv *jni = platformData->jniEnv;
 
     jstring jstrUrl = (*jni)->NewStringUTF(jni, curl);
+    if (!more)more = "";
     jstring jstrMore = (*jni)->NewStringUTF(jni, more);
 
     glfm__callJavaMethodWithArgs(jni, app->activity->clazz, "openOtherApp",

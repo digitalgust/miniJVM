@@ -14,6 +14,7 @@ public class XButton
     //
     protected String pic;
     protected int addon = XDef.SPACING_BUTTON_ADD;
+    float[] preiconColor;
 
     protected GButton button;
 
@@ -32,6 +33,8 @@ public class XButton
             pic = attValue;
         } else if (attName.equals("addon")) {
             addon = Integer.parseInt(attValue);
+        } else if (attName.equals("pcolor")) {
+            preiconColor = parseHexColor(attValue);
         }
     }
 
@@ -70,6 +73,9 @@ public class XButton
             button = createGuiImpl();
             initGuiMore();
             button.setPreIcon(preicon);
+            if (preiconColor != null) {
+                button.setPreiconColor(preiconColor);
+            }
         } else {
             button.setLocation(x, y);
             button.setSize(width, height);
