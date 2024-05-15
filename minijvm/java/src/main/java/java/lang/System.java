@@ -326,6 +326,21 @@ public final class System {
         Runtime.getRuntime().gc();
     }
 
+    public static void load(String filename) {
+        if (filename == null) {
+            return;
+        }
+        byte[] b = null;
+        try {
+            b = filename.getBytes("utf-8");
+        } catch (UnsupportedEncodingException ex) {
+            b = filename.getBytes();
+        }
+        byte[] b1 = new byte[b.length + 1];
+        System.arraycopy(b, 0, b1, 0, b.length);
+        load0(b1);
+    }
+
     public static void loadLibrary(String libname) {
         if (libname == null) {
             return;
@@ -341,5 +356,7 @@ public final class System {
         loadLibrary0(b1);
     }
 
-    public static native void loadLibrary0(byte[] name);
+    private static native void loadLibrary0(byte[] name);
+
+    private static native void load0(byte[] name);
 }

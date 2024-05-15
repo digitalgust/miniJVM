@@ -1164,21 +1164,8 @@ s32 isDir(Utf8String *path) {
     return a;
 }
 
-Utf8String *getTmpDir() {
-    Utf8String *tmps = utf8_create();
-#if __JVM_OS_MINGW__ || __JVM_OS_VS__
-    c8 buf[1024];
-    s32 len = GetTempPath(1024, buf);
-    utf8_append_data(tmps, buf, len);
-#else
+extern Utf8String *os_get_tmp_dir();
 
-#ifndef P_tmpdir
-#define P_tmpdir "/tmp"
-#endif
-    utf8_append_c(tmps, P_tmpdir);
-#endif
-    return tmps;
-}
 
 //gpt
 s32 is_ascii(const c8 *str) {
@@ -1235,6 +1222,8 @@ s32 is_platform_encoding_utf8() {
     if (utf8_indexof_c(utfs, "utf-8") >= 0) {
         ret = 1;
     } else if (utf8_indexof_c(utfs, "utf8") >= 0) {
+        ret = 1;
+    } else if (utf8_indexof_c(utfs, "utf_8") >= 0) {
         ret = 1;
     }
     utf8_destory(utfs);
@@ -1336,6 +1325,41 @@ s32 org_mini_fs_InnerFile_openFile(Runtime *runtime, JClass *clazz) {
         utf8_destory(filepath);
     } else {
         push_long(runtime->stack, 0);
+    }
+
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    invoke_deepth(runtime);
+    jvm_printf("org_mini_fs_InnerFile_openFile  \n");
+#endif
+    return 0;
+}
+
+s32 org_mini_fs_InnerFile_openFD(Runtime *runtime, JClass *clazz) {
+    s32 pfd = localvar_getInt(runtime->localvar, 0);
+    Instance *mode_arr = localvar_getRefer(runtime->localvar, 1);
+    if (pfd >= 0) {
+        FILE *fd = fdopen(pfd, mode_arr->arr_body);
+        push_long(runtime->stack, (s64) (intptr_t) fd);
+    } else {
+        push_long(runtime->stack, 0);
+    }
+
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    invoke_deepth(runtime);
+    jvm_printf("org_mini_fs_InnerFile_openFD  \n");
+#endif
+    return 0;
+}
+
+extern s32 os_fileno(FILE *fd);
+
+s32 org_mini_fs_InnerFile_fileno(Runtime *runtime, JClass *clazz) {
+    Long2Double l2d;
+    l2d.l = localvar_getLong(runtime->localvar, 0);
+    FILE *fd = (FILE *) (intptr_t) l2d.l;
+    if (fd) {
+        s32 fileno = os_fileno(fd);
+        push_int(runtime->stack, fileno);
     }
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1503,6 +1527,8 @@ s32 org_mini_fs_InnerFile_available0(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+extern void os_set_file_length(FILE *file, s64 len);
+
 s32 org_mini_fs_InnerFile_setLength0(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     Long2Double l2d;
@@ -1520,12 +1546,7 @@ s32 org_mini_fs_InnerFile_setLength0(Runtime *runtime, JClass *clazz) {
             ret = ftell(fd);
             if (!ret) {
                 if (filelen < pos) {
-#if __JVM_OS_VS__ || __JVM_OS_MINGW__
-                    fseek(fd, (long) filelen, SEEK_SET);
-                    SetEndOfFile(fd);
-#else
-                    ret = ftruncate(fileno(fd), (off_t) filelen);
-#endif
+                    os_set_file_length(fd, filelen);
                 } else {
                     u8 d = 0;
                     s64 i, imax = filelen - pos;
@@ -1775,7 +1796,7 @@ s32 org_mini_fs_InnerFile_rename0(Runtime *runtime, JClass *clazz) {
 }
 
 s32 org_mini_fs_InnerFile_getTmpDir(Runtime *runtime, JClass *clazz) {
-    Utf8String *tdir = getTmpDir();
+    Utf8String *tdir = os_get_tmp_dir();
     if (tdir) {
         Utf8String *utf8 = utf8_create();
         conv_platform_encoding_2_utf8(utf8, utf8_cstr(tdir));
@@ -1795,6 +1816,8 @@ s32 org_mini_fs_InnerFile_getTmpDir(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+extern s32 os_mkdir(const c8 *path);
+
 s32 org_mini_fs_InnerFile_mkdir0(Runtime *runtime, JClass *clazz) {
     Instance *path_arr = localvar_getRefer(runtime->localvar, 0);
     s32 ret = -1;
@@ -1803,11 +1826,7 @@ s32 org_mini_fs_InnerFile_mkdir0(Runtime *runtime, JClass *clazz) {
         ByteBuf *platformPath = bytebuf_create(0);
         conv_utf8_2_platform_encoding(platformPath, filepath);
 
-#if __JVM_OS_MINGW__ || __JVM_OS_VS__
-        ret = mkdir(platformPath->buf);
-#else
-        ret = mkdir(platformPath->buf, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-#endif
+        ret = os_mkdir(platformPath->buf);
         push_int(runtime->stack, ret);
 
         bytebuf_destory(platformPath);
@@ -1822,12 +1841,11 @@ s32 org_mini_fs_InnerFile_mkdir0(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+extern s32 os_iswin();
+
 s32 org_mini_fs_InnerFile_getOS(Runtime *runtime, JClass *clazz) {
-#if __JVM_OS_VS__ || __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__
-    push_int(runtime->stack, 1);
-#else
-    push_int(runtime->stack, 0);
-#endif
+    s32 win = os_iswin();
+    push_int(runtime->stack, win);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_getOS  \n");
@@ -2197,6 +2215,8 @@ static java_native_method METHODS_IO_TABLE[] = {
         {"org/mini/net/SocketNative", "sslc_read",            "([B[BII)I",                        org_mini_net_SocketNative_sslc_read},
         {"org/mini/net/SocketNative", "sslc_write",           "([B[BII)I",                        org_mini_net_SocketNative_sslc_write},
         {"org/mini/fs/InnerFile",     "openFile",             "([B[B)J",                          org_mini_fs_InnerFile_openFile},
+        {"org/mini/fs/InnerFile",     "openFD",               "(I[B)J",                           org_mini_fs_InnerFile_openFD},
+        {"org/mini/fs/InnerFile",     "fileno",               "(J)I",                             org_mini_fs_InnerFile_fileno},
         {"org/mini/fs/InnerFile",     "closeFile",            "(J)I",                             org_mini_fs_InnerFile_closeFile},
         {"org/mini/fs/InnerFile",     "read0",                "(J)I",                             org_mini_fs_InnerFile_read0},
         {"org/mini/fs/InnerFile",     "write0",               "(JI)I",                            org_mini_fs_InnerFile_write0},
@@ -2214,7 +2234,7 @@ static java_native_method METHODS_IO_TABLE[] = {
         {"org/mini/fs/InnerFile",     "getOS",                "()I",                              org_mini_fs_InnerFile_getOS},
         {"org/mini/fs/InnerFile",     "delete0",              "([B)I",                            org_mini_fs_InnerFile_delete0},
         {"org/mini/fs/InnerFile",     "rename0",              "([B[B)I",                          org_mini_fs_InnerFile_rename0},
-        {"org/mini/fs/InnerFile",     "getTmpDir",            "()Ljava/lang/String;",             org_mini_fs_InnerFile_getTmpDir},
+        {"org/mini/fs/InnerFile",     "os_get_tmp_dir",       "()Ljava/lang/String;",             org_mini_fs_InnerFile_getTmpDir},
         {"org/mini/fs/InnerFile",     "listWinDrivers",       "()Ljava/lang/String;",             org_mini_fs_InnerFile_listWinDrivers},
         {"org/mini/zip/Zip",          "getEntry0",            "([B[B)[B",                         org_mini_zip_ZipFile_getEntry0},
         {"org/mini/zip/Zip",          "putEntry0",            "([B[B[B)I",                        org_mini_zip_ZipFile_putEntry0},

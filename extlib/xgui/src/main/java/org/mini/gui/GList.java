@@ -14,6 +14,7 @@ import org.mini.gui.event.GStateChangeListener;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.TimerTask;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
@@ -49,7 +50,7 @@ public class GList extends GContainer {
     protected float list_image_size = ITEM_IMG_H_DEFAULT;
     protected float list_item_heigh = ITEM_HEIGH_DEFAULT;
     protected float list_rows_max = 7;
-    protected float list_rows_min = 3;
+    protected float list_rows_min = 1;
     protected float pad = 2;
     protected int scrollbarWidth = 20;
 
@@ -293,7 +294,7 @@ public class GList extends GContainer {
                     popWin.setSize(popWin.getW(), popH);
                     form.add(popWin);
                     form.setFocus(popWin);
-                    popWin.setFocusListener(focusHandler);
+
                 }
             } else {
                 GForm form = getForm();
@@ -335,7 +336,7 @@ public class GList extends GContainer {
                 popH = form.getY() + form.getH() - popY;
             }
         }
-        return popH - 10f;
+        return popH;
     }
 
     public void setItems(GImage[] imgs, String[] labs) {
@@ -520,21 +521,6 @@ public class GList extends GContainer {
      *
      */
     NormalPanel normalPanel = new NormalPanel(form);
-    PopWinFocusHandler focusHandler = new PopWinFocusHandler();
-    boolean isPressed;
-
-    class PopWinFocusHandler implements GFocusChangeListener {
-        @Override
-        public void focusGot(GObject go) {
-        }
-
-        @Override
-        public void focusLost(GObject newgo) {
-            pulldown = false;
-            changeCurPanel();
-            //popWin.setFocusListener(null);
-        }
-    }
 
     class NormalPanel extends GContainer {
         public NormalPanel(GForm form) {
@@ -545,13 +531,9 @@ public class GList extends GContainer {
         public void touchEvent(int touchid, int phase, int x, int y) {
             if (touchid != Glfw.GLFW_MOUSE_BUTTON_1) return;
             if (phase == Glfm.GLFMTouchPhaseBegan) {
-                isPressed = true;
             } else if (phase == Glfm.GLFMTouchPhaseEnded) {
-                if (isPressed) {
-                    pulldown = !pulldown;
-                    GList.this.changeCurPanel();
-                    isPressed = false;
-                }
+                pulldown = !pulldown;
+                GList.this.changeCurPanel();
             }
             super.touchEvent(touchid, phase, x, y);
 
@@ -561,13 +543,10 @@ public class GList extends GContainer {
         public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
             if (button == Glfw.GLFW_MOUSE_BUTTON_1) {
                 if (pressed) {
-                    isPressed = true;
+                    pulldown = !pulldown;
+                    GList.this.changeCurPanel();
                 } else {
-                    if (isPressed) {
-                        pulldown = !pulldown;
-                        GList.this.changeCurPanel();
-                        isPressed = false;
-                    }
+
                 }
             }
             super.mouseButtonEvent(button, pressed, x, y);
@@ -607,7 +586,8 @@ public class GList extends GContainer {
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
             nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
-            nvgTextJni(vg, x + w - 12, y + h * 0.5f, preicon_arr, 0, preicon_arr.length);
+            byte[] curIcon = pulldown ? toCstyleBytes(ICON_CHEVRON_DOWN) : preicon_arr;
+            nvgTextJni(vg, x + w - 15, y + h * 0.5f, curIcon, 0, curIcon.length);
         }
     }
 
@@ -632,10 +612,11 @@ public class GList extends GContainer {
     };
 
 
-    class GListPopWindow extends GContainer {
+    class GListPopWindow extends GContainer implements GFocusChangeListener {
         public GListPopWindow(GForm form) {
             super(form);
-//            layer = LAYER_MENU_OR_POPUP;
+            //layer = LAYER_MENU_OR_POPUP;
+            setFocusListener(this);
         }
 
         @Override
@@ -654,7 +635,7 @@ public class GList extends GContainer {
             if (GList.this.bgColor != null) {
                 bg = GList.this.bgColor;
             }
-            GToolkit.drawRoundedRect(vg, x, y, w, h, 3.5f, bg);
+            GToolkit.drawRoundedRect(vg, x, y, w, h, 4.f, nvgRGBA(0, 0, 0, 48), bg);
 
             super.paint(vg);
 
@@ -672,6 +653,26 @@ public class GList extends GContainer {
 
             scrollBar.setLocation(width - scrollbarWidth, 0);
             scrollBar.setSize(20, height);
+        }
+
+        @Override
+        public void focusGot(GObject go) {
+        }
+
+        GCmd cmd = new GCmd(new Runnable() {
+            @Override
+            public void run() {
+                GObject go = getForm().getFrontFocus();
+                if (go == normalPanel || getForm().getFocus() == GListPopWindow.this) return;
+                pulldown = false;
+                changeCurPanel();
+            }
+        });
+
+        @Override
+        public void focusLost(GObject newgo) {
+            //因为本次无法获得新获得焦点的组件是谁，因此要把操作放在队列中，等本次渲染执行完后再执行
+            GForm.addCmd(cmd);
         }
     }
 

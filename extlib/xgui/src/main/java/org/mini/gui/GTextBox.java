@@ -27,6 +27,7 @@ public class GTextBox extends GTextObject {
     protected EditArea editArea;//编辑区
 
     static final int SCROLLBAR_WIDTH = 20;
+    static final int PAD = 5;
 
     protected int curCaretRow;
     protected int curCaretCol;
@@ -264,11 +265,20 @@ public class GTextBox extends GTextObject {
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         super.mouseButtonEvent(button, pressed, x, y);
 
-        if (isInArea(x, y)) {
+        if (isInArea(x, y) || true) {//不再检测是否在区域内，需要应对鼠标移到框外时，对拖动选择仍然有效
             if (button == Glfw.GLFW_MOUSE_BUTTON_1) {
                 if (pressed) {
                     int caret = editArea.getCaretIndexFromArea(x, y);
-                    if (caret >= 0) {
+                    if (shift) {
+                        if (caretIndex == caret) {
+                            selFirst = -1;
+                            selSecond = -1;
+                        } else {
+                            selFirst = caretIndex;
+                            selSecond = caret;
+                        }
+                        caretIndex = caret;
+                    } else if (caret >= 0) {
                         setCaretIndex(caret);
                         resetSelect();
                         selFirst = caret;
@@ -293,6 +303,12 @@ public class GTextBox extends GTextObject {
                 }
             }
 
+        } else {
+            if (mouseDrag) {//在区域外，且鼠标拖拽中，释放按键时，则完成选取
+                if (!pressed) {
+                    mouseDrag = false;
+                }
+            }
         }
     }
 
@@ -310,15 +326,19 @@ public class GTextBox extends GTextObject {
         }
     }
 
+    /**
+     * 拖动处理，即便鼠标在框外，也会触发
+     *
+     * @param x
+     * @param y
+     */
     @Override
     public void cursorPosEvent(int x, int y) {
         super.cursorPosEvent(x, y);
-        if (isInArea(x, y)) {
-            if (mouseDrag) {
-                int caret = editArea.getCaretIndexFromArea(x, y);
-                if (caret >= 0) {
-                    selSecond = caret;
-                }
+        if (mouseDrag) {
+            int caret = editArea.getCaretIndexFromArea(x, y);
+            if (caret >= 0) {
+                selSecond = caret;
             }
         }
     }
@@ -342,6 +362,13 @@ public class GTextBox extends GTextObject {
     public void keyEventGlfw(int key, int scanCode, int action, int mods) {
         if (this.getFocus() != editArea) {
             return;
+        }
+        if (key == Glfw.GLFW_KEY_LEFT_SHIFT || key == Glfw.GLFW_KEY_RIGHT_SHIFT) {
+            if (action == Glfw.GLFW_PRESS || action == Glfw.GLFW_REPEAT) {
+                shift = true;
+            } else {
+                shift = false;
+            }
         }
         if (action == Glfw.GLFW_PRESS || action == Glfw.GLFW_REPEAT) {
             //edit key
@@ -742,6 +769,21 @@ public class GTextBox extends GTextObject {
          */
         int getCaretIndexFromArea(int x, int y) {
             if (editArea.area_detail != null) {
+                //如果鼠标位置超出显示区域，进行校正
+                if (x < getX()) {
+                    x = (int) getX() + PAD;
+                }
+                if (y < getY()) {
+                    y = (int) getY() + PAD;
+                }
+                if (x > getX() + getW()) {
+                    x = (int) (getX() + getW()) - PAD;
+                }
+                if (y > getY() + getH()) {
+                    y = (int) (getY() + getH()) - PAD;
+                }
+
+                //根据预存的屏幕内字符串位置，查找光标所在字符位置
                 for (short[] detail : editArea.area_detail) {
                     if (detail != null) {
                         if (x >= detail[LEFT] && x <= detail[LEFT] + getW() && y >= detail[TOP] && y <= detail[TOP] + detail[HEIGHT]) {
@@ -812,7 +854,7 @@ public class GTextBox extends GTextObject {
             nvgTextMetrics(vg, null, null, lineh);
             float lineH = lineh[0];
 
-            float[] text_area = new float[]{x + 5f, y + 5f, w - 10f, h - 10f};
+            float[] text_area = new float[]{x + PAD, y + PAD, w - PAD * 2, h - PAD * 2};
             float dx = text_area[LEFT];
             float dy = text_area[TOP];
 

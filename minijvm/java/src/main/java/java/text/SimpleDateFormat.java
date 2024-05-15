@@ -16,11 +16,15 @@ import java.util.TimeZone;
 
 public class SimpleDateFormat {
   private String pattern;
+  static final String DEFAULT_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
+  public SimpleDateFormat() {
+    this(DEFAULT_PATTERN);
+  }
   public SimpleDateFormat(String pattern) {
     this.pattern = pattern;
-    if (! "yyyy-MM-dd'T'HH:mm:ss".equals(pattern)) {
-      throw new UnsupportedOperationException("Unsupported pattern: " + pattern);
+    if (! DEFAULT_PATTERN.equals(pattern)) {
+      System.out.println("Unsupported pattern: " + pattern);
     }
   }
 
@@ -43,7 +47,7 @@ public class SimpleDateFormat {
     pad(buffer, calendar.get(Calendar.MONTH) + 1, 2);
     buffer.append('-');
     pad(buffer, calendar.get(Calendar.DAY_OF_MONTH), 2);
-    buffer.append("T");
+    buffer.append(" ");
     pad(buffer, calendar.get(Calendar.HOUR_OF_DAY), 2);
     buffer.append(':');
     pad(buffer, calendar.get(Calendar.MINUTE), 2);
@@ -65,7 +69,7 @@ public class SimpleDateFormat {
       index = parseField(text, index, 2, calendar, Calendar.MONTH, -1);
       index = expectPrefix(text, index, "-");
       index = parseField(text, index, 2, calendar, Calendar.DAY_OF_MONTH, 0);
-      index = expectPrefix(text, index, "T");
+      index = expectPrefix(text, index, " ");
       index = parseField(text, index, 2, calendar, Calendar.HOUR_OF_DAY, 0);
       index = expectPrefix(text, index, ":");
       index = parseField(text, index, 2, calendar, Calendar.MINUTE, 0);

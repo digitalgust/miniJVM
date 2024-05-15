@@ -94,6 +94,9 @@ c8 const *STR_VM_JAVA_LIBRARY_PATH = "java.library.path";
 c8 const *STR_VM_SUN_BOOT_CLASS_PATH = "sun.boot.class.path";
 c8 const *STR_VM_JAVA_CLASS_PATH = "java.class.path";
 
+const c8 *STR_JNI_LIB_NOT_FOUND = "lib not found:%s\n";
+const c8 *STR_JNI_ONLOAD_NOT_FOUND = "register function not found:%s\n";
+const c8 *STR_JNI_ON_LOAD = "JNI_OnLoad";
 
 c8 *INST_NAME[] = {
         /* 0x00 */ "nop",

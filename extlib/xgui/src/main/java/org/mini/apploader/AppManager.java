@@ -6,6 +6,7 @@
 package org.mini.apploader;
 
 import org.mini.glfm.Glfm;
+import org.mini.glwrap.GLUtil;
 import org.mini.gui.*;
 import org.mini.layout.*;
 
@@ -26,8 +27,8 @@ public class AppManager extends GApplication {
     static final String APP_DELETE_BTN = "APP_DELETE_BTN";
 
     static final String STR_EXIT = "Exit";
-    static final String STR_SETTING = "Setting";
-    static final String STR_TITLE = "Plugin Manager";
+    static final String STR_SETTING = "SETTING";
+    static final String STR_TITLE = "PLUGIN MANAGER";
     static final String STR_START_WEB_SRV_FOR_UPLOAD = "Lan webserver for upload plugin";
     static final String STR_DOWN_APP_FROM_WEB = "Download plugin from website:";
     static final String STR_DOWNLOAD = "Download";
@@ -57,7 +58,7 @@ public class AppManager extends GApplication {
     static final String STR_CONFIRM_DELETE = "Do you confirm to delete the plugin ";
     static final String STR_APP_NOT_RUNNING = "Plugin is not running ";
     static final String STR_INSTALL_FROM_LOCAL = "Install plugin from local file:";
-    static final String STR_SELECT_FILE = "Select File";
+    static final String STR_SELECT_FILE = "Browse File";
 
     static private void regStrings() {
         GLanguage.addString(STR_SETTING, new String[]{STR_SETTING, "设置", "设置"});
@@ -65,9 +66,9 @@ public class AppManager extends GApplication {
         GLanguage.addString(STR_TITLE, new String[]{STR_TITLE, "组件管理器", "組件管理器"});
         GLanguage.addString(STR_START_WEB_SRV_FOR_UPLOAD, new String[]{STR_START_WEB_SRV_FOR_UPLOAD, "启动Web服务器上传", "啟動Web伺服器上傳"});
         GLanguage.addString(STR_DOWN_APP_FROM_WEB, new String[]{STR_DOWN_APP_FROM_WEB, "从网站下载组件", "從網站下載組件"});
-        GLanguage.addString(STR_DOWNLOAD, new String[]{STR_DOWNLOAD, "下载", "下載"});
-        GLanguage.addString(STR_START, new String[]{STR_START, "启动", "啟動"});
-        GLanguage.addString(STR_STOP, new String[]{STR_STOP, "停止", "停止"});
+        GLanguage.addString(STR_DOWNLOAD, new String[]{"", "下载", "下載"});
+        GLanguage.addString(STR_START, new String[]{"", "启动", "啟動"});
+        GLanguage.addString(STR_STOP, new String[]{"", "停止", "停止"});
         GLanguage.addString(STR_WEB_LISTEN_ON, new String[]{STR_WEB_LISTEN_ON, "Web服务器临听 : ", "Web伺服器臨聽 : "});
         GLanguage.addString(STR_APP_LIST, new String[]{STR_APP_LIST, "组件列表 : ", "組件列表"});
         GLanguage.addString(STR_BACK, new String[]{STR_BACK, "返回", "返回"});
@@ -92,7 +93,7 @@ public class AppManager extends GApplication {
         GLanguage.addString(STR_CONFIRM_DELETE, new String[]{STR_CONFIRM_DELETE, "您要删除组件吗", "您要刪除組件嗎"});
         GLanguage.addString(STR_APP_NOT_RUNNING, new String[]{STR_APP_NOT_RUNNING, "组件没有运行", "組件沒有運行"});
         GLanguage.addString(STR_INSTALL_FROM_LOCAL, new String[]{STR_INSTALL_FROM_LOCAL, "选取文件安装", "選取檔案安裝"});
-        GLanguage.addString(STR_SELECT_FILE, new String[]{STR_SELECT_FILE, "选取", "選取"});
+        GLanguage.addString(STR_SELECT_FILE, new String[]{"", "安装", "安裝"});
     }
 
     static AppManager instance = new AppManager();
@@ -472,19 +473,16 @@ public class AppManager extends GApplication {
                     GLanguage.setCurLang(GLanguage.ID_ENG);
                     AppLoader.setDefaultLang(GLanguage.ID_ENG);
                     mgrForm = null;
-                    AppManager.getInstance().active();
                     break;
                 case "LI_CHS":
                     GLanguage.setCurLang(GLanguage.ID_CHN);
                     AppLoader.setDefaultLang(GLanguage.ID_CHN);
                     mgrForm = null;
-                    AppManager.getInstance().active();
                     break;
                 case "LI_CHT":
                     GLanguage.setCurLang(GLanguage.ID_CHT);
                     AppLoader.setDefaultLang(GLanguage.ID_CHT);
                     mgrForm = null;
-                    AppManager.getInstance().active();
                     break;
                 case "LI_BRIGHT":
                     GToolkit.setStyle(new GStyleBright());
@@ -562,7 +560,7 @@ public class AppManager extends GApplication {
                         }
                     };
                     if (img == null) {
-                        item.setPreIcon("\uD83C\uDFAB");
+                        item.setPreIcon("\uD83D\uDCD5");
                     }
                     item.setAttachment(appName);
                     if (runningApps.get(appName) != null) {
@@ -697,9 +695,9 @@ public class AppManager extends GApplication {
         ret += " ";
         ret += hour < 10 ? "0" + hour : String.valueOf(hour);
         ret += ":";
-        ret += minute < 10 ? "0" + hour : String.valueOf(minute);
+        ret += minute < 10 ? "0" + minute : String.valueOf(minute);
         ret += ":";
-        ret += seconds < 10 ? "0" + hour : String.valueOf(seconds);
+        ret += seconds < 10 ? "0" + seconds : String.valueOf(seconds);
         return ret;
 
     }

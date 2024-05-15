@@ -411,10 +411,24 @@ public class GFrame extends GContainer {
 
     public void setOnCloseScript(String onCloseScript) {
         this.onCloseScript = onCloseScript;
+        //fix no interpreter when script is set
+        if (onCloseScript != null) {
+            Interpreter inp = getInterpreter();
+            if (inp == null) {
+                loadScript("");
+            }
+        }
     }
 
     public void setOnInitScript(String onInitScript) {
         this.onInitScript = onInitScript;
+        //fix no interpreter when script is set
+        if (onInitScript != null) {
+            Interpreter inp = getInterpreter();
+            if (inp == null) {
+                loadScript("");
+            }
+        }
     }
 
     @Override

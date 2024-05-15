@@ -27,7 +27,7 @@ extern "C" {
 
 //=======================  micro define  =============================
 //_JVM_DEBUG  01=thread info, 02=garage&jit info  , 03=class load, 04=method call,  06=all bytecode
-#define _JVM_DEBUG_LOG_LEVEL 0
+#define _JVM_DEBUG_LOG_LEVEL 01
 #define _JVM_DEBUG_LOG_TO_FILE 0
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_PROFILE 0
@@ -438,7 +438,7 @@ typedef struct _JdwpStep JdwpStep;
 typedef struct _JdwpClient JdwpClient;
 
 typedef s32 (*java_native_fun)(Runtime *runtime, JClass *p);
-
+typedef void (*jni_fun)(__refer);
 
 enum {
     JVM_ERROR_OUTOFMEMORY,
@@ -514,6 +514,11 @@ extern c8 const *STR_INS_JAVA_LANG_STACKTRACEELEMENT;
 extern c8 const *STR_VM_JAVA_LIBRARY_PATH;
 extern c8 const *STR_VM_SUN_BOOT_CLASS_PATH;
 extern c8 const *STR_VM_JAVA_CLASS_PATH;
+
+
+extern c8 const *STR_JNI_LIB_NOT_FOUND;
+extern c8 const *STR_JNI_ONLOAD_NOT_FOUND;
+extern c8 const *STR_JNI_ON_LOAD;
 
 enum {
     METHOD_INVOKE_DYNAMIC,
@@ -1850,6 +1855,7 @@ struct _MiniJVM {
     Hashtable *sys_prop;
 
     GcCollector *collector;
+    Instance *shutdown_hook;//shutdown hook ,it's a thread
 
     ShortCut shortcut;
 

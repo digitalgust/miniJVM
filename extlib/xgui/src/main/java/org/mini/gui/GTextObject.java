@@ -52,6 +52,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
 
     protected boolean selectMode = false;
     protected boolean editable = true;
+    boolean shift = false;
 
 
     protected GTextObject(GForm form) {

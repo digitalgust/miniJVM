@@ -8,6 +8,7 @@ package org.mini.gui;
 import org.mini.glfm.Glfm;
 
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
+import static org.mini.gui.GToolkit.getStyle;
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Nanovg.*;
 
@@ -18,6 +19,7 @@ public class GListItem extends GContainer {
 
     protected byte[] preicon_arr;
     protected String preicon;
+    protected float[] preiconColor;
 
     protected GImage img;
     protected GList list;
@@ -53,6 +55,15 @@ public class GListItem extends GContainer {
         this.preicon = preicon;
         preicon_arr = toCstyleBytes(preicon);
     }
+
+    public float[] getPreiconColor() {
+        return preiconColor;
+    }
+
+    public void setPreiconColor(float[] preiconColor) {
+        this.preiconColor = preiconColor;
+    }
+
 
     /**
      * @return the label
@@ -170,10 +181,12 @@ public class GListItem extends GContainer {
         } else if (preicon_arr != null) {
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
-            nvgFillColor(vg, c);
+            float[] pc = preiconColor == null ? getStyle().getTextFontColor() : preiconColor;
+            nvgFillColor(vg, pc);
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
             nvgTextJni(vg, x + thumb * 0.5f, y + thumb * 0.5f + 2, preicon_arr, 0, preicon_arr.length);
         }
+        nvgFillColor(vg, c);
         GToolkit.drawTextLine(vg, tx + ((img == null && preicon_arr == null) ? 0 : thumb) + pad, ty + thumb / 2, getText(), list.getFontSize(), c, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         return true;
     }

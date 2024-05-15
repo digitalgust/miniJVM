@@ -7,6 +7,7 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 
+import static org.mini.gui.GToolkit.getStyle;
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
 import static org.mini.nanovg.Nanovg.*;
@@ -20,6 +21,7 @@ public class GButton extends GObject {
     protected byte[] text_arr;
     protected String preicon;
     protected byte[] preicon_arr;
+    protected float[] preiconColor;
     protected boolean bt_pressed = false;
     float oldX, oldY;
 
@@ -57,6 +59,15 @@ public class GButton extends GObject {
         this.preicon = preicon;
         preicon_arr = toCstyleBytes(preicon);
     }
+
+    public float[] getPreiconColor() {
+        return preiconColor;
+    }
+
+    public void setPreiconColor(float[] preiconColor) {
+        this.preiconColor = preiconColor;
+    }
+
 
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
@@ -156,7 +167,8 @@ public class GButton extends GObject {
 
             iw = nvgTextBoundsJni(vg, 0, 0, preicon_arr, 0, preicon_arr.length, null);
 
-            nvgFillColor(vg, textColor);
+            float[] pc = preiconColor == null ? getStyle().getTextFontColor() : preiconColor;
+            nvgFillColor(vg, pc);
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
             nvgTextJni(vg, x + w * 0.5f - tw * 0.5f, y + h * 0.5f + move, preicon_arr, 0, preicon_arr.length);
         }

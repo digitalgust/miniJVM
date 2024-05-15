@@ -309,11 +309,32 @@ public class GToolkit {
         }
     }
 
+    public static void drawRect(long vg, float x, float y, float w, float h, float[] color, float[] bgColor) {
+        nvgBeginPath(vg);
+        nvgRect(vg, x, y, w, h);
+        nvgFillColor(vg, bgColor);
+        nvgFill(vg);
+        nvgStrokeColor(vg, color);
+        nvgStrokeWidth(vg, 1.0f);
+        nvgStroke(vg);
+    }
+
     public static void drawRoundedRect(long vg, float x, float y, float w, float h, float r, float[] color) {
         nvgBeginPath(vg);
         nvgFillColor(vg, color);
         nvgRoundedRect(vg, x, y, w, h, r);
         nvgFill(vg);
+    }
+
+    public static void drawRoundedRect(long vg, float x, float y, float w, float h, float r, float[] color, float[] bgColor) {
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, x, y, w, h, r);
+        nvgFillColor(vg, bgColor);
+        nvgFill(vg);
+        nvgStrokeColor(vg, color);
+        nvgRoundedRect(vg, x, y, w, h, r - 0.5f);
+        nvgStrokeWidth(vg, 1.0f);
+        nvgStroke(vg);
     }
 
     public static float[] getTextBoundle(long vg, String s, float width) {
@@ -565,7 +586,7 @@ public class GToolkit {
             gp.add(leftBtn);
             leftBtn.setActionListener(gobj -> {
                 if (leftListener != null) leftListener.action(gobj);
-                gobj.getFrame().close();
+                else gobj.getFrame().close();
             });
         }
 
@@ -573,7 +594,7 @@ public class GToolkit {
         gp.add(rightBtn);
         rightBtn.setActionListener(gobj -> {
             if (rightListener != null) rightListener.action(gobj);
-            gobj.getFrame().close();
+            else gobj.getFrame().close();
         });
 
         return frame;
@@ -635,11 +656,11 @@ public class GToolkit {
             path = AppLoader.getProperty("filechooserpath");
         }
         if (path == null || "".equals(path)) {
-            path = "./";
+            path = GCallBack.getInstance().getApplication().getSaveRoot();  //android can't access out of app dir
         }
         File file = new File(path);
         if (!file.exists()) {
-            file = new File(GCallBack.getInstance().getApplication().getSaveRoot());
+            file = new File(".");
         }
 
         GContainer gp = frame.getView();
@@ -669,7 +690,7 @@ public class GToolkit {
 
 
         y += btnH + pad;
-        btnH = 25f;
+        btnH = 35f;
         float btnW = 40f;
         GButton upBtn = new GButton(form, "", x, y, btnW, btnH);
         upBtn.setPreIcon("⬆");
@@ -819,6 +840,9 @@ public class GToolkit {
         }
     }
 
+    static float[] dirColor = new float[]{0.7f, 0.7f, 0.2f, 0.7f};
+    static float[] fileColor = new float[]{0.4f, 0.4f, 0.7f, 0.7f};
+
     private static void chooserAddFilesToList(File dir, FileFilter filter, GList list) {
         File[] files = dir == null ? File.listRoots() : dir.listFiles(filter);
         Arrays.sort(files, (f1, f2) -> {
@@ -844,8 +868,10 @@ public class GToolkit {
             GListItem item = list.addItem(null, lab + "   | " + file.length() + " | " + new Date(file.lastModified()));
             if (file.isDirectory()) {
                 item.setPreIcon("\uD83D\uDCC1");
+                item.setPreiconColor(dirColor);
             } else {
                 item.setPreIcon("\uD83D\uDCC4");
+                item.setPreiconColor(fileColor);
             }
             item.setAttachment(file);
             item.setActionListener(fileChooserItemListener);

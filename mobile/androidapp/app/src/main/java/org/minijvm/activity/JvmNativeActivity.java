@@ -5,7 +5,9 @@ import android.app.Activity;
 import android.app.NativeActivity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -524,6 +526,53 @@ public class JvmNativeActivity extends NativeActivity {
         }
 
         return mediaFile;
+    }
+
+    /**
+     * 检查包是否存在
+     *
+     * @param packname
+     * @return
+     */
+    private boolean checkPackInfo(String packname) {
+        PackageInfo packageInfo = null;
+        try {
+            packageInfo = getPackageManager().getPackageInfo(packname, 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return packageInfo != null;
+    }
+
+    public int openOtherApp(String urls, String more, int detectAppInstalled) {
+        try {
+
+            if (more != null && more.equals("URL")) {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(urls));
+                startActivity(intent);
+            } else {
+                if (detectAppInstalled != 0) {
+                    if (!checkPackInfo(urls)) {
+                        return 1;
+                    }
+                }
+                String[] paras = urls.split(" ");
+                String pkgName = paras[0];
+                String activityName = paras[1];
+
+                Intent intent = new Intent(Intent.ACTION_MAIN);
+                ComponentName cmp = new ComponentName(pkgName, activityName);
+                intent.addCategory(Intent.CATEGORY_LAUNCHER);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.setComponent(cmp);
+                startActivity(intent);
+                return 0;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 1;
     }
 //=======================================================================================================
 

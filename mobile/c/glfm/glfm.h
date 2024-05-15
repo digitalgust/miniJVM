@@ -574,6 +574,8 @@ void setClipBoardContent(const char *str);
 
 const char *getOsName();
 
+int openOtherApp(const char *url, const char *more, int detectAppInstalled);
+
 void pickPhotoAlbum(GLFMDisplay *display, int uid, int type);
 
 void pickPhotoCamera(GLFMDisplay *display, int uid, int type);

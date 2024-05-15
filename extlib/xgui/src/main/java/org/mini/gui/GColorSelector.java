@@ -17,6 +17,9 @@ import static org.mini.nanovg.Nanovg.*;
  */
 class GColorSelector extends GObject {
 
+    /**
+     * these color can't change by user
+     */
     public static final float[] RED = new float[]{0xff, 0x00, 0x00, 0xff};
     public static final float[] GREEN = new float[]{0x00, 0xff, 0x00, 0xff};
     public static final float[] BLUE = new float[]{0x00, 0x00, 0xff, 0xff};
@@ -59,6 +62,57 @@ class GColorSelector extends GObject {
 
     }
 
+    /**
+     * 0.0f - 1.0f value of r,g,b,a
+     *
+     * @param r
+     * @param g
+     * @param b
+     * @param a
+     * @return
+     */
+    public static float[] getColor(float r, float g, float b, float a) {
+        return new float[]{r, g, b, a};
+    }
+
+    /**
+     * 0 - 255 value of r,g,b,a
+     *
+     * @param r
+     * @param g
+     * @param b
+     * @param a
+     * @return
+     */
+    public static float[] getColor(int r, int g, int b, int a) {
+        return new float[]{r / 255f, g / 255f, b / 255f, a / 255f};
+    }
+
+    public static float[] getColor(int rgba) {
+        int r = (rgba >> 24) & 0xff;
+        int g = (rgba >> 16) & 0xff;
+        int b = (rgba >> 8) & 0xff;
+        int a = (rgba) & 0xff;
+        return new float[]{r / 255f, g / 255f, b / 255f, a / 255f};
+    }
+
+    public static int getHexColor(float[] color) {
+        int r = (int) (color[0] * 255);
+        int g = (int) (color[1] * 255);
+        int b = (int) (color[2] * 255);
+        int a = (int) (color[3] * 255);
+        return (a << 24) | (r << 16) | (g << 8) | b;
+    }
+
+    public static float[] copyColor(float[] color) {
+        if (color == null) return new float[4];
+        return new float[]{color[0], color[1], color[2], color[3]};
+    }
+
+    public static void copyColor(float[] src, float[] dest) {
+        if (src == null || dest == null || src.length != 4 || dest.length != 4) return;
+        System.arraycopy(src, 0, dest, 0, 4);
+    }
 
     @Override
     public void cursorPosEvent(int x, int y) {

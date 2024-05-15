@@ -112,11 +112,11 @@ public class Glfm {
             GLFMHapticFeedbackMedium = 1,
             GLFMHapticFeedbackHeavy = 2;
     public static int //
-            GLFMSensorAccelerometer=0, // Events are a vector in G's
-            GLFMSensorMagnetometer=1, // Events are a vector in microteslas
-            GLFMSensorGyroscope=2, // Events are a vector in radians/sec
-            GLFMSensorRotationMatrix=3 // Events are a rotation matrix
-    ;
+            GLFMSensorAccelerometer = 0, // Events are a vector in G's
+            GLFMSensorMagnetometer = 1, // Events are a vector in microteslas
+            GLFMSensorGyroscope = 2, // Events are a vector in radians/sec
+            GLFMSensorRotationMatrix = 3 // Events are a rotation matrix
+                    ;
 
     /**
      * photo pick
@@ -237,6 +237,8 @@ public class Glfm {
     public static native void glfmStopVideo(long display, long handle);
 
     public static native void glfmPauseVideo(long display, long handle);
+
+    public static native int glfmOpenOtherApp(byte[] cStyleURL, byte[] cStyleMore, int detectAppInstalled);
 
 
 }

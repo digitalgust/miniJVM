@@ -1453,7 +1453,7 @@ void android_main(struct android_app *app) {
         int events;
         struct android_poll_source *source;
 
-        while ((eventIdentifier = ALooper_pollAll(platformData->animating ? 0 : -1, NULL, &events,
+        while ((eventIdentifier = ALooper_pollOnce(platformData->animating ? 0 : -1, NULL, &events,
                 (void **)&source)) >= 0) {
             if (source) {
                 source->process(app, source);
@@ -2289,6 +2289,20 @@ void stopVideo(GLFMDisplay *display, void *panel){
 
 }
 
+int openOtherApp(const char *curl, const char *more, int detectAppInstalled){
+    struct android_app *app = platformDataGlobal->app;
+    GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
+    JNIEnv *jni = platformData->jniEnv;
 
+    jstring jstrUrl = (*jni)->NewStringUTF(jni, curl);
+    if (!more)more = "";
+    jstring jstrMore = (*jni)->NewStringUTF(jni, more);
+
+    glfm__callJavaMethodWithArgs(jni, app->activity->clazz, "openOtherApp",
+                                "(Ljava/lang/String;Ljava/lang/String;I)I", Int, jstrUrl, jstrMore, detectAppInstalled);
+    (*jni)->DeleteLocalRef(jni, jstrUrl);
+    (*jni)->DeleteLocalRef(jni, jstrMore);
+    glfm__clearJavaException()
+}
 
 #endif

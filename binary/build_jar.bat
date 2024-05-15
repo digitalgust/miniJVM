@@ -15,7 +15,7 @@ for /f "tokens=1-3 delims=." %%a in ("%java_version%") do (
     set /a major1=%%a, minor1=%%b, build1=%%c
 )
 
-echo java version :%major1%
+echo java version :%minor1%
 
 
 
@@ -62,7 +62,7 @@ goto :eof
     del /Q/S/F %3\%1
     md classes 
     dir /S /B %2\java\*.java > source.txt
-    if %major1% gtr 8 (
+    if %minor1% gtr 8 (
         %JAVAC% --release 8 -cp %4;%5 -encoding "utf-8" -d classes @source.txt
     ) else (
         %JAVAC% -bootclasspath %4 -cp %5 -encoding "utf-8"   -d classes @source.txt

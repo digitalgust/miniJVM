@@ -2352,7 +2352,18 @@ void stopVideo(GLFMDisplay *display, void *panel){
     }
 }
 
-
-
+int openOtherApp(const char *curl, const char *more, int detectAppInstalled){
+    NSString *nspath = [[NSString alloc] initWithCString:curl encoding:NSUTF8StringEncoding];
+    
+    NSURL *url = [NSURL URLWithString:nspath];
+    if ([[UIApplication sharedApplication] canOpenURL:url]||!detectAppInstalled) {
+        //NSLog(@"%@ 有效" ,nspath);
+        [[UIApplication sharedApplication] openURL:url];
+        return 0;
+    }else {
+        //NSLog(@"%@ 无效" ,nspath);
+        return 1;
+    }
+}
 
 #endif

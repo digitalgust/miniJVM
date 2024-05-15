@@ -1,6 +1,11 @@
-apply plugin: 'com.android.application'
+plugins {
+    id 'com.android.application'
+}
 
 android {
+    lint {
+        baseline = file("lint-baseline.xml")
+    }
     signingConfigs {
         config {
             keyAlias 'key0'
@@ -9,7 +14,7 @@ android {
             storePassword '123456'
         }
     }
-    compileSdkVersion 26
+    compileSdkVersion 34
     defaultConfig {
         applicationId "org.minijvm.activity"
         minSdkVersion 15
@@ -48,6 +53,7 @@ android {
     sourceSets.main {
         assets.srcDirs = ["../../assets/"]
     }
+    ndkVersion '27.0.11718014 rc1'
 }
 
 dependencies {

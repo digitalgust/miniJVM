@@ -11,10 +11,18 @@
                     <table w="98%" h="100%">
                         <tr>
                             <td>
-                                <label w="70%"></label>
-                                <button name="BT_SETTING" w="30%" h="30" preicon="⚙">{Setting}</button>
+                                <table w="100%">
+                                    <tr w="100%">
+                                        <td w="float"></td>
+                                        <td w="50">
+                                            <button name="BT_SETTING" w="50" h="30" preicon="⚙"></button>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <!--                                <label w="99%"></label>-->
+
                                 <br/>
-                                <label w="100%" h="30" align="hcenter,vcenter">{Plugin Manager}</label>
+                                <label w="100%" h="30" align="hcenter,vcenter">{PLUGIN MANAGER}</label>
                                 <input name="INPUT_SEARCH" w="100%" h="30" style="search" hint="Search plugin"></input>
                                 <br/>
                             </td>
@@ -30,7 +38,7 @@
 
                 <panel w="100%" h="100%" move="left" align="hcenter,top">
                     <viewport name="VP_CONTENT" w="98%" h="100%">
-                        <button name="BT_BACK" h="30" addon="10">&lt;{Back}</button>
+                        <button name="BT_BACK" h="30" addon="50" preicon="">{Back}</button>
                         <label name="APP_NAME_LABEL" w="100%" h="35" align="hcenter,vcenter"></label>
                         <img name="APP_ICON_ITEM" pic="/res/appmgr.png" w="128" h="128" border="1" fontsize="10"></img>
                         <br/>
@@ -43,12 +51,14 @@
                         <br/>
                         <button name="APP_DELETE_BTN" w="100%" h="35">{Delete}</button>
                         <input name="APP_DESC_LABEL" multiline="1" edit="0" w="100%" h="150"></input>
+                        <br/>
+                        <label name="APP_BLANK" w="100%" h="30" align="hcenter,vcenter"></label>
                     </viewport>
                 </panel>
                 <panel w="100%" h="100%" move="fixed" align="hcenter,top">
                     <viewport name="PAN_SETTING" w="98%" h="100%">
-                        <button name="BT_BACK1" h="30" addon="10">&lt;{Back}</button>
-                        <label w="100%" h="30" align="hcenter,vcenter">{Setting}</label>
+                        <button name="BT_BACK1" h="30" addon="50" preicon="">{Back}</button>
+                        <label w="100%" h="30" align="hcenter,vcenter">{SETTING}</label>
                         <list name="LIST_LANG" w="100%" multiline="0">
                             <li name="LI_ENG">English</li>
                             <li name="LI_CHS">简体中文</li>
@@ -64,13 +74,14 @@
                         <input name="INPUT_URL" w="75%" h="30" hint="application jar url">
                             https://raw.githubusercontent.com/digitalgust/plugin4minijvm/main/plugins/ExGame.jar
                         </input>
-                        <button name="BT_DOWN" w="25%" h="30">{Download}</button>
+                        <button name="BT_DOWN" w="25%" h="30" preicon="📥">{Download}</button>
                         <label w="100%" h="20"></label>
                         <label w="75%" h="30" align="left,vcenter">{Install plugin from local file:}</label>
-                        <button name="BT_LOCALFILE" w="25%" h="30">{Select File}</button>
+                        <button name="BT_LOCALFILE" w="25%" h="30" preicon="📁">{Browse File}</button>
                         <label w="100%" h="20"></label>
-                        <label name="LAB_WEBSRV" w="75%" h="30" align="left,vcenter">{Lan webserver for upload plugin}</label>
-                        <button name="BT_STARTWEB" w="25%" h="30">{Start}</button>
+                        <label name="LAB_WEBSRV" w="75%" h="30" align="left,vcenter">{Lan webserver for upload plugin}
+                        </label>
+                        <button name="BT_STARTWEB" w="25%" h="30" preicon="📤">{Start}</button>
                         <label w="100%" h="20"></label>
                         <br/>
                         <input name="INPUT_LOG" w="100%" h="200" edit="0" multiline="1">{Message}</input>
