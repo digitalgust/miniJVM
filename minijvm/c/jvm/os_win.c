@@ -175,14 +175,14 @@ s32 os_kill_process(s64 pid) {
 s32 os_waitfor_process(Runtime *runtime, s64 pid, s64 tid, s32 *pExitCode) {
     DWORD exitCode;
     WaitForSingleObject((__refer) (intptr_t) (pid), INFINITE);
-    BOOL success = GetExitCodeProcess((HANDLE) (pid), &exitCode);
+    BOOL success = GetExitCodeProcess((HANDLE) (intptr_t) (pid), &exitCode);
     if (!success) {
         exception_throw(JVM_EXCEPTION_ILLEGALARGUMENT, runtime, NULL);
         return RUNTIME_STATUS_EXCEPTION;
     }
 
-    CloseHandle((HANDLE) (pid));
-    CloseHandle((HANDLE) (tid));
+    CloseHandle((HANDLE) (intptr_t) (pid));
+    CloseHandle((HANDLE) (intptr_t) (tid));
 
     *pExitCode = exitCode;
     return 0;
