@@ -55,7 +55,7 @@
 #endif
 
 #include <dlfcn.h>
-#include "glfm_platform.h"
+#include "glfm_internal.h"
 
 #define MAX_SIMULTANEOUS_TOUCHES 10
 
