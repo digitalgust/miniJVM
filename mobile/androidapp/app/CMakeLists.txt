@@ -42,14 +42,14 @@ SET(MINI_JVM_SOURCE_FILES ${SOURCE_JVM} ${SOURCE_UTILS} ${SOURCE_HTTPS} ${SOURCE
 
 
 if (CMAKE_SYSTEM_NAME MATCHES "Emscripten")
-    set(GLFM_SOURCE_FILES ../../c/glfm/glfm_platform.h ../../c/glfm/glfm_platform_emscripten.c)
+    set(GLFM_SOURCE_FILES ../../c/glfm/glfm_internal.h ../../c/glfm/glfm_emscripten.c)
 elseif (CMAKE_SYSTEM_NAME MATCHES "Android")
-    set(GLFM_SOURCE_FILES ../../c/glfm/glfm.h ../../c/glfm/glfm_platform.h ../../c/glfm/glfm_platform_android.c ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c)
+    set(GLFM_SOURCE_FILES ../../c/glfm/glfm.h ../../c/glfm/glfm_internal.h ../../c/glfm/glfm_android.c ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c)
     # Set NDEBUG for android_native_app_glue to remove some superfluous logging
     set_source_files_properties(${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c PROPERTIES COMPILE_FLAGS "-DNDEBUG")
 else() # Assume iOS
     set(IOS TRUE)
-    set(GLFM_SOURCE_FILES src/glfm_platform.h src/glfm_platform_ios.m)
+    set(GLFM_SOURCE_FILES src/glfm_internal.h src/glfm_apple.m)
     set(CMAKE_OSX_SYSROOT "iphoneos")
     set(GLFM_COMPILE_FLAGS "-Wno-objc-interface-ivars -Wno-objc-missing-property-synthesis -Wno-direct-ivar-access")
 endif()
