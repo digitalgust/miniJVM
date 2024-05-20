@@ -34,6 +34,7 @@ public class AppManager extends GApplication {
     static final String STR_DOWNLOAD = "Download";
     static final String STR_START = "Start";
     static final String STR_STOP = "Stop";
+    static final String STR_CLOSE = "Close";
     static final String STR_WEB_LISTEN_ON = "Lan webserver on:";
     static final String STR_APP_LIST = "Plugin list : ";
     static final String STR_BACK = "Back";
@@ -69,6 +70,7 @@ public class AppManager extends GApplication {
         GLanguage.addString(STR_DOWNLOAD, new String[]{"", "下载", "下載"});
         GLanguage.addString(STR_START, new String[]{"", "启动", "啟動"});
         GLanguage.addString(STR_STOP, new String[]{"", "停止", "停止"});
+        GLanguage.addString(STR_CLOSE, new String[]{"Close", "关闭", "關閉"});
         GLanguage.addString(STR_WEB_LISTEN_ON, new String[]{STR_WEB_LISTEN_ON, "Web服务器临听 : ", "Web伺服器臨聽 : "});
         GLanguage.addString(STR_APP_LIST, new String[]{STR_APP_LIST, "组件列表 : ", "組件列表"});
         GLanguage.addString(STR_BACK, new String[]{STR_BACK, "返回", "返回"});
