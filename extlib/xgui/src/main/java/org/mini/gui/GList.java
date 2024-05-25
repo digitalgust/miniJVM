@@ -88,6 +88,7 @@ public class GList extends GContainer {
         setScrollBar(false);
         sizeAdjust();
         changeCurPanel();
+        setCornerRadius(4.f);
 
         setShowMode(MODE_SINGLE_SHOW);
 
@@ -513,8 +514,9 @@ public class GList extends GContainer {
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
         nvgTextMetrics(vg, null, null, lineh);
+        super.paint(vg);
 
-        return super.paint(vg);
+        return true;
     }
 
     /**
@@ -525,6 +527,7 @@ public class GList extends GContainer {
     class NormalPanel extends GContainer {
         public NormalPanel(GForm form) {
             super(form);
+            setCornerRadius(4.f);
         }
 
         @Override
@@ -563,14 +566,14 @@ public class GList extends GContainer {
             byte[] bg;
 
             bg = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(255, 255, 255, 16), nvgRGBA(0, 0, 0, 16));
-            float cornerRadius = 4.0f;
+
             nvgBeginPath(vg);
-            nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, cornerRadius - 1);
+            nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, getCornerRadius() - 1);
             nvgFillPaint(vg, bg);
             nvgFill(vg);
 
             nvgBeginPath(vg);
-            nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, cornerRadius - 0.5f);
+            nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, getCornerRadius() - 0.5f);
             nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 48));
             nvgStroke(vg);
 
@@ -617,6 +620,7 @@ public class GList extends GContainer {
             super(form);
             //layer = LAYER_MENU_OR_POPUP;
             setFocusListener(this);
+            setCornerRadius(4.f);
         }
 
         @Override
@@ -635,7 +639,7 @@ public class GList extends GContainer {
             if (GList.this.bgColor != null) {
                 bg = GList.this.bgColor;
             }
-            GToolkit.drawRoundedRect(vg, x, y, w, h, 4.f, nvgRGBA(0, 0, 0, 48), bg);
+            GToolkit.drawRoundedRect(vg, x, y, w, h, getCornerRadius(), nvgRGBA(0, 0, 0, 48), bg);
 
             super.paint(vg);
 

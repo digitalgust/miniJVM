@@ -54,6 +54,8 @@ public class GTextField extends GTextObject {
         setSize(width, height);
         reset_boundle = new float[]{left + width - height, top, height, height};
         setFocusListener(this);
+
+        setCornerRadius(4.f);
     }
 
 
@@ -471,6 +473,7 @@ public class GTextField extends GTextObject {
      */
     @Override
     public boolean paint(long vg) {
+        super.paint(vg);
         float x = getX();
         float y = getY();
         float w = getW();
@@ -481,7 +484,7 @@ public class GTextField extends GTextObject {
         float leftIcons = 0.5f;//图标占位宽度
         // Edit
         if (boxStyle == BOX_STYLE_SEARCH) {
-            GToolkit.getStyle().drawFieldBoxBase(vg, x, y, w, h);
+            GToolkit.getStyle().drawFieldBoxBase(vg, x, y, w, h, h * .5f - 1f);
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
             nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
@@ -490,7 +493,7 @@ public class GTextField extends GTextObject {
             nvgTextJni(vg, x + FONT_WIDTH * 1.5f, y + h * 0.55f, search_arr, 0, search_arr.length);
             leftIcons = 2;
         } else {
-            GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h);
+            GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h, getCornerRadius());
         }
 
         if (isResetEnable()) {

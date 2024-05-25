@@ -63,6 +63,8 @@ public class GTextBox extends GTextObject {
         setSize(width, height);
         setFocusListener(this);
 
+        setCornerRadius(4.f);
+
         reAlign();
     }
 
@@ -836,16 +838,17 @@ public class GTextBox extends GTextObject {
          */
         @Override
         public boolean paint(long vg) {
+            boolean ret = super.paint(vg);
             float x = getX();
             float y = getY();
             float w = getW();
             float h = getH();
             drawTextBox(vg, x, y, w, h);
-            return super.paint(vg);
+            return ret;
         }
 
         void drawTextBox(long vg, float x, float y, float w, float h) {
-            GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h);
+            GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h, getCornerRadius());
             nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
             nvgFontFace(vg, GToolkit.getFontWord());
             nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);

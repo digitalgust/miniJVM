@@ -496,15 +496,19 @@ public class GToolkit {
      * @param ph
      */
     public static void drawImage(long vg, GImage img, float px, float py, float pw, float ph) {
-        drawImage(vg, img, px, py, pw, ph, true, 1.f);
+        drawImage(vg, img, px, py, pw, ph, true, 1.f, 5.f);
     }
 
     public static void drawImage(long vg, GImage img, float px, float py, float pw, float ph, boolean border, float alpha) {
+        drawImage(vg, img, px, py, pw, ph, border, alpha, border ? 5.f : 0.f);
+    }
+
+    public static void drawImage(long vg, GImage img, float px, float py, float pw, float ph, boolean border, float alpha, float radius) {
         if (img == null) {
             return;
         }
 
-        byte[] shadowPaint, imgPaint;
+        byte[] imgPaint;
         float ix, iy, iw, ih;
         int[] imgW = {0}, imgH = {0};
         imgW[0] = img.getWidth();
@@ -525,7 +529,7 @@ public class GToolkit {
 
         imgPaint = nvgImagePattern(vg, px + ix + 1, py + iy + 1, iw - 2, ih - 2, 0.0f / 180.0f * (float) Math.PI, img.getNvgTextureId(vg), alpha);
         nvgBeginPath(vg);
-        nvgRoundedRect(vg, px, py, pw, ph, border ? 5f : 0f);
+        nvgRoundedRect(vg, px, py, pw, ph, radius);
         nvgFillPaint(vg, imgPaint);
         nvgFill(vg);
 
@@ -539,7 +543,45 @@ public class GToolkit {
 //            nvgFill(vg);
 
             nvgBeginPath(vg);
-            nvgRoundedRect(vg, px + 1, py + 1, pw - 2, ph - 2, border ? 3.5f : 0f);
+            float r = radius - 2;
+            r = r < 0 ? 0 : r;
+            nvgRoundedRect(vg, px + 1, py + 1, pw - 2, ph - 2, r);
+            nvgStrokeWidth(vg, 1.0f);
+            nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 192));
+            nvgStroke(vg);
+        }
+    }
+
+    public static void drawImageStretch(long vg, GImage img, float px, float py, float pw, float ph, boolean border, float alpha, float radius) {
+        if (img == null) {
+            return;
+        }
+
+        byte[] imgPaint;
+        int[] imgW = {0}, imgH = {0};
+        imgW[0] = img.getWidth();
+        imgH[0] = img.getHeight();
+
+
+        imgPaint = nvgImagePattern(vg, px + 1, py + 1, pw - 2, ph - 2, 0.0f / 180.0f * (float) Math.PI, img.getNvgTextureId(vg), alpha);
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, px, py, pw, ph, radius);
+        nvgFillPaint(vg, imgPaint);
+        nvgFill(vg);
+
+        if (border) {
+//            shadowPaint = nvgBoxGradient(vg, px, py, pw, ph, 5, 3, nvgRGBA(0, 0, 0, 128), nvgRGBA(0, 0, 0, 0));
+//            nvgBeginPath(vg);
+//            //nvgRect(vg, px - 5, py - 5, pw + 10, ph + 10);
+//            nvgRoundedRect(vg, px, py, pw, ph, 6);
+//            nvgPathWinding(vg, NVG_HOLE);
+//            nvgFillPaint(vg, shadowPaint);
+//            nvgFill(vg);
+
+            nvgBeginPath(vg);
+            float r = radius - 2;
+            r = r < 0 ? 0 : r;
+            nvgRoundedRect(vg, px + 1, py + 1, pw - 2, ph - 2, r);
             nvgStrokeWidth(vg, 1.0f);
             nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 192));
             nvgStroke(vg);
@@ -1583,22 +1625,25 @@ public class GToolkit {
         }
         filepath = new String(filepath);//for holder,must new
         GImage img = imageCache.get(filepath);
-        if (img == null) {
-            img = GImage.createImageFromJar(filepath);
-            if (img != null) {
-                if (holder != null) holder.setAttachment(filepath);
-                imageCache.put(filepath, img);
-            }
-            System.out.println("load image cache " + filepath + " " + img);
-        } else {
-            //System.out.println("hit image from cache " + filepath);
-            if (holder != null) {
-                for (Map.Entry e : imageCache.entrySet()) {
-                    if (filepath.equals(e.getKey())) { //虽然两个字符串字面相同,但不是同一对象
-                        holder.setAttachment(e.getKey());
+        try {
+            if (img == null) {
+                img = GImage.createImageFromJar(filepath);
+                if (img != null) {
+                    if (holder != null) holder.setAttachment(filepath);
+                    imageCache.put(filepath, img);
+                }
+                System.out.println("load image cache " + filepath + " " + img);
+            } else {
+                //System.out.println("hit image from cache " + filepath);
+                if (holder != null) {
+                    for (Map.Entry e : imageCache.entrySet()) {
+                        if (filepath.equals(e.getKey())) { //虽然两个字符串字面相同,但不是同一对象
+                            holder.setAttachment(e.getKey());
+                        }
                     }
                 }
             }
+        } catch (Exception e) {
         }
         return img;
     }

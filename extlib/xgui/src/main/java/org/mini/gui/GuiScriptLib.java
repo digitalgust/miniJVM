@@ -69,6 +69,7 @@ public class GuiScriptLib extends Lib {
             methodNames.put("insertText".toLowerCase(), this::insertText);//
             methodNames.put("deleteText".toLowerCase(), this::deleteText);//
             methodNames.put("getCaretPos".toLowerCase(), this::getCaretPos);//
+            methodNames.put("showTitle".toLowerCase(), this::showTitle);//
 
         }
     }
@@ -551,5 +552,15 @@ public class GuiScriptLib extends Lib {
             index = ((GTextObject) gobj).getCaretIndex();
         }
         return Interpreter.getCachedInt(index);
+    }
+
+    private DataType showTitle(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(form, compont);
+        if (gobj != null && gobj instanceof GFrame) {
+            boolean show = Interpreter.popBackBool(para);
+            ((GFrame) gobj).setTitleShow(show);
+        }
+        return null;
     }
 }

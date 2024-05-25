@@ -31,7 +31,7 @@ public class GMenuItem extends GObject {
         setText(t);
         img = i;
         parent = _parent;
-
+        setCornerRadius(4.f);
     }
 
     @Override
@@ -106,13 +106,14 @@ public class GMenuItem extends GObject {
 
     public boolean paint(long vg) {
 
-        float cornerRadius = 4.0f;
+
+        super.paint(vg);
 
         //touched item background
         if (touched) {
             nvgFillColor(vg, nvgRGBA(255, 255, 255, 48));
             nvgBeginPath(vg);
-            nvgRoundedRect(vg, getX() + 1, getY() + 1, getW() - 2, getH() - 2, cornerRadius - 0.5f);
+            nvgRoundedRect(vg, getX() + 1, getY() + 1, getW() - 2, getH() - 2, getCornerRadius() - 0.5f);
             nvgFill(vg);
             //System.out.println("draw touched");
             touched = false;

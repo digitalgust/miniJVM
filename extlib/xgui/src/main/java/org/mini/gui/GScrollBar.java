@@ -155,6 +155,7 @@ public class GScrollBar extends GObject {
      * @return
      */
     public boolean paint(long vg) {
+        super.paint(vg);
         float x = getX() + line_boundle[LEFT];
         float y = getY() + line_boundle[TOP];
         float w = line_boundle[WIDTH];

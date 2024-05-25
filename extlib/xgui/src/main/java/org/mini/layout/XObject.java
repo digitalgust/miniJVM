@@ -1,9 +1,6 @@
 package org.mini.layout;
 
-import org.mini.gui.GContainer;
-import org.mini.gui.GLayout;
-import org.mini.gui.GObject;
-import org.mini.gui.GuiScriptLib;
+import org.mini.gui.*;
 import org.mini.gui.gscript.Interpreter;
 import org.mini.gui.gscript.Lib;
 import org.xmlpull.v1.KXmlParser;
@@ -51,6 +48,8 @@ public abstract class XObject implements GLayout {
     protected float[] bgColor;
 
     protected float[] color;
+    protected String bgPic = null;
+    protected float bgPicAlpha = GObject.DEFAULT_BG_ALPHA;
 
     // 脚本引擎
     protected String script;// 脚本
@@ -130,6 +129,7 @@ public abstract class XObject implements GLayout {
 
 
     protected void parseMoreAttribute(String attName, String attValue) {
+        attName = attName.toLowerCase();
         if (attName.equals("name")) { // 标题
             name = attValue;
         } else if (attName.equals("attachment")) {
@@ -193,6 +193,10 @@ public abstract class XObject implements GLayout {
             fontSize = Integer.parseInt(attValue);
         } else if (attName.equals("preicon")) {
             preicon = attValue;
+        } else if (attName.equals("bgpic")) {
+            bgPic = attValue;
+        } else if (attName.equals("bgpicalpha")) {
+            bgPicAlpha = Float.parseFloat(attValue);
         }
     }
 
@@ -235,6 +239,11 @@ public abstract class XObject implements GLayout {
             }
             if (bgColor != null) {
                 gui.setBgColor(bgColor);
+            }
+            if (bgPic != null) {
+                GImage img = GToolkit.getCachedImageFromJar(bgPic);
+                gui.setBgImg(img);
+                gui.setBgimgAlpha(bgPicAlpha);
             }
 
             if (gui instanceof GContainer) {

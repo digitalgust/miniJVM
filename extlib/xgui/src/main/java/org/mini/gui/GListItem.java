@@ -139,6 +139,7 @@ public class GListItem extends GContainer {
 
     @Override
     public boolean paint(long vg) {
+        super.paint(vg);
         float x = getX();
         float y = getY();
         float w = getW();

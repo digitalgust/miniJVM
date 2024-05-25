@@ -2,6 +2,7 @@ package org.mini.layout;
 
 import org.mini.gui.GFrame;
 import org.mini.gui.GObject;
+import org.mini.gui.GToolkit;
 
 
 /**
@@ -15,9 +16,14 @@ public class XFrame
     protected GFrame frame;
 
     protected String title;
+    protected String titleBgPic;
+    protected float titleBgPicAlpha = GObject.DEFAULT_BG_ALPHA;
+    protected String viewBgPic;
+    protected float viewBgPicAlpha = GObject.DEFAULT_BG_ALPHA;
     protected String onCloseScript;
     protected String onInitScript;
     boolean closable = true;
+    boolean titleShow = true;
 
 
     public XFrame(XContainer parent) {
@@ -25,15 +31,26 @@ public class XFrame
     }
 
     protected void parseMoreAttribute(String attName, String attValue) {
+        attName = attName.toLowerCase();
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("closable")) {
             closable = "0".equals(attValue) ? false : true;
+        } else if (attName.equals("titleshow")) {
+            titleShow = "0".equals(attValue) ? false : true;
         } else if (attName.equals("title")) {
             title = attValue;
         } else if (attName.equals("onclose")) {
             onCloseScript = attValue;
         } else if (attName.equals("oninit")) {
             onInitScript = attValue;
+        } else if (attName.equals("titlebgpic")) {
+            titleBgPic = attValue;
+        } else if (attName.equals("titlebgpicalpha")) {
+            titleBgPicAlpha = Float.valueOf(attValue);
+        } else if (attName.equals("viewbgpic")) {
+            viewBgPic = attValue;
+        } else if (attName.equals("viewbgpicalpha")) {
+            viewBgPicAlpha = Float.valueOf(attValue);
         }
     }
 
@@ -100,6 +117,11 @@ public class XFrame
             frame.setClosable(closable);
             frame.setOnCloseScript(onCloseScript);
             frame.setOnInitScript(onInitScript);
+            frame.getTitlePanel().setBgImg(GToolkit.getCachedImageFromJar(titleBgPic));
+            frame.getTitlePanel().setBgimgAlpha(titleBgPicAlpha);
+            frame.getView().setBgImg(GToolkit.getCachedImageFromJar(viewBgPic));
+            frame.getView().setBgimgAlpha(viewBgPicAlpha);
+            frame.setTitleShow(titleShow);
         } else {
             frame.setLocation(x, y);
             frame.setSize(width, height);
