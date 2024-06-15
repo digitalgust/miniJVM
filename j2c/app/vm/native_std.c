@@ -45,6 +45,16 @@
 #include <windows.h>
 #include <stdio.h>
 
+#else
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <sys/stat.h>
+#include <dlfcn.h>
+
 #endif
 
 s32 jstring_2_utf8(struct java_lang_String *jstr, Utf8String *utf8);
@@ -322,189 +332,6 @@ s32 sock_get_option(VmSock *vmsock, s32 opType) {
 //------------------------------------------------------------------------------------
 //                              Network
 //------------------------------------------------------------------------------------
-
-/*
- * Copy src to string dst of size siz.  At most siz-1 characters
- * will be copied.  Always NUL terminates (unless siz == 0).
- * Returns strlen(src); if retval >= siz, truncation occurred.
- */
-size_t strlcpy(c8 *dst, const c8 *src, size_t siz) {
-    c8 *d = dst;
-    const c8 *s = src;
-    size_t n = siz;
-
-    /* Copy as many bytes as will fit */
-    if (n != 0) {
-        while (--n != 0) {
-            if ((*d++ = *s++) == '\0')
-                break;
-        }
-    }
-
-    /* Not enough room in dst, add NUL and traverse rest of src */
-    if (n == 0) {
-        if (siz != 0)
-            *d = '\0';        /* NUL-terminate dst */
-        while (*s++);
-    }
-
-    return (s - src - 1);    /* count does not include NUL */
-}
-
-#ifndef InetNtopA
-
-/*%
- * WARNING: Don't even consider trying to compile this on a system where
- * sizeof(int) < 4.  sizeof(int) > 4 is fine; all the world's not a VAX.
- */
-
-static c8 *inet_ntop4(const u8 *src, c8 *dst, socklen_t size);
-
-static c8 *inet_ntop6(const u8 *src, c8 *dst, socklen_t size);
-
-/* char *
- * inet_ntop(af, src, dst, size)
- *	convert a network format address to presentation format.
- * return:
- *	pointer to presentation format address (`dst'), or NULL (see errno).
- * author:
- *	Paul Vixie, 1996.
- */
-c8 *inet_ntop(s32 af, const void *src, c8 *dst, socklen_t size) {
-    switch (af) {
-        case AF_INET:
-            return (inet_ntop4((const u8 *) src, dst, size));
-        case AF_INET6:
-            return (inet_ntop6((const u8 *) src, dst, size));
-        default:
-            return (NULL);
-    }
-    /* NOTREACHED */
-}
-
-/* const char *
- * inet_ntop4(src, dst, size)
- *	format an IPv4 address
- * return:
- *	`dst' (as a const)
- * notes:
- *	(1) uses no statics
- *	(2) takes a u_char* not an in_addr as input
- * author:
- *	Paul Vixie, 1996.
- */
-static c8 *inet_ntop4(const u8 *src, c8 *dst, socklen_t size) {
-    static const c8 fmt[] = "%u.%u.%u.%u";
-    c8 tmp[sizeof "255.255.255.255"];
-    s32 l;
-
-    l = snprintf(tmp, sizeof(tmp), fmt, src[0], src[1], src[2], src[3]);
-    if (l <= 0 || (socklen_t) l >= size) {
-        return (NULL);
-    }
-    strlcpy(dst, tmp, size);
-    return (dst);
-}
-
-/* const char *
- * inet_ntop6(src, dst, size)
- *	convert IPv6 binary address into presentation (printable) format
- * author:
- *	Paul Vixie, 1996.
- */
-static c8 *inet_ntop6(const u8 *src, c8 *dst, socklen_t size) {
-    /*
-     * Note that int32_t and int16_t need only be "at least" large enough
-     * to contain a value of the specified size.  On some systems, like
-     * Crays, there is no such thing as an integer variable with 16 bits.
-     * Keep this in mind if you think this function should have been coded
-     * to use pointer overlays.  All the world's not a VAX.
-     */
-    c8 tmp[sizeof "ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255"], *tp;
-    struct {
-        s32 base, len;
-    } best, cur;
-#define NS_IN6ADDRSZ    16
-#define NS_INT16SZ    2
-    u_int words[NS_IN6ADDRSZ / NS_INT16SZ];
-    s32 i;
-
-    /*
-     * Preprocess:
-     *	Copy the input (bytewise) array into a wordwise array.
-     *	Find the longest run of 0x00's in src[] for :: shorthanding.
-     */
-    memset(words, '\0', sizeof words);
-    for (i = 0; i < NS_IN6ADDRSZ; i++)
-        words[i / 2] |= (src[i] << ((1 - (i % 2)) << 3));
-    best.base = -1;
-    best.len = 0;
-    cur.base = -1;
-    cur.len = 0;
-    for (i = 0; i < (NS_IN6ADDRSZ / NS_INT16SZ); i++) {
-        if (words[i] == 0) {
-            if (cur.base == -1)
-                cur.base = i, cur.len = 1;
-            else
-                cur.len++;
-        } else {
-            if (cur.base != -1) {
-                if (best.base == -1 || cur.len > best.len)
-                    best = cur;
-                cur.base = -1;
-            }
-        }
-    }
-    if (cur.base != -1) {
-        if (best.base == -1 || cur.len > best.len)
-            best = cur;
-    }
-    if (best.base != -1 && best.len < 2)
-        best.base = -1;
-
-    /*
-     * Format the result.
-     */
-    tp = tmp;
-    for (i = 0; i < (NS_IN6ADDRSZ / NS_INT16SZ); i++) {
-        /* Are we inside the best run of 0x00's? */
-        if (best.base != -1 && i >= best.base &&
-            i < (best.base + best.len)) {
-            if (i == best.base)
-                *tp++ = ':';
-            continue;
-        }
-        /* Are we following an initial run of 0x00s or any real hex? */
-        if (i != 0)
-            *tp++ = ':';
-        /* Is this address an encapsulated IPv4? */
-        if (i == 6 && best.base == 0 && (best.len == 6 ||
-                                         (best.len == 7 && words[7] != 0x0001) ||
-                                         (best.len == 5 && words[5] == 0xffff))) {
-            if (!inet_ntop4(src + 12, tp, sizeof tmp - (tp - tmp)))
-                return (NULL);
-            tp += strlen(tp);
-            break;
-        }
-        tp += sprintf(tp, "%x", words[i]);
-    }
-    /* Was it a trailing run of 0x00's? */
-    if (best.base != -1 && (best.base + best.len) ==
-                           (NS_IN6ADDRSZ / NS_INT16SZ))
-        *tp++ = ':';
-    *tp++ = '\0';
-
-    /*
-     * Check for overflow, copy, and we're done.
-     */
-    if ((socklen_t) (tp - tmp) > size) {
-        return (NULL);
-    }
-    strcpy(dst, tmp);
-    return (dst);
-}
-
-#endif
 
 s32 host_2_ip(c8 *hostname, char *buf, s32 buflen) {
 #if __JVM_OS_VS__ || __JVM_OS_MINGW__
@@ -901,6 +728,190 @@ const c8 *STR_JNI_ON_LOAD = "JNI_OnLoad";
 
 #if defined(__JVM_OS_MINGW__) || defined(__JVM_OS_CYGWIN__) || defined(__JVM_OS_VS__)
 
+//======================  win implementation  =====================
+/*
+ * Copy src to string dst of size siz.  At most siz-1 characters
+ * will be copied.  Always NUL terminates (unless siz == 0).
+ * Returns strlen(src); if retval >= siz, truncation occurred.
+ */
+size_t strlcpy(c8 *dst, const c8 *src, size_t siz) {
+    c8 *d = dst;
+    const c8 *s = src;
+    size_t n = siz;
+
+    /* Copy as many bytes as will fit */
+    if (n != 0) {
+        while (--n != 0) {
+            if ((*d++ = *s++) == '\0')
+                break;
+        }
+    }
+
+    /* Not enough room in dst, add NUL and traverse rest of src */
+    if (n == 0) {
+        if (siz != 0)
+            *d = '\0';        /* NUL-terminate dst */
+        while (*s++);
+    }
+
+    return (s - src - 1);    /* count does not include NUL */
+}
+
+#ifndef InetNtopA
+
+/*%
+ * WARNING: Don't even consider trying to compile this on a system where
+ * sizeof(int) < 4.  sizeof(int) > 4 is fine; all the world's not a VAX.
+ */
+
+static c8 *inet_ntop4(const u8 *src, c8 *dst, socklen_t size);
+
+static c8 *inet_ntop6(const u8 *src, c8 *dst, socklen_t size);
+
+/* char *
+ * inet_ntop(af, src, dst, size)
+ *	convert a network format address to presentation format.
+ * return:
+ *	pointer to presentation format address (`dst'), or NULL (see errno).
+ * author:
+ *	Paul Vixie, 1996.
+ */
+c8 *inet_ntop(s32 af, const void *src, c8 *dst, socklen_t size) {
+    switch (af) {
+        case AF_INET:
+            return (inet_ntop4((const u8 *) src, dst, size));
+        case AF_INET6:
+            return (inet_ntop6((const u8 *) src, dst, size));
+        default:
+            return (NULL);
+    }
+    /* NOTREACHED */
+}
+
+/* const char *
+ * inet_ntop4(src, dst, size)
+ *	format an IPv4 address
+ * return:
+ *	`dst' (as a const)
+ * notes:
+ *	(1) uses no statics
+ *	(2) takes a u_char* not an in_addr as input
+ * author:
+ *	Paul Vixie, 1996.
+ */
+static c8 *inet_ntop4(const u8 *src, c8 *dst, socklen_t size) {
+    static const c8 fmt[] = "%u.%u.%u.%u";
+    c8 tmp[sizeof "255.255.255.255"];
+    s32 l;
+
+    l = snprintf(tmp, sizeof(tmp), fmt, src[0], src[1], src[2], src[3]);
+    if (l <= 0 || (socklen_t) l >= size) {
+        return (NULL);
+    }
+    strlcpy(dst, tmp, size);
+    return (dst);
+}
+
+/* const char *
+ * inet_ntop6(src, dst, size)
+ *	convert IPv6 binary address into presentation (printable) format
+ * author:
+ *	Paul Vixie, 1996.
+ */
+static c8 *inet_ntop6(const u8 *src, c8 *dst, socklen_t size) {
+    /*
+     * Note that int32_t and int16_t need only be "at least" large enough
+     * to contain a value of the specified size.  On some systems, like
+     * Crays, there is no such thing as an integer variable with 16 bits.
+     * Keep this in mind if you think this function should have been coded
+     * to use pointer overlays.  All the world's not a VAX.
+     */
+    c8 tmp[sizeof "ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255"], *tp;
+    struct {
+        s32 base, len;
+    } best, cur;
+#define NS_IN6ADDRSZ    16
+#define NS_INT16SZ    2
+    u_int words[NS_IN6ADDRSZ / NS_INT16SZ];
+    s32 i;
+
+    /*
+     * Preprocess:
+     *	Copy the input (bytewise) array into a wordwise array.
+     *	Find the longest run of 0x00's in src[] for :: shorthanding.
+     */
+    memset(words, '\0', sizeof words);
+    for (i = 0; i < NS_IN6ADDRSZ; i++)
+        words[i / 2] |= (src[i] << ((1 - (i % 2)) << 3));
+    best.base = -1;
+    best.len = 0;
+    cur.base = -1;
+    cur.len = 0;
+    for (i = 0; i < (NS_IN6ADDRSZ / NS_INT16SZ); i++) {
+        if (words[i] == 0) {
+            if (cur.base == -1)
+                cur.base = i, cur.len = 1;
+            else
+                cur.len++;
+        } else {
+            if (cur.base != -1) {
+                if (best.base == -1 || cur.len > best.len)
+                    best = cur;
+                cur.base = -1;
+            }
+        }
+    }
+    if (cur.base != -1) {
+        if (best.base == -1 || cur.len > best.len)
+            best = cur;
+    }
+    if (best.base != -1 && best.len < 2)
+        best.base = -1;
+
+    /*
+     * Format the result.
+     */
+    tp = tmp;
+    for (i = 0; i < (NS_IN6ADDRSZ / NS_INT16SZ); i++) {
+        /* Are we inside the best run of 0x00's? */
+        if (best.base != -1 && i >= best.base &&
+            i < (best.base + best.len)) {
+            if (i == best.base)
+                *tp++ = ':';
+            continue;
+        }
+        /* Are we following an initial run of 0x00s or any real hex? */
+        if (i != 0)
+            *tp++ = ':';
+        /* Is this address an encapsulated IPv4? */
+        if (i == 6 && best.base == 0 && (best.len == 6 ||
+                                         (best.len == 7 && words[7] != 0x0001) ||
+                                         (best.len == 5 && words[5] == 0xffff))) {
+            if (!inet_ntop4(src + 12, tp, sizeof tmp - (tp - tmp)))
+                return (NULL);
+            tp += strlen(tp);
+            break;
+        }
+        tp += sprintf(tp, "%x", words[i]);
+    }
+    /* Was it a trailing run of 0x00's? */
+    if (best.base != -1 && (best.base + best.len) ==
+                           (NS_IN6ADDRSZ / NS_INT16SZ))
+        *tp++ = ':';
+    *tp++ = '\0';
+
+    /*
+     * Check for overflow, copy, and we're done.
+     */
+    if ((socklen_t) (tp - tmp) > size) {
+        return (NULL);
+    }
+    strcpy(dst, tmp);
+    return (dst);
+}
+
+#endif
+
 
 s32 os_load_lib_and_init(const c8 *libname, JThreadRuntime *runtime) {
     HINSTANCE hInstLibrary = LoadLibrary(libname);
@@ -1046,6 +1057,178 @@ s32 os_waitfor_process(JThreadRuntime *runtime, s64 pid, s64 tid, s32 *pExitCode
 
 #else
 
+//======================  posix implementation  =====================
+
+void safeClose(s32 *fd) {
+    if (*fd != -1)
+        close(*fd);
+    *fd = -1;
+}
+
+s32 os_execute(JThreadRuntime *runtime, JArray *jstrArr, JArray *jlongArr, ArrayList *cstrList, const c8 *cmd) {
+
+    c8 **argv = (c8 **) cstrList->data;//
+
+    s32 in[] = {-1, -1};
+    s32 out[] = {-1, -1};
+    s32 err[] = {-1, -1};
+    s32 msg[] = {-1, -1};
+
+    if (pipe(in) != 0) {
+        exception_throw(STR_JAVA_IO_IO_EXCEPTION, runtime, NULL);
+        return 1;
+    }
+    jlongArr->prop.as_s64_arr[2] = in[0];
+    if (pipe(out) != 0) {
+        exception_throw(STR_JAVA_IO_IO_EXCEPTION, runtime, NULL);
+        return 1;
+    }
+    jlongArr->prop.as_s64_arr[3] = out[1];
+    if (pipe(err) != 0) {
+        exception_throw(STR_JAVA_IO_IO_EXCEPTION, runtime, NULL);
+        return 1;
+    }
+    jlongArr->prop.as_s64_arr[4] = err[0];
+    if (pipe(msg) != 0) {
+        exception_throw(STR_JAVA_IO_IO_EXCEPTION, runtime, NULL);
+        return 1;
+    }
+    if (fcntl(msg[1], F_SETFD, FD_CLOEXEC) != 0) {
+        exception_throw(STR_JAVA_IO_IO_EXCEPTION, runtime, NULL);
+        return 1;
+    }
+
+#ifdef __QNX__
+    // fork(2) doesn't work in multithreaded QNX programs.  See
+  // http://www.qnx.com/developers/docs/6.4.1/neutrino/getting_started/s1_procs.html
+  pid_t pid = vfork();
+#else
+    // We might be able to just use vfork on all UNIX-style systems, but
+    // the manual makes it sound dangerous due to the shared
+    // parent/child address space, so we use fork if we can.
+    pid_t pid = fork();
+#endif
+    switch (pid) {
+        case -1:  // error
+            exception_throw(STR_JAVA_IO_IO_EXCEPTION, runtime, NULL);
+            return 1;
+        case 0: {  // child
+            // Setup stdin, stdout and stderr
+            dup2(in[1], STDOUT_FILENO);
+            close(in[0]);
+            close(in[1]);
+            dup2(out[0], STDIN_FILENO);
+            close(out[0]);
+            close(out[1]);
+            dup2(err[1], STDERR_FILENO);
+            close(err[0]);
+            close(err[1]);
+
+            close(msg[0]);
+
+            execvp(argv[0], argv);
+
+            // Error if here
+            s32 val = errno;
+            ssize_t rv = write(msg[1], &val, sizeof(val));
+            exit(127);
+        }
+            break;
+
+        default: {  // parent
+            jlongArr->prop.as_s64_arr[0] = pid;
+
+            safeClose(&in[1]);
+            safeClose(&out[0]);
+            safeClose(&err[1]);
+            safeClose(&msg[1]);
+
+            s32 val;
+            s32 r = read(msg[0], &val, sizeof(val));
+            if (r == -1) {
+                exception_throw(STR_JAVA_IO_IO_EXCEPTION, runtime, NULL);
+                return 1;
+            } else if (r) {
+                errno = val;
+                exception_throw(STR_JAVA_IO_IO_EXCEPTION, runtime, NULL);
+                return 1;
+            }
+        }
+            break;
+    }
+
+    safeClose(&msg[0]);
+
+    fcntl(in[0], F_SETFD, FD_CLOEXEC);
+    fcntl(out[1], F_SETFD, FD_CLOEXEC);
+    fcntl(err[0], F_SETFD, FD_CLOEXEC);
+    return 0;
+}
+
+s32 os_kill_process(s64 pid) {
+    pid_t tpid = (pid_t) pid;
+    kill(tpid, SIGTERM);
+    return 0;
+}
+
+s32 os_waitfor_process(JThreadRuntime *runtime, s64 pid, s64 tid, s32 *pExitCode) {
+    s32 finished = 0;
+    s32 status;
+    s32 exitCode;
+    while (!finished) {
+        waitpid(pid, &status, 0);
+        if (WIFEXITED(status)) {
+            finished = 1;
+            exitCode = WEXITSTATUS(status);
+        } else if (WIFSIGNALED(status)) {
+            finished = 1;
+            exitCode = -1;
+        }
+    }
+    *pExitCode = exitCode;
+    return 0;
+}
+
+Utf8String *os_get_tmp_dir() {
+    Utf8String *tmps = utf8_create();
+
+#ifndef P_tmpdir
+#define P_tmpdir "/tmp"
+#endif
+    utf8_append_c(tmps, P_tmpdir);
+    return tmps;
+}
+
+void os_set_file_length(FILE *file, s64 len) {
+    long current_pos = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    ftruncate(fileno(file), (off_t) len);
+    fseek(file, current_pos, SEEK_SET);
+}
+
+s32 os_mkdir(const c8 *path) {
+    return mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+}
+
+s32 os_iswin() {
+    return 0;
+}
+
+s32 os_fileno(FILE *fd) {
+    return fileno(fd);
+}
+
+s32 os_append_libname(Utf8String *libname, const c8 *lib) {
+    utf8_append_c(libname, "/lib");
+    utf8_replace_c(libname, "//", "/");
+    utf8_append_c(libname, lib);
+#if defined(__JVM_OS_MAC__)
+    utf8_append_c(libname, ".dylib");
+#else //__JVM_OS_LINUX__
+    utf8_append_c(libname, ".so");
+#endif
+    return 0;
+}
 
 s32 os_load_lib_and_init(const c8 *libname, JThreadRuntime *runtime) {
     __refer lib = dlopen(libname, RTLD_LAZY);
@@ -1058,7 +1241,7 @@ s32 os_load_lib_and_init(const c8 *libname, JThreadRuntime *runtime) {
             jvm_printf(STR_JNI_ONLOAD_NOT_FOUND, STR_JNI_ON_LOAD);
             return 1;
         } else {
-            f(runtime->jvm);
+            f(NULL);
             return 2;
         }
     }
