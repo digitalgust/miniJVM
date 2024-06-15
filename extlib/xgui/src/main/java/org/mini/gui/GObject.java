@@ -748,7 +748,7 @@ abstract public class GObject implements GAttachable {
         this.bgImg = bgImg;
     }
 
-    public void setBgimgAlpha(float bgImgAlpha) {
+    public void setBgImgAlpha(float bgImgAlpha) {
         this.bgImgAlpha = bgImgAlpha;
     }
 

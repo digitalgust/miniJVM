@@ -118,9 +118,9 @@ public class XFrame
             frame.setOnCloseScript(onCloseScript);
             frame.setOnInitScript(onInitScript);
             frame.getTitlePanel().setBgImg(GToolkit.getCachedImageFromJar(titleBgPic));
-            frame.getTitlePanel().setBgimgAlpha(titleBgPicAlpha);
+            frame.getTitlePanel().setBgImgAlpha(titleBgPicAlpha);
             frame.getView().setBgImg(GToolkit.getCachedImageFromJar(viewBgPic));
-            frame.getView().setBgimgAlpha(viewBgPicAlpha);
+            frame.getView().setBgImgAlpha(viewBgPicAlpha);
             frame.setTitleShow(titleShow);
         } else {
             frame.setLocation(x, y);

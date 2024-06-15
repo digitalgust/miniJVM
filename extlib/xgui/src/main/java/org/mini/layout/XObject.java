@@ -243,7 +243,7 @@ public abstract class XObject implements GLayout {
             if (bgPic != null) {
                 GImage img = GToolkit.getCachedImageFromJar(bgPic);
                 gui.setBgImg(img);
-                gui.setBgimgAlpha(bgPicAlpha);
+                gui.setBgImgAlpha(bgPicAlpha);
             }
 
             if (gui instanceof GContainer) {
