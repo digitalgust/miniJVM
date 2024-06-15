@@ -143,6 +143,7 @@ extern c8 const *STR_JAVA_LANG_ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION;
 extern c8 const *STR_JAVA_LANG_INSTANTIATION_EXCEPTION;
 extern c8 const *STR_JAVA_LANG_STACKTRACEELEMENT;
 extern c8 const *STR_ORG_MINI_REFLECT_LAUNCHER;
+extern c8 const *STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE;
 
 //=================================  raw ====================================
 
@@ -305,6 +306,7 @@ struct _JClass {
     s32 status;
     u8 array_cell_type;
     u8 primitive;
+    u8 is_weakref;
 };
 
 struct _JObject {
@@ -417,6 +419,8 @@ struct _Jvm {
     Hashtable *table_jstring_const;
     Hashtable *sys_prop;
     ArrayList *classloaders;
+    JObject *shutdown_hook;
+    Utf8String *startup_dir;
 };
 
 struct _ProCache {
@@ -466,7 +470,9 @@ Jvm *jvm_create(c8 *bootclasspath, c8 *classpath);
 
 void jvm_destroy(Jvm *jvm);
 
-s32 jvm_run_main(Utf8String *mainClass);
+s32 jvm_run_main(Utf8String *mainClass, Utf8String *args);
+
+PeerClassLoader *classloader_create_with_path(Jvm *jvm, c8 *path);
 
 JThreadRuntime *jthreadruntime_create();
 
@@ -568,7 +574,7 @@ s32 instance_of_class_name(InstProp *ins, s32 classNameIndex);
 
 s32 instance_of(InstProp *ins, JClass *clazz);
 
-s32 assignable_from(JClass *clazzSon, JClass *clazzSuper);
+s32 assignable_from(JClass *clazzSuper, JClass *clazzSon);
 
 s32 getDataTypeIndex(c8 ch);
 
@@ -646,7 +652,7 @@ JObject *construct_string_with_ustr(JThreadRuntime *runtime, Utf8String *str);
 
 JObject *construct_string_with_cstr_and_size(JThreadRuntime *runtime, c8 const *str, s32 size);
 
-void check_suspend_and_pause(JThreadRuntime *runtime);
+s32 check_suspend_and_pause(JThreadRuntime *runtime);
 
 void sys_properties_set_c(c8 *key, c8 *val);
 
@@ -671,6 +677,8 @@ JObject *weakreference_get_target(JThreadRuntime *runtime, JObject *jobj);
 void weakref_vmreferenceenqueue(JThreadRuntime *runtime, JObject *jobj);
 
 JObject *launcher_get_systemClassLoader(JThreadRuntime *runtime);
+
+s32 thread_is_daemon(JObject *jobj);
 //=====================================================================
 
 static inline StackFrame *method_enter(JThreadRuntime *runtime, s32 methodRawIndex, const RStackItem *stack, const RStackItem *local, const s32 *spPtr) {

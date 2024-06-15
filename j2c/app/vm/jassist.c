@@ -78,9 +78,9 @@ s64 nanoTime() {
 s64 threadSleep(s64 ms) {
     //wait time
     struct timespec req;
-    clock_gettime(CLOCK_REALTIME, &req);
-    req.tv_sec += ms / MILL_2_SEC_SCALE;
-    req.tv_nsec += (ms % MILL_2_SEC_SCALE) * NANO_2_MILLS_SCALE;
+    //clock_gettime(CLOCK_REALTIME, &req);
+    req.tv_sec = ms / MILL_2_SEC_SCALE;
+    req.tv_nsec = (ms % MILL_2_SEC_SCALE) * NANO_2_MILLS_SCALE;
     //if notify or notifyall ,the thread is active again, rem record remain wait time
     struct timespec rem;
     rem.tv_sec = 0;
@@ -507,13 +507,13 @@ s32 instance_of(InstProp *ins, JClass *clazz) {
     return 0;
 }
 
-s32 assignable_from(JClass *clazzSon, JClass *clazzSuper) {
+s32 assignable_from(JClass *clazzSuper, JClass *clazzSon) {
 
-    while (clazzSuper) {
-        if (clazzSon == clazzSuper) {
+    while (clazzSon) {
+        if (clazzSuper == clazzSon) {
             return 1;
         }
-        clazzSuper = getSuperClass(clazzSuper);
+        clazzSon = getSuperClass(clazzSon);
     }
     return 0;
 }

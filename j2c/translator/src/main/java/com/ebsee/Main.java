@@ -17,8 +17,9 @@ public class Main {
             {"java.lang.String", "offset", "I", "offset_in_string"},
             {"java.lang.Class", "classHandle", "J", "classHandle_in_class"},
             {"java.lang.Class", "classLoader", "Ljava/lang/ClassLoader;", "classLoader_in_class"},
+            {"java.lang.Thread", "daemon", "Z", "daemon_in_thread"},
             {"org.mini.reflect.ReflectMethod", "methodId", "J", "methodId_in_reflectmethod"},
-            {"org.mini.reflect.Launcher", "systemClassLoader", "Ljava/lang/ClassLoader;", "systemClassLoader_in_launcher"},
+            {"sun.misc.Launcher", "systemClassLoader", "Ljava/lang/ClassLoader;", "systemClassLoader_in_launcher"},
 
             {"java.lang.Boolean", "value", "Z", "value_in_boolean"},
             {"java.lang.Byte", "value", "B", "value_in_byte"},

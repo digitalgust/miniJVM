@@ -1,5 +1,6 @@
-/* -*- mode: vm; tab-width: 2; indent-tabs-mode: nil; -*-
-Copyright (vm) 2012 Marcus Geelnard
+/* -*- mode: c; tab-width: 2; indent-tabs-mode: nil; -*-
+Copyright (c) 2012 Marcus Geelnard
+Copyright (c) 2013-2016 Evan Nemerson
 
 This software is provided 'as-is', without any express or implied
 warranty. In no event will the authors be held liable for any damages
@@ -27,6 +28,7 @@ freely, subject to the following restrictions:
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 /**
 * @file
 * @mainpage TinyCThread API Reference
@@ -52,17 +54,17 @@ extern "C" {
 
 /* Which platform are we on? */
 #if !defined(_TTHREAD_PLATFORM_DEFINED_)
-  #if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
-    #define _TTHREAD_WIN32_
-  #else
-    #define _TTHREAD_POSIX_
-  #endif
-  #define _TTHREAD_PLATFORM_DEFINED_
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+#define _TTHREAD_WIN32_
+#else
+#define _TTHREAD_POSIX_
+#endif
+#define _TTHREAD_PLATFORM_DEFINED_
 #endif
 
 /* Activate some POSIX functionality (e.g. clock_gettime and recursive mutexes) */
 #if defined(_TTHREAD_POSIX_)
-  #undef _FEATURES_H
+#undef _FEATURES_H
   #if !defined(_GNU_SOURCE)
     #define _GNU_SOURCE
   #endif
@@ -74,6 +76,7 @@ extern "C" {
     #undef _XOPEN_SOURCE
     #define _XOPEN_SOURCE 500
   #endif
+  #define _XPG6
 #endif
 
 /* Generic includes */
@@ -81,61 +84,50 @@ extern "C" {
 
 /* Platform specific includes */
 #if defined(_TTHREAD_POSIX_)
-  #include <sys/time.h>
-  #include <pthread.h>
+#include <pthread.h>
 #elif defined(_TTHREAD_WIN32_)
-  #ifndef WIN32_LEAN_AND_MEAN
-    #define WIN32_LEAN_AND_MEAN
-    #define __UNDEF_LEAN_AND_MEAN
-  #endif
-  #include <windows.h>
-  #ifdef __UNDEF_LEAN_AND_MEAN
-    #undef WIN32_LEAN_AND_MEAN
-    #undef __UNDEF_LEAN_AND_MEAN
-  #endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#define __UNDEF_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#ifdef __UNDEF_LEAN_AND_MEAN
+#undef WIN32_LEAN_AND_MEAN
+#undef __UNDEF_LEAN_AND_MEAN
+#endif
 #endif
 
-/* Workaround for missing TIME_UTC: If time.h doesn't provide TIME_UTC,
-   it's quite likely that libc does not support it either. Hence, fall back to
-   the only other supported time specifier: CLOCK_REALTIME (and if that fails,
-   we're probably emulating clock_gettime anyway, so anything goes). */
-#ifndef TIME_UTC
-  #ifdef CLOCK_REALTIME
-    #define TIME_UTC CLOCK_REALTIME
-  #else
-    #define TIME_UTC 0
-  #endif
+/* Compiler-specific information */
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+#define TTHREAD_NORETURN _Noreturn
+#elif defined(__GNUC__)
+#define TTHREAD_NORETURN __attribute__((__noreturn__))
+#else
+  #define TTHREAD_NORETURN
 #endif
 
-/* Workaround for missing clock_gettime (most Windows compilers, afaik) */
-#if defined(_TTHREAD_WIN32_) || defined(__APPLE_CC__)
-#define _TTHREAD_EMULATE_CLOCK_GETTIME_
-/* Emulate struct timespec */
+/* If TIME_UTC is missing, provide it and provide a wrapper for
+   timespec_get. */
+#if !defined(TIME_UTC) || defined(__ANDROID__)
+#define TIME_UTC 1
+#define _TTHREAD_EMULATE_TIMESPEC_GET_
+
 #if defined(_TTHREAD_WIN32_)
-struct _ttherad_timespec {
-  time_t tv_sec;
-  long   tv_nsec;
+struct _tthread_timespec {
+    time_t tv_sec;
+    long   tv_nsec;
 };
-#define timespec _ttherad_timespec
+#define timespec _tthread_timespec
 #endif
 
-/* Emulate clockid_t */
-typedef int _tthread_clockid_t;
-#define clockid_t _tthread_clockid_t
-
-/* Emulate clock_gettime */
-int _tthread_clock_gettime(clockid_t clk_id, struct timespec *ts);
-#define clock_gettime _tthread_clock_gettime
-#ifndef CLOCK_REALTIME
-  #define CLOCK_REALTIME 0
+int _tthread_timespec_get(struct timespec *ts, int base);
+#define timespec_get _tthread_timespec_get
 #endif
-#endif
-
 
 /** TinyCThread version (major number). */
 #define TINYCTHREAD_VERSION_MAJOR 1
 /** TinyCThread version (minor number). */
-#define TINYCTHREAD_VERSION_MINOR 1
+#define TINYCTHREAD_VERSION_MINOR 2
 /** TinyCThread version (full version). */
 #define TINYCTHREAD_VERSION (TINYCTHREAD_VERSION_MAJOR * 100 + TINYCTHREAD_VERSION_MINOR)
 
@@ -154,41 +146,49 @@ int _tthread_clock_gettime(clockid_t clk_id, struct timespec *ts);
 * @note This directive is currently not supported on Mac OS X (it will give
 * a compiler error), since compile-time TLS is not supported in the Mac OS X
 * executable format. Also, some older versions of MinGW (before GCC 4.x) do
-* not support this directive.
+* not support this directive, nor does the Tiny C Compiler.
 * @hideinitializer
 */
 
-/* FIXME: Check for a PROPER value of __STDC_VERSION__ to know if we have C11 */
 #if !(defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201102L)) && !defined(_Thread_local)
- #if defined(__GNUC__) || defined(__INTEL_COMPILER) || defined(__SUNPRO_CC) || defined(__IBMCPP__)
+#if defined(__GNUC__) || defined(__INTEL_COMPILER) || defined(__SUNPRO_CC) || defined(__IBMCPP__)
   #define _Thread_local __thread
  #else
   #define _Thread_local __declspec(thread)
  #endif
+#elif defined(__GNUC__) && defined(__GNUC_MINOR__) && (((__GNUC__ << 8) | __GNUC_MINOR__) < ((4 << 8) | 9))
+#define _Thread_local __thread
 #endif
 
 /* Macros */
-#define TSS_DTOR_ITERATIONS 0
+#if defined(_TTHREAD_WIN32_)
+#define TSS_DTOR_ITERATIONS (4)
+#else
+#define TSS_DTOR_ITERATIONS PTHREAD_DESTRUCTOR_ITERATIONS
+#endif
 
 /* Function return values */
 #define thrd_error    0 /**< The requested operation failed */
 #define thrd_success  1 /**< The requested operation succeeded */
-#define thrd_timeout  2 /**< The time specified in the call was reached without acquiring the requested resource */
+#define thrd_timedout 2 /**< The time specified in the call was reached without acquiring the requested resource */
 #define thrd_busy     3 /**< The requested operation failed because a tesource requested by a test and return function is already in use */
 #define thrd_nomem    4 /**< The requested operation failed because it was unable to allocate memory */
 
 /* Mutex types */
-#define mtx_plain     1
-#define mtx_timed     2
-#define mtx_try       4
-#define mtx_recursive 8
+#define mtx_plain     0
+#define mtx_timed     1
+#define mtx_recursive 2
 
 /* Mutex */
 #if defined(_TTHREAD_WIN32_)
 typedef struct {
-  CRITICAL_SECTION mHandle;   /* Critical section handle */
-  int mAlreadyLocked;         /* TRUE if the mutex is already locked */
-  int mRecursive;             /* TRUE if the mutex is recursive */
+    union {
+        CRITICAL_SECTION cs;      /* Critical section handle (used for non-timed mutexes) */
+        HANDLE mut;               /* Mutex handle (used for timed mutex) */
+    } mHandle;                  /* Mutex handle */
+    int mAlreadyLocked;         /* TRUE if the mutex is already locked */
+    int mRecursive;             /* TRUE if the mutex is recursive */
+    int mTimed;                 /* TRUE if the mutex is timed */
 } mtx_t;
 #else
 typedef pthread_mutex_t mtx_t;
@@ -199,10 +199,8 @@ typedef pthread_mutex_t mtx_t;
 * @param type Bit-mask that must have one of the following six values:
 *   @li @c mtx_plain for a simple non-recursive mutex
 *   @li @c mtx_timed for a non-recursive mutex that supports timeout
-*   @li @c mtx_try for a non-recursive mutex that supports test and return
 *   @li @c mtx_plain | @c mtx_recursive (same as @c mtx_plain, but recursive)
 *   @li @c mtx_timed | @c mtx_recursive (same as @c mtx_timed, but recursive)
-*   @li @c mtx_try | @c mtx_recursive (same as @c mtx_try, but recursive)
 * @return @ref thrd_success on success, or @ref thrd_error if the request could
 * not be honored.
 */
@@ -223,7 +221,14 @@ void mtx_destroy(mtx_t *mtx);
 */
 int mtx_lock(mtx_t *mtx);
 
-/** NOT YET IMPLEMENTED.
+/** Lock the given mutex, or block until a specific point in time.
+* Blocks until either the given mutex can be locked, or the specified TIME_UTC
+* based time.
+* @param mtx A mutex object.
+* @param ts A UTC based calendar time
+* @return @ref The mtx_timedlock function returns thrd_success on success, or
+* thrd_timedout if the time specified was reached without acquiring the
+* requested resource, or thrd_error if the request could not be honored.
 */
 int mtx_timedlock(mtx_t *mtx, const struct timespec *ts);
 
@@ -247,9 +252,9 @@ int mtx_unlock(mtx_t *mtx);
 /* Condition variable */
 #if defined(_TTHREAD_WIN32_)
 typedef struct {
-  HANDLE mEvents[2];                  /* Signal and broadcast event HANDLEs. */
-  unsigned int mWaitersCount;         /* Count of the number of waiters. */
-  CRITICAL_SECTION mWaitersCountLock; /* Serialize access to mWaitersCount. */
+    HANDLE mEvents[2];                  /* Signal and broadcast event HANDLEs. */
+    unsigned int mWaitersCount;         /* Count of the number of waiters. */
+    CRITICAL_SECTION mWaitersCountLock; /* Serialize access to mWaitersCount. */
 } cnd_t;
 #else
 typedef pthread_cond_t cnd_t;
@@ -349,7 +354,8 @@ int thrd_create(thrd_t *thr, thrd_start_t func, void *arg);
 */
 thrd_t thrd_current(void);
 
-/** NOT YET IMPLEMENTED.
+/** Dispose of any resources allocated to the thread when that thread exits.
+ * @return thrd_success, or thrd_error on error
 */
 int thrd_detach(thrd_t thr);
 
@@ -363,7 +369,7 @@ int thrd_equal(thrd_t thr0, thrd_t thr1);
 /** Terminate execution of the calling thread.
 * @param res Result code of the calling thread.
 */
-void thrd_exit(int res);
+TTHREAD_NORETURN void thrd_exit(int res);
 
 /** Wait for a thread to terminate.
 * The function joins the given thread with the current thread by blocking
@@ -378,15 +384,16 @@ int thrd_join(thrd_t thr, int *res);
 
 /** Put the calling thread to sleep.
 * Suspend execution of the calling thread.
-* @param time_point A point in time at which the thread will resume (absolute time).
-* @param remaining If non-NULL, this parameter will hold the remaining time until
-*                  time_point upon return. This will typically be zero, but if
-*                  the thread was woken up by a signal that is not ignored before
-*                  time_point was reached @c remaining will hold a positive
-*                  time.
-* @return 0 (zero) on successful sleep, or -1 if an interrupt occurred.
+* @param duration  Interval to sleep for
+* @param remaining If non-NULL, this parameter will hold the remaining
+*                  time until time_point upon return. This will
+*                  typically be zero, but if the thread was woken up
+*                  by a signal that is not ignored before duration was
+*                  reached @c remaining will hold a positive time.
+* @return 0 (zero) on successful sleep, -1 if an interrupt occurred,
+*         or a negative value if the operation fails.
 */
-int thrd_sleep(const struct timespec *time_point, struct timespec *remaining);
+int thrd_sleep(const struct timespec *duration, struct timespec *remaining);
 
 /** Yield execution to another thread.
 * Permit other threads to run, even if the current thread would ordinarily
@@ -412,9 +419,11 @@ typedef void (*tss_dtor_t)(void *val);
 * @param dtor Destructor function. This can be NULL.
 * @return @ref thrd_success on success, or @ref thrd_error if the request could
 * not be honored.
-* @note The destructor function is not supported under Windows. If @c dtor is
-* not NULL when calling this function under Windows, the function will fail
-* and return @ref thrd_error.
+* @note On Windows, the @c dtor will definitely be called when
+* appropriate for threads created with @ref thrd_create.  It will be
+* called for other threads in most cases, the possible exception being
+* for DLLs loaded with LoadLibraryEx.  In order to be certain, you
+* should use @ref thrd_create whenever possible.
 */
 int tss_create(tss_t *key, tss_dtor_t dtor);
 
@@ -441,8 +450,30 @@ void *tss_get(tss_t key);
 */
 int tss_set(tss_t key, void *val);
 
-#ifdef __cplusplus
-};
+#if defined(_TTHREAD_WIN32_)
+typedef struct {
+    LONG volatile status;
+    CRITICAL_SECTION lock;
+} once_flag;
+#define ONCE_FLAG_INIT {0,}
+#else
+#define once_flag pthread_once_t
+  #define ONCE_FLAG_INIT PTHREAD_ONCE_INIT
 #endif
-#endif /* _TINYTHREAD_H_ */
 
+/** Invoke a callback exactly once
+ * @param flag Flag used to ensure the callback is invoked exactly
+ *        once.
+ * @param func Callback to invoke.
+ */
+#if defined(_TTHREAD_WIN32_)
+void call_once(once_flag *flag, void (*func)(void));
+#else
+#define call_once(flag,func) pthread_once(flag,func)
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _TINYTHREAD_H_ */

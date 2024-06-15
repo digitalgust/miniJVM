@@ -53,6 +53,9 @@ JObject *new_instance_with_classraw(JThreadRuntime *runtime, ClassRaw *raw) {
     ins->prop.members = &ins[1];
     ins->prop.type = INS_TYPE_OBJECT;
     ins->vm_table = raw->vmtable;
+    if (raw->clazz->is_weakref) {
+        ins->prop.is_weakreference = 1;
+    }
     gc_refer_reg(runtime, ins);
     return ins;
 }
@@ -287,7 +290,7 @@ s32 exception_check_print(JThreadRuntime *runtime) {
 }
 
 
-void check_suspend_and_pause(JThreadRuntime *runtime) {
+s32 check_suspend_and_pause(JThreadRuntime *runtime) {
     if (runtime->suspend_count && !runtime->no_pause) {
         runtime->is_suspend = 1;
         garbage_thread_lock();
@@ -299,6 +302,7 @@ void check_suspend_and_pause(JThreadRuntime *runtime) {
         //jvm_printf(".");
         garbage_thread_unlock();
     }
+    return 0;
 }
 
 

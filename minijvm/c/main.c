@@ -65,7 +65,6 @@ int main(int argc, char **argv) {
         utf8_append_c(cp, PATHSEPARATOR);
         utf8_append_c(cp, "./");
         utf8_append_c(cp, PATHSEPARATOR);
-        classpath = (c8 *) utf8_cstr(cp);
         main_name = "org.mini.glfw.GlfwMain";
 
         //test case
@@ -74,7 +73,6 @@ int main(int argc, char **argv) {
 //        utf8_append_c(cp, PATHSEPARATOR);
 //        utf8_append_c(cp, "./");
 //        utf8_append_c(cp, PATHSEPARATOR);
-//        classpath = (c8 *) utf8_cstr(cp);
 //        main_name = "test.HelloWorld";
 //        main_name = "test.Foo1";
 //        main_name = "test.Foo2";
@@ -97,7 +95,6 @@ int main(int argc, char **argv) {
 //        utf8_append(cp, startup_dir);
 //        utf8_append_c(cp, "../libex/commons-compiler.jar");
 //        utf8_append_c(cp, PATHSEPARATOR);
-//        classpath = (c8 *) utf8_cstr(cp);
 //        main_name = "org.codehaus.janino.Compiler";
 //        arraylist_push_back(java_para,"../res/BpDeepTest.java");
 
@@ -110,7 +107,6 @@ int main(int argc, char **argv) {
 //        utf8_append_c(cp, PATHSEPARATOR);
 //        utf8_append_c(cp, "./");
 //        utf8_append_c(cp, PATHSEPARATOR);
-//        classpath = (c8 *) utf8_cstr(cp);
 //        main_name = "DemoBasic";
 //        main_name = "DemoButton";
 
@@ -120,9 +116,9 @@ int main(int argc, char **argv) {
 //        utf8_append_c(cp, PATHSEPARATOR);
 //        utf8_append_c(cp, "./");
 //        utf8_append_c(cp, PATHSEPARATOR);
-//        classpath = (c8 *) utf8_cstr(cp);
 //        main_name = "org.luaj.vm2.lib.jme.TestLuaJ";
 
+        classpath = (c8 *) utf8_cstr(cp);
     }//default args
 
     //  mini_jvm   -Xmx16M -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/minijvm_test.jar;./ test/Foo1 999
