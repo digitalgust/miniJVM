@@ -22,10 +22,11 @@ public class GPanel extends GContainer {
 
 
     @Override
-    public boolean paint(long ctx) {
-        if (bgColor != null) {
-            GToolkit.drawRect(ctx, getX(), getY(), getW(), getH(), bgColor);
+    public boolean paint(long vg) {
+        boolean ret = super.paint(vg);
+        if (getBgImg() == null && bgColor != null) {
+            GToolkit.drawRect(vg, getX(), getY(), getW(), getH(), bgColor);
         }
-        return super.paint(ctx);
+        return ret;
     }
 }

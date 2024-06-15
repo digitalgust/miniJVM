@@ -180,6 +180,7 @@ class GColorSelector extends GObject {
      * @return
      */
     public boolean paint(long vg) {
+        super.paint(vg);
         float x = getX();
         float y = getY();
         float w = getW();

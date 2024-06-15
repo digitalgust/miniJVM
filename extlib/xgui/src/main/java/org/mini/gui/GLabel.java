@@ -122,6 +122,7 @@ public class GLabel extends GObject {
      * @return
      */
     public boolean paint(long vg) {
+        super.paint(vg);
         float x = getX();
         float y = getY();
         return paintFlying(vg, x, y);

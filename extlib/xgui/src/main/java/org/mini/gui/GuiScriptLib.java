@@ -69,6 +69,8 @@ public class GuiScriptLib extends Lib {
             methodNames.put("insertText".toLowerCase(), this::insertText);//
             methodNames.put("deleteText".toLowerCase(), this::deleteText);//
             methodNames.put("getCaretPos".toLowerCase(), this::getCaretPos);//
+            methodNames.put("showTitle".toLowerCase(), this::showTitle);//
+            methodNames.put("setBgImg".toLowerCase(), this::setBgImg);//
 
         }
     }
@@ -551,5 +553,30 @@ public class GuiScriptLib extends Lib {
             index = ((GTextObject) gobj).getCaretIndex();
         }
         return Interpreter.getCachedInt(index);
+    }
+
+    private DataType showTitle(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(form, compont);
+        if (gobj != null && gobj instanceof GFrame) {
+            boolean show = Interpreter.popBackBool(para);
+            ((GFrame) gobj).setTitleShow(show);
+        }
+        return null;
+    }
+
+    private DataType setBgImg(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(form, compont);
+        if (gobj != null) {
+            String imgpath = Interpreter.popBackStr(para);
+            gobj.setBgImg(GToolkit.getCachedImageFromJar(imgpath));
+            if (!para.isEmpty()) {
+                String alphaStr = Interpreter.popBackStr(para);
+                float f = Float.parseFloat(alphaStr);
+                gobj.setBgImgAlpha(f);
+            }
+        }
+        return null;
     }
 }

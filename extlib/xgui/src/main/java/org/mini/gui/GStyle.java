@@ -52,27 +52,26 @@ public abstract class GStyle {
     public abstract float[] getLowColor();
 
 
-    public void drawEditBoxBase(long vg, float x, float y, float w, float h) {
+    public void drawEditBoxBase(long vg, float x, float y, float w, float h, float r) {
         byte[] bg;
         // Edit
         bg = nvgBoxGradient(vg, x, y, w, h, 3, 4, getEditBackground(), nvgRGBA(32, 32, 32, 192));
         nvgBeginPath(vg);
-        nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, 4 - 1);
+        nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, r - 1f);
         nvgFillPaint(vg, bg);
         nvgFill(vg);
 
         nvgBeginPath(vg);
-        nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, 4 - 0.5f);
+        nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, r - 0.5f);
         nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 16));
         nvgStroke(vg);
     }
 
-    public void drawFieldBoxBase(long vg, float x, float y, float w, float h) {
+    public void drawFieldBoxBase(long vg, float x, float y, float w, float h, float r) {
         byte[] bg;
-        float cornerRadius = h / 2 - 1;
         bg = nvgBoxGradient(vg, x, y + 1.5f, w, h, h / 2, 5, nvgRGBA(0, 0, 0, 16), nvgRGBA(0, 0, 0, 92));
         nvgBeginPath(vg);
-        nvgRoundedRect(vg, x, y, w, h, cornerRadius);
+        nvgRoundedRect(vg, x, y, w, h, r);
         nvgFillPaint(vg, bg);
         nvgFill(vg);
     }

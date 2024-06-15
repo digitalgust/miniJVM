@@ -72,11 +72,17 @@ public class GSwitch extends GObject {
         }
     }
 
+    @Override
+    protected float getCornerRadius() {
+        return getH() * .5f;
+    }
+
     /**
      * @param vg
      * @return
      */
     public boolean paint(long vg) {
+        super.paint(vg);
         float x = getX() + 2;
         float y = getY() + 2;
         float w = boundle[WIDTH] - 4;

@@ -6,6 +6,7 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
+import org.mini.nanovg.Nanovg;
 
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
 import static org.mini.gui.GToolkit.getStyle;
@@ -139,6 +140,7 @@ public class GListItem extends GContainer {
 
     @Override
     public boolean paint(long vg) {
+        super.paint(vg);
         float x = getX();
         float y = getY();
         float w = getW();
@@ -156,11 +158,17 @@ public class GListItem extends GContainer {
         float tx, ty;
         tx = x + pad;
         ty = y + pad * .5f;
+        float tw = w - (pad * 2);
+        float th = list.list_item_heigh - pad;
+
+        nvgSave(vg);
+        Nanovg.nvgScissor(vg, tx, ty, tw, th);
+
 
         if (list.isSelected(getIndex())) {
-            GToolkit.drawRect(vg, tx, ty, w - (pad * 2), list.list_item_heigh - pad, GToolkit.getStyle().getSelectedColor());
+            GToolkit.drawRect(vg, tx, ty, tw, th, GToolkit.getStyle().getSelectedColor());
         } else {
-            GToolkit.drawRect(vg, tx, ty, w - (pad * 2), list.list_item_heigh - pad, GToolkit.getStyle().getUnselectedColor());
+            GToolkit.drawRect(vg, tx, ty, tw, th, GToolkit.getStyle().getUnselectedColor());
         }
         float[] c = outOfFilter ? GToolkit.getStyle().getHintFontColor() : enable ? getColor() : getDisabledColor();
 
@@ -188,6 +196,7 @@ public class GListItem extends GContainer {
         }
         nvgFillColor(vg, c);
         GToolkit.drawTextLine(vg, tx + ((img == null && preicon_arr == null) ? 0 : thumb) + pad, ty + thumb / 2, getText(), list.getFontSize(), c, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        Nanovg.nvgRestore(vg);
         return true;
     }
 

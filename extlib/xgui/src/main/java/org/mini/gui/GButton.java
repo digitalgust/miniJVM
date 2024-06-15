@@ -25,12 +25,6 @@ public class GButton extends GObject {
     protected boolean bt_pressed = false;
     float oldX, oldY;
 
-    private boolean validAction(float releaseX, float releaseY) {
-        if (releaseX >= oldX && releaseX <= oldX + getW() && releaseY >= oldY && releaseY < oldY + getH()) {
-            return true;
-        }
-        return false;
-    }
 
     public GButton(GForm form) {
         this(form, null, 0f, 0f, 1f, 1f);
@@ -42,6 +36,7 @@ public class GButton extends GObject {
         setLocation(left, top);
         setSize(width, height);
         setBgColor(GColorSelector.TRANSPARENT);
+        setCornerRadius(4.f);
     }
 
 
@@ -122,6 +117,7 @@ public class GButton extends GObject {
      */
     @Override
     public boolean paint(long vg) {
+        super.paint(vg);
         float x = getX();
         float y = getY();
         return paintFlying(vg, x, y);
@@ -134,7 +130,7 @@ public class GButton extends GObject {
 
         byte[] bg;
 
-        float cornerRadius = 4.0f;
+
         float tw = 0, iw = 0;
         float move = 0;
         if (bt_pressed) {
@@ -144,14 +140,14 @@ public class GButton extends GObject {
             bg = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(255, 255, 255, 0x10), nvgRGBA(0, 0, 0, 0x10));
         }
         nvgBeginPath(vg);
-        nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, cornerRadius - 1);
+        nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, getCornerRadius() - 1);
         nvgFillColor(vg, getBgColor());
         nvgFill(vg);
         nvgFillPaint(vg, bg);
         nvgFill(vg);
 
         nvgBeginPath(vg);
-        nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, cornerRadius - 0.5f);
+        nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, getCornerRadius() - 0.5f);
         nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 48));
         nvgStroke(vg);
 
@@ -193,4 +189,12 @@ public class GButton extends GObject {
         }
         return false;
     }
+
+    private boolean validAction(float releaseX, float releaseY) {
+        if (releaseX >= oldX && releaseX <= oldX + getW() && releaseY >= oldY && releaseY < oldY + getH()) {
+            return true;
+        }
+        return false;
+    }
+
 }

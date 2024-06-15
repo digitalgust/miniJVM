@@ -917,6 +917,11 @@ public class MV extends MethodVisitor {
         return 0;
     }
 
+    private void addLoopBackCheck() {
+        add("if (runtime->suspend_count) { " + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);}");
+        add("if (runtime->is_interrupt) { goto " + EXCEPTION_HANDLER_NOT_FOUND + ";}");
+    }
+
     @Override
     public void visitJumpInsn(int opcode, Label label) {
 
@@ -924,99 +929,114 @@ public class MV extends MethodVisitor {
         switch (opcode) {
             case Opcodes.IFEQ: // 153
                 if (labels.contains(label.toString())) {
-                    add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
+                    addLoopBackCheck();
+                    //add("if(runtime->suspend_count)if(" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime)) goto " + EXCEPTION_HANDLER_NOT_FOUND + ";");
                 }
                 add("if(stack[--sp].i  == 0) goto " + label + ";");
                 break;
             case Opcodes.IFNE: // 154
                 if (labels.contains(label.toString())) {
-                    add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
+                    addLoopBackCheck();
+                    //add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
                 }
                 add("if(stack[--sp].i  != 0) goto " + label + ";");
                 break;
             case Opcodes.IFLT: // 155
                 if (labels.contains(label.toString())) {
-                    add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
+                    addLoopBackCheck();
+                    //add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
                 }
                 add("if(stack[--sp].i  < 0) goto " + label + ";");
                 break;
             case Opcodes.IFGE: // 156
                 if (labels.contains(label.toString())) {
-                    add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
+                    addLoopBackCheck();
+                    //add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
                 }
                 add("if(stack[--sp].i  >= 0) goto " + label + ";");
                 break;
             case Opcodes.IFGT: // 157
                 if (labels.contains(label.toString())) {
-                    add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
+                    addLoopBackCheck();
+                    //add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
                 }
                 add("if(stack[--sp].i  > 0) goto " + label + ";");
                 break;
             case Opcodes.IFLE: // 158
                 if (labels.contains(label.toString())) {
-                    add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
+                    addLoopBackCheck();
+                    //add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
                 }
                 add("if(stack[--sp].i  <= 0) goto " + label + ";");
                 break;
             case Opcodes.IF_ICMPEQ: // 159
                 if (labels.contains(label.toString())) {
-                    add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
+                    addLoopBackCheck();
+                    //add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
                 }
                 add("sp -= 2;");
                 add("if(stack[sp + 0].i  == stack[sp + 1].i) goto " + label + ";");
                 break;
             case Opcodes.IF_ICMPNE: // 160
                 if (labels.contains(label.toString())) {
-                    add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
+                    addLoopBackCheck();
+                    //add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
                 }
                 add("sp -= 2;");
                 add("if(stack[sp + 0].i  != stack[sp + 1].i) goto " + label + ";");
                 break;
             case Opcodes.IF_ICMPLT: // 161
                 if (labels.contains(label.toString())) {
-                    add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
+                    addLoopBackCheck();
+                    //add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
                 }
                 add("sp -= 2;");
                 add("if(stack[sp + 0].i  < stack[sp + 1].i) goto " + label + ";");
                 break;
             case Opcodes.IF_ICMPGE: // 162
                 if (labels.contains(label.toString())) {
-                    add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
+                    addLoopBackCheck();
+                    //add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
                 }
                 add("sp -= 2;");
                 add("if(stack[sp + 0].i  >= stack[sp + 1].i) goto " + label + ";");
                 break;
             case Opcodes.IF_ICMPGT: // 163
                 if (labels.contains(label.toString())) {
-                    add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
+                    addLoopBackCheck();
+                    //add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
                 }
                 add("sp -= 2;");
                 add("if(stack[sp + 0].i  > stack[sp + 1].i) goto " + label + ";");
                 break;
             case Opcodes.IF_ICMPLE: // 164
                 if (labels.contains(label.toString())) {
-                    add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
+                    addLoopBackCheck();
+                    //add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
                 }
                 add("sp -= 2;");
                 add("if(stack[sp + 0].i  <= stack[sp + 1].i) goto " + label + ";");
                 break;
             case Opcodes.IF_ACMPEQ: // 165
                 if (labels.contains(label.toString())) {
-                    add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
+                    addLoopBackCheck();
+                    //add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
                 }
                 add("sp -= 2;");
                 add("if(rstack[sp + 0].obj  == rstack[sp + 1].obj) goto " + label + ";");
                 break;
             case Opcodes.IF_ACMPNE: // 166
                 if (labels.contains(label.toString())) {
-                    add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
+                    addLoopBackCheck();
+                    //add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
                 }
                 add("sp -= 2;");
                 add("if(rstack[sp + 0].obj  != rstack[sp + 1].obj) goto " + label + ";");
                 break;
             case Opcodes.GOTO: // 167
                 if (labels.contains(label.toString())) {
-                    add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
+                    addLoopBackCheck();
+                    //add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
                 }
                 add("goto " + label + ";");
                 break;
@@ -1028,13 +1048,15 @@ public class MV extends MethodVisitor {
                 break;
             case Opcodes.IFNULL: // 198
                 if (labels.contains(label.toString())) {
-                    add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
+                    addLoopBackCheck();
+                    //add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
                 }
                 add("if(rstack[--sp].obj  == NULL) goto " + label + ";");
                 break;
             case Opcodes.IFNONNULL: // 199
                 if (labels.contains(label.toString())) {
-                    add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
+                    addLoopBackCheck();
+                    //add("if(runtime->suspend_count)" + AssistLLVM.FUNC_CHECK_SUSPEND_AND_PAUSE + "(runtime);");
                 }
                 add("if(rstack[--sp].obj  != NULL) goto " + label + ";");
                 break;

@@ -29,6 +29,7 @@ public class GImageItem extends GObject {
     public GImageItem(GForm form, GImage img) {
         super(form);
         this.img = img;
+        setCornerRadius(5.f);
     }
 
     @Override
@@ -38,7 +39,7 @@ public class GImageItem extends GObject {
 
 
     public boolean paint(long vg) {
-
+        super.paint(vg);
         float x = getX();
         float y = getY();
         return paintFlying(vg, x, y);
@@ -77,7 +78,7 @@ public class GImageItem extends GObject {
                 byte[] imgPaint;
                 imgPaint = nvgImagePattern(vg, x + ix + 2, y + iy + 2, iw - 4, ih - 4, 0.0f / 180.0f * (float) Math.PI, img.getNvgTextureId(vg), a);
                 nvgBeginPath(vg);
-                nvgRoundedRect(vg, x, y, w, h, 5);
+                nvgRoundedRect(vg, x, y, w, h, getCornerRadius());
                 nvgFillPaint(vg, imgPaint);
                 nvgFill(vg);
             } else {
@@ -91,17 +92,18 @@ public class GImageItem extends GObject {
         //画框
         if (drawBorder) {
 
+            float r = getCornerRadius();
             byte[] shadowPaint;
             shadowPaint = nvgBoxGradient(vg, x, y, w, h, 5, 3, nvgRGBA(0, 0, 0, 128), nvgRGBA(0, 0, 0, 0));
             nvgBeginPath(vg);
-            nvgRect(vg, x - 5, y - 5, w + 10, h + 10);
+            nvgRect(vg, x - r, y - r, w + r * 2, h + r * 2);
             nvgRoundedRect(vg, x, y, w, h, 6);
             nvgPathWinding(vg, NVG_HOLE);
             nvgFillPaint(vg, shadowPaint);
             nvgFill(vg);
 
             nvgBeginPath(vg);
-            nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, 3.5f);
+            nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, r - 2.f);
             nvgStrokeWidth(vg, 1.0f);
             nvgStrokeColor(vg, getColor());
             nvgStroke(vg);

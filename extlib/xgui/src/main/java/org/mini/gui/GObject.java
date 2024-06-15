@@ -97,6 +97,13 @@ abstract public class GObject implements GAttachable {
     private String onClinkScript;
     private String onStateChangeScript;
 
+    private GImage bgImg;
+
+    public static final float DEFAULT_BG_ALPHA = 0.5f;
+    private float bgImgAlpha = DEFAULT_BG_ALPHA;
+
+    float cornerRadius = 0.0f;
+
     protected GObject(GForm form) {
         if (this instanceof GForm) {//只有GForm可以传空进来
             this.form = (GForm) this;
@@ -159,7 +166,18 @@ abstract public class GObject implements GAttachable {
         return true;
     }
 
-    public boolean paint(long ctx) {
+    protected float getCornerRadius() {
+        return cornerRadius;
+    }
+
+    protected void setCornerRadius(float cornerRadius) {
+        this.cornerRadius = cornerRadius;
+    }
+
+    public boolean paint(long vg) {
+        if (bgImg != null) {
+            GToolkit.drawImageStretch(vg, bgImg, getX(), getY(), getW(), getH(), false, bgImgAlpha, getCornerRadius());
+        }
         return true;
     }
 
@@ -721,4 +739,21 @@ abstract public class GObject implements GAttachable {
         }
         return baos;
     }
+
+    public GImage getBgImg() {
+        return bgImg;
+    }
+
+    public void setBgImg(GImage bgImg) {
+        this.bgImg = bgImg;
+    }
+
+    public void setBgImgAlpha(float bgImgAlpha) {
+        this.bgImgAlpha = bgImgAlpha;
+    }
+
+    public float getBgImgAlpha() {
+        return bgImgAlpha;
+    }
+
 }

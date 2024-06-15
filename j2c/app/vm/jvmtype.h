@@ -56,6 +56,14 @@
 #endif
 
 
+#if __JVM_OS_VS__ || __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__
+#define PATHSEPARATOR ";"
+#else
+#define PATHSEPARATOR ":"
+#endif
+
+
+
 typedef unsigned char u8;
 typedef signed char s8;
 typedef char c8;

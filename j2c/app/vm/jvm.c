@@ -19,11 +19,13 @@ c8 const *STR_JAVA_LANG_NULL_POINTER_EXCEPTION = "java/lang/NullPointerException
 c8 const *STR_JAVA_LANG_NO_SUCH_METHOD_EXCEPTION = "java/lang/NoSuchMethodException";
 c8 const *STR_JAVA_LANG_NO_SUCH_FIELD_EXCEPTION = "java/lang/NoSuchFieldException";
 c8 const *STR_JAVA_LANG_ILLEGAL_ARGUMENT_EXCEPTION = "java/lang/IllegalArgumentException";
+c8 const *STR_JAVA_IO_IO_EXCEPTION = "java/io/IOException";
 c8 const *STR_JAVA_LANG_CLASS_CAST_EXCEPTION = "java/lang/ClassCastException";
 c8 const *STR_JAVA_LANG_ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION = "java/lang/ArrayIndexOutOfBoundsException";
 c8 const *STR_JAVA_LANG_INSTANTIATION_EXCEPTION = "java/lang/InstantiationException";
 c8 const *STR_JAVA_LANG_STACKTRACEELEMENT = "java/lang/StackTraceElement";
-c8 const *STR_ORG_MINI_REFLECT_LAUNCHER = "org/mini/reflect/Launcher";
+c8 const *STR_ORG_MINI_REFLECT_LAUNCHER = "sun/misc/Launcher";
+c8 const *STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE = "java/lang/ref/WeakReference";
 
 //=====================================================================
 //define variable
@@ -34,42 +36,21 @@ ProCache g_procache;
 //=====================================================================
 
 //=====================================================================
-#if __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__ || __JVM_OS_VS__
-#define PATHSEPARATOR ';'
-#else
-#define PATHSEPARATOR ':'
-#endif
 
 void classloader_add_jar_path(PeerClassLoader *class_loader, Utf8String *jar_path) {
 
-    Utf8String *tmp = NULL;
-    s32 i = 0;
-    while (i < jar_path->length) {
-        if (tmp == NULL) {
-            tmp = utf8_create();
-        }
-        c8 ch = utf8_char_at(jar_path, i++);
-        if (i == jar_path->length) {
-            if (ch != ';' && ch != ':')utf8_insert(tmp, tmp->length, ch);
-            ch = PATHSEPARATOR;
-        }
-        if (ch == PATHSEPARATOR) {
-            if (utf8_last_indexof_c(tmp, "/") == tmp->length - 1) {
-                utf8_remove(tmp, tmp->length - 1);
-            }
-            //check duplicate
-            s32 j;
-            for (j = 0; j < class_loader->classpath->length; j++) {
-                if (utf8_equals(arraylist_get_value(class_loader->classpath, j), tmp)) {
-                    continue;
-                }
-            }
-            arraylist_push_back(class_loader->classpath, tmp);
-            tmp = NULL;
+    Utf8String *libname = utf8_create();
+    s32 i;
+    for (i = 0;; i++) {
+        utf8_split_get_part(jar_path, PATHSEPARATOR, i, libname);
+        if (libname->length) {
+            arraylist_push_back(class_loader->classpath, libname);
+            libname = utf8_create();
         } else {
-            utf8_insert(tmp, tmp->length, ch);
+            break;
         }
     }
+    utf8_destory(libname);
 }
 
 PeerClassLoader *classloader_create_with_path(Jvm *jvm, c8 *path) {
@@ -391,6 +372,12 @@ void class_clinit(JThreadRuntime *runtime, Utf8String *className) {
         clazz->status = CLASS_STATUS_CLINITED;
     }
 
+    JClass *weak_clazz = classes_get_c(STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE);
+    if (weak_clazz && assignable_from(weak_clazz, clazz)) {
+        clazz->is_weakref = 1;
+    }
+
+
     runtime->no_pause--;
     garbage_thread_unlock();
 }
@@ -608,6 +595,9 @@ void jvm_destroy(Jvm *jvm) {
     arraylist_destory(jvm->classloaders);
     hashtable_destory(jvm->table_jstring_const);
     hashtable_destory(jvm->sys_prop);
+    if (g_jvm->startup_dir) {
+        utf8_destory(g_jvm->startup_dir);
+    }
     jvm_free(jvm);
     jvm_printf("[INFO]jvm destroied\n");
 }
@@ -780,9 +770,27 @@ s32 jthread_waitTime(InstProp *mb, JThreadRuntime *runtime, s64 waitms) {
 }
 
 s32 jthread_sleep(JThreadRuntime *runtime, s64 ms) {
-    u8 s = jthread_block_enter(runtime);
-    threadSleep(ms);
-    jthread_block_exit(runtime, s);
+    static const s64 PERIOD = 500;
+    s32 ret = 0;
+    jthread_block_enter(runtime);
+    u8 thread_status = runtime->thread_status;
+    runtime->thread_status = THREAD_STATUS_BLOCKED;
+    if (ms < PERIOD) {
+        threadSleep(ms);
+    } else {
+        s64 sleeped = 0, remain;
+        while (sleeped < ms) {
+            remain = ms - sleeped;
+            threadSleep(remain < PERIOD ? remain : PERIOD);
+            sleeped += PERIOD;
+            if (runtime->is_interrupt) {
+                ret = 1;
+                break;
+            }
+        }
+    }
+    runtime->thread_status = thread_status;
+    jthread_block_exit(runtime, thread_status);
     return 0;
 }
 
@@ -893,20 +901,23 @@ void jthread_unbound(JThreadRuntime *runtime) {
  */
 
 
-s32 jvm_run_main(Utf8String *mainClass) {
+s32 jvm_run_main(Utf8String *mainClass, Utf8String *startupDir) {
     g_jvm = jvm_create("", "");
+    g_jvm->startup_dir = utf8_create_copy(startupDir);
 
     utf8_replace_c(mainClass, ".", "/");
     c8 *methodName = "main";
     c8 *signature = "([Ljava/lang/String;)V";
-    class_load(utf8_cstr(mainClass));
+    JThreadRuntime *runtime = jthreadruntime_create();
+    tss_set(TLS_KEY_JTHREADRUNTIME, runtime);
+    class_load(mainClass);
     MethodRaw *method = find_methodraw(utf8_cstr(mainClass), methodName, signature);
     if (method) {
-        JThreadRuntime *runtime = jthreadruntime_create();
         runtime->exec = method;
         runtime->thread = thrd_current();
         jthread_run(runtime);
     } else {
+        jthreadruntime_destroy(runtime);
         jvm_printf("[ERROR]can not found %s.%s%s\n", utf8_cstr(mainClass), methodName, signature);
     }
     //printf("threads count %d\n", g_jvm->thread_list->length);
@@ -915,7 +926,11 @@ s32 jvm_run_main(Utf8String *mainClass) {
         s32 alive = 0;
         for (i = 0; i < g_jvm->thread_list->length; i++) {
             JThreadRuntime *r = arraylist_get_value(g_jvm->thread_list, i);
-            if (r->thread_status != THREAD_STATUS_DEAD) {//todo daemon thread
+            s32 daemon = thread_is_daemon(r->jthread);
+            if (daemon) {
+                r->is_interrupt = 1;
+            }
+            if (r->thread_status != THREAD_STATUS_DEAD) {//
                 alive++;
             }
         }

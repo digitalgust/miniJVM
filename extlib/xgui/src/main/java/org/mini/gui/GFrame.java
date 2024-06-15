@@ -22,6 +22,8 @@ import static org.mini.nanovg.Nanovg.*;
 public class GFrame extends GContainer {
 
     public static final float TITLE_HEIGHT = 30.f, PAD = 2.f;
+    float titleHeight = TITLE_HEIGHT;
+    float padH = PAD;
 
     protected String title;
     protected byte[] title_arr;
@@ -30,7 +32,9 @@ public class GFrame extends GContainer {
     protected float[] close_boundle = new float[4];
 
     protected GViewPort view = new GViewPort(form);
-    protected GPanel title_panel = new GPanel(form);
+
+    protected GPanel titlePanel = new TitlePanel(form);
+
 
     protected int frameMode;
     protected boolean closable = true;
@@ -44,23 +48,26 @@ public class GFrame extends GContainer {
 
     public GFrame(GForm form, String title, float left, float top, float width, float height) {
         super(form);
+        setCornerRadius(3.f);
+
         setTitle(title);
         setLocation(left, top);
         setSize(width, height);
 
-        view.setLocation(PAD, TITLE_HEIGHT + PAD);
-        view.setSize(width - PAD * 2, height - TITLE_HEIGHT - PAD * 2);
+        view.setLocation(PAD, titleHeight + PAD);
+        view.setSize(width - PAD * 2, height - titleHeight - PAD * 2);
         addImpl(view);
 
-        title_panel.setLocation(1, 1);
-        title_panel.setSize(width - PAD, TITLE_HEIGHT);
-        addImpl(title_panel);
+        titlePanel.setLocation(1, 1);
+        titlePanel.setSize(width - PAD, titleHeight);
+        addImpl(titlePanel);
     }
 
     @Override
     public void setSize(float w, float h) {
-        title_panel.setSize(w - PAD, TITLE_HEIGHT);
-        view.setSize(w - PAD * 2, h - TITLE_HEIGHT - PAD * 2);
+        titlePanel.setSize(w - PAD, titleHeight);
+        view.setLocation(PAD, titleHeight + PAD);
+        view.setSize(w - PAD * 2, h - titleHeight - PAD * 2);
         super.setSize(w, h);
     }
 
@@ -127,6 +134,11 @@ public class GFrame extends GContainer {
     public GViewPort getView() {
         return view;
     }
+
+    public GPanel getTitlePanel() {
+        return titlePanel;
+    }
+
 
     /**
      * @return the closable
@@ -199,76 +211,30 @@ public class GFrame extends GContainer {
         float y = getY();
         float w = getW();
         float h = getH();
-        drawWindow(vg, title, x, y, w, h);
-        super.paint(vg);
         validLocation();
-        return true;
-    }
 
-    void drawWindow(long vg, String title, float x, float y, float w, float h) {
-        float cornerRadius = 3.0f;
-        byte[] shadowPaint;
-        byte[] headerPaint;
 
         // Window
-        nvgBeginPath(vg);
-        nvgRoundedRect(vg, x, y, w, h, cornerRadius);
-        nvgFillColor(vg, getBgColor());
-        nvgFill(vg);
+        if (getBgImg() == null) {
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, x, y, w, h, getCornerRadius());
+            nvgFillColor(vg, getBgColor());
+            nvgFill(vg);
+        }
+        super.paint(vg);
 
         // Drop shadow
-        shadowPaint = nvgBoxGradient(vg, x, y + 2, w, h, cornerRadius * 2, 10, nvgRGBA(0, 0, 0, 128), nvgRGBA(0, 0, 0, 0));
+        byte[] shadowPaint;
+        shadowPaint = nvgBoxGradient(vg, x, y + 2, w, h, getCornerRadius() * 2, 10, nvgRGBA(0, 0, 0, 128), nvgRGBA(0, 0, 0, 0));
         nvgBeginPath(vg);
         nvgRect(vg, x - 10, y - 10, w + 20, h + 30);
-        nvgRoundedRect(vg, x, y, w, h, cornerRadius);
+        nvgRoundedRect(vg, x, y, w, h, getCornerRadius());
         nvgPathWinding(vg, NVG_HOLE);
         nvgFillPaint(vg, shadowPaint);
         nvgFill(vg);
-
-        // Header
-        headerPaint = nvgLinearGradient(vg, x, y, x, y + 15, nvgRGBA(255, 255, 255, 8), nvgRGBA(0, 0, 0, 16));
-        nvgBeginPath(vg);
-        nvgRoundedRect(vg,
-                title_panel.getX(),
-                title_panel.getY(),
-                title_panel.getW(),
-                title_panel.getH(),
-                cornerRadius - 1);
-        nvgFillPaint(vg, headerPaint);
-        nvgFill(vg);
-
-        nvgBeginPath(vg);
-        nvgMoveTo(vg, x + 0.5f, y + 0.5f + 30);
-        nvgLineTo(vg, x + 0.5f + w - 1, y + 0.5f + 30);
-        nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 32));
-        nvgStroke(vg);
-
-        nvgFontSize(vg, GToolkit.getStyle().getTitleFontSize());
-        nvgFontFace(vg, GToolkit.getFontWord());
-        nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-
-        if (title_arr != null) {
-            nvgFontBlur(vg, 2);
-            nvgFillColor(vg, GToolkit.getStyle().getTextShadowColor());
-            nvgTextJni(vg, x + w / 2, y + 16 + 1, title_arr, 0, title_arr.length);
-
-            nvgFontBlur(vg, 0);
-            nvgFillColor(vg, GToolkit.getStyle().getFrameTitleColor());
-            nvgTextJni(vg, x + w / 2, y + 16, title_arr, 0, title_arr.length);
-        }
-        if (closable) {
-            nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
-            nvgFontFace(vg, GToolkit.getFontIcon());
-            nvgFillColor(vg, nvgRGBA(192, 32, 32, 128));
-            nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-            nvgTextJni(vg, x + 10, y + 16, close_arr, 0, close_arr.length);
-        }
-        close_boundle[LEFT] = x;
-        close_boundle[TOP] = y;
-        close_boundle[WIDTH] = 30;
-        close_boundle[HEIGHT] = 30;
-
+        return true;
     }
+
 
     int mouseX, mouseY;
     boolean dragFrame = false;
@@ -281,7 +247,7 @@ public class GFrame extends GContainer {
                 if (pressed) {
                     if (closable && isInBoundle(close_boundle, x, y)) {
                         close();
-                    } else if (title_panel.isInArea(x, y) && button == Glfw.GLFW_MOUSE_BUTTON_1) {
+                    } else if (titlePanel.isInArea(x, y) && button == Glfw.GLFW_MOUSE_BUTTON_1) {
                         dragFrame = true;
                     }
 
@@ -334,7 +300,7 @@ public class GFrame extends GContainer {
             case Glfm.GLFMTouchPhaseBegan:
                 if (closable && isInBoundle(close_boundle, x, y)) {
                     close();
-                } else if (title_panel.isInArea(x, y)) {
+                } else if (titlePanel.isInArea(x, y)) {
                     dragFrame = true;
                 }
                 mouseX = x;
@@ -462,5 +428,78 @@ public class GFrame extends GContainer {
             }
         }
     }
+
+    public void setTitleShow(boolean enable) {
+        if (enable) {
+            titleHeight = TITLE_HEIGHT;
+            padH = PAD;
+        } else {
+            titleHeight = 0;
+            padH = 0;
+        }
+        setSize(getW(), getH());
+    }
+
+    class TitlePanel extends GPanel {
+        public TitlePanel(GForm form) {
+            super(form);
+        }
+
+        @Override
+        public boolean paint(long vg) {
+            if (getH() < 1f) return false;
+
+            super.paint(vg);
+
+            byte[] headerPaint;
+            float x = getX();
+            float y = getY();
+            float w = getW();
+            float h = getH();
+            headerPaint = nvgLinearGradient(vg, x, y, x, y + 15, nvgRGBA(255, 255, 255, 8), nvgRGBA(0, 0, 0, 16));
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg,
+                    x,
+                    y,
+                    w,
+                    h,
+                    getCornerRadius() - 1);
+            nvgFillPaint(vg, headerPaint);
+            nvgFill(vg);
+
+            nvgBeginPath(vg);
+            nvgMoveTo(vg, x + 0.5f, y + 0.5f + 30);
+            nvgLineTo(vg, x + 0.5f + w - 1, y + 0.5f + 30);
+            nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 32));
+            nvgStroke(vg);
+
+            nvgFontSize(vg, GToolkit.getStyle().getTitleFontSize());
+            nvgFontFace(vg, GToolkit.getFontWord());
+            nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+
+            if (title_arr != null) {
+                nvgFontBlur(vg, 2);
+                nvgFillColor(vg, GToolkit.getStyle().getTextShadowColor());
+                nvgTextJni(vg, x + w / 2, y + 16 + 1, title_arr, 0, title_arr.length);
+
+                nvgFontBlur(vg, 0);
+                nvgFillColor(vg, GToolkit.getStyle().getFrameTitleColor());
+                nvgTextJni(vg, x + w / 2, y + 16, title_arr, 0, title_arr.length);
+            }
+            if (closable) {
+                nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
+                nvgFontFace(vg, GToolkit.getFontIcon());
+                nvgFillColor(vg, nvgRGBA(192, 32, 32, 128));
+                nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+                nvgTextJni(vg, x + 10, y + 16, close_arr, 0, close_arr.length);
+            }
+            close_boundle[LEFT] = x;
+            close_boundle[TOP] = y;
+            close_boundle[WIDTH] = 30;
+            close_boundle[HEIGHT] = 30;
+            return true;
+        }
+    }
+
 
 }

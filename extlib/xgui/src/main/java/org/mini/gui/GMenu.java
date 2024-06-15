@@ -35,6 +35,8 @@ public class GMenu extends GContainer {
         layer = LAYER_MENU_OR_POPUP;
         setLocation(left, top);
         setSize(width, height);
+
+        setCornerRadius(4.f);
     }
 
 
@@ -98,6 +100,7 @@ public class GMenu extends GContainer {
      * @return
      */
     public boolean paint(long vg) {
+        super.paint(vg);
         float x = getX();
         float y = getY();
         float w = getW();
@@ -105,24 +108,23 @@ public class GMenu extends GContainer {
 
         //画底板
         byte[] bg;
-        float cornerRadius = 4.0f;
         //System.out.println("draw==========="+touched);
         //background
         nvgBeginPath(vg);
-        nvgRoundedRect(vg, x + 1f, y + 1f, w - 2, h - 2, cornerRadius - 0.5f);
+        nvgRoundedRect(vg, x + 1f, y + 1f, w - 2, h - 2, getCornerRadius() - 0.5f);
         nvgFillColor(vg, this.bgColor != null ? bgColor : GToolkit.getStyle().getPopBackgroundColor());
         nvgFill(vg);
 
         //渐变
         bg = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(255, 255, 255, 32), nvgRGBA(0, 0, 0, 32));
         nvgBeginPath(vg);
-        nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, cornerRadius - 1);
+        nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, getCornerRadius() - 1);
         nvgFillPaint(vg, bg);
         nvgFill(vg);
 
         //边框
         nvgBeginPath(vg);
-        nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, cornerRadius - 0.5f);
+        nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, getCornerRadius() - 0.5f);
         nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 48));
         nvgStroke(vg);
 
@@ -145,7 +147,6 @@ public class GMenu extends GContainer {
             }
         }
 
-        super.paint(vg);
         return true;
     }
 

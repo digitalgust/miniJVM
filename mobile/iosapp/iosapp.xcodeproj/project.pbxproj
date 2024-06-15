@@ -30,8 +30,6 @@
 		451F272223A24C3A00F99984 /* miniz_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C384226D637C00E88538 /* miniz_wrapper.c */; };
 		451F272323A24C3A00F99984 /* bytebuf.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C385226D637C00E88538 /* bytebuf.c */; };
 		451F272423A24C3A00F99984 /* linkedlist.c in Sources */ = {isa = PBXBuildFile; fileRef = 4581C38B226D637C00E88538 /* linkedlist.c */; };
-		451F272523A24C3A00F99984 /* glfm_platform_emscripten.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F45209D4330003B9317 /* glfm_platform_emscripten.c */; };
-		451F272623A24C3A00F99984 /* glfm_platform_android.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F46209D4330003B9317 /* glfm_platform_android.c */; };
 		451F272723A24C3A00F99984 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F65209D4330003B9317 /* main.c */; };
 		451F272823A24C3A00F99984 /* glad.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F5A209D4330003B9317 /* glad.c */; };
 		451F272923A24C3A00F99984 /* jni_gl.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F4C209D4330003B9317 /* jni_gl.c */; };
@@ -39,7 +37,6 @@
 		451F272B23A24C3A00F99984 /* jni_nanovg.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F4F209D4330003B9317 /* jni_nanovg.c */; };
 		451F272C23A24C3A00F99984 /* media.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F63209D4330003B9317 /* media.c */; };
 		451F272D23A24C3A00F99984 /* nanovg.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F62209D4330003B9317 /* nanovg.c */; };
-		451F272E23A24C7B00F99984 /* glfm_platform_ios.m in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F49209D4330003B9317 /* glfm_platform_ios.m */; };
 		451F272F23A24C7B00F99984 /* jni_minial.m in Sources */ = {isa = PBXBuildFile; fileRef = 4535FA2721944F7300B888BA /* jni_minial.m */; };
 		4581C5CC226DA7BE00E88538 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 45D78F2B209D3E62003B9317 /* Assets.xcassets */; };
 		45D7904B20A002C4003B9317 /* resfiles in Resources */ = {isa = PBXBuildFile; fileRef = 45D7904A20A002C4003B9317 /* resfiles */; };
@@ -115,6 +112,9 @@
 		45F996F9253B69E40053E7A0 /* threading.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F996B2253B69E40053E7A0 /* threading.c */; };
 		45F996FA253B69E40053E7A0 /* timing.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F996B3253B69E40053E7A0 /* timing.c */; };
 		45F9982E253D2B6D0053E7A0 /* ssl_client.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F9982D253D2B6D0053E7A0 /* ssl_client.c */; };
+		592538072BF5D27A00E5D1DC /* glfm_emscripten.c in Sources */ = {isa = PBXBuildFile; fileRef = 592538032BF5D27A00E5D1DC /* glfm_emscripten.c */; };
+		592538082BF5D27A00E5D1DC /* glfm_android.c in Sources */ = {isa = PBXBuildFile; fileRef = 592538042BF5D27A00E5D1DC /* glfm_android.c */; };
+		592538092BF5D27A00E5D1DC /* glfm_apple.m in Sources */ = {isa = PBXBuildFile; fileRef = 592538062BF5D27A00E5D1DC /* glfm_apple.m */; };
 		8451B9812BEFBA23001B3BA6 /* os_win.c in Sources */ = {isa = PBXBuildFile; fileRef = 8451B97F2BEFBA23001B3BA6 /* os_win.c */; };
 		8451B9822BEFBA23001B3BA6 /* os_posix.c in Sources */ = {isa = PBXBuildFile; fileRef = 8451B9802BEFBA23001B3BA6 /* os_posix.c */; };
 /* End PBXBuildFile section */
@@ -169,11 +169,7 @@
 		45D78F1F209D3E61003B9317 /* iosapp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosapp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		45D78F2B209D3E62003B9317 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		45D78F30209D3E62003B9317 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		45D78F45209D4330003B9317 /* glfm_platform_emscripten.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glfm_platform_emscripten.c; sourceTree = "<group>"; };
-		45D78F46209D4330003B9317 /* glfm_platform_android.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glfm_platform_android.c; sourceTree = "<group>"; };
 		45D78F47209D4330003B9317 /* glfm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glfm.h; sourceTree = "<group>"; };
-		45D78F48209D4330003B9317 /* glfm_platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glfm_platform.h; sourceTree = "<group>"; };
-		45D78F49209D4330003B9317 /* glfm_platform_ios.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = glfm_platform_ios.m; sourceTree = "<group>"; };
 		45D78F4C209D4330003B9317 /* jni_gl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jni_gl.c; sourceTree = "<group>"; };
 		45D78F4E209D4330003B9317 /* linmath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = linmath.h; sourceTree = "<group>"; };
 		45D78F4F209D4330003B9317 /* jni_nanovg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jni_nanovg.c; sourceTree = "<group>"; };
@@ -341,6 +337,10 @@
 		45F9982C253D2B6D0053E7A0 /* ssl_client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ssl_client.h; path = https/ssl_client.h; sourceTree = "<group>"; };
 		45F9982D253D2B6D0053E7A0 /* ssl_client.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ssl_client.c; path = https/ssl_client.c; sourceTree = "<group>"; };
 		5907F36F2B17A8CB007C7B0D /* sljitLir.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sljitLir.h; sourceTree = "<group>"; };
+		592538032BF5D27A00E5D1DC /* glfm_emscripten.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glfm_emscripten.c; sourceTree = "<group>"; };
+		592538042BF5D27A00E5D1DC /* glfm_android.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glfm_android.c; sourceTree = "<group>"; };
+		592538052BF5D27A00E5D1DC /* glfm_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glfm_internal.h; sourceTree = "<group>"; };
+		592538062BF5D27A00E5D1DC /* glfm_apple.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = glfm_apple.m; sourceTree = "<group>"; };
 		8451B97F2BEFBA23001B3BA6 /* os_win.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = os_win.c; sourceTree = "<group>"; };
 		8451B9802BEFBA23001B3BA6 /* os_posix.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = os_posix.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -486,11 +486,11 @@
 		45D78F44209D4330003B9317 /* glfm */ = {
 			isa = PBXGroup;
 			children = (
-				45D78F45209D4330003B9317 /* glfm_platform_emscripten.c */,
-				45D78F46209D4330003B9317 /* glfm_platform_android.c */,
+				592538042BF5D27A00E5D1DC /* glfm_android.c */,
+				592538062BF5D27A00E5D1DC /* glfm_apple.m */,
+				592538032BF5D27A00E5D1DC /* glfm_emscripten.c */,
+				592538052BF5D27A00E5D1DC /* glfm_internal.h */,
 				45D78F47209D4330003B9317 /* glfm.h */,
-				45D78F48209D4330003B9317 /* glfm_platform.h */,
-				45D78F49209D4330003B9317 /* glfm_platform_ios.m */,
 			);
 			name = glfm;
 			path = ../../c/glfm;
@@ -852,10 +852,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				45F996C2253B69E40053E7A0 /* pk.c in Sources */,
+				592538072BF5D27A00E5D1DC /* glfm_emscripten.c in Sources */,
 				45F996B4253B69E40053E7A0 /* md5.c in Sources */,
 				45F996CF253B69E40053E7A0 /* memory_buffer_alloc.c in Sources */,
 				45F996E5253B69E40053E7A0 /* x509_create.c in Sources */,
-				451F272E23A24C7B00F99984 /* glfm_platform_ios.m in Sources */,
 				451F272F23A24C7B00F99984 /* jni_minial.m in Sources */,
 				45F9982E253D2B6D0053E7A0 /* ssl_client.c in Sources */,
 				8451B9822BEFBA23001B3BA6 /* os_posix.c in Sources */,
@@ -869,6 +869,7 @@
 				451F271C23A24C3A00F99984 /* hashset.c in Sources */,
 				451F271D23A24C3A00F99984 /* tinycthread.c in Sources */,
 				45F996BE253B69E40053E7A0 /* ecdh.c in Sources */,
+				592538092BF5D27A00E5D1DC /* glfm_apple.m in Sources */,
 				451F271E23A24C3A00F99984 /* arraylist.c in Sources */,
 				45F996DB253B69E40053E7A0 /* version.c in Sources */,
 				45F996CA253B69E40053E7A0 /* padlock.c in Sources */,
@@ -887,9 +888,7 @@
 				45F996C9253B69E40053E7A0 /* dhm.c in Sources */,
 				45F996C5253B69E40053E7A0 /* entropy_poll.c in Sources */,
 				45F996DC253B69E40053E7A0 /* blowfish.c in Sources */,
-				451F272523A24C3A00F99984 /* glfm_platform_emscripten.c in Sources */,
 				45F996E1253B69E40053E7A0 /* md2.c in Sources */,
-				451F272623A24C3A00F99984 /* glfm_platform_android.c in Sources */,
 				45F996D9253B69E40053E7A0 /* md_wrap.c in Sources */,
 				451F272723A24C3A00F99984 /* main.c in Sources */,
 				45F996C1253B69E40053E7A0 /* ctr_drbg.c in Sources */,
@@ -927,6 +926,7 @@
 				451F270F23A24C1F00F99984 /* runtime.c in Sources */,
 				45F996E3253B69E40053E7A0 /* base64.c in Sources */,
 				451F271023A24C1F00F99984 /* jvm.c in Sources */,
+				592538082BF5D27A00E5D1DC /* glfm_android.c in Sources */,
 				451F271123A24C1F00F99984 /* class.c in Sources */,
 				45F996D8253B69E40053E7A0 /* camellia.c in Sources */,
 				45F996C0253B69E40053E7A0 /* ccm.c in Sources */,

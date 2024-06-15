@@ -57,14 +57,14 @@ public class GHomeButton extends GPanel implements GActionListener {
     }
 
     @Override
-    public boolean paint(long ctx) {
+    public boolean paint(long vg) {
 
-        GToolkit.drawImage(ctx, butImg, getX(), getY(), getW(), getH(), false, 0.7f);
+        GToolkit.drawImage(vg, butImg, getX(), getY(), getW(), getH(), false, 0.7f);
         //draw small state icon
         float drawX = getX() + PAD + 1;
         float drawY = getY() + getH() * .5f - 4f;
         if (AppManager.getInstance().getWebServer() != null) {
-            GToolkit.drawImage(ctx, srvImg, drawX, drawY, ICON_WH, ICON_WH, false, 0.6f);
+            GToolkit.drawImage(vg, srvImg, drawX, drawY, ICON_WH, ICON_WH, false, 0.6f);
             drawX += ICON_WH + PAD;
         }
         if (drawX - getX() + ICON_WH + PAD > getW()) {
@@ -72,14 +72,14 @@ public class GHomeButton extends GPanel implements GActionListener {
             drawX = getX() + PAD;
         }
         if (AppManager.getInstance().getHttpClients().size() > 0) {
-            GToolkit.drawImage(ctx, downImg, drawX, drawY, ICON_WH, ICON_WH, false, 0.6f);
+            GToolkit.drawImage(vg, downImg, drawX, drawY, ICON_WH, ICON_WH, false, 0.6f);
             drawX += ICON_WH + PAD;
         }
         if (drawX - getX() + ICON_WH + PAD > getW()) {
             drawY -= ICON_WH + PAD;
             drawX = getX() + PAD;
         }
-        return super.paint(ctx);
+        return super.paint(vg);
     }
 
 

@@ -440,14 +440,15 @@ abstract public class GContainer extends GObject {
     }
 
     @Override
-    public boolean paint(long ctx) {
+    public boolean paint(long vg) {
+        super.paint(vg);
         try {
             synchronized (elements) {
                 //更新所有UI组件
                 //在遍历过程中,其他线程无法修改容器,但可能会有本线程在paint过程中添加或删除组件,因此要每个循环取size
                 for (int i = 0, imax = elements.size(); i < imax; i++) {
                     GObject nko = elements.get(i);
-                    drawObj(ctx, nko);
+                    drawObj(vg, nko);
                 }
             }
 
