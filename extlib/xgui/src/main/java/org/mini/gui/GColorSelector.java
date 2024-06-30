@@ -15,7 +15,7 @@ import static org.mini.nanovg.Nanovg.*;
  *
  * @author gust
  */
-class GColorSelector extends GObject {
+public class GColorSelector extends GObject {
 
     /**
      * these color can't change by user

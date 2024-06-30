@@ -42,7 +42,7 @@ public class GMenuItem extends GObject {
         nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextMetrics(vg, null, null, lineh);
-        box = GToolkit.getTextBoundle(vg, t, getW(), GToolkit.getStyle().getTextFontSize());
+        box = GToolkit.getTextBoundle(vg, t, GCallBack.getInstance().getDeviceWidth(), GToolkit.getStyle().getTextFontSize());
     }
 
     boolean isSelected() {
@@ -130,20 +130,20 @@ public class GMenuItem extends GObject {
 
         if (img != null) {//有图
             if (text != null) {//有文字
-                if (dh > lineh[0] * 2) { //上图下文排列
-                    img_h = dh * .65f - pad - lineh[0];
+                if (dh > lineh[0] * 3) { //上图下文排列
+                    img_h = dh - pad * 3 - lineh[0];
                     img_x = dx + dw / 2 - img_h / 2;
                     img_w = img_h;
-                    img_y = dy + dh * .2f;
+                    img_y = dy + pad;
                     txt_x = dx + dw / 2;
                     txt_y = img_y + img_h + pad + lineh[0] / 2;
                 } else { //前图后文
-                    img_h = dh * .7f - pad;
+                    img_h = dh * .8f - pad;
                     img_w = img_h;
-                    img_x = dx + dw * .5f - pad - (img_w + box[WIDTH]) * .5f;
-                    img_y = dy + dh * .2f;
-                    txt_x = dx + dw * .5f + img_w * .5f + pad;
-                    txt_y = img_y + pad + lineh[0] / 2;
+                    img_x = dx + dw * .5f - pad * 2 - img_w - (box[WIDTH]) * .5f;
+                    img_y = dy + dh * .1f;
+                    txt_x = img_x + img_w + pad * 2 + box[WIDTH] * .5f;
+                    txt_y = dy + dh * .5f;
                 }
             } else {
                 img_h = dh * .75f - pad;
@@ -169,6 +169,7 @@ public class GMenuItem extends GObject {
         }
         //画文字
         if (text != null) {
+            nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
             byte[] b = toCstyleBytes(text);
             nvgFillColor(vg, GToolkit.getStyle().getTextShadowColor());
             Nanovg.nvgTextJni(vg, txt_x + 1, txt_y + 1, b, 0, b.length);

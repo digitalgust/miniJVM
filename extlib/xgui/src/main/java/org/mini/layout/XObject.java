@@ -58,6 +58,7 @@ public abstract class XObject implements GLayout {
 
     protected String onStateChangeScript = null; //state change exec
 
+    protected boolean fixed = false;
     //
 
     XmlExtAssist assist;
@@ -148,6 +149,8 @@ public abstract class XObject implements GLayout {
             enable = "0".equals(attValue) ? false : true;
         } else if (attName.equals("move")) { // viewslot move mode
             moveMode = attValue;
+        } else if (attName.equals("fixed")) {
+            fixed = "0".equals(attValue) ? false : true;
         } else if (attName.equals("w")) {
             if (attValue.equals("float")) {
                 hfloat = true;
@@ -231,6 +234,7 @@ public abstract class XObject implements GLayout {
             gui.setActionListener(getRoot().getEventHandler());
             gui.setStateChangeListener(getRoot().getEventHandler());
             gui.setOnStateChangeScript(onStateChangeScript);
+            gui.setFixed(fixed);
             if (fly) {
                 gui.setFlyListener(getRoot().getEventHandler());
             }

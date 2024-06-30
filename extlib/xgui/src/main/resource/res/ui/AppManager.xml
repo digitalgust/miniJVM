@@ -1,4 +1,4 @@
-<table name="ROOT_PAN">
+<table name="ROOT_PAN" h="100%" w="100%">
     <tr h="{STATEBAR_HEIGHT}" w="100%">
         <td>
             <label w="100%"></label>
@@ -15,7 +15,7 @@
                                     <tr w="100%">
                                         <td w="float"></td>
                                         <td w="50">
-                                            <button name="BT_SETTING" w="50" h="30" preicon="⚙"></button>
+                                            <button name="BT_STYLE" w="50" h="30" preicon="⚙"></button>
                                         </td>
                                     </tr>
                                 </table>
@@ -88,7 +88,32 @@
                         <label></label>
                     </viewport>
                 </panel>
+                <panel w="100%" h="100%" move="fixed" align="hcenter,top">
+                    <viewport name="PAN_DISCOVERY" w="98%" h="100%">
+                        <label w="100%" h="30" align="hcenter,vcenter">{DISCOVERY}</label>
+
+                        <label></label>
+                    </viewport>
+                </panel>
+                <panel w="100%" h="100%" move="fixed" align="hcenter,top">
+                    <viewport name="PAN_MY" w="98%" h="100%">
+                        <label w="100%" h="30" align="hcenter,vcenter">{MY}</label>
+                        <br/>
+                        <button name="BT_SETTING" w="100%" h="40" preicon="⚙">{SETTING}</button>
+                        <br/>
+                        <label></label>
+                    </viewport>
+                </panel>
             </viewslot>
+        </td>
+    </tr>
+    <tr h="50" w="100%">
+        <td w="100%" h="100%">
+            <menu name="MENU_MAIN" w="100%" h="100%">
+                <mi name="MI_PLUGINMGR">{PLUGIN}</mi>
+                <mi name="MI_DISCOVERY">{DISCOVERY}</mi>
+                <mi name="MI_MY">{MY}</mi>
+            </menu>
         </td>
     </tr>
 </table>

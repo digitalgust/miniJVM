@@ -100,7 +100,7 @@ public class GMenu extends GContainer {
      * @return
      */
     public boolean paint(long vg) {
-        super.paint(vg);
+
         float x = getX();
         float y = getY();
         float w = getW();
@@ -146,7 +146,7 @@ public class GMenu extends GContainer {
                 nvgFill(vg);
             }
         }
-
+        super.paint(vg);
         return true;
     }
 

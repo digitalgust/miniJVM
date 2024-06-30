@@ -26,6 +26,9 @@ public class AppManager extends GApplication {
     static final String APP_UPGRADE_BTN = "APP_UPGRADE_BTN";
     static final String APP_DELETE_BTN = "APP_DELETE_BTN";
 
+    static final String STR_PLUGIN = "PLUGIN";
+    static final String STR_DISCOVERY = "DISCOVERY";
+    static final String STR_MY = "MY";
     static final String STR_EXIT = "Exit";
     static final String STR_SETTING = "SETTING";
     static final String STR_TITLE = "PLUGIN MANAGER";
@@ -64,18 +67,18 @@ public class AppManager extends GApplication {
     static private void regStrings() {
         GLanguage.addString(STR_SETTING, new String[]{STR_SETTING, "设置", "设置"});
         GLanguage.addString(STR_EXIT, new String[]{STR_EXIT, "退出", "退出"});
-        GLanguage.addString(STR_TITLE, new String[]{STR_TITLE, "组件管理器", "組件管理器"});
+        GLanguage.addString(STR_TITLE, new String[]{STR_TITLE, "组件管理器", "元件管理器"});
         GLanguage.addString(STR_START_WEB_SRV_FOR_UPLOAD, new String[]{STR_START_WEB_SRV_FOR_UPLOAD, "启动Web服务器上传", "啟動Web伺服器上傳"});
-        GLanguage.addString(STR_DOWN_APP_FROM_WEB, new String[]{STR_DOWN_APP_FROM_WEB, "从网站下载组件", "從網站下載組件"});
+        GLanguage.addString(STR_DOWN_APP_FROM_WEB, new String[]{STR_DOWN_APP_FROM_WEB, "从网站下载组件", "從網站下載元件"});
         GLanguage.addString(STR_DOWNLOAD, new String[]{"", "下载", "下載"});
         GLanguage.addString(STR_START, new String[]{"", "启动", "啟動"});
         GLanguage.addString(STR_STOP, new String[]{"", "停止", "停止"});
         GLanguage.addString(STR_CLOSE, new String[]{"Close", "关闭", "關閉"});
         GLanguage.addString(STR_WEB_LISTEN_ON, new String[]{STR_WEB_LISTEN_ON, "Web服务器临听 : ", "Web伺服器臨聽 : "});
-        GLanguage.addString(STR_APP_LIST, new String[]{STR_APP_LIST, "组件列表 : ", "組件列表"});
+        GLanguage.addString(STR_APP_LIST, new String[]{STR_APP_LIST, "组件列表 : ", "元件列表"});
         GLanguage.addString(STR_BACK, new String[]{STR_BACK, "返回", "返回"});
         GLanguage.addString(STR_RUN, new String[]{STR_RUN, "运行", "運行"});
-        GLanguage.addString(STR_SET_AS_BOOT, new String[]{STR_SET_AS_BOOT, "置顶组件", "置頂組件"});
+        GLanguage.addString(STR_SET_AS_BOOT, new String[]{STR_SET_AS_BOOT, "置顶组件", "置頂元件"});
         GLanguage.addString(STR_UPGRADE, new String[]{STR_UPGRADE, "升级", "升級"});
         GLanguage.addString(STR_DELETE, new String[]{STR_DELETE, "删除", "刪除"});
         GLanguage.addString(STR_VERSION, new String[]{STR_VERSION, "版本: ", "版本: "});
@@ -88,14 +91,17 @@ public class AppManager extends GApplication {
         GLanguage.addString(STR_UPLOAD_FILE, new String[]{STR_UPLOAD_FILE, "文件上传结束", "文件上傳結束"});
         GLanguage.addString(STR_SUCCESS, new String[]{STR_SUCCESS, "成功", "成功"});
         GLanguage.addString(STR_FAIL, new String[]{STR_FAIL, "失败", "失敗"});
-        GLanguage.addString(STR_OPEN_APP_FAIL, new String[]{STR_OPEN_APP_FAIL, "打开组件失败", "打開組件失敗"});
+        GLanguage.addString(STR_OPEN_APP_FAIL, new String[]{STR_OPEN_APP_FAIL, "打开组件失败", "打開元件失敗"});
         GLanguage.addString(STR_BRIGHT_STYLE, new String[]{STR_BRIGHT_STYLE, "浅色外观", "淺色外觀"});
         GLanguage.addString(STR_DARK_STYLE, new String[]{STR_DARK_STYLE, "深色外观", "深色外觀"});
-        GLanguage.addString(STR_MESSAGE, new String[]{STR_MESSAGE, "信息", "信息"});
-        GLanguage.addString(STR_CONFIRM_DELETE, new String[]{STR_CONFIRM_DELETE, "您要删除组件吗", "您要刪除組件嗎"});
-        GLanguage.addString(STR_APP_NOT_RUNNING, new String[]{STR_APP_NOT_RUNNING, "组件没有运行", "組件沒有運行"});
+        GLanguage.addString(STR_MESSAGE, new String[]{STR_MESSAGE, "信息", "資訊"});
+        GLanguage.addString(STR_CONFIRM_DELETE, new String[]{STR_CONFIRM_DELETE, "您要删除组件吗", "您要刪除元件嗎"});
+        GLanguage.addString(STR_APP_NOT_RUNNING, new String[]{STR_APP_NOT_RUNNING, "组件没有运行", "元件沒有運行"});
         GLanguage.addString(STR_INSTALL_FROM_LOCAL, new String[]{STR_INSTALL_FROM_LOCAL, "选取文件安装", "選取檔案安裝"});
         GLanguage.addString(STR_SELECT_FILE, new String[]{"", "安装", "安裝"});
+        GLanguage.addString(STR_PLUGIN, new String[]{STR_PLUGIN, "组件", "元件"});
+        GLanguage.addString(STR_DISCOVERY, new String[]{STR_DISCOVERY, "发现", "發現"});
+        GLanguage.addString(STR_MY, new String[]{STR_MY, "我的", "我的"});
     }
 
     static AppManager instance = new AppManager();
@@ -220,6 +226,8 @@ public class AppManager extends GApplication {
                     }
                 });
                 add(getMainPanel(this));
+                int i = AppLoader.getGuiStyle();
+                setStyleButton(i);
             }
 
 
@@ -335,7 +343,7 @@ public class AppManager extends GApplication {
                     mainPanelShowLeft();
                     break;
                 case "BT_BACK1":
-                    mainSlot.moveTo(0, 0);
+                    mainSlot.moveTo(4, 0);
                     break;
                 case "BT_STARTWEB":
                     GButton uploadbtn = (GButton) gobj;
@@ -489,11 +497,33 @@ public class AppManager extends GApplication {
                 case "LI_BRIGHT":
                     GToolkit.setStyle(new GStyleBright());
                     AppLoader.setGuiStyle(0);
+                    setStyleButton(0);
                     break;
                 case "LI_DARK":
                     GToolkit.setStyle(new GStyleDark());
                     AppLoader.setGuiStyle(1);
+                    setStyleButton(1);
                     break;
+                case "MI_PLUGINMGR": {
+                    mainSlot.moveTo(0, 0);
+                    break;
+                }
+                case "MI_DISCOVERY": {
+                    mainSlot.moveTo(3, 0);
+                    break;
+                }
+                case "MI_MY": {
+                    mainSlot.moveTo(4, 0);
+                    break;
+                }
+                case "BT_STYLE": {
+                    int i = AppLoader.getGuiStyle();
+                    i = i == 0 ? 1 : 0;
+                    setStyleButton(i);
+                    GToolkit.setStyle(i == 0 ? new GStyleBright() : new GStyleDark());
+                    AppLoader.setGuiStyle(i);
+                    break;
+                }
             }
         }
 
@@ -530,6 +560,15 @@ public class AppManager extends GApplication {
             reloadAppList();
             updateContentViewInfo(jarName);
         };
+    }
+
+    void setStyleButton(int i) {
+        GButton bt = GToolkit.getComponent(mgrForm, "BT_STYLE");
+        if (i == 0) {
+            bt.setPreIcon("●");
+        } else {
+            bt.setPreIcon("◑");
+        }
     }
 
     void reloadAppList() {
