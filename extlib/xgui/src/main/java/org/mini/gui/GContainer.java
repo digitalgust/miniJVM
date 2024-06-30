@@ -188,6 +188,18 @@ abstract public class GContainer extends GObject {
         if (nko != null) {
             synchronized (elements) {
                 if (!elements.contains(nko)) {
+                    //根据layer 排序,加入到elements容器中
+                    if (index < 0) {
+                        index = 0;
+                    } else if (index > elements.size()) {
+                        index = elements.size();
+                    }
+                    for (int i = 0; i < elements.size(); i++){
+                        if (elements.get(i).getLayer() > nko.getLayer()) {
+                            index = i;
+                            break;
+                        }
+                    }
                     elements.add(index, nko);
                     nko.setParent(this);
                     nko.init();
@@ -361,7 +373,7 @@ abstract public class GContainer extends GObject {
     }
 
     public void onAdd(GObject obj) {
-        reLayer();
+        //reLayer();
         for (GChildrenListener l : childrenListeners) {
             try {
                 l.onChildAdd(obj);
@@ -372,7 +384,7 @@ abstract public class GContainer extends GObject {
     }
 
     public void onRemove(GObject obj) {
-        reLayer();
+        //reLayer();
         for (GChildrenListener l : childrenListeners) {
             try {
                 l.onChildRemove(obj);
