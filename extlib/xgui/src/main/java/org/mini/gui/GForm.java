@@ -161,8 +161,8 @@ public class GForm extends GContainer {
 
         Nanovg.nvgTextJni(vg, dx, dy, b, 0, b.length);
         dy += font_size;
-        if (focus != null) {
-            b = GLUtil.toCstyleBytes("focus:" + focus.getX() + "," + focus.getY() + "," + focus.getW() + "," + focus.getH() + "  " + ((focus instanceof GContainer) ? ((GContainer) focus).getInnerX() + "," + ((GContainer) focus).getInnerY() + "," + ((GContainer) focus).getInnerW() + "," + ((GContainer) focus).getInnerH() : ""));
+        if (current != null) {
+            b = GLUtil.toCstyleBytes("focus:" + current.getX() + "," + current.getY() + "," + current.getW() + "," + current.getH() + "  " + ((current instanceof GContainer) ? ((GContainer) current).getInnerX() + "," + ((GContainer) current).getInnerY() + "," + ((GContainer) current).getInnerW() + "," + ((GContainer) current).getInnerH() : ""));
             Nanovg.nvgTextJni(vg, dx, dy, b, 0, b.length);
         }
     }

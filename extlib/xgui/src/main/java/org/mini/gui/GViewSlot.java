@@ -39,7 +39,7 @@ public class GViewSlot extends GViewPort {
 
     protected List<SlotProp> props = new ArrayList<>();
     protected int scrollMode;
-    protected int current = 0;
+    protected int active = 0;
 
     protected float dragBeginX, dragBeginY;
 
@@ -137,7 +137,7 @@ public class GViewSlot extends GViewPort {
     }
 
     public int getCurrentSlot() {
-        return current;
+        return active;
     }
 
     public void showSlot(int slot) {
@@ -146,7 +146,7 @@ public class GViewSlot extends GViewPort {
             float x = scrollMode == SCROLL_MODE_HORIZONTAL ? -slot * getW() : 0;
             float y = scrollMode == SCROLL_MODE_VERTICAL ? -slot * getH() : 0;
             setInnerLocation(x, y);
-            this.current = slot;
+            this.active = slot;
         }
     }
 
@@ -165,11 +165,11 @@ public class GViewSlot extends GViewPort {
      */
     public void moveTo(GObject go, long timeInMils) {
         if (containsImpl(go)) {
-            GObject curGo = getElementsImpl().get(current);
+            GObject curGo = getElementsImpl().get(active);
             if (curGo != null && go != null) {
                 SlotSwaper swaper = new SlotSwaper(this, curGo, go, timeInMils);
                 GForm.timer.schedule(swaper, 0, (long) 16);
-                this.current = getElementsImpl().indexOf(go);
+                this.active = getElementsImpl().indexOf(go);
                 //notify
                 doStateChanged(this);
             }
@@ -249,27 +249,27 @@ public class GViewSlot extends GViewPort {
                 if (dragDirection != DIR_NODEF) {
                     float dx = x - dragBeginX;
                     float dy = y - dragBeginY;
-                    SlotProp p = getProp(current);
+                    SlotProp p = getProp(active);
                     if (p != null) {
                         if (scrollMode == SCROLL_MODE_HORIZONTAL) {
                             if (dx > getW() / 5 && p.canMoveToLeft()) {
-                                moveTo(current - 1, 200);
+                                moveTo(active - 1, 200);
                             } else if (dx < -getW() / 5 && p.canMoveToRight()) {
-                                moveTo(current + 1, 200);
+                                moveTo(active + 1, 200);
                             } else {
-                                moveTo(current, 200);
+                                moveTo(active, 200);
                             }
                         } else {
                             if (dy > getH() / 5 && p.canMoveToUp()) {
-                                moveTo(current - 1, 200);
+                                moveTo(active - 1, 200);
                             } else if (dy < -getH() / 5 && p.canMoveToDown()) {
-                                moveTo(current + 1, 200);
+                                moveTo(active + 1, 200);
                             } else {
-                                moveTo(current, 200);
+                                moveTo(active, 200);
                             }
                         }
                     } else {
-                        moveTo(current, 200);
+                        moveTo(active, 200);
                     }
                 }
                 dragDirection = DIR_NODEF;
@@ -307,10 +307,10 @@ public class GViewSlot extends GViewPort {
             return found.dragEvent(button, dx, dy, x, y);
         }
 
-        if (focus == null) {
-            setFocus(found);
+        if (current == null) {
+            setCurrent(found);
         }
-        if (focus != null && focus.dragEvent(button, dx, dy, x, y)) {
+        if (current != null && current.dragEvent(button, dx, dy, x, y)) {
             return true;
         }
         if (button != Glfw.GLFW_MOUSE_BUTTON_1) return false;//only response to left button or the first button
@@ -330,7 +330,7 @@ public class GViewSlot extends GViewPort {
         }
         float ddx = x - dragBeginX;
         float ddy = y - dragBeginY;
-        SlotProp p = getProp(current);
+        SlotProp p = getProp(active);
         float odx = (dw == 0) ? 0.f : (float) dx / dw;
         float ody = (dh == 0) ? 0.f : (float) dy / dh;
         if (dragDirection == DIR_X) {

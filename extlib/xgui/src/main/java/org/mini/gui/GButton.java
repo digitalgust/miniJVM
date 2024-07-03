@@ -69,7 +69,7 @@ public class GButton extends GObject {
         if (isInArea(x, y)) {
             if (pressed) {
                 bt_pressed = true;
-                parent.setFocus(this);
+                parent.setCurrent(this);
                 oldX = getX();
                 oldY = getY();
                 doStateChanged(this);

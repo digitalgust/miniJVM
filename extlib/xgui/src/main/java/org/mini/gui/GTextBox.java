@@ -115,7 +115,7 @@ public class GTextBox extends GTextObject {
     }
 
     boolean boxIsFocus() {
-        return parent.getFocus() == this;
+        return parent.getCurrent() == this;
     }
 
     @Override
@@ -350,7 +350,7 @@ public class GTextBox extends GTextObject {
      */
     @Override
     public void characterEvent(char character) {
-        if (this.getFocus() != editArea) {
+        if (this.getCurrent() != editArea) {
             return;
         }
         deleteSelectedText();
@@ -362,7 +362,7 @@ public class GTextBox extends GTextObject {
 
     @Override
     public void keyEventGlfw(int key, int scanCode, int action, int mods) {
-        if (this.getFocus() != editArea) {
+        if (this.getCurrent() != editArea) {
             return;
         }
         if (key == Glfw.GLFW_KEY_LEFT_SHIFT || key == Glfw.GLFW_KEY_RIGHT_SHIFT) {
@@ -987,7 +987,7 @@ public class GTextBox extends GTextObject {
                                         //计算下一行开始
                                         char_at = char_at + curRowStrs.length();
 
-                                        if (tbox.getFocus() == this) {
+                                        if (tbox.getCurrent() == this) {
                                             boolean draw = false;
                                             if (caretIndex > char_starti && caretIndex <= char_endi) {
                                                 caretx = local_detail[curRow][AREA_CHAR_POS_START + (caretIndex - char_starti)];

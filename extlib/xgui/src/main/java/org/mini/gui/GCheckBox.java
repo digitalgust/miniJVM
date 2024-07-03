@@ -47,7 +47,7 @@ public class GCheckBox extends GObject {
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         if (isInArea(x, y)) {
             if (pressed) {
-                parent.setFocus(this);
+                parent.setCurrent(this);
             } else {
                 checked = !checked;
                 doAction();

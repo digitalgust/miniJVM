@@ -132,6 +132,14 @@ abstract public class GObject implements GAttachable {
     }
 
 
+    public void focus() {
+        if (parent != null) {
+            parent.setCurrent(this);
+            parent.focus();
+        }
+    }
+
+
     public void schedule(TimerTask task, long delay, long period) {
         if (GForm.timer != null) {
 //            getForm().setActiveListener(active -> {

@@ -103,7 +103,7 @@ public class GScrollBar extends GObject {
         //if (isInBoundle(line_boundle, rx, ry)) {
         if (pressed) {
             draged = true;
-            parent.setFocus(this);
+            parent.setCurrent(this);
             pos = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
         } else {
             draged = false;

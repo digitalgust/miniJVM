@@ -14,7 +14,6 @@ import org.mini.gui.event.GStateChangeListener;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.TimerTask;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
@@ -294,7 +293,7 @@ public class GList extends GContainer {
                     popWin.setLocation(getX(), popY);
                     popWin.setSize(popWin.getW(), popH);
                     form.add(popWin);
-                    form.setFocus(popWin);
+                    form.setCurrent(popWin);
 
                 }
             } else {
@@ -667,7 +666,7 @@ public class GList extends GContainer {
             @Override
             public void run() {
                 GObject go = getForm().getFrontFocus();
-                if (go == normalPanel || getForm().getFocus() == GListPopWindow.this) return;
+                if (go == normalPanel || getForm().getCurrent() == GListPopWindow.this) return;
                 pulldown = false;
                 changeCurPanel();
             }

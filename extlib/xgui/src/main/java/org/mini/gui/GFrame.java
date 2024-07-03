@@ -200,7 +200,7 @@ public class GFrame extends GContainer {
     public void onAdd(GObject obj) {
         super.onAdd(obj);
         if (parent != null) {
-            parent.setFocus(this);
+            parent.setCurrent(this);
             validLocation();
         }
     }
@@ -319,7 +319,7 @@ public class GFrame extends GContainer {
         if (isInArea(x, y)) {
             super.touchEvent(touchid, phase, x, y);
         } else {
-            if (phase == Glfm.GLFMTouchPhaseBegan) view.setFocus(null);
+            if (phase == Glfm.GLFMTouchPhaseBegan) view.setCurrent(null);
         }
     }
 

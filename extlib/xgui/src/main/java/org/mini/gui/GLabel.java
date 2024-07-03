@@ -84,7 +84,7 @@ public class GLabel extends GObject {
         if (isInArea(x, y)) {
             if (pressed) {
                 this.pressed = true;
-                parent.setFocus(this);
+                parent.setCurrent(this);
                 oldX = getX();
                 oldY = getY();
             } else {
