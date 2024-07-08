@@ -32,11 +32,11 @@ void get_last_error(Utf8String *error_msg) {
 
     if (FormatMessageA(flags, NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
                        (LPSTR) &errorMessage, 0, NULL) != 0) {
-        printf("Error code %d: %s\n", errorCode, errorMessage);
+        printf("Error code %d: %s\n", (int)errorCode, errorMessage);
         if (error_msg)utf8_append_c(error_msg, errorMessage);
         LocalFree(errorMessage); // 使用完毕后释放由FormatMessage分配的内存
     } else {
-        printf("Failed to get error message for error code %d\n", errorCode);
+        printf("Failed to get error message for error code %d\n", (int)errorCode);
     }
 }
 

@@ -293,7 +293,7 @@ void thread_lock_init(ThreadLock *lock);
 
 
 static inline Runtime *_runtime_alloc() {
-    Runtime *runtime = jvm_calloc(sizeof(Runtime));
+    Runtime *runtime = (Runtime *) jvm_calloc(sizeof(Runtime));
     runtime->jnienv = &jnienv;
     return runtime;
 }
