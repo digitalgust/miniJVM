@@ -28,7 +28,9 @@ public class ZipEntry {
     }
 
     void load(String zipFile) {
-        contents = Zip.getEntry(zipFile, name);
+        if (contents == null) {
+            contents = Zip.getEntry(zipFile, name);
+        }
     }
     //
     //返回条目的注释字符串；如果没有，则返回 null。 

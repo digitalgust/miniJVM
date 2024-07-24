@@ -60,7 +60,15 @@ public class JsonPrinter {
 
     private StringBuilder printString(String s, StringBuilder sb) {
         sb.append('"');
-        sb.append(s);
+        String s2 = s;
+        s2 = s2.replaceAll("\\\\", "\\\\\\\\");//  \
+        s2 = s2.replaceAll("\"", "\\\\\""); // "
+        s2 = s2.replaceAll("\n", "\\\\n");// newline
+        s2 = s2.replaceAll("\r", "\\\\r");// return
+        s2 = s2.replaceAll("\t", "\\\\t");// tab
+        s2 = s2.replaceAll("\b", "\\\\b");// backspace
+        s2 = s2.replaceAll("\f", "\\\\f");// formfeed
+        sb.append(s2);
         sb.append('"');
         return sb;
     }

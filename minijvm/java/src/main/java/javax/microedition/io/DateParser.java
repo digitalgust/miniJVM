@@ -577,7 +577,8 @@ public class DateParser {
         timezones.put("PST", new Integer(-8 * millisPerHour));
         timezones.put("PDT", new Integer(-7 * millisPerHour));
         timezones.put("JST", new Integer(9 * millisPerHour));
-        
+        timezones.put("CST", new Integer(8 * millisPerHour));
+
         local_tz = ((Integer)timezones.get("PST")).intValue();
     }
 }
