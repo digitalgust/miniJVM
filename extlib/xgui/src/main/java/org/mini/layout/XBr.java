@@ -19,6 +19,7 @@ public class XBr
 
     @Override
     public void parse(KXmlParser parser, XmlExtAssist assist) throws Exception {
+        this.assist = assist;
         toEndTag(parser, XML_NAME);
     }
 

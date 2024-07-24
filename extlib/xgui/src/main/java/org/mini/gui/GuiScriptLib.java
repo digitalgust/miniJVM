@@ -48,6 +48,7 @@ public class GuiScriptLib extends Lib {
             methodNames.put("getListIdx".toLowerCase(), this::getListIdx);//
             methodNames.put("setImgAlphaStr".toLowerCase(), this::setImgAlphaStr);//
             methodNames.put("setEnable".toLowerCase(), this::setEnable);//
+            methodNames.put("getEnable".toLowerCase(), this::getEnable);//
             methodNames.put("setListIdx".toLowerCase(), this::setListIdx);//
             methodNames.put("setCheckBox".toLowerCase(), this::setCheckBox);//
             methodNames.put("getCheckBox".toLowerCase(), this::getCheckBox);//
@@ -71,6 +72,8 @@ public class GuiScriptLib extends Lib {
             methodNames.put("getCaretPos".toLowerCase(), this::getCaretPos);//
             methodNames.put("showTitle".toLowerCase(), this::showTitle);//
             methodNames.put("setBgImg".toLowerCase(), this::setBgImg);//
+            methodNames.put("setVisible".toLowerCase(), this::setVisible);//
+            methodNames.put("getVisible".toLowerCase(), this::getVisible);//
 
         }
     }
@@ -407,6 +410,16 @@ public class GuiScriptLib extends Lib {
         return null;
     }
 
+    private DataType getEnable(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(form, compont);
+        if (gobj != null) {
+            boolean en = gobj.isEnable();
+            return Interpreter.getCachedBool(en);
+        }
+        return Interpreter.getCachedBool(false);
+    }
+
     private DataType setCheckBox(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
         boolean checked = Interpreter.popBackBool(para);
@@ -518,7 +531,8 @@ public class GuiScriptLib extends Lib {
 
     public DataType showMsg(ArrayList<DataType> para) {
         String msg = Interpreter.popBackStr(para);
-        GToolkit.getMsgFrame(form, GLanguage.getString("Message"), msg);
+        GFrame f = GToolkit.getMsgFrame(form, GLanguage.getString("Message"), msg);
+        GToolkit.showFrame(f);
         return null;
     }
 
@@ -578,5 +592,25 @@ public class GuiScriptLib extends Lib {
             }
         }
         return null;
+    }
+
+    private DataType setVisible(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(form, compont);
+        if (gobj != null) {
+            boolean show = Interpreter.popBackBool(para);
+            gobj.setVisible(show);
+        }
+        return null;
+    }
+
+    private DataType getVisible(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(form, compont);
+        if (gobj != null) {
+            boolean show = gobj.isVisible();
+            return Interpreter.getCachedBool(show);
+        }
+        return Interpreter.getCachedBool(false);
     }
 }

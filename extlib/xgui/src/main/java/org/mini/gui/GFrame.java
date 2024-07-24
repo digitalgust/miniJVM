@@ -38,8 +38,6 @@ public class GFrame extends GContainer {
 
     protected int frameMode;
     protected boolean closable = true;
-    protected String onCloseScript;
-    protected String onInitScript;
 
 
     public GFrame(GForm form) {
@@ -156,23 +154,23 @@ public class GFrame extends GContainer {
 
 
     public void align(int align_mod) {
-        if (getForm() == null) {
+        if (parent == null) {
             System.out.println("warning: added to form can be set align");
             return;
         }
         if ((align_mod & Nanovg.NVG_ALIGN_LEFT) != 0) {
             move(-getX(), 0);
         } else if ((align_mod & Nanovg.NVG_ALIGN_RIGHT) != 0) {
-            move(getForm().getW() - (getX() + getW()), 0);
+            move(parent.getW() - (getX() + getW()), 0);
         } else if ((align_mod & Nanovg.NVG_ALIGN_CENTER) != 0) {
-            move(getForm().getW() / 2 - (getX() + getW() / 2), 0);
+            move(parent.getW() / 2 - (getX() + getW() / 2), 0);
         }
         if ((align_mod & Nanovg.NVG_ALIGN_TOP) != 0) {
             move(0, -getY());
         } else if ((align_mod & Nanovg.NVG_ALIGN_BOTTOM) != 0) {
-            move(0, getForm().getH() - (getY() + getH()));
+            move(0, parent.getH() - (getY() + getH()));
         } else if ((align_mod & Nanovg.NVG_ALIGN_CENTER) != 0) {
-            move(0, getForm().getH() / 2 - (getY() + getH() / 2));
+            move(0, parent.getH() / 2 - (getY() + getH() / 2));
         }
     }
 
@@ -181,18 +179,17 @@ public class GFrame extends GContainer {
      * because form maybe translate on keyboard popup
      */
     void validLocation() {
-
-        if (getX() < -(getW() - 40)) {
-            setLocation(-(getW() - 40), getY());
+        if (getX() + getW() < parent.getX() + 40) {
+            setLocation(-(getW() - 40), getLocationTop());
         }
-        if (getY() < form.getY()) {
-            setLocation(getX(), 0);
+        if (getY() < parent.getY()) {
+            setLocation(getLocationLeft(), 0);
         }
-        if (getX() > form.getX() + form.getW() - 40) {
-            setLocation(form.getX() + form.getW() - 40, getY());
+        if (getX() > parent.getX() + parent.getW() - 60) {
+            setLocation(parent.getW() - 60, getLocationTop());
         }
-        if (getY() > form.getY() + form.getH() - 30) {
-            setLocation(getX(), form.getY() + form.getH() - 30);
+        if (getY() > parent.getY() + parent.getH() - 30) {
+            setLocation(getLocationLeft(), parent.getH() - 30);
         }
     }
 
@@ -366,68 +363,6 @@ public class GFrame extends GContainer {
         view.clearImpl();
     }
 
-
-    public String getOnCloseScript() {
-        return onCloseScript;
-    }
-
-    public String getOnInitScript() {
-        return onInitScript;
-    }
-
-    public void setOnCloseScript(String onCloseScript) {
-        this.onCloseScript = onCloseScript;
-        //fix no interpreter when script is set
-        if (onCloseScript != null) {
-            Interpreter inp = getInterpreter();
-            if (inp == null) {
-                loadScript("");
-            }
-        }
-    }
-
-    public void setOnInitScript(String onInitScript) {
-        this.onInitScript = onInitScript;
-        //fix no interpreter when script is set
-        if (onInitScript != null) {
-            Interpreter inp = getInterpreter();
-            if (inp == null) {
-                loadScript("");
-            }
-        }
-    }
-
-    @Override
-    public void init() {
-        super.init();
-        if (onInitScript != null) {
-            Interpreter inp = parseInpByCall(onInitScript);
-            String funcName = parseInstByCall(onInitScript);
-            if (inp != null && funcName != null) {
-                try {
-                    inp.callSub(funcName);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    @Override
-    public void destroy() {
-        super.destroy();
-        if (onCloseScript != null) {
-            Interpreter inp = parseInpByCall(onCloseScript);
-            String funcName = parseInstByCall(onCloseScript);
-            if (inp != null && funcName != null) {
-                try {
-                    inp.callSub(funcName);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
 
     public void setTitleShow(boolean enable) {
         if (enable) {

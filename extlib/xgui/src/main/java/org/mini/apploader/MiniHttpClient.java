@@ -17,6 +17,7 @@ import java.io.IOException;
 public class MiniHttpClient extends Thread {
 
     String url;
+    ByteArrayOutputStream baos;
     DownloadCompletedHandle handle;
     boolean exit;
     HttpConnection c = null;
@@ -57,6 +58,14 @@ public class MiniHttpClient extends Thread {
         try {
             logger.log("http url:" + url);
             c = (HttpConnection) Connector.open(url);
+            if (baos != null) {
+                c.setRequestMethod(HttpConnection.POST);
+                byte[] d = baos.toByteArray();
+                c.setRequestProperty("Content-Length", String.valueOf(d.length));
+                c.openDataOutputStream().write(d);
+            } else {
+                c.setRequestMethod(HttpConnection.GET);
+            }
             int rescode = c.getResponseCode();
             if (rescode == 200) {
                 int len = (int) c.getLength();
@@ -115,6 +124,14 @@ public class MiniHttpClient extends Thread {
                 }
             } catch (Exception e) {
             }
+        }
+    }
+
+    public String getHeader(String key) {
+        try {
+            return c.getHeaderField(key);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

@@ -168,7 +168,7 @@ public class GForm extends GContainer {
     }
 
 
-    static synchronized public void flush() {
+    public static void flush() {
         GForm.flush = 3;
         //in android may flush before paint,so the menu not shown
     }

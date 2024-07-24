@@ -100,7 +100,7 @@ public class GSwitch extends GObject {
         float dy = h * .5f;
         byte[] bg, knob;
 
-        float[] back1 = nvgRGBA(0, 0, 0, 32);
+        float[] back1 = switcher ? GToolkit.getStyle().getHighColor() : nvgRGBA(0, 0, 0, 32);
         float[] back2 = nvgRGBA(0, 0, 0, 128);
         // Slot
         bg = nvgBoxGradient(vg, x, y, w, h, r, 3.0f, back1, back2);
@@ -123,7 +123,7 @@ public class GSwitch extends GObject {
         knob = nvgLinearGradient(vg, x + dx + 1, y + dy + 1, r - 3, r - 3, nvgRGBA(255, 255, 255, 0x30), nvgRGBA(0, 0, 0, 16));
         nvgBeginPath(vg);
         nvgCircle(vg, x + dx, y + dy, r - 5 * zoom);
-        nvgFillColor(vg, switcher ? GToolkit.getStyle().getHighColor() : GToolkit.getStyle().getLowColor());
+        nvgFillColor(vg, GToolkit.getStyle().getBackgroundColor());
         nvgFill(vg);
         nvgFillPaint(vg, knob);
         nvgFill(vg);

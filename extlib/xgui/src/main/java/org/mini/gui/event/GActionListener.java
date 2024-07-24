@@ -8,10 +8,9 @@ package org.mini.gui.event;
 import org.mini.gui.GObject;
 
 /**
- *
  * @author gust
  */
-public interface GActionListener{
+public interface GActionListener {
 
     void action(GObject gobj);
 }

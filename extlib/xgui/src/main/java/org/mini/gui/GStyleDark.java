@@ -116,7 +116,7 @@ public class GStyleDark extends GStyle {
         return popBackgroundColor;
     }
 
-    float[] highColor = nvgRGBA(0xff, 0xff, 0xff, 0x80);//
+    float[] highColor = nvgRGBA(0x65, 0xc4, 0x67, 0xff);//65c467
 
     public float[] getHighColor() {
         return highColor;

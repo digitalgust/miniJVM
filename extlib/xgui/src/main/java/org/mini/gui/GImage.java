@@ -5,12 +5,14 @@
  */
 package org.mini.gui;
 
+import org.mini.apploader.MiniHttpClient;
 import org.mini.glwrap.GLUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 
 /**
  * GImage is a wrap of nvg_texture
@@ -19,7 +21,8 @@ import java.io.InputStream;
  * @author gust
  */
 public abstract class GImage implements GAttachable {
-
+    public static final int IMAGE_PER_INIT_WIDTH = 16;
+    public static final int IMAGE_PER_INIT_HEIGHT = 16;
     //
     Object attachment;
 
@@ -56,6 +59,26 @@ public abstract class GImage implements GAttachable {
         img.gc = false;
         return img;
     }
+
+    /**
+     * 异步加载图片
+     *
+     * @param url
+     * @return
+     */
+    static public GImage createImage(URL url) {
+        ImageMutable preimg = createImageMutable(IMAGE_PER_INIT_WIDTH, IMAGE_PER_INIT_HEIGHT);
+        MiniHttpClient client = new MiniHttpClient(url.toString(), null, (client1, url1, data) -> {
+            int[] whd = {0, 0, 0};
+            byte[] rgb = GLUtil.image_parse_from_file_content(data, whd);
+            preimg.init(whd[0], whd[1]);
+            preimg.setPix(rgb, 0, whd[0], 0, 0, whd[0], whd[1]);
+            preimg.updateImage();
+        });
+        client.run();//同步
+        return preimg;
+    }
+
 
     static public GImage createImage(String filepath) {
         return createImage(filepath, 0);

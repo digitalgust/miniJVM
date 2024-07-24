@@ -247,6 +247,9 @@ abstract public class GContainer extends GObject {
         if (name == null) {
             return null;
         }
+        if (name.equals(this.name)) {
+            return (T) this;
+        }
         synchronized (elements) {
             for (int i = 0, imax = elements.size(); i < imax; i++) {
                 GObject go = elements.get(i);

@@ -136,7 +136,7 @@ public class XMenu extends XObject {
                 MenuItem item = (MenuItem) items.elementAt(i);
                 GImage img = null;
                 if (item.pic != null) {
-                    img = GToolkit.getCachedImageFromJar(item.pic);
+                    img = getAssist().loadImage(item.pic);
                 }
                 GMenuItem gli = menu.addItem(item.text, img);
                 gli.setActionListener(getRoot().getEventHandler());

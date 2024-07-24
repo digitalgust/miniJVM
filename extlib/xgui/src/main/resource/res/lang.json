@@ -1,0 +1,309 @@
+{
+  "lang": {
+    "Exit": [
+      "Exit",
+      "退出",
+      "退出"
+    ],
+    "Description: ": [
+      "Description: ",
+      "描述: ",
+      "描述: "
+    ],
+    "Browse File": [
+      "",
+      "安装",
+      "安裝"
+    ],
+    "Download": [
+      "",
+      "下载",
+      "下載"
+    ],
+    "Webserver started": [
+      "Webserver started",
+      "服务器已启动",
+      "伺服器已啟動"
+    ],
+    "Dark appearance": [
+      "Dark appearance",
+      "深色外观",
+      "深色外觀"
+    ],
+    "SETTING": [
+      "SETTING",
+      "设置",
+      "设置"
+    ],
+    "Back": [
+      "Back",
+      "返回",
+      "返回"
+    ],
+    "Lan webserver for upload plugin": [
+      "Lan webserver for upload plugin",
+      "启动Web服务器上传",
+      "啟動Web伺服器上傳"
+    ],
+    "Message": [
+      "Message",
+      "信息",
+      "資訊"
+    ],
+    "Close": [
+      "Close",
+      "关闭",
+      "關閉"
+    ],
+    "Webserver stoped": [
+      "Webserver stoped",
+      "服务器已停止",
+      "伺服器已停止"
+    ],
+    "Uploaded file": [
+      "Uploaded file",
+      "文件上传结束",
+      "文件上傳結束"
+    ],
+    "Delete": [
+      "Delete",
+      "删除",
+      "刪除"
+    ],
+    "Do you confirm to delete the plugin ": [
+      "Do you confirm to delete the plugin ",
+      "您要删除组件吗",
+      "您要刪除元件嗎"
+    ],
+    "Version: ": [
+      "Version: ",
+      "版本: ",
+      "版本: "
+    ],
+    "Upgrade url: ": [
+      "Upgrade url: ",
+      "升级地址: ",
+      "升級地址: "
+    ],
+    "Open plugin failed": [
+      "Open plugin failed",
+      "打开组件失败",
+      "打開元件失敗"
+    ],
+    "DISCOVERY": [
+      "DISCOVERY",
+      "发现",
+      "發現"
+    ],
+    "Put on top": [
+      "Put on top",
+      "置顶组件",
+      "置頂元件"
+    ],
+    "MY": [
+      "MY",
+      "我的",
+      "我的"
+    ],
+    "Install plugin from local file:": [
+      "Install plugin from local file:",
+      "选取文件安装",
+      "選取檔案安裝"
+    ],
+    "PLUGIN MANAGER": [
+      "PLUGIN MANAGER",
+      "组件管理器",
+      "元件管理器"
+    ],
+    "Bright appearance": [
+      "Bright appearance",
+      "浅色外观",
+      "淺色外觀"
+    ],
+    "Lan webserver on:": [
+      "Lan webserver on:",
+      "Web服务器临听 : ",
+      "Web伺服器臨聽 : "
+    ],
+    "Download plugin from website:": [
+      "Download plugin from website:",
+      "从网站下载组件",
+      "從網站下載元件"
+    ],
+    "Stop": [
+      "",
+      "停止",
+      "停止"
+    ],
+    "upgrade": [
+      "upgrade",
+      "升级",
+      "升級"
+    ],
+    "Success": [
+      "Success",
+      "成功",
+      "成功"
+    ],
+    "PLUGIN": [
+      "PLUGIN",
+      "组件",
+      "元件"
+    ],
+    "Plugin is not running ": [
+      "Plugin is not running ",
+      "组件没有运行",
+      "元件沒有運行"
+    ],
+    "Plugin list : ": [
+      "Plugin list : ",
+      "组件列表 : ",
+      "元件列表"
+    ],
+    "Start": [
+      "",
+      "启动",
+      "啟動"
+    ],
+    "File date: ": [
+      "File date: ",
+      "文件日期: ",
+      "文件日期: "
+    ],
+    "File size: ": [
+      "File size: ",
+      "文件大小: ",
+      "文件大小: "
+    ],
+    "Run": [
+      "Run",
+      "运行",
+      "運行"
+    ],
+    "DISCOVERY": [
+      "DISCOVERY",
+      "发现",
+      "發現"
+    ],
+    "MY": [
+      "MY",
+      "我的",
+      "我的"
+    ],
+    "Sign in": [
+      "Sign in",
+      "登入",
+      "登入"
+    ],
+    "Remember me": [
+      "Remember me",
+      "记住",
+      "記住"
+    ],
+    "I don't have an account, sign up now": [
+      "I don't have an account, sign up now",
+      "我没有账号，现在注册",
+      "我沒有帳號，現在註冊"
+    ],
+    "Sign up": [
+      "Sign up",
+      "注册",
+      "註冊"
+    ],
+    "I have an account, But I forgot my password": [
+      "I have an account, But I forgot my password",
+      "我有账号，但我忘记了密码",
+      "我有帳號，但我忘記了密碼"
+    ],
+    "Forgot password": [
+      "Forgot password",
+      "忘记密码",
+      "忘記密碼"
+    ],
+    "After submitting your sign-up information, you will receive an email or SMS verification code.": [
+      "After submitting your sign-up information, you will receive an email or SMS verification code.",
+      "当提交注册信息后，您将收到一封电子邮件或短信验证码。",
+      "提交您的註冊資訊後，您將收到一封電子郵件或SMS驗證"
+    ],
+    "Verify Code": [
+      "Verify Code",
+      "代码校验",
+      "驗證碼"
+    ],
+    "Fint it": [
+      "Find it",
+      "找回",
+      "找回"
+    ],
+    "Account or password can not be empty": [
+      "Account or password can not be empty",
+      "账号或密码不能为空",
+      "账号或密码不能为空"
+    ],
+    "AAA": [
+      "AAA",
+      "BBB",
+      "CCC"
+    ],
+    "AAA": [
+      "AAA",
+      "BBB",
+      "CCC"
+    ],
+    "AAA": [
+      "AAA",
+      "BBB",
+      "CCC"
+    ],
+    "AAA": [
+      "AAA",
+      "BBB",
+      "CCC"
+    ],
+    "AAA": [
+      "AAA",
+      "BBB",
+      "CCC"
+    ],
+    "AAA": [
+      "AAA",
+      "BBB",
+      "CCC"
+    ],
+    "AAA": [
+      "AAA",
+      "BBB",
+      "CCC"
+    ],
+    "AAA": [
+      "AAA",
+      "BBB",
+      "CCC"
+    ],
+    "AAA": [
+      "AAA",
+      "BBB",
+      "CCC"
+    ],
+    "AAA": [
+      "AAA",
+      "BBB",
+      "CCC"
+    ],
+    "AAA": [
+      "AAA",
+      "BBB",
+      "CCC"
+    ],
+    "AAA": [
+      "AAA",
+      "BBB",
+      "CCC"
+    ],
+    "AAA": [
+      "AAA",
+      "BBB",
+      "CCC"
+    ]
+  }
+}

@@ -151,6 +151,11 @@ public class GTextField extends GTextObject {
         }
     }
 
+    @Override
+    public boolean dragEvent(int button, float dx, float dy, float x, float y) {
+        return mouseDrag;//选中的时候，占有拖动事件
+    }
+
     /**
      * 鼠标拖拽,即便光标在区域外，也会触发
      *
@@ -210,7 +215,7 @@ public class GTextField extends GTextObject {
                         break;
                     }
                     case Glfw.GLFW_KEY_ENTER: {
-                        if (actionListener != null) {
+                        if (hrefListener != null) {
                             doAction();
                         } else if (unionObj != null) {
                             unionObj.doAction();
@@ -335,7 +340,7 @@ public class GTextField extends GTextObject {
             insertTextByIndex(caretIndex, str);
             setCaretIndex(caretIndex + str.length());
             if (containEnter) {
-                if (actionListener != null) {
+                if (hrefListener != null) {
                     doAction();
                 } else if (unionObj != null) {
                     unionObj.doAction();
@@ -357,7 +362,7 @@ public class GTextField extends GTextObject {
                     setCaretIndex(caretIndex + 1);
                 }
             } else {
-                if (actionListener != null) {
+                if (hrefListener != null) {
                     doAction();
                 } else if (unionObj != null) {
                     unionObj.doAction();

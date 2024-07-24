@@ -20,8 +20,6 @@ public class XFrame
     protected float titleBgPicAlpha = GObject.DEFAULT_BG_ALPHA;
     protected String viewBgPic;
     protected float viewBgPicAlpha = GObject.DEFAULT_BG_ALPHA;
-    protected String onCloseScript;
-    protected String onInitScript;
     boolean closable = true;
     boolean titleShow = true;
 
@@ -39,10 +37,6 @@ public class XFrame
             titleShow = "0".equals(attValue) ? false : true;
         } else if (attName.equals("title")) {
             title = attValue;
-        } else if (attName.equals("onclose")) {
-            onCloseScript = attValue;
-        } else if (attName.equals("oninit")) {
-            onInitScript = attValue;
         } else if (attName.equals("titlebgpic")) {
             titleBgPic = attValue;
         } else if (attName.equals("titlebgpicalpha")) {
@@ -115,11 +109,9 @@ public class XFrame
             frame = createGuiImpl();
             initGuiMore();
             frame.setClosable(closable);
-            frame.setOnCloseScript(onCloseScript);
-            frame.setOnInitScript(onInitScript);
-            frame.getTitlePanel().setBgImg(GToolkit.getCachedImageFromJar(titleBgPic));
+            frame.getTitlePanel().setBgImg(getAssist().loadImage(titleBgPic));
             frame.getTitlePanel().setBgImgAlpha(titleBgPicAlpha);
-            frame.getView().setBgImg(GToolkit.getCachedImageFromJar(viewBgPic));
+            frame.getView().setBgImg(getAssist().loadImage(viewBgPic));
             frame.getView().setBgImgAlpha(viewBgPicAlpha);
             frame.setTitleShow(titleShow);
         } else {

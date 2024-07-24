@@ -5,18 +5,29 @@
  */
 package org.mini.apploader;
 
+import org.mini.apploader.bean.LangBean;
+import org.mini.apploader.bean.ServerMsg;
+import org.mini.explorer.XExplorer;
+import org.mini.explorer.XPage;
 import org.mini.glfm.Glfm;
-import org.mini.glwrap.GLUtil;
 import org.mini.gui.*;
+import org.mini.json.JsonParser;
+import org.mini.json.JsonPrinter;
 import org.mini.layout.*;
 
 import java.io.*;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.*;
 
 /**
  * @author Gust
  */
 public class AppManager extends GApplication {
+    public static String CVERSION = "1.0.0";
+    public static String policyUrl;
+    public static String discoveryUrl;
+    XExplorer explorer;
 
     static final String APP_NAME_LABEL = "APP_NAME_LABEL";
     static final String APP_ICON_ITEM = "APP_ICON_ITEM";
@@ -65,43 +76,14 @@ public class AppManager extends GApplication {
     static final String STR_SELECT_FILE = "Browse File";
 
     static private void regStrings() {
-        GLanguage.addString(STR_SETTING, new String[]{STR_SETTING, "设置", "设置"});
-        GLanguage.addString(STR_EXIT, new String[]{STR_EXIT, "退出", "退出"});
-        GLanguage.addString(STR_TITLE, new String[]{STR_TITLE, "组件管理器", "元件管理器"});
-        GLanguage.addString(STR_START_WEB_SRV_FOR_UPLOAD, new String[]{STR_START_WEB_SRV_FOR_UPLOAD, "启动Web服务器上传", "啟動Web伺服器上傳"});
-        GLanguage.addString(STR_DOWN_APP_FROM_WEB, new String[]{STR_DOWN_APP_FROM_WEB, "从网站下载组件", "從網站下載元件"});
-        GLanguage.addString(STR_DOWNLOAD, new String[]{"", "下载", "下載"});
-        GLanguage.addString(STR_START, new String[]{"", "启动", "啟動"});
-        GLanguage.addString(STR_STOP, new String[]{"", "停止", "停止"});
-        GLanguage.addString(STR_CLOSE, new String[]{"Close", "关闭", "關閉"});
-        GLanguage.addString(STR_WEB_LISTEN_ON, new String[]{STR_WEB_LISTEN_ON, "Web服务器临听 : ", "Web伺服器臨聽 : "});
-        GLanguage.addString(STR_APP_LIST, new String[]{STR_APP_LIST, "组件列表 : ", "元件列表"});
-        GLanguage.addString(STR_BACK, new String[]{STR_BACK, "返回", "返回"});
-        GLanguage.addString(STR_RUN, new String[]{STR_RUN, "运行", "運行"});
-        GLanguage.addString(STR_SET_AS_BOOT, new String[]{STR_SET_AS_BOOT, "置顶组件", "置頂元件"});
-        GLanguage.addString(STR_UPGRADE, new String[]{STR_UPGRADE, "升级", "升級"});
-        GLanguage.addString(STR_DELETE, new String[]{STR_DELETE, "删除", "刪除"});
-        GLanguage.addString(STR_VERSION, new String[]{STR_VERSION, "版本: ", "版本: "});
-        GLanguage.addString(STR_UPGRADE_URL, new String[]{STR_UPGRADE_URL, "升级地址: ", "升級地址: "});
-        GLanguage.addString(STR_FILE_SIZE, new String[]{STR_FILE_SIZE, "文件大小: ", "文件大小: "});
-        GLanguage.addString(STR_FILE_DATE, new String[]{STR_FILE_DATE, "文件日期: ", "文件日期: "});
-        GLanguage.addString(STR_DESC, new String[]{STR_DESC, "描述: ", "描述: "});
-        GLanguage.addString(STR_SERVER_STARTED, new String[]{STR_SERVER_STARTED, "服务器已启动", "伺服器已啟動"});
-        GLanguage.addString(STR_SERVER_STOPED, new String[]{STR_SERVER_STOPED, "服务器已停止", "伺服器已停止"});
-        GLanguage.addString(STR_UPLOAD_FILE, new String[]{STR_UPLOAD_FILE, "文件上传结束", "文件上傳結束"});
-        GLanguage.addString(STR_SUCCESS, new String[]{STR_SUCCESS, "成功", "成功"});
-        GLanguage.addString(STR_FAIL, new String[]{STR_FAIL, "失败", "失敗"});
-        GLanguage.addString(STR_OPEN_APP_FAIL, new String[]{STR_OPEN_APP_FAIL, "打开组件失败", "打開元件失敗"});
-        GLanguage.addString(STR_BRIGHT_STYLE, new String[]{STR_BRIGHT_STYLE, "浅色外观", "淺色外觀"});
-        GLanguage.addString(STR_DARK_STYLE, new String[]{STR_DARK_STYLE, "深色外观", "深色外觀"});
-        GLanguage.addString(STR_MESSAGE, new String[]{STR_MESSAGE, "信息", "資訊"});
-        GLanguage.addString(STR_CONFIRM_DELETE, new String[]{STR_CONFIRM_DELETE, "您要删除组件吗", "您要刪除元件嗎"});
-        GLanguage.addString(STR_APP_NOT_RUNNING, new String[]{STR_APP_NOT_RUNNING, "组件没有运行", "元件沒有運行"});
-        GLanguage.addString(STR_INSTALL_FROM_LOCAL, new String[]{STR_INSTALL_FROM_LOCAL, "选取文件安装", "選取檔案安裝"});
-        GLanguage.addString(STR_SELECT_FILE, new String[]{"", "安装", "安裝"});
-        GLanguage.addString(STR_PLUGIN, new String[]{STR_PLUGIN, "组件", "元件"});
-        GLanguage.addString(STR_DISCOVERY, new String[]{STR_DISCOVERY, "发现", "發現"});
-        GLanguage.addString(STR_MY, new String[]{STR_MY, "我的", "我的"});
+
+        JsonParser<LangBean> parser = new JsonParser<>();
+        String s = GToolkit.readFileFromJarAsString("/res/lang.json", "utf-8");
+        LangBean langBean = parser.deserial(s, LangBean.class);
+
+        for (String key : langBean.getLang().keySet()) {
+            GLanguage.addString(key, langBean.getLang().get(key));
+        }
     }
 
     static AppManager instance = new AppManager();
@@ -167,6 +149,7 @@ public class AppManager extends GApplication {
 
     @Override
     public GForm getForm() {
+
         if (mgrForm != null) return mgrForm;
         mgrForm = new GForm(null) {
 
@@ -228,6 +211,7 @@ public class AppManager extends GApplication {
                 add(getMainPanel(this));
                 int i = AppLoader.getGuiStyle();
                 setStyleButton(i);
+                initExplorer();
             }
 
 
@@ -305,7 +289,10 @@ public class AppManager extends GApplication {
         System.out.println("downloadurl=" + url);
         if (url != null) GToolkit.setCompText(mainSlot, "INPUT_URL", url);
 
-        mgrForm.setSizeChangeListener((width, height) -> xcon.reSize(width, height));
+        mgrForm.setSizeChangeListener((width, height) -> {
+            xcon.reSize(width, height);
+            initExplorer();
+        });
         reloadAppList();
         return pan;
     }
@@ -341,9 +328,6 @@ public class AppManager extends GApplication {
                     break;
                 case "BT_BACK":
                     mainPanelShowLeft();
-                    break;
-                case "BT_BACK1":
-                    mainSlot.moveTo(4, 0);
                     break;
                 case "BT_STARTWEB":
                     GButton uploadbtn = (GButton) gobj;
@@ -510,6 +494,29 @@ public class AppManager extends GApplication {
                 }
                 case "MI_DISCOVERY": {
                     mainSlot.moveTo(3, 0);
+                    if (explorer.getWebView().getElementSize() == 0) {
+                        getServerPolicy();
+                    }
+                    break;
+                }
+                case "BT_DISCOVERY_REFRESH": {
+                    XPage page = explorer.getCurrentPage();
+                    if (page != null) {
+                        page.reset();
+                        explorer.gotoPage(page.getUrl().toString());
+                    }
+                    break;
+                }
+                case "BT_DISCOVERY_BACK": {
+                    if (explorer != null) {
+                        explorer.back();
+                    }
+                    break;
+                }
+                case "BT_DISCOVERY_FORWARD": {
+                    if (explorer != null) {
+                        explorer.forward();
+                    }
                     break;
                 }
                 case "MI_MY": {
@@ -542,7 +549,7 @@ public class AppManager extends GApplication {
         }
     }
 
-    MiniHttpClient.DownloadCompletedHandle getDownloadCallback() {
+    public MiniHttpClient.DownloadCompletedHandle getDownloadCallback() {
         return (client, url, data) -> {
             httpClients.remove(client);
             log("Download success " + url + " ,size: " + data.length);
@@ -568,6 +575,98 @@ public class AppManager extends GApplication {
             bt.setPreIcon("●");
         } else {
             bt.setPreIcon("◑");
+        }
+    }
+
+    void initExplorer() {
+        XmlExtAssist assist = new XmlExtAssist(mgrForm);
+
+        GContainer wv = GToolkit.getComponent(mgrForm, "TD_DISCOVERY");
+        explorer = new XExplorer(wv, eventHandler, assist);
+    }
+
+    void getServerPolicy() {
+        if (discoveryUrl == null) {
+            policyUrl = AppLoader.getBaseInfo("policyUrl");
+            policyUrl = AppLoader.appendUrlParam(policyUrl);
+
+            MiniHttpClient hc = new MiniHttpClient(policyUrl, cltLogger, new MiniHttpClient.DownloadCompletedHandle() {
+                @Override
+                public void onCompleted(MiniHttpClient client, String url, byte[] data) {
+                    if (data != null) {
+                        String s = null;
+                        try {
+                            s = new String(data, "utf-8");
+                            ServerMsg pm = new JsonParser<ServerMsg>().deserial(s, ServerMsg.class);
+                            if (pm.getCode() == 0) {
+                                String[] urls = pm.getReply().split("\n");
+                                discoveryUrl = urls[0];
+                                System.out.println(discoveryUrl);
+                                discovery(discoveryUrl);
+                            } else {
+                                GForm.addMessage(pm.getReply() + " " + url);
+                            }
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                }
+            });
+            hc.start();
+        } else {
+            discovery(discoveryUrl);
+        }
+    }
+
+    void discovery(String homeUrl) {
+        homeUrl = AppLoader.appendUrlParam(homeUrl);
+
+        explorer.gotoPage(homeUrl);
+
+//        MiniHttpClient hc = new MiniHttpClient(url, cltLogger, new MiniHttpClient.DownloadCompletedHandle() {
+//            @Override
+//            public void onCompleted(MiniHttpClient client, String url, byte[] data) {
+//                if (data != null) {
+//                    try {
+//                        String s = new String(data, "utf-8");
+//                        ServerMsg msg = new JsonParser<ServerMsg>().deserial(s, ServerMsg.class);
+//                        if (msg.getCode() == 0) {
+//                            String uistr = msg.getReply();
+//                            UITemplate uit = new UITemplate(uistr);
+//                            GContainer td = GToolkit.getComponent(mgrForm, "TD_DISCOVERY");
+//                            if (td != null) {
+//                                XContainer xcon = (XContainer) XContainer.parseXml(uit.parse(), new XmlExtAssist(mgrForm));
+//                                xcon.build((int) td.getW(), (int) td.getH(), eventHandler);
+//                                GContainer pan = xcon.getGui();
+//                                td.clear();
+//                                td.add(pan);
+//                            }
+//                        }
+//
+//                    } catch (Exception e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                }
+//            }
+//        });
+//        hc.start();
+
+    }
+
+    void test() {
+        try {
+            System.out.println("Hello World!");
+            String urlStr = "jar:http://localhost:30005/static/apps/ExApp.jar!/res/appmgr.png";
+            URL url = new URL(urlStr);
+            URLConnection con = null;
+
+            con = url.openConnection();
+
+            con.connect();
+            System.out.println(con.getContentLength());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
