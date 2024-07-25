@@ -1,37 +1,133 @@
 <table name="ROOT_PAN" h="100%" w="100%" oninit="onload()">
     <script>
         <![CDATA[
-        sub onload()
-            setText("LAB_USERNAME", "{Sign in} >")
+        sub onload() '这个用来获取服务器上的策略网址信息
+
+            if(!isDef("ENCRYPTED_KEY"))
+                def("ENCRYPTED_KEY","L7%d9&3jw5f")
+            ret
+            if(isDef("INITED"))
+                ret
+            eif
+
+            ret
+
+            policyUrl=getEnv("POLICY_URL")
+            if(strlen(policyUrl)>0)
+                url=policyUrl + "?ver=" + getEnv("CVER") + "&sver=" + getEnv("SVER")
+                httpRequest(policyUrl, "ROOT_PAN.onPolicyRequestBack")
+            eif
         ret
 
-        sub submitSignup()
-            loginUid=getText("SIGNUP_UID")
-            loginPwd=getText("SIGNUP_PWD")
-            if(strlen(loginUid)=0 | strlen(loginPwd)=0)
+        sub onPolicyRequestBack(url,code,msg) '请求策略回调
+            if(code=0)
+                def("INITED",1)
+                urls=split(msg,"\n")
+                setEnv("DISCOVERY_URL",urls[0])
+                setEnv("ACCOUNT_BASE_URL",urls[1])
+            eif
+        ret
+
+        sub showDiscovery() '显示发现
+            showSlot("SLOT_MGR", 3)
+            url=getEnv("DISCOVERY_URL")+"?ver="+ getEnv("SVER")  +"&cver="+ getEnv("CVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG")
+            openPage(url,"")
+        ret
+
+        sub showMy() '显示我的
+            showSlot("SLOT_MGR", 4)
+            str=getText("LOGIN_UID")
+            if(strlen(str)<>0)
+                ret
+            eif
+            uid=getEnv("USERNAME")
+            pwd=getEnv("USERPASS")
+            if(strlen(uid)=0 | strlen(pwd)=0)
+                ret
+            eif
+            pwd=decrypt(pwd,ENCRYPTED_KEY)
+            setText("LOGIN_UID", uid)
+            setText("LOGIN_PWD", pwd)
+        ret
+
+        sub signup() '注册
+            sUid=getText("SIGNUP_UID")
+            sPwd=getText("SIGNUP_PWD")
+            if(strlen(sUid)=0 | strlen(sPwd)=0)
                 showMsg("{Account or password can not be empty}")
             else
-                setText("LAB_USERNAME", loginUid)
-                setText("LOGIN_VERIFY_UID", loginUid)
-                showMsg("{Sign up commited}")
+                accBaseUrl=getEnv("ACCOUNT_BASE_URL")
+                encryptPwd=encrypt(sPwd,ENCRYPTED_KEY)
+                url=accBaseUrl + "/register?usr=" + sUid + "&pwd=" + encryptPwd +"&ver="+ getEnv("SVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG")
+                println(url)
+                httpRequest(url,"ROOT_PAN.onSignUpBack")
+                setText("LOGIN_VERIFY_UID", sUid)
+            eif
+        ret
+
+        sub onSignUpBack(url,code,msg) '注册回调
+            if(code=0)
+                showMsg("{Message}: "+msg)
+            else
+                showMsg("{Message}: "+msg)
             eif
         ret
 
 
-        sub verifyCode()
-
+        sub verifyCode() '验证码
+            sUid=getText("LOGIN_VERIFY_UID")
+            code=getText("LOGIN_VERIFY_CODE")
+            if(strlen(sUid)=0 | strlen(code)=0)
+                showMsg("{Account or code can not be empty}")
+            else
+                accBaseUrl=getEnv("ACCOUNT_BASE_URL")
+                url=accBaseUrl + "/verifyreg?usr=" + sUid + "&code=" + code +"&ver="+ getEnv("SVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG")
+                httpRequest(url,"ROOT_PAN.onVerifyRegBack")
+            eif
         ret
 
-        sub signIn()
+
+        sub onVerifyRegBack(url,code,msg) '验证码回调
+            if(code=0)
+                showMsg("{Message}: "+msg)
+            else
+                showMsg("{Message}: "+msg)
+            eif
+        ret
+
+        sub signIn() '登录
             loginUid=getText("LOGIN_UID")
             loginPwd=getText("LOGIN_PWD")
+
             if(strlen(loginUid)=0 | strlen(loginPwd)=0)
                 showMsg("{Account or password can not be empty}")
             else
-                setText("LAB_USERNAME", loginUid)
-                setText("LOGIN_VERIFY_UID", loginUid)
+                encryptPwd=encrypt(loginPwd,ENCRYPTED_KEY)
+                println(encryptPwd)
 
-                requestApi()
+                accBaseUrl=getEnv("ACCOUNT_BASE_URL")
+                url=accBaseUrl + "/login?usr=" + loginUid + "&pwd=" + encryptPwd  +"&ver="+ getEnv("SVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG")
+                httpRequest(url,"ROOT_PAN.onSignInBack")
+                saveEnable=getSwitch("LOGIN_SAVE")
+                if(saveEnable)
+                    setEnv("USERNAME", loginUid)
+                    setEnv("USERPASS", encryptPwd)
+                else
+                    setEnv("USERNAME", "")
+                    setEnv("USERPASS", "")
+                eif
+            eif
+        ret
+
+        sub onSignInBack(url,code,msg) '登录回调
+            if(code=0)
+                showMsg("{Message}: {Success}")
+                setEnv("TOKEN", msg)
+                uid=getEnv("USERNAME")
+                setText("LAB_USERNAME", uid)
+                setText("LOGIN_VERIFY_UID", uid)
+            else
+                showMsg("{Message}: {Fail}")
             eif
         ret
 
@@ -183,7 +279,7 @@
                             <input w="100%" name="LOGIN_UID" hint="{Account, email or mobile}"></input>
                             <br/>
                             <input w="100%" name="LOGIN_PWD" password="1" hint="{Password}"></input>
-                            <switch name="LOGIN_AUTO_NEXT" selected="1" w="40" h="25"></switch>
+                            <switch name="LOGIN_SAVE" selected="1" w="40" h="25"></switch>
                             <label w="100" h="30" align="Left,vcenter">{Remember me}</label>
                             <br/>
                             <button name="LOGIN_OK" w="100%" onclick="signIn()">{Sign in}</button>
@@ -220,9 +316,9 @@
                         <br/>
                         <input w="100%" name="SIGNUP_UID" hint="{Account, email or mobile}"></input>
                         <br/>
-                        <input w="100%" name="SIGNUP_PWD" password="1" hint="{Password}"></input>
+                        <input w="100%" name="SIGNUP_PWD" password="1" hint="{Password},6-32"></input>
                         <br/>
-                        <button name="LOGIN_REG" w="100%" onclick="submitSignup()">{Sign up}</button>
+                        <button name="LOGIN_REG" w="100%" onclick="signup()">{Sign up}</button>
                         <br/>
                         <label></label>
                         <br/>
@@ -257,9 +353,9 @@
     <tr h="50" w="100%">
         <td w="100%" h="100%">
             <menu name="MENU_MAIN" w="100%" h="100%">
-                <mi name="MI_PLUGINMGR">{PLUGIN}</mi>
-                <mi name="MI_DISCOVERY">{DISCOVERY}</mi>
-                <mi name="MI_MY">{MY}</mi>
+                <mi name="MI_PLUGINMGR" onclick="showSlot('SLOT_MGR',0)">{PLUGIN}</mi>
+                <mi name="MI_DISCOVERY" onclick="showDiscovery()">{DISCOVERY}</mi>
+                <mi name="MI_MY" onclick="showMy()">{MY}</mi>
             </menu>
         </td>
     </tr>

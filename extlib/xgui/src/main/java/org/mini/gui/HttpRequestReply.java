@@ -1,6 +1,6 @@
-package org.mini.apploader.bean;
+package org.mini.gui;
 
-public class ServerMsg {
+public class HttpRequestReply {
     private int code;
     private String reply;
 

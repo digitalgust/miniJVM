@@ -4,7 +4,9 @@ import org.mini.gui.GContainer;
 import org.mini.layout.XEventHandler;
 import org.mini.layout.XmlExtAssist;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * a web explorer that base xmlui but not html

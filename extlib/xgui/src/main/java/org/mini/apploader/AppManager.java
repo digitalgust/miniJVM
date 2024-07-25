@@ -6,13 +6,13 @@
 package org.mini.apploader;
 
 import org.mini.apploader.bean.LangBean;
-import org.mini.apploader.bean.ServerMsg;
+import org.mini.explorer.ExplorerScriptLib;
+import org.mini.gui.HttpRequestReply;
 import org.mini.explorer.XExplorer;
 import org.mini.explorer.XPage;
 import org.mini.glfm.Glfm;
 import org.mini.gui.*;
 import org.mini.json.JsonParser;
-import org.mini.json.JsonPrinter;
 import org.mini.layout.*;
 
 import java.io.*;
@@ -24,10 +24,9 @@ import java.util.*;
  * @author Gust
  */
 public class AppManager extends GApplication {
-    public static String CVERSION = "1.0.0";
-    public static String policyUrl;
-    public static String discoveryUrl;
-    XExplorer explorer;
+    public static final String POLICY_URL = "POLICY_URL";
+    public static final String DISCOVERY_URL = "DISCOVERY_URL";
+    public static final String ACCOUNT_BASE_URL = "ACCOUNT_BASE_URL";
 
     static final String APP_NAME_LABEL = "APP_NAME_LABEL";
     static final String APP_ICON_ITEM = "APP_ICON_ITEM";
@@ -75,25 +74,17 @@ public class AppManager extends GApplication {
     static final String STR_INSTALL_FROM_LOCAL = "Install plugin from local file:";
     static final String STR_SELECT_FILE = "Browse File";
 
-    static private void regStrings() {
-
-        JsonParser<LangBean> parser = new JsonParser<>();
-        String s = GToolkit.readFileFromJarAsString("/res/lang.json", "utf-8");
-        LangBean langBean = parser.deserial(s, LangBean.class);
-
-        for (String key : langBean.getLang().keySet()) {
-            GLanguage.addString(key, langBean.getLang().get(key));
-        }
-    }
 
     static AppManager instance = new AppManager();
 
     //    GApplication preApp;
 
     GForm mgrForm;
+    XExplorer explorer;
 
     GViewSlot mainSlot;
 
+    public static String CVERSION = "1.0.0";
     //
     GList appList;
     GViewPort contentView;
@@ -147,101 +138,22 @@ public class AppManager extends GApplication {
         reloadAppList();
     }
 
+    static private void regStrings() {
+
+        JsonParser<LangBean> parser = new JsonParser<>();
+        String s = GToolkit.readFileFromJarAsString("/res/lang.json", "utf-8");
+        LangBean langBean = parser.deserial(s, LangBean.class);
+
+        for (String key : langBean.getLang().keySet()) {
+            GLanguage.addString(key, langBean.getLang().get(key));
+        }
+    }
+
     @Override
     public GForm getForm() {
 
         if (mgrForm != null) return mgrForm;
-        mgrForm = new GForm(null) {
-
-            @Override
-            public void init() {
-                super.init();
-
-                final GCallBack ccb = GCallBack.getInstance();
-                devW = ccb.getDeviceWidth();
-                devH = ccb.getDeviceHeight();
-                System.out.println("devW :" + devW + ", devH  :" + devH);
-
-                GForm.hideKeyboard(this);
-                regStrings();
-                GLanguage.setCurLang(AppLoader.getDefaultLang());
-
-                if (AppLoader.getGuiStyle() == 0) {
-                    GToolkit.setStyle(new GStyleBright());
-                } else {
-                    GToolkit.setStyle(new GStyleDark());
-                }
-
-                setPickListener((uid, url, data) -> {
-                    if (data == null && url != null) {
-                        File f = new File(url);
-                        if (f.exists()) {
-                            try {
-                                FileInputStream fis = new FileInputStream(f);
-                                data = new byte[(int) f.length()];
-                                fis.read(data);
-                                fis.close();
-                            } catch (IOException ex) {
-                                ex.printStackTrace();
-                            }
-                        }
-                    }
-                    switch (uid) {
-
-                        case PICK_PHOTO:
-                        case PICK_CAMERA: {
-
-                            if (data != null) {
-
-                            }
-                            break;
-                        }
-                        case PICK_QR: {
-
-                            break;
-                        }
-                        case PICK_HEAD: {
-                            if (data != null) {
-
-                            }
-                            break;
-                        }
-                    }
-                });
-                add(getMainPanel(this));
-                int i = AppLoader.getGuiStyle();
-                setStyleButton(i);
-                initExplorer();
-            }
-
-
-            @Override
-            public boolean paint(long vg) {
-                super.paint(vg);
-                if (delayLauncher != null) {
-                    GForm.flush();
-
-                    String osname = System.getProperty("os.name");
-                    if ("iOS".equals(osname) || "Android".equals(osname)) {
-                        float w = GCallBack.getInstance().getDeviceWidth();
-                        float h = GCallBack.getInstance().getDeviceHeight();
-                        if ("h".equals(appOri)) {
-                            if (w < h) return true;
-                        } else {
-                            if (h < w) return true;
-                        }
-                    }
-                    try {
-                        delayLauncher.run();
-                    } catch (Exception e) {
-
-                    }
-                    delayLauncher = null;
-                }
-
-                return true;
-            }
-        };
+        mgrForm = new PluginMgrForm(null);
         floatButton = new GHomeButton(mgrForm);
         mgrForm.add(floatButton);
         return mgrForm;
@@ -488,17 +400,17 @@ public class AppManager extends GApplication {
                     AppLoader.setGuiStyle(1);
                     setStyleButton(1);
                     break;
-                case "MI_PLUGINMGR": {
-                    mainSlot.moveTo(0, 0);
-                    break;
-                }
-                case "MI_DISCOVERY": {
-                    mainSlot.moveTo(3, 0);
-                    if (explorer.getWebView().getElementSize() == 0) {
-                        getServerPolicy();
-                    }
-                    break;
-                }
+//                case "MI_PLUGINMGR": {
+//                    mainSlot.moveTo(0, 0);
+//                    break;
+//                }
+//                case "MI_DISCOVERY": {
+//                    mainSlot.moveTo(3, 0);
+//                    if (explorer.getWebView().getElementSize() == 0) {
+//                        queryServerPolicy();
+//                    }
+//                    break;
+//                }
                 case "BT_DISCOVERY_REFRESH": {
                     XPage page = explorer.getCurrentPage();
                     if (page != null) {
@@ -579,15 +491,19 @@ public class AppManager extends GApplication {
     }
 
     void initExplorer() {
+        updateScriptEnvironment();
         XmlExtAssist assist = new XmlExtAssist(mgrForm);
 
         GContainer wv = GToolkit.getComponent(mgrForm, "TD_DISCOVERY");
         explorer = new XExplorer(wv, eventHandler, assist);
+        queryServerPolicy();
+        wv.getInterpreter("ROOT_PAN").reglib(new ExplorerScriptLib(getForm(), explorer));
     }
 
-    void getServerPolicy() {
-        if (discoveryUrl == null) {
-            policyUrl = AppLoader.getBaseInfo("policyUrl");
+    void queryServerPolicy() {
+        if (AppLoader.getProperty(POLICY_URL) != null) {
+            String policyUrl = AppLoader.getBaseInfo("policyUrl");
+            AppLoader.setProperty(POLICY_URL, policyUrl);
             policyUrl = AppLoader.appendUrlParam(policyUrl);
 
             MiniHttpClient hc = new MiniHttpClient(policyUrl, cltLogger, new MiniHttpClient.DownloadCompletedHandle() {
@@ -597,12 +513,13 @@ public class AppManager extends GApplication {
                         String s = null;
                         try {
                             s = new String(data, "utf-8");
-                            ServerMsg pm = new JsonParser<ServerMsg>().deserial(s, ServerMsg.class);
+                            HttpRequestReply pm = new JsonParser<HttpRequestReply>().deserial(s, HttpRequestReply.class);
                             if (pm.getCode() == 0) {
                                 String[] urls = pm.getReply().split("\n");
-                                discoveryUrl = urls[0];
-                                System.out.println(discoveryUrl);
-                                discovery(discoveryUrl);
+                                AppLoader.setProperty(DISCOVERY_URL, urls[0]);
+                                AppLoader.setProperty(ACCOUNT_BASE_URL, urls[1]);
+                                System.out.println(AppLoader.getProperty(DISCOVERY_URL));
+                                discovery(AppLoader.getProperty(DISCOVERY_URL));
                             } else {
                                 GForm.addMessage(pm.getReply() + " " + url);
                             }
@@ -615,7 +532,7 @@ public class AppManager extends GApplication {
             });
             hc.start();
         } else {
-            discovery(discoveryUrl);
+            discovery(AppLoader.getProperty(DISCOVERY_URL));
         }
     }
 
@@ -623,34 +540,6 @@ public class AppManager extends GApplication {
         homeUrl = AppLoader.appendUrlParam(homeUrl);
 
         explorer.gotoPage(homeUrl);
-
-//        MiniHttpClient hc = new MiniHttpClient(url, cltLogger, new MiniHttpClient.DownloadCompletedHandle() {
-//            @Override
-//            public void onCompleted(MiniHttpClient client, String url, byte[] data) {
-//                if (data != null) {
-//                    try {
-//                        String s = new String(data, "utf-8");
-//                        ServerMsg msg = new JsonParser<ServerMsg>().deserial(s, ServerMsg.class);
-//                        if (msg.getCode() == 0) {
-//                            String uistr = msg.getReply();
-//                            UITemplate uit = new UITemplate(uistr);
-//                            GContainer td = GToolkit.getComponent(mgrForm, "TD_DISCOVERY");
-//                            if (td != null) {
-//                                XContainer xcon = (XContainer) XContainer.parseXml(uit.parse(), new XmlExtAssist(mgrForm));
-//                                xcon.build((int) td.getW(), (int) td.getH(), eventHandler);
-//                                GContainer pan = xcon.getGui();
-//                                td.clear();
-//                                td.add(pan);
-//                            }
-//                        }
-//
-//                    } catch (Exception e) {
-//                        throw new RuntimeException(e);
-//                    }
-//                }
-//            }
-//        });
-//        hc.start();
 
     }
 
@@ -841,4 +730,122 @@ public class AppManager extends GApplication {
         return ret;
 
     }
+
+
+    class PluginMgrForm extends GForm implements GuiScriptEnvVarAccessor {
+
+        public PluginMgrForm(GForm form) {
+            super(form);
+        }
+
+        @Override
+        public void init() {
+            super.init();
+
+            final GCallBack ccb = GCallBack.getInstance();
+            devW = ccb.getDeviceWidth();
+            devH = ccb.getDeviceHeight();
+            System.out.println("devW :" + devW + ", devH  :" + devH);
+
+            GForm.hideKeyboard(this);
+            regStrings();
+            GLanguage.setCurLang(AppLoader.getDefaultLang());
+
+            if (AppLoader.getGuiStyle() == 0) {
+                GToolkit.setStyle(new GStyleBright());
+            } else {
+                GToolkit.setStyle(new GStyleDark());
+            }
+
+            setPickListener((uid, url, data) -> {
+                if (data == null && url != null) {
+                    File f = new File(url);
+                    if (f.exists()) {
+                        try {
+                            FileInputStream fis = new FileInputStream(f);
+                            data = new byte[(int) f.length()];
+                            fis.read(data);
+                            fis.close();
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                }
+                switch (uid) {
+
+                    case PICK_PHOTO:
+                    case PICK_CAMERA: {
+
+                        if (data != null) {
+
+                        }
+                        break;
+                    }
+                    case PICK_QR: {
+
+                        break;
+                    }
+                    case PICK_HEAD: {
+                        if (data != null) {
+
+                        }
+                        break;
+                    }
+                }
+            });
+            add(getMainPanel(this));
+            int i = AppLoader.getGuiStyle();
+            setStyleButton(i);
+            initExplorer();
+        }
+
+
+        @Override
+        public boolean paint(long vg) {
+            super.paint(vg);
+            if (delayLauncher != null) {
+                GForm.flush();
+
+                String osname = System.getProperty("os.name");
+                if ("iOS".equals(osname) || "Android".equals(osname)) {
+                    float w = GCallBack.getInstance().getDeviceWidth();
+                    float h = GCallBack.getInstance().getDeviceHeight();
+                    if ("h".equals(appOri)) {
+                        if (w < h) return true;
+                    } else {
+                        if (h < w) return true;
+                    }
+                }
+                try {
+                    delayLauncher.run();
+                } catch (Exception e) {
+
+                }
+                delayLauncher = null;
+            }
+
+            return true;
+        }
+
+        @Override
+        public String getEnv(String key) {
+            return AppLoader.getProperty(key);
+        }
+
+        @Override
+        public void setEnv(String key, String value) {
+            AppLoader.setProperty(key, value);
+        }
+    }
+
+
+    void updateScriptEnvironment() {
+        AppLoader.setProperty("LANG", AppLoader.getLangName());
+        AppLoader.setProperty("SVER", AppLoader.getBaseInfo("sver"));
+        AppLoader.setProperty("JAR", AppLoader.getBaseInfo("jar"));
+        AppLoader.setProperty("FROM", AppLoader.getBaseInfo("from"));
+        AppLoader.setProperty("CVER", AppLoader.getBaseInfo("cver"));
+        AppLoader.setProperty("POLICY_URL", AppLoader.getBaseInfo("policyUrl"));
+    }
+
 }

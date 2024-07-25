@@ -4,10 +4,13 @@
  */
 package org.mini.gui;
 
+import org.mini.apploader.MiniHttpClient;
 import org.mini.gui.gscript.*;
+import org.mini.json.JsonParser;
 import org.mini.layout.*;
 import org.mini.nanovg.Nanovg;
 
+import java.net.URL;
 import java.util.ArrayList;
 
 
@@ -27,6 +30,7 @@ public class GuiScriptLib extends Lib {
         this.form = form;
 
         {
+            methodNames.put("flushGui".toLowerCase(), this::flushGui);//  set background color
             methodNames.put("setBgColor".toLowerCase(), this::setBgColor);//  set background color
             methodNames.put("setColor".toLowerCase(), this::setColor);//  set background color
             methodNames.put("setText".toLowerCase(), this::setText);//  set text
@@ -74,6 +78,9 @@ public class GuiScriptLib extends Lib {
             methodNames.put("setBgImg".toLowerCase(), this::setBgImg);//
             methodNames.put("setVisible".toLowerCase(), this::setVisible);//
             methodNames.put("getVisible".toLowerCase(), this::getVisible);//
+            methodNames.put("httpRequest".toLowerCase(), this::httpRequest);//
+            methodNames.put("getEnv".toLowerCase(), this::getEnv);//
+            methodNames.put("setEnv".toLowerCase(), this::setEnv);//
 
         }
     }
@@ -83,11 +90,33 @@ public class GuiScriptLib extends Lib {
     // inner method
     // -------------------------------------------------------------------------
 
+    /**
+     * @param url
+     * @param callback like: CONTAINER_NAME.SCRIPT_NAME
+     */
+    public static void doCallback(GForm form, String callback, String url, int code, String reply) {
+        if (callback != null) {
+            if (callback.contains(".")) {
+                String[] ss = callback.split("\\.");
+                GContainer gobj = GToolkit.getComponent(form, ss[0]);
+                Interpreter inp = gobj.getInterpreter();
+                inp.callSub(ss[1] + "(\"" + url + "\"," + code + ",\"" + reply + "\")");
+            } else {
+                System.out.println("httpRequest callback no GContainer specified: " + callback);
+            }
+        }
+    }
+
 
     // -------------------------------------------------------------------------
     // implementation
     // -------------------------------------------------------------------------
 
+
+    public DataType flushGui(ArrayList<DataType> para) {
+        GForm.flush();
+        return null;
+    }
 
     public DataType setBgColor(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
@@ -533,6 +562,7 @@ public class GuiScriptLib extends Lib {
         String msg = Interpreter.popBackStr(para);
         GFrame f = GToolkit.getMsgFrame(form, GLanguage.getString("Message"), msg);
         GToolkit.showFrame(f);
+        form.flush();
         return null;
     }
 
@@ -613,4 +643,64 @@ public class GuiScriptLib extends Lib {
         }
         return Interpreter.getCachedBool(false);
     }
+
+    public DataType httpRequest(ArrayList<DataType> para) {
+        String href = Interpreter.popBackStr(para);
+        String callback = Interpreter.popBackStr(para);
+        if (href != null) {
+            try {
+                URL url = new URL(href);
+            } catch (Exception e) {
+                doCallback(form, callback, href, -1, "url format error");
+                return null;
+            }
+
+            MiniHttpClient hc = new MiniHttpClient(href, null, new MiniHttpClient.DownloadCompletedHandle() {
+                @Override
+                public void onCompleted(MiniHttpClient client, String url, byte[] data) {
+                    if (data != null) {
+                        try {
+                            JsonParser<HttpRequestReply> jp = new JsonParser();
+                            HttpRequestReply msg = jp.deserial(new String(data, "UTF-8"), HttpRequestReply.class);
+                            doCallback(form, callback, url, msg.getCode(), msg.getReply());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+            hc.start();
+        }
+        return null;
+    }
+
+    public DataType getEnv(ArrayList<DataType> para) {
+        String key = Interpreter.popBackStr(para);
+        if (key != null) {
+            if (form instanceof GuiScriptEnvVarAccessor) {
+                GuiScriptEnvVarAccessor accessor = (GuiScriptEnvVarAccessor) form;
+                return Interpreter.getCachedStr((String) accessor.getEnv(key));
+            } else {
+                System.out.println(form + " is not implemented GuiScriptEnvVarAccessor");
+            }
+        }
+        return Interpreter.getCachedStr("");
+    }
+
+
+    public DataType setEnv(ArrayList<DataType> para) {
+        String key = Interpreter.popBackStr(para);
+        String val = Interpreter.popBackStr(para);
+        if (key != null) {
+            if (form instanceof GuiScriptEnvVarAccessor) {
+                GuiScriptEnvVarAccessor accessor = (GuiScriptEnvVarAccessor) form;
+                accessor.setEnv(key, val);
+                ;
+            } else {
+                System.out.println(form + " is not implemented GuiScriptEnvVarAccessor");
+            }
+        }
+        return null;
+    }
+
 }

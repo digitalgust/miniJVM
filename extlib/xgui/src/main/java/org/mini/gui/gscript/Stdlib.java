@@ -1,9 +1,13 @@
 package org.mini.gui.gscript;
 
+import org.mini.crypt.XorCrypt;
 import org.mini.reflect.ReflectMethod;
 
+import javax.microedition.io.Base64;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -46,10 +50,13 @@ public class Stdlib extends Lib {
         methodNames.put("setobjfield".toLowerCase(), this::setObjField);
         methodNames.put("trim".toLowerCase(), this::trim);//字符串去空格
         methodNames.put("str2int".toLowerCase(), this::str2int);//字符串转int
+        methodNames.put("isNumStr".toLowerCase(), this::isNumStr);//是数字串
         methodNames.put("invokeJava".toLowerCase(), this::invokeJava);//执行对象方法
         methodNames.put("invokeStatic".toLowerCase(), this::invokeStatic);//执行对象方法
         methodNames.put("getbit".toLowerCase(), this::getbit);//取整数第n位,返回bool
         methodNames.put("setbit".toLowerCase(), this::setbit);//设整数第n位
+        methodNames.put("encrypt".toLowerCase(), this::encrypt);//加密  str= encrypt(str,key)
+        methodNames.put("decrypt".toLowerCase(), this::decrypt);//解密  str= decrypt(str,key)
     }
 
 
@@ -532,7 +539,19 @@ public class Stdlib extends Lib {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return null;
+        return Interpreter.getCachedInt(-1);
+    }
+
+    private DataType isNumStr(ArrayList<DataType> para) {
+        try {
+            String str = Interpreter.popBackStr(para);
+            str = str.trim();
+            long i = Long.parseLong(str);
+            return Interpreter.getCachedBool(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Interpreter.getCachedBool(false);
     }
 
     private DataType getbit(ArrayList<DataType> para) {
@@ -557,6 +576,39 @@ public class Stdlib extends Lib {
                 i |= 1 << bitPos;
             }
             return Interpreter.getCachedInt(i);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    private DataType encrypt(ArrayList<DataType> para) {
+        try {
+            String str = Interpreter.popBackStr(para);
+            String key = Interpreter.popBackStr(para);
+            byte[] strBytes = str.getBytes("utf-8");
+            byte[] keyBytes = key.getBytes("utf-8");
+            byte[] result = XorCrypt.xor_encrypt(strBytes, keyBytes);
+            str = Base64.encode(result, 0, result.length);
+            str = URLEncoder.encode(str, "UTF-8");
+            return Interpreter.getCachedStr(str);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType decrypt(ArrayList<DataType> para) {
+        try {
+            String str = Interpreter.popBackStr(para);
+            String key = Interpreter.popBackStr(para);
+            str = URLDecoder.decode(str, "UTF-8");
+            byte[] strBytes = Base64.decode(str);
+            byte[] keyBytes = key.getBytes("utf-8");
+            byte[] result = XorCrypt.xor_decrypt(strBytes, keyBytes);
+            String i = new String(result, "utf-8");
+            return Interpreter.getCachedStr(i);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -289,7 +289,8 @@ public class AppLoader {
     }
 
     public static String getProperty(String key) {
-        return appinfo.getProperty(key);
+        String s = appinfo.getProperty(key);
+        return s == null ? "" : s;
     }
 
     public static void setProperty(String key, String val) {
