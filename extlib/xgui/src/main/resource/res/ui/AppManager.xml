@@ -19,6 +19,10 @@
             eif
         ret
 
+        sub onCallBack(url,code,msg) '通用回调
+            showMsg("{Message}: "+msg)
+        ret
+
         sub onPolicyRequestBack(url,code,msg) '请求策略回调
             if(code=0)
                 def("INITED",1)
@@ -131,6 +135,50 @@
             eif
         ret
 
+        sub retrievePwd() '找回密码发送验证码
+            sUid=getText("LOGIN_FORGOT_UID_PRE")
+            if(strlen(sUid)=0)
+                showMsg("{Account can not be empty}")
+            else
+                accBaseUrl=getEnv("ACCOUNT_BASE_URL")
+                url=accBaseUrl + "/retrieve?usr=" + sUid +"&ver="+ getEnv("SVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG")
+                println(url)
+                httpRequest(url,"ROOT_PAN.onCallBack")
+                setText("LOGIN_FORGOT_UID", sUid)
+            eif
+        ret
+
+        sub retrieveChgPwd() '收到验证码后更改密码
+            sUid=getText("LOGIN_FORGOT_UID")
+            sCode=getText("LOGIN_FORGOT_CODE")
+            sPwd=getText("LOGIN_FORGOT_PWD")
+            if(strlen(sUid)=0 | strlen(sPwd)=0 | strlen(sCode)=0)
+                showMsg("{Account or password can not be empty}")
+            else
+                accBaseUrl=getEnv("ACCOUNT_BASE_URL")
+                encryptPwd=encrypt(sPwd,ENCRYPTED_KEY)
+                url=accBaseUrl + "/retrievechgpwd?usr=" + sUid + "&pwd=" + encryptPwd + "&code=" + sCode +"&ver="+ getEnv("SVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG")
+                println(url)
+                httpRequest(url,"ROOT_PAN.onCallBack")
+            eif
+        ret
+
+        sub changePwd() '输入账号老密码改新密码
+            sUid=getText("LOGIN_CHGPWD_UID")
+            sOld=getText("LOGIN_CHGPWD_OLD")
+            sNew=getText("LOGIN_CHGPWD_NEW")
+            if(strlen(sUid)=0 | strlen(sOld)=0 | strlen(sNew)=0)
+                showMsg("{Account or password can not be empty}")
+            else
+                accBaseUrl=getEnv("ACCOUNT_BASE_URL")
+                encryptOld=encrypt(sOld,ENCRYPTED_KEY)
+                encryptNew=encrypt(sNew,ENCRYPTED_KEY)
+                url=accBaseUrl + "/chgpwd?usr=" + sUid + "&pwd=" + encryptPwd + "&code=" + sCode +"&ver="+ getEnv("SVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG")
+                println(url)
+                httpRequest(url,"ROOT_PAN.onCallBack")
+            eif
+        ret
+
         ]]>
     </script>
     <tr h="{STATEBAR_HEIGHT}" w="100%">
@@ -229,13 +277,13 @@
                 <panel w="100%" h="100%" move="fixed" align="hcenter,top">
                     <table w="98%" h="100%">
                         <tr w="100%" h="30">
-                            <td w="float" h="100%">
-                                <label w="100%" h="30" fontsize="20" align="hcenter,vcenter">{DISCOVERY}</label>
-                            </td>
                             <td w="150" h="100%">
                                 <button name="BT_DISCOVERY_BACK" w="50" h="30" preicon="⬅"></button>
                                 <button name="BT_DISCOVERY_FORWARD" w="50" h="30" preicon="➡"></button>
                                 <button name="BT_DISCOVERY_REFRESH" w="50" h="30" preicon="🔄"></button>
+                            </td>
+                            <td w="float" h="100%">
+                                <label w="100%" h="30" fontsize="20" align="hcenter,vcenter">{DISCOVERY}</label>
                             </td>
                         </tr>
                         <tr w="100%" h="float">
@@ -272,39 +320,41 @@
                     <viewport name="PAN_LOGIN" w="98%" h="100%">
                         <button onclick='showSlot("SLOT_MGR" ,4)' h="30" addon="50" preicon="">{Back}</button>
                         <br/>
-                        <panel bgcolor="55558010">
-                            <panel w="100%" h="5"/>
-                            <label w="100%" h="30" align="left,vcenter">{Sign in}</label>
-                            <br/>
-                            <input w="100%" name="LOGIN_UID" hint="{Account, email or mobile}"></input>
-                            <br/>
-                            <input w="100%" name="LOGIN_PWD" password="1" hint="{Password}"></input>
-                            <switch name="LOGIN_SAVE" selected="1" w="40" h="25"></switch>
-                            <label w="100" h="30" align="Left,vcenter">{Remember me}</label>
-                            <br/>
-                            <button name="LOGIN_OK" w="100%" onclick="signIn()">{Sign in}</button>
-                            <panel w="100%" h="5"/>
-                        </panel>
+                        <panel w="100%" h="5"/>
+                        <label w="100%" h="30" align="left,vcenter">{Sign in}</label>
+                        <br/>
+                        <input w="100%" name="LOGIN_UID" hint="{Account, email or mobile}"></input>
+                        <br/>
+                        <input w="100%" name="LOGIN_PWD" password="1" hint="{Password}"></input>
+                        <switch name="LOGIN_SAVE" selected="1" w="40" h="25"></switch>
+                        <label w="100" h="30" align="Left,vcenter">{Remember me}</label>
+                        <br/>
+                        <button w="100%" onclick="signIn()" preicon="👤">{Sign in}</button>
+                        <panel w="100%" h="5"/>
                         <br/>
                         <label></label>
                         <br/>
-                        <panel bgcolor="55558010">
-                            <panel w="100%" h="5"/>
-                            <label w="100%" h="30" align="Left,vcenter">{I don't have an account, sign up now}</label>
-                            <br/>
-                            <button name="LOGIN_REG" w="100%" onclick='showSlot("SLOT_MGR" ,6)'>{Sign up}</button>
-                            <panel w="100%" h="5"/>
-                        </panel>
+                        <panel w="100%" h="5"/>
+                        <label w="100%" h="30" align="Left,vcenter">{I don't have an account, sign up now}</label>
+                        <br/>
+                        <button w="100%" onclick='showSlot("SLOT_MGR" ,6)' preicon="">{Sign up}</button>
+                        <panel w="100%" h="5"/>
                         <br/>
                         <label></label>
                         <br/>
-                        <panel bgcolor="55558010">
-                            <panel w="100%" h="5"/>
-                            <label w="100%" h="30" align="Left,vcenter">{I have an account, But I forgot my password}</label>
-                            <br/>
-                            <button name="LOGIN_FORGOT" w="100%" onclick='showSlot("SLOT_MGR" ,7)'>{Forgot password}</button>
-                            <panel w="100%" h="5"/>
-                        </panel>
+                        <panel w="100%" h="5"/>
+                        <label w="100%" h="30" align="Left,vcenter">{I have an account, But I forgot my password}</label>
+                        <br/>
+                        <button w="100%" onclick='showSlot("SLOT_MGR" ,7)' preicon="🔓">{Forgot password}</button>
+                        <panel w="100%" h="5"/>
+                        <br/>
+                        <label></label>
+                        <br/>
+                        <panel w="100%" h="5"/>
+                        <label w="100%" h="30" align="Left,vcenter">{I want to change my password}</label>
+                        <br/>
+                        <button w="100%" onclick='showSlot("SLOT_MGR" ,8)' preicon="🔑">{Change password}</button>
+                        <panel w="100%" h="100"/>
                     </viewport>
                 </panel>
                 <!-- 6 sign up -->
@@ -326,9 +376,9 @@
                         <br/>
                         <input w="100%" name="LOGIN_VERIFY_UID" hint="{Account, email or mobile}"></input>
                         <br/>
-                        <input w="100%" name="LOGIN_VERIFY_CODE" password="1" hint="{Verify Code}"></input>
+                        <input w="100%" name="LOGIN_VERIFY_CODE" password="0" hint="{Verify Code}"></input>
                         <br/>
-                        <button name="LOGIN_VERIFY" w="100%" onclick="verifyCode()">{Verify Code}</button>
+                        <button w="100%" onclick="verifyCode()">{Verify Code}</button>
 
                     </viewport>
                 </panel>
@@ -339,11 +389,40 @@
                         <br/>
                         <label w="100%" h="30" align="hcenter,vcenter">{Forgot password}</label>
                         <br/>
-                        <label></label>
+                        <label>{Input your account: email or mobile}</label>
+                        <br/>
+                        <input w="100%" name="LOGIN_FORGOT_UID_PRE" hint="{Account, email or mobile}"></input>
+                        <br/>
+                        <button name="LOGIN_REG" w="100%" onclick="retrievePwd()">{Send code}</button>
+                        <br/>
+                        <label w="100%" h="50" align="left,vcenter" multiline="1">{After submitting your account, you will receive an email or SMS verification code.}</label>
                         <br/>
                         <input w="100%" name="LOGIN_FORGOT_UID" hint="{Account, email or mobile}"></input>
                         <br/>
-                        <button name="LOGIN_REG" w="100%" onclick="submitSignup()">{Fint it}</button>
+                        <input w="100%" name="LOGIN_FORGOT_CODE" password="0" hint="{Verify Code}"></input>
+                        <br/>
+                        <input w="100%" name="LOGIN_FORGOT_PWD" password="1" hint="{New password}"></input>
+                        <br/>
+                        <button w="100%" onclick="retrieveChgPwd()">{Change password}</button>
+
+                    </viewport>
+                </panel>
+                <!-- 8 change password -->
+                <panel w="100%" h="100%" move="fixed" align="hcenter,top">
+                    <viewport name="PAN_REG" w="98%" h="100%">
+                        <button onclick='showSlot("SLOT_MGR" ,5)' h="30" addon="50" preicon="">{Back}</button>
+                        <br/>
+                        <label w="100%" h="30" align="hcenter,vcenter">{Change password}</label>
+                        <br/>
+                        <label>{Input your account: email or mobile}</label>
+                        <br/>
+                        <input w="100%" name="LOGIN_CHGPWD_UID" hint="{Account, email or mobile}"></input>
+                        <br/>
+                        <input w="100%" name="LOGIN_CHGPWD_OLD" password="1" hint="{Old password}"></input>
+                        <br/>
+                        <input w="100%" name="LOGIN_CHGPWD_NEW" password="1" hint="{New password}"></input>
+                        <br/>
+                        <button w="100%" onclick="changePwd()">{Change password}</button>
 
                     </viewport>
                 </panel>
@@ -353,7 +432,7 @@
     <tr h="50" w="100%">
         <td w="100%" h="100%">
             <menu name="MENU_MAIN" w="100%" h="100%">
-                <mi name="MI_PLUGINMGR" onclick="showSlot('SLOT_MGR',0)">{PLUGIN}</mi>
+                <mi name="MI_PLUGINMGR" onclick='showSlot("SLOT_MGR",0)'>{PLUGIN}</mi>
                 <mi name="MI_DISCOVERY" onclick="showDiscovery()">{DISCOVERY}</mi>
                 <mi name="MI_MY" onclick="showMy()">{MY}</mi>
             </menu>

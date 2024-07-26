@@ -240,45 +240,45 @@
       "账号或密码不能为空",
       "账号或密码不能为空"
     ],
-    "AAA": [
-      "AAA",
-      "BBB",
-      "CCC"
+    "Input your account: email or mobile": [
+      "Input your account: email or mobile",
+      "请输入账号: 邮箱或手机",
+      "请输入账号: 邮箱或手机"
     ],
-    "AAA": [
-      "AAA",
-      "BBB",
-      "CCC"
+    "Send code": [
+      "Send code",
+      "发送验证码",
+      "发送验证码"
     ],
-    "AAA": [
-      "AAA",
-      "BBB",
-      "CCC"
+    "After submitting your account, you will receive an email or SMS verification code.": [
+      "After submitting your account, you will receive an email or SMS verification code.",
+      "输入账号后，您将收到一封电子邮件或短信验证码。",
+      "输入账号后，您将收到一封电子邮件或短信验证码。"
     ],
-    "AAA": [
-      "AAA",
-      "BBB",
-      "CCC"
+    "Change password": [
+      "Change password",
+      "改变密码",
+      "改变密码"
     ],
-    "AAA": [
-      "AAA",
-      "BBB",
-      "CCC"
+    "Account, email or mobile": [
+      "Account, email or mobile",
+      "账号, 邮箱或手机",
+      "账号, 邮箱或手机"
     ],
-    "AAA": [
-      "AAA",
-      "BBB",
-      "CCC"
+    "Old password": [
+      "Old password",
+      "旧密码",
+      "旧密码"
     ],
-    "AAA": [
-      "AAA",
-      "BBB",
-      "CCC"
+    "New password": [
+      "New password",
+      "新密码",
+      "新密码"
     ],
-    "AAA": [
-      "AAA",
-      "BBB",
-      "CCC"
+    "I want to change my password": [
+      "I want to change my password",
+      "我要改变我的密码",
+      "我要改变我的密码"
     ],
     "AAA": [
       "AAA",
