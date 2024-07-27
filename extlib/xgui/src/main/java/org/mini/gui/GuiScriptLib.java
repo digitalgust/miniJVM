@@ -85,6 +85,13 @@ public class GuiScriptLib extends Lib {
         }
     }
 
+    public Func getFuncByName(String name) {
+        if (form == null) { //如果通过解析XML得到form的时候，创建这个lib时，form还没有创建成功，因此进行补充设置
+            form = GCallBack.getInstance().getApplication().getForm();
+        }
+        return super.getFuncByName(name);
+    }
+
 
     // -------------------------------------------------------------------------
     // inner method

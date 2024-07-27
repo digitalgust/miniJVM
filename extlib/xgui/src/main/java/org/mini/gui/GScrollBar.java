@@ -22,6 +22,7 @@ public class GScrollBar extends GObject {
     protected boolean draged;
     protected int mode = HORIZONTAL;
     protected float radius = 8;
+    protected float radiusBig = 12;
     protected float[] line_boundle = new float[4];
 
     public GScrollBar(GForm form) {
@@ -50,15 +51,15 @@ public class GScrollBar extends GObject {
 
     public void reBoundle() {
         if (mode == HORIZONTAL) {
-            line_boundle[LEFT] = radius;
-            line_boundle[WIDTH] = boundle[WIDTH] - radius * 2;
+            line_boundle[LEFT] = radiusBig;
+            line_boundle[WIDTH] = boundle[WIDTH] - radiusBig * 2;
             line_boundle[TOP] = 0;
             line_boundle[HEIGHT] = boundle[HEIGHT];
         } else {
             line_boundle[LEFT] = 0;
             line_boundle[WIDTH] = boundle[WIDTH];
-            line_boundle[TOP] = radius;
-            line_boundle[HEIGHT] = boundle[HEIGHT] - radius * 2;
+            line_boundle[TOP] = radiusBig;
+            line_boundle[HEIGHT] = boundle[HEIGHT] - radiusBig * 2;
 
         }
     }
@@ -175,7 +176,7 @@ public class GScrollBar extends GObject {
         float kr = radius;//(int) (h * 0.25f);
 
         // Slot
-        bg = nvgBoxGradient(vg, x, cy - 2 + 1, w, 4, 2, 2, nvgRGBA(0, 0, 0, 32), nvgRGBA(0, 0, 0, 128));
+        bg = nvgBoxGradient(vg, x, cy - 2 + 1, w, 4, 2, 2, nvgRGBA(0, 0, 0, 32), nvgRGBA(0, 0, 0, 32));
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x, cy - 2, w, 4, 2);
         nvgFillPaint(vg, bg);
@@ -214,7 +215,7 @@ public class GScrollBar extends GObject {
 
         // Slot
 //        bg = nvgBoxGradient(vg, x, cx - 2 + 1, w, 4, 2, 2, nvgRGBA(0, 0, 0, 32), nvgRGBA(0, 0, 0, 128));
-        bg = nvgBoxGradient(vg, cx - 2 + 1, y, 4, h, 2, 2, nvgRGBA(0, 0, 0, 32), nvgRGBA(0, 0, 0, 128));
+        bg = nvgBoxGradient(vg, cx - 2 + 1, y, 4, h, 2, 2, nvgRGBA(0, 0, 0, 32), nvgRGBA(0, 0, 0, 32));
         nvgBeginPath(vg);
         nvgRoundedRect(vg, cx - 2, y, 4, h, 2);
         nvgFillPaint(vg, bg);
