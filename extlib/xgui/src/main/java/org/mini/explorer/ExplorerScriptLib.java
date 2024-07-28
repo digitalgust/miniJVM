@@ -25,14 +25,14 @@ import java.util.Random;
  */
 public class ExplorerScriptLib extends Lib {
     GForm form;
-    XExplorer explorer;
+    XExplorerHolder holder;
 
     /**
      *
      */
-    public ExplorerScriptLib(GForm form, XExplorer explorer) {
+    public ExplorerScriptLib(GForm form, XExplorerHolder holder) {
         this.form = form;
-        this.explorer = explorer;
+        this.holder = holder;
 
         // script method register
         {
@@ -58,11 +58,11 @@ public class ExplorerScriptLib extends Lib {
         String href = Interpreter.popBackStr(para);
         String callback = Interpreter.popBackStr(para);
         if (href != null) {
-            XPage page = explorer.getCurrentPage();
+            XPage page = holder.getExplorer().getCurrentPage();
             if (page != null) {// may be  href="/abc/c.xml"
                 href = XUrlHelper.normalizeUrl(page.getUrl(), href); //fix as : http://www.abc.com/abc/c.xml
             }
-            explorer.gotoPage(href);
+            holder.getExplorer().gotoPage(href);
             GuiScriptLib.doCallback(form, callback, href, 0, "");
         }
         return null;
@@ -73,7 +73,7 @@ public class ExplorerScriptLib extends Lib {
         String href = Interpreter.popBackStr(para);
         String callback = Interpreter.popBackStr(para);
         if (href != null) {
-            XPage page = explorer.getCurrentPage();
+            XPage page = holder.getExplorer().getCurrentPage();
             if (page != null) {// may be  href="/abc/c.xml"
                 href = XUrlHelper.normalizeUrl(page.getUrl(), href); //fix as : http://www.abc.com/abc/c.zip
             }
@@ -96,7 +96,7 @@ public class ExplorerScriptLib extends Lib {
         String href = Interpreter.popBackStr(para);
         String callback = Interpreter.popBackStr(para);
         if (href != null) {
-            XPage page = explorer.getCurrentPage();
+            XPage page = holder.getExplorer().getCurrentPage();
             if (page != null) {// may be  href="/abc/c.xml"
                 href = XUrlHelper.normalizeUrl(page.getUrl(), href); //fix as : http://www.abc.com/abc/c.zip
             }

@@ -298,6 +298,7 @@ public abstract class XContainer
             if (tmp.length() > 0) {
                 XLabel label = new XLabel(this);
                 label.assist = assist;
+                label.multiLine = true;
                 label.setText(tmp);
                 children.add(label);
             }

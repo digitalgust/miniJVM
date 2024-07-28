@@ -1,31 +1,31 @@
 {
   "lang": {
-    "Exit": [
+    "STR_EXIT": [
       "Exit",
       "退出",
       "退出"
     ],
-    "Description: ": [
+    "STR_DESC": [
       "Description: ",
       "描述: ",
       "描述: "
     ],
-    "Browse File": [
+    "STR_SELECT_FILE": [
       "",
       "安装",
       "安裝"
     ],
-    "Download": [
+    "STR_DOWNLOAD": [
       "",
       "下载",
       "下載"
     ],
-    "Webserver started": [
+    "STR_SERVER_STARTED": [
       "Webserver started",
       "服务器已启动",
       "伺服器已啟動"
     ],
-    "Dark appearance": [
+    "STR_DARK_STYLE": [
       "Dark appearance",
       "深色外观",
       "深色外觀"
@@ -35,57 +35,57 @@
       "设置",
       "设置"
     ],
-    "Back": [
+    "STR_BACK": [
       "Back",
       "返回",
       "返回"
     ],
-    "Lan webserver for upload plugin": [
+    "STR_START_WEB_SRV_FOR_UPLOAD": [
       "Lan webserver for upload plugin",
       "启动Web服务器上传",
       "啟動Web伺服器上傳"
     ],
-    "Message": [
+    "STR_MESSAGE": [
       "Message",
       "信息",
       "資訊"
     ],
-    "Close": [
+    "STR_CLOSE": [
       "Close",
       "关闭",
       "關閉"
     ],
-    "Webserver stoped": [
+    "STR_SERVER_STOPED": [
       "Webserver stoped",
       "服务器已停止",
       "伺服器已停止"
     ],
-    "Uploaded file": [
+    "STR_UPLOAD_FILE": [
       "Uploaded file",
       "文件上传结束",
       "文件上傳結束"
     ],
-    "Delete": [
+    "STR_DELETE": [
       "Delete",
       "删除",
       "刪除"
     ],
-    "Do you confirm to delete the plugin ": [
+    "STR_CONFIRM_DELETE": [
       "Do you confirm to delete the plugin ",
       "您要删除组件吗",
       "您要刪除元件嗎"
     ],
-    "Version: ": [
+    "STR_VERSION": [
       "Version: ",
       "版本: ",
       "版本: "
     ],
-    "Upgrade url: ": [
+    "STR_UPGRADE_URL": [
       "Upgrade url: ",
       "升级地址: ",
       "升級地址: "
     ],
-    "Open plugin failed": [
+    "STR_OPEN_APP_FAIL": [
       "Open plugin failed",
       "打开组件失败",
       "打開元件失敗"
@@ -95,87 +95,92 @@
       "发现",
       "發現"
     ],
-    "Put on top": [
+    "STR_SET_AS_BOOT": [
       "Put on top",
       "置顶组件",
       "置頂元件"
     ],
-    "MY": [
-      "MY",
-      "我的",
-      "我的"
-    ],
-    "Install plugin from local file:": [
+    "STR_INSTALL_FROM_LOCAL": [
       "Install plugin from local file:",
       "选取文件安装",
       "選取檔案安裝"
     ],
-    "PLUGIN MANAGER": [
+    "PLUGIN_MANAGER": [
       "PLUGIN MANAGER",
       "组件管理器",
       "元件管理器"
     ],
-    "Bright appearance": [
+    "STR_BRIGHT_STYLE": [
       "Bright appearance",
       "浅色外观",
       "淺色外觀"
     ],
-    "Lan webserver on:": [
+    "STR_WEB_LISTEN_ON": [
       "Lan webserver on:",
       "Web服务器临听 : ",
       "Web伺服器臨聽 : "
     ],
-    "Download plugin from website:": [
+    "STR_DOWN_APP_FROM_WEB": [
       "Download plugin from website:",
       "从网站下载组件",
       "從網站下載元件"
     ],
-    "Stop": [
+    "STR_STOP": [
       "",
       "停止",
       "停止"
     ],
-    "upgrade": [
+    "STR_UPGRADE": [
       "upgrade",
       "升级",
       "升級"
     ],
-    "Success": [
+    "STR_SUCCESS": [
       "Success",
       "成功",
       "成功"
+    ],
+    "STR_FAIL": [
+      "Fail",
+      "失败",
+      "失败"
     ],
     "PLUGIN": [
       "PLUGIN",
       "组件",
       "元件"
     ],
-    "Plugin is not running ": [
+    "BROWSE_FILE": [
+      "",
+      "浏览",
+      "浏览"
+    ],
+    "STR_APP_NOT_RUNNING": [
       "Plugin is not running ",
       "组件没有运行",
       "元件沒有運行"
     ],
-    "Plugin list : ": [
+    "STR_APP_LIST": [
       "Plugin list : ",
       "组件列表 : ",
       "元件列表"
     ],
-    "Start": [
+    "STR_START": [
       "",
       "启动",
       "啟動"
     ],
-    "File date: ": [
+    "STR_FILE_DATE": [
       "File date: ",
       "文件日期: ",
       "文件日期: "
     ],
-    "File size: ": [
+    "STR_FILE_SIZE": [
       "File size: ",
       "文件大小: ",
       "文件大小: "
     ],
-    "Run": [
+    "STR_RUN": [
       "Run",
       "运行",
       "運行"
@@ -190,92 +195,102 @@
       "我的",
       "我的"
     ],
-    "Sign in": [
+    "SIGN_IN": [
       "Sign in",
       "登入",
       "登入"
     ],
-    "Remember me": [
+    "REMEMBER_ME": [
       "Remember me",
       "记住",
       "記住"
     ],
-    "I don't have an account, sign up now": [
+    "I_DONT_HAVE_ACCOUNT": [
       "I don't have an account, sign up now",
       "我没有账号，现在注册",
       "我沒有帳號，現在註冊"
     ],
-    "Sign up": [
+    "SIGN_UP": [
       "Sign up",
       "注册",
       "註冊"
     ],
-    "I have an account, But I forgot my password": [
+    "I_FORGOT_PASSWORD": [
       "I have an account, But I forgot my password",
       "我有账号，但我忘记了密码",
       "我有帳號，但我忘記了密碼"
     ],
-    "Forgot password": [
+    "FORGOT_PASSWORD": [
       "Forgot password",
       "忘记密码",
       "忘記密碼"
     ],
-    "After submitting your sign-up information, you will receive an email or SMS verification code.": [
+    "NOTICE_AFTER_SIGN_UP": [
       "After submitting your sign-up information, you will receive an email or SMS verification code.",
       "当提交注册信息后，您将收到一封电子邮件或短信验证码。",
       "提交您的註冊資訊後，您將收到一封電子郵件或SMS驗證"
     ],
-    "Verify Code": [
+    "VERIFY_CODE": [
       "Verify Code",
-      "代码校验",
+      "验证码",
       "驗證碼"
     ],
-    "Fint it": [
-      "Find it",
+    "RETRIEVE_PWD": [
+      "Retrieve password",
       "找回",
       "找回"
     ],
-    "Account or password can not be empty": [
+    "ACCOUNT_PWD_NO_EMPTY": [
       "Account or password can not be empty",
       "账号或密码不能为空",
       "账号或密码不能为空"
     ],
-    "Input your account: email or mobile": [
+    "ACCOUNT_NO_EMPTY": [
+      "Account can not be empty",
+      "账号不能为空",
+      "账号不能为空"
+    ],
+    "NOTICE_INPUT_EMAIL_MOBILE": [
       "Input your account: email or mobile",
       "请输入账号: 邮箱或手机",
       "请输入账号: 邮箱或手机"
     ],
-    "Send code": [
+    "SEND_CODE": [
       "Send code",
       "发送验证码",
       "发送验证码"
     ],
-    "After submitting your account, you will receive an email or SMS verification code.": [
+    "NOTICE_RCV_VERIFY_CODE": [
       "After submitting your account, you will receive an email or SMS verification code.",
       "输入账号后，您将收到一封电子邮件或短信验证码。",
       "输入账号后，您将收到一封电子邮件或短信验证码。"
     ],
-    "Change password": [
+    "CHANGE_PASSWORD": [
       "Change password",
       "改变密码",
       "改变密码"
     ],
-    "Account, email or mobile": [
-      "Account, email or mobile",
-      "账号, 邮箱或手机",
-      "账号, 邮箱或手机"
+    "EMAIL_OR_MOBILE": [
+      "email or mobile",
+      "邮箱或手机",
+      "邮箱或手机"
     ],
-    "Old password": [
+    "OLD_PASSWORD": [
       "Old password",
       "旧密码",
       "旧密码"
     ],
-    "New password": [
+    "NEW_PASSWORD": [
       "New password",
       "新密码",
       "新密码"
     ],
-    "I want to change my password": [
+    "PASSWORD_6_32": [
+      "6-32 char password",
+      "密码",
+      "密码"
+    ],
+    "I_WANT_CHG_PWD": [
       "I want to change my password",
       "我要改变我的密码",
       "我要改变我的密码"

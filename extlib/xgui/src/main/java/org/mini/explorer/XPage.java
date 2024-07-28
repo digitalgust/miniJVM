@@ -38,7 +38,7 @@ public class XPage {
 
         this.assistDelegate = new XmlExtAssist(explorer.getAssist().getForm());
         this.assistDelegate.copyFrom(explorer.getAssist());
-        this.assistDelegate.addExtScriptLib(new ExplorerScriptLib(assistDelegate.getForm(), explorer));
+        this.assistDelegate.addExtScriptLib(new ExplorerScriptLib(assistDelegate.getForm(), (XExplorerHolder) assistDelegate.getForm()));
     }
 
     public GContainer getGui(float width, float height) {

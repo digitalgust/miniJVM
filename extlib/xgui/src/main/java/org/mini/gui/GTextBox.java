@@ -801,7 +801,10 @@ public class GTextBox extends GTextObject {
                                 }
                             }
                             int ci = detail[AREA_LINE_END_AT] + 1;
-                            if (textsb.codePointAt(ci - 1) == '\n') {//
+                            if (ci > textsb.length()) {
+                                ci= textsb.length();
+                            }
+                            if (textsb.codePointAt(ci - 1) == '\n') {//取得离光标最近的字符位置，如果光标在行尾，则返回光标所在行尾字符位置
                                 return detail[AREA_LINE_END_AT];
                             }
                             return ci;
@@ -809,7 +812,7 @@ public class GTextBox extends GTextObject {
                     }
                 }
             }
-            return textsb.length() - 1;  //只可能在下方空白区域点，那就把光标放在最后的位置
+            return textsb.length();  //只可能在下方空白区域点，那就把光标放在最后的位置
         }
 
 
@@ -915,8 +918,8 @@ public class GTextBox extends GTextObject {
                 int nrows, i, char_count;
                 float caretx = 0, carety = 0;
 
-                Nanovg.nvgScissor(vg, text_area[LEFT], text_area[TOP], text_area[WIDTH], text_area[HEIGHT]);
-                Nanovg.nvgIntersectScissor(vg, tbox.getX(), tbox.getY(), tbox.getW(), tbox.getH());
+//                Nanovg.nvgScissor(vg, text_area[LEFT], text_area[TOP], text_area[WIDTH], text_area[HEIGHT]);
+//                Nanovg.nvgIntersectScissor(vg, tbox.getX(), tbox.getY(), tbox.getW(), tbox.getH());
                 //需要恢复现场
                 try {
 

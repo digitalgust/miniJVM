@@ -162,7 +162,7 @@ public class GListItem extends GContainer {
         float th = list.list_item_heigh - pad;
 
 //        nvgSave(vg);
-        Nanovg.nvgScissor(vg, tx, ty, tw, th);
+//        Nanovg.nvgScissor(vg, tx, ty, tw, th);
 
 
         if (list.isSelected(getIndex())) {

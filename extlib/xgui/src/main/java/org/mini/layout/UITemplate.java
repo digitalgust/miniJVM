@@ -68,7 +68,7 @@ public class UITemplate {
      * @param data
      */
     void load(String data) {
-        Pattern p = Pattern.compile("\\{[^\\{^\\}]+\\}");
+        Pattern p = Pattern.compile("\\{[a-zA-Z_0-9]+\\}");
         Matcher m = p.matcher(data);
         ArrayList<String> p_array = new ArrayList();
         ArrayList<String> v_array = new ArrayList();

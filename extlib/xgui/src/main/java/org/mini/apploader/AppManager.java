@@ -7,6 +7,7 @@ package org.mini.apploader;
 
 import org.mini.apploader.bean.LangBean;
 import org.mini.explorer.ExplorerScriptLib;
+import org.mini.explorer.XExplorerHolder;
 import org.mini.gui.HttpRequestReply;
 import org.mini.explorer.XExplorer;
 import org.mini.explorer.XPage;
@@ -39,47 +40,47 @@ public class AppManager extends GApplication {
     static final String STR_PLUGIN = "PLUGIN";
     static final String STR_DISCOVERY = "DISCOVERY";
     static final String STR_MY = "MY";
-    static final String STR_EXIT = "Exit";
+    static final String STR_EXIT = "STR_EXIT";
     static final String STR_SETTING = "SETTING";
     static final String STR_TITLE = "PLUGIN MANAGER";
-    static final String STR_START_WEB_SRV_FOR_UPLOAD = "Lan webserver for upload plugin";
-    static final String STR_DOWN_APP_FROM_WEB = "Download plugin from website:";
-    static final String STR_DOWNLOAD = "Download";
-    static final String STR_START = "Start";
-    static final String STR_STOP = "Stop";
-    static final String STR_CLOSE = "Close";
-    static final String STR_WEB_LISTEN_ON = "Lan webserver on:";
-    static final String STR_APP_LIST = "Plugin list : ";
-    static final String STR_BACK = "Back";
-    static final String STR_RUN = "Run";
-    static final String STR_SET_AS_BOOT = "Put on top";
-    static final String STR_UPGRADE = "upgrade";
-    static final String STR_DELETE = "Delete";
-    static final String STR_VERSION = "Version: ";
-    static final String STR_UPGRADE_URL = "Upgrade url: ";
-    static final String STR_FILE_SIZE = "File size: ";
-    static final String STR_FILE_DATE = "File date: ";
-    static final String STR_DESC = "Description: ";
-    static final String STR_SERVER_STARTED = "Webserver started";
-    static final String STR_SERVER_STOPED = "Webserver stoped";
-    static final String STR_UPLOAD_FILE = "Uploaded file";
-    static final String STR_SUCCESS = "Success";
-    static final String STR_FAIL = "Fail";
-    static final String STR_OPEN_APP_FAIL = "Open plugin failed";
-    static final String STR_BRIGHT_STYLE = "Bright appearance";
-    static final String STR_DARK_STYLE = "Dark appearance";
-    static final String STR_MESSAGE = "Message";
-    static final String STR_CONFIRM_DELETE = "Do you confirm to delete the plugin ";
-    static final String STR_APP_NOT_RUNNING = "Plugin is not running ";
-    static final String STR_INSTALL_FROM_LOCAL = "Install plugin from local file:";
-    static final String STR_SELECT_FILE = "Browse File";
+    static final String STR_START_WEB_SRV_FOR_UPLOAD = "STR_START_WEB_SRV_FOR_UPLOAD";
+    static final String STR_DOWN_APP_FROM_WEB = "STR_DOWN_APP_FROM_WEB";
+    static final String STR_DOWNLOAD = "STR_DOWNLOAD";
+    static final String STR_START = "STR_START";
+    static final String STR_STOP = "STR_STOP";
+    static final String STR_CLOSE = "STR_CLOSE";
+    static final String STR_WEB_LISTEN_ON = "STR_WEB_LISTEN_ON";
+    static final String STR_APP_LIST = "STR_APP_LIST";
+    static final String STR_BACK = "STR_BACK";
+    static final String STR_RUN = "STR_RUN";
+    static final String STR_SET_AS_BOOT = "STR_SET_AS_BOOT";
+    static final String STR_UPGRADE = "STR_UPGRADE";
+    static final String STR_DELETE = "STR_DELETE";
+    static final String STR_VERSION = "STR_VERSION";
+    static final String STR_UPGRADE_URL = "STR_UPGRADE_URL";
+    static final String STR_FILE_SIZE = "STR_FILE_SIZE";
+    static final String STR_FILE_DATE = "STR_FILE_DATE";
+    static final String STR_DESC = "STR_DESC";
+    static final String STR_SERVER_STARTED = "STR_SERVER_STARTED";
+    static final String STR_SERVER_STOPED = "STR_SERVER_STOPED";
+    static final String STR_UPLOAD_FILE = "STR_UPLOAD_FILE";
+    static final String STR_SUCCESS = "STR_SUCCESS";
+    static final String STR_FAIL = "STR_FAIL";
+    static final String STR_OPEN_APP_FAIL = "STR_OPEN_APP_FAIL";
+    static final String STR_BRIGHT_STYLE = "STR_BRIGHT_STYLE";
+    static final String STR_DARK_STYLE = "STR_DARK_STYLE";
+    static final String STR_MESSAGE = "STR_MESSAGE";
+    static final String STR_CONFIRM_DELETE = "STR_CONFIRM_DELETE";
+    static final String STR_APP_NOT_RUNNING = "STR_APP_NOT_RUNNING";
+    static final String STR_INSTALL_FROM_LOCAL = "STR_INSTALL_FROM_LOCAL";
+    static final String STR_SELECT_FILE = "STR_SELECT_FILE";
 
 
     static AppManager instance = new AppManager();
 
     //    GApplication preApp;
 
-    GForm mgrForm;
+    PluginMgrForm mgrForm;
     XExplorer explorer;
 
     GViewSlot mainSlot;
@@ -497,7 +498,7 @@ public class AppManager extends GApplication {
         GContainer wv = GToolkit.getComponent(mgrForm, "TD_DISCOVERY");
         explorer = new XExplorer(wv, eventHandler, assist);
         queryServerPolicy();
-        wv.getInterpreter("ROOT_PAN").reglib(new ExplorerScriptLib(getForm(), explorer));
+        wv.getInterpreter("ROOT_PAN").reglib(new ExplorerScriptLib(getForm(), mgrForm));
     }
 
     void queryServerPolicy() {
@@ -732,7 +733,7 @@ public class AppManager extends GApplication {
     }
 
 
-    class PluginMgrForm extends GForm implements GuiScriptEnvVarAccessor {
+    class PluginMgrForm extends GForm implements GuiScriptEnvVarAccessor, XExplorerHolder {
 
         public PluginMgrForm(GForm form) {
             super(form);
@@ -835,6 +836,11 @@ public class AppManager extends GApplication {
         @Override
         public void setEnv(String key, String value) {
             AppLoader.setProperty(key, value);
+        }
+
+        @Override
+        public XExplorer getExplorer() {
+            return explorer;
         }
     }
 
