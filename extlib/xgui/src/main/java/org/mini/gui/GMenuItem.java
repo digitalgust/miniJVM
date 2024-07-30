@@ -16,7 +16,7 @@ import static org.mini.nanovg.Nanovg.*;
 /**
  * @author Gust
  */
-public class GMenuItem extends GObject {
+public class GMenuItem extends GContainer {
 
     protected GImage img;
 
@@ -73,13 +73,18 @@ public class GMenuItem extends GObject {
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         if (isInArea(x, y)) {
-            if (pressed && button == Glfw.GLFW_MOUSE_BUTTON_1) {
-                touched = true;
-                doAction();
-                doStateChanged(this);
-            } else if (!pressed && button == Glfw.GLFW_MOUSE_BUTTON_1) {
-                touched = false;
-                doStateChanged(this);
+            GObject found = findSonByXY(x, y);
+            if (found != null) {
+                super.mouseButtonEvent(button, pressed, x, y);
+            } else {
+                if (pressed && button == Glfw.GLFW_MOUSE_BUTTON_1) {
+                    touched = true;
+                    doAction();
+                    doStateChanged(this);
+                } else if (!pressed && button == Glfw.GLFW_MOUSE_BUTTON_1) {
+                    touched = false;
+                    doStateChanged(this);
+                }
             }
         }
 
@@ -88,13 +93,18 @@ public class GMenuItem extends GObject {
     @Override
     public void touchEvent(int touchid, int phase, int x, int y) {
         if (isInArea(x, y)) {
-            if (phase == Glfm.GLFMTouchPhaseBegan) {
-                touched = true;
-                doStateChanged(this);
-            } else if (phase == Glfm.GLFMTouchPhaseEnded) {
-                touched = false;
-                doAction();
-                doStateChanged(this);
+            GObject found = findSonByXY(x, y);
+            if (found != null) {
+                super.touchEvent(touchid, phase, x, y);
+            } else {
+                if (phase == Glfm.GLFMTouchPhaseBegan) {
+                    touched = true;
+                    doStateChanged(this);
+                } else if (phase == Glfm.GLFMTouchPhaseEnded) {
+                    touched = false;
+                    doAction();
+                    doStateChanged(this);
+                }
             }
         }
 

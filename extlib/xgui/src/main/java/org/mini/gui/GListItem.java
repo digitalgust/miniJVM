@@ -91,20 +91,24 @@ public class GListItem extends GContainer {
 
     @Override
     public void touchEvent(int touchid, int phase, int x, int y) {
-        switch (phase) {
-            case Glfm.GLFMTouchPhaseBegan:
-                oldX = getX();
-                oldY = getY();
-                break;
-            case Glfm.GLFMTouchPhaseMoved:
-                break;
-            case Glfm.GLFMTouchPhaseEnded:
-                if (validAction(x, y)) select();
-                break;
-            default:
-                break;
+        GObject found = findSonByXY(x, y);
+        if (found != null) {
+            super.touchEvent(touchid, phase, x, y);
+        } else {
+            switch (phase) {
+                case Glfm.GLFMTouchPhaseBegan:
+                    oldX = getX();
+                    oldY = getY();
+                    break;
+                case Glfm.GLFMTouchPhaseMoved:
+                    break;
+                case Glfm.GLFMTouchPhaseEnded:
+                    if (validAction(x, y)) select();
+                    break;
+                default:
+                    break;
+            }
         }
-
     }
 
     public boolean dragEvent(int button, float dx, float dy, float x, float y) {
@@ -114,11 +118,16 @@ public class GListItem extends GContainer {
 
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
-        if (pressed) {
-            oldX = getX();
-            oldY = getY();
+        GObject found = findSonByXY(x, y);
+        if (found != null) {
+            super.mouseButtonEvent(button, pressed, x, y);
         } else {
-            if (validAction(x, y)) select();
+            if (pressed) {
+                oldX = getX();
+                oldY = getY();
+            } else {
+                if (validAction(x, y)) select();
+            }
         }
     }
 

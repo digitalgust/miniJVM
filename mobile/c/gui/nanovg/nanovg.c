@@ -2694,6 +2694,8 @@ int nvgTextBreakLines(NVGcontext* ctx, const char* string, const char* end, floa
 					(iter.codepoint >= 0x3130 && iter.codepoint <= 0x318F) ||
 					(iter.codepoint >= 0xAC00 && iter.codepoint <= 0xD7AF))
 					type = NVG_CJK_CHAR;
+                else if (iter.codepoint >= 0x10000)  //  unicode 码点大于 0xFFFF ,NVG_CHAR 和 NVG_CJK_CHAR 区别是 NVG_CHAR 字符串，会在空格处换行
+                    type = NVG_CJK_CHAR;
 				else
 					type = NVG_CHAR;
 				break;
