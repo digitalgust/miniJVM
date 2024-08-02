@@ -53,7 +53,7 @@ android {
     sourceSets.main {
         assets.srcDirs = ["../../assets/"]
     }
-    ndkVersion '27.0.11718014 rc1'
+    ndkVersion '27.0.12077973'
 }
 
 dependencies {
