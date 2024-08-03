@@ -62,6 +62,9 @@
 #elif __linux__
    // linux
    #define __JVM_OS_LINUX__ 1
+   #ifdef __ANDROID__
+       #define __JVM_OS_ANDROID__ 1
+   #endif
 #elif defined(_POSIX_VERSION)
     // POSIX
     #define __JVM_OS_CYGWIN__ 1

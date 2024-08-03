@@ -802,7 +802,7 @@ public class GTextBox extends GTextObject {
                             }
                             int ci = detail[AREA_LINE_END_AT] + 1;
                             if (ci > textsb.length()) {
-                                ci= textsb.length();
+                                ci = textsb.length();
                             }
                             if (textsb.codePointAt(ci - 1) == '\n') {//取得离光标最近的字符位置，如果光标在行尾，则返回光标所在行尾字符位置
                                 return detail[AREA_LINE_END_AT];
@@ -1008,6 +1008,7 @@ public class GTextBox extends GTextObject {
 
                                         if (tbox.getCurrent() == this) {
                                             boolean draw = false;
+                                            boolean jumpWhenReturn = false;
 //                                            int code = textsb.codePointAt(caretIndex);
 //                                            int codeNext = caretIndex + 1 >= textsb.length() ? 0 : textsb.codePointAt(caretIndex + 1);
 
@@ -1016,9 +1017,10 @@ public class GTextBox extends GTextObject {
                                                 draw = true;
                                             } else if (caretIndex == char_endi + 1) {
                                                 int codePrev = caretIndex - 1 < 0 ? 0 : textsb.codePointAt(caretIndex - 1);
-                                                if (codePrev == '\n') {//如果前一个字符是换行符，则把光标放在下一行的开头
+                                                if (codePrev == '\n') {//如果光标index前一个字符是换行符，则把光标放在下一行的开头
                                                     caretx = dx + 1;
                                                     carety += lineH;
+                                                    jumpWhenReturn = true;
                                                 } else {
                                                     caretx = dx + row_width;
                                                     if (caretx >= text_area[LEFT] + text_area[WIDTH]) {
@@ -1031,8 +1033,8 @@ public class GTextBox extends GTextObject {
                                                 draw = true;
                                             }
                                             if (draw) {
-                                                curCaretRow = curRow + topShowRow;
-                                                curCaretCol = caretIndex - char_starti;
+                                                curCaretRow = curRow + topShowRow + (jumpWhenReturn ? 1 : 0);
+                                                curCaretCol = jumpWhenReturn ? 0 : (caretIndex - char_starti);
                                                 GToolkit.drawCaret(vg, caretx - 1, carety, 2, lineH, false);
                                             }
                                         }
@@ -1087,7 +1089,7 @@ public class GTextBox extends GTextObject {
             }
             if (showCaretPos) {
                 String info = curCaretRow + ":" + curCaretCol;
-                GToolkit.drawTextLine(vg, getX() + getW() * .5f, getY() + getH() - lineH, info, 12f, getColor(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+                GToolkit.drawTextLine(vg, getX() + getW() - 10f, getY() + getH() - lineH, info, 12f, GColorSelector.PURPLE_HALF, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
             }
         }
     }

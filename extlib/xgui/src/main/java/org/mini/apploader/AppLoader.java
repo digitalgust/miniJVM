@@ -599,7 +599,7 @@ public class AppLoader {
         return url
                 + "?lang=" + AppLoader.getLangName()
                 + "&ver=" + AppLoader.getBaseInfo("sver")
-                + "&jar=" + AppLoader.getBaseInfo("jar")
+                + "&jar=" + System.getProperty("os.name").toLowerCase()
                 + "&from=" + AppLoader.getBaseInfo("from")
                 + "&cver=" + AppLoader.getBaseInfo("cver")
                 + "&token=" + (token == null ? "" : token)

@@ -33,6 +33,7 @@ abstract public class GObject implements GAttachable {
     public static String ICON_CHECK = "\u2713";
     public static String ICON_LOGIN = "\uE740";
     public static String ICON_TRASH = "\uE729";
+    public static String ICON_CLOSE = "\u2716";
     //
     public static final int LEFT = 0;
     public static final int TOP = 1;

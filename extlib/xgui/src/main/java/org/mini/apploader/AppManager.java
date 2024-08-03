@@ -848,7 +848,7 @@ public class AppManager extends GApplication {
     void updateScriptEnvironment() {
         AppLoader.setProperty("LANG", AppLoader.getLangName());
         AppLoader.setProperty("SVER", AppLoader.getBaseInfo("sver"));
-        AppLoader.setProperty("JAR", AppLoader.getBaseInfo("jar"));
+        AppLoader.setProperty("JAR", System.getProperty("os.name").toLowerCase());
         AppLoader.setProperty("FROM", AppLoader.getBaseInfo("from"));
         AppLoader.setProperty("CVER", AppLoader.getBaseInfo("cver"));
         AppLoader.setProperty("POLICY_URL", AppLoader.getBaseInfo("policyUrl"));

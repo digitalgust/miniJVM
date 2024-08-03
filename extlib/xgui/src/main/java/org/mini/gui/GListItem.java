@@ -6,6 +6,7 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
+import org.mini.glfw.Glfw;
 import org.mini.nanovg.Nanovg;
 
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
@@ -170,8 +171,8 @@ public class GListItem extends GContainer {
         float tw = w - (pad * 2);
         float th = list.list_item_heigh - pad;
 
-//        nvgSave(vg);
-//        Nanovg.nvgScissor(vg, tx, ty, tw, th);
+        nvgSave(vg);
+        Nanovg.nvgIntersectScissor(vg, tx, ty, tw, th);
 
 
         if (list.isSelected(getIndex())) {
@@ -205,7 +206,7 @@ public class GListItem extends GContainer {
         }
         nvgFillColor(vg, c);
         GToolkit.drawTextLine(vg, tx + ((img == null && preicon_arr == null) ? 0 : thumb) + pad, ty + thumb / 2, getText(), list.getFontSize(), c, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-//        Nanovg.nvgRestore(vg);
+        Nanovg.nvgRestore(vg);
         return true;
     }
 

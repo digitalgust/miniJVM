@@ -10,8 +10,13 @@
                 ret
             eif
 
-            ret
+        ret
 
+        sub getPolicy() '获取策略
+            disUrl=getEnv("DISCOVERY_URL")
+            if(strlen(disUrl)>0)
+                ret
+            eif
             policyUrl=getEnv("POLICY_URL")
             if(strlen(policyUrl)>0)
                 url=policyUrl + "?ver=" + getEnv("CVER") + "&sver=" + getEnv("SVER")
@@ -33,12 +38,14 @@
         ret
 
         sub showDiscovery() '显示发现
+            getPolicy()
             showSlot("SLOT_MGR", 3)
             url=getEnv("DISCOVERY_URL")+"?ver="+ getEnv("SVER")  +"&cver="+ getEnv("CVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG")
             openPage(url,"")
         ret
 
         sub showMy() '显示我的
+            getPolicy()
             showSlot("SLOT_MGR", 4)
             str=getText("LOGIN_UID")
             if(strlen(str)<>0)

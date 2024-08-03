@@ -554,7 +554,6 @@ public class GList extends GContainer {
             super.mouseButtonEvent(button, pressed, x, y);
         }
 
-
         @Override
         public boolean paint(long vg) {
             drawNormal(vg, normalPanel.getX(), normalPanel.getY(), normalPanel.getW(), normalPanel.getH());
@@ -677,6 +676,41 @@ public class GList extends GContainer {
             //因为本次无法获得新获得焦点的组件是谁，因此要把操作放在队列中，等本次渲染执行完后再执行
             GForm.addCmd(cmd);
         }
+
+        @Override
+        public void keyEventGlfw(int key, int scanCode, int action, int mods) {
+            if (parent.getCurrent() != GListPopWindow.this) return;
+            if (action == Glfw.GLFW_PRESS) {
+                if (key == Glfw.GLFW_KEY_ESCAPE) {
+                    pulldown = false;
+                    GList.this.changeCurPanel();
+                } else if (key == Glfw.GLFW_KEY_UP) {
+                    int selectIndex = getSelectedIndex();
+                    selectIndex -= 1;
+                    if (selectIndex < 0) selectIndex = popView.getElementSize() - 1;
+                    select(selectIndex);
+                    setCurrent(getSelectedItem());
+                } else if (key == Glfw.GLFW_KEY_DOWN) {
+                    int selectIndex = getSelectedIndex();
+                    selectIndex += 1;
+                    if (selectIndex >= popView.getElementSize()) selectIndex = 0;
+                    select(selectIndex);
+                    setCurrent(getSelectedItem());
+                } else if (action == Glfw.GLFW_PRESS) {
+                    pulldown = false;
+                    GList.this.changeCurPanel();
+
+                    if (key == Glfw.GLFW_KEY_ENTER) {
+                        GListItem li = getSelectedItem();
+                        if (li != null) {
+                            li.select();
+                        }
+                    }
+                }
+            }
+            super.keyEventGlfw(key, scanCode, action, mods);
+        }
+
     }
 
     ;

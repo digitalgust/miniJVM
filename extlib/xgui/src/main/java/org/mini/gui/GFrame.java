@@ -28,7 +28,7 @@ public class GFrame extends GContainer {
     protected String title;
     protected byte[] title_arr;
 
-    protected byte[] close_arr = {(byte) 0xe2, (byte) 0x9d, (byte) 0x8e, 0};
+    protected byte[] close_arr = {(byte) 0xE2, (byte) 0x9C, (byte) 0x96, 0};
     protected float[] close_boundle = new float[4];
 
     protected GViewPort view = new GViewPort(form);
