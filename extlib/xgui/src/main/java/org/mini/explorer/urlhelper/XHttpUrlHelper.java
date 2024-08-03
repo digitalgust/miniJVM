@@ -31,16 +31,16 @@ public class XHttpUrlHelper extends XUrlHelper {
 //
 
 
-
     public String mergUrl(URL url, String path) {
         String port = url.getPort() < 0 ? "" : ":" + url.getPort();
         String prefix = url.getProtocol() + "://" + url.getHost() + port + "/";
 
-        String tmppath = url.getPath();
-        if (tmppath.endsWith("/") || path.startsWith("/") || path.indexOf("/") < 0) {
+        String relativePath = url.getPath();
+        relativePath = relativePath.indexOf('/') >= 0 ? relativePath.substring(0, relativePath.lastIndexOf('/')) : "";
+        if (path.startsWith("/")) {
             return prefix + path;
         } else {
-            return prefix + "/" + path.substring(0, path.lastIndexOf("/"));
+            return prefix + relativePath + "/" + path;
         }
     }
 
