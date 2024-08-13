@@ -17,7 +17,7 @@ android {
     compileSdkVersion 34
     defaultConfig {
         applicationId "org.minijvm.activity"
-        minSdkVersion 15
+        minSdkVersion 19
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
@@ -54,9 +54,14 @@ android {
         assets.srcDirs = ["../../assets/"]
     }
     ndkVersion '27.0.12077973'
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
+    api 'com.alipay.sdk:alipaysdk-android:+@aar'
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:26.1.0'
     testImplementation 'junit:junit:4.12'

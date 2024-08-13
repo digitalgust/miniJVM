@@ -1,9 +1,8 @@
 package org.mini.gui.gscript;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import org.mini.gui.GCallBack;
+
+import java.io.*;
 import java.util.*;
 //import main.Util;
 
@@ -49,6 +48,9 @@ public class Interpreter {
     static final int NOT_KEYWORD = -1, KEYWORD_IF = 0, KEYWORD_ELSE = 1, KEYWORD_ENDIF = 2, KEYWORD_WHILE = 3, KEYWORD_LOOP = 4, KEYWORD_SUB = 5, KEYWORD_RET = 6, KEYWORD_CALL = 7, KEYWORD_SET_VAR = 8, KEYWORD_SET_ARR = 9;
     public static final int ERR_ILLEGAL = 0, ERR_VAR = 1, ERR_TYPE_INVALID = 2, ERR_NOSUB = 3, ERR_NO_VAR = 4, ERR_PARA_CALC = 5, ERR_PAESEPARA = 6, ERR_NO_SRC = 7, ERR_OPSYMB = 8, ERR_ARR_OUT = 9;
     public static final String[] STRS_ERR = {" Illegal statment ,", " Invalid variable name ", " Data type error ", " No such method ", " No such variable ", " Method parameter error ", " Parameter count error ", " Code not load yet ", " Operation symbol error  ", " Array out of bounds  "};
+    //环境变量访问器
+    static private Properties envVar;
+    static private final String ENV_VAR_FILENAME = "/webenv.properties";
     //源码字符串数组
     //private ArrayList srcCode;
     private Statement[] srcCompiled;
@@ -70,222 +72,6 @@ public class Interpreter {
     static private List<Obj> objCache = new ArrayList<>();
 
     /**
-     * 取得一个缓存的变量表
-     *
-     * @return
-     */
-    private synchronized LocalVarsMap getCachedTable() {
-        if (varsMapCache.isEmpty()) {
-            return new LocalVarsMap();
-        }
-        return varsMapCache.remove(varsMapCache.size() - 1);
-    }
-
-    private static synchronized void putCachedTable(LocalVarsMap v) {
-        v.clear();
-        varsMapCache.add(v);
-    }
-
-    private static synchronized ArrayList getCachedVector() {
-        if (listCache.isEmpty()) {
-            return new ArrayList();
-        }
-        return listCache.remove(listCache.size() - 1);
-    }
-
-    private synchronized void putCachedVector(ArrayList v) {
-        v.clear();
-        listCache.add(v);
-    }
-
-    /**
-     * 减少内存分配,尽可能使用缓存
-     *
-     * @param v
-     * @return
-     */
-    public static synchronized Int getCachedInt(long v) {
-        if (intCache.isEmpty()) {
-            return new Int(v);
-        }
-        Int i = intCache.remove(intCache.size() - 1);
-        i.setVal(v);
-        return i;
-    }
-
-    private static synchronized void putCachedInt(Int v) {
-        if (intCache.size() > MAX_CACHE_SIZE || v == null) return;//防内存泄漏
-        if (v.isRecyclable()) {
-            intCache.add((Int) v);
-        }
-    }
-
-    public static synchronized Bool getCachedBool(boolean v) {
-        if (boolCache.isEmpty()) {
-            return new Bool(v);
-        }
-        Bool b = boolCache.remove(boolCache.size() - 1);
-        b.setVal(v);
-        return b;
-    }
-
-    private static synchronized void putCachedBool(Bool v) {
-        if (boolCache.size() > MAX_CACHE_SIZE || v == null) return;
-        if (v.isRecyclable()) {
-            boolCache.add((Bool) v);
-        }
-    }
-
-    public static synchronized Str getCachedStr(String v) {
-        if (strCache.isEmpty()) {
-            return new Str(v);
-        }
-        Str b = strCache.remove(strCache.size() - 1);
-        b.setVal(v);
-        return b;
-    }
-
-    private static synchronized void putCachedStr(Str v) {
-        if (strCache.size() > MAX_CACHE_SIZE || v == null) return;
-        if (v.isRecyclable()) {
-            ((Str) v).setVal(null);
-            strCache.add((Str) v);
-        }
-    }
-
-    public static synchronized Obj getCachedObj(Object v) {
-        if (objCache.isEmpty()) {
-            return new Obj(v);
-        }
-        Obj b = objCache.remove(objCache.size() - 1);
-        b.setVal(v);
-        return b;
-    }
-
-    private static synchronized void putCachedObj(Obj v) {
-        if (objCache.size() > MAX_CACHE_SIZE || v == null) return;
-        if (v.isRecyclable()) {
-            ((Obj) v).setVal(null);
-            objCache.add((Obj) v);
-        }
-    }
-
-    public static synchronized void putCachedData(DataType v) {
-        if (v == null) return;
-        if (v.isRecyclable()) {
-            if (v.type == DataType.DTYPE_INT) {
-                putCachedInt((Int) v);
-            } else if (v.type == DataType.DTYPE_BOOL) {
-                putCachedBool((Bool) v);
-            } else if (v.type == DataType.DTYPE_STR) {
-                putCachedStr((Str) v);
-            } else if (v.type == DataType.DTYPE_OBJ) {
-                putCachedObj((Obj) v);
-            }
-        }
-    }
-
-//    static public synchronized final String popFrontStr(ArrayList<DataType> v) {
-//        Str str = popFront(v);
-//        String s = str.getVal();
-//        putCachedData(str);
-//        return s;
-//    }
-//
-//    static public synchronized final int popFrontInt(ArrayList<DataType> v) {
-//        Int str = popFront(v);
-//        int s = (int) str.getVal();
-//        putCachedData(str);
-//        return s;
-//    }
-//
-//    static public synchronized final long popFrontLong(ArrayList<DataType> v) {
-//        Int str = popFront(v);
-//        long s = str.getVal();
-//        putCachedData(str);
-//        return s;
-//    }
-//
-//    static public synchronized final boolean popFrontBool(ArrayList<DataType> v) {
-//        Bool str = popFront(v);
-//        boolean s = str.getVal();
-//        putCachedData(str);
-//        return s;
-//    }
-//
-//    static public synchronized final Object popFrontObject(ArrayList<DataType> v) {
-//        Obj str = popFront(v);
-//        Object s = str.getVal();
-//        putCachedData(str);
-//        return s;
-//    }
-
-    static public synchronized final String popBackStr(ArrayList<DataType> v) {
-        Str str = popBack(v);
-        String s = str.getVal();
-        putCachedData(str);
-        return s;
-    }
-
-    static public synchronized final int popBackInt(ArrayList<DataType> v) {
-        Int str = popBack(v);
-        int s = (int) str.getVal();
-        putCachedData(str);
-        return s;
-    }
-
-    static public synchronized final long popBackLong(ArrayList<DataType> v) {
-        Int str = popBack(v);
-        long s = str.getVal();
-        putCachedData(str);
-        return s;
-    }
-
-    static public synchronized final boolean popBackBool(ArrayList<DataType> v) {
-        Bool str = popBack(v);
-        boolean s = str.getVal();
-        putCachedData(str);
-        return s;
-    }
-
-    static public synchronized final Object popBackObject(ArrayList<DataType> v) {
-        Obj str = popBack(v);
-        Object s = str.getVal();
-        putCachedData(str);
-        return s;
-    }
-
-    static public synchronized final <T extends DataType> T popFront(ArrayList<DataType> v) {
-        if (v.size() <= 0) {
-            return null;
-        }
-        DataType o = v.get(0);
-        if (v.size() > 0) {
-            v.remove(0);
-        }
-        return (T) o;
-    }
-
-    static public synchronized final <T extends DataType> T popBack(ArrayList<DataType> v) {
-        if (v.size() <= 0) {
-            return null;
-        }
-        DataType o = v.get(v.size() - 1);
-        if (v.size() > 0) {
-            v.remove(v.size() - 1);
-        }
-        return (T) o;
-    }
-
-    static public synchronized final void pushFront(ArrayList v, DataType o) {
-        v.add(0, o);
-    }
-
-    static public synchronized final void pushBack(ArrayList v, DataType o) {
-        v.add(o);
-    }
-
-    /**
      * 构造方法
      */
     public Interpreter() {
@@ -305,8 +91,53 @@ public class Interpreter {
 //        //初始化解析
 //        stack.clear();
         //加入标准库
-        Stdlib stdlib = new Stdlib();
+        Stdlib stdlib = new Stdlib(this);
         reglib(stdlib);
+    }
+
+    static public String getEnvVar(String envName) {
+        loadEnvVar();
+        String s = (String) envVar.get(envName);
+        return s == null ? "" : s;
+    }
+
+    static public void setEnvVar(String envName, String envValue) {
+        loadEnvVar();
+        envVar.put(envName, envValue);
+        saveProp(ENV_VAR_FILENAME, envVar);
+    }
+
+    static private synchronized void loadEnvVar() {
+        if (envVar == null) {
+            envVar = new Properties();
+            loadProp(ENV_VAR_FILENAME, envVar);
+        }
+    }
+
+    public static void loadProp(String fname, Properties prop) {
+        try {
+            File f = new File(GCallBack.getInstance().getAppSaveRoot() + fname);
+            if (f.exists()) {
+                FileInputStream fis = new FileInputStream(f);
+                prop.load(fis);
+                //System.out.println(fname + " size: " + prop.size());
+                fis.close();
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public static void saveProp(String name, Properties prop) {
+        try {
+            File f = new File(GCallBack.getInstance().getAppSaveRoot() + name);
+
+            FileOutputStream fos = new FileOutputStream(f);
+            prop.store(fos, "");
+            fos.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     /**
@@ -406,8 +237,12 @@ public class Interpreter {
             char ch = code.charAt(i);
             if (ch == '"') {
                 dquodation++;
+                line.append(ch);
+                int next = findNextDoubQuot(code, i + 1, line);
+                i = next;
+                ch = code.charAt(next);
             }
-            if ((dquodation % 2) == 0 && (ch == ';' || ch == '\n')) {
+            if ((ch == ';' || ch == '\n')) {
                 String s = line.toString().trim();
                 if (s.length() > 0) {
                     v.add(s);
@@ -421,6 +256,30 @@ public class Interpreter {
         String s = line.toString().trim();
         if (s.length() != 0) v.add(s);
         preProcess(v);
+    }
+
+    /**
+     * 从pos处开始找下一个成对匹配的双引号，需要处理字符串中的转义字符
+     *
+     * @param s
+     * @param pos
+     * @return
+     */
+    private int findNextDoubQuot(String s, int pos, StringBuilder sb) {
+
+        for (int i = pos; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            if (sb != null) sb.append(ch);
+            if (ch == '\\') {
+                i++;
+                if (sb != null) sb.append(s.charAt(i));
+                continue;
+            }
+            if (ch == '"') {
+                return i + 1;
+            }
+        }
+        return -1;
     }
 
     public Lib getLib() {
@@ -449,9 +308,11 @@ public class Interpreter {
                 for (int m = 0; m < el.length(); m++) {
                     char ch = el.charAt(m);
                     if (ch == '\"') {
-                        dqCount++;
+                        int next = findNextDoubQuot(el, m + 1, null);
+                        m = next;
+                        continue;
                     }
-                    if (ch == '\'' && (dqCount % 2) == 0) { //如果 ' 不在双引号内，则说明是注释
+                    if (ch == '\'') { //如果 ' 不在双引号内，则说明是注释
                         el = el.substring(0, m);
                     }
                 }
@@ -966,13 +827,24 @@ public class Interpreter {
             } else if (ch == '"') { //是字符串
                 sb.append(ch);
                 i++;
-                for (; i < s.length(); i++) { //找到全部串
-                    ch = s.charAt(i);
-                    sb.append(ch);
-                    if (ch == '"') {
-                        break;
-                    }
-                }
+
+                int next = findNextDoubQuot(s, i, sb);
+                String tmps = sb.toString();
+                tmps = tmps.replace("\\\\", "\\");
+                tmps = tmps.replace("\\n", "\n");
+                tmps = tmps.replace("\\t", "\t");
+                tmps = tmps.replace("\\r", "\r");
+                tmps = tmps.replace("\\\"", "\"");
+                sb.setLength(0);
+                sb.append(tmps);
+                i = next - 1;
+//                for (; i < s.length(); i++) { //找到全部串
+//                    ch = s.charAt(i);
+//                    sb.append(ch);
+//                    if (ch == '"') {
+//                        break;
+//                    }
+//                }
             } else if (isSymbol(ch)) { //是其他运算符号
                 sb.append(ch);
                 if (ch == '>') { //可能的>=
@@ -1837,4 +1709,222 @@ public class Interpreter {
         }
         return null;
     }
+
+
+    /**
+     * 取得一个缓存的变量表
+     *
+     * @return
+     */
+    private synchronized LocalVarsMap getCachedTable() {
+        if (varsMapCache.isEmpty()) {
+            return new LocalVarsMap();
+        }
+        return varsMapCache.remove(varsMapCache.size() - 1);
+    }
+
+    private static synchronized void putCachedTable(LocalVarsMap v) {
+        v.clear();
+        varsMapCache.add(v);
+    }
+
+    private static synchronized ArrayList getCachedVector() {
+        if (listCache.isEmpty()) {
+            return new ArrayList();
+        }
+        return listCache.remove(listCache.size() - 1);
+    }
+
+    private synchronized void putCachedVector(ArrayList v) {
+        v.clear();
+        listCache.add(v);
+    }
+
+    /**
+     * 减少内存分配,尽可能使用缓存
+     *
+     * @param v
+     * @return
+     */
+    public static synchronized Int getCachedInt(long v) {
+        if (intCache.isEmpty()) {
+            return new Int(v);
+        }
+        Int i = intCache.remove(intCache.size() - 1);
+        i.setVal(v);
+        return i;
+    }
+
+    private static synchronized void putCachedInt(Int v) {
+        if (intCache.size() > MAX_CACHE_SIZE || v == null) return;//防内存泄漏
+        if (v.isRecyclable()) {
+            intCache.add((Int) v);
+        }
+    }
+
+    public static synchronized Bool getCachedBool(boolean v) {
+        if (boolCache.isEmpty()) {
+            return new Bool(v);
+        }
+        Bool b = boolCache.remove(boolCache.size() - 1);
+        b.setVal(v);
+        return b;
+    }
+
+    private static synchronized void putCachedBool(Bool v) {
+        if (boolCache.size() > MAX_CACHE_SIZE || v == null) return;
+        if (v.isRecyclable()) {
+            boolCache.add((Bool) v);
+        }
+    }
+
+    public static synchronized Str getCachedStr(String v) {
+        if (strCache.isEmpty()) {
+            return new Str(v);
+        }
+        Str b = strCache.remove(strCache.size() - 1);
+        b.setVal(v);
+        return b;
+    }
+
+    private static synchronized void putCachedStr(Str v) {
+        if (strCache.size() > MAX_CACHE_SIZE || v == null) return;
+        if (v.isRecyclable()) {
+            ((Str) v).setVal(null);
+            strCache.add((Str) v);
+        }
+    }
+
+    public static synchronized Obj getCachedObj(Object v) {
+        if (objCache.isEmpty()) {
+            return new Obj(v);
+        }
+        Obj b = objCache.remove(objCache.size() - 1);
+        b.setVal(v);
+        return b;
+    }
+
+    private static synchronized void putCachedObj(Obj v) {
+        if (objCache.size() > MAX_CACHE_SIZE || v == null) return;
+        if (v.isRecyclable()) {
+            ((Obj) v).setVal(null);
+            objCache.add((Obj) v);
+        }
+    }
+
+    public static synchronized void putCachedData(DataType v) {
+        if (v == null) return;
+        if (v.isRecyclable()) {
+            if (v.type == DataType.DTYPE_INT) {
+                putCachedInt((Int) v);
+            } else if (v.type == DataType.DTYPE_BOOL) {
+                putCachedBool((Bool) v);
+            } else if (v.type == DataType.DTYPE_STR) {
+                putCachedStr((Str) v);
+            } else if (v.type == DataType.DTYPE_OBJ) {
+                putCachedObj((Obj) v);
+            }
+        }
+    }
+
+//    static public synchronized final String popFrontStr(ArrayList<DataType> v) {
+//        Str str = popFront(v);
+//        String s = str.getVal();
+//        putCachedData(str);
+//        return s;
+//    }
+//
+//    static public synchronized final int popFrontInt(ArrayList<DataType> v) {
+//        Int str = popFront(v);
+//        int s = (int) str.getVal();
+//        putCachedData(str);
+//        return s;
+//    }
+//
+//    static public synchronized final long popFrontLong(ArrayList<DataType> v) {
+//        Int str = popFront(v);
+//        long s = str.getVal();
+//        putCachedData(str);
+//        return s;
+//    }
+//
+//    static public synchronized final boolean popFrontBool(ArrayList<DataType> v) {
+//        Bool str = popFront(v);
+//        boolean s = str.getVal();
+//        putCachedData(str);
+//        return s;
+//    }
+//
+//    static public synchronized final Object popFrontObject(ArrayList<DataType> v) {
+//        Obj str = popFront(v);
+//        Object s = str.getVal();
+//        putCachedData(str);
+//        return s;
+//    }
+
+    static public synchronized final String popBackStr(ArrayList<DataType> v) {
+        Str str = popBack(v);
+        String s = str.getVal();
+        putCachedData(str);
+        return s;
+    }
+
+    static public synchronized final int popBackInt(ArrayList<DataType> v) {
+        Int str = popBack(v);
+        int s = (int) str.getVal();
+        putCachedData(str);
+        return s;
+    }
+
+    static public synchronized final long popBackLong(ArrayList<DataType> v) {
+        Int str = popBack(v);
+        long s = str.getVal();
+        putCachedData(str);
+        return s;
+    }
+
+    static public synchronized final boolean popBackBool(ArrayList<DataType> v) {
+        Bool str = popBack(v);
+        boolean s = str.getVal();
+        putCachedData(str);
+        return s;
+    }
+
+    static public synchronized final Object popBackObject(ArrayList<DataType> v) {
+        Obj str = popBack(v);
+        Object s = str.getVal();
+        putCachedData(str);
+        return s;
+    }
+
+    static public synchronized final <T extends DataType> T popFront(ArrayList<DataType> v) {
+        if (v.size() <= 0) {
+            return null;
+        }
+        DataType o = v.get(0);
+        if (v.size() > 0) {
+            v.remove(0);
+        }
+        return (T) o;
+    }
+
+    static public synchronized final <T extends DataType> T popBack(ArrayList<DataType> v) {
+        if (v.size() <= 0) {
+            return null;
+        }
+        DataType o = v.get(v.size() - 1);
+        if (v.size() > 0) {
+            v.remove(v.size() - 1);
+        }
+        return (T) o;
+    }
+
+    static public synchronized final void pushFront(ArrayList v, DataType o) {
+        v.add(0, o);
+    }
+
+    static public synchronized final void pushBack(ArrayList v, DataType o) {
+        v.add(o);
+    }
+
 }

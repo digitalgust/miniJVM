@@ -1,16 +1,15 @@
-package org.mini.explorer;
+package org.mini.layout.xwebview;
 
 import org.mini.gui.GContainer;
 import org.mini.layout.XEventHandler;
 import org.mini.layout.XmlExtAssist;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * a web explorer that base xmlui but not html
- * 本类提供一个简单的web浏览器功能，负责组织页面，并显示在webview中
+ * 本类提供一个简单的web浏览器功能，负责组织页面，并显示在GContainer中
+ * 本webview只能显示xmlui，支持http/file/jar协议
  *
  * <viewport>
  * <lable>This is a test</lable>
@@ -20,14 +19,14 @@ import java.util.Map;
  * http://www.foo.com/bar/baz.xml
  * <p>
  * FILE URI---------------------------------
- * file://localhost/etc/fstab
- * file:///etc/fstab
+ * file://localhost/etc/fstab/a.xml
+ * file:///etc/fstab/b.xml
  * <p>
  * JAR URI---------------------------------
  * A Jar entry
- * jar:http://www.foo.com/bar/baz.jar!/COM/foo/Quux.class
+ * jar:http://www.foo.com/bar/baz.jar!/COM/foo
  * A Jar file
- * jar:http://www.foo.com/bar/baz.jar!/
+ * jar:http://www.foo.com/bar/baz.jar!/y.xml
  * A Jar directory
  * jar:http://www.foo.com/bar/baz.jar!/COM/foo/
  */

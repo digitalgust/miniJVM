@@ -2,188 +2,70 @@
     <script>
         <![CDATA[
         sub onload() '这个用来获取服务器上的策略网址信息
-
             if(!isDef("ENCRYPTED_KEY"))
                 def("ENCRYPTED_KEY","L7%d9&3jw5f")
-            ret
-            if(isDef("INITED"))
-                ret
             eif
-
+            token=getEnv("TOKEN")
+            if(strlen(token)>0)
+                uid=getEnv("USERNAME")
+                setText("LAB_USERNAME",uid+" {SignIned} >")
+            eif
+            getPolicy()
         ret
 
-        sub getPolicy() '获取策略
-            disUrl=getEnv("DISCOVERY_URL")
-            if(strlen(disUrl)>0)
-                ret
-            eif
-            policyUrl=getEnv("POLICY_URL")
-            if(strlen(policyUrl)>0)
-                url=policyUrl + "?ver=" + getEnv("CVER") + "&sver=" + getEnv("SVER")
-                httpRequest(policyUrl, "ROOT_PAN.onPolicyRequestBack")
-            eif
-        ret
+        sub getQueryPara()
+            s="appid="+ getEnv("APPID") + "&appzone=" + getEnv("APPZONE") + "&ver=" + getEnv("SVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG") +"&token="+ getEnv("TOKEN")
+            println(s)
+        ret s
 
         sub onCallBack(url,code,msg) '通用回调
             showMsg("{STR_MESSAGE}: "+msg)
         ret
 
+        sub getPolicy() '获取策略
+            policyUrl=getEnv("POLICY_URL")
+            println("getPolicy"+policyUrl)
+            if(strlen(policyUrl)>0)
+                url=policyUrl +"?"+ getQueryPara()
+                httpRequestSync(url, "ROOT_PAN.onPolicyRequestBack")
+            eif
+        ret
+
         sub onPolicyRequestBack(url,code,msg) '请求策略回调
+               showMsg("onPolicyRequestBack:"+code+","+msg)
             if(code=0)
-                def("INITED",1)
                 urls=split(msg,"\n")
                 setEnv("DISCOVERY_URL",urls[0])
                 setEnv("ACCOUNT_BASE_URL",urls[1])
+                println("DISCOVERY_URL="+getEnv("DISCOVERY_URL"))
+                println("ACCOUNT_BASE_URL="+getEnv("ACCOUNT_BASE_URL"))
+            else
+               showMsg("onPolicyRequestBack:"+code+","+msg)
             eif
         ret
 
         sub showDiscovery() '显示发现
-            getPolicy()
             showSlot("SLOT_MGR", 3)
-            url=getEnv("DISCOVERY_URL")+"?ver="+ getEnv("SVER")  +"&cver="+ getEnv("CVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG")
+            if(!uiExist("DIS_HOME")) 'if there is not a discovery panel then show it
+                showHome()
+            eif
+        ret
+
+        sub showHome()
+            url=getEnv("DISCOVERY_URL") +"?"+ getQueryPara()
             openPage(url,"")
         ret
 
         sub showMy() '显示我的
-            getPolicy()
             showSlot("SLOT_MGR", 4)
-            str=getText("LOGIN_UID")
-            if(strlen(str)<>0)
-                ret
-            eif
-            uid=getEnv("USERNAME")
-            pwd=getEnv("USERPASS")
-            if(strlen(uid)=0 | strlen(pwd)=0)
-                ret
-            eif
-            pwd=decrypt(pwd,ENCRYPTED_KEY)
-            setText("LOGIN_UID", uid)
-            setText("LOGIN_PWD", pwd)
         ret
 
-        sub signup() '注册
-            sUid=getText("SIGNUP_UID")
-            sPwd=getText("SIGNUP_PWD")
-            if(strlen(sUid)=0 | strlen(sPwd)=0)
-                showMsg("{ACCOUNT_PWD_NO_EMPTY}")
-            else
-                accBaseUrl=getEnv("ACCOUNT_BASE_URL")
-                encryptPwd=encrypt(sPwd,ENCRYPTED_KEY)
-                url=accBaseUrl + "/register?usr=" + sUid + "&pwd=" + encryptPwd +"&ver="+ getEnv("SVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG")
-                println(url)
-                httpRequest(url,"ROOT_PAN.onSignUpBack")
-                setText("LOGIN_VERIFY_UID", sUid)
-            eif
-        ret
-
-        sub onSignUpBack(url,code,msg) '注册回调
-            if(code=0)
-                showMsg("{STR_MESSAGE}: "+msg)
-            else
-                showMsg("{STR_MESSAGE}: "+msg)
-            eif
-        ret
-
-
-        sub verifyCode() '验证码
-            sUid=getText("LOGIN_VERIFY_UID")
-            code=getText("LOGIN_VERIFY_CODE")
-            if(strlen(sUid)=0 | strlen(code)=0)
-                showMsg("{ACCOUNT_PWD_NO_EMPTY}")
-            else
-                accBaseUrl=getEnv("ACCOUNT_BASE_URL")
-                url=accBaseUrl + "/verifyreg?usr=" + sUid + "&code=" + code +"&ver="+ getEnv("SVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG")
-                httpRequest(url,"ROOT_PAN.onVerifyRegBack")
-            eif
-        ret
-
-
-        sub onVerifyRegBack(url,code,msg) '验证码回调
-            if(code=0)
-                showMsg("{STR_MESSAGE}: "+msg)
-            else
-                showMsg("{STR_MESSAGE}: "+msg)
-            eif
-        ret
-
-        sub signIn() '登录
-            loginUid=getText("LOGIN_UID")
-            loginPwd=getText("LOGIN_PWD")
-
-            if(strlen(loginUid)=0 | strlen(loginPwd)=0)
-                showMsg("{ACCOUNT_PWD_NO_EMPTY}")
-            else
-                encryptPwd=encrypt(loginPwd,ENCRYPTED_KEY)
-                println(encryptPwd)
-
-                accBaseUrl=getEnv("ACCOUNT_BASE_URL")
-                url=accBaseUrl + "/login?usr=" + loginUid + "&pwd=" + encryptPwd  +"&ver="+ getEnv("SVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG")
-                httpRequest(url,"ROOT_PAN.onSignInBack")
-                saveEnable=getSwitch("LOGIN_SAVE")
-                if(saveEnable)
-                    setEnv("USERNAME", loginUid)
-                    setEnv("USERPASS", encryptPwd)
-                else
-                    setEnv("USERNAME", "")
-                    setEnv("USERPASS", "")
-                eif
-            eif
-        ret
-
-        sub onSignInBack(url,code,msg) '登录回调
-            if(code=0)
-                showMsg("{STR_MESSAGE}: {STR_SUCCESS}")
-                setEnv("TOKEN", msg)
-                uid=getEnv("USERNAME")
-                setText("LAB_USERNAME", uid)
-                setText("LOGIN_VERIFY_UID", uid)
-            else
-                showMsg("{STR_MESSAGE}: {STR_FAIL}")
-            eif
-        ret
-
-        sub retrievePwd() '找回密码发送验证码
-            sUid=getText("LOGIN_FORGOT_UID_PRE")
-            if(strlen(sUid)=0)
-                showMsg("{ACCOUNT_NO_EMPTY}")
-            else
-                accBaseUrl=getEnv("ACCOUNT_BASE_URL")
-                url=accBaseUrl + "/retrieve?usr=" + sUid +"&ver="+ getEnv("SVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG")
-                println(url)
-                httpRequest(url,"ROOT_PAN.onCallBack")
-                setText("LOGIN_FORGOT_UID", sUid)
-            eif
-        ret
-
-        sub retrieveChgPwd() '收到验证码后更改密码
-            sUid=getText("LOGIN_FORGOT_UID")
-            sCode=getText("LOGIN_FORGOT_CODE")
-            sPwd=getText("LOGIN_FORGOT_PWD")
-            if(strlen(sUid)=0 | strlen(sPwd)=0 | strlen(sCode)=0)
-                showMsg("{ACCOUNT_PWD_NO_EMPTY}")
-            else
-                accBaseUrl=getEnv("ACCOUNT_BASE_URL")
-                encryptPwd=encrypt(sPwd,ENCRYPTED_KEY)
-                url=accBaseUrl + "/retrievechgpwd?usr=" + sUid + "&pwd=" + encryptPwd + "&code=" + sCode +"&ver="+ getEnv("SVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG")
-                println(url)
-                httpRequest(url,"ROOT_PAN.onCallBack")
-            eif
-        ret
-
-        sub changePwd() '输入账号老密码改新密码
-            sUid=getText("LOGIN_CHGPWD_UID")
-            sOld=getText("LOGIN_CHGPWD_OLD")
-            sNew=getText("LOGIN_CHGPWD_NEW")
-            if(strlen(sUid)=0 | strlen(sOld)=0 | strlen(sNew)=0)
-                showMsg("{ACCOUNT_PWD_NO_EMPTY}")
-            else
-                accBaseUrl=getEnv("ACCOUNT_BASE_URL")
-                encryptOld=encrypt(sOld,ENCRYPTED_KEY)
-                encryptNew=encrypt(sNew,ENCRYPTED_KEY)
-                url=accBaseUrl + "/chgpwd?usr=" + sUid + "&pwd=" + encryptPwd + "&code=" + sCode +"&ver="+ getEnv("SVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG")
-                println(url)
-                httpRequest(url,"ROOT_PAN.onCallBack")
-            eif
+        sub showProfile() '显示我的
+            s1=getEnv("DISCOVERY_URL")
+            s2=substr(s1,0,lastIdxOf(s1,"/"))
+            s3=s2+"/profile.xml" +"?"+ getQueryPara()
+            showSlot("SLOT_MGR",3)
+            openPage(s3,"")
         ret
 
         ]]>
@@ -204,7 +86,7 @@
                                 <table w="100%">
                                     <tr w="100%">
                                         <td w="float"></td>
-                                        <td w="50">
+                                        <td w="60">
                                             <button name="BT_STYLE" w="50" h="30" preicon="⚙"></button>
                                         </td>
                                     </tr>
@@ -284,10 +166,11 @@
                 <panel w="100%" h="100%" move="fixed" align="hcenter,top">
                     <table w="98%" h="100%">
                         <tr w="100%" h="30">
-                            <td w="150" h="100%">
-                                <button name="BT_DISCOVERY_BACK" w="50" h="30" preicon="⬅"></button>
-                                <button name="BT_DISCOVERY_FORWARD" w="50" h="30" preicon="➡"></button>
-                                <button name="BT_DISCOVERY_REFRESH" w="50" h="30" preicon="🔄"></button>
+                            <td w="200" h="100%">
+                                <button name="BT_DISCOVERY_BACK" w="50" h="30" preicon="⬅" onclick="prevPage()"></button>
+                                <button name="BT_DISCOVERY_FORWARD" w="50" h="30" preicon="➡" onclick="nextPage()"></button>
+                                <button name="BT_DISCOVERY_REFRESH" w="50" h="30" preicon="🔄" onclick="refreshPage()"></button>
+                                <button name="BT_DISCOVERY_HOME" w="50" h="30" preicon="⌂" onclick="showHome()"></button>
                             </td>
                             <td w="float" h="100%">
                                 <label w="100%" h="30" fontsize="20" align="hcenter,vcenter">{DISCOVERY}</label>
@@ -311,7 +194,7 @@
                                 </td>
                                 <td w="20"></td>
                                 <td w="float" bgcolor="55558020">
-                                    <label name="LAB_USERNAME" onclick='showSlot("SLOT_MGR" ,5)' w="100%" h="80" color="bb8844ff" fontsize="18" align="hcenter,vcenter">{SIGN_IN} &gt;</label>
+                                    <label name="LAB_USERNAME" onclick='showProfile()' w="100%" h="80" color="bb8844ff" fontsize="18" align="hcenter,vcenter">{SIGN_IN} &gt;</label>
                                 </td>
                             </tr>
                         </table>
@@ -320,117 +203,6 @@
                         <button name="BT_SETTING" w="100%" h="40" preicon="⚙">{SETTING}</button>
                         <br/>
                         <label></label>
-                    </viewport>
-                </panel>
-                <!-- 5 sing in -->
-                <panel w="100%" h="100%" move="fixed" align="hcenter,top">
-                    <viewport name="PAN_LOGIN" w="98%" h="100%">
-                        <button onclick='showSlot("SLOT_MGR" ,4)' h="30" addon="50" preicon="">{STR_BACK}</button>
-                        <br/>
-                        <panel w="100%" h="5"/>
-                        <label w="100%" h="30" fontsize="20" align="left,vcenter">{SIGN_IN}</label>
-                        <br/>
-                        <input w="100%" name="LOGIN_UID" hint="{EMAIL_OR_MOBILE}"></input>
-                        <br/>
-                        <input w="100%" name="LOGIN_PWD" password="1" hint="{PASSWORD_6_32}"></input>
-                        <switch name="LOGIN_SAVE" selected="1" w="40" h="25"></switch>
-                        <label w="100" h="30" align="Left,vcenter">{REMEMBER_ME}</label>
-                        <br/>
-                        <button w="100%" onclick="signIn()" preicon="👤">{SIGN_IN}</button>
-                        <panel w="100%" h="5"/>
-                        <br/>
-                        <label></label>
-                        <br/>
-                        <panel w="100%" h="5"/>
-                        <label w="100%" h="30" align="Left,vcenter">{I_DONT_HAVE_ACCOUNT}</label>
-                        <br/>
-                        <button w="100%" onclick='showSlot("SLOT_MGR" ,6)' preicon="">{SIGN_UP}</button>
-                        <panel w="100%" h="5"/>
-                        <br/>
-                        <label></label>
-                        <br/>
-                        <panel w="100%" h="5"/>
-                        <label w="100%" h="30" align="Left,vcenter">{I_FORGOT_PASSWORD}</label>
-                        <br/>
-                        <button w="100%" onclick='showSlot("SLOT_MGR" ,7)' preicon="🔓">{FORGOT_PASSWORD}</button>
-                        <panel w="100%" h="5"/>
-                        <br/>
-                        <label></label>
-                        <br/>
-                        <panel w="100%" h="5"/>
-                        <label w="100%" h="30" align="Left,vcenter">{I_WANT_CHG_PWD}</label>
-                        <br/>
-                        <button w="100%" onclick='showSlot("SLOT_MGR" ,8)' preicon="🔑">{CHANGE_PASSWORD}</button>
-                        <panel w="100%" h="100"/>
-                    </viewport>
-                </panel>
-                <!-- 6 sign up -->
-                <panel w="100%" h="100%" move="fixed" align="hcenter,top">
-                    <viewport name="PAN_REG" w="98%" h="100%">
-                        <button onclick='showSlot("SLOT_MGR" ,5)' h="30" addon="50" preicon="">{STR_BACK}</button>
-                        <br/>
-                        <label w="100%" h="30" align="left,vcenter">{I_DONT_HAVE_ACCOUNT}</label>
-                        <br/>
-                        <input w="100%" name="SIGNUP_UID" hint="{EMAIL_OR_MOBILE}"></input>
-                        <br/>
-                        <input w="100%" name="SIGNUP_PWD" password="1" hint="{PASSWORD_6_32}"></input>
-                        <br/>
-                        <button name="LOGIN_REG" w="100%" onclick="signup()">{SIGN_UP}</button>
-                        <br/>
-                        <label></label>
-                        <br/>
-                        <label w="100%" h="50" align="left,vcenter" multiline="1">{NOTE_RCV_VERIFY_CODE}</label>
-                        <br/>
-                        <input w="100%" name="LOGIN_VERIFY_UID" hint="{EMAIL_OR_MOBILE}"></input>
-                        <br/>
-                        <input w="100%" name="LOGIN_VERIFY_CODE" password="0" hint="{VERIFY_CODE}"></input>
-                        <br/>
-                        <button w="100%" onclick="verifyCode()">{VERIFY_CODE}</button>
-
-                    </viewport>
-                </panel>
-                <!-- 7 forgot password -->
-                <panel w="100%" h="100%" move="fixed" align="hcenter,top">
-                    <viewport name="PAN_REG" w="98%" h="100%">
-                        <button onclick='showSlot("SLOT_MGR" ,5)' h="30" addon="50" preicon="">{STR_BACK}</button>
-                        <br/>
-                        <label w="100%" h="30" fontsize="20" align="hcenter,vcenter">{FORGOT_PASSWORD}</label>
-                        <br/>
-                        <label>{NOTICE_INPUT_EMAIL_MOBILE}</label>
-                        <br/>
-                        <input w="100%" name="LOGIN_FORGOT_UID_PRE" hint="{EMAIL_OR_MOBILE}"></input>
-                        <br/>
-                        <button name="LOGIN_REG" w="100%" onclick="retrievePwd()">{SEND_CODE}</button>
-                        <br/>
-                        <label w="100%" h="50" align="left,vcenter" multiline="1">{NOTICE_RCV_VERIFY_CODE}</label>
-                        <br/>
-                        <input w="100%" name="LOGIN_FORGOT_UID" hint="{EMAIL_OR_MOBILE}"></input>
-                        <br/>
-                        <input w="100%" name="LOGIN_FORGOT_CODE" password="0" hint="{VERIFY_CODE}"></input>
-                        <br/>
-                        <input w="100%" name="LOGIN_FORGOT_PWD" password="1" hint="{NEW_PASSWORD}"></input>
-                        <br/>
-                        <button w="100%" onclick="retrieveChgPwd()">{CHANGE_PASSWORD}</button>
-
-                    </viewport>
-                </panel>
-                <!-- 8 change password -->
-                <panel w="100%" h="100%" move="fixed" align="hcenter,top">
-                    <viewport name="PAN_REG" w="98%" h="100%">
-                        <button onclick='showSlot("SLOT_MGR" ,5)' h="30" addon="50" preicon="">{STR_BACK}</button>
-                        <br/>
-                        <label w="100%" h="30" fontsize="20" align="hcenter,vcenter">{CHANGE_PASSWORD}</label>
-                        <br/>
-                        <label>{NOTICE_INPUT_EMAIL_MOBILE}</label>
-                        <br/>
-                        <input w="100%" name="LOGIN_CHGPWD_UID" hint="{EMAIL_OR_MOBILE}"></input>
-                        <br/>
-                        <input w="100%" name="LOGIN_CHGPWD_OLD" password="1" hint="{OLD_PASSWORD}"></input>
-                        <br/>
-                        <input w="100%" name="LOGIN_CHGPWD_NEW" password="1" hint="{NEW_PASSWORD}"></input>
-                        <br/>
-                        <button w="100%" onclick="changePwd()">{CHANGE_PASSWORD}</button>
-
                     </viewport>
                 </panel>
             </viewslot>
@@ -443,6 +215,11 @@
                 <mi name="MI_DISCOVERY" onclick="showDiscovery()">{DISCOVERY}</mi>
                 <mi name="MI_MY" onclick="showMy()">{MY}</mi>
             </menu>
+        </td>
+    </tr>
+    <tr h="{NAV_HEIGHT}" w="100%">
+        <td>
+            <label w="100%"></label>
         </td>
     </tr>
 </table>

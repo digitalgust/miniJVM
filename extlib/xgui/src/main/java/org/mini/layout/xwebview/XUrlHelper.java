@@ -1,8 +1,8 @@
-package org.mini.explorer;
+package org.mini.layout.xwebview;
 
-import org.mini.explorer.urlhelper.XFileUrlHelper;
-import org.mini.explorer.urlhelper.XHttpUrlHelper;
-import org.mini.explorer.urlhelper.XJarUrlHelper;
+import org.mini.layout.xwebview.urlhelper.XFileUrlHelper;
+import org.mini.layout.xwebview.urlhelper.XHttpUrlHelper;
+import org.mini.layout.xwebview.urlhelper.XJarUrlHelper;
 
 import java.net.URL;
 

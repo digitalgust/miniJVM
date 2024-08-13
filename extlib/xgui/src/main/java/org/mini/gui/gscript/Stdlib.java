@@ -1,6 +1,7 @@
 package org.mini.gui.gscript;
 
 import org.mini.crypt.XorCrypt;
+import org.mini.glfm.Glfm;
 import org.mini.reflect.ReflectMethod;
 
 import javax.microedition.io.Base64;
@@ -8,8 +9,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 import java.util.ArrayList;
 
@@ -24,9 +23,14 @@ public class Stdlib extends Lib {
 
     //随机数基石
     private static Random random = new Random(); //定义一个随机值
+    Interpreter inp;
 
 
-    public Stdlib() {
+    public Stdlib(Interpreter inp) {
+        this.inp = inp;
+
+        methodNames.put("getEnv".toLowerCase(), this::getEnv);//
+        methodNames.put("setEnv".toLowerCase(), this::setEnv);//
         methodNames.put("print".toLowerCase(), this::print); // 向控制台输出字符串
         methodNames.put("min".toLowerCase(), this::min);// 求最小值
         methodNames.put("max".toLowerCase(), this::max); // 求最大值
@@ -38,9 +42,10 @@ public class Stdlib extends Lib {
         methodNames.put("strlen".toLowerCase(), this::strlen); // 字符串长度
         methodNames.put("equals".toLowerCase(), this::equals); // 字符串比较
         methodNames.put("def".toLowerCase(), this::def); // 存入全局变量
-        methodNames.put("isdef".toLowerCase(), this::isDef); // 是否存在某全局变量
-        methodNames.put("valueof".toLowerCase(), this::valueOf); // 转换字符串为数值
-        methodNames.put("idxof".toLowerCase(), this::idxof);// 子串在母串的位置        idxof("abc","a")  结果0
+        methodNames.put("isDef".toLowerCase(), this::isDef); // 是否存在某全局变量
+        methodNames.put("valueOf".toLowerCase(), this::valueOf); // 转换字符串为数值
+        methodNames.put("idxOf".toLowerCase(), this::idxof);// 子串在母串的位置        idxof("abc","a")  结果0
+        methodNames.put("lastIdxOf".toLowerCase(), this::lastIdxOf);// 子串在母串的位置        idxof("abc","a")  结果0
         methodNames.put("substr".toLowerCase(), this::substr); // 截子串        substr("abcde",1,4)      结果"bcd"
         methodNames.put("split".toLowerCase(), this::split); // 截子串        substr("abcde",1,4)      结果"bcd"
         methodNames.put("base64enc".toLowerCase(), this::base64enc); //   base64编码
@@ -57,8 +62,22 @@ public class Stdlib extends Lib {
         methodNames.put("setbit".toLowerCase(), this::setbit);//设整数第n位
         methodNames.put("encrypt".toLowerCase(), this::encrypt);//加密  str= encrypt(str,key)
         methodNames.put("decrypt".toLowerCase(), this::decrypt);//解密  str= decrypt(str,key)
+        methodNames.put("remoteMethodCall".toLowerCase(), this::remoteMethodCall);//远程调用
     }
 
+
+    public DataType getEnv(ArrayList<DataType> para) {
+        String key = Interpreter.popBackStr(para);
+        return Interpreter.getCachedStr(Interpreter.getEnvVar(key));
+    }
+
+
+    public DataType setEnv(ArrayList<DataType> para) {
+        String key = Interpreter.popBackStr(para);
+        String val = Interpreter.popBackStr(para);
+        Interpreter.setEnvVar(key, val);
+        return null;
+    }
 
     /**
      * 向控制台输出字符串
@@ -234,6 +253,15 @@ public class Stdlib extends Lib {
         String sub = Interpreter.popBackStr(para);
         if (m != null && sub != null) {
             return Interpreter.getCachedInt(m.indexOf(sub));
+        }
+        return Interpreter.getCachedInt(-1);
+    }
+
+    private Int lastIdxOf(ArrayList<DataType> para) {
+        String m = Interpreter.popBackStr(para);
+        String sub = Interpreter.popBackStr(para);
+        if (m != null && sub != null) {
+            return Interpreter.getCachedInt(m.lastIndexOf(sub));
         }
         return Interpreter.getCachedInt(-1);
     }
@@ -609,6 +637,17 @@ public class Stdlib extends Lib {
             byte[] result = XorCrypt.xor_decrypt(strBytes, keyBytes);
             String i = new String(result, "utf-8");
             return Interpreter.getCachedStr(i);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType remoteMethodCall(ArrayList<DataType> para) {
+        try {
+            String str = Interpreter.popBackStr(para);
+            String ret = Glfm.glfmRemoteMethodCall(str);
+            return Interpreter.getCachedStr(ret == null ? "" : ret);
         } catch (Exception e) {
             e.printStackTrace();
         }

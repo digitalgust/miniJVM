@@ -1,4 +1,4 @@
-package org.mini.explorer;
+package org.mini.layout.xwebview;
 
 import org.mini.gui.GImage;
 

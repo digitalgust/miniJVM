@@ -5,8 +5,8 @@
  */
 package org.mini.gui;
 
-import org.mini.apploader.MiniHttpClient;
 import org.mini.glwrap.GLUtil;
+import org.mini.http.MiniHttpClient;
 
 import java.io.File;
 import java.io.FileInputStream;

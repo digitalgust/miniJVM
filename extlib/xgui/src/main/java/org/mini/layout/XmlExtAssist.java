@@ -3,7 +3,7 @@ package org.mini.layout;
 import org.mini.gui.GForm;
 import org.mini.gui.GImage;
 import org.mini.gui.GToolkit;
-import org.mini.gui.GuiScriptLib;
+import org.mini.gui.guilib.GuiScriptLib;
 import org.mini.gui.gscript.Lib;
 
 import java.util.Vector;

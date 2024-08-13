@@ -1,4 +1,4 @@
-package org.mini.explorer;
+package org.mini.layout.xwebview;
 
 import org.mini.gui.GContainer;
 import org.mini.gui.GObject;
@@ -38,7 +38,6 @@ public class XPage {
 
         this.assistDelegate = new XmlExtAssist(explorer.getAssist().getForm());
         this.assistDelegate.copyFrom(explorer.getAssist());
-        this.assistDelegate.addExtScriptLib(new ExplorerScriptLib(assistDelegate.getForm(), (XExplorerHolder) assistDelegate.getForm()));
     }
 
     public GContainer getGui(float width, float height) {

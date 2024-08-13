@@ -157,7 +157,7 @@ public class JsonParser<T> {
         }
     }
 
-    public static class JsonNumber implements JsonCell {
+    public static class JsonNumber implements JsonCell { //include null too
         String numStr;
 
         public JsonNumber(String s) {
@@ -219,6 +219,10 @@ public class JsonParser<T> {
                 return Boolean.valueOf(numStr);
             } else {
                 //guess
+
+                if (numStr.equals("null")) {
+                    return null;
+                }
                 try {
                     return Integer.valueOf(numStr);
                 } catch (Exception e) {
@@ -592,8 +596,8 @@ public class JsonParser<T> {
                     JsonList<JsonCell> list = (JsonList) json;
                     if (clazz.isArray()) {
                         String typevar = types;
-                        if (typevar.indexOf('[') > 0) {
-                            typevar = typevar.substring(0, typevar.lastIndexOf('['));
+                        if (typevar != null && typevar.indexOf('[') >= 0) {
+                            typevar = typevar.substring(1);
                         }
 
                         Object array = Array.newInstance(clazz.getComponentType(), list.size());

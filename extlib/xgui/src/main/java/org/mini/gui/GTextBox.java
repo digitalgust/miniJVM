@@ -31,6 +31,7 @@ public class GTextBox extends GTextObject {
 
     protected int curCaretRow;
     protected int curCaretCol;
+    protected float caretX, caretY;
     protected boolean showCaretPos = false;
 
     protected boolean mouseDrag;
@@ -104,6 +105,14 @@ public class GTextBox extends GTextObject {
 
     public int getCurCaretCol() {
         return curCaretCol;
+    }
+
+    public float getCaretX() {
+        return caretX;
+    }
+
+    public float getCaretY() {
+        return caretY;
     }
 
     public boolean isShowCaretPos() {
@@ -874,6 +883,8 @@ public class GTextBox extends GTextObject {
             //字高
             nvgTextMetrics(vg, null, null, lineh);
             float lineH = lineh[0];
+            caretX = getX() + PAD;
+            caretY = getY() + lineH + PAD;
 
             float[] text_area = new float[]{x + PAD, y + PAD, w - PAD * 2, h - PAD * 2};
             float dx = text_area[LEFT];
@@ -916,7 +927,6 @@ public class GTextBox extends GTextObject {
                 long rowsHandle = nvgCreateNVGtextRow(rowCount);
                 long glyphsHandle = nvgCreateNVGglyphPosition(posCount);
                 int nrows, i, char_count;
-                float caretx = 0, carety = 0;
 
 //                Nanovg.nvgScissor(vg, text_area[LEFT], text_area[TOP], text_area[WIDTH], text_area[HEIGHT]);
 //                Nanovg.nvgIntersectScissor(vg, tbox.getX(), tbox.getY(), tbox.getW(), tbox.getH());
@@ -973,8 +983,8 @@ public class GTextBox extends GTextObject {
                                     char_starti = char_at;
                                     char_endi = char_at + curRowStrs.length() - 1;
 
-                                    caretx = dx;
-                                    carety = dy;
+                                    caretX = dx;
+                                    caretY = dy;
                                     //取得i行的各个字符的具体位置，结果存入glyphs
                                     char_count = curRowStrs.length();
                                     /**
@@ -1013,29 +1023,30 @@ public class GTextBox extends GTextObject {
 //                                            int codeNext = caretIndex + 1 >= textsb.length() ? 0 : textsb.codePointAt(caretIndex + 1);
 
                                             if (caretIndex > char_starti && caretIndex <= char_endi) {
-                                                caretx = local_detail[curRow][AREA_CHAR_POS_START + (caretIndex - char_starti)];
+                                                caretX = local_detail[curRow][AREA_CHAR_POS_START + (caretIndex - char_starti)];
                                                 draw = true;
                                             } else if (caretIndex == char_endi + 1) {
                                                 int codePrev = caretIndex - 1 < 0 ? 0 : textsb.codePointAt(caretIndex - 1);
                                                 if (codePrev == '\n') {//如果光标index前一个字符是换行符，则把光标放在下一行的开头
-                                                    caretx = dx + 1;
-                                                    carety += lineH;
+                                                    caretX = dx + 1;
+                                                    caretY += lineH;
                                                     jumpWhenReturn = true;
                                                 } else {
-                                                    caretx = dx + row_width;
-                                                    if (caretx >= text_area[LEFT] + text_area[WIDTH]) {
-                                                        caretx = text_area[LEFT] + text_area[WIDTH] - 2;
+                                                    caretX = dx + row_width;
+                                                    if (caretX >= text_area[LEFT] + text_area[WIDTH]) {
+                                                        caretX = text_area[LEFT] + text_area[WIDTH] - 2;
                                                     }
                                                 }
                                                 draw = true;
                                             } else if (caretIndex == 0 && char_starti == 0) {//特殊情况
-                                                caretx = dx + 1;
+                                                caretX = dx + 1;
                                                 draw = true;
                                             }
                                             if (draw) {
                                                 curCaretRow = curRow + topShowRow + (jumpWhenReturn ? 1 : 0);
                                                 curCaretCol = jumpWhenReturn ? 0 : (caretIndex - char_starti);
-                                                GToolkit.drawCaret(vg, caretx - 1, carety, 2, lineH, false);
+                                                GToolkit.drawCaret(vg, caretX - 1, caretY, 2, lineH, false);
+                                                caretY += lineH + PAD;
                                             }
                                         }
 

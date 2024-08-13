@@ -2,15 +2,15 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.mini.explorer;
+package org.mini.layout.xwebview;
 
 import org.mini.apploader.AppManager;
-import org.mini.apploader.MiniHttpClient;
 import org.mini.gui.*;
 import org.mini.gui.gscript.DataType;
 import org.mini.gui.gscript.Interpreter;
 import org.mini.gui.gscript.Lib;
-import org.mini.gui.gscript.Stdlib;
+import org.mini.gui.guilib.GuiScriptLib;
+import org.mini.http.MiniHttpClient;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -24,14 +24,12 @@ import java.util.Random;
  * @author Gust
  */
 public class ExplorerScriptLib extends Lib {
-    GForm form;
     XExplorerHolder holder;
 
     /**
      *
      */
-    public ExplorerScriptLib(GForm form, XExplorerHolder holder) {
-        this.form = form;
+    public ExplorerScriptLib(XExplorerHolder holder) {
         this.holder = holder;
 
         // script method register
@@ -39,6 +37,11 @@ public class ExplorerScriptLib extends Lib {
             methodNames.put("openPage".toLowerCase(), this::openPage);//
             methodNames.put("downloadInstall".toLowerCase(), this::downloadInstall);//
             methodNames.put("downloadSave".toLowerCase(), this::downloadSave);//
+            methodNames.put("getPageBaseUrl".toLowerCase(), this::getPageBaseUrl);//
+            methodNames.put("getPageUrl".toLowerCase(), this::getPageUrl);//
+            methodNames.put("prevPage".toLowerCase(), this::prevPage);//
+            methodNames.put("nextPage".toLowerCase(), this::nextPage);//
+            methodNames.put("refreshPage".toLowerCase(), this::refreshPage);//
 
         }
     }
@@ -63,7 +66,7 @@ public class ExplorerScriptLib extends Lib {
                 href = XUrlHelper.normalizeUrl(page.getUrl(), href); //fix as : http://www.abc.com/abc/c.xml
             }
             holder.getExplorer().gotoPage(href);
-            GuiScriptLib.doCallback(form, callback, href, 0, "");
+            GuiScriptLib.doCallback(holder.getExplorer().getWebView().getForm(), callback, href, 0, "");
         }
         return null;
     }
@@ -83,7 +86,7 @@ public class ExplorerScriptLib extends Lib {
                 public void onCompleted(MiniHttpClient client, String url, byte[] data) {
                     if (data != null) {
                         AppManager.getInstance().getDownloadCallback().onCompleted(client, url, data);
-                        GuiScriptLib.doCallback(form, callback, url, 0, "");
+                        GuiScriptLib.doCallback(holder.getExplorer().getWebView().getForm(), callback, url, 0, "");
                     }
                 }
             });
@@ -120,7 +123,7 @@ public class ExplorerScriptLib extends Lib {
                             fos.write(data);
                             fos.close();
 
-                            GuiScriptLib.doCallback(form, callback, url, 0, path);
+                            GuiScriptLib.doCallback(holder.getExplorer().getWebView().getForm(), callback, url, 0, path);
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
@@ -133,4 +136,47 @@ public class ExplorerScriptLib extends Lib {
     }
 
 
+    public DataType getPageBaseUrl(ArrayList<DataType> para) {
+        String href = "";
+        XPage page = holder.getExplorer().getCurrentPage();
+        if (page != null) {// may be  href="/abc/c.xml"
+            href = XUrlHelper.normalizeUrl(page.getUrl(), "/"); //fix as : http://www.abc.com/abc/c.xml
+        }
+        return Interpreter.getCachedStr(href);
+    }
+
+    public DataType getPageUrl(ArrayList<DataType> para) {
+        String href = "";
+        XPage page = holder.getExplorer().getCurrentPage();
+        if (page != null) {// may be  href="/abc/c.xml"
+            href = page.getUrl().toString();
+        }
+        return Interpreter.getCachedStr(href);
+    }
+
+    public DataType prevPage(ArrayList<DataType> para) {
+        XExplorer explorer = holder.getExplorer();
+        if (explorer != null) {
+            explorer.back();
+        }
+        return null;
+    }
+    public DataType nextPage(ArrayList<DataType> para) {
+        XExplorer explorer = holder.getExplorer();
+        if (explorer != null) {
+            explorer.forward();
+        }
+        return null;
+    }
+    public DataType refreshPage(ArrayList<DataType> para) {
+        XExplorer explorer = holder.getExplorer();
+        if (explorer != null) {
+            XPage page = explorer.getCurrentPage();
+            if (page != null) {
+                page.reset();
+                explorer.gotoPage(page.getUrl().toString());
+            }
+        }
+        return null;
+    }
 }

@@ -216,10 +216,19 @@ public class GForm extends GContainer {
         this.pickListener = pickListener;
     }
 
+    float tx, ty, tw, th;
+
     public void KeyboardPopEvent(boolean visible, float x, float y, float w, float h) {
+        tx = x;
+        ty = y;
+        tw = w;
+        th = h;
         if (visible) {
             if (editObject != null) {
                 float objbtn = editObject.getY() + editObject.getH();
+                if (editObject instanceof GTextBox) {
+                    objbtn = ((GTextBox) editObject).getCaretY() + 10f;
+                }
                 float obj2scrbtn = getH() - objbtn;
                 if (h > obj2scrbtn) {
                     float trans = h - obj2scrbtn;

@@ -80,10 +80,11 @@ public class HttpHandler extends URLStreamHandler {
                     }
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     InputStream is = connection.openDataInputStream();
+                    byte[] buf = new byte[1024];
                     while (true) {
-                        int b = is.read();
-                        if (b < 0) break;
-                        baos.write(b);
+                        int len = is.read(buf);
+                        if (len < 0) break;
+                        baos.write(buf, 0, len);
                     }
                     data = (baos.toByteArray());
                     long exp = connection.getExpiration();

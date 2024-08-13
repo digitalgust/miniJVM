@@ -301,4 +301,8 @@ public class Glfm {
     }
 
 
+    public static String glfmRemoteMethodCall(String inJsonStr) {
+        return null;
+    }
+
 }

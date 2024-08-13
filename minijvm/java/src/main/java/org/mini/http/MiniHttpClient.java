@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.mini.apploader;
+package org.mini.http;
 
 import javax.microedition.io.Connector;
 import javax.microedition.io.HttpConnection;
@@ -21,9 +21,9 @@ public class MiniHttpClient extends Thread {
     DownloadCompletedHandle handle;
     boolean exit;
     HttpConnection c = null;
-    public static final MiniHttpClient.CltLogger DEFAULT_LOGGER = new CltLogger() {
+    public static final CltLogger DEFAULT_LOGGER = new CltLogger() {
         @Override
-        void log(String s) {
+        public void log(String s) {
             System.out.println(s);
         }
     };
@@ -37,7 +37,7 @@ public class MiniHttpClient extends Thread {
     }
 
     abstract static public class CltLogger {
-        abstract void log(String s);
+        public abstract void log(String s);
     }
 
     public void stopNow() {

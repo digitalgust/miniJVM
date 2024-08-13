@@ -2,10 +2,11 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.mini.gui;
+package org.mini.gui.guilib;
 
-import org.mini.apploader.MiniHttpClient;
+import org.mini.gui.*;
 import org.mini.gui.gscript.*;
+import org.mini.http.MiniHttpClient;
 import org.mini.json.JsonParser;
 import org.mini.layout.*;
 import org.mini.nanovg.Nanovg;
@@ -79,8 +80,7 @@ public class GuiScriptLib extends Lib {
             methodNames.put("setVisible".toLowerCase(), this::setVisible);//
             methodNames.put("getVisible".toLowerCase(), this::getVisible);//
             methodNames.put("httpRequest".toLowerCase(), this::httpRequest);//
-            methodNames.put("getEnv".toLowerCase(), this::getEnv);//
-            methodNames.put("setEnv".toLowerCase(), this::setEnv);//
+            methodNames.put("httpRequestSync".toLowerCase(), this::httpRequestSync);//
 
         }
     }
@@ -651,7 +651,7 @@ public class GuiScriptLib extends Lib {
         return Interpreter.getCachedBool(false);
     }
 
-    public DataType httpRequest(ArrayList<DataType> para) {
+    private DataType httpRequestImpl(ArrayList<DataType> para, boolean async) {
         String href = Interpreter.popBackStr(para);
         String callback = Interpreter.popBackStr(para);
         if (href != null) {
@@ -676,38 +676,22 @@ public class GuiScriptLib extends Lib {
                     }
                 }
             });
-            hc.start();
+            if (async) {
+                hc.start();
+            } else {
+                hc.run();
+            }
         }
         return null;
     }
 
-    public DataType getEnv(ArrayList<DataType> para) {
-        String key = Interpreter.popBackStr(para);
-        if (key != null) {
-            if (form instanceof GuiScriptEnvVarAccessor) {
-                GuiScriptEnvVarAccessor accessor = (GuiScriptEnvVarAccessor) form;
-                return Interpreter.getCachedStr((String) accessor.getEnv(key));
-            } else {
-                System.out.println(form + " is not implemented GuiScriptEnvVarAccessor");
-            }
-        }
-        return Interpreter.getCachedStr("");
+
+    public DataType httpRequestSync(ArrayList<DataType> para) {
+        return httpRequestImpl(para, false);
     }
 
-
-    public DataType setEnv(ArrayList<DataType> para) {
-        String key = Interpreter.popBackStr(para);
-        String val = Interpreter.popBackStr(para);
-        if (key != null) {
-            if (form instanceof GuiScriptEnvVarAccessor) {
-                GuiScriptEnvVarAccessor accessor = (GuiScriptEnvVarAccessor) form;
-                accessor.setEnv(key, val);
-                ;
-            } else {
-                System.out.println(form + " is not implemented GuiScriptEnvVarAccessor");
-            }
-        }
-        return null;
+    public DataType httpRequest(ArrayList<DataType> para) {
+        return httpRequestImpl(para, true);
     }
 
 }

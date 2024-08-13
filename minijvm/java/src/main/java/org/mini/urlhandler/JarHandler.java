@@ -104,13 +104,15 @@ public class JarHandler extends URLStreamHandler {
                         File tmpFile = new File(fileUrl.getFile());
                         f = File.createTempFile("", tmpFile.getName());
                         FileOutputStream fos = new FileOutputStream(f);
+                        byte[] buf = new byte[1024];
                         while (true) {
-                            int b = is.read();
-                            if (b == -1) {
+                            int len = is.read(buf);
+                            if (len == -1) {
                                 break;
                             }
-                            fos.write(b);
+                            fos.write(buf, 0, len);
                         }
+
                         fos.close();
                         is.close();
                         if (expire <= 0) {

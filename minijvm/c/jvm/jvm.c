@@ -39,7 +39,7 @@ void thread_unboundle(Runtime *runtime) {
 }
 
 void print_exception(Runtime *runtime) {
-#if _JVM_DEBUG_LOG_LEVEL > 1
+#if _JVM_DEBUG_LOG_LEVEL >= 0
     if (runtime) {
         Utf8String *stacktrack = utf8_create();
         getRuntimeStack(runtime, stacktrack);

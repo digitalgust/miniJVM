@@ -5,10 +5,6 @@
  */
 package org.mini.apploader;
 
-import org.mini.explorer.XUrlHelper;
-import org.mini.explorer.urlhelper.XFileUrlHelper;
-import org.mini.explorer.urlhelper.XHttpUrlHelper;
-import org.mini.explorer.urlhelper.XJarUrlHelper;
 import org.mini.gui.*;
 import org.mini.zip.Zip;
 
@@ -38,6 +34,7 @@ public class AppLoader {
     static final String KEY_GUISTYLE = "guistyle";
     static final String KEY_HOMEICON_X = "homeiconx";
     static final String KEY_HOMEICON_Y = "homeicony";
+    static final String KEY_TOKEN = "TOKEN";
     static Properties appinfo = new Properties();
     static Properties applist = new Properties();
     static Properties baseinfo = new Properties();
@@ -589,20 +586,4 @@ public class AppLoader {
         return s == null ? "" : s;
     }
 
-    public static String appendUrlParam(String url) {
-        XUrlHelper helper = XUrlHelper.getHelper(url);
-        if (helper instanceof XJarUrlHelper || helper instanceof XFileUrlHelper) {
-            return url;
-        }
-        String token = AppLoader.getProperty("token");
-
-        return url
-                + "?lang=" + AppLoader.getLangName()
-                + "&ver=" + AppLoader.getBaseInfo("sver")
-                + "&jar=" + System.getProperty("os.name").toLowerCase()
-                + "&from=" + AppLoader.getBaseInfo("from")
-                + "&cver=" + AppLoader.getBaseInfo("cver")
-                + "&token=" + (token == null ? "" : token)
-                ;
-    }
 }

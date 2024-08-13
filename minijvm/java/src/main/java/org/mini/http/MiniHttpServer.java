@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.mini.apploader;
+package org.mini.http;
 
 import org.mini.reflect.ReflectArray;
 import org.mini.vm.RefNative;
@@ -30,7 +30,7 @@ public class MiniHttpServer extends Thread {
     public static final int DEFAULT_PORT = 8088;
     public static final SrvLogger DEFAULT_LOGGER = new SrvLogger() {
         @Override
-        void log(String s) {
+        public void log(String s) {
             System.out.println(s);
         }
     };
@@ -65,7 +65,7 @@ public class MiniHttpServer extends Thread {
     }
 
     abstract static public class SrvLogger {
-        abstract void log(String s);
+        public abstract void log(String s);
     }
 
     static class RequestHandle extends Thread {
@@ -309,7 +309,7 @@ public class MiniHttpServer extends Thread {
          * @param request
          * @param data
          */
-        public void parseData(MiniHttpServer.RequestHandle request, byte[] data) {
+        public void parseData(RequestHandle request, byte[] data) {
             this.request = request;
             if (data != null) {
                 ContentReader creader = new ContentReader(data);
@@ -505,7 +505,7 @@ public class MiniHttpServer extends Thread {
     /**
      * 收到的文件
      */
-    static class UploadFile {
+    static public class UploadFile {
 
         public String type;
         public String filename;

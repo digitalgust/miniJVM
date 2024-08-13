@@ -29,7 +29,7 @@ void scaleSample(void *pSamples, ma_format format, s32 channels, s32 len, float 
     if (len) {
         switch (format) {
             case ma_format_s16: {
-                ma_int16 *dataPtr = pSamples;
+                ma_int16 *dataPtr = (ma_int16 *) pSamples;
                 s32 i, imax;
                 for (i = 0, imax = len * channels; i < imax; i++) {
                     dataPtr[i] *= scale;
@@ -37,7 +37,7 @@ void scaleSample(void *pSamples, ma_format format, s32 channels, s32 len, float 
                 break;
             }
             case ma_format_u8: {
-                ma_uint8 *dataPtr = pSamples;
+                ma_uint8 *dataPtr = (ma_uint8 *) pSamples;
                 s32 i, imax;
                 for (i = 0, imax = len * channels; i < imax; i++) {
                     dataPtr[i] *= scale;
@@ -45,7 +45,7 @@ void scaleSample(void *pSamples, ma_format format, s32 channels, s32 len, float 
                 break;
             }
             case ma_format_f32: {
-                f32 *dataPtr = pSamples;
+                f32 *dataPtr = (f32 *) pSamples;
                 s32 i, imax;
                 for (i = 0, imax = len * channels; i < imax; i++) {
                     dataPtr[i] *= scale;
@@ -53,7 +53,7 @@ void scaleSample(void *pSamples, ma_format format, s32 channels, s32 len, float 
                 break;
             }
             case ma_format_s24: {
-                S24Int *dataPtr = pSamples;
+                S24Int *dataPtr = (S24Int *) pSamples;
                 S24Int elem;
                 s32 i, imax;
                 for (i = 0, imax = len * channels; i < imax; i++) {
@@ -68,7 +68,7 @@ void scaleSample(void *pSamples, ma_format format, s32 channels, s32 len, float 
                 break;
             }
             case ma_format_s32: {
-                ma_int32 *dataPtr = pSamples;
+                ma_int32 *dataPtr = (ma_int32 *) pSamples;
                 s32 i, imax;
                 for (i = 0, imax = len * channels; i < imax; i++) {
                     dataPtr[i] *= scale;

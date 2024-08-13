@@ -1,4 +1,4 @@
-package org.mini.explorer;
+package org.mini.layout.xwebview;
 
 import org.mini.gui.GImage;
 import org.mini.layout.XmlExtAssist;
@@ -37,10 +37,13 @@ public class XResourceLoader implements XmlExtAssist.XLoader {
             URLConnection conn = u.openConnection();
             conn.connect();
             String type = conn.getContentType();
-            Object o = conn.getContent();
+            InputStream o = (InputStream) conn.getContent();
             if (o instanceof InputStream) {
-                byte[] data = new byte[((InputStream) o).available()];
-                ((InputStream) o).read(data);
+                byte[] data = new byte[o.available()];
+                int read = 0;
+                while (read < data.length) {
+                    read += o.read(data, read, data.length - read);
+                }
                 XResource resource = new XResource();
                 resource.url = resUrl;
                 resource.type = XResource.getTypeByString(type);
