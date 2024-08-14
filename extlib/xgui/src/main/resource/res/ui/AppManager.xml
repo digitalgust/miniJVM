@@ -5,12 +5,8 @@
             if(!isDef("ENCRYPTED_KEY"))
                 def("ENCRYPTED_KEY","L7%d9&3jw5f")
             eif
-            token=getEnv("TOKEN")
-            if(strlen(token)>0)
-                uid=getEnv("USERNAME")
-                setText("LAB_USERNAME",uid+" {SignIned} >")
-            eif
             getPolicy()
+            signInAuto() '自动登录
         ret
 
         sub getQueryPara()
@@ -44,6 +40,25 @@
             eif
         ret
 
+
+        sub signInAuto() '登录
+            logintype=getEnv("LOGINTYPE")
+            loginUid=getEnv("USERNAME")
+            ep=getEnv("USERPASS")
+            loginPwd=decrypt(ep,ENCRYPTED_KEY)
+
+            if(strlen(loginUid)=0 | strlen(loginPwd)=0)
+                ret
+            else
+                encryptPwd=encrypt(loginPwd,ENCRYPTED_KEY)
+                println(encryptPwd)
+
+                accBaseUrl=getEnv("ACCOUNT_BASE_URL")
+                url=accBaseUrl + "/login?usr=" + loginUid + "&pwd=" + encryptPwd +"&logintype="+ logintype +"&"+ getQueryPara()
+                httpRequest(url,"ROOT_PAN.onCallBack")
+            eif
+        ret
+
         sub showDiscovery() '显示发现
             showSlot("SLOT_MGR", 3)
             if(!uiExist("DIS_HOME")) 'if there is not a discovery panel then show it
@@ -58,6 +73,14 @@
 
         sub showMy() '显示我的
             showSlot("SLOT_MGR", 4)
+
+            token=getEnv("TOKEN")
+            if(strlen(token)>0)
+                uid=getEnv("USERNAME")
+                setText("LAB_USERNAME",uid+" {STR_SIGNIN_ALREADY} >")
+            else
+                setText("LAB_USERNAME","{STR_NEED_SIGNIN} >")
+            eif
         ret
 
         sub showProfile() '显示我的

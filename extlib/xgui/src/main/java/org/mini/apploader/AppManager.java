@@ -309,11 +309,11 @@ public class AppManager extends GApplication {
             appList.setSelectedIndex(-1);
             curSelectedJarName = null;
         }
-        mainSlot.moveTo(0, 200);
+        mainSlot.moveTo(0, 100);
     }
 
     void mainPanelShowRight() {
-        mainSlot.moveTo(1, 200);
+        mainSlot.moveTo(1, 100);
     }
 
     GHomeButton getFloatButton() {

@@ -237,8 +237,8 @@
     ],
     "RETRIEVE_PWD": [
       "Retrieve password",
-      "找回",
-      "找回"
+      "找回密码",
+      "找回密码"
     ],
     "ACCOUNT_PWD_NO_EMPTY": [
       "Account or password can not be empty",
@@ -251,9 +251,9 @@
       "账号不能为空"
     ],
     "NOTICE_INPUT_EMAIL_MOBILE": [
-      "Input your account: email or mobile",
-      "请输入账号: 邮箱或手机",
-      "请输入账号: 邮箱或手机"
+      "Input email or mobile",
+      "请输入邮箱或手机号码",
+      "请输入邮箱或手机号码"
     ],
     "SEND_CODE": [
       "Send code",
@@ -272,8 +272,8 @@
     ],
     "EMAIL_OR_MOBILE": [
       "email or mobile",
-      "邮箱或手机",
-      "邮箱或手机"
+      "只可为邮箱或手机",
+      "只可为邮箱或手机"
     ],
     "OLD_PASSWORD": [
       "Old password",
@@ -286,39 +286,39 @@
       "新密码"
     ],
     "PASSWORD_6_32": [
-      "6-32 char password",
-      "密码",
-      "密码"
+      "password length 6-32",
+      "密码长6-32字符",
+      "密码长6-32字符"
     ],
     "I_WANT_CHG_PWD": [
       "I want to change my password",
       "我要改变我的密码",
       "我要改变我的密码"
     ],
-    "AAA": [
-      "AAA",
-      "BBB",
-      "CCC"
+    "STR_SIGNIN_ALREADY": [
+      "Signed in",
+      "已登录",
+      "已登录"
     ],
-    "AAA": [
-      "AAA",
-      "BBB",
-      "CCC"
+    "STR_NEED_SIGNIN": [
+      "Sign in",
+      "去登录",
+      "去登录"
     ],
-    "AAA": [
-      "AAA",
-      "BBB",
-      "CCC"
+    "STR_MESSAGE": [
+      "Message",
+      "消息",
+      "消息"
     ],
-    "AAA": [
-      "AAA",
-      "BBB",
-      "CCC"
+    "STR_SUCCESS": [
+      "Success",
+      "成功",
+      "成功"
     ],
-    "AAA": [
-      "AAA",
-      "BBB",
-      "CCC"
+    "STR_FAIL": [
+      "Fail",
+      "失败",
+      "失败"
     ]
   }
 }

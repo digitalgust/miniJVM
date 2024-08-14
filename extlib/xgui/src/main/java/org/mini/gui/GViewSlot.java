@@ -43,6 +43,8 @@ public class GViewSlot extends GViewPort {
 
     protected float dragBeginX, dragBeginY;
 
+    static final int SWAP_PERIOD = 16;
+
     public GViewSlot(GForm form, float w, float h, int scrollMod) {
         this(form, 0, 0, w, h, scrollMod);
     }
@@ -168,7 +170,7 @@ public class GViewSlot extends GViewPort {
             GObject curGo = getElementsImpl().get(active);
             if (curGo != null && go != null) {
                 SlotSwaper swaper = new SlotSwaper(this, curGo, go, timeInMils);
-                GForm.timer.schedule(swaper, 0, (long) 16);
+                GForm.timer.schedule(swaper, 0, (long) SWAP_PERIOD);
                 this.active = getElementsImpl().indexOf(go);
                 //notify
                 doStateChanged(this);
@@ -178,8 +180,7 @@ public class GViewSlot extends GViewPort {
 
     class SlotSwaper extends TimerTask {
 
-        long curTime;
-        long startAt;
+        int counter = 0, maxCounter;
         long timeInMils;
 
         float distX, distY;
@@ -202,24 +203,23 @@ public class GViewSlot extends GViewPort {
                 timeInMils = 1;
             }
             this.timeInMils = timeInMils;
-            startAt = System.currentTimeMillis();
+            maxCounter = (int) (timeInMils / SWAP_PERIOD);
 
         }
 
         public void run() {
             try {
-                curTime = System.currentTimeMillis();
-                long goTime = curTime - startAt;
+
                 if ((distX == 0 && scrollMode == SCROLL_MODE_HORIZONTAL)
                         || (distY == 0 && scrollMode == SCROLL_MODE_VERTICAL)) {
                     cancel();
                     return;
                 }
-
+                counter++;
                 float curX, curY;
-                if (goTime < timeInMils) {
-                    curX = slotOrignalX - distX * goTime / timeInMils;
-                    curY = slotOrignalY - distY * goTime / timeInMils;
+                if (counter <= maxCounter) {
+                    curX = slotOrignalX - distX * counter / maxCounter;
+                    curY = slotOrignalY - distY * counter / maxCounter;
                 } else {
                     curX = slotOrignalX - distX;
                     curY = slotOrignalY - distY;

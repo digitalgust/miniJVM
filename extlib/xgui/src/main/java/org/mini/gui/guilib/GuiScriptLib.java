@@ -50,6 +50,8 @@ public class GuiScriptLib extends Lib {
             methodNames.put("setAttachInt".toLowerCase(), this::setAttachInt);//
             methodNames.put("setBgColorHexStr".toLowerCase(), this::setBgColorHexStr);//  set background color
             methodNames.put("setColorHexStr".toLowerCase(), this::setColorHexStr);//  set color
+            methodNames.put("setPreIconColor".toLowerCase(), this::setPreIconColor);//  set color
+            methodNames.put("clearPreIconColor".toLowerCase(), this::clearPreIconColor);//  set color
             methodNames.put("getListIdx".toLowerCase(), this::getListIdx);//
             methodNames.put("setImgAlphaStr".toLowerCase(), this::setImgAlphaStr);//
             methodNames.put("setEnable".toLowerCase(), this::setEnable);//
@@ -183,6 +185,31 @@ public class GuiScriptLib extends Lib {
                 gobj.setColor(color);
             } catch (Exception e) {
             }
+        }
+        return null;
+    }
+
+    public DataType setPreIconColor(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(form, compont);
+        if (gobj != null) {
+            float[] color;
+            String rgbaStr = Interpreter.popBackStr(para);
+            try {
+                int c = (int) Long.parseLong(rgbaStr, 16);
+                color = Nanovg.nvgRGBA((byte) ((c >> 24) & 0xff), (byte) ((c >> 16) & 0xff), (byte) ((c >> 8) & 0xff), (byte) ((c >> 0) & 0xff));
+                gobj.setPreiconColor(color);
+            } catch (Exception e) {
+            }
+        }
+        return null;
+    }
+
+    public DataType clearPreIconColor(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(form, compont);
+        if (gobj != null) {
+            gobj.setPreiconColor(GToolkit.getStyle().getTextFontColor());
         }
         return null;
     }

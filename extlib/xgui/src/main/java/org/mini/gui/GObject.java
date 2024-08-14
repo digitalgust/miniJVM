@@ -363,6 +363,10 @@ abstract public class GObject implements GAttachable {
         return color;
     }
 
+
+    public void setPreiconColor(float[] preiconColor) {
+    }
+
     /**
      * @param r
      * @param g
