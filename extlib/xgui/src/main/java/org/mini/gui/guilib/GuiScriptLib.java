@@ -74,6 +74,7 @@ public class GuiScriptLib extends Lib {
             methodNames.put("getListText".toLowerCase(), this::getListText);//
             methodNames.put("showBar".toLowerCase(), this::showBar);//
             methodNames.put("showMsg".toLowerCase(), this::showMsg);//
+            methodNames.put("showConfirm".toLowerCase(), this::showConfirm);//
             methodNames.put("insertText".toLowerCase(), this::insertText);//
             methodNames.put("deleteText".toLowerCase(), this::deleteText);//
             methodNames.put("getCaretPos".toLowerCase(), this::getCaretPos);//
@@ -103,7 +104,7 @@ public class GuiScriptLib extends Lib {
      * @param url
      * @param callback like: CONTAINER_NAME.SCRIPT_NAME
      */
-    public static void doCallback(GForm form, String callback, String url, int code, String reply) {
+    public static void doHttpCallback(GForm form, String callback, String url, int code, String reply) {
         if (callback != null) {
             if (callback.contains(".")) {
                 String[] ss = callback.split("\\.");
@@ -600,6 +601,33 @@ public class GuiScriptLib extends Lib {
         return null;
     }
 
+    public DataType showConfirm(ArrayList<DataType> para) {
+        String msg = Interpreter.popBackStr(para);
+        String callback = Interpreter.popBackStr(para);
+        GFrame f = GToolkit.getConfirmFrame(
+                form,
+                GLanguage.getString("Message"),
+                msg,
+                GLanguage.getString("Ok"),
+                (obj) -> {
+                    if (callback != null) {
+                        if (callback.contains(".")) {
+                            String[] ss = callback.split("\\.");
+                            GContainer gobj = GToolkit.getComponent(form, ss[0]);
+                            Interpreter inp = gobj.getInterpreter();
+                            inp.callSub(ss[1] + "()");
+                        } else {
+                            System.out.println("showConfirm callback format \"PAN.subname\" ,but : " + callback);
+                        }
+                    }
+                },
+                null,
+                null);
+        GToolkit.showFrame(f);
+        form.flush();
+        return null;
+    }
+
 
     private DataType insertText(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
@@ -685,7 +713,7 @@ public class GuiScriptLib extends Lib {
             try {
                 URL url = new URL(href);
             } catch (Exception e) {
-                doCallback(form, callback, href, -1, "url format error");
+                doHttpCallback(form, callback, href, -1, "url format error");
                 return null;
             }
 
@@ -696,7 +724,16 @@ public class GuiScriptLib extends Lib {
                         try {
                             JsonParser<HttpRequestReply> jp = new JsonParser();
                             HttpRequestReply msg = jp.deserial(new String(data, "UTF-8"), HttpRequestReply.class);
-                            doCallback(form, callback, url, msg.getCode(), msg.getReply());
+                            if (async) {//异步要交给主线程执行，因为实践中出现死锁，GContainer 的elements 同步比较多，多线程死锁
+                                GCmd cmd = new GCmd(
+                                        () -> {
+                                            doHttpCallback(form, callback, url, msg.getCode(), msg.getReply());
+                                            GForm.flush();
+                                        });
+                                GForm.addCmd(cmd);
+                            } else {
+                                doHttpCallback(form, callback, url, msg.getCode(), msg.getReply());
+                            }
                         } catch (Exception e) {
                             e.printStackTrace();
                         }

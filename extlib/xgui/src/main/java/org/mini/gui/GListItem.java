@@ -200,6 +200,7 @@ public class GListItem extends GContainer {
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
             float[] pc = preiconColor == null ? getStyle().getTextFontColor() : preiconColor;
+            pc = enable ? pc : getDisabledColor();
             nvgFillColor(vg, pc);
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
             nvgTextJni(vg, x + thumb * 0.5f, y + thumb * 0.5f + 2, preicon_arr, 0, preicon_arr.length);

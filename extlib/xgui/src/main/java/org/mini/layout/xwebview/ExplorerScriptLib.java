@@ -66,7 +66,7 @@ public class ExplorerScriptLib extends Lib {
                 href = XUrlHelper.normalizeUrl(page.getUrl(), href); //fix as : http://www.abc.com/abc/c.xml
             }
             holder.getExplorer().gotoPage(href);
-            GuiScriptLib.doCallback(holder.getExplorer().getWebView().getForm(), callback, href, 0, "");
+            GuiScriptLib.doHttpCallback(holder.getExplorer().getWebView().getForm(), callback, href, 0, "");
         }
         return null;
     }
@@ -86,7 +86,7 @@ public class ExplorerScriptLib extends Lib {
                 public void onCompleted(MiniHttpClient client, String url, byte[] data) {
                     if (data != null) {
                         AppManager.getInstance().getDownloadCallback().onCompleted(client, url, data);
-                        GuiScriptLib.doCallback(holder.getExplorer().getWebView().getForm(), callback, url, 0, "");
+                        GuiScriptLib.doHttpCallback(holder.getExplorer().getWebView().getForm(), callback, url, 0, "");
                     }
                 }
             });
@@ -123,7 +123,7 @@ public class ExplorerScriptLib extends Lib {
                             fos.write(data);
                             fos.close();
 
-                            GuiScriptLib.doCallback(holder.getExplorer().getWebView().getForm(), callback, url, 0, path);
+                            GuiScriptLib.doHttpCallback(holder.getExplorer().getWebView().getForm(), callback, url, 0, path);
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }

@@ -28,7 +28,6 @@
         ret
 
         sub onPolicyRequestBack(url,code,msg) '请求策略回调
-               showMsg("onPolicyRequestBack:"+code+","+msg)
             if(code=0)
                 urls=split(msg,"\n")
                 setEnv("DISCOVERY_URL",urls[0])
@@ -55,7 +54,17 @@
 
                 accBaseUrl=getEnv("ACCOUNT_BASE_URL")
                 url=accBaseUrl + "/login?usr=" + loginUid + "&pwd=" + encryptPwd +"&logintype="+ logintype +"&"+ getQueryPara()
-                httpRequest(url,"ROOT_PAN.onCallBack")
+                httpRequest(url,"ROOT_PAN.onSignInAutoBack")
+            eif
+        ret
+
+
+        sub onSignInAutoBack(url,code,msg) '登录回调
+            if(code=0)
+                setEnv("TOKEN", msg)
+                println("token="+msg)
+            else
+                showMsg("{STR_MESSAGE}: {STR_FAIL}")
             eif
         ret
 

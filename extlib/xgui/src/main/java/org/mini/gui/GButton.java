@@ -164,6 +164,7 @@ public class GButton extends GObject {
             iw = nvgTextBoundsJni(vg, 0, 0, preicon_arr, 0, preicon_arr.length, null);
 
             float[] pc = preiconColor == null ? getStyle().getTextFontColor() : preiconColor;
+            pc = enable ? pc : getDisabledColor();
             nvgFillColor(vg, pc);
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
             nvgTextJni(vg, x + w * 0.5f - tw * 0.5f, y + h * 0.5f + move, preicon_arr, 0, preicon_arr.length);
