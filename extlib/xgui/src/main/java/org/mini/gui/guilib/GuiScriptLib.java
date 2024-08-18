@@ -218,7 +218,8 @@ public class GuiScriptLib extends Lib {
 
     public DataType setText(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        String text = Interpreter.popBackStr(para);
+        DataType dt = Interpreter.popBack(para);
+        String text = dt.getString();
         GToolkit.setCompText(form, compont, text);
         return null;
     }
@@ -728,9 +729,9 @@ public class GuiScriptLib extends Lib {
                                 GCmd cmd = new GCmd(
                                         () -> {
                                             doHttpCallback(form, callback, url, msg.getCode(), msg.getReply());
-                                            GForm.flush();
                                         });
                                 GForm.addCmd(cmd);
+                                GForm.flush();
                             } else {
                                 doHttpCallback(form, callback, url, msg.getCode(), msg.getReply());
                             }

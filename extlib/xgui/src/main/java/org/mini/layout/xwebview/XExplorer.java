@@ -82,15 +82,18 @@ public class XExplorer {
 
     private void showPage(XPage page) {
         if (webView != null && page != null) {
-            GContainer pan = page.getGui(webView.getW(), webView.getH());
-            webView.clear();
-            webView.add(pan);
-            webView.reAlign();
-            currentPage = page;
-            if (!pages.contains(page)) {
-                pages.add(page);
-            }
-            webView.flushNow();
+            Thread thread = new Thread(() -> {
+                GContainer pan = page.getGui(webView.getW(), webView.getH());
+                webView.clear();
+                webView.add(pan);
+                webView.reAlign();
+                currentPage = page;
+                if (!pages.contains(page)) {
+                    pages.add(page);
+                }
+                webView.flushNow();
+            });
+            thread.start();
         }
     }
 

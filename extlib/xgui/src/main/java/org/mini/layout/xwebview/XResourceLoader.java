@@ -13,7 +13,7 @@ public class XResourceLoader implements XmlExtAssist.XLoader {
 
     URL url;
     static GImage notfoundImage;
-    static String notfoundText = "<panel><label>not found:</label><br/><label>{URL}</label></panel>";
+    static String notfoundText = "<panel><label>not found:</label><br/><label multiline=\"1\">{URL}</label></panel>";
 
     Map<String, XResource> resources = new HashMap<>();
 

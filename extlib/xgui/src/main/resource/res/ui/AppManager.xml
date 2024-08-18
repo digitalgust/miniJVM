@@ -205,7 +205,7 @@
                                 <button name="BT_DISCOVERY_HOME" w="50" h="30" preicon="⌂" onclick="showHome()"></button>
                             </td>
                             <td w="float" h="100%">
-                                <label w="100%" h="30" fontsize="20" align="hcenter,vcenter">{DISCOVERY}</label>
+<!--                                <label w="100%" h="30" fontsize="20" align="hcenter,vcenter">{DISCOVERY}</label>-->
                             </td>
                         </tr>
                         <tr w="100%" h="float">

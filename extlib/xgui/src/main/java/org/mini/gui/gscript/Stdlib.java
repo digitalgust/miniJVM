@@ -44,6 +44,7 @@ public class Stdlib extends Lib {
         methodNames.put("def".toLowerCase(), this::def); // 存入全局变量
         methodNames.put("isDef".toLowerCase(), this::isDef); // 是否存在某全局变量
         methodNames.put("valueOf".toLowerCase(), this::valueOf); // 转换字符串为数值
+        methodNames.put("intOf".toLowerCase(), this::valueOf); // 转换字符串为数值
         methodNames.put("idxOf".toLowerCase(), this::idxof);// 子串在母串的位置        idxof("abc","a")  结果0
         methodNames.put("lastIdxOf".toLowerCase(), this::lastIdxOf);// 子串在母串的位置        idxof("abc","a")  结果0
         methodNames.put("substr".toLowerCase(), this::substr); // 截子串        substr("abcde",1,4)      结果"bcd"
@@ -237,7 +238,12 @@ public class Stdlib extends Lib {
     private Int valueOf(ArrayList<DataType> para) {
         String s = Interpreter.popBackStr(para);
         if (s != null && !"".equals(s)) {
-            return Interpreter.getCachedInt(Integer.parseInt(s));
+            int v = 0;
+            try {
+                v = Integer.parseInt(s);
+            } catch (Exception e) {
+            }
+            return Interpreter.getCachedInt(v);
         }
         return Interpreter.getCachedInt(0);
     }
