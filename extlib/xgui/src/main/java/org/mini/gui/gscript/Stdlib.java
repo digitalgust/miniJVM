@@ -51,6 +51,8 @@ public class Stdlib extends Lib {
         methodNames.put("split".toLowerCase(), this::split); // 截子串        substr("abcde",1,4)      结果"bcd"
         methodNames.put("base64enc".toLowerCase(), this::base64enc); //   base64编码
         methodNames.put("base64dec".toLowerCase(), this::base64dec); //   base64解码
+        methodNames.put("urlenc".toLowerCase(), this::urlenc); //   UrlEncode解码
+        methodNames.put("urldec".toLowerCase(), this::urldec); //   UrlDecode解码
         methodNames.put("isnull".toLowerCase(), this::isnull); //   Obj 类型是否为空
         methodNames.put("getobjfield".toLowerCase(), this::getObjField);
         methodNames.put("setobjfield".toLowerCase(), this::setObjField);
@@ -329,6 +331,28 @@ public class Stdlib extends Lib {
             String str = Interpreter.popBackStr(para);
             byte[] b = javax.microedition.io.Base64.decode(str);
             String s = new String(b, "utf-8");
+            return Interpreter.getCachedStr(s);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType urlenc(ArrayList<DataType> para) {
+        try {
+            String str = Interpreter.popBackStr(para);
+            String s = URLEncoder.encode(str, "utf-8");
+            return Interpreter.getCachedStr(s);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType urldec(ArrayList<DataType> para) {
+        try {
+            String str = Interpreter.popBackStr(para);
+            String s = URLEncoder.encode(str, "utf-8");
             return Interpreter.getCachedStr(s);
         } catch (Exception e) {
             e.printStackTrace();

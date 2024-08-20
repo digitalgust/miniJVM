@@ -2339,10 +2339,18 @@ void remoteMethodCall(const char *inJsonStr, Utf8String *outJsonStr) {
     GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
     JNIEnv *jni;
 
-    JavaVM *jvm = app->activity->vm;;
-    if ((*jvm)->AttachCurrentThread(jvm, &jni, NULL) == 0) {
-        remoteMethodCallImpl(jni, inJsonStr, outJsonStr);
-        (*jvm)->DetachCurrentThread(jvm);
+    JavaVM *jvm = app->activity->vm;
+    JNIEnv *env;
+    jint result = (*jvm)->GetEnv(jvm, (void **) &env, JNI_VERSION_1_6);
+
+    if (result != JNI_OK) {
+        if ((*jvm)->AttachCurrentThread(jvm, &jni, NULL) == 0) {
+            remoteMethodCallImpl(jni, inJsonStr, outJsonStr);
+            (*jvm)->DetachCurrentThread(jvm);
+        } else {
+            glfm__clearJavaException()
+            printf("remoteMethodCall failed: thread can not attach to jvm\n");
+        }
     } else {
         GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
         JNIEnv *jni = platformData->jniEnv;

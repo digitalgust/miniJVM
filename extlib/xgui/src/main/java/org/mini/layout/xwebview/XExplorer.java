@@ -1,6 +1,9 @@
 package org.mini.layout.xwebview;
 
+import org.mini.gui.GCmd;
 import org.mini.gui.GContainer;
+import org.mini.gui.GForm;
+import org.mini.gui.guilib.GuiScriptLib;
 import org.mini.layout.XEventHandler;
 import org.mini.layout.XmlExtAssist;
 
@@ -83,15 +86,21 @@ public class XExplorer {
     private void showPage(XPage page) {
         if (webView != null && page != null) {
             Thread thread = new Thread(() -> {
+                GuiScriptLib.showProgressBar(assist.getForm(), 50);
                 GContainer pan = page.getGui(webView.getW(), webView.getH());
-                webView.clear();
-                webView.add(pan);
-                webView.reAlign();
-                currentPage = page;
-                if (!pages.contains(page)) {
-                    pages.add(page);
-                }
-                webView.flushNow();
+                //上面的给线程做，下面的给主线程做，要不可能导致多线程争抢GContainer.elements死锁
+                GForm.addCmd(new GCmd(() -> {
+                    webView.clear();
+                    webView.add(pan);
+                    webView.reAlign();
+                    currentPage = page;
+                    if (!pages.contains(page)) {
+                        pages.add(page);
+                    }
+                    webView.flushNow();
+                }));
+                GForm.flush();
+                GuiScriptLib.showProgressBar(assist.getForm(), 100);
             });
             thread.start();
         }

@@ -28,6 +28,7 @@ public class MiniHttpClient extends Thread {
         }
     };
     CltLogger logger = DEFAULT_LOGGER;
+    ProgressListener progressListener;
 
     public MiniHttpClient(final String url, CltLogger logger, final DownloadCompletedHandle handle) {
         this.url = url;
@@ -40,9 +41,14 @@ public class MiniHttpClient extends Thread {
         public abstract void log(String s);
     }
 
+    public static interface ProgressListener {
+        public void onProgress(MiniHttpClient client, int progress);
+    }
+
     public void stopNow() {
         if (c != null) {
             try {
+                updateProgress(100);
                 c.close();
             } catch (IOException ex) {
             }
@@ -57,6 +63,7 @@ public class MiniHttpClient extends Thread {
         byte[] data;
         try {
             logger.log("http url:" + url);
+            updateProgress(5);
             c = (HttpConnection) Connector.open(url);
             if (baos != null) {
                 c.setRequestMethod(HttpConnection.POST);
@@ -82,20 +89,20 @@ public class MiniHttpClient extends Thread {
 
                         if (len / part10percent > p) {
                             p++;
-                            logger.log("Download http data " + p + "0%");
+                            updateProgress(p * 10);
                         }
                     }
-
                 } else {
+                    updateProgress(20);
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     int ch;
                     while ((ch = dis.read()) != -1 || exit) {
-
                         baos.write(ch);
+                        updateProgress(50);
                     }
                     data = baos.toByteArray();
-
                 }
+                updateProgress(100);
                 if (handle != null) {
                     handle.onCompleted(this, url, data);
                 }
@@ -103,14 +110,17 @@ public class MiniHttpClient extends Thread {
                 String redirect = c.getHeaderField("Location");
                 logger.log("redirect:" + redirect);
                 MiniHttpClient hc = new MiniHttpClient(redirect, logger, handle);
+                hc.setProgressListener(getProgressListener());
                 hc.start();
             } else {
+                updateProgress(100);
                 if (handle != null) {
                     handle.onCompleted(this, url, null);
                 }
             }
         } catch (Exception e) {
             //e.printStackTrace();
+            updateProgress(100);
             if (handle != null) {
                 handle.onCompleted(this, url, null);
             }
@@ -140,4 +150,17 @@ public class MiniHttpClient extends Thread {
         void onCompleted(MiniHttpClient client, String url, byte[] data);
     }
 
+    private void updateProgress(int progress) {
+        if (progressListener != null) {
+            progressListener.onProgress(this, progress);
+        }
+    }
+
+    public void setProgressListener(ProgressListener progressListener) {
+        this.progressListener = progressListener;
+    }
+
+    public ProgressListener getProgressListener() {
+        return progressListener;
+    }
 }

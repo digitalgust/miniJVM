@@ -82,8 +82,8 @@ public class GuiScriptLib extends Lib {
             methodNames.put("setBgImg".toLowerCase(), this::setBgImg);//
             methodNames.put("setVisible".toLowerCase(), this::setVisible);//
             methodNames.put("getVisible".toLowerCase(), this::getVisible);//
-            methodNames.put("httpRequest".toLowerCase(), this::httpRequest);//
-            methodNames.put("httpRequestSync".toLowerCase(), this::httpRequestSync);//
+            methodNames.put("httpGet".toLowerCase(), this::httpGet);//
+            methodNames.put("httpGetSync".toLowerCase(), this::httpGetSync);//
 
         }
     }
@@ -117,6 +117,35 @@ public class GuiScriptLib extends Lib {
         }
     }
 
+    public static void showProgressBar(GForm form, int progress) {
+        long vg = GCallBack.getInstance().getNvContext();
+        //GToolkit.drawTextLine(vg, 0, 0, "waitting ..." + progress, GToolkit.getStyle().getTextFontSize(), GToolkit.getStyle().getTextFontColor(), Nanovg.NVG_ALIGN_LEFT | Nanovg.NVG_ALIGN_TOP);
+        int w = GCallBack.getInstance().getDeviceWidth();
+        int h = GCallBack.getInstance().getDeviceHeight();
+        //System.out.println("progress:" + progress);
+        final String panName = "_INNER_PROGRESS_BAR";
+        GObject go = GToolkit.getComponent(form, panName);
+        if (go == null) {
+            go = new GPanel(form, 0, h - 4, 0, 4) {
+                @Override
+                public void setSize(float w, float h) {
+                    super.setSize(w, h);
+                    layer = GObject.LAYER_INNER;
+                }
+            };
+            go.setName(panName);
+            go.setBgColor(GColorSelector.BLUE_HALF);
+            form.add(go);
+        }
+        go.setLocation(0, h - go.getH());
+        go.setSize(progress * w / 100f, go.getH());
+        if (progress == 100) {
+            GForm.addCmd(new GCmd(() -> {
+                GObject go1 = GToolkit.getComponent(form, panName);
+                if (go1 != null) go1.setSize(0, go1.getH());
+            }));
+        }
+    }
 
     // -------------------------------------------------------------------------
     // implementation
@@ -742,6 +771,12 @@ public class GuiScriptLib extends Lib {
                 }
             });
             if (async) {
+                hc.setProgressListener(new MiniHttpClient.ProgressListener() {
+                    @Override
+                    public void onProgress(MiniHttpClient client, int progress) {
+                        showProgressBar(form, progress);
+                    }
+                });
                 hc.start();
             } else {
                 hc.run();
@@ -751,11 +786,11 @@ public class GuiScriptLib extends Lib {
     }
 
 
-    public DataType httpRequestSync(ArrayList<DataType> para) {
+    public DataType httpGetSync(ArrayList<DataType> para) {
         return httpRequestImpl(para, false);
     }
 
-    public DataType httpRequest(ArrayList<DataType> para) {
+    public DataType httpGet(ArrayList<DataType> para) {
         return httpRequestImpl(para, true);
     }
 

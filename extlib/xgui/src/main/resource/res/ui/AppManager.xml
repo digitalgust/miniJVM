@@ -23,7 +23,7 @@
             println("getPolicy"+policyUrl)
             if(strlen(policyUrl)>0)
                 url=policyUrl +"?"+ getQueryPara()
-                httpRequestSync(url, "ROOT_PAN.onPolicyRequestBack")
+                httpGetSync(url, "ROOT_PAN.onPolicyRequestBack")
             eif
         ret
 
@@ -54,7 +54,7 @@
 
                 accBaseUrl=getEnv("ACCOUNT_BASE_URL")
                 url=accBaseUrl + "/login?usr=" + loginUid + "&pwd=" + encryptPwd +"&logintype="+ logintype +"&"+ getQueryPara()
-                httpRequest(url,"ROOT_PAN.onSignInAutoBack")
+                httpGet(url,"ROOT_PAN.onSignInAutoBack")
             eif
         ret
 
@@ -197,7 +197,21 @@
                 <!-- 3 DISCOVERY -->
                 <panel w="100%" h="100%" move="fixed" align="hcenter,top">
                     <table w="98%" h="100%">
+                        <tr w="0" h="2">
+                            <td name="DIS_PROGRESS_BAR" w="100%" h="100%" bgcolor="0000ff80">
+                            </td>
+                        </tr>
+                        <tr w="100%" h="float">
+                            <td w="100%" h="100%" name="TD_DISCOVERY">
+                            </td>
+                        </tr>
+                        <tr w="100%" h="5">
+                            <td w="100%" h="100%">
+                            </td>
+                        </tr>
                         <tr w="100%" h="30">
+                            <td w="float" h="100%">
+                            </td>
                             <td w="200" h="100%">
                                 <button name="BT_DISCOVERY_BACK" w="50" h="30" preicon="⬅" onclick="prevPage()"></button>
                                 <button name="BT_DISCOVERY_FORWARD" w="50" h="30" preicon="➡" onclick="nextPage()"></button>
@@ -205,11 +219,6 @@
                                 <button name="BT_DISCOVERY_HOME" w="50" h="30" preicon="⌂" onclick="showHome()"></button>
                             </td>
                             <td w="float" h="100%">
-<!--                                <label w="100%" h="30" fontsize="20" align="hcenter,vcenter">{DISCOVERY}</label>-->
-                            </td>
-                        </tr>
-                        <tr w="100%" h="float">
-                            <td w="100%" h="100%" name="TD_DISCOVERY">
                             </td>
                         </tr>
                     </table>
