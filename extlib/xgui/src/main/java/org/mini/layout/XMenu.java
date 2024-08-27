@@ -23,7 +23,6 @@ public class XMenu extends XObject {
 
     protected Vector items = new Vector();
     protected boolean contextMenu = false;
-    protected boolean fixed = true;
 
     protected GMenu menu;
 
@@ -40,8 +39,6 @@ public class XMenu extends XObject {
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("contextmenu")) {
             contextMenu = "0".equals(attValue) ? false : true;
-        } else if (attName.equals("fixed")) {
-            fixed = "0".equals(attValue) ? false : true;
         }
     }
 
@@ -139,7 +136,7 @@ public class XMenu extends XObject {
                 MenuItem item = (MenuItem) items.elementAt(i);
                 GImage img = null;
                 if (item.pic != null) {
-                    img = GToolkit.getCachedImageFromJar(item.pic);
+                    img = getAssist().loadImage(item.pic);
                 }
                 GMenuItem gli = menu.addItem(item.text, img);
                 gli.setActionListener(getRoot().getEventHandler());
@@ -151,7 +148,6 @@ public class XMenu extends XObject {
                 gli.setOnClinkScript(item.onClick);
             }
             menu.setContextMenu(contextMenu);
-            menu.setFixed(fixed);
         } else {
             menu.setLocation(x, y);
             menu.setSize(width, height);

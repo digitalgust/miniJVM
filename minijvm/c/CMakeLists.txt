@@ -37,7 +37,7 @@ add_library(mini_jvm_lib SHARED ${SOURCE_FILES})
 
 IF (MSVC)
 ELSE ()
-TARGET_LINK_LIBRARIES(mini_jvm_lib pthread m)
+    TARGET_LINK_LIBRARIES(mini_jvm_lib pthread m)
 ENDIF ()
 
 
@@ -56,7 +56,7 @@ add_executable(mini_jvm ${SOURCE_FILES} main.c)
 
 IF (MSVC)
 ELSE ()
-TARGET_LINK_LIBRARIES(mini_jvm pthread m)
+    TARGET_LINK_LIBRARIES(mini_jvm pthread m)
 ENDIF ()
 
 #Set link library.

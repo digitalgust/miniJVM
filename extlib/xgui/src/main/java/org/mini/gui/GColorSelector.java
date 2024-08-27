@@ -15,30 +15,30 @@ import static org.mini.nanovg.Nanovg.*;
  *
  * @author gust
  */
-class GColorSelector extends GObject {
+public class GColorSelector extends GObject {
 
     /**
      * these color can't change by user
      */
-    public static final float[] RED = new float[]{0xff, 0x00, 0x00, 0xff};
-    public static final float[] GREEN = new float[]{0x00, 0xff, 0x00, 0xff};
-    public static final float[] BLUE = new float[]{0x00, 0x00, 0xff, 0xff};
-    public static final float[] YELLOW = new float[]{0xff, 0xff, 0x00, 0xff};
-    public static final float[] PURPLE = new float[]{0xff, 0x00, 0xff, 0xff};
-    public static final float[] CYAN = new float[]{0x00, 0xff, 0xff, 0xff};
-    public static final float[] WHITE = new float[]{0xff, 0xff, 0xff, 0xff};
-    public static final float[] BLACK = new float[]{0x00, 0x00, 0x00, 0xff};
-    public static final float[] GRAY = new float[]{0x80, 0x80, 0x80, 0xff};
-    public static final float[] TRANSPARENT = new float[]{0x00, 0x00, 0x00, 0x00};
-    public static final float[] RED_HALF = new float[]{0xff, 0x00, 0x00, 0x80};
-    public static final float[] GREEN_HALF = new float[]{0x00, 0xff, 0x00, 0x80};
-    public static final float[] BLUE_HALF = new float[]{0x00, 0x00, 0xff, 0x80};
-    public static final float[] YELLOW_HALF = new float[]{0xff, 0xff, 0x00, 0x80};
-    public static final float[] PURPLE_HALF = new float[]{0xff, 0x00, 0xff, 0x80};
-    public static final float[] CYAN_HALF = new float[]{0x00, 0xff, 0xff, 0x80};
-    public static final float[] WHITE_HALF = new float[]{0xff, 0xff, 0xff, 0x80};
-    public static final float[] BLACK_HALF = new float[]{0x00, 0x00, 0x00, 0x80};
-    public static final float[] GRAY_HALF = new float[]{0x80, 0x80, 0x80, 0x80};
+    public static final float[] RED = new float[]{1.0f, 0.0f, 0.0f, 1.0f};
+    public static final float[] GREEN = new float[]{0.0f, 1.0f, 0.0f, 1.0f};
+    public static final float[] BLUE = new float[]{0.0f, 0.0f, 1.0f, 1.0f};
+    public static final float[] YELLOW = new float[]{1.0f, 1.0f, 0.0f, 1.0f};
+    public static final float[] PURPLE = new float[]{1.0f, 0.0f, 1.0f, 1.0f};
+    public static final float[] CYAN = new float[]{0.0f, 1.0f, 1.0f, 1.0f};
+    public static final float[] WHITE = new float[]{1.0f, 1.0f, 1.0f, 1.0f};
+    public static final float[] BLACK = new float[]{0.0f, 0.0f, 0.0f, 1.0f};
+    public static final float[] GRAY = new float[]{0.5f, 0.5f, 0.5f, 1.0f};
+    public static final float[] TRANSPARENT = new float[]{0.0f, 0.0f, 0.0f, 0.0f};
+    public static final float[] RED_HALF = new float[]{1.0f, 0.0f, 0.0f, 0.5f};
+    public static final float[] GREEN_HALF = new float[]{0.0f, 1.0f, 0.0f, 0.5f};
+    public static final float[] BLUE_HALF = new float[]{0.0f, 0.0f, 1.0f, 0.5f};
+    public static final float[] YELLOW_HALF = new float[]{1.0f, 1.0f, 0.0f, 0.5f};
+    public static final float[] PURPLE_HALF = new float[]{1.0f, 0.0f, 1.0f, 0.5f};
+    public static final float[] CYAN_HALF = new float[]{0.0f, 1.0f, 1.0f, 0.5f};
+    public static final float[] WHITE_HALF = new float[]{1.0f, 1.0f, 1.0f, 0.5f};
+    public static final float[] BLACK_HALF = new float[]{0.0f, 0.0f, 0.0f, 0.5f};
+    public static final float[] GRAY_HALF = new float[]{0.5f, 0.5f, 0.5f, 0.5f};
 
     protected String text;
     protected float curAngel;

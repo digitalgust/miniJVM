@@ -151,6 +151,11 @@ public class GTextField extends GTextObject {
         }
     }
 
+    @Override
+    public boolean dragEvent(int button, float dx, float dy, float x, float y) {
+        return mouseDrag;//选中的时候，占有拖动事件
+    }
+
     /**
      * 鼠标拖拽,即便光标在区域外，也会触发
      *
@@ -182,7 +187,7 @@ public class GTextField extends GTextObject {
 
     @Override
     public void keyEventGlfw(int key, int scanCode, int action, int mods) {
-        if (parent.getFocus() != this) {
+        if (parent.getCurrent() != this) {
             return;
         }
 
@@ -210,7 +215,7 @@ public class GTextField extends GTextObject {
                         break;
                     }
                     case Glfw.GLFW_KEY_ENTER: {
-                        if (actionListener != null) {
+                        if (hrefListener != null) {
                             doAction();
                         } else if (unionObj != null) {
                             unionObj.doAction();
@@ -335,7 +340,7 @@ public class GTextField extends GTextObject {
             insertTextByIndex(caretIndex, str);
             setCaretIndex(caretIndex + str.length());
             if (containEnter) {
-                if (actionListener != null) {
+                if (hrefListener != null) {
                     doAction();
                 } else if (unionObj != null) {
                     unionObj.doAction();
@@ -357,7 +362,7 @@ public class GTextField extends GTextObject {
                     setCaretIndex(caretIndex + 1);
                 }
             } else {
-                if (actionListener != null) {
+                if (hrefListener != null) {
                     doAction();
                 } else if (unionObj != null) {
                     unionObj.doAction();
@@ -525,7 +530,7 @@ public class GTextField extends GTextObject {
         float text_show_area_x = wordx;
         float text_show_area_w = boundle[WIDTH] - FONT_WIDTH * (leftIcons + 2.5f);
         float text_width = Nanovg.nvgTextBoundsJni(vg, 0, 0, text_arr, 0, text_arr.length, null);
-        if (parent.getFocus() != this && (textsb == null || textsb.length() == 0)) {
+        if (parent.getCurrent() != this && (textsb == null || textsb.length() == 0)) {
             if (hint_arr != null) {
                 nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
                 nvgTextJni(vg, wordx, wordy, hint_arr, 0, hint_arr.length);
@@ -533,7 +538,7 @@ public class GTextField extends GTextObject {
         } else {
 
             long glyphsHandle = nvgCreateNVGglyphPosition(text_max);
-            if (parent.getFocus() == this) {
+            if (parent.getCurrent() == this) {
                 nvgTextMetrics(vg, null, null, lineh);
             }
 
@@ -578,7 +583,7 @@ public class GTextField extends GTextObject {
                     wordShowOffsetX -= caretx - text_show_area_right;
                 }
 
-                if (parent.getFocus() == this) {
+                if (parent.getCurrent() == this) {
                     GToolkit.drawCaret(vg, caretx - 1, wordy - 0.5f * lineh[0], 2, lineh[0], false);
                 }
             } catch (Exception e) {

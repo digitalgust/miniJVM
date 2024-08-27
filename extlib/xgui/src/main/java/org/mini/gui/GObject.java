@@ -33,6 +33,7 @@ abstract public class GObject implements GAttachable {
     public static String ICON_CHECK = "\u2713";
     public static String ICON_LOGIN = "\uE740";
     public static String ICON_TRASH = "\uE729";
+    public static String ICON_CLOSE = "\u2716";
     //
     public static final int LEFT = 0;
     public static final int TOP = 1;
@@ -62,6 +63,8 @@ abstract public class GObject implements GAttachable {
     private float fontSize = -1;
 
     protected GActionListener actionListener;
+
+    protected GHrefListener hrefListener;
 
     protected GFocusChangeListener focusListener;
 
@@ -96,6 +99,8 @@ abstract public class GObject implements GAttachable {
      */
     private String onClinkScript;
     private String onStateChangeScript;
+    protected String onCloseScript;
+    protected String onInitScript;
 
     private GImage bgImg;
 
@@ -103,6 +108,7 @@ abstract public class GObject implements GAttachable {
     private float bgImgAlpha = DEFAULT_BG_ALPHA;
 
     float cornerRadius = 0.0f;
+    private String href;
 
     protected GObject(GForm form) {
         if (this instanceof GForm) {//只有GForm可以传空进来
@@ -116,19 +122,26 @@ abstract public class GObject implements GAttachable {
     /**
      *
      */
-    public void init() {
-
-    }
-
-    public void destroy() {
-    }
-
+//    public void init() {
+//
+//    }
+//
+//    public void destroy() {
+//    }
     public void setFixed(boolean fixed) {
         fixedLocation = fixed;
     }
 
     public boolean getFixed() {
         return fixedLocation;
+    }
+
+
+    public void focus() {
+        if (parent != null) {
+            parent.setCurrent(this);
+            parent.focus();
+        }
     }
 
 
@@ -350,6 +363,10 @@ abstract public class GObject implements GAttachable {
         return color;
     }
 
+
+    public void setPreiconColor(float[] preiconColor) {
+    }
+
     /**
      * @param r
      * @param g
@@ -534,6 +551,9 @@ abstract public class GObject implements GAttachable {
             }
 
             actionListener.action(this);
+        }
+        if (href != null && hrefListener != null) {
+            hrefListener.gotoHref(this, href);
         }
     }
 
@@ -754,6 +774,85 @@ abstract public class GObject implements GAttachable {
 
     public float getBgImgAlpha() {
         return bgImgAlpha;
+    }
+
+    public void setHref(String href) {
+        this.href = href;
+    }
+
+    public String getHref() {
+        return href;
+    }
+
+    public GHrefListener getHrefListener() {
+        return hrefListener;
+    }
+
+    public void setHrefListener(GHrefListener hrefListener) {
+        this.hrefListener = hrefListener;
+    }
+
+    public void flushNow() {
+        GForm.flush();
+    }
+
+
+    public String getOnCloseScript() {
+        return onCloseScript;
+    }
+
+    public String getOnInitScript() {
+        return onInitScript;
+    }
+
+    public void setOnCloseScript(String onCloseScript) {
+        this.onCloseScript = onCloseScript;
+        //fix no interpreter when script is set
+        if (onCloseScript != null) {
+            Interpreter inp = getInterpreter();
+            if (inp == null) {
+                inp.loadFromString("");
+            }
+        }
+    }
+
+    public void setOnInitScript(String onInitScript) {
+        this.onInitScript = onInitScript;
+        //fix no interpreter when script is set
+        if (onInitScript != null) {
+            Interpreter inp = getInterpreter();
+            if (inp == null) {
+                inp.loadFromString("");
+            }
+        }
+    }
+
+    public void init() {
+        if (onInitScript != null) {
+            Interpreter inp = parseInpByCall(onInitScript);
+            String funcName = parseInstByCall(onInitScript);
+            if (inp != null && funcName != null) {
+                try {
+                    inp.callSub(funcName);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public void destroy() {
+        if (onCloseScript != null) {
+            Interpreter inp = parseInpByCall(onCloseScript);
+            String funcName = parseInstByCall(onCloseScript);
+            if (inp != null && funcName != null) {
+                try {
+                    inp.callSub(funcName);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
 }

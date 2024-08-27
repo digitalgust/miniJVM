@@ -15,6 +15,9 @@ public class FileSystemWin extends FileSystemImpl {
     @Override
     public String normalize(String path) {
         path = path.replace('/', getSeparator());
+        if (path.charAt(0) == getSeparator() && path.length() > 2 && path.charAt(2) == ':') { //handle  /c:/abc/def.txt
+            path = path.substring(1);
+        }
         path = super.normalize(path);
         if (path.endsWith(":")) path += File.separator;
         return path;

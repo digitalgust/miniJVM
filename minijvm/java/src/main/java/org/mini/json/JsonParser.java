@@ -20,39 +20,81 @@ public class JsonParser<T> {
     public JsonParser() {
 
         SimpleModule module = new SimpleModule();
-        module.addDeserializer(java.util.List.class, new StdDeserializer(null) {
+        module.addDeserializer(List.class, new StdDeserializer(null) {
             @Override
             public Object deserialize(JsonCell p, String types) {
                 return map2obj(p, ArrayList.class, types);
             }
         });
-        module.addDeserializer(java.util.Set.class, new StdDeserializer(null) {
+        module.addDeserializer(Set.class, new StdDeserializer(null) {
             @Override
             public Object deserialize(JsonCell p, String types) {
                 return map2obj(p, LinkedHashSet.class, types);
             }
         });
-        module.addDeserializer(java.util.Map.class, new StdDeserializer(null) {
+        module.addDeserializer(Map.class, new StdDeserializer(null) {
+
             @Override
             public Object deserialize(JsonCell p, String types) {
                 Map map = new HashMap();
 
-                String childType = types;
-                childType = childType.substring(childType.indexOf(',') + 1, childType.length() - 1).trim();
-                String className = childType;
-                if (className.indexOf('<') >= 0) {
-                    className = className.substring(0, className.indexOf('<'));
-                }
-                JsonMap<String, JsonCell> jsonMap = (JsonMap) p;
-                for (String key : jsonMap.keySet()) {
-                    try {
-                        Object ins = map2obj(jsonMap.get(key), Class.forName(className, true, classLoader), childType);
-                        if (ins instanceof Polymorphic) {
-                            ins = map2obj(jsonMap.get(key), ((Polymorphic) ins).getType(), childType);
+                if (types.indexOf(',') < 0) {
+                    JsonMap<JsonCell, JsonCell> jsonMap = (JsonMap) p;
+                    for (JsonCell key : jsonMap.keySet()) {
+                        try {
+                            Object K = map2obj(key, null, null);
+                            Object V = map2obj(jsonMap.get(key), null, null);
+                            map.put(K, V);
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
-                        map.put(key, ins);
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
+                    }
+                } else {
+                    String qualifier = types.substring(types.indexOf('<') + 1, types.lastIndexOf('>'));
+                    //resolve key value qualifier
+                    int left = qualifier.indexOf('<');
+                    int comma = qualifier.indexOf(',');
+                    int splitPos = comma;
+                    if (left >= 0 && left < comma) { //the left type contains '<'
+                        int leftCnt = 1;
+                        int i;
+                        //find matched right '>'
+                        for (i = left + 1; leftCnt > 0; i++) {
+                            ;//start from '<', end with '>'
+                            char c = qualifier.charAt(i);
+                            if (c == '<') leftCnt++;
+                            if (c == '>') leftCnt--;
+                        }
+                        splitPos = i;
+                    }
+                    String keyClassName = qualifier.substring(0, splitPos).trim();
+                    String valueClassName = qualifier.substring(splitPos + 1).trim();
+
+                    String keyType = keyClassName;
+                    if (keyType.indexOf('<') >= 0) {
+                        keyType = keyType.substring(0, keyType.indexOf('<'));
+                    }
+                    String valueType = valueClassName;
+                    if (valueType.indexOf('<') >= 0) {
+                        valueType = valueType.substring(0, valueType.indexOf('<'));
+                    }
+                    keyType = TypeNameConverter.convertTypeNameToClassName(keyType);
+                    valueType = TypeNameConverter.convertTypeNameToClassName(valueType);
+                    JsonMap<JsonCell, JsonCell> jsonMap = (JsonMap) p;
+                    for (JsonCell key : jsonMap.keySet()) {
+                        try {
+                            Object K = map2obj(key, Class.forName(keyType, true, classLoader), keyClassName);
+                            if (K instanceof Polymorphic) {
+                                K = map2obj(key, ((Polymorphic) K).getType(), keyClassName);
+                            }
+                            Object V = map2obj(jsonMap.get(key), Class.forName(valueType, true, classLoader), valueClassName);
+                            if (V instanceof Polymorphic) {
+                                V = map2obj(jsonMap.get(key), ((Polymorphic) V).getType(), valueClassName);
+                            }
+                            map.put(K, V);
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
                 return map;
@@ -115,7 +157,7 @@ public class JsonParser<T> {
         }
     }
 
-    public static class JsonNumber implements JsonCell {
+    public static class JsonNumber implements JsonCell { //include null too
         String numStr;
 
         public JsonNumber(String s) {
@@ -176,6 +218,27 @@ public class JsonParser<T> {
             } else if (clazz == Boolean.class || clazz == boolean.class) {
                 return Boolean.valueOf(numStr);
             } else {
+                //guess
+
+                if (numStr.equals("null")) {
+                    return null;
+                }
+                try {
+                    return Integer.valueOf(numStr);
+                } catch (Exception e) {
+                }
+                try {
+                    return Long.valueOf(numStr);
+                } catch (Exception e) {
+                }
+                try {
+                    return Float.valueOf(numStr);
+                } catch (Exception e) {
+                }
+                try {
+                    return Double.valueOf(numStr);
+                } catch (Exception e) {
+                }
                 throw new IllegalArgumentException();
             }
         }
@@ -251,7 +314,26 @@ public class JsonParser<T> {
                     } else {
                         index++;
                         ch = s.charAt(index);
-                        sb.append(ch);
+                        if (ch == 'r') {
+                            sb.append('\r');
+                        } else if (ch == 'n') {
+                            sb.append('\n');
+                        } else if (ch == 't') {
+                            sb.append('\t');
+                        } else if (ch == 'b') {
+                            sb.append('\b');
+                        } else if (ch == 'f') {
+                            sb.append('\f');
+                        } else if (ch == 'u') {
+                            StringBuilder sb2 = new StringBuilder();
+                            for (int i = 0; i < 4; i++) {
+                                index++;
+                                sb2.append(s.charAt(index));
+                            }
+                            sb.append((char) Integer.parseInt(sb2.toString(), 16));
+                        } else {
+                            sb.append(ch);
+                        }
                     }
                     index++;
                 }
@@ -262,10 +344,10 @@ public class JsonParser<T> {
                 boolean inQuot = false;//if brace in string
                 int braceCnt = 0;//
                 while (!((ch = s.charAt(index)) == '}' && braceCnt == 1 && !inQuot)) {// {"ab}cd"}
-                    if (ch == '\"') {//
+                    if (ch == '\"') {//string started
                         int slash = 0;//
                         for (int j = index - 1; j >= 0; j--) {
-                            if (s.charAt(j) != '\\') {
+                            if (s.charAt(j) != '\\') {// process "abc\\\"def"
                                 break;
                             }
                             slash++;
@@ -336,7 +418,7 @@ public class JsonParser<T> {
                     sb.append(ch);
                     if (index + 1 < len) {
                         char nextch = s.charAt(index + 1);
-                        if (nextch == ',' || nextch == ']' || nextch == '}') {
+                        if (nextch == ',' || nextch == ':' || nextch == ']' || nextch == '}') {
                             break;
                         }
                     }
@@ -357,23 +439,24 @@ public class JsonParser<T> {
         } else {
             pos++;
             StringBuilder sb = new StringBuilder();
-            JsonMap<String, JsonCell> map = new JsonMap();
+            JsonMap<JsonCell, JsonCell> map = new JsonMap();
             while (true) {
                 //name
                 pos = getNext(s, pos, sb);
                 if (sb.length() == 0) {
                     break;
                 }
-                if (sb.charAt(0) != '"') {
-                    throw new RuntimeException("[JSON]error: field name need quotation : " + s);
-                }
-                String name = sb.substring(1, sb.length() - 1);
+//                if (sb.charAt(0) != '"') {
+//                    throw new RuntimeException("[JSON]error: field name need quotation : " + s);
+//                }
+                String name = sb.toString();//sb.substring(1, sb.length() - 1);
+                JsonCell cell = parse(name, 0);
                 //:
                 pos = getNext(s, pos, sb);
                 //value
                 pos = getNext(s, pos, sb);
                 String value = sb.toString();
-                map.put(name, parse(value, 0));
+                map.put(cell, parse(value, 0));
                 //,
                 pos = getNext(s, pos, sb);
                 if (sb.length() == 0) {
@@ -455,12 +538,13 @@ public class JsonParser<T> {
         }
         try {
             StdDeserializer<?> deser = findDeserializer(clazz);
-            if (deser != null) {
+            if (deser != null) {  // process list map set
                 return deser.deserialize(json, types);
             }
+            //other class
             switch (json.getType()) {
                 case JsonCell.TYPE_MAP: {
-                    JsonMap<String, JsonCell> map = (JsonMap<String, JsonCell>) json;
+                    JsonMap<JsonCell, JsonCell> map = (JsonMap<JsonCell, JsonCell>) json;
                     Object ins = findInjectableValues(clazz);//get default value
                     if (ins == null) ins = clazz.newInstance();
                     Field[] fields = clazz.getFields();
@@ -471,11 +555,16 @@ public class JsonParser<T> {
                             f.set(ins, o);
                         }
                     }
-                    for (String fieldName : map.keySet()) {
-                        JsonCell childJson = map.get(fieldName);
+                    for (JsonCell jc : map.keySet()) {
+                        if (jc.getType() != JsonCell.TYPE_STRING) {
+                            throw new RuntimeException("[JSON]error: field name need quotation : " + jc.toString());
+                        }
+                        String fieldName = ((JsonString) jc).toString();
+                        JsonCell childJson = map.get(jc);
 //                        if (fieldName.equals("COLOR_0")) {
 //                            int debug = 1;
 //                        }
+
                         Method method = getMethodByName(fieldName, clazz);
                         if (method != null) {
                             Type[] pt = method.getGenericParameterTypes();
@@ -495,15 +584,20 @@ public class JsonParser<T> {
                     return ins;
                 }
                 case JsonCell.TYPE_LIST: {
+
                     if (types == null) {
-                        throw new RuntimeException("[JSON]error: need type declare , class:" + clazz);
+                        System.out.println("[JSON]warn: need type declare , class:" + clazz);
+                    }
+
+                    if (clazz == null) {
+                        clazz = ArrayList.class;
                     }
 
                     JsonList<JsonCell> list = (JsonList) json;
                     if (clazz.isArray()) {
                         String typevar = types;
-                        if (typevar.indexOf('[') > 0) {
-                            typevar = typevar.substring(0, typevar.lastIndexOf('['));
+                        if (typevar != null && typevar.indexOf('[') >= 0) {
+                            typevar = typevar.substring(1);
                         }
 
                         Object array = Array.newInstance(clazz.getComponentType(), list.size());
@@ -515,17 +609,22 @@ public class JsonParser<T> {
                         }
                         return array;
                     } else {
-                        String typevar = types;
-                        if (typevar.indexOf('<') > 0) {
-                            typevar = typevar.substring(typevar.indexOf('<') + 1, typevar.length() - 1);
-                        }
-                        String className = typevar;
-                        if (className.indexOf('<') >= 0) {
-                            className = className.substring(0, className.indexOf('<'));
+                        Class clazzQualified = null;
+                        String typevar = null;
+                        if (types != null) {
+                            typevar = types;
+                            if (typevar.indexOf('<') > 0) {
+                                typevar = typevar.substring(typevar.indexOf('<') + 1, typevar.length() - 1);
+                            }
+                            String className = typevar;
+                            if (className.indexOf('<') >= 0) {
+                                className = className.substring(0, className.indexOf('<'));
+                            }
+                            clazzQualified = Class.forName(className, true, classLoader);
                         }
                         Collection collection = (Collection) clazz.newInstance();
                         for (JsonCell cell : list) {
-                            Object ins = map2obj(cell, Class.forName(className, true, classLoader), typevar);
+                            Object ins = map2obj(cell, clazzQualified, typevar);
                             if (ins instanceof Polymorphic) {
                                 ins = map2obj(cell, ((Polymorphic) ins).getType(), typevar);
                             }
@@ -543,7 +642,7 @@ public class JsonParser<T> {
 
             }
         } catch (Exception e) {
-            System.err.println("error on parse " + clazz.toString() + " , str:" + json.toString());
+            System.err.println("error on parse " + clazz + " , str:" + json.toString());
             e.printStackTrace();
         }
         return null;
@@ -569,17 +668,72 @@ public class JsonParser<T> {
     }
 
 
-//    static public final void main(String[] args) throws Exception {
-//        //serial
-//        FileInputStream fis = new FileInputStream("a.json");
-//        byte[] fb = new byte[fis.available()];
-//        fis.read(fb, 0, fb.length);
-//        fis.close();
-//        String s = new String(fb, "utf-8");
-//        Object obj = new JsonParser().parse(s, 0);
-//
-//
-//        System.out.println(obj);
-//    }
+    public static class TypeNameConverter {
+
+        /**
+         * 将Java类型名称转换为其对应的类名表示形式。
+         * "java.lang.String"  -> "java.lang.String"
+         * "java.lang.String[]" -> "[Ljava.lang.String;"
+         * "int[][]" -> "[[I"
+         *
+         * @param typeName 类型名称，如 "java.lang.String" 或 "java.lang.String[]" 或 "int[][]"
+         * @return 转换后的类名，如 "java.lang.String" 对于数组类型，或者 "[Ljava.lang.String;" 对于非数组类型
+         */
+        public static String convertTypeNameToClassName(String typeName) {
+            if (typeName.endsWith("[]")) {
+                // 如果是数组类型，则转换为类名表示形式
+                int arrayDimension = 0;
+                while (typeName.endsWith("[]")) {
+                    typeName = typeName.substring(0, typeName.length() - 2);
+                    arrayDimension++;
+                }
+                if (isPrimitiveType(typeName)) {
+                    // 如果是基本类型，使用JVM的内部表示
+                    return new String(new char[arrayDimension]).replace("\0", "[") + primitiveTypeToInternalForm(typeName);
+                } else {
+                    // 如果是引用类型，使用标准的类名表示
+                    return new String(new char[arrayDimension]).replace("\0", "[") + "L" + typeName + ";";
+                }
+            } else {
+                // 如果是非数组类型，直接返回或转换基本类型
+                if (isPrimitiveType(typeName)) {
+                    return primitiveTypeToInternalForm(typeName);
+                } else {
+                    return typeName;
+                }
+            }
+        }
+
+        private static boolean isPrimitiveType(String typeName) {
+            return typeName.equals("boolean") || typeName.equals("byte") ||
+                    typeName.equals("char") || typeName.equals("short") ||
+                    typeName.equals("int") || typeName.equals("long") ||
+                    typeName.equals("float") || typeName.equals("double");
+        }
+
+        private static String primitiveTypeToInternalForm(String typeName) {
+            switch (typeName) {
+                case "boolean":
+                    return "Z";
+                case "byte":
+                    return "B";
+                case "char":
+                    return "C";
+                case "short":
+                    return "S";
+                case "int":
+                    return "I";
+                case "long":
+                    return "J";
+                case "float":
+                    return "F";
+                case "double":
+                    return "D";
+                default:
+                    throw new IllegalArgumentException("Invalid primitive type: " + typeName);
+            }
+        }
+
+    }
 }
 

@@ -47,6 +47,9 @@ public class ImageImmutable extends GImage {
             long vg = GCallBack.getInstance().getNvContext();
             if (data != null) {
                 nvg_texture = Nanovg.nvgCreateImageMem(vg, image_init_flag, data, data.length);
+                if (nvg_texture == 0) {
+                    throw new RuntimeException("create image failed");
+                }
                 Nanovg.nvgImageSize(vg, nvg_texture, w, h);
                 data = null;
                 gl_texture = Nanovg.nvglImageHandleGL3(vg, nvg_texture);

@@ -1,0 +1,324 @@
+{
+  "lang": {
+    "STR_EXIT": [
+      "Exit",
+      "退出",
+      "退出"
+    ],
+    "STR_DESC": [
+      "Description: ",
+      "描述: ",
+      "描述: "
+    ],
+    "STR_SELECT_FILE": [
+      "",
+      "安装",
+      "安裝"
+    ],
+    "STR_DOWNLOAD": [
+      "",
+      "下载",
+      "下載"
+    ],
+    "STR_SERVER_STARTED": [
+      "Webserver started",
+      "服务器已启动",
+      "伺服器已啟動"
+    ],
+    "STR_DARK_STYLE": [
+      "Dark appearance",
+      "深色外观",
+      "深色外觀"
+    ],
+    "SETTING": [
+      "SETTING",
+      "设置",
+      "设置"
+    ],
+    "STR_BACK": [
+      "Back",
+      "返回",
+      "返回"
+    ],
+    "STR_START_WEB_SRV_FOR_UPLOAD": [
+      "Lan webserver for upload plugin",
+      "启动Web服务器上传",
+      "啟動Web伺服器上傳"
+    ],
+    "STR_MESSAGE": [
+      "Message",
+      "信息",
+      "資訊"
+    ],
+    "STR_CLOSE": [
+      "Close",
+      "关闭",
+      "關閉"
+    ],
+    "STR_SERVER_STOPED": [
+      "Webserver stoped",
+      "服务器已停止",
+      "伺服器已停止"
+    ],
+    "STR_UPLOAD_FILE": [
+      "Uploaded file",
+      "文件上传结束",
+      "文件上傳結束"
+    ],
+    "STR_DELETE": [
+      "Delete",
+      "删除",
+      "刪除"
+    ],
+    "STR_CONFIRM_DELETE": [
+      "Do you confirm to delete the plugin ",
+      "您要删除组件吗",
+      "您要刪除元件嗎"
+    ],
+    "STR_VERSION": [
+      "Version: ",
+      "版本: ",
+      "版本: "
+    ],
+    "STR_UPGRADE_URL": [
+      "Upgrade url: ",
+      "升级地址: ",
+      "升級地址: "
+    ],
+    "STR_OPEN_APP_FAIL": [
+      "Open plugin failed",
+      "打开组件失败",
+      "打開元件失敗"
+    ],
+    "DISCOVERY": [
+      "DISCOVERY",
+      "发现",
+      "發現"
+    ],
+    "STR_SET_AS_BOOT": [
+      "Put on top",
+      "置顶组件",
+      "置頂元件"
+    ],
+    "STR_INSTALL_FROM_LOCAL": [
+      "Install plugin from local file:",
+      "选取文件安装",
+      "選取檔案安裝"
+    ],
+    "PLUGIN_MANAGER": [
+      "PLUGIN MANAGER",
+      "组件管理器",
+      "元件管理器"
+    ],
+    "STR_BRIGHT_STYLE": [
+      "Bright appearance",
+      "浅色外观",
+      "淺色外觀"
+    ],
+    "STR_WEB_LISTEN_ON": [
+      "Lan webserver on:",
+      "Web服务器临听 : ",
+      "Web伺服器臨聽 : "
+    ],
+    "STR_DOWN_APP_FROM_WEB": [
+      "Download plugin from website:",
+      "从网站下载组件",
+      "從網站下載元件"
+    ],
+    "STR_STOP": [
+      "",
+      "停止",
+      "停止"
+    ],
+    "STR_UPGRADE": [
+      "upgrade",
+      "升级",
+      "升級"
+    ],
+    "STR_SUCCESS": [
+      "Success",
+      "成功",
+      "成功"
+    ],
+    "STR_FAIL": [
+      "Fail",
+      "失败",
+      "失败"
+    ],
+    "PLUGIN": [
+      "PLUGIN",
+      "组件",
+      "元件"
+    ],
+    "BROWSE_FILE": [
+      "",
+      "浏览",
+      "浏览"
+    ],
+    "STR_APP_NOT_RUNNING": [
+      "Plugin is not running ",
+      "组件没有运行",
+      "元件沒有運行"
+    ],
+    "STR_APP_LIST": [
+      "Plugin list : ",
+      "组件列表 : ",
+      "元件列表"
+    ],
+    "STR_START": [
+      "",
+      "启动",
+      "啟動"
+    ],
+    "STR_FILE_DATE": [
+      "File date: ",
+      "文件日期: ",
+      "文件日期: "
+    ],
+    "STR_FILE_SIZE": [
+      "File size: ",
+      "文件大小: ",
+      "文件大小: "
+    ],
+    "STR_RUN": [
+      "Run",
+      "运行",
+      "運行"
+    ],
+    "DISCOVERY": [
+      "DISCOVERY",
+      "发现",
+      "發現"
+    ],
+    "MY": [
+      "MY",
+      "我的",
+      "我的"
+    ],
+    "SIGN_IN": [
+      "Sign in",
+      "登入",
+      "登入"
+    ],
+    "REMEMBER_ME": [
+      "Remember me",
+      "记住",
+      "記住"
+    ],
+    "I_DONT_HAVE_ACCOUNT": [
+      "I don't have an account, sign up now",
+      "我没有账号，现在注册",
+      "我沒有帳號，現在註冊"
+    ],
+    "SIGN_UP": [
+      "Sign up",
+      "注册",
+      "註冊"
+    ],
+    "I_FORGOT_PASSWORD": [
+      "I have an account, But I forgot my password",
+      "我有账号，但我忘记了密码",
+      "我有帳號，但我忘記了密碼"
+    ],
+    "FORGOT_PASSWORD": [
+      "Forgot password",
+      "忘记密码",
+      "忘記密碼"
+    ],
+    "NOTICE_AFTER_SIGN_UP": [
+      "After submitting your sign-up information, you will receive an email or SMS verification code.",
+      "当提交注册信息后，您将收到一封电子邮件或短信验证码。",
+      "提交您的註冊資訊後，您將收到一封電子郵件或SMS驗證"
+    ],
+    "VERIFY_CODE": [
+      "Verify Code",
+      "验证码",
+      "驗證碼"
+    ],
+    "RETRIEVE_PWD": [
+      "Retrieve password",
+      "找回密码",
+      "找回密码"
+    ],
+    "ACCOUNT_PWD_NO_EMPTY": [
+      "Account or password can not be empty",
+      "账号或密码不能为空",
+      "账号或密码不能为空"
+    ],
+    "ACCOUNT_NO_EMPTY": [
+      "Account can not be empty",
+      "账号不能为空",
+      "账号不能为空"
+    ],
+    "NOTICE_INPUT_EMAIL_MOBILE": [
+      "Input email or mobile",
+      "请输入邮箱或手机号码",
+      "请输入邮箱或手机号码"
+    ],
+    "SEND_CODE": [
+      "Send code",
+      "发送验证码",
+      "发送验证码"
+    ],
+    "NOTICE_RCV_VERIFY_CODE": [
+      "After submitting your account, you will receive an email or SMS verification code.",
+      "输入账号后，您将收到一封电子邮件或短信验证码。",
+      "输入账号后，您将收到一封电子邮件或短信验证码。"
+    ],
+    "CHANGE_PASSWORD": [
+      "Change password",
+      "改变密码",
+      "改变密码"
+    ],
+    "EMAIL_OR_MOBILE": [
+      "email or mobile",
+      "只可为邮箱或手机",
+      "只可为邮箱或手机"
+    ],
+    "OLD_PASSWORD": [
+      "Old password",
+      "旧密码",
+      "旧密码"
+    ],
+    "NEW_PASSWORD": [
+      "New password",
+      "新密码",
+      "新密码"
+    ],
+    "PASSWORD_6_32": [
+      "password length 6-32",
+      "密码长6-32字符",
+      "密码长6-32字符"
+    ],
+    "I_WANT_CHG_PWD": [
+      "I want to change my password",
+      "我要改变我的密码",
+      "我要改变我的密码"
+    ],
+    "STR_SIGNIN_ALREADY": [
+      "Signed in",
+      "已登录",
+      "已登录"
+    ],
+    "STR_NEED_SIGNIN": [
+      "Sign in",
+      "去登录",
+      "去登录"
+    ],
+    "STR_MESSAGE": [
+      "Message",
+      "消息",
+      "消息"
+    ],
+    "STR_SUCCESS": [
+      "Success",
+      "成功",
+      "成功"
+    ],
+    "STR_FAIL": [
+      "Fail",
+      "失败",
+      "失败"
+    ]
+  }
+}

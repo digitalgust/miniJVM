@@ -25,9 +25,9 @@ public class XImageItem extends XObject {
 
     protected void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
-        if (attName.equals("pic")) {
+        if (attName.equals("pic") || attName.equals("src")) {
             pic = attValue;
-            GImage img = GToolkit.getCachedImageFromJar(pic);
+            GImage img = getAssist().loadImage(pic);
             if (img != null) {
                 img_w = img.getWidth();
                 img_h = img.getHeight();
@@ -59,7 +59,7 @@ public class XImageItem extends XObject {
     }
 
     protected <T extends GObject> T createGuiImpl() {
-        GImage img = GToolkit.getCachedImageFromJar(pic);
+        GImage img = getAssist().loadImage(pic);
         return (T) new GImageItem(getAssist().getForm(), img);
     }
 
@@ -90,7 +90,7 @@ public class XImageItem extends XObject {
     public void setPic(String s) {
         pic = s;
         if (imgItem != null) {
-            GImage img = GToolkit.getCachedImageFromJar(s);
+            GImage img = getAssist().loadImage(s);
             imgItem.setImg(img);
         }
     }

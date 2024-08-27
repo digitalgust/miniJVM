@@ -2,30 +2,44 @@ package org.minijvm.activity;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.NativeActivity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ComponentName;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.inputmethodservice.InputMethodService;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.MediaController;
 import android.widget.Toast;
 import android.widget.VideoView;
+
+import com.alipay.sdk.app.AuthTask;
+import com.alipay.sdk.app.PayTask;
+
+import org.minijvm.activity.bridge.JsonPrinter;
+import org.minijvm.activity.bridge.RMCDescriptor;
+import org.minijvm.activity.bridge.ReflectUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -34,6 +48,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by gust on 2018/4/19.
@@ -56,6 +72,24 @@ public class JvmNativeActivity extends NativeActivity {
         PHOTO_DIR_SD = new File(getExternalFilesDir("").getAbsolutePath() + "/tmp");
         PHOTO_DIR_ROOT = new File(getFilesDir().getAbsolutePath() + "/tmp");
         requestAudioPermissions();
+        //test();
+    }
+
+    void test() {
+        Window window = getWindow();
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        View view = window.getDecorView();
+        android.graphics.Rect rect = new android.graphics.Rect();
+        view.getWindowVisibleDisplayFrame(rect);
+
+        Context context = getApplicationContext();
+        InputMethodManager service = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        service.showSoftInput(view, InputMethodManager.SHOW_FORCED);
+        view.getWindowVisibleDisplayFrame(rect);
+
+        IBinder binder=view.getWindowToken();
+        service.hideSoftInputFromWindow(binder,0);
+        view.getWindowVisibleDisplayFrame(rect);
     }
 
     //============================================= audio record permission==================================================
@@ -528,54 +562,9 @@ public class JvmNativeActivity extends NativeActivity {
         return mediaFile;
     }
 
-    /**
-     * 检查包是否存在
-     *
-     * @param packname
-     * @return
-     */
-    private boolean checkPackInfo(String packname) {
-        PackageInfo packageInfo = null;
-        try {
-            packageInfo = getPackageManager().getPackageInfo(packname, 0);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-        return packageInfo != null;
-    }
-
-    public int openOtherApp(String urls, String more, int detectAppInstalled) {
-        try {
-
-            if (more != null && more.equals("URL")) {
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(urls));
-                startActivity(intent);
-            } else {
-                if (detectAppInstalled != 0) {
-                    if (!checkPackInfo(urls)) {
-                        return 1;
-                    }
-                }
-                String[] paras = urls.split(" ");
-                String pkgName = paras[0];
-                String activityName = paras[1];
-
-                Intent intent = new Intent(Intent.ACTION_MAIN);
-                ComponentName cmp = new ComponentName(pkgName, activityName);
-                intent.addCategory(Intent.CATEGORY_LAUNCHER);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent.setComponent(cmp);
-                startActivity(intent);
-                return 0;
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return 1;
-    }
-//=======================================================================================================
-
+    //=======================================================================================================
+    //    playback
+    //=======================================================================================================
     public static class VideoViewPlayActivity extends Activity {
         public MediaController mc;
 
@@ -622,4 +611,123 @@ public class JvmNativeActivity extends NativeActivity {
 
         }
     }
+
+
+    //=======================================================================================================
+    //                   open app
+    //=======================================================================================================
+
+    /**
+     * 检查包是否存在
+     *
+     * @param packname
+     * @return
+     */
+    private boolean checkPackInfo(String packname) {
+        PackageInfo packageInfo = null;
+        try {
+            packageInfo = getPackageManager().getPackageInfo(packname, 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return packageInfo != null;
+    }
+
+    public int openOtherApp(String urls, String more, int detectAppInstalled) {
+        try {
+
+            if (more != null && more.equals("URL")) {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(urls));
+                startActivity(intent);
+            } else {
+                if (detectAppInstalled != 0) {
+                    if (!checkPackInfo(urls)) {
+                        return 1;
+                    }
+                }
+                String[] paras = urls.split(" ");
+                String pkgName = paras[0];
+                String activityName = paras[1];
+
+                Intent intent = new Intent(Intent.ACTION_MAIN);
+                ComponentName cmp = new ComponentName(pkgName, activityName);
+                intent.addCategory(Intent.CATEGORY_LAUNCHER);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.setComponent(cmp);
+                startActivity(intent);
+                return 0;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 1;
+    }
+
+    //=======================================================================================================
+    //                   alipay
+    //=======================================================================================================
+
+
+    /**
+     * 支付宝支付业务示例
+     */
+    public Map<String, String> payV2(String orderInfo) {
+        Thread t = new Thread(() -> {
+            PayTask alipay = new PayTask(JvmNativeActivity.this);
+            Map<String, String> result = alipay.payV2(orderInfo, true);
+            Log.i("msp", result.toString());
+        });
+        t.start();
+        return new HashMap<>();
+
+    }
+
+    /**
+     * 支付宝账户授权业务示例
+     */
+    public Map<String, String> authV2(String authInfo) {
+        Thread t = new Thread(() -> {
+            // 构造AuthTask 对象
+            AuthTask authTask = new AuthTask(JvmNativeActivity.this);
+            // 调用授权接口，获取授权结果
+            Map<String, String> result = authTask.authV2(authInfo, true);
+
+        });
+        t.start();
+        return new HashMap<>();
+    }
+
+    /**
+     * 获取支付宝 SDK 版本号。
+     */
+    public String showSdkVersion() {
+        PayTask payTask = new PayTask(this);
+        String version = payTask.getVersion();
+        return version;
+    }
+
+    private static void showAlert(Context ctx, String info) {
+        showAlert(ctx, info, null);
+    }
+
+    private static void showAlert(Context ctx, String info, DialogInterface.OnDismissListener onDismiss) {
+        new AlertDialog.Builder(ctx)
+                .setMessage(info)
+                .setPositiveButton("OK", null)
+                .setOnDismissListener(onDismiss)
+                .show();
+    }
+
+    public String remoteMethodCall(String jsonStr) {
+
+        //把jsonStr解析成为MethodCallDesc对象
+        RMCDescriptor mcd = ReflectUtil.fromJson(jsonStr);
+
+        Object ret = ReflectUtil.invokeJava(mcd.getClassName(), mcd.getMethodDesc(), mcd.getParaJson(), mcd.getInsJson(), this);
+
+        JsonPrinter jsonPrinter = new JsonPrinter();
+        return jsonPrinter.serial(ret);
+    }
+
 }

@@ -10,6 +10,10 @@ public class JsonPrinter {
     ClassLoader classLoader;
 
     StringBuilder print(Object obj, StringBuilder sb) {
+        if (obj == null) {
+            sb.append("null");
+            return sb;
+        }
         Class clazz = obj.getClass();
         if (sb == null) sb = new StringBuilder();
         if (obj instanceof String) {
@@ -60,7 +64,15 @@ public class JsonPrinter {
 
     private StringBuilder printString(String s, StringBuilder sb) {
         sb.append('"');
-        sb.append(s);
+        String s2 = s;
+        s2 = s2.replace("\\", "\\\\");//  \
+        s2 = s2.replace("\"", "\\\""); // "
+        s2 = s2.replace("\n", "\\n");// newline
+        s2 = s2.replace("\r", "\\r");// return
+        s2 = s2.replace("\t", "\\t");// tab
+        s2 = s2.replace("\b", "\\b");// backspace
+        s2 = s2.replace("\f", "\\f");// formfeed
+        sb.append(s2);
         sb.append('"');
         return sb;
     }

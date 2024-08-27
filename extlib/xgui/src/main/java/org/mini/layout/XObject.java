@@ -51,6 +51,7 @@ public abstract class XObject implements GLayout {
     protected String bgPic = null;
     protected float bgPicAlpha = GObject.DEFAULT_BG_ALPHA;
 
+    protected String href = null;
     // 脚本引擎
     protected String script;// 脚本
 
@@ -58,6 +59,9 @@ public abstract class XObject implements GLayout {
 
     protected String onStateChangeScript = null; //state change exec
 
+    protected boolean fixed = false;
+    protected String onCloseScript;
+    protected String onInitScript;
     //
 
     XmlExtAssist assist;
@@ -115,7 +119,7 @@ public abstract class XObject implements GLayout {
      * @throws Exception
      */
     public void parse(KXmlParser parser, XmlExtAssist assist) throws Exception {
-
+        this.assist = assist;
         //iterator attribute
         int attCount = parser.getAttributeCount();
         for (int i = 0; i < attCount; i++) {
@@ -148,6 +152,8 @@ public abstract class XObject implements GLayout {
             enable = "0".equals(attValue) ? false : true;
         } else if (attName.equals("move")) { // viewslot move mode
             moveMode = attValue;
+        } else if (attName.equals("fixed")) {
+            fixed = "0".equals(attValue) ? false : true;
         } else if (attName.equals("w")) {
             if (attValue.equals("float")) {
                 hfloat = true;
@@ -197,6 +203,12 @@ public abstract class XObject implements GLayout {
             bgPic = attValue;
         } else if (attName.equals("bgpicalpha")) {
             bgPicAlpha = Float.parseFloat(attValue);
+        } else if (attName.equals("href")) {
+            href = attValue;
+        } else if (attName.equals("onclose")) {
+            onCloseScript = attValue;
+        } else if (attName.equals("oninit")) {
+            onInitScript = attValue;
         }
     }
 
@@ -228,9 +240,12 @@ public abstract class XObject implements GLayout {
             gui.setBack(backest);
             gui.setFlyable(fly);
             gui.setOnClinkScript(onClinkScript);
-            gui.setActionListener(getRoot().getEventHandler());
-            gui.setStateChangeListener(getRoot().getEventHandler());
+            gui.setActionListener(assist.getEventHandler());
+            gui.setHrefListener(assist.getEventHandler());
+            gui.setStateChangeListener(assist.getEventHandler());
             gui.setOnStateChangeScript(onStateChangeScript);
+            gui.setHref(href);
+            gui.setFixed(fixed);
             if (fly) {
                 gui.setFlyListener(getRoot().getEventHandler());
             }
@@ -241,7 +256,7 @@ public abstract class XObject implements GLayout {
                 gui.setBgColor(bgColor);
             }
             if (bgPic != null) {
-                GImage img = GToolkit.getCachedImageFromJar(bgPic);
+                GImage img = getAssist().loadImage(bgPic);
                 gui.setBgImg(img);
                 gui.setBgImgAlpha(bgPicAlpha);
             }
@@ -253,7 +268,6 @@ public abstract class XObject implements GLayout {
                     container.loadScript(script);// 装入代码
                     Interpreter inp = container.getInterpreter();
                     if (inp != null) {
-                        inp.reglib(new GuiScriptLib(getAssist().getForm()));
                         if (assist != null) {
                             for (Lib lib : assist.getExtScriptLibs()) {
                                 inp.reglib(lib);
@@ -262,6 +276,10 @@ public abstract class XObject implements GLayout {
                     }
                 }
             }
+
+            gui.setOnCloseScript(onCloseScript);
+            gui.setOnInitScript(onInitScript);
+            gui.setVisible(!hidden);
         }
     }
 

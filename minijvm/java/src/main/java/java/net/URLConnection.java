@@ -16,87 +16,96 @@ import java.io.OutputStream;
 import java.util.*;
 
 public abstract class URLConnection {
-  protected final URL url;
-  protected boolean doInput = true;
-  protected boolean doOutput = false;
-  protected boolean useCaches = true;
+    protected final URL url;
+    protected boolean doInput = true;
+    protected boolean doOutput = false;
+    protected boolean useCaches = true;
+    protected static final Map<String, CachedFile> caches = Collections.synchronizedMap(new HashMap());
 
-  protected URLConnection(URL url) {
-    this.url = url;
-  }
-
-  public Object getContent() throws IOException {
-    return getInputStream();
-  }
-
-  public int getContentLength() {
-    return -1;
-  }
-
-  public long getContentLengthLong() {
-    return -1l;
-  }
-
-  public abstract void connect() throws IOException;
-
-  public InputStream getInputStream() throws IOException {
-    throw new UnknownServiceException();
-  }
-
-  public OutputStream getOutputStream() throws IOException {
-    throw new UnknownServiceException();
-  }
-
-  public boolean getDoInput() {
-    return doInput;
-  }
-
-  public boolean getDoOutput() {
-    return doOutput;
-  }
-
-  public void setDoInput(boolean v) {
-    doInput = v;
-  }
-
-  public void setDoOutput(boolean v) {
-    doInput = v;
-  }
-
-  public void setUseCaches(boolean v) {
-    useCaches = v;
-  }
-
-  public String getHeaderField(String name) {
-    String result = null;
-    if(name != null) {
-      List<String> values = getHeaderFields().get(name.toLowerCase());
-      if (values != null && values.size() > 0) {
-        result = values.get(0);
-      }
+    protected URLConnection(URL url) {
+        this.url = url;
     }
 
-    return result;
-  }
-
-  public int getHeaderFieldInt(String name, int Default) {
-    return (int) getHeaderFieldLong(name, Default);
-  }
-
-  public long getHeaderFieldLong(String name, long Default) {
-    long result = Default;
-    try {
-      result = Long.parseLong(getHeaderField(name));
-    } catch(Exception e) {
-      // Do nothing, default will be returned
+    public Object getContent() throws IOException {
+        return getInputStream();
     }
 
-    return result;
-  }
+    public String getContentType() {
+        return getHeaderField("content-type");
+    }
 
-  public Map<String,List<String>> getHeaderFields() {
-    return Collections.emptyMap();
-  }
+    public int getContentLength() {
+        return -1;
+    }
+
+    public long getContentLengthLong() {
+        return -1l;
+    }
+
+    public abstract void connect() throws IOException;
+
+    public InputStream getInputStream() throws IOException {
+        throw new UnknownServiceException();
+    }
+
+    public OutputStream getOutputStream() throws IOException {
+        throw new UnknownServiceException();
+    }
+
+    public boolean getDoInput() {
+        return doInput;
+    }
+
+    public boolean getDoOutput() {
+        return doOutput;
+    }
+
+    public void setDoInput(boolean v) {
+        doInput = v;
+    }
+
+    public void setDoOutput(boolean v) {
+        doInput = v;
+    }
+
+    public void setUseCaches(boolean v) {
+        useCaches = v;
+    }
+
+    public boolean getUseCaches() {
+        return useCaches;
+    }
+
+    public String getHeaderField(String name) {
+        String result = null;
+        if (name != null) {
+            List<String> values = getHeaderFields().get(name.toLowerCase());
+            if (values != null && values.size() > 0) {
+                result = values.get(0);
+            }
+        }
+
+        return result;
+    }
+
+    public int getHeaderFieldInt(String name, int Default) {
+        return (int) getHeaderFieldLong(name, Default);
+    }
+
+    public long getHeaderFieldLong(String name, long Default) {
+        long result = Default;
+        try {
+            result = Long.parseLong(getHeaderField(name));
+        } catch (Exception e) {
+            // Do nothing, default will be returned
+        }
+
+        return result;
+    }
+
+    public Map<String, List<String>> getHeaderFields() {
+        return Collections.emptyMap();
+    }
 
     public long getHeaderFieldDate(String name, long Default) {
         String value = getHeaderField(name);
@@ -110,5 +119,24 @@ public abstract class URLConnection {
 
     public long getLastModified() {
         return getHeaderFieldDate("last-modified", 0);
+    }
+
+    public long getExpiration() {
+        return getHeaderFieldDate("expires", 0);
+    }
+
+
+    protected static class CachedFile {
+        public final Object resource;
+        public final long expireMs;
+
+        public CachedFile(Object resource, long expireMs) {
+            this.resource = resource;
+            this.expireMs = expireMs;
+        }
+
+        public boolean isExpired() {
+            return System.currentTimeMillis() > expireMs;
+        }
     }
 }

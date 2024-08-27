@@ -61,7 +61,7 @@ public class VmUtil {
                     try {
                         boolean exist = Zip.isEntryExist(f.getAbsolutePath(), sourceName);
                         if (exist) {
-                            String us = "jar:file:" + f.getAbsolutePath() + "!/" + sourceName;
+                            String us = "jar:file:///" + f.getAbsolutePath() + "!/" + sourceName;
                             URL url = new URL(us);
                             return url;
                         }
@@ -72,7 +72,7 @@ public class VmUtil {
                     File cf = new File(s + "/" + sourceName);
                     if (cf.exists()) {
                         try {
-                            String us = "file:" + cf.getAbsolutePath();
+                            String us = "file:///" + cf.getAbsolutePath();
                             //System.out.println(us);
                             return new URL(us);
                         } catch (Exception e) {

@@ -1,11 +1,14 @@
 package org.mini.gui.gscript;
 
+import org.mini.crypt.XorCrypt;
+import org.mini.glfm.Glfm;
 import org.mini.reflect.ReflectMethod;
 
+import javax.microedition.io.Base64;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.Random;
 import java.util.ArrayList;
 
@@ -20,9 +23,14 @@ public class Stdlib extends Lib {
 
     //随机数基石
     private static Random random = new Random(); //定义一个随机值
+    Interpreter inp;
 
 
-    public Stdlib() {
+    public Stdlib(Interpreter inp) {
+        this.inp = inp;
+
+        methodNames.put("getEnv".toLowerCase(), this::getEnv);//
+        methodNames.put("setEnv".toLowerCase(), this::setEnv);//
         methodNames.put("print".toLowerCase(), this::print); // 向控制台输出字符串
         methodNames.put("min".toLowerCase(), this::min);// 求最小值
         methodNames.put("max".toLowerCase(), this::max); // 求最大值
@@ -34,24 +42,45 @@ public class Stdlib extends Lib {
         methodNames.put("strlen".toLowerCase(), this::strlen); // 字符串长度
         methodNames.put("equals".toLowerCase(), this::equals); // 字符串比较
         methodNames.put("def".toLowerCase(), this::def); // 存入全局变量
-        methodNames.put("isdef".toLowerCase(), this::isDef); // 是否存在某全局变量
-        methodNames.put("valueof".toLowerCase(), this::valueOf); // 转换字符串为数值
-        methodNames.put("idxof".toLowerCase(), this::idxof);// 子串在母串的位置        idxof("abc","a")  结果0
+        methodNames.put("isDef".toLowerCase(), this::isDef); // 是否存在某全局变量
+        methodNames.put("valueOf".toLowerCase(), this::valueOf); // 转换字符串为数值
+        methodNames.put("intOf".toLowerCase(), this::valueOf); // 转换字符串为数值
+        methodNames.put("idxOf".toLowerCase(), this::idxof);// 子串在母串的位置        idxof("abc","a")  结果0
+        methodNames.put("lastIdxOf".toLowerCase(), this::lastIdxOf);// 子串在母串的位置        idxof("abc","a")  结果0
         methodNames.put("substr".toLowerCase(), this::substr); // 截子串        substr("abcde",1,4)      结果"bcd"
         methodNames.put("split".toLowerCase(), this::split); // 截子串        substr("abcde",1,4)      结果"bcd"
         methodNames.put("base64enc".toLowerCase(), this::base64enc); //   base64编码
         methodNames.put("base64dec".toLowerCase(), this::base64dec); //   base64解码
+        methodNames.put("urlenc".toLowerCase(), this::urlenc); //   UrlEncode解码
+        methodNames.put("urldec".toLowerCase(), this::urldec); //   UrlDecode解码
         methodNames.put("isnull".toLowerCase(), this::isnull); //   Obj 类型是否为空
         methodNames.put("getobjfield".toLowerCase(), this::getObjField);
         methodNames.put("setobjfield".toLowerCase(), this::setObjField);
         methodNames.put("trim".toLowerCase(), this::trim);//字符串去空格
         methodNames.put("str2int".toLowerCase(), this::str2int);//字符串转int
+        methodNames.put("isNumStr".toLowerCase(), this::isNumStr);//是数字串
         methodNames.put("invokeJava".toLowerCase(), this::invokeJava);//执行对象方法
         methodNames.put("invokeStatic".toLowerCase(), this::invokeStatic);//执行对象方法
         methodNames.put("getbit".toLowerCase(), this::getbit);//取整数第n位,返回bool
         methodNames.put("setbit".toLowerCase(), this::setbit);//设整数第n位
+        methodNames.put("encrypt".toLowerCase(), this::encrypt);//加密  str= encrypt(str,key)
+        methodNames.put("decrypt".toLowerCase(), this::decrypt);//解密  str= decrypt(str,key)
+        methodNames.put("remoteMethodCall".toLowerCase(), this::remoteMethodCall);//远程调用
     }
 
+
+    public DataType getEnv(ArrayList<DataType> para) {
+        String key = Interpreter.popBackStr(para);
+        return Interpreter.getCachedStr(Interpreter.getEnvVar(key));
+    }
+
+
+    public DataType setEnv(ArrayList<DataType> para) {
+        String key = Interpreter.popBackStr(para);
+        String val = Interpreter.popBackStr(para);
+        Interpreter.setEnvVar(key, val);
+        return null;
+    }
 
     /**
      * 向控制台输出字符串
@@ -211,7 +240,12 @@ public class Stdlib extends Lib {
     private Int valueOf(ArrayList<DataType> para) {
         String s = Interpreter.popBackStr(para);
         if (s != null && !"".equals(s)) {
-            return Interpreter.getCachedInt(Integer.parseInt(s));
+            int v = 0;
+            try {
+                v = Integer.parseInt(s);
+            } catch (Exception e) {
+            }
+            return Interpreter.getCachedInt(v);
         }
         return Interpreter.getCachedInt(0);
     }
@@ -227,6 +261,15 @@ public class Stdlib extends Lib {
         String sub = Interpreter.popBackStr(para);
         if (m != null && sub != null) {
             return Interpreter.getCachedInt(m.indexOf(sub));
+        }
+        return Interpreter.getCachedInt(-1);
+    }
+
+    private Int lastIdxOf(ArrayList<DataType> para) {
+        String m = Interpreter.popBackStr(para);
+        String sub = Interpreter.popBackStr(para);
+        if (m != null && sub != null) {
+            return Interpreter.getCachedInt(m.lastIndexOf(sub));
         }
         return Interpreter.getCachedInt(-1);
     }
@@ -288,6 +331,28 @@ public class Stdlib extends Lib {
             String str = Interpreter.popBackStr(para);
             byte[] b = javax.microedition.io.Base64.decode(str);
             String s = new String(b, "utf-8");
+            return Interpreter.getCachedStr(s);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType urlenc(ArrayList<DataType> para) {
+        try {
+            String str = Interpreter.popBackStr(para);
+            String s = URLEncoder.encode(str, "utf-8");
+            return Interpreter.getCachedStr(s);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType urldec(ArrayList<DataType> para) {
+        try {
+            String str = Interpreter.popBackStr(para);
+            String s = URLEncoder.encode(str, "utf-8");
             return Interpreter.getCachedStr(s);
         } catch (Exception e) {
             e.printStackTrace();
@@ -532,7 +597,19 @@ public class Stdlib extends Lib {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return null;
+        return Interpreter.getCachedInt(-1);
+    }
+
+    private DataType isNumStr(ArrayList<DataType> para) {
+        try {
+            String str = Interpreter.popBackStr(para);
+            str = str.trim();
+            long i = Long.parseLong(str);
+            return Interpreter.getCachedBool(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Interpreter.getCachedBool(false);
     }
 
     private DataType getbit(ArrayList<DataType> para) {
@@ -557,6 +634,50 @@ public class Stdlib extends Lib {
                 i |= 1 << bitPos;
             }
             return Interpreter.getCachedInt(i);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    private DataType encrypt(ArrayList<DataType> para) {
+        try {
+            String str = Interpreter.popBackStr(para);
+            String key = Interpreter.popBackStr(para);
+            byte[] strBytes = str.getBytes("utf-8");
+            byte[] keyBytes = key.getBytes("utf-8");
+            byte[] result = XorCrypt.xor_encrypt(strBytes, keyBytes);
+            str = Base64.encode(result, 0, result.length);
+            str = URLEncoder.encode(str, "UTF-8");
+            return Interpreter.getCachedStr(str);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType decrypt(ArrayList<DataType> para) {
+        try {
+            String str = Interpreter.popBackStr(para);
+            String key = Interpreter.popBackStr(para);
+            str = URLDecoder.decode(str, "UTF-8");
+            byte[] strBytes = Base64.decode(str);
+            byte[] keyBytes = key.getBytes("utf-8");
+            byte[] result = XorCrypt.xor_decrypt(strBytes, keyBytes);
+            String i = new String(result, "utf-8");
+            return Interpreter.getCachedStr(i);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType remoteMethodCall(ArrayList<DataType> para) {
+        try {
+            String str = Interpreter.popBackStr(para);
+            String ret = Glfm.glfmRemoteMethodCall(str);
+            return Interpreter.getCachedStr(ret == null ? "" : ret);
         } catch (Exception e) {
             e.printStackTrace();
         }

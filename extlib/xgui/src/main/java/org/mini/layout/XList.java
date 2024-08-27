@@ -136,7 +136,7 @@ public class XList extends XObject {
                 ListItem item = (ListItem) items.elementAt(i);
                 GImage img = null;
                 if (item.pic != null) {
-                    img = GToolkit.getCachedImageFromJar(item.pic);
+                    img = getAssist().loadImage(item.pic);
                 }
                 GListItem gli = new GListItem(getAssist().getForm(), img, item.text);
                 gli.setName(item.name);

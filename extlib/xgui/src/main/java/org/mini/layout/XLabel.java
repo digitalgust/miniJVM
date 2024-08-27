@@ -78,6 +78,9 @@ public class XLabel
 
     protected void createAndSetGui() {
         if (label == null) {
+            if (assist == null) {
+                int debug = 1;
+            }
             label = createGuiImpl();
             initGuiMore();
             label.setAlign(align);

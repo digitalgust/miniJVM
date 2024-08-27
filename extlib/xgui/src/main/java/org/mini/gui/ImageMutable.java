@@ -31,11 +31,16 @@ public class ImageMutable extends GImage {
         if (w <= 0 || h <= 0 || w > 4096 || h > 4096) {
             throw new RuntimeException("not support image size " + w + " x " + h);
         }
+        init(w, h);
+        image_init_flag = imageflag;
+    }
+
+    void init(int w, int h) {
         this.width = w;
         this.heigh = h;
-        image_init_flag = imageflag;
         data = ByteBuffer.allocate(w * h * BYTE_PER_PIXEL);
         shadow = data.asIntBuffer();
+        nvg_texture = -1;
     }
 
     public int getPix(int row, int col) {
@@ -58,17 +63,29 @@ public class ImageMutable extends GImage {
         shadow.put(pos, ((a & 0xff) << 24) | ((b & 0xff) << 16) | ((g & 0xff) << 8) | (r & 0xff));
     }
 
-    public void setPix(int[] rgbData, int offset, int scanlength, int x, int y, int w, int h) {
-        if (rgbData == null) {
+    public void setPix(byte[] rgbaData, int offset, int scanlength, int x, int y, int w, int h) {
+        ByteBuffer buffer = ByteBuffer.wrap(rgbaData, offset, scanlength * h);
+        IntBuffer intbuf = buffer.asIntBuffer();
+        for (int j = 0; j < h; j++) {
+            int imgFirst = ((y + j) * width) + x;
+            shadow.position(imgFirst);
+            intbuf.limit((w + imgFirst));
+            shadow.put(intbuf);
+            buffer.position(buffer.position() + scanlength);
+        }
+    }
+
+    public void setPix(int[] rgbaData, int offset, int scanlength, int x, int y, int w, int h) {
+        if (rgbaData == null) {
             throw new NullPointerException("RGB data is null");
         }
-        if (offset < 0 || offset > rgbData.length) {
+        if (offset < 0 || offset > rgbaData.length) {
             throw new IndexOutOfBoundsException("offset:" + offset);
         }
 
         int rgbX = offset % scanlength;
         int rgbY = offset / scanlength;
-        int rgbMaxRow = rgbData.length / scanlength;
+        int rgbMaxRow = rgbaData.length / scanlength;
 
         //trim out of area
         if (x < 0) {//填充区小于左边界
@@ -103,7 +120,7 @@ public class ImageMutable extends GImage {
             int imgFirst = ((y + j) * width) + x;
             shadow.position(imgFirst);
             try {
-                shadow.put(rgbData, rgbFirst, w);
+                shadow.put(rgbaData, rgbFirst, w);
             } catch (Exception e) {
                 int debug = 1;
             }

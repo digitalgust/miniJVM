@@ -19,7 +19,7 @@ public abstract class XContainer
     static public final String SCRIPT_XML_NAME = "script"; // 脚本代码
 
     ArrayList<XObject> children = new ArrayList<>();
-    ArrayList<XObject> hiddens = new ArrayList<>();
+    //    ArrayList<XObject> hiddens = new ArrayList<>();
     public int align = Nanovg.NVG_ALIGN_LEFT | Nanovg.NVG_ALIGN_TOP;
     private int depth = -1;
 
@@ -244,6 +244,7 @@ public abstract class XContainer
             this.eventHandler = eventHandler;
         }
 
+        assist.setEventHandler(eventHandler);
         setParentSize(parentW, parentH);
 
         preAlignHorizontal();
@@ -296,6 +297,8 @@ public abstract class XContainer
             tmp = tmp.trim();
             if (tmp.length() > 0) {
                 XLabel label = new XLabel(this);
+                label.assist = assist;
+                label.multiLine = true;
                 label.setText(tmp);
                 children.add(label);
             }
@@ -312,108 +315,114 @@ public abstract class XContainer
 
     public static XObject parseSon(KXmlParser parser, XContainer parent, XmlExtAssist assist) throws Exception {
         String tagName = parser.getName();
-        if (tagName.equals(XBr.XML_NAME)) { //br
-            XBr xbr = new XBr(parent);
-            xbr.parse(parser, assist);
-            return xbr;
-        } else if (tagName.equals(XButton.XML_NAME)) { //button
-            XButton xaction = new XButton(parent);
-            xaction.parse(parser, assist);
-            return (xaction);
-        } else if (tagName.equals(XLabel.XML_NAME)) { //label
-            XLabel label = new XLabel(parent);
-            label.parse(parser, assist);
-            return (label);
-        } else if (tagName.equals(XImageItem.XML_NAME)) { //img
-            XImageItem img = new XImageItem(parent);
-            img.parse(parser, assist);
-            return (img);
-        } else if (tagName.equals(XCheckBox.XML_NAME)) { //checkbox
-            XCheckBox xbox = new XCheckBox(parent);
-            xbox.parse(parser, assist);
-            return (xbox);
-        } else if (tagName.equals(XScrollBar.XML_NAME)) { //scrollbar
-            XScrollBar bar = new XScrollBar(parent);
-            bar.parse(parser, assist);
-            return (bar);
-        } else if (tagName.equals(XTextInput.XML_NAME)) { //textinput
-            XTextInput xinput = new XTextInput(parent);
-            xinput.parse(parser, assist);
-            return (xinput);
-        } else if (tagName.equals(XTable.XML_NAME)) { //table
-            XTable xtb = new XTable(parent);
-            xtb.parse(parser, assist);
-            return (xtb);
-        } else if (tagName.equals(XTr.XML_NAME)) { //tr
-            XTr xtr = new XTr(parent);
-            xtr.parse(parser, assist);
-            return (xtr);
-        } else if (tagName.equals(XTd.XML_NAME)) { //td
-            XTd xtd = new XTd(parent);
-            xtd.parse(parser, assist);
-            return (xtd);
-        } else if (tagName.equals(XList.XML_NAME)) { //list
-            XList xlist = new XList(parent);
-            xlist.parse(parser, assist);
-            return (xlist);
-        } else if (tagName.equals(XMenu.XML_NAME)) { //menu
-            XMenu xmenu = new XMenu(parent);
-            xmenu.parse(parser, assist);
-            return (xmenu);
-        } else if (tagName.equals(XSwitch.XML_NAME)) { //switcher
-            XSwitch xswitcher = new XSwitch(parent);
-            xswitcher.parse(parser, assist);
-            return (xswitcher);
-        } else if (tagName.equals(XPanel.XML_NAME)) { //panel
-            XPanel panel = new XPanel(parent);
-            panel.parse(parser, assist);
-            return (panel);
-        } else if (tagName.equals(XCanvas.XML_NAME)) { //canvas
-            XPanel panel = new XCanvas(parent);
-            panel.parse(parser, assist);
-            return (panel);
-        } else if (tagName.equals(XViewPort.XML_NAME)) { //viewport
-            XViewPort viewport = new XViewPort(parent);
-            viewport.parse(parser, assist);
-            return (viewport);
-        } else if (tagName.equals(XViewSlot.XML_NAME)) { //viewslot
-            XViewSlot viewSlot = new XViewSlot(parent);
-            viewSlot.parse(parser, assist);
-            return (viewSlot);
-        } else if (tagName.equals(XFrame.XML_NAME)) { //viewslot
-            XFrame frame = new XFrame(parent);
-            frame.parse(parser, assist);
-            return (frame);
-        } else if (tagName.equals(XForm.XML_NAME)) { //viewslot
-            XForm form = new XForm(parent);
-            form.parse(parser, assist);
-            return (form);
-        } else if (tagName.equals(SCRIPT_XML_NAME)) {
-            parser.next();
-            String scode = parser.getText();
-            parent.script = scode;
-            parent.toEndTag(parser, tagName); // 跳过结束符
-        } else {
-            boolean found = false;
-            if (assist != null) {
-                for (String s : assist.getExtGuiClassName()) {
-                    if (s.equals(tagName)) {
-                        try {
-                            Class clazz = Class.forName(s, true, Thread.currentThread().getContextClassLoader());
-                            Constructor con = clazz.getConstructor(XContainer.class);
-                            XObject xobj = (XObject) con.newInstance(parent);
-                            xobj.parse(parser, assist);
-                            return (xobj);
-                        } catch (Exception e) {
-                            e.printStackTrace();
+        switch (tagName) {
+            case XBr.XML_NAME:  //br
+                XBr xbr = new XBr(parent);
+                xbr.parse(parser, assist);
+                return xbr;
+            case XButton.XML_NAME:  //button
+                XButton xaction = new XButton(parent);
+                xaction.parse(parser, assist);
+                return (xaction);
+            case XLabel.XML_NAME:  //label
+                XLabel label = new XLabel(parent);
+                label.parse(parser, assist);
+                return (label);
+            case XImageItem.XML_NAME:  //img
+                XImageItem img = new XImageItem(parent);
+                img.parse(parser, assist);
+                return (img);
+            case XCheckBox.XML_NAME:  //checkbox
+                XCheckBox xbox = new XCheckBox(parent);
+                xbox.parse(parser, assist);
+                return (xbox);
+            case XScrollBar.XML_NAME:  //scrollbar
+                XScrollBar bar = new XScrollBar(parent);
+                bar.parse(parser, assist);
+                return (bar);
+            case XTextInput.XML_NAME:  //textinput
+                XTextInput xinput = new XTextInput(parent);
+                xinput.parse(parser, assist);
+                return (xinput);
+            case XTable.XML_NAME:  //table
+                XTable xtb = new XTable(parent);
+                xtb.parse(parser, assist);
+                return (xtb);
+            case XTr.XML_NAME:  //tr
+                XTr xtr = new XTr(parent);
+                xtr.parse(parser, assist);
+                return (xtr);
+            case XTd.XML_NAME:  //td
+                XTd xtd = new XTd(parent);
+                xtd.parse(parser, assist);
+                return (xtd);
+            case XList.XML_NAME:  //list
+                XList xlist = new XList(parent);
+                xlist.parse(parser, assist);
+                return (xlist);
+            case XMenu.XML_NAME:  //menu
+                XMenu xmenu = new XMenu(parent);
+                xmenu.parse(parser, assist);
+                return (xmenu);
+            case XSwitch.XML_NAME:  //switcher
+                XSwitch xswitcher = new XSwitch(parent);
+                xswitcher.parse(parser, assist);
+                return (xswitcher);
+            case XPanel.XML_NAME: { //panel
+                XPanel panel = new XPanel(parent);
+                panel.parse(parser, assist);
+                return (panel);
+            }
+            case XCanvas.XML_NAME: { //canvas
+                XPanel panel = new XCanvas(parent);
+                panel.parse(parser, assist);
+                return (panel);
+            }
+            case XViewPort.XML_NAME:  //viewport
+                XViewPort viewport = new XViewPort(parent);
+                viewport.parse(parser, assist);
+                return (viewport);
+            case XViewSlot.XML_NAME:  //viewslot
+                XViewSlot viewSlot = new XViewSlot(parent);
+                viewSlot.parse(parser, assist);
+                return (viewSlot);
+            case XFrame.XML_NAME:  //viewslot
+                XFrame frame = new XFrame(parent);
+                frame.parse(parser, assist);
+                return (frame);
+            case XForm.XML_NAME:  //viewslot
+                XForm form = new XForm(parent);
+                form.parse(parser, assist);
+                return (form);
+            case SCRIPT_XML_NAME:
+                parser.next();
+                String scode = parser.getText();
+                parent.script = scode;
+                parent.toEndTag(parser, tagName); // 跳过结束符
+
+                break;
+            default:
+                boolean found = false;
+                if (assist != null) {
+                    for (String s : assist.getExtGuiClassName()) {
+                        if (s.equals(tagName)) {
+                            try {
+                                Class clazz = Class.forName(s, true, Thread.currentThread().getContextClassLoader());
+                                Constructor con = clazz.getConstructor(XContainer.class);
+                                XObject xobj = (XObject) con.newInstance(parent);
+                                xobj.parse(parser, assist);
+                                return (xobj);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                 }
-            }
-            if (!found) {
-                new Exception("xml tag not found:" + tagName).printStackTrace();
-                parent.toEndTag(parser, tagName);
-            }
+                if (!found) {
+                    new Exception("xml tag not found:" + tagName).printStackTrace();
+                    parent.toEndTag(parser, tagName);
+                }
+                break;
         }
         return null;
     }
@@ -452,11 +461,11 @@ public abstract class XContainer
             if (parser.getEventType() == XmlPullParser.START_TAG) {
                 XObject xobj = XContainer.parseSon(parser, this, assist);
                 if (xobj != null) {
-                    if (xobj.hidden) {
-                        hiddens.add(xobj);
-                    } else {
-                        children.add(xobj);
-                    }
+//                    if (xobj.hidden) {
+//                        hiddens.add(xobj);
+//                    } else {
+                    children.add(xobj);
+//                    }
                 }
                 parser.require(XmlPullParser.END_TAG, null, tagName);
             }
@@ -477,7 +486,6 @@ public abstract class XContainer
             parser.nextTag();
 
             XObject xobj = parseSon(parser, null, assist);
-            xobj.assist = assist;
 
             parser.next();
             parser.require(XmlPullParser.END_DOCUMENT, null, null);

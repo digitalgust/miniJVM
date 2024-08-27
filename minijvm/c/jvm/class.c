@@ -514,11 +514,14 @@ u8 isSonOfInterface(JClass *clazz, JClass *son, Runtime *runtime) {
 
 u8 assignable_from(JClass *clazzParent, JClass *clazzSon) {
 
-    while (clazzSon) {
-        if (clazzParent == clazzSon) {
-            return 1;
+    s32 i, imax;
+    if (clazzSon) {
+        for (i = 0, imax = clazzSon->supers->length; i < imax; i++) {
+            JClass *cl = clazzSon->supers->data[i];
+            if (clazzParent == cl) {
+                return 1;
+            }
         }
-        clazzSon = getSuperClass(clazzSon);
     }
     return 0;
 }

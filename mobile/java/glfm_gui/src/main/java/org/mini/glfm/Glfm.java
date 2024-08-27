@@ -5,6 +5,8 @@
  */
 package org.mini.glfm;
 
+import java.io.UnsupportedEncodingException;
+
 /**
  * @author gust
  */
@@ -13,6 +15,23 @@ public class Glfm {
     static {
         System.setProperty("gui.driver", "org.mini.glfm.GlfmCallBackImpl");
     }
+
+
+    static byte[] toCstyleBytes(String s) {
+        if (s == null) {
+            return null;
+        }
+        if (s.length() == 0 || s.charAt(s.length() - 1) != '\000') {
+            s += '\000';
+        }
+        byte[] barr = null;
+        try {
+            barr = s.getBytes("utf-8");
+        } catch (UnsupportedEncodingException ex) {
+        }
+        return barr;
+    }
+
 
     public static final int //
             MAX_SIMULTANEOUS_TOUCHES = 10;
@@ -239,6 +258,13 @@ public class Glfm {
     public static native void glfmPauseVideo(long display, long handle);
 
     public static native int glfmOpenOtherApp(byte[] cStyleURL, byte[] cStyleMore, int detectAppInstalled);
+
+    static native String glfmRemoteMethodCall(byte[] inJsonStr);
+
+    public static String glfmRemoteMethodCall(String inJsonStr) {
+        byte[] inJsonStrBytes = toCstyleBytes(inJsonStr.toString());
+        return glfmRemoteMethodCall(inJsonStrBytes);
+    }
 
 
 }

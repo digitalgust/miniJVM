@@ -1272,7 +1272,7 @@ public class GToolkit {
         GForm form = gobj.getForm();
         gobj.setLocation(form.getW() / 2 - gobj.getW() / 2, form.getH() / 2 - gobj.getH() / 2);
         form.add(gobj);
-        form.setFocus(gobj);
+        form.setCurrent(gobj);
     }
 
     public static void showFrame(GObject gobj, float x, float y) {
@@ -1280,7 +1280,7 @@ public class GToolkit {
         GForm form = gobj.getForm();
         gobj.setLocation(x, y);
         form.add(gobj);
-        form.setFocus(gobj);
+        form.setCurrent(gobj);
     }
 
     public static void closeFrame(GForm form, String frameName) {

@@ -103,7 +103,7 @@ public class GViewPort extends GContainer {
 
     @Override
     public void setInnerLocation(float x, float y) {
-        super.setLocation(x, y);
+        //super.setLocation(x, y);
         if (getOutOfViewWidth() > 0) setScrollX(-x / getOutOfViewWidth());
         if (getOutOfViewHeight() > 0) setScrollY(-y / getOutOfViewHeight());
     }
@@ -348,10 +348,10 @@ public class GViewPort extends GContainer {
             return found.dragEvent(button, dx, dy, x, y);
         }
 
-        if (focus == null) {
-            setFocus(found);
+        if (current == null) {
+            setCurrent(found);
         }
-        if (focus != null && focus.dragEvent(button, dx, dy, x, y)) {
+        if (current != null && current.dragEvent(button, dx, dy, x, y)) {
             return true;
         }
         //reSize();

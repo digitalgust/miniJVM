@@ -257,8 +257,11 @@ public class ReflectClass {
     static public String convertReference2name(String sign) {
         if (sign != null) {
             int pos = sign.indexOf('<');
-            if (pos < 0) {
+            if (sign.startsWith("L") && pos < 0) {
                 return sign.substring(1, sign.length() - 1);
+            } else if (sign.startsWith("[")) {
+                String s = sign.substring(1);
+                return convertReference2name(s) + "[]";
             } else {
                 //System.out.println("----:" + sign);
                 String s = sign.substring(pos + 1, sign.length() - 2);//get content in < >
@@ -287,10 +290,18 @@ public class ReflectClass {
     public static List<String> splitSignature(String signature) {
         List<String> args = new ArrayList();
         //System.out.println("methodType:" + methodType);
-        String s = signature;
-        //从后往前拆分方法参数，从栈中弹出放入本地变量
-        while (s.length() > 0) {
-            char ch = s.charAt(0);
+
+        TokenOfString tokenOrder = new TokenOfString();
+        while (tokenOrder.pos < signature.length()) {
+            String type = getNextType(signature, tokenOrder);
+            args.add(type);
+        }
+        return args;
+    }
+
+    private static String getNextType(String signature, TokenOfString token) {
+        while (signature.length() > 0) {
+            char ch = signature.charAt(token.pos);
             String types = "";
             switch (ch) {
                 case 'S':
@@ -301,53 +312,37 @@ public class ReflectClass {
                 case 'Z':
                 case 'D':
                 case 'J': {
-                    String tmps = s.substring(0, 1);
-                    args.add(tmps);
-                    s = s.substring(1);
-                    break;
+                    String tmps = signature.substring(token.pos, token.pos + 1);
+                    token.pos++;
+                    return tmps;
                 }
                 case 'L': {
                     int ltCount = 0;
-                    int end = 1;
-                    while (!((ch = s.charAt(end)) == ';' && ltCount == 0)) {// Ljava/util/List<Ljava/lang/Object;>;
+                    int start = token.pos;
+                    token.pos++;
+                    while (!((ch = signature.charAt(token.pos)) == ';' && ltCount == 0)) {// Ljava/util/List<Ljava/lang/Object;>;
                         if (ch == '<') ltCount++;
                         if (ch == '>') ltCount--;
-                        end++;
+                        token.pos++;
                     }
-                    end++;
-                    String tmps = s.substring(0, end);
-                    args.add(tmps);
-                    s = s.substring(end);
-                    break;
+                    token.pos++;
+                    String tmps = signature.substring(start, token.pos);
+                    return tmps;
                 }
                 case '[': {
-                    int end = 1;
-                    while (s.charAt(end) == '[') {//去掉多维中的 [[[[LObject; 中的 [符
-                        end++;
-                    }
-                    if (s.charAt(end) == 'L') {
-                        int ltCount = 0;
-                        while (!((ch = s.charAt(end)) == ';' && ltCount == 0)) {// Ljava/util/List<Ljava/lang/Object;>;
-                            if (ch == '<') ltCount++;
-                            if (ch == '>') ltCount--;
-                            end++;
-                        }
-                        end++;
-                    } else {
-                        end++;
-                    }
-                    String tmps = s.substring(0, end);
-                    args.add(tmps);
-                    s = s.substring(end);
-                    break;
+                    token.pos++;
+                    String tmps = "[" + getNextType(signature, token);
+                    return tmps;
                 }
             }
 
         }
-
-        return args;
+        return null;
     }
 
+    private static class TokenOfString {
+        public int pos;
+    }
 
     final native void mapClass(long classId);
 

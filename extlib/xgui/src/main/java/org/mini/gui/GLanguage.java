@@ -16,6 +16,13 @@ public class GLanguage {
     static public final int ID_ENG = 0;
     static public final int ID_CHN = 1;
     static public final int ID_CHT = 2;
+    static public final int ID_KOR = 3;
+    static public final int ID_FRA = 4;
+    static public final int ID_SPA = 5;
+    static public final int ID_ITA = 6;
+    static public final int ID_JPA = 7;
+    static public final int ID_GER = 8;
+    static public final int ID_RUS = 9;
 
     static Map<String, String[]> lang = new HashMap();
     static Map<String, String[]> ext = new HashMap();

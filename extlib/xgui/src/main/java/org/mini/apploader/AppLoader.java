@@ -13,14 +13,13 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 /**
  * @author gust
  */
 public class AppLoader {
 
+    static final String BASE_INFO_FILE = "/res/base.properties";
     static final String APP_INFO_FILE = "/appinfo.properties";
     static final String APP_LIST_FILE = "/applist.properties";
     static final String APP_CONFIG = "config.txt";
@@ -35,8 +34,10 @@ public class AppLoader {
     static final String KEY_GUISTYLE = "guistyle";
     static final String KEY_HOMEICON_X = "homeiconx";
     static final String KEY_HOMEICON_Y = "homeicony";
+    static final String KEY_TOKEN = "TOKEN";
     static Properties appinfo = new Properties();
     static Properties applist = new Properties();
+    static Properties baseinfo = new Properties();
 
 
     static boolean inited = false;
@@ -49,6 +50,7 @@ public class AppLoader {
         if (inited) return;
         inited = true;
 
+        loadJarProp(BASE_INFO_FILE, baseinfo);
         //System.out.println("start loader");
         //
         checkDir();
@@ -136,6 +138,18 @@ public class AppLoader {
         //}
     }
 
+    public static void loadJarProp(String filePath, Properties prop) {
+        try {
+            byte[] b = GToolkit.readFileFromJar(filePath);
+            ByteArrayInputStream bais = new ByteArrayInputStream(b);
+            prop.load(bais);
+            //System.out.println(fname + " size: " + prop.size());
+            bais.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
     public static void loadProp(String fname, Properties prop) {
         try {
             File f = new File(GCallBack.getInstance().getAppSaveRoot() + fname);
@@ -197,6 +211,34 @@ public class AppLoader {
         saveProp(APP_INFO_FILE, appinfo);
     }
 
+    public static String getLangName() {
+        int lang = getDefaultLang();
+        switch (lang) {
+            case GLanguage.ID_ENG:
+                return "en_US";
+            case GLanguage.ID_CHN:
+                return "zh_CN";
+            case GLanguage.ID_CHT:
+                return "zh_TW";
+            case GLanguage.ID_KOR:
+                return "ko_KR";
+            case GLanguage.ID_FRA:
+                return "fr_FR";
+            case GLanguage.ID_SPA:
+                return "es_ES";
+            case GLanguage.ID_ITA:
+                return "it_IT";
+            case GLanguage.ID_JPA:
+                return "ja_JP";
+            case GLanguage.ID_GER:
+                return "de_DE";
+            case GLanguage.ID_RUS:
+                return "ru_RU";
+            default:
+                return "en_US";
+        }
+    }
+
     public static int getGuiStyle() {
         String langstr = appinfo.getProperty(KEY_GUISTYLE);
         int lang = 0;// 0 bright , 1 dark
@@ -244,7 +286,8 @@ public class AppLoader {
     }
 
     public static String getProperty(String key) {
-        return appinfo.getProperty(key);
+        String s = appinfo.getProperty(key);
+        return s == null ? "" : s;
     }
 
     public static void setProperty(String key, String val) {
@@ -536,6 +579,11 @@ public class AppLoader {
         boolean s = f.delete();
         //System.out.println("delete " + f.getAbsolutePath() + " state:" + s);
         return s;
+    }
+
+    public static String getBaseInfo(String key) {
+        String s = baseinfo.getProperty(key);
+        return s == null ? "" : s;
     }
 
 }

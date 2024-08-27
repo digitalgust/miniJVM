@@ -219,7 +219,7 @@ public class GlfmCallBackImpl extends GCallBack {
         if (gform == null) {
             return true;
         }
-        GObject focus = gform.getFocus();
+        GObject focus = gform.getCurrent();
         //System.out.println("keyCode  :" + keyCode + "   action=" + action + "   modifiers=" + modifiers);
         if (focus != null) {
             focus.keyEventGlfm(keyCode, action, modifiers);
@@ -235,7 +235,7 @@ public class GlfmCallBackImpl extends GCallBack {
         if (gform == null) {
             return;
         }
-        GObject focus = gform.getFocus();
+        GObject focus = gform.getCurrent();
         //System.out.println("onCharacter  :" + str + "   mod=" + modifiers);
         if (focus != null) {
             focus.characterEvent(str, modifiers);

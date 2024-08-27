@@ -59,8 +59,8 @@ package org.mini.net.http;
  * The reading and writing of data through the input and output streams are
  * configured, buffered and managed depending on the ability of a platform to
  * read/write on those streams.
- *
  */
+
 import javax.microedition.io.*;
 import java.io.*;
 
@@ -137,8 +137,8 @@ public class Protocol extends ConnectionBaseAdapter
         maxNumberOfPersistentConnections = 1;
 
         /*
-         * bug#4455443 - allows for configuration options to shut off 
-         * the persistent connection feature for http 
+         * bug#4455443 - allows for configuration options to shut off
+         * the persistent connection feature for http
          */
         String flag = System.getProperty(
                 "com.sun.midp.io.http.force_non_persistent");
@@ -387,15 +387,14 @@ public class Protocol extends ConnectionBaseAdapter
      * Warning: A subclass that implements this method, not call this method and
      * should also implement the disconnect method.
      *
-     * @param name The URL for the connection, without the without the protcol
-     * part.
-     * @param mode The access mode, ignored
+     * @param name     The URL for the connection, without the without the protcol
+     *                 part.
+     * @param mode     The access mode, ignored
      * @param timeouts A flag to indicate that the called wants timeout
-     * exceptions, ignored
-     *
-     * @exception IllegalArgumentException If a parameter is invalid.
-     * @exception ConnectionNotFoundException If the connection cannot be found.
-     * @exception IOException If some other kind of I/O error occurs.
+     *                 exceptions, ignored
+     * @throws IllegalArgumentException    If a parameter is invalid.
+     * @throws ConnectionNotFoundException If the connection cannot be found.
+     * @throws IOException                 If some other kind of I/O error occurs.
      */
     protected void connect(String name, int mode, boolean timeouts)
             throws IOException, IllegalArgumentException,
@@ -419,8 +418,8 @@ public class Protocol extends ConnectionBaseAdapter
     /**
      * Open the input stream if it has not already been opened.
      *
-     * @exception IOException is thrown if it has already been opened.
      * @return input stream for the current connection
+     * @throws IOException is thrown if it has already been opened.
      */
     public InputStream openInputStream() throws IOException {
         InputStream in;
@@ -442,8 +441,8 @@ public class Protocol extends ConnectionBaseAdapter
     /**
      * Open the output stream if it has not already been opened.
      *
-     * @exception IOException is thrown if it has already been opened.
      * @return output stream for the current connection
+     * @throws IOException is thrown if it has already been opened.
      */
     public OutputStream openOutputStream() throws IOException {
         OutputStream out;
@@ -468,14 +467,14 @@ public class Protocol extends ConnectionBaseAdapter
      * streams. This method can only be called after the InputStream setup is
      * complete.
      *
-     * @param b the buffer into which the data is read.
+     * @param b   the buffer into which the data is read.
      * @param off the start offset in array <code>b</code> at which the data is
-     * written.
+     *            written.
      * @param len the maximum number of bytes to read.
      * @return the total number of bytes read into the buffer, or
      * <code>-1</code> if there is no more data because the end of the stream
      * has been reached.
-     * @exception IOException if an I/O error occurs.
+     * @throws IOException if an I/O error occurs.
      */
     protected int readBytes(byte b[], int off, int len)
             throws IOException {
@@ -559,14 +558,14 @@ public class Protocol extends ConnectionBaseAdapter
      * Reads up to <code>len</code> bytes of data from the internal buffer into
      * an array of bytes.
      *
-     * @param b the buffer into which the data is read.
+     * @param b   the buffer into which the data is read.
      * @param off the start offset in array <code>b</code> at which the data is
-     * written.
+     *            written.
      * @param len the maximum number of bytes to read.
      * @return the total number of bytes read into the buffer, or
      * <code>-1</code> if there is no more data because the end of the stream
      * has been reached.
-     * @exception IOException if an I/O error occurs.
+     * @throws IOException if an I/O error occurs.
      */
     private int readFromBuffer(byte b[], int off, int len)
             throws IOException {
@@ -598,12 +597,12 @@ public class Protocol extends ConnectionBaseAdapter
      *
      * @return the number of bytes that can be read from this input stream
      * without blocking.
-     * @exception IOException if an I/O error occurs.
+     * @throws IOException if an I/O error occurs.
      */
     public int available() throws IOException {
         int bytesAvailable;
 
-        /* 
+        /*
          * Only after all the headers have been processed can
          * an accurate available count be provided.
          */
@@ -613,7 +612,7 @@ public class Protocol extends ConnectionBaseAdapter
 
         /*
          * Regardless of chunked or non-chunked transfers -
-         * if data is already buffered return the amount 
+         * if data is already buffered return the amount
          * buffered.
          */
         if (bytesleft > 0) {
@@ -621,7 +620,7 @@ public class Protocol extends ConnectionBaseAdapter
         }
 
         if (chunkedIn && totalbytesread == chunksize) {
-            /* 
+            /*
              * Check if a new chunk size header is available.
              */
             return readChunkSizeNonBlocking();
@@ -665,7 +664,7 @@ public class Protocol extends ConnectionBaseAdapter
 
         int size = -1;
         /*
-         * Loop through the available characters until a full 
+         * Loop through the available characters until a full
          * chunk size header is in the readLine buffer.
          */
         for (; len > 0; len--) {
@@ -738,14 +737,14 @@ public class Protocol extends ConnectionBaseAdapter
      * http connection input streams. For non-chunked set the field
      * <code>chunkedIn</code> should be false.
      *
-     * @param b the buffer into which the data is read.
+     * @param b   the buffer into which the data is read.
      * @param off the start offset in array <code>b</code> at which the data is
-     * written.
+     *            written.
      * @param len the maximum number of bytes to read.
      * @return the total number of bytes read into the buffer, or
      * <code>-1</code> if there is no more data because the end of the stream
      * has been reached.
-     * @exception IOException if an I/O error occurs.
+     * @throws IOException if an I/O error occurs.
      */
     protected int readBytesChunked(byte b[], int off, int len)
             throws IOException {
@@ -780,13 +779,13 @@ public class Protocol extends ConnectionBaseAdapter
                     eof = true;
 
                     /*
-                     * REFERENCE: HTTP1.1 document 
+                     * REFERENCE: HTTP1.1 document
                      * SECTION: 3.6.1 Chunked Transfer Coding
                      * in some cases there may be an OPTIONAL trailer
                      * containing entity-header fields. since we don't support
                      * the available() method for TCP socket input streams and
                      * for performance and reuse reasons we do not attempt to
-                     * clean up the current connections input stream. 
+                     * clean up the current connections input stream.
                      * check readResponseMessage() method in this class for
                      * more details
                      */
@@ -889,7 +888,7 @@ public class Protocol extends ConnectionBaseAdapter
     /**
      * Skips the CRLF at the end of each chunk in the InputStream.
      *
-     * @exception IOException if the LF half of the ending CRLF is missing.
+     * @throws IOException if the LF half of the ending CRLF is missing.
      */
     private void skipEndOfChunkCRLF() throws IOException {
         int ch;
@@ -943,14 +942,12 @@ public class Protocol extends ConnectionBaseAdapter
      * <p>
      * This method can only be called after an OutputStream setup has be done.
      *
-     * @param b the data.
+     * @param b   the data.
      * @param off the start offset in the data.
      * @param len the number of bytes to write.
-     *
      * @return int number of bytes written to stream
-     *
-     * @exception IOException if an I/O error occurs. In particular, an
-     * <code>IOException</code> is thrown if the output stream is closed.
+     * @throws IOException if an I/O error occurs. In particular, an
+     *                     <code>IOException</code> is thrown if the output stream is closed.
      */
     protected int writeBytes(byte b[], int off, int len)
             throws IOException {
@@ -989,7 +986,7 @@ public class Protocol extends ConnectionBaseAdapter
     /**
      * If any output data, turn on chunking send it to the server.
      *
-     * @exception IOException if an I/O error occurs
+     * @throws IOException if an I/O error occurs
      */
     public void flush() throws IOException {
         if (requestFinished) {
@@ -1083,7 +1080,7 @@ public class Protocol extends ConnectionBaseAdapter
      * Set the request method of the current connection.
      *
      * @param method request method is GET, HEAD or POST
-     * @exception IOException is thrown if the connection is already open
+     * @throws IOException is thrown if the connection is already open
      * @see #getRequestMethod
      */
     public void setRequestMethod(String method) throws IOException {
@@ -1093,7 +1090,7 @@ public class Protocol extends ConnectionBaseAdapter
             throw new IOException("connection already open");
         }
 
-        /* 
+        /*
          * The request method can not be changed once the output
          * stream has been opened.
          */
@@ -1130,10 +1127,10 @@ public class Protocol extends ConnectionBaseAdapter
     /**
      * Set the request header name/value of specific HTTP 1.1 header field.
      *
-     * @param key property name
+     * @param key   property name
      * @param value property value
-     * @exception IllegalArgumentException is thrown if value contains CRLF.
-     * @exception IOException If some other kind of I/O error occurs.
+     * @throws IllegalArgumentException is thrown if value contains CRLF.
+     * @throws IOException              If some other kind of I/O error occurs.
      * @see #getRequestProperty
      */
     public void setRequestProperty(String key, String value) throws
@@ -1146,8 +1143,8 @@ public class Protocol extends ConnectionBaseAdapter
             throw new IOException("connection already open");
         }
 
-        /* 
-         * The request headers can not be changed once the output 
+        /*
+         * The request headers can not be changed once the output
          * stream has been opened.
          */
         if (maxOStreams == 0) {
@@ -1155,7 +1152,7 @@ public class Protocol extends ConnectionBaseAdapter
         }
 
         // Look to see if a hacker embedded any extra fields.
-        for (;;) {
+        for (; ; ) {
             index = value.indexOf("\r\n", index);
 
             if (index == -1) {
@@ -1179,7 +1176,7 @@ public class Protocol extends ConnectionBaseAdapter
      * Add the named field to the list of request fields. This method is where a
      * subclass should override properties.
      *
-     * @param key key for the request header field.
+     * @param key   key for the request header field.
      * @param value the value for the request header field.
      */
     protected void setRequestField(String key, String value) {
@@ -1209,7 +1206,7 @@ public class Protocol extends ConnectionBaseAdapter
      * Get the response code of the current request.
      *
      * @return numeric value of the parsed response code
-     * @exception IOException is thrown if a network error ocurrs
+     * @throws IOException is thrown if a network error ocurrs
      */
     public int getResponseCode() throws IOException {
         ensureOpen();
@@ -1223,7 +1220,7 @@ public class Protocol extends ConnectionBaseAdapter
      * Get the response message of the current request.
      *
      * @return message associated with the current response header
-     * @exception IOException is thrown if a network error ocurrs
+     * @throws IOException is thrown if a network error ocurrs
      */
     public String getResponseMessage() throws IOException {
         ensureOpen();
@@ -1284,10 +1281,24 @@ public class Protocol extends ConnectionBaseAdapter
      * Get the Expires header for the current response.
      *
      * @return expiration data for the transmitted data
-     *
-     * @exception IOException is thrown if a network error ocurrs
+     * @throws IOException is thrown if a network error ocurrs
      */
     public long getExpiration() throws IOException {
+        String cacheControl = getHeaderField("cache-control");//Cache-Control
+        if (cacheControl != null && cacheControl.indexOf("no-cache") != -1) {
+            return 0;
+        } else if (cacheControl != null && cacheControl.indexOf("no-store") != -1) {
+            return 0;
+        } else if (cacheControl != null && cacheControl.indexOf("max-age") != -1) {
+            String[] ss = cacheControl.split("=");
+            if (ss.length > 1) {
+                try {
+                    return System.currentTimeMillis() + 1000 * Long.parseLong(ss[1].trim());
+                } catch (NumberFormatException e) {
+                    return 0;
+                }
+            }
+        }
         return getHeaderFieldDate("expires", 0);
     }
 
@@ -1295,8 +1306,7 @@ public class Protocol extends ConnectionBaseAdapter
      * Get the Date header for the current response.
      *
      * @return timestamp for the data transmission event
-     *
-     * @exception IOException is thrown if a network error ocurrs
+     * @throws IOException is thrown if a network error ocurrs
      */
     public long getDate() throws IOException {
         return getHeaderFieldDate("date", 0);
@@ -1306,8 +1316,7 @@ public class Protocol extends ConnectionBaseAdapter
      * Get the Last-Modified date header for the current response.
      *
      * @return timestamp for the transmitted data last modification
-     *
-     * @exception IOException is thrown if a network error ocurrs
+     * @throws IOException is thrown if a network error ocurrs
      */
     public long getLastModified() throws IOException {
         return getHeaderFieldDate("last-modified", 0);
@@ -1318,8 +1327,7 @@ public class Protocol extends ConnectionBaseAdapter
      *
      * @param name header field to be examined
      * @return value of requested header, if found, otherwise null
-     *
-     * @exception IOException is thrown if a network error ocurrs
+     * @throws IOException is thrown if a network error ocurrs
      */
     public String getHeaderField(String name) throws IOException {
         ensureOpen();
@@ -1335,8 +1343,7 @@ public class Protocol extends ConnectionBaseAdapter
      *
      * @param index header field offset to be examined
      * @return key name of requested header, if found, otherwise null
-     *
-     * @exception IOException is thrown if a network error ocurrs
+     * @throws IOException is thrown if a network error ocurrs
      */
     public String getHeaderField(int index) throws IOException {
         ensureOpen();
@@ -1355,8 +1362,7 @@ public class Protocol extends ConnectionBaseAdapter
      *
      * @param index header field value offset to be examined
      * @return value of requested header, if found, otherwise null
-     *
-     * @exception IOException is thrown if a network error ocurrs
+     * @throws IOException is thrown if a network error ocurrs
      */
     public String getHeaderFieldKey(int index) throws IOException {
         ensureOpen();
@@ -1376,11 +1382,10 @@ public class Protocol extends ConnectionBaseAdapter
      * does not exist or can not be parsed cleanly.
      *
      * @param name of the field to be examined
-     * @param def default value to use, if field is not parsable
+     * @param def  default value to use, if field is not parsable
      * @return numeric value of requested header, if found, otherwise supplied
      * default is returned
-     *
-     * @exception IOException is thrown if a network error ocurrs
+     * @throws IOException is thrown if a network error ocurrs
      */
     public int getHeaderFieldInt(String name, int def) throws IOException {
         ensureOpen();
@@ -1404,11 +1409,10 @@ public class Protocol extends ConnectionBaseAdapter
      * does not exist or can not be parsed cleanly.
      *
      * @param name of the field to be examined
-     * @param def default value to use, if field is not parsable
+     * @param def  default value to use, if field is not parsable
      * @return date value of requested header, if found, otherwise supplied
      * default is returned
-     *
-     * @exception IOException is thrown if a network error ocurrs
+     * @throws IOException is thrown if a network error ocurrs
      */
     public long getHeaderFieldDate(String name, long def) throws IOException {
         ensureOpen();
@@ -1431,21 +1435,21 @@ public class Protocol extends ConnectionBaseAdapter
     /**
      * If not connected, connect to the underlying socket transport and send the
      * HTTP request and get the response header.
-     * <P>
+     * <p>
      * If an http_proxy was specified the socket connection will be made to the
      * proxy server and the requested URL will include the full http URL.
-     * <P>
+     * <p>
      * On output the Content-Length header is included in the request based on
      * the size of the buffered output array.
-     * <P>
+     * <p>
      * This routine inserts the Host header needed for HTTP 1.1 virtual host
      * addressing.
-     * <P>
+     * <p>
      * This routine also receives the reply response and parses the headers for
      * easier access. After the headers are parsed the application has access to
      * the raw data from the socket stream connection.
      *
-     * @exception IOException is thrown if the connection cannot be opened
+     * @throws IOException is thrown if the connection cannot be opened
      */
     protected void sendRequest() throws IOException {
         sendRequest(false, true);
@@ -1454,24 +1458,23 @@ public class Protocol extends ConnectionBaseAdapter
     /**
      * If not connected, connect to the underlying socket transport and send the
      * HTTP request and get the response header.
-     * <P>
+     * <p>
      * If an http_proxy was specified the socket connection will be made to the
      * proxy server and the requested URL will include the full http URL.
-     * <P>
+     * <p>
      * On output the Content-Length header is included in the request based on
      * the size of the buffered output array.
-     * <P>
+     * <p>
      * This routine inserts the Host header needed for HTTP 1.1 virtual host
      * addressing.
-     * <P>
+     * <p>
      * This routine also receives the reply response and parses the headers for
      * easier access. After the headers are parsed the application has access to
      * the raw data from the socket stream connection.
      *
-     * @param chunkData if true chunk data sent to the server
+     * @param chunkData          if true chunk data sent to the server
      * @param readResponseHeader if true, read the response header
-     *
-     * @exception IOException is thrown if the connection cannot be opened
+     * @throws IOException is thrown if the connection cannot be opened
      */
     private void sendRequest(boolean chunkData, boolean readResponseHeader)
             throws IOException {
@@ -1543,21 +1546,21 @@ public class Protocol extends ConnectionBaseAdapter
     /**
      * If not connected, connect to the underlying socket transport and send the
      * HTTP request headers.
-     * <P>
+     * <p>
      * If an http_proxy was specified the socket connection will be made to the
      * proxy server and the requested URL will include the full http URL.
-     * <P>
+     * <p>
      * On output the Content-Length header is included in the request based on
      * the size of the buffered output array.
-     * <P>
+     * <p>
      * This routine inserts the Host header needed for HTTP 1.1 virtual host
      * addressing.
-     * <P>
+     * <p>
      * This routine also receives the reply response and parses the headers for
      * easier access. After the headers are parsed the application has access to
      * the raw data from the socket stream connection.
      *
-     * @exception IOException is thrown if the connection cannot be opened
+     * @throws IOException is thrown if the connection cannot be opened
      */
     private void startRequest() throws IOException {
         if (streamConnection != null) {
@@ -1572,7 +1575,7 @@ public class Protocol extends ConnectionBaseAdapter
      * Find a previous connection in the pool or try to connect to the
      * underlying stream transport.
      *
-     * @exception IOException is thrown if the connection cannot be opened
+     * @throws IOException is thrown if the connection cannot be opened
      */
     private void streamConnect() throws IOException {
         verifyPermissionCheck();
@@ -1610,7 +1613,7 @@ public class Protocol extends ConnectionBaseAdapter
      * Simplifies the sendRequest() method header functionality into one method
      * this is extremely helpful for persistent connection support and retries.
      *
-     * @exception IOException is thrown if the connection cannot be opened
+     * @throws IOException is thrown if the connection cannot be opened
      */
     private void sendRequestHeader() throws IOException {
         StringBuffer reqLine;
@@ -1646,7 +1649,7 @@ public class Protocol extends ConnectionBaseAdapter
          *
          * For HTTPS purposes we will use the relative URI.
          *
-         * Some HTTPS server's do not like to see "https" as the scheme of an 
+         * Some HTTPS server's do not like to see "https" as the scheme of an
          * URI and only recognize "http".
          * examples: www.wellsfargo.com sends back html with not HTTP headers,
          * e-banking.abbeynational.co.uk sends back a 404 to all requests.
@@ -1729,7 +1732,7 @@ public class Protocol extends ConnectionBaseAdapter
     /**
      * Write the http request body bytes to the output stream.
      *
-     * @exception IOException
+     * @throws IOException
      */
     protected void sendRequestBody() throws IOException {
 
@@ -1746,7 +1749,7 @@ public class Protocol extends ConnectionBaseAdapter
         length = bytesToWrite;
 
         /*
-         * If a CHUNKed session then write out the chunk size first 
+         * If a CHUNKed session then write out the chunk size first
          * with a trailing CRLF.
          *
          * reference: RFC2616 - section 3 protocol parameters
@@ -1790,8 +1793,8 @@ public class Protocol extends ConnectionBaseAdapter
     /**
      * Finish the http request and reads the response headers.
      *
-     * @exception IOException is thrown, if an I/O error occurs for final stream
-     * output or on reading the response message line
+     * @throws IOException is thrown, if an I/O error occurs for final stream
+     *                     output or on reading the response message line
      */
     protected void finishRequestGetResponseHeader() throws IOException {
 
@@ -1813,8 +1816,8 @@ public class Protocol extends ConnectionBaseAdapter
              * * indicates its done here.
              */
 
- /*
-             * write the last chunk (size=0 / CRLF) and the dummy trailer 
+            /*
+             * write the last chunk (size=0 / CRLF) and the dummy trailer
              */
             streamOutput.write("0\r\n\r\n".getBytes());
         }
@@ -1842,7 +1845,7 @@ public class Protocol extends ConnectionBaseAdapter
      * method and should implement the disconnect method.
      *
      * @return network stream connection
-     * @exception IOException is thrown if the connection cannot be opened
+     * @throws IOException is thrown if the connection cannot be opened
      */
     protected StreamConnection connect() throws IOException {
         org.mini.net.socket.Protocol conn;
@@ -1898,7 +1901,7 @@ public class Protocol extends ConnectionBaseAdapter
      *
      * @param os output stream for secure handshake
      * @param is input stream for secure handshake
-     * @exception IOException is thrown if an error occurs in the SSL handshake
+     * @throws IOException is thrown if an error occurs in the SSL handshake
      */
     protected void doTunnelHandshake(OutputStream os, InputStream is) throws
             IOException {
@@ -1985,7 +1988,7 @@ public class Protocol extends ConnectionBaseAdapter
      * condition codes.
      *
      * @param in input stream where the response headers are read
-     * @exception IOException is thrown if the header response can not be parsed
+     * @throws IOException is thrown if the header response can not be parsed
      */
     private void readResponseMessage(InputStream in) throws IOException {
 
@@ -1996,13 +1999,13 @@ public class Protocol extends ConnectionBaseAdapter
         line = readLine(in);
 
         /*
-         * REFERENCE: HTTP1.1 document 
+         * REFERENCE: HTTP1.1 document
          * SECTION: 3.6.1 Chunked Transfer Coding
-         * in some cases there may be an OPTIONAL trailer containing 
+         * in some cases there may be an OPTIONAL trailer containing
          * entity-header fields. since we don't support the available()
          * method for inputstreams and for performance reasons we
          * do not attempt to clean up the previous connections input
-         * stream. the first thing we do here is read the stream and 
+         * stream. the first thing we do here is read the stream and
          * discard it.
          */
         if (line != null && line.length() == 0) {
@@ -2070,7 +2073,7 @@ public class Protocol extends ConnectionBaseAdapter
      * pairs for easy application use.
      *
      * @param in input stream where the response headers are read
-     * @exception IOException is thrown if the response headers cannot be parsed
+     * @throws IOException is thrown if the response headers cannot be parsed
      */
     private void readHeaders(InputStream in) throws IOException {
         String line;
@@ -2091,7 +2094,7 @@ public class Protocol extends ConnectionBaseAdapter
         chunkedIn = false;
         eof = false;
 
-        for (;;) {
+        for (; ; ) {
             try {
                 line = readLine(in);
             } catch (IOException ioe) {
@@ -2147,16 +2150,16 @@ public class Protocol extends ConnectionBaseAdapter
             }
 
             /*
-	     * Determine if this is a chunked data transfer.
+             * Determine if this is a chunked data transfer.
              */
             if ((key.equals("transfer-encoding"))
                     && (value.regionMatches(true, 0, "chunked",
-                            0, value.length()))) {
+                    0, value.length()))) {
                 chunkedIn = true;
             }
 
             /*
-	     * Update the Content-Length based on the header value.
+             * Update the Content-Length based on the header value.
              */
             if (key.equals("content-length")) {
                 try {
@@ -2200,13 +2203,13 @@ public class Protocol extends ConnectionBaseAdapter
      *
      * @param in InputStream to read the data
      * @return one line of input header or null if end of stream
-     * @exception IOException if error encountered while reading headers
+     * @throws IOException if error encountered while reading headers
      */
     private String readLine(InputStream in) throws IOException {
         int c;
 
         try {
-            for (;;) {
+            for (; ; ) {
                 c = in.read();
                 if (c < 0) {
                     return null;
@@ -2235,7 +2238,7 @@ public class Protocol extends ConnectionBaseAdapter
     /**
      * Close the OutputStream and transition to connected state.
      *
-     * @exception IOException if the subclass throws one
+     * @throws IOException if the subclass throws one
      */
     protected void closeOutputStream() throws IOException {
         try {
@@ -2329,16 +2332,16 @@ public class Protocol extends ConnectionBaseAdapter
      * Warning: A subclass that implements connect, should also implement this
      * method without calling this method.
      *
-     * @param connection connection return from {@link #connect()}
-     * @param inputStream input stream opened from <code>connection</code>
+     * @param connection   connection return from {@link #connect()}
+     * @param inputStream  input stream opened from <code>connection</code>
      * @param outputStream output stream opened from <code>connection</code>
-     * @exception IOException if an I/O error occurs while the connection is
-     * terminated.
-     * @exception IOException is thrown if the connection or associated streams
-     * cannot be closed
+     * @throws IOException if an I/O error occurs while the connection is
+     *                     terminated.
+     * @throws IOException is thrown if the connection or associated streams
+     *                     cannot be closed
      */
     protected void disconnect(StreamConnection connection,
-            InputStream inputStream, OutputStream outputStream)
+                              InputStream inputStream, OutputStream outputStream)
             throws IOException {
         try {
             if (connection != null) {

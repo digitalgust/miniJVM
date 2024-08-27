@@ -2,12 +2,16 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.mini.gui;
+package org.mini.gui.guilib;
 
+import org.mini.gui.*;
 import org.mini.gui.gscript.*;
+import org.mini.http.MiniHttpClient;
+import org.mini.json.JsonParser;
 import org.mini.layout.*;
 import org.mini.nanovg.Nanovg;
 
+import java.net.URL;
 import java.util.ArrayList;
 
 
@@ -27,6 +31,7 @@ public class GuiScriptLib extends Lib {
         this.form = form;
 
         {
+            methodNames.put("flushGui".toLowerCase(), this::flushGui);//  set background color
             methodNames.put("setBgColor".toLowerCase(), this::setBgColor);//  set background color
             methodNames.put("setColor".toLowerCase(), this::setColor);//  set background color
             methodNames.put("setText".toLowerCase(), this::setText);//  set text
@@ -45,9 +50,12 @@ public class GuiScriptLib extends Lib {
             methodNames.put("setAttachInt".toLowerCase(), this::setAttachInt);//
             methodNames.put("setBgColorHexStr".toLowerCase(), this::setBgColorHexStr);//  set background color
             methodNames.put("setColorHexStr".toLowerCase(), this::setColorHexStr);//  set color
+            methodNames.put("setPreIconColor".toLowerCase(), this::setPreIconColor);//  set color
+            methodNames.put("clearPreIconColor".toLowerCase(), this::clearPreIconColor);//  set color
             methodNames.put("getListIdx".toLowerCase(), this::getListIdx);//
             methodNames.put("setImgAlphaStr".toLowerCase(), this::setImgAlphaStr);//
             methodNames.put("setEnable".toLowerCase(), this::setEnable);//
+            methodNames.put("getEnable".toLowerCase(), this::getEnable);//
             methodNames.put("setListIdx".toLowerCase(), this::setListIdx);//
             methodNames.put("setCheckBox".toLowerCase(), this::setCheckBox);//
             methodNames.put("getCheckBox".toLowerCase(), this::getCheckBox);//
@@ -66,13 +74,25 @@ public class GuiScriptLib extends Lib {
             methodNames.put("getListText".toLowerCase(), this::getListText);//
             methodNames.put("showBar".toLowerCase(), this::showBar);//
             methodNames.put("showMsg".toLowerCase(), this::showMsg);//
+            methodNames.put("showConfirm".toLowerCase(), this::showConfirm);//
             methodNames.put("insertText".toLowerCase(), this::insertText);//
             methodNames.put("deleteText".toLowerCase(), this::deleteText);//
             methodNames.put("getCaretPos".toLowerCase(), this::getCaretPos);//
             methodNames.put("showTitle".toLowerCase(), this::showTitle);//
             methodNames.put("setBgImg".toLowerCase(), this::setBgImg);//
+            methodNames.put("setVisible".toLowerCase(), this::setVisible);//
+            methodNames.put("getVisible".toLowerCase(), this::getVisible);//
+            methodNames.put("httpGet".toLowerCase(), this::httpGet);//
+            methodNames.put("httpGetSync".toLowerCase(), this::httpGetSync);//
 
         }
+    }
+
+    public Func getFuncByName(String name) {
+        if (form == null) { //如果通过解析XML得到form的时候，创建这个lib时，form还没有创建成功，因此进行补充设置
+            form = GCallBack.getInstance().getApplication().getForm();
+        }
+        return super.getFuncByName(name);
     }
 
 
@@ -80,11 +100,62 @@ public class GuiScriptLib extends Lib {
     // inner method
     // -------------------------------------------------------------------------
 
+    /**
+     * @param url
+     * @param callback like: CONTAINER_NAME.SCRIPT_NAME
+     */
+    public static void doHttpCallback(GForm form, String callback, String url, int code, String reply) {
+        if (callback != null) {
+            if (callback.contains(".")) {
+                String[] ss = callback.split("\\.");
+                GContainer gobj = GToolkit.getComponent(form, ss[0]);
+                Interpreter inp = gobj.getInterpreter();
+                inp.callSub(ss[1] + "(\"" + url + "\"," + code + ",\"" + reply + "\")");
+            } else {
+                System.out.println("httpRequest callback no GContainer specified: " + callback);
+            }
+        }
+    }
+
+    public static void showProgressBar(GForm form, int progress) {
+        long vg = GCallBack.getInstance().getNvContext();
+        //GToolkit.drawTextLine(vg, 0, 0, "waitting ..." + progress, GToolkit.getStyle().getTextFontSize(), GToolkit.getStyle().getTextFontColor(), Nanovg.NVG_ALIGN_LEFT | Nanovg.NVG_ALIGN_TOP);
+        int w = GCallBack.getInstance().getDeviceWidth();
+        int h = GCallBack.getInstance().getDeviceHeight();
+        //System.out.println("progress:" + progress);
+        final String panName = "_INNER_PROGRESS_BAR";
+        GObject go = GToolkit.getComponent(form, panName);
+        if (go == null) {
+            go = new GPanel(form, 0, h - 4, 0, 4) {
+                @Override
+                public void setSize(float w, float h) {
+                    super.setSize(w, h);
+                    layer = GObject.LAYER_INNER;
+                }
+            };
+            go.setName(panName);
+            go.setBgColor(GColorSelector.BLUE_HALF);
+            form.add(go);
+        }
+        go.setLocation(0, h - go.getH());
+        go.setSize(progress * w / 100f, go.getH());
+        if (progress == 100) {
+            GForm.addCmd(new GCmd(() -> {
+                GObject go1 = GToolkit.getComponent(form, panName);
+                if (go1 != null) go1.setSize(0, go1.getH());
+            }));
+        }
+    }
 
     // -------------------------------------------------------------------------
     // implementation
     // -------------------------------------------------------------------------
 
+
+    public DataType flushGui(ArrayList<DataType> para) {
+        GForm.flush();
+        return null;
+    }
 
     public DataType setBgColor(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
@@ -148,10 +219,36 @@ public class GuiScriptLib extends Lib {
         return null;
     }
 
+    public DataType setPreIconColor(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(form, compont);
+        if (gobj != null) {
+            float[] color;
+            String rgbaStr = Interpreter.popBackStr(para);
+            try {
+                int c = (int) Long.parseLong(rgbaStr, 16);
+                color = Nanovg.nvgRGBA((byte) ((c >> 24) & 0xff), (byte) ((c >> 16) & 0xff), (byte) ((c >> 8) & 0xff), (byte) ((c >> 0) & 0xff));
+                gobj.setPreiconColor(color);
+            } catch (Exception e) {
+            }
+        }
+        return null;
+    }
+
+    public DataType clearPreIconColor(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(form, compont);
+        if (gobj != null) {
+            gobj.setPreiconColor(GToolkit.getStyle().getTextFontColor());
+        }
+        return null;
+    }
+
 
     public DataType setText(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        String text = Interpreter.popBackStr(para);
+        DataType dt = Interpreter.popBack(para);
+        String text = dt.getString();
         GToolkit.setCompText(form, compont, text);
         return null;
     }
@@ -407,6 +504,16 @@ public class GuiScriptLib extends Lib {
         return null;
     }
 
+    private DataType getEnable(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(form, compont);
+        if (gobj != null) {
+            boolean en = gobj.isEnable();
+            return Interpreter.getCachedBool(en);
+        }
+        return Interpreter.getCachedBool(false);
+    }
+
     private DataType setCheckBox(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
         boolean checked = Interpreter.popBackBool(para);
@@ -518,7 +625,36 @@ public class GuiScriptLib extends Lib {
 
     public DataType showMsg(ArrayList<DataType> para) {
         String msg = Interpreter.popBackStr(para);
-        GToolkit.getMsgFrame(form, GLanguage.getString("Message"), msg);
+        GFrame f = GToolkit.getMsgFrame(form, GLanguage.getString("Message"), msg);
+        GToolkit.showFrame(f);
+        form.flush();
+        return null;
+    }
+
+    public DataType showConfirm(ArrayList<DataType> para) {
+        String msg = Interpreter.popBackStr(para);
+        String callback = Interpreter.popBackStr(para);
+        GFrame f = GToolkit.getConfirmFrame(
+                form,
+                GLanguage.getString("Message"),
+                msg,
+                GLanguage.getString("Ok"),
+                (obj) -> {
+                    if (callback != null) {
+                        if (callback.contains(".")) {
+                            String[] ss = callback.split("\\.");
+                            GContainer gobj = GToolkit.getComponent(form, ss[0]);
+                            Interpreter inp = gobj.getInterpreter();
+                            inp.callSub(ss[1] + "()");
+                        } else {
+                            System.out.println("showConfirm callback format \"PAN.subname\" ,but : " + callback);
+                        }
+                    }
+                },
+                null,
+                null);
+        GToolkit.showFrame(f);
+        form.flush();
         return null;
     }
 
@@ -579,4 +715,83 @@ public class GuiScriptLib extends Lib {
         }
         return null;
     }
+
+    private DataType setVisible(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(form, compont);
+        if (gobj != null) {
+            boolean show = Interpreter.popBackBool(para);
+            gobj.setVisible(show);
+        }
+        return null;
+    }
+
+    private DataType getVisible(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(form, compont);
+        if (gobj != null) {
+            boolean show = gobj.isVisible();
+            return Interpreter.getCachedBool(show);
+        }
+        return Interpreter.getCachedBool(false);
+    }
+
+    private DataType httpRequestImpl(ArrayList<DataType> para, boolean async) {
+        String href = Interpreter.popBackStr(para);
+        String callback = Interpreter.popBackStr(para);
+        if (href != null) {
+            try {
+                URL url = new URL(href);
+            } catch (Exception e) {
+                doHttpCallback(form, callback, href, -1, "url format error");
+                return null;
+            }
+
+            MiniHttpClient hc = new MiniHttpClient(href, null, new MiniHttpClient.DownloadCompletedHandle() {
+                @Override
+                public void onCompleted(MiniHttpClient client, String url, byte[] data) {
+                    if (data != null) {
+                        try {
+                            JsonParser<HttpRequestReply> jp = new JsonParser();
+                            HttpRequestReply msg = jp.deserial(new String(data, "UTF-8"), HttpRequestReply.class);
+                            if (async) {//异步要交给主线程执行，因为实践中出现死锁，GContainer 的elements 同步比较多，多线程死锁
+                                GCmd cmd = new GCmd(
+                                        () -> {
+                                            doHttpCallback(form, callback, url, msg.getCode(), msg.getReply());
+                                        });
+                                GForm.addCmd(cmd);
+                                GForm.flush();
+                            } else {
+                                doHttpCallback(form, callback, url, msg.getCode(), msg.getReply());
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+            if (async) {
+                hc.setProgressListener(new MiniHttpClient.ProgressListener() {
+                    @Override
+                    public void onProgress(MiniHttpClient client, int progress) {
+                        showProgressBar(form, progress);
+                    }
+                });
+                hc.start();
+            } else {
+                hc.run();
+            }
+        }
+        return null;
+    }
+
+
+    public DataType httpGetSync(ArrayList<DataType> para) {
+        return httpRequestImpl(para, false);
+    }
+
+    public DataType httpGet(ArrayList<DataType> para) {
+        return httpRequestImpl(para, true);
+    }
+
 }

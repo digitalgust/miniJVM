@@ -5,8 +5,8 @@
 extern "C" {
 #endif
 
-#define ca_crt_rsa_size 70369
-#define ca_der_count 48
+#define ca_crt_rsa_size 230347
+#define ca_der_count 146
 
 
 //virtual studio limit string < 65535

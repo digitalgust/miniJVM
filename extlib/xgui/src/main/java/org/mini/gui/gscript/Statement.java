@@ -204,7 +204,7 @@ class Expression {
                 psyt.setRecyclable(false);
                 if (psyt.getVal() == psyt.NONE) {
                     //错误的符号，需处理
-                    throw new Exception(Interpreter.STRS_ERR[Interpreter.ERR_ILLEGAL]);
+                    throw new Exception(Interpreter.STRS_ERR[Interpreter.ERR_ILLEGAL] + ":" + statement);
                 } else {
                     tgt.add(new ExprCellDataType(psyt, inp));
                 }

@@ -783,36 +783,22 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
 }
 
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations {
-    GLFMInterfaceOrientation orientations = _glfmDisplay->supportedOrientations;
-    BOOL portraitRequested = (orientations & (GLFMInterfaceOrientationPortrait | GLFMInterfaceOrientationPortraitUpsideDown)) != 0;
+    GLFMInterfaceOrientation orientations = self.glfmDisplay->supportedOrientations;
+    BOOL portraitRequested = (orientations & (GLFMInterfaceOrientationPortrait |
+                                              GLFMInterfaceOrientationPortraitUpsideDown)) != 0;
     BOOL landscapeRequested = (orientations & GLFMInterfaceOrientationLandscape) != 0;
     BOOL isTablet = [[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad;
     if (portraitRequested && landscapeRequested) {
-        if (isTablet) {
-            return UIInterfaceOrientationMaskAll;
-        } else {
-            return UIInterfaceOrientationMaskAllButUpsideDown;
-        }
-    } else if (landscapeRequested) {
-        // iOS16以下
-        NSNumber *orientation = [NSNumber numberWithInt:GLFMInterfaceOrientationLandscapeLeft];
-//        if((supportedOrientations & GLFMInterfaceOrientationLandscapeLeft) != 0){
-//            supportedOrientations = [NSNumber numberWithInt:UIInterfaceOrientationLandscapeLeft];
-//        }
-        [[UIDevice currentDevice] setValue:orientation forKey:@"orientation"];
-        return UIInterfaceOrientationMaskLandscape;
-    } else {
+        return isTablet ? UIInterfaceOrientationMaskAll : UIInterfaceOrientationMaskAllButUpsideDown;
+    }
+    if (portraitRequested) {
         if (isTablet) {
             return (UIInterfaceOrientationMask)(UIInterfaceOrientationMaskPortrait |
-                    UIInterfaceOrientationMaskPortraitUpsideDown);
-        } else {
-            // iOS16以下
-            NSNumber *orientation = [NSNumber numberWithInt:UIInterfaceOrientationPortrait];
-            [[UIDevice currentDevice] setValue:orientation forKey:@"orientation"];
-
-            return UIInterfaceOrientationMaskPortrait;
+                                                UIInterfaceOrientationMaskPortraitUpsideDown);
         }
+        return UIInterfaceOrientationMaskPortrait;
     }
+    return UIInterfaceOrientationMaskLandscape;
 }
 
 - (void)deviceOrientationChanged:(NSNotification *)notification {
@@ -2182,7 +2168,7 @@ const char* glfmGetResRoot(){
     return [resPath UTF8String];
 }
 
-const char* glfmGetSaveRoot(){
+const char* glfmGetSaveRoot(void){
 
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
     NSString *cachesDir = [paths objectAtIndex:0];
@@ -2190,13 +2176,13 @@ const char* glfmGetSaveRoot(){
     return [cachesDir UTF8String];
 }
 
-const char* glfmGetUUID(){
+const char* glfmGetUUID(void){
     NSString* Identifier = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
     return [Identifier UTF8String];
 }
 
 
-const char* getClipBoardContent() {
+const char* getClipBoardContent(void) {
     UIPasteboard* pBoard=[UIPasteboard generalPasteboard];
     if(pBoard!=NULL) {
         NSString* pNsStr=pBoard.string;
@@ -2364,6 +2350,10 @@ int openOtherApp(const char *curl, const char *more, int detectAppInstalled){
         //NSLog(@"%@ 无效" ,nspath);
         return 1;
     }
+}
+
+void remoteMethodCall(const char *inJsonStr, Utf8String *outJsonStr){
+    
 }
 
 #endif

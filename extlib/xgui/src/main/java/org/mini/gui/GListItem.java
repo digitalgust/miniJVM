@@ -6,6 +6,7 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
+import org.mini.glfw.Glfw;
 import org.mini.nanovg.Nanovg;
 
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
@@ -91,20 +92,24 @@ public class GListItem extends GContainer {
 
     @Override
     public void touchEvent(int touchid, int phase, int x, int y) {
-        switch (phase) {
-            case Glfm.GLFMTouchPhaseBegan:
-                oldX = getX();
-                oldY = getY();
-                break;
-            case Glfm.GLFMTouchPhaseMoved:
-                break;
-            case Glfm.GLFMTouchPhaseEnded:
-                if (validAction(x, y)) select();
-                break;
-            default:
-                break;
+        GObject found = findSonByXY(x, y);
+        if (found != null) {
+            super.touchEvent(touchid, phase, x, y);
+        } else {
+            switch (phase) {
+                case Glfm.GLFMTouchPhaseBegan:
+                    oldX = getX();
+                    oldY = getY();
+                    break;
+                case Glfm.GLFMTouchPhaseMoved:
+                    break;
+                case Glfm.GLFMTouchPhaseEnded:
+                    if (validAction(x, y)) select();
+                    break;
+                default:
+                    break;
+            }
         }
-
     }
 
     public boolean dragEvent(int button, float dx, float dy, float x, float y) {
@@ -114,11 +119,16 @@ public class GListItem extends GContainer {
 
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
-        if (pressed) {
-            oldX = getX();
-            oldY = getY();
+        GObject found = findSonByXY(x, y);
+        if (found != null) {
+            super.mouseButtonEvent(button, pressed, x, y);
         } else {
-            if (validAction(x, y)) select();
+            if (pressed) {
+                oldX = getX();
+                oldY = getY();
+            } else {
+                if (validAction(x, y)) select();
+            }
         }
     }
 
@@ -162,7 +172,7 @@ public class GListItem extends GContainer {
         float th = list.list_item_heigh - pad;
 
         nvgSave(vg);
-        Nanovg.nvgScissor(vg, tx, ty, tw, th);
+        Nanovg.nvgIntersectScissor(vg, tx, ty, tw, th);
 
 
         if (list.isSelected(getIndex())) {
@@ -190,6 +200,7 @@ public class GListItem extends GContainer {
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
             float[] pc = preiconColor == null ? getStyle().getTextFontColor() : preiconColor;
+            pc = enable ? pc : getDisabledColor();
             nvgFillColor(vg, pc);
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
             nvgTextJni(vg, x + thumb * 0.5f, y + thumb * 0.5f + 2, preicon_arr, 0, preicon_arr.length);

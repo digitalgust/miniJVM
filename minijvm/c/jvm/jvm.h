@@ -1568,7 +1568,7 @@ void localvar_setLong_2slot_jni(LocalVarItem *localvar, s32 index, s64 val);
 * @return ins
 */
 static inline Instance *getInstanceInStack(ConstantMethodRef *cmr, RuntimeStack *stack) {
-    return (stack->sp - 1 - cmr->para_slots)->rvalue;
+    return (Instance *) ((stack->sp - 1 - cmr->para_slots)->rvalue);
 }
 
 s32 exception_handle(RuntimeStack *stack, Runtime *runtime);

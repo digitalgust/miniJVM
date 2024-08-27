@@ -101,6 +101,8 @@
 extern "C" {
 #endif
 
+#include "utf8_string.h"
+
 // MARK: - Enums
 
 typedef enum {
@@ -313,7 +315,7 @@ typedef void (*GLFMAppFocusFunc)(GLFMDisplay *display, bool focused);
 typedef void (*GLFMPhotoPickedFunc)(GLFMDisplay *display, int uid, const char *uri, char *data,
                                     int size);
 
-typedef void (*GLFMNotifyFunc)(GLFMDisplay *display,const char *key, const char *value);
+typedef void (*GLFMNotifyFunc)(GLFMDisplay *display, const char *key, const char *value);
 //gust add end
 
 // Use event.vector for all sensors except for GLFMSensorRotationMatrix, which uses event.matrix
@@ -562,7 +564,8 @@ ANativeActivity *glfmAndroidGetActivity(void);
 
 typedef void (*GLFMPhotoPickedFunc)(GLFMDisplay *display, int uid, const char *uri, char *data,
                                     int size);
-typedef void (*GLFMNotifyFunc)(GLFMDisplay *display,const char *key, const char *value);
+
+typedef void (*GLFMNotifyFunc)(GLFMDisplay *display, const char *key, const char *value);
 
 const char *glfmGetResRoot();
 
@@ -576,11 +579,13 @@ const char *getOsName();
 
 int openOtherApp(const char *url, const char *more, int detectAppInstalled);
 
+void remoteMethodCall(const char *inJsonStr, Utf8String *outJsonStr);
+
 void pickPhotoAlbum(GLFMDisplay *display, int uid, int type);
 
 void pickPhotoCamera(GLFMDisplay *display, int uid, int type);
 
-void imageCrop(GLFMDisplay *display, int uid, const char *uri,int x,int y, int width, int height);
+void imageCrop(GLFMDisplay *display, int uid, const char *uri, int x, int y, int width, int height);
 
 void *playVideo(GLFMDisplay *display, char *cpath, char *mimeType);
 
@@ -590,7 +595,7 @@ void pauseVideo(GLFMDisplay *display, void *videoPanel);
 
 void stopVideo(GLFMDisplay *display, void *videoPanel);
 
-const char* glfmGetUUID();
+const char *glfmGetUUID();
 
 void glfmSetPhotoPickedFunc(GLFMDisplay *display, GLFMPhotoPickedFunc photoPickedFunc);
 

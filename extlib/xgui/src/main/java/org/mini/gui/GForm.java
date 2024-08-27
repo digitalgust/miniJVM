@@ -161,14 +161,14 @@ public class GForm extends GContainer {
 
         Nanovg.nvgTextJni(vg, dx, dy, b, 0, b.length);
         dy += font_size;
-        if (focus != null) {
-            b = GLUtil.toCstyleBytes("focus:" + focus.getX() + "," + focus.getY() + "," + focus.getW() + "," + focus.getH() + "  " + ((focus instanceof GContainer) ? ((GContainer) focus).getInnerX() + "," + ((GContainer) focus).getInnerY() + "," + ((GContainer) focus).getInnerW() + "," + ((GContainer) focus).getInnerH() : ""));
+        if (current != null) {
+            b = GLUtil.toCstyleBytes("focus:" + current.getX() + "," + current.getY() + "," + current.getW() + "," + current.getH() + "  " + ((current instanceof GContainer) ? ((GContainer) current).getInnerX() + "," + ((GContainer) current).getInnerY() + "," + ((GContainer) current).getInnerW() + "," + ((GContainer) current).getInnerH() : ""));
             Nanovg.nvgTextJni(vg, dx, dy, b, 0, b.length);
         }
     }
 
 
-    static synchronized public void flush() {
+    public static void flush() {
         GForm.flush = 3;
         //in android may flush before paint,so the menu not shown
     }
@@ -216,10 +216,19 @@ public class GForm extends GContainer {
         this.pickListener = pickListener;
     }
 
+    float tx, ty, tw, th;
+
     public void KeyboardPopEvent(boolean visible, float x, float y, float w, float h) {
+        tx = x;
+        ty = y;
+        tw = w;
+        th = h;
         if (visible) {
             if (editObject != null) {
                 float objbtn = editObject.getY() + editObject.getH();
+                if (editObject instanceof GTextBox) {
+                    objbtn = ((GTextBox) editObject).getCaretY() + 10f;
+                }
                 float obj2scrbtn = getH() - objbtn;
                 if (h > obj2scrbtn) {
                     float trans = h - obj2scrbtn;
