@@ -8,7 +8,7 @@
     <groupId>io.github.digitalgust</groupId>
     <artifactId>glfw_gui</artifactId>
     <name>${project.groupId}:${project.artifactId}</name>
-    <version>1.1.6</version>
+    <version>1.1.7</version>
     <description>miniJVM desktop platform gui library</description>
     <url>https://github.com/digitalgust/miniJVM</url>
 
@@ -34,16 +34,7 @@
         </developer>
     </developers>
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>ossrh</id>
-            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </distributionManagement>
+
     <profiles>
         <profile>
             <id>release</id>
@@ -119,8 +110,32 @@
                         <artifactId>maven-release-plugin</artifactId>
                         <version>2.5.3</version>
                     </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.5.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <tokenAuth>true</tokenAuth>
+                            <waitMaxTime>7200</waitMaxTime>
+                            <centralBaseUrl>https://central.sonatype.com</centralBaseUrl>
+                        </configuration>
+                    </plugin>
                 </plugins>
             </build>
+
+            <distributionManagement>
+                <snapshotRepository>
+                    <id>central</id>
+                    <url>https://central.sonatype.com/</url>
+                </snapshotRepository>
+                <!--        <repository>-->
+                <!--            <id>ossrh</id>-->
+                <!--            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>-->
+                <!--        </repository>-->
+            </distributionManagement>
+
         </profile>
     </profiles>
 
@@ -145,7 +160,7 @@
         <dependency>
             <groupId>io.github.digitalgust</groupId>
             <artifactId>minijvm_rt</artifactId>
-            <version>1.1.6</version>
+            <version>1.1.7</version>
         </dependency>
     </dependencies>
     
@@ -153,7 +168,8 @@
         <finalName>${project.artifactId}</finalName>
         <plugins>
             <plugin>   
-                <artifactId>maven-antrun-plugin</artifactId>    
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
                 <executions>       
                     <execution>         
                         <phase>package</phase>        

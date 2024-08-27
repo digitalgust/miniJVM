@@ -93,7 +93,7 @@ static void _callback_character(GLFMDisplay *window, const char *utf8, int modif
     }
 }
 
-static void _callback_render(GLFMDisplay *window, f64 frameTime) {
+static void _callback_render(GLFMDisplay *window) {
     if (refers._callback_render) {
         Runtime *runtime = getRuntimeCurThread(refers.env);
         JniEnv *env = refers.env;
