@@ -8,7 +8,6 @@ import javax.microedition.io.HttpsConnection;
 import javax.microedition.io.SecurityInfo;
 import javax.microedition.io.StreamConnection;
 import java.io.*;
-import java.nio.ByteBuffer;
 
 
 public class Protocol extends org.mini.net.http.Protocol
@@ -165,7 +164,6 @@ public class Protocol extends org.mini.net.http.Protocol
         OutputStream out;
 
 
-
         public void connectImpl() throws IOException {
             httpsinfo = SocketNative.sslc_construct_entry();
             int ret = SocketNative.sslc_init(httpsinfo);
@@ -182,32 +180,25 @@ public class Protocol extends org.mini.net.http.Protocol
         public InputStream openInputStream() throws IOException {
             if (in == null) {
                 in = new InputStream() {
-                    ByteBuffer buf = ByteBuffer.allocate(4096);
-
-                    {
-                        buf.flip();
-                    }
-
-                    byte[] b = new byte[1024];
+                    byte[] buf = new byte[1];
 
                     @Override
                     public int read() throws IOException {
-                        int ret;
-                        while (buf.remaining() == 0) {
-                            ret = SocketNative.sslc_read(httpsinfo, b, 0, b.length);
-                            if (ret < 0) {
-                                SocketNative.sslc_close(httpsinfo);
-                                return -1;
-                            }
-                            if (ret == 0) {
-                                Thread.yield();
-                                continue;
-                            }
-                            buf.compact();
-                            buf.put(b, 0, ret);
-                            buf.flip();
+                        int ret = SocketNative.sslc_read(httpsinfo, buf, 0, 1);
+                        if (ret < 0) {
+                            return -1;
                         }
-                        return buf.get() & 0xff;
+                        return buf[0] & 0xff;
+                    }
+
+                    @Override
+                    public int read(byte[] b, int off, int len) throws IOException {
+
+                        int ret = SocketNative.sslc_read(httpsinfo, b, off, len);
+                        if (ret < 0) {
+                            return -1;
+                        }
+                        return ret;
                     }
 
                     @Override

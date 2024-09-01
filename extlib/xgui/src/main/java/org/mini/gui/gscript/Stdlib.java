@@ -668,9 +668,9 @@ public class Stdlib extends Lib {
             String i = new String(result, "utf-8");
             return Interpreter.getCachedStr(i);
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
-        return null;
+        return Interpreter.getCachedStr("");
     }
 
     private DataType remoteMethodCall(ArrayList<DataType> para) {
