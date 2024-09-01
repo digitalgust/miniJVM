@@ -112,6 +112,7 @@
 		45F997DA253B6AAE0053E7A0 /* ssl_cache.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F99793253B6AAE0053E7A0 /* ssl_cache.c */; };
 		45F9982A253D2B360053E7A0 /* ssl_client.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F99829253D2B360053E7A0 /* ssl_client.c */; };
 		5907F3732B17B0D5007C7B0D /* libgui.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5907F3712B17AFC4007C7B0D /* libgui.dylib */; };
+		84D87F4A2C83F1E30041F404 /* os_posix.c in Sources */ = {isa = PBXBuildFile; fileRef = 84D87F492C83F1E30041F404 /* os_posix.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -328,6 +329,7 @@
 		45F99828253D2B360053E7A0 /* ssl_client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ssl_client.h; path = https/ssl_client.h; sourceTree = "<group>"; };
 		45F99829253D2B360053E7A0 /* ssl_client.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ssl_client.c; path = https/ssl_client.c; sourceTree = "<group>"; };
 		5907F3712B17AFC4007C7B0D /* libgui.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgui.dylib; path = ../../binary/mac_x64/libgui.dylib; sourceTree = "<group>"; };
+		84D87F492C83F1E30041F404 /* os_posix.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = os_posix.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -398,6 +400,7 @@
 		4581C62A226DAA3500E88538 /* jvm */ = {
 			isa = PBXGroup;
 			children = (
+				84D87F492C83F1E30041F404 /* os_posix.c */,
 				4517C546254C608E00F03459 /* jni_io.c */,
 				4517C545254C608E00F03459 /* jni_reflect.c */,
 				4517C547254C608E00F03459 /* jni_std.c */,
@@ -729,6 +732,7 @@
 				45F997AD253B6AAE0053E7A0 /* platform.c in Sources */,
 				45F997CB253B6AAE0053E7A0 /* md_wrap.c in Sources */,
 				45F997C1253B6AAE0053E7A0 /* ctr_drbg.c in Sources */,
+				84D87F4A2C83F1E30041F404 /* os_posix.c in Sources */,
 				45F99794253B6AAE0053E7A0 /* version_features.c in Sources */,
 				4581C6D7226DAA3600E88538 /* hashset.c in Sources */,
 				45F997A6253B6AAE0053E7A0 /* pk_wrap.c in Sources */,
