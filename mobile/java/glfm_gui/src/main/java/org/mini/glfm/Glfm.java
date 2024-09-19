@@ -266,5 +266,10 @@ public class Glfm {
         return glfmRemoteMethodCall(inJsonStrBytes);
     }
 
+    static native String glfmBuyAppleProductById(long display, byte[] cproductId);
 
+    public static void glfmBuyAppleProductById(long display, String productId) {
+        byte[] productIdBytes = toCstyleBytes(productId);
+        glfmBuyAppleProductById(display, productIdBytes);
+    }
 }

@@ -305,4 +305,8 @@ public class Glfm {
         return null;
     }
 
+
+    public static void glfmBuyAppleProductById(long display, String productId) {
+
+    }
 }
