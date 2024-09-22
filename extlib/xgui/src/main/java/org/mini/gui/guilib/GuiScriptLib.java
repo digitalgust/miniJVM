@@ -84,6 +84,8 @@ public class GuiScriptLib extends Lib {
             methodNames.put("getVisible".toLowerCase(), this::getVisible);//
             methodNames.put("httpGet".toLowerCase(), this::httpGet);//
             methodNames.put("httpGetSync".toLowerCase(), this::httpGetSync);//
+            methodNames.put("httpPost".toLowerCase(), this::httpPost);//
+            methodNames.put("httpPostSync".toLowerCase(), this::httpPostSync);//
 
         }
     }
@@ -736,9 +738,8 @@ public class GuiScriptLib extends Lib {
         return Interpreter.getCachedBool(false);
     }
 
-    private DataType httpRequestImpl(ArrayList<DataType> para, boolean async) {
-        String href = Interpreter.popBackStr(para);
-        String callback = Interpreter.popBackStr(para);
+    private DataType httpRequestImpl(String href, String postData, String callback, boolean async) {
+
         if (href != null) {
             try {
                 URL url = new URL(href);
@@ -770,6 +771,10 @@ public class GuiScriptLib extends Lib {
                     }
                 }
             });
+            if (postData != null) {
+                hc.setPostData(postData);
+                hc.setHeader("Content-Type", "application/x-www-form-urlencoded");
+            }
             if (async) {
                 hc.setProgressListener(new MiniHttpClient.ProgressListener() {
                     @Override
@@ -787,11 +792,45 @@ public class GuiScriptLib extends Lib {
 
 
     public DataType httpGetSync(ArrayList<DataType> para) {
-        return httpRequestImpl(para, false);
+        if (para.size() < 1) {
+            System.out.println("call sub error: httpGetSync(url,callback)");
+            return null;
+        }
+        String href = Interpreter.popBackStr(para);
+        String callback = para.isEmpty() ? null : Interpreter.popBackStr(para);
+        return httpRequestImpl(href, null, callback, false);
     }
 
     public DataType httpGet(ArrayList<DataType> para) {
-        return httpRequestImpl(para, true);
+        if (para.size() < 1) {
+            System.out.println("call sub error: httpGet(url,callback)");
+            return null;
+        }
+        String href = Interpreter.popBackStr(para);
+        String callback = para.isEmpty() ? null : Interpreter.popBackStr(para);
+        return httpRequestImpl(href, null, callback, true);
+    }
+
+    public DataType httpPostSync(ArrayList<DataType> para) {
+        if (para.size() < 2) {
+            System.out.println("call sub error: httpPostSync(url,postdata,callback)");
+            return null;
+        }
+        String href = Interpreter.popBackStr(para);
+        String postData = Interpreter.popBackStr(para);
+        String callback = para.isEmpty() ? null : Interpreter.popBackStr(para);
+        return httpRequestImpl(href, postData, callback, false);
+    }
+
+    public DataType httpPost(ArrayList<DataType> para) {
+        if (para.size() < 2) {
+            System.out.println("call sub error: httpPost(url,postdata,callback)");
+            return null;
+        }
+        String href = Interpreter.popBackStr(para);
+        String postData = Interpreter.popBackStr(para);
+        String callback = para.isEmpty() ? null : Interpreter.popBackStr(para);
+        return httpRequestImpl(href, postData, callback, true);
     }
 
 }

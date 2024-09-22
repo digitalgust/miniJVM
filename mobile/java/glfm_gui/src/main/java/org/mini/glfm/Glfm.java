@@ -261,15 +261,32 @@ public class Glfm {
 
     static native String glfmRemoteMethodCall(byte[] inJsonStr);
 
+    /**
+     * call android method from json string
+     *
+     * @param inJsonStr
+     * @return
+     */
     public static String glfmRemoteMethodCall(String inJsonStr) {
         byte[] inJsonStrBytes = toCstyleBytes(inJsonStr.toString());
         return glfmRemoteMethodCall(inJsonStrBytes);
     }
 
-    static native void glfmBuyAppleProductById(long display, byte[] cproductId);
+    static native void glfmBuyAppleProductById(long display, byte[] cproductId, byte[] cbase64HandleScript);
 
-    public static void glfmBuyAppleProductById(long display, String productId) {
+    /**
+     * Call this method to buy an in-app-purchase on iOS.
+     * <p>
+     * on result, GLFM onNotify will be called with key="glfm.ios.purchase", value="resultcode:receipt:base64HandleScript"
+     * AppManager call script process the result.
+     *
+     * @param display            GCallback().getInstance().getDisplay()
+     * @param productId          iap product id
+     * @param base64HandleScript base64 encoded script to handle the result.
+     */
+    public static void glfmBuyAppleProductById(long display, String productId, String base64HandleScript) {
         byte[] productIdBytes = toCstyleBytes(productId);
-        glfmBuyAppleProductById(display, productIdBytes);
+        byte[] base64HandleScriptBytes = toCstyleBytes(base64HandleScript);
+        glfmBuyAppleProductById(display, productIdBytes, base64HandleScriptBytes);
     }
 }

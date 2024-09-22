@@ -2,6 +2,7 @@ package org.mini.gui.gscript;
 
 import org.mini.crypt.XorCrypt;
 import org.mini.glfm.Glfm;
+import org.mini.gui.GCallBack;
 import org.mini.reflect.ReflectMethod;
 
 import javax.microedition.io.Base64;
@@ -66,6 +67,7 @@ public class Stdlib extends Lib {
         methodNames.put("encrypt".toLowerCase(), this::encrypt);//加密  str= encrypt(str,key)
         methodNames.put("decrypt".toLowerCase(), this::decrypt);//解密  str= decrypt(str,key)
         methodNames.put("remoteMethodCall".toLowerCase(), this::remoteMethodCall);//远程调用
+        methodNames.put("buyAppleProductById".toLowerCase(), this::buyAppleProductById);//远程调用
     }
 
 
@@ -678,6 +680,17 @@ public class Stdlib extends Lib {
             String str = Interpreter.popBackStr(para);
             String ret = Glfm.glfmRemoteMethodCall(str);
             return Interpreter.getCachedStr(ret == null ? "" : ret);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType buyAppleProductById(ArrayList<DataType> para) {
+        try {
+            String str = Interpreter.popBackStr(para);
+            String scriptStr = Interpreter.popBackStr(para);
+            Glfm.glfmBuyAppleProductById(GCallBack.getInstance().getDisplay(), str, scriptStr);
         } catch (Exception e) {
             e.printStackTrace();
         }

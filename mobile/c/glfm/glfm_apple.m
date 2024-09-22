@@ -19,6 +19,7 @@
  */
 
 #include "glfm.h"
+#include "IAPManager.h"
 
 #if !defined(GLFM_INCLUDE_METAL)
 #define GLFM_INCLUDE_METAL 1
@@ -2353,6 +2354,61 @@ int openOtherApp(const char *curl, const char *more, int detectAppInstalled){
 }
 
 void remoteMethodCall(const char *inJsonStr, Utf8String *outJsonStr){
+    
+}
+
+
+#pragma mark - IAP interface
+
+void buyAppleProductById(GLFMDisplay * display, const char *cproductID, const char *base64HandleScript){
+    NSString *productID = [[NSString alloc] initWithCString:cproductID encoding:NSUTF8StringEncoding];
+    //GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
+    
+
+    [[IAPManager shareIAPManager] startPurchaseWithID:productID completeHandle:^(IAPPurchType type,NSData *data) {
+        switch (type) {
+            case IAPPurchSuccess:
+                NSLog(@"IAPPurchSuccess");
+                break;
+            case IAPPurchFailed:
+                NSLog(@"IAPPurchFailed");
+                break;
+            case IAPPurchCancel:
+                NSLog(@"IAPPurchCancel");
+                break;
+            case IAPPurchVerFailed:
+                NSLog(@"IAPPurchVerFailed");
+                break;
+            case IAPPurchVerSuccess:
+                NSLog(@"IAPPurchVerSuccess");
+                break;
+            case IAPPurchNotArrow:
+                NSLog(@"IAPPurchNotArrow");
+                break;
+            default:
+                break;
+        }
+        const char *replyMsg = NULL;
+        NSString *nssd;
+        if (data == nil) {
+            nssd = @"";
+        } else {
+            nssd = [data base64EncodedStringWithOptions:0];
+        }
+
+        NSString *str = [NSString stringWithFormat:@"%d:%@:%s", (int)type, nssd, base64HandleScript];
+
+        replyMsg = [str UTF8String];
+        
+        
+        static char *key = "glfm.ios.purchase";
+        
+        
+
+        if(display->notifyFunc){
+            display->notifyFunc(display, key, replyMsg);
+        }
+    }];
     
 }
 

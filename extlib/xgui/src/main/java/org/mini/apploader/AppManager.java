@@ -6,7 +6,10 @@
 package org.mini.apploader;
 
 import com.ebsee.rmc.RMCUtil;
+import org.mini.gui.event.GNotifyListener;
 import org.mini.gui.gscript.Interpreter;
+import org.mini.gui.gscript.Str;
+import org.mini.gui.guilib.GuiScriptLib;
 import org.mini.http.MiniHttpClient;
 import org.mini.http.MiniHttpServer;
 import org.mini.layout.xwebview.*;
@@ -114,6 +117,10 @@ public class AppManager extends GApplication {
 
     static float devW, devH;
 
+    /**
+     * @return
+     */
+
     static public AppManager getInstance() {
         return instance;
     }
@@ -201,22 +208,6 @@ public class AppManager extends GApplication {
         explorer = new XExplorer(wv, eventHandler, assist);
     }
 
-
-    void test() {
-        try {
-            System.out.println("Hello World!");
-            String urlStr = "jar:http://localhost:30005/static/apps/ExApp.jar!/res/appmgr.png";
-            URL url = new URL(urlStr);
-            URLConnection con = null;
-
-            con = url.openConnection();
-
-            con.connect();
-            System.out.println(con.getContentLength());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     void reloadAppList() {
         if (appList == null) {
@@ -390,6 +381,11 @@ public class AppManager extends GApplication {
 
     }
 
+    /**
+     * ==============================================================================
+     * GForm that is used to show plugin manager
+     * ==============================================================================
+     */
 
     class PluginMgrForm extends GForm implements XExplorerHolder {
 
@@ -402,7 +398,7 @@ public class AppManager extends GApplication {
             final GCallBack ccb = GCallBack.getInstance();
             devW = ccb.getDeviceWidth();
             devH = ccb.getDeviceHeight();
-            System.out.println("devW :" + devW + ", devH  :" + devH);
+            //System.out.println("devW :" + devW + ", devH  :" + devH);
 
             GForm.hideKeyboard(this);
             regStrings();
@@ -413,6 +409,39 @@ public class AppManager extends GApplication {
             } else {
                 GToolkit.setStyle(new GStyleDark());
             }
+
+            setNotifyListener(new GNotifyListener() {
+                @Override
+                public void onNotify(String key, String val) {
+                    try {
+                        switch (key) {
+                            case NOTIFY_KEY_DEVICE_TOKEN:
+                                System.setProperty("device.token", val);
+                                break;
+                            case NOTIFY_KEY_IOS_PURCHASE:
+                                if (val.indexOf(':') > 0) {
+                                    String[] ss = val.split(":");
+                                    if (ss.length > 2) {
+                                        int code = Integer.parseInt(ss[0]);
+                                        String receipt = ss[1];
+                                        byte[] scriptBytes = javax.microedition.io.Base64.decode(ss[2]);
+                                        String script = new String(scriptBytes, "utf-8");
+                                        //System.out.println("script:" + script);
+                                        Interpreter inp = new Interpreter();
+                                        inp.reglib(new GuiScriptLib(PluginMgrForm.this));
+                                        inp.loadFromString(script);
+                                        inp.putGlobalVar("iap_code", Interpreter.getCachedInt(code));
+                                        inp.putGlobalVar("iap_receipt", Interpreter.getCachedStr(receipt));
+                                        inp.start();
+                                    }
+                                }
+                                break;
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
 
             setPickListener((uid, url, data) -> {
                 if (data == null && url != null) {
@@ -474,7 +503,7 @@ public class AppManager extends GApplication {
             double[] inset = new double[4];//top,right,bottom,left
             Glfm.glfmGetDisplayChromeInsets(GCallBack.getInstance().getDisplay(), inset);
             int h = (int) (inset[0] / GCallBack.getInstance().getDeviceRatio());
-            System.out.println("STATEBAR_HEIGHT " + inset[0] + " , " + inset[1] + " , " + inset[2] + " , " + inset[3]);
+            //System.out.println("STATEBAR_HEIGHT " + inset[0] + " , " + inset[1] + " , " + inset[2] + " , " + inset[3]);
             if (h <= 20) {
                 h = 20;
             }
@@ -502,7 +531,7 @@ public class AppManager extends GApplication {
                 styleList.setSelectedIndex(1);
             }
             String url = AppLoader.getDownloadUrl();
-            System.out.println("downloadurl=" + url);
+            //System.out.println("downloadurl=" + url);
             if (url != null) GToolkit.setCompText(mainSlot, "INPUT_URL", url);
 
             this.setSizeChangeListener((width, height) -> {

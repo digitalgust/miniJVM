@@ -9,7 +9,10 @@ import javax.microedition.io.Connector;
 import javax.microedition.io.HttpConnection;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Gust
@@ -19,6 +22,7 @@ public class MiniHttpClient extends Thread {
     String url;
     ByteArrayOutputStream baos;
     DownloadCompletedHandle handle;
+    Map<String, String> outHeaders = new HashMap();
     boolean exit;
     HttpConnection c = null;
     public static final CltLogger DEFAULT_LOGGER = new CltLogger() {
@@ -35,6 +39,35 @@ public class MiniHttpClient extends Thread {
         this.handle = handle;
         exit = false;
         if (logger != null) this.logger = logger;
+    }
+
+    public void setPostData(ByteArrayOutputStream baos) {
+        this.baos = baos;
+    }
+
+    public void setPostData(String str) {
+        if (str == null) return;
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            baos.write(str.getBytes("utf-8"));
+            this.baos = baos;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setHeader(String key, String value) {
+        outHeaders.put(key, value);
+    }
+
+    void outputHeaders() {
+        try {
+            for (String key : outHeaders.keySet()) {
+                c.setRequestProperty(key, outHeaders.get(key));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     abstract static public class CltLogger {
@@ -65,6 +98,7 @@ public class MiniHttpClient extends Thread {
             logger.log("http url:" + url);
             updateProgress(5);
             c = (HttpConnection) Connector.open(url);
+            outputHeaders();
             if (baos != null) {
                 c.setRequestMethod(HttpConnection.POST);
                 byte[] d = baos.toByteArray();
@@ -110,6 +144,8 @@ public class MiniHttpClient extends Thread {
                 String redirect = c.getHeaderField("Location");
                 logger.log("redirect:" + redirect);
                 MiniHttpClient hc = new MiniHttpClient(redirect, logger, handle);
+                hc.setPostData(baos);
+                hc.outHeaders = outHeaders;
                 hc.setProgressListener(getProgressListener());
                 hc.start();
             } else {

@@ -19,8 +19,12 @@
         ret
 
         sub getPolicy() '获取策略
+            if(strlen(getEnv("DISCOVERY_URL"))<>0)
+                ret
+            eif
+
             policyUrl=getEnv("POLICY_URL")
-            println("getPolicy"+policyUrl)
+            println("getPolicy:"+policyUrl)
             if(strlen(policyUrl)>0)
                 url=policyUrl +"?"+ getQueryPara()
                 httpGetSync(url, "ROOT_PAN.onPolicyRequestBack")
@@ -41,6 +45,7 @@
 
 
         sub signInAuto() '登录
+            getPolicy()
             logintype=getEnv("LOGINTYPE")
             loginUid=getEnv("USERNAME")
             ep=getEnv("USERPASS")
@@ -69,6 +74,7 @@
         ret
 
         sub showDiscovery() '显示发现
+            getPolicy()
             showSlot("SLOT_MGR", 3)
             if(!uiExist("DIS_HOME")) 'if there is not a discovery panel then show it
                 showHome()
@@ -76,11 +82,13 @@
         ret
 
         sub showHome()
+            getPolicy()
             url=getEnv("DISCOVERY_URL") +"?"+ getQueryPara()
             openPage(url,"")
         ret
 
         sub showMy() '显示我的
+            getPolicy()
             showSlot("SLOT_MGR", 4)
 
             token=getEnv("TOKEN")
@@ -93,6 +101,7 @@
         ret
 
         sub showProfile() '显示我的
+            getPolicy()
             s1=getEnv("DISCOVERY_URL")
             s2=substr(s1,0,lastIdxOf(s1,"/"))
             s3=s2+"/profile.xml" +"?"+ getQueryPara()

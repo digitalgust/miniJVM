@@ -75,6 +75,8 @@ public class Interpreter {
      * 构造方法
      */
     public Interpreter() {
+        //初始化
+        init();
     }
 
     /**
@@ -147,8 +149,6 @@ public class Interpreter {
      */
     public void loadFromFile(String path) {
 
-        //初始化
-        init();
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
@@ -227,8 +227,6 @@ public class Interpreter {
      * @param code
      */
     public void loadFromString(String code) {
-
-        init();
 
         int dquodation = 0;
         StringBuilder line = new StringBuilder();
