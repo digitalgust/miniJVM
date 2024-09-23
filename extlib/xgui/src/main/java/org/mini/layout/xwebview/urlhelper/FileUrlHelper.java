@@ -1,10 +1,10 @@
 package org.mini.layout.xwebview.urlhelper;
 
-import org.mini.layout.xwebview.XUrlHelper;
+import org.mini.layout.xwebview.UrlHelper;
 
 import java.net.URL;
 
-public class XFileUrlHelper extends XUrlHelper {
+public class FileUrlHelper extends UrlHelper {
     public String getProtocol() {
         return "file";
     }

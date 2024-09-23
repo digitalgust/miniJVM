@@ -5,30 +5,31 @@
  */
 package org.mini.apploader;
 
-import com.ebsee.rmc.RMCUtil;
+import org.mini.apploader.bean.LangBean;
+import org.mini.glfm.Glfm;
+import org.mini.gui.*;
 import org.mini.gui.event.GNotifyListener;
+import org.mini.gui.gscript.EnvVarProvider;
 import org.mini.gui.gscript.Interpreter;
-import org.mini.gui.gscript.Str;
 import org.mini.gui.guilib.GuiScriptLib;
 import org.mini.http.MiniHttpClient;
 import org.mini.http.MiniHttpServer;
-import org.mini.layout.xwebview.*;
-import org.mini.apploader.bean.LangBean;
-import org.mini.gui.guilib.HttpRequestReply;
-import org.mini.glfm.Glfm;
-import org.mini.gui.*;
 import org.mini.json.JsonParser;
-import org.mini.layout.*;
+import org.mini.layout.UITemplate;
+import org.mini.layout.XContainer;
+import org.mini.layout.XEventHandler;
+import org.mini.layout.XmlExtAssist;
+import org.mini.layout.xwebview.XuiScriptLib;
+import org.mini.layout.xwebview.XuiBrowser;
+import org.mini.layout.xwebview.XuiBrowserHolder;
 
 import java.io.*;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.*;
 
 /**
  * @author Gust
  */
-public class AppManager extends GApplication {
+public class AppManager extends GApplication implements XuiBrowserHolder {
     public static final String POLICY_URL = "POLICY_URL";
     public static final String DISCOVERY_URL = "DISCOVERY_URL";
     public static final String ACCOUNT_BASE_URL = "ACCOUNT_BASE_URL";
@@ -85,7 +86,7 @@ public class AppManager extends GApplication {
     //    GApplication preApp;
 
     PluginMgrForm mgrForm;
-    XExplorer explorer;
+    XuiBrowser browser;
 
     GViewSlot mainSlot;
 
@@ -116,6 +117,7 @@ public class AppManager extends GApplication {
     static final int PICK_PHOTO = 101, PICK_CAMERA = 102, PICK_QR = 103, PICK_HEAD = 104;
 
     static float devW, devH;
+    XmlExtAssist assist;
 
     /**
      * @return
@@ -163,6 +165,12 @@ public class AppManager extends GApplication {
 
         if (mgrForm != null) return mgrForm;
         mgrForm = new PluginMgrForm(null);
+        // init script environment
+        assist = new XmlExtAssist(mgrForm);
+        assist.addExtScriptLib(new XuiScriptLib(AppManager.getInstance()));
+        updateScriptEnvironment();
+        assist.setEnvVarProvider(envVarProvider);
+        //init form
         mgrForm.initForm();
         floatButton = new GHomeButton(mgrForm);
         mgrForm.add(floatButton);
@@ -200,12 +208,8 @@ public class AppManager extends GApplication {
     }
 
     void initExplorer() {
-//        queryServerPolicy();
-        XmlExtAssist assist = new XmlExtAssist(mgrForm);
-        assist.addExtScriptLib(new ExplorerScriptLib(mgrForm));
-
         GContainer wv = GToolkit.getComponent(mgrForm, "TD_DISCOVERY");
-        explorer = new XExplorer(wv, eventHandler, assist);
+        browser = new XuiBrowser(wv, eventHandler, assist);
     }
 
 
@@ -381,13 +385,18 @@ public class AppManager extends GApplication {
 
     }
 
+    @Override
+    public XuiBrowser getBrowser() {
+        return browser;
+    }
+
     /**
      * ==============================================================================
      * GForm that is used to show plugin manager
      * ==============================================================================
      */
 
-    class PluginMgrForm extends GForm implements XExplorerHolder {
+    class PluginMgrForm extends GForm {
 
         public PluginMgrForm(GForm form) {
             super(form);
@@ -493,8 +502,6 @@ public class AppManager extends GApplication {
             } catch (Exception e) {
             }
 
-            // init script environment
-            updateScriptEnvironment();
 
             UITemplate uit = new UITemplate(xmlStr);
             for (String s : uit.getVariable()) {
@@ -512,9 +519,7 @@ public class AppManager extends GApplication {
             uit.setVar("NAV_HEIGHT", Integer.toString(h));
 
 
-            eventHandler = new PluginEventHandler();
-            XmlExtAssist assist = new XmlExtAssist(form);
-            assist.addExtScriptLib(new ExplorerScriptLib(this));//使支持openpage, downloadinstall, downloadsave
+            eventHandler = new PluginEventHandler();//使支持openpage, downloadinstall, downloadsave
             XContainer xcon = (XContainer) XContainer.parseXml(uit.parse(), assist);
             xcon.build((int) devW, (int) (devH), eventHandler);
             GContainer pan = xcon.getGui();
@@ -536,7 +541,7 @@ public class AppManager extends GApplication {
 
             this.setSizeChangeListener((width, height) -> {
                 xcon.reSize(width, height);
-                initExplorer();
+//                browser.getWebView().getLayout().reSize(width, height);
             });
             reloadAppList();
             return pan;
@@ -570,10 +575,7 @@ public class AppManager extends GApplication {
             return true;
         }
 
-        @Override
-        public XExplorer getExplorer() {
-            return explorer;
-        }
+
     }
 
     class PluginEventHandler extends XEventHandler {
@@ -793,15 +795,43 @@ public class AppManager extends GApplication {
         }
     }
 
+
+    EnvVarProvider envVarProvider = new EnvVarProvider() {
+
+        @Override
+        public void setEnvVar(String envName, String envValue) {
+            if (envName == null) {
+                System.out.println("[WARN]envvar key is null");
+            }
+            if (envValue == null) {
+                envValue = "";
+            }
+            String enLow = envName.toLowerCase();
+            AppLoader.setProperty(enLow, envValue);
+        }
+
+        @Override
+        public String getEnvVar(String envName) {
+            String val = AppLoader.getProperty(envName.toLowerCase());
+            if (val == null) {
+                val = "";
+            }
+            //System.out.println("getEnvVar:" + envName + "=" + val);
+            return val;
+        }
+    };
+
     void updateScriptEnvironment() {
-        Interpreter.setEnvVar("LANG", AppLoader.getLangName());
-        Interpreter.setEnvVar("APPID", AppLoader.getBaseInfo("appid"));
-        Interpreter.setEnvVar("APPZONE", AppLoader.getBaseInfo("appzone"));
-        Interpreter.setEnvVar("SVER", AppLoader.getBaseInfo("sver"));
-        Interpreter.setEnvVar("JAR", System.getProperty("os.name").toLowerCase());
-        Interpreter.setEnvVar("FROM", AppLoader.getBaseInfo("from"));
-        Interpreter.setEnvVar("CVER", AppLoader.getBaseInfo("cver"));
-        Interpreter.setEnvVar("POLICY_URL", AppLoader.getBaseInfo("policyUrl"));
+        envVarProvider.setEnvVar("lang", AppLoader.getLangName());
+        envVarProvider.setEnvVar("appid", AppLoader.getBaseInfo("appid"));
+        envVarProvider.setEnvVar("appzone", AppLoader.getBaseInfo("appzone"));
+        envVarProvider.setEnvVar("sver", AppLoader.getBaseInfo("sver"));
+        envVarProvider.setEnvVar("jar", System.getProperty("os.name").toLowerCase());
+        envVarProvider.setEnvVar("from", AppLoader.getBaseInfo("from"));
+        envVarProvider.setEnvVar("cver", AppLoader.getBaseInfo("cver"));
+        envVarProvider.setEnvVar("policy_url", AppLoader.getBaseInfo("policyUrl"));
+        envVarProvider.setEnvVar("discovery_url", null);
+        envVarProvider.setEnvVar("ACCOUNT_BASE_URL", null);
     }
 
 

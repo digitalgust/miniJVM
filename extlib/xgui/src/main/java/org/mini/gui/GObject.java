@@ -145,24 +145,6 @@ abstract public class GObject implements GAttachable {
     }
 
 
-    public void schedule(TimerTask task, long delay, long period) {
-        if (GForm.timer != null) {
-//            getForm().setActiveListener(active -> {
-//
-//            });
-            GForm.timer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    try {
-                        task.run();
-                    } catch (Exception e) {
-                        cancel();//cancel this ,not task
-                    }
-                }
-            }, delay, period);
-        }
-    }
-
     public <T extends GObject> T findParentByName(String name) {
         if (name == null) return null;
         if (parent != null) {

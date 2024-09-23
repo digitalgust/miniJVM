@@ -2465,7 +2465,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 break;
             }
             case JDWP_CMD_ThreadReference_SuspendCount: {//11.12
-                jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                //jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
                 Instance *jthread = jdwppacket_read_refer(req);
                 Runtime *r = jthread_get_stackframe_value(jdwpserver->jvm, jthread);
                 if (r) {

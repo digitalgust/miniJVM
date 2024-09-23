@@ -195,9 +195,8 @@ public class GViewPort extends GContainer {
     public void touchEvent(int touchid, int phase, int x, int y) {
         switch (phase) {
             case Glfm.GLFMTouchPhaseBegan: {
-                if (task != null) {
-                    task.cancel();
-                    task = null;
+                if (inertiaCmd != null) {
+                    inertiaCmd = null;
                 }
                 touched = true;
                 break;
@@ -218,7 +217,8 @@ public class GViewPort extends GContainer {
     //初速度加成
     float addOn = 1.5f;
     //惯性任务
-    TimerTask task;
+
+    GCmd inertiaCmd;
 
     @Override
     public boolean inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
@@ -231,12 +231,13 @@ public class GViewPort extends GContainer {
         //
         final double dx = x2 - x1;
         final double dy = y2 - y1;
+        Runnable task;
         //System.out.println("inertia time: " + moveTime + " , count: " + maxMoveCount + " pos: x1,y1,x2,y2 = " + x1 + "," + y1 + "," + x2 + "," + y2);
         if (Math.abs(dy) > Math.abs(dx)) {
             if (getInnerH() <= getH()) {
                 return false;
             }
-            task = new TimerTask() {
+            task = new Runnable() {
                 //惯性速度
                 double speedY = dy * addOn / (moveTime / inertiaPeriod);
                 //阻力
@@ -262,11 +263,9 @@ public class GViewPort extends GContainer {
                         }
                         GForm.flush();
                         if (count++ > maxMoveCount || tmpScrollY < 0 || tmpScrollY > 1) {
-                            try {
-                                this.cancel();
-                            } catch (Exception e) {
-                            }
+                            inertiaCmd = null;
                         }
+                        GForm.addCmd(inertiaCmd);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -302,20 +301,18 @@ public class GViewPort extends GContainer {
                         }
                         GForm.flush();
                         if (count++ > maxMoveCount || tmpScrollX < 0 || tmpScrollX > 1) {
-                            try {
-                                this.cancel();
-                            } catch (Exception e) {
-                            }
+                            inertiaCmd = null;
                         }
+                        GForm.addCmd(inertiaCmd);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
             };
         }
-        Timer timer = GForm.timer;
-        if (timer != null) {
-            timer.schedule(task, 0, (long) inertiaPeriod);
+        if (task != null) {
+            inertiaCmd = new GCmd(task);
+            GForm.addCmd(inertiaCmd);
         }
         return true;
     }

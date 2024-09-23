@@ -33,13 +33,13 @@ import java.util.List;
  * A Jar directory
  * jar:http://www.foo.com/bar/baz.jar!/COM/foo/
  */
-public class XExplorer {
+public class XuiBrowser {
     public static final int MAX_PAGE_SIZE = 10;
-    List<XPage> pages = new java.util.ArrayList<>();
+    List<XuiPage> pages = new java.util.ArrayList<>();
     GContainer webView;
     private XEventHandler eventHandler;
     XmlExtAssist assist;
-    XPage currentPage;
+    XuiPage currentPage;
 
     /**
      * web explorer
@@ -49,7 +49,7 @@ public class XExplorer {
      * @param eventHandler native event handler
      * @param assist       parse xml ui assists, like load image, load xml, register script library
      */
-    public XExplorer(GContainer webView, XEventHandler eventHandler, XmlExtAssist assist) {
+    public XuiBrowser(GContainer webView, XEventHandler eventHandler, XmlExtAssist assist) {
         this.webView = webView;
         this.eventHandler = eventHandler;
         this.assist = assist;
@@ -57,7 +57,7 @@ public class XExplorer {
 
     public void gotoPage(String homeUrl) {
         removeAfterAtCurrentPage();
-        XPage page = new XPage(homeUrl, this);
+        XuiPage page = new XuiPage(homeUrl, this);
         showPage(page);
     }
 
@@ -69,7 +69,7 @@ public class XExplorer {
         return assist;
     }
 
-    public XPage getCurrentPage() {
+    public XuiPage getCurrentPage() {
         return currentPage;
     }
 
@@ -83,7 +83,7 @@ public class XExplorer {
         }
     }
 
-    private void showPage(XPage page) {
+    private void showPage(XuiPage page) {
         if (webView != null && page != null) {
             Thread thread = new Thread(() -> {
                 GuiScriptLib.showProgressBar(assist.getForm(), 50);
@@ -112,7 +112,7 @@ public class XExplorer {
         }
         int index = pages.indexOf(currentPage);
         if (pages.size() > 0 && index >= 1) {
-            XPage page = pages.get(index - 1);
+            XuiPage page = pages.get(index - 1);
             showPage(page);
         }
     }
@@ -123,7 +123,7 @@ public class XExplorer {
         }
         int index = pages.indexOf(currentPage);
         if (pages.size() > 0 && index < pages.size() - 1) {
-            XPage page = pages.get(index + 1);
+            XuiPage page = pages.get(index + 1);
             showPage(page);
         }
     }

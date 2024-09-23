@@ -22,7 +22,6 @@ import static org.mini.nanovg.Nanovg.*;
  */
 public class GForm extends GContainer {
 
-    final protected static Timer timer = new Timer(true);//用于更新画面，UI系统采取按需刷新的原则
 
     static GCmdHandler cmdHandler = new GCmdHandler();
     private boolean inited = false;

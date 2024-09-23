@@ -73,14 +73,14 @@ public class Stdlib extends Lib {
 
     public DataType getEnv(ArrayList<DataType> para) {
         String key = Interpreter.popBackStr(para);
-        return Interpreter.getCachedStr(Interpreter.getEnvVar(key));
+        return Interpreter.getCachedStr(inp.getEnvVar(key));
     }
 
 
     public DataType setEnv(ArrayList<DataType> para) {
         String key = Interpreter.popBackStr(para);
         String val = Interpreter.popBackStr(para);
-        Interpreter.setEnvVar(key, val);
+        inp.setEnvVar(key, val);
         return null;
     }
 

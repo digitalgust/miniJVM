@@ -544,9 +544,8 @@ public class GTextBox extends GTextObject {
                     } else if (caret >= 0) {
                         setCaretIndex(caret);
                     }       //
-                    if (task != null) {
-                        task.cancel();
-                        task = null;
+                    if (inertiaCmd != null) {
+                        inertiaCmd = null;
                     }
                     break;
                 }
@@ -670,7 +669,8 @@ public class GTextBox extends GTextObject {
     //总共做多少次操作
     long maxMoveCount = 120;
     //惯性任务
-    TimerTask task;
+
+    GCmd inertiaCmd;
 
     @Override
     public boolean inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
@@ -680,8 +680,9 @@ public class GTextBox extends GTextObject {
         double dx = x2 - x1;
         final double dy = y2 - y1;
         float scrollDelta = 0;
+        Runnable task;
         //System.out.println("inertia time: " + moveTime + " , count: " + maxMoveCount + " pos: x1,y1,x2,y2 = " + x1 + "," + y1 + "," + x2 + "," + y2);
-        task = new TimerTask() {
+        task = new Runnable() {
             //惯性速度
             double speed = dy / (moveTime / inertiaPeriod);
             //阴力
@@ -701,20 +702,16 @@ public class GTextBox extends GTextObject {
                     }
                     GForm.flush();
                     if (count++ > maxMoveCount) {
-                        try {
-                            this.cancel();
-                        } catch (Exception e) {
-                        }
+                        inertiaCmd = null;
                     }
+                    GForm.addCmd(inertiaCmd);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         };
-        Timer timer = GForm.timer;
-        if (timer != null) {
-            timer.schedule(task, 0, inertiaPeriod);
-        }
+        inertiaCmd = new GCmd(task);
+        GForm.addCmd(inertiaCmd);
         return true;
     }
 

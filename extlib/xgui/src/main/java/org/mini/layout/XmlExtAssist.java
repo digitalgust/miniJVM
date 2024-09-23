@@ -3,6 +3,8 @@ package org.mini.layout;
 import org.mini.gui.GForm;
 import org.mini.gui.GImage;
 import org.mini.gui.GToolkit;
+import org.mini.gui.gscript.EnvVarProvider;
+import org.mini.gui.gscript.Interpreter;
 import org.mini.gui.guilib.GuiScriptLib;
 import org.mini.gui.gscript.Lib;
 
@@ -25,6 +27,8 @@ public class XmlExtAssist {
     GForm form;
     protected XLoader loader;
     XEventHandler eventHandler;
+
+    EnvVarProvider envVarProvider;
 
     public XmlExtAssist(GForm form) {
         //if (form == null) throw new RuntimeException("Form can not be null");
@@ -98,6 +102,7 @@ public class XmlExtAssist {
         extScriptLibs.addAll(assist.extScriptLibs);
         loader = assist.loader;
         form = assist.form;
+        envVarProvider = assist.envVarProvider;
     }
 
     XEventHandler getEventHandler() {
@@ -106,5 +111,20 @@ public class XmlExtAssist {
 
     void setEventHandler(XEventHandler eventHandler) {
         this.eventHandler = eventHandler;
+    }
+
+    public EnvVarProvider getEnvVarProvider() {
+        return envVarProvider;
+    }
+
+    public void setEnvVarProvider(EnvVarProvider envVarProvider) {
+        this.envVarProvider = envVarProvider;
+    }
+
+    public void interpreterSetup(Interpreter inp) {
+        inp.setEnvVarProvider(envVarProvider);
+        for (Lib lib : getExtScriptLibs()) {
+            inp.reglib(lib);
+        }
     }
 }

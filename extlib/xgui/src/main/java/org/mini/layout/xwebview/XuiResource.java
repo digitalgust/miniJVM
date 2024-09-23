@@ -2,7 +2,7 @@ package org.mini.layout.xwebview;
 
 import org.mini.gui.GImage;
 
-public class XResource {
+public class XuiResource {
 
     public static final int TYPE_UNKNOWN = 0;
     public static final int TYPE_IMAGE = 1;
