@@ -306,7 +306,7 @@ public class Glfm {
     }
 
 
-    public static void glfmBuyAppleProductById(long display, String productId) {
+    public static void glfmBuyAppleProductById(long display, String productId, String base64HandleScript) {
 
     }
 }
