@@ -111,11 +111,14 @@ public class GuiScriptLib extends Lib {
             if (callback.contains(".")) {
                 String[] ss = callback.split("\\.");
                 GContainer gobj = GToolkit.getComponent(form, ss[0]);
-                Interpreter inp = gobj.getInterpreter();
-                inp.callSub(ss[1] + "(\"" + url + "\"," + code + ",\"" + reply + "\")");
-            } else {
-                System.out.println("httpRequest callback no GContainer specified: " + callback);
+                if (gobj != null) {
+                    Interpreter inp = gobj.getInterpreter();
+                    inp.callSub(ss[1] + "(\"" + url + "\"," + code + ",\"" + reply + "\")");
+                    return;
+                }
             }
+            System.out.println("httpRequest callback no GContainer specified: " + callback);
+
         }
     }
 

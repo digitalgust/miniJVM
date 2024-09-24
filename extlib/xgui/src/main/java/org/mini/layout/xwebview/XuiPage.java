@@ -45,7 +45,7 @@ public class XuiPage {
             return pan;
         }
         try {
-            ResourceLoader loader = new ResourceLoader();
+            XuiResourceLoader loader = new XuiResourceLoader();
             loader.setURL(url);
             assistDelegate.setLoader(loader);
 

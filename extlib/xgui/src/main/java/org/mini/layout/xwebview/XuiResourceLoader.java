@@ -9,7 +9,7 @@ import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ResourceLoader implements XmlExtAssist.XLoader {
+public class XuiResourceLoader implements XmlExtAssist.XLoader {
 
     URL url;
     static GImage notfoundImage;
@@ -17,7 +17,7 @@ public class ResourceLoader implements XmlExtAssist.XLoader {
 
     Map<String, XuiResource> resources = new HashMap<>();
 
-    public ResourceLoader() {
+    public XuiResourceLoader() {
         notfoundImage = GImage.createImageFromJar("/res/ui/notfound.jpg");
     }
 

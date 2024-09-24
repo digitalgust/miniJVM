@@ -12,6 +12,7 @@ import org.mini.gui.event.GNotifyListener;
 import org.mini.gui.gscript.EnvVarProvider;
 import org.mini.gui.gscript.Interpreter;
 import org.mini.gui.guilib.GuiScriptLib;
+import org.mini.gui.guilib.HttpRequestReply;
 import org.mini.http.MiniHttpClient;
 import org.mini.http.MiniHttpServer;
 import org.mini.json.JsonParser;
@@ -19,9 +20,7 @@ import org.mini.layout.UITemplate;
 import org.mini.layout.XContainer;
 import org.mini.layout.XEventHandler;
 import org.mini.layout.XmlExtAssist;
-import org.mini.layout.xwebview.XuiScriptLib;
-import org.mini.layout.xwebview.XuiBrowser;
-import org.mini.layout.xwebview.XuiBrowserHolder;
+import org.mini.layout.xwebview.*;
 
 import java.io.*;
 import java.util.*;
@@ -830,9 +829,38 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
         envVarProvider.setEnvVar("from", AppLoader.getBaseInfo("from"));
         envVarProvider.setEnvVar("cver", AppLoader.getBaseInfo("cver"));
         envVarProvider.setEnvVar("policy_url", AppLoader.getBaseInfo("policyUrl"));
-        envVarProvider.setEnvVar("discovery_url", null);
-        envVarProvider.setEnvVar("ACCOUNT_BASE_URL", null);
+        envVarProvider.setEnvVar("discovery_url", "");
+        envVarProvider.setEnvVar("account_base_url", "");
+        envVarProvider.setEnvVar("profile_url", "");
+        envVarProvider.setEnvVar("shop_url", "");
+        envVarProvider.setEnvVar("pay_url", "");
+        envVarProvider.setEnvVar("plugin_url", "");
     }
 
 
+    public String[] getPolicy(String url) {
+        try {
+            if (url == null) {
+                return null;
+            }
+            XuiResourceLoader loader = new XuiResourceLoader();
+            XuiResource res = loader.loadResource(url);
+            if (res != null) {
+                String json = res.getString();
+                if (json != null) {
+                    JsonParser<HttpRequestReply> parser = new JsonParser<>();
+                    HttpRequestReply reply = parser.deserial(json, HttpRequestReply.class);
+                    if (reply != null && reply.getCode() == 0) {
+                        String s = reply.getReply();
+                        String[] ss = s.split("\n");
+                        return ss;
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

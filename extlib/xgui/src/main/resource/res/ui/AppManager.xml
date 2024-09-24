@@ -11,7 +11,7 @@
 
         sub getQueryPara()
             s="appid="+ getEnv("APPID") + "&appzone=" + getEnv("APPZONE") + "&ver=" + getEnv("SVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG") +"&token="+ getEnv("TOKEN")
-            println(s)
+            'println(s)
         ret s
 
         sub onCallBack(url,code,msg) '通用回调
@@ -19,7 +19,7 @@
         ret
 
         sub getPolicy() '获取策略
-            if(strlen(getEnv("DISCOVERY_URL"))<>0)
+            if(strlen(getEnv("DISCOVERY_URL"))>0)
                 ret
             eif
 
@@ -36,8 +36,11 @@
                 urls=split(msg,"\n")
                 setEnv("DISCOVERY_URL",urls[0])
                 setEnv("ACCOUNT_BASE_URL",urls[1])
-                println("DISCOVERY_URL="+getEnv("DISCOVERY_URL"))
-                println("ACCOUNT_BASE_URL="+getEnv("ACCOUNT_BASE_URL"))
+                setEnv("PROFILE_URL",urls[2])
+                setEnv("SHOP_URL",urls[3])
+                setEnv("PAY_URL",urls[4])
+                setEnv("PLUGIN_URL",urls[5])
+                println("urls:\n"+urls)
             else
                showMsg("onPolicyRequestBack:"+code+","+msg)
             eif
@@ -222,10 +225,14 @@
                             <td w="float" h="100%">
                             </td>
                             <td w="200" h="100%">
-                                <button name="BT_DISCOVERY_BACK" w="50" h="30" preicon="⬅" onclick="prevPage()"></button>
-                                <button name="BT_DISCOVERY_FORWARD" w="50" h="30" preicon="➡" onclick="nextPage()"></button>
-                                <button name="BT_DISCOVERY_REFRESH" w="50" h="30" preicon="🔄" onclick="refreshPage()"></button>
-                                <button name="BT_DISCOVERY_HOME" w="50" h="30" preicon="⌂" onclick="showHome()"></button>
+                                <button name="BT_DISCOVERY_BACK" w="50" h="30" preicon="⬅"
+                                        onclick="prevPage()"></button>
+                                <button name="BT_DISCOVERY_FORWARD" w="50" h="30" preicon="➡"
+                                        onclick="nextPage()"></button>
+                                <button name="BT_DISCOVERY_REFRESH" w="50" h="30" preicon="🔄"
+                                        onclick="refreshPage()"></button>
+                                <button name="BT_DISCOVERY_HOME" w="50" h="30" preicon="⌂"
+                                        onclick="showHome()"></button>
                             </td>
                             <td w="float" h="100%">
                             </td>
@@ -244,7 +251,9 @@
                                 </td>
                                 <td w="20"></td>
                                 <td w="float" bgcolor="55558020">
-                                    <label name="LAB_USERNAME" onclick='showProfile()' w="100%" h="80" color="bb8844ff" fontsize="18" align="hcenter,vcenter">{SIGN_IN} &gt;</label>
+                                    <label name="LAB_USERNAME" onclick='showProfile()' w="100%" h="80" color="bb8844ff"
+                                           fontsize="18" align="hcenter,vcenter">{SIGN_IN} &gt;
+                                    </label>
                                 </td>
                             </tr>
                         </table>
