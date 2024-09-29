@@ -111,6 +111,9 @@ public class GuiScriptLib extends Lib {
             if (callback.contains(".")) {
                 String[] ss = callback.split("\\.");
                 GContainer gobj = GToolkit.getComponent(form, ss[0]);
+                if (gobj == null) {
+                    gobj = GToolkit.getComponent(GCallBack.getInstance().getApplication().getForm(), ss[0]);
+                }
                 if (gobj != null) {
                     Interpreter inp = gobj.getInterpreter();
                     inp.callSub(ss[1] + "(\"" + url + "\"," + code + ",\"" + reply + "\")");

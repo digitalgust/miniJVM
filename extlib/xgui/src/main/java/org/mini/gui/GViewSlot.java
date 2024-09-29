@@ -169,7 +169,7 @@ public class GViewSlot extends GViewPort {
     public void moveTo(GObject go, long timeInMils) {
         if (containsImpl(go)) {
             GObject curGo = getElementsImpl().get(active);
-            if (curGo != null && go != null) {
+            if (curGo != null && go != null && swapTask == null) {
                 SlotSwaper swaper = new SlotSwaper(this, curGo, go, timeInMils);
                 swapTask = new GCmd(swaper);
                 GForm.addCmd(swapTask);
