@@ -120,6 +120,10 @@ public class SHA1 extends MessageDigest {
         }
     }
 
+    protected int getDigestLengthImpl() {
+        return init.length * Integer.BYTES;
+    }
+
     @Override
     public byte[] digest() {
         for (int i = bufOffset; i < buf.length; i++) {
@@ -139,7 +143,7 @@ public class SHA1 extends MessageDigest {
 
         init = sha_2(buf, init);
 
-        ByteBuffer bb = ByteBuffer.allocate(20);
+        ByteBuffer bb = ByteBuffer.allocate(getDigestLengthImpl());
         bb.put((byte) (init[0] >>> 24));
         bb.put((byte) (init[0] >>> 16));
         bb.put((byte) (init[0] >>> 8));

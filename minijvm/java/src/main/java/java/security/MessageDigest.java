@@ -104,13 +104,6 @@ public abstract class MessageDigest {
         return (baos.toString());
     }
 
-    /**
-     * Compares two digests for equality. Does a simple byte compare.
-     *
-     * @param digesta one of the digests to compare.
-     * @param digestb the other digest to compare.
-     * @return true if the digests are equal, false otherwise.
-     */
     public static boolean isEqual(byte[] digesta, byte[] digestb) {
         /* All bytes in digesta are examined to determine equality.
          * The calculation time depends only on the length of digesta
@@ -141,9 +134,6 @@ public abstract class MessageDigest {
         return result == 0;
     }
 
-    /**
-     * Resets the digest for further use.
-     */
     abstract public void reset();
 
     public final String getAlgorithm() {
@@ -151,8 +141,10 @@ public abstract class MessageDigest {
     }
 
     public final int getDigestLength() {
-        return -1;
+        return getDigestLengthImpl();
     }
+
+    protected abstract int getDigestLengthImpl();
 
     public Object clone() throws CloneNotSupportedException {
         if (this instanceof Cloneable) {

@@ -93,6 +93,10 @@ public class MD5 extends MessageDigest {
         }
     }
 
+    protected int getDigestLengthImpl() {
+        return init.length * Integer.BYTES;
+    }
+
     @Override
     public byte[] digest() {
         for (int i = bufOffset; i < buf.length; i++) {
@@ -112,7 +116,7 @@ public class MD5 extends MessageDigest {
 
         init = md5_2(buf, init);
 
-        ByteBuffer bb = ByteBuffer.allocate(16);
+        ByteBuffer bb = ByteBuffer.allocate(getDigestLengthImpl());
         bb.put((byte) (init[0] >>> 0));
         bb.put((byte) (init[0] >>> 8));
         bb.put((byte) (init[0] >>> 16));
