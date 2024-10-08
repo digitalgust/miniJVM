@@ -23,6 +23,7 @@ import org.mini.layout.XmlExtAssist;
 import org.mini.layout.xwebview.*;
 
 import java.io.*;
+import java.net.URLEncoder;
 import java.util.*;
 
 /**
@@ -825,7 +826,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
         envVarProvider.setEnvVar("appid", AppLoader.getBaseInfo("appid"));
         envVarProvider.setEnvVar("appzone", AppLoader.getBaseInfo("appzone"));
         envVarProvider.setEnvVar("sver", AppLoader.getBaseInfo("sver"));
-        envVarProvider.setEnvVar("jar", System.getProperty("os.name").toLowerCase());
+        envVarProvider.setEnvVar("jar", URLEncoder.encode(System.getProperty("os.name").toLowerCase()));
         envVarProvider.setEnvVar("from", AppLoader.getBaseInfo("from"));
         envVarProvider.setEnvVar("cver", AppLoader.getBaseInfo("cver"));
         envVarProvider.setEnvVar("policy_url", AppLoader.getBaseInfo("policyUrl"));
