@@ -40,6 +40,7 @@
                 setEnv("SHOP_URL",urls[3])
                 setEnv("PAY_URL",urls[4])
                 setEnv("PLUGIN_URL",urls[5])
+                setEnv("UPDATE_URL",urls[6])
                 println("urls:\n"+urls)
             else
                showMsg("onPolicyRequestBack:"+code+","+msg)
@@ -111,6 +112,14 @@
             showSlot("SLOT_MGR",3)
             openPage(s3,"")
         ret
+
+        sub checkUpdate()
+            url=getEnv("UPDATE_URL")+"?"+ getQueryPara()
+            if(strlen(url)>0)
+                openOtherApp(url,"",0)  ' 第一个为 url，第二个为参数，第三个为检测是否App 存在，0为不检测，1为检测
+            eif
+        ret
+
 
         ]]>
     </script>
@@ -197,8 +206,7 @@
                         <label w="75%" h="30" align="left,vcenter">{STR_INSTALL_FROM_LOCAL}</label>
                         <button name="BT_LOCALFILE" w="25%" h="30" preicon="📁">{BROWSE_FILE}</button>
                         <label w="100%" h="20"></label>
-                        <label name="LAB_WEBSRV" w="75%" h="30" align="left,vcenter">{STR_START_WEB_SRV_FOR_UPLOAD}
-                        </label>
+                        <label name="LAB_WEBSRV" w="75%" h="30" align="left,vcenter">{STR_START_WEB_SRV_FOR_UPLOAD}</label>
                         <button name="BT_STARTWEB" w="25%" h="30" preicon="📤">{STR_START}</button>
                         <label w="100%" h="20"></label>
                         <br/>
@@ -225,14 +233,10 @@
                             <td w="float" h="100%">
                             </td>
                             <td w="200" h="100%">
-                                <button name="BT_DISCOVERY_BACK" w="50" h="30" preicon="⬅"
-                                        onclick="prevPage()"></button>
-                                <button name="BT_DISCOVERY_FORWARD" w="50" h="30" preicon="➡"
-                                        onclick="nextPage()"></button>
-                                <button name="BT_DISCOVERY_REFRESH" w="50" h="30" preicon="🔄"
-                                        onclick="refreshPage()"></button>
-                                <button name="BT_DISCOVERY_HOME" w="50" h="30" preicon="⌂"
-                                        onclick="showHome()"></button>
+                                <button name="BT_DISCOVERY_BACK" w="50" h="30" preicon="⬅" onclick="prevPage()"></button>
+                                <button name="BT_DISCOVERY_FORWARD" w="50" h="30" preicon="➡" onclick="nextPage()"></button>
+                                <button name="BT_DISCOVERY_REFRESH" w="50" h="30" preicon="🔄" onclick="refreshPage()"></button>
+                                <button name="BT_DISCOVERY_HOME" w="50" h="30" preicon="⌂" onclick="showHome()"></button>
                             </td>
                             <td w="float" h="100%">
                             </td>
@@ -251,8 +255,7 @@
                                 </td>
                                 <td w="20"></td>
                                 <td w="float" bgcolor="55558020">
-                                    <label name="LAB_USERNAME" onclick='showProfile()' w="100%" h="80" color="bb8844ff"
-                                           fontsize="18" align="hcenter,vcenter">{SIGN_IN} &gt;
+                                    <label name="LAB_USERNAME" onclick='showProfile()' w="100%" h="80" color="bb8844ff" fontsize="18" align="hcenter,vcenter">{SIGN_IN} &gt;
                                     </label>
                                 </td>
                             </tr>
@@ -260,6 +263,8 @@
                         <label></label>
                         <br/>
                         <button name="BT_SETTING" w="100%" h="40" preicon="⚙">{SETTING}</button>
+                        <br/>
+                        <button name="BT_UPDATING" w="100%" h="40" onclick="checkUpdate()" preicon="">{STR_UPDATE}</button>
                         <br/>
                         <label></label>
                     </viewport>

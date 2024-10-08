@@ -297,6 +297,25 @@ public class Glfm {
     }
 
     public static int glfmOpenOtherApp(byte[] cStyleURL, byte[] cStyleMore, int detectAppInstalled) {
+        try {
+            String url = new String(cStyleURL, "utf-8");
+            String more = new String(cStyleMore, "utf-8");
+            String osName = System.getProperty("os.name", "");// 获取操作系统的名字
+            if (osName.startsWith("Mac OS")) {
+                // Mac OS
+                if (more.length() > 0) {
+                    Runtime.getRuntime().exec("open " + url + " " + more);
+                } else {
+                    Runtime.getRuntime().exec("open " + url);
+                }
+            } else if (osName.startsWith("Windows")) {
+                // Windows
+                Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + url);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return 1;
     }
 
