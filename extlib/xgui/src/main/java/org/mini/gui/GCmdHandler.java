@@ -111,7 +111,7 @@ public class GCmdHandler {
                     @Override
                     public void run() {
                         GForm.flush();
-                        if (tick++ < 50) {
+                        if (tick++ < 100) {
                             GForm.addCmd(msgCmd);
                         } else {
                             curShowMessage = null;
