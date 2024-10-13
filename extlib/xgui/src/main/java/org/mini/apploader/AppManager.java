@@ -554,16 +554,16 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
             if (delayLauncher != null) {
                 GForm.flush();
 
-                String osname = System.getProperty("os.name");
-                if ("iOS".equals(osname) || "Android".equals(osname)) {
-                    float w = GCallBack.getInstance().getDeviceWidth();
-                    float h = GCallBack.getInstance().getDeviceHeight();
-                    if ("h".equals(appOri)) {
-                        if (w < h) return true;
-                    } else {
-                        if (h < w) return true;
-                    }
-                }
+//                String osname = System.getProperty("os.name");
+//                if ("iOS".equals(osname) || "Android".equals(osname)) {
+//                    float w = GCallBack.getInstance().getDeviceWidth();
+//                    float h = GCallBack.getInstance().getDeviceHeight();
+//                    if ("h".equals(appOri)) {
+//                        if (w < h) return true;
+//                    } else {
+//                        if (h < w) return true;
+//                    }
+//                }
                 try {
                     delayLauncher.run();
                 } catch (Exception e) {
