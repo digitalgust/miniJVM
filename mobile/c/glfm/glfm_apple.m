@@ -826,11 +826,36 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
     };
     self.view = glfmView;
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-//================================= gust add 3 =======================
 
-//================================= gust add 3 =======================
 
 }
+//================================= gust add 3 =======================
+//强制转屏（这个方法最好放在BaseVController中）
+
+- (void)setInterfaceOrientation:(UIInterfaceOrientation)orientation{
+
+    if ([[UIDevice currentDevice] respondsToSelector:@selector(setOrientation:)]) {
+
+        SEL selector  = NSSelectorFromString(@"setOrientation:");
+
+        NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:[UIDevice instanceMethodSignatureForSelector:selector]];
+
+        [invocation setSelector:selector];
+
+        [invocation setTarget:[UIDevice currentDevice]];
+
+        // 从2开始是因为前两个参数已经被selector和target占用
+
+        [invocation setArgument:&orientation atIndex:2];
+
+        [invocation invoke];
+
+    }
+
+}
+//================================= gust add 3 =======================
+
+ 
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -2194,6 +2219,10 @@ void glfmSetSupportedInterfaceOrientation(GLFMDisplay *display, GLFMInterfaceOri
             // HACK: Notify that the value of supportedInterfaceOrientations has changed
             GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
             if (vc.isViewLoaded && vc.view.window) {
+                
+                //================================= gust add =======================
+                [vc setInterfaceOrientation:supportedOrientations];
+                //================================= gust add =======================
                 [vc.glfmView requestRefresh];
                 UIViewController *dummyVC = GLFM_AUTORELEASE([[UIViewController alloc] init]);
                 dummyVC.view = GLFM_AUTORELEASE([[UIView alloc] init]);

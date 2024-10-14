@@ -252,6 +252,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                     appList.add(item);
                     item.setActionListener(gobj -> {
                         curSelectedJarName = ((GListItem) gobj).getAttachment();
+                        setJarName(curSelectedJarName);
                         updateContentViewInfo(appName);
                         mainPanelShowRight();
                     });
@@ -554,11 +555,19 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
             if (delayLauncher != null) {
                 GForm.flush();
 
+                String orientation = AppLoader.getApplicationOrientation(curSelectedJarName);
+                if (orientation.equals("h")) {
+                    Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationLandscapeLeft);
+                } else {
+                    Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationPortrait);
+                }
+                appOri = orientation;
                 String osname = System.getProperty("os.name");
                 if ("iOS".equals(osname) || "Android".equals(osname)) {
                     float w = GCallBack.getInstance().getDeviceWidth();
                     float h = GCallBack.getInstance().getDeviceHeight();
                     if ("h".equals(appOri)) {
+
                         if (w < h) return true;
                     }
                 }
@@ -583,12 +592,12 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
             if (name == null) return;
             switch (name) {
                 case "APP_DELETE_BTN":
-                    String jarName;
+                    String tmpJarName;
                     if (curSelectedJarName != null) {
-                        jarName = curSelectedJarName;
-                        if (jarName != null) {
+                        tmpJarName = curSelectedJarName;
+                        if (tmpJarName != null) {
                             GFrame confirmFrame = GToolkit.getConfirmFrame(mgrForm, GLanguage.getString(STR_MESSAGE), GLanguage.getString(STR_CONFIRM_DELETE), GLanguage.getString(STR_DELETE), okgobj -> {
-                                AppLoader.removeApp(jarName);
+                                AppLoader.removeApp(tmpJarName);
                                 reloadAppList();
                                 mainPanelShowLeft();
                                 okgobj.getFrame().close();
@@ -645,16 +654,9 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                     break;
                 case "APP_RUN_BTN":
                     if (curSelectedJarName != null) {
-                        jarName = curSelectedJarName;
+                        tmpJarName = curSelectedJarName;
                         GListItem gli = getGListItemByAttachment(curSelectedJarName);
 
-                        String orientation = AppLoader.getApplicationOrientation(jarName);
-                        if (orientation.equals("h")) {
-                            Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationLandscapeLeft);
-                        } else {
-                            Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationPortrait);
-                        }
-                        appOri = orientation;
                         delayLauncher = new Runnable() {
                             @Override
                             public void run() {
@@ -686,14 +688,14 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                 case "APP_STOP_BTN":
                     if (curSelectedJarName != null) {
                         //AppLoader.setBootApp(curSelectedItem.getAttachment());
-                        jarName = curSelectedJarName;
-                        GApplication app = runningApps.get(jarName);
+                        tmpJarName = curSelectedJarName;
+                        GApplication app = runningApps.get(tmpJarName);
                         if (app != null) {
                             app.closeApp();
                             GForm.addMessage(GLanguage.getString(STR_SUCCESS));
                             GListItem gli = getGListItemByAttachment(curSelectedJarName);
                             gli.setColor(null);
-                            updateContentViewInfo(jarName);
+                            updateContentViewInfo(tmpJarName);
                         } else {
                             GForm.addMessage(GLanguage.getString(STR_APP_NOT_RUNNING));
                         }
@@ -701,9 +703,9 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                     break;
                 case "APP_UPGRADE_BTN":
                     if (curSelectedJarName != null) {
-                        jarName = curSelectedJarName;
-                        if (jarName != null) {
-                            url = AppLoader.getApplicationUpgradeurl(jarName);
+                        tmpJarName = curSelectedJarName;
+                        if (tmpJarName != null) {
+                            url = AppLoader.getApplicationUpgradeurl(tmpJarName);
                             if (url != null) {
                                 hc = new MiniHttpClient(url, cltLogger, getDownloadCallback());
                                 hc.start();
