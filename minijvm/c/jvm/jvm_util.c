@@ -759,7 +759,7 @@ s32 sys_properties_load(MiniJVM *jvm) {
     sys_properties_set_c(jvm, "path.separator", PATHSEPARATOR);
     //modify os para
 #if __JVM_OS_MAC__
-    sys_properties_set_c(jvm, "os.name", "Mac");
+    sys_properties_set_c(jvm, "os.name", "Mac OS");
     sys_properties_set_c(jvm, "file.separator", "/");
     sys_properties_set_c(jvm, "line.separator", "\n");
     sys_properties_set_c(jvm, "XstartOnFirstThread", "1");

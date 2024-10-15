@@ -19,6 +19,7 @@
  */
 
 #include "glfm.h"
+#include "IAPManager.h"
 
 #if !defined(GLFM_INCLUDE_METAL)
 #define GLFM_INCLUDE_METAL 1
@@ -650,6 +651,77 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
 
 @end
 
+#pragma mark APLIndexedPosition
+@interface APLIndexedPosition : UITextPosition
+
+@property (nonatomic) NSUInteger index;
+@property (nonatomic) id <UITextInputDelegate> inputDelegate;
+
++ (instancetype)positionWithIndex:(NSUInteger)index;
+
+@end
+
+@implementation APLIndexedPosition
+
+#pragma mark IndexedPosition implementation
+
+// Class method to create an instance with a given integer index.
++ (instancetype)positionWithIndex:(NSUInteger)index
+{
+    APLIndexedPosition *indexedPosition = [[self alloc] init];
+    indexedPosition.index = index;
+    return indexedPosition;
+}
+
+@end
+
+#pragma mark APLIndexedRange
+@interface APLIndexedRange : UITextRange
+
+@property (nonatomic) NSRange range;
++ (instancetype)indexedRangeWithRange:(NSRange)range;
+
+@end
+
+
+@implementation APLIndexedRange
+
+// Class method to create an instance with a given range
++ (instancetype)indexedRangeWithRange:(NSRange)range
+{
+    if (range.location == NSNotFound) {
+        return nil;
+    }
+
+    APLIndexedRange *indexedRange = [[self alloc] init];
+    indexedRange.range = range;
+    return indexedRange;
+}
+
+
+// UITextRange read-only property - returns start index of range.
+- (UITextPosition *)start
+{
+    return [APLIndexedPosition positionWithIndex:self.range.location];
+}
+
+
+// UITextRange read-only property - returns end index of range.
+- (UITextPosition *)end
+{
+    return [APLIndexedPosition positionWithIndex:(self.range.location + self.range.length)];
+}
+
+
+// UITextRange read-only property - returns YES if range is zero length.
+-(BOOL)isEmpty
+{
+    return (self.range.length == 0);
+}
+
+@end
+
+
 #pragma mark - GLFMViewController
 
 @interface GLFMViewController : UIViewController<UIKeyInput, UITextInputTraits, UITextInput/*gust add*/>
@@ -670,8 +742,13 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
 //================================= gust add 2 =======================
 @property(nonatomic, assign) int pickerUid;
 @property(nonatomic, assign) int pickerType;
-@property (nonatomic, retain) NSString *textStore;
-@property (nonatomic, retain) UILabel *inputlabel;
+//gust for mutitage input ,ex chinese
+@property (nonatomic, retain) NSMutableString *text;
+@property (nonatomic, copy) NSString *contentText; // The text content (without attributes).
+@property (nonatomic) NSRange inMarkedTextRange; // Marked text range (for input method marked text).
+@property (nonatomic) NSRange inSelectedTextRange; // Selected text range.
+
+
 - (void)takePhotoAction:(int) puid : (int) type;
 - (void)browseAlbum:(int) puid : (int) type;
 + (UIImage *)cropImage:(UIImage *)image inRect:(CGRect)rect;
@@ -691,6 +768,9 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
         _glfmDisplay = calloc(1, sizeof(GLFMDisplay));
         _glfmDisplay->platformData = (__bridge void *)self;
         _glfmDisplay->supportedOrientations = GLFMInterfaceOrientationAll;
+        //gust
+        self.text = [[NSMutableString alloc] init];
+        self.contentText = @"";
     }
     return self;
 }
@@ -746,13 +826,36 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
     };
     self.view = glfmView;
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-//================================= gust add 3 =======================
-    self.inputlabel = [[UILabel alloc]initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 30)];
-    //self.inputlabel.backgroundColor = [UIColor lightGrayColor ];//设置背景颜色
-    self.inputlabel.textColor = [UIColor lightGrayColor];//设置Label上文字的颜色
-//================================= gust add 3 =======================
+
 
 }
+//================================= gust add 3 =======================
+//强制转屏（这个方法最好放在BaseVController中）
+
+- (void)setInterfaceOrientation:(UIInterfaceOrientation)orientation{
+
+    if ([[UIDevice currentDevice] respondsToSelector:@selector(setOrientation:)]) {
+
+        SEL selector  = NSSelectorFromString(@"setOrientation:");
+
+        NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:[UIDevice instanceMethodSignatureForSelector:selector]];
+
+        [invocation setSelector:selector];
+
+        [invocation setTarget:[UIDevice currentDevice]];
+
+        // 从2开始是因为前两个参数已经被selector和target占用
+
+        [invocation setArgument:&orientation atIndex:2];
+
+        [invocation invoke];
+
+    }
+
+}
+//================================= gust add 3 =======================
+
+ 
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -1127,17 +1230,12 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
                                                         keyboardFrame.origin.y,
                                                         keyboardFrame.size.width,
                                                         keyboardFrame.size.height);
-            [self setInputLabelPos:keyboardFrame.origin.x+10 :[nsValue CGRectValue].origin.y-30];
+
         }
     }
 }
 
--(void)setInputLabelPos:(CGFloat) nx : (CGFloat) ny{
-    CGRect tempFrame = self.inputlabel.frame;
-    tempFrame.origin.x=nx;
-    tempFrame.origin.y=ny;
-    self.inputlabel.frame=tempFrame;
-}
+
 #endif
 
 // UITextInputTraits - disable suggestion bar
@@ -1243,162 +1341,428 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
 
 @synthesize tokenizer;
 
-- (UITextWritingDirection)baseWritingDirectionForPosition:(nonnull UITextPosition *)position inDirection:(UITextStorageDirection)direction {
-    return UITextWritingDirectionLeftToRight;
+
+#pragma mark UITextInput - Replacing and Returning Text
+
+/**
+ UITextInput protocol required method.
+ Called by text system to get the string for a given range in the text storage.
+ */
+- (NSString *)textInRange:(UITextRange *)range
+{
+    APLIndexedRange *r = (APLIndexedRange *)range;
+    NSString *ts = ([self.text substringWithRange:r.range]);
+    return ts;
 }
 
-- (CGRect)caretRectForPosition:(nonnull UITextPosition *)position {
-    return CGRectMake(0, 0, 10, 30);
+
+/**
+ UITextInput protocol required method.
+ Called by text system to replace the given text storage range with new text.
+ */
+- (void)replaceRange:(UITextRange *)range withText:(NSString *)text
+{
+    APLIndexedRange *indexedRange = (APLIndexedRange *)range;
+    // Determine if replaced range intersects current selection range
+    // and update selection range if so.
+    NSRange selectedNSRange = self.inSelectedTextRange;
+    if ((indexedRange.range.location + indexedRange.range.length) <= selectedNSRange.location) {
+        // This is the easy case.
+        selectedNSRange.location -= (indexedRange.range.length - text.length);
+    } else {
+        // Need to also deal with overlapping ranges.  Not addressed
+        // in this simplified sample.
+    }
+
+    // Now replace characters in text storage
+    [self.text replaceCharactersInRange:indexedRange.range withString:text];
+
+    // Update underlying APLSimpleCoreTextView
+    self.contentText = self.text;
+    self.inSelectedTextRange = selectedNSRange;
 }
 
-- (nullable UITextRange *)characterRangeAtPoint:(CGPoint)point {
-    return nil;
+
+#pragma mark UITextInput - Working with Marked and Selected Text
+
+/**
+ UITextInput selectedTextRange property accessor overrides (access/update underlaying APLSimpleCoreTextView)
+ */
+- (UITextRange *)selectedTextRange
+{
+    return [APLIndexedRange indexedRangeWithRange:self.inMarkedTextRange];
 }
 
-- (nullable UITextRange *)characterRangeByExtendingPosition:(nonnull UITextPosition *)position inDirection:(UITextLayoutDirection)direction {
-    return nil;
+
+- (void)setSelectedTextRange:(UITextRange *)range
+{
+    APLIndexedRange *indexedRange = (APLIndexedRange *)range;
+    self.inSelectedTextRange = indexedRange.range;
 }
 
-- (nullable UITextPosition *)closestPositionToPoint:(CGPoint)point {
-    return nil;
+
+/**
+ UITextInput markedTextRange property accessor overrides (access/update underlaying APLSimpleCoreTextView).
+ */
+- (UITextRange *)markedTextRange
+{
+    /*
+     Return nil if there is no marked text.
+     */
+    NSRange markedTextRange = self.inMarkedTextRange;
+    if (markedTextRange.length == 0) {
+        return nil;
+    }
+    
+    return [APLIndexedRange indexedRangeWithRange:markedTextRange];
 }
 
-- (nullable UITextPosition *)closestPositionToPoint:(CGPoint)point withinRange:(nonnull UITextRange *)range {
-    return nil;
+
+/**
+ UITextInput protocol required method.
+ Insert the provided text and marks it to indicate that it is part of an active input session.
+ */
+- (void)setMarkedText:(NSString *)markedText selectedRange:(NSRange)selectedRange
+{
+    NSRange selectedNSRange = self.inSelectedTextRange;
+    NSRange markedTextRange = self.inMarkedTextRange;
+
+    if (markedTextRange.location != NSNotFound) {
+        if (!markedText)
+            markedText = @"";
+        // Replace characters in text storage and update markedText range length.
+        [self.text replaceCharactersInRange:markedTextRange withString:markedText];
+        markedTextRange.length = markedText.length;
+    }
+    else if (selectedNSRange.length > 0) {
+        // There currently isn't a marked text range, but there is a selected range,
+        // so replace text storage at selected range and update markedTextRange.
+        [self.text replaceCharactersInRange:selectedNSRange withString:markedText];
+        markedTextRange.location = selectedNSRange.location;
+        markedTextRange.length = markedText.length;
+    }
+    else {
+        // There currently isn't marked or selected text ranges, so just insert
+        // given text into storage and update markedTextRange.
+        [self.text insertString:markedText atIndex:selectedNSRange.location];
+        markedTextRange.location = selectedNSRange.location;
+        markedTextRange.length = markedText.length;
+    }
+
+    // Updated selected text range and underlying APLSimpleCoreTextView.
+
+    selectedNSRange = NSMakeRange(selectedRange.location + markedTextRange.location, selectedRange.length);
+
+    self.contentText = self.text;
+    self.inMarkedTextRange = markedTextRange;
+    self.inSelectedTextRange = selectedNSRange;
 }
 
-- (NSComparisonResult)comparePosition:(nonnull UITextPosition *)position toPosition:(nonnull UITextPosition *)other {
 
+/**
+ UITextInput protocol required method.
+ Unmark the currently marked text.
+ */
+- (void)unmarkText
+{
+    NSRange markedTextRange = self.inMarkedTextRange;
+
+    if (markedTextRange.location == NSNotFound) {
+        return;
+    }
+    // Unmark the underlying APLSimpleCoreTextView.markedTextRange.
+    markedTextRange.location = NSNotFound;
+    self.inMarkedTextRange = markedTextRange;
+}
+
+
+#pragma mark UITextInput - Computing Text Ranges and Text Positions
+
+// UITextInput beginningOfDocument property accessor override.
+- (UITextPosition *)beginningOfDocument
+{
+    // For this sample, the document always starts at index 0 and is the full length of the text storage.
+    return [APLIndexedPosition positionWithIndex:0];
+}
+
+
+// UITextInput endOfDocument property accessor override.
+- (UITextPosition *)endOfDocument
+{
+    // For this sample, the document always starts at index 0 and is the full length of the text storage.
+    return [APLIndexedPosition positionWithIndex:self.text.length];
+}
+
+
+/*
+ UITextInput protocol required method.
+ Return the range between two text positions using our implementation of UITextRange.
+ */
+- (UITextRange *)textRangeFromPosition:(UITextPosition *)fromPosition toPosition:(UITextPosition *)toPosition
+{
+    // Generate IndexedPosition instances that wrap the to and from ranges.
+    APLIndexedPosition *fromIndexedPosition = (APLIndexedPosition *)fromPosition;
+    APLIndexedPosition *toIndexedPosition = (APLIndexedPosition *)toPosition;
+    NSRange range = NSMakeRange(MIN(fromIndexedPosition.index, toIndexedPosition.index), ABS(toIndexedPosition.index - fromIndexedPosition.index));
+
+    return [APLIndexedRange indexedRangeWithRange:range];
+}
+
+
+/**
+ UITextInput protocol required method.
+ Returns the text position at a given offset from another text position using our implementation of UITextPosition.
+ */
+- (UITextPosition *)positionFromPosition:(UITextPosition *)position offset:(NSInteger)offset
+{
+    // Generate IndexedPosition instance, and increment index by offset.
+    APLIndexedPosition *indexedPosition = (APLIndexedPosition *)position;
+    NSInteger end = indexedPosition.index + offset;
+    // Verify position is valid in document.
+    if (end > self.text.length || end < 0) {
+        return nil;
+    }
+    
+    UITextPosition *tp = [APLIndexedPosition positionWithIndex:end];
+    
+    return tp;
+}
+
+
+/**
+ UITextInput protocol required method.
+ Returns the text position at a given offset in a specified direction from another text position using our implementation of UITextPosition.
+ */
+- (UITextPosition *)positionFromPosition:(UITextPosition *)position inDirection:(UITextLayoutDirection)direction offset:(NSInteger)offset
+{
+    // Note that this sample assumes left-to-right text direction.
+    APLIndexedPosition *indexedPosition = (APLIndexedPosition *)position;
+    NSInteger newPosition = indexedPosition.index;
+
+    switch ((NSInteger)direction) {
+        case UITextLayoutDirectionRight:
+            newPosition += offset;
+            break;
+        case UITextLayoutDirectionLeft:
+            newPosition -= offset;
+            break;
+        UITextLayoutDirectionUp:
+        UITextLayoutDirectionDown:
+            // This sample does not support vertical text directions.
+            break;
+    }
+
+    // Verify new position valid in document.
+
+    if (newPosition < 0)
+        newPosition = 0;
+
+    if (newPosition > self.text.length)
+        newPosition = self.text.length;
+
+    return [APLIndexedPosition positionWithIndex:newPosition];
+}
+
+
+#pragma mark UITextInput - Evaluating Text Positions
+
+/**
+ UITextInput protocol required method.
+ Return how one text position compares to another text position.
+ */
+- (NSComparisonResult)comparePosition:(UITextPosition *)position toPosition:(UITextPosition *)other
+{
+    APLIndexedPosition *indexedPosition = (APLIndexedPosition *)position;
+    APLIndexedPosition *otherIndexedPosition = (APLIndexedPosition *)other;
+
+    // For this sample, simply compare position index values.
+    if (indexedPosition.index < otherIndexedPosition.index) {
+        return NSOrderedAscending;
+    }
+    if (indexedPosition.index > otherIndexedPosition.index) {
+        return NSOrderedDescending;
+    }
     return NSOrderedSame;
 }
 
-- (CGRect)firstRectForRange:(nonnull UITextRange *)range {
-    return CGRectMake(0, 0, 1, 1);
-}
 
-- (NSInteger)offsetFromPosition:(nonnull UITextPosition *)from toPosition:(nonnull UITextPosition *)toPosition {
-    return NSIntegerMax;
-}
-
-- (nullable UITextPosition *)positionFromPosition:(nonnull UITextPosition *)position inDirection:(UITextLayoutDirection)direction offset:(NSInteger)offset {
-    return nil;
-}
-
-- (nullable UITextPosition *)positionFromPosition:(nonnull UITextPosition *)position offset:(NSInteger)offset {
-    return nil;
-}
-
-- (nullable UITextPosition *)positionWithinRange:(nonnull UITextRange *)range farthestInDirection:(UITextLayoutDirection)direction {
-    return nil;
-}
-
-- (void)replaceRange:(nonnull UITextRange *)range withText:(nonnull NSString *)text {
-    //NSLog(@"replaceRange %@",text);
-}
-
-- (nonnull NSArray<UITextSelectionRect *> *)selectionRectsForRange:(nonnull UITextRange *)range {
-    NSArray *arr = NULL;
-    arr = @[];
-    return arr;
-}
-
-- (void)setBaseWritingDirection:(UITextWritingDirection)writingDirection forRange:(nonnull UITextRange *)range {
-    //self.textStore = markedText;
-}
-
-- (void)setMarkedText:(nullable NSString *)markedText selectedRange:(NSRange)selectedRange {
-    //NSLog(@"setMarkedText %@",markedText);
-    self.textStore=markedText;
-    self.inputlabel.text=markedText;
-}
-
-- (nullable NSString *)textInRange:(nonnull UITextRange *)range {
-    //NSLog(@"textInRange ");
-    return nil;
-}
-
-- (nullable UITextRange *)textRangeFromPosition:(nonnull UITextPosition *)fromPosition toPosition:(nonnull UITextPosition *)toPosition {
-    return nil;
+/**
+ UITextInput protocol required method.
+ Return the number of visible characters between one text position and another text position.
+ */
+- (NSInteger)offsetFromPosition:(UITextPosition *)from toPosition:(UITextPosition *)toPosition
+{
+    APLIndexedPosition *fromIndexedPosition = (APLIndexedPosition *)from;
+    APLIndexedPosition *toIndexedPosition = (APLIndexedPosition *)toPosition;
+    return (toIndexedPosition.index - fromIndexedPosition.index);
 }
 
 
-- (void)unmarkText {
-    if (!self.textStore) return;
-    [self insertText:self.textStore];
-    self.textStore = nil;
-    self.inputlabel.text = nil;
-    //NSLog(@"unmarkText ");
+#pragma mark UITextInput - Text Layout, writing direction and position related methods
+
+/**
+ UITextInput protocol method.
+ Return the text position that is at the farthest extent in a given layout direction within a range of text.
+ */
+- (UITextPosition *)positionWithinRange:(UITextRange *)range farthestInDirection:(UITextLayoutDirection)direction
+{
+    // Note that this sample assumes left-to-right text direction.
+    APLIndexedRange *indexedRange = (APLIndexedRange *)range;
+    NSInteger position;
+
+    /*
+     For this sample, we just return the extent of the given range if the given direction is "forward" in a left-to-right context (UITextLayoutDirectionRight or UITextLayoutDirectionDown), otherwise we return just the range position.
+     */
+    switch (direction) {
+        case UITextLayoutDirectionUp:
+        case UITextLayoutDirectionLeft:
+            position = indexedRange.range.location;
+            break;
+        case UITextLayoutDirectionRight:
+        case UITextLayoutDirectionDown:
+            position = indexedRange.range.location + indexedRange.range.length;
+            break;
+    }
+
+    // Return text position using our UITextPosition implementation.
+    // Note that position is not currently checked against document range.
+    return [APLIndexedPosition positionWithIndex:position];
 }
 
-- (void)encodeWithCoder:(nonnull NSCoder *)aCoder {
 
+/**
+ UITextInput protocol required method.
+ Return a text range from a given text position to its farthest extent in a certain direction of layout.
+ */
+- (UITextRange *)characterRangeByExtendingPosition:(UITextPosition *)position inDirection:(UITextLayoutDirection)direction
+{
+    // Note that this sample assumes left-to-right text direction.
+    APLIndexedPosition *pos = (APLIndexedPosition *)position;
+    NSRange result;
+
+    switch (direction) {
+        case UITextLayoutDirectionUp:
+        case UITextLayoutDirectionLeft:
+            result = NSMakeRange(pos.index - 1, 1);
+            break;
+        case UITextLayoutDirectionRight:
+        case UITextLayoutDirectionDown:
+            result = NSMakeRange(pos.index, 1);
+            break;
+    }
+
+    // Return range using our UITextRange implementation.
+    // Note that range is not currently checked against document range.
+    return [APLIndexedRange indexedRangeWithRange:result];
 }
 
-+ (nonnull instancetype)appearance {
-    return nil;
+
+/**
+ UITextInput protocol required method.
+ Return the base writing direction for a position in the text going in a specified text direction.
+ */
+- (UITextWritingDirection)baseWritingDirectionForPosition:(UITextPosition *)position inDirection:(UITextStorageDirection)direction
+{
+    // This sample assumes left-to-right text direction and does not support bi-directional or right-to-left text.
+    return UITextWritingDirectionLeftToRight;
 }
 
-+ (nonnull instancetype)appearanceForTraitCollection:(nonnull UITraitCollection *)trait {
-    return nil;
+
+/**
+ UITextInput protocol required method.
+ Set the base writing direction for a given range of text in a document.
+ */
+- (void)setBaseWritingDirection:(UITextWritingDirection)writingDirection forRange:(UITextRange *)range
+{
+    // This sample assumes left-to-right text direction and does not support bi-directional or right-to-left text.
 }
 
-+ (nonnull instancetype)appearanceForTraitCollection:(nonnull UITraitCollection *)trait whenContainedIn:(nullable Class<UIAppearanceContainer>)ContainerClass, ... {
-    return nil;
-}
 
-+ (nonnull instancetype)appearanceForTraitCollection:(nonnull UITraitCollection *)trait whenContainedInInstancesOfClasses:(nonnull NSArray<Class<UIAppearanceContainer>> *)containerTypes {
-    return nil;
-}
+#pragma mark UITextInput - Geometry methods
 
-+ (nonnull instancetype)appearanceWhenContainedIn:(nullable Class<UIAppearanceContainer>)ContainerClass, ... {
-    return nil;
-}
+/**
+ UITextInput protocol required method.
+ Return the first rectangle that encloses a range of text in a document.
+ */
+- (CGRect)firstRectForRange:(UITextRange *)range
+{
 
-+ (nonnull instancetype)appearanceWhenContainedInInstancesOfClasses:(nonnull NSArray<Class<UIAppearanceContainer>> *)containerTypes {
-    return nil;
-}
-
-- (void)traitCollectionDidChange:(nullable UITraitCollection *)previousTraitCollection {
-
-}
-
-- (CGPoint)convertPoint:(CGPoint)point fromCoordinateSpace:(nonnull id<UICoordinateSpace>)coordinateSpace {
-    return CGPointMake(0, 0);
-}
-
-- (CGPoint)convertPoint:(CGPoint)point toCoordinateSpace:(nonnull id<UICoordinateSpace>)coordinateSpace {
-    return CGPointMake(0, 0);
-}
-
-- (CGRect)convertRect:(CGRect)rect fromCoordinateSpace:(nonnull id<UICoordinateSpace>)coordinateSpace {
     return CGRectMake(0, 0,1,1);
 }
 
-- (CGRect)convertRect:(CGRect)rect toCoordinateSpace:(nonnull id<UICoordinateSpace>)coordinateSpace {
+
+/*
+ UITextInput protocol required method.
+ Return a rectangle used to draw the caret at a given insertion point.
+ */
+- (CGRect)caretRectForPosition:(UITextPosition *)position
+{
+
     return CGRectMake(0, 0,1,1);
 }
 
-- (void)didUpdateFocusInContext:(nonnull UIFocusUpdateContext *)context withAnimationCoordinator:(nonnull UIFocusAnimationCoordinator *)coordinator {
 
+#pragma mark UITextInput - Hit testing
+
+/*
+ For this sample, hit testing methods are not implemented because there is no implemented mechanism for letting user select text via touches. There is a wide variety of approaches for this (gestures, drag rects, etc) and any approach chosen will depend greatly on the design of the application.
+ */
+
+/*
+ UITextInput protocol required method.
+ Return the position in a document that is closest to a specified point.
+ */
+- (UITextPosition *)closestPositionToPoint:(CGPoint)point
+{
+    // Not implemented in this sample. Could utilize underlying APLSimpleCoreTextView:closestIndexToPoint:point.
+    return nil;
 }
 
-- (void)setNeedsFocusUpdate {
-
+/*
+ UITextInput protocol required method.
+ Return the position in a document that is closest to a specified point in a given range.
+ */
+- (UITextPosition *)closestPositionToPoint:(CGPoint)point withinRange:(UITextRange *)range
+{
+    // Not implemented in this sample. Could utilize underlying APLSimpleCoreTextView:closestIndexToPoint:point.
+    return nil;
 }
 
-- (BOOL)shouldUpdateFocusInContext:(nonnull UIFocusUpdateContext *)context {
-    return YES;
+/*
+ UITextInput protocol required method.
+ Return the character or range of characters that is at a given point in a document.
+ */
+- (UITextRange *)characterRangeAtPoint:(CGPoint)point
+{
+    // Not implemented in this sample. Could utilize underlying APLSimpleCoreTextView:closestIndexToPoint:point.
+    return nil;
 }
 
-- (void)updateFocusIfNeeded {
 
+/*
+ UITextInput protocol required method.
+ Return an array of UITextSelectionRects.
+ */
+- (NSArray *)selectionRectsForRange:(UITextRange *)range
+{
+    // Not implemented in this sample.
+    return nil;
 }
 
-- (nonnull NSArray<id<UIFocusItem>> *)focusItemsInRect:(CGRect)rect {
-    NSArray *arr = NULL;
-    arr = @[];
-    return arr;
+
+#pragma mark UITextInput - Returning Text Styling Information
+
+/*
+ UITextInput protocol required method.
+ Return a dictionary with properties that specify how text is to be style at a certain location in a document.
+ */
+- (NSDictionary *)textStylingAtPosition:(UITextPosition *)position inDirection:(UITextStorageDirection)direction
+{
+    // This sample assumes all text is single-styled, so this is easy.
+    //return @{ UITextInputTextFontKey : self.textView.font };
+    return nil;
 }
+
 
 
 #pragma mark - 拍照并保存
@@ -1855,6 +2219,10 @@ void glfmSetSupportedInterfaceOrientation(GLFMDisplay *display, GLFMInterfaceOri
             // HACK: Notify that the value of supportedInterfaceOrientations has changed
             GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
             if (vc.isViewLoaded && vc.view.window) {
+                
+                //================================= gust add =======================
+                [vc setInterfaceOrientation:supportedOrientations];
+                //================================= gust add =======================
                 [vc.glfmView requestRefresh];
                 UIViewController *dummyVC = GLFM_AUTORELEASE([[UIViewController alloc] init]);
                 dummyVC.view = GLFM_AUTORELEASE([[UIView alloc] init]);
@@ -2353,6 +2721,61 @@ int openOtherApp(const char *curl, const char *more, int detectAppInstalled){
 }
 
 void remoteMethodCall(const char *inJsonStr, Utf8String *outJsonStr){
+    
+}
+
+
+#pragma mark - IAP interface
+
+void buyAppleProductById(GLFMDisplay * display, const char *cproductID, const char *base64HandleScript){
+    NSString *productID = [[NSString alloc] initWithCString:cproductID encoding:NSUTF8StringEncoding];
+    //GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
+    
+
+    [[IAPManager shareIAPManager] startPurchaseWithID:productID completeHandle:^(IAPPurchType type,NSData *data) {
+        switch (type) {
+            case IAPPurchSuccess:
+                NSLog(@"IAPPurchSuccess");
+                break;
+            case IAPPurchFailed:
+                NSLog(@"IAPPurchFailed");
+                break;
+            case IAPPurchCancel:
+                NSLog(@"IAPPurchCancel");
+                break;
+            case IAPPurchVerFailed:
+                NSLog(@"IAPPurchVerFailed");
+                break;
+            case IAPPurchVerSuccess:
+                NSLog(@"IAPPurchVerSuccess");
+                break;
+            case IAPPurchNotArrow:
+                NSLog(@"IAPPurchNotArrow");
+                break;
+            default:
+                break;
+        }
+        const char *replyMsg = NULL;
+        NSString *nssd;
+        if (data == nil) {
+            nssd = @"";
+        } else {
+            nssd = [data base64EncodedStringWithOptions:0];
+        }
+
+        NSString *str = [NSString stringWithFormat:@"%d:%@:%s", (int)type, nssd, base64HandleScript];
+
+        replyMsg = [str UTF8String];
+        
+        
+        static char *key = "glfm.ios.purchase";
+        
+        
+
+        if(display->notifyFunc){
+            display->notifyFunc(display, key, replyMsg);
+        }
+    }];
     
 }
 

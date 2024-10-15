@@ -581,6 +581,8 @@ int openOtherApp(const char *url, const char *more, int detectAppInstalled);
 
 void remoteMethodCall(const char *inJsonStr, Utf8String *outJsonStr);
 
+void buyAppleProductById(GLFMDisplay * display, const char *cproductID, const char *base64HandleScript);
+
 void pickPhotoAlbum(GLFMDisplay *display, int uid, int type);
 
 void pickPhotoCamera(GLFMDisplay *display, int uid, int type);

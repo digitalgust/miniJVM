@@ -11,7 +11,6 @@ import org.mini.gui.gscript.Interpreter;
 import org.mini.gui.gscript.Lib;
 import org.mini.gui.guilib.GuiScriptLib;
 import org.mini.http.MiniHttpClient;
-import org.mini.nanovg.Nanovg;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -24,13 +23,13 @@ import java.util.Random;
  *
  * @author Gust
  */
-public class ExplorerScriptLib extends Lib {
-    XExplorerHolder holder;
+public class XuiScriptLib extends Lib {
+    XuiBrowserHolder holder;
 
     /**
      *
      */
-    public ExplorerScriptLib(XExplorerHolder holder) {
+    public XuiScriptLib(XuiBrowserHolder holder) {
         this.holder = holder;
 
         // script method register
@@ -62,12 +61,12 @@ public class ExplorerScriptLib extends Lib {
         String href = Interpreter.popBackStr(para);
         String callback = Interpreter.popBackStr(para);
         if (href != null) {
-            XPage page = holder.getExplorer().getCurrentPage();
+            XuiPage page = holder.getBrowser().getCurrentPage();
             if (page != null) {// may be  href="/abc/c.xml"
-                href = XUrlHelper.normalizeUrl(page.getUrl(), href); //fix as : http://www.abc.com/abc/c.xml
+                href = UrlHelper.normalizeUrl(page.getUrl(), href); //fix as : http://www.abc.com/abc/c.xml
             }
-            holder.getExplorer().gotoPage(href);
-            GuiScriptLib.doHttpCallback(holder.getExplorer().getWebView().getForm(), callback, href, 0, "");
+            holder.getBrowser().gotoPage(href);
+            GuiScriptLib.doHttpCallback(holder.getForm(), callback, href, 0, "");
         }
         return null;
     }
@@ -77,9 +76,9 @@ public class ExplorerScriptLib extends Lib {
         String href = Interpreter.popBackStr(para);
         String callback = Interpreter.popBackStr(para);
         if (href != null) {
-            XPage page = holder.getExplorer().getCurrentPage();
+            XuiPage page = holder.getBrowser().getCurrentPage();
             if (page != null) {// may be  href="/abc/c.xml"
-                href = XUrlHelper.normalizeUrl(page.getUrl(), href); //fix as : http://www.abc.com/abc/c.zip
+                href = UrlHelper.normalizeUrl(page.getUrl(), href); //fix as : http://www.abc.com/abc/c.zip
             }
 
             MiniHttpClient hc = new MiniHttpClient(href, null, new MiniHttpClient.DownloadCompletedHandle() {
@@ -90,7 +89,7 @@ public class ExplorerScriptLib extends Lib {
                         GCmd cmd = new GCmd(
                                 () -> {
                                     AppManager.getInstance().getDownloadCallback().onCompleted(client, url, data);
-                                    GuiScriptLib.doHttpCallback(holder.getExplorer().getWebView().getForm(), callback, url, 0, "");
+                                    GuiScriptLib.doHttpCallback(holder.getForm(), callback, url, 0, "");
                                 });
                         GForm.addCmd(cmd);
                         GForm.flush();
@@ -99,7 +98,7 @@ public class ExplorerScriptLib extends Lib {
                 }
             });
             hc.setProgressListener((MiniHttpClient client, int progress) -> {
-                GuiScriptLib.showProgressBar(holder.getExplorer().getWebView().getForm(), progress);
+                GuiScriptLib.showProgressBar(holder.getForm(), progress);
             });
             hc.start();
         }
@@ -110,9 +109,9 @@ public class ExplorerScriptLib extends Lib {
         String href = Interpreter.popBackStr(para);
         String callback = Interpreter.popBackStr(para);
         if (href != null) {
-            XPage page = holder.getExplorer().getCurrentPage();
+            XuiPage page = holder.getBrowser().getCurrentPage();
             if (page != null) {// may be  href="/abc/c.xml"
-                href = XUrlHelper.normalizeUrl(page.getUrl(), href); //fix as : http://www.abc.com/abc/c.zip
+                href = UrlHelper.normalizeUrl(page.getUrl(), href); //fix as : http://www.abc.com/abc/c.zip
             }
             MiniHttpClient hc = new MiniHttpClient(href, null, new MiniHttpClient.DownloadCompletedHandle() {
                 @Override
@@ -138,7 +137,7 @@ public class ExplorerScriptLib extends Lib {
                                         fos.write(data);
                                         fos.close();
 
-                                        GuiScriptLib.doHttpCallback(holder.getExplorer().getWebView().getForm(), callback, url, 0, path);
+                                        GuiScriptLib.doHttpCallback(holder.getForm(), callback, url, 0, path);
                                     } catch (IOException e) {
                                         throw new RuntimeException(e);
                                     }
@@ -149,7 +148,7 @@ public class ExplorerScriptLib extends Lib {
                 }
             });
             hc.setProgressListener((MiniHttpClient client, int progress) -> {
-                GuiScriptLib.showProgressBar(holder.getExplorer().getWebView().getForm(), progress);
+                GuiScriptLib.showProgressBar(holder.getForm(), progress);
             });
             hc.start();
         }
@@ -159,16 +158,16 @@ public class ExplorerScriptLib extends Lib {
 
     public DataType getPageBaseUrl(ArrayList<DataType> para) {
         String href = "";
-        XPage page = holder.getExplorer().getCurrentPage();
+        XuiPage page = holder.getBrowser().getCurrentPage();
         if (page != null) {// may be  href="/abc/c.xml"
-            href = XUrlHelper.normalizeUrl(page.getUrl(), "/"); //fix as : http://www.abc.com/abc/c.xml
+            href = UrlHelper.normalizeUrl(page.getUrl(), "/"); //fix as : http://www.abc.com/abc/c.xml
         }
         return Interpreter.getCachedStr(href);
     }
 
     public DataType getPageUrl(ArrayList<DataType> para) {
         String href = "";
-        XPage page = holder.getExplorer().getCurrentPage();
+        XuiPage page = holder.getBrowser().getCurrentPage();
         if (page != null) {// may be  href="/abc/c.xml"
             href = page.getUrl().toString();
         }
@@ -176,7 +175,7 @@ public class ExplorerScriptLib extends Lib {
     }
 
     public DataType prevPage(ArrayList<DataType> para) {
-        XExplorer explorer = holder.getExplorer();
+        XuiBrowser explorer = holder.getBrowser();
         if (explorer != null) {
             explorer.back();
         }
@@ -184,7 +183,7 @@ public class ExplorerScriptLib extends Lib {
     }
 
     public DataType nextPage(ArrayList<DataType> para) {
-        XExplorer explorer = holder.getExplorer();
+        XuiBrowser explorer = holder.getBrowser();
         if (explorer != null) {
             explorer.forward();
         }
@@ -192,9 +191,9 @@ public class ExplorerScriptLib extends Lib {
     }
 
     public DataType refreshPage(ArrayList<DataType> para) {
-        XExplorer explorer = holder.getExplorer();
+        XuiBrowser explorer = holder.getBrowser();
         if (explorer != null) {
-            XPage page = explorer.getCurrentPage();
+            XuiPage page = explorer.getCurrentPage();
             if (page != null) {
                 page.reset();
                 explorer.gotoPage(page.getUrl().toString());

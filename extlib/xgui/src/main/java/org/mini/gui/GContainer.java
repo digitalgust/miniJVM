@@ -238,7 +238,7 @@ abstract public class GContainer extends GObject {
         synchronized (elements) {
             int size = elements.size();
             for (int i = 0; i < size; i++) {
-                removeImpl(elements.size() - 1);
+                removeImpl(0);
             }
         }
     }

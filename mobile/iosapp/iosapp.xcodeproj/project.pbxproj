@@ -39,6 +39,7 @@
 		451F272D23A24C3A00F99984 /* nanovg.c in Sources */ = {isa = PBXBuildFile; fileRef = 45D78F62209D4330003B9317 /* nanovg.c */; };
 		451F272F23A24C7B00F99984 /* jni_minial.m in Sources */ = {isa = PBXBuildFile; fileRef = 4535FA2721944F7300B888BA /* jni_minial.m */; };
 		4581C5CC226DA7BE00E88538 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 45D78F2B209D3E62003B9317 /* Assets.xcassets */; };
+		4589A5FD2C8DFB920079DDFC /* IAPManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 4589A5FC2C8DFB920079DDFC /* IAPManager.m */; };
 		45D7904B20A002C4003B9317 /* resfiles in Resources */ = {isa = PBXBuildFile; fileRef = 45D7904A20A002C4003B9317 /* resfiles */; };
 		45F996B4253B69E40053E7A0 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F9966D253B69DE0053E7A0 /* md5.c */; };
 		45F996B5253B69E40053E7A0 /* cmac.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F9966E253B69DE0053E7A0 /* cmac.c */; };
@@ -166,6 +167,8 @@
 		4581C389226D637C00E88538 /* tinycthread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinycthread.h; sourceTree = "<group>"; };
 		4581C38A226D637C00E88538 /* d_type.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = d_type.h; sourceTree = "<group>"; };
 		4581C38B226D637C00E88538 /* linkedlist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = linkedlist.c; sourceTree = "<group>"; };
+		4589A5FB2C8DFB6C0079DDFC /* IAPManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IAPManager.h; sourceTree = "<group>"; };
+		4589A5FC2C8DFB920079DDFC /* IAPManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IAPManager.m; sourceTree = "<group>"; };
 		45D78F1F209D3E61003B9317 /* iosapp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosapp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		45D78F2B209D3E62003B9317 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		45D78F30209D3E62003B9317 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -491,6 +494,8 @@
 				592538032BF5D27A00E5D1DC /* glfm_emscripten.c */,
 				592538052BF5D27A00E5D1DC /* glfm_internal.h */,
 				45D78F47209D4330003B9317 /* glfm.h */,
+				4589A5FB2C8DFB6C0079DDFC /* IAPManager.h */,
+				4589A5FC2C8DFB920079DDFC /* IAPManager.m */,
 			);
 			name = glfm;
 			path = ../../c/glfm;
@@ -881,6 +886,7 @@
 				45F996DE253B69E40053E7A0 /* pk_wrap.c in Sources */,
 				451F272123A24C3A00F99984 /* hashtable.c in Sources */,
 				45F996E4253B69E40053E7A0 /* oid.c in Sources */,
+				4589A5FD2C8DFB920079DDFC /* IAPManager.m in Sources */,
 				451F272223A24C3A00F99984 /* miniz_wrapper.c in Sources */,
 				451F272323A24C3A00F99984 /* bytebuf.c in Sources */,
 				451F272423A24C3A00F99984 /* linkedlist.c in Sources */,
@@ -1099,7 +1105,7 @@
 				);
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_BUNDLE_IDENTIFIER = com.ebsee.minipack;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ysbit.wushuang;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1130,7 +1136,7 @@
 				);
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_BUNDLE_IDENTIFIER = com.ebsee.minipack;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ysbit.wushuang;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				TARGETED_DEVICE_FAMILY = "1,2";

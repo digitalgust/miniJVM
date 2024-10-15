@@ -118,7 +118,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "1387"
             endingLineNumber = "1387"
-            landmarkName = "jdwp_client_process(client)"
+            landmarkName = "jdwp_eventset_clear(jdwpserver, id)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>

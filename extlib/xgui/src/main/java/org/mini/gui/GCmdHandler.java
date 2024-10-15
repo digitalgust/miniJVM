@@ -27,13 +27,18 @@ public class GCmdHandler {
 
 
     final static List<GCmd> cmds = Collections.synchronizedList(new ArrayList());
+    static List<GCmd> cmdQueue = new ArrayList();
 
     final static List<String> message = new ArrayList();
     static byte[] curShowMessage;
     float[] insets = new float[4];
     float[] bond = new float[4];
+    GCmd msgCmd;
 
     public void addCmd(GCmd cmd) {
+        if (cmd == null) {
+            return;
+        }
         cmds.add(cmd);
     }
 
@@ -47,50 +52,52 @@ public class GCmdHandler {
 
     public void process(GForm form) {
         synchronized (cmds) {
-            for (int i = 0, imax = cmds.size(); i < imax; i++) {
-                GCmd cmd = cmds.get(i);
-                try {
-                    switch (cmd.cmdId) {
-                        case GCmd.GCMD_DESTORY_TEXTURE: {
-                            Integer tex = (Integer) cmd.attachment;
-                            if (tex != null) {
-                                Nanovg.nvgDeleteImage(form.getNvContext(), tex);
-                                //System.out.println("delete image " + tex);
-                            }
-                            break;
-                        }
-                        case GCmd.GCMD_SHOW_MESSAGE: {
-                            message.add((String) cmd.attachment);
-                            break;
-                        }
-                        case GCmd.GCMD_CLEAR_MESSAGE: {
-                            message.clear();
-                            break;
-                        }
-                        case GCmd.GCMD_SHOW_KEYBOARD: {
-                            Glfm.glfmSetKeyboardVisible(form.getWinContext(), true);
-                            break;
-                        }
-                        case GCmd.GCMD_HIDE_KEYBOARD: {
-                            Glfm.glfmSetKeyboardVisible(form.getWinContext(), false);
-                            break;
-                        }
-                        case GCmd.GCMD_RUN_CODE: {
-                            if (cmd.attachment instanceof Runnable) {
-                                Runnable runnable = (Runnable) cmd.attachment;
-                                runnable.run();
-                            }
-                            break;
-                        }
-                        default: {
-
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+            cmdQueue.clear();
+            cmdQueue.addAll(cmds);
             cmds.clear();
+        }
+        for (int i = 0, imax = cmdQueue.size(); i < imax; i++) {
+            GCmd cmd = cmdQueue.get(i);
+            try {
+                switch (cmd.cmdId) {
+                    case GCmd.GCMD_DESTORY_TEXTURE: {
+                        Integer tex = (Integer) cmd.attachment;
+                        if (tex != null) {
+                            Nanovg.nvgDeleteImage(form.getNvContext(), tex);
+                            //System.out.println("delete image " + tex);
+                        }
+                        break;
+                    }
+                    case GCmd.GCMD_SHOW_MESSAGE: {
+                        message.add((String) cmd.attachment);
+                        break;
+                    }
+                    case GCmd.GCMD_CLEAR_MESSAGE: {
+                        message.clear();
+                        break;
+                    }
+                    case GCmd.GCMD_SHOW_KEYBOARD: {
+                        Glfm.glfmSetKeyboardVisible(form.getWinContext(), true);
+                        break;
+                    }
+                    case GCmd.GCMD_HIDE_KEYBOARD: {
+                        Glfm.glfmSetKeyboardVisible(form.getWinContext(), false);
+                        break;
+                    }
+                    case GCmd.GCMD_RUN_CODE: {
+                        if (cmd.attachment instanceof Runnable) {
+                            Runnable runnable = (Runnable) cmd.attachment;
+                            runnable.run();
+                        }
+                        break;
+                    }
+                    default: {
+
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -98,16 +105,21 @@ public class GCmdHandler {
         if (curShowMessage == null) {
             if (message.size() > 0) {
                 curShowMessage = GLUtil.toCstyleBytes(message.remove(0));
-                GForm.timer.schedule(new TimerTask() {
+                msgCmd = new GCmd(new Runnable() {
+                    int tick = 0;
+
                     @Override
                     public void run() {
-                        try {
+                        GForm.flush();
+                        if (tick++ < 100) {
+                            GForm.addCmd(msgCmd);
+                        } else {
                             curShowMessage = null;
-                            GForm.flush();
-                        } catch (Exception e) {
+                            msgCmd = null;
                         }
                     }
-                }, 1500);
+                });
+                GForm.addCmd(msgCmd);
             }
         } else {
             long vg = form.getNvContext();

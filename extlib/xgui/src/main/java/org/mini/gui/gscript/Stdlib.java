@@ -2,6 +2,8 @@ package org.mini.gui.gscript;
 
 import org.mini.crypt.XorCrypt;
 import org.mini.glfm.Glfm;
+import org.mini.glwrap.GLUtil;
+import org.mini.gui.GCallBack;
 import org.mini.reflect.ReflectMethod;
 
 import javax.microedition.io.Base64;
@@ -9,6 +11,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.security.MessageDigest;
 import java.util.Random;
 import java.util.ArrayList;
 
@@ -65,20 +68,24 @@ public class Stdlib extends Lib {
         methodNames.put("setbit".toLowerCase(), this::setbit);//设整数第n位
         methodNames.put("encrypt".toLowerCase(), this::encrypt);//加密  str= encrypt(str,key)
         methodNames.put("decrypt".toLowerCase(), this::decrypt);//解密  str= decrypt(str,key)
+        methodNames.put("md5".toLowerCase(), this::md5);//md5  str= md5(str) 返回32位字符串(16字节串)
+        methodNames.put("sha1".toLowerCase(), this::sha1);//sha1  str= sha1(str) 返回40位字符串(20字节串)
         methodNames.put("remoteMethodCall".toLowerCase(), this::remoteMethodCall);//远程调用
+        methodNames.put("buyAppleProductById".toLowerCase(), this::buyAppleProductById);//远程调用
+        methodNames.put("openOtherApp".toLowerCase(), this::openOtherApp);//打开其他应用
     }
 
 
     public DataType getEnv(ArrayList<DataType> para) {
         String key = Interpreter.popBackStr(para);
-        return Interpreter.getCachedStr(Interpreter.getEnvVar(key));
+        return Interpreter.getCachedStr(inp.getEnvVar(key));
     }
 
 
     public DataType setEnv(ArrayList<DataType> para) {
         String key = Interpreter.popBackStr(para);
         String val = Interpreter.popBackStr(para);
-        Interpreter.setEnvVar(key, val);
+        inp.setEnvVar(key, val);
         return null;
     }
 
@@ -673,11 +680,67 @@ public class Stdlib extends Lib {
         return Interpreter.getCachedStr("");
     }
 
+    public static String byteArrayToHex(byte[] a) {
+        StringBuilder sb = new StringBuilder(a.length * 2);
+        for (byte b : a)
+            sb.append(String.format("%02x", b & 0xff));
+        return sb.toString();
+    }
+
+    private DataType md5(ArrayList<DataType> para) {
+        try {
+            String str = Interpreter.popBackStr(para);
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(str.getBytes("utf-8"));
+            String str1 = (byteArrayToHex(md.digest()));
+            return Interpreter.getCachedStr(str1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType sha1(ArrayList<DataType> para) {
+        try {
+            String str = Interpreter.popBackStr(para);
+            MessageDigest md = MessageDigest.getInstance("SHA-1");
+            md.update(str.getBytes("utf-8"));
+            String str1 = (byteArrayToHex(md.digest()));
+            return Interpreter.getCachedStr(str1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     private DataType remoteMethodCall(ArrayList<DataType> para) {
         try {
             String str = Interpreter.popBackStr(para);
             String ret = Glfm.glfmRemoteMethodCall(str);
             return Interpreter.getCachedStr(ret == null ? "" : ret);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType buyAppleProductById(ArrayList<DataType> para) {
+        try {
+            String str = Interpreter.popBackStr(para);
+            String scriptStr = Interpreter.popBackStr(para);
+            Glfm.glfmBuyAppleProductById(GCallBack.getInstance().getDisplay(), str, scriptStr);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType openOtherApp(ArrayList<DataType> para) {
+        try {
+            String urlstr = Interpreter.popBackStr(para);
+            String moreStr = Interpreter.popBackStr(para);
+            int detectAppInstalled = Interpreter.popBackInt(para);
+            Glfm.glfmOpenOtherApp(GLUtil.toCstyleBytes(urlstr), GLUtil.toCstyleBytes(moreStr), detectAppInstalled);
         } catch (Exception e) {
             e.printStackTrace();
         }

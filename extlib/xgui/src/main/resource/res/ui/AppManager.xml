@@ -11,7 +11,7 @@
 
         sub getQueryPara()
             s="appid="+ getEnv("APPID") + "&appzone=" + getEnv("APPZONE") + "&ver=" + getEnv("SVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG") +"&token="+ getEnv("TOKEN")
-            println(s)
+            'println(s)
         ret s
 
         sub onCallBack(url,code,msg) '通用回调
@@ -19,8 +19,12 @@
         ret
 
         sub getPolicy() '获取策略
+            if(strlen(getEnv("DISCOVERY_URL"))>0)
+                ret
+            eif
+
             policyUrl=getEnv("POLICY_URL")
-            println("getPolicy"+policyUrl)
+            println("getPolicy:"+policyUrl)
             if(strlen(policyUrl)>0)
                 url=policyUrl +"?"+ getQueryPara()
                 httpGetSync(url, "ROOT_PAN.onPolicyRequestBack")
@@ -32,8 +36,12 @@
                 urls=split(msg,"\n")
                 setEnv("DISCOVERY_URL",urls[0])
                 setEnv("ACCOUNT_BASE_URL",urls[1])
-                println("DISCOVERY_URL="+getEnv("DISCOVERY_URL"))
-                println("ACCOUNT_BASE_URL="+getEnv("ACCOUNT_BASE_URL"))
+                setEnv("PROFILE_URL",urls[2])
+                setEnv("SHOP_URL",urls[3])
+                setEnv("PAY_URL",urls[4])
+                setEnv("PLUGIN_URL",urls[5])
+                setEnv("UPDATE_URL",urls[6])
+                println("urls:\n"+urls)
             else
                showMsg("onPolicyRequestBack:"+code+","+msg)
             eif
@@ -41,6 +49,7 @@
 
 
         sub signInAuto() '登录
+            getPolicy()
             logintype=getEnv("LOGINTYPE")
             loginUid=getEnv("USERNAME")
             ep=getEnv("USERPASS")
@@ -69,6 +78,7 @@
         ret
 
         sub showDiscovery() '显示发现
+            getPolicy()
             showSlot("SLOT_MGR", 3)
             if(!uiExist("DIS_HOME")) 'if there is not a discovery panel then show it
                 showHome()
@@ -76,11 +86,13 @@
         ret
 
         sub showHome()
+            getPolicy()
             url=getEnv("DISCOVERY_URL") +"?"+ getQueryPara()
             openPage(url,"")
         ret
 
         sub showMy() '显示我的
+            getPolicy()
             showSlot("SLOT_MGR", 4)
 
             token=getEnv("TOKEN")
@@ -93,12 +105,21 @@
         ret
 
         sub showProfile() '显示我的
+            getPolicy()
             s1=getEnv("DISCOVERY_URL")
             s2=substr(s1,0,lastIdxOf(s1,"/"))
             s3=s2+"/profile.xml" +"?"+ getQueryPara()
             showSlot("SLOT_MGR",3)
             openPage(s3,"")
         ret
+
+        sub checkUpdate()
+            url=getEnv("UPDATE_URL")+"?"+ getQueryPara()
+            if(strlen(url)>0)
+                openOtherApp(url,"",0)  ' 第一个为 url，第二个为参数，第三个为检测是否App 存在，0为不检测，1为检测
+            eif
+        ret
+
 
         ]]>
     </script>
@@ -185,8 +206,7 @@
                         <label w="75%" h="30" align="left,vcenter">{STR_INSTALL_FROM_LOCAL}</label>
                         <button name="BT_LOCALFILE" w="25%" h="30" preicon="📁">{BROWSE_FILE}</button>
                         <label w="100%" h="20"></label>
-                        <label name="LAB_WEBSRV" w="75%" h="30" align="left,vcenter">{STR_START_WEB_SRV_FOR_UPLOAD}
-                        </label>
+                        <label name="LAB_WEBSRV" w="75%" h="30" align="left,vcenter">{STR_START_WEB_SRV_FOR_UPLOAD}</label>
                         <button name="BT_STARTWEB" w="25%" h="30" preicon="📤">{STR_START}</button>
                         <label w="100%" h="20"></label>
                         <br/>
@@ -235,13 +255,16 @@
                                 </td>
                                 <td w="20"></td>
                                 <td w="float" bgcolor="55558020">
-                                    <label name="LAB_USERNAME" onclick='showProfile()' w="100%" h="80" color="bb8844ff" fontsize="18" align="hcenter,vcenter">{SIGN_IN} &gt;</label>
+                                    <label name="LAB_USERNAME" onclick='showProfile()' w="100%" h="80" color="bb8844ff" fontsize="18" align="hcenter,vcenter">{SIGN_IN} &gt;
+                                    </label>
                                 </td>
                             </tr>
                         </table>
                         <label></label>
                         <br/>
                         <button name="BT_SETTING" w="100%" h="40" preicon="⚙">{SETTING}</button>
+                        <br/>
+                        <button name="BT_UPDATING" w="100%" h="40" onclick="checkUpdate()" preicon="">{STR_UPDATE}</button>
                         <br/>
                         <label></label>
                     </viewport>

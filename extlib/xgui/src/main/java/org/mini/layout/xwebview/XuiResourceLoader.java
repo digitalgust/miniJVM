@@ -9,15 +9,15 @@ import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class XResourceLoader implements XmlExtAssist.XLoader {
+public class XuiResourceLoader implements XmlExtAssist.XLoader {
 
     URL url;
     static GImage notfoundImage;
     static String notfoundText = "<panel><label>not found:</label><br/><label multiline=\"1\">{URL}</label></panel>";
 
-    Map<String, XResource> resources = new HashMap<>();
+    Map<String, XuiResource> resources = new HashMap<>();
 
-    public XResourceLoader() {
+    public XuiResourceLoader() {
         notfoundImage = GImage.createImageFromJar("/res/ui/notfound.jpg");
     }
 
@@ -30,8 +30,8 @@ public class XResourceLoader implements XmlExtAssist.XLoader {
         resources.clear();
     }
 
-    public XResource loadResource(String pUrl) {
-        String resUrl = XUrlHelper.normalizeUrl(url, pUrl);
+    public XuiResource loadResource(String pUrl) {
+        String resUrl = UrlHelper.normalizeUrl(url, pUrl);
         try {
             URL u = new URL(resUrl);
             URLConnection conn = u.openConnection();
@@ -44,9 +44,9 @@ public class XResourceLoader implements XmlExtAssist.XLoader {
                 while (read < data.length) {
                     read += o.read(data, read, data.length - read);
                 }
-                XResource resource = new XResource();
+                XuiResource resource = new XuiResource();
                 resource.url = resUrl;
-                resource.type = XResource.getTypeByString(type);
+                resource.type = XuiResource.getTypeByString(type);
                 resource.data = data;
                 return resource;
             }
@@ -58,16 +58,16 @@ public class XResourceLoader implements XmlExtAssist.XLoader {
 
 
     public GImage loadImage(String pUrl) {
-        String resUrl = XUrlHelper.normalizeUrl(url, pUrl);
+        String resUrl = UrlHelper.normalizeUrl(url, pUrl);
         try {
-            XResource res = resources.get(resUrl);
+            XuiResource res = resources.get(resUrl);
             if (res == null) {
                 res = loadResource(resUrl);
             }
             if (res != null) {
                 if (res.image == null) {
                     res.image = GImage.createImage(res.data);
-                    res.type = XResource.TYPE_IMAGE;
+                    res.type = XuiResource.TYPE_IMAGE;
                     resources.put(resUrl, res);
                 }
                 if (res.image == null) {
@@ -82,16 +82,16 @@ public class XResourceLoader implements XmlExtAssist.XLoader {
     }
 
     public String loadXml(String pUrl) {
-        String resUrl = XUrlHelper.normalizeUrl(url, pUrl);
+        String resUrl = UrlHelper.normalizeUrl(url, pUrl);
         try {
-            XResource res = resources.get(resUrl);
+            XuiResource res = resources.get(resUrl);
             if (res == null) {
                 res = loadResource(resUrl);
             }
             if (res != null) {
                 if (res.xml == null) {
                     res.xml = new String(res.data, "UTF-8");
-                    res.type = XResource.TYPE_XML;
+                    res.type = XuiResource.TYPE_XML;
                     resources.put(resUrl, res);
                 }
                 return res.xml;

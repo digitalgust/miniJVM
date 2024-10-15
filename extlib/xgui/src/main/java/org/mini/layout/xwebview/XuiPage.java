@@ -14,15 +14,15 @@ import java.net.URL;
 /**
  * a xmlui page
  */
-public class XPage {
+public class XuiPage {
 
-    XExplorer explorer;
+    XuiBrowser explorer;
     XEventHandler eventDelegate;
     XmlExtAssist assistDelegate;
     URL url;
     GContainer pan;
 
-    public XPage(String homeUrl, XExplorer explorer) {
+    public XuiPage(String homeUrl, XuiBrowser browser) {
         try {
             //urlStr="jar:http://www.foo.com/bar/baz.jar!/COM/foo/Quux.class";
             url = new URL(homeUrl);
@@ -33,11 +33,11 @@ public class XPage {
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
-        XEventHandler eventDelegate = new XPageEventDelegate(explorer, url);
+        XEventHandler eventDelegate = new XPageEventDelegate(browser, url);
         this.eventDelegate = eventDelegate;
 
-        this.assistDelegate = new XmlExtAssist(explorer.getAssist().getForm());
-        this.assistDelegate.copyFrom(explorer.getAssist());
+        this.assistDelegate = new XmlExtAssist(browser.getAssist().getForm());
+        this.assistDelegate.copyFrom(browser.getAssist());
     }
 
     public GContainer getGui(float width, float height) {
@@ -45,7 +45,7 @@ public class XPage {
             return pan;
         }
         try {
-            XResourceLoader loader = new XResourceLoader();
+            XuiResourceLoader loader = new XuiResourceLoader();
             loader.setURL(url);
             assistDelegate.setLoader(loader);
 
@@ -83,11 +83,11 @@ public class XPage {
 
 
     public static class XPageEventDelegate extends XEventHandler {
-        XExplorer explorer;
+        XuiBrowser explorer;
         XEventHandler eventHandler;
         URL url;
 
-        XPageEventDelegate(XExplorer explorer, URL purl) {
+        XPageEventDelegate(XuiBrowser explorer, URL purl) {
             this.explorer = explorer;
             this.eventHandler = explorer.getEventHandler();
             this.url = purl;
@@ -116,7 +116,7 @@ public class XPage {
         @Override
         public void gotoHref(GObject gobj, String href) {
             if (href != null) {
-                String resurl = XUrlHelper.normalizeUrl(url, href);
+                String resurl = UrlHelper.normalizeUrl(url, href);
                 explorer.gotoPage(resurl);
             }
             eventHandler.gotoHref(gobj, href);

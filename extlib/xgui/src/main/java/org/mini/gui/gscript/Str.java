@@ -11,13 +11,13 @@ public class Str extends DataType {
 
     Str(String s, boolean mutable) {
         type = DTYPE_STR;
-        value = s;
+        setVal(s);
         setRecyclable(mutable);
     }
 
     public void setVal(String s) {
         if (isRecyclable()) {
-            value = s;
+            value = s == null ? "" : s.intern();
         } else {
             throw new RuntimeException("var is immutable");
         }

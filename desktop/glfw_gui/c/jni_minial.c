@@ -325,7 +325,7 @@ void setupCallback(Runtime *runtime, JClass *clazz) {
     c8 *type_s;
     c8 *clsname_s;
     if (!refers._callback_minial_on_recv_frames) {
-        clsname_s = "org/mini/media/MADevice";
+        clsname_s = "org/mini/media/MaDevice";
         name_s = "onReceiveFrames";
         type_s = "(JIJ)V";
         Utf8String *clsname = env->utf8_create_part_c(clsname_s, 0, strlen(clsname_s));
@@ -337,7 +337,7 @@ void setupCallback(Runtime *runtime, JClass *clazz) {
         env->utf8_destory(type);
     }
     if (!refers._callback_minial_on_send_frames) {
-        clsname_s = "org/mini/media/MADevice";
+        clsname_s = "org/mini/media/MaDevice";
         name_s = "onSendFrames";
         type_s = "(JIJ)I";
         Utf8String *clsname = env->utf8_create_part_c(clsname_s, 0, strlen(clsname_s));
@@ -349,7 +349,7 @@ void setupCallback(Runtime *runtime, JClass *clazz) {
         env->utf8_destory(type);
     }
     if (!refers._callback_minial_on_stop) {
-        clsname_s = "org/mini/media/MADevice";
+        clsname_s = "org/mini/media/MaDevice";
         name_s = "onStop";
         type_s = "(J)V";
         Utf8String *clsname = env->utf8_create_part_c(clsname_s, 0, strlen(clsname_s));

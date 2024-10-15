@@ -1,32 +1,32 @@
 package org.mini.layout.xwebview;
 
-import org.mini.layout.xwebview.urlhelper.XFileUrlHelper;
-import org.mini.layout.xwebview.urlhelper.XHttpUrlHelper;
-import org.mini.layout.xwebview.urlhelper.XJarUrlHelper;
+import org.mini.layout.xwebview.urlhelper.FileUrlHelper;
+import org.mini.layout.xwebview.urlhelper.HttpUrlHelper;
+import org.mini.layout.xwebview.urlhelper.JarUrlHelper;
 
 import java.net.URL;
 
-public abstract class XUrlHelper {
+public abstract class UrlHelper {
 
-    public static XUrlHelper getHelper(String urlStr) {
+    public static UrlHelper getHelper(String urlStr) {
         try {
             return getHelper(new URL(urlStr));
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return new XJarUrlHelper();
+        return new JarUrlHelper();
     }
 
-    public static XUrlHelper getHelper(URL homeUrl) {
+    public static UrlHelper getHelper(URL homeUrl) {
         switch (homeUrl.getProtocol()) {
             case "http":
             case "https":
-                return new XHttpUrlHelper();
+                return new HttpUrlHelper();
             case "file":
-                return new XFileUrlHelper();
+                return new FileUrlHelper();
             case "jar":
             default:
-                return new XJarUrlHelper();
+                return new JarUrlHelper();
         }
     }
 

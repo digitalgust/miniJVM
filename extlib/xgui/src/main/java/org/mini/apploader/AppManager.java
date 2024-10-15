@@ -5,27 +5,31 @@
  */
 package org.mini.apploader;
 
-import com.ebsee.rmc.RMCUtil;
-import org.mini.gui.gscript.Interpreter;
-import org.mini.http.MiniHttpClient;
-import org.mini.http.MiniHttpServer;
-import org.mini.layout.xwebview.*;
 import org.mini.apploader.bean.LangBean;
-import org.mini.gui.guilib.HttpRequestReply;
 import org.mini.glfm.Glfm;
 import org.mini.gui.*;
+import org.mini.gui.event.GNotifyListener;
+import org.mini.gui.gscript.EnvVarProvider;
+import org.mini.gui.gscript.Interpreter;
+import org.mini.gui.guilib.GuiScriptLib;
+import org.mini.gui.guilib.HttpRequestReply;
+import org.mini.http.MiniHttpClient;
+import org.mini.http.MiniHttpServer;
 import org.mini.json.JsonParser;
-import org.mini.layout.*;
+import org.mini.layout.UITemplate;
+import org.mini.layout.XContainer;
+import org.mini.layout.XEventHandler;
+import org.mini.layout.XmlExtAssist;
+import org.mini.layout.xwebview.*;
 
 import java.io.*;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.util.*;
 
 /**
  * @author Gust
  */
-public class AppManager extends GApplication {
+public class AppManager extends GApplication implements XuiBrowserHolder {
     public static final String POLICY_URL = "POLICY_URL";
     public static final String DISCOVERY_URL = "DISCOVERY_URL";
     public static final String ACCOUNT_BASE_URL = "ACCOUNT_BASE_URL";
@@ -82,7 +86,7 @@ public class AppManager extends GApplication {
     //    GApplication preApp;
 
     PluginMgrForm mgrForm;
-    XExplorer explorer;
+    XuiBrowser browser;
 
     GViewSlot mainSlot;
 
@@ -113,6 +117,11 @@ public class AppManager extends GApplication {
     static final int PICK_PHOTO = 101, PICK_CAMERA = 102, PICK_QR = 103, PICK_HEAD = 104;
 
     static float devW, devH;
+    XmlExtAssist assist;
+
+    /**
+     * @return
+     */
 
     static public AppManager getInstance() {
         return instance;
@@ -156,6 +165,12 @@ public class AppManager extends GApplication {
 
         if (mgrForm != null) return mgrForm;
         mgrForm = new PluginMgrForm(null);
+        // init script environment
+        assist = new XmlExtAssist(mgrForm);
+        assist.addExtScriptLib(new XuiScriptLib(AppManager.getInstance()));
+        updateScriptEnvironment();
+        assist.setEnvVarProvider(envVarProvider);
+        //init form
         mgrForm.initForm();
         floatButton = new GHomeButton(mgrForm);
         mgrForm.add(floatButton);
@@ -193,30 +208,10 @@ public class AppManager extends GApplication {
     }
 
     void initExplorer() {
-//        queryServerPolicy();
-        XmlExtAssist assist = new XmlExtAssist(mgrForm);
-        assist.addExtScriptLib(new ExplorerScriptLib(mgrForm));
-
         GContainer wv = GToolkit.getComponent(mgrForm, "TD_DISCOVERY");
-        explorer = new XExplorer(wv, eventHandler, assist);
+        browser = new XuiBrowser(wv, eventHandler, assist);
     }
 
-
-    void test() {
-        try {
-            System.out.println("Hello World!");
-            String urlStr = "jar:http://localhost:30005/static/apps/ExApp.jar!/res/appmgr.png";
-            URL url = new URL(urlStr);
-            URLConnection con = null;
-
-            con = url.openConnection();
-
-            con.connect();
-            System.out.println(con.getContentLength());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     void reloadAppList() {
         if (appList == null) {
@@ -257,6 +252,7 @@ public class AppManager extends GApplication {
                     appList.add(item);
                     item.setActionListener(gobj -> {
                         curSelectedJarName = ((GListItem) gobj).getAttachment();
+                        setJarName(curSelectedJarName);
                         updateContentViewInfo(appName);
                         mainPanelShowRight();
                     });
@@ -390,8 +386,18 @@ public class AppManager extends GApplication {
 
     }
 
+    @Override
+    public XuiBrowser getBrowser() {
+        return browser;
+    }
 
-    class PluginMgrForm extends GForm implements XExplorerHolder {
+    /**
+     * ==============================================================================
+     * GForm that is used to show plugin manager
+     * ==============================================================================
+     */
+
+    class PluginMgrForm extends GForm {
 
         public PluginMgrForm(GForm form) {
             super(form);
@@ -402,7 +408,7 @@ public class AppManager extends GApplication {
             final GCallBack ccb = GCallBack.getInstance();
             devW = ccb.getDeviceWidth();
             devH = ccb.getDeviceHeight();
-            System.out.println("devW :" + devW + ", devH  :" + devH);
+            //System.out.println("devW :" + devW + ", devH  :" + devH);
 
             GForm.hideKeyboard(this);
             regStrings();
@@ -413,6 +419,39 @@ public class AppManager extends GApplication {
             } else {
                 GToolkit.setStyle(new GStyleDark());
             }
+
+            setNotifyListener(new GNotifyListener() {
+                @Override
+                public void onNotify(String key, String val) {
+                    try {
+                        switch (key) {
+                            case NOTIFY_KEY_DEVICE_TOKEN:
+                                System.setProperty("device.token", val);
+                                break;
+                            case NOTIFY_KEY_IOS_PURCHASE:
+                                if (val.indexOf(':') > 0) {
+                                    String[] ss = val.split(":");
+                                    if (ss.length > 2) {
+                                        int code = Integer.parseInt(ss[0]);
+                                        String receipt = ss[1];
+                                        byte[] scriptBytes = javax.microedition.io.Base64.decode(ss[2]);
+                                        String script = new String(scriptBytes, "utf-8");
+                                        //System.out.println("script:" + script);
+                                        Interpreter inp = new Interpreter();
+                                        inp.reglib(new GuiScriptLib(PluginMgrForm.this));
+                                        inp.loadFromString(script);
+                                        inp.putGlobalVar("iap_code", Interpreter.getCachedInt(code));
+                                        inp.putGlobalVar("iap_receipt", Interpreter.getCachedStr(receipt));
+                                        inp.start();
+                                    }
+                                }
+                                break;
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
 
             setPickListener((uid, url, data) -> {
                 if (data == null && url != null) {
@@ -464,8 +503,6 @@ public class AppManager extends GApplication {
             } catch (Exception e) {
             }
 
-            // init script environment
-            updateScriptEnvironment();
 
             UITemplate uit = new UITemplate(xmlStr);
             for (String s : uit.getVariable()) {
@@ -474,7 +511,7 @@ public class AppManager extends GApplication {
             double[] inset = new double[4];//top,right,bottom,left
             Glfm.glfmGetDisplayChromeInsets(GCallBack.getInstance().getDisplay(), inset);
             int h = (int) (inset[0] / GCallBack.getInstance().getDeviceRatio());
-            System.out.println("STATEBAR_HEIGHT " + inset[0] + " , " + inset[1] + " , " + inset[2] + " , " + inset[3]);
+            //System.out.println("STATEBAR_HEIGHT " + inset[0] + " , " + inset[1] + " , " + inset[2] + " , " + inset[3]);
             if (h <= 20) {
                 h = 20;
             }
@@ -483,9 +520,7 @@ public class AppManager extends GApplication {
             uit.setVar("NAV_HEIGHT", Integer.toString(h));
 
 
-            eventHandler = new PluginEventHandler();
-            XmlExtAssist assist = new XmlExtAssist(form);
-            assist.addExtScriptLib(new ExplorerScriptLib(this));//使支持openpage, downloadinstall, downloadsave
+            eventHandler = new PluginEventHandler();//使支持openpage, downloadinstall, downloadsave
             XContainer xcon = (XContainer) XContainer.parseXml(uit.parse(), assist);
             xcon.build((int) devW, (int) (devH), eventHandler);
             GContainer pan = xcon.getGui();
@@ -502,12 +537,12 @@ public class AppManager extends GApplication {
                 styleList.setSelectedIndex(1);
             }
             String url = AppLoader.getDownloadUrl();
-            System.out.println("downloadurl=" + url);
+            //System.out.println("downloadurl=" + url);
             if (url != null) GToolkit.setCompText(mainSlot, "INPUT_URL", url);
 
             this.setSizeChangeListener((width, height) -> {
                 xcon.reSize(width, height);
-                initExplorer();
+//                browser.getWebView().getLayout().reSize(width, height);
             });
             reloadAppList();
             return pan;
@@ -520,14 +555,20 @@ public class AppManager extends GApplication {
             if (delayLauncher != null) {
                 GForm.flush();
 
+                String orientation = AppLoader.getApplicationOrientation(curSelectedJarName);
+                if (orientation.equals("h")) {
+                    Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationLandscapeLeft);
+                } else {
+                    Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationPortrait);
+                }
+                appOri = orientation;
                 String osname = System.getProperty("os.name");
                 if ("iOS".equals(osname) || "Android".equals(osname)) {
                     float w = GCallBack.getInstance().getDeviceWidth();
                     float h = GCallBack.getInstance().getDeviceHeight();
                     if ("h".equals(appOri)) {
+
                         if (w < h) return true;
-                    } else {
-                        if (h < w) return true;
                     }
                 }
                 try {
@@ -541,10 +582,7 @@ public class AppManager extends GApplication {
             return true;
         }
 
-        @Override
-        public XExplorer getExplorer() {
-            return explorer;
-        }
+
     }
 
     class PluginEventHandler extends XEventHandler {
@@ -554,12 +592,12 @@ public class AppManager extends GApplication {
             if (name == null) return;
             switch (name) {
                 case "APP_DELETE_BTN":
-                    String jarName;
+                    String tmpJarName;
                     if (curSelectedJarName != null) {
-                        jarName = curSelectedJarName;
-                        if (jarName != null) {
+                        tmpJarName = curSelectedJarName;
+                        if (tmpJarName != null) {
                             GFrame confirmFrame = GToolkit.getConfirmFrame(mgrForm, GLanguage.getString(STR_MESSAGE), GLanguage.getString(STR_CONFIRM_DELETE), GLanguage.getString(STR_DELETE), okgobj -> {
-                                AppLoader.removeApp(jarName);
+                                AppLoader.removeApp(tmpJarName);
                                 reloadAppList();
                                 mainPanelShowLeft();
                                 okgobj.getFrame().close();
@@ -616,16 +654,9 @@ public class AppManager extends GApplication {
                     break;
                 case "APP_RUN_BTN":
                     if (curSelectedJarName != null) {
-                        jarName = curSelectedJarName;
+                        tmpJarName = curSelectedJarName;
                         GListItem gli = getGListItemByAttachment(curSelectedJarName);
 
-                        String orientation = AppLoader.getApplicationOrientation(jarName);
-                        if (orientation.equals("h")) {
-                            Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationLandscapeLeft);
-                        } else {
-                            Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationPortrait);
-                        }
-                        appOri = orientation;
                         delayLauncher = new Runnable() {
                             @Override
                             public void run() {
@@ -657,14 +688,14 @@ public class AppManager extends GApplication {
                 case "APP_STOP_BTN":
                     if (curSelectedJarName != null) {
                         //AppLoader.setBootApp(curSelectedItem.getAttachment());
-                        jarName = curSelectedJarName;
-                        GApplication app = runningApps.get(jarName);
+                        tmpJarName = curSelectedJarName;
+                        GApplication app = runningApps.get(tmpJarName);
                         if (app != null) {
                             app.closeApp();
                             GForm.addMessage(GLanguage.getString(STR_SUCCESS));
                             GListItem gli = getGListItemByAttachment(curSelectedJarName);
                             gli.setColor(null);
-                            updateContentViewInfo(jarName);
+                            updateContentViewInfo(tmpJarName);
                         } else {
                             GForm.addMessage(GLanguage.getString(STR_APP_NOT_RUNNING));
                         }
@@ -672,9 +703,9 @@ public class AppManager extends GApplication {
                     break;
                 case "APP_UPGRADE_BTN":
                     if (curSelectedJarName != null) {
-                        jarName = curSelectedJarName;
-                        if (jarName != null) {
-                            url = AppLoader.getApplicationUpgradeurl(jarName);
+                        tmpJarName = curSelectedJarName;
+                        if (tmpJarName != null) {
+                            url = AppLoader.getApplicationUpgradeurl(tmpJarName);
                             if (url != null) {
                                 hc = new MiniHttpClient(url, cltLogger, getDownloadCallback());
                                 hc.start();
@@ -764,16 +795,73 @@ public class AppManager extends GApplication {
         }
     }
 
+
+    EnvVarProvider envVarProvider = new EnvVarProvider() {
+
+        @Override
+        public void setEnvVar(String envName, String envValue) {
+            if (envName == null) {
+                System.out.println("[WARN]envvar key is null");
+            }
+            if (envValue == null) {
+                envValue = "";
+            }
+            String enLow = envName.toLowerCase();
+            AppLoader.setProperty(enLow, envValue);
+        }
+
+        @Override
+        public String getEnvVar(String envName) {
+            String val = AppLoader.getProperty(envName.toLowerCase());
+            if (val == null) {
+                val = "";
+            }
+            //System.out.println("getEnvVar:" + envName + "=" + val);
+            return val;
+        }
+    };
+
     void updateScriptEnvironment() {
-        Interpreter.setEnvVar("LANG", AppLoader.getLangName());
-        Interpreter.setEnvVar("APPID", AppLoader.getBaseInfo("appid"));
-        Interpreter.setEnvVar("APPZONE", AppLoader.getBaseInfo("appzone"));
-        Interpreter.setEnvVar("SVER", AppLoader.getBaseInfo("sver"));
-        Interpreter.setEnvVar("JAR", System.getProperty("os.name").toLowerCase());
-        Interpreter.setEnvVar("FROM", AppLoader.getBaseInfo("from"));
-        Interpreter.setEnvVar("CVER", AppLoader.getBaseInfo("cver"));
-        Interpreter.setEnvVar("POLICY_URL", AppLoader.getBaseInfo("policyUrl"));
+        envVarProvider.setEnvVar("lang", AppLoader.getLangName());
+        envVarProvider.setEnvVar("appid", AppLoader.getBaseInfo("appid"));
+        envVarProvider.setEnvVar("appzone", AppLoader.getBaseInfo("appzone"));
+        envVarProvider.setEnvVar("sver", AppLoader.getBaseInfo("sver"));
+        envVarProvider.setEnvVar("jar", URLEncoder.encode(System.getProperty("os.name").toLowerCase()));
+        envVarProvider.setEnvVar("from", AppLoader.getBaseInfo("from"));
+        envVarProvider.setEnvVar("cver", AppLoader.getBaseInfo("cver"));
+        envVarProvider.setEnvVar("policy_url", AppLoader.getBaseInfo("policyUrl"));
+        envVarProvider.setEnvVar("discovery_url", "");
+        envVarProvider.setEnvVar("account_base_url", "");
+        envVarProvider.setEnvVar("profile_url", "");
+        envVarProvider.setEnvVar("shop_url", "");
+        envVarProvider.setEnvVar("pay_url", "");
+        envVarProvider.setEnvVar("plugin_url", "");
     }
 
 
+    public String[] getPolicy(String url) {
+        try {
+            if (url == null) {
+                return null;
+            }
+            XuiResourceLoader loader = new XuiResourceLoader();
+            XuiResource res = loader.loadResource(url);
+            if (res != null) {
+                String json = res.getString();
+                if (json != null) {
+                    JsonParser<HttpRequestReply> parser = new JsonParser<>();
+                    HttpRequestReply reply = parser.deserial(json, HttpRequestReply.class);
+                    if (reply != null && reply.getCode() == 0) {
+                        String s = reply.getReply();
+                        String[] ss = s.split("\n");
+                        return ss;
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

@@ -9,7 +9,7 @@
     <groupId>io.github.digitalgust</groupId>
     <artifactId>xgui</artifactId>
     <name>${project.groupId}:${project.artifactId}</name>
-    <version>1.1.14</version>
+    <version>1.1.15</version>
     <description>miniJVM mobile platform gui library</description>
     <url>https://github.com/digitalgust/miniJVM</url>
 
@@ -118,7 +118,6 @@
                         <extensions>true</extensions>
                         <configuration>
                             <publishingServerId>central</publishingServerId>
-                            <tokenAuth>true</tokenAuth>
                             <waitMaxTime>7200</waitMaxTime>
                             <centralBaseUrl>https://central.sonatype.com</centralBaseUrl>
                         </configuration>
@@ -167,18 +166,20 @@
 
         <!--        <dependency>-->
         <!--            <groupId>io.github.digitalgust</groupId>-->
-        <!--            <artifactId>minijvm_rt</artifactId>-->
+        <!--            <artifactId>minijvm_rt_loc</artifactId>-->
         <!--            <version>1.0</version>-->
+        <!--            <scope>system</scope>-->
+        <!--            <systemPath>${basedir}/../../mobile/assets/resfiles/minijvm_rt.jar</systemPath>-->
         <!--        </dependency>-->
         <dependency>
             <groupId>io.github.digitalgust</groupId>
             <artifactId>glfw_gui</artifactId>
-            <version>1.1.7</version>
+            <version>1.1.10</version>
         </dependency>
         <dependency>
             <groupId>io.github.digitalgust</groupId>
             <artifactId>glfm_gui</artifactId>
-            <version>1.1.7</version>
+            <version>1.1.10</version>
         </dependency>
     </dependencies>
 
@@ -195,7 +196,7 @@
                             <goal>run</goal>
                         </goals>
                         <configuration>
-                            <tasks>
+                            <target>
                                 <!--  copy to binary lib dir -->
                                 <mkdir dir="../../mobile/assets/resfiles"/>
                                 <copy todir="../../mobile/assets/resfiles/" overwrite="true">
@@ -210,7 +211,7 @@
                                         <include name="${project.artifactId}.jar"/>
                                     </fileset>
                                 </copy>
-                            </tasks>
+                            </target>
                         </configuration>
                     </execution>
                 </executions>

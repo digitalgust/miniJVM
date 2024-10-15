@@ -48,9 +48,7 @@ public class Interpreter {
     static final int NOT_KEYWORD = -1, KEYWORD_IF = 0, KEYWORD_ELSE = 1, KEYWORD_ENDIF = 2, KEYWORD_WHILE = 3, KEYWORD_LOOP = 4, KEYWORD_SUB = 5, KEYWORD_RET = 6, KEYWORD_CALL = 7, KEYWORD_SET_VAR = 8, KEYWORD_SET_ARR = 9;
     public static final int ERR_ILLEGAL = 0, ERR_VAR = 1, ERR_TYPE_INVALID = 2, ERR_NOSUB = 3, ERR_NO_VAR = 4, ERR_PARA_CALC = 5, ERR_PAESEPARA = 6, ERR_NO_SRC = 7, ERR_OPSYMB = 8, ERR_ARR_OUT = 9;
     public static final String[] STRS_ERR = {" Illegal statment ,", " Invalid variable name ", " Data type error ", " No such method ", " No such variable ", " Method parameter error ", " Parameter count error ", " Code not load yet ", " Operation symbol error  ", " Array out of bounds  "};
-    //环境变量访问器
-    static private Properties envVar;
-    static private final String ENV_VAR_FILENAME = "/webenv.properties";
+
     //源码字符串数组
     //private ArrayList srcCode;
     private Statement[] srcCompiled;
@@ -61,6 +59,8 @@ public class Interpreter {
     private HashMap<String, Int> subAddr = new HashMap();
     //系统过程及扩充过程列表 ,extend method lib
     private ArrayList<Lib> extSubList = new ArrayList();
+    //环境变量访问器
+    EnvVarProvider envVarProvider;
 
 
     static final int MAX_CACHE_SIZE = 512;
@@ -75,6 +75,8 @@ public class Interpreter {
      * 构造方法
      */
     public Interpreter() {
+        //初始化
+        init();
     }
 
     /**
@@ -95,50 +97,22 @@ public class Interpreter {
         reglib(stdlib);
     }
 
-    static public String getEnvVar(String envName) {
-        loadEnvVar();
-        String s = (String) envVar.get(envName);
-        return s == null ? "" : s;
+    public void setEnvVarProvider(EnvVarProvider envVarProvider) {
+        this.envVarProvider = envVarProvider;
     }
 
-    static public void setEnvVar(String envName, String envValue) {
-        loadEnvVar();
-        envVar.put(envName, envValue);
-        saveProp(ENV_VAR_FILENAME, envVar);
+    public String getEnvVar(String envName) {
+        String s = envVarProvider != null ? envVarProvider.getEnvVar(envName) : "";
+        return s;
     }
 
-    static private synchronized void loadEnvVar() {
-        if (envVar == null) {
-            envVar = new Properties();
-            loadProp(ENV_VAR_FILENAME, envVar);
+
+    public void setEnvVar(String envName, String envValue) {
+        if (envVarProvider != null) {
+            envVarProvider.setEnvVar(envName, envValue);
         }
     }
 
-    public static void loadProp(String fname, Properties prop) {
-        try {
-            File f = new File(GCallBack.getInstance().getAppSaveRoot() + fname);
-            if (f.exists()) {
-                FileInputStream fis = new FileInputStream(f);
-                prop.load(fis);
-                //System.out.println(fname + " size: " + prop.size());
-                fis.close();
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    public static void saveProp(String name, Properties prop) {
-        try {
-            File f = new File(GCallBack.getInstance().getAppSaveRoot() + name);
-
-            FileOutputStream fos = new FileOutputStream(f);
-            prop.store(fos, "");
-            fos.close();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
 
     /**
      * 装载脚本
@@ -147,8 +121,6 @@ public class Interpreter {
      */
     public void loadFromFile(String path) {
 
-        //初始化
-        init();
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
@@ -227,8 +199,6 @@ public class Interpreter {
      * @param code
      */
     public void loadFromString(String code) {
-
-        init();
 
         int dquodation = 0;
         StringBuilder line = new StringBuilder();

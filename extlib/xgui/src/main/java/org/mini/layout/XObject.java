@@ -2,7 +2,6 @@ package org.mini.layout;
 
 import org.mini.gui.*;
 import org.mini.gui.gscript.Interpreter;
-import org.mini.gui.gscript.Lib;
 import org.xmlpull.v1.KXmlParser;
 
 public abstract class XObject implements GLayout {
@@ -269,9 +268,7 @@ public abstract class XObject implements GLayout {
                     Interpreter inp = container.getInterpreter();
                     if (inp != null) {
                         if (assist != null) {
-                            for (Lib lib : assist.getExtScriptLibs()) {
-                                inp.reglib(lib);
-                            }
+                            assist.interpreterSetup(inp);
                         }
                     }
                 }

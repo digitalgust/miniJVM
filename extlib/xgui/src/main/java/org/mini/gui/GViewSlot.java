@@ -44,6 +44,7 @@ public class GViewSlot extends GViewPort {
     protected float dragBeginX, dragBeginY;
 
     static final int SWAP_PERIOD = 16;
+    GCmd swapTask;
 
     public GViewSlot(GForm form, float w, float h, int scrollMod) {
         this(form, 0, 0, w, h, scrollMod);
@@ -168,9 +169,11 @@ public class GViewSlot extends GViewPort {
     public void moveTo(GObject go, long timeInMils) {
         if (containsImpl(go)) {
             GObject curGo = getElementsImpl().get(active);
-            if (curGo != null && go != null) {
+            if (curGo != null && go != null && swapTask == null) {
                 SlotSwaper swaper = new SlotSwaper(this, curGo, go, timeInMils);
-                GForm.timer.schedule(swaper, 0, (long) SWAP_PERIOD);
+                swapTask = new GCmd(swaper);
+                GForm.addCmd(swapTask);
+                GForm.flush();
                 this.active = getElementsImpl().indexOf(go);
                 //notify
                 doStateChanged(this);
@@ -178,7 +181,7 @@ public class GViewSlot extends GViewPort {
         }
     }
 
-    class SlotSwaper extends TimerTask {
+    class SlotSwaper implements Runnable {
 
         int counter = 0, maxCounter;
         long timeInMils;
@@ -212,7 +215,7 @@ public class GViewSlot extends GViewPort {
 
                 if ((distX == 0 && scrollMode == SCROLL_MODE_HORIZONTAL)
                         || (distY == 0 && scrollMode == SCROLL_MODE_VERTICAL)) {
-                    cancel();
+                    swapTask = null;
                     return;
                 }
                 counter++;
@@ -223,10 +226,11 @@ public class GViewSlot extends GViewPort {
                 } else {
                     curX = slotOrignalX - distX;
                     curY = slotOrignalY - distY;
-                    cancel();
+                    swapTask = null;
                 }
                 slots.setInnerLocation(curX, curY);
-                //System.out.println("==slot(" + slots.getInnerX() + "," + slots.getInnerY() + "), from:" + from + "to:" + to + ")");
+                GForm.addCmd(swapTask);
+                //System.out.println(swapTask + "  " + slots.getInnerX() + "," + slots.getInnerY() + "), from:" + from + "to:" + to + ")");
                 GForm.flush();
             } catch (Exception e) {
                 e.printStackTrace();

@@ -6,6 +6,7 @@
 package org.mini.glfm;
 
 import org.mini.apploader.AppLoader;
+import org.mini.apploader.AppManager;
 import org.mini.apploader.Sync;
 import org.mini.glfw.Glfw;
 import org.mini.gui.GCallBack;
@@ -399,7 +400,11 @@ public class GlfmCallBackImpl extends GCallBack {
         if (gform == null) {
             return;
         }
-        gform.onDeviceNotify(key, val);
+        GForm mgrForm = AppManager.getInstance().getForm();
+        mgrForm.onDeviceNotify(key, val);// notify to manager form first
+        if (mgrForm != gform) {
+            gform.onDeviceNotify(key, val);
+        }
     }
 
     @Override
