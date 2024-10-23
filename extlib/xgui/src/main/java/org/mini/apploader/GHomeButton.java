@@ -150,7 +150,7 @@ public class GHomeButton extends GPanel implements GActionListener {
         GApplication app = GCallBack.getInstance().getApplication();
         if (app != AppManager.getInstance()) {
             app.pauseApp();
-            AppManager.getInstance().mainSlot.moveTo(1, 0);
+            AppManager.getInstance().mainSlot.showSlot(1);
         }
     }
 }
