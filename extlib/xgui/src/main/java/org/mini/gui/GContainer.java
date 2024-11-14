@@ -274,7 +274,7 @@ abstract public class GContainer extends GObject {
      * @param y
      * @return
      */
-    <T extends GObject> T findSonByXY(float x, float y) {
+    protected <T extends GObject> T findSonByXY(float x, float y) {
         GObject front = null, mid = null, back = null, menu = null;
         synchronized (elements) {
             for (int i = 0; i < elements.size(); i++) {

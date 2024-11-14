@@ -27,7 +27,10 @@ public class FloatList {
 
     public void addAt(int index, float v) {
         ensureCap(1);
-        System.arraycopy(arr, index, arr, index + 1, arr.length - index);
+        //后移一位
+        if (pos - index > 0) {
+            System.arraycopy(arr, index, arr, index + 1, pos - index);
+        }
         arr[index] = v;
         pos++;
     }
@@ -83,6 +86,10 @@ public class FloatList {
 
     public int size() {
         return pos;
+    }
+
+    public boolean isEmpty() {
+        return pos == 0;
     }
 
     public void setSize(int size) {
