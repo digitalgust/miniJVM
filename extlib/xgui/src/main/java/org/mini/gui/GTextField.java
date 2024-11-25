@@ -607,8 +607,8 @@ public class GTextField extends GTextObject {
 
             }
             nvgFillColor(vg, getColor());
-            Nanovg.nvgScissor(vg, text_show_area_x, y, text_show_area_w, h);
-            Nanovg.nvgIntersectScissor(vg, parent.getX(), parent.getY(), parent.getW(), parent.getH());
+            Nanovg.nvgIntersectScissor(vg, text_show_area_x, y, text_show_area_w, h);
+//            Nanovg.nvgIntersectScissor(vg, parent.getX(), parent.getY(), parent.getW(), parent.getH());
             nvgTextJni(vg, wordx, wordy, text_arr, 0, text_arr.length);
         }
         return true;
