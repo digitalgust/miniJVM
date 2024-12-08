@@ -178,7 +178,7 @@ public class GFrame extends GContainer {
      * ensure frame close bar in form ,not in screen
      * because form maybe translate on keyboard popup
      */
-    void validLocation() {
+    public void validLocation() {
         if (getX() + getW() < parent.getX() + 40) {
             setLocation(-(getW() - 40), getLocationTop());
         }
