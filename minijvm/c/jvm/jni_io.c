@@ -68,11 +68,15 @@ extern "C" {
 #if __JVM_OS_MINGW__
 
 #ifndef InetNtopA
+
 c8 *inet_ntop(s32 af, const void *src, c8 *dst, socklen_t size);
+
 #endif
 
 #ifndef InetPtonA
+
 s32 inet_pton(s32 af, const c8 *src, void *dst);
+
 #endif
 
 #endif //__JVM_OS_MINGW__
@@ -1467,9 +1471,9 @@ s32 org_mini_zip_ZipFile_getEntryIndex0(Runtime *runtime, JClass *clazz) {
         utf8_clear(filepath);
         utf8_append_c(filepath, name_arr->arr_body);
         ByteBuf *name = bytebuf_create(0);
-        conv_utf8_2_platform_encoding(name, filepath);
+        //conv_utf8_2_platform_encoding(name, filepath);
 
-        ret = zip_get_file_index(zip_path->buf, name->buf);
+        ret = zip_get_file_index(zip_path->buf, utf8_cstr(filepath));
 
         bytebuf_destory(zip_path);
         bytebuf_destory(name);
@@ -1494,9 +1498,9 @@ s32 org_mini_zip_ZipFile_getEntrySize0(Runtime *runtime, JClass *clazz) {
         utf8_clear(filepath);
         utf8_append_c(filepath, name_arr->arr_body);
         ByteBuf *name = bytebuf_create(0);
-        conv_utf8_2_platform_encoding(name, filepath);
+        //conv_utf8_2_platform_encoding(name, filepath);
 
-        ret = zip_get_file_unzip_size(zip_path->buf, name->buf);
+        ret = zip_get_file_unzip_size(zip_path->buf, utf8_cstr(filepath));
 
         bytebuf_destory(zip_path);
         bytebuf_destory(name);
@@ -1521,12 +1525,12 @@ s32 org_mini_zip_ZipFile_getEntry0(Runtime *runtime, JClass *clazz) {
         utf8_clear(filepath);
         utf8_append_c(filepath, name_arr->arr_body);
         ByteBuf *name = bytebuf_create(0);
-        conv_utf8_2_platform_encoding(name, filepath);
+        //conv_utf8_2_platform_encoding(name, filepath);
 
-        s64 filesize = zip_get_file_unzip_size(zip_path->buf, name->buf);
+        s64 filesize = zip_get_file_unzip_size(zip_path->buf, utf8_cstr(filepath));
         if (filesize >= 0) {
             Instance *arr = jarray_create_by_type_index(runtime, (s32) filesize, DATATYPE_BYTE);
-            ret = zip_loadfile_to_mem(zip_path->buf, name->buf, arr->arr_body, filesize);
+            ret = zip_loadfile_to_mem(zip_path->buf, utf8_cstr(filepath), arr->arr_body, filesize);
             if (ret == 0) {
                 push_ref(runtime->stack, arr);
             }
@@ -1558,9 +1562,9 @@ s32 org_mini_zip_ZipFile_putEntry0(Runtime *runtime, JClass *clazz) {
         utf8_clear(filepath);
         utf8_append_c(filepath, name_arr->arr_body);
         ByteBuf *name = bytebuf_create(0);
-        conv_utf8_2_platform_encoding(name, filepath);
+        //conv_utf8_2_platform_encoding(name, filepath);
 
-        zip_savefile_mem(zip_path->buf, name->buf, content_arr ? content_arr->arr_body : NULL, content_arr ? content_arr->arr_length : 0);
+        zip_savefile_mem(zip_path->buf, utf8_cstr(filepath), content_arr ? content_arr->arr_body : NULL, content_arr ? content_arr->arr_length : 0);
         ret = 0;
 
         bytebuf_destory(zip_path);

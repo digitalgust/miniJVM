@@ -5,8 +5,15 @@ import java.util.function.Predicate;
 
 class ChildList<T extends GObject> extends ArrayList<T> {
 
+    public synchronized T set(int index, T element) {
+        if (get(index).getLayer() == GObject.LAYER_INNER) {
+            return null;
+        }
+        return super.set(index, element);
+    }
+
     @Override
-    public T remove(int index) {
+    public synchronized T remove(int index) {
         if (index >= size() || index < 0) {
             return null;
         }
@@ -18,7 +25,7 @@ class ChildList<T extends GObject> extends ArrayList<T> {
     }
 
     @Override
-    protected void removeRange(int fromIndex, int toIndex) {
+    protected synchronized void removeRange(int fromIndex, int toIndex) {
         if (fromIndex > toIndex || fromIndex < 0 || toIndex >= size()) {
             System.out.println("removeRange error");
             return;
@@ -29,14 +36,14 @@ class ChildList<T extends GObject> extends ArrayList<T> {
     }
 
     @Override
-    public boolean remove(Object o) {
+    public synchronized boolean remove(Object o) {
         if (o == null || !(o instanceof GObject)) return false;
         if (((GObject) o).getLayer() == GObject.LAYER_INNER) return false;
         return super.remove(o);
     }
 
     @Override
-    public boolean removeAll(Collection c) {
+    public synchronized boolean removeAll(Collection c) {
         boolean modified = false;
         Iterator e = this.iterator();
 
@@ -53,7 +60,7 @@ class ChildList<T extends GObject> extends ArrayList<T> {
     }
 
     @Override
-    public boolean removeIf(Predicate filter) {
+    public synchronized boolean removeIf(Predicate filter) {
         Predicate p = new Predicate() {
             @Override
             public boolean test(Object o) {
@@ -65,93 +72,162 @@ class ChildList<T extends GObject> extends ArrayList<T> {
     }
 
     @Override
-    public void clear() {
+    public synchronized void clear() {
         for (int i = size() - 1; i >= 0; i--) {
             remove(i);
         }
     }
 
-    public List<T> subList(int fromIndex, int toIndex) {
-        System.out.println("this container not support subList()");
-        return null;
+    public synchronized List<T> subList(int fromIndex, int toIndex) {
+        ChildList<T> subList = new ChildList<>();
+        for (int i = fromIndex; i < toIndex; i++) {
+            T go = get(i);
+            if (((GObject) go).getLayer() == GObject.LAYER_INNER) continue;
+            subList.add(get(i));
+        }
+        return subList;
     }
 
-//    @Override
-//    public boolean removeAll(Collection<? extends T> c) {
-//        System.out.println("this container not support replaceAll()");
-//        return false;
-//    }
-
     @Override
-    public boolean retainAll(Collection<?> c) {
-        System.out.println("this container not support retainAll()");
+    public synchronized boolean retainAll(Collection<?> c) {
+        for (int i = 0; i < size(); i++) {
+            T go = get(i);
+            if (((GObject) go).getLayer() == GObject.LAYER_INNER) continue;
+            if (!c.contains(go)) {
+                remove(i);
+                i--;
+            }
+        }
         return false;
     }
 
     @Override
-    public ListIterator<T> listIterator() {
-        System.out.println("this container not support listIterator()");
-        return null;
+    public synchronized ListIterator<T> listIterator() {
+        ListIterator<T> li = new MyListItr(0);
+        return li;
+    }
+
+    private class MyListItr extends MyItr implements ListIterator<T> {
+        MyListItr(int index) {
+            super();
+            cursor = index;
+        }
+
+        public boolean hasPrevious() {
+            return cursor != 0;
+        }
+
+        public int nextIndex() {
+            return cursor;
+        }
+
+        public int previousIndex() {
+            return cursor - 1;
+        }
+
+        @SuppressWarnings("unchecked")
+        public T previous() {
+            checkForComodification();
+            int i = cursor - 1;
+            while (get(i).getLayer() == GObject.LAYER_INNER) {
+                i--;
+            }
+            if (i < 0)
+                throw new NoSuchElementException();
+            if (i >= size())
+                throw new ConcurrentModificationException();
+            cursor = i;
+            lastRet = i;
+            return get(i);
+        }
+
+        public void set(T e) {
+            if (lastRet < 0)
+                throw new IllegalStateException();
+            checkForComodification();
+
+            try {
+                ChildList.this.set(lastRet, e);
+            } catch (IndexOutOfBoundsException ex) {
+                throw new ConcurrentModificationException();
+            }
+        }
+
+        public void add(T e) {
+            checkForComodification();
+
+            try {
+                int i = cursor;
+                ChildList.this.add(i, e);
+                cursor = i + 1;
+                lastRet = -1;
+                expectedModCount = modCount;
+            } catch (IndexOutOfBoundsException ex) {
+                throw new ConcurrentModificationException();
+            }
+        }
     }
 
     @Override
-    public Iterator<T> iterator() {
+    public synchronized Iterator<T> iterator() {
         //System.out.println("================" + size() + "  ," + modCount);
-        return new Iterator<T>() {
-            int cursor = 0;
-            int lastRet = -1;
-            int expectedModCount = ChildList.this.modCount;
+        return new MyItr();
+    }
 
-            @Override
-            public boolean hasNext() {
-                return this.cursor != ChildList.this.size();
+    class MyItr implements Iterator<T> {
+        int cursor = 0;
+        int lastRet = -1;
+        int expectedModCount = ChildList.this.modCount;
+
+        @Override
+        public boolean hasNext() {
+            return this.cursor != ChildList.this.size();
+        }
+
+        @Override
+        public T next() {
+            //System.out.println("**************" + size() + "  ," + modCount);
+            this.checkForComodification();
+
+            try {
+                T next;
+                do {
+                    next = ChildList.this.get(this.cursor);
+                    this.lastRet = this.cursor++;
+                } while (next.getLayer() == GObject.LAYER_INNER);
+
+                return next;
+            } catch (IndexOutOfBoundsException var2) {
+                this.checkForComodification();
+                throw new NoSuchElementException();
             }
+        }
 
-            @Override
-            public T next() {
-                //System.out.println("**************" + size() + "  ," + modCount);
+        @Override
+        public void remove() {
+            if (this.lastRet == -1) {
+                throw new IllegalStateException();
+            } else {
                 this.checkForComodification();
 
                 try {
-                    T next;
-                    do {
-                        next = ChildList.this.get(this.cursor);
-                        this.lastRet = this.cursor++;
-                    } while (next.getLayer() == GObject.LAYER_INNER);
-
-                    return next;
-                } catch (IndexOutOfBoundsException var2) {
-                    this.checkForComodification();
-                    throw new NoSuchElementException();
-                }
-            }
-
-            @Override
-            public void remove() {
-                if (this.lastRet == -1) {
-                    throw new IllegalStateException();
-                } else {
-                    this.checkForComodification();
-
-                    try {
-                        ChildList.this.remove(this.lastRet);
-                        if (this.lastRet < this.cursor) {
-                            --this.cursor;
-                        }
-
-                        this.lastRet = -1;
-                        this.expectedModCount = ChildList.this.modCount;
-                    } catch (IndexOutOfBoundsException var2) {
-                        throw new ConcurrentModificationException();
+                    ChildList.this.remove(this.lastRet);
+                    if (this.lastRet < this.cursor) {
+                        --this.cursor;
                     }
-                }
-            }
 
-            final void checkForComodification() {
-                if (ChildList.this.modCount != this.expectedModCount) {
+                    this.lastRet = -1;
+                    this.expectedModCount = ChildList.this.modCount;
+                } catch (IndexOutOfBoundsException var2) {
                     throw new ConcurrentModificationException();
                 }
             }
-        };
+        }
+
+        final void checkForComodification() {
+            if (ChildList.this.modCount != this.expectedModCount) {
+                throw new ConcurrentModificationException();
+            }
+        }
     }
 }

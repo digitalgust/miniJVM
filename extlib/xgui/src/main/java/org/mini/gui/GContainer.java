@@ -21,7 +21,7 @@ import static org.mini.nanovg.Nanovg.nvgSave;
  */
 abstract public class GContainer extends GObject {
 
-    protected final List<GObject> elements = Collections.synchronizedList(new ChildList());
+    protected final List<GObject> elements = new ChildList();
     private final List<GChildrenListener> childrenListeners = new ArrayList();
     protected GObject current;  //每个容器都有自己的当前组件，current一定是直接子组件，焦点的获得和失去，是在鼠标或点击事件中从form开始逐层获得和失去
     float[] visableArea = new float[4];
@@ -274,7 +274,7 @@ abstract public class GContainer extends GObject {
      * @param y
      * @return
      */
-    <T extends GObject> T findSonByXY(float x, float y) {
+    protected <T extends GObject> T findSonByXY(float x, float y) {
         GObject front = null, mid = null, back = null, menu = null;
         synchronized (elements) {
             for (int i = 0; i < elements.size(); i++) {
@@ -463,7 +463,11 @@ abstract public class GContainer extends GObject {
                 //在遍历过程中,其他线程无法修改容器,但可能会有本线程在paint过程中添加或删除组件,因此要每个循环取size
                 for (int i = 0, imax = elements.size(); i < imax; i++) {
                     GObject nko = elements.get(i);
-                    drawObj(vg, nko);
+                    try {
+                        drawObj(vg, nko);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
 

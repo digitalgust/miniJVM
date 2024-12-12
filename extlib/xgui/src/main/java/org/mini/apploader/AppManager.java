@@ -145,7 +145,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
             updateContentViewInfo(curSelectedJarName);
         }
         mgrForm.setSize(GCallBack.getInstance().getDeviceWidth(), GCallBack.getInstance().getDeviceHeight());
-        if (mainSlot != null) mainSlot.moveTo(0, 0);
+        if (mainSlot != null) mainSlot.showSlot(0);
         reloadAppList();
     }
 

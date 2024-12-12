@@ -305,21 +305,6 @@
       "去登录",
       "去登入"
     ],
-    "STR_MESSAGE": [
-      "Message",
-      "消息",
-      "訊息"
-    ],
-    "STR_SUCCESS": [
-      "Success",
-      "成功",
-      "成功"
-    ],
-    "STR_FAIL": [
-      "Fail",
-      "失败",
-      "失敗"
-    ],
     "STR_UPDATE": [
       "Update",
       "检测更新",

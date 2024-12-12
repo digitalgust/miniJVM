@@ -136,11 +136,15 @@ public class JsonPrinter {
     }
 
     static private Method getMethodByName(String name, Class<?> clazz) {
-        String mName = "get" + name.substring(0, 1).toUpperCase() + name.substring(1);
+        String tmp = name.substring(0, 1).toUpperCase() + name.substring(1);
+        String mName0 = "get" + tmp;
+        String mName1 = "is" + tmp;
         Method[] methods = clazz.getMethods();
         for (Method m : methods) {
-            if (m.getName().equals(mName) && m.getParameterTypes().length == 0) {
-                return m;
+            if (m.getParameterTypes().length == 0) {
+                if (m.getName().equals(mName0) || m.getName().equals(mName1)) {
+                    return m;
+                }
             }
         }
         return null;
