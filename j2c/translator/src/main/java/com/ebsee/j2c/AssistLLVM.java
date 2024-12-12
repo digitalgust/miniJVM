@@ -302,7 +302,7 @@ public class AssistLLVM {
 
     static private void genJNI(String outpath) {
         try {
-            File f = new File(outpath + "/native_gen.txt");
+            File f = new File(outpath + "/_native_gen.txt");
             FileOutputStream fos = new FileOutputStream(f);
             PrintStream ps = new PrintStream(fos);
 

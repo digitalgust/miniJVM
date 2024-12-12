@@ -50,7 +50,7 @@ call :build_jar translator.jar ..\translator\src\main "tools" "." "."
  %JAVA_HOME%\bin\java -cp tools/translator.jar com.ebsee.Main ../../minijvm/java/src/main/java/;../../test/minijvm_test/src/main/java/ ../app/generted/classes/ ../app/generted/c/
 rem ==============================================================
 
-echo [INFO]build app.exe
+echo [INFO]build app.exe , maybe take a while
 call :jvm_compile app.exe ..\app %TARGETDIR%
 
 echo completed.

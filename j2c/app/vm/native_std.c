@@ -33,6 +33,8 @@
 #include <wspiapi.h>
 #include <io.h>
 
+c8 *inet_ntop(s32 af, const void *src, c8 *dst, socklen_t size);
+
 #if __JVM_OS_VS__
 #include "../utils/dirent_win.h"
 #include "../utils/tinycthread.h"
