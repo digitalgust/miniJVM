@@ -2786,8 +2786,8 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
             case op_invokeinterface: {
                 _gen_save_sp_ip(C);
 
-                //此cmr所描述的方法，对于不同的实例，有不同的method
-                //s32 _gen_invokevirtual(Runtime *runtime, u16 idx)
+                // The method described by this CMR has different methods for different instances
+                // s32 _gen_invokevirtual(Runtime *runtime, u16 idx)
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
                 sljit_emit_op1(C, SLJIT_MOV_U16, SLJIT_R1, 0, SLJIT_IMM, *((u16 *) (ip + 1)));
                 sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, 32), SLJIT_IMM, SLJIT_FUNC_ADDR(invokevirtual));
