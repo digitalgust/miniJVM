@@ -82,7 +82,7 @@ s32 org_mini_vm_RefNative_getClasses(Runtime *runtime, JClass *clazz) {
         }
     }
     vm_share_unlock(jvm);
-    push_ref(runtime->stack, jarr);//先放入栈，再关联回收器，防止多线程回收
+    push_ref(runtime->stack, jarr);//Put it into the stack first, then associate it with the collector to prevent multithreaded recycling
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
     jvm_printf("org_mini_vm_RefNative_getClasses\n");
@@ -363,7 +363,7 @@ s32 org_mini_vm_RefNative_getThreads(Runtime *runtime, JClass *clazz) {
 //            jarray_set_field(jarr, i, &l2d);
 //        }
 //    }
-    push_ref(runtime->stack, jarr);//先放入栈，再关联回收器，防止多线程回收
+    push_ref(runtime->stack, jarr);//Put it into the stack first, then associate it with the collector to prevent multi-threaded recycling
 //    garbage_thread_unlock();
 #if _JVM_DEBUG_LOG_LEVEL > 5
     jvm_printf("org_mini_vm_RefNative_getThreads\n");
@@ -373,7 +373,8 @@ s32 org_mini_vm_RefNative_getThreads(Runtime *runtime, JClass *clazz) {
 
 s32 org_mini_vm_RefNative_getStatus(Runtime *runtime, JClass *clazz) {
     Instance *thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
-    Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, thread);//线程结束之后会清除掉runtime,因为其是一个栈变量，不可再用
+    //After the thread ends, the runtime will be cleared because it is a stack variable and cannot be used again.
+    Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, thread);
     if (trun)
         push_int(runtime->stack, trun->thrd_info->thread_status);
     else
@@ -386,7 +387,8 @@ s32 org_mini_vm_RefNative_getStatus(Runtime *runtime, JClass *clazz) {
 
 s32 org_mini_vm_RefNative_suspendThread(Runtime *runtime, JClass *clazz) {
     Instance *thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
-    Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, thread);//线程结束之后会清除掉runtime,因为其是一个栈变量，不可再用
+    //After the thread ends, the runtime will be cleared because it is a stack variable and cannot be used again.
+    Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, thread);
     if (trun) {
         jthread_suspend(trun);
         push_int(runtime->stack, 0);
@@ -400,7 +402,8 @@ s32 org_mini_vm_RefNative_suspendThread(Runtime *runtime, JClass *clazz) {
 
 s32 org_mini_vm_RefNative_resumeThread(Runtime *runtime, JClass *clazz) {
     Instance *thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
-    Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, thread);//线程结束之后会清除掉runtime,因为其是一个栈变量，不可再用
+    //After the thread ends, the runtime will be cleared because it is a stack variable and cannot be used again.
+    Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, thread);
     if (trun) {
         jthread_resume(trun);
         push_int(runtime->stack, 0);
@@ -415,7 +418,8 @@ s32 org_mini_vm_RefNative_resumeThread(Runtime *runtime, JClass *clazz) {
 
 s32 org_mini_vm_RefNative_getSuspendCount(Runtime *runtime, JClass *clazz) {
     Instance *thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
-    Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, thread);//线程结束之后会清除掉runtime,因为其是一个栈变量，不可再用
+    //After the thread ends, the runtime will be cleared because it is a stack variable and cannot be used again.
+    Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, thread);
     if (trun) {
         push_int(runtime->stack, trun->thrd_info->suspend_count);
     } else
@@ -428,7 +432,8 @@ s32 org_mini_vm_RefNative_getSuspendCount(Runtime *runtime, JClass *clazz) {
 
 s32 org_mini_vm_RefNative_getFrameCount(Runtime *runtime, JClass *clazz) {
     Instance *thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
-    Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, thread);//线程结束之后会清除掉runtime,因为其是一个栈变量，不可再用
+    //After the thread ends, the runtime will be cleared because it is a stack variable and cannot be used again.
+    Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, thread);
     s32 i = 0;
     while (trun) {
         i++;
@@ -444,7 +449,8 @@ s32 org_mini_vm_RefNative_stopThread(Runtime *runtime, JClass *clazz) {
     Long2Double l2d;
     l2d.l = localvar_getLong(runtime->localvar, 1);
     Instance *ins = (__refer) (intptr_t) l2d.l;
-    Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, thread);//线程结束之后会清除掉runtime,因为其是一个栈变量，不可再用
+    //After the thread ends, the runtime will be cleared because it is a stack variable and cannot be used again.
+    Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, thread);
     if (trun) {
         push_int(runtime->stack, 0);
     } else
@@ -458,7 +464,8 @@ s32 org_mini_vm_RefNative_stopThread(Runtime *runtime, JClass *clazz) {
 
 s32 org_mini_vm_RefNative_getStackFrame(Runtime *runtime, JClass *clazz) {
     Instance *thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
-    Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, thread);//线程结束之后会清除掉runtime,因为其是一个栈变量，不可再用
+    //After the thread ends, the runtime will be cleared because it is a stack variable and cannot be used again.
+    Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, thread);
     if (trun) {
         while (trun) {
             if (!trun->son)break;
@@ -483,8 +490,8 @@ s32 org_mini_vm_RefNative_getGarbageMarkCounter(Runtime *runtime, JClass *clazz)
 }
 
 s32 org_mini_vm_RefNative_getGarbageStatus(Runtime *runtime, JClass *clazz) {
-
-    push_int(runtime->stack, runtime->jvm->collector->_garbage_thread_status);//先放入栈，再关联回收器，防止多线程回收
+    //Put it into the stack first, then associate it with the collector to prevent multithreaded recycling
+    push_int(runtime->stack, runtime->jvm->collector->_garbage_thread_status);
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
     jvm_printf("org_mini_vm_RefNative_getGarbageStatus %d\n", runtime->jvm->collector->_garbage_thread_status);
