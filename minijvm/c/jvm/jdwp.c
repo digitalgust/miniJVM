@@ -36,7 +36,7 @@ struct _JdwpClient {
     mbedtls_net_context sockfd;
     u8 closed;
     u8 conn_first;
-    JdwpPacket *rcvp; //用于非阻塞接收，多次接收往同一个包内写入字节
+    JdwpPacket *rcvp; // Used for non-blocking reception, writing bytes into the same packet multiple times
     Hashset *temp_obj_holder;
 };
 
@@ -459,13 +459,14 @@ s32 jdwp_write_fully(JdwpClient *client, c8 *buf, s32 need) {
 
 JdwpPacket *jdwp_readpacket(JdwpClient *client) {
     if (!client->conn_first) {
-        if (!client->rcvp) {//上个包已收完
+        if (!client->rcvp) {// the previous packet has been fully received
             client->rcvp = jdwppacket_create();
             client->rcvp->_req_len = 4;
             client->rcvp->_rcv_len = 0;
-            client->rcvp->_4len = 1;//标志先接收的是长度信息
+            client->rcvp->_4len = 1;// indicates that the first part received is the length information
         }
-        if (client->rcvp) {//上个包收到一半，有两种情况，先收4字节，再收剩余部分
+        // The previous packet was received partially. There are two scenarios: first, receive 4 bytes, then receive the remaining part.
+        if (client->rcvp) {
             if (client->rcvp->_4len) {
                 s32 len = mbedtls_net_recv(&client->sockfd, (u8 *) client->rcvp->data + client->rcvp->_rcv_len,
                                            client->rcvp->_req_len - client->rcvp->_rcv_len);
@@ -474,7 +475,7 @@ JdwpPacket *jdwp_readpacket(JdwpClient *client) {
                 client->rcvp->_rcv_len += len;
                 if (client->rcvp->_rcv_len == client->rcvp->_req_len) {
                     client->rcvp->_4len = 0;
-                    client->rcvp->_req_len = jdwppacket_get_length(client->rcvp) - 4;//下次进入时直接收包体
+                    client->rcvp->_req_len = jdwppacket_get_length(client->rcvp) - 4;// on the next entry, directly receive the packet body
                     client->rcvp->_rcv_len = 0;
                     jdwppacket_ensureCapacity(client->rcvp, client->rcvp->_req_len);
                 }
@@ -491,7 +492,7 @@ JdwpPacket *jdwp_readpacket(JdwpClient *client) {
                 }
             }
         }
-    } else {//首次连接
+    } else {// first connection
         c8 buf[14];
         s32 len = jdwp_read_fully(client, (c8 *) &buf, 14);
         if (len == -1) {
@@ -720,7 +721,7 @@ void writeArrayRegion(JdwpPacket *res, Instance *arr, s32 firstIndex, s32 length
     jdwppacket_write_int(res, length);
     c8 tag = getSimpleTag(arr_type);
     s32 i;
-    //原子类型不用写标志，非原子类型则需要是ValueType
+    // Primitive types do not require a flag, while non-primitive types need to be of ValueType
     for (i = 0; i < length; i++) {
         switch (tag) {
             case '1':
@@ -759,7 +760,7 @@ void getClassSignature(JClass *clazz, Utf8String *ustr) {
 }
 
 s32 location_equals(Location *loc1, Location *loc2) {
-    if ((!loc1 && loc2) || (!loc2 && loc1))return 0; //其中一个为NULL，另一个不空
+    if ((!loc1 && loc2) || (!loc2 && loc1))return 0; // one is NULL, the other is not empty
     if (loc1->typeTag == loc2->typeTag
         && loc1->classID == loc2->classID
         && loc1->methodID == loc2->methodID
@@ -1110,9 +1111,10 @@ s32 jdwp_set_breakpoint(JdwpServer *jdwpserver, s32 setOrClear, JClass *clazz, M
 
 
 s32 jdwp_set_debug_step(JdwpServer *jdwpserver, s32 setOrClear, Instance *jthread, s32 size, s32 depth) {
-    /**
-     * 由于方法调用层级不同，则runtime的son的层级不同，由此控制虚机方法step_into ,step_out
-     */
+  /**
+   * Due to different method call depths, the runtime of the son has a different level.
+   * This controls the virtual machine's method step_into and step_out.
+   */
     Runtime *r = jthread_get_stackframe_value(jdwpserver->jvm, jthread);
     if (!r)return JDWP_ERROR_INVALID_THREAD;
     Runtime *last = getLastSon(r);
@@ -1126,7 +1128,7 @@ s32 jdwp_set_debug_step(JdwpServer *jdwpserver, s32 setOrClear, Instance *jthrea
             step->next_type = NEXT_TYPE_OUT;
             step->next_stop_runtime_depth = getRuntimeDepth(r->thrd_info->top_runtime) - 1;
         } else {
-            if (size == JDWP_STEPSIZE_LINE) {//当前runtime
+            if (size == JDWP_STEPSIZE_LINE) {// current runtime
                 s32 cur_line_no = getLineNumByIndex(last->method->converted_code, (s32) (last->pc - last->method->converted_code->code));
                 step->next_type = NEXT_TYPE_OVER;
                 step->next_stop_line_no = cur_line_no;
@@ -1713,7 +1715,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 gc_pause(jdwpserver->jvm->collector);
                 Runtime *runtime = jdwp_get_runtime(jdwpserver);
                 Instance *jstr = jstring_create(str, runtime);
-                jdwp_client_hold_obj(client, jstr);//防止回收此处需要hold
+                jdwp_client_hold_obj(client, jstr);// prevent garbage collection, holding is required here
                 gc_move_objs_thread_2_gc(runtime);
                 gc_resume(jdwpserver->jvm->collector);
                 utf8_destory(str);
@@ -2370,7 +2372,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                     //jvm_printf("[JDWP]ThreadReference_Frames: startFrame=%d, len=%d\n", startFrame, length);
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
                     s32 deepth = getRuntimeDepth(rt);
-                    if (length == -1) {//等于-1返回所有剩下的
+                    if (length == -1) {// return all remaining if the value is -1
                         length = deepth - startFrame;
                     }
                     jdwppacket_write_int(res, length);
@@ -2378,7 +2380,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                     ////jvm_printf("[JDWP]deepth:" + frame.getDeepth());
                     s32 i;
                     for (i = 0; i < deepth; i++) {
-                        if (i >= startFrame && i < startFrame + length) {//返回指定层级的stackframe
+                        if (i >= startFrame && i < startFrame + length) {// return the stack frame at the specified level
                             jdwppacket_write_refer(res, r);
                             Location loc;
                             loc.typeTag = getClassType(r->clazz);

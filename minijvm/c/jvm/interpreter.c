@@ -321,15 +321,13 @@ s32 checkcast(Runtime *runtime, Instance *ins, s32 typeIdx) {
 }
 
 /**
-* 把堆栈中的方法调用参数存入方法本地变量
-* 调用方法前，父程序把函数参数推入堆栈，方法调用时，需要把堆栈中的参数存到本地变量
-* @param method  method
-* @param father  runtime of father
-* @param son     runtime of son
-*/
-
-
-
+ * Store the method call parameters from the stack into the method's local variables.
+ * Before calling a method, the parent program pushes the function parameters onto the stack.
+ * When the method is called, the parameters from the stack need to be stored in the local variables.
+ * @param method  Method being called
+ * @param father  Runtime of the parent
+ * @param son     Runtime of the child
+ */
 static inline void _synchronized_lock_method(MethodInfo *method, Runtime *runtime) {
     //synchronized process
     if (!jdwp_is_ignore_sync(runtime->jvm->jdwpserver)) {
@@ -677,7 +675,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     s64 start_at = nanoTime();
 #endif
 
-                    /* ==================================opcode start =============================*/
+/* ======================================================opcode start=================================================*/
 #ifdef __JVM_DEBUG__
                     s64 inst_pc = runtime->pc - ca->code;
 #endif
@@ -2688,11 +2686,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             ival1 = (--sp)->ivalue;// pop an int from the stack
                             offset = 0;
                             if (ival1 < low || ival1 > high) {  // if its less than <low> or greater than <high>,
-                                offset = default_offset;              // branch to default
-                            } else {                        // otherwise
+                                offset = default_offset;        // branch to default
+                            } else {                            // otherwise
                                 idx += (ival1 - low) * 4;
 
-                                offset = *((s32 *) (ip + idx));     // branch to entry in table
+                                offset = *((s32 *) (ip + idx)); // branch to entry in table
                             }
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -2872,11 +2870,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 class_clinit(fi->_this_class, runtime);
                                 sp = stack->sp;
                             }
-                            if (fi->isrefer) {//垃圾回收标识
+                            if (fi->isrefer) {// garbage collection mark
                                 *ip = op_putstatic_ref;
                             } else {
                                 // check variable type to determain long/s32/f64/f32
-                                //非引用类型
+                                // non-reference type
                                 switch (fi->datatype_bytes) {
                                     case 4: {
                                         *ip = op_putstatic_int;
@@ -3010,10 +3008,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 }
                                 spin_lock(&jvm->lock_cloader);
                                 {
-                                    if (fi->isrefer) {//垃圾回收标识
+                                    if (fi->isrefer) {// garbage collection flag
                                         *ip = op_putfield_ref;
                                     } else {
-                                        //非引用类型
+                                      // non-reference type
                                         switch (fi->datatype_bytes) {
                                             case 4: {
                                                 *ip = op_putfield_int;
@@ -3155,7 +3153,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     sp = stack->sp;
                                     spin_lock(&jvm->lock_cloader);
                                     {
-                                        pairlist_put(cmr->virtual_methods, ins->mb.clazz, m);//放入缓存，以便下次直接调用
+                                        pairlist_put(cmr->virtual_methods, ins->mb.clazz, m);// store in cache for direct use in the next call
                                     }
                                     spin_unlock(&jvm->lock_cloader);
                                 }
@@ -4098,10 +4096,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
         } else {
             jvm_printf("method code attribute is null.");
         }
-    } else {//本地方法
+    } else {// native method
         localvar_init(runtime, method->para_slots, method->para_slots);
-        //缓存调用本地方法
-        if (!method->native_func) { //把本地方法找出来缓存
+        // cache native method calls
+        if (!method->native_func) { // find and cache the native method
             java_native_method *native = find_native_method(jvm, utf8_cstr(clazz->name), utf8_cstr(method->name), utf8_cstr(method->descriptor));
             if (!native) {
                 _nosuchmethod_check_exception(utf8_cstr(method->name), stack, runtime);

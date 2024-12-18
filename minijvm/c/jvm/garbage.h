@@ -15,14 +15,16 @@ extern "C" {
 #endif
 
 
-//回收线程
+// GC thread entities
 
 
-//每个线程一个回收站，线程多了就是灾难
+// Each thread has its own garbage bin; too many threads would be a disaster.
 struct _GcCollectorType {
     MiniJVM *jvm;
-    //
-    Hashset *objs_holder; //法外之地，防回收的持有器，放入其中的对象及其引用的其他对象不会被回收
+
+    // A lawless zone, a holder that prevents garbage collection.
+    // Objects placed in it and other objects they reference will not be collected.
+    Hashset *objs_holder;
     MemoryBlock *header, *tmp_header, *tmp_tailer;
     s64 obj_count;
     s64 obj_heap_size;
@@ -31,7 +33,7 @@ struct _GcCollectorType {
     //
 
     //
-    thrd_t garbage_thread;//垃圾回收线程
+    thrd_t garbage_thread;// Garbage collection thread
 
     spinlock_t lock;
     //
@@ -53,7 +55,7 @@ enum {
 };
 
 
-//其他函数
+// API
 
 s32 gc_create(MiniJVM *jvm);
 

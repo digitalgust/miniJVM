@@ -564,17 +564,17 @@ s32 _class_method_info_destory(JClass *clazz) {
         MethodInfo *mi = &clazz->methodPool.method[i];
         for (j = 0; j < mi->attributes_count; j++) {
             AttributeInfo *attr = &mi->attributes[j];
-            if (attr->info)jvm_free(attr->info);//某些没有转
+            if (attr->info)jvm_free(attr->info);//Some things are not transferred
             attr->info = NULL;
 
         }
         if (mi->converted_code) {
             CodeAttribute *ca = (CodeAttribute *) mi->converted_code;
-            jvm_free(ca->code);//info已被转换为converted_attribute
+            jvm_free(ca->code);//info has been converted to converted_attribute
             ca->code = NULL;
             jvm_free(ca->bytecode_for_jit);//
             ca->bytecode_for_jit = NULL;
-            jvm_free(ca->exception_table);//info已被转换为converted_attribute
+            jvm_free(ca->exception_table);//info has been converted to converted_attribute
             ca->exception_table = NULL;
             jvm_free(ca->line_number_table);
             ca->line_number_table = NULL;
@@ -1044,7 +1044,7 @@ void _changeBytesOrder(MethodInfo *method) {
 
             case op_lookupswitch: {
                 s32 pos = 0;
-                pos = 4 - ((((u64) (intptr_t) ip) - (u64) (intptr_t) (ca->code)) % 4);//4 byte对齐
+                pos = 4 - ((((u64) (intptr_t) ip) - (u64) (intptr_t) (ca->code)) % 4);//4 byte alignment
 
                 u8 *addr = ip + pos;
 
@@ -1437,7 +1437,7 @@ s32 _convert_to_code_attribute(CodeAttribute *ca, AttributeInfo *attr, JClass *c
         i2c.c1 = attr->info[info_p++];
         i2c.c0 = attr->info[info_p++];
         s32 attribute_lenth = (u32) i2c.i;
-        //转行号表
+        //Line number table
         if (utf8_equals_c(class_get_utf8_string(clazz, attribute_name_index), "LineNumberTable")) {
             s2c.c1 = attr->info[info_p++];
             s2c.c0 = attr->info[info_p++];
@@ -1539,7 +1539,7 @@ s32 parseMethodPara(Utf8String *methodType, Utf8String *out) {
     s32 count = 0;
     Utf8String *para = utf8_create_copy(methodType);
     utf8_substring(para, utf8_indexof_c(para, "(") + 1, utf8_last_indexof_c(para, ")"));
-    //从后往前拆分方法参数，从栈中弹出放入本地变量
+    //Split method parameters from back to front, pop them from the stack and put them into local variables
     s32 i = 0;
     while (para->length > 0) {
         c8 ch = utf8_char_at(para, 0);
@@ -1568,7 +1568,7 @@ s32 parseMethodPara(Utf8String *methodType, Utf8String *out) {
                 break;
             case '[':
                 while (utf8_char_at(para, 1) == '[') {
-                    utf8_substring(para, 1, para->length);//去掉多维中的 [[[[LObject; 中的 [符
+                    utf8_substring(para, 1, para->length);//Remove the [ character in [[[[LObject;
                 }
                 if (utf8_char_at(para, 1) == 'L') {
                     utf8_substring(para, utf8_indexof_c(para, ";") + 1, para->length);
@@ -1587,7 +1587,7 @@ s32 parseMethodPara(Utf8String *methodType, Utf8String *out) {
 
 
 /**
- * 把各个索引转为直接地址引用，加快处理速度
+ * Convert each index into a direct address reference to speed up processing
  * @param clazz class
  */
 void _class_optimize(JClass *clazz) {
@@ -1645,7 +1645,7 @@ void _class_optimize(JClass *clazz) {
         ptr->name = class_get_utf8_string(clazz, ptr->name_index);
         ptr->descriptor = class_get_utf8_string(clazz, ptr->descriptor_index);
         ptr->_this_class = clazz;
-        if (!ptr->paraType) {//首次执行
+        if (!ptr->paraType) {//First execution
             // eg:  (Ljava/lang/Object;IBLjava/lang/String;[[[ILjava/lang/Object;)Ljava/lang/String;Z
             ptr->paraType = utf8_create();
             //parse method description return slots
@@ -1668,7 +1668,7 @@ void _class_optimize(JClass *clazz) {
         }
         s32 j;
 
-        //转attribute为CdoeAttribute
+        //Convert attribute to CodeAttribute
         for (j = 0; j < ptr->attributes_count; j++) {
             Utf8String *attname = class_get_utf8_string(clazz, ptr->attributes[j].attribute_name_index);
             if (utf8_equals_c(attname, "Code") == 1) {
@@ -1678,7 +1678,7 @@ void _class_optimize(JClass *clazz) {
 
                 CodeAttribute *ca = jvm_calloc(sizeof(CodeAttribute));
                 _convert_to_code_attribute(ca, &ptr->attributes[j], clazz);
-                jvm_free(ptr->attributes[j].info);//无用删除
+                jvm_free(ptr->attributes[j].info);//useless deletion
                 ptr->attributes[j].info = NULL;
                 ptr->converted_code = ca;
                 _changeBytesOrder(ptr);
