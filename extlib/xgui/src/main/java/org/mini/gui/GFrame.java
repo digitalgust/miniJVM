@@ -191,6 +191,12 @@ public class GFrame extends GContainer {
         if (getY() > parent.getY() + parent.getH() - 30) {
             setLocation(getLocationLeft(), parent.getH() - 30);
         }
+        if (getW() > parent.getW()) {
+            setLocation(0, getLocationTop());
+        }
+        if (getH() > parent.getH()) {
+            setLocation(getLocationLeft(), 0);
+        }
     }
 
     @Override
