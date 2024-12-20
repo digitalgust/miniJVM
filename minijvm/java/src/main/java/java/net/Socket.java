@@ -165,7 +165,7 @@ public class Socket extends SocketImpl {
         SocketNative.setOption0(fd, SocketNative.SO_RCVBUF, size, 0);
     }
 
-    public int geReceiveBufferSize() {
+    public int getReceiveBufferSize() {
         return SocketNative.getOption0(fd, SocketNative.SO_RCVBUF);
     }
 
@@ -173,7 +173,7 @@ public class Socket extends SocketImpl {
         SocketNative.setOption0(fd, SocketNative.SO_KEEPALIVE, on ? 1 : 0, 0);
     }
 
-    public boolean geKeepAlive() {
+    public boolean getKeepAlive() {
         return SocketNative.getOption0(fd, SocketNative.SO_KEEPALIVE) == 0 ? false : true;
     }
 
