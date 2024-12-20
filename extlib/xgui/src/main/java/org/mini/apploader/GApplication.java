@@ -76,7 +76,7 @@ public abstract class GApplication {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        GLanguage.clear();
+        GLanguage.clear(this);
         GToolkit.setStyle(oldStyle);
         AppManager.getInstance().removeRunningApp(this);
         AppManager.getInstance().active();

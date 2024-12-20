@@ -883,7 +883,7 @@ public class GTextBox extends GTextObject {
             caretX = getX() + PAD;
             caretY = getY() + lineH + PAD;
 
-            float[] text_area = new float[]{x + PAD, y + PAD, w - PAD * 2, h - PAD * 2};
+            float[] text_area = new float[]{x + PAD, y + PAD, w - PAD * 3, h - PAD * 3};
             float dx = text_area[LEFT];
             float dy = text_area[TOP];
 
@@ -1029,10 +1029,11 @@ public class GTextBox extends GTextObject {
                                                     caretY += lineH;
                                                     jumpWhenReturn = true;
                                                 } else {
+//                                                    caretX = local_detail[curRow][AREA_X] + local_detail[curRow][AREA_W];
                                                     caretX = dx + row_width;
-                                                    if (caretX >= text_area[LEFT] + text_area[WIDTH]) {
-                                                        caretX = text_area[LEFT] + text_area[WIDTH] - 2;
-                                                    }
+//                                                    if (caretX >= text_area[LEFT] + text_area[WIDTH]) {
+//                                                        caretX = text_area[LEFT] + text_area[WIDTH];
+//                                                    }
                                                 }
                                                 draw = true;
                                             } else if (caretIndex == 0 && char_starti == 0) {//特殊情况

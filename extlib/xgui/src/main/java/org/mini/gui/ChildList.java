@@ -107,6 +107,12 @@ class ChildList<T extends GObject> extends ArrayList<T> {
         return li;
     }
 
+    @Override
+    public synchronized ListIterator<T> listIterator(int index) {
+        ListIterator<T> li = new MyListItr(index);
+        return li;
+    }
+
     private class MyListItr extends MyItr implements ListIterator<T> {
         MyListItr(int index) {
             super();
@@ -114,7 +120,7 @@ class ChildList<T extends GObject> extends ArrayList<T> {
         }
 
         public boolean hasPrevious() {
-            return cursor != 0;
+            return cursor > 0;
         }
 
         public int nextIndex() {
@@ -129,11 +135,8 @@ class ChildList<T extends GObject> extends ArrayList<T> {
         public T previous() {
             checkForComodification();
             int i = cursor - 1;
-            while (get(i).getLayer() == GObject.LAYER_INNER) {
-                i--;
-            }
             if (i < 0)
-                throw new NoSuchElementException();
+                throw new IndexOutOfBoundsException();
             if (i >= size())
                 throw new ConcurrentModificationException();
             cursor = i;
@@ -147,9 +150,14 @@ class ChildList<T extends GObject> extends ArrayList<T> {
             checkForComodification();
 
             try {
+                T t = ChildList.this.get(lastRet);
+                if (t.getLayer() == GObject.LAYER_INNER) {
+                    System.out.println("This element can't be set " + t);
+                    return;
+                }
                 ChildList.this.set(lastRet, e);
-            } catch (IndexOutOfBoundsException ex) {
-                throw new ConcurrentModificationException();
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
             }
         }
 
@@ -181,7 +189,7 @@ class ChildList<T extends GObject> extends ArrayList<T> {
 
         @Override
         public boolean hasNext() {
-            return this.cursor != ChildList.this.size();
+            return this.cursor < ChildList.this.size();
         }
 
         @Override
@@ -191,15 +199,13 @@ class ChildList<T extends GObject> extends ArrayList<T> {
 
             try {
                 T next;
-                do {
-                    next = ChildList.this.get(this.cursor);
-                    this.lastRet = this.cursor++;
-                } while (next.getLayer() == GObject.LAYER_INNER);
+                next = ChildList.this.get(this.cursor);
+                this.lastRet = this.cursor++;
 
                 return next;
             } catch (IndexOutOfBoundsException var2) {
                 this.checkForComodification();
-                throw new NoSuchElementException();
+                throw new IndexOutOfBoundsException();
             }
         }
 
@@ -211,6 +217,10 @@ class ChildList<T extends GObject> extends ArrayList<T> {
                 this.checkForComodification();
 
                 try {
+                    T t = ChildList.this.get(this.lastRet);
+                    if (t.getLayer() == GObject.LAYER_INNER) {
+                        return;
+                    }
                     ChildList.this.remove(this.lastRet);
                     if (this.lastRet < this.cursor) {
                         --this.cursor;

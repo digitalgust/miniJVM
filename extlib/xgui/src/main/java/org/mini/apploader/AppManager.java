@@ -411,7 +411,6 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
             //System.out.println("devW :" + devW + ", devH  :" + devH);
 
             GForm.hideKeyboard(this);
-            regStrings();
             GLanguage.setCurLang(AppLoader.getDefaultLang());
 
             if (AppLoader.getGuiStyle() == 0) {
@@ -504,6 +503,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
             }
 
 
+            regStrings();
             UITemplate uit = new UITemplate(xmlStr);
             for (String s : uit.getVariable()) {
                 uit.setVar(s, GLanguage.getString(s));
@@ -613,6 +613,8 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                     MiniHttpClient hc = new MiniHttpClient(url, cltLogger, getDownloadCallback());
                     hc.start();
                     httpClients.add(hc);
+                    break;
+                case "BT_TEST":
                     break;
                 case "BT_BACK":
                     mainPanelShowLeft();

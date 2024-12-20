@@ -721,7 +721,7 @@ public class GToolkit {
             gobj.getFrame().close();
         });
 
-        GButton cancelBtn = new GButton(form, GLanguage.getString("Cancel"), x, y, btnWidth, btnH);
+        GButton cancelBtn = new GButton(form, GLanguage.getString("Cancel"), x + w * .5f, y, btnWidth, btnH);
         cancelBtn.setPreIcon("\uE712");
         cancelBtn.setName("GTOOLKIT_FILECHOOSER_CANCEL");
         gp.add(cancelBtn);

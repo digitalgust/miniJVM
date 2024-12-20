@@ -5,6 +5,9 @@
  */
 package org.mini.gui;
 
+import org.mini.apploader.AppManager;
+import org.mini.apploader.GApplication;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,7 +28,7 @@ public class GLanguage {
     static public final int ID_RUS = 9;
 
     static Map<String, String[]> lang = new HashMap();
-    static Map<String, String[]> ext = new HashMap();
+    static Map<String, Map<String, String[]>> app2ext = new HashMap();
 
     static int cur_lang = ID_ENG;
 
@@ -69,6 +72,14 @@ public class GLanguage {
 
     static public void addString(String key, String[] values) {
         if (key != null && values != null) {
+            GApplication app = GCallBack.getInstance().getApplication();
+            if (app == null) app = AppManager.getInstance();
+            String appId = app.toString();
+            Map<String, String[]> ext = app2ext.get(appId);
+            if (ext == null) {
+                ext = new HashMap();
+                app2ext.put(appId, ext);
+            }
             ext.put(key, values);
         }
     }
@@ -76,7 +87,13 @@ public class GLanguage {
     static public String getString(String key, int langType) {
         String[] ss = lang.get(key);
         if (ss == null) {
-            ss = ext.get(key);
+            GApplication app = GCallBack.getInstance().getApplication();
+            if (app == null) app = AppManager.getInstance();
+            String appId = app.toString();
+            Map<String, String[]> ext = app2ext.get(appId);
+            if (ext != null) {
+                ss = ext.get(key);
+            }
         }
         if (ss == null || langType >= ss.length) {
             return key;
@@ -84,7 +101,12 @@ public class GLanguage {
         return ss[langType];
     }
 
-    static public void clear() {
-        ext.clear();
+    static public void clear(GApplication app) {
+        if (app == null) return;
+        String appId = app.toString();
+        Map<String, String[]> ext = app2ext.get(appId);
+        if (ext != null) {
+            app2ext.remove(appId);
+        }
     }
 }
