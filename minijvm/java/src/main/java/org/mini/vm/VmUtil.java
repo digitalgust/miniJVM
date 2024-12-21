@@ -84,4 +84,8 @@ public class VmUtil {
         }
         return null;
     }
+
+    public static void setThreadCreateHandler(ThreadCreateHandler r) {
+        Thread.setThreadCreateHandler(r);
+    }
 }

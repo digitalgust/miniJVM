@@ -2358,4 +2358,7 @@ void remoteMethodCall(const char *inJsonStr, Utf8String *outJsonStr) {
     }
 }
 
+void buyAppleProductById(GLFMDisplay * display, const char *cproductID, const char *base64HandleScript){
+    printf("buyAppleProductById can't call on android\n");
+}
 #endif

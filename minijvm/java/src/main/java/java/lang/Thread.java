@@ -26,6 +26,8 @@
 
 package java.lang;
 
+import org.mini.vm.ThreadCreateHandler;
+
 /**
  * A <i>thread</i> is a thread of execution in a program. The Java Virtual
  * Machine allows an application to have multiple threads of execution running
@@ -132,6 +134,9 @@ public class Thread implements Runnable {
     /* Whether or not the thread is a daemon thread. */
     private boolean daemon = false;
 
+    /* The group of this thread */
+    private ThreadGroup group;
+
     private native long createStackFrame();
 
     /**
@@ -201,11 +206,32 @@ public class Thread implements Runnable {
      * @param name   the name of the new thread
      */
     private void init(Runnable target, String name) {
+        init(null, target, name);
+    }
+
+    private void init(ThreadGroup group, Runnable target, String name) {
         Thread parent = currentThread();
+
+        if (group == null) {
+            this.group = parent.getThreadGroup();
+            if (this.group == null) {
+                ThreadGroup systemThreadGroup = new ThreadGroup();
+                parent.group = new ThreadGroup(systemThreadGroup, "main");
+                parent.group.add(parent);
+                this.group = parent.group;
+            }
+        }
         this.target = target;
         this.name = name.toCharArray();
         this.priority = parent.getPriority();
         setPriority0(priority);
+        try {
+            if (createHandler != null) {
+                createHandler.threadCreated(this);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -251,6 +277,10 @@ public class Thread implements Runnable {
      */
     public Thread(Runnable target, String name) {
         init(target, name);
+    }
+
+    public Thread(ThreadGroup group, Runnable target, String name) {
+        init(group, target, name);
     }
 
     /**
@@ -480,7 +510,7 @@ public class Thread implements Runnable {
      * @return a string representation of this thread.
      */
     public String toString() {
-        return "Thread[" + getName() + "," + getPriority() + "]";
+        return "Thread[" + getName() + "," + getPriority() + "," + (group == null ? "" : group.getName()) + "]";
     }
 
     private native void setContextClassLoader0(ClassLoader cl);
@@ -499,5 +529,53 @@ public class Thread implements Runnable {
 
     public static void dumpStack() {
         new Exception("Stack trace").printStackTrace();
+    }
+
+    public ThreadGroup getThreadGroup() {
+        return group;
+    }
+
+
+    // Added in JSR-166
+    public interface UncaughtExceptionHandler {
+        void uncaughtException(Thread t, Throwable e);
+    }
+
+    // null unless explicitly set
+    private volatile UncaughtExceptionHandler uncaughtExceptionHandler;
+
+    private static ThreadCreateHandler createHandler;
+
+    // null unless explicitly set
+    private static volatile UncaughtExceptionHandler defaultUncaughtExceptionHandler;
+
+    public static void setDefaultUncaughtExceptionHandler(UncaughtExceptionHandler eh) {
+        defaultUncaughtExceptionHandler = eh;
+    }
+
+    public static UncaughtExceptionHandler getDefaultUncaughtExceptionHandler() {
+        return defaultUncaughtExceptionHandler;
+    }
+
+    public UncaughtExceptionHandler getUncaughtExceptionHandler() {
+        return uncaughtExceptionHandler != null ?
+                uncaughtExceptionHandler : group;
+    }
+
+    public void setUncaughtExceptionHandler(UncaughtExceptionHandler eh) {
+        uncaughtExceptionHandler = eh;
+    }
+
+    /**
+     * Dispatch an uncaught exception to the handler. This method is
+     * intended to be called only by the JVM.
+     */
+    private void dispatchUncaughtException(Throwable e) {
+        getUncaughtExceptionHandler().uncaughtException(this, e);
+    }
+
+
+    public static void setThreadCreateHandler(ThreadCreateHandler r) {
+        createHandler = r;
     }
 }
