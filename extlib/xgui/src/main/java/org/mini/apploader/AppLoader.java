@@ -6,6 +6,8 @@
 package org.mini.apploader;
 
 import org.mini.gui.*;
+import org.mini.vm.ThreadCreateHandler;
+import org.mini.vm.VmUtil;
 import org.mini.zip.Zip;
 
 import java.io.*;
@@ -67,6 +69,15 @@ public class AppLoader {
             }
         }
         saveProp(APP_LIST_FILE, applist);
+
+        //设置 创建线程的handler
+        VmUtil.setThreadCreateHandler(new ThreadCreateHandler() {
+            @Override
+            public void threadCreated(Thread thread) {
+                System.out.println(GCallBack.getInstance().getApplication().toString() + " CREATE " + thread);
+                GCallBack.getInstance().getApplication().addThread(thread);
+            }
+        });
 
         copyExApp();
         String bootApp = appinfo.getProperty(KEY_BOOT);
@@ -150,9 +161,14 @@ public class AppLoader {
         }
     }
 
-    public static void loadProp(String fname, Properties prop) {
+    private static void loadProp(String fname, Properties prop) {
+        String s = GCallBack.getInstance().getAppSaveRoot() + fname;
+        loadPropFile(s, prop);
+    }
+
+    public static void loadPropFile(String path, Properties prop) {
         try {
-            File f = new File(GCallBack.getInstance().getAppSaveRoot() + fname);
+            File f = new File(path);
             if (f.exists()) {
                 FileInputStream fis = new FileInputStream(f);
                 prop.load(fis);
@@ -164,9 +180,14 @@ public class AppLoader {
         }
     }
 
-    public static void saveProp(String name, Properties prop) {
+    private static void saveProp(String name, Properties prop) {
+        String s = GCallBack.getInstance().getAppSaveRoot() + name;
+        savePropFile(s, prop);
+    }
+
+    public static void savePropFile(String path, Properties prop) {
         try {
-            File f = new File(GCallBack.getInstance().getAppSaveRoot() + name);
+            File f = new File(path);
 
             FileOutputStream fos = new FileOutputStream(f);
             prop.store(fos, "");
@@ -343,7 +364,7 @@ public class AppLoader {
     public static String getApplicationDesc(String jarName) {
         String desc = getAppConfig(jarName, "desc");
         if (desc == null) {
-            desc = GLanguage.getString("No description.");
+            desc = AppManager.getInstance().getString("No description.");
         } else {
             desc = desc.replace("\\n", "\n");
         }
@@ -462,10 +483,9 @@ public class AppLoader {
                 Class c = getApplicationClass(jarName);
                 if (c != null) {
                     app = (GApplication) c.newInstance();
+                    app.init(jarName);
                     app.setOldStyle(oldStyle);
-                    app.setSaveRoot(getAppDataPath(jarName));
                     GCallBack.getInstance().setApplication(app);
-                    app.setJarName(jarName);
                 }
             }
         } catch (Exception ex) {

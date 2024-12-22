@@ -7,6 +7,12 @@ package org.mini.apploader;
 
 import org.mini.gui.*;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 /**
  * @author Gust
  */
@@ -17,12 +23,39 @@ public abstract class GApplication {
 
     private AppState state = AppState.STATE_INITED;
 
+    static final String APP_CONFIG_FILE = "config.properties";
+    static final String APP_LANG_KEY = "_inner_lang";
     String saveRootPath;
     GStyle oldStyle;
     GStyle myStyle;
     int myLang;
     ClassLoader myClassLoader;
     String jarName;
+
+    private String appId;
+
+    private int curLang = GLanguage.ID_NO_DEF;
+
+    Properties prop = new Properties();
+
+    //监管所有本应用的线程
+    List<Thread> threads = new CopyOnWriteArrayList<>();
+
+
+    public GApplication() {
+        appId = toString();
+    }
+
+    void init(String jarName) {
+        this.jarName = jarName;
+        setSaveRoot(AppLoader.getAppDataPath(jarName));
+        AppLoader.loadPropFile(getAppConfigFile(), prop);
+        String langId = getProperty(APP_LANG_KEY, GLanguage.ID_NO_DEF + "");
+        try {
+            curLang = Integer.parseInt(langId);
+        } catch (Exception e) {
+        }
+    }
 
     /**
      * return current form
@@ -43,7 +76,7 @@ public abstract class GApplication {
         oldStyle = style;
     }
 
-    public final void setSaveRoot(String path) {
+    void setSaveRoot(String path) {
         saveRootPath = path;
     }
 
@@ -76,13 +109,14 @@ public abstract class GApplication {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        GLanguage.clear(this);
+        GLanguage.clear(appId);
         GToolkit.setStyle(oldStyle);
         AppManager.getInstance().removeRunningApp(this);
         AppManager.getInstance().active();
         GForm.addCmd(new GCmd(() -> {
             Thread.currentThread().setContextClassLoader(null);
         }));
+        closeThreads();
         setState(AppState.STATE_CLOSED);
     }
 
@@ -105,7 +139,6 @@ public abstract class GApplication {
         setState(AppState.STATE_STARTED);
         oldStyle = GToolkit.getStyle();
         GToolkit.setStyle(myStyle);
-        GLanguage.setCurLang(myLang);
         try {
             onResume();
         } catch (Exception e) {
@@ -140,5 +173,83 @@ public abstract class GApplication {
      */
     public void onResume() {
 
+    }
+
+    /**
+     * register language string by key,
+     * String array order is: GLanguage.ID_...
+     *
+     * @param key
+     * @param value
+     */
+    public void regString(String key, String[] value) {
+        GLanguage.addString(appId, key, value);
+    }
+
+    /**
+     * get language string by key, if not found , return key
+     *
+     * @param key
+     * @return
+     */
+    public String getString(String key) {
+        int lang = curLang;
+        if (lang == GLanguage.ID_NO_DEF) {
+            lang = GLanguage.getCurLang();
+        }
+        return GLanguage.getString(appId, key, lang);
+    }
+
+    public void setLanguageId(int lang) {
+        curLang = lang;
+        setProperty(APP_LANG_KEY, lang + "");
+    }
+
+    public int getLanguageId() {
+        if (curLang != GLanguage.ID_NO_DEF) return curLang;
+        return GLanguage.getCurLang();
+    }
+
+    private String getAppConfigFile() {
+        return getSaveRoot() + "/" + APP_CONFIG_FILE;
+    }
+
+    public String getProperty(String key) {
+        String s = prop.getProperty(key);
+        return s == null ? "" : s;
+    }
+
+    public String getProperty(String key, String def) {
+        return prop.getProperty(key, def);
+    }
+
+    public void setProperty(String key, String val) {
+        prop.setProperty(key, val);
+        AppLoader.savePropFile(getAppConfigFile(), prop);
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public void addThread(Thread t) {
+        threads.add(t);
+        for (Thread t1 : threads) { //copyonwritelist remove directly
+            //System.out.println(t1 + " is alive " + t1.isAlive());
+            if (!t1.isAlive()) {
+                threads.remove(t1);
+            }
+        }
+    }
+
+    public void closeThreads() {
+        for (Thread t : threads) {
+            try {
+                //System.out.println(this + " INTERRUPT " + t);
+                t.interrupt();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

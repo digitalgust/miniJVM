@@ -15,6 +15,7 @@
 #include <windows.h>
 #include <tchar.h>
 #include <stdio.h>
+
 #endif
 
 u32 is_random_init = FALSE;
@@ -1227,7 +1228,7 @@ s32 java_lang_Thread_isAlive(Runtime *runtime, JClass *clazz) {
     Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, 0);
     Runtime *rt = jthread_get_stackframe_value(runtime->jvm, ins);
     if (rt)
-        push_int(stack, rt->thrd_info->thread_status != THREAD_STATUS_ZOMBIE);
+        push_int(stack, rt->thrd_info->thread_status > THREAD_STATUS_NEW && rt->thrd_info->thread_status < THREAD_STATUS_ZOMBIE);
     else
         push_int(stack, 0);
 #if _JVM_DEBUG_LOG_LEVEL > 5

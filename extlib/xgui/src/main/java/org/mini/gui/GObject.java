@@ -74,6 +74,8 @@ abstract public class GObject implements GAttachable {
 
     protected GSizeChangeListener sizeChangeListener;
 
+    protected GLocationChangeListener locationChangeListener;
+
     protected boolean visible = true;
 
     protected boolean enable = true;
@@ -264,8 +266,11 @@ abstract public class GObject implements GAttachable {
     }
 
     public void setLocation(float x, float y) {
+        float oldLeft = boundle[LEFT];
+        float oldTop = boundle[TOP];
         boundle[LEFT] = x;
         boundle[TOP] = y;
+        doLocationChanged(oldLeft, oldTop, x, y);
     }
 
     public void setSize(float w, float h) {
@@ -307,8 +312,7 @@ abstract public class GObject implements GAttachable {
     }
 
     public void move(float dx, float dy) {
-        boundle[LEFT] += dx;
-        boundle[TOP] += dy;
+        setLocation(boundle[LEFT] + dx, boundle[TOP] + dy);
     }
 
     /**
@@ -557,12 +561,28 @@ abstract public class GObject implements GAttachable {
         }
     }
 
+    void doLocationChanged(float oldLeft, float oldTop, float newLeft, float newTop) {
+        if (locationChangeListener != null) {
+            if (oldLeft != newLeft || oldTop != newTop) {
+                locationChangeListener.onLocationChange(oldLeft, oldTop, newLeft, newTop);
+            }
+        }
+    }
+
     public GSizeChangeListener getSizeChangeListener() {
         return sizeChangeListener;
     }
 
     public void setSizeChangeListener(GSizeChangeListener sizeChangeListener) {
         this.sizeChangeListener = sizeChangeListener;
+    }
+
+    public GLocationChangeListener getLocationChangeListener() {
+        return locationChangeListener;
+    }
+
+    public void setLocationChangeListener(GLocationChangeListener locationChangeListener) {
+        this.locationChangeListener = locationChangeListener;
     }
 
     public GStateChangeListener getStateChangeListener() {

@@ -137,7 +137,6 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
         System.setErr(systemErrDefault);
         System.setIn(systemInDefault);
         regStrings();
-        GLanguage.setCurLang(AppLoader.getDefaultLang());
         GCallBack.getInstance().setApplication(this);
         Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationPortrait);
         Glfm.glfmSetDisplayChrome(GCallBack.getInstance().getDisplay(), Glfm.GLFMUserInterfaceChromeNavigationAndStatusBar);
@@ -149,14 +148,14 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
         reloadAppList();
     }
 
-    static private void regStrings() {
+    private void regStrings() {
 
         JsonParser<LangBean> parser = new JsonParser<>();
         String s = GToolkit.readFileFromJarAsString("/res/lang.json", "utf-8");
         LangBean langBean = parser.deserial(s, LangBean.class);
 
         for (String key : langBean.getLang().keySet()) {
-            GLanguage.addString(key, langBean.getLang().get(key));
+            GLanguage.addString(getAppId(), key, langBean.getLang().get(key));
         }
     }
 
@@ -182,7 +181,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
         return (client, url, data) -> {
             httpClients.remove(client);
             log("Download success " + url + " ,size: " + data.length);
-            GForm.addMessage((data == null ? GLanguage.getString(STR_FAIL) : GLanguage.getString(STR_SUCCESS)) + " " + GLanguage.getString(STR_DOWNLOAD) + " " + url);
+            GForm.addMessage((data == null ? getString(STR_FAIL) : getString(STR_SUCCESS)) + " " + getString(STR_DOWNLOAD) + " " + url);
             String jarName = null;
             if (url.lastIndexOf('/') > 0) {
                 jarName = url.substring(url.lastIndexOf('/') + 1);
@@ -272,7 +271,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
         if (d > 0) {
             dStr = getDateString(d);
         }
-        String txt = GLanguage.getString(STR_VERSION) + "\n  " + AppLoader.getApplicationVersion(jarName) + "\n" + GLanguage.getString(STR_FILE_SIZE) + "\n  " + AppLoader.getApplicationFileSize(jarName) + "\n" + GLanguage.getString(STR_FILE_DATE) + "\n  " + dStr + "\n" + GLanguage.getString(STR_UPGRADE_URL) + "\n  " + AppLoader.getApplicationUpgradeurl(jarName) + "\n" + GLanguage.getString(STR_DESC) + "\n  " + AppLoader.getApplicationDesc(jarName) + "\n";
+        String txt = getString(STR_VERSION) + "\n  " + AppLoader.getApplicationVersion(jarName) + "\n" + getString(STR_FILE_SIZE) + "\n  " + AppLoader.getApplicationFileSize(jarName) + "\n" + getString(STR_FILE_DATE) + "\n  " + dStr + "\n" + getString(STR_UPGRADE_URL) + "\n  " + AppLoader.getApplicationUpgradeurl(jarName) + "\n" + getString(STR_DESC) + "\n  " + AppLoader.getApplicationDesc(jarName) + "\n";
         descLab.setText(txt);
 
         GButton stop = contentView.findByName(APP_STOP_BTN);
@@ -506,7 +505,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
             regStrings();
             UITemplate uit = new UITemplate(xmlStr);
             for (String s : uit.getVariable()) {
-                uit.setVar(s, GLanguage.getString(s));
+                uit.setVar(s, getString(s));
             }
             double[] inset = new double[4];//top,right,bottom,left
             Glfm.glfmGetDisplayChromeInsets(GCallBack.getInstance().getDisplay(), inset);
@@ -596,12 +595,12 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                     if (curSelectedJarName != null) {
                         tmpJarName = curSelectedJarName;
                         if (tmpJarName != null) {
-                            GFrame confirmFrame = GToolkit.getConfirmFrame(mgrForm, GLanguage.getString(STR_MESSAGE), GLanguage.getString(STR_CONFIRM_DELETE), GLanguage.getString(STR_DELETE), okgobj -> {
+                            GFrame confirmFrame = GToolkit.getConfirmFrame(mgrForm, getString(STR_MESSAGE), getString(STR_CONFIRM_DELETE), getString(STR_DELETE), okgobj -> {
                                 AppLoader.removeApp(tmpJarName);
                                 reloadAppList();
                                 mainPanelShowLeft();
                                 okgobj.getFrame().close();
-                            }, GLanguage.getString("Cancel"), null, 300f, 180f);
+                            }, getString("Cancel"), null, 300f, 180f);
                             GToolkit.showFrame(confirmFrame);
                         }
                     }
@@ -626,30 +625,30 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                         webServer.stopServer();
                         webServer = null;
                     }
-                    if (uploadbtn.getText().equals(GLanguage.getString(STR_STOP))) {
-                        uploadbtn.setText(GLanguage.getString(STR_START));
-                        uploadLab.setText(GLanguage.getString(STR_START_WEB_SRV_FOR_UPLOAD));
-                        String s = GLanguage.getString(STR_SERVER_STOPED);
+                    if (uploadbtn.getText().equals(getString(STR_STOP))) {
+                        uploadbtn.setText(getString(STR_START));
+                        uploadLab.setText(getString(STR_START_WEB_SRV_FOR_UPLOAD));
+                        String s = getString(STR_SERVER_STOPED);
                         GForm.addMessage(s);
                         log(s);
                     } else {
                         webServer = new MiniHttpServer(MiniHttpServer.DEFAULT_PORT, srvLogger);
                         webServer.setUploadCompletedHandle(files -> {
                             for (MiniHttpServer.UploadFile f : files) {
-                                String s = GLanguage.getString(STR_UPLOAD_FILE) + " " + f.filename + " " + f.data.length;
+                                String s = getString(STR_UPLOAD_FILE) + " " + f.filename + " " + f.data.length;
                                 if (AppLoader.addApp(f.filename, f.data)) {
-                                    GForm.addMessage(s + " " + GLanguage.getString(STR_SUCCESS));
+                                    GForm.addMessage(s + " " + getString(STR_SUCCESS));
                                     log(s);
                                 } else {
-                                    GForm.addMessage(s + " " + GLanguage.getString(STR_FAIL));
+                                    GForm.addMessage(s + " " + getString(STR_FAIL));
                                 }
                             }
                             reloadAppList();
                         });
                         webServer.start();
-                        uploadbtn.setText(GLanguage.getString(STR_STOP));
-                        uploadLab.setText(GLanguage.getString(STR_WEB_LISTEN_ON) + webServer.getPort());
-                        String s = GLanguage.getString(STR_SERVER_STARTED);
+                        uploadbtn.setText(getString(STR_STOP));
+                        uploadLab.setText(getString(STR_WEB_LISTEN_ON) + webServer.getPort());
+                        String s = getString(STR_SERVER_STARTED);
                         GForm.addMessage(s);
                         log(s);
                     }
@@ -677,7 +676,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                                             updateContentViewInfo(jarName);
                                             gli.setColor(RUNNING_ITEM_COLOR);
                                         } else {
-                                            GForm.addMessage(GLanguage.getString(AppManager.STR_OPEN_APP_FAIL) + ": " + jarName);
+                                            GForm.addMessage(getString(AppManager.STR_OPEN_APP_FAIL) + ": " + jarName);
 //                                            GForm.addMessage("Can't found startup class ,it setup in config.txt in jar root");
                                         }
                                         floatButton.checkLocation();
@@ -694,12 +693,12 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                         GApplication app = runningApps.get(tmpJarName);
                         if (app != null) {
                             app.closeApp();
-                            GForm.addMessage(GLanguage.getString(STR_SUCCESS));
+                            GForm.addMessage(getString(STR_SUCCESS));
                             GListItem gli = getGListItemByAttachment(curSelectedJarName);
                             gli.setColor(null);
                             updateContentViewInfo(tmpJarName);
                         } else {
-                            GForm.addMessage(GLanguage.getString(STR_APP_NOT_RUNNING));
+                            GForm.addMessage(getString(STR_APP_NOT_RUNNING));
                         }
                     }
                     break;
@@ -733,10 +732,10 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                             }
                             if (path.length() >= 0) {
                                 if (AppLoader.addApp(path, fullpath)) {
-                                    GForm.addMessage(GLanguage.getString(STR_SUCCESS) + " " + fullpath);
+                                    GForm.addMessage(getString(STR_SUCCESS) + " " + fullpath);
                                     reloadAppList();
                                 } else {
-                                    GForm.addMessage(GLanguage.getString(STR_FAIL) + " " + fullpath);
+                                    GForm.addMessage(getString(STR_FAIL) + " " + fullpath);
                                 }
                             }
                         }
