@@ -8,7 +8,7 @@
     <groupId>io.github.digitalgust</groupId>
     <artifactId>glfm_gui</artifactId>
     <name>${project.groupId}:${project.artifactId}</name>
-    <version>1.1.10</version>
+    <version>1.1.11</version>
     <description>miniJVM mobile platform gui library</description>
     <url>https://github.com/digitalgust/miniJVM</url>
 
@@ -159,7 +159,7 @@
         <dependency>
             <groupId>io.github.digitalgust</groupId>
             <artifactId>minijvm_rt</artifactId>
-            <version>1.1.9</version>
+            <version>1.1.10</version>
         </dependency>
     </dependencies>
     
