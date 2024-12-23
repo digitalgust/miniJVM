@@ -316,13 +316,19 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
         jvm_printf("[ERROR]maybe bootstrap classpath misstake: %s \n", p_bootclasspath);
         return -1;
     }
+    //load bootstrap class
     utf8_clear(clsName);
     utf8_append_c(clsName, STR_CLASS_JAVA_LANG_THREAD);
     classes_load_get(NULL, clsName, runtime);
+
     utf8_clear(clsName);
     utf8_append_c(clsName, STR_CLASS_SUN_MISC_LAUNCHER);
     classes_load_get(NULL, clsName, runtime);
-    //开始装载类
+    //for interrupted thread
+    utf8_clear(clsName);
+    utf8_append_c(clsName, STR_CLASS_JAVA_LANG_INTERRUPTEDEXCEPTION);//must load this class ,because it will be used when thread interrupt ,but it can not load when that thread is marked as interrupted
+    JClass *c2 = classes_load_get(NULL, clsName, runtime);
+    Instance *interruptedException = instance_create(runtime, c);
     utf8_destory(clsName);
     gc_move_objs_thread_2_gc(runtime);
     runtime_destory(runtime);

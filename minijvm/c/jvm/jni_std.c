@@ -628,8 +628,8 @@ s32 java_lang_Object_wait(Runtime *runtime, JClass *clazz) {
     invoke_deepth(runtime);
     jvm_printf("java_lang_Object_wait %llx  wait %lld\n", (s64) (intptr_t) ins, l2d.l);
 #endif
-    jthread_waitTime(&ins->mb, runtime, l2d.l);
-    return 0;
+    s32 ret = jthread_waitTime(&ins->mb, runtime, l2d.l);
+    return ret;
 }
 
 s32 java_lang_Runtime_exitInternal(Runtime *runtime, JClass *clazz) {
@@ -1206,8 +1206,8 @@ s32 java_lang_Thread_sleep(Runtime *runtime, JClass *clazz) {
     invoke_deepth(runtime);
     jvm_printf("java_lang_Thread_sleep %lld\n", l2d.l);
 #endif
-    jthread_sleep(runtime, l2d.l);
-    return 0;
+    s32 ret = jthread_sleep(runtime, l2d.l);
+    return ret;
 }
 
 s32 java_lang_Thread_start(Runtime *runtime, JClass *clazz) {
@@ -1270,11 +1270,24 @@ s32 java_lang_Thread_interrupt0(Runtime *runtime, JClass *clazz) {
     Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, 0);
 
     Runtime *rt_thread = jthread_get_stackframe_value(runtime->jvm, ins);
-    rt_thread->thrd_info->is_interrupt = 1;
+    if (rt_thread) {
+        rt_thread->thrd_info->is_interrupt = 1;
+
+        if (rt_thread->thrd_info->thread_status == THREAD_STATUS_WAIT) {
+            jthread_wakeup(rt_thread);
+        }
+    }
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("java_lang_Thread_interrupt0 \n");
 #endif
+
+    return 0;
+}
+
+s32 java_lang_Thread_interrupted(Runtime *runtime, JClass *clazz) {
+
+    push_int(runtime->stack, runtime->thrd_info->is_interrupt != 0);
 
     return 0;
 }
@@ -1538,6 +1551,7 @@ static java_native_method METHODS_STD_TABLE[] = {
         {"java/lang/Thread",                    "activeCount",            "()I",                                                           java_lang_Thread_activeCount},
         {"java/lang/Thread",                    "setPriority0",           "(I)V",                                                          java_lang_Thread_setPriority0},
         {"java/lang/Thread",                    "interrupt0",             "()V",                                                           java_lang_Thread_interrupt0},
+        {"java/lang/Thread",                    "interrupted",            "()V",                                                           java_lang_Thread_interrupted},
         {"java/lang/Thread",                    "setContextClassLoader0", "(Ljava/lang/ClassLoader;)V",                                    java_lang_Thread_setContextClassLoader0},
         {"java/lang/Thread",                    "getContextClassLoader0", "()Ljava/lang/ClassLoader;",                                     java_lang_Thread_getContextClassLoader0},
         {"java/lang/Throwable",                 "printStackTrace0",       "",                                                              java_io_Throwable_printStackTrace0},

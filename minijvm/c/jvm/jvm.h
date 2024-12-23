@@ -27,7 +27,7 @@ extern "C" {
 
 //=======================  micro define  =============================
 //_JVM_DEBUG  01=thread info, 02=garage&jit info  , 03=class load, 04=method call,  06=all bytecode
-#define _JVM_DEBUG_LOG_LEVEL 01
+#define _JVM_DEBUG_LOG_LEVEL 02
 #define _JVM_DEBUG_LOG_TO_FILE 0
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_PROFILE 0
@@ -456,6 +456,7 @@ enum {
     JVM_EXCEPTION_CLASSCAST,
     JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS,
     JVM_EXCEPTION_INSTANTIATION,
+    JVM_EXCEPTION_INTERRUPTED,
 };
 
 enum {
@@ -479,6 +480,7 @@ extern c8 const *STR_CLASS_JAVA_LANG_DOUBLE;
 extern c8 const *STR_CLASS_JAVA_LANG_FLOAT;
 extern c8 const *STR_CLASS_JAVA_LANG_OBJECT;
 extern c8 const *STR_CLASS_JAVA_LANG_THREAD;
+extern c8 const *STR_CLASS_JAVA_LANG_INTERRUPTEDEXCEPTION;
 extern c8 const *STR_CLASS_JAVA_LANG_CLASS;
 extern c8 const *STR_CLASS_JAVA_LANG_CLASSLOADER;
 extern c8 const *STR_CLASS_JAVA_LANG_REF_REFERENCE;
@@ -1263,7 +1265,8 @@ struct _JavaThreadInfo {
     u8 volatile is_suspend;
     u8 volatile is_unparked;
     u8 volatile is_blocking;// some of native method will enter blocking state
-    u8 is_interrupt;
+    u8 is_stop; //thread is marked as stop status, need set is_interrupt=1 also
+    u8 is_interrupt; //thread is marked as interrupt, set by Thread.interrupt();
     u8 type;// gc /jdwp /normal
 
     thrd_t pthread;

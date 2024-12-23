@@ -85,7 +85,52 @@ public class VmUtil {
         return null;
     }
 
-    public static void setThreadCreateHandler(ThreadCreateHandler r) {
-        Thread.setThreadCreateHandler(r);
+    /**
+     * thread create handler
+     * 用于把线程创建事件通知给应用
+     */
+    static class ThreadHandler implements ThreadCreateHandler {
+        ThreadCreateHandler[] handlers;
+
+        void addHandler(ThreadCreateHandler handler) {
+            if (handlers == null) {
+                handlers = new ThreadCreateHandler[]{handler};
+            } else {
+                ThreadCreateHandler[] nhandlers = new ThreadCreateHandler[handlers.length + 1];
+                System.arraycopy(handlers, 0, nhandlers, 0, handlers.length);
+                nhandlers[handlers.length] = handler;
+                handlers = nhandlers;
+            }
+        }
+
+        void removeHandler(ThreadCreateHandler handler) {
+            for (int i = 0; i < handlers.length; i++) {
+                if (handlers[i] == handler) {
+                    ThreadCreateHandler[] nhandlers = new ThreadCreateHandler[handlers.length - 1];
+                    System.arraycopy(handlers, 0, nhandlers, 0, i);
+                    System.arraycopy(handlers, i + 1, nhandlers, i, handlers.length - i - 1);
+                    handlers = nhandlers;
+                    break;
+                }
+            }
+        }
+
+        public void threadCreated(Thread t) {
+            //System.out.println("threadCreated:" + t.getName());
+            for (ThreadCreateHandler handler : handlers) {
+                handler.threadCreated(t);
+            }
+        }
+    }
+
+    static ThreadHandler threadHandler = new ThreadHandler();
+
+    public static void addThreadCreateHandler(ThreadCreateHandler r) {
+        threadHandler.addHandler(r);
+        Thread.setThreadCreateHandler(threadHandler);
+    }
+
+    public static void removeThreadCreateHandler(ThreadCreateHandler r) {
+        threadHandler.removeHandler(r);
     }
 }

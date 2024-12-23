@@ -44,6 +44,7 @@ c8 *STRS_CLASS_EXCEPTION[] = {
         "java.lang.ClassCastException",
         "java.lang.ArrayIndexOutOfBoundsException",
         "java.lang.InstantiationException",
+        "java.lang.InterruptedException",
 };
 
 c8 const *STR_CLASS_JAVA_LANG_BOOLEAN = "java/lang/Boolean";
@@ -58,6 +59,7 @@ c8 const *STR_CLASS_JAVA_LANG_STRING = "java/lang/String";
 c8 const *STR_CLASS_JAVA_LANG_STRINGBUILDER = "java/lang/StringBuilder";
 c8 const *STR_CLASS_JAVA_LANG_OBJECT = "java/lang/Object";
 c8 const *STR_CLASS_JAVA_LANG_THREAD = "java/lang/Thread";
+c8 const *STR_CLASS_JAVA_LANG_INTERRUPTEDEXCEPTION = "java/lang/InterruptedException";
 c8 const *STR_CLASS_JAVA_LANG_CLASS = "java/lang/Class";
 c8 const *STR_CLASS_JAVA_LANG_CLASSLOADER = "java/lang/ClassLoader";
 c8 const *STR_CLASS_JAVA_LANG_REF_REFERENCE = "java/lang/ref/Reference";

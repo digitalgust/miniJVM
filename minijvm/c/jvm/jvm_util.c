@@ -309,7 +309,7 @@ void thread_stop_all(MiniJVM *jvm) {
 
         jthread_suspend(r);
         r->thrd_info->no_pause = 1;
-        r->thrd_info->is_interrupt = 1;
+        r->thrd_info->is_stop = 1;
         MemoryBlock *tl = r->thrd_info->curThreadLock;
         if (tl) {
             jthread_lock(tl, r);
@@ -1100,12 +1100,20 @@ s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms) {
     runtime->thrd_info->thread_status = thread_status;
     runtime->thrd_info->curThreadLock = NULL;
     jthread_block_exit(runtime);
+    return check_throw_interruptexception(runtime);
+}
+
+//if the thread is waiting , wake it up
+s32 jthread_wakeup(Runtime *runtime) {
+    MemoryBlock *tl = runtime->thrd_info->curThreadLock;
+    jthread_lock(tl, runtime);
+    jthread_notify(tl, runtime);
+    jthread_unlock(tl, runtime);
     return 0;
 }
 
 s32 jthread_sleep(Runtime *runtime, s64 ms) {
     static const s64 PERIOD = 500;
-    s32 ret = 0;
     jthread_block_enter(runtime);
     u8 thread_status = runtime->thrd_info->thread_status;
     runtime->thrd_info->thread_status = THREAD_STATUS_SLEEPING;
@@ -1117,15 +1125,24 @@ s32 jthread_sleep(Runtime *runtime, s64 ms) {
             remain = ms - sleeped;
             threadSleep(remain < PERIOD ? remain : PERIOD);
             sleeped += PERIOD;
-            if (runtime->thrd_info->is_interrupt) {
-                ret = 1;
+            if (runtime->thrd_info->is_interrupt || runtime->thrd_info->is_stop) {
                 break;
             }
         }
     }
     runtime->thrd_info->thread_status = thread_status;
     jthread_block_exit(runtime);
-    return ret;
+    return check_throw_interruptexception(runtime);;
+}
+
+s32 check_throw_interruptexception(Runtime *runtime) {
+    if (!runtime->thrd_info->is_interrupt) {
+        return RUNTIME_STATUS_NORMAL;
+    }
+    runtime->thrd_info->is_interrupt = 0;
+    Instance *exception = exception_create(JVM_EXCEPTION_INTERRUPTED, runtime);
+    push_ref(runtime->stack, (__refer) exception);
+    return RUNTIME_STATUS_EXCEPTION;
 }
 
 s32 check_suspend_and_pause(Runtime *runtime) {

@@ -273,6 +273,8 @@ s32 jthread_notifyAll(MemoryBlock *mb, Runtime *runtime);
 
 s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms);
 
+s32 jthread_wakeup(Runtime *runtime);
+
 s32 jthread_sleep(Runtime *runtime, s64 ms);
 
 s32 jthread_yield(Runtime *runtime);
@@ -284,6 +286,8 @@ s32 jthread_suspend(Runtime *runtime);
 void jthread_block_exit(Runtime *runtime);
 
 void jthread_block_enter(Runtime *runtime);
+
+s32 check_throw_interruptexception(Runtime *runtime);
 
 s32 check_suspend_and_pause(Runtime *runtime);
 

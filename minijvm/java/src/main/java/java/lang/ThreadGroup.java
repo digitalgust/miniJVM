@@ -902,10 +902,6 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      */
     @Deprecated
     public boolean allowThreadSuspension(boolean b) {
-        this.vmAllowSuspension = b;
-        if (!b) {
-            VM.unsuspendSomeThreads();
-        }
         return true;
     }
 

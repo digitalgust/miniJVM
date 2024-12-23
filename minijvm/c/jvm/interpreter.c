@@ -130,9 +130,6 @@ static s32 filterClassName(Utf8String *clsName) {
     if (offset < 0 && thrd_info->suspend_count) {\
         runtime->pc = ip;\
         runtime->stack->sp = sp;\
-        if (thrd_info->is_interrupt) {\
-            goto label_exit_while;\
-        }\
         check_suspend_and_pause(runtime);\
     }\
 }
@@ -600,6 +597,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
             if (method->is_sync)_synchronized_lock_method(method, runtime);
+
+            if (runtime->thrd_info->is_stop) {//if stop=1 then exit thread
+                goto label_exit_while;
+            }
 
             if (JIT_ENABLE && ca->jit.state == JIT_GEN_SUCCESS) {
                 //jvm_printf("jit call %s.%s()\n", method->_this_class->name->data, method->name->data);
@@ -3011,7 +3012,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     if (fi->isrefer) {// garbage collection flag
                                         *ip = op_putfield_ref;
                                     } else {
-                                      // non-reference type
+                                        // non-reference type
                                         switch (fi->datatype_bytes) {
                                             case 4: {
                                                 *ip = op_putfield_int;

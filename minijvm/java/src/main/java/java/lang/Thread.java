@@ -26,6 +26,7 @@
 
 package java.lang;
 
+import org.mini.vm.RefNative;
 import org.mini.vm.ThreadCreateHandler;
 
 /**
@@ -213,14 +214,20 @@ public class Thread implements Runnable {
         Thread parent = currentThread();
 
         if (group == null) {
-            this.group = parent.getThreadGroup();
-            if (this.group == null) {
+            ThreadGroup pg = parent.getThreadGroup();
+            if (pg == null) {
                 ThreadGroup systemThreadGroup = new ThreadGroup();
                 parent.group = new ThreadGroup(systemThreadGroup, "main");
                 parent.group.add(parent);
                 this.group = parent.group;
+            } else {
+                this.group = pg;
             }
+        } else {
+            this.group = group;
         }
+        this.group.add(this);
+
         this.target = target;
         this.name = name.toCharArray();
         this.priority = parent.getPriority();
@@ -266,6 +273,10 @@ public class Thread implements Runnable {
      */
     public Thread(Runnable target) {
         init(target, "Thread-" + nextThreadNum());
+    }
+
+    public Thread(ThreadGroup group, Runnable target) {
+        init(group, target, "Thread-" + nextThreadNum());
     }
 
     /**
@@ -324,9 +335,7 @@ public class Thread implements Runnable {
     }
 
 
-    static public boolean interrupted() {
-        return false;
-    }
+    static public native boolean interrupted();
 
     /**
      * Tests if this thread is alive. A thread is alive if it has been started
@@ -575,7 +584,50 @@ public class Thread implements Runnable {
     }
 
 
+    private static void checkCaller() {
+        Throwable throwable = new Throwable();
+        StackTraceElement[] stackTraceElements = throwable.getStackTrace();
+        if (stackTraceElements.length < 3 || !stackTraceElements[2].getClassName().equals("org.mini.vm.VmUtil")) {
+            throw new SecurityException("setThreadCreateHandler must be called by VmUtil, Please add handler from VmUtil");
+        }
+    }
+
     public static void setThreadCreateHandler(ThreadCreateHandler r) {
+        //if caller is not VmUtil.class, throw SecurityException
+        checkCaller();
         createHandler = r;
+    }
+
+    public static ThreadCreateHandler getThreadCreateHandler() {
+        checkCaller();
+        return createHandler;
+    }
+
+    public enum State {
+        NEW,
+        RUNNABLE,
+        BLOCKED,
+        WAITING,
+        TIMED_WAITING,
+        TERMINATED;
+    }
+
+    public State getState() {
+        // get current thread state
+        int state = RefNative.getStatus(this);
+        switch (state) {
+            case 0:
+                return State.NEW;
+            case 1:
+                return State.RUNNABLE;
+            case 2:
+                return State.BLOCKED;
+            case 3:
+                return State.WAITING;
+            case 4:
+                return State.WAITING;
+            default:
+                return State.TERMINATED;
+        }
     }
 }
