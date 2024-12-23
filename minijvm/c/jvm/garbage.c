@@ -29,33 +29,37 @@ s32 _gc_copy_objs_from_thread(Runtime *pruntime);
 s64 _garbage_collect(GcCollector *collector);
 
 /**
- * 创建垃圾收集线程，
+ * Creates a garbage collection thread.
  *
- * 收集方法如下：
- * 当对象被创建时，注册进垃圾收集器，纳入监管体系。
+ * The collection method works as follows:
+ * When an object is created, it is registered with the garbage collector and included in its monitoring system.
  *
+ * The objects registered include:
+ * - Class objects
+ * - Instance objects (including array objects)
  *
- * 注册的对象包括 Class 类， Instance 对象实例（包括数组对象）
+ * During garbage collection, the garbage collection thread collects objects from the `collector->header` linked list.
+ * The collection process involves marking objects that are not referenced by any thread, directly destroying them,
+ * and freeing their memory.
  *
- * 在垃圾回收时，由垃圾收集线程来收集，收集 collector->header 链表中的对象，
- * 收集方法为： 当对象未被任一线程引用时，进行标记，直接销毁，释放内存
+ * The garbage collection thread will pause all currently executing Java threads. Once collection is complete,
+ * the paused threads are resumed.
  *
- * 收集线程会暂停所有正在执行中的java线程 ，回收完之后，恢复线程执行
+ * Runtime objects in the JDWP debugging thread are not eligible for garbage collection.
  *
- * jdwp调试线程中的运行时对象不可回收。
+ * Collection steps:
  *
- * collecting  step:
+ * 1. Stop the world (pause all Java threads).
+ * 2. Add all register/hold/release operations to a temporary linked list.
+ * 3. Copy all runtime references.
+ * 4. Mark objects referenced by threads.
+ * 5. Resume the world (resume all Java threads).
+ * 6. Release the memory of unmarked objects.
+ * 7. Move the temporary linked list back to the main list.
  *
- * 1. stop the world
- * 2. all reg/hold/release operation add to a temp linklist ,
- * 3. copy all runtime refer
- * 4. mark object when referenced by threads
- * 5. resume the world
- * 6. release unmarked object memory
- * 7. move temp linklist to main list
- *
- * @return errorcode
+ * @return Error code
  */
+
 
 
 s32 gc_create(MiniJVM *jvm) {
@@ -110,7 +114,7 @@ void _garbage_clear(GcCollector *collector) {
 #endif
     MiniJVM *jvm = collector->jvm;
 
-    //解除所有引用关系后，回收全部对象
+    //After all references are removed, all objects are collected
     while (_garbage_collect(collector));//collect instance
 
 #if _JVM_DEBUG_LOG_LEVEL > 1
@@ -204,7 +208,7 @@ s32 _getMBSize(MemoryBlock *mb) {
 }
 
 /**
- * 调试用，打印所有引用信息
+ * For debugging: Print all reference information
  */
 void _dump_refer(GcCollector *collector) {
     //jvm_printf("%d\n",sizeof(struct _Hashset));
@@ -442,7 +446,7 @@ s64 _garbage_collect(GcCollector *collector) {
             }
         }
 
-        //re mark these obj
+        //remark this obj
         nextmb = head;
         while (nextmb) {
             curmb = nextmb;
@@ -477,7 +481,7 @@ s64 _garbage_collect(GcCollector *collector) {
             if (curmb->type == MEM_TYPE_CLASS) {
                 classes_remove(collector->jvm, (JClass *) curmb);
             }
-            if (GCFLAG_JLOADER_GET(curmb->gcflag)) {// curmb->class maybe destroyed, when gc_estory() called
+            if (GCFLAG_JLOADER_GET(curmb->gcflag)) {// curmb->class might be destroyed, when gc_destory() called
 #if _JVM_DEBUG_GARBAGE_DUMP
                 jvm_printf("X: [%llx] classloader\n", (s64) (intptr_t) curmb);
 #endif
@@ -514,7 +518,7 @@ s64 _garbage_collect(GcCollector *collector) {
 
 
 /**
- * 各个线程把自己还需要使用的对象进行标注，表示不能回收
+ * Each thread marks the objects it still needs to use, indicating they cannot be collected.
  */
 static void _list_iter_thread_pause(ArrayListValue value, void *para) {
     jthread_suspend((Runtime *) value);
@@ -582,8 +586,8 @@ s32 _gc_wait_thread_suspend(MiniJVM *jvm, Runtime *runtime) {
         }
     }
 #endif
-    while (!(runtime->thrd_info->is_suspend ||  //执行字节码时,检测到suspend_count不为0时,暂停节字码执行,并设is_suspend=1
-             runtime->thrd_info->is_blocking)  //执行一些IO等待时,jni会设is_blocking为1
+    while (!(runtime->thrd_info->is_suspend ||  /// While executing bytecode, if suspend_count is not 0, pause bytecode execution and set is_suspend = 1
+             runtime->thrd_info->is_blocking)  // During certain IO waits, JNI sets is_blocking = 1
             ) { //
         vm_share_notifyall(jvm);
         vm_share_timedwait(jvm, 5);
@@ -636,7 +640,7 @@ void _gc_copy_objs(MiniJVM *jvm) {
         _gc_copy_objs_from_thread(runtime);
     }
 //    arraylist_iter_safe(thread_list, _list_iter_iter_copy, NULL);
-    //调试线程
+    // Debug thread
     if (jvm->jdwp_enable && jvm->jdwpserver) {
         Runtime *runtime = jdwp_get_runtime(jvm->jdwpserver);
         if (runtime) {
@@ -741,7 +745,7 @@ static inline void _gc_jarray_mark(GcCollector *collector, Instance *arr, u8 fla
 //        }
         if (isDataReferByIndex(arr->mb.arr_type_index)) {
             s32 i;
-            for (i = 0; i < arr->arr_length; i++) {//把所有引用去除，否则不会垃圾回收
+            for (i = 0; i < arr->arr_length; i++) {// Remove all references; otherwise, garbage collection will not occur.
                 s64 val = jarray_get_field(arr, i);
                 if (val)_gc_mark_object(collector, (__refer) (intptr_t) val, flag_cnt);
             }
@@ -778,8 +782,8 @@ static inline void _gc_class_mark(GcCollector *collector, JClass *clazz, u8 flag
 
 
 /**
- * 递归标注obj所有的子孙
- * @param ref addr
+ * Recursively mark all descendants of the object.
+ * @param ref Address of the object
  */
 
 void _gc_mark_object(GcCollector *collector, __refer ref, u8 flag_cnt) {
@@ -858,9 +862,9 @@ MemoryBlock *gc_is_alive(GcCollector *collector, __refer ref) {
 }
 
 /**
- * 把对象放到线程的对象列表中
- * @param runtime
- * @param ref
+ * Add the object to the thread's object list.
+ * @param runtime Runtime environment
+ * @param ref Reference to the object
  */
 void gc_obj_reg(Runtime *runtime, __refer ref) {
     if (!ref)return;
@@ -896,9 +900,9 @@ void gc_obj_reg(Runtime *runtime, __refer ref) {
 }
 
 /**
- * 把线程持有的所有对象,链接到gc的链表中去
- * move thread 's jobject to garbage
- * @param runtime
+ * Link all objects held by the thread to the GC's linked list.
+ * Move the thread's jobject to garbage collection.
+ * @param runtime Runtime environment
  */
 void gc_move_objs_thread_2_gc(Runtime *runtime) {
     if (runtime) {

@@ -8,7 +8,7 @@
 #include "garbage.h"
 
 
-//===============================    创建及加载  ==================================
+//===============================    Create and load  ==================================
 
 
 
@@ -88,11 +88,11 @@ void class_clear_refer(PeerClassLoader *cloader, JClass *clazz) {
     gc_obj_release(cloader->jvm->collector, clazz->ins_class);
     clazz->ins_class = NULL;
 }
-//===============================    初始化相关  ==================================
+//===============================    Initialization related  ==================================
 
 /**
- * 需要在所有类加载入系统之后
- * 初始化静态变量区，及生成实例模板
+ * It is necessary to initialize the static variable area 
+ * and generate instance templates after all classes are loaded into the system
  * @param clazz class
  * @return ret
  */
@@ -121,7 +121,7 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
 //    }
 
     FieldInfo *f = clazz->fieldPool.field;
-    //计算不同种类变量长度
+    //Calculate the length of different types of variables
     s32 static_len = 0;
     s32 instance_len = 0;
     s32 field_count = clazz->fieldPool.field_used;
@@ -129,8 +129,8 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
     s32 order_idx = 0;
     s32 datawidth = 8;//
     //memory align begin
-    //先排8字节成员,紧跟4字节成员,再跟2字节成员,最后排1字节成员
-    while (datawidth > 0) {//first align width=8B ,then width=4B, then width=2,then 1
+    //Arrange the 8-byte member first, followed by the 4-byte member, then the 2-byte member, and finally the 1-byte member
+    while (datawidth > 0) {
         for (i = 0; i < field_count; i++) {
             s32 width = DATA_TYPE_BYTES[f[i].datatype_idx];
             if (width == datawidth) {
@@ -143,10 +143,10 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
     for (i = 0; i < field_count; i++) {
         FieldInfo *fi = &f[mem_align_order[i]];
         s32 width = DATA_TYPE_BYTES[fi->datatype_idx];
-        if (fi->access_flags & ACC_STATIC) {//静态变量
+        if (fi->access_flags & ACC_STATIC) {//Static variables
             fi->offset = static_len;
             static_len += width;
-        } else {//实例变量
+        } else {//Instance variables
             fi->offset = instance_len;
             instance_len += width;
         }
@@ -159,34 +159,34 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
     instance_len = instance_len / align * align + ((instance_len % align) > 0 ? align : 0); // 8 byte align
     //memory align end
 
-    //静态变量分配
+    //Static variable allocation
     clazz->field_static_len = static_len;
     if (clazz->field_static_len) {
         clazz->field_static = jvm_calloc(clazz->field_static_len);
     }
 
 
-    //生成实例变量模板
+    //Generate instance variable template
     if (clazz->superclass) {
         clazz->field_instance_start = clazz->superclass->field_instance_len;
         clazz->field_instance_len = clazz->field_instance_start + instance_len;
-        //实例变量区前面是继承的父类变量，后面是自己的变量
+        //The instance variable area is preceded by inherited parent class variables, followed by its own variables
         //memcpy((clazz->field_instance_template), (superclass->field_instance_template), clazz->field_instance_start);
     } else {
         clazz->field_instance_start = 0;
-        //实例变量区前面是继承的父类变量，后面是自己的变量
+        //The instance variable area is preceded by inherited parent class variables, followed by its own variables
         clazz->field_instance_len = clazz->field_instance_start + instance_len;
     }
 
 
-    //提前计算类成员的偏移量，提高执行速度
+    //Calculate the offset of class members in advance to improve execution speed
     for (i = 0; i < clazz->fieldPool.field_used; i++) {
         FieldInfo *fi = &clazz->fieldPool.field[i];
         fi->offset_instance = fi->_this_class->field_instance_start + fi->offset;
     }
 
     ShortCut *jvm_runtime_cache = &runtime->jvm->shortcut;
-    //预计算字段在实例内存中的偏移，节约运行时时间
+    //Precompute the offset of fields in instance memory to save runtime time
     if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_CLASS)) {
         FieldInfo *fi;
         fi = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_CLASS, STR_FIELD_CLASSHANDLE, "J", NULL, runtime);
@@ -301,7 +301,8 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
 }
 
 /**
- * 执行静态代码，需要在类装入字节码，并初始化好静态变量区之后执行
+ * To execute static code, you need to load the bytecode into the class
+ * and initialize the static variable area.
  * @param clazz class
  * @param runtime  runtime
  */
@@ -317,9 +318,9 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
         s32 i, len;
 
         /**
-         * 把一些索引引用，转为内存对象引用，以此加快字节码执行速度
-         * 把ConstantMethodRef.index 指向具体的 MethodInfo ，可能在本类，可能在父类
-         * 把ConstantFieldRef.index 指向具体的 FieldInfo 内存
+         * Convert some index references to memory object references to speed up bytecode execution
+         * Point ConstantMethodRef.index to a specific MethodInfo, which may be in this class or in a parent class
+         * Point ConstantFieldRef.index to the specific FieldInfo memory
          * @param clazz
          */
         for (i = 0; i < clazz->constantPool.methodRef->length; i++) {
@@ -416,7 +417,7 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
             }
         }
 
-        //优先初始化基类
+        //Initialize the base class first
         JClass *superclass = getSuperClass(clazz);
         if (superclass && superclass->status < CLASS_STATUS_CLINITED) {
             class_clinit(superclass, runtime);
@@ -481,7 +482,7 @@ void class_clear_cached_virtualmethod(MiniJVM *jvm, JClass *tgt) {
     }
 }
 
-//===============================    实例化相关  ==================================
+//===============================    Instantiation related  ==================================
 
 u8 instance_of(Instance *ins, JClass *other) {
     JClass *clazz = ins->mb.clazz;
@@ -530,7 +531,7 @@ JClass *getSuperClass(JClass *clazz) {
     return clazz->superclass;
 }
 
-//===============================    类数据访问  ==================================
+//===============================    Class Data Access  ==================================
 
 
 JClass *getClassByConstantClassRef(JClass *clazz, s32 index, Runtime *runtime) {
@@ -544,10 +545,10 @@ JClass *getClassByConstantClassRef(JClass *clazz, s32 index, Runtime *runtime) {
 
 
 /**
- * 取得类成员信息，成员信息存在以下几种情况
- * ConstantFieldRef中：
- * 父类的静态和实例成员 Fathar.x ，都会描述为  Son.x ,类名描述为本类
- * 而调用其他类（非父类）的静态变量比如：  System.out ，会被描述为 System.out ，类名描述为其他类
+ * Get class member information. Member information has the following situations
+ * ConstantFieldRef：
+ * The static and instance members of the parent class, Father.x , are described as Son.x , and the class name is described as this class.
+ * Calling static variables of other classes (non-parent classes), such as System.out, will be described as System.out, and the class name will be described as other classes.
  *
  * @param clazz class
  * @param field_ref ref
@@ -619,7 +620,7 @@ FieldInfo *find_fieldInfo_by_name(Utf8String *clsName, Utf8String *fieldName, Ut
 
 
 /**
- * 查找实例的方法， invokevirtual
+ * Find the instance method, invokevirtual
  * @param ins ins
  * @param methodName name
  * @param methodType type

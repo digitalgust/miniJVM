@@ -93,7 +93,7 @@ typedef struct _VmSock {
 s32 sock_option(VmSock *vmsock, s32 opType, s32 opValue, s32 opValue2) {
     s32 ret = 0;
     switch (opType) {
-        case SOCK_OP_TYPE_NON_BLOCK: {//阻塞设置
+        case SOCK_OP_TYPE_NON_BLOCK: {// blocking setting
             if (opValue) {
                 mbedtls_net_set_nonblock(&vmsock->contex);
                 vmsock->non_block = 1;
@@ -108,13 +108,13 @@ s32 sock_option(VmSock *vmsock, s32 opType, s32 opValue, s32 opValue2) {
             vmsock->reuseaddr = 1;
             break;
         }
-        case SOCK_OP_TYPE_RCVBUF: {//缓冲区设置
-            s32 nVal = opValue;//设置为 opValue K
+        case SOCK_OP_TYPE_RCVBUF: {// buffer configuration
+            s32 nVal = opValue;// set to opValue K
             ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVBUF, (const c8 *) &nVal, sizeof(nVal));
             break;
         }
-        case SOCK_OP_TYPE_SNDBUF: {//缓冲区设置
-            s32 nVal = opValue;//设置为 opValue K
+        case SOCK_OP_TYPE_SNDBUF: {// buffer configuration
+            s32 nVal = opValue;// set to opValue K
             ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_SNDBUF, (const c8 *) &nVal, sizeof(nVal));
             break;
         }
@@ -134,10 +134,10 @@ s32 sock_option(VmSock *vmsock, s32 opType, s32 opValue, s32 opValue2) {
                 u16 l_onoff;
                 u16 l_linger;
             } m_sLinger;
-            //(在closesocket()调用,但是还有数据没发送完毕的时候容许逗留)
-            // 如果m_sLinger.l_onoff=0;则功能和2.)作用相同;
+            // (Allow lingering when closesocket() is called, but there is still data that has not been fully sent)
+            // If m_sLinger.l_onoff = 0, it functions the same as in 2.)
             m_sLinger.l_onoff = opValue;
-            m_sLinger.l_linger = opValue2;//(容许逗留的时间为5秒)
+            m_sLinger.l_linger = opValue2;// The allowed lingering time is 5 seconds
             ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVTIMEO, (const c8 *) &m_sLinger, sizeof(m_sLinger));
             break;
         }
@@ -156,7 +156,7 @@ s32 sock_get_option(VmSock *vmsock, s32 opType) {
     socklen_t len;
 
     switch (opType) {
-        case SOCK_OP_TYPE_NON_BLOCK: {//阻塞设置
+        case SOCK_OP_TYPE_NON_BLOCK: {// blocking configuration
 #if __JVM_OS_MINGW__ || __JVM_OS_VS__
             u_long flags = 1;
             ret = NO_ERROR == ioctlsocket(vmsock->contex.fd, FIONBIO, &flags);
@@ -181,7 +181,7 @@ s32 sock_get_option(VmSock *vmsock, s32 opType) {
             getsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVBUF, (void *) &ret, &len);
             break;
         }
-        case SOCK_OP_TYPE_SNDBUF: {//缓冲区设置
+        case SOCK_OP_TYPE_SNDBUF: {// buffer configuration
             len = sizeof(ret);
             getsockopt(vmsock->contex.fd, SOL_SOCKET, SO_SNDBUF, (void *) &ret, &len);
             break;
@@ -204,10 +204,10 @@ s32 sock_get_option(VmSock *vmsock, s32 opType) {
                 u16 l_onoff;
                 u16 l_linger;
             } m_sLinger;
-            //(在closesocket()调用,但是还有数据没发送完毕的时候容许逗留)
-            // 如果m_sLinger.l_onoff=0;则功能和2.)作用相同;
+            // (Allow lingering when closesocket() is called, but there is still data that has not been fully sent)
+            // If m_sLinger.l_onoff = 0, it behaves the same as in 2.)
             m_sLinger.l_onoff = 0;
-            m_sLinger.l_linger = 0;//(容许逗留的时间为5秒)
+            m_sLinger.l_linger = 0;// The allowed lingering time is 5 seconds
             len = sizeof(m_sLinger);
             getsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVTIMEO, (void *) &m_sLinger, &len);
             ret = *((s32 *) &m_sLinger);
@@ -583,7 +583,7 @@ s32 org_mini_net_SocketNative_getSockAddr(Runtime *runtime, JClass *clazz) {
 
         struct sockaddr_in *ipv4 = NULL;
         struct sockaddr_in6 *ipv6 = NULL;
-        c8 ipAddr[INET6_ADDRSTRLEN];//保存点分十进制的地址
+        c8 ipAddr[INET6_ADDRSTRLEN];// save the address in dotted decimal format
         s32 port = -1;
         if (sock.ss_family == AF_INET) {// IPv4 address
             ipv4 = ((struct sockaddr_in *) &sock);
@@ -1223,9 +1223,9 @@ s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
         struct dirent *dp;
         ByteBuf *platformPath = bytebuf_create(0);
         conv_utf8_2_platform_encoding(platformPath, filepath);
-        dirp = opendir(platformPath->buf); //打开目录指针
+        dirp = opendir(platformPath->buf); // pointer to the opened directory
         if (dirp) {
-            while ((dp = readdir(dirp)) != NULL) { //通过目录指针读目录
+            while ((dp = readdir(dirp)) != NULL) { // read the directory through the directory pointer
                 if (strcmp(dp->d_name, ".") == 0) {
                     continue;
                 }
@@ -1240,7 +1240,7 @@ s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
                 utf8_destory(ustr);
                 arraylist_push_back(files, jstr);
             }
-            (void) closedir(dirp); //关闭目录
+            (void) closedir(dirp); // close the directory
 
             s32 i;
             Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
