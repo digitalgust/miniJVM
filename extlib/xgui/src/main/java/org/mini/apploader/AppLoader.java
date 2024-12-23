@@ -71,7 +71,7 @@ public class AppLoader {
         saveProp(APP_LIST_FILE, applist);
 
         //设置 创建线程的handler
-        VmUtil.setThreadCreateHandler(new ThreadCreateHandler() {
+        VmUtil.addThreadCreateHandler(new ThreadCreateHandler() {
             @Override
             public void threadCreated(Thread thread) {
                 System.out.println(GCallBack.getInstance().getApplication().toString() + " CREATE " + thread);

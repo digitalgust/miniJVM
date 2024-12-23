@@ -236,7 +236,7 @@ public abstract class GApplication {
         threads.add(t);
         for (Thread t1 : threads) { //copyonwritelist remove directly
             //System.out.println(t1 + " is alive " + t1.isAlive());
-            if (!t1.isAlive()) {
+            if (t1.getState() == Thread.State.TERMINATED) {
                 threads.remove(t1);
             }
         }

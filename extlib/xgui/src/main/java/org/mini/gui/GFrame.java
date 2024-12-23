@@ -70,6 +70,23 @@ public class GFrame extends GContainer {
     }
 
 
+    public float[] getBgColor() {
+        if (view.bgColor == null) return GToolkit.getStyle().getBackgroundColor();
+        return view.bgColor;
+    }
+
+    public void setBgColor(int r, int g, int b, int a) {
+        view.bgColor = Nanovg.nvgRGBA((byte) r, (byte) g, (byte) b, (byte) a);
+    }
+
+    public void setBgColor(float[] color) {
+        view.bgColor = color;
+    }
+
+    public void setBgColor(int rgba) {
+        view.bgColor = nvgRGBA(rgba);
+    }
+
     @Override
     public float getInnerX() {
         return getX();
@@ -391,6 +408,10 @@ public class GFrame extends GContainer {
             if (getH() < 1f) return false;
 
             super.paint(vg);
+            boolean isFocus = false;
+            if (GFrame.this.parent != null) {
+                isFocus = GFrame.this.parent.getCurrent() == GFrame.this;
+            }
 
             byte[] headerPaint;
             float x = getX();
@@ -419,6 +440,8 @@ public class GFrame extends GContainer {
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 
             if (title_arr != null) {
+                nvgSave(vg);
+                nvgIntersectScissor(vg, x + 30, y, w - 60, h);
                 nvgFontBlur(vg, 2);
                 nvgFillColor(vg, GToolkit.getStyle().getTextShadowColor());
                 nvgTextJni(vg, x + w / 2, y + 16 + 1, title_arr, 0, title_arr.length);
@@ -426,6 +449,7 @@ public class GFrame extends GContainer {
                 nvgFontBlur(vg, 0);
                 nvgFillColor(vg, GToolkit.getStyle().getFrameTitleColor());
                 nvgTextJni(vg, x + w / 2, y + 16, title_arr, 0, title_arr.length);
+                nvgRestore(vg);
             }
             if (closable) {
                 nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
