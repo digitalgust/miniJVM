@@ -31,7 +31,11 @@ public class Zip {
             byte[] zpath = z.getBytes("utf-8");
             String n = name + "\0";
             byte[] npath = n.getBytes("utf-8");
-            return getEntry0(zpath, npath);
+            byte[] b = getEntry0(zpath, npath);
+            if (b == null) {
+                int debug = 1;
+            }
+            return b;
         } catch (Exception ex) {
             ex.printStackTrace();
         }

@@ -323,6 +323,26 @@ public class Thread implements Runnable {
         }
     }
 
+    @Deprecated
+    public void stop() {
+        RefNative.stopThread(this, null);
+    }
+
+    @Deprecated
+    public void stop(Throwable obj) {
+        RefNative.stopThread(this, obj);
+    }
+
+    @Deprecated
+    public void suspend() {
+        RefNative.suspendThread(this);
+    }
+
+    @Deprecated
+    public void resume() {
+        RefNative.resumeThread(this);
+    }
+
     /**
      * Interrupts this thread. In an implementation conforming to the CLDC
      * Specification, this operation is not required to cancel or clean up any

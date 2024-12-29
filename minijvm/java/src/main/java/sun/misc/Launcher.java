@@ -26,7 +26,7 @@ public class Launcher {
 
         @Override
         protected Class<?> findClass(String name) throws ClassNotFoundException {
-
+            if (name == null) throw new ClassNotFoundException(name);
             // 加载D盘根目录下指定类名的class
             String classname = name.replace('.', '/') + ".class";
             byte[] classData = VmUtil.getFileData(classname, paths);

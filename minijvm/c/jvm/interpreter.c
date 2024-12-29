@@ -49,7 +49,7 @@ s32 exception_handle(RuntimeStack *stack, Runtime *runtime) {
                 break;
             }
             ConstantClassRef *ccr = class_get_constant_classref(runtime->clazz, (e + i)->catch_type);
-            JClass *catchClass = classes_load_get(runtime->clazz->jloader, ccr->name, runtime);
+            JClass *catchClass = classes_load_get_with_clinit(runtime->clazz->jloader, ccr->name, runtime);
             if (instance_of(ins, catchClass)) {
                 et = e + i;
                 index = i;
@@ -595,10 +595,23 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             runtime->pc = ip;
             localvar_init(runtime, ca->max_locals, method->para_slots);
 
-
+            //method sync begin
             if (method->is_sync)_synchronized_lock_method(method, runtime);
 
             if (runtime->thrd_info->is_stop) {//if stop=1 then exit thread
+                ret = RUNTIME_STATUS_ERROR;
+                StackEntry tmp;
+                tmp.lvalue = 0;
+                tmp.rvalue = 0;
+                if (stack_size(stack) > 0) {
+                    peek_entry(stack->sp - 1, &tmp);
+                }
+                JClass *vmstopEx = classes_load_get_with_clinit_c(runtime->clazz->jloader, STR_CLASS_ORG_MINI_VM_VMSTOPEXCEPTION, runtime);
+                if (tmp.ins != NULL && tmp.ins->mb.clazz == vmstopEx) {
+                    goto label_exit_while;
+                }
+                Instance *instance = exception_create(JVM_EXCEPTION_VMSTOP, runtime);
+                push_ref(stack, instance);
                 goto label_exit_while;
             }
 
@@ -646,18 +659,20 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                 do {
 #if _JVM_JDWP_ENABLE
-                    //if (jvm->jdwp_enable) {
-                    //breakpoint
                     stack->sp = sp;
                     runtime->pc = ip;
-                    if (method->breakpoint) {
-                        jdwp_check_breakpoint(runtime);
-                    }
-                    //debug step
-                    if (thrd_info->jdwp_step->active) {//单步状态
-                        thrd_info->jdwp_step->bytecode_count++;
-                        jdwp_check_debug_step(runtime);
+                    if (!runtime->thrd_info->no_pause) {
+                        //if (jvm->jdwp_enable) {
+                        //breakpoint
+                        if (method->breakpoint) {
+                            jdwp_check_breakpoint(runtime);
+                        }
+                        //debug step
+                        if (thrd_info->jdwp_step->active) {//单步状态
+                            thrd_info->jdwp_step->bytecode_count++;
+                            jdwp_check_debug_step(runtime);
 
+                        }
                     }
                     sp = stack->sp;
                     check_gc_pause(-1);
@@ -862,7 +877,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 }
                                 case CONSTANT_CLASS: {
                                     stack->sp = sp;
-                                    other = classes_load_get(clazz->jloader, class_get_constant_classref(clazz, idx)->name, runtime);
+                                    other = classes_load_get_with_clinit(clazz->jloader, class_get_constant_classref(clazz, idx)->name, runtime);
                                     if (!other->ins_class) {
                                         other->ins_class = insOfJavaLangClass_create_get(runtime, other);
                                     }
@@ -4062,7 +4077,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     }
 
                     label_exception_handle:
-                    // there is exception handle, but not error/interrupt handle
+                    // there is exception handle, but not error handle
                     runtime->pc = ip;
                     ret = RUNTIME_STATUS_EXCEPTION;
                     if (exception_handle(runtime->stack, runtime)) {
@@ -4092,6 +4107,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                 } while (1);//end while
             }
+
+            //sync end
             if (method->is_sync)_synchronized_unlock_method(method, runtime);
 
         } else {
@@ -4149,7 +4166,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
     if (ret != RUNTIME_STATUS_EXCEPTION) {
         if (stack->sp != runtime->localvar + method->return_slots) {
             invoke_deepth(runtime);
-            jvm_printf("stack size  %s.%s%s in:%d out:%d  \n", utf8_cstr(clazz->name), utf8_cstr(method->name), utf8_cstr(method->descriptor), (runtime->localvar - runtime->stack->store), stack_size(stack));
+            jvm_printf("Thread.stop = %d | Stack size  %s.%s%s in:%d out:%d  \n", runtime->thrd_info->is_stop, utf8_cstr(clazz->name), utf8_cstr(method->name), utf8_cstr(method->descriptor), (runtime->localvar - runtime->stack->store), stack_size(stack));
             exit(1);
         }
     }

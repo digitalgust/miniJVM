@@ -502,7 +502,7 @@ u8 isSonOfInterface(JClass *clazz, JClass *son, Runtime *runtime) {
     s32 i;
     for (i = 0; i < son->interfacePool.clasz_used; i++) {
         ConstantClassRef *ccr = (son->interfacePool.clasz + i);
-        JClass *other = classes_load_get(son->jloader, class_get_constant_utf8(son, ccr->stringIndex)->utfstr, runtime);
+        JClass *other = classes_load_get_with_clinit(son->jloader, class_get_constant_utf8(son, ccr->stringIndex)->utfstr, runtime);
         if (clazz == other) {
             return 1;
         } else {
@@ -538,7 +538,7 @@ JClass *getClassByConstantClassRef(JClass *clazz, s32 index, Runtime *runtime) {
     ConstantClassRef *ccf = class_get_constant_classref(clazz, index);
     if (!ccf->clazz) {
         Utf8String *clsName = class_get_utf8_string(clazz, ccf->stringIndex);
-        ccf->clazz = classes_load_get(clazz->jloader, clsName, runtime);
+        ccf->clazz = classes_load_get_with_clinit(clazz->jloader, clsName, runtime);
     }
     return ccf->clazz;
 }

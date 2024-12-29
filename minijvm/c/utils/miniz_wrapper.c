@@ -31,8 +31,8 @@ s32 zip_loadfile(char const *jarpath, char const *filename, ByteBuf *buf) {
                 mz_free(p);
             }
         }
+        mz_zip_reader_end(&zipArchive);
     }
-    mz_zip_reader_end(&zipArchive);
     return ret;
 }
 
@@ -47,6 +47,9 @@ s32 zip_loadfile_to_mem(char const *jarpath, char const *filename, c8 *buf, s64 
         filename += 1;
     }
 
+//    if (filename[0] == '0' && filename[1] == '\0') {
+//        s32 debug = 1;
+//    }
     int ret = 0;
     if (mz_zip_reader_init_file(&zipArchive, jarpath, 0) == MZ_FALSE) {//
         ret = -1;
@@ -62,8 +65,8 @@ s32 zip_loadfile_to_mem(char const *jarpath, char const *filename, c8 *buf, s64 
                 ret = -1;
             }
         }
+        mz_zip_reader_end(&zipArchive);
     }
-    mz_zip_reader_end(&zipArchive);
     return ret;
 }
 
@@ -89,8 +92,8 @@ s64 zip_get_file_unzip_size(char const *jarpath, char const *filename) {
             size_t uncompressed_size = (size_t) file_stat.m_uncomp_size;
             ret = uncompressed_size;
         }
+        mz_zip_reader_end(&zipArchive);
     }
-    mz_zip_reader_end(&zipArchive);
     return ret;
 }
 
@@ -115,8 +118,8 @@ s32 zip_get_file_index(char const *jarpath, char const *filename) {
         } else {
             ret = file_index;
         }
+        mz_zip_reader_end(&zipArchive);
     }
-    mz_zip_reader_end(&zipArchive);
     return ret;
 }
 
@@ -143,8 +146,8 @@ s32 zip_savefile_mem(char const *jarpath, char const *filename, char const *buf,
         if (mz_zip_writer_finalize_archive(&zipArchive) == MZ_FALSE) {//
             ret = -1;
         }
+        mz_zip_writer_end(&zipArchive);
     }
-    mz_zip_writer_end(&zipArchive);
     return ret;
 }
 
@@ -163,8 +166,8 @@ s32 zip_filecount(char *jarpath) {
         ret = -1;
     } else {
         ret = mz_zip_reader_get_num_files(&zipArchive);
+        mz_zip_reader_end(&zipArchive);
     }
-    mz_zip_reader_end(&zipArchive);
     return ret;
 }
 
@@ -187,8 +190,8 @@ ArrayList *zip_get_filenames(char *jarpath) {
             }
         }
 
+        mz_zip_reader_end(&zipArchive);
     }
-    mz_zip_reader_end(&zipArchive);
     return list;
 }
 
@@ -212,8 +215,8 @@ s32 zip_is_directory(char *jarpath, int index) {
     } else {
 
         ret = mz_zip_reader_is_file_a_directory(&zipArchive, index);
+        mz_zip_reader_end(&zipArchive);
     }
-    mz_zip_reader_end(&zipArchive);
     return ret;
 }
 

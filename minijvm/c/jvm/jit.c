@@ -1383,7 +1383,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                         break;
                     }
                     case CONSTANT_CLASS: {
-                        JClass *cl = classes_load_get(clazz->jloader, class_get_constant_classref(clazz, index)->name, runtime);
+                        JClass *cl = classes_load_get_with_clinit(clazz->jloader, class_get_constant_classref(clazz, index)->name, runtime);
                         if (!cl->ins_class) {
                             cl->ins_class = insOfJavaLangClass_create_get(runtime, cl);
                         }
@@ -2860,7 +2860,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 ConstantClassRef *ccf = class_get_constant_classref(clazz, idx);
                 if (!ccf->clazz) {
                     Utf8String *clsName = class_get_utf8_string(clazz, ccf->stringIndex);
-                    ccf->clazz = classes_load_get(clazz->jloader, clsName, runtime);
+                    ccf->clazz = classes_load_get_with_clinit(clazz->jloader, clsName, runtime);
                 }
                 JClass *other = ccf->clazz;
                 Instance *ins = NULL;

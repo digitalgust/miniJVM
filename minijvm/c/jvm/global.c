@@ -45,6 +45,7 @@ c8 *STRS_CLASS_EXCEPTION[] = {
         "java.lang.ArrayIndexOutOfBoundsException",
         "java.lang.InstantiationException",
         "java.lang.InterruptedException",
+        "org/mini/vm/VmStopException",
 };
 
 c8 const *STR_CLASS_JAVA_LANG_BOOLEAN = "java/lang/Boolean";
@@ -72,6 +73,7 @@ c8 const *STR_CLASS_JAVA_LANG_THROWABLE = "java/lang/Throwable";
 c8 const *STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ = "org/mini/reflect/DirectMemObj";
 c8 const *STR_CLASS_SUN_MISC_LAUNCHER = "sun/misc/Launcher";
 c8 const *STR_CLASS_ORG_MINI_REFLECT_REFLECTMETHOD = "org/mini/reflect/ReflectMethod";
+c8 const *STR_CLASS_ORG_MINI_VM_VMSTOPEXCEPTION = "org/mini/vm/VmStopException";
 
 c8 const *STR_FIELD_STACKFRAME = "stackFrame";
 c8 const *STR_FIELD_NAME = "name";

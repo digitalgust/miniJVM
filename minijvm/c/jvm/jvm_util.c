@@ -78,14 +78,22 @@ JClass *classes_load_get_without_resolve(Instance *jloader, Utf8String *ustr, Ru
     return cl;
 }
 
-JClass *classes_load_get_c(Instance *jloader, c8 const *pclassName, Runtime *runtime) {
+JClass *classes_load_get_with_resolve(Instance *jloader, Utf8String *ustr, Runtime *runtime) {
+    JClass *cl = classes_load_get_without_resolve(jloader, ustr, runtime);
+    if (cl && cl->status < CLASS_STATUS_PREPARED) {
+        class_prepar(jloader, cl, runtime);
+    }
+    return cl;
+}
+
+JClass *classes_load_get_with_clinit_c(Instance *jloader, c8 const *pclassName, Runtime *runtime) {
     Utf8String *ustr = utf8_create_c(pclassName);
-    JClass *clazz = classes_load_get(jloader, ustr, runtime);
+    JClass *clazz = classes_load_get_with_clinit(jloader, ustr, runtime);
     utf8_destory(ustr);
     return clazz;
 }
 
-JClass *classes_load_get(Instance *jloader, Utf8String *ustr, Runtime *runtime) {
+JClass *classes_load_get_with_clinit(Instance *jloader, Utf8String *ustr, Runtime *runtime) {
     JClass *cl = classes_load_get_without_resolve(jloader, ustr, runtime);
     if (cl && cl->status < CLASS_STATUS_CLINITED) {
         class_clinit(cl, runtime);
@@ -148,7 +156,7 @@ JClass *arraytype_get_by_desc(Runtime *runtime, Instance *jloader, Utf8String *d
         if (utf8_char_at(typename, 0) == 'L') {//class:  Ljava/lang/Object;
             utf8_remove(typename, 0);//remove "L"
             utf8_remove(typename, typename->length - 1);//remove ";"
-            typec = classes_load_get(jloader, typename, runtime);
+            typec = classes_load_get_with_resolve(jloader, typename, runtime);
         } else {//primitive : I
             c8 *cname = getDataTypeFullName(utf8_char_at(typename, 0));
             utf8_clear(typename);
@@ -911,7 +919,7 @@ s32 jthread_run(void *para) {
     runtime->thrd_info->thread_status = THREAD_STATUS_RUNNING;
     push_ref(runtime->stack, (__refer) jthread);
     ret = execute_method_impl(method, runtime);
-    if (ret != RUNTIME_STATUS_NORMAL && ret != RUNTIME_STATUS_INTERRUPT) {
+    if (ret != RUNTIME_STATUS_NORMAL) {
         print_exception(runtime);
     }
     runtime->thrd_info->thread_status = THREAD_STATUS_ZOMBIE;
@@ -1487,7 +1495,7 @@ Instance *instance_copy(Runtime *runtime, Instance *src, s32 deep_copy) {
  */
 
 Instance *insOfJavaLangClass_create_get(Runtime *runtime, JClass *clazz) {
-    JClass *java_lang_class = classes_load_get_c(NULL, STR_CLASS_JAVA_LANG_CLASS, runtime);
+    JClass *java_lang_class = classes_load_get_with_clinit_c(NULL, STR_CLASS_JAVA_LANG_CLASS, runtime);
     if (java_lang_class) {
         if (clazz->ins_class) {
             return clazz->ins_class;
@@ -1517,7 +1525,7 @@ void insOfJavaLangClass_set_classHandle(Runtime *runtime, Instance *insOfJavaLan
 //===============================    实例化字符串  ==================================
 Instance *jstring_create(Utf8String *src, Runtime *runtime) {
     if (!src)return NULL;
-    JClass *jstr_clazz = classes_load_get_c(NULL, STR_CLASS_JAVA_LANG_STRING, runtime);
+    JClass *jstr_clazz = classes_load_get_with_clinit_c(NULL, STR_CLASS_JAVA_LANG_STRING, runtime);
     Instance *jstring = instance_create(runtime, jstr_clazz);
     instance_hold_to_thread(jstring, runtime);//hold for no gc
 
@@ -1660,7 +1668,7 @@ Instance *exception_create(s32 exception_type, Runtime *runtime) {
     jvm_printf("create exception : %s\n", STRS_CLASS_EXCEPTION[exception_type]);
 #endif
     Utf8String *clsName = utf8_create_c(STRS_CLASS_EXCEPTION[exception_type]);
-    JClass *clazz = classes_load_get(NULL, clsName, runtime);
+    JClass *clazz = classes_load_get_with_clinit(NULL, clsName, runtime);
     utf8_destory(clsName);
 
     Instance *ins = instance_create(runtime, clazz);
@@ -1683,7 +1691,7 @@ Instance *exception_create_str(s32 exception_type, Runtime *runtime, c8 const *e
     push_ref(para, jstr);
     instance_release_from_thread(jstr, runtime);
     Utf8String *clsName = utf8_create_c(STRS_CLASS_EXCEPTION[exception_type]);
-    JClass *clazz = classes_load_get(NULL, clsName, runtime);
+    JClass *clazz = classes_load_get_with_clinit(NULL, clsName, runtime);
     utf8_destory(clsName);
     Instance *ins = instance_create(runtime, clazz);
     instance_hold_to_thread(ins, runtime);
@@ -1702,7 +1710,7 @@ void exception_throw(s32 exception_type, Runtime *runtime, c8 const *errmsg) {
 
 
 Instance *method_type_create(Runtime *runtime, Instance *jloader, Utf8String *desc) {
-    JClass *cl = classes_load_get_c(NULL, STR_CLASS_JAVA_LANG_INVOKE_METHODTYPE, runtime);
+    JClass *cl = classes_load_get_with_clinit_c(NULL, STR_CLASS_JAVA_LANG_INVOKE_METHODTYPE, runtime);
     if (cl) {
         Instance *mt = instance_create(runtime, cl);
         instance_hold_to_thread(mt, runtime);
@@ -1721,7 +1729,7 @@ Instance *method_type_create(Runtime *runtime, Instance *jloader, Utf8String *de
 }
 
 Instance *method_handle_create(Runtime *runtime, MethodInfo *mi, s32 kind) {
-    JClass *cl = classes_load_get_c(NULL, STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLE, runtime);
+    JClass *cl = classes_load_get_with_clinit_c(NULL, STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLE, runtime);
     if (cl) {
         Instance *mh = instance_create(runtime, cl);
         instance_hold_to_thread(mh, runtime);
@@ -1751,7 +1759,7 @@ Instance *method_handle_create(Runtime *runtime, MethodInfo *mi, s32 kind) {
 }
 
 Instance *method_handles_lookup_create(Runtime *runtime, JClass *caller) {
-    JClass *cl = classes_load_get_c(NULL, STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLES_LOOKUP, runtime);
+    JClass *cl = classes_load_get_with_clinit_c(NULL, STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLES_LOOKUP, runtime);
     if (cl) {
         Instance *lookup = instance_create(runtime, cl);
         instance_hold_to_thread(lookup, runtime);
@@ -2046,6 +2054,68 @@ ByteBuf *load_file_from_classpath(PeerClassLoader *cloader, Utf8String *path) {
     }
     return bytebuf;
 }
+
+
+Instance *build_stack_element(Runtime *runtime, Runtime *target) {
+    JClass *clazz = classes_load_get_with_clinit_c(NULL, STR_CLASS_JAVA_LANG_STACKTRACE, target);
+
+    //ignore exception <init> stackframe
+    JClass *throwable = classes_load_get_with_clinit_c(NULL, STR_CLASS_JAVA_LANG_THROWABLE, target);
+    while (assignable_from(throwable, target->clazz)) {
+        target = target->parent;
+    }
+
+    if (clazz) {
+        ShortCut *shortcut = &runtime->jvm->shortcut;
+        Instance *ins = instance_create(runtime, clazz);
+        instance_hold_to_thread(ins, runtime);
+        instance_init(ins, runtime);
+        c8 *ptr;
+        //
+        ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_declaringClass);
+        if (ptr) {
+            Instance *name = jstring_create(target->clazz->name, runtime);
+            setFieldRefer(ptr, name);
+        }
+        //
+        ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_methodName);
+        if (ptr) {
+            Instance *name = jstring_create(target->method->name, runtime);
+            setFieldRefer(ptr, name);
+        }
+        //
+        ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_fileName);
+        if (ptr) {
+            Instance *name = jstring_create(target->clazz->source, runtime);
+            setFieldRefer(ptr, name);
+        }
+        //
+        ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_lineNumber);
+        if (ptr) {
+            if (target->method->is_native) {
+                setFieldInt(ptr, -1);
+            } else {
+                setFieldInt(ptr, getLineNumByIndex(target->method->converted_code, (s32) (target->pc - target->method->converted_code->code)));
+            }
+        }
+        if (target->parent && target->parent->parent) {
+            ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_parent);
+            if (ptr) {
+                Instance *parent = build_stack_element(runtime, target->parent);
+                setFieldRefer(ptr, parent);
+            }
+        }
+        ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_declaringClazz);
+        if (ptr) {
+            setFieldRefer(ptr, insOfJavaLangClass_create_get(runtime, target->clazz));
+        }
+
+        instance_release_from_thread(ins, runtime);
+        return ins;
+    }
+    return NULL;
+}
+
 
 void init_jni_func_table(MiniJVM *jvm) {
     jnienv.data_type_bytes = (s32 *) &DATA_TYPE_BYTES;

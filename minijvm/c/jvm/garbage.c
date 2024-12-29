@@ -292,6 +292,10 @@ s32 _gc_thread_run(void *para) {
             threadSleep(1000);
             continue;
         }
+        if (cur_mil - collector->lastgc < 2000) {
+            threadSleep(1000);
+            continue;
+        };
 
         s64 heap = gc_sum_heap(collector);
         if (cur_mil - collector->lastgc > jvm->garbage_collect_period_ms || heap >= jvm->max_heap_size * jvm->heap_overload_percent / 100) {

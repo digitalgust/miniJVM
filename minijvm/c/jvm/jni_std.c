@@ -73,7 +73,7 @@ s32 java_lang_Class_forName(Runtime *runtime, JClass *clazz) {
         Utf8String *ustr = utf8_create();
         jstring_2_utf8(jstr, ustr, runtime);
         utf8_replace_c(ustr, ".", "/");
-        cl = classes_load_get(classloader, ustr, runtime);
+        cl = classes_load_get_with_clinit(classloader, ustr, runtime);
         if (!cl) {
             Instance *exception = exception_create_str(JVM_EXCEPTION_CLASSNOTFOUND, runtime, utf8_cstr(ustr));
             push_ref(stack, (__refer) exception);
@@ -246,7 +246,7 @@ s32 java_lang_Class_getInterfaces(Runtime *runtime, JClass *clazz) {
     s32 i;
     for (i = 0; i < len; i++) {
         ConstantClassRef *ccr = (cl->interfacePool.clasz + i);
-        JClass *other = classes_load_get(cl->jloader, class_get_constant_utf8(cl, ccr->stringIndex)->utfstr, runtime);
+        JClass *other = classes_load_get_with_clinit(cl->jloader, class_get_constant_utf8(cl, ccr->stringIndex)->utfstr, runtime);
         if (other) {
             Instance *cins = insOfJavaLangClass_create_get(runtime, other);
             jarray_set_field(jarr, i, (s64) (intptr_t) cins);
@@ -296,7 +296,7 @@ s32 java_lang_Class_getComponentType(Runtime *runtime, JClass *clazz) {
             utf8_append_c(ustr, cstr);
         }
 
-        JClass *cl = classes_load_get(other->jloader, ustr, runtime);
+        JClass *cl = classes_load_get_with_clinit(other->jloader, ustr, runtime);
         if (cl) {
             push_ref(stack, cl->ins_class);
         } else {
@@ -1365,66 +1365,6 @@ s32 java_io_Throwable_printStackTrace0(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-Instance *buildStackElement(Runtime *runtime, Runtime *target) {
-    JClass *clazz = classes_load_get_c(NULL, STR_CLASS_JAVA_LANG_STACKTRACE, target);
-
-    //ignore exception <init> stackframe
-    JClass *throwable = classes_load_get_c(NULL, STR_CLASS_JAVA_LANG_THROWABLE, target);
-    while (assignable_from(throwable, target->clazz)) {
-        target = target->parent;
-    }
-
-    if (clazz) {
-        ShortCut *shortcut = &runtime->jvm->shortcut;
-        Instance *ins = instance_create(runtime, clazz);
-        instance_hold_to_thread(ins, runtime);
-        instance_init(ins, runtime);
-        c8 *ptr;
-        //
-        ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_declaringClass);
-        if (ptr) {
-            Instance *name = jstring_create(target->clazz->name, runtime);
-            setFieldRefer(ptr, name);
-        }
-        //
-        ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_methodName);
-        if (ptr) {
-            Instance *name = jstring_create(target->method->name, runtime);
-            setFieldRefer(ptr, name);
-        }
-        //
-        ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_fileName);
-        if (ptr) {
-            Instance *name = jstring_create(target->clazz->source, runtime);
-            setFieldRefer(ptr, name);
-        }
-        //
-        ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_lineNumber);
-        if (ptr) {
-            if (target->method->is_native) {
-                setFieldInt(ptr, -1);
-            } else {
-                setFieldInt(ptr, getLineNumByIndex(target->method->converted_code, (s32) (target->pc - target->method->converted_code->code)));
-            }
-        }
-        if (target->parent && target->parent->parent) {
-            ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_parent);
-            if (ptr) {
-                Instance *parent = buildStackElement(runtime, target->parent);
-                setFieldRefer(ptr, parent);
-            }
-        }
-        ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_declaringClazz);
-        if (ptr) {
-            setFieldRefer(ptr, insOfJavaLangClass_create_get(runtime, target->clazz));
-        }
-
-        instance_release_from_thread(ins, runtime);
-        return ins;
-    }
-    return NULL;
-}
-
 s32 java_io_Throwable_buildStackElement(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
     Instance *ins_thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
@@ -1432,7 +1372,7 @@ s32 java_io_Throwable_buildStackElement(Runtime *runtime, JClass *clazz) {
     if (ins_thread) {
         Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, ins_thread);
         //if (trun->thrd_info->is_suspend || trun->thrd_info->is_blocking) {
-        ins = buildStackElement(runtime, getLastSon(trun));
+        ins = build_stack_element(runtime, getLastSon(trun));
         //}
     }
     push_ref(stack, ins);

@@ -27,6 +27,7 @@
 
 package java.lang;
 import java.lang.ref.*;
+import java.util.function.Supplier;
 
 /**
  * This class provides thread-local variables.  These variables differ from
@@ -125,6 +126,15 @@ public class ThreadLocal<T> {
      */
     protected T initialValue() {
         return null;
+    }
+
+    public static <S> ThreadLocal<S> withInitial(Supplier<? extends S> supplier) {
+        return new ThreadLocal<S>() {
+            @Override
+            protected S initialValue() {
+                return supplier.get();
+            }
+        };
     }
 
     /**
