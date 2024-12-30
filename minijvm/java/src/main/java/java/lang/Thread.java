@@ -351,11 +351,19 @@ public class Thread implements Runnable {
      * @since JDK 1.0, CLDC 1.1
      */
     public void interrupt() {
-        interrupt0();
+        interrupt0(this);
     }
 
 
-    static public native boolean interrupted();
+    static public boolean interrupted() {
+        return interrupted0(Thread.currentThread());
+    }
+
+    static public native boolean interrupted0(Thread t);
+
+    public boolean isInterrupted() {
+        return interrupted0(this);
+    }
 
     /**
      * Tests if this thread is alive. A thread is alive if it has been started
@@ -549,7 +557,7 @@ public class Thread implements Runnable {
     /* Some private helper methods */
     private native void setPriority0(int newPriority);
 
-    private native void interrupt0();
+    static private native void interrupt0(Thread t);
 
     //Returns an array of stack trace elements representing the stack dump of this thread.
     public StackTraceElement[] getStackTrace() {

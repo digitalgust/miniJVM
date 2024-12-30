@@ -1285,10 +1285,14 @@ s32 java_lang_Thread_interrupt0(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-s32 java_lang_Thread_interrupted(Runtime *runtime, JClass *clazz) {
-
-    push_int(runtime->stack, runtime->thrd_info->is_interrupt != 0);
-
+s32 java_lang_Thread_interrupted0(Runtime *runtime, JClass *clazz) {
+    Instance *ins_thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
+    if (ins_thread == NULL) {
+        push_int(runtime->stack, 0);
+    } else {
+        Runtime *rt_thread = jthread_get_stackframe_value(runtime->jvm, ins_thread);
+        push_int(runtime->stack, rt_thread->thrd_info->is_interrupt != 0);
+    }
     return 0;
 }
 
@@ -1481,23 +1485,23 @@ static java_native_method METHODS_STD_TABLE[] = {
         {"java/lang/System",                    "nanoTime",               "()J",                                                           java_lang_System_nanotime},
         {"java/lang/System",                    "identityHashCode",       "(Ljava/lang/Object;)I",                                         java_lang_System_identityHashCode},
         {"java/lang/System",                    "getProperty0",           "(Ljava/lang/String;)Ljava/lang/String;",                        java_lang_System_getProperty0},
-        {"java/lang/System",                    "setProperty0",           "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",      java_lang_System_setProperty0},
-        {"java/lang/Thread",                    "currentThread",          "()Ljava/lang/Thread;",                                          java_lang_Thread_currentThread},
-        {"java/lang/Thread",                    "createStackFrame",       "()J",                                                           java_lang_Thread_createStackFrame},
-        {"java/lang/Thread",                    "yield",                  "()V",                                                           java_lang_Thread_yield},
-        {"java/lang/Thread",                    "sleep",                  "(J)V",                                                          java_lang_Thread_sleep},
-        {"java/lang/Thread",                    "start",                  "()V",                                                           java_lang_Thread_start},
-        {"java/lang/Thread",                    "isAlive",                "()Z",                                                           java_lang_Thread_isAlive},
-        {"java/lang/Thread",                    "activeCount",            "()I",                                                           java_lang_Thread_activeCount},
-        {"java/lang/Thread",                    "setPriority0",           "(I)V",                                                          java_lang_Thread_setPriority0},
-        {"java/lang/Thread",                    "interrupt0",             "()V",                                                           java_lang_Thread_interrupt0},
-        {"java/lang/Thread",                    "interrupted",            "()V",                                                           java_lang_Thread_interrupted},
-        {"java/lang/Thread",                    "setContextClassLoader0", "(Ljava/lang/ClassLoader;)V",                                    java_lang_Thread_setContextClassLoader0},
-        {"java/lang/Thread",                    "getContextClassLoader0", "()Ljava/lang/ClassLoader;",                                     java_lang_Thread_getContextClassLoader0},
-        {"java/lang/Throwable",                 "printStackTrace0",       "",                                                              java_io_Throwable_printStackTrace0},
-        {"java/lang/Throwable",                 "buildStackElement",      "(Ljava/lang/Thread;)Ljava/lang/StackTraceElement;",             java_io_Throwable_buildStackElement},
-        {"java/io/PrintStream",                 "printImpl",              "(Ljava/lang/String;)V",                                         java_io_PrintStream_printImpl},
-        {"java/lang/System",                    "getNativeProperties",    "()[Ljava/lang/String;",                                         java_lang_System_getNativeProperties},
+        {"java/lang/System",                    "setProperty0",           "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", java_lang_System_setProperty0},
+        {"java/lang/Thread",                    "currentThread",          "()Ljava/lang/Thread;",                                     java_lang_Thread_currentThread},
+        {"java/lang/Thread",                    "createStackFrame",       "()J",                                                      java_lang_Thread_createStackFrame},
+        {"java/lang/Thread",                    "yield",                  "()V",                                                      java_lang_Thread_yield},
+        {"java/lang/Thread",                    "sleep",                  "(J)V",                                                     java_lang_Thread_sleep},
+        {"java/lang/Thread",                    "start",                  "()V",                                                      java_lang_Thread_start},
+        {"java/lang/Thread",                    "isAlive",                "()Z",                                                      java_lang_Thread_isAlive},
+        {"java/lang/Thread",                    "activeCount",            "()I",                                                      java_lang_Thread_activeCount},
+        {"java/lang/Thread",                    "setPriority0",           "(I)V",                                                     java_lang_Thread_setPriority0},
+        {"java/lang/Thread",                    "interrupt0",             "(Ljava/lang/Thread;)V",                                    java_lang_Thread_interrupt0},
+        {"java/lang/Thread",                    "interrupted0",            "(Ljava/lang/Thread;)I",                                   java_lang_Thread_interrupted0},
+        {"java/lang/Thread",                    "setContextClassLoader0", "(Ljava/lang/ClassLoader;)V",                               java_lang_Thread_setContextClassLoader0},
+        {"java/lang/Thread",                    "getContextClassLoader0", "()Ljava/lang/ClassLoader;",                                java_lang_Thread_getContextClassLoader0},
+        {"java/lang/Throwable",                 "printStackTrace0",       "",                                                         java_io_Throwable_printStackTrace0},
+        {"java/lang/Throwable",                 "buildStackElement",      "(Ljava/lang/Thread;)Ljava/lang/StackTraceElement;",        java_io_Throwable_buildStackElement},
+        {"java/io/PrintStream",                 "printImpl",              "(Ljava/lang/String;)V",                                    java_io_PrintStream_printImpl},
+        {"java/lang/System",                    "getNativeProperties",    "()[Ljava/lang/String;",                                    java_lang_System_getNativeProperties},
 };
 
 
