@@ -89,6 +89,7 @@ public class GButton extends GObject {
     public void cursorPosEvent(int x, int y) {
         if (!isInArea(x, y)) {
             bt_pressed = false;
+            doStateChanged(this);
         }
     }
 
@@ -104,10 +105,10 @@ public class GButton extends GObject {
                 if (validAction(x, y)) doAction();
                 bt_pressed = false;
                 doStateChanged(this);
-            } else if (!isInArea(x, y)) {
-                bt_pressed = false;
-                doStateChanged(this);
             }
+        } else if (!isInArea(x, y)) {
+            bt_pressed = false;
+            doStateChanged(this);
         }
     }
 
