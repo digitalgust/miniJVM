@@ -1,12 +1,9 @@
 package org.mini.vm;
 
-public class VmStopException extends RuntimeException {
+public class VmStopException extends ThreadDeath {
 
     public VmStopException() {
         super();
     }
 
-    public VmStopException(String s) {
-        super(s);
-    }
 }
