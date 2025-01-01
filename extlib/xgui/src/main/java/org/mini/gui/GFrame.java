@@ -447,7 +447,11 @@ public class GFrame extends GContainer {
                 nvgTextJni(vg, x + w / 2, y + 16 + 1, title_arr, 0, title_arr.length);
 
                 nvgFontBlur(vg, 0);
-                nvgFillColor(vg, GToolkit.getStyle().getFrameTitleColor());
+                if(isFocus) {
+                    nvgFillColor(vg, GToolkit.getStyle().getFrameTitleColor());
+                }else{
+                    nvgFillColor(vg, GToolkit.getStyle().getDisabledTextFontColor());
+                }
                 nvgTextJni(vg, x + w / 2, y + 16, title_arr, 0, title_arr.length);
                 nvgRestore(vg);
             }

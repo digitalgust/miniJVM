@@ -1267,8 +1267,8 @@ struct _JavaThreadInfo {
     u8 volatile is_suspend;
     u8 volatile is_unparked;
     u8 volatile is_blocking;// some of native method will enter blocking state
-    u8 is_stop; //thread is marked as stop status, need set is_interrupt=1 also
-    u8 is_interrupt; //thread is marked as interrupt, set by Thread.interrupt();
+    u8 volatile is_stop; //thread is marked as stop status, need set is_interrupt=1 also
+    u8 volatile is_interrupt; //thread is marked as interrupt, set by Thread.interrupt();
     u8 type;// gc /jdwp /normal
 
     thrd_t pthread;

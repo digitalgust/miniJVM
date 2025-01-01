@@ -600,18 +600,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
             if (runtime->thrd_info->is_stop) {//if stop=1 then exit thread
                 ret = RUNTIME_STATUS_ERROR;
-                StackEntry tmp;
-                tmp.lvalue = 0;
-                tmp.rvalue = 0;
-                if (stack_size(stack) > 0) {
-                    peek_entry(stack->sp - 1, &tmp);
-                }
-                JClass *vmstopEx = classes_load_get_with_clinit_c(runtime->clazz->jloader, STR_CLASS_ORG_MINI_VM_VMSTOPEXCEPTION, runtime);
-                if (tmp.ins != NULL && tmp.ins->mb.clazz == vmstopEx) {
-                    goto label_exit_while;
-                }
-                Instance *instance = exception_create(JVM_EXCEPTION_VMSTOP, runtime);
-                push_ref(stack, instance);
                 goto label_exit_while;
             }
 
@@ -4167,7 +4155,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
         if (stack->sp != runtime->localvar + method->return_slots) {
             invoke_deepth(runtime);
             jvm_printf("Thread.stop = %d | Stack size  %s.%s%s in:%d out:%d  \n", runtime->thrd_info->is_stop, utf8_cstr(clazz->name), utf8_cstr(method->name), utf8_cstr(method->descriptor), (runtime->localvar - runtime->stack->store), stack_size(stack));
-            exit(1);
+            if (!runtime->thrd_info->is_stop)exit(1);//if is_stop , the stack will confuse
         }
     }
 #endif
