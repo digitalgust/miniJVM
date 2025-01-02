@@ -457,9 +457,9 @@ s32 org_mini_vm_RefNative_stopThread(Runtime *runtime, JClass *clazz) {
         push_int(runtime->stack, 0);
 
         //putin an exception to target thread
-        JClass *vmstopEx = classes_load_get_with_clinit_c(runtime->clazz->jloader, STR_CLASS_ORG_MINI_VM_VMSTOPEXCEPTION, runtime);
-        Instance *instance = exception_create(JVM_EXCEPTION_VMSTOP, runtime);
-        push_ref(trun->stack, instance);
+//        JClass *vmstopEx = classes_load_get_with_clinit_c(runtime->clazz->jloader, STR_CLASS_ORG_MINI_VM_VMSTOPEXCEPTION, runtime);
+//        Instance *instance = exception_create(JVM_EXCEPTION_VMSTOP, runtime);
+//        push_ref(trun->stack, instance);
     } else
         push_int(runtime->stack, 1);
 #if _JVM_DEBUG_LOG_LEVEL > 5

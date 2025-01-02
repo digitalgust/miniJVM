@@ -899,7 +899,7 @@ s32 jthread_run(void *para) {
 
 #if _JVM_DEBUG_LOG_LEVEL > 0
     s64 startAt = currentTimeMillis();
-    jvm_printf("[INFO]thread start %llx\n", (s64) (intptr_t) jthread);
+    jvm_printf("[INFO]thread start jthread %llx ,pthread %llx\n", (s64) (intptr_t) jthread, (s64) (intptr_t)thrd_current());
 #endif
     s32 ret = 0;
     runtime->thrd_info->pthread = thrd_current();

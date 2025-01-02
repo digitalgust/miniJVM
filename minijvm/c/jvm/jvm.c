@@ -326,7 +326,7 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     classes_load_get_with_clinit(NULL, clsName, runtime);
     //for interrupted thread
     utf8_clear(clsName);
-    utf8_append_c(clsName, STR_CLASS_JAVA_LANG_INTERRUPTEDEXCEPTION);//must load this class ,because it will be used when thread interrupt ,but it can not load when that thread is marked as interrupted
+    utf8_append_c(clsName, STR_CLASS_JAVA_LANG_INTERRUPTED);//must load this class ,because it will be used when thread interrupt ,but it can not load when that thread is marked as interrupted
     JClass *c2;
     c2 = classes_load_get_with_clinit(NULL, clsName, runtime);
     instance_create(runtime, c2);
