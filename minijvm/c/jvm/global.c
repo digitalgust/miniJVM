@@ -93,7 +93,7 @@ const c8 STR_JNI_ONLOAD_NOT_FOUND[] = "register function not found:%s\n";
 const c8 STR_JNI_ON_LOAD[] = "JNI_OnLoad";
 
 
-const c8 *STR_JNI_LIB_NOT_FOUND = "lib not found:%s\n";
+const c8 *STRS_CLASS_EXCEPTION[] = {
         STR_CLASS_JAVA_LANG_OUTOFMEMORYERROR,
         STR_CLASS_JAVA_LANG_VIRTUALMACHINEERROR,
         STR_CLASS_JAVA_LANG_NOCLASSDEFFOUNDERROR,
