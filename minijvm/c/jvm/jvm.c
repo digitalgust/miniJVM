@@ -17,12 +17,15 @@ void thread_boundle(Runtime *runtime) {
     Instance *t = instance_create(runtime, thread_clazz);
     instance_hold_to_thread(t, runtime);
     runtime->thrd_info->jthread = t;//Thread.init currentThread() need this
+    //runtime->clazz = thread_clazz;
     instance_init(t, runtime);
+    //destroy old runtime
     Runtime *r = jthread_get_stackframe_value(runtime->jvm, t);
     if (r) {
         gc_move_objs_thread_2_gc(r);
         runtime_destory(r);
     }
+    //bind new runtime
     jthread_set_stackframe_value(runtime->jvm, t, runtime);
     jthread_init(runtime->jvm, t);
     instance_release_from_thread(t, runtime);

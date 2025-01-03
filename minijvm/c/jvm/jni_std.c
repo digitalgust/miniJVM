@@ -1380,19 +1380,15 @@ s32 java_io_Throwable_printStackTrace0(Runtime *runtime, JClass *clazz) {
 
 s32 java_io_Throwable_buildStackElement(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
-    Instance *ins_thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
     Instance *ins = NULL;
-    if (ins_thread) {
-        Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, ins_thread);
-        if (trun) {
-            if (runtime->thrd_info->top_runtime == trun) {
-                s32 dt = getRuntimeDepth(trun);
-                s32 debug = 1;
-
-            }
-            ins = build_stack_element(runtime, getLastSon(trun));
-        }
-    }
+    //can only build current thread stack
+//    Instance *ins_thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
+//    if (ins_thread) {
+//        Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, ins_thread);
+//        if (trun) {
+    ins = build_stack_element(runtime, getLastSon(runtime));
+//        }
+//    }
     push_ref(stack, ins);
     return 0;
 }
