@@ -83,8 +83,6 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
 
     static AppManager instance = new AppManager();
 
-    //    GApplication preApp;
-
     PluginMgrForm mgrForm;
     XuiBrowser browser;
 
@@ -388,6 +386,10 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
     @Override
     public XuiBrowser getBrowser() {
         return browser;
+    }
+
+    public GApplication[] getRunningApps() {
+        return runningApps.values().toArray(new GApplication[0]);
     }
 
     /**

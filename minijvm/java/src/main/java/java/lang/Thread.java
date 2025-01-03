@@ -27,7 +27,7 @@
 package java.lang;
 
 import org.mini.vm.RefNative;
-import org.mini.vm.ThreadCreateHandler;
+import org.mini.vm.ThreadLifeHandler;
 
 /**
  * A <i>thread</i> is a thread of execution in a program. The Java Virtual
@@ -233,8 +233,8 @@ public class Thread implements Runnable {
         this.priority = parent.getPriority();
         setPriority0(priority);
         try {
-            if (createHandler != null) {
-                createHandler.threadCreated(this);
+            if (lifeHandler != null) {
+                lifeHandler.threadCreated(this);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -541,6 +541,29 @@ public class Thread implements Runnable {
     }
 
     /**
+     * This method is called by the system to give a Thread
+     * a chance to clean up before it actually exits.
+     */
+    private void exit() {
+        try {
+            if (lifeHandler != null) {
+                lifeHandler.threadDestroy(this);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (group != null) {
+            group.remove(this);
+            group = null;
+        }
+        /* Aggressively null out all reference fields: see bug 4006245 */
+        target = null;
+        /* Speed the release of some of these resources */
+        threadLocals = null;
+        uncaughtExceptionHandler = null;
+    }
+
+    /**
      * Returns a string representation of this thread, including the thread's
      * name and priority.
      *
@@ -581,7 +604,7 @@ public class Thread implements Runnable {
     // null unless explicitly set
     private volatile UncaughtExceptionHandler uncaughtExceptionHandler;
 
-    private static ThreadCreateHandler createHandler;
+    private static ThreadLifeHandler lifeHandler;
 
     // null unless explicitly set
     private static volatile UncaughtExceptionHandler defaultUncaughtExceptionHandler;
@@ -620,15 +643,15 @@ public class Thread implements Runnable {
         }
     }
 
-    public static void setThreadCreateHandler(ThreadCreateHandler r) {
+    public static void setThreadLifeHandler(ThreadLifeHandler r) {
         //if caller is not VmUtil.class, throw SecurityException
         checkCaller();
-        createHandler = r;
+        lifeHandler = r;
     }
 
-    public static ThreadCreateHandler getThreadCreateHandler() {
+    public static ThreadLifeHandler getThreadLifeHandler() {
         checkCaller();
-        return createHandler;
+        return lifeHandler;
     }
 
     public enum State {

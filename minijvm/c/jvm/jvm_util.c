@@ -899,7 +899,7 @@ s32 jthread_run(void *para) {
 
 #if _JVM_DEBUG_LOG_LEVEL > 0
     s64 startAt = currentTimeMillis();
-    jvm_printf("[INFO]thread start jthread %llx ,pthread %llx\n", (s64) (intptr_t) jthread, (s64) (intptr_t)thrd_current());
+    jvm_printf("[INFO]thread(pthread %llx) start jthread %llx\n", (s64) (intptr_t) thrd_current(), (s64) (intptr_t) jthread);
 #endif
     s32 ret = 0;
     runtime->thrd_info->pthread = thrd_current();
@@ -908,8 +908,6 @@ s32 jthread_run(void *para) {
     Utf8String *methodType = utf8_create_c("()V");
     MethodInfo *method = NULL;
     method = find_instance_methodInfo_by_name(jthread, methodName, methodType, runtime);
-    utf8_destory(methodName);
-    utf8_destory(methodType);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     jvm_printf("therad_loader    %s.%s%s  \n", utf8_cstr(method->_this_class->name),
                utf8_cstr(method->name), utf8_cstr(method->descriptor));
@@ -922,10 +920,28 @@ s32 jthread_run(void *para) {
     if (ret != RUNTIME_STATUS_NORMAL) {
         print_exception(runtime);
     }
+
+    //run Thread.exit()
+    utf8_clear(methodName);
+    utf8_clear(methodType);
+    utf8_append_c(methodName, "exit");
+    utf8_append_c(methodType, "()V");
+    runtime->thrd_info->thread_status = THREAD_STATUS_RUNNING;
+    runtime->thrd_info->is_interrupt = 0;
+    runtime->thrd_info->is_stop = 0;
+    runtime->thrd_info->is_suspend = 0;
+    runtime->thrd_info->is_blocking = 0;
+    method = find_instance_methodInfo_by_name(jthread, methodName, methodType, runtime);
+    push_ref(runtime->stack, (__refer) jthread);
+    execute_method_impl(method, runtime);
+
     runtime->thrd_info->thread_status = THREAD_STATUS_ZOMBIE;
     jthread_dispose(jthread, runtime);
     gc_move_objs_thread_2_gc(runtime);
     runtime_destory(runtime);
+
+    utf8_destory(methodName);
+    utf8_destory(methodType);
 #if _JVM_DEBUG_LOG_LEVEL > 0
     s64 spent = currentTimeMillis() - startAt;
     jvm_printf("[INFO]thread over %llx , return %d , spent : %lld\n", (s64) (intptr_t) jthread, ret, spent);

@@ -103,7 +103,7 @@ public abstract class GApplication {
 
     public final void closeApp() {
         if (getState() == AppState.STATE_CLOSED) return;
-        System.out.println("Closed app : " + this);
+        System.out.println("[INFO]Closed app : " + this);
         try {
             onClose();
         } catch (Exception e) {
@@ -234,12 +234,10 @@ public abstract class GApplication {
 
     public void addThread(Thread t) {
         threads.add(t);
-        for (Thread t1 : threads) { //copyonwritelist remove directly
-            //System.out.println(t1 + " is alive " + t1.isAlive());
-            if (t1.getState() == Thread.State.TERMINATED) {
-                threads.remove(t1);
-            }
-        }
+    }
+
+    public void removeThread(Thread t) {
+        threads.remove(t);
     }
 
     public void closeThreads() {
