@@ -14,7 +14,7 @@ extern "C" {
 #if __JVM_OS_IOS__ || __JVM_OS_CYGWIN__ || __JVM_ARCH_32__
     #define JIT_ENABLE 0
 #else
-    #define JIT_ENABLE 0
+    #define JIT_ENABLE 01
 #endif
 
 #define JIT_COMPILE_EXEC_COUNT 500

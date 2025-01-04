@@ -4065,6 +4065,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     }
 
                     label_exception_handle:
+                    if (ret == RUNTIME_STATUS_ERROR) {
+                        goto label_exit_while;
+                    }
                     // there is exception handle, but not error handle
                     runtime->pc = ip;
                     ret = RUNTIME_STATUS_EXCEPTION;

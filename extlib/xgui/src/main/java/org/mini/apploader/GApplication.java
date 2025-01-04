@@ -244,7 +244,7 @@ public abstract class GApplication {
         for (Thread t : threads) {
             try {
                 //System.out.println(this + " INTERRUPT " + t);
-                t.interrupt();
+                t.stop();
             } catch (Exception e) {
                 e.printStackTrace();
             }
