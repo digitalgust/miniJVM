@@ -144,7 +144,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
 
     abstract void resetSelect();
 
-    abstract void setCaretIndex(int caretIndex);
+    abstract public void setCaretIndex(int caretIndex);
 
     abstract public int getCaretIndex();
 

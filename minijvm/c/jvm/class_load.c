@@ -1877,6 +1877,7 @@ JClass *class_parse(Instance *loader, ByteBuf *bytebuf, Runtime *runtime) {
     }
     return tmpclazz;
 }
+
 /**
  * Loads a Java class from the classpath using specified ClassLoader or the bootstrap classloader.
  *
@@ -1939,8 +1940,8 @@ JClass *load_class(Instance *jloader, Utf8String *pClassName, Runtime *runtime) 
                         tmpclazz = insOfJavaLangClass_get_classHandle(runtime, ins_of_clazz);
                     }
                 } else {
-                    jvm_printf("class not found:%s\n", utf8_cstr(clsName));
-                    print_exception(runtime);
+                    //jvm_printf("class_load.c class not found:%s\n", utf8_cstr(clsName));
+                    //print_exception(runtime);
                     //Instance *ins = pop_ref(runtime->stack);
                     //jvm_printf("load class exception:%s\n", utf8_cstr(ins->mb.clazz->name));
                 }
@@ -1950,7 +1951,7 @@ JClass *load_class(Instance *jloader, Utf8String *pClassName, Runtime *runtime) 
     }
 #if _JVM_DEBUG_LOG_LEVEL > 2
     if (!tmpclazz) {
-        //jvm_printf("class not found in bootstrap classpath:  %s \n", utf8_cstr(clsName));
+        jvm_printf("class not found in bootstrap classpath:  %s \n", utf8_cstr(clsName));
     }
 #endif
     utf8_destory(clsName);

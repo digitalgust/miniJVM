@@ -116,9 +116,11 @@ public class GLMath {
      * Draw img to imgCanvas,
      * limit in clipX,clipY,clipW,clipH
      * image transform M00,M01,M02(translateX),M10,M11,M12(translateY)
-     * [ x']   [  m00  m01  m02  ] [ x ]   [ m00x + m01y + m02 ]
-     * [ y'] = [  m10  m11  m12  ] [ y ] = [ m10x + m11y + m12 ]
-     * [ 1 ]   [   0    0    1   ] [ 1 ]   [         1         ]
+     * <pre>
+     * 	[  x' ]   [  m00  m01 (m02) ] [  x  ]   [ m00x + m01y ]
+     * 	[  y' ] = [  m10  m11 (m12) ] [  y  ] = [ m10x + m11y ]
+     * 	[ (1) ]   [  (0)  (0) ( 1 ) ] [ (1) ]   [     (1)     ]
+     * </pre>
      * <p>
      * if return is not 0, error
      *

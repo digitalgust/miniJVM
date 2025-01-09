@@ -19,3 +19,5 @@ call mvn clean install deploy -P release
 cd ..\..\..\binary
 cd ..\extlib\xgui\
 call mvn clean install deploy -P release
+
+cd ..\..\binary

@@ -42,6 +42,10 @@ public class GTextField extends GTextObject {
 
     protected float wordShowOffsetX = 0.f;
 
+    float resetWidth = 0.f;
+    float searchWidth = 0.f;
+    static final float PAD = 4f;
+
     public GTextField(GForm form) {
         this(form, "", "", 0f, 0f, 1f, 1f);
     }
@@ -52,7 +56,8 @@ public class GTextField extends GTextObject {
         setHint(hint);
         setLocation(left, top);
         setSize(width, height);
-        reset_boundle = new float[]{left + width - height, top, height, height};
+        setBoxStyle(BOX_STYLE_EDIT);
+        setResetEnable(true);
         setFocusListener(this);
 
         setCornerRadius(4.f);
@@ -71,6 +76,11 @@ public class GTextField extends GTextObject {
 
     public void setBoxStyle(int boxStyle) {
         this.boxStyle = boxStyle;
+        if (boxStyle == BOX_STYLE_SEARCH) {
+            searchWidth = GToolkit.getStyle().getIconFontWidth() * 2f;
+        } else {
+            searchWidth = 0.f;
+        }
     }
 
     public void setMaxTextLength(int len) {
@@ -88,10 +98,22 @@ public class GTextField extends GTextObject {
 
     public void setResetEnable(boolean resetEnable) {
         this.resetEnable = resetEnable;
+        if (resetEnable) {
+            resetWidth = GToolkit.getStyle().getIconFontWidth() * 2.5f;
+        } else {
+            resetWidth = 0.f;
+        }
+        reset_boundle = new float[]{getLocationLeft() + getW() - resetWidth, getLocationTop(), resetWidth, getH()};
+
     }
 
     public boolean isResetEnable() {
         return resetEnable;
+    }
+
+    public void setSize(float w, float h) {
+        super.setSize(w, h);
+        setResetEnable(resetEnable);//重新计算reset_boundle
     }
 
     @Override
@@ -495,7 +517,7 @@ public class GTextField extends GTextObject {
             nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 
-            nvgTextJni(vg, x + FONT_WIDTH * 1.5f, y + h * 0.55f, search_arr, 0, search_arr.length);
+            nvgTextJni(vg, x + FONT_WIDTH, y + h * 0.55f, search_arr, 0, search_arr.length);
             leftIcons = 2;
         } else {
             GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h, getCornerRadius());
@@ -506,7 +528,7 @@ public class GTextField extends GTextObject {
             nvgFontFace(vg, GToolkit.getFontIcon());
             nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-            nvgTextJni(vg, x + w - h * 0.55f, y + h * 0.55f, reset_arr, 0, reset_arr.length);
+            nvgTextJni(vg, x + w - resetWidth * 0.5f, y + h * 0.55f, reset_arr, 0, reset_arr.length);
         }
 
         nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
@@ -525,10 +547,10 @@ public class GTextField extends GTextObject {
                 text_arr = toCstyleBytes(textsb.toString());
             }
         }
-        float wordx = x + FONT_WIDTH * leftIcons;
+        float wordx = x + searchWidth + PAD;
         float wordy = y + boundle[HEIGHT] * 0.5f;
         float text_show_area_x = wordx;
-        float text_show_area_w = boundle[WIDTH] - FONT_WIDTH * (leftIcons + 2.5f);
+        float text_show_area_w = boundle[WIDTH] - PAD * 2 - searchWidth - resetWidth;
         float text_width = Nanovg.nvgTextBoundsJni(vg, 0, 0, text_arr, 0, text_arr.length, null);
         if (parent.getCurrent() != this && (textsb == null || textsb.length() == 0)) {
             if (hint_arr != null) {
@@ -570,10 +592,11 @@ public class GTextField extends GTextObject {
                 }
 
                 //本次计算,下次绘制生效
-                if (Math.abs(caretx - text_show_area_x) < 50 && leftShowCharIdx > 0) {
+                float mid = (text_show_area_w) / 3;
+                if (mid > 50) mid = 50;//如果文字宽度小于100，会左右不停的闪，相互拉锯
+                if (Math.abs(caretx - text_show_area_x) < mid && leftShowCharIdx > 0) {
                     wordShowOffsetX += 20;
-                }
-                if (Math.abs(caretx - text_show_area_right) < 50 && rightShowCharIdx < text_pos.length - 1) {
+                } else if (Math.abs(caretx - text_show_area_right) < mid && rightShowCharIdx < text_pos.length - 1) {
                     wordShowOffsetX -= 20;
                 }
 
@@ -594,6 +617,9 @@ public class GTextField extends GTextObject {
             if (selectStart != -1 && selectEnd != -1) {
                 float selStartX = getPosXByIndex(selectStart);
                 float selEndX = getPosXByIndex(selectEnd);
+                if (selStartX < text_show_area_x) {
+                    selStartX = text_show_area_x;
+                }
                 if (selStartX > text_show_area_x + text_show_area_w) {
                     selStartX = text_show_area_x + text_show_area_w;
                 }

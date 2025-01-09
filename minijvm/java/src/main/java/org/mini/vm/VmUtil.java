@@ -84,4 +84,71 @@ public class VmUtil {
         }
         return null;
     }
+
+    /**
+     * thread create handler
+     * 用于把线程创建事件通知给应用
+     */
+    static class ThreadHandler implements ThreadLifeHandler {
+        ThreadLifeHandler[] handlers;
+
+        void addHandler(ThreadLifeHandler handler) {
+            if (handlers == null) {
+                handlers = new ThreadLifeHandler[]{handler};
+            } else {
+                ThreadLifeHandler[] nhandlers = new ThreadLifeHandler[handlers.length + 1];
+                System.arraycopy(handlers, 0, nhandlers, 0, handlers.length);
+                nhandlers[handlers.length] = handler;
+                handlers = nhandlers;
+            }
+        }
+
+        void removeHandler(ThreadLifeHandler handler) {
+            for (int i = 0; i < handlers.length; i++) {
+                if (handlers[i] == handler) {
+                    ThreadLifeHandler[] nhandlers = new ThreadLifeHandler[handlers.length - 1];
+                    System.arraycopy(handlers, 0, nhandlers, 0, i);
+                    System.arraycopy(handlers, i + 1, nhandlers, i, handlers.length - i - 1);
+                    handlers = nhandlers;
+                    break;
+                }
+            }
+        }
+
+        @Override
+        public synchronized void threadCreated(Thread t) {
+            //System.out.println("threadCreated:" + t.getName());
+            for (ThreadLifeHandler handler : handlers) {
+                try {
+                    handler.threadCreated(t);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+
+        @Override
+        public synchronized void threadDestroy(Thread t) {
+            //System.out.println("threadCreated:" + t.getName());
+            for (ThreadLifeHandler handler : handlers) {
+                try {
+                    handler.threadDestroy(t);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    static ThreadHandler threadHandler = new ThreadHandler();
+
+    public synchronized static void addThreadLifeHandler(ThreadLifeHandler r) {
+        threadHandler.addHandler(r);
+        Thread.setThreadLifeHandler(threadHandler);
+    }
+
+    public synchronized static void removeThreadLifeHandler(ThreadLifeHandler r) {
+        threadHandler.removeHandler(r);
+    }
 }

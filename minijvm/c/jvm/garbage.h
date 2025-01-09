@@ -34,6 +34,7 @@ struct _GcCollectorType {
 
     //
     thrd_t garbage_thread;// Garbage collection thread
+    Hashtable *objs_2_count;
 
     spinlock_t lock;
     //

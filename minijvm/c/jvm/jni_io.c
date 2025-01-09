@@ -1465,19 +1465,9 @@ s32 org_mini_zip_ZipFile_getEntryIndex0(Runtime *runtime, JClass *clazz) {
     Instance *name_arr = localvar_getRefer(runtime->localvar, 1);
     s32 ret = -1;
     if (zip_path_arr && name_arr) {
-        Utf8String *filepath = utf8_create_c(zip_path_arr->arr_body);
-        ByteBuf *zip_path = bytebuf_create(0);
-        conv_utf8_2_platform_encoding(zip_path, filepath);
-        utf8_clear(filepath);
-        utf8_append_c(filepath, name_arr->arr_body);
-        ByteBuf *name = bytebuf_create(0);
-        //conv_utf8_2_platform_encoding(name, filepath);
 
-        ret = zip_get_file_index(zip_path->buf, utf8_cstr(filepath));
+        ret = zip_get_file_index(zip_path_arr->arr_body, name_arr->arr_body);
 
-        bytebuf_destory(zip_path);
-        bytebuf_destory(name);
-        utf8_destory(filepath);
     }
     push_int(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1492,19 +1482,9 @@ s32 org_mini_zip_ZipFile_getEntrySize0(Runtime *runtime, JClass *clazz) {
     Instance *name_arr = localvar_getRefer(runtime->localvar, 1);
     s64 ret = -1;
     if (zip_path_arr && name_arr) {
-        Utf8String *filepath = utf8_create_c(zip_path_arr->arr_body);
-        ByteBuf *zip_path = bytebuf_create(0);
-        conv_utf8_2_platform_encoding(zip_path, filepath);
-        utf8_clear(filepath);
-        utf8_append_c(filepath, name_arr->arr_body);
-        ByteBuf *name = bytebuf_create(0);
-        //conv_utf8_2_platform_encoding(name, filepath);
 
-        ret = zip_get_file_unzip_size(zip_path->buf, utf8_cstr(filepath));
+        ret = zip_get_file_unzip_size(zip_path_arr->arr_body, name_arr->arr_body);
 
-        bytebuf_destory(zip_path);
-        bytebuf_destory(name);
-        utf8_destory(filepath);
     }
     push_long(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1519,26 +1499,14 @@ s32 org_mini_zip_ZipFile_getEntry0(Runtime *runtime, JClass *clazz) {
     Instance *name_arr = localvar_getRefer(runtime->localvar, 1);
     s32 ret = -1;
     if (zip_path_arr && name_arr) {
-        Utf8String *filepath = utf8_create_c(zip_path_arr->arr_body);
-        ByteBuf *zip_path = bytebuf_create(0);
-        conv_utf8_2_platform_encoding(zip_path, filepath);
-        utf8_clear(filepath);
-        utf8_append_c(filepath, name_arr->arr_body);
-        ByteBuf *name = bytebuf_create(0);
-        //conv_utf8_2_platform_encoding(name, filepath);
-
-        s64 filesize = zip_get_file_unzip_size(zip_path->buf, utf8_cstr(filepath));
+        s64 filesize = zip_get_file_unzip_size(zip_path_arr->arr_body, name_arr->arr_body);
         if (filesize >= 0) {
             Instance *arr = jarray_create_by_type_index(runtime, (s32) filesize, DATATYPE_BYTE);
-            ret = zip_loadfile_to_mem(zip_path->buf, utf8_cstr(filepath), arr->arr_body, filesize);
+            ret = zip_loadfile_to_mem(zip_path_arr->arr_body, name_arr->arr_body, arr->arr_body, filesize);
             if (ret == 0) {
                 push_ref(runtime->stack, arr);
             }
         }
-
-        bytebuf_destory(zip_path);
-        bytebuf_destory(name);
-        utf8_destory(filepath);
     }
     if (ret) {
         push_ref(runtime->stack, NULL);
@@ -1556,20 +1524,10 @@ s32 org_mini_zip_ZipFile_putEntry0(Runtime *runtime, JClass *clazz) {
     Instance *content_arr = localvar_getRefer(runtime->localvar, 2);
     s32 ret = -1;
     if (zip_path_arr && name_arr) {
-        Utf8String *filepath = utf8_create_c(zip_path_arr->arr_body);
-        ByteBuf *zip_path = bytebuf_create(0);
-        conv_utf8_2_platform_encoding(zip_path, filepath);
-        utf8_clear(filepath);
-        utf8_append_c(filepath, name_arr->arr_body);
-        ByteBuf *name = bytebuf_create(0);
-        //conv_utf8_2_platform_encoding(name, filepath);
 
-        zip_savefile_mem(zip_path->buf, utf8_cstr(filepath), content_arr ? content_arr->arr_body : NULL, content_arr ? content_arr->arr_length : 0);
+        zip_savefile_mem(zip_path_arr->arr_body, name_arr->arr_body, content_arr ? content_arr->arr_body : NULL, content_arr ? content_arr->arr_length : 0);
         ret = 0;
 
-        bytebuf_destory(zip_path);
-        bytebuf_destory(name);
-        utf8_destory(filepath);
     }
     push_int(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1584,14 +1542,9 @@ s32 org_mini_zip_ZipFile_fileCount0(Runtime *runtime, JClass *clazz) {
 
     s32 ret = 0;
     if (zip_path_arr) {
-        Utf8String *filepath = utf8_create_c(zip_path_arr->arr_body);
-        ByteBuf *zip_path = bytebuf_create(0);
-        conv_utf8_2_platform_encoding(zip_path, filepath);
 
-        ret = zip_filecount(zip_path->buf);
+        ret = zip_filecount(zip_path_arr->arr_body);
 
-        bytebuf_destory(zip_path);
-        utf8_destory(filepath);
     }
     push_int(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1605,11 +1558,8 @@ s32 org_mini_zip_ZipFile_listFiles0(Runtime *runtime, JClass *clazz) {
     Instance *zip_path_arr = localvar_getRefer(runtime->localvar, 0);
     s32 ret = -1;
     if (zip_path_arr) {
-        Utf8String *filepath = utf8_create_c(zip_path_arr->arr_body);
-        ByteBuf *zip_path = bytebuf_create(0);
-        conv_utf8_2_platform_encoding(zip_path, filepath);
 
-        ArrayList *list = zip_get_filenames(zip_path->buf);
+        ArrayList *list = zip_get_filenames(zip_path_arr->arr_body);
         if (list) {
             Utf8String *clustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
             Instance *jarr = jarray_create_by_type_name(runtime, list->length, clustr, NULL);
@@ -1627,8 +1577,6 @@ s32 org_mini_zip_ZipFile_listFiles0(Runtime *runtime, JClass *clazz) {
             ret = 0;
         }
 
-        bytebuf_destory(zip_path);
-        utf8_destory(filepath);
     }
     if (ret == -1) {
         push_ref(runtime->stack, NULL);
@@ -1645,14 +1593,9 @@ s32 org_mini_zip_ZipFile_isDirectory0(Runtime *runtime, JClass *clazz) {
     s32 index = localvar_getInt(runtime->localvar, 1);
     s32 ret = -1;
     if (zip_path_arr) {
-        Utf8String *filepath = utf8_create_c(zip_path_arr->arr_body);
-        ByteBuf *zip_path = bytebuf_create(0);
-        conv_utf8_2_platform_encoding(zip_path, filepath);
 
-        ret = zip_is_directory(zip_path->buf, index);
+        ret = zip_is_directory(zip_path_arr->arr_body, index);
 
-        bytebuf_destory(zip_path);
-        utf8_destory(filepath);
     }
 
     push_int(runtime->stack, ret);

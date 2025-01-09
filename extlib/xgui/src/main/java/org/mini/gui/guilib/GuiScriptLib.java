@@ -4,6 +4,7 @@
  */
 package org.mini.gui.guilib;
 
+import org.mini.apploader.AppManager;
 import org.mini.gui.*;
 import org.mini.gui.gscript.*;
 import org.mini.http.MiniHttpClient;
@@ -633,7 +634,7 @@ public class GuiScriptLib extends Lib {
 
     public DataType showMsg(ArrayList<DataType> para) {
         String msg = Interpreter.popBackStr(para);
-        GFrame f = GToolkit.getMsgFrame(form, GLanguage.getString("Message"), msg);
+        GFrame f = GToolkit.getMsgFrame(form, AppManager.getInstance().getString("Message"), msg);
         GToolkit.showFrame(f);
         form.flush();
         return null;
@@ -644,9 +645,9 @@ public class GuiScriptLib extends Lib {
         String callback = Interpreter.popBackStr(para);
         GFrame f = GToolkit.getConfirmFrame(
                 form,
-                GLanguage.getString("Message"),
+                AppManager.getInstance().getString("Message"),
                 msg,
-                GLanguage.getString("Ok"),
+                AppManager.getInstance().getString("Ok"),
                 (obj) -> {
                     if (callback != null) {
                         if (callback.contains(".")) {

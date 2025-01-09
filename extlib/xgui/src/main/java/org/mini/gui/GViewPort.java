@@ -30,9 +30,12 @@ public class GViewPort extends GContainer {
 
     @Override
     public void setLocation(float x, float y) {
+        float oldLeft = viewBoundle[LEFT];
+        float oldTop = viewBoundle[TOP];
         viewBoundle[LEFT] = x;
         viewBoundle[TOP] = y;
         reAlign();
+        doLocationChanged(oldLeft, oldTop, x, y);
     }
 
     @Override
@@ -122,8 +125,11 @@ public class GViewPort extends GContainer {
     public void move(float dx, float dy) {
         boundle[LEFT] += dx;
         boundle[TOP] += dy;
+        float oldLeft = viewBoundle[LEFT];
+        float oldTop = viewBoundle[TOP];
         viewBoundle[LEFT] += dx;
         viewBoundle[TOP] += dy;
+        doLocationChanged(oldLeft, oldTop, viewBoundle[LEFT], viewBoundle[TOP]);
     }
 
     @Override

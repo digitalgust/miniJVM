@@ -8,6 +8,7 @@ public class GHomeButton extends GPanel implements GActionListener {
     public static final float DEF_X = 16f, DEF_Y = 40f;
     public static final float DEF_W = 32f, DEF_H = 32f;
     public static final float ICON_WH = 8f, PAD = 0f;
+    public static final String FLOAT_HOME_BOTTOM = "FLOAT_HOME_BOTTOM";
 
     GImage butImg = GImage.createImageFromJar("/res/ui/home.png");
     GImage downImg = GImage.createImageFromJar("/res/ui/yellow.png");
@@ -20,6 +21,7 @@ public class GHomeButton extends GPanel implements GActionListener {
 
     public GHomeButton(GForm form) {
         super(form, form.getW() * .5f, form.getH() * .5f, DEF_W, DEF_H);
+        setName(FLOAT_HOME_BOTTOM);
         int saveX = AppLoader.getHomeIconX();
         int saveY = AppLoader.getHomeIconY();
         setLocation(saveX, saveY);

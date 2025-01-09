@@ -29,7 +29,6 @@ import java.util.*;
  * 同时StandalongGuiAppClassLoader加载的类B(2)也向A.c存入了B(2)ins，
  * 获取A.c时，结果包含了B(1)ins，导致不同类加载器的类和实例混淆
  * 为解决这类问题，则A中不能有静态容器A.c,改变设计
- *
  */
 public abstract class ClassLoader {
 
@@ -64,7 +63,7 @@ public abstract class ClassLoader {
     protected void finalize() throws Throwable {
         super.finalize();
         RefNative.destroyNativeClassLoader(this);
-        System.out.println(this + " finalized");
+        System.out.println("[INFO]" + this + " finalized");
     }
 
     private Map<String, Package> packages() {
@@ -162,15 +161,19 @@ public abstract class ClassLoader {
         Class c = findLoadedClass(name);
 
         if (c == null) {
-            if (parent != null) {
-                try {
-                    c = parent.loadClass(name);
-                } catch (ClassNotFoundException ok) {
+            try {
+                if (parent != null) {
+                    c = parent.loadClass(name, false);
+                } else {
+                    c = RefNative.getBootstrapClassByName(name);
                 }
-            }
-
-            if (c == null) {
+            } catch (ClassNotFoundException e) {
+                // If still not found, then call findClass in order
+                // to find the class.
                 c = findClass(name);
+                if (c == null) {
+                    throw new ClassNotFoundException(name);
+                }
             }
         }
 

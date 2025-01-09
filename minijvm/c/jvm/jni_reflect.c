@@ -95,14 +95,17 @@ s32 org_mini_vm_RefNative_getBootstrapClassByName(Runtime *runtime, JClass *claz
     Utf8String *ustr = utf8_create();
     jstring_2_utf8(jstr, ustr, runtime);
     utf8_replace_c(ustr, ".", "/");
-    JClass *cl = classes_load_get(NULL, ustr, runtime);
+    JClass *cl = classes_load_get_with_clinit(NULL, ustr, runtime);
     utf8_destory(ustr);
+    s32 ret = 0;
     if (cl) {
         push_ref(runtime->stack, insOfJavaLangClass_create_get(runtime, cl));
     } else {
-        push_ref(runtime->stack, NULL);
+        Instance *exception = exception_create(JVM_EXCEPTION_CLASSNOTFOUND, runtime);
+        push_ref(runtime->stack, (__refer) exception);
+        ret = RUNTIME_STATUS_EXCEPTION;
     }
-    return 0;
+    return ret;
 }
 
 
@@ -446,15 +449,19 @@ s32 org_mini_vm_RefNative_getFrameCount(Runtime *runtime, JClass *clazz) {
 
 s32 org_mini_vm_RefNative_stopThread(Runtime *runtime, JClass *clazz) {
     Instance *thread = (Instance *) localvar_getRefer(runtime->localvar, 0);
-    Long2Double l2d;
-    l2d.l = localvar_getLong(runtime->localvar, 1);
-    Instance *ins = (__refer) (intptr_t) l2d.l;
+    Instance *ins = localvar_getRefer(runtime->localvar, 1);
     //After the thread ends, the runtime will be cleared because it is a stack variable and cannot be used again.
     Runtime *trun = (Runtime *) jthread_get_stackframe_value(runtime->jvm, thread);
     if (trun) {
+        trun->thrd_info->is_stop = 1;
         push_int(runtime->stack, 0);
+
+        //putin an exception to target thread
+//        JClass *vmstopEx = classes_load_get_with_clinit_c(runtime->clazz->jloader, STR_CLASS_ORG_MINI_VM_VMSTOPEXCEPTION, runtime);
+//        Instance *instance = exception_create(JVM_EXCEPTION_VMSTOP, runtime);
+//        push_ref(trun->stack, instance);
     } else
-        push_int(runtime->stack, 0);
+        push_int(runtime->stack, 1);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     jvm_printf("com_egls_jvm_RefNative_stopThread\n");
 #endif
@@ -513,7 +520,11 @@ s32 org_mini_vm_RefNative_defineClass(Runtime *runtime, JClass *clazz) {
     bytebuf_destory(bytebuf);
 
     if (!cl->source)cl->source = cl->name; //maybe lambda generated class
-
+    if (
+            utf8_equals_c(cl->name, "org/objectweb/asm/ClassAdapter")
+            ) {
+        s32 debug = 1;
+    }
     Instance *clIns = insOfJavaLangClass_create_get(runtime, cl);
 
     setFieldRefer(getInstanceFieldPtr(clIns, runtime->jvm->shortcut.class_classLoader), cloader);
@@ -697,7 +708,7 @@ s32 org_mini_reflect_ReflectClass_mapClass(Runtime *runtime, JClass *clazz) {
                 Instance *jarr = jarray_create_by_type_index(runtime, target->interfacePool.clasz_used, DATATYPE_LONG);
                 setFieldRefer(ptr, jarr);
                 for (i = 0; i < target->interfacePool.clasz_used; i++) {
-                    JClass *cl = classes_load_get(ins->mb.clazz->jloader, target->interfacePool.clasz[i].name, runtime);
+                    JClass *cl = classes_load_get_with_clinit(ins->mb.clazz->jloader, target->interfacePool.clasz[i].name, runtime);
                     s64 val = (u64) (intptr_t) cl;
                     jarray_set_field(jarr, i, val);
                 }
@@ -750,7 +761,7 @@ s32 org_mini_reflect_ReflectField_mapField(Runtime *runtime, JClass *clazz) {
 }
 
 Instance *localVarTable2java(JClass *clazz, LocalVarTable *lvt, Runtime *runtime) {
-    JClass *cl = classes_load_get_c(NULL, JDWP_CLASS_LOCALVARTABLE, runtime);
+    JClass *cl = classes_load_get_with_clinit_c(NULL, JDWP_CLASS_LOCALVARTABLE, runtime);
     Instance *ins = instance_create(runtime, cl);
     instance_hold_to_thread(ins, runtime);// hold by manual
     instance_init(ins, runtime);
@@ -1048,7 +1059,7 @@ s32 org_mini_reflect_ReflectMethod_getExceptionTypes0(Runtime *runtime, JClass *
     s32 i;
     for (i = 0; i < len; i++) {
         ConstantClassRef *ccr = class_get_constant_classref(cl, info[i + 1]);
-        JClass *other = classes_load_get(cl->jloader, class_get_constant_utf8(cl, ccr->stringIndex)->utfstr, runtime);
+        JClass *other = classes_load_get_with_clinit(cl->jloader, class_get_constant_utf8(cl, ccr->stringIndex)->utfstr, runtime);
         if (other) {
             Instance *cins = insOfJavaLangClass_create_get(runtime, other);
             jarray_set_field(jarr, i, (s64) (intptr_t) cins);
@@ -1646,7 +1657,7 @@ static java_native_method METHODS_REFLECT_TABLE[] = {
         {"org/mini/vm/RefNative",          "resumeThread",             "(Ljava/lang/Thread;)I",                                                            org_mini_vm_RefNative_resumeThread},
         {"org/mini/vm/RefNative",          "getSuspendCount",          "(Ljava/lang/Thread;)I",                                                            org_mini_vm_RefNative_getSuspendCount},
         {"org/mini/vm/RefNative",          "getFrameCount",            "(Ljava/lang/Thread;)I",                                                            org_mini_vm_RefNative_getFrameCount},
-        {"org/mini/vm/RefNative",          "stopThread",               "(Ljava/lang/Thread;J)I",                                                           org_mini_vm_RefNative_stopThread},
+        {"org/mini/vm/RefNative",          "stopThread",               "(Ljava/lang/Thread;Ljava/lang/Object;)I",                                          org_mini_vm_RefNative_stopThread},
         {"org/mini/vm/RefNative",          "getStackFrame",            "(Ljava/lang/Thread;)J",                                                            org_mini_vm_RefNative_getStackFrame},
         {"org/mini/vm/RefNative",          "getGarbageMarkCounter",    "()I",                                                                              org_mini_vm_RefNative_getGarbageMarkCounter},
         {"org/mini/vm/RefNative",          "getGarbageStatus",         "()I",                                                                              org_mini_vm_RefNative_getGarbageStatus},

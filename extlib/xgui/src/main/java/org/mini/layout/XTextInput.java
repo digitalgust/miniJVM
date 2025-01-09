@@ -10,6 +10,7 @@ public class XTextInput
 
     protected boolean multiLine = false;
     protected boolean edit = true;
+    protected boolean reset = true;
     protected boolean password = false;
     protected boolean scrollbar = false;
     protected int style = GTextField.BOX_STYLE_EDIT;
@@ -30,9 +31,11 @@ public class XTextInput
     protected void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("multiline")) {
-            multiLine = "0".equals(attValue) ? false : true;
+            multiLine = !"0".equals(attValue);
         } else if (attName.equals("edit")) {
-            edit = "0".equals(attValue) ? false : true;
+            edit = !"0".equals(attValue);
+        } else if (attName.equals("reset")) {
+            reset = !"0".equals(attValue);
         } else if (attName.equals("style")) {
             if (attValue.equalsIgnoreCase("search")) {
                 style = GTextField.BOX_STYLE_SEARCH;
@@ -42,9 +45,9 @@ public class XTextInput
         } else if (attName.equals("union")) {
             union = attValue;
         } else if (attName.equals("password")) {
-            password = "0".equals(attValue) ? false : true;
+            password = !"0".equals(attValue);
         } else if (attName.equals("scroll")) {
-            scrollbar = "0".equals(attValue) ? false : true;
+            scrollbar = !"0".equals(attValue);
         }
     }
 
@@ -97,6 +100,7 @@ public class XTextInput
                 textInput = createGuiImpl();
                 ((GTextField) textInput).setBoxStyle(style);
                 ((GTextField) textInput).setPasswordMode(password);
+                ((GTextField) textInput).setResetEnable(reset);
             }
             initGuiMore();
             textInput.setEnable(enable);

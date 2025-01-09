@@ -26,6 +26,9 @@
 
 package java.lang;
 
+import org.mini.vm.RefNative;
+import org.mini.vm.ThreadLifeHandler;
+
 /**
  * A <i>thread</i> is a thread of execution in a program. The Java Virtual
  * Machine allows an application to have multiple threads of execution running
@@ -132,6 +135,9 @@ public class Thread implements Runnable {
     /* Whether or not the thread is a daemon thread. */
     private boolean daemon = false;
 
+    /* The group of this thread */
+    private ThreadGroup group;
+
     private native long createStackFrame();
 
     /**
@@ -201,11 +207,38 @@ public class Thread implements Runnable {
      * @param name   the name of the new thread
      */
     private void init(Runnable target, String name) {
+        init(null, target, name);
+    }
+
+    private void init(ThreadGroup group, Runnable target, String name) {
         Thread parent = currentThread();
+
+        if (group == null) {
+            ThreadGroup pg = parent.getThreadGroup();
+            if (pg == null) {
+                ThreadGroup systemThreadGroup = new ThreadGroup();
+                parent.group = new ThreadGroup(systemThreadGroup, "main");
+                parent.group.add(parent);
+                this.group = parent.group;
+            } else {
+                this.group = pg;
+            }
+        } else {
+            this.group = group;
+        }
+        this.group.add(this);
+
         this.target = target;
         this.name = name.toCharArray();
         this.priority = parent.getPriority();
         setPriority0(priority);
+        try {
+            if (lifeHandler != null) {
+                lifeHandler.threadCreated(this);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -242,6 +275,10 @@ public class Thread implements Runnable {
         init(target, "Thread-" + nextThreadNum());
     }
 
+    public Thread(ThreadGroup group, Runnable target) {
+        init(group, target, "Thread-" + nextThreadNum());
+    }
+
     /**
      * Allocates a new <code>Thread</code> object with the given target and
      * name.
@@ -251,6 +288,10 @@ public class Thread implements Runnable {
      */
     public Thread(Runnable target, String name) {
         init(target, name);
+    }
+
+    public Thread(ThreadGroup group, Runnable target, String name) {
+        init(group, target, name);
     }
 
     /**
@@ -282,6 +323,26 @@ public class Thread implements Runnable {
         }
     }
 
+    @Deprecated
+    public void stop() {
+        RefNative.stopThread(this, null);
+    }
+
+    @Deprecated
+    public void stop(Throwable obj) {
+        RefNative.stopThread(this, obj);
+    }
+
+    @Deprecated
+    public void suspend() {
+        RefNative.suspendThread(this);
+    }
+
+    @Deprecated
+    public void resume() {
+        RefNative.resumeThread(this);
+    }
+
     /**
      * Interrupts this thread. In an implementation conforming to the CLDC
      * Specification, this operation is not required to cancel or clean up any
@@ -290,12 +351,18 @@ public class Thread implements Runnable {
      * @since JDK 1.0, CLDC 1.1
      */
     public void interrupt() {
-        interrupt0();
+        interrupt0(this);
     }
 
 
     static public boolean interrupted() {
-        return false;
+        return interrupted0(Thread.currentThread());
+    }
+
+    static public native boolean interrupted0(Thread t);
+
+    public boolean isInterrupted() {
+        return interrupted0(this);
     }
 
     /**
@@ -474,13 +541,36 @@ public class Thread implements Runnable {
     }
 
     /**
+     * This method is called by the system to give a Thread
+     * a chance to clean up before it actually exits.
+     */
+    private void exit() {
+        try {
+            if (lifeHandler != null) {
+                lifeHandler.threadDestroy(this);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (group != null) {
+            group.remove(this);
+            group = null;
+        }
+        /* Aggressively null out all reference fields: see bug 4006245 */
+        target = null;
+        /* Speed the release of some of these resources */
+        threadLocals = null;
+        uncaughtExceptionHandler = null;
+    }
+
+    /**
      * Returns a string representation of this thread, including the thread's
      * name and priority.
      *
      * @return a string representation of this thread.
      */
     public String toString() {
-        return "Thread[" + getName() + "," + getPriority() + "]";
+        return "Thread[" + getName() + "," + getPriority() + "," + (group == null ? "" : group.getName()) + "]";
     }
 
     private native void setContextClassLoader0(ClassLoader cl);
@@ -490,7 +580,7 @@ public class Thread implements Runnable {
     /* Some private helper methods */
     private native void setPriority0(int newPriority);
 
-    private native void interrupt0();
+    static private native void interrupt0(Thread t);
 
     //Returns an array of stack trace elements representing the stack dump of this thread.
     public StackTraceElement[] getStackTrace() {
@@ -499,5 +589,96 @@ public class Thread implements Runnable {
 
     public static void dumpStack() {
         new Exception("Stack trace").printStackTrace();
+    }
+
+    public ThreadGroup getThreadGroup() {
+        return group;
+    }
+
+
+    // Added in JSR-166
+    public interface UncaughtExceptionHandler {
+        void uncaughtException(Thread t, Throwable e);
+    }
+
+    // null unless explicitly set
+    private volatile UncaughtExceptionHandler uncaughtExceptionHandler;
+
+    private static ThreadLifeHandler lifeHandler;
+
+    // null unless explicitly set
+    private static volatile UncaughtExceptionHandler defaultUncaughtExceptionHandler;
+
+    public static void setDefaultUncaughtExceptionHandler(UncaughtExceptionHandler eh) {
+        defaultUncaughtExceptionHandler = eh;
+    }
+
+    public static UncaughtExceptionHandler getDefaultUncaughtExceptionHandler() {
+        return defaultUncaughtExceptionHandler;
+    }
+
+    public UncaughtExceptionHandler getUncaughtExceptionHandler() {
+        return uncaughtExceptionHandler != null ?
+                uncaughtExceptionHandler : group;
+    }
+
+    public void setUncaughtExceptionHandler(UncaughtExceptionHandler eh) {
+        uncaughtExceptionHandler = eh;
+    }
+
+    /**
+     * Dispatch an uncaught exception to the handler. This method is
+     * intended to be called only by the JVM.
+     */
+    private void dispatchUncaughtException(Throwable e) {
+        getUncaughtExceptionHandler().uncaughtException(this, e);
+    }
+
+
+    private static void checkCaller() {
+        Throwable throwable = new Throwable();
+        StackTraceElement[] stackTraceElements = throwable.getStackTrace();
+        if (stackTraceElements.length < 3 || !stackTraceElements[2].getClassName().equals("org.mini.vm.VmUtil")) {
+            throw new SecurityException("setThreadCreateHandler must be called by VmUtil, Please add handler from VmUtil");
+        }
+    }
+
+    public static void setThreadLifeHandler(ThreadLifeHandler r) {
+        //if caller is not VmUtil.class, throw SecurityException
+        checkCaller();
+        lifeHandler = r;
+    }
+
+    public static ThreadLifeHandler getThreadLifeHandler() {
+        checkCaller();
+        return lifeHandler;
+    }
+
+    public enum State {
+        NEW,
+        RUNNABLE,
+        BLOCKED,
+        WAITING,
+        TIMED_WAITING,
+        TERMINATED;
+    }
+
+    public State getState() {
+        // get current thread state
+        int state = RefNative.getStatus(this);
+        switch (state) {
+            case 0:
+                return State.NEW;
+            case 1:
+                return State.RUNNABLE;
+            case 2:
+                return State.BLOCKED;
+            case 3:
+                return State.WAITING;
+            case 4:
+                return State.WAITING;
+            default:
+                return State.TERMINATED;
+        }
     }
 }

@@ -273,6 +273,8 @@ s32 jthread_notifyAll(MemoryBlock *mb, Runtime *runtime);
 
 s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms);
 
+s32 jthread_wakeup(Runtime *runtime);
+
 s32 jthread_sleep(Runtime *runtime, s64 ms);
 
 s32 jthread_yield(Runtime *runtime);
@@ -284,6 +286,8 @@ s32 jthread_suspend(Runtime *runtime);
 void jthread_block_exit(Runtime *runtime);
 
 void jthread_block_enter(Runtime *runtime);
+
+s32 check_throw_interruptexception(Runtime *runtime);
 
 s32 check_suspend_and_pause(Runtime *runtime);
 
@@ -389,11 +393,13 @@ JClass *classes_get(MiniJVM *jvm, Instance *jloader, Utf8String *clsName);
 
 JClass *classes_load_get_without_resolve(Instance *jloader, Utf8String *ustr, Runtime *runtime);
 
-JClass *classes_load_get_c(Instance *jloader, c8 const *pclassName, Runtime *runtime);
+JClass *classes_load_get_with_resolve(Instance *jloader, Utf8String *ustr, Runtime *runtime);
+
+JClass *classes_load_get_with_clinit_c(Instance *jloader, c8 const *pclassName, Runtime *runtime);
 
 s32 classes_put(MiniJVM *jvm, JClass *clazz);
 
-JClass *classes_load_get(Instance *jloader, Utf8String *pclassName, Runtime *runtime);
+JClass *classes_load_get_with_clinit(Instance *jloader, Utf8String *ustr, Runtime *runtime);
 
 JClass *primitive_class_create_get(Runtime *runtime, Utf8String *ustr);
 
@@ -401,6 +407,7 @@ s32 classes_loaded_count_unsafe(MiniJVM *jvm);
 
 s32 classes_remove(MiniJVM *jvm, JClass *clazz);
 
+Instance *build_stack_element(Runtime *runtime, Runtime *target);
 
 #ifdef __cplusplus
 }

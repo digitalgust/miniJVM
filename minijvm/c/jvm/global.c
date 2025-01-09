@@ -27,76 +27,92 @@ s32 DATA_TYPE_BYTES[DATATYPE_COUNT] = {0, 0, 0, 0,
                                        sizeof(__refer),
 };
 
+const c8 STR_CLASS_JAVA_LANG_BOOLEAN[] = "java/lang/Boolean";
+const c8 STR_CLASS_JAVA_LANG_BYTE[] = "java/lang/Byte";
+const c8 STR_CLASS_JAVA_LANG_SHORT[] = "java/lang/Short";
+const c8 STR_CLASS_JAVA_LANG_CHARACTER[] = "java/lang/Character";
+const c8 STR_CLASS_JAVA_LANG_INTEGER[] = "java/lang/Integer";
+const c8 STR_CLASS_JAVA_LANG_LONG[] = "java/lang/Long";
+const c8 STR_CLASS_JAVA_LANG_FLOAT[] = "java/lang/Float";
+const c8 STR_CLASS_JAVA_LANG_DOUBLE[] = "java/lang/Double";
+const c8 STR_CLASS_JAVA_LANG_STRING[] = "java/lang/String";
+const c8 STR_CLASS_JAVA_LANG_STRINGBUILDER[] = "java/lang/StringBuilder";
+const c8 STR_CLASS_JAVA_LANG_OBJECT[] = "java/lang/Object";
+const c8 STR_CLASS_JAVA_LANG_THREAD[] = "java/lang/Thread";
+const c8 STR_CLASS_JAVA_LANG_CLASS[] = "java/lang/Class";
+const c8 STR_CLASS_JAVA_LANG_CLASSLOADER[] = "java/lang/ClassLoader";
+const c8 STR_CLASS_JAVA_LANG_REF_REFERENCE[] = "java/lang/ref/Reference";
+const c8 STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE[] = "java/lang/ref/WeakReference";
+const c8 STR_CLASS_JAVA_LANG_INVOKE_METHODTYPE[] = "java/lang/invoke/MethodType";
+const c8 STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLE[] = "java/lang/invoke/MethodHandle";
+const c8 STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLES_LOOKUP[] = "java/lang/invoke/MethodHandles$Lookup";
+const c8 STR_CLASS_JAVA_LANG_STACKTRACE[] = "java/lang/StackTraceElement";
+const c8 STR_CLASS_JAVA_LANG_THROWABLE[] = "java/lang/Throwable";
+const c8 STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ[] = "org/mini/reflect/DirectMemObj";
+const c8 STR_CLASS_SUN_MISC_LAUNCHER[] = "sun/misc/Launcher";
+const c8 STR_CLASS_ORG_MINI_REFLECT_REFLECTMETHOD[] = "org/mini/reflect/ReflectMethod";
+const c8 STR_CLASS_JAVA_LANG_OUTOFMEMORYERROR[] = "java.lang.OutOfMemoryError";
+const c8 STR_CLASS_JAVA_LANG_VIRTUALMACHINEERROR[] = "java.lang.VirtualMachineError";
+const c8 STR_CLASS_JAVA_LANG_NOCLASSDEFFOUNDERROR[] = "java.lang.NoClassDefFoundError";
+const c8 STR_CLASS_JAVA_IO_EOF[] = "java.io.EOFException";
+const c8 STR_CLASS_JAVA_IO_IO[] = "java.io.IOException";
+const c8 STR_CLASS_JAVA_IO_FILENOTFOUND[] = "java.io.FileNotFoundException";
+const c8 STR_CLASS_JAVA_LANG_ARITHMETIC[] = "java.lang.ArithmeticException";
+const c8 STR_CLASS_JAVA_LANG_CLASSNOTFOUND[] = "java.lang.ClassNotFoundException";
+const c8 STR_CLASS_JAVA_LANG_NULLPOINTER[] = "java.lang.NullPointerException";
+const c8 STR_CLASS_JAVA_LANG_NOSUCHMETHOD[] = "java.lang.NoSuchMethodException";
+const c8 STR_CLASS_JAVA_LANG_NOSUCHFIELD[] = "java.lang.NoSuchFieldException";
+const c8 STR_CLASS_JAVA_LANG_ILLEGALARGUMENT[] = "java.lang.IllegalArgumentException";
+const c8 STR_CLASS_JAVA_LANG_CLASSCAST[] = "java.lang.ClassCastException";
+const c8 STR_CLASS_JAVA_LANG_ARRAYINDEXOUTOFBOUNDS[] = "java.lang.ArrayIndexOutOfBoundsException";
+const c8 STR_CLASS_JAVA_LANG_INSTANTIATION[] = "java.lang.InstantiationException";
+const c8 STR_CLASS_JAVA_LANG_INTERRUPTED[] = "java/lang/InterruptedException";
+const c8 STR_CLASS_ORG_MINI_VM_VMSTOPEXCEPTION[] = "org/mini/vm/VmStopException";
+const c8 STR_CLASS_JAVA_LANG_ILLEGALTHREADSTATE[] = "java.lang.IllegalThreadStateException";
 
-c8 *STRS_CLASS_EXCEPTION[] = {
-        "java.lang.OutOfMemoryError",
-        "java.lang.VirtualMachineError",
-        "java.lang.NoClassDefFoundError",
-        "java.io.EOFException",
-        "java.io.IOException",
-        "java.lang.FileNotFoundException",
-        "java.lang.ArithmeticException",
-        "java.lang.ClassNotFoundException",
-        "java.lang.NullPointerException",
-        "java.lang.NoSuchMethodException",
-        "java.lang.NoSuchFieldException",
-        "java.lang.IllegalArgumentException",
-        "java.lang.ClassCastException",
-        "java.lang.ArrayIndexOutOfBoundsException",
-        "java.lang.InstantiationException",
+
+const c8 STR_FIELD_STACKFRAME[] = "stackFrame";
+const c8 STR_FIELD_NAME[] = "name";
+const c8 STR_FIELD_VALUE[] = "value";
+const c8 STR_FIELD_COUNT[] = "count";
+const c8 STR_FIELD_OFFSET[] = "offset";
+const c8 STR_FIELD_CLASSHANDLE[] = "classHandle";
+const c8 STR_FIELD_CLASSLOADER[] = "classLoader";
+const c8 STR_METHOD_CLINIT[] = "<clinit>";
+const c8 STR_METHOD_FINALIZE[] = "finalize";
+const c8 STR_INS_JAVA_LANG_STRING[] = "Ljava/lang/String;";
+const c8 STR_INS_JAVA_LANG_THREAD[] = "Ljava/lang/Thread;";
+const c8 STR_INS_JAVA_LANG_CLASS[] = "Ljava/lang/Class;";
+const c8 STR_INS_JAVA_LANG_OBJECT[] = "Ljava/lang/Object;";
+const c8 STR_INS_JAVA_LANG_STACKTRACEELEMENT[] = "Ljava/lang/StackTraceElement;";
+const c8 STR_VM_JAVA_LIBRARY_PATH[] = "java.library.path";
+const c8 STR_VM_SUN_BOOT_CLASS_PATH[] = "sun.boot.class.path";
+const c8 STR_VM_JAVA_CLASS_PATH[] = "java.class.path";
+const c8 STR_JNI_LIB_NOT_FOUND[] = "lib not found:%s\n";
+const c8 STR_JNI_ONLOAD_NOT_FOUND[] = "register function not found:%s\n";
+const c8 STR_JNI_ON_LOAD[] = "JNI_OnLoad";
+
+
+const c8 *STRS_CLASS_EXCEPTION[] = {
+        STR_CLASS_JAVA_LANG_OUTOFMEMORYERROR,
+        STR_CLASS_JAVA_LANG_VIRTUALMACHINEERROR,
+        STR_CLASS_JAVA_LANG_NOCLASSDEFFOUNDERROR,
+        STR_CLASS_JAVA_IO_EOF,
+        STR_CLASS_JAVA_IO_IO,
+        STR_CLASS_JAVA_IO_FILENOTFOUND,
+        STR_CLASS_JAVA_LANG_ARITHMETIC,
+        STR_CLASS_JAVA_LANG_CLASSNOTFOUND,
+        STR_CLASS_JAVA_LANG_NULLPOINTER,
+        STR_CLASS_JAVA_LANG_NOSUCHMETHOD,
+        STR_CLASS_JAVA_LANG_NOSUCHFIELD,
+        STR_CLASS_JAVA_LANG_ILLEGALARGUMENT,
+        STR_CLASS_JAVA_LANG_CLASSCAST,
+        STR_CLASS_JAVA_LANG_ARRAYINDEXOUTOFBOUNDS,
+        STR_CLASS_JAVA_LANG_INSTANTIATION,
+        STR_CLASS_JAVA_LANG_INTERRUPTED,
+        STR_CLASS_ORG_MINI_VM_VMSTOPEXCEPTION,
+        STR_CLASS_JAVA_LANG_ILLEGALTHREADSTATE,
 };
-
-c8 const *STR_CLASS_JAVA_LANG_BOOLEAN = "java/lang/Boolean";
-c8 const *STR_CLASS_JAVA_LANG_BYTE = "java/lang/Byte";
-c8 const *STR_CLASS_JAVA_LANG_SHORT = "java/lang/Short";
-c8 const *STR_CLASS_JAVA_LANG_CHARACTER = "java/lang/Character";
-c8 const *STR_CLASS_JAVA_LANG_INTEGER = "java/lang/Integer";
-c8 const *STR_CLASS_JAVA_LANG_LONG = "java/lang/Long";
-c8 const *STR_CLASS_JAVA_LANG_FLOAT = "java/lang/Float";
-c8 const *STR_CLASS_JAVA_LANG_DOUBLE = "java/lang/Double";
-c8 const *STR_CLASS_JAVA_LANG_STRING = "java/lang/String";
-c8 const *STR_CLASS_JAVA_LANG_STRINGBUILDER = "java/lang/StringBuilder";
-c8 const *STR_CLASS_JAVA_LANG_OBJECT = "java/lang/Object";
-c8 const *STR_CLASS_JAVA_LANG_THREAD = "java/lang/Thread";
-c8 const *STR_CLASS_JAVA_LANG_CLASS = "java/lang/Class";
-c8 const *STR_CLASS_JAVA_LANG_CLASSLOADER = "java/lang/ClassLoader";
-c8 const *STR_CLASS_JAVA_LANG_REF_REFERENCE = "java/lang/ref/Reference";
-c8 const *STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE = "java/lang/ref/WeakReference";
-c8 const *STR_CLASS_JAVA_LANG_INVOKE_METHODTYPE = "java/lang/invoke/MethodType";
-c8 const *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLE = "java/lang/invoke/MethodHandle";
-c8 const *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLES_LOOKUP = "java/lang/invoke/MethodHandles$Lookup";
-c8 const *STR_CLASS_JAVA_LANG_STACKTRACE = "java/lang/StackTraceElement";
-c8 const *STR_CLASS_JAVA_LANG_THROWABLE = "java/lang/Throwable";
-c8 const *STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ = "org/mini/reflect/DirectMemObj";
-c8 const *STR_CLASS_SUN_MISC_LAUNCHER = "sun/misc/Launcher";
-c8 const *STR_CLASS_ORG_MINI_REFLECT_REFLECTMETHOD = "org/mini/reflect/ReflectMethod";
-
-c8 const *STR_FIELD_STACKFRAME = "stackFrame";
-c8 const *STR_FIELD_NAME = "name";
-c8 const *STR_FIELD_VALUE = "value";
-c8 const *STR_FIELD_COUNT = "count";
-c8 const *STR_FIELD_OFFSET = "offset";
-
-c8 const *STR_FIELD_CLASSHANDLE = "classHandle";
-c8 const *STR_FIELD_CLASSLOADER = "classLoader";
-
-c8 const *STR_METHOD_CLINIT = "<clinit>";
-c8 const *STR_METHOD_FINALIZE = "finalize";
-
-c8 const *STR_INS_JAVA_LANG_STRING = "Ljava/lang/String;";
-c8 const *STR_INS_JAVA_LANG_THREAD = "Ljava/lang/Thread;";
-c8 const *STR_INS_JAVA_LANG_CLASS = "Ljava/lang/Class;";
-c8 const *STR_INS_JAVA_LANG_OBJECT = "Ljava/lang/Object;";
-c8 const *STR_INS_JAVA_LANG_STACKTRACEELEMENT = "Ljava/lang/StackTraceElement;";
-
-
-c8 const *STR_VM_JAVA_LIBRARY_PATH = "java.library.path";
-c8 const *STR_VM_SUN_BOOT_CLASS_PATH = "sun.boot.class.path";
-c8 const *STR_VM_JAVA_CLASS_PATH = "java.class.path";
-
-const c8 *STR_JNI_LIB_NOT_FOUND = "lib not found:%s\n";
-const c8 *STR_JNI_ONLOAD_NOT_FOUND = "register function not found:%s\n";
-const c8 *STR_JNI_ON_LOAD = "JNI_OnLoad";
 
 c8 *INST_NAME[] = {
         /* 0x00 */ "nop",

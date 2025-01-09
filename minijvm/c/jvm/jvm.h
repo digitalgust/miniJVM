@@ -27,8 +27,9 @@ extern "C" {
 
 //=======================  micro define  =============================
 //_JVM_DEBUG  01=thread info, 02=garage&jit info  , 03=class load, 04=method call,  06=all bytecode
-#define _JVM_DEBUG_LOG_LEVEL 01
+#define _JVM_DEBUG_LOG_LEVEL 02
 #define _JVM_DEBUG_LOG_TO_FILE 0
+//_JVM_DEBUG_GARBAGE_DUMP 01=count instance , 02=print every object create/destroy
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_PROFILE 0
 #define _JVM_JDWP_ENABLE 01
@@ -438,6 +439,7 @@ typedef struct _JdwpStep JdwpStep;
 typedef struct _JdwpClient JdwpClient;
 
 typedef s32 (*java_native_fun)(Runtime *runtime, JClass *p);
+
 typedef void (*jni_fun)(__refer);
 
 enum {
@@ -456,6 +458,9 @@ enum {
     JVM_EXCEPTION_CLASSCAST,
     JVM_EXCEPTION_ARRAYINDEXOUTOFBOUNDS,
     JVM_EXCEPTION_INSTANTIATION,
+    JVM_EXCEPTION_INTERRUPTED,
+    JVM_EXCEPTION_VMSTOP,
+    JVM_EXCEPTION_ILLEGALTHREADSTATE,
 };
 
 enum {
@@ -465,60 +470,55 @@ enum {
     THREAD_TYPE_JDWP,
 };
 
-extern c8 *STRS_CLASS_EXCEPTION[];
+extern const c8 *STRS_CLASS_EXCEPTION[];
 
-extern c8 const *STR_CLASS_JAVA_LANG_STRING;
-extern c8 const *STR_CLASS_JAVA_LANG_STRINGBUILDER;
-extern c8 const *STR_CLASS_JAVA_LANG_BOOLEAN;
-extern c8 const *STR_CLASS_JAVA_LANG_BYTE;
-extern c8 const *STR_CLASS_JAVA_LANG_CHARACTER;
-extern c8 const *STR_CLASS_JAVA_LANG_SHORT;
-extern c8 const *STR_CLASS_JAVA_LANG_INTEGER;
-extern c8 const *STR_CLASS_JAVA_LANG_LONG;
-extern c8 const *STR_CLASS_JAVA_LANG_DOUBLE;
-extern c8 const *STR_CLASS_JAVA_LANG_FLOAT;
-extern c8 const *STR_CLASS_JAVA_LANG_OBJECT;
-extern c8 const *STR_CLASS_JAVA_LANG_THREAD;
-extern c8 const *STR_CLASS_JAVA_LANG_CLASS;
-extern c8 const *STR_CLASS_JAVA_LANG_CLASSLOADER;
-extern c8 const *STR_CLASS_JAVA_LANG_REF_REFERENCE;
-extern c8 const *STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE;
-extern c8 const *STR_CLASS_JAVA_LANG_STACKTRACE;
-extern c8 const *STR_CLASS_JAVA_LANG_THROWABLE;
-extern c8 const *STR_CLASS_JAVA_LANG_INVOKE_METHODTYPE;
-extern c8 const *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLE;
-extern c8 const *STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLES_LOOKUP;
-extern c8 const *STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ;
-extern c8 const *STR_CLASS_SUN_MISC_LAUNCHER;
-extern c8 const *STR_CLASS_ORG_MINI_REFLECT_REFLECTMETHOD;
+extern const c8 STR_CLASS_JAVA_LANG_STRING[];
+extern const c8 STR_CLASS_JAVA_LANG_STRINGBUILDER[];
+extern const c8 STR_CLASS_JAVA_LANG_BOOLEAN[];
+extern const c8 STR_CLASS_JAVA_LANG_BYTE[];
+extern const c8 STR_CLASS_JAVA_LANG_CHARACTER[];
+extern const c8 STR_CLASS_JAVA_LANG_SHORT[];
+extern const c8 STR_CLASS_JAVA_LANG_INTEGER[];
+extern const c8 STR_CLASS_JAVA_LANG_LONG[];
+extern const c8 STR_CLASS_JAVA_LANG_DOUBLE[];
+extern const c8 STR_CLASS_JAVA_LANG_FLOAT[];
+extern const c8 STR_CLASS_JAVA_LANG_OBJECT[];
+extern const c8 STR_CLASS_JAVA_LANG_THREAD[];
+extern const c8 STR_CLASS_JAVA_LANG_INTERRUPTED[];
+extern const c8 STR_CLASS_JAVA_LANG_CLASS[];
+extern const c8 STR_CLASS_JAVA_LANG_CLASSLOADER[];
+extern const c8 STR_CLASS_JAVA_LANG_REF_REFERENCE[];
+extern const c8 STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE[];
+extern const c8 STR_CLASS_JAVA_LANG_STACKTRACE[];
+extern const c8 STR_CLASS_JAVA_LANG_THROWABLE[];
+extern const c8 STR_CLASS_JAVA_LANG_INVOKE_METHODTYPE[];
+extern const c8 STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLE[];
+extern const c8 STR_CLASS_JAVA_LANG_INVOKE_METHODHANDLES_LOOKUP[];
+extern const c8 STR_CLASS_ORG_MINI_REFLECT_DIRECTMEMOBJ[];
+extern const c8 STR_CLASS_SUN_MISC_LAUNCHER[];
+extern const c8 STR_CLASS_ORG_MINI_REFLECT_REFLECTMETHOD[];
+extern const c8 STR_CLASS_ORG_MINI_VM_VMSTOPEXCEPTION[];
 
-extern c8 const *STR_FIELD_STACKFRAME;
-extern c8 const *STR_FIELD_NAME;
-extern c8 const *STR_FIELD_VALUE;
-extern c8 const *STR_FIELD_COUNT;
-extern c8 const *STR_FIELD_OFFSET;
-
-extern c8 const *STR_FIELD_CLASSHANDLE;
-extern c8 const *STR_FIELD_CLASSLOADER;
-
-extern c8 const *STR_METHOD_CLINIT;
-extern c8 const *STR_METHOD_FINALIZE;
-
-extern c8 const *STR_INS_JAVA_LANG_STRING;
-extern c8 const *STR_INS_JAVA_LANG_THREAD;
-extern c8 const *STR_INS_JAVA_LANG_CLASS;
-extern c8 const *STR_INS_JAVA_LANG_OBJECT;
-extern c8 const *STR_INS_JAVA_LANG_STACKTRACEELEMENT;
-
-
-extern c8 const *STR_VM_JAVA_LIBRARY_PATH;
-extern c8 const *STR_VM_SUN_BOOT_CLASS_PATH;
-extern c8 const *STR_VM_JAVA_CLASS_PATH;
-
-
-extern c8 const *STR_JNI_LIB_NOT_FOUND;
-extern c8 const *STR_JNI_ONLOAD_NOT_FOUND;
-extern c8 const *STR_JNI_ON_LOAD;
+extern const c8 STR_FIELD_STACKFRAME[];
+extern const c8 STR_FIELD_NAME[];
+extern const c8 STR_FIELD_VALUE[];
+extern const c8 STR_FIELD_COUNT[];
+extern const c8 STR_FIELD_OFFSET[];
+extern const c8 STR_FIELD_CLASSHANDLE[];
+extern const c8 STR_FIELD_CLASSLOADER[];
+extern const c8 STR_METHOD_CLINIT[];
+extern const c8 STR_METHOD_FINALIZE[];
+extern const c8 STR_INS_JAVA_LANG_STRING[];
+extern const c8 STR_INS_JAVA_LANG_THREAD[];
+extern const c8 STR_INS_JAVA_LANG_CLASS[];
+extern const c8 STR_INS_JAVA_LANG_OBJECT[];
+extern const c8 STR_INS_JAVA_LANG_STACKTRACEELEMENT[];
+extern const c8 STR_VM_JAVA_LIBRARY_PATH[];
+extern const c8 STR_VM_SUN_BOOT_CLASS_PATH[];
+extern const c8 STR_VM_JAVA_CLASS_PATH[];
+extern const c8 STR_JNI_LIB_NOT_FOUND[];
+extern const c8 STR_JNI_ONLOAD_NOT_FOUND[];
+extern const c8 STR_JNI_ON_LOAD[];
 
 enum {
     METHOD_INVOKE_DYNAMIC,
@@ -595,11 +595,12 @@ enum {
 };
 //线程
 enum {
-    THREAD_STATUS_ZOMBIE,
+    THREAD_STATUS_NEW,
     THREAD_STATUS_RUNNING,
     THREAD_STATUS_SLEEPING,
     THREAD_STATUS_MONITOR,
     THREAD_STATUS_WAIT,
+    THREAD_STATUS_ZOMBIE,
 };
 
 //指令指行返回状态
@@ -1262,7 +1263,8 @@ struct _JavaThreadInfo {
     u8 volatile is_suspend;
     u8 volatile is_unparked;
     u8 volatile is_blocking;// some of native method will enter blocking state
-    u8 is_interrupt;
+    u8 volatile is_stop; //thread is marked as stop status, need set is_interrupt=1 also
+    u8 volatile is_interrupt; //thread is marked as interrupt, set by Thread.interrupt();
     u8 type;// gc /jdwp /normal
 
     thrd_t pthread;

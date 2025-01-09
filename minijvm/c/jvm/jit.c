@@ -1158,7 +1158,7 @@ void gen_jit_suspend_check_func() {
     {
         sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_R2, SLJIT_R2, 0);
         _gen_save_sp_ip(C);
-        sljit_emit_op1(C, SLJIT_MOV_U8, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_R0), SLJIT_OFFSETOF(JavaThreadInfo, is_interrupt));
+        sljit_emit_op1(C, SLJIT_MOV_U8, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_R0), SLJIT_OFFSETOF(JavaThreadInfo, is_stop));
         jump_to_interrupted = sljit_emit_cmp(C, SLJIT_NOT_EQUAL, SLJIT_R1, 0, SLJIT_IMM, 0);
         {
             jump_not_interrupted = sljit_emit_jump(C, SLJIT_JUMP);
@@ -1383,7 +1383,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                         break;
                     }
                     case CONSTANT_CLASS: {
-                        JClass *cl = classes_load_get(clazz->jloader, class_get_constant_classref(clazz, index)->name, runtime);
+                        JClass *cl = classes_load_get_with_clinit(clazz->jloader, class_get_constant_classref(clazz, index)->name, runtime);
                         if (!cl->ins_class) {
                             cl->ins_class = insOfJavaLangClass_create_get(runtime, cl);
                         }
@@ -2860,7 +2860,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 ConstantClassRef *ccf = class_get_constant_classref(clazz, idx);
                 if (!ccf->clazz) {
                     Utf8String *clsName = class_get_utf8_string(clazz, ccf->stringIndex);
-                    ccf->clazz = classes_load_get(clazz->jloader, clsName, runtime);
+                    ccf->clazz = classes_load_get_with_clinit(clazz->jloader, clsName, runtime);
                 }
                 JClass *other = ccf->clazz;
                 Instance *ins = NULL;

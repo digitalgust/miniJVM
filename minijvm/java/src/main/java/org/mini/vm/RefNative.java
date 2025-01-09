@@ -42,7 +42,7 @@ public class RefNative {
 
     static public native int getFrameCount(Thread t);
 
-    static public native int stopThread(Thread t, long objid);
+    static public native int stopThread(Thread t, Object obj);
 
     static public native long getStackFrame(Thread t);
 

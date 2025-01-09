@@ -5,7 +5,12 @@
  */
 package org.mini.apploader;
 
-import org.mini.gui.*;
+import org.mini.gui.GCallBack;
+import org.mini.gui.GLanguage;
+import org.mini.gui.GStyle;
+import org.mini.gui.GToolkit;
+import org.mini.vm.ThreadLifeHandler;
+import org.mini.vm.VmUtil;
 import org.mini.zip.Zip;
 
 import java.io.*;
@@ -67,6 +72,58 @@ public class AppLoader {
             }
         }
         saveProp(APP_LIST_FILE, applist);
+
+        //设置 创建线程的handler
+        VmUtil.addThreadLifeHandler(new ThreadLifeHandler() {
+            @Override
+            public void threadCreated(Thread thread) {
+
+                //从调用栈中查找创建者
+                Throwable callStack = new Throwable();
+                GApplication creator = findCreator(callStack);
+                if (creator != null) {
+                    //System.out.println(creator.getClass().getClassLoader() + " CREATED+++++ " + thread);
+                    creator.addThread(thread);
+                }
+            }
+
+            @Override
+            public void threadDestroy(Thread thread) {
+                //谁创建的线程
+                GApplication creator = findCreator(thread);
+                if (creator != null) {
+                    //System.out.println(creator.getClass().getClassLoader() + " DESTROYED----- " + thread);
+                    creator.removeThread(thread);
+                }
+            }
+
+            private GApplication findCreator(Throwable callStack) {
+                for (GApplication a : AppManager.getInstance().getRunningApps()) {
+                    ClassLoader appClassLoader = a.getClass().getClassLoader();
+                    for (StackTraceElement e : callStack.getStackTrace()) {
+                        String cname = e.getClassName();
+                        try {
+                            Class c = Class.forName(cname, true, appClassLoader);
+                            if (c != null && c.getClassLoader() == appClassLoader) {//调用栈中如果有和app的classloader相同的类，则说明此线程为这个app创建的
+                                return a;
+                            }
+                        } catch (Exception ex) {
+                            //ex.printStackTrace();
+                        }
+                    }
+                }
+                return null;
+            }
+
+            private GApplication findCreator(Thread thread) {
+                for (GApplication a : AppManager.getInstance().getRunningApps()) {
+                    if (a.threads.contains(thread)) {
+                        return a;
+                    }
+                }
+                return null;
+            }
+        });
 
         copyExApp();
         String bootApp = appinfo.getProperty(KEY_BOOT);
@@ -150,9 +207,14 @@ public class AppLoader {
         }
     }
 
-    public static void loadProp(String fname, Properties prop) {
+    private static void loadProp(String fname, Properties prop) {
+        String s = GCallBack.getInstance().getAppSaveRoot() + fname;
+        loadPropFile(s, prop);
+    }
+
+    public static void loadPropFile(String path, Properties prop) {
         try {
-            File f = new File(GCallBack.getInstance().getAppSaveRoot() + fname);
+            File f = new File(path);
             if (f.exists()) {
                 FileInputStream fis = new FileInputStream(f);
                 prop.load(fis);
@@ -164,9 +226,14 @@ public class AppLoader {
         }
     }
 
-    public static void saveProp(String name, Properties prop) {
+    private static void saveProp(String name, Properties prop) {
+        String s = GCallBack.getInstance().getAppSaveRoot() + name;
+        savePropFile(s, prop);
+    }
+
+    public static void savePropFile(String path, Properties prop) {
         try {
-            File f = new File(GCallBack.getInstance().getAppSaveRoot() + name);
+            File f = new File(path);
 
             FileOutputStream fos = new FileOutputStream(f);
             prop.store(fos, "");
@@ -343,7 +410,7 @@ public class AppLoader {
     public static String getApplicationDesc(String jarName) {
         String desc = getAppConfig(jarName, "desc");
         if (desc == null) {
-            desc = GLanguage.getString("No description.");
+            desc = AppManager.getInstance().getString("No description.");
         } else {
             desc = desc.replace("\\n", "\n");
         }
@@ -462,10 +529,9 @@ public class AppLoader {
                 Class c = getApplicationClass(jarName);
                 if (c != null) {
                     app = (GApplication) c.newInstance();
+                    app.init(jarName);
                     app.setOldStyle(oldStyle);
-                    app.setSaveRoot(getAppDataPath(jarName));
                     GCallBack.getInstance().setApplication(app);
-                    app.setJarName(jarName);
                 }
             }
         } catch (Exception ex) {

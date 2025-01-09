@@ -1562,8 +1562,8 @@ s32 org_mini_glfm_utils_Gutil_img_draw(Runtime *runtime, JClass *clazz) {
             for (imgy = 0; imgy < imgHeight; imgy++) {
                 s32 imgRowByteStart = imgy * imgRowBytes;
                 for (imgx = 0; imgx < imgWidth; imgx++) {
-                    s32 dx = round(imgx * M00 + imgy * M01 + M02);
-                    s32 dy = round(imgx * M10 + imgy * M11 + M12);
+                    s32 dx = round(imgx * M00 + imgy * M01 + M02 + (M00 < -0.0f ? M00 : 0));//fix negative scale
+                    s32 dy = round(imgx * M10 + imgy * M11 + M12 + (M11 < -0.0f ? M11 : 0));
                     if (dx >= clip.x && dx < clip.x + clip.w && dy >= clip.y && dy < clip.y + clip.h) {
                         s32 imgColByteStart = imgRowByteStart + imgx * CELL_BYTES;
                         u8 a = img[imgColByteStart + 3];

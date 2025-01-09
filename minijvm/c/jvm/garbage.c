@@ -28,6 +28,8 @@ s32 _gc_copy_objs_from_thread(Runtime *pruntime);
 
 s64 _garbage_collect(GcCollector *collector);
 
+void _gc_print_obj_list(GcCollector *pType);
+
 /**
  * Creates a garbage collection thread.
  *
@@ -67,6 +69,7 @@ s32 gc_create(MiniJVM *jvm) {
     jvm->collector = collector;
     collector->jvm = jvm;
     collector->objs_holder = hashset_create();
+    collector->objs_2_count = hashtable_create(UNICODE_STR_HASH_FUNC, UNICODE_STR_EQUALS_FUNC);
 
     collector->runtime_refer_copy = arraylist_create(256);
 
@@ -99,6 +102,7 @@ void gc_destory(MiniJVM *jvm) {
     collector->objs_holder = NULL;
 
     arraylist_destory(collector->runtime_refer_copy);
+    hashtable_destory(collector->objs_2_count);
 
     //
     runtime_destory(collector->runtime);
@@ -160,7 +164,65 @@ void gc_stop(GcCollector *collector) {
 }
 
 //===============================   inner  ====================================
+void _gc_add_obj_count(GcCollector *collector, MemoryBlock *mb) {
+    if (mb->type == MEM_TYPE_CLASS) {
+        return;
+    }
+    if (collector->_garbage_thread_status != GARBAGE_THREAD_NORMAL) {
+        return;
+    }
+    if (utf8_equals_c(mb->clazz->name, "javax/microedition/lcdui/Display$SerialCallTimerTask")) {
+        s32 debug = 1;
+    }
+    HashtableValue v = hashtable_get(collector->objs_2_count, mb->clazz->name);
+    if (!v) {
+        s64 count = 1;
+        if (sizeof(void *) == 8) {
+            count = count << 32;
+            count = count | mb->heap_size;
+        }
+        hashtable_put(collector->objs_2_count, mb->clazz->name, (HashtableValue) (intptr_t) count);
+    } else {
+        s64 val = (s64) (intptr_t) v;
+        if (sizeof(void *) == 8) {
+            s32 pc = (s32) (val >> 32);
+            s32 msize = (s32) val;
+            pc++;
+            val = ((s64) pc) << 32;
+            msize += mb->heap_size;
+            val = val | msize;
+        } else {
+            val++;
+        }
+        hashtable_put(collector->objs_2_count, mb->clazz->name, (HashtableValue) (intptr_t) val);
+    }
+}
 
+
+void _gc_print_obj_list(GcCollector *collector) {
+    jvm_printf("[INFO]--------------------------types: %d\n", collector->objs_2_count->entries);
+    jvm_printf("[INFO] -----count----- ---memo size---  ----name---\n");
+    HashtableIterator hti;
+    hashtable_iterate(collector->objs_2_count, &hti);
+    for (; hashtable_iter_has_more(&hti);) {
+        Utf8String *clsName = hashtable_iter_next_key(&hti);
+        if (utf8_equals_c(clsName, "javax/microedition/lcdui/Display$SerialCallTimerTask")) {
+            s32 debug = 1;
+        }
+        s64 val = (s64) (intptr_t) hashtable_get(collector->objs_2_count, clsName);
+        s32 pc = 0, msize = 0;
+        if (sizeof(void *) == 8) {
+            pc = (s32) (val >> 32);
+            msize = (s32) val;
+        } else {
+            pc = (s32) val;
+        }
+        jvm_printf("[INFO] %15d %15d  %s\n", pc, msize, utf8_cstr(clsName));
+        //utf8_destory(clsName);
+    }
+    hashtable_clear(collector->objs_2_count);
+    jvm_printf("[INFO]--------------------------\n");
+}
 //=============================   debug ===================================
 
 void _gc_get_obj_name(GcCollector *collector, void *memblock, Utf8String *name) {
@@ -292,6 +354,10 @@ s32 _gc_thread_run(void *para) {
             threadSleep(1000);
             continue;
         }
+        if (cur_mil - collector->lastgc < 2000) {
+            threadSleep(1000);
+            continue;
+        };
 
         s64 heap = gc_sum_heap(collector);
         if (cur_mil - collector->lastgc > jvm->garbage_collect_period_ms || heap >= jvm->max_heap_size * jvm->heap_overload_percent / 100) {
@@ -379,6 +445,10 @@ s64 _garbage_collect(GcCollector *collector) {
 #if _JVM_DEBUG_GARBAGE
         jvm_printf("garbage_big_search %lld\n", (currentTimeMillis() - time));
         time = currentTimeMillis();
+#endif
+
+#if _JVM_DEBUG_GARBAGE_DUMP > 0
+        _gc_print_obj_list(collector);
 #endif
 
         collector->isworldstoped = 0;
@@ -472,7 +542,7 @@ s64 _garbage_collect(GcCollector *collector) {
         if (curmb->garbage_mark != collector->mark_cnt) {
             mem_free += size;
             //
-#if _JVM_DEBUG_GARBAGE_DUMP
+#if _JVM_DEBUG_GARBAGE_DUMP > 1
             Utf8String *sus = utf8_create();
             _gc_get_obj_name(collector, curmb, sus);
             jvm_printf("X: %s[%llx]\n", utf8_cstr(sus), (s64) (intptr_t) curmb);
@@ -482,7 +552,7 @@ s64 _garbage_collect(GcCollector *collector) {
                 classes_remove(collector->jvm, (JClass *) curmb);
             }
             if (GCFLAG_JLOADER_GET(curmb->gcflag)) {// curmb->class might be destroyed, when gc_destory() called
-#if _JVM_DEBUG_GARBAGE_DUMP
+#if _JVM_DEBUG_GARBAGE_DUMP > 1
                 jvm_printf("X: [%llx] classloader\n", (s64) (intptr_t) curmb);
 #endif
                 PeerClassLoader *pcl = classLoaders_find_by_instance(jvm, (Instance *) curmb);
@@ -539,7 +609,7 @@ s32 _gc_pause_the_world(MiniJVM *jvm) {
             }
             gc_move_objs_thread_2_gc(runtime);
 
-#if _JVM_DEBUG_GARBAGE_DUMP
+#if _JVM_DEBUG_GARBAGE_DUMP > 1
             Utf8String *stack = utf8_create();
             getRuntimeStack(runtime, stack);
             jvm_printf("%s\n", utf8_cstr(stack));
@@ -560,7 +630,7 @@ s32 _gc_resume_the_world(MiniJVM *jvm) {
     for (i = 0; i < thread_list->length; i++) {
         Runtime *runtime = arraylist_get_value(thread_list, i);
         if (runtime) {
-#if _JVM_DEBUG_GARBAGE_DUMP
+#if _JVM_DEBUG_GARBAGE_DUMP > 1
             Utf8String *stack = utf8_create();
             getRuntimeStack(runtime, stack);
             jvm_printf("%s\n", utf8_cstr(stack));
@@ -790,6 +860,11 @@ void _gc_mark_object(GcCollector *collector, __refer ref, u8 flag_cnt) {
     if (ref) {
         MemoryBlock *mb = (MemoryBlock *) ref;
         if (flag_cnt != mb->garbage_mark) {
+
+#if _JVM_DEBUG_GARBAGE_DUMP > 0
+            _gc_add_obj_count(collector, mb);
+#endif
+
             mb->garbage_mark = flag_cnt;
             switch (mb->type) {
                 case MEM_TYPE_INS:
@@ -888,7 +963,7 @@ void gc_obj_reg(Runtime *runtime, __refer ref) {
         }
 #endif
 
-#if _JVM_DEBUG_GARBAGE_DUMP
+#if _JVM_DEBUG_GARBAGE_DUMP > 1
         Utf8String *sus = utf8_create();
         _gc_get_obj_name(runtime->jvm->collector, mb, sus);
         jvm_printf("R: %s[%llx]\n", utf8_cstr(sus), (s64) (intptr_t) mb);
@@ -912,7 +987,7 @@ void gc_move_objs_thread_2_gc(Runtime *runtime) {
             //lock
             spin_lock(&collector->lock);
             {
-#if _JVM_DEBUG_GARBAGE_DUMP
+#if _JVM_DEBUG_GARBAGE_DUMP > 1
                 MemoryBlock *mb = ti->objs_header;
                 while (mb) {
                     Utf8String *sus = utf8_create();

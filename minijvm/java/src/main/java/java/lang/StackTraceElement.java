@@ -5,11 +5,8 @@
  */
 package java.lang;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
- *
  * @author gust
  */
 public class StackTraceElement {
@@ -30,7 +27,7 @@ public class StackTraceElement {
     }
 
     public String getClassName() {
-        return declaringClass;
+        return declaringClass.replace('/', '.');
     }
 
     /**

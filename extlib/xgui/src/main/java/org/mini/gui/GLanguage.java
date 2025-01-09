@@ -5,6 +5,9 @@
  */
 package org.mini.gui;
 
+import org.mini.apploader.AppManager;
+import org.mini.apploader.GApplication;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,6 +16,7 @@ import java.util.Map;
  */
 public class GLanguage {
 
+    static public final int ID_NO_DEF = -1;
     static public final int ID_ENG = 0;
     static public final int ID_CHN = 1;
     static public final int ID_CHT = 2;
@@ -25,7 +29,7 @@ public class GLanguage {
     static public final int ID_RUS = 9;
 
     static Map<String, String[]> lang = new HashMap();
-    static Map<String, String[]> ext = new HashMap();
+    static Map<String, Map<String, String[]>> app2ext = new HashMap();
 
     static int cur_lang = ID_ENG;
 
@@ -57,8 +61,8 @@ public class GLanguage {
         return cur_lang;
     }
 
-    static public String getString(String key) {
-        return getString(key, cur_lang);
+    static public String getString(String appId, String key) {
+        return getString(appId, key, cur_lang);
     }
 
     static private void addStringInner(String key, String[] values) {
@@ -67,24 +71,36 @@ public class GLanguage {
         }
     }
 
-    static public void addString(String key, String[] values) {
-        if (key != null && values != null) {
+    static public void addString(String appId, String key, String[] values) {
+        if (appId != null && key != null && values != null) {
+            Map<String, String[]> ext = app2ext.get(appId);
+            if (ext == null) {
+                ext = new HashMap();
+                app2ext.put(appId, ext);
+            }
             ext.put(key, values);
         }
     }
 
-    static public String getString(String key, int langType) {
-        String[] ss = lang.get(key);
-        if (ss == null) {
+    static public String getString(String appId, String key, int langType) {
+        String[] ss = null;
+        Map<String, String[]> ext = app2ext.get(appId);
+        if (ext != null) {
             ss = ext.get(key);
         }
-        if (ss == null || langType >= ss.length) {
+        if (ss == null) {
+            ss = lang.get(key);
+        }
+        if (ss == null || langType < 0 || langType >= ss.length) {
             return key;
         }
         return ss[langType];
     }
 
-    static public void clear() {
-        ext.clear();
+    static public void clear(String appId) {
+        Map<String, String[]> ext = app2ext.get(appId);
+        if (ext != null) {
+            app2ext.remove(appId);
+        }
     }
 }

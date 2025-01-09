@@ -12,17 +12,20 @@
 
 void thread_boundle(Runtime *runtime) {
 
-    JClass *thread_clazz = classes_load_get_c(NULL, STR_CLASS_JAVA_LANG_THREAD, runtime);
+    JClass *thread_clazz = classes_load_get_with_clinit_c(NULL, STR_CLASS_JAVA_LANG_THREAD, runtime);
     //为主线程创建Thread实例
     Instance *t = instance_create(runtime, thread_clazz);
     instance_hold_to_thread(t, runtime);
     runtime->thrd_info->jthread = t;//Thread.init currentThread() need this
+    //runtime->clazz = thread_clazz;
     instance_init(t, runtime);
+    //destroy old runtime
     Runtime *r = jthread_get_stackframe_value(runtime->jvm, t);
     if (r) {
         gc_move_objs_thread_2_gc(r);
         runtime_destory(r);
     }
+    //bind new runtime
     jthread_set_stackframe_value(runtime->jvm, t, runtime);
     jthread_init(runtime->jvm, t);
     instance_release_from_thread(t, runtime);
@@ -311,18 +314,27 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     Runtime *runtime = runtime_create(jvm);
     runtime->thrd_info->type = THREAD_TYPE_NORMAL;
     Utf8String *clsName = utf8_create_c(STR_CLASS_JAVA_LANG_INTEGER);
-    JClass *c = classes_load_get(NULL, clsName, runtime);
+    JClass *c = classes_load_get_with_clinit(NULL, clsName, runtime);
     if (!c) {
         jvm_printf("[ERROR]maybe bootstrap classpath misstake: %s \n", p_bootclasspath);
         return -1;
     }
+    //load bootstrap class
     utf8_clear(clsName);
     utf8_append_c(clsName, STR_CLASS_JAVA_LANG_THREAD);
-    classes_load_get(NULL, clsName, runtime);
+    classes_load_get_with_clinit(NULL, clsName, runtime);
+
     utf8_clear(clsName);
     utf8_append_c(clsName, STR_CLASS_SUN_MISC_LAUNCHER);
-    classes_load_get(NULL, clsName, runtime);
-    //开始装载类
+    classes_load_get_with_clinit(NULL, clsName, runtime);
+    //for interrupted thread
+    utf8_clear(clsName);
+    utf8_append_c(clsName, STR_CLASS_JAVA_LANG_INTERRUPTED);//must load this class ,because it will be used when thread interrupt ,but it can not load when that thread is marked as interrupted
+    JClass *c2;
+    c2 = classes_load_get_with_clinit(NULL, clsName, runtime);
+    instance_create(runtime, c2);
+    utf8_clear(clsName);
+
     utf8_destory(clsName);
     gc_move_objs_thread_2_gc(runtime);
     runtime_destory(runtime);
@@ -446,7 +458,7 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
         print_exception(runtime);
     }
     //装入主类
-    JClass *clazz = classes_load_get(jloader, str_mainClsName, runtime);
+    JClass *clazz = classes_load_get_with_clinit(jloader, str_mainClsName, runtime);
 
 
     ret = 0;

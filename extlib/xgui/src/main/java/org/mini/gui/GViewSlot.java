@@ -230,7 +230,6 @@ public class GViewSlot extends GViewPort {
                 }
                 slots.setInnerLocation(curX, curY);
                 GForm.addCmd(swapTask);
-                //System.out.println(swapTask + "  " + slots.getInnerX() + "," + slots.getInnerY() + "), from:" + from + "to:" + to + ")");
                 GForm.flush();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -260,16 +259,16 @@ public class GViewSlot extends GViewPort {
                                 moveTo(active - 1, 200);
                             } else if (dx < -getW() / 5 && p.canMoveToRight()) {
                                 moveTo(active + 1, 200);
-                            } else {
-                                moveTo(active, 200);
+                            } else if (dx != 0) {
+                                moveTo(active, 0);
                             }
                         } else {
                             if (dy > getH() / 5 && p.canMoveToUp()) {
                                 moveTo(active - 1, 200);
                             } else if (dy < -getH() / 5 && p.canMoveToDown()) {
                                 moveTo(active + 1, 200);
-                            } else {
-                                moveTo(active, 200);
+                            } else if (dy != 0) {
+                                moveTo(active, 0);
                             }
                         }
                     } else {
