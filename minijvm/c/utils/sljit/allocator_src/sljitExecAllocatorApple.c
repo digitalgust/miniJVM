@@ -41,9 +41,10 @@
 #include <sys/utsname.h>
 #include <stdlib.h>
 
-#define SLJIT_MAP_JIT	(get_map_jit_flag())
 #define SLJIT_UPDATE_WX_FLAGS(from, to, enable_exec)
 
+#ifdef MAP_JIT
+#define SLJIT_MAP_JIT	(get_map_jit_flag())
 static SLJIT_INLINE int get_map_jit_flag(void)
 {
 	size_t page_size;
@@ -70,6 +71,9 @@ static SLJIT_INLINE int get_map_jit_flag(void)
 	}
 	return map_jit_flag;
 }
+#else /* !defined(MAP_JIT) */
+#define SLJIT_MAP_JIT	(0)
+#endif
 
 #elif defined(SLJIT_CONFIG_ARM) && SLJIT_CONFIG_ARM
 
@@ -105,7 +109,6 @@ static SLJIT_INLINE void apple_update_wx_flags(sljit_s32 enable_exec)
 #define SLJIT_MAP_JIT	(0)
 #endif
 
-#define SLJIT_UPDATE_WX_FLAGS(from, to, enable_exec)
 #endif /* TARGET_OS_OSX */
 
 static SLJIT_INLINE void* alloc_chunk(sljit_uw size)

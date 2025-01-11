@@ -1140,8 +1140,8 @@ static s32 instanceof(JClass *other, Instance *ins, Runtime *runtime) {
 //-----------------------------------------------------------------
 
 void gen_jit_suspend_check_func() {
-    struct sljit_compiler *C = sljit_create_compiler(NULL, NULL);
-    sljit_set_context(C, 0, 0, 3, 3, 3, 0, LOCAL_COUNT * sizeof(sljit_sw));
+    struct sljit_compiler *C = sljit_create_compiler(NULL);
+    sljit_set_context(C, 0, 0, 3, 3, LOCAL_COUNT * sizeof(sljit_sw));
 
     sljit_emit_op_dst(C, SLJIT_FAST_ENTER, SLJIT_R2, 0);
 
@@ -1191,7 +1191,7 @@ void gen_jit_suspend_check_func() {
     sljit_emit_op_src(C, SLJIT_FAST_RETURN, SLJIT_R2, 0);
 
 
-    check_suspend = sljit_generate_code(C);
+    check_suspend = sljit_generate_code(C, 0, NULL);
     sljit_uw len = sljit_get_generated_code_size(C);
     sljit_free_compiler(C);
     //dump_code(check_suspend, len);
@@ -1239,7 +1239,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
     void *genfunc;
 
     /* Start a context(function entry), have 2 arguments, discuss later */
-    sljit_emit_enter(C, 0, SLJIT_ARGS2(W, P, P), 3, 3, 3, 0, LOCAL_COUNT * sizeof(sljit_sw));
+    sljit_emit_enter(C, 0, SLJIT_ARGS2(W, P, P), 3 | SLJIT_ENTER_FLOAT(3), 3, LOCAL_COUNT * sizeof(sljit_sw));
 
     /* SLJIT_SP is the init address of local var */
     //arr[LOCAL_METHOD]= (S0)MethodInfo *method
@@ -3275,7 +3275,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
     }
 
     //Generate machine code
-    genfunc = sljit_generate_code(C);
+    genfunc = sljit_generate_code(C, 0, NULL);
     if (sljit_get_compiler_error(C) != SLJIT_ERR_COMPILED) {
         return JIT_GEN_ERROR;
     }
@@ -3342,7 +3342,7 @@ void construct_jit(MethodInfo *method, Runtime *runtime) {
         return;
     }
     /* Create a SLJIT compiler */
-    struct sljit_compiler *C = sljit_create_compiler(NULL, NULL);
+    struct sljit_compiler *C = sljit_create_compiler(NULL);
     ca->jit.state = JIT_GEN_COMPILING;
     ca->jit.state = gen_jit_bytecode_func(C, method, runtime);
 
