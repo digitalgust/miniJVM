@@ -98,7 +98,7 @@
             token=getEnv("TOKEN")
             if(strlen(token)>0)
                 uid=getEnv("USERNAME")
-                setText("LAB_USERNAME",uid+" {STR_SIGNIN_ALREADY} >")
+                setText("LAB_USERNAME",uid+" >")
             else
                 setText("LAB_USERNAME","{STR_NEED_SIGNIN} >")
             eif
@@ -148,7 +148,7 @@
 
                                 <br/>
                                 <label w="100%" h="30" fontsize="20" align="hcenter,vcenter">{PLUGIN_MANAGER}</label>
-                                <input name="INPUT_SEARCH" w="100%" h="30" style="search" hint="Search plugin"></input>
+                                <input name="INPUT_SEARCH" w="100%" h="30" style="search" hint="Search"></input>
                                 <br/>
                             </td>
                         </tr>
@@ -255,8 +255,7 @@
                                 </td>
                                 <td w="20"></td>
                                 <td w="float" bgcolor="55558020">
-                                    <label name="LAB_USERNAME" onclick='showProfile()' w="100%" h="80" color="bb8844ff" fontsize="18" align="hcenter,vcenter">{SIGN_IN} &gt;
-                                    </label>
+                                    <label name="LAB_USERNAME" onclick='showProfile()' w="100%" h="80" color="bb8844ff" fontsize="18" align="hcenter,vcenter">{SIGN_IN} &gt;</label>
                                 </td>
                             </tr>
                         </table>
@@ -275,7 +274,7 @@
     <tr h="50" w="100%">
         <td w="100%" h="100%">
             <menu name="MENU_MAIN" w="100%" h="100%">
-                <mi name="MI_PLUGINMGR" onclick='showSlot("SLOT_MGR",0)'>{PLUGIN}</mi>
+                <mi name="MI_PLUGINMGR" onclick='showSlot("SLOT_MGR",0)'>{PLUGIN_MANAGER}</mi>
                 <mi name="MI_DISCOVERY" onclick="showDiscovery()">{DISCOVERY}</mi>
                 <mi name="MI_MY" onclick="showMy()">{MY}</mi>
             </menu>
