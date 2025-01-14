@@ -519,12 +519,6 @@ s32 org_mini_vm_RefNative_defineClass(Runtime *runtime, JClass *clazz) {
     JClass *cl = class_parse(cloader, bytebuf, runtime);
     bytebuf_destory(bytebuf);
 
-    if (!cl->source)cl->source = cl->name; //maybe lambda generated class
-    if (
-            utf8_equals_c(cl->name, "org/objectweb/asm/ClassAdapter")
-            ) {
-        s32 debug = 1;
-    }
     Instance *clIns = insOfJavaLangClass_create_get(runtime, cl);
 
     setFieldRefer(getInstanceFieldPtr(clIns, runtime->jvm->shortcut.class_classLoader), cloader);

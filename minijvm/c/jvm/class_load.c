@@ -1854,25 +1854,37 @@ s32 _LOAD_CLASS_FROM_BYTES(JClass *_this, ByteBuf *buf) {
 }
 
 JClass *class_parse(Instance *loader, ByteBuf *bytebuf, Runtime *runtime) {
-    JClass *tmpclazz = NULL;
+    JClass *tmpclazz = NULL, *tmp_for_del = NULL;
     if (bytebuf != NULL) {
-        tmpclazz = class_create(runtime);
-        tmpclazz->jloader = loader;
-
-        s32 iret = tmpclazz->_load_class_from_bytes(tmpclazz, bytebuf);//load file
+        tmp_for_del = class_create(runtime);
+        tmp_for_del->jloader = loader;
         MiniJVM *jvm = runtime->jvm;
 
+        s32 iret = tmp_for_del->_load_class_from_bytes(tmp_for_del, bytebuf);//load file
+
         if (iret == 0) {
-            classes_put(jvm, tmpclazz);
-            class_prepar(loader, tmpclazz, runtime);
-            if (jvm->jdwp_enable && jvm->jdwpserver && tmpclazz)event_on_class_prepare(jvm->jdwpserver, runtime, tmpclazz);
+            tmpclazz = classes_get(jvm, loader, tmp_for_del->name);// if class already loaded
+            if (!tmpclazz) {
+                tmpclazz = tmp_for_del;
+                tmp_for_del = NULL;
+                classes_put(jvm, tmpclazz);
+                class_prepar(loader, tmpclazz, runtime);
+                if (jvm->jdwp_enable && jvm->jdwpserver && tmpclazz)event_on_class_prepare(jvm->jdwpserver, runtime, tmpclazz);
 #if _JVM_DEBUG_LOG_LEVEL > 2
-            jvm_printf("load class (%016llx load %016llx):  %s \n", (s64) (intptr_t) loader, (s64) (intptr_t) tmpclazz, utf8_cstr(tmpclazz->name));
+                jvm_printf("load class (%016llx load %016llx):  %s \n", (s64) (intptr_t) loader, (s64) (intptr_t) tmpclazz, utf8_cstr(tmpclazz->name));
 #endif
+            } else {
+                //may be user load class twice or more from ClassLoader.defineClass()
+                jvm_printf("multiple load class: %llx  %s \n", (s64) (intptr_t) tmp_for_del, utf8_cstr(tmp_for_del->name));
+            }
         } else {
-            classes_remove(jvm, tmpclazz);
-            class_destory(tmpclazz);
-            tmpclazz = NULL;
+            jvm_printf("load class error: %llx  %s \n", (s64) (intptr_t) tmp_for_del, utf8_cstr(tmp_for_del->name));
+        }
+        if (tmp_for_del) {
+            // class register to gc when it created ,
+            // gc will remove the same name class from class_table when gc destroy this class ,
+            // so we need clear its name to avoid gc remove a class with same name
+            utf8_clear(tmp_for_del->name);
         }
     }
     return tmpclazz;

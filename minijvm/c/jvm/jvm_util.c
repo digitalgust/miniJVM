@@ -897,7 +897,7 @@ s32 jthread_run(void *para) {
     Instance *jthread = runtime->thrd_info->jthread;
     MiniJVM *jvm = runtime->jvm;
 
-#if _JVM_DEBUG_LOG_LEVEL > 0
+#if _JVM_DEBUG_LOG_LEVEL > 1
     s64 startAt = currentTimeMillis();
     jvm_printf("[INFO]thread(pthread %llx) start jthread %llx\n", (s64) (intptr_t) thrd_current(), (s64) (intptr_t) jthread);
 #endif
@@ -942,7 +942,7 @@ s32 jthread_run(void *para) {
 
     utf8_destory(methodName);
     utf8_destory(methodType);
-#if _JVM_DEBUG_LOG_LEVEL > 0
+#if _JVM_DEBUG_LOG_LEVEL > 1
     s64 spent = currentTimeMillis() - startAt;
     jvm_printf("[INFO]thread over %llx , return %d , spent : %lld\n", (s64) (intptr_t) jthread, ret, spent);
 #endif

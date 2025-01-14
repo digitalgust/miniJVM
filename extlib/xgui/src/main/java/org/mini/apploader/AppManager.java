@@ -198,9 +198,9 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
     void setStyleButton(int i) {
         GButton bt = GToolkit.getComponent(mgrForm, "BT_STYLE");
         if (i == 0) {
-            bt.setPreIcon("●");
-        } else {
             bt.setPreIcon("◑");
+        } else {
+            bt.setPreIcon("\uD83D\uDD06");
         }
     }
 

@@ -35,6 +35,7 @@ public class GuiScriptLib extends Lib {
             methodNames.put("flushGui".toLowerCase(), this::flushGui);//  set background color
             methodNames.put("setBgColor".toLowerCase(), this::setBgColor);//  set background color
             methodNames.put("setColor".toLowerCase(), this::setColor);//  set background color
+            methodNames.put("getDefaultColor".toLowerCase(), this::getDefaultTextColorHexStr);//  set background color
             methodNames.put("setText".toLowerCase(), this::setText);//  set text
             methodNames.put("getText".toLowerCase(), this::getText);//  get text
             methodNames.put("setCmd".toLowerCase(), this::setCmd);//
@@ -194,6 +195,16 @@ public class GuiScriptLib extends Lib {
             gobj.setColor(color);
         }
         return null;
+    }
+
+    public DataType getDefaultTextColorHexStr(ArrayList<DataType> para) {
+        float[] fcolor = GToolkit.getStyle().getTextFontColor();
+        int c = (((int) (fcolor[0] * 0xff)) << 24)
+                | (((int) (fcolor[1] * 0xff)) << 16)
+                | (((int) (fcolor[2] * 0xff)) << 8)
+                | (((int) (fcolor[3] * 0xff)));
+        String hex = Integer.toHexString(c);
+        return Interpreter.getCachedStr(hex);
     }
 
     public DataType setBgColorHexStr(ArrayList<DataType> para) {
