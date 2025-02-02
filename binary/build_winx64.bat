@@ -13,7 +13,7 @@ if exist  %GCCHOME% (
 ) else (
     echo [ERROR]gcc not found
     echo [INFO]http://mingw-w64.org/ 
-    echo [INFO]Please download gcc: https://github.com/digitalgust/mingw-w64/releases/download/release/x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z
+    echo [INFO]Please download gcc: https://objects.githubusercontent.com/github-production-release-asset-2e65be/446033510/b5868a81-162c-42ec-ab3c-701571ad88b2?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=releaseassetproduction%2F20250201%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250201T140119Z&X-Amz-Expires=300&X-Amz-Signature=93b5769fdafe169607384e9e75f65f7c856b1699edd52c8911c2fa7de4275895&X-Amz-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3Dx86_64-14.2.0-release-posix-seh-msvcrt-rt_v12-rev1.7z&response-content-type=application%2Foctet-stream
     echo [INFO]Change GCCHOME with installed directory
     goto :eof
 )
