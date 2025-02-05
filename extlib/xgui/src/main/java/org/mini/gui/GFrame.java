@@ -30,6 +30,7 @@ public class GFrame extends GContainer {
 
     protected byte[] close_arr = {(byte) 0xE2, (byte) 0x9C, (byte) 0x96, 0};
     protected float[] close_boundle = new float[4];
+    protected float[] titleColor = null;
 
     protected GViewPort view = new GViewPort(form);
 
@@ -447,10 +448,15 @@ public class GFrame extends GContainer {
                 nvgTextJni(vg, x + w / 2, y + 16 + 1, title_arr, 0, title_arr.length);
 
                 nvgFontBlur(vg, 0);
-                if(isFocus) {
+                if (isFocus) {
                     nvgFillColor(vg, GToolkit.getStyle().getFrameTitleColor());
-                }else{
-                    nvgFillColor(vg, GToolkit.getStyle().getDisabledTextFontColor());
+                } else {
+                    if (titleColor == null) {
+                        titleColor = new float[4];
+                        System.arraycopy(GToolkit.getStyle().getFrameTitleColor(), 0, titleColor, 0, titleColor.length);
+                        titleColor[3] *= 0.7f;
+                    }
+                    nvgFillColor(vg, titleColor);
                 }
                 nvgTextJni(vg, x + w / 2, y + 16, title_arr, 0, title_arr.length);
                 nvgRestore(vg);

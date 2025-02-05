@@ -485,8 +485,17 @@ public class GuiScriptLib extends Lib {
 
     public DataType setListIdx(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        int idx = Interpreter.popBackInt(para);
+        DataType idxD = Interpreter.popBack(para);
         GObject gobj = GToolkit.getComponent(form, compont);
+        int idx = -1;
+        if (idxD instanceof Int) {
+            idx = ((Int) idxD).getValAsInt();
+        } else if (idxD instanceof Str) {
+            try {
+                idx = Integer.parseInt(((Str) idxD).getVal());
+            } catch (Exception e) {
+            }
+        }
         if (gobj != null && gobj instanceof GList) {
             GList list = (GList) gobj;
             if (idx >= 0 && idx < list.getElements().size()) {

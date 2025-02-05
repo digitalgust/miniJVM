@@ -411,6 +411,7 @@ abstract public class GObject implements GAttachable {
 
     public void setVisible(boolean v) {
         visible = v;
+        setEnable(v);
     }
 
     public boolean isVisible() {
