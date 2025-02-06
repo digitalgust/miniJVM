@@ -105,7 +105,8 @@ public class GScrollBar extends GObject {
         if (pressed) {
             draged = true;
             parent.setCurrent(this);
-            pos = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
+            float p = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
+            setPos(p);
         } else {
             draged = false;
             doAction();
@@ -119,7 +120,8 @@ public class GScrollBar extends GObject {
         int rx = (int) (x - getX());
         int ry = (int) (y - getY());
         if (draged) {
-            pos = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
+            float p = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
+            setPos(p);
             doStateChanged(this);
         }
     }
@@ -132,11 +134,13 @@ public class GScrollBar extends GObject {
         switch (phase) {
             case Glfm.GLFMTouchPhaseBegan:
                 draged = true;
-                pos = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
+                float p = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
+                setPos(p);
                 break;
             case Glfm.GLFMTouchPhaseMoved:
                 if (draged) {
-                    pos = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
+                    p = mode == HORIZONTAL ? (rx - line_boundle[LEFT]) / line_boundle[WIDTH] : (ry - line_boundle[TOP]) / line_boundle[HEIGHT];
+                    setPos(p);
                     doStateChanged(this);
                 }
                 break;
