@@ -661,7 +661,7 @@ s32 org_mini_reflect_ReflectClass_mapClass(Runtime *runtime, JClass *clazz) {
         //
         ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_REFERENCE, "source", STR_INS_JAVA_LANG_STRING, runtime);
         if (ptr) {
-            Instance *source = jstring_create(target->source, runtime);
+            Instance *source = jstring_create(target->source ? target->source : target->name, runtime);
             setFieldRefer(ptr, source);
         }
         //

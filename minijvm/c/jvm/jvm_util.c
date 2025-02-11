@@ -936,6 +936,10 @@ s32 jthread_run(void *para) {
     execute_method_impl(method, runtime);
 
     runtime->thrd_info->thread_status = THREAD_STATUS_ZOMBIE;
+
+    if (runtime->thrd_info->curThreadLock) {
+        jthread_unlock(runtime->thrd_info->curThreadLock, runtime);
+    }
     jthread_dispose(jthread, runtime);
     gc_move_objs_thread_2_gc(runtime);
     runtime_destory(runtime);
@@ -1228,7 +1232,7 @@ s32 jarray_destory(Instance *arr) {
         jthreadlock_destory(&arr->mb);
         arr->mb.thread_lock = NULL;
         arr->arr_length = -1;
-        jvm_free(arr);
+        jvm_free(arr); // 确保释放数组内存
     }
     return 0;
 }
@@ -1421,8 +1425,7 @@ void instance_clear_refer(Instance *ins) {
 
 s32 instance_destory(Instance *ins) {
     jthreadlock_destory(&ins->mb);
-    jvm_free(ins);
-
+    jvm_free(ins); // 确保释放实例内存
     return 0;
 }
 
@@ -2102,7 +2105,7 @@ Instance *build_stack_element(Runtime *runtime, Runtime *target) {
         //
         ptr = getInstanceFieldPtr(ins, shortcut->stacktrace_fileName);
         if (ptr) {
-            Instance *name = jstring_create(target->clazz->source, runtime);
+            Instance *name = jstring_create(target->clazz->source ? target->clazz->source : target->clazz->name, runtime);
             setFieldRefer(ptr, name);
         }
         //

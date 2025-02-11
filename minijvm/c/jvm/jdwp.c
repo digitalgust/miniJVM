@@ -1111,10 +1111,10 @@ s32 jdwp_set_breakpoint(JdwpServer *jdwpserver, s32 setOrClear, JClass *clazz, M
 
 
 s32 jdwp_set_debug_step(JdwpServer *jdwpserver, s32 setOrClear, Instance *jthread, s32 size, s32 depth) {
-  /**
-   * Due to different method call depths, the runtime of the son has a different level.
-   * This controls the virtual machine's method step_into and step_out.
-   */
+    /**
+     * Due to different method call depths, the runtime of the son has a different level.
+     * This controls the virtual machine's method step_into and step_out.
+     */
     Runtime *r = jthread_get_stackframe_value(jdwpserver->jvm, jthread);
     if (!r)return JDWP_ERROR_INVALID_THREAD;
     Runtime *last = getLastSon(r);
@@ -1963,7 +1963,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 JClass *ref = jdwppacket_read_refer(req);
                 if (is_class_exists(jdwpserver->jvm, ref)) {
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
-                    jdwppacket_write_utf(res, ref->source);
+                    jdwppacket_write_utf(res, ref->source ? ref->source : ref->name);//Lambda has no source
                 } else {
                     jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
                 }
