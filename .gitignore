@@ -10,9 +10,10 @@ dist
 cmake-build-debug
 cmake-build-release
 
-
+.vscode
 .svn
 
+/minijvm/c/build
 /minijvm/java/target/
 /desktop/jni_gui/java/target/
 /desktop/awtk
