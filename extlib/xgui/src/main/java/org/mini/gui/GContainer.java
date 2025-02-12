@@ -447,8 +447,8 @@ abstract public class GContainer extends GObject {
                 }
                 //对掉位置
                 if (oldPos >= 0 && newPos >= 0) {
-                    elements.set(newPos, current);
-                    elements.set(oldPos, swapGo);
+                    elements.add(newPos + 1, current);
+                    elements.remove(oldPos);
                 }
             }
         }

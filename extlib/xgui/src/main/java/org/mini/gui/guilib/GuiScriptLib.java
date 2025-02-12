@@ -485,8 +485,17 @@ public class GuiScriptLib extends Lib {
 
     public DataType setListIdx(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        int idx = Interpreter.popBackInt(para);
+        DataType idxD = Interpreter.popBack(para);
         GObject gobj = GToolkit.getComponent(form, compont);
+        int idx = -1;
+        if (idxD instanceof Int) {
+            idx = ((Int) idxD).getValAsInt();
+        } else if (idxD instanceof Str) {
+            try {
+                idx = Integer.parseInt(((Str) idxD).getVal());
+            } catch (Exception e) {
+            }
+        }
         if (gobj != null && gobj instanceof GList) {
             GList list = (GList) gobj;
             if (idx >= 0 && idx < list.getElements().size()) {
@@ -557,10 +566,10 @@ public class GuiScriptLib extends Lib {
 
     private DataType setScrollBar(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        Float fv = (Float) Interpreter.popBackObject(para);
+        int fv = Interpreter.popBackInt(para);
         GObject gobj = GToolkit.getComponent(form, compont);
-        if (gobj != null && gobj instanceof GScrollBar) {
-            ((GScrollBar) gobj).setPos(fv);
+        if (gobj instanceof GScrollBar) {
+            ((GScrollBar) gobj).setPos(fv / 100f);
         }
         return null;
     }
@@ -568,20 +577,21 @@ public class GuiScriptLib extends Lib {
     private DataType getScrollBar(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
         GObject gobj = GToolkit.getComponent(form, compont);
-        Float val;
-        if (gobj != null && gobj instanceof GScrollBar) {
-            val = ((GScrollBar) gobj).getPos();
+        float fv;
+        if (gobj instanceof GScrollBar) {
+            fv = ((GScrollBar) gobj).getPos();
         } else {
-            val = Float.valueOf(0);
+            fv = 0f;
         }
-        return Interpreter.getCachedObj(val);
+        int v = (int) (fv * 100);
+        return Interpreter.getCachedInt(v);
     }
 
     private DataType setSwitch(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
         boolean checked = Interpreter.popBackBool(para);
         GObject gobj = GToolkit.getComponent(form, compont);
-        if (gobj != null && gobj instanceof GSwitch) {
+        if (gobj instanceof GSwitch) {
             ((GSwitch) gobj).setSwitcher(checked);
         }
         return null;
@@ -591,7 +601,7 @@ public class GuiScriptLib extends Lib {
         String compont = Interpreter.popBackStr(para);
         GObject gobj = GToolkit.getComponent(form, compont);
         boolean checked = false;
-        if (gobj != null && gobj instanceof GSwitch) {
+        if (gobj instanceof GSwitch) {
             checked = ((GSwitch) gobj).getSwitcher();
         }
         return Interpreter.getCachedBool(checked);
@@ -602,14 +612,14 @@ public class GuiScriptLib extends Lib {
         XmlExtAssist xmlExtAssist = null;
         if (!para.isEmpty()) {
             Object sobj = Interpreter.popBackObject(para);
-            if (sobj != null && sobj instanceof XmlExtAssist) {
+            if (sobj instanceof XmlExtAssist) {
                 xmlExtAssist = (XmlExtAssist) sobj;
             }
         }
         XEventHandler eventHandler = null;
         if (!para.isEmpty()) {
             Object sobj = Interpreter.popBackObject(para);
-            if (sobj != null && sobj instanceof XEventHandler) {
+            if (sobj instanceof XEventHandler) {
                 eventHandler = (XEventHandler) sobj;
             }
         }
@@ -684,7 +694,7 @@ public class GuiScriptLib extends Lib {
         GObject gobj = GToolkit.getComponent(form, compont);
         int pos = Interpreter.popBackInt(para);
         String str = Interpreter.popBackStr(para);
-        if (gobj != null && gobj instanceof GTextObject) {
+        if (gobj instanceof GTextObject) {
             ((GTextObject) gobj).insertTextByIndex(pos, str);
         }
         return null;
@@ -695,7 +705,7 @@ public class GuiScriptLib extends Lib {
         GObject gobj = GToolkit.getComponent(form, compont);
         int pos = Interpreter.popBackInt(para);
         int pos1 = Interpreter.popBackInt(para);
-        if (gobj != null && gobj instanceof GTextObject) {
+        if (gobj instanceof GTextObject) {
             ((GTextObject) gobj).deleteTextRange(pos, pos1);
         }
         return null;
