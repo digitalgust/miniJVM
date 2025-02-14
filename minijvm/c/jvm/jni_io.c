@@ -869,12 +869,14 @@ s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src) {
 
     if (!is_platform_encoding_utf8() && !os_utf8) {
         if (!is_ascii(utf8_cstr(src))) {
-            s32 u16len = src->length * DATA_TYPE_BYTES[DATATYPE_JCHAR] + 2;
-            u16 *arr = jvm_calloc(u16len);
-            s32 len = utf8_2_unicode(src, arr, u16len);
-            s32 plen = conv_unicode_2_platform_encoding(dst, arr, len);
-            jvm_free(arr);
-            return plen;
+            s32 c8len = (src->length + 1) * DATA_TYPE_BYTES[DATATYPE_JCHAR];
+            u16 *arr = jvm_calloc(c8len);
+            s32 len = utf8_2_unicode(src, arr, c8len / DATA_TYPE_BYTES[DATATYPE_JCHAR]);
+            if (len >= 0) {
+                s32 plen = conv_unicode_2_platform_encoding(dst, arr, len);
+                jvm_free(arr);
+                return plen;
+            }
         }
     }
     bytebuf_expand(dst, src->length + 4);

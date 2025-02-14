@@ -1,4 +1,3 @@
-
 #include <stdlib.h>
 #include <string.h>
 #include "utf8_string.h"
@@ -559,6 +558,7 @@ s32 utf8_2_unicode(Utf8String *ustr, u16 *jchar_arr, s32 jchar_arr_u16_len) {
     while (*pInput) {
         //*Unic = 0x0; // 把 *Unic 初始化为全零
         s32 utfbytes = enc_get_utf8_size(pInput);
+        if (utfbytes < 1) return -1; // 无效的 UTF-8 序列
         //printf("%d", utfbytes);
         codepoint = 0;
         switch (utfbytes) {
@@ -576,8 +576,8 @@ s32 utf8_2_unicode(Utf8String *ustr, u16 *jchar_arr, s32 jchar_arr_u16_len) {
                 b2 = *(pInput + 1);
                 if ((b2 & 0xc0) != 0x80)
                     return -1;
-                *pOutput = (b1 << 6) + (b2 & 0x3F);
-                *(pOutput + 1) = (b1 >> 2) & 0x07;
+                *pOutput = (b2 & 0x3F) | ((b1 & 0x1F) << 6);
+                *(pOutput + 1) = 0;
                 if (outputSize < jchar_arr_u16_len) {
                     *jchar_arr = (u16) codepoint;
                     jchar_arr++;
@@ -590,8 +590,8 @@ s32 utf8_2_unicode(Utf8String *ustr, u16 *jchar_arr, s32 jchar_arr_u16_len) {
                 b3 = *(pInput + 2);
                 if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80))
                     return -1;
-                *pOutput = (b2 << 6) + (b3 & 0x3F);
-                *(pOutput + 1) = (b1 << 4) + ((b2 >> 2) & 0x0F);
+                *pOutput = (b3 & 0x3F) | ((b2 & 0x3F) << 6);
+                *(pOutput + 1) = (b1 & 0x0F) << 4 | ((b2 >> 2) & 0x0F);
                 if (outputSize < jchar_arr_u16_len) {
                     *jchar_arr = (u16) codepoint;
                     jchar_arr++;
@@ -606,9 +606,8 @@ s32 utf8_2_unicode(Utf8String *ustr, u16 *jchar_arr, s32 jchar_arr_u16_len) {
                 if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80)
                     || ((b4 & 0xC0) != 0x80))
                     return -1;
-                *pOutput = (b3 << 6) + (b4 & 0x3F);
-                *(pOutput + 1) = (b2 << 4) + ((b3 >> 2) & 0x0F);
-                *(pOutput + 2) = ((b1 << 2) & 0x1C) + ((b2 >> 4) & 0x03);
+                codepoint = ((b1 & 0x07) << 18) | ((b2 & 0x3F) << 12) |
+                            ((b3 & 0x3F) << 6) | (b4 & 0x3F);
                 break;
 
             case 5:
@@ -620,10 +619,8 @@ s32 utf8_2_unicode(Utf8String *ustr, u16 *jchar_arr, s32 jchar_arr_u16_len) {
                 if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80)
                     || ((b4 & 0xC0) != 0x80) || ((b5 & 0xC0) != 0x80))
                     return -1;
-                *pOutput = (b4 << 6) + (b5 & 0x3F);
-                *(pOutput + 1) = (b3 << 4) + ((b4 >> 2) & 0x0F);
-                *(pOutput + 2) = (b2 << 2) + ((b3 >> 4) & 0x03);
-                *(pOutput + 3) = (b1 << 6);
+                codepoint = ((b1 & 0x03) << 24) | ((b2 & 0x3F) << 18) |
+                            ((b3 & 0x3F) << 12) | ((b4 & 0x3F) << 6) | (b5 & 0x3F);
                 break;
 
             case 6:
@@ -637,10 +634,9 @@ s32 utf8_2_unicode(Utf8String *ustr, u16 *jchar_arr, s32 jchar_arr_u16_len) {
                     || ((b4 & 0xC0) != 0x80) || ((b5 & 0xC0) != 0x80)
                     || ((b6 & 0xC0) != 0x80))
                     return -1;
-                *pOutput = (b5 << 6) + (b6 & 0x3F);
-                *(pOutput + 1) = (b5 << 4) + ((b6 >> 2) & 0x0F);
-                *(pOutput + 2) = (b3 << 2) + ((b4 >> 4) & 0x03);
-                *(pOutput + 3) = ((b1 << 6) & 0x40) + (b2 & 0x3F);
+                codepoint = ((b1 & 0x01) << 30) | ((b2 & 0x3F) << 24) |
+                            ((b3 & 0x3F) << 18) | ((b4 & 0x3F) << 12) |
+                            ((b5 & 0x3F) << 6) | (b6 & 0x3F);
                 break;
 
             default:
@@ -668,6 +664,8 @@ s32 utf8_2_unicode(Utf8String *ustr, u16 *jchar_arr, s32 jchar_arr_u16_len) {
 
 
 s32 unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 jchar_arr_u16_len) {
+    if (!jchar_arr || !ustr || jchar_arr_u16_len < 0) return 0;
+
     s32 i;
     for (i = 0; i < jchar_arr_u16_len; i++) {
         s32 unic = jchar_arr[i];
@@ -678,7 +676,7 @@ s32 unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 jchar_arr_u16_len) {
                     i++;
                     s32 lead = unic & 0x3ff;
                     s32 trail = c1 & 0x3ff;
-                    unic = (lead << 10) | trail | 0x10000;
+                    unic = ((lead << 10) | trail) + 0x10000;
                 }
             }
         }

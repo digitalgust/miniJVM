@@ -1349,9 +1349,9 @@ Instance *jstring_create(Utf8String *src, Runtime *runtime) {
     instance_init(jstring, runtime);
 
     c8 *ptr = jstring_get_value_ptr(jstring, runtime);
-    s32 u16len = src->length * DATA_TYPE_BYTES[DATATYPE_JCHAR] + 2;
-    u16 *buf = jvm_calloc(u16len);
-    s32 len = utf8_2_unicode(src, buf, u16len);
+    s32 c8len = (src->length + 1) * DATA_TYPE_BYTES[DATATYPE_JCHAR];
+    u16 *buf = jvm_calloc(c8len);
+    s32 len = utf8_2_unicode(src, buf, c8len / DATA_TYPE_BYTES[DATATYPE_JCHAR]);
     if (len >= 0) {//可能解析出错
         Instance *arr = jstring_get_value_array(jstring, runtime);
         if (!arr || arr->arr_length < len) {
