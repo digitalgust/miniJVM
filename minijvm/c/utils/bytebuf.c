@@ -15,7 +15,7 @@ ByteBuf *bytebuf_create(u32 size) {
     return NULL;
 }
 
-void bytebuf_destory(ByteBuf *bf) {
+void bytebuf_destroy(ByteBuf *bf) {
     if (bf) {
         jvm_free(bf->buf);
         jvm_free(bf);

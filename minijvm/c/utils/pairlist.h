@@ -34,24 +34,32 @@ static inline Pairlist *pairlist_create(s32 len) {
     if (len <= 0) {
         len = 4;
     }
-    Pairlist *list = (Pairlist *) jvm_calloc(sizeof(Pairlist));//每个位置放两个指针
-    if (list) {
-        list->ptr = (Pair *) jvm_calloc(sizeof(Pair) * len);//每个位置放两个指针
-        list->_alloced = len;
-        list->count = 0;
-        return list;
+    Pairlist *list = (Pairlist *) jvm_calloc(sizeof(Pairlist));
+    if (!list) {
+        return NULL;
     }
-    return NULL;
+    list->ptr = (Pair *) jvm_calloc(sizeof(Pair) * len);
+    if (!list->ptr) {
+        jvm_free(list);
+        return NULL;
+    }
+    list->_alloced = len;
+    list->count = 0;
+    return list;
 }
 
-static inline void pairlist_destory(Pairlist *list) {
+static inline void pairlist_destroy(Pairlist *list) {
     if (list) {
-        jvm_free(list->ptr);
+        if (list->ptr) {
+            jvm_free(list->ptr);
+        }
         jvm_free(list);
     }
-};
+}
 
 static inline __refer pairlist_get(Pairlist *list, __refer left) {
+    if (!list || !list->ptr) return NULL;
+
     Pair *start = list->ptr;
     Pair *end = start + list->count;
     for (; start < end; start++) {
@@ -67,13 +75,9 @@ static inline intptr_t pairlist_getl(Pairlist *list, intptr_t left) {
 }
 
 static inline s32 pairlist_put(Pairlist *list, __refer left, __refer right) {
-    if (list->count >= list->_alloced) {//空间不足
-        s32 newSize = list->_alloced << 1;
-        void *p = jvm_realloc(list->ptr, newSize * sizeof(Pair));
-        list->_alloced = newSize;
-        list->ptr = (Pair *) p;
-    }
+    if (!list) return -1;
 
+    // First try to update existing entry
     Pair *start = list->ptr;
     Pair *end = start + list->count;
     for (; start < end; start++) {
@@ -82,8 +86,21 @@ static inline s32 pairlist_put(Pairlist *list, __refer left, __refer right) {
             return 1;
         }
     }
-    start->left = left;
-    start->right = right;
+
+    // Need to add new entry, check if reallocation needed
+    if (list->count >= list->_alloced) {
+        s32 newSize = list->_alloced << 1;
+        Pair *newPtr = (Pair *) jvm_realloc(list->ptr, newSize * sizeof(Pair));
+        if (!newPtr) {
+            return -1;
+        }
+        list->ptr = newPtr;
+        list->_alloced = newSize;
+    }
+
+    // Add new entry
+    list->ptr[list->count].left = left;
+    list->ptr[list->count].right = right;
     list->count++;
     return 0;
 }
@@ -94,22 +111,29 @@ static inline s32 pairlist_putl(Pairlist *list, intptr_t left, intptr_t right) {
 }
 
 static inline Pair pairlist_get_pair(Pairlist *list, s32 index) {
+    Pair empty = {0};
+    if (!list || !list->ptr || index < 0 || index >= list->count) {
+        return empty;
+    }
     return list->ptr[index];
 }
 
 static inline __refer pairlist_remove(Pairlist *list, __refer left) {
-    __refer right = NULL;
+    if (!list || !list->ptr) return NULL;
 
     Pair *start = list->ptr;
     Pair *end = start + list->count;
     for (; start < end; start++) {
         if (start->left == left) {
-            memmove(start, start + 1, ((c8 *) end) - ((c8 *) (start + 1)));
+            __refer right = start->right;
+            if (start + 1 < end) {
+                memmove(start, start + 1, (end - (start + 1)) * sizeof(Pair));
+            }
             list->count--;
-            break;
+            return right;
         }
     }
-    return right;
+    return NULL;
 }
 
 static inline intptr_t pairlist_removel(Pairlist *list, intptr_t left) {

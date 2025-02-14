@@ -23,7 +23,7 @@ void thread_boundle(Runtime *runtime) {
     Runtime *r = jthread_get_stackframe_value(runtime->jvm, t);
     if (r) {
         gc_move_objs_thread_2_gc(r);
-        runtime_destory(r);
+        runtime_destroy(r);
     }
     //bind new runtime
     jthread_set_stackframe_value(runtime->jvm, t, runtime);
@@ -47,7 +47,7 @@ void print_exception(Runtime *runtime) {
         Utf8String *stacktrack = utf8_create();
         getRuntimeStack(runtime, stacktrack);
         jvm_printf("%s\n", utf8_cstr(stacktrack));
-        utf8_destory(stacktrack);
+        utf8_destroy(stacktrack);
 
         runtime_clear_stacktrack(runtime);
     }
@@ -94,14 +94,14 @@ PeerClassLoader *classloader_create_with_path(MiniJVM *jvm, c8 *path) {
     class_loader->classpath = arraylist_create(0);
     Utf8String *g_classpath = utf8_create_c(path);
     classloader_add_jar_path(class_loader, g_classpath);
-    utf8_destory(g_classpath);
+    utf8_destroy(g_classpath);
     //创建类容器
     class_loader->classes = hashtable_create(UNICODE_STR_HASH_FUNC, UNICODE_STR_EQUALS_FUNC);
 
     return class_loader;
 }
 
-void classloader_destory(PeerClassLoader *class_loader) {
+void classloader_destroy(PeerClassLoader *class_loader) {
     HashtableIterator hti;
     hashtable_iterate(class_loader->classes, &hti);
     for (; hashtable_iter_has_more(&hti);) {
@@ -112,10 +112,10 @@ void classloader_destory(PeerClassLoader *class_loader) {
     hashtable_clear(class_loader->classes);
     s32 i;
     for (i = 0; i < class_loader->classpath->length; i++) {
-        utf8_destory(arraylist_get_value(class_loader->classpath, i));
+        utf8_destroy(arraylist_get_value(class_loader->classpath, i));
     }
-    arraylist_destory(class_loader->classpath);
-    hashtable_destory(class_loader->classes);
+    arraylist_destroy(class_loader->classpath);
+    hashtable_destroy(class_loader->classes);
 
     class_loader->classes = NULL;
 
@@ -150,7 +150,7 @@ void classloader_add_jar_path(PeerClassLoader *class_loader, Utf8String *jar_pat
             break;
         }
     }
-    utf8_destory(libname);
+    utf8_destroy(libname);
 }
 
 void classloaders_add(MiniJVM *jvm, PeerClassLoader *pcl) {
@@ -206,12 +206,12 @@ void classloaders_destroy_all(MiniJVM *jvm) {
         for (i = 0; i < jvm->classloaders->length; i++) {
             PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
             //release class static field
-            classloader_destory(pcl);
+            classloader_destroy(pcl);
         }
     }
     spin_unlock(&jvm->lock_cloader);
     spin_destroy(&jvm->lock_cloader);
-    arraylist_destory(jvm->classloaders);
+    arraylist_destroy(jvm->classloaders);
     jvm->boot_classloader = NULL;
     jvm->classloaders = NULL;
 }
@@ -292,7 +292,7 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
 
     //创建jstring 相关容器
     jvm->table_jstring_const = hashtable_create(UNICODE_STR_HASH_FUNC, UNICODE_STR_EQUALS_FUNC);
-    hashtable_register_free_functions(jvm->table_jstring_const, (HashtableKeyFreeFunc) utf8_destory, NULL);
+    hashtable_register_free_functions(jvm->table_jstring_const, (HashtableKeyFreeFunc) utf8_destroy, NULL);
 
     spin_init(&jvm->lock_cloader, 0);
     jvm->boot_classloader = classloader_create_with_path(jvm, p_bootclasspath);
@@ -335,9 +335,9 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     instance_create(runtime, c2);
     utf8_clear(clsName);
 
-    utf8_destory(clsName);
+    utf8_destroy(clsName);
     gc_move_objs_thread_2_gc(runtime);
-    runtime_destory(runtime);
+    runtime_destroy(runtime);
     runtime = NULL;
 
     //启动垃圾回收
@@ -354,7 +354,7 @@ void jvm_destroy(MiniJVM *jvm) {
     if (parent && jvm->shutdown_hook) {
         jthread_start(jvm->shutdown_hook, parent);
     }
-    runtime_destory(parent);
+    runtime_destroy(parent);
     parent = NULL;
     while (threadlist_count_none_daemon(jvm) > 0 && !jvm->collector->exit_flag) {//wait for other thread over ,
         threadSleep(20);
@@ -372,13 +372,13 @@ void jvm_destroy(MiniJVM *jvm) {
 
     jdwp_stop_server(jvm);
     //
-    gc_destory(jvm);
+    gc_destroy(jvm);
 
-    hashtable_destory(jvm->table_jstring_const);
+    hashtable_destroy(jvm->table_jstring_const);
     //
     thread_lock_dispose(&jvm->threadlock);
-    arraylist_destory(jvm->thread_list);
-    native_lib_destory(jvm);
+    arraylist_destroy(jvm->thread_list);
+    native_lib_destroy(jvm);
     sys_properties_dispose(jvm);
     close_log();
 #if _JVM_DEBUG_LOG_LEVEL > 0
@@ -386,7 +386,7 @@ void jvm_destroy(MiniJVM *jvm) {
 #endif
     set_jvm_state(jvm, JVM_STATUS_UNKNOW);
     if (jvm->startup_dir) {
-        utf8_destory(jvm->startup_dir);
+        utf8_destroy(jvm->startup_dir);
     }
     jvm_free(jvm);
 }
@@ -405,13 +405,13 @@ s32 call_main(MiniJVM *jvm, c8 *p_mainclass, ArrayList *java_para) {
     Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
     Instance *arr = jarray_create_by_type_name(runtime, count, ustr, NULL);
     instance_hold_to_thread(arr, runtime);
-    utf8_destory(ustr);
+    utf8_destroy(ustr);
     s32 i;
     for (i = 0; i < count; i++) {
         Utf8String *utfs = utf8_create_c(arraylist_get_value(java_para, i));
         Instance *jstr = jstring_create(utfs, runtime);
         jarray_set_field(arr, i, (intptr_t) jstr);
-        utf8_destory(utfs);
+        utf8_destroy(utfs);
     }
     push_ref(runtime->stack, arr);
     instance_release_from_thread(arr, runtime);
@@ -422,7 +422,7 @@ s32 call_main(MiniJVM *jvm, c8 *p_mainclass, ArrayList *java_para) {
 
     thread_unboundle(runtime);
     gc_move_objs_thread_2_gc(runtime);
-    runtime_destory(runtime);
+    runtime_destroy(runtime);
     return ret;
 }
 
@@ -500,8 +500,8 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
 
 
         }
-        utf8_destory(methodName);
-        utf8_destory(methodType);
+        utf8_destroy(methodName);
+        utf8_destroy(methodType);
     } else {
         jvm_printf("[ERROR]main class not found: %s\n", p_classname);
         ret = RUNTIME_STATUS_ERROR;
@@ -509,9 +509,9 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
     if (!p_runtime) {
         thread_unboundle(runtime);
         gc_move_objs_thread_2_gc(runtime);
-        runtime_destory(runtime);
+        runtime_destroy(runtime);
     }
-    utf8_destory(str_mainClsName);
+    utf8_destroy(str_mainClsName);
     return ret;
 }
 

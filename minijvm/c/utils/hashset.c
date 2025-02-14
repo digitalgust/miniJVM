@@ -116,24 +116,24 @@ Hashset *hashset_create() {
     return set;
 }
 
-void hashset_destory(Hashset *set) {
-    if (!set)return;
+void hashset_destroy(Hashset *hash_table) {
+    if (!hash_table)return;
     HashsetEntry *rover;
     HashsetEntry *next;
     u64 i;
 
-    for (i = 0; i < set->table_size; ++i) {
-        rover = set->table[i];
+    for (i = 0; i < hash_table->table_size; ++i) {
+        rover = hash_table->table[i];
         while (rover != NULL) {
             next = rover->next;
-            _hashset_free_entry(set, rover);
+            _hashset_free_entry(hash_table, rover);
             rover = next;
         }
     }
-    _hashset_clear_pool(set);
-    arraylist_destory(set->entry_pool);
-    jvm_free(set->table);
-    jvm_free(set);
+    _hashset_clear_pool(hash_table);
+    arraylist_destroy(hash_table->entry_pool);
+    jvm_free(hash_table->table);
+    jvm_free(hash_table);
 }
 
 
@@ -159,7 +159,7 @@ void hashset_clear(Hashset *set) {
         set->table = NULL;
         set->table_size = 0;
         if (!hashset_allocate_table(set, HASH_SET_DEFAULT_SIZE)) {
-            arraylist_destory(set->entry_pool);
+            arraylist_destroy(set->entry_pool);
             jvm_free(set);
         }
     }

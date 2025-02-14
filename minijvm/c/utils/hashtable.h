@@ -181,7 +181,7 @@ int DEFAULT_HASH_EQUALS_FUNC(HashtableValue value1, HashtableValue value2);
  * @param hash_table           The hash table to destroy.
  */
 
-void hashtable_destory(Hashtable *hash_table);
+void hashtable_destroy(Hashtable *hash_table);
 
 void hashtable_clear(Hashtable *hash_table);
 

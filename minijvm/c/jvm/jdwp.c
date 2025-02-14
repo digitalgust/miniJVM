@@ -47,15 +47,15 @@ void event_on_debug_step(JdwpServer *jdwpserver, Runtime *step_runtime);
 
 EventSet *jdwp_eventset_create(JdwpServer *jdwpserver, JdwpClient *client, JdwpPacket *req);
 
-void jdwp_eventset_destory(EventSet *set);
+void jdwp_eventset_destroy(EventSet *set);
 
 void jdwp_eventset_remove_on_client_close(JdwpServer *jdwpserver, JdwpClient *client);
 
-void jdwppacket_destory(JdwpPacket *packet);
+void jdwppacket_destroy(JdwpPacket *packet);
 
 JdwpClient *jdwp_client_create(JdwpServer *jdwpserver);
 
-void jdwp_client_destory(JdwpServer *jdpwserver, JdwpClient *client);
+void jdwp_client_destroy(JdwpServer *jdwpserver, JdwpClient *client);
 
 void resume_all_thread(MiniJVM *jvm);
 
@@ -79,7 +79,7 @@ s32 jdwp_thread_listener(void *para) {
         JdwpClient *client = jdwp_client_create(jdwpserver);
         s32 ret = mbedtls_net_accept(&jdwpserver->srvsock, &client->sockfd, NULL, 0, NULL);
         if (ret < 0) {
-            jdwp_client_destory(jdwpserver, client);
+            jdwp_client_destroy(jdwpserver, client);
             jdwpserver->exit = 1;
             break;
         }
@@ -101,7 +101,7 @@ s32 jdwp_thread_dispacher(void *para) {
             jdwp_client_process(jdwpserver, client);
             jdwp_send_packets(client);
             if (client->closed) {
-                jdwp_client_destory(jdwpserver, client);
+                jdwp_client_destroy(jdwpserver, client);
                 arraylist_remove(jdwpserver->clients, client);
             }
         }
@@ -148,32 +148,32 @@ s32 jdwp_stop_server(MiniJVM *jvm) {
     //
     for (i = 0; i < jdwpserver->clients->length; i++) {
         JdwpClient *client = arraylist_get_value(jdwpserver->clients, i);
-        jdwp_client_destory(jdwpserver, client);
+        jdwp_client_destroy(jdwpserver, client);
     }
-    arraylist_destory(jdwpserver->clients);
+    arraylist_destroy(jdwpserver->clients);
     //
     spin_lock(&jdwpserver->event_packets->spinlock);
     for (i = 0; i < jdwpserver->event_packets->length; i++) {
         JdwpPacket *packet = arraylist_get_value_unsafe(jdwpserver->event_packets, i);
-        jdwppacket_destory(packet);
+        jdwppacket_destroy(packet);
     }
     spin_unlock(&jdwpserver->event_packets->spinlock);
-    arraylist_destory(jdwpserver->event_packets);
+    arraylist_destroy(jdwpserver->event_packets);
     //
     mtx_lock(&jdwpserver->event_sets_lock);
     Pair *pair = (Pair *) jdwpserver->event_sets->ptr;
     Pair *end = pair + jdwpserver->event_sets->count;
     for (; pair < end; pair++) {
         EventSet *set = (EventSet *) pair->right;
-        jdwp_eventset_destory(set);
+        jdwp_eventset_destroy(set);
     }
     mtx_unlock(&jdwpserver->event_sets_lock);
 
     mtx_destroy(&jdwpserver->event_sets_lock);
-    pairlist_destory(jdwpserver->event_sets);
+    pairlist_destroy(jdwpserver->event_sets);
 
     //
-    runtime_destory(jdwpserver->runtime_jdwp);
+    runtime_destroy(jdwpserver->runtime_jdwp);
     //
     thrd_detach(jdwpserver->pt_listener);
     thrd_detach(jdwpserver->pt_dispacher);
@@ -195,9 +195,9 @@ JdwpClient *jdwp_client_create(JdwpServer *jdwpserver) {
     return client;
 }
 
-void jdwp_client_destory(JdwpServer *jdwpserver, JdwpClient *client) {
+void jdwp_client_destroy(JdwpServer *jdwpserver, JdwpClient *client) {
     if (client->rcvp) {
-        jdwppacket_destory(client->rcvp);
+        jdwppacket_destroy(client->rcvp);
     }
     //release all hold object
     HashsetIterator hi;
@@ -206,7 +206,7 @@ void jdwp_client_destory(JdwpServer *jdwpserver, JdwpClient *client) {
         HashsetKey k = hashset_iter_next_key(&hi);
         gc_obj_release(client->jdwpserver->jvm->collector, k);
     }
-    hashset_destory(client->temp_obj_holder);
+    hashset_destroy(client->temp_obj_holder);
     client->temp_obj_holder = NULL;
 
     jdwp_eventset_remove_on_client_close(jdwpserver, client);
@@ -243,7 +243,7 @@ JdwpPacket *jdwppacket_create_data(c8 *data, s32 len) {
     return packet;
 }
 
-void jdwppacket_destory(JdwpPacket *packet) {
+void jdwppacket_destroy(JdwpPacket *packet) {
     jvm_free(packet->data);
     jvm_free(packet);
 }
@@ -519,7 +519,7 @@ JdwpPacket *jdwp_readpacket(JdwpClient *client) {
 s32 jdwp_writepacket(JdwpClient *client, JdwpPacket *packet) {
     jdwppacket_set_length(packet, packet->writePos);
     s32 len = jdwp_write_fully(client, packet->data, packet->writePos);
-    jdwppacket_destory(packet);
+    jdwppacket_destroy(packet);
     if (len < 0) {
         client->closed = 1;
         return 1;
@@ -952,7 +952,7 @@ void event_on_class_prepare(JdwpServer *jdwpserver, Runtime *runtime, JClass *cl
                 }
             }
         }
-        utf8_destory(str);
+        utf8_destroy(str);
         mtx_unlock(&jdwpserver->event_sets_lock);
     }
 }
@@ -982,7 +982,7 @@ void event_on_class_unload(JdwpServer *jdwpserver, JClass *clazz) {
             }
         }
         mtx_unlock(&jdwpserver->event_sets_lock);
-        utf8_destory(str);
+        utf8_destroy(str);
     }
 }
 
@@ -1212,13 +1212,13 @@ EventSet *jdwp_eventset_create(JdwpServer *jdwpserver, JdwpClient *client, JdwpP
     return set;
 }
 
-void jdwp_eventset_destory(EventSet *set) {
+void jdwp_eventset_destroy(EventSet *set) {
     if (set->mods) {
         s32 i;
         for (i = 0; i < set->modifiers; i++) {
             EventSetMod *mod = &set->mods[i];
-            if (mod->sourceNamePattern)utf8_destory(mod->sourceNamePattern);
-            if (mod->classPattern)utf8_destory(mod->classPattern);
+            if (mod->sourceNamePattern)utf8_destroy(mod->sourceNamePattern);
+            if (mod->classPattern)utf8_destroy(mod->classPattern);
         }
         jvm_free(set->mods);
     }
@@ -1400,7 +1400,7 @@ s16 jdwp_eventset_clear(JdwpServer *jdwpserver, s32 id) {
         }
     }
     jdwp_eventset_remove(jdwpserver, id);
-    jdwp_eventset_destory(set);
+    jdwp_eventset_destroy(set);
     return ret;
 }
 
@@ -1513,14 +1513,14 @@ void invoke_method(s32 call_mode, JdwpPacket *req, JdwpPacket *res, JdwpClient *
 //                                s32 debug = 1;
 //                                Utf8String *ustr = utf8_create();
 //                                jstring_2_utf8((Instance *) r, ustr);
-//                                utf8_destory(ustr);
+//                                utf8_destroy(ustr);
 //                            }
                 break;
             }
             default:
                 vt.value = pop_int(runtime->stack);
         }
-        utf8_destory(us);
+        utf8_destroy(us);
     }
     writeValueType(res, &vt);
     vt.type = 'L';
@@ -1562,7 +1562,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 utf8_append_c(ustr, "Mini jvm");
                 jdwppacket_write_utf(res, ustr);
                 jdwp_packet_put(jdwpserver, res);
-                utf8_destory(ustr);
+                utf8_destroy(ustr);
                 while (!jvm->thread_list->length) {
                     threadSleep(20);
                 }
@@ -1596,7 +1596,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 spin_unlock(&jvm->lock_cloader);
                 //jvm_printf("[JDWP]VirtualMachine_ClassesBySignature:%s ,%lld\n", utf8_cstr(signature), (s64) (intptr_t) cl);
                 jdwp_packet_put(jdwpserver, res);
-                utf8_destory(signature);
+                utf8_destroy(signature);
                 break;
             }
             case JDWP_CMD_VirtualMachine_AllClasses: {//1.3
@@ -1632,7 +1632,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 }
                 spin_unlock(&jvm->lock_cloader);
 
-                utf8_destory(ustr);
+                utf8_destroy(ustr);
 
                 jdwp_packet_put(jdwpserver, res);
                 break;
@@ -1650,7 +1650,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                         Utf8String *ustr = utf8_create();
                         unicode_2_utf8((u16 *) jarr_name->arr_body, ustr, jarr_name->arr_length);
                         //printf("[JDWP]%s\n", utf8_cstr(ustr));
-                        utf8_destory(ustr);
+                        utf8_destroy(ustr);
                     }
                 }
                 jdwp_packet_put(jdwpserver, res);
@@ -1718,7 +1718,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 jdwp_client_hold_obj(client, jstr);// prevent garbage collection, holding is required here
                 gc_move_objs_thread_2_gc(runtime);
                 gc_resume(jdwpserver->jvm->collector);
-                utf8_destory(str);
+                utf8_destroy(str);
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
                 jdwppacket_write_refer(res, jstr);
                 //jvm_printf("[JDWP]VirtualMachine_CreateString: %s , rid: %llx\n", utf8_cstr(str), (s64) (intptr_t) jstr);
@@ -1755,7 +1755,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
 //                s32 i;
 //                for (i = 0; i < requests; i++) {
 //                    __refer ins = jdwppacket_read_refer(req);
-//                    memoryblock_destory(ins);
+//                    memoryblock_destroy(ins);
 //                    s32 count = jdwppacket_read_int(req);
 //                    jdwp_client_release_obj(client, ins);//release obj
 //                    jvm_printf("[JDWP]%x disposed.\n", (s64) (intptr_t) ins);
@@ -1850,7 +1850,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 }
                 spin_unlock(&jvm->lock_cloader);
 
-                utf8_destory(ustr);
+                utf8_destroy(ustr);
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }
@@ -1863,7 +1863,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                     Utf8String *str = utf8_create();
                     getClassSignature(ref, str);
                     jdwppacket_write_utf(res, str);
-                    utf8_destory(str);
+                    utf8_destroy(str);
                 } else {
                     jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
                 }
@@ -2030,7 +2030,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                     jdwppacket_write_utf(res, str);
                     utf8_clear(str);
                     jdwppacket_write_utf(res, str);
-                    utf8_destory(str);
+                    utf8_destroy(str);
                 } else {
                     jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
                 }
@@ -2053,7 +2053,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                         jdwppacket_write_utf(res, ustr);
                         jdwppacket_write_int(res, ref->fieldPool.field[i].access_flags);
                     }
-                    utf8_destory(ustr);
+                    utf8_destroy(ustr);
                 } else {
                     jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
                 }
@@ -2075,7 +2075,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                         jdwppacket_write_utf(res, ustr);
                         jdwppacket_write_int(res, ref->methodPool.method[i].access_flags);
                     }
-                    utf8_destory(ustr);
+                    utf8_destroy(ustr);
                 } else {
                     jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
                 }
@@ -2289,7 +2289,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 jdwppacket_write_utf(res, ustr);
                 jdwp_packet_put(jdwpserver, res);
                 //jvm_printf("[JDWP]ThreadReference_Name:%s\n", utf8_cstr(ustr));
-                utf8_destory(ustr);
+                utf8_destroy(ustr);
                 break;
             }
 //set 11
@@ -2304,7 +2304,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
 
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
                     jdwppacket_write_utf(res, ustr);
-                    utf8_destory(ustr);
+                    utf8_destroy(ustr);
                 } else {
                     jdwppacket_set_err(res, JDWP_ERROR_INVALID_THREAD);
                 }
@@ -2724,7 +2724,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 break;
             }
         }
-        jdwppacket_destory(req);
+        jdwppacket_destroy(req);
     }
     return 0;
 }

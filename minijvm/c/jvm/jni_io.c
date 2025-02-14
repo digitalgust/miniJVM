@@ -600,7 +600,7 @@ s32 org_mini_net_SocketNative_getSockAddr(Runtime *runtime, JClass *clazz) {
         utf8_append_c(ustr, ":");
         utf8_append_s64(ustr, port, 10);
         Instance *jstr = jstring_create(ustr, runtime);
-        utf8_destory(ustr);
+        utf8_destroy(ustr);
         push_ref(runtime->stack, jstr);
     } else {
         push_ref(runtime->stack, NULL);
@@ -799,7 +799,7 @@ s32 is_platform_encoding_utf8() {
     } else if (utf8_indexof_c(utfs, "utf_8") >= 0) {
         ret = 1;
     }
-    utf8_destory(utfs);
+    utf8_destroy(utfs);
     setlocale(LC_ALL, "C");
     return ret;
 }
@@ -856,7 +856,7 @@ void conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
                 unicode_2_utf8(str2bytes, dst, ulen);
                 jvm_free(str2bytes);
             }
-            bytebuf_destory(bb);
+            bytebuf_destroy(bb);
         }
     }
 }
@@ -897,8 +897,8 @@ s32 org_mini_fs_InnerFile_openFile(Runtime *runtime, JClass *clazz) {
         FILE *fd = fopen(platformPath->buf, mode_arr->arr_body);
         push_long(runtime->stack, (s64) (intptr_t) fd);
 
-        bytebuf_destory(platformPath);
-        utf8_destory(filepath);
+        bytebuf_destroy(platformPath);
+        utf8_destroy(filepath);
     } else {
         push_long(runtime->stack, 0);
     }
@@ -1204,8 +1204,8 @@ s32 org_mini_fs_InnerFile_loadFS(Runtime *runtime, JClass *clazz) {
                 setFieldByte(ptr, 1);
             }
 
-            bytebuf_destory(platformPath);
-            utf8_destory(filepath);
+            bytebuf_destroy(platformPath);
+            utf8_destroy(filepath);
             push_int(runtime->stack, state);
         }
     }
@@ -1240,7 +1240,7 @@ s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
                 conv_platform_encoding_2_utf8(ustr, dp->d_name);//
                 Instance *jstr = jstring_create(ustr, runtime);
                 instance_hold_to_thread(jstr, runtime);
-                utf8_destory(ustr);
+                utf8_destroy(ustr);
                 arraylist_push_back(files, jstr);
             }
             (void) closedir(dirp); // close the directory
@@ -1248,7 +1248,7 @@ s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
             s32 i;
             Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
             Instance *jarr = jarray_create_by_type_name(runtime, files->length, ustr, NULL);
-            utf8_destory(ustr);
+            utf8_destroy(ustr);
             for (i = 0; i < files->length; i++) {
                 __refer ref = arraylist_get_value(files, i);
                 instance_release_from_thread(ref, runtime);
@@ -1258,9 +1258,9 @@ s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
         } else {
             push_ref(runtime->stack, NULL);
         }
-        bytebuf_destory(platformPath);
-        arraylist_destory(files);
-        utf8_destory(filepath);
+        bytebuf_destroy(platformPath);
+        arraylist_destroy(files);
+        utf8_destroy(filepath);
     } else {
         push_ref(runtime->stack, NULL);
     }
@@ -1307,12 +1307,12 @@ s32 org_mini_fs_InnerFile_getcwd(Runtime *runtime, JClass *clazz) {
         Instance *jstr = jstring_create(filepath, runtime);
         push_ref(runtime->stack, jstr);
 
-        utf8_destory(filepath);
+        utf8_destroy(filepath);
     } else {
         push_ref(runtime->stack, NULL);
     }
 
-    bytebuf_destory(platformPath);
+    bytebuf_destroy(platformPath);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_fs_InnerFile_getcwd  \n");
@@ -1331,8 +1331,8 @@ s32 org_mini_fs_InnerFile_chmod(Runtime *runtime, JClass *clazz) {
         s32 ret = chmod(platformPath->buf, mode);
         push_int(runtime->stack, ret);
 
-        bytebuf_destory(platformPath);
-        utf8_destory(filepath);
+        bytebuf_destroy(platformPath);
+        utf8_destroy(filepath);
     } else {
         push_int(runtime->stack, -1);
     }
@@ -1358,9 +1358,9 @@ s32 org_mini_fs_InnerFile_rename0(Runtime *runtime, JClass *clazz) {
         s32 ret = rename(oldPath->buf, newPath->buf);
         push_int(runtime->stack, ret);
 
-        bytebuf_destory(oldPath);
-        bytebuf_destory(newPath);
-        utf8_destory(filepath);
+        bytebuf_destroy(oldPath);
+        bytebuf_destroy(newPath);
+        utf8_destroy(filepath);
     } else {
         push_int(runtime->stack, -1);
     }
@@ -1380,8 +1380,8 @@ s32 org_mini_fs_InnerFile_getTmpDir(Runtime *runtime, JClass *clazz) {
         Instance *jstr = jstring_create(utf8, runtime);
         push_ref(runtime->stack, jstr);
 
-        utf8_destory(utf8);
-        utf8_destory(tdir);
+        utf8_destroy(utf8);
+        utf8_destroy(tdir);
     } else {
         push_ref(runtime->stack, NULL);
     }
@@ -1405,8 +1405,8 @@ s32 org_mini_fs_InnerFile_mkdir0(Runtime *runtime, JClass *clazz) {
         ret = os_mkdir(platformPath->buf);
         push_int(runtime->stack, ret);
 
-        bytebuf_destory(platformPath);
-        utf8_destory(filepath);
+        bytebuf_destroy(platformPath);
+        utf8_destroy(filepath);
     } else {
         push_int(runtime->stack, ret);
     }
@@ -1447,8 +1447,8 @@ s32 org_mini_fs_InnerFile_delete0(Runtime *runtime, JClass *clazz) {
         }
         push_int(runtime->stack, ret);
 
-        bytebuf_destory(platformPath);
-        utf8_destory(filepath);
+        bytebuf_destroy(platformPath);
+        utf8_destroy(filepath);
     } else {
         push_int(runtime->stack, ret);
     }
@@ -1566,7 +1566,7 @@ s32 org_mini_zip_ZipFile_listFiles0(Runtime *runtime, JClass *clazz) {
         if (list) {
             Utf8String *clustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
             Instance *jarr = jarray_create_by_type_name(runtime, list->length, clustr, NULL);
-            utf8_destory(clustr);
+            utf8_destroy(clustr);
             instance_hold_to_thread(jarr, runtime);
             s32 i;
             for (i = 0; i < list->length; i++) {
@@ -1574,7 +1574,7 @@ s32 org_mini_zip_ZipFile_listFiles0(Runtime *runtime, JClass *clazz) {
                 Instance *jstr = jstring_create(ustr, runtime);
                 jarray_set_field(jarr, i, (s64) (intptr_t) jstr);
             }
-            zip_destory_filenames_list(list);
+            zip_destroy_filenames_list(list);
             instance_release_from_thread(jarr, runtime);
             push_ref(runtime->stack, jarr);
             ret = 0;
@@ -1624,7 +1624,7 @@ s32 org_mini_zip_ZipFile_extract0(Runtime *runtime, JClass *clazz) {
         bytebuf_read_batch(data, byte_arr->arr_body, data->wp);
         push_ref(runtime->stack, byte_arr);
     }
-    bytebuf_destory(data);
+    bytebuf_destroy(data);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_zip_ZipFile_extract0  \n");
@@ -1646,7 +1646,7 @@ s32 org_mini_zip_ZipFile_compress0(Runtime *runtime, JClass *clazz) {
         bytebuf_read_batch(zip_data, byte_arr->arr_body, zip_data->wp);
         push_ref(runtime->stack, byte_arr);
     }
-    bytebuf_destory(zip_data);
+    bytebuf_destroy(zip_data);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_zip_ZipFile_compress0  \n");

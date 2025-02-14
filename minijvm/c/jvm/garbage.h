@@ -60,7 +60,7 @@ enum {
 
 s32 gc_create(MiniJVM *jvm);
 
-void gc_destory(MiniJVM *jvm);
+void gc_destroy(MiniJVM *jvm);
 
 void gc_stop(GcCollector *collector);
 

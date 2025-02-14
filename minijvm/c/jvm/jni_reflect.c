@@ -69,7 +69,7 @@ s32 org_mini_vm_RefNative_getClasses(Runtime *runtime, JClass *clazz) {
         }
         spin_unlock(&jvm->lock_cloader);
         jarr = jarray_create_by_type_name(runtime, count, ustr, NULL);
-        utf8_destory(ustr);
+        utf8_destroy(ustr);
         for (i = 0; i < jvm->classloaders->length; i++) {
             PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
             HashtableIterator hti;
@@ -96,7 +96,7 @@ s32 org_mini_vm_RefNative_getBootstrapClassByName(Runtime *runtime, JClass *claz
     jstring_2_utf8(jstr, ustr, runtime);
     utf8_replace_c(ustr, ".", "/");
     JClass *cl = classes_load_get_with_clinit(NULL, ustr, runtime);
-    utf8_destory(ustr);
+    utf8_destroy(ustr);
     s32 ret = 0;
     if (cl) {
         push_ref(runtime->stack, insOfJavaLangClass_create_get(runtime, cl));
@@ -324,7 +324,7 @@ s32 org_mini_reflect_ReflectArray_multiNewArray(Runtime *runtime, JClass *clazz)
     }
 
     Instance *arr = jarray_multi_create(runtime, (s32 *) dimarr->arr_body, dimarr->arr_length, desc, 0);
-    utf8_destory(desc);
+    utf8_destroy(desc);
     push_ref(runtime->stack, arr);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     jvm_printf("org_mini_reflect_ReflectArray_multiNewArray\n");
@@ -352,7 +352,7 @@ s32 org_mini_vm_RefNative_getThreads(Runtime *runtime, JClass *clazz) {
 //    garbage_thread_lock();
     Utf8String *ustr = utf8_create_c(STR_CLASS_JAVA_LANG_THREAD);
     Instance *jarr = jarray_create_by_type_name(runtime, runtime->jvm->thread_list->length, ustr, NULL);
-    utf8_destory(ustr);
+    utf8_destroy(ustr);
 
     struct _ListGetThreadPara para;
     para.i = 0;
@@ -517,7 +517,7 @@ s32 org_mini_vm_RefNative_defineClass(Runtime *runtime, JClass *clazz) {
     ByteBuf *bytebuf = bytebuf_create(len);
     bytebuf_write_batch(bytebuf, bytesarr->arr_body + offset, len);
     JClass *cl = class_parse(cloader, bytebuf, runtime);
-    bytebuf_destory(bytebuf);
+    bytebuf_destroy(bytebuf);
 
     Instance *clIns = insOfJavaLangClass_create_get(runtime, cl);
 
@@ -540,7 +540,7 @@ s32 org_mini_vm_RefNative_findLoadedClass0(Runtime *runtime, JClass *clazz) {
     Utf8String *ustr = utf8_create();
     jstring_2_utf8(namejstr, ustr, runtime);
     JClass *cl = classes_get(runtime->jvm, jloader, ustr);
-    utf8_destory(ustr);
+    utf8_destroy(ustr);
     if (cl) {
         Instance *clIns = insOfJavaLangClass_create_get(runtime, cl);
         push_ref(runtime->stack, clIns);
@@ -621,7 +621,7 @@ s32 org_mini_vm_RefNative_addJarToClasspath(Runtime *runtime, JClass *clazz) {
     jstring_2_utf8(jstr, ustr, runtime);
 
     classloader_add_jar_path(runtime->jvm->boot_classloader, ustr);
-    utf8_destory(ustr);
+    utf8_destroy(ustr);
 
     return 0;
 }
@@ -852,7 +852,7 @@ s32 org_mini_reflect_ReflectMethod_mapMethod(Runtime *runtime, JClass *clazz) {
                     utf8_substring(ustr, 1, ustr->length);
                     Instance *jarr = jarray_create_by_type_name(runtime, ca->local_var_table_length, ustr, NULL);
                     setFieldRefer(ptr, jarr);
-                    utf8_destory(ustr);
+                    utf8_destroy(ustr);
                     for (i = 0; i < ca->local_var_table_length; i++) {
                         LocalVarTable *lvt = &ca->local_var_table[i];
                         s64 val = (intptr_t) localVarTable2java(methodInfo->_this_class, lvt, runtime);
@@ -1029,9 +1029,9 @@ s32 org_mini_reflect_ReflectMethod_findMethod0(Runtime *runtime, JClass *clazz) 
 
     MethodInfo *mi = find_methodInfo_by_name(ustr_clsName, ustr_methodName, ustr_methodDesc, jloader, runtime);
 
-    utf8_destory(ustr_clsName);
-    utf8_destory(ustr_methodName);
-    utf8_destory(ustr_methodDesc);
+    utf8_destroy(ustr_clsName);
+    utf8_destroy(ustr_methodName);
+    utf8_destroy(ustr_methodDesc);
     push_long(runtime->stack, (s64) (intptr_t) mi);
     return 0;
 }
@@ -1048,7 +1048,7 @@ s32 org_mini_reflect_ReflectMethod_getExceptionTypes0(Runtime *runtime, JClass *
     s32 len = info[0];
     Utf8String *ustr = utf8_create_c(STR_INS_JAVA_LANG_CLASS);
     Instance *jarr = jarray_create_by_type_name(runtime, len, ustr, cl->jloader);
-    utf8_destory(ustr);
+    utf8_destroy(ustr);
 
     s32 i;
     for (i = 0; i < len; i++) {

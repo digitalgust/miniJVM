@@ -30,7 +30,7 @@ Utf8String *utf8_create() {
     return uni_str;
 }
 
-void utf8_destory(Utf8String *uni_str) {
+void utf8_destroy(Utf8String *uni_str) {
     if (uni_str != NULL) {
         jvm_free(uni_str->data);
         jvm_free(uni_str);
@@ -341,7 +341,7 @@ static inline void _utf8_replace_impl(Utf8String *a1, char const *a2, int count2
         utf8_append_data(a1, a3, count3);
         start = end + count2;
     }
-    utf8_destory(tmps);
+    utf8_destroy(tmps);
 }
 
 void utf8_replace(Utf8String *a1, Utf8String *a2, Utf8String *a3) {

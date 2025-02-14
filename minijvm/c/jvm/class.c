@@ -33,13 +33,13 @@ JClass *class_create(Runtime *runtime) {
     return clazz;
 }
 
-s32 class_destory(JClass *clazz) {
-    //jvm_printf("class_destory   : %s\n", utf8_cstr(clazz->name));
-    _DESTORY_CLASS(clazz);
-    pairlist_destory(clazz->arr_class_type);
-    arraylist_destory(clazz->insFieldPtrIndex);
-    arraylist_destory(clazz->staticFieldPtrIndex);
-    arraylist_destory(clazz->supers);
+s32 class_destroy(JClass *clazz) {
+    //jvm_printf("class_destroy   : %s\n", utf8_cstr(clazz->name));
+    _DESTROY_CLASS(clazz);
+    pairlist_destroy(clazz->arr_class_type);
+    arraylist_destroy(clazz->insFieldPtrIndex);
+    arraylist_destroy(clazz->staticFieldPtrIndex);
+    arraylist_destroy(clazz->supers);
     jvm_free(clazz);
     return 0;
 }
@@ -53,13 +53,13 @@ void constant_list_create(JClass *clazz) {
     clazz->constantPool.interfaceMethodRef = arraylist_create(0);
 }
 
-void constant_list_destory(JClass *clazz) {
-    arraylist_destory(clazz->constantPool.utf8CP);
-    arraylist_destory(clazz->constantPool.classRef);
-    arraylist_destory(clazz->constantPool.stringRef);
-    arraylist_destory(clazz->constantPool.fieldRef);
-    arraylist_destory(clazz->constantPool.methodRef);
-    arraylist_destory(clazz->constantPool.interfaceMethodRef);
+void constant_list_destroy(JClass *clazz) {
+    arraylist_destroy(clazz->constantPool.utf8CP);
+    arraylist_destroy(clazz->constantPool.classRef);
+    arraylist_destroy(clazz->constantPool.stringRef);
+    arraylist_destroy(clazz->constantPool.fieldRef);
+    arraylist_destroy(clazz->constantPool.methodRef);
+    arraylist_destroy(clazz->constantPool.interfaceMethodRef);
 }
 
 void class_clear_refer(PeerClassLoader *cloader, JClass *clazz) {
@@ -568,9 +568,9 @@ FieldInfo *find_fieldInfo_by_name_c(c8 const *pclsName, c8 const *pfieldName, c8
     Utf8String *fieldName = utf8_create_c(pfieldName);
     Utf8String *fieldType = utf8_create_c(pfieldType);
     FieldInfo *fi = find_fieldInfo_by_name(clsName, fieldName, fieldType, jloader, runtime);
-    utf8_destory(clsName);
-    utf8_destory(fieldName);
-    utf8_destory(fieldType);
+    utf8_destroy(clsName);
+    utf8_destroy(fieldName);
+    utf8_destroy(fieldType);
     return fi;
 }
 
@@ -644,9 +644,9 @@ MethodInfo *find_methodInfo_by_name_c(c8 const *pclsName, c8 const *pmethodName,
     Utf8String *methodName = utf8_create_c(pmethodName);
     Utf8String *methodType = utf8_create_c(pmethodType);
     MethodInfo *mi = find_methodInfo_by_name(clsName, methodName, methodType, jloader, runtime);
-    utf8_destory(clsName);
-    utf8_destory(methodName);
-    utf8_destory(methodType);
+    utf8_destroy(clsName);
+    utf8_destroy(methodName);
+    utf8_destroy(methodType);
     return mi;
 }
 

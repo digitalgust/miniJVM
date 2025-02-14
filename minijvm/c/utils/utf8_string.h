@@ -43,7 +43,7 @@ Utf8String *utf8_create_copy(Utf8String *str);
 
 Utf8String *utf8_create_part(Utf8String *str, int start, int len);
 
-void utf8_destory(Utf8String *);
+void utf8_destroy(Utf8String *uni_str);
 
 void utf8_clear(Utf8String *ustr);
 

@@ -195,15 +195,15 @@ ArrayList *zip_get_filenames(char *jarpath) {
     return list;
 }
 
-void zip_destory_filenames_list(ArrayList *list) {
+void zip_destroy_filenames_list(ArrayList *list) {
     s32 i;
     for (i = 0; i < list->length; i++) {
         Utf8String *ustr = arraylist_get_value_unsafe(list, i);
         if (ustr) {
-            utf8_destory(ustr);
+            utf8_destroy(ustr);
         }
     }
-    arraylist_destory(list);
+    arraylist_destroy(list);
 }
 
 s32 zip_is_directory(char *jarpath, int index) {

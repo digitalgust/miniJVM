@@ -674,7 +674,7 @@ typedef struct _MemoryBlock {
     u8 arr_type_index;
 } MemoryBlock;
 
-void memoryblock_destory(__refer ref);
+void memoryblock_destroy(__refer ref);
 
 //======================= classloader =============================
 
@@ -697,7 +697,7 @@ void classloaders_destroy_all(MiniJVM *jvm);
 
 void classloader_release_class_static_field(PeerClassLoader *class_loader);
 
-void classloader_destory(PeerClassLoader *class_loader);
+void classloader_destroy(PeerClassLoader *class_loader);
 
 void classloader_add_jar_path(PeerClassLoader *class_loader, Utf8String *jar_path);
 
@@ -1061,7 +1061,7 @@ struct _ClassType {
 };
 
 
-s32 _DESTORY_CLASS(JClass *clazz);
+s32 _DESTROY_CLASS(JClass *clazz);
 
 JClass *class_create(Runtime *runtime);
 
@@ -1069,9 +1069,9 @@ JClass *getSuperClass(JClass *clazz);
 
 void constant_list_create(JClass *clazz);
 
-void constant_list_destory(JClass *clazz);
+void constant_list_destroy(JClass *clazz);
 
-s32 class_destory(JClass *clazz);
+s32 class_destroy(JClass *clazz);
 
 JClass *class_parse(Instance *loader, ByteBuf *bytebuf, Runtime *runtime);
 
@@ -1094,15 +1094,15 @@ void printClassFileFormat(
         ClassFileFormat *cff
 );
 
-s32 _class_method_info_destory(JClass *clazz);
+s32 _class_method_info_destroy(JClass *clazz);
 
-s32 _class_attribute_info_destory(JClass *clazz);
+s32 _class_attribute_info_destroy(JClass *clazz);
 
-s32 _class_interface_pool_destory(JClass *clazz);
+s32 _class_interface_pool_destroy(JClass *clazz);
 
-s32 _class_constant_pool_destory(JClass *clazz);
+s32 _class_constant_pool_destroy(JClass *clazz);
 
-s32 _class_field_info_destory(JClass *clazz);
+s32 _class_field_info_destroy(JClass *clazz);
 
 u8 instance_of(Instance *ins, JClass *other);
 
@@ -1138,7 +1138,7 @@ void instance_finalize(Instance *ins, Runtime *runtime);
 
 void instance_of_reference_enqueue(Instance *ins, Runtime *runtime);
 
-s32 instance_destory(Instance *instance);
+s32 instance_destroy(Instance *ins);
 
 Instance *instance_copy(Runtime *runtime, Instance *src, s32 deep_copy);
 
@@ -1334,7 +1334,7 @@ struct _Runtime {
 //======================= stack =============================
 RuntimeStack *stack_create(s32 entry_size);
 
-void stack_destory(RuntimeStack *stack);
+void stack_destroy(RuntimeStack *stack);
 
 s32 stack_expand(RuntimeStack *stack);
 
@@ -1492,7 +1492,7 @@ s32 is_ref(StackEntry *entry);
 
 Runtime *runtime_create(MiniJVM *jvm);
 
-void runtime_destory(Runtime *runtime);
+void runtime_destroy(Runtime *runtime);
 
 Runtime *getLastSon(Runtime *top);
 
@@ -1619,7 +1619,7 @@ s32 native_reg_lib(MiniJVM *jvm, java_native_method *methods, s32 method_size);
 
 s32 native_remove_lib(MiniJVM *jvm, JavaNativeLib *lib);
 
-s32 native_lib_destory(MiniJVM *jvm);
+s32 native_lib_destroy(MiniJVM *jvm);
 
 void reg_std_native_lib(MiniJVM *jvm);
 

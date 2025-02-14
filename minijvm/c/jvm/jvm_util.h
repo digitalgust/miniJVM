@@ -196,9 +196,9 @@ s32 jstring_2_utf8(Instance *jstr, Utf8String *utf8, Runtime *runtime);
 
 CStringArr *cstringarr_create(Instance *jstr_arr);
 
-void cstringarr_destory(CStringArr *);
+void cstringarr_destroy(CStringArr *);
 
-void referarr_destory(CStringArr *ref_arr);
+void referarr_destroy(CStringArr *ref_arr);
 
 ReferArr *referarr_create(Instance *jobj_arr);
 
@@ -237,7 +237,7 @@ void vm_share_notifyall(MiniJVM *jvm);
 
 JavaThreadInfo *threadinfo_create(void);
 
-void threadinfo_destory(JavaThreadInfo *threadInfo);
+void threadinfo_destroy(JavaThreadInfo *threadInfo);
 
 s32 jthread_init(MiniJVM *jvm, Instance *jthread);
 
@@ -257,7 +257,7 @@ __refer jthread_get_name_value(MiniJVM *jvm, Instance *ins);
 
 void jthreadlock_create(Runtime *runtime, MemoryBlock *mb);
 
-void jthreadlock_destory(MemoryBlock *mb);
+void jthreadlock_destroy(MemoryBlock *mb);
 
 s32 jthread_lock(MemoryBlock *mb, Runtime *runtime);
 
@@ -330,14 +330,14 @@ static inline Runtime *runtime_create_inl(Runtime *parent) {
 }
 
 
-static inline void runtime_destory_inl(Runtime *runtime) {
+static inline void runtime_destroy_inl(Runtime *runtime) {
     Runtime *top_runtime = runtime->thrd_info->top_runtime;
     if (top_runtime != runtime) {
         runtime->next = top_runtime->runtime_pool_header;
         top_runtime->runtime_pool_header = runtime;
     } else {
-        stack_destory(runtime->stack);
-        threadinfo_destory(runtime->thrd_info);
+        stack_destroy(runtime->stack);
+        threadinfo_destroy(runtime->thrd_info);
 
         Runtime *next = top_runtime->runtime_pool_header;
         while (next) {
@@ -371,7 +371,7 @@ JClass *array_class_create_get(Runtime *runtime, Instance *jloader, Utf8String *
 
 JClass *array_class_get_by_index(Runtime *runtime, s32 typeIdx);
 
-s32 jarray_destory(Instance *arr);
+s32 jarray_destroy(Instance *arr);
 
 Instance *jarray_multi_create(Runtime *runtime, s32 *dim, s32 dim_size, Utf8String *desc, s32 deep);
 

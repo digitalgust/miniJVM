@@ -105,7 +105,7 @@ static void print_callstack(Runtime *runtime) {
     Utf8String *ustr = utf8_create();
     getRuntimeStack(runtime, ustr);
     jvm_printf("error :\n %s\n", utf8_cstr(ustr));
-    utf8_destory(ustr);
+    utf8_destroy(ustr);
 }
 
 static void _debug_gen_print_reg(struct sljit_compiler *C) {
@@ -3375,7 +3375,7 @@ void jit_init(CodeAttribute *ca) {
     }
 }
 
-void jit_destory(Jit *jit) {
+void jit_destroy(Jit *jit) {
 
     while (jit->switchtable) {
         SwitchTable *tmp = jit->switchtable->next;
@@ -3405,7 +3405,7 @@ void jit_set_exception_jump_addr(Runtime *runtime, CodeAttribute *ca, s32 index)
 void jit_init(CodeAttribute *ca) {
 }
 
-void jit_destory(Jit *jit) {
+void jit_destroy(Jit *jit) {
 }
 
 void jit_set_exception_jump_addr(Runtime *runtime, CodeAttribute *ca, s32 index) {

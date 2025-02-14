@@ -57,7 +57,7 @@ struct _SwitchTable {
 
 void jit_init(CodeAttribute *ca) ;
 
-void jit_destory(Jit *jit);
+void jit_destroy(Jit *jit);
 
 void construct_jit(MethodInfo *method, Runtime *runtime);
 

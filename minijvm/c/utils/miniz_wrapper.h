@@ -23,7 +23,7 @@ s32 zip_savefile_mem(char const *jarpath, char const *filename, char const *buf,
 
 ArrayList *zip_get_filenames(char *jarpath);
 
-void zip_destory_filenames_list(ArrayList *list);
+void zip_destroy_filenames_list(ArrayList *list);
 
 s32 zip_filecount(char *jarpath);
 

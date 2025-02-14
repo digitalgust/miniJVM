@@ -93,7 +93,7 @@ Hashtable *hashtable_create(HashtableHashFunc hash_func,
     return hash_table;
 }
 
-void hashtable_destory(Hashtable *hash_table) {
+void hashtable_destroy(Hashtable *hash_table) {
     HashtableEntry *rover;
     HashtableEntry *next;
     s64 i;

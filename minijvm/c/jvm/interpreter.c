@@ -187,7 +187,7 @@ s32 invokedynamic_prepare(Runtime *runtime, BootstrapMethod *bootMethod, Constan
     if (args_cnt > ALT_PARA) {
         Utf8String *ustr = utf8_create_c(STR_INS_JAVA_LANG_OBJECT);
         more_args = jarray_create_by_type_name(runtime, args_cnt, ustr, clazz->jloader);
-        utf8_destory(ustr);
+        utf8_destroy(ustr);
 
         push_ref(stack, more_args);
     }
@@ -588,7 +588,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                 ustr = utf8_create();
                 getRuntimeStack(runtime, ustr);
                 jvm_printf("Stack overflow :\n %s\n", utf8_cstr(ustr));
-                utf8_destory(ustr);
+                utf8_destroy(ustr);
                 exit(1);
             }
             ip = ca->code;
@@ -4162,7 +4162,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
         }
     }
 #endif
-    runtime_destory_inl(runtime);
+    runtime_destroy_inl(runtime);
     pruntime->son = NULL;  //must clear , required for getLastSon()
 
 #if _JVM_DEBUG_LOG_LEVEL > 3
