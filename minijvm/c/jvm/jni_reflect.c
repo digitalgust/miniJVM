@@ -1555,7 +1555,7 @@ s32 com_misc_Unsafe_compareAndSwapLong(Runtime *runtime, JClass *clazz) {
     } else {
         c8 *src = (c8 *) (ins ? ins->arr_body : NULL) + offset;
 #if __JVM_ARCH_64__
-        s32 ret = (s32) __sync_bool_compare_and_swap64((s64 *) src, oldv, newv);
+        s32 ret = (s32) ATOMIC_CAS((s64 *) src, oldv, newv);
 #else
         s32 ret = __sync_bool_compare_and_swap((s64 *) src, oldv, newv);
 #endif
@@ -1583,7 +1583,7 @@ s32 com_misc_Unsafe_compareAndSwapObject(Runtime *runtime, JClass *clazz) {
         c8 *src = (c8 *) (ins ? ins->arr_body : NULL) + offset;
         s32 ret = 0;
         if (sizeof(__refer) == 8) {
-            ret = __sync_bool_compare_and_swap64((s64 *) src, (s64) (intptr_t) oldv, (s64) (intptr_t) newv);
+            ret = ATOMIC_CAS((s64 *) src, (s64) (intptr_t) oldv, (s64) (intptr_t) newv);
         } else {
             ret = __sync_bool_compare_and_swap((s32 *) src, (s32) (intptr_t) oldv, (s32) (intptr_t) newv);
         }
