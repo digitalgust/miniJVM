@@ -20,10 +20,6 @@ extern "C" {
 //======================= utils =============================
 s32 isDir(Utf8String *path);
 
-s32 utf8_2_unicode(Utf8String *ustr, u16 *arr);
-
-s32 unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 totalSize);
-
 void swap_endian_little_big(u8 *ptr, s32 size);
 
 s32 instance_base_size();

@@ -123,6 +123,10 @@ int _utf8_enlarge(Utf8String *ustr);
 
 int _utf8_space_require(Utf8String *ustr, int size);
 
+s32 utf8_2_unicode(Utf8String *ustr, u16 *jchar_arr, s32 jchar_arr_u16_len);
+
+s32 unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 jchar_arr_u16_len);
+
 #ifdef __cplusplus
 };
 #endif

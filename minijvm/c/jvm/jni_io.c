@@ -869,8 +869,9 @@ s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src) {
 
     if (!is_platform_encoding_utf8() && !os_utf8) {
         if (!is_ascii(utf8_cstr(src))) {
-            u16 *arr = jvm_calloc(src->length * sizeof(u16) + 2);
-            s32 len = utf8_2_unicode(src, arr);
+            s32 u16len = src->length * DATA_TYPE_BYTES[DATATYPE_JCHAR] + 2;
+            u16 *arr = jvm_calloc(u16len);
+            s32 len = utf8_2_unicode(src, arr, u16len);
             s32 plen = conv_unicode_2_platform_encoding(dst, arr, len);
             jvm_free(arr);
             return plen;
