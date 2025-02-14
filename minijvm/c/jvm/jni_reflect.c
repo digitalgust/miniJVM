@@ -1531,7 +1531,7 @@ s32 com_misc_Unsafe_compareAndSwapInt(Runtime *runtime, JClass *clazz) {
     } else {
         c8 *src = (c8 *) (ins ? ins->arr_body : NULL) + offset;
         s32 *src32 = (s32 *) src;
-        s32 ret = __sync_bool_compare_and_swap(src32, oldv, newv);
+        s32 ret = ATOMIC_CAS(src32, oldv, newv);
         push_int(runtime->stack, ret);
         return 0;
     }
