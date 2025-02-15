@@ -20,10 +20,9 @@ extern "C"
 // high-contention environments.
 
 #include "tinycthread.h"
+#include "d_type.h"  // Include d_type.h for type definitions
 
 #define MAX_SPIN 1024
-typedef int s32;
-typedef long long s64;
 
 struct _SpinLock {
     volatile s32 lock;
