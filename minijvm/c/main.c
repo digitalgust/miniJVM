@@ -181,10 +181,10 @@ int main(int argc, char **argv) {
     }
     //getchar();
 
-    utf8_destory(startup_dir);
-    utf8_destory(bootcp);
-    utf8_destory(cp);
-    arraylist_destory(java_para);
+    utf8_destroy(startup_dir);
+    utf8_destroy(bootcp);
+    utf8_destroy(cp);
+    arraylist_destroy(java_para);
     fflush(stdout);
     fflush(stderr);
     return ret;

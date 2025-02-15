@@ -126,7 +126,7 @@ ArrayList *arraylist_create(int length);
  * @param arraylist      The ArrayList to free.
  */
 
-void arraylist_destory(ArrayList *arraylist);
+void arraylist_destroy(ArrayList *arraylist);
 
 /**
  * Append a value to the end of an ArrayList.

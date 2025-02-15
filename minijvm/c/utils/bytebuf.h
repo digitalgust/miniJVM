@@ -19,7 +19,7 @@ typedef struct _ByteBuf {
 
 ByteBuf *bytebuf_create(u32 size);
 
-void bytebuf_destory(ByteBuf *bf);
+void bytebuf_destroy(ByteBuf *bf);
 
 u32 bytebuf_available(ByteBuf *bf);
 

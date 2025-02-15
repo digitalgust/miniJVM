@@ -36,7 +36,7 @@ s32 classes_loaded_count_unsafe(MiniJVM *jvm) {
 JClass *classes_get_c(MiniJVM *jvm, Instance *jloader, c8 const *clsName) {
     Utf8String *ustr = utf8_create_c(clsName);
     JClass *clazz = classes_get(jvm, jloader, ustr);
-    utf8_destory(ustr);
+    utf8_destroy(ustr);
     return clazz;
 }
 
@@ -89,7 +89,7 @@ JClass *classes_load_get_with_resolve(Instance *jloader, Utf8String *ustr, Runti
 JClass *classes_load_get_with_clinit_c(Instance *jloader, c8 const *pclassName, Runtime *runtime) {
     Utf8String *ustr = utf8_create_c(pclassName);
     JClass *clazz = classes_load_get_with_clinit(jloader, ustr, runtime);
-    utf8_destory(ustr);
+    utf8_destroy(ustr);
     return clazz;
 }
 
@@ -163,7 +163,7 @@ JClass *arraytype_get_by_desc(Runtime *runtime, Instance *jloader, Utf8String *d
             utf8_append_c(typename, cname);
             typec = primitive_class_create_get(runtime, typename);
         }
-        utf8_destory(typename);
+        utf8_destroy(typename);
         return typec;
     }
     return NULL;
@@ -217,7 +217,7 @@ JClass *array_class_get_by_index(Runtime *runtime, s32 typeIdx) {
         Utf8String *ustr = utf8_create_c("[");
         utf8_insert(ustr, ustr->length, getDataTypeTag(typeIdx));
         clazz = cache->array_classes[typeIdx] = array_class_create_get(runtime, NULL, ustr);
-        utf8_destory(ustr);
+        utf8_destroy(ustr);
     } else {
         clazz = cache->array_classes[typeIdx];
     }
@@ -253,7 +253,7 @@ JClass *array_class_get_by_name(Runtime *runtime, Instance *jloader, Utf8String 
             utf8_append(ustr, name);
         }
         clazz = array_class_create_get(runtime, jloader, ustr);
-        utf8_destory(ustr);
+        utf8_destroy(ustr);
 
     }
     return clazz;
@@ -378,209 +378,6 @@ void vm_share_notify(MiniJVM *jvm) {
 
 void vm_share_notifyall(MiniJVM *jvm) {
     cnd_broadcast(&jvm->threadlock.thread_cond);
-}
-
-/**
- * =============================== utf8 ==============================
- */
-/**
- * 把utf字符串转为 java unicode 双字节串
- * @param ustr in
- * @param arr out
- */
-
-
-s32 enc_get_utf8_size(const c8 *pInput) {
-    u8 c = *((u8 *) pInput);
-    //printf("---c=%c---\n", c);
-    if (c < 0x80) return 1;                // 0xxxxxxx 返回0
-    if (c >= 0x80 && c < 0xC0) return -1;     // 10xxxxxx 返回-1
-    if (c >= 0xC0 && c < 0xE0) return 2;      // 110xxxxx 返回2
-    if (c >= 0xE0 && c < 0xF0) return 3;      // 1110xxxx 返回3
-    if (c >= 0xF0 && c < 0xF8) return 4;      // 11110xxx 返回4
-    if (c >= 0xF8 && c < 0xFC) return 5;      // 111110xx 返回5
-    if (c >= 0xFC) return 6;                // 1111110x 返回6
-    return 0;
-}
-
-//https://yuncode.net/code/c_5715d18940eb269
-
-/**
- *
- * @param ustr
- * @param arr
- * @return
- */
-s32 utf8_2_unicode(Utf8String *ustr, u16 *arr) {
-    c8 const *pInput = utf8_cstr(ustr);
-    //assert(pInput != NULL && Unic != NULL);
-    s32 outputSize = 0; //记录转换后的Unicode字符串的字节数
-    // b1 表示UTF-8编码的pInput中的高字节, b2 表示次高字节, ...
-    c8 b1, b2, b3, b4, b5, b6;
-    s32 codepoint = 0;
-    c8 *pOutput = (c8 *) &codepoint;
-
-    while (*pInput) {
-        //*Unic = 0x0; // 把 *Unic 初始化为全零
-        s32 utfbytes = enc_get_utf8_size(pInput);
-        //printf("%d", utfbytes);
-        codepoint = 0;
-        switch (utfbytes) {
-            case 1:
-                *pOutput = *pInput;
-                *(pOutput + 1) = 0;
-                *arr = (u16) codepoint;
-                arr++;
-                break;
-
-            case 2:
-                b1 = *pInput;
-                b2 = *(pInput + 1);
-                if ((b2 & 0xc0) != 0x80)
-                    return -1;
-                *pOutput = (b1 << 6) + (b2 & 0x3F);
-                *(pOutput + 1) = (b1 >> 2) & 0x07;
-                *arr = (u16) codepoint;
-                arr++;
-                break;
-
-            case 3:
-                b1 = *pInput;
-                b2 = *(pInput + 1);
-                b3 = *(pInput + 2);
-                if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80))
-                    return -1;
-                *pOutput = (b2 << 6) + (b3 & 0x3F);
-                *(pOutput + 1) = (b1 << 4) + ((b2 >> 2) & 0x0F);
-                *arr = (u16) codepoint;
-                arr++;
-                break;
-
-            case 4:
-                b1 = *pInput;
-                b2 = *(pInput + 1);
-                b3 = *(pInput + 2);
-                b4 = *(pInput + 3);
-                if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80)
-                    || ((b4 & 0xC0) != 0x80))
-                    return -1;
-                *pOutput = (b3 << 6) + (b4 & 0x3F);
-                *(pOutput + 1) = (b2 << 4) + ((b3 >> 2) & 0x0F);
-                *(pOutput + 2) = ((b1 << 2) & 0x1C) + ((b2 >> 4) & 0x03);
-                break;
-
-            case 5:
-                b1 = *pInput;
-                b2 = *(pInput + 1);
-                b3 = *(pInput + 2);
-                b4 = *(pInput + 3);
-                b5 = *(pInput + 4);
-                if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80)
-                    || ((b4 & 0xC0) != 0x80) || ((b5 & 0xC0) != 0x80))
-                    return -1;
-                *pOutput = (b4 << 6) + (b5 & 0x3F);
-                *(pOutput + 1) = (b3 << 4) + ((b4 >> 2) & 0x0F);
-                *(pOutput + 2) = (b2 << 2) + ((b3 >> 4) & 0x03);
-                *(pOutput + 3) = (b1 << 6);
-                break;
-
-            case 6:
-                b1 = *pInput;
-                b2 = *(pInput + 1);
-                b3 = *(pInput + 2);
-                b4 = *(pInput + 3);
-                b5 = *(pInput + 4);
-                b6 = *(pInput + 5);
-                if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80)
-                    || ((b4 & 0xC0) != 0x80) || ((b5 & 0xC0) != 0x80)
-                    || ((b6 & 0xC0) != 0x80))
-                    return -1;
-                *pOutput = (b5 << 6) + (b6 & 0x3F);
-                *(pOutput + 1) = (b5 << 4) + ((b6 >> 2) & 0x0F);
-                *(pOutput + 2) = (b3 << 2) + ((b4 >> 4) & 0x03);
-                *(pOutput + 3) = ((b1 << 6) & 0x40) + (b2 & 0x3F);
-                break;
-
-            default:
-                return -1;
-                break;
-        }
-        if (utfbytes >= 4) {
-            codepoint -= 0x10000;
-            u16 c1 = codepoint >> 10;
-            *arr = (u16) (0xD800 | (c1 & 0x3ff));
-            arr++;
-            *arr = (u16) (0xDC00 | (codepoint & 0x3ff));
-            arr++;
-            outputSize += 2;
-        } else {
-            outputSize++;
-        }
-
-        pInput += utfbytes;
-    }
-    return outputSize;
-}
-
-
-s32 unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 totalSize) {
-    s32 i;
-    for (i = 0; i < totalSize; i++) {
-        s32 unic = jchar_arr[i];
-        if (unic >= 0xd800 && unic <= 0xdbff) {
-            if (i + 1 < totalSize) {
-                s32 c1 = jchar_arr[i + 1];
-                if (c1 >= 0xdc00 && c1 <= 0xdfff) {
-                    i++;
-                    s32 lead = unic & 0x3ff;
-                    s32 trail = c1 & 0x3ff;
-                    unic = (lead << 10) | trail | 0x10000;
-                }
-            }
-        }
-
-        if (unic <= 0x0000007F) {
-            // * U-00000000 - U-0000007F:  0xxxxxxx
-            utf8_pushback(ustr, unic & 0x7F);
-
-        } else if (unic >= 0x00000080 && unic <= 0x000007FF) {
-            // * U-00000080 - U-000007FF:  110xxxxx 10xxxxxx
-            utf8_pushback(ustr, ((unic >> 6) & 0x1F) | 0xC0);
-            utf8_pushback(ustr, (unic & 0x3F) | 0x80);
-
-        } else if (unic >= 0x00000800 && unic <= 0x0000FFFF) {
-            // * U-00000800 - U-0000FFFF:  1110xxxx 10xxxxxx 10xxxxxx
-            utf8_pushback(ustr, ((unic >> 12) & 0x0F) | 0xE0);
-            utf8_pushback(ustr, ((unic >> 6) & 0x3F) | 0x80);
-            utf8_pushback(ustr, (unic & 0x3F) | 0x80);
-
-        } else if (unic >= 0x00010000 && unic <= 0x001FFFFF) {
-            // * U-00010000 - U-001FFFFF:  11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-            utf8_pushback(ustr, ((unic >> 18) & 0x07) | 0xF0);
-            utf8_pushback(ustr, ((unic >> 12) & 0x3F) | 0x80);
-            utf8_pushback(ustr, ((unic >> 6) & 0x3F) | 0x80);
-            utf8_pushback(ustr, (unic & 0x3F) | 0x80);
-
-        } else if (unic >= 0x00200000 && unic <= 0x03FFFFFF) {
-            // * U-00200000 - U-03FFFFFF:  111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
-            utf8_pushback(ustr, ((unic >> 24) & 0x03) | 0xF8);
-            utf8_pushback(ustr, ((unic >> 18) & 0x3F) | 0x80);
-            utf8_pushback(ustr, ((unic >> 12) & 0x3F) | 0x80);
-            utf8_pushback(ustr, ((unic >> 6) & 0x3F) | 0x80);
-            utf8_pushback(ustr, (unic & 0x3F) | 0x80);
-
-        } else if (unic >= 0x04000000 && unic <= 0x7FFFFFFF) {
-            // * U-04000000 - U-7FFFFFFF:  1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
-            utf8_pushback(ustr, ((unic >> 30) & 0x01) | 0xFC);
-            utf8_pushback(ustr, ((unic >> 24) & 0x3F) | 0x80);
-            utf8_pushback(ustr, ((unic >> 18) & 0x3F) | 0x80);
-            utf8_pushback(ustr, ((unic >> 12) & 0x3F) | 0x80);
-            utf8_pushback(ustr, ((unic >> 6) & 0x3F) | 0x80);
-            utf8_pushback(ustr, (unic & 0x3F) | 0x80);
-
-        }
-    }
-    return ustr->length;
 }
 
 /**
@@ -722,8 +519,8 @@ void sys_properties_set_c(MiniJVM *jvm, c8 const *key, c8 const *val) {
 s32 sys_properties_load(MiniJVM *jvm) {
     jvm->sys_prop = hashtable_create(UNICODE_STR_HASH_FUNC, UNICODE_STR_EQUALS_FUNC);
     hashtable_register_free_functions(jvm->sys_prop,
-                                      (HashtableKeyFreeFunc) utf8_destory,
-                                      (HashtableValueFreeFunc) utf8_destory);
+                                      (HashtableKeyFreeFunc) utf8_destroy,
+                                      (HashtableValueFreeFunc) utf8_destroy);
     Utf8String *ustr = NULL;
     Utf8String *prop_name = utf8_create_c("sys.properties");
     ByteBuf *buf = load_file_from_classpath(jvm->boot_classloader, prop_name);
@@ -733,9 +530,9 @@ s32 sys_properties_load(MiniJVM *jvm) {
             c8 ch = (c8) bytebuf_read(buf);
             utf8_insert(ustr, ustr->length, ch);
         }
-        bytebuf_destory(buf);
+        bytebuf_destroy(buf);
     }
-    utf8_destory(prop_name);
+    utf8_destroy(prop_name);
     //parse
     if (ustr) {
         utf8_replace_c(ustr, "\r\n", "\n");
@@ -760,8 +557,8 @@ s32 sys_properties_load(MiniJVM *jvm) {
                 hashtable_put(jvm->sys_prop, key, val);
             }
         }
-        utf8_destory(line);
-        utf8_destory(ustr);
+        utf8_destroy(line);
+        utf8_destroy(ustr);
     }
 
     sys_properties_set_c(jvm, "path.separator", PATHSEPARATOR);
@@ -804,7 +601,7 @@ s32 sys_properties_load(MiniJVM *jvm) {
 }
 
 void sys_properties_dispose(MiniJVM *jvm) {
-    hashtable_destory(jvm->sys_prop);
+    hashtable_destroy(jvm->sys_prop);
 }
 
 void open_log() {
@@ -886,7 +683,7 @@ s32 jthread_dispose(Instance *jthread, Runtime *runtime) {
     gc_move_objs_thread_2_gc(runtime);
     threadlist_remove(runtime);
     if (runtime->jvm->jdwp_enable)event_on_thread_death(runtime->jvm->jdwpserver, runtime->thrd_info->jthread);
-    //destory
+    //destroy
     jthread_set_stackframe_value(runtime->jvm, jthread, NULL);
 
     return 0;
@@ -942,10 +739,10 @@ s32 jthread_run(void *para) {
     }
     jthread_dispose(jthread, runtime);
     gc_move_objs_thread_2_gc(runtime);
-    runtime_destory(runtime);
+    runtime_destroy(runtime);
 
-    utf8_destory(methodName);
-    utf8_destory(methodType);
+    utf8_destroy(methodName);
+    utf8_destroy(methodType);
 #if _JVM_DEBUG_LOG_LEVEL > 1
     s64 spent = currentTimeMillis() - startAt;
     jvm_printf("[INFO]thread over %llx , return %d , spent : %lld\n", (s64) (intptr_t) jthread, ret, spent);
@@ -1004,7 +801,7 @@ void jthreadlock_create(Runtime *runtime, MemoryBlock *mb) {
     spin_unlock(&runtime->jvm->lock_cloader);
 }
 
-void jthreadlock_destory(MemoryBlock *mb) {
+void jthreadlock_destroy(MemoryBlock *mb) {
     thread_lock_dispose(mb->thread_lock);
     if (mb->thread_lock) {
         jvm_free(mb->thread_lock);
@@ -1227,9 +1024,9 @@ Instance *jarray_create_by_type_name(Runtime *runtime, s32 count, Utf8String *na
 }
 
 
-s32 jarray_destory(Instance *arr) {
+s32 jarray_destroy(Instance *arr) {
     if (arr && arr->mb.type == MEM_TYPE_ARR) {
-        jthreadlock_destory(&arr->mb);
+        jthreadlock_destroy(&arr->mb);
         arr->mb.thread_lock = NULL;
         arr->arr_length = -1;
         jvm_free(arr); // 确保释放数组内存
@@ -1265,7 +1062,7 @@ Instance *jarray_multi_create(Runtime *runtime, s32 *dim, s32 dim_size, Utf8Stri
             jarray_set_field(arr, i, val);
         }
     }
-    utf8_destory(desc);
+    utf8_destroy(desc);
     return arr;
 }
 
@@ -1374,8 +1171,8 @@ void instance_init_with_para(Instance *ins, Runtime *runtime, c8 *methodtype, Ru
         if (ret != RUNTIME_STATUS_NORMAL) {
             print_exception(runtime);
         }
-        utf8_destory(methodName);
-        utf8_destory(methodType);
+        utf8_destroy(methodName);
+        utf8_destroy(methodType);
     }
 }
 
@@ -1423,8 +1220,8 @@ void instance_clear_refer(Instance *ins) {
     }
 }
 
-s32 instance_destory(Instance *ins) {
-    jthreadlock_destory(&ins->mb);
+s32 instance_destroy(Instance *ins) {
+    jthreadlock_destroy(&ins->mb);
     jvm_free(ins); // 确保释放实例内存
     return 0;
 }
@@ -1552,8 +1349,9 @@ Instance *jstring_create(Utf8String *src, Runtime *runtime) {
     instance_init(jstring, runtime);
 
     c8 *ptr = jstring_get_value_ptr(jstring, runtime);
-    u16 *buf = jvm_calloc(src->length * DATA_TYPE_BYTES[DATATYPE_JCHAR]);
-    s32 len = utf8_2_unicode(src, buf);
+    s32 c8len = (src->length + 1) * DATA_TYPE_BYTES[DATATYPE_JCHAR];
+    u16 *buf = jvm_calloc(c8len);
+    s32 len = utf8_2_unicode(src, buf, c8len / DATA_TYPE_BYTES[DATATYPE_JCHAR]);
     if (len >= 0) {//可能解析出错
         Instance *arr = jstring_get_value_array(jstring, runtime);
         if (!arr || arr->arr_length < len) {
@@ -1572,7 +1370,7 @@ Instance *jstring_create_cstr(c8 const *cstr, Runtime *runtime) {
     if (!cstr)return NULL;
     Utf8String *ustr = utf8_create_part_c(cstr, 0, strlen(cstr));
     Instance *jstr = jstring_create(ustr, runtime);
-    utf8_destory(ustr);
+    utf8_destroy(ustr);
     return jstr;
 }
 
@@ -1688,7 +1486,7 @@ Instance *exception_create(s32 exception_type, Runtime *runtime) {
 #endif
     Utf8String *clsName = utf8_create_c(STRS_CLASS_EXCEPTION[exception_type]);
     JClass *clazz = classes_load_get_with_clinit(NULL, clsName, runtime);
-    utf8_destory(clsName);
+    utf8_destroy(clsName);
 
     Instance *ins = instance_create(runtime, clazz);
     instance_hold_to_thread(ins, runtime);
@@ -1705,18 +1503,18 @@ Instance *exception_create_str(s32 exception_type, Runtime *runtime, c8 const *e
     Utf8String *uerrmsg = utf8_create_c(errmsg);
     Instance *jstr = jstring_create(uerrmsg, runtime);
     instance_hold_to_thread(jstr, runtime);
-    utf8_destory(uerrmsg);
+    utf8_destroy(uerrmsg);
     RuntimeStack *para = stack_create(10);
     push_ref(para, jstr);
     instance_release_from_thread(jstr, runtime);
     Utf8String *clsName = utf8_create_c(STRS_CLASS_EXCEPTION[exception_type]);
     JClass *clazz = classes_load_get_with_clinit(NULL, clsName, runtime);
-    utf8_destory(clsName);
+    utf8_destroy(clsName);
     Instance *ins = instance_create(runtime, clazz);
     instance_hold_to_thread(ins, runtime);
     instance_init_with_para(ins, runtime, "(Ljava/lang/String;)V", para);
     instance_release_from_thread(ins, runtime);
-    stack_destory(para);
+    stack_destroy(para);
     return ins;
 }
 
@@ -1740,7 +1538,7 @@ Instance *method_type_create(Runtime *runtime, Instance *jloader, Utf8String *de
         push_ref(para, jloader);
         push_ref(para, jstr_desc);
         instance_init_with_para(mt, runtime, "(Ljava/lang/ClassLoader;Ljava/lang/String;)V", para);
-        stack_destory(para);
+        stack_destroy(para);
         instance_release_from_thread(mt, runtime);
         return mt;
     }
@@ -1767,7 +1565,7 @@ Instance *method_handle_create(Runtime *runtime, MethodInfo *mi, s32 kind) {
         instance_init_with_para(mh, runtime,
                                 "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/ClassLoader;)V",
                                 para);
-        stack_destory(para);
+        stack_destroy(para);
         instance_release_from_thread(mh, runtime);
         instance_release_from_thread(jstr_clsName, runtime);
         instance_release_from_thread(jstr_methodName, runtime);
@@ -1786,7 +1584,7 @@ Instance *method_handles_lookup_create(Runtime *runtime, JClass *caller) {
 
         push_ref(para, insOfJavaLangClass_create_get(runtime, caller));
         instance_init_with_para(lookup, runtime, "(Ljava/lang/Class;)V", para);
-        stack_destory(para);
+        stack_destroy(para);
         instance_release_from_thread(lookup, runtime);
         return lookup;
     }
@@ -1804,9 +1602,9 @@ c8 *getFieldPtr_byName_c(Instance *instance, c8 const *pclassName, c8 const *pfi
     Utf8String *fieldName = utf8_create_c(pfieldName);
     Utf8String *fieldType = utf8_create_c(pfieldType);
     c8 *ptr = getFieldPtr_byName(instance, clsName, fieldName, fieldType, runtime);
-    utf8_destory(clsName);
-    utf8_destory(fieldName);
-    utf8_destory(fieldType);
+    utf8_destroy(clsName);
+    utf8_destroy(fieldName);
+    utf8_destroy(fieldType);
     return ptr;
 }
 
@@ -1848,7 +1646,7 @@ s32 getLineNumByIndex(CodeAttribute *ca, s32 offset) {
 }
 
 
-void memoryblock_destory(__refer ref) {
+void memoryblock_destroy(__refer ref) {
     MemoryBlock *mb = (MemoryBlock *) ref;
     if (!mb)return;
 //    if (utf8_equals_c(mb->clazz->name, "test/GuiTest$CallBack")) {
@@ -1856,11 +1654,11 @@ void memoryblock_destory(__refer ref) {
 //        int debug = 1;
 //    }
     if (mb->type == MEM_TYPE_INS) {
-        instance_destory((Instance *) mb);
+        instance_destroy((Instance *) mb);
     } else if (mb->type == MEM_TYPE_ARR) {
-        jarray_destory((Instance *) mb);
+        jarray_destroy((Instance *) mb);
     } else if (mb->type == MEM_TYPE_CLASS) {
-        class_destory((JClass *) mb);
+        class_destroy((JClass *) mb);
     }
 }
 
@@ -1873,10 +1671,10 @@ JavaThreadInfo *threadinfo_create() {
     return threadInfo;
 }
 
-void threadinfo_destory(JavaThreadInfo *threadInfo) {
-    arraylist_destory(threadInfo->lineNo);
-    arraylist_destory(threadInfo->stacktrack);
-    jthreadlock_destory(&threadInfo->pack);
+void threadinfo_destroy(JavaThreadInfo *threadInfo) {
+    arraylist_destroy(threadInfo->lineNo);
+    arraylist_destroy(threadInfo->stacktrack);
+    jthreadlock_destroy(&threadInfo->pack);
     jvm_free(threadInfo->jdwp_step);
     spin_destroy(&threadInfo->lock);
     jvm_free(threadInfo);
@@ -1962,7 +1760,7 @@ CStringArr *cstringarr_create(Instance *jstr_arr) { //byte[][] to c8**
     return cstr_arr;
 }
 
-void cstringarr_destory(CStringArr *cstr_arr) {
+void cstringarr_destroy(CStringArr *cstr_arr) {
     jvm_free(cstr_arr->arr_body);
     jvm_free(cstr_arr);
 }
@@ -1980,7 +1778,7 @@ ReferArr *referarr_create(Instance *jobj_arr) {
     return ref_arr;
 }
 
-void referarr_destory(CStringArr *ref_arr) {
+void referarr_destroy(CStringArr *ref_arr) {
     jvm_free(ref_arr->arr_body);
     jvm_free(ref_arr);
 }
@@ -2053,10 +1851,10 @@ ByteBuf *load_file_from_classpath(PeerClassLoader *cloader, Utf8String *path) {
 
             bytebuf = bytebuf_create(16);
             iret = _loadFileContents(utf8_cstr(filepath), bytebuf);
-            utf8_destory(filepath);
+            utf8_destroy(filepath);
             //回收
             if (iret != 0) {
-                bytebuf_destory(bytebuf);
+                bytebuf_destroy(bytebuf);
                 bytebuf = NULL;
             }
         } else { //from jar
@@ -2064,7 +1862,7 @@ ByteBuf *load_file_from_classpath(PeerClassLoader *cloader, Utf8String *path) {
             iret = zip_loadfile(utf8_cstr(pClassPath), utf8_cstr(path), bytebuf);
             //回收
             if (iret != 0) {
-                bytebuf_destory(bytebuf);
+                bytebuf_destroy(bytebuf);
                 bytebuf = NULL;
             } else {
                 break;
@@ -2168,14 +1966,14 @@ void init_jni_func_table(MiniJVM *jvm) {
     jnienv.utf8_create = utf8_create;
     jnienv.utf8_create_part_c = utf8_create_part_c;
     jnienv.utf8_cstr = utf8_cstr;
-    jnienv.utf8_destory = utf8_destory;
+    jnienv.utf8_destory = utf8_destroy;
     jnienv.jstring_2_utf8 = jstring_2_utf8;
     jnienv.jstring_create = jstring_create;
     jnienv.jstring_create_cstr = jstring_create_cstr;
     jnienv.cstringarr_create = cstringarr_create;
-    jnienv.cstringarr_destory = cstringarr_destory;
+    jnienv.cstringarr_destory = cstringarr_destroy;
     jnienv.referarr_create = referarr_create;
-    jnienv.referarr_destory = referarr_destory;
+    jnienv.referarr_destory = referarr_destroy;
     jnienv.referarr_2_jlongarr = referarr_2_jlongarr;
     jnienv.jvm_calloc = jvm_calloc;
     jnienv.jvm_malloc = jvm_malloc;
@@ -2193,7 +1991,7 @@ void init_jni_func_table(MiniJVM *jvm) {
     jnienv.garbage_refer_hold = gc_obj_hold;
     jnienv.garbage_refer_release = gc_obj_release;
     jnienv.runtime_create = runtime_create;
-    jnienv.runtime_destory = runtime_destory;
+    jnienv.runtime_destory = runtime_destroy;
     jnienv.getLastSon = getLastSon;
     jnienv.thread_boundle = thread_boundle;
     jnienv.thread_unboundle = thread_unboundle;

@@ -90,7 +90,7 @@ Hashset *hashset_create(void);
  * @param hash_table           The hash table to destroy.
  */
 
-void hashset_destory(Hashset *hash_table);
+void hashset_destroy(Hashset *hash_table);
 
 
 void hashset_clear(Hashset *hash_table);

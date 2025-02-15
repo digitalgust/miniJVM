@@ -43,7 +43,7 @@ Utf8String *utf8_create_copy(Utf8String *str);
 
 Utf8String *utf8_create_part(Utf8String *str, int start, int len);
 
-void utf8_destory(Utf8String *);
+void utf8_destroy(Utf8String *uni_str);
 
 void utf8_clear(Utf8String *ustr);
 
@@ -122,6 +122,10 @@ int utf8_insert(Utf8String *ustr, int index, utf8_char data);
 int _utf8_enlarge(Utf8String *ustr);
 
 int _utf8_space_require(Utf8String *ustr, int size);
+
+s32 utf8_2_unicode(Utf8String *ustr, u16 *jchar_arr, s32 jchar_arr_u16_len);
+
+s32 unicode_2_utf8(u16 *jchar_arr, Utf8String *ustr, s32 jchar_arr_u16_len);
 
 #ifdef __cplusplus
 };

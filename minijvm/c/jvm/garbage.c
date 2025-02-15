@@ -87,7 +87,7 @@ s32 gc_create(MiniJVM *jvm) {
     return 0;
 }
 
-void gc_destory(MiniJVM *jvm) {
+void gc_destroy(MiniJVM *jvm) {
     GcCollector *collector = jvm->collector;
     gc_stop(collector);
     vm_share_lock(jvm);
@@ -98,14 +98,14 @@ void gc_destory(MiniJVM *jvm) {
     //
     _garbage_clear(collector);
     //
-    hashset_destory(collector->objs_holder);
+    hashset_destroy(collector->objs_holder);
     collector->objs_holder = NULL;
 
-    arraylist_destory(collector->runtime_refer_copy);
-    hashtable_destory(collector->objs_2_count);
+    arraylist_destroy(collector->runtime_refer_copy);
+    hashtable_destroy(collector->objs_2_count);
 
     //
-    runtime_destory(collector->runtime);
+    runtime_destroy(collector->runtime);
     jvm_free(collector);
     jvm->collector = NULL;
 }
@@ -218,7 +218,7 @@ void _gc_print_obj_list(GcCollector *collector) {
             pc = (s32) val;
         }
         jvm_printf("[INFO] %15d %15d  %s\n", pc, msize, utf8_cstr(clsName));
-        //utf8_destory(clsName);
+        //utf8_destroy(clsName);
     }
     hashtable_clear(collector->objs_2_count);
     jvm_printf("[INFO]--------------------------\n");
@@ -279,7 +279,7 @@ void _dump_refer(GcCollector *collector) {
         Utf8String *name = utf8_create();
         _gc_get_obj_name(collector, mb, name);
         jvm_printf("   %s[%llx] \n", utf8_cstr(name), (s64) (intptr_t) mb);
-        utf8_destory(name);
+        utf8_destroy(name);
         mb = mb->next;
     }
 }
@@ -303,7 +303,7 @@ void gc_dump_runtime(GcCollector *collector) {
                     utf8_clear(name);
                     _gc_get_obj_name(collector, ref, name);
                     jvm_printf("   %s[%llx] \n", utf8_cstr(name), (s64) (intptr_t) ref);
-                    utf8_destory(name);
+                    utf8_destroy(name);
                 }
             }
         }
@@ -546,22 +546,22 @@ s64 _garbage_collect(GcCollector *collector) {
             Utf8String *sus = utf8_create();
             _gc_get_obj_name(collector, curmb, sus);
             jvm_printf("X: %s[%llx]\n", utf8_cstr(sus), (s64) (intptr_t) curmb);
-            utf8_destory(sus);
+            utf8_destroy(sus);
 #endif
             if (curmb->type == MEM_TYPE_CLASS) {
                 classes_remove(collector->jvm, (JClass *) curmb);
             }
-            if (GCFLAG_JLOADER_GET(curmb->gcflag)) {// curmb->class might be destroyed, when gc_destory() called
+            if (GCFLAG_JLOADER_GET(curmb->gcflag)) {// curmb->class might be destroyed, when gc_destroy() called
 #if _JVM_DEBUG_GARBAGE_DUMP > 1
                 jvm_printf("X: [%llx] classloader\n", (s64) (intptr_t) curmb);
 #endif
                 PeerClassLoader *pcl = classLoaders_find_by_instance(jvm, (Instance *) curmb);
                 if (pcl) {
                     classloaders_remove(jvm, pcl);
-                    classloader_destory(pcl);
+                    classloader_destroy(pcl);
                 }
             }
-            memoryblock_destory(curmb);
+            memoryblock_destroy(curmb);
             if (prevmb)prevmb->next = nextmb;
             else collector->header = nextmb;
             del++;
@@ -613,7 +613,7 @@ s32 _gc_pause_the_world(MiniJVM *jvm) {
             Utf8String *stack = utf8_create();
             getRuntimeStack(runtime, stack);
             jvm_printf("%s\n", utf8_cstr(stack));
-            utf8_destory(stack);
+            utf8_destroy(stack);
 #endif
         }
 
@@ -634,7 +634,7 @@ s32 _gc_resume_the_world(MiniJVM *jvm) {
             Utf8String *stack = utf8_create();
             getRuntimeStack(runtime, stack);
             jvm_printf("%s\n", utf8_cstr(stack));
-            utf8_destory(stack);
+            utf8_destroy(stack);
 #endif
             jthread_resume(runtime);
             vm_share_notifyall(jvm);
@@ -967,7 +967,7 @@ void gc_obj_reg(Runtime *runtime, __refer ref) {
         Utf8String *sus = utf8_create();
         _gc_get_obj_name(runtime->jvm->collector, mb, sus);
         jvm_printf("R: %s[%llx]\n", utf8_cstr(sus), (s64) (intptr_t) mb);
-        utf8_destory(sus);
+        utf8_destroy(sus);
 #endif
     } else {
         s32 debug = 1;
@@ -993,7 +993,7 @@ void gc_move_objs_thread_2_gc(Runtime *runtime) {
                     Utf8String *sus = utf8_create();
                     _gc_get_obj_name(runtime->jvm->collector, mb, sus);
                     jvm_printf("M: %s[%llx]\n", utf8_cstr(sus), (s64) (intptr_t) mb);
-                    utf8_destory(sus);
+                    utf8_destroy(sus);
                     mb = mb->next;
                 }
 #endif

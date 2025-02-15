@@ -17,7 +17,7 @@ RuntimeStack *stack_create(s32 entry_size) {
     return stack;
 }
 
-void stack_destory(RuntimeStack *stack) {
+void stack_destroy(RuntimeStack *stack) {
     if (stack->store) {
         jvm_free(stack->store);
         stack->store = NULL;
@@ -127,8 +127,8 @@ Runtime *runtime_create(MiniJVM *jvm) {
     return runtime;
 }
 
-void runtime_destory(Runtime *runtime) {
-    runtime_destory_inl(runtime);
+void runtime_destroy(Runtime *runtime) {
+    runtime_destroy_inl(runtime);
 }
 
 void print_runtime_stack(Runtime *r) {

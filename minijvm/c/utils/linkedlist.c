@@ -23,7 +23,7 @@ LinkedList *linkedlist_create() {
     return list;
 }
 
-void linkedlist_destory(LinkedList *list) {
+void linkedlist_destroy(LinkedList *list) {
     _linkedlist_free(list->mNode);
     spin_destroy(&list->spinlock);
     jvm_free(list);

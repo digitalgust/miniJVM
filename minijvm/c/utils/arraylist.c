@@ -71,7 +71,7 @@ ArrayList *arraylist_create(int length) {
     return new_arraylist;
 }
 
-void arraylist_destory(ArrayList *arraylist) {
+void arraylist_destroy(ArrayList *arraylist) {
     /* Do not free if a NULL pointer is passed */
 
     if (arraylist != NULL) {

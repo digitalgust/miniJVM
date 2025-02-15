@@ -86,7 +86,7 @@ typedef int (*ListCompareFunc)(LinkedListValue value1, LinkedListValue value2);
 
 LinkedList *linkedlist_create(void);
 
-void linkedlist_destory(LinkedList *list);
+void linkedlist_destroy(LinkedList *list);
 
 typedef int (*ListEqualFunc)(LinkedListValue value1, LinkedListValue value2);
 

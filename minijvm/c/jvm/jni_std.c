@@ -49,12 +49,12 @@ s32 com_sun_cldc_io_ResourceInputStream_open(Runtime *runtime, JClass *clazz) {
         s32 _j_t_bytes = buf->wp;
         Instance *_arr = jarray_create_by_type_index(runtime, _j_t_bytes, DATATYPE_BYTE);
         bytebuf_read_batch(buf, _arr->arr_body, _j_t_bytes);
-        bytebuf_destory(buf);
+        bytebuf_destroy(buf);
         push_ref(runtime->stack, _arr);
     } else {
         push_ref(runtime->stack, NULL);
     }
-    utf8_destory(path);
+    utf8_destroy(path);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("com_sun_cldc_io_ConsoleInputStream_read\n");
@@ -82,7 +82,7 @@ s32 java_lang_Class_forName(Runtime *runtime, JClass *clazz) {
             Instance *ins = insOfJavaLangClass_create_get(runtime, cl);
             push_ref(stack, ins);
         }
-        utf8_destory(ustr);
+        utf8_destroy(ustr);
     } else {
         Instance *exception = exception_create(JVM_EXCEPTION_NULLPOINTER, runtime);
         push_ref(stack, (__refer) exception);
@@ -208,7 +208,7 @@ s32 java_lang_Class_getName0(Runtime *runtime, JClass *clazz) {
         utf8_replace_c(ustr, "/", ".");
         Instance *ins = jstring_create(ustr, runtime);
         push_ref(stack, ins);
-        utf8_destory(ustr);
+        utf8_destroy(ustr);
     } else {
         push_ref(stack, NULL);
     }
@@ -242,7 +242,7 @@ s32 java_lang_Class_getInterfaces(Runtime *runtime, JClass *clazz) {
     s32 len = cl ? cl->interfacePool.clasz_used : 0;
     Utf8String *ustr = utf8_create_c(STR_INS_JAVA_LANG_CLASS);
     Instance *jarr = jarray_create_by_type_name(runtime, len, ustr, cl->jloader);
-    utf8_destory(ustr);
+    utf8_destroy(ustr);
     s32 i;
     for (i = 0; i < len; i++) {
         ConstantClassRef *ccr = (cl->interfacePool.clasz + i);
@@ -268,7 +268,7 @@ s32 java_lang_Class_getPrimitiveClass(Runtime *runtime, JClass *clazz) {
         jstring_2_utf8(jstr, ustr, runtime);
         JClass *cl = primitive_class_create_get(runtime, ustr);
         Instance *ins = insOfJavaLangClass_create_get(runtime, cl);
-        utf8_destory(ustr);
+        utf8_destroy(ustr);
         push_ref(stack, ins);
     } else {
         push_ref(stack, NULL);
@@ -720,11 +720,11 @@ s32 java_lang_Runtime_exec(Runtime *runtime, JClass *clazz) {
 
     for (i = 0; i < ustrList->length; i++) {
         Utf8String *ustr = arraylist_get_value(ustrList, i);
-        utf8_destory(ustr);
+        utf8_destroy(ustr);
     }
-    arraylist_destory(ustrList);
-    arraylist_destory(cstrList);
-    bytebuf_destory(buf);
+    arraylist_destroy(ustrList);
+    arraylist_destroy(cstrList);
+    bytebuf_destroy(buf);
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
@@ -829,7 +829,7 @@ s32 java_lang_String_replace0(Runtime *runtime, JClass *clazz) {
         s32 jchar_count = sb->wp / 2;
         Instance *jchar_arr = jarray_create_by_type_index(runtime, jchar_count, DATATYPE_JCHAR);
         bytebuf_read_batch(sb, (c8 *) jchar_arr->arr_body, sb->wp);
-        bytebuf_destory(sb);
+        bytebuf_destroy(sb);
         push_ref(stack, jchar_arr);
     }
 
@@ -902,7 +902,7 @@ s32 java_lang_String_intern0(Runtime *runtime, JClass *clazz) {
         jstring_2_utf8(jstr, ustr, runtime);
         Instance *in_jstr = (Instance *) hashtable_get(runtime->jvm->table_jstring_const, ustr);
         push_ref(stack, (__refer) in_jstr);
-        utf8_destory(ustr);
+        utf8_destroy(ustr);
     } else {
         push_ref(stack, NULL);
     }
@@ -1002,7 +1002,7 @@ s32 java_lang_System_doubleToString(Runtime *runtime, JClass *clazz) {
     Utf8String *str = utf8_create_c(buf);
     Instance *jstr = jstring_create(str, runtime);
     push_ref(stack, (__refer) jstr);
-    utf8_destory(str);
+    utf8_destroy(str);
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
@@ -1060,8 +1060,8 @@ s32 java_lang_System_loadLibrary0(Runtime *runtime, JClass *clazz) {
             // load success
             if (ret)break;
         }
-        utf8_destory(lab);
-        utf8_destory(libname);
+        utf8_destroy(lab);
+        utf8_destroy(libname);
     }
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1126,7 +1126,7 @@ s32 java_lang_System_getProperty0(Runtime *runtime, JClass *clazz) {
     } else {
         push_ref(stack, (__refer) (intptr_t) NULL);
     }
-    utf8_destory(key);
+    utf8_destroy(key);
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
@@ -1420,7 +1420,7 @@ s32 java_lang_System_getNativeProperties(Runtime *runtime, JClass *clazz) {
     push_ref(runtime->stack, jarr);//先放入栈，
     instance_release_from_thread(jarr, runtime);
 
-    utf8_destory(ustr);
+    utf8_destroy(ustr);
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
@@ -1559,12 +1559,12 @@ s32 native_remove_lib(MiniJVM *jvm, JavaNativeLib *lib) {
     return 0;
 }
 
-s32 native_lib_destory(MiniJVM *jvm) {
+s32 native_lib_destroy(MiniJVM *jvm) {
     s32 i;
     for (i = 0; i < jvm->native_libs->length; i++) {
         __refer lib = arraylist_get_value(jvm->native_libs, i);
         jvm_free(lib);
     }
-    arraylist_destory(jvm->native_libs);
+    arraylist_destroy(jvm->native_libs);
     return 0;
 }

@@ -302,7 +302,7 @@ void *_parseCPInvokeDynamic(JClass *_this, ByteBuf *buf, s32 index) {
     return ptr;
 }
 
-s32 _class_constant_pool_destory(JClass *clazz) {
+s32 _class_constant_pool_destroy(JClass *clazz) {
     s32 i;
     for (i = 0; i < clazz->constant_item_count; i++) {
         ConstantItem *cptr = clazz->constant_item_ptr[i];
@@ -311,7 +311,7 @@ s32 _class_constant_pool_destory(JClass *clazz) {
                 case CONSTANT_UTF8: {
                     ConstantUTF8 *ptr = (ConstantUTF8 *) cptr;
                     if (ptr->utfstr) {
-                        utf8_destory(ptr->utfstr);
+                        utf8_destroy(ptr->utfstr);
                         ptr->utfstr = NULL;
                     }
                     break;
@@ -319,7 +319,7 @@ s32 _class_constant_pool_destory(JClass *clazz) {
                 case CONSTANT_METHOD_REF: {
                     ConstantMethodRef *ptr = (ConstantMethodRef *) cptr;
                     if (ptr->virtual_methods) {
-                        pairlist_destory(ptr->virtual_methods);
+                        pairlist_destroy(ptr->virtual_methods);
                         ptr->virtual_methods = NULL;
                     }
                     break;
@@ -420,7 +420,7 @@ s32 _parse_field_pool(JClass *_this, ByteBuf *buf, s32 count) {
 }
 
 
-s32 _class_field_info_destory(JClass *clazz) {
+s32 _class_field_info_destroy(JClass *clazz) {
     s32 i, j;
     for (i = 0; i < clazz->fieldPool.field_used; i++) {
         FieldInfo *fi = &clazz->fieldPool.field[i];
@@ -467,7 +467,7 @@ s32 _parse_interface_pool(JClass *_this, ByteBuf *buf, s32 count) {
     return 0;
 }
 
-s32 _class_interface_pool_destory(JClass *clazz) {
+s32 _class_interface_pool_destroy(JClass *clazz) {
     if (clazz->interfacePool.clasz)jvm_free(clazz->interfacePool.clasz);
     clazz->interfacePool.clasz = NULL;
     return 0;
@@ -558,7 +558,7 @@ s32 _parse_method_pool(JClass *_this, ByteBuf *buf, s32 count) {
 }
 
 
-s32 _class_method_info_destory(JClass *clazz) {
+s32 _class_method_info_destroy(JClass *clazz) {
     s32 i, j;
     for (i = 0; i < clazz->methodPool.method_used; i++) {
         MethodInfo *mi = &clazz->methodPool.method[i];
@@ -580,19 +580,19 @@ s32 _class_method_info_destory(JClass *clazz) {
             ca->line_number_table = NULL;
             if (ca->local_var_table)jvm_free(ca->local_var_table);
             ca->local_var_table = NULL;
-            jit_destory(&ca->jit);
+            jit_destroy(&ca->jit);
             //
             jvm_free(mi->converted_code);
             mi->converted_code = NULL;
         }
         if (mi->attributes)jvm_free(mi->attributes);
         mi->attributes = NULL;
-        if (mi->jump_2_pos)pairlist_destory(mi->jump_2_pos);
+        if (mi->jump_2_pos)pairlist_destroy(mi->jump_2_pos);
         mi->jump_2_pos = NULL;
-        if (mi->pos_2_label)pairlist_destory(mi->pos_2_label);
+        if (mi->pos_2_label)pairlist_destroy(mi->pos_2_label);
         mi->pos_2_label = NULL;
-        utf8_destory(mi->paraType);
-        utf8_destory(mi->returnType);
+        utf8_destroy(mi->paraType);
+        utf8_destroy(mi->returnType);
         if (mi->breakpoint)jvm_free(mi->breakpoint);
         mi->breakpoint = NULL;
     }
@@ -634,7 +634,7 @@ s32 _parse_attribute_pool(JClass *_this, ByteBuf *buf, s32 count) {
     return 0;
 }
 
-s32 _class_attribute_info_destory(JClass *clazz) {
+s32 _class_attribute_info_destroy(JClass *clazz) {
     s32 i;
     for (i = 0; i < clazz->attributePool.attribute_used; i++) {
         AttributeInfo *ptr = &(clazz->attributePool.attribute[i]);
@@ -1517,7 +1517,7 @@ void _convert_2_bootstrap_methods(AttributeInfo *attr, JClass *clazz) {
     clazz->bootstrapMethodAttr = bms;
 }
 
-void _class_bootstrap_methods_destory(JClass *clazz) {
+void _class_bootstrap_methods_destroy(JClass *clazz) {
     BootstrapMethodsAttr *bms = clazz->bootstrapMethodAttr;
     if (!bms)return;
 
@@ -1581,7 +1581,7 @@ s32 parseMethodPara(Utf8String *methodType, Utf8String *out) {
         }
         i++;
     }
-    utf8_destory(para);
+    utf8_destroy(para);
     return count;
 }
 
@@ -1748,7 +1748,7 @@ void _class_optimize(JClass *clazz) {
         if (cmr->para_slots == -1) {
             Utf8String *tmps = utf8_create();
             cmr->para_slots = parseMethodPara(cmr->descriptor, tmps);
-            utf8_destory(tmps);
+            utf8_destroy(tmps);
         }
     }
     for (i = 0; i < clazz->constantPool.interfaceMethodRef->length; i++) {
@@ -1760,7 +1760,7 @@ void _class_optimize(JClass *clazz) {
         if (cmr->para_slots == -1) {
             Utf8String *tmps = utf8_create();
             cmr->para_slots = parseMethodPara(cmr->descriptor, tmps);
-            utf8_destory(tmps);
+            utf8_destroy(tmps);
         }
     }
 
@@ -1930,7 +1930,7 @@ JClass *load_class(Instance *jloader, Utf8String *pClassName, Runtime *runtime) 
         bytebuf = load_file_from_classpath(pcl, clsName);//load class from classloader
         if (bytebuf != NULL) {
             tmpclazz = class_parse(jloader, bytebuf, runtime);
-            bytebuf_destory(bytebuf);
+            bytebuf_destroy(bytebuf);
         } else if (jloader) { //using appclassloader load
             if (jvm->shortcut.launcher_loadClass) {
 //                if (utf8_equals_c(pClassName, "test/AppManagerTest")) {
@@ -1966,28 +1966,28 @@ JClass *load_class(Instance *jloader, Utf8String *pClassName, Runtime *runtime) 
         jvm_printf("class not found in bootstrap classpath:  %s \n", utf8_cstr(clsName));
     }
 #endif
-    utf8_destory(clsName);
+    utf8_destroy(clsName);
     return tmpclazz;
 }
 
 
-s32 _DESTORY_CLASS(JClass *clazz) {
+s32 _DESTROY_CLASS(JClass *clazz) {
 #if _JVM_DEBUG_LOG_LEVEL > 2
     jvm_printf("destroy class (%016llx load %016llx):  %s \n", (s64) (intptr_t) clazz->jloader, (s64) (intptr_t) clazz, utf8_cstr(clazz->name));
 #endif
     //
-    _class_method_info_destory(clazz);
-    _class_bootstrap_methods_destory(clazz);
-    _class_interface_pool_destory(clazz);
-    _class_field_info_destory(clazz);
-    _class_constant_pool_destory(clazz);
-    _class_attribute_info_destory(clazz);
+    _class_method_info_destroy(clazz);
+    _class_bootstrap_methods_destroy(clazz);
+    _class_interface_pool_destroy(clazz);
+    _class_field_info_destroy(clazz);
+    _class_constant_pool_destroy(clazz);
+    _class_attribute_info_destroy(clazz);
     if (clazz->field_static)jvm_free(clazz->field_static);
     clazz->field_static = NULL;
     if (clazz->constant_item_ptr)jvm_free(clazz->constant_item_ptr);
     clazz->constant_item_ptr = NULL;
-    jthreadlock_destory(&clazz->mb);
-    constant_list_destory(clazz);
-    utf8_destory(clazz->name);
+    jthreadlock_destroy(&clazz->mb);
+    constant_list_destroy(clazz);
+    utf8_destroy(clazz->name);
     return 0;
 }
