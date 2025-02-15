@@ -31,10 +31,10 @@ void JNI_OnUnload_mini(MiniJVM *jvm) {
         Runtime *runtime=pairlist_get_pair(refers.runtime_list, i).right;
         if(runtime){
             thread_unboundle(runtime);
-            runtime_destory(runtime);
+            runtime_destroy(runtime);
         }
     }
-    pairlist_destory(refers.runtime_list);
+    pairlist_destroy(refers.runtime_list);
     
 }
 

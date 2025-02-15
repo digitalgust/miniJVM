@@ -737,7 +737,7 @@ int org_mini_glfm_Glfm_glfmSetClipBoardContent(Runtime *runtime, JClass *clazz) 
     Utf8String *ustr = utf8_create();
     env->jstring_2_utf8(jstr, ustr, runtime);
     setClipBoardContent(utf8_cstr(ustr));
-    utf8_destory(ustr);
+    utf8_destroy(ustr);
     return 0;
 }
 
@@ -777,7 +777,7 @@ int org_mini_glfm_Glfm_glfmImageCrop(Runtime *runtime, JClass *clazz) {
     s32 w = env->localvar_getInt(runtime->localvar, pos++);
     s32 h = env->localvar_getInt(runtime->localvar, pos++);
     imageCrop(window, uid, utf8_cstr(ustr), x, y, w, h);
-    utf8_destory(ustr);
+    utf8_destroy(ustr);
     return 0;
 }
 
@@ -855,7 +855,7 @@ int org_mini_glfm_Glfm_glfmRemoteMethodCall(Runtime *runtime, JClass *clazz) {
     Utf8String *outJsonStr = utf8_create();
     remoteMethodCall(inJsonStr->arr_body, outJsonStr);
     env->push_ref(runtime->stack, createJavaString(runtime, utf8_cstr(outJsonStr)));
-    utf8_destory(outJsonStr);
+    utf8_destroy(outJsonStr);
     return 0;
 }
 

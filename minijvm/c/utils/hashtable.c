@@ -25,6 +25,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "d_type.h"
 #include "hashtable.h"
 #include "math.h"
+#include "string.h"
 
 static s32 HASH_TABLE_DEFAULT_SIZE = 16;
 

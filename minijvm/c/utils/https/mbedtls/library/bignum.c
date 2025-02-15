@@ -1100,10 +1100,11 @@ int mbedtls_mpi_sub_int( mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_sint 
  *
  * gust 20240902 compiler release optimize error
  * on gcc4.2.1 in mac with clang 13.0.0 (clang-1300.0.29.30)
- * so we use __attribute__ ((noinline)) to avoid this.
+ * so we use __GNUC__ instead preview __attribute__ ((noinline)) to avoid this.
  */
 static
-#if defined(__APPLE__) && defined(__arm__)
+#if __GNUC__
+//#if defined(__APPLE__) && defined(__arm__)
 /*
  * Apple LLVM version 4.2 (clang-425.0.24) (based on LLVM 3.2svn)
  * appears to need this to prevent bad ARM code generation at -O3.

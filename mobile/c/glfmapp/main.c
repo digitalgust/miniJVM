@@ -63,8 +63,8 @@ void glfmMain(GLFMDisplay *display) {
     sys_properties_set_c(refers.jvm, "os.name", getOsName());
     Runtime *runtime=getRuntimeCurThread(&jnienv);
 
-    utf8_destory(classpath);
-    utf8_destory(bootclasspath);
+    utf8_destroy(classpath);
+    utf8_destroy(bootclasspath);
     c8* p_classname="org/mini/glfm/GlfmCallBackImpl";
     c8* p_methodname="glinit";
     c8* p_methodtype="(J)V";
