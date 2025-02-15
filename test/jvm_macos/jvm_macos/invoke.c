@@ -35,11 +35,11 @@ int call_jvm(char* app_path) {
     jvm->jdwp_enable = 1;
     ret = jvm_init(jvm, bootstrappath, path);
     //ret = call_main(jvm, "test/HttpServer", java_para);
-    //ret = call_main(jvm, "test/BpDeepTest", java_para);
-    ret = call_main(jvm, "org.mini.glfw.GlfwMain", java_para);
+    ret = call_main(jvm, "test/BpDeepTest", java_para);
+    //ret = call_main(jvm, "org.mini.glfw.GlfwMain", java_para);
     //ret = call_main(jvm, "test/ReflectTest", java_para);
     //ret = call_main(jvm, "test/LambdaTest", java_para);
-        arraylist_destory(java_para);
+        arraylist_destroy(java_para);
     jvm_destroy(jvm);
     return ret;
 }
