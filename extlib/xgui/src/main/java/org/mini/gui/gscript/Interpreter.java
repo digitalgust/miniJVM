@@ -26,6 +26,7 @@ import java.util.*;
  * 20110819 添加预编译处理过程,加快执行速度<br/>
  * 20130720 修改了数值类型为长整型<br/>
  * 20220424 添加数据回收系统,使整个运算过程中,尽可能不创建新的对象实例.减小GC压力
+ * 20250217 表达式求值类型缓存，加快执行速度
  * <p>
  * Title: </p>
  * <p>
@@ -1061,47 +1062,50 @@ public class Interpreter {
         ArrayList<DataType> expr = getCachedVector();
         evaluationCell(stat, varTable, expr); //求变量和过程调用的值
 
-        int cType = 0, cType1 = 0; //默认为算术运算
+        if (stat.type == 0) {
+            int cType = 0, cType1 = 0; //默认为算术运算
 
-        for (int i = 0; i < expr.size(); i++) {
-            DataType o = expr.get(i);
-            //串类型
-            if (isStr(o)) {
-                cType |= T_STR;
-            } else if (isSymb(o)) { //逻辑类型
-                if (((Symb) o).isLogicOp()) {
-                    cType |= T_LOGSYM;
+            for (int i = 0; i < expr.size(); i++) {
+                DataType o = expr.get(i);
+                //串类型
+                if (isStr(o)) {
+                    cType |= T_STR;
+                } else if (isSymb(o)) { //逻辑类型
+                    if (((Symb) o).isLogicOp()) {
+                        cType |= T_LOGSYM;
+                    }
+                } else if (isBool(o)) {
+                    cType |= T_LOG;
+                } else if (isArr(o)) {
+                    cType |= T_ARR;
+                } else if (isInt(o)) {
+                    cType |= T_NUM;
+                } else if (isObj(o)) {
+                    cType |= T_OBJ;
                 }
-            } else if (isBool(o)) {
-                cType |= T_LOG;
-            } else if (isArr(o)) {
-                cType |= T_ARR;
-            } else if (isInt(o)) {
-                cType |= T_NUM;
-            } else if (isObj(o)) {
-                cType |= T_OBJ;
             }
-        }
 
-        //下面将判别是否运算正常
-        if (((cType & T_NUM) != 0) && ((cType & T_STR) == 0) && ((cType & T_ARR) == 0) && (cType & T_LOG) == 0 && (cType & T_LOGSYM) == 0 && (cType & T_OBJ) == 0) { //数值运算，只要有数值
-            cType1 = T_NUM;
-        } else if ((cType & T_STR) != 0 && (cType & T_LOGSYM) == 0) { //字符串，除不许逻辑符号外都可
-            cType1 = T_STR;
-        } else if (((cType & T_LOG) != 0 || (cType & T_LOGSYM) != 0) && (cType & T_STR) == 0 && (cType & T_ARR) == 0 && (cType & T_OBJ) == 0) { //逻辑运算，只要有逻辑符号或逻辑值均可，但需无串，无数组
-            cType1 = T_LOG;
-        } else if ((cType & T_ARR) == cType) { //数组指针，其他均无
-            cType1 = T_ARR;
-        } else if ((cType & T_OBJ) == cType) { //对象参数，其他均无
-            cType1 = T_OBJ;
-        } else {
-            //出错，需处理
-            throw new Exception(STRS_ERR[ERR_ILLEGAL]);
+            //下面将判别是否运算正常
+            if (((cType & T_NUM) != 0) && ((cType & T_STR) == 0) && ((cType & T_ARR) == 0) && (cType & T_LOG) == 0 && (cType & T_LOGSYM) == 0 && (cType & T_OBJ) == 0) { //数值运算，只要有数值
+                cType1 = T_NUM;
+            } else if ((cType & T_STR) != 0 && (cType & T_LOGSYM) == 0) { //字符串，除不许逻辑符号外都可
+                cType1 = T_STR;
+            } else if (((cType & T_LOG) != 0 || (cType & T_LOGSYM) != 0) && (cType & T_STR) == 0 && (cType & T_ARR) == 0 && (cType & T_OBJ) == 0) { //逻辑运算，只要有逻辑符号或逻辑值均可，但需无串，无数组
+                cType1 = T_LOG;
+            } else if ((cType & T_ARR) == cType) { //数组指针，其他均无
+                cType1 = T_ARR;
+            } else if ((cType & T_OBJ) == cType) { //对象参数，其他均无
+                cType1 = T_OBJ;
+            } else {
+                //出错，需处理
+                throw new Exception(STRS_ERR[ERR_ILLEGAL]);
+            }
+            stat.type = cType1;
         }
 
         DataType resultDt = null;
 
-        switch (cType1) {
+        switch (stat.type) {
             case T_NUM:
 
                 //左递归运算
@@ -1612,15 +1616,17 @@ public class Interpreter {
      */
     private int[] parseArrayPos(ExprCellArr arrStr, LocalVarsMap varTable) throws Exception {
         int len = arrStr.para.length;
-        int[] stack = arrStr.dimPos.get();
-        for (int i = 0; i < len; i++) {
-            DataType dt = evalExpr(arrStr.para[i], varTable);
-            if (dt.type != DataType.DTYPE_INT) { //数组维数只能是数值型
-                throw new Exception(STRS_ERR[ERR_TYPE_INVALID]);
+        if (arrStr.dimPos == null) {//缓存数组维数
+            arrStr.dimPos = new int[len];
+            for (int i = 0; i < len; i++) {
+                DataType dt = evalExpr(arrStr.para[i], varTable);
+                if (dt.type != DataType.DTYPE_INT) { //数组维数只能是数值型
+                    throw new Exception(STRS_ERR[ERR_TYPE_INVALID]);
+                }
+                arrStr.dimPos[i] = (int) ((Int) dt).getVal();
             }
-            stack[i] = (int) ((Int) dt).getVal();
         }
-        return stack;
+        return arrStr.dimPos;
     }
 
     /**
