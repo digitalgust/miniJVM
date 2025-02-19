@@ -116,7 +116,7 @@ class ExprCellArr extends ExprCell {
 
     String arrName;
     Expression[] para;
-    int[] dimPos;
+    static ThreadLocal<int[]> dimPos;
 
     void parseArr(String arrs, ArrayList paraList, Interpreter inp) throws Exception {
         //取得数组的名字
@@ -164,6 +164,12 @@ class ExprCellArr extends ExprCell {
         for (int i = 0; i < paralen; i++) {
             para[i] = new Expression((String) tmppara.get(i), inp);
         }
+        dimPos = new ThreadLocal<int[]>() {
+            @Override
+            protected int[] initialValue() {
+                return new int[para.length];
+            }
+        };
     }
 
     public String toString() {

@@ -1616,17 +1616,15 @@ public class Interpreter {
      */
     private int[] parseArrayPos(ExprCellArr arrStr, LocalVarsMap varTable) throws Exception {
         int len = arrStr.para.length;
-        if (arrStr.dimPos == null) {//缓存数组维数
-            arrStr.dimPos = new int[len];
-            for (int i = 0; i < len; i++) {
-                DataType dt = evalExpr(arrStr.para[i], varTable);
-                if (dt.type != DataType.DTYPE_INT) { //数组维数只能是数值型
-                    throw new Exception(STRS_ERR[ERR_TYPE_INVALID]);
-                }
-                arrStr.dimPos[i] = (int) ((Int) dt).getVal();
+        int[] dimPos = arrStr.dimPos.get();
+        for (int i = 0; i < len; i++) {
+            DataType dt = evalExpr(arrStr.para[i], varTable);
+            if (dt.type != DataType.DTYPE_INT) { //数组维数只能是数值型
+                throw new Exception(STRS_ERR[ERR_TYPE_INVALID]);
             }
+            dimPos[i] = (int) ((Int) dt).getVal();
         }
-        return arrStr.dimPos;
+        return dimPos;
     }
 
     /**

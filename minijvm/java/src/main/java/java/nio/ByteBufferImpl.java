@@ -11,6 +11,12 @@ class ByteBufferImpl extends ByteBuffer {
 
     protected ByteBufferImpl(byte[] arr, int start, int length, boolean readOnly) {
         super(readOnly);
+        if (arr != null && (start < 0 || start + length > arr.length)) {
+            throw new IndexOutOfBoundsException("Invalid start or length parameters");
+        }
+        if (length < 0) {
+            throw new IllegalArgumentException("Length cannot be negative");
+        }
         if (arr == null) {
             arr = new byte[length];
         }
@@ -298,11 +304,8 @@ class ByteBufferImpl extends ByteBuffer {
 
     public ByteBuffer compact() {
         int remaining = remaining();
-
-        if (position != 0) {
-            ByteBuffer b = slice();
-            position = 0;
-            put(b);
+        if (remaining > 0) {
+            System.arraycopy(array, position, array, 0, remaining);
         }
 
         position = remaining;
