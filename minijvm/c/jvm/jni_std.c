@@ -1062,6 +1062,7 @@ s32 java_lang_System_loadLibrary0(Runtime *runtime, JClass *clazz) {
         }
         utf8_destroy(lab);
         utf8_destroy(libname);
+        utf8_destroy(paths);
     }
 
 #if _JVM_DEBUG_LOG_LEVEL > 5

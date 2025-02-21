@@ -550,8 +550,7 @@ s64 _garbage_collect(GcCollector *collector) {
 #endif
             if (curmb->type == MEM_TYPE_CLASS) {
                 classes_remove(collector->jvm, (JClass *) curmb);
-            }
-            if (GCFLAG_JLOADER_GET(curmb->gcflag)) {// curmb->class might be destroyed, when gc_destroy() called
+            } else if (GCFLAG_JLOADER_GET(curmb->gcflag)) {// curmb->class might be destroyed, when gc_destroy() called
 #if _JVM_DEBUG_GARBAGE_DUMP > 1
                 jvm_printf("X: [%llx] classloader\n", (s64) (intptr_t) curmb);
 #endif
@@ -559,6 +558,12 @@ s64 _garbage_collect(GcCollector *collector) {
                 if (pcl) {
                     classloaders_remove(jvm, pcl);
                     classloader_destroy(pcl);
+                }
+            } else if (GCFLAG_JTHREAD_GET(curmb->gcflag)) {//process thread if it created but not started
+                Runtime *ort = jthread_get_stackframe_value(jvm, (Instance *) curmb);
+                if (ort) {
+                    jthread_dispose((Instance *) curmb, ort);
+                    runtime_destroy(ort);
                 }
             }
             memoryblock_destroy(curmb);
@@ -983,10 +988,10 @@ void gc_move_objs_thread_2_gc(Runtime *runtime) {
     if (runtime) {
         JavaThreadInfo *ti = runtime->thrd_info;
         GcCollector *collector = runtime->jvm->collector;
-        if (ti->objs_header) {
-            //lock
-            spin_lock(&collector->lock);
-            {
+        //lock
+        spin_lock(&collector->lock);
+        {
+            if (ti->objs_header) {
 #if _JVM_DEBUG_GARBAGE_DUMP > 1
                 MemoryBlock *mb = ti->objs_header;
                 while (mb) {
@@ -1003,14 +1008,14 @@ void gc_move_objs_thread_2_gc(Runtime *runtime) {
                 }
                 collector->tmp_header = ti->objs_header;
                 collector->obj_heap_size += ti->objs_heap_of_thread;
+
+                ti->objs_header = NULL;
+                ti->objs_tailer = NULL;
+
+                ti->objs_heap_of_thread = 0;
             }
-            spin_unlock(&collector->lock);
-
-            ti->objs_header = NULL;
-            ti->objs_tailer = NULL;
-
-            ti->objs_heap_of_thread = 0;
         }
+        spin_unlock(&collector->lock);
     }
 }
 

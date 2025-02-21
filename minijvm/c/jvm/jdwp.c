@@ -179,6 +179,7 @@ s32 jdwp_stop_server(MiniJVM *jvm) {
     thrd_detach(jdwpserver->pt_dispacher);
     jvm_free(jdwpserver);
     jvm->jdwpserver = NULL;
+    jvm->jdwp_enable = 0;
     return 0;
 }
 

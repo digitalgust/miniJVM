@@ -682,7 +682,9 @@ s32 jthread_init(MiniJVM *jvm, Instance *jthread) {
 s32 jthread_dispose(Instance *jthread, Runtime *runtime) {
     gc_move_objs_thread_2_gc(runtime);
     threadlist_remove(runtime);
-    if (runtime->jvm->jdwp_enable)event_on_thread_death(runtime->jvm->jdwpserver, runtime->thrd_info->jthread);
+    if (runtime->jvm->jdwp_enable) {//jdwpserver might stoped when
+        event_on_thread_death(runtime->jvm->jdwpserver, runtime->thrd_info->jthread);
+    }
     //destroy
     jthread_set_stackframe_value(runtime->jvm, jthread, NULL);
 
@@ -738,7 +740,6 @@ s32 jthread_run(void *para) {
         jthread_unlock(runtime->thrd_info->curThreadLock, runtime);
     }
     jthread_dispose(jthread, runtime);
-    gc_move_objs_thread_2_gc(runtime);
     runtime_destroy(runtime);
 
     utf8_destroy(methodName);
@@ -774,6 +775,7 @@ __refer jthread_get_stackframe_value(MiniJVM *jvm, Instance *ins) {
 void jthread_set_stackframe_value(MiniJVM *jvm, Instance *ins, __refer val) {
     c8 *ptr = getInstanceFieldPtr(ins, jvm->shortcut.thread_stackFrame);
     setFieldLong(ptr, (s64) (intptr_t) val);
+    GCFLAG_JTHREAD_SET(ins->mb.gcflag);
 }
 
 s32 jthread_get_daemon_value(Instance *ins, Runtime *runtime) {

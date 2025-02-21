@@ -336,8 +336,6 @@ static inline void runtime_destroy_inl(Runtime *runtime) {
         runtime->next = top_runtime->runtime_pool_header;
         top_runtime->runtime_pool_header = runtime;
     } else {
-        stack_destroy(runtime->stack);
-        threadinfo_destroy(runtime->thrd_info);
 
         Runtime *next = top_runtime->runtime_pool_header;
         while (next) {
@@ -345,6 +343,9 @@ static inline void runtime_destroy_inl(Runtime *runtime) {
             next = r->next;
             jvm_free(r);
         }
+
+        stack_destroy(runtime->stack);
+        threadinfo_destroy(runtime->thrd_info);
         runtime->runtime_pool_header = NULL;
         jvm_free(runtime);
     }

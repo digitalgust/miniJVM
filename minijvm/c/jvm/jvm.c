@@ -24,6 +24,7 @@ void thread_boundle(Runtime *runtime) {
     if (r) {
         gc_move_objs_thread_2_gc(r);
         runtime_destroy(r);
+        jthread_set_stackframe_value(runtime->jvm, t, NULL);
     }
     //bind new runtime
     jthread_set_stackframe_value(runtime->jvm, t, runtime);
@@ -421,7 +422,6 @@ s32 call_main(MiniJVM *jvm, c8 *p_mainclass, ArrayList *java_para) {
     s32 ret = call_method(jvm, p_mainclass, p_methodname, p_methodtype, runtime);
 
     thread_unboundle(runtime);
-    gc_move_objs_thread_2_gc(runtime);
     runtime_destroy(runtime);
     return ret;
 }
@@ -508,7 +508,6 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
     }
     if (!p_runtime) {
         thread_unboundle(runtime);
-        gc_move_objs_thread_2_gc(runtime);
         runtime_destroy(runtime);
     }
     utf8_destroy(str_mainClsName);

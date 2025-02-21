@@ -658,6 +658,9 @@ void profile_print();
 #define GCFLAG_JLOADER_SET(reg_v) (reg_v = (0x10 | reg_v))
 #define GCFLAG_JLOADER_GET(reg_v) (0x10 & reg_v)
 #define GCFLAG_JLOADER_CLEAR(reg_v) (reg_v = ((~0x10) & reg_v))
+#define GCFLAG_JTHREAD_SET(reg_v) (reg_v = (0x08 | reg_v))
+#define GCFLAG_JTHREAD_GET(reg_v) (0x08 & reg_v)
+#define GCFLAG_JTHREAD_CLEAR(reg_v) (reg_v = ((~0x08) & reg_v))
 
 typedef struct _MemoryBlock {
 
