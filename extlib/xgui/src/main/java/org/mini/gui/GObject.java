@@ -5,12 +5,14 @@
  */
 package org.mini.gui;
 
+import org.mini.glwrap.GLUtil;
+import org.mini.gui.callback.GCallBack;
+import org.mini.gui.callback.GCallbackUI;
 import org.mini.gui.event.*;
 import org.mini.gui.gscript.Interpreter;
 import org.mini.nanovg.Nanovg;
 
 import java.io.ByteArrayOutputStream;
-import java.util.TimerTask;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
 
@@ -27,13 +29,21 @@ abstract public class GObject implements GAttachable {
             LAYER_INNER = 10;
 
     public static String ICON_SEARCH = "\uD83D\uDD0D";
+    public static byte[] ICON_SEARCH_BYTE = GLUtil.toCstyleBytes(ICON_SEARCH);
     public static String ICON_CIRCLED_CROSS = "\u2716";
+    public static byte[] ICON_CIRCLED_CROSS_BYTE = GLUtil.toCstyleBytes(ICON_CIRCLED_CROSS);
     public static String ICON_CHEVRON_RIGHT = "\uE75E";
+    public static byte[] ICON_CHEVRON_RIGHT_BYTE = GLUtil.toCstyleBytes(ICON_CHEVRON_RIGHT);
     public static String ICON_CHEVRON_DOWN = "\uE75C";
+    public static byte[] ICON_CHEVRON_DOWN_BYTE = GLUtil.toCstyleBytes(ICON_CHEVRON_DOWN);
     public static String ICON_CHECK = "\u2713";
+    public static byte[] ICON_CHECK_BYTE = GLUtil.toCstyleBytes(ICON_CHECK);
     public static String ICON_LOGIN = "\uE740";
+    public static byte[] ICON_LOGIN_BYTE = GLUtil.toCstyleBytes(ICON_LOGIN);
     public static String ICON_TRASH = "\uE729";
+    public static byte[] ICON_TRASH_BYTE = GLUtil.toCstyleBytes(ICON_TRASH);
     public static String ICON_CLOSE = "\u2716";
+    public static byte[] ICON_CLOSE_BYTE = GLUtil.toCstyleBytes(ICON_CLOSE);
     //
     public static final int LEFT = 0;
     public static final int TOP = 1;
@@ -93,6 +103,8 @@ abstract public class GObject implements GAttachable {
     private String cmd;//类似attachment 用于附加String类型用户数据
     protected GLayout layout;
 
+    protected boolean paintWhenOutOfScreen = false;
+
     //脚本触发器
     /**
      * two call formate:
@@ -112,8 +124,11 @@ abstract public class GObject implements GAttachable {
     float cornerRadius = 0.0f;
     private String href;
 
+
     protected GObject(GForm form) {
-        if (this instanceof GForm) {//只有GForm可以传空进来
+        if (this instanceof GCallbackUI) {
+            System.out.println("[INFO]new GCallbackUI " + this);
+        } else if (this instanceof GForm) {//只有GForm可以传空进来
             this.form = (GForm) this;
         } else {
             if (form == null) throw new RuntimeException("Form can not be null");

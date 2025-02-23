@@ -8,8 +8,13 @@ package org.mini.gui;
 import org.mini.apploader.AppLoader;
 import org.mini.apploader.AppManager;
 import org.mini.glfw.Glfw;
+import org.mini.gui.callback.GCallBack;
+import org.mini.gui.callback.GFont;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
+import org.mini.gui.style.GStyle;
+import org.mini.gui.style.GStyleBright;
+import org.mini.gui.style.GStyleInner;
 import org.mini.nanovg.Nanovg;
 import org.mini.reflect.ReflectArray;
 
@@ -142,7 +147,7 @@ public class GToolkit {
     public static class FontHolder {
 
         static boolean fontLoaded = false;
-        static GFont word, icon;
+        public static GFont word, icon;
 
         public static synchronized void loadFont(long vg) {
             if (fontLoaded) {
@@ -428,6 +433,22 @@ public class GToolkit {
             nvgFillColor(vg, color);
             nvgTextBoxJni(vg, x, y + 1, w, text_arr, 0, text_arr.length);
         }
+    }
+
+    public static void drawEmoj(long vg, float x, float y, float w, float h, byte[] emojBytes) {
+        drawEmoj(vg, x, y, w, h, emojBytes, GToolkit.getStyle().getIconFontSize(), null);
+    }
+
+    public static void drawEmoj(long vg, float x, float y, float w, float h, byte[] emojBytes, float fontsize, float[] color) {
+        if (emojBytes == null || fontsize == 0) return;
+
+        nvgFontSize(vg, fontsize);
+        nvgFontFace(vg, GToolkit.getFontIcon());
+
+        float[] pc = color == null ? getStyle().getTextFontColor() : color;
+        nvgFillColor(vg, pc);
+        nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+        nvgTextJni(vg, x + w * 0.5f, y + h * 0.5f, emojBytes, 0, emojBytes.length);
     }
 
     public static void drawImageFrame(long vg, GImage img, int imgCols, int imgRows, int frameIndex, float px, float py, float pw, float ph) {

@@ -2,9 +2,11 @@ package org.mini.apploader;
 
 import org.mini.glfm.Glfm;
 import org.mini.gui.*;
+import org.mini.gui.callback.GCallBack;
 import org.mini.gui.event.GActionListener;
+import org.mini.gui.callback.GCallbackUI;
 
-public class GHomeButton extends GPanel implements GActionListener {
+public class GHomeButton extends GPanel implements GActionListener, GCallbackUI {
     public static final float DEF_X = 16f, DEF_Y = 40f;
     public static final float DEF_W = 32f, DEF_H = 32f;
     public static final float ICON_WH = 8f, PAD = 0f;
@@ -19,8 +21,8 @@ public class GHomeButton extends GPanel implements GActionListener {
     boolean drag = false;
     boolean moved = false;// is moved the button
 
-    public GHomeButton(GForm form) {
-        super(form, form.getW() * .5f, form.getH() * .5f, DEF_W, DEF_H);
+    public GHomeButton() {
+        super(null, GCallBack.getInstance().getDeviceWidth() * .5f, GCallBack.getInstance().getDeviceHeight() * .5f, DEF_W, DEF_H);
         setName(FLOAT_HOME_BOTTOM);
         int saveX = AppLoader.getHomeIconX();
         int saveY = AppLoader.getHomeIconY();
@@ -32,24 +34,27 @@ public class GHomeButton extends GPanel implements GActionListener {
 
 
     void checkLocation() {
-        GForm form = GCallBack.getInstance().getApplication().getForm();
         int oldx = (int) getX();
         int oldy = (int) getY();
+        int deviceW = GCallBack.getInstance().getDeviceWidth();
+        int deviceH = GCallBack.getInstance().getDeviceHeight();
+        long vg = GCallBack.getInstance().getNvContext();
+        long display = GCallBack.getInstance().getDisplay();
 
         double[] inset = new double[4];
-        Glfm.glfmGetDisplayChromeInsets(form.getWinContext(), inset);
+        Glfm.glfmGetDisplayChromeInsets(display, inset);
         double ratio = GCallBack.getInstance().getDeviceRatio();
 
         int tx = oldx, ty = oldy;
         int top = (int) (inset[0] / ratio);
         int bt = (int) (inset[2] / ratio);
         if (oldy < top) ty = top;
-        if (oldy + DEF_H > form.getDeviceHeight() - bt) ty = (int) (form.getDeviceHeight() - bt - DEF_H);
+        if (oldy + DEF_H > deviceH - bt) ty = (int) (deviceH - bt - DEF_H);
 
         int right = (int) (inset[1] / ratio);
         int left = (int) (inset[3] / ratio);
         if (oldx < left) tx = left;
-        if (oldx + DEF_W > form.getDeviceWidth() - right) tx = (int) (form.getDeviceWidth() - right - DEF_W);
+        if (oldx + DEF_W > deviceW - right) tx = (int) (deviceW - right - DEF_W);
 
         if (tx != oldx || ty != oldy) {
             setLocation(tx, ty);

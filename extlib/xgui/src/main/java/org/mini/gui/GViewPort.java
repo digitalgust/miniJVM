@@ -7,8 +7,8 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
+import org.mini.gui.callback.GCmd;
 
-import java.util.Timer;
 import java.util.TimerTask;
 
 /**

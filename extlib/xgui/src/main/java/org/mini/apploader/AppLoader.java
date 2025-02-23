@@ -5,9 +5,9 @@
  */
 package org.mini.apploader;
 
-import org.mini.gui.GCallBack;
+import org.mini.gui.callback.GCallBack;
 import org.mini.gui.GLanguage;
-import org.mini.gui.GStyle;
+import org.mini.gui.style.GStyle;
 import org.mini.gui.GToolkit;
 import org.mini.vm.ThreadLifeHandler;
 import org.mini.vm.VmUtil;

@@ -19,7 +19,6 @@ public class GCheckBox extends GObject {
     protected String text;
     protected byte[] text_arr;
     protected boolean checked;
-    protected byte[] preicon_arr = toCstyleBytes(ICON_CHECK);
 
     public GCheckBox(GForm form) {
         this(form, "", false, 0f, 0f, 1f, 1f);
@@ -98,7 +97,7 @@ public class GCheckBox extends GObject {
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
         if (checked) {
-            nvgTextJni(vg, x + 3, y + (int) (h * 0.5f), preicon_arr, 0, preicon_arr.length);
+            nvgTextJni(vg, x + 3, y + (int) (h * 0.5f), ICON_CHECK_BYTE, 0, ICON_CHECK_BYTE.length);
         }
         return true;
     }

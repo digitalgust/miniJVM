@@ -3,7 +3,7 @@ package org.mini.gui.gscript;
 import org.mini.crypt.XorCrypt;
 import org.mini.glfm.Glfm;
 import org.mini.glwrap.GLUtil;
-import org.mini.gui.GCallBack;
+import org.mini.gui.callback.GCallBack;
 import org.mini.reflect.ReflectMethod;
 
 import javax.microedition.io.Base64;

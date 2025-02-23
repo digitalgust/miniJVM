@@ -5,6 +5,8 @@
  */
 package org.mini.gui;
 
+import org.mini.gui.callback.GCallBack;
+
 import static org.mini.nanovg.Nanovg.*;
 
 /**

@@ -1,5 +1,7 @@
 package org.mini.gui;
 
+import org.mini.gui.callback.GCmd;
+
 abstract public class GOpenGLPanel extends GPanel {
     protected GImage glRendereredImg;
 

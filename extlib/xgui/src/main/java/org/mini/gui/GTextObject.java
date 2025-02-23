@@ -7,6 +7,7 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
+import org.mini.gui.callback.GCallBack;
 import org.mini.gui.event.GFocusChangeListener;
 import org.mini.util.CodePointBuilder;
 

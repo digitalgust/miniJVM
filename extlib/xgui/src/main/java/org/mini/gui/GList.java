@@ -7,6 +7,7 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
+import org.mini.gui.callback.GCmd;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
 import org.mini.gui.event.GStateChangeListener;
@@ -35,7 +36,6 @@ public class GList extends GContainer {
     public static final float ITEM_IMG_H_DEFAULT = 28f;
 
     protected String preicon;
-    protected byte[] preicon_arr = toCstyleBytes(ICON_CHEVRON_RIGHT);
     protected List<Integer> selected = new ArrayList();
     protected boolean pulldown;
     //
@@ -164,12 +164,6 @@ public class GList extends GContainer {
     @Override
     public float[] getInnerBoundle() {
         return getBoundle();
-    }
-
-    public void setPreIcon(String preicon) {
-        if (preicon == null || preicon.trim().length() == 0) return;
-        this.preicon = preicon;
-        preicon_arr = toCstyleBytes(preicon);
     }
 
     public GListItem addItem(GImage img, String lab) {
@@ -587,7 +581,7 @@ public class GList extends GContainer {
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
             nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
-            byte[] curIcon = pulldown ? toCstyleBytes(ICON_CHEVRON_DOWN) : preicon_arr;
+            byte[] curIcon = pulldown ? ICON_CHEVRON_DOWN_BYTE : ICON_CHEVRON_RIGHT_BYTE;
             nvgTextJni(vg, x + w - 15, y + h * 0.5f, curIcon, 0, curIcon.length);
         }
     }

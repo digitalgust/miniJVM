@@ -1,6 +1,6 @@
 package org.mini.glfw;
 
-import org.mini.gui.GCallBack;
+import org.mini.gui.callback.GCallBack;
 
 
 /**

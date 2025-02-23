@@ -5,7 +5,7 @@
  */
 package org.mini.glwrap;
 
-import org.mini.gui.GCmd;
+import org.mini.gui.callback.GCmd;
 import org.mini.gui.GForm;
 import org.mini.gui.GImage;
 import org.mini.nanovg.Nanovg;
@@ -90,7 +90,7 @@ public class GLShadowMapping {
         GLShadowMappingCleaner attachment = new GLShadowMappingCleaner();
         attachment.rendertext[0] = rendertex[0];
         attachment.fboobj[0] = fbo[0];
-        GForm.addCmd(new GCmd(GCmd.GCMD_RUN_CODE, attachment));
+        GForm.addCmd(new GCmd(attachment));
     }
 
 

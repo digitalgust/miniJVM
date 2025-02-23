@@ -1,5 +1,7 @@
-package org.mini.gui;
+package org.mini.gui.callback;
 
+import org.mini.gui.GObject;
+import org.mini.gui.GToolkit;
 import org.mini.nanovg.Nanovg;
 
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
@@ -27,7 +29,7 @@ public class GFont {
 
     void loadFont(String ttfInJarPath) {
         data = GToolkit.readFileFromJar(ttfInJarPath);
-        long vg = GCallBack.instance.getNvContext();
+        long vg = GCallBack.getInstance().getNvContext();
         font_handle = Nanovg.nvgCreateFontMem(vg, fontName, data, data.length, 0);
         if (font_handle == -1) {
             System.out.println("Could not add font.\n");

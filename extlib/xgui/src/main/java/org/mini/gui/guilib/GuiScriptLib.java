@@ -6,6 +6,8 @@ package org.mini.gui.guilib;
 
 import org.mini.apploader.AppManager;
 import org.mini.gui.*;
+import org.mini.gui.callback.GCallBack;
+import org.mini.gui.callback.GCmd;
 import org.mini.gui.gscript.*;
 import org.mini.http.MiniHttpClient;
 import org.mini.json.JsonParser;

@@ -7,6 +7,7 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
+import org.mini.gui.callback.GCallBack;
 import org.mini.nanovg.Nanovg;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
@@ -38,7 +39,7 @@ public class GMenuItem extends GContainer {
     public void setText(String t) {
         super.setText(t);
         if (t == null) return;
-        long vg = GCallBack.instance.getNvContext();
+        long vg = GCallBack.getInstance().getNvContext();
         nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextMetrics(vg, null, null, lineh);

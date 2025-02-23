@@ -5,9 +5,6 @@
  */
 package org.mini.gui;
 
-import org.mini.apploader.AppManager;
-import org.mini.apploader.GApplication;
-
 import java.util.HashMap;
 import java.util.Map;
 

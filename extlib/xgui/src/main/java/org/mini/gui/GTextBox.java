@@ -7,11 +7,9 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
+import org.mini.gui.callback.GCmd;
 import org.mini.nanovg.Nanovg;
 import org.mini.util.CodePointBuilder;
-
-import java.util.Timer;
-import java.util.TimerTask;
 
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
 import static org.mini.nanovg.Nanovg.*;

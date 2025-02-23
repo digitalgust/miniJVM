@@ -3,11 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.mini.gui;
+package org.mini.gui.callback;
 
 import org.mini.apploader.GApplication;
 import org.mini.glfm.GlfmCallBack;
 import org.mini.glfw.GlfwCallback;
+import org.mini.gui.GForm;
 
 import java.io.InputStream;
 
@@ -19,7 +20,7 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
     static GCallBack instance;
 
     protected GApplication gapp;
-    protected GForm gform;
+    protected GDesktop desktop;
 
     public static GCallBack getInstance() {
         if (instance == null) {
@@ -31,6 +32,7 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
                 System.out.println("load gui native " + glfm);
                 Class c = Class.forName(System.getProperty("gui.driver"));
                 instance = (GCallBack) c.newInstance();
+                instance.desktop = new GDesktop(instance);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -44,12 +46,17 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
 
     public void setApplication(GApplication app) {
         if (app != null) {
+            desktop.setSize(getDeviceWidth(), getDeviceHeight());
             gapp = app;
-            gform = app.getForm();
+            gapp.getForm();
         }
     }
 
     protected abstract void onFormSet(GForm form);
+
+    public GDesktop getDesktop() {
+        return desktop;
+    }
 
 
     private ClassLoader getClassLoader() {

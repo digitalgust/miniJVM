@@ -6,6 +6,7 @@
 package org.mini.gui;
 
 import org.mini.glwrap.GLUtil;
+import org.mini.gui.callback.GCallBack;
 import org.mini.http.MiniHttpClient;
 
 import java.io.File;

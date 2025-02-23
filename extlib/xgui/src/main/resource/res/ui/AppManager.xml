@@ -5,8 +5,7 @@
             if(!isDef("ENCRYPTED_KEY"))
                 def("ENCRYPTED_KEY","L7%d9&3jw5f")
             eif
-            getPolicy()
-            signInAuto() '自动登录
+            getPolicy(false) '异步调用
         ret
 
         sub getQueryPara()
@@ -18,7 +17,7 @@
             showMsg("{STR_MESSAGE}: "+msg)
         ret
 
-        sub getPolicy() '获取策略
+        sub getPolicy(sync) '获取策略
             if(strlen(getEnv("DISCOVERY_URL"))>0)
                 ret
             eif
@@ -27,7 +26,11 @@
             println("getPolicy:"+policyUrl)
             if(strlen(policyUrl)>0)
                 url=policyUrl +"?"+ getQueryPara()
-                httpGetSync(url, "ROOT_PAN.onPolicyRequestBack")
+                if(sync)
+                    httpGetSync(url, "ROOT_PAN.onPolicyRequestBack")
+                else
+                    httpGet(url, "ROOT_PAN.onPolicyRequestBack")
+                eif
             eif
         ret
 
@@ -42,6 +45,8 @@
                 setEnv("PLUGIN_URL",urls[5])
                 setEnv("UPDATE_URL",urls[6])
                 println("urls:\n"+urls)
+
+                signInAuto() '自动登录
             else
                showMsg("onPolicyRequestBack:"+code+","+msg)
             eif
@@ -49,7 +54,7 @@
 
 
         sub signInAuto() '登录
-            getPolicy()
+            getPolicy(true)
             logintype=getEnv("LOGINTYPE")
             loginUid=getEnv("USERNAME")
             ep=getEnv("USERPASS")
@@ -73,12 +78,12 @@
                 setEnv("TOKEN", msg)
                 println("token="+msg)
             else
-                showMsg("{STR_MESSAGE}: {STR_FAIL}")
+                showMsg("{STR_MESSAGE}: {STR_CONNECTION_FAIL}")
             eif
         ret
 
         sub showDiscovery() '显示发现
-            getPolicy()
+            getPolicy(true)
             showSlot("SLOT_MGR", 3)
             if(!uiExist("DIS_HOME")) 'if there is not a discovery panel then show it
                 showHome()
@@ -86,13 +91,13 @@
         ret
 
         sub showHome()
-            getPolicy()
+            getPolicy(true)
             url=getEnv("DISCOVERY_URL") +"?"+ getQueryPara()
             openPage(url,"")
         ret
 
         sub showMy() '显示我的
-            getPolicy()
+            getPolicy(true)
             showSlot("SLOT_MGR", 4)
 
             token=getEnv("TOKEN")
@@ -105,7 +110,7 @@
         ret
 
         sub showProfile() '显示我的
-            getPolicy()
+            getPolicy(true)
             s1=getEnv("DISCOVERY_URL")
             s2=substr(s1,0,lastIdxOf(s1,"/"))
             s3=s2+"/profile.xml" +"?"+ getQueryPara()

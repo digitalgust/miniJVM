@@ -9,10 +9,9 @@ import org.mini.apploader.AppLoader;
 import org.mini.apploader.AppManager;
 import org.mini.apploader.Sync;
 import org.mini.glfw.Glfw;
-import org.mini.gui.GCallBack;
-import org.mini.gui.GForm;
-import org.mini.gui.GObject;
-import org.mini.gui.GToolkit;
+import org.mini.gui.*;
+import org.mini.gui.callback.GCallBack;
+import org.mini.gui.callback.GDesktop;
 import org.mini.nanovg.Nanovg;
 
 import static org.mini.nanovg.Nanovg.*;
@@ -92,12 +91,6 @@ public class GlfmCallBackImpl extends GCallBack {
         this.display = display;
     }
 
-
-    void setForm(GForm form) {
-        gform = form;
-    }
-
-
     /**
      * @return the fps
      */
@@ -174,19 +167,15 @@ public class GlfmCallBackImpl extends GCallBack {
             }
             try {
                 Thread.currentThread().setContextClassLoader(gapp.getClass().getClassLoader());//there were be an app pause and the other app setup
-                gform = gapp.getForm();
-                if (!gform.isInited()) {
-                    gform.cb_init();
-                    gapp.startApp();
-                }
+                desktop.checkAppRun(gapp);
             } catch (Exception e) {
                 gapp.closeApp();
-                GForm.addMessage("Init error : " + e.getMessage());
+                GDesktop.addMessage("Init error : " + e.getMessage());
                 e.printStackTrace();
             }
-            if (gform.flushReq()) {
-                if (gform != null) {
-                    gform.display(vg);
+            if (desktop.flushReq()) {
+                if (desktop != null) {
+                    desktop.display(vg);
                 }
             }
             //
@@ -217,34 +206,34 @@ public class GlfmCallBackImpl extends GCallBack {
 
     @Override
     public boolean onKey(long display, int keyCode, int action, int modifiers) {
-        if (gform == null) {
+        if (desktop == null) {
             return true;
         }
-        GObject focus = gform.getCurrent();
+        GObject focus = desktop.getCurrent();
         //System.out.println("keyCode  :" + keyCode + "   action=" + action + "   modifiers=" + modifiers);
         if (focus != null) {
             focus.keyEventGlfm(keyCode, action, modifiers);
         } else {
-            gform.keyEventGlfm(keyCode, action, modifiers);
+            desktop.keyEventGlfm(keyCode, action, modifiers);
         }
-        gform.flush();
+        desktop.flush();
         return true;
     }
 
     @Override
     public void onCharacter(long window, String str, int modifiers) {
-        if (gform == null) {
+        if (desktop == null) {
             return;
         }
-        GObject focus = gform.getCurrent();
+        GObject focus = desktop.getCurrent();
         //System.out.println("onCharacter  :" + str + "   mod=" + modifiers);
         if (focus != null) {
             focus.characterEvent(str, modifiers);
         } else {
-            gform.characterEvent(str, modifiers);
+            desktop.characterEvent(str, modifiers);
         }
 
-        gform.flush();
+        desktop.flush();
     }
 
     public int getTouchOrMouseX() {
@@ -257,7 +246,7 @@ public class GlfmCallBackImpl extends GCallBack {
 
     @Override
     public boolean onTouch(long display, int touch, int phase, double x, double y) {
-        GForm form = this.gform;
+        GDesktop form = this.desktop;
         if (form == null) {
             return true;
         }
@@ -349,61 +338,61 @@ public class GlfmCallBackImpl extends GCallBack {
 
         Glfm.glfmGetDisplayChromeInsets(display, insetsDouble);
 
-        if (gform == null) {
+        if (desktop == null) {
             return;
         }
         //System.out.println(width + "," + height + "," + pxRatio);
         //System.out.println(winWidth + "," + winHeight);
-        gform.setSize(winWidth, winHeight);
-        gform.onDeviceSizeChanged(winWidth, winHeight);
-        gform.flush();
+        desktop.setSize(winWidth, winHeight);
+        desktop.onDeviceSizeChanged(winWidth, winHeight);
+        desktop.flush();
     }
 
     public void onSurfaceError(long display, String description) {
-        if (gform == null) {
+        if (desktop == null) {
             return;
         }
-        gform.flush();
+        desktop.flush();
     }
 
     @Override
     public void onKeyboardVisible(long display, boolean visible, double x, double y, double w, double h) {
         //System.out.println("keyboardVisableEvent:" + display + "," + visible + "," + x + "," + y + "," + w + "," + h);
-        if (gform == null) {
+        if (desktop == null) {
             return;
         }
         x /= Glfm.glfmGetDisplayScale(display);
         y /= Glfm.glfmGetDisplayScale(display);
         w /= Glfm.glfmGetDisplayScale(display);
         h /= Glfm.glfmGetDisplayScale(display);
-        gform.KeyboardPopEvent(visible, (float) x, (float) y, (float) w, (float) h);
+        desktop.KeyboardPopEvent(visible, (float) x, (float) y, (float) w, (float) h);
     }
 
     @Override
     public void onPhotoPicked(long display, int uid, String url, byte[] data) {
-        if (gform == null) {
+        if (desktop == null) {
             return;
         }
-        gform.onPhotoPicked(uid, url, data);
+        desktop.onPhotoPicked(uid, url, data);
     }
 
     @Override
     public void onAppFocus(long display, boolean focused) {
-        if (gform == null) {
+        if (desktop == null) {
             return;
         }
-        gform.onAppFocus(focused);
+        desktop.onAppFocus(focused);
     }
 
     @Override
     public void onNotify(long display, String key, String val) {
-        if (gform == null) {
+        if (desktop == null) {
             return;
         }
         GForm mgrForm = AppManager.getInstance().getForm();
         mgrForm.onDeviceNotify(key, val);// notify to manager form first
-        if (mgrForm != gform) {
-            gform.onDeviceNotify(key, val);
+        if (mgrForm != desktop.getForm()) {
+            desktop.onDeviceNotify(key, val);
         }
     }
 

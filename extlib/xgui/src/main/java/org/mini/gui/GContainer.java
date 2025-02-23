@@ -11,7 +11,6 @@ import org.mini.gui.gscript.Interpreter;
 import org.mini.nanovg.Nanovg;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static org.mini.nanovg.Nanovg.nvgSave;
@@ -495,7 +494,7 @@ abstract public class GContainer extends GObject {
         float vy = nko.getY();
         float vw = nko.getW();
         float vh = nko.getH();
-        if (va[2] <= va[0] || va[3] <= va[1] || vx + vw <= va[0] || vx >= va[2] || vy >= va[3] || vy + vh <= va[1]) {
+        if (!nko.paintWhenOutOfScreen && (va[2] <= va[0] || va[3] <= va[1] || vx + vw <= va[0] || vx >= va[2] || vy >= va[3] || vy + vh <= va[1])) {
             //out of visable area
         } else {
 

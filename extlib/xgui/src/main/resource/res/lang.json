@@ -90,6 +90,11 @@
       "打开组件失败",
       "打開元件失敗"
     ],
+    "STR_CONNECTION_FAIL": [
+      "Connection failed",
+      "联网失败",
+      "联網失敗"
+    ],
     "DISCOVERY": [
       "DISCOVERY",
       "发现",

@@ -5,7 +5,7 @@
  */
 package org.mini.layout;
 
-import org.mini.gui.GCallBack;
+import org.mini.gui.callback.GCallBack;
 import org.mini.gui.GObject;
 import org.mini.gui.GToolkit;
 import org.mini.nanovg.Nanovg;

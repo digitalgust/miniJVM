@@ -1,7 +1,5 @@
 package org.mini.gui.gscript;
 
-import org.mini.gui.GCallBack;
-
 import java.io.*;
 import java.util.*;
 //import main.Util;

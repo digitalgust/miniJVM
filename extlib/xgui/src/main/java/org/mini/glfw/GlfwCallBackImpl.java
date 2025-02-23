@@ -9,11 +9,11 @@ package org.mini.glfw;
 import org.mini.apploader.AppLoader;
 import org.mini.apploader.Sync;
 import org.mini.glwrap.GLUtil;
-import org.mini.gui.GCallBack;
+import org.mini.gui.callback.GCallBack;
+import org.mini.gui.callback.GDesktop;
 import org.mini.gui.GForm;
 import org.mini.gui.GToolkit;
 import org.mini.media.MaDevice;
-import org.mini.media.MiniAudio;
 
 import java.io.File;
 
@@ -130,7 +130,8 @@ public class GlfwCallBackImpl extends GCallBack {
         vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
         if (vg == 0) {
             System.out.println("Could not init nanovg.\n");
-            System.out.println("callback.getNvContext() is null.");
+        } else {
+            System.out.println("nanovg success.");
         }
 
         GToolkit.FontHolder.loadFont(vg);
@@ -151,20 +152,16 @@ public class GlfwCallBackImpl extends GCallBack {
                 }
                 try {
                     Thread.currentThread().setContextClassLoader(gapp.getClass().getClassLoader());
-                    gform = gapp.getForm();
-                    if (!gform.isInited()) {
-                        gform.cb_init();
-                        gapp.startApp();
-                    }
+                    desktop.checkAppRun(gapp);
                 } catch (Exception e) {
                     gapp.closeApp();
-                    gform.addMessageIm("Init error: " + e.getMessage());
+                    desktop.addMessage("Init error: " + e.getMessage());
                     e.printStackTrace();
                 }
                 startAt = System.currentTimeMillis();
                 //user define contents
-                if (gform.flushReq()) {
-                    gform.display(vg);
+                if (desktop.flushReq()) {
+                    desktop.display(vg);
                     //GToolkit.drawText(vg, 0, 0, 200, 30, mouseX + " , " + mouseY);
                     Glfw.glfwSwapBuffers(display);
                 }
@@ -213,14 +210,14 @@ public class GlfwCallBackImpl extends GCallBack {
     @Override
     public void key(long window, int key, int scancode, int action, int mods) {
         try {
-            if (gform == null) {
+            if (desktop == null) {
                 return;
             }
             if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
                 Glfw.glfwSetWindowShouldClose(window, GLFW_TRUE);
             }
-            gform.keyEventGlfw(key, scancode, action, mods);
-            gform.flush3();
+            desktop.keyEventGlfw(key, scancode, action, mods);
+            GDesktop.flush();
         } catch (Exception ex) {
             ex.printStackTrace();
 
@@ -230,11 +227,11 @@ public class GlfwCallBackImpl extends GCallBack {
     @Override
     public void character(long window, char character) {
         try {
-            if (gform == null) {
+            if (desktop == null) {
                 return;
             }
-            gform.characterEvent(character);
-            gform.flush3();
+            desktop.characterEvent(character);
+            GDesktop.flush();
         } catch (Exception ex) {
             ex.printStackTrace();
 
@@ -252,7 +249,7 @@ public class GlfwCallBackImpl extends GCallBack {
     @Override
     public void mouseButton(long window, int button, boolean pressed) {
         try {
-            if (gform == null) {
+            if (desktop == null) {
                 return;
             }
             if (window == display) {
@@ -284,7 +281,7 @@ public class GlfwCallBackImpl extends GCallBack {
                         break;
                     }
                 }
-                gform.mouseButtonEvent(button, pressed, mouseX, mouseY);
+                desktop.mouseButtonEvent(button, pressed, mouseX, mouseY);
                 //click event
                 long cur = System.currentTimeMillis();
                 if (pressed) {
@@ -298,12 +295,12 @@ public class GlfwCallBackImpl extends GCallBack {
                 }
                 if (!pressed) {
                     if (clickCount > 0) {
-                        gform.clickEvent(button, mouseX, mouseY);
+                        desktop.clickEvent(button, mouseX, mouseY);
                         clickCount = 0;
                     }
                 }
             }
-            gform.flush3();
+            GDesktop.flush();
             //System.out.println("flushed");
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -314,11 +311,11 @@ public class GlfwCallBackImpl extends GCallBack {
     @Override
     public void scroll(long window, double scrollX, double scrollY) {
         try {
-            if (gform == null) {
+            if (desktop == null) {
                 return;
             }
-            gform.scrollEvent((float) scrollX * 10, (float) scrollY * 10, mouseX, mouseY);
-            gform.flush3();
+            desktop.scrollEvent((float) scrollX * 10, (float) scrollY * 10, mouseX, mouseY);
+            GDesktop.flush();
         } catch (Exception ex) {
             ex.printStackTrace();
 
@@ -328,23 +325,23 @@ public class GlfwCallBackImpl extends GCallBack {
     @Override
     public void cursorPos(long window, int x, int y) {
         try {
-            if (gform == null) {
+            if (desktop == null) {
                 return;
             }
             //form maybe translate when keyboard popup
-            x += gform.getX();
-            y += gform.getY();
+            x += desktop.getX();
+            y += desktop.getY();
 
             if (display == window) {
                 mouseX = x;
                 mouseY = y;
-                gform.cursorPosEvent(x, y);
+                desktop.cursorPosEvent(x, y);
                 if (drag) {
-                    gform.dragEvent(buttonOnDrag, x - hoverX, y - hoverY, x, y);
+                    desktop.dragEvent(buttonOnDrag, x - hoverX, y - hoverY, x, y);
                     hoverX = mouseX;
                     hoverY = mouseY;
                 }
-                gform.flush3();
+                GDesktop.flush();
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -355,10 +352,10 @@ public class GlfwCallBackImpl extends GCallBack {
     @Override
     public boolean windowClose(long window) {
         try {
-            if (gform == null) {
+            if (desktop == null) {
                 return true;
             }
-            gform.flush3();
+            GDesktop.flush();
         } catch (Exception ex) {
             ex.printStackTrace();
 
@@ -382,15 +379,16 @@ public class GlfwCallBackImpl extends GCallBack {
 
     @Override
     public void windowSize(long window, int width, int height) {
+            System.out.println("windowsize" + width + "," + height);
         try {
             reloadWindow();
 
-            if (gform == null) {
+            if (desktop == null) {
                 return;
             }
-            gform.setSize(width, height);
-            gform.onDeviceSizeChanged(width, height);
-            gform.flush3();
+            desktop.setSize(width, height);
+            desktop.onDeviceSizeChanged(width, height);
+            GDesktop.flush();
         } catch (Exception ex) {
             ex.printStackTrace();
 
@@ -401,12 +399,12 @@ public class GlfwCallBackImpl extends GCallBack {
     public void framebufferSize(long window, int x, int y) {
         try {
             reloadWindow();
-            if (gform == null) {
+            if (desktop == null) {
                 return;
             }
-            gform.setSize(x, y);
+            desktop.setSize(x, y);
             reloadWindow();
-            gform.flush3();
+            GDesktop.flush();
         } catch (Exception ex) {
             ex.printStackTrace();
 
@@ -416,11 +414,11 @@ public class GlfwCallBackImpl extends GCallBack {
     @Override
     public void drop(long window, int count, String[] paths) {
         try {
-            if (gform == null) {
+            if (desktop == null) {
                 return;
             }
-            gform.dropEvent(count, paths);
-            gform.flush3();
+            desktop.dropEvent(count, paths);
+            GDesktop.flush();
         } catch (Exception ex) {
             ex.printStackTrace();
 

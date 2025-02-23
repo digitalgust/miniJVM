@@ -1,4 +1,4 @@
-package org.mini.gui;
+package org.mini.gui.style;
 
 
 import static org.mini.gui.GToolkit.nvgRGBA;
@@ -9,7 +9,7 @@ import static org.mini.gui.GToolkit.nvgRGBA;
  * 此类的的主要目的是,在GToolkit的静态变量中不存外部类的实例
  * 因为第三方应用GApplication结束时,还存在引用,这样可能导致第三方类无法释放
  */
-class GStyleInner extends GStyle {
+public class GStyleInner extends GStyle {
     float textFontSize;
     float titleFontSize;
     float iconFontSize;
@@ -29,7 +29,7 @@ class GStyleInner extends GStyle {
     float[] highColor;
     float[] lowColor;
 
-    GStyleInner(GStyle source) {
+    public GStyleInner(GStyle source) {
         set(source);
     }
 

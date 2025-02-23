@@ -8,11 +8,15 @@ package org.mini.apploader;
 import org.mini.apploader.bean.LangBean;
 import org.mini.glfm.Glfm;
 import org.mini.gui.*;
+import org.mini.gui.callback.GCallBack;
+import org.mini.gui.callback.GDesktop;
 import org.mini.gui.event.GNotifyListener;
 import org.mini.gui.gscript.EnvVarProvider;
 import org.mini.gui.gscript.Interpreter;
 import org.mini.gui.guilib.GuiScriptLib;
 import org.mini.gui.guilib.HttpRequestReply;
+import org.mini.gui.style.GStyleBright;
+import org.mini.gui.style.GStyleDark;
 import org.mini.http.MiniHttpClient;
 import org.mini.http.MiniHttpServer;
 import org.mini.json.JsonParser;
@@ -125,7 +129,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
         return instance;
     }
 
-    void active() {
+    public void active() {
 //        if (webServer != null) {
 //            webServer.stopServer();
 //        }
@@ -169,8 +173,10 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
         assist.setEnvVarProvider(envVarProvider);
         //init form
         mgrForm.initForm();
-        floatButton = new GHomeButton(mgrForm);
-        mgrForm.add(floatButton);
+        if (floatButton == null) {
+            floatButton = new GHomeButton();
+        }
+        GCallBack.getInstance().getDesktop().add(floatButton);
         return mgrForm;
     }
 
@@ -326,7 +332,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
         runningApps.put(app.getJarName(), app);
     }
 
-    void removeRunningApp(GApplication app) {
+    public void removeRunningApp(GApplication app) {
         if (app == null) return;
         runningApps.remove(app.getJarName());
     }
@@ -402,6 +408,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
 
         public PluginMgrForm(GForm form) {
             super(form);
+            System.out.println("[INFO]inited PluginMgrForm" + this);
         }
 
         public void initForm() {
@@ -631,7 +638,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                         uploadbtn.setText(getString(STR_START));
                         uploadLab.setText(getString(STR_START_WEB_SRV_FOR_UPLOAD));
                         String s = getString(STR_SERVER_STOPED);
-                        GForm.addMessage(s);
+                        GDesktop.addMessage(s);
                         log(s);
                     } else {
                         webServer = new MiniHttpServer(MiniHttpServer.DEFAULT_PORT, srvLogger);
@@ -673,8 +680,6 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                                         app = AppLoader.runApp(jarName);
                                         if (app != AppManager.this) {
                                             runningApps.put(jarName, app);
-                                            GForm form = app.getForm();
-                                            form.add(AppManager.getInstance().getFloatButton());
                                             updateContentViewInfo(jarName);
                                             gli.setColor(RUNNING_ITEM_COLOR);
                                         } else {
@@ -723,7 +728,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                         public boolean accept(File file) {
                             return file.isDirectory() || file.getName().endsWith(".jar");
                         }
-                    }, mgrForm.getDeviceWidth(), mgrForm.getDeviceHeight(), gobj1 -> {
+                    }, GCallBack.getInstance().getDeviceWidth(), GCallBack.getInstance().getDeviceHeight(), gobj1 -> {
                         File f = gobj1.getAttachment();
                         if (f.isFile()) {
                             String fullpath = f.getAbsolutePath();

@@ -1,6 +1,6 @@
 package org.mini.layout.xwebview;
 
-import org.mini.gui.GCmd;
+import org.mini.gui.callback.GCmd;
 import org.mini.gui.GContainer;
 import org.mini.gui.GForm;
 import org.mini.gui.guilib.GuiScriptLib;

@@ -6,6 +6,8 @@ package org.mini.layout.xwebview;
 
 import org.mini.apploader.AppManager;
 import org.mini.gui.*;
+import org.mini.gui.callback.GCallBack;
+import org.mini.gui.callback.GCmd;
 import org.mini.gui.gscript.DataType;
 import org.mini.gui.gscript.Interpreter;
 import org.mini.gui.gscript.Lib;

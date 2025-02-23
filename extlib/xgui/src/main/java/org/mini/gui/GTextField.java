@@ -25,9 +25,6 @@ public class GTextField extends GTextObject {
     protected int text_max = 400;
     protected int boxStyle = BOX_STYLE_EDIT;
     //
-    protected byte[] search_arr = toCstyleBytes(ICON_SEARCH);
-    protected byte[] reset_arr = toCstyleBytes(ICON_CIRCLED_CROSS);
-    //
     protected float[] lineh = {0};
     protected short[] text_pos;
     //
@@ -517,7 +514,7 @@ public class GTextField extends GTextObject {
             nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 
-            nvgTextJni(vg, x + FONT_WIDTH, y + h * 0.55f, search_arr, 0, search_arr.length);
+            nvgTextJni(vg, x + FONT_WIDTH, y + h * 0.55f, ICON_SEARCH_BYTE, 0, ICON_SEARCH_BYTE.length);
             leftIcons = 2;
         } else {
             GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h, getCornerRadius());
@@ -528,7 +525,7 @@ public class GTextField extends GTextObject {
             nvgFontFace(vg, GToolkit.getFontIcon());
             nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-            nvgTextJni(vg, x + w - resetWidth * 0.5f, y + h * 0.55f, reset_arr, 0, reset_arr.length);
+            nvgTextJni(vg, x + w - resetWidth * 0.5f, y + h * 0.55f, ICON_CIRCLED_CROSS_BYTE, 0, ICON_CIRCLED_CROSS_BYTE.length);
         }
 
         nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
