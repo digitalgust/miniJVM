@@ -17,13 +17,7 @@ import java.util.regex.Pattern;
  */
 public class UITemplate {
 
-    private static ThreadLocal<HashMap> vars = new ThreadLocal() {
-
-        @Override
-        protected HashMap initialValue() {
-            return new HashMap();
-        }
-    };
+    private HashMap vars = new HashMap();
     /**
      * 分割字符串
      */
@@ -137,7 +131,7 @@ public class UITemplate {
      * @return
      */
     public String parse() {
-        HashMap map = vars.get();
+        HashMap map = vars;
         String ui = parse(map);
         map.clear();
         return ui;
@@ -178,12 +172,12 @@ public class UITemplate {
         return variable;
     }
 
-    public static void setVar(Object key, Object value) {
-        vars.get().put(key, value);
+    public void setVar(Object key, Object value) {
+        vars.put(key, value);
     }
 
-    public static HashMap getVarMap() {
-        return vars.get();
+    public HashMap getVarMap() {
+        return vars;
     }
 
     public UITemplate clone() {

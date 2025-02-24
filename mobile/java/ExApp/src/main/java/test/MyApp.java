@@ -2,6 +2,7 @@ package test;
 
 import org.mini.apploader.GApplication;
 import org.mini.gui.*;
+import org.mini.gui.callback.GCallBack;
 import org.mini.layout.UITemplate;
 import org.mini.layout.XContainer;
 import org.mini.layout.XEventHandler;
@@ -31,10 +32,10 @@ public class MyApp extends GApplication {
         String xmlStr = GToolkit.readFileFromJarAsString("/res/MyForm.xml", "utf-8");
 
         UITemplate uit = new UITemplate(xmlStr);
-        UITemplate.getVarMap().put("Cancel", "CANCEL"); //replace keywork in xml
-        UITemplate.getVarMap().put("Change", "Change");
-        UITemplate.getVarMap().put("Test", "Test");
-        UITemplate.getVarMap().put("Exit", "QUIT");
+        uit.getVarMap().put("Cancel", "CANCEL"); //replace keywork in xml
+        uit.getVarMap().put("Change", "Change");
+        uit.getVarMap().put("Test", "Test");
+        uit.getVarMap().put("Exit", "QUIT");
         XContainer xc = (XContainer) XContainer.parseXml(uit.parse(), new XmlExtAssist(null));
         int screenW = GCallBack.getInstance().getDeviceWidth();
         int screenH = GCallBack.getInstance().getDeviceHeight();

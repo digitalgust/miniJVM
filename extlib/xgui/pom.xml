@@ -9,7 +9,7 @@
     <groupId>io.github.digitalgust</groupId>
     <artifactId>xgui</artifactId>
     <name>${project.groupId}:${project.artifactId}</name>
-    <version>1.1.16</version>
+    <version>1.2.0</version>
     <description>miniJVM mobile platform gui library</description>
     <url>https://github.com/digitalgust/miniJVM</url>
 
@@ -174,17 +174,17 @@
         <dependency>
             <groupId>io.github.digitalgust</groupId>
             <artifactId>minijvm_rt</artifactId>
-            <version>1.1.11</version>
+            <version>1.2.0</version>
         </dependency>
         <dependency>
             <groupId>io.github.digitalgust</groupId>
             <artifactId>glfw_gui</artifactId>
-            <version>1.1.12</version>
+            <version>1.2.0</version>
         </dependency>
         <dependency>
             <groupId>io.github.digitalgust</groupId>
             <artifactId>glfm_gui</artifactId>
-            <version>1.1.12</version>
+            <version>1.2.0</version>
         </dependency>
     </dependencies>
 

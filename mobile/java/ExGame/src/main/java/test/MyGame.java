@@ -2,6 +2,7 @@ package test;
 
 import org.mini.apploader.GApplication;
 import org.mini.gui.*;
+import org.mini.gui.callback.GCallBack;
 import org.mini.layout.UITemplate;
 import org.mini.layout.XContainer;
 import org.mini.layout.XEventHandler;
