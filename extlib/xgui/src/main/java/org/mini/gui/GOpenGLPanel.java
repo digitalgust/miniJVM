@@ -50,7 +50,7 @@ abstract public class GOpenGLPanel extends GPanel {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            System.out.println("GOpenGLPanel clean success");
+            System.out.println("[INFO]GOpenGLPanel clean success");
         }));
     }
 

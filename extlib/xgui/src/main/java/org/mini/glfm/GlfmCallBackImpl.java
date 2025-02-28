@@ -49,7 +49,7 @@ public class GlfmCallBackImpl extends GCallBack {
     long vg;
 
     float fps;
-    float fpsExpect = 60;
+    float fpsExpect = FPS_DEFAULT;
     long startAt, cost;
     long last = System.currentTimeMillis(), now;
     int count = 0;
@@ -149,9 +149,9 @@ public class GlfmCallBackImpl extends GCallBack {
 
         vg = Nanovg.nvgCreateGLES3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
         if (vg == 0) {
-            System.out.println("Could not init nanovg.\n");
+            System.out.println("[ERRO]Could not init nanovg.\n");
         } else {
-            System.out.println("nanovg success.");
+            System.out.println("[INFO]nanovg success.");
         }
         GToolkit.FontHolder.loadFont(vg);
         AppLoader.cb_init();
@@ -199,7 +199,7 @@ public class GlfmCallBackImpl extends GCallBack {
     @Override
     public void onSurfaceCreated(long display, int width, int height) {
         init();
-        System.out.println("onSurfaceCreated " + width + "," + height + "," + pxRatio);
+        System.out.println("[INFO]onSurfaceCreated " + width + "," + height + "," + pxRatio);
         Glfm.glfmSetMultitouchEnabled(display, true);
         Glfm.glfmGetDisplayChromeInsets(display, insetsDouble);
     }

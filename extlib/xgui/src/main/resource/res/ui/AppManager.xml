@@ -125,6 +125,22 @@
             eif
         ret
 
+        sub openWebForUpload()
+            '执行java语句  AppManager.getInstance().getWebServer()==null
+            ins=invokeStatic("org.mini.apploader.AppManager","getInstance()Lorg.mini.apploader.AppManager;")
+            websrv=invokeJava(ins,"getWebServer()Lorg.mini.http.MiniHttpServer;")
+
+            '因为按下按钮后，脚本先于按钮的action执行，
+            '因此，webServer如果不为空，
+            '说明本次事件是要停止webserver,反之是要启动
+            if(isNull(websrv))
+                url="http://localhost:8088"
+                println(url)
+                if(strlen(url)>0)
+                    openOtherApp(url,"",0)  ' 第一个为 url，第二个为参数，第三个为检测是否App 存在，0为不检测，1为检测
+                eif
+            eif
+        ret
 
         ]]>
     </script>
@@ -212,7 +228,7 @@
                         <button name="BT_LOCALFILE" w="25%" h="30" preicon="📁">{BROWSE_FILE}</button>
                         <label w="100%" h="20"></label>
                         <label name="LAB_WEBSRV" w="75%" h="30" align="left,vcenter">{STR_START_WEB_SRV_FOR_UPLOAD}</label>
-                        <button name="BT_STARTWEB" w="25%" h="30" preicon="📤">{STR_START}</button>
+                        <button name="BT_STARTWEB" onclick="openWebForUpload()" w="25%" h="30" preicon="📤">{STR_START}</button>
                         <label w="100%" h="20"></label>
                         <br/>
                         <input name="INPUT_LOG" w="100%" h="200" edit="0" multiline="1">{STR_MESSAGE}</input>

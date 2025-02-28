@@ -20,7 +20,7 @@ import static org.mini.nanovg.Nanovg.nvgSave;
  */
 abstract public class GContainer extends GObject {
 
-    protected final List<GObject> elements = new ChildList();
+    protected final List<GObject> elements = new ArrayList();
     private final List<GChildrenListener> childrenListeners = new ArrayList();
     protected GObject current;  //每个容器都有自己的当前组件，current一定是直接子组件，焦点的获得和失去，是在鼠标或点击事件中从form开始逐层获得和失去
     float[] visableArea = new float[4];
@@ -201,7 +201,7 @@ abstract public class GContainer extends GObject {
                     }
                     elements.add(index, nko);
                     nko.setParent(this);
-                    nko.init();
+                    if (!nko.isInited()) nko.init();
                     onAdd(nko);
                 }
             }
@@ -216,7 +216,7 @@ abstract public class GContainer extends GObject {
                 }
                 onRemove(nko);
                 nko.setParent(null);
-                nko.destroy();
+                if (!nko.isInited()) nko.destroy();
                 elements.remove(nko);
             }
         }

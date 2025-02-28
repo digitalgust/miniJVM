@@ -124,7 +124,7 @@ public class GuiScriptLib extends Lib {
                     return;
                 }
             }
-            System.out.println("httpRequest callback no GContainer specified: " + callback);
+            System.out.println("[WARN]httpRequest callback no GContainer specified: " + callback);
 
         }
     }
@@ -146,7 +146,7 @@ public class GuiScriptLib extends Lib {
                 }
             };
             go.setName(panName);
-            go.setBgColor(GColorSelector.BLUE_HALF);
+            go.setBgColor(GColorSelector.GREEN_HALF);
             form.add(go);
         }
         go.setLocation(0, h - go.getH());
@@ -679,7 +679,7 @@ public class GuiScriptLib extends Lib {
                             Interpreter inp = gobj.getInterpreter();
                             inp.callSub(ss[1] + "()");
                         } else {
-                            System.out.println("showConfirm callback format \"PAN.subname\" ,but : " + callback);
+                            System.out.println("[WARN]showConfirm callback format \"PAN.subname\" ,but : " + callback);
                         }
                     }
                 },
@@ -823,7 +823,7 @@ public class GuiScriptLib extends Lib {
 
     public DataType httpGetSync(ArrayList<DataType> para) {
         if (para.size() < 1) {
-            System.out.println("call sub error: httpGetSync(url,callback)");
+            System.out.println("[ERRO]call sub error: httpGetSync(url,callback)");
             return null;
         }
         String href = Interpreter.popBackStr(para);
@@ -833,7 +833,7 @@ public class GuiScriptLib extends Lib {
 
     public DataType httpGet(ArrayList<DataType> para) {
         if (para.size() < 1) {
-            System.out.println("call sub error: httpGet(url,callback)");
+            System.out.println("[ERRO]call sub error: httpGet(url,callback)");
             return null;
         }
         String href = Interpreter.popBackStr(para);
@@ -843,7 +843,7 @@ public class GuiScriptLib extends Lib {
 
     public DataType httpPostSync(ArrayList<DataType> para) {
         if (para.size() < 2) {
-            System.out.println("call sub error: httpPostSync(url,postdata,callback)");
+            System.out.println("[ERRO]call sub error: httpPostSync(url,postdata,callback)");
             return null;
         }
         String href = Interpreter.popBackStr(para);
@@ -854,7 +854,7 @@ public class GuiScriptLib extends Lib {
 
     public DataType httpPost(ArrayList<DataType> para) {
         if (para.size() < 2) {
-            System.out.println("call sub error: httpPost(url,postdata,callback)");
+            System.out.println("[ERRO]call sub error: httpPost(url,postdata,callback)");
             return null;
         }
         String href = Interpreter.popBackStr(para);

@@ -49,9 +49,11 @@ public class GDesktop extends GPanel implements GCallbackUI {
 
         GForm gform = gapp.getForm();
         if (gform != curForm) {
-            remove(curForm);
+            //here can not using this.remove() and this.add(),
+            // it would call curForm.init() and curForm.destroy()
+            elements.remove(curForm);
             curForm = gform;
-            add(curForm);
+            elements.add(0, curForm);
 
             curForm.setSize(GCallBack.getInstance().getDeviceWidth(), GCallBack.getInstance().getDeviceHeight());
 

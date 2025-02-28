@@ -84,7 +84,7 @@ public class GToolkit {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        System.out.println("load from jar fail : " + path);
+        System.out.println("[ERRO]load from jar fail : " + path);
         return null;
     }
 
@@ -119,7 +119,7 @@ public class GToolkit {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        System.out.println("load from file fail : " + path);
+        System.out.println("[ERRO]load from file fail : " + path);
         return null;
     }
 
@@ -778,7 +778,7 @@ public class GToolkit {
 
             GFrame confirm = getConfirmFrame(form,
                     AppManager.getInstance().getString("Message"),
-                    AppManager.getInstance().getString("Do you sure delete : ") + pathLabel.getText(),
+                    AppManager.getInstance().getString("Do you sure delete :") + pathLabel.getText(),
                     AppManager.getInstance().getString("Ok"),
                     gobj1 -> {
                         File f = new File(pathLabel.getText());
@@ -798,10 +798,10 @@ public class GToolkit {
         newBtn.setActionListener(gobj -> {
 
             GFrame confirm = getInputFrame(form,
-                    AppManager.getInstance().getString("New"),
-                    AppManager.getInstance().getString("Create new folder : "),
+                    AppManager.getInstance().getString("Message"),
+                    AppManager.getInstance().getString("Create new folder :"),
                     "",
-                    "Folder Name",
+                    AppManager.getInstance().getString("Folder Name"),
                     AppManager.getInstance().getString("Cancel"),
                     null,
                     AppManager.getInstance().getString("Ok"),
@@ -1324,7 +1324,7 @@ public class GToolkit {
         if (gobj == null) return;
         GForm form = gobj.getForm();
         if (form == null) {
-            System.out.println("warning: added to form can be set align");
+            System.out.println("[WARN]added to form can be set align");
             return;
         }
         if ((align_mod & Nanovg.NVG_ALIGN_LEFT) != 0) {
@@ -1655,7 +1655,7 @@ public class GToolkit {
                     if (holder != null) holder.setAttachment(filepath);
                     imageCache.put(filepath, img);
                 }
-                System.out.println("load image cache " + filepath + " " + img);
+                System.out.println("[INFO]load image cache " + filepath + " " + img);
             } else {
                 //System.out.println("hit image from cache " + filepath);
                 if (holder != null) {
@@ -1682,7 +1682,7 @@ public class GToolkit {
         filepath = new String(filepath);//for holder,must new
         GImage img = imageCache.get(filepath);
         if (img == null) {
-            System.out.println("load image cache " + filepath);
+            System.out.println("[INFO]load image cache " + filepath);
             img = GImage.createImage(filepath);
             if (img != null) {
                 if (holder != null) holder.setAttachment(filepath);

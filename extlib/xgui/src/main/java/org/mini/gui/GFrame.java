@@ -173,7 +173,7 @@ public class GFrame extends GContainer {
 
     public void align(int align_mod) {
         if (parent == null) {
-            System.out.println("warning: added to form can be set align");
+            System.out.println("[WARN]added to form can be set align");
             return;
         }
         if ((align_mod & Nanovg.NVG_ALIGN_LEFT) != 0) {
@@ -293,7 +293,7 @@ public class GFrame extends GContainer {
 
     @Override
     public void setFlyable(boolean flyable) {
-        if (flyable) System.out.println(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
+        if (flyable) System.out.println("[INFO]" + this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
     }
 
     @Override

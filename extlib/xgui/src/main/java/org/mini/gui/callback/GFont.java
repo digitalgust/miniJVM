@@ -32,7 +32,7 @@ public class GFont {
         long vg = GCallBack.getInstance().getNvContext();
         font_handle = Nanovg.nvgCreateFontMem(vg, fontName, data, data.length, 0);
         if (font_handle == -1) {
-            System.out.println("Could not add font.\n");
+            System.out.println("[ERRO]Could not add font.\n");
         }
         nvgAddFallbackFontId(vg, font_handle, font_handle);
     }

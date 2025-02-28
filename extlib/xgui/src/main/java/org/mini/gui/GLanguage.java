@@ -48,6 +48,9 @@ public class GLanguage {
         addStringInner("Ok", new String[]{"Ok", "确定", "確認"});
         addStringInner("Save to album", new String[]{"Save to album", "存入相册", "存入相冊"});
         addStringInner("Message", new String[]{"Message", "消息", "訊息"});
+        addStringInner("Do you sure delete :", new String[]{"Do you sure delete: ", "你要删除文件或目录： ", "你要删除文件或目录： "});
+        addStringInner("Create new folder :", new String[]{"Create new folder :", "创建新文件夹名称： ", "创建新文件夹名称： "});
+        addStringInner("Folder Name", new String[]{"Folder Name", "文件夹名称", "文件夹名称"});
     }
 
     static public void setCurLang(int langType) {

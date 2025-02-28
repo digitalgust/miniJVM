@@ -6,7 +6,9 @@
 package org.mini.apploader;
 
 import org.mini.gui.*;
+import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GCmd;
+import org.mini.gui.callback.GDesktop;
 import org.mini.gui.style.GStyle;
 
 import java.util.List;
@@ -29,6 +31,7 @@ public abstract class GApplication {
     GStyle oldStyle;
     GStyle myStyle;
     int myLang;
+    float myFPS;
     ClassLoader myClassLoader;
     String jarName;
 
@@ -126,6 +129,7 @@ public abstract class GApplication {
         myStyle = GToolkit.getStyle();
         GToolkit.setStyle(oldStyle);
         myLang = GLanguage.getCurLang();
+        myFPS = GCallBack.getInstance().getFps();
         try {
             onPause();
         } catch (Exception e) {
@@ -137,6 +141,8 @@ public abstract class GApplication {
     public final void resumeApp() {
         if (getState() != AppState.STATE_PAUSEED) return;
         setState(AppState.STATE_STARTED);
+        GCallBack.getInstance().setFps(myFPS);
+        GLanguage.setCurLang(myLang);
         oldStyle = GToolkit.getStyle();
         GToolkit.setStyle(myStyle);
         try {

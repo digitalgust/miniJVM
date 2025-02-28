@@ -491,7 +491,7 @@ public class GList extends GContainer {
 
     @Override
     public void setFlyable(boolean flyable) {
-        if (flyable) System.out.println(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
+        if (flyable) System.out.println("[INFO]" + this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
     }
 
     /**

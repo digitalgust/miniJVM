@@ -156,4 +156,8 @@ public class GStyleInner extends GStyle {
     public float[] getLowColor() {
         return lowColor;
     }
+
+    public void copyFrom(GStyle style) {
+        set(style);
+    }
 }

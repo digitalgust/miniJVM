@@ -106,6 +106,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
     public static final int RUNNING_ITEM_COLOR = 0x00cc00ff;
 
     GImage runningImg = GImage.createImageFromJar("/res/ui/green.png");
+    GImage titleImg = GImage.createImageFromJar("/res/ui/title.png");
 
     GTextBox logBox;
     static PrintStream systemOutDefault = System.out;
@@ -319,11 +320,18 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
         return floatButton;
     }
 
-    MiniHttpServer getWebServer() {
+    public MiniHttpServer getWebServer() {
         return webServer;
     }
 
-    List<MiniHttpClient> getHttpClients() {
+    @Override
+    public List<MiniHttpClient> getHttpClients() {
+        for (Iterator<MiniHttpClient> it = httpClients.iterator(); it.hasNext(); ) {
+            MiniHttpClient httpClient = it.next();
+            if (!httpClient.isAlive()) {
+                it.remove();
+            }
+        }
         return httpClients;
     }
 
@@ -723,12 +731,12 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                     }
                     break;
                 case "BT_LOCALFILE":
-                    GFrame chooser = GToolkit.getFileChooser(mgrForm, STR_INSTALL_FROM_LOCAL, null, new FileFilter() {
+                    GFrame chooser = GToolkit.getFileChooser(mgrForm, getString(STR_INSTALL_FROM_LOCAL), null, new FileFilter() {
                         @Override
                         public boolean accept(File file) {
                             return file.isDirectory() || file.getName().endsWith(".jar");
                         }
-                    }, GCallBack.getInstance().getDeviceWidth(), GCallBack.getInstance().getDeviceHeight(), gobj1 -> {
+                    }, GCallBack.getInstance().getDeviceWidth() * .9f, GCallBack.getInstance().getDeviceHeight() * .9f, gobj1 -> {
                         File f = gobj1.getAttachment();
                         if (f.isFile()) {
                             String fullpath = f.getAbsolutePath();
@@ -747,7 +755,9 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                             }
                         }
                     }, null);
-                    mgrForm.add(chooser);
+                    chooser.getTitlePanel().setBgImg(titleImg);
+                    chooser.getTitlePanel().setBgImgAlpha(0.3f);
+                    GToolkit.showFrame(chooser);
                     break;
                 case "BT_SETTING":
                     mainSlot.moveTo(2, 0);

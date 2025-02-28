@@ -17,6 +17,7 @@ import java.io.InputStream;
  */
 public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
 
+    public static final float FPS_DEFAULT = 60f;
     static GCallBack instance;
 
     protected GApplication gapp;
@@ -27,9 +28,9 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
 
             try {
                 Class glfw = Class.forName("org.mini.glfw.Glfw");
-                System.out.println("load gui native " + glfw);
+                System.out.println("[INFO]load gui native " + glfw);
                 Class glfm = Class.forName("org.mini.glfm.Glfm");
-                System.out.println("load gui native " + glfm);
+                System.out.println("[INFO]load gui native " + glfm);
                 Class c = Class.forName(System.getProperty("gui.driver"));
                 instance = (GCallBack) c.newInstance();
                 instance.desktop = new GDesktop(instance);

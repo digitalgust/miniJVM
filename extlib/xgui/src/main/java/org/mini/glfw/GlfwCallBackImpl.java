@@ -46,7 +46,8 @@ public class GlfwCallBackImpl extends GCallBack {
 
     //not in mobile
     float fps;
-    float fpsExpect = 60;
+    float fpsExpect = FPS_DEFAULT;
+
 
     public GlfwCallBackImpl() {
     }
@@ -97,7 +98,7 @@ public class GlfwCallBackImpl extends GCallBack {
         this.winHeight = height;
 
         if (!Glfw.glfwInit()) {
-            System.out.println("glfw init error.");
+            System.out.println("[ERRO]glfw init error.");
             System.exit(1);
         }
         String osname = System.getProperty("os.name");
@@ -125,13 +126,13 @@ public class GlfwCallBackImpl extends GCallBack {
         Glfw.glfwMakeContextCurrent(display);
         Glfw.glfwSwapInterval(1);
         reloadWindow();
-        System.out.println("fbWidth=" + fbWidth + "  ,fbHeight=" + fbHeight);
+        System.out.println("[INFO]fbWidth=" + fbWidth + "  ,fbHeight=" + fbHeight);
 
         vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
         if (vg == 0) {
-            System.out.println("Could not init nanovg.\n");
+            System.out.println("[ERRO]Could not init nanovg.\n");
         } else {
-            System.out.println("nanovg success.");
+            System.out.println("[INFO]nanovg success.");
         }
 
         GToolkit.FontHolder.loadFont(vg);
@@ -379,7 +380,7 @@ public class GlfwCallBackImpl extends GCallBack {
 
     @Override
     public void windowSize(long window, int width, int height) {
-            System.out.println("windowsize" + width + "," + height);
+        System.out.println("windowsize" + width + "," + height);
         try {
             reloadWindow();
 

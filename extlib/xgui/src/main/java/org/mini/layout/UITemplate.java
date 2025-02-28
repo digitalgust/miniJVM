@@ -17,6 +17,10 @@ import java.util.regex.Pattern;
  */
 public class UITemplate {
 
+    public interface VarPutter {
+        void putVar(HashMap vars);
+    }
+
     private HashMap vars = new HashMap();
     /**
      * 分割字符串

@@ -8,6 +8,7 @@ import org.mini.apploader.AppManager;
 import org.mini.gui.*;
 import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GCmd;
+import org.mini.gui.callback.GDesktop;
 import org.mini.gui.gscript.DataType;
 import org.mini.gui.gscript.Interpreter;
 import org.mini.gui.gscript.Lib;
@@ -101,8 +102,11 @@ public class XuiScriptLib extends Lib {
             });
             hc.setProgressListener((MiniHttpClient client, int progress) -> {
                 GuiScriptLib.showProgressBar(holder.getForm(), progress);
+                GDesktop.flush();
             });
             hc.start();
+            //GDesktop.addMessage(AppManager.getInstance().getString("STR_DOWNLOAD") + ":" + href);
+            holder.getHttpClients().add(hc);
         }
         return null;
     }

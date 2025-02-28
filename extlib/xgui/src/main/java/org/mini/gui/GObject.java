@@ -89,6 +89,8 @@ abstract public class GObject implements GAttachable {
     protected boolean visible = true;
 
     protected boolean enable = true;
+    protected boolean inited = false;
+    protected boolean destroyed = false;
 
     protected byte layer = LAYER_NORMAL;
 
@@ -845,7 +847,16 @@ abstract public class GObject implements GAttachable {
         }
     }
 
+    public boolean isInited() {
+        return inited;
+    }
+
+    public boolean isDestroyed() {
+        return destroyed;
+    }
+
     public void init() {
+        inited = true;
         if (onInitScript != null) {
             Interpreter inp = parseInpByCall(onInitScript);
             String funcName = parseInstByCall(onInitScript);
@@ -860,6 +871,7 @@ abstract public class GObject implements GAttachable {
     }
 
     public void destroy() {
+        destroyed = true;
         if (onCloseScript != null) {
             Interpreter inp = parseInpByCall(onCloseScript);
             String funcName = parseInstByCall(onCloseScript);

@@ -89,6 +89,10 @@ public class MiniHttpClient extends Thread {
         exit = true;
     }
 
+    public String getUrl() {
+        return url;
+    }
+
     @Override
     public void run() {
 
@@ -113,17 +117,25 @@ public class MiniHttpClient extends Thread {
                 dis = c.openDataInputStream();
                 if (len > 0) {
 
-                    int part10percent = len / 10;
+                    int part10percent = len / 100;
                     int p = 1;
 
                     data = new byte[len];
+                    byte[] buf = new byte[4096];
                     int read = 0;
                     while (read < len) {
-                        read += dis.read(data, read, len - read);
+                        //read += dis.read(data, read, len - read);
+                        int r = dis.read(buf);
+                        if (r == -1) {
+                            break;
+                        }
+                        System.arraycopy(buf, 0, data, read, r);
+                        read += r;
 
-                        if (len / part10percent > p) {
+                        //System.out.println("read:" + read);
+                        if (read > part10percent * p) {
                             p++;
-                            updateProgress(p * 10);
+                            updateProgress(p);
                         }
                     }
                 } else {

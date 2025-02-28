@@ -27,7 +27,7 @@ class ChildList<T extends GObject> extends ArrayList<T> {
     @Override
     protected synchronized void removeRange(int fromIndex, int toIndex) {
         if (fromIndex > toIndex || fromIndex < 0 || toIndex >= size()) {
-            System.out.println("removeRange error");
+            System.out.println("[ERRO]removeRange error");
             return;
         }
         for (int i = fromIndex; i < toIndex; i++) {
@@ -152,7 +152,7 @@ class ChildList<T extends GObject> extends ArrayList<T> {
             try {
                 T t = ChildList.this.get(lastRet);
                 if (t.getLayer() == GObject.LAYER_INNER) {
-                    System.out.println("This element can't be set " + t);
+                    System.out.println("[ERRO]This element can't be set " + t);
                     return;
                 }
                 ChildList.this.set(lastRet, e);
