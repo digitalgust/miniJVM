@@ -60,9 +60,9 @@ public class GForm extends GContainer {
     }
 
     public boolean paint(long vg) {
-
+        super.paint(vg);
         paintFlyingObject(vg);
-        return super.paint(vg);
+        return true;
     }
 
 

@@ -24,7 +24,6 @@
  */
 
 
-
 package java.io;
 
 import java.util.Locale;
@@ -40,10 +39,10 @@ import java.util.Locale;
  * <p> All characters printed by a <code>PrintStream</code> are converted into
  * bytes using the platform's default character encoding.
  *
- * @version    12/17/01 (CLDC 1.1)
- * @author     Frank Yellin
- * @author     Mark Reinhold
- * @since      JDK1.0, CLDC 1.0
+ * @author Frank Yellin
+ * @author Mark Reinhold
+ * @version 12/17/01 (CLDC 1.1)
+ * @since JDK1.0, CLDC 1.0
  */
 
 public class PrintStream extends OutputStream {
@@ -55,13 +54,13 @@ public class PrintStream extends OutputStream {
      * can be flushed without flushing the entire stream.
      */
     private OutputStreamWriter charOut;
-    private OutputStream       byteOut;
+    private OutputStream byteOut;
 
     /**
      * Create a new print stream.  This stream will not flush automatically.
      *
-     * @param  out  The output stream to which values and objects will be
-     *              printed
+     * @param out The output stream to which values and objects will be
+     *            printed
      */
     public PrintStream(OutputStream out) {
         if (out == null) {
@@ -69,6 +68,14 @@ public class PrintStream extends OutputStream {
         }
         byteOut = out;
         this.charOut = new OutputStreamWriter(out);
+    }
+
+    public PrintStream(OutputStream out, boolean autoFlush, String encoding) throws UnsupportedEncodingException {
+        if (out == null) {
+            throw new NullPointerException("Null output stream");
+        }
+        byteOut = out;
+        this.charOut = new OutputStreamWriter(out, encoding);
     }
 
     /**
@@ -83,15 +90,14 @@ public class PrintStream extends OutputStream {
      * Flush the stream.  This is done by writing any buffered output bytes to
      * the underlying output stream and then flushing that stream.
      *
-     * @see        java.io.OutputStream#flush()
+     * @see java.io.OutputStream#flush()
      */
     public void flush() {
         synchronized (this) {
             try {
                 ensureOpen();
                 charOut.flush();
-            }
-            catch (IOException x) {
+            } catch (IOException x) {
                 trouble = true;
             }
         }
@@ -103,16 +109,15 @@ public class PrintStream extends OutputStream {
      * Close the stream.  This is done by flushing the stream and then closing
      * the underlying output stream.
      *
-     * @see        java.io.OutputStream#close()
+     * @see java.io.OutputStream#close()
      */
     public void close() {
         synchronized (this) {
-            if (! closing) {
+            if (!closing) {
                 closing = true;
                 try {
-                      charOut.close();
-                }
-                catch (IOException x) {
+                    charOut.close();
+                } catch (IOException x) {
                     trouble = true;
                 }
                 charOut = null;
@@ -128,8 +133,8 @@ public class PrintStream extends OutputStream {
      * and when the <code>setError</code> method is invoked.
      *
      * @return True if and only if this stream has encountered an
-     *         <code>IOException</code>, or the
-     *         <code>setError</code> method has been invoked
+     * <code>IOException</code>, or the
+     * <code>setError</code> method has been invoked
      */
     public boolean checkError() {
         if (charOut != null)
@@ -146,7 +151,7 @@ public class PrintStream extends OutputStream {
         trouble = true;
     }
 
-
+
     /*
      * Exception-catching, synchronized output operations,
      * which also implement the write() methods of OutputStream
@@ -160,7 +165,7 @@ public class PrintStream extends OutputStream {
      * encoding, use the <code>print(char)</code> or <code>println(char)</code>
      * methods.
      *
-     * @param  b  The byte to be written
+     * @param b The byte to be written
      * @see #print(char)
      * @see #println(char)
      */
@@ -184,9 +189,9 @@ public class PrintStream extends OutputStream {
      * encoding, use the <code>print(char)</code> or <code>println(char)</code>
      * methods.
      *
-     * @param  buf   A byte array
-     * @param  off   Offset from which to start taking bytes
-     * @param  len   Number of bytes to write
+     * @param buf A byte array
+     * @param off Offset from which to start taking bytes
+     * @param len Number of bytes to write
      */
     public void write(byte buf[], int off, int len) {
         try {
@@ -238,7 +243,7 @@ public class PrintStream extends OutputStream {
         }
     }
 
-
+
     /* Methods that do not terminate lines */
 
     /**
@@ -248,7 +253,7 @@ public class PrintStream extends OutputStream {
      * are written in exactly the manner of the
      * <code>{@link #write(int)}</code> method.
      *
-     * @param      b   The <code>boolean</code> to be printed
+     * @param b The <code>boolean</code> to be printed
      */
     public void print(boolean b) {
         write(b ? "true" : "false");
@@ -260,7 +265,7 @@ public class PrintStream extends OutputStream {
      * are written in exactly the manner of the
      * <code>{@link #write(int)}</code> method.
      *
-     * @param      c   The <code>char</code> to be printed
+     * @param c The <code>char</code> to be printed
      */
     public void print(char c) {
         write(String.valueOf(c));
@@ -273,8 +278,8 @@ public class PrintStream extends OutputStream {
      * are written in exactly the manner of the
      * <code>{@link #write(int)}</code> method.
      *
-     * @param      i   The <code>int</code> to be printed
-     * @see        java.lang.Integer#toString(int)
+     * @param i The <code>int</code> to be printed
+     * @see java.lang.Integer#toString(int)
      */
     public void print(int i) {
         write(String.valueOf(i));
@@ -287,38 +292,38 @@ public class PrintStream extends OutputStream {
      * are written in exactly the manner of the
      * <code>{@link #write(int)}</code> method.
      *
-     * @param      l   The <code>long</code> to be printed
-     * @see        java.lang.Long#toString(long)
+     * @param l The <code>long</code> to be printed
+     * @see java.lang.Long#toString(long)
      */
     public void print(long l) {
         write(String.valueOf(l));
     }
 
     /**
-     * Print a floating point number.  The string produced by 
-     * <code>{@link java.lang.String#valueOf(float)}</code> is translated 
-     * into bytes according to the platform's default character encoding, 
+     * Print a floating point number.  The string produced by
+     * <code>{@link java.lang.String#valueOf(float)}</code> is translated
+     * into bytes according to the platform's default character encoding,
      * and these bytes are written in exactly the manner of the
      * <code>{@link #write(int)}</code> method.
      *
-     * @param      f   The <code>float</code> to be printed
-     * @see        java.lang.Float#toString(float)
-     * @since      CLDC 1.1
+     * @param f The <code>float</code> to be printed
+     * @see java.lang.Float#toString(float)
+     * @since CLDC 1.1
      */
     public void print(float f) {
         write(String.valueOf(f));
     }
 
     /**
-     * Print a double-precision floating point number.  The string produced by 
-     * <code>{@link java.lang.String#valueOf(double)}</code> is translated 
-     * into bytes according to the platform's default character encoding, 
+     * Print a double-precision floating point number.  The string produced by
+     * <code>{@link java.lang.String#valueOf(double)}</code> is translated
+     * into bytes according to the platform's default character encoding,
      * and these bytes are written in exactly the manner of the
      * <code>{@link #write(int)}</code> method.
      *
-     * @param      d   The <code>double</code> to be printed
-     * @see        java.lang.Double#toString(double)
-     * @since      CLDC 1.1
+     * @param d The <code>double</code> to be printed
+     * @see java.lang.Double#toString(double)
+     * @since CLDC 1.1
      */
     public void print(double d) {
         write(String.valueOf(d));
@@ -330,9 +335,8 @@ public class PrintStream extends OutputStream {
      * are written in exactly the manner of the
      * <code>{@link #write(int)}</code> method.
      *
-     * @param      s   The array of chars to be printed
-     *
-     * @throws  NullPointerException  If <code>s</code> is <code>null</code>
+     * @param s The array of chars to be printed
+     * @throws NullPointerException If <code>s</code> is <code>null</code>
      */
     public void print(char s[]) {
         write(s);
@@ -345,7 +349,7 @@ public class PrintStream extends OutputStream {
      * encoding, and these bytes are written in exactly the manner of the
      * <code>{@link #write(int)}</code> method.
      *
-     * @param      s   The <code>String</code> to be printed
+     * @param s The <code>String</code> to be printed
      */
     public void print(String s) {
         if (s == null) {
@@ -361,14 +365,14 @@ public class PrintStream extends OutputStream {
      * are written in exactly the manner of the
      * <code>{@link #write(int)}</code> method.
      *
-     * @param      obj   The <code>Object</code> to be printed
-     * @see        java.lang.Object#toString()
+     * @param obj The <code>Object</code> to be printed
+     * @see java.lang.Object#toString()
      */
     public void print(Object obj) {
         write(String.valueOf(obj));
     }
 
-
+
     /* Methods that do terminate lines */
 
     /**
@@ -386,7 +390,7 @@ public class PrintStream extends OutputStream {
      * though it invokes <code>{@link #print(boolean)}</code> and then
      * <code>{@link #println()}</code>.
      *
-     * @param x  The <code>boolean</code> to be printed
+     * @param x The <code>boolean</code> to be printed
      */
     public void println(boolean x) {
         synchronized (this) {
@@ -400,7 +404,7 @@ public class PrintStream extends OutputStream {
      * though it invokes <code>{@link #print(char)}</code> and then
      * <code>{@link #println()}</code>.
      *
-     * @param x  The <code>char</code> to be printed.
+     * @param x The <code>char</code> to be printed.
      */
     public void println(char x) {
         synchronized (this) {
@@ -414,7 +418,7 @@ public class PrintStream extends OutputStream {
      * though it invokes <code>{@link #print(int)}</code> and then
      * <code>{@link #println()}</code>.
      *
-     * @param x  The <code>int</code> to be printed.
+     * @param x The <code>int</code> to be printed.
      */
     public void println(int x) {
         synchronized (this) {
@@ -428,7 +432,7 @@ public class PrintStream extends OutputStream {
      * though it invokes <code>{@link #print(long)}</code> and then
      * <code>{@link #println()}</code>.
      *
-     * @param x  The <code>long</code> to be printed.
+     * @param x The <code>long</code> to be printed.
      */
     public void println(long x) {
         synchronized (this) {
@@ -442,7 +446,7 @@ public class PrintStream extends OutputStream {
      * though it invokes <code>{@link #print(float)}</code> and then
      * <code>{@link #println()}</code>.
      *
-     * @param x  The <code>float</code> to be printed.
+     * @param x The <code>float</code> to be printed.
      * @since CLDC 1.1
      */
     public void println(float x) {
@@ -457,7 +461,7 @@ public class PrintStream extends OutputStream {
      * though it invokes <code>{@link #print(double)}</code> and then
      * <code>{@link #println()}</code>.
      *
-     * @param x  The <code>double</code> to be printed.
+     * @param x The <code>double</code> to be printed.
      * @since CLDC 1.1
      */
     public void println(double x) {
@@ -472,7 +476,7 @@ public class PrintStream extends OutputStream {
      * behaves as though it invokes <code>{@link #print(char[])}</code> and
      * then <code>{@link #println()}</code>.
      *
-     * @param x  an array of chars to print.
+     * @param x an array of chars to print.
      */
     public void println(char x[]) {
         synchronized (this) {
@@ -486,7 +490,7 @@ public class PrintStream extends OutputStream {
      * though it invokes <code>{@link #print(String)}</code> and then
      * <code>{@link #println()}</code>.
      *
-     * @param x  The <code>String</code> to be printed.
+     * @param x The <code>String</code> to be printed.
      */
     public void println(String x) {
         synchronized (this) {
@@ -500,7 +504,7 @@ public class PrintStream extends OutputStream {
      * though it invokes <code>{@link #print(Object)}</code> and then
      * <code>{@link #println()}</code>.
      *
-     * @param x  The <code>Object</code> to be printed.
+     * @param x The <code>Object</code> to be printed.
      */
     public void println(Object x) {
         synchronized (this) {
