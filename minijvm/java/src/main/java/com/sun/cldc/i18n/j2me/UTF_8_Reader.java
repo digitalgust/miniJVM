@@ -46,6 +46,8 @@ public class UTF_8_Reader extends com.sun.cldc.i18n.StreamReader {
      */
     private boolean newRead;
 
+    private int remainChar = -1; //the second char of a SURROGATE char
+
     /**
      * Constructs a UTF-8 reader.
      */
@@ -154,12 +156,19 @@ public class UTF_8_Reader extends com.sun.cldc.i18n.StreamReader {
             return 0;
         }
 
+
         int outputSize = 0; //记录转换后的Unicode字符串的字节数
         // b1 表示UTF-8编码的pInput中的高字节, b2 表示次高字节, ...
         int b1, b2, b3, b4, b5, b6;
         int codepoint;
 
-        while (true) {
+        if (remainChar != -1) {
+            cbuf[off] = (char) remainChar;
+            remainChar = -1;
+            outputSize++;
+        }
+
+        while (outputSize < len) {
             b1 = in.read();
             if (b1 < 0) {
                 if (outputSize == 0) {
@@ -255,14 +264,20 @@ public class UTF_8_Reader extends com.sun.cldc.i18n.StreamReader {
                 char c1 = (char) (codepoint >> 10);
                 cbuf[off + outputSize] = (char) (0xD800 | (c1 & 0x3ff));
                 outputSize++;
-                cbuf[off + outputSize] = (char) (0xDC00 | (codepoint & 0x3ff));
+
+                int c = (char) (0xDC00 | (codepoint & 0x3ff));
+                if (outputSize >= len) {
+                    remainChar = c;
+                    return outputSize;
+                }
+                cbuf[off + outputSize] = (char) c;
                 outputSize++;
             } else {
                 cbuf[off + outputSize] = (char) codepoint;
                 outputSize++;
             }
 
-            if (outputSize >= len) break;
+
         }
         return outputSize;
     }
