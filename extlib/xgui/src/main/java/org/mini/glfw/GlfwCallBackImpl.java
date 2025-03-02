@@ -380,7 +380,7 @@ public class GlfwCallBackImpl extends GCallBack {
 
     @Override
     public void windowSize(long window, int width, int height) {
-        System.out.println("windowsize" + width + "," + height);
+        //System.out.println("windowsize" + width + "," + height);
         try {
             reloadWindow();
 

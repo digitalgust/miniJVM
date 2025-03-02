@@ -365,7 +365,7 @@ public class GTextBox extends GTextObject {
             return;
         }
         deleteSelectedText();
-        if (enable) {
+        if (enable && editable) {
             insertTextByIndex(caretIndex, character);
             setCaretIndex(getCaretIndex() + 1);
         }
@@ -385,7 +385,7 @@ public class GTextBox extends GTextObject {
         }
         if (action == Glfw.GLFW_PRESS || action == Glfw.GLFW_REPEAT) {
             //edit key
-            if (enable) {
+            if (enable && editable) {
                 switch (key) {
                     case Glfw.GLFW_KEY_BACKSPACE: {
                         if (isSelected()) {
@@ -597,7 +597,7 @@ public class GTextBox extends GTextObject {
         if (action == Glfm.GLFMKeyActionPressed || action == Glfm.GLFMKeyActionRepeated) {
             switch (key) {
                 case Glfm.GLFMKeyBackspace: {
-                    if (enable) {
+                    if (enable && editable) {
                         if (textsb.length() > 0 && caretIndex > 0) {
                             if (isSelected()) {
                                 deleteSelectedText();
@@ -611,7 +611,7 @@ public class GTextBox extends GTextObject {
                 }
                 case Glfm.GLFMKeyEnter: {
                     String txt = getText();
-                    if (enable) {
+                    if (enable && editable) {
                         if (txt != null && txt.length() > 0) {
                             if (isSelected()) {
                                 deleteSelectedText();

@@ -137,8 +137,16 @@
                 url="http://localhost:8088"
                 println(url)
                 if(strlen(url)>0)
-                    openOtherApp(url,"",0)  ' 第一个为 url，第二个为参数，第三个为检测是否App 存在，0为不检测，1为检测
+                    openOtherApp(url,"URL",0)  ' 第一个为 url，第二个为参数(URL表示打开网址),，第三个为检测是否App 存在，0为不检测，1为检测
                 eif
+            eif
+        ret
+
+        sub plug_download()
+            url=getEnv("PLUGIN_URL")+"?"+ getQueryPara()
+            if(strlen(url)>0)
+                openPage(url,"")
+                showSlot("SLOT_MGR",3)
             eif
         ret
 
@@ -160,8 +168,9 @@
                                 <table w="100%">
                                     <tr w="100%">
                                         <td w="float"></td>
-                                        <td w="60">
+                                        <td w="100">
                                             <button name="BT_STYLE" w="50" h="30" preicon="⚙"></button>
+                                            <button name="BT_PLUGINDOWN" onclick="plug_download()" w="50" h="30" preicon="📥"></button>
                                         </td>
                                     </tr>
                                 </table>

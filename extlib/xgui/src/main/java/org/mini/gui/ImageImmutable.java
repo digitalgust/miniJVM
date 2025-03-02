@@ -109,7 +109,7 @@ public class ImageImmutable extends GImage {
         try {
             if (gc) {
                 GForm.deleteImage(nvg_texture);
-                System.out.println("[INFO]finalize image " + this);
+                //System.out.println("[INFO]finalize image " + this);
             }
         } catch (Throwable e) {
         }

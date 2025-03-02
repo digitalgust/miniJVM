@@ -63,7 +63,7 @@ public class MaDecoder extends MaDataSource {
 
     public void finalize() {
         if (handle != 0) {
-            System.out.println("[ERRO]clean " + this + " " + handle);
+            //System.out.println("[INFO]clean " + this + " " + handle);
             MiniAudio.ma_decoder_uninit(handle);
             handle = 0;
         }

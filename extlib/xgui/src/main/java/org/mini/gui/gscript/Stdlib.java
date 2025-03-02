@@ -51,7 +51,9 @@ public class Stdlib extends Lib {
         methodNames.put("idxOf".toLowerCase(), this::idxof);// 子串在母串的位置        idxof("abc","a")  结果0
         methodNames.put("lastIdxOf".toLowerCase(), this::lastIdxOf);// 子串在母串的位置        idxof("abc","a")  结果0
         methodNames.put("substr".toLowerCase(), this::substr); // 截子串        substr("abcde",1,4)      结果"bcd"
-        methodNames.put("split".toLowerCase(), this::split); // 截子串        substr("abcde",1,4)      结果"bcd"
+        methodNames.put("split".toLowerCase(), this::split); // 截子串        split("abc;de",";")      结果"abc","de"
+        methodNames.put("lowCase".toLowerCase(), this::lowCase); // 小写字符串
+        methodNames.put("upCase".toLowerCase(), this::upCase); //     大写字符串
         methodNames.put("base64enc".toLowerCase(), this::base64enc); //   base64编码
         methodNames.put("base64dec".toLowerCase(), this::base64dec); //   base64解码
         methodNames.put("urlenc".toLowerCase(), this::urlenc); //   UrlEncode解码
@@ -320,6 +322,15 @@ public class Stdlib extends Lib {
         return arr;
     }
 
+    private Str lowCase(ArrayList<DataType> para) {
+        String s = Interpreter.popBackStr(para);
+        return Interpreter.getCachedStr(s.toLowerCase());
+    }
+
+    private Str upCase(ArrayList<DataType> para) {
+        String s = Interpreter.popBackStr(para);
+        return Interpreter.getCachedStr(s.toUpperCase());
+    }
 
     private DataType base64enc(ArrayList<DataType> para) {
         try {
