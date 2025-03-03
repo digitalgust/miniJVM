@@ -5,6 +5,7 @@
 package org.mini.gui.guilib;
 
 import org.mini.apploader.AppManager;
+import org.mini.glfm.Glfm;
 import org.mini.gui.*;
 import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GCmd;
@@ -130,10 +131,12 @@ public class GuiScriptLib extends Lib {
     }
 
     public static void showProgressBar(GForm form, int progress) {
-        long vg = GCallBack.getInstance().getNvContext();
+        //long vg = GCallBack.getInstance().getNvContext();
         //GToolkit.drawTextLine(vg, 0, 0, "waitting ..." + progress, GToolkit.getStyle().getTextFontSize(), GToolkit.getStyle().getTextFontColor(), Nanovg.NVG_ALIGN_LEFT | Nanovg.NVG_ALIGN_TOP);
         int w = GCallBack.getInstance().getDeviceWidth();
-        int h = GCallBack.getInstance().getDeviceHeight();
+        //int h = GCallBack.getInstance().getDeviceHeight();
+        double[] inset = new double[4];//top,right,bottom,left
+        Glfm.glfmGetDisplayChromeInsets(GCallBack.getInstance().getDisplay(), inset);
         //System.out.println("progress:" + progress);
         final String panName = "_INNER_PROGRESS_BAR";
         GObject go = GToolkit.getComponent(form, panName);
@@ -149,7 +152,7 @@ public class GuiScriptLib extends Lib {
             go.setBgColor(GColorSelector.GREEN_HALF);
             form.add(go);
         }
-        go.setLocation(0, 0);
+        go.setLocation(0, (float) inset[0]);
         go.setSize(progress * w / 100f, go.getH());
         if (progress == 100) {
             GForm.addCmd(new GCmd(() -> {
