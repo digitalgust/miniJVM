@@ -413,6 +413,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
      */
 
     class PluginMgrForm extends GForm {
+        float[] inset = new float[4];//top,right,bottom,left
 
         public PluginMgrForm(GForm form) {
             super(form);
@@ -524,15 +525,15 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
             for (String s : uit.getVariable()) {
                 uit.setVar(s, getString(s));
             }
-            double[] inset = new double[4];//top,right,bottom,left
-            Glfm.glfmGetDisplayChromeInsets(GCallBack.getInstance().getDisplay(), inset);
-            int h = (int) (inset[0] / GCallBack.getInstance().getDeviceRatio());
+
+            GCallBack.getInstance().getInsets(inset);
+            int h = (int) (inset[0]);
             //System.out.println("STATEBAR_HEIGHT " + inset[0] + " , " + inset[1] + " , " + inset[2] + " , " + inset[3]);
             if (h <= 20) {
                 h = 20;
             }
             uit.setVar("STATEBAR_HEIGHT", Integer.toString(h));
-            h = (int) (inset[2] / GCallBack.getInstance().getDeviceRatio());
+            h = (int) (inset[2] );
             uit.setVar("NAV_HEIGHT", Integer.toString(h));
 
 

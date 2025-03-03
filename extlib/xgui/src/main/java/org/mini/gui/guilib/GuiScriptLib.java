@@ -27,6 +27,7 @@ import java.util.ArrayList;
 public class GuiScriptLib extends Lib {
     GForm form;
 
+    static float[] inset = new float[4];//top,right,bottom,left
 
     /**
      *
@@ -135,8 +136,7 @@ public class GuiScriptLib extends Lib {
         //GToolkit.drawTextLine(vg, 0, 0, "waitting ..." + progress, GToolkit.getStyle().getTextFontSize(), GToolkit.getStyle().getTextFontColor(), Nanovg.NVG_ALIGN_LEFT | Nanovg.NVG_ALIGN_TOP);
         int w = GCallBack.getInstance().getDeviceWidth();
         //int h = GCallBack.getInstance().getDeviceHeight();
-        double[] inset = new double[4];//top,right,bottom,left
-        Glfm.glfmGetDisplayChromeInsets(GCallBack.getInstance().getDisplay(), inset);
+        GCallBack.getInstance().getInsets(inset);
         //System.out.println("progress:" + progress);
         final String panName = "_INNER_PROGRESS_BAR";
         GObject go = GToolkit.getComponent(form, panName);
@@ -152,7 +152,7 @@ public class GuiScriptLib extends Lib {
             go.setBgColor(GColorSelector.GREEN_HALF);
             form.add(go);
         }
-        go.setLocation(0, (float) inset[0]);
+        go.setLocation(0, inset[0]);
         go.setSize(progress * w / 100f, go.getH());
         if (progress == 100) {
             GForm.addCmd(new GCmd(() -> {

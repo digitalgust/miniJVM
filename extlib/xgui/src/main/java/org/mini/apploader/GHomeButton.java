@@ -25,6 +25,7 @@ public class GHomeButton extends GPanel implements GActionListener, GCallbackUI 
 
     int cIdx = 0;
     long markEndAt = 0;
+    float[] inset = new float[4];
 
     public GHomeButton() {
         super(null, GCallBack.getInstance().getDeviceWidth() * .5f, GCallBack.getInstance().getDeviceHeight() * .5f, DEF_W, DEF_H);
@@ -46,18 +47,17 @@ public class GHomeButton extends GPanel implements GActionListener, GCallbackUI 
         long vg = GCallBack.getInstance().getNvContext();
         long display = GCallBack.getInstance().getDisplay();
 
-        double[] inset = new double[4];
-        Glfm.glfmGetDisplayChromeInsets(display, inset);
-        double ratio = GCallBack.getInstance().getDeviceRatio();
+
+        GCallBack.getInstance().getInsets(inset);
 
         int tx = oldx, ty = oldy;
-        int top = (int) (inset[0] / ratio);
-        int bt = (int) (inset[2] / ratio);
+        int top = (int) (inset[0]);
+        int bt = (int) (inset[2]);
         if (oldy < top) ty = top;
         if (oldy + DEF_H > deviceH - bt) ty = (int) (deviceH - bt - DEF_H);
 
-        int right = (int) (inset[1] / ratio);
-        int left = (int) (inset[3] / ratio);
+        int right = (int) (inset[1]);
+        int left = (int) (inset[3]);
         if (oldx < left) tx = left;
         if (oldx + DEF_W > deviceW - right) tx = (int) (deviceW - right - DEF_W);
 
