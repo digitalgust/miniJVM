@@ -2260,6 +2260,10 @@ const char *getOsName() {
     return "Android";
 }
 
+void getOsLanguage(char *buf, int bufSize) {
+    
+}
+
 void *playVideo(GLFMDisplay *display, char *cpath, char *mimeType) {
 
     if (display) {

@@ -61,8 +61,19 @@ void glfmMain(GLFMDisplay *display) {
     sys_properties_set_c(refers.jvm, "glfm.save.root", glfmGetSaveRoot());
     sys_properties_set_c(refers.jvm, "glfm.uuid", glfmGetUUID());
     sys_properties_set_c(refers.jvm, "os.name", getOsName());
+    c8 cbuf[32];
+    getOsLanguage(cbuf, sizeof(cbuf));
+    Utf8String *buf=utf8_create_c(cbuf);
+    utf8_replace_c(buf, "-", "_");
+    s32 i = utf8_indexof_c(buf, "_");
+    if (i > 0) {
+        utf8_substring(buf, 0, i);
+    }
+    sys_properties_set_c(refers.jvm, "user.language", utf8_cstr(buf));
+    
     Runtime *runtime=getRuntimeCurThread(&jnienv);
 
+    utf8_destroy(buf);
     utf8_destroy(classpath);
     utf8_destroy(bootclasspath);
     c8* p_classname="org/mini/glfm/GlfmCallBackImpl";

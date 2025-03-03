@@ -2577,6 +2577,21 @@ const char* getOsName(){
     return "iOS";
 }
 
+void getOsLanguage(char *buf, int bufSize) {
+    CFArrayRef localeIDs = CFLocaleCopyPreferredLanguages();
+    if (localeIDs&&bufSize > 0) {
+        CFStringRef localeID = (CFStringRef)CFArrayGetValueAtIndex(localeIDs, 0);
+        if (!CFStringGetCString(localeID, buf, bufSize, kCFStringEncodingUTF8)){
+            buf[0] = 0;
+        }
+        CFRelease(localeIDs);
+    } else {
+        if(bufSize > 0){
+            buf[0] = 0;
+        }
+    }
+}
+
 void pickPhotoAlbum(GLFMDisplay *display, int uid, int type){
     if (display) {
         GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
