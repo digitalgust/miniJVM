@@ -406,6 +406,8 @@ s32 classes_remove(MiniJVM *jvm, JClass *clazz);
 
 Instance *build_stack_element(Runtime *runtime, Runtime *target);
 
+void os_get_lang(Utf8String *buf);
+
 #ifdef __cplusplus
 }
 #endif

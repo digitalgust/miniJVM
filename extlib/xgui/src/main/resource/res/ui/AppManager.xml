@@ -144,6 +144,7 @@
 
         sub plug_download()
             url=getEnv("PLUGIN_URL")+"?"+ getQueryPara()
+            println(url)
             if(strlen(url)>0)
                 openPage(url,"")
                 showSlot("SLOT_MGR",3)
@@ -228,7 +229,7 @@
                         </list>
                         <label w="100%" h="20"></label>
                         <label w="100%" h="30" align="left,vcenter">{STR_DOWN_APP_FROM_WEB}</label>
-                        <input name="INPUT_URL" w="75%" h="30" hint="application jar url">
+                        <input name="INPUT_URL" w="75%" h="30" hint="plug jar url">
                             https://raw.githubusercontent.com/digitalgust/plugin4minijvm/main/plugins/ExGame.jar
                         </input>
                         <button name="BT_DOWN" w="25%" h="30" preicon="📥">{STR_DOWNLOAD}</button>

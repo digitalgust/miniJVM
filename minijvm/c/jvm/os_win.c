@@ -475,11 +475,11 @@ void get_last_error(Utf8String *error_msg) {
 
     if (FormatMessageA(flags, NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
                        (LPSTR) &errorMessage, 0, NULL) != 0) {
-        printf("Error code %d: %s\n", (int)errorCode, errorMessage);
+        printf("Error code %d: %s\n", (int) errorCode, errorMessage);
         if (error_msg)utf8_append_c(error_msg, errorMessage);
         LocalFree(errorMessage); // 使用完毕后释放由FormatMessage分配的内存
     } else {
-        printf("Failed to get error message for error code %d\n", (int)errorCode);
+        printf("Failed to get error message for error code %d\n", (int) errorCode);
     }
 }
 
@@ -684,6 +684,33 @@ s32 os_load_lib_and_init(const c8 *libname, Runtime *runtime) {
         }
     }
     return 0;
+}
+
+void os_get_lang(Utf8String *buf) {
+
+    const int size = 256;
+    wchar_t localeName[size];
+
+    if (GetUserDefaultLocaleName(localeName, size)) {
+        //使用windows api 把 wchar_t 转 char
+        char str[256];
+        int result = WideCharToMultiByte(CP_UTF8, 0, localeName, -1, str, size, NULL, NULL);
+        if (result == 0) {
+            // Handle error
+            //printf("WideCharToMultiByte failed with error %d\n", GetLastError());
+            return;
+        }
+
+        utf8_append_c(buf, str);
+        utf8_replace_c(buf, "-", "_");
+        s32 i = utf8_indexof_c(buf, "_");
+        if (i > 0) {
+            utf8_substring(buf, 0, i);
+        }
+        //printf("language: %s\n", utf8_cstr(buf));
+    } else {
+        //printf("GetUserDefaultLocaleName failed with error %d\n", GetLastError());
+    }
 }
 
 #endif

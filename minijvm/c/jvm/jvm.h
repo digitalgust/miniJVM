@@ -515,6 +515,8 @@ extern const c8 STR_INS_JAVA_LANG_OBJECT[];
 extern const c8 STR_INS_JAVA_LANG_STACKTRACEELEMENT[];
 extern const c8 STR_VM_JAVA_LIBRARY_PATH[];
 extern const c8 STR_VM_SUN_BOOT_CLASS_PATH[];
+extern const c8 STR_VM_JAVA_CLASS_VERSION[];//"java.class.version"
+extern const c8 STR_VM_USER_LANGUAGE[];//"user.language"
 extern const c8 STR_VM_JAVA_CLASS_PATH[];
 extern const c8 STR_JNI_LIB_NOT_FOUND[];
 extern const c8 STR_JNI_ONLOAD_NOT_FOUND[];

@@ -131,11 +131,14 @@ public class XUtil {
      * @return
      */
     public static int measureHeight(int width, String str, int fontSize) {
+        if (fontSize == 14) {
+            int debug = 1;
+        }
         long vg = GCallBack.getInstance().getNvContext();
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
         nvgFontSize(vg, fontSize);
         nvgFontFace(vg, GToolkit.getFontWord());
-        float[] boundle = GToolkit.getTextBoundle(vg, str, width);
+        float[] boundle = GToolkit.getTextBoundle(vg, str, width, fontSize);
         return (int) (boundle[GObject.HEIGHT] - boundle[GObject.TOP] + 1f);
     }
 

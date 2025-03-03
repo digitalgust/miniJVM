@@ -304,7 +304,11 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     sys_properties_load(jvm);
     sys_properties_set_c(jvm, STR_VM_JAVA_CLASS_PATH, p_classpath);
     sys_properties_set_c(jvm, STR_VM_SUN_BOOT_CLASS_PATH, p_bootclasspath);
-    sys_properties_set_c(jvm, "java.class.version", "52.0");
+    sys_properties_set_c(jvm, STR_VM_JAVA_CLASS_VERSION, "52.0");
+    Utf8String *tmpstr = utf8_create();
+    os_get_lang(tmpstr);
+    sys_properties_set_c(jvm, STR_VM_USER_LANGUAGE, utf8_cstr(tmpstr));
+    utf8_destroy(tmpstr);
 
     //启动调试器
     jdwp_start_server(jvm);

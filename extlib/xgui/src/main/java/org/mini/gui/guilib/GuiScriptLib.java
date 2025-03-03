@@ -138,7 +138,7 @@ public class GuiScriptLib extends Lib {
         final String panName = "_INNER_PROGRESS_BAR";
         GObject go = GToolkit.getComponent(form, panName);
         if (go == null) {
-            go = new GPanel(form, 0, h - 4, 0, 4) {
+            go = new GPanel(form, 0, 0, 0, 4) {
                 @Override
                 public void setSize(float w, float h) {
                     super.setSize(w, h);
@@ -149,7 +149,7 @@ public class GuiScriptLib extends Lib {
             go.setBgColor(GColorSelector.GREEN_HALF);
             form.add(go);
         }
-        go.setLocation(0, h - go.getH());
+        go.setLocation(0, 0);
         go.setSize(progress * w / 100f, go.getH());
         if (progress == 100) {
             GForm.addCmd(new GCmd(() -> {

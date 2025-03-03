@@ -589,7 +589,7 @@ public class GTextField extends GTextObject {
                 }
 
                 //本次计算,下次绘制生效
-                float mid = (text_show_area_w) / 3;
+                float mid = (text_show_area_w) / 4;
                 if (mid > 50) mid = 50;//如果文字宽度小于100，会左右不停的闪，相互拉锯
                 if (Math.abs(caretx - text_show_area_x) < mid && leftShowCharIdx > 0) {
                     wordShowOffsetX += 20;

@@ -209,4 +209,22 @@ s32 os_load_lib_and_init(const c8 *libname, Runtime *runtime) {
     return 0;
 }
 
+void os_get_lang(Utf8String *buf) {
+    char *lang = getenv("LC_ALL");
+    if (lang == NULL) {
+        lang = getenv("LANG");
+    }
+    if (lang!= NULL) {
+        //printf("language: %s\n", lang);
+        utf8_append_c(buf, lang);
+        utf8_replace_c(buf, "-", "_");
+        s32 i = utf8_indexof_c(buf, "_");
+        if (i > 0) {
+            utf8_substring(buf, 0, i);
+        }
+    } else {
+        //printf("无法获取系统语言环境。\n");
+    }
+}
+
 #endif //  end of   __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__ || __JVM_OS_VS__
