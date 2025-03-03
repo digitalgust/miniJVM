@@ -214,7 +214,10 @@ void os_get_lang(Utf8String *buf) {
     if (lang == NULL) {
         lang = getenv("LANG");
     }
-    if (lang!= NULL) {
+    if (lang == NULL) {
+        lang = getenv("LC_CTYPE");
+    }
+    if (lang != NULL) {
         //printf("language: %s\n", lang);
         utf8_append_c(buf, lang);
         utf8_replace_c(buf, "-", "_");
