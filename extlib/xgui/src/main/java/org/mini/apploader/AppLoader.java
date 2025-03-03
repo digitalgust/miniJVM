@@ -265,7 +265,10 @@ public class AppLoader {
 
     public static int getDefaultLang() {
         String langstr = appinfo.getProperty(KEY_LANGUAGE);
-        int lang = GLanguage.ID_ENG;
+
+        String sysLang = System.getProperty("user.language");
+        System.out.println("[INFO]sysLang:" + sysLang);
+        int lang = GLanguage.getIdByShortName(sysLang);
         try {
             lang = Integer.parseInt(langstr.trim());
         } catch (Exception e) {
@@ -276,34 +279,6 @@ public class AppLoader {
     public static void setDefaultLang(int lang) {
         appinfo.put(KEY_LANGUAGE, "" + lang);
         saveProp(APP_INFO_FILE, appinfo);
-    }
-
-    public static String getLangName() {
-        int lang = getDefaultLang();
-        switch (lang) {
-            case GLanguage.ID_ENG:
-                return "en_US";
-            case GLanguage.ID_CHN:
-                return "zh_CN";
-            case GLanguage.ID_CHT:
-                return "zh_TW";
-            case GLanguage.ID_KOR:
-                return "ko_KR";
-            case GLanguage.ID_FRA:
-                return "fr_FR";
-            case GLanguage.ID_SPA:
-                return "es_ES";
-            case GLanguage.ID_ITA:
-                return "it_IT";
-            case GLanguage.ID_JPA:
-                return "ja_JP";
-            case GLanguage.ID_GER:
-                return "de_DE";
-            case GLanguage.ID_RUS:
-                return "ru_RU";
-            default:
-                return "en_US";
-        }
     }
 
     public static int getGuiStyle() {

@@ -762,21 +762,6 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                 case "BT_SETTING":
                     mainSlot.moveTo(2, 0);
                     break;
-                case "LI_ENG":
-                    GLanguage.setCurLang(GLanguage.ID_ENG);
-                    AppLoader.setDefaultLang(GLanguage.ID_ENG);
-                    mgrForm = null;
-                    break;
-                case "LI_CHS":
-                    GLanguage.setCurLang(GLanguage.ID_CHN);
-                    AppLoader.setDefaultLang(GLanguage.ID_CHN);
-                    mgrForm = null;
-                    break;
-                case "LI_CHT":
-                    GLanguage.setCurLang(GLanguage.ID_CHT);
-                    AppLoader.setDefaultLang(GLanguage.ID_CHT);
-                    mgrForm = null;
-                    break;
                 case "LI_BRIGHT":
                     GToolkit.setStyle(new GStyleBright());
                     AppLoader.setGuiStyle(0);
@@ -802,13 +787,24 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
         @Override
         public void onStateChange(GObject gobj) {
             String name = gobj.getName();
-            if ("INPUT_SEARCH".equals(name)) {
-                GTextObject search = (GTextObject) gobj;
-                String str = search.getText();
-                if (appList != null) {
-                    appList.filterLabelWithKey(str);
-                    //System.out.println("key=" + str);
-                }
+            if (name == null) {
+                return;
+            }
+            switch (name) {
+                case "INPUT_SEARCH":
+                    GTextObject search = (GTextObject) gobj;
+                    String str = search.getText();
+                    if (appList != null) {
+                        appList.filterLabelWithKey(str);
+                        //System.out.println("key=" + str);
+                    }
+                    break;
+                case "LIST_LANG":
+                    int selectedIndex = ((GList) gobj).getSelectedIndex();
+                    GLanguage.setCurLang(selectedIndex);
+                    AppLoader.setDefaultLang(selectedIndex);
+                    mgrForm = null;
+                    break;
             }
         }
     }
@@ -840,7 +836,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
     };
 
     void updateScriptEnvironment() {
-        envVarProvider.setEnvVar("lang", AppLoader.getLangName());
+        envVarProvider.setEnvVar("lang", GLanguage.getLangCode(AppLoader.getDefaultLang()));
         envVarProvider.setEnvVar("appid", AppLoader.getBaseInfo("appid"));
         envVarProvider.setEnvVar("appzone", AppLoader.getBaseInfo("appzone"));
         envVarProvider.setEnvVar("sver", AppLoader.getBaseInfo("sver"));

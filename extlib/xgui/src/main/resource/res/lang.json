@@ -3,302 +3,722 @@
     "STR_EXIT": [
       "Exit",
       "退出",
-      "退出"
+      "退出",
+      "나가기",
+      "Quitter",
+      "Salir",
+      "Uscire",
+      "終了する",
+      "Beenden",
+      "Выйти"
     ],
     "STR_DESC": [
       "Description: ",
       "描述: ",
-      "描述: "
+      "描述: ",
+      "설명: ",
+      "Description",
+      "Descripción",
+      "Descrizione",
+      "説明",
+      "Beschreibung",
+      "Описание"
     ],
     "STR_SELECT_FILE": [
       "Setup",
       "安装",
-      "安裝"
+      "安裝",
+      "설치",
+      "Installer",
+      "Instalar",
+      "Installare",
+      "インストールする",
+      "Installieren",
+      "Установить"
     ],
     "STR_DOWNLOAD": [
       "Down",
       "下载",
-      "下載"
+      "下載",
+      "다운로드",
+      "Télécharger",
+      "Descargar",
+      "Scaricare",
+      "ダウンロード",
+      "Herunterladen",
+      "Скачать"
     ],
     "STR_SERVER_STARTED": [
       "Webserver started",
       "服务器已启动",
-      "伺服器已啟動"
+      "伺服器已啟動",
+      "서버가 시작되었습니다",
+      "Le serveur a été démarré",
+      "El servidor se ha iniciado",
+      "Il server è stato avviato",
+      "サーバーが起動しました",
+      "Der Server wurde gestartet",
+      "Сервер был запущен"
     ],
     "STR_DARK_STYLE": [
       "Dark appearance",
       "深色外观",
-      "深色外觀"
+      "深色外觀",
+      "다크 테마",
+      "Apparence sombre",
+      "Apariencia oscura",
+      "Aspetto scuro",
+      "ダークモード",
+      "Dunkles Erscheinungsbild",
+      "Тёмный вид"
     ],
     "SETTING": [
-      "SETTING",
+      "Settings",
       "设置",
-      "設定"
+      "設定",
+      "설정",
+      "Paramètres",
+      "Configuración",
+      "Impostazioni",
+      "設定",
+      "Einstellungen",
+      "Настройки"
     ],
     "STR_BACK": [
       "Back",
       "返回",
-      "返回"
+      "返回",
+      "돌아가기",
+      "Retourner",
+      "Volver",
+      "Torna",
+      "戻る",
+      "Zurück",
+      "Вернуться"
     ],
     "STR_START_WEB_SRV_FOR_UPLOAD": [
-      "Lan webserver for upload plugin",
-      "启动Web服务器上传",
-      "啟動Web伺服器上傳"
+      "Start Web server upload",
+      "启动 Web 服务器上传",
+      "啟動 Web 伺服器上傳",
+      "웹 서버 업로드 시작",
+      "Démarrer le téléchargement via le serveur Web",
+      "Iniciar la carga del servidor web",
+      "Avvia l'upload del server Web",
+      "Web サーバーのアップロードを開始する",
+      "Webserver-Upload starten",
+      "Запустить загрузку на веб-сервер"
     ],
     "STR_MESSAGE": [
       "Message",
-      "信息",
-      "資訊"
+      "消息",
+      "訊息",
+      "메시지",
+      "Message",
+      "Mensaje",
+      "Messaggio",
+      "メッセージ",
+      "Nachricht",
+      "Сообщение"
     ],
     "STR_CLOSE": [
       "Close",
       "关闭",
-      "關閉"
+      "關閉",
+      "닫기",
+      "Fermer",
+      "Cerrar",
+      "Chiudere",
+      "閉じる",
+      "Schließen",
+      "Закрыть"
     ],
     "STR_SERVER_STOPED": [
-      "Webserver stoped",
+      "The server has stopped",
       "服务器已停止",
-      "伺服器已停止"
+      "伺服器已停止",
+      "서버가 중지되었습니다",
+      "Le serveur a été arrêté",
+      "El servidor se ha detenido",
+      "Il server è stato fermato",
+      "サーバーが停止しました",
+      "Der Server wurde gestoppt",
+      "Сервер остановлен"
     ],
     "STR_UPLOAD_FILE": [
-      "Uploaded file",
+      "File upload is finished",
       "文件上传结束",
-      "文件上傳結束"
+      "檔案上傳結束",
+      "파일 업로드가 완료되었습니다",
+      "Le téléchargement de fichiers est terminé",
+      "La carga de archivos ha finalizado",
+      "Il caricamento del file è terminato",
+      "ファイルのアップロードが完了しました",
+      "Die Datei-Upload ist abgeschlossen",
+      "Загрузка файла завершена"
     ],
     "STR_DELETE": [
       "Delete",
       "删除",
-      "刪除"
+      "刪除",
+      "삭제",
+      "Supprimer",
+      "Eliminar",
+      "Eliminare",
+      "削除する",
+      "Löschen",
+      "Удалить"
     ],
     "STR_CONFIRM_DELETE": [
-      "Do you confirm to delete the plugin ",
-      "您要删除组件吗",
-      "您要刪除元件嗎"
+      "Do you confirm to delete the plugin",
+      "你确认要删除该插件吗",
+      "你確認要刪除該外掛程式嗎",
+      "플러그인을 삭제하시겠습니까",
+      "Confirmez-vous la suppression du plugin ?",
+      "¿Confirma que desea eliminar el complemento?",
+      "Confermi di voler eliminare il plugin?",
+      "プラグインを削除してもよろしいですか",
+      "Bestätigen Sie die Löschung des Plugins?",
+      "Вы подтверждаете удаление плагина?"
     ],
     "STR_VERSION": [
-      "Version: ",
-      "版本: ",
-      "版本: "
+      "Version",
+      "版本",
+      "版本",
+      "버전",
+      "Version",
+      "Versión",
+      "Versione",
+      "バージョン",
+      "Version",
+      "Версия"
     ],
     "STR_UPGRADE_URL": [
-      "Upgrade url: ",
-      "升级地址: ",
-      "升級地址: "
+      "Upgrade url:",
+      "升级链接:",
+      "升級網址:",
+      "업그레이드 URL:",
+      "URL de mise à niveau:",
+      "URL de actualización:",
+      "URL di aggiornamento:",
+      "アップグレード URL:",
+      "Upgrade-URL:",
+      "URL обновления:"
     ],
     "STR_OPEN_APP_FAIL": [
       "Open plugin failed",
-      "打开组件失败",
-      "打開元件失敗"
+      "打开插件失败",
+      "開啟外掛程式失敗",
+      "플러그인 열기 실패",
+      "Échec de l'ouverture du plugin",
+      "Error al abrir el complemento",
+      "Apertura del plugin non riuscita",
+      "プラグインの開啟に失敗しました",
+      "Öffnen des Plugins fehlgeschlagen",
+      "Не удалось открыть плагин"
     ],
     "STR_CONNECTION_FAIL": [
       "Connection failed",
-      "联网失败",
-      "联網失敗"
+      "连接失败",
+      "連線失敗",
+      "연결 실패",
+      "Échec de la connexion",
+      "Conexión fallida",
+      "Connessione fallita",
+      "接続に失敗しました",
+      "Verbindung fehlgeschlagen",
+      "Подключение не удалось"
     ],
     "DISCOVERY": [
       "DISCOVERY",
       "发现",
-      "發現"
+      "發現",
+      "탐색",
+      "Découverte",
+      "Descubrimiento",
+      "Scoperta",
+      "発見",
+      "Entdeckung",
+      "Обнаружение"
     ],
     "STR_SET_AS_BOOT": [
-      "Put on top",
-      "置顶组件",
-      "置頂元件"
+      "Pin the plugin",
+      "置顶插件",
+      "置頂外掛程式",
+      "플러그인 고정",
+      "Épingler le plugin",
+      "Fijar el complemento",
+      "Blocca il plugin",
+      "プラグインを固定する",
+      "Plugin anheften",
+      "Закрепить плагин"
     ],
     "STR_INSTALL_FROM_LOCAL": [
       "Install plugin from local file:",
-      "选取文件安装",
-      "選取檔案安裝"
+      "从本地文件安装插件:",
+      "從本地檔案安裝外掛程式:",
+      "로컬 파일에서 플러그인 설치:",
+      "Installer le plugin à partir d'un fichier local :",
+      "Instalar el complemento desde un archivo local:",
+      "Installa il plugin da un file locale:",
+      "ローカルファイルからプラグインをインストールする:",
+      "Plugin aus lokaler Datei installieren:",
+      "Установить плагин из локального файла:"
     ],
     "PLUGIN_MANAGER": [
       "HOME",
       "主页",
-      "主页"
+      "首頁",
+      "홈",
+      "Accueil",
+      "Inicio",
+      "Home",
+      "ホーム",
+      "Startseite",
+      "Главная"
     ],
     "STR_BRIGHT_STYLE": [
-      "Bright appearance",
+      "Light appearance",
       "浅色外观",
-      "淺色外觀"
+      "淺色外觀",
+      "라이트 테마",
+      "Apparence claire",
+      "Apariencia clara",
+      "Aspetto chiaro",
+      "ライトモード",
+      "Helles Erscheinungsbild",
+      "Светлый вид"
     ],
     "STR_WEB_LISTEN_ON": [
       "Lan webserver on:",
-      "Web服务器临听 : ",
-      "Web伺服器臨聽 : "
+      "局域网 Web 服务器已开启:",
+      "區域網 Web 伺服器已開啟:",
+      "LAN 웹 서버 켜짐:",
+      "Serveur Web LAN activé :",
+      "Servidor web de red local activado:",
+      "Server Web LAN attivato:",
+      "LAN Web サーバーがオン:",
+      "LAN-Webserver eingeschaltet:",
+      "Веб-сервер локальной сети включен:"
     ],
     "STR_DOWN_APP_FROM_WEB": [
       "Download plugin from website:",
-      "从网站下载组件",
-      "從網站下載元件"
+      "从网站下载插件:",
+      "從網站下載外掛程式:",
+      "웹사이트에서 플러그인 다운로드:",
+      "Télécharger le plugin depuis un site web :",
+      "Descargar el complemento desde un sitio web:",
+      "Scarica il plugin dal sito web:",
+      "ウェブサイトからプラグインをダウンロードする:",
+      "Plugin von einer Website herunterladen:",
+      "Скачать плагин с веб-сайта:"
     ],
     "STR_STOP": [
       "Stop",
       "停止",
-      "停止"
+      "停止",
+      "정지",
+      "Arrêter",
+      "Detener",
+      "Fermare",
+      "停止する",
+      "Stoppen",
+      "Остановить"
     ],
     "STR_UPGRADE": [
-      "upgrade",
+      "Upgrade",
       "升级",
-      "升級"
+      "升級",
+      "업그레이드",
+      "Mise à niveau",
+      "Actualizar",
+      "Aggiornamento",
+      "アップグレード",
+      "Upgrade",
+      "Обновление"
     ],
     "STR_SUCCESS": [
       "Success",
       "成功",
-      "成功"
+      "成功",
+      "성공",
+      "Succès",
+      "Éxito",
+      "Successo",
+      "成功",
+      "Erfolg",
+      "Успех"
     ],
     "STR_FAIL": [
       "Fail",
       "失败",
-      "失敗"
+      "失敗",
+      "실패",
+      "Échec",
+      "Fracaso",
+      "Fallimento",
+      "失敗",
+      "Fehlschlag",
+      "Неудача"
     ],
     "PLUGIN": [
       "PLUGIN",
-      "组件",
-      "元件"
+      "插件",
+      "外掛程式",
+      "플러그인",
+      "Plugin",
+      "Complemento",
+      "Plugin",
+      "プラグイン",
+      "Plugin",
+      "Плагин"
     ],
     "BROWSE_FILE": [
-      "Open",
+      "Browse",
       "浏览",
-      "瀏覽"
+      "瀏覽",
+      "찾아보기",
+      "Parcourir",
+      "Navegar",
+      "Esplorare",
+      "閲覧する",
+      "Durchsuchen",
+      "Просматривать"
     ],
     "STR_APP_NOT_RUNNING": [
       "Plugin is not running ",
-      "组件没有运行",
-      "元件沒有運行"
+      "插件未运行",
+      "外掛程式未執行",
+      "플러그인이 실행 중이지 않습니다",
+      "Le plugin n'est pas en cours d'exécution",
+      "El complemento no está en ejecución",
+      "Il plugin non è in esecuzione",
+      "プラグインが実行されていません",
+      "Das Plugin wird nicht ausgeführt",
+      "Плагин не запущен"
     ],
     "STR_APP_LIST": [
-      "Plugin list : ",
-      "组件列表 : ",
-      "元件列表"
+      "Plugin list:",
+      "插件列表:",
+      "外掛程式清單:",
+      "플러그인 목록:",
+      "Liste des plugins :",
+      "Lista de complementos:",
+      "Elenco dei plugin:",
+      "プラグインリスト:",
+      "Plugin-Liste:",
+      "Список плагинов:"
     ],
     "STR_START": [
       "Start",
       "启动",
-      "啟動"
+      "啟動",
+      "시작",
+      "Démarrer",
+      "Iniciar",
+      "Avviare",
+      "起動する",
+      "Starten",
+      "Запустить"
     ],
     "STR_FILE_DATE": [
-      "File date: ",
-      "文件日期: ",
-      "文件日期: "
+      "File date:",
+      "文件日期:",
+      "檔案日期:",
+      "파일 날짜:",
+      "Date du fichier :",
+      "Fecha del archivo:",
+      "Data del file:",
+      "ファイルの日付:",
+      "Datei-Datum:",
+      "Дата файла:"
     ],
     "STR_FILE_SIZE": [
-      "File size: ",
-      "文件大小: ",
-      "文件大小: "
+      "File size:",
+      "文件大小:",
+      "檔案大小:",
+      "파일 크기:",
+      "Taille du fichier :",
+      "Tamaño del archivo:",
+      "Dimensione del file:",
+      "ファイルサイズ:",
+      "Dateigröße:",
+      "Размер файла:"
     ],
     "STR_RUN": [
       "Run",
       "运行",
-      "運行"
+      "執行",
+      "실행",
+      "Exécuter",
+      "Ejecutar",
+      "Eseguire",
+      "実行する",
+      "Ausführen",
+      "Запускать"
     ],
     "DISCOVERY": [
       "DISCOVERY",
       "发现",
-      "發現"
+      "發現",
+      "발견",
+      "Découverte",
+      "Descubrimiento",
+      "Scoperta",
+      "発見",
+      "Entdeckung",
+      "Обнаружение"
     ],
     "MY": [
-      "MY",
+      "My",
       "我的",
-      "我的"
+      "我的",
+      "제",
+      "Mon",
+      "Mi",
+      "Mio",
+      "私の",
+      "Mein",
+      "Мой"
     ],
     "SIGN_IN": [
       "Sign in",
+      "登录",
       "登入",
-      "登入"
+      "로그인",
+      "Se connecter",
+      "Iniciar sesión",
+      "Accedi",
+      "サインインする",
+      "Anmelden",
+      "Войти"
     ],
     "REMEMBER_ME": [
-      "Remember me",
+      "Remember",
       "记住",
-      "記住"
+      "記住",
+      "기억하다",
+      "Se souvenir",
+      "Recordar",
+      "Ricordare",
+      "覚える",
+      "Merken",
+      "Запомнить"
     ],
     "I_DONT_HAVE_ACCOUNT": [
-      "I don't have an account, sign up now",
+      "I don't have an account. Sign up now.",
       "我没有账号，现在注册",
-      "我沒有帳號，現在註冊"
+      "我沒有帳號，現在註冊",
+      "제 계정이 없습니다. 지금 가입하세요.",
+      "Je n'ai pas de compte. Inscrivez-vous maintenant.",
+      "No tengo una cuenta. Regístrate ahora.",
+      "Non ho un account. Iscriviti ora.",
+      "私はアカウントを持っていません。今すぐ登録します。",
+      "Ich habe kein Konto. Jetzt registrieren.",
+      "У меня нет аккаунта. Зарегистрируйтесь сейчас."
     ],
     "SIGN_UP": [
       "Sign up",
       "注册",
-      "註冊"
+      "註冊",
+      "가입하기",
+      "S'inscrire",
+      "Registrarse",
+      "Iscriviti",
+      "登録する",
+      "Registrieren",
+      "Зарегистрироваться"
     ],
     "I_FORGOT_PASSWORD": [
-      "I have an account, But I forgot my password",
+      "I have an account, but I forgot my password.",
       "我有账号，但我忘记了密码",
-      "我有帳號，但我忘記了密碼"
+      "我有帳號，但我忘記了密碼",
+      "제 계정이 있지만 비밀번호를 잊어버렸습니다.",
+      "J'ai un compte, mais j'ai oublié mon mot de passe.",
+      "Tengo una cuenta, pero olvidé mi contraseña.",
+      "Ho un account, ma ho dimenticato la mia password.",
+      "私はアカウントを持っていますが、パスワードを忘れてしまいました。",
+      "Ich habe ein Konto, aber ich habe mein Passwort vergessen.",
+      "У меня есть аккаунт, но я забыл свой пароль."
     ],
     "FORGOT_PASSWORD": [
       "Forgot password",
       "忘记密码",
-      "忘記密碼"
+      "忘記密碼",
+      "비밀번호를 잊었습니다",
+      "Mot de passe oublié",
+      "Contraseña olvidada",
+      "Password dimenticata",
+      "パスワードを忘れた",
+      "Passwort vergessen",
+      "Забыли пароль"
     ],
     "NOTICE_AFTER_SIGN_UP": [
-      "After submitting your sign-up information, you will receive an email or SMS verification code.",
-      "当提交注册信息后，您将收到一封电子邮件或短信验证码。",
-      "提交您的註冊資訊後，您將收到一封電子郵件或SMS驗證"
+      "After submitting the registration information, you will receive an email or SMS verification code.",
+      "当提交注册信息后，你将收到一封电子邮件或短信验证码。",
+      "當提交註冊資訊後，你將收到一封電子郵件或簡訊驗證碼。",
+      "등록 정보를 제출하면 이메일 또는 문자 메시지 인증 코드를 받게 됩니다.",
+      "Après avoir soumis les informations d'inscription, vous recevrez un code de vérification par e-mail ou par SMS.",
+      "Después de enviar la información de registro, recibirás un código de verificación por correo electrónico o SMS.",
+      "Dopo aver inviato le informazioni di registrazione, riceverai un codice di verifica via e-mail o SMS.",
+      "登録情報を送信すると、メールまたは SMS による検証コードを受け取ります。",
+      "Nach der Einreichung der Registrierungsinformationen erhalten Sie einen E-Mail- oder SMS-Bestätigungscode.",
+      "После отправки регистрационных данных вы получите код подтверждения по электронной почте или SMS."
     ],
     "VERIFY_CODE": [
-      "Verify Code",
+      "Verification code",
       "验证码",
-      "驗證碼"
+      "驗證碼",
+      "인증 코드",
+      "Code de vérification",
+      "Código de verificación",
+      "Codice di verifica",
+      "検証コード",
+      "Bestätigungscode",
+      "Код подтверждения"
     ],
     "RETRIEVE_PWD": [
       "Retrieve password",
       "找回密码",
-      "找回密碼"
+      "找回密碼",
+      "비밀번호 찾기",
+      "Récupérer le mot de passe",
+      "Recuperar contraseña",
+      "Recupera la password",
+      "パスワードを再取得する",
+      "Passwort zurücksetzen",
+      "Восстановить пароль"
     ],
     "ACCOUNT_PWD_NO_EMPTY": [
       "Account or password can not be empty",
       "账号或密码不能为空",
-      "帳號或密碼不能為空"
+      "帳號或密碼不能為空",
+      "계정 또는 비밀번호를 입력해야 합니다.",
+      "Le compte ou le mot de passe ne peut pas être vide.",
+      "El nombre de usuario o la contraseña no pueden estar vacíos.",
+      "Il nome utente o la password non possono essere vuoti.",
+      "アカウントまたはパスワードを入力する必要があります。",
+      "Der Benutzername oder das Passwort kann nicht leer sein.",
+      "Укажите имя пользователя и пароль."
     ],
     "ACCOUNT_NO_EMPTY": [
       "Account can not be empty",
       "账号不能为空",
-      "帳號不能為空"
+      "帳號不能為空",
+      "계정을 입력해야 합니다.",
+      "Le compte ne peut pas être vide.",
+      "El nombre de usuario no puede estar vacío.",
+      "Il nome utente non può essere vuoto.",
+      "アカウントを入力する必要があります。",
+      "Der Benutzername kann nicht leer sein.",
+      "Укажите имя пользователя."
     ],
     "NOTICE_INPUT_EMAIL_MOBILE": [
-      "Input email or mobile",
+      "Please enter your email or phone number.",
       "请输入邮箱或手机号码",
-      "请输入邮箱或手机号码"
+      "請輸入電子郵件或手機號碼",
+      "이메일 또는 휴대폰 번호를 입력하세요.",
+      "Veuillez entrer votre adresse e-mail ou votre numéro de téléphone.",
+      "Por favor, ingrese su correo electrónico o número de teléfono.",
+      "Per favore, inserisci la tua email o il numero di telefono.",
+      "メールアドレスまたは電話番号を入力してください。",
+      "Bitte geben Sie Ihre E-Mail-Adresse oder Ihre Telefonnummer ein.",
+      "Пожалуйста, введите адрес электронной почты или номер телефона."
     ],
     "SEND_CODE": [
       "Send code",
       "发送验证码",
-      "發送驗證碼"
+      "發送驗證碼",
+      "코드 전송",
+      "Envoyer le code",
+      "Enviar el código",
+      "Inviare il codice",
+      "コードを送信する",
+      "Senden Sie den Code.",
+      "Отправить код."
     ],
     "NOTICE_RCV_VERIFY_CODE": [
       "After submitting your account, you will receive an email or SMS verification code.",
       "输入账号后，您将收到一封电子邮件或短信验证码。",
-      "輸入帳號後，您將收到一封電子郵件或SMS驗證碼。"
+      "輸入帳號後，您將收到一封電子郵件或SMS驗證碼。",
+      "계정을 제출한 후, 이메일 또는 SMS 인증 코드를 받게 됩니다.",
+      "Après avoir soumis votre compte, vous recevrez un code de vérification par e-mail ou par SMS.",
+      "Después de enviar su cuenta, recibirá un código de verificación por correo electrónico o SMS.",
+      "Dopo aver inviato il tuo account, riceverai un codice di verifica via e-mail o SMS.",
+      "アカウントを送信した後、メールまたは SMS による検証コードを受け取ります。",
+      "Nachdem Sie Ihre Anmeldeinformationen eingereicht haben, erhalten Sie einen E-Mail- oder SMS-Bestätigungscode.",
+      "После отправки ваших учетных данных вы получите код подтверждения по электронной почте или SMS."
     ],
     "CHANGE_PASSWORD": [
       "Change password",
       "改变密码",
-      "改變密碼"
+      "改變密碼",
+      "비밀번호 변경",
+      "Changer le mot de passe",
+      "Cambiar la contraseña",
+      "Cambia la password",
+      "パスワードを変更する",
+      "Passwort ändern",
+      "Изменить пароль"
     ],
     "EMAIL_OR_MOBILE": [
-      "email or mobile",
-      "只可为邮箱或手机",
-      "只可为電子郵件或手機"
+      "Email or phone",
+      "邮箱或手机",
+      "電子郵件或手機",
+      "이메일 또는 휴대폰",
+      "E-mail ou téléphone",
+      "Correo electrónico o teléfono",
+      "E-mail o telefono",
+      "メールアドレスまたは電話番号",
+      "E-Mail oder Telefon",
+      "Электронная почта или телефон"
     ],
     "OLD_PASSWORD": [
       "Old password",
       "旧密码",
-      "舊密碼"
+      "舊密碼",
+      "기존 비밀번호",
+      "Ancien mot de passe",
+      "Contraseña antigua",
+      "Vecchia password",
+      "旧パスワード",
+      "Altes Passwort",
+      "Старый пароль"
     ],
     "NEW_PASSWORD": [
       "New password",
       "新密码",
-      "新密碼"
+      "新密碼",
+      "새 비밀번호",
+      "Nouveau mot de passe",
+      "Nueva contraseña",
+      "Nuova password",
+      "新しいパスワード",
+      "Neues Passwort",
+      "Новый пароль"
     ],
     "PASSWORD_6_32": [
       "password length 6-32",
-      "密码长6-32字符",
-      "密碼長6-32字符"
+      "密码长度 6 - 32",
+      "密碼長度 6 - 32",
+      "비밀번호 길이 6 - 32",
+      "Longueur du mot de passe 6 - 32",
+      "Longitud de la contraseña 6 - 32",
+      "Lunghezza password 6 - 32",
+      "パスワードの長さは 6 - 32 文字",
+      "Passwortlänge 6 - 32",
+      "Длина пароля 6 - 32 символов"
     ],
     "I_WANT_CHG_PWD": [
-      "I want to change my password",
-      "我要改变我的密码",
-      "我要改變我的密碼"
+      "I want to change password",
+      "我想修改密码",
+      "我想修改密碼",
+      "나는 비밀번호를 변경하고 싶어",
+      "Je veux changer de mot de passe",
+      "Quiero cambiar la contraseña",
+      "Voglio cambiare la password",
+      "私はパスワードを変更したい",
+      "Ich möchte mein Passwort ändern",
+      "Я хочу изменить пароль"
     ],
     "STR_SIGNIN_ALREADY": [
       "Signed in",
@@ -306,14 +726,28 @@
       "已登入"
     ],
     "STR_NEED_SIGNIN": [
-      "Sign in",
-      "去登录",
-      "去登入"
+      "Signed in",
+      "已登录",
+      "已登入",
+      "로그인 됨",
+      "Connecté",
+      "Conectado",
+      "Connesso",
+      "サインイン済み",
+      "Eingeloggt",
+      "Вошел в систему"
     ],
     "STR_UPDATE": [
       "UPDATE",
-      "检测更新",
-      "检测更新"
+      "更新",
+      "更新",
+      "업데이트",
+      "Mettre à jour",
+      "Actualizar",
+      "Aggiornare",
+      "更新する",
+      "Aktualisieren",
+      "Обновить"
     ]
   }
 }

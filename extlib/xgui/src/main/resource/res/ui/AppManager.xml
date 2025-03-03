@@ -221,6 +221,13 @@
                             <li name="LI_ENG">English</li>
                             <li name="LI_CHS">简体中文</li>
                             <li name="LI_CHT">繁體中文</li>
+                            <li name="LI_KOR">한국어</li>
+                            <li name="LI_FRA">Français</li>
+                            <li name="LI_ESP">Español</li>
+                            <li name="LI_ITA">Italiano</li>
+                            <li name="LI_JPN">日本語</li>
+                            <li name="LI_GER">Deutsch</li>
+                            <li name="LI_RUS">Русский</li>
                         </list>
                         <br/>
                         <list name="LIST_STYLE" w="100%" multiline="0">

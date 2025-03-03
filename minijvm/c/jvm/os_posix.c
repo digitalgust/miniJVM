@@ -210,12 +210,12 @@ s32 os_load_lib_and_init(const c8 *libname, Runtime *runtime) {
 }
 
 void os_get_lang(Utf8String *buf) {
-    char *lang = getenv("LC_ALL");
+    char *lang = getenv("LC_ALL");//linux
     if (lang == NULL) {
         lang = getenv("LANG");
     }
     if (lang == NULL) {
-        lang = getenv("LC_CTYPE");
+        lang = getenv("LC_CTYPE");//mac os
     }
     if (lang != NULL) {
         //printf("language: %s\n", lang);
