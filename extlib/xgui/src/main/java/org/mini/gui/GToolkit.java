@@ -1245,7 +1245,7 @@ public class GToolkit {
                 } else {
                     if (getForm() != null) {
                         List<GObject> list = getElements();
-                        synchronized (list) {
+                        {
                             if (getElements().isEmpty()) {//no menu
                                 getForm().remove(this);
                                 //System.out.println("picture removed");

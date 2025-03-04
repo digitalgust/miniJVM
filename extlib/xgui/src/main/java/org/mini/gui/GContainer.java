@@ -12,6 +12,7 @@ import org.mini.nanovg.Nanovg;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.mini.nanovg.Nanovg.nvgSave;
 
@@ -20,8 +21,8 @@ import static org.mini.nanovg.Nanovg.nvgSave;
  */
 abstract public class GContainer extends GObject {
 
-    protected final List<GObject> elements = new ArrayList();
-    private final List<GChildrenListener> childrenListeners = new ArrayList();
+    protected final List<GObject> elements = new CopyOnWriteArrayList<>();//使用无锁列表，否则如果进行容器同步，在findSonByName，会导出线程死锁
+    private final List<GChildrenListener> childrenListeners = new ArrayList<>();
     protected GObject current;  //每个容器都有自己的当前组件，current一定是直接子组件，焦点的获得和失去，是在鼠标或点击事件中从form开始逐层获得和失去
     float[] visableArea = new float[4];
 
@@ -185,7 +186,7 @@ abstract public class GContainer extends GObject {
 
     void addImpl(int index, GObject nko) {
         if (nko != null) {
-            synchronized (elements) {
+            {
                 if (!elements.contains(nko)) {
                     //根据layer 排序,加入到elements容器中
                     if (index < 0) {
@@ -210,7 +211,7 @@ abstract public class GContainer extends GObject {
 
     void removeImpl(GObject nko) {
         if (nko != null) {
-            synchronized (elements) {
+            {
                 if (current == nko) {
                     setCurrent(null);
                 }
@@ -223,7 +224,7 @@ abstract public class GContainer extends GObject {
     }
 
     void removeImpl(int index) {
-        synchronized (elements) {
+        {
             GObject nko = elements.get(index);
             removeImpl(nko);
         }
@@ -234,7 +235,7 @@ abstract public class GContainer extends GObject {
     }
 
     void clearImpl() {
-        synchronized (elements) {
+        {
             int size = elements.size();
             for (int i = 0; i < size; i++) {
                 removeImpl(0);
@@ -249,7 +250,7 @@ abstract public class GContainer extends GObject {
         if (name.equals(this.name)) {
             return (T) this;
         }
-        synchronized (elements) {
+        {
             for (int i = 0, imax = elements.size(); i < imax; i++) {
                 GObject go = elements.get(i);
                 if (name.equals(go.name)) {
@@ -275,7 +276,7 @@ abstract public class GContainer extends GObject {
      */
     protected <T extends GObject> T findSonByXY(float x, float y) {
         GObject front = null, mid = null, back = null, menu = null;
-        synchronized (elements) {
+        {
             for (int i = 0; i < elements.size(); i++) {
                 GObject nko = elements.get(i);
                 if (nko.isInArea(x, y)) {
@@ -304,7 +305,7 @@ abstract public class GContainer extends GObject {
      * @return
      */
     public <T extends GObject> T findByXY(float x, float y) {
-        synchronized (elements) {
+        {
             for (int i = elements.size() - 1; i >= 0; i--) {
                 GObject nko = elements.get(i);
                 if (nko.isInArea(x, y)) {
@@ -401,7 +402,7 @@ abstract public class GContainer extends GObject {
     }
 
     protected void reLayer() {
-        synchronized (elements) {
+        {
             //更新所有UI组件
 
             int size = elements.size();
@@ -422,7 +423,7 @@ abstract public class GContainer extends GObject {
      * 把focus排在同级的最后面
      */
     protected void reLayerFocus() {
-        synchronized (elements) {
+        {
             //更新所有UI组件
             if (current != null) {
                 int flayer = current.layer;
@@ -457,7 +458,7 @@ abstract public class GContainer extends GObject {
     public boolean paint(long vg) {
         super.paint(vg);
         try {
-            synchronized (elements) {
+            {
                 //更新所有UI组件
                 //在遍历过程中,其他线程无法修改容器,但可能会有本线程在paint过程中添加或删除组件,因此要每个循环取size
                 for (int i = 0, imax = elements.size(); i < imax; i++) {

@@ -126,7 +126,7 @@ public class GuiScriptLib extends Lib {
                     return;
                 }
             }
-            System.out.println("[WARN]httpRequest callback no GContainer specified: " + callback);
+            //System.out.println("[WARN]httpRequest callback no GContainer specified: " + callback);
 
         }
     }

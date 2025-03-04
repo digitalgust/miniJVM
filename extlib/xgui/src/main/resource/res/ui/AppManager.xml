@@ -44,7 +44,7 @@
                 setEnv("PAY_URL",urls[4])
                 setEnv("PLUGIN_URL",urls[5])
                 setEnv("UPDATE_URL",urls[6])
-                println("urls:\n"+urls)
+                'println("urls:\n"+urls)
 
                 signInAuto() '自动登录
             else
@@ -64,7 +64,7 @@
                 ret
             else
                 encryptPwd=encrypt(loginPwd,ENCRYPTED_KEY)
-                println(encryptPwd)
+                'println(encryptPwd)
 
                 accBaseUrl=getEnv("ACCOUNT_BASE_URL")
                 url=accBaseUrl + "/login?usr=" + loginUid + "&pwd=" + encryptPwd +"&logintype="+ logintype +"&"+ getQueryPara()
@@ -76,7 +76,7 @@
         sub onSignInAutoBack(url,code,msg) '登录回调
             if(code=0)
                 setEnv("TOKEN", msg)
-                println("token="+msg)
+                'println("token="+msg)
             else
                 showMsg("{STR_MESSAGE}: {STR_CONNECTION_FAIL}")
             eif
@@ -135,7 +135,7 @@
             '说明本次事件是要停止webserver,反之是要启动
             if(isNull(websrv))
                 url="http://localhost:8088"
-                println(url)
+                'println(url)
                 if(strlen(url)>0)
                     openOtherApp(url,"URL",0)  ' 第一个为 url，第二个为参数(URL表示打开网址),，第三个为检测是否App 存在，0为不检测，1为检测
                 eif
@@ -144,7 +144,7 @@
 
         sub plug_download()
             url=getEnv("PLUGIN_URL")+"?"+ getQueryPara()
-            println(url)
+            'println(url)
             if(strlen(url)>0)
                 openPage(url,"")
                 showSlot("SLOT_MGR",3)

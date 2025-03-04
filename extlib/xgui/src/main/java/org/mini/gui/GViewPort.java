@@ -153,7 +153,7 @@ public class GViewPort extends GContainer {
         minY = 0;
         maxX = minX + viewBoundle[WIDTH];
         maxY = minY + viewBoundle[HEIGHT];
-        synchronized (elements) {
+        {
             for (GObject nko : elements) {
                 float[] bond = null;
                 if (nko instanceof GContainer) {
@@ -261,7 +261,7 @@ public class GViewPort extends GContainer {
                         float inh = getInnerH();
                         if (inh > 0) {
                             float vec = (float) speedY / inh;
-                            synchronized (elements) {
+                            {
                                 movePercentY(vec);
                             }
                             tmpScrollY -= vec;
@@ -299,7 +299,7 @@ public class GViewPort extends GContainer {
                         float tmpScrollX = scrollx;
                         if (inw > 0) {
                             float vec = (float) speedX / inw;
-                            synchronized (elements) {
+                            {
                                 movePercentX(vec);
                             }
                             tmpScrollX -= vec;
