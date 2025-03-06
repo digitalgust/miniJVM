@@ -638,7 +638,9 @@ s32 jvm_printf(const c8 *format, ...) {
     }
 #else
     result = vfprintf(stderr, format, vp);
+#ifdef __JVM_OS_ANDROID__
     LOGD(format,vp);
+#endif
 #endif
     va_end(vp);
     fflush(stderr);
