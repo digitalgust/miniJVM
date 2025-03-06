@@ -638,6 +638,7 @@ s32 jvm_printf(const c8 *format, ...) {
     }
 #else
     result = vfprintf(stderr, format, vp);
+    LOGD(format,vp);
 #endif
     va_end(vp);
     fflush(stderr);

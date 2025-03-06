@@ -89,7 +89,11 @@ public class GDesktop extends GPanel implements GCallbackUI {
             Nanovg.nvgScissor(vg, 0, 0, winWidth, winHeight);
             paint(vg);
             nvgEndFrame(vg);
-
+            try {
+                cmdHandler.process(); //GOpenGLPanel.gl_paint() here be called
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             //
         } catch (Exception e) {
             e.printStackTrace();

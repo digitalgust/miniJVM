@@ -134,34 +134,34 @@ public class GuiScriptLib extends Lib {
     }
 
     public static void showProgressBar(GForm form, int progress) {
-        //long vg = GCallBack.getInstance().getNvContext();
-        //GToolkit.drawTextLine(vg, 0, 0, "waitting ..." + progress, GToolkit.getStyle().getTextFontSize(), GToolkit.getStyle().getTextFontColor(), Nanovg.NVG_ALIGN_LEFT | Nanovg.NVG_ALIGN_TOP);
-        int w = GCallBack.getInstance().getDeviceWidth();
-        //int h = GCallBack.getInstance().getDeviceHeight();
-        GCallBack.getInstance().getInsets(inset);
-        //System.out.println("progress:" + progress);
-        final String panName = "_INNER_PROGRESS_BAR";
-        GObject go = GToolkit.getComponent(form, panName);
-        if (go == null) {
-            go = new GPanel(form, 0, 0, 0, 4) {
-                @Override
-                public void setSize(float w, float h) {
-                    super.setSize(w, h);
-                    layer = GObject.LAYER_INNER;
-                }
-            };
-            go.setName(panName);
-            go.setBgColor(GColorSelector.GREEN_HALF);
-            form.add(go);
-        }
-        go.setLocation(0, inset[0]);
-        go.setSize(progress * w / 100f, go.getH());
-        if (progress == 100) {
-            GForm.addCmd(new GCmd(() -> {
+        GForm.addCmd(new GCmd(() -> {
+            //long vg = GCallBack.getInstance().getNvContext();
+            //GToolkit.drawTextLine(vg, 0, 0, "waitting ..." + progress, GToolkit.getStyle().getTextFontSize(), GToolkit.getStyle().getTextFontColor(), Nanovg.NVG_ALIGN_LEFT | Nanovg.NVG_ALIGN_TOP);
+            int w = GCallBack.getInstance().getDeviceWidth();
+            //int h = GCallBack.getInstance().getDeviceHeight();
+            GCallBack.getInstance().getInsets(inset);
+            //System.out.println("progress:" + progress);
+            final String panName = "_INNER_PROGRESS_BAR";
+            GObject go = GToolkit.getComponent(form, panName);
+            if (go == null) {
+                go = new GPanel(form, 0, 0, 0, 4) {
+                    @Override
+                    public void setSize(float w, float h) {
+                        super.setSize(w, h);
+                        layer = GObject.LAYER_INNER;
+                    }
+                };
+                go.setName(panName);
+                go.setBgColor(GColorSelector.GREEN_HALF);
+                form.add(go);
+            }
+            go.setLocation(0, inset[0]);
+            go.setSize(progress * w / 100f, go.getH());
+            if (progress == 100) {
                 GObject go1 = GToolkit.getComponent(form, panName);
                 if (go1 != null) go1.setSize(0, go1.getH());
-            }));
-        }
+            }
+        }));
     }
 
     // -------------------------------------------------------------------------

@@ -163,7 +163,6 @@ public class GCmdHandler extends GPanel implements GCallbackUI {
         } else {
             setSize(1, 1);
         }
-        process();
         return true;
     }
 
