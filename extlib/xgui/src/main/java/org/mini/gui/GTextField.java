@@ -36,6 +36,7 @@ public class GTextField extends GTextObject {
     protected boolean password = false;//是否密码字段
 
     protected boolean resetEnable = true;
+    protected boolean resetPressBegin = false;
 
     protected float wordShowOffsetX = 0.f;
 
@@ -139,6 +140,12 @@ public class GTextField extends GTextObject {
                     } else {
                         GToolkit.disposeEditMenu();
                     }
+                    if (isInBoundle(reset_boundle, rx, ry)) {
+                        if (isResetEnable()) {
+                            resetPressBegin = true;
+                        }
+                        if (GToolkit.getEditMenu() != null) GToolkit.getEditMenu().dispose();
+                    }
                 } else {
                     mouseDrag = false;
                     if (selectEnd == -1 || selectStart == selectEnd) {
@@ -146,12 +153,13 @@ public class GTextField extends GTextObject {
                         GToolkit.disposeEditMenu();
                     }
                     if (isInBoundle(reset_boundle, rx, ry)) {
-                        if (isResetEnable()) {
+                        if (isResetEnable() && resetPressBegin) {
                             deleteAll();
                             resetSelect();
                         }
                         if (GToolkit.getEditMenu() != null) GToolkit.getEditMenu().dispose();
                     }
+                    resetPressBegin = false;
                 }
 
             } else if (button == Glfw.GLFW_MOUSE_BUTTON_2) {
@@ -330,7 +338,7 @@ public class GTextField extends GTextObject {
         if (isInBoundle(boundle, rx, ry)) {
             if (phase == Glfm.GLFMTouchPhaseEnded) {
                 if (isInBoundle(reset_boundle, rx, ry)) {
-                    if (isResetEnable()) {
+                    if (isResetEnable() && resetPressBegin) {
                         deleteAll();
                         resetSelect();
                     }
@@ -342,6 +350,16 @@ public class GTextField extends GTextObject {
                     }
                     setCaretIndex(getCaretIndex(x, y));
                 }
+                resetPressBegin = false;
+            } else if (phase == Glfm.GLFMTouchPhaseBegan) {
+                if (isInBoundle(reset_boundle, rx, ry)) {
+                    if (isResetEnable()) {
+                        resetPressBegin = true;
+                    }
+                }
+            } else if (phase == Glfm.GLFMTouchPhaseMoved) {
+                int caret = getCaretIndex(x, y);
+                setCaretIndex(caret);
             }
         }
         super.touchEvent(touchid, phase, x, y);

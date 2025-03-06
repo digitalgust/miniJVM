@@ -499,7 +499,8 @@ abstract public class GContainer extends GObject {
             //out of visable area
         } else {
 
-            Nanovg.nvgScissor(ctx, va[0], va[1], va[2] - va[0], va[3] - va[1]);
+            Nanovg.nvgScissor(ctx, vx, vy, vw, vh);
+            Nanovg.nvgIntersectScissor(ctx, va[0], va[1], va[2] - va[0], va[3] - va[1]);
 
             nko.paint(ctx);
 

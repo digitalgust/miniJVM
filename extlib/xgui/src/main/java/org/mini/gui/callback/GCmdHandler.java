@@ -139,9 +139,6 @@ public class GCmdHandler extends GPanel implements GCallbackUI {
             GToolkit.drawRoundedRect(vg, x, y, w, h, 5, GToolkit.getStyle().getTextFontColor());
 
 
-            nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
-            nvgFontFace(vg, GToolkit.getFontWord());
-            nvgTextAlign(vg, Nanovg.NVG_ALIGN_TOP | Nanovg.NVG_ALIGN_LEFT);
             long curt = System.currentTimeMillis();
             int i = 0;
             for (Iterator<Long> it = curShowMessage.keySet().iterator(); it.hasNext(); ) {
@@ -149,13 +146,13 @@ public class GCmdHandler extends GPanel implements GCallbackUI {
                 if (curt - t < 5 * 1000) {
                     GCmd cmd = curShowMessage.get(t);
                     float dx = x;
-                    float dy = y + PAD * 0.5f + i * 28;
+                    float dy = y + 6 + i * 30;
                     float lineh = 25;
                     if (cmd.getWork() != null) {
                         GToolkit.drawEmoj(vg, dx, dy, 30, lineh, GObject.ICON_LOGIN_BYTE, GToolkit.getStyle().getIconFontSize(), GToolkit.getStyle().getBackgroundColor());
                         dx += 30;
                     }
-                    GToolkit.drawText(vg, dx, dy, w, lineh, cmd.getMsg(), GToolkit.getStyle().getTextFontSize(), GToolkit.getStyle().getBackgroundColor());
+                    GToolkit.drawTextLine(vg, dx, dy, cmd.getMsg(), GToolkit.getStyle().getTextFontSize(), GToolkit.getStyle().getBackgroundColor(), NVG_ALIGN_TOP | NVG_ALIGN_LEFT);
                     cmd.setBoundle(dx, dy, panW, lineh);
                     i++;
                 } else {
@@ -166,6 +163,7 @@ public class GCmdHandler extends GPanel implements GCallbackUI {
         } else {
             setSize(1, 1);
         }
+        process();
         return true;
     }
 

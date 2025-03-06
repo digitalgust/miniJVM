@@ -401,6 +401,7 @@ public class GlfmCallBackImpl extends GCallBack {
     }
 
     public void getInsets(float[] top_right_bottom_left) {
+        Glfm.glfmGetDisplayChromeInsets(display, insetsDouble);
         if (top_right_bottom_left != null) {
             top_right_bottom_left[0] = (float) (insetsDouble[0] / pxRatio);
             top_right_bottom_left[1] = (float) (insetsDouble[1] / pxRatio);

@@ -1493,9 +1493,11 @@ public class GToolkit {
     static public class EditMenu extends GMenu {
 
         GTextObject text;
+        int curLang;
 
         public EditMenu(GForm form, float left, float top, float width, float height) {
             super(form, left, top, width, height);
+            curLang = GLanguage.getCurLang();
         }
 
         @Override
@@ -1552,6 +1554,13 @@ public class GToolkit {
             my = gform.getH() - menuH;
         }
         my += gform.getY();
+
+        if (editMenu != null) {
+            if (editMenu.curLang != GLanguage.getCurLang()) {
+                editMenu.dispose();
+                editMenu = null;
+            }
+        }
 
         if (editMenu == null) {
             editMenu = new EditMenu(gform, mx, my, menuW, menuH);

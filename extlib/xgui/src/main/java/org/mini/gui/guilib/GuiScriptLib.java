@@ -9,6 +9,8 @@ import org.mini.glfm.Glfm;
 import org.mini.gui.*;
 import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GCmd;
+import org.mini.gui.callback.GCmdHandler;
+import org.mini.gui.callback.GDesktop;
 import org.mini.gui.gscript.*;
 import org.mini.http.MiniHttpClient;
 import org.mini.json.JsonParser;
@@ -777,7 +779,15 @@ public class GuiScriptLib extends Lib {
             try {
                 URL url = new URL(href);
             } catch (Exception e) {
-                doHttpCallback(form, callback, href, -1, "url format error");
+                if (async) {//异步要交给主线程执行，因为实践中出现死锁，GContainer 的elements 同步比较多，多线程死锁
+                    GCmd cmd = new GCmd(
+                            () -> {
+                                doHttpCallback(form, callback, href, -1, "url format error");
+                            });
+                    GDesktop.addCmd(cmd);
+                } else {
+                    doHttpCallback(form, callback, href, -1, "url format error");
+                }
                 return null;
             }
 

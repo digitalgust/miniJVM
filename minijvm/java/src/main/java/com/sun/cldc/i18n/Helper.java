@@ -25,7 +25,6 @@
  */
 
 
-
 package com.sun.cldc.i18n;
 
 import java.io.*;
@@ -35,7 +34,7 @@ import java.io.*;
  * <p>
  * <em>No application code should reference this class directly.</em>
  *
- * @author  Nik Shaylor, Antero Taivalsaari
+ * @author Nik Shaylor, Antero Taivalsaari
  * @version CLDC 1.1 03/29/02
  */
 public class Helper {
@@ -56,25 +55,25 @@ public class Helper {
         }
     }
 
-/*------------------------------------------------------------------------------*/
-/*                               Character encoding                             */
-/*------------------------------------------------------------------------------*/
+    /*------------------------------------------------------------------------------*/
+    /*                               Character encoding                             */
+    /*------------------------------------------------------------------------------*/
 
     /**
      * Get a reader for an InputStream
      *
-     * @param  is              The input stream the reader is for
-     * @return                 A new reader for the stream
+     * @param is The input stream the reader is for
+     * @return A new reader for the stream
      */
     public static Reader getStreamReader(InputStream is) {
         try {
             return getStreamReader(is, defaultEncoding);
-        } catch(UnsupportedEncodingException x) {
+        } catch (UnsupportedEncodingException x) {
             try {
                 defaultEncoding = "ISO8859_1";
                 return getStreamReader(is, defaultEncoding);
-            } catch(UnsupportedEncodingException e) {
-                throw new RuntimeException("Missing default encoding "+defaultEncoding);
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException("Missing default encoding " + defaultEncoding);
             }
         }
     }
@@ -82,13 +81,13 @@ public class Helper {
     /**
      * Get a reader for an InputStream
      *
-     * @param  is              The input stream the reader is for
-     * @param  name            The name of the decoder
-     * @return                 A new reader for the stream
-     * @exception UnsupportedEncodingException  If the encoding is not known
+     * @param is   The input stream the reader is for
+     * @param name The name of the decoder
+     * @return A new reader for the stream
+     * @throws UnsupportedEncodingException If the encoding is not known
      */
     public static Reader getStreamReader(InputStream is, String name)
-        throws UnsupportedEncodingException {
+            throws UnsupportedEncodingException {
 
         /* Test for null arguments */
         if (is == null || name == null) {
@@ -105,12 +104,12 @@ public class Helper {
     /**
      * Get a reader for an InputStream
      *
-     * @param  name            The name of the decoder
-     * @return                 A new reader for the stream
-     * @exception UnsupportedEncodingException  If the encoding is not known
+     * @param name The name of the decoder
+     * @return A new reader for the stream
+     * @throws UnsupportedEncodingException If the encoding is not known
      */
     private static StreamReader getStreamReaderPrim(String name)
-        throws UnsupportedEncodingException {
+            throws UnsupportedEncodingException {
 
         if (name == null) {
             throw new NullPointerException();
@@ -128,34 +127,34 @@ public class Helper {
             Class clazz = Class.forName(className);
 
             /* Return a new instance */
-            return (StreamReader)clazz.newInstance();
+            return (StreamReader) clazz.newInstance();
 
-        } catch(ClassNotFoundException x) {
-            throw new UnsupportedEncodingException("Encoding "+name+" not found");
-        } catch(InstantiationException x) {
-            throw new RuntimeException("InstantiationException "+x.getMessage());
-        } catch(IllegalAccessException x) {
-            throw new RuntimeException("IllegalAccessException "+x.getMessage());
-        } catch(ClassCastException x) {
-            throw new RuntimeException("ClassCastException "+x.getMessage());
+        } catch (ClassNotFoundException x) {
+            throw new UnsupportedEncodingException("Encoding " + name + " not found");
+        } catch (InstantiationException x) {
+            throw new RuntimeException("InstantiationException " + x.getMessage());
+        } catch (IllegalAccessException x) {
+            throw new RuntimeException("IllegalAccessException " + x.getMessage());
+        } catch (ClassCastException x) {
+            throw new RuntimeException("ClassCastException " + x.getMessage());
         }
     }
 
     /**
      * Get a writer for an OutputStream
      *
-     * @param  os              The output stream the reader is for
-     * @return                 A new writer for the stream
+     * @param os The output stream the reader is for
+     * @return A new writer for the stream
      */
     public static Writer getStreamWriter(OutputStream os) {
         try {
             return getStreamWriter(os, defaultEncoding);
-        } catch(UnsupportedEncodingException x) {
+        } catch (UnsupportedEncodingException x) {
             try {
                 defaultEncoding = "ISO8859_1";
                 return getStreamWriter(os, defaultEncoding);
-            } catch(UnsupportedEncodingException e) {
-                throw new RuntimeException("Missing default encoding "+defaultEncoding);
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException("Missing default encoding " + defaultEncoding);
             }
         }
     }
@@ -163,13 +162,13 @@ public class Helper {
     /**
      * Get a writer for an OutputStream
      *
-     * @param  os              The output stream the reader is for
-     * @param  name            The name of the decoder
-     * @return                 A new writer for the stream
-     * @exception UnsupportedEncodingException  If the encoding is not known
+     * @param os   The output stream the reader is for
+     * @param name The name of the decoder
+     * @return A new writer for the stream
+     * @throws UnsupportedEncodingException If the encoding is not known
      */
     public static Writer getStreamWriter(OutputStream os, String name)
-        throws UnsupportedEncodingException {
+            throws UnsupportedEncodingException {
 
         /* Test for null arguments */
         if (os == null || name == null) {
@@ -186,12 +185,12 @@ public class Helper {
     /**
      * Get a writer for an OutputStream
      *
-     * @param  name            The name of the decoder
-     * @return                 A new writer for the stream
-     * @exception UnsupportedEncodingException  If the encoding is not known
+     * @param name The name of the decoder
+     * @return A new writer for the stream
+     * @throws UnsupportedEncodingException If the encoding is not known
      */
     private static StreamWriter getStreamWriterPrim(String name)
-        throws UnsupportedEncodingException {
+            throws UnsupportedEncodingException {
 
         if (name == null) {
             throw new NullPointerException();
@@ -203,75 +202,70 @@ public class Helper {
             String className;
 
             /* Get the writer class name */
-            className = "com.sun.cldc.i18n.j2me" + '.' + name +"_Writer";
+            className = "com.sun.cldc.i18n.j2me" + '.' + name + "_Writer";
 
             /* Using the decoder names lookup a class to implement the writer */
             Class clazz = Class.forName(className);
 
             /* Construct a new instance */
-            return (StreamWriter)clazz.newInstance();
+            return (StreamWriter) clazz.newInstance();
 
-        } catch(ClassNotFoundException x) {
-            throw new UnsupportedEncodingException("Encoding "+name+" not found");
-        } catch(InstantiationException x) {
-            throw new RuntimeException("InstantiationException "+x.getMessage());
-        } catch(IllegalAccessException x) {
-            throw new RuntimeException("IllegalAccessException "+x.getMessage());
-        } catch(ClassCastException x) {
-            throw new RuntimeException("ClassCastException "+x.getMessage());
+        } catch (ClassNotFoundException x) {
+            throw new UnsupportedEncodingException("Encoding " + name + " not found");
+        } catch (InstantiationException x) {
+            throw new RuntimeException("InstantiationException " + x.getMessage());
+        } catch (IllegalAccessException x) {
+            throw new RuntimeException("IllegalAccessException " + x.getMessage());
+        } catch (ClassCastException x) {
+            throw new RuntimeException("ClassCastException " + x.getMessage());
         }
     }
 
     /**
      * Convert a byte array to a char array
      *
-     * @param  buffer          The byte array buffer
-     * @param  offset          The offset
-     * @param  length          The length
-     * @return                 A new char array
+     * @param buffer The byte array buffer
+     * @param offset The offset
+     * @param length The length
+     * @return A new char array
      */
     public static char[] byteToCharArray(byte[] buffer, int offset, int length) {
         try {
             return byteToCharArray(buffer, offset, length, defaultEncoding);
-        } catch(UnsupportedEncodingException x) {
-            throw new RuntimeException("Missing default encoding "+defaultEncoding);
+        } catch (UnsupportedEncodingException x) {
+            throw new RuntimeException("Missing default encoding " + defaultEncoding);
         }
     }
 
     /**
      * Convert a char array to a byte array
      *
-     * @param  buffer          The char array buffer
-     * @param  offset          The offset
-     * @param  length          The length
-     * @return                 A new byte array
+     * @param buffer The char array buffer
+     * @param offset The offset
+     * @param length The length
+     * @return A new byte array
      */
     public static byte[] charToByteArray(char[] buffer, int offset, int length) {
         try {
             return charToByteArray(buffer, offset, length, defaultEncoding);
-        } catch(UnsupportedEncodingException x) {
-            throw new RuntimeException("Missing default encoding "+defaultEncoding);
+        } catch (UnsupportedEncodingException x) {
+            throw new RuntimeException("Missing default encoding " + defaultEncoding);
         }
     }
 
-    /*
-     * Cached variables for byteToCharArray
-     */
-    private static String lastReaderEncoding;
-    private static StreamReader  lastReader;
 
     /**
      * Convert a byte array to a char array
      *
-     * @param  buffer          The byte array buffer
-     * @param  offset          The offset
-     * @param  length          The length
-     * @param  enc             The character encoding
-     * @return                 A new char array
-     * @exception UnsupportedEncodingException  If the encoding is not known
+     * @param buffer The byte array buffer
+     * @param offset The offset
+     * @param length The length
+     * @param enc    The character encoding
+     * @return A new char array
+     * @throws UnsupportedEncodingException If the encoding is not known
      */
     public static synchronized char[] byteToCharArray(byte[] buffer, int offset,
-        int length, String enc) throws UnsupportedEncodingException {
+                                                      int length, String enc) throws UnsupportedEncodingException {
 
         if (offset < 0) {
             throw new IndexOutOfBoundsException(Integer.toString(offset));
@@ -284,14 +278,11 @@ public class Helper {
         /* Note: offset or length might be near -1>>>1 */
         if (offset > buffer.length - length) {
             throw new IndexOutOfBoundsException(
-                Integer.toString(offset + length));
+                    Integer.toString(offset + length));
         }
 
-        /* If we don't have a cached reader then make one */
-        if (lastReaderEncoding == null || !lastReaderEncoding.equals(enc)) {
-            lastReader = getStreamReaderPrim(enc);
-            lastReaderEncoding = enc;
-        }
+        StreamReader lastReader;
+        lastReader = getStreamReaderPrim(enc);
 
         /* Ask the reader for the size the output will be */
         int size = lastReader.sizeOf(buffer, offset, length);
@@ -307,38 +298,30 @@ public class Helper {
             lastReader.read(outbuf, 0, size);
             /* Close the reader */
             lastReader.close();
-        } catch(IOException x) {
-            throw new RuntimeException("IOException reading reader "+x.getMessage());
+        } catch (IOException x) {
+            throw new RuntimeException("IOException reading reader " + x.getMessage());
         }
 
         /* And return the buffer */
         return outbuf;
     }
 
-    /*
-     * Cached variables for charToByteArray
-     */
-    private static String lastWriterEncoding;
-    private static StreamWriter lastWriter;
 
     /**
      * Convert a char array to a byte array
      *
-     * @param  buffer          The char array buffer
-     * @param  offset          The offset
-     * @param  length          The length
-     * @param  enc             The character encoding
-     * @return                 A new byte array
-     * @exception UnsupportedEncodingException  If the encoding is not known
+     * @param buffer The char array buffer
+     * @param offset The offset
+     * @param length The length
+     * @param enc    The character encoding
+     * @return A new byte array
+     * @throws UnsupportedEncodingException If the encoding is not known
      */
     public static synchronized byte[] charToByteArray(char[] buffer, int offset,
-        int length, String enc) throws UnsupportedEncodingException {
+                                                      int length, String enc) throws UnsupportedEncodingException {
 
-        /* If we don't have a cached writer then make one */
-        if (lastWriterEncoding == null || !lastWriterEncoding.equals(enc)) {
-            lastWriter = getStreamWriterPrim(enc);
-            lastWriterEncoding = enc;
-        }
+        StreamWriter lastWriter;
+        lastWriter = getStreamWriterPrim(enc);
 
         /* Ask the writer for the size the output will be */
         int size = lastWriter.sizeOf(buffer, offset, length);
@@ -354,14 +337,16 @@ public class Helper {
             lastWriter.write(buffer, offset, length);
             /* Close the writer */
             lastWriter.close();
-        } catch(IOException x) {
-            throw new RuntimeException("IOException writing writer "+x.getMessage());
+        } catch (IOException x) {
+            throw new RuntimeException("IOException writing writer " + x.getMessage());
         }
 
         /* Close the output stream */
         try {
             os.close();
-        } catch(IOException x) {};
+        } catch (IOException x) {
+        }
+        ;
 
         /* Return the array */
         return os.toByteArray();
@@ -371,7 +356,6 @@ public class Helper {
      * Get the internal name for an encoding.
      *
      * @param encodingName encoding name
-     *
      * @return internal name for this encoding
      */
     private static String internalNameForEncoding(String encodingName) {
@@ -421,7 +405,6 @@ public class Helper {
      * IANA encoding names are not case sensitive.
      *
      * @param encodingName encoding name
-     *
      * @return normalized name
      */
     private static String normalizeEncodingName(String encodingName) {

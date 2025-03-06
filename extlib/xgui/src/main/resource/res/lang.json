@@ -723,11 +723,6 @@
     "STR_SIGNIN_ALREADY": [
       "Signed in",
       "已登录",
-      "已登入"
-    ],
-    "STR_NEED_SIGNIN": [
-      "Signed in",
-      "已登录",
       "已登入",
       "로그인 됨",
       "Connecté",
@@ -736,6 +731,18 @@
       "サインイン済み",
       "Eingeloggt",
       "Вошел в систему"
+    ],
+    "STR_NEED_SIGNIN": [
+      "Not logged in",
+      "未登录",
+      "未登入",
+      "로그인하지 않음",
+      "Non connecté",
+      "No ha iniciado sesión",
+      "Non connesso",
+      "未ログイン",
+      "Nicht angemeldet",
+      "Не вошел в систему"
     ],
     "STR_UPDATE": [
       "UPDATE",

@@ -90,11 +90,6 @@ public class GDesktop extends GPanel implements GCallbackUI {
             paint(vg);
             nvgEndFrame(vg);
 
-            try {
-                cmdHandler.process();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
             //
         } catch (Exception e) {
             e.printStackTrace();

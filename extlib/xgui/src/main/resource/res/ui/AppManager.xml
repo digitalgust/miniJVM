@@ -155,7 +155,6 @@
     </script>
     <tr h="{STATEBAR_HEIGHT}" w="100%">
         <td>
-            <label w="100%"></label>
         </td>
     </tr>
     <tr h="float" w="100%">
@@ -236,16 +235,16 @@
                         </list>
                         <label w="100%" h="20"></label>
                         <label w="100%" h="30" align="left,vcenter">{STR_DOWN_APP_FROM_WEB}</label>
-                        <input name="INPUT_URL" w="75%" h="30" hint="plug jar url">
+                        <input name="INPUT_URL" w="100%" h="30" hint="plug jar url">
                             https://raw.githubusercontent.com/digitalgust/plugin4minijvm/main/plugins/ExGame.jar
                         </input>
-                        <button name="BT_DOWN" w="25%" h="30" preicon="📥">{STR_DOWNLOAD}</button>
+                        <button name="BT_DOWN" w="100%" h="30" preicon="📥">{STR_DOWNLOAD}</button>
                         <label w="100%" h="20"></label>
-                        <label w="75%" h="30" align="left,vcenter">{STR_INSTALL_FROM_LOCAL}</label>
-                        <button name="BT_LOCALFILE" w="25%" h="30" preicon="📁">{BROWSE_FILE}</button>
+                        <label w="100%" h="30" align="left,vcenter">{STR_INSTALL_FROM_LOCAL}</label>
+                        <button name="BT_LOCALFILE" w="100%" h="30" preicon="📁">{BROWSE_FILE}</button>
                         <label w="100%" h="20"></label>
-                        <label name="LAB_WEBSRV" w="75%" h="30" align="left,vcenter">{STR_START_WEB_SRV_FOR_UPLOAD}</label>
-                        <button name="BT_STARTWEB" onclick="openWebForUpload()" w="25%" h="30" preicon="📤">{STR_START}</button>
+                        <label name="LAB_WEBSRV" w="100%" h="30" align="left,vcenter">{STR_START_WEB_SRV_FOR_UPLOAD}</label>
+                        <button name="BT_STARTWEB" onclick="openWebForUpload()" w="100%" h="30" preicon="📤">{STR_START}</button>
                         <label w="100%" h="20"></label>
                         <br/>
                         <input name="INPUT_LOG" w="100%" h="200" edit="0" multiline="1">{STR_MESSAGE}</input>
