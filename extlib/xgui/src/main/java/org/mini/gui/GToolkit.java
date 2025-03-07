@@ -154,7 +154,7 @@ public class GToolkit {
                 return;
             }
             word = GFont.getFont("word", "/res/NotoEmoji+NotoSansCJKSC-Regular.ttf");
-            icon = GFont.getFont("icon", "/res/entypo.ttf");
+            icon = word;//GFont.getFont("icon", "/res/entypo.ttf");
 
             fontLoaded = true;
         }

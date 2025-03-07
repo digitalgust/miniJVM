@@ -533,7 +533,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                 h = 20;
             }
             uit.setVar("STATEBAR_HEIGHT", Integer.toString(h));
-            h = (int) (inset[2] );
+            h = (int) (inset[2]);
             uit.setVar("NAV_HEIGHT", Integer.toString(h));
 
 
@@ -841,7 +841,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
         envVarProvider.setEnvVar("appid", AppLoader.getBaseInfo("appid"));
         envVarProvider.setEnvVar("appzone", AppLoader.getBaseInfo("appzone"));
         envVarProvider.setEnvVar("sver", AppLoader.getBaseInfo("sver"));
-        envVarProvider.setEnvVar("jar", URLEncoder.encode(System.getProperty("os.name").toLowerCase()));
+        envVarProvider.setEnvVar("jar", System.getProperty("os.name").toLowerCase().replace(' ', '-'));
         envVarProvider.setEnvVar("from", AppLoader.getBaseInfo("from"));
         envVarProvider.setEnvVar("cver", AppLoader.getBaseInfo("cver"));
         envVarProvider.setEnvVar("policy_url", AppLoader.getBaseInfo("policyUrl"));
