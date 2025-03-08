@@ -4,6 +4,8 @@ import org.mini.crypt.XorCrypt;
 import org.mini.glfm.Glfm;
 import org.mini.glwrap.GLUtil;
 import org.mini.gui.callback.GCallBack;
+import org.mini.json.JsonParser;
+import org.mini.json.JsonPrinter;
 import org.mini.reflect.ReflectMethod;
 
 import javax.microedition.io.Base64;
@@ -12,6 +14,7 @@ import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
+import java.util.Map;
 import java.util.Random;
 import java.util.ArrayList;
 
@@ -49,11 +52,15 @@ public class Stdlib extends Lib {
         methodNames.put("valueOf".toLowerCase(), this::valueOf); // 转换字符串为数值
         methodNames.put("intOf".toLowerCase(), this::valueOf); // 转换字符串为数值
         methodNames.put("idxOf".toLowerCase(), this::idxof);// 子串在母串的位置        idxof("abc","a")  结果0
+        methodNames.put("indexOf".toLowerCase(), this::idxof);// 子串在母串的位置        idxof("abc","a")  结果0
         methodNames.put("lastIdxOf".toLowerCase(), this::lastIdxOf);// 子串在母串的位置        idxof("abc","a")  结果0
+        methodNames.put("lastIndexOf".toLowerCase(), this::lastIdxOf);// 子串在母串的位置        idxof("abc","a")  结果0
         methodNames.put("substr".toLowerCase(), this::substr); // 截子串        substr("abcde",1,4)      结果"bcd"
         methodNames.put("split".toLowerCase(), this::split); // 截子串        split("abc;de",";")      结果"abc","de"
         methodNames.put("lowCase".toLowerCase(), this::lowCase); // 小写字符串
         methodNames.put("upCase".toLowerCase(), this::upCase); //     大写字符串
+        methodNames.put("startsWith".toLowerCase(), this::startsWith); //
+        methodNames.put("endsWith".toLowerCase(), this::endsWith); //
         methodNames.put("base64enc".toLowerCase(), this::base64enc); //   base64编码
         methodNames.put("base64dec".toLowerCase(), this::base64dec); //   base64解码
         methodNames.put("urlenc".toLowerCase(), this::urlenc); //   UrlEncode解码
@@ -75,6 +82,10 @@ public class Stdlib extends Lib {
         methodNames.put("remoteMethodCall".toLowerCase(), this::remoteMethodCall);//远程调用
         methodNames.put("buyAppleProductById".toLowerCase(), this::buyAppleProductById);//远程调用
         methodNames.put("openOtherApp".toLowerCase(), this::openOtherApp);//打开其他应用
+        methodNames.put("jsonParse".toLowerCase(), this::jsonParse);//把字符串解析为json对象
+        methodNames.put("jsonGet".toLowerCase(), this::jsonGet);// 获取json对象某属性的值
+        methodNames.put("json2Str".toLowerCase(), this::json2Str);// 把json对象转成字符串
+        methodNames.put("jsonSet".toLowerCase(), this::jsonSet);// 设置json对象某属性的值
     }
 
 
@@ -330,6 +341,18 @@ public class Stdlib extends Lib {
     private Str upCase(ArrayList<DataType> para) {
         String s = Interpreter.popBackStr(para);
         return Interpreter.getCachedStr(s.toUpperCase());
+    }
+
+    private Bool startsWith(ArrayList<DataType> para) {
+        String s = Interpreter.popBackStr(para);
+        String sub = Interpreter.popBackStr(para);
+        return Interpreter.getCachedBool(s.startsWith(sub));
+    }
+
+    private Bool endsWith(ArrayList<DataType> para) {
+        String s = Interpreter.popBackStr(para);
+        String sub = Interpreter.popBackStr(para);
+        return Interpreter.getCachedBool(s.endsWith(sub));
     }
 
     private DataType base64enc(ArrayList<DataType> para) {
@@ -758,4 +781,38 @@ public class Stdlib extends Lib {
         return null;
     }
 
+    public DataType jsonParse(ArrayList<DataType> para) {
+        String jsonStr = Interpreter.popBackStr(para);
+        try {
+            JsonParser parser = new JsonParser();
+            Map map = (Map) parser.deserial(jsonStr, Map.class);
+            return Interpreter.getCachedObj(map);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public DataType jsonGet(ArrayList<DataType> para) {
+        Map<String, String> json = (Map) Interpreter.popBackObject(para);
+        String key = Interpreter.popBackStr(para);
+
+        return Interpreter.getCachedStr(json.get(key));
+    }
+
+    public DataType jsonSet(ArrayList<DataType> para) {
+        Map<String, String> json = (Map) Interpreter.popBackObject(para);
+        String key = Interpreter.popBackStr(para);
+        String oldValue = json.get(key);
+        String value = Interpreter.popBackStr(para);
+        json.put(key, value);
+        return Interpreter.getCachedStr(oldValue);
+    }
+
+    public DataType json2Str(ArrayList<DataType> para) {
+        Map<String, String> json = (Map) Interpreter.popBackObject(para);
+        JsonPrinter printer = new JsonPrinter();
+        String s = printer.serial(json);
+        return Interpreter.getCachedStr(s);
+    }
 }

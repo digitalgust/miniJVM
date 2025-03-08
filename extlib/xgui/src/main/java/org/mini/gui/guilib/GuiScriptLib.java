@@ -6,6 +6,8 @@ package org.mini.gui.guilib;
 
 import org.mini.apploader.AppManager;
 import org.mini.glfm.Glfm;
+import org.mini.glfw.Glfw;
+import org.mini.glfw.GlfwCallBackImpl;
 import org.mini.gui.*;
 import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GCmd;
@@ -17,7 +19,9 @@ import org.mini.json.JsonParser;
 import org.mini.layout.*;
 import org.mini.nanovg.Nanovg;
 
+import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 
 
@@ -94,6 +98,9 @@ public class GuiScriptLib extends Lib {
             methodNames.put("httpGetSync".toLowerCase(), this::httpGetSync);//
             methodNames.put("httpPost".toLowerCase(), this::httpPost);//
             methodNames.put("httpPostSync".toLowerCase(), this::httpPostSync);//
+            methodNames.put("urlGetAsString".toLowerCase(), this::urlGetAsString);//
+            methodNames.put("setClipboard".toLowerCase(), this::setClipboard);//
+            methodNames.put("getClipboard".toLowerCase(), this::getClipboard);//
 
         }
     }
@@ -876,4 +883,41 @@ public class GuiScriptLib extends Lib {
         return httpRequestImpl(href, postData, callback, true);
     }
 
+    public DataType urlGetAsString(ArrayList<DataType> para) {
+        if (para.size() < 1) {
+            System.out.println("[ERRO]call sub error: urlGetAsString(url)");
+            return null;
+        }
+        String href = Interpreter.popBackStr(para);
+        try {
+            URL url = new URL(href);
+            URLConnection conn = url.openConnection();
+            conn.connect();
+            InputStream is = conn.getInputStream();
+            byte[] data = new byte[is.available()];
+            is.read(data);
+            return Interpreter.getCachedStr(new String(data, "utf-8"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Interpreter.getCachedStr("");
+    }
+
+    public DataType setClipboard(ArrayList<DataType> para) {
+        if (para.size() < 1) {
+            System.out.println("[ERRO]call sub error: setClipboard(url)");
+            return null;
+        }
+        String str = Interpreter.popBackStr(para);
+        Glfw.glfwSetClipboardString(GCallBack.getInstance().getDisplay(), str);
+        Glfm.glfmSetClipBoardContent(str);
+        return null;
+    }
+
+    public DataType getClipboard(ArrayList<DataType> para) {
+        String s = Glfw.glfwGetClipboardString(GCallBack.getInstance().getDisplay());
+        if (s == null) s = Glfm.glfmGetClipBoardContent();
+        if (s == null) s = "";
+        return Interpreter.getCachedStr(s);
+    }
 }

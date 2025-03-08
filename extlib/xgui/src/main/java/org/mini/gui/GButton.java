@@ -87,7 +87,7 @@ public class GButton extends GObject {
 
     @Override
     public void cursorPosEvent(int x, int y) {
-        if (!isInArea(x, y)) {
+        if (!isInArea(x, y) && bt_pressed) {
             bt_pressed = false;
             doStateChanged(this);
         }

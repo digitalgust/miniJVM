@@ -837,6 +837,10 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
     };
 
     void updateScriptEnvironment() {
+        String from = AppLoader.getBaseInfo("from");
+        String profile = AppLoader.getBaseInfo("profile");
+        String policyUrl = AppLoader.getBaseInfo(from + "." + profile + ".policyUrl");
+        envVarProvider.setEnvVar("policy_url", policyUrl);
         envVarProvider.setEnvVar("lang", GLanguage.getLangCode(AppLoader.getDefaultLang()));
         envVarProvider.setEnvVar("appid", AppLoader.getBaseInfo("appid"));
         envVarProvider.setEnvVar("appzone", AppLoader.getBaseInfo("appzone"));
@@ -844,7 +848,6 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
         envVarProvider.setEnvVar("jar", System.getProperty("os.name").toLowerCase().replace(' ', '-'));
         envVarProvider.setEnvVar("from", AppLoader.getBaseInfo("from"));
         envVarProvider.setEnvVar("cver", AppLoader.getBaseInfo("cver"));
-        envVarProvider.setEnvVar("policy_url", AppLoader.getBaseInfo("policyUrl"));
         envVarProvider.setEnvVar("discovery_url", "");
         envVarProvider.setEnvVar("account_base_url", "");
         envVarProvider.setEnvVar("profile_url", "");

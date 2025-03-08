@@ -7,7 +7,9 @@ cmake_minimum_required(VERSION 3.4.1)
 
 project(androidapp C)
 
-set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unsafe-buffer-usage")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unsafe-buffer-usage")
 
 include_directories(../../c/glfm
 ../../c/gui/

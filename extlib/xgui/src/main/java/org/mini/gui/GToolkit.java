@@ -1082,7 +1082,7 @@ public class GToolkit {
         view.add(lb_state);
 
         y = 10;
-        GLabel lb1 = new GLabel(form, msg, x, y, contentWidth, view.getH() - y - 35);
+        GLabel lb1 = new GLabel(form, msg, x, y, contentWidth, view.getH() - 100);
         lb1.setShowMode(GLabel.MODE_MULTI_SHOW);
         view.add(lb1);
 

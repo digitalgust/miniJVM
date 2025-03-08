@@ -568,6 +568,9 @@ public class GTextBox extends GTextObject {
                             setCaretIndex(selSecond);
                         }
                         selectAdjusted = true;
+                    } else {
+                        int caret = editArea.getCaretIndexFromArea(x, y);
+                        setCaretIndex(caret);
                     }
                     break;
                 }
@@ -878,8 +881,8 @@ public class GTextBox extends GTextObject {
             //字高
             nvgTextMetrics(vg, null, null, lineh);
             float lineH = lineh[0];
-            caretX = getX() + PAD;
-            caretY = getY() + lineH + PAD;
+            float caretX = getX() + PAD;
+            float caretY = getY() + lineH + PAD;
 
             float[] text_area = new float[]{x + PAD, y + PAD, w - PAD * 3, h - PAD * 3};
             float dx = text_area[LEFT];
@@ -1043,6 +1046,8 @@ public class GTextBox extends GTextObject {
                                                 curCaretCol = jumpWhenReturn ? 0 : (caretIndex - char_starti);
                                                 GToolkit.drawCaret(vg, caretX - 1, caretY, 2, lineH, false);
                                                 caretY += lineH + PAD;
+                                                GTextBox.this.caretX = caretX;
+                                                GTextBox.this.caretY = caretY;
                                             }
                                         }
 

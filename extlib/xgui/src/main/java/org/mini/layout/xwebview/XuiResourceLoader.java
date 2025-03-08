@@ -13,12 +13,26 @@ public class XuiResourceLoader implements XmlExtAssist.XLoader {
 
     URL url;
     static GImage notfoundImage;
-    static String notfoundText = "<panel><label>not found:</label><br/><label multiline=\"1\">{URL}</label></panel>";
+    static String notfoundText = "<panel>" +
+            "<script>\n" +
+            "    <![CDATA[\n" +
+            "    sub copyurl()\n" +
+            "        setClipboard(getText(\"LB_URL\"))\n" +
+            "        showBar(\"URL copied\")\n" +
+            "    ret\n" +
+            "    ]]>\n" +
+            "</script>" +
+            "<label>not found:</label>" +
+            "<br/>" +
+            "<label color=\"3333aaff\" name=\"LB_URL\" multiline=\"1\" onclick=\"copyurl()\">{URL}</label>" +
+            "</panel>";
 
     Map<String, XuiResource> resources = new HashMap<>();
 
     public XuiResourceLoader() {
-        notfoundImage = GImage.createImageFromJar("/res/ui/notfound.jpg");
+        if (notfoundImage == null) {
+            notfoundImage = GImage.createImageFromJar("/res/ui/notfound.jpg");
+        }
     }
 
 

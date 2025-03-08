@@ -112,6 +112,9 @@ public class GForm extends GContainer {
                 float objbtn = editObject.getY() + editObject.getH();
                 if (editObject instanceof GTextBox) {
                     objbtn = ((GTextBox) editObject).getCaretY() + 10f;
+                    if (objbtn < 30) {
+                        objbtn = 30;
+                    }
                 }
                 float obj2scrbtn = getH() - objbtn;
                 if (h > obj2scrbtn) {

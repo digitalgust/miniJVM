@@ -17,8 +17,17 @@
             showMsg("{STR_MESSAGE}: "+msg)
         ret
 
+        sub isGithub()
+            if(equals(getEnv("FROM"),"github"))
+                ret true
+            eif
+        ret false
+
         sub getPolicy(sync) '获取策略
             if(strlen(getEnv("DISCOVERY_URL"))>0)
+                ret
+            eif
+            if(isGithub())
                 ret
             eif
 
@@ -26,17 +35,29 @@
             println("getPolicy:"+policyUrl)
             if(strlen(policyUrl)>0)
                 url=policyUrl +"?"+ getQueryPara()
-                if(sync)
-                    httpGetSync(url, "ROOT_PAN.onPolicyRequestBack")
+                if(startsWith(url,"file://"))
+                    jsonStr=urlGetAsString(url)
+                    json=jsonParse(jsonStr)
+                    reply=jsonGet(json,"reply")
+                    onPolicyRequestBack(url,0,reply)
                 else
-                    httpGet(url, "ROOT_PAN.onPolicyRequestBack")
+                    if(sync)
+                        httpGetSync(url, "ROOT_PAN.onPolicyRequestBack")
+                    else
+                        httpGet(url, "ROOT_PAN.onPolicyRequestBack")
+                    eif
                 eif
             eif
         ret
 
         sub onPolicyRequestBack(url,code,msg) '请求策略回调
+            println(code+" "+msg)
             if(code=0)
-                urls=split(msg,"\n")
+                if(indexOf(msg,"\n")>0)
+                    urls=split(msg,"\n")
+                else
+                    urls=split(msg," ")
+                eif
                 setEnv("DISCOVERY_URL",urls[0])
                 setEnv("ACCOUNT_BASE_URL",urls[1])
                 setEnv("PROFILE_URL",urls[2])
@@ -54,6 +75,9 @@
 
 
         sub signInAuto() '登录
+            if(isGithub())
+                ret
+            eif
             getPolicy(true)
             logintype=getEnv("LOGINTYPE")
             loginUid=getEnv("USERNAME")
@@ -83,22 +107,31 @@
         ret
 
         sub showDiscovery() '显示发现
-            getPolicy(true)
             showSlot("SLOT_MGR", 3)
+            if(isGithub())
+                ret
+            eif
+            getPolicy(true)
             if(!uiExist("DIS_HOME")) 'if there is not a discovery panel then show it
                 showHome()
             eif
         ret
 
         sub showHome()
+            if(isGithub())
+                ret
+            eif
             getPolicy(true)
             url=getEnv("DISCOVERY_URL") +"?"+ getQueryPara()
             openPage(url,"")
         ret
 
         sub showMy() '显示我的
-            getPolicy(true)
             showSlot("SLOT_MGR", 4)
+            if(isGithub())
+                ret
+            eif
+            getPolicy(true)
 
             token=getEnv("TOKEN")
             if(strlen(token)>0)
@@ -110,6 +143,9 @@
         ret
 
         sub showProfile() '显示我的
+            if(isGithub())
+                ret
+            eif
             getPolicy(true)
             s1=getEnv("DISCOVERY_URL")
             s2=substr(s1,0,lastIdxOf(s1,"/"))
@@ -119,6 +155,9 @@
         ret
 
         sub checkUpdate()
+            if(isGithub())
+                ret
+            eif
             url=getEnv("UPDATE_URL")+"?"+ getQueryPara()
             if(strlen(url)>0)
                 openOtherApp(url,"",0)  ' 第一个为 url，第二个为参数，第三个为检测是否App 存在，0为不检测，1为检测
@@ -144,6 +183,10 @@
 
         sub plug_download()
             url=getEnv("PLUGIN_URL")+"?"+ getQueryPara()
+            if(isGithub())
+                url="https://raw.githubusercontent.com/digitalgust/plugin4minijvm/main/plugins/plugin.xml"
+                'url="file:///D:/GitHub/plugin4minijvm/plugins/plugin.xml"
+            eif
             'println(url)
             if(strlen(url)>0)
                 openPage(url,"")
@@ -217,16 +260,16 @@
                         <button onclick='showSlot("SLOT_MGR" ,4)' h="30" addon="50" preicon="">{STR_BACK}</button>
                         <label w="100%" h="30" fontsize="20" align="hcenter,vcenter">{SETTING}</label>
                         <list name="LIST_LANG" w="100%" multiline="0">
-                            <li name="LI_ENG">English</li>
-                            <li name="LI_CHS">简体中文</li>
-                            <li name="LI_CHT">繁體中文</li>
-                            <li name="LI_KOR">한국어</li>
-                            <li name="LI_FRA">Français</li>
-                            <li name="LI_ESP">Español</li>
-                            <li name="LI_ITA">Italiano</li>
-                            <li name="LI_JPN">日本語</li>
-                            <li name="LI_GER">Deutsch</li>
-                            <li name="LI_RUS">Русский</li>
+                            <li name="LI_ENG" preicon="🇺🇸" pcolor="aa4422ff">English</li>
+                            <li name="LI_CHS" preicon="🇨🇳" pcolor="aa4422ff">简体中文</li>
+                            <li name="LI_CHT" preicon="🇹🇼" pcolor="aa4422ff">繁體中文</li>
+                            <li name="LI_KOR" preicon="🇰🇷" pcolor="aa4422ff">한국어</li>
+                            <li name="LI_FRA" preicon="🇫🇷" pcolor="aa4422ff">Français</li>
+                            <li name="LI_ESP" preicon="🇪🇸" pcolor="aa4422ff">Español</li>
+                            <li name="LI_ITA" preicon="🇮🇹" pcolor="aa4422ff">Italiano</li>
+                            <li name="LI_JPN" preicon="🇯🇵" pcolor="aa4422ff">日本語</li>
+                            <li name="LI_GER" preicon="🇩🇪" pcolor="aa4422ff">Deutsch</li>
+                            <li name="LI_RUS" preicon="🇷🇺" pcolor="aa4422ff">Русский</li>
                         </list>
                         <br/>
                         <list name="LIST_STYLE" w="100%" multiline="0">
