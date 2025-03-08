@@ -6,6 +6,7 @@ Thumbs.db
 target
 
 dist
+base.properties
 
 cmake-build-debug
 cmake-build-release
