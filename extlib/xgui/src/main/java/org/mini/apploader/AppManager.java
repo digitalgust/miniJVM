@@ -25,6 +25,7 @@ import org.mini.layout.XContainer;
 import org.mini.layout.XEventHandler;
 import org.mini.layout.XmlExtAssist;
 import org.mini.layout.xwebview.*;
+import org.mini.nanovg.Nanovg;
 
 import java.io.*;
 import java.net.URLEncoder;
@@ -255,7 +256,15 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                     }
                     appList.add(item);
                     item.setActionListener(gobj -> {
-                        curSelectedJarName = ((GListItem) gobj).getAttachment();
+                        curSelectedJarName = gobj.getAttachment();
+                        setJarName(curSelectedJarName);
+                        AppLoader.runApp(curSelectedJarName);
+                    });
+                    GLabel label = new GLabel(mgrForm, "ⓘ", item.getW() - 40, 0, 40, item.getH());
+                    label.setAlign(Nanovg.NVG_ALIGN_LEFT | Nanovg.NVG_ALIGN_MIDDLE);
+                    item.add(label);
+                    label.setActionListener(gobj -> {
+                        curSelectedJarName = gobj.getAttachment();
                         setJarName(curSelectedJarName);
                         updateContentViewInfo(appName);
                         mainPanelShowRight();
@@ -316,7 +325,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
         mainSlot.moveTo(1, 100);
     }
 
-    GHomeButton getFloatButton() {
+    public GHomeButton getFloatButton() {
         return floatButton;
     }
 
@@ -560,6 +569,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
             this.setSizeChangeListener((width, height) -> {
                 xcon.reSize(width, height);
 //                browser.getWebView().getLayout().reSize(width, height);
+                reloadAppList();
             });
             reloadAppList();
             return pan;

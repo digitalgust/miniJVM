@@ -81,6 +81,7 @@ public class Zip {
             String z = zipFile + "\0";
             byte[] zpath = z.getBytes("utf-8");
             String n = name + "\0";
+            n = n.replace('\\', '/');
             byte[] npath = n.getBytes("utf-8");
             return putEntry0(zpath, npath, contents);
         } catch (Exception ex) {

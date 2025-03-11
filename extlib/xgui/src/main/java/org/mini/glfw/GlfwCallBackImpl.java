@@ -110,6 +110,7 @@ public class GlfwCallBackImpl extends GCallBack {
                 Glfw.glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
             }
         }
+        //Glfw.glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
         Glfw.glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         Glfw.glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         Glfw.glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -382,6 +383,9 @@ public class GlfwCallBackImpl extends GCallBack {
     public void windowSize(long window, int width, int height) {
         //System.out.println("windowsize" + width + "," + height);
         try {
+//            if (winWidth == width && winHeight == height) {
+//                return;
+//            }
             reloadWindow();
 
             if (desktop == null) {

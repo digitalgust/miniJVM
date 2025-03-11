@@ -74,7 +74,7 @@ public class GDesktop extends GPanel implements GCallbackUI {
             fbWidth = callback.getFrameBufferWidth();
             fbHeight = callback.getFrameBufferHeight();
             glViewport(0, 0, fbWidth, fbHeight);
-            float[] bgc = GToolkit.getStyle().getBackgroundColor();
+            float[] bgc = getBgColor();
             glClearColor(bgc[0], bgc[1], bgc[2], bgc[3]);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 

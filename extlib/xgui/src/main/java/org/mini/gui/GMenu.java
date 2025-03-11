@@ -128,7 +128,7 @@ public class GMenu extends GContainer {
         nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 48));
         nvgStroke(vg);
 
-        nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
+        nvgFontSize(vg, getFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextAlign(vg, Nanovg.NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 

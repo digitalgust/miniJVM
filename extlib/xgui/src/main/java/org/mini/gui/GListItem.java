@@ -161,8 +161,6 @@ public class GListItem extends GContainer {
             outOfFilter = true;
         }
         float pad = 2;
-//        float ix, iy, iw, ih;
-//        int[] imgw = {0}, imgh = {0};
         float thumb = list.list_item_heigh - pad;
 
         float tx, ty;
@@ -183,19 +181,7 @@ public class GListItem extends GContainer {
         float[] c = outOfFilter ? GToolkit.getStyle().getHintFontColor() : enable ? getColor() : getDisabledColor();
 
         if (img != null) {
-//            nvgImageSize(vg, img.getNvgTextureId(vg), imgw, imgh);
-//            if (imgw[0] < imgh[0]) {
-//                iw = thumb;
-//                ih = iw * (float) imgh[0] / (float) imgw[0];
-//                ix = 0;
-//                iy = -(ih - thumb) * 0.5f;
-//            } else {
-//                ih = thumb;
-//                iw = ih * (float) imgw[0] / (float) imgh[0];
-//                ix = -(iw - thumb) * 0.5f;
-//                iy = 0;
-//            }
-            GToolkit.drawImage(vg, img, tx, ty, thumb, thumb, !outOfFilter, outOfFilter ? 0.5f : 0.8f);
+            GToolkit.drawImage(vg, img, tx + pad, ty + pad, thumb - pad * 2, thumb - pad * 2, !outOfFilter, outOfFilter ? 0.5f : 0.8f);
         } else if (preicon_arr != null) {
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());

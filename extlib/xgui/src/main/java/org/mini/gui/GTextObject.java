@@ -8,6 +8,7 @@ package org.mini.gui;
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.gui.callback.GCallBack;
+import org.mini.gui.event.GCaretListener;
 import org.mini.gui.event.GFocusChangeListener;
 import org.mini.util.CodePointBuilder;
 
@@ -20,6 +21,10 @@ import static org.mini.glwrap.GLUtil.toCstyleBytes;
  * @author Gust
  */
 public abstract class GTextObject extends GContainer implements GFocusChangeListener {
+    protected int selectStart = -1;//选取开始
+    protected int selectEnd = -1;//选取结束
+
+    protected GCaretListener caretListener;
     //for keyboard union action
     GObject defaultUnionObj = new GObject(form) {
     };
@@ -43,6 +48,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
     protected List<UserAction> undoQ = new ArrayList();
     protected List<UserAction> redoQ = new ArrayList();
     static final int MAXUNDO = 15;
+    protected int undoMax = MAXUNDO;
 
 
     protected String hint;
@@ -145,9 +151,30 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
 
     abstract void resetSelect();
 
-    abstract public void setCaretIndex(int caretIndex);
+    public void setCaretIndex(int caretIndex) {
+        if (caretListener != null) {
+            caretListener.caretChanged(this, caretIndex);
+        }
+    }
 
     abstract public int getCaretIndex();
+
+    public void setSelection(int start, int end) {
+        if (start < 0) start = 0;
+        if (end > textsb.length()) end = textsb.length();
+        if (start > end) {
+            int tmp = start;
+            start = end;
+            end = tmp;
+        }
+        if (start == end) {
+            this.selectStart = -1;
+            this.selectEnd = -1;
+        } else {
+            this.selectStart = start;
+            this.selectEnd = end;
+        }
+    }
 
     public void doSelectText() {
 
@@ -325,16 +352,18 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
         this.editable = editable;
     }
 
+
+    public void setUndoSize(int undoMax) {
+        this.undoMax = undoMax;
+    }
+
     public void putInUndo(int mod, String t, int caretIndex) {
-        undoQ.add(new UserAction(mod, t, caretIndex));
-        if (undoQ.size() > MAXUNDO) {
-            undoQ.remove(0);
-        }
+        putInUndo(new UserAction(mod, t, caretIndex));
     }
 
     public void putInUndo(UserAction te) {
         undoQ.add(te);
-        if (undoQ.size() > MAXUNDO) {
+        if (undoQ.size() > undoMax) {
             undoQ.remove(0);
         }
     }
@@ -349,15 +378,12 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
 
 
     public void putInRedo(int mod, String t, int caretIndex) {
-        redoQ.add(new UserAction(mod, t, caretIndex));
-        if (redoQ.size() > MAXUNDO) {
-            redoQ.remove(0);
-        }
+        putInRedo(new UserAction(mod, t, caretIndex));
     }
 
     public void putInRedo(UserAction te) {
         redoQ.add(te);
-        if (redoQ.size() > MAXUNDO) {
+        if (redoQ.size() > undoMax) {
             redoQ.remove(0);
         }
     }
@@ -376,10 +402,12 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
         if (action != null) {
             if (action.addOrDel == UserAction.ADD) {
                 textsb.delete(action.caretIndex, action.caretIndex + action.txt.codePointCount(0, action.txt.length()));
+                setCaretIndex(action.caretIndex);
             } else {
                 textsb.insert(action.caretIndex, action.txt);
+                int len = action.txt.length();
+                setCaretIndex(action.caretIndex + len);
             }
-            setCaretIndex(action.caretIndex);
             putInRedo(action);
             text_arr = null;
         }
@@ -391,13 +419,20 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
         if (action != null) {
             if (action.addOrDel == UserAction.ADD) {
                 textsb.insert(action.caretIndex, action.txt);
+                int len = action.txt.length();
+                setCaretIndex(action.caretIndex + len);
             } else {
                 textsb.delete(action.caretIndex, action.caretIndex + action.txt.codePointCount(0, action.txt.length()));
+                setCaretIndex(action.caretIndex);
             }
-            setCaretIndex(action.caretIndex);
             putInUndo(action);
             text_arr = null;
         }
+    }
+
+    public void clearUndoRedo() {
+        undoQ.clear();
+        redoQ.clear();
     }
 
     public void setScrollBar(boolean enable) {

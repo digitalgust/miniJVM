@@ -78,9 +78,9 @@ public class GCheckBox extends GObject {
 
         byte[] bg;
 
-        nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
+        nvgFontSize(vg, getFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
-        nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
+        nvgFillColor(vg, getColor());
 
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         nvgTextJni(vg, x + 25, y + h * 0.5f, text_arr, 0, text_arr.length);
@@ -91,9 +91,9 @@ public class GCheckBox extends GObject {
         nvgFillPaint(vg, bg);
         nvgFill(vg);
 
-        nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
+        nvgFontSize(vg, getFontSize());
         nvgFontFace(vg, GToolkit.getFontIcon());
-        nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
+        nvgFillColor(vg, getColor());
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
         if (checked) {

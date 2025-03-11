@@ -129,6 +129,11 @@ s32 zip_savefile_mem(char const *jarpath, char const *filename, char const *buf,
     mz_zip_archive zipArchive = {0};
     mz_zip_archive_file_stat file_stat = {0};
 
+    //skit the first '/'
+    if (filename && filename[0] == '/') {
+        filename += 1;
+    }
+
     int ret = 0;
     if (mz_zip_reader_init_file(&zipArchive, jarpath, 0) == MZ_FALSE) {//
         if (mz_zip_writer_init_file(&zipArchive, jarpath, 0) == MZ_FALSE) {//

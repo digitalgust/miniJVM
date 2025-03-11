@@ -136,7 +136,7 @@ public class GCmdHandler extends GPanel implements GCallbackUI {
             float w = getW();
             float h = getH();
 
-            GToolkit.drawRoundedRect(vg, x, y, w, h, 5, GToolkit.getStyle().getTextFontColor());
+            GToolkit.drawRoundedRect(vg, x, y, w, h, 5, getColor());
 
 
             long curt = System.currentTimeMillis();
@@ -149,10 +149,10 @@ public class GCmdHandler extends GPanel implements GCallbackUI {
                     float dy = y + 6 + i * 30;
                     float lineh = 25;
                     if (cmd.getWork() != null) {
-                        GToolkit.drawEmoj(vg, dx, dy, 30, lineh, GObject.ICON_LOGIN_BYTE, GToolkit.getStyle().getIconFontSize(), GToolkit.getStyle().getBackgroundColor());
+                        GToolkit.drawEmoj(vg, dx, dy, 30, lineh, GObject.ICON_LOGIN_BYTE, GToolkit.getStyle().getIconFontSize(), getBgColor());
                         dx += 30;
                     }
-                    GToolkit.drawTextLine(vg, dx, dy, cmd.getMsg(), GToolkit.getStyle().getTextFontSize(), GToolkit.getStyle().getBackgroundColor(), NVG_ALIGN_TOP | NVG_ALIGN_LEFT);
+                    GToolkit.drawTextLine(vg, dx, dy, cmd.getMsg(), getFontSize(), getBgColor(), NVG_ALIGN_TOP | NVG_ALIGN_LEFT);
                     cmd.setBoundle(dx, dy, panW, lineh);
                     i++;
                 } else {

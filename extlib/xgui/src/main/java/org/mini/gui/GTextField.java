@@ -29,8 +29,6 @@ public class GTextField extends GTextObject {
     protected short[] text_pos;
     //
     protected int caretIndex;
-    protected int selectStart = -1;//选取开始
-    protected int selectEnd = -1;//选取结束
     boolean mouseDrag;
 
     protected boolean password = false;//是否密码字段
@@ -439,6 +437,7 @@ public class GTextField extends GTextObject {
     /**
      * @param caretIndex the caretIndex to set
      */
+    @Override
     public void setCaretIndex(int caretIndex) {
         if (caretIndex < 0) {
             caretIndex = 0;
@@ -446,6 +445,7 @@ public class GTextField extends GTextObject {
             caretIndex = textsb.length();
         }
         this.caretIndex = caretIndex;
+        super.setCaretIndex(caretIndex);
     }
 
     int[] getSelected() {
@@ -539,14 +539,14 @@ public class GTextField extends GTextObject {
         }
 
         if (isResetEnable()) {
-            nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
+            nvgFontSize(vg, getFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
             nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
             nvgTextJni(vg, x + w - resetWidth * 0.5f, y + h * 0.55f, ICON_CIRCLED_CROSS_BYTE, 0, ICON_CIRCLED_CROSS_BYTE.length);
         }
 
-        nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
+        nvgFontSize(vg, getFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
 
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);

@@ -502,7 +502,7 @@ public class GList extends GContainer {
     public boolean paint(long vg) {
 
         //int itemcount = popView.elements.size();
-        nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
+        nvgFontSize(vg, getFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 

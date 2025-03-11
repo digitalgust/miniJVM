@@ -278,9 +278,7 @@
                         </list>
                         <label w="100%" h="20"></label>
                         <label w="100%" h="30" align="left,vcenter">{STR_DOWN_APP_FROM_WEB}</label>
-                        <input name="INPUT_URL" w="100%" h="30" hint="plug jar url">
-                            https://raw.githubusercontent.com/digitalgust/plugin4minijvm/main/plugins/ExGame.jar
-                        </input>
+                        <input name="INPUT_URL" w="100%" h="30" hint="plug jar url"></input>
                         <button name="BT_DOWN" w="100%" h="30" preicon="📥">{STR_DOWNLOAD}</button>
                         <label w="100%" h="20"></label>
                         <label w="100%" h="30" align="left,vcenter">{STR_INSTALL_FROM_LOCAL}</label>

@@ -65,9 +65,9 @@ public class GToolkit {
     }
 
     public static byte[] readFileFromJar(String path) {
+        InputStream is = null;
         try {
-
-            InputStream is = GCallBack.getInstance().getResourceAsStream(path);
+            is = GCallBack.getInstance().getResourceAsStream(path);
             if (is != null) {
                 int av = is.available();
 
@@ -83,6 +83,14 @@ public class GToolkit {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
+        } finally {
+            try {
+                if (is != null) {
+                    is.close();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
         System.out.println("[ERRO]load from jar fail : " + path);
         return null;
@@ -100,9 +108,9 @@ public class GToolkit {
     }
 
     public static byte[] readFileFromFile(String path) {
+        InputStream is = null;
         try {
-
-            InputStream is = new FileInputStream(path);
+            is = new FileInputStream(path);
             if (is != null) {
                 int av = is.available();
 
@@ -118,6 +126,14 @@ public class GToolkit {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
+        } finally {
+            try {
+                if (is != null) {
+                    is.close();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
         System.out.println("[ERRO]load from file fail : " + path);
         return null;
@@ -251,7 +267,12 @@ public class GToolkit {
      * @param h
      * @param blink
      */
+
     public static void drawCaret(long vg, float x, float y, float w, float h, boolean blink) {
+        drawCaret(vg, x, y, w, h, blink, nvgRGBA(255, 192, 0, 255));
+    }
+
+    public static void drawCaret(long vg, float x, float y, float w, float h, boolean blink, float[] color) {
         long curTime = System.currentTimeMillis();
         if (curTime - caretLastBlink > CARET_BLINK_PERIOD) {
             caretBlink = !caretBlink;
@@ -259,7 +280,7 @@ public class GToolkit {
         }
         if (caretBlink || !blink) {
             nvgBeginPath(vg);
-            nvgFillColor(vg, nvgRGBA(255, 192, 0, 255));
+            nvgFillColor(vg, color);
             nvgRect(vg, x, y, w, h);
             nvgFill(vg);
         }
@@ -1354,7 +1375,7 @@ public class GToolkit {
      * @param o
      */
     public static void setCompAttachment(GContainer parent, String compName, Object o) {
-        if (compName == null || o == null || parent == null) return;
+        if (compName == null || parent == null) return;
         GObject go = parent.findByName(compName);
         if (go != null) {
             go.setAttachment(o);

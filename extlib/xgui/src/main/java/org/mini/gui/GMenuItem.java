@@ -40,10 +40,10 @@ public class GMenuItem extends GContainer {
         super.setText(t);
         if (t == null) return;
         long vg = GCallBack.getInstance().getNvContext();
-        nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
+        nvgFontSize(vg, getFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextMetrics(vg, null, null, lineh);
-        box = GToolkit.getTextBoundle(vg, t, GCallBack.getInstance().getDeviceWidth(), GToolkit.getStyle().getTextFontSize());
+        box = GToolkit.getTextBoundle(vg, t, GCallBack.getInstance().getDeviceWidth(), getFontSize());
     }
 
     boolean isSelected() {

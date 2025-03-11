@@ -166,12 +166,13 @@ public class GHomeButton extends GPanel implements GActionListener, GCallbackUI 
         GApplication app = GCallBack.getInstance().getApplication();
         if (app != AppManager.getInstance()) {
             app.pauseApp();
-            AppManager.getInstance().mainSlot.showSlot(1);
+            AppManager.getInstance().mainPanelShowLeft();
         }
     }
 
     public void setDrawMarkSecond(int second) {
         markEndAt = System.currentTimeMillis() + second * 1000;
+        cIdx = (int) (Math.random() * colors.length);
     }
 
     private void drawMark(long vg) {
