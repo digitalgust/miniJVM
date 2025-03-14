@@ -1,3 +1,7 @@
+Author description:
+/minijvm/java/ -----------GPL2.0 However, you can use the minijvm_rt.jar binary file in the release to avoid the infectious nature of the GPL.
+/*             -----------MIT
+
 MIT License
 
 Copyright (c) 2023 Gust

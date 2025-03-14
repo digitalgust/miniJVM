@@ -6,7 +6,6 @@ Thumbs.db
 target
 
 dist
-base.properties
 
 cmake-build-debug
 cmake-build-release
@@ -20,3 +19,5 @@ cmake-build-release
 /desktop/awtk
 /desktop/awtk_gui
 /binary/tmp
+extlib/xgui/src/main/resource/res/base.properties
+cmd.bat
