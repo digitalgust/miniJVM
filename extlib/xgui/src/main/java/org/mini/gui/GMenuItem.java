@@ -187,7 +187,7 @@ public class GMenuItem extends GContainer {
             byte[] b = toCstyleBytes(text);
             nvgFillColor(vg, GToolkit.getStyle().getTextShadowColor());
             Nanovg.nvgTextJni(vg, txt_x + 1, txt_y + 1, b, 0, b.length);
-            nvgFillColor(vg, enable ? getColor() : getDisabledColor());
+            nvgFillColor(vg, getColor());
             Nanovg.nvgTextJni(vg, txt_x, txt_y, b, 0, b.length);
         }
 

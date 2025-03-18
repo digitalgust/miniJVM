@@ -163,7 +163,7 @@ public class GButton extends GObject {
         nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 48));
         nvgStroke(vg);
 
-        float[] textColor = enable ? (isFlying() ? getFlyingColor() : getColor()) : getDisabledColor();
+        float[] textColor = getColor();
         //calc text width
         if (text.length() > 0) {
             tw = box[WIDTH];

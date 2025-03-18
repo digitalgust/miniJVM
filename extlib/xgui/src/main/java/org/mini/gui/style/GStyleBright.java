@@ -34,14 +34,14 @@ public class GStyleBright extends GStyle {
         return textFontColor;
     }
 
-    float[] textShadowColor = nvgRGBA(0xff, 0xff, 0xff, 0xb0);
+    float[] textShadowColor = nvgRGBA(0xff, 0xff, 0xff, 0xc0);
 
     @Override
     public float[] getTextShadowColor() {
         return textShadowColor;
     }
 
-    float[] disabledTextFontColor = nvgRGBA(0x72, 0x72, 0x72, 0x80);
+    float[] disabledTextFontColor = nvgRGBA(0x30, 0x30, 0x30, 0xa0);
 
     @Override
     public float[] getDisabledTextFontColor() {

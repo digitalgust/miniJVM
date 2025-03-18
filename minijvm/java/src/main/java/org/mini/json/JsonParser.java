@@ -537,6 +537,9 @@ public class JsonParser<T> {
             return null;
         }
         try {
+            if (clazz == null && types == null && json.getType() == JsonCell.TYPE_MAP) {
+                clazz = Map.class;
+            }
             StdDeserializer<?> deser = findDeserializer(clazz);
             if (deser != null) {  // process list map set
                 return deser.deserialize(json, types);

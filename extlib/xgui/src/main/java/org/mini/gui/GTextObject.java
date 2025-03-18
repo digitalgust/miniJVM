@@ -406,7 +406,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
                 setCaretIndex(action.caretIndex);
             } else {
                 textsb.insert(action.caretIndex, action.txt);
-                int len = action.txt.length();
+                int len = action.txt.codePointCount(0, action.txt.length());
                 setCaretIndex(action.caretIndex + len);
             }
             putInRedo(action);
@@ -420,7 +420,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
         if (action != null) {
             if (action.addOrDel == UserAction.ADD) {
                 textsb.insert(action.caretIndex, action.txt);
-                int len = action.txt.length();
+                int len = action.txt.codePointCount(0, action.txt.length());
                 setCaretIndex(action.caretIndex + len);
             } else {
                 textsb.delete(action.caretIndex, action.caretIndex + action.txt.codePointCount(0, action.txt.length()));

@@ -373,7 +373,6 @@ public class GTextField extends GTextObject {
             }
             deleteSelectedText();
             insertTextByIndex(caretIndex, str);
-            setCaretIndex(caretIndex + str.length());
             if (containEnter) {
                 if (hrefListener != null) {
                     doAction();
@@ -394,7 +393,6 @@ public class GTextField extends GTextObject {
                 if (character != '\r' && textsb.length() < text_max) {
                     deleteSelectedText();
                     insertTextByIndex(caretIndex, character);
-                    setCaretIndex(caretIndex + 1);
                 }
             } else {
                 if (hrefListener != null) {
@@ -487,7 +485,6 @@ public class GTextField extends GTextObject {
     @Override
     public void insertTextAtCaret(String str) {
         insertTextByIndex(caretIndex, str);
-        setCaretIndex(caretIndex + textsb.length());
     }
 
     @Override

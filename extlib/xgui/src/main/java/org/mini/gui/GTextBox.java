@@ -257,7 +257,6 @@ public class GTextBox extends GTextObject {
     @Override
     public void insertTextAtCaret(String str) {
         insertTextByIndex(this.caretIndex, str);
-        setCaretIndex(this.caretIndex + str.length());
     }
 
     @Override
@@ -427,7 +426,6 @@ public class GTextBox extends GTextObject {
         deleteSelectedText();
         if (visible && enable) {
             insertTextByIndex(caretIndex, character);
-            setCaretIndex(getCaretIndex() + 1);
         }
     }
 
@@ -1152,7 +1150,7 @@ public class GTextBox extends GTextObject {
                                             }
 
                                         }
-                                        nvgFillColor(vg, isEditable() ? getColor() : getDisabledColor());
+                                        nvgFillColor(vg, GTextBox.this.getColor());
                                         nvgTextJni(vg, dx, dy + 1, local_arr, byte_starti, byte_endi);
                                     }
                                 }

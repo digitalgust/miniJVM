@@ -27,7 +27,7 @@ public class GStyleDark extends GStyle {
         return 17f;
     }
 
-    float[] textFontColor = nvgRGBA(0xff, 0xff, 0xff, 0xb0);
+    float[] textFontColor = nvgRGBA(0xff, 0xff, 0xff, 0xc0);
 
     @Override
     public float[] getTextFontColor() {
@@ -41,7 +41,7 @@ public class GStyleDark extends GStyle {
         return textShadowColor;
     }
 
-    float[] disabledTextFontColor = nvgRGBA(0x60, 0x60, 0x60, 0x80);
+    float[] disabledTextFontColor = nvgRGBA(0xc0, 0xc0, 0xc0, 0xa0);
 
     @Override
     public float[] getDisabledTextFontColor() {

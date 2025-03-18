@@ -679,6 +679,7 @@ public class GToolkit {
         float x = 10, y = 5, w = gp.getW() - 20, h = gp.getH() - 50;
 
         GTextBox tbox = new GTextBox(form, msg, "", x, y, w, h);
+        tbox.setName("GTOOLS_MSG_BOX");
         tbox.setEditable(false);
         gp.add(tbox);
         y += h + 5;
@@ -879,6 +880,7 @@ public class GToolkit {
                 pathLabel.setText(f == null ? "" : f.getAbsolutePath());
                 chooserRefresh(upBtn);
             }
+            list.setSelectedIndex(-1);
         });
 
         return frame;

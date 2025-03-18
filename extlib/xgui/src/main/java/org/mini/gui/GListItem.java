@@ -178,7 +178,7 @@ public class GListItem extends GContainer {
         } else {
             GToolkit.drawRect(vg, tx, ty, tw, th, GToolkit.getStyle().getUnselectedColor());
         }
-        float[] c = outOfFilter ? GToolkit.getStyle().getHintFontColor() : enable ? getColor() : getDisabledColor();
+        float[] c = outOfFilter ? GToolkit.getStyle().getHintFontColor() : getColor();
 
         if (img != null) {
             GToolkit.drawImage(vg, img, tx + pad, ty + pad, thumb - pad * 2, thumb - pad * 2, !outOfFilter, outOfFilter ? 0.5f : 0.8f);

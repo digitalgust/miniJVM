@@ -358,7 +358,11 @@ abstract public class GObject implements GAttachable {
      * @return the color
      */
     public float[] getColor() {
-        if (color == null) return GToolkit.getStyle().getTextFontColor();
+        if (isFlying()) return getFlyingColor();
+        if (color == null) {
+            if (isEnable()) return GToolkit.getStyle().getTextFontColor();
+            else return GToolkit.getStyle().getDisabledTextFontColor();
+        }
         return color;
     }
 
@@ -393,7 +397,11 @@ abstract public class GObject implements GAttachable {
 
     public float[] getFlyingColor() {
         if (flyingColor == null) {
-            flyingColor = getColor();
+            float[] c = color == null ? GToolkit.getStyle().getTextFontColor() : color;
+            flyingColor = new float[4];
+            for (int i = 0; i < 3; i++) {
+                flyingColor[i] = c[i];
+            }
             flyingColor[3] /= 2;
         }
         return flyingColor;
