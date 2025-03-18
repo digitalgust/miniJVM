@@ -24,7 +24,7 @@ public class GDesktop extends GPanel implements GCallbackUI {
     protected float pxRatio;
     static GCmdHandler cmdHandler;
     GCallBack callback;
-    public static byte flush = 3;
+    public static byte flush = 4;
     GForm curForm;
 
     GDesktop(GCallBack callback) {
@@ -47,19 +47,26 @@ public class GDesktop extends GPanel implements GCallbackUI {
     public void checkAppRun(GApplication gapp) {
         if (gapp == null) return;
 
+        gapp.init();
+
         GForm gform = gapp.getForm();
+        if (gform == null) {
+            return;
+        }
         if (gform != curForm) {
             //here can not using this.remove() and this.add(),
             // it would call curForm.init() and curForm.destroy()
             elements.remove(curForm);
             curForm = gform;
             elements.add(0, curForm);
+            if (!curForm.isInited()) {
+                curForm.init();
+            }
 
             curForm.setSize(GCallBack.getInstance().getDeviceWidth(), GCallBack.getInstance().getDeviceHeight());
 
         }
         if (!curForm.isInited()) {
-            curForm.cb_init();
             gapp.startApp();
         }
     }
@@ -109,7 +116,7 @@ public class GDesktop extends GPanel implements GCallbackUI {
     }
 
     public static void flush() {
-        flush = 3;
+        flush = 4;
         //in android may flush before paint,so the menu not shown
     }
 
@@ -155,6 +162,10 @@ public class GDesktop extends GPanel implements GCallbackUI {
 
     public static void addCmd(GCmd cmd) {
         cmdHandler.addCmd(cmd);
+    }
+
+    public static void addCmd(Runnable work) {
+        cmdHandler.addCmd(work);
     }
 
     public static void deleteImage(int texture) {

@@ -194,20 +194,12 @@ public class GToolkit {
         return FontHolder.icon.getFontName();
     }
 
-    public static float[] getFontBoundle(long vg) {
-        float[] bond = new float[4];
-        nvgTextBoundsJni(vg, 0f, 0f, FONT_GLYPH_TEMPLATE, 0, FONT_GLYPH_TEMPLATE.length, bond);
-        bond[GObject.WIDTH] -= bond[GObject.LEFT];
-        bond[GObject.HEIGHT] -= bond[GObject.TOP];
-        bond[GObject.LEFT] = bond[GObject.TOP] = 0;
-        return bond;
-    }
 
-    public static float[] getFontBoundle(long vg, byte[] fontName, float fontSize) {
-        float[] bond = new float[4];
+    public static float[] getFontBoundle(long vg, String string, float fontSize) {
+        float[] bond = bounds.get();
         nvgSave(vg);
         nvgFontSize(vg, fontSize);
-        nvgFontFace(vg, fontName);
+        nvgFontFace(vg, getDefaultFont());
         nvgTextBoundsJni(vg, 0f, 0f, FONT_GLYPH_TEMPLATE, 0, FONT_GLYPH_TEMPLATE.length, bond);
         bond[GObject.WIDTH] -= bond[GObject.LEFT];
         bond[GObject.HEIGHT] -= bond[GObject.TOP];
@@ -364,25 +356,52 @@ public class GToolkit {
         nvgStroke(vg);
     }
 
-    public static float[] getTextBoundle(long vg, String s, float width) {
-        return getTextBoundle(vg, s, width, GToolkit.getStyle().getTextFontSize(), GToolkit.getFontWord());
+
+    /**
+     * =========================================================
+     * measure font
+     */
+    static ThreadLocal<float[]> bounds = new ThreadLocal<float[]>() {
+        @Override
+        protected float[] initialValue() {
+            return new float[4];
+        }
+    };
+
+    /**
+     * @param vg
+     * @param s
+     * @param width
+     * @param fontSize
+     * @param multiline
+     * @return
+     */
+    public static float[] getTextBoundle(long vg, String s, float width, float fontSize, boolean multiline) {
+        return getTextBoundle(vg, s, width, fontSize, GToolkit.getFontWord(), multiline);
     }
 
-    public static float[] getTextBoundle(long vg, String s, float width, float fontSize) {
-        return getTextBoundle(vg, s, width, fontSize, GToolkit.getFontWord());
-    }
+    public static float[] getTextBoundle(long vg, String s, float width, float fontSize, byte[] font, boolean multiline) {
 
-    public static float[] getTextBoundle(long vg, String s, float width, float fontSize, byte[] font) {
-        float[] bond = new float[4];
         byte[] b = toCstyleBytes(s);
+        return getTextBoundle(vg, b, width, fontSize, font, multiline);
+    }
+
+    public static float[] getTextBoundle(long vg, byte[] b, float width, float fontSize, byte[] font, boolean multiline) {
+        float[] bond = bounds.get();
         nvgFontSize(vg, fontSize);
         nvgFontFace(vg, font);
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-        nvgTextBoxBoundsJni(vg, 0, 0, width - GLabel.TEXT_BOUND_DEC, b, 0, b.length, bond);
+        if (multiline) {
+            nvgTextBoxBoundsJni(vg, 0, 0, width + GLabel.TEXT_BOUND_DEC, b, 0, b.length, bond);
+        } else {
+            nvgTextBoundsJni(vg, 0, 0, b, 0, b.length, bond);
+        }
         bond[GObject.WIDTH] -= bond[GObject.LEFT];
         bond[GObject.HEIGHT] -= bond[GObject.TOP];
         bond[GObject.LEFT] = bond[GObject.TOP] = 0;
-        bond[GObject.WIDTH] += GLabel.TEXT_BOUND_DEC;
+        if (multiline) {
+            bond[GObject.WIDTH] += GLabel.TEXT_BOUND_DEC;
+        }
         return bond;
     }
 
@@ -1317,6 +1336,7 @@ public class GToolkit {
         gobj.setLocation(form.getW() / 2 - gobj.getW() / 2, form.getH() / 2 - gobj.getH() / 2);
         form.add(gobj);
         form.setCurrent(gobj);
+        gobj.setVisible(true);
     }
 
     public static void showFrame(GObject gobj, float x, float y) {
@@ -1325,6 +1345,7 @@ public class GToolkit {
         gobj.setLocation(x, y);
         form.add(gobj);
         form.setCurrent(gobj);
+        gobj.setVisible(true);
     }
 
     public static void closeFrame(GForm form, String frameName) {
@@ -1507,7 +1528,7 @@ public class GToolkit {
         return editMenu;
     }
 
-    static public void disposeEditMenu() {
+    static public void hideEditMenu() {
         if (editMenu != null) editMenu.dispose();
     }
 

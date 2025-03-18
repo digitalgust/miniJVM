@@ -93,7 +93,7 @@ public class GListItem extends GContainer {
     @Override
     public void touchEvent(int touchid, int phase, int x, int y) {
         GObject found = findSonByXY(x, y);
-        if (found != null) {
+        if (found != null && found.actionListener != null && found.getOnClinkScript() == null) {
             super.touchEvent(touchid, phase, x, y);
         } else {
             switch (phase) {
@@ -120,7 +120,7 @@ public class GListItem extends GContainer {
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         GObject found = findSonByXY(x, y);
-        if (found != null) {
+        if (found != null && found.actionListener != null && found.getOnClinkScript() == null) {
             super.mouseButtonEvent(button, pressed, x, y);
         } else {
             if (pressed) {
@@ -137,7 +137,7 @@ public class GListItem extends GContainer {
     }
 
     void select() {
-        if (enable) {
+        if (visible && enable) {
             int index = getIndex();
             list.select(index);
             list.pulldown = false;

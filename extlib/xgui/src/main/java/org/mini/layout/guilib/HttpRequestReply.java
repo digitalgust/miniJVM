@@ -1,4 +1,4 @@
-package org.mini.gui.guilib;
+package org.mini.layout.guilib;
 
 public class HttpRequestReply {
     private int code;

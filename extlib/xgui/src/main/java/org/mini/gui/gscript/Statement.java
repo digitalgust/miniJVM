@@ -11,11 +11,12 @@ import java.util.ArrayList;
  */
 abstract class ExprCell {
 
-    byte type;
+    byte celltype;
     static public final byte EXPR_CELL_CALL = 0;
     static public final byte EXPR_CELL_DATATYPE = 1;
     static public final byte EXPR_CELL_VAR = 2;
     static public final byte EXPR_CELL_ARR = 3;
+    static public final byte EXPR_CELL_EXPR = 4;
 };
 
 /**
@@ -55,8 +56,8 @@ class ExprCellCall extends ExprCell {
     }
 
     ExprCellCall(String inst, Interpreter inp) throws Exception {
-        type = (ExprCell.EXPR_CELL_CALL);
-        ArrayList tmppara = new ArrayList();
+        celltype = (ExprCell.EXPR_CELL_CALL);
+        ArrayList tmppara = Interpreter.getCachedVector();
 
         parseCallPara(inst, tmppara, inp);
 
@@ -68,6 +69,8 @@ class ExprCellCall extends ExprCell {
                 para[i] = new Expression((String) tmppara.get(i), inp);
             }
         }
+
+        Interpreter.putCachedVector(tmppara);
     }
 
     public String toString() {
@@ -83,7 +86,7 @@ class ExprCellDataType extends ExprCell {
     DataType pit;
 
     ExprCellDataType(DataType p, Interpreter inp) {
-        type = ExprCell.EXPR_CELL_DATATYPE;
+        celltype = ExprCell.EXPR_CELL_DATATYPE;
         pit = p;
     }
 
@@ -100,7 +103,7 @@ class ExprCellVar extends ExprCell {
     String varName;
 
     ExprCellVar(String pvarname, Interpreter inp) {
-        type = (ExprCell.EXPR_CELL_VAR);
+        celltype = (ExprCell.EXPR_CELL_VAR);
         varName = pvarname.toLowerCase();
     }
 
@@ -155,8 +158,8 @@ class ExprCellArr extends ExprCell {
     }
 
     ExprCellArr(String src, Interpreter inp) throws Exception {
-        type = (ExprCell.EXPR_CELL_ARR);
-        ArrayList tmppara = new ArrayList();
+        celltype = (ExprCell.EXPR_CELL_ARR);
+        ArrayList tmppara = Interpreter.getCachedVector();
         parseArr(src, tmppara, inp);
         //拆分表达式
         int paralen = tmppara.size();
@@ -170,6 +173,7 @@ class ExprCellArr extends ExprCell {
                 return new int[para.length];
             }
         };
+        Interpreter.putCachedVector(tmppara);
     }
 
     public String toString() {
@@ -181,14 +185,15 @@ class ExprCellArr extends ExprCell {
  * ------------------------------------------------------ Expression
  * ------------------------------------------------------
  */
-class Expression {
-    int type;//表达式类型，
+class Expression extends ExprCell {
+    int type;//表达式求值类型，
 
     ExprCell[] cells;
 
     Expression(String statement, Interpreter inp) throws Exception {
+        celltype = EXPR_CELL_EXPR;
 
-        ArrayList tgt = new ArrayList();
+        ArrayList tgt = Interpreter.getCachedVector();
         ArrayList src = inp.parseInstruct(statement);
 
         for (int i = 0; i < src.size(); i++) {
@@ -226,6 +231,133 @@ class Expression {
             }
         }
 
+        init(tgt, inp);
+
+        Interpreter.putCachedVector(tgt);
+    }
+
+    Expression(ArrayList tgt, Interpreter inp) throws Exception {
+        celltype = EXPR_CELL_EXPR;
+        init(tgt, inp);
+    }
+
+    private void init(ArrayList tgt, Interpreter inp) throws Exception {
+        //把子表达式找出来，合并成一个Expression，作为一个元素加入到list中
+        for (int i = 0; i < tgt.size() - 2; i++) {
+            ExprCell curr = (ExprCell) tgt.get(i);
+            if (curr instanceof ExprCellDataType) {
+                ExprCellDataType dt = (ExprCellDataType) curr;
+                if (dt.pit instanceof Symb && ((Symb) dt.pit).getVal() == Symb.LP) {
+                    // 找到对应的右括号
+                    int bracketCount = 1;
+                    int endIndex = i + 1;
+                    for (int j = i + 1; j < tgt.size(); j++) {
+                        ExprCell cell = (ExprCell) tgt.get(j);
+                        if (cell instanceof ExprCellDataType) {
+                            ExprCellDataType cellDt = (ExprCellDataType) cell;
+                            if (cellDt.pit instanceof Symb) {
+                                if (((Symb) cellDt.pit).getVal() == Symb.LP) bracketCount++;
+                                if (((Symb) cellDt.pit).getVal() == Symb.RP) bracketCount--;
+                            }
+                        }
+                        if (bracketCount == 0) {
+                            endIndex = j;
+                            break;
+                        }
+                    }
+
+                    if (bracketCount == 0) {
+                        // 提取子表达式内容,直接把子表达式转为数组，用Expression (ExprCell[] para, Interpreter inp)初始化
+                        int subExprLength = endIndex - (i + 1);
+                        ArrayList<ExprCell> subExpr = Interpreter.getCachedVector();
+                        for (int j = 0; j < subExprLength; j++) {
+                            subExpr.add((ExprCell) tgt.get(i + 1 + j));
+                        }
+
+                        Expression subExpression = new Expression(subExpr, inp);
+                        Interpreter.putCachedVector(subExpr);
+
+                        // 移除旧的元素
+                        for (int j = endIndex; j >= i; j--) {
+                            tgt.remove(j);
+                        }
+
+                        // 添加新的子表达式
+                        tgt.add(i, subExpression);
+                        i--; // 重新检查当前位置
+                    }
+                }
+            }
+        }
+
+        //进一步，如果这个表达式有逻辑操作符Symb.isLogicOp()==true,同时这个表达式中还有算述运算 Symb.isArithOp()==true，
+        // 则把这个逻辑表达式中的算术表达式，合并成一个Expression，作为一个子表达式加入到list中
+        boolean hasLogicOp = false;
+        boolean hasArithOp = false;
+
+        // 首先检查是否同时存在逻辑运算符和算术运算符
+        for (int i = 0; i < tgt.size(); i++) {
+            ExprCell cell = (ExprCell) tgt.get(i);
+            if (cell instanceof ExprCellDataType) {
+                ExprCellDataType dt = (ExprCellDataType) cell;
+                if (dt.pit instanceof Symb) {
+                    Symb sym = (Symb) dt.pit;
+                    if (sym.isLogicOp()) hasLogicOp = true;
+                    if (sym.isArithOp()) hasArithOp = true;
+                }
+            }
+        }
+
+        // 如果同时存在两种运算符，处理算术表达式
+        if (hasLogicOp && hasArithOp) {
+            for (int i = 0; i < tgt.size(); i++) {
+                int start = -1;
+                int end = -1;
+
+                // 找到算术表达式的开始和结束
+                for (int j = i; j < tgt.size(); j++) {
+                    ExprCell cell = (ExprCell) tgt.get(j);
+                    if (cell instanceof ExprCellDataType) {
+                        ExprCellDataType dt = (ExprCellDataType) cell;
+                        if (dt.pit instanceof Symb) {
+                            Symb sym = (Symb) dt.pit;
+                            if (sym.isArithOp()) {
+                                if (start == -1) start = j - 1;
+                                end = j + 2; // 包含运算符后面的操作数
+                                j++; // 跳过下一个操作数
+                            } else if (sym.isLogicOp()) {
+                                if (start != -1) break; // 遇到逻辑运算符就结束当前算术表达式
+                            }
+                        }
+                    }
+                }
+
+                // 如果找到了算术表达式，将其合并
+                if (start >= 0 && end > start && end <= tgt.size()) {
+                    ArrayList<ExprCell> arithExpr = Interpreter.getCachedVector();
+                    for (int j = start; j < end; j++) {
+                        arithExpr.add((ExprCell) tgt.get(j));
+                    }
+
+                    Expression subExpression = new Expression(arithExpr, inp);
+                    Interpreter.putCachedVector(arithExpr);
+
+                    // 移除原来的元素
+                    for (int j = end - 1; j >= start; j--) {
+                        tgt.remove(j);
+                    }
+
+                    // 添加新的子表达式
+                    tgt.add(start, subExpression);
+
+                    // 调整索引
+                    i = start;
+                }
+            }
+        }
+
+
+        //把list转为数组
         int cellslen = tgt.size();
         cells = new ExprCell[cellslen];
         if (cellslen > 0) {
@@ -233,7 +365,6 @@ class Expression {
                 cells[i] = (ExprCell) tgt.get(i);
             }
         }
-
     }
 };
 

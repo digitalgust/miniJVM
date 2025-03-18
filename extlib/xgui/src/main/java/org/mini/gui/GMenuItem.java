@@ -21,11 +21,11 @@ public class GMenuItem extends GContainer {
 
     protected GImage img;
 
-    protected float[] lineh = new float[1];
+    protected float lineh;
     protected boolean touched = false;
 
     protected int redPoint;
-    float[] box;
+    float[] box = new float[4];
 
     GMenuItem(GForm form, String t, GImage i, GMenu _parent) {
         super(form);
@@ -40,10 +40,9 @@ public class GMenuItem extends GContainer {
         super.setText(t);
         if (t == null) return;
         long vg = GCallBack.getInstance().getNvContext();
-        nvgFontSize(vg, getFontSize());
-        nvgFontFace(vg, GToolkit.getFontWord());
-        nvgTextMetrics(vg, null, null, lineh);
-        box = GToolkit.getTextBoundle(vg, t, GCallBack.getInstance().getDeviceWidth(), getFontSize());
+        float[] b = GToolkit.getTextBoundle(vg, t, GCallBack.getInstance().getDeviceWidth(), getFontSize(), true);
+        System.arraycopy(b, 0, box, 0, 4);
+        lineh = b[HEIGHT];
     }
 
     boolean isSelected() {
@@ -71,6 +70,10 @@ public class GMenuItem extends GContainer {
         redPoint = 0;
     }
 
+    public void setRedPoint(int redPoint) {
+        this.redPoint = redPoint;
+    }
+
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         if (isInArea(x, y)) {
@@ -88,7 +91,6 @@ public class GMenuItem extends GContainer {
                 }
             }
         }
-
     }
 
     @Override
@@ -139,15 +141,16 @@ public class GMenuItem extends GContainer {
 
         float txt_x = 0f, txt_y = 0f, img_x = 0f, img_y = 0f, img_w = 0f, img_h = 0f;
 
+        String text = getText();
         if (img != null) {//有图
             if (text != null) {//有文字
-                if (dh > lineh[0] * 3) { //上图下文排列
-                    img_h = dh - pad * 3 - lineh[0];
+                if (dh > lineh * 3) { //上图下文排列
+                    img_h = dh - pad * 3 - lineh;
                     img_x = dx + dw / 2 - img_h / 2;
                     img_w = img_h;
                     img_y = dy + pad;
                     txt_x = dx + dw / 2;
-                    txt_y = img_y + img_h + pad + lineh[0] / 2;
+                    txt_y = img_y + img_h + pad + lineh / 2;
                 } else { //前图后文
                     img_h = dh * .8f - pad;
                     img_w = img_h;

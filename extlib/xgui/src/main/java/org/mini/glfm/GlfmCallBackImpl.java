@@ -390,6 +390,9 @@ public class GlfmCallBackImpl extends GCallBack {
             return;
         }
         GForm mgrForm = AppManager.getInstance().getForm();
+        if (mgrForm == null) {
+            System.out.println("[WARN]form is null when onNotify:" + key + "," + val);
+        }
         mgrForm.onDeviceNotify(key, val);// notify to manager form first
         if (mgrForm != desktop.getForm()) {
             desktop.onDeviceNotify(key, val);

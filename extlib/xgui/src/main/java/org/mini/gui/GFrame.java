@@ -472,7 +472,7 @@ public class GFrame extends GContainer {
             close_boundle[TOP] = y;
             close_boundle[WIDTH] = 30;
             close_boundle[HEIGHT] = 30;
-            return true;
+            return super.paint(vg);
         }
     }
 

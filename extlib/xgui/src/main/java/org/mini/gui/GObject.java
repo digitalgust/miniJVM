@@ -36,7 +36,7 @@ abstract public class GObject implements GAttachable {
     public static byte[] ICON_CHEVRON_RIGHT_BYTE = GLUtil.toCstyleBytes(ICON_CHEVRON_RIGHT);
     public static String ICON_CHEVRON_DOWN = "\uE75C";
     public static byte[] ICON_CHEVRON_DOWN_BYTE = GLUtil.toCstyleBytes(ICON_CHEVRON_DOWN);
-    public static String ICON_CHECK = "\u2713";
+    public static String ICON_CHECK = "\u2714";
     public static byte[] ICON_CHECK_BYTE = GLUtil.toCstyleBytes(ICON_CHECK);
     public static String ICON_LOGIN = "\uE740";
     public static byte[] ICON_LOGIN_BYTE = GLUtil.toCstyleBytes(ICON_LOGIN);
@@ -44,6 +44,8 @@ abstract public class GObject implements GAttachable {
     public static byte[] ICON_TRASH_BYTE = GLUtil.toCstyleBytes(ICON_TRASH);
     public static String ICON_CLOSE = "\u2716";
     public static byte[] ICON_CLOSE_BYTE = GLUtil.toCstyleBytes(ICON_CLOSE);
+    public static String ICON_RIGHT = "\u2705";
+    public static byte[] ICON_RIGHT_BYTE = GLUtil.toCstyleBytes(ICON_RIGHT);
     //
     public static final int LEFT = 0;
     public static final int TOP = 1;
@@ -98,7 +100,7 @@ abstract public class GObject implements GAttachable {
 
     protected String name;
 
-    protected String text;
+    private String text;
 
     protected Object attachment;//用户自定义数据
 
@@ -141,17 +143,11 @@ abstract public class GObject implements GAttachable {
     /**
      *
      */
-//    public void init() {
-//
-//    }
-//
-//    public void destroy() {
-//    }
     public void setFixed(boolean fixed) {
         fixedLocation = fixed;
     }
 
-    public boolean getFixed() {
+    public boolean isFixed() {
         return fixedLocation;
     }
 
@@ -427,8 +423,9 @@ abstract public class GObject implements GAttachable {
     }
 
     public void setVisible(boolean v) {
+        if (visible == v) return;
         visible = v;
-        setEnable(v);
+        doStateChanged(this);
     }
 
     public boolean isVisible() {
@@ -441,7 +438,9 @@ abstract public class GObject implements GAttachable {
     }
 
     public void setEnable(boolean enable) {
+        if (this.enable == enable) return;
         this.enable = enable;
+        doStateChanged(this);
     }
 
 
@@ -513,8 +512,11 @@ abstract public class GObject implements GAttachable {
      * @param front the front to set
      */
     public void setFront(boolean front) {
+        if (front && this.layer == LAYER_FRONT) return;
+        if (!front && this.layer == LAYER_NORMAL) return;
         this.layer = front ? LAYER_FRONT : LAYER_NORMAL;
         if (parent != null) parent.reLayer();
+        doStateChanged(this);
     }
 
     /**
@@ -528,8 +530,11 @@ abstract public class GObject implements GAttachable {
      * @param back the front to set
      */
     public void setBack(boolean back) {
+        if (back && this.layer == LAYER_BACK) return;
+        if (!back && this.layer == LAYER_NORMAL) return;
         this.layer = back ? LAYER_BACK : LAYER_NORMAL;
         if (parent != null) parent.reLayer();
+        doStateChanged(this);
     }
 
     public boolean isMenu() {
@@ -541,7 +546,7 @@ abstract public class GObject implements GAttachable {
     }
 
     protected void doAction() {
-        if (actionListener != null && enable) {
+        if (actionListener != null && visible && enable) {
             if (onClinkScript != null) {
                 Interpreter inp = parseInpByCall(onClinkScript);
                 String funcName = parseInstByCall(onClinkScript);

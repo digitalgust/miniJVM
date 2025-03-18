@@ -2,6 +2,7 @@ package org.mini.layout;
 
 import org.mini.gui.GButton;
 import org.mini.gui.GObject;
+import org.mini.layout.loader.XmlExtAssist;
 import org.xmlpull.v1.KXmlParser;
 
 /**
@@ -54,7 +55,7 @@ public class XButton
 
 
     protected int getDefaultWidth(int parentViewW) {
-        int w = XUtil.measureWidth(parentViewW, text, fontSize);
+        int w = XUtil.measureWidth(parentViewW, text, getFontSize(), false);
         w += addon;
         return w;
     }
@@ -83,7 +84,7 @@ public class XButton
     }
 
 
-    public GObject getGui() {
-        return button;
+    public <T extends GObject> T getGui() {
+        return (T) button;
     }
 }

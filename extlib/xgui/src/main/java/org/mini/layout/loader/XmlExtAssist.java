@@ -1,19 +1,24 @@
-package org.mini.layout;
+package org.mini.layout.loader;
 
+import org.mini.apploader.GApplication;
 import org.mini.gui.GForm;
 import org.mini.gui.GImage;
 import org.mini.gui.GToolkit;
 import org.mini.gui.gscript.EnvVarProvider;
 import org.mini.gui.gscript.Interpreter;
-import org.mini.gui.guilib.GuiScriptLib;
+import org.mini.layout.XEventHandler;
+import org.mini.layout.guilib.GuiScriptLib;
 import org.mini.gui.gscript.Lib;
+import org.mini.layout.xwebview.BrowserHolder;
+import org.mini.layout.xwebview.XuiBrowser;
+import org.mini.layout.xwebview.XuiScriptLib;
 
 import java.util.Vector;
 
 /**
  * XMLUI parse assist
  */
-public class XmlExtAssist {
+public class XmlExtAssist implements BrowserHolder {
 
 
     public interface XLoader {
@@ -24,15 +29,20 @@ public class XmlExtAssist {
 
     protected Vector<String> extGuiClassName = new Vector();
     protected Vector<Lib> extScriptLibs = new Vector();
-    GForm form;
+    XuiAppHolder xuiAppHolder;
     protected XLoader loader;
     XEventHandler eventHandler;
 
     EnvVarProvider envVarProvider;
 
-    public XmlExtAssist(GForm form) {
+    XuiBrowser browser;
+
+    public XmlExtAssist(XuiAppHolder xuiAppHolder) {
+        if (xuiAppHolder == null || xuiAppHolder.getApp() == null) {
+            throw new RuntimeException("[ERRO]app can not be null");
+        }
         //if (form == null) throw new RuntimeException("Form can not be null");
-        this.form = form;
+        this.xuiAppHolder = xuiAppHolder;
         // the default image loader is jar image loader
         loader = new XLoader() {
             public GImage loadImage(String path) {
@@ -44,16 +54,31 @@ public class XmlExtAssist {
             }
         };
 
-        addExtScriptLib(new GuiScriptLib(form));
+        addExtScriptLib(new GuiScriptLib(xuiAppHolder));
+
+        addExtScriptLib(new XuiScriptLib(this, xuiAppHolder));
+    }
+
+    public XuiAppHolder getXuiBrowserHolder() {
+        return xuiAppHolder;
+    }
+
+    @Override
+    public XuiBrowser getBrowser() {
+        if (browser == null) {
+            browser = new XuiBrowser(eventHandler, this);
+        }
+        return browser;
+    }
+
+    public GApplication getApp() {
+        return xuiAppHolder.getApp();
     }
 
     public GForm getForm() {
-        return form;
+        return xuiAppHolder.getForm();
     }
 
-    public void setForm(GForm form) {
-        this.form = form;
-    }
 
     public void registerGUI(String guiClassName) {
         if (!extGuiClassName.contains(guiClassName)) {
@@ -101,15 +126,16 @@ public class XmlExtAssist {
         extGuiClassName.addAll(assist.extGuiClassName);
         extScriptLibs.addAll(assist.extScriptLibs);
         loader = assist.loader;
-        form = assist.form;
+        xuiAppHolder = assist.xuiAppHolder;
         envVarProvider = assist.envVarProvider;
+        browser = assist.browser;
     }
 
-    XEventHandler getEventHandler() {
+    public XEventHandler getEventHandler() {
         return eventHandler;
     }
 
-    void setEventHandler(XEventHandler eventHandler) {
+    public void setEventHandler(XEventHandler eventHandler) {
         this.eventHandler = eventHandler;
     }
 

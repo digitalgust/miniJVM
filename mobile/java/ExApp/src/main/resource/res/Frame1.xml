@@ -3,7 +3,7 @@
         <![CDATA[
 
             sub onOpen()
-                'print("FRAME1 is open")
+                #print("FRAME1 is open")
                 func1("FRAME1","OPEN")
             ret
 

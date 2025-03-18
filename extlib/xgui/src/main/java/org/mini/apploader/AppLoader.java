@@ -32,7 +32,7 @@ public class AppLoader {
     static final String APP_FILE_EXT = ".jar";
     static final String APP_DATA_DIR = "/appdata/";
     static final String TMP_DIR = "/tmp/";
-    static final String EXAMPLE_APP_FILE = "ExApp.jar";
+    static final String EXAMPLE_APP_FILE = "minicompiler.jar";
     static final String KEY_BOOT = "boot";
     static final String KEY_DOWNLOADURL = "downloadurl";
     static final String KEY_LANGUAGE = "language";

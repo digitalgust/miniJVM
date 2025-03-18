@@ -36,6 +36,7 @@ public class GHomeButton extends GPanel implements GActionListener, GCallbackUI 
         checkLocation();
         layer = LAYER_INNER;
         setActionListener(this);
+        paintWhenOutOfScreen = true;// 在屏幕外也需要绘制
     }
 
 
@@ -70,6 +71,7 @@ public class GHomeButton extends GPanel implements GActionListener, GCallbackUI 
 
     @Override
     public boolean paint(long vg) {
+        checkLocation();
 
         GToolkit.drawImage(vg, butImg, getX(), getY(), getW(), getH(), false, 0.7f);
 
@@ -87,10 +89,10 @@ public class GHomeButton extends GPanel implements GActionListener, GCallbackUI 
             drawY -= ICON_WH + PAD;
             drawX = getX() + PAD;
         }
-        if (AppManager.getInstance().getHttpClients().size() > 0) {
-            GToolkit.drawImage(vg, downImg, drawX, drawY, ICON_WH, ICON_WH, false, 0.6f);
-            drawX += ICON_WH + PAD;
-        }
+//        if (AppManager.getInstance().getHttpClients().size() > 0) {
+//            GToolkit.drawImage(vg, downImg, drawX, drawY, ICON_WH, ICON_WH, false, 0.6f);
+//            drawX += ICON_WH + PAD;
+//        }
         if (drawX - getX() + ICON_WH + PAD > getW()) {
             drawY -= ICON_WH + PAD;
             drawX = getX() + PAD;
@@ -166,6 +168,7 @@ public class GHomeButton extends GPanel implements GActionListener, GCallbackUI 
         GApplication app = GCallBack.getInstance().getApplication();
         if (app != AppManager.getInstance()) {
             app.pauseApp();
+            AppManager.getInstance().active();
             AppManager.getInstance().mainPanelShowLeft();
         }
     }

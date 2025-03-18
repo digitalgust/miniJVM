@@ -383,9 +383,9 @@ public class GlfwCallBackImpl extends GCallBack {
     public void windowSize(long window, int width, int height) {
         //System.out.println("windowsize" + width + "," + height);
         try {
-//            if (winWidth == width && winHeight == height) {
-//                return;
-//            }
+            if (winWidth == width && winHeight == height) {
+                return;
+            }
             reloadWindow();
 
             if (desktop == null) {
@@ -403,12 +403,10 @@ public class GlfwCallBackImpl extends GCallBack {
     @Override
     public void framebufferSize(long window, int x, int y) {
         try {
-            reloadWindow();
             if (desktop == null) {
                 return;
             }
             desktop.setSize(x, y);
-            reloadWindow();
             GDesktop.flush();
         } catch (Exception ex) {
             ex.printStackTrace();

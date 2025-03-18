@@ -57,13 +57,10 @@ public class GLabel extends GObject {
     }
 
     public void setText(String text) {
-        this.text = text;
+        super.setText(text);
         text_arr = toCstyleBytes(text);
     }
 
-    public String getText() {
-        return text;
-    }
 
     public void setIcon(char icon) {
         preicon = icon;
@@ -132,7 +129,7 @@ public class GLabel extends GObject {
     boolean paintFlying(long vg, float x, float y) {
         float w = getW();
         float h = getH();
-        
+
         if (bgColor != null) {
             GToolkit.drawRect(vg, getX(), getY(), getW(), getH(), bgColor);
         }

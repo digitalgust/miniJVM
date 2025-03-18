@@ -49,7 +49,6 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
         if (app != null) {
             desktop.setSize(getDeviceWidth(), getDeviceHeight());
             gapp = app;
-            gapp.getForm();
         }
     }
 

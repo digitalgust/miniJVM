@@ -2,13 +2,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 <!--    https://central.sonatype.com/-->
-<!--    mvn clean install deploy -P release-->
+<!--    mvn clean install deploy -P release  -->
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.github.digitalgust</groupId>
     <artifactId>minijvm_rt</artifactId>
     <name>${project.groupId}:${project.artifactId}</name>
-    <version>1.2.0</version>
+    <version>2.0.0</version>
     <description>miniJVM runtime library</description>
     <url>https://github.com/digitalgust/miniJVM</url>
 

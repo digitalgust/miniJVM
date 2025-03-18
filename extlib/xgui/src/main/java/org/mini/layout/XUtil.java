@@ -130,19 +130,15 @@ public class XUtil {
      * @param str
      * @return
      */
-    public static int measureHeight(int width, String str, int fontSize) {
+    public static int measureHeight(int width, String str, int fontSize, boolean multiline) {
         long vg = GCallBack.getInstance().getNvContext();
-        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-        nvgFontSize(vg, fontSize);
-        nvgFontFace(vg, GToolkit.getFontWord());
-        float[] boundle = GToolkit.getTextBoundle(vg, str, width, fontSize);
+        float[] boundle = GToolkit.getTextBoundle(vg, str, width, fontSize, multiline);
         return (int) (boundle[GObject.HEIGHT] - boundle[GObject.TOP] + 1f);
     }
 
-    public static int measureWidth(int width, String str, int fontSize) {
-        //if (true) return str.length() * fontSize;
+    public static int measureWidth(int width, String str, int fontSize, boolean multiline) {
         long vg = GCallBack.getInstance().getNvContext();
-        float[] boundle = GToolkit.getTextBoundle(vg, str, width, fontSize, GToolkit.getFontWord());
+        float[] boundle = GToolkit.getTextBoundle(vg, str, width, fontSize, GToolkit.getFontWord(), multiline);
         return (int) (boundle[GObject.WIDTH] - boundle[GObject.LEFT] + 1f);
     }
 

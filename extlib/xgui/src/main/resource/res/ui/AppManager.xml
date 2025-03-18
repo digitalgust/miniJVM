@@ -1,19 +1,20 @@
-<table name="ROOT_PAN" h="100%" w="100%" oninit="onload()">
-    <script>
-        <![CDATA[
-        sub onload() '这个用来获取服务器上的策略网址信息
+<form name="FORM_PLUGMGR" w="100%" h="100%">
+    <table name="ROOT_PAN" h="100%" w="100%" oninit="onload()">
+        <script>
+            <![CDATA[
+        sub onload() #这个用来获取服务器上的策略网址信息
             if(!isDef("ENCRYPTED_KEY"))
                 def("ENCRYPTED_KEY","L7%d9&3jw5f")
             eif
-            getPolicy(false) '异步调用
+            getPolicy(false) #异步调用
         ret
 
         sub getQueryPara()
             s="appid="+ getEnv("APPID") + "&appzone=" + getEnv("APPZONE") + "&ver=" + getEnv("SVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG") +"&token="+ getEnv("TOKEN")
-            'println(s)
+            #println(s)
         ret s
 
-        sub onCallBack(url,code,msg) '通用回调
+        sub onCallBack(url,code,msg) #通用回调
             showMsg("{STR_MESSAGE}: "+msg)
         ret
 
@@ -23,7 +24,7 @@
             eif
         ret false
 
-        sub getPolicy(sync) '获取策略
+        sub getPolicy(sync) #获取策略
             if(strlen(getEnv("DISCOVERY_URL"))>0)
                 ret
             eif
@@ -50,7 +51,7 @@
             eif
         ret
 
-        sub onPolicyRequestBack(url,code,msg) '请求策略回调
+        sub onPolicyRequestBack(url,code,msg) #请求策略回调
             println(code+" "+msg)
             if(code=0)
                 if(indexOf(msg,"\n")>0)
@@ -65,16 +66,16 @@
                 setEnv("PAY_URL",urls[4])
                 setEnv("PLUGIN_URL",urls[5])
                 setEnv("UPDATE_URL",urls[6])
-                'println("urls:\n"+urls)
+                #println("urls:\n"+urls)
 
-                signInAuto() '自动登录
+                signInAuto() #自动登录
             else
                showMsg("onPolicyRequestBack:"+code+","+msg)
             eif
         ret
 
 
-        sub signInAuto() '登录
+        sub signInAuto() #登录
             if(isGithub())
                 ret
             eif
@@ -88,7 +89,7 @@
                 ret
             else
                 encryptPwd=encrypt(loginPwd,ENCRYPTED_KEY)
-                'println(encryptPwd)
+                #println(encryptPwd)
 
                 accBaseUrl=getEnv("ACCOUNT_BASE_URL")
                 url=accBaseUrl + "/login?usr=" + loginUid + "&pwd=" + encryptPwd +"&logintype="+ logintype +"&"+ getQueryPara()
@@ -97,22 +98,22 @@
         ret
 
 
-        sub onSignInAutoBack(url,code,msg) '登录回调
+        sub onSignInAutoBack(url,code,msg) #登录回调
             if(code=0)
                 setEnv("TOKEN", msg)
-                'println("token="+msg)
+                #println("token="+msg)
             else
                 showMsg("{STR_MESSAGE}: {STR_CONNECTION_FAIL}")
             eif
         ret
 
-        sub showDiscovery() '显示发现
+        sub showDiscovery() #显示发现
             showSlot("SLOT_MGR", 3)
             if(isGithub())
                 ret
             eif
             getPolicy(true)
-            if(!uiExist("DIS_HOME")) 'if there is not a discovery panel then show it
+            if(!uiExist("DIS_HOME")) #if there is not a discovery panel then show it
                 showHome()
             eif
         ret
@@ -126,7 +127,7 @@
             openPage(url,"")
         ret
 
-        sub showMy() '显示我的
+        sub showMy() #显示我的
             showSlot("SLOT_MGR", 4)
             if(isGithub())
                 ret
@@ -142,7 +143,7 @@
             eif
         ret
 
-        sub showProfile() '显示我的
+        sub showProfile() #显示我的
             if(isGithub())
                 ret
             eif
@@ -160,34 +161,34 @@
             eif
             url=getEnv("UPDATE_URL")+"?"+ getQueryPara()
             if(strlen(url)>0)
-                openOtherApp(url,"",0)  ' 第一个为 url，第二个为参数，第三个为检测是否App 存在，0为不检测，1为检测
+                openOtherApp(url,"",0)  # 第一个为 url，第二个为参数，第三个为检测是否App 存在，0为不检测，1为检测
             eif
         ret
 
         sub openWebForUpload()
-            '执行java语句  AppManager.getInstance().getWebServer()==null
+            #执行java语句  AppManager.getInstance().getWebServer()==null
             ins=invokeStatic("org.mini.apploader.AppManager","getInstance()Lorg.mini.apploader.AppManager;")
             websrv=invokeJava(ins,"getWebServer()Lorg.mini.http.MiniHttpServer;")
 
-            '因为按下按钮后，脚本先于按钮的action执行，
-            '因此，webServer如果不为空，
-            '说明本次事件是要停止webserver,反之是要启动
+            #因为按下按钮后，脚本先于按钮的action执行，
+            #因此，webServer如果不为空，
+            #说明本次事件是要停止webserver,反之是要启动
             if(isNull(websrv))
                 url="http://localhost:8088"
-                'println(url)
+                #println(url)
                 if(strlen(url)>0)
-                    openOtherApp(url,"URL",0)  ' 第一个为 url，第二个为参数(URL表示打开网址),，第三个为检测是否App 存在，0为不检测，1为检测
+                    openOtherApp(url,"URL",0)  # 第一个为 url，第二个为参数(URL表示打开网址),，第三个为检测是否App 存在，0为不检测，1为检测
                 eif
             eif
         ret
 
-        sub plug_download()
+        sub showPlugDownload()
             url=getEnv("PLUGIN_URL")+"?"+ getQueryPara()
             if(isGithub())
                 url="https://raw.githubusercontent.com/digitalgust/plugin4minijvm/main/plugins/plugin.xml"
-                'url="file:///D:/GitHub/plugin4minijvm/plugins/plugin.xml"
+                #url="file:///D:/GitHub/plugin4minijvm/plugins/plugin.xml"
             eif
-            'println(url)
+            #println(url)
             if(strlen(url)>0)
                 openPage(url,"")
                 showSlot("SLOT_MGR",3)
@@ -195,172 +196,173 @@
         ret
 
         ]]>
-    </script>
-    <tr h="{STATEBAR_HEIGHT}" w="100%">
-        <td>
-        </td>
-    </tr>
-    <tr h="float" w="100%">
-        <td w="100%" h="100%">
-            <viewslot w="100%" h="100%" scroll="h" name="SLOT_MGR">
-                <!-- 0 APPLICATION LIST -->
-                <panel name="PAN_MGR" w="100%" h="100%" move="fixed" align="hcenter,top">
-                    <table w="98%" h="100%">
-                        <tr>
-                            <td>
-                                <table w="100%">
-                                    <tr w="100%">
-                                        <td w="float"></td>
-                                        <td w="100">
-                                            <button name="BT_STYLE" w="50" h="30" preicon="⚙"></button>
-                                            <button name="BT_PLUGINDOWN" onclick="plug_download()" w="50" h="30" preicon="📥"></button>
-                                        </td>
-                                    </tr>
-                                </table>
-                                <!--                                <label w="99%"></label>-->
-
-                                <br/>
-                                <label w="100%" h="30" fontsize="20" align="hcenter,vcenter">{PLUGIN_MANAGER}</label>
-                                <input name="INPUT_SEARCH" w="100%" h="30" style="search" hint="Search"></input>
-                                <br/>
-                            </td>
-                        </tr>
-                        <tr h="float">
-                            <td>
-                                <list name="LIST_APP" w="100%" h="100%" multiline="1" itemh="50">
-                                </list>
-                            </td>
-                        </tr>
-                    </table>
-                </panel>
-
-                <!-- 1 APPLICATION DETAIL -->
-                <panel w="100%" h="100%" move="left" align="hcenter,top">
-                    <viewport name="VP_CONTENT" w="98%" h="100%">
-                        <button name="BT_BACK" h="30" addon="50" preicon="">{STR_BACK}</button>
-                        <label name="APP_NAME_LABEL" w="100%" h="35" align="hcenter,vcenter"></label>
-                        <img name="APP_ICON_ITEM" pic="/res/appmgr.png" w="128" h="128" border="1" fontsize="10"></img>
-                        <br/>
-                        <br/>
-                        <button name="APP_RUN_BTN" w="100%" h="35">{STR_RUN}</button>
-                        <br/>
-                        <button name="APP_STOP_BTN" w="100%" h="35">{STR_CLOSE}</button>
-                        <br/>
-                        <button name="APP_UPGRADE_BTN" w="100%" h="35">{STR_UPGRADE}</button>
-                        <br/>
-                        <button name="APP_DELETE_BTN" w="100%" h="35">{STR_DELETE}</button>
-                        <input name="APP_DESC_LABEL" multiline="1" edit="0" w="100%" h="150"></input>
-                        <br/>
-                        <label name="APP_BLANK" w="100%" h="30" align="hcenter,vcenter"></label>
-                    </viewport>
-                </panel>
-                <!-- 2 SETTING -->
-                <panel w="100%" h="100%" move="fixed" align="hcenter,top">
-                    <viewport name="PAN_SETTING" w="98%" h="100%">
-                        <button onclick='showSlot("SLOT_MGR" ,4)' h="30" addon="50" preicon="">{STR_BACK}</button>
-                        <label w="100%" h="30" fontsize="20" align="hcenter,vcenter">{SETTING}</label>
-                        <list name="LIST_LANG" w="100%" multiline="0">
-                            <li name="LI_ENG" preicon="🇺🇸" pcolor="aa4422ff">English</li>
-                            <li name="LI_CHS" preicon="🇨🇳" pcolor="aa4422ff">简体中文</li>
-                            <li name="LI_CHT" preicon="🇹🇼" pcolor="aa4422ff">繁體中文</li>
-                            <li name="LI_KOR" preicon="🇰🇷" pcolor="aa4422ff">한국어</li>
-                            <li name="LI_FRA" preicon="🇫🇷" pcolor="aa4422ff">Français</li>
-                            <li name="LI_ESP" preicon="🇪🇸" pcolor="aa4422ff">Español</li>
-                            <li name="LI_ITA" preicon="🇮🇹" pcolor="aa4422ff">Italiano</li>
-                            <li name="LI_JPN" preicon="🇯🇵" pcolor="aa4422ff">日本語</li>
-                            <li name="LI_GER" preicon="🇩🇪" pcolor="aa4422ff">Deutsch</li>
-                            <li name="LI_RUS" preicon="🇷🇺" pcolor="aa4422ff">Русский</li>
-                        </list>
-                        <br/>
-                        <list name="LIST_STYLE" w="100%" multiline="0">
-                            <li name="LI_BRIGHT" selected="1">{STR_BRIGHT_STYLE}</li>
-                            <li name="LI_DARK">{STR_DARK_STYLE}</li>
-                        </list>
-                        <label w="100%" h="20"></label>
-                        <label w="100%" h="30" align="left,vcenter">{STR_DOWN_APP_FROM_WEB}</label>
-                        <input name="INPUT_URL" w="100%" h="30" hint="plug jar url"></input>
-                        <button name="BT_DOWN" w="100%" h="30" preicon="📥">{STR_DOWNLOAD}</button>
-                        <label w="100%" h="20"></label>
-                        <label w="100%" h="30" align="left,vcenter">{STR_INSTALL_FROM_LOCAL}</label>
-                        <button name="BT_LOCALFILE" w="100%" h="30" preicon="📁">{BROWSE_FILE}</button>
-                        <label w="100%" h="20"></label>
-                        <label name="LAB_WEBSRV" w="100%" h="30" align="left,vcenter">{STR_START_WEB_SRV_FOR_UPLOAD}</label>
-                        <button name="BT_STARTWEB" onclick="openWebForUpload()" w="100%" h="30" preicon="📤">{STR_START}</button>
-                        <label w="100%" h="20"></label>
-                        <br/>
-                        <input name="INPUT_LOG" w="100%" h="200" edit="0" multiline="1">{STR_MESSAGE}</input>
-                        <label></label>
-                    </viewport>
-                </panel>
-                <!-- 3 DISCOVERY -->
-                <panel w="100%" h="100%" move="fixed" align="hcenter,top">
-                    <table w="98%" h="100%">
-                        <tr w="0" h="2">
-                            <td name="DIS_PROGRESS_BAR" w="100%" h="100%" bgcolor="0000ff80">
-                            </td>
-                        </tr>
-                        <tr w="100%" h="float">
-                            <td w="100%" h="100%" name="TD_DISCOVERY">
-                            </td>
-                        </tr>
-                        <tr w="100%" h="5">
-                            <td w="100%" h="100%">
-                            </td>
-                        </tr>
-                        <tr w="100%" h="30">
-                            <td w="float" h="100%">
-                            </td>
-                            <td w="200" h="100%">
-                                <button name="BT_DISCOVERY_BACK" w="50" h="30" preicon="⬅" onclick="prevPage()"></button>
-                                <button name="BT_DISCOVERY_FORWARD" w="50" h="30" preicon="➡" onclick="nextPage()"></button>
-                                <button name="BT_DISCOVERY_REFRESH" w="50" h="30" preicon="🔄" onclick="refreshPage()"></button>
-                                <button name="BT_DISCOVERY_HOME" w="50" h="30" preicon="⌂" onclick="showHome()"></button>
-                            </td>
-                            <td w="float" h="100%">
-                            </td>
-                        </tr>
-                    </table>
-                </panel>
-                <!-- 4 MY -->
-                <panel w="100%" h="100%" move="fixed" align="hcenter,top">
-                    <viewport name="PAN_MY" w="98%" h="100%">
-                        <label w="100%" h="30" fontsize="20" align="hcenter,vcenter">{MY}</label>
-                        <br/>
-                        <table w="100%">
+        </script>
+        <tr h="{STATEBAR_HEIGHT}" w="100%">
+            <td>
+            </td>
+        </tr>
+        <tr h="float" w="100%">
+            <td w="100%" h="100%">
+                <viewslot w="100%" h="100%" scroll="h" name="SLOT_MGR">
+                    <!-- 0 APPLICATION LIST -->
+                    <panel name="PAN_MGR" w="100%" h="100%" move="fixed" align="hcenter,top">
+                        <table w="98%" h="100%">
                             <tr>
-                                <td w="80" h="85">
-                                    <img w="80" h="80" border="1" pic="/res/ui/head.png"></img>
+                                <td>
+                                    <table w="100%">
+                                        <tr w="100%">
+                                            <td w="float"></td>
+                                            <td w="100">
+                                                <button name="BT_STYLE" w="50" h="30" preicon="⚙"></button>
+                                                <button name="BT_PLUGINDOWN" onclick="showPlugDownload()" w="50" h="30" preicon="📥"></button>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <!--                                <label w="99%"></label>-->
+
+                                    <br/>
+                                    <label w="100%" h="30" fontsize="20" align="hcenter,vcenter">{PLUGIN_MANAGER}</label>
+                                    <input name="INPUT_SEARCH" w="100%" h="30" style="search" hint="Search"></input>
+                                    <br/>
                                 </td>
-                                <td w="20"></td>
-                                <td w="float" bgcolor="55558020">
-                                    <label name="LAB_USERNAME" onclick='showProfile()' w="100%" h="80" color="bb8844ff" fontsize="18" align="hcenter,vcenter">{SIGN_IN} &gt;</label>
+                            </tr>
+                            <tr h="float">
+                                <td>
+                                    <list name="LIST_APP" w="100%" h="100%" multiline="1" itemh="50">
+                                    </list>
                                 </td>
                             </tr>
                         </table>
-                        <label></label>
-                        <br/>
-                        <button name="BT_SETTING" w="100%" h="40" preicon="⚙">{SETTING}</button>
-                        <br/>
-                        <button name="BT_UPDATING" w="100%" h="40" onclick="checkUpdate()" preicon="">{STR_UPDATE}</button>
-                        <br/>
-                        <label></label>
-                    </viewport>
-                </panel>
-            </viewslot>
-        </td>
-    </tr>
-    <tr h="50" w="100%">
-        <td w="100%" h="100%">
-            <menu name="MENU_MAIN" w="100%" h="100%">
-                <mi name="MI_PLUGINMGR" onclick='showSlot("SLOT_MGR",0)'>{PLUGIN_MANAGER}</mi>
-                <mi name="MI_DISCOVERY" onclick="showDiscovery()">{DISCOVERY}</mi>
-                <mi name="MI_MY" onclick="showMy()">{MY}</mi>
-            </menu>
-        </td>
-    </tr>
-    <tr h="{NAV_HEIGHT}" w="100%">
-        <td>
-            <label w="100%"></label>
-        </td>
-    </tr>
-</table>
+                    </panel>
+
+                    <!-- 1 APPLICATION DETAIL -->
+                    <panel w="100%" h="100%" move="left" align="hcenter,top">
+                        <viewport name="VP_CONTENT" w="98%" h="100%">
+                            <button name="BT_BACK" h="30" addon="50" preicon="">{STR_BACK}</button>
+                            <label name="APP_NAME_LABEL" w="100%" h="35" align="hcenter,vcenter"></label>
+                            <img name="APP_ICON_ITEM" pic="/res/appmgr.png" w="128" h="128" border="1" fontsize="10"></img>
+                            <br/>
+                            <br/>
+                            <button name="APP_RUN_BTN" w="100%" h="35">{STR_RUN}</button>
+                            <br/>
+                            <button name="APP_STOP_BTN" w="100%" h="35">{STR_CLOSE}</button>
+                            <br/>
+                            <button name="APP_UPGRADE_BTN" w="100%" h="35">{STR_UPGRADE}</button>
+                            <br/>
+                            <button name="APP_DELETE_BTN" w="100%" h="35">{STR_DELETE}</button>
+                            <input name="APP_DESC_LABEL" multiline="1" edit="0" w="100%" h="150"></input>
+                            <br/>
+                            <label name="APP_BLANK" w="100%" h="30" align="hcenter,vcenter"></label>
+                        </viewport>
+                    </panel>
+                    <!-- 2 SETTING -->
+                    <panel w="100%" h="100%" move="fixed" align="hcenter,top">
+                        <viewport name="PAN_SETTING" w="98%" h="100%">
+                            <button onclick='showSlot("SLOT_MGR" ,4)' h="30" addon="50" preicon="">{STR_BACK}</button>
+                            <label w="100%" h="30" fontsize="20" align="hcenter,vcenter">{SETTING}</label>
+                            <list name="LIST_LANG" w="100%" multiline="0">
+                                <li name="LI_ENG" preicon="🇺🇸" pcolor="aa4422ff">English</li>
+                                <li name="LI_CHS" preicon="🇨🇳" pcolor="aa4422ff">简体中文</li>
+                                <li name="LI_CHT" preicon="🇹🇼" pcolor="aa4422ff">繁體中文</li>
+                                <li name="LI_KOR" preicon="🇰🇷" pcolor="aa4422ff">한국어</li>
+                                <li name="LI_FRA" preicon="🇫🇷" pcolor="aa4422ff">Français</li>
+                                <li name="LI_ESP" preicon="🇪🇸" pcolor="aa4422ff">Español</li>
+                                <li name="LI_ITA" preicon="🇮🇹" pcolor="aa4422ff">Italiano</li>
+                                <li name="LI_JPN" preicon="🇯🇵" pcolor="aa4422ff">日本語</li>
+                                <li name="LI_GER" preicon="🇩🇪" pcolor="aa4422ff">Deutsch</li>
+                                <li name="LI_RUS" preicon="🇷🇺" pcolor="aa4422ff">Русский</li>
+                            </list>
+                            <br/>
+                            <list name="LIST_STYLE" w="100%" multiline="0">
+                                <li name="LI_BRIGHT" selected="1">{STR_BRIGHT_STYLE}</li>
+                                <li name="LI_DARK">{STR_DARK_STYLE}</li>
+                            </list>
+                            <label w="100%" h="20"></label>
+                            <label w="100%" h="30" align="left,vcenter">{STR_DOWN_APP_FROM_WEB}</label>
+                            <input name="INPUT_URL" w="100%" h="30" hint="plug jar url"></input>
+                            <button name="BT_DOWN" w="100%" h="30" preicon="📥">{STR_DOWNLOAD}</button>
+                            <label w="100%" h="20"></label>
+                            <label w="100%" h="30" align="left,vcenter">{STR_INSTALL_FROM_LOCAL}</label>
+                            <button name="BT_LOCALFILE" w="100%" h="30" preicon="📁">{BROWSE_FILE}</button>
+                            <label w="100%" h="20"></label>
+                            <label name="LAB_WEBSRV" w="100%" h="30" align="left,vcenter">{STR_START_WEB_SRV_FOR_UPLOAD}</label>
+                            <button name="BT_STARTWEB" onclick="openWebForUpload()" w="100%" h="30" preicon="📤">{STR_START}</button>
+                            <label w="100%" h="20"></label>
+                            <br/>
+                            <input name="INPUT_LOG" w="100%" h="200" edit="0" multiline="1">{STR_MESSAGE}</input>
+                            <label></label>
+                        </viewport>
+                    </panel>
+                    <!-- 3 DISCOVERY -->
+                    <panel w="100%" h="100%" move="fixed" align="hcenter,top">
+                        <table w="98%" h="100%">
+                            <tr w="0" h="2">
+                                <td name="DIS_PROGRESS_BAR" w="100%" h="100%" bgcolor="0000ff80">
+                                </td>
+                            </tr>
+                            <tr w="100%" h="float">
+                                <td w="100%" h="100%" name="TD_DISCOVERY">
+                                </td>
+                            </tr>
+                            <tr w="100%" h="5">
+                                <td w="100%" h="100%">
+                                </td>
+                            </tr>
+                            <tr w="100%" h="30">
+                                <td w="float" h="100%">
+                                </td>
+                                <td w="200" h="100%">
+                                    <button name="BT_DISCOVERY_BACK" w="50" h="30" preicon="⬅" onclick="prevPage()"></button>
+                                    <button name="BT_DISCOVERY_FORWARD" w="50" h="30" preicon="➡" onclick="nextPage()"></button>
+                                    <button name="BT_DISCOVERY_REFRESH" w="50" h="30" preicon="🔄" onclick="refreshPage()"></button>
+                                    <button name="BT_DISCOVERY_HOME" w="50" h="30" preicon="⌂" onclick="showHome()"></button>
+                                </td>
+                                <td w="float" h="100%">
+                                </td>
+                            </tr>
+                        </table>
+                    </panel>
+                    <!-- 4 MY -->
+                    <panel w="100%" h="100%" move="fixed" align="hcenter,top">
+                        <viewport name="PAN_MY" w="98%" h="100%">
+                            <label w="100%" h="30" fontsize="20" align="hcenter,vcenter">{MY}</label>
+                            <br/>
+                            <table w="100%">
+                                <tr>
+                                    <td w="80" h="85">
+                                        <img w="80" h="80" border="1" pic="/res/ui/head.png"></img>
+                                    </td>
+                                    <td w="20"></td>
+                                    <td w="float" bgcolor="55558020">
+                                        <label name="LAB_USERNAME" onclick='showProfile()' w="100%" h="80" color="bb8844ff" fontsize="18" align="hcenter,vcenter">{SIGN_IN} &gt;</label>
+                                    </td>
+                                </tr>
+                            </table>
+                            <label></label>
+                            <br/>
+                            <button name="BT_SETTING" w="100%" h="40" preicon="⚙">{SETTING}</button>
+                            <br/>
+                            <button name="BT_UPDATING" w="100%" h="40" onclick="checkUpdate()" preicon="">{STR_UPDATE}</button>
+                            <br/>
+                            <label></label>
+                        </viewport>
+                    </panel>
+                </viewslot>
+            </td>
+        </tr>
+        <tr h="50" w="100%">
+            <td w="100%" h="100%">
+                <menu name="MENU_MAIN" w="100%" h="100%">
+                    <mi name="MI_PLUGINMGR" onclick='showSlot("SLOT_MGR",0)'>{PLUGIN_MANAGER}</mi>
+                    <mi name="MI_DISCOVERY" onclick="showPlugDownload()">{DISCOVERY}</mi>
+                    <mi name="MI_MY" onclick="showMy()">{MY}</mi>
+                </menu>
+            </td>
+        </tr>
+        <tr h="{NAV_HEIGHT}" w="100%">
+            <td>
+                <label w="100%"></label>
+            </td>
+        </tr>
+    </table>
+</form>

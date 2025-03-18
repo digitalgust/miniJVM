@@ -100,6 +100,21 @@ public class GTextBox extends GTextObject {
 
     }
 
+    public void setFontSize(float fontSize) {
+        super.setFontSize(fontSize);
+        editArea.setFontSize(fontSize);
+    }
+
+    public void setColor(float[] color) {
+        super.setColor(color);
+        editArea.setColor(color);
+    }
+
+    public void setBgColor(float[] bgcolor) {
+        super.setBgColor(bgcolor);
+        editArea.setBgColor(bgcolor);
+    }
+
     public int getCurCaretRow() {
         return curCaretRow;
     }
@@ -342,13 +357,13 @@ public class GTextBox extends GTextObject {
                         selectStart = caret;
                         mouseDrag = true;
                     } else {
-                        GToolkit.disposeEditMenu();
+                        GToolkit.hideEditMenu();
                     }
                 } else {
                     mouseDrag = false;
                     if (selectEnd == -1 || selectStart == selectEnd) {
                         resetSelect();
-                        GToolkit.disposeEditMenu();
+                        GToolkit.hideEditMenu();
                     } else {
                         selectMode = true;
                     }
@@ -410,7 +425,7 @@ public class GTextBox extends GTextObject {
             return;
         }
         deleteSelectedText();
-        if (enable && editable) {
+        if (visible && enable) {
             insertTextByIndex(caretIndex, character);
             setCaretIndex(getCaretIndex() + 1);
         }
@@ -430,7 +445,7 @@ public class GTextBox extends GTextObject {
         }
         if (action == Glfw.GLFW_PRESS || action == Glfw.GLFW_REPEAT) {
             //edit key
-            if (enable && editable) {
+            if (visible && enable) {
                 switch (key) {
                     case Glfw.GLFW_KEY_BACKSPACE: {
                         if (isSelected()) {
@@ -573,7 +588,7 @@ public class GTextBox extends GTextObject {
         super.touchEvent(touchid, phase, x, y);
 
         if (touchid != Glfw.GLFW_MOUSE_BUTTON_1) return;
-        if (isInArea(x, y)) {
+        if (editArea.isInArea(x, y)) {
             switch (phase) {
                 case Glfm.GLFMTouchPhaseBegan: {
                     int caret = editArea.getCaretIndexFromArea(x, y);
@@ -645,7 +660,7 @@ public class GTextBox extends GTextObject {
         if (action == Glfm.GLFMKeyActionPressed || action == Glfm.GLFMKeyActionRepeated) {
             switch (key) {
                 case Glfm.GLFMKeyBackspace: {
-                    if (enable && editable) {
+                    if (visible && enable) {
                         if (textsb.length() > 0 && caretIndex > 0) {
                             if (isSelected()) {
                                 deleteSelectedText();
@@ -659,7 +674,7 @@ public class GTextBox extends GTextObject {
                 }
                 case Glfm.GLFMKeyEnter: {
                     String txt = getText();
-                    if (enable && editable) {
+                    if (visible && enable) {
                         if (txt != null && txt.length() > 0) {
                             if (isSelected()) {
                                 deleteSelectedText();
@@ -1137,7 +1152,7 @@ public class GTextBox extends GTextObject {
                                             }
 
                                         }
-                                        nvgFillColor(vg, getColor());
+                                        nvgFillColor(vg, isEditable() ? getColor() : getDisabledColor());
                                         nvgTextJni(vg, dx, dy + 1, local_arr, byte_starti, byte_endi);
                                     }
                                 }

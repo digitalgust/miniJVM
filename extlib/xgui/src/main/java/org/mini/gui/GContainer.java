@@ -10,8 +10,7 @@ import org.mini.gui.event.GChildrenListener;
 import org.mini.gui.gscript.Interpreter;
 import org.mini.nanovg.Nanovg;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.mini.nanovg.Nanovg.nvgSave;
@@ -21,7 +20,8 @@ import static org.mini.nanovg.Nanovg.nvgSave;
  */
 abstract public class GContainer extends GObject {
 
-    protected final List<GObject> elements = new CopyOnWriteArrayList<>();//使用无锁列表，否则如果进行容器同步，在findSonByName，会导出线程死锁
+    protected final List<GObject> elements = new CopyOnWriteArrayList<>();//使用无锁列表，否则如果进行容器同步，在findSonByName，会导出线程死锁，但是copylist的问题是不能sort
+    //    protected final Vector<GObject> elements = new Vector<>();//vector的问题是，遍历时，可能因同步问题位置出现错乱
     private final List<GChildrenListener> childrenListeners = new ArrayList<>();
     protected GObject current;  //每个容器都有自己的当前组件，current一定是直接子组件，焦点的获得和失去，是在鼠标或点击事件中从form开始逐层获得和失去
     float[] visableArea = new float[4];
@@ -279,7 +279,7 @@ abstract public class GContainer extends GObject {
         {
             for (int i = 0; i < elements.size(); i++) {
                 GObject nko = elements.get(i);
-                if (nko.isInArea(x, y)) {
+                if (nko.isInArea(x, y) && nko.visible) {
                     if (nko.getLayer() == LAYER_INNER) {
                         return (T) nko;
                     } else if (nko.isMenu()) {
@@ -368,6 +368,9 @@ abstract public class GContainer extends GObject {
     }
 
     public void addChildrenListener(GChildrenListener listener) {
+        if (listener == null) {
+            return;
+        }
         if (!childrenListeners.contains(listener)) childrenListeners.add(listener);
     }
 
@@ -529,9 +532,9 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void keyEventGlfw(int key, int scanCode, int action, int mods) {
-        if (!isEnable()) {
-            return;
-        }
+//        if (!isEnable()) {
+//            return;
+//        }
         if (current != null) {
             current.keyEventGlfw(key, scanCode, action, mods);
         }
@@ -549,9 +552,9 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
-        if (!isEnable()) {
-            return;
-        }
+//        if (!isEnable()) {
+//            return;
+//        }
         GObject found = findSonByXY(x, y);
         if (found != null && found.isMenu()) {//memu 不影响焦点
             found.mouseButtonEvent(button, pressed, x, y);
@@ -573,9 +576,9 @@ abstract public class GContainer extends GObject {
     @Override
     public void cursorPosEvent(int x, int y) {
 
-        if (!isEnable()) {
-            return;
-        }
+//        if (!isEnable()) {
+//            return;
+//        }
         if (current != null/* && focus.isInArea(x, y)*/) {
             current.cursorPosEvent(x, y);
         }
@@ -584,9 +587,9 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void dropEvent(int count, String[] paths) {
-        if (!isEnable()) {
-            return;
-        }
+//        if (!isEnable()) {
+//            return;
+//        }
         if (current != null) {
             current.dropEvent(count, paths);
         }
@@ -594,9 +597,9 @@ abstract public class GContainer extends GObject {
 
     @Override
     public boolean scrollEvent(float scrollX, float scrollY, float x, float y) {
-        if (!isEnable()) {
-            return false;
-        }
+//        if (!isEnable()) {
+//            return false;
+//        }
         setCurrent(findSonByXY(x, y));
         if (current != null && current.isInArea(x, y)) {
             return current.scrollEvent(scrollX, scrollY, x, y);
@@ -606,9 +609,9 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void clickEvent(int button, int x, int y) {
-        if (!isEnable()) {
-            return;
-        }
+//        if (!isEnable()) {
+//            return;
+//        }
         if (current != null && current.isInArea(x, y)) {
             current.clickEvent(button, x, y);
         }
@@ -616,9 +619,9 @@ abstract public class GContainer extends GObject {
 
     @Override
     public boolean dragEvent(int button, float dx, float dy, float x, float y) {
-        if (!isEnable()) {
-            return false;
-        }
+//        if (!isEnable()) {
+//            return false;
+//        }
 
         if (current != null) {
             return current.dragEvent(button, dx, dy, x, y);
@@ -635,9 +638,9 @@ abstract public class GContainer extends GObject {
     ///==========================
     @Override
     public void keyEventGlfm(int key, int action, int mods) {
-        if (!isEnable()) {
-            return;
-        }
+//        if (!isEnable()) {
+//            return;
+//        }
         if (current != null) {
             current.keyEventGlfm(key, action, mods);
         }
@@ -645,9 +648,9 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void characterEvent(String str, int mods) {
-        if (!isEnable()) {
-            return;
-        }
+//        if (!isEnable()) {
+//            return;
+//        }
         if (current != null) {
             current.characterEvent(str, mods);
         }
@@ -655,9 +658,9 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void touchEvent(int touchid, int phase, int x, int y) {
-        if (!isEnable()) {
-            return;
-        }
+//        if (!isEnable()) {
+//            return;
+//        }
         GObject found = findSonByXY(x, y);
         if (found != null && found.isMenu()) {
             found.touchEvent(touchid, phase, x, y);
@@ -679,9 +682,9 @@ abstract public class GContainer extends GObject {
     @Override
     public boolean inertiaEvent(float x1, float y1, float x2, float y2, long moveTime) {
 
-        if (!isEnable()) {
-            return false;
-        }
+//        if (!isEnable()) {
+//            return false;
+//        }
         if (current != null && current.isInArea((float) x1, (float) y1)) {
             return current.inertiaEvent(x1, y1, x2, y2, moveTime);
         }
@@ -690,9 +693,9 @@ abstract public class GContainer extends GObject {
 
     @Override
     public void longTouchedEvent(int x, int y) {
-        if (!isEnable()) {
-            return;
-        }
+//        if (!isEnable()) {
+//            return;
+//        }
         GObject found = findSonByXY(x, y);
         if (found != null && found.isMenu()) {
             if (!found.isContextMenu()) {
@@ -709,4 +712,15 @@ abstract public class GContainer extends GObject {
         }
     }
 
+    /**
+     * 根据外部比较器进行排序
+     *
+     * @param c
+     */
+    public synchronized void sort(Comparator<? super GObject> c) {
+        List list = new ArrayList(elements);
+        list.sort(c);
+        elements.clear();
+        elements.addAll(list);
+    }
 }

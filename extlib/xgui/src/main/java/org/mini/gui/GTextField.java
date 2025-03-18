@@ -136,7 +136,7 @@ public class GTextField extends GTextObject {
                         selectStart = caret;
                         mouseDrag = true;
                     } else {
-                        GToolkit.disposeEditMenu();
+                        GToolkit.hideEditMenu();
                     }
                     if (isInBoundle(reset_boundle, rx, ry)) {
                         if (isResetEnable()) {
@@ -148,7 +148,7 @@ public class GTextField extends GTextObject {
                     mouseDrag = false;
                     if (selectEnd == -1 || selectStart == selectEnd) {
                         resetSelect();
-                        GToolkit.disposeEditMenu();
+                        GToolkit.hideEditMenu();
                     }
                     if (isInBoundle(reset_boundle, rx, ry)) {
                         if (isResetEnable() && resetPressBegin) {
@@ -225,7 +225,7 @@ public class GTextField extends GTextObject {
         }
 
         if (action == Glfw.GLFW_PRESS || action == Glfw.GLFW_REPEAT) {
-            if (enable) {
+            if (visible && enable) {
                 switch (key) {
                     case Glfw.GLFW_KEY_BACKSPACE: {
                         int[] selectFromTo = getSelected();
@@ -365,7 +365,7 @@ public class GTextField extends GTextObject {
 
     @Override
     public void characterEvent(String str, int mods) {
-        if (enable) {
+        if (visible && enable) {
             boolean containEnter = false;
             if (str.indexOf('\n') >= 0) {
                 str = str.replace("\n", "");
@@ -389,7 +389,7 @@ public class GTextField extends GTextObject {
      */
     @Override
     public void characterEvent(char character) {
-        if (enable) {
+        if (visible && enable) {
             if (character != '\n') {
                 if (character != '\r' && textsb.length() < text_max) {
                     deleteSelectedText();

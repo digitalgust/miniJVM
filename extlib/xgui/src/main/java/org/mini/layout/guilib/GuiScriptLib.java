@@ -2,21 +2,21 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.mini.gui.guilib;
+package org.mini.layout.guilib;
 
 import org.mini.apploader.AppManager;
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
-import org.mini.glfw.GlfwCallBackImpl;
 import org.mini.gui.*;
 import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GCmd;
-import org.mini.gui.callback.GCmdHandler;
 import org.mini.gui.callback.GDesktop;
 import org.mini.gui.gscript.*;
 import org.mini.http.MiniHttpClient;
 import org.mini.json.JsonParser;
 import org.mini.layout.*;
+import org.mini.layout.loader.UITemplate;
+import org.mini.layout.loader.XmlExtAssist;
 import org.mini.nanovg.Nanovg;
 
 import java.io.InputStream;
@@ -31,15 +31,15 @@ import java.util.ArrayList;
  * @author Gust
  */
 public class GuiScriptLib extends Lib {
-    GForm form;
+    FormHolder formHolder;
 
     static float[] inset = new float[4];//top,right,bottom,left
 
     /**
      *
      */
-    public GuiScriptLib(GForm form) {
-        this.form = form;
+    public GuiScriptLib(FormHolder formHolder) {
+        this.formHolder = formHolder;
 
         {
             methodNames.put("flushGui".toLowerCase(), this::flushGui);//  set background color
@@ -106,9 +106,6 @@ public class GuiScriptLib extends Lib {
     }
 
     public Func getFuncByName(String name) {
-        if (form == null) { //如果通过解析XML得到form的时候，创建这个lib时，form还没有创建成功，因此进行补充设置
-            form = GCallBack.getInstance().getApplication().getForm();
-        }
         return super.getFuncByName(name);
     }
 
@@ -142,12 +139,8 @@ public class GuiScriptLib extends Lib {
 
     public static void showProgressBar(GForm form, int progress) {
         GForm.addCmd(new GCmd(() -> {
-            //long vg = GCallBack.getInstance().getNvContext();
-            //GToolkit.drawTextLine(vg, 0, 0, "waitting ..." + progress, GToolkit.getStyle().getTextFontSize(), GToolkit.getStyle().getTextFontColor(), Nanovg.NVG_ALIGN_LEFT | Nanovg.NVG_ALIGN_TOP);
             int w = GCallBack.getInstance().getDeviceWidth();
-            //int h = GCallBack.getInstance().getDeviceHeight();
             GCallBack.getInstance().getInsets(inset);
-            //System.out.println("progress:" + progress);
             final String panName = "_INNER_PROGRESS_BAR";
             GObject go = GToolkit.getComponent(form, panName);
             if (go == null) {
@@ -165,7 +158,7 @@ public class GuiScriptLib extends Lib {
             go.setLocation(0, inset[0]);
             go.setSize(progress * w / 100f, go.getH());
             AppManager.getInstance().getFloatButton().setDrawMarkSecond(1000);
-            if (progress == 100) {
+            if (progress >= 100) {
                 GObject go1 = GToolkit.getComponent(form, panName);
                 if (go1 != null) go1.setSize(0, go1.getH());
                 AppManager.getInstance().getFloatButton().setDrawMarkSecond(0);
@@ -185,7 +178,7 @@ public class GuiScriptLib extends Lib {
 
     public DataType setBgColor(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         if (gobj != null) {
             float[] color;
             int r = Interpreter.popBackInt(para);
@@ -200,7 +193,7 @@ public class GuiScriptLib extends Lib {
 
     public DataType setColor(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         if (gobj != null) {
             float[] color;
             int r = Interpreter.popBackInt(para);
@@ -225,7 +218,7 @@ public class GuiScriptLib extends Lib {
 
     public DataType setBgColorHexStr(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         if (gobj != null) {
             float[] color;
             String rgbaStr = Interpreter.popBackStr(para);
@@ -241,7 +234,7 @@ public class GuiScriptLib extends Lib {
 
     public DataType setColorHexStr(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         if (gobj != null) {
             float[] color;
             String rgbaStr = Interpreter.popBackStr(para);
@@ -257,7 +250,7 @@ public class GuiScriptLib extends Lib {
 
     public DataType setPreIconColor(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         if (gobj != null) {
             float[] color;
             String rgbaStr = Interpreter.popBackStr(para);
@@ -273,7 +266,7 @@ public class GuiScriptLib extends Lib {
 
     public DataType clearPreIconColor(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         if (gobj != null) {
             gobj.setPreiconColor(GToolkit.getStyle().getTextFontColor());
         }
@@ -285,13 +278,13 @@ public class GuiScriptLib extends Lib {
         String compont = Interpreter.popBackStr(para);
         DataType dt = Interpreter.popBack(para);
         String text = dt.getString();
-        GToolkit.setCompText(form, compont, text);
+        GToolkit.setCompText(formHolder.getForm(), compont, text);
         return null;
     }
 
     public DataType getText(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        String text = GToolkit.getCompText(form, compont);
+        String text = GToolkit.getCompText(formHolder.getForm(), compont);
         return Interpreter.getCachedStr(text == null ? "" : text);
     }
 
@@ -299,7 +292,7 @@ public class GuiScriptLib extends Lib {
         String compont = Interpreter.popBackStr(para);
         int x = Interpreter.popBackInt(para);
         int y = Interpreter.popBackInt(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         if (gobj != null) {
             gobj.setLocation(x, y);
         }
@@ -311,7 +304,7 @@ public class GuiScriptLib extends Lib {
         String compont = Interpreter.popBackStr(para);
         int w = Interpreter.popBackInt(para);
         int h = Interpreter.popBackInt(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         if (gobj != null) {
             gobj.setSize(w, h);
         }
@@ -327,10 +320,10 @@ public class GuiScriptLib extends Lib {
      * @return
      */
     public DataType getX(ArrayList<DataType> para) {
-        int left = (int) form.getX();
+        int left = (int) formHolder.getForm().getX();
         if (!para.isEmpty()) {
             String compont = Interpreter.popBackStr(para);
-            GObject go = GToolkit.getComponent(form, compont);
+            GObject go = GToolkit.getComponent(formHolder.getForm(), compont);
             if (go != null) {
                 left = (int) go.getX();
             } else {
@@ -341,10 +334,10 @@ public class GuiScriptLib extends Lib {
     }
 
     public DataType getY(ArrayList<DataType> para) {
-        int top = (int) form.getY();
+        int top = (int) formHolder.getForm().getY();
         if (!para.isEmpty()) {
             String compont = Interpreter.popBackStr(para);
-            GObject go = GToolkit.getComponent(form, compont);
+            GObject go = GToolkit.getComponent(formHolder.getForm(), compont);
             if (go != null) {
                 top = (int) go.getY();
             } else {
@@ -355,10 +348,10 @@ public class GuiScriptLib extends Lib {
     }
 
     public DataType getW(ArrayList<DataType> para) {
-        int w = (int) form.getW();
+        int w = (int) formHolder.getForm().getW();
         if (!para.isEmpty()) {
             String compont = Interpreter.popBackStr(para);
-            GObject go = GToolkit.getComponent(form, compont);
+            GObject go = GToolkit.getComponent(formHolder.getForm(), compont);
             if (go != null) {
                 w = (int) go.getW();
             } else {
@@ -369,10 +362,10 @@ public class GuiScriptLib extends Lib {
     }
 
     public DataType getH(ArrayList<DataType> para) {
-        int h = (int) form.getH();
+        int h = (int) formHolder.getForm().getH();
         if (!para.isEmpty()) {
             String compont = Interpreter.popBackStr(para);
-            GObject go = GToolkit.getComponent(form, compont);
+            GObject go = GToolkit.getComponent(formHolder.getForm(), compont);
             if (go != null) {
                 h = (int) go.getH();
             } else {
@@ -385,13 +378,13 @@ public class GuiScriptLib extends Lib {
     public DataType setCmd(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
         String cmd = Interpreter.popBackStr(para);
-        GToolkit.setCompCmd(form, compont, cmd);
+        GToolkit.setCompCmd(formHolder.getForm(), compont, cmd);
         return null;
     }
 
     public DataType getCmd(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        String text = GToolkit.getCompCmd(form, compont);
+        String text = GToolkit.getCompCmd(formHolder.getForm(), compont);
         if (text == null) {
             text = "";
         }
@@ -400,14 +393,14 @@ public class GuiScriptLib extends Lib {
 
     public DataType close(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GToolkit.closeFrame(form, compont);
+        GToolkit.closeFrame(formHolder.getForm(), compont);
         return null;
     }
 
     public DataType getCurSlot(ArrayList<DataType> para) {
         Int val = Interpreter.getCachedInt(0);
         String compont = Interpreter.popBackStr(para);
-        GObject go = GToolkit.getComponent(form, compont);
+        GObject go = GToolkit.getComponent(formHolder.getForm(), compont);
         if (go instanceof GViewSlot) {
             val.setVal(((GViewSlot) go).getCurrentSlot());
         }
@@ -416,7 +409,7 @@ public class GuiScriptLib extends Lib {
 
     public DataType showSlot(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject go = GToolkit.getComponent(form, compont);
+        GObject go = GToolkit.getComponent(formHolder.getForm(), compont);
         int slot = Interpreter.popBackInt(para);
         Int time = Interpreter.popBack(para);
         if (go instanceof GViewSlot) {
@@ -430,7 +423,7 @@ public class GuiScriptLib extends Lib {
     public DataType setImgPath(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
         String img = Interpreter.popBackStr(para);
-        GToolkit.setCompImage(form, compont, img);
+        GToolkit.setCompImage(formHolder.getForm(), compont, img);
         return null;
     }
 
@@ -438,27 +431,27 @@ public class GuiScriptLib extends Lib {
         String compont = Interpreter.popBackStr(para);
         Object img = Interpreter.popBackObject(para);
         if (img instanceof GImage) {
-            GToolkit.setCompImage(form, compont, (GImage) img);
+            GToolkit.setCompImage(formHolder.getForm(), compont, (GImage) img);
         }
         return null;
     }
 
     public DataType getImg(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GImage img = GToolkit.getCompImage(form, compont);
+        GImage img = GToolkit.getCompImage(formHolder.getForm(), compont);
         return Interpreter.getCachedObj(img);
     }
 
     public DataType setAttachStr(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
         String str1 = Interpreter.popBackStr(para);
-        GToolkit.setCompAttachment(form, compont, str1);
+        GToolkit.setCompAttachment(formHolder.getForm(), compont, str1);
         return null;
     }
 
     public DataType getAttachStr(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        String text = GToolkit.getCompAttachment(form, compont);
+        String text = GToolkit.getCompAttachment(formHolder.getForm(), compont);
         return Interpreter.getCachedStr(text);
     }
 
@@ -466,20 +459,20 @@ public class GuiScriptLib extends Lib {
     public DataType setAttachInt(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
         int val = Interpreter.popBackInt(para);
-        GToolkit.setCompAttachment(form, compont, Integer.valueOf(val));
+        GToolkit.setCompAttachment(formHolder.getForm(), compont, Integer.valueOf(val));
         return null;
     }
 
     public DataType getAttachInt(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        Integer val = GToolkit.getCompAttachment(form, compont);
+        Integer val = GToolkit.getCompAttachment(formHolder.getForm(), compont);
         return Interpreter.getCachedInt(val == null ? 0 : val.intValue());
     }
 
 
     public DataType getListIdx(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         int selectIndex = -1;
         if (gobj != null && gobj instanceof GList) {
             selectIndex = ((GList) gobj).getSelectedIndex();
@@ -490,7 +483,7 @@ public class GuiScriptLib extends Lib {
 
     public DataType getListText(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         String selectText = "";
         if (gobj != null && gobj instanceof GList && ((GList) gobj).getSelectedIndex() >= 0) {
             selectText = ((GList) gobj).getSelectedItem().getText();
@@ -502,7 +495,7 @@ public class GuiScriptLib extends Lib {
     public DataType setListIdx(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
         DataType idxD = Interpreter.popBack(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         int idx = -1;
         if (idxD instanceof Int) {
             idx = ((Int) idxD).getValAsInt();
@@ -523,7 +516,7 @@ public class GuiScriptLib extends Lib {
 
     private DataType setImgAlphaStr(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         if (gobj != null) {
             String alphaStr = Interpreter.popBackStr(para);
             try {
@@ -531,11 +524,6 @@ public class GuiScriptLib extends Lib {
                 if (gobj instanceof GImageItem) {
                     ((GImageItem) gobj).setAlpha(alpha);
                 }
-//                else if (gobj instanceof GListItem) {
-//                    ((GListItem) gobj).setAlpha(alpha);
-//                } else if (gobj instanceof GMenuItem) {
-//                    ((GMenuItem) gobj).setAlpha(alpha);
-//                }
             } catch (Exception e) {
             }
         }
@@ -545,13 +533,13 @@ public class GuiScriptLib extends Lib {
     private DataType setEnable(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
         boolean enable = Interpreter.popBackBool(para);
-        GToolkit.setCompEnable(form, compont, enable);
+        GToolkit.setCompEnable(formHolder.getForm(), compont, enable);
         return null;
     }
 
     private DataType getEnable(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         if (gobj != null) {
             boolean en = gobj.isEnable();
             return Interpreter.getCachedBool(en);
@@ -562,7 +550,7 @@ public class GuiScriptLib extends Lib {
     private DataType setCheckBox(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
         boolean checked = Interpreter.popBackBool(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         if (gobj != null && gobj instanceof GCheckBox) {
             ((GCheckBox) gobj).setChecked(checked);
         }
@@ -571,7 +559,7 @@ public class GuiScriptLib extends Lib {
 
     private DataType getCheckBox(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         boolean checked = false;
         if (gobj != null && gobj instanceof GCheckBox) {
             checked = ((GCheckBox) gobj).isChecked();
@@ -583,7 +571,7 @@ public class GuiScriptLib extends Lib {
     private DataType setScrollBar(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
         int fv = Interpreter.popBackInt(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         if (gobj instanceof GScrollBar) {
             ((GScrollBar) gobj).setPos(fv / 100f);
         }
@@ -592,7 +580,7 @@ public class GuiScriptLib extends Lib {
 
     private DataType getScrollBar(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         float fv;
         if (gobj instanceof GScrollBar) {
             fv = ((GScrollBar) gobj).getPos();
@@ -606,7 +594,7 @@ public class GuiScriptLib extends Lib {
     private DataType setSwitch(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
         boolean checked = Interpreter.popBackBool(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         if (gobj instanceof GSwitch) {
             ((GSwitch) gobj).setSwitcher(checked);
         }
@@ -615,7 +603,7 @@ public class GuiScriptLib extends Lib {
 
     private DataType getSwitch(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         boolean checked = false;
         if (gobj instanceof GSwitch) {
             checked = ((GSwitch) gobj).getSwitcher();
@@ -646,7 +634,7 @@ public class GuiScriptLib extends Lib {
         //System.out.println(s);
         XObject xobj = XContainer.parseXml(s, xmlExtAssist);
         if (xobj instanceof XContainer) {
-            ((XContainer) xobj).build((int) form.getW(), (int) form.getH(), eventHandler);
+            ((XContainer) xobj).build((int) formHolder.getForm().getW(), (int) formHolder.getForm().getH(), eventHandler);
         }
         GToolkit.showFrame(xobj.getGui());
         return null;
@@ -656,7 +644,7 @@ public class GuiScriptLib extends Lib {
         boolean w = false;
         if (!para.isEmpty()) {
             String compont = Interpreter.popBackStr(para);
-            GObject go = GToolkit.getComponent(form, compont);
+            GObject go = GToolkit.getComponent(formHolder.getForm(), compont);
             w = (go != null);
         }
         return Interpreter.getCachedBool(w);
@@ -671,9 +659,9 @@ public class GuiScriptLib extends Lib {
 
     public DataType showMsg(ArrayList<DataType> para) {
         String msg = Interpreter.popBackStr(para);
-        GFrame f = GToolkit.getMsgFrame(form, AppManager.getInstance().getString("Message"), msg);
+        GFrame f = GToolkit.getMsgFrame(formHolder.getForm(), AppManager.getInstance().getString("Message"), msg);
         GToolkit.showFrame(f);
-        form.flush();
+        formHolder.getForm().flush();
         return null;
     }
 
@@ -681,7 +669,7 @@ public class GuiScriptLib extends Lib {
         String msg = Interpreter.popBackStr(para);
         String callback = Interpreter.popBackStr(para);
         GFrame f = GToolkit.getConfirmFrame(
-                form,
+                formHolder.getForm(),
                 AppManager.getInstance().getString("Message"),
                 msg,
                 AppManager.getInstance().getString("Ok"),
@@ -689,7 +677,7 @@ public class GuiScriptLib extends Lib {
                     if (callback != null) {
                         if (callback.contains(".")) {
                             String[] ss = callback.split("\\.");
-                            GContainer gobj = GToolkit.getComponent(form, ss[0]);
+                            GContainer gobj = GToolkit.getComponent(formHolder.getForm(), ss[0]);
                             Interpreter inp = gobj.getInterpreter();
                             inp.callSub(ss[1] + "()");
                         } else {
@@ -700,14 +688,14 @@ public class GuiScriptLib extends Lib {
                 null,
                 null);
         GToolkit.showFrame(f);
-        form.flush();
+        formHolder.getForm().flush();
         return null;
     }
 
 
     private DataType insertText(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         int pos = Interpreter.popBackInt(para);
         String str = Interpreter.popBackStr(para);
         if (gobj instanceof GTextObject) {
@@ -718,7 +706,7 @@ public class GuiScriptLib extends Lib {
 
     private DataType deleteText(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         int pos = Interpreter.popBackInt(para);
         int pos1 = Interpreter.popBackInt(para);
         if (gobj instanceof GTextObject) {
@@ -729,7 +717,7 @@ public class GuiScriptLib extends Lib {
 
     private DataType getCaretPos(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         int index = 0;
         if (gobj != null && gobj instanceof GTextObject) {
             index = ((GTextObject) gobj).getCaretIndex();
@@ -739,7 +727,7 @@ public class GuiScriptLib extends Lib {
 
     private DataType showTitle(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         if (gobj != null && gobj instanceof GFrame) {
             boolean show = Interpreter.popBackBool(para);
             ((GFrame) gobj).setTitleShow(show);
@@ -749,7 +737,7 @@ public class GuiScriptLib extends Lib {
 
     private DataType setBgImg(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         if (gobj != null) {
             String imgpath = Interpreter.popBackStr(para);
             gobj.setBgImg(GToolkit.getCachedImageFromJar(imgpath));
@@ -764,7 +752,7 @@ public class GuiScriptLib extends Lib {
 
     private DataType setVisible(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         if (gobj != null) {
             boolean show = Interpreter.popBackBool(para);
             gobj.setVisible(show);
@@ -774,7 +762,7 @@ public class GuiScriptLib extends Lib {
 
     private DataType getVisible(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
-        GObject gobj = GToolkit.getComponent(form, compont);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
         if (gobj != null) {
             boolean show = gobj.isVisible();
             return Interpreter.getCachedBool(show);
@@ -791,11 +779,11 @@ public class GuiScriptLib extends Lib {
                 if (async) {//异步要交给主线程执行，因为实践中出现死锁，GContainer 的elements 同步比较多，多线程死锁
                     GCmd cmd = new GCmd(
                             () -> {
-                                doHttpCallback(form, callback, href, -1, "url format error");
+                                doHttpCallback(formHolder.getForm(), callback, href, -1, "url format error");
                             });
                     GDesktop.addCmd(cmd);
                 } else {
-                    doHttpCallback(form, callback, href, -1, "url format error");
+                    doHttpCallback(formHolder.getForm(), callback, href, -1, "url format error");
                 }
                 return null;
             }
@@ -810,12 +798,12 @@ public class GuiScriptLib extends Lib {
                             if (async) {//异步要交给主线程执行，因为实践中出现死锁，GContainer 的elements 同步比较多，多线程死锁
                                 GCmd cmd = new GCmd(
                                         () -> {
-                                            doHttpCallback(form, callback, url, msg.getCode(), msg.getReply());
+                                            doHttpCallback(formHolder.getForm(), callback, url, msg.getCode(), msg.getReply());
                                         });
                                 GForm.addCmd(cmd);
                                 GForm.flush();
                             } else {
-                                doHttpCallback(form, callback, url, msg.getCode(), msg.getReply());
+                                doHttpCallback(formHolder.getForm(), callback, url, msg.getCode(), msg.getReply());
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -831,7 +819,7 @@ public class GuiScriptLib extends Lib {
                 hc.setProgressListener(new MiniHttpClient.ProgressListener() {
                     @Override
                     public void onProgress(MiniHttpClient client, int progress) {
-                        showProgressBar(form, progress);
+                        showProgressBar(formHolder.getForm(), progress);
                     }
                 });
                 hc.start();

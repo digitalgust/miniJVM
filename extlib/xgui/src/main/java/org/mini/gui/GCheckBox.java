@@ -94,10 +94,10 @@ public class GCheckBox extends GObject {
         nvgFontSize(vg, getFontSize());
         nvgFontFace(vg, GToolkit.getFontIcon());
         nvgFillColor(vg, getColor());
-        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+        nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 
         if (checked) {
-            nvgTextJni(vg, x + 3, y + (int) (h * 0.5f), ICON_CHECK_BYTE, 0, ICON_CHECK_BYTE.length);
+            nvgTextJni(vg, x + 20 * 0.5f, y + (h * 0.5f), ICON_RIGHT_BYTE, 0, ICON_RIGHT_BYTE.length);
         }
         return true;
     }

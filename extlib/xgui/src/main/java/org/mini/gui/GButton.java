@@ -6,10 +6,10 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
+import org.mini.gui.callback.GCallBack;
 
-import static org.mini.gui.GToolkit.getStyle;
-import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
+import static org.mini.gui.GToolkit.*;
 import static org.mini.nanovg.Nanovg.*;
 
 /**
@@ -24,6 +24,9 @@ public class GButton extends GObject {
     protected float[] preiconColor;
     protected boolean bt_pressed = false;
     float oldX, oldY;
+    float[] box = new float[4];
+    float lineh;
+    float iconWidth;
 
 
     public GButton(GForm form) {
@@ -41,8 +44,13 @@ public class GButton extends GObject {
 
 
     public void setText(String text) {
+        if (text == null) return;
         this.text = text;
         text_arr = toCstyleBytes(text);
+        long vg = GCallBack.getInstance().getNvContext();
+        float[] b = GToolkit.getTextBoundle(vg, text_arr, GCallBack.getInstance().getDeviceWidth(), getFontSize(), getFontWord(), false);
+        System.arraycopy(b, 0, box, 0, 4);
+        lineh = b[HEIGHT];
     }
 
     public String getText() {
@@ -53,6 +61,9 @@ public class GButton extends GObject {
         if (preicon == null || preicon.trim().length() == 0) return;
         this.preicon = preicon;
         preicon_arr = toCstyleBytes(preicon);
+        long vg = GCallBack.getInstance().getNvContext();
+        float[] b = GToolkit.getTextBoundle(vg, preicon_arr, GCallBack.getInstance().getDeviceWidth(), GToolkit.getStyle().getIconFontSize(), getFontIcon(), true);
+        iconWidth = b[WIDTH];
     }
 
     public float[] getPreiconColor() {
@@ -155,22 +166,20 @@ public class GButton extends GObject {
         float[] textColor = enable ? (isFlying() ? getFlyingColor() : getColor()) : getDisabledColor();
         //calc text width
         if (text.length() > 0) {
-            nvgFontSize(vg, getFontSize());
-            nvgFontFace(vg, GToolkit.getFontWord());
-            tw = nvgTextBoundsJni(vg, 0, 0, text_arr, 0, text_arr.length, null);
+            tw = box[WIDTH];
         }
         //draw preicon
         if (preicon != null) {
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
 
-            iw = nvgTextBoundsJni(vg, 0, 0, preicon_arr, 0, preicon_arr.length, null);
+            iw = iconWidth;
 
             float[] pc = preiconColor == null ? getStyle().getTextFontColor() : preiconColor;
             pc = enable ? pc : getDisabledColor();
             nvgFillColor(vg, pc);
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-            nvgTextJni(vg, x + w * 0.5f - tw * 0.5f, y + h * 0.5f + move, preicon_arr, 0, preicon_arr.length);
+            nvgTextJni(vg, x + w * 0.5f - tw * 0.5f, y + h * 0.5f + move + 1f, preicon_arr, 0, preicon_arr.length);
         }
         // draw text
         nvgFontSize(vg, getFontSize());
@@ -178,10 +187,10 @@ public class GButton extends GObject {
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         nvgFontBlur(vg, 2f);
         nvgFillColor(vg, GToolkit.getStyle().getTextShadowColor());
-        nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw - 2, y + h * 0.5f + move + 1.5f, text_arr, 0, text_arr.length);
+        nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw * .5f, y + h * 0.5f + move + 1.5f, text_arr, 0, text_arr.length);
         nvgFontBlur(vg, 0);
         nvgFillColor(vg, textColor);
-        nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw - 2, y + h * 0.5f + move + 1.5f, text_arr, 0, text_arr.length);
+        nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw * .5f, y + h * 0.5f + move + 1.5f, text_arr, 0, text_arr.length);
 
         return true;
     }

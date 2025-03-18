@@ -1,7 +1,7 @@
 package org.mini.layout.xwebview;
 
 import org.mini.gui.GImage;
-import org.mini.layout.XmlExtAssist;
+import org.mini.layout.loader.XmlExtAssist;
 
 import java.io.InputStream;
 import java.net.URL;

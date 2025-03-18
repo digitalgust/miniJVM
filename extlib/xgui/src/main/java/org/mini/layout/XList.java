@@ -1,6 +1,7 @@
 package org.mini.layout;
 
 import org.mini.gui.*;
+import org.mini.layout.loader.XmlExtAssist;
 import org.xmlpull.v1.KXmlParser;
 import org.xmlpull.v1.XmlPullParser;
 
@@ -8,22 +9,6 @@ import java.util.Vector;
 
 public class XList extends XObject {
     static public final String XML_NAME = "list";
-
-    protected static class ListItem {
-        static public final String XML_NAME = "li";
-
-        XList xlist;
-        String name;
-        String text;
-        String pic;
-        String cmd;
-        String attachment;
-        String onClick;
-        boolean selected;
-        float[] color;
-        String preicon;
-        float[] preiconColor;
-    }
 
     protected Vector items = new Vector();
     protected boolean multiLine = true;
@@ -72,28 +57,12 @@ public class XList extends XObject {
             parser.next();
             String tagName = parser.getName();
             if (parser.getEventType() == XmlPullParser.START_TAG) {
-
-                if (tagName.equals(XList.ListItem.XML_NAME)) {
-                    XList.ListItem item = new ListItem();
-                    item.xlist = this;
-                    item.name = parser.getAttributeValue(null, "name");
-                    item.pic = parser.getAttributeValue(null, "pic");
-                    item.cmd = parser.getAttributeValue(null, "cmd");
-                    item.color = parseHexColor(parser.getAttributeValue(null, "color"));
-                    item.onClick = parser.getAttributeValue(null, "onclick");
-                    item.attachment = parser.getAttributeValue(null, "attachment");
-                    String tmp1 = parser.getAttributeValue(null, "selected");
-                    item.selected = ("1".equals(tmp1)) ? true : false;
-                    try {
-                        item.preicon = parser.getAttributeValue(null, "preicon");
-                        item.preiconColor = parseHexColor(parser.getAttributeValue(null, "pcolor"));
-                    } catch (Exception e) {
-                    }
-                    String tmp2 = parser.nextText();
-                    item.text = tmp2 == null ? "" : tmp2;
-                    items.add(item);
+                if (tagName.equals(XListItem.XML_NAME)) {
+                    XContainer tmp = new XPanel(parent);
+                    XListItem xitem = (XListItem) XContainer.parseSon(parser, tmp, assist);
+                    items.add(xitem);
                 }
-                toEndTag(parser, XList.ListItem.XML_NAME);
+                toEndTag(parser, XListItem.XML_NAME);
                 parser.require(XmlPullParser.END_TAG, null, tagName);
             }
         }
@@ -133,29 +102,21 @@ public class XList extends XObject {
             list.setScrollBar(scrollbar);
             int selected = -1, selectCount = 0;
             for (int i = 0; i < items.size(); i++) {
-                ListItem item = (ListItem) items.elementAt(i);
-                GImage img = null;
-                if (item.pic != null) {
-                    img = getAssist().loadImage(item.pic);
-                }
-                GListItem gli = new GListItem(getAssist().getForm(), img, item.text);
-                gli.setName(item.name);
-                gli.setAttachment(item.attachment);
-                gli.setActionListener(getRoot().getEventHandler());
-                gli.setEnable(enable);
-                gli.setCmd(item.cmd);
-                gli.setOnClinkScript(item.onClick);
-                gli.setPreIcon(item.preicon);
-                if (item.color != null) {
-                    gli.setColor(item.color);
-                }
-                if (item.preiconColor != null) {
-                    gli.setPreiconColor(item.preiconColor);
-                }
+                // 创建子项，因为glist不是个标准容器，因此需要手动构建子项
+                XListItem xitem = (XListItem) items.elementAt(i);
+                xitem.build(viewW, itemheight, assist.getEventHandler());
+                GListItem gli = (GListItem) xitem.getGui();
+                gli.setPreIcon(xitem.preicon);
+                gli.setPreiconColor(xitem.preiconColor);
                 list.add(gli);
-                if (item.selected) {
+                if (xitem.selected) {
                     selectCount++;
                     selected = i;
+                }
+                if (xitem.getRawFontSize() <= 0) {
+                    if (getRawFontSize() > 0) {
+                        gli.setFontSize(getRawFontSize());
+                    }
                 }
             }
             list.setEnable(enable);
@@ -163,7 +124,7 @@ public class XList extends XObject {
                 int[] seleArr = new int[selectCount];
                 int tmp = 0;
                 for (int i = 0; i < items.size(); i++) {
-                    ListItem item = (ListItem) items.elementAt(i);
+                    XListItem item = (XListItem) items.elementAt(i);
                     if (item.selected) {
                         seleArr[tmp] = i;
                         tmp++;

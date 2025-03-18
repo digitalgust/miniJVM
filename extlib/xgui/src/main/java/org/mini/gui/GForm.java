@@ -5,6 +5,7 @@
  */
 package org.mini.gui;
 
+import org.mini.apploader.GApplication;
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.gui.callback.GCallBack;
@@ -19,9 +20,6 @@ import static org.mini.gui.GToolkit.nvgRGBA;
  */
 public class GForm extends GContainer {
 
-
-    private boolean inited = false;
-
     protected GObject flyingObject;
 
     //键盘弹出,使form 向上移动
@@ -34,10 +32,26 @@ public class GForm extends GContainer {
     protected GKeyboardShowListener keyshowListener;
     protected GAppActiveListener activeListener;
     protected GNotifyListener notifyListener;
+    GApplication app;
 
-    public GForm(GForm form) {
-        super(form);
+    public GForm(GApplication app) {
+        super(null);
+        if (app == null) {
+            throw new RuntimeException("app can't be null when create a GForm");
+        }
+        setApp(app);
+        if (app.getForm() == null) { //only one form
+            app.setForm(this);
+        }
         setSize(GCallBack.getInstance().getDeviceWidth(), GCallBack.getInstance().getDeviceHeight());
+    }
+
+    void setApp(GApplication app) {
+        this.app = app;
+    }
+
+    public GApplication getApp() {
+        return app;
     }
 
     public static void addCmd(GCmd cmd) {
@@ -48,17 +62,6 @@ public class GForm extends GContainer {
         GDesktop.deleteImage(nvgTexture);
     }
 
-
-    public boolean isInited() {
-        return inited;
-    }
-
-
-    public void cb_init() {
-        inited = true;
-        init();
-    }
-
     public boolean paint(long vg) {
         super.paint(vg);
         paintFlyingObject(vg);
@@ -67,7 +70,7 @@ public class GForm extends GContainer {
 
 
     public static void flush() {
-        GDesktop.flush = 3;
+        GDesktop.flush = 4;
         //in android may flush before paint,so the menu not shown
     }
 

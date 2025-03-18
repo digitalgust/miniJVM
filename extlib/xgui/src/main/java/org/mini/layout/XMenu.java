@@ -1,6 +1,7 @@
 package org.mini.layout;
 
 import org.mini.gui.*;
+import org.mini.layout.loader.XmlExtAssist;
 import org.xmlpull.v1.KXmlParser;
 import org.xmlpull.v1.XmlPullParser;
 

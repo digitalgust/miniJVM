@@ -481,10 +481,7 @@ public class GList extends GContainer {
     }
 
     public void sort(Comparator<? super GObject> c) {
-        List<GObject> list = popView.getElements();
-        {
-            list.sort(c);
-        }
+        popView.sort(c);
         sizeAdjust();
     }
 

@@ -13,28 +13,28 @@ import org.mini.gui.callback.GDesktop;
 import org.mini.gui.event.GNotifyListener;
 import org.mini.gui.gscript.EnvVarProvider;
 import org.mini.gui.gscript.Interpreter;
-import org.mini.gui.guilib.GuiScriptLib;
-import org.mini.gui.guilib.HttpRequestReply;
+import org.mini.layout.guilib.GuiScriptLib;
+import org.mini.layout.guilib.HttpRequestReply;
 import org.mini.gui.style.GStyleBright;
 import org.mini.gui.style.GStyleDark;
 import org.mini.http.MiniHttpClient;
 import org.mini.http.MiniHttpServer;
 import org.mini.json.JsonParser;
-import org.mini.layout.UITemplate;
+import org.mini.layout.loader.UITemplate;
 import org.mini.layout.XContainer;
 import org.mini.layout.XEventHandler;
-import org.mini.layout.XmlExtAssist;
+import org.mini.layout.loader.XmlExtAssist;
+import org.mini.layout.loader.XuiAppHolder;
 import org.mini.layout.xwebview.*;
 import org.mini.nanovg.Nanovg;
 
 import java.io.*;
-import java.net.URLEncoder;
 import java.util.*;
 
 /**
  * @author Gust
  */
-public class AppManager extends GApplication implements XuiBrowserHolder {
+public class AppManager extends GApplication implements XuiAppHolder {
     public static final String POLICY_URL = "POLICY_URL";
     public static final String DISCOVERY_URL = "DISCOVERY_URL";
     public static final String ACCOUNT_BASE_URL = "ACCOUNT_BASE_URL";
@@ -85,12 +85,12 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
     static final String STR_INSTALL_FROM_LOCAL = "STR_INSTALL_FROM_LOCAL";
     static final String STR_SELECT_FILE = "STR_SELECT_FILE";
 
+    public static final float[] RUNNING_ITEM_COLOR = {0.0f, 0.8f, 0.0f, 1.0f}; //0x00cc00ff;
 
     static AppManager instance = new AppManager();
 
-    PluginMgrForm mgrForm;
-    XuiBrowser browser;
-
+    GForm mgrForm;
+    float[] inset = new float[4];//top,right,bottom,left
     GViewSlot mainSlot;
 
     public static String CVERSION = "1.0.0";
@@ -104,7 +104,6 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
     MiniHttpServer webServer;
     List<MiniHttpClient> httpClients = new ArrayList<>();
     Map<String, GApplication> runningApps = new HashMap<>();
-    public static final int RUNNING_ITEM_COLOR = 0x00cc00ff;
 
     GImage runningImg = GImage.createImageFromJar("/res/ui/green.png");
     GImage titleImg = GImage.createImageFromJar("/res/ui/title.png");
@@ -115,13 +114,13 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
     static InputStream systemInDefault = System.in;
 
     //the app would launch after Orientation set success
-    Runnable delayLauncher = null;
     String appOri;
     //
     static final int PICK_PHOTO = 101, PICK_CAMERA = 102, PICK_QR = 103, PICK_HEAD = 104;
 
     static float devW, devH;
     XmlExtAssist assist;
+    GContainer webView;
 
     /**
      * @return
@@ -132,9 +131,6 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
     }
 
     public void active() {
-//        if (webServer != null) {
-//            webServer.stopServer();
-//        }
         if (GCallBack.getInstance().getApplication() == this) return;
 
         System.setOut(systemOutDefault);
@@ -147,9 +143,11 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
         if (curSelectedJarName != null) {
             updateContentViewInfo(curSelectedJarName);
         }
-        mgrForm.setSize(GCallBack.getInstance().getDeviceWidth(), GCallBack.getInstance().getDeviceHeight());
-        if (mainSlot != null) mainSlot.showSlot(0);
-        reloadAppList();
+        if (mgrForm != null) {
+            mgrForm.setSize(GCallBack.getInstance().getDeviceWidth(), GCallBack.getInstance().getDeviceHeight());
+            mainPanelShowLeft();
+            reloadAppList();
+        }
     }
 
     private void regStrings() {
@@ -164,22 +162,173 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
     }
 
     @Override
-    public GForm getForm() {
+    public void onInit() {
+        regStrings();
 
-        if (mgrForm != null) return mgrForm;
-        mgrForm = new PluginMgrForm(null);
-        // init script environment
-        assist = new XmlExtAssist(mgrForm);
-        assist.addExtScriptLib(new XuiScriptLib(AppManager.getInstance()));
-        updateScriptEnvironment();
-        assist.setEnvVarProvider(envVarProvider);
+        mgrForm = loadXmlForm();
+        initForm();
+        initExplorer();
+
         //init form
-        mgrForm.initForm();
         if (floatButton == null) {
             floatButton = new GHomeButton();
         }
         GCallBack.getInstance().getDesktop().add(floatButton);
-        return mgrForm;
+
+
+        reloadAppList();
+    }
+
+    /**
+     * ==============================================================================
+     * GForm that is used to show plugin manager
+     * ==============================================================================
+     */
+
+    GForm loadXmlForm() {
+
+        final GCallBack ccb = GCallBack.getInstance();
+        devW = ccb.getDeviceWidth();
+        devH = ccb.getDeviceHeight();
+
+        String xmlStr = "";
+        try {
+            xmlStr = new String(GToolkit.readFileFromJar("/res/ui/AppManager.xml"), "utf-8");
+        } catch (Exception e) {
+        }
+
+        // init script environment
+        assist = new XmlExtAssist(this);
+        updateScriptEnvironment();
+        assist.setEnvVarProvider(envVarProvider);
+
+        UITemplate uit = new UITemplate(xmlStr);
+        for (String s : uit.getVariable()) {
+            uit.setVar(s, getString(s));
+        }
+
+        GCallBack.getInstance().getInsets(inset);
+        int h = (int) (inset[0]);
+        //System.out.println("STATEBAR_HEIGHT " + inset[0] + " , " + inset[1] + " , " + inset[2] + " , " + inset[3]);
+        if (h <= 20) {
+            h = 20;
+        }
+        uit.setVar("STATEBAR_HEIGHT", Integer.toString(h));
+        h = (int) (inset[2]);
+        uit.setVar("NAV_HEIGHT", Integer.toString(h));
+
+
+        eventHandler = new PluginEventHandler();//使支持openpage, downloadinstall, downloadsave
+        XContainer xcon = (XContainer) XContainer.parseXml(uit.parse(), assist);
+        xcon.build((int) devW, (int) (devH), eventHandler);
+        GForm form = xcon.getGui();
+        mainSlot = form.findByName("SLOT_MGR");
+        appList = mainSlot.findByName("LIST_APP");
+        contentView = mainSlot.findByName("VP_CONTENT");
+        logBox = mainSlot.findByName("INPUT_LOG");
+        GList langList = mainSlot.findByName("LIST_LANG");
+        langList.setSelectedIndex(AppLoader.getDefaultLang());
+        GList styleList = mainSlot.findByName("LIST_STYLE");
+        if (AppLoader.getGuiStyle() == 0) {
+            styleList.setSelectedIndex(0);
+        } else {
+            styleList.setSelectedIndex(1);
+        }
+        String url = AppLoader.getDownloadUrl();
+        //System.out.println("downloadurl=" + url);
+        if (url != null) GToolkit.setCompText(mainSlot, "INPUT_URL", url);
+
+        form.setSizeChangeListener((width, height) -> {
+            xcon.reSize(width, height);
+//                browser.getWebView().getLayout().reSize(width, height);
+            reloadAppList();
+        });
+        return form;
+    }
+
+    public void initForm() {
+        //System.out.println("devW :" + devW + ", devH  :" + devH);
+
+        GForm.hideKeyboard(mgrForm);
+        GLanguage.setCurLang(AppLoader.getDefaultLang());
+
+        if (AppLoader.getGuiStyle() == 0) {
+            GToolkit.setStyle(new GStyleBright());
+        } else {
+            GToolkit.setStyle(new GStyleDark());
+        }
+
+        mgrForm.setNotifyListener(new GNotifyListener() {
+            @Override
+            public void onNotify(String key, String val) {
+                try {
+                    switch (key) {
+                        case NOTIFY_KEY_DEVICE_TOKEN:
+                            System.setProperty("device.token", val);
+                            break;
+                        case NOTIFY_KEY_IOS_PURCHASE:
+                            if (val.indexOf(':') > 0) {
+                                String[] ss = val.split(":");
+                                if (ss.length > 2) {
+                                    int code = Integer.parseInt(ss[0]);
+                                    String receipt = ss[1];
+                                    byte[] scriptBytes = javax.microedition.io.Base64.decode(ss[2]);
+                                    String script = new String(scriptBytes, "utf-8");
+                                    //System.out.println("script:" + script);
+                                    Interpreter inp = new Interpreter();
+                                    inp.reglib(new GuiScriptLib(AppManager.getInstance()));
+                                    inp.loadFromString(script);
+                                    inp.putGlobalVar("iap_code", Interpreter.getCachedInt(code));
+                                    inp.putGlobalVar("iap_receipt", Interpreter.getCachedStr(receipt));
+                                    inp.start();
+                                }
+                            }
+                            break;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        mgrForm.setPickListener((uid, url, data) -> {
+            if (data == null && url != null) {
+                File f = new File(url);
+                if (f.exists()) {
+                    try {
+                        FileInputStream fis = new FileInputStream(f);
+                        data = new byte[(int) f.length()];
+                        fis.read(data);
+                        fis.close();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+            switch (uid) {
+
+                case PICK_PHOTO:
+                case PICK_CAMERA: {
+
+                    if (data != null) {
+
+                    }
+                    break;
+                }
+                case PICK_QR: {
+
+                    break;
+                }
+                case PICK_HEAD: {
+                    if (data != null) {
+
+                    }
+                    break;
+                }
+            }
+        });
+        int i = AppLoader.getGuiStyle();
+        setStyleButton(i);
     }
 
 
@@ -213,8 +362,17 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
     }
 
     void initExplorer() {
-        GContainer wv = GToolkit.getComponent(mgrForm, "TD_DISCOVERY");
-        browser = new XuiBrowser(wv, eventHandler, assist);
+        webView = GToolkit.getComponent(mgrForm, "TD_DISCOVERY");
+    }
+
+    @Override
+    public GApplication getApp() {
+        return this;
+    }
+
+    @Override
+    public GContainer getWebView() {
+        return webView;
     }
 
 
@@ -234,45 +392,43 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                         img = GImage.createImage(iconBytes);
                     }
                     String name = AppLoader.getApplicationName(appName);
-                    GListItem item = new GListItem(mgrForm, img, name) {
-                        public boolean paint(long vg) {
-                            super.paint(vg);
-//                            if (getLabel() != null && getAttachment().equals(AppLoader.getBootApp())) {
-//                                GToolkit.drawRedPoint(vg, "v", getX() + getW() - 20, getY() + getH() * .5f, 10);
-//                            }
-                            if (runningApps.get(getAttachment()) != null) {
-                                GToolkit.drawImage(vg, runningImg, getX() + getW() - 30, getY() + getH() * .5f - 6f, 12f, 12f, false, 0.8f);
-
-                            }
-                            return true;
-                        }
-                    };
+                    GListItem item = new GListItem(mgrForm, img, name);
                     if (img == null) {
                         item.setPreIcon("\uD83D\uDCD5");
                     }
                     item.setAttachment(appName);
-                    if (runningApps.get(appName) != null) {
-                        item.setColor(RUNNING_ITEM_COLOR);
-                    }
                     appList.add(item);
                     item.setActionListener(gobj -> {
                         curSelectedJarName = gobj.getAttachment();
                         setJarName(curSelectedJarName);
-                        AppLoader.runApp(curSelectedJarName);
+                        runApp();
                     });
+
+                    //add label
                     GLabel label = new GLabel(mgrForm, "ⓘ", item.getW() - 40, 0, 40, item.getH());
-                    label.setAlign(Nanovg.NVG_ALIGN_LEFT | Nanovg.NVG_ALIGN_MIDDLE);
+                    label.setAlign(Nanovg.NVG_ALIGN_CENTER | Nanovg.NVG_ALIGN_MIDDLE);
                     item.add(label);
                     label.setActionListener(gobj -> {
-                        curSelectedJarName = gobj.getAttachment();
+                        curSelectedJarName = gobj.getParent().getAttachment();//buttom's attachment
                         setJarName(curSelectedJarName);
                         updateContentViewInfo(appName);
                         mainPanelShowRight();
                     });
+
+                    //set label color
+                    if (runningApps.get(appName) != null) {
+                        setListItemColor(item, RUNNING_ITEM_COLOR);
+                    }
                 }
             }
         }
         GForm.flush();
+    }
+
+    void setListItemColor(GListItem item, float[] color) {
+        if (item == null || item.getElementSize() == 0) return;
+        GLabel infoLab = (GLabel) item.getElements().get(0);
+        infoLab.setColor(color);
     }
 
     void updateContentViewInfo(String jarName) {
@@ -333,16 +489,15 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
         return webServer;
     }
 
-    @Override
-    public List<MiniHttpClient> getHttpClients() {
-        for (Iterator<MiniHttpClient> it = httpClients.iterator(); it.hasNext(); ) {
-            MiniHttpClient httpClient = it.next();
-            if (!httpClient.isAlive()) {
-                it.remove();
-            }
-        }
-        return httpClients;
-    }
+//    public List<MiniHttpClient> getHttpClients() {
+//        for (Iterator<MiniHttpClient> it = httpClients.iterator(); it.hasNext(); ) {
+//            MiniHttpClient httpClient = it.next();
+//            if (!httpClient.isAlive()) {
+//                it.remove();
+//            }
+//        }
+//        return httpClients;
+//    }
 
     void addRunningApp(GApplication app) {
         if (app == null) return;
@@ -406,210 +561,113 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
 
     }
 
-    @Override
-    public XuiBrowser getBrowser() {
-        return browser;
-    }
-
     public GApplication[] getRunningApps() {
         return runningApps.values().toArray(new GApplication[0]);
     }
 
-    /**
-     * ==============================================================================
-     * GForm that is used to show plugin manager
-     * ==============================================================================
-     */
 
-    class PluginMgrForm extends GForm {
-        float[] inset = new float[4];//top,right,bottom,left
+    void startWebServer() {
 
-        public PluginMgrForm(GForm form) {
-            super(form);
-            System.out.println("[INFO]inited PluginMgrForm" + this);
+        GButton uploadbtn = GToolkit.getComponent(mgrForm, "BT_STARTWEB");
+        GLabel uploadLab = (GLabel) mgrForm.findByName("LAB_WEBSRV");
+        if (webServer != null) {
+            webServer.stopServer();
+            webServer = null;
         }
-
-        public void initForm() {
-
-            final GCallBack ccb = GCallBack.getInstance();
-            devW = ccb.getDeviceWidth();
-            devH = ccb.getDeviceHeight();
-            //System.out.println("devW :" + devW + ", devH  :" + devH);
-
-            GForm.hideKeyboard(this);
-            GLanguage.setCurLang(AppLoader.getDefaultLang());
-
-            if (AppLoader.getGuiStyle() == 0) {
-                GToolkit.setStyle(new GStyleBright());
-            } else {
-                GToolkit.setStyle(new GStyleDark());
-            }
-
-            setNotifyListener(new GNotifyListener() {
-                @Override
-                public void onNotify(String key, String val) {
-                    try {
-                        switch (key) {
-                            case NOTIFY_KEY_DEVICE_TOKEN:
-                                System.setProperty("device.token", val);
-                                break;
-                            case NOTIFY_KEY_IOS_PURCHASE:
-                                if (val.indexOf(':') > 0) {
-                                    String[] ss = val.split(":");
-                                    if (ss.length > 2) {
-                                        int code = Integer.parseInt(ss[0]);
-                                        String receipt = ss[1];
-                                        byte[] scriptBytes = javax.microedition.io.Base64.decode(ss[2]);
-                                        String script = new String(scriptBytes, "utf-8");
-                                        //System.out.println("script:" + script);
-                                        Interpreter inp = new Interpreter();
-                                        inp.reglib(new GuiScriptLib(PluginMgrForm.this));
-                                        inp.loadFromString(script);
-                                        inp.putGlobalVar("iap_code", Interpreter.getCachedInt(code));
-                                        inp.putGlobalVar("iap_receipt", Interpreter.getCachedStr(receipt));
-                                        inp.start();
-                                    }
-                                }
-                                break;
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
+        if (uploadbtn.getText().equals(getString(STR_STOP))) {
+            uploadbtn.setText(getString(STR_START));
+            uploadLab.setText(getString(STR_START_WEB_SRV_FOR_UPLOAD));
+            String s = getString(STR_SERVER_STOPED);
+            GDesktop.addMessage(s);
+            log(s);
+        } else {
+            webServer = new MiniHttpServer(MiniHttpServer.DEFAULT_PORT, srvLogger);
+            webServer.setUploadCompletedHandle(files -> {
+                for (MiniHttpServer.UploadFile f : files) {
+                    String s = getString(STR_UPLOAD_FILE) + " " + f.filename + " " + f.data.length;
+                    if (AppLoader.addApp(f.filename, f.data)) {
+                        GForm.addMessage(s + " " + getString(STR_SUCCESS));
+                        log(s);
+                    } else {
+                        GForm.addMessage(s + " " + getString(STR_FAIL));
                     }
                 }
-            });
-
-            setPickListener((uid, url, data) -> {
-                if (data == null && url != null) {
-                    File f = new File(url);
-                    if (f.exists()) {
-                        try {
-                            FileInputStream fis = new FileInputStream(f);
-                            data = new byte[(int) f.length()];
-                            fis.read(data);
-                            fis.close();
-                        } catch (IOException ex) {
-                            ex.printStackTrace();
-                        }
-                    }
-                }
-                switch (uid) {
-
-                    case PICK_PHOTO:
-                    case PICK_CAMERA: {
-
-                        if (data != null) {
-
-                        }
-                        break;
-                    }
-                    case PICK_QR: {
-
-                        break;
-                    }
-                    case PICK_HEAD: {
-                        if (data != null) {
-
-                        }
-                        break;
-                    }
-                }
-            });
-            add(getMainPanel(this));
-            int i = AppLoader.getGuiStyle();
-            setStyleButton(i);
-            initExplorer();
-        }
-
-        GContainer getMainPanel(GForm form) {
-
-            String xmlStr = "";
-            try {
-                xmlStr = new String(GToolkit.readFileFromJar("/res/ui/AppManager.xml"), "utf-8");
-            } catch (Exception e) {
-            }
-
-
-            regStrings();
-            UITemplate uit = new UITemplate(xmlStr);
-            for (String s : uit.getVariable()) {
-                uit.setVar(s, getString(s));
-            }
-
-            GCallBack.getInstance().getInsets(inset);
-            int h = (int) (inset[0]);
-            //System.out.println("STATEBAR_HEIGHT " + inset[0] + " , " + inset[1] + " , " + inset[2] + " , " + inset[3]);
-            if (h <= 20) {
-                h = 20;
-            }
-            uit.setVar("STATEBAR_HEIGHT", Integer.toString(h));
-            h = (int) (inset[2]);
-            uit.setVar("NAV_HEIGHT", Integer.toString(h));
-
-
-            eventHandler = new PluginEventHandler();//使支持openpage, downloadinstall, downloadsave
-            XContainer xcon = (XContainer) XContainer.parseXml(uit.parse(), assist);
-            xcon.build((int) devW, (int) (devH), eventHandler);
-            GContainer pan = xcon.getGui();
-            mainSlot = pan.findByName("SLOT_MGR");
-            appList = mainSlot.findByName("LIST_APP");
-            contentView = mainSlot.findByName("VP_CONTENT");
-            logBox = mainSlot.findByName("INPUT_LOG");
-            GList langList = mainSlot.findByName("LIST_LANG");
-            langList.setSelectedIndex(AppLoader.getDefaultLang());
-            GList styleList = mainSlot.findByName("LIST_STYLE");
-            if (AppLoader.getGuiStyle() == 0) {
-                styleList.setSelectedIndex(0);
-            } else {
-                styleList.setSelectedIndex(1);
-            }
-            String url = AppLoader.getDownloadUrl();
-            //System.out.println("downloadurl=" + url);
-            if (url != null) GToolkit.setCompText(mainSlot, "INPUT_URL", url);
-
-            this.setSizeChangeListener((width, height) -> {
-                xcon.reSize(width, height);
-//                browser.getWebView().getLayout().reSize(width, height);
                 reloadAppList();
             });
-            reloadAppList();
-            return pan;
+            webServer.start();
+            uploadbtn.setText(getString(STR_STOP));
+            uploadLab.setText(getString(STR_WEB_LISTEN_ON) + webServer.getPort());
+            String s = getString(STR_SERVER_STARTED);
+            GForm.addMessage(s);
+            log(s);
         }
+    }
 
+    void runApp() {
+        if (curSelectedJarName != null) {
+            GListItem gli = getGListItemByAttachment(curSelectedJarName);
+            setListItemColor(gli, RUNNING_ITEM_COLOR);
 
-        @Override
-        public boolean paint(long vg) {
-            super.paint(vg);
-            if (delayLauncher != null) {
-                GForm.flush();
+            GDesktop.addCmd(new Runnable() {
+                @Override
+                public void run() {
+                    GForm.flush();
 
-                String orientation = AppLoader.getApplicationOrientation(curSelectedJarName);
-                if (orientation.equals("h")) {
-                    Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationLandscapeLeft);
-                } else {
-                    Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationPortrait);
-                }
-                appOri = orientation;
-                String osname = System.getProperty("os.name");
-                if ("iOS".equals(osname) || "Android".equals(osname)) {
-                    float w = GCallBack.getInstance().getDeviceWidth();
-                    float h = GCallBack.getInstance().getDeviceHeight();
-                    if ("h".equals(appOri)) {
+                    String orientation = AppLoader.getApplicationOrientation(curSelectedJarName);
+                    if (orientation.equals("h")) {
+                        Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationLandscapeLeft);
+                    } else {
+                        Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationPortrait);
+                    }
+                    appOri = orientation;
+                    String osname = System.getProperty("os.name");
+                    if ("iOS".equals(osname) || "Android".equals(osname)) {
+                        float w = GCallBack.getInstance().getDeviceWidth();
+                        float h = GCallBack.getInstance().getDeviceHeight();
+                        if ("h".equals(appOri)) {
+                            if (w < h) return;
+                        }
+                    }
 
-                        if (w < h) return true;
+                    String jarName = curSelectedJarName;
+                    if (jarName != null) {
+                        GApplication app = runningApps.get(jarName);
+                        if (app != null && app.getState() != AppState.STATE_CLOSED) {
+                            GCallBack.getInstance().setApplication(app);
+                            app.resumeApp();
+                        } else {
+                            app = AppLoader.runApp(jarName);
+                            if (app != AppManager.this) {
+                                runningApps.put(jarName, app);
+                                updateContentViewInfo(jarName);
+                                setListItemColor(gli, RUNNING_ITEM_COLOR);
+                            } else {
+                                GForm.addMessage(getString(AppManager.STR_OPEN_APP_FAIL) + ": " + jarName);
+//                                            GForm.addMessage("Can't found startup class ,it setup in config.txt in jar root");
+                            }
+                        }
                     }
                 }
-                try {
-                    delayLauncher.run();
-                } catch (Exception e) {
-
-                }
-                delayLauncher = null;
-            }
-
-            return true;
+            });
         }
+    }
 
+    void stopApp() {
 
+        if (curSelectedJarName != null) {
+            //AppLoader.setBootApp(curSelectedItem.getAttachment());
+            String tmpJarName = curSelectedJarName;
+            GApplication app = runningApps.get(tmpJarName);
+            if (app != null) {
+                app.closeApp();
+                GForm.addMessage(getString(STR_SUCCESS));
+                GListItem gli = getGListItemByAttachment(curSelectedJarName);
+                setListItemColor(gli, null);
+                updateContentViewInfo(tmpJarName);
+            } else {
+                GForm.addMessage(getString(STR_APP_NOT_RUNNING));
+            }
+        }
     }
 
     class PluginEventHandler extends XEventHandler {
@@ -647,97 +705,22 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                     mainPanelShowLeft();
                     break;
                 case "BT_STARTWEB":
-                    GButton uploadbtn = (GButton) gobj;
-                    GLabel uploadLab = (GLabel) mgrForm.findByName("LAB_WEBSRV");
-                    if (webServer != null) {
-                        webServer.stopServer();
-                        webServer = null;
-                    }
-                    if (uploadbtn.getText().equals(getString(STR_STOP))) {
-                        uploadbtn.setText(getString(STR_START));
-                        uploadLab.setText(getString(STR_START_WEB_SRV_FOR_UPLOAD));
-                        String s = getString(STR_SERVER_STOPED);
-                        GDesktop.addMessage(s);
-                        log(s);
-                    } else {
-                        webServer = new MiniHttpServer(MiniHttpServer.DEFAULT_PORT, srvLogger);
-                        webServer.setUploadCompletedHandle(files -> {
-                            for (MiniHttpServer.UploadFile f : files) {
-                                String s = getString(STR_UPLOAD_FILE) + " " + f.filename + " " + f.data.length;
-                                if (AppLoader.addApp(f.filename, f.data)) {
-                                    GForm.addMessage(s + " " + getString(STR_SUCCESS));
-                                    log(s);
-                                } else {
-                                    GForm.addMessage(s + " " + getString(STR_FAIL));
-                                }
-                            }
-                            reloadAppList();
-                        });
-                        webServer.start();
-                        uploadbtn.setText(getString(STR_STOP));
-                        uploadLab.setText(getString(STR_WEB_LISTEN_ON) + webServer.getPort());
-                        String s = getString(STR_SERVER_STARTED);
-                        GForm.addMessage(s);
-                        log(s);
-                    }
+                    startWebServer();
                     break;
                 case "APP_RUN_BTN":
-                    if (curSelectedJarName != null) {
-                        tmpJarName = curSelectedJarName;
-                        GListItem gli = getGListItemByAttachment(curSelectedJarName);
-
-                        delayLauncher = new Runnable() {
-                            @Override
-                            public void run() {
-                                String jarName = curSelectedJarName;
-                                if (jarName != null) {
-                                    GApplication app = runningApps.get(jarName);
-                                    if (app != null && app.getState() != AppState.STATE_CLOSED) {
-                                        GCallBack.getInstance().setApplication(app);
-                                        app.resumeApp();
-                                    } else {
-                                        app = AppLoader.runApp(jarName);
-                                        if (app != AppManager.this) {
-                                            runningApps.put(jarName, app);
-                                            updateContentViewInfo(jarName);
-                                            gli.setColor(RUNNING_ITEM_COLOR);
-                                        } else {
-                                            GForm.addMessage(getString(AppManager.STR_OPEN_APP_FAIL) + ": " + jarName);
-//                                            GForm.addMessage("Can't found startup class ,it setup in config.txt in jar root");
-                                        }
-                                        floatButton.checkLocation();
-                                    }
-                                }
-                            }
-                        };
-                    }
+                    runApp();
                     break;
                 case "APP_STOP_BTN":
-                    if (curSelectedJarName != null) {
-                        //AppLoader.setBootApp(curSelectedItem.getAttachment());
-                        tmpJarName = curSelectedJarName;
-                        GApplication app = runningApps.get(tmpJarName);
-                        if (app != null) {
-                            app.closeApp();
-                            GForm.addMessage(getString(STR_SUCCESS));
-                            GListItem gli = getGListItemByAttachment(curSelectedJarName);
-                            gli.setColor(null);
-                            updateContentViewInfo(tmpJarName);
-                        } else {
-                            GForm.addMessage(getString(STR_APP_NOT_RUNNING));
-                        }
-                    }
+                    stopApp();
                     break;
                 case "APP_UPGRADE_BTN":
                     if (curSelectedJarName != null) {
                         tmpJarName = curSelectedJarName;
-                        if (tmpJarName != null) {
-                            url = AppLoader.getApplicationUpgradeurl(tmpJarName);
-                            if (url != null) {
-                                hc = new MiniHttpClient(url, cltLogger, getDownloadCallback());
-                                hc.start();
-                                httpClients.add(hc);
-                            }
+                        url = AppLoader.getApplicationUpgradeurl(tmpJarName);
+                        if (url != null) {
+                            hc = new MiniHttpClient(url, cltLogger, getDownloadCallback());
+                            hc.start();
+                            httpClients.add(hc);
                         }
                     }
                     break;
@@ -814,7 +797,7 @@ public class AppManager extends GApplication implements XuiBrowserHolder {
                     int selectedIndex = ((GList) gobj).getSelectedIndex();
                     GLanguage.setCurLang(selectedIndex);
                     AppLoader.setDefaultLang(selectedIndex);
-                    mgrForm = null;
+                    onInit();
                     break;
             }
         }

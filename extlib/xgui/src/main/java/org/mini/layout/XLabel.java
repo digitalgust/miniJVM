@@ -2,6 +2,7 @@ package org.mini.layout;
 
 import org.mini.gui.GLabel;
 import org.mini.gui.GObject;
+import org.mini.layout.loader.XmlExtAssist;
 import org.xmlpull.v1.KXmlParser;
 import org.mini.nanovg.Nanovg;
 
@@ -57,19 +58,15 @@ public class XLabel
 
 
     protected int getDefaultWidth(int parentViewW) {
-        int w = XUtil.measureWidth(parentViewW - GLabel.TEXT_BOUND_DEC, text, fontSize);
-        w = w + addon;
-        w += GLabel.TEXT_BOUND_DEC;
+        int w = XUtil.measureWidth(parentViewW - GLabel.TEXT_BOUND_DEC, text, getFontSize(), multiLine);
+        //w = w + addon;
+        //w += GLabel.TEXT_BOUND_DEC;
         if (w > parentViewW) w = parentViewW;
         return w;
     }
 
     protected int getDefaultHeight(int parentViewH) {
-        if (multiLine) {
-            return XUtil.measureHeight(viewW - GLabel.TEXT_BOUND_DEC, text, fontSize);
-        } else {
-            return XDef.DEFAULT_COMPONENT_HEIGHT;
-        }
+        return XUtil.measureHeight(viewW - GLabel.TEXT_BOUND_DEC, text, getFontSize(), multiLine);
     }
 
     protected <T extends GObject> T createGuiImpl() {
@@ -78,9 +75,6 @@ public class XLabel
 
     protected void createAndSetGui() {
         if (label == null) {
-            if (assist == null) {
-                int debug = 1;
-            }
             label = createGuiImpl();
             initGuiMore();
             label.setAlign(align);

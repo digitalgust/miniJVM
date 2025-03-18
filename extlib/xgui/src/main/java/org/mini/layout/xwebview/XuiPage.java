@@ -2,13 +2,12 @@ package org.mini.layout.xwebview;
 
 import org.mini.gui.GContainer;
 import org.mini.gui.GObject;
-import org.mini.layout.UITemplate;
+import org.mini.layout.loader.UITemplate;
 import org.mini.layout.XContainer;
 import org.mini.layout.XEventHandler;
-import org.mini.layout.XmlExtAssist;
+import org.mini.layout.loader.XmlExtAssist;
 
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
@@ -30,13 +29,13 @@ public class XuiPage {
 //            URLConnection con = url.openConnection();
 //            con.connect();
 //            System.out.println(con.getContentLength());
-        } catch (MalformedURLException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
         XEventHandler eventDelegate = new XPageEventDelegate(browser, url);
         this.eventDelegate = eventDelegate;
 
-        this.assistDelegate = new XmlExtAssist(browser.getAssist().getForm());
+        this.assistDelegate = new XmlExtAssist(browser.getAssist().getXuiBrowserHolder());
         this.assistDelegate.copyFrom(browser.getAssist());
     }
 

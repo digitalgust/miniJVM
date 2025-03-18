@@ -58,7 +58,6 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
 
 
     protected boolean selectMode = false;
-    protected boolean editable = true;
     boolean shift = false;
 
 
@@ -99,6 +98,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
         //if(!editable)return;
         textsb.insertCodePoint(index, ch);
         text_arr = null;
+        setCaretIndex(index + 1);
         doStateChanged(this);
         StringBuilder undo = new StringBuilder();
         undo.appendCodePoint(ch);
@@ -109,6 +109,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
         //if(!editable)return;
         textsb.insert(index, str);
         text_arr = null;
+        setCaretIndex(index + str.codePointCount(0, str.length()));
         doStateChanged(this);
         putInUndo(UserAction.ADD, str, index);
     }
@@ -193,13 +194,13 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
     }
 
     public void doCut() {
-        if (!editable || !enable) return;
+        if (!visible || !enable) return;
         doCopyClipBoard();
         deleteSelectedText();
     }
 
     public void doPasteClipBoard() {
-        if (!editable || !enable) return;
+        if (!visible || !enable) return;
         deleteSelectedText();
         String s = Glfm.glfmGetClipBoardContent();
         if (s == null) {
@@ -214,7 +215,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
 
     @Override
     public void focusGot(GObject go) {
-        if (editable) {
+        if (visible && enable) {
             GForm.showKeyboard(this);
         }
     }
@@ -224,7 +225,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
         if (newgo != unionObj && newgo != this) {
             GForm.hideKeyboard(form);
         }
-        GToolkit.disposeEditMenu();
+        GToolkit.hideEditMenu();
         touched = false;
     }
 
@@ -237,7 +238,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
             switch (phase) {
                 case Glfm.GLFMTouchPhaseBegan: {
                     touched = true;
-                    if (editable && !Glfm.glfmIsKeyboardVisible(GCallBack.getInstance().getDisplay())) {
+                    if (visible && enable && !Glfm.glfmIsKeyboardVisible(GCallBack.getInstance().getDisplay())) {
                         GForm.showKeyboard(this);
                     }
                     break;
@@ -342,14 +343,14 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
      * @return the editable
      */
     public boolean isEditable() {
-        return editable;
+        return enable;
     }
 
     /**
      * @param editable the editable to set
      */
     public void setEditable(boolean editable) {
-        this.editable = editable;
+        this.enable = editable;
     }
 
 
@@ -397,7 +398,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
     }
 
     public void undo() {
-        if (!editable) return;
+        if (!visible || !enable) return;
         UserAction action = getUndo();
         if (action != null) {
             if (action.addOrDel == UserAction.ADD) {
@@ -414,7 +415,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
     }
 
     public void redo() {
-        if (!editable) return;
+        if (!visible || !enable) return;
         UserAction action = getRedo();
         if (action != null) {
             if (action.addOrDel == UserAction.ADD) {

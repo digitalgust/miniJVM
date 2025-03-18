@@ -64,7 +64,7 @@ public class GFont {
 
     public float stringWidth(String str) {
         long vg = GCallBack.getInstance().getNvContext();
-        float[] boundle = GToolkit.getTextBoundle(vg, str, 5000f, size, GToolkit.getFontWord());
+        float[] boundle = GToolkit.getTextBoundle(vg, str, 5000f, size, getFontName(), false);
         return (int) (boundle[GObject.WIDTH] - boundle[GObject.LEFT] + 1f);
     }
 
