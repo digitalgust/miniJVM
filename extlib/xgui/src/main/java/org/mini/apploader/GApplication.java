@@ -5,13 +5,14 @@
  */
 package org.mini.apploader;
 
-import org.mini.gui.*;
+import org.mini.gui.GForm;
+import org.mini.gui.GLanguage;
+import org.mini.gui.GToolkit;
 import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GCmd;
-import org.mini.layout.guilib.FormHolder;
 import org.mini.gui.style.GStyle;
+import org.mini.layout.guilib.FormHolder;
 
-import javax.xml.bind.SchemaOutputResolver;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -52,8 +53,9 @@ public abstract class GApplication implements FormHolder {
         appId = toString();
     }
 
-    void init(String jarName) {
-        this.jarName = jarName;
+
+    public void init() {
+        if (state != AppState.STATE_NEW) return;
         setSaveRoot(AppLoader.getAppDataPath(jarName));
         AppLoader.loadPropFile(getAppConfigFile(), prop);
         String langId = getProperty(APP_LANG_KEY, GLanguage.ID_NO_DEF + "");
@@ -61,12 +63,6 @@ public abstract class GApplication implements FormHolder {
             curLang = Integer.parseInt(langId);
         } catch (Exception e) {
         }
-    }
-
-
-    public void init() {
-        if (state != AppState.STATE_NEW) return;
-
         state = AppState.STATE_INITED;
         try {
             onInit();
@@ -76,6 +72,7 @@ public abstract class GApplication implements FormHolder {
         if (form == null) {
             System.out.println("[ERRO]init form failed");
         }
+        startApp();
     }
 
     public abstract void onInit();

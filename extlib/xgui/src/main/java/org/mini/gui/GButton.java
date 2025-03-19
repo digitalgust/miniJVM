@@ -22,7 +22,7 @@ public class GButton extends GObject {
     protected String preicon;
     protected byte[] preicon_arr;
     protected float[] preiconColor;
-    protected boolean bt_pressed = false;
+    protected boolean touched = false;
     float oldX, oldY;
     float[] box = new float[4];
     float lineh;
@@ -74,32 +74,31 @@ public class GButton extends GObject {
         this.preiconColor = preiconColor;
     }
 
+    public boolean isPressed() {
+        return touched;
+    }
 
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         if (isInArea(x, y)) {
             if (pressed) {
-                bt_pressed = true;
+                touched = true;
                 parent.setCurrent(this);
-                oldX = getX();
-                oldY = getY();
+                oldX = x;
+                oldY = y;
                 doStateChanged(this);
             } else {
                 if (validAction(x, y)) doAction();
-                bt_pressed = false;
+                touched = false;
                 doStateChanged(this);
             }
         }
     }
 
-    public boolean isPressed() {
-        return bt_pressed;
-    }
-
     @Override
     public void cursorPosEvent(int x, int y) {
-        if (!isInArea(x, y) && bt_pressed) {
-            bt_pressed = false;
+        if (!isInArea(x, y) && touched) {
+            touched = false;
             doStateChanged(this);
         }
     }
@@ -107,19 +106,24 @@ public class GButton extends GObject {
     @Override
     public void touchEvent(int touchid, int phase, int x, int y) {
         if (isInArea(x, y)) {
-            if (phase == Glfm.GLFMTouchPhaseBegan) {
-                bt_pressed = true;
-                oldX = getX();
-                oldY = getY();
-                doStateChanged(this);
-            } else if (phase == Glfm.GLFMTouchPhaseEnded) {
-                if (validAction(x, y)) doAction();
-                bt_pressed = false;
-                doStateChanged(this);
+            switch (phase) {
+                case Glfm.GLFMTouchPhaseBegan:
+                    touched = true;
+                    oldX = x;
+                    oldY = y;
+                    doStateChanged(this);
+                    break;
+                case Glfm.GLFMTouchPhaseEnded:
+                    if (validAction(x, y)) doAction();
+                    touched = false;
+                    doStateChanged(this);
+                    break;
             }
         } else if (!isInArea(x, y)) {
-            bt_pressed = false;
-            doStateChanged(this);
+            if (touched) {
+                touched = false;
+                doStateChanged(this);
+            }
         }
     }
 
@@ -145,7 +149,7 @@ public class GButton extends GObject {
 
         float tw = 0, iw = 0;
         float move = 0;
-        if (bt_pressed) {
+        if (touched) {
             move = 1;
             bg = nvgLinearGradient(vg, x, y + h, x, y, nvgRGBA(255, 255, 255, 0x10), nvgRGBA(0, 0, 0, 0x10));
         } else {
@@ -204,7 +208,7 @@ public class GButton extends GObject {
     }
 
     private boolean validAction(float releaseX, float releaseY) {
-        if (releaseX >= oldX && releaseX <= oldX + getW() && releaseY >= oldY && releaseY < oldY + getH()) {
+        if (Math.abs(releaseX - oldX) < TOUCH_RANGE && Math.abs(releaseY - oldY) < TOUCH_RANGE) {
             return true;
         }
         return false;

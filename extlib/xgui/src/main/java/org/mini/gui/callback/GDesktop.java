@@ -66,9 +66,6 @@ public class GDesktop extends GPanel implements GCallbackUI {
             curForm.setSize(GCallBack.getInstance().getDeviceWidth(), GCallBack.getInstance().getDeviceHeight());
 
         }
-        if (!curForm.isInited()) {
-            gapp.startApp();
-        }
     }
 
 

@@ -233,7 +233,7 @@ public class GToolkit {
 
     public static void setStyle(GStyle style) {
         if (style == null) return;
-        defaultStyle = new GStyleInner(style);//copy every times
+        defaultStyle = new GStyleInner(style);//copy every times, copy for not reference the source style
     }
 
     /**

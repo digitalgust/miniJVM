@@ -133,13 +133,9 @@ public class AppManager extends GApplication implements XuiAppHolder {
     public void active() {
         if (GCallBack.getInstance().getApplication() == this) return;
 
-        System.setOut(systemOutDefault);
-        System.setErr(systemErrDefault);
-        System.setIn(systemInDefault);
-        regStrings();
+        onResume();
+
         GCallBack.getInstance().setApplication(this);
-        Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationPortrait);
-        Glfm.glfmSetDisplayChrome(GCallBack.getInstance().getDisplay(), Glfm.GLFMUserInterfaceChromeNavigationAndStatusBar);
         if (curSelectedJarName != null) {
             updateContentViewInfo(curSelectedJarName);
         }
@@ -147,6 +143,29 @@ public class AppManager extends GApplication implements XuiAppHolder {
             mgrForm.setSize(GCallBack.getInstance().getDeviceWidth(), GCallBack.getInstance().getDeviceHeight());
             mainPanelShowLeft();
             reloadAppList();
+        }
+    }
+
+    public void onResume() {
+        System.setOut(systemOutDefault);
+        System.setErr(systemErrDefault);
+        System.setIn(systemInDefault);
+
+        GCallBack.getInstance().setFps(GCallBack.FPS_DEFAULT);
+
+        Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationPortrait);
+        Glfm.glfmSetDisplayChrome(GCallBack.getInstance().getDisplay(), Glfm.GLFMUserInterfaceChromeNavigationAndStatusBar);
+
+        GLanguage.setCurLang(AppLoader.getDefaultLang());
+
+        if (AppLoader.getGuiStyle() == 0) {
+            GToolkit.setStyle(new GStyleBright());
+        } else {
+            GToolkit.setStyle(new GStyleDark());
+        }
+
+        if (mgrForm != null) {
+            GForm.hideKeyboard(mgrForm);
         }
     }
 
@@ -249,14 +268,7 @@ public class AppManager extends GApplication implements XuiAppHolder {
     public void initForm() {
         //System.out.println("devW :" + devW + ", devH  :" + devH);
 
-        GForm.hideKeyboard(mgrForm);
-        GLanguage.setCurLang(AppLoader.getDefaultLang());
-
-        if (AppLoader.getGuiStyle() == 0) {
-            GToolkit.setStyle(new GStyleBright());
-        } else {
-            GToolkit.setStyle(new GStyleDark());
-        }
+        onResume();
 
         mgrForm.setNotifyListener(new GNotifyListener() {
             @Override
@@ -400,7 +412,6 @@ public class AppManager extends GApplication implements XuiAppHolder {
                     appList.add(item);
                     item.setActionListener(gobj -> {
                         curSelectedJarName = gobj.getAttachment();
-                        setJarName(curSelectedJarName);
                         runApp();
                     });
 
@@ -410,7 +421,6 @@ public class AppManager extends GApplication implements XuiAppHolder {
                     item.add(label);
                     label.setActionListener(gobj -> {
                         curSelectedJarName = gobj.getParent().getAttachment();//buttom's attachment
-                        setJarName(curSelectedJarName);
                         updateContentViewInfo(appName);
                         mainPanelShowRight();
                     });

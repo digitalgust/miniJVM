@@ -82,9 +82,10 @@ public class GListItem extends GContainer {
     }
 
     float oldX, oldY;
+    boolean touched = false;
 
     private boolean validAction(float releaseX, float releaseY) {
-        if (releaseX >= oldX && releaseX <= oldX + getW() && releaseY >= oldY && releaseY < oldY + getH()) {
+        if (Math.abs(releaseX - oldX) < TOUCH_RANGE && Math.abs(releaseY - oldY) < TOUCH_RANGE) {
             return true;
         }
         return false;
@@ -98,13 +99,17 @@ public class GListItem extends GContainer {
         } else {
             switch (phase) {
                 case Glfm.GLFMTouchPhaseBegan:
-                    oldX = getX();
-                    oldY = getY();
+                    oldX = x;
+                    oldY = y;
+                    touched = true;
                     break;
                 case Glfm.GLFMTouchPhaseMoved:
+                    touched = false;
+                    doStateChanged(this);
                     break;
                 case Glfm.GLFMTouchPhaseEnded:
-                    if (validAction(x, y)) select();
+                    if (isInArea(x, y) && validAction(x, y)) select();
+                    touched = false;
                     break;
                 default:
                     break;
@@ -124,11 +129,21 @@ public class GListItem extends GContainer {
             super.mouseButtonEvent(button, pressed, x, y);
         } else {
             if (pressed) {
-                oldX = getX();
-                oldY = getY();
+                oldX = x;
+                oldY = y;
+                touched = true;
             } else {
-                if (validAction(x, y)) select();
+                if (isInArea(x, y) && validAction(x, y)) select();
+                touched = false;
             }
+        }
+    }
+
+    @Override
+    public void cursorPosEvent(int x, int y) {
+        if (!isInArea(x, y) && touched) {
+            touched = false;
+            doStateChanged(this);
         }
     }
 
@@ -173,7 +188,7 @@ public class GListItem extends GContainer {
         Nanovg.nvgIntersectScissor(vg, tx, ty, tw, th);
 
 
-        if (list.isSelected(getIndex())) {
+        if (list.isSelected(getIndex()) || touched) {
             GToolkit.drawRect(vg, tx, ty, tw, th, GToolkit.getStyle().getSelectedColor());
         } else {
             GToolkit.drawRect(vg, tx, ty, tw, th, GToolkit.getStyle().getUnselectedColor());

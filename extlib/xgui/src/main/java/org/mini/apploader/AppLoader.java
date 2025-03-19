@@ -504,7 +504,7 @@ public class AppLoader {
                 Class c = getApplicationClass(jarName);
                 if (c != null) {
                     app = (GApplication) c.newInstance();
-                    app.init(jarName);
+                    app.setJarName(jarName);
                     app.setOldStyle(oldStyle);
                     GCallBack.getInstance().setApplication(app);
                 }

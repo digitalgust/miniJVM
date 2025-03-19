@@ -43,7 +43,7 @@ public class GViewSlot extends GViewPort {
 
     protected float dragBeginX, dragBeginY;
 
-    static final int SWAP_PERIOD = 16;
+    static final int SWAP_PERIOD = 20;
     GCmd swapTask;
 
     public GViewSlot(GForm form, float w, float h, int scrollMod) {

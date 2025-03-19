@@ -26,6 +26,7 @@ public class GMenuItem extends GContainer {
 
     protected int redPoint;
     float[] box = new float[4];
+    float oldX, oldY;
 
     GMenuItem(GForm form, String t, GImage i, GMenu _parent) {
         super(form);
@@ -75,17 +76,54 @@ public class GMenuItem extends GContainer {
     }
 
     @Override
-    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
-        if (isInArea(x, y)) {
-            GObject found = findSonByXY(x, y);
-            if (found != null) {
-                super.mouseButtonEvent(button, pressed, x, y);
-            } else {
-                if (pressed && button == Glfw.GLFW_MOUSE_BUTTON_1) {
-                    touched = true;
-                    doAction();
+    public void touchEvent(int touchid, int phase, int x, int y) {
+        GObject found = findSonByXY(x, y);
+        if (found != null && found.actionListener != null && found.getOnClinkScript() == null) {
+            super.touchEvent(touchid, phase, x, y);
+        } else {
+            if (isInArea(x, y)) {
+                switch (phase) {
+                    case Glfm.GLFMTouchPhaseBegan:
+                        touched = true;
+                        oldX = x;
+                        oldY = y;
+                        doStateChanged(this);
+                        break;
+                    case Glfm.GLFMTouchPhaseEnded:
+                        if (validAction(x, y)) doAction();
+                        touched = false;
+                        doStateChanged(this);
+                        break;
+                }
+            } else if (!isInArea(x, y)) {
+                if (touched) {
+                    touched = false;
                     doStateChanged(this);
-                } else if (!pressed && button == Glfw.GLFW_MOUSE_BUTTON_1) {
+                }
+            }
+        }
+    }
+
+    public boolean dragEvent(int button, float dx, float dy, float x, float y) {
+        return false;
+    }
+
+
+    @Override
+    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+        GObject found = findSonByXY(x, y);
+        if (found != null && found.actionListener != null && found.getOnClinkScript() == null) {
+            super.mouseButtonEvent(button, pressed, x, y);
+        } else {
+            if (isInArea(x, y)) {
+                if (pressed) {
+                    touched = true;
+                    parent.setCurrent(this);
+                    oldX = x;
+                    oldY = y;
+                    doStateChanged(this);
+                } else {
+                    if (validAction(x, y)) doAction();
                     touched = false;
                     doStateChanged(this);
                 }
@@ -94,23 +132,18 @@ public class GMenuItem extends GContainer {
     }
 
     @Override
-    public void touchEvent(int touchid, int phase, int x, int y) {
-        if (isInArea(x, y)) {
-            GObject found = findSonByXY(x, y);
-            if (found != null) {
-                super.touchEvent(touchid, phase, x, y);
-            } else {
-                if (phase == Glfm.GLFMTouchPhaseBegan) {
-                    touched = true;
-                    doStateChanged(this);
-                } else if (phase == Glfm.GLFMTouchPhaseEnded) {
-                    touched = false;
-                    doAction();
-                    doStateChanged(this);
-                }
-            }
+    public void cursorPosEvent(int x, int y) {
+        if (!isInArea(x, y) && touched) {
+            touched = false;
+            doStateChanged(this);
         }
+    }
 
+    private boolean validAction(float releaseX, float releaseY) {
+        if (Math.abs(releaseX - oldX) < TOUCH_RANGE && Math.abs(releaseY - oldY) < TOUCH_RANGE) {
+            return true;
+        }
+        return false;
     }
 
     public boolean isPressed() {
@@ -129,7 +162,7 @@ public class GMenuItem extends GContainer {
             nvgRoundedRect(vg, getX() + 1, getY() + 1, getW() - 2, getH() - 2, getCornerRadius() - 0.5f);
             nvgFill(vg);
             //System.out.println("draw touched");
-            touched = false;
+            //touched = false;
         }
 
         float pad = 2;

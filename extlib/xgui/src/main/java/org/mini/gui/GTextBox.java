@@ -412,6 +412,12 @@ public class GTextBox extends GTextObject {
             if (caret >= 0) {
                 selectEnd = caret;
             }
+            if (y < getY()) {
+                setScroll(getScroll() - editArea.ratioPerLine * 0.5f);
+            }
+            if (y > getY() + getH()) {
+                setScroll(getScroll() + editArea.ratioPerLine * 0.5f);
+            }
         }
     }
 
@@ -586,9 +592,9 @@ public class GTextBox extends GTextObject {
         super.touchEvent(touchid, phase, x, y);
 
         if (touchid != Glfw.GLFW_MOUSE_BUTTON_1) return;
-        if (editArea.isInArea(x, y)) {
-            switch (phase) {
-                case Glfm.GLFMTouchPhaseBegan: {
+        switch (phase) {
+            case Glfm.GLFMTouchPhaseBegan: {
+                if (editArea.isInArea(x, y)) {
                     int caret = editArea.getCaretIndexFromArea(x, y);
                     if (selectMode) {
                         selectAdjusted = false;
@@ -603,38 +609,47 @@ public class GTextBox extends GTextObject {
                     if (inertiaCmd != null) {
                         inertiaCmd = null;
                     }
-                    break;
                 }
-                case Glfm.GLFMTouchPhaseEnded: {
+                break;
+            }
+            case Glfm.GLFMTouchPhaseEnded: {
+                if (editArea.isInArea(x, y)) {
                     if (selectMode) {
                         if (selectStart != -1) {
                             GToolkit.callEditMenu(this, x, y);
                         }
                     }
-                    break;
                 }
-                case Glfm.GLFMTouchPhaseMoved: {
-                    if (selectMode) {
-                        int caret = editArea.getCaretIndexFromArea(x, y);
-                        int mid = selectStart + (selectEnd - selectStart) / 2;
-                        if (adjustSelStart) {
-                            if (caret < mid) {
-                                selectStart = caret;
-                            }
-                        } else if (caret > mid) {
-                            selectEnd = caret;
-                            setCaretIndex(selectEnd);
+                break;
+            }
+            case Glfm.GLFMTouchPhaseMoved: {
+                if (selectMode) {
+                    int caret = editArea.getCaretIndexFromArea(x, y);
+                    int mid = selectStart + (selectEnd - selectStart) / 2;
+                    if (adjustSelStart) {
+                        if (caret < mid) {
+                            selectStart = caret;
                         }
-                        selectAdjusted = true;
-                    } else {
+                    } else if (caret > mid) {
+                        selectEnd = caret;
+                        setCaretIndex(selectEnd);
+                    }
+                    selectAdjusted = true;
+
+                    if (y < getY()) {
+                        setScroll(getScroll() - editArea.ratioPerLine * 0.5f);
+                    }
+                    if (y > getY() + getH()) {
+                        setScroll(getScroll() + editArea.ratioPerLine * 0.5f);
+                    }
+                } else {
 //                        int caret = editArea.getCaretIndexFromArea(x, y);
 //                        setCaretIndex(caret);
-                    }
-                    break;
                 }
-                default:
-                    break;
+                break;
             }
+            default:
+                break;
         }
     }
 
@@ -819,6 +834,7 @@ public class GTextBox extends GTextObject {
         protected int[][] area_detail;
         protected float totalTextHeight;//字符串总高度
         protected float showAreaHeight;//显示区域高度
+        protected float ratioPerLine;//每行占比
 
 
         GTextBox tbox;
@@ -973,6 +989,7 @@ public class GTextBox extends GTextObject {
                     Nanovg.nvgTextBoxBoundsJni(vg, 0, 0, text_area[WIDTH], local_arr, 0, local_arr.length, bond);
                     totalRows = Math.round((bond[HEIGHT] - bond[TOP]) / lineH);
                     totalTextHeight = bond[HEIGHT];
+                    ratioPerLine = lineH / totalTextHeight;
                 }
                 //
                 float dh = scroll * (totalTextHeight - showAreaHeight);

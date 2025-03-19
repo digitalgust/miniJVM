@@ -22,6 +22,7 @@ import static org.mini.gui.GToolkit.nvgRGBA;
 abstract public class GObject implements GAttachable {
 
     //
+    public static final int TOUCH_RANGE = 20;//pix
     public static final byte LAYER_BACK = 2,
             LAYER_NORMAL = 4,
             LAYER_FRONT = 6,
