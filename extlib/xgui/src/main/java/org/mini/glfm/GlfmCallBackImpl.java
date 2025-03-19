@@ -54,7 +54,7 @@ public class GlfmCallBackImpl extends GCallBack {
     long last = System.currentTimeMillis(), now;
     int count = 0;
 
-//    static GlfmCallBackImpl instance = new GlfmCallBackImpl();
+    Thread openglThread;
 
     /**
      * the glinit method call by native function, glfmapp/main.c
@@ -139,6 +139,10 @@ public class GlfmCallBackImpl extends GCallBack {
         ;
     }
 
+    public Thread getOpenglThread() {
+        return openglThread;
+    }
+
     void init() {
         fbWidth = Glfm.glfmGetDisplayWidth(display);
         fbHeight = Glfm.glfmGetDisplayHeight(display);
@@ -202,6 +206,8 @@ public class GlfmCallBackImpl extends GCallBack {
         System.out.println("[INFO]onSurfaceCreated " + width + "," + height + "," + pxRatio);
         Glfm.glfmSetMultitouchEnabled(display, true);
         Glfm.glfmGetDisplayChromeInsets(display, insetsDouble);
+
+        openglThread = Thread.currentThread();
     }
 
     @Override

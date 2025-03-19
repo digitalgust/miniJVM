@@ -273,7 +273,7 @@ public abstract class GApplication implements FormHolder {
         for (Thread t : threads) {
             try {
                 //System.out.println(this + " INTERRUPT " + t);
-                t.stop();
+                t.interrupt();//不能stop,会造成锁未释放，主线程死锁，操作无响应
             } catch (Exception e) {
                 e.printStackTrace();
             }

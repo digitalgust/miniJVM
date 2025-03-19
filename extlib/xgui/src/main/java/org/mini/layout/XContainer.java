@@ -3,6 +3,7 @@ package org.mini.layout;
 import org.mini.glwrap.GLUtil;
 import org.mini.gui.GContainer;
 import org.mini.gui.GObject;
+import org.mini.gui.callback.GCallBack;
 import org.mini.layout.loader.XmlExtAssist;
 import org.mini.util.IntList;
 import org.xmlpull.v1.KXmlParser;
@@ -243,6 +244,10 @@ public abstract class XContainer
 
 
     public void build(int parentW, int parentH, XEventHandler eventHandler) {
+
+        if (!Thread.currentThread().equals(GCallBack.getInstance().getOpenglThread())) {
+            throw new RuntimeException("must call build in opengl thread");
+        }
 
         if (eventHandler == null) {
             this.eventHandler = new XEventHandler();

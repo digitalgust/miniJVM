@@ -83,25 +83,22 @@ public class XuiBrowser {
 
     private void showPage(XuiPage page) {
         GContainer webView = assist.getXuiBrowserHolder().getWebView();
-        GuiScriptLib.showProgressBar(assist.getForm(), 99);
+        GuiScriptLib.showProgressBar(assist.getForm(), 80);
         if (webView != null && page != null) {
-            Thread thread = new Thread(() -> {
+            //上面的给线程做，下面的给主线程做，要不可能导致多线程争抢GContainer.elements死锁
+            GForm.addCmd(new GCmd(() -> {
                 GContainer pan = page.getGui(webView.getW(), webView.getH());
-                //上面的给线程做，下面的给主线程做，要不可能导致多线程争抢GContainer.elements死锁
-                GForm.addCmd(new GCmd(() -> {
-                    webView.clear();
-                    webView.add(pan);
-                    webView.reAlign();
-                    currentPage = page;
-                    if (!pages.contains(page)) {
-                        pages.add(page);
-                    }
-                    webView.flushNow();
-                    GuiScriptLib.showProgressBar(assist.getForm(), 100);
-                }));
-                GForm.flush();
-            });
-            thread.start();
+                webView.clear();
+                webView.add(pan);
+                webView.reAlign();
+                currentPage = page;
+                if (!pages.contains(page)) {
+                    pages.add(page);
+                }
+                webView.flushNow();
+                GuiScriptLib.showProgressBar(assist.getForm(), 100);
+            }));
+            GForm.flush();
         }
     }
 

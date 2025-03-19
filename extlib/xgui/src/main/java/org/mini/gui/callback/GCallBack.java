@@ -112,6 +112,7 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
 
     public abstract void getInsets(float[] top_right_bottom_left);
 
+    public abstract Thread getOpenglThread();
     //============================== glfm
 
 

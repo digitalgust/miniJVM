@@ -20,6 +20,7 @@ public class GSwitch extends GObject {
     static public final float DEFAULT_WIDTH = 50f;
     static public final float DEFAULT_HEIGHT = 30f;
     boolean inArea;
+    float oldX, oldY;
 
     public GSwitch(GForm form) {
         this(form, false, 0f, 0f, DEFAULT_WIDTH, DEFAULT_HEIGHT);
@@ -47,15 +48,23 @@ public class GSwitch extends GObject {
         if (flyable) System.out.println(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
     }
 
+    private boolean validAction(float releaseX, float releaseY) {
+        if (Math.abs(releaseX - oldX) < TOUCH_RANGE && Math.abs(releaseY - oldY) < TOUCH_RANGE) {
+            return true;
+        }
+        return false;
+    }
 
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         if (pressed) {
             if (isInArea(x, y)) {
                 inArea = true;
+                oldX = x;
+                oldY = y;
             }
         } else {
-            if (isInArea(x, y) && inArea) {
+            if (isInArea(x, y) && validAction(x, y) && inArea) {
                 setSwitcher(!switcher);
                 doAction();
             }
@@ -68,12 +77,14 @@ public class GSwitch extends GObject {
             case Glfm.GLFMTouchPhaseBegan:
                 if (isInArea(x, y)) {
                     inArea = true;
+                    oldX = x;
+                    oldY = y;
                 }
                 break;
             case Glfm.GLFMTouchPhaseMoved:
                 break;
             case Glfm.GLFMTouchPhaseEnded:
-                if (isInArea(x, y) && inArea) {
+                if (isInArea(x, y) && validAction(x, y) && inArea) {
                     setSwitcher(!switcher);
                     doAction();
                 }

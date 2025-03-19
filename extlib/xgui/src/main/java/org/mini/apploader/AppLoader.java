@@ -498,6 +498,10 @@ public class AppLoader {
     public static GApplication runApp(String jarName) {
         GApplication app = null;
         try {
+            GApplication old = GCallBack.getInstance().getApplication();
+            if (old != AppManager.getInstance()) {
+                old.pauseApp();
+            }
             if (jarName != null) {
                 extractFatJar(jarName); //extract dependence lib
                 GStyle oldStyle = GToolkit.getStyle();

@@ -48,6 +48,7 @@ public class GlfwCallBackImpl extends GCallBack {
     float fps;
     float fpsExpect = FPS_DEFAULT;
 
+    Thread openglThread;
 
     public GlfwCallBackImpl() {
     }
@@ -92,6 +93,9 @@ public class GlfwCallBackImpl extends GCallBack {
         Glfw.glfwSetWindowTitle(display, title);
     }
 
+    public Thread getOpenglThread() {
+        return openglThread;
+    }
 
     public void init(int width, int height) {
         this.winWidth = width;
@@ -128,6 +132,7 @@ public class GlfwCallBackImpl extends GCallBack {
         Glfw.glfwSwapInterval(1);
         reloadWindow();
         System.out.println("[INFO]fbWidth=" + fbWidth + "  ,fbHeight=" + fbHeight);
+        openglThread = Thread.currentThread();
 
         vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
         if (vg == 0) {
