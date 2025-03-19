@@ -1026,7 +1026,9 @@ public class GTextBox extends GTextObject {
                     int row_index = 0;
 
                     if (end - start == 0) {
-                        GToolkit.drawCaret(vg, dx, dy, 2, lineH, false);
+                        GToolkit.drawCaret(vg, dx, dy, 2, fontH, false);
+                        GTextBox.this.caretX = dx;
+                        GTextBox.this.caretY = dy + lineH + PAD;
                     } else {//通过nvgTextBreakLinesJni进行断行
 
                         for (int li = 0; li < local_detail.length; li++) local_detail[li] = null;

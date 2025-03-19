@@ -656,24 +656,30 @@ public class GToolkit {
      * ----------------------------------------------------------------
      */
     static public GFrame getConfirmFrame(GForm form, String title, String msg, String left, GActionListener leftListener, String right, GActionListener rightListener) {
-        return getConfirmFrame(form, title, msg, left, leftListener, right, rightListener, 300f, 200f);
+        return getConfirmFrame(form, title, msg, left, leftListener, right, rightListener, 300f, 200f, false);
     }
 
     static public GFrame getConfirmFrame(GForm form, String title, String msg, String left, GActionListener leftListener, String right, GActionListener rightListener, float width, float height) {
+        return getConfirmFrame(form, title, msg, left, leftListener, right, rightListener, width, height, false);
+    }
+
+    static public GFrame getConfirmFrame(GForm form, String title, String msg, String left, GActionListener leftListener, String right, GActionListener rightListener, float width, float height, boolean disappeOnLostFocus) {
         GFrame frame = new GFrame(form, title, 0, 0, width, height);
         frame.setFront(true);
-        frame.setFocusListener(new GFocusChangeListener() {
-            @Override
-            public void focusGot(GObject go) {
-            }
-
-            @Override
-            public void focusLost(GObject go) {
-                if (frame.getForm() != null) {
-                    frame.getForm().remove(frame);
+        if (disappeOnLostFocus) {
+            frame.setFocusListener(new GFocusChangeListener() {
+                @Override
+                public void focusGot(GObject go) {
                 }
-            }
-        });
+
+                @Override
+                public void focusLost(GObject go) {
+                    if (frame.getForm() != null) {
+                        frame.getForm().remove(frame);
+                    }
+                }
+            });
+        }
 
         GContainer gp = frame.getView();
         float x = 10, y = 5, w = gp.getW() - 20, h = gp.getH() - 50;
@@ -1580,8 +1586,7 @@ public class GToolkit {
         }
         GForm gform = focus.getForm();
 
-        x -= gform.getX();
-        y -= gform.getY();
+
         float menuH = 40, menuW = 300;
 
         float mx = x - menuW / 2;
@@ -1590,14 +1595,15 @@ public class GToolkit {
         } else if (mx + menuW > gform.getW()) {
             mx = gform.getW() - menuW;
         }
-        mx += gform.getX();
-        float my = y - 20 - menuH;
+        float my = y - 40 - menuH;
         if (my < 20) {
-            my = y + 10;
+            my = 10;
         } else if (my + menuH > gform.getH()) {
             my = gform.getH() - menuH;
         }
-        my += gform.getY();
+
+//        mx += gform.getX();
+//        my += gform.getY();
 
         if (editMenu != null) {
             if (editMenu.curLang != GLanguage.getCurLang()) {

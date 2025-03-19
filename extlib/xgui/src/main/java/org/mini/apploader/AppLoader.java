@@ -499,7 +499,7 @@ public class AppLoader {
         GApplication app = null;
         try {
             GApplication old = GCallBack.getInstance().getApplication();
-            if (old != AppManager.getInstance()) {
+            if (old != null && old != AppManager.getInstance()) {
                 old.pauseApp();
             }
             if (jarName != null) {
