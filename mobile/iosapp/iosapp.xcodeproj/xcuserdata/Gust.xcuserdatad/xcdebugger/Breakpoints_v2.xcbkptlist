@@ -134,7 +134,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "709"
             endingLineNumber = "709"
-            landmarkName = "_garbage_mark_object(ref)"
+            landmarkName = "_gc_copy_objs(jvm)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>

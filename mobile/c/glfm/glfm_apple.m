@@ -832,26 +832,26 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
 //================================= gust add 3 =======================
 //强制转屏（这个方法最好放在BaseVController中）
 
-- (void)setInterfaceOrientation:(UIInterfaceOrientation)orientation{
-
-    if ([[UIDevice currentDevice] respondsToSelector:@selector(setOrientation:)]) {
-
-        SEL selector  = NSSelectorFromString(@"setOrientation:");
-
-        NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:[UIDevice instanceMethodSignatureForSelector:selector]];
-
-        [invocation setSelector:selector];
-
-        [invocation setTarget:[UIDevice currentDevice]];
-
-        // 从2开始是因为前两个参数已经被selector和target占用
-
-        [invocation setArgument:&orientation atIndex:2];
-
-        [invocation invoke];
-
+- (void)setInterfaceOrientation:(UIInterfaceOrientation)orientation {
+    if (@available(iOS 16.0, *)) {
+        UIWindowScene *windowScene = self.view.window.windowScene;
+        if (windowScene) {
+            UIWindowSceneGeometryPreferencesIOS *preferences = [[UIWindowSceneGeometryPreferencesIOS alloc] 
+                initWithInterfaceOrientations:1 << orientation];
+            [windowScene requestGeometryUpdateWithPreferences:preferences errorHandler:^(NSError * _Nonnull error) {
+                //NSLog(@"Failed to update interface orientation: %@", error);
+            }];
+        }
+    } else {
+        if ([[UIDevice currentDevice] respondsToSelector:@selector(setOrientation:)]) {
+            SEL selector = NSSelectorFromString(@"setOrientation:");
+            NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:[UIDevice instanceMethodSignatureForSelector:selector]];
+            [invocation setSelector:selector];
+            [invocation setTarget:[UIDevice currentDevice]];
+            [invocation setArgument:&orientation atIndex:2];
+            [invocation invoke];
+        }
     }
-
 }
 //================================= gust add 3 =======================
 
