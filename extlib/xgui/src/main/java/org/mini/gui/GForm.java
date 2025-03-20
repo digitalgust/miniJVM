@@ -167,6 +167,8 @@ public class GForm extends GContainer {
     public void onDeviceNotify(String key, String val) {
         if (notifyListener != null) {
             notifyListener.onNotify(key, val);
+        } else {
+            System.out.println("[WARN]notifyListener is null when onNotify:" + key + "," + val);
         }
     }
 

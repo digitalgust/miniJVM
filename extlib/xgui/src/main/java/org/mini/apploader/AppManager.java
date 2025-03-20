@@ -273,11 +273,9 @@ public class AppManager extends GApplication implements XuiAppHolder {
         mgrForm.setNotifyListener(new GNotifyListener() {
             @Override
             public void onNotify(String key, String val) {
+                //System.out.println("[INFO]notify:" + key + "," + val);
                 try {
                     switch (key) {
-                        case NOTIFY_KEY_DEVICE_TOKEN:
-                            System.setProperty("device.token", val);
-                            break;
                         case NOTIFY_KEY_IOS_PURCHASE:
                             if (val.indexOf(':') > 0) {
                                 String[] ss = val.split(":");
@@ -619,23 +617,36 @@ public class AppManager extends GApplication implements XuiAppHolder {
             setListItemColor(gli, RUNNING_ITEM_COLOR);
 
             GDesktop.addCmd(new Runnable() {
+                int retry = 0;
+
                 @Override
                 public void run() {
                     GForm.flush();
 
                     String orientation = AppLoader.getApplicationOrientation(curSelectedJarName);
-                    if (orientation.equals("h")) {
-                        Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationLandscapeLeft);
+                    if (orientation.equalsIgnoreCase("h")) {
+                        Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationLandscapeLeft | Glfm.GLFMInterfaceOrientationLandscapeRight);
                     } else {
                         Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationPortrait);
                     }
                     appOri = orientation;
                     String osname = System.getProperty("os.name");
-                    if ("iOS".equals(osname) || "Android".equals(osname)) {
-                        float w = GCallBack.getInstance().getDeviceWidth();
-                        float h = GCallBack.getInstance().getDeviceHeight();
+                    if ("iOS".equalsIgnoreCase(osname) || "Android".equalsIgnoreCase(osname)) {
+                        //float w = GCallBack.getInstance().getDeviceWidth();
+                        //float h = GCallBack.getInstance().getDeviceHeight();
+                        GCallBack.getInstance().getInsets(inset);
+                        //System.out.println("[INFO] INSET:" + inset[0] + " , " + inset[1] + " , " + inset[2] + " , " + inset[3]);
+
                         if ("h".equals(appOri)) {
-                            if (w < h) return;
+                            int ori = Glfm.glfmGetInterfaceOrientation(GCallBack.getInstance().getDisplay());
+                            if ((ori & Glfm.GLFMInterfaceOrientationLandscapeLeft) == 0
+                                    && (ori & Glfm.GLFMInterfaceOrientationLandscapeRight) == 0
+                            ) {
+                                if (retry++ < 120) { // wait for turn orientation
+                                    GDesktop.addCmd(this);
+                                }
+                                return;
+                            }
                         }
                     }
 

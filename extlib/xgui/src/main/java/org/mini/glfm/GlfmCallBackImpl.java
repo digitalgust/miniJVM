@@ -342,7 +342,9 @@ public class GlfmCallBackImpl extends GCallBack {
         winWidth = (int) (fbWidth / pxRatio);
         winHeight = (int) (fbHeight / pxRatio);
 
-        Glfm.glfmGetDisplayChromeInsets(display, insetsDouble);
+        //float[] inset = new float[4];
+        //GCallBack.getInstance().getInsets(inset);
+        //System.out.println("[INFO]glfm INSET:" + inset[0] + " , " + inset[1] + " , " + inset[2] + " , " + inset[3]);
 
         if (desktop == null) {
             return;
@@ -398,8 +400,9 @@ public class GlfmCallBackImpl extends GCallBack {
         GForm mgrForm = AppManager.getInstance().getForm();
         if (mgrForm == null) {
             System.out.println("[WARN]form is null when onNotify:" + key + "," + val);
+        } else {
+            mgrForm.onDeviceNotify(key, val);// notify to manager form first
         }
-        mgrForm.onDeviceNotify(key, val);// notify to manager form first
         if (mgrForm != desktop.getForm()) {
             desktop.onDeviceNotify(key, val);
         }

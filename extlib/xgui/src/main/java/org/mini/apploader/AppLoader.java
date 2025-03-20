@@ -189,10 +189,10 @@ public class AppLoader {
 
     static void copyExApp() {
         String srcPath = GCallBack.getInstance().getAppResRoot() + "/resfiles/" + EXAMPLE_APP_FILE;
-        //if (!applist.contains(EXAMPLE_APP_FILE) || !isJarExists(srcPath)) {
-        addApp(EXAMPLE_APP_FILE, srcPath);
-        //System.out.println("copy exapp");
-        //}
+        if (!isJarExists(srcPath)) {
+            addApp(EXAMPLE_APP_FILE, srcPath);
+            System.out.println("copy exapp");
+        }
     }
 
     public static void loadJarProp(String filePath, Properties prop) {

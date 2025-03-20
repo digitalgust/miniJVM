@@ -8,6 +8,7 @@ import org.mini.nanovg.Nanovg;
 import static org.mini.gl.GL.*;
 import static org.mini.gl.GL.GL_STENCIL_BUFFER_BIT;
 import static org.mini.gui.GToolkit.nvgRGBA;
+import static org.mini.gui.event.GNotifyListener.NOTIFY_KEY_DEVICE_TOKEN;
 import static org.mini.nanovg.Nanovg.*;
 
 
@@ -203,6 +204,11 @@ public class GDesktop extends GPanel implements GCallbackUI {
     }
 
     public void onDeviceNotify(String key, String val) {
+        switch (key) {
+            case NOTIFY_KEY_DEVICE_TOKEN:
+                System.setProperty("device.token", val);
+                break;
+        }
         getForm().onDeviceNotify(key, val);
     }
 }
