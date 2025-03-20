@@ -623,6 +623,12 @@ public class AppManager extends GApplication implements XuiAppHolder {
                 public void run() {
                     GForm.flush();
 
+                    String fullscreen = AppLoader.getApplicationFullscreen(curSelectedJarName);
+                    if ("1".equalsIgnoreCase(fullscreen)) {
+                        Glfm.glfmSetDisplayChrome(GCallBack.getInstance().getDisplay(), Glfm.GLFMUserInterfaceChromeFullscreen);
+                    } else {
+                        Glfm.glfmSetDisplayChrome(GCallBack.getInstance().getDisplay(), Glfm.GLFMUserInterfaceChromeNavigationAndStatusBar);
+                    }
                     String orientation = AppLoader.getApplicationOrientation(curSelectedJarName);
                     if (orientation.equalsIgnoreCase("h")) {
                         Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationLandscapeLeft | Glfm.GLFMInterfaceOrientationLandscapeRight);

@@ -408,6 +408,14 @@ public class AppLoader {
         return v;
     }
 
+    public static String getApplicationFullscreen(String jarName) {
+        String v = getAppConfig(jarName, "fullscreen");
+        if (v == null) {
+            v = "0";
+        }
+        return v.toLowerCase();
+    }
+
     public static String getApplicationOrientation(String jarName) {
         String v = getAppConfig(jarName, "orientation");
         if (v == null) {
