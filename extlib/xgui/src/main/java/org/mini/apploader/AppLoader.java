@@ -189,9 +189,15 @@ public class AppLoader {
 
     static void copyExApp() {
         String srcPath = GCallBack.getInstance().getAppResRoot() + "/resfiles/" + EXAMPLE_APP_FILE;
+        String dstPath = getAppJarPath(EXAMPLE_APP_FILE);
+        File dst = new File(dstPath);
+        if (dst.exists()) {
+            System.out.println("[INFO]exapp exists " + EXAMPLE_APP_FILE);
+            return;
+        }
         if (!isJarExists(srcPath)) {
             addApp(EXAMPLE_APP_FILE, srcPath);
-            System.out.println("copy exapp");
+            System.out.println("[INFO]copy exapp " + EXAMPLE_APP_FILE);
         }
     }
 

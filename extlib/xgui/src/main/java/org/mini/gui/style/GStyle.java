@@ -69,7 +69,7 @@ public abstract class GStyle {
 
     public void drawFieldBoxBase(long vg, float x, float y, float w, float h, float r) {
         byte[] bg;
-        bg = nvgBoxGradient(vg, x + 1f, y + 1f, w - 2f, h - 2f, r - 0.5f, 2f, nvgRGBA(0, 0, 0, 16), nvgRGBA(0, 0, 0, 66));
+        bg = nvgBoxGradient(vg, x + 1f, y + 1f, w - 2f, h - 2f, r - 0.5f, 1f, nvgRGBA(0, 0, 0, 16), nvgRGBA(0, 0, 0, 66));
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x, y, w, h, r);
         nvgFillPaint(vg, bg);

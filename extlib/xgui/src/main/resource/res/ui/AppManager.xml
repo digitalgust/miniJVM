@@ -139,7 +139,7 @@
                 uid=getEnv("USERNAME")
                 setText("LAB_USERNAME",uid+" >")
             else
-                setText("LAB_USERNAME","{STR_NEED_SIGNIN} >")
+                setText("LAB_USERNAME","{SIGN_IN} >")
             eif
         ret
 
