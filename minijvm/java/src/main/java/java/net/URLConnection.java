@@ -138,5 +138,22 @@ public abstract class URLConnection {
         public boolean isExpired() {
             return System.currentTimeMillis() > expireMs;
         }
+
+        public void setRequestProperty(String key, String value) {
+
+        }
+
+        public void addRequestProperty(String key, String value) {
+
+        }
+
+        public String getRequestProperty(String key) {
+            return null;
+        }
+
+        public Map<String, List<String>> getRequestProperties() {
+            return Collections.emptyMap();
+        }
+
     }
 }

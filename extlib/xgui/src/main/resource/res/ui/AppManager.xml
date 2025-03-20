@@ -33,9 +33,10 @@
             eif
 
             policyUrl=getEnv("POLICY_URL")
-            println("getPolicy:"+policyUrl)
+            #println("getPolicy:"+policyUrl)
             if(strlen(policyUrl)>0)
-                url=policyUrl +"?"+ getQueryPara()
+                url=policyUrl
+                body=getQueryPara()
                 if(startsWith(url,"file://"))
                     jsonStr=urlGetAsString(url)
                     json=jsonParse(jsonStr)
@@ -43,9 +44,9 @@
                     onPolicyRequestBack(url,0,reply)
                 else
                     if(sync)
-                        httpGetSync(url, "ROOT_PAN.onPolicyRequestBack")
+                        httpPostSync(url, body, "ROOT_PAN.onPolicyRequestBack")
                     else
-                        httpGet(url, "ROOT_PAN.onPolicyRequestBack")
+                        httpPost(url, body, "ROOT_PAN.onPolicyRequestBack")
                     eif
                 eif
             eif
@@ -92,8 +93,9 @@
                 #println(encryptPwd)
 
                 accBaseUrl=getEnv("ACCOUNT_BASE_URL")
-                url=accBaseUrl + "/login?usr=" + loginUid + "&pwd=" + encryptPwd +"&logintype="+ logintype +"&"+ getQueryPara()
-                httpGet(url,"ROOT_PAN.onSignInAutoBack")
+                url=accBaseUrl + "/login"
+                body="usr=" + loginUid + "&pwd=" + encryptPwd +"&logintype="+ logintype +"&"+ getQueryPara()
+                httpPost(url,body,"ROOT_PAN.onSignInAutoBack")
             eif
         ret
 
