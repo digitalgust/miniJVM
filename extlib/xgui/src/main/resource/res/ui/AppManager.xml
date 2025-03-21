@@ -187,10 +187,13 @@
         ret
 
         sub showPlugDownload()
-            url=getEnv("PLUGIN_URL")+"?"+ getQueryPara()
+            url=""
             if(isGithub())
                 url="https://raw.githubusercontent.com/digitalgust/plugin4minijvm/main/plugins/plugin.xml"
                 #url="file:///D:/GitHub/plugin4minijvm/plugins/plugin.xml"
+            else
+                getPolicy(true)
+                url=getEnv("PLUGIN_URL")+"?"+ getQueryPara()
             eif
             #println(url)
             if(strlen(url)>0)
