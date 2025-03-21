@@ -99,17 +99,18 @@ public class MiniHttpClient extends Thread {
         DataInputStream dis = null;
         byte[] data;
         try {
-            logger.log("http url:" + url);
+            //logger.log("[INFO]http url:" + url);
             updateProgress(5);
             c = (HttpConnection) Connector.open(url);
-            outputHeaders();
             if (baos != null) {
                 c.setRequestMethod(HttpConnection.POST);
+                outputHeaders();
                 byte[] d = baos.toByteArray();
                 c.setRequestProperty("Content-Length", String.valueOf(d.length));
                 c.openDataOutputStream().write(d);
             } else {
                 c.setRequestMethod(HttpConnection.GET);
+                outputHeaders();
             }
             int rescode = c.getResponseCode();
             if (rescode == 200) {
@@ -167,7 +168,7 @@ public class MiniHttpClient extends Thread {
                 }
             }
         } catch (Exception e) {
-            //e.printStackTrace();
+            //logger.log("[ERRO]http error:" + e.getCodeStack());
             updateProgress(100);
             if (handle != null) {
                 handle.onCompleted(this, url, null);

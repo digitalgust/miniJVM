@@ -748,6 +748,9 @@ public class GTextBox extends GTextObject {
 
     @Override
     public boolean inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
+        if (scrollBar.isInArea(x2, y2)) {
+            return true;
+        }
         if (scroll >= 1 || scroll <= 0) {
             return false;
         }

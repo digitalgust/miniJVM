@@ -6,7 +6,7 @@ import java.net.URL;
 
 public class JarUrlHelper extends UrlHelper {
     public String getProtocol() {
-        return "file";
+        return "jar";
     }
 
 
@@ -27,9 +27,9 @@ public class JarUrlHelper extends UrlHelper {
         if (tmppath.indexOf("!/") < 0) {
             tmppath = tmppath + "!/" + path;
         } else {
-            if(path.startsWith("/")) {
+            if (path.startsWith("/")) {
                 tmppath = tmppath.substring(0, tmppath.indexOf("!/")) + "!/" + path;
-            }else{
+            } else {
                 tmppath = tmppath.substring(0, tmppath.lastIndexOf("/")) + "/" + path;
             }
         }

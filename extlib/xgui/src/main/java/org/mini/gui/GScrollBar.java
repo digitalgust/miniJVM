@@ -127,6 +127,11 @@ public class GScrollBar extends GObject {
     }
 
     @Override
+    public boolean inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
+        return true;
+    }
+
+    @Override
     public void touchEvent(int touchid, int phase, int x, int y) {
         int rx = (int) (x - getX());
         int ry = (int) (y - getY());

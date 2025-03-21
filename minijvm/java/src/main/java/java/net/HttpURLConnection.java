@@ -144,24 +144,25 @@ public abstract class HttpURLConnection extends URLConnection {
     }
 
     public void setRequestProperty(String key, String value) {
-        List<String> list = outHeader.get(key.toLowerCase());
+        List<String> list = outHeader.get(key);
         if (list == null) {
             list = new ArrayList<>();
-            outHeader.put(key.toLowerCase(), list);
+            outHeader.put(key, list);
         }
+        list.add(value);
     }
 
     public void addRequestProperty(String key, String value) {
         List<String> list = outHeader.get(key.toLowerCase());
         if (list == null) {
             list = new ArrayList<>();
-            outHeader.put(key.toLowerCase(), list);
+            outHeader.put(key, list);
         }
         list.add(value);
     }
 
     public String getRequestProperty(String key) {
-        List<String> list = outHeader.get(key.toLowerCase());
+        List<String> list = outHeader.get(key);
         if (list != null && list.size() > 0) {
             return list.get(0);
         } else {

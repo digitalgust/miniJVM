@@ -19,9 +19,14 @@ public class XuiPage {
     XEventHandler eventDelegate;
     XmlExtAssist assistDelegate;
     URL url;
+    String post;
     GContainer pan;
 
     public XuiPage(String homeUrl, XuiBrowser browser) {
+        this(homeUrl, null, browser);
+    }
+
+    public XuiPage(String homeUrl, String post, XuiBrowser browser) {
         try {
             //urlStr="jar:http://www.foo.com/bar/baz.jar!/COM/foo/Quux.class";
             url = new URL(homeUrl);
@@ -32,6 +37,7 @@ public class XuiPage {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        this.post = post;
         XEventHandler eventDelegate = new XPageEventDelegate(browser, url);
         this.eventDelegate = eventDelegate;
 
@@ -48,7 +54,7 @@ public class XuiPage {
             loader.setURL(url);
             assistDelegate.setLoader(loader);
 
-            String uistr = loader.loadXml(url.toString());
+            String uistr = loader.loadXml(url.toString(), post);
             if (uistr != null) {
                 UITemplate uit = new UITemplate(uistr);
                 XContainer xcon = (XContainer) XContainer.parseXml(uit.parse(), assistDelegate);
@@ -78,6 +84,10 @@ public class XuiPage {
 
     public URL getUrl() {
         return url;
+    }
+
+    public String getPost() {
+        return post;
     }
 
 

@@ -125,8 +125,9 @@
                 ret
             eif
             getPolicy(true)
-            url=getEnv("DISCOVERY_URL") +"?"+ getQueryPara()
-            openPage(url,"")
+            url=getEnv("DISCOVERY_URL")
+            body=getQueryPara()
+            openPagePost(url,body,"")
         ret
 
         sub showMy() #显示我的
@@ -139,9 +140,9 @@
             token=getEnv("TOKEN")
             if(strlen(token)>0)
                 uid=getEnv("USERNAME")
-                setText("LAB_USERNAME",uid+" >")
+                setText("LAB_USERNAME",uid+" ▶")
             else
-                setText("LAB_USERNAME","{SIGN_IN} >")
+                setText("LAB_USERNAME","{SIGN_IN} ▶")
             eif
         ret
 
@@ -152,16 +153,17 @@
             getPolicy(true)
             s1=getEnv("DISCOVERY_URL")
             s2=substr(s1,0,lastIdxOf(s1,"/"))
-            s3=s2+"/profile.xml" +"?"+ getQueryPara()
+            s3=s2+"/profile.xml"
+            body=getQueryPara()
             showSlot("SLOT_MGR",3)
-            openPage(s3,"")
+            openPagePost(s3,body,"")
         ret
 
         sub checkUpdate()
             if(isGithub())
                 ret
             eif
-            url=getEnv("UPDATE_URL")+"?"+ getQueryPara()
+            url=getEnv("UPDATE_URL")
             if(strlen(url)>0)
                 openOtherApp(url,"",0)  # 第一个为 url，第二个为参数，第三个为检测是否App 存在，0为不检测，1为检测
             eif
@@ -336,7 +338,7 @@
                                     </td>
                                     <td w="20"></td>
                                     <td w="float" bgcolor="55558020">
-                                        <label name="LAB_USERNAME" onclick='showProfile()' w="100%" h="80" color="bb8844ff" fontsize="18" align="hcenter,vcenter">{SIGN_IN} &gt;</label>
+                                        <label name="LAB_USERNAME" onclick='showProfile()' w="100%" h="80" color="bb8844ff" fontsize="18" align="hcenter,vcenter">{SIGN_IN} ▶</label>
                                     </td>
                                 </tr>
                             </table>

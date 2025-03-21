@@ -239,7 +239,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
                 case Glfm.GLFMTouchPhaseBegan: {
                     touched = true;
                     if (visible && enable && !Glfm.glfmIsKeyboardVisible(GCallBack.getInstance().getDisplay())) {
-                        GForm.showKeyboard(this);
+                        //GForm.showKeyboard(this);
                     }
                     break;
                 }

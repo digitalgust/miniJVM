@@ -90,6 +90,7 @@ public class GLanguage {
         addStringInner("Do you sure delete :", new String[]{"Do you sure delete: ", "你要删除文件或目录： ", "你要刪除檔案或目錄： ", "파일 또는 디렉토리를 삭제하려고 합니다: ", "Vous êtes sur le point de supprimer le fichier ou le répertoire :", "Estás a punto de eliminar el archivo o directorio:", "Stai per eliminare il file o la directory:", "あなたはファイルまたはディレクトリを削除しようとしています: ", "Sie sind im Begriff, die Datei oder das Verzeichnis zu löschen:", "Вы собираетесь удалить файл или каталог: "});
         addStringInner("Create new folder :", new String[]{"Name for the new folder to be created:", "创建新文件夹名称： ", "建立新資料夾名稱： ", "새 폴더의 이름: ", "Nom du nouveau dossier à créer :", "Nombre de la nueva carpeta a crear:", "Nome per la nuova cartella da creare:", "作成する新しいフォルダの名前:", "Name für den neu zu erstellenden Ordner:", "Имя нового создаваемого каталога:"});
         addStringInner("Folder Name", new String[]{"Folder Name", "文件夹名称", "資料夾名稱", "폴더 이름", "Nom du dossier", "Nombre de la carpeta", "Nome della cartella", "フォルダ名", "Ordnername", "Имя папки"});
+        addStringInner("Delete", new String[]{"Delete", "删除", "刪除", "삭제", "Supprimer", "Eliminar", "Eliminare", "削除", "Löschen", "Удалить"});
     }
 
     static public int getSupportedLang() {

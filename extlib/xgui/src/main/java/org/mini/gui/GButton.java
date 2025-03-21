@@ -149,7 +149,7 @@ public class GButton extends GObject {
 
         float tw = 0, iw = 0;
         float move = 0;
-        if (touched) {
+        if (touched && enable) {
             move = 1;
             bg = nvgLinearGradient(vg, x, y + h, x, y, nvgRGBA(255, 255, 255, 0x10), nvgRGBA(0, 0, 0, 0x10));
         } else {

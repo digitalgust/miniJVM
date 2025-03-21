@@ -41,6 +41,7 @@ public class XuiScriptLib extends Lib {
         // script method register
         {
             methodNames.put("openPage".toLowerCase(), this::openPage);//
+            methodNames.put("openPagePost".toLowerCase(), this::openPagePost);//
             methodNames.put("downloadInstall".toLowerCase(), this::downloadInstall);//
             methodNames.put("downloadSave".toLowerCase(), this::downloadSave);//
             methodNames.put("getPageBaseUrl".toLowerCase(), this::getPageBaseUrl);//
@@ -77,6 +78,20 @@ public class XuiScriptLib extends Lib {
         return null;
     }
 
+    public DataType openPagePost(ArrayList<DataType> para) {
+        String href = Interpreter.popBackStr(para);
+        String post = Interpreter.popBackStr(para);
+        String callback = Interpreter.popBackStr(para);
+        if (href != null) {
+            XuiPage page = browserHolder.getBrowser().getCurrentPage();
+            if (page != null) {// may be  href="/abc/c.xml"
+                href = UrlHelper.normalizeUrl(page.getUrl(), href); //fix as : http://www.abc.com/abc/c.xml
+            }
+            browserHolder.getBrowser().gotoPage(href, post);
+            GuiScriptLib.doHttpCallback(formHolder.getForm(), callback, href, 0, "");
+        }
+        return null;
+    }
 
     public DataType downloadInstall(ArrayList<DataType> para) {
         String href = Interpreter.popBackStr(para);
@@ -203,7 +218,7 @@ public class XuiScriptLib extends Lib {
             XuiPage page = explorer.getCurrentPage();
             if (page != null) {
                 page.reset();
-                explorer.gotoPage(page.getUrl().toString());
+                explorer.gotoPage(page.getUrl().toString(), page.getPost());
             }
         }
         return null;

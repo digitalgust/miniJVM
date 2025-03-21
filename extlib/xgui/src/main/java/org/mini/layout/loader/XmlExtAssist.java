@@ -24,7 +24,7 @@ public class XmlExtAssist implements BrowserHolder {
     public interface XLoader {
         GImage loadImage(String path);
 
-        String loadXml(String path);
+        String loadXml(String path, String post);
     }
 
     protected Vector<String> extGuiClassName = new Vector();
@@ -49,7 +49,7 @@ public class XmlExtAssist implements BrowserHolder {
                 return GToolkit.getCachedImageFromJar(path);
             }
 
-            public String loadXml(String path) {
+            public String loadXml(String path, String post) {
                 return GToolkit.readFileFromJarAsString(path, "utf-8");
             }
         };

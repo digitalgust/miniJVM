@@ -156,7 +156,7 @@ public class GMenuItem extends GContainer {
         super.paint(vg);
 
         //touched item background
-        if (touched) {
+        if (touched && enable) {
             nvgFillColor(vg, nvgRGBA(255, 255, 255, 48));
             nvgBeginPath(vg);
             nvgRoundedRect(vg, getX() + 1, getY() + 1, getW() - 2, getH() - 2, getCornerRadius() - 0.5f);

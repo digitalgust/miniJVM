@@ -877,13 +877,13 @@ public class AppManager extends GApplication implements XuiAppHolder {
     }
 
 
-    public String[] getPolicy(String url) {
+    public String[] getPolicy(String url, String post) {
         try {
             if (url == null) {
                 return null;
             }
             XuiResourceLoader loader = new XuiResourceLoader();
-            XuiResource res = loader.loadResource(url);
+            XuiResource res = loader.loadResource(url, post);
             if (res != null) {
                 String json = res.getString();
                 if (json != null) {

@@ -161,7 +161,7 @@
                             <goal>run</goal>        
                         </goals>             
                         <configuration>       
-                            <tasks>
+                            <target>
                                 <!--  copy to binary lib dir -->
                                 <mkdir dir="../../binary/lib"/>        
                                 <copy todir="../../binary/lib/" overwrite="true" > 
@@ -176,7 +176,7 @@
                                         <include name="${project.artifactId}.jar"/>
                                     </fileset>
                                 </copy>         
-                            </tasks>        
+                            </target>
                         </configuration>        
                     </execution>    
                 </executions>  

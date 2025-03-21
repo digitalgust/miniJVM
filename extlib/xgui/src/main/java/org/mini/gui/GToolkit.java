@@ -685,7 +685,7 @@ public class GToolkit {
         float x = 10, y = 5, w = gp.getW() - 20, h = gp.getH() - 50;
 
         GTextBox tbox = new GTextBox(form, msg, "", x, y, w, h);
-        tbox.setName("GTOOLS_MSG_BOX");
+        tbox.setName("GTOOLKIT_CONFIRM_TEXTBOX");
         tbox.setEditable(false);
         gp.add(tbox);
         y += h + 5;
@@ -694,6 +694,7 @@ public class GToolkit {
         if (left != null) {
             GButton leftBtn = new GButton(form, left, x, y, btnWidth, 30);
             //leftBtn.setBgColor(128, 16, 8, 255);
+            leftBtn.setName("GTOOLKIT_CONFIRM_LEFT");
             gp.add(leftBtn);
             leftBtn.setActionListener(gobj -> {
                 if (leftListener != null) leftListener.action(gobj);
@@ -703,6 +704,7 @@ public class GToolkit {
 
         GButton rightBtn = new GButton(form, right == null ? AppManager.getInstance().getString("Cancel") : right, btnWidth + 10, y, btnWidth, 30);
         gp.add(rightBtn);
+        rightBtn.setName("GTOOLKIT_CONFIRM_RIGHT");
         rightBtn.setActionListener(gobj -> {
             if (rightListener != null) rightListener.action(gobj);
             else gobj.getFrame().close();
@@ -717,6 +719,7 @@ public class GToolkit {
 
     static public GFrame getMsgFrame(GForm form, String title, String msg, float width, float height) {
         final GFrame frame = new GFrame(form, title, 0, 0, width, height);
+        frame.setName("GTOOLKIT_MSGFRAME");
         frame.setFront(true);
         frame.setFocusListener(new GFocusChangeListener() {
             @Override
@@ -742,7 +745,7 @@ public class GToolkit {
         float btnWidth = w * .5f;
         GButton leftBtn = new GButton(form, AppManager.getInstance().getString("Ok"), x + btnWidth * .5f, y, btnWidth, 28);
         //leftBtn.setBgColor(128, 16, 8, 255);
-        leftBtn.setName("MSG_FRAME_OK");
+        leftBtn.setName("GTOOLKIT_MSGFRAME_OK");
         gp.add(leftBtn);
         leftBtn.setActionListener(gobj -> frame.close());
 
@@ -761,6 +764,7 @@ public class GToolkit {
 
     static public GFrame getFileChooser(GForm form, String title, String path, FileFilter filter, boolean multiSelect, float width, float height, GActionListener openAction, GActionListener cancelAction) {
         final GFrame frame = new GFrame(form, title, 0, 0, width, height);
+        frame.setName("GTOOLKIT_FILECHOOSER_FRAME");
         frame.setFront(true);
 
         if (path == null || path.length() == 0) {
@@ -826,7 +830,7 @@ public class GToolkit {
             GFrame confirm = getConfirmFrame(form,
                     AppManager.getInstance().getString("Message"),
                     AppManager.getInstance().getString("Do you sure delete :") + pathLabel.getText(),
-                    AppManager.getInstance().getString("Ok"),
+                    AppManager.getInstance().getString("Delete"),
                     gobj1 -> {
                         File f = new File(pathLabel.getText());
                         AppLoader.deleteTree(f);
@@ -835,6 +839,9 @@ public class GToolkit {
                     },
                     AppManager.getInstance().getString("Cancel"),
                     null);
+            GButton btn = GToolkit.getComponent(confirm, "GTOOLKIT_CONFIRM_LEFT_BTN");
+            btn.setPreIcon("\u26A0");
+            btn.setPreiconColor(GColorSelector.YELLOW);
             GToolkit.showFrame(confirm);
         });
 
@@ -1011,7 +1018,7 @@ public class GToolkit {
         float y = pad;
 
         GFrame frame = new GFrame(form, title, 0, 0, width, height);
-
+        frame.setName("GTOOLKIT_LISTFRAME");
         frame.setFront(true);
         frame.setFocusListener(new GFocusChangeListener() {
             @Override
@@ -1026,7 +1033,7 @@ public class GToolkit {
         GContainer view = frame.getView();
 
         GTextField search = new GTextField(form, "", "search", pad, y, view.getW() - pad * 2, 30);
-        search.setName("search");
+        search.setName("GTOOLKIT_LISTFRAME_TEXTFIELD");
         search.setBoxStyle(GTextField.BOX_STYLE_SEARCH);
 
         view.add(search);
@@ -1034,7 +1041,7 @@ public class GToolkit {
 
         float h = view.getH() - y - 30 - pad * 4;
         GList glist = new GList(form, 0, y, view.getW(), h);
-        glist.setName("list");
+        glist.setName("GTOOLKIT_LISTFRAME_LIST");
         glist.setShowMode(GList.MODE_MULTI_SHOW);
         glist.setSelectMode(multiSelect ? GList.MODE_MULTI_SELECT : GList.MODE_SINGLE_SELECT);
 
@@ -1064,7 +1071,7 @@ public class GToolkit {
 
 
         GButton btn = new GButton(form, buttonText == null ? AppManager.getInstance().getString("Ok") : buttonText, (view.getW() - btnW - pad), y, btnW, btnH);
-        btn.setName("perform");
+        btn.setName("GTOOLKIT_LISTFRAME_OK");
         frame.getView().add(btn);
         btn.setActionListener(gobj -> {
             if (buttonListener != null) {
@@ -1095,6 +1102,7 @@ public class GToolkit {
 
         float x = 10, y;
         GFrame frame = new GFrame(form, title, 0, 0, width, height);
+        frame.setName("GTOOLKIT_INPUTFRAME");
         frame.setFront(true);
         frame.setFocusListener(new GFocusChangeListener() {
             @Override
@@ -1114,19 +1122,21 @@ public class GToolkit {
         float buttonWidth = contentWidth * .5f - 10;
         y -= 35f;
         GButton cancelbtn = new GButton(form, leftLabel == null ? AppManager.getInstance().getString("Cancel") : leftLabel, x, y, buttonWidth, 28);
+        cancelbtn.setName("GTOOLKIT_INPUTFRAME_LEFT");
         view.add(cancelbtn);
 
         GButton okbtn = new GButton(form, rightLabel == null ? AppManager.getInstance().getString("Ok") : rightLabel, x + buttonWidth + 20, y, buttonWidth, 28);
         //okbtn.setBgColor(0, 96, 128, 255);
+        okbtn.setName("GTOOLKIT_INPUTFRAME_RIGHT");
         view.add(okbtn);
         y -= 35;
         GTextField input = new GTextField(form, defaultValue == null ? "" : defaultValue, inputHint, x, y, contentWidth, 28);
-        input.setName("input");
+        input.setName("GTOOLKIT_INPUTFRAME_TEXTFIELD");
         view.add(input);
 
         y -= 25;
         GLabel lb_state = new GLabel(form, "", x, y, contentWidth, 20);
-        lb_state.setName("state");
+        lb_state.setName("GTOOLKIT_INPUTFRAME_STATE");
         view.add(lb_state);
 
         y = 10;
@@ -1165,6 +1175,7 @@ public class GToolkit {
     public static GList getListMenu(GForm form, String[] strs, GImage[] imgs, GActionListener[] listeners, float width, float height) {
 
         GList list = new GList(form, 0, 0, width, height);
+        list.setName("GTOOLKIT_LISTMENU");
         list.setBgColor(getStyle().getPopBackgroundColor());
         list.setShowMode(GList.MODE_MULTI_SHOW);
         list.setFocusListener(new GFocusChangeListener() {
@@ -1207,7 +1218,6 @@ public class GToolkit {
 //        }
 //        list.setInnerSize(200, size * list.list_item_heigh);
         list.setFront(true);
-        list.setName("listmenu");
 
         return list;
     }
@@ -1220,6 +1230,7 @@ public class GToolkit {
     public static GMenu getMenu(GForm form, String[] strs, GImage[] imgs, GActionListener[] listener) {
 
         GMenu menu = new GMenu(form, 0, 0, 150, 120);
+        menu.setName("GTOOLKIT_MENU");
         menu.setFocusListener(new GFocusChangeListener() {
             @Override
             public void focusGot(GObject oldgo) {
@@ -1303,6 +1314,7 @@ public class GToolkit {
                 }
             }
         };
+        view.setName("GTOOLKIT_IMAGEVIEW");
         view.setFocusListener(new GFocusChangeListener() {
             @Override
             public void focusGot(GObject oldgo) {

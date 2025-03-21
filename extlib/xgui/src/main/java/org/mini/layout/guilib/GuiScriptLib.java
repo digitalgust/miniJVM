@@ -4,6 +4,7 @@
  */
 package org.mini.layout.guilib;
 
+import org.mini.apploader.AppLoader;
 import org.mini.apploader.AppManager;
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
@@ -95,12 +96,15 @@ public class GuiScriptLib extends Lib {
             methodNames.put("setVisible".toLowerCase(), this::setVisible);//
             methodNames.put("getVisible".toLowerCase(), this::getVisible);//
             methodNames.put("httpGet".toLowerCase(), this::httpGet);//
+            methodNames.put("httpGetAsync".toLowerCase(), this::httpGet);//
             methodNames.put("httpGetSync".toLowerCase(), this::httpGetSync);//
             methodNames.put("httpPost".toLowerCase(), this::httpPost);//
+            methodNames.put("httpPostAsync".toLowerCase(), this::httpPost);//
             methodNames.put("httpPostSync".toLowerCase(), this::httpPostSync);//
             methodNames.put("urlGetAsString".toLowerCase(), this::urlGetAsString);//
             methodNames.put("setClipboard".toLowerCase(), this::setClipboard);//
             methodNames.put("getClipboard".toLowerCase(), this::getClipboard);//
+            methodNames.put("getVersion".toLowerCase(), this::getVersion);//
 
         }
     }
@@ -909,5 +913,14 @@ public class GuiScriptLib extends Lib {
         if (s == null) s = Glfm.glfmGetClipBoardContent();
         if (s == null) s = "";
         return Interpreter.getCachedStr(s);
+    }
+
+    public DataType getVersion(ArrayList<DataType> para) {
+        String jarName = Interpreter.popBackStr(para);
+        String ver = "";
+        if (jarName != null) {
+            jarName = AppLoader.getApplicationVersion(jarName);
+        }
+        return Interpreter.getCachedStr(ver);
     }
 }

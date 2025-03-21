@@ -4,6 +4,7 @@ import org.mini.gui.GImage;
 import org.mini.layout.loader.XmlExtAssist;
 
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.HashMap;
@@ -44,15 +45,23 @@ public class XuiResourceLoader implements XmlExtAssist.XLoader {
         resources.clear();
     }
 
-    public XuiResource loadResource(String pUrl) {
+    public XuiResource loadResource(String pUrl, String post) {
         String resUrl = UrlHelper.normalizeUrl(url, pUrl);
         try {
             URL u = new URL(resUrl);
             URLConnection conn = u.openConnection();
+            if (conn instanceof HttpURLConnection) {
+                HttpURLConnection http = (HttpURLConnection) conn;
+                if (post != null) {
+                    http.setRequestMethod("POST");
+                    http.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                    http.getOutputStream().write(post.getBytes("utf-8"));
+                }
+            }
             conn.connect();
             String type = conn.getContentType();
             InputStream o = (InputStream) conn.getContent();
-            if (o instanceof InputStream) {
+            if (o != null) {
                 byte[] data = new byte[o.available()];
                 int read = 0;
                 while (read < data.length) {
@@ -76,7 +85,7 @@ public class XuiResourceLoader implements XmlExtAssist.XLoader {
         try {
             XuiResource res = resources.get(resUrl);
             if (res == null) {
-                res = loadResource(resUrl);
+                res = loadResource(resUrl, null);
             }
             if (res != null) {
                 if (res.image == null) {
@@ -95,18 +104,18 @@ public class XuiResourceLoader implements XmlExtAssist.XLoader {
         return notfoundImage;
     }
 
-    public String loadXml(String pUrl) {
+    public String loadXml(String pUrl, String post) {
         String resUrl = UrlHelper.normalizeUrl(url, pUrl);
         try {
-            XuiResource res = resources.get(resUrl);
+            XuiResource res = resources.get(resUrl + post);
             if (res == null) {
-                res = loadResource(resUrl);
+                res = loadResource(resUrl, post);
             }
             if (res != null) {
                 if (res.xml == null) {
                     res.xml = new String(res.data, "UTF-8");
                     res.type = XuiResource.TYPE_XML;
-                    resources.put(resUrl, res);
+                    resources.put(resUrl + post, res);
                 }
                 return res.xml;
             }
