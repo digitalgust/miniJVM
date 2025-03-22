@@ -202,8 +202,8 @@ public class GViewPort extends GContainer {
     public void touchEvent(int touchid, int phase, int x, int y) {
         switch (phase) {
             case Glfm.GLFMTouchPhaseBegan: {
-                if (inertiaCmd != null) {
-                    inertiaCmd = null;
+                if (inertiaCmdY != null) {
+                    inertiaCmdY = null;
                 }
                 touched = true;
                 break;
@@ -222,7 +222,8 @@ public class GViewPort extends GContainer {
     float addOn = 1.0f;
     //惯性任务
 
-    GCmd inertiaCmd;
+    GCmd inertiaCmdY;
+    GCmd inertiaCmdX;
 
     @Override
     public boolean inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
@@ -237,7 +238,7 @@ public class GViewPort extends GContainer {
         final double dy = y2 - y1;
         Runnable task;
         //System.out.println("inertia time: " + moveTime + " , count: " + maxMoveCount + " pos: x1,y1,x2,y2 = " + x1 + "," + y1 + "," + x2 + "," + y2);
-        if (Math.abs(dy) > Math.abs(dx)) {
+        if (Math.abs(dy) > Math.abs(dx) || !isSlideDirectionLimit()) {
             if (getInnerH() <= getH()) {
                 return false;
             }
@@ -260,7 +261,7 @@ public class GViewPort extends GContainer {
                         speedY -= resistance;//速度和阻力抵消为0时,退出滑动
                         count++;
                         if (count > maxMoveCount) {
-                            inertiaCmd = null;
+                            inertiaCmdY = null;
                         } else {
                             float inh = getInnerH();
                             if (inh > 0) {
@@ -271,13 +272,19 @@ public class GViewPort extends GContainer {
                         }
                         GForm.flush();
 
-                        GForm.addCmd(inertiaCmd);
+                        GForm.addCmd(inertiaCmdY);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
             };
-        } else {
+
+            inertiaCmdY = new GCmd(task);
+            GForm.addCmd(inertiaCmdY);
+        }
+
+
+        if (Math.abs(dx) > Math.abs(dy) || !isSlideDirectionLimit()) {
             if (getInnerW() <= getW()) {
                 return false;
             }
@@ -300,7 +307,7 @@ public class GViewPort extends GContainer {
                         speedX -= resistance;//速度和阴力抵消为0时,退出滑动
                         count++;
                         if (count > maxMoveCount) {
-                            inertiaCmd = null;
+                            inertiaCmdX = null;
                         } else {
                             float inw = getInnerW();
                             if (inw > 0) {
@@ -311,16 +318,15 @@ public class GViewPort extends GContainer {
                         }
                         GForm.flush();
 
-                        GForm.addCmd(inertiaCmd);
+                        GForm.addCmd(inertiaCmdX);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
             };
-        }
-        if (task != null) {
-            inertiaCmd = new GCmd(task);
-            GForm.addCmd(inertiaCmd);
+
+            inertiaCmdX = new GCmd(task);
+            GForm.addCmd(inertiaCmdX);
         }
         return true;
     }
