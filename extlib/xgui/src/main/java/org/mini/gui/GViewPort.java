@@ -7,6 +7,7 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
+import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GCmd;
 
 import java.util.TimerTask;
@@ -216,12 +217,9 @@ public class GViewPort extends GContainer {
         super.touchEvent(touchid, phase, x, y);
     }
 
-    //每多长时间进行一次惯性动作
-    float inertiaPeriod = 16;
-    //总共做多少次操作
-    long maxMoveCount = 120;
+
     //初速度加成
-    float addOn = 1.5f;
+    float addOn = 1.0f;
     //惯性任务
 
     GCmd inertiaCmd;
@@ -244,6 +242,10 @@ public class GViewPort extends GContainer {
                 return false;
             }
             task = new Runnable() {
+                //每多长时间进行一次惯性动作
+                float inertiaPeriod = 1000 / GCallBack.getInstance().getFps();
+                //总共做多少次操作
+                float maxMoveCount = 2000 / inertiaPeriod - 2;
                 //惯性速度
                 double speedY = dy * addOn / (moveTime / inertiaPeriod);
                 //阻力
@@ -256,21 +258,19 @@ public class GViewPort extends GContainer {
                     try {
                         //System.out.println(this + " inertia Y " + speedY + " , " + resistance + " , " + count);
                         speedY -= resistance;//速度和阻力抵消为0时,退出滑动
-
-                        float tmpScrollY = scrolly;
-                        float inh = getInnerH();
-                        if (inh > 0) {
-                            float vec = (float) speedY / inh;
-                            {
+                        count++;
+                        if (count > maxMoveCount) {
+                            inertiaCmd = null;
+                        } else {
+                            float inh = getInnerH();
+                            if (inh > 0) {
+                                float vec = (float) speedY / inh;
                                 movePercentY(vec);
+                                //System.out.println("dy:" + ((float) speedY / dh));
                             }
-                            tmpScrollY -= vec;
-                            //System.out.println("dy:" + ((float) speedY / dh));
                         }
                         GForm.flush();
-                        if (count++ > maxMoveCount || tmpScrollY < 0 || tmpScrollY > 1) {
-                            inertiaCmd = null;
-                        }
+
                         GForm.addCmd(inertiaCmd);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -282,6 +282,10 @@ public class GViewPort extends GContainer {
                 return false;
             }
             task = new TimerTask() {
+                //每多长时间进行一次惯性动作
+                float inertiaPeriod = 1000 / GCallBack.getInstance().getFps();
+                //总共做多少次操作
+                float maxMoveCount = 2000 / inertiaPeriod - 2;
                 //惯性速度
                 double speedX = dx * addOn / (moveTime / inertiaPeriod);
                 //阴力
@@ -294,21 +298,19 @@ public class GViewPort extends GContainer {
                     try {
                         //System.out.println(this + " inertia X " + speedX + " , " + resistance + " , " + count);
                         speedX -= resistance;//速度和阴力抵消为0时,退出滑动
-
-                        float inw = getInnerW();
-                        float tmpScrollX = scrollx;
-                        if (inw > 0) {
-                            float vec = (float) speedX / inw;
-                            {
+                        count++;
+                        if (count > maxMoveCount) {
+                            inertiaCmd = null;
+                        } else {
+                            float inw = getInnerW();
+                            if (inw > 0) {
+                                float vec = (float) speedX / inw;
                                 movePercentX(vec);
+                                //System.out.println("dx:" + ((float) speedX / dw));
                             }
-                            tmpScrollX -= vec;
-                            //System.out.println("dx:" + ((float) speedX / dw));
                         }
                         GForm.flush();
-                        if (count++ > maxMoveCount || tmpScrollX < 0 || tmpScrollX > 1) {
-                            inertiaCmd = null;
-                        }
+
                         GForm.addCmd(inertiaCmd);
                     } catch (Exception e) {
                         e.printStackTrace();

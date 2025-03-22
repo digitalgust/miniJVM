@@ -7,6 +7,7 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
+import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GCmd;
 import org.mini.nanovg.Nanovg;
 import org.mini.util.CodePointBuilder;
@@ -738,8 +739,6 @@ public class GTextBox extends GTextObject {
         }
     }
 
-    //每多长时间进行一次惯性动作
-    long inertiaPeriod = 16;
     //总共做多少次操作
     long maxMoveCount = 120;
     //惯性任务
@@ -760,6 +759,8 @@ public class GTextBox extends GTextObject {
         Runnable task;
         //System.out.println("inertia time: " + moveTime + " , count: " + maxMoveCount + " pos: x1,y1,x2,y2 = " + x1 + "," + y1 + "," + x2 + "," + y2);
         task = new Runnable() {
+            //每多长时间进行一次惯性动作
+            float inertiaPeriod = 1000 / GCallBack.getInstance().getFps();
             //惯性速度
             double speed = dy / (moveTime / inertiaPeriod);
             //阴力
@@ -778,7 +779,7 @@ public class GTextBox extends GTextObject {
                         setScroll(scroll - (float) speed / dh);
                     }
                     GForm.flush();
-                    if (count++ > maxMoveCount) {
+                    if (++count > maxMoveCount) {
                         inertiaCmd = null;
                     }
                     GForm.addCmd(inertiaCmd);

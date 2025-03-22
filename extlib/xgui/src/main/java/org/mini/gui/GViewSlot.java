@@ -2,6 +2,7 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
+import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GCmd;
 
 import java.util.ArrayList;
@@ -205,7 +206,9 @@ public class GViewSlot extends GViewPort {
                 timeInMils = 1;
             }
             this.timeInMils = timeInMils;
-            maxCounter = (int) (timeInMils / SWAP_PERIOD);
+            //每多长时间进行一次惯性动作
+            float inertiaPeriod = 1000 / GCallBack.getInstance().getFps();
+            maxCounter = (int) (timeInMils / inertiaPeriod);
 
         }
 
