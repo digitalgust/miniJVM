@@ -55,7 +55,7 @@ public abstract class GStyle {
     public void drawEditBoxBase(long vg, float x, float y, float w, float h, float r) {
         byte[] bg;
         // Edit
-        bg = nvgBoxGradient(vg, x, y, w, h, 3, 4, getEditBackground(), nvgRGBA(32, 32, 32, 192));
+        bg = nvgBoxGradient(vg, x, y, w, h, r, 1, getEditBackground(), nvgRGBA(32, 32, 32, 192));
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, r - 1f);
         nvgFillPaint(vg, bg);
@@ -69,7 +69,7 @@ public abstract class GStyle {
 
     public void drawFieldBoxBase(long vg, float x, float y, float w, float h, float r) {
         byte[] bg;
-        bg = nvgBoxGradient(vg, x + 1f, y + 1f, w - 2f, h - 2f, r - 0.5f, 1f, nvgRGBA(0, 0, 0, 16), nvgRGBA(0, 0, 0, 66));
+        bg = nvgBoxGradient(vg, x, y, w, h, r, h * 0.5f, nvgRGBA(0, 0, 0, 0), nvgRGBA(0, 0, 0, 40));
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x, y, w, h, r);
         nvgFillPaint(vg, bg);

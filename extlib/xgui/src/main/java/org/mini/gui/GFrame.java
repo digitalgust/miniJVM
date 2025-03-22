@@ -245,10 +245,11 @@ public class GFrame extends GContainer {
         super.paint(vg);
 
         // Drop shadow
+        float shadowBlur = 18;
         byte[] shadowPaint;
-        shadowPaint = nvgBoxGradient(vg, x, y + 2, w, h, getCornerRadius() * 2, 10, nvgRGBA(0, 0, 0, 128), nvgRGBA(0, 0, 0, 0));
+        shadowPaint = nvgBoxGradient(vg, x, y + 0.5f, w, h, getCornerRadius(), shadowBlur, nvgRGBA(0, 0, 0, 32), nvgRGBA(0, 0, 0, 0));
         nvgBeginPath(vg);
-        nvgRect(vg, x - 10, y - 10, w + 20, h + 30);
+        nvgRect(vg, x - shadowBlur, y - shadowBlur, w + shadowBlur * 2, h + shadowBlur * 2);
         nvgRoundedRect(vg, x, y, w, h, getCornerRadius());
         nvgPathWinding(vg, NVG_HOLE);
         nvgFillPaint(vg, shadowPaint);

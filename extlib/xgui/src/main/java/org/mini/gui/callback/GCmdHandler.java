@@ -145,15 +145,17 @@ public class GCmdHandler extends GPanel implements GCallbackUI {
                 Long t = it.next();
                 if (curt - t < 5 * 1000) {
                     GCmd cmd = curShowMessage.get(t);
-                    float dx = x;
+                    float dx = x + 6;
                     float dy = y + 6 + i * 30;
+                    float dw = panW - 12;
                     float lineh = 25;
+                    nvgScissor(vg, dx, dy, dw, lineh);
                     if (cmd.getWork() != null) {
                         GToolkit.drawEmoj(vg, dx, dy, 30, lineh, GObject.ICON_LOGIN_BYTE, GToolkit.getStyle().getIconFontSize(), getBgColor());
                         dx += 30;
                     }
                     GToolkit.drawTextLine(vg, dx, dy, cmd.getMsg(), getFontSize(), getBgColor(), NVG_ALIGN_TOP | NVG_ALIGN_LEFT);
-                    cmd.setBoundle(dx, dy, panW, lineh);
+                    cmd.setBoundle(dx, dy, dw, lineh);
                     i++;
                 } else {
                     it.remove();
