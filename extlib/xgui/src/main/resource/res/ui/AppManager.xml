@@ -189,8 +189,9 @@
         sub showPlugDownload()
             url=""
             if(isGithub())
-                url="https://raw.githubusercontent.com/digitalgust/plugin4minijvm/main/plugins/plugin.xml"
+                showConfirm("Do you want visit miniJVM github pages?","ROOT_PAN.onConfirmGithubBack")
                 #url="file:///D:/GitHub/plugin4minijvm/plugins/plugin.xml"
+                ret
             else
                 getPolicy(true)
                 url=getEnv("PLUGIN_URL")+"?"+ getQueryPara()
@@ -199,6 +200,15 @@
             if(strlen(url)>0)
                 openPage(url,"")
                 showSlot("SLOT_MGR",3)
+            eif
+        ret
+
+        sub onConfirmGithubBack(op)
+            if(op = 1)
+                url="https://raw.githubusercontent.com/digitalgust/plugin4minijvm/main/plugins/plugin.xml"
+                openPage(url,"")
+            else
+                println("User canceled")
             eif
         ret
 

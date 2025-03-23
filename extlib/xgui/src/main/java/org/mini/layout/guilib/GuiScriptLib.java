@@ -683,14 +683,27 @@ public class GuiScriptLib extends Lib {
                             String[] ss = callback.split("\\.");
                             GContainer gobj = GToolkit.getComponent(formHolder.getForm(), ss[0]);
                             Interpreter inp = gobj.getInterpreter();
-                            inp.callSub(ss[1] + "()");
+                            inp.callSub(ss[1] + "(1)");
                         } else {
                             System.out.println("[WARN]showConfirm callback format \"PAN.subname\" ,but : " + callback);
                         }
                     }
+                    obj.getFrame().close();
                 },
                 null,
-                null);
+                (obj) -> {
+                    if (callback != null) {
+                        if (callback.contains(".")) {
+                            String[] ss = callback.split("\\.");
+                            GContainer gobj = GToolkit.getComponent(formHolder.getForm(), ss[0]);
+                            Interpreter inp = gobj.getInterpreter();
+                            inp.callSub(ss[1] + "(0)");
+                        } else {
+                            System.out.println("[WARN]showConfirm callback format \"PAN.subname\" ,but : " + callback);
+                        }
+                    }
+                    obj.getFrame().close();
+                });
         GToolkit.showFrame(f);
         formHolder.getForm().flush();
         return null;

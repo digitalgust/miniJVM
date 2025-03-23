@@ -142,7 +142,7 @@ abstract public class FileSystemImpl extends org.mini.fs.FileSystem {
         if (ifa.exists) {
             throw new IOException("file exists.");
         }
-        long fd = InnerFile.openFile(SocketNative.toCStyle(pathname), "w".getBytes());
+        long fd = InnerFile.openFile(SocketNative.toCStyle(pathname), SocketNative.toCStyle("w"));
         if (fd != 0) {
             InnerFile.closeFile(fd);
             return true;
