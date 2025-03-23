@@ -875,6 +875,7 @@ public class GToolkit {
                         File f = new File(pathLabel.getText());
                         AppLoader.deleteTree(f);
                         pathLabel.setText(f == null ? "" : f.getParent());
+                        gobj1.getFrame().close();
                         chooserRefresh(upBtn);
                     },
                     AppManager.getInstance().getString("Cancel"),

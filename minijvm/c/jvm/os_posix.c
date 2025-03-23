@@ -230,4 +230,55 @@ void os_get_lang(Utf8String *buf) {
     }
 }
 
+/**
+ * for posix system, implement convert utf8 path to platform encoding
+ * macOS and linux use utf8 as default encoding, so copy src to dst
+ */
+s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src) {
+    // Check input parameters
+    if (!dst || !src) {
+        return -1;
+    }
+
+    // Get source string length
+    s32 src_len = src->length;
+    if (src_len == 0) {
+        bytebuf_expand(dst, 1);  // Allocate space for null terminator
+        dst->buf[0] = 0;
+        return 0;
+    }
+
+    // Expand destination buffer to fit source string plus null terminator
+    bytebuf_expand(dst, src_len + 1);
+
+    // Copy source string to destination buffer
+    memcpy(dst->buf, src->data, src_len);
+    dst->buf[src_len] = 0;  // Add null terminator
+
+    return src_len;
+}
+
+s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
+    // Check input parameters
+    if (!dst || !src) {
+        return -1;
+    }
+
+    // Get source string length
+    s32 src_len = strlen(src);
+    if (src_len == 0) {
+        utf8_clear(dst);
+        return 0;
+    }
+
+    // Expand destination buffer to fit source string plus null terminator
+    utf8_expand(dst, src_len + 1);
+
+    // Copy source string to destination buffer
+    memcpy(dst->data, src, src_len);
+    dst->length = src_len;
+    dst->data[src_len] = 0;  // Ensure null termination
+
+    return src_len;
+}
 #endif //  end of   __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__ || __JVM_OS_VS__

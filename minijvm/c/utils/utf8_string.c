@@ -389,6 +389,7 @@ int utf8_equals_c(Utf8String *a1, char const *a2) {
     return 0;
 }
 
+//为 hashtable / hashset 准备的 hash函数
 
 int UNICODE_STR_EQUALS_FUNC(HashtableValue value1, HashtableValue value2) {
     return utf8_equals(value1, value2) == 1;
@@ -438,6 +439,18 @@ int _utf8_space_require(Utf8String *ustr, int need) {
 
         return 1;
     }
+}
+
+int utf8_expand(Utf8String *ustr, int newlen) {
+    if (newlen <= ustr->length)return 0;
+    if (newlen > ustr->_alloced) {
+        if (!_utf8_space_require(ustr, newlen - ustr->length)) {
+            return 0;
+        }
+    }
+    ustr->length = newlen;
+    ustr->hash = 0;
+    return 1;
 }
 
 int utf8_insert(Utf8String *ustr, int index, utf8_char data) {
