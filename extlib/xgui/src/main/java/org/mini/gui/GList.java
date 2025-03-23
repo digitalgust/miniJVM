@@ -566,20 +566,24 @@ public class GList extends GContainer {
             nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 48));
             nvgStroke(vg);
 
+            nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
+            nvgFontFace(vg, GToolkit.getFontIcon());
+            nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
+            byte[] curIcon = pulldown ? ICON_CHEVRON_DOWN_BYTE : ICON_CHEVRON_RIGHT_BYTE;
+            nvgTextJni(vg, x + w - 15, y + h * 0.5f, curIcon, 0, curIcon.length);
+
             float thumb = h - pad;
             if (popView.elements.size() > 0) {
                 int selectIndex = getSelectedIndex();
                 if (selectIndex >= 0) {
                     GListItem gli = (GListItem) getItem(selectIndex);
                     GToolkit.drawImage(vg, gli.img, x + pad, y + h * 0.5f - thumb / 2, thumb, thumb, false, 1.0f);
-                    GToolkit.drawTextLine(vg, x + (gli.img == null ? 0 : thumb) + pad + pad, y + h / 2, gli.getText(), GList.this.getFontSize(), GList.this.getColor(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+
+                    nvgScissor(vg, x, y, w - 20, h);
+                    float dx = x + (gli.img == null ? 0 : thumb) + pad + pad;
+                    GToolkit.drawTextLine(vg, dx, y + h / 2, gli.getText(), GList.this.getFontSize(), GList.this.getColor(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
                 }
             }
-            nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
-            nvgFontFace(vg, GToolkit.getFontIcon());
-            nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
-            byte[] curIcon = pulldown ? ICON_CHEVRON_DOWN_BYTE : ICON_CHEVRON_RIGHT_BYTE;
-            nvgTextJni(vg, x + w - 15, y + h * 0.5f, curIcon, 0, curIcon.length);
         }
     }
 

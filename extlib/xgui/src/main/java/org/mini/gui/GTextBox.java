@@ -480,7 +480,6 @@ public class GTextBox extends GTextObject {
                                 deleteSelectedText();
                             }
                             insertTextByIndex(caretIndex, '\n');
-                            setCaretIndex(caretIndex + 1);
                         }
                         break;
                     }

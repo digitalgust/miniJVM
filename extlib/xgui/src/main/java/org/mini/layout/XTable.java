@@ -49,7 +49,7 @@ public class XTable
                     yOffset += floatAvgH - xo.height;
 //                    xo.viewH = xo.height = floatAvgH;
                     //key
-                    xo.raw_heightPercent = floatAvgH * 100 / viewH;
+                    xo.raw_heightPercent = Math.round((float) floatAvgH * 100 / viewH);
 //                    xo.getGui().setSize(xo.width, xo.height);
                     int tx = xo.x;
                     int ty = xo.y;

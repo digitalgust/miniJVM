@@ -857,10 +857,7 @@ public class AppManager extends GApplication implements XuiAppHolder {
     };
 
     void updateScriptEnvironment() {
-        String from = AppLoader.getBaseInfo("from");
-        String profile = AppLoader.getBaseInfo("profile");
-        String policyUrl = AppLoader.getBaseInfo(from + "." + profile + ".policyUrl");
-        envVarProvider.setEnvVar("policy_url", policyUrl);
+        envVarProvider.setEnvVar("policy_url", AppLoader.getPolicyUrl());
         envVarProvider.setEnvVar("lang", GLanguage.getLangCode(AppLoader.getDefaultLang()));
         envVarProvider.setEnvVar("appid", AppLoader.getBaseInfo("appid"));
         envVarProvider.setEnvVar("appzone", AppLoader.getBaseInfo("appzone"));
@@ -877,29 +874,4 @@ public class AppManager extends GApplication implements XuiAppHolder {
     }
 
 
-    public String[] getPolicy(String url, String post) {
-        try {
-            if (url == null) {
-                return null;
-            }
-            XuiResourceLoader loader = new XuiResourceLoader();
-            XuiResource res = loader.loadResource(url, post);
-            if (res != null) {
-                String json = res.getString();
-                if (json != null) {
-                    JsonParser<HttpRequestReply> parser = new JsonParser<>();
-                    HttpRequestReply reply = parser.deserial(json, HttpRequestReply.class);
-                    if (reply != null && reply.getCode() == 0) {
-                        String s = reply.getReply();
-                        String[] ss = s.split("\n");
-                        return ss;
-                    }
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 }

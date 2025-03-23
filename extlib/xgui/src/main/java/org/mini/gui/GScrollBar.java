@@ -218,12 +218,10 @@ public class GScrollBar extends GObject {
 
     void drawSliderV(long vg, float pos, float x, float y, float w, float h) {
         byte[] bg, knob;
-//        float cy = y + (int) (h * 0.5f);
         float cx = x + (int) (w * 0.5f);
         float kr = radius;//(int) (w * 0.25f);
 
         // Slot
-//        bg = nvgBoxGradient(vg, x, cx - 2 + 1, w, 4, 2, 2, nvgRGBA(0, 0, 0, 32), nvgRGBA(0, 0, 0, 128));
         bg = nvgBoxGradient(vg, cx - 2 + 1, y, 4, h, 2, 2, nvgRGBA(0, 0, 0, 32), nvgRGBA(0, 0, 0, 32));
         nvgBeginPath(vg);
         nvgRoundedRect(vg, cx - 2, y, 4, h, 2);
@@ -231,22 +229,16 @@ public class GScrollBar extends GObject {
         nvgFill(vg);
 
         // Knob Shadow
-//        bg = nvgRadialGradient(vg, x + (int) (pos * w), cx + 1, kr - 3, kr + 3, nvgRGBA(0, 0, 0, 64), nvgRGBA(0, 0, 0, 0));
         bg = nvgRadialGradient(vg, cx + 1, y + (int) (pos * h), kr - 3, kr + 3, nvgRGBA(0, 0, 0, 64), nvgRGBA(0, 0, 0, 0));
         nvgBeginPath(vg);
-//        nvgRect(vg, x + (int) (pos * w) - kr - 5, cx - kr - 5, kr * 2 + 5 + 5, kr * 2 + 5 + 5 + 3);
-        nvgRect(vg, cx - kr - 5, y + (int) (pos * h) - kr - 5, kr * 2 + 5 + 5, kr * 2 + 5 + 5 + 3);
-//        nvgCircle(vg, x + (int) (pos * w), cx, kr);
         nvgCircle(vg, cx, y + (int) (pos * h), kr);
-        nvgPathWinding(vg, NVG_HOLE);
+        nvgPathWinding(vg, NVG_SOLID);
         nvgFillPaint(vg, bg);
         nvgFill(vg);
 
         // Knob
-//        knob = nvgLinearGradient(vg, x, cx - kr, x, cx + kr, nvgRGBA(255, 255, 255, 16), nvgRGBA(0, 0, 0, 16));
         knob = nvgLinearGradient(vg, cx - kr, y, x, cx + kr, nvgRGBA(255, 255, 255, 16), nvgRGBA(0, 0, 0, 16));
         nvgBeginPath(vg);
-//        nvgCircle(vg, x + (int) (pos * w), cx, kr - 1);
         nvgCircle(vg, cx, y + (int) (pos * h), kr - 1);
         nvgFillColor(vg, getBgColor());
         nvgFill(vg);

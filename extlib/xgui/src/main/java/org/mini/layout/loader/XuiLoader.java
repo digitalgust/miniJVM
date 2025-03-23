@@ -90,7 +90,7 @@ public class XuiLoader {
             localSetting.setProperty("jar", System.getProperty("os.name").toLowerCase().replace(' ', '-'));
             localSetting.setProperty("from", AppLoader.getProperty("from"));
             localSetting.setProperty("cver", AppLoader.getBaseInfo("cver"));
-            localSetting.setProperty("policy_url", AppLoader.getBaseInfo("policyUrl"));
+            localSetting.setProperty("policy_url", AppLoader.getPolicyUrl());
             localSetting.setProperty("discovery_url", AppLoader.getProperty("discovery_url"));
             localSetting.setProperty("account_base_url", AppLoader.getProperty("account_base_url"));
             localSetting.setProperty("profile_url", AppLoader.getProperty("profile_url"));

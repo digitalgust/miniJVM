@@ -523,7 +523,7 @@ public class GTextField extends GTextObject {
         float leftIcons = 0.5f;//图标占位宽度
         // Edit
         if (boxStyle == BOX_STYLE_SEARCH) {
-            GToolkit.getStyle().drawFieldBoxBase(vg, x, y, w, h, h * .5f - 1f);
+            GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h, h * .5f - 1f);
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
             nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());

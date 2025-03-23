@@ -161,7 +161,7 @@ public class GuiScriptLib extends Lib {
             }
             go.setLocation(0, inset[0]);
             go.setSize(progress * w / 100f, go.getH());
-            AppManager.getInstance().getFloatButton().setDrawMarkSecond(1000);
+            AppManager.getInstance().getFloatButton().setDrawMarkSecond(60);
             if (progress >= 100) {
                 GObject go1 = GToolkit.getComponent(form, panName);
                 if (go1 != null) go1.setSize(0, go1.getH());

@@ -77,10 +77,16 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
     abstract void onSetText(String text);
 
     public void setText(String text) {
+        //put in del undo
+        String old = textsb.toString();
+        putInUndo(UserAction.DEL, old, 0);
+
         this.textsb.setLength(0);
         if (text != null) {
             this.textsb.append(text);
         }
+        putInUndo(UserAction.ADD, text, 0);
+
         onSetText(text);
         text_arr = null;
         doStateChanged(this);

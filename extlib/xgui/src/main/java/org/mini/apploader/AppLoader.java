@@ -9,6 +9,10 @@ import org.mini.gui.callback.GCallBack;
 import org.mini.gui.GLanguage;
 import org.mini.gui.style.GStyle;
 import org.mini.gui.GToolkit;
+import org.mini.json.JsonParser;
+import org.mini.layout.guilib.HttpRequestReply;
+import org.mini.layout.xwebview.XuiResource;
+import org.mini.layout.xwebview.XuiResourceLoader;
 import org.mini.vm.ThreadLifeHandler;
 import org.mini.vm.VmUtil;
 import org.mini.zip.Zip;
@@ -273,7 +277,7 @@ public class AppLoader {
         String langstr = appinfo.getProperty(KEY_LANGUAGE);
 
         String sysLang = System.getProperty("user.language");
-        System.out.println("[INFO]sysLang:" + sysLang);
+        //System.out.println("[INFO]sysLang:" + sysLang);
         int lang = GLanguage.getIdByShortName(sysLang);
         try {
             lang = Integer.parseInt(langstr.trim());
@@ -645,4 +649,37 @@ public class AppLoader {
         return s == null ? "" : s;
     }
 
+    public static String getPolicyUrl() {
+        String from = AppLoader.getBaseInfo("from");
+        String profile = AppLoader.getBaseInfo("profile");
+        String policyUrl = AppLoader.getBaseInfo(from + "." + profile + ".policyUrl");
+        return policyUrl;
+    }
+
+
+    public String[] getPolicy(String url, String post) {
+        try {
+            if (url == null) {
+                return null;
+            }
+            XuiResourceLoader loader = new XuiResourceLoader();
+            XuiResource res = loader.loadResource(url, post);
+            if (res != null) {
+                String json = res.getString();
+                if (json != null) {
+                    JsonParser<HttpRequestReply> parser = new JsonParser<>();
+                    HttpRequestReply reply = parser.deserial(json, HttpRequestReply.class);
+                    if (reply != null && reply.getCode() == 0) {
+                        String s = reply.getReply();
+                        String[] ss = s.split("\n");
+                        return ss;
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
