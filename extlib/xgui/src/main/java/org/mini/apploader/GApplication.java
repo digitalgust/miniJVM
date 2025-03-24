@@ -262,11 +262,16 @@ public abstract class GApplication implements FormHolder {
     }
 
     public void addThread(Thread t) {
-        threads.add(t);
+        if (!threads.contains(t)) {
+            //System.out.println(this + " ADD " + t);
+            threads.add(t);
+        }
     }
 
     public void removeThread(Thread t) {
-        threads.remove(t);
+        if (threads.contains(t)) {
+            threads.remove(t);
+        }
     }
 
     public void closeThreads() {

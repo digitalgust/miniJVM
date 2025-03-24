@@ -1846,7 +1846,7 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
 
         char *cd=(char*)[data bytes];
         int len=(int)[data length];
-        _glfmDisplay->pickerFunc(_glfmDisplay, _pickerUid, url, cd, len);
+        _glfmDisplay->pickerFunc(_glfmDisplay, _pickerUid, url, cd, len);//把路径和数据都返回到java层
 
         //通过判断picker的sourceType，如果是拍照则保存到相册去
         if (picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
@@ -2743,9 +2743,25 @@ void remoteMethodCall(const char *inJsonStr, Utf8String *outJsonStr){
 #pragma mark - IAP interface
 
 void buyAppleProductById(GLFMDisplay * display, const char *cproductID, const char *base64HandleScript){
-    NSString *productID = [[NSString alloc] initWithCString:cproductID encoding:NSUTF8StringEncoding];
-    //GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
-    
+    // 复制字符串
+    char *productIDCopy = NULL;
+    char *scriptCopy = NULL;
+    if (cproductID) {
+        size_t len = strlen(cproductID) + 1;
+        productIDCopy = (char *)calloc(len, 1);
+        if (productIDCopy) {
+            strcpy(productIDCopy, cproductID);
+        }
+    }
+    if (base64HandleScript) {
+        size_t len = strlen(base64HandleScript) + 1;
+        scriptCopy = (char *)calloc(len, 1);
+        if (scriptCopy) {
+            strcpy(scriptCopy, base64HandleScript);
+        }
+    }
+
+    NSString *productID = [[NSString alloc] initWithCString:productIDCopy encoding:NSUTF8StringEncoding];
 
     [[IAPManager shareIAPManager] startPurchaseWithID:productID completeHandle:^(IAPPurchType type,NSData *data) {
         switch (type) {
@@ -2778,20 +2794,24 @@ void buyAppleProductById(GLFMDisplay * display, const char *cproductID, const ch
             nssd = [data base64EncodedStringWithOptions:0];
         }
 
-        NSString *str = [NSString stringWithFormat:@"%d:%@:%s", (int)type, nssd, base64HandleScript];
+        NSString *str = [NSString stringWithFormat:@"%d:%@:%s", (int)type, nssd, scriptCopy?scriptCopy:""];
 
         replyMsg = [str UTF8String];
         
-        
         static char *key = "glfm.ios.purchase";
         
-        
-
         if(display->notifyFunc){
             display->notifyFunc(display, key, replyMsg);
         }
+
+        // 释放复制的字符串 - 移到最后
+        if (productIDCopy) {
+            free(productIDCopy);
+        }
+        if (scriptCopy) {
+            free(scriptCopy);
+        }
     }];
-    
 }
 
 #endif

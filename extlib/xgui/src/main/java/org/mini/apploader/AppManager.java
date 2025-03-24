@@ -274,30 +274,7 @@ public class AppManager extends GApplication implements XuiAppHolder {
             @Override
             public void onNotify(String key, String val) {
                 //System.out.println("[INFO]notify:" + key + "," + val);
-                try {
-                    switch (key) {
-                        case NOTIFY_KEY_IOS_PURCHASE:
-                            if (val.indexOf(':') > 0) {
-                                String[] ss = val.split(":");
-                                if (ss.length > 2) {
-                                    int code = Integer.parseInt(ss[0]);
-                                    String receipt = ss[1];
-                                    byte[] scriptBytes = javax.microedition.io.Base64.decode(ss[2]);
-                                    String script = new String(scriptBytes, "utf-8");
-                                    //System.out.println("script:" + script);
-                                    Interpreter inp = new Interpreter();
-                                    inp.reglib(new GuiScriptLib(AppManager.getInstance()));
-                                    inp.loadFromString(script);
-                                    inp.putGlobalVar("iap_code", Interpreter.getCachedInt(code));
-                                    inp.putGlobalVar("iap_receipt", Interpreter.getCachedStr(receipt));
-                                    inp.start();
-                                }
-                            }
-                            break;
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+
             }
         });
 

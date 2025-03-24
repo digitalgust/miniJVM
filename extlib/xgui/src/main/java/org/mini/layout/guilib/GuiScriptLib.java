@@ -663,7 +663,14 @@ public class GuiScriptLib extends Lib {
 
     public DataType showMsg(ArrayList<DataType> para) {
         String msg = Interpreter.popBackStr(para);
+        boolean focusSensitive = false;
+        if (!para.isEmpty()) {
+            focusSensitive = Interpreter.popBackBool(para);
+        }
         GFrame f = GToolkit.getMsgFrame(formHolder.getForm(), AppManager.getInstance().getString("Message"), msg);
+        if (!focusSensitive) {
+            f.setFocusListener(null);
+        }
         GToolkit.showFrame(f);
         formHolder.getForm().flush();
         return null;

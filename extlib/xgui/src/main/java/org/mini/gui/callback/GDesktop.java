@@ -1,14 +1,18 @@
 package org.mini.gui.callback;
 
+import org.mini.apploader.AppManager;
 import org.mini.apploader.GApplication;
 import org.mini.glwrap.GLUtil;
 import org.mini.gui.*;
+import org.mini.gui.gscript.Interpreter;
+import org.mini.layout.guilib.GuiScriptLib;
 import org.mini.nanovg.Nanovg;
 
 import static org.mini.gl.GL.*;
 import static org.mini.gl.GL.GL_STENCIL_BUFFER_BIT;
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.gui.event.GNotifyListener.NOTIFY_KEY_DEVICE_TOKEN;
+import static org.mini.gui.event.GNotifyListener.NOTIFY_KEY_IOS_PURCHASE;
 import static org.mini.nanovg.Nanovg.*;
 
 
@@ -204,10 +208,32 @@ public class GDesktop extends GPanel implements GCallbackUI {
     }
 
     public void onDeviceNotify(String key, String val) {
-        switch (key) {
-            case NOTIFY_KEY_DEVICE_TOKEN:
-                System.setProperty("device.token", val);
-                break;
+        try {
+            switch (key) {
+                case NOTIFY_KEY_DEVICE_TOKEN:
+                    System.setProperty("device.token", val);
+                    break;
+                case NOTIFY_KEY_IOS_PURCHASE:
+                    if (val.indexOf(':') > 0) {
+                        String[] ss = val.split(":");
+                        if (ss.length > 2) {
+                            int code = Integer.parseInt(ss[0]);
+                            String receipt = ss[1];
+                            byte[] scriptBytes = javax.microedition.io.Base64.decode(ss[2]);
+                            String script = new String(scriptBytes, "utf-8");
+                            //System.out.println("script:" + script);
+                            Interpreter inp = new Interpreter();
+                            inp.reglib(new GuiScriptLib(AppManager.getInstance()));
+                            inp.loadFromString(script);
+                            inp.putGlobalVar("iap_code", Interpreter.getCachedInt(code));
+                            inp.putGlobalVar("iap_receipt", Interpreter.getCachedStr(receipt));
+                            inp.start();
+                        }
+                    }
+                    break;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         getForm().onDeviceNotify(key, val);
     }
