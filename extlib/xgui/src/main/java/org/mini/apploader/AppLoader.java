@@ -196,13 +196,15 @@ public class AppLoader {
         String dstPath = getAppJarPath(EXAMPLE_APP_FILE);
         File dst = new File(dstPath);
         if (dst.exists()) {
-            System.out.println("[INFO]exapp exists " + EXAMPLE_APP_FILE);
-            return;
+            String dstVersion = getAppConfig(EXAMPLE_APP_FILE, "version");
+            String srcVersion = getAppConfigWithJarPath(srcPath, "version");
+            if (compareVersions(srcVersion, dstVersion) <= 0) {
+                System.out.println("[INFO]exapp exists " + EXAMPLE_APP_FILE);
+                return;
+            }
         }
-        if (!isJarExists(srcPath)) {
-            addApp(EXAMPLE_APP_FILE, srcPath);
-            System.out.println("[INFO]copy exapp " + EXAMPLE_APP_FILE);
-        }
+        addApp(EXAMPLE_APP_FILE, srcPath);
+        System.out.println("[INFO]copy exapp " + EXAMPLE_APP_FILE);
     }
 
     public static void loadJarProp(String filePath, Properties prop) {
@@ -461,12 +463,16 @@ public class AppLoader {
     }
 
     static String getAppConfig(String jarName, String key) {
+        String jarFullPath = getAppJarPath(jarName);
+        return getAppConfigWithJarPath(jarFullPath, key);
+    }
+
+    static String getAppConfigWithJarPath(String jarPath, String key) {
         try {
-            String jarFullPath = getAppJarPath(jarName);
-            File f = new File(jarFullPath);
+            File f = new File(jarPath);
             if (f.exists()) {
                 //System.out.println("jar path:" + jarFullPath + "  " + key);
-                byte[] b = Zip.getEntry(jarFullPath, APP_CONFIG);
+                byte[] b = Zip.getEntry(jarPath, APP_CONFIG);
                 //System.out.println("b=" + b);
                 if (b != null) {
 
@@ -681,5 +687,33 @@ public class AppLoader {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * 比较版本号
+     * 如果版本号相同，返回0；如果v1大于v2，返回1；如果v1小于v2，返回-1。
+     *
+     * @param v1
+     * @param v2
+     * @return
+     */
+    public static int compareVersions(String v1, String v2) {
+        try {
+            String[] parts1 = v1.split("\\.");
+            String[] parts2 = v2.split("\\.");
+
+            int maxLength = Math.max(parts1.length, parts2.length);
+            for (int i = 0; i < maxLength; i++) {
+                int num1 = (i < parts1.length) ? Integer.parseInt(parts1[i]) : 0;
+                int num2 = (i < parts2.length) ? Integer.parseInt(parts2[i]) : 0;
+
+                if (num1 != num2) {
+                    return Integer.compare(num1, num2);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 }
