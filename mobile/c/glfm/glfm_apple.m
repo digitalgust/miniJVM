@@ -2741,28 +2741,14 @@ void remoteMethodCall(const char *inJsonStr, Utf8String *outJsonStr){
 
 
 #pragma mark - IAP interface
-
-void buyAppleProductById(GLFMDisplay * display, const char *cproductID, const char *base64HandleScript){
-    // 复制字符串
-    char *productIDCopy = NULL;
-    char *scriptCopy = NULL;
-    if (cproductID) {
-        size_t len = strlen(cproductID) + 1;
-        productIDCopy = (char *)calloc(len, 1);
-        if (productIDCopy) {
-            strcpy(productIDCopy, cproductID);
-        }
-    }
-    if (base64HandleScript) {
-        size_t len = strlen(base64HandleScript) + 1;
-        scriptCopy = (char *)calloc(len, 1);
-        if (scriptCopy) {
-            strcpy(scriptCopy, base64HandleScript);
-        }
-    }
-
-    NSString *productID = [[NSString alloc] initWithCString:productIDCopy encoding:NSUTF8StringEncoding];
-
+//传入的cproductID和base64HandleScript是const char*类型的，在本函数执行结束后，会被jvm释放 
+//所以需要在函数内部复制一份为NSString，避免被jvm释放
+void buyAppleProductById(GLFMDisplay * display, const char *cproductID, const char *base64HandleScript) {
+    // 复制 cproductID
+    NSString *productID = [[NSString alloc] initWithCString:cproductID encoding:NSUTF8StringEncoding];
+    // 复制 base64HandleScript
+    NSString *script = [[NSString alloc] initWithCString:base64HandleScript encoding:NSUTF8StringEncoding];
+ 
     [[IAPManager shareIAPManager] startPurchaseWithID:productID completeHandle:^(IAPPurchType type,NSData *data) {
         switch (type) {
             case IAPPurchSuccess:
@@ -2794,7 +2780,7 @@ void buyAppleProductById(GLFMDisplay * display, const char *cproductID, const ch
             nssd = [data base64EncodedStringWithOptions:0];
         }
 
-        NSString *str = [NSString stringWithFormat:@"%d:%@:%s", (int)type, nssd, scriptCopy?scriptCopy:""];
+        NSString *str = [NSString stringWithFormat:@"%d:%@:%@", (int)type, nssd, script];
 
         replyMsg = [str UTF8String];
         
@@ -2804,13 +2790,6 @@ void buyAppleProductById(GLFMDisplay * display, const char *cproductID, const ch
             display->notifyFunc(display, key, replyMsg);
         }
 
-        // 释放复制的字符串 - 移到最后
-        if (productIDCopy) {
-            free(productIDCopy);
-        }
-        if (scriptCopy) {
-            free(scriptCopy);
-        }
     }];
 }
 
