@@ -299,7 +299,7 @@ public class Stdlib extends Lib {
     }
 
     /**
-     * 取子串
+     * 取子串,同java String 的substring方法
      *
      * @param para
      * @return
@@ -307,16 +307,19 @@ public class Stdlib extends Lib {
     private Str substr(ArrayList<DataType> para) {
         String s = Interpreter.popBackStr(para);
         int a = (int) Interpreter.popBackLong(para);
-        int b = (int) Interpreter.popBackLong(para);
-        StringBuffer sb = new StringBuffer();
-        for (int i = a; i < b; i++) {
-            if (i < s.length()) {
-                sb.append(s.charAt(i));
-            }
+        if (!para.isEmpty()) {
+            int b = (int) Interpreter.popBackLong(para);
+            return Interpreter.getCachedStr(s.substring(a, b));
         }
-        return Interpreter.getCachedStr(sb.toString());
+        return Interpreter.getCachedStr(s.substring(a));
     }
 
+    /**
+     * 替换字符串,同java String 的replaceAll方法
+     *
+     * @param para
+     * @return
+     */
     private Str replace(ArrayList<DataType> para) {
         String s = Interpreter.popBackStr(para);
         String src = Interpreter.popBackStr(para);

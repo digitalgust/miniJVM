@@ -33,8 +33,6 @@
 #include <wspiapi.h>
 #include <io.h>
 
-c8 *inet_ntop(s32 af, const void *src, c8 *dst, socklen_t size);
-
 #if __JVM_OS_VS__
 #include "../utils/dirent_win.h"
 #include "../utils/tinycthread.h"
@@ -1854,9 +1852,15 @@ struct java_lang_ClassLoader *func_java_lang_Thread_getContextClassLoader0___Lja
     return (struct java_lang_ClassLoader *) tr->context_classloader;
 }
 
-void func_java_lang_Thread_interrupt0___V(JThreadRuntime *runtime, struct java_lang_Thread *p0) {
-    return;
+void func_java_lang_Thread_interrupt0__Ljava_lang_Thread_2_V(JThreadRuntime *runtime, struct java_lang_Thread* p0){
+    return ;
 }
+
+
+s8 func_java_lang_Thread_interrupted0__Ljava_lang_Thread_2_Z(JThreadRuntime *runtime, struct java_lang_Thread* p0){
+    return 0;
+}
+
 
 s8 func_java_lang_Thread_isAlive___Z(JThreadRuntime *runtime, struct java_lang_Thread *p0) {
     JThreadRuntime *tr = (JThreadRuntime *) (intptr_t) p0->stackFrame_in_thread;
@@ -3294,7 +3298,7 @@ s32 func_org_mini_vm_RefNative_setLocalVal__JIBJI_I(JThreadRuntime *runtime, s64
     return 0;
 }
 
-s32 func_org_mini_vm_RefNative_stopThread__Ljava_lang_Thread_2J_I(JThreadRuntime *runtime, struct java_lang_Thread *p0, s64 p1) {
+s32 func_org_mini_vm_RefNative_stopThread__Ljava_lang_Thread_2Ljava_lang_Object_2_I(JThreadRuntime *runtime, struct java_lang_Thread* p0, struct java_lang_Object* p1){
     return 0;
 }
 

@@ -105,6 +105,7 @@ public class GuiScriptLib extends Lib {
             methodNames.put("setClipboard".toLowerCase(), this::setClipboard);//
             methodNames.put("getClipboard".toLowerCase(), this::getClipboard);//
             methodNames.put("getVersion".toLowerCase(), this::getVersion);//
+            methodNames.put("compareVersion".toLowerCase(), this::compareVersion);//
 
         }
     }
@@ -939,8 +940,15 @@ public class GuiScriptLib extends Lib {
         String jarName = Interpreter.popBackStr(para);
         String ver = "";
         if (jarName != null) {
-            jarName = AppLoader.getApplicationVersion(jarName);
+            ver = AppLoader.getApplicationVersion(jarName);
         }
         return Interpreter.getCachedStr(ver);
+    }
+
+    public DataType compareVersion(ArrayList<DataType> para) {
+        String v1 = Interpreter.popBackStr(para);
+        String v2 = Interpreter.popBackStr(para);
+        int ret = AppLoader.compareVersions(v1, v2);
+        return Interpreter.getCachedInt(ret);
     }
 }

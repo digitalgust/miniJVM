@@ -19,26 +19,27 @@ import java.util.List;
 // ------------------------------------------------------------------------- //
 //  * get the date formatter working for individual fields at a minimum 
 // ------------------------------------------------------------------------- //
+
 /**
  * A Java flavored printf for classpath-challenged JVMs.
- *
+ * <p>
  * Each instance of this class is a threadsafe pre-parsed format pattern. Refer
  * to the very detailed class description of java.util.Formatter in the OpenJDK
  * API documentation for an explanation of the supported formats.
- *
+ * <p>
  * Should be easily portable to other Java runtimes that do not include the
  * printf functionality that was introduced in Java 5.
- *
+ * <p>
  * Aims to be lightweight and reasonably fast, and provide reasonably complete
  * API compatibility with the OpenJDK implementation. To clarify what
  * "reasonably complete" means in this context, this implementation should
  * accept any valid format string that the OpenJDK version accepts. However, it
  * should not be relied upon to throw an Exception for every format pattern that
  * the OpenJDK implementation does.
- *
+ * <p>
  * If your program's behavior relies on the side effects from an Exception being
  * thrown for an invalid format string, this might not be for you.
- *
+ * <p>
  * Perhaps more troubling is the fact that the correct localization of numbers
  * and temporal values is barely even attempted, even though the parser accepts
  * the flags without even a warning. However, now you have been warned.
@@ -100,7 +101,7 @@ public final class StringFormatImpl {
                         if ((cntr) >= args.length) {
                             throw new IllegalFormatException(
                                     "Format specified at least " + (cntr + 1)
-                                    + " arguments, but " + cntr + " were supplied."
+                                            + " arguments, but " + cntr + " were supplied."
                             );
                         }
                         arg = args[cntr++];
@@ -172,13 +173,14 @@ public final class StringFormatImpl {
     /*/ keeping this private for now to encourage access through the static 
       compile method, which might allow caching format string instances if it 
       turns out there is an advantage to that. /*/
+
     /**
      * Constructor
      */
     private StringFormatImpl(final String fmt) {
         this._source = fmt;
         final List<FmtCmpnt> cmps = new ArrayList<FmtCmpnt>();
-        for (int i = 0; (i = next(fmt, cmps, i)) > -1;);
+        for (int i = 0; (i = next(fmt, cmps, i)) > -1; ) ;
         this._components = cmps.toArray(new FmtCmpnt[cmps.size()]);
     }
 
@@ -504,11 +506,29 @@ public final class StringFormatImpl {
             final int width,
             final int precision) throws IOException {
         String result = val;
+        boolean isPositive = false;
+        boolean isNegitive = false;
+        int effectiveWidth = width;
+
         if (checkFlag(flags, FLAG_FORCE_UPPER_CASE)) {
             result = result.toUpperCase();
         }
+        if (checkFlag(flags, FLAG_ALWAYS_INCLUDES_SIGN)) {
+            try {
+                double num = Double.parseDouble(result);
+                if (num >= 0) {
+                    isPositive = true;
+                } else {
+                    isNegitive = true;
+                    result = result.substring(1);// 去掉负号
+                }
+                // 当有符号时，减少一个宽度用于正号占位
+                effectiveWidth--;
+            } catch (NumberFormatException e) {
+                // 如果不是数字，则不处理
+            }
+        }
         // TODO: implement other flags
-        // (+) always include sign
         // (,) grouping separators
         // (() negatives in parentheses
         if (precision > 0) {
@@ -516,23 +536,28 @@ public final class StringFormatImpl {
             final int difference = result.length() - precision;
             if (difference > 0) {
                 result = result.substring(0, precision);
-                a.append(result);
-                return;
             }
         }
-        if (width > 0) {
-            final int difference = width - result.length();
+        if (effectiveWidth > 0) {
+            final int difference = effectiveWidth - result.length();
             final boolean leftJustified = checkFlag(flags, FLAG_LEFT_JUSTIFIED);
             if (!leftJustified && difference > 0) {
                 char fill = checkFlag(flags, FLAG_LEADING_ZERO_PADDED) ? '0' : ' ';
-                fill(a, difference, fill);
+                StringBuilder padded = new StringBuilder();
+                for (int i = 0; i < difference; i++) {
+                    padded.append(fill);
+                }
+                padded.append(result);
+                result = padded.toString();
             }
-            a.append(result);
-            if (leftJustified && difference > 0) {
-                fill(a, difference, ' ');
-            }
-            return;
         }
+        if (isPositive) {
+            result = "+" + result;
+        }
+        if (isNegitive) {
+            result = "-" + result;
+        }
+
         a.append(result);
     }
 
@@ -648,123 +673,123 @@ public final class StringFormatImpl {
                     // leading zero as necessary i.e. 00 - 23.
                     case 'H':
 
-                    // Hour for the 12-hour clock, formatted as two digits with a leading 
-                    // zero as necessary, i.e. 01 - 12.
+                        // Hour for the 12-hour clock, formatted as two digits with a leading
+                        // zero as necessary, i.e. 01 - 12.
                     case 'I':
 
-                    // Hour of the day for the 24-hour clock, i.e. 0 - 23.
+                        // Hour of the day for the 24-hour clock, i.e. 0 - 23.
                     case 'k':
 
-                    // Hour for the 12-hour clock, i.e. 1 - 12.
+                        // Hour for the 12-hour clock, i.e. 1 - 12.
                     case 'l':
 
-                    // Minute within the hour formatted as two digits with a leading zero 
-                    // as necessary, i.e. 00 - 59.
+                        // Minute within the hour formatted as two digits with a leading zero
+                        // as necessary, i.e. 00 - 59.
                     case 'M':
 
-                    // Seconds within the minute, formatted as two digits with a leading 
-                    // zero as necessary, i.e. 00 - 60 ("60" is a special value required to 
-                    // support leap seconds).
+                        // Seconds within the minute, formatted as two digits with a leading
+                        // zero as necessary, i.e. 00 - 60 ("60" is a special value required to
+                        // support leap seconds).
                     case 'S':
 
-                    // Millisecond within the second formatted as three digits with leading 
-                    // zeros as necessary, i.e. 000 - 999.
+                        // Millisecond within the second formatted as three digits with leading
+                        // zeros as necessary, i.e. 000 - 999.
                     case 'L':
 
-                    // Nanosecond within the second, formatted as nine digits with leading 
-                    // zeros as necessary, i.e. 000000000 - 999999999.
+                        // Nanosecond within the second, formatted as nine digits with leading
+                        // zeros as necessary, i.e. 000000000 - 999999999.
                     case 'N':
 
-                    // Locale-specific morning or afternoon marker in lower case, 
-                    // e.g."am" or "pm". Use of the conversion prefix 'T' forces this 
-                    // output to upper case.
+                        // Locale-specific morning or afternoon marker in lower case,
+                        // e.g."am" or "pm". Use of the conversion prefix 'T' forces this
+                        // output to upper case.
                     case 'p':
 
-                    // RFC 822 style numeric time zone offset from GMT, e.g. -0800.
+                        // RFC 822 style numeric time zone offset from GMT, e.g. -0800.
                     case 'z':
 
-                    // A string representing the abbreviation for the time zone. The 
-                    // Formatter's locale will supersede the locale of the argument 
-                    // (if any).
+                        // A string representing the abbreviation for the time zone. The
+                        // Formatter's locale will supersede the locale of the argument
+                        // (if any).
                     case 'Z':
 
-                    // Seconds since the beginning of the epoch 
-                    // starting at 1 January 1970 00:00:00 UTC, 
-                    // i.e. Long.MIN_VALUE/1000 to Long.MAX_VALUE/1000.
+                        // Seconds since the beginning of the epoch
+                        // starting at 1 January 1970 00:00:00 UTC,
+                        // i.e. Long.MIN_VALUE/1000 to Long.MAX_VALUE/1000.
                     case 's':
 
-                    // Milliseconds since the beginning of the epoch 
-                    // starting at 1 January 1970 00:00:00 UTC, 
-                    // i.e. Long.MIN_VALUE to Long.MAX_VALUE.
+                        // Milliseconds since the beginning of the epoch
+                        // starting at 1 January 1970 00:00:00 UTC,
+                        // i.e. Long.MIN_VALUE to Long.MAX_VALUE.
                     case 'Q':
 
-                    // ------------------------------------------------------------------
-                    // The following conversion characters are used for formatting dates:
-                    // ------------------------------------------------------------------
-                    // Locale-specific full month name, e.g. "January", "February".
+                        // ------------------------------------------------------------------
+                        // The following conversion characters are used for formatting dates:
+                        // ------------------------------------------------------------------
+                        // Locale-specific full month name, e.g. "January", "February".
                     case 'B':
 
-                    // Locale-specific abbreviated month name, e.g. "Jan", "Feb".
+                        // Locale-specific abbreviated month name, e.g. "Jan", "Feb".
                     case 'b':
 
-                    // Same as 'b'.
+                        // Same as 'b'.
                     case 'h':
 
-                    // Locale-specific full name of the day of the week, e.g. "Sunday"
+                        // Locale-specific full name of the day of the week, e.g. "Sunday"
                     case 'A':
 
-                    // Locale-specific short name of the day of the week, e.g. "Sun"
+                        // Locale-specific short name of the day of the week, e.g. "Sun"
                     case 'a':
 
-                    // Four-digit year divided by 100, formatted as two digits with leading 
-                    // zero as necessary, i.e. 00 - 99
+                        // Four-digit year divided by 100, formatted as two digits with leading
+                        // zero as necessary, i.e. 00 - 99
                     case 'C':
 
-                    // Year, formatted as at least four digits with leading zeros 
-                    // as necessary, e.g. 0092 equals 92 CE for the Gregorian calendar.
+                        // Year, formatted as at least four digits with leading zeros
+                        // as necessary, e.g. 0092 equals 92 CE for the Gregorian calendar.
                     case 'Y':
 
-                    // Last two digits of the year, formatted with leading zeros 
-                    // as necessary, i.e. 00 - 99.
+                        // Last two digits of the year, formatted with leading zeros
+                        // as necessary, i.e. 00 - 99.
                     case 'y':
 
-                    // Day of year, formatted as three digits with leading zeros 
-                    // as necessary, e.g. 001 - 366 for the Gregorian calendar.
+                        // Day of year, formatted as three digits with leading zeros
+                        // as necessary, e.g. 001 - 366 for the Gregorian calendar.
                     case 'j':
 
-                    // Month, formatted as two digits with leading zeros as necessary, 
-                    // i.e. 01 - 13.
+                        // Month, formatted as two digits with leading zeros as necessary,
+                        // i.e. 01 - 13.
                     case 'm':
 
-                    // Day of month, formatted as two digits with leading zeros as 
-                    // necessary, i.e. 01 - 31
+                        // Day of month, formatted as two digits with leading zeros as
+                        // necessary, i.e. 01 - 31
                     case 'd':
 
-                    // Day of month, formatted as two digits, i.e. 1 - 31.
+                        // Day of month, formatted as two digits, i.e. 1 - 31.
                     case 'e':
 
-                    // -------------------------------------------------------------------
-                    // The following conversion characters are used for formatting common 
-                    // date/time compositions.
-                    // -------------------------------------------------------------------
-                    // Time formatted for the 24-hour clock as "%tH:%tM"
+                        // -------------------------------------------------------------------
+                        // The following conversion characters are used for formatting common
+                        // date/time compositions.
+                        // -------------------------------------------------------------------
+                        // Time formatted for the 24-hour clock as "%tH:%tM"
                     case 'R':
 
-                    // Time formatted for the 24-hour clock as "%tH:%tM:%tS".
+                        // Time formatted for the 24-hour clock as "%tH:%tM:%tS".
                     case 'T':
 
-                    // Time formatted for the 12-hour clock as "%tI:%tM:%tS %Tp". The location
-                    // of the morning or afternoon marker ('%Tp') may be locale-dependent.
+                        // Time formatted for the 12-hour clock as "%tI:%tM:%tS %Tp". The location
+                        // of the morning or afternoon marker ('%Tp') may be locale-dependent.
                     case 'r':
 
-                    // Date formatted as "%tm/%td/%ty".
+                        // Date formatted as "%tm/%td/%ty".
                     case 'D':
 
-                    // ISO 8601 complete date formatted as "%tY-%tm-%td".
+                        // ISO 8601 complete date formatted as "%tY-%tm-%td".
                     case 'F':
 
-                    // Date and time formatted as "%ta %tb %td %tT %tZ %tY", e.g. 
-                    // "Sun Jul 20 16:17:00 EDT 1969".
+                        // Date and time formatted as "%ta %tb %td %tT %tZ %tY", e.g.
+                        // "Sun Jul 20 16:17:00 EDT 1969".
                     case 'c':
                         return seal(CONV_DTIME);
 

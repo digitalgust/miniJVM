@@ -18,10 +18,7 @@ import org.mini.gui.style.GStyleInner;
 import org.mini.nanovg.Nanovg;
 import org.mini.reflect.ReflectArray;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
@@ -187,6 +184,29 @@ public class GToolkit {
         }
         return null;
     }
+
+
+    public static void saveStringToFile(String fileName, String contents) {
+        try {
+            byte[] b = contents.getBytes("utf-8");
+            saveDataToFile(fileName, b);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public static void saveDataToFile(String fileName, byte[] contents) {
+        try {
+            FileOutputStream fos = new FileOutputStream(fileName);
+            fos.write(contents);
+            fos.close();
+            System.out.println("save file:" + fileName);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * ----------------------------------------------------------------
      *      font

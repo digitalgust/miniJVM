@@ -866,29 +866,29 @@ int tss_set(tss_t key, void *val)
 int _tthread_timespec_get(struct timespec *ts, int base)
 {
 #if defined(_TTHREAD_WIN32_)
-  struct _timeb tb;
+    struct _timeb tb;
 #elif !defined(CLOCK_REALTIME)
-  struct timeval tv;
+    struct timeval tv;
 #endif
 
-  if (base != TIME_UTC)
-  {
-    return 0;
-  }
+    if (base != TIME_UTC)
+    {
+        return 0;
+    }
 
 #if defined(_TTHREAD_WIN32_)
-  _ftime_s(&tb);
-  ts->tv_sec = (time_t)tb.time;
-  ts->tv_nsec = 1000000L * (long)tb.millitm;
+    _ftime_s(&tb);
+    ts->tv_sec = (time_t)tb.time;
+    ts->tv_nsec = 1000000L * (long)tb.millitm;
 #elif defined(CLOCK_REALTIME)
-  base = (clock_gettime(CLOCK_REALTIME, ts) == 0) ? base : 0;
+    base = (clock_gettime(CLOCK_REALTIME, ts) == 0) ? base : 0;
 #else
   gettimeofday(&tv, NULL);
   ts->tv_sec = (time_t)tv.tv_sec;
   ts->tv_nsec = 1000L * (long)tv.tv_usec;
 #endif
 
-  return base;
+    return base;
 }
 #endif /* _TTHREAD_EMULATE_TIMESPEC_GET_ */
 

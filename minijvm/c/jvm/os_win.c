@@ -239,7 +239,7 @@ static c8 *inet_ntop6(const u8 *src, c8 *dst, socklen_t size) {
     return (dst);
 }
 
-#endif
+#endif  //#ifndef InetNtopA
 
 #ifndef InetPtonA
 
@@ -423,7 +423,7 @@ static s32 inet_pton6(const c8 *src, u_char *dst) {
     return (1);
 }
 
-#endif
+#endif  //#ifndef InetPtonA
 
 /*------------------------------------------
     MAIN  -  tester
@@ -463,7 +463,7 @@ static s32 inet_pton6(const c8 *src, u_char *dst) {
 //
 //}
 
-#endif
+#endif  //#if __JVM_OS_MINGW__
 
 
 void get_last_error(Utf8String *error_msg) {
@@ -830,4 +830,4 @@ s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
     return utf8_len;
 }
 
-#endif
+#endif   //#if defined(__JVM_OS_MINGW__) || defined(__JVM_OS_CYGWIN__) || defined(__JVM_OS_VS__)

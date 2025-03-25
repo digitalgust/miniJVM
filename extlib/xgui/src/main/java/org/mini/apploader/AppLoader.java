@@ -699,6 +699,25 @@ public class AppLoader {
      */
     public static int compareVersions(String v1, String v2) {
         try {
+            if (v1 == null) {
+                v1 = "";
+            }
+            if (v2 == null) {
+                v2 = "";
+            }
+            //用正则表达式检测版本号正确性
+            boolean isValid1 = v1.matches("^\\d+(\\.\\d+)*$");
+            boolean isValid2 = v2.matches("^\\d+(\\.\\d+)*$");
+            if (!isValid1 && !isValid2) {
+                return 0;
+            }
+            if (!isValid1) {
+                return -1;
+            }
+            if (!isValid2) {
+                return 1;
+            }
+
             String[] parts1 = v1.split("\\.");
             String[] parts2 = v2.split("\\.");
 
