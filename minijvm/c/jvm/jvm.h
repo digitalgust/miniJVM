@@ -1862,7 +1862,7 @@ struct _MiniJVM {
     Hashtable *sys_prop;
 
     GcCollector *collector;
-    Instance *shutdown_hook;//shutdown hook ,it's a thread
+    ArrayList *shutdown_hook;//shutdown hook ,it contains thread instance
 
     ShortCut shortcut;
 
