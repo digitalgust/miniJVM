@@ -14,6 +14,7 @@ import org.mini.gui.callback.GDesktop;
 import org.mini.gui.GForm;
 import org.mini.gui.GToolkit;
 import org.mini.media.MaDevice;
+import org.mini.util.SysLog;
 
 import java.io.File;
 
@@ -102,7 +103,7 @@ public class GlfwCallBackImpl extends GCallBack {
         this.winHeight = height;
 
         if (!Glfw.glfwInit()) {
-            System.out.println("[ERRO]glfw init error.");
+            SysLog.error("glfw init error.");
             System.exit(1);
         }
         String osname = System.getProperty("os.name");
@@ -131,14 +132,14 @@ public class GlfwCallBackImpl extends GCallBack {
         Glfw.glfwMakeContextCurrent(display);
         Glfw.glfwSwapInterval(1);
         reloadWindow();
-        System.out.println("[INFO]fbWidth=" + fbWidth + "  ,fbHeight=" + fbHeight);
+        SysLog.info("fbWidth=" + fbWidth + "  ,fbHeight=" + fbHeight);
         openglThread = Thread.currentThread();
 
         vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
         if (vg == 0) {
-            System.out.println("[ERRO]Could not init nanovg.\n");
+            SysLog.error("Could not init nanovg.\n");
         } else {
-            System.out.println("[INFO]nanovg success.");
+            SysLog.info("nanovg success.");
         }
 
         GToolkit.FontHolder.loadFont(vg);
@@ -198,7 +199,12 @@ public class GlfwCallBackImpl extends GCallBack {
     public void destroy() {
         nvgDeleteGL3(vg);
         Glfw.glfwTerminate();
-        MaDevice.stopAll();
+        try {
+            Class.forName("org.mini.media.MaDevice");
+            MaDevice.stopAll();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
         vg = 0;
         System.exit(0);//some thread not exit ,that will continue running
     }
@@ -434,7 +440,7 @@ public class GlfwCallBackImpl extends GCallBack {
     }
 
     public void error(int error, String description) {
-        System.out.println("error: " + error + " message: " + description);
+        SysLog.error("error: " + error + " message: " + description);
     }
 
     @Override
