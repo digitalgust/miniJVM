@@ -7,6 +7,7 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
+import org.mini.util.SysLog;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Nanovg.*;
@@ -81,7 +82,7 @@ public class GScrollBar extends GObject {
 
     @Override
     public void setFlyable(boolean flyable) {
-        if (flyable) System.out.println(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
+        if (flyable) SysLog.info(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
     }
 
     @Override

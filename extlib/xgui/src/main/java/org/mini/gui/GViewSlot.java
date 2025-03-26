@@ -4,6 +4,7 @@ import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GCmd;
+import org.mini.util.SysLog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -302,7 +303,7 @@ public class GViewSlot extends GViewPort {
 
     @Override
     public void setFlyable(boolean flyable) {
-        if (flyable) System.out.println(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
+        if (flyable) SysLog.warn(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
     }
 
     public boolean dragEvent(int button, float dx, float dy, float x, float y) {

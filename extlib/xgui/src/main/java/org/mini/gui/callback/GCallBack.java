@@ -9,6 +9,7 @@ import org.mini.apploader.GApplication;
 import org.mini.glfm.GlfmCallBack;
 import org.mini.glfw.GlfwCallback;
 import org.mini.gui.GForm;
+import org.mini.util.SysLog;
 
 import java.io.InputStream;
 
@@ -28,9 +29,9 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
 
             try {
                 Class glfw = Class.forName("org.mini.glfw.Glfw");
-                System.out.println("[INFO]load gui native " + glfw);
+                SysLog.info("load gui native " + glfw);
                 Class glfm = Class.forName("org.mini.glfm.Glfm");
-                System.out.println("[INFO]load gui native " + glfm);
+                SysLog.info("load gui native " + glfm);
                 Class c = Class.forName(System.getProperty("gui.driver"));
                 instance = (GCallBack) c.newInstance();
                 instance.desktop = new GDesktop(instance);

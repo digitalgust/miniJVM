@@ -683,7 +683,7 @@ s32 java_lang_Runtime_gc(Runtime *runtime, JClass *clazz) {
 s32 java_lang_Runtime_addShutdownHook(Runtime *runtime, JClass *clazz) {
     Instance *jruntime = (Instance *) localvar_getRefer(runtime->localvar, 0);
     Instance *jthread = (Instance *) localvar_getRefer(runtime->localvar, 1);
-    runtime->jvm->shutdown_hook = jthread;
+    arraylist_push_back(runtime->jvm->shutdown_hook, jthread);
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);

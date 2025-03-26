@@ -9,6 +9,7 @@ import org.mini.gl.GL;
 import org.mini.nanovg.Nanovg;
 import org.mini.reflect.DirectMemObj;
 import org.mini.reflect.ReflectArray;
+import org.mini.util.SysLog;
 
 import java.io.UnsupportedEncodingException;
 
@@ -72,13 +73,13 @@ public class GLUtil {
 
     public static byte[] image_parse_from_file_content(byte[] fileCont, int start, int len, int[] w_h_d) {
         if (fileCont == null) {
-            System.out.println("ERROR: image parse file content is null");
+            SysLog.error("image parse file content is null");
         }
         int[] x = {0}, y = {0}, n = {0};
         long ptr = ReflectArray.getBodyPtr(fileCont);
         long raw_data_handle = Nanovg.stbi_load_from_memory(ptr + start, len, x, y, n, 0);
         if (raw_data_handle == 0) {
-            System.out.println("ERROR: failed to load image from file content start:" + start + ", size:" + len);
+            SysLog.error("failed to load image from file content start:" + start + ", size:" + len);
             new Exception().printStackTrace();
             return null;
         }
@@ -96,7 +97,7 @@ public class GLUtil {
         byte[] fb = toCstyleBytes(filename);
         long raw_data_handle = stbi_load(fb, x, y, n, 4);
         if (raw_data_handle == 0) {
-            System.out.println("ERROR: failed to load image: " + filename);
+            SysLog.error("failed to load image: " + filename);
             return null;
         }
         w_h_d[0] = x[0];
@@ -110,7 +111,7 @@ public class GLUtil {
 
     public static byte[] image_parse(long raw_data_handle, int[] w_h_d) {
         if (raw_data_handle == 0) {
-            System.out.println("ERROR: image raw data is null");
+            SysLog.error("image raw data is null");
             return null;
         }
         int w = w_h_d[0];
@@ -128,7 +129,7 @@ public class GLUtil {
     public static void checkGlError(String tag) {
         int err = glGetError();
         if (err != 0) {
-            System.out.println("gl error tag:" + tag + "  code:" + err + "[" + Integer.toHexString(err) + "]");
+            SysLog.error("gl error tag:" + tag + "  code:" + err + "[" + Integer.toHexString(err) + "]");
             new Throwable().printStackTrace();
         }
     }
@@ -160,7 +161,7 @@ public class GLUtil {
         long ptr = ReflectArray.getBodyPtr(fileCont);
         long data = Nanovg.stbi_load_from_memory(ptr, fileCont.length, x, y, n, 0);
         if (data == 0) {
-            System.out.println("ERROR: failed to load image: " + fileCont);
+            SysLog.error("failed to load image: " + fileCont);
             return;
         }
         w_h_d[0] = x[0];
@@ -195,9 +196,9 @@ public class GLUtil {
         String majorVersion = b == null ? "" : new String(b);
         b = glGetString(GL.GL_MINOR_VERSION);
         String minorVersion = b == null ? "" : new String(b);
-        System.out.println("OpenGL vendor：" + name);
-        System.out.println("OpenGL renderer：" + biaoshifu);
-        System.out.println("OpenGL version：" + OpenGLVersion);
-        System.out.println("OpenGL version：" + majorVersion + "." + minorVersion);
+        SysLog.info("OpenGL vendor：" + name);
+        SysLog.info("OpenGL renderer：" + biaoshifu);
+        SysLog.info("OpenGL version：" + OpenGLVersion);
+        SysLog.info("OpenGL version：" + majorVersion + "." + minorVersion);
     }
 }

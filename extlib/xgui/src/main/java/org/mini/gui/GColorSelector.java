@@ -134,7 +134,7 @@ public class GColorSelector extends GObject {
                 } else if (r < r_big) {
                     curAngel = (float) (Math.atan2(offY, offX));
                     float angel = -oldAngel + curAngel;
-                    System.out.println("curA:" + curAngel + "    oldA:" + oldAngel + "    result:" + angel);
+                    //System.out.println("curA:" + curAngel + "    oldA:" + oldAngel + "    result:" + angel);
                     oldAngel = curAngel;
                     float oldX = selectX;
                     float oldY = selectY;
@@ -159,7 +159,7 @@ public class GColorSelector extends GObject {
                 } else if (r < r_big) {
                     curAngel = (float) (Math.atan2(offY, offX));
                     float angel = -oldAngel + curAngel;
-                    System.out.println("curA:" + curAngel + "    oldA:" + oldAngel + "    result:" + angel);
+                    //System.out.println("curA:" + curAngel + "    oldA:" + oldAngel + "    result:" + angel);
                     oldAngel = curAngel;
                     float oldX = selectX;
                     float oldY = selectY;

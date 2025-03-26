@@ -11,6 +11,7 @@ import org.mini.gui.callback.GCallbackUI;
 import org.mini.gui.event.*;
 import org.mini.gui.gscript.Interpreter;
 import org.mini.nanovg.Nanovg;
+import org.mini.util.SysLog;
 
 import java.io.ByteArrayOutputStream;
 
@@ -132,7 +133,7 @@ abstract public class GObject implements GAttachable {
 
     protected GObject(GForm form) {
         if (this instanceof GCallbackUI) {
-            System.out.println("[INFO]new GCallbackUI " + this);
+            SysLog.info("new GCallbackUI " + this);
         } else if (this instanceof GForm) {//只有GForm可以传空进来
             this.form = (GForm) this;
         } else {

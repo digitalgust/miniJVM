@@ -8,11 +8,13 @@ package org.mini.zip;
 import java.io.UnsupportedEncodingException;
 
 /**
+ * <pre>
  * byte[] b = javax.mini.zip.Zip.getEntry("../lib/minijvm_rt.jar",
  * "sys.properties"); for (int i = 0; i < b.length; i++) {
  * System.out.print((char) b[i]); }
- * <p>
+ *
  * Zip.putEntry("../tmp.zip", "aaa/sys.properties", b);
+ * </pre>
  *
  * @author Gust
  */

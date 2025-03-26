@@ -12,6 +12,7 @@ import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GCmd;
 import org.mini.gui.style.GStyle;
 import org.mini.layout.guilib.FormHolder;
+import org.mini.util.SysLog;
 
 import java.util.List;
 import java.util.Properties;
@@ -70,7 +71,7 @@ public abstract class GApplication implements FormHolder {
             e.printStackTrace();
         }
         if (form == null) {
-            System.out.println("[ERRO]init form failed");
+            SysLog.error("init form failed");
         }
         startApp();
     }
@@ -129,7 +130,7 @@ public abstract class GApplication implements FormHolder {
 
     public final void closeApp() {
         if (getState() == AppState.STATE_CLOSED) return;
-        System.out.println("[INFO]Closed app : " + this);
+        SysLog.info("Closed app : " + this);
         try {
             onClose();
         } catch (Exception e) {

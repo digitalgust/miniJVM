@@ -719,7 +719,7 @@ s32 jthread_run(void *para) {
     runtime->thrd_info->thread_status = THREAD_STATUS_RUNNING;
     push_ref(runtime->stack, (__refer) jthread);
     ret = execute_method_impl(method, runtime);
-    if (ret != RUNTIME_STATUS_NORMAL) {
+    if (ret == RUNTIME_STATUS_EXCEPTION) {
         print_exception(runtime);
     }
 

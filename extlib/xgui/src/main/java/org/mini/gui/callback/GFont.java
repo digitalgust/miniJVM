@@ -3,6 +3,7 @@ package org.mini.gui.callback;
 import org.mini.gui.GObject;
 import org.mini.gui.GToolkit;
 import org.mini.nanovg.Nanovg;
+import org.mini.util.SysLog;
 
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
 import static org.mini.nanovg.Nanovg.nvgAddFallbackFontId;
@@ -32,7 +33,7 @@ public class GFont {
         long vg = GCallBack.getInstance().getNvContext();
         font_handle = Nanovg.nvgCreateFontMem(vg, fontName, data, data.length, 0);
         if (font_handle == -1) {
-            System.out.println("[ERRO]Could not add font.\n");
+            SysLog.error("Could not add font.\n");
         }
         nvgAddFallbackFontId(vg, font_handle, font_handle);
     }

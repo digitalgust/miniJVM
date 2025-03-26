@@ -3,6 +3,7 @@ package org.mini.layout;
 import org.mini.gui.*;
 import org.mini.gui.gscript.Interpreter;
 import org.mini.layout.loader.XmlExtAssist;
+import org.mini.util.SysLog;
 import org.xmlpull.v1.KXmlParser;
 
 public abstract class XObject implements GLayout {
@@ -89,7 +90,7 @@ public abstract class XObject implements GLayout {
                 }
                 this.parent = xc;
             } else {
-                System.out.println("error ============");
+                SysLog.info("error");
             }
         } else {
             if (this.parent != null) {

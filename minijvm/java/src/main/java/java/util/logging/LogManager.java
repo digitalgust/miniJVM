@@ -71,30 +71,19 @@ public class LogManager {
 
     private class Cleaner extends Thread {
         public void run() {
-
-
-            LogManager mgr = manager;
-
-
             synchronized (LogManager.this) {
-
                 deathImminent = true;
                 initializedGlobalHandlers = true;
             }
-
-
             reset();
         }
     }
 
 
     protected LogManager() {
-
         try {
             Runtime.getRuntime().addShutdownHook(new Cleaner());
         } catch (IllegalStateException e) {
-
-
         }
     }
 
@@ -110,13 +99,10 @@ public class LogManager {
         if (!readPrimordialConfiguration) {
             synchronized (this) {
                 if (!readPrimordialConfiguration) {
-
-
                     if (System.out == null) {
                         return;
                     }
                     readPrimordialConfiguration = true;
-
                 }
             }
         }
@@ -143,8 +129,6 @@ public class LogManager {
         if (level != null) {
             doSetLevel(logger, level);
         }
-
-
         int ix = 1;
         for (; ; ) {
             int ix2 = name.indexOf(".", ix);
@@ -234,34 +218,7 @@ public class LogManager {
 
 
     public void readConfiguration() throws IOException, SecurityException {
-        checkAccess();
 
-
-        String cname = System.getProperty("java.util.logging.config.class");
-        String contextLoadingConfig = System.getProperty("java.util.logging.manager.altclassloader");
-        if (cname != null) {
-            try {
-
-
-                try {
-                    Class clz = ClassLoader.getSystemClassLoader().loadClass(cname);
-                    clz.newInstance();
-                    return;
-                } catch (ClassNotFoundException ex) {
-                    if (null != contextLoadingConfig) {
-                        Class clz = Thread.currentThread().getContextClassLoader().loadClass(cname);
-                        clz.newInstance();
-                        return;
-                    } else {
-                        throw ex;
-                    }
-                }
-            } catch (Exception ex) {
-                System.err.println("Logging configuration class \"" + cname + "\" failed");
-                System.err.println("" + ex);
-
-            }
-        }
 
         String fname = System.getProperty("java.util.logging.config.file");
         if (fname == null) {

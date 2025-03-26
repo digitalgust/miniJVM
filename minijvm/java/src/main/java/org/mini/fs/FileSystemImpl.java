@@ -6,6 +6,7 @@
 package org.mini.fs;
 
 import org.mini.net.SocketNative;
+import org.mini.util.SysLog;
 
 import java.io.File;
 import java.io.IOException;
@@ -157,7 +158,7 @@ abstract public class FileSystemImpl extends org.mini.fs.FileSystem {
 
     @Override
     public boolean deleteOnExit(File f) {
-        System.out.println("deleteOnExit not supported");
+        SysLog.warn("deleteOnExit not supported");
         return false;
     }
 
@@ -184,13 +185,13 @@ abstract public class FileSystemImpl extends org.mini.fs.FileSystem {
 
     @Override
     public boolean setLastModifiedTime(File f, long time) {
-        System.out.println("setLastModifiedTime not supported");
+        SysLog.warn("setLastModifiedTime not supported");
         return false;
     }
 
     @Override
     public boolean setReadOnly(File f) {
-        System.out.println("setReadOnly not supported");
+        SysLog.warn("setReadOnly not supported");
         return false;
     }
 

@@ -13,6 +13,7 @@ import org.mini.gui.*;
 import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GDesktop;
 import org.mini.nanovg.Nanovg;
+import org.mini.util.SysLog;
 
 import static org.mini.nanovg.Nanovg.*;
 
@@ -153,9 +154,9 @@ public class GlfmCallBackImpl extends GCallBack {
 
         vg = Nanovg.nvgCreateGLES3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
         if (vg == 0) {
-            System.out.println("[ERRO]Could not init nanovg.\n");
+            SysLog.error("Could not init nanovg.\n");
         } else {
-            System.out.println("[INFO]nanovg success.");
+            SysLog.info("nanovg success.");
         }
         GToolkit.FontHolder.loadFont(vg);
         AppLoader.cb_init();
@@ -203,7 +204,7 @@ public class GlfmCallBackImpl extends GCallBack {
     @Override
     public void onSurfaceCreated(long display, int width, int height) {
         init();
-        System.out.println("[INFO]onSurfaceCreated " + width + "," + height + "," + pxRatio);
+        SysLog.info("onSurfaceCreated " + width + "," + height + "," + pxRatio);
         Glfm.glfmSetMultitouchEnabled(display, true);
         Glfm.glfmGetDisplayChromeInsets(display, insetsDouble);
 
@@ -344,7 +345,7 @@ public class GlfmCallBackImpl extends GCallBack {
 
         //float[] inset = new float[4];
         //GCallBack.getInstance().getInsets(inset);
-        //System.out.println("[INFO]glfm INSET:" + inset[0] + " , " + inset[1] + " , " + inset[2] + " , " + inset[3]);
+        //System.out.println("glfm INSET:" + inset[0] + " , " + inset[1] + " , " + inset[2] + " , " + inset[3]);
 
         if (desktop == null) {
             return;

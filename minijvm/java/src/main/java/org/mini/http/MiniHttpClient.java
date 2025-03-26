@@ -5,6 +5,8 @@
  */
 package org.mini.http;
 
+import org.mini.util.SysLog;
+
 import javax.microedition.io.Connector;
 import javax.microedition.io.HttpConnection;
 import java.io.ByteArrayOutputStream;
@@ -28,7 +30,7 @@ public class MiniHttpClient extends Thread {
     public static final CltLogger DEFAULT_LOGGER = new CltLogger() {
         @Override
         public void log(String s) {
-            System.out.println(s);
+            SysLog.info(s);
         }
     };
     CltLogger logger = DEFAULT_LOGGER;

@@ -9,6 +9,7 @@ import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GCmd;
+import org.mini.util.SysLog;
 
 import java.util.TimerTask;
 
@@ -341,7 +342,7 @@ public class GViewPort extends GContainer {
 
     @Override
     public void setFlyable(boolean flyable) {
-        if (flyable) System.out.println(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
+        if (flyable) SysLog.warn(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
     }
 
     @Override

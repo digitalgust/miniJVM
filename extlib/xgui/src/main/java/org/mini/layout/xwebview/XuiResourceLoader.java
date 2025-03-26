@@ -2,6 +2,7 @@ package org.mini.layout.xwebview;
 
 import org.mini.gui.GImage;
 import org.mini.layout.loader.XmlExtAssist;
+import org.mini.util.SysLog;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -74,7 +75,7 @@ public class XuiResourceLoader implements XmlExtAssist.XLoader {
                 return resource;
             }
         } catch (Exception e) {
-            System.out.println("loadData error:" + resUrl);
+            SysLog.error("loadData error:" + resUrl, e);
         }
         return null;
     }
@@ -99,7 +100,7 @@ public class XuiResourceLoader implements XmlExtAssist.XLoader {
                 return res.image;
             }
         } catch (Exception e) {
-            System.out.println("loadImage error:" + resUrl);
+            SysLog.error("loadImage error:" + resUrl, e);
         }
         return notfoundImage;
     }
@@ -120,7 +121,7 @@ public class XuiResourceLoader implements XmlExtAssist.XLoader {
                 return res.xml;
             }
         } catch (Exception e) {
-            System.out.println("loadXml error:" + resUrl);
+            SysLog.error("loadXml error:" + resUrl, e);
         }
         String urlStr = resUrl.replace("&", "&amp;");
         urlStr = urlStr.replace("<", "&lt;");

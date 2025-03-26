@@ -78,7 +78,7 @@ public class DirectMemObj {
         }
         if (finalizer != null) {
             finalizer.onFinalize();
-            System.out.println("DMO finalized");
+            //System.out.println("DMO finalized");
         }
     }
 

@@ -12,6 +12,7 @@ import org.mini.layout.XEventHandler;
 import org.mini.layout.XObject;
 import org.mini.layout.xwebview.XuiBrowser;
 import org.mini.nanovg.Nanovg;
+import org.mini.util.SysLog;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,7 +38,7 @@ public class XuiLoader {
 
     public XuiLoader(XuiAppHolder appHolder, XEventHandler eventHandler, Lib scriptLib) {
         if (appHolder == null) {
-            throw new RuntimeException("[ERRO]app is null");
+            throw new RuntimeException("app is null");
         }
         this.appHolder = appHolder;
         this.eventHandler = eventHandler;
@@ -138,7 +139,7 @@ public class XuiLoader {
             }
             return (T) xobj.getGui();
         } catch (Exception e) {
-            System.out.println("[ERRO]load xmlui error:" + uipath);
+            SysLog.error("load xmlui error:" + uipath);
             ex = e;
             e.printStackTrace();
         }

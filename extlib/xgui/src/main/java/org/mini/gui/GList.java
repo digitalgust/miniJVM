@@ -11,6 +11,7 @@ import org.mini.gui.callback.GCmd;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
 import org.mini.gui.event.GStateChangeListener;
+import org.mini.util.SysLog;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -488,7 +489,7 @@ public class GList extends GContainer {
 
     @Override
     public void setFlyable(boolean flyable) {
-        if (flyable) System.out.println("[INFO]" + this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
+        if (flyable) SysLog.info("" + this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
     }
 
     /**

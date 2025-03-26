@@ -1,5 +1,7 @@
 package org.mini.json;
 
+import org.mini.util.SysLog;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -580,7 +582,7 @@ public class JsonParser<T> {
                             }
                         } else {
                             if (!(ins instanceof Polymorphic)) {
-                                System.out.println("[JSON]warn :" + clazz.getName() + " field '" + fieldName + "' setter not found.");
+                                SysLog.warn("[JSON]" + clazz.getName() + " field '" + fieldName + "' setter not found.");
                             }
                         }
                     }
@@ -589,7 +591,7 @@ public class JsonParser<T> {
                 case JsonCell.TYPE_LIST: {
 
                     if (types == null) {
-                        System.out.println("[JSON]warn: need type declare , class:" + clazz);
+                        SysLog.warn("[JSON] need type declare , class:" + clazz);
                     }
 
                     if (clazz == null) {

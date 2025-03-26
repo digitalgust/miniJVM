@@ -1,6 +1,7 @@
 package org.mini.gui;
 
 import org.mini.gui.callback.GCmd;
+import org.mini.util.SysLog;
 
 abstract public class GOpenGLPanel extends GPanel {
     protected GImage glRendereredImg;
@@ -50,7 +51,7 @@ abstract public class GOpenGLPanel extends GPanel {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            System.out.println("[INFO]GOpenGLPanel clean success");
+            SysLog.info("GOpenGLPanel clean success");
         }));
     }
 

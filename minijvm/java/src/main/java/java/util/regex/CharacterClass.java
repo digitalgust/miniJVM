@@ -772,44 +772,44 @@ System.out.println();
       return val;
    }
    
-   public static void main(String[] args){
-      if(!namesInitialized)initNames();
-      if(args.length==0){
-         System.out.println("Class usage: \\p{Class},\\P{Class}");
-         printRealm(posixClasses,"Posix classes");
-         printRealm(unicodeCategories,"Unicode categories");
-         printRealm(unicodeBlocks,"Unicode blocks");
-      }
-      else{
-         for(int i=0;i<args.length;i++){
-            System.out.print(args[i]);
-            System.out.print(": ");
-            System.out.println(namedClasses.containsKey(args[i])? "supported": "not supported");
-         }
-      }
-      /*
-      int[][] data=new int[CATEGORY_COUNT][BLOCK_SIZE+2];
-      for(int i=Character.MIN_VALUE;i<=Character.MAX_VALUE;i++){
-         int cat=Character.getType((char)i);
-         data[cat][BLOCK_SIZE]++;
-         int b=(i>>8)&0xff;
-         if(data[cat][b]==0){
-            data[cat][b]=1;
-            data[cat][BLOCK_SIZE+1]++;
-         }
-      }
-      for(int i=0;i<CATEGORY_COUNT;i++){
-         System.out.print(unicodeCategoryNames.get(new Integer(i))+": ");
-         System.out.println(data[i][BLOCK_SIZE]+" chars, "+data[i][BLOCK_SIZE+1]+" blocks, "+(data[i][BLOCK_SIZE]/data[i][BLOCK_SIZE+1])+" chars/block");
-      }
-      */
-   }
-   
-   private static void printRealm(Vector realm,String name){
-      System.out.println(name+":");
-      Enumeration e=realm.elements();
-      while(e.hasMoreElements()){
-         System.out.println("  "+e.nextElement());
-      }
-   }
+//   public static void main(String[] args){
+//      if(!namesInitialized)initNames();
+//      if(args.length==0){
+//         System.out.println("Class usage: \\p{Class},\\P{Class}");
+//         printRealm(posixClasses,"Posix classes");
+//         printRealm(unicodeCategories,"Unicode categories");
+//         printRealm(unicodeBlocks,"Unicode blocks");
+//      }
+//      else{
+//         for(int i=0;i<args.length;i++){
+//            System.out.print(args[i]);
+//            System.out.print(": ");
+//            System.out.println(namedClasses.containsKey(args[i])? "supported": "not supported");
+//         }
+//      }
+//      /*
+//      int[][] data=new int[CATEGORY_COUNT][BLOCK_SIZE+2];
+//      for(int i=Character.MIN_VALUE;i<=Character.MAX_VALUE;i++){
+//         int cat=Character.getType((char)i);
+//         data[cat][BLOCK_SIZE]++;
+//         int b=(i>>8)&0xff;
+//         if(data[cat][b]==0){
+//            data[cat][b]=1;
+//            data[cat][BLOCK_SIZE+1]++;
+//         }
+//      }
+//      for(int i=0;i<CATEGORY_COUNT;i++){
+//         System.out.print(unicodeCategoryNames.get(new Integer(i))+": ");
+//         System.out.println(data[i][BLOCK_SIZE]+" chars, "+data[i][BLOCK_SIZE+1]+" blocks, "+(data[i][BLOCK_SIZE]/data[i][BLOCK_SIZE+1])+" chars/block");
+//      }
+//      */
+//   }
+//
+//   private static void printRealm(Vector realm,String name){
+//      System.out.println(name+":");
+//      Enumeration e=realm.elements();
+//      while(e.hasMoreElements()){
+//         System.out.println("  "+e.nextElement());
+//      }
+//   }
 }

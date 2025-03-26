@@ -63,7 +63,7 @@ public abstract class ClassLoader {
     protected void finalize() throws Throwable {
         super.finalize();
         RefNative.destroyNativeClassLoader(this);
-        System.out.println("[INFO]" + this + " finalized");
+        //System.out.println("[INFO]" + this + " finalized");
     }
 
     private Map<String, Package> packages() {

@@ -282,6 +282,7 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
 
     //创建线程容器
     jvm->thread_list = arraylist_create(0);
+    jvm->shutdown_hook = arraylist_create(0);
     //创建垃圾收集器
     gc_create(jvm);
 
@@ -356,8 +357,16 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
 
 void jvm_destroy(MiniJVM *jvm) {
     Runtime *parent = runtime_create(jvm);
-    if (parent && jvm->shutdown_hook) {
-        jthread_start(jvm->shutdown_hook, parent);
+
+    while (parent && jvm->shutdown_hook->length) {
+        Instance *inst = arraylist_get_value(jvm->shutdown_hook, 0);
+        arraylist_remove(jvm->shutdown_hook, 0);
+
+        //there is an week is that the hook thread is serialized execution,
+        // because the hook thread may be not inserted into the thread list,
+        // then vm is destroyed
+        thrd_t t = jthread_start(inst, parent);
+        thrd_join(t, NULL);
     }
     runtime_destroy(parent);
     parent = NULL;
@@ -383,6 +392,7 @@ void jvm_destroy(MiniJVM *jvm) {
     //
     thread_lock_dispose(&jvm->threadlock);
     arraylist_destroy(jvm->thread_list);
+    arraylist_destroy(jvm->shutdown_hook);
     native_lib_destroy(jvm);
     sys_properties_dispose(jvm);
     close_log();

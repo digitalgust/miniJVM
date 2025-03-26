@@ -6,6 +6,7 @@
 package org.mini.http;
 
 import org.mini.reflect.ReflectArray;
+import org.mini.util.SysLog;
 import org.mini.vm.RefNative;
 
 import java.io.*;
@@ -31,7 +32,7 @@ public class MiniHttpServer extends Thread {
     public static final SrvLogger DEFAULT_LOGGER = new SrvLogger() {
         @Override
         public void log(String s) {
-            System.out.println(s);
+            SysLog.info(s);
         }
     };
     int port = DEFAULT_PORT;

@@ -8,6 +8,7 @@ package org.mini.gui;
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.nanovg.Nanovg;
+import org.mini.util.SysLog;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
@@ -200,7 +201,7 @@ public class GTextField extends GTextObject {
 
     @Override
     public void setFlyable(boolean flyable) {
-        if (flyable) System.out.println(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
+        if (flyable) SysLog.info(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
     }
 
     @Override

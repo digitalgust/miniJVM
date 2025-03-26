@@ -158,13 +158,6 @@ public class StreamHandler extends Handler {
         }
     }
 
-    protected void finalize() throws Throwable {
-        System.out.println("======1");
-        flushAndClose();
-        super.finalize();
-        System.out.println("======2");
-    }
-
     private synchronized void flushAndClose() throws SecurityException {
         checkAccess();
         if (writer != null) {

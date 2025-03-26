@@ -39,7 +39,7 @@ public class XmlExtAssist implements BrowserHolder {
 
     public XmlExtAssist(XuiAppHolder xuiAppHolder) {
         if (xuiAppHolder == null || xuiAppHolder.getApp() == null) {
-            throw new RuntimeException("[ERRO]app can not be null");
+            throw new RuntimeException("app can not be null");
         }
         //if (form == null) throw new RuntimeException("Form can not be null");
         this.xuiAppHolder = xuiAppHolder;

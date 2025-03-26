@@ -7,6 +7,7 @@ import org.mini.gui.callback.GCallBack;
 import org.mini.json.JsonParser;
 import org.mini.json.JsonPrinter;
 import org.mini.reflect.ReflectMethod;
+import org.mini.util.SysLog;
 
 import javax.microedition.io.Base64;
 import java.lang.reflect.Field;
@@ -703,7 +704,7 @@ public class Stdlib extends Lib {
             long r = i & j;
             return Interpreter.getCachedInt(r);
         } catch (Exception e) {
-            System.out.println("[ERRO]need 2 number for bit and");
+            SysLog.error("need 2 number for bit and");
             e.printStackTrace();
         }
         return null;
@@ -716,7 +717,7 @@ public class Stdlib extends Lib {
             long r = i | j;
             return Interpreter.getCachedInt(r);
         } catch (Exception e) {
-            System.out.println("[ERRO]need 2 number for bit or");
+            SysLog.error("need 2 number for bit or");
             e.printStackTrace();
         }
         return null;
@@ -728,7 +729,7 @@ public class Stdlib extends Lib {
             long r = ~i;
             return Interpreter.getCachedInt(r);
         } catch (Exception e) {
-            System.out.println("[ERRO]need 2 number for bit not");
+            SysLog.error("need 2 number for bit not");
             e.printStackTrace();
         }
         return null;

@@ -34,6 +34,7 @@ public class Test {
 
         t1();
         t2();
+        t3();
     }
 
 
@@ -95,5 +96,24 @@ public class Test {
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error configuring handlers", e);
         }
+    }
+
+    static void t3() {
+
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < 2; i++) {
+                    System.out.println("Hello World");
+                    try {
+                        Thread.sleep(10000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+        t.setDaemon(true);
+        t.start();
     }
 }

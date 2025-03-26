@@ -17,6 +17,7 @@ import org.mini.gui.style.GStyleBright;
 import org.mini.gui.style.GStyleInner;
 import org.mini.nanovg.Nanovg;
 import org.mini.reflect.ReflectArray;
+import org.mini.util.SysLog;
 
 import java.io.*;
 import java.util.*;
@@ -127,7 +128,7 @@ public class GToolkit {
                 ex.printStackTrace();
             }
         }
-        System.out.println("[ERRO]load from jar fail : " + path);
+        SysLog.error("load from jar fail : " + path);
         return null;
     }
 
@@ -170,7 +171,7 @@ public class GToolkit {
                 ex.printStackTrace();
             }
         }
-        System.out.println("[ERRO]load from file fail : " + path);
+        SysLog.error("load from file fail : " + path);
         return null;
     }
 
@@ -201,7 +202,7 @@ public class GToolkit {
             FileOutputStream fos = new FileOutputStream(fileName);
             fos.write(contents);
             fos.close();
-            System.out.println("save file:" + fileName);
+            //System.out.println("save file:" + fileName);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1446,7 +1447,7 @@ public class GToolkit {
         if (gobj == null) return;
         GForm form = gobj.getForm();
         if (form == null) {
-            System.out.println("[WARN]added to form can be set align");
+            SysLog.warn("added to form can be set align");
             return;
         }
         if ((align_mod & Nanovg.NVG_ALIGN_LEFT) != 0) {
@@ -1781,7 +1782,7 @@ public class GToolkit {
                     if (holder != null) holder.setAttachment(filepath);
                     imageCache.put(filepath, img);
                 }
-                System.out.println("[INFO]load image cache " + filepath + " " + img);
+                SysLog.info("load image cache " + filepath + " " + img);
             } else {
                 //System.out.println("hit image from cache " + filepath);
                 if (holder != null) {
@@ -1808,7 +1809,7 @@ public class GToolkit {
         filepath = new String(filepath);//for holder,must new
         GImage img = imageCache.get(filepath);
         if (img == null) {
-            System.out.println("[INFO]load image cache " + filepath);
+            SysLog.info("load image cache " + filepath);
             img = GImage.createImage(filepath);
             if (img != null) {
                 if (holder != null) holder.setAttachment(filepath);

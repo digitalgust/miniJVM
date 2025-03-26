@@ -13,6 +13,7 @@ import org.mini.json.JsonParser;
 import org.mini.layout.guilib.HttpRequestReply;
 import org.mini.layout.xwebview.XuiResource;
 import org.mini.layout.xwebview.XuiResourceLoader;
+import org.mini.util.SysLog;
 import org.mini.vm.ThreadLifeHandler;
 import org.mini.vm.VmUtil;
 import org.mini.zip.Zip;
@@ -199,12 +200,12 @@ public class AppLoader {
             String dstVersion = getAppConfig(EXAMPLE_APP_FILE, "version");
             String srcVersion = getAppConfigWithJarPath(srcPath, "version");
             if (compareVersions(srcVersion, dstVersion) <= 0) {
-                System.out.println("[INFO]exapp exists " + EXAMPLE_APP_FILE);
+                SysLog.info("exapp exists " + EXAMPLE_APP_FILE);
                 return;
             }
         }
         addApp(EXAMPLE_APP_FILE, srcPath);
-        System.out.println("[INFO]copy exapp " + EXAMPLE_APP_FILE);
+        SysLog.info("copy exapp " + EXAMPLE_APP_FILE);
     }
 
     public static void loadJarProp(String filePath, Properties prop) {
@@ -279,7 +280,7 @@ public class AppLoader {
         String langstr = appinfo.getProperty(KEY_LANGUAGE);
 
         String sysLang = System.getProperty("user.language");
-        //System.out.println("[INFO]sysLang:" + sysLang);
+        //System.out.println("sysLang:" + sysLang);
         int lang = GLanguage.getIdByShortName(sysLang);
         try {
             lang = Integer.parseInt(langstr.trim());
@@ -571,7 +572,7 @@ public class AppLoader {
             return true;
         } catch (Exception exception) {
             //exception.printStackTrace();
-            System.out.println("[INFO] " + exception.getMessage());
+            SysLog.error("add app error", exception);
         }
         return false;
     }

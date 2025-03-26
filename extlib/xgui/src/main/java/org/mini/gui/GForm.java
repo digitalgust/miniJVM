@@ -12,6 +12,7 @@ import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GCmd;
 import org.mini.gui.callback.GDesktop;
 import org.mini.gui.event.*;
+import org.mini.util.SysLog;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
 
@@ -168,7 +169,7 @@ public class GForm extends GContainer {
         if (notifyListener != null) {
             notifyListener.onNotify(key, val);
         } else {
-            System.out.println("[WARN]notifyListener is null when onNotify:" + key + ":" + val);
+            SysLog.warn("notifyListener is null when onNotify:" + key + ":" + val);
         }
     }
 
