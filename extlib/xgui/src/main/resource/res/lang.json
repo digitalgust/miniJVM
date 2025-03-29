@@ -755,6 +755,30 @@
       "更新する",
       "Aktualisieren",
       "Обновить"
+    ],
+    "STR_FLAT_FELL": [
+      "FLAT UI",
+      "扁平用户界面",
+      "扁平使用者介面",
+      "플랫 UI",
+      "Interface utilisateur plate",
+      "Interfaz de usuario plana",
+      "Interfaccia utente flat",
+      "フラットUI",
+      "Flache Benutzeroberfläche",
+      "Плоский пользовательский интерфейс"
+    ],
+    "STR_DIMENSION_FELL": [
+      "BUTTON UI",
+      "按钮用户界面",
+      "按鈕使用者介面",
+      "버튼 UI",
+      "Interface utilisateur de bouton",
+      "Interfaz de usuario de botón",
+      "Interfaccia utente del pulsante",
+      "ボタンUI",
+      "Schaltflächen-Benutzeroberfläche",
+      "Пользовательский интерфейс кнопки"
     ]
   }
 }

@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import static org.mini.gui.GToolkit.FEEL_DIMENSION;
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
 import static org.mini.nanovg.Nanovg.*;
@@ -35,6 +36,8 @@ public class GList extends GContainer {
     public static final int MODE_MULTI_SELECT = 4, MODE_SINGLE_SELECT = 8;
     public static final float ITEM_HEIGH_DEFAULT = 36f;
     public static final float ITEM_IMG_H_DEFAULT = 28f;
+    static float[] GRADIENT_COLOR0 = {1.0f, 1.0f, 1.0f, 0.125f};
+    static float[] GRADIENT_COLOR1 = {0.0f, 0.0f, 0.0f, 0.125f};
 
     protected String preicon;
     protected List<Integer> selected = new ArrayList();
@@ -555,12 +558,19 @@ public class GList extends GContainer {
         void drawNormal(long vg, float x, float y, float w, float h) {
             byte[] bg;
 
-            bg = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(255, 255, 255, 16), nvgRGBA(0, 0, 0, 16));
+            if (GToolkit.getFeel() == FEEL_DIMENSION) {
+                bg = nvgLinearGradient(vg, x, y, x, y + h, GRADIENT_COLOR0, GRADIENT_COLOR1);
+                nvgBeginPath(vg);
+                nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, getCornerRadius() - 1);
+                nvgFillPaint(vg, bg);
+                nvgFill(vg);
+            } else {
 
-            nvgBeginPath(vg);
-            nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, getCornerRadius() - 1);
-            nvgFillPaint(vg, bg);
-            nvgFill(vg);
+                nvgBeginPath(vg);
+                nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, getCornerRadius() - 0.5f);
+                nvgFillColor(vg, GRADIENT_COLOR0);
+                nvgFill(vg);
+            }
 
             nvgBeginPath(vg);
             nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, getCornerRadius() - 0.5f);

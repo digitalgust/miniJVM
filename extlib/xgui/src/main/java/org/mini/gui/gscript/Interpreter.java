@@ -1,5 +1,7 @@
 package org.mini.gui.gscript;
 
+import org.mini.util.SysLog;
+
 import java.io.*;
 import java.util.*;
 //import main.Util;
@@ -205,22 +207,27 @@ public class Interpreter {
         StringBuilder line = new StringBuilder();
         ArrayList v = new ArrayList();
         for (int i = 0, len = code.length(); i < len; i++) {
-            char ch = code.charAt(i);
-            if (ch == '"') {
-                dquodation++;
-                line.append(ch);
-                int next = findNextDoubQuot(code, i + 1, line);
-                i = next;
-                ch = code.charAt(next);
-            }
-            if ((ch == ';' || ch == '\n')) {
-                String s = line.toString().trim();
-                if (s.length() > 0) {
-                    v.add(s);
+            try {
+                char ch = code.charAt(i);
+                if (ch == '"') {
+                    dquodation++;
+                    line.append(ch);
+                    int next = findNextDoubQuot(code, i + 1, line);
+                    i = next;
+                    ch = code.charAt(next);
                 }
-                line.setLength(0);
-            } else {
-                line.append(ch);
+                if ((ch == ';' || ch == '\n')) {
+                    String s = line.toString().trim();
+                    if (s.length() > 0) {
+                        v.add(s);
+                    }
+                    line.setLength(0);
+                } else {
+                    line.append(ch);
+                }
+            } catch (Exception e) {
+                errout("Parse error: " + line);
+                throw e;
             }
         }
         //fix lost the last line
@@ -909,7 +916,11 @@ public class Interpreter {
         if (srcCompiled[ip] != null) {
             src = srcCompiled[ip].src;
         }
-        System.out.println((ip + 1) + " " + src + " : " + s);
+        SysLog.error((ip + 1) + " " + src + " : " + s);
+    }
+
+    private void errout(String s) {
+        SysLog.error(s);
     }
 
 //    /**

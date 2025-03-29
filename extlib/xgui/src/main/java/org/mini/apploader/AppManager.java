@@ -12,9 +12,6 @@ import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GDesktop;
 import org.mini.gui.event.GNotifyListener;
 import org.mini.gui.gscript.EnvVarProvider;
-import org.mini.gui.gscript.Interpreter;
-import org.mini.layout.guilib.GuiScriptLib;
-import org.mini.layout.guilib.HttpRequestReply;
 import org.mini.gui.style.GStyleBright;
 import org.mini.gui.style.GStyleDark;
 import org.mini.http.MiniHttpClient;
@@ -25,7 +22,6 @@ import org.mini.layout.XContainer;
 import org.mini.layout.XEventHandler;
 import org.mini.layout.loader.XmlExtAssist;
 import org.mini.layout.loader.XuiAppHolder;
-import org.mini.layout.xwebview.*;
 import org.mini.nanovg.Nanovg;
 
 import java.io.*;
@@ -163,6 +159,7 @@ public class AppManager extends GApplication implements XuiAppHolder {
         } else {
             GToolkit.setStyle(new GStyleDark());
         }
+        GToolkit.setFeel(AppLoader.getGuiFeel());
 
         if (mgrForm != null) {
             GForm.hideKeyboard(mgrForm);

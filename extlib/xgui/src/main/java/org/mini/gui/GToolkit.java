@@ -30,6 +30,10 @@ import static org.mini.nanovg.Nanovg.*;
  */
 public class GToolkit {
 
+    // -------------------------- Component FELL Constants --------------------------
+    public static final int FEEL_FLAT = 0;
+    public static final int FEEL_DIMENSION = 1;
+
     // -------------------------- Component Name Constants --------------------------
     // Confirm Frame constants
     public static final String NAME_CONFIRM_FRAME = "GTOOLKIT_CONFIRM_FRAME";
@@ -282,6 +286,7 @@ public class GToolkit {
      * 风格
      */
     static GStyleInner defaultStyle;
+    static int feel = 0;
 
     public static GStyle getStyle() {
         if (defaultStyle == null) {
@@ -293,6 +298,14 @@ public class GToolkit {
     public static void setStyle(GStyle style) {
         if (style == null) return;
         defaultStyle = new GStyleInner(style);//copy every times, copy for not reference the source style
+    }
+
+    public static void setFeel(int pfell) {
+        feel = pfell;
+    }
+
+    public static int getFeel() {
+        return feel;
     }
 
     /**

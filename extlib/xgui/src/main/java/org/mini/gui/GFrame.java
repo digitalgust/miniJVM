@@ -411,6 +411,7 @@ public class GFrame extends GContainer {
             if (getH() < 1f) return false;
 
             super.paint(vg);
+
             boolean isFocus = false;
             if (GFrame.this.parent != null) {
                 isFocus = GFrame.this.parent.getCurrent() == GFrame.this;
@@ -474,7 +475,7 @@ public class GFrame extends GContainer {
             close_boundle[TOP] = y;
             close_boundle[WIDTH] = 30;
             close_boundle[HEIGHT] = 30;
-            return super.paint(vg);
+            return true;
         }
     }
 

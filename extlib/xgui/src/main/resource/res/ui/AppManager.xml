@@ -6,6 +6,10 @@
             if(!isDef("ENCRYPTED_KEY"))
                 def("ENCRYPTED_KEY","L7%d9&3jw5f")
             eif
+
+            feel=invokeStatic("org.mini.apploader.AppLoader","getGuiFeel()I")
+            setListIdx("LIST_FELL",feel)
+
             getPolicy(false) #异步调用
         ret
 
@@ -212,6 +216,11 @@
             eif
         ret
 
+        sub setFeel(fell)
+            invokeStatic("org.mini.apploader.AppLoader","setGuiFeel(I)V",fell)
+            invokeStatic("org.mini.gui.GToolkit","setFeel(I)V",fell)
+        ret
+
         ]]>
         </script>
         <tr h="{STATEBAR_HEIGHT}" w="100%">
@@ -294,12 +303,19 @@
                                 <li name="LI_BRIGHT" selected="1">{STR_BRIGHT_STYLE}</li>
                                 <li name="LI_DARK">{STR_DARK_STYLE}</li>
                             </list>
+                            <br/>
+                            <list name="LIST_FELL" w="100%" multiline="0">
+                                <li name="LI_FLAT" onclick="setFeel(0)">{STR_FLAT_FELL}</li>
+                                <li name="LI_DIMENSION" onclick="setFeel(1)">{STR_DIMENSION_FELL}</li>
+                            </list>
                             <label w="100%" h="20"></label>
                             <label w="100%" h="30" align="left,vcenter">{STR_DOWN_APP_FROM_WEB}</label>
                             <input name="INPUT_URL" w="100%" h="30" hint="plug jar url"></input>
+                            <br/>
                             <button name="BT_DOWN" w="100%" h="30" preicon="📥">{STR_DOWNLOAD}</button>
                             <label w="100%" h="20"></label>
                             <label w="100%" h="30" align="left,vcenter">{STR_INSTALL_FROM_LOCAL}</label>
+                            <br/>
                             <button name="BT_LOCALFILE" w="100%" h="30" preicon="📁">{BROWSE_FILE}</button>
                             <label w="100%" h="20"></label>
                             <label name="LAB_WEBSRV" w="100%" h="30" align="left,vcenter">{STR_START_WEB_SRV_FOR_UPLOAD}</label>

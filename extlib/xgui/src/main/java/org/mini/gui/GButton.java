@@ -139,6 +139,9 @@ public class GButton extends GObject {
         return paintFlying(vg, x, y);
     }
 
+    static float[] GRADIENT_COLOR0 = {1.0f, 1.0f, 1.0f, 0.05f};
+    static float[] GRADIENT_COLOR1 = {0.0f, 0.0f, 0.0f, 0.05f};
+
     @Override
     boolean paintFlying(long vg, float x, float y) {
         float w = getW();
@@ -149,18 +152,33 @@ public class GButton extends GObject {
 
         float tw = 0, iw = 0;
         float move = 0;
-        if (touched && enable) {
-            move = 1;
-            bg = nvgLinearGradient(vg, x, y + h, x, y, nvgRGBA(255, 255, 255, 0x10), nvgRGBA(0, 0, 0, 0x10));
+        if (GToolkit.getFeel() == FEEL_DIMENSION) {
+            if (touched && enable) {
+                move = 1;
+                bg = nvgLinearGradient(vg, x, y + h, x, y, GRADIENT_COLOR0, GRADIENT_COLOR1);
+            } else {
+                bg = nvgLinearGradient(vg, x, y, x, y + h, GRADIENT_COLOR0, GRADIENT_COLOR1);
+            }
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, getCornerRadius() - 1);
+            nvgFillColor(vg, getBgColor());
+            nvgFill(vg);
+            nvgFillPaint(vg, bg);
+            nvgFill(vg);
         } else {
-            bg = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(255, 255, 255, 0x10), nvgRGBA(0, 0, 0, 0x10));
+            float[] c;
+            if (touched && enable) {
+                move = 1;
+                c = GRADIENT_COLOR1;
+            } else {
+                c = GRADIENT_COLOR0;
+            }
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, getCornerRadius() - 0.5f);
+            nvgFillColor(vg, c);
+            nvgFill(vg);
         }
-        nvgBeginPath(vg);
-        nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, getCornerRadius() - 1);
-        nvgFillColor(vg, getBgColor());
-        nvgFill(vg);
-        nvgFillPaint(vg, bg);
-        nvgFill(vg);
+
 
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, getCornerRadius() - 0.5f);

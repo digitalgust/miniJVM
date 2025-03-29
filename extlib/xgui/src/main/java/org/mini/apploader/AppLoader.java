@@ -42,6 +42,7 @@ public class AppLoader {
     static final String KEY_DOWNLOADURL = "downloadurl";
     static final String KEY_LANGUAGE = "language";
     static final String KEY_GUISTYLE = "guistyle";
+    static final String KEY_GUIFEEL = "guifeel";
     static final String KEY_HOMEICON_X = "homeiconx";
     static final String KEY_HOMEICON_Y = "homeicony";
     static final String KEY_TOKEN = "TOKEN";
@@ -306,6 +307,21 @@ public class AppLoader {
 
     public static void setGuiStyle(int style) {
         appinfo.put(KEY_GUISTYLE, "" + style);
+        saveProp(APP_INFO_FILE, appinfo);
+    }
+
+    public static int getGuiFeel() {
+        String langstr = appinfo.getProperty(KEY_GUIFEEL);
+        int lang = 0;// 0 bright , 1 dark
+        try {
+            lang = Integer.parseInt(langstr.trim());
+        } catch (Exception e) {
+        }
+        return lang;
+    }
+
+    public static void setGuiFeel(int feel) {
+        appinfo.put(KEY_GUIFEEL, "" + feel);
         saveProp(APP_INFO_FILE, appinfo);
     }
 

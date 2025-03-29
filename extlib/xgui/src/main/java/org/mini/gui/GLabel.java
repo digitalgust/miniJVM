@@ -9,6 +9,7 @@ import org.mini.glfm.Glfm;
 import org.mini.nanovg.Nanovg;
 
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
+import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Nanovg.*;
 
 /**
@@ -154,7 +155,14 @@ public class GLabel extends GObject {
     }
 
     void drawLine(long vg, float x, float y, float w, float h) {
-        //NVG_NOTUSED(w);
+
+        if (bgColor != null) {
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, getCornerRadius() - 0.5f);
+            nvgFillColor(vg, bgColor);
+            nvgFill(vg);
+        }
+
         nvgFontSize(vg, getFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgFillColor(vg, getColor());
@@ -181,6 +189,13 @@ public class GLabel extends GObject {
     }
 
     void drawMultiText(long vg, float x, float y, float w, float h) {
+
+        if (bgColor != null) {
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, getCornerRadius() - 0.5f);
+            nvgFillColor(vg, bgColor);
+            nvgFill(vg);
+        }
 
         nvgFontSize(vg, getFontSize());
         nvgFillColor(vg, getColor());

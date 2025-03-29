@@ -150,6 +150,8 @@ public class GMenuItem extends GContainer {
         return touched;
     }
 
+    static float[] TOUCHED_COLOR0 = {1.0f, 1.0f, 1.0f, 0.2f};
+
     public boolean paint(long vg) {
 
 
@@ -157,7 +159,7 @@ public class GMenuItem extends GContainer {
 
         //touched item background
         if (touched && enable) {
-            nvgFillColor(vg, nvgRGBA(255, 255, 255, 48));
+            nvgFillColor(vg, TOUCHED_COLOR0);
             nvgBeginPath(vg);
             nvgRoundedRect(vg, getX() + 1, getY() + 1, getW() - 2, getH() - 2, getCornerRadius() - 0.5f);
             nvgFill(vg);

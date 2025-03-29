@@ -9,6 +9,7 @@ import org.mini.nanovg.Nanovg;
 
 import java.util.Iterator;
 
+import static org.mini.gui.GToolkit.FEEL_DIMENSION;
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Nanovg.*;
 
@@ -95,6 +96,10 @@ public class GMenu extends GContainer {
         }
     }
 
+
+    static float[] GRADIENT_COLOR0 = {1.0f, 1.0f, 1.0f, 0.125f};
+    static float[] GRADIENT_COLOR1 = {0.0f, 0.0f, 0.0f, 0.125f};
+
     /**
      * @param vg
      * @return
@@ -116,11 +121,18 @@ public class GMenu extends GContainer {
         nvgFill(vg);
 
         //渐变
-        bg = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(255, 255, 255, 32), nvgRGBA(0, 0, 0, 32));
-        nvgBeginPath(vg);
-        nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, getCornerRadius() - 1);
-        nvgFillPaint(vg, bg);
-        nvgFill(vg);
+        if (GToolkit.getFeel() == FEEL_DIMENSION) {
+            bg = nvgLinearGradient(vg, x, y, x, y + h, GRADIENT_COLOR0, GRADIENT_COLOR1);
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, getCornerRadius() - 1);
+            nvgFillPaint(vg, bg);
+            nvgFill(vg);
+        } else {
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, getCornerRadius() - 0.5f);
+            nvgFillColor(vg, GRADIENT_COLOR0);
+            nvgFill(vg);
+        }
 
         //边框
         nvgBeginPath(vg);
@@ -142,7 +154,7 @@ public class GMenu extends GContainer {
             if (i > 0) {
                 nvgBeginPath(vg);
                 nvgFillColor(vg, nvgRGBA(192, 192, 192, 48));
-                nvgRect(vg, dx - 1, dy + 2, 2, h - 4);
+                nvgRect(vg, dx - 1, dy + 3, 2, h - 6);
                 nvgFill(vg);
             }
         }
