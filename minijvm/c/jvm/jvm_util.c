@@ -317,11 +317,11 @@ void thread_stop_all(MiniJVM *jvm) {
 
         jthread_suspend(r);
         r->thrd_info->no_pause = 1;
-        r->thrd_info->is_stop = 1;
+        r->thrd_info->is_stop = 1;//stop thread that's sleeping state
         MemoryBlock *tl = r->thrd_info->curThreadLock;
         if (tl) {
             jthread_lock(tl, r);
-            jthread_notify(tl, r);
+            jthread_notify(tl, r); //wake up thread that's waiting state
             jthread_unlock(tl, r);
         }
 

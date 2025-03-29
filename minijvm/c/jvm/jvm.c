@@ -360,7 +360,7 @@ void jvm_destroy(MiniJVM *jvm) {
 
     while (parent && jvm->shutdown_hook->length) {
         Instance *inst = arraylist_get_value(jvm->shutdown_hook, 0);
-        arraylist_remove(jvm->shutdown_hook, 0);
+        arraylist_remove_at(jvm->shutdown_hook, 0);
 
         //there is an week is that the hook thread is serialized execution,
         // because the hook thread may be not inserted into the thread list,
