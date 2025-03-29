@@ -264,7 +264,7 @@ public class GViewPort extends GContainer {
                         if (count > maxMoveCount) {
                             inertiaCmdY = null;
                         } else {
-                            float inh = getInnerH();
+                            float inh = getOutOfViewHeight();
                             if (inh > 0) {
                                 float vec = (float) speedY / inh;
                                 movePercentY(vec);
@@ -310,7 +310,7 @@ public class GViewPort extends GContainer {
                         if (count > maxMoveCount) {
                             inertiaCmdX = null;
                         } else {
-                            float inw = getInnerW();
+                            float inw = getOutOfViewHeight();
                             if (inw > 0) {
                                 float vec = (float) speedX / inw;
                                 movePercentX(vec);
