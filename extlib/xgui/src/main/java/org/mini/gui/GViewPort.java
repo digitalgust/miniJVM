@@ -206,6 +206,9 @@ public class GViewPort extends GContainer {
                 if (inertiaCmdY != null) {
                     inertiaCmdY = null;
                 }
+                if (inertiaCmdX != null) {
+                    inertiaCmdX = null;
+                }
                 touched = true;
                 break;
             }
