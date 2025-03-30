@@ -139,8 +139,8 @@ public class GButton extends GObject {
         return paintFlying(vg, x, y);
     }
 
-    static float[] GRADIENT_COLOR0 = {1.0f, 1.0f, 1.0f, 0.05f};
-    static float[] GRADIENT_COLOR1 = {0.0f, 0.0f, 0.0f, 0.05f};
+    static float[] GRADIENT_COLOR0 = {1.0f, 1.0f, 1.0f, 0.2f};
+    static float[] GRADIENT_COLOR1 = {0.0f, 0.0f, 0.0f, 0.1f};
 
     @Override
     boolean paintFlying(long vg, float x, float y) {

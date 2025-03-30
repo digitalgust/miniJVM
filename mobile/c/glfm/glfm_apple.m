@@ -744,7 +744,6 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
 @property(nonatomic, assign) int pickerType;
 //gust for mutitage input ,ex chinese
 @property (nonatomic, retain) NSMutableString *text;
-@property (nonatomic, copy) NSString *contentText; // The text content (without attributes).
 @property (nonatomic) NSRange inMarkedTextRange; // Marked text range (for input method marked text).
 @property (nonatomic) NSRange inSelectedTextRange; // Selected text range.
 
@@ -770,7 +769,6 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
         _glfmDisplay->supportedOrientations = GLFMInterfaceOrientationAll;
         //gust
         self.text = [[NSMutableString alloc] init];
-        self.contentText = @"";
     }
     return self;
 }
@@ -1243,23 +1241,6 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
     return UITextAutocorrectionTypeNo;
 }
 
-- (BOOL)hasText {
-    return YES;
-}
-
-- (void)insertText:(NSString *)text {
-    if (_glfmDisplay->charFunc) {
-        _glfmDisplay->charFunc(_glfmDisplay, text.UTF8String, 0);
-    }
-}
-
-- (void)deleteBackward {
-    if (_glfmDisplay->keyFunc) {
-        _glfmDisplay->keyFunc(_glfmDisplay, GLFMKeyBackspace, GLFMKeyActionPressed, 0);
-        _glfmDisplay->keyFunc(_glfmDisplay, GLFMKeyBackspace, GLFMKeyActionReleased, 0);
-    }
-}
-
 - (BOOL)canBecomeFirstResponder {
     return self.keyboardRequested;
 }
@@ -1378,7 +1359,6 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
     [self.text replaceCharactersInRange:indexedRange.range withString:text];
 
     // Update underlying APLSimpleCoreTextView
-    self.contentText = self.text;
     self.inSelectedTextRange = selectedNSRange;
 }
 
@@ -1390,7 +1370,7 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
  */
 - (UITextRange *)selectedTextRange
 {
-    return [APLIndexedRange indexedRangeWithRange:self.inMarkedTextRange];
+    return [APLIndexedRange indexedRangeWithRange:self.inSelectedTextRange];
 }
 
 
@@ -1453,7 +1433,6 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
 
     selectedNSRange = NSMakeRange(selectedRange.location + markedTextRange.location, selectedRange.length);
 
-    self.contentText = self.text;
     self.inMarkedTextRange = markedTextRange;
     self.inSelectedTextRange = selectedNSRange;
 }
@@ -1473,6 +1452,17 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
     // Unmark the underlying APLSimpleCoreTextView.markedTextRange.
     markedTextRange.location = NSNotFound;
     self.inMarkedTextRange = markedTextRange;
+
+    //这个插入动作主要是针对ios自带的拼音键盘输入的时候，多阶段输入最终选取文字之后，
+    //ios自带拼音输入法并没有调用insertText()把文本传入jvm,因此在进行unmark时，把最终文本传给jvm
+    //当把self.text传给jvm后，便清空之前的内容
+    if (_glfmDisplay->charFunc) {
+        _glfmDisplay->charFunc(_glfmDisplay, self.text.UTF8String, 0);
+        //这里把self.contentText, self.text清空 , 把self.inSelectedTextRange, self.inMarkedTextRange设为0长度
+        self.inSelectedTextRange = NSMakeRange(0, 0);
+        self.inMarkedTextRange = NSMakeRange(0, 0);
+        [self.text deleteCharactersInRange:NSMakeRange(0, self.text.length) ];
+    }
 }
 
 
@@ -1763,6 +1753,120 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
     return nil;
 }
 
+
+#pragma mark UIKeyInput methods
+
+///**
+// UIKeyInput protocol required method.
+// A Boolean value that indicates whether the text-entry objects have any text.
+// */
+//- (BOOL)hasText
+//{
+//    return (self.text.length != 0);
+//}
+//
+//
+///**
+// UIKeyInput protocol required method.
+// Insert a character into the displayed text. Called by the text system when the user has entered simple text.
+// */
+//- (void)insertText:(NSString *)text
+//{
+//    NSRange selectedNSRange = self.inSelectedTextRange;
+//    NSRange markedTextRange = self.inMarkedTextRange;
+//
+//    /*
+//     While this sample does not provide a way for the user to create marked or selected text, the following code still checks for these ranges and acts accordingly.
+//     */
+//    if (markedTextRange.location != NSNotFound) {
+//        // There is marked text -- replace marked text with user-entered text.
+//        [self.text replaceCharactersInRange:markedTextRange withString:text];
+//        selectedNSRange.location = markedTextRange.location + text.length;
+//        selectedNSRange.length = 0;
+//        markedTextRange = NSMakeRange(NSNotFound, 0);
+//    } else if (selectedNSRange.length > 0) {
+//        // Replace selected text with user-entered text.
+//        [self.text replaceCharactersInRange:selectedNSRange withString:text];
+//        selectedNSRange.length = 0;
+//        selectedNSRange.location += text.length;
+//    } else {
+//        // Insert user-entered text at current insertion point.
+//        [self.text insertString:text atIndex:selectedNSRange.location];
+//        selectedNSRange.location += text.length;
+//    }
+//
+//    // Update underlying APLSimpleCoreTextView.
+//    self.contentText = self.text;
+//    self.inMarkedTextRange = markedTextRange;
+//    self.inSelectedTextRange = selectedNSRange;
+//    
+//        if (_glfmDisplay->charFunc) {
+//            _glfmDisplay->charFunc(_glfmDisplay, text.UTF8String, 0);
+//        }
+//}
+//
+//
+///**
+// UIKeyInput protocol required method.
+// Delete a character from the displayed text. Called by the text system when the user is invoking a delete (e.g. pressing the delete software keyboard key).
+// */
+//- (void)deleteBackward
+//{
+//    NSRange selectedNSRange = self.inSelectedTextRange;
+//    NSRange markedTextRangeLocal = self.inMarkedTextRange;
+//
+//    /*
+//     Note: While this sample does not provide a way for the user to create marked or selected text, the following code still checks for these ranges and acts accordingly.
+//     */
+//    if (markedTextRangeLocal.location != NSNotFound) {
+//        // There is marked text, so delete it.
+//        [self.text deleteCharactersInRange:markedTextRangeLocal];
+//        selectedNSRange.location = markedTextRangeLocal.location;
+//        selectedNSRange.length = 0;
+//        markedTextRangeLocal = NSMakeRange(NSNotFound, 0);
+//    }
+//    else if (selectedNSRange.length > 0) {
+//        // Delete the selected text.
+//        [self.text deleteCharactersInRange:selectedNSRange];
+//        selectedNSRange.length = 0;
+//    }
+//    else if (selectedNSRange.location > 0) {
+//        // Delete one char of text at the current insertion point.
+//        selectedNSRange.location--;
+//        selectedNSRange.length = 1;
+//        [self.text deleteCharactersInRange:selectedNSRange];
+//        selectedNSRange.length = 0;
+//    }
+//
+//    // Update underlying APLSimpleCoreTextView.
+//    self.contentText = self.text;
+//    self.inMarkedTextRange = markedTextRangeLocal;
+//    self.inSelectedTextRange = selectedNSRange;
+//    
+//        if (_glfmDisplay->keyFunc) {
+//            _glfmDisplay->keyFunc(_glfmDisplay, GLFMKeyBackspace, GLFMKeyActionPressed, 0);
+//            _glfmDisplay->keyFunc(_glfmDisplay, GLFMKeyBackspace, GLFMKeyActionReleased, 0);
+//        }
+//}
+
+
+
+- (BOOL)hasText {
+    return YES;
+}
+
+- (void)insertText:(NSString *)text {
+    if (_glfmDisplay->charFunc) {
+        _glfmDisplay->charFunc(_glfmDisplay, text.UTF8String, 0);
+    }
+}
+
+- (void)deleteBackward {
+    if (_glfmDisplay->keyFunc) {
+        _glfmDisplay->keyFunc(_glfmDisplay, GLFMKeyBackspace, GLFMKeyActionPressed, 0);
+        _glfmDisplay->keyFunc(_glfmDisplay, GLFMKeyBackspace, GLFMKeyActionReleased, 0);
+    }
+}
 
 
 #pragma mark - 拍照并保存
