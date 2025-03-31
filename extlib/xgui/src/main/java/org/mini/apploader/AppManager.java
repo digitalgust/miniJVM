@@ -5,7 +5,6 @@
  */
 package org.mini.apploader;
 
-import org.mini.apploader.bean.LangBean;
 import org.mini.glfm.Glfm;
 import org.mini.gui.*;
 import org.mini.gui.callback.GCallBack;
@@ -16,7 +15,6 @@ import org.mini.gui.style.GStyleBright;
 import org.mini.gui.style.GStyleDark;
 import org.mini.http.MiniHttpClient;
 import org.mini.http.MiniHttpServer;
-import org.mini.json.JsonParser;
 import org.mini.layout.loader.UITemplate;
 import org.mini.layout.XContainer;
 import org.mini.layout.XEventHandler;

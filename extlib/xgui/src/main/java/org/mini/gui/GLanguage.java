@@ -5,7 +5,6 @@
  */
 package org.mini.gui;
 
-import org.mini.apploader.bean.LangBean;
 import org.mini.json.JsonParser;
 
 import java.util.HashMap;
@@ -205,7 +204,7 @@ public class GLanguage {
      * @param appId
      * @param jsonStr
      */
-    public static void regJsonStrings(String appId, String jsonStr) {
+    public static LangBean regJsonStrings(String appId, String jsonStr) {
 
         JsonParser<LangBean> parser = new JsonParser<>();
         LangBean langBean = parser.deserial(jsonStr, LangBean.class);
@@ -213,6 +212,7 @@ public class GLanguage {
         for (String key : langBean.getLang().keySet()) {
             GLanguage.addString(appId, key, langBean.getLang().get(key));
         }
+        return langBean;
     }
 
 }

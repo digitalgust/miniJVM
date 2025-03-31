@@ -1,4 +1,4 @@
-package org.mini.apploader.bean;
+package org.mini.gui;
 
 import java.util.HashMap;
 import java.util.Map;
