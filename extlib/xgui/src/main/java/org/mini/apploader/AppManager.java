@@ -168,13 +168,8 @@ public class AppManager extends GApplication implements XuiAppHolder {
 
     private void regStrings() {
 
-        JsonParser<LangBean> parser = new JsonParser<>();
         String s = GToolkit.readFileFromJarAsString("/res/lang.json", "utf-8");
-        LangBean langBean = parser.deserial(s, LangBean.class);
-
-        for (String key : langBean.getLang().keySet()) {
-            GLanguage.addString(getAppId(), key, langBean.getLang().get(key));
-        }
+        GLanguage.regJsonStrings(getAppId(), s);
     }
 
     @Override

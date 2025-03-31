@@ -5,6 +5,9 @@
  */
 package org.mini.gui;
 
+import org.mini.apploader.bean.LangBean;
+import org.mini.json.JsonParser;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -177,4 +180,39 @@ public class GLanguage {
         }
         return lang;
     }
+
+
+    /**
+     * register String resources
+     * json format:
+     * <pre>
+     * {
+     *   "lang": {
+     *     "STR_Save": [
+     *       "Save",
+     *       "退出",
+     *       "退出"
+     *     ],
+     *     "STR_Browse": [
+     *       "Browse",
+     *       "浏览",
+     *       "瀏覽"
+     *     ]
+     *   }
+     * }
+     * </pre>
+     *
+     * @param appId
+     * @param jsonStr
+     */
+    public static void regJsonStrings(String appId, String jsonStr) {
+
+        JsonParser<LangBean> parser = new JsonParser<>();
+        LangBean langBean = parser.deserial(jsonStr, LangBean.class);
+
+        for (String key : langBean.getLang().keySet()) {
+            GLanguage.addString(appId, key, langBean.getLang().get(key));
+        }
+    }
+
 }
