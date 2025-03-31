@@ -350,7 +350,7 @@ public class GToolkit {
         }
     }
 
-    static float[] RED_POINT_BACKGROUND = Nanovg.nvgRGBAf(1.f, 0, 0, 1.f);
+    static float[] RED_POINT_BACKGROUND = Nanovg.nvgRGBAf(1.f, 0, 0, 0.8f);
     static float[] RED_POINT_FRONT = Nanovg.nvgRGBAf(1.f, 1.f, 1.f, 1.f);
 
     public static void drawRedPoint(long vg, String text, float x, float y, float r) {

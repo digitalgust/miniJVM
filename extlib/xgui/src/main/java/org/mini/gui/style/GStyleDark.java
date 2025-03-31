@@ -24,7 +24,7 @@ public class GStyleDark extends GStyle {
 
     @Override
     public float getIconFontSize() {
-        return 17f;
+        return 18f;
     }
 
     float[] textFontColor = nvgRGBA(0xff, 0xff, 0xff, 0xc0);
@@ -34,7 +34,7 @@ public class GStyleDark extends GStyle {
         return textFontColor;
     }
 
-    float[] textShadowColor = nvgRGBA(0, 0, 0, 0xff);
+    float[] textShadowColor = nvgRGBA(0, 0, 0, 0xaa);
 
     @Override
     public float[] getTextShadowColor() {

@@ -388,7 +388,7 @@ public class AppManager extends GApplication implements XuiAppHolder {
                     });
 
                     //add label
-                    GLabel label = new GLabel(mgrForm, "ⓘ", item.getW() - 40, 0, 40, item.getH());
+                    GLabel label = new GLabel(mgrForm, "\uE705", item.getW() - 40, 0, 40, item.getH());
                     label.setAlign(Nanovg.NVG_ALIGN_CENTER | Nanovg.NVG_ALIGN_MIDDLE);
                     item.add(label);
                     label.setActionListener(gobj -> {

@@ -74,7 +74,7 @@ public class GTextField extends GTextObject {
     public void setBoxStyle(int boxStyle) {
         this.boxStyle = boxStyle;
         if (boxStyle == BOX_STYLE_SEARCH) {
-            searchWidth = GToolkit.getStyle().getIconFontWidth() * 2f;
+            searchWidth = GToolkit.getStyle().getIconFontWidth() * 1.5f;
         } else {
             searchWidth = 0.f;
         }

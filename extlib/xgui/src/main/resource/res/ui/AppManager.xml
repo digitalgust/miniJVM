@@ -114,17 +114,18 @@
         ret
 
         sub showDiscovery() #显示发现
+            setMenuMarkIndex("MENU_MAIN",1)
             showSlot("SLOT_MGR", 3)
             if(isGithub())
                 ret
             eif
             getPolicy(true)
             if(!uiExist("DIS_HOME")) #if there is not a discovery panel then show it
-                showHome()
+                showWebHome()
             eif
         ret
 
-        sub showHome()
+        sub showWebHome()
             if(isGithub())
                 ret
             eif
@@ -134,7 +135,13 @@
             openPagePost(url,body,"")
         ret
 
+        sub showMainHome()
+            setMenuMarkIndex("MENU_MAIN",0)
+            showSlot("SLOT_MGR",0)
+        ret
+
         sub showMy() #显示我的
+            setMenuMarkIndex("MENU_MAIN",2)
             showSlot("SLOT_MGR", 4)
             if(isGithub())
                 ret
@@ -191,6 +198,7 @@
         ret
 
         sub showPlugDownload()
+            setMenuMarkIndex("MENU_MAIN",1)
             url=""
             if(isGithub())
                 showConfirm("Do you want visit miniJVM github pages?","ROOT_PAN.onConfirmGithubBack")
@@ -348,7 +356,7 @@
                                     <button name="BT_DISCOVERY_BACK" w="50" h="30" preicon="⬅" onclick="prevPage()"></button>
                                     <button name="BT_DISCOVERY_FORWARD" w="50" h="30" preicon="➡" onclick="nextPage()"></button>
                                     <button name="BT_DISCOVERY_REFRESH" w="50" h="30" preicon="🔄" onclick="refreshPage()"></button>
-                                    <button name="BT_DISCOVERY_HOME" w="50" h="30" preicon="⌂" onclick="showHome()"></button>
+                                    <button name="BT_DISCOVERY_HOME" w="50" h="30" preicon="⌂" onclick="showWebHome()"></button>
                                 </td>
                                 <td w="float" h="100%">
                                 </td>
@@ -385,10 +393,10 @@
         </tr>
         <tr h="50" w="100%">
             <td w="100%" h="100%">
-                <menu name="MENU_MAIN" w="100%" h="100%">
-                    <mi name="MI_PLUGINMGR" onclick='showSlot("SLOT_MGR",0)'>{PLUGIN_MANAGER}</mi>
-                    <mi name="MI_DISCOVERY" onclick="showPlugDownload()">{DISCOVERY}</mi>
-                    <mi name="MI_MY" onclick="showMy()">{MY}</mi>
+                <menu name="MENU_MAIN" fontsize="24" mark="0" w="100%" h="100%">
+                    <mi name="MI_PLUGINMGR" fontsize="24" onclick='showMainHome()'>⌂</mi>
+                    <mi name="MI_DISCOVERY" fontsize="24" onclick="showPlugDownload()"></mi>
+                    <mi name="MI_MY" onclick="showMy()">👤</mi>
                 </menu>
             </td>
         </tr>

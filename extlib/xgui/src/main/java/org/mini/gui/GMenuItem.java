@@ -161,7 +161,7 @@ public class GMenuItem extends GContainer {
         if (touched && enable) {
             nvgFillColor(vg, TOUCHED_COLOR0);
             nvgBeginPath(vg);
-            nvgRoundedRect(vg, getX() + 1, getY() + 1, getW() - 2, getH() - 2, getCornerRadius() - 0.5f);
+            nvgRoundedRect(vg, getX() + 2, getY() + 2, getW() - 4, getH() - 4, getCornerRadius() - 0.5f);
             nvgFill(vg);
             //System.out.println("draw touched");
             //touched = false;
@@ -224,6 +224,11 @@ public class GMenuItem extends GContainer {
             Nanovg.nvgTextJni(vg, txt_x + 1, txt_y + 1, b, 0, b.length);
             nvgFillColor(vg, getColor());
             Nanovg.nvgTextJni(vg, txt_x, txt_y, b, 0, b.length);
+        }
+
+        GMenu menu = (GMenu) parent;
+        if (menu.getMarkIndex() == menu.getElements().indexOf(this)) {
+            GToolkit.drawRect(vg, dx + dw * 0.333f, dy + dh * 0.8f, dw * 0.333f, 2, GToolkit.getStyle().getTextShadowColor());
         }
 
         if (redPoint > 0) {

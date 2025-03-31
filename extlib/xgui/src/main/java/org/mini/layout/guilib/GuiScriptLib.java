@@ -66,15 +66,19 @@ public class GuiScriptLib extends Lib {
             methodNames.put("setColorHexStr".toLowerCase(), this::setColorHexStr);//  set color
             methodNames.put("setPreIconColor".toLowerCase(), this::setPreIconColor);//  set color
             methodNames.put("clearPreIconColor".toLowerCase(), this::clearPreIconColor);//  set color
-            methodNames.put("getListIdx".toLowerCase(), this::getListIdx);//
             methodNames.put("setImgAlphaStr".toLowerCase(), this::setImgAlphaStr);//
             methodNames.put("setEnable".toLowerCase(), this::setEnable);//
             methodNames.put("getEnable".toLowerCase(), this::getEnable);//
+            methodNames.put("getListIdx".toLowerCase(), this::getListIdx);//
+            methodNames.put("getListIndex".toLowerCase(), this::getListIdx);//
             methodNames.put("setListIdx".toLowerCase(), this::setListIdx);//
+            methodNames.put("setListIndex".toLowerCase(), this::setListIdx);//
             methodNames.put("setCheckBox".toLowerCase(), this::setCheckBox);//
             methodNames.put("getCheckBox".toLowerCase(), this::getCheckBox);//
             methodNames.put("setScrollBar".toLowerCase(), this::setScrollBar);//
             methodNames.put("getScrollBar".toLowerCase(), this::getScrollBar);//
+            methodNames.put("setMenuMarkIndex".toLowerCase(), this::setMenuMarkIndex);//
+            methodNames.put("getMenuMarkIndex".toLowerCase(), this::getMenuMarkIndex);//
             methodNames.put("setSwitch".toLowerCase(), this::setSwitch);//
             methodNames.put("getSwitch".toLowerCase(), this::getSwitch);//
             methodNames.put("getX".toLowerCase(), this::getX);//
@@ -595,6 +599,29 @@ public class GuiScriptLib extends Lib {
         }
         int v = (int) (fv * 100);
         return Interpreter.getCachedInt(v);
+    }
+
+
+    private DataType setMenuMarkIndex(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        int fv = Interpreter.popBackInt(para);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
+        if (gobj instanceof GMenu) {
+            ((GMenu) gobj).setMarkIndex(fv);
+        }
+        return null;
+    }
+
+    private DataType getMenuMarkIndex(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
+        int fv;
+        if (gobj instanceof GMenu) {
+            fv = ((GMenu) gobj).getMarkIndex();
+        } else {
+            fv = -1;
+        }
+        return Interpreter.getCachedInt(fv);
     }
 
     private DataType setSwitch(ArrayList<DataType> para) {
