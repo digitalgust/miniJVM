@@ -111,23 +111,29 @@ public class XuiLoader {
         return eventHandler;
     }
 
-    public <T extends GObject> T loadXmlUiWithPara(String uipath, HashMap<String, String> para) {
-        return (T) loadXmlUi(uipath, varMap -> {
+    public <T extends GObject> T loadXmlUiWithPara(String uipath, HashMap<String, Object> para) {
+        return (T) loadXmlUi(uipath, key -> {
             if (para != null) {
-                varMap.putAll(para);
+                return para.get(key);
             }
+            return null;
         });
     }
 
 
-    public <T extends GObject> T loadXmlUi(String uipath, UITemplate.VarPutter putter) {
+    public <T extends GObject> T loadXmlUi(String uipath, UITemplate.VarGetter getter) {
         Exception ex;
         try {
 
             String xmlStr = GToolkit.readFileFromJarAsString(uipath, "utf-8");
             UITemplate uit = new UITemplate(xmlStr);
-            if (putter != null) {
-                putter.putVar(uit.getVarMap());
+            for (String key : uit.getVariable()) {
+                if (getter != null) {
+                    Object v = getter.getVar(key);
+                    if (v != null) {
+                        uit.setVar(key, v);
+                    }
+                }
             }
             String s = uit.parse();
             //System.out.println(s);

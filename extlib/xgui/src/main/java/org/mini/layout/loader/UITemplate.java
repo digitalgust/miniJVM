@@ -17,11 +17,11 @@ import java.util.regex.Pattern;
  */
 public class UITemplate {
 
-    public interface VarPutter {
-        void putVar(HashMap<String, String> vars);
+    public interface VarGetter {
+        Object getVar(String key);
     }
 
-    private HashMap<String, String> vars = new HashMap<>();
+    private final HashMap<String, Object> vars = new HashMap<>();
     /**
      * 分割字符串
      */
