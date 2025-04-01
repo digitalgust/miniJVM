@@ -200,17 +200,19 @@
         sub showPlugDownload()
             setMenuMarkIndex("MENU_MAIN",1)
             url=""
+            body=""
             if(isGithub())
                 showConfirm("Do you want visit miniJVM github pages?","ROOT_PAN.onConfirmGithubBack")
                 #url="file:///D:/GitHub/plugin4minijvm/plugins/plugin.xml"
                 ret
             else
                 getPolicy(true)
-                url=getEnv("PLUGIN_URL")+"?"+ getQueryPara()
+                url=getEnv("PLUGIN_URL")
+                body=getQueryPara()
             eif
             #println(url)
             if(strlen(url)>0)
-                openPage(url,"")
+                openPagePost(url,body,"")
                 showSlot("SLOT_MGR",3)
             eif
         ret
