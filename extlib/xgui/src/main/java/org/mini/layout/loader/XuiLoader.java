@@ -135,6 +135,13 @@ public class XuiLoader {
                     }
                 }
             }
+            float[] inset = new float[4];//top,right,bottom,left
+            GCallBack.getInstance().getInsets(inset);
+            uit.setVar("_INSET_TOP", Integer.toString((int) inset[0]));
+            uit.setVar("_INSET_RIGHT", Integer.toString((int) inset[1]));
+            uit.setVar("_INSET_BOTTOM", Integer.toString((int) (inset[2])));
+            uit.setVar("_INSET_LEFT", Integer.toString((int) inset[3]));
+
             String s = uit.parse();
             //System.out.println(s);
             XObject xobj = XContainer.parseXml(s, getXmlExtAssist());
