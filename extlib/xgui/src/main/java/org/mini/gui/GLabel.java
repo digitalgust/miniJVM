@@ -58,6 +58,7 @@ public class GLabel extends GObject {
     }
 
     public void setText(String text) {
+        text = text.replace("\\n", "\n");
         super.setText(text);
         text_arr = toCstyleBytes(text);
     }

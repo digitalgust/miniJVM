@@ -10,6 +10,10 @@
             feel=invokeStatic("org.mini.apploader.AppLoader","getGuiFeel()I")
             setListIdx("LIST_FELL",feel)
 
+            #uuid=System.getProperty("uuid")
+            uuidstr=invokeStatic("java.lang.System","getProperty(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;","glfm.uuid","0000-0000-0000-0000")
+            def("uuid",uuidstr)
+
             getPolicy(false) #异步调用
         ret
 
@@ -73,12 +77,46 @@
                 setEnv("UPDATE_URL",urls[6])
                 #println("urls:\n"+urls)
 
-                signInAuto() #自动登录
+                loginUid=getEnv("USERNAME")
+                loginPwdEnc=getEnv("USERPASS")
+                if(strlen(loginUid)=0 & strlen(loginPwdEnc)=0)  #登录信息为空
+                    singUpAuto()  #自动注册
+                else
+                    signInAuto()  #自动登录
+                eif
             else
                showMsg("onPolicyRequestBack:"+code+","+msg)
             eif
         ret
 
+        sub singUpAuto()  #注册
+            if(isGithub())
+                ret
+            eif
+            accBaseUrl=getEnv("ACCOUNT_BASE_URL")
+            url=accBaseUrl + "/regauto"
+            body="uuid="+uuid+"&"+getQueryPara()
+            httpPost(url,body,"ROOT_PAN.onSignUpAutoBack")
+        ret
+
+        sub onSignUpAutoBack(url,code,msg) #注册回调
+            if(code=0)
+
+                if(indexOf(msg,"\n")>0)
+                    lines=split(msg,"\n")
+                else
+                    lines=split(msg," ")
+                eif
+
+                setEnv("USERNAME", lines[0])
+                setEnv("USERPASS", lines[1])
+                setEnv("LOGINTYPE", ""+1)       # 0{mobile or email type}     1{username + password type}
+                setEnv("TOKEN", lines[2])
+                #println("token="+msg)
+            else
+                showMsg("{STR_MESSAGE}: {STR_CONNECTION_FAIL}")
+            eif
+        ret
 
         sub signInAuto() #登录
             if(isGithub())

@@ -50,6 +50,8 @@ abstract public class GObject implements GAttachable {
     public static byte[] ICON_RIGHT_BYTE = GLUtil.toCstyleBytes(ICON_RIGHT);
     public static String ICON_INFO = "\uE705";
     public static byte[] ICON_INFO_BYTE = GLUtil.toCstyleBytes(ICON_INFO);
+    public static String ICON_EYES = "\uD83D\uDC53";
+    public static byte[] ICON_EYES_BYTE = GLUtil.toCstyleBytes(ICON_EYES);
     //
     public static final int LEFT = 0;
     public static final int TOP = 1;

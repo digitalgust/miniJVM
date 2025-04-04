@@ -32,7 +32,8 @@ public class GTextField extends GTextObject {
     protected int caretIndex;
     boolean mouseDrag;
 
-    protected boolean password = false;//是否密码字段
+    protected boolean passwordMode = false;//是否密码字段
+    protected boolean passwordShow = false;
 
     protected boolean resetEnable = true;
     protected boolean resetPressBegin = false;
@@ -85,11 +86,11 @@ public class GTextField extends GTextObject {
     }
 
     public void setPasswordMode(boolean pwd) {
-        password = pwd;
+        passwordMode = pwd;
     }
 
     public boolean isPasswordMode() {
-        return password;
+        return passwordMode;
     }
 
 
@@ -140,7 +141,8 @@ public class GTextField extends GTextObject {
                         GToolkit.hideEditMenu();
                     }
                     if (isInBoundle(reset_boundle, rx, ry)) {
-                        if (isResetEnable()) {
+                        if (passwordMode) {
+                        } else if (isResetEnable()) {
                             resetPressBegin = true;
                         }
                         if (GToolkit.getEditMenu() != null) GToolkit.getEditMenu().dispose();
@@ -152,7 +154,10 @@ public class GTextField extends GTextObject {
                         GToolkit.hideEditMenu();
                     }
                     if (isInBoundle(reset_boundle, rx, ry)) {
-                        if (isResetEnable() && resetPressBegin) {
+                        if (passwordMode) {
+                            passwordShow = !passwordShow;
+                            text_arr = null;
+                        } else if (isResetEnable() && resetPressBegin) {
                             deleteAll();
                             resetSelect();
                         }
@@ -337,7 +342,9 @@ public class GTextField extends GTextObject {
         if (isInBoundle(boundle, rx, ry)) {
             if (phase == Glfm.GLFMTouchPhaseEnded) {
                 if (isInBoundle(reset_boundle, rx, ry)) {
-                    if (isResetEnable() && resetPressBegin) {
+                    if (passwordMode) {
+
+                    } else if (isResetEnable() && resetPressBegin) {
                         deleteAll();
                         resetSelect();
                     }
@@ -352,7 +359,10 @@ public class GTextField extends GTextObject {
                 resetPressBegin = false;
             } else if (phase == Glfm.GLFMTouchPhaseBegan) {
                 if (isInBoundle(reset_boundle, rx, ry)) {
-                    if (isResetEnable()) {
+                    if (passwordMode) {
+                        passwordShow = !passwordShow;
+                        text_arr = null;
+                    } else if (isResetEnable()) {
                         resetPressBegin = true;
                     }
                 }
@@ -536,7 +546,13 @@ public class GTextField extends GTextObject {
             GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h, getCornerRadius());
         }
 
-        if (isResetEnable()) {
+        if (passwordMode) {
+            nvgFontSize(vg, getFontSize());
+            nvgFontFace(vg, GToolkit.getFontIcon());
+            nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
+            nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+            nvgTextJni(vg, x + w - resetWidth * 0.5f, y + h * 0.55f, ICON_EYES_BYTE, 0, ICON_CIRCLED_CROSS_BYTE.length);
+        } else if (isResetEnable()) {
             nvgFontSize(vg, getFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
             nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
@@ -550,7 +566,7 @@ public class GTextField extends GTextObject {
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
         if (text_arr == null) {//文字被修改过
-            if (password) {
+            if (passwordMode && !passwordShow) {
                 int len = textsb.length();
                 text_arr = new byte[len + 1];
                 for (int i = 0; i < len; i++) {
@@ -561,7 +577,7 @@ public class GTextField extends GTextObject {
             }
         }
         float wordx = x + searchWidth + PAD;
-        float wordy = y + boundle[HEIGHT] * 0.5f;
+        float wordy = y + boundle[HEIGHT] * 0.5f + 2f;
         float text_show_area_x = wordx;
         float text_show_area_w = boundle[WIDTH] - PAD * 2 - searchWidth - resetWidth;
         float text_width = Nanovg.nvgTextBoundsJni(vg, 0, 0, text_arr, 0, text_arr.length, null);

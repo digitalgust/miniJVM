@@ -88,9 +88,7 @@ public class GCmdHandler extends GPanel implements GCallbackUI {
                         break;
                     }
                     case GCmd.GCMD_RUN_CODE: {
-                        if (cmd.work instanceof Runnable) {
-                            cmd.work.run();
-                        }
+                        runWork(cmd);
                         break;
                     }
                     default: {
@@ -199,11 +197,21 @@ public class GCmdHandler extends GPanel implements GCallbackUI {
             Long t = it.next();
             GCmd cmd = curShowMessage.get(t);
             if (cmd.isInBoundle(x, y)) {
-                Runnable work = cmd.getWork();
-                if (work != null) {
-                    work.run();
-                }
+                runWork(cmd);
             }
+        }
+    }
+
+    void runWork(GCmd cmd) {
+        Runnable work = cmd.getWork();
+        if (work != null) {
+            //fix some work load res ,no classloader will cause error
+            //this classloader is used to gerResourceStream load resource
+            ClassLoader cl = cmd.getWorkClassLoader();
+            if (cl != null) {
+                Thread.currentThread().setContextClassLoader(cl);
+            }
+            work.run();
         }
     }
 }

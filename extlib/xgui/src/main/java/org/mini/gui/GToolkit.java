@@ -359,13 +359,13 @@ public class GToolkit {
         nvgFillColor(vg, RED_POINT_BACKGROUND);
         nvgFill(vg);
 
-        nvgFontSize(vg, r * 2 - 4);
+        nvgFontSize(vg, r * 2 - 8);
         nvgFillColor(vg, RED_POINT_FRONT);
         nvgFontFace(vg, GToolkit.getFontWord());
         byte[] text_arr = toCstyleBytes(text);
         nvgTextAlign(vg, Nanovg.NVG_ALIGN_CENTER | Nanovg.NVG_ALIGN_MIDDLE);
         if (text_arr != null) {
-            Nanovg.nvgTextJni(vg, x, y + 1, text_arr, 0, text_arr.length);
+            Nanovg.nvgTextJni(vg, x, y + 1.5f, text_arr, 0, text_arr.length);
         }
 
     }
@@ -787,10 +787,18 @@ public class GToolkit {
     }
 
     static public GFrame getMsgFrame(GForm form, String title, String msg) {
-        return getMsgFrame(form, title, msg, 300f, 200f);
+        return getMsgFrame(form, title, msg, 300f, 200f, null);
+    }
+
+    static public GFrame getMsgFrame(GForm form, String title, String msg, GActionListener listener) {
+        return getMsgFrame(form, title, msg, 300f, 200f, listener);
     }
 
     static public GFrame getMsgFrame(GForm form, String title, String msg, float width, float height) {
+        return getMsgFrame(form, title, msg, width, height, null);
+    }
+
+    static public GFrame getMsgFrame(GForm form, String title, String msg, float width, float height, GActionListener listener) {
         final GFrame frame = new GFrame(form, title, 0, 0, width, height);
         frame.setName(NAME_MSGFRAME);
         frame.setFront(true);
@@ -821,7 +829,13 @@ public class GToolkit {
         //leftBtn.setBgColor(128, 16, 8, 255);
         leftBtn.setName(NAME_MSGFRAME_OK);
         gp.add(leftBtn);
-        leftBtn.setActionListener(gobj -> frame.close());
+        leftBtn.setActionListener(new GActionListener() {
+            @Override
+            public void action(GObject gobj) {
+                if (listener != null) listener.action(gobj);
+                else frame.close();
+            }
+        });
 
         return frame;
     }
@@ -1243,11 +1257,17 @@ public class GToolkit {
      * ----------------------------------------------------------------
      */
     public static GList getListMenu(GForm form, String[] strs, GImage[] imgs, GActionListener[] listeners) {
-        return getListMenu(form, strs, imgs, listeners, 150, 120);
+        return getListMenu(form, strs, imgs, listeners, -1, -1);
     }
 
     public static GList getListMenu(GForm form, String[] strs, GImage[] imgs, GActionListener[] listeners, float width, float height) {
 
+        if (width < 0) {
+            width = 150;
+        }
+        if (height < 0) {
+            height = GList.ITEM_HEIGH_DEFAULT * strs.length;
+        }
         GList list = new GList(form, 0, 0, width, height);
         list.setName(NAME_LISTMENU);
         list.setBgColor(getStyle().getPopBackgroundColor());

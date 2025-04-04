@@ -91,7 +91,7 @@ public class GuiScriptLib extends Lib {
             methodNames.put("uiExist".toLowerCase(), this::uiExist);//
             methodNames.put("getListText".toLowerCase(), this::getListText);//
             methodNames.put("showBar".toLowerCase(), this::showBar);//
-            methodNames.put("showMsg".toLowerCase(), this::showMsg);//
+            methodNames.put("showMsg".toLowerCase(), this::showMsg);//参数：内容，失去焦点关闭，回调函数，回调参数
             methodNames.put("showConfirm".toLowerCase(), this::showConfirm);//
             methodNames.put("insertText".toLowerCase(), this::insertText);//
             methodNames.put("deleteText".toLowerCase(), this::deleteText);//
@@ -123,6 +123,24 @@ public class GuiScriptLib extends Lib {
     // -------------------------------------------------------------------------
     // inner method
     // -------------------------------------------------------------------------
+    public static void doCallback(GForm form, String callback, String para) {
+        if (callback != null) {
+            if (callback.contains(".")) {
+                String[] ss = callback.split("\\.");
+                GContainer gobj = GToolkit.getComponent(form, ss[0]);
+                if (gobj == null) {
+                    gobj = GToolkit.getComponent(GCallBack.getInstance().getApplication().getForm(), ss[0]);
+                }
+                if (gobj != null) {
+                    Interpreter inp = gobj.getInterpreter();
+                    inp.callSub(ss[1] + "(\"" + para + "\")");
+                    return;
+                }
+            }
+            //System.out.println("[WARN]httpRequest callback no GContainer specified: " + callback);
+
+        }
+    }
 
     /**
      * @param url
@@ -692,13 +710,19 @@ public class GuiScriptLib extends Lib {
 
     public DataType showMsg(ArrayList<DataType> para) {
         String msg = Interpreter.popBackStr(para);
-        boolean focusSensitive = false;
-        if (!para.isEmpty()) {
-            focusSensitive = Interpreter.popBackBool(para);
-        }
+        boolean focusSensitive = para.isEmpty() ? false : Interpreter.popBackBool(para);
+        String callback = para.isEmpty() ? null : Interpreter.popBackStr(para);
+        String callbackPara = para.isEmpty() ? "" : Interpreter.popBackStr(para);
+
         GFrame f = GToolkit.getMsgFrame(formHolder.getForm(), AppManager.getInstance().getString("Message"), msg);
         if (!focusSensitive) {
             f.setFocusListener(null);
+        }
+        if (callback != null && !callback.isEmpty()) {
+            GButton bt = GToolkit.getComponent(f, GToolkit.NAME_MSGFRAME_OK);
+            bt.setActionListener((obj) -> {
+                doCallback(formHolder.getForm(), callback, callbackPara);
+            });
         }
         GToolkit.showFrame(f);
         formHolder.getForm().flush();
@@ -716,10 +740,11 @@ public class GuiScriptLib extends Lib {
                 (obj) -> {
                     if (callback != null) {
                         if (callback.contains(".")) {
-                            String[] ss = callback.split("\\.");
-                            GContainer gobj = GToolkit.getComponent(formHolder.getForm(), ss[0]);
-                            Interpreter inp = gobj.getInterpreter();
-                            inp.callSub(ss[1] + "(1)");
+//                            String[] ss = callback.split("\\.");
+//                            GContainer gobj = GToolkit.getComponent(formHolder.getForm(), ss[0]);
+//                            Interpreter inp = gobj.getInterpreter();
+//                            inp.callSub(ss[1] + "(1)");
+                            doCallback(formHolder.getForm(), callback, "1");
                         } else {
                             SysLog.info("showConfirm callback format \"PAN.subname\" ,but : " + callback);
                         }
@@ -730,10 +755,11 @@ public class GuiScriptLib extends Lib {
                 (obj) -> {
                     if (callback != null) {
                         if (callback.contains(".")) {
-                            String[] ss = callback.split("\\.");
-                            GContainer gobj = GToolkit.getComponent(formHolder.getForm(), ss[0]);
-                            Interpreter inp = gobj.getInterpreter();
-                            inp.callSub(ss[1] + "(0)");
+//                            String[] ss = callback.split("\\.");
+//                            GContainer gobj = GToolkit.getComponent(formHolder.getForm(), ss[0]);
+//                            Interpreter inp = gobj.getInterpreter();
+//                            inp.callSub(ss[1] + "(0)");
+                            doCallback(formHolder.getForm(), callback, "0");
                         } else {
                             SysLog.info("showConfirm callback format \"PAN.subname\" ,but : " + callback);
                         }

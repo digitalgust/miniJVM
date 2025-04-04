@@ -22,6 +22,7 @@ public class GCmd {
     protected int cmdId;
     protected String msg;
     protected Runnable work;
+    protected ClassLoader workClassLoader;//some work may need classloader
 
     float x, y, width, height;
 
@@ -37,12 +38,14 @@ public class GCmd {
     public GCmd(Runnable work) {
         this.cmdId = GCMD_RUN_CODE;
         this.work = work;
+        this.workClassLoader = Thread.currentThread().getContextClassLoader();
     }
 
     public GCmd(String msg, Runnable work) {
         this.cmdId = GCMD_SHOW_MESSAGE;
         this.msg = msg;
         this.work = work;
+        this.workClassLoader = Thread.currentThread().getContextClassLoader();
     }
 
     public byte[] getBytes() {
@@ -58,6 +61,10 @@ public class GCmd {
 
     public Runnable getWork() {
         return work;
+    }
+
+    public ClassLoader getWorkClassLoader() {
+        return workClassLoader;
     }
 
     public void setBoundle(float x, float y, float width, float height) {

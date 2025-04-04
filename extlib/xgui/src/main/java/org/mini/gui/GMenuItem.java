@@ -187,7 +187,7 @@ public class GMenuItem extends GContainer {
                     txt_x = dx + dw / 2;
                     txt_y = img_y + img_h + pad + lineh / 2;
                 } else { //前图后文
-                    img_h = dh * .8f - pad;
+                    img_h = dh * .7f - pad;
                     img_w = img_h;
                     img_x = dx + dw * .5f - pad * 2 - img_w - (box[WIDTH]) * .5f;
                     img_y = dy + dh * .1f;
@@ -195,7 +195,7 @@ public class GMenuItem extends GContainer {
                     txt_y = dy + dh * .5f;
                 }
             } else {
-                img_h = dh * .75f - pad;
+                img_h = dh * .7f - pad;
                 img_x = dx + dw / 2 - img_h / 2;
                 img_w = img_h;
                 img_y = dy + dh / 2 - img_h / 2;
@@ -232,7 +232,7 @@ public class GMenuItem extends GContainer {
         }
 
         if (redPoint > 0) {
-            GToolkit.drawRedPoint(vg, redPoint > 99 ? "..." : Integer.toString(redPoint), dx + dw * .7f, dy + dh * .5f - 10, 12f);
+            GToolkit.drawRedPoint(vg, redPoint > 99 ? "..." : Integer.toString(redPoint), dx + dw * .7f, dy + dh * .5f - 10, 10f);
         }
         return true;
     }
