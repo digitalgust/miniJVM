@@ -2065,6 +2065,43 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
 
 }
 
+- (void)targetAction:(UIButton *)button {
+    UIView *videoPanel = button.superview;
+    AVPlayer *avplayer = [videoPanel.layer valueForKey:@"AVPLAYER"];
+    
+    switch (button.tag) {
+        case 555: // CLOSE button
+            if (avplayer) {
+                [avplayer pause];
+                [videoPanel removeFromSuperview];
+                [[AVPlayerLayer playerLayerWithPlayer:avplayer] removeFromSuperlayer];
+                avplayer = NULL;
+            }
+            break;
+            
+        case 556: // PAUSE button
+            if (avplayer && avplayer.rate != 0) {
+                [avplayer pause];
+            }
+            break;
+            
+        case 557: // PLAY button
+            if (avplayer) {
+                AVPlayerItem *playerItem = avplayer.currentItem;
+                if (playerItem.currentTime.value == playerItem.duration.value) {
+                    // Video has finished playing, seek to beginning and play
+                    [avplayer seekToTime:CMTimeMake(0, 1)];
+                    [avplayer play];
+                } else if (avplayer.rate == 0) {
+                    // Video is paused, resume playing
+                    [avplayer play];
+                }
+                // If video is already playing, do nothing
+            }
+            break;
+    }
+}
+
 @end
 
 #pragma mark - Application Delegate
