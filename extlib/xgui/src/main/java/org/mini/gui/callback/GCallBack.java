@@ -20,6 +20,8 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
 
     public static final int PICK_PHOTO_DEVICE_ALBUM = 0x1000;
     public static final int PICK_PHOTO_DEVICE_CAMERA = 0x2000;
+    public static final int PICK_PHOTO_RESIZE_1024 = 0x100;
+    public static final int PICK_PHOTO_RESIZE_NONE = 0x000;
     public static final int PICK_PHOTO_TYPE_IMAGE = 0x1;
     public static final int PICK_PHOTO_TYPE_MOIVE = 0x2;
     public static final float FPS_DEFAULT = 60f;
@@ -145,9 +147,12 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    public void playeVideo(String url, String mimeType) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+
     //============================== glfm
-
-
     @Override
     public void onRender(long display) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

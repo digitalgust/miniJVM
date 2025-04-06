@@ -583,4 +583,8 @@ public class GlfwCallBackImpl extends GCallBack {
             SysLog.error(String.format("pickPhoto device not support ,only album(0x%x) or camera(0x%x)", PICK_PHOTO_DEVICE_ALBUM, PICK_PHOTO_DEVICE_CAMERA));
         }
     }
+
+    public void playeVideo(String url, String mimeType) {
+        Glfm.glfmOpenOtherApp(GLUtil.toCstyleBytes(url), GLUtil.toCstyleBytes(mimeType), 0);
+    }
 }

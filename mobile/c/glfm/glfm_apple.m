@@ -1931,7 +1931,7 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
     if ([mediaType isEqualToString:@"public.image"]) {  //判断是否为图片
 
         UIImage *image = [info objectForKey:UIImagePickerControllerOriginalImage];
-        if(_pickerType==0){//autofit
+        if((_pickerType&0x100)!=0){//autofit to 1024
             float iw=image.size.width;
             float ih=image.size.height;
             float ratio=1024;
@@ -1943,10 +1943,15 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
 
         NSData *data=UIImageJPEGRepresentation(image, 0.75);
         //self.imageShow.image = image;
+        const char *savePath=glfmGetSaveRoot();
 
         NSURL *nsurl=[info objectForKey:UIImagePickerControllerReferenceURL];
         NSString *nss=[nsurl path];
-        const char* url=[nss UTF8String];
+        NSString *fileName = [NSString stringWithFormat:@"%ld.jpg",time(NULL)];
+        NSString *path=[NSString stringWithFormat:@"%s/%@",savePath,fileName];
+        const char* url=[path UTF8String];
+        
+        [data writeToFile:path atomically:YES];
 
         char *cd=(char*)[data bytes];
         int len=(int)[data length];
@@ -1958,7 +1963,10 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
         }
     } else if([mediaType isEqualToString:@"public.movie"]){
         NSURL *videoURL = [info objectForKey:UIImagePickerControllerMediaURL];
-        NSString *path = [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true) lastObject] stringByAppendingPathComponent:[NSString stringWithFormat:@"%ld_compressedVideo.mp4",time(NULL)]];
+        const char *savePath=glfmGetSaveRoot();
+//        NSString *path = [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true) lastObject] stringByAppendingPathComponent:[NSString stringWithFormat:@"%ld_compressedVideo.mp4",time(NULL)]];
+        NSString *fileName = [NSString stringWithFormat:@"%ld.mp4",time(NULL)];
+        NSString *path=[NSString stringWithFormat:@"%s/%@",savePath,fileName];
         NSLog(@"compressedVideoSavePath : %@",path);
         //if(![path isEqualToString:@".mp4"]){
             //压缩

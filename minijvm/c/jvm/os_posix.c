@@ -72,6 +72,11 @@ s32 os_execute(Runtime *runtime, Instance *jstrArr, Instance *jlongArr, ArrayLis
     switch (pid) {
         case -1:  // error
             exception_throw(JVM_EXCEPTION_IO, runtime, NULL);
+            safeClose(&in[0]);
+            safeClose(&out[1]);
+            safeClose(&err[0]);
+            safeClose(&msg[0]);
+            safeClose(&msg[1]);
             return RUNTIME_STATUS_EXCEPTION;
         case 0: {  // child
             // Setup stdin, stdout and stderr
@@ -91,8 +96,8 @@ s32 os_execute(Runtime *runtime, Instance *jstrArr, Instance *jlongArr, ArrayLis
 
             // Error if here
             s32 val = errno;
-            ssize_t rv = write(msg[1], &val, sizeof(val));
-            exit(127);
+            write(msg[1], &val, sizeof(val));
+            _exit(127);  // 使用 _exit 而不是 exit 以避免刷新标准IO缓冲区
         }
             break;
 
