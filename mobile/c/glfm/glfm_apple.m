@@ -2114,24 +2114,24 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
     [[UIApplication sharedApplication] registerForRemoteNotifications];
 
     //register lock screen event
-    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, screenLockStateChanged, NotificationLock, NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
-    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, screenLockStateChanged, NotificationChange, NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
+//    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, screenLockStateChanged, NotificationLock, NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
+//    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, screenLockStateChanged, NotificationChange, NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
 
 
     //setScreenStateCb();
 
     return YES;
 }
-//lock screen
-static void screenLockStateChanged(CFNotificationCenterRef center,void* observer,CFStringRef name,const void*object,CFDictionaryRef userInfo)
-{
-    NSString* lockstate = (__bridge NSString*)name;
-    if ([lockstate isEqualToString:(__bridge NSString*)NotificationLock]) {
-        NSLog(@"locked.");
-    } else {
-        NSLog(@"lock state changed.");
-    }
-}
+////lock screen
+//static void screenLockStateChanged(CFNotificationCenterRef center,void* observer,CFStringRef name,const void*object,CFDictionaryRef userInfo)
+//{
+//    NSString* lockstate = (__bridge NSString*)name;
+//    if ([lockstate isEqualToString:(__bridge NSString*)NotificationLock]) {
+//        NSLog(@"locked.");
+//    } else {
+//        NSLog(@"lock state changed.");
+//    }
+//}
 
 //gust {
 void setDeviceToken(GLFMDisplay * display, const char *deviceToken) {

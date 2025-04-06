@@ -93,6 +93,7 @@ public class GLanguage {
         addStringInner("Create new folder :", new String[]{"Name for the new folder to be created:", "创建新文件夹名称： ", "建立新資料夾名稱： ", "새 폴더의 이름: ", "Nom du nouveau dossier à créer :", "Nombre de la nueva carpeta a crear:", "Nome per la nuova cartella da creare:", "作成する新しいフォルダの名前:", "Name für den neu zu erstellenden Ordner:", "Имя нового создаваемого каталога:"});
         addStringInner("Folder Name", new String[]{"Folder Name", "文件夹名称", "資料夾名稱", "폴더 이름", "Nom du dossier", "Nombre de la carpeta", "Nome della cartella", "フォルダ名", "Ordnername", "Имя папки"});
         addStringInner("Delete", new String[]{"Delete", "删除", "刪除", "삭제", "Supprimer", "Eliminar", "Eliminare", "削除", "Löschen", "Удалить"});
+        addStringInner("Pick Media File", new String[]{"Pick Media File","选择媒体文件","選擇媒體檔案","미디어 파일 선택","Choisir un fichier multimédia","Seleccionar archivo multimedia","Seleziona file multimediale","メディアファイルを選択","Medien-Datei auswählen","Выберите медиафайл"});
     }
 
     static public int getSupportedLang() {

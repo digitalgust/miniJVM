@@ -202,9 +202,13 @@ public class GToolkit {
 
 
     public static void saveDataToFile(String fileName, byte[] contents) {
+        saveDataToFile(fileName, contents, 0, contents.length);
+    }
+
+    public static void saveDataToFile(String fileName, byte[] contents, int offset, int len) {
         try {
             FileOutputStream fos = new FileOutputStream(fileName);
-            fos.write(contents);
+            fos.write(contents, offset, len);
             fos.close();
             //System.out.println("save file:" + fileName);
         } catch (Exception e) {
@@ -775,7 +779,7 @@ public class GToolkit {
             });
         }
 
-        GButton rightBtn = new GButton(form, right == null ? AppManager.getInstance().getString("Cancel") : right, btnWidth + 10, y, btnWidth, 30);
+        GButton rightBtn = new GButton(form, right == null ? GLanguage.getString(null, "Cancel") : right, btnWidth + 10, y, btnWidth, 30);
         gp.add(rightBtn);
         rightBtn.setName(NAME_CONFIRM_RIGHT);
         rightBtn.setActionListener(gobj -> {
@@ -825,7 +829,7 @@ public class GToolkit {
         y += h + 10;
 
         float btnWidth = w * .5f;
-        GButton leftBtn = new GButton(form, AppManager.getInstance().getString("Ok"), x + btnWidth * .5f, y, btnWidth, 28);
+        GButton leftBtn = new GButton(form, GLanguage.getString(null, "Ok"), x + btnWidth * .5f, y, btnWidth, 28);
         //leftBtn.setBgColor(128, 16, 8, 255);
         leftBtn.setName(NAME_MSGFRAME_OK);
         gp.add(leftBtn);
@@ -873,7 +877,7 @@ public class GToolkit {
 
         btnH = 30f;
         float btnWidth = 70f;
-        GButton okBtn = new GButton(form, AppManager.getInstance().getString("Ok"), x + w - 75f, y, btnWidth, btnH);
+        GButton okBtn = new GButton(form, GLanguage.getString(null, "Ok"), x + w - 75f, y, btnWidth, btnH);
         //okBtn.setPreIcon("✓");
         okBtn.setName(NAME_FILECHOOSER_OK);
         gp.add(okBtn);
@@ -882,7 +886,7 @@ public class GToolkit {
             gobj.getFrame().close();
         });
 
-        GButton cancelBtn = new GButton(form, AppManager.getInstance().getString("Cancel"), x + w - 150f, y, btnWidth, btnH);
+        GButton cancelBtn = new GButton(form, GLanguage.getString(null, "Cancel"), x + w - 150f, y, btnWidth, btnH);
         //cancelBtn.setPreIcon("\uE712");
         cancelBtn.setName(NAME_FILECHOOSER_CANCEL);
         gp.add(cancelBtn);
@@ -916,9 +920,9 @@ public class GToolkit {
         delBtn.setActionListener(gobj -> {
 
             GFrame confirm = getConfirmFrame(form,
-                    AppManager.getInstance().getString("Message"),
-                    AppManager.getInstance().getString("Do you sure delete :") + pathLabel.getText(),
-                    AppManager.getInstance().getString("Delete"),
+                    GLanguage.getString(null, "Message"),
+                    GLanguage.getString(null, "Do you sure delete :") + pathLabel.getText(),
+                    GLanguage.getString(null, "Delete"),
                     gobj1 -> {
                         File f = new File(pathLabel.getText());
                         AppLoader.deleteTree(f);
@@ -926,7 +930,7 @@ public class GToolkit {
                         gobj1.getFrame().close();
                         chooserRefresh(upBtn);
                     },
-                    AppManager.getInstance().getString("Cancel"),
+                    GLanguage.getString(null, "Cancel"),
                     null);
             GButton btn = GToolkit.getComponent(confirm, NAME_CONFIRM_LEFT);
             btn.setPreIcon("\u26A0");
@@ -941,13 +945,13 @@ public class GToolkit {
         newBtn.setActionListener(gobj -> {
 
             GFrame confirm = getInputFrame(form,
-                    AppManager.getInstance().getString("Message"),
-                    AppManager.getInstance().getString("Create new folder :"),
+                    GLanguage.getString(null, "Message"),
+                    GLanguage.getString(null, "Create new folder :"),
                     "",
-                    AppManager.getInstance().getString("Folder Name"),
-                    AppManager.getInstance().getString("Cancel"),
+                    GLanguage.getString(null, "Folder Name"),
+                    GLanguage.getString(null, "Cancel"),
                     null,
-                    AppManager.getInstance().getString("Ok"),
+                    GLanguage.getString(null, "Ok"),
                     gobj1 -> {
                         GButton up = GToolkit.getComponent(gobj.getFrame(), NAME_FILECHOOSER_UP);
                         if (up != null) {
@@ -1147,7 +1151,7 @@ public class GToolkit {
         y += h + pad;
         btnW = view.getW() * .5f - pad;
         if (multiSelect) {
-            GCheckBox chbox = new GCheckBox(form, AppManager.getInstance().getString("SeleAll"), false, pad, y, btnW, btnH);
+            GCheckBox chbox = new GCheckBox(form, GLanguage.getString(null, "SeleAll"), false, pad, y, btnW, btnH);
             view.add(chbox);
             chbox.setActionListener(gobj -> {
                 if (((GCheckBox) gobj).isChecked()) {
@@ -1159,7 +1163,7 @@ public class GToolkit {
         }
 
 
-        GButton btn = new GButton(form, buttonText == null ? AppManager.getInstance().getString("Ok") : buttonText, (view.getW() - btnW - pad), y, btnW, btnH);
+        GButton btn = new GButton(form, buttonText == null ? GLanguage.getString(null, "Ok") : buttonText, (view.getW() - btnW - pad), y, btnW, btnH);
         btn.setName(NAME_LISTFRAME_OK);
         frame.getView().add(btn);
         btn.setActionListener(gobj -> {
@@ -1209,11 +1213,11 @@ public class GToolkit {
 
         float buttonWidth = contentWidth * .5f - 10;
         y -= 35f;
-        GButton cancelbtn = new GButton(form, leftLabel == null ? AppManager.getInstance().getString("Cancel") : leftLabel, x, y, buttonWidth, 28);
+        GButton cancelbtn = new GButton(form, leftLabel == null ? GLanguage.getString(null, "Cancel") : leftLabel, x, y, buttonWidth, 28);
         cancelbtn.setName(NAME_INPUTFRAME_LEFT);
         view.add(cancelbtn);
 
-        GButton okbtn = new GButton(form, rightLabel == null ? AppManager.getInstance().getString("Ok") : rightLabel, x + buttonWidth + 20, y, buttonWidth, 28);
+        GButton okbtn = new GButton(form, rightLabel == null ? GLanguage.getString(null, "Ok") : rightLabel, x + buttonWidth + 20, y, buttonWidth, 28);
         //okbtn.setBgColor(0, 96, 128, 255);
         okbtn.setName(NAME_INPUTFRAME_RIGHT);
         view.add(okbtn);
@@ -1368,10 +1372,10 @@ public class GToolkit {
             @Override
             public void longTouchedEvent(int x, int y) {
                 GList menu = new GList(form);
-                GListItem item = menu.addItem(null, AppManager.getInstance().getString("Save to album"));
+                GListItem item = menu.addItem(null, GLanguage.getString(null, "Save to album"));
                 item.setActionListener((GObject gobj) -> {
                 });
-                item = menu.addItem(null, AppManager.getInstance().getString("Cancel"));
+                item = menu.addItem(null, GLanguage.getString(null, "Cancel"));
                 item.setActionListener((GObject gobj) -> {
                     if (gobj.getForm() != null) {
                         gobj.getForm().remove(menu);
@@ -1722,19 +1726,19 @@ public class GToolkit {
             editMenu = new EditMenu(gform, mx, my, menuW, menuH);
             GMenuItem item;
 
-            item = editMenu.addItem(AppManager.getInstance().getString("Select"), null);
+            item = editMenu.addItem(GLanguage.getString(null, "Select"), null);
             item.setName(NAME_EDITMENUCTX_SELECT);
             item.setActionListener(gobj -> {
                 editMenu.text.doSelectText();
                 setCompEnable(editMenu, NAME_EDITMENUCTX_COPY, true);
             });
-            item = editMenu.addItem(AppManager.getInstance().getString("Copy"), null);
+            item = editMenu.addItem(GLanguage.getString(null, "Copy"), null);
             item.setName(NAME_EDITMENUCTX_COPY);
             item.setActionListener(gobj -> {
                 editMenu.text.doCopyClipBoard();
                 editMenu.dispose();
             });
-            item = editMenu.addItem(AppManager.getInstance().getString("Paste"), null);
+            item = editMenu.addItem(GLanguage.getString(null, "Paste"), null);
             item.setName(NAME_EDITMENUCTX_PASTE);
             item.setActionListener(gobj -> {
                 if (editMenu.text.enable) {
@@ -1742,7 +1746,7 @@ public class GToolkit {
                 }
                 editMenu.dispose();
             });
-            item = editMenu.addItem(AppManager.getInstance().getString("Cut"), null);
+            item = editMenu.addItem(GLanguage.getString(null, "Cut"), null);
             item.setName(NAME_EDITMENUCTX_CUT);
             item.setActionListener(gobj -> {
                 if (editMenu.text.enable) {
@@ -1750,7 +1754,7 @@ public class GToolkit {
                 }
                 editMenu.dispose();
             });
-            item = editMenu.addItem(AppManager.getInstance().getString("SeleAll"), null);
+            item = editMenu.addItem(GLanguage.getString(null, "SeleAll"), null);
             item.setName(NAME_EDITMENUCTX_SELECTALL);
             item.setActionListener(gobj -> {
                 editMenu.text.doSelectAll();

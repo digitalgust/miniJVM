@@ -1506,6 +1506,50 @@ s32 org_mini_zip_ZipFile_compress0(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+s32 org_mini_zip_ZipFile_gzipExtract0(Runtime *runtime, JClass *clazz) {
+    Instance *gzip_data = localvar_getRefer(runtime->localvar, 0);
+    s32 ret = 0;
+    ByteBuf *data = bytebuf_create(0);
+    if (gzip_data) {
+        ret = gzip_extract(gzip_data->arr_body, gzip_data->arr_length, data);
+    }
+    if (ret == -1) {
+        push_ref(runtime->stack, NULL);
+    } else {
+        Instance *byte_arr = jarray_create_by_type_index(runtime, data->wp, DATATYPE_BYTE);
+        bytebuf_read_batch(data, byte_arr->arr_body, data->wp);
+        push_ref(runtime->stack, byte_arr);
+    }
+    bytebuf_destroy(data);
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    invoke_deepth(runtime);
+    jvm_printf("org_mini_zip_ZipFile_gzipExtract0  \n");
+#endif
+    return 0;
+}
+
+s32 org_mini_zip_ZipFile_gzipCompress0(Runtime *runtime, JClass *clazz) {
+    Instance *data = localvar_getRefer(runtime->localvar, 0);
+    s32 ret = 0;
+    ByteBuf *gzip_data = bytebuf_create(0);
+    if (data) {
+        ret = gzip_compress(data->arr_body, data->arr_length, gzip_data);
+    }
+    if (ret == -1) {
+        push_ref(runtime->stack, NULL);
+    } else {
+        Instance *byte_arr = jarray_create_by_type_index(runtime, gzip_data->wp, DATATYPE_BYTE);
+        bytebuf_read_batch(gzip_data, byte_arr->arr_body, gzip_data->wp);
+        push_ref(runtime->stack, byte_arr);
+    }
+    bytebuf_destroy(gzip_data);
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    invoke_deepth(runtime);
+    jvm_printf("org_mini_zip_ZipFile_gzipCompress0  \n");
+#endif
+    return 0;
+}
+
 s32 org_mini_crypt_XorCrypt_encrypt(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     Instance *data = localvar_getRefer(runtime->localvar, pos++);
@@ -1616,6 +1660,8 @@ static java_native_method METHODS_IO_TABLE[] = {
         {"org/mini/zip/Zip",          "isDirectory0",         "([BI)I",                           org_mini_zip_ZipFile_isDirectory0},
         {"org/mini/zip/Zip",          "extract0",             "([B)[B",                           org_mini_zip_ZipFile_extract0},
         {"org/mini/zip/Zip",          "compress0",            "([B)[B",                           org_mini_zip_ZipFile_compress0},
+        {"org/mini/zip/Zip",          "gzipExtract0",         "([B)[B",                           org_mini_zip_ZipFile_gzipExtract0},
+        {"org/mini/zip/Zip",          "gzipCompress0",        "([B)[B",                           org_mini_zip_ZipFile_gzipCompress0},
         {"org/mini/crypt/XorCrypt",   "encrypt",              "([B[B)[B",                         org_mini_crypt_XorCrypt_encrypt},
         {"org/mini/crypt/XorCrypt",   "decrypt",              "([B[B)[B",                         org_mini_crypt_XorCrypt_decrypt},
 

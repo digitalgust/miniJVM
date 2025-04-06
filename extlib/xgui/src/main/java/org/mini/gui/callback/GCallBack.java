@@ -18,11 +18,17 @@ import java.io.InputStream;
  */
 public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
 
+    public static final int PICK_PHOTO_DEVICE_ALBUM = 0x1000;
+    public static final int PICK_PHOTO_DEVICE_CAMERA = 0x2000;
+    public static final int PICK_PHOTO_TYPE_IMAGE = 0x1;
+    public static final int PICK_PHOTO_TYPE_MOIVE = 0x2;
     public static final float FPS_DEFAULT = 60f;
     static GCallBack instance;
 
     protected GApplication gapp;
     protected GDesktop desktop;
+
+    float[] insets = new float[4];
 
     public static GCallBack getInstance() {
         if (instance == null) {
@@ -113,7 +119,32 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
 
     public abstract void getInsets(float[] top_right_bottom_left);
 
+    public float getInsetTop() {
+        getInsets(insets);
+        return insets[0];
+    }
+
+    public float getInsetRight() {
+        getInsets(insets);
+        return insets[1];
+    }
+
+    public float getInsetBottom() {
+        getInsets(insets);
+        return insets[2];
+    }
+
+    public float getInsetLeft() {
+        getInsets(insets);
+        return insets[3];
+    }
+
     public abstract Thread getOpenglThread();
+
+    public void pickPhoto(int uid, int deviceAndType) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
     //============================== glfm
 
 

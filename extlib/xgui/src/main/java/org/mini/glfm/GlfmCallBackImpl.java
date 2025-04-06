@@ -6,10 +6,11 @@
 package org.mini.glfm;
 
 import org.mini.apploader.AppLoader;
-import org.mini.apploader.AppManager;
 import org.mini.apploader.Sync;
 import org.mini.glfw.Glfw;
-import org.mini.gui.*;
+import org.mini.gui.GForm;
+import org.mini.gui.GObject;
+import org.mini.gui.GToolkit;
 import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GDesktop;
 import org.mini.nanovg.Nanovg;
@@ -436,5 +437,16 @@ public class GlfmCallBackImpl extends GCallBack {
         }
     }
 
-
+    public void pickPhoto(int uid, int deviceAndType) {
+        if ((deviceAndType & PICK_PHOTO_TYPE_IMAGE) == 0 && (deviceAndType & PICK_PHOTO_TYPE_MOIVE) == 0) {
+            deviceAndType = PICK_PHOTO_TYPE_IMAGE | PICK_PHOTO_TYPE_MOIVE;
+        }
+        if ((deviceAndType & PICK_PHOTO_DEVICE_ALBUM) != 0) {
+            Glfm.glfmPickPhotoAlbum(display, uid, deviceAndType);
+        } else if ((deviceAndType & PICK_PHOTO_DEVICE_CAMERA) != 0) {
+            Glfm.glfmPickPhotoCamera(display, uid, deviceAndType);
+        } else {
+            SysLog.error(String.format("pickPhoto device not support ,only album(0x%x) or camera(0x%x)", PICK_PHOTO_DEVICE_ALBUM, PICK_PHOTO_DEVICE_CAMERA));
+        }
+    }
 }

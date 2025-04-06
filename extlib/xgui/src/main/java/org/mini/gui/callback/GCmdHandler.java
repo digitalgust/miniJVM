@@ -46,18 +46,22 @@ public class GCmdHandler extends GPanel implements GCallbackUI {
             return;
         }
         cmds.add(cmd);
+        GDesktop.flush();
     }
 
     public void addCmd(int cmdId) {
         cmds.add(new GCmd(cmdId));
+        GDesktop.flush();
     }
 
     public void addCmd(Runnable work) {
         cmds.add(new GCmd(work));
+        GDesktop.flush();
     }
 
     public void addCmd(String msg, Runnable work) {
         cmds.add(new GCmd(msg, work));
+        GDesktop.flush();
     }
 
     public void process() {

@@ -136,6 +136,10 @@ public class Zip {
 
     public native static byte[] compress0(byte[] data);
 
+    public native static byte[] gzipExtract0(byte[] zipData);
+
+    public native static byte[] gzipCompress0(byte[] data);
+
     static native byte[] getEntry0(byte[] zippath, byte[] path);
 
     static native int putEntry0(byte[] zippath, byte[] path, byte[] contents);

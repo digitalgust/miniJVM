@@ -8,15 +8,20 @@ package org.mini.glfw;
 
 import org.mini.apploader.AppLoader;
 import org.mini.apploader.Sync;
+import org.mini.glfm.Glfm;
 import org.mini.glwrap.GLUtil;
+import org.mini.gui.GFrame;
+import org.mini.gui.GLanguage;
 import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GDesktop;
 import org.mini.gui.GForm;
 import org.mini.gui.GToolkit;
+import org.mini.gui.event.GPhotoPickedListener;
 import org.mini.media.MaDevice;
 import org.mini.util.SysLog;
 
 import java.io.File;
+import java.io.FileFilter;
 
 import static org.mini.gl.GL.GL_TRUE;
 import static org.mini.glfw.Glfw.*;
@@ -491,4 +496,91 @@ public class GlfwCallBackImpl extends GCallBack {
         windowSize(display, getDeviceWidth(), getDeviceHeight());
     }
 
+    static FileFilter imagefilter = new FileFilter() {
+        String[] extensions = new String[]{".jpg", ".png", ".gif", ".jpeg"};
+
+        @Override
+        public boolean accept(File f) {
+            if (f.isDirectory()) {
+                return true;
+            }
+            String name = f.getName();
+            for (String ext : extensions) {
+                if (name.endsWith(ext)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    };
+
+    static FileFilter moviefilter = new FileFilter() {
+        String[] extensions = new String[]{".mp4", ".avi", ".rmvb", ".rm", ".flv", ".wmv", ".mkv", ".mpg", ".mpeg"};
+
+        @Override
+        public boolean accept(File f) {
+            if (f.isDirectory()) {
+                return true;
+            }
+            String name = f.getName();
+            for (String ext : extensions) {
+                if (name.endsWith(ext)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    };
+
+    static FileFilter bothFilter = new FileFilter() {
+        @Override
+        public boolean accept(File f) {
+            if (imagefilter.accept(f)) {
+                return true;
+            } else if (moviefilter.accept(f)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    };
+
+    public void pickPhoto(int uid, int deviceAndType) {
+        FileFilter filter = null;
+        if ((deviceAndType & PICK_PHOTO_TYPE_IMAGE) == 0 && (deviceAndType & PICK_PHOTO_TYPE_MOIVE) == 0) {
+            deviceAndType = PICK_PHOTO_TYPE_IMAGE | PICK_PHOTO_TYPE_MOIVE;
+            filter = bothFilter;
+        }
+        if ((deviceAndType & PICK_PHOTO_TYPE_IMAGE) == 1) {
+            filter = imagefilter;
+        } else if ((deviceAndType & PICK_PHOTO_TYPE_MOIVE) == 0) {
+            filter = moviefilter;
+        }
+        if ((deviceAndType & PICK_PHOTO_DEVICE_ALBUM) != 0 || (deviceAndType & PICK_PHOTO_DEVICE_CAMERA) != 0) {
+            GForm form = getDesktop().getForm();
+            if (form == null) {
+                SysLog.error("pickPhoto form is null");
+                return;
+            }
+            GFrame frame = GToolkit.getFileChooser(
+                    form,
+                    GLanguage.getString(null, "Pick Media File"),
+                    null,
+                    filter,
+                    false,
+                    getDesktop().getW() * 0.8f,
+                    getDesktop().getH() * 0.8f,
+                    gobj1 -> {
+                        GPhotoPickedListener pickedListener = form.getPickListener();
+                        if (pickedListener != null) {
+                            String path = GToolkit.getCompText(gobj1.getFrame(), GToolkit.NAME_FILECHOOSER_PATH);
+                            pickedListener.onPicked(uid, path, null);
+                        }
+                    },
+                    null);
+            GToolkit.showFrame(frame);
+        } else {
+            SysLog.error(String.format("pickPhoto device not support ,only album(0x%x) or camera(0x%x)", PICK_PHOTO_DEVICE_ALBUM, PICK_PHOTO_DEVICE_CAMERA));
+        }
+    }
 }
