@@ -607,6 +607,7 @@ s32 _gc_pause_the_world(MiniJVM *jvm) {
     if (thread_list->length) {
         arraylist_iter_safe(thread_list, _list_iter_thread_pause, NULL);
 
+        //此处可能存在多线程交互，比如某个线程结束等情况，导致for错误
         for (i = 0; i < thread_list->length; i++) {
             Runtime *runtime = arraylist_get_value(thread_list, i);
             if (_gc_wait_thread_suspend(jvm, runtime) == -1) {
@@ -651,16 +652,6 @@ s32 _gc_resume_the_world(MiniJVM *jvm) {
 
 
 s32 _gc_wait_thread_suspend(MiniJVM *jvm, Runtime *runtime) {
-#if _JVM_DEBUG_LOG_LEVEL > 2
-    if (runtime->thrd_info->is_blocking) {
-        s32 debug = 1;
-        Runtime *r = getLastSon(runtime);
-        jvm_printf("STW blocking on: %s.%s\n", utf8_cstr(r->method->_this_class->name), utf8_cstr(r->method->name));
-        if (!(utf8_equals_c(r->method->name, "wait") || utf8_equals_c(r->method->name, "sleep"))) {
-            s32 debug = 1;
-        }
-    }
-#endif
     while (!(runtime->thrd_info->is_suspend ||  /// While executing bytecode, if suspend_count is not 0, pause bytecode execution and set is_suspend = 1
              runtime->thrd_info->is_blocking)  // During certain IO waits, JNI sets is_blocking = 1
             ) { //
