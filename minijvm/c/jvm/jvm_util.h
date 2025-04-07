@@ -245,6 +245,8 @@ s32 jthread_dispose(Instance *jthread, Runtime *runtime);
 
 s32 jthread_run(void *para);
 
+s32 jthread_run_finalize(Runtime *runtime);
+
 thrd_t jthread_start(Instance *ins, Runtime *parent);
 
 s32 jthread_get_daemon_value(Instance *ins, Runtime *runtime);

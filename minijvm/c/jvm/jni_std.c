@@ -1506,7 +1506,7 @@ static java_native_method METHODS_STD_TABLE[] = {
         {"java/lang/Thread",                    "activeCount",            "()I",                                                           java_lang_Thread_activeCount},
         {"java/lang/Thread",                    "setPriority0",           "(I)V",                                                          java_lang_Thread_setPriority0},
         {"java/lang/Thread",                    "interrupt0",             "(Ljava/lang/Thread;)V",                                         java_lang_Thread_interrupt0},
-        {"java/lang/Thread",                    "interrupted0",           "(Ljava/lang/Thread;)I",                                         java_lang_Thread_interrupted0},
+        {"java/lang/Thread",                    "interrupted0",           "(Ljava/lang/Thread;)Z",                                         java_lang_Thread_interrupted0},
         {"java/lang/Thread",                    "setContextClassLoader0", "(Ljava/lang/ClassLoader;)V",                                    java_lang_Thread_setContextClassLoader0},
         {"java/lang/Thread",                    "getContextClassLoader0", "()Ljava/lang/ClassLoader;",                                     java_lang_Thread_getContextClassLoader0},
         {"java/lang/Throwable",                 "printStackTrace0",       "",                                                              java_io_Throwable_printStackTrace0},

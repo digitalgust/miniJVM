@@ -561,10 +561,7 @@ s64 _garbage_collect(GcCollector *collector) {
                 }
             } else if (GCFLAG_JTHREAD_GET(curmb->gcflag)) {//process thread if it created but not started
                 Runtime *ort = jthread_get_stackframe_value(jvm, (Instance *) curmb);
-                if (ort) {
-                    jthread_dispose((Instance *) curmb, ort);
-                    runtime_destroy(ort);
-                }
+                jthread_run_finalize(ort);
             }
             memoryblock_destroy(curmb);
             if (prevmb)prevmb->next = nextmb;
@@ -652,6 +649,9 @@ s32 _gc_resume_the_world(MiniJVM *jvm) {
 
 
 s32 _gc_wait_thread_suspend(MiniJVM *jvm, Runtime *runtime) {
+    if (runtime->thrd_info->thread_status == THREAD_STATUS_NEW || runtime->thrd_info->thread_status == THREAD_STATUS_ZOMBIE) {
+        return 0;
+    }
     while (!(runtime->thrd_info->is_suspend ||  /// While executing bytecode, if suspend_count is not 0, pause bytecode execution and set is_suspend = 1
              runtime->thrd_info->is_blocking)  // During certain IO waits, JNI sets is_blocking = 1
             ) { //

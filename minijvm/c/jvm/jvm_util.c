@@ -716,6 +716,7 @@ s32 jthread_run(void *para) {
 #endif
     //gc_refer_reg(runtime, jthread);//20201019 gust comment it , duplicate reg
     if (jvm->jdwp_enable && jvm->jdwpserver)event_on_thread_start(jvm->jdwpserver, runtime->thrd_info->jthread);
+    check_suspend_and_pause(runtime);//check suspend if gc is running
     runtime->thrd_info->thread_status = THREAD_STATUS_RUNNING;
     push_ref(runtime->stack, (__refer) jthread);
     ret = execute_method_impl(method, runtime);
@@ -742,17 +743,28 @@ s32 jthread_run(void *para) {
     if (runtime->thrd_info->curThreadLock) {
         jthread_unlock(runtime->thrd_info->curThreadLock, runtime);
     }
-    jthread_dispose(jthread, runtime);
-    runtime_destroy(runtime);
 
     utf8_destroy(methodName);
     utf8_destroy(methodType);
+    thrd_exit(ret);
 #if _JVM_DEBUG_LOG_LEVEL > 1
     s64 spent = currentTimeMillis() - startAt;
     jvm_printf("[INFO]thread over %llx , return %d , spent : %lld\n", (s64) (intptr_t) jthread, ret, spent);
 #endif
-    thrd_exit(ret);
     return ret;
+}
+
+/**
+ * the thread finalize, called by gc thread, else the threadlist is
+ * @param runtime
+ * @return
+ */
+s32 jthread_run_finalize(Runtime *runtime) {
+    if (!!runtime)return -1;
+    Instance *jthread = runtime->thrd_info->jthread;
+    jthread_dispose(jthread, runtime);
+    runtime_destroy(runtime);
+    return 0;
 }
 
 thrd_t jthread_start(Instance *ins, Runtime *parent) {//
