@@ -105,9 +105,9 @@ class MultiThread {
 
     private static void hugeThreadTest() {
         int i = 0;
-        while (true) {
+        while (i < 50000) {
             synchronized (threadList) {
-                while (threadList.size() < 1000) {
+                while (threadList.size() < 15) {
                     HugeThread ht = new HugeThread();
                     ht.start();
                     threadList.add(ht);
@@ -117,6 +117,15 @@ class MultiThread {
                     }
                 }
             }
+        }
+
+        while (true) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
         }
     }
 }

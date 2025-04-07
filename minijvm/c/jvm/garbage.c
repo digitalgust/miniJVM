@@ -585,6 +585,7 @@ s64 _garbage_collect(GcCollector *collector) {
     jvm_squeeze(0);
 #endif
     collector->isgc = 0;
+    jvm_printf("gc finished\n");
     return del;
 }
 
@@ -703,7 +704,11 @@ void _gc_copy_objs(MiniJVM *jvm) {
     //jvm_printf("thread set size:%d\n", thread_list->length);
     for (i = 0; i < jvm->thread_list->length; i++) {
         Runtime *runtime = threadlist_get(jvm, i);
-        _gc_copy_objs_from_thread(runtime);
+        if (runtime->thrd_info->thread_status != THREAD_STATUS_ZOMBIE) {//zombie thread is not need to mark
+            _gc_copy_objs_from_thread(runtime);
+        } else {
+            s32 debug = 1;
+        }
     }
 //    arraylist_iter_safe(thread_list, _list_iter_iter_copy, NULL);
     // Debug thread

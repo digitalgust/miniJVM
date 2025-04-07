@@ -760,7 +760,7 @@ s32 jthread_run(void *para) {
  * @return
  */
 s32 jthread_run_finalize(Runtime *runtime) {
-    if (!!runtime)return -1;
+    if (!runtime)return -1;
     Instance *jthread = runtime->thrd_info->jthread;
     jthread_dispose(jthread, runtime);
     runtime_destroy(runtime);
