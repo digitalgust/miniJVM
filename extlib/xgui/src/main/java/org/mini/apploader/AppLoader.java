@@ -37,7 +37,7 @@ public class AppLoader {
     static final String APP_FILE_EXT = ".jar";
     static final String APP_DATA_DIR = "/appdata/";
     static final String TMP_DIR = "/tmp/";
-    static final String EXAMPLE_APP_FILE = "minicompiler.jar";
+    static final String[] EXAMPLE_APP_FILES = {"minix.jar", "minicompiler.jar"};
     static final String KEY_BOOT = "boot";
     static final String KEY_DOWNLOADURL = "downloadurl";
     static final String KEY_LANGUAGE = "language";
@@ -134,8 +134,8 @@ public class AppLoader {
         copyExApp();
         String bootApp = appinfo.getProperty(KEY_BOOT);
         if (bootApp == null || !isJarExists(bootApp)) {
-            setBootApp(EXAMPLE_APP_FILE);
-            bootApp = EXAMPLE_APP_FILE;
+            setBootApp(EXAMPLE_APP_FILES[0]);
+            bootApp = EXAMPLE_APP_FILES[0];
         }
         bootApp = null;//"block the setup bootapp auto boot";
         runApp(bootApp);
@@ -194,19 +194,21 @@ public class AppLoader {
     }
 
     static void copyExApp() {
-        String srcPath = GCallBack.getInstance().getAppResRoot() + "/resfiles/" + EXAMPLE_APP_FILE;
-        String dstPath = getAppJarPath(EXAMPLE_APP_FILE);
-        File dst = new File(dstPath);
-        if (dst.exists()) {
-            String dstVersion = getAppConfig(EXAMPLE_APP_FILE, "version");
-            String srcVersion = getAppConfigWithJarPath(srcPath, "version");
-            if (compareVersions(srcVersion, dstVersion) <= 0) {
-                SysLog.info("exapp exists " + EXAMPLE_APP_FILE);
-                return;
+        for (String jarName : EXAMPLE_APP_FILES) {
+            String srcPath = GCallBack.getInstance().getAppResRoot() + "/resfiles/" + jarName;
+            String dstPath = getAppJarPath(jarName);
+            File dst = new File(dstPath);
+            if (dst.exists()) {
+                String dstVersion = getAppConfig(jarName, "version");
+                String srcVersion = getAppConfigWithJarPath(srcPath, "version");
+                if (compareVersions(srcVersion, dstVersion) <= 0) {
+                    SysLog.info("exapp exists " + jarName);
+                    return;
+                }
             }
+            addApp(jarName, srcPath);
+            SysLog.info("copy exapp " + jarName);
         }
-        addApp(EXAMPLE_APP_FILE, srcPath);
-        SysLog.info("copy exapp " + EXAMPLE_APP_FILE);
     }
 
     public static void loadJarProp(String filePath, Properties prop) {

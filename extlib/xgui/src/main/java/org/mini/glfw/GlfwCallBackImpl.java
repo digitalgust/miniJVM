@@ -547,13 +547,11 @@ public class GlfwCallBackImpl extends GCallBack {
 
     public void pickPhoto(int uid, int deviceAndType) {
         FileFilter filter = null;
-        if ((deviceAndType & PICK_PHOTO_TYPE_IMAGE) == 0 && (deviceAndType & PICK_PHOTO_TYPE_MOIVE) == 0) {
-            deviceAndType = PICK_PHOTO_TYPE_IMAGE | PICK_PHOTO_TYPE_MOIVE;
+        if (((deviceAndType & PICK_PHOTO_TYPE_IMAGE) != 0) && ((deviceAndType & PICK_PHOTO_TYPE_MOIVE) != 0)) {
             filter = bothFilter;
-        }
-        if ((deviceAndType & PICK_PHOTO_TYPE_IMAGE) == 1) {
+        } else if ((deviceAndType & PICK_PHOTO_TYPE_IMAGE) != 0) {
             filter = imagefilter;
-        } else if ((deviceAndType & PICK_PHOTO_TYPE_MOIVE) == 0) {
+        } else if ((deviceAndType & PICK_PHOTO_TYPE_MOIVE) != 0) {
             filter = moviefilter;
         }
         if ((deviceAndType & PICK_PHOTO_DEVICE_ALBUM) != 0 || (deviceAndType & PICK_PHOTO_DEVICE_CAMERA) != 0) {
