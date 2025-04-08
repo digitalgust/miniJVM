@@ -27,7 +27,7 @@ extern "C" {
 
 //=======================  micro define  =============================
 //_JVM_DEBUG  01=thread info, 02=garage&jit info  , 03=class load, 04=method call,  06=all bytecode
-#define _JVM_DEBUG_LOG_LEVEL 02
+#define _JVM_DEBUG_LOG_LEVEL 0
 #define _JVM_DEBUG_LOG_TO_FILE 0
 //_JVM_DEBUG_GARBAGE_DUMP 01=count instance , 02=print every object create/destroy
 #define _JVM_DEBUG_GARBAGE_DUMP 0
@@ -37,7 +37,7 @@ extern "C" {
 
 
 #define GARBAGE_OVERLOAD_DEFAULT 90  // overload of max heap size ,will active garbage collection
-#define GARBAGE_PERIOD_MS_DEFAULT 10 * 60 * 1000
+#define GARBAGE_PERIOD_MS_DEFAULT 10 * 1000
 #define MAX_HEAP_SIZE_DEFAULT  200 * 1024 * 1024
 #define MAX_STACK_SIZE_DEFAULT 4096
 
@@ -515,6 +515,8 @@ extern const c8 STR_INS_JAVA_LANG_OBJECT[];
 extern const c8 STR_INS_JAVA_LANG_STACKTRACEELEMENT[];
 extern const c8 STR_VM_JAVA_LIBRARY_PATH[];
 extern const c8 STR_VM_SUN_BOOT_CLASS_PATH[];
+extern const c8 STR_VM_JAVA_CLASS_VERSION[];//"java.class.version"
+extern const c8 STR_VM_USER_LANGUAGE[];//"user.language"
 extern const c8 STR_VM_JAVA_CLASS_PATH[];
 extern const c8 STR_JNI_LIB_NOT_FOUND[];
 extern const c8 STR_JNI_ONLOAD_NOT_FOUND[];
@@ -658,6 +660,9 @@ void profile_print();
 #define GCFLAG_JLOADER_SET(reg_v) (reg_v = (0x10 | reg_v))
 #define GCFLAG_JLOADER_GET(reg_v) (0x10 & reg_v)
 #define GCFLAG_JLOADER_CLEAR(reg_v) (reg_v = ((~0x10) & reg_v))
+#define GCFLAG_JTHREAD_SET(reg_v) (reg_v = (0x08 | reg_v))
+#define GCFLAG_JTHREAD_GET(reg_v) (0x08 & reg_v)
+#define GCFLAG_JTHREAD_CLEAR(reg_v) (reg_v = ((~0x08) & reg_v))
 
 typedef struct _MemoryBlock {
 
@@ -1857,7 +1862,7 @@ struct _MiniJVM {
     Hashtable *sys_prop;
 
     GcCollector *collector;
-    Instance *shutdown_hook;//shutdown hook ,it's a thread
+    ArrayList *shutdown_hook;//shutdown hook ,it contains thread instance
 
     ShortCut shortcut;
 

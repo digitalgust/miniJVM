@@ -73,6 +73,11 @@ public final class System {
     public static PrintStream out = getOutput();
 
     private static PrintStream getOutput() {
+        try {
+            PrintStream ps = new PrintStream(new com.sun.cldc.io.ConsoleOutputStream(), true, "utf-8");
+            return ps;
+        } catch (UnsupportedEncodingException e) {
+        }
         return new PrintStream(new com.sun.cldc.io.ConsoleOutputStream());
     }
 

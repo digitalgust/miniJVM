@@ -2,10 +2,12 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
+import org.mini.gui.callback.GCallBack;
+import org.mini.gui.callback.GCmd;
+import org.mini.util.SysLog;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TimerTask;
 
 /**
  * Privide multi slots of view, can swap it by auto or manul drag
@@ -43,7 +45,7 @@ public class GViewSlot extends GViewPort {
 
     protected float dragBeginX, dragBeginY;
 
-    static final int SWAP_PERIOD = 16;
+    static final int SWAP_PERIOD = 20;
     GCmd swapTask;
 
     public GViewSlot(GForm form, float w, float h, int scrollMod) {
@@ -109,8 +111,7 @@ public class GViewSlot extends GViewPort {
     }
 
     public void remove(GObject go) {
-        List<GObject> list = getElements();
-        synchronized (list) {
+        {
             int index = getElements().indexOf(go);
             remove(index);
         }
@@ -206,7 +207,9 @@ public class GViewSlot extends GViewPort {
                 timeInMils = 1;
             }
             this.timeInMils = timeInMils;
-            maxCounter = (int) (timeInMils / SWAP_PERIOD);
+            //每多长时间进行一次惯性动作
+            float inertiaPeriod = 1000 / GCallBack.getInstance().getFps();
+            maxCounter = (int) (timeInMils / inertiaPeriod);
 
         }
 
@@ -300,7 +303,7 @@ public class GViewSlot extends GViewPort {
 
     @Override
     public void setFlyable(boolean flyable) {
-        if (flyable) System.out.println(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
+        if (flyable) SysLog.warn(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
     }
 
     public boolean dragEvent(int button, float dx, float dy, float x, float y) {

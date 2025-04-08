@@ -10,44 +10,48 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
-    
-    
-        
+
+
     <dependencies>
+        <!--        <dependency>-->
+        <!--            <groupId>org.minijvm</groupId>  -->
+        <!--            <artifactId>minijvm_rt</artifactId>   -->
+        <!--            <version>1.0</version>-->
+        <!--            <scope>system</scope> -->
+        <!--            <systemPath>${basedir}/../../binary/lib/minijvm_rt.jar</systemPath> -->
+        <!--        </dependency> -->
         <dependency>
-            <groupId>org.minijvm</groupId>  
-            <artifactId>minijvm_rt</artifactId>   
-            <version>1.0</version>
-            <scope>system</scope> 
-            <systemPath>${basedir}/../../binary/lib/minijvm_rt.jar</systemPath> 
-        </dependency> 
+            <groupId>io.github.digitalgust</groupId>
+            <artifactId>minijvm_rt</artifactId>
+            <version>2.0.0</version>
+        </dependency>
     </dependencies>
-    
+
     <build>
         <finalName>${project.artifactId}</finalName>
         <plugins>
-            <plugin>   
-                <artifactId>maven-antrun-plugin</artifactId>    
-                <executions>       
-                    <execution>         
-                        <phase>package</phase>        
-                        <goals>            
-                            <goal>run</goal>        
-                        </goals>             
-                        <configuration>       
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
                             <tasks>
                                 <!--  copy to binary lib dir -->
-                                <mkdir dir="../../binary/libex"/>        
-                                <copy todir="../../binary/libex/" overwrite="true" > 
+                                <mkdir dir="../../binary/libex"/>
+                                <copy todir="../../binary/libex/" overwrite="true">
                                     <fileset dir="${project.build.directory}" erroronmissingdir="false">
                                         <include name="${project.artifactId}.jar"/>
                                     </fileset>
-                                </copy>        
-                            </tasks>        
-                        </configuration>        
-                    </execution>    
-                </executions>  
-            </plugin>   
+                                </copy>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>

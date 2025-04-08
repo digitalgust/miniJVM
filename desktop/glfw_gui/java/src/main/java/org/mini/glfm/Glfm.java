@@ -6,6 +6,7 @@
 package org.mini.glfm;
 
 import org.mini.glfw.Glfw;
+import org.mini.net.SocketNative;
 
 /**
  * @author gust
@@ -203,6 +204,9 @@ public class Glfm {
     }
 
     public static long glfmPlayVideo(long display, String uris, String mimeType) {
+
+        uris = "file://" + uris;
+        Glfm.glfmOpenOtherApp(SocketNative.toCStyle(uris), SocketNative.toCStyle(""), 0);
         return 0;
     }
 
@@ -298,8 +302,8 @@ public class Glfm {
 
     public static int glfmOpenOtherApp(byte[] cStyleURL, byte[] cStyleMore, int detectAppInstalled) {
         try {
-            String url = new String(cStyleURL, "utf-8");
-            String more = new String(cStyleMore, "utf-8");
+            String url = new String(cStyleURL, 0, cStyleURL.length - 1, "utf-8");
+            String more = new String(cStyleMore, 0, cStyleMore.length - 1, "utf-8");
             String osName = System.getProperty("os.name", "");// 获取操作系统的名字
             if (osName.startsWith("Mac OS")) {
                 // Mac OS

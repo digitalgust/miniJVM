@@ -2248,6 +2248,7 @@ const char *glfmGetUUID() {
             len = ANDROID_UUID_MAX_LEN - 1;
         }
         memcpy(android_uuid, rawString, len);
+        android_uuid[len] = 0;
         (*jni)->DeleteLocalRef(jni, clazz);
         (*jni)->DeleteLocalRef(jni, UUID);
         (*jni)->ReleaseStringUTFChars(jni, uuidStr, rawString);
@@ -2258,6 +2259,32 @@ const char *glfmGetUUID() {
 
 const char *getOsName() {
     return "Android";
+}
+
+void getOsLanguage(char *buf, int bufSize) {
+    struct android_app *app = platformDataGlobal->app;
+    GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
+    JNIEnv *jni = platformData->jniEnv;
+
+    jclass localeClass = (*jni)->FindClass(jni, "java/util/Locale");
+
+    // 获取 getDefault() 方法
+    // 调用 getDefault() 方法获取默认 Locale 对象
+    jobject localeObject = glfm__callStaticJavaMethod(jni, localeClass, "getDefault", "()Ljava/util/Locale;", Object);
+    // 获取 getLanguage() 方法
+    // 调用 getLanguage() 方法获取语言代码
+    jstring language = glfm__callJavaMethod(jni, localeObject, "getLanguage", "()Ljava/lang/String;", Object);
+    const char *rawString = (*jni)->GetStringUTFChars(jni, language, 0);
+    int len = strlen(rawString);
+    if (len > bufSize) {
+        len = bufSize - 1;
+    }
+    memcpy(buf, rawString, len);
+    buf[len]=0;
+    (*jni)->DeleteLocalRef(jni, localeClass);
+    (*jni)->DeleteLocalRef(jni, localeObject);
+    (*jni)->ReleaseStringUTFChars(jni, language, rawString);
+    (*jni)->DeleteLocalRef(jni, language);
 }
 
 void *playVideo(GLFMDisplay *display, char *cpath, char *mimeType) {
@@ -2361,4 +2388,4 @@ void remoteMethodCall(const char *inJsonStr, Utf8String *outJsonStr) {
 void buyAppleProductById(GLFMDisplay * display, const char *cproductID, const char *base64HandleScript){
     printf("buyAppleProductById can't call on android\n");
 }
-#endif
+#endif  //GLFM_PLATFORM_ANDROID

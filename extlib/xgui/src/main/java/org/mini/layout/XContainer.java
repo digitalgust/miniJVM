@@ -3,6 +3,9 @@ package org.mini.layout;
 import org.mini.glwrap.GLUtil;
 import org.mini.gui.GContainer;
 import org.mini.gui.GObject;
+import org.mini.gui.callback.GCallBack;
+import org.mini.layout.loader.XmlExtAssist;
+import org.mini.util.IntList;
 import org.xmlpull.v1.KXmlParser;
 import org.xmlpull.v1.XmlPullParser;
 import org.mini.nanovg.Nanovg;
@@ -128,6 +131,7 @@ public abstract class XContainer
         //for realign gui component
         List<List<XObject>> rows = new ArrayList();
         List<XObject> row = new ArrayList();
+        IntList rowHight = new IntList();
 
         //split rows
         int dy = 0;
@@ -158,6 +162,7 @@ public abstract class XContainer
                 sumWidth += xo.width;
             }
             sumHeight += maxH;
+            rowHight.add(maxH);
             //tr same row height
             if (isSameHeightRow()) {
                 for (XObject xo : crow) {
@@ -179,19 +184,21 @@ public abstract class XContainer
         //start realign vert
         int bottomPix = viewH - sumHeight;
         int vcenterPix = bottomPix / 2;
+        int i = 0;
         for (List<XObject> crow : rows) {
-            boolean rowHasFloatObj = false;
+            int curRowH = rowHight.get(i);
             for (XObject xo : crow) {
                 if ((align & Nanovg.NVG_ALIGN_MIDDLE) != 0) {
-                    xo.y += vcenterPix;
+                    xo.y += vcenterPix + (curRowH - xo.height) / 2;
                 } else if ((align & Nanovg.NVG_ALIGN_BOTTOM) != 0) {
-                    xo.y += bottomPix;
+                    xo.y += bottomPix + (curRowH - xo.height) / 2;
                 }
                 if (xo.getGui() != null) xo.getGui().setLocation(xo.x, xo.y);
                 if (xo instanceof XContainer) {
                     ((XContainer) xo).align();
                 }
             }
+            i++;
         }
     }
 
@@ -237,6 +244,10 @@ public abstract class XContainer
 
 
     public void build(int parentW, int parentH, XEventHandler eventHandler) {
+
+        if (!Thread.currentThread().equals(GCallBack.getInstance().getOpenglThread())) {
+            throw new RuntimeException("must call build in opengl thread");
+        }
 
         if (eventHandler == null) {
             this.eventHandler = new XEventHandler();
@@ -296,11 +307,13 @@ public abstract class XContainer
             tmp = tmp.replace('\r', ' ');
             tmp = tmp.trim();
             if (tmp.length() > 0) {
-                XLabel label = new XLabel(this);
-                label.assist = assist;
-                label.multiLine = true;
-                label.setText(tmp);
-                children.add(label);
+//                XLabel label = new XLabel(this);
+//                label.assist = assist;
+//                label.multiLine = true;
+//                label.isPlain = true;
+//                label.setText(tmp);
+//                children.add(label);
+                setText(tmp);
             }
         }
 
@@ -360,6 +373,10 @@ public abstract class XContainer
                 XList xlist = new XList(parent);
                 xlist.parse(parser, assist);
                 return (xlist);
+            case XListItem.XML_NAME:  //listitem
+                XListItem xlistitem = new XListItem(parent);
+                xlistitem.parse(parser, assist);
+                return (xlistitem);
             case XMenu.XML_NAME:  //menu
                 XMenu xmenu = new XMenu(parent);
                 xmenu.parse(parser, assist);
@@ -461,11 +478,7 @@ public abstract class XContainer
             if (parser.getEventType() == XmlPullParser.START_TAG) {
                 XObject xobj = XContainer.parseSon(parser, this, assist);
                 if (xobj != null) {
-//                    if (xobj.hidden) {
-//                        hiddens.add(xobj);
-//                    } else {
                     children.add(xobj);
-//                    }
                 }
                 parser.require(XmlPullParser.END_TAG, null, tagName);
             }

@@ -134,8 +134,68 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "709"
             endingLineNumber = "709"
-            landmarkName = "_garbage_mark_object(ref)"
+            landmarkName = "_gc_copy_objs(jvm)"
             landmarkType = "9">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "4267929A-C2A2-408C-B200-4488A0978941"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../c/glfm/glfm_apple.m"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "2731"
+            endingLineNumber = "2731"
+            landmarkName = "getOsLanguage(buf, bufSize)"
+            landmarkType = "9">
+            <Locations>
+               <Location
+                  uuid = "4267929A-C2A2-408C-B200-4488A0978941 - 29f370d4471bb765"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "pickPhotoAlbum"
+                  moduleName = "iosapp"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/gust/Documents/GitHub/miniJVM/mobile/c/glfm/glfm_apple.m"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "2731"
+                  endingLineNumber = "2731">
+               </Location>
+               <Location
+                  uuid = "4267929A-C2A2-408C-B200-4488A0978941 - 29f370d4471bb765"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "pickPhotoAlbum"
+                  moduleName = "iosapp"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/gust/Documents/GitHub/miniJVM/mobile/c/glfm/glfm_apple.m"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "2731"
+                  endingLineNumber = "2731">
+               </Location>
+               <Location
+                  uuid = "4267929A-C2A2-408C-B200-4488A0978941 - 7055cb81e09022e6"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "getOsLanguage"
+                  moduleName = "iosapp"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/gust/Documents/GitHub/miniJVM/mobile/c/glfm/glfm_apple.m"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "2731"
+                  endingLineNumber = "2731">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

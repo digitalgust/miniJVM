@@ -15,7 +15,7 @@ import org.mini.crypt.XorCrypt;
 public class CryptTest {
 
     void t1() {
-        AsynCrypt.test();
+        //AsynCrypt.test();
     }
 
     void t2() {

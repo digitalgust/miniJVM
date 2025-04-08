@@ -7,6 +7,8 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
+import org.mini.gui.callback.GCallBack;
+import org.mini.gui.event.GCaretListener;
 import org.mini.gui.event.GFocusChangeListener;
 import org.mini.util.CodePointBuilder;
 
@@ -19,6 +21,10 @@ import static org.mini.glwrap.GLUtil.toCstyleBytes;
  * @author Gust
  */
 public abstract class GTextObject extends GContainer implements GFocusChangeListener {
+    protected int selectStart = -1;//选取开始
+    protected int selectEnd = -1;//选取结束
+
+    protected GCaretListener caretListener;
     //for keyboard union action
     GObject defaultUnionObj = new GObject(form) {
     };
@@ -42,6 +48,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
     protected List<UserAction> undoQ = new ArrayList();
     protected List<UserAction> redoQ = new ArrayList();
     static final int MAXUNDO = 15;
+    protected int undoMax = MAXUNDO;
 
 
     protected String hint;
@@ -51,7 +58,6 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
 
 
     protected boolean selectMode = false;
-    protected boolean editable = true;
     boolean shift = false;
 
 
@@ -71,10 +77,16 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
     abstract void onSetText(String text);
 
     public void setText(String text) {
+        //put in del undo
+        String old = textsb.toString();
+        putInUndo(UserAction.DEL, old, 0);
+
         this.textsb.setLength(0);
         if (text != null) {
             this.textsb.append(text);
         }
+        putInUndo(UserAction.ADD, text, 0);
+
         onSetText(text);
         text_arr = null;
         doStateChanged(this);
@@ -89,9 +101,10 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
     }
 
     public void insertTextByIndex(int index, int ch) {
-        if(!editable)return;
+        //if(!editable)return;
         textsb.insertCodePoint(index, ch);
         text_arr = null;
+        setCaretIndex(index + 1);
         doStateChanged(this);
         StringBuilder undo = new StringBuilder();
         undo.appendCodePoint(ch);
@@ -99,15 +112,16 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
     }
 
     public void insertTextByIndex(int index, String str) {
-        if(!editable)return;
+        //if(!editable)return;
         textsb.insert(index, str);
         text_arr = null;
+        setCaretIndex(index + str.codePointCount(0, str.length()));
         doStateChanged(this);
         putInUndo(UserAction.ADD, str, index);
     }
 
     public void deleteTextByIndex(int index) {
-        if(!editable)return;
+        //if(!editable)return;
         int ch = textsb.codePointAt(index);
         textsb.deleteCodePointAt(index);
         text_arr = null;
@@ -118,7 +132,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
     }
 
     public void deleteTextRange(int start, int end) {
-        if(!editable)return;
+        //if(!editable)return;
         String str = textsb.substring(start, end);
         textsb.delete(start, end);
         text_arr = null;
@@ -128,7 +142,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
 
 
     public void deleteAll() {
-        if(!editable)return;
+        //if(!editable)return;
         String str = textsb.toString();
         textsb.setLength(0);
         text_arr = null;
@@ -144,9 +158,30 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
 
     abstract void resetSelect();
 
-    abstract public void setCaretIndex(int caretIndex);
+    public void setCaretIndex(int caretIndex) {
+        if (caretListener != null) {
+            caretListener.caretChanged(this, caretIndex);
+        }
+    }
 
     abstract public int getCaretIndex();
+
+    public void setSelection(int start, int end) {
+        if (start < 0) start = 0;
+        if (end > textsb.length()) end = textsb.length();
+        if (start > end) {
+            int tmp = start;
+            start = end;
+            end = tmp;
+        }
+        if (start == end) {
+            this.selectStart = -1;
+            this.selectEnd = -1;
+        } else {
+            this.selectStart = start;
+            this.selectEnd = end;
+        }
+    }
 
     public void doSelectText() {
 
@@ -165,13 +200,13 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
     }
 
     public void doCut() {
-        if(!editable)return;
+        if (!visible || !enable) return;
         doCopyClipBoard();
         deleteSelectedText();
     }
 
     public void doPasteClipBoard() {
-        if(!editable)return;
+        if (!visible || !enable) return;
         deleteSelectedText();
         String s = Glfm.glfmGetClipBoardContent();
         if (s == null) {
@@ -186,7 +221,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
 
     @Override
     public void focusGot(GObject go) {
-        if (editable) {
+        if (visible && enable) {
             GForm.showKeyboard(this);
         }
     }
@@ -196,7 +231,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
         if (newgo != unionObj && newgo != this) {
             GForm.hideKeyboard(form);
         }
-        GToolkit.disposeEditMenu();
+        GToolkit.hideEditMenu();
         touched = false;
     }
 
@@ -209,8 +244,8 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
             switch (phase) {
                 case Glfm.GLFMTouchPhaseBegan: {
                     touched = true;
-                    if (editable && !Glfm.glfmIsKeyboardVisible(GCallBack.getInstance().getDisplay())) {
-                        GForm.showKeyboard(this);
+                    if (visible && enable && !Glfm.glfmIsKeyboardVisible(GCallBack.getInstance().getDisplay())) {
+                        //GForm.showKeyboard(this);
                     }
                     break;
                 }
@@ -235,7 +270,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
 
     @Override
     public void keyEventGlfm(int key, int action, int mods) {
-        super.keyEventGlfm(key,action,mods);
+        super.keyEventGlfm(key, action, mods);
         int glfwAction = 0;
         if (action == Glfm.GLFMKeyActionPressed) {
             glfwAction = Glfw.GLFW_PRESS;
@@ -314,26 +349,28 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
      * @return the editable
      */
     public boolean isEditable() {
-        return editable;
+        return enable;
     }
 
     /**
      * @param editable the editable to set
      */
     public void setEditable(boolean editable) {
-        this.editable = editable;
+        this.enable = editable;
+    }
+
+
+    public void setUndoSize(int undoMax) {
+        this.undoMax = undoMax;
     }
 
     public void putInUndo(int mod, String t, int caretIndex) {
-        undoQ.add(new UserAction(mod, t, caretIndex));
-        if (undoQ.size() > MAXUNDO) {
-            undoQ.remove(0);
-        }
+        putInUndo(new UserAction(mod, t, caretIndex));
     }
 
     public void putInUndo(UserAction te) {
         undoQ.add(te);
-        if (undoQ.size() > MAXUNDO) {
+        if (undoQ.size() > undoMax) {
             undoQ.remove(0);
         }
     }
@@ -348,15 +385,12 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
 
 
     public void putInRedo(int mod, String t, int caretIndex) {
-        redoQ.add(new UserAction(mod, t, caretIndex));
-        if (redoQ.size() > MAXUNDO) {
-            redoQ.remove(0);
-        }
+        putInRedo(new UserAction(mod, t, caretIndex));
     }
 
     public void putInRedo(UserAction te) {
         redoQ.add(te);
-        if (redoQ.size() > MAXUNDO) {
+        if (redoQ.size() > undoMax) {
             redoQ.remove(0);
         }
     }
@@ -370,33 +404,42 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
     }
 
     public void undo() {
-        if(!editable)return;
+        if (!visible || !enable) return;
         UserAction action = getUndo();
         if (action != null) {
             if (action.addOrDel == UserAction.ADD) {
                 textsb.delete(action.caretIndex, action.caretIndex + action.txt.codePointCount(0, action.txt.length()));
+                setCaretIndex(action.caretIndex);
             } else {
                 textsb.insert(action.caretIndex, action.txt);
+                int len = action.txt.codePointCount(0, action.txt.length());
+                setCaretIndex(action.caretIndex + len);
             }
-            setCaretIndex(action.caretIndex);
             putInRedo(action);
             text_arr = null;
         }
     }
 
     public void redo() {
-        if(!editable)return;
+        if (!visible || !enable) return;
         UserAction action = getRedo();
         if (action != null) {
             if (action.addOrDel == UserAction.ADD) {
                 textsb.insert(action.caretIndex, action.txt);
+                int len = action.txt.codePointCount(0, action.txt.length());
+                setCaretIndex(action.caretIndex + len);
             } else {
                 textsb.delete(action.caretIndex, action.caretIndex + action.txt.codePointCount(0, action.txt.length()));
+                setCaretIndex(action.caretIndex);
             }
-            setCaretIndex(action.caretIndex);
             putInUndo(action);
             text_arr = null;
         }
+    }
+
+    public void clearUndoRedo() {
+        undoQ.clear();
+        redoQ.clear();
     }
 
     public void setScrollBar(boolean enable) {

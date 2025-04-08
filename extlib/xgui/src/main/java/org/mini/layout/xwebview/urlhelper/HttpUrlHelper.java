@@ -6,7 +6,7 @@ import java.net.URL;
 
 public class HttpUrlHelper extends UrlHelper {
     public String getProtocol() {
-        return "file";
+        return "http";
     }
 
 

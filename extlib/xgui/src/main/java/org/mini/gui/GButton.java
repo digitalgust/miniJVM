@@ -6,10 +6,10 @@
 package org.mini.gui;
 
 import org.mini.glfm.Glfm;
+import org.mini.gui.callback.GCallBack;
 
-import static org.mini.gui.GToolkit.getStyle;
-import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
+import static org.mini.gui.GToolkit.*;
 import static org.mini.nanovg.Nanovg.*;
 
 /**
@@ -22,8 +22,11 @@ public class GButton extends GObject {
     protected String preicon;
     protected byte[] preicon_arr;
     protected float[] preiconColor;
-    protected boolean bt_pressed = false;
+    protected boolean touched = false;
     float oldX, oldY;
+    float[] box = new float[4];
+    float lineh;
+    float iconWidth;
 
 
     public GButton(GForm form) {
@@ -41,8 +44,13 @@ public class GButton extends GObject {
 
 
     public void setText(String text) {
+        if (text == null) return;
         this.text = text;
         text_arr = toCstyleBytes(text);
+        long vg = GCallBack.getInstance().getNvContext();
+        float[] b = GToolkit.getTextBoundle(vg, text_arr, GCallBack.getInstance().getDeviceWidth(), getFontSize(), getFontWord(), false);
+        System.arraycopy(b, 0, box, 0, 4);
+        lineh = b[HEIGHT];
     }
 
     public String getText() {
@@ -53,6 +61,9 @@ public class GButton extends GObject {
         if (preicon == null || preicon.trim().length() == 0) return;
         this.preicon = preicon;
         preicon_arr = toCstyleBytes(preicon);
+        long vg = GCallBack.getInstance().getNvContext();
+        float[] b = GToolkit.getTextBoundle(vg, preicon_arr, GCallBack.getInstance().getDeviceWidth(), GToolkit.getStyle().getIconFontSize(), getFontIcon(), true);
+        iconWidth = b[WIDTH];
     }
 
     public float[] getPreiconColor() {
@@ -63,32 +74,31 @@ public class GButton extends GObject {
         this.preiconColor = preiconColor;
     }
 
+    public boolean isPressed() {
+        return touched;
+    }
 
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         if (isInArea(x, y)) {
             if (pressed) {
-                bt_pressed = true;
+                touched = true;
                 parent.setCurrent(this);
-                oldX = getX();
-                oldY = getY();
+                oldX = x;
+                oldY = y;
                 doStateChanged(this);
             } else {
                 if (validAction(x, y)) doAction();
-                bt_pressed = false;
+                touched = false;
                 doStateChanged(this);
             }
         }
     }
 
-    public boolean isPressed() {
-        return bt_pressed;
-    }
-
     @Override
     public void cursorPosEvent(int x, int y) {
-        if (!isInArea(x, y)) {
-            bt_pressed = false;
+        if (!isInArea(x, y) && touched) {
+            touched = false;
             doStateChanged(this);
         }
     }
@@ -96,19 +106,24 @@ public class GButton extends GObject {
     @Override
     public void touchEvent(int touchid, int phase, int x, int y) {
         if (isInArea(x, y)) {
-            if (phase == Glfm.GLFMTouchPhaseBegan) {
-                bt_pressed = true;
-                oldX = getX();
-                oldY = getY();
-                doStateChanged(this);
-            } else if (phase == Glfm.GLFMTouchPhaseEnded) {
-                if (validAction(x, y)) doAction();
-                bt_pressed = false;
-                doStateChanged(this);
+            switch (phase) {
+                case Glfm.GLFMTouchPhaseBegan:
+                    touched = true;
+                    oldX = x;
+                    oldY = y;
+                    doStateChanged(this);
+                    break;
+                case Glfm.GLFMTouchPhaseEnded:
+                    if (validAction(x, y)) doAction();
+                    touched = false;
+                    doStateChanged(this);
+                    break;
             }
         } else if (!isInArea(x, y)) {
-            bt_pressed = false;
-            doStateChanged(this);
+            if (touched) {
+                touched = false;
+                doStateChanged(this);
+            }
         }
     }
 
@@ -124,6 +139,9 @@ public class GButton extends GObject {
         return paintFlying(vg, x, y);
     }
 
+    static float[] GRADIENT_COLOR0 = {1.0f, 1.0f, 1.0f, 0.2f};
+    static float[] GRADIENT_COLOR1 = {0.0f, 0.0f, 0.0f, 0.1f};
+
     @Override
     boolean paintFlying(long vg, float x, float y) {
         float w = getW();
@@ -134,43 +152,56 @@ public class GButton extends GObject {
 
         float tw = 0, iw = 0;
         float move = 0;
-        if (bt_pressed) {
-            move = 1;
-            bg = nvgLinearGradient(vg, x, y + h, x, y, nvgRGBA(255, 255, 255, 0x10), nvgRGBA(0, 0, 0, 0x10));
+        if (GToolkit.getFeel() == FEEL_DIMENSION) {
+            if (touched && enable) {
+                move = 1;
+                bg = nvgLinearGradient(vg, x, y + h, x, y, GRADIENT_COLOR0, GRADIENT_COLOR1);
+            } else {
+                bg = nvgLinearGradient(vg, x, y, x, y + h, GRADIENT_COLOR0, GRADIENT_COLOR1);
+            }
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, getCornerRadius() - 1);
+            nvgFillColor(vg, getBgColor());
+            nvgFill(vg);
+            nvgFillPaint(vg, bg);
+            nvgFill(vg);
         } else {
-            bg = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(255, 255, 255, 0x10), nvgRGBA(0, 0, 0, 0x10));
+            float[] c;
+            if (touched && enable) {
+                move = 1;
+                c = GRADIENT_COLOR1;
+            } else {
+                c = GRADIENT_COLOR0;
+            }
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, getCornerRadius() - 0.5f);
+            nvgFillColor(vg, c);
+            nvgFill(vg);
         }
-        nvgBeginPath(vg);
-        nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, getCornerRadius() - 1);
-        nvgFillColor(vg, getBgColor());
-        nvgFill(vg);
-        nvgFillPaint(vg, bg);
-        nvgFill(vg);
+
 
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, getCornerRadius() - 0.5f);
         nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 48));
         nvgStroke(vg);
 
-        float[] textColor = enable ? (isFlying() ? getFlyingColor() : getColor()) : getDisabledColor();
+        float[] textColor = getColor();
         //calc text width
         if (text.length() > 0) {
-            nvgFontSize(vg, getFontSize());
-            nvgFontFace(vg, GToolkit.getFontWord());
-            tw = nvgTextBoundsJni(vg, 0, 0, text_arr, 0, text_arr.length, null);
+            tw = box[WIDTH];
         }
         //draw preicon
         if (preicon != null) {
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
 
-            iw = nvgTextBoundsJni(vg, 0, 0, preicon_arr, 0, preicon_arr.length, null);
+            iw = iconWidth;
 
             float[] pc = preiconColor == null ? getStyle().getTextFontColor() : preiconColor;
             pc = enable ? pc : getDisabledColor();
             nvgFillColor(vg, pc);
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-            nvgTextJni(vg, x + w * 0.5f - tw * 0.5f, y + h * 0.5f + move, preicon_arr, 0, preicon_arr.length);
+            nvgTextJni(vg, x + w * 0.5f - tw * 0.5f, y + h * 0.5f + move + 1f, preicon_arr, 0, preicon_arr.length);
         }
         // draw text
         nvgFontSize(vg, getFontSize());
@@ -178,10 +209,10 @@ public class GButton extends GObject {
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
         nvgFontBlur(vg, 2f);
         nvgFillColor(vg, GToolkit.getStyle().getTextShadowColor());
-        nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw - 2, y + h * 0.5f + move + 1.5f, text_arr, 0, text_arr.length);
+        nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw * .5f, y + h * 0.5f + move + 1.5f, text_arr, 0, text_arr.length);
         nvgFontBlur(vg, 0);
         nvgFillColor(vg, textColor);
-        nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw - 2, y + h * 0.5f + move + 1.5f, text_arr, 0, text_arr.length);
+        nvgTextJni(vg, x + w * 0.5f - tw * 0.5f + iw * .5f, y + h * 0.5f + move + 1.5f, text_arr, 0, text_arr.length);
 
         return true;
     }
@@ -195,7 +226,7 @@ public class GButton extends GObject {
     }
 
     private boolean validAction(float releaseX, float releaseY) {
-        if (releaseX >= oldX && releaseX <= oldX + getW() && releaseY >= oldY && releaseY < oldY + getH()) {
+        if (Math.abs(releaseX - oldX) < TOUCH_RANGE && Math.abs(releaseY - oldY) < TOUCH_RANGE) {
             return true;
         }
         return false;

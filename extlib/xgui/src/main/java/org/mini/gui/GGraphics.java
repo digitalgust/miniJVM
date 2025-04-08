@@ -6,6 +6,7 @@
 package org.mini.gui;
 
 import org.mini.glwrap.GLUtil;
+import org.mini.gui.callback.GFont;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Nanovg.*;

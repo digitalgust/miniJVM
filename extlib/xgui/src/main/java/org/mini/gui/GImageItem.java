@@ -158,46 +158,63 @@ public class GImageItem extends GObject {
         this.drawBorder = drawBorder;
     }
 
-    boolean bt_pressed;
+    boolean touched;
     float oldX, oldY;
 
     private boolean validAction(float releaseX, float releaseY) {
-        if (releaseX >= oldX && releaseX <= oldX + getW() && releaseY >= oldY && releaseY < oldY + getH()) {
+        if (Math.abs(releaseX - oldX) < TOUCH_RANGE && Math.abs(releaseY - oldY) < TOUCH_RANGE) {
             return true;
         }
         return false;
     }
 
     @Override
-    public void touchEvent(int touchid, int phase, int x, int y) {
+    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         if (isInArea(x, y)) {
-            if (phase == Glfm.GLFMTouchPhaseBegan) {
-                bt_pressed = true;
-                oldX = getX();
-                oldY = getY();
-            } else if (phase == Glfm.GLFMTouchPhaseEnded) {
+            if (pressed) {
+                touched = true;
+                parent.setCurrent(this);
+                oldX = x;
+                oldY = y;
+                doStateChanged(this);
+            } else {
                 if (validAction(x, y)) doAction();
-                bt_pressed = false;
-            } else if (!isInArea(x, y)) {
-                bt_pressed = false;
+                touched = false;
+                doStateChanged(this);
             }
         }
     }
 
-    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
-        if (isInArea(x, y)) {
-            if (button == Glfw.GLFW_MOUSE_BUTTON_1) {//left
-                if (pressed) {
-                    bt_pressed = true;
-                    oldX = getX();
-                    oldY = getY();
-                } else {
-                    if (validAction(x, y)) doAction();
-                    bt_pressed = false;
-                }
-            }
-        } else {
-            bt_pressed = false;
+    @Override
+    public void cursorPosEvent(int x, int y) {
+        if (!isInArea(x, y) && touched) {
+            touched = false;
+            doStateChanged(this);
         }
     }
+
+    @Override
+    public void touchEvent(int touchid, int phase, int x, int y) {
+        if (isInArea(x, y)) {
+            switch (phase) {
+                case Glfm.GLFMTouchPhaseBegan:
+                    touched = true;
+                    oldX = x;
+                    oldY = y;
+                    doStateChanged(this);
+                    break;
+                case Glfm.GLFMTouchPhaseEnded:
+                    if (validAction(x, y)) doAction();
+                    touched = false;
+                    doStateChanged(this);
+                    break;
+            }
+        } else if (!isInArea(x, y)) {
+            if (touched) {
+                touched = false;
+                doStateChanged(this);
+            }
+        }
+    }
+
 }

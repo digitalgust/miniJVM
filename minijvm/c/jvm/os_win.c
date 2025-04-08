@@ -209,7 +209,7 @@ static c8 *inet_ntop6(const u8 *src, c8 *dst, socklen_t size) {
                 *tp++ = ':';
             continue;
         }
-        /* Are we following an initial run of 0x00s or any real hex? */
+        /* Are we following an initial run of 0x00's or any real hex? */
         if (i != 0)
             *tp++ = ':';
         /* Is this address an encapsulated IPv4? */
@@ -239,7 +239,7 @@ static c8 *inet_ntop6(const u8 *src, c8 *dst, socklen_t size) {
     return (dst);
 }
 
-#endif
+#endif  //#ifndef InetNtopA
 
 #ifndef InetPtonA
 
@@ -423,7 +423,7 @@ static s32 inet_pton6(const c8 *src, u_char *dst) {
     return (1);
 }
 
-#endif
+#endif  //#ifndef InetPtonA
 
 /*------------------------------------------
     MAIN  -  tester
@@ -463,7 +463,7 @@ static s32 inet_pton6(const c8 *src, u_char *dst) {
 //
 //}
 
-#endif
+#endif  //#if __JVM_OS_MINGW__
 
 
 void get_last_error(Utf8String *error_msg) {
@@ -475,11 +475,11 @@ void get_last_error(Utf8String *error_msg) {
 
     if (FormatMessageA(flags, NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
                        (LPSTR) &errorMessage, 0, NULL) != 0) {
-        printf("Error code %d: %s\n", (int)errorCode, errorMessage);
+        printf("Error code %d: %s\n", (int) errorCode, errorMessage);
         if (error_msg)utf8_append_c(error_msg, errorMessage);
         LocalFree(errorMessage); // 使用完毕后释放由FormatMessage分配的内存
     } else {
-        printf("Failed to get error message for error code %d\n", (int)errorCode);
+        printf("Failed to get error message for error code %d\n", (int) errorCode);
     }
 }
 
@@ -686,4 +686,148 @@ s32 os_load_lib_and_init(const c8 *libname, Runtime *runtime) {
     return 0;
 }
 
-#endif
+void os_get_lang(Utf8String *buf) {
+
+    const int size = 256;
+    wchar_t localeName[size];
+
+    if (GetUserDefaultLocaleName(localeName, size)) {
+        //使用windows api 把 wchar_t 转 char
+        char str[256];
+        int result = WideCharToMultiByte(CP_UTF8, 0, localeName, -1, str, size, NULL, NULL);
+        if (result == 0) {
+            // Handle error
+            //printf("WideCharToMultiByte failed with error %d\n", GetLastError());
+            return;
+        }
+
+        utf8_append_c(buf, str);
+        utf8_replace_c(buf, "-", "_");
+        s32 i = utf8_indexof_c(buf, "_");
+        if (i > 0) {
+            utf8_substring(buf, 0, i);
+        }
+        //printf("language: %s\n", utf8_cstr(buf));
+    } else {
+        //printf("GetUserDefaultLocaleName failed with error %d\n", GetLastError());
+    }
+}
+
+/**
+ * for windows convert utf8 path string to platform supported encoding ,and save to dst ByteBuf
+ */
+s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src) {
+    // 首先检查输入参数
+    if (!dst || !src) {
+        return -1;
+    }
+
+    // 获取 UTF-8 字符串的长度
+    s32 utf8_len = src->length;
+    if (utf8_len == 0) {
+        bytebuf_expand(dst, 1);  // 为 null 终止符分配空间
+        dst->buf[0] = 0;
+        return 0;
+    }
+
+    // 第一步：将 UTF-8 转换为 UTF-16
+    s32 utf16_len = MultiByteToWideChar(CP_UTF8, 0, src->data, utf8_len, NULL, 0);
+    if (utf16_len == 0) {
+        return -1;
+    }
+
+    // 分配临时 UTF-16 缓冲区
+    wchar_t *utf16_buf = (wchar_t *) malloc((utf16_len + 1) * sizeof(wchar_t));
+    if (!utf16_buf) {
+        return -1;
+    }
+
+    // 执行 UTF-8 到 UTF-16 的转换
+    s32 result = MultiByteToWideChar(CP_UTF8, 0, src->data, utf8_len, utf16_buf, utf16_len);
+    if (result == 0) {
+        free(utf16_buf);
+        return -1;
+    }
+    utf16_buf[utf16_len] = 0;  // 确保 null 终止
+
+    // 第二步：将 UTF-16 转换为 ANSI/ACP 编码
+    s32 ansi_len = WideCharToMultiByte(CP_ACP, 0, utf16_buf, utf16_len, NULL, 0, NULL, NULL);
+    if (ansi_len == 0) {
+        free(utf16_buf);
+        return -1;
+    }
+
+    // 分配目标缓冲区空间
+    bytebuf_expand(dst, ansi_len + 1);
+
+    // 执行 UTF-16 到 ANSI/ACP 的转换
+    result = WideCharToMultiByte(CP_ACP, 0, utf16_buf, utf16_len, dst->buf, ansi_len, NULL, NULL);
+    if (result == 0) {
+        free(utf16_buf);
+        return -1;
+    }
+
+    // 清理并确保 null 终止
+    free(utf16_buf);
+    dst->buf[ansi_len] = 0;
+
+    return ansi_len;
+}
+
+s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
+    // Check input parameters
+    if (!dst || !src) {
+        return -1;
+    }
+
+    // Get source string length
+    s32 src_len = strlen(src);
+    if (src_len == 0) {
+        utf8_clear(dst);
+        return 0;
+    }
+
+    // First convert from platform encoding (ANSI) to UTF-16
+    s32 utf16_len = MultiByteToWideChar(CP_ACP, 0, src, src_len, NULL, 0);
+    if (utf16_len == 0) {
+        return -1;
+    }
+
+    // Allocate temporary buffer for UTF-16 string
+    wchar_t *utf16_buf = (wchar_t *) malloc((utf16_len + 1) * sizeof(wchar_t));
+    if (!utf16_buf) {
+        return -1;
+    }
+
+    // Convert to UTF-16
+    s32 result = MultiByteToWideChar(CP_ACP, 0, src, src_len, utf16_buf, utf16_len);
+    if (result == 0) {
+        free(utf16_buf);
+        return -1;
+    }
+    utf16_buf[utf16_len] = 0;  // Ensure null termination
+
+    // Convert from UTF-16 to UTF-8
+    s32 utf8_len = WideCharToMultiByte(CP_UTF8, 0, utf16_buf, utf16_len, NULL, 0, NULL, NULL);
+    if (utf8_len == 0) {
+        free(utf16_buf);
+        return -1;
+    }
+
+    // Expand destination buffer and perform conversion
+    utf8_expand(dst, utf8_len + 1);
+    result = WideCharToMultiByte(CP_UTF8, 0, utf16_buf, utf16_len, dst->data, utf8_len, NULL, NULL);
+    if (result == 0) {
+        free(utf16_buf);
+        return -1;
+    }
+
+    // Clean up and set length
+    free(utf16_buf);
+    dst->length = utf8_len;
+    dst->data[utf8_len] = 0;  // Ensure null termination
+
+    return utf8_len;
+}
+
+#endif   //#if defined(__JVM_OS_MINGW__) || defined(__JVM_OS_CYGWIN__) || defined(__JVM_OS_VS__)

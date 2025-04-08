@@ -739,152 +739,9 @@ s32 isDir(Utf8String *path) {
 
 extern Utf8String *os_get_tmp_dir();
 
+extern s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src);
 
-//gpt
-s32 is_ascii(const c8 *str) {
-    while (*str) {
-        if (!isascii(*str)) {
-            return 0;
-        }
-        str++;
-    }
-    return 1;
-}
-
-//gpt
-s32 is_utf8(const c8 *string) {
-    const u8 *bytes = (const u8 *) string;
-    while (*bytes) {
-        if ((// ASCII
-                    // 0xxxxxxx
-                    *bytes & 0x80) == 0x00) {
-            bytes += 1;
-            continue;
-        } else if ((// 2-byte
-                           // 110xxxxx 10xxxxxx
-                           *bytes & 0xE0) == 0xC0) {
-            if ((bytes[1] & 0xC0) != 0x80)
-                return 0;
-            bytes += 2;
-        } else if ((// 3-byte
-                           // 1110xxxx 10xxxxxx 10xxxxxx
-                           *bytes & 0xF0) == 0xE0) {
-            if ((bytes[1] & 0xC0) != 0x80 || (bytes[2] & 0xC0) != 0x80)
-                return 0;
-            bytes += 3;
-        } else if ((// 4-byte
-                           // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-                           *bytes & 0xF8) == 0xF0) {
-            if ((bytes[1] & 0xC0) != 0x80 || (bytes[2] & 0xC0) != 0x80 ||
-                (bytes[3] & 0xC0) != 0x80)
-                return 0;
-            bytes += 4;
-        } else {
-            return 0;
-        }
-    }
-    return 1;
-}
-
-s32 is_platform_encoding_utf8() {
-    s32 ret = 0;
-    setlocale(LC_ALL, "");
-    c8 *locstr = setlocale(LC_CTYPE, NULL);
-    Utf8String *utfs = utf8_create_c(locstr);
-    utf8_lowercase(utfs);
-    if (utf8_indexof_c(utfs, "utf-8") >= 0) {
-        ret = 1;
-    } else if (utf8_indexof_c(utfs, "utf8") >= 0) {
-        ret = 1;
-    } else if (utf8_indexof_c(utfs, "utf_8") >= 0) {
-        ret = 1;
-    }
-    utf8_destroy(utfs);
-    setlocale(LC_ALL, "C");
-    return ret;
-}
-
-s32 conv_platform_encoding_2_unicode(ByteBuf *dst, const c8 *src) {
-    setlocale(LC_ALL, "");
-    s32 len = (s32) strlen(src);
-    bytebuf_expand(dst, len * sizeof(wchar_t));
-    s32 read = mbstowcs((wchar_t *) dst->buf, src, len);
-    setlocale(LC_ALL, "C");
-    return read;
-}
-
-
-s32 conv_unicode_2_platform_encoding(ByteBuf *dst, const u16 *src, s32 srcLen) {
-    setlocale(LC_ALL, "");
-    s32 len = 0;
-    if (sizeof(wchar_t) == 2) {
-        len = wcstombs(NULL, (wchar_t *) src, srcLen);
-    } else {
-        wchar_t *wstr = jvm_calloc(srcLen * sizeof(wchar_t));
-        s32 i;
-        for (i = 0; i < srcLen; i++) {
-            wstr[i] = src[i];
-        }
-        len = wcstombs(NULL, wstr, srcLen);
-        jvm_free(wstr);
-    }
-    if (len < 0) {
-        return len;
-    }
-    bytebuf_expand(dst, len + 2);//for write '\0'
-    wcstombs(dst->buf, (wchar_t *) src, len);
-    dst->buf[len] = '\0';
-    setlocale(LC_ALL, "C");
-    return len;
-}
-
-void conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
-    if (!is_platform_encoding_utf8()) {
-        if (is_utf8(src)) {
-            utf8_append_c(dst, src);
-        } else {
-            ByteBuf *bb = bytebuf_create(0);
-            s32 ulen = conv_platform_encoding_2_unicode(bb, src);
-            if (sizeof(wchar_t) == 2) {
-                unicode_2_utf8((u16 *) bb->buf, dst, ulen);
-            } else {
-                u16 *str2bytes = jvm_calloc(ulen * 2);
-                s32 i;
-                for (i = 0; i < ulen; i++) {
-                    str2bytes[i] = (u16) ((wchar_t *) bb->buf)[i];
-                }
-                unicode_2_utf8(str2bytes, dst, ulen);
-                jvm_free(str2bytes);
-            }
-            bytebuf_destroy(bb);
-        }
-    }
-}
-
-s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src) {
-    s32 os_utf8 = 0;
-#if __JVM_OS_MAC__ || __JVM_OS_LINUX__
-    os_utf8 = 1;
-#endif
-
-    if (!is_platform_encoding_utf8() && !os_utf8) {
-        if (!is_ascii(utf8_cstr(src))) {
-            s32 c8len = (src->length + 1) * DATA_TYPE_BYTES[DATATYPE_JCHAR];
-            u16 *arr = jvm_calloc(c8len);
-            s32 len = utf8_2_unicode(src, arr, c8len / DATA_TYPE_BYTES[DATATYPE_JCHAR]);
-            if (len >= 0) {
-                s32 plen = conv_unicode_2_platform_encoding(dst, arr, len);
-                jvm_free(arr);
-                return plen;
-            }
-        }
-    }
-    bytebuf_expand(dst, src->length + 4);
-    memcpy(dst->buf, src->data, src->length);
-    dst->buf[src->length] = 0;
-    return src->length;
-}
-
+extern s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src);
 
 s32 org_mini_fs_InnerFile_openFile(Runtime *runtime, JClass *clazz) {
     Instance *name_arr = localvar_getRefer(runtime->localvar, 0);
@@ -1203,16 +1060,11 @@ s32 org_mini_fs_InnerFile_loadFS(Runtime *runtime, JClass *clazz) {
                 ptr = getFieldPtr_byName_c(fd, className, "exists", "Z", runtime);
                 setFieldByte(ptr, 1);
             }
-
             bytebuf_destroy(platformPath);
             utf8_destroy(filepath);
             push_int(runtime->stack, state);
         }
     }
-#if _JVM_DEBUG_LOG_LEVEL > 5
-    invoke_deepth(runtime);
-    jvm_printf("org_mini_fs_InnerFile_loadFD  \n");
-#endif
     return ret;
 }
 
@@ -1654,6 +1506,50 @@ s32 org_mini_zip_ZipFile_compress0(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+s32 org_mini_zip_ZipFile_gzipExtract0(Runtime *runtime, JClass *clazz) {
+    Instance *gzip_data = localvar_getRefer(runtime->localvar, 0);
+    s32 ret = 0;
+    ByteBuf *data = bytebuf_create(0);
+    if (gzip_data) {
+        ret = gzip_extract(gzip_data->arr_body, gzip_data->arr_length, data);
+    }
+    if (ret == -1) {
+        push_ref(runtime->stack, NULL);
+    } else {
+        Instance *byte_arr = jarray_create_by_type_index(runtime, data->wp, DATATYPE_BYTE);
+        bytebuf_read_batch(data, byte_arr->arr_body, data->wp);
+        push_ref(runtime->stack, byte_arr);
+    }
+    bytebuf_destroy(data);
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    invoke_deepth(runtime);
+    jvm_printf("org_mini_zip_ZipFile_gzipExtract0  \n");
+#endif
+    return 0;
+}
+
+s32 org_mini_zip_ZipFile_gzipCompress0(Runtime *runtime, JClass *clazz) {
+    Instance *data = localvar_getRefer(runtime->localvar, 0);
+    s32 ret = 0;
+    ByteBuf *gzip_data = bytebuf_create(0);
+    if (data) {
+        ret = gzip_compress(data->arr_body, data->arr_length, gzip_data);
+    }
+    if (ret == -1) {
+        push_ref(runtime->stack, NULL);
+    } else {
+        Instance *byte_arr = jarray_create_by_type_index(runtime, gzip_data->wp, DATATYPE_BYTE);
+        bytebuf_read_batch(gzip_data, byte_arr->arr_body, gzip_data->wp);
+        push_ref(runtime->stack, byte_arr);
+    }
+    bytebuf_destroy(gzip_data);
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    invoke_deepth(runtime);
+    jvm_printf("org_mini_zip_ZipFile_gzipCompress0  \n");
+#endif
+    return 0;
+}
+
 s32 org_mini_crypt_XorCrypt_encrypt(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     Instance *data = localvar_getRefer(runtime->localvar, pos++);
@@ -1764,6 +1660,8 @@ static java_native_method METHODS_IO_TABLE[] = {
         {"org/mini/zip/Zip",          "isDirectory0",         "([BI)I",                           org_mini_zip_ZipFile_isDirectory0},
         {"org/mini/zip/Zip",          "extract0",             "([B)[B",                           org_mini_zip_ZipFile_extract0},
         {"org/mini/zip/Zip",          "compress0",            "([B)[B",                           org_mini_zip_ZipFile_compress0},
+        {"org/mini/zip/Zip",          "gzipExtract0",         "([B)[B",                           org_mini_zip_ZipFile_gzipExtract0},
+        {"org/mini/zip/Zip",          "gzipCompress0",        "([B)[B",                           org_mini_zip_ZipFile_gzipCompress0},
         {"org/mini/crypt/XorCrypt",   "encrypt",              "([B[B)[B",                         org_mini_crypt_XorCrypt_encrypt},
         {"org/mini/crypt/XorCrypt",   "decrypt",              "([B[B)[B",                         org_mini_crypt_XorCrypt_decrypt},
 

@@ -3,8 +3,11 @@ package org.mini.gui.gscript;
 import org.mini.crypt.XorCrypt;
 import org.mini.glfm.Glfm;
 import org.mini.glwrap.GLUtil;
-import org.mini.gui.GCallBack;
+import org.mini.gui.callback.GCallBack;
+import org.mini.json.JsonParser;
+import org.mini.json.JsonPrinter;
 import org.mini.reflect.ReflectMethod;
+import org.mini.util.SysLog;
 
 import javax.microedition.io.Base64;
 import java.lang.reflect.Field;
@@ -12,6 +15,7 @@ import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
+import java.util.Map;
 import java.util.Random;
 import java.util.ArrayList;
 
@@ -34,38 +38,41 @@ public class Stdlib extends Lib {
 
         methodNames.put("getEnv".toLowerCase(), this::getEnv);//
         methodNames.put("setEnv".toLowerCase(), this::setEnv);//
+        methodNames.put("def".toLowerCase(), this::def); // 存入全局变量
+        methodNames.put("isDef".toLowerCase(), this::isDef); // 是否存在某全局变量
         methodNames.put("print".toLowerCase(), this::print); // 向控制台输出字符串
+        methodNames.put("println".toLowerCase(), this::println); // 输出回车
         methodNames.put("min".toLowerCase(), this::min);// 求最小值
         methodNames.put("max".toLowerCase(), this::max); // 求最大值
         methodNames.put("arrlen".toLowerCase(), this::arrlen); // 求数组大小
         methodNames.put("abs".toLowerCase(), this::abs); // 求取对值
         methodNames.put("random".toLowerCase(), this::random); // 得到一个随机数
         methodNames.put("mod".toLowerCase(), this::mod);// 取余
-        methodNames.put("println".toLowerCase(), this::println); // 输出回车
         methodNames.put("strlen".toLowerCase(), this::strlen); // 字符串长度
         methodNames.put("equals".toLowerCase(), this::equals); // 字符串比较
-        methodNames.put("def".toLowerCase(), this::def); // 存入全局变量
-        methodNames.put("isDef".toLowerCase(), this::isDef); // 是否存在某全局变量
         methodNames.put("valueOf".toLowerCase(), this::valueOf); // 转换字符串为数值
         methodNames.put("intOf".toLowerCase(), this::valueOf); // 转换字符串为数值
         methodNames.put("idxOf".toLowerCase(), this::idxof);// 子串在母串的位置        idxof("abc","a")  结果0
+        methodNames.put("indexOf".toLowerCase(), this::idxof);// 子串在母串的位置        idxof("abc","a")  结果0
         methodNames.put("lastIdxOf".toLowerCase(), this::lastIdxOf);// 子串在母串的位置        idxof("abc","a")  结果0
+        methodNames.put("lastIndexOf".toLowerCase(), this::lastIdxOf);// 子串在母串的位置        idxof("abc","a")  结果0
         methodNames.put("substr".toLowerCase(), this::substr); // 截子串        substr("abcde",1,4)      结果"bcd"
-        methodNames.put("split".toLowerCase(), this::split); // 截子串        substr("abcde",1,4)      结果"bcd"
-        methodNames.put("base64enc".toLowerCase(), this::base64enc); //   base64编码
-        methodNames.put("base64dec".toLowerCase(), this::base64dec); //   base64解码
-        methodNames.put("urlenc".toLowerCase(), this::urlenc); //   UrlEncode解码
-        methodNames.put("urldec".toLowerCase(), this::urldec); //   UrlDecode解码
-        methodNames.put("isnull".toLowerCase(), this::isnull); //   Obj 类型是否为空
-        methodNames.put("getobjfield".toLowerCase(), this::getObjField);
-        methodNames.put("setobjfield".toLowerCase(), this::setObjField);
+        methodNames.put("replace".toLowerCase(), this::replace); // 截子串        substr("abcde",1,4)      结果"bcd"
+        methodNames.put("split".toLowerCase(), this::split); // 截子串        split("abc;de",";")      结果"abc","de"
+        methodNames.put("lowCase".toLowerCase(), this::lowCase); // 小写字符串
+        methodNames.put("upCase".toLowerCase(), this::upCase); //     大写字符串
+        methodNames.put("startsWith".toLowerCase(), this::startsWith); //
+        methodNames.put("endsWith".toLowerCase(), this::endsWith); //
         methodNames.put("trim".toLowerCase(), this::trim);//字符串去空格
         methodNames.put("str2int".toLowerCase(), this::str2int);//字符串转int
         methodNames.put("isNumStr".toLowerCase(), this::isNumStr);//是数字串
         methodNames.put("invokeJava".toLowerCase(), this::invokeJava);//执行对象方法
         methodNames.put("invokeStatic".toLowerCase(), this::invokeStatic);//执行对象方法
-        methodNames.put("getbit".toLowerCase(), this::getbit);//取整数第n位,返回bool
-        methodNames.put("setbit".toLowerCase(), this::setbit);//设整数第n位
+        methodNames.put("bitGet".toLowerCase(), this::bitGet);//取整数第n位,返回bool
+        methodNames.put("bitSet".toLowerCase(), this::bitSet);//设整数第n位
+        methodNames.put("bitAnd".toLowerCase(), this::bitAnd);//设整数第n位
+        methodNames.put("bitOr".toLowerCase(), this::bitOr);//设整数第n位
+        methodNames.put("bitNot".toLowerCase(), this::bitNot);//设整数第n位
         methodNames.put("encrypt".toLowerCase(), this::encrypt);//加密  str= encrypt(str,key)
         methodNames.put("decrypt".toLowerCase(), this::decrypt);//解密  str= decrypt(str,key)
         methodNames.put("md5".toLowerCase(), this::md5);//md5  str= md5(str) 返回32位字符串(16字节串)
@@ -73,6 +80,17 @@ public class Stdlib extends Lib {
         methodNames.put("remoteMethodCall".toLowerCase(), this::remoteMethodCall);//远程调用
         methodNames.put("buyAppleProductById".toLowerCase(), this::buyAppleProductById);//远程调用
         methodNames.put("openOtherApp".toLowerCase(), this::openOtherApp);//打开其他应用
+        methodNames.put("jsonParse".toLowerCase(), this::jsonParse);//把字符串解析为json对象
+        methodNames.put("jsonGet".toLowerCase(), this::jsonGet);// 获取json对象某属性的值
+        methodNames.put("json2Str".toLowerCase(), this::json2Str);// 把json对象转成字符串
+        methodNames.put("jsonSet".toLowerCase(), this::jsonSet);// 设置json对象某属性的值
+        methodNames.put("base64enc".toLowerCase(), this::base64enc); //   base64编码
+        methodNames.put("base64dec".toLowerCase(), this::base64dec); //   base64解码
+        methodNames.put("urlenc".toLowerCase(), this::urlenc); //   UrlEncode解码
+        methodNames.put("urldec".toLowerCase(), this::urldec); //   UrlDecode解码
+        methodNames.put("isnull".toLowerCase(), this::isnull); //   Obj 类型是否为空
+        methodNames.put("getobjfield".toLowerCase(), this::getObjField);
+        methodNames.put("setobjfield".toLowerCase(), this::setObjField);
     }
 
 
@@ -282,7 +300,7 @@ public class Stdlib extends Lib {
     }
 
     /**
-     * 取子串
+     * 取子串,同java String 的substring方法
      *
      * @param para
      * @return
@@ -290,14 +308,25 @@ public class Stdlib extends Lib {
     private Str substr(ArrayList<DataType> para) {
         String s = Interpreter.popBackStr(para);
         int a = (int) Interpreter.popBackLong(para);
-        int b = (int) Interpreter.popBackLong(para);
-        StringBuffer sb = new StringBuffer();
-        for (int i = a; i < b; i++) {
-            if (i < s.length()) {
-                sb.append(s.charAt(i));
-            }
+        if (!para.isEmpty()) {
+            int b = (int) Interpreter.popBackLong(para);
+            return Interpreter.getCachedStr(s.substring(a, b));
         }
-        return Interpreter.getCachedStr(sb.toString());
+        return Interpreter.getCachedStr(s.substring(a));
+    }
+
+    /**
+     * 替换字符串,同java String 的replaceAll方法
+     *
+     * @param para
+     * @return
+     */
+    private Str replace(ArrayList<DataType> para) {
+        String s = Interpreter.popBackStr(para);
+        String src = Interpreter.popBackStr(para);
+        String dst = Interpreter.popBackStr(para);
+        s = s.replaceAll(src, dst);
+        return Interpreter.getCachedStr(s);
     }
 
 
@@ -320,6 +349,27 @@ public class Stdlib extends Lib {
         return arr;
     }
 
+    private Str lowCase(ArrayList<DataType> para) {
+        String s = Interpreter.popBackStr(para);
+        return Interpreter.getCachedStr(s.toLowerCase());
+    }
+
+    private Str upCase(ArrayList<DataType> para) {
+        String s = Interpreter.popBackStr(para);
+        return Interpreter.getCachedStr(s.toUpperCase());
+    }
+
+    private Bool startsWith(ArrayList<DataType> para) {
+        String s = Interpreter.popBackStr(para);
+        String sub = Interpreter.popBackStr(para);
+        return Interpreter.getCachedBool(s.startsWith(sub));
+    }
+
+    private Bool endsWith(ArrayList<DataType> para) {
+        String s = Interpreter.popBackStr(para);
+        String sub = Interpreter.popBackStr(para);
+        return Interpreter.getCachedBool(s.endsWith(sub));
+    }
 
     private DataType base64enc(ArrayList<DataType> para) {
         try {
@@ -602,9 +652,9 @@ public class Stdlib extends Lib {
             int i = Integer.parseInt(str);
             return Interpreter.getCachedInt(i);
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
-        return Interpreter.getCachedInt(-1);
+        return null;
     }
 
     private DataType isNumStr(ArrayList<DataType> para) {
@@ -614,12 +664,12 @@ public class Stdlib extends Lib {
             long i = Long.parseLong(str);
             return Interpreter.getCachedBool(true);
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         return Interpreter.getCachedBool(false);
     }
 
-    private DataType getbit(ArrayList<DataType> para) {
+    private DataType bitGet(ArrayList<DataType> para) {
         try {
             long i = Interpreter.popBackLong(para);
             int bitPos = Interpreter.popBackInt(para);
@@ -631,7 +681,7 @@ public class Stdlib extends Lib {
     }
 
 
-    private DataType setbit(ArrayList<DataType> para) {
+    private DataType bitSet(ArrayList<DataType> para) {
         try {
             long i = Interpreter.popBackLong(para);
             int bitPos = Interpreter.popBackInt(para);
@@ -642,6 +692,44 @@ public class Stdlib extends Lib {
             }
             return Interpreter.getCachedInt(i);
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType bitAnd(ArrayList<DataType> para) {
+        try {
+            long i = Interpreter.popBackLong(para);
+            long j = Interpreter.popBackLong(para);
+            long r = i & j;
+            return Interpreter.getCachedInt(r);
+        } catch (Exception e) {
+            SysLog.error("need 2 number for bit and");
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType bitOr(ArrayList<DataType> para) {
+        try {
+            long i = Interpreter.popBackLong(para);
+            long j = Interpreter.popBackLong(para);
+            long r = i | j;
+            return Interpreter.getCachedInt(r);
+        } catch (Exception e) {
+            SysLog.error("need 2 number for bit or");
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType bitNot(ArrayList<DataType> para) {
+        try {
+            long i = Interpreter.popBackLong(para);
+            long r = ~i;
+            return Interpreter.getCachedInt(r);
+        } catch (Exception e) {
+            SysLog.error("need 2 number for bit not");
             e.printStackTrace();
         }
         return null;
@@ -747,4 +835,38 @@ public class Stdlib extends Lib {
         return null;
     }
 
+    public DataType jsonParse(ArrayList<DataType> para) {
+        String jsonStr = Interpreter.popBackStr(para);
+        try {
+            JsonParser parser = new JsonParser();
+            Map map = (Map) parser.deserial(jsonStr, Map.class);
+            return Interpreter.getCachedObj(map);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public DataType jsonGet(ArrayList<DataType> para) {
+        Map<String, String> json = (Map) Interpreter.popBackObject(para);
+        String key = Interpreter.popBackStr(para);
+
+        return Interpreter.getCachedStr(json.get(key));
+    }
+
+    public DataType jsonSet(ArrayList<DataType> para) {
+        Map<String, String> json = (Map) Interpreter.popBackObject(para);
+        String key = Interpreter.popBackStr(para);
+        String oldValue = json.get(key);
+        String value = Interpreter.popBackStr(para);
+        json.put(key, value);
+        return Interpreter.getCachedStr(oldValue);
+    }
+
+    public DataType json2Str(ArrayList<DataType> para) {
+        Map<String, String> json = (Map) Interpreter.popBackObject(para);
+        JsonPrinter printer = new JsonPrinter();
+        String s = printer.serial(json);
+        return Interpreter.getCachedStr(s);
+    }
 }

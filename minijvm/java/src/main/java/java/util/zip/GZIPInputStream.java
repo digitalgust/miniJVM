@@ -9,10 +9,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
 import org.mini.zip.Zip;
 
 /**
- *
  * @author Gust
  */
 public class GZIPInputStream {
@@ -27,7 +27,7 @@ public class GZIPInputStream {
         while ((b = in.read()) != -1) {
             baos.write(b);
         }
-        byte[] e = Zip.extract0(baos.toByteArray());
+        byte[] e = Zip.gzipExtract0(baos.toByteArray());
         bais = new ByteArrayInputStream(e);
     }
 

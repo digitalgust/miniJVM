@@ -6,6 +6,7 @@
 package org.mini.http;
 
 import org.mini.reflect.ReflectArray;
+import org.mini.util.SysLog;
 import org.mini.vm.RefNative;
 
 import java.io.*;
@@ -31,26 +32,28 @@ public class MiniHttpServer extends Thread {
     public static final SrvLogger DEFAULT_LOGGER = new SrvLogger() {
         @Override
         public void log(String s) {
-            System.out.println(s);
+            SysLog.info(s);
         }
     };
     int port = DEFAULT_PORT;
     SrvLogger logger = DEFAULT_LOGGER;
 
     static final String header = "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n";
-    static final String responseText = header + "<html>\n"
+    String responseText = header + "<html>\n"
             + "<head>\n"
             + "<title>Upload jar</title>\n"
             + "<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>\n"
             + "</head>\n"
             + "<body text='#000000' topmargin='10'>\n"
             + "<br>\n"
-            + "Please select miniJVM application *.jar to upload.<br>\n"
-            + "<form name='form1' method='post' action='' enctype='multipart/form-data'>\n"
+            + "Please select miniJVM plugin *.jar to upload and install.<br/>\n"
+            + "The root directory of this jar file must contain a config.txt file.<br/>\n"
+            + "<form name='form1' method='post' action='' enctype='multipart/form-data'/>\n"
             + "  \n"
-            + "    Choice a file： <br>\n"
-            + "    <input type='file' name='link' style='width:400' class='tx1' value=''><br>\n"
-            + "    <input type='submit' name='Submit' value='Upload File' class='bt'><br>\n"
+            + "1.    Choice a jar file. <br/>\n"
+            + "    <input type='file' name='link' style='width:400' class='tx1' value=''/><br/>\n"
+            + "2.    Upload file when selected a jar. <br/>\n"
+            + "    <input type='submit' name='Submit' value='Upload File' class='bt'/><br/>\n"
             + "</form>\n"
             + "</body>\n"
             + "</html>";
@@ -62,6 +65,10 @@ public class MiniHttpServer extends Thread {
     public MiniHttpServer(int port, SrvLogger log) {
         this.port = port;
         if (log != null) this.logger = log;
+    }
+
+    public void setResponseText(String responseText) {
+        this.responseText = header + responseText;
     }
 
     abstract static public class SrvLogger {

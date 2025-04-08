@@ -106,6 +106,7 @@ s64 UNICODE_STR_HASH_FUNC(HashtableKey kmer);
 
 unsigned long _utf8_hashCode(Utf8String *ustr);
 
+int utf8_expand(Utf8String *ustr, int newlen);
 
 int utf8_index_of(Utf8String *ustr, utf8_char data);
 

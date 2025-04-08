@@ -6,7 +6,25 @@ import java.util.Random;
 
 /**
  * RSA like asymmetric encryption
+ * <pre>
+ *     public static void test() {
+ *         int NUMBER_OF_BIT = 512;
  *
+ *         String MY_TEXT = "This is my text";
+ *         AsynCrypt ac = new AsynCrypt(NUMBER_OF_BIT);
+ *         System.out.println("plain text: " + MY_TEXT);
+ *         byte[] encryptedMessage = ac.encryptMessageStr(MY_TEXT);
+ *         BigInteger enc = new BigInteger(encryptedMessage);
+ *         System.out.println("encrptyed text: " + enc);
+ *         System.out.println("decrypt text: " + ac.decryptMessageStr(encryptedMessage));
+ *
+ *         byte[] xorkey = XorCrypt.genKey(8);
+ *         System.out.println("plain bytes: " + bytesToHex(xorkey));
+ *         byte[] enbytes = ac.encryptMessage(xorkey);
+ *         System.out.println("encrptyed bytes: " + bytesToHex(enbytes));
+ *         System.out.println("decrypt bytes: " + bytesToHex(ac.decryptMessage(enbytes)));
+ *     }
+ * </pre>
  *
  * @author Gust
  */
@@ -186,22 +204,22 @@ public class AsynCrypt {
         return b;
     }
 
-    public static void test() {
-        int NUMBER_OF_BIT = 512;
-
-        String MY_TEXT = "This is my text";
-        AsynCrypt ac = new AsynCrypt(NUMBER_OF_BIT);
-        System.out.println("plain text: " + MY_TEXT);
-        byte[] encryptedMessage = ac.encryptMessageStr(MY_TEXT);
-        BigInteger enc = new BigInteger(encryptedMessage);
-        System.out.println("encrptyed text: " + enc);
-        System.out.println("decrypt text: " + ac.decryptMessageStr(encryptedMessage));
-
-        byte[] xorkey = XorCrypt.genKey(8);
-        System.out.println("plain bytes: " + bytesToHex(xorkey));
-        byte[] enbytes = ac.encryptMessage(xorkey);
-        System.out.println("encrptyed bytes: " + bytesToHex(enbytes));
-        System.out.println("decrypt bytes: " + bytesToHex(ac.decryptMessage(enbytes)));
-    }
+//    public static void test() {
+//        int NUMBER_OF_BIT = 512;
+//
+//        String MY_TEXT = "This is my text";
+//        AsynCrypt ac = new AsynCrypt(NUMBER_OF_BIT);
+//        System.out.println("plain text: " + MY_TEXT);
+//        byte[] encryptedMessage = ac.encryptMessageStr(MY_TEXT);
+//        BigInteger enc = new BigInteger(encryptedMessage);
+//        System.out.println("encrptyed text: " + enc);
+//        System.out.println("decrypt text: " + ac.decryptMessageStr(encryptedMessage));
+//
+//        byte[] xorkey = XorCrypt.genKey(8);
+//        System.out.println("plain bytes: " + bytesToHex(xorkey));
+//        byte[] enbytes = ac.encryptMessage(xorkey);
+//        System.out.println("encrptyed bytes: " + bytesToHex(enbytes));
+//        System.out.println("decrypt bytes: " + bytesToHex(ac.decryptMessage(enbytes)));
+//    }
 
 }

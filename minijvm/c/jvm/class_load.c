@@ -1963,7 +1963,7 @@ JClass *load_class(Instance *jloader, Utf8String *pClassName, Runtime *runtime) 
     }
 #if _JVM_DEBUG_LOG_LEVEL > 2
     if (!tmpclazz) {
-        jvm_printf("class not found in bootstrap classpath:  %s \n", utf8_cstr(clsName));
+        //jvm_printf("class not found in bootstrap classpath:  %s \n", utf8_cstr(clsName));
     }
 #endif
     utf8_destroy(clsName);

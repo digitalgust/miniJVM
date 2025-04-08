@@ -6,14 +6,15 @@
 package org.mini.glfm;
 
 import org.mini.apploader.AppLoader;
-import org.mini.apploader.AppManager;
 import org.mini.apploader.Sync;
 import org.mini.glfw.Glfw;
-import org.mini.gui.GCallBack;
 import org.mini.gui.GForm;
 import org.mini.gui.GObject;
 import org.mini.gui.GToolkit;
+import org.mini.gui.callback.GCallBack;
+import org.mini.gui.callback.GDesktop;
 import org.mini.nanovg.Nanovg;
+import org.mini.util.SysLog;
 
 import static org.mini.nanovg.Nanovg.*;
 
@@ -50,12 +51,12 @@ public class GlfmCallBackImpl extends GCallBack {
     long vg;
 
     float fps;
-    float fpsExpect = 60;
+    float fpsExpect = FPS_DEFAULT;
     long startAt, cost;
     long last = System.currentTimeMillis(), now;
     int count = 0;
 
-//    static GlfmCallBackImpl instance = new GlfmCallBackImpl();
+    Thread openglThread;
 
     /**
      * the glinit method call by native function, glfmapp/main.c
@@ -91,12 +92,6 @@ public class GlfmCallBackImpl extends GCallBack {
     public void setDisplay(long display) {
         this.display = display;
     }
-
-
-    void setForm(GForm form) {
-        gform = form;
-    }
-
 
     /**
      * @return the fps
@@ -146,6 +141,10 @@ public class GlfmCallBackImpl extends GCallBack {
         ;
     }
 
+    public Thread getOpenglThread() {
+        return openglThread;
+    }
+
     void init() {
         fbWidth = Glfm.glfmGetDisplayWidth(display);
         fbHeight = Glfm.glfmGetDisplayHeight(display);
@@ -156,9 +155,9 @@ public class GlfmCallBackImpl extends GCallBack {
 
         vg = Nanovg.nvgCreateGLES3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
         if (vg == 0) {
-            System.out.println("Could not init nanovg.\n");
+            SysLog.error("Could not init nanovg.\n");
         } else {
-            System.out.println("nanovg success.");
+            SysLog.info("nanovg success.");
         }
         GToolkit.FontHolder.loadFont(vg);
         AppLoader.cb_init();
@@ -174,19 +173,15 @@ public class GlfmCallBackImpl extends GCallBack {
             }
             try {
                 Thread.currentThread().setContextClassLoader(gapp.getClass().getClassLoader());//there were be an app pause and the other app setup
-                gform = gapp.getForm();
-                if (!gform.isInited()) {
-                    gform.cb_init();
-                    gapp.startApp();
-                }
+                desktop.checkAppRun(gapp);
             } catch (Exception e) {
                 gapp.closeApp();
-                GForm.addMessage("Init error : " + e.getMessage());
+                GDesktop.addMessage("Init error : " + e.getMessage());
                 e.printStackTrace();
             }
-            if (gform.flushReq()) {
-                if (gform != null) {
-                    gform.display(vg);
+            if (desktop.flushReq()) {
+                if (desktop != null) {
+                    desktop.display(vg);
                 }
             }
             //
@@ -210,41 +205,43 @@ public class GlfmCallBackImpl extends GCallBack {
     @Override
     public void onSurfaceCreated(long display, int width, int height) {
         init();
-        System.out.println("onSurfaceCreated " + width + "," + height + "," + pxRatio);
+        SysLog.info("onSurfaceCreated " + width + "," + height + "," + pxRatio);
         Glfm.glfmSetMultitouchEnabled(display, true);
         Glfm.glfmGetDisplayChromeInsets(display, insetsDouble);
+
+        openglThread = Thread.currentThread();
     }
 
     @Override
     public boolean onKey(long display, int keyCode, int action, int modifiers) {
-        if (gform == null) {
+        if (desktop == null) {
             return true;
         }
-        GObject focus = gform.getCurrent();
+        GObject focus = desktop.getCurrent();
         //System.out.println("keyCode  :" + keyCode + "   action=" + action + "   modifiers=" + modifiers);
         if (focus != null) {
             focus.keyEventGlfm(keyCode, action, modifiers);
         } else {
-            gform.keyEventGlfm(keyCode, action, modifiers);
+            desktop.keyEventGlfm(keyCode, action, modifiers);
         }
-        gform.flush();
+        desktop.flush();
         return true;
     }
 
     @Override
     public void onCharacter(long window, String str, int modifiers) {
-        if (gform == null) {
+        if (desktop == null) {
             return;
         }
-        GObject focus = gform.getCurrent();
+        GObject focus = desktop.getCurrent();
         //System.out.println("onCharacter  :" + str + "   mod=" + modifiers);
         if (focus != null) {
             focus.characterEvent(str, modifiers);
         } else {
-            gform.characterEvent(str, modifiers);
+            desktop.characterEvent(str, modifiers);
         }
 
-        gform.flush();
+        desktop.flush();
     }
 
     public int getTouchOrMouseX() {
@@ -257,7 +254,7 @@ public class GlfmCallBackImpl extends GCallBack {
 
     @Override
     public boolean onTouch(long display, int touch, int phase, double x, double y) {
-        GForm form = this.gform;
+        GDesktop form = this.desktop;
         if (form == null) {
             return true;
         }
@@ -347,64 +344,62 @@ public class GlfmCallBackImpl extends GCallBack {
         winWidth = (int) (fbWidth / pxRatio);
         winHeight = (int) (fbHeight / pxRatio);
 
-        Glfm.glfmGetDisplayChromeInsets(display, insetsDouble);
+        //float[] inset = new float[4];
+        //GCallBack.getInstance().getInsets(inset);
+        //System.out.println("glfm INSET:" + inset[0] + " , " + inset[1] + " , " + inset[2] + " , " + inset[3]);
 
-        if (gform == null) {
+        if (desktop == null) {
             return;
         }
         //System.out.println(width + "," + height + "," + pxRatio);
         //System.out.println(winWidth + "," + winHeight);
-        gform.setSize(winWidth, winHeight);
-        gform.onDeviceSizeChanged(winWidth, winHeight);
-        gform.flush();
+        desktop.setSize(winWidth, winHeight);
+        desktop.onDeviceSizeChanged(winWidth, winHeight);
+        desktop.flush();
     }
 
     public void onSurfaceError(long display, String description) {
-        if (gform == null) {
+        if (desktop == null) {
             return;
         }
-        gform.flush();
+        desktop.flush();
     }
 
     @Override
     public void onKeyboardVisible(long display, boolean visible, double x, double y, double w, double h) {
         //System.out.println("keyboardVisableEvent:" + display + "," + visible + "," + x + "," + y + "," + w + "," + h);
-        if (gform == null) {
+        if (desktop == null) {
             return;
         }
         x /= Glfm.glfmGetDisplayScale(display);
         y /= Glfm.glfmGetDisplayScale(display);
         w /= Glfm.glfmGetDisplayScale(display);
         h /= Glfm.glfmGetDisplayScale(display);
-        gform.KeyboardPopEvent(visible, (float) x, (float) y, (float) w, (float) h);
+        desktop.KeyboardPopEvent(visible, (float) x, (float) y, (float) w, (float) h);
     }
 
     @Override
     public void onPhotoPicked(long display, int uid, String url, byte[] data) {
-        if (gform == null) {
+        if (desktop == null) {
             return;
         }
-        gform.onPhotoPicked(uid, url, data);
+        desktop.onPhotoPicked(uid, url, data);
     }
 
     @Override
     public void onAppFocus(long display, boolean focused) {
-        if (gform == null) {
+        if (desktop == null) {
             return;
         }
-        gform.onAppFocus(focused);
+        desktop.onAppFocus(focused);
     }
 
     @Override
     public void onNotify(long display, String key, String val) {
-        if (gform == null) {
+        if (desktop == null) {
             return;
         }
-        GForm mgrForm = AppManager.getInstance().getForm();
-        mgrForm.onDeviceNotify(key, val);// notify to manager form first
-        if (mgrForm != gform) {
-            gform.onDeviceNotify(key, val);
-        }
+        desktop.onDeviceNotify(key, val);
     }
 
     @Override
@@ -412,6 +407,8 @@ public class GlfmCallBackImpl extends GCallBack {
     }
 
     public void getInsets(float[] top_right_bottom_left) {
+        if (display == 0 || vg == 0) return;
+        Glfm.glfmGetDisplayChromeInsets(display, insetsDouble);
         if (top_right_bottom_left != null) {
             top_right_bottom_left[0] = (float) (insetsDouble[0] / pxRatio);
             top_right_bottom_left[1] = (float) (insetsDouble[1] / pxRatio);
@@ -440,5 +437,20 @@ public class GlfmCallBackImpl extends GCallBack {
         }
     }
 
+    public void pickPhoto(int uid, int deviceAndType) {
+        if ((deviceAndType & PICK_PHOTO_TYPE_IMAGE) == 0 && (deviceAndType & PICK_PHOTO_TYPE_MOIVE) == 0) {
+            deviceAndType = PICK_PHOTO_TYPE_IMAGE | PICK_PHOTO_TYPE_MOIVE;
+        }
+        if ((deviceAndType & PICK_PHOTO_DEVICE_ALBUM) != 0) {
+            Glfm.glfmPickPhotoAlbum(display, uid, deviceAndType);
+        } else if ((deviceAndType & PICK_PHOTO_DEVICE_CAMERA) != 0) {
+            Glfm.glfmPickPhotoCamera(display, uid, deviceAndType);
+        } else {
+            SysLog.error(String.format("pickPhoto device not support ,only album(0x%x) or camera(0x%x)", PICK_PHOTO_DEVICE_ALBUM, PICK_PHOTO_DEVICE_CAMERA));
+        }
+    }
 
+    public void playeVideo(String url, String mimeType) {
+        Glfm.glfmPlayVideo(display, url, mimeType);
+    }
 }

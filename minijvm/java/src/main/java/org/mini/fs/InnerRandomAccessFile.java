@@ -10,9 +10,8 @@ import org.mini.net.SocketNative;
 import java.io.IOException;
 
 /**
- *
  * open file for random access
- *
+ * <p>
  * filemode : r rw rws rwd
  *
  * <pre>
@@ -62,10 +61,10 @@ public class InnerRandomAccessFile extends InnerFile {
         } else {
             this.mode = "rb+";
         }
-        filePointer = openFile(SocketNative.toCStyle(path), mode.getBytes());
+        filePointer = openFile(SocketNative.toCStyle(path), SocketNative.toCStyle(mode));
         if (filePointer == 0 && "rb+".equals(this.mode)) {// file not exists , create new 
             this.mode = "wb+";
-            filePointer = openFile(SocketNative.toCStyle(path), mode.getBytes());
+            filePointer = openFile(SocketNative.toCStyle(path), SocketNative.toCStyle(mode));
         }
         if (filePointer == 0) {
             throw new RuntimeException("open file error:" + path);

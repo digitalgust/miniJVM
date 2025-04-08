@@ -1,6 +1,6 @@
 package org.mini.gui.gscript;
 
-import org.mini.gui.GCallBack;
+import org.mini.util.SysLog;
 
 import java.io.*;
 import java.util.*;
@@ -26,6 +26,8 @@ import java.util.*;
  * 20110819 添加预编译处理过程,加快执行速度<br/>
  * 20130720 修改了数值类型为长整型<br/>
  * 20220424 添加数据回收系统,使整个运算过程中,尽可能不创建新的对象实例.减小GC压力
+ * 20250217 表达式求值类型缓存，加快执行速度
+ * 20250317 表达式初始化时，把子表达式找出来，简化表达式求值
  * <p>
  * Title: </p>
  * <p>
@@ -41,9 +43,10 @@ import java.util.*;
  */
 public class Interpreter {
 
-    static final String[] STRS_RESERVED = {"if", "else", "eif", "while", "loop", "sub", "ret", "", "", ""};
-    static private final String STR_SYMBOL = "+-*/><()=, []:&|!\'";
+    static final String[] STRS_RESERVED = {"if", "else", "eif", "while", "loop", "sub", "ret",};
+    static private final String STR_SYMBOL = "+-*/><()=, []:&|!#";
     static private final String STR_NUMERIC = "0123456789";
+    static private final char CHAR_COMMENT = '#';
     //关键字代码
     static final int NOT_KEYWORD = -1, KEYWORD_IF = 0, KEYWORD_ELSE = 1, KEYWORD_ENDIF = 2, KEYWORD_WHILE = 3, KEYWORD_LOOP = 4, KEYWORD_SUB = 5, KEYWORD_RET = 6, KEYWORD_CALL = 7, KEYWORD_SET_VAR = 8, KEYWORD_SET_ARR = 9;
     public static final int ERR_ILLEGAL = 0, ERR_VAR = 1, ERR_TYPE_INVALID = 2, ERR_NOSUB = 3, ERR_NO_VAR = 4, ERR_PARA_CALC = 5, ERR_PAESEPARA = 6, ERR_NO_SRC = 7, ERR_OPSYMB = 8, ERR_ARR_OUT = 9;
@@ -204,22 +207,27 @@ public class Interpreter {
         StringBuilder line = new StringBuilder();
         ArrayList v = new ArrayList();
         for (int i = 0, len = code.length(); i < len; i++) {
-            char ch = code.charAt(i);
-            if (ch == '"') {
-                dquodation++;
-                line.append(ch);
-                int next = findNextDoubQuot(code, i + 1, line);
-                i = next;
-                ch = code.charAt(next);
-            }
-            if ((ch == ';' || ch == '\n')) {
-                String s = line.toString().trim();
-                if (s.length() > 0) {
-                    v.add(s);
+            try {
+                char ch = code.charAt(i);
+                if (ch == '"') {
+                    dquodation++;
+                    line.append(ch);
+                    int next = findNextDoubQuot(code, i + 1, line);
+                    i = next;
+                    ch = code.charAt(next);
                 }
-                line.setLength(0);
-            } else {
-                line.append(ch);
+                if ((ch == ';' || ch == '\n')) {
+                    String s = line.toString().trim();
+                    if (s.length() > 0) {
+                        v.add(s);
+                    }
+                    line.setLength(0);
+                } else {
+                    line.append(ch);
+                }
+            } catch (Exception e) {
+                errout("Parse error: " + line);
+                throw e;
             }
         }
         //fix lost the last line
@@ -273,7 +281,7 @@ public class Interpreter {
             }
             //去掉注释
             String el = (String) srcCode.get(i);
-            if (el.indexOf('\'') >= 0) {
+            if (el.indexOf(CHAR_COMMENT) >= 0) {
                 int dqCount = 0; //双引号计数
                 for (int m = 0; m < el.length(); m++) {
                     char ch = el.charAt(m);
@@ -282,7 +290,7 @@ public class Interpreter {
                         m = next;
                         continue;
                     }
-                    if (ch == '\'') { //如果 ' 不在双引号内，则说明是注释
+                    if (ch == CHAR_COMMENT) { //如果 ' 不在双引号内，则说明是注释
                         el = el.substring(0, m);
                     }
                 }
@@ -792,7 +800,7 @@ public class Interpreter {
             char ch = s.charAt(i);
             if (ch == ' ') { //无用空格
                 continue;
-            } else if (ch == '\'') { //去掉注释
+            } else if (ch == CHAR_COMMENT) { //去掉注释
                 break;
             } else if (ch == '"') { //是字符串
                 sb.append(ch);
@@ -908,7 +916,11 @@ public class Interpreter {
         if (srcCompiled[ip] != null) {
             src = srcCompiled[ip].src;
         }
-        System.out.println((ip + 1) + " " + src + " : " + s);
+        SysLog.error((ip + 1) + " " + src + " : " + s);
+    }
+
+    private void errout(String s) {
+        SysLog.error(s);
     }
 
 //    /**
@@ -1055,12 +1067,8 @@ public class Interpreter {
             , T_LOGSYM = 16 //逻辑符号
             , T_OBJ = 32; //对象
 
-    DataType evalExpr(Expression stat, LocalVarsMap<String, DataType> varTable) throws Exception {
 
-        //ArrayList expr = parseInstruct(exprStr); //分解表达式
-        ArrayList<DataType> expr = getCachedVector();
-        evaluationCell(stat, varTable, expr); //求变量和过程调用的值
-
+    private int getTypeOfExpr(ArrayList<DataType> expr) {
         int cType = 0, cType1 = 0; //默认为算术运算
 
         for (int i = 0; i < expr.size(); i++) {
@@ -1096,12 +1104,26 @@ public class Interpreter {
             cType1 = T_OBJ;
         } else {
             //出错，需处理
-            throw new Exception(STRS_ERR[ERR_ILLEGAL]);
+            throw new RuntimeException(STRS_ERR[ERR_ILLEGAL]);
+        }
+        return cType1;
+    }
+
+
+    DataType evalExpr(Expression stat, LocalVarsMap<String, DataType> varTable) throws Exception {
+
+        //ArrayList expr = parseInstruct(exprStr); //分解表达式
+        ArrayList<DataType> expr = getCachedVector();
+        evaluationCell(stat, varTable, expr); //求变量和过程调用、子表达式的值
+
+        if (stat.type == 0) {
+
+            stat.type = getTypeOfExpr(expr);
         }
 
         DataType resultDt = null;
 
-        switch (cType1) {
+        switch (stat.type) {
             case T_NUM:
 
                 //左递归运算
@@ -1115,101 +1137,8 @@ public class Interpreter {
                 break;
             case T_LOG: //分解逻辑表达式与算术表达式，主要是把算术表达式先于逻辑运算求值
             {
-                //下两个变量用于逻辑表达式求值过程
-                ArrayList log_dElem = getCachedVector(); //逻辑
-                ArrayList ari_dElem = getCachedVector(); //算术
-
-                while (expr.size() > 0) {
-                    DataType pdt = popFront(expr);
-
-                    ari_dElem.clear();
-                    if (isSymb(pdt)) {
-                        Symb pst = (Symb) pdt;
-                        if (pst.isCompOp()) { //以比较逻辑运算符进行拆分
-
-                            //把刚加入log_dElem中的算术部分拿出来，算出结果再放回去
-                            //从后向前找,如：3-(1+4)<>0  从<>处找到3-(1+4)
-                            int rightQ = 0; //右括号计数
-                            while (log_dElem.size() > 0) {
-                                DataType pdt2 = popBack(log_dElem);
-                                if (isSymb(pdt2)) {
-
-                                    if (((Symb) pdt2).getVal() == Symb.RP) {
-                                        rightQ++; //右括号+1
-
-                                    }
-                                    if (((Symb) pdt2).isLogicOp() //如果遇另一个
-                                            || (((Symb) pdt2).getVal() == Symb.LP && rightQ == 0) //当遇到左括号且括号计数为0时
-                                    ) {
-                                        pushBack(log_dElem, pdt2); //放回去
-                                        break;
-                                    }
-                                    if (((Symb) pdt2).getVal() == Symb.LP) {
-                                        rightQ--; //右括号-1
-                                    }
-                                }
-                                pushFront(ari_dElem, pdt2);
-                            } //end while
-                            //运算出算术表达式
-                            evalExprNum(ari_dElem);
-                            //放入逻辑表达式中
-                            if (ari_dElem.size() > 0) {
-                                pushBack(log_dElem, popFront(ari_dElem));
-                            }
-                        }
-                    } //end if是符号
-
-                    //插入表达式元素
-                    pushBack(log_dElem, pdt);
-
-                    //再找比较逻辑运算符后面的元素
-                    ari_dElem.clear();
-                    if (isSymb(pdt)) {
-
-                        if (((Symb) pdt).isCompOp()) { //以比较逻辑运算符进行拆分
-
-                            //把刚加入log_dElem中的算术部分拿出来，算出结果再放回去
-                            //从后向前找,如：3-(1+4)<>0  从<>处找到3-(1+4)
-                            int leftQ = 0; //左括号计数
-                            while (expr.size() > 0) {
-                                DataType pdt2 = popFront(expr);
-                                if (isSymb(pdt2)) {
-
-                                    Symb pst2 = (Symb) pdt2;
-                                    byte opType = pst2.getVal();
-                                    if (opType == Symb.LP) {
-                                        leftQ++; //左括号+1
-
-                                    }
-                                    if (pst2.isLogicOp() //如果遇另一个
-                                            || (opType == Symb.RP && leftQ == 0) //当遇到左括号且括号计数为0时
-                                    ) {
-                                        pushFront(expr, pdt2); //放回去
-                                        break;
-                                    }
-                                    if (opType == Symb.RP) {
-                                        leftQ--; //左括号-1
-                                    }
-                                }
-                                pushBack(ari_dElem, pdt2);
-                            } //end while
-                            //运算出算术表达式
-                            evalExprNum(ari_dElem);
-                            if (ari_dElem.size() > 0) {
-                                pushBack(log_dElem, popFront(ari_dElem));
-                            }
-                        }
-                    } //end if是符号
-                } //end while
-
-                //逻辑表达式求值
-                evalExprLgc(log_dElem);
-
-                resultDt = popBack(log_dElem);
-
-                //
-                putCachedVector(log_dElem);
-                putCachedVector(ari_dElem);
+                evalExprLgc(expr);
+                resultDt = popBack(expr);
             }
             break;
             case T_ARR:
@@ -1243,7 +1172,7 @@ public class Interpreter {
             ExprCell cell = expr.cells[i];
             //是串，包括变量，方法，符号,字符串
 
-            switch (cell.type) {
+            switch (cell.celltype) {
                 case ExprCell.EXPR_CELL_DATATYPE: {// 是字符串
                     ExprCellDataType celldt = (ExprCellDataType) cell;
                     tgt.add(celldt.pit);
@@ -1271,6 +1200,14 @@ public class Interpreter {
                 case ExprCell.EXPR_CELL_ARR: {//是数组
                     ExprCellArr cella = (ExprCellArr) cell;
                     tgt.add(_getArr(cella, varTable));
+                    break;
+                }
+                case ExprCell.EXPR_CELL_EXPR: {//是子表达式
+                    Expression subexpr = (Expression) cell;
+                    DataType data = evalExpr(subexpr, varTable);
+                    if (data != null) {
+                        tgt.add(data);
+                    }
                     break;
                 }
             }
@@ -1318,35 +1255,24 @@ public class Interpreter {
             //按优先级进行计算,优先级如下：() 取负(正)值  */ + - %
             DataType element1 = popFront(expr);
             if (element1.type == DataType.DTYPE_SYMB) {
-                if (((Symb) element1).getVal() == Symb.LP) {// (
+
+                if (((Symb) element1).getVal() == Symb.ADD) {// +
                     evalExprNumImpl(expr);
-                    DataType element2 = popFront(expr);
-                    DataType element3 = popFront(expr);
-                    if (element3.type == DataType.DTYPE_SYMB && ((Symb) element3).getVal() == Symb.RP) { // (num)    扔掉反括号
-                        pushFront(expr, element2);
-                    } else { // (...             括号中如果仍未计算完成,则继续
-                        pushFront(expr, element3);
-                        pushFront(expr, element2);
-                        pushFront(expr, element1);
-                        evalExprNumImpl(expr); //再算括号中的内容
-                    }
-                } else //取正值
-                    if (((Symb) element1).getVal() == Symb.ADD) {// +
-                        evalExprNumImpl(expr);
-                    } else //取负值
-                        if (((Symb) element1).getVal() == Symb.SUB) {// -
-                            DataType element2 = popFront(expr);
-                            if (element2.type == DataType.DTYPE_INT) { // -num       立即数
-                                Int val = getCachedInt(-((Int) element2).getVal());
-                                pushFront(expr, val);
-                                putCachedInt((Int) element2);
-                            } else { // -...      表达式
-                                pushFront(expr, element2);
-                                evalExprNumImpl(expr);
-                                pushFront(expr, element1);
-                                evalExprNumImpl(expr);
-                            }
+                } else { //取负值
+                    if (((Symb) element1).getVal() == Symb.SUB) {// -
+                        DataType element2 = popFront(expr);
+                        if (element2.type == DataType.DTYPE_INT) { // -num       立即数
+                            Int val = getCachedInt(-((Int) element2).getVal());
+                            pushFront(expr, val);
+                            putCachedInt((Int) element2);
+                        } else { // -...      表达式
+                            pushFront(expr, element2);
+                            evalExprNumImpl(expr);
+                            pushFront(expr, element1);
+                            evalExprNumImpl(expr);
                         }
+                    }
+                }
             } else if (element1.type == DataType.DTYPE_INT) {// num   是数字
                 Symb element2 = popFront(expr); //应是操作符
                 DataType element3 = popFront(expr); // 可能是操作数或操作符
@@ -1398,13 +1324,6 @@ public class Interpreter {
                         pushFront(expr, element1);
                         evalExprNumImpl(expr);
                     }
-                } else if (element2.getVal() == Symb.RP) { // num)   是右括号
-                    if (element3 != null) {
-                        pushFront(expr, element3);
-                    }
-                    pushFront(expr, element2);
-                    pushFront(expr, element1);
-                    return;
                 }
             }
         }
@@ -1434,19 +1353,7 @@ public class Interpreter {
             //按优先级进行计算,优先级如下：() 取负(正)值  */ + - %
             DataType element1 = popFront(expr);
             if (element1.type == DataType.DTYPE_SYMB) { //括号
-                if (((Symb) element1).getVal() == Symb.LP) {// (
-                    evalExprLgcImpl(expr);
-                    DataType element2 = popFront(expr);
-                    DataType element3 = popFront(expr);
-                    if (element3.type == DataType.DTYPE_SYMB && ((Symb) element3).getVal() == Symb.RP) { // (dtype)  扔掉反括号
-                        pushFront(expr, element2);
-                    } else { //括号中如果仍未计算完成,则继续   //(dtype...
-                        pushFront(expr, element3);
-                        pushFront(expr, element2);
-                        pushFront(expr, element1);
-                        evalExprLgcImpl(expr); //再算括号中的内容
-                    }
-                } else if (((Symb) element1).getVal() == Symb.NOT) { //  !  取反
+                if (((Symb) element1).getVal() == Symb.NOT) { //  !  取反
                     DataType element2 = popFront(expr);
                     if (element2.type == DataType.DTYPE_BOOL) { // !bool    立即数
                         boolean val = ((Bool) element2).getVal();
@@ -1491,7 +1398,25 @@ public class Interpreter {
             } else if (element1.type == DataType.DTYPE_BOOL) { // bool
                 Symb element2 = popFront(expr); //应是操作符
                 DataType element3 = popFront(expr); // 操作数或操作符 >= <=
-                if (element2.getVal() == Symb.AND) {// bool &
+                if (element2.getVal() == Symb.EQU || element2.getVal() == Symb.NE) {// bool =
+                    if (element3.type == DataType.DTYPE_BOOL) { //bool & bool
+                        boolean result;
+                        if (element2.getVal() == Symb.EQU) {
+                            result = ((Bool) element1).getVal() == ((Bool) element3).getVal();
+                        } else {
+                            result = ((Bool) element1).getVal() != ((Bool) element3).getVal();
+                        }
+                        pushFront(expr, getCachedBool(result));
+                        putCachedBool((Bool) element1);
+                        putCachedBool((Bool) element3);
+                    } else { // bool & ...
+                        pushFront(expr, element3);
+                        evalExprLgcImpl(expr);
+                        pushFront(expr, element2);
+                        pushFront(expr, element1);
+                        evalExprLgcImpl(expr);
+                    }
+                } else if (element2.getVal() == Symb.AND) {// bool &
                     if (element3.type == DataType.DTYPE_BOOL) { //bool & bool
                         boolean result = ((Bool) element1).getVal() && ((Bool) element3).getVal();
                         pushFront(expr, getCachedBool(result));
@@ -1532,13 +1457,6 @@ public class Interpreter {
                         evalExprLgcImpl(expr);
                     }
 
-                } else if (element2.getVal() == Symb.RP) { // bool)  是右括号
-                    if (element3 != null) {
-                        pushFront(expr, element3);
-                    }
-                    pushFront(expr, element2);
-                    pushFront(expr, element1);
-                    return;
                 }
 
             }
@@ -1612,15 +1530,15 @@ public class Interpreter {
      */
     private int[] parseArrayPos(ExprCellArr arrStr, LocalVarsMap varTable) throws Exception {
         int len = arrStr.para.length;
-        int[] stack = arrStr.dimPos.get();
+        int[] dimPos = arrStr.dimPos.get();
         for (int i = 0; i < len; i++) {
             DataType dt = evalExpr(arrStr.para[i], varTable);
             if (dt.type != DataType.DTYPE_INT) { //数组维数只能是数值型
                 throw new Exception(STRS_ERR[ERR_TYPE_INVALID]);
             }
-            stack[i] = (int) ((Int) dt).getVal();
+            dimPos[i] = (int) ((Int) dt).getVal();
         }
-        return stack;
+        return dimPos;
     }
 
     /**
@@ -1686,26 +1604,26 @@ public class Interpreter {
      *
      * @return
      */
-    private synchronized LocalVarsMap getCachedTable() {
+    static synchronized LocalVarsMap getCachedTable() {
         if (varsMapCache.isEmpty()) {
             return new LocalVarsMap();
         }
         return varsMapCache.remove(varsMapCache.size() - 1);
     }
 
-    private static synchronized void putCachedTable(LocalVarsMap v) {
+    static synchronized void putCachedTable(LocalVarsMap v) {
         v.clear();
         varsMapCache.add(v);
     }
 
-    private static synchronized ArrayList getCachedVector() {
+    static synchronized ArrayList getCachedVector() {
         if (listCache.isEmpty()) {
             return new ArrayList();
         }
         return listCache.remove(listCache.size() - 1);
     }
 
-    private synchronized void putCachedVector(ArrayList v) {
+    static synchronized void putCachedVector(ArrayList v) {
         v.clear();
         listCache.add(v);
     }

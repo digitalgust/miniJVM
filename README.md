@@ -53,10 +53,10 @@ MiniJVM on web build by Starcommander. [Source](https://github.com/Starcommander
 
   <div align=center><img width="112" height="199" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/doc/img/demo.gif"/></div>
      
-  <div align=center><img width="400" height="240" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/doc/img/game.gif"/></div>
+
 
 * Instant Message app Demo , [Source](https://github.com/digitalgust/BiBiX)
-* 3D game app Demo, [Source](https://github.com/digitalgust/g3d)
+
 
 <span id="linkarch"/>
 
@@ -74,7 +74,7 @@ MiniJVM on web build by Starcommander. [Source](https://github.com/Starcommander
 2020.12. Add build script and release v2.1.   
 2020.10. Refactor source and remove binary in repository.   
 2020.10. Https supported.   
-2020.03. Add xml layout for gui system, add 3D game demo for minijvm, fix jdwp debug for jetbrain idea.               
+2020.03. Add xml layout for gui system, fix jdwp debug for jetbrain idea.               
 2019.12. Bind cross-platform awtk ui system , see [awtk-minijvm](https://github.com/digitalgust/miniJVM/tree/master/desktop/awtk_gui)   
 2019.12. Jit enabled, it based on sljit project   
 2019.10. Jit is developing   
@@ -158,7 +158,6 @@ struct _MiniJVM {
 [Awtk-minijvm](https://github.com/zlgopen/awtk-minijvm)  :[AWTK](https://github.com/zlgopen/awtk) cross platform native ui bind to minijvm   
 [LWJGUI-Mobile](https://github.com/orange451/LWJGUI-Mobile) : java LWJGL UI library        
 [BiBiX](https://github.com/digitalgust/BiBiX) : java instantial messager        
-[G3d](https://github.com/digitalgust/g3d) : java 3d game demo        
 [MiniJVM web demo](https://java-on-web.org/examples/) :  miniJVM on web demo
 
 <span id="linkref"/>

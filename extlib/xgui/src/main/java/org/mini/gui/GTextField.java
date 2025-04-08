@@ -8,6 +8,7 @@ package org.mini.gui;
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.nanovg.Nanovg;
+import org.mini.util.SysLog;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
@@ -25,20 +26,17 @@ public class GTextField extends GTextObject {
     protected int text_max = 400;
     protected int boxStyle = BOX_STYLE_EDIT;
     //
-    protected byte[] search_arr = toCstyleBytes(ICON_SEARCH);
-    protected byte[] reset_arr = toCstyleBytes(ICON_CIRCLED_CROSS);
-    //
     protected float[] lineh = {0};
     protected short[] text_pos;
     //
     protected int caretIndex;
-    protected int selectStart = -1;//选取开始
-    protected int selectEnd = -1;//选取结束
     boolean mouseDrag;
 
-    protected boolean password = false;//是否密码字段
+    protected boolean passwordMode = false;//是否密码字段
+    protected boolean passwordShow = false;
 
     protected boolean resetEnable = true;
+    protected boolean resetPressBegin = false;
 
     protected float wordShowOffsetX = 0.f;
 
@@ -77,7 +75,7 @@ public class GTextField extends GTextObject {
     public void setBoxStyle(int boxStyle) {
         this.boxStyle = boxStyle;
         if (boxStyle == BOX_STYLE_SEARCH) {
-            searchWidth = GToolkit.getStyle().getIconFontWidth() * 2f;
+            searchWidth = GToolkit.getStyle().getIconFontWidth() * 1.5f;
         } else {
             searchWidth = 0.f;
         }
@@ -88,11 +86,11 @@ public class GTextField extends GTextObject {
     }
 
     public void setPasswordMode(boolean pwd) {
-        password = pwd;
+        passwordMode = pwd;
     }
 
     public boolean isPasswordMode() {
-        return password;
+        return passwordMode;
     }
 
 
@@ -140,21 +138,32 @@ public class GTextField extends GTextObject {
                         selectStart = caret;
                         mouseDrag = true;
                     } else {
-                        GToolkit.disposeEditMenu();
+                        GToolkit.hideEditMenu();
+                    }
+                    if (isInBoundle(reset_boundle, rx, ry)) {
+                        if (passwordMode) {
+                        } else if (isResetEnable()) {
+                            resetPressBegin = true;
+                        }
+                        if (GToolkit.getEditMenu() != null) GToolkit.getEditMenu().dispose();
                     }
                 } else {
                     mouseDrag = false;
                     if (selectEnd == -1 || selectStart == selectEnd) {
                         resetSelect();
-                        GToolkit.disposeEditMenu();
+                        GToolkit.hideEditMenu();
                     }
                     if (isInBoundle(reset_boundle, rx, ry)) {
-                        if (isResetEnable()) {
+                        if (passwordMode) {
+                            passwordShow = !passwordShow;
+                            text_arr = null;
+                        } else if (isResetEnable() && resetPressBegin) {
                             deleteAll();
                             resetSelect();
                         }
                         if (GToolkit.getEditMenu() != null) GToolkit.getEditMenu().dispose();
                     }
+                    resetPressBegin = false;
                 }
 
             } else if (button == Glfw.GLFW_MOUSE_BUTTON_2) {
@@ -197,7 +206,7 @@ public class GTextField extends GTextObject {
 
     @Override
     public void setFlyable(boolean flyable) {
-        if (flyable) System.out.println(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
+        if (flyable) SysLog.info(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
     }
 
     @Override
@@ -222,7 +231,7 @@ public class GTextField extends GTextObject {
         }
 
         if (action == Glfw.GLFW_PRESS || action == Glfw.GLFW_REPEAT) {
-            if (enable) {
+            if (visible && enable) {
                 switch (key) {
                     case Glfw.GLFW_KEY_BACKSPACE: {
                         int[] selectFromTo = getSelected();
@@ -333,7 +342,9 @@ public class GTextField extends GTextObject {
         if (isInBoundle(boundle, rx, ry)) {
             if (phase == Glfm.GLFMTouchPhaseEnded) {
                 if (isInBoundle(reset_boundle, rx, ry)) {
-                    if (isResetEnable()) {
+                    if (passwordMode) {
+
+                    } else if (isResetEnable() && resetPressBegin) {
                         deleteAll();
                         resetSelect();
                     }
@@ -345,6 +356,19 @@ public class GTextField extends GTextObject {
                     }
                     setCaretIndex(getCaretIndex(x, y));
                 }
+                resetPressBegin = false;
+            } else if (phase == Glfm.GLFMTouchPhaseBegan) {
+                if (isInBoundle(reset_boundle, rx, ry)) {
+                    if (passwordMode) {
+                        passwordShow = !passwordShow;
+                        text_arr = null;
+                    } else if (isResetEnable()) {
+                        resetPressBegin = true;
+                    }
+                }
+            } else if (phase == Glfm.GLFMTouchPhaseMoved) {
+                int caret = getCaretIndex(x, y);
+                setCaretIndex(caret);
             }
         }
         super.touchEvent(touchid, phase, x, y);
@@ -352,7 +376,7 @@ public class GTextField extends GTextObject {
 
     @Override
     public void characterEvent(String str, int mods) {
-        if (enable) {
+        if (visible && enable) {
             boolean containEnter = false;
             if (str.indexOf('\n') >= 0) {
                 str = str.replace("\n", "");
@@ -360,7 +384,6 @@ public class GTextField extends GTextObject {
             }
             deleteSelectedText();
             insertTextByIndex(caretIndex, str);
-            setCaretIndex(caretIndex + str.length());
             if (containEnter) {
                 if (hrefListener != null) {
                     doAction();
@@ -376,12 +399,11 @@ public class GTextField extends GTextObject {
      */
     @Override
     public void characterEvent(char character) {
-        if (enable) {
+        if (visible && enable) {
             if (character != '\n') {
                 if (character != '\r' && textsb.length() < text_max) {
                     deleteSelectedText();
                     insertTextByIndex(caretIndex, character);
-                    setCaretIndex(caretIndex + 1);
                 }
             } else {
                 if (hrefListener != null) {
@@ -424,6 +446,7 @@ public class GTextField extends GTextObject {
     /**
      * @param caretIndex the caretIndex to set
      */
+    @Override
     public void setCaretIndex(int caretIndex) {
         if (caretIndex < 0) {
             caretIndex = 0;
@@ -431,6 +454,7 @@ public class GTextField extends GTextObject {
             caretIndex = textsb.length();
         }
         this.caretIndex = caretIndex;
+        super.setCaretIndex(caretIndex);
     }
 
     int[] getSelected() {
@@ -472,7 +496,6 @@ public class GTextField extends GTextObject {
     @Override
     public void insertTextAtCaret(String str) {
         insertTextByIndex(caretIndex, str);
-        setCaretIndex(caretIndex + textsb.length());
     }
 
     @Override
@@ -511,33 +534,39 @@ public class GTextField extends GTextObject {
         float leftIcons = 0.5f;//图标占位宽度
         // Edit
         if (boxStyle == BOX_STYLE_SEARCH) {
-            GToolkit.getStyle().drawFieldBoxBase(vg, x, y, w, h, h * .5f - 1f);
+            GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h, h * .5f - 1f);
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
             nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 
-            nvgTextJni(vg, x + FONT_WIDTH, y + h * 0.55f, search_arr, 0, search_arr.length);
+            nvgTextJni(vg, x + FONT_WIDTH, y + h * 0.55f, ICON_SEARCH_BYTE, 0, ICON_SEARCH_BYTE.length);
             leftIcons = 2;
         } else {
             GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h, getCornerRadius());
         }
 
-        if (isResetEnable()) {
-            nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
+        if (passwordMode) {
+            nvgFontSize(vg, getFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
             nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-            nvgTextJni(vg, x + w - resetWidth * 0.5f, y + h * 0.55f, reset_arr, 0, reset_arr.length);
+            nvgTextJni(vg, x + w - resetWidth * 0.5f, y + h * 0.55f, ICON_EYES_BYTE, 0, ICON_CIRCLED_CROSS_BYTE.length);
+        } else if (isResetEnable()) {
+            nvgFontSize(vg, getFontSize());
+            nvgFontFace(vg, GToolkit.getFontIcon());
+            nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
+            nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+            nvgTextJni(vg, x + w - resetWidth * 0.5f, y + h * 0.55f, ICON_CIRCLED_CROSS_BYTE, 0, ICON_CIRCLED_CROSS_BYTE.length);
         }
 
-        nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
+        nvgFontSize(vg, getFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
 
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
         if (text_arr == null) {//文字被修改过
-            if (password) {
+            if (passwordMode && !passwordShow) {
                 int len = textsb.length();
                 text_arr = new byte[len + 1];
                 for (int i = 0; i < len; i++) {
@@ -548,7 +577,7 @@ public class GTextField extends GTextObject {
             }
         }
         float wordx = x + searchWidth + PAD;
-        float wordy = y + boundle[HEIGHT] * 0.5f;
+        float wordy = y + boundle[HEIGHT] * 0.5f + 2f;
         float text_show_area_x = wordx;
         float text_show_area_w = boundle[WIDTH] - PAD * 2 - searchWidth - resetWidth;
         float text_width = Nanovg.nvgTextBoundsJni(vg, 0, 0, text_arr, 0, text_arr.length, null);
@@ -592,7 +621,7 @@ public class GTextField extends GTextObject {
                 }
 
                 //本次计算,下次绘制生效
-                float mid = (text_show_area_w) / 3;
+                float mid = (text_show_area_w) / 4;
                 if (mid > 50) mid = 50;//如果文字宽度小于100，会左右不停的闪，相互拉锯
                 if (Math.abs(caretx - text_show_area_x) < mid && leftShowCharIdx > 0) {
                     wordShowOffsetX += 20;

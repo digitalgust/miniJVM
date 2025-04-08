@@ -317,11 +317,11 @@ void thread_stop_all(MiniJVM *jvm) {
 
         jthread_suspend(r);
         r->thrd_info->no_pause = 1;
-        r->thrd_info->is_stop = 1;
+        r->thrd_info->is_stop = 1;//stop thread that's sleeping state
         MemoryBlock *tl = r->thrd_info->curThreadLock;
         if (tl) {
             jthread_lock(tl, r);
-            jthread_notify(tl, r);
+            jthread_notify(tl, r); //wake up thread that's waiting state
             jthread_unlock(tl, r);
         }
 
@@ -638,6 +638,9 @@ s32 jvm_printf(const c8 *format, ...) {
     }
 #else
     result = vfprintf(stderr, format, vp);
+#ifdef __JVM_OS_ANDROID__
+    LOGD(format,vp);
+#endif
 #endif
     va_end(vp);
     fflush(stderr);
@@ -682,7 +685,9 @@ s32 jthread_init(MiniJVM *jvm, Instance *jthread) {
 s32 jthread_dispose(Instance *jthread, Runtime *runtime) {
     gc_move_objs_thread_2_gc(runtime);
     threadlist_remove(runtime);
-    if (runtime->jvm->jdwp_enable)event_on_thread_death(runtime->jvm->jdwpserver, runtime->thrd_info->jthread);
+    if (runtime->jvm->jdwp_enable) {//jdwpserver might stoped when
+        event_on_thread_death(runtime->jvm->jdwpserver, runtime->thrd_info->jthread);
+    }
     //destroy
     jthread_set_stackframe_value(runtime->jvm, jthread, NULL);
 
@@ -711,10 +716,11 @@ s32 jthread_run(void *para) {
 #endif
     //gc_refer_reg(runtime, jthread);//20201019 gust comment it , duplicate reg
     if (jvm->jdwp_enable && jvm->jdwpserver)event_on_thread_start(jvm->jdwpserver, runtime->thrd_info->jthread);
+    check_suspend_and_pause(runtime);//check suspend if gc is running
     runtime->thrd_info->thread_status = THREAD_STATUS_RUNNING;
     push_ref(runtime->stack, (__refer) jthread);
     ret = execute_method_impl(method, runtime);
-    if (ret != RUNTIME_STATUS_NORMAL) {
+    if (ret == RUNTIME_STATUS_EXCEPTION) {
         print_exception(runtime);
     }
 
@@ -737,18 +743,28 @@ s32 jthread_run(void *para) {
     if (runtime->thrd_info->curThreadLock) {
         jthread_unlock(runtime->thrd_info->curThreadLock, runtime);
     }
-    jthread_dispose(jthread, runtime);
-    gc_move_objs_thread_2_gc(runtime);
-    runtime_destroy(runtime);
 
     utf8_destroy(methodName);
     utf8_destroy(methodType);
+    thrd_exit(ret);
 #if _JVM_DEBUG_LOG_LEVEL > 1
     s64 spent = currentTimeMillis() - startAt;
     jvm_printf("[INFO]thread over %llx , return %d , spent : %lld\n", (s64) (intptr_t) jthread, ret, spent);
 #endif
-    thrd_exit(ret);
     return ret;
+}
+
+/**
+ * the thread finalize, called by gc thread, else the threadlist is
+ * @param runtime
+ * @return
+ */
+s32 jthread_run_finalize(Runtime *runtime) {
+    if (!runtime)return -1;
+    Instance *jthread = runtime->thrd_info->jthread;
+    jthread_dispose(jthread, runtime);
+    runtime_destroy(runtime);
+    return 0;
 }
 
 thrd_t jthread_start(Instance *ins, Runtime *parent) {//
@@ -774,6 +790,7 @@ __refer jthread_get_stackframe_value(MiniJVM *jvm, Instance *ins) {
 void jthread_set_stackframe_value(MiniJVM *jvm, Instance *ins, __refer val) {
     c8 *ptr = getInstanceFieldPtr(ins, jvm->shortcut.thread_stackFrame);
     setFieldLong(ptr, (s64) (intptr_t) val);
+    GCFLAG_JTHREAD_SET(ins->mb.gcflag);
 }
 
 s32 jthread_get_daemon_value(Instance *ins, Runtime *runtime) {

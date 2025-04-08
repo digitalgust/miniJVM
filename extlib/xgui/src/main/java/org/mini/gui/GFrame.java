@@ -9,6 +9,7 @@ import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.gui.gscript.Interpreter;
 import org.mini.nanovg.Nanovg;
+import org.mini.util.SysLog;
 
 import java.util.List;
 
@@ -173,7 +174,7 @@ public class GFrame extends GContainer {
 
     public void align(int align_mod) {
         if (parent == null) {
-            System.out.println("warning: added to form can be set align");
+            SysLog.warn("added to form can be set align");
             return;
         }
         if ((align_mod & Nanovg.NVG_ALIGN_LEFT) != 0) {
@@ -245,10 +246,11 @@ public class GFrame extends GContainer {
         super.paint(vg);
 
         // Drop shadow
+        float shadowBlur = 18;
         byte[] shadowPaint;
-        shadowPaint = nvgBoxGradient(vg, x, y + 2, w, h, getCornerRadius() * 2, 10, nvgRGBA(0, 0, 0, 128), nvgRGBA(0, 0, 0, 0));
+        shadowPaint = nvgBoxGradient(vg, x, y + 0.5f, w, h, getCornerRadius(), shadowBlur, nvgRGBA(0, 0, 0, 32), nvgRGBA(0, 0, 0, 0));
         nvgBeginPath(vg);
-        nvgRect(vg, x - 10, y - 10, w + 20, h + 30);
+        nvgRect(vg, x - shadowBlur, y - shadowBlur, w + shadowBlur * 2, h + shadowBlur * 2);
         nvgRoundedRect(vg, x, y, w, h, getCornerRadius());
         nvgPathWinding(vg, NVG_HOLE);
         nvgFillPaint(vg, shadowPaint);
@@ -293,7 +295,7 @@ public class GFrame extends GContainer {
 
     @Override
     public void setFlyable(boolean flyable) {
-        if (flyable) System.out.println(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
+        if (flyable) SysLog.warn(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
     }
 
     @Override
@@ -409,6 +411,7 @@ public class GFrame extends GContainer {
             if (getH() < 1f) return false;
 
             super.paint(vg);
+
             boolean isFocus = false;
             if (GFrame.this.parent != null) {
                 isFocus = GFrame.this.parent.getCurrent() == GFrame.this;

@@ -3,7 +3,7 @@ package org.mini.layout;
 import org.mini.gui.GImage;
 import org.mini.gui.GImageItem;
 import org.mini.gui.GObject;
-import org.mini.gui.GToolkit;
+import org.mini.layout.loader.XmlExtAssist;
 import org.xmlpull.v1.KXmlParser;
 
 public class XImageItem extends XObject {

@@ -744,7 +744,6 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
 @property(nonatomic, assign) int pickerType;
 //gust for mutitage input ,ex chinese
 @property (nonatomic, retain) NSMutableString *text;
-@property (nonatomic, copy) NSString *contentText; // The text content (without attributes).
 @property (nonatomic) NSRange inMarkedTextRange; // Marked text range (for input method marked text).
 @property (nonatomic) NSRange inSelectedTextRange; // Selected text range.
 
@@ -770,7 +769,6 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
         _glfmDisplay->supportedOrientations = GLFMInterfaceOrientationAll;
         //gust
         self.text = [[NSMutableString alloc] init];
-        self.contentText = @"";
     }
     return self;
 }
@@ -832,26 +830,26 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
 //================================= gust add 3 =======================
 //强制转屏（这个方法最好放在BaseVController中）
 
-- (void)setInterfaceOrientation:(UIInterfaceOrientation)orientation{
-
-    if ([[UIDevice currentDevice] respondsToSelector:@selector(setOrientation:)]) {
-
-        SEL selector  = NSSelectorFromString(@"setOrientation:");
-
-        NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:[UIDevice instanceMethodSignatureForSelector:selector]];
-
-        [invocation setSelector:selector];
-
-        [invocation setTarget:[UIDevice currentDevice]];
-
-        // 从2开始是因为前两个参数已经被selector和target占用
-
-        [invocation setArgument:&orientation atIndex:2];
-
-        [invocation invoke];
-
+- (void)setInterfaceOrientation:(UIInterfaceOrientation)orientation {
+    if (@available(iOS 16.0, *)) {
+        UIWindowScene *windowScene = self.view.window.windowScene;
+        if (windowScene) {
+            UIWindowSceneGeometryPreferencesIOS *preferences = [[UIWindowSceneGeometryPreferencesIOS alloc] 
+                initWithInterfaceOrientations:1 << orientation];
+            [windowScene requestGeometryUpdateWithPreferences:preferences errorHandler:^(NSError * _Nonnull error) {
+                //NSLog(@"Failed to update interface orientation: %@", error);
+            }];
+        }
+    } else {
+        if ([[UIDevice currentDevice] respondsToSelector:@selector(setOrientation:)]) {
+            SEL selector = NSSelectorFromString(@"setOrientation:");
+            NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:[UIDevice instanceMethodSignatureForSelector:selector]];
+            [invocation setSelector:selector];
+            [invocation setTarget:[UIDevice currentDevice]];
+            [invocation setArgument:&orientation atIndex:2];
+            [invocation invoke];
+        }
     }
-
 }
 //================================= gust add 3 =======================
 
@@ -1243,23 +1241,6 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
     return UITextAutocorrectionTypeNo;
 }
 
-- (BOOL)hasText {
-    return YES;
-}
-
-- (void)insertText:(NSString *)text {
-    if (_glfmDisplay->charFunc) {
-        _glfmDisplay->charFunc(_glfmDisplay, text.UTF8String, 0);
-    }
-}
-
-- (void)deleteBackward {
-    if (_glfmDisplay->keyFunc) {
-        _glfmDisplay->keyFunc(_glfmDisplay, GLFMKeyBackspace, GLFMKeyActionPressed, 0);
-        _glfmDisplay->keyFunc(_glfmDisplay, GLFMKeyBackspace, GLFMKeyActionReleased, 0);
-    }
-}
-
 - (BOOL)canBecomeFirstResponder {
     return self.keyboardRequested;
 }
@@ -1378,7 +1359,6 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
     [self.text replaceCharactersInRange:indexedRange.range withString:text];
 
     // Update underlying APLSimpleCoreTextView
-    self.contentText = self.text;
     self.inSelectedTextRange = selectedNSRange;
 }
 
@@ -1390,7 +1370,7 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
  */
 - (UITextRange *)selectedTextRange
 {
-    return [APLIndexedRange indexedRangeWithRange:self.inMarkedTextRange];
+    return [APLIndexedRange indexedRangeWithRange:self.inSelectedTextRange];
 }
 
 
@@ -1453,7 +1433,6 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
 
     selectedNSRange = NSMakeRange(selectedRange.location + markedTextRange.location, selectedRange.length);
 
-    self.contentText = self.text;
     self.inMarkedTextRange = markedTextRange;
     self.inSelectedTextRange = selectedNSRange;
 }
@@ -1473,6 +1452,17 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
     // Unmark the underlying APLSimpleCoreTextView.markedTextRange.
     markedTextRange.location = NSNotFound;
     self.inMarkedTextRange = markedTextRange;
+
+    //这个插入动作主要是针对ios自带的拼音键盘输入的时候，多阶段输入最终选取文字之后，
+    //ios自带拼音输入法并没有调用insertText()把文本传入jvm,因此在进行unmark时，把最终文本传给jvm
+    //当把self.text传给jvm后，便清空之前的内容
+    if (_glfmDisplay->charFunc) {
+        _glfmDisplay->charFunc(_glfmDisplay, self.text.UTF8String, 0);
+        //这里把self.contentText, self.text清空 , 把self.inSelectedTextRange, self.inMarkedTextRange设为0长度
+        self.inSelectedTextRange = NSMakeRange(0, 0);
+        self.inMarkedTextRange = NSMakeRange(0, 0);
+        [self.text deleteCharactersInRange:NSMakeRange(0, self.text.length) ];
+    }
 }
 
 
@@ -1764,6 +1754,120 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
 }
 
 
+#pragma mark UIKeyInput methods
+
+///**
+// UIKeyInput protocol required method.
+// A Boolean value that indicates whether the text-entry objects have any text.
+// */
+//- (BOOL)hasText
+//{
+//    return (self.text.length != 0);
+//}
+//
+//
+///**
+// UIKeyInput protocol required method.
+// Insert a character into the displayed text. Called by the text system when the user has entered simple text.
+// */
+//- (void)insertText:(NSString *)text
+//{
+//    NSRange selectedNSRange = self.inSelectedTextRange;
+//    NSRange markedTextRange = self.inMarkedTextRange;
+//
+//    /*
+//     While this sample does not provide a way for the user to create marked or selected text, the following code still checks for these ranges and acts accordingly.
+//     */
+//    if (markedTextRange.location != NSNotFound) {
+//        // There is marked text -- replace marked text with user-entered text.
+//        [self.text replaceCharactersInRange:markedTextRange withString:text];
+//        selectedNSRange.location = markedTextRange.location + text.length;
+//        selectedNSRange.length = 0;
+//        markedTextRange = NSMakeRange(NSNotFound, 0);
+//    } else if (selectedNSRange.length > 0) {
+//        // Replace selected text with user-entered text.
+//        [self.text replaceCharactersInRange:selectedNSRange withString:text];
+//        selectedNSRange.length = 0;
+//        selectedNSRange.location += text.length;
+//    } else {
+//        // Insert user-entered text at current insertion point.
+//        [self.text insertString:text atIndex:selectedNSRange.location];
+//        selectedNSRange.location += text.length;
+//    }
+//
+//    // Update underlying APLSimpleCoreTextView.
+//    self.contentText = self.text;
+//    self.inMarkedTextRange = markedTextRange;
+//    self.inSelectedTextRange = selectedNSRange;
+//    
+//        if (_glfmDisplay->charFunc) {
+//            _glfmDisplay->charFunc(_glfmDisplay, text.UTF8String, 0);
+//        }
+//}
+//
+//
+///**
+// UIKeyInput protocol required method.
+// Delete a character from the displayed text. Called by the text system when the user is invoking a delete (e.g. pressing the delete software keyboard key).
+// */
+//- (void)deleteBackward
+//{
+//    NSRange selectedNSRange = self.inSelectedTextRange;
+//    NSRange markedTextRangeLocal = self.inMarkedTextRange;
+//
+//    /*
+//     Note: While this sample does not provide a way for the user to create marked or selected text, the following code still checks for these ranges and acts accordingly.
+//     */
+//    if (markedTextRangeLocal.location != NSNotFound) {
+//        // There is marked text, so delete it.
+//        [self.text deleteCharactersInRange:markedTextRangeLocal];
+//        selectedNSRange.location = markedTextRangeLocal.location;
+//        selectedNSRange.length = 0;
+//        markedTextRangeLocal = NSMakeRange(NSNotFound, 0);
+//    }
+//    else if (selectedNSRange.length > 0) {
+//        // Delete the selected text.
+//        [self.text deleteCharactersInRange:selectedNSRange];
+//        selectedNSRange.length = 0;
+//    }
+//    else if (selectedNSRange.location > 0) {
+//        // Delete one char of text at the current insertion point.
+//        selectedNSRange.location--;
+//        selectedNSRange.length = 1;
+//        [self.text deleteCharactersInRange:selectedNSRange];
+//        selectedNSRange.length = 0;
+//    }
+//
+//    // Update underlying APLSimpleCoreTextView.
+//    self.contentText = self.text;
+//    self.inMarkedTextRange = markedTextRangeLocal;
+//    self.inSelectedTextRange = selectedNSRange;
+//    
+//        if (_glfmDisplay->keyFunc) {
+//            _glfmDisplay->keyFunc(_glfmDisplay, GLFMKeyBackspace, GLFMKeyActionPressed, 0);
+//            _glfmDisplay->keyFunc(_glfmDisplay, GLFMKeyBackspace, GLFMKeyActionReleased, 0);
+//        }
+//}
+
+
+
+- (BOOL)hasText {
+    return YES;
+}
+
+- (void)insertText:(NSString *)text {
+    if (_glfmDisplay->charFunc) {
+        _glfmDisplay->charFunc(_glfmDisplay, text.UTF8String, 0);
+    }
+}
+
+- (void)deleteBackward {
+    if (_glfmDisplay->keyFunc) {
+        _glfmDisplay->keyFunc(_glfmDisplay, GLFMKeyBackspace, GLFMKeyActionPressed, 0);
+        _glfmDisplay->keyFunc(_glfmDisplay, GLFMKeyBackspace, GLFMKeyActionReleased, 0);
+    }
+}
+
 
 #pragma mark - 拍照并保存
 - (void)takePhotoAction:(int) puid:(int) type {
@@ -1827,7 +1931,7 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
     if ([mediaType isEqualToString:@"public.image"]) {  //判断是否为图片
 
         UIImage *image = [info objectForKey:UIImagePickerControllerOriginalImage];
-        if(_pickerType==0){//autofit
+        if((_pickerType&0x100)!=0){//autofit to 1024
             float iw=image.size.width;
             float ih=image.size.height;
             float ratio=1024;
@@ -1839,14 +1943,19 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
 
         NSData *data=UIImageJPEGRepresentation(image, 0.75);
         //self.imageShow.image = image;
+        const char *savePath=glfmGetSaveRoot();
 
         NSURL *nsurl=[info objectForKey:UIImagePickerControllerReferenceURL];
         NSString *nss=[nsurl path];
-        const char* url=[nss UTF8String];
+        NSString *fileName = [NSString stringWithFormat:@"%ld.jpg",time(NULL)];
+        NSString *path=[NSString stringWithFormat:@"%s/%@",savePath,fileName];
+        const char* url=[path UTF8String];
+        
+        [data writeToFile:path atomically:YES];
 
         char *cd=(char*)[data bytes];
         int len=(int)[data length];
-        _glfmDisplay->pickerFunc(_glfmDisplay, _pickerUid, url, cd, len);
+        _glfmDisplay->pickerFunc(_glfmDisplay, _pickerUid, url, cd, len);//把路径和数据都返回到java层
 
         //通过判断picker的sourceType，如果是拍照则保存到相册去
         if (picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
@@ -1854,7 +1963,10 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
         }
     } else if([mediaType isEqualToString:@"public.movie"]){
         NSURL *videoURL = [info objectForKey:UIImagePickerControllerMediaURL];
-        NSString *path = [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true) lastObject] stringByAppendingPathComponent:[NSString stringWithFormat:@"%ld_compressedVideo.mp4",time(NULL)]];
+        const char *savePath=glfmGetSaveRoot();
+//        NSString *path = [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true) lastObject] stringByAppendingPathComponent:[NSString stringWithFormat:@"%ld_compressedVideo.mp4",time(NULL)]];
+        NSString *fileName = [NSString stringWithFormat:@"%ld.mp4",time(NULL)];
+        NSString *path=[NSString stringWithFormat:@"%s/%@",savePath,fileName];
         NSLog(@"compressedVideoSavePath : %@",path);
         //if(![path isEqualToString:@".mp4"]){
             //压缩
@@ -1961,6 +2073,43 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
 
 }
 
+- (void)targetAction:(UIButton *)button {
+    UIView *videoPanel = button.superview;
+    AVPlayer *avplayer = [videoPanel.layer valueForKey:@"AVPLAYER"];
+    
+    switch (button.tag) {
+        case 555: // CLOSE button
+            if (avplayer) {
+                [avplayer pause];
+                [videoPanel removeFromSuperview];
+                [[AVPlayerLayer playerLayerWithPlayer:avplayer] removeFromSuperlayer];
+                avplayer = NULL;
+            }
+            break;
+            
+        case 556: // PAUSE button
+            if (avplayer && avplayer.rate != 0) {
+                [avplayer pause];
+            }
+            break;
+            
+        case 557: // PLAY button
+            if (avplayer) {
+                AVPlayerItem *playerItem = avplayer.currentItem;
+                if (playerItem.currentTime.value == playerItem.duration.value) {
+                    // Video has finished playing, seek to beginning and play
+                    [avplayer seekToTime:CMTimeMake(0, 1)];
+                    [avplayer play];
+                } else if (avplayer.rate == 0) {
+                    // Video is paused, resume playing
+                    [avplayer play];
+                }
+                // If video is already playing, do nothing
+            }
+            break;
+    }
+}
+
 @end
 
 #pragma mark - Application Delegate
@@ -2010,24 +2159,24 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
     [[UIApplication sharedApplication] registerForRemoteNotifications];
 
     //register lock screen event
-    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, screenLockStateChanged, NotificationLock, NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
-    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, screenLockStateChanged, NotificationChange, NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
+//    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, screenLockStateChanged, NotificationLock, NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
+//    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, screenLockStateChanged, NotificationChange, NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
 
 
     //setScreenStateCb();
 
     return YES;
 }
-//lock screen
-static void screenLockStateChanged(CFNotificationCenterRef center,void* observer,CFStringRef name,const void*object,CFDictionaryRef userInfo)
-{
-    NSString* lockstate = (__bridge NSString*)name;
-    if ([lockstate isEqualToString:(__bridge NSString*)NotificationLock]) {
-        NSLog(@"locked.");
-    } else {
-        NSLog(@"lock state changed.");
-    }
-}
+////lock screen
+//static void screenLockStateChanged(CFNotificationCenterRef center,void* observer,CFStringRef name,const void*object,CFDictionaryRef userInfo)
+//{
+//    NSString* lockstate = (__bridge NSString*)name;
+//    if ([lockstate isEqualToString:(__bridge NSString*)NotificationLock]) {
+//        NSLog(@"locked.");
+//    } else {
+//        NSLog(@"lock state changed.");
+//    }
+//}
 
 //gust {
 void setDeviceToken(GLFMDisplay * display, const char *deviceToken) {
@@ -2043,16 +2192,43 @@ void setDeviceToken(GLFMDisplay * display, const char *deviceToken) {
 didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
     GLFMViewController *vc = (GLFMViewController *)[self.window rootViewController];
     //NSLog(@"%@", [NSString stringWithFormat:@"Device Token: %@", deviceToken]);
-    NSString * newStr = [[[[deviceToken description]
-         stringByReplacingOccurrencesOfString:@"<" withString:@""]
-         stringByReplacingOccurrencesOfString:@">" withString:@""]
-         stringByReplacingOccurrencesOfString:@"" withString:@""];
-    //NSString* newStr = [[NSString alloc] initWithData:deviceToken encoding:NSUTF8StringEncoding];
-    if(newStr != nil){
-        const char * token=[newStr UTF8String];
+
+    
+    NSData *data = deviceToken;
+    if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 13) {
+        
+        if (![data isKindOfClass:[NSData class]]) {
+            setDeviceToken(vc.glfmDisplay,NULL);
+        }
+        NSUInteger len = [data length];
+        char *chars = (char *)[data bytes];
+        NSMutableString *hexString = [[NSMutableString alloc]init];
+        for (NSUInteger i=0; i<len; i++) {
+            [hexString appendString:[NSString stringWithFormat:@"%0.2hhx" , chars[i]]];
+            if((i+1)%4==0){
+                //[hexString appendString:@" "];
+            }
+        }
+        
+        const char * token=[hexString UTF8String];
         setDeviceToken(vc.glfmDisplay,token);
-    }else{
-        setDeviceToken(vc.glfmDisplay,NULL);
+    } else {
+        NSString *myToken = [[data description] stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"<>"]];
+        //myToken = [myToken stringByReplacingOccurrencesOfString:@" " withString:@""];
+        
+        const char * token=[myToken UTF8String];
+        setDeviceToken(vc.glfmDisplay,token);
+//        NSString * newStr = [[[[deviceToken description]
+//                               stringByReplacingOccurrencesOfString:@"<" withString:@""]
+//                              stringByReplacingOccurrencesOfString:@">" withString:@""]
+//                             stringByReplacingOccurrencesOfString:@"" withString:@""];
+//        //NSString* newStr = [[NSString alloc] initWithData:deviceToken encoding:NSUTF8StringEncoding];
+//        if(newStr != nil){
+//            const char * token=[newStr UTF8String];
+//            setDeviceToken(vc.glfmDisplay,token);
+//        }else{
+//            setDeviceToken(vc.glfmDisplay,NULL);
+//        }
     }
 }
 // 获得Device Token失败
@@ -2577,6 +2753,21 @@ const char* getOsName(){
     return "iOS";
 }
 
+void getOsLanguage(char *buf, int bufSize) {
+    CFArrayRef localeIDs = CFLocaleCopyPreferredLanguages();
+    if (localeIDs&&bufSize > 0) {
+        CFStringRef localeID = (CFStringRef)CFArrayGetValueAtIndex(localeIDs, 0);
+        if (!CFStringGetCString(localeID, buf, bufSize, kCFStringEncodingUTF8)){
+            buf[0] = 0;
+        }
+        CFRelease(localeIDs);
+    } else {
+        if(bufSize > 0){
+            buf[0] = 0;
+        }
+    }
+}
+
 void pickPhotoAlbum(GLFMDisplay *display, int uid, int type){
     if (display) {
         GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
@@ -2726,12 +2917,14 @@ void remoteMethodCall(const char *inJsonStr, Utf8String *outJsonStr){
 
 
 #pragma mark - IAP interface
-
-void buyAppleProductById(GLFMDisplay * display, const char *cproductID, const char *base64HandleScript){
+//传入的cproductID和base64HandleScript是const char*类型的，在本函数执行结束后，会被jvm释放 
+//所以需要在函数内部复制一份为NSString，避免被jvm释放
+void buyAppleProductById(GLFMDisplay * display, const char *cproductID, const char *base64HandleScript) {
+    // 复制 cproductID
     NSString *productID = [[NSString alloc] initWithCString:cproductID encoding:NSUTF8StringEncoding];
-    //GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
-    
-
+    // 复制 base64HandleScript
+    NSString *script = [[NSString alloc] initWithCString:base64HandleScript encoding:NSUTF8StringEncoding];
+ 
     [[IAPManager shareIAPManager] startPurchaseWithID:productID completeHandle:^(IAPPurchType type,NSData *data) {
         switch (type) {
             case IAPPurchSuccess:
@@ -2763,20 +2956,17 @@ void buyAppleProductById(GLFMDisplay * display, const char *cproductID, const ch
             nssd = [data base64EncodedStringWithOptions:0];
         }
 
-        NSString *str = [NSString stringWithFormat:@"%d:%@:%s", (int)type, nssd, base64HandleScript];
+        NSString *str = [NSString stringWithFormat:@"%d:%@:%@", (int)type, nssd, script];
 
         replyMsg = [str UTF8String];
         
-        
         static char *key = "glfm.ios.purchase";
         
-        
-
         if(display->notifyFunc){
             display->notifyFunc(display, key, replyMsg);
         }
+
     }];
-    
 }
 
 #endif

@@ -647,30 +647,29 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                 do {
 #if _JVM_JDWP_ENABLE
-                    stack->sp = sp;
-                    runtime->pc = ip;
-                    if (!runtime->thrd_info->no_pause) {
-                        //if (jvm->jdwp_enable) {
-                        //breakpoint
-                        if (method->breakpoint) {
-                            jdwp_check_breakpoint(runtime);
+                    if (jvm->jdwp_enable) {
+                        stack->sp = sp;
+                        runtime->pc = ip;
+                        if (!runtime->thrd_info->no_pause) {
+                            //breakpoint
+                            if (method->breakpoint) {
+                                jdwp_check_breakpoint(runtime);
+                            }
+                            //debug step
+                            if (thrd_info->jdwp_step->active) {//单步状态
+                                thrd_info->jdwp_step->bytecode_count++;
+                                jdwp_check_debug_step(runtime);
+                            }
                         }
-                        //debug step
-                        if (thrd_info->jdwp_step->active) {//单步状态
-                            thrd_info->jdwp_step->bytecode_count++;
-                            jdwp_check_debug_step(runtime);
-
-                        }
-                    }
-                    sp = stack->sp;
-                    check_gc_pause(-1);
+                        sp = stack->sp;
+                        check_gc_pause(-1);  //step debug required
 #if _JVM_DEBUG_LOG_LEVEL > 1
-                    if (jvm->collector->isworldstoped) {
-                        jvm_printf("[ERROR] world stoped, but thread is running: %llx\n", (s64) (intptr_t) runtime->thrd_info->jthread);
+                        if (jvm->collector->isworldstoped) {
+                            jvm_printf("[ERROR] world stopped, but thread is running: %llx\n", (s64) (intptr_t) runtime->thrd_info->jthread);
+                        }
+#endif   //_JVM_DEBUG_LOG_LEVEL > 1
                     }
-#endif
-                    //}
-#endif
+#endif  //_JVM_JDWP_ENABLE
 
 
 #if _JVM_DEBUG_PROFILE
@@ -4118,7 +4117,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             }
         }
 
-        if (method->native_func) {
+        if (runtime->thrd_info->is_stop) {//if stop=1 then exit thread
+            ret = RUNTIME_STATUS_ERROR;
+        } else if (method->native_func) {
             if (method->is_sync)_synchronized_lock_method(method, runtime);
             ret = method->native_func(runtime, clazz);
             if (method->is_sync)_synchronized_unlock_method(method, runtime);

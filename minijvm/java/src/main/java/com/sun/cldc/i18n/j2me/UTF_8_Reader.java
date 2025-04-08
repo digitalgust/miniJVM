@@ -46,6 +46,8 @@ public class UTF_8_Reader extends com.sun.cldc.i18n.StreamReader {
      */
     private boolean newRead;
 
+    private int remainChar = -1; //the second char of a SURROGATE char
+
     /**
      * Constructs a UTF-8 reader.
      */
@@ -54,112 +56,25 @@ public class UTF_8_Reader extends com.sun.cldc.i18n.StreamReader {
         prepareForNextChar();
     }
 
-    /**
-     * Read a block of UTF8 characters.
-     *
-     * @param cbuf output buffer for converted characters read
-     * @param off  initial offset into the provided buffer
-     * @param len  length of characters in the buffer
-     * @return the number of converted characters
-     * @throws IOException is thrown if the input stream
-     *                     could not be read for the raw unconverted character
-     */
-//    public int read1(char cbuf[], int off, int len) throws IOException {
-//        int count = 0;
-//        int firstByte;
-//        int extraBytes;
-//        int currentChar = 0;
-//        int nextByte;
-//
-//        if (len == 0) {
-//            return 0;
-//        }
-//
-//        newRead = true;
-//        while (count < len) {
-//            firstByte = getByteOfCurrentChar(0);
-//            if (firstByte < 0) {
-//                if (firstByte == -1 && count == 0) {
-//                    // end of stream
-//                    return -1;
-//                }
-//
-//                return count;
-//            }
-//
-//            switch (firstByte >> 4) {
-//                case 0:
-//                case 1:
-//                case 2:
-//                case 3:
-//                case 4:
-//                case 5:
-//                case 6:
-//                case 7:
-//                    /* 7 bits: 0xxxxxxx */
-//                    extraBytes = 0;
-//                    currentChar = firstByte;
-//                    break;
-//
-//                case 12:
-//                case 13:
-//                    /* 11 bits: 110x xxxx   10xx xxxx */
-//                    extraBytes = 1;
-//                    currentChar = firstByte & 0x1F;
-//                    break;
-//
-//                case 14:
-//                    /* 16 bits: 1110 xxxx  10xx xxxx  10xx xxxx */
-//                    extraBytes = 2;
-//                    currentChar = firstByte & 0x0F;
-//                    break;
-//
-//                default:
-//                    /* we do not handle characters greater the 16 bits */
-//                    throw new UTFDataFormatException("invalid first byte " +
-//                            Integer.toBinaryString(firstByte));
-//            }
-//
-//            for (int j = 1; j <= extraBytes; j++) {
-//                nextByte = getByteOfCurrentChar(j);
-//                if (nextByte == NO_BYTE) {
-//                    // done for now, comeback later for the rest of char
-//                    return count;
-//                }
-//
-//                if (nextByte == -1) {
-//                    // end of stream in the middle of char
-//                    throw new UTFDataFormatException("partial character");
-//                }
-//
-//                if ((nextByte & 0xC0) != 0x80) {
-//                    throw new UTFDataFormatException("invalid byte " +
-//                            Integer.toBinaryString(nextByte));
-//                }
-//
-//                // each extra byte has 6 bits more of the char
-//                currentChar = (currentChar << 6) + (nextByte & 0x3F);
-//            }
-//
-//            cbuf[off + count] = (char) currentChar;
-//            count++;
-//            prepareForNextChar();
-//        }
-//
-//        return count;
-//    }
     public int read(char cbuf[], int off, int len) throws IOException {
 
         if (len == 0) {
             return 0;
         }
 
+
         int outputSize = 0; //记录转换后的Unicode字符串的字节数
         // b1 表示UTF-8编码的pInput中的高字节, b2 表示次高字节, ...
         int b1, b2, b3, b4, b5, b6;
         int codepoint;
 
-        while (true) {
+        if (remainChar != -1) {
+            cbuf[off] = (char) remainChar;
+            remainChar = -1;
+            outputSize++;
+        }
+
+        while (outputSize < len) {
             b1 = in.read();
             if (b1 < 0) {
                 if (outputSize == 0) {
@@ -255,14 +170,20 @@ public class UTF_8_Reader extends com.sun.cldc.i18n.StreamReader {
                 char c1 = (char) (codepoint >> 10);
                 cbuf[off + outputSize] = (char) (0xD800 | (c1 & 0x3ff));
                 outputSize++;
-                cbuf[off + outputSize] = (char) (0xDC00 | (codepoint & 0x3ff));
+
+                int c = (char) (0xDC00 | (codepoint & 0x3ff));
+                if (outputSize >= len) {
+                    remainChar = c;
+                    return outputSize;
+                }
+                cbuf[off + outputSize] = (char) c;
                 outputSize++;
             } else {
                 cbuf[off + outputSize] = (char) codepoint;
                 outputSize++;
             }
 
-            if (outputSize >= len) break;
+
         }
         return outputSize;
     }
@@ -409,87 +330,26 @@ public class UTF_8_Reader extends com.sun.cldc.i18n.StreamReader {
 //        return count;
 //    }
     public int sizeOf(byte[] array, int offset, int length) {
-        //assert(pInput != NULL && Unic != NULL);
-        int outputSize = 0; //记录转换后的Unicode字符串的字节数
-        // b1 表示UTF-8编码的pInput中的高字节, b2 表示次高字节, ...
-        int b1, b2, b3, b4, b5, b6;
+        int charCount = 0;
         int end = offset + length;
 
         while (offset < end) {
-            b1 = array[offset];
-            int utfbytes = enc_get_utf8_size((byte) b1);
-            switch (utfbytes) {
-                case 1:
-                    break;
-                case 2:
-                    b2 = array[offset + 1];
-                    b2 &= 0xff;
-                    if ((b2 & 0xc0) != 0x80)
-                        offset = length;
-                    break;
-
-                case 3:
-                    b2 = array[offset + 1];
-                    b2 &= 0xff;
-                    b3 = array[offset + 2];
-                    b3 &= 0xff;
-                    if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80))
-                        offset = length;
-                    break;
-
-                case 4:
-                    b2 = array[offset + 1];
-                    b2 &= 0xff;
-                    b3 = array[offset + 2];
-                    b3 &= 0xff;
-                    b4 = array[offset + 3];
-                    b4 &= 0xff;
-                    if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80)
-                            || ((b4 & 0xC0) != 0x80))
-                        offset = length;
-                    break;
-
-                case 5:
-                    b2 = array[offset + 1];
-                    b2 &= 0xff;
-                    b3 = array[offset + 2];
-                    b3 &= 0xff;
-                    b4 = array[offset + 3];
-                    b4 &= 0xff;
-                    b5 = array[offset + 4];
-                    b5 &= 0xff;
-                    if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80)
-                            || ((b4 & 0xC0) != 0x80) || ((b5 & 0xC0) != 0x80))
-                        offset = length;
-                    break;
-
-                case 6:
-                    b2 = array[offset + 1];
-                    b2 &= 0xff;
-                    b3 = array[offset + 2];
-                    b3 &= 0xff;
-                    b4 = array[offset + 3];
-                    b4 &= 0xff;
-                    b5 = array[offset + 4];
-                    b5 &= 0xff;
-                    b6 = array[offset + 5];
-                    b6 &= 0xff;
-                    if (((b2 & 0xC0) != 0x80) || ((b3 & 0xC0) != 0x80)
-                            || ((b4 & 0xC0) != 0x80) || ((b5 & 0xC0) != 0x80)
-                            || ((b6 & 0xC0) != 0x80))
-                        offset = length;
-                    break;
-
-                default:
-                    offset = length;
+            int utfbytes = enc_get_utf8_size(array[offset]);
+            if (utfbytes < 0 || offset + utfbytes > end) {
+                throw new IllegalArgumentException("Invalid UTF-8 sequence at offset " + offset);
             }
-            if (utfbytes >= 4) {
-                outputSize += 2;
-            } else {
-                outputSize++;
+
+            // 检查后续字节的合法性
+            for (int i = 1; i < utfbytes; i++) {
+                if ((array[offset + i] & 0xC0) != 0x80) {
+                    throw new IllegalArgumentException("Invalid UTF-8 continuation byte at offset " + (offset + i));
+                }
             }
+
+            // 4字节及以上的UTF-8序列会产生代理对
+            charCount += (utfbytes >= 4) ? 2 : 1;
             offset += utfbytes;
         }
-        return outputSize;
+        return charCount;
     }
 }

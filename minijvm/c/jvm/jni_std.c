@@ -683,7 +683,7 @@ s32 java_lang_Runtime_gc(Runtime *runtime, JClass *clazz) {
 s32 java_lang_Runtime_addShutdownHook(Runtime *runtime, JClass *clazz) {
     Instance *jruntime = (Instance *) localvar_getRefer(runtime->localvar, 0);
     Instance *jthread = (Instance *) localvar_getRefer(runtime->localvar, 1);
-    runtime->jvm->shutdown_hook = jthread;
+    arraylist_push_back(runtime->jvm->shutdown_hook, jthread);
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
@@ -1062,6 +1062,7 @@ s32 java_lang_System_loadLibrary0(Runtime *runtime, JClass *clazz) {
         }
         utf8_destroy(lab);
         utf8_destroy(libname);
+        utf8_destroy(paths);
     }
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1505,7 +1506,7 @@ static java_native_method METHODS_STD_TABLE[] = {
         {"java/lang/Thread",                    "activeCount",            "()I",                                                           java_lang_Thread_activeCount},
         {"java/lang/Thread",                    "setPriority0",           "(I)V",                                                          java_lang_Thread_setPriority0},
         {"java/lang/Thread",                    "interrupt0",             "(Ljava/lang/Thread;)V",                                         java_lang_Thread_interrupt0},
-        {"java/lang/Thread",                    "interrupted0",           "(Ljava/lang/Thread;)I",                                         java_lang_Thread_interrupted0},
+        {"java/lang/Thread",                    "interrupted0",           "(Ljava/lang/Thread;)Z",                                         java_lang_Thread_interrupted0},
         {"java/lang/Thread",                    "setContextClassLoader0", "(Ljava/lang/ClassLoader;)V",                                    java_lang_Thread_setContextClassLoader0},
         {"java/lang/Thread",                    "getContextClassLoader0", "()Ljava/lang/ClassLoader;",                                     java_lang_Thread_getContextClassLoader0},
         {"java/lang/Throwable",                 "printStackTrace0",       "",                                                              java_io_Throwable_printStackTrace0},

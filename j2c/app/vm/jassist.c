@@ -59,14 +59,14 @@ int jvm_printf(const char *format, ...) {
 s64 currentTimeMillis() {
 
     struct timespec tv;
-    clock_gettime(CLOCK_REALTIME, &tv);
+    timespec_get(&tv, TIME_UTC);
     return ((s64) tv.tv_sec) * MILL_2_SEC_SCALE + tv.tv_nsec / NANO_2_MILLS_SCALE;
 }
 
 s64 nanoTime() {
 
     struct timespec tv;
-    clock_gettime(CLOCK_REALTIME, &tv);
+    timespec_get(&tv, TIME_UTC);
 
     if (!NANO_START) {
         NANO_START = ((s64) tv.tv_sec) * NANO_2_SEC_SCALE + tv.tv_nsec;

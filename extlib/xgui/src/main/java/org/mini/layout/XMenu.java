@@ -1,6 +1,7 @@
 package org.mini.layout;
 
 import org.mini.gui.*;
+import org.mini.layout.loader.XmlExtAssist;
 import org.xmlpull.v1.KXmlParser;
 import org.xmlpull.v1.XmlPullParser;
 
@@ -23,6 +24,7 @@ public class XMenu extends XObject {
 
     protected Vector items = new Vector();
     protected boolean contextMenu = false;
+    int mark = -1;
 
     protected GMenu menu;
 
@@ -39,6 +41,8 @@ public class XMenu extends XObject {
         super.parseMoreAttribute(attName, attValue);
         if (attName.equals("contextmenu")) {
             contextMenu = "0".equals(attValue) ? false : true;
+        } else if (attName.equals("mark")) {
+            mark = Integer.parseInt(attValue.trim());
         }
     }
 
@@ -148,6 +152,9 @@ public class XMenu extends XObject {
                 gli.setOnClinkScript(item.onClick);
             }
             menu.setContextMenu(contextMenu);
+            if (mark >= 0) {
+                menu.setMarkIndex(mark);
+            }
         } else {
             menu.setLocation(x, y);
             menu.setSize(width, height);

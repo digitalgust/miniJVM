@@ -169,7 +169,7 @@ void garbage_thread_wait() {
 
 void garbage_thread_timedwait(s64 ms) {
     struct timespec t;
-    clock_gettime(CLOCK_REALTIME, &t);
+    timespec_get(&t, TIME_UTC);
     t.tv_sec += ms / 1000;
     t.tv_nsec += (ms % 1000) * 1000000;
     s32 ret = cnd_timedwait(&g_jvm->collector->garbagelock.thread_cond, &g_jvm->collector->garbagelock.mutex_lock, &t);

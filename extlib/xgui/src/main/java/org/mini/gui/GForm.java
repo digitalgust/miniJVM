@@ -5,33 +5,22 @@
  */
 package org.mini.gui;
 
+import org.mini.apploader.GApplication;
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
+import org.mini.gui.callback.GCallBack;
+import org.mini.gui.callback.GCmd;
+import org.mini.gui.callback.GDesktop;
 import org.mini.gui.event.*;
-import org.mini.glwrap.GLUtil;
-import org.mini.nanovg.Nanovg;
+import org.mini.util.SysLog;
 
-import java.util.Timer;
-
-import static org.mini.gl.GL.*;
 import static org.mini.gui.GToolkit.nvgRGBA;
-import static org.mini.nanovg.Nanovg.*;
 
 /**
  * @author gust
  */
 public class GForm extends GContainer {
 
-
-    static GCmdHandler cmdHandler = new GCmdHandler();
-    private boolean inited = false;
-    public static byte flush = 3;
-
-    protected String title;
-    protected long display; //glfw display
-    protected long vg; //nk contex
-    protected GCallBack callback;
-    protected float pxRatio;
     protected GObject flyingObject;
 
     //键盘弹出,使form 向上移动
@@ -44,152 +33,52 @@ public class GForm extends GContainer {
     protected GKeyboardShowListener keyshowListener;
     protected GAppActiveListener activeListener;
     protected GNotifyListener notifyListener;
+    GApplication app;
 
-    public GForm(GForm form) {
-        super(form);
-        callback = GCallBack.getInstance();
-
-        display = callback.getDisplay();
-        vg = callback.getNvContext();
-        if (vg == 0) {
-            System.out.println("callback.getNvContext() is null.");
+    public GForm(GApplication app) {
+        super(null);
+        if (app == null) {
+            throw new RuntimeException("app can't be null when create a GForm");
         }
-
-        int winWidth, winHeight;
-        winWidth = callback.getDeviceWidth();
-        winHeight = callback.getDeviceHeight();
-
-        pxRatio = callback.getDeviceRatio();
-
-
-        //System.out.println("fbWidth=" + fbWidth + "  ,fbHeight=" + fbHeight);
-        flush();
-        setLocation(0, 0);
-        setSize(winWidth, winHeight);
-    }
-
-
-    public GCallBack getCallBack() {
-        return this.callback;
-    }
-
-    public long getNvContext() {
-        return callback.getNvContext();
-    }
-
-    public long getWinContext() {
-        return display;
-    }
-
-    public int getDeviceWidth() {
-        return (int) callback.getDeviceWidth();
-    }
-
-    public int getDeviceHeight() {
-        return (int) callback.getDeviceHeight();
-    }
-
-    public void setTitle(String title) {
-        callback.setDisplayTitle(title);
-    }
-
-    public boolean isInited() {
-        return inited;
-    }
-
-
-    public void cb_init() {
-        inited = true;
-        init();
-    }
-
-    public void display(long vg) {
-
-        try {
-
-            // Update and render
-            int fbWidth, fbHeight;
-            fbWidth = callback.getFrameBufferWidth();
-            fbHeight = callback.getFrameBufferHeight();
-            glViewport(0, 0, fbWidth, fbHeight);
-            float[] bgc = GToolkit.getStyle().getBackgroundColor();
-            glClearColor(bgc[0], bgc[1], bgc[2], bgc[3]);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-            int winWidth, winHeight;
-            winWidth = callback.getDeviceWidth();
-            winHeight = callback.getDeviceHeight();
-
-            nvgBeginFrame(vg, winWidth, winHeight, pxRatio);
-            //drawDebugInfo(vg);
-            Nanovg.nvgReset(vg);
-            Nanovg.nvgResetScissor(vg);
-            Nanovg.nvgScissor(vg, 0, 0, winWidth, winHeight);
-            paint(vg);
-            paintFlyingObject(vg);
-            try {
-                cmdHandler.paint(this);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            nvgEndFrame(vg);
-
-            try {
-                cmdHandler.process(this);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            //
-        } catch (Exception e) {
-            e.printStackTrace();
+        setApp(app);
+        if (app.getForm() == null) { //only one form
+            app.setForm(this);
         }
+        setSize(GCallBack.getInstance().getDeviceWidth(), GCallBack.getInstance().getDeviceHeight());
     }
 
-    void drawDebugInfo(long vg) {
-        float font_size = 15;
-        nvgFontSize(vg, font_size);
-        nvgFontFace(vg, GToolkit.getFontWord());
-        nvgTextAlign(vg, Nanovg.NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+    void setApp(GApplication app) {
+        this.app = app;
+    }
 
-        float dx = 2, dy = 40;
-        byte[] b;
-        nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+    public GApplication getApp() {
+        return app;
+    }
 
-        dy += font_size;
-        b = GLUtil.toCstyleBytes("form:" + getX() + "," + getY() + "," + getW() + "," + getH() + "  " + getInnerX() + "," + getInnerY() + "," + getInnerW() + "," + getInnerH());
+    public static void addCmd(GCmd cmd) {
+        GDesktop.addCmd(cmd);
+    }
 
-        Nanovg.nvgTextJni(vg, dx, dy, b, 0, b.length);
-        dy += font_size;
-        if (current != null) {
-            b = GLUtil.toCstyleBytes("focus:" + current.getX() + "," + current.getY() + "," + current.getW() + "," + current.getH() + "  " + ((current instanceof GContainer) ? ((GContainer) current).getInnerX() + "," + ((GContainer) current).getInnerY() + "," + ((GContainer) current).getInnerW() + "," + ((GContainer) current).getInnerH() : ""));
-            Nanovg.nvgTextJni(vg, dx, dy, b, 0, b.length);
-        }
+    public static void deleteImage(int nvgTexture) {
+        GDesktop.deleteImage(nvgTexture);
+    }
+
+    public boolean paint(long vg) {
+        super.paint(vg);
+        paintFlyingObject(vg);
+        return true;
     }
 
 
     public static void flush() {
-        GForm.flush = 3;
+        GDesktop.flush = 4;
         //in android may flush before paint,so the menu not shown
     }
-
-    public void flush3() {
-        GForm.flush = 3;
-        //in android may flush before paint,so the menu not shown
-    }
-
-    synchronized public boolean flushReq() {
-        if (GForm.flush > 0) {
-            GForm.flush--;
-            return true;
-        }
-        return false;
-    }
-
 
     void paintFlyingObject(long vg) {
         if (flyingObject != null) {
-            int x = callback.getTouchOrMouseX();
-            int y = callback.getTouchOrMouseY();
+            int x = GCallBack.getInstance().getTouchOrMouseX();
+            int y = GCallBack.getInstance().getTouchOrMouseY();
             flyingObject.paintFlying(vg, x - flyingObject.flyOffsetX, y - flyingObject.flyOffsetY);
         }
 
@@ -227,6 +116,9 @@ public class GForm extends GContainer {
                 float objbtn = editObject.getY() + editObject.getH();
                 if (editObject instanceof GTextBox) {
                     objbtn = ((GTextBox) editObject).getCaretY() + 10f;
+                    if (objbtn < 30) {
+                        objbtn = 30;
+                    }
                 }
                 float obj2scrbtn = getH() - objbtn;
                 if (h > obj2scrbtn) {
@@ -245,6 +137,11 @@ public class GForm extends GContainer {
         flush();
     }
 
+
+    public static void addMessage(String s) {
+        GDesktop.addMessage(s);
+    }
+
     /**
      * @return the keyshowListener
      */
@@ -259,9 +156,6 @@ public class GForm extends GContainer {
         this.keyshowListener = keyshowListener;
     }
 
-    public static void deleteImage(int texture) {
-        cmdHandler.addCmd(GCmd.GCMD_DESTORY_TEXTURE, texture);
-    }
 
     public void onAppFocus(boolean focus) {
         //System.out.println("app focus:" + focus);
@@ -274,6 +168,8 @@ public class GForm extends GContainer {
     public void onDeviceNotify(String key, String val) {
         if (notifyListener != null) {
             notifyListener.onNotify(key, val);
+        } else {
+            SysLog.warn("notifyListener is null when onNotify:" + key + ":" + val);
         }
     }
 
@@ -341,40 +237,20 @@ public class GForm extends GContainer {
         this.notifyListener = notifyListener;
     }
 
-    /**
-     * @param s
-     */
-    public static void addMessage(String s) {
-        cmdHandler.addCmd(GCmd.GCMD_SHOW_MESSAGE, s);
-    }
-
-    public void addMessageIm(String s) {
-        cmdHandler.addCmd(GCmd.GCMD_SHOW_MESSAGE, s);
-    }
-
-    public static void clearMessage() {
-        cmdHandler.addCmd(GCmd.GCMD_CLEAR_MESSAGE);
-    }
 
     public static void showKeyboard() {
-        cmdHandler.addCmd(GCmd.GCMD_SHOW_KEYBOARD);
+        GDesktop.addCmd(GCmd.GCMD_SHOW_KEYBOARD);
     }
 
     public static void showKeyboard(GTextObject editObj) {
         editObj.form.editObject = editObj;
-        cmdHandler.addCmd(GCmd.GCMD_SHOW_KEYBOARD);
+        GDesktop.addCmd(GCmd.GCMD_SHOW_KEYBOARD);
     }
 
     public static void hideKeyboard(GForm form) {
         form.editObject = null;
-        cmdHandler.addCmd(GCmd.GCMD_HIDE_KEYBOARD);
+        GDesktop.addCmd(GCmd.GCMD_HIDE_KEYBOARD);
     }
 
-    public static void addCmd(GCmd cmd) {
-        cmdHandler.addCmd(cmd);
-    }
 
-    public float getRatio() {
-        return pxRatio;
-    }
 }

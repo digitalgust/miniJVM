@@ -1,7 +1,6 @@
 package test;
 
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 class MultiThread {
@@ -89,5 +88,44 @@ class MultiThread {
         mt.test();
         mt.test2();
 
+        hugeThreadTest();
+    }
+
+    static class HugeThread extends Thread {
+        public void run() {
+            List<Float> list = new ArrayList<>();
+            for (int i = 0; i < 1000; i++) {
+                list.add((float) Math.random());
+            }
+            threadList.remove(this);
+        }
+    }
+
+    static Vector threadList = new Vector();
+
+    private static void hugeThreadTest() {
+        int i = 0;
+        while (i < 50000) {
+            synchronized (threadList) {
+                while (threadList.size() < 15) {
+                    HugeThread ht = new HugeThread();
+                    ht.start();
+                    threadList.add(ht);
+                    i++;
+                    if (i % 100 == 0) {
+                        System.out.println("thread created:" + i);
+                    }
+                }
+            }
+        }
+
+        while (true) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
     }
 }

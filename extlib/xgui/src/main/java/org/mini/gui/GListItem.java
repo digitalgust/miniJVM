@@ -82,9 +82,10 @@ public class GListItem extends GContainer {
     }
 
     float oldX, oldY;
+    boolean touched = false;
 
     private boolean validAction(float releaseX, float releaseY) {
-        if (releaseX >= oldX && releaseX <= oldX + getW() && releaseY >= oldY && releaseY < oldY + getH()) {
+        if (Math.abs(releaseX - oldX) < TOUCH_RANGE && Math.abs(releaseY - oldY) < TOUCH_RANGE) {
             return true;
         }
         return false;
@@ -93,18 +94,22 @@ public class GListItem extends GContainer {
     @Override
     public void touchEvent(int touchid, int phase, int x, int y) {
         GObject found = findSonByXY(x, y);
-        if (found != null) {
+        if (found != null && found.actionListener != null && found.getOnClinkScript() == null) {
             super.touchEvent(touchid, phase, x, y);
         } else {
             switch (phase) {
                 case Glfm.GLFMTouchPhaseBegan:
-                    oldX = getX();
-                    oldY = getY();
+                    oldX = x;
+                    oldY = y;
+                    touched = true;
                     break;
                 case Glfm.GLFMTouchPhaseMoved:
+                    touched = false;
+                    doStateChanged(this);
                     break;
                 case Glfm.GLFMTouchPhaseEnded:
-                    if (validAction(x, y)) select();
+                    if (isInArea(x, y) && validAction(x, y)) select();
+                    touched = false;
                     break;
                 default:
                     break;
@@ -120,15 +125,25 @@ public class GListItem extends GContainer {
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         GObject found = findSonByXY(x, y);
-        if (found != null) {
+        if (found != null && found.actionListener != null && found.getOnClinkScript() == null) {
             super.mouseButtonEvent(button, pressed, x, y);
         } else {
             if (pressed) {
-                oldX = getX();
-                oldY = getY();
+                oldX = x;
+                oldY = y;
+                touched = true;
             } else {
-                if (validAction(x, y)) select();
+                if (isInArea(x, y) && validAction(x, y)) select();
+                touched = false;
             }
+        }
+    }
+
+    @Override
+    public void cursorPosEvent(int x, int y) {
+        if (!isInArea(x, y) && touched) {
+            touched = false;
+            doStateChanged(this);
         }
     }
 
@@ -137,7 +152,7 @@ public class GListItem extends GContainer {
     }
 
     void select() {
-        if (enable) {
+        if (visible && enable) {
             int index = getIndex();
             list.select(index);
             list.pulldown = false;
@@ -161,8 +176,6 @@ public class GListItem extends GContainer {
             outOfFilter = true;
         }
         float pad = 2;
-//        float ix, iy, iw, ih;
-//        int[] imgw = {0}, imgh = {0};
         float thumb = list.list_item_heigh - pad;
 
         float tx, ty;
@@ -175,27 +188,15 @@ public class GListItem extends GContainer {
         Nanovg.nvgIntersectScissor(vg, tx, ty, tw, th);
 
 
-        if (list.isSelected(getIndex())) {
+        if (list.isSelected(getIndex()) || touched) {
             GToolkit.drawRect(vg, tx, ty, tw, th, GToolkit.getStyle().getSelectedColor());
         } else {
             GToolkit.drawRect(vg, tx, ty, tw, th, GToolkit.getStyle().getUnselectedColor());
         }
-        float[] c = outOfFilter ? GToolkit.getStyle().getHintFontColor() : enable ? getColor() : getDisabledColor();
+        float[] c = outOfFilter ? GToolkit.getStyle().getHintFontColor() : getColor();
 
         if (img != null) {
-//            nvgImageSize(vg, img.getNvgTextureId(vg), imgw, imgh);
-//            if (imgw[0] < imgh[0]) {
-//                iw = thumb;
-//                ih = iw * (float) imgh[0] / (float) imgw[0];
-//                ix = 0;
-//                iy = -(ih - thumb) * 0.5f;
-//            } else {
-//                ih = thumb;
-//                iw = ih * (float) imgw[0] / (float) imgh[0];
-//                ix = -(iw - thumb) * 0.5f;
-//                iy = 0;
-//            }
-            GToolkit.drawImage(vg, img, tx, ty, thumb, thumb, !outOfFilter, outOfFilter ? 0.5f : 0.8f);
+            GToolkit.drawImage(vg, img, tx + pad, ty + pad, thumb - pad * 2, thumb - pad * 2, !outOfFilter, outOfFilter ? 0.5f : 0.8f);
         } else if (preicon_arr != null) {
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());

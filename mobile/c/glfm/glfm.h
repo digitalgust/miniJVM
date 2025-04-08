@@ -577,6 +577,8 @@ void setClipBoardContent(const char *str);
 
 const char *getOsName();
 
+void getOsLanguage(char *buf, int bufSize);
+
 int openOtherApp(const char *url, const char *more, int detectAppInstalled);
 
 void remoteMethodCall(const char *inJsonStr, Utf8String *outJsonStr);

@@ -5,12 +5,15 @@
  */
 package org.mini.gui;
 
+import org.mini.glwrap.GLUtil;
+import org.mini.gui.callback.GCallBack;
+import org.mini.gui.callback.GCallbackUI;
 import org.mini.gui.event.*;
 import org.mini.gui.gscript.Interpreter;
 import org.mini.nanovg.Nanovg;
+import org.mini.util.SysLog;
 
 import java.io.ByteArrayOutputStream;
-import java.util.TimerTask;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
 
@@ -20,6 +23,7 @@ import static org.mini.gui.GToolkit.nvgRGBA;
 abstract public class GObject implements GAttachable {
 
     //
+    public static final int TOUCH_RANGE = 20;//pix
     public static final byte LAYER_BACK = 2,
             LAYER_NORMAL = 4,
             LAYER_FRONT = 6,
@@ -27,13 +31,27 @@ abstract public class GObject implements GAttachable {
             LAYER_INNER = 10;
 
     public static String ICON_SEARCH = "\uD83D\uDD0D";
+    public static byte[] ICON_SEARCH_BYTE = GLUtil.toCstyleBytes(ICON_SEARCH);
     public static String ICON_CIRCLED_CROSS = "\u2716";
+    public static byte[] ICON_CIRCLED_CROSS_BYTE = GLUtil.toCstyleBytes(ICON_CIRCLED_CROSS);
     public static String ICON_CHEVRON_RIGHT = "\uE75E";
+    public static byte[] ICON_CHEVRON_RIGHT_BYTE = GLUtil.toCstyleBytes(ICON_CHEVRON_RIGHT);
     public static String ICON_CHEVRON_DOWN = "\uE75C";
-    public static String ICON_CHECK = "\u2713";
+    public static byte[] ICON_CHEVRON_DOWN_BYTE = GLUtil.toCstyleBytes(ICON_CHEVRON_DOWN);
+    public static String ICON_CHECK = "\u2714";
+    public static byte[] ICON_CHECK_BYTE = GLUtil.toCstyleBytes(ICON_CHECK);
     public static String ICON_LOGIN = "\uE740";
+    public static byte[] ICON_LOGIN_BYTE = GLUtil.toCstyleBytes(ICON_LOGIN);
     public static String ICON_TRASH = "\uE729";
+    public static byte[] ICON_TRASH_BYTE = GLUtil.toCstyleBytes(ICON_TRASH);
     public static String ICON_CLOSE = "\u2716";
+    public static byte[] ICON_CLOSE_BYTE = GLUtil.toCstyleBytes(ICON_CLOSE);
+    public static String ICON_RIGHT = "\u2705";
+    public static byte[] ICON_RIGHT_BYTE = GLUtil.toCstyleBytes(ICON_RIGHT);
+    public static String ICON_INFO = "\uE705";
+    public static byte[] ICON_INFO_BYTE = GLUtil.toCstyleBytes(ICON_INFO);
+    public static String ICON_EYES = "\uD83D\uDC53";
+    public static byte[] ICON_EYES_BYTE = GLUtil.toCstyleBytes(ICON_EYES);
     //
     public static final int LEFT = 0;
     public static final int TOP = 1;
@@ -79,6 +97,8 @@ abstract public class GObject implements GAttachable {
     protected boolean visible = true;
 
     protected boolean enable = true;
+    protected boolean inited = false;
+    protected boolean destroyed = false;
 
     protected byte layer = LAYER_NORMAL;
 
@@ -86,12 +106,14 @@ abstract public class GObject implements GAttachable {
 
     protected String name;
 
-    protected String text;
+    private String text;
 
     protected Object attachment;//用户自定义数据
 
     private String cmd;//类似attachment 用于附加String类型用户数据
     protected GLayout layout;
+
+    protected boolean paintWhenOutOfScreen = false;
 
     //脚本触发器
     /**
@@ -112,8 +134,11 @@ abstract public class GObject implements GAttachable {
     float cornerRadius = 0.0f;
     private String href;
 
+
     protected GObject(GForm form) {
-        if (this instanceof GForm) {//只有GForm可以传空进来
+        if (this instanceof GCallbackUI) {
+            SysLog.info("new GCallbackUI " + this);
+        } else if (this instanceof GForm) {//只有GForm可以传空进来
             this.form = (GForm) this;
         } else {
             if (form == null) throw new RuntimeException("Form can not be null");
@@ -124,17 +149,11 @@ abstract public class GObject implements GAttachable {
     /**
      *
      */
-//    public void init() {
-//
-//    }
-//
-//    public void destroy() {
-//    }
     public void setFixed(boolean fixed) {
         fixedLocation = fixed;
     }
 
-    public boolean getFixed() {
+    public boolean isFixed() {
         return fixedLocation;
     }
 
@@ -345,7 +364,11 @@ abstract public class GObject implements GAttachable {
      * @return the color
      */
     public float[] getColor() {
-        if (color == null) return GToolkit.getStyle().getTextFontColor();
+        if (isFlying()) return getFlyingColor();
+        if (color == null) {
+            if (isEnable()) return GToolkit.getStyle().getTextFontColor();
+            else return GToolkit.getStyle().getDisabledTextFontColor();
+        }
         return color;
     }
 
@@ -380,7 +403,11 @@ abstract public class GObject implements GAttachable {
 
     public float[] getFlyingColor() {
         if (flyingColor == null) {
-            flyingColor = getColor();
+            float[] c = color == null ? GToolkit.getStyle().getTextFontColor() : color;
+            flyingColor = new float[4];
+            for (int i = 0; i < 3; i++) {
+                flyingColor[i] = c[i];
+            }
             flyingColor[3] /= 2;
         }
         return flyingColor;
@@ -410,8 +437,9 @@ abstract public class GObject implements GAttachable {
     }
 
     public void setVisible(boolean v) {
+        if (visible == v) return;
         visible = v;
-        setEnable(v);
+        doStateChanged(this);
     }
 
     public boolean isVisible() {
@@ -424,7 +452,9 @@ abstract public class GObject implements GAttachable {
     }
 
     public void setEnable(boolean enable) {
+        if (this.enable == enable) return;
         this.enable = enable;
+        doStateChanged(this);
     }
 
 
@@ -496,8 +526,11 @@ abstract public class GObject implements GAttachable {
      * @param front the front to set
      */
     public void setFront(boolean front) {
+        if (front && this.layer == LAYER_FRONT) return;
+        if (!front && this.layer == LAYER_NORMAL) return;
         this.layer = front ? LAYER_FRONT : LAYER_NORMAL;
         if (parent != null) parent.reLayer();
+        doStateChanged(this);
     }
 
     /**
@@ -511,8 +544,11 @@ abstract public class GObject implements GAttachable {
      * @param back the front to set
      */
     public void setBack(boolean back) {
+        if (back && this.layer == LAYER_BACK) return;
+        if (!back && this.layer == LAYER_NORMAL) return;
         this.layer = back ? LAYER_BACK : LAYER_NORMAL;
         if (parent != null) parent.reLayer();
+        doStateChanged(this);
     }
 
     public boolean isMenu() {
@@ -524,7 +560,7 @@ abstract public class GObject implements GAttachable {
     }
 
     protected void doAction() {
-        if (actionListener != null && enable) {
+        if (actionListener != null && visible && enable) {
             if (onClinkScript != null) {
                 Interpreter inp = parseInpByCall(onClinkScript);
                 String funcName = parseInstByCall(onClinkScript);
@@ -830,7 +866,16 @@ abstract public class GObject implements GAttachable {
         }
     }
 
+    public boolean isInited() {
+        return inited;
+    }
+
+    public boolean isDestroyed() {
+        return destroyed;
+    }
+
     public void init() {
+        inited = true;
         if (onInitScript != null) {
             Interpreter inp = parseInpByCall(onInitScript);
             String funcName = parseInstByCall(onInitScript);
@@ -845,6 +890,7 @@ abstract public class GObject implements GAttachable {
     }
 
     public void destroy() {
+        destroyed = true;
         if (onCloseScript != null) {
             Interpreter inp = parseInpByCall(onCloseScript);
             String funcName = parseInstByCall(onCloseScript);

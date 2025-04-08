@@ -2,10 +2,12 @@ package test;
 
 import org.mini.apploader.GApplication;
 import org.mini.gui.*;
-import org.mini.layout.UITemplate;
+import org.mini.gui.callback.GCallBack;
 import org.mini.layout.XContainer;
 import org.mini.layout.XEventHandler;
-import org.mini.layout.XmlExtAssist;
+import org.mini.layout.loader.UITemplate;
+import org.mini.layout.loader.XmlExtAssist;
+import org.mini.layout.loader.XuiAppHolder;
 import org.mini.nanovg.Nanovg;
 import test.ext.ExScriptLib;
 import test.ext.GCustomList;
@@ -13,17 +15,14 @@ import test.ext.GCustomList;
 /**
  * @author gust
  */
-public class MyApp extends GApplication {
+public class MyApp extends GApplication implements XuiAppHolder {
 
     GForm form;
     GMenu menu;
     GFrame gframe;
 
     @Override
-    public GForm getForm() {
-        if (form != null) {
-            return form;
-        }
+    public void onInit() {
         //set the default language
         GLanguage.setCurLang(GLanguage.ID_CHN);
 
@@ -31,11 +30,11 @@ public class MyApp extends GApplication {
         String xmlStr = GToolkit.readFileFromJarAsString("/res/MyForm.xml", "utf-8");
 
         UITemplate uit = new UITemplate(xmlStr);
-        UITemplate.getVarMap().put("Cancel", "CANCEL"); //replace keywork in xml
-        UITemplate.getVarMap().put("Change", "Change");
-        UITemplate.getVarMap().put("Test", "Test");
-        UITemplate.getVarMap().put("Exit", "QUIT");
-        XContainer xc = (XContainer) XContainer.parseXml(uit.parse(), new XmlExtAssist(null));
+        uit.getVarMap().put("Cancel", "CANCEL"); //replace keywork in xml
+        uit.getVarMap().put("Change", "Change");
+        uit.getVarMap().put("Test", "Test");
+        uit.getVarMap().put("Exit", "QUIT");
+        XContainer xc = (XContainer) XContainer.parseXml(uit.parse(), new XmlExtAssist(this));
         int screenW = GCallBack.getInstance().getDeviceWidth();
         int screenH = GCallBack.getInstance().getDeviceHeight();
 
@@ -52,7 +51,7 @@ public class MyApp extends GApplication {
                         }
                         break;
                     case "MI_OPENFRAME1":
-                        XmlExtAssist assist = new XmlExtAssist(form);
+                        XmlExtAssist assist = new XmlExtAssist(MyApp.this);
                         assist.registerGUI("test.ext.XCustomList");
                         assist.addExtScriptLib(new ExScriptLib());
                         String xmlStr = GToolkit.readFileFromJarAsString("/res/Frame1.xml", "utf-8");
@@ -80,6 +79,7 @@ public class MyApp extends GApplication {
             }
         });
         form = xc.getGui();
+        setForm(form);
         gframe = form.findByName("FRAME_TEST");
         if (gframe != null) gframe.align(Nanovg.NVG_ALIGN_CENTER | Nanovg.NVG_ALIGN_MIDDLE);
         menu = (GMenu) form.findByName("MENU_MAIN");
@@ -92,6 +92,15 @@ public class MyApp extends GApplication {
                 gframe.align(Nanovg.NVG_ALIGN_CENTER | Nanovg.NVG_ALIGN_MIDDLE);
             }
         });
-        return form;
+    }
+
+    @Override
+    public GApplication getApp() {
+        return this;
+    }
+
+    @Override
+    public GContainer getWebView() {
+        return null;
     }
 }

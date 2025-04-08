@@ -3,6 +3,7 @@ package org.mini.media.engine;
 import org.mini.media.MaDevice;
 import org.mini.media.MaNativeObject;
 import org.mini.media.MiniAudio;
+import org.mini.util.SysLog;
 
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
 
@@ -74,7 +75,7 @@ public class MaEngine extends MaNativeObject {
 
     @Override
     public void finalize() {
-        System.out.println("clean " + this + " " + handle);
+        SysLog.info("clean " + this + " " + handle);
         MiniAudio.ma_engine_uninit(handle);
         MaDevice.removeDevice(device);
         handle = 0;

@@ -1,5 +1,7 @@
 package org.mini.json;
 
+import org.mini.util.SysLog;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -49,7 +51,7 @@ public class JsonPrinter {
                         e.printStackTrace();
                     }
                 } else {
-                    System.out.println("[JSON]warn :" + clazz.getName() + " field '" + fieldName + "' getter not found.");
+                    SysLog.warn("[JSON]" + clazz.getName() + " field '" + fieldName + "' getter not found.");
                 }
             }
             sb.append("}");
@@ -225,14 +227,14 @@ public class JsonPrinter {
         }
     }
 
-    static public final void main(String[] args) throws Exception {
-        //serial
-        Foo t = new Foo();
-        t.init();
-        String s = new JsonPrinter().serial(t);
-        System.out.println(s);
-
-        Foo t1 = new JsonParser<Foo>().deserial(s, Foo.class);
-        int debug = 1;
-    }
+//    static public final void main(String[] args) throws Exception {
+//        //serial
+//        Foo t = new Foo();
+//        t.init();
+//        String s = new JsonPrinter().serial(t);
+//        System.out.println(s);
+//
+//        Foo t1 = new JsonParser<Foo>().deserial(s, Foo.class);
+//        int debug = 1;
+//    }
 }

@@ -8,15 +8,18 @@ package org.mini.gui;
 import org.mini.apploader.AppLoader;
 import org.mini.apploader.AppManager;
 import org.mini.glfw.Glfw;
+import org.mini.gui.callback.GCallBack;
+import org.mini.gui.callback.GFont;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
+import org.mini.gui.style.GStyle;
+import org.mini.gui.style.GStyleBright;
+import org.mini.gui.style.GStyleInner;
 import org.mini.nanovg.Nanovg;
 import org.mini.reflect.ReflectArray;
+import org.mini.util.SysLog;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
@@ -27,19 +30,61 @@ import static org.mini.nanovg.Nanovg.*;
  */
 public class GToolkit {
 
-    static Hashtable<Long, GForm> table = new Hashtable();
+    // -------------------------- Component FELL Constants --------------------------
+    public static final int FEEL_FLAT = 0;
+    public static final int FEEL_DIMENSION = 1;
 
-    static public GForm getForm(long ctx) {
-        return table.get(ctx);
-    }
+    // -------------------------- Component Name Constants --------------------------
+    // Confirm Frame constants
+    public static final String NAME_CONFIRM_FRAME = "GTOOLKIT_CONFIRM_FRAME";
+    public static final String NAME_CONFIRM_TEXTBOX = "GTOOLKIT_CONFIRM_TEXTBOX";
+    public static final String NAME_CONFIRM_LEFT = "GTOOLKIT_CONFIRM_LEFT";
+    public static final String NAME_CONFIRM_RIGHT = "GTOOLKIT_CONFIRM_RIGHT";
 
-    static public GForm removeForm(long ctx) {
-        return table.remove(ctx);
-    }
+    // Message Frame constants
+    public static final String NAME_MSGFRAME = "GTOOLKIT_MSGFRAME";
+    public static final String NAME_MSGFRAME_TEXTBOX = "NAME_MSGFRAME_TEXTBOX";
+    public static final String NAME_MSGFRAME_OK = "GTOOLKIT_MSGFRAME_OK";
 
-    static public void putForm(long ctx, GForm win) {
-        table.put(ctx, win);
-    }
+    // File Chooser Frame constants
+    public static final String NAME_FILECHOOSER_FRAME = "GTOOLKIT_FILECHOOSER_FRAME";
+    public static final String NAME_FILECHOOSER_OK = "GTOOLKIT_FILECHOOSER_OK";
+    public static final String NAME_FILECHOOSER_CANCEL = "GTOOLKIT_FILECHOOSER_CANCEL";
+    public static final String NAME_FILECHOOSER_UP = "GTOOLKIT_FILECHOOSER_UP";
+    public static final String NAME_FILECHOOSER_PATH = "GTOOLKIT_FILECHOOSER_PATH";
+    public static final String NAME_FILECHOOSER_DEL = "GTOOLKIT_FILECHOOSER_DEL";
+    public static final String NAME_FILECHOOSER_NEW = "GTOOLKIT_FILECHOOSER_NEW";
+    public static final String NAME_FILECHOOSER_FILELIST = "GTOOLKIT_FILECHOOSER_FILELIST";
+
+    // List Frame constants
+    public static final String NAME_LISTFRAME = "GTOOLKIT_LISTFRAME";
+    public static final String NAME_LISTFRAME_TEXTFIELD = "GTOOLKIT_LISTFRAME_TEXTFIELD";
+    public static final String NAME_LISTFRAME_LIST = "GTOOLKIT_LISTFRAME_LIST";
+    public static final String NAME_LISTFRAME_OK = "GTOOLKIT_LISTFRAME_OK";
+
+    // Input Frame constants already exists
+    public static final String NAME_INPUTFRAME = "GTOOLKIT_INPUTFRAME";
+    public static final String NAME_INPUTFRAME_TEXTFIELD = "GTOOLKIT_INPUTFRAME_TEXTFIELD";
+    public static final String NAME_INPUTFRAME_LEFT = "GTOOLKIT_INPUTFRAME_LEFT";
+    public static final String NAME_INPUTFRAME_RIGHT = "GTOOLKIT_INPUTFRAME_RIGHT";
+    public static final String NAME_INPUTFRAME_STATE = "GTOOLKIT_INPUTFRAME_STATE";
+
+    // List Menu constants
+    public static final String NAME_LISTMENU = "GTOOLKIT_LISTMENU";
+
+    // Menu constants
+    public static final String NAME_MENU = "GTOOLKIT_MENU";
+
+    // Image View constants
+    public static final String NAME_IMAGEVIEW = "GTOOLKIT_IMAGEVIEW";
+
+    // Edit Menu Context constants
+    public static final String NAME_EDITMENUCTX_SELECT = "EDITMENUCTX_SELECT";
+    public static final String NAME_EDITMENUCTX_COPY = "EDITMENUCTX_COPY";
+    public static final String NAME_EDITMENUCTX_PASTE = "EDITMENUCTX_PASTE";
+    public static final String NAME_EDITMENUCTX_CUT = "EDITMENUCTX_CUT";
+    public static final String NAME_EDITMENUCTX_SELECTALL = "EDITMENUCTX_SELECTALL";
+
 
     /**
      * 返回数组数据区首地址
@@ -60,9 +105,9 @@ public class GToolkit {
     }
 
     public static byte[] readFileFromJar(String path) {
+        InputStream is = null;
         try {
-
-            InputStream is = GCallBack.getInstance().getResourceAsStream(path);
+            is = GCallBack.getInstance().getResourceAsStream(path);
             if (is != null) {
                 int av = is.available();
 
@@ -78,8 +123,16 @@ public class GToolkit {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
+        } finally {
+            try {
+                if (is != null) {
+                    is.close();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
-        System.out.println("load from jar fail : " + path);
+        SysLog.error("load from jar fail : " + path);
         return null;
     }
 
@@ -95,9 +148,9 @@ public class GToolkit {
     }
 
     public static byte[] readFileFromFile(String path) {
+        InputStream is = null;
         try {
-
-            InputStream is = new FileInputStream(path);
+            is = new FileInputStream(path);
             if (is != null) {
                 int av = is.available();
 
@@ -113,8 +166,16 @@ public class GToolkit {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
+        } finally {
+            try {
+                if (is != null) {
+                    is.close();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
-        System.out.println("load from file fail : " + path);
+        SysLog.error("load from file fail : " + path);
         return null;
     }
 
@@ -128,6 +189,33 @@ public class GToolkit {
         }
         return null;
     }
+
+
+    public static void saveStringToFile(String fileName, String contents) {
+        try {
+            byte[] b = contents.getBytes("utf-8");
+            saveDataToFile(fileName, b);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public static void saveDataToFile(String fileName, byte[] contents) {
+        saveDataToFile(fileName, contents, 0, contents.length);
+    }
+
+    public static void saveDataToFile(String fileName, byte[] contents, int offset, int len) {
+        try {
+            FileOutputStream fos = new FileOutputStream(fileName);
+            fos.write(contents, offset, len);
+            fos.close();
+            //System.out.println("save file:" + fileName);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * ----------------------------------------------------------------
      *      font
@@ -142,14 +230,14 @@ public class GToolkit {
     public static class FontHolder {
 
         static boolean fontLoaded = false;
-        static GFont word, icon;
+        public static GFont word, icon;
 
         public static synchronized void loadFont(long vg) {
             if (fontLoaded) {
                 return;
             }
             word = GFont.getFont("word", "/res/NotoEmoji+NotoSansCJKSC-Regular.ttf");
-            icon = GFont.getFont("icon", "/res/entypo.ttf");
+            icon = word;//GFont.getFont("icon", "/res/entypo.ttf");
 
             fontLoaded = true;
         }
@@ -173,20 +261,12 @@ public class GToolkit {
         return FontHolder.icon.getFontName();
     }
 
-    public static float[] getFontBoundle(long vg) {
-        float[] bond = new float[4];
-        nvgTextBoundsJni(vg, 0f, 0f, FONT_GLYPH_TEMPLATE, 0, FONT_GLYPH_TEMPLATE.length, bond);
-        bond[GObject.WIDTH] -= bond[GObject.LEFT];
-        bond[GObject.HEIGHT] -= bond[GObject.TOP];
-        bond[GObject.LEFT] = bond[GObject.TOP] = 0;
-        return bond;
-    }
 
-    public static float[] getFontBoundle(long vg, byte[] fontName, float fontSize) {
-        float[] bond = new float[4];
+    public static float[] getFontBoundle(long vg, String string, float fontSize) {
+        float[] bond = bounds.get();
         nvgSave(vg);
         nvgFontSize(vg, fontSize);
-        nvgFontFace(vg, fontName);
+        nvgFontFace(vg, getDefaultFont());
         nvgTextBoundsJni(vg, 0f, 0f, FONT_GLYPH_TEMPLATE, 0, FONT_GLYPH_TEMPLATE.length, bond);
         bond[GObject.WIDTH] -= bond[GObject.LEFT];
         bond[GObject.HEIGHT] -= bond[GObject.TOP];
@@ -210,6 +290,7 @@ public class GToolkit {
      * 风格
      */
     static GStyleInner defaultStyle;
+    static int feel = 0;
 
     public static GStyle getStyle() {
         if (defaultStyle == null) {
@@ -220,7 +301,15 @@ public class GToolkit {
 
     public static void setStyle(GStyle style) {
         if (style == null) return;
-        defaultStyle = new GStyleInner(style);//copy every times
+        defaultStyle = new GStyleInner(style);//copy every times, copy for not reference the source style
+    }
+
+    public static void setFeel(int pfell) {
+        feel = pfell;
+    }
+
+    public static int getFeel() {
+        return feel;
     }
 
     /**
@@ -246,7 +335,12 @@ public class GToolkit {
      * @param h
      * @param blink
      */
+
     public static void drawCaret(long vg, float x, float y, float w, float h, boolean blink) {
+        drawCaret(vg, x, y, w, h, blink, nvgRGBA(255, 192, 0, 255));
+    }
+
+    public static void drawCaret(long vg, float x, float y, float w, float h, boolean blink, float[] color) {
         long curTime = System.currentTimeMillis();
         if (curTime - caretLastBlink > CARET_BLINK_PERIOD) {
             caretBlink = !caretBlink;
@@ -254,13 +348,13 @@ public class GToolkit {
         }
         if (caretBlink || !blink) {
             nvgBeginPath(vg);
-            nvgFillColor(vg, nvgRGBA(255, 192, 0, 255));
+            nvgFillColor(vg, color);
             nvgRect(vg, x, y, w, h);
             nvgFill(vg);
         }
     }
 
-    static float[] RED_POINT_BACKGROUND = Nanovg.nvgRGBAf(1.f, 0, 0, 1.f);
+    static float[] RED_POINT_BACKGROUND = Nanovg.nvgRGBAf(1.f, 0, 0, 0.8f);
     static float[] RED_POINT_FRONT = Nanovg.nvgRGBAf(1.f, 1.f, 1.f, 1.f);
 
     public static void drawRedPoint(long vg, String text, float x, float y, float r) {
@@ -269,13 +363,13 @@ public class GToolkit {
         nvgFillColor(vg, RED_POINT_BACKGROUND);
         nvgFill(vg);
 
-        nvgFontSize(vg, r * 2 - 4);
+        nvgFontSize(vg, r * 2 - 8);
         nvgFillColor(vg, RED_POINT_FRONT);
         nvgFontFace(vg, GToolkit.getFontWord());
         byte[] text_arr = toCstyleBytes(text);
         nvgTextAlign(vg, Nanovg.NVG_ALIGN_CENTER | Nanovg.NVG_ALIGN_MIDDLE);
         if (text_arr != null) {
-            Nanovg.nvgTextJni(vg, x, y + 1, text_arr, 0, text_arr.length);
+            Nanovg.nvgTextJni(vg, x, y + 1.5f, text_arr, 0, text_arr.length);
         }
 
     }
@@ -338,25 +432,52 @@ public class GToolkit {
         nvgStroke(vg);
     }
 
-    public static float[] getTextBoundle(long vg, String s, float width) {
-        return getTextBoundle(vg, s, width, GToolkit.getStyle().getTextFontSize(), GToolkit.getFontWord());
+
+    /**
+     * =========================================================
+     * measure font
+     */
+    static ThreadLocal<float[]> bounds = new ThreadLocal<float[]>() {
+        @Override
+        protected float[] initialValue() {
+            return new float[4];
+        }
+    };
+
+    /**
+     * @param vg
+     * @param s
+     * @param width
+     * @param fontSize
+     * @param multiline
+     * @return
+     */
+    public static float[] getTextBoundle(long vg, String s, float width, float fontSize, boolean multiline) {
+        return getTextBoundle(vg, s, width, fontSize, GToolkit.getFontWord(), multiline);
     }
 
-    public static float[] getTextBoundle(long vg, String s, float width, float fontSize) {
-        return getTextBoundle(vg, s, width, fontSize, GToolkit.getFontWord());
-    }
+    public static float[] getTextBoundle(long vg, String s, float width, float fontSize, byte[] font, boolean multiline) {
 
-    public static float[] getTextBoundle(long vg, String s, float width, float fontSize, byte[] font) {
-        float[] bond = new float[4];
         byte[] b = toCstyleBytes(s);
+        return getTextBoundle(vg, b, width, fontSize, font, multiline);
+    }
+
+    public static float[] getTextBoundle(long vg, byte[] b, float width, float fontSize, byte[] font, boolean multiline) {
+        float[] bond = bounds.get();
         nvgFontSize(vg, fontSize);
         nvgFontFace(vg, font);
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-        nvgTextBoxBoundsJni(vg, 0, 0, width - GLabel.TEXT_BOUND_DEC, b, 0, b.length, bond);
+        if (multiline) {
+            nvgTextBoxBoundsJni(vg, 0, 0, width + GLabel.TEXT_BOUND_DEC, b, 0, b.length, bond);
+        } else {
+            nvgTextBoundsJni(vg, 0, 0, b, 0, b.length, bond);
+        }
         bond[GObject.WIDTH] -= bond[GObject.LEFT];
         bond[GObject.HEIGHT] -= bond[GObject.TOP];
         bond[GObject.LEFT] = bond[GObject.TOP] = 0;
-        bond[GObject.WIDTH] += GLabel.TEXT_BOUND_DEC;
+        if (multiline) {
+            bond[GObject.WIDTH] += GLabel.TEXT_BOUND_DEC;
+        }
         return bond;
     }
 
@@ -428,6 +549,22 @@ public class GToolkit {
             nvgFillColor(vg, color);
             nvgTextBoxJni(vg, x, y + 1, w, text_arr, 0, text_arr.length);
         }
+    }
+
+    public static void drawEmoj(long vg, float x, float y, float w, float h, byte[] emojBytes) {
+        drawEmoj(vg, x, y, w, h, emojBytes, GToolkit.getStyle().getIconFontSize(), null);
+    }
+
+    public static void drawEmoj(long vg, float x, float y, float w, float h, byte[] emojBytes, float fontsize, float[] color) {
+        if (emojBytes == null || fontsize == 0) return;
+
+        nvgFontSize(vg, fontsize);
+        nvgFontFace(vg, GToolkit.getFontIcon());
+
+        float[] pc = color == null ? getStyle().getTextFontColor() : color;
+        nvgFillColor(vg, pc);
+        nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+        nvgTextJni(vg, x + w * 0.5f, y + h * 0.5f, emojBytes, 0, emojBytes.length);
     }
 
     public static void drawImageFrame(long vg, GImage img, int imgCols, int imgRows, int frameIndex, float px, float py, float pw, float ph) {
@@ -595,29 +732,37 @@ public class GToolkit {
      * ----------------------------------------------------------------
      */
     static public GFrame getConfirmFrame(GForm form, String title, String msg, String left, GActionListener leftListener, String right, GActionListener rightListener) {
-        return getConfirmFrame(form, title, msg, left, leftListener, right, rightListener, 300f, 200f);
+        return getConfirmFrame(form, title, msg, left, leftListener, right, rightListener, 300f, 200f, false);
     }
 
     static public GFrame getConfirmFrame(GForm form, String title, String msg, String left, GActionListener leftListener, String right, GActionListener rightListener, float width, float height) {
-        GFrame frame = new GFrame(form, title, 0, 0, width, height);
-        frame.setFront(true);
-        frame.setFocusListener(new GFocusChangeListener() {
-            @Override
-            public void focusGot(GObject go) {
-            }
+        return getConfirmFrame(form, title, msg, left, leftListener, right, rightListener, width, height, false);
+    }
 
-            @Override
-            public void focusLost(GObject go) {
-                if (frame.getForm() != null) {
-                    frame.getForm().remove(frame);
+    static public GFrame getConfirmFrame(GForm form, String title, String msg, String left, GActionListener leftListener, String right, GActionListener rightListener, float width, float height, boolean disappeOnLostFocus) {
+        GFrame frame = new GFrame(form, title, 0, 0, width, height);
+        frame.setName(NAME_CONFIRM_FRAME);
+        frame.setFront(true);
+        if (disappeOnLostFocus) {
+            frame.setFocusListener(new GFocusChangeListener() {
+                @Override
+                public void focusGot(GObject go) {
                 }
-            }
-        });
+
+                @Override
+                public void focusLost(GObject go) {
+                    if (frame.getForm() != null) {
+                        frame.getForm().remove(frame);
+                    }
+                }
+            });
+        }
 
         GContainer gp = frame.getView();
         float x = 10, y = 5, w = gp.getW() - 20, h = gp.getH() - 50;
 
         GTextBox tbox = new GTextBox(form, msg, "", x, y, w, h);
+        tbox.setName(NAME_CONFIRM_TEXTBOX);
         tbox.setEditable(false);
         gp.add(tbox);
         y += h + 5;
@@ -626,6 +771,7 @@ public class GToolkit {
         if (left != null) {
             GButton leftBtn = new GButton(form, left, x, y, btnWidth, 30);
             //leftBtn.setBgColor(128, 16, 8, 255);
+            leftBtn.setName(NAME_CONFIRM_LEFT);
             gp.add(leftBtn);
             leftBtn.setActionListener(gobj -> {
                 if (leftListener != null) leftListener.action(gobj);
@@ -633,8 +779,9 @@ public class GToolkit {
             });
         }
 
-        GButton rightBtn = new GButton(form, right == null ? AppManager.getInstance().getString("Cancel") : right, btnWidth + 10, y, btnWidth, 30);
+        GButton rightBtn = new GButton(form, right == null ? GLanguage.getString(null, "Cancel") : right, btnWidth + 10, y, btnWidth, 30);
         gp.add(rightBtn);
+        rightBtn.setName(NAME_CONFIRM_RIGHT);
         rightBtn.setActionListener(gobj -> {
             if (rightListener != null) rightListener.action(gobj);
             else gobj.getFrame().close();
@@ -644,11 +791,20 @@ public class GToolkit {
     }
 
     static public GFrame getMsgFrame(GForm form, String title, String msg) {
-        return getMsgFrame(form, title, msg, 300f, 200f);
+        return getMsgFrame(form, title, msg, 300f, 200f, null);
+    }
+
+    static public GFrame getMsgFrame(GForm form, String title, String msg, GActionListener listener) {
+        return getMsgFrame(form, title, msg, 300f, 200f, listener);
     }
 
     static public GFrame getMsgFrame(GForm form, String title, String msg, float width, float height) {
+        return getMsgFrame(form, title, msg, width, height, null);
+    }
+
+    static public GFrame getMsgFrame(GForm form, String title, String msg, float width, float height, GActionListener listener) {
         final GFrame frame = new GFrame(form, title, 0, 0, width, height);
+        frame.setName(NAME_MSGFRAME);
         frame.setFront(true);
         frame.setFocusListener(new GFocusChangeListener() {
             @Override
@@ -667,16 +823,23 @@ public class GToolkit {
         float x = 10, y = 10, w = gp.getW() - 20, h = gp.getH() - 50;
 
         GTextBox tbox = new GTextBox(form, msg, "", x, y, w, h);
+        tbox.setName(NAME_MSGFRAME_TEXTBOX);
         tbox.setEditable(false);
         gp.add(tbox);
         y += h + 10;
 
         float btnWidth = w * .5f;
-        GButton leftBtn = new GButton(form, AppManager.getInstance().getString("Ok"), x + btnWidth * .5f, y, btnWidth, 28);
+        GButton leftBtn = new GButton(form, GLanguage.getString(null, "Ok"), x + btnWidth * .5f, y, btnWidth, 28);
         //leftBtn.setBgColor(128, 16, 8, 255);
-        leftBtn.setName("MSG_FRAME_OK");
+        leftBtn.setName(NAME_MSGFRAME_OK);
         gp.add(leftBtn);
-        leftBtn.setActionListener(gobj -> frame.close());
+        leftBtn.setActionListener(new GActionListener() {
+            @Override
+            public void action(GObject gobj) {
+                if (listener != null) listener.action(gobj);
+                else frame.close();
+            }
+        });
 
         return frame;
     }
@@ -693,6 +856,7 @@ public class GToolkit {
 
     static public GFrame getFileChooser(GForm form, String title, String path, FileFilter filter, boolean multiSelect, float width, float height, GActionListener openAction, GActionListener cancelAction) {
         final GFrame frame = new GFrame(form, title, 0, 0, width, height);
+        frame.setName(NAME_FILECHOOSER_FRAME);
         frame.setFront(true);
 
         if (path == null || path.length() == 0) {
@@ -713,18 +877,18 @@ public class GToolkit {
 
         btnH = 30f;
         float btnWidth = 70f;
-        GButton okBtn = new GButton(form, AppManager.getInstance().getString("Ok"), x + w - 75f, y, btnWidth, btnH);
+        GButton okBtn = new GButton(form, GLanguage.getString(null, "Ok"), x + w - 75f, y, btnWidth, btnH);
         //okBtn.setPreIcon("✓");
-        okBtn.setName("GTOOLKIT_FILECHOOSER_OK");
+        okBtn.setName(NAME_FILECHOOSER_OK);
         gp.add(okBtn);
         okBtn.setActionListener(gobj -> {
             if (openAction != null) openAction.action(gobj);
             gobj.getFrame().close();
         });
 
-        GButton cancelBtn = new GButton(form, AppManager.getInstance().getString("Cancel"), x + w - 150f, y, btnWidth, btnH);
+        GButton cancelBtn = new GButton(form, GLanguage.getString(null, "Cancel"), x + w - 150f, y, btnWidth, btnH);
         //cancelBtn.setPreIcon("\uE712");
-        cancelBtn.setName("GTOOLKIT_FILECHOOSER_CANCEL");
+        cancelBtn.setName(NAME_FILECHOOSER_CANCEL);
         gp.add(cancelBtn);
         cancelBtn.setActionListener(gobj -> {
             if (cancelAction != null) cancelAction.action(gobj);
@@ -737,13 +901,13 @@ public class GToolkit {
         float btnW = 40f;
         GButton upBtn = new GButton(form, "", x, y, btnW, btnH);
         upBtn.setPreIcon("⬆");
-        upBtn.setName("GTOOLKIT_FILECHOOSER_UP");
+        upBtn.setName(NAME_FILECHOOSER_UP);
         gp.add(upBtn);
 
         float labX = x + btnW + pad;
         float labW = w - 3 * (btnW + pad);
         GTextField pathLabel = new GTextField(form, file.getAbsolutePath(), "", labX, y, labW, btnH);
-        pathLabel.setName("GTOOLKIT_FILECHOOSER_PATH");
+        pathLabel.setName(NAME_FILECHOOSER_PATH);
         pathLabel.setEditable(false);
         pathLabel.setResetEnable(false);
         gp.add(pathLabel);
@@ -751,44 +915,48 @@ public class GToolkit {
         float delX = labX + labW + pad;
         GButton delBtn = new GButton(form, "", delX, y, btnW, btnH);
         delBtn.setPreIcon("\uE729");
-        delBtn.setName("GTOOLKIT_FILECHOOSER_DEL");
+        delBtn.setName(NAME_FILECHOOSER_DEL);
         gp.add(delBtn);
         delBtn.setActionListener(gobj -> {
 
             GFrame confirm = getConfirmFrame(form,
-                    AppManager.getInstance().getString("Message"),
-                    AppManager.getInstance().getString("Do you sure delete : ") + pathLabel.getText(),
-                    AppManager.getInstance().getString("Ok"),
+                    GLanguage.getString(null, "Message"),
+                    GLanguage.getString(null, "Do you sure delete :") + pathLabel.getText(),
+                    GLanguage.getString(null, "Delete"),
                     gobj1 -> {
                         File f = new File(pathLabel.getText());
                         AppLoader.deleteTree(f);
                         pathLabel.setText(f == null ? "" : f.getParent());
+                        gobj1.getFrame().close();
                         chooserRefresh(upBtn);
                     },
-                    AppManager.getInstance().getString("Cancel"),
+                    GLanguage.getString(null, "Cancel"),
                     null);
+            GButton btn = GToolkit.getComponent(confirm, NAME_CONFIRM_LEFT);
+            btn.setPreIcon("\u26A0");
+            btn.setPreiconColor(GColorSelector.YELLOW);
             GToolkit.showFrame(confirm);
         });
 
         GButton newBtn = new GButton(form, "", delX + btnW + pad, y, btnW, btnH);
         newBtn.setPreIcon("⊕");
-        newBtn.setName("GTOOLKIT_FILECHOOSER_NEW");
+        newBtn.setName(NAME_FILECHOOSER_NEW);
         gp.add(newBtn);
         newBtn.setActionListener(gobj -> {
 
             GFrame confirm = getInputFrame(form,
-                    AppManager.getInstance().getString("New"),
-                    AppManager.getInstance().getString("Create new folder : "),
+                    GLanguage.getString(null, "Message"),
+                    GLanguage.getString(null, "Create new folder :"),
                     "",
-                    "Folder Name",
-                    AppManager.getInstance().getString("Cancel"),
+                    GLanguage.getString(null, "Folder Name"),
+                    GLanguage.getString(null, "Cancel"),
                     null,
-                    AppManager.getInstance().getString("Ok"),
+                    GLanguage.getString(null, "Ok"),
                     gobj1 -> {
-                        GButton up = GToolkit.getComponent(gobj.getFrame(), "GTOOLKIT_FILECHOOSER_UP");
+                        GButton up = GToolkit.getComponent(gobj.getFrame(), NAME_FILECHOOSER_UP);
                         if (up != null) {
                             File f = up.getAttachment();
-                            f = new File(f.getAbsolutePath() + File.separator + GToolkit.getCompText(form, "input"));
+                            f = new File(f.getAbsolutePath() + File.separator + GToolkit.getCompText(form, NAME_INPUTFRAME_TEXTFIELD));
                             if (f.mkdirs()) {
                                 chooserRefresh(upBtn);
                             }
@@ -802,7 +970,7 @@ public class GToolkit {
         GList list = new GList(form, x, y, w, btnH);
         list.setShowMode(GList.MODE_MULTI_SHOW);
         if (multiSelect) list.setSelectMode(GList.MODE_MULTI_SELECT);
-        list.setName("GTOOLKIT_FILECHOOSER_FILELIST");
+        list.setName(NAME_FILECHOOSER_FILELIST);
         list.setAttachment(filter);
         list.setScrollBar(true);
         chooserAddFilesToList(file, filter, list);
@@ -818,14 +986,15 @@ public class GToolkit {
                 pathLabel.setText(f == null ? "" : f.getAbsolutePath());
                 chooserRefresh(upBtn);
             }
+            list.setSelectedIndex(-1);
         });
 
         return frame;
     }
 
     private static void chooserRefresh(GObject gobj) {
-        GButton up = GToolkit.getComponent(gobj.getFrame(), "GTOOLKIT_FILECHOOSER_UP");
-        GList list = GToolkit.getComponent(gobj.getFrame(), "GTOOLKIT_FILECHOOSER_FILELIST");
+        GButton up = GToolkit.getComponent(gobj.getFrame(), NAME_FILECHOOSER_UP);
+        GList list = GToolkit.getComponent(gobj.getFrame(), NAME_FILECHOOSER_FILELIST);
 
         File f = up.getAttachment();
         //System.out.println("=====" + (f == null ? f : f.toString() + f.exists()));
@@ -845,19 +1014,19 @@ public class GToolkit {
 
     private static GActionListener fileChooserItemListener = gobj -> {
         File f = gobj.getAttachment();
-        GList list = GToolkit.getComponent(gobj.getFrame(), "GTOOLKIT_FILECHOOSER_FILELIST");
+        GList list = GToolkit.getComponent(gobj.getFrame(), NAME_FILECHOOSER_FILELIST);
 
         if (f.isDirectory()) {
             if (list != null) {
                 chooserAddFilesToList(f, list.getAttachment(), list);
             }
-            GButton upBtn = GToolkit.getComponent(gobj.getFrame(), "GTOOLKIT_FILECHOOSER_UP");
+            GButton upBtn = GToolkit.getComponent(gobj.getFrame(), NAME_FILECHOOSER_UP);
             if (upBtn != null) {
                 AppLoader.setProperty("filechooserpath", f.getAbsolutePath());
                 upBtn.setAttachment(f);
             }
         }
-        GTextField lab = GToolkit.getComponent(gobj.getFrame(), "GTOOLKIT_FILECHOOSER_PATH");
+        GTextField lab = GToolkit.getComponent(gobj.getFrame(), NAME_FILECHOOSER_PATH);
         if (lab != null) {
             lab.setText(f.getAbsolutePath());
         }
@@ -866,9 +1035,9 @@ public class GToolkit {
     };
 
     private static void setChooserResult(GObject listItem) {
-        GList list = GToolkit.getComponent(listItem.getFrame(), "GTOOLKIT_FILECHOOSER_FILELIST");
+        GList list = GToolkit.getComponent(listItem.getFrame(), NAME_FILECHOOSER_FILELIST);
 
-        GButton okbtn = GToolkit.getComponent(listItem.getFrame(), "GTOOLKIT_FILECHOOSER_OK");
+        GButton okbtn = GToolkit.getComponent(listItem.getFrame(), NAME_FILECHOOSER_OK);
         if (okbtn != null) {
             //single select
             if (list.getSelectMode() == GList.MODE_SINGLE_SELECT) {
@@ -942,7 +1111,7 @@ public class GToolkit {
         float y = pad;
 
         GFrame frame = new GFrame(form, title, 0, 0, width, height);
-
+        frame.setName(NAME_LISTFRAME);
         frame.setFront(true);
         frame.setFocusListener(new GFocusChangeListener() {
             @Override
@@ -957,7 +1126,7 @@ public class GToolkit {
         GContainer view = frame.getView();
 
         GTextField search = new GTextField(form, "", "search", pad, y, view.getW() - pad * 2, 30);
-        search.setName("search");
+        search.setName(NAME_LISTFRAME_TEXTFIELD);
         search.setBoxStyle(GTextField.BOX_STYLE_SEARCH);
 
         view.add(search);
@@ -965,7 +1134,7 @@ public class GToolkit {
 
         float h = view.getH() - y - 30 - pad * 4;
         GList glist = new GList(form, 0, y, view.getW(), h);
-        glist.setName("list");
+        glist.setName(NAME_LISTFRAME_LIST);
         glist.setShowMode(GList.MODE_MULTI_SHOW);
         glist.setSelectMode(multiSelect ? GList.MODE_MULTI_SELECT : GList.MODE_SINGLE_SELECT);
 
@@ -982,7 +1151,7 @@ public class GToolkit {
         y += h + pad;
         btnW = view.getW() * .5f - pad;
         if (multiSelect) {
-            GCheckBox chbox = new GCheckBox(form, AppManager.getInstance().getString("SeleAll"), false, pad, y, btnW, btnH);
+            GCheckBox chbox = new GCheckBox(form, GLanguage.getString(null, "SeleAll"), false, pad, y, btnW, btnH);
             view.add(chbox);
             chbox.setActionListener(gobj -> {
                 if (((GCheckBox) gobj).isChecked()) {
@@ -994,8 +1163,8 @@ public class GToolkit {
         }
 
 
-        GButton btn = new GButton(form, buttonText == null ? AppManager.getInstance().getString("Ok") : buttonText, (view.getW() - btnW - pad), y, btnW, btnH);
-        btn.setName("perform");
+        GButton btn = new GButton(form, buttonText == null ? GLanguage.getString(null, "Ok") : buttonText, (view.getW() - btnW - pad), y, btnW, btnH);
+        btn.setName(NAME_LISTFRAME_OK);
         frame.getView().add(btn);
         btn.setActionListener(gobj -> {
             if (buttonListener != null) {
@@ -1026,6 +1195,7 @@ public class GToolkit {
 
         float x = 10, y;
         GFrame frame = new GFrame(form, title, 0, 0, width, height);
+        frame.setName(NAME_INPUTFRAME);
         frame.setFront(true);
         frame.setFocusListener(new GFocusChangeListener() {
             @Override
@@ -1038,30 +1208,31 @@ public class GToolkit {
             }
         });
         GContainer view = frame.getView();
-        float contentWidth;
-        contentWidth = view.getW() - 20;
+        float contentWidth = view.getW() - 20;
         y = view.getH();
 
         float buttonWidth = contentWidth * .5f - 10;
         y -= 35f;
-        GButton cancelbtn = new GButton(form, leftLabel == null ? AppManager.getInstance().getString("Cancel") : leftLabel, x, y, buttonWidth, 28);
+        GButton cancelbtn = new GButton(form, leftLabel == null ? GLanguage.getString(null, "Cancel") : leftLabel, x, y, buttonWidth, 28);
+        cancelbtn.setName(NAME_INPUTFRAME_LEFT);
         view.add(cancelbtn);
 
-        GButton okbtn = new GButton(form, rightLabel == null ? AppManager.getInstance().getString("Ok") : rightLabel, x + buttonWidth + 20, y, buttonWidth, 28);
+        GButton okbtn = new GButton(form, rightLabel == null ? GLanguage.getString(null, "Ok") : rightLabel, x + buttonWidth + 20, y, buttonWidth, 28);
         //okbtn.setBgColor(0, 96, 128, 255);
+        okbtn.setName(NAME_INPUTFRAME_RIGHT);
         view.add(okbtn);
         y -= 35;
         GTextField input = new GTextField(form, defaultValue == null ? "" : defaultValue, inputHint, x, y, contentWidth, 28);
-        input.setName("input");
+        input.setName(NAME_INPUTFRAME_TEXTFIELD);
         view.add(input);
 
         y -= 25;
         GLabel lb_state = new GLabel(form, "", x, y, contentWidth, 20);
-        lb_state.setName("state");
+        lb_state.setName(NAME_INPUTFRAME_STATE);
         view.add(lb_state);
 
         y = 10;
-        GLabel lb1 = new GLabel(form, msg, x, y, contentWidth, y);
+        GLabel lb1 = new GLabel(form, msg, x, y, contentWidth, view.getH() - 100);
         lb1.setShowMode(GLabel.MODE_MULTI_SHOW);
         view.add(lb1);
 
@@ -1090,12 +1261,19 @@ public class GToolkit {
      * ----------------------------------------------------------------
      */
     public static GList getListMenu(GForm form, String[] strs, GImage[] imgs, GActionListener[] listeners) {
-        return getListMenu(form, strs, imgs, listeners, 150, 120);
+        return getListMenu(form, strs, imgs, listeners, -1, -1);
     }
 
     public static GList getListMenu(GForm form, String[] strs, GImage[] imgs, GActionListener[] listeners, float width, float height) {
 
+        if (width < 0) {
+            width = 150;
+        }
+        if (height < 0) {
+            height = GList.ITEM_HEIGH_DEFAULT * strs.length;
+        }
         GList list = new GList(form, 0, 0, width, height);
+        list.setName(NAME_LISTMENU);
         list.setBgColor(getStyle().getPopBackgroundColor());
         list.setShowMode(GList.MODE_MULTI_SHOW);
         list.setFocusListener(new GFocusChangeListener() {
@@ -1138,7 +1316,6 @@ public class GToolkit {
 //        }
 //        list.setInnerSize(200, size * list.list_item_heigh);
         list.setFront(true);
-        list.setName("listmenu");
 
         return list;
     }
@@ -1151,6 +1328,7 @@ public class GToolkit {
     public static GMenu getMenu(GForm form, String[] strs, GImage[] imgs, GActionListener[] listener) {
 
         GMenu menu = new GMenu(form, 0, 0, 150, 120);
+        menu.setName(NAME_MENU);
         menu.setFocusListener(new GFocusChangeListener() {
             @Override
             public void focusGot(GObject oldgo) {
@@ -1194,10 +1372,10 @@ public class GToolkit {
             @Override
             public void longTouchedEvent(int x, int y) {
                 GList menu = new GList(form);
-                GListItem item = menu.addItem(null, AppManager.getInstance().getString("Save to album"));
+                GListItem item = menu.addItem(null, GLanguage.getString(null, "Save to album"));
                 item.setActionListener((GObject gobj) -> {
                 });
-                item = menu.addItem(null, AppManager.getInstance().getString("Cancel"));
+                item = menu.addItem(null, GLanguage.getString(null, "Cancel"));
                 item.setActionListener((GObject gobj) -> {
                     if (gobj.getForm() != null) {
                         gobj.getForm().remove(menu);
@@ -1224,7 +1402,7 @@ public class GToolkit {
                 } else {
                     if (getForm() != null) {
                         List<GObject> list = getElements();
-                        synchronized (list) {
+                        {
                             if (getElements().isEmpty()) {//no menu
                                 getForm().remove(this);
                                 //System.out.println("picture removed");
@@ -1234,6 +1412,7 @@ public class GToolkit {
                 }
             }
         };
+        view.setName(NAME_IMAGEVIEW);
         view.setFocusListener(new GFocusChangeListener() {
             @Override
             public void focusGot(GObject oldgo) {
@@ -1275,6 +1454,7 @@ public class GToolkit {
         gobj.setLocation(form.getW() / 2 - gobj.getW() / 2, form.getH() / 2 - gobj.getH() / 2);
         form.add(gobj);
         form.setCurrent(gobj);
+        gobj.setVisible(true);
     }
 
     public static void showFrame(GObject gobj, float x, float y) {
@@ -1283,6 +1463,7 @@ public class GToolkit {
         gobj.setLocation(x, y);
         form.add(gobj);
         form.setCurrent(gobj);
+        gobj.setVisible(true);
     }
 
     public static void closeFrame(GForm form, String frameName) {
@@ -1303,7 +1484,7 @@ public class GToolkit {
         if (gobj == null) return;
         GForm form = gobj.getForm();
         if (form == null) {
-            System.out.println("warning: added to form can be set align");
+            SysLog.warn("added to form can be set align");
             return;
         }
         if ((align_mod & Nanovg.NVG_ALIGN_LEFT) != 0) {
@@ -1333,7 +1514,7 @@ public class GToolkit {
      * @param o
      */
     public static void setCompAttachment(GContainer parent, String compName, Object o) {
-        if (compName == null || o == null || parent == null) return;
+        if (compName == null || parent == null) return;
         GObject go = parent.findByName(compName);
         if (go != null) {
             go.setAttachment(o);
@@ -1465,16 +1646,18 @@ public class GToolkit {
         return editMenu;
     }
 
-    static public void disposeEditMenu() {
+    static public void hideEditMenu() {
         if (editMenu != null) editMenu.dispose();
     }
 
     static public class EditMenu extends GMenu {
 
         GTextObject text;
+        int curLang;
 
         public EditMenu(GForm form, float left, float top, float width, float height) {
             super(form, left, top, width, height);
+            curLang = GLanguage.getCurLang();
         }
 
         @Override
@@ -1513,8 +1696,7 @@ public class GToolkit {
         }
         GForm gform = focus.getForm();
 
-        x -= gform.getX();
-        y -= gform.getY();
+
         float menuH = 40, menuW = 300;
 
         float mx = x - menuW / 2;
@@ -1523,69 +1705,72 @@ public class GToolkit {
         } else if (mx + menuW > gform.getW()) {
             mx = gform.getW() - menuW;
         }
-        mx += gform.getX();
-        float my = y - 20 - menuH;
+        float my = y - 40 - menuH;
         if (my < 20) {
-            my = y + 10;
+            my = 10;
         } else if (my + menuH > gform.getH()) {
             my = gform.getH() - menuH;
         }
-        my += gform.getY();
+
+//        mx += gform.getX();
+//        my += gform.getY();
+
+        if (editMenu != null) {
+            if (editMenu.curLang != GLanguage.getCurLang()) {
+                editMenu.dispose();
+                editMenu = null;
+            }
+        }
 
         if (editMenu == null) {
             editMenu = new EditMenu(gform, mx, my, menuW, menuH);
             GMenuItem item;
 
-            item = editMenu.addItem(AppManager.getInstance().getString("Select"), null);
-            item.setName("EDITMENUCTX_SELECT");
+            item = editMenu.addItem(GLanguage.getString(null, "Select"), null);
+            item.setName(NAME_EDITMENUCTX_SELECT);
             item.setActionListener(gobj -> {
                 editMenu.text.doSelectText();
-                setCompEnable(editMenu, "EDITMENUCTX_COPY", true);
+                setCompEnable(editMenu, NAME_EDITMENUCTX_COPY, true);
             });
-            item = editMenu.addItem(AppManager.getInstance().getString("Copy"), null);
-            item.setName("EDITMENUCTX_COPY");
+            item = editMenu.addItem(GLanguage.getString(null, "Copy"), null);
+            item.setName(NAME_EDITMENUCTX_COPY);
             item.setActionListener(gobj -> {
                 editMenu.text.doCopyClipBoard();
                 editMenu.dispose();
             });
-            item = editMenu.addItem(AppManager.getInstance().getString("Paste"), null);
-            item.setName("EDITMENUCTX_PASTE");
+            item = editMenu.addItem(GLanguage.getString(null, "Paste"), null);
+            item.setName(NAME_EDITMENUCTX_PASTE);
             item.setActionListener(gobj -> {
                 if (editMenu.text.enable) {
                     editMenu.text.doPasteClipBoard();
                 }
                 editMenu.dispose();
             });
-            item = editMenu.addItem(AppManager.getInstance().getString("Cut"), null);
-            item.setName("EDITMENUCTX_CUT");
+            item = editMenu.addItem(GLanguage.getString(null, "Cut"), null);
+            item.setName(NAME_EDITMENUCTX_CUT);
             item.setActionListener(gobj -> {
                 if (editMenu.text.enable) {
                     editMenu.text.doCut();
                 }
                 editMenu.dispose();
             });
-            item = editMenu.addItem(AppManager.getInstance().getString("SeleAll"), null);
-            item.setName("EDITMENUCTX_SELECTALL");
+            item = editMenu.addItem(GLanguage.getString(null, "SeleAll"), null);
+            item.setName(NAME_EDITMENUCTX_SELECTALL);
             item.setActionListener(gobj -> {
                 editMenu.text.doSelectAll();
-                setCompEnable(editMenu, "EDITMENUCTX_COPY", true);
+                setCompEnable(editMenu, NAME_EDITMENUCTX_COPY, true);
             });
 
             editMenu.setFixed(true);
             editMenu.setContextMenu(true);
         }
         if (focus.isEditable()) {
-            setCompEnable(editMenu, "EDITMENUCTX_PASTE", true);
-            setCompEnable(editMenu, "EDITMENUCTX_CUT", true);
+            setCompEnable(editMenu, NAME_EDITMENUCTX_PASTE, true);
+            setCompEnable(editMenu, NAME_EDITMENUCTX_CUT, true);
         } else {
-            setCompEnable(editMenu, "EDITMENUCTX_PASTE", false);
-            setCompEnable(editMenu, "EDITMENUCTX_CUT", false);
+            setCompEnable(editMenu, NAME_EDITMENUCTX_PASTE, false);
+            setCompEnable(editMenu, NAME_EDITMENUCTX_CUT, false);
         }
-//        if (focus.selectMode) {
-//            setCompEnable(editMenu, "EDITMENUCTX_COPY", true);
-//        } else {
-//            setCompEnable(editMenu, "EDITMENUCTX_COPY", false);
-//        }
         editMenu.form = gform;
         editMenu.text = focus;
         editMenu.setLocation(mx, my);
@@ -1634,7 +1819,7 @@ public class GToolkit {
                     if (holder != null) holder.setAttachment(filepath);
                     imageCache.put(filepath, img);
                 }
-                System.out.println("load image cache " + filepath + " " + img);
+                SysLog.info("load image cache " + filepath + " " + img);
             } else {
                 //System.out.println("hit image from cache " + filepath);
                 if (holder != null) {
@@ -1661,7 +1846,7 @@ public class GToolkit {
         filepath = new String(filepath);//for holder,must new
         GImage img = imageCache.get(filepath);
         if (img == null) {
-            System.out.println("load image cache " + filepath);
+            SysLog.info("load image cache " + filepath);
             img = GImage.createImage(filepath);
             if (img != null) {
                 if (holder != null) holder.setAttachment(filepath);

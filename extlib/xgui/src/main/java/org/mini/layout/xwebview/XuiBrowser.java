@@ -1,11 +1,11 @@
 package org.mini.layout.xwebview;
 
-import org.mini.gui.GCmd;
+import org.mini.gui.callback.GCmd;
 import org.mini.gui.GContainer;
 import org.mini.gui.GForm;
-import org.mini.gui.guilib.GuiScriptLib;
+import org.mini.layout.guilib.GuiScriptLib;
 import org.mini.layout.XEventHandler;
-import org.mini.layout.XmlExtAssist;
+import org.mini.layout.loader.XmlExtAssist;
 
 import java.util.List;
 
@@ -36,7 +36,6 @@ import java.util.List;
 public class XuiBrowser {
     public static final int MAX_PAGE_SIZE = 10;
     List<XuiPage> pages = new java.util.ArrayList<>();
-    GContainer webView;
     private XEventHandler eventHandler;
     XmlExtAssist assist;
     XuiPage currentPage;
@@ -45,19 +44,25 @@ public class XuiBrowser {
      * web explorer
      * this web explorer will load xml ui from web server, and display it in webview
      *
-     * @param webView      for display page ui
      * @param eventHandler native event handler
      * @param assist       parse xml ui assists, like load image, load xml, register script library
      */
-    public XuiBrowser(GContainer webView, XEventHandler eventHandler, XmlExtAssist assist) {
-        this.webView = webView;
+    public XuiBrowser(XEventHandler eventHandler, XmlExtAssist assist) {
         this.eventHandler = eventHandler;
         this.assist = assist;
     }
 
     public void gotoPage(String homeUrl) {
         removeAfterAtCurrentPage();
+        GuiScriptLib.showProgressBar(assist.getForm(), 50);
         XuiPage page = new XuiPage(homeUrl, this);
+        showPage(page);
+    }
+
+    public void gotoPage(String homeUrl, String post) {
+        removeAfterAtCurrentPage();
+        GuiScriptLib.showProgressBar(assist.getForm(), 50);
+        XuiPage page = new XuiPage(homeUrl, post, this);
         showPage(page);
     }
 
@@ -84,25 +89,23 @@ public class XuiBrowser {
     }
 
     private void showPage(XuiPage page) {
+        GContainer webView = assist.getXuiBrowserHolder().getWebView();
+        GuiScriptLib.showProgressBar(assist.getForm(), 80);
         if (webView != null && page != null) {
-            Thread thread = new Thread(() -> {
-                GuiScriptLib.showProgressBar(assist.getForm(), 50);
+            //上面的给线程做，下面的给主线程做，要不可能导致多线程争抢GContainer.elements死锁
+            GForm.addCmd(new GCmd(() -> {
                 GContainer pan = page.getGui(webView.getW(), webView.getH());
-                //上面的给线程做，下面的给主线程做，要不可能导致多线程争抢GContainer.elements死锁
-                GForm.addCmd(new GCmd(() -> {
-                    webView.clear();
-                    webView.add(pan);
-                    webView.reAlign();
-                    currentPage = page;
-                    if (!pages.contains(page)) {
-                        pages.add(page);
-                    }
-                    webView.flushNow();
-                }));
-                GForm.flush();
+                webView.clear();
+                webView.add(pan);
+                webView.reAlign();
+                currentPage = page;
+                if (!pages.contains(page)) {
+                    pages.add(page);
+                }
+                webView.flushNow();
                 GuiScriptLib.showProgressBar(assist.getForm(), 100);
-            });
-            thread.start();
+            }));
+            GForm.flush();
         }
     }
 
@@ -130,6 +133,7 @@ public class XuiBrowser {
 
 
     public GContainer getWebView() {
+        GContainer webView = assist.getXuiBrowserHolder().getWebView();
         return webView;
     }
 }

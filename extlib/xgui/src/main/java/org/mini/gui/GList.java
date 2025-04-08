@@ -7,14 +7,17 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
+import org.mini.gui.callback.GCmd;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
 import org.mini.gui.event.GStateChangeListener;
+import org.mini.util.SysLog;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import static org.mini.gui.GToolkit.FEEL_DIMENSION;
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
 import static org.mini.nanovg.Nanovg.*;
@@ -33,9 +36,10 @@ public class GList extends GContainer {
     public static final int MODE_MULTI_SELECT = 4, MODE_SINGLE_SELECT = 8;
     public static final float ITEM_HEIGH_DEFAULT = 36f;
     public static final float ITEM_IMG_H_DEFAULT = 28f;
+    static float[] GRADIENT_COLOR0 = {1.0f, 1.0f, 1.0f, 0.125f};
+    static float[] GRADIENT_COLOR1 = {0.0f, 0.0f, 0.0f, 0.125f};
 
     protected String preicon;
-    protected byte[] preicon_arr = toCstyleBytes(ICON_CHEVRON_RIGHT);
     protected List<Integer> selected = new ArrayList();
     protected boolean pulldown;
     //
@@ -164,12 +168,6 @@ public class GList extends GContainer {
     @Override
     public float[] getInnerBoundle() {
         return getBoundle();
-    }
-
-    public void setPreIcon(String preicon) {
-        if (preicon == null || preicon.trim().length() == 0) return;
-        this.preicon = preicon;
-        preicon_arr = toCstyleBytes(preicon);
     }
 
     public GListItem addItem(GImage img, String lab) {
@@ -487,17 +485,14 @@ public class GList extends GContainer {
     }
 
     public void sort(Comparator<? super GObject> c) {
-        List<GObject> list = popView.getElements();
-        synchronized (list) {
-            list.sort(c);
-        }
+        popView.sort(c);
         sizeAdjust();
     }
 
 
     @Override
     public void setFlyable(boolean flyable) {
-        if (flyable) System.out.println(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
+        if (flyable) SysLog.info("" + this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
     }
 
     /**
@@ -508,7 +503,7 @@ public class GList extends GContainer {
     public boolean paint(long vg) {
 
         //int itemcount = popView.elements.size();
-        nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
+        nvgFontSize(vg, getFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
@@ -563,17 +558,30 @@ public class GList extends GContainer {
         void drawNormal(long vg, float x, float y, float w, float h) {
             byte[] bg;
 
-            bg = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(255, 255, 255, 16), nvgRGBA(0, 0, 0, 16));
+            if (GToolkit.getFeel() == FEEL_DIMENSION) {
+                bg = nvgLinearGradient(vg, x, y, x, y + h, GRADIENT_COLOR0, GRADIENT_COLOR1);
+                nvgBeginPath(vg);
+                nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, getCornerRadius() - 1);
+                nvgFillPaint(vg, bg);
+                nvgFill(vg);
+            } else {
 
-            nvgBeginPath(vg);
-            nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, getCornerRadius() - 1);
-            nvgFillPaint(vg, bg);
-            nvgFill(vg);
+                nvgBeginPath(vg);
+                nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, getCornerRadius() - 0.5f);
+                nvgFillColor(vg, GRADIENT_COLOR0);
+                nvgFill(vg);
+            }
 
             nvgBeginPath(vg);
             nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, getCornerRadius() - 0.5f);
             nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 48));
             nvgStroke(vg);
+
+            nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
+            nvgFontFace(vg, GToolkit.getFontIcon());
+            nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
+            byte[] curIcon = pulldown ? ICON_CHEVRON_DOWN_BYTE : ICON_CHEVRON_RIGHT_BYTE;
+            nvgTextJni(vg, x + w - 15, y + h * 0.5f, curIcon, 0, curIcon.length);
 
             float thumb = h - pad;
             if (popView.elements.size() > 0) {
@@ -581,14 +589,12 @@ public class GList extends GContainer {
                 if (selectIndex >= 0) {
                     GListItem gli = (GListItem) getItem(selectIndex);
                     GToolkit.drawImage(vg, gli.img, x + pad, y + h * 0.5f - thumb / 2, thumb, thumb, false, 1.0f);
-                    GToolkit.drawTextLine(vg, x + (gli.img == null ? 0 : thumb) + pad + pad, y + h / 2, gli.getText(), GList.this.getFontSize(), GList.this.getColor(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+
+                    nvgScissor(vg, x, y, w - 20, h);
+                    float dx = x + (gli.img == null ? 0 : thumb) + pad + pad;
+                    GToolkit.drawTextLine(vg, dx, y + h / 2, gli.getText(), GList.this.getFontSize(), GList.this.getColor(), NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
                 }
             }
-            nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
-            nvgFontFace(vg, GToolkit.getFontIcon());
-            nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
-            byte[] curIcon = pulldown ? toCstyleBytes(ICON_CHEVRON_DOWN) : preicon_arr;
-            nvgTextJni(vg, x + w - 15, y + h * 0.5f, curIcon, 0, curIcon.length);
         }
     }
 

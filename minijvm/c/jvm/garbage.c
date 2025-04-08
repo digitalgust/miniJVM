@@ -550,8 +550,7 @@ s64 _garbage_collect(GcCollector *collector) {
 #endif
             if (curmb->type == MEM_TYPE_CLASS) {
                 classes_remove(collector->jvm, (JClass *) curmb);
-            }
-            if (GCFLAG_JLOADER_GET(curmb->gcflag)) {// curmb->class might be destroyed, when gc_destroy() called
+            } else if (GCFLAG_JLOADER_GET(curmb->gcflag)) {// curmb->class might be destroyed, when gc_destroy() called
 #if _JVM_DEBUG_GARBAGE_DUMP > 1
                 jvm_printf("X: [%llx] classloader\n", (s64) (intptr_t) curmb);
 #endif
@@ -560,6 +559,9 @@ s64 _garbage_collect(GcCollector *collector) {
                     classloaders_remove(jvm, pcl);
                     classloader_destroy(pcl);
                 }
+            } else if (GCFLAG_JTHREAD_GET(curmb->gcflag)) {//process thread if it created but not started
+                Runtime *ort = jthread_get_stackframe_value(jvm, (Instance *) curmb);
+                jthread_run_finalize(ort);
             }
             memoryblock_destroy(curmb);
             if (prevmb)prevmb->next = nextmb;
@@ -602,21 +604,25 @@ s32 _gc_pause_the_world(MiniJVM *jvm) {
     if (thread_list->length) {
         arraylist_iter_safe(thread_list, _list_iter_thread_pause, NULL);
 
-        for (i = 0; i < thread_list->length; i++) {
-            Runtime *runtime = arraylist_get_value(thread_list, i);
-            if (_gc_wait_thread_suspend(jvm, runtime) == -1) {
-                return -1;
-            }
-            gc_move_objs_thread_2_gc(runtime);
+        //此处可能存在多线程交互，比如某个线程结束等情况，导致for错误
+        spin_lock(&thread_list->spinlock);
+        {
+            for (i = 0; i < thread_list->length; i++) {
+                Runtime *runtime = arraylist_get_value(thread_list, i);
+                if (_gc_wait_thread_suspend(jvm, runtime) == -1) {
+                    return -1;
+                }
+                gc_move_objs_thread_2_gc(runtime);
 
 #if _JVM_DEBUG_GARBAGE_DUMP > 1
-            Utf8String *stack = utf8_create();
-            getRuntimeStack(runtime, stack);
-            jvm_printf("%s\n", utf8_cstr(stack));
-            utf8_destroy(stack);
+                Utf8String *stack = utf8_create();
+                getRuntimeStack(runtime, stack);
+                jvm_printf("%s\n", utf8_cstr(stack));
+                utf8_destroy(stack);
 #endif
+            }
         }
-
+        spin_unlock(&thread_list->spinlock);
     }
     gc_move_objs_thread_2_gc(collector->runtime);// maybe someone new object in finalize...
 
@@ -646,16 +652,9 @@ s32 _gc_resume_the_world(MiniJVM *jvm) {
 
 
 s32 _gc_wait_thread_suspend(MiniJVM *jvm, Runtime *runtime) {
-#if _JVM_DEBUG_LOG_LEVEL > 2
-    if (runtime->thrd_info->is_blocking) {
-        s32 debug = 1;
-        Runtime *r = getLastSon(runtime);
-        jvm_printf("STW blocking on: %s.%s\n", utf8_cstr(r->method->_this_class->name), utf8_cstr(r->method->name));
-        if (!(utf8_equals_c(r->method->name, "wait") || utf8_equals_c(r->method->name, "sleep"))) {
-            s32 debug = 1;
-        }
+    if (runtime->thrd_info->thread_status == THREAD_STATUS_NEW || runtime->thrd_info->thread_status == THREAD_STATUS_ZOMBIE) {
+        return 0;
     }
-#endif
     while (!(runtime->thrd_info->is_suspend ||  /// While executing bytecode, if suspend_count is not 0, pause bytecode execution and set is_suspend = 1
              runtime->thrd_info->is_blocking)  // During certain IO waits, JNI sets is_blocking = 1
             ) { //
@@ -707,7 +706,11 @@ void _gc_copy_objs(MiniJVM *jvm) {
     //jvm_printf("thread set size:%d\n", thread_list->length);
     for (i = 0; i < jvm->thread_list->length; i++) {
         Runtime *runtime = threadlist_get(jvm, i);
-        _gc_copy_objs_from_thread(runtime);
+        if (runtime->thrd_info->thread_status != THREAD_STATUS_ZOMBIE) {//zombie thread is not need to mark
+            _gc_copy_objs_from_thread(runtime);
+        } else {
+            s32 debug = 1;
+        }
     }
 //    arraylist_iter_safe(thread_list, _list_iter_iter_copy, NULL);
     // Debug thread
@@ -983,10 +986,10 @@ void gc_move_objs_thread_2_gc(Runtime *runtime) {
     if (runtime) {
         JavaThreadInfo *ti = runtime->thrd_info;
         GcCollector *collector = runtime->jvm->collector;
-        if (ti->objs_header) {
-            //lock
-            spin_lock(&collector->lock);
-            {
+        //lock
+        spin_lock(&collector->lock);
+        {
+            if (ti->objs_header) {
 #if _JVM_DEBUG_GARBAGE_DUMP > 1
                 MemoryBlock *mb = ti->objs_header;
                 while (mb) {
@@ -1003,14 +1006,14 @@ void gc_move_objs_thread_2_gc(Runtime *runtime) {
                 }
                 collector->tmp_header = ti->objs_header;
                 collector->obj_heap_size += ti->objs_heap_of_thread;
+
+                ti->objs_header = NULL;
+                ti->objs_tailer = NULL;
+
+                ti->objs_heap_of_thread = 0;
             }
-            spin_unlock(&collector->lock);
-
-            ti->objs_header = NULL;
-            ti->objs_tailer = NULL;
-
-            ti->objs_heap_of_thread = 0;
         }
+        spin_unlock(&collector->lock);
     }
 }
 

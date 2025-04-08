@@ -493,20 +493,60 @@ public final class Class<T> implements java.io.Serializable,
     }
 
     public Method getMethod(String name, Class<?>... parameterTypes) throws NoSuchMethodException {
-        Method m = getDeclaredMethod(name, parameterTypes);
-        if ((m.getModifiers() & RConst.ACC_PUBLIC) != 0) {
-            return m;
+        // 遍历类及其父类的所有方法
+        for (Class<?> clazz = this; clazz != null; clazz = clazz.getSuperclass()) {
+            for (Method method : clazz.getDeclaredMethods()) {
+                // 检查方法是否为 public
+                if (Modifier.isPublic(method.getModifiers())) {
+                    // 检查方法名称是否匹配
+                    if (method.getName().equals(name)) {
+                        // 检查参数类型是否匹配
+                        Class<?>[] methodParamTypes = method.getParameterTypes();
+                        if (parameterTypes.length == methodParamTypes.length) {
+                            boolean match = true;
+                            for (int i = 0; i < parameterTypes.length; i++) {
+                                if (parameterTypes[i] != methodParamTypes[i]) {
+                                    match = false;
+                                    break;
+                                }
+                            }
+                            if (match) {
+                                return method;
+                            }
+                        }
+                    }
+                }
+            }
         }
-        throw new NoSuchMethodException(name);
+
+        // 如果没有找到匹配的方法，抛出异常
+        throw new NoSuchMethodException("No such method: " + name);
     }
 
     public Method getDeclaredMethod(String name, Class<?>... parameterTypes) throws NoSuchMethodException {
-        checkRefectClassLoaded();
-        ReflectMethod rm = refClass.getMethod(name, parameterTypes);
-        if (rm != null) {
-            return new Method(this, rm);
+        // 遍历当前类声明的所有方法
+        for (Method method : this.getDeclaredMethods()) {
+            // 检查方法名称是否匹配
+            if (method.getName().equals(name)) {
+                // 检查参数类型是否匹配
+                Class<?>[] methodParamTypes = method.getParameterTypes();
+                if (parameterTypes.length == methodParamTypes.length) {
+                    boolean match = true;
+                    for (int i = 0; i < parameterTypes.length; i++) {
+                        if (!parameterTypes[i].equals(methodParamTypes[i])) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) {
+                        return method;
+                    }
+                }
+            }
         }
-        throw new NoSuchMethodException(name);
+
+        // 如果没有找到匹配的方法，抛出异常
+        throw new NoSuchMethodException("No such declared method: " + name);
     }
 
     public Method[] getMethods() {

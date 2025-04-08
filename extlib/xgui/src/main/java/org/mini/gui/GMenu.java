@@ -9,6 +9,7 @@ import org.mini.nanovg.Nanovg;
 
 import java.util.Iterator;
 
+import static org.mini.gui.GToolkit.FEEL_DIMENSION;
 import static org.mini.gui.GToolkit.nvgRGBA;
 import static org.mini.nanovg.Nanovg.*;
 
@@ -19,6 +20,8 @@ public class GMenu extends GContainer {
 
     protected float[] lineh = new float[1];
     protected int selectedIndex = -1;
+
+    protected int markIndex = -1;
     /**
      * contextMenu :
      * change focus when this menu touched , the value true would not change current focus, false would chang
@@ -95,6 +98,12 @@ public class GMenu extends GContainer {
         }
     }
 
+
+    static float[] GRADIENT_COLOR0 = {1.0f, 1.0f, 1.0f, 0.125f};
+    static float[] GRADIENT_COLOR1 = {0.0f, 0.0f, 0.0f, 0.125f};
+    static float[] BORDER_COLOR = {0.0f, 0.0f, 0.0f, 0.2f};
+    static float[] SPREATOR_COLOR = {192f / 255f, 192f / 255f, 192f / 255f, 0.2f};
+
     /**
      * @param vg
      * @return
@@ -110,25 +119,31 @@ public class GMenu extends GContainer {
         byte[] bg;
         //System.out.println("draw==========="+touched);
         //background
-        nvgBeginPath(vg);
-        nvgRoundedRect(vg, x + 1f, y + 1f, w - 2, h - 2, getCornerRadius() - 0.5f);
-        nvgFillColor(vg, this.bgColor != null ? bgColor : GToolkit.getStyle().getPopBackgroundColor());
-        nvgFill(vg);
-
         //渐变
-        bg = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(255, 255, 255, 32), nvgRGBA(0, 0, 0, 32));
-        nvgBeginPath(vg);
-        nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, getCornerRadius() - 1);
-        nvgFillPaint(vg, bg);
-        nvgFill(vg);
+        if (GToolkit.getFeel() == FEEL_DIMENSION) {
+            bg = nvgLinearGradient(vg, x, y, x, y + h, GRADIENT_COLOR0, GRADIENT_COLOR1);
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, getCornerRadius() - 1);
+            nvgFillPaint(vg, bg);
+            nvgFill(vg);
+        } else {
+//            nvgBeginPath(vg);
+//            nvgRoundedRect(vg, x + 1, y + 1, w - 2, h - 2, getCornerRadius() - 0.5f);
+//            nvgFillColor(vg, GRADIENT_COLOR0);
+//            nvgFill(vg);
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, x + 1f, y + 1f, w - 2, h - 2, getCornerRadius() - 0.5f);
+            nvgFillColor(vg, this.bgColor != null ? bgColor : GToolkit.getStyle().getPopBackgroundColor());
+            nvgFill(vg);
+        }
 
         //边框
         nvgBeginPath(vg);
         nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, getCornerRadius() - 0.5f);
-        nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 48));
+        nvgStrokeColor(vg, BORDER_COLOR);
         nvgStroke(vg);
 
-        nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
+        nvgFontSize(vg, getFontSize());
         nvgFontFace(vg, GToolkit.getFontWord());
         nvgTextAlign(vg, Nanovg.NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 
@@ -142,7 +157,7 @@ public class GMenu extends GContainer {
             if (i > 0) {
                 nvgBeginPath(vg);
                 nvgFillColor(vg, nvgRGBA(192, 192, 192, 48));
-                nvgRect(vg, dx - 1, dy + 2, 2, h - 4);
+                nvgRect(vg, dx - 1, dy + 3, 2, h - 6);
                 nvgFill(vg);
             }
         }
@@ -165,4 +180,14 @@ public class GMenu extends GContainer {
         this.contextMenu = contextMenu;
     }
 
+    public void setMarkIndex(int markIndex) {
+        if (markIndex >= getElementSize()) {
+            markIndex = getElementSize() - 1;
+        }
+        this.markIndex = markIndex;
+    }
+
+    public int getMarkIndex() {
+        return markIndex;
+    }
 }

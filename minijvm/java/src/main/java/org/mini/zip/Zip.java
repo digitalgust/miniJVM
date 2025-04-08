@@ -8,11 +8,13 @@ package org.mini.zip;
 import java.io.UnsupportedEncodingException;
 
 /**
+ * <pre>
  * byte[] b = javax.mini.zip.Zip.getEntry("../lib/minijvm_rt.jar",
  * "sys.properties"); for (int i = 0; i < b.length; i++) {
  * System.out.print((char) b[i]); }
- * <p>
+ *
  * Zip.putEntry("../tmp.zip", "aaa/sys.properties", b);
+ * </pre>
  *
  * @author Gust
  */
@@ -81,6 +83,7 @@ public class Zip {
             String z = zipFile + "\0";
             byte[] zpath = z.getBytes("utf-8");
             String n = name + "\0";
+            n = n.replace('\\', '/');
             byte[] npath = n.getBytes("utf-8");
             return putEntry0(zpath, npath, contents);
         } catch (Exception ex) {
@@ -132,6 +135,10 @@ public class Zip {
     public native static byte[] extract0(byte[] zipData);
 
     public native static byte[] compress0(byte[] data);
+
+    public native static byte[] gzipExtract0(byte[] zipData);
+
+    public native static byte[] gzipCompress0(byte[] data);
 
     static native byte[] getEntry0(byte[] zippath, byte[] path);
 

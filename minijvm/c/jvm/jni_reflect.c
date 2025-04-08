@@ -1604,6 +1604,7 @@ s32 com_misc_Unsafe_pack(Runtime *runtime, JClass *clazz) {
     if (time < NANO_2_MILLS_SCALE)time = NANO_2_MILLS_SCALE;
     s64 waitmills = absolute ? (time - currentTimeMillis()) : time / NANO_2_MILLS_SCALE;
 
+    s32 ret = 0;
     Runtime *rt = runtime;// current thread
     jthread_lock(&rt->thrd_info->pack, rt);
     if (rt->thrd_info->is_unparked) {
@@ -1611,10 +1612,10 @@ s32 com_misc_Unsafe_pack(Runtime *runtime, JClass *clazz) {
     } else {
         rt->thrd_info->is_unparked = 0;
         //jvm_printf("++++++pack %llx  %d\n", (s64) (intptr_t) &runtime->thrd_info->pack.thread_lock->thread_cond, (s32) waitmills);
-        jthread_waitTime(&rt->thrd_info->pack, rt, waitmills);
+        ret = jthread_waitTime(&rt->thrd_info->pack, rt, waitmills);
     }
     jthread_unlock(&rt->thrd_info->pack, rt);
-    return 0;
+    return ret;
 }
 
 s32 com_misc_Unsafe_unpack(Runtime *runtime, JClass *clazz) {

@@ -2,6 +2,8 @@ package org.mini.layout;
 
 import org.mini.gui.*;
 import org.mini.gui.gscript.Interpreter;
+import org.mini.layout.loader.XmlExtAssist;
+import org.mini.util.SysLog;
 import org.xmlpull.v1.KXmlParser;
 
 public abstract class XObject implements GLayout {
@@ -32,7 +34,7 @@ public abstract class XObject implements GLayout {
 
     protected String text = null; //文本
 
-    protected int fontSize = XDef.DEFAULT_FONT_SIZE;
+    private int fontSize = -1;//same value as GObject fontSize initialized value
 
     protected String preicon;
 
@@ -88,7 +90,7 @@ public abstract class XObject implements GLayout {
                 }
                 this.parent = xc;
             } else {
-                System.out.println("error ============");
+                SysLog.info("error");
             }
         } else {
             if (this.parent != null) {
@@ -462,6 +464,13 @@ public abstract class XObject implements GLayout {
             }
             viewW = width - getDiff_viewW2Width();
         }
+        if (x == XDef.NODEF) {
+            if (raw_xPercent != XDef.NODEF && parent != null && parent.getTrialViewH() != XDef.NODEF) {
+                x = raw_xPercent * parent.getTrialViewW() / 100;
+            } else {
+                x = 0;
+            }
+        }
     }
 
     /**
@@ -489,6 +498,17 @@ public abstract class XObject implements GLayout {
      */
     protected boolean isVfloat() {
         return vfloat;
+    }
+
+    public int getFontSize() {
+        if (fontSize <= 0) {
+            return XDef.DEFAULT_FONT_SIZE;
+        }
+        return fontSize;
+    }
+
+    public int getRawFontSize() {
+        return fontSize;
     }
 
     public abstract <T extends GObject> T getGui();

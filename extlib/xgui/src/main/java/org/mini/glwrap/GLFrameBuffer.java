@@ -5,10 +5,11 @@
  */
 package org.mini.glwrap;
 
-import org.mini.gui.GCmd;
+import org.mini.gui.callback.GCmd;
 import org.mini.gui.GForm;
 import org.mini.gui.GImage;
 import org.mini.nanovg.Nanovg;
+import org.mini.util.SysLog;
 
 import static org.mini.gl.GL.*;
 
@@ -39,7 +40,7 @@ public class GLFrameBuffer {
             glDeleteTextures(rendertext.length, rendertext, 0);
             glDeleteRenderbuffers(renderbuf1.length, renderbuf1, 0);
             glDeleteFramebuffers(fboobj.length, fboobj, 0);
-            System.out.println("delete fbo success");
+            SysLog.info("delete fbo success");
         }
     }
 
@@ -67,9 +68,9 @@ public class GLFrameBuffer {
         //
         int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE) {
-            System.out.println("framebuffer object error.");
+            SysLog.error("framebuffer object error.");
         } else {
-            System.out.println("framebuffer object ok");
+            SysLog.info("framebuffer object ok");
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -84,13 +85,14 @@ public class GLFrameBuffer {
         glDeleteFramebuffers(fbo.length, fbo, 0);
     }
 
+    @Override
     public void finalize() {
         //Don't reference to this instance
         Cleaner attachment = new Cleaner();
         attachment.rendertext[0] = rendertex[0];
         attachment.renderbuf1[0] = depth_stencil_buffer[0];
         attachment.fboobj[0] = fbo[0];
-        GForm.addCmd(new GCmd(GCmd.GCMD_RUN_CODE, attachment));
+        GForm.addCmd(new GCmd(attachment));
     }
 
 

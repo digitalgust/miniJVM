@@ -84,6 +84,18 @@ public class Symb extends DataType {
         }
     }
 
+    public boolean isArithOp() { //是算术运算符
+        byte ot = value;
+        if (ot == ADD
+                || ot == SUB
+                || ot == MUL
+                || ot == DIV) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public String toString() {
         return s_value;
     }

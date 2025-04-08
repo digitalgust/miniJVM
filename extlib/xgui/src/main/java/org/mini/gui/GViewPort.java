@@ -7,8 +7,10 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
+import org.mini.gui.callback.GCallBack;
+import org.mini.gui.callback.GCmd;
+import org.mini.util.SysLog;
 
-import java.util.Timer;
 import java.util.TimerTask;
 
 /**
@@ -153,7 +155,7 @@ public class GViewPort extends GContainer {
         minY = 0;
         maxX = minX + viewBoundle[WIDTH];
         maxY = minY + viewBoundle[HEIGHT];
-        synchronized (elements) {
+        {
             for (GObject nko : elements) {
                 float[] bond = null;
                 if (nko instanceof GContainer) {
@@ -201,8 +203,11 @@ public class GViewPort extends GContainer {
     public void touchEvent(int touchid, int phase, int x, int y) {
         switch (phase) {
             case Glfm.GLFMTouchPhaseBegan: {
-                if (inertiaCmd != null) {
-                    inertiaCmd = null;
+                if (inertiaCmdY != null) {
+                    inertiaCmdY = null;
+                }
+                if (inertiaCmdX != null) {
+                    inertiaCmdX = null;
                 }
                 touched = true;
                 break;
@@ -216,15 +221,13 @@ public class GViewPort extends GContainer {
         super.touchEvent(touchid, phase, x, y);
     }
 
-    //每多长时间进行一次惯性动作
-    float inertiaPeriod = 16;
-    //总共做多少次操作
-    long maxMoveCount = 120;
+
     //初速度加成
-    float addOn = 1.5f;
+    float addOn = 1.0f;
     //惯性任务
 
-    GCmd inertiaCmd;
+    GCmd inertiaCmdY;
+    GCmd inertiaCmdX;
 
     @Override
     public boolean inertiaEvent(float x1, float y1, float x2, float y2, final long moveTime) {
@@ -239,11 +242,15 @@ public class GViewPort extends GContainer {
         final double dy = y2 - y1;
         Runnable task;
         //System.out.println("inertia time: " + moveTime + " , count: " + maxMoveCount + " pos: x1,y1,x2,y2 = " + x1 + "," + y1 + "," + x2 + "," + y2);
-        if (Math.abs(dy) > Math.abs(dx)) {
+        if (Math.abs(dy) > Math.abs(dx) || !isSlideDirectionLimit()) {
             if (getInnerH() <= getH()) {
                 return false;
             }
             task = new Runnable() {
+                //每多长时间进行一次惯性动作
+                float inertiaPeriod = 1000 / GCallBack.getInstance().getFps();
+                //总共做多少次操作
+                float maxMoveCount = 2000 / inertiaPeriod - 2;
                 //惯性速度
                 double speedY = dy * addOn / (moveTime / inertiaPeriod);
                 //阻力
@@ -256,32 +263,40 @@ public class GViewPort extends GContainer {
                     try {
                         //System.out.println(this + " inertia Y " + speedY + " , " + resistance + " , " + count);
                         speedY -= resistance;//速度和阻力抵消为0时,退出滑动
-
-                        float tmpScrollY = scrolly;
-                        float inh = getInnerH();
-                        if (inh > 0) {
-                            float vec = (float) speedY / inh;
-                            synchronized (elements) {
+                        count++;
+                        if (count > maxMoveCount) {
+                            inertiaCmdY = null;
+                        } else {
+                            float inh = getOutOfViewHeight();
+                            if (inh > 0) {
+                                float vec = (float) speedY / inh;
                                 movePercentY(vec);
+                                //System.out.println("dy:" + ((float) speedY / dh));
                             }
-                            tmpScrollY -= vec;
-                            //System.out.println("dy:" + ((float) speedY / dh));
                         }
                         GForm.flush();
-                        if (count++ > maxMoveCount || tmpScrollY < 0 || tmpScrollY > 1) {
-                            inertiaCmd = null;
-                        }
-                        GForm.addCmd(inertiaCmd);
+
+                        GForm.addCmd(inertiaCmdY);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
             };
-        } else {
+
+            inertiaCmdY = new GCmd(task);
+            GForm.addCmd(inertiaCmdY);
+        }
+
+
+        if (Math.abs(dx) > Math.abs(dy) || !isSlideDirectionLimit()) {
             if (getInnerW() <= getW()) {
                 return false;
             }
             task = new TimerTask() {
+                //每多长时间进行一次惯性动作
+                float inertiaPeriod = 1000 / GCallBack.getInstance().getFps();
+                //总共做多少次操作
+                float maxMoveCount = 2000 / inertiaPeriod - 2;
                 //惯性速度
                 double speedX = dx * addOn / (moveTime / inertiaPeriod);
                 //阴力
@@ -294,31 +309,28 @@ public class GViewPort extends GContainer {
                     try {
                         //System.out.println(this + " inertia X " + speedX + " , " + resistance + " , " + count);
                         speedX -= resistance;//速度和阴力抵消为0时,退出滑动
-
-                        float inw = getInnerW();
-                        float tmpScrollX = scrollx;
-                        if (inw > 0) {
-                            float vec = (float) speedX / inw;
-                            synchronized (elements) {
+                        count++;
+                        if (count > maxMoveCount) {
+                            inertiaCmdX = null;
+                        } else {
+                            float inw = getOutOfViewHeight();
+                            if (inw > 0) {
+                                float vec = (float) speedX / inw;
                                 movePercentX(vec);
+                                //System.out.println("dx:" + ((float) speedX / dw));
                             }
-                            tmpScrollX -= vec;
-                            //System.out.println("dx:" + ((float) speedX / dw));
                         }
                         GForm.flush();
-                        if (count++ > maxMoveCount || tmpScrollX < 0 || tmpScrollX > 1) {
-                            inertiaCmd = null;
-                        }
-                        GForm.addCmd(inertiaCmd);
+
+                        GForm.addCmd(inertiaCmdX);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
             };
-        }
-        if (task != null) {
-            inertiaCmd = new GCmd(task);
-            GForm.addCmd(inertiaCmd);
+
+            inertiaCmdX = new GCmd(task);
+            GForm.addCmd(inertiaCmdX);
         }
         return true;
     }
@@ -333,7 +345,7 @@ public class GViewPort extends GContainer {
 
     @Override
     public void setFlyable(boolean flyable) {
-        if (flyable) System.out.println(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
+        if (flyable) SysLog.warn(this.getClass() + " " + getName() + ", can't dragfly, setting ignored ");
     }
 
     @Override

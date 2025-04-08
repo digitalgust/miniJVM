@@ -7,6 +7,7 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
+import org.mini.gui.callback.GCallBack;
 import org.mini.nanovg.Nanovg;
 
 import static org.mini.gui.GToolkit.nvgRGBA;
@@ -20,11 +21,12 @@ public class GMenuItem extends GContainer {
 
     protected GImage img;
 
-    protected float[] lineh = new float[1];
+    protected float lineh;
     protected boolean touched = false;
 
     protected int redPoint;
-    float[] box;
+    float[] box = new float[4];
+    float oldX, oldY;
 
     GMenuItem(GForm form, String t, GImage i, GMenu _parent) {
         super(form);
@@ -38,11 +40,10 @@ public class GMenuItem extends GContainer {
     public void setText(String t) {
         super.setText(t);
         if (t == null) return;
-        long vg = GCallBack.instance.getNvContext();
-        nvgFontSize(vg, GToolkit.getStyle().getTextFontSize());
-        nvgFontFace(vg, GToolkit.getFontWord());
-        nvgTextMetrics(vg, null, null, lineh);
-        box = GToolkit.getTextBoundle(vg, t, GCallBack.getInstance().getDeviceWidth(), GToolkit.getStyle().getTextFontSize());
+        long vg = GCallBack.getInstance().getNvContext();
+        float[] b = GToolkit.getTextBoundle(vg, t, GCallBack.getInstance().getDeviceWidth(), getFontSize(), true);
+        System.arraycopy(b, 0, box, 0, 4);
+        lineh = b[HEIGHT];
     }
 
     boolean isSelected() {
@@ -70,49 +71,86 @@ public class GMenuItem extends GContainer {
         redPoint = 0;
     }
 
-    @Override
-    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
-        if (isInArea(x, y)) {
-            GObject found = findSonByXY(x, y);
-            if (found != null) {
-                super.mouseButtonEvent(button, pressed, x, y);
-            } else {
-                if (pressed && button == Glfw.GLFW_MOUSE_BUTTON_1) {
-                    touched = true;
-                    doAction();
-                    doStateChanged(this);
-                } else if (!pressed && button == Glfw.GLFW_MOUSE_BUTTON_1) {
-                    touched = false;
-                    doStateChanged(this);
-                }
-            }
-        }
-
+    public void setRedPoint(int redPoint) {
+        this.redPoint = redPoint;
     }
 
     @Override
     public void touchEvent(int touchid, int phase, int x, int y) {
-        if (isInArea(x, y)) {
-            GObject found = findSonByXY(x, y);
-            if (found != null) {
-                super.touchEvent(touchid, phase, x, y);
-            } else {
-                if (phase == Glfm.GLFMTouchPhaseBegan) {
-                    touched = true;
-                    doStateChanged(this);
-                } else if (phase == Glfm.GLFMTouchPhaseEnded) {
+        GObject found = findSonByXY(x, y);
+        if (found != null && found.actionListener != null && found.getOnClinkScript() == null) {
+            super.touchEvent(touchid, phase, x, y);
+        } else {
+            if (isInArea(x, y)) {
+                switch (phase) {
+                    case Glfm.GLFMTouchPhaseBegan:
+                        touched = true;
+                        oldX = x;
+                        oldY = y;
+                        doStateChanged(this);
+                        break;
+                    case Glfm.GLFMTouchPhaseEnded:
+                        if (validAction(x, y)) doAction();
+                        touched = false;
+                        doStateChanged(this);
+                        break;
+                }
+            } else if (!isInArea(x, y)) {
+                if (touched) {
                     touched = false;
-                    doAction();
                     doStateChanged(this);
                 }
             }
         }
+    }
 
+    public boolean dragEvent(int button, float dx, float dy, float x, float y) {
+        return false;
+    }
+
+
+    @Override
+    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+        GObject found = findSonByXY(x, y);
+        if (found != null && found.actionListener != null && found.getOnClinkScript() == null) {
+            super.mouseButtonEvent(button, pressed, x, y);
+        } else {
+            if (isInArea(x, y)) {
+                if (pressed) {
+                    touched = true;
+                    parent.setCurrent(this);
+                    oldX = x;
+                    oldY = y;
+                    doStateChanged(this);
+                } else {
+                    if (validAction(x, y)) doAction();
+                    touched = false;
+                    doStateChanged(this);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void cursorPosEvent(int x, int y) {
+        if (!isInArea(x, y) && touched) {
+            touched = false;
+            doStateChanged(this);
+        }
+    }
+
+    private boolean validAction(float releaseX, float releaseY) {
+        if (Math.abs(releaseX - oldX) < TOUCH_RANGE && Math.abs(releaseY - oldY) < TOUCH_RANGE) {
+            return true;
+        }
+        return false;
     }
 
     public boolean isPressed() {
         return touched;
     }
+
+    static float[] TOUCHED_COLOR0 = {1.0f, 1.0f, 1.0f, 0.2f};
 
     public boolean paint(long vg) {
 
@@ -120,13 +158,13 @@ public class GMenuItem extends GContainer {
         super.paint(vg);
 
         //touched item background
-        if (touched) {
-            nvgFillColor(vg, nvgRGBA(255, 255, 255, 48));
+        if (touched && enable) {
+            nvgFillColor(vg, TOUCHED_COLOR0);
             nvgBeginPath(vg);
-            nvgRoundedRect(vg, getX() + 1, getY() + 1, getW() - 2, getH() - 2, getCornerRadius() - 0.5f);
+            nvgRoundedRect(vg, getX() + 2, getY() + 2, getW() - 4, getH() - 4, getCornerRadius() - 0.5f);
             nvgFill(vg);
             //System.out.println("draw touched");
-            touched = false;
+            //touched = false;
         }
 
         float pad = 2;
@@ -138,17 +176,18 @@ public class GMenuItem extends GContainer {
 
         float txt_x = 0f, txt_y = 0f, img_x = 0f, img_y = 0f, img_w = 0f, img_h = 0f;
 
+        String text = getText();
         if (img != null) {//有图
             if (text != null) {//有文字
-                if (dh > lineh[0] * 3) { //上图下文排列
-                    img_h = dh - pad * 3 - lineh[0];
+                if (dh > lineh * 3) { //上图下文排列
+                    img_h = dh - pad * 3 - lineh;
                     img_x = dx + dw / 2 - img_h / 2;
                     img_w = img_h;
                     img_y = dy + pad;
                     txt_x = dx + dw / 2;
-                    txt_y = img_y + img_h + pad + lineh[0] / 2;
+                    txt_y = img_y + img_h + pad + lineh / 2;
                 } else { //前图后文
-                    img_h = dh * .8f - pad;
+                    img_h = dh * .7f - pad;
                     img_w = img_h;
                     img_x = dx + dw * .5f - pad * 2 - img_w - (box[WIDTH]) * .5f;
                     img_y = dy + dh * .1f;
@@ -156,7 +195,7 @@ public class GMenuItem extends GContainer {
                     txt_y = dy + dh * .5f;
                 }
             } else {
-                img_h = dh * .75f - pad;
+                img_h = dh * .7f - pad;
                 img_x = dx + dw / 2 - img_h / 2;
                 img_w = img_h;
                 img_y = dy + dh / 2 - img_h / 2;
@@ -183,12 +222,17 @@ public class GMenuItem extends GContainer {
             byte[] b = toCstyleBytes(text);
             nvgFillColor(vg, GToolkit.getStyle().getTextShadowColor());
             Nanovg.nvgTextJni(vg, txt_x + 1, txt_y + 1, b, 0, b.length);
-            nvgFillColor(vg, enable ? getColor() : getDisabledColor());
+            nvgFillColor(vg, getColor());
             Nanovg.nvgTextJni(vg, txt_x, txt_y, b, 0, b.length);
         }
 
+        GMenu menu = (GMenu) parent;
+        if (menu.getMarkIndex() == menu.getElements().indexOf(this)) {
+            GToolkit.drawRect(vg, dx + dw * 0.333f, dy + dh * 0.8f, dw * 0.333f, 2, GToolkit.getStyle().getTextShadowColor());
+        }
+
         if (redPoint > 0) {
-            GToolkit.drawRedPoint(vg, redPoint > 99 ? "..." : Integer.toString(redPoint), dx + dw * .7f, dy + dh * .5f - 10, 12f);
+            GToolkit.drawRedPoint(vg, redPoint > 99 ? "..." : Integer.toString(redPoint), dx + dw * .7f, dy + dh * .5f - 10, 10f);
         }
         return true;
     }

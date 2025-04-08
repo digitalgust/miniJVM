@@ -65,6 +65,8 @@ s32 is_class_exists(MiniJVM *jvm, JClass *clazz);
 
 //==================================================    server    ==================================================
 
+Runtime *find_jthread_from_threadlist(MiniJVM *jvm, Instance *jthread);
+
 void jdwp_put_client(ArrayList *clients, JdwpClient *client) {
     arraylist_push_back(clients, client);
 }
@@ -179,6 +181,7 @@ s32 jdwp_stop_server(MiniJVM *jvm) {
     thrd_detach(jdwpserver->pt_dispacher);
     jvm_free(jdwpserver);
     jvm->jdwpserver = NULL;
+    jvm->jdwp_enable = 0;
     return 0;
 }
 
@@ -2296,7 +2299,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
 
             case JDWP_CMD_ThreadReference_Name: {//11.1
                 Instance *jthread = jdwppacket_read_refer(req);
-                Runtime *r = jthread_get_stackframe_value(jdwpserver->jvm, jthread);
+                Runtime *r = find_jthread_from_threadlist(jdwpserver->jvm, jthread);
                 if (r) {
                     Instance *jarr_name = jthread_get_name_value(jdwpserver->jvm, jthread);
                     Utf8String *ustr = utf8_create();
@@ -2314,7 +2317,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             }
             case JDWP_CMD_ThreadReference_Suspend: {//11.2
                 Instance *jthread = jdwppacket_read_refer(req);
-                Runtime *r = jthread_get_stackframe_value(jdwpserver->jvm, jthread);
+                Runtime *r = find_jthread_from_threadlist(jdwpserver->jvm, jthread);
                 if (r) {
                     jthread_suspend(r);
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
@@ -2326,7 +2329,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             }
             case JDWP_CMD_ThreadReference_Resume: {//11.3
                 Instance *jthread = jdwppacket_read_refer(req);
-                Runtime *r = jthread_get_stackframe_value(jdwpserver->jvm, jthread);
+                Runtime *r = find_jthread_from_threadlist(jdwpserver->jvm, jthread);
                 if (r) {
                     if (r->thrd_info->suspend_count > 0)jthread_resume(r);;
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
@@ -2338,7 +2341,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             }
             case JDWP_CMD_ThreadReference_Status: {//11.4
                 Instance *jthread = jdwppacket_read_refer(req);
-                Runtime *r = jthread_get_stackframe_value(jdwpserver->jvm, jthread);
+                Runtime *r = find_jthread_from_threadlist(jdwpserver->jvm, jthread);
                 if (r) {
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
                     jdwppacket_write_int(res, r->thrd_info->thread_status);
@@ -2353,7 +2356,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
 
             case JDWP_CMD_ThreadReference_ThreadGroup: {//11.5
                 Instance *jthread = jdwppacket_read_refer(req);
-                Runtime *r = jthread_get_stackframe_value(jdwpserver->jvm, jthread);
+                Runtime *r = find_jthread_from_threadlist(jdwpserver->jvm, jthread);
                 if (r) {
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
                     jdwppacket_write_refer(res, 0);
@@ -2365,7 +2368,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             }
             case JDWP_CMD_ThreadReference_Frames: {//11.6
                 Instance *jthread = jdwppacket_read_refer(req);
-                Runtime *rt = jthread_get_stackframe_value(jdwpserver->jvm, jthread);
+                Runtime *rt = find_jthread_from_threadlist(jdwpserver->jvm, jthread);
                 s32 startFrame = jdwppacket_read_int(req);
                 s32 length = jdwppacket_read_int(req);
                 if (rt) {
@@ -2405,7 +2408,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             }
             case JDWP_CMD_ThreadReference_FrameCount: {//11.7
                 Instance *jthread = jdwppacket_read_refer(req);
-                Runtime *r = jthread_get_stackframe_value(jdwpserver->jvm, jthread);
+                Runtime *r = find_jthread_from_threadlist(jdwpserver->jvm, jthread);
                 if (r) {
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
                     jdwppacket_write_int(res, getRuntimeDepth(r));
@@ -2418,7 +2421,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             }
             case JDWP_CMD_ThreadReference_OwnedMonitors: {//11.8
                 Instance *jthread = jdwppacket_read_refer(req);
-                Runtime *r = jthread_get_stackframe_value(jdwpserver->jvm, jthread);
+                Runtime *r = find_jthread_from_threadlist(jdwpserver->jvm, jthread);
                 if (r) {
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
                     jdwppacket_write_int(res, 0);
@@ -2430,7 +2433,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             }
             case JDWP_CMD_ThreadReference_CurrentContendedMonitor: {//11.9
                 Instance *jthread = jdwppacket_read_refer(req);
-                Runtime *r = jthread_get_stackframe_value(jdwpserver->jvm, jthread);
+                Runtime *r = find_jthread_from_threadlist(jdwpserver->jvm, jthread);
                 if (r) {
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
                     jdwppacket_write_refer(res, NULL);
@@ -2443,7 +2446,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             case JDWP_CMD_ThreadReference_Stop: {//11.10
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
                 Instance *jthread = jdwppacket_read_refer(req);
-                Runtime *r = jthread_get_stackframe_value(jdwpserver->jvm, jthread);
+                Runtime *r = find_jthread_from_threadlist(jdwpserver->jvm, jthread);
                 if (r) {
                     thrd_detach(r->thrd_info->pthread);//todo need release all lock
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
@@ -2456,7 +2459,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             case JDWP_CMD_ThreadReference_Interrupt: {//11.11
                 jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
                 Instance *jthread = jdwppacket_read_refer(req);
-                Runtime *r = jthread_get_stackframe_value(jdwpserver->jvm, jthread);
+                Runtime *r = find_jthread_from_threadlist(jdwpserver->jvm, jthread);
                 if (r) {
                     //todo
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
@@ -2469,7 +2472,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             case JDWP_CMD_ThreadReference_SuspendCount: {//11.12
                 //jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
                 Instance *jthread = jdwppacket_read_refer(req);
-                Runtime *r = jthread_get_stackframe_value(jdwpserver->jvm, jthread);
+                Runtime *r = find_jthread_from_threadlist(jdwpserver->jvm, jthread);
                 if (r) {
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
                     jdwppacket_write_int(res, r->thrd_info->suspend_count);
@@ -2727,5 +2730,24 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
         jdwppacket_destroy(req);
     }
     return 0;
+}
+
+Runtime *find_jthread_from_threadlist(MiniJVM *jvm, Instance *jthread) {
+    Runtime *otr = NULL;
+    spin_lock(&jvm->thread_list->spinlock);
+    {
+        s32 i = 0;
+        for (; i < jvm->thread_list->length; i++) {
+            Runtime *r = arraylist_get_value_unsafe(jvm->thread_list, i);
+            if (r->thrd_info->jthread == jthread) {
+                otr = r;
+            }
+        }
+    }
+    spin_unlock(&jvm->thread_list->spinlock);
+    if (!otr) {
+        s32 debug = 1;
+    }
+    return otr;
 }
 

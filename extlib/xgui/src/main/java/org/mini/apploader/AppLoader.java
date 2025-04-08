@@ -5,10 +5,15 @@
  */
 package org.mini.apploader;
 
-import org.mini.gui.GCallBack;
+import org.mini.gui.callback.GCallBack;
 import org.mini.gui.GLanguage;
-import org.mini.gui.GStyle;
+import org.mini.gui.style.GStyle;
 import org.mini.gui.GToolkit;
+import org.mini.json.JsonParser;
+import org.mini.layout.guilib.HttpRequestReply;
+import org.mini.layout.xwebview.XuiResource;
+import org.mini.layout.xwebview.XuiResourceLoader;
+import org.mini.util.SysLog;
 import org.mini.vm.ThreadLifeHandler;
 import org.mini.vm.VmUtil;
 import org.mini.zip.Zip;
@@ -32,11 +37,12 @@ public class AppLoader {
     static final String APP_FILE_EXT = ".jar";
     static final String APP_DATA_DIR = "/appdata/";
     static final String TMP_DIR = "/tmp/";
-    static final String EXAMPLE_APP_FILE = "ExApp.jar";
+    static final String[] EXAMPLE_APP_FILES = {"minix.jar", "minicompiler.jar"};
     static final String KEY_BOOT = "boot";
     static final String KEY_DOWNLOADURL = "downloadurl";
     static final String KEY_LANGUAGE = "language";
     static final String KEY_GUISTYLE = "guistyle";
+    static final String KEY_GUIFEEL = "guifeel";
     static final String KEY_HOMEICON_X = "homeiconx";
     static final String KEY_HOMEICON_Y = "homeicony";
     static final String KEY_TOKEN = "TOKEN";
@@ -128,8 +134,8 @@ public class AppLoader {
         copyExApp();
         String bootApp = appinfo.getProperty(KEY_BOOT);
         if (bootApp == null || !isJarExists(bootApp)) {
-            setBootApp(EXAMPLE_APP_FILE);
-            bootApp = EXAMPLE_APP_FILE;
+            setBootApp(EXAMPLE_APP_FILES[0]);
+            bootApp = EXAMPLE_APP_FILES[0];
         }
         bootApp = null;//"block the setup bootapp auto boot";
         runApp(bootApp);
@@ -188,11 +194,21 @@ public class AppLoader {
     }
 
     static void copyExApp() {
-        String srcPath = GCallBack.getInstance().getAppResRoot() + "/resfiles/" + EXAMPLE_APP_FILE;
-        //if (!applist.contains(EXAMPLE_APP_FILE) || !isJarExists(srcPath)) {
-        addApp(EXAMPLE_APP_FILE, srcPath);
-        //System.out.println("copy exapp");
-        //}
+        for (String jarName : EXAMPLE_APP_FILES) {
+            String srcPath = GCallBack.getInstance().getAppResRoot() + "/resfiles/" + jarName;
+            String dstPath = getAppJarPath(jarName);
+            File dst = new File(dstPath);
+            if (dst.exists()) {
+                String dstVersion = getAppConfig(jarName, "version");
+                String srcVersion = getAppConfigWithJarPath(srcPath, "version");
+                if (compareVersions(srcVersion, dstVersion) <= 0) {
+                    SysLog.info("exapp exists " + jarName);
+                    continue;
+                }
+            }
+            addApp(jarName, srcPath);
+            SysLog.info("copy exapp " + jarName);
+        }
     }
 
     public static void loadJarProp(String filePath, Properties prop) {
@@ -265,7 +281,10 @@ public class AppLoader {
 
     public static int getDefaultLang() {
         String langstr = appinfo.getProperty(KEY_LANGUAGE);
-        int lang = GLanguage.ID_ENG;
+
+        String sysLang = System.getProperty("user.language");
+        //System.out.println("sysLang:" + sysLang);
+        int lang = GLanguage.getIdByShortName(sysLang);
         try {
             lang = Integer.parseInt(langstr.trim());
         } catch (Exception e) {
@@ -276,34 +295,6 @@ public class AppLoader {
     public static void setDefaultLang(int lang) {
         appinfo.put(KEY_LANGUAGE, "" + lang);
         saveProp(APP_INFO_FILE, appinfo);
-    }
-
-    public static String getLangName() {
-        int lang = getDefaultLang();
-        switch (lang) {
-            case GLanguage.ID_ENG:
-                return "en_US";
-            case GLanguage.ID_CHN:
-                return "zh_CN";
-            case GLanguage.ID_CHT:
-                return "zh_TW";
-            case GLanguage.ID_KOR:
-                return "ko_KR";
-            case GLanguage.ID_FRA:
-                return "fr_FR";
-            case GLanguage.ID_SPA:
-                return "es_ES";
-            case GLanguage.ID_ITA:
-                return "it_IT";
-            case GLanguage.ID_JPA:
-                return "ja_JP";
-            case GLanguage.ID_GER:
-                return "de_DE";
-            case GLanguage.ID_RUS:
-                return "ru_RU";
-            default:
-                return "en_US";
-        }
     }
 
     public static int getGuiStyle() {
@@ -318,6 +309,21 @@ public class AppLoader {
 
     public static void setGuiStyle(int style) {
         appinfo.put(KEY_GUISTYLE, "" + style);
+        saveProp(APP_INFO_FILE, appinfo);
+    }
+
+    public static int getGuiFeel() {
+        String langstr = appinfo.getProperty(KEY_GUIFEEL);
+        int lang = 0;// 0 bright , 1 dark
+        try {
+            lang = Integer.parseInt(langstr.trim());
+        } catch (Exception e) {
+        }
+        return lang;
+    }
+
+    public static void setGuiFeel(int feel) {
+        appinfo.put(KEY_GUIFEEL, "" + feel);
         saveProp(APP_INFO_FILE, appinfo);
     }
 
@@ -433,6 +439,14 @@ public class AppLoader {
         return v;
     }
 
+    public static String getApplicationFullscreen(String jarName) {
+        String v = getAppConfig(jarName, "fullscreen");
+        if (v == null) {
+            v = "0";
+        }
+        return v.toLowerCase();
+    }
+
     public static String getApplicationOrientation(String jarName) {
         String v = getAppConfig(jarName, "orientation");
         if (v == null) {
@@ -468,12 +482,16 @@ public class AppLoader {
     }
 
     static String getAppConfig(String jarName, String key) {
+        String jarFullPath = getAppJarPath(jarName);
+        return getAppConfigWithJarPath(jarFullPath, key);
+    }
+
+    static String getAppConfigWithJarPath(String jarPath, String key) {
         try {
-            String jarFullPath = getAppJarPath(jarName);
-            File f = new File(jarFullPath);
+            File f = new File(jarPath);
             if (f.exists()) {
                 //System.out.println("jar path:" + jarFullPath + "  " + key);
-                byte[] b = Zip.getEntry(jarFullPath, APP_CONFIG);
+                byte[] b = Zip.getEntry(jarPath, APP_CONFIG);
                 //System.out.println("b=" + b);
                 if (b != null) {
 
@@ -523,13 +541,17 @@ public class AppLoader {
     public static GApplication runApp(String jarName) {
         GApplication app = null;
         try {
+            GApplication old = GCallBack.getInstance().getApplication();
+            if (old != null && old != AppManager.getInstance()) {
+                old.pauseApp();
+            }
             if (jarName != null) {
                 extractFatJar(jarName); //extract dependence lib
                 GStyle oldStyle = GToolkit.getStyle();
                 Class c = getApplicationClass(jarName);
                 if (c != null) {
                     app = (GApplication) c.newInstance();
-                    app.init(jarName);
+                    app.setJarName(jarName);
                     app.setOldStyle(oldStyle);
                     GCallBack.getInstance().setApplication(app);
                 }
@@ -568,7 +590,7 @@ public class AppLoader {
             return true;
         } catch (Exception exception) {
             //exception.printStackTrace();
-            System.out.println("[INFO] " + exception.getMessage());
+            SysLog.error("add app error", exception);
         }
         return false;
     }
@@ -652,4 +674,84 @@ public class AppLoader {
         return s == null ? "" : s;
     }
 
+    public static String getPolicyUrl() {
+        String from = AppLoader.getBaseInfo("from");
+        String profile = AppLoader.getBaseInfo("profile");
+        String policyUrl = AppLoader.getBaseInfo(from + "." + profile + ".policyUrl");
+        return policyUrl;
+    }
+
+
+    public String[] getPolicy(String url, String post) {
+        try {
+            if (url == null) {
+                return null;
+            }
+            XuiResourceLoader loader = new XuiResourceLoader();
+            XuiResource res = loader.loadResource(url, post);
+            if (res != null) {
+                String json = res.getString();
+                if (json != null) {
+                    JsonParser<HttpRequestReply> parser = new JsonParser<>();
+                    HttpRequestReply reply = parser.deserial(json, HttpRequestReply.class);
+                    if (reply != null && reply.getCode() == 0) {
+                        String s = reply.getReply();
+                        String[] ss = s.split("\n");
+                        return ss;
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * 比较版本号
+     * 如果版本号相同，返回0；如果v1大于v2，返回1；如果v1小于v2，返回-1。
+     *
+     * @param v1
+     * @param v2
+     * @return
+     */
+    public static int compareVersions(String v1, String v2) {
+        try {
+            if (v1 == null) {
+                v1 = "";
+            }
+            if (v2 == null) {
+                v2 = "";
+            }
+            //用正则表达式检测版本号正确性
+            boolean isValid1 = v1.matches("^\\d+(\\.\\d+)*$");
+            boolean isValid2 = v2.matches("^\\d+(\\.\\d+)*$");
+            if (!isValid1 && !isValid2) {
+                return 0;
+            }
+            if (!isValid1) {
+                return -1;
+            }
+            if (!isValid2) {
+                return 1;
+            }
+
+            String[] parts1 = v1.split("\\.");
+            String[] parts2 = v2.split("\\.");
+
+            int maxLength = Math.max(parts1.length, parts2.length);
+            for (int i = 0; i < maxLength; i++) {
+                int num1 = (i < parts1.length) ? Integer.parseInt(parts1[i]) : 0;
+                int num2 = (i < parts2.length) ? Integer.parseInt(parts2[i]) : 0;
+
+                if (num1 != num2) {
+                    return Integer.compare(num1, num2);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }

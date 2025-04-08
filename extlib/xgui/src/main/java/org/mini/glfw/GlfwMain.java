@@ -1,6 +1,7 @@
 package org.mini.glfw;
 
-import org.mini.gui.GCallBack;
+import org.mini.gui.callback.GCallBack;
+import org.mini.util.SysLog;
 
 
 /**
@@ -11,7 +12,7 @@ import org.mini.gui.GCallBack;
 public class GlfwMain {
 
     public static void main(String[] args) {
-        System.out.println("para[0] : window width, para[1] window height");
+        SysLog.info("para[0] : window width, para[1] window height");
 
         int w = 800, h = 480;
         if (args.length >= 2) {

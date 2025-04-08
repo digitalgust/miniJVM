@@ -2,13 +2,12 @@ package org.mini.layout.xwebview;
 
 import org.mini.gui.GContainer;
 import org.mini.gui.GObject;
-import org.mini.layout.UITemplate;
+import org.mini.layout.loader.UITemplate;
 import org.mini.layout.XContainer;
 import org.mini.layout.XEventHandler;
-import org.mini.layout.XmlExtAssist;
+import org.mini.layout.loader.XmlExtAssist;
 
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
@@ -20,9 +19,14 @@ public class XuiPage {
     XEventHandler eventDelegate;
     XmlExtAssist assistDelegate;
     URL url;
+    String post;
     GContainer pan;
 
     public XuiPage(String homeUrl, XuiBrowser browser) {
+        this(homeUrl, null, browser);
+    }
+
+    public XuiPage(String homeUrl, String post, XuiBrowser browser) {
         try {
             //urlStr="jar:http://www.foo.com/bar/baz.jar!/COM/foo/Quux.class";
             url = new URL(homeUrl);
@@ -30,13 +34,14 @@ public class XuiPage {
 //            URLConnection con = url.openConnection();
 //            con.connect();
 //            System.out.println(con.getContentLength());
-        } catch (MalformedURLException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        this.post = post;
         XEventHandler eventDelegate = new XPageEventDelegate(browser, url);
         this.eventDelegate = eventDelegate;
 
-        this.assistDelegate = new XmlExtAssist(browser.getAssist().getForm());
+        this.assistDelegate = new XmlExtAssist(browser.getAssist().getXuiBrowserHolder());
         this.assistDelegate.copyFrom(browser.getAssist());
     }
 
@@ -49,7 +54,7 @@ public class XuiPage {
             loader.setURL(url);
             assistDelegate.setLoader(loader);
 
-            String uistr = loader.loadXml(url.toString());
+            String uistr = loader.loadXml(url.toString(), post);
             if (uistr != null) {
                 UITemplate uit = new UITemplate(uistr);
                 XContainer xcon = (XContainer) XContainer.parseXml(uit.parse(), assistDelegate);
@@ -79,6 +84,10 @@ public class XuiPage {
 
     public URL getUrl() {
         return url;
+    }
+
+    public String getPost() {
+        return post;
     }
 
 

@@ -26,6 +26,8 @@
 
 package java.lang;
 
+import org.mini.util.SysLog;
+
 import java.io.*;
 import java.util.StringTokenizer;
 
@@ -156,7 +158,7 @@ public class Runtime {
                                     (info[0], info[1], (int) info[2], (int) info[3],
                                             (int) info[4]);
                         } catch (Throwable e) {
-                            System.out.println(e);
+                            SysLog.error("execute process error", e);
                             exception[0] = e;
                         } finally {
                             process.notifyAll();

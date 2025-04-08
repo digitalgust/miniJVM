@@ -5,6 +5,8 @@
  */
 package org.mini.http;
 
+import org.mini.util.SysLog;
+
 import javax.microedition.io.Connector;
 import javax.microedition.io.HttpConnection;
 import java.io.ByteArrayOutputStream;
@@ -28,7 +30,7 @@ public class MiniHttpClient extends Thread {
     public static final CltLogger DEFAULT_LOGGER = new CltLogger() {
         @Override
         public void log(String s) {
-            System.out.println(s);
+            SysLog.info(s);
         }
     };
     CltLogger logger = DEFAULT_LOGGER;
@@ -89,23 +91,28 @@ public class MiniHttpClient extends Thread {
         exit = true;
     }
 
+    public String getUrl() {
+        return url;
+    }
+
     @Override
     public void run() {
 
         DataInputStream dis = null;
         byte[] data;
         try {
-            logger.log("http url:" + url);
+            //logger.log("[INFO]http url:" + url);
             updateProgress(5);
             c = (HttpConnection) Connector.open(url);
-            outputHeaders();
             if (baos != null) {
                 c.setRequestMethod(HttpConnection.POST);
+                outputHeaders();
                 byte[] d = baos.toByteArray();
                 c.setRequestProperty("Content-Length", String.valueOf(d.length));
                 c.openDataOutputStream().write(d);
             } else {
                 c.setRequestMethod(HttpConnection.GET);
+                outputHeaders();
             }
             int rescode = c.getResponseCode();
             if (rescode == 200) {
@@ -113,17 +120,25 @@ public class MiniHttpClient extends Thread {
                 dis = c.openDataInputStream();
                 if (len > 0) {
 
-                    int part10percent = len / 10;
+                    int part10percent = len / 100;
                     int p = 1;
 
                     data = new byte[len];
+                    byte[] buf = new byte[4096];
                     int read = 0;
                     while (read < len) {
-                        read += dis.read(data, read, len - read);
+                        //read += dis.read(data, read, len - read);
+                        int r = dis.read(buf);
+                        if (r == -1) {
+                            break;
+                        }
+                        System.arraycopy(buf, 0, data, read, r);
+                        read += r;
 
-                        if (len / part10percent > p) {
+                        //System.out.println("read:" + read);
+                        if (read > part10percent * p) {
                             p++;
-                            updateProgress(p * 10);
+                            updateProgress(p);
                         }
                     }
                 } else {
@@ -155,7 +170,7 @@ public class MiniHttpClient extends Thread {
                 }
             }
         } catch (Exception e) {
-            //e.printStackTrace();
+            //logger.log("[ERRO]http error:" + e.getCodeStack());
             updateProgress(100);
             if (handle != null) {
                 handle.onCompleted(this, url, null);

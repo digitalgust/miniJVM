@@ -245,6 +245,8 @@ s32 jthread_dispose(Instance *jthread, Runtime *runtime);
 
 s32 jthread_run(void *para);
 
+s32 jthread_run_finalize(Runtime *runtime);
+
 thrd_t jthread_start(Instance *ins, Runtime *parent);
 
 s32 jthread_get_daemon_value(Instance *ins, Runtime *runtime);
@@ -336,8 +338,6 @@ static inline void runtime_destroy_inl(Runtime *runtime) {
         runtime->next = top_runtime->runtime_pool_header;
         top_runtime->runtime_pool_header = runtime;
     } else {
-        stack_destroy(runtime->stack);
-        threadinfo_destroy(runtime->thrd_info);
 
         Runtime *next = top_runtime->runtime_pool_header;
         while (next) {
@@ -345,6 +345,9 @@ static inline void runtime_destroy_inl(Runtime *runtime) {
             next = r->next;
             jvm_free(r);
         }
+
+        stack_destroy(runtime->stack);
+        threadinfo_destroy(runtime->thrd_info);
         runtime->runtime_pool_header = NULL;
         jvm_free(runtime);
     }
@@ -404,6 +407,8 @@ s32 classes_loaded_count_unsafe(MiniJVM *jvm);
 s32 classes_remove(MiniJVM *jvm, JClass *clazz);
 
 Instance *build_stack_element(Runtime *runtime, Runtime *target);
+
+void os_get_lang(Utf8String *buf);
 
 #ifdef __cplusplus
 }

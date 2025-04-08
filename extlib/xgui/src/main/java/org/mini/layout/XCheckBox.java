@@ -2,6 +2,7 @@ package org.mini.layout;
 
 import org.mini.gui.GCheckBox;
 import org.mini.gui.GObject;
+import org.mini.layout.loader.XmlExtAssist;
 import org.xmlpull.v1.KXmlParser;
 
 /**
@@ -45,13 +46,13 @@ public class XCheckBox
 //----------------------------------------------------------------------------
 
     protected int getDefaultWidth(int parentViewW) {
-        int w = XUtil.measureWidth(parentViewW, text, fontSize);
+        int w = XUtil.measureWidth(parentViewW, text, getFontSize(), false);
         viewW = width = w + XDef.SPACING_CHECKBOX_ADD;
         return w;
     }
 
     protected int getDefaultHeight(int parentViewH) {
-        return XUtil.measureHeight(viewW, text, fontSize);
+        return XUtil.measureHeight(viewW, text, getFontSize(), false);
     }
 
     protected <T extends GObject> T createGuiImpl() {

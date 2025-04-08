@@ -8,10 +8,10 @@ package java.util.zip;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+
 import org.mini.zip.Zip;
 
 /**
- *
  * @author Gust
  */
 public class GZIPOutputStream {
@@ -29,7 +29,7 @@ public class GZIPOutputStream {
 
     public void finish() throws IOException {
         byte[] src = baos.toByteArray();
-        byte[] dst = Zip.compress0(src);
+        byte[] dst = Zip.gzipCompress0(src);
         out.write(dst);
         out.flush();
     }

@@ -120,7 +120,7 @@ public class MaSound extends MaNativeObject {
 
     @Override
     public void finalize() {
-        System.out.println("clean " + this + " " + handle);
+        //System.out.println("clean " + this + " " + handle);
         MiniAudio.ma_sound_uninit(handle);
         handle = 0;
     }

@@ -5,10 +5,15 @@
  */
 package org.mini.apploader;
 
-import org.mini.gui.*;
+import org.mini.gui.GForm;
+import org.mini.gui.GLanguage;
+import org.mini.gui.GToolkit;
+import org.mini.gui.callback.GCallBack;
+import org.mini.gui.callback.GCmd;
+import org.mini.gui.style.GStyle;
+import org.mini.layout.guilib.FormHolder;
+import org.mini.util.SysLog;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -16,19 +21,22 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * @author Gust
  */
-public abstract class GApplication {
+public abstract class GApplication implements FormHolder {
     public enum AppState {
-        STATE_INITED, STATE_STARTED, STATE_PAUSEED, STATE_CLOSED,
+        STATE_NEW, STATE_INITED, STATE_RUNNING, STATE_PAUSEED, STATE_CLOSED,
     }
 
-    private AppState state = AppState.STATE_INITED;
+    private AppState state = AppState.STATE_NEW;
 
     static final String APP_CONFIG_FILE = "config.properties";
     static final String APP_LANG_KEY = "_inner_lang";
+
+    private GForm form;
     String saveRootPath;
     GStyle oldStyle;
     GStyle myStyle;
     int myLang;
+    float myFPS;
     ClassLoader myClassLoader;
     String jarName;
 
@@ -46,8 +54,9 @@ public abstract class GApplication {
         appId = toString();
     }
 
-    void init(String jarName) {
-        this.jarName = jarName;
+
+    public void init() {
+        if (state != AppState.STATE_NEW) return;
         setSaveRoot(AppLoader.getAppDataPath(jarName));
         AppLoader.loadPropFile(getAppConfigFile(), prop);
         String langId = getProperty(APP_LANG_KEY, GLanguage.ID_NO_DEF + "");
@@ -55,14 +64,32 @@ public abstract class GApplication {
             curLang = Integer.parseInt(langId);
         } catch (Exception e) {
         }
+        state = AppState.STATE_INITED;
+        try {
+            onInit();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (form == null) {
+            SysLog.error("init form failed");
+        }
+        startApp();
     }
+
+    public abstract void onInit();
 
     /**
      * return current form
      *
      * @return
      */
-    public abstract GForm getForm();
+    public GForm getForm() {
+        return form;
+    }
+
+    public void setForm(GForm form) {
+        this.form = form;
+    }
 
     void setJarName(String jarName) {
         this.jarName = jarName;
@@ -93,7 +120,7 @@ public abstract class GApplication {
     }
 
     public final void startApp() {
-        setState(AppState.STATE_STARTED);
+        setState(AppState.STATE_RUNNING);
         try {
             onStart();
         } catch (Exception e) {
@@ -103,7 +130,7 @@ public abstract class GApplication {
 
     public final void closeApp() {
         if (getState() == AppState.STATE_CLOSED) return;
-        System.out.println("[INFO]Closed app : " + this);
+        SysLog.info("Closed app : " + this);
         try {
             onClose();
         } catch (Exception e) {
@@ -121,22 +148,25 @@ public abstract class GApplication {
     }
 
     public final void pauseApp() {
-        if (getState() == AppState.STATE_PAUSEED || getState() == AppState.STATE_CLOSED) return;
-        setState(AppState.STATE_PAUSEED);
-        myStyle = GToolkit.getStyle();
-        GToolkit.setStyle(oldStyle);
-        myLang = GLanguage.getCurLang();
+        if (getState() != AppState.STATE_RUNNING) return;
         try {
             onPause();
         } catch (Exception e) {
             e.printStackTrace();
         }
+        setState(AppState.STATE_PAUSEED);
+        myStyle = GToolkit.getStyle();
+        GToolkit.setStyle(oldStyle);
+        myLang = GLanguage.getCurLang();
+        myFPS = GCallBack.getInstance().getFps();
         AppManager.getInstance().active();
     }
 
     public final void resumeApp() {
         if (getState() != AppState.STATE_PAUSEED) return;
-        setState(AppState.STATE_STARTED);
+        setState(AppState.STATE_RUNNING);
+        GCallBack.getInstance().setFps(myFPS);
+        GLanguage.setCurLang(myLang);
         oldStyle = GToolkit.getStyle();
         GToolkit.setStyle(myStyle);
         try {
@@ -233,18 +263,23 @@ public abstract class GApplication {
     }
 
     public void addThread(Thread t) {
-        threads.add(t);
+        if (!threads.contains(t)) {
+            //System.out.println(this + " ADD " + t);
+            threads.add(t);
+        }
     }
 
     public void removeThread(Thread t) {
-        threads.remove(t);
+        if (threads.contains(t)) {
+            threads.remove(t);
+        }
     }
 
     public void closeThreads() {
         for (Thread t : threads) {
             try {
                 //System.out.println(this + " INTERRUPT " + t);
-                t.stop();
+                t.interrupt();//不能stop,会造成锁未释放，主线程死锁，操作无响应
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -6,10 +6,14 @@ package org.mini.layout.xwebview;
 
 import org.mini.apploader.AppManager;
 import org.mini.gui.*;
+import org.mini.gui.callback.GCallBack;
+import org.mini.gui.callback.GCmd;
+import org.mini.gui.callback.GDesktop;
 import org.mini.gui.gscript.DataType;
 import org.mini.gui.gscript.Interpreter;
 import org.mini.gui.gscript.Lib;
-import org.mini.gui.guilib.GuiScriptLib;
+import org.mini.layout.guilib.FormHolder;
+import org.mini.layout.guilib.GuiScriptLib;
 import org.mini.http.MiniHttpClient;
 
 import java.io.FileOutputStream;
@@ -24,17 +28,20 @@ import java.util.Random;
  * @author Gust
  */
 public class XuiScriptLib extends Lib {
-    XuiBrowserHolder holder;
+    BrowserHolder browserHolder;
+    FormHolder formHolder;
 
     /**
      *
      */
-    public XuiScriptLib(XuiBrowserHolder holder) {
-        this.holder = holder;
+    public XuiScriptLib(BrowserHolder browserHolder, FormHolder formHolder) {
+        this.browserHolder = browserHolder;
+        this.formHolder = formHolder;
 
         // script method register
         {
             methodNames.put("openPage".toLowerCase(), this::openPage);//
+            methodNames.put("openPagePost".toLowerCase(), this::openPagePost);//
             methodNames.put("downloadInstall".toLowerCase(), this::downloadInstall);//
             methodNames.put("downloadSave".toLowerCase(), this::downloadSave);//
             methodNames.put("getPageBaseUrl".toLowerCase(), this::getPageBaseUrl);//
@@ -61,22 +68,36 @@ public class XuiScriptLib extends Lib {
         String href = Interpreter.popBackStr(para);
         String callback = Interpreter.popBackStr(para);
         if (href != null) {
-            XuiPage page = holder.getBrowser().getCurrentPage();
+            XuiPage page = browserHolder.getBrowser().getCurrentPage();
             if (page != null) {// may be  href="/abc/c.xml"
                 href = UrlHelper.normalizeUrl(page.getUrl(), href); //fix as : http://www.abc.com/abc/c.xml
             }
-            holder.getBrowser().gotoPage(href);
-            GuiScriptLib.doHttpCallback(holder.getForm(), callback, href, 0, "");
+            browserHolder.getBrowser().gotoPage(href);
+            GuiScriptLib.doHttpCallback(formHolder.getForm(), callback, href, 0, "");
         }
         return null;
     }
 
+    public DataType openPagePost(ArrayList<DataType> para) {
+        String href = Interpreter.popBackStr(para);
+        String post = Interpreter.popBackStr(para);
+        String callback = Interpreter.popBackStr(para);
+        if (href != null) {
+            XuiPage page = browserHolder.getBrowser().getCurrentPage();
+            if (page != null) {// may be  href="/abc/c.xml"
+                href = UrlHelper.normalizeUrl(page.getUrl(), href); //fix as : http://www.abc.com/abc/c.xml
+            }
+            browserHolder.getBrowser().gotoPage(href, post);
+            GuiScriptLib.doHttpCallback(formHolder.getForm(), callback, href, 0, "");
+        }
+        return null;
+    }
 
     public DataType downloadInstall(ArrayList<DataType> para) {
         String href = Interpreter.popBackStr(para);
         String callback = Interpreter.popBackStr(para);
         if (href != null) {
-            XuiPage page = holder.getBrowser().getCurrentPage();
+            XuiPage page = browserHolder.getBrowser().getCurrentPage();
             if (page != null) {// may be  href="/abc/c.xml"
                 href = UrlHelper.normalizeUrl(page.getUrl(), href); //fix as : http://www.abc.com/abc/c.zip
             }
@@ -89,7 +110,7 @@ public class XuiScriptLib extends Lib {
                         GCmd cmd = new GCmd(
                                 () -> {
                                     AppManager.getInstance().getDownloadCallback().onCompleted(client, url, data);
-                                    GuiScriptLib.doHttpCallback(holder.getForm(), callback, url, 0, "");
+                                    GuiScriptLib.doHttpCallback(formHolder.getForm(), callback, url, 0, "");
                                 });
                         GForm.addCmd(cmd);
                         GForm.flush();
@@ -98,7 +119,8 @@ public class XuiScriptLib extends Lib {
                 }
             });
             hc.setProgressListener((MiniHttpClient client, int progress) -> {
-                GuiScriptLib.showProgressBar(holder.getForm(), progress);
+                GuiScriptLib.showProgressBar(formHolder.getForm(), progress);
+                GDesktop.flush();
             });
             hc.start();
         }
@@ -109,7 +131,7 @@ public class XuiScriptLib extends Lib {
         String href = Interpreter.popBackStr(para);
         String callback = Interpreter.popBackStr(para);
         if (href != null) {
-            XuiPage page = holder.getBrowser().getCurrentPage();
+            XuiPage page = browserHolder.getBrowser().getCurrentPage();
             if (page != null) {// may be  href="/abc/c.xml"
                 href = UrlHelper.normalizeUrl(page.getUrl(), href); //fix as : http://www.abc.com/abc/c.zip
             }
@@ -137,7 +159,7 @@ public class XuiScriptLib extends Lib {
                                         fos.write(data);
                                         fos.close();
 
-                                        GuiScriptLib.doHttpCallback(holder.getForm(), callback, url, 0, path);
+                                        GuiScriptLib.doHttpCallback(formHolder.getForm(), callback, url, 0, path);
                                     } catch (IOException e) {
                                         throw new RuntimeException(e);
                                     }
@@ -148,7 +170,7 @@ public class XuiScriptLib extends Lib {
                 }
             });
             hc.setProgressListener((MiniHttpClient client, int progress) -> {
-                GuiScriptLib.showProgressBar(holder.getForm(), progress);
+                GuiScriptLib.showProgressBar(formHolder.getForm(), progress);
             });
             hc.start();
         }
@@ -158,7 +180,7 @@ public class XuiScriptLib extends Lib {
 
     public DataType getPageBaseUrl(ArrayList<DataType> para) {
         String href = "";
-        XuiPage page = holder.getBrowser().getCurrentPage();
+        XuiPage page = browserHolder.getBrowser().getCurrentPage();
         if (page != null) {// may be  href="/abc/c.xml"
             href = UrlHelper.normalizeUrl(page.getUrl(), "/"); //fix as : http://www.abc.com/abc/c.xml
         }
@@ -167,7 +189,7 @@ public class XuiScriptLib extends Lib {
 
     public DataType getPageUrl(ArrayList<DataType> para) {
         String href = "";
-        XuiPage page = holder.getBrowser().getCurrentPage();
+        XuiPage page = browserHolder.getBrowser().getCurrentPage();
         if (page != null) {// may be  href="/abc/c.xml"
             href = page.getUrl().toString();
         }
@@ -175,7 +197,7 @@ public class XuiScriptLib extends Lib {
     }
 
     public DataType prevPage(ArrayList<DataType> para) {
-        XuiBrowser explorer = holder.getBrowser();
+        XuiBrowser explorer = browserHolder.getBrowser();
         if (explorer != null) {
             explorer.back();
         }
@@ -183,7 +205,7 @@ public class XuiScriptLib extends Lib {
     }
 
     public DataType nextPage(ArrayList<DataType> para) {
-        XuiBrowser explorer = holder.getBrowser();
+        XuiBrowser explorer = browserHolder.getBrowser();
         if (explorer != null) {
             explorer.forward();
         }
@@ -191,12 +213,12 @@ public class XuiScriptLib extends Lib {
     }
 
     public DataType refreshPage(ArrayList<DataType> para) {
-        XuiBrowser explorer = holder.getBrowser();
+        XuiBrowser explorer = browserHolder.getBrowser();
         if (explorer != null) {
             XuiPage page = explorer.getCurrentPage();
             if (page != null) {
                 page.reset();
-                explorer.gotoPage(page.getUrl().toString());
+                explorer.gotoPage(page.getUrl().toString(), page.getPost());
             }
         }
         return null;

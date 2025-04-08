@@ -5,10 +5,11 @@
  */
 package org.mini.glwrap;
 
-import org.mini.gui.GCmd;
+import org.mini.gui.callback.GCmd;
 import org.mini.gui.GForm;
 import org.mini.gui.GImage;
 import org.mini.nanovg.Nanovg;
+import org.mini.util.SysLog;
 
 import static org.mini.gl.GL.*;
 
@@ -36,7 +37,7 @@ public class GLShadowMapping {
         public void run() {
             glDeleteTextures(rendertext.length, rendertext, 0);
             glDeleteFramebuffers(fboobj.length, fboobj, 0);
-            System.out.println("delete fbo success");
+            SysLog.info("delete fbo success");
         }
     }
 
@@ -69,9 +70,9 @@ public class GLShadowMapping {
         //
         int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE) {
-            System.out.println("ShadowMapping object error.");
+            SysLog.error("ShadowMapping object error.");
         } else {
-            System.out.println("ShadowMapping object ok");
+            SysLog.info("ShadowMapping object ok");
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -90,7 +91,7 @@ public class GLShadowMapping {
         GLShadowMappingCleaner attachment = new GLShadowMappingCleaner();
         attachment.rendertext[0] = rendertex[0];
         attachment.fboobj[0] = fbo[0];
-        GForm.addCmd(new GCmd(GCmd.GCMD_RUN_CODE, attachment));
+        GForm.addCmd(new GCmd(attachment));
     }
 
 

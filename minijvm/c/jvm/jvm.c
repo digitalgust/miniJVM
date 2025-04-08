@@ -24,6 +24,7 @@ void thread_boundle(Runtime *runtime) {
     if (r) {
         gc_move_objs_thread_2_gc(r);
         runtime_destroy(r);
+        jthread_set_stackframe_value(runtime->jvm, t, NULL);
     }
     //bind new runtime
     jthread_set_stackframe_value(runtime->jvm, t, runtime);
@@ -281,6 +282,7 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
 
     //创建线程容器
     jvm->thread_list = arraylist_create(0);
+    jvm->shutdown_hook = arraylist_create(0);
     //创建垃圾收集器
     gc_create(jvm);
 
@@ -303,7 +305,11 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     sys_properties_load(jvm);
     sys_properties_set_c(jvm, STR_VM_JAVA_CLASS_PATH, p_classpath);
     sys_properties_set_c(jvm, STR_VM_SUN_BOOT_CLASS_PATH, p_bootclasspath);
-    sys_properties_set_c(jvm, "java.class.version", "52.0");
+    sys_properties_set_c(jvm, STR_VM_JAVA_CLASS_VERSION, "52.0");
+    Utf8String *tmpstr = utf8_create();
+    os_get_lang(tmpstr);
+    sys_properties_set_c(jvm, STR_VM_USER_LANGUAGE, utf8_cstr(tmpstr));
+    utf8_destroy(tmpstr);
 
     //启动调试器
     jdwp_start_server(jvm);
@@ -351,8 +357,16 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
 
 void jvm_destroy(MiniJVM *jvm) {
     Runtime *parent = runtime_create(jvm);
-    if (parent && jvm->shutdown_hook) {
-        jthread_start(jvm->shutdown_hook, parent);
+
+    while (parent && jvm->shutdown_hook->length) {
+        Instance *inst = arraylist_get_value(jvm->shutdown_hook, 0);
+        arraylist_remove_at(jvm->shutdown_hook, 0);
+
+        //there is an week is that the hook thread is serialized execution,
+        // because the hook thread may be not inserted into the thread list,
+        // then vm is destroyed
+        thrd_t t = jthread_start(inst, parent);
+        thrd_join(t, NULL);
     }
     runtime_destroy(parent);
     parent = NULL;
@@ -378,6 +392,7 @@ void jvm_destroy(MiniJVM *jvm) {
     //
     thread_lock_dispose(&jvm->threadlock);
     arraylist_destroy(jvm->thread_list);
+    arraylist_destroy(jvm->shutdown_hook);
     native_lib_destroy(jvm);
     sys_properties_dispose(jvm);
     close_log();
@@ -421,7 +436,6 @@ s32 call_main(MiniJVM *jvm, c8 *p_mainclass, ArrayList *java_para) {
     s32 ret = call_method(jvm, p_mainclass, p_methodname, p_methodtype, runtime);
 
     thread_unboundle(runtime);
-    gc_move_objs_thread_2_gc(runtime);
     runtime_destroy(runtime);
     return ret;
 }
@@ -508,7 +522,6 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
     }
     if (!p_runtime) {
         thread_unboundle(runtime);
-        gc_move_objs_thread_2_gc(runtime);
         runtime_destroy(runtime);
     }
     utf8_destroy(str_mainClsName);

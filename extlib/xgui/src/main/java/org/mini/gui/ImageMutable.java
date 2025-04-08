@@ -1,5 +1,6 @@
 package org.mini.gui;
 
+import org.mini.gui.callback.GCallBack;
 import org.mini.nanovg.Nanovg;
 
 import java.nio.ByteBuffer;
