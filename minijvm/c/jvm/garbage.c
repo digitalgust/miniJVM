@@ -606,21 +606,24 @@ s32 _gc_pause_the_world(MiniJVM *jvm) {
         arraylist_iter_safe(thread_list, _list_iter_thread_pause, NULL);
 
         //此处可能存在多线程交互，比如某个线程结束等情况，导致for错误
-        for (i = 0; i < thread_list->length; i++) {
-            Runtime *runtime = arraylist_get_value(thread_list, i);
-            if (_gc_wait_thread_suspend(jvm, runtime) == -1) {
-                return -1;
-            }
-            gc_move_objs_thread_2_gc(runtime);
+        spin_lock(&thread_list->spinlock);
+        {
+            for (i = 0; i < thread_list->length; i++) {
+                Runtime *runtime = arraylist_get_value(thread_list, i);
+                if (_gc_wait_thread_suspend(jvm, runtime) == -1) {
+                    return -1;
+                }
+                gc_move_objs_thread_2_gc(runtime);
 
 #if _JVM_DEBUG_GARBAGE_DUMP > 1
-            Utf8String *stack = utf8_create();
-            getRuntimeStack(runtime, stack);
-            jvm_printf("%s\n", utf8_cstr(stack));
-            utf8_destroy(stack);
+                Utf8String *stack = utf8_create();
+                getRuntimeStack(runtime, stack);
+                jvm_printf("%s\n", utf8_cstr(stack));
+                utf8_destroy(stack);
 #endif
+            }
         }
-
+        spin_unlock(&thread_list->spinlock);
     }
     gc_move_objs_thread_2_gc(collector->runtime);// maybe someone new object in finalize...
 

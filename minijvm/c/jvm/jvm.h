@@ -27,7 +27,7 @@ extern "C" {
 
 //=======================  micro define  =============================
 //_JVM_DEBUG  01=thread info, 02=garage&jit info  , 03=class load, 04=method call,  06=all bytecode
-#define _JVM_DEBUG_LOG_LEVEL 00
+#define _JVM_DEBUG_LOG_LEVEL 0
 #define _JVM_DEBUG_LOG_TO_FILE 0
 //_JVM_DEBUG_GARBAGE_DUMP 01=count instance , 02=print every object create/destroy
 #define _JVM_DEBUG_GARBAGE_DUMP 0
@@ -37,7 +37,7 @@ extern "C" {
 
 
 #define GARBAGE_OVERLOAD_DEFAULT 90  // overload of max heap size ,will active garbage collection
-#define GARBAGE_PERIOD_MS_DEFAULT 10 * 60 * 1000
+#define GARBAGE_PERIOD_MS_DEFAULT 10 * 1000
 #define MAX_HEAP_SIZE_DEFAULT  200 * 1024 * 1024
 #define MAX_STACK_SIZE_DEFAULT 4096
 
