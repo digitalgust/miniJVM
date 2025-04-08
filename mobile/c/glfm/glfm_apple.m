@@ -2192,16 +2192,43 @@ void setDeviceToken(GLFMDisplay * display, const char *deviceToken) {
 didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
     GLFMViewController *vc = (GLFMViewController *)[self.window rootViewController];
     //NSLog(@"%@", [NSString stringWithFormat:@"Device Token: %@", deviceToken]);
-    NSString * newStr = [[[[deviceToken description]
-         stringByReplacingOccurrencesOfString:@"<" withString:@""]
-         stringByReplacingOccurrencesOfString:@">" withString:@""]
-         stringByReplacingOccurrencesOfString:@"" withString:@""];
-    //NSString* newStr = [[NSString alloc] initWithData:deviceToken encoding:NSUTF8StringEncoding];
-    if(newStr != nil){
-        const char * token=[newStr UTF8String];
+
+    
+    NSData *data = deviceToken;
+    if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 13) {
+        
+        if (![data isKindOfClass:[NSData class]]) {
+            setDeviceToken(vc.glfmDisplay,NULL);
+        }
+        NSUInteger len = [data length];
+        char *chars = (char *)[data bytes];
+        NSMutableString *hexString = [[NSMutableString alloc]init];
+        for (NSUInteger i=0; i<len; i++) {
+            [hexString appendString:[NSString stringWithFormat:@"%0.2hhx" , chars[i]]];
+            if((i+1)%4==0){
+                //[hexString appendString:@" "];
+            }
+        }
+        
+        const char * token=[hexString UTF8String];
         setDeviceToken(vc.glfmDisplay,token);
-    }else{
-        setDeviceToken(vc.glfmDisplay,NULL);
+    } else {
+        NSString *myToken = [[data description] stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"<>"]];
+        //myToken = [myToken stringByReplacingOccurrencesOfString:@" " withString:@""];
+        
+        const char * token=[myToken UTF8String];
+        setDeviceToken(vc.glfmDisplay,token);
+//        NSString * newStr = [[[[deviceToken description]
+//                               stringByReplacingOccurrencesOfString:@"<" withString:@""]
+//                              stringByReplacingOccurrencesOfString:@">" withString:@""]
+//                             stringByReplacingOccurrencesOfString:@"" withString:@""];
+//        //NSString* newStr = [[NSString alloc] initWithData:deviceToken encoding:NSUTF8StringEncoding];
+//        if(newStr != nil){
+//            const char * token=[newStr UTF8String];
+//            setDeviceToken(vc.glfmDisplay,token);
+//        }else{
+//            setDeviceToken(vc.glfmDisplay,NULL);
+//        }
     }
 }
 // 获得Device Token失败

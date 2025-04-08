@@ -211,7 +211,15 @@ public class GDesktop extends GPanel implements GCallbackUI {
         try {
             switch (key) {
                 case NOTIFY_KEY_DEVICE_TOKEN:
-                    System.setProperty("device.token", val);
+                    if (val != null) {
+                        int start = val.indexOf('=');
+                        int end = val.indexOf('}');
+                        if (start >= 0 && end > 0) {
+                            val = val.substring(start + 1, end);
+                            val = val.trim();
+                        }
+                        System.setProperty("device.token", val);
+                    }
                     break;
                 case NOTIFY_KEY_IOS_PURCHASE:
                     if (val.indexOf(':') > 0) {
