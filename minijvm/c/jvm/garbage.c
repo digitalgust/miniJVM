@@ -585,7 +585,6 @@ s64 _garbage_collect(GcCollector *collector) {
     jvm_squeeze(0);
 #endif
     collector->isgc = 0;
-    jvm_printf("gc finished\n");
     return del;
 }
 
