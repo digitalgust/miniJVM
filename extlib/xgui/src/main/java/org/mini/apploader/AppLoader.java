@@ -203,7 +203,7 @@ public class AppLoader {
                 String srcVersion = getAppConfigWithJarPath(srcPath, "version");
                 if (compareVersions(srcVersion, dstVersion) <= 0) {
                     SysLog.info("exapp exists " + jarName);
-                    return;
+                    continue;
                 }
             }
             addApp(jarName, srcPath);
