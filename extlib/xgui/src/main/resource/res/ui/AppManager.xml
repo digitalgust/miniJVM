@@ -8,7 +8,7 @@
             eif
 
             feel=invokeStatic("org.mini.apploader.AppLoader","getGuiFeel()I")
-            setListIdx("LIST_FELL",feel)
+            setListIdx("LIST_FEEL",feel)
 
             #uuid=System.getProperty("uuid")
             uuidstr=invokeStatic("java.lang.System","getProperty(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;","glfm.uuid","0000-0000-0000-0000")
@@ -19,6 +19,16 @@
                 setVisible("BT_ABOUT",false)
             else
                 getPolicy(false) #异步调用
+
+                setVisible("LAB_FROM_URL",false)
+                setVisible("INPUT_URL",false)
+                setVisible("BT_DOWN",false)
+                setVisible("LAB_FROM_LOCAL",false)
+                setVisible("BT_LOCALFILE",false)
+                setVisible("LAB_WEBSRV",false)
+                setVisible("BT_STARTWEB",false)
+                setVisible("BT_STARTWEB",false)
+                setVisible("INPUT_LOG",false)
             eif
         ret
 
@@ -269,9 +279,9 @@
             eif
         ret
 
-        sub setFeel(fell)
-            invokeStatic("org.mini.apploader.AppLoader","setGuiFeel(I)V",fell)
-            invokeStatic("org.mini.gui.GToolkit","setFeel(I)V",fell)
+        sub setFeel(feel)
+            invokeStatic("org.mini.apploader.AppLoader","setGuiFeel(I)V",feel)
+            invokeStatic("org.mini.gui.GToolkit","setFeel(I)V",feel)
         ret
 
         sub showPrivacy()
@@ -383,17 +393,23 @@
                                 <li name="LI_DARK">{STR_DARK_STYLE}</li>
                             </list>
                             <br/>
-                            <list name="LIST_FELL" w="100%" multiline="0">
-                                <li name="LI_FLAT" onclick="setFeel(0)">{STR_FLAT_FELL}</li>
-                                <li name="LI_DIMENSION" onclick="setFeel(1)">{STR_DIMENSION_FELL}</li>
+                            <list name="LIST_FEEL" w="100%" multiline="0">
+                                <li name="LI_FLAT" onclick="setFeel(0)">{STR_FLAT_FEEL}</li>
+                                <li name="LI_DIMENSION" onclick="setFeel(1)">{STR_DIMENSION_FEEL}</li>
                             </list>
                             <label w="100%" h="20"></label>
-                            <label w="100%" h="30" align="left,vcenter">{STR_DOWN_APP_FROM_WEB}</label>
+
+                            <button name="BT_PRIVACY" w="100%" h="40" align="left,vcenter" onclick="showPrivacy()" preicon="📄">{STR_PRIVACY}</button>
+                            <br/>
+                            <button name="BT_ABOUT" w="100%" h="40" align="left,vcenter" onclick="showAbout()" preicon="📄">{STR_ABOUT}</button>
+                            <br/>
+
+                            <label name="LAB_FROM_URL" w="100%" h="30" align="left,vcenter">{STR_DOWN_APP_FROM_WEB}</label>
                             <input name="INPUT_URL" w="100%" h="30" hint="plug jar url"></input>
                             <br/>
                             <button name="BT_DOWN" w="100%" h="30" preicon="📥">{STR_DOWNLOAD}</button>
                             <label w="100%" h="20"></label>
-                            <label w="100%" h="30" align="left,vcenter">{STR_INSTALL_FROM_LOCAL}</label>
+                            <label name="LAB_FROM_LOCAL" w="100%" h="30" align="left,vcenter">{STR_INSTALL_FROM_LOCAL}</label>
                             <br/>
                             <button name="BT_LOCALFILE" w="100%" h="30" preicon="📁">{BROWSE_FILE}</button>
                             <label w="100%" h="20"></label>
@@ -401,12 +417,7 @@
                             <button name="BT_STARTWEB" onclick="openWebForUpload()" w="100%" h="30" preicon="📤">{STR_START}</button>
                             <label w="100%" h="20"></label>
                             <br/>
-                            <button name="BT_PRIVACY" w="100%" h="40" onclick="showPrivacy()" preicon="">{STR_PRIVACY}</button>
-                            <br/>
-                            <button name="BT_ABOUT" w="100%" h="40" onclick="showAbout()" preicon="">{STR_ABOUT}</button>
-                            <br/>
-
-                            <input name="INPUT_LOG" w="100%" h="200" edit="0" multiline="1">{STR_MESSAGE}</input>
+                            <!--                            <input name="INPUT_LOG" w="100%" h="200" edit="0" multiline="1">{STR_MESSAGE}</input>-->
                             <label></label>
                         </viewport>
                     </panel>

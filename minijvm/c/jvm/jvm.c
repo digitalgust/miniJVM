@@ -380,7 +380,7 @@ void jvm_destroy(MiniJVM *jvm) {
 #if _JVM_DEBUG_LOG_LEVEL > 0
     jvm_printf("[INFO]waitting for thread terminate\n");
 #endif
-    while (jvm->thread_list->length) {
+    while (threadlist_count_active(jvm) > 0) {
         threadSleep(20);
     }
 

@@ -37,7 +37,7 @@ public class AppLoader {
     static final String APP_FILE_EXT = ".jar";
     static final String APP_DATA_DIR = "/appdata/";
     static final String TMP_DIR = "/tmp/";
-    static final String[] EXAMPLE_APP_FILES = {"minix.jar", "minicompiler.jar"};
+    static String[] EXAMPLE_APP_FILES = {"minix.jar", "minicompiler.jar"};
     static final String KEY_BOOT = "boot";
     static final String KEY_DOWNLOADURL = "downloadurl";
     static final String KEY_LANGUAGE = "language";
@@ -60,6 +60,7 @@ public class AppLoader {
     public static void cb_init() {
         if (inited) return;
         inited = true;
+        System.setProperty("com.sun.midp.io.http.proxy","127.0.0.1:10808");
 
         loadJarProp(BASE_INFO_FILE, baseinfo);
         //System.out.println("start loader");
@@ -131,14 +132,24 @@ public class AppLoader {
             }
         });
 
-        copyExApp();
-        String bootApp = appinfo.getProperty(KEY_BOOT);
-        if (bootApp == null || !isJarExists(bootApp)) {
-            setBootApp(EXAMPLE_APP_FILES[0]);
-            bootApp = EXAMPLE_APP_FILES[0];
+        String copyjars = getBaseInfo("copy");
+        if (copyjars != null) {
+            EXAMPLE_APP_FILES = copyjars.split(",");
+            for (int i = 0; i < EXAMPLE_APP_FILES.length; i++) {
+                EXAMPLE_APP_FILES[i] = EXAMPLE_APP_FILES[i] + APP_FILE_EXT;
+            }
         }
-        bootApp = null;//"block the setup bootapp auto boot";
-        runApp(bootApp);
+
+        copyExApp();
+        runApp(null);
+    }
+
+    public static void runBootApp() {
+        String bootApp = getBaseInfo(KEY_BOOT);
+        if (bootApp != null) {
+            bootApp = bootApp + APP_FILE_EXT;
+            runApp(bootApp);
+        }
     }
 
     static void checkDir() {
@@ -753,5 +764,10 @@ public class AppLoader {
             e.printStackTrace();
         }
         return 0;
+    }
+
+
+    public static boolean isShowHome() {
+        return !"false".equals(getBaseInfo("home"));
     }
 }

@@ -31,6 +31,10 @@ public class GDesktop extends GPanel implements GCallbackUI {
     GCallBack callback;
     public static byte flush = 4;
     GForm curForm;
+    //==================
+    long splashStartAt = 0; //开机屏
+    GImage splashImg;
+    public static final int SPLASH_MILLIS = 2000;
 
     GDesktop(GCallBack callback) {
         super(null);
@@ -38,6 +42,7 @@ public class GDesktop extends GPanel implements GCallbackUI {
         setLocation(0, 0);
         cmdHandler = new GCmdHandler();
         add(cmdHandler);
+        splashImg = GToolkit.getCachedImageFromJar("/res/clogo.png");
     }
 
 
@@ -96,7 +101,30 @@ public class GDesktop extends GPanel implements GCallbackUI {
             Nanovg.nvgReset(vg);
             Nanovg.nvgResetScissor(vg);
             Nanovg.nvgScissor(vg, 0, 0, winWidth, winHeight);
+            //
             paint(vg);
+
+            // draw open screen
+            if (splashImg != null) {
+                if (splashStartAt == 0) {
+                    splashStartAt = System.currentTimeMillis();
+                }
+
+                GToolkit.drawRect(vg, 0, 0, winWidth, winHeight, getBgColor(), true);
+                float imgW = 128f;
+                float imgH = 128f;
+                float dx = (winWidth - imgW) * 0.5f;
+                float dy = (winHeight - imgH) * 0.5f;
+                float alpha = (float) (System.currentTimeMillis() - splashStartAt) / (SPLASH_MILLIS / 2f);//淡入
+                if (System.currentTimeMillis() - splashStartAt > SPLASH_MILLIS / 2f) {
+                    alpha = 1f - (alpha - 1f);//淡出
+                }
+                GToolkit.drawImage(vg, splashImg, dx, dy, imgW, imgH, false, alpha, 0f);
+                flush();
+                if (System.currentTimeMillis() - splashStartAt > 2000) {
+                    splashImg = null;
+                }
+            }
             nvgEndFrame(vg);
             try {
                 cmdHandler.process(); //GOpenGLPanel.gl_paint() here be called

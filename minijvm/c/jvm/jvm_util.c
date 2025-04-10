@@ -289,7 +289,23 @@ s32 threadlist_count_none_daemon(MiniJVM *jvm) {
         Runtime *r = (Runtime *) arraylist_get_value_unsafe(jvm->thread_list, i);
         Instance *ins = r->thrd_info->jthread;
         s32 daemon = jthread_get_daemon_value(ins, r);
-        if (!daemon) {
+        if (!daemon && r->thrd_info->thread_status != THREAD_STATUS_ZOMBIE) {
+            count++;
+        }
+    }
+    spin_unlock(&jvm->thread_list->spinlock);
+    return count;
+}
+
+s32 threadlist_count_active(MiniJVM *jvm) {
+    spin_lock(&jvm->thread_list->spinlock);
+    s32 count = 0;
+    s32 i;
+    for (i = 0; i < jvm->thread_list->length; i++) {
+        Runtime *r = (Runtime *) arraylist_get_value_unsafe(jvm->thread_list, i);
+        Instance *ins = r->thrd_info->jthread;
+        s32 daemon = jthread_get_daemon_value(ins, r);
+        if (r->thrd_info->thread_status != THREAD_STATUS_ZOMBIE) {
             count++;
         }
     }
@@ -315,7 +331,7 @@ void thread_stop_all(MiniJVM *jvm) {
     for (i = 0; i < jvm->thread_list->length; i++) {
         Runtime *r = arraylist_get_value_unsafe(jvm->thread_list, i);
 
-        jthread_suspend(r);
+        //jthread_suspend(r);
         r->thrd_info->no_pause = 1;
         r->thrd_info->is_stop = 1;//stop thread that's sleeping state
         MemoryBlock *tl = r->thrd_info->curThreadLock;
@@ -762,7 +778,9 @@ s32 jthread_run(void *para) {
 s32 jthread_run_finalize(Runtime *runtime) {
     if (!runtime)return -1;
     Instance *jthread = runtime->thrd_info->jthread;
-    jthread_dispose(jthread, runtime);
+    if (jthread) {// if the thread status is NEW, then jthread is NULL
+        jthread_dispose(jthread, runtime);
+    }
     runtime_destroy(runtime);
     return 0;
 }

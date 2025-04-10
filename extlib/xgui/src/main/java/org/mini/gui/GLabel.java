@@ -52,9 +52,13 @@ public class GLabel extends GObject {
 
     public void setAlign(int ali) {
         align = ali;
-        if ((align & 0x78) == 0) {
+        if ((align & 0x7f) == 0) {
             align |= NVG_ALIGN_TOP;
         }
+    }
+
+    public int getAlign() {
+        return align;
     }
 
     public void setText(String text) {

@@ -30,7 +30,7 @@ import static org.mini.nanovg.Nanovg.*;
  */
 public class GToolkit {
 
-    // -------------------------- Component FELL Constants --------------------------
+    // -------------------------- Component FEEL Constants --------------------------
     public static final int FEEL_FLAT = 0;
     public static final int FEEL_DIMENSION = 1;
 
@@ -304,8 +304,8 @@ public class GToolkit {
         defaultStyle = new GStyleInner(style);//copy every times, copy for not reference the source style
     }
 
-    public static void setFeel(int pfell) {
-        feel = pfell;
+    public static void setFeel(int pfeel) {
+        feel = pfeel;
     }
 
     public static int getFeel() {

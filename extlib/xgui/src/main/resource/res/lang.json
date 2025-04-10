@@ -756,7 +756,7 @@
       "Aktualisieren",
       "Обновить"
     ],
-    "STR_FLAT_FELL": [
+    "STR_FLAT_FEEL": [
       "FLAT UI",
       "扁平用户界面",
       "扁平使用者介面",
@@ -767,6 +767,18 @@
       "フラットUI",
       "Flache Benutzeroberfläche",
       "Плоский пользовательский интерфейс"
+    ],
+    "STR_DIMENSION_FEEL": [
+      "BUTTON UI",
+      "按钮用户界面",
+      "按鈕使用者介面",
+      "버튼 UI",
+      "Interface utilisateur de bouton",
+      "Interfaz de usuario de botón",
+      "Interfaccia utente del pulsante",
+      "ボタンUI",
+      "Schaltflächen-Benutzeroberfläche",
+      "Пользовательский интерфейс кнопки"
     ],
     "STR_PRIVACY": [
       "Privacy Policy",

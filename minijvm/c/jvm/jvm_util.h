@@ -215,6 +215,8 @@ Runtime *threadlist_get(MiniJVM *jvm, s32 i);
 
 s32 threadlist_count_none_daemon(MiniJVM *jvm);
 
+s32 threadlist_count_active(MiniJVM *jvm);
+
 s64 threadlist_sum_heap(MiniJVM *jvm);
 
 void thread_stop_all(MiniJVM *jvm);

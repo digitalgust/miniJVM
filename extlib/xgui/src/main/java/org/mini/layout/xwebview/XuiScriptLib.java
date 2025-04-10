@@ -41,6 +41,7 @@ public class XuiScriptLib extends Lib {
         // script method register
         {
             methodNames.put("openPage".toLowerCase(), this::openPage);//
+            methodNames.put("openPageGet".toLowerCase(), this::openPage);//
             methodNames.put("openPagePost".toLowerCase(), this::openPagePost);//
             methodNames.put("downloadInstall".toLowerCase(), this::downloadInstall);//
             methodNames.put("downloadSave".toLowerCase(), this::downloadSave);//

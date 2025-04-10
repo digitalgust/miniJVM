@@ -179,13 +179,14 @@ public class AppManager extends GApplication implements XuiAppHolder {
         initExplorer();
 
         //init form
-        if (floatButton == null) {
+        if (floatButton == null && AppLoader.isShowHome()) {
             floatButton = new GHomeButton();
         }
         GCallBack.getInstance().getDesktop().add(floatButton);
 
 
         reloadAppList();
+        AppLoader.runBootApp();
     }
 
     /**
