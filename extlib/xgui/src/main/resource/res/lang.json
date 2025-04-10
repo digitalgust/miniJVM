@@ -768,17 +768,29 @@
       "Flache Benutzeroberfläche",
       "Плоский пользовательский интерфейс"
     ],
-    "STR_DIMENSION_FELL": [
-      "BUTTON UI",
-      "按钮用户界面",
-      "按鈕使用者介面",
-      "버튼 UI",
-      "Interface utilisateur de bouton",
-      "Interfaz de usuario de botón",
-      "Interfaccia utente del pulsante",
-      "ボタンUI",
-      "Schaltflächen-Benutzeroberfläche",
-      "Пользовательский интерфейс кнопки"
+    "STR_PRIVACY": [
+      "Privacy Policy",
+      "隐私政策",
+      "隱私政策",
+      "개인 정보 정책",
+      "Politique de confidentialité",
+      "Política de privacidad",
+      "Politica sulla privacy",
+      "プライバシーポリシー",
+      "Datenschutzrichtlinie",
+      "Политика конфиденциальности"
+    ],
+    "STR_ABOUT": [
+      "About",
+      "关于",
+      "關於",
+      "에 대해",
+      "À propos de",
+      "Sobre",
+      "Sul",
+      "について",
+      "Über",
+      "О"
     ]
   }
 }

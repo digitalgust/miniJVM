@@ -14,7 +14,12 @@
             uuidstr=invokeStatic("java.lang.System","getProperty(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;","glfm.uuid","0000-0000-0000-0000")
             def("uuid",uuidstr)
 
-            getPolicy(false) #异步调用
+            if(isGithub())
+                setVisible("BT_PRIVACY",false)
+                setVisible("BT_ABOUT",false)
+            else
+                getPolicy(false) #异步调用
+            eif
         ret
 
         sub getQueryPara()
@@ -269,6 +274,32 @@
             invokeStatic("org.mini.gui.GToolkit","setFeel(I)V",fell)
         ret
 
+        sub showPrivacy()
+            if(isGithub())
+                ret
+            eif
+            getPolicy(true)
+            s1=getEnv("DISCOVERY_URL")
+            s2=substr(s1,0,lastIdxOf(s1,"/"))
+            s3=s2+"/privacy.xml"
+            body=getQueryPara()
+            showSlot("SLOT_MGR",3)
+            openPagePost(s3,body,"")
+        ret
+
+        sub showAbout()
+            if(isGithub())
+                ret
+            eif
+            getPolicy(true)
+            s1=getEnv("DISCOVERY_URL")
+            s2=substr(s1,0,lastIdxOf(s1,"/"))
+            s3=s2+"/about.xml"
+            body=getQueryPara()
+            showSlot("SLOT_MGR",3)
+            openPagePost(s3,body,"")
+        ret
+
         ]]>
         </script>
         <tr h="{STATEBAR_HEIGHT}" w="100%">
@@ -370,6 +401,11 @@
                             <button name="BT_STARTWEB" onclick="openWebForUpload()" w="100%" h="30" preicon="📤">{STR_START}</button>
                             <label w="100%" h="20"></label>
                             <br/>
+                            <button name="BT_PRIVACY" w="100%" h="40" onclick="showPrivacy()" preicon="">{STR_PRIVACY}</button>
+                            <br/>
+                            <button name="BT_ABOUT" w="100%" h="40" onclick="showAbout()" preicon="">{STR_ABOUT}</button>
+                            <br/>
+
                             <input name="INPUT_LOG" w="100%" h="200" edit="0" multiline="1">{STR_MESSAGE}</input>
                             <label></label>
                         </viewport>
