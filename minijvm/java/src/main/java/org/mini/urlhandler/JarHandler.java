@@ -102,7 +102,7 @@ public class JarHandler extends URLStreamHandler {
                         InputStream is = (InputStream) fileUrl.getContent();
 
                         File tmpFile = new File(fileUrl.getFile());
-                        f = File.createTempFile("", tmpFile.getName());
+                        f = File.createTempFile("jar_handler_" + System.currentTimeMillis() + "_", tmpFile.getName());
                         FileOutputStream fos = new FileOutputStream(f);
                         byte[] buf = new byte[1024];
                         while (true) {

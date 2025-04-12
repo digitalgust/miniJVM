@@ -1,12 +1,9 @@
-
 package org.mini.net.https;
 
 import org.mini.net.SocketNative;
 import org.mini.net.http.Properties;
 
-import javax.microedition.io.HttpsConnection;
-import javax.microedition.io.SecurityInfo;
-import javax.microedition.io.StreamConnection;
+import javax.microedition.io.*;
 import java.io.*;
 
 
@@ -117,14 +114,14 @@ public class Protocol extends org.mini.net.http.Protocol
     private SSLStreamConnection sslConnection;
 
     /**
-     * Create a new instance of this class. Override the some of the values
+     * Create a new instance of this class. Override some of the values
      * in our super class.
      */
     public Protocol() {
         protocol = "https";
         default_port = 443; // 443 is the default port for HTTPS
 
-        //requiredPermission = Permissions.HTTPS;//gust
+        parseProxy();
     }
 
     /**
@@ -165,14 +162,84 @@ public class Protocol extends org.mini.net.http.Protocol
 
 
         public void connectImpl() throws IOException {
-            httpsinfo = SocketNative.sslc_construct_entry();
-            int ret = SocketNative.sslc_init(httpsinfo);
-            if (httpsinfo == null || ret < 0) {
-                throw new IOException("https init error");
-            }
-            ret = SocketNative.sslc_connect(httpsinfo, SocketNative.toCStyle(getHost()), SocketNative.toCStyle(Integer.toString(getPort())));
-            if (ret < 0) {
-                throw new IOException("https open error");
+
+            if (proxyHost != null && proxyHost.length() > 0 && proxyPort > 0) {
+                // Connect through proxy
+                org.mini.net.socket.Protocol conn = new org.mini.net.socket.Protocol();
+                conn.openPrim("//" + proxyHost + ":" + proxyPort, Connector.READ_WRITE, true);
+
+                // Get streams for proxy communication
+                DataOutputStream out = conn.openDataOutputStream();
+                DataInputStream in = conn.openDataInputStream();
+
+                try {
+                    // Send CONNECT request to proxy
+                    StringBuilder connectRequest = new StringBuilder();
+                    connectRequest.append(String.format("CONNECT %s:%d HTTP/1.1\r\n", getHost(), getPort()));
+                    connectRequest.append(String.format("Host: %s:%d\r\n", getHost(), getPort()));
+                    connectRequest.append("User-agent: Mozilla/5.0\r\n");
+
+                    // Add any additional proxy headers
+                    for (int i = 0; i < proxyHeaders.size(); i++) {
+                        String key = proxyHeaders.getKeyAt(i);
+                        String val = proxyHeaders.getValueAt(i);
+                        connectRequest.append(key + ": " + val + "\r\n");
+                    }
+
+                    connectRequest.append("\r\n");
+
+                    // Send the CONNECT request
+                    out.write(connectRequest.toString().getBytes());
+                    out.flush();
+
+                    // Read proxy response
+                    String response = readLine(in);
+                    if (response == null || !response.contains(" 200 ")) {
+                        throw new IOException("Proxy tunnel setup failed: " + response);
+                    }
+
+                    // Skip the rest of proxy response headers
+                    while (true) {
+                        String line = readLine(in);
+                        if (line == null || line.trim().length() == 0) {
+                            break;
+                        }
+                    }
+                    //String line=readLine(in);
+
+                    // Now establish SSL connection through the tunnel
+                    httpsinfo = SocketNative.sslc_construct_entry();
+                    int ret = SocketNative.sslc_init(httpsinfo);
+                    if (httpsinfo == null || ret < 0) {
+                        throw new IOException("https proxy init error");
+                    }
+                    ret = SocketNative.sslc_wrap(httpsinfo, conn.getHandle(), SocketNative.toCStyle(getHost()));
+                    if (ret < 0) {
+                        out.close();
+                        in.close();
+                        conn.close();
+                        throw new IOException("https proxy wrap error");
+                    }
+
+                } catch (IOException e) {
+                    try {
+                        conn.close();
+                    } catch (IOException ce) {
+                        // Ignore close exception
+                    }
+                    throw e;
+                }
+            } else {
+
+                httpsinfo = SocketNative.sslc_construct_entry();
+                int ret = SocketNative.sslc_init(httpsinfo);
+                if (httpsinfo == null || ret < 0) {
+                    throw new IOException("https init error");
+                }
+                ret = SocketNative.sslc_connect(httpsinfo, SocketNative.toCStyle(getHost()), SocketNative.toCStyle(Integer.toString(getPort())));
+                if (ret < 0) {
+                    throw new IOException("https open error");
+                }
             }
         }
 
@@ -272,11 +339,10 @@ public class Protocol extends org.mini.net.http.Protocol
 
     /**
      * Connect to the underlying secure socket transport.
-     * Perform the SSL handshake and then proceded to the underlying
-     * HTTP protocol connect semantics.
+     * If proxy is configured, first establish a tunnel through the proxy using CONNECT.
      *
      * @return SSL/TCP stream connection
-     * @throws IOException is thrown if the connection cannot be opened
+     * @throws IOException if the connection cannot be opened
      */
     protected StreamConnection connect() throws IOException {
         if (sslConnection == null) {

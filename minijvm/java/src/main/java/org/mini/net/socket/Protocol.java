@@ -321,6 +321,9 @@ public class Protocol implements ConnectionBaseInterface, SocketConnection {
         return -1;
     }
 
+    public byte[] getHandle() {
+        return handle;
+    }
 
     public void setSocketOption(byte option, int value) {
         switch (option) {

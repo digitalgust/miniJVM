@@ -95,6 +95,8 @@ public class SocketNative {
 
     public static native int sslc_init(byte[] hi);
 
+    public static native int sslc_wrap(byte[] httpsinfo, byte[] sockinfo, byte[] hostname);
+
     public static native int sslc_connect(byte[] hi, byte[] host, byte[] port);
 
     public static native int sslc_close(byte[] hi);

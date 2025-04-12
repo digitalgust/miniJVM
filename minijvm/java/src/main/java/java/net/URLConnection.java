@@ -20,7 +20,12 @@ public abstract class URLConnection {
     protected boolean doInput = true;
     protected boolean doOutput = false;
     protected boolean useCaches = true;
-    protected static final Map<String, CachedFile> caches = Collections.synchronizedMap(new HashMap());
+    protected static final Map<String, CachedFile> caches = Collections.synchronizedMap(new LinkedHashMap(){
+        @Override
+        protected boolean removeEldestEntry(Map.Entry eldest) {
+            return size() > 100;
+        }
+    });
 
     protected URLConnection(URL url) {
         this.url = url;
