@@ -14,6 +14,7 @@ import java.util.Map;
 public class XuiResourceLoader implements XmlExtAssist.XLoader {
 
     URL url;
+    boolean useCaches;
     static GImage notfoundImage;
     static String notfoundText = "<panel>" +
             "<script>\n" +
@@ -32,11 +33,15 @@ public class XuiResourceLoader implements XmlExtAssist.XLoader {
     Map<String, XuiResource> resources = new HashMap<>();
 
     public XuiResourceLoader() {
+        this(true);
+    }
+
+    public XuiResourceLoader(boolean useCaches) {
         if (notfoundImage == null) {
             notfoundImage = GImage.createImageFromJar("/res/ui/notfound.jpg");
         }
+        this.useCaches = useCaches;
     }
-
 
     public void setURL(URL url) {
         this.url = url;
@@ -53,6 +58,7 @@ public class XuiResourceLoader implements XmlExtAssist.XLoader {
             URLConnection conn = u.openConnection();
             if (conn instanceof HttpURLConnection) {
                 HttpURLConnection http = (HttpURLConnection) conn;
+                http.setUseCaches(useCaches);
                 if (post != null) {
                     http.setRequestMethod("POST");
                     http.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");

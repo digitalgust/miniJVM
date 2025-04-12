@@ -133,7 +133,7 @@ public class GuiScriptLib extends Lib {
                 }
                 if (gobj != null) {
                     Interpreter inp = gobj.getInterpreter();
-                    inp.callSub(ss[1] + "(\"" + para + "\")");
+                    inp.callSub(ss[1] + "(" + para + ")");
                     return;
                 }
             }

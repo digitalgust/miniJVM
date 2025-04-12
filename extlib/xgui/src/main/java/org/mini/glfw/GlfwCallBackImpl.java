@@ -137,7 +137,7 @@ public class GlfwCallBackImpl extends GCallBack {
         Glfw.glfwMakeContextCurrent(display);
         Glfw.glfwSwapInterval(1);
         reloadWindow();
-        SysLog.info("fbWidth=" + fbWidth + "  ,fbHeight=" + fbHeight);
+        //SysLog.info("fbWidth=" + fbWidth + "  ,fbHeight=" + fbHeight);
         openglThread = Thread.currentThread();
 
         vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);

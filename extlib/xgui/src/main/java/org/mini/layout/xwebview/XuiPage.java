@@ -20,13 +20,14 @@ public class XuiPage {
     XmlExtAssist assistDelegate;
     URL url;
     String post;
+    boolean useCaches;
     GContainer pan;
 
     public XuiPage(String homeUrl, XuiBrowser browser) {
-        this(homeUrl, null, browser);
+        this(homeUrl, null, true, browser);
     }
 
-    public XuiPage(String homeUrl, String post, XuiBrowser browser) {
+    public XuiPage(String homeUrl, String post, boolean useCaches, XuiBrowser browser) {
         try {
             //urlStr="jar:http://www.foo.com/bar/baz.jar!/COM/foo/Quux.class";
             url = new URL(homeUrl);
@@ -38,6 +39,7 @@ public class XuiPage {
             throw new RuntimeException(e);
         }
         this.post = post;
+        this.useCaches = useCaches;
         XEventHandler eventDelegate = new XPageEventDelegate(browser, url);
         this.eventDelegate = eventDelegate;
 
@@ -50,7 +52,7 @@ public class XuiPage {
             return pan;
         }
         try {
-            XuiResourceLoader loader = new XuiResourceLoader();
+            XuiResourceLoader loader = new XuiResourceLoader(useCaches);
             loader.setURL(url);
             assistDelegate.setLoader(loader);
 

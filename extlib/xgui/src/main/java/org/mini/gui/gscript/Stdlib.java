@@ -1,11 +1,13 @@
 package org.mini.gui.gscript;
 
+import org.mini.apploader.AppManager;
 import org.mini.crypt.XorCrypt;
 import org.mini.glfm.Glfm;
 import org.mini.glwrap.GLUtil;
 import org.mini.gui.callback.GCallBack;
 import org.mini.json.JsonParser;
 import org.mini.json.JsonPrinter;
+import org.mini.layout.guilib.GuiScriptLib;
 import org.mini.reflect.ReflectMethod;
 import org.mini.util.SysLog;
 
@@ -91,6 +93,7 @@ public class Stdlib extends Lib {
         methodNames.put("isnull".toLowerCase(), this::isnull); //   Obj 类型是否为空
         methodNames.put("getobjfield".toLowerCase(), this::getObjField);
         methodNames.put("setobjfield".toLowerCase(), this::setObjField);
+        methodNames.put("run".toLowerCase(), this::run);   // run("sub f();println(5);ret;", "f()")
     }
 
 
@@ -868,5 +871,12 @@ public class Stdlib extends Lib {
         JsonPrinter printer = new JsonPrinter();
         String s = printer.serial(json);
         return Interpreter.getCachedStr(s);
+    }
+
+    public DataType run(ArrayList<DataType> para) {
+        String script = Interpreter.popBackStr(para);
+        String subcall = Interpreter.popBackStr(para);
+        inp.loadFromString(script);
+        return inp.callSub(subcall);
     }
 }

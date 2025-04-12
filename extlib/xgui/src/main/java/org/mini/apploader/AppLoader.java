@@ -60,7 +60,6 @@ public class AppLoader {
     public static void cb_init() {
         if (inited) return;
         inited = true;
-        System.setProperty("com.sun.midp.io.http.proxy","127.0.0.1:10808");
 
         loadJarProp(BASE_INFO_FILE, baseinfo);
         //System.out.println("start loader");
@@ -133,7 +132,7 @@ public class AppLoader {
         });
 
         String copyjars = getBaseInfo("copy");
-        if (copyjars != null) {
+        if (copyjars != null && copyjars.length() > 0) {
             EXAMPLE_APP_FILES = copyjars.split(",");
             for (int i = 0; i < EXAMPLE_APP_FILES.length; i++) {
                 EXAMPLE_APP_FILES[i] = EXAMPLE_APP_FILES[i] + APP_FILE_EXT;
@@ -206,6 +205,9 @@ public class AppLoader {
 
     static void copyExApp() {
         for (String jarName : EXAMPLE_APP_FILES) {
+            if (jarName.length() == 0) {
+                continue;
+            }
             String srcPath = GCallBack.getInstance().getAppResRoot() + "/resfiles/" + jarName;
             String dstPath = getAppJarPath(jarName);
             File dst = new File(dstPath);
@@ -213,12 +215,12 @@ public class AppLoader {
                 String dstVersion = getAppConfig(jarName, "version");
                 String srcVersion = getAppConfigWithJarPath(srcPath, "version");
                 if (compareVersions(srcVersion, dstVersion) <= 0) {
-                    SysLog.info("exapp exists " + jarName);
+                    //SysLog.info("exapp exists " + jarName);
                     continue;
                 }
             }
             addApp(jarName, srcPath);
-            SysLog.info("copy exapp " + jarName);
+            //SysLog.info("copy exapp " + jarName);
         }
     }
 
@@ -601,7 +603,7 @@ public class AppLoader {
             return true;
         } catch (Exception exception) {
             //exception.printStackTrace();
-            SysLog.error("add app error", exception);
+            SysLog.error("add plugin error" + jarName, exception);
         }
         return false;
     }
@@ -698,7 +700,7 @@ public class AppLoader {
             if (url == null) {
                 return null;
             }
-            XuiResourceLoader loader = new XuiResourceLoader();
+            XuiResourceLoader loader = new XuiResourceLoader(false);
             XuiResource res = loader.loadResource(url, post);
             if (res != null) {
                 String json = res.getString();

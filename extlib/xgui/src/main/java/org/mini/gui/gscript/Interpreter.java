@@ -54,7 +54,7 @@ public class Interpreter {
 
     //源码字符串数组
     //private ArrayList srcCode;
-    private Statement[] srcCompiled;
+    private List<Statement> srcCompiled = new ArrayList<>();
     //变量范围控制
     private boolean isTopCall; //是否是顶级调用
     private LocalVarsMap<String, DataType> globalVar = new LocalVarsMap(); //全局变量
@@ -86,7 +86,7 @@ public class Interpreter {
      * 初始化类
      */
     private void init() {//init localvar table cache
-        srcCompiled = null;
+        srcCompiled.clear();
         //脚本中过程首地址
         subAddr.clear();
         //系统过程及扩充过程列表
@@ -169,7 +169,6 @@ public class Interpreter {
         ByteArrayOutputStream line = new ByteArrayOutputStream();
         //StringBuffer sb = new StringBuffer();
         ArrayList srcCode = new ArrayList();
-        srcCompiled = new Statement[lineCount];
         lineCount = 0;
         for (int i = 0; i < srcBytes.length; i++) {
             if (srcBytes[i] == 0x0a || i + 1 == srcBytes.length) { //行结束,或者文件结束
@@ -303,13 +302,15 @@ public class Interpreter {
             srcCode.set(i, el);
             i++;
         }
-        srcCompiled = new Statement[srcCode.size()];
+
         for (int i = 0; i < srcCode.size(); i++) {
+            Statement st;
+            int lineNo = srcCompiled.size();
             try {
                 String sc = (String) srcCode.get(i);
-                Statement st = Statement.parseInstruct(sc, this);
-                srcCompiled[i] = st;
+                st = Statement.parseInstruct(sc, this);
                 st.src = sc;
+                srcCompiled.add(st);
                 //System.out.println(i + " " + sc);
             } catch (Exception e) {
                 errout(i, STRS_ERR[ERR_ILLEGAL] + srcCode.get(i));
@@ -318,9 +319,9 @@ public class Interpreter {
             }
 
             //找过程起始行号
-            if (srcCompiled[i].type == KEYWORD_SUB) {
-                StatementSub ss = (StatementSub) srcCompiled[i];
-                subAddr.put(ss.cell.subName, new Int(i, false)); //放入过程表中
+            if (st.type == KEYWORD_SUB) {
+                StatementSub ss = (StatementSub) st;
+                subAddr.put(ss.cell.subName, new Int(lineNo, false)); //放入过程表中
             }
         }
     }
@@ -444,7 +445,7 @@ public class Interpreter {
             long calls = System.currentTimeMillis();
 
             //把过程调用的参数放入localVar
-            Statement pstat = srcCompiled[ip];
+            Statement pstat = srcCompiled.get(ip);
             if (pstat != null && pstat.type == KEYWORD_SUB) {
                 StatementSub psubstat = (StatementSub) pstat;
                 for (int i = 0, j = psubstat.cell.para.length; i < j; i++) {
@@ -461,10 +462,10 @@ public class Interpreter {
             }
             calls = System.currentTimeMillis() - calls;
             calls = System.currentTimeMillis();
-            while (ip < srcCompiled.length) {
+            while (ip < srcCompiled.size()) {
                 try {
                     //String instruct = srcCode[ip];
-                    Statement stat = srcCompiled[ip];
+                    Statement stat = srcCompiled.get(ip);
 
                     //System.out.println(ip + " " + stat.src);
                     int keywordCode = stat.type;
@@ -479,8 +480,8 @@ public class Interpreter {
                                         ip = pstatWhile.ip_loop;
                                     } else {
                                         int countWhile = 1;
-                                        for (int i = ip + 1; i < srcCompiled.length; i++) {
-                                            Statement tmpst = srcCompiled[i];
+                                        for (int i = ip + 1; i < srcCompiled.size(); i++) {
+                                            Statement tmpst = srcCompiled.get(i);
                                             if (tmpst.type == KEYWORD_WHILE) {
                                                 countWhile++;
                                             } else if (tmpst.type == KEYWORD_LOOP) {
@@ -505,7 +506,7 @@ public class Interpreter {
                                 } else {
                                     int countWhile = 1;
                                     for (int i = ip - 1; i > 0; --i) {
-                                        Statement tmp = srcCompiled[i];
+                                        Statement tmp = srcCompiled.get(i);
                                         if (tmp.type == KEYWORD_WHILE) {
                                             countWhile--;
                                         } else if (tmp.type == KEYWORD_LOOP) {
@@ -531,8 +532,8 @@ public class Interpreter {
                                         ip = pstatIf.ip_endif;
                                     } else {
                                         int countIf = 1;
-                                        for (int i = ip + 1; i < srcCompiled.length; i++) {
-                                            Statement tmpst = srcCompiled[i];
+                                        for (int i = ip + 1; i < srcCompiled.size(); i++) {
+                                            Statement tmpst = srcCompiled.get(i);
                                             if (tmpst.type == KEYWORD_IF) {
                                                 countIf++;
                                             } else if (tmpst.type == KEYWORD_ENDIF) {
@@ -560,8 +561,8 @@ public class Interpreter {
                                     ip = pstatElse.ip_endif;
                                 } else {
                                     int countIf = 1;
-                                    for (int i = ip + 1; i < srcCompiled.length; i++) {
-                                        Statement tmpst = srcCompiled[i];
+                                    for (int i = ip + 1; i < srcCompiled.size(); i++) {
+                                        Statement tmpst = srcCompiled.get(i);
                                         if (tmpst.type == KEYWORD_IF) {
                                             countIf++;
                                         } else if (tmpst.type == KEYWORD_ENDIF) {
@@ -913,8 +914,8 @@ public class Interpreter {
      */
     private void errout(int ip, String s) {
         String src = "";
-        if (srcCompiled[ip] != null) {
-            src = srcCompiled[ip].src;
+        if (srcCompiled.get(ip) != null) {
+            src = srcCompiled.get(ip).src;
         }
         SysLog.error((ip + 1) + " " + src + " : " + s);
     }

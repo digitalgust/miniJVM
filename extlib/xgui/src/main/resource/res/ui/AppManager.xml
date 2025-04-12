@@ -76,22 +76,27 @@
         ret
 
         sub onPolicyRequestBack(url,code,msg) #请求策略回调
-            println(code+" "+msg)
+            #println(code+" "+msg)
             if(code=0)
-                if(indexOf(msg,"\n")>0)
-                    urls=split(msg,"\n")
-                else
-                    urls=split(msg," ")
-                eif
-                setEnv("DISCOVERY_URL",urls[0])
-                setEnv("ACCOUNT_BASE_URL",urls[1])
-                setEnv("PROFILE_URL",urls[2])
-                setEnv("SHOP_URL",urls[3])
-                setEnv("PAY_URL",urls[4])
-                setEnv("PLUGIN_URL",urls[5])
-                setEnv("UPDATE_URL",urls[6])
-                #println("urls:\n"+urls)
+                urls=split(msg,"\n")
+                i=0
+                while(i<arrlen(urls))
+                    str=urls[i]
+                    eqIdx=indexOf(str,"=")
+                    if(eqIdx>0)
+                        key=substr(str,0,eqIdx)
+                        val=substr(str,eqIdx+1)
+                        #println(key+" : "+val)
+                        setEnv(key,val)
+                    eif
+                    i=i+1
+                loop
+                scriptBase64=getEnv("BOOT")
+                setEnv("BOOT","")    #clear script string
+                scriptStr=base64dec(scriptBase64)
+                run(scriptStr,"onUrlsLoad()")
 
+                #println("resume call script")
                 loginUid=getEnv("USERNAME")
                 loginPwdEnc=getEnv("USERPASS")
                 if(strlen(loginUid)=0 & strlen(loginPwdEnc)=0)  #登录信息为空
@@ -273,6 +278,7 @@
         sub onConfirmGithubBack(op)
             if(op = 1)
                 url="https://raw.githubusercontent.com/digitalgust/plugin4minijvm/main/plugins/plugin.xml"
+                showSlot("SLOT_MGR",3)
                 openPage(url,"")
             else
                 println("User canceled")
