@@ -140,14 +140,16 @@ public class AppLoader {
         }
 
         copyExApp();
-        runApp(null);
+        AppManager.getInstance().active();
     }
 
     public static void runBootApp() {
-        String bootApp = getBaseInfo(KEY_BOOT);
-        if (bootApp != null) {
-            bootApp = bootApp + APP_FILE_EXT;
-            runApp(bootApp);
+        if (isBootRun()) { //如果appinfo.properties中配置为false,则不运行bootjar
+            String bootApp = getBaseInfo(KEY_BOOT);
+            if (bootApp != null) {
+                bootApp = bootApp + APP_FILE_EXT;
+                runApp(bootApp);
+            }
         }
     }
 
@@ -769,7 +771,16 @@ public class AppLoader {
     }
 
 
+    public static boolean isBootRun() {
+        String bootRun = getProperty("bootrun"); //本地存没存，如果存了以本地为准
+        return !"false".equals(bootRun);
+    }
+
     public static boolean isShowHome() {
-        return !"false".equals(getBaseInfo("home"));
+        String showHome = getProperty("home"); //本地存没存，如果存了以本地为准
+        if (showHome.length() == 0) {
+            showHome = getBaseInfo("home"); //没存用配置文件默认值
+        }
+        return !"false".equals(showHome);
     }
 }

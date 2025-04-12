@@ -91,12 +91,15 @@
                     eif
                     i=i+1
                 loop
-                scriptBase64=getEnv("BOOT")
-                setEnv("BOOT","")    #clear script string
-                scriptStr=base64dec(scriptBase64)
-                run(scriptStr,"onUrlsLoad()")
 
+                scriptBase64=getEnv("BOOT")
+                if(strlen(scriptBase64)>0)
+                    setEnv("BOOT","")    #clear script string
+                    scriptStr=base64dec(scriptBase64)
+                    run(scriptStr,"onUrlsLoad()")
+                eif
                 #println("resume call script")
+
                 loginUid=getEnv("USERNAME")
                 loginPwdEnc=getEnv("USERPASS")
                 if(strlen(loginUid)=0 & strlen(loginPwdEnc)=0)  #登录信息为空
