@@ -13,7 +13,9 @@
 #include "jdwp.h"
 
 #if __JVM_OS_ANDROID__
+
 #include <android/log.h>
+
 #define LOG_TAG "MINIJVM"
 #endif
 
@@ -657,13 +659,21 @@ s32 jvm_printf(const c8 *format, ...) {
         }
     }
 #else
-    result = vfprintf(stderr, format, vp);
-    fflush(stderr);
 #ifdef __JVM_OS_ANDROID__
     static c8 buf[1024];
-    vsnprintf(buf, sizeof(buf), format, vp);
-    __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, "%s", buf);
+    static u32 buf_pos = 0, buf_writable_len = sizeof(buf) - 1;
+    s32 w = vsnprintf(buf + buf_pos, sizeof(buf) - buf_pos - 1, format, vp);//maybe some bytes lost
+    buf_pos += (u32) w;
+    buf[buf_pos] = 0;
+    if ((buf_pos > 0 && memchr(buf, '\n', buf_pos) != NULL)// if '\n' in buf, print buf and clear buf
+        || buf_pos == buf_writable_len) { // or buf is full, print buf and clear buf
+        __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, "%s", buf);
+        buf_pos = 0;
+    }
     result = strlen(buf);
+#else
+    result = vfprintf(stderr, format, vp);
+    fflush(stderr);
 #endif
 #endif
     va_end(vp);

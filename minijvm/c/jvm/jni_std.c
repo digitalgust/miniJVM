@@ -21,8 +21,12 @@
 u32 is_random_init = FALSE;
 
 s32 com_sun_cldc_io_ConsoleOutputStream_write(Runtime *runtime, JClass *clazz) {
-    s16 ch = localvar_getInt(runtime->localvar, 1);
+    u8 ch = (u8) localvar_getInt(runtime->localvar, 1);
+#if __JVM_OS_ANDROID__
+    jvm_printf("%c", ch);
+#else
     fprintf(stdout, "%c", ch);
+#endif
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("com_sun_cldc_io_ConsoleOutputStream_write\n");
