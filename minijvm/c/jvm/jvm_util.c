@@ -12,6 +12,10 @@
 #include "garbage.h"
 #include "jdwp.h"
 
+#if __JVM_OS_ANDROID__
+#include <android/log.h>
+#define LOG_TAG "MINIJVM"
+#endif
 
 
 //==================================================================================
@@ -654,12 +658,15 @@ s32 jvm_printf(const c8 *format, ...) {
     }
 #else
     result = vfprintf(stderr, format, vp);
+    fflush(stderr);
 #ifdef __JVM_OS_ANDROID__
-    LOGD(format,vp);
+    static c8 buf[1024];
+    vsnprintf(buf, sizeof(buf), format, vp);
+    __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, "%s", buf);
+    result = strlen(buf);
 #endif
 #endif
     va_end(vp);
-    fflush(stderr);
     return result;
 }
 

@@ -309,6 +309,8 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     Utf8String *tmpstr = utf8_create();
     os_get_lang(tmpstr);
     sys_properties_set_c(jvm, STR_VM_USER_LANGUAGE, utf8_cstr(tmpstr));
+    os_get_uuid(tmpstr);
+    sys_properties_set_c(jvm, STR_VM_UUID, utf8_cstr(tmpstr));
     utf8_destroy(tmpstr);
 
     //启动调试器

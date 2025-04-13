@@ -23,6 +23,8 @@
 #include <windows.h>
 #include <stdio.h>
 
+#include <rpc.h>
+#include <rpcdce.h>
 
 #if __JVM_OS_MINGW__
 
@@ -828,6 +830,34 @@ s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
     dst->data[utf8_len] = 0;  // Ensure null termination
 
     return utf8_len;
+}
+
+
+void os_get_uuid(Utf8String *buf) {
+    utf8_clear(buf);
+
+    UUID uuid;
+    RPC_STATUS status;
+    RPC_CSTR uuid_str = NULL;
+    c8 *result = NULL;
+
+    // 生成UUID
+    status = UuidCreateSequential(&uuid);
+    if (status != RPC_S_OK && status != RPC_S_UUID_LOCAL_ONLY) {
+        return;
+    }
+
+    // 将UUID转换为字符串
+    status = UuidToStringA(&uuid, &uuid_str);
+    if (status != RPC_S_OK) {
+        return;
+    }
+
+    // 分配内存并复制字符串
+    utf8_append_c(buf, (char *) uuid_str);
+
+    // 释放RPC分配的内存
+    RpcStringFreeA(&uuid_str);
 }
 
 #endif   //#if defined(__JVM_OS_MINGW__) || defined(__JVM_OS_CYGWIN__) || defined(__JVM_OS_VS__)
