@@ -21,7 +21,9 @@
 
 #if __JVM_OS_ANDROID__ || __JVM_OS_IOS__
 #else
+
 #include <uuid/uuid.h>
+
 #endif
 
 void safeClose(s32 *fd) {
@@ -297,19 +299,15 @@ void os_get_uuid(Utf8String *buf) {
     utf8_append_c(buf, "00000000-0000-0000-0000-000000000000"); //android ios uuid is set by mobile launcher
 #else
     uuid_t uuid;
-    c8* result = NULL;
-    
+
     // 生成UUID
     uuid_generate(uuid);
-    
+
     // 分配内存用于存储UUID字符串
-    utf8_expand(buf, 37); // UUID字符串长度为36字节，加上null终止符
-    if (result == NULL) {
-        return;
-    }
-    
+    uuid_string_t data;
     // 将UUID转换为字符串格式
-    uuid_unparse(uuid, buf->data);
+    uuid_unparse(uuid, data);
+    utf8_append_c(buf, (const c8 *) data);
 #endif
 }
 
