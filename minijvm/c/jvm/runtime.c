@@ -137,7 +137,13 @@ void print_runtime_stack(Runtime *r) {
     jvm_printf("call stack:\n");
     while (trun) {
         if (!trun->parent)break;
-        if (trun->method)jvm_printf("    %s.%s\n", utf8_cstr(trun->method->_this_class->name), utf8_cstr(trun->method->name));
+        if (trun->method) {
+            s32 lineNo = -1;
+            if (trun->method->converted_code) {
+                lineNo = getLineNumByIndex(trun->method->converted_code, ((s64) trun->pc) - (s64) trun->method->converted_code->code);
+            }
+            jvm_printf("    %s.%s(%d)\n", utf8_cstr(trun->method->_this_class->name), utf8_cstr(trun->method->name), lineNo);
+        }
         trun = trun->parent;
     }
 }

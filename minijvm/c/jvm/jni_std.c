@@ -1284,13 +1284,7 @@ s32 java_lang_Thread_interrupt0(Runtime *runtime, JClass *clazz) {
     Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, 0);
 
     Runtime *rt_thread = jthread_get_stackframe_value(runtime->jvm, ins);
-    if (rt_thread) {
-        rt_thread->thrd_info->is_interrupt = 1;
-
-        if (rt_thread->thrd_info->thread_status == THREAD_STATUS_WAIT) {
-            jthread_wakeup(rt_thread);
-        }
-    }
+    jthread_interrupt(rt_thread);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("java_lang_Thread_interrupt0 \n");

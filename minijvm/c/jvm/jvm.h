@@ -32,7 +32,6 @@ extern "C" {
 //_JVM_DEBUG_GARBAGE_DUMP 01=count instance , 02=print every object create/destroy
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_PROFILE 0
-#define _JVM_JDWP_ENABLE 01
 #define _JVM_DEBUG_GARBAGE 0
 
 
@@ -994,6 +993,7 @@ struct _MethodInfo {
     u16 attributes_count;
     //
     u8 is_native;
+    u8 is_jit;
     u8 is_sync;
     u8 is_static;
     u8 is_getter;

@@ -926,6 +926,18 @@ s32 jthread_notifyAll(MemoryBlock *mb, Runtime *runtime) {
     return 0;
 }
 
+s32 jthread_interrupt(Runtime *rt_thread) {
+    if (rt_thread) {
+        rt_thread->thrd_info->is_interrupt = 1;
+
+        if (rt_thread->thrd_info->thread_status == THREAD_STATUS_WAIT) {
+            jthread_wakeup(rt_thread);
+        }
+        return 0;
+    }
+    return -1;
+}
+
 s32 jthread_yield(Runtime *runtime) {
     thrd_yield();
     return 0;

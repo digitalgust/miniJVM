@@ -100,12 +100,14 @@
                 eif
                 #println("resume call script")
 
-                loginUid=getEnv("USERNAME")
-                loginPwdEnc=getEnv("USERPASS")
-                if(strlen(loginUid)=0 & strlen(loginPwdEnc)=0)  #登录信息为空
-                    singUpAuto()  #自动注册
-                else
-                    signInAuto()  #自动登录
+                if(strlen(getEnv("ACCOUNT_URL"))>0)  #取得了登录信息
+                    loginUid=getEnv("USERNAME")
+                    loginPwdEnc=getEnv("USERPASS")
+                    if(strlen(loginUid)=0 & strlen(loginPwdEnc)=0)  #登录信息为空
+                        singUpAuto()  #自动注册
+                    else
+                        signInAuto()  #自动登录
+                    eif
                 eif
             else
                showMsg("onPolicyRequestBack:"+code+","+msg)
@@ -135,7 +137,6 @@
                 setEnv("USERPASS", lines[1])
                 setEnv("LOGINTYPE", ""+1)       # 0{mobile or email type}     1{username + password type}
                 setEnv("TOKEN", lines[2])
-                #println("token="+msg)
             else
                 showMsg("{STR_MESSAGE}: {STR_CONNECTION_FAIL}")
             eif

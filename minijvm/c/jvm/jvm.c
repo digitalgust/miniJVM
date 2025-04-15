@@ -253,10 +253,6 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
         return -1;
     }
 
-    if (jvm->jdwp_enable && !_JVM_JDWP_ENABLE) {
-        jvm_printf("[WARN]jvm set jdwp enable, please set _JVM_JDWP_ENABLE with 1 in jvm.h and recompile \n");
-    }
-
     signal(SIGABRT, _on_jvm_sig);
     signal(SIGFPE, _on_jvm_sig);
     signal(SIGSEGV, _on_jvm_sig);
@@ -498,14 +494,13 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
             jvm_printf("\n[INFO]main thread start\n");
 #endif
             //调用主方法
-            if (_JVM_JDWP_ENABLE) {
-                if (jvm->jdwp_enable) {
-                    if (jvm->jdwp_suspend_on_start)jthread_suspend(runtime);
+            if (jvm->jdwp_enable) {
+                if (jvm->jdwp_suspend_on_start)jthread_suspend(runtime);
 #if _JVM_DEBUG_LOG_LEVEL > 0
-                    jvm_printf("[JDWP]jdwp listening (port:%s) ...\n", JDWP_TCP_PORT);
+                jvm_printf("[JDWP]jdwp listening (port:%s) ...\n", JDWP_TCP_PORT);
 #endif
-                }//jdwp 会启动调试器
-            }
+            }//jdwp 会启动调试器
+
             runtime->method = NULL;
             runtime->clazz = clazz;
             ret = execute_method(m, runtime);

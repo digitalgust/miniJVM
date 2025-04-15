@@ -3348,6 +3348,7 @@ void construct_jit(MethodInfo *method, Runtime *runtime) {
 
     if (ca->jit.state == JIT_GEN_SUCCESS) {
         s32 debug = 1;
+        method->is_jit = 1;
     }
 #if(JIT_CODE_DUMP)
     if (utf8_equals_c(runtime->method->_this_class->name, "org/mini/json/JsonParser")

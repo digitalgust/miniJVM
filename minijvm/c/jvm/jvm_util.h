@@ -279,6 +279,8 @@ s32 jthread_sleep(Runtime *runtime, s64 ms);
 
 s32 jthread_yield(Runtime *runtime);
 
+s32 jthread_interrupt(Runtime *rt_thread);
+
 s32 jthread_resume(Runtime *runtime);
 
 s32 jthread_suspend(Runtime *runtime);

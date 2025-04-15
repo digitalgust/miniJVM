@@ -275,11 +275,9 @@ s32 host_2_ip(c8 *hostname, c8 *buf, s32 buflen) {
 
 s32 org_mini_net_SocketNative_open0(Runtime *runtime, JClass *clazz) {
     RuntimeStack *stack = runtime->stack;
-    jthread_block_enter(runtime);
     Instance *vmarr = jarray_create_by_type_index(runtime, sizeof(VmSock), DATATYPE_BYTE);
     mbedtls_net_context *ctx = &((VmSock *) vmarr->arr_body)->contex;
     mbedtls_net_init(ctx);
-    jthread_block_exit(runtime);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_net_SocketNative_open0  \n");
@@ -298,10 +296,8 @@ s32 org_mini_net_SocketNative_bind0(Runtime *runtime, JClass *clazz) {
     if (vmarr && host && port) {
         VmSock *vmsock = (VmSock *) vmarr->arr_body;
         mbedtls_net_context *ctx = &vmsock->contex;
-        jthread_block_enter(runtime);
         ret = mbedtls_net_bind(ctx, strlen(host->arr_body) == 0 ? NULL : host->arr_body, port->arr_body, proto);
         if (ret >= 0)ret = mbedtls_net_set_nonblock(ctx);//set as non_block , for vm destroy
-        jthread_block_exit(runtime);
 #if _JVM_DEBUG_LOG_LEVEL > 5
         invoke_deepth(runtime);
         jvm_printf("org_mini_net_SocketNative_open0  \n");
@@ -320,9 +316,7 @@ s32 org_mini_net_SocketNative_accept0(Runtime *runtime, JClass *clazz) {
         gc_obj_hold(runtime->jvm->collector, cltarr);
         s32 ret = 0;
         while (1) {
-            jthread_block_enter(runtime);
             ret = mbedtls_net_accept(ctx, &cltsock->contex, NULL, 0, NULL);
-            jthread_block_exit(runtime);
             if (runtime->thrd_info->is_interrupt) {//vm notify thread destroy
                 ret = -1;
                 break;
@@ -369,9 +363,7 @@ s32 org_mini_net_SocketNative_connect0(Runtime *runtime, JClass *clazz) {
         }
         memcpy(&vmsock->hostname, host->arr_body, hostlen);//copy with 0
         memcpy(&vmsock->hostport, port->arr_body, host->arr_length);
-        jthread_block_enter(runtime);
         ret = mbedtls_net_connect(ctx, host->arr_body, port->arr_body, proto);
-        jthread_block_exit(runtime);
 #if _JVM_DEBUG_LOG_LEVEL > 5
         invoke_deepth(runtime);
         jvm_printf("org_mini_net_SocketNative_open0  \n");
@@ -435,9 +427,7 @@ s32 org_mini_net_SocketNative_readBuf(Runtime *runtime, JClass *clazz) {
     if (vmarr && jbyte_arr) {
         VmSock *vmsock = (VmSock *) vmarr->arr_body;
 
-        jthread_block_enter(runtime);
         ret = sock_recv(vmsock, (u8 *) jbyte_arr->arr_body + offset, count, runtime);
-        jthread_block_exit(runtime);
     }
     push_int(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -453,9 +443,7 @@ s32 org_mini_net_SocketNative_readByte(Runtime *runtime, JClass *clazz) {
     u8 b = 0;
     if (vmarr) {
         VmSock *vmsock = (VmSock *) vmarr->arr_body;
-        jthread_block_enter(runtime);
         ret = sock_recv(vmsock, &b, 1, runtime);
-        jthread_block_exit(runtime);
     }
     push_int(runtime->stack, ret < 0 ? ret : (u8) b);
 
@@ -476,9 +464,7 @@ s32 org_mini_net_SocketNative_writeBuf(Runtime *runtime, JClass *clazz) {
     if (vmarr && jbyte_arr) {
         VmSock *vmsock = (VmSock *) vmarr->arr_body;
         mbedtls_net_context *ctx = &vmsock->contex;
-        jthread_block_enter(runtime);
         ret = mbedtls_net_send(ctx, (const u8 *) jbyte_arr->arr_body + offset, count);
-        jthread_block_exit(runtime);
         if (ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
             ret = 0;
         } else if (ret < 0) {
@@ -501,9 +487,7 @@ s32 org_mini_net_SocketNative_writeByte(Runtime *runtime, JClass *clazz) {
     if (vmarr) {
         VmSock *vmsock = (VmSock *) vmarr->arr_body;
         mbedtls_net_context *ctx = &vmsock->contex;
-        jthread_block_enter(runtime);
         ret = mbedtls_net_send(ctx, &b, 1);
-        jthread_block_exit(runtime);
         if (ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
             ret = 0;
         } else if (ret < 0) {
@@ -719,9 +703,7 @@ s32 org_mini_net_SocketNative_sslc_read(Runtime *runtime, JClass *clazz) {
     s32 offset = localvar_getInt(runtime->localvar, 2);
     s32 len = localvar_getInt(runtime->localvar, 3);
     if (jbyte_arr && data_arr) {
-        jthread_block_enter(runtime);
         ret = sslc_read((SSLC_Entry *) jbyte_arr->arr_body, data_arr->arr_body + offset, len);
-        jthread_block_exit(runtime);
     }
     push_int(runtime->stack, ret < 0 ? -1 : ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -738,9 +720,7 @@ s32 org_mini_net_SocketNative_sslc_write(Runtime *runtime, JClass *clazz) {
     s32 offset = localvar_getInt(runtime->localvar, 2);
     s32 len = localvar_getInt(runtime->localvar, 3);
     if (jbyte_arr && data_arr) {
-        jthread_block_enter(runtime);
         ret = sslc_write((SSLC_Entry *) jbyte_arr->arr_body, data_arr->arr_body + offset, len);
-        jthread_block_exit(runtime);
     }
     push_int(runtime->stack, ret < 0 ? -1 : ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5

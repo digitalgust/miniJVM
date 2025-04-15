@@ -495,6 +495,8 @@ void jdwp_check_breakpoint(Runtime *runtime);
 
 void jdwp_check_debug_step(Runtime *runtime);
 
+s32 jdwp_client_count(JdwpServer *jdwpserver);
+
 #ifdef __cplusplus
 }
 #endif

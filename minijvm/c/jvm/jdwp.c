@@ -19,6 +19,10 @@ struct _JdwpServer {
     ArrayList *event_packets;
     Pairlist *event_sets;
     mtx_t event_sets_lock;
+    struct NetWorkLock {
+        cnd_t thread_cond;
+        mtx_t mutex_lock; //互斥锁
+    } netlock;
     Runtime *runtime_jdwp;
 
 
@@ -67,8 +71,50 @@ s32 is_class_exists(MiniJVM *jvm, JClass *clazz);
 
 Runtime *find_jthread_from_threadlist(MiniJVM *jvm, Instance *jthread);
 
+void netlock_init(JdwpServer *jdwpserver) {
+    cnd_init(&jdwpserver->netlock.thread_cond);
+    mtx_init(&jdwpserver->netlock.mutex_lock, mtx_recursive | mtx_timed);
+}
+
+void netlock_destroy(JdwpServer *jdwpserver) {
+    cnd_destroy(&jdwpserver->netlock.thread_cond);
+    mtx_destroy(&jdwpserver->netlock.mutex_lock);
+}
+
+void netlock_lock(JdwpServer *jdwpserver) {
+    mtx_lock(&jdwpserver->netlock.mutex_lock);
+}
+
+void netlock_unlock(JdwpServer *jdwpserver) {
+    mtx_unlock(&jdwpserver->netlock.mutex_lock);
+}
+
+void netlock_wait(JdwpServer *jdwpserver) {
+    cnd_wait(&jdwpserver->netlock.thread_cond, &jdwpserver->netlock.mutex_lock);
+}
+
+void netlock_wait_time(JdwpServer *jdwpserver, s64 ms) {
+    struct timespec t;
+    timespec_get(&t, TIME_UTC);
+    t.tv_sec += ms / 1000;
+    t.tv_nsec += (ms % 1000) * 1000000;
+    s32 ret = cnd_timedwait(&jdwpserver->netlock.thread_cond, &jdwpserver->netlock.mutex_lock, &t);
+}
+
+void netlock_notify(JdwpServer *jdwpserver) {
+    cnd_signal(&jdwpserver->netlock.thread_cond);
+}
+
+void netlock_notify_all(JdwpServer *jdwpserver) {
+    cnd_broadcast(&jdwpserver->netlock.thread_cond);
+}
+
 void jdwp_put_client(ArrayList *clients, JdwpClient *client) {
     arraylist_push_back(clients, client);
+}
+
+inline s32 jdwp_client_count(JdwpServer *jdwpserver) {
+    return jdwpserver->clients->length;
 }
 
 s32 jdwp_thread_listener(void *para) {
@@ -88,6 +134,11 @@ s32 jdwp_thread_listener(void *para) {
         jvm_printf("[JDWP]accepetd client\n");
         mbedtls_net_set_nonblock(&client->sockfd);
         jdwp_put_client(jdwpserver->clients, client);
+        netlock_lock(jdwpserver);
+        {
+            netlock_notify(jdwpserver);
+        }
+        netlock_unlock(jdwpserver);
     }
     jdwpserver->mode &= ~JDWP_MODE_LISTEN;
     return 0;
@@ -99,6 +150,11 @@ s32 jdwp_thread_dispacher(void *para) {
     s32 i;
     while (!jdwpserver->exit) {
         for (i = 0; i < jdwpserver->clients->length; i++) {
+            netlock_lock(jdwpserver);
+            {
+                netlock_wait_time(jdwpserver, 100);
+            }
+            netlock_unlock(jdwpserver);
             JdwpClient *client = arraylist_get_value(jdwpserver->clients, i);
             jdwp_client_process(jdwpserver, client);
             jdwp_send_packets(client);
@@ -107,7 +163,6 @@ s32 jdwp_thread_dispacher(void *para) {
                 arraylist_remove(jdwpserver->clients, client);
             }
         }
-        threadSleep(20);
     }
     jdwpserver->mode &= ~JDWP_MODE_DISPATCH;
     return 0;
@@ -130,6 +185,7 @@ s32 jdwp_start_server(MiniJVM *jvm) {
     jdwpserver->runtime_jdwp = runtime_create(jvm);
     jdwpserver->runtime_jdwp->thrd_info->type = THREAD_TYPE_JDWP;
     mtx_init(&jdwpserver->event_sets_lock, mtx_recursive | mtx_timed);
+    netlock_init(jdwpserver);
     jvm->jdwpserver = jdwpserver;
 
     thrd_create(&jdwpserver->pt_listener, jdwp_thread_listener, jdwpserver);
@@ -173,6 +229,7 @@ s32 jdwp_stop_server(MiniJVM *jvm) {
 
     mtx_destroy(&jdwpserver->event_sets_lock);
     pairlist_destroy(jdwpserver->event_sets);
+    netlock_destroy(jdwpserver);
 
     //
     runtime_destroy(jdwpserver->runtime_jdwp);
@@ -854,6 +911,11 @@ s32 jdwp_is_ignore_sync(JdwpServer *srv) {
 
 void jdwp_packet_put(JdwpServer *jdwpserver, JdwpPacket *packet) {
     arraylist_push_back(jdwpserver->event_packets, packet);
+    netlock_lock(jdwpserver);
+    {
+        netlock_notify(jdwpserver);
+    }
+    netlock_unlock(jdwpserver);
 }
 
 JdwpPacket *jdwp_event_packet_get(JdwpServer *jdwpserver) {
@@ -2444,11 +2506,11 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 break;
             }
             case JDWP_CMD_ThreadReference_Stop: {//11.10
-                jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                //jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
                 Instance *jthread = jdwppacket_read_refer(req);
                 Runtime *r = find_jthread_from_threadlist(jdwpserver->jvm, jthread);
                 if (r) {
-                    thrd_detach(r->thrd_info->pthread);//todo need release all lock
+                    r->thrd_info->is_stop = 1;
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
                 } else {
                     jdwppacket_set_err(res, JDWP_ERROR_INVALID_THREAD);
@@ -2457,11 +2519,11 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 break;
             }
             case JDWP_CMD_ThreadReference_Interrupt: {//11.11
-                jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
+                //jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
                 Instance *jthread = jdwppacket_read_refer(req);
                 Runtime *r = find_jthread_from_threadlist(jdwpserver->jvm, jthread);
                 if (r) {
-                    //todo
+                    jthread_interrupt(r);
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
                 } else {
                     jdwppacket_set_err(res, JDWP_ERROR_INVALID_THREAD);
