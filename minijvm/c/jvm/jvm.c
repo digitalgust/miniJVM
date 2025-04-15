@@ -343,6 +343,13 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     instance_create(runtime, c2);
     utf8_clear(clsName);
 
+
+    if (!jvm->collector->runtime->thrd_info->jthread) {
+        Instance *inst = instance_create(runtime, classes_get_c(jvm, NULL, STR_CLASS_JAVA_LANG_THREAD));
+        jvm->collector->runtime->thrd_info->jthread = inst;
+        hashset_put(jvm->collector->objs_holder, inst);
+    }
+
     utf8_destroy(clsName);
     gc_move_objs_thread_2_gc(runtime);
     runtime_destroy(runtime);
