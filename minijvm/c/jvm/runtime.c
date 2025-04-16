@@ -132,20 +132,10 @@ void runtime_destroy(Runtime *runtime) {
 }
 
 void print_runtime_stack(Runtime *r) {
-    if (!r)return;
-    Runtime *trun = getLastSon(r);
-    jvm_printf("call stack:\n");
-    while (trun) {
-        if (!trun->parent)break;
-        if (trun->method) {
-            s32 lineNo = -1;
-            if (trun->method->converted_code) {
-                lineNo = getLineNumByIndex(trun->method->converted_code, ((s64) trun->pc) - (s64) trun->method->converted_code->code);
-            }
-            jvm_printf("    %s.%s(%d)\n", utf8_cstr(trun->method->_this_class->name), utf8_cstr(trun->method->name), lineNo);
-        }
-        trun = trun->parent;
-    }
+    Utf8String *ustr = utf8_create();
+    getRuntimeStack(r, ustr);
+    jvm_printf("%s", utf8_cstr(ustr));
+    utf8_destroy(ustr);
 }
 
 s32 getRuntimeDepth(Runtime *top) {
@@ -181,8 +171,49 @@ s64 getInstructPointer(Runtime *runtime) {
     return -1;
 }
 
+void getRuntimeStackWithOutReturn(Runtime *runtime, Utf8String *ustr) {
+    if (!runtime)return;
+    Runtime *trun = getLastSon(runtime);
+    while (trun) {
+        if (!trun->parent)break;
+        if (trun->method) {
+            s32 lineNo = -1;
+            if (trun->method->converted_code) {
+                lineNo = getLineNumByIndex(trun->method->converted_code, ((s64) trun->pc) - (s64) trun->method->converted_code->code);
+            }
+            utf8_append(ustr, trun->method->_this_class->name);
+            utf8_append_c(ustr, ".");
+            utf8_append(ustr, trun->method->name);
+            utf8_append_s64(ustr, lineNo, 10);
+            utf8_append_c(ustr, " | ");
+        }
+        trun = trun->parent;
+    }
+}
 
 void getRuntimeStack(Runtime *runtime, Utf8String *ustr) {
+    if (!runtime)return;
+    Runtime *trun = getLastSon(runtime);
+    utf8_append_c(ustr, "call stack:\n");
+    while (trun) {
+        if (!trun->parent)break;
+        if (trun->method) {
+            s32 lineNo = -1;
+            if (trun->method->converted_code) {
+                lineNo = getLineNumByIndex(trun->method->converted_code, ((s64) trun->pc) - (s64) trun->method->converted_code->code);
+            }
+            utf8_append_c(ustr, "    ");
+            utf8_append(ustr, trun->method->_this_class->name);
+            utf8_append_c(ustr, ".");
+            utf8_append(ustr, trun->method->name);
+            utf8_append_s64(ustr, lineNo, 10);
+            utf8_append_c(ustr, "\n");
+        }
+        trun = trun->parent;
+    }
+}
+
+void getExceptionStack(Runtime *runtime, Utf8String *ustr) {
     s32 i, imax;
     utf8_append_c(ustr, "Exception threw: ");
     Instance *ins = (runtime->stack->sp - 1)->ins;

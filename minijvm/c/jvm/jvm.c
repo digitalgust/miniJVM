@@ -46,7 +46,7 @@ void print_exception(Runtime *runtime) {
 #if _JVM_DEBUG_LOG_LEVEL >= 0
     if (runtime) {
         Utf8String *stacktrack = utf8_create();
-        getRuntimeStack(runtime, stacktrack);
+        getExceptionStack(runtime, stacktrack);
         jvm_printf("%s\n", utf8_cstr(stacktrack));
         utf8_destroy(stacktrack);
 
@@ -495,10 +495,13 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
 #endif
             //调用主方法
             if (jvm->jdwp_enable) {
-                if (jvm->jdwp_suspend_on_start)jthread_suspend(runtime);
 #if _JVM_DEBUG_LOG_LEVEL > 0
                 jvm_printf("[JDWP]jdwp listening (port:%s) ...\n", JDWP_TCP_PORT);
 #endif
+                if (jvm->jdwp_suspend_on_start){
+                    jvm_printf("[JDWP]suspend on start, waitting for connect... \n");
+                    jthread_suspend(runtime);
+                }
             }//jdwp 会启动调试器
 
             runtime->method = NULL;
@@ -537,15 +540,6 @@ s32 execute_method(MethodInfo *method, Runtime *runtime) {
     if (!runtime || !method) {
         return RUNTIME_STATUS_ERROR;
     }
-    // if not detect the son ,may cause jthread enter fake blocking state,
-    // eg: call_bc-> call_native->(reenter) call_bc->ret_bc(fake_blocking)->ret_native->ret_bc
-    // only the outer thread top call the java bytecode ,need check block state
-    if (runtime->thrd_info->top_runtime->son == NULL) {// is top call bc, not reenter bc
-        jthread_block_exit(runtime);
-    }
     s32 ret = execute_method_impl(method, runtime);
-    if (runtime->thrd_info->top_runtime->son == NULL) {
-        jthread_block_enter(runtime);
-    }
     return ret;
 }

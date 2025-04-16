@@ -285,9 +285,9 @@ s32 jthread_resume(Runtime *runtime);
 
 s32 jthread_suspend(Runtime *runtime);
 
-void jthread_block_exit(Runtime *runtime);
+void jthread_bytecode_enter(Runtime *runtime);
 
-void jthread_block_enter(Runtime *runtime);
+void jthread_bytecode_exit(Runtime *runtime);
 
 s32 check_throw_interruptexception(Runtime *runtime);
 

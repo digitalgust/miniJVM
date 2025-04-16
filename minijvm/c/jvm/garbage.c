@@ -1,4 +1,3 @@
-
 #include <errno.h>
 #include "jvm.h"
 #include "garbage.h"
@@ -410,7 +409,7 @@ s64 _garbage_collect(GcCollector *collector) {
         if (_gc_pause_the_world(jvm) != 0) {
             _gc_resume_the_world(jvm);
             vm_share_unlock(jvm);
-            jvm_printf("gc canceled ");
+            jvm_printf("[WARN] GC canceled - failed to pause the world\n");
             return -1;
         }
         collector->isworldstoped = 1;
@@ -656,7 +655,7 @@ s32 _gc_wait_thread_suspend(MiniJVM *jvm, Runtime *runtime) {
         return 0;
     }
     while (!(runtime->thrd_info->is_suspend ||  /// While executing bytecode, if suspend_count is not 0, pause bytecode execution and set is_suspend = 1
-             runtime->thrd_info->is_blocking)  // During certain IO waits, JNI sets is_blocking = 1
+             !runtime->thrd_info->is_bc_exec)  // During certain IO waits, JNI sets is_bc_exec = 1
             ) { //
         vm_share_notifyall(jvm);
         vm_share_timedwait(jvm, 5);
@@ -969,7 +968,8 @@ void gc_obj_reg(Runtime *runtime, __refer ref) {
 #if _JVM_DEBUG_GARBAGE_DUMP > 1
         Utf8String *sus = utf8_create();
         _gc_get_obj_name(runtime->jvm->collector, mb, sus);
-        jvm_printf("R: %s[%llx]\n", utf8_cstr(sus), (s64) (intptr_t) mb);
+        getRuntimeStackWithOutReturn(runtime, sus);
+        jvm_printf("R: [%llx]%s\n", (s64) (intptr_t) mb, utf8_cstr(sus));
         utf8_destroy(sus);
 #endif
     } else {

@@ -643,6 +643,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                 localvar = runtime->localvar;
                 sp = runtime->stack->sp;
 
+                jthread_bytecode_enter(runtime);
                 do {
                     if (jvm->jdwp_enable) {
                         stack->sp = sp;
@@ -4092,6 +4093,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     break;
 
                 } while (1);//end while
+                jthread_bytecode_exit(runtime);
             }
 
             //sync end
@@ -4117,9 +4119,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             ret = RUNTIME_STATUS_ERROR;
         } else if (method->native_func) {
             if (method->is_sync)_synchronized_lock_method(method, runtime);
-            jthread_block_enter(runtime);//some native method may block, so we need to set the thread is blocked status
             ret = method->native_func(runtime, clazz);
-            jthread_block_exit(runtime);
             if (method->is_sync)_synchronized_unlock_method(method, runtime);
             if (ret) {
                 ins = pop_ref(stack);

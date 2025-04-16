@@ -1819,9 +1819,9 @@ public class GToolkit {
                     if (holder != null) holder.setAttachment(filepath);
                     imageCache.put(filepath, img);
                 }
-                SysLog.info("load image cache " + filepath + " " + img);
+                //SysLog.info("load image cache " + filepath + " " + img);
             } else {
-                //System.out.println("hit image from cache " + filepath);
+                //SysLog.info("hit image from cache " + filepath);
                 if (holder != null) {
                     for (Map.Entry e : imageCache.entrySet()) {
                         if (filepath.equals(e.getKey())) { //虽然两个字符串字面相同,但不是同一对象

@@ -2407,7 +2407,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 if (r) {
                     jdwppacket_set_err(res, JDWP_ERROR_NONE);
                     jdwppacket_write_int(res, r->thrd_info->thread_status);
-                    jdwppacket_write_int(res, r->thrd_info->is_suspend || r->thrd_info->is_blocking
+                    jdwppacket_write_int(res, (r->thrd_info->is_suspend || !r->thrd_info->is_bc_exec)
                                               ? JDWP_SUSPEND_STATUS_SUSPENDED : 0);
                 } else {
                     jdwppacket_set_err(res, JDWP_ERROR_INVALID_THREAD);
