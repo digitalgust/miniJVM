@@ -362,7 +362,7 @@ s32 org_mini_net_SocketNative_connect0(Runtime *runtime, JClass *clazz) {
             hostlen = sizeof(vmsock->hostname);
         }
         memcpy(&vmsock->hostname, host->arr_body, hostlen);//copy with 0
-        memcpy(&vmsock->hostport, port->arr_body, host->arr_length);
+        memcpy(&vmsock->hostport, port->arr_body, port->arr_length);
         ret = mbedtls_net_connect(ctx, host->arr_body, port->arr_body, proto);
 #if _JVM_DEBUG_LOG_LEVEL > 5
         invoke_deepth(runtime);

@@ -12,34 +12,34 @@
 
 int call_jvm(char* app_path) {
     
-        s32 ret ;
-        char bootstrappath[512];
-        memset(&bootstrappath,0,512);
-        strcat(bootstrappath,app_path);
-        strcat(bootstrappath,"/lib/minijvm_rt.jar");
-        strcat(bootstrappath,":");
-        char path[512];
-        memset(&path,0,512);
-        strcat(path,app_path);
+    s32 ret ;
+    char bootstrappath[512];
+    memset(&bootstrappath,0,512);
+    strcat(bootstrappath,app_path);
+    strcat(bootstrappath,"/lib/minijvm_rt.jar");
+    strcat(bootstrappath,":");
+    char path[512];
+    memset(&path,0,512);
+    strcat(path,app_path);
     strcat(path,"/libex/glfw_gui.jar");
     strcat(path,":");
     strcat(path,app_path);
     strcat(path,"/libex/xgui.jar");
     strcat(path,":");
-        strcat(path,app_path);
-        strcat(path,"/libex/minijvm_test.jar");
-        printf("classpath: %s\n",path);
-
-        ArrayList * java_para=arraylist_create(0);
+    strcat(path,app_path);
+    strcat(path,"/libex/minijvm_test.jar");
+    printf("classpath: %s\n",path);
+    
+    ArrayList * java_para=arraylist_create(0);
     MiniJVM *jvm=jvm_create();
     jvm->jdwp_enable = 1;
     ret = jvm_init(jvm, bootstrappath, path);
     //ret = call_main(jvm, "test/HttpServer", java_para);
-    ret = call_main(jvm, "test/BpDeepTest", java_para);
-    //ret = call_main(jvm, "org.mini.glfw.GlfwMain", java_para);
+    //ret = call_main(jvm, "test/BpDeepTest", java_para);
+    ret = call_main(jvm, "org.mini.glfw.GlfwMain", java_para);
     //ret = call_main(jvm, "test/ReflectTest", java_para);
     //ret = call_main(jvm, "test/LambdaTest", java_para);
-        arraylist_destroy(java_para);
+    arraylist_destroy(java_para);
     jvm_destroy(jvm);
     return ret;
 }
