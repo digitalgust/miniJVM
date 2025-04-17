@@ -556,6 +556,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
     //start
     ret = RUNTIME_STATUS_NORMAL;
     runtime = runtime_create_inl(pruntime);
+    jthread_bytecode_exit(runtime);
 
     jvm = runtime->jvm;
 
@@ -645,7 +646,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                 jthread_bytecode_enter(runtime);
                 do {
-                    if (jvm->jdwp_enable) {
+                    if (jvm->jdwp_enable && jdwp_client_count(jvm->jdwpserver)) {
                         stack->sp = sp;
                         runtime->pc = ip;
                         if (!runtime->thrd_info->no_pause) {
@@ -4161,6 +4162,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
         }
     }
 #endif
+    jthread_bytecode_enter(runtime);
     runtime_destroy_inl(runtime);
     pruntime->son = NULL;  //must clear , required for getLastSon()
 

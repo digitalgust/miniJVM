@@ -467,7 +467,6 @@ s64 _garbage_collect(GcCollector *collector) {
 
 
     MemoryBlock *head = NULL;//find all finalize obj and weak obj
-    MemoryBlock *tail = NULL;
 
     MemoryBlock *nextmb = collector->header;
     MemoryBlock *curmb, *prevmb = NULL;
@@ -482,10 +481,7 @@ s64 _garbage_collect(GcCollector *collector) {
                     if (curmb->garbage_mark != collector->mark_cnt && !GCFLAG_FINALIZED_GET(curmb->gcflag)) {
                         instance_finalize((Instance *) curmb, collector->runtime);
                         if (!head) {
-                            head = tail = curmb;
-//                            if (curmb->tmp_next) {
-//                                s32 debug = 1;
-//                            }
+                            head = curmb;
                             curmb->tmp_next = NULL;
                         } else {
                             curmb->tmp_next = head;
@@ -501,10 +497,7 @@ s64 _garbage_collect(GcCollector *collector) {
                     if (target && target->mb.garbage_mark != collector->mark_cnt) {
                         instance_of_reference_enqueue((Instance *) curmb, collector->runtime);
                         if (!head) {
-                            head = tail = curmb;
-//                            if (curmb->tmp_next) {
-//                                s32 debug = 1;
-//                            }
+                            head = curmb;
                             curmb->tmp_next = NULL;
                         } else {
                             curmb->tmp_next = head;

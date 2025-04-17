@@ -950,11 +950,11 @@ s32 jthread_suspend(Runtime *runtime) {
     return 0;
 }
 
-void jthread_bytecode_exit(Runtime *runtime) {
+inline void jthread_bytecode_exit(Runtime *runtime) {
     runtime->thrd_info->is_bc_exec = 0; // enter native execution
 }
 
-void jthread_bytecode_enter(Runtime *runtime) {
+inline void jthread_bytecode_enter(Runtime *runtime) {
     runtime->thrd_info->is_bc_exec = 1;//enter bytecode execution
     check_suspend_and_pause(runtime);
 }
