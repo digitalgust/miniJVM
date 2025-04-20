@@ -38,7 +38,8 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
 
             try {
                 SysLog.getLogger().setLevel(Level.INFO);
-//                System.setProperty("com.sun.midp.io.http.proxy", "127.0.0.1:10808");
+                System.out.println("uuid=" + System.getProperty("uuid"));
+//                System.setProperty("com.sun.midp.io.http.proxy", "127.0.0.1:1087");
 //                System.setProperty("https.proxyHost", "127.0.0.1");
 //                System.setProperty("https.proxyPort", "10808");
                 Class glfw = Class.forName("org.mini.glfw.Glfw");

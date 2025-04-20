@@ -67,6 +67,8 @@ void suspend_all_thread(MiniJVM *jvm);
 
 s32 is_class_exists(MiniJVM *jvm, JClass *clazz);
 
+s32 jdwp_thread_dispacher(void *para);
+
 //==================================================    server    ==================================================
 
 Runtime *find_jthread_from_threadlist(MiniJVM *jvm, Instance *jthread);
@@ -114,6 +116,7 @@ void jdwp_put_client(ArrayList *clients, JdwpClient *client) {
 }
 
 inline s32 jdwp_client_count(JdwpServer *jdwpserver) {
+    if (!jdwpserver)return 0;
     return jdwpserver->clients->length;
 }
 
@@ -149,12 +152,12 @@ s32 jdwp_thread_dispacher(void *para) {
     jdwpserver->mode |= JDWP_MODE_DISPATCH;
     s32 i;
     while (!jdwpserver->exit) {
+        netlock_lock(jdwpserver);
+        {
+            netlock_wait_time(jdwpserver, 100);
+        }
+        netlock_unlock(jdwpserver);
         for (i = 0; i < jdwpserver->clients->length; i++) {
-            netlock_lock(jdwpserver);
-            {
-                netlock_wait_time(jdwpserver, 100);
-            }
-            netlock_unlock(jdwpserver);
             JdwpClient *client = arraylist_get_value(jdwpserver->clients, i);
             jdwp_client_process(jdwpserver, client);
             jdwp_send_packets(client);
