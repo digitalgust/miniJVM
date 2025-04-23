@@ -556,7 +556,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
     //start
     ret = RUNTIME_STATUS_NORMAL;
     runtime = runtime_create_inl(pruntime);
-    jthread_bytecode_exit(runtime);
+    jthread_bytecode_enter(runtime);
 
     jvm = runtime->jvm;
 
@@ -604,7 +604,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
             if (JIT_ENABLE && ca->jit.state == JIT_GEN_SUCCESS) {
                 //jvm_printf("jit call %s.%s()\n", method->_this_class->name->data, method->name->data);
+                jthread_bytecode_exit(runtime);
                 ret = ca->jit.func(method, runtime);
+                jthread_bytecode_enter(runtime);
                 if (!ret) {
                     switch (method->return_slots) {
                         case 0: {// V
@@ -644,7 +646,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                 localvar = runtime->localvar;
                 sp = runtime->stack->sp;
 
-                jthread_bytecode_enter(runtime);
                 do {
                     if (jvm->jdwp_enable && jdwp_client_count(jvm->jdwpserver)) {
                         stack->sp = sp;
@@ -4094,7 +4095,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     break;
 
                 } while (1);//end while
-                jthread_bytecode_exit(runtime);
             }
 
             //sync end
@@ -4120,7 +4120,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             ret = RUNTIME_STATUS_ERROR;
         } else if (method->native_func) {
             if (method->is_sync)_synchronized_lock_method(method, runtime);
+            jthread_bytecode_exit(runtime);
             ret = method->native_func(runtime, clazz);
+            jthread_bytecode_enter(runtime);
             if (method->is_sync)_synchronized_unlock_method(method, runtime);
             if (ret) {
                 ins = pop_ref(stack);
@@ -4162,7 +4164,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
         }
     }
 #endif
-    jthread_bytecode_enter(runtime);
+    jthread_bytecode_exit(runtime);
     runtime_destroy_inl(runtime);
     pruntime->son = NULL;  //must clear , required for getLastSon()
 
