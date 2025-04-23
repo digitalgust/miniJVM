@@ -45,7 +45,7 @@ struct _JdwpClient {
 };
 
 
-void jdwp_send_packets(JdwpClient *client);
+s32 jdwp_send_packets(JdwpClient *client);
 
 void event_on_debug_step(JdwpServer *jdwpserver, Runtime *step_runtime);
 
@@ -150,20 +150,29 @@ s32 jdwp_thread_listener(void *para) {
 s32 jdwp_thread_dispacher(void *para) {
     JdwpServer *jdwpserver = (JdwpServer *) para;
     jdwpserver->mode |= JDWP_MODE_DISPATCH;
+    s64 last_time = 0;
+    s32 wait = 100;
     s32 i;
     while (!jdwpserver->exit) {
-        netlock_lock(jdwpserver);
-        {
-            netlock_wait_time(jdwpserver, 100);
+        if (current_timestamp() - last_time > 0) {
+            netlock_lock(jdwpserver);
+            {
+                netlock_wait_time(jdwpserver, 100);
+            }
+            netlock_unlock(jdwpserver);
         }
-        netlock_unlock(jdwpserver);
         for (i = 0; i < jdwpserver->clients->length; i++) {
             JdwpClient *client = arraylist_get_value(jdwpserver->clients, i);
-            jdwp_client_process(jdwpserver, client);
-            jdwp_send_packets(client);
+            s32 received = jdwp_client_process(jdwpserver, client);
+            s32 sent = jdwp_send_packets(client);
             if (client->closed) {
                 jdwp_client_destroy(jdwpserver, client);
                 arraylist_remove(jdwpserver->clients, client);
+            }
+            if (received > 0 || sent > 0) {
+                last_time = current_timestamp() + 3000;//3s不等
+            } else {
+                last_time = current_timestamp();
             }
         }
     }
@@ -944,11 +953,14 @@ EventSet *jdwp_eventset_get(JdwpServer *jdwpserver, s32 id) {
     return es;
 }
 
-void jdwp_send_packets(JdwpClient *client) {
+s32 jdwp_send_packets(JdwpClient *client) {
     JdwpPacket *packet;
+    s32 count = 0;
     while ((packet = jdwp_event_packet_get(client->jdwpserver)) != NULL) {
         jdwp_writepacket(client, packet);
+        count++;
     }
+    return count;
 }
 
 void event_on_vmstart(JdwpServer *jdwpserver, Instance *jthread) {
@@ -1606,6 +1618,7 @@ void invoke_method(s32 call_mode, JdwpPacket *req, JdwpPacket *res, JdwpClient *
 s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
     JdwpPacket *req = NULL;
     MiniJVM *jvm = jdwpserver->jvm;
+    s32 packetCount = 0;
     while ((req = jdwp_readpacket(client)) != NULL) {
 
         u16 cmd = jdwppacket_get_cmd_err(req);
@@ -2793,8 +2806,9 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             }
         }
         jdwppacket_destroy(req);
+        packetCount++;
     }
-    return 0;
+    return packetCount;
 }
 
 Runtime *find_jthread_from_threadlist(MiniJVM *jvm, Instance *jthread) {

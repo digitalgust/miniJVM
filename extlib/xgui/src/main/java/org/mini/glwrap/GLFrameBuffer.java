@@ -78,6 +78,14 @@ public class GLFrameBuffer {
 
     }
 
+    public int getColorTexture() {
+        return rendertex[0];
+    }
+
+    public int getDepthTexture() {
+        return depth_stencil_buffer[0];
+    }
+
     public void delete() {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDeleteTextures(rendertex.length, rendertex, 0);

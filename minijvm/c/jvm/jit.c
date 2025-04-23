@@ -6,7 +6,7 @@
 #include "jit.h"
 
 #if JIT_ENABLE
-
+#pragma "jit compiled"
 #include "sljitLir.h"
 
 #include <stdio.h>
