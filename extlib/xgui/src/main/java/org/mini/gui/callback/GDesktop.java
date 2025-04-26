@@ -173,6 +173,8 @@ public class GDesktop extends GPanel implements GCallbackUI {
 
 
     public void onDeviceSizeChanged(int width, int height) {
+        if (width <= 0) width = 1;
+        if (height <= 0) height = 1;
         setSize(width, height);
         if (curForm != null) {
             curForm.setSize(width, height);

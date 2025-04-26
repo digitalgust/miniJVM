@@ -88,14 +88,18 @@ static inline int arraylist_enlarge(ArrayList *arraylist) {
     /* Double the allocated size */
 
     newsize = arraylist->_alloced * 2;
+    int newBytes = newsize * sizeof(ArrayListValue);
 
     /* Reallocate the array to the new size */
 
-    data = jvm_realloc(arraylist->data, sizeof(ArrayListValue) * newsize);
+    data = jvm_calloc(newBytes);
 
     if (data == NULL) {
+        printf("[ERROR]arraylist alloc mem fail, size:%d bytes\n", newBytes);
         return 0;
     } else {
+        memcpy(data, arraylist->data, arraylist->_alloced * sizeof(ArrayListValue));
+        jvm_free(arraylist->data);
         arraylist->data = data;
         arraylist->_alloced = newsize;
 
@@ -124,7 +128,7 @@ static inline int _arraylist_insert_impl(ArrayList *arraylist, int index, ArrayL
         ++arraylist->length;
     }
 
-    return 1;
+    return doit;
 }
 
 int arraylist_insert(ArrayList *arraylist, int index, ArrayListValue data) {

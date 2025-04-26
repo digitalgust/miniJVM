@@ -786,6 +786,26 @@ s64 getPtrValue(u8 type, c8 *ptr) {
     return value;
 }
 
+void setPtrValue(u8 type, c8 *ptr, s64 value) {
+    switch (getSimpleTag(type)) {
+        case '1':
+            setFieldByte(ptr, (c8) value);
+            break;
+        case '2':
+            setFieldShort(ptr, (s16) value);
+            break;
+        case '4':
+            setFieldInt(ptr, (s32) value);
+            break;
+        case '8':
+            setFieldLong(ptr, value);
+            break;
+        case 'R':
+            setFieldRefer(ptr, (__refer) (intptr_t) value);
+            break;
+    }
+}
+
 
 void writeArrayRegion(JdwpPacket *res, Instance *arr, s32 firstIndex, s32 length) {
     c8 arr_type = utf8_char_at(arr->mb.clazz->name, 1);
@@ -815,6 +835,40 @@ void writeArrayRegion(JdwpPacket *res, Instance *arr, s32 firstIndex, s32 length
                 else
                     jdwppacket_write_byte(res, 'L');
                 jdwppacket_write_refer(res, elem);
+                break;
+            }
+        }
+    }
+}
+
+
+void readArrayRegion(JdwpPacket *res, Instance *arr, s32 firstIndex, s32 length) {
+    c8 arr_type = utf8_char_at(arr->mb.clazz->name, 1);
+    c8 tag = getSimpleTag(arr_type);
+    s64 val;
+    s32 i;
+    // Primitive types do not require a flag, while non-primitive types need to be of ValueType
+    for (i = 0; i < length; i++) {
+        switch (tag) {
+            case '1':
+                val = jdwppacket_read_byte(res);
+                jarray_set_field(arr, firstIndex + i, val);
+                break;
+            case '2':
+                val = jdwppacket_read_short(res);
+                jarray_set_field(arr, firstIndex + i, val);
+                break;
+            case '4':
+                val = jdwppacket_read_int(res);
+                jarray_set_field(arr, firstIndex + i, val);
+                break;
+            case '8':
+                val = jdwppacket_read_long(res);
+                jarray_set_field(arr, firstIndex + i, val);
+                break;
+            case 'R': {
+                val = (s64) (intptr_t) jdwppacket_read_refer(res);
+                jarray_set_field(arr, firstIndex + i, val);
                 break;
             }
         }
@@ -2312,9 +2366,26 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 break;
             }
             case JDWP_CMD_ObjectReference_SetValues: {//9.3
-                jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
-                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                gc_pause(jdwpserver->jvm->collector);
+                Runtime *runtime = jdwp_get_runtime(jdwpserver);
+                Instance *obj = (Instance *) jdwppacket_read_refer(req);
+                JClass *ref = obj->mb.clazz;
+                s32 fields = jdwppacket_read_int(req);
+                jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                jdwppacket_write_int(res, fields);
+                s32 i;
+                for (i = 0; i < fields; i++) {
+                    FieldInfo *fi = jdwppacket_read_refer(req);
+                    ValueType vt;
+                    vt.type = getJdwpTag(fi->descriptor);
+                    readValueType(req, &vt);
+                    c8 *ptr = getFieldPtr_byName(obj, obj->mb.clazz->name, fi->name, fi->descriptor, runtime);
+                    setPtrValue(vt.type, ptr, vt.value);
+                }
                 jdwp_packet_put(jdwpserver, res);
+
+                gc_move_objs_thread_2_gc(runtime);
+                gc_resume(jdwpserver->jvm->collector);
                 break;
             }
             case JDWP_CMD_ObjectReference_MonitorInfo: {//9.5
@@ -2596,21 +2667,29 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
             }
             case JDWP_CMD_ArrayReference_GetValues: {//13.2
                 Instance *arr = jdwppacket_read_refer(req);
-//                if (gc_is_alive(arr)) {
                 s32 firstIndex = jdwppacket_read_int(req);
                 s32 length = jdwppacket_read_int(req);
+                if (arr->arr_length < firstIndex + length) {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_LENGTH);
+                    jdwp_packet_put(jdwpserver, res);
+                    break;
+                }
                 jdwppacket_set_err(res, JDWP_ERROR_NONE);
                 writeArrayRegion(res, arr, firstIndex, length);
-//                } else {
-//                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_ARRAY);
-//                }
                 jdwp_packet_put(jdwpserver, res);
-                //jvm_printf("[JDWP]ArrayReference_GetValues:%llx\n", arr);
                 break;
             }
             case JDWP_CMD_ArrayReference_SetValues: {//13.3
-                jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
-                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
+                Instance *arr = jdwppacket_read_refer(req);
+                s32 firstIndex = jdwppacket_read_int(req);
+                s32 length = jdwppacket_read_int(req);
+                if (arr->arr_length < firstIndex + length) {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_LENGTH);
+                    jdwp_packet_put(jdwpserver, res);
+                    break;
+                }
+                readArrayRegion(req, arr, firstIndex, length);
+                jdwppacket_set_err(res, JDWP_ERROR_NONE);
                 jdwp_packet_put(jdwpserver, res);
                 break;
             }

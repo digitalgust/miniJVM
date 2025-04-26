@@ -1,5 +1,7 @@
 package org.mini.layout;
 
+import org.mini.gui.GColorSelector;
+
 public class XTable
         extends XPanel {
     static public final String XML_NAME = "table";

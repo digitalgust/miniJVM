@@ -17,7 +17,7 @@ extern "C" {
     #define JIT_ENABLE 01
 #endif
 
-#define JIT_COMPILE_EXEC_COUNT 500
+#define JIT_COMPILE_EXEC_COUNT 5000
 #define JIT_DEBUG 0
 
 #define SLJIT_CONFIG_AUTO 1

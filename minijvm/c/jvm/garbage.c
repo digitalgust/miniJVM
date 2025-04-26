@@ -503,6 +503,8 @@ s64 _garbage_collect(GcCollector *collector) {
                             curmb->tmp_next = head;
                             head = curmb;
                         }
+                    } else {
+                        s32 debug = 1;
                     }
                 }
             }
@@ -651,7 +653,7 @@ s32 _gc_wait_thread_suspend(MiniJVM *jvm, Runtime *runtime) {
              !runtime->thrd_info->is_bc_exec)  // During certain IO waits, JNI sets is_bc_exec = 1
             ) { //
         vm_share_notifyall(jvm);
-        vm_share_timedwait(jvm, 5);
+        vm_share_timedwait(jvm, 100);
         if (jvm->collector->_garbage_thread_status != GARBAGE_THREAD_NORMAL) {
             return -1;
         }

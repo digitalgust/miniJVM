@@ -647,7 +647,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                 sp = runtime->stack->sp;
 
                 do {
-                    if (jvm->jdwp_enable && jdwp_client_count(jvm->jdwpserver)) {
+                    if (jdwp_client_count(jvm->jdwpserver)) {
                         stack->sp = sp;
                         runtime->pc = ip;
                         if (!runtime->thrd_info->no_pause) {

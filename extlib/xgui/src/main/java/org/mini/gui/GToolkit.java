@@ -1791,44 +1791,24 @@ public class GToolkit {
 
     /**
      * 从缓存中取得图象,如果缓存中没有,则加载
+     * <p>
+     * 图像并且返回此图象的holder就是这个String filepath, 如果此hfilepath不被GC销毁,此图象也不会被销毁
      *
      * @param filepath
      * @return
      */
     static public GImage getCachedImageFromJar(String filepath) {
-        return getCachedImageFromJar(filepath, null);
-    }
-
-    /**
-     * 返回 图像并且返回此图象的holder, 如果此holder不被GC销毁,此图象也不会被销毁
-     *
-     * @param filepath
-     * @param holder
-     * @return
-     */
-    static public GImage getCachedImageFromJar(String filepath, GAttachable holder) {
         if (filepath == null || "".equals(filepath.trim())) {
             return null;
         }
-        filepath = new String(filepath);//for holder,must new
         GImage img = imageCache.get(filepath);
         try {
             if (img == null) {
                 img = GImage.createImageFromJar(filepath);
                 if (img != null) {
-                    if (holder != null) holder.setAttachment(filepath);
                     imageCache.put(filepath, img);
                 }
-                //SysLog.info("load image cache " + filepath + " " + img);
-            } else {
-                //SysLog.info("hit image from cache " + filepath);
-                if (holder != null) {
-                    for (Map.Entry e : imageCache.entrySet()) {
-                        if (filepath.equals(e.getKey())) { //虽然两个字符串字面相同,但不是同一对象
-                            holder.setAttachment(e.getKey());
-                        }
-                    }
-                }
+                SysLog.getLogger().fine("load image cache " + filepath + " " + img);
             }
         } catch (Exception e) {
         }

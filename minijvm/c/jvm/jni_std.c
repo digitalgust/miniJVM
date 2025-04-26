@@ -905,8 +905,14 @@ s32 java_lang_String_intern0(Runtime *runtime, JClass *clazz) {
         Utf8String *ustr = utf8_create();
         jstring_2_utf8(jstr, ustr, runtime);
         Instance *in_jstr = (Instance *) hashtable_get(runtime->jvm->table_jstring_const, ustr);
+        if (!in_jstr) {
+            in_jstr = jstr;
+            hashtable_put(runtime->jvm->table_jstring_const, ustr, in_jstr);
+            gc_obj_hold(runtime->jvm->collector, in_jstr);
+        } else {
+            utf8_destroy(ustr);
+        }
         push_ref(stack, (__refer) in_jstr);
-        utf8_destroy(ustr);
     } else {
         push_ref(stack, NULL);
     }

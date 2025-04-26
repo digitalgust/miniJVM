@@ -481,7 +481,7 @@ abstract public class GContainer extends GObject {
 //            for (Iterator<GObject> it = elements.listIterator(); it.hasNext(); ) {
 //                System.out.println("--" + it.next());
 //            }
-            e.printStackTrace();
+//            e.printStackTrace();
         }
         return true;
     }

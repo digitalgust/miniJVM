@@ -122,7 +122,7 @@ s32 classes_remove(MiniJVM *jvm, JClass *clazz) {
         //jvm_printf("PUT in classloader %s <- %s\n", clazz->jloader ? utf8_cstr(clazz->jloader->mb.clazz->name) : "NULL", utf8_cstr(clazz->name));
         PeerClassLoader *pcl = classLoaders_find_by_instance(jvm, clazz->jloader);
         if (pcl) {
-            if (jvm->jdwp_enable)event_on_class_unload(jvm->jdwpserver, clazz);
+            if (jdwp_client_count(jvm->jdwpserver))event_on_class_unload(jvm->jdwpserver, clazz);
             hashtable_remove(pcl->classes, clazz->name, 0);
             class_clear_cached_virtualmethod(jvm, clazz);
         }
@@ -142,7 +142,7 @@ JClass *primitive_class_create_get(Runtime *runtime, Utf8String *ustr) {
         cl->is_primitive = 1;
         cl->jloader = NULL;//system classloader
         classes_put(jvm, cl);
-        if (jvm->jdwp_enable && jvm->jdwpserver && cl)event_on_class_prepare(jvm->jdwpserver, runtime, cl);
+        if (jdwp_client_count(jvm->jdwpserver) && cl)event_on_class_prepare(jvm->jdwpserver, runtime, cl);
 //        gc_obj_hold(jvm->collector, cl);
         vm_share_unlock(jvm);
 #if _JVM_DEBUG_LOG_LEVEL > 2
@@ -193,7 +193,7 @@ JClass *array_class_create_get(Runtime *runtime, Instance *jloader, Utf8String *
 
 //                gc_obj_hold(jvm->collector, clazz);
                 classes_put(jvm, clazz);
-                if (jvm->jdwp_enable && jvm->jdwpserver && clazz)event_on_class_prepare(jvm->jdwpserver, runtime, clazz);
+                if (jdwp_client_count(jvm->jdwpserver) && clazz)event_on_class_prepare(jvm->jdwpserver, runtime, clazz);
 #if _JVM_DEBUG_LOG_LEVEL > 2
                 jvm_printf("load class (%016llx load %016llx):  %s \n", (s64) (intptr_t) clazz->jloader, (s64) (intptr_t) clazz, utf8_cstr(clazz->name));
 #endif
@@ -660,20 +660,20 @@ s32 jvm_printf(const c8 *format, ...) {
     }
 #else
 #ifdef __JVM_OS_ANDROID__
-        static c8 buf[1024];
-        static u32 buf_pos = 0, buf_writable_len = sizeof(buf) - 1;
-        s32 w = vsnprintf(buf + buf_pos, sizeof(buf) - buf_pos - 1, format, vp);//maybe some bytes lost
-        buf_pos += (u32) w;
-        buf[buf_pos] = 0;
-        if ((buf_pos > 0 && memchr(buf, '\n', buf_pos) != NULL)// if '\n' in buf, print buf and clear buf
-            || buf_pos == buf_writable_len) { // or buf is full, print buf and clear buf
-            __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, "%s", buf);
-            buf_pos = 0;
-        }
-        result = strlen(buf);
+    static c8 buf[1024];
+    static u32 buf_pos = 0, buf_writable_len = sizeof(buf) - 1;
+    s32 w = vsnprintf(buf + buf_pos, sizeof(buf) - buf_pos - 1, format, vp);//maybe some bytes lost
+    buf_pos += (u32) w;
+    buf[buf_pos] = 0;
+    if ((buf_pos > 0 && memchr(buf, '\n', buf_pos) != NULL)// if '\n' in buf, print buf and clear buf
+        || buf_pos == buf_writable_len) { // or buf is full, print buf and clear buf
+        __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, "%s", buf);
+        buf_pos = 0;
+    }
+    result = strlen(buf);
 #else
-        result = vfprintf(stderr, format, vp);
-        fflush(stderr);
+    result = vfprintf(stderr, format, vp);
+    fflush(stderr);
 #endif
 #endif
     va_end(vp);
@@ -718,7 +718,7 @@ s32 jthread_init(MiniJVM *jvm, Instance *jthread) {
 s32 jthread_dispose(Instance *jthread, Runtime *runtime) {
     gc_move_objs_thread_2_gc(runtime);
     threadlist_remove(runtime);
-    if (runtime->jvm->jdwp_enable) {//jdwpserver might stoped when
+    if (jdwp_client_count(runtime->jvm->jdwpserver)) {//jdwpserver might stoped when
         event_on_thread_death(runtime->jvm->jdwpserver, runtime->thrd_info->jthread);
     }
     //destroy
@@ -748,7 +748,7 @@ s32 jthread_run(void *para) {
                utf8_cstr(method->name), utf8_cstr(method->descriptor));
 #endif
     //gc_refer_reg(runtime, jthread);//20201019 gust comment it , duplicate reg
-    if (jvm->jdwp_enable && jvm->jdwpserver)event_on_thread_start(jvm->jdwpserver, runtime->thrd_info->jthread);
+    if (jdwp_client_count(jvm->jdwpserver))event_on_thread_start(jvm->jdwpserver, runtime->thrd_info->jthread);
     check_suspend_and_pause(runtime);//check suspend if gc is running
     runtime->thrd_info->thread_status = THREAD_STATUS_RUNNING;
     push_ref(runtime->stack, (__refer) jthread);
@@ -779,11 +779,11 @@ s32 jthread_run(void *para) {
 
     utf8_destroy(methodName);
     utf8_destroy(methodType);
-    thrd_exit(ret);
 #if _JVM_DEBUG_LOG_LEVEL > 1
     s64 spent = currentTimeMillis() - startAt;
     jvm_printf("[INFO]thread over %llx , return %d , spent : %lld\n", (s64) (intptr_t) jthread, ret, spent);
 #endif
+    thrd_exit(ret);
     return ret;
 }
 

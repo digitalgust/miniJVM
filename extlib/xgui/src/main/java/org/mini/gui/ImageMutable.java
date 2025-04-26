@@ -2,6 +2,7 @@ package org.mini.gui;
 
 import org.mini.gui.callback.GCallBack;
 import org.mini.nanovg.Nanovg;
+import org.mini.util.SysLog;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -197,6 +198,7 @@ public class ImageMutable extends GImage {
     protected void finalize() {
         try {
             GForm.deleteImage(nvg_texture);
+            SysLog.getLogger().fine("finalize image " + this.getWidth() + "x" + this.getHeight());
         } catch (Throwable e) {
         }
     }

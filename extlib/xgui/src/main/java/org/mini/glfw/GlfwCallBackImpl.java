@@ -190,10 +190,10 @@ public class GlfwCallBackImpl extends GCallBack {
 
                 cost = now - startAt;
                 //System.out.println(cost);
-//                if (cost < 1000 / fpsExpect) {
-//                    Thread.sleep((long) (1000 / fpsExpect - cost));
-//                }
-                Sync.sync((int) fpsExpect);
+                if (cost < 1000 / fpsExpect) {
+                    Thread.sleep((long) (1000 / fpsExpect - cost));
+                }
+//                Sync.sync((int) fpsExpect);
             } catch (Exception ex) {
                 ex.printStackTrace();
 
