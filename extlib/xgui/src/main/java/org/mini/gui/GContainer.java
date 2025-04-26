@@ -217,7 +217,7 @@ abstract public class GContainer extends GObject {
                 }
                 onRemove(nko);
                 nko.setParent(null);
-                if (!nko.isInited()) nko.destroy();
+                if (!nko.isDestroyed()) nko.destroy();
                 elements.remove(nko);
             }
         }
