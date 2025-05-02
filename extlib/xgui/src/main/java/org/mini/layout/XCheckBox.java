@@ -13,7 +13,7 @@ public class XCheckBox
 
     static public final String XML_NAME = "checkbox";
     // 当前绘制颜色
-    protected boolean selected = true;
+    protected boolean selected = false;
 
     protected GCheckBox checkBox;
 
@@ -47,7 +47,7 @@ public class XCheckBox
 
     protected int getDefaultWidth(int parentViewW) {
         int w = XUtil.measureWidth(parentViewW, text, getFontSize(), false);
-        viewW = width = w + XDef.SPACING_CHECKBOX_ADD;
+        w += XDef.SPACING_CHECKBOX_ADD;
         return w;
     }
 

@@ -78,9 +78,11 @@ public class GMenuItem extends GContainer {
     @Override
     public void touchEvent(int touchid, int phase, int x, int y) {
         GObject found = findSonByXY(x, y);
-        if (found != null && found.actionListener != null && found.getOnClinkScript() == null) {
+        if (found != null) {
             super.touchEvent(touchid, phase, x, y);
-        } else {
+        }
+        //self
+        {
             if (isInArea(x, y)) {
                 switch (phase) {
                     case Glfm.GLFMTouchPhaseBegan:
@@ -112,9 +114,11 @@ public class GMenuItem extends GContainer {
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         GObject found = findSonByXY(x, y);
-        if (found != null && found.actionListener != null && found.getOnClinkScript() == null) {
+        if (found != null) {
             super.mouseButtonEvent(button, pressed, x, y);
-        } else {
+        }
+        //self
+        {
             if (isInArea(x, y)) {
                 if (pressed) {
                     touched = true;
