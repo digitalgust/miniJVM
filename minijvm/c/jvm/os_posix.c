@@ -22,7 +22,7 @@
 #if __JVM_OS_ANDROID__ || __JVM_OS_IOS__
 #else
 
-#include <uuid/uuid.h>
+//#include <uuid/uuid.h>
 
 #endif
 
@@ -295,20 +295,20 @@ s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
 
 void os_get_uuid(Utf8String *buf) {
     utf8_clear(buf);
-#if __JVM_OS_ANDROID__ || __JVM_OS_IOS__
+//#if __JVM_OS_ANDROID__ || __JVM_OS_IOS__
     utf8_append_c(buf, "00000000-0000-0000-0000-000000000000"); //android ios uuid is set by mobile launcher
-#else
-    uuid_t uuid;
-
-    // 生成UUID
-    uuid_generate(uuid);
-
-    // 分配内存用于存储UUID字符串
-    uuid_string_t data;
-    // 将UUID转换为字符串格式
-    uuid_unparse(uuid, data);
-    utf8_append_c(buf, (const c8 *) data);
-#endif
+//#else
+//    uuid_t uuid;
+//
+//    // 生成UUID
+//    uuid_generate(uuid);
+//
+//    // 分配内存用于存储UUID字符串
+//    uuid_string_t data;
+//    // 将UUID转换为字符串格式
+//    uuid_unparse(uuid, data);
+//    utf8_append_c(buf, (const c8 *) data);
+//#endif
 }
 
 #endif //  end of   __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__ || __JVM_OS_VS__
