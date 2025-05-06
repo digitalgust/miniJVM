@@ -82,8 +82,8 @@ public class GMenuItem extends GContainer {
             super.touchEvent(touchid, phase, x, y);
         }
         //self
-        {
-            if (isInArea(x, y)) {
+        if (isInArea(x, y)) {
+            if (actionType == ACTION_TYPE_BOTH || found == null) {
                 switch (phase) {
                     case Glfm.GLFMTouchPhaseBegan:
                         touched = true;
@@ -97,11 +97,11 @@ public class GMenuItem extends GContainer {
                         doStateChanged(this);
                         break;
                 }
-            } else if (!isInArea(x, y)) {
-                if (touched) {
-                    touched = false;
-                    doStateChanged(this);
-                }
+            }
+        } else if (!isInArea(x, y)) {
+            if (touched) {
+                touched = false;
+                doStateChanged(this);
             }
         }
     }
@@ -118,8 +118,8 @@ public class GMenuItem extends GContainer {
             super.mouseButtonEvent(button, pressed, x, y);
         }
         //self
-        {
-            if (isInArea(x, y)) {
+        if (isInArea(x, y)) {
+            if (actionType == ACTION_TYPE_BOTH || found == null) {
                 if (pressed) {
                     touched = true;
                     parent.setCurrent(this);

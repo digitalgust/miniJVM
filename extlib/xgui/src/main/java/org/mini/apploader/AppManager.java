@@ -374,6 +374,7 @@ public class AppManager extends GApplication implements XuiAppHolder {
                     if (img == null) {
                         item.setPreIcon("\uD83D\uDCD5");
                     }
+                    item.setActionType(GContainer.ACTION_TYPE_SON_ONLY);
                     item.setAttachment(appName);
                     appList.add(item);
                     item.setActionListener(gobj -> {

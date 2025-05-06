@@ -98,7 +98,7 @@ public class GListItem extends GContainer {
             super.touchEvent(touchid, phase, x, y);
         }
         //self
-        {
+        if (actionType == ACTION_TYPE_BOTH || found == null) {
             switch (phase) {
                 case Glfm.GLFMTouchPhaseBegan:
                     oldX = x;
@@ -131,7 +131,7 @@ public class GListItem extends GContainer {
             super.mouseButtonEvent(button, pressed, x, y);
         }
         //self
-        {
+        if (actionType == ACTION_TYPE_BOTH || found == null) {
             if (pressed) {
                 oldX = x;
                 oldY = y;

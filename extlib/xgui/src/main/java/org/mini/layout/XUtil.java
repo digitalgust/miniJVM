@@ -5,6 +5,7 @@
  */
 package org.mini.layout;
 
+import org.mini.gui.GContainer;
 import org.mini.gui.callback.GCallBack;
 import org.mini.gui.GObject;
 import org.mini.gui.GToolkit;
@@ -165,6 +166,15 @@ public class XUtil {
             return Nanovg.NVG_ALIGN_CENTER | Nanovg.NVG_ALIGN_MIDDLE;
         }
         return 0;
+    }
+
+    public static int parseActionType(String actionType) {
+        if (actionType.equalsIgnoreCase("both")) {
+            return GContainer.ACTION_TYPE_BOTH;
+        } else if (actionType.equalsIgnoreCase("sononly")) {
+            return GContainer.ACTION_TYPE_SON_ONLY;
+        }
+        return GContainer.ACTION_TYPE_BOTH;
     }
 
 

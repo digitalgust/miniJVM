@@ -194,6 +194,9 @@ public class Stdlib extends Lib {
      * @return int 返回一个正数
      */
     public DataType random(ArrayList<DataType> para) {
+        if (!para.isEmpty()) {
+            return Interpreter.getCachedInt(random.nextInt(Interpreter.popBackInt(para)));
+        }
         return Interpreter.getCachedInt(random.nextInt());
     }
 

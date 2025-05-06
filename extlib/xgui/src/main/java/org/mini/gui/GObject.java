@@ -292,6 +292,19 @@ abstract public class GObject implements GAttachable {
         doLocationChanged(oldLeft, oldTop, x, y);
     }
 
+    public GObject findParent(GContainer p) {
+        if (p != null) {
+            if (parent != null) {
+                if (parent == p) {
+                    return parent;
+                } else {
+                    return parent.findParent(p);
+                }
+            }
+        }
+        return null;
+    }
+
     public void setSize(float w, float h) {
         if (boundle[WIDTH] != w || boundle[HEIGHT] != h) {
             boundle[WIDTH] = w;

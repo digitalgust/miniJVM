@@ -16,6 +16,8 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mini.gui.GContainer.ACTION_TYPE_BOTH;
+
 
 public abstract class XContainer
         extends XObject {
@@ -24,6 +26,7 @@ public abstract class XContainer
     ArrayList<XObject> children = new ArrayList<>();
     //    ArrayList<XObject> hiddens = new ArrayList<>();
     public int align = Nanovg.NVG_ALIGN_LEFT | Nanovg.NVG_ALIGN_TOP;
+    public int actionType = ACTION_TYPE_BOTH;
     private int depth = -1;
 
     protected XEventHandler eventHandler;
@@ -204,7 +207,7 @@ public abstract class XContainer
 
 
     protected void createAndSetGui() {
-
+        ((GContainer) getGui()).setActionType(actionType);
     }
 
     void setParentSize(int parentW, int parentH) {
@@ -447,11 +450,14 @@ public abstract class XContainer
 
     protected void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
+        attName = attName.toLowerCase();
         if (attName.equals("align")) {
             align = 0;
             for (String s : attValue.split(",")) {
                 align |= XUtil.parseAlign(s);
             }
+        } else if (attName.equals("actiontype")) {
+            actionType = XUtil.parseActionType(attValue);
         }
     }
 

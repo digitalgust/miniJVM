@@ -19,6 +19,9 @@ import static org.mini.nanovg.Nanovg.nvgSave;
  * @author gust
  */
 abstract public class GContainer extends GObject {
+    public static final byte ACTION_TYPE_SON_ONLY = 1;// 点了子组件区域，则响应子组件的点击事件，否则响应当前容器的点击事件
+    public static final byte ACTION_TYPE_BOTH = 0; //同时响应子点击事件
+    protected byte actionType = ACTION_TYPE_BOTH;
 
     protected final List<GObject> elements = new CopyOnWriteArrayList<>();//使用无锁列表，否则如果进行容器同步，在findSonByName，会导出线程死锁，但是copylist的问题是不能sort
     //    protected final Vector<GObject> elements = new Vector<>();//vector的问题是，遍历时，可能因同步问题位置出现错乱
@@ -336,6 +339,22 @@ abstract public class GContainer extends GObject {
         return current;
     }
 
+    public GObject findSon(GObject son) {
+        for (int i = 0; i < elements.size(); i++) {
+            GObject nko = elements.get(i);
+            if (nko == son) {
+                return nko;
+            }
+            if (nko instanceof GContainer) {
+                GObject sub = ((GContainer) nko).findSon(son);
+                if (sub != null) {
+                    return sub;
+                }
+            }
+        }
+        return null;
+    }
+
     /**
      * @return the focus
      */
@@ -348,6 +367,9 @@ abstract public class GContainer extends GObject {
      */
     public void setCurrent(GObject go) {
         if (go != null && go.isContextMenu()) {
+            return;
+        }
+        if (!elements.contains(go)) {
             return;
         }
         if (this.current != go) {
@@ -722,5 +744,13 @@ abstract public class GContainer extends GObject {
         list.sort(c);
         elements.clear();
         elements.addAll(list);
+    }
+
+    public void setActionType(int actionType) {
+        this.actionType = (byte) actionType;
+    }
+
+    public byte getActionType() {
+        return actionType;
     }
 }

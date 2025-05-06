@@ -137,7 +137,7 @@ public class GDesktop extends GPanel implements GCallbackUI {
         }
     }
 
-    synchronized public boolean flushReq() {
+    public boolean flushReq() {
         if (flush > 0) {
             flush--;
             return true;

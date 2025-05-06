@@ -118,6 +118,7 @@ public class XFrame
             frame.setLocation(x, y);
             frame.setSize(width, height);
         }
+        super.createAndSetGui();
     }
 
     protected boolean isFreeObj() {

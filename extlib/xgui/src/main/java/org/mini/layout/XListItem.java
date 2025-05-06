@@ -65,5 +65,6 @@ public class XListItem extends XContainer {
             listItem.setLocation(x, y);
             listItem.setSize(width, height);
         }
+        super.createAndSetGui();
     }
 }
