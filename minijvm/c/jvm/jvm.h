@@ -1,4 +1,3 @@
-
 #ifndef G_JVM_H
 #define G_JVM_H
 
@@ -460,6 +459,7 @@ enum {
     JVM_EXCEPTION_INTERRUPTED,
     JVM_EXCEPTION_VMSTOP,
     JVM_EXCEPTION_ILLEGALTHREADSTATE,
+    JVM_EXCEPTION_ILLEGALMONITORSTATE,
 };
 
 enum {
@@ -1849,6 +1849,8 @@ typedef struct _ShortCut {
 struct _ThreadLock {
     cnd_t thread_cond;
     mtx_t mutex_lock; //互斥锁
+    void* owner_thread; // 锁的所有者线程
+    int count; // 重入计数
 };
 //======================= Jvm =============================
 struct _MiniJVM {

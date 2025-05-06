@@ -356,6 +356,8 @@ void thread_lock_init(ThreadLock *lock) {
     if (lock) {
         cnd_init(&lock->thread_cond);
         mtx_init(&lock->mutex_lock, mtx_recursive | mtx_timed);
+        lock->owner_thread = NULL;
+        lock->count = 0;
     }
 }
 
@@ -883,6 +885,17 @@ s32 jthread_lock(MemoryBlock *mb, Runtime *runtime) { //可能会重入，同一
         jthread_yield(runtime);
         i++;
     }
+
+    //获得锁之后，检查是否锁重入
+    void *current_thread = (void *) (intptr_t) (runtime->thrd_info);
+    if (jtl->owner_thread == current_thread) {
+        // 当前线程已经持有此锁，递增计数器
+        jtl->count++;
+    } else {
+        // 成功获取锁后，设置锁的所有者和计数
+        jtl->owner_thread = current_thread;
+        jtl->count = 1;
+    }
 #if _JVM_DEBUG_LOG_LEVEL > 5
     if (i > 0) {
         waitTime = currentTimeMillis() - waitTime;
@@ -899,7 +912,34 @@ s32 jthread_unlock(MemoryBlock *mb, Runtime *runtime) {
         jthreadlock_create(runtime, mb);
     }
     ThreadLock *jtl = mb->thread_lock;
-    mtx_unlock(&jtl->mutex_lock);
+
+    //释放锁之前， 检查当前线程是否是锁的拥有者
+    void *current_thread = (void *) (intptr_t) (runtime->thrd_info);
+    if (jtl->owner_thread != current_thread || jtl->count <= 0) {
+        jvm_printf("[ERROR]Thread %llx trying to unlock a mutex owned by another thread %llx, count: %d\n",
+                   (s64) (intptr_t) current_thread,
+                   (s64) (intptr_t) jtl->owner_thread,
+                   jtl->count);
+        // 打印调用栈帮助调试
+        print_runtime_stack(runtime);
+        return -1;
+    }
+
+    // 递减计数器，只有当计数器为0时才真正释放锁
+    jtl->count--;
+    if (jtl->count == 0) {
+        jtl->owner_thread = NULL;
+    }
+    s32 ret = mtx_unlock(&jtl->mutex_lock);
+    if (ret != thrd_success) {
+        jvm_printf("[ERROR] unlocking mutex in jthread_unlock. Thread: %llx, mutex: %llx\n",
+                   (s64) (intptr_t) (runtime->thrd_info->jthread),
+                   (s64) (intptr_t) mb);
+        // 发生错误时打印当前线程的调用栈，帮助调试
+        print_runtime_stack(runtime);
+        return -1;
+    }
+
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("unlock: %llx   lock holder: %s, \n", (s64) (intptr_t) (runtime->thrd_info->jthread),
@@ -974,6 +1014,12 @@ s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms) {
     runtime->thrd_info->curThreadLock = mb;
     u8 thread_status = runtime->thrd_info->thread_status;
     runtime->thrd_info->thread_status = THREAD_STATUS_WAIT;
+
+    // wait会释放锁，因此保存锁的拥有者和计数
+    void *saveThread = mb->thread_lock->owner_thread;
+    s32 saveCount = mb->thread_lock->count;
+    mb->thread_lock->owner_thread = NULL;
+    mb->thread_lock->count = 0;
     if (waitms) {
         waitms += currentTimeMillis();
         struct timespec t;
@@ -987,6 +1033,10 @@ s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms) {
     //jvm_printf("!!!!!wake: %llx   \n", (s64) (intptr_t) (&mb->thread_lock->thread_cond));
     runtime->thrd_info->thread_status = thread_status;
     runtime->thrd_info->curThreadLock = NULL;
+
+    //wait结束时，获得锁后恢复锁的拥有者和计数
+    mb->thread_lock->owner_thread = saveThread;
+    mb->thread_lock->count = saveCount;
     return check_throw_interruptexception(runtime);
 }
 
