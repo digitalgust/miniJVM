@@ -833,35 +833,67 @@ s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
 }
 
 
-void os_get_uuid(Utf8String *buf) {
+void os_get_uuid(MiniJVM *jvm, Utf8String *buf) {
     utf8_clear(buf);
-    utf8_append_c(buf, "00000000-0000-0000-0000-000000000000"); //android ios uuid is set by mobile launcher
 
+    // Get computer name using Windows API
+    char deviceId[MAX_COMPUTERNAME_LENGTH + 1] = {0};
+    DWORD size = sizeof(deviceId);
+    if (!GetComputerNameA(deviceId, &size)) {
+        // If GetComputerName fails, use a default value
+        strcpy(deviceId, "UNKNOWN");
+    }
 
-//    utf8_clear(buf);
-//
-//    UUID uuid;
-//    RPC_STATUS status;
-//    RPC_CSTR uuid_str = NULL;
-//    c8 *result = NULL;
-//
-//    // 生成UUID
-//    status = UuidCreateSequential(&uuid);
-//    if (status != RPC_S_OK && status != RPC_S_UUID_LOCAL_ONLY) {
-//        return;
-//    }
-//
-//    // 将UUID转换为字符串
-//    status = UuidToStringA(&uuid, &uuid_str);
-//    if (status != RPC_S_OK) {
-//        return;
-//    }
-//
-//    // 分配内存并复制字符串
-//    utf8_append_c(buf, (char *) uuid_str);
-//
-//    // 释放RPC分配的内存
-//    RpcStringFreeA(&uuid_str);
+    // Get system info
+    OSVERSIONINFOEXA osvi;
+    ZeroMemory(&osvi, sizeof(OSVERSIONINFOEXA));
+    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXA);
+    GetVersionExA((LPOSVERSIONINFOA) &osvi);
+
+    // Get memory info
+    MEMORYSTATUSEX memInfo;
+    memInfo.dwLength = sizeof(MEMORYSTATUSEX);
+    GlobalMemoryStatusEx(&memInfo);
+
+    // Combine all system information
+    char sysInfo[512] = {0};
+    snprintf(sysInfo, sizeof(sysInfo), "%s|%d.%d|%llu",
+             deviceId,
+             osvi.dwMajorVersion, osvi.dwMinorVersion,
+             memInfo.ullTotalPhys);
+    u64 hash0 = 0;
+    for (int i = 0; sysInfo[i] != '\0'; i++) {
+        hash0 = 31 * hash0 + sysInfo[i];
+    }
+
+    // Get absolute path of startup directory
+    char absPath[MAX_PATH] = {0};
+    if (GetFullPathNameA(utf8_cstr(jvm->startup_dir), MAX_PATH, absPath, NULL) == 0) {
+        // If GetFullPathName fails, use the original path
+        strcpy(absPath, utf8_cstr(jvm->startup_dir));
+    }
+
+    // Combine with startup directory
+    char combined[512] = {0};
+    snprintf(combined, sizeof(combined), "%s", absPath);
+
+    // Generate hash1 using custom hash1 function
+    u64 hash1 = 0;
+    for (int i = 0; combined[i] != '\0'; i++) {
+        hash1 = 31 * hash1 + combined[i];
+    }
+
+    // Format as UUID using the hash1 value
+    char uuid[37] = {0};
+    snprintf(uuid, sizeof(uuid),
+             "%08lx-%04lx-%04lx-%04lx-%012llx",
+             hash0 & 0xFFFFFFFF,
+             (hash1 >> 48) & 0xFFFF,
+             (hash1 >> 32) & 0xFFFF,
+             (hash1 >> 16) & 0xFFFF,
+             hash0 ^ hash1);
+
+    utf8_append_c(buf, uuid);
 }
 
 #endif   //#if defined(__JVM_OS_MINGW__) || defined(__JVM_OS_CYGWIN__) || defined(__JVM_OS_VS__)

@@ -266,7 +266,9 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     if (!p_classpath) {
         p_classpath = "./";
     }
-
+    if (!jvm->startup_dir) {
+        jvm->startup_dir = utf8_create_c("./");
+    }
     //
     open_log();
 
@@ -305,7 +307,7 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     Utf8String *tmpstr = utf8_create();
     os_get_lang(tmpstr);
     sys_properties_set_c(jvm, STR_VM_USER_LANGUAGE, utf8_cstr(tmpstr));
-    os_get_uuid(tmpstr);
+    os_get_uuid(jvm, tmpstr);
     sys_properties_set_c(jvm, STR_VM_UUID, utf8_cstr(tmpstr));
     utf8_destroy(tmpstr);
 
@@ -498,7 +500,7 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
 #if _JVM_DEBUG_LOG_LEVEL > 0
                 jvm_printf("[JDWP]jdwp listening (port:%s) ...\n", JDWP_TCP_PORT);
 #endif
-                if (jvm->jdwp_suspend_on_start){
+                if (jvm->jdwp_suspend_on_start) {
                     jvm_printf("[JDWP]suspend on start, waitting for connect... \n");
                     jthread_suspend(runtime);
                 }

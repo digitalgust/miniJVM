@@ -414,7 +414,7 @@ Instance *build_stack_element(Runtime *runtime, Runtime *target);
 
 void os_get_lang(Utf8String *buf);
 
-void os_get_uuid(Utf8String *buf);
+void os_get_uuid(MiniJVM *jvm, Utf8String *buf);
 
 #ifdef __cplusplus
 }
