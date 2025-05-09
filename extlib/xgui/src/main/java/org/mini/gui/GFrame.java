@@ -29,7 +29,7 @@ public class GFrame extends GContainer {
     protected String title;
     protected byte[] title_arr;
 
-    protected byte[] close_arr = {(byte) 0xE2, (byte) 0x9C, (byte) 0x96, 0};
+    protected byte[] close_arr = ICON_CIRCLED_CROSS_BYTE;
     protected float[] close_boundle = new float[4];
     protected float[] titleColor = null;
 
@@ -467,7 +467,7 @@ public class GFrame extends GContainer {
             if (closable) {
                 nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
                 nvgFontFace(vg, GToolkit.getFontIcon());
-                nvgFillColor(vg, nvgRGBA(192, 32, 32, 128));
+                nvgFillColor(vg, nvgRGBA(192, 32, 32, 196));
                 nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
                 nvgTextJni(vg, x + 10, y + 16, close_arr, 0, close_arr.length);
             }

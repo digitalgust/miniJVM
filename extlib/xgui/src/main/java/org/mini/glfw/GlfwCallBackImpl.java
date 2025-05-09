@@ -229,7 +229,7 @@ public class GlfwCallBackImpl extends GCallBack {
     @Override
     public void key(long window, int key, int scancode, int action, int mods) {
         try {
-            if (desktop == null) {
+            if (desktop == null || desktop.isSplash()) {
                 return;
             }
             if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
@@ -246,7 +246,7 @@ public class GlfwCallBackImpl extends GCallBack {
     @Override
     public void character(long window, char character) {
         try {
-            if (desktop == null) {
+            if (desktop == null || desktop.isSplash()) {
                 return;
             }
             desktop.characterEvent(character);
@@ -268,7 +268,7 @@ public class GlfwCallBackImpl extends GCallBack {
     @Override
     public void mouseButton(long window, int button, boolean pressed) {
         try {
-            if (desktop == null) {
+            if (desktop == null || desktop.isSplash()) {
                 return;
             }
             if (window == display) {
@@ -330,7 +330,7 @@ public class GlfwCallBackImpl extends GCallBack {
     @Override
     public void scroll(long window, double scrollX, double scrollY) {
         try {
-            if (desktop == null) {
+            if (desktop == null || desktop.isSplash()) {
                 return;
             }
             desktop.scrollEvent((float) scrollX * 10, (float) scrollY * 10, mouseX, mouseY);
@@ -344,7 +344,7 @@ public class GlfwCallBackImpl extends GCallBack {
     @Override
     public void cursorPos(long window, int x, int y) {
         try {
-            if (desktop == null) {
+            if (desktop == null || desktop.isSplash()) {
                 return;
             }
             //form maybe translate when keyboard popup

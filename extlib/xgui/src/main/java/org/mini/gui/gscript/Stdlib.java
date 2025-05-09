@@ -9,6 +9,7 @@ import org.mini.json.JsonParser;
 import org.mini.json.JsonPrinter;
 import org.mini.layout.guilib.GuiScriptLib;
 import org.mini.reflect.ReflectMethod;
+import org.mini.util.IntList;
 import org.mini.util.SysLog;
 
 import javax.microedition.io.Base64;
@@ -42,6 +43,11 @@ public class Stdlib extends Lib {
         methodNames.put("setEnv".toLowerCase(), this::setEnv);//
         methodNames.put("def".toLowerCase(), this::def); // 存入全局变量
         methodNames.put("isDef".toLowerCase(), this::isDef); // 是否存在某全局变量
+        methodNames.put("isBool".toLowerCase(), this::isBool); //
+        methodNames.put("isInt".toLowerCase(), this::isInt); //
+        methodNames.put("isStr".toLowerCase(), this::isStr); //
+        methodNames.put("isObj".toLowerCase(), this::isObj); //
+        methodNames.put("isArray".toLowerCase(), this::isArray); //
         methodNames.put("print".toLowerCase(), this::print); // 向控制台输出字符串
         methodNames.put("println".toLowerCase(), this::println); // 输出回车
         methodNames.put("min".toLowerCase(), this::min);// 求最小值
@@ -108,6 +114,31 @@ public class Stdlib extends Lib {
         DataType val = Interpreter.popBack(para);
         inp.setEnvVar(key, val.toString());
         return null;
+    }
+
+    public DataType isBool(ArrayList<DataType> para) {
+        DataType dt = Interpreter.popBack(para);//
+        return Interpreter.getCachedBool(dt.type == DataType.DTYPE_BOOL);
+    }
+
+    public DataType isInt(ArrayList<DataType> para) {
+        DataType dt = Interpreter.popBack(para);//
+        return Interpreter.getCachedBool(dt.type == DataType.DTYPE_INT);
+    }
+
+    public DataType isStr(ArrayList<DataType> para) {
+        DataType dt = Interpreter.popBack(para);//
+        return Interpreter.getCachedBool(dt.type == DataType.DTYPE_STR);
+    }
+
+    public DataType isArray(ArrayList<DataType> para) {
+        DataType dt = Interpreter.popBack(para);//
+        return Interpreter.getCachedBool(dt.type == DataType.DTYPE_ARRAY);
+    }
+
+    public DataType isObj(ArrayList<DataType> para) {
+        DataType dt = Interpreter.popBack(para);//
+        return Interpreter.getCachedBool(dt.type == DataType.DTYPE_OBJ);
     }
 
     /**
@@ -346,12 +377,15 @@ public class Stdlib extends Lib {
         String s = Interpreter.popBackStr(para);
         String splitor = Interpreter.popBackStr(para);
         String[] ss = s.split(splitor);
-        int[] dim = new int[]{ss.length};
+        IntList dim = Interpreter.getCachedIntList();
+        dim.add(ss.length);
         Array arr = new Array(dim);
         for (int i = 0; i < ss.length; i++) {
-            dim[0] = i;
+            dim.clear();
+            dim.add(i);
             arr.setValue(dim, Interpreter.getCachedStr(ss[i]));
         }
+        Interpreter.putCachedIntList(dim);
         return arr;
     }
 

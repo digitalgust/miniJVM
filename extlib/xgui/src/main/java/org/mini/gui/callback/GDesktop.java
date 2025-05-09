@@ -137,6 +137,10 @@ public class GDesktop extends GPanel implements GCallbackUI {
         }
     }
 
+    public boolean isSplash() {
+        return splashImg != null;
+    }
+
     public boolean flushReq() {
         if (flush > 0) {
             flush--;

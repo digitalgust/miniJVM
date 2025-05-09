@@ -219,7 +219,7 @@ public class GlfmCallBackImpl extends GCallBack {
 
     @Override
     public boolean onKey(long display, int keyCode, int action, int modifiers) {
-        if (desktop == null) {
+        if (desktop == null || desktop.isSplash()) {
             return true;
         }
         GObject focus = desktop.getCurrent();
@@ -235,7 +235,7 @@ public class GlfmCallBackImpl extends GCallBack {
 
     @Override
     public void onCharacter(long window, String str, int modifiers) {
-        if (desktop == null) {
+        if (desktop == null || desktop.isSplash()) {
             return;
         }
         GObject focus = desktop.getCurrent();
@@ -259,8 +259,7 @@ public class GlfmCallBackImpl extends GCallBack {
 
     @Override
     public boolean onTouch(long display, int touch, int phase, double x, double y) {
-        GDesktop form = this.desktop;
-        if (form == null) {
+        if (desktop == null || desktop.isSplash()) {
             return true;
         }
         touch += Glfw.GLFW_MOUSE_BUTTON_1; //convert touchid to mouse button
@@ -298,7 +297,7 @@ public class GlfmCallBackImpl extends GCallBack {
                     long cost = System.currentTimeMillis() - moveStartAt;
                     if ((Math.abs(x - moveStartX) > INERTIA_MIN_DISTANCE || Math.abs(y - moveStartY) > INERTIA_MIN_DISTANCE)
                             && cost < INERTIA_MAX_MILLS) {//在短时间内进行了滑动操作
-                        form.inertiaEvent((float) moveStartX, (float) moveStartY, (float) x, (float) y, cost);
+                        desktop.inertiaEvent((float) moveStartX, (float) moveStartY, (float) x, (float) y, cost);
                     }
                     //检测长按
                     long_touched = cur - mouseLastPressed > LONG_TOUCH_TIME && Math.abs(x - longStartX) < LONG_TOUCH_MAX_DISTANCE && Math.abs(y - longStartY) < LONG_TOUCH_MAX_DISTANCE;
@@ -310,7 +309,7 @@ public class GlfmCallBackImpl extends GCallBack {
                     break;
                 }
                 case Glfm.GLFMTouchPhaseMoved: {//
-                    form.dragEvent(touch, mouseX[touch] - lastX[touch], mouseY[touch] - lastY[touch], mouseX[touch], mouseY[touch]);
+                    desktop.dragEvent(touch, mouseX[touch] - lastX[touch], mouseY[touch] - lastY[touch], mouseX[touch], mouseY[touch]);
                     long cost = System.currentTimeMillis() - moveStartAt;
                     if (cost > INERTIA_MAX_MILLS) {//reset
                         moveStartX = x;
@@ -326,10 +325,10 @@ public class GlfmCallBackImpl extends GCallBack {
 
             //click event
             if (long_touched) {
-                form.longTouchedEvent(mouseX[touch], mouseY[touch]);
+                desktop.longTouchedEvent(mouseX[touch], mouseY[touch]);
                 long_touched = false;
             }
-            form.touchEvent(touch, phase, mouseX[touch], mouseY[touch]);
+            desktop.touchEvent(touch, phase, mouseX[touch], mouseY[touch]);
         }
         GForm.flush();
         return true;

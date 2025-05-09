@@ -119,7 +119,6 @@ class ExprCellArr extends ExprCell {
 
     String arrName;
     Expression[] para;
-    static ThreadLocal<int[]> dimPos;
 
     void parseArr(String arrs, ArrayList paraList, Interpreter inp) throws Exception {
         //取得数组的名字
@@ -167,12 +166,7 @@ class ExprCellArr extends ExprCell {
         for (int i = 0; i < paralen; i++) {
             para[i] = new Expression((String) tmppara.get(i), inp);
         }
-        dimPos = new ThreadLocal<int[]>() {
-            @Override
-            protected int[] initialValue() {
-                return new int[para.length];
-            }
-        };
+
         Interpreter.putCachedVector(tmppara);
     }
 
@@ -186,7 +180,8 @@ class ExprCellArr extends ExprCell {
  * ------------------------------------------------------
  */
 class Expression extends ExprCell {
-    int type;//表达式求值类型，
+    byte type;//表达式求值类型，
+    boolean containsArrExpr = false;
 
     ExprCell[] cells;
 
@@ -222,6 +217,7 @@ class Expression extends ExprCell {
                 tgt.add(new ExprCellCall(s, inp));
             } else if (inp.isArr(s)) {//是数组
                 tgt.add(new ExprCellArr(s, inp));
+                containsArrExpr = true;
             } else if (Bool.isBool(s)) {//是BOOL值
                 Bool pbt = new Bool(s);
                 pbt.setRecyclable(false);
@@ -269,12 +265,18 @@ class Expression extends ExprCell {
                     if (bracketCount == 0) {
                         // 提取子表达式内容,直接把子表达式转为数组，用Expression (ExprCell[] para, Interpreter inp)初始化
                         int subExprLength = endIndex - (i + 1);
+                        boolean hasArrExpr = false;
                         ArrayList<ExprCell> subExpr = Interpreter.getCachedVector();
                         for (int j = 0; j < subExprLength; j++) {
-                            subExpr.add((ExprCell) tgt.get(i + 1 + j));
+                            ExprCell cell = (ExprCell) tgt.get(i + 1 + j);
+                            subExpr.add(cell);
+                            if (cell instanceof ExprCellArr) {
+                                hasArrExpr = true;
+                            }
                         }
 
                         Expression subExpression = new Expression(subExpr, inp);
+                        subExpression.containsArrExpr = hasArrExpr;
                         Interpreter.putCachedVector(subExpr);
 
                         // 移除旧的元素
@@ -399,6 +401,10 @@ public abstract class Statement {
                     return new StatementSub(stat, inp);
                 case Interpreter.KEYWORD_RET:
                     return new StatementRet(stat, inp);
+                case Interpreter.KEYWORD_FOR:
+                    return new StatementFor(stat, inp);
+                case Interpreter.KEYWORD_EFOR:
+                    return new StatementEfor(stat, inp);
                 default:
                     throw new Exception("error in CStatement.cpp,unknow statement.");
             }
@@ -521,21 +527,150 @@ class StatementSetArr extends Statement {
 
     ExprCellArr dimCell; //数组维数定义,等号左边
     Expression expr; //赋值表达式,等号右边
+    ArrayList<Object> initValues; //存储初始化值,可以是Expression或ArrayList
 
     StatementSetArr(String src, Interpreter inp) throws Exception {
         type = (Interpreter.KEYWORD_SET_ARR);
         ArrayList stackTmp = inp.parseInstruct(src);
         if (!stackTmp.isEmpty()) {
             String leftStr = (String) stackTmp.get(0);
-            //leftStr.print();
             stackTmp.remove(0);
-
             dimCell = new ExprCellArr(leftStr, inp);
         }
-        if (!stackTmp.isEmpty()) {
-            String exprStr = src.substring(src.indexOf('=') + 1);
-            //exprStr.print();
-            expr = new Expression(exprStr, inp);
+
+        // 检查是否有初始化值
+        if (src.contains("=")) {
+            String initStr = src.substring(src.indexOf("(") + 1);
+            initStr = initStr.substring(0, initStr.lastIndexOf(')'));
+
+            // 解析嵌套的初始化值
+            initValues = parseNestedInitValues(initStr, inp);
         }
     }
+
+    // 解析嵌套的初始化值
+    private ArrayList<Object> parseNestedInitValues(String initStr, Interpreter inp) throws Exception {
+        ArrayList<Object> result = new ArrayList<>();
+        ArrayList sValue = inp.parseInstruct(initStr);
+
+        while (!sValue.isEmpty()) {
+            StringBuffer exprStr = new StringBuffer();
+            int bracketCount = 0;
+
+            while (!sValue.isEmpty()) {
+                String tmps = (String) sValue.get(0);
+                sValue.remove(0);
+
+                if (tmps.equals("(")) {
+                    bracketCount++;
+                    exprStr.append(tmps);
+                } else if (tmps.equals(")")) {
+                    bracketCount--;
+                    exprStr.append(tmps);
+                    if (bracketCount == 0) {
+                        // 遇到完整的括号对，递归解析内部的值
+                        String nestedStr = exprStr.toString();
+                        result.add(parseNestedInitValues(nestedStr.substring(1, nestedStr.length() - 1), inp));
+                        exprStr.setLength(0);
+                        break;
+                    }
+                } else if (tmps.equals(",") && bracketCount == 0) {
+                    break;
+                } else {
+                    exprStr.append(tmps);
+                }
+            }
+
+            if (exprStr.length() > 0) {
+                // 检查是否是表达式（包含运算符）
+                boolean isExpression = false;
+                for (int i = 0; i < exprStr.length(); i++) {
+                    char ch = exprStr.charAt(i);
+                    if ("+-*/%><=!&|".indexOf(ch) >= 0) {
+                        isExpression = true;
+                        break;
+                    }
+                }
+
+                if (isExpression) {
+                    // 如果是表达式，创建 Expression 对象
+                    result.add(new Expression(exprStr.toString(), inp));
+                } else {
+                    // 如果不是表达式，尝试解析为常量
+                    String value = exprStr.toString().trim();
+                    if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) {
+                        result.add(new Expression(value, inp));
+                    } else if (value.startsWith("\"") && value.endsWith("\"")) {
+                        result.add(new Expression(value, inp));
+                    } else {
+                        try {
+                            // 尝试解析为数字
+                            Long.parseLong(value);
+                            result.add(new Expression(value, inp));
+                        } catch (NumberFormatException e) {
+                            // 如果不是数字，当作变量处理
+                            result.add(new Expression(value, inp));
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
 };
+
+class StatementFor extends Statement {
+    StatementSetVar initStat;    // 初始化表达式
+    Expression condExpr;    // 条件表达式
+    StatementSetVar stepStat;    // 步进表达式
+    short ip_efor = -1;    // efor语句的位置
+    boolean firstEnter = true;// 是否 是第一次进入循环
+
+    StatementFor(String src, Interpreter inp) throws Exception {
+        type = (Interpreter.KEYWORD_FOR);
+        // 解析for语句的三个部分：初始化、条件、步进
+        String content = src.substring(Interpreter.STRS_RESERVED[Interpreter.KEYWORD_FOR].length());
+        content = content.substring(content.indexOf('(') + 1, content.lastIndexOf(')'));
+
+        // 使用 parseInstruct 分割表达式
+        ArrayList<String> parts = new ArrayList<>();
+        ArrayList<String> tokens = inp.parseInstruct(content);
+        StringBuilder currentExpr = new StringBuilder();
+
+        while (!tokens.isEmpty()) {
+            String token = (String) tokens.get(0);
+            tokens.remove(0);
+
+            if (token.equals(",")) {
+                parts.add(currentExpr.toString().trim());
+                currentExpr.setLength(0);
+            } else {
+                currentExpr.append(token);
+            }
+        }
+
+        // 添加最后一个表达式
+        if (currentExpr.length() > 0) {
+            parts.add(currentExpr.toString().trim());
+        }
+
+        if (parts.size() != 3) {
+            throw new Exception("Invalid for statement format: expected 3 expressions");
+        }
+
+        // 创建三个表达式
+        initStat = new StatementSetVar(parts.get(0), inp);
+        condExpr = new Expression(parts.get(1), inp);
+        stepStat = new StatementSetVar(parts.get(2), inp);
+    }
+}
+
+class StatementEfor extends Statement {
+    short ip_for = -1;    // for语句的位置
+
+    StatementEfor(String src, Interpreter inp) {
+        type = (Interpreter.KEYWORD_EFOR);
+    }
+}
+
