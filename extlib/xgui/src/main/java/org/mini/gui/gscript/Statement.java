@@ -50,7 +50,7 @@ class ExprCellCall extends ExprCell {
                 }
                 paraList.add(exprStr.toString());
             } //end while
-
+            Interpreter.putCachedVector(sValue);
         }
 
     }
@@ -228,7 +228,7 @@ class Expression extends ExprCell {
         }
 
         init(tgt, inp);
-
+        Interpreter.putCachedVector(src);
         Interpreter.putCachedVector(tgt);
     }
 
@@ -539,13 +539,20 @@ class StatementSetArr extends Statement {
         }
 
         // 检查是否有初始化值
-        if (src.contains("=")) {
-            String initStr = src.substring(src.indexOf("(") + 1);
-            initStr = initStr.substring(0, initStr.lastIndexOf(')'));
+        if (stackTmp.size() > 2 && stackTmp.get(0).equals("=") && stackTmp.get(1).equals("[")) {
+            String initStr = src.substring(src.indexOf("=") + 1);
+            initStr = initStr.substring(initStr.indexOf("[") + 1);
+            initStr = initStr.substring(0, initStr.lastIndexOf(']'));
 
             // 解析嵌套的初始化值
             initValues = parseNestedInitValues(initStr, inp);
+        } else {
+            if (!stackTmp.isEmpty()) {
+                String exprStr = src.substring(src.indexOf('=') + 1);
+                expr = new Expression(exprStr, inp);
+            }
         }
+        Interpreter.putCachedVector(stackTmp);
     }
 
     // 解析嵌套的初始化值
@@ -561,10 +568,10 @@ class StatementSetArr extends Statement {
                 String tmps = (String) sValue.get(0);
                 sValue.remove(0);
 
-                if (tmps.equals("(")) {
+                if (tmps.equals("[")) {
                     bracketCount++;
                     exprStr.append(tmps);
-                } else if (tmps.equals(")")) {
+                } else if (tmps.equals("]")) {
                     bracketCount--;
                     exprStr.append(tmps);
                     if (bracketCount == 0) {
@@ -616,6 +623,7 @@ class StatementSetArr extends Statement {
             }
         }
 
+        Interpreter.putCachedVector(sValue);
         return result;
     }
 };
@@ -649,7 +657,7 @@ class StatementFor extends Statement {
                 currentExpr.append(token);
             }
         }
-
+        Interpreter.putCachedVector(tokens);
         // 添加最后一个表达式
         if (currentExpr.length() > 0) {
             parts.add(currentExpr.toString().trim());

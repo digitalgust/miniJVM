@@ -30,7 +30,7 @@ import java.util.*;
  * 20250217 表达式求值类型缓存，加快执行速度
  * 20250317 表达式初始化时，把子表达式找出来，简化表达式求值
  * 20250510 添加了for语句： for(i=0,i<10,i++); println(i); efor;
- * 20250510 添加了数组初始化语句： arr[2][3]=((1,2),(true,5,"b"));
+ * 20250510 添加了数组初始化语句： arr[2][3]=[[1,2],[true,5,"b"]];
  * <p>
  * Title: </p>
  * <p>
@@ -206,14 +206,12 @@ public class Interpreter {
      */
     public void loadFromString(String code) {
 
-        int dquodation = 0;
         StringBuilder line = new StringBuilder();
         ArrayList v = new ArrayList();
         for (int i = 0, len = code.length(); i < len; i++) {
             try {
                 char ch = code.charAt(i);
                 if (ch == '"') {
-                    dquodation++;
                     line.append(ch);
                     int next = findNextDoubQuot(code, i + 1, line);
                     i = next;
@@ -786,7 +784,7 @@ public class Interpreter {
 //    	if(!stack.isEmpty()){
 //    		return stack;
 //    	}
-        ArrayList stack = new ArrayList();
+        ArrayList stack = getCachedVector();
 //    	if (bolo.CompilerCfg.isProfile) {
 //			debug.Profile.instance.begin("parse");
 //		}
