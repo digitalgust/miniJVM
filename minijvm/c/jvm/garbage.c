@@ -650,7 +650,7 @@ s32 _gc_wait_thread_suspend(MiniJVM *jvm, Runtime *runtime) {
         return 0;
     }
     while (!(runtime->thrd_info->is_suspend ||  /// While executing bytecode, if suspend_count is not 0, pause bytecode execution and set is_suspend = 1
-             !runtime->thrd_info->is_bc_exec)  // During certain IO waits, JNI sets is_bc_exec = 1
+             runtime->thrd_info->is_blocking)  // During certain IO waits, JNI sets is_blocking = 1
             ) { //
         vm_share_notifyall(jvm);
         vm_share_timedwait(jvm, 100);

@@ -768,7 +768,7 @@ s32 jthread_run(void *para) {
     runtime->thrd_info->is_interrupt = 0;
     runtime->thrd_info->is_stop = 0;
     runtime->thrd_info->is_suspend = 0;
-    runtime->thrd_info->is_bc_exec = 0;
+    runtime->thrd_info->is_blocking = 0;
     method = find_instance_methodInfo_by_name(jthread, methodName, methodType, runtime);
     push_ref(runtime->stack, (__refer) jthread);
     execute_method_impl(method, runtime);
@@ -990,12 +990,12 @@ s32 jthread_suspend(Runtime *runtime) {
     return 0;
 }
 
-inline void jthread_bytecode_exit(Runtime *runtime) {
-    runtime->thrd_info->is_bc_exec = 0; // enter native execution
+void jthread_block_enter(Runtime *runtime) {
+    runtime->thrd_info->is_blocking = 1;
 }
 
-inline void jthread_bytecode_enter(Runtime *runtime) {
-    runtime->thrd_info->is_bc_exec = 1;//enter bytecode execution
+void jthread_block_exit(Runtime *runtime) {
+    runtime->thrd_info->is_blocking = 0;
     check_suspend_and_pause(runtime);
 }
 
@@ -1011,6 +1011,7 @@ s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms) {
     if (!mb->thread_lock) {
         jthreadlock_create(runtime, mb);
     }
+    jthread_block_enter(runtime);
     runtime->thrd_info->curThreadLock = mb;
     u8 thread_status = runtime->thrd_info->thread_status;
     runtime->thrd_info->thread_status = THREAD_STATUS_WAIT;
@@ -1037,6 +1038,7 @@ s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms) {
     //wait结束时，获得锁后恢复锁的拥有者和计数
     mb->thread_lock->owner_thread = saveThread;
     mb->thread_lock->count = saveCount;
+    jthread_block_exit(runtime);
     return check_throw_interruptexception(runtime);
 }
 
@@ -1051,6 +1053,7 @@ s32 jthread_wakeup(Runtime *runtime) {
 
 s32 jthread_sleep(Runtime *runtime, s64 ms) {
     static const s64 PERIOD = 500;
+    jthread_block_enter(runtime);
     u8 thread_status = runtime->thrd_info->thread_status;
     runtime->thrd_info->thread_status = THREAD_STATUS_SLEEPING;
     if (ms < PERIOD) {
@@ -1067,6 +1070,7 @@ s32 jthread_sleep(Runtime *runtime, s64 ms) {
         }
     }
     runtime->thrd_info->thread_status = thread_status;
+    jthread_block_exit(runtime);
     return check_throw_interruptexception(runtime);;
 }
 
@@ -2071,8 +2075,8 @@ void init_jni_func_table(MiniJVM *jvm) {
     jnienv.localvar_getInt = localvar_getInt_jni;
     jnienv.localvar_getLong_2slot = localvar_getLong_2slot_jni;
     jnienv.localvar_setLong_2slot = localvar_setLong_2slot_jni;
-    jnienv.jthread_block_enter = jthread_bytecode_exit;
-    jnienv.jthread_block_exit = jthread_bytecode_enter;
+    jnienv.jthread_block_enter = jthread_block_enter;
+    jnienv.jthread_block_exit = jthread_block_exit;
     jnienv.utf8_create = utf8_create;
     jnienv.utf8_create_part_c = utf8_create_part_c;
     jnienv.utf8_cstr = utf8_cstr;

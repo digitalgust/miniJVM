@@ -554,7 +554,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
     //start
     ret = RUNTIME_STATUS_NORMAL;
     runtime = runtime_create_inl(pruntime);
-    jthread_bytecode_enter(runtime);
 
     jvm = runtime->jvm;
 
@@ -602,9 +601,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
             if (JIT_ENABLE && ca->jit.state == JIT_GEN_SUCCESS) {
                 //jvm_printf("jit call %s.%s()\n", method->_this_class->name->data, method->name->data);
-                jthread_bytecode_exit(runtime);
                 ret = ca->jit.func(method, runtime);
-                jthread_bytecode_enter(runtime);
                 if (!ret) {
                     switch (method->return_slots) {
                         case 0: {// V
@@ -661,12 +658,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
                         sp = stack->sp;
                         check_gc_pause(-1);  //step debug required
-#if _JVM_DEBUG_LOG_LEVEL > 1
-                        if (jvm->collector->isworldstoped) {
-                            jvm_printf("[ERROR] world stopped, but thread is running: %llx\n", (s64) (intptr_t) runtime->thrd_info->jthread);
-                        }
-#endif   //_JVM_DEBUG_LOG_LEVEL > 1
                     }
+#if _JVM_DEBUG_LOG_LEVEL > 1
+                    if (jvm->collector->isworldstoped && thrd_info->top_runtime != jvm->collector->runtime) {
+                        jvm_printf("[ERROR] world stopped, but thread is running: %llx\n", (s64) (intptr_t) runtime->thrd_info->jthread);
+                    }
+#endif   //_JVM_DEBUG_LOG_LEVEL > 1
 
 
 #if _JVM_DEBUG_PROFILE
@@ -4121,9 +4118,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
             ret = RUNTIME_STATUS_ERROR;
         } else if (method->native_func) {
             if (method->is_sync)_synchronized_lock_method(method, runtime);
-            jthread_bytecode_exit(runtime);
             ret = method->native_func(runtime, clazz);
-            jthread_bytecode_enter(runtime);
             if (method->is_sync)_synchronized_unlock_method(method, runtime);
             if (ret) {
                 ins = pop_ref(stack);
@@ -4165,7 +4160,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
         }
     }
 #endif
-    jthread_bytecode_exit(runtime);
     runtime_destroy_inl(runtime);
     pruntime->son = NULL;  //must clear , required for getLastSon()
 

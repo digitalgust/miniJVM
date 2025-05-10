@@ -542,6 +542,15 @@ s32 execute_method(MethodInfo *method, Runtime *runtime) {
     if (!runtime || !method) {
         return RUNTIME_STATUS_ERROR;
     }
+    // if not detect the son ,may cause jthread enter fake blocking state,
+    // eg: call_bc-> call_native->(reenter) call_bc->ret_bc(fake_blocking)->ret_native->ret_bc
+    // only the outer thread top call the java bytecode ,need check block state
+    if (runtime->thrd_info->top_runtime->son == NULL) {// is top call bc, not reenter bc
+        jthread_block_exit(runtime);
+    }
     s32 ret = execute_method_impl(method, runtime);
+    if (runtime->thrd_info->top_runtime->son == NULL) {
+        jthread_block_enter(runtime);
+    }
     return ret;
 }
