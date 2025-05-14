@@ -739,7 +739,7 @@ s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src) {
     }
 
     // 分配临时 UTF-16 缓冲区
-    wchar_t *utf16_buf = (wchar_t *) malloc((utf16_len + 1) * sizeof(wchar_t));
+    wchar_t *utf16_buf = (wchar_t *) jvm_malloc((utf16_len + 1) * sizeof(wchar_t));
     if (!utf16_buf) {
         return -1;
     }
@@ -796,7 +796,7 @@ s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
     }
 
     // Allocate temporary buffer for UTF-16 string
-    wchar_t *utf16_buf = (wchar_t *) malloc((utf16_len + 1) * sizeof(wchar_t));
+    wchar_t *utf16_buf = (wchar_t *) jvm_malloc((utf16_len + 1) * sizeof(wchar_t));
     if (!utf16_buf) {
         return -1;
     }

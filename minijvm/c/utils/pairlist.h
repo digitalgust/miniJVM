@@ -11,6 +11,7 @@ extern "C" {
 #endif
 
 #include "d_type.h"
+#include <string.h>
 
 typedef struct _Pair {
     union {
@@ -90,10 +91,16 @@ static inline s32 pairlist_put(Pairlist *list, __refer left, __refer right) {
     // Need to add new entry, check if reallocation needed
     if (list->count >= list->_alloced) {
         s32 newSize = list->_alloced << 1;
-        Pair *newPtr = (Pair *) jvm_realloc(list->ptr, newSize * sizeof(Pair));
+        Pair *newPtr = (Pair *) jvm_malloc(newSize * sizeof(Pair));
         if (!newPtr) {
             return -1;
         }
+        /* Copy existing data to new memory */
+        memmove(newPtr, list->ptr, list->count * sizeof(Pair));
+        
+        /* Free old memory */
+        jvm_free(list->ptr);
+        
         list->ptr = newPtr;
         list->_alloced = newSize;
     }

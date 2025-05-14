@@ -3,6 +3,7 @@
 //
 #include "memory.h"
 #include "bytebuf.h"
+#include <string.h>
 
 ByteBuf *bytebuf_create(u32 size) {
     if (!size)size = 256;
@@ -94,14 +95,23 @@ s32 bytebuf_write_to(ByteBuf *bf, ByteBuf *dst, s32 size) {
 
 
 void bytebuf_expand(ByteBuf *bf, u32 size) {
-    if (size == 0) {
+    if (!bf || size == 0) {
         return;
     }
-//    if (size == 1854) {
-//        int debug = 1;
-//    }
-    void *p = jvm_realloc(bf->buf, size);
+    
+    /* Calculate actual data size to copy */
+    u32 data_size = bf->wp;
+    
+    void *p = jvm_malloc(size);
     if (p) {
+        /* Copy only the actual data that is in use */
+        if (data_size > 0) {
+            memmove(p, bf->buf, data_size);
+        }
+        
+        /* Free old memory */
+        jvm_free(bf->buf);
+        
         bf->buf = p;
         bf->_alloc_size = size;
     }

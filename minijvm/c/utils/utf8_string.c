@@ -413,7 +413,7 @@ unsigned long _utf8_hashCode(Utf8String *ustr) {
 }
 
 int _utf8_space_require(Utf8String *ustr, int need) {
-    if (ustr->length + need <= ustr->_alloced) {
+    if ((!ustr) || ustr->length + need <= ustr->_alloced) {
         return 0;
     }
 
@@ -429,16 +429,21 @@ int _utf8_space_require(Utf8String *ustr, int need) {
 
     /* Reallocate the array to the new size */
 
-    data = jvm_realloc(ustr->data, sizeof(utf8_char) * newsize);
-
+    data = jvm_malloc(sizeof(utf8_char) * newsize);
     if (data == NULL) {
         return 0;
-    } else {
-        ustr->data = data;
-        ustr->_alloced = newsize;
-
-        return 1;
     }
+
+    /* Copy existing data to new memory */
+    memmove(data, ustr->data, sizeof(utf8_char) * ustr->length);
+
+    /* Free old memory */
+    jvm_free(ustr->data);
+
+    ustr->data = data;
+    ustr->_alloced = newsize;
+
+    return 1;
 }
 
 int utf8_expand(Utf8String *ustr, int newlen) {
