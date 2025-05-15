@@ -35,5 +35,6 @@ public class XViewPort extends XContainer {
             viewPort.setLocation(x, y);
             viewPort.setSize(width, height);
         }
+        super.createAndSetGui();
     }
 }

@@ -21,8 +21,12 @@
 u32 is_random_init = FALSE;
 
 s32 com_sun_cldc_io_ConsoleOutputStream_write(Runtime *runtime, JClass *clazz) {
-    s16 ch = localvar_getInt(runtime->localvar, 1);
+    u8 ch = (u8) localvar_getInt(runtime->localvar, 1);
+#if __JVM_OS_ANDROID__
+    jvm_printf("%c", ch);
+#else
     fprintf(stdout, "%c", ch);
+#endif
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("com_sun_cldc_io_ConsoleOutputStream_write\n");
@@ -901,8 +905,14 @@ s32 java_lang_String_intern0(Runtime *runtime, JClass *clazz) {
         Utf8String *ustr = utf8_create();
         jstring_2_utf8(jstr, ustr, runtime);
         Instance *in_jstr = (Instance *) hashtable_get(runtime->jvm->table_jstring_const, ustr);
+        if (!in_jstr) {
+            in_jstr = jstr;
+            hashtable_put(runtime->jvm->table_jstring_const, ustr, in_jstr);
+            gc_obj_hold(runtime->jvm->collector, in_jstr);
+        } else {
+            utf8_destroy(ustr);
+        }
         push_ref(stack, (__refer) in_jstr);
-        utf8_destroy(ustr);
     } else {
         push_ref(stack, NULL);
     }
@@ -1280,13 +1290,7 @@ s32 java_lang_Thread_interrupt0(Runtime *runtime, JClass *clazz) {
     Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, 0);
 
     Runtime *rt_thread = jthread_get_stackframe_value(runtime->jvm, ins);
-    if (rt_thread) {
-        rt_thread->thrd_info->is_interrupt = 1;
-
-        if (rt_thread->thrd_info->thread_status == THREAD_STATUS_WAIT) {
-            jthread_wakeup(rt_thread);
-        }
-    }
+    jthread_interrupt(rt_thread);
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("java_lang_Thread_interrupt0 \n");

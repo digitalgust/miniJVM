@@ -94,9 +94,11 @@ public class GListItem extends GContainer {
     @Override
     public void touchEvent(int touchid, int phase, int x, int y) {
         GObject found = findSonByXY(x, y);
-        if (found != null && found.actionListener != null && found.getOnClinkScript() == null) {
+        if (found != null) {
             super.touchEvent(touchid, phase, x, y);
-        } else {
+        }
+        //self
+        if (actionType == ACTION_TYPE_BOTH || found == null) {
             switch (phase) {
                 case Glfm.GLFMTouchPhaseBegan:
                     oldX = x;
@@ -125,9 +127,11 @@ public class GListItem extends GContainer {
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         GObject found = findSonByXY(x, y);
-        if (found != null && found.actionListener != null && found.getOnClinkScript() == null) {
+        if (found != null) {
             super.mouseButtonEvent(button, pressed, x, y);
-        } else {
+        }
+        //self
+        if (actionType == ACTION_TYPE_BOTH || found == null) {
             if (pressed) {
                 oldX = x;
                 oldY = y;

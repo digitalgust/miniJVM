@@ -6,7 +6,7 @@
 #include "jit.h"
 
 #if JIT_ENABLE
-
+//#pragma message("jit compiled")
 #include "sljitLir.h"
 
 #include <stdio.h>
@@ -101,12 +101,6 @@ static void print_stack(s64 a, s64 b, s64 c) {
     printf("%d %s\n", offset, INST_NAME[ca->bytecode_for_jit[offset]]);
 }
 
-static void print_callstack(Runtime *runtime) {
-    Utf8String *ustr = utf8_create();
-    getRuntimeStack(runtime, ustr);
-    jvm_printf("error :\n %s\n", utf8_cstr(ustr));
-    utf8_destroy(ustr);
-}
 
 static void _debug_gen_print_reg(struct sljit_compiler *C) {
     //save r0,r1,r2
@@ -184,7 +178,7 @@ static void _debug_gen_print_callstack(struct sljit_compiler *C) {
 
     _gen_save_sp_ip(C);
     sljit_emit_op1(C, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
-    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS1V(P), SLJIT_IMM, SLJIT_FUNC_ADDR(print_callstack));
+    sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS1V(P), SLJIT_IMM, SLJIT_FUNC_ADDR(print_runtime_stack));
 
     //restore r0,r1,r2
     sljit_emit_op1(C, SLJIT_MOV, SLJIT_R0, 0, SLJIT_MEM0(), (sljit_sw) &a);
@@ -3348,6 +3342,7 @@ void construct_jit(MethodInfo *method, Runtime *runtime) {
 
     if (ca->jit.state == JIT_GEN_SUCCESS) {
         s32 debug = 1;
+        method->is_jit = 1;
     }
 #if(JIT_CODE_DUMP)
     if (utf8_equals_c(runtime->method->_this_class->name, "org/mini/json/JsonParser")

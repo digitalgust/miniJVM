@@ -39,7 +39,6 @@
 #include <string.h>
 
 
-
 struct _SSLC_Entry {
     mbedtls_net_context server_fd;
     char pers[32];
@@ -54,6 +53,8 @@ struct _SSLC_Entry {
 typedef struct _SSLC_Entry SSLC_Entry;
 
 int sslc_init(SSLC_Entry *entry);
+
+int sslc_wrap(SSLC_Entry *entry, int netfd, char *hostname);
 
 int sslc_connect(SSLC_Entry *entry, char *hostname, char *port);
 

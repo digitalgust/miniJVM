@@ -117,6 +117,10 @@ public class SysLog {
         logger.log(level, msg, params);
     }
 
+    public static void fine(String msg, Object... params) {
+        logger.log(Level.FINE, msg, params);
+    }
+
     public static void info(String msg, Object... params) {
         logger.log(Level.INFO, msg, params);
     }
@@ -125,7 +129,12 @@ public class SysLog {
         logger.log(Level.WARNING, msg, params);
     }
 
-    public static void error(String msg, Object... params) {
-        logger.log(Level.SEVERE, msg, params);
+    public static void error(String msg, Throwable thr) {
+        logger.log(Level.SEVERE, msg, thr);
     }
+
+    public static void error(String msg) {
+        logger.log(Level.SEVERE, msg);
+    }
+
 }

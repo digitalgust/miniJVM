@@ -32,7 +32,7 @@ abstract public class GObject implements GAttachable {
 
     public static String ICON_SEARCH = "\uD83D\uDD0D";
     public static byte[] ICON_SEARCH_BYTE = GLUtil.toCstyleBytes(ICON_SEARCH);
-    public static String ICON_CIRCLED_CROSS = "\u2716";
+    public static String ICON_CIRCLED_CROSS = "\u2297";//"\u2716";
     public static byte[] ICON_CIRCLED_CROSS_BYTE = GLUtil.toCstyleBytes(ICON_CIRCLED_CROSS);
     public static String ICON_CHEVRON_RIGHT = "\uE75E";
     public static byte[] ICON_CHEVRON_RIGHT_BYTE = GLUtil.toCstyleBytes(ICON_CHEVRON_RIGHT);
@@ -137,7 +137,7 @@ abstract public class GObject implements GAttachable {
 
     protected GObject(GForm form) {
         if (this instanceof GCallbackUI) {
-            SysLog.info("new GCallbackUI " + this);
+            //SysLog.info("new GCallbackUI " + this);
         } else if (this instanceof GForm) {//只有GForm可以传空进来
             this.form = (GForm) this;
         } else {
@@ -290,6 +290,19 @@ abstract public class GObject implements GAttachable {
         boundle[LEFT] = x;
         boundle[TOP] = y;
         doLocationChanged(oldLeft, oldTop, x, y);
+    }
+
+    public GObject findParent(GContainer p) {
+        if (p != null) {
+            if (parent != null) {
+                if (parent == p) {
+                    return parent;
+                } else {
+                    return parent.findParent(p);
+                }
+            }
+        }
+        return null;
     }
 
     public void setSize(float w, float h) {

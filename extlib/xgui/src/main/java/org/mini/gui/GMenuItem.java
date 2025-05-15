@@ -78,10 +78,12 @@ public class GMenuItem extends GContainer {
     @Override
     public void touchEvent(int touchid, int phase, int x, int y) {
         GObject found = findSonByXY(x, y);
-        if (found != null && found.actionListener != null && found.getOnClinkScript() == null) {
+        if (found != null) {
             super.touchEvent(touchid, phase, x, y);
-        } else {
-            if (isInArea(x, y)) {
+        }
+        //self
+        if (isInArea(x, y)) {
+            if (actionType == ACTION_TYPE_BOTH || found == null) {
                 switch (phase) {
                     case Glfm.GLFMTouchPhaseBegan:
                         touched = true;
@@ -95,11 +97,11 @@ public class GMenuItem extends GContainer {
                         doStateChanged(this);
                         break;
                 }
-            } else if (!isInArea(x, y)) {
-                if (touched) {
-                    touched = false;
-                    doStateChanged(this);
-                }
+            }
+        } else if (!isInArea(x, y)) {
+            if (touched) {
+                touched = false;
+                doStateChanged(this);
             }
         }
     }
@@ -112,10 +114,12 @@ public class GMenuItem extends GContainer {
     @Override
     public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
         GObject found = findSonByXY(x, y);
-        if (found != null && found.actionListener != null && found.getOnClinkScript() == null) {
+        if (found != null) {
             super.mouseButtonEvent(button, pressed, x, y);
-        } else {
-            if (isInArea(x, y)) {
+        }
+        //self
+        if (isInArea(x, y)) {
+            if (actionType == ACTION_TYPE_BOTH || found == null) {
                 if (pressed) {
                     touched = true;
                     parent.setCurrent(this);

@@ -105,7 +105,7 @@ public abstract class HttpURLConnection extends URLConnection {
                 rcvData = (baos.toByteArray());
                 long exp = connection.getExpiration();
                 long cur = System.currentTimeMillis();
-                if (cur < exp) {
+                if (cur < exp && rcvData.length < 1024 * 1024) {
                     CachedFile res = new CachedFile(rcvData, connection.getExpiration());
                     caches.put(urlStr, res);
                 }

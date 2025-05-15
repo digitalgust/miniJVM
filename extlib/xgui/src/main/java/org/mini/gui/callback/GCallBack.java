@@ -12,6 +12,7 @@ import org.mini.gui.GForm;
 import org.mini.util.SysLog;
 
 import java.io.InputStream;
+import java.util.logging.Level;
 
 /**
  * @author Gust
@@ -36,10 +37,15 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
         if (instance == null) {
 
             try {
+                SysLog.getLogger().setLevel(Level.INFO);
+                System.out.println("uuid=" + System.getProperty("uuid"));
+//                System.setProperty("com.sun.midp.io.http.proxy", "127.0.0.1:1087");
+//                System.setProperty("https.proxyHost", "127.0.0.1");
+//                System.setProperty("https.proxyPort", "10808");
                 Class glfw = Class.forName("org.mini.glfw.Glfw");
-                SysLog.info("load gui native " + glfw);
+                //SysLog.info("load gui native " + glfw);
                 Class glfm = Class.forName("org.mini.glfm.Glfm");
-                SysLog.info("load gui native " + glfm);
+                //SysLog.info("load gui native " + glfm);
                 Class c = Class.forName(System.getProperty("gui.driver"));
                 instance = (GCallBack) c.newInstance();
                 instance.desktop = new GDesktop(instance);

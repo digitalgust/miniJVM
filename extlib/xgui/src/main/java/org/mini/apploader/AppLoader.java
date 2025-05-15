@@ -37,7 +37,7 @@ public class AppLoader {
     static final String APP_FILE_EXT = ".jar";
     static final String APP_DATA_DIR = "/appdata/";
     static final String TMP_DIR = "/tmp/";
-    static final String[] EXAMPLE_APP_FILES = {"minix.jar", "minicompiler.jar"};
+    static String[] EXAMPLE_APP_FILES = {"minix.jar", "minicompiler.jar"};
     static final String KEY_BOOT = "boot";
     static final String KEY_DOWNLOADURL = "downloadurl";
     static final String KEY_LANGUAGE = "language";
@@ -131,14 +131,26 @@ public class AppLoader {
             }
         });
 
-        copyExApp();
-        String bootApp = appinfo.getProperty(KEY_BOOT);
-        if (bootApp == null || !isJarExists(bootApp)) {
-            setBootApp(EXAMPLE_APP_FILES[0]);
-            bootApp = EXAMPLE_APP_FILES[0];
+        String copyjars = getBaseInfo("copy");
+        if (copyjars != null && copyjars.length() > 0) {
+            EXAMPLE_APP_FILES = copyjars.split(",");
+            for (int i = 0; i < EXAMPLE_APP_FILES.length; i++) {
+                EXAMPLE_APP_FILES[i] = EXAMPLE_APP_FILES[i] + APP_FILE_EXT;
+            }
         }
-        bootApp = null;//"block the setup bootapp auto boot";
-        runApp(bootApp);
+
+        copyExApp();
+        AppManager.getInstance().active();
+    }
+
+    public static void runBootApp() {
+        if (isBootRun()) { //如果appinfo.properties中配置为false,则不运行bootjar
+            String bootApp = getBaseInfo(KEY_BOOT);
+            if (bootApp != null) {
+                bootApp = bootApp + APP_FILE_EXT;
+                runApp(bootApp);
+            }
+        }
     }
 
     static void checkDir() {
@@ -195,6 +207,9 @@ public class AppLoader {
 
     static void copyExApp() {
         for (String jarName : EXAMPLE_APP_FILES) {
+            if (jarName.length() == 0) {
+                continue;
+            }
             String srcPath = GCallBack.getInstance().getAppResRoot() + "/resfiles/" + jarName;
             String dstPath = getAppJarPath(jarName);
             File dst = new File(dstPath);
@@ -202,12 +217,12 @@ public class AppLoader {
                 String dstVersion = getAppConfig(jarName, "version");
                 String srcVersion = getAppConfigWithJarPath(srcPath, "version");
                 if (compareVersions(srcVersion, dstVersion) <= 0) {
-                    SysLog.info("exapp exists " + jarName);
+                    //SysLog.info("exapp exists " + jarName);
                     continue;
                 }
             }
             addApp(jarName, srcPath);
-            SysLog.info("copy exapp " + jarName);
+            //SysLog.info("copy exapp " + jarName);
         }
     }
 
@@ -590,7 +605,7 @@ public class AppLoader {
             return true;
         } catch (Exception exception) {
             //exception.printStackTrace();
-            SysLog.error("add app error", exception);
+            SysLog.error("add plugin error" + jarName, exception);
         }
         return false;
     }
@@ -687,7 +702,7 @@ public class AppLoader {
             if (url == null) {
                 return null;
             }
-            XuiResourceLoader loader = new XuiResourceLoader();
+            XuiResourceLoader loader = new XuiResourceLoader(false);
             XuiResource res = loader.loadResource(url, post);
             if (res != null) {
                 String json = res.getString();
@@ -753,5 +768,19 @@ public class AppLoader {
             e.printStackTrace();
         }
         return 0;
+    }
+
+
+    public static boolean isBootRun() {
+        String bootRun = getProperty("bootrun"); //本地存没存，如果存了以本地为准
+        return !"false".equals(bootRun);
+    }
+
+    public static boolean isShowHome() {
+        String showHome = getProperty("home"); //本地存没存，如果存了以本地为准
+        if (showHome.length() == 0) {
+            showHome = getBaseInfo("home"); //没存用配置文件默认值
+        }
+        return !"false".equals(showHome);
     }
 }

@@ -55,7 +55,7 @@ public class XFrame
     protected int getTrialViewH() {
         int tmpViewH = super.getTrialViewH();
         if (tmpViewH != XDef.NODEF) {
-            return tmpViewH - (int) GFrame.TITLE_HEIGHT;
+            return tmpViewH - (int) (titleShow ? (int) GFrame.TITLE_HEIGHT : 0);
         }
         return tmpViewH;
     }
@@ -118,6 +118,7 @@ public class XFrame
             frame.setLocation(x, y);
             frame.setSize(width, height);
         }
+        super.createAndSetGui();
     }
 
     protected boolean isFreeObj() {

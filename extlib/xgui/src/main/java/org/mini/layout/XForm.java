@@ -48,5 +48,6 @@ public class XForm extends XContainer {
             form.setLocation(x, y);
             form.setSize(width, height);
         }
+        super.createAndSetGui();
     }
 }

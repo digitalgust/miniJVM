@@ -58,6 +58,8 @@ public class GuiScriptLib extends Lib {
             methodNames.put("getImg".toLowerCase(), this::getImg);//
             methodNames.put("setImg".toLowerCase(), this::setImg);//
             methodNames.put("setImgPath".toLowerCase(), this::setImgPath);//
+            methodNames.put("getBgImg".toLowerCase(), this::getBgImg);//
+            methodNames.put("setBgImgPath".toLowerCase(), this::setBgImgPath);//
             methodNames.put("getAttachStr".toLowerCase(), this::getAttachStr);//
             methodNames.put("setAttachStr".toLowerCase(), this::setAttachStr);//
             methodNames.put("getAttachInt".toLowerCase(), this::getAttachInt);//
@@ -133,7 +135,7 @@ public class GuiScriptLib extends Lib {
                 }
                 if (gobj != null) {
                     Interpreter inp = gobj.getInterpreter();
-                    inp.callSub(ss[1] + "(\"" + para + "\")");
+                    inp.callSub(ss[1] + "(" + para + ")");
                     return;
                 }
             }
@@ -452,6 +454,29 @@ public class GuiScriptLib extends Lib {
         String compont = Interpreter.popBackStr(para);
         String img = Interpreter.popBackStr(para);
         GToolkit.setCompImage(formHolder.getForm(), compont, img);
+        return null;
+    }
+
+
+    public DataType getBgImg(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
+        GImage img = null;
+        if (gobj != null) {
+            img = gobj.getBgImg();
+        }
+        return Interpreter.getCachedObj(img);
+    }
+
+
+    public DataType setBgImgPath(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        String imgPath = Interpreter.popBackStr(para);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
+        GImage img = GToolkit.getCachedImageFromJar(imgPath);
+        if (gobj != null && img != null) {
+            gobj.setBgImg(img);
+        }
         return null;
     }
 

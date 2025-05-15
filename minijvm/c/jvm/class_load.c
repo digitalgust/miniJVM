@@ -1869,7 +1869,7 @@ JClass *class_parse(Instance *loader, ByteBuf *bytebuf, Runtime *runtime) {
                 tmp_for_del = NULL;
                 classes_put(jvm, tmpclazz);
                 class_prepar(loader, tmpclazz, runtime);
-                if (jvm->jdwp_enable && jvm->jdwpserver && tmpclazz)event_on_class_prepare(jvm->jdwpserver, runtime, tmpclazz);
+                if (jdwp_client_count(jvm->jdwpserver) && tmpclazz)event_on_class_prepare(jvm->jdwpserver, runtime, tmpclazz);
 #if _JVM_DEBUG_LOG_LEVEL > 2
                 jvm_printf("load class (%016llx load %016llx):  %s \n", (s64) (intptr_t) loader, (s64) (intptr_t) tmpclazz, utf8_cstr(tmpclazz->name));
 #endif

@@ -3,6 +3,7 @@ package org.mini.layout;
 import org.mini.gui.GButton;
 import org.mini.gui.GObject;
 import org.mini.layout.loader.XmlExtAssist;
+import org.mini.nanovg.Nanovg;
 import org.xmlpull.v1.KXmlParser;
 
 /**
@@ -15,6 +16,8 @@ public class XButton
     //
     protected String pic;
     protected int addon = XDef.SPACING_BUTTON_ADD;
+
+    protected int align = Nanovg.NVG_ALIGN_CENTER | Nanovg.NVG_ALIGN_MIDDLE;
     float[] preiconColor;
 
     protected GButton button;
@@ -30,7 +33,12 @@ public class XButton
 
     protected void parseMoreAttribute(String attName, String attValue) {
         super.parseMoreAttribute(attName, attValue);
-        if (attName.equals("pic")) {
+        if (attName.equals("align")) {
+            align = 0;
+            for (String s : attValue.split(",")) {
+                align |= XUtil.parseAlign(s);
+            }
+        } else if (attName.equals("pic")) {
             pic = attValue;
         } else if (attName.equals("addon")) {
             addon = Integer.parseInt(attValue);
@@ -77,6 +85,7 @@ public class XButton
             if (preiconColor != null) {
                 button.setPreiconColor(preiconColor);
             }
+            button.setAlign(align);
         } else {
             button.setLocation(x, y);
             button.setSize(width, height);

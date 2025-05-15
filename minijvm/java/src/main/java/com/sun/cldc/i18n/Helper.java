@@ -264,7 +264,7 @@ public class Helper {
      * @return A new char array
      * @throws UnsupportedEncodingException If the encoding is not known
      */
-    public static synchronized char[] byteToCharArray(byte[] buffer, int offset,
+    public static char[] byteToCharArray(byte[] buffer, int offset,
                                                       int length, String enc) throws UnsupportedEncodingException {
 
         if (offset < 0) {
@@ -317,7 +317,7 @@ public class Helper {
      * @return A new byte array
      * @throws UnsupportedEncodingException If the encoding is not known
      */
-    public static synchronized byte[] charToByteArray(char[] buffer, int offset,
+    public static byte[] charToByteArray(char[] buffer, int offset,
                                                       int length, String enc) throws UnsupportedEncodingException {
 
         StreamWriter lastWriter;

@@ -756,7 +756,7 @@
       "Aktualisieren",
       "Обновить"
     ],
-    "STR_FLAT_FELL": [
+    "STR_FLAT_FEEL": [
       "FLAT UI",
       "扁平用户界面",
       "扁平使用者介面",
@@ -768,7 +768,7 @@
       "Flache Benutzeroberfläche",
       "Плоский пользовательский интерфейс"
     ],
-    "STR_DIMENSION_FELL": [
+    "STR_DIMENSION_FEEL": [
       "BUTTON UI",
       "按钮用户界面",
       "按鈕使用者介面",
@@ -779,6 +779,30 @@
       "ボタンUI",
       "Schaltflächen-Benutzeroberfläche",
       "Пользовательский интерфейс кнопки"
+    ],
+    "STR_PRIVACY": [
+      "Privacy Policy",
+      "隐私政策",
+      "隱私政策",
+      "개인 정보 정책",
+      "Politique de confidentialité",
+      "Política de privacidad",
+      "Politica sulla privacy",
+      "プライバシーポリシー",
+      "Datenschutzrichtlinie",
+      "Политика конфиденциальности"
+    ],
+    "STR_ABOUT": [
+      "About",
+      "关于",
+      "關於",
+      "에 대해",
+      "À propos de",
+      "Sobre",
+      "Sul",
+      "について",
+      "Über",
+      "О"
     ]
   }
 }

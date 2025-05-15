@@ -1,5 +1,7 @@
 package org.mini.layout;
 
+import org.mini.gui.GColorSelector;
+
 public class XTr
         extends XPanel {
 

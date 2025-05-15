@@ -36,5 +36,6 @@ public class XPanel extends XContainer {
             panel.setLocation(x, y);
             panel.setSize(width, height);
         }
+        super.createAndSetGui();
     }
 }

@@ -1,4 +1,3 @@
-
 #ifndef G_JVM_H
 #define G_JVM_H
 
@@ -32,7 +31,6 @@ extern "C" {
 //_JVM_DEBUG_GARBAGE_DUMP 01=count instance , 02=print every object create/destroy
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_PROFILE 0
-#define _JVM_JDWP_ENABLE 01
 #define _JVM_DEBUG_GARBAGE 0
 
 
@@ -461,6 +459,7 @@ enum {
     JVM_EXCEPTION_INTERRUPTED,
     JVM_EXCEPTION_VMSTOP,
     JVM_EXCEPTION_ILLEGALTHREADSTATE,
+    JVM_EXCEPTION_ILLEGALMONITORSTATE,
 };
 
 enum {
@@ -517,6 +516,7 @@ extern const c8 STR_VM_JAVA_LIBRARY_PATH[];
 extern const c8 STR_VM_SUN_BOOT_CLASS_PATH[];
 extern const c8 STR_VM_JAVA_CLASS_VERSION[];//"java.class.version"
 extern const c8 STR_VM_USER_LANGUAGE[];//"user.language"
+extern const c8 STR_VM_UUID[];//"uuid"
 extern const c8 STR_VM_JAVA_CLASS_PATH[];
 extern const c8 STR_JNI_LIB_NOT_FOUND[];
 extern const c8 STR_JNI_ONLOAD_NOT_FOUND[];
@@ -993,6 +993,7 @@ struct _MethodInfo {
     u16 attributes_count;
     //
     u8 is_native;
+    u8 is_jit;
     u8 is_sync;
     u8 is_static;
     u8 is_getter;
@@ -1507,6 +1508,10 @@ s64 getInstructPointer(Runtime *runtime);
 
 void getRuntimeStack(Runtime *runtime, Utf8String *ustr);
 
+void getRuntimeStackWithOutReturn(Runtime *runtime, Utf8String *ustr);
+
+void getExceptionStack(Runtime *runtime, Utf8String *ustr);
+
 void print_runtime_stack(Runtime *r);
 
 s32 getRuntimeDepth(Runtime *top);
@@ -1795,6 +1800,9 @@ typedef struct _ShortCut {
     FieldInfo *stacktrace_declaringClazz;
 
     //
+    FieldInfo *throwable_detailMessage;
+
+    //
     FieldInfo *dmo_memAddr;
     FieldInfo *dmo_length;
     FieldInfo *dmo_desc;
@@ -1844,6 +1852,8 @@ typedef struct _ShortCut {
 struct _ThreadLock {
     cnd_t thread_cond;
     mtx_t mutex_lock; //互斥锁
+    void *owner_thread; // 锁的所有者线程
+    int count; // 重入计数
 };
 //======================= Jvm =============================
 struct _MiniJVM {

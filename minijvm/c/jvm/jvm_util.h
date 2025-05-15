@@ -215,6 +215,8 @@ Runtime *threadlist_get(MiniJVM *jvm, s32 i);
 
 s32 threadlist_count_none_daemon(MiniJVM *jvm);
 
+s32 threadlist_count_active(MiniJVM *jvm);
+
 s64 threadlist_sum_heap(MiniJVM *jvm);
 
 void thread_stop_all(MiniJVM *jvm);
@@ -276,6 +278,8 @@ s32 jthread_wakeup(Runtime *runtime);
 s32 jthread_sleep(Runtime *runtime, s64 ms);
 
 s32 jthread_yield(Runtime *runtime);
+
+s32 jthread_interrupt(Runtime *rt_thread);
 
 s32 jthread_resume(Runtime *runtime);
 
@@ -409,6 +413,8 @@ s32 classes_remove(MiniJVM *jvm, JClass *clazz);
 Instance *build_stack_element(Runtime *runtime, Runtime *target);
 
 void os_get_lang(Utf8String *buf);
+
+void os_get_uuid(MiniJVM *jvm, Utf8String *buf);
 
 #ifdef __cplusplus
 }

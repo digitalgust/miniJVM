@@ -98,7 +98,7 @@ public class Protocol extends ConnectionBaseAdapter
     /**
      * The "host:port" value to use for HTTP proxied requests.
      */
-    private static String http_proxy;
+//    private static String http_proxy;
     /**
      * Maximum number of persistent connections.
      */
@@ -128,7 +128,7 @@ public class Protocol extends ConnectionBaseAdapter
          * so when this method subclassed by HTTPS http_proxy will be null
          * and the proxy will not be added into the request.
          */
-        http_proxy = System.getProperty("com.sun.midp.io.http.proxy");
+//        http_proxy = System.getProperty("com.sun.midp.io.http.proxy");
 
         /*
          * if first time intialize the connection pool and create
@@ -358,6 +358,12 @@ public class Protocol extends ConnectionBaseAdapter
      */
     private boolean readInProgress;
 
+
+    protected String proxyHost = null;
+    protected int proxyPort = -1;
+    protected String authUser = null;
+    protected String authPassword = null;
+
     /**
      * Create a new instance of this class and intialize variables. Initially an
      * http connection is unconnected to the network.
@@ -378,6 +384,40 @@ public class Protocol extends ConnectionBaseAdapter
 
         readbuf = new byte[inputBufferSize];
 
+        parseProxy();
+    }
+
+    protected void parseProxy() {
+        // Get proxy settings from system property
+        String proxy = System.getProperty("com.sun.midp.io.http.proxy");
+        if (proxy != null && proxy.length() > 0) {
+            int colonPos = proxy.indexOf(':');
+            if (colonPos > 0) {
+                proxyHost = proxy.substring(0, colonPos);
+                try {
+                    proxyPort = Integer.parseInt(proxy.substring(colonPos + 1));
+                } catch (NumberFormatException e) {
+                    throw new RuntimeException("Invalid proxy port number");
+                }
+            }
+            String proxyAuth = System.getProperty("com.sun.midp.io.http.proxy.auth");
+            if (proxyAuth != null && proxyAuth.length() > 0 && proxyAuth.indexOf(':') > 0) {
+                proxyHeaders.addProperty("Proxy-Authorization", "Basic " + Base64.encode(proxyAuth.getBytes()));
+                authUser = proxyAuth.substring(0, proxyAuth.indexOf(':'));
+                authPassword = proxyAuth.substring(proxyAuth.indexOf(':') + 1);
+            }
+        } else {
+            proxyHost = System.getProperty(getProtocol() + ".proxyHost");
+            try {
+                proxyPort = Integer.parseInt(System.getProperty(getProtocol() + ".proxyPort"));
+            } catch (NumberFormatException e) {
+            }
+            authUser = System.getProperty(getProtocol() + ".proxyUser");
+            authPassword = System.getProperty(getProtocol() + ".proxyPassword");
+            if (authUser != null && authUser.length() > 0 && authPassword != null) {
+                proxyHeaders.addProperty("Proxy-Authorization", "Basic " + Base64.encode((authUser + ":" + authPassword).getBytes()));
+            }
+        }
     }
 
     /**
@@ -1854,7 +1894,7 @@ public class Protocol extends ConnectionBaseAdapter
 
         conn = new org.mini.net.socket.Protocol();
 
-        if (http_proxy == null) {
+        if (proxyHost == null || proxyHost.length() == 0 || proxyPort <= 0) {
             conn.openPrim("//" + hostAndPort, Connector.READ_WRITE, true);
 
             // Do not delay request since this delays the response.
@@ -1862,7 +1902,7 @@ public class Protocol extends ConnectionBaseAdapter
             return conn;
         }
 
-        conn.openPrim("//" + http_proxy, 0, true);
+        conn.openPrim("//" + proxyHost + ":" + proxyPort, Connector.READ_WRITE, true);
 
         // Do not delay request since this delays the response.
 //        conn.setSocketOption(SocketConnection.DELAY, 0);
@@ -2205,35 +2245,20 @@ public class Protocol extends ConnectionBaseAdapter
      * @return one line of input header or null if end of stream
      * @throws IOException if error encountered while reading headers
      */
-    private String readLine(InputStream in) throws IOException {
+    protected String readLine(InputStream in) throws IOException {
+        StringBuilder line = new StringBuilder();
         int c;
-
-        try {
-            for (; ; ) {
-                c = in.read();
-                if (c < 0) {
-                    return null;
-                }
-
-                if (c == '\r') {
-                    continue;
-                }
-
-                if (c == '\n') {
-                    break;
-                }
-
-                stringbuffer.append((char) c);
+        while ((c = in.read()) != -1) {
+            if (c == '\n') {
+                break;
             }
-
-            /* Return a whole line and reset the string buffer. */
-            String line = stringbuffer.toString();
-
-            return line;
-        } finally {
-            stringbuffer.setLength(0);
+            if (c != '\r') {
+                line.append((char) c);
+            }
         }
+        return line.toString();
     }
+
 
     /**
      * Close the OutputStream and transition to connected state.

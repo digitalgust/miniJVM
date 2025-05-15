@@ -1,5 +1,6 @@
 package org.mini.gui.gscript;
 
+import org.mini.util.IntList;
 import org.mini.util.SysLog;
 
 import java.io.*;
@@ -28,6 +29,8 @@ import java.util.*;
  * 20220424 添加数据回收系统,使整个运算过程中,尽可能不创建新的对象实例.减小GC压力
  * 20250217 表达式求值类型缓存，加快执行速度
  * 20250317 表达式初始化时，把子表达式找出来，简化表达式求值
+ * 20250510 添加了for语句： for(i=0,i<10,i++); println(i); efor;
+ * 20250510 添加了数组初始化语句： arr[2][3]=[[1,2],[true,5,"b"]];
  * <p>
  * Title: </p>
  * <p>
@@ -43,18 +46,18 @@ import java.util.*;
  */
 public class Interpreter {
 
-    static final String[] STRS_RESERVED = {"if", "else", "eif", "while", "loop", "sub", "ret",};
+    static final String[] STRS_RESERVED = {"if", "else", "eif", "while", "loop", "sub", "ret", "for", "efor"};
     static private final String STR_SYMBOL = "+-*/><()=, []:&|!#";
     static private final String STR_NUMERIC = "0123456789";
     static private final char CHAR_COMMENT = '#';
     //关键字代码
-    static final int NOT_KEYWORD = -1, KEYWORD_IF = 0, KEYWORD_ELSE = 1, KEYWORD_ENDIF = 2, KEYWORD_WHILE = 3, KEYWORD_LOOP = 4, KEYWORD_SUB = 5, KEYWORD_RET = 6, KEYWORD_CALL = 7, KEYWORD_SET_VAR = 8, KEYWORD_SET_ARR = 9;
+    static final int NOT_KEYWORD = -1, KEYWORD_IF = 0, KEYWORD_ELSE = 1, KEYWORD_ENDIF = 2, KEYWORD_WHILE = 3, KEYWORD_LOOP = 4, KEYWORD_SUB = 5, KEYWORD_RET = 6, KEYWORD_FOR = 7, KEYWORD_EFOR = 8, KEYWORD_CALL = 9, KEYWORD_SET_VAR = 10, KEYWORD_SET_ARR = 11;
     public static final int ERR_ILLEGAL = 0, ERR_VAR = 1, ERR_TYPE_INVALID = 2, ERR_NOSUB = 3, ERR_NO_VAR = 4, ERR_PARA_CALC = 5, ERR_PAESEPARA = 6, ERR_NO_SRC = 7, ERR_OPSYMB = 8, ERR_ARR_OUT = 9;
     public static final String[] STRS_ERR = {" Illegal statment ,", " Invalid variable name ", " Data type error ", " No such method ", " No such variable ", " Method parameter error ", " Parameter count error ", " Code not load yet ", " Operation symbol error  ", " Array out of bounds  "};
 
     //源码字符串数组
     //private ArrayList srcCode;
-    private Statement[] srcCompiled;
+    private List<Statement> statements = new ArrayList<>();  // List of statements to execute
     //变量范围控制
     private boolean isTopCall; //是否是顶级调用
     private LocalVarsMap<String, DataType> globalVar = new LocalVarsMap(); //全局变量
@@ -73,6 +76,7 @@ public class Interpreter {
     static private List<Bool> boolCache = new ArrayList<>();
     static private List<Str> strCache = new ArrayList<>();
     static private List<Obj> objCache = new ArrayList<>();
+    static private List<IntList> intlistCache = new ArrayList<>();
 
     /**
      * 构造方法
@@ -86,7 +90,7 @@ public class Interpreter {
      * 初始化类
      */
     private void init() {//init localvar table cache
-        srcCompiled = null;
+        statements.clear();
         //脚本中过程首地址
         subAddr.clear();
         //系统过程及扩充过程列表
@@ -169,7 +173,6 @@ public class Interpreter {
         ByteArrayOutputStream line = new ByteArrayOutputStream();
         //StringBuffer sb = new StringBuffer();
         ArrayList srcCode = new ArrayList();
-        srcCompiled = new Statement[lineCount];
         lineCount = 0;
         for (int i = 0; i < srcBytes.length; i++) {
             if (srcBytes[i] == 0x0a || i + 1 == srcBytes.length) { //行结束,或者文件结束
@@ -203,14 +206,12 @@ public class Interpreter {
      */
     public void loadFromString(String code) {
 
-        int dquodation = 0;
         StringBuilder line = new StringBuilder();
         ArrayList v = new ArrayList();
         for (int i = 0, len = code.length(); i < len; i++) {
             try {
                 char ch = code.charAt(i);
                 if (ch == '"') {
-                    dquodation++;
                     line.append(ch);
                     int next = findNextDoubQuot(code, i + 1, line);
                     i = next;
@@ -303,13 +304,15 @@ public class Interpreter {
             srcCode.set(i, el);
             i++;
         }
-        srcCompiled = new Statement[srcCode.size()];
+
         for (int i = 0; i < srcCode.size(); i++) {
+            Statement st;
+            int lineNo = statements.size();
             try {
                 String sc = (String) srcCode.get(i);
-                Statement st = Statement.parseInstruct(sc, this);
-                srcCompiled[i] = st;
+                st = Statement.parseInstruct(sc, this);
                 st.src = sc;
+                statements.add(st);
                 //System.out.println(i + " " + sc);
             } catch (Exception e) {
                 errout(i, STRS_ERR[ERR_ILLEGAL] + srcCode.get(i));
@@ -318,9 +321,9 @@ public class Interpreter {
             }
 
             //找过程起始行号
-            if (srcCompiled[i].type == KEYWORD_SUB) {
-                StatementSub ss = (StatementSub) srcCompiled[i];
-                subAddr.put(ss.cell.subName, new Int(i, false)); //放入过程表中
+            if (st.type == KEYWORD_SUB) {
+                StatementSub ss = (StatementSub) st;
+                subAddr.put(ss.cell.subName, new Int(lineNo, false)); //放入过程表中
             }
         }
     }
@@ -344,7 +347,7 @@ public class Interpreter {
         //开始执行代码
 
         try {
-            if (srcCompiled == null) {
+            if (statements == null) {
                 errout(0, STRS_ERR[ERR_NO_SRC]);
             } else {
                 //如果环境变量存在
@@ -444,7 +447,7 @@ public class Interpreter {
             long calls = System.currentTimeMillis();
 
             //把过程调用的参数放入localVar
-            Statement pstat = srcCompiled[ip];
+            Statement pstat = statements.get(ip);
             if (pstat != null && pstat.type == KEYWORD_SUB) {
                 StatementSub psubstat = (StatementSub) pstat;
                 for (int i = 0, j = psubstat.cell.para.length; i < j; i++) {
@@ -461,10 +464,10 @@ public class Interpreter {
             }
             calls = System.currentTimeMillis() - calls;
             calls = System.currentTimeMillis();
-            while (ip < srcCompiled.length) {
+            while (ip < statements.size()) {
                 try {
                     //String instruct = srcCode[ip];
-                    Statement stat = srcCompiled[ip];
+                    Statement stat = statements.get(ip);
 
                     //System.out.println(ip + " " + stat.src);
                     int keywordCode = stat.type;
@@ -473,55 +476,53 @@ public class Interpreter {
                             case KEYWORD_WHILE://循环
                             {
                                 StatementWhile pstatWhile = (StatementWhile) stat;
+                                if (pstatWhile.ip_loop < 0) {
+                                    pstatWhile.ip_loop = (short) findPairedStatement(KEYWORD_WHILE, KEYWORD_LOOP, ip);
+                                    if (pstatWhile.ip_loop < 0) {
+                                        throw new RuntimeException(STRS_RESERVED[KEYWORD_LOOP] + " not found");
+                                    }
+                                    StatementLoop sl = (StatementLoop) statements.get(pstatWhile.ip_loop);
+                                    sl.ip_while = (short) ip;
+                                }
                                 Bool wpdt = (Bool) evalExpr(pstatWhile.expr, localVar);
                                 if (wpdt.getVal() == false) { //如果为假，则查else或endif
-                                    if (pstatWhile.ip_loop != -1) {
-                                        ip = pstatWhile.ip_loop;
-                                    } else {
-                                        int countWhile = 1;
-                                        for (int i = ip + 1; i < srcCompiled.length; i++) {
-                                            Statement tmpst = srcCompiled[i];
-                                            if (tmpst.type == KEYWORD_WHILE) {
-                                                countWhile++;
-                                            } else if (tmpst.type == KEYWORD_LOOP) {
-                                                countWhile--;
-                                            }
-                                            //跳转
-                                            if (tmpst.type == KEYWORD_LOOP && countWhile == 0) {
-                                                ip = i;
-                                                pstatWhile.ip_loop = (short) ip;
-                                                break;
-                                            }
-                                        }
-                                    }
+                                    ip = pstatWhile.ip_loop;
                                 }
                                 putCachedBool(wpdt);
+                                ip++;
                                 break;
                             }
                             case KEYWORD_LOOP:
-                                StatementLoop sl = (StatementLoop) stat;
-                                if (sl.ip_while != -1) {
-                                    ip = sl.ip_while;
-                                } else {
-                                    int countWhile = 1;
-                                    for (int i = ip - 1; i > 0; --i) {
-                                        Statement tmp = srcCompiled[i];
-                                        if (tmp.type == KEYWORD_WHILE) {
-                                            countWhile--;
-                                        } else if (tmp.type == KEYWORD_LOOP) {
-                                            countWhile++;
-                                        }
-                                        //跳转
-                                        if (tmp.type == KEYWORD_WHILE && countWhile == 0) {
-                                            ip = i - 1;
-                                            sl.ip_while = (short) ip;
-                                            break;
-                                        }
-                                    }
-                                }
+                                ip = ((StatementLoop) stat).ip_while;
                                 break;
                             case KEYWORD_IF: //if分支
                                 StatementIf pstatIf = (StatementIf) stat;
+                                if (pstatIf.ip_endif < 0) {
+                                    int countIf = 1;
+                                    for (int i = ip + 1; i < statements.size(); i++) {
+                                        Statement tmpst = statements.get(i);
+                                        if (tmpst.type == KEYWORD_IF) {
+                                            countIf++;
+                                        } else if (tmpst.type == KEYWORD_ENDIF) {
+                                            countIf--;
+                                        }
+
+                                        //跳转
+                                        if (tmpst.type == KEYWORD_ELSE && countIf == 1) {
+                                            pstatIf.ip_else = (short) i;
+                                        } else if (tmpst.type == KEYWORD_ENDIF && countIf == 0) {
+                                            pstatIf.ip_endif = (short) i;
+                                            break;
+                                        }
+                                    }
+                                    if (pstatIf.ip_endif == -1) {
+                                        throw new RuntimeException(STRS_RESERVED[KEYWORD_ENDIF] + " not found");
+                                    }
+                                    if (pstatIf.ip_else != -1) {
+                                        StatementElse pstatElse = (StatementElse) statements.get(pstatIf.ip_else);
+                                        pstatElse.ip_endif = (short) pstatIf.ip_endif;
+                                    }
+                                }
 
                                 Bool ib = (Bool) evalExpr(pstatIf.expr, localVar);
                                 if (ib.getVal() == false) { //如果为假，则查else或endif
@@ -529,52 +530,15 @@ public class Interpreter {
                                         ip = pstatIf.ip_else;
                                     } else if (pstatIf.ip_endif != -1) {
                                         ip = pstatIf.ip_endif;
-                                    } else {
-                                        int countIf = 1;
-                                        for (int i = ip + 1; i < srcCompiled.length; i++) {
-                                            Statement tmpst = srcCompiled[i];
-                                            if (tmpst.type == KEYWORD_IF) {
-                                                countIf++;
-                                            } else if (tmpst.type == KEYWORD_ENDIF) {
-                                                countIf--;
-                                            }
-
-                                            //跳转
-                                            if (tmpst.type == KEYWORD_ELSE && countIf == 1) {
-                                                ip = i;
-                                                pstatIf.ip_else = (short) ip;
-                                                break;
-                                            } else if (tmpst.type == KEYWORD_ENDIF && countIf == 0) {
-                                                ip = i;
-                                                pstatIf.ip_endif = (short) ip;
-                                                break;
-                                            }
-                                        }
                                     }
                                 }
                                 putCachedBool(ib);
+
+                                ip++;
                                 break;
                             case KEYWORD_ELSE:
                                 StatementElse pstatElse = (StatementElse) stat;
-                                if (pstatElse.ip_endif != -1) {
-                                    ip = pstatElse.ip_endif;
-                                } else {
-                                    int countIf = 1;
-                                    for (int i = ip + 1; i < srcCompiled.length; i++) {
-                                        Statement tmpst = srcCompiled[i];
-                                        if (tmpst.type == KEYWORD_IF) {
-                                            countIf++;
-                                        } else if (tmpst.type == KEYWORD_ENDIF) {
-                                            countIf--;
-                                        }
-                                        //跳转
-                                        if (tmpst.type == KEYWORD_ENDIF && countIf == 0) {
-                                            ip = i;
-                                            pstatElse.ip_endif = (short) ip;
-                                            break;
-                                        }
-                                    }
-                                }
+                                ip = pstatElse.ip_endif;
                                 break;
                             case KEYWORD_CALL: {
                                 StatementCall pstatCall = (StatementCall) stat;
@@ -582,20 +546,25 @@ public class Interpreter {
                                 if (re != null) {
                                     putCachedData(re);
                                 }
+
+                                ip++;
                                 break;
                             }
                             case KEYWORD_SET_VAR: {
                                 StatementSetVar pstatVar = (StatementSetVar) stat;
                                 _setVar(pstatVar, localVar);
+                                ip++;
                                 break;
                             }
                             case KEYWORD_ENDIF: {
+                                ip++;
                                 break;
                             }
 
                             case KEYWORD_SET_ARR: {
                                 StatementSetArr pstatArr = (StatementSetArr) stat;
                                 _setArr(pstatArr, localVar);
+                                ip++;
                                 break;
                             }
 
@@ -608,22 +577,33 @@ public class Interpreter {
                                     re = evalExpr(pstatRet.expr, localVar);
                                 }
                                 return re;
+                            case KEYWORD_FOR:
+                                ip = _for((StatementFor) stat, localVar, ip);
+                                break;
+                            case KEYWORD_EFOR:
+                                ip = _efor((StatementEfor) stat, localVar, ip);
+                                break;
                         }
                     } else {
                         errout(ip, STRS_ERR[ERR_ILLEGAL]);
                     }
                 } catch (Exception ex) {
+                    List<String> keylist = localVar.getKeylist();
+                    for (int i = 0; i < keylist.size(); i++) {
+                        String key = keylist.get(i);
+                        DataType dt = localVar.get(key);
+                        System.out.println(key + "=" + dt.getString());
+                    }
                     errout(ip, STRS_ERR[ERR_ILLEGAL] + ex.getMessage());
                     ex.printStackTrace();
                     break;
                 }
-                //指针自动加一
-                ip++;
             } //end while
             calls = System.currentTimeMillis() - calls;
 
 
         } catch (Exception e) {
+            e.printStackTrace();
         } finally {
             if (localVar != globalVar) {
                 //回收局部变量
@@ -644,6 +624,23 @@ public class Interpreter {
 //;----------------------------------------------------------------------------
 //;                                  工具方法
 //;----------------------------------------------------------------------------
+
+    private int findPairedStatement(int beginStatType, int endStatType, int ip) {
+        int countWhile = 1;
+        for (int i = ip + 1; i < statements.size(); i++) {
+            Statement tmpst = statements.get(i);
+            if (tmpst.type == beginStatType) {
+                countWhile++;
+            } else if (tmpst.type == endStatType) {
+                countWhile--;
+            }
+            //跳转
+            if (tmpst.type == endStatType && countWhile == 0) {
+                return i;
+            }
+        }
+        return -1;
+    }
 
     /**
      * 得到第一个单词
@@ -787,7 +784,7 @@ public class Interpreter {
 //    	if(!stack.isEmpty()){
 //    		return stack;
 //    	}
-        ArrayList stack = new ArrayList();
+        ArrayList stack = getCachedVector();
 //    	if (bolo.CompilerCfg.isProfile) {
 //			debug.Profile.instance.begin("parse");
 //		}
@@ -913,8 +910,8 @@ public class Interpreter {
      */
     private void errout(int ip, String s) {
         String src = "";
-        if (srcCompiled[ip] != null) {
-            src = srcCompiled[ip].src;
+        if (statements.get(ip) != null) {
+            src = statements.get(ip).src;
         }
         SysLog.error((ip + 1) + " " + src + " : " + s);
     }
@@ -1060,16 +1057,17 @@ public class Interpreter {
     //---------------------------表达式求值------------------------------
 
     //运算类型
-    static final int T_NUM = 1 //数值
-            , T_STR = 2 //串
-            , T_LOG = 4 //布尔值
-            , T_ARR = 8 //数组指针，非数组
-            , T_LOGSYM = 16 //逻辑符号
-            , T_OBJ = 32; //对象
+    static final byte T_NUM = 0x01 //数值
+            , T_STR = 0x02 //串
+            , T_LOG = 0x04 //布尔值
+            , T_ARR = 0x08 //数组指针，非数组
+            , T_LOGSYM = 0x10 //逻辑符号
+            , T_OBJ = 0x20 //对象
+            ;
 
 
-    private int getTypeOfExpr(ArrayList<DataType> expr) {
-        int cType = 0, cType1 = 0; //默认为算术运算
+    private byte getTypeOfExpr(ArrayList<DataType> expr) {
+        byte cType = 0, cType1 = 0; //默认为算术运算
 
         for (int i = 0; i < expr.size(); i++) {
             DataType o = expr.get(i);
@@ -1112,12 +1110,10 @@ public class Interpreter {
 
     DataType evalExpr(Expression stat, LocalVarsMap<String, DataType> varTable) throws Exception {
 
-        //ArrayList expr = parseInstruct(exprStr); //分解表达式
         ArrayList<DataType> expr = getCachedVector();
         evaluationCell(stat, varTable, expr); //求变量和过程调用、子表达式的值
 
-        if (stat.type == 0) {
-
+        if (stat.type == 0 || stat.containsArrExpr) { //array element can be any type ,so check type every times
             stat.type = getTypeOfExpr(expr);
         }
 
@@ -1275,7 +1271,7 @@ public class Interpreter {
                 }
             } else if (element1.type == DataType.DTYPE_INT) {// num   是数字
                 Symb element2 = popFront(expr); //应是操作符
-                DataType element3 = popFront(expr); // 可能是操作数或操作符
+                DataType element3 = popFront(expr); // 可能是操作数或操作符 >= <=
                 //四则运算
                 if ((element2).getVal() == Symb.MUL || (element2).getVal() == Symb.DIV) { // num*/
                     if (element3.type == DataType.DTYPE_INT) {//num */ num
@@ -1528,17 +1524,22 @@ public class Interpreter {
      * @return Stack 反回 a+b , 35-4
      * @throws Exception
      */
-    private int[] parseArrayPos(ExprCellArr arrStr, LocalVarsMap varTable) throws Exception {
+    private IntList parseArrayPos(ExprCellArr arrStr, LocalVarsMap varTable) throws Exception {
         int len = arrStr.para.length;
-        int[] dimPos = arrStr.dimPos.get();
-        for (int i = 0; i < len; i++) {
-            DataType dt = evalExpr(arrStr.para[i], varTable);
-            if (dt.type != DataType.DTYPE_INT) { //数组维数只能是数值型
-                throw new Exception(STRS_ERR[ERR_TYPE_INVALID]);
+        IntList dimPos = getCachedIntList();
+        try {
+            for (int i = 0; i < len; i++) {
+                DataType dt = evalExpr(arrStr.para[i], varTable);
+                if (dt.type != DataType.DTYPE_INT) {
+                    throw new Exception(STRS_ERR[ERR_TYPE_INVALID]);
+                }
+                dimPos.add((int) ((Int) dt).getVal());
             }
-            dimPos[i] = (int) ((Int) dt).getVal();
+            return dimPos;
+        } catch (Exception e) {
+            putCachedIntList(dimPos);
+            throw e;
         }
-        return dimPos;
     }
 
     /**
@@ -1549,24 +1550,66 @@ public class Interpreter {
      * @throws Exception
      */
     private void _setArr(StatementSetArr stat, LocalVarsMap<String, DataType> varTable) throws Exception {
-
-        String arrName = stat.dimCell.arrName; //取得数组的名字
+        String arrName = stat.dimCell.arrName;
         arrName = arrName.toLowerCase();
-        int[] dimPara = parseArrayPos(stat.dimCell, varTable); //分解参数
-
-        if (stat.expr == null) { //创建
-
-            //创建数组对象，放入变量表
-            Array arr = new Array(dimPara);
-            varTable.put(arrName, arr); //放入变量表中
-        } else { //赋值
-            DataType arr = varTable.get(arrName);
-            if (arr == null) {
-                arr = globalVar.get(arrName);
+        IntList dimPara = parseArrayPos(stat.dimCell, varTable);
+        try {
+            if (stat.expr == null) {
+                Array arr = new Array(dimPara);
+                if (stat.initValues != null) {
+                    IntList dims = getCachedIntList();
+                    dims.setSize(dimPara.size());
+                    try {
+                        initializeArray(arr, stat.initValues, dims, 0, varTable);
+                    } finally {
+                        putCachedIntList(dims);
+                    }
+                }
+                varTable.put(arrName, arr);
+            } else {
+                DataType arr = varTable.get(arrName);
+                if (arr == null) {
+                    arr = globalVar.get(arrName);
+                }
+                if (arr != null && arr.type == DataType.DTYPE_ARRAY) {
+                    DataType old = ((Array) arr).setValue(dimPara, evalExpr(stat.expr, varTable));
+                    putCachedData(old);
+                }
             }
-            if (arr != null && arr.type == DataType.DTYPE_ARRAY) {
-                DataType old = ((Array) arr).setValue(dimPara, evalExpr(stat.expr, varTable)); //赋值
-                putCachedData(old);
+        } finally {
+            putCachedIntList(dimPara);
+        }
+    }
+
+    // 递归初始化多维数组
+    private void initializeArray(Array arr, ArrayList<Object> initValues, IntList dims, int dimIndex, LocalVarsMap<String, DataType> varTable) throws Exception {
+        if (dimIndex >= dims.size()) return;
+
+        int size = arr.getDimensionSize(0);
+        for (int i = 0; i < size && i < initValues.size(); i++) {
+            Object value = initValues.get(i);
+            if (value instanceof ArrayList) {
+                // 如果是嵌套数组，递归初始化
+                if (dimIndex + 1 < dims.size()) {
+                    initializeArray((Array) arr.elements[i], (ArrayList<Object>) value, dims, dimIndex + 1, varTable);
+                }
+            } else if (value instanceof Expression) {
+                // 如果是表达式，计算其值
+                Expression expr = (Expression) value;
+                DataType result = evalExpr(expr, varTable);
+                if (dimIndex + 1 == dims.size()) {
+                    // 最后一维，直接设置值
+                    IntList pos = getCachedIntList();
+                    pos.add(i);
+                    arr.setValue(pos, result);
+                    putCachedIntList(pos);
+                } else {
+                    // 非最后一维，需要创建新的数组
+                    arr.elements[i] = new Array(dims, dimIndex + 1);
+                }
+            } else {
+                // 非最后一维，需要创建新的数组
+                arr.elements[i] = new Array(dims, dimIndex + 1);
             }
         }
     }
@@ -1580,22 +1623,23 @@ public class Interpreter {
      * @throws Exception
      */
     private DataType _getArr(ExprCellArr arrExpr, LocalVarsMap<String, DataType> varTable) throws Exception {
-
-        String arrName = arrExpr.arrName; //取得数组的名字
-
-        int[] dimPara = parseArrayPos(arrExpr, varTable); //分解参数
-
-        Array arr = _getVar(arrName, varTable);
-        if (arr != null && arr.type == DataType.DTYPE_ARRAY) {
-            DataType dt = (arr).getValue(dimPara); //取值
-            if (dt.type == DataType.DTYPE_BOOL || dt.type == DataType.DTYPE_INT) {
-                if (dt.isRecyclable()) {
-                    throw new RuntimeException("can not be mutable data in arr");
+        String arrName = arrExpr.arrName;
+        IntList dimPara = parseArrayPos(arrExpr, varTable);
+        try {
+            Array arr = _getVar(arrName, varTable);
+            if (arr != null && arr.type == DataType.DTYPE_ARRAY) {
+                DataType dt = (arr).getValue(dimPara);
+                if (dt.type == DataType.DTYPE_BOOL || dt.type == DataType.DTYPE_INT) {
+                    if (dt.isRecyclable()) {
+                        throw new RuntimeException("can not be mutable data in arr");
+                    }
                 }
+                return dt;
             }
-            return dt;
+            return null;
+        } finally {
+            putCachedIntList(dimPara);
         }
-        return null;
     }
 
 
@@ -1626,6 +1670,18 @@ public class Interpreter {
     static synchronized void putCachedVector(ArrayList v) {
         v.clear();
         listCache.add(v);
+    }
+
+    static synchronized IntList getCachedIntList() {
+        if (intlistCache.isEmpty()) {
+            return new IntList();
+        }
+        return intlistCache.remove(intlistCache.size() - 1);
+    }
+
+    static synchronized void putCachedIntList(IntList v) {
+        v.clear();
+        intlistCache.add(v);
     }
 
     /**
@@ -1813,6 +1869,58 @@ public class Interpreter {
 
     static public synchronized final void pushBack(ArrayList v, DataType o) {
         v.add(o);
+    }
+
+    private int _for(StatementFor stat, LocalVarsMap<String, DataType> varTable, int ip) throws Exception {
+        if (stat.ip_efor < 0) {
+            int eip = findPairedStatement(KEYWORD_FOR, KEYWORD_EFOR, ip);
+            if (eip < 0) {
+                throw new RuntimeException(STRS_RESERVED[KEYWORD_EFOR] + " not found");
+            }
+            Statement efor = statements.get(eip);
+            stat.ip_efor = (short) eip;
+            ((StatementEfor) efor).ip_for = (short) (ip);
+        }
+
+        // 执行初始化表达式
+        if (stat.initStat != null && stat.firstEnter) {
+            StatementSetVar pstatVar = stat.initStat;
+            _setVar(pstatVar, varTable);
+            stat.firstEnter = false;
+        }
+
+        // 检查条件表达式
+        boolean condition = true;
+        if (stat.condExpr != null) {
+            DataType result = evalExpr(stat.condExpr, varTable);
+            if (result.type == DataType.DTYPE_BOOL) {
+                condition = ((Bool) result).getVal();
+            } else {
+                throw new Exception("For loop condition must evaluate to boolean");
+            }
+        }
+
+        if (condition) {
+            // 如果条件为真，继续执行循环体
+            ip = ip + 1;
+        } else {
+            // 如果条件为假，跳转到efor语句
+            ip = stat.ip_efor + 1;
+            stat.firstEnter = true;// 重置firstEnter标志
+        }
+        return ip;
+    }
+
+    private int _efor(StatementEfor stat, LocalVarsMap<String, DataType> varTable, int ip) throws Exception {
+        // 执行步进表达式
+        StatementFor forStat = (StatementFor) this.statements.get(stat.ip_for);
+        if (forStat.stepStat != null) {
+            StatementSetVar pstatVar = forStat.stepStat;
+            _setVar(pstatVar, varTable);
+        }
+
+        // 跳回for语句
+        return stat.ip_for;
     }
 
 }

@@ -76,6 +76,7 @@ public class MaEngine extends MaNativeObject {
     @Override
     public void finalize() {
         SysLog.info("clean " + this + " " + handle);
+        MiniAudio.ma_engine_stop(handle);
         MiniAudio.ma_engine_uninit(handle);
         MaDevice.removeDevice(device);
         handle = 0;

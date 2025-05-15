@@ -1,4 +1,3 @@
-
 #include <errno.h>
 #include "jvm.h"
 #include "garbage.h"
@@ -410,7 +409,7 @@ s64 _garbage_collect(GcCollector *collector) {
         if (_gc_pause_the_world(jvm) != 0) {
             _gc_resume_the_world(jvm);
             vm_share_unlock(jvm);
-            jvm_printf("gc canceled ");
+            jvm_printf("[WARN] GC canceled - failed to pause the world\n");
             return -1;
         }
         collector->isworldstoped = 1;
@@ -468,7 +467,6 @@ s64 _garbage_collect(GcCollector *collector) {
 
 
     MemoryBlock *head = NULL;//find all finalize obj and weak obj
-    MemoryBlock *tail = NULL;
 
     MemoryBlock *nextmb = collector->header;
     MemoryBlock *curmb, *prevmb = NULL;
@@ -483,10 +481,7 @@ s64 _garbage_collect(GcCollector *collector) {
                     if (curmb->garbage_mark != collector->mark_cnt && !GCFLAG_FINALIZED_GET(curmb->gcflag)) {
                         instance_finalize((Instance *) curmb, collector->runtime);
                         if (!head) {
-                            head = tail = curmb;
-//                            if (curmb->tmp_next) {
-//                                s32 debug = 1;
-//                            }
+                            head = curmb;
                             curmb->tmp_next = NULL;
                         } else {
                             curmb->tmp_next = head;
@@ -502,15 +497,14 @@ s64 _garbage_collect(GcCollector *collector) {
                     if (target && target->mb.garbage_mark != collector->mark_cnt) {
                         instance_of_reference_enqueue((Instance *) curmb, collector->runtime);
                         if (!head) {
-                            head = tail = curmb;
-//                            if (curmb->tmp_next) {
-//                                s32 debug = 1;
-//                            }
+                            head = curmb;
                             curmb->tmp_next = NULL;
                         } else {
                             curmb->tmp_next = head;
                             head = curmb;
                         }
+                    } else {
+                        s32 debug = 1;
                     }
                 }
             }
@@ -659,7 +653,7 @@ s32 _gc_wait_thread_suspend(MiniJVM *jvm, Runtime *runtime) {
              runtime->thrd_info->is_blocking)  // During certain IO waits, JNI sets is_blocking = 1
             ) { //
         vm_share_notifyall(jvm);
-        vm_share_timedwait(jvm, 5);
+        vm_share_timedwait(jvm, 100);
         if (jvm->collector->_garbage_thread_status != GARBAGE_THREAD_NORMAL) {
             return -1;
         }
@@ -969,7 +963,8 @@ void gc_obj_reg(Runtime *runtime, __refer ref) {
 #if _JVM_DEBUG_GARBAGE_DUMP > 1
         Utf8String *sus = utf8_create();
         _gc_get_obj_name(runtime->jvm->collector, mb, sus);
-        jvm_printf("R: %s[%llx]\n", utf8_cstr(sus), (s64) (intptr_t) mb);
+        getRuntimeStackWithOutReturn(runtime, sus);
+        jvm_printf("R: [%llx]%s\n", (s64) (intptr_t) mb, utf8_cstr(sus));
         utf8_destroy(sus);
 #endif
     } else {

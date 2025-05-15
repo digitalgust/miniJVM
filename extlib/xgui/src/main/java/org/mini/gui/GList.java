@@ -273,6 +273,8 @@ public class GList extends GContainer {
     }
 
     void changeCurPanel() {
+        GObject frontCur = getFrontFocus();//save focus
+
         super.clearImpl();
         if (showMode == MODE_SINGLE_SHOW) {
             super.addImpl(normalPanel);
@@ -302,6 +304,18 @@ public class GList extends GContainer {
             }
         } else {
             super.addImpl(popWin);
+        }
+
+        //restore focus
+        if (frontCur != null) {
+            if (findSon(frontCur) != null) {
+                GContainer p = frontCur.getParent();
+                while (p != null) {
+                    p.setCurrent(frontCur);
+                    frontCur = p;
+                    p = p.getParent();
+                }
+            }
         }
     }
 

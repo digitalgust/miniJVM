@@ -50,6 +50,7 @@ public class GCheckBox extends GObject {
             } else {
                 checked = !checked;
                 doAction();
+                doStateChanged(this);
             }
         }
     }
@@ -60,6 +61,7 @@ public class GCheckBox extends GObject {
             if (phase == Glfm.GLFMTouchPhaseBegan) {
                 checked = !checked;
                 doAction();
+                doStateChanged(this);
             }
         }
     }

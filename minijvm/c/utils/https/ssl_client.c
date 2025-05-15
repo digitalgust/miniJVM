@@ -3660,6 +3660,120 @@ int sslc_init(SSLC_Entry *entry) {
     return 0;
 }
 
+/**
+ * 包装一个已有连接
+ * @param entry
+ * @param netfd
+ * @param hostname
+ *
+ * @return
+ */
+int sslc_wrap(SSLC_Entry *entry, int netfd, char *hostname) {
+
+    uint32_t flags;
+    /*
+     * 0. Initialize certificates
+     */
+    SSL_LOG_PRINTF("  . Loading the CA root certificate ... ");
+    //fflush(stdout);
+
+//    int ret = mbedtls_x509_crt_parse(&entry->cacert, (const unsigned char *) mbedtls_test_cas_pem,
+//                                     mbedtls_test_cas_pem_len);
+    //ca_crt_rsa[ca_crt_rsa_size - 1] = 0;
+    int ret = mbedtls_x509_crt_parse(&entry->cacert, (const unsigned char *) ca_crt_rsa, ca_crt_rsa_size);
+    if (ret < 0) {
+        SSL_LOG_PRINTF(" failed\n  !  mbedtls_x509_crt_parse returned -0x%x\n\n", -ret);
+        return -1;
+    }
+
+    SSL_LOG_PRINTF(" ok (%d skipped)\n", ret);
+
+    /*
+     * 1. Start the connection
+     */
+    SSL_LOG_PRINTF("  . Connecting to tcp/%s... ", hostname);
+    //fflush(stdout);
+
+//    if ((ret = mbedtls_net_connect(&entry->server_fd, hostname,
+//                                   port, MBEDTLS_NET_PROTO_TCP)) != 0) {
+//        SSL_LOG_PRINTF(" failed\n  ! mbedtls_net_connect returned %d\n\n", ret);
+//        return -1;
+//    }
+    entry->server_fd.fd = netfd;
+
+    SSL_LOG_PRINTF(" ok\n");
+
+    /*
+     * 2. Setup stuff
+     */
+    SSL_LOG_PRINTF("  . Setting up the SSL/TLS structure... ");
+    //fflush(stdout);
+
+    if ((ret = mbedtls_ssl_config_defaults(&entry->conf,
+                                           MBEDTLS_SSL_IS_CLIENT,
+                                           MBEDTLS_SSL_TRANSPORT_STREAM,
+                                           MBEDTLS_SSL_PRESET_DEFAULT)) != 0) {
+        SSL_LOG_PRINTF(" failed\n  ! mbedtls_ssl_config_defaults returned %d\n\n", ret);
+        return -1;
+    }
+
+    SSL_LOG_PRINTF(" ok\n");
+
+    /* OPTIONAL is not optimal for security,
+     * but makes interop easier in this simplified example */
+    mbedtls_ssl_conf_authmode(&entry->conf, MBEDTLS_SSL_VERIFY_OPTIONAL);
+    mbedtls_ssl_conf_ca_chain(&entry->conf, &entry->cacert, NULL);
+    mbedtls_ssl_conf_rng(&entry->conf, mbedtls_ctr_drbg_random, &entry->ctr_drbg);
+    mbedtls_ssl_conf_dbg(&entry->conf, my_debug, stdout);
+
+    if ((ret = mbedtls_ssl_setup(&entry->ssl, &entry->conf)) != 0) {
+        SSL_LOG_PRINTF(" failed\n  ! mbedtls_ssl_setup returned %d\n\n", ret);
+        return -1;
+    }
+
+    if ((ret = mbedtls_ssl_set_hostname(&entry->ssl, hostname)) != 0) {
+        SSL_LOG_PRINTF(" failed\n  ! mbedtls_ssl_set_hostname returned %d\n\n", ret);
+        return -1;
+    }
+
+    mbedtls_ssl_set_bio(&entry->ssl, &entry->server_fd, mbedtls_net_send, mbedtls_net_recv, NULL);
+
+    /*
+     * 4. Handshake
+     */
+    SSL_LOG_PRINTF("  . Performing the SSL/TLS handshake... ");
+    //flush(stdout);
+
+    while ((ret = mbedtls_ssl_handshake(&entry->ssl)) != 0) {
+        if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
+            SSL_LOG_PRINTF(" failed\n  ! mbedtls_ssl_handshake returned -0x%x\n\n", -ret);
+            return -1;
+        }
+    }
+
+    SSL_LOG_PRINTF(" ok\n");
+
+    /*
+     * 5. Verify the server certificate
+     */
+    SSL_LOG_PRINTF("  . Verifying peer X.509 certificate... ");
+
+    /* In real life, we probably want to bail out when ret != 0 */
+    if ((flags = mbedtls_ssl_get_verify_result(&entry->ssl)) != 0) {
+        char vrfy_buf[512];
+
+        SSL_LOG_PRINTF(" failed\n");
+
+        mbedtls_x509_crt_verify_info(vrfy_buf, sizeof(vrfy_buf), "  ! ", flags);
+
+        SSL_LOG_PRINTF("%s\n", vrfy_buf);
+    } else {
+        SSL_LOG_PRINTF(" ok\n");
+    }
+
+    return 0;
+}
+
 int sslc_connect(SSLC_Entry *entry, char *hostname, char *port) {
 
     uint32_t flags;

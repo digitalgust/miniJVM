@@ -18,7 +18,7 @@ android {
     defaultConfig {
         applicationId "org.minijvm.activity"
         minSdkVersion 19
-        targetSdkVersion 26
+        targetSdkVersion 30
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"

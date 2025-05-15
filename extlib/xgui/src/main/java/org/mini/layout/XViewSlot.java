@@ -91,7 +91,7 @@ public class XViewSlot extends XContainer {
             }
             viewSlot.reSizeChildren();
         }
-
+        super.createAndSetGui();
     }
 
 }

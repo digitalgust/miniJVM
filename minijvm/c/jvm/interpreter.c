@@ -1,5 +1,3 @@
-
-
 #include "jvm.h"
 #include "jvm_util.h"
 #include "jit.h"
@@ -35,14 +33,14 @@ s32 exception_handle(RuntimeStack *stack, Runtime *runtime) {
     );
 #endif
     s32 index = 0;
-    ExceptionTable *et = NULL;// _find_exception_handler(runtime, ins, ca, (s32) (ip - ca->code), &index);
+    ExceptionTable *et = NULL;// _find_exception_handler(runtime, ins, ca, (s32) (runtime->pc - ca->code), &index);
     s32 offset = (s32) (runtime->pc - ca->code);
     s32 i;
     ExceptionTable *e = ca->exception_table;
     for (i = 0; i < ca->exception_table_length; i++) {
 
         if (offset >= (e + i)->start_pc
-            && offset <= (e + i)->end_pc) {
+            && offset < (e + i)->end_pc) {
             if (!(e + i)->catch_type) {
                 et = e + i;
                 index = i;
@@ -128,7 +126,7 @@ static s32 filterClassName(Utf8String *clsName) {
 
 #define check_gc_pause(offset){\
     if (offset < 0 && thrd_info->suspend_count) {\
-        runtime->pc = ip;\
+        \
         runtime->stack->sp = sp;\
         check_suspend_and_pause(runtime);\
     }\
@@ -550,7 +548,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
     RuntimeStack *stack;
     LocalVarItem *localvar;
     JClass *clazz;
-    register u8 *ip;
+    //register u8 *runtime->pc;
     register StackEntry *sp;
 
     //start
@@ -585,14 +583,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
             if (stack->max_size < (stack->sp - stack->store) + ca->max_stack) {
-                ustr = utf8_create();
-                getRuntimeStack(runtime, ustr);
-                jvm_printf("Stack overflow :\n %s\n", utf8_cstr(ustr));
-                utf8_destroy(ustr);
+                jvm_printf("Stack overflow :\n");
+                print_runtime_stack(runtime);
                 exit(1);
             }
-            ip = ca->code;
-            runtime->pc = ip;
+            runtime->pc = ca->code;
+
             localvar_init(runtime, ca->max_locals, method->para_slots);
 
             //method sync begin
@@ -646,10 +642,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                 sp = runtime->stack->sp;
 
                 do {
-#if _JVM_JDWP_ENABLE
-                    if (jvm->jdwp_enable) {
+                    if (jdwp_client_count(jvm->jdwpserver)) {
                         stack->sp = sp;
-                        runtime->pc = ip;
+
                         if (!runtime->thrd_info->no_pause) {
                             //breakpoint
                             if (method->breakpoint) {
@@ -663,17 +658,16 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
                         sp = stack->sp;
                         check_gc_pause(-1);  //step debug required
-#if _JVM_DEBUG_LOG_LEVEL > 1
-                        if (jvm->collector->isworldstoped) {
-                            jvm_printf("[ERROR] world stopped, but thread is running: %llx\n", (s64) (intptr_t) runtime->thrd_info->jthread);
-                        }
-#endif   //_JVM_DEBUG_LOG_LEVEL > 1
                     }
-#endif  //_JVM_JDWP_ENABLE
+#if _JVM_DEBUG_LOG_LEVEL > 1
+                    if (jvm->collector->isworldstoped && thrd_info->top_runtime != jvm->collector->runtime) {
+                        jvm_printf("[ERROR] world stopped, but thread is running: %llx\n", (s64) (intptr_t) runtime->thrd_info->jthread);
+                    }
+#endif   //_JVM_DEBUG_LOG_LEVEL > 1
 
 
 #if _JVM_DEBUG_PROFILE
-                    u8 cur_inst = *ip;
+                    u8 cur_inst = *runtime->pc;
                     s64 spent = 0;
                     s64 start_at = nanoTime();
 #endif
@@ -682,14 +676,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #ifdef __JVM_DEBUG__
                     s64 inst_pc = runtime->pc - ca->code;
 #endif
-                    switch (*ip) {
+                    switch (*runtime->pc) {
 
                         case op_nop: {
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("nop\n");
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -700,56 +694,56 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("aconst_null: push %d into stack\n", 0);
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
 
                         case op_iconst_m1: {
                             (sp++)->ivalue = -1;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
 
                         case op_iconst_0: {
                             (sp++)->ivalue = 0;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
 
                         case op_iconst_1: {
                             (sp++)->ivalue = 1;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
 
                         case op_iconst_2: {
                             (sp++)->ivalue = 2;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
 
                         case op_iconst_3: {
                             (sp++)->ivalue = 3;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
 
                         case op_iconst_4: {
                             (sp++)->ivalue = 4;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
 
                         case op_iconst_5: {
                             (sp++)->ivalue = 5;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
@@ -757,7 +751,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_lconst_0: {
                             (sp++)->lvalue = 0;
                             sp++;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
@@ -765,28 +759,28 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_lconst_1: {
                             (sp++)->lvalue = 1;
                             sp++;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
 
                         case op_fconst_0: {
                             (sp++)->fvalue = 0;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
 
                         case op_fconst_1: {
                             (sp++)->fvalue = 1;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
 
                         case op_fconst_2: {
                             (sp++)->fvalue = 2;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
@@ -794,7 +788,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_dconst_0: {
                             (sp++)->dvalue = 0;
                             sp++;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
@@ -802,19 +796,19 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_dconst_1: {
                             (sp++)->dvalue = 1;
                             sp++;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
 
                         case op_bipush: {
 
-                            (sp++)->ivalue = (s8) ip[1];
+                            (sp++)->ivalue = (s8) runtime->pc[1];
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("bipush a byte %d onto the stack \n", (sp - 1)->ivalue);
 #endif
-                            ip += 2;
+                            runtime->pc += 2;
 
                             break;
                         }
@@ -823,22 +817,22 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_sipush: {
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
-                            jvm_printf("sipush value %d\n", *((s16 *) (ip + 1)));
+                            jvm_printf("sipush value %d\n", *((s16 *) (runtime->pc + 1)));
 #endif
-                            (sp++)->ivalue = *((s16 *) (ip + 1));
-                            ip += 3;
+                            (sp++)->ivalue = *((s16 *) (runtime->pc + 1));
+                            runtime->pc += 3;
 
                             break;
                         }
 
                         case op_ldc:
                         case op_ldc_w: {
-                            if (*ip == op_ldc) {
-                                idx = ip[1];
-                                ip += 2;
+                            if (*runtime->pc == op_ldc) {
+                                idx = runtime->pc[1];
+                                runtime->pc += 2;
                             } else {
-                                idx = *((u16 *) (ip + 1));
-                                ip += 3;
+                                idx = *((u16 *) (runtime->pc + 1));
+                                runtime->pc += 3;
                             }
                             ConstantItem *item = class_get_constant_item(clazz, idx);
                             switch (item->tag) {
@@ -882,14 +876,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_ldc2_w: {
 
-                            lval1 = class_get_constant_long(clazz, *((u16 *) (ip + 1)));//long or double
+                            lval1 = class_get_constant_long(clazz, *((u16 *) (runtime->pc + 1)));//long or double
                             (sp++)->lvalue = lval1;
                             sp++;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
-                            jvm_printf("ldc2_w: push a constant(%d) [%llx] onto the stack \n", *((u16 *) (ip + 1)), (sp - 2)->lvalue);
+                            jvm_printf("ldc2_w: push a constant(%d) [%llx] onto the stack \n", *((u16 *) (runtime->pc + 1)), (sp - 2)->lvalue);
 #endif
-                            ip += 3;
+                            runtime->pc += 3;
 
                             break;
                         }
@@ -897,51 +891,51 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_iload:
                         case op_fload: {
-                            (sp++)->ivalue = localvar[(u8) ip[1]].ivalue;
-                            ip += 2;
+                            (sp++)->ivalue = localvar[(u8) runtime->pc[1]].ivalue;
+                            runtime->pc += 2;
                             break;
                         }
 
                         case op_aload: {
-                            (sp++)->rvalue = localvar[(u8) ip[1]].rvalue;
-                            ip += 2;
+                            (sp++)->rvalue = localvar[(u8) runtime->pc[1]].rvalue;
+                            runtime->pc += 2;
                             break;
                         }
 
 
                         case op_lload:
                         case op_dload: {
-                            (sp++)->lvalue = localvar[(u8) ip[1]].lvalue;
+                            (sp++)->lvalue = localvar[(u8) runtime->pc[1]].lvalue;
                             sp++;
-                            ip += 2;
+                            runtime->pc += 2;
                             break;
                         }
 
                         case op_fload_0:
                         case op_iload_0: {
                             (sp++)->ivalue = localvar[0].ivalue;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
                         case op_fload_1:
                         case op_iload_1: {
                             (sp++)->ivalue = localvar[1].ivalue;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
                         case op_fload_2:
                         case op_iload_2: {
                             (sp++)->ivalue = localvar[2].ivalue;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
                         case op_fload_3:
                         case op_iload_3: {
                             (sp++)->ivalue = localvar[3].ivalue;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
@@ -949,7 +943,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_lload_0: {
                             (sp++)->lvalue = localvar[0].lvalue;
                             (sp++);
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
@@ -957,7 +951,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_lload_1: {
                             (sp++)->lvalue = localvar[1].lvalue;
                             (sp++);
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
@@ -965,7 +959,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_lload_2: {
                             (sp++)->lvalue = localvar[2].lvalue;
                             (sp++);
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
@@ -973,34 +967,34 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_lload_3: {
                             (sp++)->lvalue = localvar[3].lvalue;
                             (sp++);
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
                         case op_aload_0: {
                             (sp++)->rvalue = localvar[0].rvalue;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
 
                         case op_aload_1: {
                             (sp++)->rvalue = localvar[1].rvalue;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
 
                         case op_aload_2: {
                             (sp++)->rvalue = localvar[2].rvalue;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
 
                         case op_aload_3: {
                             (sp++)->rvalue = localvar[3].rvalue;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
@@ -1019,9 +1013,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
-                                jvm_printf("if_aload push arr[%llx].(%d)=%x:%d:%lf into stack\n", (u64) (intptr_t) ins, index, ival1, ival1, *(f32 *) &ival1);
+                                jvm_printf("if_aload push arr[%llx].(%d)=%x:%d:%lf into stack\n", (u64) (intptr_t) ins, idx, ival1, ival1, *(f32 *) &ival1);
 #endif
-                                ip++;
+                                runtime->pc++;
                             }
                             break;
                         }
@@ -1041,10 +1035,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 (sp++);
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
-                                jvm_printf("ld_aload push arr[%llx].(%d)=%llx:%lld:%lf into stack\n", (u64) (intptr_t) ins, index, lval1, lval1, *(f64 *) &lval1);
+                                jvm_printf("ld_aload push arr[%llx].(%d)=%llx:%lld:%lf into stack\n", (u64) (intptr_t) ins, idx, lval1, lval1, *(f64 *) &lval1);
 #endif
 
-                                ip++;
+                                runtime->pc++;
                             }
                             break;
                         }
@@ -1063,10 +1057,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
-                                jvm_printf("aaload push arr[%llx].(%d)=%llx:%lld into stack\n", (u64) (intptr_t) ins, index, (s64) (intptr_t) rval1, (s64) (intptr_t) rval1);
+                                jvm_printf("aaload push arr[%llx].(%d)=%llx:%lld into stack\n", (u64) (intptr_t) ins, idx, (s64) (intptr_t) rval1, (s64) (intptr_t) rval1);
 #endif
 
-                                ip++;
+                                runtime->pc++;
                             }
                             break;
                         }
@@ -1085,10 +1079,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
-                                jvm_printf("iaload push arr[%llx].(%d)=%x:%d:%lf into stack\n", (u64) (intptr_t) ins, index, ival1, ival1, *(f32 *) &ival1);
+                                jvm_printf("iaload push arr[%llx].(%d)=%x:%d:%lf into stack\n", (u64) (intptr_t) ins, idx, ival1, ival1, *(f32 *) &ival1);
 #endif
 
-                                ip++;
+                                runtime->pc++;
                             }
                             break;
                         }
@@ -1107,10 +1101,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
-                                jvm_printf("iaload push arr[%llx].(%d)=%x:%d:%lf into stack\n", (u64) (intptr_t) ins, index, ival1, ival1, *(f32 *) &ival1);
+                                jvm_printf("iaload push arr[%llx].(%d)=%x:%d:%lf into stack\n", (u64) (intptr_t) ins, idx, ival1, ival1, *(f32 *) &ival1);
 #endif
 
-                                ip++;
+                                runtime->pc++;
                             }
                             break;
                         }
@@ -1129,10 +1123,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
-                                jvm_printf("iaload push arr[%llx].(%d)=%x:%d:%lf into stack\n", (u64) (intptr_t) ins, index, ival1, ival1, *(f32 *) &ival1);
+                                jvm_printf("iaload push arr[%llx].(%d)=%x:%d:%lf into stack\n", (u64) (intptr_t) ins, idx, ival1, ival1, *(f32 *) &ival1);
 #endif
 
-                                ip++;
+                                runtime->pc++;
                             }
                             break;
                         }
@@ -1140,14 +1134,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_istore:
                         case op_fstore: {
-                            localvar[(u8) ip[1]].ivalue = (--sp)->ivalue;
-                            ip += 2;
+                            localvar[(u8) runtime->pc[1]].ivalue = (--sp)->ivalue;
+                            runtime->pc += 2;
                             break;
                         }
 
                         case op_astore: {
-                            localvar[(u8) ip[1]].rvalue = (--sp)->rvalue;
-                            ip += 2;
+                            localvar[(u8) runtime->pc[1]].rvalue = (--sp)->rvalue;
+                            runtime->pc += 2;
                             break;
                         }
 
@@ -1156,8 +1150,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_dstore: {
                             --sp;
                             --sp;
-                            localvar[(u8) ip[1]].lvalue = (sp)->lvalue;
-                            ip += 2;
+                            localvar[(u8) runtime->pc[1]].lvalue = (sp)->lvalue;
+                            runtime->pc += 2;
 
                             break;
                         }
@@ -1165,28 +1159,28 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_fstore_0:
                         case op_istore_0: {
                             localvar[0].ivalue = (--sp)->ivalue;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
                         case op_fstore_1:
                         case op_istore_1: {
                             localvar[1].ivalue = (--sp)->ivalue;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
                         case op_fstore_2:
                         case op_istore_2: {
                             localvar[2].ivalue = (--sp)->ivalue;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
                         case op_fstore_3:
                         case op_istore_3: {
                             localvar[3].ivalue = (--sp)->ivalue;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
@@ -1194,7 +1188,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_lstore_0: {
                             --sp;
                             localvar[0].lvalue = (--sp)->lvalue;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
@@ -1202,7 +1196,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_lstore_1: {
                             --sp;
                             localvar[1].lvalue = (--sp)->lvalue;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
@@ -1210,7 +1204,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_lstore_2: {
                             --sp;
                             localvar[2].lvalue = (--sp)->lvalue;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
@@ -1218,34 +1212,34 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_lstore_3: {
                             --sp;
                             localvar[3].lvalue = (--sp)->lvalue;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
                         case op_astore_0: {
                             localvar[0].rvalue = (--sp)->rvalue;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
 
                         case op_astore_1: {
                             localvar[1].rvalue = (--sp)->rvalue;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
 
                         case op_astore_2: {
                             localvar[2].rvalue = (--sp)->rvalue;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
 
                         case op_astore_3: {
                             localvar[3].rvalue = (--sp)->rvalue;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
@@ -1264,10 +1258,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
-                                jvm_printf("iastore: save array[%llx].(%d)=%d)\n", (s64) (intptr_t) ins, index, ival1);
+                                jvm_printf("iastore: save array[%llx].(%d)=%d)\n", (s64) (intptr_t) ins, idx, ival1);
 #endif
 
-                                ip++;
+                                runtime->pc++;
                             }
                             break;
                         }
@@ -1288,10 +1282,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
-                                jvm_printf("iastore: save array[%llx].(%d)=%lld)\n", (s64) (intptr_t) ins, index, lval1);
+                                jvm_printf("iastore: save array[%llx].(%d)=%lld)\n", (s64) (intptr_t) ins, idx, lval1);
 #endif
 
-                                ip++;
+                                runtime->pc++;
                             }
                             break;
                         }
@@ -1310,10 +1304,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
-                                jvm_printf("iastore: save array[%llx].(%d)=%llx)\n", (s64) (intptr_t) ins, index, (s64) (intptr_t) rval1);
+                                jvm_printf("iastore: save array[%llx].(%d)=%llx)\n", (s64) (intptr_t) ins, idx, (s64) (intptr_t) rval1);
 #endif
 
-                                ip++;
+                                runtime->pc++;
                             }
                             break;
                         }
@@ -1332,10 +1326,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
-                                jvm_printf("iastore: save array[%llx].(%d)=%d)\n", (s64) (intptr_t) ins, index, ival1);
+                                jvm_printf("iastore: save array[%llx].(%d)=%d)\n", (s64) (intptr_t) ins, idx, ival1);
 #endif
 
-                                ip++;
+                                runtime->pc++;
                             }
                             break;
                         }
@@ -1354,10 +1348,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
-                                jvm_printf("iastore: save array[%llx].(%d)=%d)\n", (s64) (intptr_t) ins, index, ival1);
+                                jvm_printf("iastore: save array[%llx].(%d)=%d)\n", (s64) (intptr_t) ins, idx, ival1);
 #endif
 
-                                ip++;
+                                runtime->pc++;
                             }
                             break;
                         }
@@ -1376,10 +1370,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
-                                jvm_printf("iastore: save array[%llx].(%d)=%d)\n", (s64) (intptr_t) ins, index, ival1);
+                                jvm_printf("iastore: save array[%llx].(%d)=%d)\n", (s64) (intptr_t) ins, idx, ival1);
 #endif
 
-                                ip++;
+                                runtime->pc++;
                             }
                             break;
                         }
@@ -1391,7 +1385,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("pop\n");
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1405,7 +1399,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("pop2\n");
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1419,7 +1413,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("dup\n");
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1435,7 +1429,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("dup_x1\n");
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1452,7 +1446,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("dup_x2 \n");
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1468,7 +1462,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("dup2\n");
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1488,7 +1482,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("dup2_x1\n");
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1508,7 +1502,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("dup2_x2\n");
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1525,7 +1519,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("swap\n");
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1539,7 +1533,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("iadd:  %d\n", (sp - 1)->ivalue);
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1554,7 +1548,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("ladd:  %lld\n", (sp - 2)->lvalue);
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1568,7 +1562,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("fadd:  %f\n", (sp - 1)->fvalue);
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1583,7 +1577,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("dadd:  %lf\n", (sp - 2)->dvalue);
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1597,7 +1591,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("isub :  %d\n", (sp - 1)->ivalue);
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1612,7 +1606,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("lsub:  %lld\n", (sp - 2)->lvalue);
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1626,7 +1620,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("fsub:  %f\n", (sp - 1)->fvalue);
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1642,7 +1636,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("dsub:  %lf\n", (sp - 2)->dvalue);
 #endif
 
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1656,7 +1650,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("imul:  %d\n", (sp - 1)->ivalue);
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1671,7 +1665,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("lmul:  %lld\n", (sp - 2)->lvalue);
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1684,7 +1678,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("fmul:  %f\n", (sp - 1)->fvalue);
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1698,7 +1692,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("dmul:  %lf\n", (sp - 2)->dvalue);
 #endif
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1715,7 +1709,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             } else {
                                 --sp;
                                 (sp - 1)->ivalue /= (sp - 0)->ivalue;
-                                ip++;
+                                runtime->pc++;
                             }
 
                             break;
@@ -1733,7 +1727,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 --sp;
                                 --sp;
                                 (sp - 2)->lvalue /= (sp - 0)->lvalue;
-                                ip++;
+                                runtime->pc++;
                             }
 
                             break;
@@ -1750,7 +1744,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("fdiv:  %f\n", (sp - 1)->fvalue);
 #endif
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
@@ -1765,7 +1759,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("ddiv:  %lf\n", (sp - 2)->dvalue);
 #endif
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
@@ -1780,7 +1774,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 invoke_deepth(runtime);
                                 jvm_printf("irem:  %d\n", (sp - 1)->ivalue);
 #endif
-                                ip++;
+                                runtime->pc++;
                             }
                             break;
                         }
@@ -1798,7 +1792,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 invoke_deepth(runtime);
                                 jvm_printf("lrem:  %lld\n", (sp - 2)->lvalue);
 #endif
-                                ip++;
+                                runtime->pc++;
                             }
                             break;
                         }
@@ -1816,7 +1810,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("frem:  %f\n", (sp - 1)->fvalue);
 #endif
                             (sp - 1)->fvalue = v;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
@@ -1835,7 +1829,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("drem:  %lf\n", (sp - 2)->dvalue);
 #endif
                             (sp - 2)->dvalue = v;
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
@@ -1847,7 +1841,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("ineg:  %d\n", (sp - 1)->ivalue);
 #endif
                             (sp - 1)->ivalue = -(sp - 1)->ivalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1860,7 +1854,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("lneg:  %lld\n", (sp - 2)->lvalue);
 #endif
                             (sp - 2)->lvalue = -(sp - 2)->lvalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1873,7 +1867,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("fneg:  %f\n", (sp - 1)->fvalue);
 #endif
                             (sp - 1)->fvalue = -(sp - 1)->fvalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1886,7 +1880,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("dneg:  %lf\n", (sp - 2)->dvalue);
 #endif
                             (sp - 2)->dvalue = -(sp - 2)->dvalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1900,7 +1894,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                             --sp;
                             (sp - 1)->ivalue <<= (sp - 0)->ivalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1914,7 +1908,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                             --sp;
                             (sp - 2)->lvalue <<= (sp - 0)->ivalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1928,7 +1922,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                             --sp;
                             (sp - 1)->ivalue >>= (sp - 0)->ivalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1942,7 +1936,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                             --sp;
                             (sp - 2)->lvalue >>= (sp - 0)->ivalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1956,7 +1950,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                             --sp;
                             (sp - 1)->uivalue >>= (sp - 0)->ivalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1970,7 +1964,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                             --sp;
                             (sp - 2)->ulvalue >>= (sp - 0)->ivalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1984,7 +1978,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                             --sp;
                             (sp - 1)->ivalue &= (sp - 0)->ivalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -1999,7 +1993,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             --sp;
                             --sp;
                             (sp - 2)->lvalue &= (sp - 0)->lvalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2013,7 +2007,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                             --sp;
                             (sp - 1)->ivalue |= (sp - 0)->ivalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2028,7 +2022,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             --sp;
                             --sp;
                             (sp - 2)->lvalue |= (sp - 0)->lvalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2042,7 +2036,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                             --sp;
                             (sp - 1)->ivalue ^= (sp - 0)->ivalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2057,18 +2051,18 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             --sp;
                             --sp;
                             (sp - 2)->lvalue ^= (sp - 0)->lvalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
 
 
                         case op_iinc: {
-                            localvar[(u8) ip[1]].ivalue += (s8) ip[2];
-                            ip += 3;
+                            localvar[(u8) runtime->pc[1]].ivalue += (s8) runtime->pc[2];
+                            runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
-                            jvm_printf("iinc: localvar(%d) = %d , inc %d\n", (u8) ip[1], runtime->localvar[(u8) ip[1]].ivalue, (s8) ip[2]);
+                            jvm_printf("iinc: localvar(%d) = %d , inc %d\n", (u8) runtime->pc[1], runtime->localvar[(u8) runtime->pc[1]].ivalue, (s8) runtime->pc[2]);
 #endif
 
                             break;
@@ -2083,7 +2077,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                             ++sp;
                             (sp - 2)->lvalue = (s64) (sp - 2)->ivalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2095,7 +2089,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("i2f:  %d\n", (sp - 1)->ivalue);
 #endif
                             (sp - 1)->fvalue = (f32) (sp - 1)->ivalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2108,7 +2102,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                             ++sp;
                             (sp - 2)->dvalue = (f64) (sp - 2)->ivalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2122,7 +2116,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                             --sp;
                             (sp - 1)->ivalue = (s32) (sp - 1)->lvalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2136,7 +2130,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                             --sp;
                             (sp - 1)->fvalue = (f32) (sp - 1)->lvalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2149,7 +2143,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("l2d:  %lld\n", (sp - 2)->lvalue);
 #endif
                             (sp - 2)->dvalue = (f64) (sp - 2)->lvalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2161,7 +2155,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("f2i: %f\n", (sp - 1)->fvalue);
 #endif
                             (sp - 1)->ivalue = (s32) (sp - 1)->fvalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2174,7 +2168,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                             ++sp;
                             (sp - 2)->lvalue = (s64) (sp - 2)->fvalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2187,7 +2181,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                             ++sp;
                             (sp - 2)->dvalue = (f64) (sp - 2)->fvalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2200,7 +2194,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                             --sp;
                             (sp - 1)->ivalue = (s32) (sp - 1)->dvalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2212,7 +2206,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("d2l: %lf\n", (sp - 2)->dvalue);
 #endif
                             (sp - 2)->lvalue = (s64) (sp - 2)->dvalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2225,7 +2219,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                             --sp;
                             (sp - 1)->fvalue = (f32) (sp - 1)->dvalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2238,7 +2232,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("i2b:  %d\n", (sp - 1)->ivalue);
 #endif
                             (sp - 1)->ivalue = (s8) (sp - 1)->ivalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2251,7 +2245,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("i2c:  %d\n", (sp - 1)->ivalue);
 #endif
                             (sp - 1)->ivalue = (u16) (sp - 1)->ivalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2263,7 +2257,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("i2s:  %d\n", (sp - 1)->ivalue);
 #endif
                             (sp - 1)->ivalue = (s16) (sp - 1)->ivalue;
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2282,7 +2276,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                             (sp++)->ivalue = result;
 
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2302,7 +2296,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                                 (sp++)->ivalue = result;
                             }
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2322,7 +2316,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                                 (sp++)->ivalue = result;
                             }
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2344,7 +2338,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                                 (sp++)->ivalue = result;
                             }
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2366,7 +2360,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 #endif
                                 (sp++)->ivalue = result;
                             }
-                            ip++;
+                            runtime->pc++;
 
                             break;
                         }
@@ -2375,11 +2369,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_ifeq: {
                             ival1 = (--sp)->ivalue;
                             if (ival1 == 0) {
-                                offset = *((s16 *) (ip + 1));
-                                ip += offset;
+                                offset = *((s16 *) (runtime->pc + 1));
+                                runtime->pc += offset;
                                 check_gc_pause(offset);
                             } else {
-                                ip += 3;
+                                runtime->pc += 3;
                             }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
@@ -2394,11 +2388,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_ifne: {
                             ival1 = (--sp)->ivalue;
                             if (ival1 != 0) {
-                                offset = *((s16 *) (ip + 1));
-                                ip += offset;
+                                offset = *((s16 *) (runtime->pc + 1));
+                                runtime->pc += offset;
                                 check_gc_pause(offset);
                             } else {
-                                ip += 3;
+                                runtime->pc += 3;
                             }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
@@ -2413,11 +2407,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_iflt: {
                             ival1 = (--sp)->ivalue;
                             if (ival1 < 0) {
-                                offset = *((s16 *) (ip + 1));
-                                ip += offset;
+                                offset = *((s16 *) (runtime->pc + 1));
+                                runtime->pc += offset;
                                 check_gc_pause(offset);
                             } else {
-                                ip += 3;
+                                runtime->pc += 3;
                             }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
@@ -2432,11 +2426,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_ifge: {
                             ival1 = (--sp)->ivalue;
                             if (ival1 >= 0) {
-                                offset = *((s16 *) (ip + 1));
-                                ip += offset;
+                                offset = *((s16 *) (runtime->pc + 1));
+                                runtime->pc += offset;
                                 check_gc_pause(offset);
                             } else {
-                                ip += 3;
+                                runtime->pc += 3;
                             }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
@@ -2451,11 +2445,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_ifgt: {
                             ival1 = (--sp)->ivalue;
                             if (ival1 > 0) {
-                                offset = *((s16 *) (ip + 1));
-                                ip += offset;
+                                offset = *((s16 *) (runtime->pc + 1));
+                                runtime->pc += offset;
                                 check_gc_pause(offset);
                             } else {
-                                ip += 3;
+                                runtime->pc += 3;
                             }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
@@ -2470,11 +2464,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_ifle: {
                             ival1 = (--sp)->ivalue;
                             if (ival1 <= 0) {
-                                offset = *((s16 *) (ip + 1));
-                                ip += offset;
+                                offset = *((s16 *) (runtime->pc + 1));
+                                runtime->pc += offset;
                                 check_gc_pause(offset);
                             } else {
-                                ip += 3;
+                                runtime->pc += 3;
                             }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
@@ -2490,11 +2484,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             ival2 = (--sp)->ivalue;
                             ival1 = (--sp)->ivalue;
                             if (ival1 == ival2) {
-                                offset = *((s16 *) (ip + 1));
-                                ip += offset;
+                                offset = *((s16 *) (runtime->pc + 1));
+                                runtime->pc += offset;
                                 check_gc_pause(offset);
                             } else {
-                                ip += 3;
+                                runtime->pc += 3;
                             }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
@@ -2509,11 +2503,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             ival2 = (--sp)->ivalue;
                             ival1 = (--sp)->ivalue;
                             if (ival1 != ival2) {
-                                offset = *((s16 *) (ip + 1));
-                                ip += offset;
+                                offset = *((s16 *) (runtime->pc + 1));
+                                runtime->pc += offset;
                                 check_gc_pause(offset);
                             } else {
-                                ip += 3;
+                                runtime->pc += 3;
                             }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
@@ -2528,11 +2522,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             ival2 = (--sp)->ivalue;
                             ival1 = (--sp)->ivalue;
                             if (ival1 < ival2) {
-                                offset = *((s16 *) (ip + 1));
-                                ip += offset;
+                                offset = *((s16 *) (runtime->pc + 1));
+                                runtime->pc += offset;
                                 check_gc_pause(offset);
                             } else {
-                                ip += 3;
+                                runtime->pc += 3;
                             }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
@@ -2547,11 +2541,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             ival2 = (--sp)->ivalue;
                             ival1 = (--sp)->ivalue;
                             if (ival1 >= ival2) {
-                                offset = *((s16 *) (ip + 1));
-                                ip += offset;
+                                offset = *((s16 *) (runtime->pc + 1));
+                                runtime->pc += offset;
                                 check_gc_pause(offset);
                             } else {
-                                ip += 3;
+                                runtime->pc += 3;
                             }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
@@ -2566,11 +2560,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             ival2 = (--sp)->ivalue;
                             ival1 = (--sp)->ivalue;
                             if (ival1 > ival2) {
-                                offset = *((s16 *) (ip + 1));
-                                ip += offset;
+                                offset = *((s16 *) (runtime->pc + 1));
+                                runtime->pc += offset;
                                 check_gc_pause(offset);
                             } else {
-                                ip += 3;
+                                runtime->pc += 3;
                             }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
@@ -2585,11 +2579,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             ival2 = (--sp)->ivalue;
                             ival1 = (--sp)->ivalue;
                             if (ival1 <= ival2) {
-                                offset = *((s16 *) (ip + 1));
-                                ip += offset;
+                                offset = *((s16 *) (runtime->pc + 1));
+                                runtime->pc += offset;
                                 check_gc_pause(offset);
                             } else {
-                                ip += 3;
+                                runtime->pc += 3;
                             }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
@@ -2604,11 +2598,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             rval2 = (--sp)->rvalue;
                             rval1 = (--sp)->rvalue;
                             if (rval1 == rval2) {
-                                offset = *((s16 *) (ip + 1));
-                                ip += offset;
+                                offset = *((s16 *) (runtime->pc + 1));
+                                runtime->pc += offset;
                                 check_gc_pause(offset);
                             } else {
-                                ip += 3;
+                                runtime->pc += 3;
                             }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
@@ -2623,11 +2617,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             rval2 = (--sp)->rvalue;
                             rval1 = (--sp)->rvalue;
                             if (rval1 != rval2) {
-                                offset = *((s16 *) (ip + 1));
-                                ip += offset;
+                                offset = *((s16 *) (runtime->pc + 1));
+                                runtime->pc += offset;
                                 check_gc_pause(offset);
                             } else {
-                                ip += 3;
+                                runtime->pc += 3;
                             }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
@@ -2640,8 +2634,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_goto: {
 
-                            offset = *((s16 *) (ip + 1));
-                            ip += offset;
+                            offset = *((s16 *) (runtime->pc + 1));
+                            runtime->pc += offset;
                             check_gc_pause(offset);
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -2653,37 +2647,37 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_jsr: {
-                            offset = *((s16 *) (ip + 1));
-                            (sp++)->rvalue = (ip + 3);
+                            offset = *((s16 *) (runtime->pc + 1));
+                            (sp++)->rvalue = (runtime->pc + 3);
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("jsr: %d\n", offset);
 #endif
-                            ip += offset;
+                            runtime->pc += offset;
                             break;
                         }
 
 
                         case op_ret: {
-                            __returnaddress addr = (__refer) (intptr_t) localvar[(u8) ip[1]].rvalue;
+                            __returnaddress addr = (__refer) (intptr_t) localvar[(u8) runtime->pc[1]].rvalue;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("ret: %x\n", (s64) (intptr_t) addr);
 #endif
-                            ip = (u8 *) addr;
+                            runtime->pc = (u8 *) addr;
                             break;
                         }
 
 
                         case op_tableswitch: {
-                            idx = (s32) (4 - ((((u64) (intptr_t) ip) - (u64) (intptr_t) (ca->code)) % 4));//4 byte对齐
+                            idx = (s32) (4 - ((((u64) (intptr_t) runtime->pc) - (u64) (intptr_t) (ca->code)) % 4));//4 byte对齐
 
-                            s32 default_offset = *((s32 *) (ip + idx));
+                            s32 default_offset = *((s32 *) (runtime->pc + idx));
                             idx += 4;
-                            s32 low = *((s32 *) (ip + idx));
+                            s32 low = *((s32 *) (runtime->pc + idx));
                             idx += 4;
-                            s32 high = *((s32 *) (ip + idx));
+                            s32 high = *((s32 *) (runtime->pc + idx));
                             idx += 4;
 
                             ival1 = (--sp)->ivalue;// pop an int from the stack
@@ -2693,14 +2687,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             } else {                            // otherwise
                                 idx += (ival1 - low) * 4;
 
-                                offset = *((s32 *) (ip + idx)); // branch to entry in table
+                                offset = *((s32 *) (runtime->pc + idx)); // branch to entry in table
                             }
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("tableswitch: val=%d, offset=%d\n", ival1, offset);
 #endif
-                            ip += offset;
+                            runtime->pc += offset;
 
 
                             break;
@@ -2708,11 +2702,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_lookupswitch: {
-                            idx = (s32) (4 - ((((u64) (intptr_t) ip) - (u64) (intptr_t) (ca->code)) % 4));//4 byte对齐
+                            idx = (s32) (4 - ((((u64) (intptr_t) runtime->pc) - (u64) (intptr_t) (ca->code)) % 4));//4 byte对齐
 
-                            s32 default_offset = *((s32 *) (ip + idx));
+                            s32 default_offset = *((s32 *) (runtime->pc + idx));
                             idx += 4;
-                            s32 n = *((s32 *) (ip + idx));
+                            s32 n = *((s32 *) (runtime->pc + idx));
                             idx += 4;
                             s32 i, key;
 
@@ -2720,10 +2714,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             offset = default_offset;
                             for (i = 0; i < n; i++) {
 
-                                key = *((s32 *) (ip + idx));
+                                key = *((s32 *) (runtime->pc + idx));
                                 idx += 4;
                                 if (key == ival1) {
-                                    offset = *((s32 *) (ip + idx));
+                                    offset = *((s32 *) (runtime->pc + idx));
                                     break;
                                 } else {
                                     idx += 4;
@@ -2734,7 +2728,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("tableswitch: val=%d, offset=%d\n", ival1, offset);
 #endif
-                            ip += offset;
+                            runtime->pc += offset;
 
                             break;
                         }
@@ -2799,7 +2793,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_getstatic: {
                             stack->sp = sp;
-                            idx = *((u16 *) (ip + 1));
+                            idx = *((u16 *) (runtime->pc + 1));
                             fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             if (!fi) {
                                 cfr = class_get_constant_fieldref(clazz, idx);
@@ -2818,27 +2812,27 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 sp = stack->sp;
                             }
                             if (fi->isrefer) {
-                                *ip = op_getstatic_ref;
+                                *runtime->pc = op_getstatic_ref;
                             } else {
                                 // check variable type to determine s64/s32/f64/f32
                                 switch (fi->datatype_bytes) {
                                     case 4: {
-                                        *ip = op_getstatic_int;
+                                        *runtime->pc = op_getstatic_int;
                                         break;
                                     }
                                     case 1: {
-                                        *ip = op_getstatic_byte;
+                                        *runtime->pc = op_getstatic_byte;
                                         break;
                                     }
                                     case 8: {
-                                        *ip = op_getstatic_long;
+                                        *runtime->pc = op_getstatic_long;
                                         break;
                                     }
                                     case 2: {
                                         if (fi->datatype_idx == DATATYPE_JCHAR) {
-                                            *ip = op_getstatic_jchar;
+                                            *runtime->pc = op_getstatic_jchar;
                                         } else {
-                                            *ip = op_getstatic_short;
+                                            *runtime->pc = op_getstatic_short;
                                         }
                                         break;
                                     }
@@ -2853,7 +2847,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_putstatic: {
 
-                            idx = *((u16 *) (ip + 1));
+                            idx = *((u16 *) (runtime->pc + 1));
 
                             fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             if (!fi) {
@@ -2874,25 +2868,25 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 sp = stack->sp;
                             }
                             if (fi->isrefer) {// garbage collection mark
-                                *ip = op_putstatic_ref;
+                                *runtime->pc = op_putstatic_ref;
                             } else {
                                 // check variable type to determain long/s32/f64/f32
                                 // non-reference type
                                 switch (fi->datatype_bytes) {
                                     case 4: {
-                                        *ip = op_putstatic_int;
+                                        *runtime->pc = op_putstatic_int;
                                         break;
                                     }
                                     case 1: {
-                                        *ip = op_putstatic_byte;
+                                        *runtime->pc = op_putstatic_byte;
                                         break;
                                     }
                                     case 8: {
-                                        *ip = op_putstatic_long;
+                                        *runtime->pc = op_putstatic_long;
                                         break;
                                     }
                                     case 2: {
-                                        *ip = op_putstatic_short;
+                                        *runtime->pc = op_putstatic_short;
                                         break;
                                     }
                                     default: {
@@ -2908,8 +2902,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             s8 byte_changed = 0;
                             spin_lock(&jvm->lock_cloader);
                             {
-                                if (*(ip) == op_getfield) {
-                                    idx = *((u16 *) (ip + 1));
+                                if (*(runtime->pc) == op_getfield) {
+                                    idx = *((u16 *) (runtime->pc + 1));
                                 } else {
                                     byte_changed = 1;
                                 }
@@ -2937,27 +2931,27 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 spin_lock(&jvm->lock_cloader);
                                 {
                                     if (fi->isrefer) {
-                                        *ip = op_getfield_ref;
+                                        *runtime->pc = op_getfield_ref;
                                     } else {
                                         // check variable type to determine s64/s32/f64/f32
                                         switch (fi->datatype_bytes) {
                                             case 4: {
-                                                *ip = op_getfield_int;
+                                                *runtime->pc = op_getfield_int;
                                                 break;
                                             }
                                             case 1: {
-                                                *ip = op_getfield_byte;
+                                                *runtime->pc = op_getfield_byte;
                                                 break;
                                             }
                                             case 8: {
-                                                *ip = op_getfield_long;
+                                                *runtime->pc = op_getfield_long;
                                                 break;
                                             }
                                             case 2: {
                                                 if (fi->datatype_idx == DATATYPE_JCHAR) {
-                                                    *ip = op_getfield_jchar;
+                                                    *runtime->pc = op_getfield_jchar;
                                                 } else {
-                                                    *ip = op_getfield_short;
+                                                    *runtime->pc = op_getfield_short;
                                                 }
                                                 break;
                                             }
@@ -2966,7 +2960,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                             }
                                         }
                                     }
-                                    *((u16 *) (ip + 1)) = fi->offset_instance;
+                                    *((u16 *) (runtime->pc + 1)) = fi->offset_instance;
                                 }
                                 spin_unlock(&jvm->lock_cloader);
                             } else {
@@ -2982,8 +2976,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                             spin_lock(&jvm->lock_cloader);
                             {
-                                if (*(ip) == op_putfield) {
-                                    idx = *((u16 *) (ip + 1));
+                                if (*(runtime->pc) == op_putfield) {
+                                    idx = *((u16 *) (runtime->pc + 1));
                                 } else {
                                     byte_changed = 1;
                                 }
@@ -3012,24 +3006,24 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 spin_lock(&jvm->lock_cloader);
                                 {
                                     if (fi->isrefer) {// garbage collection flag
-                                        *ip = op_putfield_ref;
+                                        *runtime->pc = op_putfield_ref;
                                     } else {
                                         // non-reference type
                                         switch (fi->datatype_bytes) {
                                             case 4: {
-                                                *ip = op_putfield_int;
+                                                *runtime->pc = op_putfield_int;
                                                 break;
                                             }
                                             case 1: {
-                                                *ip = op_putfield_byte;
+                                                *runtime->pc = op_putfield_byte;
                                                 break;
                                             }
                                             case 8: {
-                                                *ip = op_putfield_long;
+                                                *runtime->pc = op_putfield_long;
                                                 break;
                                             }
                                             case 2: {
-                                                *ip = op_putfield_short;
+                                                *runtime->pc = op_putfield_short;
                                                 break;
                                             }
                                             default: {
@@ -3037,7 +3031,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                             }
                                         }
                                     }
-                                    *((u16 *) (ip + 1)) = fi->offset_instance;
+                                    *((u16 *) (runtime->pc + 1)) = fi->offset_instance;
                                 }
                                 spin_unlock(&jvm->lock_cloader);
                             } else {
@@ -3049,7 +3043,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_invokevirtual: {
 
-                            cmr = class_get_constant_method_ref(clazz, *((u16 *) (ip + 1)));
+                            cmr = class_get_constant_method_ref(clazz, *((u16 *) (runtime->pc + 1)));
 
                             ins = (sp - 1 - cmr->para_slots)->rvalue;
                             if (!ins) {
@@ -3085,7 +3079,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                             goto label_exception_handle;
                                         }
                                         //jvm_printf("methodcall getter %s.%s  %d  in    %s.%s\n", utf8_cstr(m->_this_class->name), utf8_cstr(m->name), m->_this_class->status, utf8_cstr(clazz->name), utf8_cstr(method->name));
-                                        ip += 3;
+                                        runtime->pc += 3;
                                     } else if (m->is_setter) {//optimize setter eg: void setSize(int size){this.size=size;}
                                         ptr = (c8 *) m->converted_code->bytecode_for_jit;//must use original bytecode
                                         match = 1;
@@ -3099,10 +3093,10 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                             goto label_exception_handle;
                                         }
                                         //jvm_printf("methodcall setter %s.%s  %d  in    %s.%s\n", utf8_cstr(m->_this_class->name), utf8_cstr(m->name), m->_this_class->status, utf8_cstr(clazz->name), utf8_cstr(method->name));
-                                        ip += 3;
+                                        runtime->pc += 3;
                                     }
                                     if (!match) {
-                                        *ip = op_invokevirtual_fast;
+                                        *runtime->pc = op_invokevirtual_fast;
                                     }
                                 }
                             }
@@ -3112,30 +3106,30 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_invokespecial: {
-                            cmr = class_get_constant_method_ref(clazz, *((u16 *) (ip + 1)));
+                            cmr = class_get_constant_method_ref(clazz, *((u16 *) (runtime->pc + 1)));
                             m = cmr->methodInfo;
 
                             if (!m) {
                                 err_msg = utf8_cstr(cmr->name);
                                 goto label_nosuchmethod_throw;
                             } else {
-                                *ip = op_invokespecial_fast;
-                                _optimize_empty_method_call(m, ca, ip);//if method is empty ,bytecode would replaced 'nop' and 'pop' para
+                                *runtime->pc = op_invokespecial_fast;
+                                _optimize_empty_method_call(m, ca, runtime->pc);//if method is empty ,bytecode would replaced 'nop' and 'pop' para
                             }
                             break;
                         }
 
 
                         case op_invokestatic: {
-                            cmr = class_get_constant_method_ref(clazz, *((u16 *) (ip + 1)));
+                            cmr = class_get_constant_method_ref(clazz, *((u16 *) (runtime->pc + 1)));
                             m = cmr->methodInfo;
 
                             if (!m) {
                                 err_msg = utf8_cstr(cmr->name);
                                 goto label_nosuchmethod_throw;
                             } else {
-                                *ip = op_invokestatic_fast;
-                                _optimize_empty_method_call(m, ca, ip);
+                                *runtime->pc = op_invokestatic_fast;
+                                _optimize_empty_method_call(m, ca, runtime->pc);
                             }
                             break;
                         }
@@ -3143,8 +3137,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_invokeinterface: {
 
-                            //s32 paraCount = (u8) ip[3];
-                            cmr = class_get_constant_method_ref(clazz, *((u16 *) (ip + 1)));
+                            //s32 paraCount = (u8) runtime->pc[3];
+                            cmr = class_get_constant_method_ref(clazz, *((u16 *) (runtime->pc + 1)));
                             ins = (sp - 1 - cmr->para_slots)->rvalue;
                             if (!ins) {
                                 goto label_null_throw;
@@ -3164,7 +3158,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     err_msg = utf8_cstr(cmr->name);
                                     goto label_nosuchmethod_throw;
                                 } else {
-                                    *ip = op_invokeinterface_fast;
+                                    *runtime->pc = op_invokeinterface_fast;
                                 }
                             }
                             break;
@@ -3173,7 +3167,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_invokedynamic: {
                             //get bootMethod struct
-                            cid = class_get_invoke_dynamic(clazz, *((u16 *) (ip + 1)));
+                            cid = class_get_invoke_dynamic(clazz, *((u16 *) (runtime->pc + 1)));
                             bootMethod = &clazz->bootstrapMethodAttr->bootstrap_methods[cid->bootstrap_method_attr_index];//Boot
 
                             if (bootMethod->make == NULL) {
@@ -3190,14 +3184,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 err_msg = "Lambda generated method";
                                 goto label_nosuchmethod_throw;
                             } else {
-                                *ip = op_invokedynamic_fast;
+                                *runtime->pc = op_invokedynamic_fast;
                             }
                             break;
                         }
 
 
                         case op_new: {
-                            idx = *((u16 *) (ip + 1));
+                            idx = *((u16 *) (runtime->pc + 1));
 
                             stack->sp = sp;
                             other = getClassByConstantClassRef(clazz, idx, runtime);
@@ -3213,13 +3207,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("new %s [%llx]\n", utf8_cstr(other->name), (s64) (intptr_t) ins);
 #endif
-                            ip += 3;
+                            runtime->pc += 3;
                             break;
                         }
 
 
                         case op_newarray: {
-                            idx = ip[1];
+                            idx = runtime->pc[1];
 
                             count = (--sp)->ivalue;
 
@@ -3231,13 +3225,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("(a)newarray  [%llx] type:%c , count:%d  \n", (s64) (intptr_t) ins, getDataTypeTag(idx), count);
 #endif
                             (sp++)->rvalue = ins;
-                            ip += 2;
+                            runtime->pc += 2;
                             break;
                         }
 
 
                         case op_anewarray: {
-                            idx = *((u16 *) (ip + 1));
+                            idx = *((u16 *) (runtime->pc + 1));
 
                             count = (--sp)->ivalue;
                             other = pairlist_get(clazz->arr_class_type, (__refer) (intptr_t) idx);
@@ -3259,7 +3253,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("(a)newarray  [%llx] type:%d , count:%d  \n", (s64) (intptr_t) ins, other->arr_class_type, count);
 #endif
                             (sp++)->rvalue = ins;
-                            ip += 3;
+                            runtime->pc += 3;
                             break;
                         }
 
@@ -3275,7 +3269,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 goto label_null_throw;
                             } else {
                                 (sp++)->ivalue = ins->arr_length;
-                                ip++;
+                                runtime->pc++;
                             }
                             break;
                         }
@@ -3296,7 +3290,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_checkcast: {
-                            idx = *((u16 *) (ip + 1));
+                            idx = *((u16 *) (runtime->pc + 1));
 
                             ins = (--sp)->rvalue;
 
@@ -3306,7 +3300,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             } else {
                                 sp = stack->sp;
                                 (sp++)->rvalue = ins;
-                                ip += 3;
+                                runtime->pc += 3;
                             }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
@@ -3319,7 +3313,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_instanceof: {
                             ins = (--sp)->rvalue;
-                            idx = *((u16 *) (ip + 1));
+                            idx = *((u16 *) (runtime->pc + 1));
 
                             s8 checkok = 0;
                             if (!ins) {
@@ -3336,7 +3330,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("instanceof  [%llx] instancof %s  \n", (s64) (intptr_t) ins, utf8_cstr(class_get_constant_classref(clazz, idx)->name));
 #endif
-                            ip += 3;
+                            runtime->pc += 3;
                             break;
                         }
 
@@ -3351,7 +3345,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("monitorenter  [%llx] %s  \n", (s64) (intptr_t) ins, ins ? utf8_cstr(ins->mb.clazz->name) : "null");
 #endif
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
@@ -3360,13 +3354,16 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             ins = (--sp)->rvalue;
                             stack->sp = sp;
                             if (!ins)goto label_null_throw;
-                            jthread_unlock(&ins->mb, runtime);
+                            int ret = jthread_unlock(&ins->mb, runtime);
+                            if (ret < 0) {
+                                s32 debug = 1;
+                            }
                             sp = stack->sp;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("monitorexit  [%llx] %s  \n", (s64) (intptr_t) ins, ins ? utf8_cstr(ins->mb.clazz->name) : "null");
 #endif
-                            ip++;
+                            runtime->pc++;
                             break;
                         }
 
@@ -3377,66 +3374,66 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             invoke_deepth(runtime);
                             jvm_printf("wide  \n");
 #endif
-                            ip++;
-                            switch (*ip) {
+                            runtime->pc++;
+                            switch (*runtime->pc) {
                                 case op_iload:
                                 case op_fload: {
-                                    (sp++)->ivalue = localvar[*((u16 *) (ip + 1))].ivalue;
-                                    ip += 3;
+                                    (sp++)->ivalue = localvar[*((u16 *) (runtime->pc + 1))].ivalue;
+                                    runtime->pc += 3;
                                     break;
                                 }
                                 case op_aload: {
-                                    (sp++)->rvalue = localvar[*((u16 *) (ip + 1))].rvalue;
-                                    ip += 3;
+                                    (sp++)->rvalue = localvar[*((u16 *) (runtime->pc + 1))].rvalue;
+                                    runtime->pc += 3;
                                     break;
                                 }
                                 case op_lload:
                                 case op_dload: {
-                                    (sp++)->lvalue = localvar[*((u16 *) (ip + 1))].lvalue;
+                                    (sp++)->lvalue = localvar[*((u16 *) (runtime->pc + 1))].lvalue;
                                     sp++;
-                                    ip += 3;
+                                    runtime->pc += 3;
                                     break;
                                 }
                                 case op_istore:
                                 case op_fstore: {
-                                    localvar[*((u16 *) (ip + 1))].ivalue = (--sp)->ivalue;
-                                    ip += 3;
+                                    localvar[*((u16 *) (runtime->pc + 1))].ivalue = (--sp)->ivalue;
+                                    runtime->pc += 3;
                                     break;
                                 }
                                 case op_astore: {
-                                    localvar[*((u16 *) (ip + 1))].rvalue = (--sp)->rvalue;
-                                    ip += 3;
+                                    localvar[*((u16 *) (runtime->pc + 1))].rvalue = (--sp)->rvalue;
+                                    runtime->pc += 3;
                                     break;
                                 }
                                 case op_lstore:
                                 case op_dstore: {
                                     --sp;
-                                    localvar[*((u16 *) (ip + 1))].lvalue = (--sp)->lvalue;
-                                    ip += 3;
+                                    localvar[*((u16 *) (runtime->pc + 1))].lvalue = (--sp)->lvalue;
+                                    runtime->pc += 3;
                                     break;
                                 }
                                 case op_ret: {
-                                    __refer addr = (__refer) (intptr_t) localvar[*((u16 *) (ip + 1))].lvalue;
+                                    __refer addr = (__refer) (intptr_t) localvar[*((u16 *) (runtime->pc + 1))].lvalue;
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                     invoke_deepth(runtime);
                                     jvm_printf("wide ret: %x\n", (s64) (intptr_t) addr);
 #endif
-                                    ip = (u8 *) addr;
+                                    runtime->pc = (u8 *) addr;
                                     break;
                                 }
                                 case op_iinc    : {
 
-                                    localvar[*((u16 *) (ip + 1))].ivalue += *((s16 *) (ip + 3));
+                                    localvar[*((u16 *) (runtime->pc + 1))].ivalue += *((s16 *) (runtime->pc + 3));
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                     invoke_deepth(runtime);
-                                    jvm_printf("wide iinc: localvar(%d) = %d , inc %d\n", *((u16 *) (ip + 1)), runtime->localvar[*((u16 *) (ip + 1))].ivalue, *((u16 *) (ip + 3)));
+                                    jvm_printf("wide iinc: localvar(%d) = %d , inc %d\n", *((u16 *) (runtime->pc + 1)), runtime->localvar[*((u16 *) (runtime->pc + 1))].ivalue, *((u16 *) (runtime->pc + 3)));
 #endif
-                                    ip += 5;
+                                    runtime->pc += 5;
                                     break;
                                 }
                                 default:
-                                    _op_notsupport(ip, runtime);
+                                    _op_notsupport(runtime->pc, runtime);
                             }
                             break;
                         }
@@ -3445,9 +3442,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_multianewarray: {
                             //data type index
 
-                            ustr = class_get_utf8_string(clazz, *((u16 *) (ip + 1)));
+                            ustr = class_get_utf8_string(clazz, *((u16 *) (runtime->pc + 1)));
                             //array dim
-                            count = (u8) ip[3];
+                            count = (u8) runtime->pc[3];
 #ifdef __JVM_OS_VS__
                             s32 dim[32];
 #else
@@ -3464,7 +3461,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             jvm_printf("multianewarray  [%llx] type:%s , count:%d  \n", (s64) (intptr_t) ins, utf8_cstr(ustr), count);
 #endif
                             (sp++)->rvalue = ins;
-                            ip += 4;
+                            runtime->pc += 4;
                             break;
                         }
 
@@ -3473,9 +3470,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             ins = (--sp)->rvalue;
                             if (!ins) {
 
-                                ip += *((s16 *) (ip + 1));
+                                runtime->pc += *((s16 *) (runtime->pc + 1));
                             } else {
-                                ip += 3;
+                                runtime->pc += 3;
                             }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
@@ -3490,9 +3487,9 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         case op_ifnonnull: {
                             ins = (--sp)->rvalue;
                             if (ins) {
-                                ip += *((s16 *) (ip + 1));
+                                runtime->pc += *((s16 *) (runtime->pc + 1));
                             } else {
-                                ip += 3;
+                                runtime->pc += 3;
                             }
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
@@ -3503,8 +3500,8 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_goto_w: {
-                            offset = *((s32 *) (ip + 1));
-                            ip += offset;
+                            offset = *((s32 *) (runtime->pc + 1));
+                            runtime->pc += offset;
                             check_gc_pause(offset);
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
@@ -3516,13 +3513,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_jsr_w: {
 
-                            offset = *((s32 *) (ip + 1));
-                            (sp++)->rvalue = (ip + 3);
+                            offset = *((s32 *) (runtime->pc + 1));
+                            (sp++)->rvalue = (runtime->pc + 3);
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("jsr_w: %d\n", offset);
 #endif
-                            ip += offset;
+                            runtime->pc += offset;
                             break;
                         }
 
@@ -3538,12 +3535,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_getstatic_ref: {
-                            idx = *((u16 *) (ip + 1));
+                            idx = *((u16 *) (runtime->pc + 1));
                             fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             ptr = getStaticFieldPtr(fi);
 
                             (sp++)->rvalue = *((__refer *) ptr);
-                            ip += 3;
+                            runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: ref  %d = %s.%s \n", "getstatic", (s64) (intptr_t) getFieldRefer(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
@@ -3552,12 +3549,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 
                         case op_getstatic_long: {
-                            idx = *((u16 *) (ip + 1));
+                            idx = *((u16 *) (runtime->pc + 1));
                             fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             ptr = getStaticFieldPtr(fi);
                             (sp++)->lvalue = *((s64 *) ptr);
                             sp++;
-                            ip += 3;
+                            runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: long  %d = %s.%s \n", "getstatic", getFieldLong(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
@@ -3566,11 +3563,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 
                         case op_getstatic_int: {
-                            idx = *((u16 *) (ip + 1));
+                            idx = *((u16 *) (runtime->pc + 1));
                             fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             ptr = getStaticFieldPtr(fi);
                             (sp++)->ivalue = *((s32 *) ptr);
-                            ip += 3;
+                            runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: int  %d = %s.%s \n", "getstatic", (s32) getFieldInt(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
@@ -3579,11 +3576,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 
                         case op_getstatic_short: {
-                            idx = *((u16 *) (ip + 1));
+                            idx = *((u16 *) (runtime->pc + 1));
                             fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             ptr = getStaticFieldPtr(fi);
                             (sp++)->ivalue = *((s16 *) ptr);
-                            ip += 3;
+                            runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: short  %d = %s.%s \n", "getstatic", (s32) getFieldShort(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
@@ -3592,11 +3589,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 
                         case op_getstatic_jchar: {
-                            idx = *((u16 *) (ip + 1));
+                            idx = *((u16 *) (runtime->pc + 1));
                             fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             ptr = getStaticFieldPtr(fi);
                             (sp++)->ivalue = *((u16 *) ptr);
-                            ip += 3;
+                            runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: char  %d = %s.%s \n", "getstatic", (s32) (u16) getFieldChar(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
@@ -3605,11 +3602,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 
                         case op_getstatic_byte: {
-                            idx = *((u16 *) (ip + 1));
+                            idx = *((u16 *) (runtime->pc + 1));
                             fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             ptr = getStaticFieldPtr(fi);
                             (sp++)->ivalue = *((s8 *) ptr);
-                            ip += 3;
+                            runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: byte  %d = %s.%s \n", "getstatic", (s32) getFieldByte(ptr), utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
@@ -3619,11 +3616,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_putstatic_ref: {
-                            idx = *((u16 *) (ip + 1));
+                            idx = *((u16 *) (runtime->pc + 1));
                             fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             ptr = getStaticFieldPtr(fi);
                             *((__refer *) ptr) = (--sp)->rvalue;
-                            ip += 3;
+                            runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: ref  %s.%s = %llx \n", "putstatic", utf8_cstr(clazz->name), utf8_cstr(fi->name), (s64) (intptr_t) getFieldRefer(ptr));
@@ -3633,12 +3630,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_putstatic_long: {
-                            idx = *((u16 *) (ip + 1));
+                            idx = *((u16 *) (runtime->pc + 1));
                             fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             ptr = getStaticFieldPtr(fi);
                             --sp;
                             *((s64 *) ptr) = (--sp)->lvalue;
-                            ip += 3;
+                            runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: long  %s.%s = %lld \n", "putstatic", utf8_cstr(clazz->name), utf8_cstr(fi->name), getFieldLong(ptr));
@@ -3647,11 +3644,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 
                         case op_putstatic_int: {
-                            idx = *((u16 *) (ip + 1));
+                            idx = *((u16 *) (runtime->pc + 1));
                             fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             ptr = getStaticFieldPtr(fi);
                             *((s32 *) ptr) = (--sp)->ivalue;
-                            ip += 3;
+                            runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: int  %s.%s = %d \n", "putstatic", utf8_cstr(clazz->name), utf8_cstr(fi->name), (s32) getFieldInt(ptr));
@@ -3660,11 +3657,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 
                         case op_putstatic_short: {
-                            idx = *((u16 *) (ip + 1));
+                            idx = *((u16 *) (runtime->pc + 1));
                             fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             ptr = getStaticFieldPtr(fi);
                             *((s16 *) ptr) = (s16) (--sp)->ivalue;
-                            ip += 3;
+                            runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: short  %s.%s = %d \n", "putstatic", utf8_cstr(clazz->name), utf8_cstr(fi->name), (s32) getFieldShort(ptr));
@@ -3673,11 +3670,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         }
 
                         case op_putstatic_byte: {
-                            idx = *((u16 *) (ip + 1));
+                            idx = *((u16 *) (runtime->pc + 1));
                             fi = class_get_constant_fieldref(clazz, idx)->fieldInfo;
                             ptr = getStaticFieldPtr(fi);
                             *((s8 *) ptr) = (s8) (--sp)->ivalue;
-                            ip += 3;
+                            runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                             invoke_deepth(runtime);
                             jvm_printf("%s: byte  %s.%s = %d \n", "putstatic", utf8_cstr(clazz->name), utf8_cstr(fi->name), (s32) getFieldByte(ptr));
@@ -3687,7 +3684,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_getfield_ref: {
-                            offset = *((u16 *) (ip + 1));
+                            offset = *((u16 *) (runtime->pc + 1));
                             ins = (--sp)->rvalue;
                             if (!ins) {
                                 goto label_null_throw;
@@ -3695,7 +3692,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 ptr = &(ins->obj_fields[offset]);
 
                                 (sp++)->rvalue = *((__refer *) ptr);
-                                ip += 3;
+                                runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
                                 jvm_printf("%s: ref %llx = %s. \n", "getfield", getFieldRefer(ptr), utf8_cstr(clazz->name));
@@ -3706,7 +3703,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_getfield_long: {
-                            offset = *((u16 *) (ip + 1));
+                            offset = *((u16 *) (runtime->pc + 1));
                             ins = (--sp)->rvalue;
                             if (!ins) {
                                 goto label_null_throw;
@@ -3715,7 +3712,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                                 (sp++)->lvalue = *((s64 *) ptr);
                                 sp++;
-                                ip += 3;
+                                runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
                                 jvm_printf("%s: long %lld = %s. \n", "getfield", getFieldLong(ptr), utf8_cstr(ins->mb.clazz->name));
@@ -3726,7 +3723,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_getfield_int: {
-                            offset = *((u16 *) (ip + 1));
+                            offset = *((u16 *) (runtime->pc + 1));
                             ins = (--sp)->rvalue;
                             if (!ins) {
                                 goto label_null_throw;
@@ -3734,7 +3731,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 ptr = &(ins->obj_fields[offset]);
 
                                 (sp++)->ivalue = *((s32 *) ptr);
-                                ip += 3;
+                                runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
                                 jvm_printf("%s: int %d = %s  \n", "getfield", (s32) getFieldInt(ptr), utf8_cstr(clazz->name));
@@ -3745,7 +3742,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_getfield_short: {
-                            offset = *((u16 *) (ip + 1));
+                            offset = *((u16 *) (runtime->pc + 1));
                             ins = (--sp)->rvalue;
                             if (!ins) {
                                 goto label_null_throw;
@@ -3753,7 +3750,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 ptr = &(ins->obj_fields[offset]);
 
                                 (sp++)->ivalue = *((s16 *) ptr);
-                                ip += 3;
+                                runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
                                 jvm_printf("%s: short %d = %s \n", "getfield", (s32) getFieldShort(ptr), utf8_cstr(clazz->name));
@@ -3764,7 +3761,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_getfield_jchar: {
-                            offset = *((u16 *) (ip + 1));
+                            offset = *((u16 *) (runtime->pc + 1));
                             ins = (--sp)->rvalue;
                             if (!ins) {
                                 goto label_null_throw;
@@ -3772,7 +3769,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 ptr = &(ins->obj_fields[offset]);
 
                                 (sp++)->ivalue = *((u16 *) ptr);
-                                ip += 3;
+                                runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
                                 jvm_printf("%s: char %d = %s \n", "getfield", (s32) (u16) getFieldChar(ptr), utf8_cstr(clazz->name));
@@ -3783,7 +3780,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_getfield_byte: {
-                            offset = *((u16 *) (ip + 1));
+                            offset = *((u16 *) (runtime->pc + 1));
                             ins = (--sp)->rvalue;
                             if (!ins) {
                                 goto label_null_throw;
@@ -3791,7 +3788,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 ptr = &(ins->obj_fields[offset]);
 
                                 (sp++)->ivalue = *((s8 *) ptr);
-                                ip += 3;
+                                runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
                                 jvm_printf("%s: byte %d = %s \n", "getfield", (s32) getFieldByte(ptr), utf8_cstr(clazz->name));
@@ -3802,7 +3799,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_putfield_ref: {
-                            offset = *((u16 *) (ip + 1));
+                            offset = *((u16 *) (runtime->pc + 1));
                             rval1 = (--sp)->rvalue;
                             ins = (--sp)->rvalue;
                             if (!ins) {
@@ -3811,7 +3808,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 // check variable type to determain long/s32/f64/f32
                                 ptr = &(ins->obj_fields[offset]);
                                 *((__refer *) ptr) = rval1;
-                                ip += 3;
+                                runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
                                 jvm_printf("%s: ref %s\n", "putfield", utf8_cstr(clazz->name));
@@ -3822,7 +3819,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_putfield_long: {
-                            offset = *((u16 *) (ip + 1));
+                            offset = *((u16 *) (runtime->pc + 1));
                             --sp;
                             lval1 = (--sp)->lvalue;
                             ins = (--sp)->rvalue;
@@ -3831,7 +3828,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             } else {
                                 ptr = &(ins->obj_fields[offset]);
                                 *((s64 *) ptr) = lval1;
-                                ip += 3;
+                                runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
                                 jvm_printf("%s: long %s\n", "putfield", utf8_cstr(clazz->name));
@@ -3842,7 +3839,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_putfield_int: {
-                            offset = *((u16 *) (ip + 1));
+                            offset = *((u16 *) (runtime->pc + 1));
                             ival1 = (--sp)->ivalue;
                             ins = (--sp)->rvalue;
                             if (!ins) {
@@ -3850,7 +3847,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             } else {
                                 ptr = &(ins->obj_fields[offset]);
                                 *((s32 *) ptr) = ival1;
-                                ip += 3;
+                                runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
                                 jvm_printf("%s: int %s.= %d\n", "putfield", utf8_cstr(clazz->name), ival1);
@@ -3861,7 +3858,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_putfield_short: {
-                            offset = *((u16 *) (ip + 1));
+                            offset = *((u16 *) (runtime->pc + 1));
                             ival1 = (--sp)->ivalue;
                             ins = (--sp)->rvalue;
                             if (!ins) {
@@ -3869,7 +3866,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             } else {
                                 ptr = &(ins->obj_fields[offset]);
                                 *((s16 *) ptr) = (s16) ival1;
-                                ip += 3;
+                                runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
                                 jvm_printf("%s: short %s. = %d\n", "putfield", utf8_cstr(clazz->name), ival1);
@@ -3880,7 +3877,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_putfield_byte: {
-                            offset = *((u16 *) (ip + 1));
+                            offset = *((u16 *) (runtime->pc + 1));
                             ival1 = (--sp)->ivalue;
                             ins = (--sp)->rvalue;
                             if (!ins) {
@@ -3888,7 +3885,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             } else {
                                 ptr = &(ins->obj_fields[offset]);
                                 *((s8 *) ptr) = (s8) ival1;
-                                ip += 3;
+                                runtime->pc += 3;
 #if _JVM_DEBUG_LOG_LEVEL > 5
                                 invoke_deepth(runtime);
                                 jvm_printf("%s: byte %s. = %d\n", "putfield", utf8_cstr(clazz->name), ival1);
@@ -3900,7 +3897,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_invokevirtual_fast: {
 
-                            cmr = class_get_constant_method_ref(clazz, *((u16 *) (ip + 1)));
+                            cmr = class_get_constant_method_ref(clazz, *((u16 *) (runtime->pc + 1)));
                             ins = (sp - 1 - cmr->para_slots)->rvalue;
                             if (!ins) {
                                 goto label_null_throw;
@@ -3910,7 +3907,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 spent = nanoTime() - start_at;
 #endif
                                 if (!m) {
-                                    *ip = op_invokevirtual;
+                                    *runtime->pc = op_invokevirtual;
                                 } else {
                                     stack->sp = sp;
                                     ret = execute_method_impl(m, runtime);
@@ -3918,7 +3915,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     if (ret) {
                                         goto label_exception_handle;
                                     }
-                                    ip += 3;
+                                    runtime->pc += 3;
                                 }
                             }
 
@@ -3927,7 +3924,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
 
                         case op_invokespecial_fast: {
-                            cmr = class_get_constant_method_ref(clazz, *((u16 *) (ip + 1)));
+                            cmr = class_get_constant_method_ref(clazz, *((u16 *) (runtime->pc + 1)));
                             m = cmr->methodInfo;
 #if _JVM_DEBUG_PROFILE
                             spent = nanoTime() - start_at;
@@ -3938,13 +3935,13 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (ret) {
                                 goto label_exception_handle;
                             }
-                            ip += 3;
+                            runtime->pc += 3;
                             break;
                         }
 
 
                         case op_invokestatic_fast: {
-                            cmr = class_get_constant_method_ref(clazz, *((u16 *) (ip + 1)));
+                            cmr = class_get_constant_method_ref(clazz, *((u16 *) (runtime->pc + 1)));
                             m = cmr->methodInfo;
 #if _JVM_DEBUG_PROFILE
                             spent = nanoTime() - start_at;
@@ -3955,14 +3952,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             if (ret) {
                                 goto label_exception_handle;
                             }
-                            ip += 3;
+                            runtime->pc += 3;
                             break;
                         }
 
 
                         case op_invokeinterface_fast: {
                             //此cmr所描述的方法，对于不同的实例，有不同的method
-                            cmr = class_get_constant_method_ref(clazz, *((u16 *) (ip + 1)));
+                            cmr = class_get_constant_method_ref(clazz, *((u16 *) (runtime->pc + 1)));
 
                             ins = (sp - 1 - cmr->para_slots)->rvalue;
                             if (!ins) {
@@ -3973,7 +3970,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 spent = nanoTime() - start_at;
 #endif
                                 if (!m) {
-                                    *ip = op_invokeinterface;
+                                    *runtime->pc = op_invokeinterface;
                                 } else {
                                     stack->sp = sp;
                                     ret = execute_method_impl(m, runtime);
@@ -3981,7 +3978,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     if (ret) {
                                         goto label_exception_handle;
                                     }
-                                    ip += 5;
+                                    runtime->pc += 5;
                                 }
                             }
                             break;
@@ -3990,7 +3987,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_invokedynamic_fast: {
                             //get bootMethod struct
-                            cid = class_get_invoke_dynamic(clazz, *((u16 *) (ip + 1)));
+                            cid = class_get_invoke_dynamic(clazz, *((u16 *) (runtime->pc + 1)));
                             bootMethod = &clazz->bootstrapMethodAttr->bootstrap_methods[cid->bootstrap_method_attr_index];//Boot
                             m = bootMethod->make;
 
@@ -4005,12 +4002,12 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 goto label_exception_handle;
                             }
 
-                            ip += 5;
+                            runtime->pc += 5;
                             break;
                         }
 
                         default:
-                            _op_notsupport(ip, runtime);
+                            _op_notsupport(runtime->pc, runtime);
                     }
 
                     /* ================================== runtime->pc end =============================*/
@@ -4068,11 +4065,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         goto label_exit_while;
                     }
                     // there is exception handle, but not error handle
-                    runtime->pc = ip;
+
                     ret = RUNTIME_STATUS_EXCEPTION;
                     if (exception_handle(runtime->stack, runtime)) {
                         ret = RUNTIME_STATUS_NORMAL;
-                        ip = runtime->pc;
+
                         runtime_clear_stacktrack(runtime);
                     } else {
                         arraylist_push_back(runtime->thrd_info->stacktrack, method);

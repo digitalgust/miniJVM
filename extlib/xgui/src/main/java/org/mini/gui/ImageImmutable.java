@@ -7,6 +7,7 @@ package org.mini.gui;
 
 import org.mini.gui.callback.GCallBack;
 import org.mini.nanovg.Nanovg;
+import org.mini.util.SysLog;
 
 /**
  * GImage is a wrap of nvg_texture
@@ -109,7 +110,7 @@ public class ImageImmutable extends GImage {
         try {
             if (gc) {
                 GForm.deleteImage(nvg_texture);
-                //System.out.println("finalize image " + this);
+                SysLog.getLogger().fine("finalize image " + this.getWidth() + "x" + this.getHeight());
             }
         } catch (Throwable e) {
         }

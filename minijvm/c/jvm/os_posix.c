@@ -19,6 +19,12 @@
 #include <sys/stat.h>
 #include <dlfcn.h>
 
+#if __JVM_OS_ANDROID__ || __JVM_OS_IOS__
+#else
+
+//#include <uuid/uuid.h>
+
+#endif
 
 void safeClose(s32 *fd) {
     if (*fd != -1)
@@ -286,4 +292,50 @@ s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
 
     return src_len;
 }
+
+#ifndef PATH_MAX
+#define PATH_MAX 1024
+#endif
+
+void os_get_uuid(MiniJVM *jvm, Utf8String *buf) {
+    utf8_clear(buf);
+    
+    // Get hostname using POSIX API
+    char deviceId[256] = {0};
+    if (gethostname(deviceId, sizeof(deviceId)) != 0) {
+        // If gethostname fails, use a default value
+        strcpy(deviceId, "UNKNOWN");
+    }
+    
+    // Get absolute path of startup directory
+    char absPath[PATH_MAX] = {0};
+    if (realpath(utf8_cstr(jvm->startup_dir), absPath) == NULL) {
+        // If realpath fails, use the original path
+        strcpy(absPath, utf8_cstr(jvm->startup_dir));
+    }
+    
+    u64 hash0 = 0;
+    for (int i = 0; deviceId[i] != '\0'; i++) {
+        hash0 = 31 * hash0 + deviceId[i];
+    }
+    
+    // Generate hash1 using custom hash1 function
+    u64 hash1 = 0;
+    for (int i = 0; absPath[i] != '\0'; i++) {
+        hash1 = 31 * hash1 + absPath[i];
+    }
+    
+    // Format as UUID using the hash1 value
+    char uuid[37] = {0};
+    snprintf(uuid, sizeof(uuid),
+            "%08llx-%04llx-%04llx-%04llx-%012llx",
+            hash0 & 0xFFFFFFFF,
+            (hash1 >> 16) & 0xFFFF,
+            (hash1 >> 32) & 0xFFFF,
+            (hash1 >> 48) & 0xFFFF,
+            hash0 ^ hash1);
+    
+    utf8_append_c(buf, uuid);
+}
+
 #endif //  end of   __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__ || __JVM_OS_VS__

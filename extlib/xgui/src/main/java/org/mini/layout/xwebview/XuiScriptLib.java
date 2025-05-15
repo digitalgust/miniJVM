@@ -41,6 +41,7 @@ public class XuiScriptLib extends Lib {
         // script method register
         {
             methodNames.put("openPage".toLowerCase(), this::openPage);//
+            methodNames.put("openPageGet".toLowerCase(), this::openPage);//
             methodNames.put("openPagePost".toLowerCase(), this::openPagePost);//
             methodNames.put("downloadInstall".toLowerCase(), this::downloadInstall);//
             methodNames.put("downloadSave".toLowerCase(), this::downloadSave);//
@@ -87,7 +88,7 @@ public class XuiScriptLib extends Lib {
             if (page != null) {// may be  href="/abc/c.xml"
                 href = UrlHelper.normalizeUrl(page.getUrl(), href); //fix as : http://www.abc.com/abc/c.xml
             }
-            browserHolder.getBrowser().gotoPage(href, post);
+            browserHolder.getBrowser().gotoPage(href, post, true);
             GuiScriptLib.doHttpCallback(formHolder.getForm(), callback, href, 0, "");
         }
         return null;
@@ -218,7 +219,7 @@ public class XuiScriptLib extends Lib {
             XuiPage page = explorer.getCurrentPage();
             if (page != null) {
                 page.reset();
-                explorer.gotoPage(page.getUrl().toString(), page.getPost());
+                explorer.gotoPage(page.getUrl().toString(), page.getPost(), false);
             }
         }
         return null;

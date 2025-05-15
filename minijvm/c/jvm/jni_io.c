@@ -87,6 +87,8 @@ typedef struct _VmSock {
     s32 rcv_time_out;
     u8 non_block;
     u8 reuseaddr;
+    char hostname[256]; //domain name length max 253
+    char hostport[6];  //port the max is 65535
 } VmSock;
 
 //=================================  socket  ====================================
@@ -360,9 +362,13 @@ s32 org_mini_net_SocketNative_connect0(Runtime *runtime, JClass *clazz) {
     if (vmarr && host && port) {
         VmSock *vmsock = (VmSock *) vmarr->arr_body;
         mbedtls_net_context *ctx = &vmsock->contex;
-//    host_2_ip4()
-//    memcpy(&vmsock->server_ip, host->arr_body, strlen(host->arr_body) + 1);//copy with 0
-//    memcpy(&vmsock->server_port, port->arr_body, strlen(port->arr_body) + 1);
+
+        s32 hostlen = host->arr_length;
+        if (hostlen > sizeof(vmsock->hostname)) {
+            hostlen = sizeof(vmsock->hostname);
+        }
+        memcpy(&vmsock->hostname, host->arr_body, hostlen);//copy with 0
+        memcpy(&vmsock->hostport, port->arr_body, port->arr_length);
         jthread_block_enter(runtime);
         ret = mbedtls_net_connect(ctx, host->arr_body, port->arr_body, proto);
         jthread_block_exit(runtime);
@@ -654,6 +660,24 @@ s32 org_mini_net_SocketNative_sslc_init(Runtime *runtime, JClass *clazz) {
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("org_mini_net_SocketNative_sslc_init  \n");
+#endif
+    return 0;
+}
+
+s32 org_mini_net_SocketNative_sslc_wrap(Runtime *runtime, JClass *clazz) {
+    s32 ret = -1;
+    Instance *jbyte_arr = (Instance *) localvar_getRefer(runtime->localvar, 0);
+    Instance *conn_arr = (Instance *) localvar_getRefer(runtime->localvar, 1);
+    Instance *host_arr = (Instance *) localvar_getRefer(runtime->localvar, 2);
+    if (jbyte_arr && conn_arr && host_arr) {
+        VmSock *vmsock = (VmSock *) conn_arr->arr_body;
+        mbedtls_net_context *ctx = &vmsock->contex;
+        ret = sslc_wrap((SSLC_Entry *) jbyte_arr->arr_body, ctx->fd, host_arr->arr_body);
+    }
+    push_int(runtime->stack, ret);
+#if _JVM_DEBUG_LOG_LEVEL > 5
+    invoke_deepth(runtime);
+    jvm_printf("org_mini_net_SocketNative_http_open  \n");
 #endif
     return 0;
 }
@@ -1625,6 +1649,7 @@ static java_native_method METHODS_IO_TABLE[] = {
         {"org/mini/net/SocketNative", "host2ip",              "([B)[B",                           org_mini_net_SocketNative_host2ip},
         {"org/mini/net/SocketNative", "sslc_construct_entry", "()[B",                             org_mini_net_SocketNative_sslc_construct_entry},
         {"org/mini/net/SocketNative", "sslc_init",            "([B)I",                            org_mini_net_SocketNative_sslc_init},
+        {"org/mini/net/SocketNative", "sslc_wrap",            "([B[B[B)I",                        org_mini_net_SocketNative_sslc_wrap},
         {"org/mini/net/SocketNative", "sslc_connect",         "([B[B[B)I",                        org_mini_net_SocketNative_sslc_connect},
         {"org/mini/net/SocketNative", "sslc_close",           "([B)I",                            org_mini_net_SocketNative_sslc_close},
         {"org/mini/net/SocketNative", "sslc_read",            "([B[BII)I",                        org_mini_net_SocketNative_sslc_read},

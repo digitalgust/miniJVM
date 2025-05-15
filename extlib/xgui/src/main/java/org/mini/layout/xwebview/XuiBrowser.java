@@ -59,10 +59,10 @@ public class XuiBrowser {
         showPage(page);
     }
 
-    public void gotoPage(String homeUrl, String post) {
+    public void gotoPage(String homeUrl, String post, boolean useCache) {
         removeAfterAtCurrentPage();
         GuiScriptLib.showProgressBar(assist.getForm(), 50);
-        XuiPage page = new XuiPage(homeUrl, post, this);
+        XuiPage page = new XuiPage(homeUrl, post, useCache, this);
         showPage(page);
     }
 

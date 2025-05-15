@@ -23,6 +23,8 @@
 #include <windows.h>
 #include <stdio.h>
 
+#include <rpc.h>
+#include <rpcdce.h>
 
 #if __JVM_OS_MINGW__
 
@@ -737,7 +739,7 @@ s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src) {
     }
 
     // 分配临时 UTF-16 缓冲区
-    wchar_t *utf16_buf = (wchar_t *) malloc((utf16_len + 1) * sizeof(wchar_t));
+    wchar_t *utf16_buf = (wchar_t *) jvm_malloc((utf16_len + 1) * sizeof(wchar_t));
     if (!utf16_buf) {
         return -1;
     }
@@ -794,7 +796,7 @@ s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
     }
 
     // Allocate temporary buffer for UTF-16 string
-    wchar_t *utf16_buf = (wchar_t *) malloc((utf16_len + 1) * sizeof(wchar_t));
+    wchar_t *utf16_buf = (wchar_t *) jvm_malloc((utf16_len + 1) * sizeof(wchar_t));
     if (!utf16_buf) {
         return -1;
     }
@@ -828,6 +830,70 @@ s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
     dst->data[utf8_len] = 0;  // Ensure null termination
 
     return utf8_len;
+}
+
+
+void os_get_uuid(MiniJVM *jvm, Utf8String *buf) {
+    utf8_clear(buf);
+
+    // Get computer name using Windows API
+    char deviceId[MAX_COMPUTERNAME_LENGTH + 1] = {0};
+    DWORD size = sizeof(deviceId);
+    if (!GetComputerNameA(deviceId, &size)) {
+        // If GetComputerName fails, use a default value
+        strcpy(deviceId, "UNKNOWN");
+    }
+
+    // Get system info
+    OSVERSIONINFOEXA osvi;
+    ZeroMemory(&osvi, sizeof(OSVERSIONINFOEXA));
+    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXA);
+    GetVersionExA((LPOSVERSIONINFOA) &osvi);
+
+    // Get memory info
+    MEMORYSTATUSEX memInfo;
+    memInfo.dwLength = sizeof(MEMORYSTATUSEX);
+    GlobalMemoryStatusEx(&memInfo);
+
+    // Combine all system information
+    char sysInfo[512] = {0};
+    snprintf(sysInfo, sizeof(sysInfo), "%s|%d.%d|%llu",
+             deviceId,
+             osvi.dwMajorVersion, osvi.dwMinorVersion,
+             memInfo.ullTotalPhys);
+    u64 hash0 = 0;
+    for (int i = 0; sysInfo[i] != '\0'; i++) {
+        hash0 = 31 * hash0 + sysInfo[i];
+    }
+
+    // Get absolute path of startup directory
+    char absPath[MAX_PATH] = {0};
+    if (GetFullPathNameA(utf8_cstr(jvm->startup_dir), MAX_PATH, absPath, NULL) == 0) {
+        // If GetFullPathName fails, use the original path
+        strcpy(absPath, utf8_cstr(jvm->startup_dir));
+    }
+
+    // Combine with startup directory
+    char combined[512] = {0};
+    snprintf(combined, sizeof(combined), "%s", absPath);
+
+    // Generate hash1 using custom hash1 function
+    u64 hash1 = 0;
+    for (int i = 0; combined[i] != '\0'; i++) {
+        hash1 = 31 * hash1 + combined[i];
+    }
+
+    // Format as UUID using the hash1 value
+    char uuid[37] = {0};
+    snprintf(uuid, sizeof(uuid),
+             "%08lx-%04lx-%04lx-%04lx-%012llx",
+             hash0 & 0xFFFFFFFF,
+             (hash1 >> 48) & 0xFFFF,
+             (hash1 >> 32) & 0xFFFF,
+             (hash1 >> 16) & 0xFFFF,
+             hash0 ^ hash1);
+
+    utf8_append_c(buf, uuid);
 }
 
 #endif   //#if defined(__JVM_OS_MINGW__) || defined(__JVM_OS_CYGWIN__) || defined(__JVM_OS_VS__)

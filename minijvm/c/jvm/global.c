@@ -69,6 +69,7 @@ const c8 STR_CLASS_JAVA_LANG_INSTANTIATION[] = "java.lang.InstantiationException
 const c8 STR_CLASS_JAVA_LANG_INTERRUPTED[] = "java/lang/InterruptedException";
 const c8 STR_CLASS_ORG_MINI_VM_VMSTOPEXCEPTION[] = "org/mini/vm/VmStopException";
 const c8 STR_CLASS_JAVA_LANG_ILLEGALTHREADSTATE[] = "java.lang.IllegalThreadStateException";
+const c8 STR_CLASS_JAVA_LANG_ILLEGALMONITORSTATE[] = "java.lang.IllegalMonitorStateException";
 
 
 const c8 STR_FIELD_STACKFRAME[] = "stackFrame";
@@ -90,6 +91,7 @@ const c8 STR_VM_SUN_BOOT_CLASS_PATH[] = "sun.boot.class.path";
 const c8 STR_VM_JAVA_CLASS_PATH[] = "java.class.path";
 const c8 STR_VM_JAVA_CLASS_VERSION[] = "java.class.version";
 const c8 STR_VM_USER_LANGUAGE[] = "user.language";
+const c8 STR_VM_UUID[] = "uuid";
 const c8 STR_JNI_LIB_NOT_FOUND[] = "lib not found:%s\n";
 const c8 STR_JNI_ONLOAD_NOT_FOUND[] = "register function not found:%s\n";
 const c8 STR_JNI_ON_LOAD[] = "JNI_OnLoad";
@@ -114,6 +116,7 @@ const c8 *STRS_CLASS_EXCEPTION[] = {
         STR_CLASS_JAVA_LANG_INTERRUPTED,
         STR_CLASS_ORG_MINI_VM_VMSTOPEXCEPTION,
         STR_CLASS_JAVA_LANG_ILLEGALTHREADSTATE,
+        STR_CLASS_JAVA_LANG_ILLEGALMONITORSTATE,
 };
 
 c8 *INST_NAME[] = {

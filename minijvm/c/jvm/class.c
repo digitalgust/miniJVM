@@ -100,6 +100,7 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
     if (clazz->status >= CLASS_STATUS_PREPARING)return 0;
     clazz->status = CLASS_STATUS_PREPARING;
 
+    s32 ret = 0;
     s32 superid = clazz->cff.super_class;
     if (superid && !clazz->superclass) {
         ConstantClassRef *ccf = class_get_constant_classref(clazz, superid);
@@ -280,6 +281,8 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
         jvm_runtime_cache->reference_vmEnqueneReference = find_methodInfo_by_name_c(STR_CLASS_JAVA_LANG_REF_REFERENCE, "vmEnqueneReference", "(Ljava/lang/ref/Reference;)V", NULL, runtime);
     } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE)) {
         jvm_runtime_cache->weakreference = clazz;
+    } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_THROWABLE)) {
+        jvm_runtime_cache->throwable_detailMessage = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_THROWABLE, "detailMessage", STR_INS_JAVA_LANG_STRING, NULL, runtime);
     }
     // mark class if it is son of classloader
     if (!utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_CLASSLOADER)) {
@@ -297,7 +300,7 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
 //    jvm_printf("prepared: %s\n", utf8_cstr(clazz->name));
 
     clazz->status = CLASS_STATUS_PREPARED;
-    return 0;
+    return ret;
 }
 
 /**
@@ -471,8 +474,8 @@ void class_clear_cached_virtualmethod(MiniJVM *jvm, JClass *tgt) {
                 if (cmr->virtual_methods) {
 #if _JVM_DEBUG_LOG_LEVEL > 2
                     if (pairlist_get(cmr->virtual_methods, tgt)) {
-                       jvm_printf("virtual method clear %s in %s.%s\n", utf8_cstr(tgt->name), utf8_cstr(cmr->clsName), utf8_cstr(cmr->name));
-                     }
+                        jvm_printf("virtual method clear %s in %s.%s\n", utf8_cstr(tgt->name), utf8_cstr(cmr->clsName), utf8_cstr(cmr->name));
+                    }
 #endif
                     pairlist_remove(cmr->virtual_methods, tgt);
                 }

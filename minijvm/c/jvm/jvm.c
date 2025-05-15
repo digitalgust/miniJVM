@@ -46,7 +46,7 @@ void print_exception(Runtime *runtime) {
 #if _JVM_DEBUG_LOG_LEVEL >= 0
     if (runtime) {
         Utf8String *stacktrack = utf8_create();
-        getRuntimeStack(runtime, stacktrack);
+        getExceptionStack(runtime, stacktrack);
         jvm_printf("%s\n", utf8_cstr(stacktrack));
         utf8_destroy(stacktrack);
 
@@ -253,10 +253,6 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
         return -1;
     }
 
-    if (jvm->jdwp_enable && !_JVM_JDWP_ENABLE) {
-        jvm_printf("[WARN]jvm set jdwp enable, please set _JVM_JDWP_ENABLE with 1 in jvm.h and recompile \n");
-    }
-
     signal(SIGABRT, _on_jvm_sig);
     signal(SIGFPE, _on_jvm_sig);
     signal(SIGSEGV, _on_jvm_sig);
@@ -270,7 +266,9 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     if (!p_classpath) {
         p_classpath = "./";
     }
-
+    if (!jvm->startup_dir) {
+        jvm->startup_dir = utf8_create_c("./");
+    }
     //
     open_log();
 
@@ -309,6 +307,8 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     Utf8String *tmpstr = utf8_create();
     os_get_lang(tmpstr);
     sys_properties_set_c(jvm, STR_VM_USER_LANGUAGE, utf8_cstr(tmpstr));
+    os_get_uuid(jvm, tmpstr);
+    sys_properties_set_c(jvm, STR_VM_UUID, utf8_cstr(tmpstr));
     utf8_destroy(tmpstr);
 
     //启动调试器
@@ -340,6 +340,13 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     c2 = classes_load_get_with_clinit(NULL, clsName, runtime);
     instance_create(runtime, c2);
     utf8_clear(clsName);
+
+
+    if (!jvm->collector->runtime->thrd_info->jthread) {
+        Instance *inst = instance_create(runtime, classes_get_c(jvm, NULL, STR_CLASS_JAVA_LANG_THREAD));
+        jvm->collector->runtime->thrd_info->jthread = inst;
+        hashset_put(jvm->collector->objs_holder, inst);
+    }
 
     utf8_destroy(clsName);
     gc_move_objs_thread_2_gc(runtime);
@@ -380,7 +387,7 @@ void jvm_destroy(MiniJVM *jvm) {
 #if _JVM_DEBUG_LOG_LEVEL > 0
     jvm_printf("[INFO]waitting for thread terminate\n");
 #endif
-    while (jvm->thread_list->length) {
+    while (threadlist_count_active(jvm) > 0) {
         threadSleep(20);
     }
 
@@ -489,14 +496,16 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
             jvm_printf("\n[INFO]main thread start\n");
 #endif
             //调用主方法
-            if (_JVM_JDWP_ENABLE) {
-                if (jvm->jdwp_enable) {
-                    if (jvm->jdwp_suspend_on_start)jthread_suspend(runtime);
+            if (jvm->jdwp_enable) {
 #if _JVM_DEBUG_LOG_LEVEL > 0
-                    jvm_printf("[JDWP]jdwp listening (port:%s) ...\n", JDWP_TCP_PORT);
+                jvm_printf("[JDWP]jdwp listening (port:%s) ...\n", JDWP_TCP_PORT);
 #endif
-                }//jdwp 会启动调试器
-            }
+                if (jvm->jdwp_suspend_on_start) {
+                    jvm_printf("[JDWP]suspend on start, waitting for connect... \n");
+                    jthread_suspend(runtime);
+                }
+            }//jdwp 会启动调试器
+
             runtime->method = NULL;
             runtime->clazz = clazz;
             ret = execute_method(m, runtime);

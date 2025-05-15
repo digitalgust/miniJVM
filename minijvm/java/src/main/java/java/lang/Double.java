@@ -87,6 +87,8 @@ public final class Double extends Number implements Comparable<Double> {
     public static final int MAX_EXPONENT = 1023;
     public static final int MIN_EXPONENT = -1022;
 
+    public static final long SIGN_BIT_MASK = Long.MIN_VALUE;
+
     /**
      * Creates a string representation of the <code>double</code> argument. All
      * characters mentioned below are ASCII characters.

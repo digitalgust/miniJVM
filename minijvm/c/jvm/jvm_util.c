@@ -12,6 +12,12 @@
 #include "garbage.h"
 #include "jdwp.h"
 
+#if __JVM_OS_ANDROID__
+
+#include <android/log.h>
+
+#define LOG_TAG "MINIJVM"
+#endif
 
 
 //==================================================================================
@@ -116,7 +122,7 @@ s32 classes_remove(MiniJVM *jvm, JClass *clazz) {
         //jvm_printf("PUT in classloader %s <- %s\n", clazz->jloader ? utf8_cstr(clazz->jloader->mb.clazz->name) : "NULL", utf8_cstr(clazz->name));
         PeerClassLoader *pcl = classLoaders_find_by_instance(jvm, clazz->jloader);
         if (pcl) {
-            if (jvm->jdwp_enable)event_on_class_unload(jvm->jdwpserver, clazz);
+            if (jdwp_client_count(jvm->jdwpserver))event_on_class_unload(jvm->jdwpserver, clazz);
             hashtable_remove(pcl->classes, clazz->name, 0);
             class_clear_cached_virtualmethod(jvm, clazz);
         }
@@ -136,7 +142,7 @@ JClass *primitive_class_create_get(Runtime *runtime, Utf8String *ustr) {
         cl->is_primitive = 1;
         cl->jloader = NULL;//system classloader
         classes_put(jvm, cl);
-        if (jvm->jdwp_enable && jvm->jdwpserver && cl)event_on_class_prepare(jvm->jdwpserver, runtime, cl);
+        if (jdwp_client_count(jvm->jdwpserver) && cl)event_on_class_prepare(jvm->jdwpserver, runtime, cl);
 //        gc_obj_hold(jvm->collector, cl);
         vm_share_unlock(jvm);
 #if _JVM_DEBUG_LOG_LEVEL > 2
@@ -187,7 +193,7 @@ JClass *array_class_create_get(Runtime *runtime, Instance *jloader, Utf8String *
 
 //                gc_obj_hold(jvm->collector, clazz);
                 classes_put(jvm, clazz);
-                if (jvm->jdwp_enable && jvm->jdwpserver && clazz)event_on_class_prepare(jvm->jdwpserver, runtime, clazz);
+                if (jdwp_client_count(jvm->jdwpserver) && clazz)event_on_class_prepare(jvm->jdwpserver, runtime, clazz);
 #if _JVM_DEBUG_LOG_LEVEL > 2
                 jvm_printf("load class (%016llx load %016llx):  %s \n", (s64) (intptr_t) clazz->jloader, (s64) (intptr_t) clazz, utf8_cstr(clazz->name));
 #endif
@@ -289,7 +295,23 @@ s32 threadlist_count_none_daemon(MiniJVM *jvm) {
         Runtime *r = (Runtime *) arraylist_get_value_unsafe(jvm->thread_list, i);
         Instance *ins = r->thrd_info->jthread;
         s32 daemon = jthread_get_daemon_value(ins, r);
-        if (!daemon) {
+        if (!daemon && r->thrd_info->thread_status != THREAD_STATUS_ZOMBIE) {
+            count++;
+        }
+    }
+    spin_unlock(&jvm->thread_list->spinlock);
+    return count;
+}
+
+s32 threadlist_count_active(MiniJVM *jvm) {
+    spin_lock(&jvm->thread_list->spinlock);
+    s32 count = 0;
+    s32 i;
+    for (i = 0; i < jvm->thread_list->length; i++) {
+        Runtime *r = (Runtime *) arraylist_get_value_unsafe(jvm->thread_list, i);
+        Instance *ins = r->thrd_info->jthread;
+        s32 daemon = jthread_get_daemon_value(ins, r);
+        if (r->thrd_info->thread_status != THREAD_STATUS_ZOMBIE) {
             count++;
         }
     }
@@ -315,7 +337,7 @@ void thread_stop_all(MiniJVM *jvm) {
     for (i = 0; i < jvm->thread_list->length; i++) {
         Runtime *r = arraylist_get_value_unsafe(jvm->thread_list, i);
 
-        jthread_suspend(r);
+        //jthread_suspend(r);
         r->thrd_info->no_pause = 1;
         r->thrd_info->is_stop = 1;//stop thread that's sleeping state
         MemoryBlock *tl = r->thrd_info->curThreadLock;
@@ -334,6 +356,8 @@ void thread_lock_init(ThreadLock *lock) {
     if (lock) {
         cnd_init(&lock->thread_cond);
         mtx_init(&lock->mutex_lock, mtx_recursive | mtx_timed);
+        lock->owner_thread = NULL;
+        lock->count = 0;
     }
 }
 
@@ -637,13 +661,24 @@ s32 jvm_printf(const c8 *format, ...) {
         }
     }
 #else
-    result = vfprintf(stderr, format, vp);
 #ifdef __JVM_OS_ANDROID__
-    LOGD(format,vp);
+    static c8 buf[1024];
+    static u32 buf_pos = 0, buf_writable_len = sizeof(buf) - 1;
+    s32 w = vsnprintf(buf + buf_pos, sizeof(buf) - buf_pos - 1, format, vp);//maybe some bytes lost
+    buf_pos += (u32) w;
+    buf[buf_pos] = 0;
+    if ((buf_pos > 0 && memchr(buf, '\n', buf_pos) != NULL)// if '\n' in buf, print buf and clear buf
+        || buf_pos == buf_writable_len) { // or buf is full, print buf and clear buf
+        __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, "%s", buf);
+        buf_pos = 0;
+    }
+    result = strlen(buf);
+#else
+    result = vfprintf(stderr, format, vp);
+    fflush(stderr);
 #endif
 #endif
     va_end(vp);
-    fflush(stderr);
     return result;
 }
 
@@ -685,7 +720,7 @@ s32 jthread_init(MiniJVM *jvm, Instance *jthread) {
 s32 jthread_dispose(Instance *jthread, Runtime *runtime) {
     gc_move_objs_thread_2_gc(runtime);
     threadlist_remove(runtime);
-    if (runtime->jvm->jdwp_enable) {//jdwpserver might stoped when
+    if (jdwp_client_count(runtime->jvm->jdwpserver)) {//jdwpserver might stoped when
         event_on_thread_death(runtime->jvm->jdwpserver, runtime->thrd_info->jthread);
     }
     //destroy
@@ -715,7 +750,7 @@ s32 jthread_run(void *para) {
                utf8_cstr(method->name), utf8_cstr(method->descriptor));
 #endif
     //gc_refer_reg(runtime, jthread);//20201019 gust comment it , duplicate reg
-    if (jvm->jdwp_enable && jvm->jdwpserver)event_on_thread_start(jvm->jdwpserver, runtime->thrd_info->jthread);
+    if (jdwp_client_count(jvm->jdwpserver))event_on_thread_start(jvm->jdwpserver, runtime->thrd_info->jthread);
     check_suspend_and_pause(runtime);//check suspend if gc is running
     runtime->thrd_info->thread_status = THREAD_STATUS_RUNNING;
     push_ref(runtime->stack, (__refer) jthread);
@@ -746,11 +781,11 @@ s32 jthread_run(void *para) {
 
     utf8_destroy(methodName);
     utf8_destroy(methodType);
-    thrd_exit(ret);
 #if _JVM_DEBUG_LOG_LEVEL > 1
     s64 spent = currentTimeMillis() - startAt;
     jvm_printf("[INFO]thread over %llx , return %d , spent : %lld\n", (s64) (intptr_t) jthread, ret, spent);
 #endif
+    thrd_exit(ret);
     return ret;
 }
 
@@ -762,7 +797,9 @@ s32 jthread_run(void *para) {
 s32 jthread_run_finalize(Runtime *runtime) {
     if (!runtime)return -1;
     Instance *jthread = runtime->thrd_info->jthread;
-    jthread_dispose(jthread, runtime);
+    if (jthread) {// if the thread status is NEW, then jthread is NULL
+        jthread_dispose(jthread, runtime);
+    }
     runtime_destroy(runtime);
     return 0;
 }
@@ -848,6 +885,17 @@ s32 jthread_lock(MemoryBlock *mb, Runtime *runtime) { //可能会重入，同一
         jthread_yield(runtime);
         i++;
     }
+
+    //获得锁之后，检查是否锁重入
+    void *current_thread = (void *) (intptr_t) (runtime->thrd_info);
+    if (jtl->owner_thread == current_thread) {
+        // 当前线程已经持有此锁，递增计数器
+        jtl->count++;
+    } else {
+        // 成功获取锁后，设置锁的所有者和计数
+        jtl->owner_thread = current_thread;
+        jtl->count = 1;
+    }
 #if _JVM_DEBUG_LOG_LEVEL > 5
     if (i > 0) {
         waitTime = currentTimeMillis() - waitTime;
@@ -864,7 +912,34 @@ s32 jthread_unlock(MemoryBlock *mb, Runtime *runtime) {
         jthreadlock_create(runtime, mb);
     }
     ThreadLock *jtl = mb->thread_lock;
-    mtx_unlock(&jtl->mutex_lock);
+
+    //释放锁之前， 检查当前线程是否是锁的拥有者
+    void *current_thread = (void *) (intptr_t) (runtime->thrd_info);
+    if (jtl->owner_thread != current_thread || jtl->count <= 0) {
+        jvm_printf("[ERROR]Thread %llx trying to unlock a mutex owned by another thread %llx, count: %d\n",
+                   (s64) (intptr_t) current_thread,
+                   (s64) (intptr_t) jtl->owner_thread,
+                   jtl->count);
+        // 打印调用栈帮助调试
+        print_runtime_stack(runtime);
+        return -1;
+    }
+
+    // 递减计数器，只有当计数器为0时才真正释放锁
+    jtl->count--;
+    if (jtl->count == 0) {
+        jtl->owner_thread = NULL;
+    }
+    s32 ret = mtx_unlock(&jtl->mutex_lock);
+    if (ret != thrd_success) {
+        jvm_printf("[ERROR] unlocking mutex in jthread_unlock. Thread: %llx, mutex: %llx\n",
+                   (s64) (intptr_t) (runtime->thrd_info->jthread),
+                   (s64) (intptr_t) mb);
+        // 发生错误时打印当前线程的调用栈，帮助调试
+        print_runtime_stack(runtime);
+        return -1;
+    }
+
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
     jvm_printf("unlock: %llx   lock holder: %s, \n", (s64) (intptr_t) (runtime->thrd_info->jthread),
@@ -889,6 +964,18 @@ s32 jthread_notifyAll(MemoryBlock *mb, Runtime *runtime) {
     }
     cnd_broadcast(&mb->thread_lock->thread_cond);
     return 0;
+}
+
+s32 jthread_interrupt(Runtime *rt_thread) {
+    if (rt_thread) {
+        rt_thread->thrd_info->is_interrupt = 1;
+
+        if (rt_thread->thrd_info->thread_status == THREAD_STATUS_WAIT) {
+            jthread_wakeup(rt_thread);
+        }
+        return 0;
+    }
+    return -1;
 }
 
 s32 jthread_yield(Runtime *runtime) {
@@ -928,6 +1015,12 @@ s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms) {
     runtime->thrd_info->curThreadLock = mb;
     u8 thread_status = runtime->thrd_info->thread_status;
     runtime->thrd_info->thread_status = THREAD_STATUS_WAIT;
+
+    // wait会释放锁，因此保存锁的拥有者和计数
+    void *saveThread = mb->thread_lock->owner_thread;
+    s32 saveCount = mb->thread_lock->count;
+    mb->thread_lock->owner_thread = NULL;
+    mb->thread_lock->count = 0;
     if (waitms) {
         waitms += currentTimeMillis();
         struct timespec t;
@@ -941,6 +1034,10 @@ s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms) {
     //jvm_printf("!!!!!wake: %llx   \n", (s64) (intptr_t) (&mb->thread_lock->thread_cond));
     runtime->thrd_info->thread_status = thread_status;
     runtime->thrd_info->curThreadLock = NULL;
+
+    //wait结束时，获得锁后恢复锁的拥有者和计数
+    mb->thread_lock->owner_thread = saveThread;
+    mb->thread_lock->count = saveCount;
     jthread_block_exit(runtime);
     return check_throw_interruptexception(runtime);
 }
