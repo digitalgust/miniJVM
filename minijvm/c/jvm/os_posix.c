@@ -293,6 +293,10 @@ s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
     return src_len;
 }
 
+#ifndef PATH_MAX
+#define PATH_MAX 1024
+#endif
+
 void os_get_uuid(MiniJVM *jvm, Utf8String *buf) {
     utf8_clear(buf);
     
@@ -324,7 +328,7 @@ void os_get_uuid(MiniJVM *jvm, Utf8String *buf) {
     // Format as UUID using the hash1 value
     char uuid[37] = {0};
     snprintf(uuid, sizeof(uuid),
-            "%08lx-%04lx-%04lx-%04lx-%012llx",
+            "%08llx-%04llx-%04llx-%04llx-%012llx",
             hash0 & 0xFFFFFFFF,
             (hash1 >> 16) & 0xFFFF,
             (hash1 >> 32) & 0xFFFF,
