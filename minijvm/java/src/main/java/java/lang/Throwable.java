@@ -27,6 +27,7 @@
 package java.lang;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -304,6 +305,10 @@ public class Throwable {
         java.io.PrintStream err = System.err;
         err.print(getCodeStack());
 
+    }
+
+    public void printStackTrace(PrintStream s) {
+        s.print(getCodeStack());
     }
 
     public void printStackTrace(Writer writer) {

@@ -1800,6 +1800,9 @@ typedef struct _ShortCut {
     FieldInfo *stacktrace_declaringClazz;
 
     //
+    FieldInfo *throwable_detailMessage;
+
+    //
     FieldInfo *dmo_memAddr;
     FieldInfo *dmo_length;
     FieldInfo *dmo_desc;
@@ -1849,7 +1852,7 @@ typedef struct _ShortCut {
 struct _ThreadLock {
     cnd_t thread_cond;
     mtx_t mutex_lock; //互斥锁
-    void* owner_thread; // 锁的所有者线程
+    void *owner_thread; // 锁的所有者线程
     int count; // 重入计数
 };
 //======================= Jvm =============================

@@ -281,6 +281,8 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
         jvm_runtime_cache->reference_vmEnqueneReference = find_methodInfo_by_name_c(STR_CLASS_JAVA_LANG_REF_REFERENCE, "vmEnqueneReference", "(Ljava/lang/ref/Reference;)V", NULL, runtime);
     } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE)) {
         jvm_runtime_cache->weakreference = clazz;
+    } else if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_THROWABLE)) {
+        jvm_runtime_cache->throwable_detailMessage = find_fieldInfo_by_name_c(STR_CLASS_JAVA_LANG_THROWABLE, "detailMessage", STR_INS_JAVA_LANG_STRING, NULL, runtime);
     }
     // mark class if it is son of classloader
     if (!utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_CLASSLOADER)) {

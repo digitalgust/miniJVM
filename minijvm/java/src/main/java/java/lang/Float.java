@@ -81,6 +81,8 @@ public final class Float extends Number implements Comparable<Float> {
 
     public static final Class<Float> TYPE = (Class<Float>) Class.getPrimitiveClass("float");
 
+    public static final int SIGN_BIT_MASK = Integer.MIN_VALUE;
+
     /**
      * Returns a String representation for the specified float value. The
      * argument is converted to a readable string format as follows. All

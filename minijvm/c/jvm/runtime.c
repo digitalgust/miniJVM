@@ -184,6 +184,7 @@ void getRuntimeStackWithOutReturn(Runtime *runtime, Utf8String *ustr) {
             utf8_append(ustr, trun->method->_this_class->name);
             utf8_append_c(ustr, ".");
             utf8_append(ustr, trun->method->name);
+            utf8_append_c(ustr, ":");
             utf8_append_s64(ustr, lineNo, 10);
             utf8_append_c(ustr, " | ");
         }
@@ -206,6 +207,7 @@ void getRuntimeStack(Runtime *runtime, Utf8String *ustr) {
             utf8_append(ustr, trun->method->_this_class->name);
             utf8_append_c(ustr, ".");
             utf8_append(ustr, trun->method->name);
+            utf8_append_c(ustr, ":");
             utf8_append_s64(ustr, lineNo, 10);
             utf8_append_c(ustr, "\n");
         }
@@ -217,8 +219,19 @@ void getExceptionStack(Runtime *runtime, Utf8String *ustr) {
     s32 i, imax;
     utf8_append_c(ustr, "Exception threw: ");
     Instance *ins = (runtime->stack->sp - 1)->ins;
-    if (ins)utf8_append(ustr, ins->mb.clazz->name);
-    else utf8_append_c(ustr, "null");
+    if (ins) {
+        utf8_append(ustr, ins->mb.clazz->name);
+        utf8_append_c(ustr, ": ");
+        u8 *ptr = getInstanceFieldPtr(ins, runtime->jvm->shortcut.throwable_detailMessage);
+        if (ptr) {
+            Instance *jstr_detailMessage = getFieldRefer(ptr);
+            if (jstr_detailMessage) {
+                Utf8String *ustr2 = utf8_create();
+                jstring_2_utf8(jstr_detailMessage, ustr2, runtime);
+                utf8_append(ustr, ustr2);
+            }
+        }
+    }
     utf8_pushback(ustr, '\n');
     for (i = 0, imax = runtime->thrd_info->stacktrack->length; i < imax; i++) {
         utf8_append_c(ustr, "    at ");
@@ -226,10 +239,10 @@ void getExceptionStack(Runtime *runtime, Utf8String *ustr) {
         utf8_append(ustr, method->_this_class->name);
         utf8_append_c(ustr, ".");
         utf8_append(ustr, method->name);
-        if (method->_this_class->source) {
+        if (method->_this_class->name) {
             utf8_append_c(ustr, "(");
-            utf8_append(ustr, method->_this_class->source);
-            utf8_append_c(ustr, ":");
+            utf8_append(ustr, method->_this_class->name);
+            utf8_append_c(ustr, ".java:");
             s32 lineNo = method->converted_code ? (s32) (intptr_t) arraylist_get_value(runtime->thrd_info->lineNo, i) : -1;
             utf8_append_s64(ustr, lineNo, 10);
             utf8_append_c(ustr, ")");
