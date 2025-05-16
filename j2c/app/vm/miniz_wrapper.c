@@ -263,3 +263,123 @@ s32 zip_compress(char *data, int size, ByteBuf *zip_data) {
     }
     return ret;
 }
+
+// 修改gzip_compress函数，生成完整的GZIP格式
+s32 gzip_compress(char *data, int size, ByteBuf *gzip_data) {
+    mz_stream stream = {0};
+    int status;
+    mz_ulong crc = mz_crc32(MZ_CRC32_INIT, (const unsigned char *) data, size);
+
+    // 分配压缩缓冲区 - 预留头部(10字节)和尾部(8字节)的空间
+    mz_ulong compressed_size = mz_compressBound(size) + 18;
+    unsigned char *compressed_data = (unsigned char *) MZ_MALLOC(compressed_size);
+    if (!compressed_data) {
+        return -1;
+    }
+
+    // 写入GZIP头部
+    compressed_data[0] = 0x1F;  // ID1
+    compressed_data[1] = 0x8B;  // ID2
+    compressed_data[2] = 0x08;  // CM = DEFLATE
+    compressed_data[3] = 0x00;  // FLG
+    compressed_data[4] = 0x00;  // MTIME (4 bytes)
+    compressed_data[5] = 0x00;
+    compressed_data[6] = 0x00;
+    compressed_data[7] = 0x00;
+    compressed_data[8] = 0x00;  // XFL
+    compressed_data[9] = 0xFF;  // OS = unknown
+
+    // 设置压缩流
+    stream.next_in = (const unsigned char *) data;
+    stream.avail_in = size;
+    stream.next_out = compressed_data + 10;  // 跳过GZIP头
+    stream.avail_out = compressed_size - 18;  // 减去头和尾的大小
+
+    // 初始化deflate
+    status = mz_deflateInit2(&stream, MZ_DEFAULT_LEVEL, MZ_DEFLATED, -MZ_DEFAULT_WINDOW_BITS, 8, MZ_DEFAULT_STRATEGY);
+    if (status != MZ_OK) {
+        MZ_FREE(compressed_data);
+        return -1;
+    }
+
+    // 执行压缩
+    status = mz_deflate(&stream, MZ_FINISH);
+    if (status != MZ_STREAM_END) {
+        mz_deflateEnd(&stream);
+        MZ_FREE(compressed_data);
+        return -1;
+    }
+
+    // 获取压缩后的大小
+    mz_ulong compressed_len = stream.total_out;
+    mz_deflateEnd(&stream);
+
+    // 写入CRC32和原始大小(8字节尾部)
+    unsigned char *footer = compressed_data + 10 + compressed_len;
+    *(mz_uint32 *) footer = crc;
+    *(mz_uint32 *) (footer + 4) = size;
+
+    // 写入到输出缓冲区
+    bytebuf_write_batch(gzip_data, (char *) compressed_data, compressed_len + 18);
+    MZ_FREE(compressed_data);
+
+    return 0;
+}
+
+// 修改gzip_extract函数，解析标准GZIP格式
+s32 gzip_extract(char *gzip_data, int size, ByteBuf *data) {
+    if (size < 18 ||
+        (unsigned char) gzip_data[0] != 0x1F ||
+        (unsigned char) gzip_data[1] != 0x8B ||
+        (unsigned char) gzip_data[2] != 0x08) {
+        return -1;  // 无效的GZIP格式
+    }
+
+    mz_stream stream = {0};
+    int status;
+
+    // 读取原始大小(从尾部)
+    mz_uint32 original_size = *(mz_uint32 *) (gzip_data + size - 4);
+    mz_uint32 expected_crc = *(mz_uint32 *) (gzip_data + size - 8);
+
+    // 分配解压缓冲区
+    unsigned char *uncompressed_data = (unsigned char *) MZ_MALLOC(original_size);
+    if (!uncompressed_data) {
+        return -1;
+    }
+
+    // 设置解压流
+    stream.next_in = (unsigned char *) gzip_data + 10;  // 跳过GZIP头
+    stream.avail_in = size - 18;  // 减去头和尾的大小
+    stream.next_out = uncompressed_data;
+    stream.avail_out = original_size;
+
+    // 初始化inflate
+    status = mz_inflateInit2(&stream, -MZ_DEFAULT_WINDOW_BITS);
+    if (status != MZ_OK) {
+        MZ_FREE(uncompressed_data);
+        return -1;
+    }
+
+    // 执行解压
+    status = mz_inflate(&stream, MZ_FINISH);
+    mz_inflateEnd(&stream);
+
+    if (status != MZ_STREAM_END || stream.total_out != original_size) {
+        MZ_FREE(uncompressed_data);
+        return -1;
+    }
+
+    // 验证CRC32
+    mz_uint32 computed_crc = mz_crc32(MZ_CRC32_INIT, uncompressed_data, original_size);
+    if (computed_crc != expected_crc) {
+        MZ_FREE(uncompressed_data);
+        return -1;
+    }
+
+    // 写入到输出缓冲区
+    bytebuf_write_batch(data, (char *) uncompressed_data, original_size);
+    MZ_FREE(uncompressed_data);
+
+    return 0;
+}
