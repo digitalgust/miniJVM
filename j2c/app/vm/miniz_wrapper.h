@@ -29,4 +29,8 @@ s32 zip_compress(char *data, int size, ByteBuf *zip_data);
 
 s32 zip_extract(char *zip_data, int size, ByteBuf *data);
 
+s32 gzip_compress(char *data, int size, ByteBuf *gzip_data);
+
+s32 gzip_extract(char *gzip_data, int size, ByteBuf *data);
+
 #endif

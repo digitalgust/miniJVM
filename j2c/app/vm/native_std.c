@@ -1852,12 +1852,12 @@ struct java_lang_ClassLoader *func_java_lang_Thread_getContextClassLoader0___Lja
     return (struct java_lang_ClassLoader *) tr->context_classloader;
 }
 
-void func_java_lang_Thread_interrupt0__Ljava_lang_Thread_2_V(JThreadRuntime *runtime, struct java_lang_Thread* p0){
-    return ;
+void func_java_lang_Thread_interrupt0__Ljava_lang_Thread_2_V(JThreadRuntime *runtime, struct java_lang_Thread *p0) {
+    return;
 }
 
 
-s8 func_java_lang_Thread_interrupted0__Ljava_lang_Thread_2_Z(JThreadRuntime *runtime, struct java_lang_Thread* p0){
+s8 func_java_lang_Thread_interrupted0__Ljava_lang_Thread_2_Z(JThreadRuntime *runtime, struct java_lang_Thread *p0) {
     return 0;
 }
 
@@ -2476,6 +2476,16 @@ JArray *func_org_mini_net_SocketNative_sslc_1construct_1entry____3B(JThreadRunti
 
 s32 func_org_mini_net_SocketNative_sslc_1init___3B_I(JThreadRuntime *runtime, JArray *p0) {
     return sslc_init((SSLC_Entry *) p0->prop.as_c8_arr);
+}
+
+s32 func_org_mini_net_SocketNative_sslc_1wrap___3B_3B_3B_I(JThreadRuntime *runtime, JArray *p0, JArray *p1, JArray *p2) {
+    s32 ret = -1;
+    if (p0 && p1 && p2) {
+        VmSock *vmsock = (VmSock *) p1->prop.as_c8_arr;
+        mbedtls_net_context *ctx = &vmsock->contex;
+        ret = sslc_wrap((SSLC_Entry *) p0->prop.as_c8_arr, ctx->fd, p2->prop.as_c8_arr);
+    }
+    return ret;
 }
 
 
@@ -3298,7 +3308,7 @@ s32 func_org_mini_vm_RefNative_setLocalVal__JIBJI_I(JThreadRuntime *runtime, s64
     return 0;
 }
 
-s32 func_org_mini_vm_RefNative_stopThread__Ljava_lang_Thread_2Ljava_lang_Object_2_I(JThreadRuntime *runtime, struct java_lang_Thread* p0, struct java_lang_Object* p1){
+s32 func_org_mini_vm_RefNative_stopThread__Ljava_lang_Thread_2Ljava_lang_Object_2_I(JThreadRuntime *runtime, struct java_lang_Thread *p0, struct java_lang_Object *p1) {
     return 0;
 }
 
@@ -3428,6 +3438,41 @@ s64 func_org_mini_zip_Zip_getEntrySize0___3B_3B_J(JThreadRuntime *runtime, JArra
     }
 
     return ret;
+}
+
+
+JArray *func_org_mini_zip_Zip_gzipCompress0___3B__3B(JThreadRuntime *runtime, JArray *p0) {
+    s32 ret = 0;
+    ByteBuf *gzip_data = bytebuf_create(0);
+    JArray *jarr = NULL;
+    if (p0) {
+        ret = gzip_compress(p0->prop.as_s8_arr, p0->prop.arr_length, gzip_data);
+    }
+    if (ret == -1) {
+        return NULL;
+    } else {
+        jarr = multi_array_create_by_typename(runtime, (s32 *) &gzip_data->wp, 1, "[B");
+        memmove(jarr->prop.as_s8_arr, gzip_data->buf, gzip_data->wp);
+    }
+    bytebuf_destory(gzip_data);
+    return jarr;
+}
+
+
+JArray *func_org_mini_zip_Zip_gzipExtract0___3B__3B(JThreadRuntime *runtime, JArray *p0) {
+    s32 ret = 0;
+    ByteBuf *data = bytebuf_create(0);
+    JArray *jarr = NULL;
+    if (p0) {
+        ret = gzip_extract(p0->prop.as_c8_arr, p0->prop.arr_length, data);
+    }
+    if (ret == -1) {
+    } else {
+        jarr = multi_array_create_by_typename(runtime, (s32 *) &data->wp, 1, "[B");
+        memmove(jarr->prop.as_s8_arr, data->buf, data->wp);
+    }
+    bytebuf_destory(data);
+    return jarr;
 }
 
 s32 func_org_mini_zip_Zip_isDirectory0___3BI_I(JThreadRuntime *runtime, JArray *p0, s32 p1) {
