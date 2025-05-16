@@ -867,6 +867,10 @@ public class MV extends MethodVisitor {
             case Opcodes.INVOKESTATIC: // 184
             {
                 comment("invoke" + (opcode == Opcodes.INVOKESPECIAL ? "special" : "static") + " " + className + "." + methodName + signature);
+                if (opcode == Opcodes.INVOKESTATIC) {
+                    int index = AssistLLVM.getStrIndex(className);
+                    add("class_clinit(runtime, get_utf8str_by_utfraw_index(" + index + "));");
+                }
                 genFixedMethodCall(className, methodName, signature);
             }
             break;
@@ -1659,6 +1663,8 @@ public class MV extends MethodVisitor {
 
     public void putstatic(String className, String name, String signature) {
         comment("putstatic " + className + " " + name + " " + signature);
+        int index = AssistLLVM.getStrIndex(className);
+        add("class_clinit(runtime, get_utf8str_by_utfraw_index(" + index + "));");
         Field field = ClassManger.findField(className, name, signature);
 
         String fname = Util.getStackFieldName_by_Jtype(signature);
@@ -1681,6 +1687,8 @@ public class MV extends MethodVisitor {
 
     public void getstatic(String className, String name, String signature) {
         comment("getstatic " + className + " " + name + " " + signature);
+        int index = AssistLLVM.getStrIndex(className);
+        add("class_clinit(runtime, get_utf8str_by_utfraw_index(" + index + "));");
         Field field = ClassManger.findField(className, name, signature);
 
         String fname = Util.getStackFieldName_by_Jtype(signature);

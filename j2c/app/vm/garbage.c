@@ -269,7 +269,7 @@ void instance_finalize(JThreadRuntime *runtime, InstProp *ins) {
         finalize_func_t finalizeFunc = ins->clazz->raw->finalize_method;
         if (finalizeFunc) {
             finalizeFunc(runtime, ins);//
-            exception_check_print(runtime);
+            //exception_check_print(runtime);
         }
     }
 }

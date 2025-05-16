@@ -529,7 +529,7 @@ s32 jstring_index_of(struct java_lang_String *jstr, s32 ch, s32 startAt) {
 
 JObject *buildStackElement(JThreadRuntime *runtime, StackFrame *target) {
     JClass *clazz = get_class_by_name_c(STR_JAVA_LANG_STACKTRACEELEMENT);
-    if (clazz) {
+    if (clazz && target) {
         struct java_lang_StackTraceElement *ins = (__refer) new_instance_with_class(runtime, clazz);
         instance_hold_to_thread(runtime, ins);
         instance_init(runtime, (__refer) ins);
@@ -1893,7 +1893,8 @@ void func_java_lang_Thread_yield___V(JThreadRuntime *runtime) {
 }
 
 struct java_lang_StackTraceElement *func_java_lang_Throwable_buildStackElement__Ljava_lang_Thread_2_Ljava_lang_StackTraceElement_2(JThreadRuntime *runtime, struct java_lang_Thread *p0) {
-    return (__refer) buildStackElement(runtime, ((JThreadRuntime *) (intptr_t) p0->stackFrame_in_thread)->tail);
+    if (p0)return (__refer) buildStackElement(runtime, ((JThreadRuntime *) (intptr_t) p0->stackFrame_in_thread)->tail);
+    return (__refer) buildStackElement(runtime, runtime->tail);
 }
 
 JArray *func_org_mini_crypt_XorCrypt_decrypt___3B_3B__3B(JThreadRuntime *runtime, JArray *p0, JArray *p1) {
