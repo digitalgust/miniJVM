@@ -11,6 +11,7 @@ c8 const *STR_JAVA_LANG_OBJECT = "java/lang/Object";
 c8 const *STR_JAVA_LANG_STRING = "java/lang/String";
 c8 const *STR_JAVA_LANG_THREAD = "java/lang/Thread";
 c8 const *STR_JAVA_LANG_INTEGER = "java/lang/Integer";
+c8 const *STR_JAVA_UTIL_LOGGING_LEVEL = "java/util/logging/Level";
 c8 const *STR_JAVA_LANG_OUT_OF_MEMORY_ERROR = "java/io/OutOfMemoryError";
 c8 const *STR_JAVA_LANG_VIRTUAL_MACHINE_ERROR = "java/io/VirtualMachineError";
 c8 const *STR_JAVA_LANG_CLASS_NOT_FOUND_EXCEPTION = "java/lang/ClassNotFoundException";
@@ -355,10 +356,10 @@ void class_clinit(JThreadRuntime *runtime, Utf8String *className) {
 
         s32 i;
         //clinit dependence classes
-        for (i = 0; i < clazz->dependent_classes->length; i++) {
-            JClass *dcClazz = arraylist_get_value(clazz->dependent_classes, i);
-            class_clinit(runtime, dcClazz->name);
-        }
+//        for (i = 0; i < clazz->dependent_classes->length; i++) {
+//            JClass *dcClazz = arraylist_get_value(clazz->dependent_classes, i);
+//            class_clinit(runtime, dcClazz->name);
+//        }
 
         c8 *methodName = "<clinit>";
         c8 *signature = "()V";
@@ -814,6 +815,9 @@ s32 jthread_prepar(JThreadRuntime *runtime) {
     utf8_append_c(ustr, STR_JAVA_LANG_THREAD);
     class_clinit(runtime, ustr);
     utf8_clear(ustr);
+//    utf8_append_c(ustr, STR_JAVA_UTIL_LOGGING_LEVEL);
+//    class_clinit(runtime, ustr);
+//    utf8_clear(ustr);
 //    if (!runtime->jthread) {
 //        JObject *jthread = new_jthread(runtime);
 //        runtime->jthread = jthread;
@@ -863,13 +867,28 @@ JThreadRuntime *jthread_bound(JThreadRuntime *runtime) {
     s32 ret = tss_set(TLS_KEY_JTHREADRUNTIME, runtime);
     Utf8String *ustr = utf8_create();
     tss_set(TLS_KEY_UTF8STR_CACHE, ustr);
-    jthread_prepar(runtime);
     if (!runtime->jthread) {
-        runtime->jthread = new_instance_with_name(runtime, STR_JAVA_LANG_THREAD);
+        ClassRaw *raw = find_classraw(STR_JAVA_LANG_THREAD);
+        s32 insSize = raw->ins_size;
+        JObject *ins = (JObject *) jvm_calloc(insSize);
+        ins->prop.heap_size = insSize;
+        ins->prop.members = &ins[1];
+        ins->prop.type = INS_TYPE_OBJECT;
+        ins->vm_table = raw->vmtable;
+        runtime->jthread = ins;
+        jthread_set_stackFrame(runtime->jthread, runtime);
+    }
+    jthread_prepar(runtime);
+    if (runtime->jthread) {
         gc_refer_hold(runtime->jthread);
+        ClassRaw *raw = find_classraw(STR_JAVA_LANG_THREAD);
+        if (!raw->clazz) {
+            class_clinit(runtime, get_utf8str_by_utfraw_index(raw->name));
+        }
+        runtime->jthread->prop.clazz = raw->clazz;
         instance_init(runtime, runtime->jthread);
         JThreadRuntime *r = jthread_get_stackFrame(runtime->jthread);
-        if (r) {
+        if (r && r != runtime) {
             gc_move_refer_thread_2_gc(r);
             jthreadruntime_destroy(r);
         }
