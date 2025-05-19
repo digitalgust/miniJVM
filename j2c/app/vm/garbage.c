@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include "garbage.h"
 
+//#undef PRJ_DEBUG_GARBAGE_DUMP
+//#define PRJ_DEBUG_GARBAGE_DUMP 01
 
 void release_classs_static_field();
 
@@ -248,8 +250,8 @@ void _garbage_put_in_holder(__refer ref) {
 
 #if PRJ_DEBUG_GARBAGE_DUMP
     Utf8String *sus = utf8_create();
-    _getMBName(( InstProp *) ref, sus);
-    jvm_printf("+: %s[%llx]\n", utf8_cstr(sus), (s64) (intptr_t) ref);
+    _getMBName((InstProp *) ref, sus);
+    jvm_printf("+: [%llx]%s\n", (s64) (intptr_t) ref, utf8_cstr(sus));
     utf8_destory(sus);
 #endif
 }
@@ -258,8 +260,8 @@ void _garbage_remove_out_holder(__refer ref) {
     hashtable_remove(g_jvm->collector->objs_holder, ref, 0);
 #if PRJ_DEBUG_GARBAGE_DUMP
     Utf8String *sus = utf8_create();
-    _getMBName(( InstProp *) ref, sus);
-    jvm_printf("-: %s[%llx]\n", utf8_cstr(sus), (s64) (intptr_t) ref);
+    _getMBName((InstProp *) ref, sus);
+    jvm_printf("-: [%llx]%s\n", (s64) (intptr_t) ref, utf8_cstr(sus));
     utf8_destory(sus);
 #endif
 }
@@ -339,7 +341,7 @@ s32 _collect_thread_run(void *para) {
 
         s64 heap = gc_sum_heap(collector);
         if (cur_mil - collector->lastgc > collector->garbage_collect_period_ms || heap >= collector->max_heap_size * .8f) {
-            _garbage_collect(collector);
+            _garbage_collect();
             collector->lastgc = cur_mil;
         } else {
             threadSleep(100);
@@ -580,7 +582,19 @@ s32 _garbage_big_search() {
     s32 i, len;
     for (i = 0, len = g_jvm->collector->runtime_refer_copy->length; i < len; i++) {
         __refer r = arraylist_get_value(g_jvm->collector->runtime_refer_copy, i);
-        _garbage_mark_object(r, g_jvm->collector->mark_cnt);
+        if (r) {
+            InstProp *mb = (InstProp *) r;
+            if (mb->type != INS_TYPE_OBJECT && mb->type != INS_TYPE_ARRAY && mb->type != INS_TYPE_CLASS) {
+                Utf8String *name = utf8_create();
+                _getMBName(mb, name);
+                jvm_printf("Invalid object type in runtime_refer_copy: %s, type: %d\n",
+                           utf8_cstr(name), mb->type);
+                utf8_destory(name);
+            }
+            _garbage_mark_object(r, g_jvm->collector->mark_cnt);
+        } else {
+            jvm_printf("Invalid object in runtime_refer_copy: %p\n", r);
+        }
     }
 
     HashtableIterator hi;
@@ -617,7 +631,15 @@ void _garbage_copy_refer() {
 
 
 s32 _garbage_copy_refer_thread(JThreadRuntime *pruntime) {
-    arraylist_push_back_unsafe(g_jvm->collector->runtime_refer_copy, pruntime->jthread);
+    if (pruntime->jthread) {
+        InstProp *mb = (InstProp *) pruntime->jthread;
+        if (mb->type == INS_TYPE_OBJECT || mb->type == INS_TYPE_ARRAY || mb->type == INS_TYPE_CLASS) {
+            arraylist_push_back_unsafe(g_jvm->collector->runtime_refer_copy, pruntime->jthread);
+        } else {
+            jvm_printf("Invalid object type in jthread: %s\n",
+                       utf8_cstr(pruntime->jthread->prop.clazz->name));
+        }
+    }
 
     InstProp *next = pruntime->tmp_holder;
     for (; next;) {
@@ -633,6 +655,8 @@ s32 _garbage_copy_refer_thread(JThreadRuntime *pruntime) {
         StackFrame *frame = runtime->tail;
         while (frame) {
             const RStackItem *rstack = frame->rstack;
+            MethodRaw *raw = get_methodraw_by_index(frame->methodRawIndex);
+            JClass *clazz = get_class_by_nameIndex(raw->class_name);
             if (rstack) {
                 s32 size = *frame->spPtr;
 //                s32 size = g_methods[frame->methodRawIndex].max_stack;
@@ -645,7 +669,7 @@ s32 _garbage_copy_refer_thread(JThreadRuntime *pruntime) {
             }
             const RStackItem *rlocal = frame->rlocal;
             if (rlocal) {
-                s32 max_local = get_methodraw_by_index(frame->methodRawIndex)->max_local;
+                s32 max_local = raw->max_local;
                 for (j = 0; j < max_local; j++) {
                     if (rlocal[j].obj) {
                         //jvm_printf("rlocal :%llx\n",(s64)(intptr_t)rlocal[j].obj);
@@ -787,8 +811,11 @@ InstProp *gc_is_alive(__refer ref) {
  * @param ref
  */
 void gc_refer_reg(JThreadRuntime *runtime, __refer ref) {
-    if (!ref)return;
+    if (!ref) return;
     InstProp *mb = (InstProp *) ref;
+    if (mb->type != INS_TYPE_OBJECT && mb->type != INS_TYPE_ARRAY && mb->type != INS_TYPE_CLASS) {
+        return;  // 不是有效的Java对象，不注册
+    }
     if (!mb->garbage_reg) {
         mb->garbage_reg = 1;
         mb->next = runtime->objs_header;
@@ -797,13 +824,11 @@ void gc_refer_reg(JThreadRuntime *runtime, __refer ref) {
             runtime->objs_tailer = ref;
         }
         runtime->objs_heap_of_thread += mb->heap_size;
-//        if(!mb->heap_size){
-//            s32 debug =1;
-//        }
 #if PRJ_DEBUG_GARBAGE_DUMP
         Utf8String *sus = utf8_create();
         _getMBName(mb, sus);
-        jvm_printf("R: %s[%llx]\n", utf8_cstr(sus), (s64) (intptr_t) mb);
+        jthreadruntime_get_stacktrack(runtime, sus);
+        jvm_printf("R: [%llx]%s\n", (s64) (intptr_t) mb, utf8_cstr(sus));
         utf8_destory(sus);
 #endif
     }
