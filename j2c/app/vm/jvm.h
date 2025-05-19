@@ -478,6 +478,8 @@ JThreadRuntime *jthreadruntime_create();
 
 void jthreadruntime_destroy(__refer jthreadruntime);
 
+void jthreadruntime_get_stacktrack(JThreadRuntime *runtime, Utf8String *ustr);
+
 JObject *new_jthread(JThreadRuntime *runtime);
 
 s32 jthread_prepar(JThreadRuntime *runtime);

@@ -159,6 +159,7 @@ JClass *primitive_class_create_get(JThreadRuntime *runtime, Utf8String *ustr) {
         clazz = _jclass_create_inner();
         clazz->name = utf8_create_copy(ustr);
         clazz->primitive = 1;
+        clazz->status = CLASS_STATUS_CLINITED;
         classes_put(clazz);
         gc_refer_hold(clazz);
         garbage_thread_unlock();
@@ -342,13 +343,14 @@ void class_load(Utf8String *className) {
 void class_clinit(JThreadRuntime *runtime, Utf8String *className) {
     ClassRaw *classRaw = find_classraw(utf8_cstr(className));
     if (!classRaw)return;
-
+    JClass *clazz = classes_get(className);
+    if (clazz && clazz->status == CLASS_STATUS_CLINITED)return;
 
     garbage_thread_lock();
     runtime->no_pause++;
     //load this
     class_load(className);
-    JClass *clazz = classes_get(className);
+    clazz = classes_get(className);
 
 
     if (clazz->status < CLASS_STATUS_CLINITING) {
@@ -374,7 +376,7 @@ void class_clinit(JThreadRuntime *runtime, Utf8String *className) {
     }
 
     JClass *weak_clazz = classes_get_c(STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE);
-    if (weak_clazz && assignable_from(weak_clazz, clazz)) {
+    if (utf8_equals_c(clazz->name, STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE) || weak_clazz && assignable_from(weak_clazz, clazz)) {
         clazz->is_weakref = 1;
     }
 
@@ -626,6 +628,28 @@ void jthreadruntime_destroy(__refer jthreadruntime) {
     jvm_free(jthreadruntime);
 }
 
+void jthreadruntime_get_stacktrack(JThreadRuntime *runtime, Utf8String *ustr) {
+    s32 i;
+    for (i = 0; i < g_jvm->thread_list->length; i++) {
+        JThreadRuntime *runtime = arraylist_get_value(g_jvm->thread_list, i);
+
+        s32 j, size;
+        StackFrame *frame = runtime->tail;
+        while (frame) {
+            MethodRaw *raw = get_methodraw_by_index(frame->methodRawIndex);
+
+            utf8_append(ustr, get_utf8str_by_utfraw_index(raw->class_name));
+            utf8_append_c(ustr, ".");
+            utf8_append(ustr, get_utf8str_by_utfraw_index(raw->name));
+            utf8_append_c(ustr, "(");
+            utf8_append_s64(ustr, frame->lineNo, 10);
+            utf8_append_c(ustr, ") ");
+
+            frame = frame->next;
+        }
+    }
+}
+
 /**
  *==============================================================
  *                        java thread
@@ -815,9 +839,9 @@ s32 jthread_prepar(JThreadRuntime *runtime) {
     utf8_append_c(ustr, STR_JAVA_LANG_THREAD);
     class_clinit(runtime, ustr);
     utf8_clear(ustr);
-//    utf8_append_c(ustr, STR_JAVA_UTIL_LOGGING_LEVEL);
-//    class_clinit(runtime, ustr);
-//    utf8_clear(ustr);
+    utf8_append_c(ustr, STR_CLASS_JAVA_LANG_REF_WEAKREFERENCE);
+    class_clinit(runtime, ustr);
+    utf8_clear(ustr);
 //    if (!runtime->jthread) {
 //        JObject *jthread = new_jthread(runtime);
 //        runtime->jthread = jthread;
@@ -869,18 +893,31 @@ JThreadRuntime *jthread_bound(JThreadRuntime *runtime) {
     tss_set(TLS_KEY_UTF8STR_CACHE, ustr);
     if (!runtime->jthread) {
         ClassRaw *raw = find_classraw(STR_JAVA_LANG_THREAD);
+        if (!raw) {
+            jvm_printf("ERROR: Cannot find Thread class raw\n");
+            return NULL;
+        }
+
         s32 insSize = raw->ins_size;
         JObject *ins = (JObject *) jvm_calloc(insSize);
+        if (!ins) {
+            jvm_printf("ERROR: Failed to allocate memory for Thread object\n");
+            return NULL;
+        }
+
         ins->prop.heap_size = insSize;
         ins->prop.members = &ins[1];
         ins->prop.type = INS_TYPE_OBJECT;
         ins->vm_table = raw->vmtable;
         runtime->jthread = ins;
         jthread_set_stackFrame(runtime->jthread, runtime);
+
+        // 先注册到线程，再添加到holder
+        gc_refer_reg(runtime, runtime->jthread);
+        gc_refer_hold(runtime->jthread);
     }
     jthread_prepar(runtime);
     if (runtime->jthread) {
-        gc_refer_hold(runtime->jthread);
         ClassRaw *raw = find_classraw(STR_JAVA_LANG_THREAD);
         if (!raw->clazz) {
             class_clinit(runtime, get_utf8str_by_utfraw_index(raw->name));
@@ -894,7 +931,6 @@ JThreadRuntime *jthread_bound(JThreadRuntime *runtime) {
         }
         jthread_set_stackFrame(runtime->jthread, runtime);
     }
-
 
     arraylist_push_back(g_jvm->thread_list, runtime);
     runtime->thread_status = THREAD_STATUS_RUNNING;

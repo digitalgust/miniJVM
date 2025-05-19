@@ -57,7 +57,7 @@ public class SpecTest {
 
         try {
             System.gc();
-            Thread.sleep(1000);
+            Thread.sleep(2000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -1284,11 +1284,11 @@ public class SpecTest {
 
         _wait_for_gc();
         //下面两个输出为null,表示对象被回收了
-        if (apple1.get() == null) printerr("weakreference");
+        if (apple1.get() == null) printerr("weakreference 1");
 
         a = null;
         _wait_for_gc();
-        if (apple1.get() != null) printerr("weakreference");
+        if (apple1.get() != null) printerr("weakreference 2");
 
         //输出结果，并且就是上面的appleWeakReference、appleWeakReference2，再次证明对象被回收了
         int count = 0;
@@ -1325,7 +1325,7 @@ public class SpecTest {
         weakHashMap.put(key1, "Z");
         weakHashMap.put(key2, "W");
         if (weakHashMap.size() != 3) {
-            printerr("weakHashMap ");
+            printerr("weakHashMap 1");
         }
         // 这意味着"弱键"key0再没有被其它对象引用，调用gc时会回收WeakHashMap中与key0对应的键值对
         key0 = null;
@@ -1336,7 +1336,7 @@ public class SpecTest {
         _wait_for_gc();
 
         if (weakHashMap.size() != 1) {
-            printerr("weakHashMap ");
+            printerr("weakHashMap 2");
         }
     }
 }
