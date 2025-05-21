@@ -82,6 +82,8 @@ void garbage_collector_destory(GcCollector *collector) {
         garbage_thread_timedwait(50);
     }
     garbage_thread_unlock();
+
+    g_jvm->collector->runtime = jthreadruntime_create();
     //
     _garbage_clear();
     //
@@ -90,6 +92,7 @@ void garbage_collector_destory(GcCollector *collector) {
 
     arraylist_destory(collector->runtime_refer_copy);
 
+    jthreadruntime_destroy(collector->runtime);
     //
     thread_lock_dispose(&collector->garbagelock);
     jvm_free(collector);
@@ -239,7 +242,7 @@ void _dump_refer() {
     while (mb) {
         Utf8String *name = utf8_create();
         _getMBName(mb, name);
-        jvm_printf("   %s[%llx] \n", utf8_cstr(name), (s64) (intptr_t) mb);
+        jvm_printf("A  %s[%llx] \n", utf8_cstr(name), (s64) (intptr_t) mb);
         utf8_destory(name);
         mb = mb->next;
     }
@@ -321,21 +324,23 @@ s64 gc_sum_heap(GcCollector *collector) {
 //==============================   thread_run() =====================================
 
 s32 _collect_thread_run(void *para) {
-    JThreadRuntime *runtime = runtime = jthreadruntime_create();
+    JThreadRuntime *runtime = jthreadruntime_create();
     jthread_bound(runtime);
     arraylist_remove(g_jvm->thread_list, runtime);//remove from threadlist
 
     GcCollector *collector = g_jvm->collector;
+    collector->runtime = runtime;
     while (1) {
         s64 cur_mil = currentTimeMillis();
 
         if (collector->_garbage_thread_status == GARBAGE_THREAD_STOP) {
             break;
         }
-        if (collector->_garbage_thread_status == GARBAGE_THREAD_PAUSE) {
-            continue;
-        }
-        if (cur_mil - collector->lastgc < 1000) {// less than custom sec no gc
+        if (collector->_garbage_thread_status == GARBAGE_THREAD_PAUSE
+            || cur_mil - collector->lastgc < 1000
+            || g_jvm->thread_list == 0
+                ) {// less than custom sec no gc
+            threadSleep(100);
             continue;
         }
 
@@ -587,9 +592,10 @@ s32 _garbage_big_search() {
             if (mb->type != INS_TYPE_OBJECT && mb->type != INS_TYPE_ARRAY && mb->type != INS_TYPE_CLASS) {
                 Utf8String *name = utf8_create();
                 _getMBName(mb, name);
-                jvm_printf("Invalid object type in runtime_refer_copy: %s, type: %d\n",
-                           utf8_cstr(name), mb->type);
+                jvm_printf("Invalid object type in runtime_refer_copy:%llx %s, type: %d\n",
+                           r, utf8_cstr(name), mb->type);
                 utf8_destory(name);
+                //_garbage_copy_refer();
             }
             _garbage_mark_object(r, g_jvm->collector->mark_cnt);
         } else {
@@ -616,6 +622,11 @@ void _garbage_copy_refer() {
         JThreadRuntime *runtime = arraylist_get_value(g_jvm->thread_list, i);
         _garbage_copy_refer_thread(runtime);
     }
+
+    InstProp *mb = (InstProp *) g_jvm->collector->runtime->jthread;
+    if (mb) {
+        arraylist_push_back(g_jvm->collector->runtime_refer_copy, mb);
+    }
 //    arraylist_iter_safe(thread_list, _list_iter_iter_copy, NULL);
 
 }
@@ -635,16 +646,27 @@ s32 _garbage_copy_refer_thread(JThreadRuntime *pruntime) {
         InstProp *mb = (InstProp *) pruntime->jthread;
         if (mb->type == INS_TYPE_OBJECT || mb->type == INS_TYPE_ARRAY || mb->type == INS_TYPE_CLASS) {
             arraylist_push_back_unsafe(g_jvm->collector->runtime_refer_copy, pruntime->jthread);
+
+            //jvm_printf("_garbage_copy_refer_thread:%llx name:%s\n", mb,  utf8_cstr(mb->clazz->name));
         } else {
             jvm_printf("Invalid object type in jthread: %s\n",
                        utf8_cstr(pruntime->jthread->prop.clazz->name));
         }
     }
 
+
     InstProp *next = pruntime->tmp_holder;
     for (; next;) {
+        // 新增：防御性检查，避免访问非法对象的 tmp_next
+        if (next->type != INS_TYPE_OBJECT &&
+            next->type != INS_TYPE_ARRAY &&
+            next->type != INS_TYPE_CLASS) {
+            jvm_printf("[ERROR] Non-InstProp object found in tmp_holder: %p\n", next);
+            next = next->tmp_next; // 跳过非法对象
+            continue;
+        }
         arraylist_push_back_unsafe(g_jvm->collector->runtime_refer_copy, next);
-        next = next->tmp_next;
+        next = next->tmp_next; // L647 原问题行
     }
 
     s32 i;
@@ -875,9 +897,18 @@ void gc_refer_release(__refer ref) {
 }
 
 
+// 原函数：instance_hold_to_thread
 void instance_hold_to_thread(JThreadRuntime *runtime, __refer ref) {
+    if (!ref) return; // 空指针直接返回
     InstProp *ins = (InstProp *) ref;
-    if (runtime && ins) {
+    // 新增：校验对象类型是否为合法的 Java 对象
+    if (ins->type != INS_TYPE_OBJECT &&
+        ins->type != INS_TYPE_ARRAY &&
+        ins->type != INS_TYPE_CLASS) {
+        jvm_printf("[ERROR] Non-InstProp object held in thread tmp_holder: %p\n", ref);
+        return;
+    }
+    if (runtime) {
         ins->tmp_next = runtime->tmp_holder;
         runtime->tmp_holder = ins;
     }

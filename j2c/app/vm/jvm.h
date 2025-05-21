@@ -392,6 +392,7 @@ struct _GcCollectorType {
     spinlock_t lock;
     //
     ArrayList *runtime_refer_copy;
+    JThreadRuntime *runtime;
     //
     s64 obj_heap_size;
     s64 lastgc;//last gc at mills

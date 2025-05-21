@@ -206,7 +206,7 @@ JClass *array_class_create_get(Utf8String *name) {
 JClass *jclass_create_with_raw(ClassRaw *classRaw) {
 
     JClass *clazz = _jclass_create_inner();
-    clazz->name = get_utf8str(&g_strings[classRaw->name]);
+    clazz->name = utf8_create_copy(get_utf8str(&g_strings[classRaw->name]));
     clazz->source_name = get_utf8str(&g_strings[classRaw->source_name]);
     clazz->signature = classRaw->signature_name < 0 ? NULL : get_utf8str(&g_strings[classRaw->signature_name]);
 
@@ -279,8 +279,13 @@ void jclass_destroy(JClass *clazz) {
     }
     arraylist_destory(clazz->fields);
 
+    arraylist_destory(clazz->interfaces);
     arraylist_destory(clazz->dependent_classes);
+    utf8_destory(clazz->name);
 
+    if (clazz->prop.thread_lock) {
+        jthreadlock_destory(&clazz->prop);
+    }
     jvm_free(clazz);
 }
 
@@ -625,6 +630,13 @@ void jthreadruntime_destroy(__refer jthreadruntime) {
     JThreadRuntime *runtime = (JThreadRuntime *) jthreadruntime;
     arraylist_destory(runtime->stacktrack);
     arraylist_destory(runtime->lineNo);
+    //destroy cache
+    StackFrame *frame = runtime->cache;
+    while (frame) {
+        StackFrame *next = frame->next;
+        stackframe_destroy(frame);
+        frame = next;
+    }
     jvm_free(jthreadruntime);
 }
 
@@ -914,7 +926,7 @@ JThreadRuntime *jthread_bound(JThreadRuntime *runtime) {
 
         // 先注册到线程，再添加到holder
         gc_refer_reg(runtime, runtime->jthread);
-        gc_refer_hold(runtime->jthread);
+        //gc_refer_hold(runtime->jthread);
     }
     jthread_prepar(runtime);
     if (runtime->jthread) {
@@ -938,6 +950,7 @@ JThreadRuntime *jthread_bound(JThreadRuntime *runtime) {
 }
 
 void jthread_unbound(JThreadRuntime *runtime) {
+    runtime->jthread = NULL;
     arraylist_remove(g_jvm->thread_list, runtime);
     runtime->thread_status = THREAD_STATUS_DEAD;
     if (runtime->context_classloader)gc_refer_release(runtime->context_classloader);
@@ -945,7 +958,9 @@ void jthread_unbound(JThreadRuntime *runtime) {
     jthreadruntime_destroy(runtime);
     tss_set(TLS_KEY_JTHREADRUNTIME, NULL);
     Utf8String *ustr = tss_get(TLS_KEY_UTF8STR_CACHE);
-    utf8_destory(ustr);
+    if (ustr) {
+        utf8_destory(ustr);
+    }
     tss_set(TLS_KEY_UTF8STR_CACHE, NULL);
 }
 

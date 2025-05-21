@@ -437,13 +437,21 @@ s32 isDir(Utf8String *path) {
 }
 
 s32 jstring_2_utf8(struct java_lang_String *jstr, Utf8String *utf8) {
-    if (!jstr)return 1;
+    if (!jstr) return 1;
     JArray *arr = jstr->value_in_string;
     if (arr) {
         s32 count = jstr->count_in_string;
         s32 offset = jstr->offset_in_string;
+        // 新增：校验 offset 和 count 是否合法（非负且不越界）
+        if (offset < 0 || count < 0 || (offset + count) > arr->prop.arr_length) {
+            jvm_printf("[ERROR] jstring_2_utf8: invalid offset=%d, count=%d (arr_length=%d)\n", 
+                      offset, count, arr->prop.arr_length);
+            return 1; // 参数非法，避免越界访问
+        }
         u16 *arrbody = arr->prop.as_u16_arr;
-        if (arr->prop.as_u16_arr)unicode_2_utf8(&arrbody[offset], utf8, count);
+        if (arrbody) {
+            unicode_2_utf8(&arrbody[offset], utf8, count);
+        }
     }
     return 0;
 }
