@@ -33,6 +33,9 @@ public abstract class AccessibleObject implements AnnotatedElement {
         return getAnnotation(class_) != null;
     }
 
+    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+        throw new AssertionError("All subclasses should override this method");
+    }
 //    public abstract boolean isAccessible();
 //
 //    public abstract void setAccessible(boolean v);

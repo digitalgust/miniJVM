@@ -32,6 +32,7 @@ import org.mini.reflect.ReflectMethod;
 import org.mini.vm.RConst;
 import org.mini.vm.RefNative;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -70,6 +71,19 @@ public final class Class<T> implements java.io.Serializable,
     private static final int ENUM = 0x00004000;
     private static final int SYNTHETIC = 0x00001000;
     ClassLoader classLoader; //don't change var name, it used in vm
+    // 缓存字段
+    private transient volatile Field[] declaredFieldsCached;
+    private transient volatile Field[] fieldsCached;
+
+    // 缓存构造函数
+    private transient volatile Constructor<?>[] declaredConstructorsCached;
+    private transient volatile Constructor<?>[] constructorsCached;
+
+    // 缓存方法
+    private transient volatile Method[] declaredMethodsCached;
+    private transient volatile Method[] methodsCached;
+    private transient volatile Class[] cachedDeclaredClasses;
+    ;
 
     /*
      * Constructor. Only the Java Virtual Machine creates Class
@@ -550,6 +564,9 @@ public final class Class<T> implements java.io.Serializable,
     }
 
     public Method[] getMethods() {
+        if (methodsCached != null) {
+            return methodsCached;
+        }
         checkRefectClassLoaded();
         ReflectMethod[] rms = refClass.getMethods();
         int mcount = 0;
@@ -561,18 +578,30 @@ public final class Class<T> implements java.io.Serializable,
         Method[] ms = new Method[mcount];
         for (int i = 0, j = 0, imax = rms.length; i < imax; i++) {
             if (rms[i].methodName.charAt(0) != '<' && (rms[i].accessFlags & (RConst.ACC_PUBLIC)) != 0) {
-                ms[j] = new Method(this, rms[i]);
-                j++;
+                ms[j++] = new Method(this, rms[i]);
             }
         }
-        Method[] superms = getSuperclass() == null ? new Method[0] : getSuperclass().getMethods();
-        Method[] result = new Method[ms.length + superms.length];
-        System.arraycopy(superms, 0, result, 0, superms.length);
-        System.arraycopy(ms, 0, result, superms.length, ms.length);
+
+        Class<? super T> superClass = getSuperclass();
+        if (superClass == null) {
+            methodsCached = ms;
+            return ms;
+        }
+
+        Method[] superMethods = superClass.getMethods();
+        Method[] result = new Method[ms.length + superMethods.length];
+        System.arraycopy(ms, 0, result, 0, ms.length);
+        System.arraycopy(superMethods, 0, result, ms.length, superMethods.length);
+
+        methodsCached = result;
         return result;
     }
 
+
     public Method[] getDeclaredMethods() {
+        if (declaredMethodsCached != null) {
+            return declaredMethodsCached;
+        }
         checkRefectClassLoaded();
         ReflectMethod[] rms = refClass.getMethods();
         int mcount = 0;
@@ -584,12 +613,13 @@ public final class Class<T> implements java.io.Serializable,
         Method[] ms = new Method[mcount];
         for (int i = 0, j = 0, imax = rms.length; i < imax; i++) {
             if (rms[i].methodName.charAt(0) != '<') {
-                ms[j] = new Method(this, rms[i]);
-                j++;
+                ms[j++] = new Method(this, rms[i]);
             }
         }
+        declaredMethodsCached = ms;
         return ms;
     }
+
 
     public Constructor<T> getConstructor(Class<?>... parameterTypes) throws NoSuchMethodException {
         Constructor<T> c = getDeclaredConstructor(parameterTypes);
@@ -600,6 +630,54 @@ public final class Class<T> implements java.io.Serializable,
     }
 
     public Constructor<?>[] getConstructors() {
+        if (constructorsCached != null) {
+            return constructorsCached;
+        }
+        checkRefectClassLoaded();
+        if (isInterface()) {
+            constructorsCached = new Constructor[0];
+            return constructorsCached;
+        }
+
+        // 获取当前类 public 构造函数
+        ReflectMethod[] rms = refClass.getMethods();
+        int mcount = 0;
+        for (int i = 0, imax = rms.length; i < imax; i++) {
+            if (rms[i].methodName.equals("<init>") && Modifier.isPublic(rms[i].accessFlags)) {
+                mcount++;
+            }
+        }
+
+        Constructor[] currentConstructors = new Constructor[mcount];
+        for (int i = 0, j = 0, imax = rms.length; i < imax; i++) {
+            if (rms[i].methodName.equals("<init>") && Modifier.isPublic(rms[i].accessFlags)) {
+                currentConstructors[j++] = new Constructor<>(this, rms[i]);
+            }
+        }
+
+        // 获取父类构造函数
+        Class<? super T> superClass = getSuperclass();
+        if (superClass == null) {
+            constructorsCached = currentConstructors;
+            return currentConstructors;
+        }
+
+        Constructor<?>[] superConstructors = superClass.getConstructors();
+
+        // 合并
+        Constructor<?>[] result = new Constructor[currentConstructors.length + superConstructors.length];
+        System.arraycopy(currentConstructors, 0, result, 0, currentConstructors.length);
+        System.arraycopy(superConstructors, 0, result, currentConstructors.length, superConstructors.length);
+
+        constructorsCached = result;
+        return result;
+    }
+
+
+    public Constructor<?>[] getDeclaredConstructors() throws SecurityException {
+        if (declaredConstructorsCached != null) {
+            return declaredConstructorsCached;
+        }
         checkRefectClassLoaded();
         ReflectMethod[] rms = refClass.getMethods();
         int mcount = 0;
@@ -611,12 +689,13 @@ public final class Class<T> implements java.io.Serializable,
         Constructor[] cs = new Constructor[mcount];
         for (int i = 0, j = 0, imax = rms.length; i < imax; i++) {
             if (rms[i].methodName.equals("<init>")) {
-                cs[j] = new Constructor<>(this, rms[i]);
-                j++;
+                cs[j++] = new Constructor<>(this, rms[i]);
             }
         }
+        declaredConstructorsCached = cs;
         return cs;
     }
+
 
     public Constructor<T> getDeclaredConstructor(Class<?>... parameterTypes) throws NoSuchMethodException {
         checkRefectClassLoaded();
@@ -645,6 +724,9 @@ public final class Class<T> implements java.io.Serializable,
     }
 
     public Field[] getFields() {
+        if (fieldsCached != null) {
+            return fieldsCached;
+        }
         checkRefectClassLoaded();
         ReflectField[] rfs = refClass.getFields();
         int fcount = 0;
@@ -655,30 +737,120 @@ public final class Class<T> implements java.io.Serializable,
         }
 
         Field[] fs = new Field[fcount];
-
         for (int i = 0, j = 0, imax = rfs.length; i < imax; i++) {
             if ((rfs[i].accessFlags & RConst.ACC_PUBLIC) != 0) {
-                fs[j] = new Field(this, rfs[i]);
-                j++;
+                fs[j++] = new Field(this, rfs[i]);
             }
         }
-        Field[] superfs = getSuperclass() == null ? new Field[0] : getSuperclass().getFields();
-        Field[] result = new Field[fs.length + superfs.length];
-        System.arraycopy(superfs, 0, result, 0, superfs.length);
-        System.arraycopy(fs, 0, result, superfs.length, fs.length);
+
+        Class<? super T> superClass = getSuperclass();
+        if (superClass == null) {
+            fieldsCached = fs;
+            return fs;
+        }
+
+        Field[] superFields = superClass.getFields();
+        Field[] result = new Field[fs.length + superFields.length];
+        System.arraycopy(fs, 0, result, 0, fs.length);
+        System.arraycopy(superFields, 0, result, fs.length, superFields.length);
+
+        fieldsCached = result;
         return result;
     }
 
+
     public Field[] getDeclaredFields() {
+        if (declaredFieldsCached != null) {
+            return declaredFieldsCached;
+        }
         checkRefectClassLoaded();
         ReflectField[] rfs = refClass.getFields();
         int fcount = rfs.length;
-
         Field[] fs = new Field[fcount];
         for (int i = 0; i < fcount; i++) {
             fs[i] = new Field(this, rfs[i]);
         }
+        declaredFieldsCached = fs;
         return fs;
+    }
+
+    public Annotation[] getAnnotations() {
+        checkRefectClassLoaded();
+
+        // Get the annotation string from the ReflectClass
+        String annotationStr = refClass.annotations;
+        if (annotationStr == null || annotationStr.isEmpty()) {
+            return new Annotation[0];
+        }
+
+        return refClass.getAnnotations();
+    }
+
+    public AnnotatedType[] getAnnotatedInterfaces() {
+        // 暂时返回空数组，因为miniJVM还没有完整的AnnotatedType支持
+        return new AnnotatedType[0];
+    }
+
+    public AnnotatedType getAnnotatedSuperclass() {
+        // 暂时返回null，因为miniJVM还没有完整的AnnotatedType支持
+        return null;
+    }
+
+    public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
+        if (annotationClass == null) {
+            throw new NullPointerException();
+        }
+
+        Annotation[] annotations = getAnnotations();
+        for (Annotation annotation : annotations) {
+            if (annotationClass.equals(annotation.annotationType())) {
+                return annotationClass.cast(annotation);
+            }
+        }
+        return null;
+    }
+
+    public <A extends Annotation> A[] getAnnotationsByType(Class<A> annotationClass) {
+        if (annotationClass == null) {
+            throw new NullPointerException();
+        }
+
+        Annotation[] annotations = getAnnotations();
+        java.util.List<A> result = new java.util.ArrayList<>();
+
+        for (Annotation annotation : annotations) {
+            if (annotationClass.equals(annotation.annotationType())) {
+                result.add(annotationClass.cast(annotation));
+            }
+        }
+
+        // 创建正确类型的数组
+        A[] array = (A[]) java.lang.reflect.Array.newInstance(annotationClass, result.size());
+        return result.toArray(array);
+    }
+
+    public <A extends Annotation> A getDeclaredAnnotation(Class<A> annotationClass) {
+        // 对于类级别的注解，declared和普通注解是一样的
+        return getAnnotation(annotationClass);
+    }
+
+    public Annotation[] getDeclaredAnnotations() {
+        // 对于类级别的注解，declared和普通注解是一样的
+        return getAnnotations();
+    }
+
+    public <A extends Annotation> A[] getDeclaredAnnotationsByType(Class<A> annotationClass) {
+        // 对于类级别的注解，declared和普通注解是一样的
+        return getAnnotationsByType(annotationClass);
+    }
+
+    public boolean isAnnotationPresent(Class<? extends Annotation> annotationClass) {
+        return getAnnotation(annotationClass) != null;
+    }
+
+
+    public boolean isAnnotation() {
+        return (getModifiers() & ANNOTATION) != 0;
     }
 
     public Class getComponentType() {
@@ -724,6 +896,19 @@ public final class Class<T> implements java.io.Serializable,
         } else {
             return this;//todo
         }
+    }
+
+
+    public Class<?>[] getDeclaredClasses() throws SecurityException {
+        if (cachedDeclaredClasses != null) {
+            return cachedDeclaredClasses;
+        }
+        if (isPrimitive() || isArray() || this.equals(Void.class)) {
+            cachedDeclaredClasses = new Class[0];
+        } else {
+            cachedDeclaredClasses = new Class[0];
+        }
+        return cachedDeclaredClasses;
     }
 
     public boolean desiredAssertionStatus() {

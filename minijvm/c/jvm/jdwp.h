@@ -263,7 +263,7 @@ enum {
 
 //=============================      my define   ==============================================
 
-#define JDWP_TCP_PORT  "8000"
+#define JDWP_TCP_PORT  "5005"
 
 #define JDWP_HANDSHAKE  "JDWP-Handshake"
 

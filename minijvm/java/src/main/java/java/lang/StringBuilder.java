@@ -83,7 +83,7 @@ package java.lang;
  * @see java.lang.String
  * @since JDK1.0, CLDC 1.0
  */
-public class StringBuilder implements Appendable {
+public class StringBuilder implements Appendable, CharSequence {
 
     /**
      * The value is used for character storage.
@@ -1039,5 +1039,10 @@ public class StringBuilder implements Appendable {
         str.getChars(value, start);
         count = newCount;
         return this;
+    }
+
+    @Override
+    public CharSequence subSequence(int start, int end) {
+        return substring(start, end);
     }
 }

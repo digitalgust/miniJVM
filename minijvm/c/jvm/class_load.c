@@ -1534,6 +1534,139 @@ void _class_bootstrap_methods_destroy(JClass *clazz) {
     clazz->bootstrapMethodAttr = NULL;
 }
 
+// Parse element value recursively
+ElementValue *_parse_element_value(u8 *info, s32 *ptr) {
+    ElementValue *ev = jvm_calloc(sizeof(ElementValue));
+    ev->tag = info[(*ptr)++];
+
+    switch (ev->tag) {
+        case ELEMENT_VALUE_BYTE:
+        case ELEMENT_VALUE_CHAR:
+        case ELEMENT_VALUE_DOUBLE:
+        case ELEMENT_VALUE_FLOAT:
+        case ELEMENT_VALUE_INT:
+        case ELEMENT_VALUE_LONG:
+        case ELEMENT_VALUE_SHORT:
+        case ELEMENT_VALUE_BOOLEAN:
+        case ELEMENT_VALUE_STRING: {
+            Short2Char s2c;
+            s2c.c1 = info[(*ptr)++];
+            s2c.c0 = info[(*ptr)++];
+            ev->value.const_value_index = s2c.us;
+            break;
+        }
+        case ELEMENT_VALUE_ENUM: {
+            Short2Char s2c;
+            s2c.c1 = info[(*ptr)++];
+            s2c.c0 = info[(*ptr)++];
+            ev->value.enum_const_value.type_name_index = s2c.us;
+            s2c.c1 = info[(*ptr)++];
+            s2c.c0 = info[(*ptr)++];
+            ev->value.enum_const_value.const_name_index = s2c.us;
+            break;
+        }
+        case ELEMENT_VALUE_CLASS: {
+            Short2Char s2c;
+            s2c.c1 = info[(*ptr)++];
+            s2c.c0 = info[(*ptr)++];
+            ev->value.class_info_index = s2c.us;
+            break;
+        }
+        case ELEMENT_VALUE_ANNOTATION: {
+            // For simplicity, we'll implement this later
+            ev->value.annotation_value = NULL;
+            break;
+        }
+        case ELEMENT_VALUE_ARRAY: {
+            Short2Char s2c;
+            s2c.c1 = info[(*ptr)++];
+            s2c.c0 = info[(*ptr)++];
+            ev->value.array_value.num_values = s2c.us;
+            ev->value.array_value.values = jvm_calloc(sizeof(ElementValue) * ev->value.array_value.num_values);
+            s32 j;
+            for (j = 0; j < ev->value.array_value.num_values; j++) {
+                ElementValue *nested_ev = _parse_element_value(info, ptr);
+                ev->value.array_value.values[j] = *nested_ev;
+                jvm_free(nested_ev);
+            }
+            break;
+        }
+    }
+    return ev;
+}
+
+void _convert_2_runtime_visible_annotations(AttributeInfo *attr, JClass *clazz) {
+    RuntimeVisibleAnnotationsAttr *annotations = jvm_calloc(sizeof(RuntimeVisibleAnnotationsAttr));
+    s32 ptr = 0;
+
+    // Read number of annotations
+    Short2Char s2c;
+    s2c.c1 = attr->info[ptr++];
+    s2c.c0 = attr->info[ptr++];
+    annotations->num_annotations = s2c.us;
+
+    annotations->annotations = jvm_calloc(sizeof(Annotation) * annotations->num_annotations);
+
+    s32 i;
+    for (i = 0; i < annotations->num_annotations; i++) {
+        Annotation *ann = &annotations->annotations[i];
+
+        // Read type index
+        s2c.c1 = attr->info[ptr++];
+        s2c.c0 = attr->info[ptr++];
+        ann->type_index = s2c.us;
+
+        // Read number of element value pairs
+        s2c.c1 = attr->info[ptr++];
+        s2c.c0 = attr->info[ptr++];
+        ann->num_element_value_pairs = s2c.us;
+
+        ann->element_value_pairs = jvm_calloc(sizeof(ElementValuePair) * ann->num_element_value_pairs);
+
+        s32 j;
+        for (j = 0; j < ann->num_element_value_pairs; j++) {
+            ElementValuePair *evp = &ann->element_value_pairs[j];
+
+            // Read element name index
+            s2c.c1 = attr->info[ptr++];
+            s2c.c0 = attr->info[ptr++];
+            evp->element_name_index = s2c.us;
+
+            // Parse element value
+            ElementValue *ev = _parse_element_value(attr->info, &ptr);
+            evp->value = *ev;
+            jvm_free(ev);
+        }
+    }
+
+    jvm_free(attr->info);
+    attr->info = NULL;
+    clazz->annotationsAttr = annotations;
+}
+
+void _class_annotations_destroy(JClass *clazz) {
+    RuntimeVisibleAnnotationsAttr *annotations = clazz->annotationsAttr;
+    if (!annotations) return;
+
+    s32 i;
+    for (i = 0; i < annotations->num_annotations; i++) {
+        Annotation *ann = &annotations->annotations[i];
+        if (ann->element_value_pairs) {
+            s32 j;
+            for (j = 0; j < ann->num_element_value_pairs; j++) {
+                ElementValuePair *evp = &ann->element_value_pairs[j];
+                // Clean up element value if needed
+                if (evp->value.tag == ELEMENT_VALUE_ARRAY && evp->value.value.array_value.values) {
+                    jvm_free(evp->value.value.array_value.values);
+                }
+            }
+            jvm_free(ann->element_value_pairs);
+        }
+    }
+    jvm_free(annotations->annotations);
+    jvm_free(annotations);
+    clazz->annotationsAttr = NULL;
+}
 
 s32 parseMethodPara(Utf8String *methodType, Utf8String *out) {
     s32 count = 0;
@@ -1720,7 +1853,10 @@ void _class_optimize(JClass *clazz) {
             s2c.c1 = ptr->info[0];
             s2c.c0 = ptr->info[1];
             clazz->signature = class_get_utf8_string(clazz, s2c.us);
+        } else if (utf8_equals_c(name, "RuntimeVisibleAnnotations")) {
+            _convert_2_runtime_visible_annotations(ptr, clazz);
         }
+
     }
 
     for (i = 0; i < clazz->constantPool.classRef->length; i++) {
@@ -1978,6 +2114,7 @@ s32 _DESTROY_CLASS(JClass *clazz) {
     //
     _class_method_info_destroy(clazz);
     _class_bootstrap_methods_destroy(clazz);
+    _class_annotations_destroy(clazz);
     _class_interface_pool_destroy(clazz);
     _class_field_info_destroy(clazz);
     _class_constant_pool_destroy(clazz);

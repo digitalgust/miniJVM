@@ -446,6 +446,14 @@ public final class String implements Comparable<String>, CharSequence {
      */
     public native boolean equals(Object anObject);
 
+    public boolean contentEquals(StringBuffer sb) {
+        return contentEquals((CharSequence) sb);
+    }
+
+    public boolean contentEquals(CharSequence cs) {
+        String anotherString = cs.toString();
+        return (count == cs.length()) && regionMatches(false, offset, anotherString, anotherString.offset, count);
+    }
     /**
      * **********
      * public boolean equals(Object anObject) { if (this == anObject) { return
@@ -647,6 +655,10 @@ public final class String implements Comparable<String>, CharSequence {
             return false;
         }
         return true;
+    }
+
+    public boolean regionMatches(int toffset, String other, int ooffset, int len) {
+        return regionMatches(false, toffset, other, ooffset, len);
     }
 
     /**

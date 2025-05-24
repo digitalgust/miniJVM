@@ -5,6 +5,7 @@
  */
 package org.mini.reflect;
 
+import org.mini.vm.LambdaUtil;
 import org.mini.vm.RefNative;
 
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ public class ReflectClass {
     public short accessFlags;
     public String source;
     public String signature;
+    public String annotations;
     public int status;
     long fieldIds[];
     long methodIds[];
@@ -265,7 +267,7 @@ public class ReflectClass {
             } else {
                 //System.out.println("----:" + sign);
                 String s = sign.substring(pos + 1, sign.length() - 2);//get content in < >
-                List<String> ss = splitSignature(s);
+                List<String> ss = s.equals("*") ? new ArrayList<>() : splitSignature(s);
                 StringBuilder sb = new StringBuilder();
                 sb.append(sign.substring(1, pos)).append('<');
                 for (int i = 0, imax = ss.size(); i < imax; i++) {
@@ -345,5 +347,287 @@ public class ReflectClass {
     }
 
     final native void mapClass(long classId);
+
+    /**
+     * 获取这个类的注解
+     *
+     * @return 注解对象数组
+     */
+    public java.lang.annotation.Annotation[] getAnnotations() {
+        if (annotations == null || annotations.isEmpty()) {
+            return new java.lang.annotation.Annotation[0];
+        }
+
+        // 解析注解字符串
+        // 格式: [Lcom/example/MyAnnotation;(value="test",number=123),LOtherAnnotation;]
+        if (annotations.startsWith("[") && annotations.endsWith("]")) {
+            String content = annotations.substring(1, annotations.length() - 1);
+            if (content.isEmpty()) {
+                return new java.lang.annotation.Annotation[0];
+            }
+
+            List<java.lang.annotation.Annotation> annotationList = new ArrayList<>();
+
+            // 简单的解析：按逗号分割注解
+            String[] parts = splitAnnotations(content);
+
+            for (String part : parts) {
+                try {
+                    java.lang.annotation.Annotation annotation = parseAnnotation(part.trim());
+                    if (annotation != null) {
+                        annotationList.add(annotation);
+                    }
+                } catch (Exception e) {
+                    // 忽略解析错误，继续处理其他注解
+                    e.printStackTrace();
+                }
+            }
+
+            return annotationList.toArray(new java.lang.annotation.Annotation[annotationList.size()]);
+        }
+
+        return new java.lang.annotation.Annotation[0];
+    }
+
+    /**
+     * 分割注解字符串，处理嵌套的括号
+     */
+    private String[] splitAnnotations(String content) {
+        List<String> result = new ArrayList<>();
+        int start = 0;
+        int depth = 0;
+
+        for (int i = 0; i < content.length(); i++) {
+            char c = content.charAt(i);
+            if (c == '(') {
+                depth++;
+            } else if (c == ')') {
+                depth--;
+            } else if (c == ',' && depth == 0) {
+                // 只有在不在括号内时才分割
+                result.add(content.substring(start, i));
+                start = i + 1;
+            }
+        }
+
+        // 添加最后一部分
+        if (start < content.length()) {
+            result.add(content.substring(start));
+        }
+
+        return result.toArray(new String[result.size()]);
+    }
+
+    /**
+     * 解析单个注解字符串
+     */
+    private java.lang.annotation.Annotation parseAnnotation(String annotationStr) {
+        try {
+            // 解析注解类型名称
+            String typeName;
+            String params = "";
+
+            int paramStart = annotationStr.indexOf('(');
+            if (paramStart > 0) {
+                typeName = annotationStr.substring(0, paramStart);
+                params = annotationStr.substring(paramStart + 1, annotationStr.lastIndexOf(')'));
+            } else {
+                typeName = annotationStr;
+            }
+
+            // 转换类型名称格式
+            if (typeName.startsWith("L") && typeName.endsWith(";")) {
+                typeName = typeName.substring(1, typeName.length() - 1).replace('/', '.');
+            }
+
+            // 加载注解类
+            Class<?> annotationClass = Class.forName(typeName, false, classObj.getClassLoader());
+
+            if (annotationClass.isAnnotation()) {
+                // 创建注解实例 - 使用Proxy动态代理
+                return genProxyClass(annotationClass, params);
+            }
+        } catch (Exception e) {
+            // 如果无法解析，返回null
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    /**
+     * 使用Proxy动态代理创建注解实例
+     */
+    private java.lang.annotation.Annotation genProxyClass(Class<?> annotationClass, String params) {
+        try {
+            // 使用Java标准的Proxy机制创建注解代理
+            java.lang.reflect.InvocationHandler handler = new AnnotationInvocationHandler(annotationClass, params);
+
+            Object proxy = java.lang.reflect.Proxy.newProxyInstance(
+                    annotationClass.getClassLoader(),
+                    new Class<?>[]{annotationClass},
+                    handler
+            );
+
+            return (java.lang.annotation.Annotation) proxy;
+        } catch (Exception e) {
+            // 如果Proxy创建失败，回退到简单代理
+            return createAnnotationProxy(annotationClass, params);
+        }
+    }
+
+    /**
+     * 注解的InvocationHandler实现
+     */
+    private static class AnnotationInvocationHandler implements java.lang.reflect.InvocationHandler {
+        private final Class<?> annotationType;
+        private final String params;
+
+        public AnnotationInvocationHandler(Class<?> annotationType, String params) {
+            this.annotationType = annotationType;
+            this.params = params;
+        }
+
+        @Override
+        public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) throws Throwable {
+            String methodName = method.getName();
+
+            // 处理Annotation接口的方法
+            if ("annotationType".equals(methodName)) {
+                return annotationType;
+            } else if ("toString".equals(methodName)) {
+                return "@" + annotationType.getName() + (params.isEmpty() ? "" : "(" + params + ")");
+            } else if ("equals".equals(methodName) && args != null && args.length == 1) {
+                Object other = args[0];
+                if (other instanceof java.lang.annotation.Annotation) {
+                    return annotationType.equals(((java.lang.annotation.Annotation) other).annotationType());
+                }
+                return false;
+            } else if ("hashCode".equals(methodName)) {
+                return annotationType.hashCode();
+            }
+
+            // 处理注解方法（如value(), number()等）
+            // 这里可以解析params字符串来返回对应的值
+            // 目前返回默认值
+            Class<?> returnType = method.getReturnType();
+            if (returnType == String.class) {
+                return parseStringValue(methodName, params);
+            } else if (returnType == int.class) {
+                return parseIntValue(methodName, params);
+            } else if (returnType == boolean.class) {
+                return parseBooleanValue(methodName, params);
+            }
+
+            // 返回默认值
+            return getDefaultValue(returnType);
+        }
+
+        private String parseStringValue(String methodName, String params) {
+            // 简单的参数解析，格式：name=value,name2=value2
+            if (params != null && !params.isEmpty()) {
+                String[] pairs = params.split(",");
+                for (String pair : pairs) {
+                    String[] parts = pair.split("=");
+                    if (parts.length == 2 && parts[0].trim().equals(methodName)) {
+                        String value = parts[1].trim();
+                        if (value.startsWith("\"") && value.endsWith("\"")) {
+                            return value.substring(1, value.length() - 1);
+                        }
+                        return value;
+                    }
+                }
+            }
+            return ""; // 默认值
+        }
+
+        private int parseIntValue(String methodName, String params) {
+            if (params != null && !params.isEmpty()) {
+                String[] pairs = params.split(",");
+                for (String pair : pairs) {
+                    String[] parts = pair.split("=");
+                    if (parts.length == 2 && parts[0].trim().equals(methodName)) {
+                        try {
+                            return Integer.parseInt(parts[1].trim());
+                        } catch (NumberFormatException e) {
+                            // 忽略解析错误
+                        }
+                    }
+                }
+            }
+            return 0; // 默认值
+        }
+
+        private boolean parseBooleanValue(String methodName, String params) {
+            if (params != null && !params.isEmpty()) {
+                String[] pairs = params.split(",");
+                for (String pair : pairs) {
+                    String[] parts = pair.split("=");
+                    if (parts.length == 2 && parts[0].trim().equals(methodName)) {
+                        return Boolean.parseBoolean(parts[1].trim());
+                    }
+                }
+            }
+            return false; // 默认值
+        }
+
+        private Object getDefaultValue(Class<?> type) {
+            if (type == boolean.class) return false;
+            if (type == byte.class) return (byte) 0;
+            if (type == short.class) return (short) 0;
+            if (type == int.class) return 0;
+            if (type == long.class) return 0L;
+            if (type == float.class) return 0.0f;
+            if (type == double.class) return 0.0;
+            if (type == char.class) return '\0';
+            if (type == String.class) return "";
+            return null;
+        }
+    }
+
+    /**
+     * 创建简单注解代理对象（回退方案）
+     */
+    private java.lang.annotation.Annotation createAnnotationProxy(Class<?> annotationClass, String params) {
+        // 这里创建一个简单的注解代理
+        // 由于miniJVM的限制，我们返回一个基本的实现
+        return new SimpleAnnotationProxy(annotationClass, params);
+    }
+
+    /**
+     * 简单的注解代理类
+     */
+    private static class SimpleAnnotationProxy implements java.lang.annotation.Annotation {
+        private final Class<?> annotationType;
+        private final String params;
+
+        public SimpleAnnotationProxy(Class<?> annotationType, String params) {
+            this.annotationType = annotationType;
+            this.params = params;
+        }
+
+        @Override
+        public Class<? extends java.lang.annotation.Annotation> annotationType() {
+            return (Class<? extends java.lang.annotation.Annotation>) annotationType;
+        }
+
+        @Override
+        public String toString() {
+            return "@" + annotationType.getName() + (params.isEmpty() ? "" : "(" + params + ")");
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof java.lang.annotation.Annotation)) return false;
+            java.lang.annotation.Annotation other = (java.lang.annotation.Annotation) obj;
+            return annotationType.equals(other.annotationType());
+        }
+
+        @Override
+        public int hashCode() {
+            return annotationType.hashCode();
+        }
+    }
 
 }

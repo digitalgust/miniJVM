@@ -364,4 +364,12 @@ public final class System {
     private static native void loadLibrary0(byte[] name);
 
     private static native void load0(byte[] name);
+
+    public static SecurityManager getSecurityManager() {
+        return null;
+    }
+
+    public static void setSecurityManager(SecurityManager s) {
+
+    }
 }

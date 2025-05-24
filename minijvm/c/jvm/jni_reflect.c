@@ -671,6 +671,70 @@ s32 org_mini_reflect_ReflectClass_mapClass(Runtime *runtime, JClass *clazz) {
             setFieldRefer(ptr, signature);
         }
         //
+        ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_REFERENCE, "annotations", STR_INS_JAVA_LANG_STRING, runtime);
+        if (ptr) {
+            // Convert annotations to a more detailed string representation
+            Utf8String *annotationStr = utf8_create();
+            if (target->annotationsAttr && target->annotationsAttr->num_annotations > 0) {
+                utf8_append_c(annotationStr, "[");
+                s32 i;
+                for (i = 0; i < target->annotationsAttr->num_annotations; i++) {
+                    Annotation *ann = &target->annotationsAttr->annotations[i];
+                    Utf8String *typeStr = class_get_utf8_string(target, ann->type_index);
+                    utf8_append(annotationStr, typeStr);
+
+                    // Add element-value pairs if any
+                    if (ann->num_element_value_pairs > 0) {
+                        utf8_append_c(annotationStr, "(");
+                        s32 j;
+                        for (j = 0; j < ann->num_element_value_pairs; j++) {
+                            ElementValuePair *evp = &ann->element_value_pairs[j];
+                            Utf8String *elementName = class_get_utf8_string(target, evp->element_name_index);
+                            utf8_append(annotationStr, elementName);
+                            utf8_append_c(annotationStr, "=");
+
+                            // Convert element value based on tag
+                            switch (evp->value.tag) {
+                                case ELEMENT_VALUE_STRING: {
+                                    Utf8String *valueStr = class_get_utf8_string(target, evp->value.value.const_value_index);
+                                    utf8_append_c(annotationStr, "\"");
+                                    utf8_append(annotationStr, valueStr);
+                                    utf8_append_c(annotationStr, "\"");
+                                    break;
+                                }
+                                case ELEMENT_VALUE_INT: {
+                                    s32 intVal = class_get_constant_integer(target, evp->value.value.const_value_index);
+                                    utf8_append_s64(annotationStr, intVal, 10);
+                                    break;
+                                }
+                                case ELEMENT_VALUE_BOOLEAN: {
+                                    s32 boolVal = class_get_constant_integer(target, evp->value.value.const_value_index);
+                                    utf8_append_c(annotationStr, boolVal ? "true" : "false");
+                                    break;
+                                }
+                                default:
+                                    utf8_append_c(annotationStr, "?");
+                                    break;
+                            }
+
+                            if (j < ann->num_element_value_pairs - 1) {
+                                utf8_append_c(annotationStr, ",");
+                            }
+                        }
+                        utf8_append_c(annotationStr, ")");
+                    }
+
+                    if (i < target->annotationsAttr->num_annotations - 1) {
+                        utf8_append_c(annotationStr, ",");
+                    }
+                }
+                utf8_append_c(annotationStr, "]");
+            }
+            Instance *annotations = jstring_create(annotationStr, runtime);
+            setFieldRefer(ptr, annotations);
+            utf8_destroy(annotationStr);
+        }
+        //
         s32 i;
         {
             ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_REFERENCE, "fieldIds", "[J", runtime);
