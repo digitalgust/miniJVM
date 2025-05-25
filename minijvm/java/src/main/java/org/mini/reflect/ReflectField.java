@@ -27,6 +27,7 @@ public class ReflectField {
     public byte type;
     char bytesTag; //'1','2','4','8','R'
     public long fieldOffset;
+    public String annotations; // Added for annotation support
 
     public ReflectField(ReflectClass c, long fid) {
         if (fid == 0) {

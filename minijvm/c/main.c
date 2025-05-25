@@ -73,6 +73,7 @@ int main(int argc, char **argv) {
 //        utf8_append_c(cp, PATHSEPARATOR);
 //        utf8_append_c(cp, "./");
 //        utf8_append_c(cp, PATHSEPARATOR);
+//        main_name = "test.AnnotationTest";
 //        main_name = "test.HelloWorld";
 //        main_name = "test.Foo1";
 //        main_name = "test.Foo2";
@@ -158,8 +159,12 @@ int main(int argc, char **argv) {
             } else if (main_set == 0) {
                 main_name = argv[i];
                 main_set = 1;
-            } else {
-                arraylist_push_back(java_para, argv[i]);
+
+                // get main class args
+                for (i++; i < argc; i++) {
+                    arraylist_push_back(java_para, argv[i]);
+                }
+                break;
             }
         }
     }

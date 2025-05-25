@@ -60,11 +60,19 @@ public class GLFrameBuffer {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rendertex[0], 0);
+        // 创建深度纹理（关键修改：替换原Renderbuffer为纹理）
+        int[] depthTexture = depth_stencil_buffer;
+        glGenTextures(depthTexture.length, depthTexture, 0);
+        glBindTexture(GL_TEXTURE_2D, depthTexture[0]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, texture_w, texture_h, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, null, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture[0], 0);
         //创建深度缓冲区
-        glGenRenderbuffers(depth_stencil_buffer.length, depth_stencil_buffer, 0);
-        glBindRenderbuffer(GL_RENDERBUFFER, depth_stencil_buffer[0]);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, texture_w, texture_h);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_buffer[0]); // now actually attach it
+//        glGenRenderbuffers(depth_stencil_buffer.length, depth_stencil_buffer, 0);
+//        glBindRenderbuffer(GL_RENDERBUFFER, depth_stencil_buffer[0]);
+//        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, texture_w, texture_h);
+//        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_buffer[0]); // now actually attach it
         //
         int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE) {

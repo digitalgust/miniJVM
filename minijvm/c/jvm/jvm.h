@@ -937,6 +937,66 @@ typedef struct _BootstrapMethodsAttribute {
     u16 num_bootstrap_methods;
     BootstrapMethod *bootstrap_methods;
 } BootstrapMethodsAttr;
+
+//=================================  Annotation related  ======================================
+
+// Element value types for annotations
+typedef enum {
+    ELEMENT_VALUE_BYTE = 'B',
+    ELEMENT_VALUE_CHAR = 'C',
+    ELEMENT_VALUE_DOUBLE = 'D',
+    ELEMENT_VALUE_FLOAT = 'F',
+    ELEMENT_VALUE_INT = 'I',
+    ELEMENT_VALUE_LONG = 'J',
+    ELEMENT_VALUE_SHORT = 'S',
+    ELEMENT_VALUE_BOOLEAN = 'Z',
+    ELEMENT_VALUE_STRING = 's',
+    ELEMENT_VALUE_ENUM = 'e',
+    ELEMENT_VALUE_CLASS = 'c',
+    ELEMENT_VALUE_ANNOTATION = '@',
+    ELEMENT_VALUE_ARRAY = '['
+} ElementValueTag;
+
+// Forward declaration
+typedef struct _ElementValue ElementValue;
+
+// Element value structure for annotation elements
+typedef struct _ElementValue {
+    u8 tag;
+    union {
+        u16 const_value_index;  // For primitive types and strings
+        struct {
+            u16 type_name_index;
+            u16 const_name_index;
+        } enum_const_value;
+        u16 class_info_index;   // For class types
+        struct _Annotation *annotation_value;  // For annotation types
+        struct {
+            u16 num_values;
+            ElementValue *values;
+        } array_value;
+    } value;
+} ElementValue;
+
+// Element value pair for annotations
+typedef struct _ElementValuePair {
+    u16 element_name_index;
+    ElementValue value;
+} ElementValuePair;
+
+// Annotation structure
+typedef struct _Annotation {
+    u16 type_index;
+    u16 num_element_value_pairs;
+    ElementValuePair *element_value_pairs;
+} Annotation;
+
+// Runtime visible annotations attribute
+typedef struct _RuntimeVisibleAnnotationsAttr {
+    u16 num_annotations;
+    Annotation *annotations;
+} RuntimeVisibleAnnotationsAttr;
+
 //============================================
 
 struct _FieldInfo {
@@ -950,6 +1010,7 @@ struct _FieldInfo {
     Utf8String *name;
     Utf8String *descriptor;
     Utf8String *signature;
+    RuntimeVisibleAnnotationsAttr *annotationsAttr;
     JClass *_this_class;
     u16 offset;//字段的偏移地址，静态字段存放在class中
     u16 offset_instance;
@@ -977,6 +1038,7 @@ struct _MethodInfo {
     Utf8String *signature;
     Utf8String *paraType;
     Utf8String *returnType;
+    RuntimeVisibleAnnotationsAttr *annotationsAttr;
     JClass *_this_class;
     java_native_fun native_func;
     Pairlist *breakpoint;
@@ -1042,6 +1104,7 @@ struct _ClassType {
     Utf8String *source;
     Utf8String *signature;
     BootstrapMethodsAttr *bootstrapMethodAttr;
+    RuntimeVisibleAnnotationsAttr *annotationsAttr;
 
     //
     Utf8String *name;
@@ -1921,6 +1984,11 @@ void set_jvm_state(MiniJVM *jvm, s32 state);
 
 //=======================   =============================
 
+void _class_bootstrap_methods_destroy(JClass *clazz);
+
+void _convert_2_runtime_visible_annotations(AttributeInfo *attr, JClass *clazz);
+
+void _class_annotations_destroy(JClass *clazz);
 
 #ifdef __cplusplus
 }

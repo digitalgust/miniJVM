@@ -38,6 +38,7 @@ public class ReflectClass {
     public short accessFlags;
     public String source;
     public String signature;
+    public String annotations;
     public int status;
     long fieldIds[];
     long methodIds[];
@@ -226,6 +227,9 @@ public class ReflectClass {
 
 
     static public String getNameByDescriptor(String s) {
+        if (s == null || s.isEmpty()) {
+            return "void";
+        }
         switch (s.charAt(0)) {
             case 'S':
                 return "short";
@@ -249,15 +253,25 @@ public class ReflectClass {
                 return getNameByDescriptor(s.substring(1)) + "[]";
             case 'L':
                 return convertReference2name(s);
+            case 'T':
+                // 泛型类型变量，如TT; -> T
+                if (s.endsWith(";")) {
+                    return s.substring(1, s.length() - 1);
+                } else {
+                    return s.substring(1);
+                }
             default:
-                throw new RuntimeException();
+                // 对于未知类型，返回原字符串
+                return s;
         }
     }
 
     static public String convertReference2name(String sign) {
         if (sign != null) {
             int pos = sign.indexOf('<');
-            if (sign.startsWith("L") && pos < 0) {
+            if (sign.equals("*")) {
+                return "?";
+            } else if (sign.startsWith("L") && pos < 0) {
                 return sign.substring(1, sign.length() - 1);
             } else if (sign.startsWith("[")) {
                 String s = sign.substring(1);
@@ -265,6 +279,8 @@ public class ReflectClass {
             } else {
                 //System.out.println("----:" + sign);
                 String s = sign.substring(pos + 1, sign.length() - 2);//get content in < >
+                if (s.equals("T")) return s;
+                //
                 List<String> ss = splitSignature(s);
                 StringBuilder sb = new StringBuilder();
                 sb.append(sign.substring(1, pos)).append('<');
@@ -293,10 +309,177 @@ public class ReflectClass {
 
         TokenOfString tokenOrder = new TokenOfString();
         while (tokenOrder.pos < signature.length()) {
-            String type = getNextType(signature, tokenOrder);
+            String type = getNextGenericType(signature, tokenOrder);
             args.add(type);
         }
         return args;
+    }
+
+    /**
+     * 解析方法的descriptor，用于getParameterTypes()等
+     * 格式：(Ljava/lang/Class;Ljava/util/Map;)Ljava/lang/annotation/Annotation;
+     */
+    public static List<String> splitDescriptor(String descriptor) {
+        List<String> args = new ArrayList();
+        if (descriptor == null || descriptor.isEmpty()) {
+            return args;
+        }
+
+        // 找到参数部分 (...)
+        int start = descriptor.indexOf('(');
+        int end = descriptor.indexOf(')');
+        if (start >= 0 && end > start) {
+            String paramPart = descriptor.substring(start + 1, end);
+            if (!paramPart.isEmpty()) {
+                TokenOfString tokenOrder = new TokenOfString();
+                while (tokenOrder.pos < paramPart.length()) {
+                    String type = getNextType(paramPart, tokenOrder);
+                    args.add(type);
+                }
+            }
+        }
+        return args;
+    }
+
+    /**
+     * 解析方法的signature，用于getGenericParameterTypes()等
+     * 格式：<T::Ljava/lang/annotation/Annotation;>(Ljava/lang/Class<TT;>;Ljava/util/Map<Ljava/lang/String;TT;>;)TT;
+     * 格式：<T::Ljava/lang/annotation/Annotation;>(Ljava/lang/String;Ljava/lang/Class<*>;Ljava/lang/Class<TT;>;)TT;
+     */
+    public static List<String> splitGenericSignature(String signature) {
+        List<String> args = new ArrayList();
+        if (signature == null || signature.isEmpty()) {
+            return args;
+        }
+
+        // 跳过泛型类型参数部分 <...>
+        int genericStart = signature.indexOf('<');
+        int paramStart = signature.indexOf('(');
+
+        if (genericStart >= 0 && genericStart < paramStart) {
+            // 有泛型参数，需要跳过
+            int depth = 1;
+            int pos = genericStart + 1;
+            while (pos < signature.length() && depth > 0) {
+                char c = signature.charAt(pos);
+                if (c == '<') depth++;
+                else if (c == '>') depth--;
+                pos++;
+            }
+            // 现在pos指向泛型参数后面，重新找参数部分
+            paramStart = signature.indexOf('(', pos);
+        }
+
+        // 找到参数部分 (...)
+        int paramEnd = signature.indexOf(')', paramStart);
+        if (paramStart >= 0 && paramEnd > paramStart) {
+            String paramPart = signature.substring(paramStart + 1, paramEnd);
+            if (!paramPart.isEmpty()) {
+                TokenOfString tokenOrder = new TokenOfString();
+                while (tokenOrder.pos < paramPart.length()) {
+                    String type = getNextGenericType(paramPart, tokenOrder);
+                    args.add(type);
+                }
+            }
+        }
+        return args;
+    }
+
+    /**
+     * 获取signature中的返回类型
+     */
+    public static String getGenericReturnType(String signature) {
+        if (signature == null || signature.isEmpty()) {
+            return null;
+        }
+
+        int paramEnd = signature.lastIndexOf(')');
+        if (paramEnd >= 0 && paramEnd + 1 < signature.length()) {
+            return signature.substring(paramEnd + 1);
+        }
+        return null;
+    }
+
+    /**
+     * 获取descriptor中的返回类型
+     */
+    public static String getDescriptorReturnType(String descriptor) {
+        if (descriptor == null || descriptor.isEmpty()) {
+            return null;
+        }
+
+        int paramEnd = descriptor.lastIndexOf(')');
+        if (paramEnd >= 0 && paramEnd + 1 < descriptor.length()) {
+            return descriptor.substring(paramEnd + 1);
+        }
+        return null;
+    }
+
+    /**
+     * 解析泛型类型，处理泛型参数如<T>等
+     */
+    private static String getNextGenericType(String signature, TokenOfString token) {
+        if (token.pos >= signature.length()) {
+            return null;
+        }
+
+        char ch = signature.charAt(token.pos);
+        switch (ch) {
+            case 'S':
+            case 'C':
+            case 'B':
+            case 'I':
+            case 'F':
+            case 'Z':
+            case 'D':
+            case 'J': {
+                String tmps = signature.substring(token.pos, token.pos + 1);
+                token.pos++;
+                return tmps;
+            }
+            case 'T': {
+                // 泛型类型变量，如TT;
+                int start = token.pos;
+                token.pos++; // 跳过T
+                while (token.pos < signature.length() && signature.charAt(token.pos) != ';') {
+                    token.pos++;
+                }
+                if (token.pos < signature.length()) {
+                    token.pos++; // 跳过;
+                }
+                return signature.substring(start, token.pos);
+            }
+            case 'L': {
+                // 引用类型，可能包含泛型参数
+                int ltCount = 0;
+                int start = token.pos;
+                token.pos++;
+                while (token.pos < signature.length()) {
+                    ch = signature.charAt(token.pos);
+                    if (ch == '<') {
+                        ltCount++;
+                    } else if (ch == '>') {
+                        ltCount--;
+                    } else if (ch == ';' && ltCount == 0) {
+                        break;
+                    }
+                    token.pos++;
+                }
+                if (token.pos < signature.length()) {
+                    token.pos++; // 跳过;
+                }
+                return signature.substring(start, token.pos);
+            }
+            case '[': {
+                token.pos++;
+                String tmps = "[" + getNextGenericType(signature, token);
+                return tmps;
+            }
+            default:
+                // 未知类型，跳过一个字符
+                token.pos++;
+                return String.valueOf(ch);
+        }
     }
 
     private static String getNextType(String signature, TokenOfString token) {
@@ -345,5 +528,323 @@ public class ReflectClass {
     }
 
     final native void mapClass(long classId);
+
+    /**
+     * 获取这个类的注解
+     *
+     * @return 注解对象数组
+     */
+    public java.lang.annotation.Annotation[] getAnnotations() {
+        return parseAnnotations(annotations, classObj);
+    }
+
+    /**
+     * 静态方法：解析注解字符串为注解数组
+     *
+     * @param annotationsStr 注解字符串
+     * @param classObj       类对象，用于获取ClassLoader
+     * @return 注解对象数组
+     */
+    public static java.lang.annotation.Annotation[] parseAnnotations(String annotationsStr, Class<?> classObj) {
+        if (annotationsStr == null || annotationsStr.isEmpty()) {
+            return new java.lang.annotation.Annotation[0];
+        }
+
+        // 解析注解字符串
+        // 格式: {Lcom/example/MyAnnotation;(value="test",number=123),LOtherAnnotation;}
+        if (annotationsStr.startsWith("{") && annotationsStr.endsWith("}")) {
+            String content = annotationsStr.substring(1, annotationsStr.length() - 1);
+            if (content.isEmpty()) {
+                return new java.lang.annotation.Annotation[0];
+            }
+
+            List<java.lang.annotation.Annotation> annotationList = new ArrayList<>();
+
+            // 简单的解析：按逗号分割注解
+            String[] parts = splitAnnotations(content);
+
+            for (String part : parts) {
+                try {
+                    java.lang.annotation.Annotation annotation = parseAnnotation(part.trim(), classObj);
+                    if (annotation != null) {
+                        annotationList.add(annotation);
+                    }
+                } catch (Exception e) {
+                    // 忽略解析错误，继续处理其他注解
+                    e.printStackTrace();
+                }
+            }
+
+            return annotationList.toArray(new java.lang.annotation.Annotation[annotationList.size()]);
+        }
+
+        return new java.lang.annotation.Annotation[0];
+    }
+
+    /**
+     * 静态方法：分割注解字符串，处理嵌套的括号
+     * 注解之间用逗号分隔，但要注意括号内的逗号不应该作为分隔符
+     */
+    private static String[] splitAnnotations(String content) {
+        List<String> result = new ArrayList<>();
+        int start = 0;
+        int depth = 0;
+
+        for (int i = 0; i < content.length(); i++) {
+            char c = content.charAt(i);
+            if (c == '(') {
+                depth++;
+            } else if (c == ')') {
+                depth--;
+            } else if (c == ',' && depth == 0) {
+                // 只有在不在括号内时才分割
+                result.add(content.substring(start, i));
+                start = i + 1;
+            }
+        }
+
+        // 添加最后一部分
+        if (start < content.length()) {
+            result.add(content.substring(start));
+        }
+
+        return result.toArray(new String[result.size()]);
+    }
+
+    /**
+     * 静态方法：解析单个注解字符串
+     */
+    private static java.lang.annotation.Annotation parseAnnotation(String annotationStr, Class<?> classObj) {
+        try {
+            // 解析注解类型名称
+            String typeName;
+            String params = "";
+
+            int paramStart = annotationStr.indexOf('(');
+            if (paramStart > 0) {
+                typeName = annotationStr.substring(0, paramStart);
+                params = annotationStr.substring(paramStart + 1, annotationStr.lastIndexOf(')'));
+            } else {
+                typeName = annotationStr;
+            }
+
+            // 转换类型名称格式
+            if (typeName.startsWith("[L") && typeName.endsWith(";")) {
+                // 字段/方法注解格式：[Ltest/TestAnnotation; -> test/TestAnnotation
+                typeName = typeName.substring(2, typeName.length() - 1).replace('/', '.');
+            } else if (typeName.startsWith("L") && typeName.endsWith(";")) {
+                // 类注解格式：Ltest/TestAnnotation; -> test/TestAnnotation
+                typeName = typeName.substring(1, typeName.length() - 1).replace('/', '.');
+            } else {
+                // 简单格式：test/TestAnnotation -> test.TestAnnotation
+                typeName = typeName.replace('/', '.');
+            }
+
+            // 加载注解类
+            Class<?> annotationClass = Class.forName(typeName, false, classObj.getClassLoader());
+
+            if (annotationClass.isAnnotation()) {
+                // 创建注解实例 - 使用Proxy动态代理
+                return genProxyClass(annotationClass, params);
+            }
+        } catch (Exception e) {
+            // 如果无法解析，返回null
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    /**
+     * 静态方法：使用Proxy动态代理创建注解实例
+     */
+    private static java.lang.annotation.Annotation genProxyClass(Class<?> annotationClass, String params) {
+        try {
+            // 使用Java标准的Proxy机制创建注解代理
+            java.lang.reflect.InvocationHandler handler = new AnnotationInvocationHandler(annotationClass, params);
+
+            Object proxy = java.lang.reflect.Proxy.newProxyInstance(
+                    annotationClass.getClassLoader(),
+                    new Class<?>[]{annotationClass},
+                    handler
+            );
+
+            return (java.lang.annotation.Annotation) proxy;
+        } catch (Exception e) {
+            // 如果Proxy创建失败，回退到简单代理
+            return createAnnotationProxy(annotationClass, params);
+        }
+    }
+
+    /**
+     * 静态方法：创建简单注解代理对象（回退方案）
+     */
+    private static java.lang.annotation.Annotation createAnnotationProxy(Class<?> annotationClass, String params) {
+        // 这里创建一个简单的注解代理
+        // 由于miniJVM的限制，我们返回一个基本的实现
+        return new SimpleAnnotationProxy(annotationClass, params);
+    }
+
+    /**
+     * 静态方法：根据注解类型查找特定注解
+     */
+    public static <T extends java.lang.annotation.Annotation> T findAnnotation(String annotationsStr, Class<?> classObj, Class<T> annotationClass) {
+        if (annotationsStr == null || annotationsStr.isEmpty()) {
+            return null;
+        }
+
+        java.lang.annotation.Annotation[] annotations = parseAnnotations(annotationsStr, classObj);
+        for (java.lang.annotation.Annotation annotation : annotations) {
+            if (annotationClass.equals(annotation.annotationType())) {
+                return annotationClass.cast(annotation);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 注解的InvocationHandler实现
+     */
+    private static class AnnotationInvocationHandler implements java.lang.reflect.InvocationHandler {
+        private final Class<?> annotationType;
+        private final String params;
+
+        public AnnotationInvocationHandler(Class<?> annotationType, String params) {
+            this.annotationType = annotationType;
+            this.params = params;
+        }
+
+        @Override
+        public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) throws Throwable {
+            String methodName = method.getName();
+
+            // 处理Annotation接口的方法
+            if ("annotationType".equals(methodName)) {
+                return annotationType;
+            } else if ("toString".equals(methodName)) {
+                return "@" + annotationType.getName() + (params.isEmpty() ? "" : "(" + params + ")");
+            } else if ("equals".equals(methodName) && args != null && args.length == 1) {
+                Object other = args[0];
+                if (other instanceof java.lang.annotation.Annotation) {
+                    return annotationType.equals(((java.lang.annotation.Annotation) other).annotationType());
+                }
+                return false;
+            } else if ("hashCode".equals(methodName)) {
+                return annotationType.hashCode();
+            }
+
+            // 处理注解方法（如value(), number()等）
+            // 这里可以解析params字符串来返回对应的值
+            // 目前返回默认值
+            Class<?> returnType = method.getReturnType();
+            if (returnType == String.class) {
+                return parseStringValue(methodName, params);
+            } else if (returnType == int.class) {
+                return parseIntValue(methodName, params);
+            } else if (returnType == boolean.class) {
+                return parseBooleanValue(methodName, params);
+            }
+
+            // 返回默认值
+            return getDefaultValue(returnType);
+        }
+
+        private String parseStringValue(String methodName, String params) {
+            // 简单的参数解析，格式：name=value,name2=value2
+            if (params != null && !params.isEmpty()) {
+                String[] pairs = params.split(",");
+                for (String pair : pairs) {
+                    String[] parts = pair.split("=");
+                    if (parts.length == 2 && parts[0].trim().equals(methodName)) {
+                        String value = parts[1].trim();
+                        if (value.startsWith("\"") && value.endsWith("\"")) {
+                            return value.substring(1, value.length() - 1);
+                        }
+                        return value;
+                    }
+                }
+            }
+            return ""; // 默认值
+        }
+
+        private int parseIntValue(String methodName, String params) {
+            if (params != null && !params.isEmpty()) {
+                String[] pairs = params.split(",");
+                for (String pair : pairs) {
+                    String[] parts = pair.split("=");
+                    if (parts.length == 2 && parts[0].trim().equals(methodName)) {
+                        try {
+                            return Integer.parseInt(parts[1].trim());
+                        } catch (NumberFormatException e) {
+                            // 忽略解析错误
+                        }
+                    }
+                }
+            }
+            return 0; // 默认值
+        }
+
+        private boolean parseBooleanValue(String methodName, String params) {
+            if (params != null && !params.isEmpty()) {
+                String[] pairs = params.split(",");
+                for (String pair : pairs) {
+                    String[] parts = pair.split("=");
+                    if (parts.length == 2 && parts[0].trim().equals(methodName)) {
+                        return Boolean.parseBoolean(parts[1].trim());
+                    }
+                }
+            }
+            return false; // 默认值
+        }
+
+        private Object getDefaultValue(Class<?> type) {
+            if (type == boolean.class) return false;
+            if (type == byte.class) return (byte) 0;
+            if (type == short.class) return (short) 0;
+            if (type == int.class) return 0;
+            if (type == long.class) return 0L;
+            if (type == float.class) return 0.0f;
+            if (type == double.class) return 0.0;
+            if (type == char.class) return '\0';
+            if (type == String.class) return "";
+            return null;
+        }
+    }
+
+    /**
+     * 简单的注解代理类
+     */
+    private static class SimpleAnnotationProxy implements java.lang.annotation.Annotation {
+        private final Class<?> annotationType;
+        private final String params;
+
+        public SimpleAnnotationProxy(Class<?> annotationType, String params) {
+            this.annotationType = annotationType;
+            this.params = params;
+        }
+
+        @Override
+        public Class<? extends java.lang.annotation.Annotation> annotationType() {
+            return (Class<? extends java.lang.annotation.Annotation>) annotationType;
+        }
+
+        @Override
+        public String toString() {
+            return "@" + annotationType.getName() + (params.isEmpty() ? "" : "(" + params + ")");
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof java.lang.annotation.Annotation)) return false;
+            java.lang.annotation.Annotation other = (java.lang.annotation.Annotation) obj;
+            return annotationType.equals(other.annotationType());
+        }
+
+        @Override
+        public int hashCode() {
+            return annotationType.hashCode();
+        }
+    }
 
 }

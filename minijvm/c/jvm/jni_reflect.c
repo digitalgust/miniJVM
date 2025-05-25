@@ -626,6 +626,107 @@ s32 org_mini_vm_RefNative_addJarToClasspath(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
+
+/**
+ * 通用的注解转换为字符串函数
+ * 代码的核心逻辑完全相同，只是在格式上略有差异：
+ *类注解格式：{注解类型名(参数=值)}
+ *字段/方法注解格式：{[L注解类型名;(参数=值)}
+ * @param annotationsAttr
+ * @param clazz
+ * @param use_class_format
+ * @return
+ */
+Utf8String *_annotations_to_string(RuntimeVisibleAnnotationsAttr *annotationsAttr, JClass *clazz, s32 use_class_format) {
+    Utf8String *annotationStr = utf8_create_c("{");
+
+    if (annotationsAttr && annotationsAttr->num_annotations > 0) {
+        s32 i;
+        for (i = 0; i < annotationsAttr->num_annotations; i++) {
+            Annotation *ann = &annotationsAttr->annotations[i];
+            Utf8String *typeName = class_get_utf8_string(clazz, ann->type_index);
+
+            if (use_class_format) {
+                // 类注解格式：直接使用类型名，去掉L和;
+                if (typeName && utf8_char_at(typeName, 0) == 'L' && utf8_char_at(typeName, typeName->length - 1) == ';') {
+                    // 去掉L前缀和;后缀
+                    Utf8String *cleanTypeName = utf8_create();
+                    utf8_append(cleanTypeName, typeName);
+                    utf8_substring(cleanTypeName, 1, typeName->length - 1);
+                    utf8_append(annotationStr, cleanTypeName);
+                    utf8_destroy(cleanTypeName);
+                } else {
+                    utf8_append(annotationStr, typeName);
+                }
+            } else {
+                // 字段/方法注解格式：[L类型名;
+                if (typeName && utf8_char_at(typeName, 0) == 'L' && utf8_char_at(typeName, typeName->length - 1) == ';') {
+                    // 已经是L...;格式，直接添加[前缀
+                    utf8_append_c(annotationStr, "[");
+                    utf8_append(annotationStr, typeName);
+                } else {
+                    // 不是L...;格式，添加[L前缀和;后缀
+                    utf8_append_c(annotationStr, "[L");
+                    utf8_append(annotationStr, typeName);
+                    utf8_append_c(annotationStr, ";");
+                }
+            }
+
+            // 处理注解参数
+            if (ann->num_element_value_pairs > 0) {
+                utf8_append_c(annotationStr, "(");
+                s32 j;
+                for (j = 0; j < ann->num_element_value_pairs; j++) {
+                    ElementValuePair *pair = &ann->element_value_pairs[j];
+                    Utf8String *elementName = class_get_utf8_string(clazz, pair->element_name_index);
+                    utf8_append(annotationStr, elementName);
+                    utf8_append_c(annotationStr, "=");
+
+                    // 根据元素值类型格式化
+                    switch (pair->value.tag) {
+                        case ELEMENT_VALUE_STRING: {
+                            utf8_append_c(annotationStr, "\"");
+                            Utf8String *strValue = class_get_utf8_string(clazz, pair->value.value.const_value_index);
+                            utf8_append(annotationStr, strValue);
+                            utf8_append_c(annotationStr, "\"");
+                            break;
+                        }
+                        case ELEMENT_VALUE_INT: {
+                            s32 intValue = class_get_constant_integer(clazz, pair->value.value.const_value_index);
+                            c8 intStr[32];
+                            sprintf(intStr, "%d", intValue);
+                            utf8_append_c(annotationStr, intStr);
+                            break;
+                        }
+                        case ELEMENT_VALUE_BOOLEAN: {
+                            s32 boolValue = class_get_constant_integer(clazz, pair->value.value.const_value_index);
+                            utf8_append_c(annotationStr, boolValue ? "true" : "false");
+                            break;
+                        }
+                        default:
+                            // 对于未知类型，添加占位符
+                            utf8_append_c(annotationStr, "?");
+                            break;
+                    }
+
+                    if (j < ann->num_element_value_pairs - 1) {
+                        utf8_append_c(annotationStr, ",");
+                    }
+                }
+                utf8_append_c(annotationStr, ")");
+            }
+
+            if (i < annotationsAttr->num_annotations - 1) {
+                utf8_append_c(annotationStr, ",");
+            }
+        }
+    }
+
+    utf8_append_c(annotationStr, "}");
+    return annotationStr;
+}
+
+
 s32 org_mini_reflect_ReflectClass_mapClass(Runtime *runtime, JClass *clazz) {
     s32 pos = 0;
     Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, pos++);
@@ -669,6 +770,15 @@ s32 org_mini_reflect_ReflectClass_mapClass(Runtime *runtime, JClass *clazz) {
         if (ptr) {
             Instance *signature = jstring_create(target->signature, runtime);
             setFieldRefer(ptr, signature);
+        }
+        //
+        ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_REFERENCE, "annotations", STR_INS_JAVA_LANG_STRING, runtime);
+        if (ptr) {
+            // Convert annotations to a more detailed string representation
+            Utf8String *annotationStr = _annotations_to_string(target->annotationsAttr, target, 1);
+            Instance *annotations = jstring_create(annotationStr, runtime);
+            setFieldRefer(ptr, annotations);
+            utf8_destroy(annotationStr);
         }
         //
         s32 i;
@@ -749,6 +859,15 @@ s32 org_mini_reflect_ReflectField_mapField(Runtime *runtime, JClass *clazz) {
         ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_FIELD, "fieldOffset", "J", runtime);
         if (ptr) {
             setFieldLong(ptr, (s64) (intptr_t) ptr);
+        }
+
+        // Add field annotations
+        ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_FIELD, "annotations", STR_INS_JAVA_LANG_STRING, runtime);
+        if (ptr && fieldInfo->annotationsAttr && fieldInfo->annotationsAttr->num_annotations > 0) {
+            Utf8String *annotationStr = _annotations_to_string(fieldInfo->annotationsAttr, fieldInfo->_this_class, 0);
+            Instance *annotations = jstring_create(annotationStr, runtime);
+            setFieldRefer(ptr, annotations);
+            utf8_destroy(annotationStr);
         }
     }
     return 0;
@@ -861,6 +980,15 @@ s32 org_mini_reflect_ReflectMethod_mapMethod(Runtime *runtime, JClass *clazz) {
                     }
                 }
             }
+        }
+
+        // Add method annotations
+        ptr = getFieldPtr_byName_c(ins, JDWP_CLASS_METHOD, "annotations", STR_INS_JAVA_LANG_STRING, runtime);
+        if (ptr && methodInfo->annotationsAttr && methodInfo->annotationsAttr->num_annotations > 0) {
+            Utf8String *annotationStr = _annotations_to_string(methodInfo->annotationsAttr, methodInfo->_this_class, 0);
+            Instance *annotations = jstring_create(annotationStr, runtime);
+            setFieldRefer(ptr, annotations);
+            utf8_destroy(annotationStr);
         }
 
     }
@@ -1044,6 +1172,17 @@ s32 org_mini_reflect_ReflectMethod_getExceptionTypes0(Runtime *runtime, JClass *
     pos += 2;
     MethodInfo *m = l2d.r;
     JClass *cl = m->_this_class;
+    
+    // Check if method has exceptions table
+    if (m->exceptions_index_in_attributes == -1 || m->exceptions_index_in_attributes >= m->attributes_count) {
+        // No exceptions table, return empty array
+        Utf8String *ustr = utf8_create_c(STR_INS_JAVA_LANG_CLASS);
+        Instance *jarr = jarray_create_by_type_name(runtime, 0, ustr, cl->jloader);
+        utf8_destroy(ustr);
+        push_ref(runtime->stack, jarr);
+        return 0;
+    }
+    
     u16 *info = (u16 *) m->attributes[m->exceptions_index_in_attributes].info;
     s32 len = info[0];
     Utf8String *ustr = utf8_create_c(STR_INS_JAVA_LANG_CLASS);
