@@ -227,6 +227,9 @@ public class ReflectClass {
 
 
     static public String getNameByDescriptor(String s) {
+        if (s == null || s.isEmpty()) {
+            return "void";
+        }
         switch (s.charAt(0)) {
             case 'S':
                 return "short";
@@ -250,15 +253,25 @@ public class ReflectClass {
                 return getNameByDescriptor(s.substring(1)) + "[]";
             case 'L':
                 return convertReference2name(s);
+            case 'T':
+                // 泛型类型变量，如TT; -> T
+                if (s.endsWith(";")) {
+                    return s.substring(1, s.length() - 1);
+                } else {
+                    return s.substring(1);
+                }
             default:
-                throw new RuntimeException();
+                // 对于未知类型，返回原字符串
+                return s;
         }
     }
 
     static public String convertReference2name(String sign) {
         if (sign != null) {
             int pos = sign.indexOf('<');
-            if (sign.startsWith("L") && pos < 0) {
+            if (sign.equals("*")) {
+                return "?";
+            } else if (sign.startsWith("L") && pos < 0) {
                 return sign.substring(1, sign.length() - 1);
             } else if (sign.startsWith("[")) {
                 String s = sign.substring(1);
@@ -266,11 +279,9 @@ public class ReflectClass {
             } else {
                 //System.out.println("----:" + sign);
                 String s = sign.substring(pos + 1, sign.length() - 2);//get content in < >
-                boolean isGeneric = false;
-                if (s.equals("*") || s.startsWith("T") || s.indexOf(";T") > 0) {
-                    isGeneric = true;
-                }
-                List<String> ss = isGeneric ? new ArrayList<>() : splitSignature(s);
+                if (s.equals("T")) return s;
+                //
+                List<String> ss = splitSignature(s);
                 StringBuilder sb = new StringBuilder();
                 sb.append(sign.substring(1, pos)).append('<');
                 for (int i = 0, imax = ss.size(); i < imax; i++) {
@@ -298,10 +309,177 @@ public class ReflectClass {
 
         TokenOfString tokenOrder = new TokenOfString();
         while (tokenOrder.pos < signature.length()) {
-            String type = getNextType(signature, tokenOrder);
+            String type = getNextGenericType(signature, tokenOrder);
             args.add(type);
         }
         return args;
+    }
+
+    /**
+     * 解析方法的descriptor，用于getParameterTypes()等
+     * 格式：(Ljava/lang/Class;Ljava/util/Map;)Ljava/lang/annotation/Annotation;
+     */
+    public static List<String> splitDescriptor(String descriptor) {
+        List<String> args = new ArrayList();
+        if (descriptor == null || descriptor.isEmpty()) {
+            return args;
+        }
+
+        // 找到参数部分 (...)
+        int start = descriptor.indexOf('(');
+        int end = descriptor.indexOf(')');
+        if (start >= 0 && end > start) {
+            String paramPart = descriptor.substring(start + 1, end);
+            if (!paramPart.isEmpty()) {
+                TokenOfString tokenOrder = new TokenOfString();
+                while (tokenOrder.pos < paramPart.length()) {
+                    String type = getNextType(paramPart, tokenOrder);
+                    args.add(type);
+                }
+            }
+        }
+        return args;
+    }
+
+    /**
+     * 解析方法的signature，用于getGenericParameterTypes()等
+     * 格式：<T::Ljava/lang/annotation/Annotation;>(Ljava/lang/Class<TT;>;Ljava/util/Map<Ljava/lang/String;TT;>;)TT;
+     * 格式：<T::Ljava/lang/annotation/Annotation;>(Ljava/lang/String;Ljava/lang/Class<*>;Ljava/lang/Class<TT;>;)TT;
+     */
+    public static List<String> splitGenericSignature(String signature) {
+        List<String> args = new ArrayList();
+        if (signature == null || signature.isEmpty()) {
+            return args;
+        }
+
+        // 跳过泛型类型参数部分 <...>
+        int genericStart = signature.indexOf('<');
+        int paramStart = signature.indexOf('(');
+
+        if (genericStart >= 0 && genericStart < paramStart) {
+            // 有泛型参数，需要跳过
+            int depth = 1;
+            int pos = genericStart + 1;
+            while (pos < signature.length() && depth > 0) {
+                char c = signature.charAt(pos);
+                if (c == '<') depth++;
+                else if (c == '>') depth--;
+                pos++;
+            }
+            // 现在pos指向泛型参数后面，重新找参数部分
+            paramStart = signature.indexOf('(', pos);
+        }
+
+        // 找到参数部分 (...)
+        int paramEnd = signature.indexOf(')', paramStart);
+        if (paramStart >= 0 && paramEnd > paramStart) {
+            String paramPart = signature.substring(paramStart + 1, paramEnd);
+            if (!paramPart.isEmpty()) {
+                TokenOfString tokenOrder = new TokenOfString();
+                while (tokenOrder.pos < paramPart.length()) {
+                    String type = getNextGenericType(paramPart, tokenOrder);
+                    args.add(type);
+                }
+            }
+        }
+        return args;
+    }
+
+    /**
+     * 获取signature中的返回类型
+     */
+    public static String getGenericReturnType(String signature) {
+        if (signature == null || signature.isEmpty()) {
+            return null;
+        }
+
+        int paramEnd = signature.lastIndexOf(')');
+        if (paramEnd >= 0 && paramEnd + 1 < signature.length()) {
+            return signature.substring(paramEnd + 1);
+        }
+        return null;
+    }
+
+    /**
+     * 获取descriptor中的返回类型
+     */
+    public static String getDescriptorReturnType(String descriptor) {
+        if (descriptor == null || descriptor.isEmpty()) {
+            return null;
+        }
+
+        int paramEnd = descriptor.lastIndexOf(')');
+        if (paramEnd >= 0 && paramEnd + 1 < descriptor.length()) {
+            return descriptor.substring(paramEnd + 1);
+        }
+        return null;
+    }
+
+    /**
+     * 解析泛型类型，处理泛型参数如<T>等
+     */
+    private static String getNextGenericType(String signature, TokenOfString token) {
+        if (token.pos >= signature.length()) {
+            return null;
+        }
+
+        char ch = signature.charAt(token.pos);
+        switch (ch) {
+            case 'S':
+            case 'C':
+            case 'B':
+            case 'I':
+            case 'F':
+            case 'Z':
+            case 'D':
+            case 'J': {
+                String tmps = signature.substring(token.pos, token.pos + 1);
+                token.pos++;
+                return tmps;
+            }
+            case 'T': {
+                // 泛型类型变量，如TT;
+                int start = token.pos;
+                token.pos++; // 跳过T
+                while (token.pos < signature.length() && signature.charAt(token.pos) != ';') {
+                    token.pos++;
+                }
+                if (token.pos < signature.length()) {
+                    token.pos++; // 跳过;
+                }
+                return signature.substring(start, token.pos);
+            }
+            case 'L': {
+                // 引用类型，可能包含泛型参数
+                int ltCount = 0;
+                int start = token.pos;
+                token.pos++;
+                while (token.pos < signature.length()) {
+                    ch = signature.charAt(token.pos);
+                    if (ch == '<') {
+                        ltCount++;
+                    } else if (ch == '>') {
+                        ltCount--;
+                    } else if (ch == ';' && ltCount == 0) {
+                        break;
+                    }
+                    token.pos++;
+                }
+                if (token.pos < signature.length()) {
+                    token.pos++; // 跳过;
+                }
+                return signature.substring(start, token.pos);
+            }
+            case '[': {
+                token.pos++;
+                String tmps = "[" + getNextGenericType(signature, token);
+                return tmps;
+            }
+            default:
+                // 未知类型，跳过一个字符
+                token.pos++;
+                return String.valueOf(ch);
+        }
     }
 
     private static String getNextType(String signature, TokenOfString token) {

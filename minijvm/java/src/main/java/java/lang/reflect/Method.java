@@ -161,15 +161,16 @@ public class Method<T> extends AccessibleObject implements Member, GenericDeclar
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        if ((refMethod.accessFlags & RConst.ACC_STATIC) != 0) {
-            sb.append("static ");
-        }
+
         if ((refMethod.accessFlags & RConst.ACC_PUBLIC) != 0) {
             sb.append("public ");
         } else if ((refMethod.accessFlags & RConst.ACC_PRIVATE) != 0) {
             sb.append("private ");
         } else if ((refMethod.accessFlags & RConst.ACC_PROTECTED) != 0) {
             sb.append("protected ");
+        }
+        if ((refMethod.accessFlags & RConst.ACC_STATIC) != 0) {
+            sb.append("static ");
         }
         sb.append(refMethod.getReturnType().getCanonicalName()).append(' ');
         sb.append(getDeclaringClass().getName()).append('.');
@@ -217,6 +218,10 @@ public class Method<T> extends AccessibleObject implements Member, GenericDeclar
 
     public Type getGenericReturnType() {
         return refMethod.getGenericReturnType();
+    }
+
+    public Type[] getGenericExceptionTypes() {
+        return refMethod.getGenericExceptionTypes();
     }
 
     public Class<?>[] getExceptionTypes() {

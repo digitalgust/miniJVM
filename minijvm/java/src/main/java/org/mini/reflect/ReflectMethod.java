@@ -22,8 +22,8 @@ public class ReflectMethod {
     //不可随意改动字段类型及名字，要和native一起改
     public long methodId;
     public String methodName;
-    public String descriptor;
-    public String signature;
+    public String descriptor;// ex: (Ljava/lang/Class;Ljava/util/Map;)Ljava/lang/annotation/Annotation;
+    public String signature;// ex:  <T::Ljava/lang/annotation/Annotation;>(Ljava/lang/Class<TT;>;Ljava/util/Map<Ljava/lang/String;TT;>;)TT;
     public short accessFlags;
     public long codeStart;
     public long codeEnd;
@@ -46,11 +46,13 @@ public class ReflectMethod {
         //System.out.println("mid:" + mid);
         this.methodId = mid;
         mapMethod(methodId);
-        paras = ReflectClass.splitSignature(
-                descriptor.substring(descriptor.indexOf("(") + 1, descriptor.indexOf(")"))
-        ).toArray(new String[0]);
+
+        // 使用descriptor解析参数类型（用于getParameterTypes）
+        paras = ReflectClass.splitDescriptor(descriptor).toArray(new String[0]);
         paras_class = getMethodPara(clazzObj.getClassLoader(), descriptor);
-        paras_type = getMethodParaType(signature != null ? signature : descriptor);
+
+        // 使用signature解析泛型参数类型（用于getGenericParameterTypes）
+        paras_type = getGenericParaType(signature != null ? signature : descriptor);
     }
 
     public Class[] getParameterTypes() {
@@ -99,9 +101,7 @@ public class ReflectMethod {
     }
 
     public static Class<?>[] getMethodPara(ClassLoader loader, String descriptor) {
-        List<String> paras = ReflectClass.splitSignature(
-                descriptor.substring(descriptor.indexOf("(") + 1, descriptor.indexOf(")"))
-        );
+        List<String> paras = ReflectClass.splitDescriptor(descriptor);
         Class<?>[] paras_class;
         paras_class = new Class[paras.size()];
         for (int i = 0; i < paras.size(); i++) {
@@ -120,14 +120,18 @@ public class ReflectMethod {
         public String getTypeName() {
             return name;
         }
+
+        @Override
+        public String toString() {
+            return name;
+        }
     }
 
-    public static Type[] getMethodParaType(String signature) {
-        if (signature == null) {
-            return null;
+    public static Type[] getGenericParaType(String signature) {
+        if (signature == null || signature.isEmpty()) {
+            return new Type[0];
         }
-        List<String> paras = ReflectClass.splitSignature(
-                signature.substring(signature.indexOf("(") + 1, signature.indexOf(")")));
+        List<String> paras = ReflectClass.splitGenericSignature(signature);
         Type[] paras_type;
         paras_type = new Type[paras.size()];
         for (int i = 0; i < paras.size(); i++) {
@@ -139,11 +143,14 @@ public class ReflectMethod {
     }
 
     public Class<?> getReturnType() {
-        return getMethodReturnType(clazzObj.getClassLoader(), descriptor);
+        return getReturnType(clazzObj.getClassLoader(), descriptor);
     }
 
-    static public Class<?> getMethodReturnType(ClassLoader loader, String descriptor) {
-        String s = descriptor.substring(descriptor.indexOf(')') + 1);
+    static public Class<?> getReturnType(ClassLoader loader, String descriptor) {
+        String s = ReflectClass.getDescriptorReturnType(descriptor);
+        if (s == null) {
+            return Void.TYPE;
+        }
         if (s.equals("V")) {
             return Void.TYPE;
         }
@@ -155,10 +162,31 @@ public class ReflectMethod {
     }
 
     static public Type getGenericReturnType(String signature) {
-        String s = signature.substring(signature.indexOf(')') + 1);
+        if (signature == null || signature.isEmpty()) {
+            TypeMethodImpl t = new TypeMethodImpl();
+            t.name = "void";
+            return t;
+        }
+        String s = ReflectClass.getGenericReturnType(signature);
+        if (s == null) {
+            TypeMethodImpl t = new TypeMethodImpl();
+            t.name = "void";
+            return t;
+        }
         TypeMethodImpl t = new TypeMethodImpl();
         t.name = ReflectClass.getNameByDescriptor(s);
         return t;
+    }
+
+    public Type[] getGenericExceptionTypes() {
+        Class[] exceptions = getExceptionTypes();
+        Type[] types = new Type[exceptions.length];
+        for (int i = 0; i < exceptions.length; i++) {
+            TypeMethodImpl t = new TypeMethodImpl();
+            t.name = ReflectClass.getNameByDescriptor(ReflectClass.getDescriptorByClass(exceptions[i]));
+            types[i] = t;
+        }
+        return types;
     }
 
     public boolean hasGenericInformation() {

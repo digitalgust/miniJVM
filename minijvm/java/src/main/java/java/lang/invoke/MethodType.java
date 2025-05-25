@@ -36,7 +36,7 @@ public final class MethodType implements java.io.Serializable {
     MethodType(ClassLoader loader, String spec) {
         this.loader = loader;
         this.spec = spec;
-        this.rtype = ReflectMethod.getMethodReturnType(loader, spec);
+        this.rtype = ReflectMethod.getReturnType(loader, spec);
         this.ptypes = ReflectMethod.getMethodPara(loader, spec);
     }
 

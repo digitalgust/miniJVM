@@ -1,5 +1,6 @@
 package test;
 
+import org.mini.reflect.ReflectClass;
 import org.mini.vm.VmUtil;
 
 import java.lang.annotation.*;
@@ -31,6 +32,8 @@ interface OtherInterface {
 @SimpleAnnotation
 public class AnnotationTest {
 
+    //descriptor:  (Ljava/lang/Class;Ljava/util/Map;)Ljava/lang/annotation/Annotation;
+    //signature:  <T::Ljava/lang/annotation/Annotation;>(Ljava/lang/Class<TT;>;Ljava/util/Map<Ljava/lang/String;TT;>;)TT;
     <T extends Annotation> T getAnnotation(Class<T> annotationClass, Map<String, T> map) {
         return this.getClass().getAnnotation(annotationClass);
     }
@@ -39,7 +42,10 @@ public class AnnotationTest {
         Class<?> clazz = AnnotationTest.class;
 
         Method m = clazz.getDeclaredMethod("getAnnotation", Class.class, Map.class);
-        System.out.println("m=" + m);
+        clazz = ReflectClass.class;
+        m = clazz.getDeclaredMethod("findAnnotation", String.class, Class.class, Class.class);
+        System.out.println("m.toString() = " + m);
+        System.out.println("m.toGenericString() = " + m.toGenericString());
         System.out.println("m.getParameterTypes() = " + Arrays.asList(m.getParameterTypes()));
         System.out.println("m.getReturnType() = " + m.getReturnType());
         System.out.println("m.getExceptionTypes() = " + m.getExceptionTypes());
