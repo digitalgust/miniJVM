@@ -5,7 +5,6 @@
  */
 package org.mini.reflect;
 
-import org.mini.vm.LambdaUtil;
 import org.mini.vm.RefNative;
 
 import java.util.ArrayList;
@@ -267,7 +266,11 @@ public class ReflectClass {
             } else {
                 //System.out.println("----:" + sign);
                 String s = sign.substring(pos + 1, sign.length() - 2);//get content in < >
-                List<String> ss = s.equals("*") ? new ArrayList<>() : splitSignature(s);
+                boolean isGeneric = false;
+                if (s.equals("*") || s.startsWith("T") || s.indexOf(";T") > 0) {
+                    isGeneric = true;
+                }
+                List<String> ss = isGeneric ? new ArrayList<>() : splitSignature(s);
                 StringBuilder sb = new StringBuilder();
                 sb.append(sign.substring(1, pos)).append('<');
                 for (int i = 0, imax = ss.size(); i < imax; i++) {
@@ -354,14 +357,25 @@ public class ReflectClass {
      * @return 注解对象数组
      */
     public java.lang.annotation.Annotation[] getAnnotations() {
-        if (annotations == null || annotations.isEmpty()) {
+        return parseAnnotations(annotations, classObj);
+    }
+
+    /**
+     * 静态方法：解析注解字符串为注解数组
+     *
+     * @param annotationsStr 注解字符串
+     * @param classObj       类对象，用于获取ClassLoader
+     * @return 注解对象数组
+     */
+    public static java.lang.annotation.Annotation[] parseAnnotations(String annotationsStr, Class<?> classObj) {
+        if (annotationsStr == null || annotationsStr.isEmpty()) {
             return new java.lang.annotation.Annotation[0];
         }
 
         // 解析注解字符串
-        // 格式: [Lcom/example/MyAnnotation;(value="test",number=123),LOtherAnnotation;]
-        if (annotations.startsWith("[") && annotations.endsWith("]")) {
-            String content = annotations.substring(1, annotations.length() - 1);
+        // 格式: {Lcom/example/MyAnnotation;(value="test",number=123),LOtherAnnotation;}
+        if (annotationsStr.startsWith("{") && annotationsStr.endsWith("}")) {
+            String content = annotationsStr.substring(1, annotationsStr.length() - 1);
             if (content.isEmpty()) {
                 return new java.lang.annotation.Annotation[0];
             }
@@ -373,7 +387,7 @@ public class ReflectClass {
 
             for (String part : parts) {
                 try {
-                    java.lang.annotation.Annotation annotation = parseAnnotation(part.trim());
+                    java.lang.annotation.Annotation annotation = parseAnnotation(part.trim(), classObj);
                     if (annotation != null) {
                         annotationList.add(annotation);
                     }
@@ -390,9 +404,10 @@ public class ReflectClass {
     }
 
     /**
-     * 分割注解字符串，处理嵌套的括号
+     * 静态方法：分割注解字符串，处理嵌套的括号
+     * 注解之间用逗号分隔，但要注意括号内的逗号不应该作为分隔符
      */
-    private String[] splitAnnotations(String content) {
+    private static String[] splitAnnotations(String content) {
         List<String> result = new ArrayList<>();
         int start = 0;
         int depth = 0;
@@ -419,9 +434,9 @@ public class ReflectClass {
     }
 
     /**
-     * 解析单个注解字符串
+     * 静态方法：解析单个注解字符串
      */
-    private java.lang.annotation.Annotation parseAnnotation(String annotationStr) {
+    private static java.lang.annotation.Annotation parseAnnotation(String annotationStr, Class<?> classObj) {
         try {
             // 解析注解类型名称
             String typeName;
@@ -436,8 +451,15 @@ public class ReflectClass {
             }
 
             // 转换类型名称格式
-            if (typeName.startsWith("L") && typeName.endsWith(";")) {
+            if (typeName.startsWith("[L") && typeName.endsWith(";")) {
+                // 字段/方法注解格式：[Ltest/TestAnnotation; -> test/TestAnnotation
+                typeName = typeName.substring(2, typeName.length() - 1).replace('/', '.');
+            } else if (typeName.startsWith("L") && typeName.endsWith(";")) {
+                // 类注解格式：Ltest/TestAnnotation; -> test/TestAnnotation
                 typeName = typeName.substring(1, typeName.length() - 1).replace('/', '.');
+            } else {
+                // 简单格式：test/TestAnnotation -> test.TestAnnotation
+                typeName = typeName.replace('/', '.');
             }
 
             // 加载注解类
@@ -456,9 +478,9 @@ public class ReflectClass {
     }
 
     /**
-     * 使用Proxy动态代理创建注解实例
+     * 静态方法：使用Proxy动态代理创建注解实例
      */
-    private java.lang.annotation.Annotation genProxyClass(Class<?> annotationClass, String params) {
+    private static java.lang.annotation.Annotation genProxyClass(Class<?> annotationClass, String params) {
         try {
             // 使用Java标准的Proxy机制创建注解代理
             java.lang.reflect.InvocationHandler handler = new AnnotationInvocationHandler(annotationClass, params);
@@ -474,6 +496,32 @@ public class ReflectClass {
             // 如果Proxy创建失败，回退到简单代理
             return createAnnotationProxy(annotationClass, params);
         }
+    }
+
+    /**
+     * 静态方法：创建简单注解代理对象（回退方案）
+     */
+    private static java.lang.annotation.Annotation createAnnotationProxy(Class<?> annotationClass, String params) {
+        // 这里创建一个简单的注解代理
+        // 由于miniJVM的限制，我们返回一个基本的实现
+        return new SimpleAnnotationProxy(annotationClass, params);
+    }
+
+    /**
+     * 静态方法：根据注解类型查找特定注解
+     */
+    public static <T extends java.lang.annotation.Annotation> T findAnnotation(String annotationsStr, Class<?> classObj, Class<T> annotationClass) {
+        if (annotationsStr == null || annotationsStr.isEmpty()) {
+            return null;
+        }
+
+        java.lang.annotation.Annotation[] annotations = parseAnnotations(annotationsStr, classObj);
+        for (java.lang.annotation.Annotation annotation : annotations) {
+            if (annotationClass.equals(annotation.annotationType())) {
+                return annotationClass.cast(annotation);
+            }
+        }
+        return null;
     }
 
     /**
@@ -583,15 +631,6 @@ public class ReflectClass {
             if (type == String.class) return "";
             return null;
         }
-    }
-
-    /**
-     * 创建简单注解代理对象（回退方案）
-     */
-    private java.lang.annotation.Annotation createAnnotationProxy(Class<?> annotationClass, String params) {
-        // 这里创建一个简单的注解代理
-        // 由于miniJVM的限制，我们返回一个基本的实现
-        return new SimpleAnnotationProxy(annotationClass, params);
     }
 
     /**

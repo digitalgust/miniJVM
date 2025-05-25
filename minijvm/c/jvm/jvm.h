@@ -1010,6 +1010,7 @@ struct _FieldInfo {
     Utf8String *name;
     Utf8String *descriptor;
     Utf8String *signature;
+    RuntimeVisibleAnnotationsAttr *annotationsAttr;
     JClass *_this_class;
     u16 offset;//字段的偏移地址，静态字段存放在class中
     u16 offset_instance;
@@ -1037,6 +1038,7 @@ struct _MethodInfo {
     Utf8String *signature;
     Utf8String *paraType;
     Utf8String *returnType;
+    RuntimeVisibleAnnotationsAttr *annotationsAttr;
     JClass *_this_class;
     java_native_fun native_func;
     Pairlist *breakpoint;

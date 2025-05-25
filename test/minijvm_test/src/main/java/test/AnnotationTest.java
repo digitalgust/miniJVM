@@ -4,7 +4,10 @@ import org.mini.vm.VmUtil;
 
 import java.lang.annotation.*;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
+import java.util.Map;
 
 interface OtherInterface {
     String doSomething(int a, String b);
@@ -28,8 +31,21 @@ interface OtherInterface {
 @SimpleAnnotation
 public class AnnotationTest {
 
-    public static void main(String[] args) {
+    <T extends Annotation> T getAnnotation(Class<T> annotationClass, Map<String, T> map) {
+        return this.getClass().getAnnotation(annotationClass);
+    }
+
+    public static void main(String[] args) throws Exception {
         Class<?> clazz = AnnotationTest.class;
+
+        Method m = clazz.getDeclaredMethod("getAnnotation", Class.class, Map.class);
+        System.out.println("m=" + m);
+        System.out.println("m.getParameterTypes() = " + Arrays.asList(m.getParameterTypes()));
+        System.out.println("m.getReturnType() = " + m.getReturnType());
+        System.out.println("m.getExceptionTypes() = " + m.getExceptionTypes());
+        System.out.println("m.getGenericParameterTypes() = " + Arrays.asList(m.getGenericParameterTypes()));
+        System.out.println("m.getGenericReturnType() = " + m.getGenericReturnType());
+        System.out.println("m.getGenericExceptionTypes() = " + m.getGenericExceptionTypes());
 
         System.out.println("类名: " + clazz.getName());
         System.out.println("是否为注解: " + clazz.isAnnotation());

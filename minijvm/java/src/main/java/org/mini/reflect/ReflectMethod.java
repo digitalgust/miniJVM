@@ -36,6 +36,7 @@ public class ReflectMethod {
     private String[] paras;//参数列表
     private Class<?>[] paras_class;
     private Type[] paras_type;
+    public String annotations; // Added for annotation support
 
     public ReflectMethod(Class c, long mid) {
         if (mid == 0) {

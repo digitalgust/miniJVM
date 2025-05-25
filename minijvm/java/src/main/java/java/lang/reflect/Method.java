@@ -51,10 +51,14 @@ import java.lang.annotation.Annotation;
  * @see java.lang.Class#getDeclaredMethods()
  * @see java.lang.Class#getDeclaredMethod(String, Class[])
  */
-public class Method<T> extends AccessibleObject implements Member {
+public class Method<T> extends AccessibleObject implements Member, GenericDeclaration {
 
     Class clazz;
     ReflectMethod refMethod;
+
+    // 缓存解析后的注解数组
+    private Annotation[] cachedAnnotations;
+    private boolean annotationsCached = false;
 
     public Method(Class cl, ReflectMethod refm) {
         refMethod = refm;
@@ -129,15 +133,25 @@ public class Method<T> extends AccessibleObject implements Member {
 
     @Override
     public <T extends Annotation> T getAnnotation(Class<T> class_) {
+        // 先获取缓存的注解数组
+        Annotation[] annotations = getAnnotations();
 
+        // 在缓存的数组中查找指定类型的注解
+        for (Annotation annotation : annotations) {
+            if (class_.equals(annotation.annotationType())) {
+                return class_.cast(annotation);
+            }
+        }
         return null;
     }
 
     @Override
     public Annotation[] getAnnotations() {
-
-        return new Annotation[0];
-
+        if (!annotationsCached) {
+            cachedAnnotations = org.mini.reflect.ReflectClass.parseAnnotations(refMethod.annotations, clazz);
+            annotationsCached = true;
+        }
+        return cachedAnnotations;
     }
 
     @Override
@@ -207,5 +221,9 @@ public class Method<T> extends AccessibleObject implements Member {
 
     public Class<?>[] getExceptionTypes() {
         return refMethod.getExceptionTypes();
+    }
+
+    public TypeVariable<Method>[] getTypeParameters() {
+        return new TypeVariable[0];
     }
 }
