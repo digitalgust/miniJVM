@@ -270,6 +270,7 @@ s32 host_2_ip(c8 *hostname, c8 *buf, s32 buflen) {
 }
 
 
+extern s32 os_mkdir(const c8 *path);
 //=================================  native  ====================================
 
 
@@ -1248,7 +1249,19 @@ s32 org_mini_fs_InnerFile_rename0(Runtime *runtime, JClass *clazz) {
 }
 
 s32 org_mini_fs_InnerFile_getTmpDir(Runtime *runtime, JClass *clazz) {
-    Utf8String *tdir = os_get_tmp_dir();
+    Utf8String *key = utf8_create_c("glfm.save.root");//mobile platform get the write privilege dir
+    Utf8String *val = hashtable_get(runtime->jvm->sys_prop, key);//don't destroy the val
+
+    Utf8String *tdir;
+    if (val) {
+        tdir = utf8_create_copy(val);
+        utf8_append_c(tdir, "/tmp/");
+        os_mkdir(utf8_cstr(tdir));
+    } else {
+        tdir = os_get_tmp_dir();
+    }
+    utf8_destroy(key);
+
     if (tdir) {
         Utf8String *utf8 = utf8_create();
         conv_platform_encoding_2_utf8(utf8, utf8_cstr(tdir));
@@ -1268,7 +1281,6 @@ s32 org_mini_fs_InnerFile_getTmpDir(Runtime *runtime, JClass *clazz) {
     return 0;
 }
 
-extern s32 os_mkdir(const c8 *path);
 
 s32 org_mini_fs_InnerFile_mkdir0(Runtime *runtime, JClass *clazz) {
     Instance *path_arr = localvar_getRefer(runtime->localvar, 0);
