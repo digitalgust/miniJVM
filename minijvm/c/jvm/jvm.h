@@ -961,7 +961,7 @@ typedef enum {
 typedef struct _ElementValue ElementValue;
 
 // Element value structure for annotation elements
-typedef struct _ElementValue {
+struct _ElementValue {
     u8 tag;
     union {
         u16 const_value_index;  // For primitive types and strings
@@ -976,7 +976,7 @@ typedef struct _ElementValue {
             ElementValue *values;
         } array_value;
     } value;
-} ElementValue;
+};
 
 // Element value pair for annotations
 typedef struct _ElementValuePair {
