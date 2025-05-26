@@ -102,7 +102,7 @@ public class JarHandler extends URLStreamHandler {
                         InputStream is = (InputStream) fileUrl.getContent();
 
                         File tmpFile = new File(fileUrl.getFile());
-                        f = File.createTempFile("jar_handler_" + System.currentTimeMillis() + "_", tmpFile.getName());
+                        f = File.createTempFile(getCacheFileName(), tmpFile.getName());
                         FileOutputStream fos = new FileOutputStream(f);
                         byte[] buf = new byte[1024];
                         while (true) {
@@ -116,7 +116,7 @@ public class JarHandler extends URLStreamHandler {
                         fos.close();
                         is.close();
                         if (expire <= 0) {
-                            expire = System.currentTimeMillis() + 1000 * 60 * 60 * 24;
+                            expire = System.currentTimeMillis() + CACHE_EXPIRE_TIME;
                         }
                         cachedFile = new CachedFile(f.getAbsolutePath(), expire);
                         caches.put(fileUrl.toString(), cachedFile);

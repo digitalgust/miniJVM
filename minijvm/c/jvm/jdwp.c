@@ -1713,20 +1713,30 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 MiniJVM *jvm = jdwpserver->jvm;
                 spin_lock(&jvm->lock_cloader);
                 {
-                    s32 i, count;
-                    count = classes_loaded_count_unsafe(jdwpserver->jvm);
-                    jdwppacket_write_int(res, count);
+                    s32 i, found = 0;
+                    ByteBuf *bb = bytebuf_create(64);
                     for (i = 0; i < jvm->classloaders->length; i++) {
                         PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
                         JClass *cl = hashtable_get(pcl->classes, signature);
                         if (cl != NULL) {
-                            jdwppacket_write_byte(res, getClassType(cl));
-                            jdwppacket_write_refer(res, cl);
-                            jdwppacket_write_int(res, getClassStatus(cl));
-
-                            //event_on_class_prepare(jdwpserver, NULL, cl);
+                            bytebuf_write_byte(bb, getClassType(cl));
+                            if (sizeof(__refer) == 4) {
+                                bytebuf_write_int(bb, (s32) (intptr_t) cl);
+                            } else {
+                                bytebuf_write_long(bb, (s64) (intptr_t) cl);
+                            }
+                            bytebuf_write_int(bb, getClassStatus(cl));
+//                                jdwppacket_write_byte(res, getClassType(cl));
+//                                jdwppacket_write_refer(res, cl);
+//                                jdwppacket_write_int(res, getClassStatus(cl));
+                            found++;
                         }
                     }
+                    jdwppacket_write_int(res, found);
+                    if (found) {
+                        jdwppacket_write_buf(res, bb->buf, bb->wp);
+                    }
+                    bytebuf_destroy(bb);
                 }
                 spin_unlock(&jvm->lock_cloader);
                 //jvm_printf("[JDWP]VirtualMachine_ClassesBySignature:%s ,%lld\n", utf8_cstr(signature), (s64) (intptr_t) cl);
