@@ -222,7 +222,7 @@ void getExceptionStack(Runtime *runtime, Utf8String *ustr) {
     if (ins) {
         utf8_append(ustr, ins->mb.clazz->name);
         utf8_append_c(ustr, ": ");
-        u8 *ptr = getInstanceFieldPtr(ins, runtime->jvm->shortcut.throwable_detailMessage);
+        c8 *ptr = getInstanceFieldPtr(ins, runtime->jvm->shortcut.throwable_detailMessage);
         if (ptr) {
             Instance *jstr_detailMessage = getFieldRefer(ptr);
             if (jstr_detailMessage) {
