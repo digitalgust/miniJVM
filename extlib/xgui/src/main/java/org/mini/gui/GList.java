@@ -250,12 +250,12 @@ public class GList extends GContainer {
         } else {
             float popH = getPopWinH();
             popWin.setSize(width, popH);
+
+            normalPanel.setLocation(0, 0);
+            normalPanel.setSize(width, height);
         }
 
         reAlignItems();
-
-        normalPanel.setLocation(0, 0);
-        normalPanel.setSize(width, height);
 
         scrollBar.setPos(popView.scrolly);
         GForm.flush();
@@ -279,10 +279,9 @@ public class GList extends GContainer {
         if (showMode == MODE_SINGLE_SHOW) {
             super.addImpl(normalPanel);
             //pop list in form
-            int itemcount = popView.elements.size();
-            if (pulldown) {
-                GForm form = getForm();
-                if (form != null) {
+            GForm form = getForm();
+            if (form != null) {
+                if (pulldown) {
                     float popY, popH;
                     popY = getY() + normalPanel.getH();
                     popH = getPopWinH();
@@ -293,12 +292,7 @@ public class GList extends GContainer {
                     popWin.setLocation(getX(), popY);
                     popWin.setSize(popWin.getW(), popH);
                     form.add(popWin);
-                    form.setCurrent(popWin);
-
-                }
-            } else {
-                GForm form = getForm();
-                if (form != null) {
+                } else {
                     form.remove(popWin);
                 }
             }
@@ -515,6 +509,10 @@ public class GList extends GContainer {
      */
     @Override
     public boolean paint(long vg) {
+        if (getParent() != null && getParent().getCurrent() != this && pulldown) {
+            pulldown = false;
+            changeCurPanel();
+        }
 
         //int itemcount = popView.elements.size();
         nvgFontSize(vg, getFontSize());
@@ -553,7 +551,7 @@ public class GList extends GContainer {
         @Override
         public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
             if (button == Glfw.GLFW_MOUSE_BUTTON_1) {
-                if (pressed) {
+                if (!pressed) {
                     pulldown = !pulldown;
                     GList.this.changeCurPanel();
                 } else {
@@ -594,6 +592,7 @@ public class GList extends GContainer {
             nvgFontSize(vg, GToolkit.getStyle().getIconFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
             nvgFillColor(vg, GToolkit.getStyle().getTextFontColor());
+            nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
             byte[] curIcon = pulldown ? ICON_CHEVRON_DOWN_BYTE : ICON_CHEVRON_RIGHT_BYTE;
             nvgTextJni(vg, x + w - 15, y + h * 0.5f, curIcon, 0, curIcon.length);
 
@@ -633,11 +632,10 @@ public class GList extends GContainer {
     };
 
 
-    class GListPopWindow extends GContainer implements GFocusChangeListener {
+    class GListPopWindow extends GContainer {
         public GListPopWindow(GForm form) {
             super(form);
-            //layer = LAYER_MENU_OR_POPUP;
-            setFocusListener(this);
+            layer = LAYER_MENU_OR_POPUP;
             setCornerRadius(4.f);
         }
 
@@ -675,26 +673,6 @@ public class GList extends GContainer {
 
             scrollBar.setLocation(width - scrollbarWidth, 0);
             scrollBar.setSize(20, height);
-        }
-
-        @Override
-        public void focusGot(GObject go) {
-        }
-
-        GCmd cmd = new GCmd(new Runnable() {
-            @Override
-            public void run() {
-                GObject go = getForm().getFrontFocus();
-                if (go == normalPanel || getForm().getCurrent() == GListPopWindow.this) return;
-                pulldown = false;
-                changeCurPanel();
-            }
-        });
-
-        @Override
-        public void focusLost(GObject newgo) {
-            //因为本次无法获得新获得焦点的组件是谁，因此要把操作放在队列中，等本次渲染执行完后再执行
-            GForm.addCmd(cmd);
         }
 
         @Override
@@ -751,7 +729,6 @@ public class GList extends GContainer {
         @Override
         public void onStateChange(GObject gobj) {
             popView.setScrollY(((GScrollBar) gobj).getPos());
-            //sizeAdjust();
             GForm.flush();
         }
 
