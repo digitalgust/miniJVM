@@ -42,8 +42,6 @@ public class AnnotationTest {
         Class<?> clazz = AnnotationTest.class;
 
         Method m = clazz.getDeclaredMethod("getAnnotation", Class.class, Map.class);
-        clazz = ReflectClass.class;
-        m = clazz.getDeclaredMethod("findAnnotation", String.class, Class.class, Class.class);
         System.out.println("m.toString() = " + m);
         System.out.println("m.toGenericString() = " + m.toGenericString());
         System.out.println("m.getParameterTypes() = " + Arrays.asList(m.getParameterTypes()));

@@ -25,9 +25,25 @@ u32 bytebuf_available(ByteBuf *bf);
 
 s32 bytebuf_write(ByteBuf *bf, s32 i);
 
+s32 bytebuf_write_byte(ByteBuf *bf, c8 v);
+
+s32 bytebuf_write_short(ByteBuf *bf, s16 v);
+
+s32 bytebuf_write_int(ByteBuf *bf, s32 v);
+
+s32 bytebuf_write_long(ByteBuf *bf, s64 v);
+
 s32 bytebuf_write_batch(ByteBuf *bf, c8 *src, s32 size);
 
 s32 bytebuf_read(ByteBuf *bf);
+
+c8 bytebuf_read_byte(ByteBuf *bf);
+
+s16 bytebuf_read_short(ByteBuf *bf);
+
+s32 bytebuf_read_int(ByteBuf *bf);
+
+s64 bytebuf_read_long(ByteBuf *bf);
 
 s32 bytebuf_read_batch(ByteBuf *bf, c8 *dst, s32 size);
 
@@ -38,6 +54,8 @@ s32 bytebuf_write_to(ByteBuf *bf, ByteBuf *dst, s32 size);
 void bytebuf_expand(ByteBuf *bf, u32 size);
 
 s32 bytebuf_chkread(ByteBuf *bf, u32 pos);
+
+s32 bytebuf_hasmore(ByteBuf *bf, u32 size);
 
 #ifdef __cplusplus
 };

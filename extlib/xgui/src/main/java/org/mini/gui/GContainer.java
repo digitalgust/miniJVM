@@ -110,7 +110,7 @@ abstract public class GContainer extends GObject {
         float y1 = getY();
         float x2 = x1 + getW();
         float y2 = y1 + getH();
-        if (parent != null) {
+        if (parent != null && !paintWhenOutOfScreen) {
             float[] parentVA = parent.getVisableArea();
             visableArea[0] = x1 > parentVA[0] ? x1 : parentVA[0];
             visableArea[1] = y1 > parentVA[1] ? y1 : parentVA[1];
@@ -369,7 +369,7 @@ abstract public class GContainer extends GObject {
         if (go != null && go.isContextMenu()) {
             return;
         }
-        if (!elements.contains(go)) {
+        if (go != null && !elements.contains(go)) {
             return;
         }
         if (this.current != go) {

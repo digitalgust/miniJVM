@@ -37,7 +37,7 @@ public class AppLoader {
     static final String APP_FILE_EXT = ".jar";
     static final String APP_DATA_DIR = "/appdata/";
     static final String TMP_DIR = "/tmp/";
-    static String[] EXAMPLE_APP_FILES = {"minix.jar", "minicompiler.jar"};
+    static String[] EXAMPLE_APP_FILES = {};
     static final String KEY_BOOT = "boot";
     static final String KEY_DOWNLOADURL = "downloadurl";
     static final String KEY_LANGUAGE = "language";

@@ -32,7 +32,7 @@ public abstract class HttpURLConnection extends URLConnection {
 
     protected int status;
     protected Map<String, List<String>> rcvHeader = new HashMap<>();
-    protected byte[] rcvData;
+    protected String cacheFilePath; // Store cache file path instead of data
 
     String method = HTTP_GET;
 
@@ -42,20 +42,36 @@ public abstract class HttpURLConnection extends URLConnection {
 
     @Override
     public void connect() throws IOException {
-        if (rcvData != null) return;
+        if (cacheFilePath != null) return;
 
         String urlStr = url.toString();
         int index = urlStr.indexOf("?");
         if (index > 0) {
             urlStr = urlStr.substring(0, index);
         }
-        CachedFile ba = caches.get(urlStr);
-        if (ba != null && !ba.isExpired()) {
-            if (useCaches) {  //cache hit
-                rcvData = (byte[]) ba.resource;
-                return;
+        CachedFile cachedFile = caches.get(urlStr);
+        if (cachedFile != null && !cachedFile.isExpired()) {
+            if (useCaches) {  //cache hit - load from file
+                File cacheFile = new File((String) cachedFile.resource);
+                if (cacheFile.exists()) {
+                    cacheFilePath = cacheFile.getAbsolutePath();
+                    return;
+                }
             }
         } else {
+            // Remove expired cache entry and delete the file
+            if (cachedFile != null && cachedFile.isExpired()) {
+                if (cachedFile.resource instanceof String) {
+                    try {
+                        File file = new File((String) cachedFile.resource);
+                        if (file.exists()) {
+                            file.delete();
+                        }
+                    } catch (Exception e) {
+                        // Ignore cleanup errors
+                    }
+                }
+            }
             caches.remove(urlStr);
         }
         //request
@@ -94,19 +110,34 @@ public abstract class HttpURLConnection extends URLConnection {
                     list.add(v);
                     rcvHeader.put(k.toLowerCase(), list);
                 }
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 InputStream is = connection.openDataInputStream();
+                // Save response to temporary file
+                File tmpFile = File.createTempFile(getCacheFileName(), ".tmp");
+                FileOutputStream fos = new FileOutputStream(tmpFile);
                 byte[] buf = new byte[1024];
                 while (true) {
                     int len = is.read(buf);
                     if (len < 0) break;
-                    baos.write(buf, 0, len);
+                    fos.write(buf, 0, len);
                 }
-                rcvData = (baos.toByteArray());
+                try {
+                    fos.close();
+                } catch (Exception e) {
+                }
+                try {
+                    is.close();
+                } catch (Exception e) {
+                }
+                cacheFilePath = tmpFile.getAbsolutePath();
+
                 long exp = connection.getExpiration();
+                if (exp <= 0) {
+                    exp = System.currentTimeMillis() + CACHE_EXPIRE_TIME; // 24 hours default
+                }
                 long cur = System.currentTimeMillis();
-                if (cur < exp && rcvData.length < 1024 * 1024) {
-                    CachedFile res = new CachedFile(rcvData, connection.getExpiration());
+                if (cur < exp) {
+                    // Cache the file if conditions are met
+                    CachedFile res = new CachedFile(cacheFilePath, exp);
                     caches.put(urlStr, res);
                 }
             }
@@ -117,7 +148,11 @@ public abstract class HttpURLConnection extends URLConnection {
     @Override
     public InputStream getInputStream() throws IOException {
         connect();
-        return new ByteArrayInputStream(rcvData);
+        if (cacheFilePath != null) {
+            return new FileInputStream(cacheFilePath);
+        } else {
+            return connection.openDataInputStream();
+        }
     }
 
     @Override
