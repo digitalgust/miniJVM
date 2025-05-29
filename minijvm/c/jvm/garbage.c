@@ -3,6 +3,10 @@
 #include "garbage.h"
 #include "jvm_util.h"
 
+#if __JVM_LTALLOC__
+#include "ltalloc.h"
+#endif
+
 s32 _gc_thread_run(void *para);
 
 void _dump_refer(GcCollector *collector);
@@ -569,7 +573,9 @@ s64 _garbage_collect(GcCollector *collector) {
     collector->obj_count = iter - del;
     collector->obj_heap_size -= mem_free;
     spin_unlock(&collector->lock);
-
+#if __JVM_LTALLOC__
+    ltsqueeze(0);
+#endif
 #if _JVM_DEBUG_LOG_LEVEL > 1
     s64 time_gc = currentTimeMillis() - time;
     jvm_printf("[INFO]gc obj: %lld->%lld   heap : %lld -> %lld  stop_world: %lld  gc:%lld\n", iter, collector->obj_count, mem_total, collector->obj_heap_size, time_stopWorld, time_gc);
@@ -861,6 +867,9 @@ void _gc_mark_object(GcCollector *collector, __refer ref, u8 flag_cnt) {
 #if _JVM_DEBUG_GARBAGE_DUMP > 0
             _gc_add_obj_count(collector, mb);
 #endif
+//            if (utf8_equals_c(mb->clazz->name, "com/ebsee/shl/main/GamePanel")) {
+//                s32 debug = 1;
+//            }
 
             mb->garbage_mark = flag_cnt;
             switch (mb->type) {

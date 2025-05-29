@@ -80,56 +80,7 @@ public class AppLoader {
         saveProp(APP_LIST_FILE, applist);
 
         //设置 创建线程的handler
-        VmUtil.addThreadLifeHandler(new ThreadLifeHandler() {
-            @Override
-            public void threadCreated(Thread thread) {
-
-                //从调用栈中查找创建者
-                Throwable callStack = new Throwable();
-                GApplication creator = findCreator(callStack);
-                if (creator != null) {
-                    //System.out.println(creator.getClass().getClassLoader() + " CREATED+++++ " + thread);
-                    creator.addThread(thread);
-                }
-            }
-
-            @Override
-            public void threadDestroy(Thread thread) {
-                //谁创建的线程
-                GApplication creator = findCreator(thread);
-                if (creator != null) {
-                    //System.out.println(creator.getClass().getClassLoader() + " DESTROYED----- " + thread);
-                    creator.removeThread(thread);
-                }
-            }
-
-            private GApplication findCreator(Throwable callStack) {
-                for (GApplication a : AppManager.getInstance().getRunningApps()) {
-                    ClassLoader appClassLoader = a.getClass().getClassLoader();
-                    for (StackTraceElement e : callStack.getStackTrace()) {
-                        String cname = e.getClassName();
-                        try {
-                            Class c = Class.forName(cname, true, appClassLoader);
-                            if (c != null && c.getClassLoader() == appClassLoader) {//调用栈中如果有和app的classloader相同的类，则说明此线程为这个app创建的
-                                return a;
-                            }
-                        } catch (Exception ex) {
-                            //ex.printStackTrace();
-                        }
-                    }
-                }
-                return null;
-            }
-
-            private GApplication findCreator(Thread thread) {
-                for (GApplication a : AppManager.getInstance().getRunningApps()) {
-                    if (a.threads.contains(thread)) {
-                        return a;
-                    }
-                }
-                return null;
-            }
-        });
+        VmUtil.addThreadLifeHandler(new XuiThreadHandler());
 
         String copyjars = getBaseInfo("copy");
         if (copyjars != null && copyjars.length() > 0) {
@@ -141,6 +92,57 @@ public class AppLoader {
 
         copyExApp();
         AppManager.getInstance().active();
+    }
+
+    static class XuiThreadHandler implements ThreadLifeHandler {
+        @Override
+        public void threadCreated(Thread thread) {
+
+            //从调用栈中查找创建者
+            Throwable callStack = new Throwable();
+            GApplication creator = findCreator(callStack);
+            if (creator != null) {
+                //System.out.println(creator.getClass().getClassLoader() + " CREATED+++++ " + thread);
+                creator.addThread(thread);
+            }
+        }
+
+        @Override
+        public void threadDestroy(Thread thread) {
+            //谁创建的线程
+            GApplication creator = findCreator(thread);
+            if (creator != null) {
+                //System.out.println(creator.getClass().getClassLoader() + " DESTROYED----- " + thread);
+                creator.removeThread(thread);
+            }
+        }
+
+        private GApplication findCreator(Throwable callStack) {
+            for (GApplication a : AppManager.getInstance().getRunningApps()) {
+                ClassLoader appClassLoader = a.getClass().getClassLoader();
+                for (StackTraceElement e : callStack.getStackTrace()) {
+                    String cname = e.getClassName();
+                    try {
+                        Class c = Class.forName(cname, true, appClassLoader);
+                        if (c != null && c.getClassLoader() == appClassLoader) {//调用栈中如果有和app的classloader相同的类，则说明此线程为这个app创建的
+                            return a;
+                        }
+                    } catch (Exception ex) {
+                        //ex.printStackTrace();
+                    }
+                }
+            }
+            return null;
+        }
+
+        private GApplication findCreator(Thread thread) {
+            for (GApplication a : AppManager.getInstance().getRunningApps()) {
+                if (a.threads.contains(thread)) {
+                    return a;
+                }
+            }
+            return null;
+        }
     }
 
     public static void runBootApp() {

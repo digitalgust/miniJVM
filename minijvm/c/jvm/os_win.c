@@ -747,7 +747,7 @@ s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src) {
     // 执行 UTF-8 到 UTF-16 的转换
     s32 result = MultiByteToWideChar(CP_UTF8, 0, src->data, utf8_len, utf16_buf, utf16_len);
     if (result == 0) {
-        free(utf16_buf);
+        jvm_free(utf16_buf);
         return -1;
     }
     utf16_buf[utf16_len] = 0;  // 确保 null 终止
@@ -755,7 +755,7 @@ s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src) {
     // 第二步：将 UTF-16 转换为 ANSI/ACP 编码
     s32 ansi_len = WideCharToMultiByte(CP_ACP, 0, utf16_buf, utf16_len, NULL, 0, NULL, NULL);
     if (ansi_len == 0) {
-        free(utf16_buf);
+        jvm_free(utf16_buf);
         return -1;
     }
 
@@ -765,12 +765,12 @@ s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src) {
     // 执行 UTF-16 到 ANSI/ACP 的转换
     result = WideCharToMultiByte(CP_ACP, 0, utf16_buf, utf16_len, dst->buf, ansi_len, NULL, NULL);
     if (result == 0) {
-        free(utf16_buf);
+        jvm_free(utf16_buf);
         return -1;
     }
 
     // 清理并确保 null 终止
-    free(utf16_buf);
+    jvm_free(utf16_buf);
     dst->buf[ansi_len] = 0;
 
     return ansi_len;
@@ -804,7 +804,7 @@ s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
     // Convert to UTF-16
     s32 result = MultiByteToWideChar(CP_ACP, 0, src, src_len, utf16_buf, utf16_len);
     if (result == 0) {
-        free(utf16_buf);
+        jvm_free(utf16_buf);
         return -1;
     }
     utf16_buf[utf16_len] = 0;  // Ensure null termination
@@ -812,7 +812,7 @@ s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
     // Convert from UTF-16 to UTF-8
     s32 utf8_len = WideCharToMultiByte(CP_UTF8, 0, utf16_buf, utf16_len, NULL, 0, NULL, NULL);
     if (utf8_len == 0) {
-        free(utf16_buf);
+        jvm_free(utf16_buf);
         return -1;
     }
 
@@ -820,12 +820,12 @@ s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
     utf8_expand(dst, utf8_len + 1);
     result = WideCharToMultiByte(CP_UTF8, 0, utf16_buf, utf16_len, dst->data, utf8_len, NULL, NULL);
     if (result == 0) {
-        free(utf16_buf);
+        jvm_free(utf16_buf);
         return -1;
     }
 
     // Clean up and set length
-    free(utf16_buf);
+    jvm_free(utf16_buf);
     dst->length = utf8_len;
     dst->data[utf8_len] = 0;  // Ensure null termination
 

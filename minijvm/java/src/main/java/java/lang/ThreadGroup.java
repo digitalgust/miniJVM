@@ -27,6 +27,7 @@ package java.lang;
 
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.lang.ref.WeakReference;
 
 
 /**
@@ -64,7 +65,7 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
 
     int nUnstartedThreads = 0;
     int nthreads;
-    Thread threads[];
+    WeakReference<Thread> threads[];
 
     int ngroups;
     ThreadGroup groups[];
@@ -304,8 +305,8 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      * is called with this thread group as its argument. This may result
      * in throwing a <code>SecurityException</code>.
      *
-     * @throws SecurityException if the current thread is not allowed to
-     *                           access this thread group.
+     * @throws SecurityException if the current thread is not allowed
+     *                           to access this thread group.
      * @see SecurityManager#checkAccess(ThreadGroup)
      * @since JDK1.0
      */
@@ -335,7 +336,16 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
             if (destroyed) {
                 return 0;
             }
-            result = nthreads;
+
+            // Count only alive threads
+            result = 0;
+            for (int i = 0; i < nthreads; i++) {
+                Thread t = threads[i].get();
+                if (t != null && t.isAlive()) {
+                    result++;
+                }
+            }
+
             ngroupsSnapshot = ngroups;
             if (groups != null) {
                 groupsSnapshot = Arrays.copyOf(groups, ngroupsSnapshot);
@@ -423,15 +433,22 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
             if (destroyed) {
                 return 0;
             }
+
+            // Count only alive threads
             int nt = nthreads;
             if (nt > list.length - n) {
                 nt = list.length - n;
             }
-            for (int i = 0; i < nt; i++) {
-                if (threads[i].isAlive()) {
-                    list[n++] = threads[i];
+            int added = 0;
+            for (int i = 0; i < nthreads && added < nt; i++) {
+                Thread t = threads[i].get();
+                if (t != null && t.isAlive()) {
+                    list[n + added] = t;
+                    added++;
                 }
             }
+            n += added;
+
             if (recurse) {
                 ngroupsSnapshot = ngroups;
                 if (groups != null) {
@@ -605,8 +622,13 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
         ThreadGroup[] groupsSnapshot;
         synchronized (this) {
             checkAccess();
+
+            // Count only alive threads
             for (int i = 0; i < nthreads; i++) {
-                threads[i].interrupt();
+                Thread t = threads[i].get();
+                if (t != null) {
+                    t.interrupt();
+                }
             }
             ngroupsSnapshot = ngroups;
             if (groups != null) {
@@ -649,6 +671,7 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
         ThreadGroup[] groupsSnapshot;
         synchronized (this) {
             checkAccess();
+
             if (destroyed || (nthreads > 0)) {
                 throw new IllegalThreadStateException();
             }
@@ -757,12 +780,25 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
             if (destroyed) {
                 throw new IllegalThreadStateException();
             }
+
+            // Clean up any dead thread references first
+            cleanupDeadThreads();
+
             if (threads == null) {
-                threads = new Thread[4];
+                threads = new WeakReference[4];
             } else if (nthreads == threads.length) {
                 threads = Arrays.copyOf(threads, nthreads * 2);
             }
-            threads[nthreads] = t;
+            //if the thread is already exist, remove it
+            for (int i = 0; i < nthreads; i++) {
+                if (threads[i].get() == t) {
+                    //System.out.println("thread already exist" + t.getName());
+                    System.arraycopy(threads, i + 1, threads, i, --nthreads - i);
+                    threads[nthreads] = null;
+                    break;
+                }
+            }
+            threads[nthreads] = new WeakReference<Thread>(t);
 
             // This is done last so it doesn't matter in case the
             // thread is killed
@@ -782,8 +818,12 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
             if (destroyed) {
                 return;
             }
+
+            // Clean up any dead thread references first
+            cleanupDeadThreads();
+
             for (int i = 0; i < nthreads; i++) {
-                if (threads[i] == t) {
+                if (threads[i].get() == t) {
                     System.arraycopy(threads, i + 1, threads, i, --nthreads - i);
                     // Zap dangling reference to the dead thread so that
                     // the garbage collector will collect it.
@@ -797,6 +837,21 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
             if (daemon && (nthreads == 0) &&
                     (nUnstartedThreads == 0) && (ngroups == 0)) {
                 destroy();
+            }
+        }
+    }
+
+    /**
+     * Cleans up dead thread references.
+     * This method should be called in add() and remove() methods to clean up
+     * threads that were created but never started and have been garbage collected.
+     */
+    private void cleanupDeadThreads() {
+        // Use reverse iteration to safely remove elements
+        for (int i = nthreads - 1; i >= 0; i--) {
+            if (threads[i].get() == null) {
+                System.arraycopy(threads, i + 1, threads, i, nthreads - i - 1);
+                threads[--nthreads] = null;
             }
         }
     }
@@ -821,10 +876,13 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
             out.println(this);
             indent += 4;
             for (int i = 0; i < nthreads; i++) {
-                for (int j = 0; j < indent; j++) {
-                    out.print(" ");
+                Thread t = threads[i].get();
+                if (t != null) {
+                    for (int j = 0; j < indent; j++) {
+                        out.print(" ");
+                    }
+                    out.println(t);
                 }
-                out.println(threads[i]);
             }
             ngroupsSnapshot = ngroups;
             if (groups != null) {

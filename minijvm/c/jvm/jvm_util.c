@@ -12,6 +12,10 @@
 #include "garbage.h"
 #include "jdwp.h"
 
+#if __JVM_LTALLOC__
+#include "ltalloc.h"
+#endif
+
 #if __JVM_OS_ANDROID__
 
 #include <android/log.h>
@@ -784,6 +788,9 @@ s32 jthread_run(void *para) {
 #if _JVM_DEBUG_LOG_LEVEL > 1
     s64 spent = currentTimeMillis() - startAt;
     jvm_printf("[INFO]thread over %llx , return %d , spent : %lld\n", (s64) (intptr_t) jthread, ret, spent);
+#endif
+#if __JVM_LTALLOC__
+    ltonthreadexit();
 #endif
     thrd_exit(ret);
     return ret;
