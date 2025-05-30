@@ -688,6 +688,7 @@ s32 java_lang_Runtime_addShutdownHook(Runtime *runtime, JClass *clazz) {
     Instance *jruntime = (Instance *) localvar_getRefer(runtime->localvar, 0);
     Instance *jthread = (Instance *) localvar_getRefer(runtime->localvar, 1);
     arraylist_push_back(runtime->jvm->shutdown_hook, jthread);
+    gc_obj_hold(runtime->jvm->collector, (__refer) jthread);
 
 #if _JVM_DEBUG_LOG_LEVEL > 5
     invoke_deepth(runtime);
@@ -1226,12 +1227,11 @@ s32 java_lang_Thread_start(Runtime *runtime, JClass *clazz) {
     Instance *ins = (Instance *) localvar_getRefer(runtime->localvar, 0);
     Runtime *thrd_rt = jthread_get_stackframe_value(runtime->jvm, ins);
     s32 ret = 0;
-    if (thrd_rt->thrd_info->thread_status != THREAD_STATUS_NEW) {
+    if (thrd_rt && thrd_rt->thrd_info->thread_status != THREAD_STATUS_NEW) {
         Instance *exception = exception_create(JVM_EXCEPTION_ILLEGALTHREADSTATE, runtime);
         push_ref(runtime->stack, exception);
         ret = RUNTIME_STATUS_EXCEPTION;
     } else {
-        thrd_rt->thrd_info->thread_status = THREAD_STATUS_RUNNING;
         jthread_start(ins, runtime);
     }
 

@@ -97,7 +97,8 @@ void on_recv_frames(ma_device *pDevice, ma_uint32 frameCount, const void *pSampl
             env->push_long(runtime->stack, (s64) (intptr_t)
                     pSamples);
             s32 ret = env->execute_method(refers._callback_minial_on_recv_frames, runtime);
-            if (ret) {
+            if (ret == RUNTIME_STATUS_ERROR) {
+            } else if (ret == RUNTIME_STATUS_EXCEPTION) {
                 env->print_exception(runtime);
             }
             runtime = NULL;
@@ -118,7 +119,8 @@ ma_uint32 on_send_frames(ma_device *pDevice, ma_uint32 frameCount, void *pSample
             env->push_long(runtime->stack, (s64) (intptr_t)
                     pSamples);
             s32 ret = env->execute_method(refers._callback_minial_on_send_frames, runtime);
-            if (ret) {
+            if (ret == RUNTIME_STATUS_ERROR) {
+            } else if (ret == RUNTIME_STATUS_EXCEPTION) {
                 env->print_exception(runtime);
             }
             s32 v = env->pop_int(runtime->stack);
@@ -139,7 +141,8 @@ void on_stop(ma_device *pDevice) {
             JniEnv *env = refers.env;
             env->push_long(runtime->stack, (s64) (intptr_t) pDevice);
             s32 ret = env->execute_method(refers._callback_minial_on_stop, runtime);
-            if (ret) {
+            if (ret == RUNTIME_STATUS_ERROR) {
+            } else if (ret == RUNTIME_STATUS_EXCEPTION) {
                 env->print_exception(runtime);
             }
             runtime = NULL;

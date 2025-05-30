@@ -433,7 +433,7 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
             if (utf8_equals_c(mi->name, STR_METHOD_CLINIT)) {
 
                 s32 ret = execute_method_impl(mi, runtime);
-                if (ret != RUNTIME_STATUS_NORMAL) {
+                if (ret == RUNTIME_STATUS_EXCEPTION) {
                     print_exception(runtime);
                 }
                 //jvm_printf("clinit %s.%s\n", utf8_cstr(clazz->name), utf8_cstr(mi->name));

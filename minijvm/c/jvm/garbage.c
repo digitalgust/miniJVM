@@ -553,6 +553,9 @@ s64 _garbage_collect(GcCollector *collector) {
                 jvm_printf("X: [%llx] classloader\n", (s64) (intptr_t) curmb);
 #endif
                 PeerClassLoader *pcl = classLoaders_find_by_instance(jvm, (Instance *) curmb);
+#if _JVM_DEBUG_LOG_LEVEL > 1
+                jvm_printf("[INFO] [%llx] classloader destroied class:%s\n", (s64) (intptr_t) curmb, utf8_cstr(pcl->jloader->mb.clazz->name));
+#endif
                 if (pcl) {
                     classloaders_remove(jvm, pcl);
                     classloader_destroy(pcl);

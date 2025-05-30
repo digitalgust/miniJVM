@@ -114,7 +114,7 @@ public class Thread implements Runnable {
     private char name[];
 
     /*  save top runtime   */
-    private long stackFrame = createStackFrame();
+    private long stackFrame;// = createStackFrame();
     /**
      * The minimum priority that a thread can have.
      */

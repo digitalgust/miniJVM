@@ -45,12 +45,14 @@ void thread_unboundle(Runtime *runtime) {
 void print_exception(Runtime *runtime) {
 #if _JVM_DEBUG_LOG_LEVEL >= 0
     if (runtime) {
-        Utf8String *stacktrack = utf8_create();
-        getExceptionStack(runtime, stacktrack);
-        jvm_printf("%s\n", utf8_cstr(stacktrack));
-        utf8_destroy(stacktrack);
+        if (!runtime->thrd_info->is_stop) {
+            Utf8String *stacktrack = utf8_create();
+            getExceptionStack(runtime, stacktrack);
+            jvm_printf("%s\n", utf8_cstr(stacktrack));
+            utf8_destroy(stacktrack);
 
-        runtime_clear_stacktrack(runtime);
+            runtime_clear_stacktrack(runtime);
+        }
     }
 #endif
 }
@@ -476,7 +478,9 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
     if (!ret) {
         jloader = pop_ref(runtime->stack);
     } else {
-        print_exception(runtime);
+        if (ret == RUNTIME_STATUS_EXCEPTION) {
+            print_exception(runtime);
+        }
     }
     //装入主类
     JClass *clazz = classes_load_get_with_clinit(jloader, str_mainClsName, runtime);

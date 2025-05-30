@@ -1098,7 +1098,7 @@ s32 org_mini_reflect_ReflectMethod_invokeMethod(Runtime *runtime, JClass *clazz)
                     //do nothing
                 }
             }
-        } else {
+        } else if (ret == RUNTIME_STATUS_EXCEPTION) {
             print_exception(runtime);
         }
     } else

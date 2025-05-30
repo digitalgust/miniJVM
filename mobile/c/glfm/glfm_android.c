@@ -961,6 +961,13 @@ static void glfm__onAppCmd(struct android_app *app, int32_t cmd) {
             const bool success = glfm__eglInit(platformData);
             if (!success) {
                 glfm__eglCheckError(platformData);
+            // } else {
+            //     // 窗口初始化成功后，先清空缓冲区
+            //     if (platformData->eglContextCurrent) {
+            //         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+            //         eglSwapBuffers(platformData->eglDisplay, platformData->eglSurface);
+            //         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+            //     }
             }
             platformData->refreshRequested = true;
             glfm__drawFrame(platformData);
@@ -984,6 +991,17 @@ static void glfm__onAppCmd(struct android_app *app, int32_t cmd) {
         case APP_CMD_GAINED_FOCUS: {
             LOG_LIFECYCLE("APP_CMD_GAINED_FOCUS");
             glfm__setAnimating(platformData, true);
+            // 从后台恢复时，强制刷新以解决闪烁问题
+            if (platformData->eglContextCurrent) {
+                // 清空双缓冲区以避免旧内容闪烁
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                if (platformData->eglDisplay != EGL_NO_DISPLAY && platformData->eglSurface != EGL_NO_SURFACE) {
+                    eglSwapBuffers(platformData->eglDisplay, platformData->eglSurface);
+                }
+                // 再次清空前缓冲区
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+            }
+            platformData->refreshRequested = true;
             break;
         }
         case APP_CMD_LOST_FOCUS: {
@@ -2101,6 +2119,28 @@ ANativeActivity *glfmAndroidGetActivity() {
 
 //gust
 
+void glfmRequestDestroyApp() {
+    if (platformDataGlobal && platformDataGlobal->app) {
+        struct android_app *app = platformDataGlobal->app;
+        GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
+        JNIEnv *jni = platformData->jniEnv;
+
+//        // 方法1: 调用 Activity.finish()
+//        glfm__callJavaMethod(jni, app->activity->clazz, "finish", "()V", Void);
+
+        // 方法2: 调用 Activity.finishAndRemoveTask() (API 21+)
+        if (app->activity->sdkVersion >= 21) {
+            glfm__callJavaMethod(jni, app->activity->clazz, "finishAndRemoveTask", "()V", Void);
+        } else {
+            exit(0);
+        }
+//
+//        // 方法3: 移动到后台
+//        glfm__callJavaMethodWithArgs(jni, app->activity->clazz, "moveTaskToBack", "(Z)Z", Boolean, true);
+
+    }
+}
+
 JNIEXPORT jboolean JNICALL Java_org_minijvm_activity_JvmNativeActivity_onStringInput(JNIEnv *env, jobject jobj, jstring s) {
     int down = 0;
     if (platformDataGlobal && platformDataGlobal->app) {
@@ -2280,7 +2320,7 @@ void getOsLanguage(char *buf, int bufSize) {
         len = bufSize - 1;
     }
     memcpy(buf, rawString, len);
-    buf[len]=0;
+    buf[len] = 0;
     (*jni)->DeleteLocalRef(jni, localeClass);
     (*jni)->DeleteLocalRef(jni, localeObject);
     (*jni)->ReleaseStringUTFChars(jni, language, rawString);
@@ -2385,7 +2425,8 @@ void remoteMethodCall(const char *inJsonStr, Utf8String *outJsonStr) {
     }
 }
 
-void buyAppleProductById(GLFMDisplay * display, const char *cproductID, const char *base64HandleScript){
+void buyAppleProductById(GLFMDisplay *display, const char *cproductID, const char *base64HandleScript) {
     printf("buyAppleProductById can't call on android\n");
 }
+
 #endif  //GLFM_PLATFORM_ANDROID

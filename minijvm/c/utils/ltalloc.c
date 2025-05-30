@@ -517,7 +517,7 @@ static uintptr_t ptrie_lookup(PTrie *ptrie, uintptr_t key)
 	return (uintptr_t)node & ~1;
 }
 
-static bool ptrie_insert(PTrie *ptrie, uintptr_t key, uintptr_t value)
+static int ptrie_insert(PTrie *ptrie, uintptr_t key, uintptr_t value)
 {
 	SPINLOCK_ACQUIRE(&ptrie->lock);
 	// First get a new node.
@@ -535,7 +535,7 @@ static bool ptrie_insert(PTrie *ptrie, uintptr_t key, uintptr_t value)
 	else {
 		SPINLOCK_RELEASE(&ptrie->lock);
 		newNode = (PTrieNode*)LTALLOC_VMALLOC(LTALLOC_VMALLOC_MIN_SIZE());
-		if (unlikely(!newNode)) { return false; }
+		if (unlikely(!newNode)) { return 0; }
 		LTALLOC_ASSERT(((char**)((char*)newNode + LTALLOC_VMALLOC_MIN_SIZE()))[-1] == 0);
 		SPINLOCK_ACQUIRE(&ptrie->lock);
 		((PTrieNode**)((char*)newNode + LTALLOC_VMALLOC_MIN_SIZE()))[-1] = ptrie->newAllocatedPage;//in case if other thread also have just allocated a new page
@@ -568,7 +568,7 @@ static bool ptrie_insert(PTrie *ptrie, uintptr_t key, uintptr_t value)
 				newNode->childNodes[0] = (PTrieNode*)(value | 1);
 				newNode->childNodes[1] = PTRIE_NULL_NODE;
 				SPINLOCK_RELEASE(&ptrie->lock);
-				return true;
+				return 1;
 			} else {
 				pkey = *prevKey & ~0xFF;
 				x = key ^ pkey;
@@ -586,7 +586,7 @@ static bool ptrie_insert(PTrie *ptrie, uintptr_t key, uintptr_t value)
 	newNode->childNodes[b^1] = n;
 	*node = newNode;
 	SPINLOCK_RELEASE(&ptrie->lock);
-	return true;
+	return 1;
 }
 
 static uintptr_t ptrie_remove(PTrie *ptrie, uintptr_t key)
