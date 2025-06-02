@@ -1133,11 +1133,14 @@ public class GTextBox extends GTextObject {
                                         if (draw) {
                                             curCaretShowRow = curRow + topShowRow + (jumpWhenReturn ? 1 : 0);
                                             curCaretShowCol = jumpWhenReturn ? 0 : (caretIndex - char_starti);
-                                            if (tbox.getCurrent() == this) {
-                                                GToolkit.drawCaret(vg, caretX - 1, caretY, 2, fontH, false);
+                                            if (isEditable() && isEnable()) {
+                                                if (tbox.getCurrent() == this) {
+                                                    GToolkit.drawCaret(vg, caretX - 1, caretY, 2, fontH, false);
+                                                } else {
+                                                    GToolkit.drawCaret(vg, caretX - 1, caretY, 2, fontH, false, GColorSelector.BLUE_HALF);
+                                                }
                                             } else {
-                                                GToolkit.drawCaret(vg, caretX - 1, caretY, 2, fontH, false, GColorSelector.BLUE_HALF);
-
+                                                GToolkit.drawCaret(vg, caretX - 1, caretY, 2, fontH, false, GColorSelector.GRAY_HALF);
                                             }
                                             caretY += lineH + PAD;
                                             GTextBox.this.caretX = caretX;

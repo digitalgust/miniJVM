@@ -625,8 +625,10 @@ public class GTextField extends GTextObject {
                 if (mid > 50) mid = 50;//如果文字宽度小于100，会左右不停的闪，相互拉锯
                 if (Math.abs(caretx - text_show_area_x) < mid && leftShowCharIdx > 0) {
                     wordShowOffsetX += 20;
+                    flushNow();//不刷可能在android上闪烁
                 } else if (Math.abs(caretx - text_show_area_right) < mid && rightShowCharIdx < text_pos.length - 1) {
                     wordShowOffsetX -= 20;
+                    flushNow();
                 }
 
                 if (caretx < text_show_area_x) {
@@ -634,9 +636,12 @@ public class GTextField extends GTextObject {
                 } else if (caretx > text_show_area_right) {
                     wordShowOffsetX -= caretx - text_show_area_right;
                 }
-
                 if (parent.getCurrent() == this) {
-                    GToolkit.drawCaret(vg, caretx - 1, wordy - 0.5f * lineh[0], 2, lineh[0], false);
+                    if (isEditable() && isEnable()) {
+                        GToolkit.drawCaret(vg, caretx - 1, wordy - 0.5f * lineh[0], 2, lineh[0], false);
+                    } else {
+                        GToolkit.drawCaret(vg, caretx - 1, wordy - 0.5f * lineh[0], 2, lineh[0], false, GColorSelector.GRAY_HALF);
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();

@@ -273,7 +273,7 @@ public class GList extends GContainer {
     }
 
     void changeCurPanel() {
-        GObject frontCur = getFrontFocus();//save focus
+//        GObject frontCur = getFrontFocus();//save focus
 
         super.clearImpl();
         if (showMode == MODE_SINGLE_SHOW) {
@@ -292,6 +292,7 @@ public class GList extends GContainer {
                     popWin.setLocation(getX(), popY);
                     popWin.setSize(popWin.getW(), popH);
                     form.add(popWin);
+                    form.setCurrent(popWin);
                 } else {
                     form.remove(popWin);
                 }
@@ -301,16 +302,16 @@ public class GList extends GContainer {
         }
 
         //restore focus
-        if (frontCur != null) {
-            if (findSon(frontCur) != null) {
-                GContainer p = frontCur.getParent();
-                while (p != null) {
-                    p.setCurrent(frontCur);
-                    frontCur = p;
-                    p = p.getParent();
-                }
-            }
-        }
+//        if (frontCur != null) {
+//            if (findSon(frontCur) != null) {
+//                GContainer p = frontCur.getParent();
+//                while (p != null) {
+//                    p.setCurrent(frontCur);
+//                    frontCur = p;
+//                    p = p.getParent();
+//                }
+//            }
+//        }
     }
 
     private float getPopWinH() {
@@ -509,7 +510,7 @@ public class GList extends GContainer {
      */
     @Override
     public boolean paint(long vg) {
-        if (getParent() != null && getParent().getCurrent() != this && pulldown) {
+        if (getParent() != null && getParent().getCurrent() != this && form.getCurrent() != popWin && pulldown) {
             pulldown = false;
             changeCurPanel();
         }
@@ -702,6 +703,7 @@ public class GList extends GContainer {
                         GListItem li = getSelectedItem();
                         if (li != null) {
                             li.select();
+                            doAction();
                         }
                     }
                 }

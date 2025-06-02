@@ -184,9 +184,12 @@ public class AppManager extends GApplication implements XuiAppHolder {
         }
         GCallBack.getInstance().getDesktop().add(floatButton);
 
-
         reloadAppList();
-        AppLoader.runBootApp();
+
+        if (AppLoader.isBootRun()) {//如果appinfo.properties中 bootrun=false,则不运行bootjar
+            curSelectedJarName = AppLoader.getBootApp() + AppLoader.APP_FILE_EXT;
+            runApp();
+        }
     }
 
     /**

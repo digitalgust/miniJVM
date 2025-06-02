@@ -145,16 +145,6 @@ public class AppLoader {
         }
     }
 
-    public static void runBootApp() {
-        if (isBootRun()) { //如果appinfo.properties中配置为false,则不运行bootjar
-            String bootApp = getBaseInfo(KEY_BOOT);
-            if (bootApp != null) {
-                bootApp = bootApp + APP_FILE_EXT;
-                runApp(bootApp);
-            }
-        }
-    }
-
     static void checkDir() {
         File f = new File(GCallBack.getInstance().getAppSaveRoot() + APP_DIR);
         if (!f.exists()) {
@@ -277,13 +267,8 @@ public class AppLoader {
     }
 
     public static String getBootApp() {
-        String defaultApp = appinfo.getProperty(KEY_BOOT);
+        String defaultApp = getBaseInfo(KEY_BOOT);
         return defaultApp;
-    }
-
-    public static void setBootApp(String jarName) {
-        appinfo.put(KEY_BOOT, jarName);
-        saveProp(APP_INFO_FILE, appinfo);
     }
 
     public static String getDownloadUrl() {
@@ -775,7 +760,7 @@ public class AppLoader {
 
     public static boolean isBootRun() {
         String bootRun = getProperty("bootrun"); //本地存没存，如果存了以本地为准
-        return !"false".equals(bootRun);
+        return !"false".equals(bootRun) && getBootApp().length() > 0;
     }
 
     public static boolean isShowHome() {

@@ -822,6 +822,8 @@ static void glfm__setContentRect(struct android_app *android_app, ARect rect) {
 }
 
 static void glfm__onContentRectChanged(ANativeActivity *activity, const ARect *rect) {
+    LOG_DEBUG("glfm__onContentRectChanged called: left=%d, top=%d, right=%d, bottom=%d", 
+              rect->left, rect->top, rect->right, rect->bottom);
     glfm__setContentRect((struct android_app *) activity->instance, *rect);
 }
 
@@ -1393,6 +1395,7 @@ void android_main(struct android_app *app) {
     app->onAppCmd = glfm__onAppCmd;
     app->onInputEvent = glfm__onInputEvent;
     app->activity->callbacks->onContentRectChanged = glfm__onContentRectChanged;
+    LOG_DEBUG("Registered onContentRectChanged callback: %p", glfm__onContentRectChanged);
     platformData->app = app;
     platformData->refreshRequested = true;
     platformData->lastSwapTime = glfmGetTime();
@@ -1469,6 +1472,10 @@ void android_main(struct android_app *app) {
             (*jni)->DeleteLocalRef(jni, window);
         }
     }
+
+    // 添加键盘状态检查变量
+    static double lastKeyboardCheckTime = 0;
+    static const double KEYBOARD_CHECK_INTERVAL = 0.1; // 每100ms检查一次
 
     // Run the main loop
     while (1) {
@@ -1583,6 +1590,14 @@ void android_main(struct android_app *app) {
                 // App is destroyed, but android_main() can be called again in the same process.
                 return;
             }
+        }
+
+        // 定期检查键盘可见性状态（备用机制）
+        double currentTime = glfmGetTime();
+        if (platformData->animating && platformData->display && 
+            (currentTime - lastKeyboardCheckTime) >= KEYBOARD_CHECK_INTERVAL) {
+            lastKeyboardCheckTime = currentTime;
+            glfm__updateKeyboardVisibility(platformData);
         }
 
         if (platformData->animating && platformData->display) {
