@@ -11,6 +11,7 @@ import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GDesktop;
 import org.mini.gui.event.GNotifyListener;
 import org.mini.gui.gscript.EnvVarProvider;
+import org.mini.gui.gscript.Interpreter;
 import org.mini.gui.style.GStyleBright;
 import org.mini.gui.style.GStyleDark;
 import org.mini.http.MiniHttpClient;
@@ -596,13 +597,15 @@ public class AppManager extends GApplication implements XuiAppHolder {
                     GForm.flush();
 
                     String fullscreen = AppLoader.getApplicationFullscreen(curSelectedJarName);
+                    int fullflag;
                     if ("1".equalsIgnoreCase(fullscreen)) {
-                        Glfm.glfmSetDisplayChrome(GCallBack.getInstance().getDisplay(), Glfm.GLFMUserInterfaceChromeFullscreen);
+                        fullflag = Glfm.GLFMUserInterfaceChromeFullscreen;
                     } else {
-                        Glfm.glfmSetDisplayChrome(GCallBack.getInstance().getDisplay(), Glfm.GLFMUserInterfaceChromeNavigationAndStatusBar);
+                        fullflag = Glfm.GLFMUserInterfaceChromeNavigationAndStatusBar;
                     }
+                    Glfm.glfmSetDisplayChrome(GCallBack.getInstance().getDisplay(), fullflag);
                     String orientation = AppLoader.getApplicationOrientation(curSelectedJarName);
-                    if (orientation.equalsIgnoreCase("h")) {
+                    if ("h".equalsIgnoreCase(orientation)) {
                         Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationLandscapeLeft | Glfm.GLFMInterfaceOrientationLandscapeRight);
                     } else {
                         Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationPortrait);

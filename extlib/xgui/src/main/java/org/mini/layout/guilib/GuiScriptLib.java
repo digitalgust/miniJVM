@@ -125,6 +125,22 @@ public class GuiScriptLib extends Lib {
     // -------------------------------------------------------------------------
     // inner method
     // -------------------------------------------------------------------------
+
+    public static Object execScript(String scriptPathAndName) {
+        if (scriptPathAndName == null) return null;
+        if (scriptPathAndName.contains(".")) {
+            int dex = scriptPathAndName.indexOf(".");
+            String containerName = scriptPathAndName.substring(0, dex);
+            String scriptName = scriptPathAndName.substring(dex + 1);
+            GContainer gobj = GToolkit.getComponent(GCallBack.getInstance().getDesktop(), containerName);
+            if (gobj != null) {
+                Interpreter inp = gobj.getInterpreter();
+                return inp.callSub(scriptName);
+            }
+        }
+        return null;
+    }
+
     public static void doCallback(GForm form, String callback, String para) {
         if (callback != null) {
             if (callback.contains(".")) {
