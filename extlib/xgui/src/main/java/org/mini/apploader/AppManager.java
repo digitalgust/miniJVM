@@ -153,11 +153,7 @@ public class AppManager extends GApplication implements XuiAppHolder {
 
         GLanguage.setCurLang(AppLoader.getDefaultLang());
 
-        if (AppLoader.getGuiStyle() == 0) {
-            GToolkit.setStyle(new GStyleBright());
-        } else {
-            GToolkit.setStyle(new GStyleDark());
-        }
+        setStyle(AppLoader.getGuiStyle());
         GToolkit.setFeel(AppLoader.getGuiFeel());
 
         if (mgrForm != null) {
@@ -759,21 +755,16 @@ public class AppManager extends GApplication implements XuiAppHolder {
                     mainSlot.moveTo(2, 0);
                     break;
                 case "LI_BRIGHT":
-                    GToolkit.setStyle(new GStyleBright());
-                    AppLoader.setGuiStyle(0);
+                    setStyle(0);
                     setStyleButton(0);
                     break;
                 case "LI_DARK":
-                    GToolkit.setStyle(new GStyleDark());
-                    AppLoader.setGuiStyle(1);
+                    setStyle(1);
                     setStyleButton(1);
                     break;
                 case "BT_STYLE": {
-                    int i = AppLoader.getGuiStyle();
-                    i = i == 0 ? 1 : 0;
+                    int i = swapStyle();
                     setStyleButton(i);
-                    GToolkit.setStyle(i == 0 ? new GStyleBright() : new GStyleDark());
-                    AppLoader.setGuiStyle(i);
                     break;
                 }
             }
@@ -848,5 +839,17 @@ public class AppManager extends GApplication implements XuiAppHolder {
         envVarProvider.setEnvVar("plugin_url", "");
     }
 
+    public static void setStyle(int style) {
+        GToolkit.setStyle(style == 0 ? new GStyleBright() : new GStyleDark());
+        AppLoader.setGuiStyle(style);
+    }
+
+    public static int swapStyle() {
+        int style = AppLoader.getGuiStyle();
+        style = style == 0 ? 1 : 0;
+        GToolkit.setStyle(style == 1 ? new GStyleDark() : new GStyleBright());
+        AppLoader.setGuiStyle(style);
+        return style;
+    }
 
 }
