@@ -95,6 +95,7 @@ public class GuiScriptLib extends Lib {
             methodNames.put("showBar".toLowerCase(), this::showBar);//
             methodNames.put("showMsg".toLowerCase(), this::showMsg);//参数：内容，失去焦点关闭，回调函数，回调参数
             methodNames.put("showConfirm".toLowerCase(), this::showConfirm);//
+            methodNames.put("showInput".toLowerCase(), this::showInput);//
             methodNames.put("insertText".toLowerCase(), this::insertText);//
             methodNames.put("deleteText".toLowerCase(), this::deleteText);//
             methodNames.put("getCaretPos".toLowerCase(), this::getCaretPos);//
@@ -113,6 +114,9 @@ public class GuiScriptLib extends Lib {
             methodNames.put("getClipboard".toLowerCase(), this::getClipboard);//
             methodNames.put("getVersion".toLowerCase(), this::getVersion);//
             methodNames.put("compareVersion".toLowerCase(), this::compareVersion);//
+            methodNames.put("getApp".toLowerCase(), this::getApp);//
+            methodNames.put("closeApp".toLowerCase(), this::closeApp);//
+            methodNames.put("pauseApp".toLowerCase(), this::pauseApp);//
 
         }
     }
@@ -785,10 +789,6 @@ public class GuiScriptLib extends Lib {
                 (obj) -> {
                     if (callback != null) {
                         if (callback.contains(".")) {
-//                            String[] ss = callback.split("\\.");
-//                            GContainer gobj = GToolkit.getComponent(formHolder.getForm(), ss[0]);
-//                            Interpreter inp = gobj.getInterpreter();
-//                            inp.callSub(ss[1] + "(1)");
                             doCallback(formHolder.getForm(), callback, "1");
                         } else {
                             SysLog.info("showConfirm callback format \"PAN.subname\" ,but : " + callback);
@@ -796,17 +796,49 @@ public class GuiScriptLib extends Lib {
                     }
                     obj.getFrame().close();
                 },
-                null,
+                AppManager.getInstance().getString("Cancel"),
                 (obj) -> {
                     if (callback != null) {
                         if (callback.contains(".")) {
-//                            String[] ss = callback.split("\\.");
-//                            GContainer gobj = GToolkit.getComponent(formHolder.getForm(), ss[0]);
-//                            Interpreter inp = gobj.getInterpreter();
-//                            inp.callSub(ss[1] + "(0)");
                             doCallback(formHolder.getForm(), callback, "0");
                         } else {
                             SysLog.info("showConfirm callback format \"PAN.subname\" ,but : " + callback);
+                        }
+                    }
+                    obj.getFrame().close();
+                });
+        GToolkit.showFrame(f);
+        formHolder.getForm().flush();
+        return null;
+    }
+
+    public DataType showInput(ArrayList<DataType> para) {
+        String msg = Interpreter.popBackStr(para);
+        String callback = Interpreter.popBackStr(para);
+        GFrame f = GToolkit.getInputFrame(
+                formHolder.getForm(),
+                AppManager.getInstance().getString("Message"),
+                msg,
+                "",
+                "",
+                AppManager.getInstance().getString("Ok"),
+                (obj) -> {
+                    if (callback != null) {
+                        if (callback.contains(".")) {
+                            doCallback(formHolder.getForm(), callback, "1,\"" + GToolkit.getCompText(formHolder.getForm(), GToolkit.NAME_INPUTFRAME_TEXTFIELD) + "\"");
+                        } else {
+                            SysLog.info("showInput callback format \"PAN.subname\" ,but : " + callback);
+                        }
+                    }
+                    obj.getFrame().close();
+                },
+                AppManager.getInstance().getString("Cancel"),
+                (obj) -> {
+                    if (callback != null) {
+                        if (callback.contains(".")) {
+                            doCallback(formHolder.getForm(), callback, "0,\"" + GToolkit.getCompText(formHolder.getForm(), GToolkit.NAME_INPUTFRAME_TEXTFIELD) + "\"");
+                        } else {
+                            SysLog.info("showInput callback format \"PAN.subname\" ,but : " + callback);
                         }
                     }
                     obj.getFrame().close();
@@ -1049,5 +1081,23 @@ public class GuiScriptLib extends Lib {
         String v2 = Interpreter.popBackStr(para);
         int ret = AppLoader.compareVersions(v1, v2);
         return Interpreter.getCachedInt(ret);
+    }
+
+    public DataType getApp(ArrayList<DataType> para) {
+        return Interpreter.getCachedObj(GCallBack.getInstance().getApplication());
+    }
+
+    public DataType getAppId(ArrayList<DataType> para) {
+        return Interpreter.getCachedStr(GCallBack.getInstance().getApplication().getAppId());
+    }
+
+    public DataType closeApp(ArrayList<DataType> para) {
+        GCallBack.getInstance().getApplication().closeApp();
+        return Interpreter.getCachedInt(0);
+    }
+
+    public DataType pauseApp(ArrayList<DataType> para) {
+        GCallBack.getInstance().getApplication().pauseApp();
+        return Interpreter.getCachedInt(0);
     }
 }

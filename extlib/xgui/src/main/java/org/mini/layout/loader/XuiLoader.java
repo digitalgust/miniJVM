@@ -30,7 +30,7 @@ public class XuiLoader {
     public static final String LOCAL_SETTING_FILE = "localsetting.propertites";
     public static final String WEB_FRAME_NAME = "BROWSER_FRAME";
     XuiAppHolder appHolder;
-    static Properties localSetting = new Properties();
+    Properties localSetting = new Properties();
 
     XmlExtAssist xmlExtAssist;
     XEventHandler eventHandler;
