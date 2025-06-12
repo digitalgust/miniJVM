@@ -583,7 +583,7 @@ abstract public class GContainer extends GObject {
             return;
         }
 
-        if (current != null && !pressed) {
+        if (current != null && !pressed) { //release 必须透传到原来的焦点组件上
             current.mouseButtonEvent(button, pressed, x, y);
         } else {
             if (pressed) {

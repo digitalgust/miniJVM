@@ -172,7 +172,8 @@ public class GlfmCallBackImpl extends GCallBack {
                 return;
             }
             try {
-                Thread.currentThread().setContextClassLoader(gapp.getClass().getClassLoader());//there were be an app pause and the other app setup
+                openglThread = Thread.currentThread();
+                openglThread.setContextClassLoader(gapp.getClass().getClassLoader());//there were be an app pause and the other app setup
                 desktop.checkAppRun(gapp);
             } catch (Exception e) {
                 gapp.closeApp();
@@ -214,7 +215,6 @@ public class GlfmCallBackImpl extends GCallBack {
         Glfm.glfmSetMultitouchEnabled(display, true);
         Glfm.glfmGetDisplayChromeInsets(display, insetsDouble);
 
-        openglThread = Thread.currentThread();
     }
 
     @Override

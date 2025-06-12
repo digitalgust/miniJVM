@@ -358,6 +358,11 @@ public class GList extends GContainer {
 
     public void setShowMode(int m) {
         this.showMode = m;
+        if (m == MODE_MULTI_SHOW) {
+            popWin.layer = LAYER_NORMAL;
+        } else {
+            popWin.layer = LAYER_MENU_OR_POPUP;
+        }
 
         sizeAdjust();
         changeCurPanel();
@@ -509,10 +514,6 @@ public class GList extends GContainer {
      */
     @Override
     public boolean paint(long vg) {
-        if (getParent() != null && getParent().getCurrent() != this && form.getCurrent() != popWin && pulldown) {
-            pulldown = false;
-            changeCurPanel();
-        }
 
         //int itemcount = popView.elements.size();
         nvgFontSize(vg, getFontSize());
@@ -523,6 +524,11 @@ public class GList extends GContainer {
         super.paint(vg);
 
         return true;
+    }
+
+    @Override
+    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+        super.mouseButtonEvent(button, pressed, x, y);
     }
 
     /**
@@ -643,12 +649,22 @@ public class GList extends GContainer {
     class GListPopWindow extends GContainer {
         public GListPopWindow(GForm form) {
             super(form);
-            layer = LAYER_MENU_OR_POPUP;
             setCornerRadius(4.f);
         }
 
         @Override
         public boolean paint(long vg) {
+
+            if (pulldown) {
+                if (getParent() != null && getParent().getCurrent() != this
+                        && form.getCurrent() != popWin
+                        || !isSuperParent(form)  // 不在form中显示了，比如窗口已经关闭，list不显示了
+                ) {
+                    pulldown = false;
+                    changeCurPanel();
+                }
+            }
+
             float x = getX();
             float y = getY();
             float w = getW();

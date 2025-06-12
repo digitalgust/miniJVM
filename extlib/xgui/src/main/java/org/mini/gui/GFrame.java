@@ -286,11 +286,12 @@ public class GFrame extends GContainer {
                 break;
             }
         }
-        if (isInArea(x, y)) {
-            super.mouseButtonEvent(button, pressed, x, y);
-        } else {
-            //view.setFocus(null);// x,y not in FrameArea when  popup keyboard
-        }
+//        if (isInArea(x, y)) {
+//            super.mouseButtonEvent(button, pressed, x, y);
+//        } else {
+//            //view.setFocus(null);// x,y not in FrameArea when  popup keyboard
+//        }
+        super.mouseButtonEvent(button, pressed, x, y);
     }
 
     @Override

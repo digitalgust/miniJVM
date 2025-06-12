@@ -284,6 +284,11 @@ abstract public class GObject implements GAttachable {
         parent = p;
     }
 
+    public boolean isSuperParent(GContainer p) {
+        if (p == null) return false;
+        return parent == p || (parent != null && parent.isSuperParent(p));
+    }
+
     public void setLocation(float x, float y) {
         float oldLeft = boundle[LEFT];
         float oldTop = boundle[TOP];
