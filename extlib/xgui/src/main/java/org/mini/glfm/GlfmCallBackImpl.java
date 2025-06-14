@@ -56,7 +56,6 @@ public class GlfmCallBackImpl extends GCallBack {
     long last = System.currentTimeMillis(), now;
     int count = 0;
 
-    Thread openglThread;
 
     /**
      * the glinit method call by native function, glfmapp/main.c
@@ -141,9 +140,6 @@ public class GlfmCallBackImpl extends GCallBack {
         ;
     }
 
-    public Thread getOpenglThread() {
-        return openglThread;
-    }
 
     void init() {
         fbWidth = Glfm.glfmGetDisplayWidth(display);
@@ -172,8 +168,7 @@ public class GlfmCallBackImpl extends GCallBack {
                 return;
             }
             try {
-                openglThread = Thread.currentThread();
-                openglThread.setContextClassLoader(gapp.getClass().getClassLoader());//there were be an app pause and the other app setup
+                setOpenglThread(gapp.getClass().getClassLoader());
                 desktop.checkAppRun(gapp);
             } catch (Exception e) {
                 gapp.closeApp();

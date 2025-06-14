@@ -30,6 +30,7 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
 
     protected GApplication gapp;
     protected GDesktop desktop;
+    Thread openglThread;
 
     float[] insets = new float[4];
 
@@ -148,7 +149,16 @@ public abstract class GCallBack implements GlfwCallback, GlfmCallBack {
         return insets[3];
     }
 
-    public abstract Thread getOpenglThread();
+    public final Thread getOpenglThread() {
+        return openglThread;
+    }
+
+    protected final void setOpenglThread(ClassLoader loader) {
+        openglThread = Thread.currentThread();
+        if (openglThread.getContextClassLoader() != loader) { //must check, else throw security exception
+            openglThread.setContextClassLoader(loader);
+        }
+    }
 
     public void pickPhoto(int uid, int deviceAndType) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

@@ -45,15 +45,12 @@ public class GuiSecurityManager extends SecurityManager {
         // 默认允许所有权限
         switch (perm.getName()) {
             case "accessPassword":
-                if (Thread.currentThread().getContextClassLoader() instanceof StandalongGuiAppClassLoader) {
+                GApplication app = GCallBack.getInstance().getApplication();
+                if (app != null && !isAppManager()) {
                     throw new SecurityException("Access declined: " + perm);
                 }
-                if (isAccessAllowed() || isAppManager()) {
-
-                } else {
-                    if (isAccessDeclined()) {
-                        throw new SecurityException("Access declined: " + perm);
-                    }
+                if (isAccessDeclined()) {
+                    throw new SecurityException("Access declined: " + perm);
                 }
                 break;
             case "setSecurityManager":
@@ -86,26 +83,35 @@ public class GuiSecurityManager extends SecurityManager {
             return;
         }
         //当前处于应用程序中
-        if (Thread.currentThread().getContextClassLoader() instanceof StandalongGuiAppClassLoader) {
-
+        GApplication app = GCallBack.getInstance().getApplication();
+        if (app != null && !isAppManager()) {
+            String appSaveRoot = app.getSaveRoot();
+            if (appSaveRoot == null) {//when new GApplication(), but not setJarName()
+                throw new SecurityException("Access declined: " + filePath);
+            }
             // 检查是否是受限文件
             String saveRootFilePath = GCallBack.getInstance().getAppSaveRoot();
             File saveRootFile = new File(saveRootFilePath);
             String absSaveRoot = saveRootFile.getAbsolutePath();
-            if (GCallBack.getInstance().getApplication() != null) {
-                String appSaveRoot = GCallBack.getInstance().getApplication().getSaveRoot();
-                File appSaveRootFile = new File(appSaveRoot);
-                String absAppSaveRoot = appSaveRootFile.getAbsolutePath();
-                File file = new File(filePath);
-                String absolutePath = file.getAbsolutePath();
 
-                if (absolutePath.startsWith(absSaveRoot)) {//如果是访问保存目录下的文件
-                    if (!absolutePath.startsWith(absAppSaveRoot)) { // 如果不是访问当前Application的保存目录下的文件
-//                        System.out.println("absSaveRoot= " + absSaveRoot);
-//                        System.out.println("absAppSaveRoot= " + absAppSaveRoot);
-//                        System.out.println("absolutePath= " + absolutePath);
-                        throw new SecurityException("Access declined: " + file);
-                    }
+
+            File appSaveRootFile = new File(appSaveRoot);
+            String absAppSaveRoot = appSaveRootFile.getAbsolutePath();
+            File file = new File(filePath);
+            String absolutePath = file.getAbsolutePath();
+
+            File tmpFile = new File(AppLoader.getTmpDirPath());
+            String absTmp = tmpFile.getAbsolutePath();
+            if (absolutePath.startsWith(absTmp)) { // 如果是访问临时目录下的文件
+                return;
+            }
+
+            if (absolutePath.startsWith(absSaveRoot)) {//如果是访问保存目录下的文件
+                if (!absolutePath.startsWith(absAppSaveRoot)) { // 如果不是访问当前Application的保存目录下的文件
+                    System.out.println("absSaveRoot= " + absSaveRoot);
+                    System.out.println("absAppSaveRoot= " + absAppSaveRoot);
+                    System.out.println("absolutePath= " + absolutePath);
+                    throw new SecurityException("Access declined: " + file);
                 }
             }
         }

@@ -99,9 +99,6 @@ public class GlfwCallBackImpl extends GCallBack {
         Glfw.glfwSetWindowTitle(display, title);
     }
 
-    public Thread getOpenglThread() {
-        return openglThread;
-    }
 
     public void init(int width, int height) {
         this.winWidth = width;
@@ -163,8 +160,7 @@ public class GlfwCallBackImpl extends GCallBack {
                     return;
                 }
                 try {
-                    openglThread = Thread.currentThread();
-                    openglThread.setContextClassLoader(gapp.getClass().getClassLoader());
+                    setOpenglThread(gapp.getClass().getClassLoader());
                     desktop.checkAppRun(gapp);
                 } catch (Exception e) {
                     gapp.closeApp();

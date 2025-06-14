@@ -19,6 +19,7 @@ import org.mini.vm.VmUtil;
 import org.mini.zip.Zip;
 
 import java.io.*;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -36,7 +37,7 @@ public final class AppLoader {
     static final String APP_DIR = "/apps/";
     static final String APP_FILE_EXT = ".jar";
     public static final String APP_DATA_DIR = "/appdata/";
-    static final String TMP_DIR = "/tmp/";
+    public static final String TMP_DIR = "/tmp/";
     static String[] EXAMPLE_APP_FILES = {};
     static final String KEY_BOOT = "boot";
     static final String KEY_DOWNLOADURL = "downloadurl";
@@ -88,7 +89,6 @@ public final class AppLoader {
         if (sm == null) {// add security manager, to decline app access others resources
             GuiSecurityManager guiSecurityManager = new GuiSecurityManager();
             guiSecurityManager.addAllowedCaller("org.mini.apploader.AppManager", "active");
-            guiSecurityManager.addAllowedCaller("org.mini.apploader.AppManager", "onInit");
             guiSecurityManager.addAllowedCaller("org.mini.apploader.AppLoader", "setGuiStyle");
             guiSecurityManager.addAllowedCaller("org.mini.apploader.AppLoader", "setGuiFeel");
             guiSecurityManager.addAllowedCaller("org.mini.apploader.AppLoader", "addApp");
@@ -587,7 +587,6 @@ public final class AppLoader {
             if (app == null) {
                 app = AppManager.getInstance();
                 Thread.currentThread().setContextClassLoader(app.getClass().getClassLoader());
-                app.setSaveRoot(getAppDataPath("Home"));
                 AppManager.getInstance().active();
                 //GForm.addMessage(GLanguage.getString(AppManager.STR_OPEN_APP_FAIL) + ": " + jarName);
             }

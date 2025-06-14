@@ -28,6 +28,7 @@ package java.lang;
 
 import org.mini.vm.RefNative;
 import org.mini.vm.ThreadLifeHandler;
+import sun.reflect.Reflection;
 
 /**
  * A <i>thread</i> is a thread of execution in a program. The Java Virtual
@@ -519,11 +520,23 @@ public class Thread implements Runnable {
     }
 
 
+    static RuntimePermission SET_CONTEXT_CLASS_LOADER_PERMISSION = new RuntimePermission("setContextClassLoader");
+    static RuntimePermission GET_CONTEXT_CLASS_LOADER_PERMISSION = new RuntimePermission("getContextClassLoader");
+
     public void setContextClassLoader(ClassLoader cl) {
+
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkPermission(SET_CONTEXT_CLASS_LOADER_PERMISSION);
+        }
         setContextClassLoader0(cl);
     }
 
     public ClassLoader getContextClassLoader() {
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkPermission(GET_CONTEXT_CLASS_LOADER_PERMISSION);
+        }
         return getContextClassLoader0();
     }
 

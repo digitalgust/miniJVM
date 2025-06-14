@@ -42,6 +42,10 @@ public abstract class GApplication implements FormHolder {
 
     private String appId = toString();
 
+    {
+        GCallBack.getInstance().setApplication(this);//put here to make sure GCallBack.getInstance() is not null
+    }
+
     private int curLang = GLanguage.ID_NO_DEF;
 
     Properties prop = new Properties();
