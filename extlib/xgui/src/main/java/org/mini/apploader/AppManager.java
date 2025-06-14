@@ -21,6 +21,7 @@ import org.mini.layout.XContainer;
 import org.mini.layout.XEventHandler;
 import org.mini.layout.loader.XmlExtAssist;
 import org.mini.layout.loader.XuiAppHolder;
+import org.mini.layout.loader.XuiLoader;
 import org.mini.nanovg.Nanovg;
 
 import java.io.*;
@@ -29,7 +30,7 @@ import java.util.*;
 /**
  * @author Gust
  */
-public class AppManager extends GApplication implements XuiAppHolder {
+public final class AppManager extends GApplication implements XuiAppHolder {
     public static final String POLICY_URL = "POLICY_URL";
     public static final String DISCOVERY_URL = "DISCOVERY_URL";
     public static final String ACCOUNT_BASE_URL = "ACCOUNT_BASE_URL";
@@ -117,6 +118,10 @@ public class AppManager extends GApplication implements XuiAppHolder {
     XmlExtAssist assist;
     GContainer webView;
 
+    {
+        jarName = "AppManager";//set jar name
+    }
+
     /**
      * @return
      */
@@ -125,7 +130,7 @@ public class AppManager extends GApplication implements XuiAppHolder {
         return instance;
     }
 
-    public void active() {
+    public final void active() {
         if (GCallBack.getInstance().getApplication() == this) return;
 
         onResume();
@@ -168,7 +173,7 @@ public class AppManager extends GApplication implements XuiAppHolder {
     }
 
     @Override
-    public void onInit() {
+    public final void onInit() {
         regStrings();
 
         mgrForm = loadXmlForm();

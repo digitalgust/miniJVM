@@ -12,6 +12,7 @@ import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GCmd;
 import org.mini.gui.style.GStyle;
 import org.mini.layout.guilib.FormHolder;
+import org.mini.layout.loader.XuiLoader;
 import org.mini.util.SysLog;
 
 import java.util.List;
@@ -28,7 +29,7 @@ public abstract class GApplication implements FormHolder {
 
     private AppState state = AppState.STATE_NEW;
 
-    static final String APP_CONFIG_FILE = "config.properties";
+    public static final String APP_CONFIG_FILE = "localsetting.propertites";
     static final String APP_LANG_KEY = "_inner_lang";
 
     private GForm form;
@@ -37,10 +38,9 @@ public abstract class GApplication implements FormHolder {
     GStyle myStyle;
     int myLang;
     float myFPS;
-    ClassLoader myClassLoader;
     String jarName;
 
-    private String appId;
+    private String appId = toString();
 
     private int curLang = GLanguage.ID_NO_DEF;
 
@@ -51,7 +51,6 @@ public abstract class GApplication implements FormHolder {
 
 
     public GApplication() {
-        appId = toString();
     }
 
 
@@ -260,6 +259,10 @@ public abstract class GApplication implements FormHolder {
     public void setProperty(String key, String val) {
         prop.setProperty(key, val);
         AppLoader.savePropFile(getAppConfigFile(), prop);
+    }
+
+    public Properties getConfigProp() {
+        return prop;
     }
 
     public String getAppId() {

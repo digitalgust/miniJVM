@@ -11,23 +11,26 @@
 package java.security;
 
 public abstract class Permission {
-  
-  protected String name;
-  
-  public Permission(String name) {
-    this.name = name;
-  }
-  
-  public String getName() {
-    return name;
-  }
-  
-  @Override
-  public String toString() {
-    return this.getClass().getSimpleName() + '['+name+']';
-  }
-  
-  public PermissionCollection newPermissionCollection() {
-    return null;
-  }
+
+    protected String name;
+
+    public Permission(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + '[' + name + ']';
+    }
+
+    public PermissionCollection newPermissionCollection() {
+        return null;
+    }
+
+    public abstract boolean implies(Permission permission);
+
 }

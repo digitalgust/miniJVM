@@ -39,6 +39,7 @@ import java.io.UnsupportedEncodingException;
  * @since JDK1.0, CLDC 1.0
  */
 public final class System {
+    private static SecurityManager security = null;
 
     public static native String doubleToString(double val);
 
@@ -366,10 +367,13 @@ public final class System {
     private static native void load0(byte[] name);
 
     public static SecurityManager getSecurityManager() {
-        return null;
+        return security;
     }
 
     public static void setSecurityManager(SecurityManager s) {
-
+        if (security != null) {
+            security.checkPermission(new RuntimePermission("setSecurityManager"));
+        }
+        security = s;
     }
 }

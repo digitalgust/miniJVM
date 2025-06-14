@@ -10,10 +10,12 @@
 
 package java.security;
 
-public class AllPermission extends Permission { 
-  public AllPermission() {
-    super("<all>");
-  }
-  
-  
+public class AllPermission extends Permission {
+    public AllPermission() {
+        super("<all>");
+    }
+
+    public boolean implies(Permission p) {
+        return true;
+    }
 }
