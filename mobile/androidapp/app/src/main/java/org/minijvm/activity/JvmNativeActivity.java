@@ -18,6 +18,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.inputmethodservice.InputMethodService;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
@@ -28,6 +29,8 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.MediaController;
@@ -72,6 +75,47 @@ public class JvmNativeActivity extends NativeActivity {
         PHOTO_DIR_SD = new File(getExternalFilesDir("").getAbsolutePath() + "/tmp");
         PHOTO_DIR_ROOT = new File(getFilesDir().getAbsolutePath() + "/tmp");
         requestAudioPermissions();
+
+        // 沉浸式模式
+        Window window = getWindow();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            window.getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        }
+        View decorView = window.getDecorView();
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN);
+
+
+        // 键盘处理
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
+        decorView.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+            @Override
+            public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
+                boolean isKeyboardVisible;
+                int keyboardHeight;
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { // Android 11+
+                    isKeyboardVisible = insets.isVisible(WindowInsets.Type.ime());
+                    keyboardHeight = insets.getInsets(WindowInsets.Type.ime()).bottom;
+                } else {
+                    // Fallback for older APIs using deprecated methods
+                    int bottomInset = insets.getSystemWindowInsetBottom();
+                    // A common heuristic: if the bottom inset is larger than the stable inset,
+                    // the keyboard is visible. The stable inset is for permanent system bars.
+                    int stableBottomInset = insets.getStableInsetBottom();
+                    isKeyboardVisible = bottomInset > stableBottomInset;
+                    keyboardHeight = isKeyboardVisible ? bottomInset : 0;
+                }
+
+                onKeyboardHeightChanged(isKeyboardVisible, keyboardHeight);
+                return insets;
+            }
+        });
         //test();
     }
 
@@ -87,8 +131,8 @@ public class JvmNativeActivity extends NativeActivity {
         service.showSoftInput(view, InputMethodManager.SHOW_FORCED);
         view.getWindowVisibleDisplayFrame(rect);
 
-        IBinder binder=view.getWindowToken();
-        service.hideSoftInputFromWindow(binder,0);
+        IBinder binder = view.getWindowToken();
+        service.hideSoftInputFromWindow(binder, 0);
         view.getWindowVisibleDisplayFrame(rect);
     }
 
@@ -198,6 +242,8 @@ public class JvmNativeActivity extends NativeActivity {
 
 
     native boolean onStringInput(String str);
+
+    native void onKeyboardHeightChanged(boolean visible, int height);
 
     //=======================================================================================================
     private static final int CAMERA_IMAGE_CODE = 0;

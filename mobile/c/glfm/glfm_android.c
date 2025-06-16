@@ -70,6 +70,7 @@ typedef struct {
 
     ARect keyboardFrame;
     bool keyboardVisible;
+    int keyboardHeight;
 
     bool animating;
     bool hasInited;
@@ -822,7 +823,7 @@ static void glfm__setContentRect(struct android_app *android_app, ARect rect) {
 }
 
 static void glfm__onContentRectChanged(ANativeActivity *activity, const ARect *rect) {
-    LOG_DEBUG("glfm__onContentRectChanged called: left=%d, top=%d, right=%d, bottom=%d", 
+    LOG_DEBUG("glfm__onContentRectChanged called: left=%d, top=%d, right=%d, bottom=%d",
               rect->left, rect->top, rect->right, rect->bottom);
     glfm__setContentRect((struct android_app *) activity->instance, *rect);
 }
@@ -871,69 +872,9 @@ static ARect glfm__getDecorViewRect(GLFMPlatformData *platformData, ARect defaul
 }
 
 static void glfm__updateKeyboardVisibility(GLFMPlatformData *platformData) {
-    if (platformData->display) {
-        ARect windowRect = glfm__getDecorViewRect(platformData, platformData->app->contentRect);
-        ARect visibleRect = glfm__getWindowVisibleDisplayFrame(platformData, windowRect);
-        ARect nonVisibleRect[4];
-
-        // Left
-        nonVisibleRect[0].left = windowRect.left;
-        nonVisibleRect[0].right = visibleRect.left;
-        nonVisibleRect[0].top = windowRect.top;
-        nonVisibleRect[0].bottom = windowRect.bottom;
-
-        // Right
-        nonVisibleRect[1].left = visibleRect.right;
-        nonVisibleRect[1].right = windowRect.right;
-        nonVisibleRect[1].top = windowRect.top;
-        nonVisibleRect[1].bottom = windowRect.bottom;
-
-        // Top
-        nonVisibleRect[2].left = windowRect.left;
-        nonVisibleRect[2].right = windowRect.right;
-        nonVisibleRect[2].top = windowRect.top;
-        nonVisibleRect[2].bottom = visibleRect.top;
-
-        // Bottom
-        nonVisibleRect[3].left = windowRect.left;
-        nonVisibleRect[3].right = windowRect.right;
-        nonVisibleRect[3].top = visibleRect.bottom;
-        nonVisibleRect[3].bottom = windowRect.bottom;
-
-        // Find largest with minimum keyboard size
-        const int minimumKeyboardSize = (int) (100 * platformData->scale);
-        int largestIndex = 0;
-        int largestArea = -1;
-        for (int i = 0; i < 4; i++) {
-            int w = nonVisibleRect[i].right - nonVisibleRect[i].left;
-            int h = nonVisibleRect[i].bottom - nonVisibleRect[i].top;
-            int area = w * h;
-            if (w >= minimumKeyboardSize && h >= minimumKeyboardSize && area > largestArea) {
-                largestIndex = i;
-                largestArea = area;
-            }
-        }
-
-        bool keyboardVisible = largestArea > 0;
-        ARect keyboardFrame = keyboardVisible ? nonVisibleRect[largestIndex] : (ARect) {0, 0, 0, 0};
-
-        // Send update notification
-        if (platformData->keyboardVisible != keyboardVisible ||
-            !ARectsEqual(platformData->keyboardFrame, keyboardFrame)) {
-            platformData->keyboardVisible = keyboardVisible;
-            platformData->keyboardFrame = keyboardFrame;
-            platformData->refreshRequested = true;
-            if (platformData->display->keyboardVisibilityChangedFunc) {
-                double x = keyboardFrame.left;
-                double y = keyboardFrame.top;
-                double w = keyboardFrame.right - keyboardFrame.left;
-                double h = keyboardFrame.bottom - keyboardFrame.top;
-                platformData->display->keyboardVisibilityChangedFunc(platformData->display,
-                                                                     keyboardVisible,
-                                                                     x, y, w, h);
-            }
-        }
-    }
+    // This function is now obsolete. All keyboard updates are handled by
+    // Java_org_minijvm_activity_JvmNativeActivity_onKeyboardHeightChanged
+    // via the OnApplyWindowInsetsListener.
 }
 
 // MARK: App command callback
@@ -963,13 +904,13 @@ static void glfm__onAppCmd(struct android_app *app, int32_t cmd) {
             const bool success = glfm__eglInit(platformData);
             if (!success) {
                 glfm__eglCheckError(platformData);
-            // } else {
-            //     // 窗口初始化成功后，先清空缓冲区
-            //     if (platformData->eglContextCurrent) {
-            //         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-            //         eglSwapBuffers(platformData->eglDisplay, platformData->eglSurface);
-            //         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-            //     }
+                // } else {
+                //     // 窗口初始化成功后，先清空缓冲区
+                //     if (platformData->eglContextCurrent) {
+                //         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                //         eglSwapBuffers(platformData->eglDisplay, platformData->eglSurface);
+                //         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                //     }
             }
             platformData->refreshRequested = true;
             glfm__drawFrame(platformData);
@@ -1025,7 +966,6 @@ static void glfm__onAppCmd(struct android_app *app, int32_t cmd) {
             pthread_mutex_unlock(&app->mutex);
             glfm__updateSurfaceSizeIfNeeded(platformData->display, true);
             glfm__reportOrientationChangeIfNeeded(platformData->display);
-            glfm__updateKeyboardVisibility(platformData);
             break;
         }
         case APP_CMD_LOW_MEMORY: {
@@ -1473,10 +1413,6 @@ void android_main(struct android_app *app) {
         }
     }
 
-    // 添加键盘状态检查变量
-    static double lastKeyboardCheckTime = 0;
-    static const double KEYBOARD_CHECK_INTERVAL = 0.1; // 每100ms检查一次
-
     // Run the main loop
     while (1) {
         int eventIdentifier;
@@ -1590,14 +1526,6 @@ void android_main(struct android_app *app) {
                 // App is destroyed, but android_main() can be called again in the same process.
                 return;
             }
-        }
-
-        // 定期检查键盘可见性状态（备用机制）
-        double currentTime = glfmGetTime();
-        if (platformData->animating && platformData->display && 
-            (currentTime - lastKeyboardCheckTime) >= KEYBOARD_CHECK_INTERVAL) {
-            lastKeyboardCheckTime = currentTime;
-            glfm__updateKeyboardVisibility(platformData);
         }
 
         if (platformData->animating && platformData->display) {
@@ -2442,6 +2370,41 @@ void remoteMethodCall(const char *inJsonStr, Utf8String *outJsonStr) {
 
 void buyAppleProductById(GLFMDisplay *display, const char *cproductID, const char *base64HandleScript) {
     printf("buyAppleProductById can't call on android\n");
+}
+
+JNIEXPORT void JNICALL
+Java_org_minijvm_activity_JvmNativeActivity_onKeyboardHeightChanged(JNIEnv *env, jobject thiz, jboolean jvisible, jint jheight) {
+    if (platformDataGlobal && platformDataGlobal->display) {
+        bool visible = jvisible;
+
+        if (platformDataGlobal->keyboardVisible != visible || (visible && platformDataGlobal->keyboardHeight != jheight)) {
+            platformDataGlobal->keyboardVisible = visible;
+            platformDataGlobal->keyboardHeight = jheight;
+
+            if (platformDataGlobal->display->keyboardVisibilityChangedFunc) {
+                int screenWidth, screenHeight;
+                glfmGetDisplaySize(platformDataGlobal->display, &screenWidth, &screenHeight);
+
+                double kbdX, kbdY, kbdW, kbdH;
+
+                if (visible) {
+                    kbdX = 0;
+                    kbdY = screenHeight - jheight;
+                    kbdW = screenWidth;
+                    kbdH = jheight;
+                    platformDataGlobal->keyboardFrame = (ARect) {(int) kbdX, (int) kbdY, (int) (kbdX + kbdW), (int) (kbdY + kbdH)};
+                } else {
+                    kbdX = kbdY = kbdW = kbdH = 0;
+                    platformDataGlobal->keyboardFrame = (ARect) {0, 0, 0, 0};
+                }
+
+                platformDataGlobal->display->keyboardVisibilityChangedFunc(platformDataGlobal->display,
+                                                                           visible,
+                                                                           kbdX, kbdY, kbdW, kbdH);
+                platformDataGlobal->refreshRequested = true;
+            }
+        }
+    }
 }
 
 #endif  //GLFM_PLATFORM_ANDROID
