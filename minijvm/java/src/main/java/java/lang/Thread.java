@@ -28,7 +28,6 @@ package java.lang;
 
 import org.mini.vm.RefNative;
 import org.mini.vm.ThreadLifeHandler;
-import sun.reflect.Reflection;
 
 /**
  * A <i>thread</i> is a thread of execution in a program. The Java Virtual

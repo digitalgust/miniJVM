@@ -92,6 +92,8 @@ public final class AppLoader {
             guiSecurityManager.addAllowedCaller("org.mini.apploader.AppLoader", "setGuiStyle");
             guiSecurityManager.addAllowedCaller("org.mini.apploader.AppLoader", "setGuiFeel");
             guiSecurityManager.addAllowedCaller("org.mini.apploader.AppLoader", "addApp");
+            guiSecurityManager.addAllowedCaller("org.mini.apploader.AppLoader", "setHomeIconY");
+            guiSecurityManager.addAllowedCaller("org.mini.apploader.AppLoader", "setHomeIconX");
             //decline app access others resources
 //            guiSecurityManager.addDeclinedCaller("org.mini.apploader.GApplication", "init");
             System.setSecurityManager(guiSecurityManager);

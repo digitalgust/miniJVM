@@ -22,6 +22,7 @@ public class GuiSecurityManager extends SecurityManager {
     // 允许访问的类名
     private final Set<String> allowedCaller = new HashSet<>();
     private final Set<String> declinedCaller = new HashSet<>();
+    private final String runWork = "org.mini.gui.callback.GCmdHandler.runWork";
 
     public GuiSecurityManager() {
     }
@@ -47,9 +48,6 @@ public class GuiSecurityManager extends SecurityManager {
             case "accessPassword":
                 GApplication app = GCallBack.getInstance().getApplication();
                 if (app != null && !isAppManager()) {
-                    throw new SecurityException("Access declined: " + perm);
-                }
-                if (isAccessDeclined()) {
                     throw new SecurityException("Access declined: " + perm);
                 }
                 break;
@@ -79,9 +77,16 @@ public class GuiSecurityManager extends SecurityManager {
     }
 
     private void checkRestrictedFile(String filePath) {
-        if (isAccessAllowed()) {
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        if (isAccessAllowed(stackTrace)) {
             return;
         }
+
+        if (isRunWork(stackTrace) && Thread.currentThread().getContextClassLoader() == AppManager.class.getClassLoader()) {
+            //System.out.println("runWork in AppManager");
+            return;
+        }
+
         //当前处于应用程序中
         GApplication app = GCallBack.getInstance().getApplication();
         if (app != null && !isAppManager()) {
@@ -108,9 +113,9 @@ public class GuiSecurityManager extends SecurityManager {
 
             if (absolutePath.startsWith(absSaveRoot)) {//如果是访问保存目录下的文件
                 if (!absolutePath.startsWith(absAppSaveRoot)) { // 如果不是访问当前Application的保存目录下的文件
-                    System.out.println("absSaveRoot= " + absSaveRoot);
-                    System.out.println("absAppSaveRoot= " + absAppSaveRoot);
-                    System.out.println("absolutePath= " + absolutePath);
+//                    System.out.println("absSaveRoot= " + absSaveRoot);
+//                    System.out.println("absAppSaveRoot= " + absAppSaveRoot);
+//                    System.out.println("absolutePath= " + absolutePath);
                     throw new SecurityException("Access declined: " + file);
                 }
             }
@@ -122,7 +127,7 @@ public class GuiSecurityManager extends SecurityManager {
     }
 
     // 判断当前访问是否被允许
-    private boolean isAccessAllowed() {
+    private boolean isAccessAllowed(StackTraceElement[] stackTrace) {
         // 检查当前线程名称
         String currentThreadName = Thread.currentThread().getName();
         if (allowedThreadNames.contains(currentThreadName)) {
@@ -130,7 +135,6 @@ public class GuiSecurityManager extends SecurityManager {
         }
 
         // 检查调用栈中的类
-        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
         for (StackTraceElement element : stackTrace) {
             String className = element.getClassName();
             String methodName = element.getMethodName();
@@ -142,9 +146,19 @@ public class GuiSecurityManager extends SecurityManager {
         return false;
     }
 
-    private boolean isAccessDeclined() {
+    private boolean isRunWork(StackTraceElement[] stackTrace) {
+        for (StackTraceElement element : stackTrace) {
+            String className = element.getClassName();
+            String methodName = element.getMethodName();
+            if (runWork.equals(className + "." + methodName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isAccessDeclined(StackTraceElement[] stackTrace) {
         // 检查调用栈中的类
-        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
         for (StackTraceElement element : stackTrace) {
             String className = element.getClassName();
             String methodName = element.getMethodName();
