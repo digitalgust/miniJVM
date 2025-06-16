@@ -175,6 +175,7 @@ public final class AppManager extends GApplication implements XuiAppHolder {
     @Override
     public final void onInit() {
         regStrings();
+        onResume();
 
         mgrForm = loadXmlForm();
         initForm();
@@ -264,7 +265,6 @@ public final class AppManager extends GApplication implements XuiAppHolder {
     public void initForm() {
         //System.out.println("devW :" + devW + ", devH  :" + devH);
 
-        onResume();
 
         mgrForm.setNotifyListener(new GNotifyListener() {
             @Override
