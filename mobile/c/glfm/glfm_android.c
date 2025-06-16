@@ -303,6 +303,7 @@ static bool glfm__handleBackButton(struct android_app *app) {
     return !glfm__wasJavaExceptionThrown() && handled;
 }
 
+// Internal function, shows the native keyboard
 static bool glfm__setKeyboardVisible(GLFMPlatformData *platformData, bool visible) {
     static const int InputMethodManager_SHOW_FORCED = 2;
 
@@ -318,18 +319,24 @@ static bool glfm__setKeyboardVisible(GLFMPlatformData *platformData, bool visibl
 
     jclass contextClass = (*jni)->FindClass(jni, "android/content/Context");
     if (glfm__wasJavaExceptionThrown()) {
+        (*jni)->DeleteLocalRef(jni, decorView);
         return false;
     }
 
     jstring imString = glfm__getJavaStaticField(jni, contextClass, "INPUT_METHOD_SERVICE",
                                                 "Ljava/lang/String;", Object);
     if (!imString || glfm__wasJavaExceptionThrown()) {
+        (*jni)->DeleteLocalRef(jni, contextClass);
+        (*jni)->DeleteLocalRef(jni, decorView);
         return false;
     }
     jobject ime = glfm__callJavaMethodWithArgs(jni, platformData->app->activity->clazz,
                                                "getSystemService", "(Ljava/lang/String;)Ljava/lang/Object;",
                                                Object, imString);
     if (!ime || glfm__wasJavaExceptionThrown()) {
+        (*jni)->DeleteLocalRef(jni, imString);
+        (*jni)->DeleteLocalRef(jni, contextClass);
+        (*jni)->DeleteLocalRef(jni, decorView);
         return false;
     }
 
@@ -339,6 +346,10 @@ static bool glfm__setKeyboardVisible(GLFMPlatformData *platformData, bool visibl
     } else {
         jobject windowToken = glfm__callJavaMethod(jni, decorView, "getWindowToken", "()Landroid/os/IBinder;", Object);
         if (!windowToken || glfm__wasJavaExceptionThrown()) {
+            (*jni)->DeleteLocalRef(jni, ime);
+            (*jni)->DeleteLocalRef(jni, imString);
+            (*jni)->DeleteLocalRef(jni, contextClass);
+            (*jni)->DeleteLocalRef(jni, decorView);
             return false;
         }
         glfm__callJavaMethodWithArgs(jni, ime, "hideSoftInputFromWindow",
@@ -352,6 +363,56 @@ static bool glfm__setKeyboardVisible(GLFMPlatformData *platformData, bool visibl
     (*jni)->DeleteLocalRef(jni, decorView);
 
     return !glfm__wasJavaExceptionThrown();
+}
+
+// Internal function to show the text input dialog
+static void glfm__showTextInput(GLFMDisplay *display, const char *initialText) {
+    if (display) {
+        GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+        JNIEnv *jni = platformData->jniEnv;
+
+        jstring jInitialText = (*jni)->NewStringUTF(jni, initialText ? initialText : "");
+
+        glfm__callJavaMethodWithArgs(jni, platformData->app->activity->clazz, "showTextInput",
+                                     "(Ljava/lang/String;)V", Void, jInitialText);
+
+        (*jni)->DeleteLocalRef(jni, jInitialText);
+        glfm__clearJavaException();
+    }
+}
+
+// Internal function to hide the text input dialog
+static void glfm__hideTextInput(GLFMDisplay *display) {
+    if (display) {
+        GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+        JNIEnv *jni = platformData->jniEnv;
+
+        glfm__callJavaMethod(jni, platformData->app->activity->clazz, "hideTextInput",
+                             "()V", Void);
+        glfm__clearJavaException();
+    }
+}
+
+void glfmSetKeyboardVisible(GLFMDisplay *display, bool visible) {
+    if (!display) {
+        return;
+    }
+    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+    JNIEnv *jni = platformData->jniEnv;
+
+    if (visible) {
+        glfm__callJavaMethod(jni, platformData->app->activity->clazz, "showSoftInput",
+                             "()V", Void);
+    } else {
+        glfm__callJavaMethod(jni, platformData->app->activity->clazz, "hideSoftInput",
+                             "()V", Void);
+    }
+    glfm__clearJavaException();
+}
+
+bool glfmIsKeyboardVisible(GLFMDisplay *display) {
+    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+    return platformData->keyboardVisible;
 }
 
 static void glfm__resetContentRect(GLFMPlatformData *platformData) {
@@ -1856,21 +1917,6 @@ GLFMProc glfmGetProcAddress(const char *functionName) {
     return function;
 }
 
-void glfmSetKeyboardVisible(GLFMDisplay *display, bool visible) {
-    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
-    if (glfm__setKeyboardVisible(platformData, visible)) {
-        if (visible && display->uiChrome == GLFMUserInterfaceChromeFullscreen) {
-            // This seems to be required to reset to fullscreen when the keyboard is shown.
-            glfm__setFullScreen(platformData->app, GLFMUserInterfaceChromeNavigationAndStatusBar);
-        }
-    }
-}
-
-bool glfmIsKeyboardVisible(GLFMDisplay *display) {
-    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
-    return platformData->keyboardVisible;
-}
-
 // MARK: Sensors
 
 static const ASensor *glfm__getDeviceSensor(GLFMSensor sensor) {
@@ -2404,6 +2450,102 @@ Java_org_minijvm_activity_JvmNativeActivity_onKeyboardHeightChanged(JNIEnv *env,
                 platformDataGlobal->refreshRequested = true;
             }
         }
+    }
+}
+
+JNIEXPORT void JNICALL
+Java_org_minijvm_activity_JvmNativeActivity_onNativeKey(JNIEnv *env, jobject thiz, jint key_code, jint count) {
+    if (platformDataGlobal && platformDataGlobal->display && platformDataGlobal->display->keyFunc) {
+        // We only handle backspace from the text watcher for now
+        GLFMKey key = GLFMKeyBackspace;
+        for (int i = 0; i < count; i++) {
+            platformDataGlobal->display->keyFunc(platformDataGlobal->display, key, GLFMKeyActionPressed, 0);
+            platformDataGlobal->display->keyFunc(platformDataGlobal->display, key, GLFMKeyActionReleased, 0);
+        }
+    }
+}
+
+// Helper to convert Android key code to GLFMKey
+static GLFMKey glfm__android_key_to_glfm_key(int32_t aKeyCode) {
+    switch (aKeyCode) {
+        case AKEYCODE_DEL:
+            return GLFMKeyBackspace;
+        case AKEYCODE_TAB:
+            return GLFMKeyTab;
+        case AKEYCODE_ENTER:
+            return GLFMKeyEnter;
+        case AKEYCODE_DPAD_CENTER:
+            return GLFMKeyEnter;
+        case AKEYCODE_ESCAPE:
+            return GLFMKeyEscape;
+        case AKEYCODE_SPACE:
+            return GLFMKeySpace;
+        case AKEYCODE_PAGE_UP:
+            return GLFMKeyPageUp;
+        case AKEYCODE_PAGE_DOWN:
+            return GLFMKeyPageDown;
+        case AKEYCODE_MOVE_END:
+            return GLFMKeyEnd;
+        case AKEYCODE_MOVE_HOME:
+            return GLFMKeyHome;
+        case AKEYCODE_DPAD_LEFT:
+            return GLFMKeyLeft;
+        case AKEYCODE_DPAD_UP:
+            return GLFMKeyUp;
+        case AKEYCODE_DPAD_RIGHT:
+            return GLFMKeyRight;
+        case AKEYCODE_DPAD_DOWN:
+            return GLFMKeyDown;
+        case AKEYCODE_FORWARD_DEL:
+            return GLFMKeyDelete;
+        case AKEYCODE_BACK:
+            return GLFMKeyNavBack;
+        case AKEYCODE_MENU:
+            return GLFMKeyNavMenu;
+        default:
+            if (aKeyCode >= AKEYCODE_0 && aKeyCode <= AKEYCODE_9) {
+                return (GLFMKey) (aKeyCode - AKEYCODE_0 + '0');
+            } else if (aKeyCode >= AKEYCODE_A && aKeyCode <= AKEYCODE_Z) {
+                return (GLFMKey) (aKeyCode - AKEYCODE_A + 'A');
+            } else {
+                return (GLFMKey) 0;
+            }
+    }
+}
+
+// Helper to convert Android meta state to GLFM modifiers
+static int glfm__android_meta_to_glfm_modifiers(jint metaState) {
+    int modifiers = 0;
+    if (metaState & AMETA_SHIFT_ON) { modifiers |= GLFMKeyModifierShift; }
+    if (metaState & AMETA_CTRL_ON) { modifiers |= GLFMKeyModifierCtrl; }
+    if (metaState & AMETA_ALT_ON) { modifiers |= GLFMKeyModifierAlt; }
+    if (metaState & AMETA_META_ON) { modifiers |= GLFMKeyModifierMeta; }
+    return modifiers;
+}
+
+JNIEXPORT void JNICALL
+Java_org_minijvm_activity_JvmNativeActivity_onNativeSpecialKey(JNIEnv *env, jobject thiz, jint key_code, jint action, jint modifiers) {
+    if (platformDataGlobal && platformDataGlobal->display && platformDataGlobal->display->keyFunc) {
+        GLFMKey glfmKey = glfm__android_key_to_glfm_key(key_code);
+        if (glfmKey == 0) {
+            return;
+        }
+
+        GLFMKeyAction glfmAction;
+        // In Java, KeyEvent.ACTION_DOWN = 0; ACTION_UP = 1;
+        // In GLFM, GLFMKeyActionReleased = 0; GLFMKeyActionPressed = 1;
+        // They are reversed.
+        if (action == 0) { // ACTION_DOWN
+            glfmAction = GLFMKeyActionPressed;
+        } else if (action == 1) { // ACTION_UP
+            glfmAction = GLFMKeyActionReleased;
+        } else {
+            return; // Ignore other actions
+        }
+
+        int glfmModifiers = glfm__android_meta_to_glfm_modifiers(modifiers);
+
+        platformDataGlobal->display->keyFunc(platformDataGlobal->display, glfmKey, glfmAction, glfmModifiers);
     }
 }
 

@@ -25,15 +25,22 @@ import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.text.Editable;
+import android.text.InputType;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.MediaController;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
@@ -55,6 +62,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * 20250616
+ * 因为搜狗输入法导致输入异常，表现为半个键盘无法使用，显示区和按钮区无法对应，应用和键盘均无法正常工作，我寻求多个AI进行解决，但很长时间都没能修正，
+ * 因为这是android相关的问题，最后我通过cursor里的gemini 2.5pro， 在进行各种提示后解决了问题，
+ * 主要引用了IOS键盘需要和UITextInput文本控件进行协议沟通的思想，想法得到了AI的支持，他最终完成了一个自定义文本控件mInputProxy，
+ * 其约束了输入法的行为，最终解决了问题。核心是：
+ * mInputProxy.setImeOptions(EditorInfo.IME_ACTION_DONE | EditorInfo.IME_FLAG_NO_EXTRACT_UI | EditorInfo.IME_FLAG_NO_FULLSCREEN);
+ * 其规定了输入法不能全屏，输入法不能接管应用层的输入内容
+ *
  * Created by gust on 2018/4/19.
  */
 
@@ -66,6 +81,8 @@ public class JvmNativeActivity extends NativeActivity {
     ClipboardManager mClipboardManager;
     InputMethodManager inputMethodManager;
     private final static String TAG = "JvmNativeActivity";
+    private EditText mInputProxy;//极为重要的一个自定义文本控件，否则，可能导致搜狗输入法的键盘无法工作，因为搜狗输入法需要和焦点文本控件进行沟通，以控制输入法的一些行为，早期没有这个控件，导致输入法行为异常，无法输入
+    private String mPreviousText = "";
 
     // android:name="android.app.NativeActivity"
     @Override
@@ -91,32 +108,167 @@ public class JvmNativeActivity extends NativeActivity {
                         | View.SYSTEM_UI_FLAG_FULLSCREEN);
 
 
-        // 键盘处理
-        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
-        decorView.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
-            @Override
-            public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
-                boolean isKeyboardVisible;
-                int keyboardHeight;
+        // 键盘处理，必须设置上SOFT_INPUT_ADJUST_RESIZE，c++才会通过keyboardVisibilityChangedFunc通知到应用层，否则键盘会挡住输入框
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            decorView.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+                @Override
+                public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
+                    boolean isKeyboardVisible;
+                    int keyboardHeight;
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { // Android 11+
-                    isKeyboardVisible = insets.isVisible(WindowInsets.Type.ime());
-                    keyboardHeight = insets.getInsets(WindowInsets.Type.ime()).bottom;
-                } else {
-                    // Fallback for older APIs using deprecated methods
-                    int bottomInset = insets.getSystemWindowInsetBottom();
-                    // A common heuristic: if the bottom inset is larger than the stable inset,
-                    // the keyboard is visible. The stable inset is for permanent system bars.
-                    int stableBottomInset = insets.getStableInsetBottom();
-                    isKeyboardVisible = bottomInset > stableBottomInset;
-                    keyboardHeight = isKeyboardVisible ? bottomInset : 0;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { // Android 11+
+                        isKeyboardVisible = insets.isVisible(WindowInsets.Type.ime());
+                        keyboardHeight = insets.getInsets(WindowInsets.Type.ime()).bottom;
+                    } else {
+                        // Fallback for older APIs using deprecated methods
+                        int bottomInset = insets.getSystemWindowInsetBottom();
+                        // A common heuristic: if the bottom inset is larger than the stable inset,
+                        // the keyboard is visible. The stable inset is for permanent system bars.
+                        int stableBottomInset = insets.getStableInsetBottom();
+                        isKeyboardVisible = bottomInset > stableBottomInset;
+                        keyboardHeight = isKeyboardVisible ? bottomInset : 0;
+                    }
+
+                    onKeyboardHeightChanged(isKeyboardVisible, keyboardHeight);
+                    return insets;
                 }
+            });
+        }
+        //test();
+        setupInputProxy();
+    }
 
-                onKeyboardHeightChanged(isKeyboardVisible, keyboardHeight);
-                return insets;
+    private void setupInputProxy() {
+        final JvmNativeActivity self = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mInputProxy = new EditText(self);
+                mInputProxy.setFocusable(true);
+                mInputProxy.setFocusableInTouchMode(true);
+                // Make it transparent and tiny
+                mInputProxy.setBackgroundColor(0);
+                mInputProxy.setTextColor(0);
+                mInputProxy.setCursorVisible(false);
+                //全文最重要的参数：IME_FLAG_NO_EXTRACT_UI 提示输入法不要接管输入框，IME_FLAG_NO_FULLSCREEN 提示输入法不要全屏，否则搜狗输入法会将输入框全屏，并接管输入文本，看不见应用层的输入框，处理非常麻烦
+                mInputProxy.setImeOptions(EditorInfo.IME_ACTION_DONE | EditorInfo.IME_FLAG_NO_EXTRACT_UI | EditorInfo.IME_FLAG_NO_FULLSCREEN);
+
+                mInputProxy.setOnKeyListener(new View.OnKeyListener() {
+                    @Override
+                    public boolean onKey(View v, int keyCode, KeyEvent event) {
+                        switch (keyCode) {
+                            case KeyEvent.KEYCODE_DPAD_UP:
+                            case KeyEvent.KEYCODE_DPAD_DOWN:
+                            case KeyEvent.KEYCODE_DPAD_LEFT:
+                            case KeyEvent.KEYCODE_DPAD_RIGHT:
+                            case KeyEvent.KEYCODE_ENTER:
+                            case KeyEvent.KEYCODE_FORWARD_DEL:
+                                // Handle these special keys by forwarding them to the native layer
+                                int action = event.getAction(); // ACTION_DOWN or ACTION_UP
+                                int modifiers = event.getMetaState();
+                                onNativeSpecialKey(keyCode, action, modifiers);
+                                return true; // We've handled this key
+                        }
+                        // Let the system handle other keys (like characters and regular backspace).
+                        // Regular backspace (KEYCODE_DEL) will trigger the TextWatcher.
+                        return false;
+                    }
+                });
+
+                mInputProxy.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                        mPreviousText = s.toString();
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        String newText = s.toString();
+                        // This logic is simplified. A more robust solution would handle compositions better.
+                        // Here, we calculate diff and send to native.
+
+                        // Deletion
+                        if (before > 0) {
+                            int numCharsToDelete = before;
+                            onNativeKey(KeyEvent.KEYCODE_DEL, numCharsToDelete);
+                        }
+
+                        // Insertion
+                        if (count > 0) {
+                            String inserted = newText.substring(start, start + count);
+                            onStringInput(inserted);
+                        }
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        // After changes, if the IME is done, we might clear the text
+                        // to be ready for the next input.
+                        if (mInputProxy.getText().length() > 0 && !mInputProxy.hasFocus()) {
+                            mInputProxy.setText("");
+                        }
+                    }
+                });
+
+                mInputProxy.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                    @Override
+                    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                        if (actionId == EditorInfo.IME_ACTION_DONE) {
+                            hideSoftInput();
+                            return true; // We handled the action
+                        }
+                        return false;
+                    }
+                });
+
+                // Hide it by placing it in a 1x1 layout at 0,0
+                FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(1, 1);
+                addContentView(mInputProxy, params);
             }
         });
-        //test();
+    }
+
+    public void showSoftInput() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // Temporarily exit immersive sticky mode to allow the keyboard to appear.
+                getWindow().getDecorView().setSystemUiVisibility(
+                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+
+                if (mInputProxy.requestFocus()) {
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        imm.showSoftInput(mInputProxy, InputMethodManager.SHOW_FORCED);
+                    }
+                }
+            }
+        });
+    }
+
+    public void hideSoftInput() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null) {
+                    imm.hideSoftInputFromWindow(mInputProxy.getWindowToken(), 0);
+                }
+                mInputProxy.clearFocus();
+
+                // Re-enter immersive sticky mode.
+                getWindow().getDecorView().setSystemUiVisibility(
+                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                | View.SYSTEM_UI_FLAG_FULLSCREEN);
+            }
+        });
     }
 
     void test() {
@@ -197,7 +349,7 @@ public class JvmNativeActivity extends NativeActivity {
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         String str = event.getCharacters();
-        if (str != null) {
+        if (str != null && !str.isEmpty()) {
             if (onStringInput(str)) return true;
         }
         return super.dispatchKeyEvent(event);
@@ -244,6 +396,10 @@ public class JvmNativeActivity extends NativeActivity {
     native boolean onStringInput(String str);
 
     native void onKeyboardHeightChanged(boolean visible, int height);
+
+    native void onNativeKey(int keyCode, int count);
+
+    native void onNativeSpecialKey(int keyCode, int action, int modifiers);
 
     //=======================================================================================================
     private static final int CAMERA_IMAGE_CODE = 0;
