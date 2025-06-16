@@ -91,7 +91,7 @@ public class JvmNativeActivity extends NativeActivity {
         mClipboardManager = mClipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
         PHOTO_DIR_SD = new File(getExternalFilesDir("").getAbsolutePath() + "/tmp");
         PHOTO_DIR_ROOT = new File(getFilesDir().getAbsolutePath() + "/tmp");
-        requestAudioPermissions();
+        //requestAudioPermissions();
 
         // 沉浸式模式
         Window window = getWindow();
