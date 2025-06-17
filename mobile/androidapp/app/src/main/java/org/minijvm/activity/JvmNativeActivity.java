@@ -83,6 +83,7 @@ public class JvmNativeActivity extends NativeActivity {
     private final static String TAG = "JvmNativeActivity";
     private EditText mInputProxy;//极为重要的一个自定义文本控件，否则，可能导致搜狗输入法的键盘无法工作，因为搜狗输入法需要和焦点文本控件进行沟通，以控制输入法的一些行为，早期没有这个控件，导致输入法行为异常，无法输入
     private String mPreviousText = "";
+    private boolean mClearingProxyText = false;
 
     // android:name="android.app.NativeActivity"
     @Override
@@ -179,11 +180,14 @@ public class JvmNativeActivity extends NativeActivity {
                 mInputProxy.addTextChangedListener(new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                        if (mClearingProxyText) return;
                         mPreviousText = s.toString();
                     }
 
                     @Override
                     public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        if (mClearingProxyText) return;
+
                         String newText = s.toString();
                         // This logic is simplified. A more robust solution would handle compositions better.
                         // Here, we calculate diff and send to native.
@@ -203,11 +207,7 @@ public class JvmNativeActivity extends NativeActivity {
 
                     @Override
                     public void afterTextChanged(Editable s) {
-                        // After changes, if the IME is done, we might clear the text
-                        // to be ready for the next input.
-                        if (mInputProxy.getText().length() > 0 && !mInputProxy.hasFocus()) {
-                            mInputProxy.setText("");
-                        }
+                        // This logic is no longer needed. Text is cleared explicitly when the keyboard is hidden.
                     }
                 });
 
@@ -257,6 +257,13 @@ public class JvmNativeActivity extends NativeActivity {
                 if (imm != null) {
                     imm.hideSoftInputFromWindow(mInputProxy.getWindowToken(), 0);
                 }
+
+                // Clear the text in the proxy view to reset the IME state,
+                // using a flag to prevent the TextWatcher from firing.
+                mClearingProxyText = true;
+                mInputProxy.setText("");
+                mClearingProxyText = false;
+
                 mInputProxy.clearFocus();
 
                 // Re-enter immersive sticky mode.
