@@ -65,13 +65,13 @@ public class JsonPrinter {
     private StringBuilder printString(String s, StringBuilder sb) {
         sb.append('"');
         String s2 = s;
-        s2 = s2.replaceAll("\\\\", "\\\\\\\\");//  \
-        s2 = s2.replaceAll("\"", "\\\\\""); // "
-        s2 = s2.replaceAll("\n", "\\\\n");// newline
-        s2 = s2.replaceAll("\r", "\\\\r");// return
-        s2 = s2.replaceAll("\t", "\\\\t");// tab
-        s2 = s2.replaceAll("\b", "\\\\b");// backspace
-        s2 = s2.replaceAll("\f", "\\\\f");// formfeed
+        s2 = s2.replace("\\", "\\\\");//  \
+        s2 = s2.replace("\"", "\\\""); // "
+        s2 = s2.replace("\n", "\\n");// newline
+        s2 = s2.replace("\r", "\\r");// return
+        s2 = s2.replace("\t", "\\t");// tab
+        s2 = s2.replace("\b", "\\b");// backspace
+        s2 = s2.replace("\f", "\\f");// formfeed
         sb.append(s2);
         sb.append('"');
         return sb;
@@ -136,11 +136,15 @@ public class JsonPrinter {
     }
 
     static private Method getMethodByName(String name, Class<?> clazz) {
-        String mName = "get" + name.substring(0, 1).toUpperCase() + name.substring(1);
+        String tmp = name.substring(0, 1).toUpperCase() + name.substring(1);
+        String mName0 = "get" + tmp;
+        String mName1 = "is" + tmp;
         Method[] methods = clazz.getMethods();
         for (Method m : methods) {
-            if (m.getName().equals(mName) && m.getParameterTypes().length == 0) {
-                return m;
+            if (m.getParameterTypes().length == 0) {
+                if (m.getName().equals(mName0) || m.getName().equals(mName1)) {
+                    return m;
+                }
             }
         }
         return null;
@@ -221,14 +225,14 @@ public class JsonPrinter {
         }
     }
 
-    static public final void main(String[] args) throws Exception {
-        //serial
-        Foo t = new Foo();
-        t.init();
-        String s = new JsonPrinter().serial(t);
-        System.out.println(s);
-
-        Foo t1 = new JsonParser<Foo>().deserial(s, Foo.class);
-        int debug = 1;
-    }
+//    static public final void main(String[] args) throws Exception {
+//        //serial
+//        Foo t = new Foo();
+//        t.init();
+//        String s = new JsonPrinter().serial(t);
+//        System.out.println(s);
+//
+//        Foo t1 = new JsonParser<Foo>().deserial(s, Foo.class);
+//        int debug = 1;
+//    }
 }

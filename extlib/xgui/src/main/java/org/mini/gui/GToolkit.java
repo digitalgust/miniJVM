@@ -863,7 +863,7 @@ public class GToolkit {
         frame.setFront(true);
 
         if (path == null || path.length() == 0) {
-            path = AppLoader.getProperty("filechooserpath");
+            path = AppLoader.getFileChooserPath();
         }
         if (path == null || "".equals(path)) {
             path = GCallBack.getInstance().getApplication().getSaveRoot();  //android can't access out of app dir
@@ -1012,7 +1012,7 @@ public class GToolkit {
         }
         up.setAttachment(f);
         chooserAddFilesToList(f, list.getAttachment(), list);
-        AppLoader.setProperty("filechooserpath", "");
+        AppLoader.setFileChooserPath("");
     }
 
     private static GActionListener fileChooserItemListener = gobj -> {
@@ -1025,7 +1025,7 @@ public class GToolkit {
             }
             GButton upBtn = GToolkit.getComponent(gobj.getFrame(), NAME_FILECHOOSER_UP);
             if (upBtn != null) {
-                AppLoader.setProperty("filechooserpath", f.getAbsolutePath());
+                AppLoader.setFileChooserPath(f.getAbsolutePath());
                 upBtn.setAttachment(f);
             }
         }

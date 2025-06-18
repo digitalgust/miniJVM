@@ -88,6 +88,10 @@ public class JvmNativeActivity extends NativeActivity {
     // 用于存储等待权限的图片裁剪请求
     private Bitmap mPendingBitmapToSave = null;
     private String mPendingFilename = null;
+    
+    // 用于存储等待权限的视频保存请求
+    private String mPendingVideoPath = null;
+    private String mPendingVideoFilename = null;
 
     // android:name="android.app.NativeActivity"
     @Override
@@ -394,7 +398,7 @@ public class JvmNativeActivity extends NativeActivity {
                     if (mPendingBitmapToSave != null) {
                         boolean saved = saveImageToGalleryLegacy(mPendingBitmapToSave, mPendingFilename);
                         if (saved) {
-                            Toast.makeText(this, "图片已保存到相册", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "Photo saved success", Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(this, "保存图片失败", Toast.LENGTH_SHORT).show();
                         }
@@ -404,6 +408,19 @@ public class JvmNativeActivity extends NativeActivity {
                         }
                         mPendingBitmapToSave = null;
                         mPendingFilename = null;
+                    }
+                    
+                    // 如果有待处理的视频保存请求，现在执行它
+                    if (mPendingVideoPath != null) {
+                        boolean saved = saveVideoToGalleryLegacy(mPendingVideoPath, mPendingVideoFilename);
+                        if (saved) {
+                            Toast.makeText(this, "Video saved success", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(this, "保存视频失败", Toast.LENGTH_SHORT).show();
+                        }
+                        // 清除待处理的视频请求
+                        mPendingVideoPath = null;
+                        mPendingVideoFilename = null;
                     }
                 } else {
                     // permission denied, boo! Disable the
@@ -415,6 +432,10 @@ public class JvmNativeActivity extends NativeActivity {
                     }
                     mPendingBitmapToSave = null;
                     mPendingFilename = null;
+                    
+                    // 清除待处理的视频请求
+                    mPendingVideoPath = null;
+                    mPendingVideoFilename = null;
                 }
                 return;
             }
@@ -445,6 +466,10 @@ public class JvmNativeActivity extends NativeActivity {
             mPendingBitmapToSave.recycle();
             mPendingBitmapToSave = null;
         }
+        
+        // 清理待处理的视频请求
+        mPendingVideoPath = null;
+        mPendingVideoFilename = null;
     }
 
     public void showKeyboard() {
@@ -669,6 +694,114 @@ public class JvmNativeActivity extends NativeActivity {
     }
 
     /**
+     * 将视频保存到相册
+     *
+     * @param videoPath 视频文件路径
+     * @param filename  文件名（可选，为null时自动生成）
+     * @return 是否保存成功
+     */
+    public boolean saveVideoToGallery(String videoPath, String filename) {
+        try {
+            if (filename == null) {
+                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                filename = "VID_" + timeStamp + ".mp4";
+            }
+
+            // Android 10 及以上版本使用 MediaStore
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                return saveVideoToGalleryQ(videoPath, filename);
+            } else {
+                // Android 10 以下版本需要检查外部存储权限
+                if (!hasWriteExternalStoragePermission()) {
+                    // 存储待处理的视频保存请求
+                    mPendingVideoPath = videoPath;
+                    mPendingVideoFilename = filename;
+                    requestWriteExternalStoragePermission();
+                    return false;
+                }
+                return saveVideoToGalleryLegacy(videoPath, filename);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Android 10+ 版本保存视频到相册
+     */
+    @android.annotation.TargetApi(Build.VERSION_CODES.Q)
+    private boolean saveVideoToGalleryQ(String videoPath, String filename) {
+        try {
+            android.content.ContentValues values = new android.content.ContentValues();
+            values.put(android.provider.MediaStore.Video.Media.DISPLAY_NAME, filename);
+            values.put(android.provider.MediaStore.Video.Media.MIME_TYPE, "video/mp4");
+            values.put(android.provider.MediaStore.Video.Media.RELATIVE_PATH, "DCIM/Camera");
+
+            android.content.ContentResolver resolver = getContentResolver();
+            Uri uri = resolver.insert(android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
+
+            if (uri != null) {
+                java.io.OutputStream outputStream = resolver.openOutputStream(uri);
+                java.io.FileInputStream inputStream = new java.io.FileInputStream(videoPath);
+
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+
+                inputStream.close();
+                outputStream.close();
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Android 10 以下版本保存视频到相册
+     */
+    private boolean saveVideoToGalleryLegacy(String videoPath, String filename) {
+        try {
+            // 保存到相册目录
+            File galleryDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Camera");
+            if (!galleryDir.exists()) {
+                galleryDir.mkdirs();
+            }
+
+            File sourceFile = new File(videoPath);
+            File targetFile = new File(galleryDir, filename);
+
+            // 复制文件
+            java.io.FileInputStream inputStream = new java.io.FileInputStream(sourceFile);
+            java.io.FileOutputStream outputStream = new java.io.FileOutputStream(targetFile);
+
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+
+            inputStream.close();
+            outputStream.close();
+
+            // 通知媒体库扫描新文件
+            android.media.MediaScannerConnection.scanFile(this,
+                    new String[]{targetFile.getAbsolutePath()},
+                    new String[]{"video/mp4"},
+                    null);
+
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
      * 通过Uri传递图像信息以供裁剪
      *
      * @param uris
@@ -690,6 +823,12 @@ public class JvmNativeActivity extends NativeActivity {
      */
     public void imageCrop(int uid, String uris, int x, int y, int width, int height, boolean saveToGallery) {
         try {
+            // 检查是否为视频文件
+            if (uris.toLowerCase().endsWith(".mp4")) {
+                handleVideoFile(uid, uris, saveToGallery);
+                return;
+            }
+
             // 不再使用过时的系统裁剪Intent，改为自定义实现
             Bitmap originalBitmap = loadBitmapFromUri(uris);
 
@@ -714,7 +853,7 @@ public class JvmNativeActivity extends NativeActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(JvmNativeActivity.this, "图片已保存到相册", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(JvmNativeActivity.this, "Photo saved success", Toast.LENGTH_SHORT).show();
                             }
                         });
                     }
@@ -736,6 +875,124 @@ public class JvmNativeActivity extends NativeActivity {
             e.printStackTrace();
             // 发生异常时回调失败
             onPhotoPicked(uid, null, null);
+        }
+    }
+
+    /**
+     * 处理视频文件，直接保存到相册而不做裁剪
+     * 
+     * @param uid 用户ID
+     * @param videoPath 视频文件路径
+     * @param saveToGallery 是否保存到相册
+     */
+    private void handleVideoFile(int uid, String videoPath, boolean saveToGallery) {
+        try {
+            // 获取实际的文件路径
+            String actualPath = getActualVideoPath(videoPath);
+            
+            if (actualPath == null || !new File(actualPath).exists()) {
+                // 文件不存在，返回失败
+                onPhotoPicked(uid, null, null);
+                return;
+            }
+            
+            if (saveToGallery) {
+                boolean savedToGallery = saveVideoToGallery(actualPath, null);
+                if (savedToGallery) {
+                    // 显示保存成功提示
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(JvmNativeActivity.this, "Video saved success", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            }
+            
+            // 无论是否保存到相册，都返回原始路径
+            onPhotoPicked(uid, actualPath, null);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            onPhotoPicked(uid, null, null);
+        }
+    }
+    
+    /**
+     * 获取视频文件的实际路径
+     * 
+     * @param uris URI字符串
+     * @return 实际文件路径
+     */
+    private String getActualVideoPath(String uris) {
+        try {
+            // 首先尝试作为文件路径处理
+            if (uris.startsWith("/")) {
+                // 绝对路径
+                File file = new File(uris);
+                if (file.exists()) {
+                    return uris;
+                }
+            }
+            
+            // 尝试作为URI处理
+            Uri uri = Uri.parse(uris);
+            String scheme = uri.getScheme();
+            
+            if ("file".equals(scheme)) {
+                // file:// URI
+                String path = uri.getPath();
+                File file = new File(path);
+                if (file.exists()) {
+                    return path;
+                }
+            } else if ("content".equals(scheme)) {
+                // content:// URI需要先复制到临时文件
+                return copyContentUriToTempFile(uri);
+            } else {
+                // 没有scheme，尝试作为文件路径
+                File file = new File(uris);
+                if (file.exists()) {
+                    return uris;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    /**
+     * 将content URI的视频复制到临时文件
+     * 
+     * @param uri content URI
+     * @return 临时文件路径
+     */
+    private String copyContentUriToTempFile(Uri uri) {
+        try {
+            InputStream inputStream = getContentResolver().openInputStream(uri);
+            if (inputStream == null) {
+                return null;
+            }
+            
+            // 创建临时文件
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            File tempFile = new File(getPhotoStorage(), "temp_video_" + timeStamp + ".mp4");
+            
+            FileOutputStream outputStream = new FileOutputStream(tempFile);
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+            
+            inputStream.close();
+            outputStream.close();
+            
+            return tempFile.getAbsolutePath();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
     }
 

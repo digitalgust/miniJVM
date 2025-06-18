@@ -38,7 +38,7 @@ public class JsonParser<T> {
             public Object deserialize(JsonCell p, String types) {
                 Map map = new HashMap();
 
-                if (types.indexOf(',') < 0) {
+                if (types == null || types.indexOf(',') < 0) {
                     JsonMap<JsonCell, JsonCell> jsonMap = (JsonMap) p;
                     for (JsonCell key : jsonMap.keySet()) {
                         try {
@@ -537,6 +537,9 @@ public class JsonParser<T> {
             return null;
         }
         try {
+            if (clazz == null && types == null && json.getType() == JsonCell.TYPE_MAP) {
+                clazz = Map.class;
+            }
             StdDeserializer<?> deser = findDeserializer(clazz);
             if (deser != null) {  // process list map set
                 return deser.deserialize(json, types);

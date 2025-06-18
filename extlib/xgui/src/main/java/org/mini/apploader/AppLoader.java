@@ -94,6 +94,7 @@ public final class AppLoader {
             guiSecurityManager.addAllowedCaller("org.mini.apploader.AppLoader", "addApp");
             guiSecurityManager.addAllowedCaller("org.mini.apploader.AppLoader", "setHomeIconY");
             guiSecurityManager.addAllowedCaller("org.mini.apploader.AppLoader", "setHomeIconX");
+            guiSecurityManager.addAllowedCaller("org.mini.apploader.AppLoader", "setFileChooserPath");
             //decline app access others resources
 //            guiSecurityManager.addDeclinedCaller("org.mini.apploader.GApplication", "init");
             System.setSecurityManager(guiSecurityManager);
@@ -375,6 +376,15 @@ public final class AppLoader {
 
     static void setHomeIconY(int y) {
         appinfo.put(KEY_HOMEICON_Y, "" + y);
+        saveProp(APP_INFO_FILE, appinfo);
+    }
+
+    public static String getFileChooserPath() {
+        return appinfo.getProperty("filechooserpath");
+    }
+
+    public static void setFileChooserPath(String path) {
+        appinfo.put("filechooserpath", path);
         saveProp(APP_INFO_FILE, appinfo);
     }
 
