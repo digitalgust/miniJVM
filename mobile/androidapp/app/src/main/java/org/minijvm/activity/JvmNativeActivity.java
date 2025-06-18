@@ -69,7 +69,7 @@ import java.util.Map;
  * 其约束了输入法的行为，最终解决了问题。核心是：
  * mInputProxy.setImeOptions(EditorInfo.IME_ACTION_DONE | EditorInfo.IME_FLAG_NO_EXTRACT_UI | EditorInfo.IME_FLAG_NO_FULLSCREEN);
  * 其规定了输入法不能全屏，输入法不能接管应用层的输入内容
- *
+ * <p>
  * Created by gust on 2018/4/19.
  */
 
@@ -84,6 +84,10 @@ public class JvmNativeActivity extends NativeActivity {
     private EditText mInputProxy;//极为重要的一个自定义文本控件，否则，可能导致搜狗输入法的键盘无法工作，因为搜狗输入法需要和焦点文本控件进行沟通，以控制输入法的一些行为，早期没有这个控件，导致输入法行为异常，无法输入
     private String mPreviousText = "";
     private boolean mClearingProxyText = false;
+
+    // 用于存储等待权限的图片裁剪请求
+    private Bitmap mPendingBitmapToSave = null;
+    private String mPendingFilename = null;
 
     // android:name="android.app.NativeActivity"
     @Override
@@ -300,6 +304,7 @@ public class JvmNativeActivity extends NativeActivity {
     //Create placeholder for user's consent to record_audio permission.
     //This will be used in handling callback
     private final int MY_PERMISSIONS_RECORD_AUDIO = 1;
+    private final int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 2;
 
     private void requestAudioPermissions() {
         if (ContextCompat.checkSelfPermission(this,
@@ -333,6 +338,35 @@ public class JvmNativeActivity extends NativeActivity {
         }
     }
 
+    private void requestWriteExternalStoragePermission() {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            //When permission is not granted by user, show them message why this permission is needed.
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                Toast.makeText(this, "需要存储权限来保存图片到相册", Toast.LENGTH_LONG).show();
+
+                //Give user option to still opt-in the permissions
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
+
+            } else {
+                // Show user dialog to grant permission to write external storage
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
+            }
+        }
+    }
+
+    private boolean hasWriteExternalStoragePermission() {
+        return ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
+
     //Handling callback
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -347,6 +381,40 @@ public class JvmNativeActivity extends NativeActivity {
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
                     Toast.makeText(this, "Permissions Denied to record audio", Toast.LENGTH_LONG).show();
+                }
+                return;
+            }
+            case MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay!
+                    Toast.makeText(this, "存储权限已授予", Toast.LENGTH_SHORT).show();
+
+                    // 如果有待处理的图片保存请求，现在执行它
+                    if (mPendingBitmapToSave != null) {
+                        boolean saved = saveImageToGalleryLegacy(mPendingBitmapToSave, mPendingFilename);
+                        if (saved) {
+                            Toast.makeText(this, "图片已保存到相册", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(this, "保存图片失败", Toast.LENGTH_SHORT).show();
+                        }
+                        // 清除待处理的请求并回收副本bitmap
+                        if (mPendingBitmapToSave != null && !mPendingBitmapToSave.isRecycled()) {
+                            mPendingBitmapToSave.recycle();
+                        }
+                        mPendingBitmapToSave = null;
+                        mPendingFilename = null;
+                    }
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    Toast.makeText(this, "存储权限被拒绝，无法保存图片到相册", Toast.LENGTH_LONG).show();
+                    // 清除待处理的请求并回收副本bitmap
+                    if (mPendingBitmapToSave != null && !mPendingBitmapToSave.isRecycled()) {
+                        mPendingBitmapToSave.recycle();
+                    }
+                    mPendingBitmapToSave = null;
+                    mPendingFilename = null;
                 }
                 return;
             }
@@ -367,6 +435,16 @@ public class JvmNativeActivity extends NativeActivity {
     @Override
     public void onConfigurationChanged(android.content.res.Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // 清理待处理的bitmap以避免内存泄漏
+        if (mPendingBitmapToSave != null && !mPendingBitmapToSave.isRecycled()) {
+            mPendingBitmapToSave.recycle();
+            mPendingBitmapToSave = null;
+        }
     }
 
     public void showKeyboard() {
@@ -496,29 +574,261 @@ public class JvmNativeActivity extends NativeActivity {
     }
 
     /**
+     * 将图片保存到相册
+     *
+     * @param bitmap   要保存的图片
+     * @param filename 文件名（可选，为null时自动生成）
+     * @return 是否保存成功
+     */
+    public boolean saveImageToGallery(Bitmap bitmap, String filename) {
+        try {
+            if (filename == null) {
+                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                filename = "IMG_CROP_" + timeStamp + ".jpg";
+            }
+
+            // Android 10 及以上版本使用 MediaStore
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                return saveImageToGalleryQ(bitmap, filename);
+            } else {
+                // Android 10 以下版本需要检查外部存储权限
+                if (!hasWriteExternalStoragePermission()) {
+                    try {
+                        // 创建bitmap的副本来存储待处理的请求，避免原bitmap被回收
+                        mPendingBitmapToSave = bitmap.copy(bitmap.getConfig(), false);
+                        mPendingFilename = filename;
+                        requestWriteExternalStoragePermission();
+                        return false;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Toast.makeText(this, "创建图片副本失败", Toast.LENGTH_SHORT).show();
+                        return false;
+                    }
+                }
+                return saveImageToGalleryLegacy(bitmap, filename);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Android 10+ 版本保存图片到相册
+     */
+    @android.annotation.TargetApi(Build.VERSION_CODES.Q)
+    private boolean saveImageToGalleryQ(Bitmap bitmap, String filename) {
+        try {
+            android.content.ContentValues values = new android.content.ContentValues();
+            values.put(android.provider.MediaStore.Images.Media.DISPLAY_NAME, filename);
+            values.put(android.provider.MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+            values.put(android.provider.MediaStore.Images.Media.RELATIVE_PATH, "DCIM/Camera");
+
+            android.content.ContentResolver resolver = getContentResolver();
+            Uri uri = resolver.insert(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+
+            if (uri != null) {
+                java.io.OutputStream outputStream = resolver.openOutputStream(uri);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream);
+                outputStream.close();
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Android 10 以下版本保存图片到相册
+     */
+    private boolean saveImageToGalleryLegacy(Bitmap bitmap, String filename) {
+        try {
+            // 保存到相册目录
+            File galleryDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Camera");
+            if (!galleryDir.exists()) {
+                galleryDir.mkdirs();
+            }
+
+            File imageFile = new File(galleryDir, filename);
+            FileOutputStream outputStream = new FileOutputStream(imageFile);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream);
+            outputStream.close();
+
+            // 通知媒体库扫描新文件
+            android.media.MediaScannerConnection.scanFile(this,
+                    new String[]{imageFile.getAbsolutePath()},
+                    new String[]{"image/jpeg"},
+                    null);
+
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
      * 通过Uri传递图像信息以供裁剪
      *
      * @param uris
      */
     public void imageCrop(int uid, String uris, int x, int y, int width, int height) {
-        //构建隐式Intent来启动裁剪程序
-        Intent intent = new Intent("com.android.camera.action.CROP");
-        //设置数据uri和类型为图片类型
-        Uri uri = Uri.parse(uris);
-        intent.setDataAndType(uri, "image/*");
-        //显示View为可裁剪的
-        intent.putExtra("crop", true);
-        //裁剪的宽高的比例为1:1
-        intent.putExtra("aspectX", 1);
-        intent.putExtra("aspectY", 1);
-        //输出图片的宽高均为150
-        intent.putExtra("outputX", width);
-        intent.putExtra("outputY", height);
-        //裁剪之后的数据是通过Intent返回
-        intent.putExtra("return-data", true);
-        pick_para[CROP_CODE][PARA_REQUEST_UID] = uid;
-        pick_para[CROP_CODE][PARA_REQUEST_TYPE] = 0;
-        startActivityForResult(intent, CROP_CODE);
+        imageCrop(uid, uris, x, y, width, height, true);
+    }
+
+    /**
+     * 通过Uri传递图像信息以供裁剪，可选择是否保存到相册
+     *
+     * @param uid           用户ID
+     * @param uris          图片URI
+     * @param x             裁剪起始X坐标
+     * @param y             裁剪起始Y坐标
+     * @param width         裁剪宽度
+     * @param height        裁剪高度
+     * @param saveToGallery 是否保存到相册
+     */
+    public void imageCrop(int uid, String uris, int x, int y, int width, int height, boolean saveToGallery) {
+        try {
+            // 不再使用过时的系统裁剪Intent，改为自定义实现
+            Bitmap originalBitmap = loadBitmapFromUri(uris);
+
+            if (originalBitmap == null) {
+                // 如果无法解码图片，直接返回失败
+                onPhotoPicked(uid, null, null);
+                return;
+            }
+
+            // 执行裁剪操作
+            Bitmap croppedBitmap = cropBitmap(originalBitmap, x, y, width, height);
+
+            if (croppedBitmap != null) {
+                // 保存裁剪后的图片到应用目录
+                Uri croppedUri = saveImage(croppedBitmap);
+
+                // 如果需要，同时保存到相册
+                if (saveToGallery) {
+                    boolean savedToGallery = saveImageToGallery(croppedBitmap, null);
+                    if (savedToGallery) {
+                        // 可以显示一个提示消息告诉用户图片已保存到相册
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(JvmNativeActivity.this, "图片已保存到相册", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                }
+
+                onPhotoPicked(uid, croppedUri.getPath(), null);
+
+                // 释放资源
+                if (croppedBitmap != originalBitmap) {
+                    croppedBitmap.recycle();
+                }
+            } else {
+                onPhotoPicked(uid, null, null);
+            }
+
+            originalBitmap.recycle();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            // 发生异常时回调失败
+            onPhotoPicked(uid, null, null);
+        }
+    }
+
+    /**
+     * 从URI加载Bitmap，支持不同格式的URI
+     *
+     * @param uris URI字符串
+     * @return 加载的Bitmap，失败返回null
+     */
+    private Bitmap loadBitmapFromUri(String uris) {
+        try {
+            // 首先尝试作为文件路径处理
+            if (uris.startsWith("/")) {
+                // 绝对路径
+                File file = new File(uris);
+                if (file.exists()) {
+                    return BitmapFactory.decodeFile(uris);
+                }
+            }
+
+            // 尝试作为URI处理
+            Uri uri = Uri.parse(uris);
+            String scheme = uri.getScheme();
+
+            if ("file".equals(scheme)) {
+                // file:// URI
+                String path = uri.getPath();
+                File file = new File(path);
+                if (file.exists()) {
+                    return BitmapFactory.decodeFile(path);
+                }
+            } else if ("content".equals(scheme)) {
+                // content:// URI
+                InputStream is = getContentResolver().openInputStream(uri);
+                Bitmap bitmap = BitmapFactory.decodeStream(is);
+                is.close();
+                return bitmap;
+            } else {
+                // 没有scheme，尝试作为文件路径
+                File file = new File(uris);
+                if (file.exists()) {
+                    return BitmapFactory.decodeFile(uris);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * 自定义图片裁剪方法
+     *
+     * @param source 原始图片
+     * @param x      裁剪起始X坐标
+     * @param y      裁剪起始Y坐标
+     * @param width  裁剪宽度
+     * @param height 裁剪高度
+     * @return 裁剪后的图片，如果失败返回null
+     */
+    private Bitmap cropBitmap(Bitmap source, int x, int y, int width, int height) {
+        if (source == null) {
+            return null;
+        }
+
+        int sourceWidth = source.getWidth();
+        int sourceHeight = source.getHeight();
+
+        // 边界检查和修正
+        if (x < 0) x = 0;
+        if (y < 0) y = 0;
+        if (x >= sourceWidth) return null;
+        if (y >= sourceHeight) return null;
+
+        // 修正裁剪区域大小，确保不超出原图边界
+        if (x + width > sourceWidth) {
+            width = sourceWidth - x;
+        }
+        if (y + height > sourceHeight) {
+            height = sourceHeight - y;
+        }
+
+        if (width <= 0 || height <= 0) {
+            return null;
+        }
+
+        try {
+            // 执行裁剪
+            return Bitmap.createBitmap(source, x, y, width, height);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
@@ -591,20 +901,8 @@ public class JvmNativeActivity extends NativeActivity {
                 break;
             }
             case CROP_CODE: {
-                if (intent == null) {
-                    return;
-                } else {
-                    Bundle extras = intent.getExtras();
-                    if (extras != null) {
-                        //获取到裁剪后的图像
-                        Bitmap bm = extras.getParcelable("data");
-                        int uid = pick_para[CROP_CODE][PARA_REQUEST_UID];
-                        int type = pick_para[CROP_CODE][PARA_REQUEST_TYPE];
-                        //mImageView.setImageBitmap(bm);
-                        Uri uri = saveImage(bm);
-                        onPhotoPicked(uid, uri.getPath(), null);
-                    }
-                }
+                // CROP_CODE 已不再使用，因为我们改为了自定义裁剪实现
+                // 保留此 case 是为了兼容性，但实际上不会被调用
                 break;
             }
             default:

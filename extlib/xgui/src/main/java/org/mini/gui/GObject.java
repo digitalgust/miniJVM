@@ -327,14 +327,20 @@ abstract public class GObject implements GAttachable {
     }
 
     public float getX() {
-        if (parent != null && !fixedLocation) {
+        if (parent != null) {
+            if (fixedLocation) {
+                return parent.getX() + boundle[LEFT];
+            }
             return parent.getInnerX() + boundle[LEFT];
         }
         return boundle[LEFT];
     }
 
     public float getY() {
-        if (parent != null && !fixedLocation) {
+        if (parent != null) {
+            if (fixedLocation) {
+                return parent.getY() + boundle[TOP];
+            }
             return parent.getInnerY() + boundle[TOP];
         }
         return boundle[TOP];

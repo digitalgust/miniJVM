@@ -8,6 +8,10 @@ package org.mini.glfm;
 import org.mini.glfw.Glfw;
 import org.mini.net.SocketNative;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+
 /**
  * @author gust
  */
@@ -159,7 +163,30 @@ public class Glfm {
     }
 
     public static void glfmImageCrop(long display, int uid, String uris, int x, int y, int width, int height) {
+        String saveRoot = glfmGetSaveRoot();
+        File src = new File(uris);
+        if (src.exists()) {
+            // copy file
+            File dst = new File(saveRoot + "/tmp/" + src.getName());
+            try {
+                byte[] buf = new byte[4096];
+                FileInputStream fis = new FileInputStream(src);
+                FileOutputStream fos = new FileOutputStream(dst);
+                while (true) {
+                    int len = fis.read(buf);
+                    if (len <= 0) {
+                        break;
+                    }
+                    fos.write(buf, 0, len);
 
+                }
+                fos.flush();
+                fos.close();
+                fis.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public static void glfmSetDisplayConfig(long display,
@@ -196,11 +223,11 @@ public class Glfm {
     }
 
     public static String glfmGetSaveRoot() {
-        return null;
+        return new File("./").getAbsolutePath();
     }
 
     public static String glfmGetResRoot() {
-        return null;
+        return glfmGetSaveRoot();
     }
 
     public static long glfmPlayVideo(long display, String uris, String mimeType) {
