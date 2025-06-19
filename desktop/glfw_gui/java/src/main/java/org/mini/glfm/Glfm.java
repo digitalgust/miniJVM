@@ -342,6 +342,13 @@ public class Glfm {
             } else if (osName.startsWith("Windows")) {
                 // Windows
                 Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + url);
+            } else if (osName.startsWith("Linux")) {
+                // Linux
+                if (more.length() > 0) {
+                    Runtime.getRuntime().exec("xdg-open " + url + " " + more);
+                } else {
+                    Runtime.getRuntime().exec("xdg-open " + url);
+                }
             }
 
         } catch (Exception e) {
