@@ -331,6 +331,9 @@ public class Glfm {
         try {
             String url = new String(cStyleURL, 0, cStyleURL.length - 1, "utf-8");
             String more = new String(cStyleMore, 0, cStyleMore.length - 1, "utf-8");
+            if (more.equalsIgnoreCase("url")) {
+                more = "";
+            }
             String osName = System.getProperty("os.name", "");// 获取操作系统的名字
             if (osName.startsWith("Mac OS")) {
                 // Mac OS
