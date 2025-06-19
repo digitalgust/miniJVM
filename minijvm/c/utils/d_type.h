@@ -10,10 +10,6 @@
 #include "stdint.h"
 #include <stdio.h>
 
-#define __JVM_LTALLOC__ 1
-#if __JVM_LTALLOC__
-#include "ltalloc.h"
-#endif
 
 // x86   x64 ...
 #define __JVM_LITTLE_ENDIAN__ 1
@@ -77,6 +73,13 @@
 #   error "Unknown compiler"
 #endif
 
+#if __JVM_OS_MAC__
+#else
+    #define __JVM_LTALLOC__ 1
+    #if __JVM_LTALLOC__
+    #include "ltalloc.h"
+    #endif
+#endif
 
 #if __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__ || __JVM_OS_VS__
 #else

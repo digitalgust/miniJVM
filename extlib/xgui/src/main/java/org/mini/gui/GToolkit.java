@@ -5,7 +5,6 @@
  */
 package org.mini.gui;
 
-import javafx.scene.control.ScrollBar;
 import org.mini.apploader.AppLoader;
 import org.mini.apploader.AppManager;
 import org.mini.glfm.Glfm;

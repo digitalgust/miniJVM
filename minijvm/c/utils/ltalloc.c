@@ -36,6 +36,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   Project URL: http://code.google.com/p/ltalloc
 */
 
+
+#if __JVM_LTALLOC__
+
+
+
 #define LTALLOC_VERSION "2.0.2" /* (2019/04/18) - new LTALLOC_OVERFLOW_DETECTION directive
 #define LTALLOC_VERSION "2.0.1" // (2018/07/09) - fix android (arm) build
 #define LTALLOC_VERSION "2.0.0" // (2015/06/16) - ltcalloc(), ltmsize(), ltrealloc(), ltmemalign(), LTALLOC_AUTO_GC_INTERVAL
@@ -1332,4 +1337,7 @@ CPPCODE(extern "C") void *ltrealloc( void *ptr, size_t sz ) {
 
 	return nptr;
 }
+
+
+#endif
 /* } */
