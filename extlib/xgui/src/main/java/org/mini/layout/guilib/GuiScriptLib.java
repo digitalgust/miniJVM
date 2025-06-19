@@ -50,6 +50,7 @@ public class GuiScriptLib extends Lib {
             methodNames.put("getDefaultColor".toLowerCase(), this::getDefaultTextColorHexStr);//  set background color
             methodNames.put("setText".toLowerCase(), this::setText);//  set text
             methodNames.put("getText".toLowerCase(), this::getText);//  get text
+            methodNames.put("setRedPoint".toLowerCase(), this::setRedPoint);//
             methodNames.put("setCmd".toLowerCase(), this::setCmd);//
             methodNames.put("getCmd".toLowerCase(), this::getCmd);//
             methodNames.put("close".toLowerCase(), this::close);//  close frame
@@ -327,6 +328,17 @@ public class GuiScriptLib extends Lib {
         return null;
     }
 
+
+    public DataType setRedPoint(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        int redPoint = Interpreter.popBackInt(para);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
+        if (gobj instanceof GMenuItem) {
+            GMenuItem item = (GMenuItem) gobj;
+            item.setRedPoint(redPoint);
+        }
+        return null;
+    }
 
     public DataType setText(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);

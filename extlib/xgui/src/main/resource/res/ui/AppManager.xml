@@ -9,6 +9,7 @@
 
             feel=invokeStatic("org.mini.apploader.AppLoader","getGuiFeel()I")
             setListIdx("LIST_FEEL",feel)
+            setText("LAB_VERSION",getEnv("CVER"))
 
             #uuid=System.getProperty("uuid")
             uuidstr=invokeStatic("java.lang.System","getProperty(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;","glfm.uuid","0000-0000-0000-0000")
@@ -100,6 +101,18 @@
                 eif
                 #println("resume call script")
 
+                #检查是否有更新
+                if(strlen(getEnv("UPDATE_VERSION"))>0)
+                    if(compareVersion(getEnv("CVER"),getEnv("UPDATE_VERSION"))<0)  #有新版本
+                        showConfirm("{STR_NEW_VERSION}"+getEnv("UPDATE_VERSION"),"ROOT_PAN.onConfirmUpdateBack")
+                        if(strlen(getEnv("UPDATE_URL"))>0)   #有更新
+                            #设红点
+                            setRedPoint("MI_MY",1)
+                            setPreIconColor("BT_UPDATING","ff0000ff")
+                        eif
+                    eif
+                eif
+
                 if(strlen(getEnv("ACCOUNT_URL"))>0)  #取得了登录信息
                     loginUid=getEnv("USERNAME")
                     loginPwdEnc=getEnv("USERPASS")
@@ -112,6 +125,13 @@
             else
                showMsg("onPolicyRequestBack:"+code+","+msg)
             eif
+        ret
+
+        sub onConfirmUpdateBack(code)
+            if(code=0)
+                ret
+            eif
+            checkUpdate()
         ret
 
         sub singUpAuto()  #注册
@@ -238,7 +258,9 @@
             eif
             url=getEnv("UPDATE_URL")
             if(strlen(url)>0)
-                openOtherApp(url,"",0)  # 第一个为 url，第二个为参数，第三个为检测是否App 存在，0为不检测，1为检测
+                openOtherApp(url,"URL",0)  # 第一个为 url，第二个为参数，第三个为检测是否App 存在，0为不检测，1为检测
+            else
+                showMsg("{STR_NEW_VERSION_ALREADY}")
             eif
         ret
 
@@ -481,6 +503,8 @@
                             <button name="BT_SETTING" w="100%" h="40" preicon="⚙">{SETTING}</button>
                             <br/>
                             <button name="BT_UPDATING" w="100%" h="40" onclick="checkUpdate()" preicon="">{STR_UPDATE}</button>
+                            <label>Version:</label>
+                            <label name="LAB_VERSION" w="100" align="left,vcenter"></label>
                             <br/>
                             <label></label>
                         </viewport>

@@ -803,6 +803,30 @@
       "について",
       "Über",
       "О"
+    ],
+    "STR_NEW_VERSION": [
+      "An updated version is available. Would you like to upgrade?",
+      "已经有更新版本了，您要升级吗？",
+      "已經有更新版本了，您要升級嗎？",
+      "새로운 버전이 있습니다. 업그레이드하시겠습니까?",
+      "Une version mise à jour est disponible. Voulez-vous mettre à niveau ?",
+      "Hay una nueva versión disponible. ¿Desea actualizar?",
+      "C'è una nuova versione disponibile. Desideri aggiornare?",
+      "最新バージョンがあります。アップグレードしますか？",
+      "Es gibt eine aktualisierte Version. Möchten Sie diese updaten?",
+      "Доступна новая версия. Хотите обновиться?"
+    ],
+    "STR_NEW_VERSION_ALREADY": [
+      "You are already using the latest version. No upgrade is needed.",
+      "您已经是最新版本了，无需升级。",
+      "您已經是最新版本了，無需升級。",
+      "이미 최신 버전입니다. 업그레이드가 필요하지 않습니다.",
+      "Vous utilisez déjà la dernière version. Aucune mise à niveau n'est nécessaire.",
+      "Ya está usando la última versión. No es necesario actualizar.",
+      "Stai già utilizzando l'ultima versione. Non è necessario aggiornare.",
+      "すでに最新バージョンです。アップグレードは必要ありません。",
+      "Sie verwenden bereits die neueste Version. Ein Upgrade ist nicht erforderlich.",
+      "Вы уже используете последнюю версию. Обновление не требуется."
     ]
   }
 }
