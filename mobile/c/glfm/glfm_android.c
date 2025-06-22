@@ -965,13 +965,13 @@ static void glfm__onAppCmd(struct android_app *app, int32_t cmd) {
             const bool success = glfm__eglInit(platformData);
             if (!success) {
                 glfm__eglCheckError(platformData);
-                // } else {
-                //     // 窗口初始化成功后，先清空缓冲区
-                //     if (platformData->eglContextCurrent) {
-                //         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-                //         eglSwapBuffers(platformData->eglDisplay, platformData->eglSurface);
-                //         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-                //     }
+            } else {
+                // 窗口初始化成功后，先清空缓冲区
+                if (platformData->eglContextCurrent) {
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                    eglSwapBuffers(platformData->eglDisplay, platformData->eglSurface);
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                }
             }
             platformData->refreshRequested = true;
             glfm__drawFrame(platformData);
@@ -989,7 +989,14 @@ static void glfm__onAppCmd(struct android_app *app, int32_t cmd) {
         }
         case APP_CMD_WINDOW_REDRAW_NEEDED: {
             LOG_LIFECYCLE("APP_CMD_WINDOW_REDRAW_NEEDED");
-            platformData->refreshRequested = true;
+            if (platformData->animating) {
+                platformData->refreshRequested = true;
+            } else {
+                if (platformData->eglDisplay != EGL_NO_DISPLAY && platformData->eglSurface != EGL_NO_SURFACE) {
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                    eglSwapBuffers(platformData->eglDisplay, platformData->eglSurface);
+                }
+            }
             break;
         }
         case APP_CMD_GAINED_FOCUS: {
@@ -1423,6 +1430,7 @@ void android_main(struct android_app *app) {
         platformData->display->platformData = platformData;
         platformData->display->supportedOrientations = GLFMInterfaceOrientationAll;
         platformData->display->swapBehavior = GLFMSwapBehaviorPlatformDefault;
+        platformData->display->swapBehavior = GLFMSwapBehaviorBufferPreserved;
         platformData->orientation = glfmGetInterfaceOrientation(platformData->display);
         platformData->resizeEventWaitFrames = RESIZE_EVENT_MAX_WAIT_FRAMES;
         copyFile2ExternData(app);//gust add
