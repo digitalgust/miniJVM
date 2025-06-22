@@ -4,7 +4,9 @@
 #include "jvm_util.h"
 
 #if __JVM_LTALLOC__
+
 #include "ltalloc.h"
+
 #endif
 
 s32 _gc_thread_run(void *para);
@@ -596,6 +598,9 @@ s64 _garbage_collect(GcCollector *collector) {
  * Each thread marks the objects it still needs to use, indicating they cannot be collected.
  */
 static void _list_iter_thread_pause(ArrayListValue value, void *para) {
+#if _JVM_DEBUG_LOG_LEVEL > 1
+    print_runtime_stack((Runtime *) value);
+#endif
     jthread_suspend((Runtime *) value);
 }
 

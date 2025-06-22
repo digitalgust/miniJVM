@@ -73,7 +73,7 @@
 #   error "Unknown compiler"
 #endif
 
-#if __JVM_OS_MAC__
+#if 1
 #else
     #define __JVM_LTALLOC__ 1
     #if __JVM_LTALLOC__
