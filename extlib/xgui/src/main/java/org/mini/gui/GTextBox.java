@@ -9,9 +9,13 @@ import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GCmd;
+import org.mini.json.JsonParser;
+import org.mini.json.JsonPrinter;
 import org.mini.nanovg.Nanovg;
 import org.mini.util.CodePointBuilder;
 import org.mini.util.SysLog;
+
+import java.util.List;
 
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
 import static org.mini.nanovg.Nanovg.*;
@@ -47,6 +51,69 @@ public class GTextBox extends GTextObject {
 
     protected int pendingMoveToIndex = -1;
 
+    /**
+     * StyleRun defines a styled segment of text.
+     */
+    public static class StyleRun {
+        public int start;
+        public int length;
+        public float[] color;
+        public boolean bold;
+        public boolean italic;
+
+        public StyleRun() {
+        }
+
+        public StyleRun(int start, int length, float[] color, boolean bold, boolean italic) {
+            this.start = start;
+            this.length = length;
+            this.color = color;
+            this.bold = bold;
+            this.italic = italic;
+        }
+
+        public int getStart() {
+            return start;
+        }
+
+        public void setStart(int start) {
+            this.start = start;
+        }
+
+        public int getLength() {
+            return length;
+        }
+
+        public void setLength(int length) {
+            this.length = length;
+        }
+
+        public float[] getColor() {
+            return color;
+        }
+
+        public void setColor(float[] color) {
+            this.color = color;
+        }
+
+        public boolean isBold() {
+            return bold;
+        }
+
+        public void setBold(boolean bold) {
+            this.bold = bold;
+        }
+
+        public boolean isItalic() {
+            return italic;
+        }
+
+        public void setItalic(boolean italic) {
+            this.italic = italic;
+        }
+    }
+
+    protected java.util.List<StyleRun> styles = new java.util.ArrayList<>();
 
     public GTextBox(GForm form) {
         this(form, "", "", 0f, 0f, 1f, 1f);
@@ -181,6 +248,7 @@ public class GTextBox extends GTextObject {
         if (tmp != this.scroll) {
             scrollBar.setPos(this.scroll);
         }
+        resetSelect();
         return tmp != this.scroll;
     }
 
@@ -220,7 +288,7 @@ public class GTextBox extends GTextObject {
     }
 
 
-    boolean isSelected() {
+    public boolean isSelected() {
         if (this.selectStart != -1 && this.selectEnd != -1) {
             return true;
         } else {
@@ -228,7 +296,7 @@ public class GTextBox extends GTextObject {
         }
     }
 
-    int getSelectBegin() {
+    public int getSelectBegin() {
         int select1 = 0;
         if (this.selectStart != -1 && this.selectEnd != -1) {
             select1 = this.selectStart > this.selectEnd ? this.selectEnd : this.selectStart;
@@ -237,7 +305,7 @@ public class GTextBox extends GTextObject {
         return -1;
     }
 
-    int getSelectEnd() {
+    public int getSelectEnd() {
         int select2 = 0;
         if (this.selectStart != -1 && this.selectEnd != -1) {
             select2 = this.selectStart < this.selectEnd ? this.selectEnd : this.selectStart;
@@ -979,7 +1047,7 @@ public class GTextBox extends GTextObject {
             } else {//编辑中
                 int topShowRow = 0;//显示区域第一行的行号
 
-                if (local_arr == null) {//文字被修改过
+                if (local_arr == null || local_detail == null) {//文字被修改过
                     local_arr = toCstyleBytes(textsb.toString());
                     tbox.text_arr = local_arr;
                     showRows = Math.round(text_area[HEIGHT] / lineH) + 2;
@@ -1051,6 +1119,9 @@ public class GTextBox extends GTextObject {
                                     //返回 i 行的起始和结束位置
                                     int byte_starti = (int) (Nanovg.nvgNVGtextRow_start(rowsHandle, i) - ptr);
                                     int byte_endi = (int) (Nanovg.nvgNVGtextRow_end(rowsHandle, i) - ptr) + 1;
+                                    if (byte_endi > local_arr.length) {
+                                        byte_endi = local_arr.length;
+                                    }
 
                                     //save herer
                                     if (char_at == 0) {
@@ -1176,8 +1247,59 @@ public class GTextBox extends GTextObject {
                                             }
 
                                         }
-                                        nvgFillColor(vg, GTextBox.this.getColor());
-                                        nvgTextJni(vg, dx, dy + 1, local_arr, byte_starti, byte_endi);
+                                        //nvgFillColor(vg, GTextBox.this.getColor());
+                                        //nvgTextJni(vg, dx, dy + 1, local_arr, byte_starti, byte_endi);
+
+                                        // ================== RICH TEXT DRAWING LOGIC ==================
+                                        int scanCharIndex = char_starti;
+                                        if (char_starti <= char_endi) { // protection for empty lines
+                                            while (scanCharIndex <= char_endi) {
+                                                // 1. Find style and end of segment
+                                                StyleRun currentStyle = tbox.findStyleAt(scanCharIndex);
+                                                int segmentEndCharIndex = char_endi;
+
+                                                if (currentStyle != null) {
+                                                    segmentEndCharIndex = Math.min(char_endi, currentStyle.start + currentStyle.length - 1);
+                                                }
+
+                                                // check for next style starts
+                                                for (StyleRun run : tbox.styles) {
+                                                    if (run.start > scanCharIndex && run.start - 1 < segmentEndCharIndex) {
+                                                        segmentEndCharIndex = run.start - 1;
+                                                    }
+                                                }
+
+                                                // 2. Get segment text bytes
+                                                int subEnd = segmentEndCharIndex + 1;
+                                                if (subEnd > tbox.textsb.length()) {
+                                                    subEnd = tbox.textsb.length();
+                                                }
+                                                String segmentStr = tbox.textsb.substring(scanCharIndex, subEnd);
+                                                byte[] segmentBytes = toCstyleBytes(segmentStr);
+                                                //byte[] segmentBytes = tbox.textsb.toUtf8Bytes(scanCharIndex, subEnd);//需要minijvm_rt升级
+
+                                                // 3. Set color
+                                                if (currentStyle != null && currentStyle.color != null) {
+                                                    nvgFillColor(vg, currentStyle.color);
+                                                } else {
+                                                    nvgFillColor(vg, GTextBox.this.getColor());
+                                                }
+
+                                                // 4. Find start x pos from pre-calculated glyph positions
+                                                float startX = dx;
+                                                int glyphIndex = scanCharIndex - char_starti;
+                                                if (glyphIndex > 0 && (AREA_CHAR_POS_START + glyphIndex) < local_detail[curRow].length) {
+                                                    startX = local_detail[curRow][AREA_CHAR_POS_START + glyphIndex];
+                                                }
+
+                                                // 5. Draw and update position
+                                                nvgTextJni(vg, startX, dy + 1, segmentBytes, 0, segmentBytes.length);
+
+                                                // 6. Move to next segment
+                                                scanCharIndex = segmentEndCharIndex + 1;
+                                            }
+                                        }
+                                        // ========================================================
                                     }
                                 }
                                 dy += lineH;
@@ -1215,5 +1337,64 @@ public class GTextBox extends GTextObject {
                 GToolkit.drawTextLine(vg, getX() + getW() - 10f, getY() + getH() - lineH, info, 12f, getColor(), NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
             }
         }
+    }
+
+    /**
+     * Add a style to a range of text.
+     * Note: For now, this just adds the style. Overlapping styles are not merged.
+     * The last added style will have priority in rendering.
+     *
+     * @param start  start character index
+     * @param length character length
+     * @param color  text color
+     */
+    public void addStyle(int start, int length, float[] color) {
+        styles.add(new StyleRun(start, length, color, false, false));
+        editArea.area_detail = null; //force redraw
+    }
+
+    /**
+     * Clear all styles.
+     */
+    public void clearStyles() {
+        styles.clear();
+        editArea.area_detail = null; //force redraw
+    }
+
+    /**
+     * Find the style for a given character index.
+     * Iterates backwards so the last added style takes precedence.
+     *
+     * @param charIndex index
+     * @return StyleRun or null
+     */
+    protected StyleRun findStyleAt(int charIndex) {
+        for (int i = styles.size() - 1; i >= 0; i--) {
+            StyleRun run = styles.get(i);
+            if (charIndex >= run.start && charIndex < run.start + run.length) {
+                return run;
+            }
+        }
+        return null;
+    }
+
+    public List<StyleRun> getStyles() {
+        return styles;
+    }
+
+    public void setStyles(List<StyleRun> styles) {
+        this.styles = styles;
+        editArea.area_detail = null; //force redraw
+    }
+
+    public void setStyleJson(String json) {
+        JsonParser<List<StyleRun>> jp = new JsonParser();
+        styles = jp.deserial(json, List.class, StyleRun.class.getClassLoader(), "java.util.List<org.mini.gui.GTextBox$StyleRun>");
+    }
+
+
+    public String getStyleJson() {
+        JsonPrinter printer = new JsonPrinter();
+        return printer.serial(styles);
     }
 }

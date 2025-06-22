@@ -252,6 +252,54 @@ public class CodePointBuilder {
         return sb.toString();
     }
 
+    public byte[] toUtf8Bytes(int start, int end) {
+        if (start < 0 || end > count || start > end) {
+            throw new StringIndexOutOfBoundsException();
+        }
+
+        // First pass: calculate the required byte array size
+        int byteCount = 0;
+        for (int i = start; i < end; i++) {
+            int cp = value[i];
+            if (cp < 0x80) {
+                byteCount++;
+            } else if (cp < 0x800) {
+                byteCount += 2;
+            } else if (cp < 0x10000) {
+                byteCount += 3;
+            } else {
+                byteCount += 4;
+            }
+        }
+
+        // Second pass: fill the byte array
+        byte[] bytes = new byte[byteCount + 1]; // +1 for C-style null terminator
+        int byteIndex = 0;
+        if (byteCount > 0) {
+            for (int i = start; i < end; i++) {
+                int cp = value[i];
+                if (cp < 0x80) {
+                    bytes[byteIndex++] = (byte) cp;
+                } else if (cp < 0x800) {
+                    bytes[byteIndex++] = (byte) (0xC0 | (cp >> 6));
+                    bytes[byteIndex++] = (byte) (0x80 | (cp & 0x3F));
+                } else if (cp < 0x10000) {
+                    bytes[byteIndex++] = (byte) (0xE0 | (cp >> 12));
+                    bytes[byteIndex++] = (byte) (0x80 | ((cp >> 6) & 0x3F));
+                    bytes[byteIndex++] = (byte) (0x80 | (cp & 0x3F));
+                } else {
+                    bytes[byteIndex++] = (byte) (0xF0 | (cp >> 18));
+                    bytes[byteIndex++] = (byte) (0x80 | ((cp >> 12) & 0x3F));
+                    bytes[byteIndex++] = (byte) (0x80 | ((cp >> 6) & 0x3F));
+                    bytes[byteIndex++] = (byte) (0x80 | (cp & 0x3F));
+                }
+            }
+        }
+        bytes[byteIndex] = 0; // Null terminator for C-style strings
+
+        return bytes;
+    }
+
     public CodePointBuilder append(long l) {
         if (l == Long.MIN_VALUE) {
             append("-9223372036854775808");
