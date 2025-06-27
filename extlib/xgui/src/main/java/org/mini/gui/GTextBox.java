@@ -15,6 +15,7 @@ import org.mini.nanovg.Nanovg;
 import org.mini.util.CodePointBuilder;
 import org.mini.util.SysLog;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
@@ -55,21 +56,23 @@ public class GTextBox extends GTextObject {
      * StyleRun defines a styled segment of text.
      */
     public static class StyleRun {
+        /**
+         * The start index of the segment, it is CodePoint index.
+         */
         public int start;
+        /**
+         * The length of the segment, it is CodePoint length.
+         */
         public int length;
         public float[] color;
-        public boolean bold;
-        public boolean italic;
 
         public StyleRun() {
         }
 
-        public StyleRun(int start, int length, float[] color, boolean bold, boolean italic) {
+        public StyleRun(int start, int length, float[] color) {
             this.start = start;
             this.length = length;
             this.color = color;
-            this.bold = bold;
-            this.italic = italic;
         }
 
         public int getStart() {
@@ -96,21 +99,6 @@ public class GTextBox extends GTextObject {
             this.color = color;
         }
 
-        public boolean isBold() {
-            return bold;
-        }
-
-        public void setBold(boolean bold) {
-            this.bold = bold;
-        }
-
-        public boolean isItalic() {
-            return italic;
-        }
-
-        public void setItalic(boolean italic) {
-            this.italic = italic;
-        }
     }
 
     protected java.util.List<StyleRun> styles = new java.util.ArrayList<>();
@@ -1349,7 +1337,7 @@ public class GTextBox extends GTextObject {
      * @param color  text color
      */
     public void addStyle(int start, int length, float[] color) {
-        styles.add(new StyleRun(start, length, color, false, false));
+        styles.add(new StyleRun(start, length, color));
         editArea.area_detail = null; //force redraw
     }
 
@@ -1382,14 +1370,34 @@ public class GTextBox extends GTextObject {
         return styles;
     }
 
+
+    /**
+     * find the same color to  merge
+     *
+     * @param srs
+     */
+    private void mergeStyleRunColor(List<GTextBox.StyleRun> srs) {
+        for (int i = 0; i < srs.size() - 1; i++) {
+            float[] sr = srs.get(i).getColor();
+            for (int j = 0; j < i; j++) {
+                float[] sr2 = srs.get(j).getColor();
+                if (sr[0] == sr2[0] && sr[1] == sr2[1] && sr[2] == sr2[2] && sr[3] == sr2[3]) {
+                    srs.get(j).color = sr;
+                }
+            }
+        }
+    }
+
     public void setStyles(List<StyleRun> styles) {
         this.styles = styles;
+        mergeStyleRunColor(styles);//合并相同颜色
         editArea.area_detail = null; //force redraw
     }
 
     public void setStyleJson(String json) {
         JsonParser<List<StyleRun>> jp = new JsonParser();
-        styles = jp.deserial(json, List.class, StyleRun.class.getClassLoader(), "java.util.List<org.mini.gui.GTextBox$StyleRun>");
+        List<StyleRun> list = jp.deserial(json, List.class, StyleRun.class.getClassLoader(), "java.util.List<org.mini.gui.GTextBox$StyleRun>");
+        setStyles(list);
     }
 
 
