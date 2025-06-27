@@ -8,7 +8,7 @@
     <groupId>io.github.digitalgust</groupId>
     <artifactId>glfw_gui</artifactId>
     <name>${project.groupId}:${project.artifactId}</name>
-    <version>2.0.0</version>
+    <version>2.0.1</version>
     <description>miniJVM desktop platform gui library</description>
     <url>https://github.com/digitalgust/miniJVM</url>
 
@@ -160,7 +160,7 @@
         <dependency>
             <groupId>io.github.digitalgust</groupId>
             <artifactId>minijvm_rt</artifactId>
-            <version>2.0.0</version>
+            <version>2.0.1</version>
         </dependency>
     </dependencies>
     

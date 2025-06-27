@@ -12,6 +12,9 @@ import org.mini.nanovg.Nanovg;
 import test.ext.ExScriptLib;
 import test.ext.GCustomList;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author gust
  */
@@ -72,6 +75,53 @@ public class MyApp extends GApplication implements XuiAppHolder {
                     case "BT_CANCEL":
                         gframe.close();
                         break;
+                    case "BT_SET_BLUE": {
+                        GTextBox tb = GToolkit.getComponent(form, "INPUT_AREA");
+                        if (tb != null && tb.isSelected()) {
+                            int start = tb.getSelectBegin();
+                            int end = tb.getSelectEnd();
+                            float[] blue = Nanovg.nvgRGBAf(0.3f, 0.5f, 1.f, 1.f);
+                            tb.addStyle(start, end - start, blue);
+                            System.out.println("--------------------\n" + tb.getStyleJson());
+                            GToolkit.saveDataToFile(getSaveRoot() + "/style.json", tb.getStyleJson().getBytes());
+                        }
+                        break;
+                    }
+                    case "BT_CLEAR_STYLE": {
+                        GTextBox tb = GToolkit.getComponent(form, "INPUT_AREA");
+                        if (tb != null && tb.isSelected()) {
+                            int selStart = tb.getSelectBegin();
+                            int selEnd = tb.getSelectEnd();
+
+                            List<GTextBox.StyleRun> oldStyles = tb.getStyles();
+                            List<GTextBox.StyleRun> newStyles = new ArrayList<>();
+
+                            for (GTextBox.StyleRun run : oldStyles) {
+                                int runStart = run.getStart();
+                                int runEnd = run.getStart() + run.getLength();
+
+                                // No overlap
+                                if (runEnd <= selStart || runStart >= selEnd) {
+                                    newStyles.add(run);
+                                    continue;
+                                }
+
+                                // Overlap exists. We need to calculate what parts of the run remain.
+
+                                // Part of the run before the selection
+                                if (runStart < selStart) {
+                                    newStyles.add(new GTextBox.StyleRun(runStart, selStart - runStart, run.getColor()));
+                                }
+
+                                // Part of the run after the selection
+                                if (runEnd > selEnd) {
+                                    newStyles.add(new GTextBox.StyleRun(selEnd, runEnd - selEnd, run.getColor()));
+                                }
+                            }
+                            tb.setStyles(newStyles);
+                        }
+                        break;
+                    }
                 }
             }
 
@@ -83,6 +133,10 @@ public class MyApp extends GApplication implements XuiAppHolder {
         gframe = form.findByName("FRAME_TEST");
         if (gframe != null) gframe.align(Nanovg.NVG_ALIGN_CENTER | Nanovg.NVG_ALIGN_MIDDLE);
         menu = (GMenu) form.findByName("MENU_MAIN");
+
+        GTextBox tb = GToolkit.getComponent(form, "INPUT_AREA");
+        String s = GToolkit.readFileFromFileAsString(getSaveRoot() + "/style.json", "utf-8");
+        tb.setStyleJson(s);
 
         //process Hori screen or Vert screen
         //if screen size changed ,then ui will resized relative

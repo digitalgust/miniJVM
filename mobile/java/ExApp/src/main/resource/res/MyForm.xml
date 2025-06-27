@@ -27,6 +27,8 @@
         <br/>
         <button name="BT_SCRIPT" h="30" onclick="change()">{Change}</button>
         <button name="BT_CANCEL" h="30">{Cancel}</button>
+        <button name="BT_SET_BLUE" h="30">Set Blue</button>
+        <button name="BT_CLEAR_STYLE" h="30">Clear Style</button>
         <br/>
     </frame>
 
