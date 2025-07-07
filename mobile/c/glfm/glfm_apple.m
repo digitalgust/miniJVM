@@ -2969,4 +2969,56 @@ void buyAppleProductById(GLFMDisplay * display, const char *cproductID, const ch
     }];
 }
 
+// MARK: - Screen Control functions
+
+void glfmSetScreenSaverEnabled(GLFMDisplay *display, bool enabled) {
+    if (!display) {
+        return;
+    }
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [UIApplication sharedApplication].idleTimerDisabled = !enabled;
+    });
+}
+
+bool glfmIsScreenSaverEnabled(GLFMDisplay *display) {
+    if (!display) {
+        return true; // Default
+    }
+    
+    __block bool result = true;
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        result = ![UIApplication sharedApplication].idleTimerDisabled;
+    });
+    
+    return result;
+}
+
+void glfmSetScreenBrightness(GLFMDisplay *display, float brightness) {
+    if (!display) {
+        return;
+    }
+    
+    // Clamp brightness to valid range
+    if (brightness < 0.0f) brightness = 0.0f;
+    if (brightness > 1.0f) brightness = 1.0f;
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [UIScreen mainScreen].brightness = brightness;
+    });
+}
+
+float glfmGetScreenBrightness(GLFMDisplay *display) {
+    if (!display) {
+        return -1.0f; // Default: use system brightness
+    }
+    
+    __block float result = -1.0f;
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        result = [UIScreen mainScreen].brightness;
+    });
+    
+    return result;
+}
+
 #endif

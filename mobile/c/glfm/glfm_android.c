@@ -102,6 +102,10 @@ typedef struct {
     JNIEnv *jniEnv;
     char *clipBoardStr;
 
+    // Screen control
+    bool screenSaverEnabled;
+    float screenBrightness;
+
 } GLFMPlatformData;
 
 static GLFMPlatformData *platformDataGlobal = NULL;
@@ -1407,6 +1411,9 @@ void android_main(struct android_app *app) {
     platformData->app = app;
     platformData->refreshRequested = true;
     platformData->lastSwapTime = glfmGetTime();
+    // Initialize screen control variables
+    platformData->screenSaverEnabled = true;  // Default: allow screen to turn off
+    platformData->screenBrightness = -1.0f;   // Default: use system brightness
 
     // Init java env
     JavaVM *vm = app->activity->vm;
@@ -2555,6 +2562,78 @@ Java_org_minijvm_activity_JvmNativeActivity_onNativeSpecialKey(JNIEnv *env, jobj
 
         platformDataGlobal->display->keyFunc(platformDataGlobal->display, glfmKey, glfmAction, glfmModifiers);
     }
+}
+
+// MARK: - Screen Control functions
+
+void glfmSetScreenSaverEnabled(GLFMDisplay *display, bool enabled) {
+    if (!display || !platformDataGlobal) {
+        return;
+    }
+    
+    GLFMPlatformData *platformData = (GLFMPlatformData *)display->platformData;
+    if (!platformData) {
+        return;
+    }
+    
+    platformData->screenSaverEnabled = enabled;
+    
+    struct android_app *app = platformData->app;
+    JNIEnv *jni = platformData->jniEnv;
+    
+    glfm__callJavaMethodWithArgs(jni, app->activity->clazz, "setScreenSaver", "(Z)V", Void, (jboolean)enabled);
+    
+    glfm__clearJavaException();
+}
+
+bool glfmIsScreenSaverEnabled(GLFMDisplay *display) {
+    if (!display || !platformDataGlobal) {
+        return true; // Default
+    }
+    
+    GLFMPlatformData *platformData = (GLFMPlatformData *)display->platformData;
+    if (!platformData) {
+        return true; // Default
+    }
+    
+    return platformData->screenSaverEnabled;
+}
+
+void glfmSetScreenBrightness(GLFMDisplay *display, float brightness) {
+    if (!display || !platformDataGlobal) {
+        return;
+    }
+    
+    GLFMPlatformData *platformData = (GLFMPlatformData *)display->platformData;
+    if (!platformData) {
+        return;
+    }
+    
+    // Clamp brightness to valid range
+    if (brightness < 0.0f) brightness = 0.0f;
+    if (brightness > 1.0f) brightness = 1.0f;
+    
+    platformData->screenBrightness = brightness;
+    
+    struct android_app *app = platformData->app;
+    JNIEnv *jni = platformData->jniEnv;
+    
+    glfm__callJavaMethodWithArgs(jni, app->activity->clazz, "setScreenBrightness", "(F)V", Void, (jfloat)brightness);
+    
+    glfm__clearJavaException();
+}
+
+float glfmGetScreenBrightness(GLFMDisplay *display) {
+    if (!display || !platformDataGlobal) {
+        return -1.0f; // Default: use system brightness
+    }
+    
+    GLFMPlatformData *platformData = (GLFMPlatformData *)display->platformData;
+    if (!platformData) {
+        return -1.0f; // Default: use system brightness
+    }
+    
+    return platformData->screenBrightness;
 }
 
 #endif  //GLFM_PLATFORM_ANDROID

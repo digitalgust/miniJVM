@@ -289,4 +289,44 @@ public class Glfm {
         byte[] base64HandleScriptBytes = toCstyleBytes(base64HandleScript);
         glfmBuyAppleProductById(display, productIdBytes, base64HandleScriptBytes);
     }
+
+    // Screen Control Functions
+
+    /**
+     * Sets whether the screen saver (auto screen off) is enabled.
+     * On iOS, this controls UIApplication.idleTimerDisabled.
+     * On Android, this controls FLAG_KEEP_SCREEN_ON.
+     * On Emscripten, this function does nothing.
+     *
+     * @param display The GLFMDisplay instance
+     * @param enabled true to allow screen to turn off automatically (default), false to keep screen on
+     */
+    public static native void glfmSetScreenSaverEnabled(long display, boolean enabled);
+
+    /**
+     * Returns whether the screen saver (auto screen off) is enabled.
+     *
+     * @param display The GLFMDisplay instance
+     * @return true if screen can turn off automatically, false if screen is kept on
+     */
+    public static native boolean glfmIsScreenSaverEnabled(long display);
+
+    /**
+     * Sets the screen brightness.
+     * On iOS, this controls UIScreen.brightness.
+     * On Android, this controls window brightness attribute.
+     * On Emscripten, this function does nothing.
+     *
+     * @param display The GLFMDisplay instance
+     * @param brightness Brightness level from 0.0 (darkest) to 1.0 (brightest)
+     */
+    public static native void glfmSetScreenBrightness(long display, float brightness);
+
+    /**
+     * Gets the current screen brightness.
+     *
+     * @param display The GLFMDisplay instance
+     * @return Current brightness level from 0.0 (darkest) to 1.0 (brightest), or -1.0 if unknown
+     */
+    public static native float glfmGetScreenBrightness(long display);
 }

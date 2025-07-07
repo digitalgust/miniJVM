@@ -115,9 +115,16 @@ public class GuiScriptLib extends Lib {
             methodNames.put("getClipboard".toLowerCase(), this::getClipboard);//
             methodNames.put("getVersion".toLowerCase(), this::getVersion);//
             methodNames.put("compareVersion".toLowerCase(), this::compareVersion);//
+            methodNames.put("getMiniPackVersion".toLowerCase(), this::getMiniPackVersion);//
             methodNames.put("getApp".toLowerCase(), this::getApp);//
             methodNames.put("closeApp".toLowerCase(), this::closeApp);//
             methodNames.put("pauseApp".toLowerCase(), this::pauseApp);//
+            methodNames.put("getDisplay".toLowerCase(), this::getDisplay);//
+
+            methodNames.put("isScreenSaver".toLowerCase(), this::isScreenSaver);//
+            methodNames.put("setScreenSaver".toLowerCase(), this::setScreenSaver);//
+            methodNames.put("getScreenBrightness".toLowerCase(), this::getScreenBrightness);//
+            methodNames.put("setScreenBrightness".toLowerCase(), this::setScreenBrightness);//
 
         }
     }
@@ -1088,6 +1095,15 @@ public class GuiScriptLib extends Lib {
         return Interpreter.getCachedStr(ver);
     }
 
+    public DataType getMiniPackVersion(ArrayList<DataType> para) {
+        String jarName = Interpreter.popBackStr(para);
+        String ver = "";
+        if (jarName != null) {
+            ver = AppLoader.getBaseInfo("cver");
+        }
+        return Interpreter.getCachedStr(ver);
+    }
+
     public DataType compareVersion(ArrayList<DataType> para) {
         String v1 = Interpreter.popBackStr(para);
         String v2 = Interpreter.popBackStr(para);
@@ -1111,5 +1127,38 @@ public class GuiScriptLib extends Lib {
     public DataType pauseApp(ArrayList<DataType> para) {
         GCallBack.getInstance().getApplication().pauseApp();
         return Interpreter.getCachedInt(0);
+    }
+
+    public DataType getDisplay(ArrayList<DataType> para) {
+        return Interpreter.getCachedInt(GCallBack.getInstance().getDisplay());
+    }
+
+    public DataType setScreenSaver(ArrayList<DataType> para) {
+        boolean b = Interpreter.popBackBool(para);
+        Glfm.glfmSetScreenSaverEnabled(GCallBack.getInstance().getDisplay(), b);
+        return null;
+    }
+
+    public DataType isScreenSaver(ArrayList<DataType> para) {
+        boolean b = Glfm.glfmIsScreenSaverEnabled(GCallBack.getInstance().getDisplay());
+        return Interpreter.getCachedBool(b);
+    }
+
+    public DataType setScreenBrightness(ArrayList<DataType> para) {
+        int v = Interpreter.popBackInt(para);
+        float v2;
+        try {
+            v2 = v / 100.0f;
+        } catch (Exception e) {
+            return null;
+        }
+        Glfm.glfmSetScreenBrightness(GCallBack.getInstance().getDisplay(), v2);
+        return null;
+    }
+
+    public DataType getScreenBrightness(ArrayList<DataType> para) {
+        float v = Glfm.glfmGetScreenBrightness(GCallBack.getInstance().getDisplay());
+        int v2 = (int) (v * 100);
+        return Interpreter.getCachedInt(v2);
     }
 }

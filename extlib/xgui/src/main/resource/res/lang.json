@@ -827,6 +827,30 @@
       "すでに最新バージョンです。アップグレードは必要ありません。",
       "Sie verwenden bereits die neueste Version. Ein Upgrade ist nicht erforderlich.",
       "Вы уже используете последнюю версию. Обновление не требуется."
+    ],
+    "STR_SCREEN_ON": [
+      "Keep Screen On",
+      "屏幕常亮设置",
+      "螢幕常亮設定",
+      "화면 계속 켜기",
+      "Paramètres d'allumage permanent de l'écran",
+      "Configuración de pantalla siempre encendida",
+      "Impostazioni schermo sempre acceso",
+      "画面常時点灯設定",
+      "Einstellungen für Dauerhaft eingeschaltetes Display",
+      "Настройки постоянного включения экрана"
+    ],
+    "STR_BRIGHTNESS": [
+      "Screen Brightness Settings",
+      "屏幕亮度设置",
+      "螢幕亮度設定",
+      "화면 밝기 설정",
+      "Réglages de luminosité de l'écran",
+      "Configuración de brillo de pantalla",
+      "Impostazioni di luminosità dello schermo",
+      "画面輝度設定",
+      "Bildschirmhelligkeitseinstellungen",
+      "Настройки яркости экрана"
     ]
   }
 }

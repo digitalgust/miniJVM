@@ -1494,4 +1494,37 @@ public class JvmNativeActivity extends NativeActivity {
         return jsonPrinter.serial(ret);
     }
 
+    public void setScreenSaver(final boolean enabled) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Window window = getWindow();
+                if (window != null) {
+                    if (enabled) {
+                        // enabled=true means allow screen to turn off (default behavior)
+                        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    } else {
+                        // enabled=false means keep screen on
+                        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    }
+                }
+            }
+        });
+    }
+
+    public void setScreenBrightness(final float brightness) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Window window = getWindow();
+                if (window != null) {
+                    WindowManager.LayoutParams params = window.getAttributes();
+                    // brightness value is from 0.0 to 1.0.
+                    // -1f means use system default, but C code clamps it.
+                    params.screenBrightness = brightness;
+                    window.setAttributes(params);
+                }
+            }
+        });
+    }
 }

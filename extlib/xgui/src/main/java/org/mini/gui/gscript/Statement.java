@@ -185,6 +185,25 @@ class Expression extends ExprCell {
 
     ExprCell[] cells;
 
+    // 检查字符串是否是带符号的数字（如"-1", "+123"）
+    private boolean isSignedNumber(String s) {
+        if (s == null || s.length() < 2) {
+            return false;
+        }
+        char first = s.charAt(0);
+        if (first != '+' && first != '-') {
+            return false;
+        }
+        // 检查后面的字符是否都是数字
+        for (int i = 1; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            if (ch < '0' || ch > '9') {
+                return false;
+            }
+        }
+        return true;
+    }
+
     Expression(String statement, Interpreter inp) throws Exception {
         celltype = EXPR_CELL_EXPR;
 
@@ -200,6 +219,10 @@ class Expression extends ExprCell {
                 Str pst = new Str(ws);
                 pst.setRecyclable(false);
                 tgt.add(new ExprCellDataType(pst, inp));
+            } else if (isSignedNumber(s)) {//是带符号的数字
+                Int pit = new Int(s);
+                pit.setRecyclable(false);
+                tgt.add(new ExprCellDataType(pit, inp));
             } else if (inp.isSymbol(s.charAt(0))) {
                 Symb psyt = new Symb(s);
                 psyt.setRecyclable(false);

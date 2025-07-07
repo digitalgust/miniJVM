@@ -891,6 +891,49 @@ int org_mini_glfm_Glfm_glfmBuyAppleProductById(Runtime *runtime, JClass *clazz) 
     return 0;
 }
 
+/* ==============================   jni screen control =================================*/
+
+int org_mini_glfm_Glfm_glfmSetScreenSaverEnabled(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    s32 enabled = env->localvar_getInt(runtime->localvar, pos++);
+    glfmSetScreenSaverEnabled(window, enabled);
+    return 0;
+}
+
+int org_mini_glfm_Glfm_glfmIsScreenSaverEnabled(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    s32 result = glfmIsScreenSaverEnabled(window);
+    env->push_int(runtime->stack, result);
+    return 0;
+}
+
+int org_mini_glfm_Glfm_glfmSetScreenBrightness(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    Int2Float brightness;
+    brightness.i = env->localvar_getInt(runtime->localvar, pos++);
+    glfmSetScreenBrightness(window, brightness.f);
+    return 0;
+}
+
+int org_mini_glfm_Glfm_glfmGetScreenBrightness(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    float result = glfmGetScreenBrightness(window);
+    env->push_float(runtime->stack, result);
+    return 0;
+}
+
 /* ==============================   jni utils =================================*/
 
 int org_mini_glfm_utils_Gutil_f2b(Runtime *runtime, JClass *clazz) {
@@ -1693,6 +1736,10 @@ static java_native_method method_glfm_table[] = {
         {"org/mini/glfm/Glfm", "glfmOpenOtherApp",                     "([B[BI)I",                                 org_mini_glfm_Glfm_glfmOpenOtherApp},
         {"org/mini/glfm/Glfm", "glfmRemoteMethodCall",                 "([B)Ljava/lang/String;",                   org_mini_glfm_Glfm_glfmRemoteMethodCall},
         {"org/mini/glfm/Glfm", "glfmBuyAppleProductById",              "(J[B[B)V",                                 org_mini_glfm_Glfm_glfmBuyAppleProductById},
+        {"org/mini/glfm/Glfm", "glfmSetScreenSaverEnabled",            "(JZ)V",                                    org_mini_glfm_Glfm_glfmSetScreenSaverEnabled},
+        {"org/mini/glfm/Glfm", "glfmIsScreenSaverEnabled",             "(J)Z",                                     org_mini_glfm_Glfm_glfmIsScreenSaverEnabled},
+        {"org/mini/glfm/Glfm", "glfmSetScreenBrightness",              "(JF)V",                                    org_mini_glfm_Glfm_glfmSetScreenBrightness},
+        {"org/mini/glfm/Glfm", "glfmGetScreenBrightness",              "(J)F",                                     org_mini_glfm_Glfm_glfmGetScreenBrightness},
 
 };
 

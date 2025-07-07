@@ -31,6 +31,34 @@
                 setVisible("BT_STARTWEB",false)
                 setVisible("INPUT_LOG",false)
             eif
+
+            #设置屏幕常亮
+            screenOn=getEnv("SCREEN_OPEN")
+            if(equals(screenOn,""))
+                screenOn="1"
+                if(isScreenSaver())
+                    screenOn="0"
+                eif
+                setEnv("SCREEN_OPEN",screenOn)
+            eif
+            if(equals(screenOn,"1"))
+                setSwitch("SET_SCREEN_OPEN",true)
+                setScreenSaver(false)
+            else
+                setSwitch("SET_SCREEN_OPEN",false)
+                setScreenSaver(true)
+            eif
+
+            #设置亮度
+            bright=getEnv("SCREEN_BRIGHTNESS")
+            if(equals(bright,""))
+                b=getScreenBrightness()
+                bright=b+""
+                setEnv("SET_BRIGHTNESS",bright)
+            eif
+            b=str2int(bright)
+            setscrollbar("SET_BRIGHTNESS",b)
+            setScreenBrightness(b)
         ret
 
         sub getQueryPara()
@@ -342,6 +370,21 @@
             openPagePost(s3,body,"")
         ret
 
+        sub setScreenOpen()
+            enable = getSwitch("SET_SCREEN_OPEN")
+            if(enable)
+                setEnv("SCREEN_OPEN","1")
+            else
+                setEnv("SCREEN_OPEN","0")
+            eif
+            setScreenSaver(!enable)
+        ret
+
+        sub setBright()
+            v = getscrollbar("SET_BRIGHTNESS")
+            setScreenBrightness(v)
+            setEnv("SCREEN_BRIGHTNESS",v)
+        ret
         ]]>
         </script>
         <tr h="{STATEBAR_HEIGHT}" w="100%">
@@ -429,6 +472,11 @@
                                 <li name="LI_FLAT" onclick="setFeel(0)">{STR_FLAT_FEEL}</li>
                                 <li name="LI_DIMENSION" onclick="setFeel(1)">{STR_DIMENSION_FEEL}</li>
                             </list>
+                            <label w="85%" h="30" align="left,vcenter">{STR_SCREEN_ON}</label>
+                            <switch name="SET_SCREEN_OPEN" w="15%" selected="1" onclick="setScreenOpen()"></switch>
+                            <label align="left,vcenter" w="50%">{STR_BRIGHTNESS}</label>
+                            <scrollbar name="SET_BRIGHTNESS" w="50%" h="25" value="0.6" mode="h" onchange="setBright()" onclick="setBright()"></scrollbar>
+                            <br/>
                             <label w="100%" h="20"></label>
 
                             <button name="BT_PRIVACY" w="100%" h="40" align="left,vcenter" onclick="showPrivacy()" preicon="📄">{STR_PRIVACY}</button>

@@ -73,6 +73,8 @@ public class Stdlib extends Lib {
         methodNames.put("endsWith".toLowerCase(), this::endsWith); //
         methodNames.put("trim".toLowerCase(), this::trim);//字符串去空格
         methodNames.put("str2int".toLowerCase(), this::str2int);//字符串转int
+        methodNames.put("str2float".toLowerCase(), this::str2float);   //
+        methodNames.put("str2double".toLowerCase(), this::str2double);   //
         methodNames.put("isNumStr".toLowerCase(), this::isNumStr);//是数字串
         methodNames.put("invokeJava".toLowerCase(), this::invokeJava);//执行对象方法
         methodNames.put("invokeStatic".toLowerCase(), this::invokeStatic);//执行对象方法
@@ -606,6 +608,17 @@ public class Stdlib extends Lib {
                     }
                 } else if (dt.type == DataType.DTYPE_STR) {
                     javaPara[i] = ((Str) dt).getVal();
+                    if (types[i] == float.class) {
+                        try {
+                            javaPara[i] = Float.parseFloat(((Str) dt).getVal());
+                        } catch (Exception e) {
+                        }
+                    } else if (types[i] == double.class) {
+                        try {
+                            javaPara[i] = Double.parseDouble(((Str) dt).getVal());
+                        } catch (Exception e) {
+                        }
+                    }
                 } else if (dt.type == DataType.DTYPE_BOOL) {
                     javaPara[i] = ((Bool) dt).getVal();
                 } else if (dt.type == DataType.DTYPE_OBJ) {
@@ -689,8 +702,32 @@ public class Stdlib extends Lib {
         try {
             String str = Interpreter.popBackStr(para);
             str = str.trim();
-            int i = Integer.parseInt(str);
+            long i = Long.parseLong(str);
             return Interpreter.getCachedInt(i);
+        } catch (Exception e) {
+            //e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType str2float(ArrayList<DataType> para) {
+        try {
+            String str = Interpreter.popBackStr(para);
+            str = str.trim();
+            float i = Float.parseFloat(str);
+            return Interpreter.getCachedObj(i);
+        } catch (Exception e) {
+            //e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType str2double(ArrayList<DataType> para) {
+        try {
+            String str = Interpreter.popBackStr(para);
+            str = str.trim();
+            double i = Double.parseDouble(str);
+            return Interpreter.getCachedObj(i);
         } catch (Exception e) {
             //e.printStackTrace();
         }
