@@ -42,23 +42,40 @@
                 setEnv("SCREEN_OPEN",screenOn)
             eif
             if(equals(screenOn,"1"))
-                setSwitch("SET_SCREEN_OPEN",true)
+                setSwitch("SW_SCREEN_OPEN",true)
+            else
+                setSwitch("SW_SCREEN_OPEN",false)
+            eif
+            setScreenOpen()
+
+            #设置屏幕跟随系统
+            systemBright=getEnv("SYSTEM_BRIGHT")
+            if(equals(systemBright,""))
+                systemBright="1"    #默认跟随系统
+                setEnv("SYSTEM_BRIGHT",screenOn)
+            eif
+            if(equals(systemBright,"1"))
+                setSwitch("SW_SYSTEM_BRIGHT",true)
                 setScreenSaver(false)
             else
-                setSwitch("SET_SCREEN_OPEN",false)
+                setSwitch("SW_SYSTEM_BRIGHT",false)
                 setScreenSaver(true)
             eif
+            setSystemBright()
 
             #设置亮度
             bright=getEnv("SCREEN_BRIGHTNESS")
             if(equals(bright,""))
                 b=getScreenBrightness()
+                if(b<50)
+                    b=50
+                eif
                 bright=b+""
-                setEnv("SET_BRIGHTNESS",bright)
+                setEnv("SBAR_SCREEN_OPEN",bright)
             eif
             b=str2int(bright)
-            setscrollbar("SET_BRIGHTNESS",b)
-            setScreenBrightness(b)
+            setscrollbar("SBAR_SCREEN_OPEN",b)
+            setBrightness(b)
         ret
 
         sub getQueryPara()
@@ -371,7 +388,7 @@
         ret
 
         sub setScreenOpen()
-            enable = getSwitch("SET_SCREEN_OPEN")
+            enable = getSwitch("SW_SCREEN_OPEN")
             if(enable)
                 setEnv("SCREEN_OPEN","1")
             else
@@ -380,8 +397,23 @@
             setScreenSaver(!enable)
         ret
 
-        sub setBright()
-            v = getscrollbar("SET_BRIGHTNESS")
+        sub setSystemBright()
+            enable = getSwitch("SW_SYSTEM_BRIGHT")
+            if(enable)
+                setEnv("SCREEN_SYSTEM","1")
+                setScreenBrightness(-100)    #-1.0表示跟随系统亮度
+            else
+                setEnv("SCREEN_SYSTEM","0")
+            eif
+            setBrightness()
+        ret
+
+        sub setBrightness()
+            sysbright = getSwitch("SW_SYSTEM_BRIGHT")
+            if(sysbright)
+                ret
+            eif
+            v = getscrollbar("SBAR_SCREEN_OPEN")
             setScreenBrightness(v)
             setEnv("SCREEN_BRIGHTNESS",v)
         ret
@@ -473,9 +505,11 @@
                                 <li name="LI_DIMENSION" onclick="setFeel(1)">{STR_DIMENSION_FEEL}</li>
                             </list>
                             <label w="85%" h="30" align="left,vcenter">{STR_SCREEN_ON}</label>
-                            <switch name="SET_SCREEN_OPEN" w="15%" selected="1" onclick="setScreenOpen()"></switch>
-                            <label align="left,vcenter" w="50%">{STR_BRIGHTNESS}</label>
-                            <scrollbar name="SET_BRIGHTNESS" w="50%" h="25" value="0.6" mode="h" onchange="setBright()" onclick="setBright()"></scrollbar>
+                            <switch name="SW_SCREEN_OPEN" w="15%" selected="1" onclick="setScreenOpen()"></switch>
+                            <label w="85%" h="30" align="left,vcenter">{STR_SYSTEM_BRIGHTNESS}</label>
+                            <switch name="SW_SYSTEM_BRIGHT" w="15%" selected="1" onclick="setSystemBright()"></switch>
+                            <label align="left,vcenter" w="50%" h="30">{STR_BRIGHTNESS}</label>
+                            <scrollbar name="SBAR_SCREEN_OPEN" w="50%" h="30" value="0.6" mode="h" onchange="setBrightness()" onclick="setBrightness()"></scrollbar>
                             <br/>
                             <label w="100%" h="20"></label>
 
