@@ -2985,12 +2985,13 @@ bool glfmIsScreenSaverEnabled(GLFMDisplay *display) {
     if (!display) {
         return true; // Default
     }
-    
+    if ([NSThread isMainThread]) {
+        return ![UIApplication sharedApplication].idleTimerDisabled;
+    }
     __block bool result = true;
     dispatch_sync(dispatch_get_main_queue(), ^{
         result = ![UIApplication sharedApplication].idleTimerDisabled;
     });
-    
     return result;
 }
 
@@ -2998,10 +2999,13 @@ void glfmSetScreenBrightness(GLFMDisplay *display, float brightness) {
     if (!display) {
         return;
     }
-    
-    // Clamp brightness to valid range
-    if (brightness < 0.0f) brightness = 0.0f;
-    if (brightness > 1.0f) brightness = 1.0f;
+    if(brightness == -1.0f){
+        brightness = [UIScreen mainScreen].brightness;
+    } else {
+        // Clamp brightness to valid range
+        if (brightness < 0.0f) brightness = 0.0f;
+        if (brightness > 1.0f) brightness = 1.0f;
+    }
     
     dispatch_async(dispatch_get_main_queue(), ^{
         [UIScreen mainScreen].brightness = brightness;
@@ -3012,12 +3016,13 @@ float glfmGetScreenBrightness(GLFMDisplay *display) {
     if (!display) {
         return -1.0f; // Default: use system brightness
     }
-    
+    if ([NSThread isMainThread]) {
+        return [UIScreen mainScreen].brightness;
+    }
     __block float result = -1.0f;
     dispatch_sync(dispatch_get_main_queue(), ^{
         result = [UIScreen mainScreen].brightness;
     });
-    
     return result;
 }
 
