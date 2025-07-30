@@ -33,6 +33,7 @@ public class GTextBox extends GTextObject {
 
     static final int SCROLLBAR_WIDTH = 20;
     static final int PAD = 5;
+    static final float LINE_SCALE = 1.2f;
 
     protected int curCaretRow;//以回车为换行符的行数
     protected int curCaretCol;//以回车为换行符的列数
@@ -51,6 +52,7 @@ public class GTextBox extends GTextObject {
     protected float[] lineh = {0};
 
     protected int pendingMoveToIndex = -1;
+    protected boolean pendingMoveTo = false;
 
     /**
      * StyleRun defines a styled segment of text.
@@ -236,7 +238,7 @@ public class GTextBox extends GTextObject {
         if (tmp != this.scroll) {
             scrollBar.setPos(this.scroll);
         }
-        resetSelect();
+        //resetSelect();
         return tmp != this.scroll;
     }
 
@@ -256,8 +258,15 @@ public class GTextBox extends GTextObject {
         if (charIndex > textsb.length()) {
             charIndex = textsb.length();
         }
-
+//        int[] pos = editArea.getCaretPosFromArea();
+//        if (pos != null) {
+//            float moveOffset = charIndex < caretIndex ? (-lineh[0]) : lineh[0];
+//            if (pos[1] < getY() + lineh[0] * 2) {//超出屏幕时先滚屏
+//                setScroll(scroll + moveOffset / (editArea.totalTextHeight - editArea.showAreaHeight));
+//            }
+//        }
         pendingMoveToIndex = charIndex;
+        pendingMoveTo = true;
     }
 
     @Override
@@ -416,6 +425,7 @@ public class GTextBox extends GTextObject {
                     } else {
                         GToolkit.hideEditMenu();
                     }
+                    moveScreenToIndex(caret);
                 } else {
                     mouseDrag = false;
                     if (selectEnd == -1 || selectStart == selectEnd) {
@@ -514,6 +524,7 @@ public class GTextBox extends GTextObject {
                             deleteSelectedText();
                         } else {
                             if (textsb.length() > 0 && caretIndex > 0) {
+                                moveScreenToIndex(caretIndex - 1);
                                 setCaretIndex(caretIndex - 1);
                                 deleteTextByIndex(caretIndex);
                             }
@@ -587,25 +598,38 @@ public class GTextBox extends GTextObject {
 
                 case Glfw.GLFW_KEY_LEFT: {
                     if (textsb.length() > 0 && caretIndex > 0) {
-                        setCaretIndex(caretIndex - 1);
+                        int[] pos = editArea.getCaretPosFromArea();
+                        if (pos != null) {
+                            if (pos[1] < getY() + lineh[0] * 2 && scroll > 0f) {//需要向上滚动
+                                setScroll(scroll - lineh[0] / (editArea.totalTextHeight - editArea.showAreaHeight));
+                            } else {
+                                setCaretIndex(caretIndex - 1);
+                            }
+                        }
                     }
                     break;
                 }
                 case Glfw.GLFW_KEY_RIGHT: {
                     if (textsb.length() > caretIndex) {
-                        setCaretIndex(caretIndex + 1);
+                        int[] pos = editArea.getCaretPosFromArea();
+                        if (pos[1] > getY() + getH() - lineh[0] * 2 && scroll < 1.0f) {//需要向下滚动
+                            setScroll(scroll + lineh[0] / (editArea.totalTextHeight - editArea.showAreaHeight));
+                        } else {
+                            setCaretIndex(caretIndex + 1);
+                        }
                     }
                     break;
                 }
                 case Glfw.GLFW_KEY_UP: {
                     int[] pos = editArea.getCaretPosFromArea();
                     if (pos != null) {
-                        if (pos[1] < getY() + lineh[0] * 2) {
+                        if (pos[1] < getY() + lineh[0]) {
                             setScroll(scroll - lineh[0] / (editArea.totalTextHeight - editArea.showAreaHeight));
-                        }
-                        int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] - (int) lineh[0]);
-                        if (cart >= 0) {
-                            setCaretIndex(cart);
+                        } else {
+                            int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] - (int) (lineh[0] * 1.5f));//定位到下一行中央
+                            if (cart >= 0) {
+                                setCaretIndex(cart);
+                            }
                         }
                     } else {
                         for (int i = editArea.area_detail.length - 1; i >= 0; i--) {
@@ -621,14 +645,14 @@ public class GTextBox extends GTextObject {
                 case Glfw.GLFW_KEY_DOWN: {
                     int[] pos = editArea.getCaretPosFromArea();
                     if (pos != null) {
-                        if (pos[1] > getY() + getH() - lineh[0] * 2) {
+                        if (pos[1] > getY() + getH() - lineh[0]) {
                             setScroll(scroll + lineh[0] / (editArea.totalTextHeight - editArea.showAreaHeight));
+                        } else {
+                            int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] + (int) (lineh[0] * 1.5f));//定位到下一行中央
+                            if (cart >= 0) {
+                                setCaretIndex(cart);
+                            }
                         }
-                        int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] + (int) lineh[0]);
-                        if (cart >= 0) {
-                            setCaretIndex(cart);
-                        }
-
                     } else {
                         for (int i = 0; i < editArea.area_detail.length; i++) {
                             if (editArea.area_detail[i] != null) {
@@ -662,6 +686,7 @@ public class GTextBox extends GTextObject {
                         }
                     } else if (caret >= 0) {
                         setCaretIndex(caret);
+                        moveScreenToIndex(caret);
                     }       //
                     if (inertiaCmd != null) {
                         inertiaCmd = null;
@@ -853,7 +878,7 @@ public class GTextBox extends GTextObject {
     public boolean scrollEvent(float scrollX, float scrollY, float x, float y) {
         float dh = editArea.getOutOfShowAreaHeight();
         if (dh > 0) {
-            return setScroll(scroll - (float) scrollY / dh);
+            return setScroll(scroll - scrollY / dh);
         }
         return true;
     }
@@ -915,6 +940,7 @@ public class GTextBox extends GTextObject {
          * @return
          */
         int getCaretIndexFromArea(int x, int y) {
+            int minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
             if (editArea.area_detail != null) {
                 //如果鼠标位置超出显示区域，进行校正
                 if (x < getX()) {
@@ -933,6 +959,8 @@ public class GTextBox extends GTextObject {
                 //根据预存的屏幕内字符串位置，查找光标所在字符位置
                 for (int[] detail : editArea.area_detail) {
                     if (detail != null) {
+                        minY = Math.min(minY, detail[TOP]);
+                        maxY = Math.max(maxY, detail[TOP] + detail[HEIGHT]);
                         if (x >= detail[LEFT] && x <= detail[LEFT] + getW() && y >= detail[TOP] && y <= detail[TOP] + detail[HEIGHT]) {
                             for (int i = AREA_CHAR_POS_START, imax = detail.length; i < imax; i++) {
                                 float x0 = detail[i];
@@ -953,7 +981,10 @@ public class GTextBox extends GTextObject {
                     }
                 }
             }
-            return textsb.length();  //只可能在下方空白区域点，那就把光标放在最后的位置
+            if (y > maxY) {
+                return textsb.length();//只可能在下方空白区域点，那就把光标放在最后的位置
+            }
+            return caretIndex;
         }
 
 
@@ -1013,10 +1044,11 @@ public class GTextBox extends GTextObject {
             nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 
             //字高
-            nvgTextLineHeight(vg, 1.5f);
+            nvgTextLineHeight(vg, LINE_SCALE);
             nvgTextMetrics(vg, null, null, lineh);
             float fontH = lineh[0];
-            float lineH = fontH * 1.5f;
+            float lineH = fontH * LINE_SCALE;
+            lineh[0] = lineH;
             float caretX = 0;
             float caretY = 0;
 
@@ -1148,10 +1180,12 @@ public class GTextBox extends GTextObject {
                                         local_detail[curRow][AREA_LINE_START_AT] = (int) char_starti;
                                         local_detail[curRow][AREA_LINE_END_AT] = (int) char_endi;
                                         local_detail[curRow][AREA_ROW_NO] = (int) row_index;
-                                        if (firstCharOnScreen == -1) {
+                                        if (firstCharOnScreen == -1 && dy >= text_area[TOP]) {// 显示区域第一行完整的显示出来
                                             firstCharOnScreen = char_starti;
                                         }
-                                        lastCharOnScreen = char_endi;
+                                        if (dy + lineH <= text_area[TOP] + text_area[HEIGHT]) {// 显示区域最后一行完整的显示出来
+                                            lastCharOnScreen = char_endi;
+                                        }
                                         //后面把每个char的位置存下来
                                         for (int j = 0; j < char_count; j++) {
                                             //取第 j 个字符的X座标
@@ -1299,16 +1333,17 @@ public class GTextBox extends GTextObject {
                         }
 
                         //计算moveToIndex，滚动到需要显示的行
-                        if (pendingMoveToIndex >= 0 && firstCharOnScreen >= 0 && lastCharOnScreen >= 0) {
+                        if (pendingMoveTo && firstCharOnScreen >= 0 && lastCharOnScreen >= 0) {
                             float delta = showAreaHeight * 0.5f / totalTextHeight;//半屏占整个文本高度的比值，即每次滚动半屏
-                            if (pendingMoveToIndex < firstCharOnScreen) {
+                            if (pendingMoveToIndex < firstCharOnScreen && getScroll() > 0f) {
                                 setScroll(getScroll() - delta);
                                 flushNow();
-                            } else if (pendingMoveToIndex > lastCharOnScreen) {
+                            } else if (pendingMoveToIndex > lastCharOnScreen && getScroll() < 1f) {
                                 setScroll(getScroll() + delta);
                                 flushNow();
                             } else { //结束滚动
                                 pendingMoveToIndex = -1;
+                                pendingMoveTo = false;
                             }
                         }
                     }
