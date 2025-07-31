@@ -11,17 +11,16 @@ import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GDesktop;
 import org.mini.gui.event.GNotifyListener;
 import org.mini.gui.gscript.EnvVarProvider;
-import org.mini.gui.gscript.Interpreter;
 import org.mini.gui.style.GStyleBright;
 import org.mini.gui.style.GStyleDark;
 import org.mini.http.MiniHttpClient;
 import org.mini.http.MiniHttpServer;
-import org.mini.layout.loader.UITemplate;
 import org.mini.layout.XContainer;
 import org.mini.layout.XEventHandler;
+import org.mini.layout.guilib.GuiScriptLib;
+import org.mini.layout.loader.UITemplate;
 import org.mini.layout.loader.XmlExtAssist;
 import org.mini.layout.loader.XuiAppHolder;
-import org.mini.layout.loader.XuiLoader;
 import org.mini.nanovg.Nanovg;
 
 import java.io.*;
@@ -153,7 +152,10 @@ public final class AppManager extends GApplication implements XuiAppHolder {
 
         GCallBack.getInstance().setFps(GCallBack.FPS_DEFAULT);
 
-        Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationPortrait);
+        // 只有在当前方向不是Portrait时才设置
+        if (Glfm.glfmGetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay()) != Glfm.GLFMInterfaceOrientationPortrait) {
+            Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationPortrait);
+        }
         Glfm.glfmSetDisplayChrome(GCallBack.getInstance().getDisplay(), Glfm.GLFMUserInterfaceChromeNavigationAndStatusBar);
 
         GLanguage.setCurLang(AppLoader.getDefaultLang());
@@ -606,30 +608,44 @@ public final class AppManager extends GApplication implements XuiAppHolder {
                     }
                     Glfm.glfmSetDisplayChrome(GCallBack.getInstance().getDisplay(), fullflag);
                     String orientation = AppLoader.getApplicationOrientation(curSelectedJarName);
+                    int targetOrientation;
                     if ("h".equalsIgnoreCase(orientation)) {
-                        Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationLandscapeLeft | Glfm.GLFMInterfaceOrientationLandscapeRight);
+                        //System.out.println("[INFO] orientation h");
+                        targetOrientation = Glfm.GLFMInterfaceOrientationLandscapeLeft | Glfm.GLFMInterfaceOrientationLandscapeRight;
                     } else {
-                        Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationPortrait);
+                        //System.out.println("[INFO] orientation v");
+                        targetOrientation = Glfm.GLFMInterfaceOrientationPortrait;
+                    }
+
+                    // 只有在目标方向与当前方向不同时才设置
+                    if (Glfm.glfmGetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay()) != targetOrientation) {
+                        Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), targetOrientation);
                     }
                     appOri = orientation;
                     String osname = System.getProperty("os.name");
                     if ("iOS".equalsIgnoreCase(osname) || "Android".equalsIgnoreCase(osname)) {
-                        //float w = GCallBack.getInstance().getDeviceWidth();
-                        //float h = GCallBack.getInstance().getDeviceHeight();
+                        float w = GCallBack.getInstance().getDeviceWidth();
+                        float h = GCallBack.getInstance().getDeviceHeight();
                         GCallBack.getInstance().getInsets(inset);
                         //System.out.println("[INFO] INSET:" + inset[0] + " , " + inset[1] + " , " + inset[2] + " , " + inset[3]);
 
-                        if ("h".equals(appOri)) {
-                            int ori = Glfm.glfmGetInterfaceOrientation(GCallBack.getInstance().getDisplay());
-                            if ((ori & Glfm.GLFMInterfaceOrientationLandscapeLeft) == 0
-                                    && (ori & Glfm.GLFMInterfaceOrientationLandscapeRight) == 0
-                            ) {
-                                if (retry++ < 120) { // wait for turn orientation
-                                    GDesktop.addCmd(this);
-                                }
-                                return;
+                        if (w < h) {
+                            if (retry++ < 180) { // wait for turn orientation
+                                GDesktop.addCmd(this);
                             }
+                            return;
                         }
+//                        if ("h".equals(appOri)) {
+//                            int ori = Glfm.glfmGetInterfaceOrientation(GCallBack.getInstance().getDisplay());
+//                            if ((ori & Glfm.GLFMInterfaceOrientationLandscapeLeft) == 0
+//                                    && (ori & Glfm.GLFMInterfaceOrientationLandscapeRight) == 0
+//                            ) {
+//                                if (retry++ < 120) { // wait for turn orientation
+//                                    GDesktop.addCmd(this);
+//                                }
+//                                return;
+//                            }
+//                        }
                     }
 
                     String jarName = curSelectedJarName;
@@ -699,8 +715,14 @@ public final class AppManager extends GApplication implements XuiAppHolder {
                     AppLoader.setDownloadUrl(url);
 
                     MiniHttpClient hc = new MiniHttpClient(url, cltLogger, getDownloadCallback());
-                    hc.start();
+                    hc.setProgressListener(new MiniHttpClient.ProgressListener() {
+                        @Override
+                        public void onProgress(MiniHttpClient client, int progress) {
+                            GuiScriptLib.showProgressBar(getForm(), progress);
+                        }
+                    });
                     httpClients.add(hc);
+                    hc.start();
                     break;
                 case "BT_TEST":
                     break;
@@ -722,6 +744,12 @@ public final class AppManager extends GApplication implements XuiAppHolder {
                         url = AppLoader.getApplicationUpgradeurl(tmpJarName);
                         if (url != null) {
                             hc = new MiniHttpClient(url, cltLogger, getDownloadCallback());
+                            hc.setProgressListener(new MiniHttpClient.ProgressListener() {
+                                @Override
+                                public void onProgress(MiniHttpClient client, int progress) {
+                                    GuiScriptLib.showProgressBar(getForm(), progress);
+                                }
+                            });
                             hc.start();
                             httpClients.add(hc);
                         }

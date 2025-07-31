@@ -1,5 +1,7 @@
 package org.mini.layout.xwebview;
 
+import org.mini.gui.GFrame;
+import org.mini.gui.GToolkit;
 import org.mini.gui.callback.GCmd;
 import org.mini.gui.GContainer;
 import org.mini.gui.GForm;
@@ -103,6 +105,10 @@ public class XuiBrowser {
                     pages.add(page);
                 }
                 webView.flushNow();
+                GFrame frame = webView.getFrame();
+                if (frame != null) {
+                    GToolkit.showFrame(frame);
+                }
                 GuiScriptLib.showProgressBar(assist.getForm(), 100);
             }));
             GForm.flush();

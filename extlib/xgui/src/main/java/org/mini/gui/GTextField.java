@@ -95,9 +95,13 @@ public class GTextField extends GTextObject {
 
 
     public void setResetEnable(boolean resetEnable) {
+        float rw = GToolkit.getStyle().getIconFontWidth() * 2.5f;
+        if (getW() < rw * 3) {//宽度不够
+            resetEnable = false;
+        }
         this.resetEnable = resetEnable;
         if (resetEnable) {
-            resetWidth = GToolkit.getStyle().getIconFontWidth() * 2.5f;
+            resetWidth = rw;
         } else {
             resetWidth = 0.f;
         }

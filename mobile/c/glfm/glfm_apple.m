@@ -834,8 +834,26 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
     if (@available(iOS 16.0, *)) {
         UIWindowScene *windowScene = self.view.window.windowScene;
         if (windowScene) {
+            UIInterfaceOrientationMask mask;
+            switch (orientation) {
+                case UIInterfaceOrientationPortrait:
+                    mask = UIInterfaceOrientationMaskPortrait;
+                    break;
+                case UIInterfaceOrientationPortraitUpsideDown:
+                    mask = UIInterfaceOrientationMaskPortraitUpsideDown;
+                    break;
+                case UIInterfaceOrientationLandscapeLeft:
+                    mask = UIInterfaceOrientationMaskLandscapeLeft;
+                    break;
+                case UIInterfaceOrientationLandscapeRight:
+                    mask = UIInterfaceOrientationMaskLandscapeRight;
+                    break;
+                default:
+                    mask = UIInterfaceOrientationMaskPortrait;
+                    break;
+            }
             UIWindowSceneGeometryPreferencesIOS *preferences = [[UIWindowSceneGeometryPreferencesIOS alloc] 
-                initWithInterfaceOrientations:1 << orientation];
+                initWithInterfaceOrientations:mask];
             [windowScene requestGeometryUpdateWithPreferences:preferences errorHandler:^(NSError * _Nonnull error) {
                 //NSLog(@"Failed to update interface orientation: %@", error);
             }];
@@ -2395,16 +2413,23 @@ void glfmSetSupportedInterfaceOrientation(GLFMDisplay *display, GLFMInterfaceOri
             // HACK: Notify that the value of supportedInterfaceOrientations has changed
             GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
             if (vc.isViewLoaded && vc.view.window) {
-                
-                //================================= gust add =======================
-                [vc setInterfaceOrientation:supportedOrientations];
-                //================================= gust add =======================
                 [vc.glfmView requestRefresh];
-                UIViewController *dummyVC = GLFM_AUTORELEASE([[UIViewController alloc] init]);
-                dummyVC.view = GLFM_AUTORELEASE([[UIView alloc] init]);
-                [vc presentViewController:dummyVC animated:NO completion:^{
-                    [vc dismissViewControllerAnimated:NO completion:NULL];
-                }];
+                // 使用更合适的方法来触发界面更新，避免出现两次动画
+                if (@available(iOS 16.0, *)) {
+                    [vc setNeedsUpdateOfSupportedInterfaceOrientations];//qwen3-coder
+                } else {
+                    // Fallback on earlier versions
+                    //================================= gust add =======================
+                    [vc setInterfaceOrientation:supportedOrientations];
+                    //================================= gust add =======================
+//                    [vc.glfmView requestRefresh];
+//                    UIViewController *dummyVC = GLFM_AUTORELEASE([[UIViewController alloc] init]);
+//                    dummyVC.view = GLFM_AUTORELEASE([[UIView alloc] init]);
+//                    [vc presentViewController:dummyVC animated:NO completion:^{
+//                        [vc dismissViewControllerAnimated:NO completion:NULL];
+//                    }];
+                }
+
             }
         }
     }

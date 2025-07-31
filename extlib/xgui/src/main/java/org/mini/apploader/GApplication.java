@@ -149,7 +149,7 @@ public abstract class GApplication implements FormHolder {
         closeThreads();
         setState(AppState.STATE_CLOSED);
 
-        if (AppLoader.isBootRun()) {
+        if (!AppLoader.isShowHome()) {
             System.exit(0);
         }
     }
