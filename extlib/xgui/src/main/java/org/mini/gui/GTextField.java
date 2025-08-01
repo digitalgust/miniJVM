@@ -21,6 +21,7 @@ public class GTextField extends GTextObject {
 
     static public final int BOX_STYLE_EDIT = 0;
     static public final int BOX_STYLE_SEARCH = 1;
+    static int CARET_MOVE_AREA_WIDTH = 50;//在输入框内，光标进入首尾50区域，文字就会向前或向后滚动
 
     protected float[] reset_boundle;
     protected int text_max = 400;
@@ -38,7 +39,7 @@ public class GTextField extends GTextObject {
     protected boolean resetEnable = true;
     protected boolean resetPressBegin = false;
 
-    protected float wordShowOffsetX = 0.f;
+    protected float wordShowOffsetX = 0.f; //文字滚动的偏移
 
     float resetWidth = 0.f;
     float searchWidth = 0.f;
@@ -105,7 +106,8 @@ public class GTextField extends GTextObject {
         } else {
             resetWidth = 0.f;
         }
-        reset_boundle = new float[]{getLocationLeft() + getW() - resetWidth, getLocationTop(), resetWidth, getH()};
+        //重新计算reset_boundle,其作用区域只有resetWidth的后半段
+        reset_boundle = new float[]{getLocationLeft() + getW() - resetWidth * 0.5f, getLocationTop(), resetWidth * 0.5f, getH()};
 
     }
 
@@ -533,9 +535,7 @@ public class GTextField extends GTextObject {
         float w = getW();
         float h = getH();
 
-        byte[] bg;
         float FONT_WIDTH = GToolkit.getStyle().getIconFontWidth();
-        float leftIcons = 0.5f;//图标占位宽度
         // Edit
         if (boxStyle == BOX_STYLE_SEARCH) {
             GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h, h * .5f - 1f);
@@ -545,7 +545,6 @@ public class GTextField extends GTextObject {
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 
             nvgTextJni(vg, x + FONT_WIDTH, y + h * 0.55f, ICON_SEARCH_BYTE, 0, ICON_SEARCH_BYTE.length);
-            leftIcons = 2;
         } else {
             GToolkit.getStyle().drawEditBoxBase(vg, x, y, w, h, getCornerRadius());
         }
@@ -555,13 +554,13 @@ public class GTextField extends GTextObject {
             nvgFontFace(vg, GToolkit.getFontIcon());
             nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-            nvgTextJni(vg, x + w - resetWidth * 0.5f, y + h * 0.55f, ICON_EYES_BYTE, 0, ICON_CIRCLED_CROSS_BYTE.length);
+            nvgTextJni(vg, x + w - resetWidth * 0.25f, y + h * 0.55f, ICON_EYES_BYTE, 0, ICON_CIRCLED_CROSS_BYTE.length);
         } else if (isResetEnable()) {
             nvgFontSize(vg, getFontSize());
             nvgFontFace(vg, GToolkit.getFontIcon());
             nvgFillColor(vg, GToolkit.getStyle().getHintFontColor());
             nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-            nvgTextJni(vg, x + w - resetWidth * 0.5f, y + h * 0.55f, ICON_CIRCLED_CROSS_BYTE, 0, ICON_CIRCLED_CROSS_BYTE.length);
+            nvgTextJni(vg, x + w - resetWidth * 0.25f, y + h * 0.55f, ICON_CIRCLED_CROSS_BYTE, 0, ICON_CIRCLED_CROSS_BYTE.length);
         }
 
         nvgFontSize(vg, getFontSize());
@@ -617,7 +616,7 @@ public class GTextField extends GTextObject {
                         caretx = x0;
                     }
                     if (j - 1 >= 0 && text_pos[j - 1] <= text_show_area_x && x0 > text_show_area_x) {
-                        leftShowCharIdx = j;
+                        leftShowCharIdx = j - 1;
                     }
                     if (j - 1 >= 0 && text_pos[j - 1] <= text_show_area_right && x0 > text_show_area_right) {
                         rightShowCharIdx = j;
@@ -625,14 +624,21 @@ public class GTextField extends GTextObject {
                 }
 
                 //本次计算,下次绘制生效
-                float mid = (text_show_area_w) / 4;
-                if (mid > 50) mid = 50;//如果文字宽度小于100，会左右不停的闪，相互拉锯
-                if (Math.abs(caretx - text_show_area_x) < mid && leftShowCharIdx > 0) {
-                    wordShowOffsetX += 20;
-                    flushNow();//不刷可能在android上闪烁
-                } else if (Math.abs(caretx - text_show_area_right) < mid && rightShowCharIdx < text_pos.length - 1) {
-                    wordShowOffsetX -= 20;
-                    flushNow();
+                float offset = (text_show_area_w) / 4;
+                if (offset > CARET_MOVE_AREA_WIDTH) offset = CARET_MOVE_AREA_WIDTH;//如果文字宽度小于50，会左右不停的闪，相互拉锯
+                if (Math.abs(caretx - text_show_area_x) < offset && leftShowCharIdx >= 0) {
+                    if (wordx + offset > text_show_area_x) {//如果计算出起始字符的X座标大于text_show_area_x，则只偏移差额部分
+                        offset = text_show_area_x - wordx;
+                    }
+                    wordShowOffsetX += offset;
+                    if (offset > 0f) flushNow();//不刷可能在android上闪烁
+                }
+                if (Math.abs(caretx - text_show_area_right) < offset && rightShowCharIdx <= text_pos.length - 1) {
+                    if (wordx + text_width - offset < text_show_area_right) {
+                        offset = (wordx + text_width) - text_show_area_right;
+                    }
+                    wordShowOffsetX -= offset;
+                    if (offset > 0f) flushNow();
                 }
 
                 if (caretx < text_show_area_x) {
@@ -640,6 +646,7 @@ public class GTextField extends GTextObject {
                 } else if (caretx > text_show_area_right) {
                     wordShowOffsetX -= caretx - text_show_area_right;
                 }
+
                 if (parent.getCurrent() == this) {
                     if (isEditable() && isEnable()) {
                         GToolkit.drawCaret(vg, caretx - 1, wordy - 0.5f * lineh[0], 2, lineh[0], false);
