@@ -517,6 +517,8 @@ public class ReflectClass {
                     String tmps = "[" + getNextType(signature, token);
                     return tmps;
                 }
+                default:
+                    throw new RuntimeException("unknown type:" + ch);
             }
 
         }

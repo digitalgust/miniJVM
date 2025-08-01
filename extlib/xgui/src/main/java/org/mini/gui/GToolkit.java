@@ -683,9 +683,9 @@ public class GToolkit {
 //            nvgFill(vg);
 
             nvgBeginPath(vg);
-            float r = radius - 2;
+            float r = radius;
             r = r < 0 ? 0 : r;
-            nvgRoundedRect(vg, px + 1, py + 1, pw - 2, ph - 2, r);
+            nvgRoundedRect(vg, px, py, pw, ph, r);
             nvgStrokeWidth(vg, 1.0f);
             nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 192));
             nvgStroke(vg);
