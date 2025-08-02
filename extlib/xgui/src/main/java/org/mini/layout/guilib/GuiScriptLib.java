@@ -119,6 +119,7 @@ public class GuiScriptLib extends Lib {
             methodNames.put("getApp".toLowerCase(), this::getApp);//
             methodNames.put("closeApp".toLowerCase(), this::closeApp);//
             methodNames.put("pauseApp".toLowerCase(), this::pauseApp);//
+            methodNames.put("getJarConfig".toLowerCase(), this::getJarConfig);
             methodNames.put("getDisplay".toLowerCase(), this::getDisplay);//
 
             methodNames.put("isScreenSaver".toLowerCase(), this::isScreenSaver);//
@@ -1112,21 +1113,27 @@ public class GuiScriptLib extends Lib {
     }
 
     public DataType getApp(ArrayList<DataType> para) {
-        return Interpreter.getCachedObj(GCallBack.getInstance().getApplication());
+        return Interpreter.getCachedObj(formHolder.getForm().getApp());
     }
 
     public DataType getAppId(ArrayList<DataType> para) {
-        return Interpreter.getCachedStr(GCallBack.getInstance().getApplication().getAppId());
+        return Interpreter.getCachedStr(formHolder.getForm().getApp().getAppId());
     }
 
     public DataType closeApp(ArrayList<DataType> para) {
-        GCallBack.getInstance().getApplication().closeApp();
+        formHolder.getForm().getApp().closeApp();
         return Interpreter.getCachedInt(0);
     }
 
     public DataType pauseApp(ArrayList<DataType> para) {
-        GCallBack.getInstance().getApplication().pauseApp();
+        formHolder.getForm().getApp().pauseApp();
         return Interpreter.getCachedInt(0);
+    }
+
+    private DataType getJarConfig(ArrayList<DataType> para) {
+        String K = Interpreter.popBackStr(para);
+        String V = formHolder.getForm().getApp().getJarConfig(K);
+        return Interpreter.getCachedStr(V);
     }
 
     public DataType getDisplay(ArrayList<DataType> para) {

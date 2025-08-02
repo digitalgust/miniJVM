@@ -98,7 +98,7 @@ public abstract class GApplication implements FormHolder {
         this.jarName = jarName;
     }
 
-    String getJarName() {
+    public String getJarName() {
         return jarName;
     }
 
@@ -267,6 +267,27 @@ public abstract class GApplication implements FormHolder {
 
     public Properties getConfigProp() {
         return prop;
+    }
+
+    public String getJarConfig(String key) {
+        String configStr = GToolkit.readFileFromFileAsString("/config.txt", "utf-8");
+        //System.out.println("b=" + configStr);
+        if (configStr != null) {
+
+            configStr = configStr.replace("\r", "\n");
+            String[] ss = configStr.split("\n");
+            for (String line : ss) {
+                int pos = line.indexOf("=");
+                if (pos > 0) {
+                    String k = line.substring(0, pos).trim();
+                    String v = line.substring(pos + 1).trim();
+                    if (k.equalsIgnoreCase(key)) {
+                        return v;
+                    }
+                }
+            }
+        }
+        return "";
     }
 
     public String getAppId() {

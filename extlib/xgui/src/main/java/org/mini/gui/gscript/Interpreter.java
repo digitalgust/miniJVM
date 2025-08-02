@@ -316,7 +316,7 @@ public class Interpreter {
                 statements.add(st);
                 //System.out.println(i + " " + sc);
             } catch (Exception e) {
-                errout(i, STRS_ERR[ERR_ILLEGAL] + srcCode.get(i));
+                errout(STRS_ERR[ERR_ILLEGAL] + srcCode.get(i));
                 e.printStackTrace();
                 break;
             }
@@ -837,14 +837,14 @@ public class Interpreter {
                     } else {
                         String lastToken = (String) stack.get(stack.size() - 1);
                         // 如果前面是比较运算符、逻辑运算符、括号、逗号等，则认为是带符号的数字
-                        if (lastToken.equals("=") || lastToken.equals(">") || lastToken.equals("<") || 
-                            lastToken.equals(">=") || lastToken.equals("<=") || lastToken.equals("<>") ||
-                            lastToken.equals("&") || lastToken.equals("|") || lastToken.equals("!") ||
-                            lastToken.equals("(") || lastToken.equals(",")) {
+                        if (lastToken.equals("=") || lastToken.equals(">") || lastToken.equals("<") ||
+                                lastToken.equals(">=") || lastToken.equals("<=") || lastToken.equals("<>") ||
+                                lastToken.equals("&") || lastToken.equals("|") || lastToken.equals("!") ||
+                                lastToken.equals("(") || lastToken.equals(",")) {
                             isSignedNumber = true;
                         }
                     }
-                    
+
                     if (isSignedNumber) {
                         // 处理带符号数字：包含符号和后面的数字
                         sb.append(ch); // 添加符号
