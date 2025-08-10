@@ -870,6 +870,7 @@ public final class AppManager extends GApplication implements XuiAppHolder {
         envVarProvider.setEnvVar("shop_url", "");
         envVarProvider.setEnvVar("pay_url", "");
         envVarProvider.setEnvVar("plugin_url", "");
+        envVarProvider.setEnvVar("uuid", System.getProperty("uuid"));
     }
 
     public static void setStyle(int style) {

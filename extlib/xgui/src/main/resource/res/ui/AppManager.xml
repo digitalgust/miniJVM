@@ -79,7 +79,7 @@
         ret
 
         sub getQueryPara()
-            s="appid="+ getEnv("APPID") + "&appzone=" + getEnv("APPZONE") + "&ver=" + getEnv("SVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG") +"&token="+ getEnv("TOKEN")
+            s="appid="+ getEnv("APPID") + "&appzone=" + getEnv("APPZONE") + "&ver=" + getEnv("SVER") +"&cver="+ getEnv("CVER") +"&from="+ getEnv("FROM") +"&jar="+ getEnv("JAR") +"&lang="+ getEnv("LANG") +"&token="+ getEnv("TOKEN")+"&uuid="+getEnv("UUID")
             #println(s)
         ret s
 
@@ -185,7 +185,7 @@
             eif
             accBaseUrl=getEnv("ACCOUNT_BASE_URL")
             url=accBaseUrl + "/regauto"
-            body="uuid="+uuid+"&"+getQueryPara()
+            body=getQueryPara()
             httpPost(url,body,"ROOT_PAN.onSignUpAutoBack")
         ret
 

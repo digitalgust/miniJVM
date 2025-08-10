@@ -96,6 +96,7 @@ public class XuiLoader {
             appHolder.getApp().setProperty("pay_url", AppLoader.getProperty("pay_url"));
             appHolder.getApp().setProperty("plugin_url", AppLoader.getProperty("plugin_url"));
             appHolder.getApp().setProperty("update_url", AppLoader.getProperty("update_url"));
+            appHolder.getApp().setProperty("uuid", AppLoader.getProperty("uuid"));
         }
         return envVarProvider;
     }
@@ -301,7 +302,7 @@ public class XuiLoader {
         hideBtn.setName("BT_HIDE_BROWSER");
         hideBtn.setText("\u2716");
         hideBtn.setSize(25, 25);
-        hideBtn.setLocation(10, (GFrame.TITLE_HEIGHT - hideBtn.getH()) * 0.5f);
+        hideBtn.setLocation(w - hideBtn.getW() - 10, (GFrame.TITLE_HEIGHT - hideBtn.getH()) * 0.5f);
         hideBtn.setActionListener((e) -> {
             GFrame f = GToolkit.getComponent(form, WEB_FRAME_NAME);
             if (f != null) {
