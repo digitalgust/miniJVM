@@ -13,7 +13,7 @@
 
     <frame name="FRAME_TEST" w="80%" h="300" align="top,hcenter" title="WINDOW">
         <label name="LAB_HELP" w="100%" h="30" align="left,vcenter">Help text:</label>
-        <input w="100%" h="200" multiline="1" edit="0"><![CDATA[
+        <input name="INPUT_AREA" w="100%" h="200" multiline="1" edit="0"><![CDATA[
             This app is an example of mini_jvm, Threre are a menu and a frame .
             Touch the 'Exit to AppManager' , you will enter the AppManager, AppManager manage all app, it can upload ,download , delete app.
             1. DOWNLOAD : Put your jar in a website , then input the url of jar in AppManager, Touch 'Download' ,it would download the jar ,then update the app list.
