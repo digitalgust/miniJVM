@@ -52,10 +52,12 @@ MiniJVM on web build by Starcommander. [Source](https://github.com/Starcommander
 ## MiniJVM gui Demo
 
   <div align=center><img width="112" height="199" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/doc/img/demo.gif"/></div>
-     
+
+  <div align=center><img width="400" height="240" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/doc/img/game.gif"/></div>
 
 
 * Instant Message app Demo , [Source](https://github.com/digitalgust/BiBiX)
+* 3D game app Demo, [Source](https://github.com/digitalgust/g3d)
 
 
 <span id="linkarch"/>
