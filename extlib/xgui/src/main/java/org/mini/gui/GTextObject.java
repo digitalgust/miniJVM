@@ -76,6 +76,9 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
 
     abstract void onSetText(String text);
 
+    void moveScreenToIndex(int charIndex) {
+    }
+
     public void setText(String text) {
         //put in del undo
         String old = textsb.toString();
@@ -109,6 +112,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
         StringBuilder undo = new StringBuilder();
         undo.appendCodePoint(ch);
         putInUndo(UserAction.ADD, undo.toString(), index);
+        moveScreenToIndex(getCaretIndex());
     }
 
     public void insertTextByIndex(int index, String str) {
@@ -118,6 +122,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
         setCaretIndex(index + str.codePointCount(0, str.length()));
         doStateChanged(this);
         putInUndo(UserAction.ADD, str, index);
+        moveScreenToIndex(getCaretIndex());
     }
 
     public void deleteTextByIndex(int index) {
@@ -129,6 +134,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
         StringBuilder undo = new StringBuilder();
         undo.appendCodePoint(ch);
         putInUndo(UserAction.DEL, undo.toString(), index);
+        moveScreenToIndex(getCaretIndex());
     }
 
     public void deleteTextRange(int start, int end) {
@@ -138,6 +144,7 @@ public abstract class GTextObject extends GContainer implements GFocusChangeList
         text_arr = null;
         doStateChanged(this);
         putInUndo(UserAction.DEL, str, start);
+        moveScreenToIndex(getCaretIndex());
     }
 
 

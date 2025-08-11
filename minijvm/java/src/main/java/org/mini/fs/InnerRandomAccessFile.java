@@ -50,16 +50,21 @@ public class InnerRandomAccessFile extends InnerFile {
         this.path = ppath;
         if ("r".equals(pmode)) {
             this.mode = "rb";
+            checkReadPermission();
         } else if ("rw".equals(pmode)) {
             this.mode = "rb+";
+            checkWritePermission();
         } else if ("rws".equals(pmode)) {
             this.mode = "rb+";
             flush = true;
+            checkWritePermission();
         } else if ("rwd".equals(pmode)) {
             this.mode = "rb+";
             flush = true;
+            checkWritePermission();
         } else {
             this.mode = "rb+";
+            checkWritePermission();
         }
         filePointer = openFile(SocketNative.toCStyle(path), SocketNative.toCStyle(mode));
         if (filePointer == 0 && "rb+".equals(this.mode)) {// file not exists , create new 
@@ -77,10 +82,12 @@ public class InnerRandomAccessFile extends InnerFile {
     }
 
     public int read(byte[] b, int off, int len) throws IOException {
+        //checkReadPermission();
         return readbuf(getFilePointer(), b, off, len);
     }
 
     public int write(byte[] b, int off, int len) throws IOException {
+        //checkWritePermission();
         int ret = writebuf(getFilePointer(), b, off, len);
         if (flush) {
             flush0(getFilePointer());
@@ -89,10 +96,16 @@ public class InnerRandomAccessFile extends InnerFile {
     }
 
     public int seek(long pos) throws IOException {
+//        if (mode.startsWith("r")) {
+//            checkReadPermission();
+//        } else {
+//            checkWritePermission();
+//        }
         return seek0(getFilePointer(), pos);
     }
 
     public int setLength(long length) throws IOException {
+        //checkWritePermission();
         return setLength0(getFilePointer(), length);
     }
 }

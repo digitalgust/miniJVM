@@ -834,8 +834,26 @@ static void glfm__preferredDrawableSize(CGRect bounds, CGFloat contentScaleFacto
     if (@available(iOS 16.0, *)) {
         UIWindowScene *windowScene = self.view.window.windowScene;
         if (windowScene) {
+            UIInterfaceOrientationMask mask;
+            switch (orientation) {
+                case UIInterfaceOrientationPortrait:
+                    mask = UIInterfaceOrientationMaskPortrait;
+                    break;
+                case UIInterfaceOrientationPortraitUpsideDown:
+                    mask = UIInterfaceOrientationMaskPortraitUpsideDown;
+                    break;
+                case UIInterfaceOrientationLandscapeLeft:
+                    mask = UIInterfaceOrientationMaskLandscapeLeft;
+                    break;
+                case UIInterfaceOrientationLandscapeRight:
+                    mask = UIInterfaceOrientationMaskLandscapeRight;
+                    break;
+                default:
+                    mask = UIInterfaceOrientationMaskPortrait;
+                    break;
+            }
             UIWindowSceneGeometryPreferencesIOS *preferences = [[UIWindowSceneGeometryPreferencesIOS alloc] 
-                initWithInterfaceOrientations:1 << orientation];
+                initWithInterfaceOrientations:mask];
             [windowScene requestGeometryUpdateWithPreferences:preferences errorHandler:^(NSError * _Nonnull error) {
                 //NSLog(@"Failed to update interface orientation: %@", error);
             }];
@@ -2395,16 +2413,23 @@ void glfmSetSupportedInterfaceOrientation(GLFMDisplay *display, GLFMInterfaceOri
             // HACK: Notify that the value of supportedInterfaceOrientations has changed
             GLFMViewController *vc = (__bridge GLFMViewController *)display->platformData;
             if (vc.isViewLoaded && vc.view.window) {
-                
-                //================================= gust add =======================
-                [vc setInterfaceOrientation:supportedOrientations];
-                //================================= gust add =======================
                 [vc.glfmView requestRefresh];
-                UIViewController *dummyVC = GLFM_AUTORELEASE([[UIViewController alloc] init]);
-                dummyVC.view = GLFM_AUTORELEASE([[UIView alloc] init]);
-                [vc presentViewController:dummyVC animated:NO completion:^{
-                    [vc dismissViewControllerAnimated:NO completion:NULL];
-                }];
+                // 使用更合适的方法来触发界面更新，避免出现两次动画
+                if (@available(iOS 16.0, *)) {
+                    [vc setNeedsUpdateOfSupportedInterfaceOrientations];//qwen3-coder
+                } else {
+                    // Fallback on earlier versions
+                    //================================= gust add =======================
+                    [vc setInterfaceOrientation:supportedOrientations];
+                    //================================= gust add =======================
+//                    [vc.glfmView requestRefresh];
+//                    UIViewController *dummyVC = GLFM_AUTORELEASE([[UIViewController alloc] init]);
+//                    dummyVC.view = GLFM_AUTORELEASE([[UIView alloc] init]);
+//                    [vc presentViewController:dummyVC animated:NO completion:^{
+//                        [vc dismissViewControllerAnimated:NO completion:NULL];
+//                    }];
+                }
+
             }
         }
     }
@@ -2967,6 +2992,63 @@ void buyAppleProductById(GLFMDisplay * display, const char *cproductID, const ch
         }
 
     }];
+}
+
+// MARK: - Screen Control functions
+
+void glfmSetScreenSaverEnabled(GLFMDisplay *display, bool enabled) {
+    if (!display) {
+        return;
+    }
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [UIApplication sharedApplication].idleTimerDisabled = !enabled;
+    });
+}
+
+bool glfmIsScreenSaverEnabled(GLFMDisplay *display) {
+    if (!display) {
+        return true; // Default
+    }
+    if ([NSThread isMainThread]) {
+        return ![UIApplication sharedApplication].idleTimerDisabled;
+    }
+    __block bool result = true;
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        result = ![UIApplication sharedApplication].idleTimerDisabled;
+    });
+    return result;
+}
+
+void glfmSetScreenBrightness(GLFMDisplay *display, float brightness) {
+    if (!display) {
+        return;
+    }
+    if(brightness == -1.0f){
+        brightness = [UIScreen mainScreen].brightness;
+    } else {
+        // Clamp brightness to valid range
+        if (brightness < 0.0f) brightness = 0.0f;
+        if (brightness > 1.0f) brightness = 1.0f;
+    }
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [UIScreen mainScreen].brightness = brightness;
+    });
+}
+
+float glfmGetScreenBrightness(GLFMDisplay *display) {
+    if (!display) {
+        return -1.0f; // Default: use system brightness
+    }
+    if ([NSThread isMainThread]) {
+        return [UIScreen mainScreen].brightness;
+    }
+    __block float result = -1.0f;
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        result = [UIScreen mainScreen].brightness;
+    });
+    return result;
 }
 
 #endif

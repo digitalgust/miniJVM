@@ -58,8 +58,6 @@ public class Stdlib extends Lib {
         methodNames.put("mod".toLowerCase(), this::mod);// 取余
         methodNames.put("strlen".toLowerCase(), this::strlen); // 字符串长度
         methodNames.put("equals".toLowerCase(), this::equals); // 字符串比较
-        methodNames.put("valueOf".toLowerCase(), this::valueOf); // 转换字符串为数值
-        methodNames.put("intOf".toLowerCase(), this::valueOf); // 转换字符串为数值
         methodNames.put("idxOf".toLowerCase(), this::idxof);// 子串在母串的位置        idxof("abc","a")  结果0
         methodNames.put("indexOf".toLowerCase(), this::idxof);// 子串在母串的位置        idxof("abc","a")  结果0
         methodNames.put("lastIdxOf".toLowerCase(), this::lastIdxOf);// 子串在母串的位置        idxof("abc","a")  结果0
@@ -72,8 +70,6 @@ public class Stdlib extends Lib {
         methodNames.put("startsWith".toLowerCase(), this::startsWith); //
         methodNames.put("endsWith".toLowerCase(), this::endsWith); //
         methodNames.put("trim".toLowerCase(), this::trim);//字符串去空格
-        methodNames.put("str2int".toLowerCase(), this::str2int);//字符串转int
-        methodNames.put("isNumStr".toLowerCase(), this::isNumStr);//是数字串
         methodNames.put("invokeJava".toLowerCase(), this::invokeJava);//执行对象方法
         methodNames.put("invokeStatic".toLowerCase(), this::invokeStatic);//执行对象方法
         methodNames.put("bitGet".toLowerCase(), this::bitGet);//取整数第n位,返回bool
@@ -100,6 +96,23 @@ public class Stdlib extends Lib {
         methodNames.put("getobjfield".toLowerCase(), this::getObjField);
         methodNames.put("setobjfield".toLowerCase(), this::setObjField);
         methodNames.put("run".toLowerCase(), this::run);   // run("sub f();println(5);ret;", "f()")
+        methodNames.put("floatAdd".toLowerCase(), this::floatAdd);
+        methodNames.put("floatSub".toLowerCase(), this::floatSub);
+        methodNames.put("floatMul".toLowerCase(), this::floatMul);
+        methodNames.put("floatDiv".toLowerCase(), this::floatDiv);
+        methodNames.put("floatMod".toLowerCase(), this::floatMod);
+        methodNames.put("str2float".toLowerCase(), this::str2float);
+        methodNames.put("float2str".toLowerCase(), this::float2str);
+        methodNames.put("valueOf".toLowerCase(), this::str2int); // 转换字符串为数值
+        methodNames.put("intOf".toLowerCase(), this::str2int); // 转换字符串为数值
+        methodNames.put("str2int".toLowerCase(), this::str2int);//字符串转int
+        methodNames.put("int2str".toLowerCase(), this::int2str);//字符串转int
+        methodNames.put("str2double".toLowerCase(), this::str2double);   //
+        methodNames.put("double2str".toLowerCase(), this::double2str);   //
+        methodNames.put("isNumStr".toLowerCase(), this::isNumStr);//是数字串
+        methodNames.put("int2float".toLowerCase(), this::int2float);
+        methodNames.put("float2int".toLowerCase(), this::float2int);
+        methodNames.put("isFloat".toLowerCase(), this::isFloat);
     }
 
 
@@ -291,25 +304,6 @@ public class Stdlib extends Lib {
             return Interpreter.getCachedBool(false);
         }
         return Interpreter.getCachedBool(true);
-    }
-
-    /**
-     * 某名称的全局变量是否存在
-     *
-     * @param para int
-     * @return gscript.Int
-     */
-    private Int valueOf(ArrayList<DataType> para) {
-        String s = Interpreter.popBackStr(para);
-        if (s != null && !"".equals(s)) {
-            int v = 0;
-            try {
-                v = Integer.parseInt(s);
-            } catch (Exception e) {
-            }
-            return Interpreter.getCachedInt(v);
-        }
-        return Interpreter.getCachedInt(0);
     }
 
     /**
@@ -606,6 +600,17 @@ public class Stdlib extends Lib {
                     }
                 } else if (dt.type == DataType.DTYPE_STR) {
                     javaPara[i] = ((Str) dt).getVal();
+                    if (types[i] == float.class) {
+                        try {
+                            javaPara[i] = Float.parseFloat(((Str) dt).getVal());
+                        } catch (Exception e) {
+                        }
+                    } else if (types[i] == double.class) {
+                        try {
+                            javaPara[i] = Double.parseDouble(((Str) dt).getVal());
+                        } catch (Exception e) {
+                        }
+                    }
                 } else if (dt.type == DataType.DTYPE_BOOL) {
                     javaPara[i] = ((Bool) dt).getVal();
                 } else if (dt.type == DataType.DTYPE_OBJ) {
@@ -685,16 +690,66 @@ public class Stdlib extends Lib {
     }
 
 
+    private DataType int2str(ArrayList<DataType> para) {
+        try {
+            long i = Interpreter.popBackLong(para);
+            return Interpreter.getCachedStr(Long.toString(i));
+        } catch (Exception e) {
+        }
+        throw new RuntimeException("int required");
+    }
+
     private DataType str2int(ArrayList<DataType> para) {
+        String str = Interpreter.popBackStr(para);
+        try {
+            str = str.trim();
+            long i = Long.parseLong(str);
+            return Interpreter.getCachedInt(i);
+        } catch (Exception e) {
+        }
+        throw new RuntimeException("int required, but :" + str);
+    }
+
+
+    private DataType str2double(ArrayList<DataType> para) {
         try {
             String str = Interpreter.popBackStr(para);
             str = str.trim();
-            int i = Integer.parseInt(str);
-            return Interpreter.getCachedInt(i);
+            double i = Double.parseDouble(str);
+            return Interpreter.getCachedObj(i);
         } catch (Exception e) {
             //e.printStackTrace();
         }
         return null;
+    }
+
+    private DataType double2str(ArrayList<DataType> para) {
+        try {
+            Object d = Interpreter.popBackObject(para);
+            return Interpreter.getCachedStr(d.toString());
+        } catch (Exception e) {
+        }
+        throw new RuntimeException("double-obj required");
+    }
+
+    private DataType float2int(ArrayList<DataType> para) {
+        try {
+            Object f = Interpreter.popBackObject(para);
+            long i = (long) ((float) f);
+            return Interpreter.getCachedInt(i);
+        } catch (Exception e) {
+        }
+        throw new RuntimeException("float-obj required");
+    }
+
+    private DataType int2float(ArrayList<DataType> para) {
+        try {
+            long i = Interpreter.popBackLong(para);
+            float f = i;
+            return Interpreter.getCachedObj(f);
+        } catch (Exception e) {
+        }
+        throw new RuntimeException("int required");
     }
 
     private DataType isNumStr(ArrayList<DataType> para) {
@@ -915,5 +970,102 @@ public class Stdlib extends Lib {
         String subcall = Interpreter.popBackStr(para);
         inp.loadFromString(script);
         return inp.callSub(subcall);
+    }
+
+
+    private DataType floatAdd(ArrayList para) {
+        String f1 = Interpreter.popBackStr(para);
+        String f2 = Interpreter.popBackStr(para);
+        try {
+            float f = Float.parseFloat(f1) + Float.parseFloat(f2);
+            return Interpreter.getCachedStr(Float.toString(f));
+        } catch (Exception e) {
+            throw new RuntimeException("float string require, like \"3.14\"");
+        }
+    }
+
+
+    private DataType floatSub(ArrayList para) {
+        String f1 = Interpreter.popBackStr(para);
+        String f2 = Interpreter.popBackStr(para);
+        try {
+            float f = Float.parseFloat(f1) - Float.parseFloat(f2);
+            return Interpreter.getCachedStr(Float.toString(f));
+        } catch (Exception e) {
+            throw new RuntimeException("float string require, like \"3.14\"");
+        }
+    }
+
+    private DataType floatMul(ArrayList para) {
+        String f1 = Interpreter.popBackStr(para);
+        String f2 = Interpreter.popBackStr(para);
+        try {
+            float f = Float.parseFloat(f1) * Float.parseFloat(f2);
+            return Interpreter.getCachedStr(Float.toString(f));
+        } catch (Exception e) {
+            throw new RuntimeException("float string require, like \"3.14\"");
+        }
+    }
+
+    private DataType floatDiv(ArrayList para) {
+        String f1 = Interpreter.popBackStr(para);
+        String f2 = Interpreter.popBackStr(para);
+        try {
+            float f = Float.parseFloat(f1) / Float.parseFloat(f2);
+            return Interpreter.getCachedStr(Float.toString(f));
+        } catch (Exception e) {
+            throw new RuntimeException("float string require, like \"3.14\"");
+        }
+    }
+
+    private DataType floatMod(ArrayList para) {
+        String f1 = Interpreter.popBackStr(para);
+        String f2 = Interpreter.popBackStr(para);
+        try {
+            float f = Float.parseFloat(f1) % Float.parseFloat(f2);
+            return Interpreter.getCachedStr(Float.toString(f));
+        } catch (Exception e) {
+            throw new RuntimeException("float string require, like \"3.14\"");
+        }
+    }
+
+    private DataType str2float(ArrayList<DataType> para) {
+        try {
+            String str = Interpreter.popBackStr(para);
+            str = str.trim();
+            float i = Float.parseFloat(str);
+            return Interpreter.getCachedObj(i);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType float2str(ArrayList<DataType> para) {
+        try {
+            Object o = Interpreter.popBackObject(para);
+            return Interpreter.getCachedStr(o.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private DataType isFloat(ArrayList<DataType> para) {
+        DataType f = Interpreter.popBack(para);
+        boolean b = false;
+        if (f.type == DataType.DTYPE_STR) {
+            try {
+                Float.parseFloat(f.getString());
+                b = true;
+            } catch (Exception e) {
+            }
+        }
+        if (!b) {
+            if (f.type == DataType.DTYPE_OBJ) {
+                b = ((Obj) f).getVal() instanceof Float;
+            }
+        }
+        return Interpreter.getCachedBool(b);
     }
 }

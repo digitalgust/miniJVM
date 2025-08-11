@@ -70,6 +70,7 @@ typedef struct {
 
     ARect keyboardFrame;
     bool keyboardVisible;
+    int keyboardHeight;
 
     bool animating;
     bool hasInited;
@@ -100,6 +101,10 @@ typedef struct {
 
     JNIEnv *jniEnv;
     char *clipBoardStr;
+
+    // Screen control
+    bool screenSaverEnabled;
+    float screenBrightness;
 
 } GLFMPlatformData;
 
@@ -302,6 +307,7 @@ static bool glfm__handleBackButton(struct android_app *app) {
     return !glfm__wasJavaExceptionThrown() && handled;
 }
 
+// Internal function, shows the native keyboard
 static bool glfm__setKeyboardVisible(GLFMPlatformData *platformData, bool visible) {
     static const int InputMethodManager_SHOW_FORCED = 2;
 
@@ -317,18 +323,24 @@ static bool glfm__setKeyboardVisible(GLFMPlatformData *platformData, bool visibl
 
     jclass contextClass = (*jni)->FindClass(jni, "android/content/Context");
     if (glfm__wasJavaExceptionThrown()) {
+        (*jni)->DeleteLocalRef(jni, decorView);
         return false;
     }
 
     jstring imString = glfm__getJavaStaticField(jni, contextClass, "INPUT_METHOD_SERVICE",
                                                 "Ljava/lang/String;", Object);
     if (!imString || glfm__wasJavaExceptionThrown()) {
+        (*jni)->DeleteLocalRef(jni, contextClass);
+        (*jni)->DeleteLocalRef(jni, decorView);
         return false;
     }
     jobject ime = glfm__callJavaMethodWithArgs(jni, platformData->app->activity->clazz,
                                                "getSystemService", "(Ljava/lang/String;)Ljava/lang/Object;",
                                                Object, imString);
     if (!ime || glfm__wasJavaExceptionThrown()) {
+        (*jni)->DeleteLocalRef(jni, imString);
+        (*jni)->DeleteLocalRef(jni, contextClass);
+        (*jni)->DeleteLocalRef(jni, decorView);
         return false;
     }
 
@@ -338,6 +350,10 @@ static bool glfm__setKeyboardVisible(GLFMPlatformData *platformData, bool visibl
     } else {
         jobject windowToken = glfm__callJavaMethod(jni, decorView, "getWindowToken", "()Landroid/os/IBinder;", Object);
         if (!windowToken || glfm__wasJavaExceptionThrown()) {
+            (*jni)->DeleteLocalRef(jni, ime);
+            (*jni)->DeleteLocalRef(jni, imString);
+            (*jni)->DeleteLocalRef(jni, contextClass);
+            (*jni)->DeleteLocalRef(jni, decorView);
             return false;
         }
         glfm__callJavaMethodWithArgs(jni, ime, "hideSoftInputFromWindow",
@@ -351,6 +367,56 @@ static bool glfm__setKeyboardVisible(GLFMPlatformData *platformData, bool visibl
     (*jni)->DeleteLocalRef(jni, decorView);
 
     return !glfm__wasJavaExceptionThrown();
+}
+
+// Internal function to show the text input dialog
+static void glfm__showTextInput(GLFMDisplay *display, const char *initialText) {
+    if (display) {
+        GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+        JNIEnv *jni = platformData->jniEnv;
+
+        jstring jInitialText = (*jni)->NewStringUTF(jni, initialText ? initialText : "");
+
+        glfm__callJavaMethodWithArgs(jni, platformData->app->activity->clazz, "showTextInput",
+                                     "(Ljava/lang/String;)V", Void, jInitialText);
+
+        (*jni)->DeleteLocalRef(jni, jInitialText);
+        glfm__clearJavaException();
+    }
+}
+
+// Internal function to hide the text input dialog
+static void glfm__hideTextInput(GLFMDisplay *display) {
+    if (display) {
+        GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+        JNIEnv *jni = platformData->jniEnv;
+
+        glfm__callJavaMethod(jni, platformData->app->activity->clazz, "hideTextInput",
+                             "()V", Void);
+        glfm__clearJavaException();
+    }
+}
+
+void glfmSetKeyboardVisible(GLFMDisplay *display, bool visible) {
+    if (!display) {
+        return;
+    }
+    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+    JNIEnv *jni = platformData->jniEnv;
+
+    if (visible) {
+        glfm__callJavaMethod(jni, platformData->app->activity->clazz, "showSoftInput",
+                             "()V", Void);
+    } else {
+        glfm__callJavaMethod(jni, platformData->app->activity->clazz, "hideSoftInput",
+                             "()V", Void);
+    }
+    glfm__clearJavaException();
+}
+
+bool glfmIsKeyboardVisible(GLFMDisplay *display) {
+    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+    return platformData->keyboardVisible;
 }
 
 static void glfm__resetContentRect(GLFMPlatformData *platformData) {
@@ -822,6 +888,8 @@ static void glfm__setContentRect(struct android_app *android_app, ARect rect) {
 }
 
 static void glfm__onContentRectChanged(ANativeActivity *activity, const ARect *rect) {
+    LOG_DEBUG("glfm__onContentRectChanged called: left=%d, top=%d, right=%d, bottom=%d",
+              rect->left, rect->top, rect->right, rect->bottom);
     glfm__setContentRect((struct android_app *) activity->instance, *rect);
 }
 
@@ -869,69 +937,9 @@ static ARect glfm__getDecorViewRect(GLFMPlatformData *platformData, ARect defaul
 }
 
 static void glfm__updateKeyboardVisibility(GLFMPlatformData *platformData) {
-    if (platformData->display) {
-        ARect windowRect = glfm__getDecorViewRect(platformData, platformData->app->contentRect);
-        ARect visibleRect = glfm__getWindowVisibleDisplayFrame(platformData, windowRect);
-        ARect nonVisibleRect[4];
-
-        // Left
-        nonVisibleRect[0].left = windowRect.left;
-        nonVisibleRect[0].right = visibleRect.left;
-        nonVisibleRect[0].top = windowRect.top;
-        nonVisibleRect[0].bottom = windowRect.bottom;
-
-        // Right
-        nonVisibleRect[1].left = visibleRect.right;
-        nonVisibleRect[1].right = windowRect.right;
-        nonVisibleRect[1].top = windowRect.top;
-        nonVisibleRect[1].bottom = windowRect.bottom;
-
-        // Top
-        nonVisibleRect[2].left = windowRect.left;
-        nonVisibleRect[2].right = windowRect.right;
-        nonVisibleRect[2].top = windowRect.top;
-        nonVisibleRect[2].bottom = visibleRect.top;
-
-        // Bottom
-        nonVisibleRect[3].left = windowRect.left;
-        nonVisibleRect[3].right = windowRect.right;
-        nonVisibleRect[3].top = visibleRect.bottom;
-        nonVisibleRect[3].bottom = windowRect.bottom;
-
-        // Find largest with minimum keyboard size
-        const int minimumKeyboardSize = (int) (100 * platformData->scale);
-        int largestIndex = 0;
-        int largestArea = -1;
-        for (int i = 0; i < 4; i++) {
-            int w = nonVisibleRect[i].right - nonVisibleRect[i].left;
-            int h = nonVisibleRect[i].bottom - nonVisibleRect[i].top;
-            int area = w * h;
-            if (w >= minimumKeyboardSize && h >= minimumKeyboardSize && area > largestArea) {
-                largestIndex = i;
-                largestArea = area;
-            }
-        }
-
-        bool keyboardVisible = largestArea > 0;
-        ARect keyboardFrame = keyboardVisible ? nonVisibleRect[largestIndex] : (ARect) {0, 0, 0, 0};
-
-        // Send update notification
-        if (platformData->keyboardVisible != keyboardVisible ||
-            !ARectsEqual(platformData->keyboardFrame, keyboardFrame)) {
-            platformData->keyboardVisible = keyboardVisible;
-            platformData->keyboardFrame = keyboardFrame;
-            platformData->refreshRequested = true;
-            if (platformData->display->keyboardVisibilityChangedFunc) {
-                double x = keyboardFrame.left;
-                double y = keyboardFrame.top;
-                double w = keyboardFrame.right - keyboardFrame.left;
-                double h = keyboardFrame.bottom - keyboardFrame.top;
-                platformData->display->keyboardVisibilityChangedFunc(platformData->display,
-                                                                     keyboardVisible,
-                                                                     x, y, w, h);
-            }
-        }
-    }
+    // This function is now obsolete. All keyboard updates are handled by
+    // Java_org_minijvm_activity_JvmNativeActivity_onKeyboardHeightChanged
+    // via the OnApplyWindowInsetsListener.
 }
 
 // MARK: App command callback
@@ -961,6 +969,13 @@ static void glfm__onAppCmd(struct android_app *app, int32_t cmd) {
             const bool success = glfm__eglInit(platformData);
             if (!success) {
                 glfm__eglCheckError(platformData);
+            } else {
+                // 窗口初始化成功后，先清空缓冲区
+                if (platformData->eglContextCurrent) {
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                    eglSwapBuffers(platformData->eglDisplay, platformData->eglSurface);
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                }
             }
             platformData->refreshRequested = true;
             glfm__drawFrame(platformData);
@@ -978,12 +993,30 @@ static void glfm__onAppCmd(struct android_app *app, int32_t cmd) {
         }
         case APP_CMD_WINDOW_REDRAW_NEEDED: {
             LOG_LIFECYCLE("APP_CMD_WINDOW_REDRAW_NEEDED");
-            platformData->refreshRequested = true;
+            if (platformData->animating) {
+                platformData->refreshRequested = true;
+            } else {
+                if (platformData->eglDisplay != EGL_NO_DISPLAY && platformData->eglSurface != EGL_NO_SURFACE) {
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                    eglSwapBuffers(platformData->eglDisplay, platformData->eglSurface);
+                }
+            }
             break;
         }
         case APP_CMD_GAINED_FOCUS: {
             LOG_LIFECYCLE("APP_CMD_GAINED_FOCUS");
             glfm__setAnimating(platformData, true);
+            // 从后台恢复时，强制刷新以解决闪烁问题
+            if (platformData->eglContextCurrent) {
+                // 清空双缓冲区以避免旧内容闪烁
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                if (platformData->eglDisplay != EGL_NO_DISPLAY && platformData->eglSurface != EGL_NO_SURFACE) {
+                    eglSwapBuffers(platformData->eglDisplay, platformData->eglSurface);
+                }
+                // 再次清空前缓冲区
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+            }
+            platformData->refreshRequested = true;
             break;
         }
         case APP_CMD_LOST_FOCUS: {
@@ -1005,7 +1038,6 @@ static void glfm__onAppCmd(struct android_app *app, int32_t cmd) {
             pthread_mutex_unlock(&app->mutex);
             glfm__updateSurfaceSizeIfNeeded(platformData->display, true);
             glfm__reportOrientationChangeIfNeeded(platformData->display);
-            glfm__updateKeyboardVisibility(platformData);
             break;
         }
         case APP_CMD_LOW_MEMORY: {
@@ -1375,9 +1407,13 @@ void android_main(struct android_app *app) {
     app->onAppCmd = glfm__onAppCmd;
     app->onInputEvent = glfm__onInputEvent;
     app->activity->callbacks->onContentRectChanged = glfm__onContentRectChanged;
+    LOG_DEBUG("Registered onContentRectChanged callback: %p", glfm__onContentRectChanged);
     platformData->app = app;
     platformData->refreshRequested = true;
     platformData->lastSwapTime = glfmGetTime();
+    // Initialize screen control variables
+    platformData->screenSaverEnabled = true;  // Default: allow screen to turn off
+    platformData->screenBrightness = -1.0f;   // Default: use system brightness
 
     // Init java env
     JavaVM *vm = app->activity->vm;
@@ -1401,6 +1437,7 @@ void android_main(struct android_app *app) {
         platformData->display->platformData = platformData;
         platformData->display->supportedOrientations = GLFMInterfaceOrientationAll;
         platformData->display->swapBehavior = GLFMSwapBehaviorPlatformDefault;
+        platformData->display->swapBehavior = GLFMSwapBehaviorBufferPreserved;
         platformData->orientation = glfmGetInterfaceOrientation(platformData->display);
         platformData->resizeEventWaitFrames = RESIZE_EVENT_MAX_WAIT_FRAMES;
         copyFile2ExternData(app);//gust add
@@ -1895,21 +1932,6 @@ GLFMProc glfmGetProcAddress(const char *functionName) {
     return function;
 }
 
-void glfmSetKeyboardVisible(GLFMDisplay *display, bool visible) {
-    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
-    if (glfm__setKeyboardVisible(platformData, visible)) {
-        if (visible && display->uiChrome == GLFMUserInterfaceChromeFullscreen) {
-            // This seems to be required to reset to fullscreen when the keyboard is shown.
-            glfm__setFullScreen(platformData->app, GLFMUserInterfaceChromeNavigationAndStatusBar);
-        }
-    }
-}
-
-bool glfmIsKeyboardVisible(GLFMDisplay *display) {
-    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
-    return platformData->keyboardVisible;
-}
-
 // MARK: Sensors
 
 static const ASensor *glfm__getDeviceSensor(GLFMSensor sensor) {
@@ -2101,6 +2123,28 @@ ANativeActivity *glfmAndroidGetActivity() {
 
 //gust
 
+void glfmRequestDestroyApp() {
+    if (platformDataGlobal && platformDataGlobal->app) {
+        struct android_app *app = platformDataGlobal->app;
+        GLFMPlatformData *platformData = (GLFMPlatformData *) app->userData;
+        JNIEnv *jni = platformData->jniEnv;
+
+//        // 方法1: 调用 Activity.finish()
+//        glfm__callJavaMethod(jni, app->activity->clazz, "finish", "()V", Void);
+
+        // 方法2: 调用 Activity.finishAndRemoveTask() (API 21+)
+        if (app->activity->sdkVersion >= 21) {
+            glfm__callJavaMethod(jni, app->activity->clazz, "finishAndRemoveTask", "()V", Void);
+        } else {
+            exit(0);
+        }
+//
+//        // 方法3: 移动到后台
+//        glfm__callJavaMethodWithArgs(jni, app->activity->clazz, "moveTaskToBack", "(Z)Z", Boolean, true);
+
+    }
+}
+
 JNIEXPORT jboolean JNICALL Java_org_minijvm_activity_JvmNativeActivity_onStringInput(JNIEnv *env, jobject jobj, jstring s) {
     int down = 0;
     if (platformDataGlobal && platformDataGlobal->app) {
@@ -2280,7 +2324,7 @@ void getOsLanguage(char *buf, int bufSize) {
         len = bufSize - 1;
     }
     memcpy(buf, rawString, len);
-    buf[len]=0;
+    buf[len] = 0;
     (*jni)->DeleteLocalRef(jni, localeClass);
     (*jni)->DeleteLocalRef(jni, localeObject);
     (*jni)->ReleaseStringUTFChars(jni, language, rawString);
@@ -2385,7 +2429,213 @@ void remoteMethodCall(const char *inJsonStr, Utf8String *outJsonStr) {
     }
 }
 
-void buyAppleProductById(GLFMDisplay * display, const char *cproductID, const char *base64HandleScript){
+void buyAppleProductById(GLFMDisplay *display, const char *cproductID, const char *base64HandleScript) {
     printf("buyAppleProductById can't call on android\n");
 }
+
+JNIEXPORT void JNICALL
+Java_org_minijvm_activity_JvmNativeActivity_onKeyboardHeightChanged(JNIEnv *env, jobject thiz, jboolean jvisible, jint jheight) {
+    if (platformDataGlobal && platformDataGlobal->display) {
+        bool visible = jvisible;
+
+        if (platformDataGlobal->keyboardVisible != visible || (visible && platformDataGlobal->keyboardHeight != jheight)) {
+            platformDataGlobal->keyboardVisible = visible;
+            platformDataGlobal->keyboardHeight = jheight;
+
+            if (platformDataGlobal->display->keyboardVisibilityChangedFunc) {
+                int screenWidth, screenHeight;
+                glfmGetDisplaySize(platformDataGlobal->display, &screenWidth, &screenHeight);
+
+                double kbdX, kbdY, kbdW, kbdH;
+
+                if (visible) {
+                    kbdX = 0;
+                    kbdY = screenHeight - jheight;
+                    kbdW = screenWidth;
+                    kbdH = jheight;
+                    platformDataGlobal->keyboardFrame = (ARect) {(int) kbdX, (int) kbdY, (int) (kbdX + kbdW), (int) (kbdY + kbdH)};
+                } else {
+                    kbdX = kbdY = kbdW = kbdH = 0;
+                    platformDataGlobal->keyboardFrame = (ARect) {0, 0, 0, 0};
+                }
+
+                platformDataGlobal->display->keyboardVisibilityChangedFunc(platformDataGlobal->display,
+                                                                           visible,
+                                                                           kbdX, kbdY, kbdW, kbdH);
+                platformDataGlobal->refreshRequested = true;
+            }
+        }
+    }
+}
+
+JNIEXPORT void JNICALL
+Java_org_minijvm_activity_JvmNativeActivity_onNativeKey(JNIEnv *env, jobject thiz, jint key_code, jint count) {
+    if (platformDataGlobal && platformDataGlobal->display && platformDataGlobal->display->keyFunc) {
+        // We only handle backspace from the text watcher for now
+        GLFMKey key = GLFMKeyBackspace;
+        for (int i = 0; i < count; i++) {
+            platformDataGlobal->display->keyFunc(platformDataGlobal->display, key, GLFMKeyActionPressed, 0);
+            platformDataGlobal->display->keyFunc(platformDataGlobal->display, key, GLFMKeyActionReleased, 0);
+        }
+    }
+}
+
+// Helper to convert Android key code to GLFMKey
+static GLFMKey glfm__android_key_to_glfm_key(int32_t aKeyCode) {
+    switch (aKeyCode) {
+        case AKEYCODE_DEL:
+            return GLFMKeyBackspace;
+        case AKEYCODE_TAB:
+            return GLFMKeyTab;
+        case AKEYCODE_ENTER:
+            return GLFMKeyEnter;
+        case AKEYCODE_DPAD_CENTER:
+            return GLFMKeyEnter;
+        case AKEYCODE_ESCAPE:
+            return GLFMKeyEscape;
+        case AKEYCODE_SPACE:
+            return GLFMKeySpace;
+        case AKEYCODE_PAGE_UP:
+            return GLFMKeyPageUp;
+        case AKEYCODE_PAGE_DOWN:
+            return GLFMKeyPageDown;
+        case AKEYCODE_MOVE_END:
+            return GLFMKeyEnd;
+        case AKEYCODE_MOVE_HOME:
+            return GLFMKeyHome;
+        case AKEYCODE_DPAD_LEFT:
+            return GLFMKeyLeft;
+        case AKEYCODE_DPAD_UP:
+            return GLFMKeyUp;
+        case AKEYCODE_DPAD_RIGHT:
+            return GLFMKeyRight;
+        case AKEYCODE_DPAD_DOWN:
+            return GLFMKeyDown;
+        case AKEYCODE_FORWARD_DEL:
+            return GLFMKeyDelete;
+        case AKEYCODE_BACK:
+            return GLFMKeyNavBack;
+        case AKEYCODE_MENU:
+            return GLFMKeyNavMenu;
+        default:
+            if (aKeyCode >= AKEYCODE_0 && aKeyCode <= AKEYCODE_9) {
+                return (GLFMKey) (aKeyCode - AKEYCODE_0 + '0');
+            } else if (aKeyCode >= AKEYCODE_A && aKeyCode <= AKEYCODE_Z) {
+                return (GLFMKey) (aKeyCode - AKEYCODE_A + 'A');
+            } else {
+                return (GLFMKey) 0;
+            }
+    }
+}
+
+// Helper to convert Android meta state to GLFM modifiers
+static int glfm__android_meta_to_glfm_modifiers(jint metaState) {
+    int modifiers = 0;
+    if (metaState & AMETA_SHIFT_ON) { modifiers |= GLFMKeyModifierShift; }
+    if (metaState & AMETA_CTRL_ON) { modifiers |= GLFMKeyModifierCtrl; }
+    if (metaState & AMETA_ALT_ON) { modifiers |= GLFMKeyModifierAlt; }
+    if (metaState & AMETA_META_ON) { modifiers |= GLFMKeyModifierMeta; }
+    return modifiers;
+}
+
+JNIEXPORT void JNICALL
+Java_org_minijvm_activity_JvmNativeActivity_onNativeSpecialKey(JNIEnv *env, jobject thiz, jint key_code, jint action, jint modifiers) {
+    if (platformDataGlobal && platformDataGlobal->display && platformDataGlobal->display->keyFunc) {
+        GLFMKey glfmKey = glfm__android_key_to_glfm_key(key_code);
+        if (glfmKey == 0) {
+            return;
+        }
+
+        GLFMKeyAction glfmAction;
+        // In Java, KeyEvent.ACTION_DOWN = 0; ACTION_UP = 1;
+        // In GLFM, GLFMKeyActionReleased = 0; GLFMKeyActionPressed = 1;
+        // They are reversed.
+        if (action == 0) { // ACTION_DOWN
+            glfmAction = GLFMKeyActionPressed;
+        } else if (action == 1) { // ACTION_UP
+            glfmAction = GLFMKeyActionReleased;
+        } else {
+            return; // Ignore other actions
+        }
+
+        int glfmModifiers = glfm__android_meta_to_glfm_modifiers(modifiers);
+
+        platformDataGlobal->display->keyFunc(platformDataGlobal->display, glfmKey, glfmAction, glfmModifiers);
+    }
+}
+
+// MARK: - Screen Control functions
+
+void glfmSetScreenSaverEnabled(GLFMDisplay *display, bool enabled) {
+    if (!display || !platformDataGlobal) {
+        return;
+    }
+
+    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+    if (!platformData) {
+        return;
+    }
+
+    platformData->screenSaverEnabled = enabled;
+
+    struct android_app *app = platformData->app;
+    JNIEnv *jni = platformData->jniEnv;
+
+    glfm__callJavaMethodWithArgs(jni, app->activity->clazz, "setScreenSaver", "(Z)V", Void, (jboolean) enabled);
+
+    glfm__clearJavaException();
+}
+
+bool glfmIsScreenSaverEnabled(GLFMDisplay *display) {
+    if (!display || !platformDataGlobal) {
+        return true; // Default
+    }
+
+    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+    if (!platformData) {
+        return true; // Default
+    }
+
+    return platformData->screenSaverEnabled;
+}
+
+void glfmSetScreenBrightness(GLFMDisplay *display, float brightness) {
+    if (!display || !platformDataGlobal) {
+        return;
+    }
+
+    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+    if (!platformData) {
+        return;
+    }
+
+    if (brightness != -1) {
+        // Clamp brightness to valid range
+        if (brightness < 0.0f) brightness = 0.0f;
+        if (brightness > 1.0f) brightness = 1.0f;
+    }
+
+    platformData->screenBrightness = brightness;
+
+    struct android_app *app = platformData->app;
+    JNIEnv *jni = platformData->jniEnv;
+
+    glfm__callJavaMethodWithArgs(jni, app->activity->clazz, "setScreenBrightness", "(F)V", Void, (jfloat) brightness);
+
+    glfm__clearJavaException();
+}
+
+float glfmGetScreenBrightness(GLFMDisplay *display) {
+    if (!display || !platformDataGlobal) {
+        return -1.0f; // Default: use system brightness
+    }
+
+    GLFMPlatformData *platformData = (GLFMPlatformData *) display->platformData;
+    if (!platformData) {
+        return -1.0f; // Default: use system brightness
+    }
+
+    return platformData->screenBrightness;
+}
+
 #endif  //GLFM_PLATFORM_ANDROID

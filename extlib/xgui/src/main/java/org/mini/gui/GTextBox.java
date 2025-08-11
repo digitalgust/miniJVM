@@ -9,9 +9,14 @@ import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GCmd;
+import org.mini.json.JsonParser;
+import org.mini.json.JsonPrinter;
 import org.mini.nanovg.Nanovg;
 import org.mini.util.CodePointBuilder;
 import org.mini.util.SysLog;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
 import static org.mini.nanovg.Nanovg.*;
@@ -28,6 +33,7 @@ public class GTextBox extends GTextObject {
 
     static final int SCROLLBAR_WIDTH = 20;
     static final int PAD = 5;
+    static final float LINE_SCALE = 1.2f;
 
     protected int curCaretRow;//以回车为换行符的行数
     protected int curCaretCol;//以回车为换行符的列数
@@ -46,7 +52,58 @@ public class GTextBox extends GTextObject {
     protected float[] lineh = {0};
 
     protected int pendingMoveToIndex = -1;
+    protected boolean pendingMoveTo = false;
 
+    /**
+     * StyleRun defines a styled segment of text.
+     */
+    public static class StyleRun {
+        /**
+         * The start index of the segment, it is CodePoint index.
+         */
+        public int start;
+        /**
+         * The length of the segment, it is CodePoint length.
+         */
+        public int length;
+        public float[] color;
+
+        public StyleRun() {
+        }
+
+        public StyleRun(int start, int length, float[] color) {
+            this.start = start;
+            this.length = length;
+            this.color = color;
+        }
+
+        public int getStart() {
+            return start;
+        }
+
+        public void setStart(int start) {
+            this.start = start;
+        }
+
+        public int getLength() {
+            return length;
+        }
+
+        public void setLength(int length) {
+            this.length = length;
+        }
+
+        public float[] getColor() {
+            return color;
+        }
+
+        public void setColor(float[] color) {
+            this.color = color;
+        }
+
+    }
+
+    protected java.util.List<StyleRun> styles = new java.util.ArrayList<>();
 
     public GTextBox(GForm form) {
         this(form, "", "", 0f, 0f, 1f, 1f);
@@ -181,6 +238,7 @@ public class GTextBox extends GTextObject {
         if (tmp != this.scroll) {
             scrollBar.setPos(this.scroll);
         }
+        //resetSelect();
         return tmp != this.scroll;
     }
 
@@ -200,8 +258,15 @@ public class GTextBox extends GTextObject {
         if (charIndex > textsb.length()) {
             charIndex = textsb.length();
         }
-
+//        int[] pos = editArea.getCaretPosFromArea();
+//        if (pos != null) {
+//            float moveOffset = charIndex < caretIndex ? (-lineh[0]) : lineh[0];
+//            if (pos[1] < getY() + lineh[0] * 2) {//超出屏幕时先滚屏
+//                setScroll(scroll + moveOffset / (editArea.totalTextHeight - editArea.showAreaHeight));
+//            }
+//        }
         pendingMoveToIndex = charIndex;
+        pendingMoveTo = true;
     }
 
     @Override
@@ -220,7 +285,7 @@ public class GTextBox extends GTextObject {
     }
 
 
-    boolean isSelected() {
+    public boolean isSelected() {
         if (this.selectStart != -1 && this.selectEnd != -1) {
             return true;
         } else {
@@ -228,7 +293,7 @@ public class GTextBox extends GTextObject {
         }
     }
 
-    int getSelectBegin() {
+    public int getSelectBegin() {
         int select1 = 0;
         if (this.selectStart != -1 && this.selectEnd != -1) {
             select1 = this.selectStart > this.selectEnd ? this.selectEnd : this.selectStart;
@@ -237,7 +302,7 @@ public class GTextBox extends GTextObject {
         return -1;
     }
 
-    int getSelectEnd() {
+    public int getSelectEnd() {
         int select2 = 0;
         if (this.selectStart != -1 && this.selectEnd != -1) {
             select2 = this.selectStart < this.selectEnd ? this.selectEnd : this.selectStart;
@@ -360,6 +425,7 @@ public class GTextBox extends GTextObject {
                     } else {
                         GToolkit.hideEditMenu();
                     }
+                    moveScreenToIndex(caret);
                 } else {
                     mouseDrag = false;
                     if (selectEnd == -1 || selectStart == selectEnd) {
@@ -458,6 +524,7 @@ public class GTextBox extends GTextObject {
                             deleteSelectedText();
                         } else {
                             if (textsb.length() > 0 && caretIndex > 0) {
+                                moveScreenToIndex(caretIndex - 1);
                                 setCaretIndex(caretIndex - 1);
                                 deleteTextByIndex(caretIndex);
                             }
@@ -531,25 +598,38 @@ public class GTextBox extends GTextObject {
 
                 case Glfw.GLFW_KEY_LEFT: {
                     if (textsb.length() > 0 && caretIndex > 0) {
-                        setCaretIndex(caretIndex - 1);
+                        int[] pos = editArea.getCaretPosFromArea();
+                        if (pos != null) {
+                            if (pos[1] < getY() + lineh[0] * 2 && scroll > 0f) {//需要向上滚动
+                                setScroll(scroll - lineh[0] / (editArea.totalTextHeight - editArea.showAreaHeight));
+                            } else {
+                                setCaretIndex(caretIndex - 1);
+                            }
+                        }
                     }
                     break;
                 }
                 case Glfw.GLFW_KEY_RIGHT: {
                     if (textsb.length() > caretIndex) {
-                        setCaretIndex(caretIndex + 1);
+                        int[] pos = editArea.getCaretPosFromArea();
+                        if (pos[1] > getY() + getH() - lineh[0] * 2 && scroll < 1.0f) {//需要向下滚动
+                            setScroll(scroll + lineh[0] / (editArea.totalTextHeight - editArea.showAreaHeight));
+                        } else {
+                            setCaretIndex(caretIndex + 1);
+                        }
                     }
                     break;
                 }
                 case Glfw.GLFW_KEY_UP: {
                     int[] pos = editArea.getCaretPosFromArea();
                     if (pos != null) {
-                        if (pos[1] < getY() + lineh[0] * 2) {
+                        if (pos[1] < getY() + lineh[0]) {
                             setScroll(scroll - lineh[0] / (editArea.totalTextHeight - editArea.showAreaHeight));
-                        }
-                        int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] - (int) lineh[0]);
-                        if (cart >= 0) {
-                            setCaretIndex(cart);
+                        } else {
+                            int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] - (int) (lineh[0] * 1.5f));//定位到下一行中央
+                            if (cart >= 0) {
+                                setCaretIndex(cart);
+                            }
                         }
                     } else {
                         for (int i = editArea.area_detail.length - 1; i >= 0; i--) {
@@ -565,14 +645,14 @@ public class GTextBox extends GTextObject {
                 case Glfw.GLFW_KEY_DOWN: {
                     int[] pos = editArea.getCaretPosFromArea();
                     if (pos != null) {
-                        if (pos[1] > getY() + getH() - lineh[0] * 2) {
+                        if (pos[1] > getY() + getH() - lineh[0]) {
                             setScroll(scroll + lineh[0] / (editArea.totalTextHeight - editArea.showAreaHeight));
+                        } else {
+                            int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] + (int) (lineh[0] * 1.5f));//定位到下一行中央
+                            if (cart >= 0) {
+                                setCaretIndex(cart);
+                            }
                         }
-                        int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] + (int) lineh[0]);
-                        if (cart >= 0) {
-                            setCaretIndex(cart);
-                        }
-
                     } else {
                         for (int i = 0; i < editArea.area_detail.length; i++) {
                             if (editArea.area_detail[i] != null) {
@@ -606,6 +686,7 @@ public class GTextBox extends GTextObject {
                         }
                     } else if (caret >= 0) {
                         setCaretIndex(caret);
+                        moveScreenToIndex(caret);
                     }       //
                     if (inertiaCmd != null) {
                         inertiaCmd = null;
@@ -797,7 +878,7 @@ public class GTextBox extends GTextObject {
     public boolean scrollEvent(float scrollX, float scrollY, float x, float y) {
         float dh = editArea.getOutOfShowAreaHeight();
         if (dh > 0) {
-            return setScroll(scroll - (float) scrollY / dh);
+            return setScroll(scroll - scrollY / dh);
         }
         return true;
     }
@@ -859,6 +940,7 @@ public class GTextBox extends GTextObject {
          * @return
          */
         int getCaretIndexFromArea(int x, int y) {
+            int minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
             if (editArea.area_detail != null) {
                 //如果鼠标位置超出显示区域，进行校正
                 if (x < getX()) {
@@ -877,6 +959,8 @@ public class GTextBox extends GTextObject {
                 //根据预存的屏幕内字符串位置，查找光标所在字符位置
                 for (int[] detail : editArea.area_detail) {
                     if (detail != null) {
+                        minY = Math.min(minY, detail[TOP]);
+                        maxY = Math.max(maxY, detail[TOP] + detail[HEIGHT]);
                         if (x >= detail[LEFT] && x <= detail[LEFT] + getW() && y >= detail[TOP] && y <= detail[TOP] + detail[HEIGHT]) {
                             for (int i = AREA_CHAR_POS_START, imax = detail.length; i < imax; i++) {
                                 float x0 = detail[i];
@@ -897,7 +981,10 @@ public class GTextBox extends GTextObject {
                     }
                 }
             }
-            return textsb.length();  //只可能在下方空白区域点，那就把光标放在最后的位置
+            if (y > maxY) {
+                return textsb.length();//只可能在下方空白区域点，那就把光标放在最后的位置
+            }
+            return caretIndex;
         }
 
 
@@ -957,10 +1044,11 @@ public class GTextBox extends GTextObject {
             nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 
             //字高
-            nvgTextLineHeight(vg, 1.5f);
+            nvgTextLineHeight(vg, LINE_SCALE);
             nvgTextMetrics(vg, null, null, lineh);
             float fontH = lineh[0];
-            float lineH = fontH * 1.5f;
+            float lineH = fontH * LINE_SCALE;
+            lineh[0] = lineH;
             float caretX = 0;
             float caretY = 0;
 
@@ -979,7 +1067,7 @@ public class GTextBox extends GTextObject {
             } else {//编辑中
                 int topShowRow = 0;//显示区域第一行的行号
 
-                if (local_arr == null) {//文字被修改过
+                if (local_arr == null || local_detail == null) {//文字被修改过
                     local_arr = toCstyleBytes(textsb.toString());
                     tbox.text_arr = local_arr;
                     showRows = Math.round(text_area[HEIGHT] / lineH) + 2;
@@ -1051,6 +1139,9 @@ public class GTextBox extends GTextObject {
                                     //返回 i 行的起始和结束位置
                                     int byte_starti = (int) (Nanovg.nvgNVGtextRow_start(rowsHandle, i) - ptr);
                                     int byte_endi = (int) (Nanovg.nvgNVGtextRow_end(rowsHandle, i) - ptr) + 1;
+                                    if (byte_endi > local_arr.length) {
+                                        byte_endi = local_arr.length;
+                                    }
 
                                     //save herer
                                     if (char_at == 0) {
@@ -1089,10 +1180,12 @@ public class GTextBox extends GTextObject {
                                         local_detail[curRow][AREA_LINE_START_AT] = (int) char_starti;
                                         local_detail[curRow][AREA_LINE_END_AT] = (int) char_endi;
                                         local_detail[curRow][AREA_ROW_NO] = (int) row_index;
-                                        if (firstCharOnScreen == -1) {
+                                        if (firstCharOnScreen == -1 && dy >= text_area[TOP]) {// 显示区域第一行完整的显示出来
                                             firstCharOnScreen = char_starti;
                                         }
-                                        lastCharOnScreen = char_endi;
+                                        if (dy + lineH <= text_area[TOP] + text_area[HEIGHT]) {// 显示区域最后一行完整的显示出来
+                                            lastCharOnScreen = char_endi;
+                                        }
                                         //后面把每个char的位置存下来
                                         for (int j = 0; j < char_count; j++) {
                                             //取第 j 个字符的X座标
@@ -1133,11 +1226,14 @@ public class GTextBox extends GTextObject {
                                         if (draw) {
                                             curCaretShowRow = curRow + topShowRow + (jumpWhenReturn ? 1 : 0);
                                             curCaretShowCol = jumpWhenReturn ? 0 : (caretIndex - char_starti);
-                                            if (tbox.getCurrent() == this) {
-                                                GToolkit.drawCaret(vg, caretX - 1, caretY, 2, fontH, false);
+                                            if (isEditable() && isEnable()) {
+                                                if (tbox.getCurrent() == this) {
+                                                    GToolkit.drawCaret(vg, caretX - 1, caretY, 2, fontH, false);
+                                                } else {
+                                                    GToolkit.drawCaret(vg, caretX - 1, caretY, 2, fontH, false, GColorSelector.BLUE_HALF);
+                                                }
                                             } else {
-                                                GToolkit.drawCaret(vg, caretX - 1, caretY, 2, fontH, false, GColorSelector.BLUE_HALF);
-
+                                                GToolkit.drawCaret(vg, caretX - 1, caretY, 2, fontH, false, GColorSelector.GRAY_HALF);
                                             }
                                             caretY += lineH + PAD;
                                             GTextBox.this.caretX = caretX;
@@ -1173,8 +1269,59 @@ public class GTextBox extends GTextObject {
                                             }
 
                                         }
-                                        nvgFillColor(vg, GTextBox.this.getColor());
-                                        nvgTextJni(vg, dx, dy + 1, local_arr, byte_starti, byte_endi);
+                                        //nvgFillColor(vg, GTextBox.this.getColor());
+                                        //nvgTextJni(vg, dx, dy + 1, local_arr, byte_starti, byte_endi);
+
+                                        // ================== RICH TEXT DRAWING LOGIC ==================
+                                        int scanCharIndex = char_starti;
+                                        if (char_starti <= char_endi) { // protection for empty lines
+                                            while (scanCharIndex <= char_endi) {
+                                                // 1. Find style and end of segment
+                                                StyleRun currentStyle = tbox.findStyleAt(scanCharIndex);
+                                                int segmentEndCharIndex = char_endi;
+
+                                                if (currentStyle != null) {
+                                                    segmentEndCharIndex = Math.min(char_endi, currentStyle.start + currentStyle.length - 1);
+                                                }
+
+                                                // check for next style starts
+                                                for (StyleRun run : tbox.styles) {
+                                                    if (run.start > scanCharIndex && run.start - 1 < segmentEndCharIndex) {
+                                                        segmentEndCharIndex = run.start - 1;
+                                                    }
+                                                }
+
+                                                // 2. Get segment text bytes
+                                                int subEnd = segmentEndCharIndex + 1;
+                                                if (subEnd > tbox.textsb.length()) {
+                                                    subEnd = tbox.textsb.length();
+                                                }
+                                                String segmentStr = tbox.textsb.substring(scanCharIndex, subEnd);
+                                                byte[] segmentBytes = toCstyleBytes(segmentStr);
+                                                //byte[] segmentBytes = tbox.textsb.toUtf8Bytes(scanCharIndex, subEnd);//需要minijvm_rt升级
+
+                                                // 3. Set color
+                                                if (currentStyle != null && currentStyle.color != null) {
+                                                    nvgFillColor(vg, currentStyle.color);
+                                                } else {
+                                                    nvgFillColor(vg, GTextBox.this.getColor());
+                                                }
+
+                                                // 4. Find start x pos from pre-calculated glyph positions
+                                                float startX = dx;
+                                                int glyphIndex = scanCharIndex - char_starti;
+                                                if (glyphIndex > 0 && (AREA_CHAR_POS_START + glyphIndex) < local_detail[curRow].length) {
+                                                    startX = local_detail[curRow][AREA_CHAR_POS_START + glyphIndex];
+                                                }
+
+                                                // 5. Draw and update position
+                                                nvgTextJni(vg, startX, dy + 1, segmentBytes, 0, segmentBytes.length);
+
+                                                // 6. Move to next segment
+                                                scanCharIndex = segmentEndCharIndex + 1;
+                                            }
+                                        }
+                                        // ========================================================
                                     }
                                 }
                                 dy += lineH;
@@ -1186,16 +1333,17 @@ public class GTextBox extends GTextObject {
                         }
 
                         //计算moveToIndex，滚动到需要显示的行
-                        if (pendingMoveToIndex >= 0 && firstCharOnScreen >= 0 && lastCharOnScreen >= 0) {
+                        if (pendingMoveTo && firstCharOnScreen >= 0 && lastCharOnScreen >= 0) {
                             float delta = showAreaHeight * 0.5f / totalTextHeight;//半屏占整个文本高度的比值，即每次滚动半屏
-                            if (pendingMoveToIndex < firstCharOnScreen) {
+                            if (pendingMoveToIndex < firstCharOnScreen && getScroll() > 0f) {
                                 setScroll(getScroll() - delta);
                                 flushNow();
-                            } else if (pendingMoveToIndex > lastCharOnScreen) {
+                            } else if (pendingMoveToIndex > lastCharOnScreen && getScroll() < 1f) {
                                 setScroll(getScroll() + delta);
                                 flushNow();
                             } else { //结束滚动
                                 pendingMoveToIndex = -1;
+                                pendingMoveTo = false;
                             }
                         }
                     }
@@ -1212,5 +1360,84 @@ public class GTextBox extends GTextObject {
                 GToolkit.drawTextLine(vg, getX() + getW() - 10f, getY() + getH() - lineH, info, 12f, getColor(), NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
             }
         }
+    }
+
+    /**
+     * Add a style to a range of text.
+     * Note: For now, this just adds the style. Overlapping styles are not merged.
+     * The last added style will have priority in rendering.
+     *
+     * @param start  start character index
+     * @param length character length
+     * @param color  text color
+     */
+    public void addStyle(int start, int length, float[] color) {
+        styles.add(new StyleRun(start, length, color));
+        editArea.area_detail = null; //force redraw
+    }
+
+    /**
+     * Clear all styles.
+     */
+    public void clearStyles() {
+        styles.clear();
+        editArea.area_detail = null; //force redraw
+    }
+
+    /**
+     * Find the style for a given character index.
+     * Iterates backwards so the last added style takes precedence.
+     *
+     * @param charIndex index
+     * @return StyleRun or null
+     */
+    protected StyleRun findStyleAt(int charIndex) {
+        for (int i = styles.size() - 1; i >= 0; i--) {
+            StyleRun run = styles.get(i);
+            if (charIndex >= run.start && charIndex < run.start + run.length) {
+                return run;
+            }
+        }
+        return null;
+    }
+
+    public List<StyleRun> getStyles() {
+        return styles;
+    }
+
+
+    /**
+     * find the same color to  merge
+     *
+     * @param srs
+     */
+    private void mergeStyleRunColor(List<GTextBox.StyleRun> srs) {
+        for (int i = 0; i < srs.size() - 1; i++) {
+            float[] sr = srs.get(i).getColor();
+            for (int j = 0; j < i; j++) {
+                float[] sr2 = srs.get(j).getColor();
+                if (sr[0] == sr2[0] && sr[1] == sr2[1] && sr[2] == sr2[2] && sr[3] == sr2[3]) {
+                    srs.get(j).color = sr;
+                }
+            }
+        }
+    }
+
+    public void setStyles(List<StyleRun> styles) {
+        this.styles = styles;
+        mergeStyleRunColor(styles);//合并相同颜色
+        editArea.area_detail = null; //force redraw
+    }
+
+    public void setStyleJson(String json) {
+        JsonParser<List<StyleRun>> jp = new JsonParser();
+        List<StyleRun> list = jp.deserial(json, List.class, StyleRun.class.getClassLoader(), "java.util.List<org.mini.gui.GTextBox$StyleRun>");
+        setStyles(list);
+    }
+
+
+    public String getStyleJson() {
+        JsonPrinter printer = new JsonPrinter();
+        return printer.serial(styles);
     }
 }

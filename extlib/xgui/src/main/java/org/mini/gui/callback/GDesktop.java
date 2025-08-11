@@ -110,7 +110,7 @@ public class GDesktop extends GPanel implements GCallbackUI {
                     splashStartAt = System.currentTimeMillis();
                 }
 
-                GToolkit.drawRect(vg, 0, 0, winWidth, winHeight, getBgColor(), true);
+                GToolkit.drawRect(vg, 0, 0, winWidth, winHeight, GColorSelector.BLACK, true);
                 float imgW = 128f;
                 float imgH = 128f;
                 float dx = (winWidth - imgW) * 0.5f;

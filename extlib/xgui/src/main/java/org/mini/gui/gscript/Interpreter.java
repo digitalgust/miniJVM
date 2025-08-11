@@ -29,8 +29,9 @@ import java.util.*;
  * 20220424 添加数据回收系统,使整个运算过程中,尽可能不创建新的对象实例.减小GC压力
  * 20250217 表达式求值类型缓存，加快执行速度
  * 20250317 表达式初始化时，把子表达式找出来，简化表达式求值
- * 20250510 添加了for语句： for(i=0,i<10,i++); println(i); efor;
+ * 20250510 添加了for语句,本脚本不支持++操作符： for(i=0,i<10,i=i+1); println(i); efor;
  * 20250510 添加了数组初始化语句： arr[2][3]=[[1,2],[true,5,"b"]];
+ * 20250707 修复了 if(var=-1)  这个表达式的问题
  * <p>
  * Title: </p>
  * <p>
@@ -315,7 +316,7 @@ public class Interpreter {
                 statements.add(st);
                 //System.out.println(i + " " + sc);
             } catch (Exception e) {
-                errout(i, STRS_ERR[ERR_ILLEGAL] + srcCode.get(i));
+                errout(STRS_ERR[ERR_ILLEGAL] + srcCode.get(i));
                 e.printStackTrace();
                 break;
             }
@@ -611,8 +612,13 @@ public class Interpreter {
                 for (int i = 0; i < keylist.size(); i++) {
                     String key = keylist.get(i);
                     DataType dt = localVar.get(key);
-                    dt.setRecyclable(true);
-                    putCachedData(dt);
+                    DataType gdt = globalVar.get(key);
+                    if (dt != gdt) { //不是全局变量
+                        dt.setRecyclable(true);
+                        putCachedData(dt);
+                    } else {
+                        int debug = 1;
+                    }
                 }
                 //回收局部变量表
                 putCachedTable(localVar);
@@ -821,19 +827,57 @@ public class Interpreter {
 //                    }
 //                }
             } else if (isSymbol(ch)) { //是其他运算符号
-                sb.append(ch);
-                if (ch == '>') { //可能的>=
-                    if (i + 1 < len) {
-                        if (s.charAt(i + 1) == '=') {
-                            sb.append(s.charAt(i + 1));
-                            i++;
+                // 特殊处理：检查是否是带符号的数字（正数或负数） if(varA=-1) → varA, =, -1  或 if(varA=+123) → varA, =, +123
+                if ((ch == '-' || ch == '+') && i + 1 < len && isNumeric(s.charAt(i + 1))) {
+                    // 检查前一个token是否是比较运算符或逻辑运算符或括号
+                    boolean isSignedNumber = false;
+                    if (stack.isEmpty()) {
+                        // 表达式开头的符号
+                        isSignedNumber = true;
+                    } else {
+                        String lastToken = (String) stack.get(stack.size() - 1);
+                        // 如果前面是比较运算符、逻辑运算符、括号、逗号等，则认为是带符号的数字
+                        if (lastToken.equals("=") || lastToken.equals(">") || lastToken.equals("<") ||
+                                lastToken.equals(">=") || lastToken.equals("<=") || lastToken.equals("<>") ||
+                                lastToken.equals("&") || lastToken.equals("|") || lastToken.equals("!") ||
+                                lastToken.equals("(") || lastToken.equals(",")) {
+                            isSignedNumber = true;
                         }
                     }
-                } else if (ch == '<') { //可能的<=,  <>
-                    if (i + 1 < len) {
-                        if (s.charAt(i + 1) == '=' || s.charAt(i + 1) == '>') {
-                            sb.append(s.charAt(i + 1));
-                            i++;
+
+                    if (isSignedNumber) {
+                        // 处理带符号数字：包含符号和后面的数字
+                        sb.append(ch); // 添加符号
+                        i++; // 移动到数字
+                        // 读取完整的数字部分
+                        for (; i < s.length(); i++) {
+                            char numCh = s.charAt(i);
+                            if (isNumeric(numCh)) {
+                                sb.append(numCh);
+                            } else {
+                                i--; // 回退一位，因为外层循环会+1
+                                break;
+                            }
+                        }
+                    } else {
+                        // 普通的运算符
+                        sb.append(ch);
+                    }
+                } else {
+                    sb.append(ch);
+                    if (ch == '>') { //可能的>=
+                        if (i + 1 < len) {
+                            if (s.charAt(i + 1) == '=') {
+                                sb.append(s.charAt(i + 1));
+                                i++;
+                            }
+                        }
+                    } else if (ch == '<') { //可能的<=,  <>
+                        if (i + 1 < len) {
+                            if (s.charAt(i + 1) == '=' || s.charAt(i + 1) == '>') {
+                                sb.append(s.charAt(i + 1));
+                                i++;
+                            }
                         }
                     }
                 }

@@ -27,6 +27,7 @@ public class GlfmCallBackImpl extends GCallBack {
     int winWidth, winHeight;
     int fbWidth, fbHeight;
     double[] insetsDouble = {0, 0, 0, 0};
+    float keyboardX, keyboardY, keyboardW, keyboardH;
     float pxRatio;
 
     public int[] mouseX = new int[Glfm.MAX_SIMULTANEOUS_TOUCHES],
@@ -56,7 +57,6 @@ public class GlfmCallBackImpl extends GCallBack {
     long last = System.currentTimeMillis(), now;
     int count = 0;
 
-    Thread openglThread;
 
     /**
      * the glinit method call by native function, glfmapp/main.c
@@ -141,9 +141,6 @@ public class GlfmCallBackImpl extends GCallBack {
         ;
     }
 
-    public Thread getOpenglThread() {
-        return openglThread;
-    }
 
     void init() {
         fbWidth = Glfm.glfmGetDisplayWidth(display);
@@ -172,7 +169,7 @@ public class GlfmCallBackImpl extends GCallBack {
                 return;
             }
             try {
-                Thread.currentThread().setContextClassLoader(gapp.getClass().getClassLoader());//there were be an app pause and the other app setup
+                setOpenglThread(gapp.getClass().getClassLoader());
                 desktop.checkAppRun(gapp);
             } catch (Exception e) {
                 gapp.closeApp();
@@ -214,7 +211,6 @@ public class GlfmCallBackImpl extends GCallBack {
         Glfm.glfmSetMultitouchEnabled(display, true);
         Glfm.glfmGetDisplayChromeInsets(display, insetsDouble);
 
-        openglThread = Thread.currentThread();
     }
 
     @Override
@@ -328,7 +324,11 @@ public class GlfmCallBackImpl extends GCallBack {
                 desktop.longTouchedEvent(mouseX[touch], mouseY[touch]);
                 long_touched = false;
             }
-            desktop.touchEvent(touch, phase, mouseX[touch], mouseY[touch]);
+            if (mouseX[touch] > keyboardX && mouseY[touch] > keyboardY && mouseX[touch] < keyboardX + keyboardW && mouseY[touch] < keyboardY + keyboardH) {
+                //if touch keyboard, ignore touch event
+            } else {
+                desktop.touchEvent(touch, phase, mouseX[touch], mouseY[touch]);
+            }
         }
         GForm.flush();
         return true;
@@ -379,6 +379,10 @@ public class GlfmCallBackImpl extends GCallBack {
         y /= Glfm.glfmGetDisplayScale(display);
         w /= Glfm.glfmGetDisplayScale(display);
         h /= Glfm.glfmGetDisplayScale(display);
+        keyboardX = (float) x;
+        keyboardY = (float) y;
+        keyboardW = (float) w;
+        keyboardH = (float) h;
         desktop.KeyboardPopEvent(visible, (float) x, (float) y, (float) w, (float) h);
     }
 

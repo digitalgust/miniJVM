@@ -284,6 +284,11 @@ abstract public class GObject implements GAttachable {
         parent = p;
     }
 
+    public boolean isSuperParent(GContainer p) {
+        if (p == null) return false;
+        return parent == p || (parent != null && parent.isSuperParent(p));
+    }
+
     public void setLocation(float x, float y) {
         float oldLeft = boundle[LEFT];
         float oldTop = boundle[TOP];
@@ -322,14 +327,20 @@ abstract public class GObject implements GAttachable {
     }
 
     public float getX() {
-        if (parent != null && !fixedLocation) {
+        if (parent != null) {
+            if (fixedLocation) {
+                return parent.getX() + boundle[LEFT];
+            }
             return parent.getInnerX() + boundle[LEFT];
         }
         return boundle[LEFT];
     }
 
     public float getY() {
-        if (parent != null && !fixedLocation) {
+        if (parent != null) {
+            if (fixedLocation) {
+                return parent.getY() + boundle[TOP];
+            }
             return parent.getInnerY() + boundle[TOP];
         }
         return boundle[TOP];

@@ -398,11 +398,13 @@ s32 org_mini_net_SocketNative_connect0(Runtime *runtime, JClass *clazz) {
 static s32 sock_recv(VmSock *vmsock, u8 *buf, s32 count, Runtime *runtime) {
     s32 ret;
     while (1) {
+        jthread_block_enter(runtime);
         if (vmsock->non_block) {
             ret = mbedtls_net_recv(&vmsock->contex, buf, count);
         } else {
             ret = mbedtls_net_recv_timeout(&vmsock->contex, buf, count, vmsock->rcv_time_out ? vmsock->rcv_time_out : 100);
         }
+        jthread_block_exit(runtime);
         if (runtime->thrd_info->is_interrupt) {//vm waiting for destroy
             ret = -1;
             break;
@@ -626,7 +628,9 @@ s32 org_mini_net_SocketNative_host2ip(Runtime *runtime, JClass *clazz) {
     if (host) {
 
         c8 buf[50];
+        jthread_block_enter(runtime);
         s32 ret = host_2_ip(host->arr_body, buf, sizeof(buf));
+        jthread_block_exit(runtime);
         if (ret >= 0) {
             s32 buflen = strlen(buf);
             jbyte_arr = jarray_create_by_type_index(runtime, buflen, DATATYPE_BYTE);
@@ -655,7 +659,9 @@ s32 org_mini_net_SocketNative_sslc_init(Runtime *runtime, JClass *clazz) {
     s32 v = 0;
     Instance *jbyte_arr = (Instance *) localvar_getRefer(runtime->localvar, 0);
     if (jbyte_arr) {
+        jthread_block_enter(runtime);
         v = sslc_init((SSLC_Entry *) jbyte_arr->arr_body);
+        jthread_block_exit(runtime);
     }
     push_int(runtime->stack, v);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -689,7 +695,9 @@ s32 org_mini_net_SocketNative_sslc_connect(Runtime *runtime, JClass *clazz) {
     Instance *host_arr = (Instance *) localvar_getRefer(runtime->localvar, 1);
     Instance *port_arr = (Instance *) localvar_getRefer(runtime->localvar, 2);
     if (jbyte_arr && host_arr && port_arr) {
+        jthread_block_enter(runtime);
         ret = sslc_connect((SSLC_Entry *) jbyte_arr->arr_body, host_arr->arr_body, port_arr->arr_body);
+        jthread_block_exit(runtime);
     }
     push_int(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -703,7 +711,9 @@ s32 org_mini_net_SocketNative_sslc_close(Runtime *runtime, JClass *clazz) {
     s32 ret = -1;
     Instance *jbyte_arr = (Instance *) localvar_getRefer(runtime->localvar, 0);
     if (jbyte_arr) {
+        jthread_block_enter(runtime);
         ret = sslc_close((SSLC_Entry *) jbyte_arr->arr_body);
+        jthread_block_exit(runtime);
     }
     push_int(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5

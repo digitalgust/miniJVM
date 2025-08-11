@@ -113,10 +113,12 @@ public class InnerFile {
     }
 
     public String[] list() {
+        checkReadPermission();
         return listDir(SocketNative.toCStyle(path));
     }
 
     public OutputStream getOutputStream(boolean append) throws IOException {
+        checkWritePermission();
         if (ifos != null) {
             return ifos;
         }
@@ -137,6 +139,7 @@ public class InnerFile {
     }
 
     public InputStream getInputStream() throws IOException {
+        checkReadPermission();
         if (ifis != null) {
             return ifis;
         }
@@ -165,16 +168,19 @@ public class InnerFile {
         }
 
         public int available() throws IOException {
+//            checkReadPermission();
             return available0(getFilePointer());
         }
 
         @Override
         public int read() throws IOException {
+//            checkReadPermission();
             return read0(getFilePointer());
         }
 
         @Override
         public int read(byte b[], int off, int len) throws IOException {
+//            checkReadPermission();
             return readbuf(getFilePointer(), b, off, len);
         }
 
@@ -198,6 +204,7 @@ public class InnerFile {
 
         @Override
         public void write(int b) throws IOException {
+//            checkWritePermission();
             int ret = write0(getFilePointer(), b);
             if (ret < 0) {
                 throw new IOException("write file error: " + path);
@@ -206,6 +213,7 @@ public class InnerFile {
 
         @Override
         public void write(byte[] b, int offset, int len) {
+//            checkWritePermission();
             int wrote = 0;
             while (wrote < len) {
                 wrote += writebuf(getFilePointer(), b, offset + wrote, len - wrote);
@@ -220,6 +228,7 @@ public class InnerFile {
     }
 
     public int read() throws IOException {
+//        checkReadPermission();
         int ret = read0(filePointer);
         if (ret < 0) {
             throw new IOException("read file error: " + path);
@@ -228,6 +237,7 @@ public class InnerFile {
     }
 
     public void write(int b) throws IOException {
+//        checkWritePermission();
         int ret = write0(filePointer, b);
         if (ret < 0) {
             throw new IOException("write file error: " + path);
@@ -252,6 +262,25 @@ public class InnerFile {
 
     public FileDescriptor getFD() {
         return fd;
+    }
+
+    // 安全检查方法
+    protected void checkReadPermission() {
+        if (path != null) {
+            java.lang.SecurityManager sm = System.getSecurityManager();
+            if (sm != null) {
+                sm.checkRead(path);
+            }
+        }
+    }
+
+    protected void checkWritePermission() {
+        if (path != null) {
+            java.lang.SecurityManager sm = System.getSecurityManager();
+            if (sm != null) {
+                sm.checkWrite(path);
+            }
+        }
     }
 
     public static native int getOS();

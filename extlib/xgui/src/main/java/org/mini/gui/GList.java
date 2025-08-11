@@ -48,7 +48,8 @@ public class GList extends GContainer {
     protected int selectMode = MODE_SINGLE_SELECT;
 
     protected GScrollBar scrollBar;
-    GListPopWindow popWin;
+    protected GViewPort popView;
+    protected GListPopWindow popWin;
     protected float[] lineh = {0f};
     protected float list_image_size = ITEM_IMG_H_DEFAULT;
     protected float list_item_heigh = ITEM_HEIGH_DEFAULT;
@@ -78,13 +79,11 @@ public class GList extends GContainer {
         this.width = width;
         this.height = height;
 
-        setLocation(left, top);
-        setSize(width, height);
-
         //
         scrollBar = new GScrollBar(form, 0, GScrollBar.VERTICAL, 0, 0, scrollbarWidth, 100);
         scrollBar.setActionListener(new ScrollBarActionListener());
         scrollBar.setStateChangeListener(new ScrollBarStateChangeListener());
+        popView = new GListPopView(form);
         popWin = new GListPopWindow(form);
         popWin.addImpl(scrollBar);
         popWin.addImpl(popView);
@@ -92,6 +91,9 @@ public class GList extends GContainer {
         sizeAdjust();
         changeCurPanel();
         setCornerRadius(4.f);
+
+        setLocation(left, top);
+        setSize(width, height);
 
         setShowMode(MODE_SINGLE_SHOW);
 
@@ -239,9 +241,6 @@ public class GList extends GContainer {
 
     void sizeAdjust() {
         int itemcount = popView.elements.size();
-        if (itemcount <= 0) {
-            return;
-        }
 
         if (showMode == MODE_MULTI_SHOW) {
             popWin.setLocation(0, 0);
@@ -273,7 +272,7 @@ public class GList extends GContainer {
     }
 
     void changeCurPanel() {
-        GObject frontCur = getFrontFocus();//save focus
+//        GObject frontCur = getFrontFocus();//save focus
 
         super.clearImpl();
         if (showMode == MODE_SINGLE_SHOW) {
@@ -292,6 +291,7 @@ public class GList extends GContainer {
                     popWin.setLocation(getX(), popY);
                     popWin.setSize(popWin.getW(), popH);
                     form.add(popWin);
+                    form.setCurrent(popWin);
                 } else {
                     form.remove(popWin);
                 }
@@ -301,16 +301,16 @@ public class GList extends GContainer {
         }
 
         //restore focus
-        if (frontCur != null) {
-            if (findSon(frontCur) != null) {
-                GContainer p = frontCur.getParent();
-                while (p != null) {
-                    p.setCurrent(frontCur);
-                    frontCur = p;
-                    p = p.getParent();
-                }
-            }
-        }
+//        if (frontCur != null) {
+//            if (findSon(frontCur) != null) {
+//                GContainer p = frontCur.getParent();
+//                while (p != null) {
+//                    p.setCurrent(frontCur);
+//                    frontCur = p;
+//                    p = p.getParent();
+//                }
+//            }
+//        }
     }
 
     private float getPopWinH() {
@@ -358,6 +358,11 @@ public class GList extends GContainer {
 
     public void setShowMode(int m) {
         this.showMode = m;
+        if (m == MODE_MULTI_SHOW) {
+            popWin.layer = LAYER_NORMAL;
+        } else {
+            popWin.layer = LAYER_MENU_OR_POPUP;
+        }
 
         sizeAdjust();
         changeCurPanel();
@@ -509,10 +514,6 @@ public class GList extends GContainer {
      */
     @Override
     public boolean paint(long vg) {
-        if (getParent() != null && getParent().getCurrent() != this && pulldown) {
-            pulldown = false;
-            changeCurPanel();
-        }
 
         //int itemcount = popView.elements.size();
         nvgFontSize(vg, getFontSize());
@@ -523,6 +524,11 @@ public class GList extends GContainer {
         super.paint(vg);
 
         return true;
+    }
+
+    @Override
+    public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+        super.mouseButtonEvent(button, pressed, x, y);
     }
 
     /**
@@ -616,7 +622,13 @@ public class GList extends GContainer {
     /**
      *
      */
-    protected GViewPort popView = new GViewPort(form) {
+
+
+    class GListPopView extends GViewPort {
+        public GListPopView(GForm form) {
+            super(form);
+        }
+
         @Override
         public void setScrollY(float sy) {
             super.setScrollY(sy);
@@ -629,18 +641,30 @@ public class GList extends GContainer {
             scrollBar.setPos(scrolly);
             return ret;
         }
-    };
+    }
+
+    ;
 
 
     class GListPopWindow extends GContainer {
         public GListPopWindow(GForm form) {
             super(form);
-            layer = LAYER_MENU_OR_POPUP;
             setCornerRadius(4.f);
         }
 
         @Override
         public boolean paint(long vg) {
+
+            if (pulldown) {
+                if (getParent() != null && getParent().getCurrent() != this
+                        && form.getCurrent() != popWin
+                        || !isSuperParent(form)  // 不在form中显示了，比如窗口已经关闭，list不显示了
+                ) {
+                    pulldown = false;
+                    changeCurPanel();
+                }
+            }
+
             float x = getX();
             float y = getY();
             float w = getW();
@@ -702,6 +726,7 @@ public class GList extends GContainer {
                         GListItem li = getSelectedItem();
                         if (li != null) {
                             li.select();
+                            doAction();
                         }
                     }
                 }

@@ -10,6 +10,20 @@
 
 package java.security;
 
-public abstract class PermissionCollection { 
-  public abstract void add(Permission p);
+public abstract class PermissionCollection {
+    private volatile boolean readOnly;
+
+    public abstract void add(Permission p);
+
+    public boolean implies(Permission permission) {
+        return true;
+    }
+
+    public void setReadOnly() {
+        readOnly = true;
+    }
+
+    public boolean isReadOnly() {
+        return readOnly;
+    }
 }

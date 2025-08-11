@@ -1,8 +1,11 @@
 package org.mini.layout;
 
 import org.mini.gui.*;
+import org.mini.json.JsonParser;
 import org.mini.layout.loader.XmlExtAssist;
 import org.xmlpull.v1.KXmlParser;
+
+import java.util.List;
 
 public class XTextInput
         extends XObject {
@@ -17,6 +20,8 @@ public class XTextInput
     protected int style = GTextField.BOX_STYLE_EDIT;
     protected String hint = "";
     protected String union = null;
+
+    protected List<GTextBox.StyleRun> stylerun = null;
 
     GTextObject textInput;
 
@@ -49,6 +54,13 @@ public class XTextInput
             password = !"0".equals(attValue);
         } else if (attName.equals("scroll")) {
             scrollbar = !"0".equals(attValue);
+        } else if (attName.equals("stylerun")) {
+            try {
+                JsonParser<List<GTextBox.StyleRun>> jsonParser = new JsonParser<>();
+                stylerun = jsonParser.deserial(attValue, List.class, null, "java.util.List<org.mini.gui.GTextBox$StyleRun>");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -107,6 +119,9 @@ public class XTextInput
             textInput.setEnable(enable);
             textInput.setEditable(edit);
             textInput.setScrollBar(scrollbar);
+            if (stylerun != null && textInput instanceof GTextBox) {
+                ((GTextBox) textInput).setStyles(stylerun);
+            }
         } else {
             textInput.setLocation(x, y);
             textInput.setSize(width, height);

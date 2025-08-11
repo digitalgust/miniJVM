@@ -536,6 +536,34 @@ bool glfmIsHapticFeedbackSupported(GLFMDisplay *display);
 /// On Emscripten, this function does nothing.
 void glfmPerformHapticFeedback(GLFMDisplay *display, GLFMHapticFeedbackStyle style);
 
+// MARK: - Screen Control functions
+
+/// Sets whether the screen saver (auto screen off) is enabled.
+/// On iOS, this controls UIApplication.idleTimerDisabled.
+/// On Android, this controls FLAG_KEEP_SCREEN_ON.
+/// On Emscripten, this function does nothing.
+/// @param display The GLFMDisplay instance
+/// @param enabled true to allow screen to turn off automatically (default), false to keep screen on
+void glfmSetScreenSaverEnabled(GLFMDisplay *display, bool enabled);
+
+/// Returns whether the screen saver (auto screen off) is enabled.
+/// @param display The GLFMDisplay instance
+/// @return true if screen can turn off automatically, false if screen is kept on
+bool glfmIsScreenSaverEnabled(GLFMDisplay *display);
+
+/// Sets the screen brightness.
+/// On iOS, this controls UIScreen.brightness.
+/// On Android, this controls window brightness attribute.
+/// On Emscripten, this function does nothing.
+/// @param display The GLFMDisplay instance
+/// @param brightness Brightness level from 0.0 (darkest) to 1.0 (brightest)
+void glfmSetScreenBrightness(GLFMDisplay *display, float brightness);
+
+/// Gets the current screen brightness.
+/// @param display The GLFMDisplay instance
+/// @return Current brightness level from 0.0 (darkest) to 1.0 (brightest)
+float glfmGetScreenBrightness(GLFMDisplay *display);
+
 // MARK: - Platform-specific functions
 
 /// Returns true if this is an iOS device that supports Metal, false otherwise

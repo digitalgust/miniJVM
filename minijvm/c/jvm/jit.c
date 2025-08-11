@@ -61,11 +61,12 @@ static void FAILE(s32 cond, c8 *text) {
     }
 }
 
-static void CHECK(struct sljit_compiler *compiler) {
+static s32 CHECK(struct sljit_compiler *compiler) {
     if (sljit_get_compiler_error(compiler) != SLJIT_ERR_COMPILED) {
         printf("Compiler error: %d\n", sljit_get_compiler_error(compiler));
-        sljit_free_compiler(compiler);
+        return -1; // 返回错误状态而不是直接释放
     }
+    return 0; // 成功
 }
 
 static void print_reg(s64 a, s64 b, s64 c) {
@@ -192,7 +193,11 @@ static void dump_code(void *code, sljit_uw len) {
     FILE *fp = fopen("/tmp/slj_dump", "wb");
     if (!fp)
         return;
-    fwrite(code, len, 1, fp);
+    
+    size_t written = fwrite(code, len, 1, fp);
+    if (written != 1) {
+        printf("Warning: Failed to write complete dump data\n");
+    }
     fclose(fp);
 
 #if __JVM_ARCH_64__
@@ -683,6 +688,11 @@ void _gen_arith_float_2op(struct sljit_compiler *C, sljit_s32 op) {
 }
 
 void _gen_arith_long_2op(struct sljit_compiler *C, sljit_s32 op) {
+    // 首先检查除零错误（对长整型）
+    if (op == SLJIT_DIV_UW || op == SLJIT_DIV_SW || op == SLJIT_DIVMOD_UW || op == SLJIT_DIVMOD_SW) {
+        _gen_stack_peek_long(C, -2, SLJIT_R0, 0);
+        _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 0, JVM_EXCEPTION_ARRITHMETIC, -4);
+    }
 
     _gen_stack_peek_long(C, -2, SLJIT_R1, 0);
     _gen_stack_peek_long(C, -4, SLJIT_R0, 0);
@@ -1029,11 +1039,16 @@ void _gen_jump_to_suspend_check(struct sljit_compiler *C, s32 offset) {
 
 s32 multiarray(Runtime *runtime, Utf8String *desc, s32 count) {
     RuntimeStack *stack = runtime->stack;
-#ifdef __JVM_OS_VS__
-    s32 dim[32];
-#else
-    s32 dim[count];
-#endif
+    // 使用固定大小数组并添加边界检查以提高安全性
+    #define MAX_ARRAY_DIMENSIONS 32
+    s32 dim[MAX_ARRAY_DIMENSIONS];
+    
+    // 添加维度数量的边界检查
+    if (count > MAX_ARRAY_DIMENSIONS || count <= 0) {
+        // 应该抛出适当的异常
+        return RUNTIME_STATUS_EXCEPTION;
+    }
+    
     s32 i;
     for (i = 0; i < count; i++)
         dim[i] = pop_int(stack);
@@ -2347,7 +2362,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 s32 high = *((s32 *) (ip + pos));
                 pos += 4;
 
-                SwitchTable *st = switchtable_create(&ca->jit, high - low + 1);
+                SwitchTable *st = switchtable_create(&ca->jit, high - low + 2);
                 s32 i = low;
                 for (; i <= high; i++) {
                     s32 offset = (*((s32 *) (ip + pos)));
@@ -2413,7 +2428,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 pos += 4;
                 s32 i, key;
 
-                SwitchTable *st = switchtable_create(&ca->jit, n);
+                SwitchTable *st = switchtable_create(&ca->jit, n + 1);
                 for (i = 0; i < n; i++) {
 
                     st->table[i].value = *((s32 *) (ip + pos));
@@ -3337,6 +3352,10 @@ void construct_jit(MethodInfo *method, Runtime *runtime) {
     }
     /* Create a SLJIT compiler */
     struct sljit_compiler *C = sljit_create_compiler(NULL);
+    if (!C) {
+        ca->jit.state = JIT_GEN_ERROR;
+        return;
+    }
     ca->jit.state = JIT_GEN_COMPILING;
     ca->jit.state = gen_jit_bytecode_func(C, method, runtime);
 
@@ -3374,6 +3393,9 @@ void jit_destroy(Jit *jit) {
 
     while (jit->switchtable) {
         SwitchTable *tmp = jit->switchtable->next;
+        if (jit->switchtable->table) {
+            jvm_free(jit->switchtable->table);  // 先释放table数组
+        }
         jvm_free(jit->switchtable);
         jit->switchtable = tmp;
     }

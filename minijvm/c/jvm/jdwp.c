@@ -1622,7 +1622,7 @@ void invoke_method(s32 call_mode, JdwpPacket *req, JdwpPacket *res, JdwpClient *
     s32 ret = execute_method_impl(methodInfo, runtime);
     jdwpserver->thread_sync_ignore = 0;
 
-    if (ret != RUNTIME_STATUS_NORMAL) {
+    if (ret == RUNTIME_STATUS_EXCEPTION) {
         print_exception(runtime);
     }
     jdwppacket_set_err(res, JDWP_ERROR_NONE);

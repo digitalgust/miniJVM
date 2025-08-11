@@ -286,11 +286,12 @@ public class GFrame extends GContainer {
                 break;
             }
         }
-        if (isInArea(x, y)) {
-            super.mouseButtonEvent(button, pressed, x, y);
-        } else {
-            //view.setFocus(null);// x,y not in FrameArea when  popup keyboard
-        }
+//        if (isInArea(x, y)) {
+//            super.mouseButtonEvent(button, pressed, x, y);
+//        } else {
+//            //view.setFocus(null);// x,y not in FrameArea when  popup keyboard
+//        }
+        super.mouseButtonEvent(button, pressed, x, y);
     }
 
     @Override
@@ -469,12 +470,12 @@ public class GFrame extends GContainer {
                 nvgFontFace(vg, GToolkit.getFontIcon());
                 nvgFillColor(vg, nvgRGBA(192, 32, 32, 196));
                 nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-                nvgTextJni(vg, x + 10, y + 16, close_arr, 0, close_arr.length);
+                nvgTextJni(vg, x + w - 30, y + 16, close_arr, 0, close_arr.length);
+                close_boundle[LEFT] = x + w - 30;
+                close_boundle[TOP] = y;
+                close_boundle[WIDTH] = 30;
+                close_boundle[HEIGHT] = 30;
             }
-            close_boundle[LEFT] = x;
-            close_boundle[TOP] = y;
-            close_boundle[WIDTH] = 30;
-            close_boundle[HEIGHT] = 30;
             return true;
         }
     }

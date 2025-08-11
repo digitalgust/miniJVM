@@ -7,6 +7,7 @@ package org.mini.gui;
 
 import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
+import org.mini.gui.event.GActionListener;
 import org.mini.nanovg.Nanovg;
 
 import static org.mini.glwrap.GLUtil.toCstyleBytes;
@@ -25,6 +26,11 @@ public class GListItem extends GContainer {
 
     protected GImage img;
     protected GList list;
+
+    float oldX, oldY;
+    boolean touched = false;
+
+    protected GActionListener longTouchedListener;
 
     public GListItem(GForm form, GImage img, String lab) {
         super(form);
@@ -81,8 +87,20 @@ public class GListItem extends GContainer {
         setText(label);
     }
 
-    float oldX, oldY;
-    boolean touched = false;
+    public void setLongTouchedListener(GActionListener longTouchedListener) {
+        this.longTouchedListener = longTouchedListener;
+    }
+
+    public GActionListener getLongTouchedListener() {
+        return longTouchedListener;
+    }
+
+    protected void doLongTouched() {
+        select();
+        if (longTouchedListener != null) {
+            longTouchedListener.action(this);
+        }
+    }
 
     private boolean validAction(float releaseX, float releaseY) {
         if (Math.abs(releaseX - oldX) < TOUCH_RANGE && Math.abs(releaseY - oldY) < TOUCH_RANGE) {
@@ -110,11 +128,27 @@ public class GListItem extends GContainer {
                     doStateChanged(this);
                     break;
                 case Glfm.GLFMTouchPhaseEnded:
-                    if (isInArea(x, y) && validAction(x, y)) select();
+                    if (isInArea(x, y) && validAction(x, y)) {
+                        select();
+                        doAction();
+                    }
                     touched = false;
                     break;
                 default:
                     break;
+            }
+        }
+    }
+
+    @Override
+    public void longTouchedEvent(int x, int y) {
+        GObject found = findSonByXY(x, y);
+        if (found != null) {
+            super.longTouchedEvent(x, y);
+        }
+        if (actionType == ACTION_TYPE_BOTH || found == null) {
+            if (isInArea(x, y)) {
+                doLongTouched();
             }
         }
     }
@@ -130,15 +164,24 @@ public class GListItem extends GContainer {
         if (found != null) {
             super.mouseButtonEvent(button, pressed, x, y);
         }
-        //self
-        if (actionType == ACTION_TYPE_BOTH || found == null) {
+        if (button == Glfw.GLFW_MOUSE_BUTTON_LEFT) {
+            //self
+            if (actionType == ACTION_TYPE_BOTH || found == null) {
+                if (pressed) {
+                    oldX = x;
+                    oldY = y;
+                    touched = true;
+                } else {
+                    if (isInArea(x, y) && validAction(x, y)) {
+                        select();
+                        doAction();
+                    }
+                    touched = false;
+                }
+            }
+        } else if (button == Glfw.GLFW_MOUSE_BUTTON_RIGHT) {
             if (pressed) {
-                oldX = x;
-                oldY = y;
-                touched = true;
-            } else {
-                if (isInArea(x, y) && validAction(x, y)) select();
-                touched = false;
+                doLongTouched();
             }
         }
     }
@@ -151,7 +194,7 @@ public class GListItem extends GContainer {
         }
     }
 
-    int getIndex() {
+    public int getIndex() {
         return parent.getElementsImpl().indexOf(this);
     }
 
@@ -163,7 +206,6 @@ public class GListItem extends GContainer {
             list.changeCurPanel();
             list.doStateChanged(list);
             GForm.flush();
-            doAction();
         }
     }
 

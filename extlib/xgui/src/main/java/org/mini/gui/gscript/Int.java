@@ -6,6 +6,9 @@ public class Int extends DataType {
 
     Int(String s) {
         type = DTYPE_INT;
+        if (s.indexOf("+") >= 0) {
+            s = s.substring(s.indexOf("+") + 1);
+        }
         value = Long.parseLong(s);
     }
 

@@ -27,10 +27,8 @@ import java.util.Properties;
  * 提供本地设置的保存和加载
  */
 public class XuiLoader {
-    public static final String LOCAL_SETTING_FILE = "localsetting.propertites";
     public static final String WEB_FRAME_NAME = "BROWSER_FRAME";
     XuiAppHolder appHolder;
-    static Properties localSetting = new Properties();
 
     XmlExtAssist xmlExtAssist;
     XEventHandler eventHandler;
@@ -42,7 +40,6 @@ public class XuiLoader {
         }
         this.appHolder = appHolder;
         this.eventHandler = eventHandler;
-        loadProp(appHolder.getApp(), LOCAL_SETTING_FILE, localSetting);
         xmlExtAssist = new XmlExtAssist(appHolder);
         xmlExtAssist.addExtScriptLib(scriptLib);
         envVarProvider = getEnvVarProvider();
@@ -62,43 +59,44 @@ public class XuiLoader {
                     putSetting(s.toLowerCase(), s1);
                 }
             };
-            if (localSetting.getProperty("lang") == null)
-                localSetting.setProperty("lang", "zh_CN");
-            if (localSetting.getProperty("appid") == null)
-                localSetting.setProperty("appid", "example");
-            if (localSetting.getProperty("appzone") == null)
-                localSetting.setProperty("appzone", "0");
+            if (appHolder.getApp().getProperty("lang") == null)
+                appHolder.getApp().setProperty("lang", GLanguage.getLangCode(AppLoader.getDefaultLang()));
+            if (appHolder.getApp().getProperty("appid") == null)
+                appHolder.getApp().setProperty("appid", "");
+            if (appHolder.getApp().getProperty("appzone") == null)
+                appHolder.getApp().setProperty("appzone", "");
 
             //用minipack的环境变量初始化本应用的环境变量
-            String username = localSetting.getProperty("username");
-            if (username == null || username.trim().length() == 0) {
-                localSetting.setProperty("username", AppLoader.getProperty("username"));
-            }
-            String userpass = localSetting.getProperty("userpass");
-            if (userpass == null || userpass.trim().length() == 0) {
-                localSetting.setProperty("userpass", AppLoader.getProperty("userpass"));
-            }
-            String logintype = localSetting.getProperty("logintype");
-            if (logintype == null || logintype.trim().length() == 0) {
-                localSetting.setProperty("logintype", AppLoader.getProperty("logintype"));
-            }
-            String token = localSetting.getProperty("token");
-            if (token == null || token.trim().length() == 0) {
-                localSetting.setProperty("token", AppLoader.getProperty("token"));
-            }
+            String username = appHolder.getApp().getProperty("username");
+//            if (username == null || username.trim().length() == 0) {
+//                appHolder.getApp().setProperty("username", AppLoader.getProperty("username"));
+//            }
+            String userpass = appHolder.getApp().getProperty("userpass");
+//            if (userpass == null || userpass.trim().length() == 0) {
+//                appHolder.getApp().setProperty("userpass", AppLoader.getProperty("userpass"));
+//            }
+            String logintype = appHolder.getApp().getProperty("logintype");
+//            if (logintype == null || logintype.trim().length() == 0) {
+//                appHolder.getApp().setProperty("logintype", AppLoader.getProperty("logintype"));
+//            }
+            String token = appHolder.getApp().getProperty("token");
+//            if (token == null || token.trim().length() == 0) {
+//                appHolder.getApp().setProperty("token", AppLoader.getProperty("token"));
+//            }
 
-            localSetting.setProperty("sver", AppLoader.getBaseInfo("sver"));
-            localSetting.setProperty("jar", System.getProperty("os.name").toLowerCase().replace(' ', '-'));
-            localSetting.setProperty("from", AppLoader.getProperty("from"));
-            localSetting.setProperty("cver", AppLoader.getBaseInfo("cver"));
-            localSetting.setProperty("policy_url", AppLoader.getPolicyUrl());
-            localSetting.setProperty("discovery_url", AppLoader.getProperty("discovery_url"));
-            localSetting.setProperty("account_base_url", AppLoader.getProperty("account_base_url"));
-            localSetting.setProperty("profile_url", AppLoader.getProperty("profile_url"));
-            localSetting.setProperty("shop_url", AppLoader.getProperty("shop_url"));
-            localSetting.setProperty("pay_url", AppLoader.getProperty("pay_url"));
-            localSetting.setProperty("plugin_url", AppLoader.getProperty("plugin_url"));
-            localSetting.setProperty("update_url", AppLoader.getProperty("update_url"));
+            appHolder.getApp().setProperty("sver", AppLoader.getBaseInfo("sver"));
+            appHolder.getApp().setProperty("jar", System.getProperty("os.name").toLowerCase().replace(' ', '-'));
+            appHolder.getApp().setProperty("from", AppLoader.getProperty("from"));
+            appHolder.getApp().setProperty("cver", AppLoader.getBaseInfo("cver"));
+            appHolder.getApp().setProperty("policy_url", AppLoader.getPolicyUrl());
+            appHolder.getApp().setProperty("discovery_url", AppLoader.getProperty("discovery_url"));
+            appHolder.getApp().setProperty("account_base_url", AppLoader.getProperty("account_base_url"));
+            appHolder.getApp().setProperty("profile_url", AppLoader.getProperty("profile_url"));
+            appHolder.getApp().setProperty("shop_url", AppLoader.getProperty("shop_url"));
+            appHolder.getApp().setProperty("pay_url", AppLoader.getProperty("pay_url"));
+            appHolder.getApp().setProperty("plugin_url", AppLoader.getProperty("plugin_url"));
+            appHolder.getApp().setProperty("update_url", AppLoader.getProperty("update_url"));
+            appHolder.getApp().setProperty("uuid", AppLoader.getProperty("uuid"));
         }
         return envVarProvider;
     }
@@ -161,7 +159,7 @@ public class XuiLoader {
 
 
     public String getSetting(String key) {
-        return getSetting(key, localSetting);
+        return appHolder.getApp().getProperty(key);
     }
 
     public static String getSetting(String key, Properties p) {
@@ -176,7 +174,7 @@ public class XuiLoader {
     }
 
     public Float getSettingAsFloat(String key) {
-        return getSettingAsFloat(key, localSetting);
+        return getSettingAsFloat(key, appHolder.getApp().getConfigProp());
     }
 
     public static Float getSettingAsFloat(String key, Properties p) {
@@ -193,7 +191,7 @@ public class XuiLoader {
     }
 
     public Integer getSettingAsInt(String key) {
-        return getSettingAsInt(key, localSetting);
+        return getSettingAsInt(key, appHolder.getApp().getConfigProp());
     }
 
     public static Integer getSettingAsInt(String key, Properties p) {
@@ -210,7 +208,7 @@ public class XuiLoader {
     }
 
     public byte[] getSettingAsByteArr(String key) {
-        return getSettingAsByteArr(key, localSetting);
+        return getSettingAsByteArr(key, appHolder.getApp().getConfigProp());
     }
 
     public static byte[] getSettingAsByteArr(String key, Properties p) {
@@ -228,8 +226,7 @@ public class XuiLoader {
 
 
     public void putSetting(String key, Object value) {
-        putSetting(key, value, localSetting);
-        saveProp(appHolder.getApp(), LOCAL_SETTING_FILE, localSetting);
+        appHolder.getApp().setProperty(key, value == null ? null : value.toString());
     }
 
     public static void putSetting(String key, Object value, Properties p) {
@@ -305,7 +302,7 @@ public class XuiLoader {
         hideBtn.setName("BT_HIDE_BROWSER");
         hideBtn.setText("\u2716");
         hideBtn.setSize(25, 25);
-        hideBtn.setLocation(10, (GFrame.TITLE_HEIGHT - hideBtn.getH()) * 0.5f);
+        hideBtn.setLocation(w - hideBtn.getW() - 10, (GFrame.TITLE_HEIGHT - hideBtn.getH()) * 0.5f);
         hideBtn.setActionListener((e) -> {
             GFrame f = GToolkit.getComponent(form, WEB_FRAME_NAME);
             if (f != null) {

@@ -8,6 +8,10 @@ package org.mini.glfm;
 import org.mini.glfw.Glfw;
 import org.mini.net.SocketNative;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+
 /**
  * @author gust
  */
@@ -159,7 +163,30 @@ public class Glfm {
     }
 
     public static void glfmImageCrop(long display, int uid, String uris, int x, int y, int width, int height) {
+        String saveRoot = glfmGetSaveRoot();
+        File src = new File(uris);
+        if (src.exists()) {
+            // copy file
+            File dst = new File(saveRoot + "/tmp/" + src.getName());
+            try {
+                byte[] buf = new byte[4096];
+                FileInputStream fis = new FileInputStream(src);
+                FileOutputStream fos = new FileOutputStream(dst);
+                while (true) {
+                    int len = fis.read(buf);
+                    if (len <= 0) {
+                        break;
+                    }
+                    fos.write(buf, 0, len);
 
+                }
+                fos.flush();
+                fos.close();
+                fis.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public static void glfmSetDisplayConfig(long display,
@@ -196,11 +223,11 @@ public class Glfm {
     }
 
     public static String glfmGetSaveRoot() {
-        return null;
+        return new File("./").getAbsolutePath();
     }
 
     public static String glfmGetResRoot() {
-        return null;
+        return glfmGetSaveRoot();
     }
 
     public static long glfmPlayVideo(long display, String uris, String mimeType) {
@@ -304,6 +331,9 @@ public class Glfm {
         try {
             String url = new String(cStyleURL, 0, cStyleURL.length - 1, "utf-8");
             String more = new String(cStyleMore, 0, cStyleMore.length - 1, "utf-8");
+            if (more.equalsIgnoreCase("url")) {
+                more = "";
+            }
             String osName = System.getProperty("os.name", "");// 获取操作系统的名字
             if (osName.startsWith("Mac OS")) {
                 // Mac OS
@@ -315,6 +345,13 @@ public class Glfm {
             } else if (osName.startsWith("Windows")) {
                 // Windows
                 Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + url);
+            } else if (osName.startsWith("Linux")) {
+                // Linux
+                if (more.length() > 0) {
+                    Runtime.getRuntime().exec("xdg-open " + url + " " + more);
+                } else {
+                    Runtime.getRuntime().exec("xdg-open " + url);
+                }
             }
 
         } catch (Exception e) {
@@ -331,5 +368,54 @@ public class Glfm {
 
     public static void glfmBuyAppleProductById(long display, String productId, String base64HandleScript) {
 
+    }
+
+
+    // Screen Control Functions
+
+    /**
+     * Sets whether the screen saver (auto screen off) is enabled.
+     * On iOS, this controls UIApplication.idleTimerDisabled.
+     * On Android, this controls FLAG_KEEP_SCREEN_ON.
+     * On Emscripten, this function does nothing.
+     *
+     * @param display The GLFMDisplay instance
+     * @param enabled true to allow screen to turn off automatically (default), false to keep screen on
+     */
+    public static void glfmSetScreenSaverEnabled(long display, boolean enabled) {
+
+    }
+
+    /**
+     * Returns whether the screen saver (auto screen off) is enabled.
+     *
+     * @param display The GLFMDisplay instance
+     * @return true if screen can turn off automatically, false if screen is kept on
+     */
+    public static boolean glfmIsScreenSaverEnabled(long display) {
+        return true;
+    }
+
+    /**
+     * Sets the screen brightness.
+     * On iOS, this controls UIScreen.brightness.
+     * On Android, this controls window brightness attribute.
+     * On Emscripten, this function does nothing.
+     *
+     * @param display    The GLFMDisplay instance
+     * @param brightness Brightness level from 0.0 (darkest) to 1.0 (brightest)
+     */
+    public static void glfmSetScreenBrightness(long display, float brightness) {
+
+    }
+
+    /**
+     * Gets the current screen brightness.
+     *
+     * @param display The GLFMDisplay instance
+     * @return Current brightness level from 0.0 (darkest) to 1.0 (brightest), or -1.0 if unknown
+     */
+    public static float glfmGetScreenBrightness(long display) {
+        return -1.0f;
     }
 }

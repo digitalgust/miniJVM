@@ -153,6 +153,12 @@ abstract public class FileSystemImpl extends org.mini.fs.FileSystem {
 
     @Override
     public boolean delete(File f) {
+        if (f.getPath() != null) {
+            java.lang.SecurityManager sm = System.getSecurityManager();
+            if (sm != null) {
+                sm.checkDelete(f.getPath());
+            }
+        }
         return InnerFile.delete0(SocketNative.toCStyle(f.getPath())) == 0;
     }
 

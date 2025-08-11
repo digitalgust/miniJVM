@@ -83,7 +83,7 @@ void glfmMain(GLFMDisplay *display) {
     call_method(refers.jvm, p_classname,p_methodname,p_methodtype,runtime);
 }
 
-void glfmDestroy(){
+void glfmDestroy(GLFMDisplay *display){
     JNI_OnUnload_mini(refers.jvm);
     jvm_destroy(refers.jvm);
 }

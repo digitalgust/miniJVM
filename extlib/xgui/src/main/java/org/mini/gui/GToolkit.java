@@ -7,11 +7,13 @@ package org.mini.gui;
 
 import org.mini.apploader.AppLoader;
 import org.mini.apploader.AppManager;
+import org.mini.glfm.Glfm;
 import org.mini.glfw.Glfw;
 import org.mini.gui.callback.GCallBack;
 import org.mini.gui.callback.GFont;
 import org.mini.gui.event.GActionListener;
 import org.mini.gui.event.GFocusChangeListener;
+import org.mini.gui.event.GStateChangeListener;
 import org.mini.gui.style.GStyle;
 import org.mini.gui.style.GStyleBright;
 import org.mini.gui.style.GStyleInner;
@@ -681,9 +683,9 @@ public class GToolkit {
 //            nvgFill(vg);
 
             nvgBeginPath(vg);
-            float r = radius - 2;
+            float r = radius;
             r = r < 0 ? 0 : r;
-            nvgRoundedRect(vg, px + 1, py + 1, pw - 2, ph - 2, r);
+            nvgRoundedRect(vg, px, py, pw, ph, r);
             nvgStrokeWidth(vg, 1.0f);
             nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 192));
             nvgStroke(vg);
@@ -860,7 +862,7 @@ public class GToolkit {
         frame.setFront(true);
 
         if (path == null || path.length() == 0) {
-            path = AppLoader.getProperty("filechooserpath");
+            path = AppLoader.getFileChooserPath();
         }
         if (path == null || "".equals(path)) {
             path = GCallBack.getInstance().getApplication().getSaveRoot();  //android can't access out of app dir
@@ -1009,7 +1011,7 @@ public class GToolkit {
         }
         up.setAttachment(f);
         chooserAddFilesToList(f, list.getAttachment(), list);
-        AppLoader.setProperty("filechooserpath", "");
+        AppLoader.setFileChooserPath("");
     }
 
     private static GActionListener fileChooserItemListener = gobj -> {
@@ -1022,7 +1024,7 @@ public class GToolkit {
             }
             GButton upBtn = GToolkit.getComponent(gobj.getFrame(), NAME_FILECHOOSER_UP);
             if (upBtn != null) {
-                AppLoader.setProperty("filechooserpath", f.getAbsolutePath());
+                AppLoader.setFileChooserPath(f.getAbsolutePath());
                 upBtn.setAttachment(f);
             }
         }
@@ -1283,8 +1285,8 @@ public class GToolkit {
 
             @Override
             public void focusLost(GObject newgo) {
-                if (list.getForm() != null) {
-                    list.getForm().remove(list);
+                if (list.getParent() != null) {
+                    list.getParent().remove(list);
                 }
             }
         });
@@ -1336,8 +1338,8 @@ public class GToolkit {
 
             @Override
             public void focusLost(GObject newgo) {
-                if (menu.getForm() != null) {
-                    menu.getForm().remove(menu);
+                if (menu.getParent() != null) {
+                    menu.getParent().remove(menu);
                 }
             }
         });
@@ -1364,55 +1366,84 @@ public class GToolkit {
      * getImageView
      * ----------------------------------------------------------------
      */
-    public static GViewPort getImageView(GForm form, GImage img, GActionListener listener) {
+    static String[] menuStrs = new String[2];
 
+
+    public static GViewPort getImageView(GForm form, GImage img, final GActionListener listener) {
+        float imgW = img.getWidth();
+        float imgH = img.getHeight();
+        final float maxW = imgW;
+        final float maxH = imgH;
+
+        float formW = form.getW() * 0.8f;
+        float formH = form.getH() * 0.8f;
+        menuStrs[0] = GLanguage.getString(null, "Save to album");
+        menuStrs[1] = GLanguage.getString(null, "Cancel");
+        GScrollBar scrollBar = new GScrollBar(form, 0.0f, GScrollBar.VERTICAL, 0, 0, 20, formH);
         GViewPort view = new GViewPort(form) {
-            GImage image = img;
-
-            @Override
-            public void longTouchedEvent(int x, int y) {
-                GList menu = new GList(form);
-                GListItem item = menu.addItem(null, GLanguage.getString(null, "Save to album"));
-                item.setActionListener((GObject gobj) -> {
-                });
-                item = menu.addItem(null, GLanguage.getString(null, "Cancel"));
-                item.setActionListener((GObject gobj) -> {
-                    if (gobj.getForm() != null) {
-                        gobj.getForm().remove(menu);
-                    }
-                });
-                add(menu);
-            }
-
             @Override
             public boolean paint(long vg) {
                 float w = getW();
                 float h = getH();
+                GToolkit.drawRect(vg, getX(), getY(), w, h, GColorSelector.GRAY);
+                return super.paint(vg);
+            }
 
-                GToolkit.drawImage(vg, image, getX(), getY(), w, h);
-
-                return true;
+            @Override
+            public void mouseButtonEvent(int button, boolean pressed, int x, int y) {
+                touchEvent(button, pressed ? Glfm.GLFMTouchPhaseBegan : Glfm.GLFMTouchPhaseEnded, x, y);
             }
 
             @Override
             public void touchEvent(int touchid, int phase, int x, int y) {
+                super.touchEvent(touchid, phase, x, y);
                 if (touchid != Glfw.GLFW_MOUSE_BUTTON_1) return;
-                if (listener != null) {
-                    listener.action(this);
-                } else {
-                    if (getForm() != null) {
-                        List<GObject> list = getElements();
-                        {
-                            if (getElements().isEmpty()) {//no menu
-                                getForm().remove(this);
-                                //System.out.println("picture removed");
-                            }
-                        }
+                if (scrollBar.isInArea(x, y)) {
+                    return;
+                }
+                if (phase == Glfm.GLFMTouchPhaseEnded) {
+                    if (listener != null) {
+                        listener.action(this);
+                    } else {
+                        addMenu(x, y);
                     }
                 }
             }
+
+            GActionListener[] menuListeners = new GActionListener[]{
+                    (GObject gobj) -> {
+                        if (img.getAttachment() instanceof String) { //if image attachment is file abs path
+                            Glfm.glfmImageCrop(GCallBack.getInstance().getDisplay(), 0, img.getAttachment(), 0, 0, (int) maxW, (int) maxH);
+                            GForm.addMessage("Saving..." + img.getAttachment());
+                        }
+                        GContainer parent = this.getParent();
+                        if (parent != null) {
+                            parent.remove(this);
+                        }
+                    },
+                    (GObject gobj) -> {
+                        GContainer parent = this.getParent();
+                        if (parent != null) {
+                            parent.remove(this);
+                        }
+                    }
+            };
+
+            private void addMenu(int x, int y) {
+                GObject old = findByName(NAME_LISTMENU);
+                if (old != null) {
+                    if (!old.isInArea(x, y)) {
+                        remove(old);
+                    }
+                } else {
+                    GList menu = GToolkit.getListMenu(form, menuStrs, null, menuListeners);
+                    menu.setFront(true);
+                    menu.setLocation(x - getInnerX(), y - getInnerY());
+                    menu.setFocusListener(null);
+                    add(menu);
+                }
+            }
         };
-        view.setName(NAME_IMAGEVIEW);
         view.setFocusListener(new GFocusChangeListener() {
             @Override
             public void focusGot(GObject oldgo) {
@@ -1425,25 +1456,45 @@ public class GToolkit {
                 }
             }
         });
+        view.setName(NAME_IMAGEVIEW);
+        view.setSize(formW, formH);
+        view.setLocation(formW * 0.1f, formH * 0.1f);
 
-        float imgW = img.getWidth();
-        float imgH = img.getHeight();
+        float ratioW = imgW / formW;
+        float ratioH = imgH / formH;
 
-        float formW = form.getW();
-        float formH = form.getH();
-
-        float ratioW = formW / imgW;
-        float ratioH = formH / imgH;
-
-        if (formW < formH) {
-            imgW *= ratioW;
-            imgH *= ratioW;
+        if (ratioW > ratioH) {
+            imgW /= ratioW;
+            imgH /= ratioW;
         } else {
-            imgW *= ratioH;
-            imgH *= ratioH;
+            imgW /= ratioH;
+            imgH /= ratioH;
         }
-        view.setSize(imgW, imgH);
-        view.setLocation((formW - view.getW()) / 2, (formH - view.getH()) / 2);
+
+        GImageItem item = new GImageItem(form, img);
+        item.setLocation(0, 0);
+        item.setSize(imgW, imgH);
+        view.add(item);
+
+
+        scrollBar.setLocation(0 + view.getW() - scrollBar.getW(), 0f);
+        scrollBar.setFront(true);
+        scrollBar.setFixed(true);
+        view.add(scrollBar);
+
+        final float minW = imgW;
+        final float minH = imgH;
+        scrollBar.setStateChangeListener(new GStateChangeListener() {
+            @Override
+            public void onStateChange(GObject bar) {
+                float pos = ((GScrollBar) bar).getPos();// 0.0f - 1.0f
+                float w = minW + (maxW - minW) * pos;
+                float h = minH + (maxH - minH) * pos;
+                item.setSize(w, h);
+                view.reAlign();
+            }
+        });
+
 
         return view;
     }

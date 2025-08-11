@@ -15,9 +15,10 @@ import org.mini.gui.style.GStyleBright;
 import org.mini.gui.style.GStyleDark;
 import org.mini.http.MiniHttpClient;
 import org.mini.http.MiniHttpServer;
-import org.mini.layout.loader.UITemplate;
 import org.mini.layout.XContainer;
 import org.mini.layout.XEventHandler;
+import org.mini.layout.guilib.GuiScriptLib;
+import org.mini.layout.loader.UITemplate;
 import org.mini.layout.loader.XmlExtAssist;
 import org.mini.layout.loader.XuiAppHolder;
 import org.mini.nanovg.Nanovg;
@@ -28,7 +29,7 @@ import java.util.*;
 /**
  * @author Gust
  */
-public class AppManager extends GApplication implements XuiAppHolder {
+public final class AppManager extends GApplication implements XuiAppHolder {
     public static final String POLICY_URL = "POLICY_URL";
     public static final String DISCOVERY_URL = "DISCOVERY_URL";
     public static final String ACCOUNT_BASE_URL = "ACCOUNT_BASE_URL";
@@ -116,6 +117,10 @@ public class AppManager extends GApplication implements XuiAppHolder {
     XmlExtAssist assist;
     GContainer webView;
 
+    {
+        jarName = "AppManager";//set jar name
+    }
+
     /**
      * @return
      */
@@ -124,7 +129,7 @@ public class AppManager extends GApplication implements XuiAppHolder {
         return instance;
     }
 
-    public void active() {
+    public final void active() {
         if (GCallBack.getInstance().getApplication() == this) return;
 
         onResume();
@@ -147,16 +152,15 @@ public class AppManager extends GApplication implements XuiAppHolder {
 
         GCallBack.getInstance().setFps(GCallBack.FPS_DEFAULT);
 
-        Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationPortrait);
+        // 只有在当前方向不是Portrait时才设置
+        if (Glfm.glfmGetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay()) != Glfm.GLFMInterfaceOrientationPortrait) {
+            Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationPortrait);
+        }
         Glfm.glfmSetDisplayChrome(GCallBack.getInstance().getDisplay(), Glfm.GLFMUserInterfaceChromeNavigationAndStatusBar);
 
         GLanguage.setCurLang(AppLoader.getDefaultLang());
 
-        if (AppLoader.getGuiStyle() == 0) {
-            GToolkit.setStyle(new GStyleBright());
-        } else {
-            GToolkit.setStyle(new GStyleDark());
-        }
+        setStyle(AppLoader.getGuiStyle());
         GToolkit.setFeel(AppLoader.getGuiFeel());
 
         if (mgrForm != null) {
@@ -171,8 +175,9 @@ public class AppManager extends GApplication implements XuiAppHolder {
     }
 
     @Override
-    public void onInit() {
+    public final void onInit() {
         regStrings();
+        onResume();
 
         mgrForm = loadXmlForm();
         initForm();
@@ -184,9 +189,12 @@ public class AppManager extends GApplication implements XuiAppHolder {
         }
         GCallBack.getInstance().getDesktop().add(floatButton);
 
-
         reloadAppList();
-        AppLoader.runBootApp();
+
+        if (AppLoader.isBootRun()) {//如果appinfo.properties中 bootrun=false,则不运行bootjar
+            curSelectedJarName = AppLoader.getBootApp() + AppLoader.APP_FILE_EXT;
+            runApp();
+        }
     }
 
     /**
@@ -259,7 +267,6 @@ public class AppManager extends GApplication implements XuiAppHolder {
     public void initForm() {
         //System.out.println("devW :" + devW + ", devH  :" + devH);
 
-        onResume();
 
         mgrForm.setNotifyListener(new GNotifyListener() {
             @Override
@@ -593,36 +600,52 @@ public class AppManager extends GApplication implements XuiAppHolder {
                     GForm.flush();
 
                     String fullscreen = AppLoader.getApplicationFullscreen(curSelectedJarName);
+                    int fullflag;
                     if ("1".equalsIgnoreCase(fullscreen)) {
-                        Glfm.glfmSetDisplayChrome(GCallBack.getInstance().getDisplay(), Glfm.GLFMUserInterfaceChromeFullscreen);
+                        fullflag = Glfm.GLFMUserInterfaceChromeFullscreen;
                     } else {
-                        Glfm.glfmSetDisplayChrome(GCallBack.getInstance().getDisplay(), Glfm.GLFMUserInterfaceChromeNavigationAndStatusBar);
+                        fullflag = Glfm.GLFMUserInterfaceChromeNavigationAndStatusBar;
                     }
+                    Glfm.glfmSetDisplayChrome(GCallBack.getInstance().getDisplay(), fullflag);
                     String orientation = AppLoader.getApplicationOrientation(curSelectedJarName);
-                    if (orientation.equalsIgnoreCase("h")) {
-                        Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationLandscapeLeft | Glfm.GLFMInterfaceOrientationLandscapeRight);
+                    int targetOrientation;
+                    if ("h".equalsIgnoreCase(orientation)) {
+                        //System.out.println("[INFO] orientation h");
+                        targetOrientation = Glfm.GLFMInterfaceOrientationLandscapeLeft | Glfm.GLFMInterfaceOrientationLandscapeRight;
                     } else {
-                        Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), Glfm.GLFMInterfaceOrientationPortrait);
+                        //System.out.println("[INFO] orientation v");
+                        targetOrientation = Glfm.GLFMInterfaceOrientationPortrait;
+                    }
+
+                    // 只有在目标方向与当前方向不同时才设置
+                    if (Glfm.glfmGetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay()) != targetOrientation) {
+                        Glfm.glfmSetSupportedInterfaceOrientation(GCallBack.getInstance().getDisplay(), targetOrientation);
                     }
                     appOri = orientation;
                     String osname = System.getProperty("os.name");
                     if ("iOS".equalsIgnoreCase(osname) || "Android".equalsIgnoreCase(osname)) {
-                        //float w = GCallBack.getInstance().getDeviceWidth();
-                        //float h = GCallBack.getInstance().getDeviceHeight();
+                        float w = GCallBack.getInstance().getDeviceWidth();
+                        float h = GCallBack.getInstance().getDeviceHeight();
                         GCallBack.getInstance().getInsets(inset);
                         //System.out.println("[INFO] INSET:" + inset[0] + " , " + inset[1] + " , " + inset[2] + " , " + inset[3]);
 
-                        if ("h".equals(appOri)) {
-                            int ori = Glfm.glfmGetInterfaceOrientation(GCallBack.getInstance().getDisplay());
-                            if ((ori & Glfm.GLFMInterfaceOrientationLandscapeLeft) == 0
-                                    && (ori & Glfm.GLFMInterfaceOrientationLandscapeRight) == 0
-                            ) {
-                                if (retry++ < 120) { // wait for turn orientation
-                                    GDesktop.addCmd(this);
-                                }
-                                return;
+                        if (w < h) {
+                            if (retry++ < 180) { // wait for turn orientation
+                                GDesktop.addCmd(this);
                             }
+                            return;
                         }
+//                        if ("h".equals(appOri)) {
+//                            int ori = Glfm.glfmGetInterfaceOrientation(GCallBack.getInstance().getDisplay());
+//                            if ((ori & Glfm.GLFMInterfaceOrientationLandscapeLeft) == 0
+//                                    && (ori & Glfm.GLFMInterfaceOrientationLandscapeRight) == 0
+//                            ) {
+//                                if (retry++ < 120) { // wait for turn orientation
+//                                    GDesktop.addCmd(this);
+//                                }
+//                                return;
+//                            }
+//                        }
                     }
 
                     String jarName = curSelectedJarName;
@@ -692,8 +715,14 @@ public class AppManager extends GApplication implements XuiAppHolder {
                     AppLoader.setDownloadUrl(url);
 
                     MiniHttpClient hc = new MiniHttpClient(url, cltLogger, getDownloadCallback());
-                    hc.start();
+                    hc.setProgressListener(new MiniHttpClient.ProgressListener() {
+                        @Override
+                        public void onProgress(MiniHttpClient client, int progress) {
+                            GuiScriptLib.showProgressBar(getForm(), progress);
+                        }
+                    });
                     httpClients.add(hc);
+                    hc.start();
                     break;
                 case "BT_TEST":
                     break;
@@ -715,6 +744,12 @@ public class AppManager extends GApplication implements XuiAppHolder {
                         url = AppLoader.getApplicationUpgradeurl(tmpJarName);
                         if (url != null) {
                             hc = new MiniHttpClient(url, cltLogger, getDownloadCallback());
+                            hc.setProgressListener(new MiniHttpClient.ProgressListener() {
+                                @Override
+                                public void onProgress(MiniHttpClient client, int progress) {
+                                    GuiScriptLib.showProgressBar(getForm(), progress);
+                                }
+                            });
                             hc.start();
                             httpClients.add(hc);
                         }
@@ -753,21 +788,16 @@ public class AppManager extends GApplication implements XuiAppHolder {
                     mainSlot.moveTo(2, 0);
                     break;
                 case "LI_BRIGHT":
-                    GToolkit.setStyle(new GStyleBright());
-                    AppLoader.setGuiStyle(0);
+                    setStyle(0);
                     setStyleButton(0);
                     break;
                 case "LI_DARK":
-                    GToolkit.setStyle(new GStyleDark());
-                    AppLoader.setGuiStyle(1);
+                    setStyle(1);
                     setStyleButton(1);
                     break;
                 case "BT_STYLE": {
-                    int i = AppLoader.getGuiStyle();
-                    i = i == 0 ? 1 : 0;
+                    int i = swapStyle();
                     setStyleButton(i);
-                    GToolkit.setStyle(i == 0 ? new GStyleBright() : new GStyleDark());
-                    AppLoader.setGuiStyle(i);
                     break;
                 }
             }
@@ -840,7 +870,20 @@ public class AppManager extends GApplication implements XuiAppHolder {
         envVarProvider.setEnvVar("shop_url", "");
         envVarProvider.setEnvVar("pay_url", "");
         envVarProvider.setEnvVar("plugin_url", "");
+        envVarProvider.setEnvVar("uuid", System.getProperty("uuid"));
     }
 
+    public static void setStyle(int style) {
+        GToolkit.setStyle(style == 0 ? new GStyleBright() : new GStyleDark());
+        AppLoader.setGuiStyle(style);
+    }
+
+    public static int swapStyle() {
+        int style = AppLoader.getGuiStyle();
+        style = style == 0 ? 1 : 0;
+        GToolkit.setStyle(style == 1 ? new GStyleDark() : new GStyleBright());
+        AppLoader.setGuiStyle(style);
+        return style;
+    }
 
 }

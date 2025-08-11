@@ -40,6 +40,7 @@
 		451F272F23A24C7B00F99984 /* jni_minial.m in Sources */ = {isa = PBXBuildFile; fileRef = 4535FA2721944F7300B888BA /* jni_minial.m */; };
 		4581C5CC226DA7BE00E88538 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 45D78F2B209D3E62003B9317 /* Assets.xcassets */; };
 		4589A5FD2C8DFB920079DDFC /* IAPManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 4589A5FC2C8DFB920079DDFC /* IAPManager.m */; };
+		45B2F0EE2E01AB1C00164D87 /* ltalloc.c in Sources */ = {isa = PBXBuildFile; fileRef = 45B2F0ED2E01AB1C00164D87 /* ltalloc.c */; };
 		45D7904B20A002C4003B9317 /* resfiles in Resources */ = {isa = PBXBuildFile; fileRef = 45D7904A20A002C4003B9317 /* resfiles */; };
 		45F996B4253B69E40053E7A0 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F9966D253B69DE0053E7A0 /* md5.c */; };
 		45F996B5253B69E40053E7A0 /* cmac.c in Sources */ = {isa = PBXBuildFile; fileRef = 45F9966E253B69DE0053E7A0 /* cmac.c */; };
@@ -169,6 +170,8 @@
 		4581C38B226D637C00E88538 /* linkedlist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = linkedlist.c; sourceTree = "<group>"; };
 		4589A5FB2C8DFB6C0079DDFC /* IAPManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IAPManager.h; sourceTree = "<group>"; };
 		4589A5FC2C8DFB920079DDFC /* IAPManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IAPManager.m; sourceTree = "<group>"; };
+		45B2F0EC2E01AB1C00164D87 /* ltalloc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ltalloc.h; sourceTree = "<group>"; };
+		45B2F0ED2E01AB1C00164D87 /* ltalloc.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ltalloc.c; sourceTree = "<group>"; };
 		45D78F1F209D3E61003B9317 /* iosapp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosapp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		45D78F2B209D3E62003B9317 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		45D78F30209D3E62003B9317 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -415,6 +418,8 @@
 		4581C372226D637C00E88538 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				45B2F0EC2E01AB1C00164D87 /* ltalloc.h */,
+				45B2F0ED2E01AB1C00164D87 /* ltalloc.c */,
 				45F99663253B69600053E7A0 /* https */,
 				4581C37C226D637C00E88538 /* arraylist.c */,
 				4581C388226D637C00E88538 /* arraylist.h */,
@@ -889,6 +894,7 @@
 				4589A5FD2C8DFB920079DDFC /* IAPManager.m in Sources */,
 				451F272223A24C3A00F99984 /* miniz_wrapper.c in Sources */,
 				451F272323A24C3A00F99984 /* bytebuf.c in Sources */,
+				45B2F0EE2E01AB1C00164D87 /* ltalloc.c in Sources */,
 				451F272423A24C3A00F99984 /* linkedlist.c in Sources */,
 				45F996F8253B69E40053E7A0 /* ssl_ticket.c in Sources */,
 				45F996C9253B69E40053E7A0 /* dhm.c in Sources */,

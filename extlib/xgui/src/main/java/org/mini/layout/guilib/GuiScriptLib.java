@@ -50,6 +50,7 @@ public class GuiScriptLib extends Lib {
             methodNames.put("getDefaultColor".toLowerCase(), this::getDefaultTextColorHexStr);//  set background color
             methodNames.put("setText".toLowerCase(), this::setText);//  set text
             methodNames.put("getText".toLowerCase(), this::getText);//  get text
+            methodNames.put("setRedPoint".toLowerCase(), this::setRedPoint);//
             methodNames.put("setCmd".toLowerCase(), this::setCmd);//
             methodNames.put("getCmd".toLowerCase(), this::getCmd);//
             methodNames.put("close".toLowerCase(), this::close);//  close frame
@@ -95,6 +96,7 @@ public class GuiScriptLib extends Lib {
             methodNames.put("showBar".toLowerCase(), this::showBar);//
             methodNames.put("showMsg".toLowerCase(), this::showMsg);//参数：内容，失去焦点关闭，回调函数，回调参数
             methodNames.put("showConfirm".toLowerCase(), this::showConfirm);//
+            methodNames.put("showInput".toLowerCase(), this::showInput);//
             methodNames.put("insertText".toLowerCase(), this::insertText);//
             methodNames.put("deleteText".toLowerCase(), this::deleteText);//
             methodNames.put("getCaretPos".toLowerCase(), this::getCaretPos);//
@@ -113,6 +115,17 @@ public class GuiScriptLib extends Lib {
             methodNames.put("getClipboard".toLowerCase(), this::getClipboard);//
             methodNames.put("getVersion".toLowerCase(), this::getVersion);//
             methodNames.put("compareVersion".toLowerCase(), this::compareVersion);//
+            methodNames.put("getMiniPackVersion".toLowerCase(), this::getMiniPackVersion);//
+            methodNames.put("getApp".toLowerCase(), this::getApp);//
+            methodNames.put("closeApp".toLowerCase(), this::closeApp);//
+            methodNames.put("pauseApp".toLowerCase(), this::pauseApp);//
+            methodNames.put("getJarConfig".toLowerCase(), this::getJarConfig);
+            methodNames.put("getDisplay".toLowerCase(), this::getDisplay);//
+
+            methodNames.put("isScreenSaver".toLowerCase(), this::isScreenSaver);//
+            methodNames.put("setScreenSaver".toLowerCase(), this::setScreenSaver);//
+            methodNames.put("getScreenBrightness".toLowerCase(), this::getScreenBrightness);//
+            methodNames.put("setScreenBrightness".toLowerCase(), this::setScreenBrightness);//
 
         }
     }
@@ -125,6 +138,22 @@ public class GuiScriptLib extends Lib {
     // -------------------------------------------------------------------------
     // inner method
     // -------------------------------------------------------------------------
+
+    public static Object execScript(String scriptPathAndName) {
+        if (scriptPathAndName == null) return null;
+        if (scriptPathAndName.contains(".")) {
+            int dex = scriptPathAndName.indexOf(".");
+            String containerName = scriptPathAndName.substring(0, dex);
+            String scriptName = scriptPathAndName.substring(dex + 1);
+            GContainer gobj = GToolkit.getComponent(GCallBack.getInstance().getDesktop(), containerName);
+            if (gobj != null) {
+                Interpreter inp = gobj.getInterpreter();
+                return inp.callSub(scriptName);
+            }
+        }
+        return null;
+    }
+
     public static void doCallback(GForm form, String callback, String para) {
         if (callback != null) {
             if (callback.contains(".")) {
@@ -187,11 +216,15 @@ public class GuiScriptLib extends Lib {
             }
             go.setLocation(0, inset[0]);
             go.setSize(progress * w / 100f, go.getH());
-            AppManager.getInstance().getFloatButton().setDrawMarkSecond(60);
+            if (AppManager.getInstance().getFloatButton() != null) {
+                AppManager.getInstance().getFloatButton().setDrawMarkSecond(60);
+                if (progress >= 100) {
+                    AppManager.getInstance().getFloatButton().setDrawMarkSecond(0);
+                }
+            }
             if (progress >= 100) {
                 GObject go1 = GToolkit.getComponent(form, panName);
                 if (go1 != null) go1.setSize(0, go1.getH());
-                AppManager.getInstance().getFloatButton().setDrawMarkSecond(0);
             }
         }));
     }
@@ -303,6 +336,17 @@ public class GuiScriptLib extends Lib {
         return null;
     }
 
+
+    public DataType setRedPoint(ArrayList<DataType> para) {
+        String compont = Interpreter.popBackStr(para);
+        int redPoint = Interpreter.popBackInt(para);
+        GObject gobj = GToolkit.getComponent(formHolder.getForm(), compont);
+        if (gobj instanceof GMenuItem) {
+            GMenuItem item = (GMenuItem) gobj;
+            item.setRedPoint(redPoint);
+        }
+        return null;
+    }
 
     public DataType setText(ArrayList<DataType> para) {
         String compont = Interpreter.popBackStr(para);
@@ -765,10 +809,6 @@ public class GuiScriptLib extends Lib {
                 (obj) -> {
                     if (callback != null) {
                         if (callback.contains(".")) {
-//                            String[] ss = callback.split("\\.");
-//                            GContainer gobj = GToolkit.getComponent(formHolder.getForm(), ss[0]);
-//                            Interpreter inp = gobj.getInterpreter();
-//                            inp.callSub(ss[1] + "(1)");
                             doCallback(formHolder.getForm(), callback, "1");
                         } else {
                             SysLog.info("showConfirm callback format \"PAN.subname\" ,but : " + callback);
@@ -776,17 +816,49 @@ public class GuiScriptLib extends Lib {
                     }
                     obj.getFrame().close();
                 },
-                null,
+                AppManager.getInstance().getString("Cancel"),
                 (obj) -> {
                     if (callback != null) {
                         if (callback.contains(".")) {
-//                            String[] ss = callback.split("\\.");
-//                            GContainer gobj = GToolkit.getComponent(formHolder.getForm(), ss[0]);
-//                            Interpreter inp = gobj.getInterpreter();
-//                            inp.callSub(ss[1] + "(0)");
                             doCallback(formHolder.getForm(), callback, "0");
                         } else {
                             SysLog.info("showConfirm callback format \"PAN.subname\" ,but : " + callback);
+                        }
+                    }
+                    obj.getFrame().close();
+                });
+        GToolkit.showFrame(f);
+        formHolder.getForm().flush();
+        return null;
+    }
+
+    public DataType showInput(ArrayList<DataType> para) {
+        String msg = Interpreter.popBackStr(para);
+        String callback = Interpreter.popBackStr(para);
+        GFrame f = GToolkit.getInputFrame(
+                formHolder.getForm(),
+                AppManager.getInstance().getString("Message"),
+                msg,
+                "",
+                "",
+                AppManager.getInstance().getString("Ok"),
+                (obj) -> {
+                    if (callback != null) {
+                        if (callback.contains(".")) {
+                            doCallback(formHolder.getForm(), callback, "1,\"" + GToolkit.getCompText(formHolder.getForm(), GToolkit.NAME_INPUTFRAME_TEXTFIELD) + "\"");
+                        } else {
+                            SysLog.info("showInput callback format \"PAN.subname\" ,but : " + callback);
+                        }
+                    }
+                    obj.getFrame().close();
+                },
+                AppManager.getInstance().getString("Cancel"),
+                (obj) -> {
+                    if (callback != null) {
+                        if (callback.contains(".")) {
+                            doCallback(formHolder.getForm(), callback, "0,\"" + GToolkit.getCompText(formHolder.getForm(), GToolkit.NAME_INPUTFRAME_TEXTFIELD) + "\"");
+                        } else {
+                            SysLog.info("showInput callback format \"PAN.subname\" ,but : " + callback);
                         }
                     }
                     obj.getFrame().close();
@@ -1024,10 +1096,76 @@ public class GuiScriptLib extends Lib {
         return Interpreter.getCachedStr(ver);
     }
 
+    public DataType getMiniPackVersion(ArrayList<DataType> para) {
+        String jarName = Interpreter.popBackStr(para);
+        String ver = "";
+        if (jarName != null) {
+            ver = AppLoader.getBaseInfo("cver");
+        }
+        return Interpreter.getCachedStr(ver);
+    }
+
     public DataType compareVersion(ArrayList<DataType> para) {
         String v1 = Interpreter.popBackStr(para);
         String v2 = Interpreter.popBackStr(para);
         int ret = AppLoader.compareVersions(v1, v2);
         return Interpreter.getCachedInt(ret);
+    }
+
+    public DataType getApp(ArrayList<DataType> para) {
+        return Interpreter.getCachedObj(formHolder.getForm().getApp());
+    }
+
+    public DataType getAppId(ArrayList<DataType> para) {
+        return Interpreter.getCachedStr(formHolder.getForm().getApp().getAppId());
+    }
+
+    public DataType closeApp(ArrayList<DataType> para) {
+        formHolder.getForm().getApp().closeApp();
+        return Interpreter.getCachedInt(0);
+    }
+
+    public DataType pauseApp(ArrayList<DataType> para) {
+        formHolder.getForm().getApp().pauseApp();
+        return Interpreter.getCachedInt(0);
+    }
+
+    private DataType getJarConfig(ArrayList<DataType> para) {
+        String K = Interpreter.popBackStr(para);
+        String V = formHolder.getForm().getApp().getJarConfig(K);
+        return Interpreter.getCachedStr(V);
+    }
+
+    public DataType getDisplay(ArrayList<DataType> para) {
+        return Interpreter.getCachedInt(GCallBack.getInstance().getDisplay());
+    }
+
+    public DataType setScreenSaver(ArrayList<DataType> para) {
+        boolean b = Interpreter.popBackBool(para);
+        Glfm.glfmSetScreenSaverEnabled(GCallBack.getInstance().getDisplay(), b);
+        return null;
+    }
+
+    public DataType isScreenSaver(ArrayList<DataType> para) {
+        boolean b = Glfm.glfmIsScreenSaverEnabled(GCallBack.getInstance().getDisplay());
+        return Interpreter.getCachedBool(b);
+    }
+
+    public DataType setScreenBrightness(ArrayList<DataType> para) {
+        int v = Interpreter.popBackInt(para);
+        float v2;
+        try {
+            v2 = v / 100.0f;
+        } catch (Exception e) {
+            return null;
+        }
+        Glfm.glfmSetScreenBrightness(GCallBack.getInstance().getDisplay(), v2);
+        return null;
+    }
+
+    public DataType getScreenBrightness(ArrayList<DataType> para) {
+        float v = Glfm.glfmGetScreenBrightness(GCallBack.getInstance().getDisplay());
+        int v2 = (int) (v * 100);
+        return Interpreter.getCachedInt(v2);
     }
 }

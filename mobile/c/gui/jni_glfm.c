@@ -50,7 +50,8 @@ static void _callback_surface_error(GLFMDisplay *window, const char *description
         env->push_ref(runtime->stack, jstr);
 
         s32 ret = env->execute_method(refers._callback_surface_error, runtime);
-        if (ret) {
+        if (ret == RUNTIME_STATUS_ERROR) {
+        } else if (ret == RUNTIME_STATUS_EXCEPTION) {
             env->print_exception(runtime);
         }
     }
@@ -67,7 +68,8 @@ static bool _callback_key(GLFMDisplay *window, GLFMKey key, GLFMKeyAction action
         env->push_int(runtime->stack, mods);
 
         s32 ret = env->execute_method(refers._callback_key, runtime);
-        if (ret) {
+        if (ret == RUNTIME_STATUS_ERROR) {
+        } else if (ret == RUNTIME_STATUS_EXCEPTION) {
             env->print_exception(runtime);
         } else {
             return env->pop_int(runtime->stack);
@@ -87,7 +89,8 @@ static void _callback_character(GLFMDisplay *window, const char *utf8, int modif
         env->push_int(runtime->stack, modifiers);
 
         s32 ret = env->execute_method(refers._callback_character, runtime);
-        if (ret) {
+        if (ret == RUNTIME_STATUS_ERROR) {
+        } else if (ret == RUNTIME_STATUS_EXCEPTION) {
             env->print_exception(runtime);
         }
     }
@@ -101,7 +104,9 @@ static void _callback_render(GLFMDisplay *window) {
         env->push_long(runtime->stack, (s64) (intptr_t) window);
 
         s32 ret = env->execute_method(refers._callback_render, runtime);
-        if (ret) {
+        if (ret == RUNTIME_STATUS_ERROR) {
+            exit(ret);
+        } else if (ret == RUNTIME_STATUS_EXCEPTION) {
             env->print_exception(runtime);
         }
     }
@@ -114,7 +119,8 @@ void _callback_memory_warning(GLFMDisplay *window) {
         env->push_ref(runtime->stack, refers.glfm_callback);
         env->push_long(runtime->stack, (s64) (intptr_t) window);
         s32 ret = env->execute_method(refers._callback_memory_warning, runtime);
-        if (ret) {
+        if (ret == RUNTIME_STATUS_ERROR) {
+        } else if (ret == RUNTIME_STATUS_EXCEPTION) {
             env->print_exception(runtime);
         }
     }
@@ -133,7 +139,8 @@ void _callback_keyboard_visible(GLFMDisplay *window, bool visible, f64 x, f64 y,
         env->push_double(runtime->stack, h);
 
         s32 ret = env->execute_method(refers._callback_keyboard_visible, runtime);
-        if (ret) {
+        if (ret == RUNTIME_STATUS_ERROR) {
+        } else if (ret == RUNTIME_STATUS_EXCEPTION) {
             env->print_exception(runtime);
         }
     }
@@ -151,7 +158,8 @@ bool _callback_touch(GLFMDisplay *window, s32 touch, GLFMTouchPhase phase, f64 x
         env->push_double(runtime->stack, y);
 
         s32 ret = env->execute_method(refers._callback_touch, runtime);
-        if (ret) {
+        if (ret == RUNTIME_STATUS_ERROR) {
+        } else if (ret == RUNTIME_STATUS_EXCEPTION) {
             env->print_exception(runtime);
         } else {
             return env->pop_int(runtime->stack);
@@ -171,7 +179,8 @@ void _callback_surface_resized(GLFMDisplay *window, s32 w, s32 h) {
         env->push_int(runtime->stack, h);
 
         s32 ret = env->execute_method(refers._callback_surface_resized, runtime);
-        if (ret) {
+        if (ret == RUNTIME_STATUS_ERROR) {
+        } else if (ret == RUNTIME_STATUS_EXCEPTION) {
             env->print_exception(runtime);
         }
     }
@@ -185,7 +194,8 @@ void _callback_surface_destroyed(GLFMDisplay *window) {
         env->push_long(runtime->stack, (s64) (intptr_t) window);
 
         s32 ret = env->execute_method(refers._callback_surface_destroyed, runtime);
-        if (ret) {
+        if (ret == RUNTIME_STATUS_ERROR) {
+        } else if (ret == RUNTIME_STATUS_EXCEPTION) {
             env->print_exception(runtime);
         }
     }
@@ -200,7 +210,8 @@ void _callback_app_focus(GLFMDisplay *window, bool focus) {
         env->push_int(runtime->stack, focus);
 
         s32 ret = env->execute_method(refers._callback_app_focus, runtime);
-        if (ret) {
+        if (ret == RUNTIME_STATUS_ERROR) {
+        } else if (ret == RUNTIME_STATUS_EXCEPTION) {
             env->print_exception(runtime);
         }
     }
@@ -217,7 +228,8 @@ void _callback_surface_created(GLFMDisplay *window, s32 w, s32 h) {
         env->push_int(runtime->stack, h);
 
         s32 ret = env->execute_method(refers._callback_surface_created, runtime);
-        if (ret) {
+        if (ret == RUNTIME_STATUS_ERROR) {
+        } else if (ret == RUNTIME_STATUS_EXCEPTION) {
             env->print_exception(runtime);
         }
     }
@@ -242,7 +254,8 @@ _callback_photo_picked(GLFMDisplay *window, s32 uid, const c8 *url, c8 *data, s3
         env->push_ref(runtime->stack, jarr);
 
         s32 ret = env->execute_method(refers._callback_photo_picked, runtime);
-        if (ret) {
+        if (ret == RUNTIME_STATUS_ERROR) {
+        } else if (ret == RUNTIME_STATUS_EXCEPTION) {
             env->print_exception(runtime);
         }
     }
@@ -261,7 +274,8 @@ void _callback_notify(GLFMDisplay *window, const c8 *key, const c8 *val) {
         env->push_ref(runtime->stack, insVal);
 
         s32 ret = env->execute_method(refers._callback_notify, runtime);
-        if (ret) {
+        if (ret == RUNTIME_STATUS_ERROR) {
+        } else if (ret == RUNTIME_STATUS_EXCEPTION) {
             env->print_exception(runtime);
         }
     }
@@ -276,7 +290,8 @@ void _callback_orientation_changed(GLFMDisplay *window, GLFMInterfaceOrientation
         env->push_int(runtime->stack, orientation);
 
         s32 ret = env->execute_method(refers._callback_orientation_changed, runtime);
-        if (ret) {
+        if (ret == RUNTIME_STATUS_ERROR) {
+        } else if (ret == RUNTIME_STATUS_EXCEPTION) {
             env->print_exception(runtime);
         }
     }
@@ -870,9 +885,52 @@ int org_mini_glfm_Glfm_glfmBuyAppleProductById(Runtime *runtime, JClass *clazz) 
     pos += 1;
     Instance *inBase64HandleScriptStr = env->localvar_getRefer(runtime->localvar, pos);
     const c8 *cscript = inBase64HandleScriptStr->arr_body;
-    if(window && cproductID){
+    if (window && cproductID) {
         buyAppleProductById(window, cproductID, cscript);
     }
+    return 0;
+}
+
+/* ==============================   jni screen control =================================*/
+
+int org_mini_glfm_Glfm_glfmSetScreenSaverEnabled(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    s32 enabled = env->localvar_getInt(runtime->localvar, pos++);
+    glfmSetScreenSaverEnabled(window, enabled);
+    return 0;
+}
+
+int org_mini_glfm_Glfm_glfmIsScreenSaverEnabled(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    s32 result = glfmIsScreenSaverEnabled(window);
+    env->push_int(runtime->stack, result);
+    return 0;
+}
+
+int org_mini_glfm_Glfm_glfmSetScreenBrightness(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    Int2Float brightness;
+    brightness.i = env->localvar_getInt(runtime->localvar, pos++);
+    glfmSetScreenBrightness(window, brightness.f);
+    return 0;
+}
+
+int org_mini_glfm_Glfm_glfmGetScreenBrightness(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    float result = glfmGetScreenBrightness(window);
+    env->push_float(runtime->stack, result);
     return 0;
 }
 
@@ -1677,7 +1735,11 @@ static java_native_method method_glfm_table[] = {
         {"org/mini/glfm/Glfm", "glfmStartVideo",                       "(JJ)V",                                    org_mini_glfm_Glfm_glfmStartVideo},
         {"org/mini/glfm/Glfm", "glfmOpenOtherApp",                     "([B[BI)I",                                 org_mini_glfm_Glfm_glfmOpenOtherApp},
         {"org/mini/glfm/Glfm", "glfmRemoteMethodCall",                 "([B)Ljava/lang/String;",                   org_mini_glfm_Glfm_glfmRemoteMethodCall},
-        {"org/mini/glfm/Glfm", "glfmBuyAppleProductById",                 "(J[B[B)V",                   org_mini_glfm_Glfm_glfmBuyAppleProductById},
+        {"org/mini/glfm/Glfm", "glfmBuyAppleProductById",              "(J[B[B)V",                                 org_mini_glfm_Glfm_glfmBuyAppleProductById},
+        {"org/mini/glfm/Glfm", "glfmSetScreenSaverEnabled",            "(JZ)V",                                    org_mini_glfm_Glfm_glfmSetScreenSaverEnabled},
+        {"org/mini/glfm/Glfm", "glfmIsScreenSaverEnabled",             "(J)Z",                                     org_mini_glfm_Glfm_glfmIsScreenSaverEnabled},
+        {"org/mini/glfm/Glfm", "glfmSetScreenBrightness",              "(JF)V",                                    org_mini_glfm_Glfm_glfmSetScreenBrightness},
+        {"org/mini/glfm/Glfm", "glfmGetScreenBrightness",              "(J)F",                                     org_mini_glfm_Glfm_glfmGetScreenBrightness},
 
 };
 

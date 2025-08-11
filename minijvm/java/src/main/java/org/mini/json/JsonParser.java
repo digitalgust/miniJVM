@@ -221,7 +221,12 @@ public class JsonParser<T> {
                 return Boolean.valueOf(numStr);
             } else {
                 //guess
-
+                if (numStr.equalsIgnoreCase("true")) {
+                    return Boolean.TRUE;
+                }
+                if (numStr.equalsIgnoreCase("false")) {
+                    return Boolean.FALSE;
+                }
                 if (numStr.equals("null")) {
                     return null;
                 }
@@ -655,10 +660,21 @@ public class JsonParser<T> {
 
 
     public final T deserial(String s, Class clazz) {
+        return (T) deserial(s, clazz, null);
+    }
+
+    public final T deserial(String s, Class clazz, ClassLoader classLoader) {
+        return (T) deserial(s, clazz, classLoader, null);
+    }
+
+    public final T deserial(String s, Class clazz, ClassLoader classLoader, String types) {
         if (clazz == null) throw new RuntimeException("Class can't null");
-        classLoader = clazz.getClassLoader();
+        if (classLoader == null) {
+            classLoader = Thread.currentThread().getContextClassLoader();
+        }
+        this.classLoader = classLoader;
         JsonCell json = parse(s, 0);
-        return (T) map2obj(json, clazz, null);
+        return (T) map2obj(json, clazz, types);
     }
 
     /**

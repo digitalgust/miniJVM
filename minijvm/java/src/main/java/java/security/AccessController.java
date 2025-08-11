@@ -99,6 +99,21 @@ public final class AccessController {
 
     public static void checkPermission(Permission perm)
             throws AccessControlException {
+        if (perm == null) {
+            throw new NullPointerException("permission can't be null");
+        }
 
+        AccessControlContext stack = getStackAccessControlContext();
+        // if context is null, we had privileged system code on the stack.
+        if (stack == null) {
+            return;
+        }
+
+        AccessControlContext acc = stack.optimize();
+        acc.checkPermission(perm);
+    }
+
+    private static AccessControlContext getStackAccessControlContext() {
+        return new AccessControlContext(null);
     }
 }

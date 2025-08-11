@@ -12,6 +12,12 @@
 #include "garbage.h"
 #include "jdwp.h"
 
+#if __JVM_LTALLOC__
+
+#include "ltalloc.h"
+
+#endif
+
 #if __JVM_OS_ANDROID__
 
 #include <android/log.h>
@@ -311,7 +317,7 @@ s32 threadlist_count_active(MiniJVM *jvm) {
         Runtime *r = (Runtime *) arraylist_get_value_unsafe(jvm->thread_list, i);
         Instance *ins = r->thrd_info->jthread;
         s32 daemon = jthread_get_daemon_value(ins, r);
-        if (r->thrd_info->thread_status != THREAD_STATUS_ZOMBIE) {
+        if (!daemon && r->thrd_info->thread_status != THREAD_STATUS_ZOMBIE) {
             count++;
         }
     }
@@ -785,6 +791,9 @@ s32 jthread_run(void *para) {
     s64 spent = currentTimeMillis() - startAt;
     jvm_printf("[INFO]thread over %llx , return %d , spent : %lld\n", (s64) (intptr_t) jthread, ret, spent);
 #endif
+#if __JVM_LTALLOC__
+    ltonthreadexit();
+#endif
     thrd_exit(ret);
     return ret;
 }
@@ -806,6 +815,12 @@ s32 jthread_run_finalize(Runtime *runtime) {
 
 thrd_t jthread_start(Instance *ins, Runtime *parent) {//
     Runtime *runtime = jthread_get_stackframe_value(parent->jvm, ins);
+    if (!runtime) {
+        runtime = runtime_create(parent->jvm);
+        runtime->thrd_info->type = THREAD_TYPE_NORMAL;
+        jthread_set_stackframe_value(parent->jvm, ins, runtime);
+    }
+    runtime->thrd_info->thread_status = THREAD_STATUS_RUNNING;
     runtime->thrd_info->jthread = ins;
     runtime->thrd_info->context_classloader = parent->thrd_info->context_classloader;//copy context classloader
 
@@ -1282,7 +1297,7 @@ void instance_init_with_para(Instance *ins, Runtime *runtime, c8 *methodtype, Ru
             }
         }
         s32 ret = execute_method_impl(mi, runtime);
-        if (ret != RUNTIME_STATUS_NORMAL) {
+        if (ret == RUNTIME_STATUS_EXCEPTION) {
             print_exception(runtime);
         }
         utf8_destroy(methodName);
@@ -1296,7 +1311,7 @@ void instance_finalize(Instance *ins, Runtime *runtime) {
         if (mi) {
             push_ref(runtime->stack, ins);
             s32 ret = execute_method_impl(mi, runtime);
-            if (ret != RUNTIME_STATUS_NORMAL) {
+            if (ret == RUNTIME_STATUS_EXCEPTION) {
                 print_exception(runtime);
             }
         }
@@ -1309,7 +1324,7 @@ void instance_of_reference_enqueue(Instance *ins, Runtime *runtime) {
         if (mi) {
             push_ref(runtime->stack, ins);
             s32 ret = execute_method_impl(mi, runtime);
-            if (ret != RUNTIME_STATUS_NORMAL) {
+            if (ret == RUNTIME_STATUS_EXCEPTION) {
                 print_exception(runtime);
             }
         }

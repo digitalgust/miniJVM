@@ -53,4 +53,7 @@ public final class AccessControlContext {
     }
 
 
+    public AccessControlContext optimize() {
+        return this;
+    }
 }

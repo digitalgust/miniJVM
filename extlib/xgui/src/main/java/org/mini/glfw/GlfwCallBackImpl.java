@@ -99,9 +99,6 @@ public class GlfwCallBackImpl extends GCallBack {
         Glfw.glfwSetWindowTitle(display, title);
     }
 
-    public Thread getOpenglThread() {
-        return openglThread;
-    }
 
     public void init(int width, int height) {
         this.winWidth = width;
@@ -138,7 +135,6 @@ public class GlfwCallBackImpl extends GCallBack {
         Glfw.glfwSwapInterval(1);
         reloadWindow();
         //SysLog.info("fbWidth=" + fbWidth + "  ,fbHeight=" + fbHeight);
-        openglThread = Thread.currentThread();
 
         vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
         if (vg == 0) {
@@ -164,7 +160,7 @@ public class GlfwCallBackImpl extends GCallBack {
                     return;
                 }
                 try {
-                    Thread.currentThread().setContextClassLoader(gapp.getClass().getClassLoader());
+                    setOpenglThread(gapp.getClass().getClassLoader());
                     desktop.checkAppRun(gapp);
                 } catch (Exception e) {
                     gapp.closeApp();

@@ -801,4 +801,30 @@ int main() {
     return 0;
 }
 
+// MARK: - Screen Control functions (Not supported on Emscripten)
+
+void glfmSetScreenSaverEnabled(GLFMDisplay *display, bool enabled) {
+    // Not supported on Emscripten/Web
+    (void)display;
+    (void)enabled;
+}
+
+bool glfmIsScreenSaverEnabled(GLFMDisplay *display) {
+    // Not supported on Emscripten/Web
+    (void)display;
+    return true; // Default: assume enabled
+}
+
+void glfmSetScreenBrightness(GLFMDisplay *display, float brightness) {
+    // Not supported on Emscripten/Web
+    (void)display;
+    (void)brightness;
+}
+
+float glfmGetScreenBrightness(GLFMDisplay *display) {
+    // Not supported on Emscripten/Web
+    (void)display;
+    return -1.0f; // Default: unknown
+}
+
 #endif

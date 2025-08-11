@@ -19,6 +19,7 @@ import org.mini.vm.VmUtil;
 import org.mini.zip.Zip;
 
 import java.io.*;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -27,7 +28,7 @@ import java.util.Properties;
 /**
  * @author gust
  */
-public class AppLoader {
+public final class AppLoader {
 
     static final String BASE_INFO_FILE = "/res/base.properties";
     static final String APP_INFO_FILE = "/appinfo.properties";
@@ -35,8 +36,8 @@ public class AppLoader {
     static final String APP_CONFIG = "config.txt";
     static final String APP_DIR = "/apps/";
     static final String APP_FILE_EXT = ".jar";
-    static final String APP_DATA_DIR = "/appdata/";
-    static final String TMP_DIR = "/tmp/";
+    public static final String APP_DATA_DIR = "/appdata/";
+    public static final String TMP_DIR = "/tmp/";
     static String[] EXAMPLE_APP_FILES = {};
     static final String KEY_BOOT = "boot";
     static final String KEY_DOWNLOADURL = "downloadurl";
@@ -46,6 +47,8 @@ public class AppLoader {
     static final String KEY_HOMEICON_X = "homeiconx";
     static final String KEY_HOMEICON_Y = "homeicony";
     static final String KEY_TOKEN = "TOKEN";
+    static final String KEY_USERNAME = "USERNAME";
+    static final String KEY_USERPASS = "USERPASS";
     static Properties appinfo = new Properties();
     static Properties applist = new Properties();
     static Properties baseinfo = new Properties();
@@ -80,56 +83,23 @@ public class AppLoader {
         saveProp(APP_LIST_FILE, applist);
 
         //设置 创建线程的handler
-        VmUtil.addThreadLifeHandler(new ThreadLifeHandler() {
-            @Override
-            public void threadCreated(Thread thread) {
+        VmUtil.addThreadLifeHandler(new XuiThreadHandler());
 
-                //从调用栈中查找创建者
-                Throwable callStack = new Throwable();
-                GApplication creator = findCreator(callStack);
-                if (creator != null) {
-                    //System.out.println(creator.getClass().getClassLoader() + " CREATED+++++ " + thread);
-                    creator.addThread(thread);
-                }
-            }
+        SecurityManager sm = System.getSecurityManager();
+        if (sm == null) {// add security manager, to decline app access others resources
+            GuiSecurityManager guiSecurityManager = new GuiSecurityManager();
+            guiSecurityManager.addAllowedCaller("org.mini.apploader.AppManager", "active");
+            guiSecurityManager.addAllowedCaller("org.mini.apploader.AppLoader", "setGuiStyle");
+            guiSecurityManager.addAllowedCaller("org.mini.apploader.AppLoader", "setGuiFeel");
+            guiSecurityManager.addAllowedCaller("org.mini.apploader.AppLoader", "addApp");
+            guiSecurityManager.addAllowedCaller("org.mini.apploader.AppLoader", "setHomeIconY");
+            guiSecurityManager.addAllowedCaller("org.mini.apploader.AppLoader", "setHomeIconX");
+            guiSecurityManager.addAllowedCaller("org.mini.apploader.AppLoader", "setFileChooserPath");
+            //decline app access others resources
+//            guiSecurityManager.addDeclinedCaller("org.mini.apploader.GApplication", "init");
+            System.setSecurityManager(guiSecurityManager);
+        }
 
-            @Override
-            public void threadDestroy(Thread thread) {
-                //谁创建的线程
-                GApplication creator = findCreator(thread);
-                if (creator != null) {
-                    //System.out.println(creator.getClass().getClassLoader() + " DESTROYED----- " + thread);
-                    creator.removeThread(thread);
-                }
-            }
-
-            private GApplication findCreator(Throwable callStack) {
-                for (GApplication a : AppManager.getInstance().getRunningApps()) {
-                    ClassLoader appClassLoader = a.getClass().getClassLoader();
-                    for (StackTraceElement e : callStack.getStackTrace()) {
-                        String cname = e.getClassName();
-                        try {
-                            Class c = Class.forName(cname, true, appClassLoader);
-                            if (c != null && c.getClassLoader() == appClassLoader) {//调用栈中如果有和app的classloader相同的类，则说明此线程为这个app创建的
-                                return a;
-                            }
-                        } catch (Exception ex) {
-                            //ex.printStackTrace();
-                        }
-                    }
-                }
-                return null;
-            }
-
-            private GApplication findCreator(Thread thread) {
-                for (GApplication a : AppManager.getInstance().getRunningApps()) {
-                    if (a.threads.contains(thread)) {
-                        return a;
-                    }
-                }
-                return null;
-            }
-        });
 
         String copyjars = getBaseInfo("copy");
         if (copyjars != null && copyjars.length() > 0) {
@@ -143,13 +113,54 @@ public class AppLoader {
         AppManager.getInstance().active();
     }
 
-    public static void runBootApp() {
-        if (isBootRun()) { //如果appinfo.properties中配置为false,则不运行bootjar
-            String bootApp = getBaseInfo(KEY_BOOT);
-            if (bootApp != null) {
-                bootApp = bootApp + APP_FILE_EXT;
-                runApp(bootApp);
+    static class XuiThreadHandler implements ThreadLifeHandler {
+        @Override
+        public void threadCreated(Thread thread) {
+
+            //从调用栈中查找创建者
+            Throwable callStack = new Throwable();
+            GApplication creator = findCreator(callStack);
+            if (creator != null) {
+                //System.out.println(creator.getClass().getClassLoader() + " CREATED+++++ " + thread);
+                creator.addThread(thread);
             }
+        }
+
+        @Override
+        public void threadDestroy(Thread thread) {
+            //谁创建的线程
+            GApplication creator = findCreator(thread);
+            if (creator != null) {
+                //System.out.println(creator.getClass().getClassLoader() + " DESTROYED----- " + thread);
+                creator.removeThread(thread);
+            }
+        }
+
+        private GApplication findCreator(Throwable callStack) {
+            for (GApplication a : AppManager.getInstance().getRunningApps()) {
+                ClassLoader appClassLoader = a.getClass().getClassLoader();
+                for (StackTraceElement e : callStack.getStackTrace()) {
+                    String cname = e.getClassName();
+                    try {
+                        Class c = Class.forName(cname, true, appClassLoader);
+                        if (c != null && c.getClassLoader() == appClassLoader) {//调用栈中如果有和app的classloader相同的类，则说明此线程为这个app创建的
+                            return a;
+                        }
+                    } catch (Exception ex) {
+                        //ex.printStackTrace();
+                    }
+                }
+            }
+            return null;
+        }
+
+        private GApplication findCreator(Thread thread) {
+            for (GApplication a : AppManager.getInstance().getRunningApps()) {
+                if (a.threads.contains(thread)) {
+                    return a;
+                }
+            }
+            return null;
         }
     }
 
@@ -175,7 +186,7 @@ public class AppLoader {
         }
     }
 
-    static public void reloadAppList() {
+    static void reloadAppList() {
         File f = new File(GCallBack.getInstance().getAppSaveRoot() + APP_DIR);
 
         //reload all jar
@@ -190,7 +201,7 @@ public class AppLoader {
         return GCallBack.getInstance().getAppSaveRoot() + TMP_DIR;
     }
 
-    static public String getAppJarPath(String jarName) {
+    static String getAppJarPath(String jarName) {
         String s = GCallBack.getInstance().getAppSaveRoot() + APP_DIR + jarName;
         File f = new File(s);
         return f.getAbsolutePath();
@@ -226,7 +237,7 @@ public class AppLoader {
         }
     }
 
-    public static void loadJarProp(String filePath, Properties prop) {
+    static void loadJarProp(String filePath, Properties prop) {
         try {
             byte[] b = GToolkit.readFileFromJar(filePath);
             ByteArrayInputStream bais = new ByteArrayInputStream(b);
@@ -274,22 +285,17 @@ public class AppLoader {
         }
     }
 
-    public static String getBootApp() {
-        String defaultApp = appinfo.getProperty(KEY_BOOT);
+    static String getBootApp() {
+        String defaultApp = getBaseInfo(KEY_BOOT);
         return defaultApp;
     }
 
-    public static void setBootApp(String jarName) {
-        appinfo.put(KEY_BOOT, jarName);
-        saveProp(APP_INFO_FILE, appinfo);
-    }
-
-    public static String getDownloadUrl() {
+    static String getDownloadUrl() {
         String defaultApp = appinfo.getProperty(KEY_DOWNLOADURL);
         return defaultApp;
     }
 
-    public static void setDownloadUrl(String downloadUrl) {
+    static void setDownloadUrl(String downloadUrl) {
         appinfo.put(KEY_DOWNLOADURL, downloadUrl);
         saveProp(APP_INFO_FILE, appinfo);
     }
@@ -322,7 +328,7 @@ public class AppLoader {
         return lang;
     }
 
-    public static void setGuiStyle(int style) {
+    public static final void setGuiStyle(int style) {
         appinfo.put(KEY_GUISTYLE, "" + style);
         saveProp(APP_INFO_FILE, appinfo);
     }
@@ -337,13 +343,13 @@ public class AppLoader {
         return lang;
     }
 
-    public static void setGuiFeel(int feel) {
+    public static final void setGuiFeel(int feel) {
         appinfo.put(KEY_GUIFEEL, "" + feel);
         saveProp(APP_INFO_FILE, appinfo);
     }
 
 
-    public static int getHomeIconX() {
+    static int getHomeIconX() {
         String langstr = appinfo.getProperty(KEY_HOMEICON_X);
         int v = 0;//
         try {
@@ -353,12 +359,12 @@ public class AppLoader {
         return v;
     }
 
-    public static void setHomeIconX(int x) {
+    static void setHomeIconX(int x) {
         appinfo.put(KEY_HOMEICON_X, "" + x);
         saveProp(APP_INFO_FILE, appinfo);
     }
 
-    public static int getHomeIconY() {
+    static int getHomeIconY() {
         String langstr = appinfo.getProperty(KEY_HOMEICON_Y);
         int v = 0;//
         try {
@@ -368,12 +374,28 @@ public class AppLoader {
         return v;
     }
 
-    public static void setHomeIconY(int y) {
+    static void setHomeIconY(int y) {
         appinfo.put(KEY_HOMEICON_Y, "" + y);
         saveProp(APP_INFO_FILE, appinfo);
     }
 
+    public static String getFileChooserPath() {
+        return appinfo.getProperty("filechooserpath");
+    }
+
+    public static void setFileChooserPath(String path) {
+        appinfo.put("filechooserpath", path);
+        saveProp(APP_INFO_FILE, appinfo);
+    }
+
     public static String getProperty(String key) {
+        String uk = key.toUpperCase();
+        if (KEY_TOKEN.equals(uk) || KEY_USERPASS.equals(uk) || KEY_USERNAME.equals(uk)) {
+            SecurityManager sm = System.getSecurityManager();
+            if (sm != null) {
+                sm.checkPermission(GuiSecurityManager.PERMISSION_TOKEN);
+            }
+        }
         String s = appinfo.getProperty(key);
         return s == null ? "" : s;
     }
@@ -383,12 +405,12 @@ public class AppLoader {
         saveProp(APP_INFO_FILE, appinfo);
     }
 
-    public static boolean isJarExists(String jarName) {
+    static boolean isJarExists(String jarName) {
         File f = new File(getAppJarPath(jarName));
         return f.exists();
     }
 
-    public static Class getApplicationClass(String jarName) {
+    private static Class getApplicationClass(String jarName) {
         try {
             String className = getAppConfig(jarName, "app");
             if (className != null && className.length() > 0) {
@@ -532,7 +554,7 @@ public class AppLoader {
         return null;
     }
 
-    static public List<String> getAppList() {
+    static List<String> getAppList() {
         List<String> list = new ArrayList();
         for (Enumeration e = applist.keys(); e.hasMoreElements(); ) {
             try {
@@ -545,7 +567,7 @@ public class AppLoader {
         return list;
     }
 
-    static public void putAppList(List<String> list) {
+    static void putAppList(List<String> list) {
         //clear old
         applist.clear();
         for (String s : list) {
@@ -576,7 +598,7 @@ public class AppLoader {
         } finally {
             if (app == null) {
                 app = AppManager.getInstance();
-                app.setSaveRoot(getAppDataPath("Home"));
+                Thread.currentThread().setContextClassLoader(app.getClass().getClassLoader());
                 AppManager.getInstance().active();
                 //GForm.addMessage(GLanguage.getString(AppManager.STR_OPEN_APP_FAIL) + ": " + jarName);
             }
@@ -632,7 +654,7 @@ public class AppLoader {
         return false;
     }
 
-    static private void extractFatJar(String jarName) {
+    private static void extractFatJar(String jarName) {
         try {
             String fatPath = getAppJarPath(jarName);
             String[] fns = Zip.listFiles(fatPath);
@@ -654,7 +676,7 @@ public class AppLoader {
         }
     }
 
-    public static void removeApp(String jarName) {
+    static void removeApp(String jarName) {
         applist.remove(jarName);
         //delete jar
         String jarFullPath = getAppJarPath(jarName);
@@ -696,32 +718,6 @@ public class AppLoader {
         return policyUrl;
     }
 
-
-    public String[] getPolicy(String url, String post) {
-        try {
-            if (url == null) {
-                return null;
-            }
-            XuiResourceLoader loader = new XuiResourceLoader(false);
-            XuiResource res = loader.loadResource(url, post);
-            if (res != null) {
-                String json = res.getString();
-                if (json != null) {
-                    JsonParser<HttpRequestReply> parser = new JsonParser<>();
-                    HttpRequestReply reply = parser.deserial(json, HttpRequestReply.class);
-                    if (reply != null && reply.getCode() == 0) {
-                        String s = reply.getReply();
-                        String[] ss = s.split("\n");
-                        return ss;
-                    }
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 
     /**
      * 比较版本号
@@ -773,7 +769,7 @@ public class AppLoader {
 
     public static boolean isBootRun() {
         String bootRun = getProperty("bootrun"); //本地存没存，如果存了以本地为准
-        return !"false".equals(bootRun);
+        return !"false".equals(bootRun) && getBootApp().length() > 0;
     }
 
     public static boolean isShowHome() {
