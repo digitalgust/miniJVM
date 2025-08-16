@@ -270,7 +270,7 @@ public abstract class GApplication implements FormHolder {
     }
 
     public String getJarConfig(String key) {
-        String configStr = GToolkit.readFileFromFileAsString("/config.txt", "utf-8");
+        String configStr = GToolkit.readFileFromJarAsString("/config.txt", "utf-8");
         //System.out.println("b=" + configStr);
         if (configStr != null) {
 

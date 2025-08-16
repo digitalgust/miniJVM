@@ -629,11 +629,11 @@ public final class AppManager extends GApplication implements XuiAppHolder {
                         GCallBack.getInstance().getInsets(inset);
                         //System.out.println("[INFO] INSET:" + inset[0] + " , " + inset[1] + " , " + inset[2] + " , " + inset[3]);
 
-                        if (w < h) {
+                        if ("h".equals(appOri) && w < h) {
                             if (retry++ < 180) { // wait for turn orientation
                                 GDesktop.addCmd(this);
+                                return;
                             }
-                            return;
                         }
 //                        if ("h".equals(appOri)) {
 //                            int ori = Glfm.glfmGetInterfaceOrientation(GCallBack.getInstance().getDisplay());
