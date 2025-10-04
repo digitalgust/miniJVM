@@ -2362,7 +2362,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 s32 high = *((s32 *) (ip + pos));
                 pos += 4;
 
-                SwitchTable *st = switchtable_create(&ca->jit, high - low + 2);
+                SwitchTable *st = switchtable_create(&ca->jit, high - low + 1);
                 s32 i = low;
                 for (; i <= high; i++) {
                     s32 offset = (*((s32 *) (ip + pos)));
@@ -2428,7 +2428,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 pos += 4;
                 s32 i, key;
 
-                SwitchTable *st = switchtable_create(&ca->jit, n + 1);
+                SwitchTable *st = switchtable_create(&ca->jit, n);
                 for (i = 0; i < n; i++) {
 
                     st->table[i].value = *((s32 *) (ip + pos));
