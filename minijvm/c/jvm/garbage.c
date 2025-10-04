@@ -153,6 +153,9 @@ void _garbage_clear(GcCollector *collector) {
 void gc_pause(GcCollector *collector) {
     vm_share_lock(collector->jvm);
     collector->_garbage_thread_status = GARBAGE_THREAD_PAUSE;
+    while (collector->isgc) {
+        vm_share_timedwait(collector->jvm, 100);
+    }
     vm_share_unlock(collector->jvm);
 }
 
