@@ -53,11 +53,11 @@ public class UTF_8_Writer extends com.sun.cldc.i18n.StreamWriter {
 
             if (Character.isHighSurrogate((char) unic)) {
                 if (count >= len) {
-                    throw new IllegalArgumentException("Incomplete surrogate pair");
+                    continue;
                 }
                 int c1 = cbuf[off + count];
                 if (!Character.isLowSurrogate((char) c1)) {
-                    throw new IllegalArgumentException("Invalid surrogate pair");
+                    continue;
                 }
                 count++;
                 int lead = unic & 0x3ff;
@@ -129,11 +129,11 @@ public class UTF_8_Writer extends com.sun.cldc.i18n.StreamWriter {
             if (Character.isHighSurrogate((char) unic)) {
                 // Check array bounds before accessing next char
                 if (count >= len) {
-                    throw new IllegalArgumentException("Incomplete surrogate pair");
+                    continue;
                 }
                 int c1 = cbuf[off + count];
                 if (!Character.isLowSurrogate((char) c1)) {
-                    throw new IllegalArgumentException("Invalid surrogate pair");
+                    continue;
                 }
                 count++;
                 int lead = unic & 0x3ff;

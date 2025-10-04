@@ -1,7 +1,7 @@
 //
 // Created by gust on 2017/9/20.
 //
-
+#include <string.h>
 #include "jdwp.h"
 #include "jvm_util.h"
 #include "garbage.h"
@@ -1622,44 +1622,67 @@ void invoke_method(s32 call_mode, JdwpPacket *req, JdwpPacket *res, JdwpClient *
     s32 ret = execute_method_impl(methodInfo, runtime);
     jdwpserver->thread_sync_ignore = 0;
 
-    if (ret == RUNTIME_STATUS_EXCEPTION) {
-        print_exception(runtime);
-    }
     jdwppacket_set_err(res, JDWP_ERROR_NONE);
 
-    ValueType vt;
-    memset(&vt, 0, sizeof(ValueType));
-    if (stack_size(runtime->stack) > stacksize) {
-        Utf8String *us = utf8_create_copy(methodInfo->descriptor);
-        utf8_substring(us, utf8_indexof_c(us, ")") + 1, us->length);
-        vt.type = getJdwpTag(us);
-        switch (getSimpleTag(vt.type)) {
-            case '8':
-                vt.value = pop_long(runtime->stack);
-                break;
-            case 'R': {
-                __refer r = pop_ref(runtime->stack);
-                vt.type = getInstanceOfClassTag(r);//recorrect type, may be Arraylist<String>
-                vt.value = (s64) (intptr_t) r;
-                jdwp_client_hold_obj(client, r);
+    ValueType returnValue, exceptionValue;
+    memset(&returnValue, 0, sizeof(ValueType));
+    memset(&exceptionValue, 0, sizeof(ValueType));
 
-//                            if (vt.type == 's') {
-//                                s32 debug = 1;
-//                                Utf8String *ustr = utf8_create();
-//                                jstring_2_utf8((Instance *) r, ustr);
-//                                utf8_destroy(ustr);
-//                            }
-                break;
-            }
-            default:
-                vt.value = pop_int(runtime->stack);
+    if (ret == RUNTIME_STATUS_EXCEPTION) {
+        // Method threw an exception
+        print_exception(runtime);
+
+        // Get the exception object from stack top
+        Instance *exception = (Instance *) pop_ref(runtime->stack);
+
+        // Set return value to default (void/null)
+        returnValue.type = 'V';  // void type
+        returnValue.value = 0;
+
+        // Set exception object
+        if (exception) {
+            exceptionValue.type = getInstanceOfClassTag(exception);
+            exceptionValue.value = (s64) (intptr_t) exception;
+            jdwp_client_hold_obj(client, exception);
+        } else {
+            exceptionValue.type = 'L';
+            exceptionValue.value = 0;
         }
-        utf8_destroy(us);
+    } else {
+        // Method completed normally
+        if (stack_size(runtime->stack) > stacksize) {
+            Utf8String *us = utf8_create_copy(methodInfo->descriptor);
+            utf8_substring(us, utf8_indexof_c(us, ")") + 1, us->length);
+            returnValue.type = getJdwpTag(us);
+            switch (getSimpleTag(returnValue.type)) {
+                case '8':
+                    returnValue.value = pop_long(runtime->stack);
+                    break;
+                case 'R': {
+                    __refer r = pop_ref(runtime->stack);
+                    returnValue.type = getInstanceOfClassTag(r);//recorrect type, may be Arraylist<String>
+                    returnValue.value = (s64) (intptr_t) r;
+                    jdwp_client_hold_obj(client, r);
+                    break;
+                }
+                default:
+                    returnValue.value = pop_int(runtime->stack);
+            }
+            utf8_destroy(us);
+        } else {
+            // Void method
+            returnValue.type = 'V';
+            returnValue.value = 0;
+        }
+
+        // No exception
+        exceptionValue.type = 'L';
+        exceptionValue.value = 0;
     }
-    writeValueType(res, &vt);
-    vt.type = 'L';
-    vt.value = 0;
-    writeValueType(res, &vt);
+
+    // Write return value and exception according to JDWP protocol
+    writeValueType(res, &returnValue);
+    writeValueType(res, &exceptionValue);
     jdwp_packet_put(jdwpserver, res);
 
     gc_move_objs_thread_2_gc(runtime);
@@ -2241,28 +2264,224 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
                 break;
             }
             case JDWP_CMD_ClassType_SetValues: {//3.2
-                jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
-                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
-                jdwp_packet_put(jdwpserver, res);
+                JClass *ref = jdwppacket_read_refer(req);
+                if (is_class_exists(jdwpserver->jvm, ref)) {
+                    gc_pause(jdwpserver->jvm->collector);
+                    Runtime *runtime = jdwp_get_runtime(jdwpserver);
+                    s32 fields = jdwppacket_read_int(req);
+                    jdwppacket_set_err(res, JDWP_ERROR_NONE);
+                    s32 i;
+                    for (i = 0; i < fields; i++) {
+                        FieldInfo *fi = jdwppacket_read_refer(req);
+                        ValueType vt;
+                        vt.type = getJdwpTag(fi->descriptor);
+                        readValueType(req, &vt);
+                        if (fi->access_flags & ACC_STATIC) {
+                            c8 *ptr = getStaticFieldPtr(fi);
+                            setPtrValue(vt.type, ptr, vt.value);
+                        }
+                    }
+                    jdwp_packet_put(jdwpserver, res);
+
+                    gc_move_objs_thread_2_gc(runtime);
+                    gc_resume(jdwpserver->jvm->collector);
+                } else {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
+                    jdwp_packet_put(jdwpserver, res);
+                }
                 break;
             }
             case JDWP_CMD_ClassType_InvokeMethod: {//3.3
                 invoke_method(CALL_MODE_STATIC, req, res, client);
-                //jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
                 break;
             }
             case JDWP_CMD_ClassType_NewInstance: {//3.4
-                jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
-                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
-                jdwp_packet_put(jdwpserver, res);
+                JClass *clazz = jdwppacket_read_refer(req);
+                if (is_class_exists(jdwpserver->jvm, clazz)) {
+                    // Check if class is instantiable (not interface, not abstract, not array)
+                    if ((clazz->cff.access_flags & ACC_INTERFACE) ||
+                        (clazz->cff.access_flags & ACC_ABSTRACT) ||
+                        clazz->mb.arr_type_index != 0) {
+                        jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
+                        jdwp_packet_put(jdwpserver, res);
+                        break;
+                    }
+
+                    Instance *thread = jdwppacket_read_refer(req);
+                    MethodInfo *constructor = jdwppacket_read_refer(req);
+                    s32 arguments = jdwppacket_read_int(req);
+
+                    // Validate constructor
+                    if (!constructor || constructor->_this_class != clazz ||
+                        utf8_equals_c(constructor->name, "<init>") != 1) {
+                        jdwppacket_set_err(res, JDWP_ERROR_INVALID_METHODID);
+                        jdwp_packet_put(jdwpserver, res);
+                        break;
+                    }
+
+                    gc_pause(jdwpserver->jvm->collector);
+                    Runtime *runtime = jdwp_get_runtime(jdwpserver);
+
+                    // Create new instance
+                    Instance *newInstance = instance_create(runtime, clazz);
+                    if (newInstance) {
+                        jdwp_client_hold_obj(client, newInstance);
+
+                        // Create parameter stack for constructor
+                        RuntimeStack *paraStack = NULL;
+                        if (arguments > 0) {
+                            paraStack = stack_create(arguments);
+                            s32 i;
+                            for (i = 0; i < arguments; i++) {
+                                ValueType vt;
+                                readValueType(req, &vt);
+
+                                switch (getSimpleTag(vt.type)) {
+                                    case '8':
+                                        push_long(paraStack, vt.value);
+                                        break;
+                                    case 'R':
+                                        push_ref(paraStack, (__refer) (intptr_t) vt.value);
+                                        break;
+                                    default:
+                                        push_int(paraStack, (s32) vt.value);
+                                }
+                            }
+                        }
+
+                        // Execute constructor using instance_init_with_para
+                        jdwpserver->thread_sync_ignore = 1;
+
+                        // Save current stack state
+                        s32 saved_stack_size = stack_size(runtime->stack);
+
+                        // Build method signature and call constructor
+                        Utf8String *methodSig = utf8_create_copy(constructor->descriptor);
+                        instance_init_with_para(newInstance, runtime, utf8_cstr(methodSig), paraStack);
+                        utf8_destroy(methodSig);
+
+                        jdwpserver->thread_sync_ignore = 0;
+
+                        // Check if constructor threw exception
+                        s32 current_stack_size = stack_size(runtime->stack);
+                        s32 ret = (current_stack_size > saved_stack_size) ? RUNTIME_STATUS_EXCEPTION
+                                                                          : RUNTIME_STATUS_NORMAL;
+
+                        jdwppacket_set_err(res, JDWP_ERROR_NONE);
+
+                        ValueType newInstanceValue, exceptionValue;
+                        memset(&newInstanceValue, 0, sizeof(ValueType));
+                        memset(&exceptionValue, 0, sizeof(ValueType));
+
+                        if (ret == RUNTIME_STATUS_EXCEPTION) {
+                            // Constructor threw an exception
+                            Instance *exception = (Instance *) pop_ref(runtime->stack);
+
+                            // Set return value to null
+                            newInstanceValue.type = JDWP_TAG_OBJECT;
+                            newInstanceValue.value = 0;
+
+                            // Set exception object
+                            if (exception) {
+                                exceptionValue.type = getInstanceOfClassTag(exception);
+                                exceptionValue.value = (s64) (intptr_t) exception;
+                                jdwp_client_hold_obj(client, exception);
+                            } else {
+                                exceptionValue.type = JDWP_TAG_OBJECT;
+                                exceptionValue.value = 0;
+                            }
+                        } else {
+                            // Constructor completed normally
+                            newInstanceValue.type = getInstanceOfClassTag(newInstance);
+                            newInstanceValue.value = (s64) (intptr_t) newInstance;
+
+                            // No exception
+                            exceptionValue.type = JDWP_TAG_OBJECT;
+                            exceptionValue.value = 0;
+                        }
+
+                        // Write return value and exception
+                        writeValueType(res, &newInstanceValue);
+                        writeValueType(res, &exceptionValue);
+
+                        // Clean up parameter stack
+                        if (paraStack) {
+                            stack_destroy(paraStack);
+                        }
+
+                    } else {
+                        // Instance creation failed
+                        jdwppacket_set_err(res, JDWP_ERROR_OUT_OF_MEMORY);
+                    }
+
+                    jdwp_packet_put(jdwpserver, res);
+                    gc_move_objs_thread_2_gc(runtime);
+                    gc_resume(jdwpserver->jvm->collector);
+                } else {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
+                    jdwp_packet_put(jdwpserver, res);
+                }
                 break;
             }
 //set 4
 
             case JDWP_CMD_ArrayType_NewInstance: {//4.1
-                jvm_printf("[JDWP]%x not support\n", jdwppacket_get_cmd_err(req));
-                jdwppacket_set_err(res, JDWP_ERROR_NOT_IMPLEMENTED);
-                jdwp_packet_put(jdwpserver, res);
+                JClass *arrayType = jdwppacket_read_refer(req);
+                if (is_class_exists(jdwpserver->jvm, arrayType)) {
+                    // Check if it's actually an array type
+                    if (arrayType->mb.arr_type_index == 0) {
+                        jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
+                        jdwp_packet_put(jdwpserver, res);
+                        break;
+                    }
+
+                    s32 length = jdwppacket_read_int(req);
+
+                    if (length < 0) {
+                        // Negative array size
+                        jdwppacket_set_err(res, JDWP_ERROR_ILLEGAL_ARGUMENT);
+                        jdwp_packet_put(jdwpserver, res);
+                        break;
+                    }
+
+                    // Check for potential integer overflow in size calculation
+                    s32 typeIdx = arrayType->mb.arr_type_index;
+                    s32 width = DATA_TYPE_BYTES[typeIdx];
+                    if (length > 0 && width > 0) {
+                        // Check if length * width would overflow (use 2147483647 as max s32)
+                        if (length > (2147483647 - instance_base_size()) / width) {
+                            jdwppacket_set_err(res, JDWP_ERROR_OUT_OF_MEMORY);
+                            jdwp_packet_put(jdwpserver, res);
+                            break;
+                        }
+                    }
+
+                    gc_pause(jdwpserver->jvm->collector);
+                    Runtime *runtime = jdwp_get_runtime(jdwpserver);
+
+                    // Create array instance
+                    Instance *newArray = jarray_create_by_class(runtime, length, arrayType);
+                    if (newArray) {
+                        jdwp_client_hold_obj(client, newArray);
+                        jdwppacket_set_err(res, JDWP_ERROR_NONE);
+
+                        // Return new array instance
+                        ValueType arrayValue;
+                        arrayValue.type = getInstanceOfClassTag(newArray);
+                        arrayValue.value = (s64) (intptr_t) newArray;
+                        writeValueType(res, &arrayValue);
+                    } else {
+                        // Array creation failed
+                        jdwppacket_set_err(res, JDWP_ERROR_OUT_OF_MEMORY);
+                    }
+
+                    jdwp_packet_put(jdwpserver, res);
+                    gc_move_objs_thread_2_gc(runtime);
+                    gc_resume(jdwpserver->jvm->collector);
+                } else {
+                    jdwppacket_set_err(res, JDWP_ERROR_INVALID_CLASS);
+                    jdwp_packet_put(jdwpserver, res);
+                }
                 break;
             }
 //set 5
