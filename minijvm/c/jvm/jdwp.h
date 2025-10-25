@@ -452,13 +452,22 @@ enum {
 };
 struct _JdwpStep {
     u8 active;
-    u8 next_type;
-    s32 next_stop_runtime_depth;
-    union {
-        s32 next_stop_bytecode_count;
-        s32 next_stop_line_no;
-    };
-    s32 bytecode_count;
+    u8 step_type;  // NEXT_TYPE_INTO, NEXT_TYPE_OVER, NEXT_TYPE_OUT, NEXT_TYPE_SINGLE
+
+    // Target control information
+    __refer target_method;        // Target method for precise control
+    s32 target_line_no;          // Target line number (for STEP_OVER)
+    s32 target_bytecode_pos;     // Target bytecode position
+    s32 target_depth;            // Target call depth (for STEP_OUT)
+
+    // Current state when stepping started
+    __refer start_method;        // Method when stepping started
+    s32 start_line_no;          // Line number when stepping started
+    s32 start_depth;            // Call depth when stepping started
+
+    // Control flags
+    __refer target_thread;       // Target thread (only this thread's step events are valid)
+    s32 bytecode_count;         // For single instruction stepping
 };
 
 enum {
@@ -495,7 +504,11 @@ void jdwp_check_breakpoint(Runtime *runtime);
 
 void jdwp_check_debug_step(Runtime *runtime);
 
+void jdwp_apply_suspend_policy(JdwpServer *jdwpserver, u8 suspendPolicy, Runtime *event_thread);
+
 s32 jdwp_client_count(JdwpServer *jdwpserver);
+
+s32 jdwp_has_active_stepping(JdwpServer *jdwpserver);
 
 #ifdef __cplusplus
 }

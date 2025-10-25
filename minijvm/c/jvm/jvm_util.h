@@ -293,6 +293,17 @@ s32 check_throw_interruptexception(Runtime *runtime);
 
 s32 check_suspend_and_pause(Runtime *runtime);
 
+void thread_add_held_lock(Runtime *runtime, MemoryBlock *lock);
+
+void thread_remove_held_lock(Runtime *runtime, MemoryBlock *lock);
+
+s32 thread_owns_lock(Runtime *runtime, MemoryBlock *lock);
+
+void temporarily_resume_for_lock_release(Runtime *suspended_thread, MemoryBlock *lock);
+
+// JDWP条件检查宏
+#define IS_JDWP_ENABLED(runtime) ((runtime)->jvm && (runtime)->jvm->jdwp_enable != 0)
+
 void thread_lock_dispose(ThreadLock *lock);
 
 void thread_lock_init(ThreadLock *lock);

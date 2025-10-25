@@ -2,6 +2,7 @@
 #include "jvm.h"
 #include "garbage.h"
 #include "jvm_util.h"
+#include "jdwp.h"
 
 #if __JVM_LTALLOC__
 
@@ -602,7 +603,7 @@ s64 _garbage_collect(GcCollector *collector) {
  */
 static void _list_iter_thread_pause(ArrayListValue value, void *para) {
 #if _JVM_DEBUG_LOG_LEVEL > 1
-    print_runtime_stack((Runtime *) value);
+    //print_runtime_stack((Runtime *) value);
 #endif
     jthread_suspend((Runtime *) value);
 }
