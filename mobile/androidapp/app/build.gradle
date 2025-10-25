@@ -3,6 +3,7 @@ plugins {
 }
 
 android {
+    namespace "org.minijvm.activity"
     lint {
         baseline = file("lint-baseline.xml")
     }
@@ -18,7 +19,7 @@ android {
     defaultConfig {
         applicationId "org.minijvm.activity"
         minSdkVersion 19
-        targetSdkVersion 30
+        targetSdkVersion 34
         versionCode 1
         versionName "1.0.7"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -53,7 +54,7 @@ android {
     sourceSets.main {
         assets.srcDirs = ["../../assets/"]
     }
-    ndkVersion '27.0.12077973'
+    ndkVersion '29.0.14206865'
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
