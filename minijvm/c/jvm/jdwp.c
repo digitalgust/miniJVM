@@ -602,21 +602,27 @@ s32 jdwp_writepacket(JdwpClient *client, JdwpPacket *packet) {
 //==================================================    toolkit    ==================================================
 
 void suspend_all_thread(MiniJVM *jvm) {
-    s32 i;
-    for (i = 0; i < jvm->thread_list->length; i++) {
-        Runtime *t = threadlist_get(jvm, i);
-        if (t)jthread_suspend(t);
-        //jvm_printf("[JDWP]VirtualMachine_Suspend: %lld\n" + (s64) (intptr_t) t);
+    spin_lock(&jvm->thread_list->spinlock);
+    {
+        for (s32 i = 0; i < jvm->thread_list->length; i++) {
+            Runtime *t = arraylist_get_value_unsafe(jvm->thread_list, i);
+            if (t)jthread_suspend(t);
+            //jvm_printf("[JDWP]VirtualMachine_Suspend: %lld\n" + (s64) (intptr_t) t);
+        }
     }
+    spin_unlock(&jvm->thread_list->spinlock);
 }
 
 void resume_all_thread(MiniJVM *jvm) {
-    s32 i;
-    for (i = 0; i < jvm->thread_list->length; i++) {
-        Runtime *t = threadlist_get(jvm, i);
-        if (t)jthread_resume(t);
-        //jvm_printf("[JDWP]VirtualMachine_Suspend: %lld\n" + (s64) (intptr_t) t);
+    spin_lock(&jvm->thread_list->spinlock);
+    {
+        for (s32 i = 0; i < jvm->thread_list->length; i++) {
+            Runtime *t = arraylist_get_value_unsafe(jvm->thread_list, i);
+            if (t)jthread_resume(t);
+            //jvm_printf("[JDWP]VirtualMachine_Suspend: %lld\n" + (s64) (intptr_t) t);
+        }
     }
+    spin_unlock(&jvm->thread_list->spinlock);
 }
 
 void signatureToName(Utf8String *signature) {
@@ -921,45 +927,65 @@ void jdwp_check_debug_step(Runtime *runtime) {
     JdwpServer *jdwpserver = runtime->jvm->jdwpserver;
     JdwpStep *step = (runtime->thrd_info->jdwp_step);
 
-    s32 suspend = 0;
-    switch (step->next_type) {
+    if (!step->active) return;
+
+    // Only check stepping for the specific target thread
+    if (step->target_thread != runtime->thrd_info->jthread) return;
+
+    s32 should_suspend = 0;
+    s32 current_depth = getRuntimeDepth(runtime->thrd_info->top_runtime);
+    MethodInfo *current_method = runtime->method;
+    CodeAttribute *ca = current_method->converted_code;
+
+    switch (step->step_type) {
         case NEXT_TYPE_SINGLE:
-            if (step->bytecode_count >= step->next_stop_bytecode_count) {
-                suspend = 1;
+            // Single instruction stepping
+            if (step->bytecode_count >= 1) {
+                should_suspend = 1;
             }
             break;
-        case NEXT_TYPE_OVER: {
-            CodeAttribute *ca = runtime->method->converted_code;
-            if (ca) {
-                s32 depth = getRuntimeDepth(runtime->thrd_info->top_runtime);
-                if (depth == step->next_stop_runtime_depth) {
-                    s32 lineNo = getLineNumByIndex(ca, (s32) (runtime->pc - ca->code));
-//                    jvm_printf("[jdwp] STEPOVER: %s, depth=%d/%d, pc=%d, line=%d/%d\n",
-//                               utf8_cstr(runtime->method->name),
-//                               depth, step->next_stop_runtime_depth,
-//                               runtime->pc - ca->code,
-//                               lineNo, step->next_stop_line_no);
-                    if (lineNo != step->next_stop_line_no) {
-                        suspend = 1;
-                    }
-                } else if (depth < step->next_stop_runtime_depth) {
-                    suspend = 1;
+
+        case NEXT_TYPE_INTO:
+            // Step into: stop when method changes or line changes
+            if (current_method != step->start_method) {
+                should_suspend = 1;
+            } else if (ca) {
+                s32 current_line = getLineNumByIndex(ca, (s32) (runtime->pc - ca->code));
+                // For native methods, both start_line_no and current_line will be -1
+                // We should not trigger step events for native methods unless method changes
+                if (current_line != step->start_line_no && current_line > 0 && step->start_line_no > 0) {
+                    should_suspend = 1;
                 }
             }
             break;
-        }
-        case NEXT_TYPE_INTO:
-            if (getRuntimeDepth(runtime->thrd_info->top_runtime) <= step->next_stop_runtime_depth) {// at least equile nextstop, or lessthan nextstop
-                suspend = 1;
+
+        case NEXT_TYPE_OVER:
+            // Step over: stop at same depth with different line, or when returning to upper level
+            if (current_depth < step->start_depth) {
+                should_suspend = 1;  // Returned to upper level
+            } else if (current_depth == step->start_depth && ca) {
+                s32 current_line = getLineNumByIndex(ca, (s32) (runtime->pc - ca->code));
+                // For native methods, both start_line_no and current_line will be -1
+                // We should not trigger step events for native methods unless method changes
+                if (current_line != step->start_line_no && current_line > 0 && step->start_line_no > 0) {
+                    should_suspend = 1;  // Same level, different line
+                }
             }
             break;
+
         case NEXT_TYPE_OUT:
-            if (getRuntimeDepth(runtime->thrd_info->top_runtime) == step->next_stop_runtime_depth) {
-                suspend = 1;
+            // Step out: stop when call depth decreases
+            if (current_depth < step->start_depth) {
+                should_suspend = 1;
             }
             break;
     }
-    if (suspend) {
+
+    if (should_suspend) {
+        // Stop stepping for current thread
+        step->active = 0;
+
+        // Send step event first, which will handle suspension based on EventSet policy
         event_on_debug_step(jdwpserver, runtime);
     }
 }
@@ -971,6 +997,38 @@ Runtime *jdwp_get_runtime(JdwpServer *srv) {
 s32 jdwp_is_ignore_sync(JdwpServer *srv) {
     if (!srv)return 1;//srv==NULL mean that vm is creating ,there isn't multi thread,so can be ignore
     return srv->thread_sync_ignore != 0;
+}
+
+//==================================================    event suspend helper    ==================================================
+
+/**
+ * Apply suspend policy for JDWP events
+ * @param jdwpserver JDWP server instance
+ * @param suspendPolicy The suspend policy from EventSet
+ * @param event_thread The thread that triggered the event (can be NULL)
+ */
+void jdwp_apply_suspend_policy(JdwpServer *jdwpserver, u8 suspendPolicy, Runtime *event_thread) {
+    switch (suspendPolicy) {
+        case JDWP_SUSPENDPOLICY_NONE:
+            // Do not suspend any threads
+            break;
+        case JDWP_SUSPENDPOLICY_EVENT_THREAD:
+            // Suspend only the thread that triggered the event
+            if (event_thread) {
+                jthread_suspend(event_thread);
+            }
+            break;
+        case JDWP_SUSPENDPOLICY_ALL:
+            // Suspend all threads
+            suspend_all_thread(jdwpserver->jvm);
+            break;
+        default:
+            // Default to suspending event thread for unknown policies
+            if (event_thread) {
+                jthread_suspend(event_thread);
+            }
+            break;
+    }
 }
 
 //==================================================    event    ==================================================
@@ -1075,9 +1133,8 @@ void event_on_class_prepare(JdwpServer *jdwpserver, Runtime *runtime, JClass *cl
                             }
                             if (classNameMatch) {
                                 send_class_prepare(jdwpserver, runtime, clazz, set, str);
-                                if (set->suspendPolicy != JDWP_SUSPENDPOLICY_NONE) {
-                                    if (runtime)jthread_suspend(runtime);
-                                }
+                                // Apply suspend policy for class prepare events
+                                jdwp_apply_suspend_policy(jdwpserver, set->suspendPolicy, runtime);
                             }
                         }
                     }
@@ -1175,7 +1232,9 @@ void event_on_breakpoint(JdwpServer *jdwpserver, Runtime *breakpoint_runtime) {
                     jdwppacket_write_refer(req, ei.thread);
                     writeLocation(req, &ei.loc);
                     jdwp_packet_put(jdwpserver, req);
-                    suspend_all_thread(jdwpserver->jvm);
+
+                    // Apply suspend policy based on EventSet configuration
+                    jdwp_apply_suspend_policy(jdwpserver, set->suspendPolicy, breakpoint_runtime);
                 }
             }
         }
@@ -1212,7 +1271,13 @@ void event_on_debug_step(JdwpServer *jdwpserver, Runtime *step_runtime) {
                 writeLocation(req, &ei.loc);
                 jdwp_packet_put(jdwpserver, req);
 
-                suspend_all_thread(jdwpserver->jvm);
+                MethodInfo *methodInfo = ei.loc.methodID;
+                if (utf8_equals_c(methodInfo->name, "wait")) {
+                    s32 debug = 1;
+                }
+
+                // Apply suspend policy for step events
+                jdwp_apply_suspend_policy(jdwpserver, set->suspendPolicy, step_runtime);
             }
         }
     }
@@ -1245,45 +1310,51 @@ s32 jdwp_set_breakpoint(JdwpServer *jdwpserver, s32 setOrClear, JClass *clazz, M
 
 
 s32 jdwp_set_debug_step(JdwpServer *jdwpserver, s32 setOrClear, Instance *jthread, s32 size, s32 depth) {
-    /**
-     * Due to different method call depths, the runtime of the son has a different level.
-     * This controls the virtual machine's method step_into and step_out.
-     */
     Runtime *r = jthread_get_stackframe_value(jdwpserver->jvm, jthread);
-    if (!r)return JDWP_ERROR_INVALID_THREAD;
+    if (!r) return JDWP_ERROR_INVALID_THREAD;
+
     Runtime *last = getLastSon(r);
     JdwpStep *step = r->thrd_info->jdwp_step;
+
     if (setOrClear) {
         step->active = 1;
-        if (depth == JDWP_STEPDEPTH_INTO) {
-            step->next_type = NEXT_TYPE_INTO;
-            step->next_stop_runtime_depth = getRuntimeDepth(r->thrd_info->top_runtime) + 1;
-        } else if (depth == JDWP_STEPDEPTH_OUT || (last->method && last->method->is_native)) {
-            step->next_type = NEXT_TYPE_OUT;
-            step->next_stop_runtime_depth = getRuntimeDepth(r->thrd_info->top_runtime) - 1;
+        step->target_thread = jthread;  // Bind to specific thread
+        step->start_method = last->method;
+        step->start_depth = getRuntimeDepth(r->thrd_info->top_runtime);
+        if (step->start_depth > 1) {
+            s32 debug = 1;
+        }
+
+        // Get current line number
+        if (last->method->converted_code) {
+            step->start_line_no = getLineNumByIndex(last->method->converted_code,
+                                                    (s32) (last->pc - last->method->converted_code->code));
         } else {
-            if (size == JDWP_STEPSIZE_LINE) {// current runtime
-                s32 cur_line_no = getLineNumByIndex(last->method->converted_code, (s32) (last->pc - last->method->converted_code->code));
-                step->next_type = NEXT_TYPE_OVER;
-                step->next_stop_line_no = cur_line_no;
-                step->next_stop_runtime_depth = getRuntimeDepth(r->thrd_info->top_runtime);
-//                if (utf8_equals_c(getLastSon(r)->method->name, "display") && (r->thrd_info->suspend_count == 0)) {
-//                    s32 debug = 1;
-//                }
-//
-//                jvm_printf("[jdwp] set  : %s, depth=%d, pc=%d, line=%d\n",
-//                           utf8_cstr(last->method->name),
-//                           step->next_stop_runtime_depth,
-//                           last->pc - last->method->converted_code->code,
-//                           cur_line_no);
+            step->start_line_no = -1;
+        }
+
+        // Set step type based on depth parameter
+        if (depth == JDWP_STEPDEPTH_INTO) {
+            step->step_type = NEXT_TYPE_INTO;
+        } else if (depth == JDWP_STEPDEPTH_OUT || (last->method && last->method->is_native)) {
+            step->step_type = NEXT_TYPE_OUT;
+        } else {
+            if (size == JDWP_STEPSIZE_LINE) {
+                step->step_type = NEXT_TYPE_OVER;
             } else {
-                step->next_type = NEXT_TYPE_SINGLE;
-                step->next_stop_bytecode_count = 1;
+                step->step_type = NEXT_TYPE_SINGLE;
             }
         }
+
+        // Reset bytecode counter for single instruction stepping
+        step->bytecode_count = 0;
+
     } else {
+        // Clear stepping
         step->active = 0;
+        step->target_thread = NULL;
     }
+
     return JDWP_ERROR_NONE;
 }
 
@@ -1702,7 +1773,9 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
         //jvm_printf("[JDWP]jdwp receiv cmd: %x\n", cmd);
         JdwpPacket *res = jdwppacket_create();
         jdwppacket_set_flag(res, JDWP_PACKET_RESPONSE);
-        jdwppacket_set_id(res, jdwppacket_get_id(req));
+        s32 reqid = jdwppacket_get_id(req);
+//        jvm_printf("jdwp_client_process: %x  id=%d\n", cmd, reqid);
+        jdwppacket_set_id(res, reqid);
         switch (cmd) {
 //set 1
             case JDWP_CMD_VirtualMachine_Version: {//1.1
@@ -2357,7 +2430,7 @@ s32 jdwp_client_process(JdwpServer *jdwpserver, JdwpClient *client) {
 
                         // Build method signature and call constructor
                         Utf8String *methodSig = utf8_create_copy(constructor->descriptor);
-                        instance_init_with_para(newInstance, runtime, utf8_cstr(methodSig), paraStack);
+                        instance_init_with_para(newInstance, runtime, (c8 *) utf8_cstr(methodSig), paraStack);
                         utf8_destroy(methodSig);
 
                         jdwpserver->thread_sync_ignore = 0;

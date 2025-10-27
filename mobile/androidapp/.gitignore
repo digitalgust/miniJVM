@@ -4,4 +4,7 @@
 build/
 captures/
 .externalNativeBuild
-app/
+app/.cxx
+app/build
+app/target
+app/debug

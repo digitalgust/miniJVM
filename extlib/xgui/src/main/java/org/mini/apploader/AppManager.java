@@ -97,7 +97,6 @@ public final class AppManager extends GApplication implements XuiAppHolder {
     GHomeButton floatButton;
 
     MiniHttpServer webServer;
-    List<MiniHttpClient> httpClients = new ArrayList<>();
     Map<String, GApplication> runningApps = new HashMap<>();
 
     GImage runningImg = GImage.createImageFromJar("/res/ui/green.png");
@@ -319,7 +318,6 @@ public final class AppManager extends GApplication implements XuiAppHolder {
 
     public MiniHttpClient.DownloadCompletedHandle getDownloadCallback() {
         return (client, url, data) -> {
-            httpClients.remove(client);
             log("Download success " + url + " ,size: " + data.length);
             GForm.addMessage((data == null ? getString(STR_FAIL) : getString(STR_SUCCESS)) + " " + getString(STR_DOWNLOAD) + " " + url);
             String jarName = null;
@@ -721,7 +719,6 @@ public final class AppManager extends GApplication implements XuiAppHolder {
                             GuiScriptLib.showProgressBar(getForm(), progress);
                         }
                     });
-                    httpClients.add(hc);
                     hc.start();
                     break;
                 case "BT_TEST":
@@ -751,7 +748,6 @@ public final class AppManager extends GApplication implements XuiAppHolder {
                                 }
                             });
                             hc.start();
-                            httpClients.add(hc);
                         }
                     }
                     break;

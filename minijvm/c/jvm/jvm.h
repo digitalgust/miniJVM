@@ -1320,6 +1320,8 @@ struct _JavaThreadInfo {
     MemoryBlock *objs_header;//link to new instance, until garbage accept
     MemoryBlock *objs_tailer;//link to last instance, until garbage accept
     MemoryBlock *curThreadLock;//if thread is locked ,the filed save the lock
+    ArrayList *held_locks;//list of locks held by this thread for precise debugging (JDWP only)
+    MemoryBlock *pending_release_lock;//lock that needs to be released for suspension (JDWP only)
 
     ArrayList *stacktrack;  //save methodrawindex, the pos 0 is the throw point
     ArrayList *lineNo;  //save methodrawindex, the pos 0 is the throw point
@@ -1915,7 +1917,7 @@ typedef struct _ShortCut {
 struct _ThreadLock {
     cnd_t thread_cond;
     mtx_t mutex_lock; //互斥锁
-    void *owner_thread; // 锁的所有者线程
+    JavaThreadInfo *owner_thread; // 锁的所有者线程
     int count; // 重入计数
 };
 //======================= Jvm =============================

@@ -891,8 +891,25 @@ s32 jthread_lock(MemoryBlock *mb, Runtime *runtime) { //可能会重入，同一
     struct timespec t;
     t.tv_nsec = 5 * NANO_2_MILLS_SCALE;
     t.tv_sec = 0;
+
     //can pause when lock
     while (mtx_timedlock(&jtl->mutex_lock, &t) != thrd_success) {
+        // 检查是否有被挂起的线程持有该锁（仅JDWP模式）
+        if (IS_JDWP_ENABLED(runtime)) {
+            Runtime *lock_holder = mb->thread_lock->owner_thread ? mb->thread_lock->owner_thread->top_runtime : NULL;
+            if (lock_holder && lock_holder != runtime &&
+                lock_holder->thrd_info->suspend_count > 0) {
+
+//                jvm_printf("[LOCK_CONTENTION] Thread %llx waiting for lock %llx held by suspended thread %llx\n",
+//                           (s64) (intptr_t) runtime->thrd_info->jthread,
+//                           (s64) (intptr_t) mb,
+//                           (s64) (intptr_t) lock_holder->thrd_info->jthread);
+
+                // 临时恢复被挂起的线程直到它释放锁
+                temporarily_resume_for_lock_release(lock_holder, mb);
+            }
+        }
+
         check_suspend_and_pause(runtime);
         if (runtime->thrd_info->type == THREAD_TYPE_JDWP) {
             break;
@@ -910,7 +927,14 @@ s32 jthread_lock(MemoryBlock *mb, Runtime *runtime) { //可能会重入，同一
         // 成功获取锁后，设置锁的所有者和计数
         jtl->owner_thread = current_thread;
         jtl->count = 1;
+        // 第一次获得锁时，记录锁对象（用于调试）
+        if (!runtime->thrd_info->held_locks || runtime->thrd_info->held_locks->length == 0) {
+            runtime->thrd_info->curThreadLock = mb;
+        }
+        // 添加到精确的锁跟踪列表
+        thread_add_held_lock(runtime, mb);
     }
+
 #if _JVM_DEBUG_LOG_LEVEL > 5
     if (i > 0) {
         waitTime = currentTimeMillis() - waitTime;
@@ -944,6 +968,12 @@ s32 jthread_unlock(MemoryBlock *mb, Runtime *runtime) {
     jtl->count--;
     if (jtl->count == 0) {
         jtl->owner_thread = NULL;
+        // 当完全不持有任何锁时，清除 curThreadLock
+        if (!runtime->thrd_info->held_locks || runtime->thrd_info->held_locks->length <= 1) {
+            runtime->thrd_info->curThreadLock = NULL;
+        }
+        // 从精确的锁跟踪列表中移除
+        thread_remove_held_lock(runtime, mb);
     }
     s32 ret = mtx_unlock(&jtl->mutex_lock);
     if (ret != thrd_success) {
@@ -1001,6 +1031,7 @@ s32 jthread_yield(Runtime *runtime) {
 s32 jthread_suspend(Runtime *runtime) {
     spin_lock(&runtime->thrd_info->lock);
     runtime->thrd_info->suspend_count++;
+    //jvm_printf("[DEBUG] Thread %llx is suspended  %d\n", (s64) (intptr_t) (runtime->thrd_info->jthread), runtime->thrd_info->suspend_count);
     spin_unlock(&runtime->thrd_info->lock);
     return 0;
 }
@@ -1017,6 +1048,7 @@ void jthread_block_exit(Runtime *runtime) {
 s32 jthread_resume(Runtime *runtime) {
     spin_lock(&runtime->thrd_info->lock);
     if (runtime->thrd_info->suspend_count > 0)runtime->thrd_info->suspend_count--;
+    //jvm_printf("[DEBUG] Thread %llx is resumed    %d\n", (s64) (intptr_t) (runtime->thrd_info->jthread), runtime->thrd_info->suspend_count);
     spin_unlock(&runtime->thrd_info->lock);
     return 0;
 }
@@ -1027,13 +1059,20 @@ s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms) {
         jthreadlock_create(runtime, mb);
     }
     jthread_block_enter(runtime);
-    runtime->thrd_info->curThreadLock = mb;
     u8 thread_status = runtime->thrd_info->thread_status;
     runtime->thrd_info->thread_status = THREAD_STATUS_WAIT;
 
     // wait会释放锁，因此保存锁的拥有者和计数
     void *saveThread = mb->thread_lock->owner_thread;
     s32 saveCount = mb->thread_lock->count;
+    // wait期间减少锁计数，因为锁会被释放
+    if (IS_JDWP_ENABLED(runtime) && saveCount > 0) {
+        // 从 held_locks 中临时移除该锁
+        arraylist_remove(runtime->thrd_info->held_locks, mb);
+        if (runtime->thrd_info->held_locks->length == 0) {
+            runtime->thrd_info->curThreadLock = NULL;
+        }
+    }
     mb->thread_lock->owner_thread = NULL;
     mb->thread_lock->count = 0;
     if (waitms) {
@@ -1048,11 +1087,18 @@ s32 jthread_waitTime(MemoryBlock *mb, Runtime *runtime, s64 waitms) {
     }
     //jvm_printf("!!!!!wake: %llx   \n", (s64) (intptr_t) (&mb->thread_lock->thread_cond));
     runtime->thrd_info->thread_status = thread_status;
-    runtime->thrd_info->curThreadLock = NULL;
 
     //wait结束时，获得锁后恢复锁的拥有者和计数
     mb->thread_lock->owner_thread = saveThread;
     mb->thread_lock->count = saveCount;
+    // 恢复锁计数和 curThreadLock 状态
+    if (IS_JDWP_ENABLED(runtime) && saveCount > 0) {
+        // 重新添加到 held_locks
+        arraylist_push_back(runtime->thrd_info->held_locks, mb);
+        if (runtime->thrd_info->held_locks->length == 1) {
+            runtime->thrd_info->curThreadLock = mb;
+        }
+    }
     jthread_block_exit(runtime);
     return check_throw_interruptexception(runtime);
 }
@@ -1103,6 +1149,29 @@ s32 check_suspend_and_pause(Runtime *runtime) {
     JavaThreadInfo *threadInfo = runtime->thrd_info;
     MiniJVM *jvm = runtime->jvm;
     if (threadInfo->suspend_count && !threadInfo->no_pause) {
+        // 使用精确的锁列表检查线程是否持有任何锁（仅JDWP模式）
+        // 只有当线程持有pending_release_lock时才延迟挂起（精确的锁冲突检测）
+        if (IS_JDWP_ENABLED(runtime) && threadInfo->pending_release_lock != NULL) {
+            // 检查当前线程是否在单步调试模式
+            u8 is_stepping = threadInfo->jdwp_step && threadInfo->jdwp_step->active;
+
+            // 只有在单步模式下才启用防死锁机制
+            if (is_stepping && thread_owns_lock(runtime, threadInfo->pending_release_lock)) {
+                // jvm_printf("[DEBUG] Thread %llx in stepping mode, defer suspension for lock %llx\n", 
+                //           (s64) (intptr_t) threadInfo->jthread, 
+                //           (s64) (intptr_t) threadInfo->pending_release_lock);
+                return 0; // 单步模式：返回而不挂起
+            } else if (!is_stepping) {
+                // 断点模式：清除pending_release_lock标记，强制挂起
+                threadInfo->pending_release_lock = NULL;
+                // jvm_printf("[DEBUG] Thread %llx in breakpoint mode, force suspension\n", 
+                //           (s64) (intptr_t) threadInfo->jthread);
+            } else {
+                // 如果不再持有待释放的锁，清除标记
+                threadInfo->pending_release_lock = NULL;
+            }
+        }
+
         vm_share_lock(jvm);
         threadInfo->is_suspend = 1;
         vm_share_notifyall(jvm);
@@ -2131,4 +2200,135 @@ void init_jni_func_table(MiniJVM *jvm) {
     jnienv.jthread_get_daemon_value = jthread_get_daemon_value;
     jnienv.jthread_set_daemon_value = jthread_set_daemon_value;
     jnienv.get_jvm_state = get_jvm_state;
+}
+
+/**
+ * 将锁添加到线程的持有锁列表（仅JDWP模式）
+ */
+void thread_add_held_lock(Runtime *runtime, MemoryBlock *lock) {
+    JavaThreadInfo *threadInfo = runtime->thrd_info;
+
+    // 只在JDWP启用时才维护锁列表
+    if (!IS_JDWP_ENABLED(runtime)) {
+        return;
+    }
+
+    if (!threadInfo->held_locks) {
+        threadInfo->held_locks = arraylist_create(0);
+    }
+
+    // 使用 arraylist_index_of 检查是否已经存在（防止重复添加）
+    if (arraylist_index_of(threadInfo->held_locks, arraylist_compare_ptr, lock) == -1) {
+        arraylist_push_back(threadInfo->held_locks, lock);
+//        jvm_printf("[LOCK_TRACK] Thread %llx acquired lock %llx, total locks: %d\n",
+//                   (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock,
+//                   threadInfo->held_locks->length);
+    }
+}
+
+/**
+ * 从线程的持有锁列表中移除锁（仅JDWP模式）
+ */
+void thread_remove_held_lock(Runtime *runtime, MemoryBlock *lock) {
+    JavaThreadInfo *threadInfo = runtime->thrd_info;
+
+    // 只在JDWP启用时才维护锁列表
+    if (!IS_JDWP_ENABLED(runtime) || !threadInfo->held_locks) {
+        return;
+    }
+
+    // 使用 arraylist_remove 直接移除
+    if (arraylist_remove(threadInfo->held_locks, lock)) {
+//        jvm_printf("[LOCK_TRACK] Thread %llx released lock %llx, remaining locks: %d\n",
+//                   (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock,
+//                   threadInfo->held_locks->length);
+
+        // 检查是否是待释放的锁，如果是则主动检查挂起
+        if (threadInfo->pending_release_lock == lock) {
+            threadInfo->pending_release_lock = NULL;
+//            jvm_printf("[ACTIVE_SUSPEND] Thread %llx released pending lock %llx, checking suspension\n",
+//                       (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock);
+            // 主动检查是否需要挂起
+            check_suspend_and_pause(runtime);
+        }
+    }
+}
+
+/**
+ * 检查线程是否持有指定的锁（仅JDWP模式）
+ */
+s32 thread_owns_lock(Runtime *runtime, MemoryBlock *lock) {
+    JavaThreadInfo *threadInfo = runtime->thrd_info;
+
+    // 只在JDWP启用时才检查锁列表
+    if (!IS_JDWP_ENABLED(runtime) || !threadInfo->held_locks) {
+        return 0;
+    }
+
+    // 使用 arraylist_index_of 查找锁
+    return arraylist_index_of(threadInfo->held_locks, arraylist_compare_ptr, lock) != -1;
+}
+
+/**
+ * 查找持有指定锁的线程
+ */
+Runtime *find_thread_holding_lock(MiniJVM *jvm, MemoryBlock *lock) {
+    // 注意：这里需要遍历所有线程，实际实现中应该维护一个线程列表
+    // 这里作为简化实现，直接检查锁的拥有者
+    if (lock && lock->thread_lock && lock->thread_lock->owner_thread) {
+        JavaThreadInfo *owner_info = (JavaThreadInfo *) lock->thread_lock->owner_thread;
+        return owner_info->top_runtime;
+    }
+    return NULL;
+}
+
+/**
+ * 临时恢复被挂起的线程直到它释放指定的锁
+ */
+void temporarily_resume_for_lock_release(Runtime *suspended_thread, MemoryBlock *lock) {
+    JavaThreadInfo *threadInfo = suspended_thread->thrd_info;
+
+//    jvm_printf("[LOCK_RESOLVE] Temporarily resuming thread %llx to release lock %llx\n",
+//               (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock);
+
+    // 保存原有的挂起状态
+    s32 original_suspend_count = threadInfo->suspend_count;
+
+    // 设置待释放的锁，用于主动挂起
+    threadInfo->pending_release_lock = lock;
+
+    // 临时恢复线程
+    threadInfo->suspend_count = 0;
+
+    // 等待线程释放锁（或者主动挂起）
+    s32 max_wait_cycles = 1000; // 最大等待周期
+    s32 cycles = 0;
+
+    while (thread_owns_lock(suspended_thread, lock) && cycles < max_wait_cycles) {
+        threadSleep(5); // 等待5毫秒
+        cycles++;
+
+        // 检查是否已经主动挂起
+        if (threadInfo->suspend_count > 0) {
+//            jvm_printf("[LOCK_RESOLVE] Thread %llx actively suspended after releasing lock %llx\n",
+//                       (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock);
+            return; // 已经主动挂起，无需继续等待
+        }
+    }
+
+//    if (cycles >= max_wait_cycles) {
+//        jvm_printf("[WARNING] Thread %llx did not release lock %llx within timeout\n",
+//                   (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock);
+//    } else {
+//        jvm_printf("[LOCK_RESOLVE] Thread %llx successfully released lock %llx\n",
+//                   (s64) (intptr_t) threadInfo->jthread, (s64) (intptr_t) lock);
+//    }
+
+    // 恢复原有的挂起状态（如果没有主动挂起）
+    if (threadInfo->suspend_count == 0) {
+        threadInfo->suspend_count = original_suspend_count;
+    }
+
+    // 清除待释放锁标记
+    threadInfo->pending_release_lock = NULL;
 }

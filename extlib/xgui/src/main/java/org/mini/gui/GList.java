@@ -395,14 +395,42 @@ public class GList extends GContainer {
         return null;
     }
 
+
     public void setSelectedIndex(int i) {
-        selected.clear();
-        if (i >= 0 && i < popView.getElementsImpl().size()) {
-            selected.add(i);
-            float scrollY = (float) i / getElementSize();
-            popView.setScrollY(scrollY);
+        this.selected.clear();
+        if (i >= 0 && i < this.popView.getElementsImpl().size()) {
+            this.selected.add(i);
+            float viewHeight = this.popView.getH();
+            float itemHeight = this.list_item_heigh;
+            float currentScrollY = this.popView.getScrollY();
+            float totalContentHeight = (float) this.getElementSize() * itemHeight;
+            float visibleTopY = currentScrollY * (totalContentHeight - viewHeight);
+            float visibleBottomY = visibleTopY + viewHeight;
+            float itemTopY = (float) i * itemHeight;
+            float itemBottomY = itemTopY + itemHeight;
+            boolean itemVisible = itemTopY >= visibleTopY && itemBottomY <= visibleBottomY;
+            if (!itemVisible) {
+                float targetScrollY;
+                if (itemTopY < visibleTopY) {
+                    targetScrollY = itemTopY / (totalContentHeight - viewHeight);
+                } else {
+                    targetScrollY = (itemBottomY - viewHeight) / (totalContentHeight - viewHeight);
+                }
+
+                if (targetScrollY < 0.0F) {
+                    targetScrollY = 0.0F;
+                }
+
+                if (targetScrollY > 1.0F) {
+                    targetScrollY = 1.0F;
+                }
+
+                this.popView.setScrollY(targetScrollY);
+            }
         }
+
     }
+
 
     public int[] getSelectedIndices() {
         int size = selected.size();
