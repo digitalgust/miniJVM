@@ -518,12 +518,8 @@ static inline s32 _optimize_inline_setter(JClass *clazz, s32 cfrIdx, Runtime *ru
 
 s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
-
-
     //local var for control
-    MiniJVM *jvm;
     s32 ret;
-    c8 const *err_msg;
     Runtime *r;
     RuntimeStack *stack;
     LocalVarItem *localvar;
@@ -534,8 +530,6 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
     //start
     ret = RUNTIME_STATUS_NORMAL;
     r = runtime_create_inl(pruntime);
-
-    jvm = r->jvm;
 
     clazz = method->_this_class;
     r->clazz = clazz;
@@ -621,7 +615,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                 sp = r->stack->sp;
 
                 do {
-                    if (jdwp_client_count(jvm->jdwpserver)) {
+                    if (jdwp_client_count(r->jvm->jdwpserver)) {
                         stack->sp = sp;
 
                         if (!r->thrd_info->no_pause) {
@@ -639,7 +633,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         check_gc_pause(-1);  //step debug required
                     }
 #if _JVM_DEBUG_LOG_LEVEL > 1
-                    if (jvm->collector->isworldstoped && thrd_info->top_runtime != jvm->collector->runtime) {
+                    if (r->jvm->collector->isworldstoped && thrd_info->top_runtime != r->jvm->collector->runtime) {
                         jvm_printf("[ERROR] world stopped, but thread is running: %llx\n", (s64) (intptr_t) r->thrd_info->jthread);
                     }
 #endif   //_JVM_DEBUG_LOG_LEVEL > 1
@@ -2781,7 +2775,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                 sp = stack->sp;
                                 r->cfr->fieldInfo = r->fi;
                                 if (!r->fi) {
-                                    err_msg = utf8_cstr(r->cfr->name);
+                                    r->err_msg = utf8_cstr(r->cfr->name);
                                     goto label_nosuchfield_throw;
                                 }
                             }
@@ -2837,7 +2831,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                                 r->cfr->fieldInfo = r->fi;
                                 if (!r->fi) {
-                                    err_msg = utf8_cstr(r->cfr->name);
+                                    r->err_msg = utf8_cstr(r->cfr->name);
                                     goto label_nosuchfield_throw;
                                 }
                             }
@@ -2879,7 +2873,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
 
                         case op_getfield: {
                             s8 byte_changed = 0;
-                            spin_lock(&jvm->lock_cloader);
+                            spin_lock(&r->jvm->lock_cloader);
                             {
                                 if (*(r->pc) == op_getfield) {
                                     r->idx = *((u16 *) (r->pc + 1));
@@ -2887,7 +2881,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     byte_changed = 1;
                                 }
                             }
-                            spin_unlock(&jvm->lock_cloader);
+                            spin_unlock(&r->jvm->lock_cloader);
 
                             if (!byte_changed) {
                                 r->fi = class_get_constant_fieldref(clazz, r->idx)->fieldInfo;
@@ -2898,7 +2892,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     sp = stack->sp;
                                     r->cfr->fieldInfo = r->fi;
                                     if (!r->fi) {
-                                        err_msg = utf8_cstr(r->cfr->name);
+                                        r->err_msg = utf8_cstr(r->cfr->name);
                                         goto label_nosuchfield_throw;
                                     }
                                 }
@@ -2907,7 +2901,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     class_clinit(r->fi->_this_class, r);
                                     sp = stack->sp;
                                 }
-                                spin_lock(&jvm->lock_cloader);
+                                spin_lock(&r->jvm->lock_cloader);
                                 {
                                     if (r->fi->isrefer) {
                                         *r->pc = op_getfield_ref;
@@ -2941,7 +2935,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     }
                                     *((u16 *) (r->pc + 1)) = r->fi->offset_instance;
                                 }
-                                spin_unlock(&jvm->lock_cloader);
+                                spin_unlock(&r->jvm->lock_cloader);
                             } else {
                                 //jvm_printf("getfield byte code changed by r->other thread.\n");
                             }
@@ -2953,7 +2947,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             //there were a multithread error , one enter the r->ins but changed by another
                             s8 byte_changed = 0;
 
-                            spin_lock(&jvm->lock_cloader);
+                            spin_lock(&r->jvm->lock_cloader);
                             {
                                 if (*(r->pc) == op_putfield) {
                                     r->idx = *((u16 *) (r->pc + 1));
@@ -2961,7 +2955,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     byte_changed = 1;
                                 }
                             }
-                            spin_unlock(&jvm->lock_cloader);
+                            spin_unlock(&r->jvm->lock_cloader);
 
                             if (!byte_changed) {
                                 r->fi = class_get_constant_fieldref(clazz, r->idx)->fieldInfo;
@@ -2973,7 +2967,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     sp = stack->sp;
                                     r->cfr->fieldInfo = r->fi;
                                     if (!r->fi) {
-                                        err_msg = utf8_cstr(r->cfr->name);
+                                        r->err_msg = utf8_cstr(r->cfr->name);
                                         goto label_nosuchfield_throw;
                                     }
                                 }
@@ -2982,7 +2976,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     class_clinit(r->fi->_this_class, r);
                                     sp = stack->sp;
                                 }
-                                spin_lock(&jvm->lock_cloader);
+                                spin_lock(&r->jvm->lock_cloader);
                                 {
                                     if (r->fi->isrefer) {// garbage collection flag
                                         *r->pc = op_putfield_ref;
@@ -3012,7 +3006,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     }
                                     *((u16 *) (r->pc + 1)) = r->fi->offset_instance;
                                 }
-                                spin_unlock(&jvm->lock_cloader);
+                                spin_unlock(&r->jvm->lock_cloader);
                             } else {
                                 //jvm_printf("putfield byte code changed by r->other thread.\n");
                             }
@@ -3033,15 +3027,15 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     stack->sp = sp;
                                     r->m = find_instance_methodInfo_by_name(r->ins, r->cmr->name, r->cmr->descriptor, r);
                                     sp = stack->sp;
-                                    spin_lock(&jvm->lock_cloader);
+                                    spin_lock(&r->jvm->lock_cloader);
                                     {
                                         pairlist_put(r->cmr->virtual_methods, r->ins->mb.clazz, r->m);//放入缓存，以便下次直接调用
                                     }
-                                    spin_unlock(&jvm->lock_cloader);
+                                    spin_unlock(&r->jvm->lock_cloader);
                                 }
 
                                 if (!r->m) {
-                                    err_msg = utf8_cstr(r->cmr->name);
+                                    r->err_msg = utf8_cstr(r->cmr->name);
                                     goto label_nosuchmethod_throw;
                                 } else {
                                     s8 match = 0;
@@ -3089,7 +3083,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->m = r->cmr->methodInfo;
 
                             if (!r->m) {
-                                err_msg = utf8_cstr(r->cmr->name);
+                                r->err_msg = utf8_cstr(r->cmr->name);
                                 goto label_nosuchmethod_throw;
                             } else {
                                 *r->pc = op_invokespecial_fast;
@@ -3104,7 +3098,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->m = r->cmr->methodInfo;
 
                             if (!r->m) {
-                                err_msg = utf8_cstr(r->cmr->name);
+                                r->err_msg = utf8_cstr(r->cmr->name);
                                 goto label_nosuchmethod_throw;
                             } else {
                                 *r->pc = op_invokestatic_fast;
@@ -3127,14 +3121,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                                     stack->sp = sp;
                                     r->m = find_instance_methodInfo_by_name(r->ins, r->cmr->name, r->cmr->descriptor, r);
                                     sp = stack->sp;
-                                    spin_lock(&jvm->lock_cloader);
+                                    spin_lock(&r->jvm->lock_cloader);
                                     {
                                         pairlist_put(r->cmr->virtual_methods, r->ins->mb.clazz, r->m);// store in cache for direct use in the next call
                                     }
-                                    spin_unlock(&jvm->lock_cloader);
+                                    spin_unlock(&r->jvm->lock_cloader);
                                 }
                                 if (!r->m) {
-                                    err_msg = utf8_cstr(r->cmr->name);
+                                    r->err_msg = utf8_cstr(r->cmr->name);
                                     goto label_nosuchmethod_throw;
                                 } else {
                                     *r->pc = op_invokeinterface_fast;
@@ -3160,7 +3154,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             r->m = r->bootMethod->make;
 
                             if (!r->m) {
-                                err_msg = "Lambda generated method";
+                                r->err_msg = "Lambda generated method err";
                                 goto label_nosuchmethod_throw;
                             } else {
                                 *r->pc = op_invokedynamic_fast;
@@ -3218,11 +3212,11 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                             stack->sp = sp;
                             if (!r->other) {//cache to speed
                                 r->other = array_class_get_by_name(r, r->clazz->jloader, class_get_utf8_string(clazz, r->idx));
-                                spin_lock(&jvm->lock_cloader);
+                                spin_lock(&r->jvm->lock_cloader);
                                 {
                                     pairlist_put(clazz->arr_class_type, (__refer) (intptr_t) r->idx, r->other);
                                 }
-                                spin_unlock(&jvm->lock_cloader);
+                                spin_unlock(&r->jvm->lock_cloader);
                             }
                             r->ins = jarray_create_by_class(r, r->count, r->other);
                             sp = stack->sp;
@@ -4014,14 +4008,14 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                     label_nosuchmethod_throw:
                     {
                         stack->sp = sp;
-                        push_ref(stack, (__refer) exception_create_str(JVM_EXCEPTION_NOSUCHMETHOD, r, err_msg));
+                        push_ref(stack, (__refer) exception_create_str(JVM_EXCEPTION_NOSUCHMETHOD, r, r->err_msg));
                         goto label_exception_handle;
                     }
 
                     label_nosuchfield_throw:
                     {
                         stack->sp = sp;
-                        push_ref(stack, (__refer) exception_create_str(JVM_EXCEPTION_NOSUCHFIELD, r, err_msg));
+                        push_ref(stack, (__refer) exception_create_str(JVM_EXCEPTION_NOSUCHFIELD, r, r->err_msg));
                         goto label_exception_handle;
                     }
 
@@ -4084,7 +4078,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
         localvar_init(r, method->para_slots, method->para_slots);
         // cache native method calls
         if (!method->native_func) { // find and cache the native method
-            java_native_method *native = find_native_method(jvm, utf8_cstr(clazz->name), utf8_cstr(method->name), utf8_cstr(method->descriptor));
+            java_native_method *native = find_native_method(r->jvm, utf8_cstr(clazz->name), utf8_cstr(method->name), utf8_cstr(method->descriptor));
             if (!native) {
                 _nosuchmethod_check_exception(utf8_cstr(method->name), stack, r);
                 ret = RUNTIME_STATUS_EXCEPTION;
