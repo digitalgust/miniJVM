@@ -124,13 +124,13 @@ public class JsonParser<T> {
 
     public static class JsonMap<K, V> extends HashMap<K, V> implements JsonCell {
         public int getType() {
-            return 0;
+            return TYPE_MAP;
         }
     }
 
     public static class JsonList<T> extends ArrayList<T> implements JsonCell {
         public int getType() {
-            return 1;
+            return TYPE_LIST;
         }
     }
 
@@ -142,7 +142,7 @@ public class JsonParser<T> {
         }
 
         public int getType() {
-            return 2;
+            return TYPE_STRING;
         }
 
         public String toString() {
@@ -158,7 +158,7 @@ public class JsonParser<T> {
         }
 
         public int getType() {
-            return 3;
+            return TYPE_NUMBER;
         }
 
         public String toString() {
@@ -519,7 +519,7 @@ public class JsonParser<T> {
             if (deser != null)
                 return deser.deserialize(json, types);
             switch (json.getType()) {
-                case 0:
+                case JsonCell.TYPE_MAP:
                     map = (JsonMap<JsonCell, JsonCell>) json;
                     ins = findInjectableValues(clazz);
                     if (ins == null)
@@ -551,7 +551,7 @@ public class JsonParser<T> {
                             SysLog.warn("[JSON]" + clazz.getName() + " field '" + fieldName + "' setter not found.", new Object[0]);
                     }
                     return ins;
-                case 1:
+                case JsonCell.TYPE_LIST:
                     if (types == null)
                         SysLog.warn("[JSON] need type declare , class:" + clazz, new Object[0]);
                     if (clazz == null)
@@ -589,9 +589,9 @@ public class JsonParser<T> {
                         collection.add(object);
                     }
                     return collection;
-                case 2:
+                case JsonCell.TYPE_STRING:
                     return ((JsonString) json).str;
-                case 3:
+                case JsonCell.TYPE_NUMBER:
                     return ((JsonNumber) json).getValue(clazz);
             }
         } catch (Exception e) {
