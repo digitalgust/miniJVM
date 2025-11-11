@@ -1400,6 +1400,27 @@ struct _Runtime {
     };
 
     JniEnv *jnienv;
+
+    //shared local var for opcode , this usually in cache 1
+    Instance *ins;
+    s32 idx;
+    s32 offset;
+    s32 count;
+    FieldInfo *fi;
+    MethodInfo *m;
+    c8 *ptr;
+    s32 ival1, ival2;
+    f64 dval1, dval2;
+    f32 fval1, fval2;
+    s64 lval1, lval2;
+    __refer rval1, rval2;
+    ConstantMethodRef *cmr;
+    ConstantFieldRef *cfr;
+    JClass *other;
+    StackEntry entry;
+    Utf8String *ustr;
+    ConstantInvokeDynamic *cid;
+    BootstrapMethod *bootMethod;
 };
 
 //======================= stack =============================
