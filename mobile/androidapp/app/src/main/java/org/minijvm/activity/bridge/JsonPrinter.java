@@ -49,7 +49,7 @@ public class JsonPrinter {
                         e.printStackTrace();
                     }
                 } else {
-                    System.out.println("[JSON]warn :" + clazz.getName() + " field '" + fieldName + "' getter not found.");
+                    System.out.println("[JSON]" + clazz.getName() + " field '" + fieldName + "' getter not found.");
                 }
             }
             sb.append("}");

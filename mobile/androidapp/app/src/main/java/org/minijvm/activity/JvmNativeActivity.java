@@ -26,7 +26,6 @@ import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -46,7 +45,11 @@ import android.widget.VideoView;
 
 import com.alipay.sdk.app.AuthTask;
 import com.alipay.sdk.app.PayTask;
+import com.tencent.mm.opensdk.modelpay.PayReq;
+import com.tencent.mm.opensdk.openapi.IWXAPI;
+import com.tencent.mm.opensdk.openapi.WXAPIFactory;
 
+import org.minijvm.activity.bridge.Base64;
 import org.minijvm.activity.bridge.JsonPrinter;
 import org.minijvm.activity.bridge.RMCDescriptor;
 import org.minijvm.activity.bridge.ReflectUtil;
@@ -88,10 +91,13 @@ public class JvmNativeActivity extends NativeActivity {
     // 用于存储等待权限的图片裁剪请求
     private Bitmap mPendingBitmapToSave = null;
     private String mPendingFilename = null;
-    
+
     // 用于存储等待权限的视频保存请求
     private String mPendingVideoPath = null;
     private String mPendingVideoFilename = null;
+
+    public static IWXAPI sWxApi;
+    public static String sWxAppId;
 
     // android:name="android.app.NativeActivity"
     @Override
@@ -409,7 +415,7 @@ public class JvmNativeActivity extends NativeActivity {
                         mPendingBitmapToSave = null;
                         mPendingFilename = null;
                     }
-                    
+
                     // 如果有待处理的视频保存请求，现在执行它
                     if (mPendingVideoPath != null) {
                         boolean saved = saveVideoToGalleryLegacy(mPendingVideoPath, mPendingVideoFilename);
@@ -432,7 +438,7 @@ public class JvmNativeActivity extends NativeActivity {
                     }
                     mPendingBitmapToSave = null;
                     mPendingFilename = null;
-                    
+
                     // 清除待处理的视频请求
                     mPendingVideoPath = null;
                     mPendingVideoFilename = null;
@@ -466,7 +472,7 @@ public class JvmNativeActivity extends NativeActivity {
             mPendingBitmapToSave.recycle();
             mPendingBitmapToSave = null;
         }
-        
+
         // 清理待处理的视频请求
         mPendingVideoPath = null;
         mPendingVideoFilename = null;
@@ -880,22 +886,22 @@ public class JvmNativeActivity extends NativeActivity {
 
     /**
      * 处理视频文件，直接保存到相册而不做裁剪
-     * 
-     * @param uid 用户ID
-     * @param videoPath 视频文件路径
+     *
+     * @param uid           用户ID
+     * @param videoPath     视频文件路径
      * @param saveToGallery 是否保存到相册
      */
     private void handleVideoFile(int uid, String videoPath, boolean saveToGallery) {
         try {
             // 获取实际的文件路径
             String actualPath = getActualVideoPath(videoPath);
-            
+
             if (actualPath == null || !new File(actualPath).exists()) {
                 // 文件不存在，返回失败
                 onPhotoPicked(uid, null, null);
                 return;
             }
-            
+
             if (saveToGallery) {
                 boolean savedToGallery = saveVideoToGallery(actualPath, null);
                 if (savedToGallery) {
@@ -908,19 +914,19 @@ public class JvmNativeActivity extends NativeActivity {
                     });
                 }
             }
-            
+
             // 无论是否保存到相册，都返回原始路径
             onPhotoPicked(uid, actualPath, null);
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             onPhotoPicked(uid, null, null);
         }
     }
-    
+
     /**
      * 获取视频文件的实际路径
-     * 
+     *
      * @param uris URI字符串
      * @return 实际文件路径
      */
@@ -934,11 +940,11 @@ public class JvmNativeActivity extends NativeActivity {
                     return uris;
                 }
             }
-            
+
             // 尝试作为URI处理
             Uri uri = Uri.parse(uris);
             String scheme = uri.getScheme();
-            
+
             if ("file".equals(scheme)) {
                 // file:// URI
                 String path = uri.getPath();
@@ -961,10 +967,10 @@ public class JvmNativeActivity extends NativeActivity {
         }
         return null;
     }
-    
+
     /**
      * 将content URI的视频复制到临时文件
-     * 
+     *
      * @param uri content URI
      * @return 临时文件路径
      */
@@ -974,21 +980,21 @@ public class JvmNativeActivity extends NativeActivity {
             if (inputStream == null) {
                 return null;
             }
-            
+
             // 创建临时文件
             String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
             File tempFile = new File(getPhotoStorage(), "temp_video_" + timeStamp + ".mp4");
-            
+
             FileOutputStream outputStream = new FileOutputStream(tempFile);
             byte[] buffer = new byte[4096];
             int bytesRead;
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, bytesRead);
             }
-            
+
             inputStream.close();
             outputStream.close();
-            
+
             return tempFile.getAbsolutePath();
         } catch (Exception e) {
             e.printStackTrace();
@@ -1434,17 +1440,70 @@ public class JvmNativeActivity extends NativeActivity {
 
 
     /**
-     * 支付宝支付业务示例
+     * 支付宝支付业务示例, 被minijvm的 rmi调用
      */
     public Map<String, String> payV2(String orderInfo) {
-        Thread t = new Thread(() -> {
-            PayTask alipay = new PayTask(JvmNativeActivity.this);
-            Map<String, String> result = alipay.payV2(orderInfo, true);
-            Log.i("msp", result.toString());
-        });
-        t.start();
+        try {
+            String decOrderInfo = new String(Base64.decode(orderInfo), "utf-8");
+            Thread t = new Thread(() -> {
+                PayTask alipay = new PayTask(JvmNativeActivity.this);
+                Map<String, String> result = alipay.payV2(decOrderInfo, true);
+                Log.i("msg", result.toString());
+            });
+            t.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return new HashMap<>();
 
+    }
+
+    /**
+     * 微信支付, 被minijvm的 rmi调用
+     *
+     * @param orderInfo
+     * @return
+     */
+    public Map<String, String> wxPay(String orderInfo) {
+        try {
+            orderInfo = new String(Base64.decode(orderInfo), "utf-8");
+            org.minijvm.activity.bridge.JsonParser<Map> parser = new org.minijvm.activity.bridge.JsonParser<>();
+            Map params = parser.deserial(orderInfo, Map.class);
+            String appId = String.valueOf(params.get("appid"));
+            String partnerId = String.valueOf(params.get("partnerid"));
+            String prepayId = String.valueOf(params.get("prepayid"));
+            String packageValue = String.valueOf(params.get("package"));
+            String nonceStr = String.valueOf(params.get("noncestr"));
+            String timestamp = String.valueOf(params.get("timestamp"));
+            String sign = String.valueOf(params.get("sign"));
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    sWxAppId = appId;
+                    sWxApi = WXAPIFactory.createWXAPI(JvmNativeActivity.this, appId, true);
+                    sWxApi.registerApp(appId);
+                    if (!sWxApi.isWXAppInstalled()) {
+                        Toast.makeText(JvmNativeActivity.this, "WeChat not installed", Toast.LENGTH_SHORT).show();
+                    } else {
+                        PayReq req = new PayReq();
+                        req.appId = appId;
+                        req.partnerId = partnerId;
+                        req.prepayId = prepayId;
+                        req.packageValue = packageValue;
+                        req.nonceStr = nonceStr;
+                        req.timeStamp = timestamp;
+                        req.sign = sign;
+                        sWxApi.sendReq(req);
+                    }
+                }
+            });
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new HashMap<>();
     }
 
     /**
