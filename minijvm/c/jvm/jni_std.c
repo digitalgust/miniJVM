@@ -105,10 +105,15 @@ s32 java_lang_Class_newInstance(Runtime *runtime, JClass *clazz) {
     Instance *ins = NULL;
     s32 ret = 0;
     if (cl && !cl->mb.arr_type_index) {//class exists and not array class
-        ins = instance_create(runtime, cl);
-        instance_hold_to_thread(ins, runtime);
-        instance_init(ins, runtime);
-        instance_release_from_thread(ins, runtime);
+        if (cl->cff.access_flags & (ACC_ABSTRACT | ACC_INTERFACE)) {
+            //if class is abstract or  interface, can't new
+
+        } else {
+            ins = instance_create(runtime, cl);
+            instance_hold_to_thread(ins, runtime);
+            instance_init(ins, runtime);
+            instance_release_from_thread(ins, runtime);
+        }
     }
     if (ins) {
         push_ref(stack, (__refer) ins);

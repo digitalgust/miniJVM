@@ -9,6 +9,23 @@
 #include "jvm.h"
 #include "media.h"
 
+int org_mini_gl_GL_get_gl_proc(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    
+    Instance *namez = env->localvar_getRefer(runtime->localvar, pos++);
+    Utf8String *u_namez;
+    if(namez){
+        u_namez = env->utf8_create();
+        env->jstring_2_utf8(namez, u_namez, runtime);
+    }
+
+    GLint64 _re_val = get_gl_proc((const char*)(env->utf8_cstr(u_namez)));
+    s64 ret_value = *((s64*)&_re_val);env->push_long(runtime->stack, ret_value);
+    env->utf8_destory(u_namez);
+    return 0;
+}
+
 int org_mini_gl_GL_glActiveTexture(Runtime *runtime, JClass *clazz) {
     JniEnv *env = runtime->jnienv;
     s32 pos = 0;
@@ -3773,7 +3790,7 @@ int org_mini_gl_GL_glGetSynciv(Runtime *runtime, JClass *clazz) {
     
     intptr_t psync = env->localvar_getLong_2slot(runtime->localvar, pos);pos += 2;
     s32 ppname = env->localvar_getInt(runtime->localvar, pos++);
-    s32 pbufSize = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pcount = env->localvar_getInt(runtime->localvar, pos++);
     Instance *plength = env->localvar_getRefer(runtime->localvar, pos++);
     int offset_plength = env->localvar_getInt(runtime->localvar, pos++);
     __refer ptr_plength = NULL;
@@ -3789,7 +3806,7 @@ int org_mini_gl_GL_glGetSynciv(Runtime *runtime, JClass *clazz) {
         ptr_pvalues = pvalues->arr_body + offset_pvalues;
     } else if(offset_pvalues) { ptr_pvalues = (__refer)(intptr_t)offset_pvalues;}
 
-    glGetSynciv((GLsync)psync, (GLenum)ppname, (GLsizei)pbufSize, (GLsizei*)(ptr_plength), (GLint*)(ptr_pvalues));
+    glGetSynciv((GLsync)psync, (GLenum)ppname, (GLsizei)pcount, (GLsizei*)(ptr_plength), (GLint*)(ptr_pvalues));
     
     
     return 0;
@@ -4257,7 +4274,7 @@ int org_mini_gl_GL_glGetInternalformativ(Runtime *runtime, JClass *clazz) {
     s32 ptarget = env->localvar_getInt(runtime->localvar, pos++);
     s32 pinternalformat = env->localvar_getInt(runtime->localvar, pos++);
     s32 ppname = env->localvar_getInt(runtime->localvar, pos++);
-    s32 pbufSize = env->localvar_getInt(runtime->localvar, pos++);
+    s32 pcount = env->localvar_getInt(runtime->localvar, pos++);
     Instance *pparams = env->localvar_getRefer(runtime->localvar, pos++);
     int offset_pparams = env->localvar_getInt(runtime->localvar, pos++);
     __refer ptr_pparams = NULL;
@@ -4266,7 +4283,7 @@ int org_mini_gl_GL_glGetInternalformativ(Runtime *runtime, JClass *clazz) {
         ptr_pparams = pparams->arr_body + offset_pparams;
     } else if(offset_pparams) { ptr_pparams = (__refer)(intptr_t)offset_pparams;}
 
-    glGetInternalformativ((GLenum)ptarget, (GLenum)pinternalformat, (GLenum)ppname, (GLsizei)pbufSize, (GLint*)(ptr_pparams));
+    glGetInternalformativ((GLenum)ptarget, (GLenum)pinternalformat, (GLenum)ppname, (GLsizei)pcount, (GLint*)(ptr_pparams));
     
     
     return 0;
@@ -4277,6 +4294,7 @@ int org_mini_gl_GL_glGetInternalformativ(Runtime *runtime, JClass *clazz) {
 
 static java_native_method method_gl_table[] = {
 
+{"org/mini/gl/GL",  "get_gl_proc",  "(Ljava/lang/String;)J",  org_mini_gl_GL_get_gl_proc},
 {"org/mini/gl/GL",  "glActiveTexture",  "(I)V",  org_mini_gl_GL_glActiveTexture},
 {"org/mini/gl/GL",  "glAttachShader",  "(II)V",  org_mini_gl_GL_glAttachShader},
 {"org/mini/gl/GL",  "glBindAttribLocation",  "(II[B)V",  org_mini_gl_GL_glBindAttribLocation},

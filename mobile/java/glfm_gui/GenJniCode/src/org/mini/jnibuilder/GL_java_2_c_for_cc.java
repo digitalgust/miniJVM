@@ -6,12 +6,11 @@
 package org.mini.jnibuilder;
 
 import java.io.*;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mini.jnibuilder.Util.isPointer;
-import static org.mini.jnibuilder.Util.isTypes;
+import static org.mini.jnibuilder.JniUtil.isPointer;
+import static org.mini.jnibuilder.JniUtil.isTypes;
 
 /**
  * @author gust

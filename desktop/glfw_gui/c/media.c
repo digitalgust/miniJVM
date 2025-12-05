@@ -7,7 +7,6 @@
 #include "jvm.h"
 #include "media.h"
 
-
 void JNI_OnLoad(MiniJVM *jvm) {
     memset(&refers, 0, sizeof(GlobeRefer));
     JniEnv *env = jvm->env;
@@ -51,6 +50,12 @@ Runtime *getRuntimeCurThread(JniEnv *env) {
  *                          DEMO
  *
  * ===============================================================*/
+extern void *get_proc(const char *namez);
+
+s64 get_gl_proc(const char *namez) {
+    void *ptr = get_proc(namez);
+    return (s64) (intptr_t) ptr;
+}
 
 int main(void) {
 

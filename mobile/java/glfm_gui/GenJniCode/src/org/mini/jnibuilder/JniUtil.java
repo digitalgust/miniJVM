@@ -9,7 +9,7 @@ package org.mini.jnibuilder;
  *
  * @author gust
  */
-public class Util {
+public class JniUtil {
 
     public static boolean isPointer(String nativeTypeStr) {
         return nativeTypeStr.contains("/*ptr*/");

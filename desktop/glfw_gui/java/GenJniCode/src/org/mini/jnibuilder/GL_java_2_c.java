@@ -280,14 +280,12 @@ public class GL_java_2_c {
                             javaArgvCode += "D";
                         } else if ("String".equals(argvType)) {
                             varCode += "    Instance *" + argvName + " = env->localvar_getRefer(runtime->localvar, pos++);\n";
-                            varCode += "    __refer ptr_" + argvName + " = NULL;\n";
                             varCode += "    Utf8String *u_" + argvName + ";\n";
                             varCode += "    if(" + argvName + "){\n";
                             varCode += "        u_" + argvName + " = env->utf8_create();\n";
-                            varCode += "        env->jstring_2_utf8(" + argvName + ", u_" + argvName + ");\n";
-                            varCode += "        ptr_" + argvName + " = env->utf8_cstr(u_" + argvName + ");\n";
+                            varCode += "        env->jstring_2_utf8(" + argvName + ", u_" + argvName + ", runtime);\n";
                             varCode += "    }\n";
-                            curArgvName = "(ptr_" + argvName + ")";
+                            curArgvName = "(env->utf8_cstr(u_" + argvName + "))";
                             releaseMemCode += "env->utf8_destory(u_" + argvName + ");";
                             javaArgvCode += "Ljava/lang/String;";
                         } else if ("byte[][]".equals(argvType) || "byte[]...".equals(argvType)) {

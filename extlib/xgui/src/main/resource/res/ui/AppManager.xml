@@ -400,10 +400,10 @@
         sub setSystemBright()
             enable = getSwitch("SW_SYSTEM_BRIGHT")
             if(enable)
-                setEnv("SCREEN_SYSTEM","1")
+                setEnv("SYSTEM_BRIGHT","1")
                 setScreenBrightness(-100)    #-1.0表示跟随系统亮度
             else
-                setEnv("SCREEN_SYSTEM","0")
+                setEnv("SYSTEM_BRIGHT","0")
             eif
             setBrightness()
         ret

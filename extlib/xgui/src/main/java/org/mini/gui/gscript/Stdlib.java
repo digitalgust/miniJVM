@@ -109,10 +109,13 @@ public class Stdlib extends Lib {
         methodNames.put("int2str".toLowerCase(), this::int2str);//字符串转int
         methodNames.put("str2double".toLowerCase(), this::str2double);   //
         methodNames.put("double2str".toLowerCase(), this::double2str);   //
+        methodNames.put("double2float".toLowerCase(), this::double2float);   //
+        methodNames.put("float2double".toLowerCase(), this::float2double);   //
         methodNames.put("isNumStr".toLowerCase(), this::isNumStr);//是数字串
         methodNames.put("int2float".toLowerCase(), this::int2float);
         methodNames.put("float2int".toLowerCase(), this::float2int);
         methodNames.put("isFloat".toLowerCase(), this::isFloat);
+        methodNames.put("isDouble".toLowerCase(), this::isDouble);
     }
 
 
@@ -723,6 +726,31 @@ public class Stdlib extends Lib {
         return null;
     }
 
+    private DataType double2float(ArrayList para) {
+        try {
+            Object obj = Interpreter.popBackObject(para);
+            if (obj instanceof Double) {
+                return Interpreter.getCachedObj(((Double) obj).floatValue());
+            }
+        } catch (Exception e) {
+            //e.printStackTrace();
+        }
+        throw new RuntimeException("double-obj required");
+    }
+
+    private DataType float2double(ArrayList para) {
+        try {
+            Object obj = Interpreter.popBackObject(para);
+            if (obj instanceof Float) {
+                return Interpreter.getCachedObj(((Float) obj).doubleValue());
+            }
+        } catch (Exception e) {
+            //e.printStackTrace();
+        }
+        throw new RuntimeException("double-obj required");
+    }
+
+
     private DataType double2str(ArrayList<DataType> para) {
         try {
             Object d = Interpreter.popBackObject(para);
@@ -1064,6 +1092,24 @@ public class Stdlib extends Lib {
         if (!b) {
             if (f.type == DataType.DTYPE_OBJ) {
                 b = ((Obj) f).getVal() instanceof Float;
+            }
+        }
+        return Interpreter.getCachedBool(b);
+    }
+
+    private DataType isDouble(ArrayList<DataType> para) {
+        DataType f = Interpreter.popBack(para);
+        boolean b = false;
+        if (f.type == DataType.DTYPE_STR) {
+            try {
+                Double.parseDouble(f.getString());
+                b = true;
+            } catch (Exception e) {
+            }
+        }
+        if (!b) {
+            if (f.type == DataType.DTYPE_OBJ) {
+                b = ((Obj) f).getVal() instanceof Double;
             }
         }
         return Interpreter.getCachedBool(b);

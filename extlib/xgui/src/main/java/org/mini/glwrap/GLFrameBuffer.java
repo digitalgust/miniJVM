@@ -38,13 +38,17 @@ public class GLFrameBuffer {
         @Override
         public void run() {
             glDeleteTextures(rendertext.length, rendertext, 0);
-            glDeleteRenderbuffers(renderbuf1.length, renderbuf1, 0);
+            glDeleteTextures(renderbuf1.length, renderbuf1, 0);
             glDeleteFramebuffers(fboobj.length, fboobj, 0);
             SysLog.info("delete fbo success");
         }
     }
 
     public GLFrameBuffer(int w, int h) {
+        this(w, h, 2.f);
+    }
+
+    public GLFrameBuffer(int w, int h, float scale) {
         texture_w = w * 2;
         texture_h = h * 2;
     }
@@ -97,7 +101,7 @@ public class GLFrameBuffer {
     public void delete() {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDeleteTextures(rendertex.length, rendertex, 0);
-        glDeleteRenderbuffers(depth_stencil_buffer.length, depth_stencil_buffer, 0);
+        glDeleteTextures(depth_stencil_buffer.length, depth_stencil_buffer, 0);
         glDeleteFramebuffers(fbo.length, fbo, 0);
     }
 

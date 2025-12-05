@@ -34,6 +34,8 @@ s32 count_MiniAudioFuncTable();
 //
 Runtime *getRuntimeCurThread(JniEnv *env);
 
+s64 get_gl_proc(const char *namez);
+
 struct _GlobeRefer {
     MiniJVM *jvm;
     JniEnv *env;

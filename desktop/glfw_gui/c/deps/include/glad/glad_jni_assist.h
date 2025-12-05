@@ -54,6 +54,21 @@ GLAPI PFNGLGETSTRINGPROC glad_glGetString;
 //    return 0;
 //}
 
+//
+//int org_mini_gl_GL_get_proc(Runtime *runtime, JClass *clazz) {
+//    JniEnv *env = runtime->jnienv;
+//    s32 pos = 0;
+//    Instance *nameArr = env->localvar_getRefer(runtime, pos++);
+//    c8 *cstr = nameArr->arr_body;
+//    if (cstr) {
+//        void *addr = get_proc(cstr);
+//        s64 value = (s64) (intptr_t) addr;
+//        env->push_long(runtime->stack, value);
+//    } else {
+//        env->push_long(runtime->stack, 0);
+//    }
+//    return 0;
+//}
 
 
 

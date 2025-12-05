@@ -164,8 +164,8 @@ public class GuiScriptLib extends Lib {
                 }
                 if (gobj != null) {
                     Interpreter inp = gobj.getInterpreter();
-                    inp.callSub(ss[1] + "(" + para + ")");
-                    return;
+                    inp.putGlobalVar("callbackPara", Interpreter.getCachedStr(para));
+                    inp.callSub(ss[1] + "(callbackPara)");
                 }
             }
             //System.out.println("[WARN]httpRequest callback no GContainer specified: " + callback);
@@ -187,7 +187,10 @@ public class GuiScriptLib extends Lib {
                 }
                 if (gobj != null) {
                     Interpreter inp = gobj.getInterpreter();
-                    inp.callSub(ss[1] + "(\"" + url + "\"," + code + ",\"" + reply + "\")");
+                    inp.putGlobalVar("httpReplyUrl", Interpreter.getCachedStr(url));
+                    inp.putGlobalVar("httpReplyCode", Interpreter.getCachedInt(code));
+                    inp.putGlobalVar("httpReplyMsg", Interpreter.getCachedStr(reply));
+                    inp.callSub(ss[1] + "(httpReplyUrl,httpReplyCode,httpReplyMsg)");
                     return;
                 }
             }
