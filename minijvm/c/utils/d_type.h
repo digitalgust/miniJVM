@@ -76,9 +76,7 @@
 #if 1
 #else
     #define __JVM_LTALLOC__ 1
-    #if __JVM_LTALLOC__
-    #include "ltalloc.h"
-    #endif
+
 #endif
 
 #if __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__ || __JVM_OS_VS__
@@ -116,22 +114,6 @@ typedef void *__returnaddress;
 //======================= memory manage =============================
 
 #if __JVM_LTALLOC__
-static inline void *jvm_calloc(u32 size) {
-    return ltcalloc(size, 1);
-}
-
-static inline void *jvm_malloc(u32 size) {
-    return ltmalloc(size);
-}
-
-static inline void jvm_free(void *ptr) {
-    ltfree(ptr);
-}
-
-static inline void *jvm_realloc(void *pPtr, u32 size) {
-    return ltrealloc(pPtr, size);
-
-}
 
 #else
 
