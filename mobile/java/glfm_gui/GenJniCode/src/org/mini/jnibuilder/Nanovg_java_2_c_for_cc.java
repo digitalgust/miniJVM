@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static org.mini.jnibuilder.Util.*;
+import static org.mini.jnibuilder.JniUtil.*;
 
 /**
  * @author gust
@@ -194,7 +194,7 @@ public class Nanovg_java_2_c_for_cc {
                             returnCode = nativeReurnType + " _re_val = ";
                             String entryType = "";
                             entryType = nativeReurnType;//计算实体字节数，不能算指针大小
-                            if (Util.isStruct(nativeReurnType)) {
+                            if (JniUtil.isStruct(nativeReurnType)) {
                                 pushCode += cType + "* _ptr_re_val = (" + cType + "*)&_re_val;\n";
                                 pushCode += "    s32 _struct_bytes = sizeof(_re_val);\n";
                             } else {
@@ -305,7 +305,7 @@ public class Nanovg_java_2_c_for_cc {
 
                             varCode += "    __refer ptr_" + argvName + " = " + argvName + "?" + argvName + "->prop.as_s8_arr:NULL;\n";
                             curArgvName = "(ptr_" + argvName + ")";
-                            if (Util.isStruct(nativeArgvs[nativei])) {
+                            if (JniUtil.isStruct(nativeArgvs[nativei])) {
                                 curArgvType = "*(" + nativeArgvs[nativei] + "*)";
                             }
 

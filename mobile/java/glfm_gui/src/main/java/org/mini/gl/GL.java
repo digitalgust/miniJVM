@@ -627,6 +627,7 @@ public class GL {
     public static final int GL_ES_VERSION_3_0 = 1;
 
     //public static native int gladLoadGLES2Loader();// //int
+    public static native long get_gl_proc(String namez);//const char* //GLint64
     public static native void glActiveTexture(int ptexture); //GLenum, //void
     public static native void glAttachShader(int pprogram, int pshader); //GLuint,GLuint, //void
     public static native void glBindAttribLocation(int pprogram, int pindex, byte[] pname); //GLuint,GLuint,const GLchar*, //void

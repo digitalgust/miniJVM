@@ -532,12 +532,10 @@ public class GTextBox extends GTextObject {
                         break;
                     }
                     case Glfw.GLFW_KEY_DELETE: {
-                        if (textsb.length() > caretIndex) {
-                            if (isSelected()) {
-                                deleteSelectedText();
-                            } else {
-                                deleteTextByIndex(caretIndex);
-                            }
+                        if (isSelected()) {
+                            deleteSelectedText();
+                        } else if (textsb.length() > caretIndex) {
+                            deleteTextByIndex(caretIndex);
                         }
                         break;
                     }
@@ -599,24 +597,26 @@ public class GTextBox extends GTextObject {
                 case Glfw.GLFW_KEY_LEFT: {
                     if (textsb.length() > 0 && caretIndex > 0) {
                         int[] pos = editArea.getCaretPosFromArea();
-                        if (pos != null) {
-                            if (pos[1] < getY() + lineh[0] * 2 && scroll > 0f) {//需要向上滚动
-                                setScroll(scroll - lineh[0] / (editArea.totalTextHeight - editArea.showAreaHeight));
-                            } else {
-                                setCaretIndex(caretIndex - 1);
+                        if (pos != null && pos[1] < getY() + lineh[0] * 2 && scroll > 0f) {
+                            float denom = (editArea.totalTextHeight - editArea.showAreaHeight);
+                            if (denom > 0f) {
+                                setScroll(scroll - lineh[0] / denom);
                             }
                         }
+                        setCaretIndex(caretIndex - 1);
                     }
                     break;
                 }
                 case Glfw.GLFW_KEY_RIGHT: {
                     if (textsb.length() > caretIndex) {
                         int[] pos = editArea.getCaretPosFromArea();
-                        if (pos[1] > getY() + getH() - lineh[0] * 2 && scroll < 1.0f) {//需要向下滚动
-                            setScroll(scroll + lineh[0] / (editArea.totalTextHeight - editArea.showAreaHeight));
-                        } else {
-                            setCaretIndex(caretIndex + 1);
+                        if (pos != null && pos[1] > getY() + getH() - lineh[0] * 2 && scroll < 1.0f) {
+                            float denom = (editArea.totalTextHeight - editArea.showAreaHeight);
+                            if (denom > 0f) {
+                                setScroll(scroll + lineh[0] / denom);
+                            }
                         }
+                        setCaretIndex(caretIndex + 1);
                     }
                     break;
                 }
@@ -646,11 +646,19 @@ public class GTextBox extends GTextObject {
                     int[] pos = editArea.getCaretPosFromArea();
                     if (pos != null) {
                         if (pos[1] > getY() + getH() - lineh[0]) {
-                            setScroll(scroll + lineh[0] / (editArea.totalTextHeight - editArea.showAreaHeight));
+                            float denom = (editArea.totalTextHeight - editArea.showAreaHeight);
+                            if (denom > 0f) {
+                                setScroll(scroll + lineh[0] / denom);
+                            }
                         } else {
-                            int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] + (int) (lineh[0] * 1.5f));//定位到下一行中央
-                            if (cart >= 0) {
+                            int cart = editArea.getCaretIndexFromArea(pos[0], pos[1] + (int) (lineh[0] * 1.5f));
+                            if (cart >= 0 && cart < textsb.length()) {
                                 setCaretIndex(cart);
+                            } else if (cart >= textsb.length()) {
+                                float denom = (editArea.totalTextHeight - editArea.showAreaHeight);
+                                if (scroll < 1.0f && denom > 0f) {
+                                    setScroll(scroll + lineh[0] / denom);
+                                }
                             }
                         }
                     } else {

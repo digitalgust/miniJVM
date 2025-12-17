@@ -19,7 +19,26 @@ public class JsonParser<T> {
 
     private InjectableValues injectableValues = null;
 
+    private Object[] callPara = {null};
+
+    static List<StringBuilder> sbpool = new ArrayList<>();
+
     ClassLoader classLoader;
+
+    static synchronized StringBuilder getStringBuilder() {
+        if (sbpool.size() > 0) {
+            return sbpool.remove(sbpool.size() - 1);
+        } else {
+            return new StringBuilder();
+        }
+    }
+
+    static synchronized void releaseStringBuilder(StringBuilder sb) {
+        if (sbpool.size() < 10) {
+            sb.setLength(0);
+            sbpool.add(sb);
+        }
+    }
 
     public JsonParser() {
         SimpleModule module = new SimpleModule();
@@ -124,13 +143,13 @@ public class JsonParser<T> {
 
     public static class JsonMap<K, V> extends HashMap<K, V> implements JsonCell {
         public int getType() {
-            return 0;
+            return TYPE_MAP;
         }
     }
 
     public static class JsonList<T> extends ArrayList<T> implements JsonCell {
         public int getType() {
-            return 1;
+            return TYPE_LIST;
         }
     }
 
@@ -142,7 +161,7 @@ public class JsonParser<T> {
         }
 
         public int getType() {
-            return 2;
+            return TYPE_STRING;
         }
 
         public String toString() {
@@ -158,7 +177,7 @@ public class JsonParser<T> {
         }
 
         public int getType() {
-            return 3;
+            return TYPE_NUMBER;
         }
 
         public String toString() {
@@ -368,7 +387,7 @@ public class JsonParser<T> {
     }
 
     private static void parseStringDirect(ParseToken token) {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = getStringBuilder();
         token.advance();
         while (!token.isEnd()) {
             char ch = token.currentChar();
@@ -391,13 +410,14 @@ public class JsonParser<T> {
                     } else if (ch == 'f') {
                         sb.append('\f');
                     } else if (ch == 'u') {
-                        StringBuilder unicode = new StringBuilder();
+                        StringBuilder unicode = getStringBuilder();
                         for (int i = 0; i < 4 && !token.isEnd(); i++) {
                             token.advance();
                             if (!token.isEnd())
                                 unicode.append(token.currentChar());
                         }
                         sb.append((char) Integer.parseInt(unicode.toString(), 16));
+                        releaseStringBuilder(unicode);
                     } else {
                         sb.append(ch);
                     }
@@ -408,10 +428,11 @@ public class JsonParser<T> {
             token.advance();
         }
         token.result = new JsonString(sb.toString());
+        releaseStringBuilder(sb);
     }
 
     private static void parseNumberDirect(ParseToken token) {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = getStringBuilder();
         while (!token.isEnd()) {
             char ch = token.currentChar();
             if (ch == ',' || ch == '}' || ch == ']' || Character.isWhitespace(ch))
@@ -420,6 +441,7 @@ public class JsonParser<T> {
             token.advance();
         }
         token.result = new JsonNumber(sb.toString());
+        releaseStringBuilder(sb);
     }
 
     private static void parseMapDirect(ParseToken token, JsonMap<JsonCell, JsonCell> targetMap) {
@@ -519,7 +541,7 @@ public class JsonParser<T> {
             if (deser != null)
                 return deser.deserialize(json, types);
             switch (json.getType()) {
-                case 0:
+                case JsonCell.TYPE_MAP:
                     map = (JsonMap<JsonCell, JsonCell>) json;
                     ins = findInjectableValues(clazz);
                     if (ins == null)
@@ -541,19 +563,20 @@ public class JsonParser<T> {
                             Type[] pt = method.getGenericParameterTypes();
                             Class<?> childClazz = method.getParameterTypes()[0];
                             try {
-                                method.invoke(ins, new Object[]{map2obj(childJson, childClazz, pt[0].getTypeName())});
+                                callPara[0] = map2obj(childJson, childClazz, pt[0].getTypeName());
+                                method.invoke(ins, callPara);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
                             continue;
                         }
                         if (!(ins instanceof Polymorphic))
-                            SysLog.warn("[JSON]" + clazz.getName() + " field '" + fieldName + "' setter not found.", new Object[0]);
+                            SysLog.warn("[JSON]" + clazz.getName() + " field '" + fieldName + "' setter not found.");
                     }
                     return ins;
-                case 1:
+                case JsonCell.TYPE_LIST:
                     if (types == null)
-                        SysLog.warn("[JSON] need type declare , class:" + clazz, new Object[0]);
+                        SysLog.warn("[JSON] need type declare , class:" + clazz);
                     if (clazz == null)
                         clazz = ArrayList.class;
                     list = (JsonList<JsonCell>) json;
@@ -589,9 +612,9 @@ public class JsonParser<T> {
                         collection.add(object);
                     }
                     return collection;
-                case 2:
+                case JsonCell.TYPE_STRING:
                     return ((JsonString) json).str;
-                case 3:
+                case JsonCell.TYPE_NUMBER:
                     return ((JsonNumber) json).getValue(clazz);
             }
         } catch (Exception e) {
@@ -616,7 +639,8 @@ public class JsonParser<T> {
             classLoader = Thread.currentThread().getContextClassLoader();
         this.classLoader = classLoader;
         JsonCell json = parse(s, 0);
-        return (T) map2obj(json, clazz, types);
+        T t= (T) map2obj(json, clazz, types);
+        return t;
     }
 
     public static final boolean isJsonString(String str) {

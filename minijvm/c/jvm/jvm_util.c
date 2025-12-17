@@ -14,7 +14,7 @@
 
 #if __JVM_LTALLOC__
 
-#include "ltalloc.h"
+
 
 #endif
 
@@ -792,7 +792,7 @@ s32 jthread_run(void *para) {
     jvm_printf("[INFO]thread over %llx , return %d , spent : %lld\n", (s64) (intptr_t) jthread, ret, spent);
 #endif
 #if __JVM_LTALLOC__
-    ltonthreadexit();
+
 #endif
     thrd_exit(ret);
     return ret;

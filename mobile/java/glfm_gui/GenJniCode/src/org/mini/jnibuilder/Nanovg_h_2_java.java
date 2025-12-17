@@ -214,7 +214,7 @@ public class Nanovg_h_2_java {
                         String[] nArgvs = mdef.split(",");
                         for (int j = 0; j < nArgvs.length; j++) {
                             String nargv = nArgvs[j].trim();
-                            String arType = Util.getType(TYPES_ALL, nargv);
+                            String arType = JniUtil.getType(TYPES_ALL, nargv);
                             String arName = "arg" + j;
                             if (arType == null) {
                                 System.out.println("error argv type:" + nargv);
@@ -227,52 +227,52 @@ public class Nanovg_h_2_java {
                             arName = arName.trim();
                             arName = "p" + arName;
 
-                            if (Util.isTypes(INT_TYPE, arType)) {
+                            if (JniUtil.isTypes(INT_TYPE, arType)) {
                                 javaArgvCode += "int " + arName;
-                            } else if (Util.isTypes(ARR_INT_TYPE, arType)) {
+                            } else if (JniUtil.isTypes(ARR_INT_TYPE, arType)) {
                                 javaArgvCode += "int[] " + arName;
-                            } else if (Util.isTypes(SHORT_TYPE, arType)) {
+                            } else if (JniUtil.isTypes(SHORT_TYPE, arType)) {
                                 javaArgvCode += "short " + arName;
-                            } else if (Util.isTypes(ARR_SHORT_TYPE, arType)) {
+                            } else if (JniUtil.isTypes(ARR_SHORT_TYPE, arType)) {
                                 javaArgvCode += "short[] " + arName;
-                            } else if (Util.isTypes(BYTE_TYPE, arType)) {
+                            } else if (JniUtil.isTypes(BYTE_TYPE, arType)) {
                                 javaArgvCode += "byte " + arName;
-                            } else if (Util.isTypes(ARR_BYTE_TYPE, arType)) {
+                            } else if (JniUtil.isTypes(ARR_BYTE_TYPE, arType)) {
                                 javaArgvCode += "byte[] " + arName;
-                            } else if (Util.isTypes(LONG_TYPE, arType)) {
+                            } else if (JniUtil.isTypes(LONG_TYPE, arType)) {
                                 javaArgvCode += "long " + arName;
-                            } else if (Util.isTypes(ARR_LONG_TYPE, arType)) {
+                            } else if (JniUtil.isTypes(ARR_LONG_TYPE, arType)) {
                                 javaArgvCode += "long[] " + arName;
-                            } else if (Util.isTypes(FLOAT_TYPE, arType)) {
+                            } else if (JniUtil.isTypes(FLOAT_TYPE, arType)) {
                                 javaArgvCode += "float " + arName;
-                            } else if (Util.isTypes(ARR_FLOAT_TYPE, arType)) {
+                            } else if (JniUtil.isTypes(ARR_FLOAT_TYPE, arType)) {
                                 javaArgvCode += "float[] " + arName;
-                            } else if (Util.isTypes(DOUBLE_TYPE, arType)) {
+                            } else if (JniUtil.isTypes(DOUBLE_TYPE, arType)) {
                                 javaArgvCode += "double " + arName;
-                            } else if (Util.isTypes(ARR_DOUBLE_TYPE, arType)) {
+                            } else if (JniUtil.isTypes(ARR_DOUBLE_TYPE, arType)) {
                                 javaArgvCode += "double[] " + arName;
-                            } else if (Util.isTypes(OBJECT_TYPE, arType)) {
+                            } else if (JniUtil.isTypes(OBJECT_TYPE, arType)) {
                                 javaArgvCode += "long " + arName;
                                 arType += "/*ptr*/";
-                            } else if (Util.isTypes(ARR_OBJECT_TYPE, arType)) {
+                            } else if (JniUtil.isTypes(ARR_OBJECT_TYPE, arType)) {
                                 javaArgvCode += "long[] " + arName;
                                 arType += "/*ptr*/";
-                            } else if (Util.isTypes(MULT_TYPE, arType)) {
+                            } else if (JniUtil.isTypes(MULT_TYPE, arType)) {
                                 javaArgvCode += "byte[]" + arType + " " + arName;
-                            } else if (Util.isTypes(STRUCT_FLOAT_ARR_TYPE, arType)) {
+                            } else if (JniUtil.isTypes(STRUCT_FLOAT_ARR_TYPE, arType)) {
                                 javaArgvCode += "float[] " + arName;
                                 arType += "/*none_ptr*/";
-                            } else if (Util.isTypes(STRUCT_INT_ARR_TYPE, arType)) {
+                            } else if (JniUtil.isTypes(STRUCT_INT_ARR_TYPE, arType)) {
                                 javaArgvCode += "int[] " + arName;
                                 arType += "/*none_ptr*/";
-                            } else if (Util.isTypes(STRUCT_BYTE_ARR_TYPE, arType)) {
+                            } else if (JniUtil.isTypes(STRUCT_BYTE_ARR_TYPE, arType)) {
                                 javaArgvCode += "byte[] " + arName;
                                 arType += "/*none_ptr*/";
-                            } else if (Util.isTypes(STRING_TYPE, arType)) {
+                            } else if (JniUtil.isTypes(STRING_TYPE, arType)) {
                                 javaArgvCode += "byte[] " + arName;
-                            } else if (Util.isTypes(ARR_STRING_TYPE, arType)) {
+                            } else if (JniUtil.isTypes(ARR_STRING_TYPE, arType)) {
                                 javaArgvCode += "byte[][] " + arName;
-                            } else if (Util.isTypes(VOID_TYPE, arType)) {
+                            } else if (JniUtil.isTypes(VOID_TYPE, arType)) {
                             } else {
                                 System.out.println("java argv type:" + arType);
                             }
@@ -288,36 +288,36 @@ public class Nanovg_h_2_java {
                     //
                     mtype = mtype.replace(" *", "*");
                     String nativeReturnCode = mtype;
-                    if (Util.isTypes(BYTE_TYPE, mtype)) {
+                    if (JniUtil.isTypes(BYTE_TYPE, mtype)) {
                         javaReturnCode = "byte";
-                    } else if (Util.isTypes(INT_TYPE, mtype)) {
+                    } else if (JniUtil.isTypes(INT_TYPE, mtype)) {
                         javaReturnCode = "int";
-                    } else if (Util.isTypes(ARR_INT_TYPE, mtype)) {
+                    } else if (JniUtil.isTypes(ARR_INT_TYPE, mtype)) {
                         javaReturnCode = "int[]";
-                    } else if (Util.isTypes(FLOAT_TYPE, mtype)) {
+                    } else if (JniUtil.isTypes(FLOAT_TYPE, mtype)) {
                         javaReturnCode = "float";
-                    } else if (Util.isTypes(ARR_FLOAT_TYPE, mtype)) {
+                    } else if (JniUtil.isTypes(ARR_FLOAT_TYPE, mtype)) {
                         javaReturnCode = "float[]";
-                    } else if (Util.isTypes(LONG_TYPE, mtype)) {
+                    } else if (JniUtil.isTypes(LONG_TYPE, mtype)) {
                         javaReturnCode = "long";
-                    } else if (Util.isTypes(ARR_BYTE_TYPE, mtype)) {
+                    } else if (JniUtil.isTypes(ARR_BYTE_TYPE, mtype)) {
                         javaReturnCode = "byte[]";
-                    } else if (Util.isTypes(STRING_TYPE, mtype)) {
+                    } else if (JniUtil.isTypes(STRING_TYPE, mtype)) {
                         javaReturnCode = "byte[]";
-                    } else if (Util.isTypes(DOUBLE_TYPE, mtype)) {
+                    } else if (JniUtil.isTypes(DOUBLE_TYPE, mtype)) {
                         javaReturnCode = "double";
-                    } else if (Util.isTypes(ARR_LONG_TYPE, mtype)) {
+                    } else if (JniUtil.isTypes(ARR_LONG_TYPE, mtype)) {
                         javaReturnCode = "long[]";
-                    } else if (Util.isTypes(OBJECT_TYPE, mtype)) {
+                    } else if (JniUtil.isTypes(OBJECT_TYPE, mtype)) {
                         javaReturnCode += "long ";
                         nativeReturnCode += "/*ptr*/ ";
-                    } else if (Util.isTypes(STRUCT_FLOAT_ARR_TYPE, mtype)) {
+                    } else if (JniUtil.isTypes(STRUCT_FLOAT_ARR_TYPE, mtype)) {
                         javaReturnCode += "float[] ";
                         nativeReturnCode += "/*none_ptr*/ ";
-                    } else if (Util.isTypes(STRUCT_INT_ARR_TYPE, mtype)) {
+                    } else if (JniUtil.isTypes(STRUCT_INT_ARR_TYPE, mtype)) {
                         javaReturnCode += "int[] ";
                         nativeReturnCode += "/*none_ptr*/ ";
-                    } else if (Util.isTypes(STRUCT_BYTE_ARR_TYPE, mtype)) {
+                    } else if (JniUtil.isTypes(STRUCT_BYTE_ARR_TYPE, mtype)) {
                         javaReturnCode += "byte[] ";
                         nativeReturnCode += "/*none_ptr*/ ";
                     } else if (mtype.equals("void")) {

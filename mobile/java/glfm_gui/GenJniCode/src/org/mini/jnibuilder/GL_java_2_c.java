@@ -13,8 +13,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import static org.mini.jnibuilder.Util.isPointer;
-import static org.mini.jnibuilder.Util.isTypes;
+import static org.mini.jnibuilder.JniUtil.isPointer;
+import static org.mini.jnibuilder.JniUtil.isTypes;
 
 /**
  *
@@ -30,7 +30,7 @@ public class GL_java_2_c {
     String[] path = {"src/main/java/org/mini/gl/GL.java", "org_mini_gl_GL_", "org/mini/gl/GL", "../../c/gui/jni_gl.c"};
 
     String[] ignore_list = {"",
-        "",};
+            "",};
 
     String C_BODY_HEADER
             = ""//
@@ -49,26 +49,26 @@ public class GL_java_2_c {
     String TOOL_FUNC
             = //
             "s32 count_GLFuncTable() {\n"
-            + "    return sizeof(method_gl_table) / sizeof(java_native_method);\n"
-            + "}\n"
-            + "\n"
-            + "__refer ptr_GLFuncTable() {\n"
-            + "    return &method_gl_table[0];\n"
-            + "}";
+                    + "    return sizeof(method_gl_table) / sizeof(java_native_method);\n"
+                    + "}\n"
+                    + "\n"
+                    + "__refer ptr_GLFuncTable() {\n"
+                    + "    return &method_gl_table[0];\n"
+                    + "}";
     String FUNC_TABLE_HEADER = "static java_native_method method_gl_table[] = {\n\n";
     String FUNC_TABLE_FOOTER = "};\n\n";
 
     String FUNC_BODY_TEMPLATE
             = //
             "int ${PKG_NAME}${METHOD_NAME}(Runtime *runtime, JClass *clazz) {\n"
-            + "    JniEnv *env = runtime->jnienv;\n"
-            + "    s32 pos = 0;\n"
-            + "    \n${GET_VAR}\n"
-            + "    ${RETURN_TYPE}${METHOD_NAME}(${NATIVE_ARGV});\n"
-            + "    ${PUSH_RESULT}\n"
-            + "    ${RELEASE_MEM}\n"
-            + "    return 0;\n"
-            + "}\n\n";
+                    + "    JniEnv *env = runtime->jnienv;\n"
+                    + "    s32 pos = 0;\n"
+                    + "    \n${GET_VAR}\n"
+                    + "    ${RETURN_TYPE}${METHOD_NAME}(${NATIVE_ARGV});\n"
+                    + "    ${PUSH_RESULT}\n"
+                    + "    ${RELEASE_MEM}\n"
+                    + "    return 0;\n"
+                    + "}\n\n";
     String PKG_NAME = "${PKG_NAME}";
     String PKG_PATH = "${PKG_PATH}";
     String METHOD_NAME = "${METHOD_NAME}";
@@ -285,14 +285,12 @@ public class GL_java_2_c {
                             javaArgvCode += "D";
                         } else if ("String".equals(argvType)) {
                             varCode += "    Instance *" + argvName + " = env->localvar_getRefer(runtime->localvar, pos++);\n";
-                            varCode += "    __refer ptr_" + argvName + " = NULL;\n";
                             varCode += "    Utf8String *u_" + argvName + ";\n";
                             varCode += "    if(" + argvName + "){\n";
                             varCode += "        u_" + argvName + " = env->utf8_create();\n";
-                            varCode += "        env->jstring_2_utf8(" + argvName + ", u_" + argvName + ");\n";
-                            varCode += "        ptr_" + argvName + " = env->utf8_cstr(u_" + argvName + ");\n";
+                            varCode += "        env->jstring_2_utf8(" + argvName + ", u_" + argvName + ", runtime);\n";
                             varCode += "    }\n";
-                            curArgvName = "(ptr_" + argvName + ")";
+                            curArgvName = "(env->utf8_cstr(u_" + argvName + "))";
                             releaseMemCode += "env->utf8_destory(u_" + argvName + ");";
                             javaArgvCode += "Ljava/lang/String;";
                         } else if ("byte[][]".equals(argvType) || "byte[]...".equals(argvType)) {

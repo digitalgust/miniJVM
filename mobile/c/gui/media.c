@@ -11,7 +11,7 @@ void JNI_OnLoad_mini(MiniJVM *jvm) {
     JniEnv *env = jvm->env;
     refers.env = env;
 
-    refers.runtime_list=pairlist_create(10);
+    refers.runtime_list = pairlist_create(10);
 
 
     env->native_reg_lib(jvm, ptr_GlfmFuncTable(), count_GlfmFuncTable());
@@ -27,22 +27,23 @@ void JNI_OnUnload_mini(MiniJVM *jvm) {
     env->native_remove_lib(jvm, ptr_NanovgFuncTable());
 
     s32 i;
-    for(i=0;i<refers.runtime_list->count;i++){
-        Runtime *runtime=pairlist_get_pair(refers.runtime_list, i).right;
-        if(runtime){
+    for (i = 0; i < refers.runtime_list->count; i++) {
+        Runtime *runtime = pairlist_get_pair(refers.runtime_list, i).right;
+        if (runtime) {
             thread_unboundle(runtime);
             runtime_destroy(runtime);
         }
     }
     pairlist_destroy(refers.runtime_list);
-    
+
 }
 
 tss_t TSS_KEY_RUNTIME_OF_THREAD;
+
 Runtime *getRuntimeCurThread(JniEnv *env) {
-    static s32 init=0;
-    if(!init){
-        tss_create(&TSS_KEY_RUNTIME_OF_THREAD,NULL);
+    static s32 init = 0;
+    if (!init) {
+        tss_create(&TSS_KEY_RUNTIME_OF_THREAD, NULL);
         //tss_create(&TSS_KEY_RUNTIME_OF_THREAD,(tss_dtor_t)env->runtime_destory);
         init = 1;
     }
@@ -55,9 +56,9 @@ Runtime *getRuntimeCurThread(JniEnv *env) {
         runtime = env->runtime_create(refers.jvm);
         env->thread_boundle(runtime);
         env->jthread_set_daemon_value(runtime->thrd_info->jthread, runtime, 1);
-        tss_set(TSS_KEY_RUNTIME_OF_THREAD,runtime);
+        tss_set(TSS_KEY_RUNTIME_OF_THREAD, runtime);
     }
-    
+
     return runtime;//
 }
 
@@ -67,3 +68,9 @@ Runtime *getRuntimeCurThread(JniEnv *env) {
  *
  * ===============================================================*/
 
+extern int has_ext(const char *ext);
+
+s64 get_gl_proc(const char *namez) {
+    int has = has_ext(namez);
+    return (s64) (intptr_t) has;
+}

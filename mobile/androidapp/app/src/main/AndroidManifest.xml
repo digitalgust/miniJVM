@@ -2,6 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.minijvm.activity">
 
+    <queries>
+        <package android:name="com.tencent.mm"/>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="weixin"/>
+        </intent>
+    </queries>
+
     <uses-feature
         android:glEsVersion="0x00020000"
         android:required="true" />
@@ -36,6 +44,13 @@
         </activity>
         <activity android:name=".JvmNativeActivity$VideoViewPlayActivity"
             android:configChanges="orientation|screenLayout|screenSize|keyboardHidden|keyboard" />
+        <activity
+            android:name=".wxapi.WXPayEntryActivity"
+            android:label="@string/app_name"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:exported="true"
+            android:taskAffinity="org.minijvm.activity"
+            android:launchMode="singleTask" />
     </application>
 
 </manifest>

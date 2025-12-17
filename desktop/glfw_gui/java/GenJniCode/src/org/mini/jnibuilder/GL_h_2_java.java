@@ -34,6 +34,7 @@ public class GL_h_2_java {
                     + "    }\n"
                     + "${FIELDS}\n"
                     + "    public static native void init();// //void\n"
+                    + "    public static native long get_gl_proc(String namez);//const char* //GLint64\n"
                     + "${METHODS}\n"
                     + "}\n\n";
     String FIELDS = "${FIELDS}";

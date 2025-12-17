@@ -1255,6 +1255,118 @@ public class GL {
     public static final int GL_TIME_ELAPSED = 0x88BF;
     public static final int GL_TIMESTAMP = 0x8E28;
     public static final int GL_INT_2_10_10_10_REV = 0x8D9F;
+    public static final int GL_SAMPLE_SHADING = 0x8C36;
+    public static final int GL_MIN_SAMPLE_SHADING_VALUE = 0x8C37;
+    public static final int GL_MIN_PROGRAM_TEXTURE_GATHER_OFFSET = 0x8E5E;
+    public static final int GL_MAX_PROGRAM_TEXTURE_GATHER_OFFSET = 0x8E5F;
+    public static final int GL_TEXTURE_CUBE_MAP_ARRAY = 0x9009;
+    public static final int GL_TEXTURE_BINDING_CUBE_MAP_ARRAY = 0x900A;
+    public static final int GL_PROXY_TEXTURE_CUBE_MAP_ARRAY = 0x900B;
+    public static final int GL_SAMPLER_CUBE_MAP_ARRAY = 0x900C;
+    public static final int GL_SAMPLER_CUBE_MAP_ARRAY_SHADOW = 0x900D;
+    public static final int GL_INT_SAMPLER_CUBE_MAP_ARRAY = 0x900E;
+    public static final int GL_UNSIGNED_INT_SAMPLER_CUBE_MAP_ARRAY = 0x900F;
+    public static final int GL_DRAW_INDIRECT_BUFFER = 0x8F3F;
+    public static final int GL_DRAW_INDIRECT_BUFFER_BINDING = 0x8F43;
+    public static final int GL_GEOMETRY_SHADER_INVOCATIONS = 0x887F;
+    public static final int GL_MAX_GEOMETRY_SHADER_INVOCATIONS = 0x8E5A;
+    public static final int GL_MIN_FRAGMENT_INTERPOLATION_OFFSET = 0x8E5B;
+    public static final int GL_MAX_FRAGMENT_INTERPOLATION_OFFSET = 0x8E5C;
+    public static final int GL_FRAGMENT_INTERPOLATION_OFFSET_BITS = 0x8E5D;
+    public static final int GL_MAX_VERTEX_STREAMS = 0x8E71;
+    public static final int GL_DOUBLE_VEC2 = 0x8FFC;
+    public static final int GL_DOUBLE_VEC3 = 0x8FFD;
+    public static final int GL_DOUBLE_VEC4 = 0x8FFE;
+    public static final int GL_DOUBLE_MAT2 = 0x8F46;
+    public static final int GL_DOUBLE_MAT3 = 0x8F47;
+    public static final int GL_DOUBLE_MAT4 = 0x8F48;
+    public static final int GL_DOUBLE_MAT2x3 = 0x8F49;
+    public static final int GL_DOUBLE_MAT2x4 = 0x8F4A;
+    public static final int GL_DOUBLE_MAT3x2 = 0x8F4B;
+    public static final int GL_DOUBLE_MAT3x4 = 0x8F4C;
+    public static final int GL_DOUBLE_MAT4x2 = 0x8F4D;
+    public static final int GL_DOUBLE_MAT4x3 = 0x8F4E;
+    public static final int GL_ACTIVE_SUBROUTINES = 0x8DE5;
+    public static final int GL_ACTIVE_SUBROUTINE_UNIFORMS = 0x8DE6;
+    public static final int GL_ACTIVE_SUBROUTINE_UNIFORM_LOCATIONS = 0x8E47;
+    public static final int GL_ACTIVE_SUBROUTINE_MAX_LENGTH = 0x8E48;
+    public static final int GL_ACTIVE_SUBROUTINE_UNIFORM_MAX_LENGTH = 0x8E49;
+    public static final int GL_MAX_SUBROUTINES = 0x8DE7;
+    public static final int GL_MAX_SUBROUTINE_UNIFORM_LOCATIONS = 0x8DE8;
+    public static final int GL_NUM_COMPATIBLE_SUBROUTINES = 0x8E4A;
+    public static final int GL_COMPATIBLE_SUBROUTINES = 0x8E4B;
+    public static final int GL_PATCHES = 0x000E;
+    public static final int GL_PATCH_VERTICES = 0x8E72;
+    public static final int GL_PATCH_DEFAULT_INNER_LEVEL = 0x8E73;
+    public static final int GL_PATCH_DEFAULT_OUTER_LEVEL = 0x8E74;
+    public static final int GL_TESS_CONTROL_OUTPUT_VERTICES = 0x8E75;
+    public static final int GL_TESS_GEN_MODE = 0x8E76;
+    public static final int GL_TESS_GEN_SPACING = 0x8E77;
+    public static final int GL_TESS_GEN_VERTEX_ORDER = 0x8E78;
+    public static final int GL_TESS_GEN_POINT_MODE = 0x8E79;
+    public static final int GL_ISOLINES = 0x8E7A;
+    public static final int GL_FRACTIONAL_ODD = 0x8E7B;
+    public static final int GL_FRACTIONAL_EVEN = 0x8E7C;
+    public static final int GL_MAX_PATCH_VERTICES = 0x8E7D;
+    public static final int GL_MAX_TESS_GEN_LEVEL = 0x8E7E;
+    public static final int GL_MAX_TESS_CONTROL_UNIFORM_COMPONENTS = 0x8E7F;
+    public static final int GL_MAX_TESS_EVALUATION_UNIFORM_COMPONENTS = 0x8E80;
+    public static final int GL_MAX_TESS_CONTROL_TEXTURE_IMAGE_UNITS = 0x8E81;
+    public static final int GL_MAX_TESS_EVALUATION_TEXTURE_IMAGE_UNITS = 0x8E82;
+    public static final int GL_MAX_TESS_CONTROL_OUTPUT_COMPONENTS = 0x8E83;
+    public static final int GL_MAX_TESS_PATCH_COMPONENTS = 0x8E84;
+    public static final int GL_MAX_TESS_CONTROL_TOTAL_OUTPUT_COMPONENTS = 0x8E85;
+    public static final int GL_MAX_TESS_EVALUATION_OUTPUT_COMPONENTS = 0x8E86;
+    public static final int GL_MAX_TESS_CONTROL_UNIFORM_BLOCKS = 0x8E89;
+    public static final int GL_MAX_TESS_EVALUATION_UNIFORM_BLOCKS = 0x8E8A;
+    public static final int GL_MAX_TESS_CONTROL_INPUT_COMPONENTS = 0x886C;
+    public static final int GL_MAX_TESS_EVALUATION_INPUT_COMPONENTS = 0x886D;
+    public static final int GL_MAX_COMBINED_TESS_CONTROL_UNIFORM_COMPONENTS = 0x8E1E;
+    public static final int GL_MAX_COMBINED_TESS_EVALUATION_UNIFORM_COMPONENTS = 0x8E1F;
+    public static final int GL_UNIFORM_BLOCK_REFERENCED_BY_TESS_CONTROL_SHADER = 0x84F0;
+    public static final int GL_UNIFORM_BLOCK_REFERENCED_BY_TESS_EVALUATION_SHADER = 0x84F1;
+    public static final int GL_TESS_EVALUATION_SHADER = 0x8E87;
+    public static final int GL_TESS_CONTROL_SHADER = 0x8E88;
+    public static final int GL_TRANSFORM_FEEDBACK = 0x8E22;
+    public static final int GL_TRANSFORM_FEEDBACK_BUFFER_PAUSED = 0x8E23;
+    public static final int GL_TRANSFORM_FEEDBACK_BUFFER_ACTIVE = 0x8E24;
+    public static final int GL_TRANSFORM_FEEDBACK_BINDING = 0x8E25;
+    public static final int GL_MAX_TRANSFORM_FEEDBACK_BUFFERS = 0x8E70;
+    public static final int GL_FIXED = 0x140C;
+    public static final int GL_IMPLEMENTATION_COLOR_READ_TYPE = 0x8B9A;
+    public static final int GL_IMPLEMENTATION_COLOR_READ_FORMAT = 0x8B9B;
+    public static final int GL_LOW_FLOAT = 0x8DF0;
+    public static final int GL_MEDIUM_FLOAT = 0x8DF1;
+    public static final int GL_HIGH_FLOAT = 0x8DF2;
+    public static final int GL_LOW_INT = 0x8DF3;
+    public static final int GL_MEDIUM_INT = 0x8DF4;
+    public static final int GL_HIGH_INT = 0x8DF5;
+    public static final int GL_SHADER_COMPILER = 0x8DFA;
+    public static final int GL_SHADER_BINARY_FORMATS = 0x8DF8;
+    public static final int GL_NUM_SHADER_BINARY_FORMATS = 0x8DF9;
+    public static final int GL_MAX_VERTEX_UNIFORM_VECTORS = 0x8DFB;
+    public static final int GL_MAX_VARYING_VECTORS = 0x8DFC;
+    public static final int GL_MAX_FRAGMENT_UNIFORM_VECTORS = 0x8DFD;
+    public static final int GL_RGB565 = 0x8D62;
+    public static final int GL_PROGRAM_BINARY_RETRIEVABLE_HINT = 0x8257;
+    public static final int GL_PROGRAM_BINARY_LENGTH = 0x8741;
+    public static final int GL_NUM_PROGRAM_BINARY_FORMATS = 0x87FE;
+    public static final int GL_PROGRAM_BINARY_FORMATS = 0x87FF;
+    public static final int GL_VERTEX_SHADER_BIT = 0x00000001;
+    public static final int GL_FRAGMENT_SHADER_BIT = 0x00000002;
+    public static final int GL_GEOMETRY_SHADER_BIT = 0x00000004;
+    public static final int GL_TESS_CONTROL_SHADER_BIT = 0x00000008;
+    public static final int GL_TESS_EVALUATION_SHADER_BIT = 0x00000010;
+    public static final long GL_ALL_SHADER_BITS = 0xFFFFFFFFL;
+    public static final int GL_PROGRAM_SEPARABLE = 0x8258;
+    public static final int GL_ACTIVE_PROGRAM = 0x8259;
+    public static final int GL_PROGRAM_PIPELINE_BINDING = 0x825A;
+    public static final int GL_MAX_VIEWPORTS = 0x825B;
+    public static final int GL_VIEWPORT_SUBPIXEL_BITS = 0x825C;
+    public static final int GL_VIEWPORT_BOUNDS_RANGE = 0x825D;
+    public static final int GL_LAYER_PROVOKING_VERTEX = 0x825E;
+    public static final int GL_VIEWPORT_INDEX_PROVOKING_VERTEX = 0x825F;
+    public static final int GL_UNDEFINED_VERTEX = 0x8260;
     public static final int GL_VERSION_1_0 = 1;
     public static final int GL_VERSION_1_1 = 1;
     public static final int GL_VERSION_1_2 = 1;
@@ -1267,8 +1379,11 @@ public class GL {
     public static final int GL_VERSION_3_1 = 1;
     public static final int GL_VERSION_3_2 = 1;
     public static final int GL_VERSION_3_3 = 1;
+    public static final int GL_VERSION_4_0 = 1;
+    public static final int GL_VERSION_4_1 = 1;
 
     public static native void init();// //void
+    public static native long get_gl_proc(String namez);//const char* //GLint64
     public static native void glCullFace(int pmode); //GLenum, //void
     public static native void glFrontFace(int pmode); //GLenum, //void
     public static native void glHint(int ptarget, int pmode); //GLenum,GLenum, //void
@@ -1927,7 +2042,7 @@ public class GL {
     public static native int glClientWaitSync(long psync, int pflags, long ptimeout); //GLsync,GLbitfield,GLuint64, //GLenum
     public static native void glWaitSync(long psync, int pflags, long ptimeout); //GLsync,GLbitfield,GLuint64, //void
     public static native void glGetInteger64v(int ppname, long[] pdata, int offset_pdata); //GLenum,GLint64*, //void
-    public static native void glGetSynciv(long psync, int ppname, int pbufSize, int[] plength, int offset_plength, int[] pvalues, int offset_pvalues); //GLsync,GLenum,GLsizei,GLsizei*,GLint*, //void
+    public static native void glGetSynciv(long psync, int ppname, int pcount, int[] plength, int offset_plength, int[] pvalues, int offset_pvalues); //GLsync,GLenum,GLsizei,GLsizei*,GLint*, //void
     public static native void glGetInteger64i_v(int ptarget, int pindex, long[] pdata, int offset_pdata); //GLenum,GLuint,GLint64*, //void
     public static native void glGetBufferParameteri64v(int ptarget, int ppname, long[] pparams, int offset_pparams); //GLenum,GLenum,GLint64*, //void
     public static native void glFramebufferTexture(int ptarget, int pattachment, int ptexture, int plevel); //GLenum,GLenum,GLuint,GLint, //void
@@ -1993,6 +2108,140 @@ public class GL {
     public static native void glColorP4uiv(int ptype, int[] pcolor, int offset_pcolor); //GLenum,const GLuint*, //void
     public static native void glSecondaryColorP3ui(int ptype, int pcolor); //GLenum,GLuint, //void
     public static native void glSecondaryColorP3uiv(int ptype, int[] pcolor, int offset_pcolor); //GLenum,const GLuint*, //void
+    public static native void glMinSampleShading(float pvalue); //GLfloat, //void
+    public static native void glBlendEquationi(int pbuf, int pmode); //GLuint,GLenum, //void
+    public static native void glBlendEquationSeparatei(int pbuf, int pmodeRGB, int pmodeAlpha); //GLuint,GLenum,GLenum, //void
+    public static native void glBlendFunci(int pbuf, int psrc, int pdst); //GLuint,GLenum,GLenum, //void
+    public static native void glBlendFuncSeparatei(int pbuf, int psrcRGB, int pdstRGB, int psrcAlpha, int pdstAlpha); //GLuint,GLenum,GLenum,GLenum,GLenum, //void
+    public static native void glDrawArraysIndirect(int pmode, Object pindirect, int offset_pindirect); //GLenum,const void*, //void
+    public static native void glDrawElementsIndirect(int pmode, int ptype, Object pindirect, int offset_pindirect); //GLenum,GLenum,const void*, //void
+    public static native void glUniform1d(int plocation, double px); //GLint,GLdouble, //void
+    public static native void glUniform2d(int plocation, double px, double py); //GLint,GLdouble,GLdouble, //void
+    public static native void glUniform3d(int plocation, double px, double py, double pz); //GLint,GLdouble,GLdouble,GLdouble, //void
+    public static native void glUniform4d(int plocation, double px, double py, double pz, double pw); //GLint,GLdouble,GLdouble,GLdouble,GLdouble, //void
+    public static native void glUniform1dv(int plocation, int pcount, double[] pvalue, int offset_pvalue); //GLint,GLsizei,const GLdouble*, //void
+    public static native void glUniform2dv(int plocation, int pcount, double[] pvalue, int offset_pvalue); //GLint,GLsizei,const GLdouble*, //void
+    public static native void glUniform3dv(int plocation, int pcount, double[] pvalue, int offset_pvalue); //GLint,GLsizei,const GLdouble*, //void
+    public static native void glUniform4dv(int plocation, int pcount, double[] pvalue, int offset_pvalue); //GLint,GLsizei,const GLdouble*, //void
+    public static native void glUniformMatrix2dv(int plocation, int pcount, int ptranspose, double[] pvalue, int offset_pvalue); //GLint,GLsizei,GLboolean,const GLdouble*, //void
+    public static native void glUniformMatrix3dv(int plocation, int pcount, int ptranspose, double[] pvalue, int offset_pvalue); //GLint,GLsizei,GLboolean,const GLdouble*, //void
+    public static native void glUniformMatrix4dv(int plocation, int pcount, int ptranspose, double[] pvalue, int offset_pvalue); //GLint,GLsizei,GLboolean,const GLdouble*, //void
+    public static native void glUniformMatrix2x3dv(int plocation, int pcount, int ptranspose, double[] pvalue, int offset_pvalue); //GLint,GLsizei,GLboolean,const GLdouble*, //void
+    public static native void glUniformMatrix2x4dv(int plocation, int pcount, int ptranspose, double[] pvalue, int offset_pvalue); //GLint,GLsizei,GLboolean,const GLdouble*, //void
+    public static native void glUniformMatrix3x2dv(int plocation, int pcount, int ptranspose, double[] pvalue, int offset_pvalue); //GLint,GLsizei,GLboolean,const GLdouble*, //void
+    public static native void glUniformMatrix3x4dv(int plocation, int pcount, int ptranspose, double[] pvalue, int offset_pvalue); //GLint,GLsizei,GLboolean,const GLdouble*, //void
+    public static native void glUniformMatrix4x2dv(int plocation, int pcount, int ptranspose, double[] pvalue, int offset_pvalue); //GLint,GLsizei,GLboolean,const GLdouble*, //void
+    public static native void glUniformMatrix4x3dv(int plocation, int pcount, int ptranspose, double[] pvalue, int offset_pvalue); //GLint,GLsizei,GLboolean,const GLdouble*, //void
+    public static native void glGetUniformdv(int pprogram, int plocation, double[] pparams, int offset_pparams); //GLuint,GLint,GLdouble*, //void
+    public static native int glGetSubroutineUniformLocation(int pprogram, int pshadertype, byte[] pname); //GLuint,GLenum,const GLchar*, //GLint
+    public static native int glGetSubroutineIndex(int pprogram, int pshadertype, byte[] pname); //GLuint,GLenum,const GLchar*, //GLuint
+    public static native void glGetActiveSubroutineUniformiv(int pprogram, int pshadertype, int pindex, int ppname, int[] pvalues, int offset_pvalues); //GLuint,GLenum,GLuint,GLenum,GLint*, //void
+    public static native void glGetActiveSubroutineUniformName(int pprogram, int pshadertype, int pindex, int pbufSize, int[] plength, int offset_plength, byte[] pname); //GLuint,GLenum,GLuint,GLsizei,GLsizei*,GLchar*, //void
+    public static native void glGetActiveSubroutineName(int pprogram, int pshadertype, int pindex, int pbufSize, int[] plength, int offset_plength, byte[] pname); //GLuint,GLenum,GLuint,GLsizei,GLsizei*,GLchar*, //void
+    public static native void glUniformSubroutinesuiv(int pshadertype, int pcount, int[] pindices, int offset_pindices); //GLenum,GLsizei,const GLuint*, //void
+    public static native void glGetUniformSubroutineuiv(int pshadertype, int plocation, int[] pparams, int offset_pparams); //GLenum,GLint,GLuint*, //void
+    public static native void glGetProgramStageiv(int pprogram, int pshadertype, int ppname, int[] pvalues, int offset_pvalues); //GLuint,GLenum,GLenum,GLint*, //void
+    public static native void glPatchParameteri(int ppname, int pvalue); //GLenum,GLint, //void
+    public static native void glPatchParameterfv(int ppname, float[] pvalues, int offset_pvalues); //GLenum,const GLfloat*, //void
+    public static native void glBindTransformFeedback(int ptarget, int pid); //GLenum,GLuint, //void
+    public static native void glDeleteTransformFeedbacks(int pn, int[] pids, int offset_pids); //GLsizei,const GLuint*, //void
+    public static native void glGenTransformFeedbacks(int pn, int[] pids, int offset_pids); //GLsizei,GLuint*, //void
+    public static native int glIsTransformFeedback(int pid); //GLuint, //GLboolean
+    public static native void glPauseTransformFeedback(); //void, //void
+    public static native void glResumeTransformFeedback(); //void, //void
+    public static native void glDrawTransformFeedback(int pmode, int pid); //GLenum,GLuint, //void
+    public static native void glDrawTransformFeedbackStream(int pmode, int pid, int pstream); //GLenum,GLuint,GLuint, //void
+    public static native void glBeginQueryIndexed(int ptarget, int pindex, int pid); //GLenum,GLuint,GLuint, //void
+    public static native void glEndQueryIndexed(int ptarget, int pindex); //GLenum,GLuint, //void
+    public static native void glGetQueryIndexediv(int ptarget, int pindex, int ppname, int[] pparams, int offset_pparams); //GLenum,GLuint,GLenum,GLint*, //void
+    public static native void glReleaseShaderCompiler(); //void, //void
+    public static native void glShaderBinary(int pcount, int[] pshaders, int offset_pshaders, int pbinaryFormat, Object pbinary, int offset_pbinary, int plength); //GLsizei,const GLuint*,GLenum,const void*,GLsizei, //void
+    public static native void glGetShaderPrecisionFormat(int pshadertype, int pprecisiontype, int[] prange, int offset_prange, int[] pprecision, int offset_pprecision); //GLenum,GLenum,GLint*,GLint*, //void
+    public static native void glDepthRangef(float pn, float pf); //GLfloat,GLfloat, //void
+    public static native void glClearDepthf(float pd); //GLfloat, //void
+    public static native void glGetProgramBinary(int pprogram, int pbufSize, int[] plength, int offset_plength, int[] pbinaryFormat, int offset_pbinaryFormat, Object pbinary, int offset_pbinary); //GLuint,GLsizei,GLsizei*,GLenum*,void*, //void
+    public static native void glProgramBinary(int pprogram, int pbinaryFormat, Object pbinary, int offset_pbinary, int plength); //GLuint,GLenum,const void*,GLsizei, //void
+    public static native void glProgramParameteri(int pprogram, int ppname, int pvalue); //GLuint,GLenum,GLint, //void
+    public static native void glUseProgramStages(int ppipeline, int pstages, int pprogram); //GLuint,GLbitfield,GLuint, //void
+    public static native void glActiveShaderProgram(int ppipeline, int pprogram); //GLuint,GLuint, //void
+    public static native int glCreateShaderProgramv(int ptype, int pcount, byte[][] pstrings); //GLenum,GLsizei,const GLchar*const*, //GLuint
+    public static native void glBindProgramPipeline(int ppipeline); //GLuint, //void
+    public static native void glDeleteProgramPipelines(int pn, int[] ppipelines, int offset_ppipelines); //GLsizei,const GLuint*, //void
+    public static native void glGenProgramPipelines(int pn, int[] ppipelines, int offset_ppipelines); //GLsizei,GLuint*, //void
+    public static native int glIsProgramPipeline(int ppipeline); //GLuint, //GLboolean
+    public static native void glGetProgramPipelineiv(int ppipeline, int ppname, int[] pparams, int offset_pparams); //GLuint,GLenum,GLint*, //void
+    public static native void glProgramUniform1i(int pprogram, int plocation, int pv0); //GLuint,GLint,GLint, //void
+    public static native void glProgramUniform1iv(int pprogram, int plocation, int pcount, int[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,const GLint*, //void
+    public static native void glProgramUniform1f(int pprogram, int plocation, float pv0); //GLuint,GLint,GLfloat, //void
+    public static native void glProgramUniform1fv(int pprogram, int plocation, int pcount, float[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,const GLfloat*, //void
+    public static native void glProgramUniform1d(int pprogram, int plocation, double pv0); //GLuint,GLint,GLdouble, //void
+    public static native void glProgramUniform1dv(int pprogram, int plocation, int pcount, double[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,const GLdouble*, //void
+    public static native void glProgramUniform1ui(int pprogram, int plocation, int pv0); //GLuint,GLint,GLuint, //void
+    public static native void glProgramUniform1uiv(int pprogram, int plocation, int pcount, int[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,const GLuint*, //void
+    public static native void glProgramUniform2i(int pprogram, int plocation, int pv0, int pv1); //GLuint,GLint,GLint,GLint, //void
+    public static native void glProgramUniform2iv(int pprogram, int plocation, int pcount, int[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,const GLint*, //void
+    public static native void glProgramUniform2f(int pprogram, int plocation, float pv0, float pv1); //GLuint,GLint,GLfloat,GLfloat, //void
+    public static native void glProgramUniform2fv(int pprogram, int plocation, int pcount, float[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,const GLfloat*, //void
+    public static native void glProgramUniform2d(int pprogram, int plocation, double pv0, double pv1); //GLuint,GLint,GLdouble,GLdouble, //void
+    public static native void glProgramUniform2dv(int pprogram, int plocation, int pcount, double[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,const GLdouble*, //void
+    public static native void glProgramUniform2ui(int pprogram, int plocation, int pv0, int pv1); //GLuint,GLint,GLuint,GLuint, //void
+    public static native void glProgramUniform2uiv(int pprogram, int plocation, int pcount, int[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,const GLuint*, //void
+    public static native void glProgramUniform3i(int pprogram, int plocation, int pv0, int pv1, int pv2); //GLuint,GLint,GLint,GLint,GLint, //void
+    public static native void glProgramUniform3iv(int pprogram, int plocation, int pcount, int[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,const GLint*, //void
+    public static native void glProgramUniform3f(int pprogram, int plocation, float pv0, float pv1, float pv2); //GLuint,GLint,GLfloat,GLfloat,GLfloat, //void
+    public static native void glProgramUniform3fv(int pprogram, int plocation, int pcount, float[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,const GLfloat*, //void
+    public static native void glProgramUniform3d(int pprogram, int plocation, double pv0, double pv1, double pv2); //GLuint,GLint,GLdouble,GLdouble,GLdouble, //void
+    public static native void glProgramUniform3dv(int pprogram, int plocation, int pcount, double[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,const GLdouble*, //void
+    public static native void glProgramUniform3ui(int pprogram, int plocation, int pv0, int pv1, int pv2); //GLuint,GLint,GLuint,GLuint,GLuint, //void
+    public static native void glProgramUniform3uiv(int pprogram, int plocation, int pcount, int[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,const GLuint*, //void
+    public static native void glProgramUniform4i(int pprogram, int plocation, int pv0, int pv1, int pv2, int pv3); //GLuint,GLint,GLint,GLint,GLint,GLint, //void
+    public static native void glProgramUniform4iv(int pprogram, int plocation, int pcount, int[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,const GLint*, //void
+    public static native void glProgramUniform4f(int pprogram, int plocation, float pv0, float pv1, float pv2, float pv3); //GLuint,GLint,GLfloat,GLfloat,GLfloat,GLfloat, //void
+    public static native void glProgramUniform4fv(int pprogram, int plocation, int pcount, float[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,const GLfloat*, //void
+    public static native void glProgramUniform4d(int pprogram, int plocation, double pv0, double pv1, double pv2, double pv3); //GLuint,GLint,GLdouble,GLdouble,GLdouble,GLdouble, //void
+    public static native void glProgramUniform4dv(int pprogram, int plocation, int pcount, double[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,const GLdouble*, //void
+    public static native void glProgramUniform4ui(int pprogram, int plocation, int pv0, int pv1, int pv2, int pv3); //GLuint,GLint,GLuint,GLuint,GLuint,GLuint, //void
+    public static native void glProgramUniform4uiv(int pprogram, int plocation, int pcount, int[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,const GLuint*, //void
+    public static native void glProgramUniformMatrix2fv(int pprogram, int plocation, int pcount, int ptranspose, float[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,GLboolean,const GLfloat*, //void
+    public static native void glProgramUniformMatrix3fv(int pprogram, int plocation, int pcount, int ptranspose, float[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,GLboolean,const GLfloat*, //void
+    public static native void glProgramUniformMatrix4fv(int pprogram, int plocation, int pcount, int ptranspose, float[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,GLboolean,const GLfloat*, //void
+    public static native void glProgramUniformMatrix2dv(int pprogram, int plocation, int pcount, int ptranspose, double[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,GLboolean,const GLdouble*, //void
+    public static native void glProgramUniformMatrix3dv(int pprogram, int plocation, int pcount, int ptranspose, double[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,GLboolean,const GLdouble*, //void
+    public static native void glProgramUniformMatrix4dv(int pprogram, int plocation, int pcount, int ptranspose, double[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,GLboolean,const GLdouble*, //void
+    public static native void glProgramUniformMatrix2x3fv(int pprogram, int plocation, int pcount, int ptranspose, float[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,GLboolean,const GLfloat*, //void
+    public static native void glProgramUniformMatrix3x2fv(int pprogram, int plocation, int pcount, int ptranspose, float[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,GLboolean,const GLfloat*, //void
+    public static native void glProgramUniformMatrix2x4fv(int pprogram, int plocation, int pcount, int ptranspose, float[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,GLboolean,const GLfloat*, //void
+    public static native void glProgramUniformMatrix4x2fv(int pprogram, int plocation, int pcount, int ptranspose, float[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,GLboolean,const GLfloat*, //void
+    public static native void glProgramUniformMatrix3x4fv(int pprogram, int plocation, int pcount, int ptranspose, float[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,GLboolean,const GLfloat*, //void
+    public static native void glProgramUniformMatrix4x3fv(int pprogram, int plocation, int pcount, int ptranspose, float[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,GLboolean,const GLfloat*, //void
+    public static native void glProgramUniformMatrix2x3dv(int pprogram, int plocation, int pcount, int ptranspose, double[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,GLboolean,const GLdouble*, //void
+    public static native void glProgramUniformMatrix3x2dv(int pprogram, int plocation, int pcount, int ptranspose, double[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,GLboolean,const GLdouble*, //void
+    public static native void glProgramUniformMatrix2x4dv(int pprogram, int plocation, int pcount, int ptranspose, double[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,GLboolean,const GLdouble*, //void
+    public static native void glProgramUniformMatrix4x2dv(int pprogram, int plocation, int pcount, int ptranspose, double[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,GLboolean,const GLdouble*, //void
+    public static native void glProgramUniformMatrix3x4dv(int pprogram, int plocation, int pcount, int ptranspose, double[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,GLboolean,const GLdouble*, //void
+    public static native void glProgramUniformMatrix4x3dv(int pprogram, int plocation, int pcount, int ptranspose, double[] pvalue, int offset_pvalue); //GLuint,GLint,GLsizei,GLboolean,const GLdouble*, //void
+    public static native void glValidateProgramPipeline(int ppipeline); //GLuint, //void
+    public static native void glGetProgramPipelineInfoLog(int ppipeline, int pbufSize, int[] plength, int offset_plength, byte[] pinfoLog); //GLuint,GLsizei,GLsizei*,GLchar*, //void
+    public static native void glVertexAttribL1d(int pindex, double px); //GLuint,GLdouble, //void
+    public static native void glVertexAttribL2d(int pindex, double px, double py); //GLuint,GLdouble,GLdouble, //void
+    public static native void glVertexAttribL3d(int pindex, double px, double py, double pz); //GLuint,GLdouble,GLdouble,GLdouble, //void
+    public static native void glVertexAttribL4d(int pindex, double px, double py, double pz, double pw); //GLuint,GLdouble,GLdouble,GLdouble,GLdouble, //void
+    public static native void glVertexAttribL1dv(int pindex, double[] pv, int offset_pv); //GLuint,const GLdouble*, //void
+    public static native void glVertexAttribL2dv(int pindex, double[] pv, int offset_pv); //GLuint,const GLdouble*, //void
+    public static native void glVertexAttribL3dv(int pindex, double[] pv, int offset_pv); //GLuint,const GLdouble*, //void
+    public static native void glVertexAttribL4dv(int pindex, double[] pv, int offset_pv); //GLuint,const GLdouble*, //void
+    public static native void glVertexAttribLPointer(int pindex, int psize, int ptype, int pstride, Object ppointer, int offset_ppointer); //GLuint,GLint,GLenum,GLsizei,const void*, //void
+    public static native void glGetVertexAttribLdv(int pindex, int ppname, double[] pparams, int offset_pparams); //GLuint,GLenum,GLdouble*, //void
+    public static native void glViewportArrayv(int pfirst, int pcount, float[] pv, int offset_pv); //GLuint,GLsizei,const GLfloat*, //void
+    public static native void glViewportIndexedf(int pindex, float px, float py, float pw, float ph); //GLuint,GLfloat,GLfloat,GLfloat,GLfloat, //void
+    public static native void glViewportIndexedfv(int pindex, float[] pv, int offset_pv); //GLuint,const GLfloat*, //void
+    public static native void glScissorArrayv(int pfirst, int pcount, int[] pv, int offset_pv); //GLuint,GLsizei,const GLint*, //void
+    public static native void glScissorIndexed(int pindex, int pleft, int pbottom, int pwidth, int pheight); //GLuint,GLint,GLint,GLsizei,GLsizei, //void
+    public static native void glScissorIndexedv(int pindex, int[] pv, int offset_pv); //GLuint,const GLint*, //void
+    public static native void glDepthRangeArrayv(int pfirst, int pcount, double[] pv, int offset_pv); //GLuint,GLsizei,const GLdouble*, //void
+    public static native void glDepthRangeIndexed(int pindex, double pn, double pf); //GLuint,GLdouble,GLdouble, //void
+    public static native void glGetFloati_v(int ptarget, int pindex, float[] pdata, int offset_pdata); //GLenum,GLuint,GLfloat*, //void
+    public static native void glGetDoublei_v(int ptarget, int pindex, double[] pdata, int offset_pdata); //GLenum,GLuint,GLdouble*, //void
 
 }
 

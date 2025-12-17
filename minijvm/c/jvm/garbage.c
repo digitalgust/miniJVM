@@ -6,7 +6,7 @@
 
 #if __JVM_LTALLOC__
 
-#include "ltalloc.h"
+
 
 #endif
 
@@ -583,7 +583,7 @@ s64 _garbage_collect(GcCollector *collector) {
     collector->obj_heap_size -= mem_free;
     spin_unlock(&collector->lock);
 #if __JVM_LTALLOC__
-    ltsqueeze(0);
+
 #endif
 #if _JVM_DEBUG_LOG_LEVEL > 1
     s64 time_gc = currentTimeMillis() - time;

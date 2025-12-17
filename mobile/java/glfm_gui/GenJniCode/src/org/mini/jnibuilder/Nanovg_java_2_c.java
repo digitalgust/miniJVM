@@ -15,9 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static org.mini.jnibuilder.Util.isConstPointer;
-import static org.mini.jnibuilder.Util.isPointer;
-import static org.mini.jnibuilder.Util.isTypes;
+import static org.mini.jnibuilder.JniUtil.isConstPointer;
+import static org.mini.jnibuilder.JniUtil.isPointer;
+import static org.mini.jnibuilder.JniUtil.isTypes;
 
 /**
  *
@@ -219,7 +219,7 @@ public class Nanovg_java_2_c {
                             returnCode = nativeReurnType + " _re_val = ";
                             String entryType = "";
                             entryType = nativeReurnType;//计算实体字节数，不能算指针大小
-                            if (Util.isStruct(nativeReurnType)) {
+                            if (JniUtil.isStruct(nativeReurnType)) {
                                 pushCode += cType + "* _ptr_re_val = (" + cType + "*)&_re_val;\n";
                                 pushCode += "    s32 _struct_bytes = sizeof(_re_val);\n";
                             } else {
@@ -347,7 +347,7 @@ public class Nanovg_java_2_c {
                             varCode += "    if(" + argvName + "){\n";
                             varCode += "        ptr_" + argvName + " = " + argvName + "->arr_body" + ";\n";
                             varCode += "    }\n";
-                            if (Util.isStruct(nativeArgvs[nativei])) {
+                            if (JniUtil.isStruct(nativeArgvs[nativei])) {
                                 curArgvType = "*(" + nativeArgvs[nativei] + "*)";
                             }
                             curArgvName = "(ptr_" + argvName + ")";

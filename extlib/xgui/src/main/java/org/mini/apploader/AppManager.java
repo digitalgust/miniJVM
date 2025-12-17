@@ -837,6 +837,7 @@ public final class AppManager extends GApplication implements XuiAppHolder {
                 envValue = "";
             }
             String enLow = envName.toLowerCase();
+            //System.out.println("setEnvVar:" + enLow + "=" + envValue);
             AppLoader.setProperty(enLow, envValue);
         }
 

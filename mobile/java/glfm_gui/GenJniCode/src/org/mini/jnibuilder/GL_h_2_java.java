@@ -13,8 +13,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import static org.mini.jnibuilder.Util.getType;
-import static org.mini.jnibuilder.Util.isTypes;
+import static org.mini.jnibuilder.JniUtil.getType;
+import static org.mini.jnibuilder.JniUtil.isTypes;
 
 /**
  *
@@ -37,6 +37,7 @@ public class GL_h_2_java {
             + "public class GL {\n"
             + "${FIELDS}\n"
             + "    //public static native int gladLoadGLES2Loader();// //int\n"
+            + "    public static native long get_gl_proc(String namez);//const char* //GLint64\n"
             + "${METHODS}\n"
             + "}\n\n";
     String FIELDS = "${FIELDS}";
