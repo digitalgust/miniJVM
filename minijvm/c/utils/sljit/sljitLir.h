@@ -1466,6 +1466,24 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_shift_into(struct sljit_compiler *
 	sljit_s32 src2_reg,
 	sljit_s32 src3, sljit_sw src3w);
 
+/* The following options are used by sljit_emit_op2_shift. */
+
+/* The src2 argument is shifted left by an immedate value. */
+#define SLJIT_SHL_IMM			(1 << 9)
+/* When src2 argument is a register, its value is undefined after the operation. */
+#define SLJIT_SRC2_UNDEFINED		(1 << 10)
+
+/* Emits an addition operation, where the second argument is shifted by a value.
+
+   op must be SLJIT_ADD | SLJIT_SHL_IMM, where the immedate value is stored in shift_arg
+
+   Flags: - (may destroy flags) */
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_op2_shift(struct sljit_compiler *compiler, sljit_s32 op,
+	sljit_s32 dst, sljit_sw dstw,
+	sljit_s32 src1, sljit_sw src1w,
+	sljit_s32 src2, sljit_sw src2w,
+	sljit_sw shift_arg);
+
 /* Starting index of opcodes for sljit_emit_op_src
    and sljit_emit_op_dst. */
 #define SLJIT_OP_SRC_DST_BASE		112
@@ -1743,7 +1761,10 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_label* sljit_emit_aligned_label(struct slj
 #define SLJIT_SET_OVERFLOW		SLJIT_SET(SLJIT_OVERFLOW)
 #define SLJIT_NOT_OVERFLOW		11
 
-/* Unlike other flags, sljit_emit_jump may destroy the carry flag. */
+/* Unlike other comparison types, sljit_emit_jump may destroy zero flag
+   when carry flag is specified (powerpc limitation). Furthermore,
+   SLJIT_CARRY represents that the first operand is unsigned less than
+   the second operand after an SLJIT_SUB / SLJIT_SUBC operation. */
 #define SLJIT_CARRY			12
 #define SLJIT_SET_CARRY			SLJIT_SET(SLJIT_CARRY)
 #define SLJIT_NOT_CARRY			13
@@ -1827,7 +1848,7 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_label* sljit_emit_aligned_label(struct slj
 #define SLJIT_CALL_RETURN		0x20000
 
 /* Emit a jump instruction. The destination is not set, only the type of the jump.
-    type must be between SLJIT_EQUAL and SLJIT_FAST_CALL
+    type must be between SLJIT_JUMP and SLJIT_FAST_CALL
     type can be combined (or'ed) with SLJIT_REWRITABLE_JUMP
 
    Flags: does not modify flags. */
@@ -1917,7 +1938,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_icall(struct sljit_compiler *compi
 /* Perform an operation using the conditional flags as the second argument.
    Type must always be between SLJIT_EQUAL and SLJIT_ORDERED_LESS_EQUAL.
    The value represented by the type is 1, if the condition represented
-   by the type is fulfilled, and 0 otherwise.
+   by type is fulfilled, and 0 otherwise.
 
    When op is SLJIT_MOV or SLJIT_MOV32:
      Set dst to the value represented by the type (0 or 1).
@@ -1930,27 +1951,55 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_op_flags(struct sljit_compiler *co
 	sljit_s32 dst, sljit_sw dstw,
 	sljit_s32 type);
 
+/* The following flags are used by sljit_emit_select(). */
+
+/* Compare src1 and src2_reg operands before executing select
+   (i.e. converts the select operation to a min/max operation). */
+#define SLJIT_COMPARE_SELECT	SLJIT_SET_Z
+
 /* Emit a conditional select instruction which moves src1 to dst_reg,
-   if the condition is satisfied, or src2_reg to dst_reg otherwise.
+   if the conditional flag is set, or src2_reg to dst_reg otherwise.
+   The conditional flag should be set before executing the select
+   instruction unless SLJIT_COMPARE_SELECT is specified.
 
    type must be between SLJIT_EQUAL and SLJIT_ORDERED_LESS_EQUAL
+       when SLJIT_COMPARE_SELECT option is NOT specified
+   type must be between SLJIT_LESS and SLJIT_SET_SIG_LESS_EQUAL
+       when SLJIT_COMPARE_SELECT option is specified
    type can be combined (or'ed) with SLJIT_32 to move 32 bit
        register values instead of word sized ones
+   type can be combined (or'ed) with SLJIT_COMPARE_SELECT
+       which compares src1 and src2_reg before executing the select
    dst_reg and src2_reg must be valid registers
    src1 must be valid operand
 
    Note: if src1 is a memory operand, its value
-         might be loaded even if the condition is false.
+         might be loaded even if the condition is false
 
-   Flags: - (does not modify flags) */
+   Note: when SLJIT_COMPARE_SELECT is specified, the status flag
+         bits might not represent the result of a normal compare
+         operation, hence flags are not specified after the operation
+
+   Note: if sljit_has_cpu_feature(SLJIT_HAS_CMOV) returns with a non-zero value:
+         (a) conditional register move (dst_reg==src2_reg, src1 is register)
+             can be performed using a single instruction, except on RISCV,
+             where three instructions are needed
+         (b) conditional clearing (dst_reg==src2_reg, src1==SLJIT_IMM,
+             src1w==0) can be performed using a single instruction,
+             except on x86, where two instructions are needed
+
+   Flags:
+     When SLJIT_COMPARE_SELECT is NOT specified: - (does not modify flags)
+     When SLJIT_COMPARE_SELECT is specified: - (may destroy flags) */
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_select(struct sljit_compiler *compiler, sljit_s32 type,
 	sljit_s32 dst_reg,
 	sljit_s32 src1, sljit_sw src1w,
 	sljit_s32 src2_reg);
 
 /* Emit a conditional floating point select instruction which moves
-   src1 to dst_reg, if the condition is satisfied, or src2_reg to
-   dst_reg otherwise.
+   src1 to dst_reg, if the conditional flag is set, or src2_reg to
+   dst_reg otherwise. The conditional flag should be set before
+   executing the select instruction.
 
    type must be between SLJIT_EQUAL and SLJIT_ORDERED_LESS_EQUAL
    type can be combined (or'ed) with SLJIT_32 to move 32 bit
