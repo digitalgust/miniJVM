@@ -179,7 +179,7 @@ void getRuntimeStackWithOutReturn(Runtime *runtime, Utf8String *ustr) {
         if (trun->method) {
             s32 lineNo = -1;
             if (trun->method->converted_code) {
-                lineNo = getLineNumByIndex(trun->method->converted_code, ((s64) trun->pc) - (s64) trun->method->converted_code->code);
+                lineNo = getLineNumByIndex(trun->method->converted_code, ((s64) (intptr_t) trun->pc) - (s64) (intptr_t) trun->method->converted_code->code);
             }
             utf8_append(ustr, trun->method->_this_class->name);
             utf8_append_c(ustr, ".");
@@ -201,7 +201,7 @@ void getRuntimeStack(Runtime *runtime, Utf8String *ustr) {
         if (trun->method) {
             s32 lineNo = -1;
             if (trun->method->converted_code) {
-                lineNo = getLineNumByIndex(trun->method->converted_code, ((s64) trun->pc) - (s64) trun->method->converted_code->code);
+                lineNo = getLineNumByIndex(trun->method->converted_code, ((s64) (intptr_t) trun->pc) - (s64) (intptr_t) trun->method->converted_code->code);
             }
             utf8_append_c(ustr, "    ");
             utf8_append(ustr, trun->method->_this_class->name);

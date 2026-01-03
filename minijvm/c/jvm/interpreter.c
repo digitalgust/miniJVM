@@ -633,7 +633,7 @@ s32 execute_method_impl(MethodInfo *method, Runtime *pruntime) {
                         check_gc_pause(-1);  //step debug required
                     }
 #if _JVM_DEBUG_LOG_LEVEL > 1
-                    if (r->jvm->collector->isworldstoped && thrd_info->top_runtime != r->jvm->collector->runtime) {
+                    if (r->jvm->collector->isworldstoped && r->thrd_info->top_runtime != r->jvm->collector->runtime) {
                         jvm_printf("[ERROR] world stopped, but thread is running: %llx\n", (s64) (intptr_t) r->thrd_info->jthread);
                     }
 #endif   //_JVM_DEBUG_LOG_LEVEL > 1

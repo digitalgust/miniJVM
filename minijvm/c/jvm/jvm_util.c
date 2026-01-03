@@ -15,7 +15,6 @@
 #if __JVM_LTALLOC__
 
 
-
 #endif
 
 #if __JVM_OS_ANDROID__
@@ -28,7 +27,7 @@
 
 //==================================================================================
 
-static FILE *logfile = NULL;
+FILE *logfile = NULL;
 static s64 last_flush = 0;
 static s64 nano_sec_start_at = 0;
 
@@ -644,7 +643,7 @@ void open_log() {
 
 void close_log() {
 #if _JVM_DEBUG_LOG_TO_FILE
-    if (!logfile) {
+    if (logfile) {
         fclose(logfile);
         logfile = NULL;
         last_flush = 0;

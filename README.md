@@ -5,12 +5,12 @@
 
 # miniJVM
 
-Develop iOS Android app in java, Cross platform java virtual machine , the minimal jvm .
+Develop iOS and Android apps in Java with a cross‑platform, minimal Java Virtual Machine. Run the same Java code on mobile and desktop with small binaries and low memory footprint.
 
 [Features](#linkfeatures)    
 [Architecture](#linkarch)    
-[Build for iOS/Android platform](#linkbuildmobile)     
-[Build for Windows/Linux/MacOS platform](#linkbuilddesktop)     
+[Build for iOS/Android](#linkbuildmobile)     
+[Build for Windows/Linux/macOS](#linkbuilddesktop)     
 [How to debug source](#linkdebug)    
 [Using miniJVM in project](#linkembed)    
 [Documentation](https://github.com/digitalgust/miniJVM/tree/master/doc/api.md)    
@@ -20,44 +20,44 @@ Develop iOS Android app in java, Cross platform java virtual machine , the minim
 
 ## Features
 
-* Jvm Build pass: iOS / Android / mingw-w64 32|64bit / MSVC 32|64bit / MacOS / Linux
-* No dependence Library
+* Builds on iOS / Android / mingw-w64 32|64-bit / MSVC 32|64-bit / macOS / Linux
+* No external dependencies
 * Minimal memory footprint
-* Minimal binary, embedded jvm
-* Minimal bootstrap classlib , So the classes is **NOT FULL** of jdk 1.8     
-* Support java source compiler(janino compiler)
-* Jit support
-* Low latency java garbage collection
-* Java remote debug supported, JDWP Spec
-* Translate minijvm classes to C source code to improve execute speed.
+* Small binaries; embeddable JVM
+* Minimal bootstrap class library — not a full JDK 8 implementation     
+* Supports Java source compilation (Janino)
+* JIT support
+* Low-latency Java garbage collection
+* Remote debugging via JDWP
+* Option to translate MiniJVM classes to C to improve execution speed
 
 <span id="linkmobilefeatures"/>
 
 ## iOS/Android Platform Extended Features
 
 * OpenGL ES 3.0
-* Swing like gui lib, HTML like XML layout
-* Audio/Video Playback and Capture
-* Take photo from Camera or Album
-* Save and Load file from mobile device
-* Api compatible with miniJVM desktop platform, app can running on desktop platform
+* Swing‑like GUI library; HTML‑style XML layout
+* Audio/Video playback and capture
+* Take photos from camera or album
+* Save and load files on the device
+* API compatible with the desktop platform so apps run on desktop too
 
 ## MiniJVM on Web
 
-MiniJVM on web build by Starcommander. [Source](https://github.com/Starcommander/miniJVM)
+MiniJVM on the web, built by Starcommander. [Source](https://github.com/Starcommander/miniJVM)
 [Web demo](https://java-on-web.org/examples/)
 
 <span id="linkdemo"/>
 
-## MiniJVM gui Demo
+## MiniJVM GUI Demos
 
   <div align=center><img width="112" height="199" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/doc/img/demo.gif"/></div>
 
   <div align=center><img width="400" height="240" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/doc/img/game.gif"/></div>
 
 
-* Instant Message app Demo , [Source](https://github.com/digitalgust/BiBiX)
-* 3D game app Demo, [Source](https://github.com/digitalgust/g3d)
+* Instant messaging app demo — [Source](https://github.com/digitalgust/BiBiX)
+* 3D game app demo — [Source](https://github.com/digitalgust/g3d)
 
 
 <span id="linkarch"/>
@@ -70,132 +70,132 @@ MiniJVM on web build by Starcommander. [Source](https://github.com/Starcommander
 
 ## Changelog:
 
-2023.09. Rebound the glfw and glfm graphics jni and separated the GUI java class into the xgui package .    
-2022.11. Add documentation.    
-2021.03. Add j2c module, it 's a tool for convert minijvm java source code to c source code , then build it as native application , support desktop and mobile platform .   
-2020.12. Add build script and release v2.1.   
-2020.10. Refactor source and remove binary in repository.   
-2020.10. Https supported.   
-2020.03. Add xml layout for gui system, fix jdwp debug for jetbrain idea.               
-2019.12. Bind cross-platform awtk ui system , see [awtk-minijvm](https://github.com/digitalgust/miniJVM/tree/master/desktop/awtk_gui)   
-2019.12. Jit enabled, it based on sljit project   
-2019.10. Jit is developing   
-2018.12. Optimize performance     
-2017.09. miniJVM start
+2023.09 Rebound GLFW and GLFM graphics JNI bindings; moved GUI Java classes into the xgui package.    
+2022.11 Added documentation.    
+2021.03 Added j2c module — converts MiniJVM Java source to C and builds native applications for desktop and mobile.   
+2020.12 Added build scripts and released v2.1.   
+2020.10 Refactored source and removed binaries from the repository.   
+2020.10 Added HTTPS support.   
+2020.03 Added XML layout for the GUI system; fixed JDWP debugging for JetBrains IDEs.               
+2019.12 Bound cross‑platform AWTK UI system — see [awtk-minijvm](https://github.com/digitalgust/miniJVM/tree/master/desktop/awtk_gui).   
+2019.12 Enabled JIT based on the SLJIT project.   
+2019.10 JIT in development.   
+2018.12 Optimized performance.     
+2017.09 Project started.
 
 <span id="linkbuildmobile"/>
 
-## Build for iOS/Android platform:
+## Build for iOS/Android
 
-Write java code once , running on all of iOS / Android / MacOSX / Win / Linux platforms   
-There were not essential jar file pre-built, so build these jar file first   
-Develop IDE:  Eclipse, Netbeans or JetBrains Intelli Idea
+Write Java code once and run it on iOS / Android / macOS / Windows / Linux.  
+The essential JARs are not prebuilt; build them first.  
+Preferred IDEs: Eclipse, NetBeans, or JetBrains IntelliJ IDEA.
 
-1. Run script **/binary/build_jar.sh** or **/binary/build_jar.bat** to generted jars.     
+1. Run **/binary/build_jar.sh** or **/binary/build_jar.bat** to generate JARs.     
    Or
 
-   > Build maven projects /minijvm/java copy to  **/mobile/assets/resfiles/minijvm_rt.jar**      
-   > Build maven projects /mobile/java/glfm_gui, copy to  **/mobile/assets/resfiles/glfm_gui.jar**       
-   > Build maven projects /mobile/java/ExApp, copy to  **/mobile/assets/resfiles/ExApp.jar**   
-   > Maybe you can change   **/mobile/java/ExApp/src/main/java/test/MyApp.java**    , Add your resource to **/mobile/java/ExApp/src/main/resource/res/** , such as audio or image etc, Configure **/mobile/java/ExApp/src/main/config.txt** for icon ,version, boot class, etc
+   > Build Maven project /minijvm/java; copy to **/mobile/assets/resfiles/minijvm_rt.jar**      
+   > Build Maven project /mobile/java/glfm_gui; copy to **/mobile/assets/resfiles/glfm_gui.jar**       
+   > Build Maven project /mobile/java/ExApp; copy to **/mobile/assets/resfiles/ExApp.jar**   
+   > Optionally modify **/mobile/java/ExApp/src/main/java/test/MyApp.java**; add resources to **/mobile/java/ExApp/src/main/resource/res/** (audio, images, etc.); configure **/mobile/java/ExApp/src/main/config.txt** for icon, version, boot class, etc.
 
-2. XCode open **/mobile/iosapp** ,setup developer account in Signing&Capabilities , build and install app to Device , verify app before running app (Setting->General->Device Management->{Developer account}->Verify App->Trust)
-3. Android Studio open **/mobile/androidapp**  build and install app to Android device
-4. The AppManager is running   
+2. In Xcode open **/mobile/iosapp**; set up your developer account in Signing & Capabilities; build and install to a device; verify the app before running (Settings → General → Device Management → {developer account} → Verify App → Trust).
+3. In Android Studio open **/mobile/androidapp**; build and install to an Android device.
+4. AppManager will run:
 
   <div align=center><img width="340" height="250"   src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/doc/img/appmgr.png"/></div>
 
 <span id="linkbuilddesktop"/>
 
-## Build for Windows/Linux/MacOS platform
+## Build for Windows/Linux/macOS
 
-1. Run script **/binary/build_jar.sh** or **/binary/build_jar.bat** to generted jars     
+1. Run **/binary/build_jar.sh** or **/binary/build_jar.bat** to generate JARs.     
    Or   
-   > Build java bootstrap classes  **/minijvm/java**  , Maven build jar and copy to /binary/lib/minijvm_rt.jar    
-   > Build gui classes **/desktop/glfw_gui/java** , Maven build jar and copy to /binary/libex/glfw_gui.jar     
-   > Build console test case classes **/test/minijvm_test** , Maven build jar and copy to /binary/libex/minijvm_test.jar     
-   > Build gui test app classes **/mobile/java/ExApp** , Maven built jar and copy to /binary/{platform}/apps/ExApp.jar
+   > Build Java bootstrap classes in **/minijvm/java**; Maven build the JAR and copy to /binary/lib/minijvm_rt.jar    
+   > Build GUI classes **/desktop/glfw_gui/java**; Maven build the JAR and copy to /binary/libex/glfw_gui.jar     
+   > Build console test case classes **/test/minijvm_test**; Maven build the JAR and copy to /binary/libex/minijvm_test.jar     
+   > Build GUI test app classes **/mobile/java/ExApp**; Maven build the JAR and copy to /binary/{platform}/apps/ExApp.jar
 
-2. Run **/binary/build_mac_linux.sh** or **/binary/build_wini686.bat** or  **/binary/build_winx64.bat** to generted binaries    
+2. Run **/binary/build_mac_linux.sh**, **/binary/build_wini686.bat**, or **/binary/build_winx64.bat** to generate binaries.    
    Or   
-   > Build gui jni c dynamic library /desktop/glfw_gui/c by cmake    
-   > Build minijvm /minijvm/c by cmake
+   > Build the GUI JNI C dynamic library in /desktop/glfw_gui/c with CMake    
+   > Build MiniJVM in /minijvm/c with CMake
 
-3. Run test script /binary/{platform}/test.sh | test.bat
+3. Run the test script /binary/{platform}/test.sh or test.bat
 
 <span id="linkdebug"/>
 
 ## How to debug source
 
-Almost all Java IDEs support remote debugging. The IDE connects to the debug port of the miniJVM through TCP, and then enters the debugging state. The miniJVM has two options, one is to enable the debugging function, and the other is to wait for the IDE to connect to the debug port after the VM is started, and execute the bytecode only after that. These two options need to be setup before initializing the VM.    
-These two options defined in jvm.h
+Almost all Java IDEs support remote debugging. The IDE connects to MiniJVM’s debug port over TCP and enters a debugging session. MiniJVM has two options: enable debugging, and suspend on start (wait for the IDE to attach before executing bytecode). Configure both options before initializing the VM.    
+These options are defined in jvm.h:
 
 ```
 struct _MiniJVM {
     ...
-    s32 jdwp_enable;// 0:disable java debug , 1:enable java debug and disable jit
+    s32 jdwp_enable;// 0: disable Java debug, 1: enable Java debug and disable JIT
     s32 jdwp_suspend_on_start;
     ...
 };
 ```
 
-1. Open miniJVM debug mode, mini_jvm jdwp listen on port 8000    
-   **Desktop platform** : Run mini_jvm with flag: -Xdebug for debug mode ,Or change source before build.   
-   /minijvm/c/main.c 134: jvm->jdwp_enable = 1; //change "jdwp" to 1    
-   **iOS/Android** : change source before build      
-   /mobile/c/glfmapp/main.c 50: refers.jvm->jdwp_enable = 1; //change 0 to 1    
-   If debug on phone device, check the device ip address from General Setting -> wifi ->(i)
+1. Enable MiniJVM debug mode; mini_jvm JDWP listens on port 8000.    
+   **Desktop**: Run mini_jvm with -Xdebug, or change the source before building.   
+   /minijvm/c/main.c: jvm->jdwp_enable = 1;    
+   **iOS/Android**: change the source before building.      
+   /mobile/c/glfmapp/main.c: refers.jvm->jdwp_enable = 1;    
+   For device debugging, check the device IP address in Settings → Wi‑Fi → (i).
 
 2. Run the VM with jars eg:   
    mini_jvm.exe -Xdebug -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/glfw_gui.jar org.mini.glfw.GlfwMain
 3. IDE open project , eg: /mobile/java/ExApp    
-   **Intelli idea** :  menu Run -> Edit Configurations , + remote , Transport : socket , Debugger mode : attach , host is your mini_jvm running on host ip and port ,ex "127.0.0.1:8000" or "192.168.0.32:8000"   
-   **Eclipse** : configuration like as idea    
-   **Netbeans** :  menu Debug -> connect to Debugger, Connector : SocketAttach , host is your mini_jvm running on the host and port, ex. "localhost:8000" , Timeout: 10000
-4. Then you can set breakpoints and pause vm and watch variables
+   **IntelliJ IDEA**: Run → Edit Configurations → + Remote; Transport: Socket; Debugger mode: Attach; host/port of your mini_jvm, e.g. "127.0.0.1:5005" or "192.168.0.32:5005".   
+   **Eclipse**: configure similarly.    
+   **NetBeans**: Debug → Attach Debugger; Connector: SocketAttach; host/port of your mini_jvm, e.g. "localhost:5005"; Timeout: 10000.
+4. Set breakpoints, pause the VM, and inspect variables.
 
 
 ## Project based miniJVM
 
-[Awtk-minijvm](https://github.com/zlgopen/awtk-minijvm)  :[AWTK](https://github.com/zlgopen/awtk) cross platform native ui bind to minijvm   
-[LWJGUI-Mobile](https://github.com/orange451/LWJGUI-Mobile) : java LWJGL UI library        
-[BiBiX](https://github.com/digitalgust/BiBiX) : java instantial messager        
-[MiniJVM web demo](https://java-on-web.org/examples/) :  miniJVM on web demo
+[Awtk-minijvm](https://github.com/zlgopen/awtk-minijvm): [AWTK](https://github.com/zlgopen/awtk) cross‑platform native UI bound to MiniJVM.   
+[LWJGUI-Mobile](https://github.com/orange451/LWJGUI-Mobile): Java LWJGL UI library.        
+[BiBiX](https://github.com/digitalgust/BiBiX): Java instant messenger.        
+[MiniJVM web demo](https://java-on-web.org/examples/): MiniJVM web demo.
 
 <span id="linkref"/>
 
 ## miniJVM referenced project and technology
 
-[Oracle CLDC](http://www.oracle.com/technetwork/java/cldc-141990.html)  :referenced cldc api     
-[OpenJDK](https://openjdk.java.net/) : referenced java api    
-[Miniz](https://github.com/richgel999/miniz) :for read jar files    
-[Glfm](https://github.com/brackeen/glfm) :for cross platform (android/ios) GUI     
-[Nanovg](https://github.com/memononen/nanovg)  :for GUI paint function     
-[Stb](https://github.com/nothings/stb) :for GUI truetype font and image    
-[Glad](https://github.com/Dav1dde/glad)  :for replace openGL/GLES head file   
-[Glfw](https://github.com/glfw/glfw)  :for pc cross platform GUI   
-[Dirent](https://github.com/tronkko/dirent)  :for linux style on win vc file and directory access    
-[Tinycthread](https://github.com/tinycthread/tinycthread)  :for cross platform thread    
-[JRegex](https://github.com/digitalgust/minijvm_third_lib/tree/master/jregex)  :for java String regex match        
-[Janino](http://janino-compiler.github.io/janino/)  :for compile java source file     
-[MiniAudio](https://github.com/dr-soft/miniaudio)  :for java audio playback and capture    
-[Sljit](https://github.com/zherczeg/sljit)  :Platform independent low-level JIT compiler      
-[Mbedtls](https://github.com/ARMmbed/mbedtls)  :Https support by mbedtls    
-[Avian](https://github.com/ReadyTalk/avian)  :referenced java api
+[Oracle CLDC](http://www.oracle.com/technetwork/java/cldc-141990.html): CLDC API reference.     
+[OpenJDK](https://openjdk.java.net/): Java API reference.    
+[Miniz](https://github.com/richgel999/miniz): reading JAR files.    
+[Glfm](https://github.com/brackeen/glfm): cross‑platform (Android/iOS) GUI.     
+[Nanovg](https://github.com/memononen/nanovg): GUI rendering.     
+[Stb](https://github.com/nothings/stb): GUI TrueType fonts and images.    
+[Glad](https://github.com/Dav1dde/glad): OpenGL/GLES header replacement.   
+[Glfw](https://github.com/glfw/glfw): cross‑platform desktop GUI.   
+[Dirent](https://github.com/tronkko/dirent): Linux‑style file and directory access on Windows VC.    
+[Tinycthread](https://github.com/tinycthread/tinycthread): cross‑platform threads.    
+[JRegex](https://github.com/digitalgust/minijvm_third_lib/tree/master/jregex): Java String regex matching.        
+[Janino](http://janino-compiler.github.io/janino/): compile Java source files.     
+[MiniAudio](https://github.com/dr-soft/miniaudio): Java audio playback and capture.    
+[Sljit](https://github.com/zherczeg/sljit): platform‑independent low‑level JIT compiler.      
+[Mbedtls](https://github.com/ARMmbed/mbedtls): HTTPS support via mbedtls.    
+[Avian](https://github.com/ReadyTalk/avian): Java API reference.
 
 ## Development IDE usage
 
-C / ObjC:   JetBrains CLion, Xcode, Virtual studio   
-Swift :    XCode    
-Java :     Jetbrain Idea, Netbeans   
-Android :  Android Studio
+C / ObjC: JetBrains CLion, Xcode, Visual Studio   
+Swift: Xcode    
+Java: JetBrains IntelliJ IDEA, NetBeans   
+Android: Android Studio
 
 
 <span id="linkembed"/>
 
 ## Using miniJVM in project
 
-Copy C source **/minijvm/c**  to your project source folder, copy built jar minijvm_rt.jar to you projec resource folder
+Copy C sources from **/minijvm/c** into your project, and copy the built minijvm_rt.jar into your project’s resource folder.
 
 ```
 #include "jvm/jvm.h"
@@ -224,18 +224,18 @@ int main(int argc, char **argv) {
 }
 ```
 
-## Third liberies   
+## Third‑Party Libraries   
 
 * ### Janino java compiler
 
 Project:   [Janino](http://janino-compiler.github.io/janino/)       
 Janino is a super-small, super-fast Java compiler.   
-Janino can not only compile a set of source files to a set of class files like JAVAC, but also compile a Java expression, a block, a class body, one .java file or a set of .java files in memory, load the bytecode and execute it directly in the same JVM. Janino compiler is not the full java compiler, see [limitation](http://janino-compiler.github.io/janino/#limitations) , like :
+Janino can not only compile a set of source files to class files like javac, but also compile a Java expression, a block, a class body, one .java file or a set of .java files in memory, load the bytecode and execute it directly in the same JVM. Janino is not a full Java compiler; see [limitations](http://janino-compiler.github.io/janino/#limitations), for example:
 
 ```
 List<String> list=new ArrayList();
 list.add("abc");
-String s=(String)list.get(0);//can't ignore (String) cast qualifier.
+String s=(String)list.get(0);// cannot omit the (String) cast.
 ```
 
 Download jars :    
@@ -243,38 +243,38 @@ Download jars :
 [commons-compiler.jar](https://github.com/digitalgust/digitalgust.github.io/blob/main/lib/commons-compiler.jar?raw=true)
 
 ```
-#compile /binary/res/BpDeepTest.java
+# compile /binary/res/BpDeepTest.java
 mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/janino.jar:../libex/commons-compiler.jar   org.codehaus.janino.Compiler  ../res/BpDeepTest.java
 ```
 
 * ### Luaj
 
 Project:   [Luaj](https://github.com/luaj/luaj)   
-miniJVM adapted : [Luaj minijvm]  https://github.com/digitalgust/minijvm_third_lib
-Lightweight, fast, Java-centric Lua interpreter written for JME and JSE, with string, table, package, math, io, os, debug, coroutine & luajava libraries, JSR-223 bindings, all metatags, weak tables and unique direct lua-to-java-bytecode compiling. Download jars :    
+MiniJVM adapted: [Luaj minijvm](https://github.com/digitalgust/minijvm_third_lib)  
+Lightweight, fast, Java‑centric Lua interpreter written for JME and JSE, with string, table, package, math, io, os, debug, coroutine & luajava libraries, JSR‑223 bindings, all metatags, weak tables and unique direct Lua‑to‑Java‑bytecode compiling. Download JAR:    
 [luaj.jar](https://github.com/digitalgust/digitalgust.github.io/blob/main/lib/luaj.jar?raw=true)
 
 ```
 mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/luaj.jar Sample
 ```
 
-## Screen shot   
+## Screenshots   
 
 <table>
 <tr>
-<td>  Windows mini_jvm gui
+<td>  Windows mini_jvm GUI
   <div align=center><img width="210" height="160" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/doc/img/win.png"/></div>
 
 </td>
-<td>  Macos mini_jvm gui    
+<td>  macOS mini_jvm GUI    
   <div align=center><img width="210" height="160" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/doc/img/mac.png"/></div> 
 
 </td>
-<td>  Linux mini_jvm gui    
+<td>  Linux mini_jvm GUI    
   <div align=center><img width="210" height="160" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/doc/img/centos.png"/></div>
 
 </td>
-<td>  Web mini_jvm gui    
+<td>  Web mini_jvm GUI    
   <div align=center><img width="210" height="160" src="https://raw.githubusercontent.com/digitalgust/miniJVM/master/doc/img/web-glfw.png"/></div>
 </td>
 </tr>
@@ -282,28 +282,28 @@ mini_jvm -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/luaj.jar Sample
 
 <span id="linkdir"/>    
 
-## Directorie struct   
+## Directory Structure   
 
 ```
 .
-├── binary              miniJVM binary  for build(win32/win64/mac/linux/
+├── binary              miniJVM binaries for build (win32/win64/mac/linux)
 ├── desktop
-│   ├── awtk_gui        open source gui frame awtk jni
-│   └── glfw_gui        desktop openGL, glfw, miniaudio, native module
-├── j2c                 miniJVM java source translate to c tools
+│   ├── awtk_gui        open-source AWTK GUI JNI bindings
+│   └── glfw_gui        desktop OpenGL, GLFW, miniaudio, native module
+├── j2c                 tools to translate MiniJVM Java source to C
 │   ├── app
 │   └── translator
 ├── minijvm             Core source
-│   ├── c               miniJVM c source 
+│   ├── c               MiniJVM C source 
 │   └── java            miniJVM runtime library
 ├── mobile
 │   ├── androidapp      Android launcher
-│   ├── assets          mobile app resource, font files, jar files ,pic ,audio etc.
-│   ├── c               mobile native lib, openGLES, glfm framework, gui jni, glfmapp
+│   ├── assets          app resources (fonts, JARs, images, audio, etc.)
+│   ├── c               mobile native libs: OpenGLES, GLFM framework, GUI JNI, glfmapp
 │   ├── iosapp          iOS launcher
-│   └── java            mobile java lib, GUI, AppManager, app example
+│   └── java            mobile Java lib, GUI, AppManager, example app
 ├── doc
-└── test                miniJVM test case 
+└── test                miniJVM test cases 
 ```
 
 

@@ -227,12 +227,36 @@ s32 get_jvm_state(MiniJVM *jvm) {
     return jvm->jvm_state;
 }
 
+static MiniJVM *g_jvm = NULL;
+
 void _on_jvm_sig_print(s32 no) {
     jvm_printf("[SIGNAL]jvm sig:%d  errno: %d , %s\n", no, errno, strerror(errno));
+    if (g_jvm && g_jvm->thread_list) {
+        jvm_printf("[SIGNAL]dump all threads runtime stacks:\n");
+        spin_lock(&g_jvm->thread_list->spinlock);
+        s32 len = g_jvm->thread_list->length;
+        spin_unlock(&g_jvm->thread_list->spinlock);
+        s32 i;
+        for (i = 0; i < len; i++) {
+            Runtime *r = threadlist_get(g_jvm, i);
+            if (!r || !r->thrd_info) continue;
+            Utf8String *ustr = utf8_create();
+            getRuntimeStackWithOutReturn(r, ustr);
+            jvm_printf("[Thread #%d status=%d suspend=%d blocking=%d] %s\n",
+                       i,
+                       r->thrd_info->thread_status,
+                       r->thrd_info->is_suspend,
+                       r->thrd_info->is_blocking,
+                       utf8_cstr(ustr));
+            utf8_destroy(ustr);
+        }
+    }
 }
 
 void _on_jvm_sig(s32 no) {
     _on_jvm_sig_print(no);
+    fflush(NULL);
+    close_log();
     exit(no);
 }
 
@@ -246,6 +270,7 @@ MiniJVM *jvm_create() {
     jvm->max_heap_size = MAX_HEAP_SIZE_DEFAULT;
     jvm->heap_overload_percent = GARBAGE_OVERLOAD_DEFAULT;
     jvm->garbage_collect_period_ms = GARBAGE_PERIOD_MS_DEFAULT;
+    g_jvm = jvm;
     return jvm;
 }
 
@@ -359,7 +384,12 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     gc_resume(jvm->collector);
 
 #if _JVM_DEBUG_LOG_LEVEL > 0
-    jvm_printf("[INFO]jvm inited\n");
+#ifdef __JVM_ARCH_32__
+    c8 *arch = "32-bit";
+#else
+    c8 *arch = "64-bit";
+#endif
+    jvm_printf("[INFO] jvm inited in %s mode\n", arch);
 #endif
     return 0;
 }
