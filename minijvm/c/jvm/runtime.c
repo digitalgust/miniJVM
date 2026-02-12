@@ -1,5 +1,3 @@
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -123,7 +121,7 @@ Runtime *runtime_create(MiniJVM *jvm) {
     }
     Runtime *runtime = runtime_create_inl(NULL);
     runtime->jvm = jvm;
-//    runtime->jvm = jvm;
+    //    runtime->jvm = jvm;
     return runtime;
 }
 
@@ -145,7 +143,7 @@ s32 getRuntimeDepth(Runtime *top) {
         deep++;
         top = top->son;
     }
-    deep--;//top need not
+    deep--; //top need not
     return deep;
 }
 
@@ -252,8 +250,6 @@ void getExceptionStack(Runtime *runtime, Utf8String *ustr) {
 }
 
 //======================= localvar =============================
-
-
 
 
 void localvar_setInt_jni(LocalVarItem *localvar, s32 index, s32 val) {

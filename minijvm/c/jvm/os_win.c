@@ -72,11 +72,11 @@ size_t strlcpy(c8 *dst, const c8 *src, size_t siz) {
     /* Not enough room in dst, add NUL and traverse rest of src */
     if (n == 0) {
         if (siz != 0)
-            *d = '\0';        /* NUL-terminate dst */
+            *d = '\0'; /* NUL-terminate dst */
         while (*s++);
     }
 
-    return (s - src - 1);    /* count does not include NUL */
+    return (s - src - 1); /* count does not include NUL */
 }
 
 
@@ -227,7 +227,7 @@ static c8 *inet_ntop6(const u8 *src, c8 *dst, socklen_t size) {
     }
     /* Was it a trailing run of 0x00's? */
     if (best.base != -1 && (best.base + best.len) ==
-                           (NS_IN6ADDRSZ / NS_INT16SZ))
+        (NS_IN6ADDRSZ / NS_INT16SZ))
         *tp++ = ':';
     *tp++ = '\0';
 
@@ -393,7 +393,7 @@ static s32 inet_pton6(const c8 *src, u_char *dst) {
             inet_pton4(curtok, tp) > 0) {
             tp += NS_INADDRSZ;
             seen_xdigits = 0;
-            break;    /*%< '\\0' was seen by inet_pton4(). */
+            break; /*%< '\\0' was seen by inet_pton4(). */
         }
         return (0);
     }
@@ -541,7 +541,6 @@ s32 descriptor(HANDLE h, Runtime *runtime) {
 
 
 s32 os_execute(Runtime *runtime, Instance *jstrArr, Instance *jlongArr, ArrayList *cstrList, const c8 *cmd) {
-
     HANDLE in[] = {0, 0};
     HANDLE out[] = {0, 0};
     HANDLE err[] = {0, 0};
@@ -689,7 +688,6 @@ s32 os_load_lib_and_init(const c8 *libname, Runtime *runtime) {
 }
 
 void os_get_lang(Utf8String *buf) {
-
     const int size = 256;
     wchar_t localeName[size];
 
@@ -727,7 +725,7 @@ s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src) {
     // 获取 UTF-8 字符串的长度
     s32 utf8_len = src->length;
     if (utf8_len == 0) {
-        bytebuf_expand(dst, 1);  // 为 null 终止符分配空间
+        bytebuf_expand(dst, 1); // 为 null 终止符分配空间
         dst->buf[0] = 0;
         return 0;
     }
@@ -750,7 +748,7 @@ s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src) {
         jvm_free(utf16_buf);
         return -1;
     }
-    utf16_buf[utf16_len] = 0;  // 确保 null 终止
+    utf16_buf[utf16_len] = 0; // 确保 null 终止
 
     // 第二步：将 UTF-16 转换为 ANSI/ACP 编码
     s32 ansi_len = WideCharToMultiByte(CP_ACP, 0, utf16_buf, utf16_len, NULL, 0, NULL, NULL);
@@ -807,7 +805,7 @@ s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
         jvm_free(utf16_buf);
         return -1;
     }
-    utf16_buf[utf16_len] = 0;  // Ensure null termination
+    utf16_buf[utf16_len] = 0; // Ensure null termination
 
     // Convert from UTF-16 to UTF-8
     s32 utf8_len = WideCharToMultiByte(CP_UTF8, 0, utf16_buf, utf16_len, NULL, 0, NULL, NULL);
@@ -827,7 +825,7 @@ s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
     // Clean up and set length
     jvm_free(utf16_buf);
     dst->length = utf8_len;
-    dst->data[utf8_len] = 0;  // Ensure null termination
+    dst->data[utf8_len] = 0; // Ensure null termination
 
     return utf8_len;
 }

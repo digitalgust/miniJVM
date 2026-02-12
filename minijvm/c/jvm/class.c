@@ -40,6 +40,18 @@ s32 class_destroy(JClass *clazz) {
     arraylist_destroy(clazz->insFieldPtrIndex);
     arraylist_destroy(clazz->staticFieldPtrIndex);
     arraylist_destroy(clazz->supers);
+    if(clazz->vtable) jvm_free(clazz->vtable);
+    if(clazz->itable) {
+        if(clazz->itable->interfaces) jvm_free(clazz->itable->interfaces);
+        if(clazz->itable->entries) {
+            s32 i;
+            for(i=0; i < clazz->itable_length; i++) {
+                if(clazz->itable->entries[i].methods) jvm_free(clazz->itable->entries[i].methods);
+            }
+            jvm_free(clazz->itable->entries);
+        }
+        jvm_free(clazz->itable);
+    }
     jvm_free(clazz);
     return 0;
 }
@@ -90,6 +102,125 @@ void class_clear_refer(PeerClassLoader *cloader, JClass *clazz) {
 }
 //===============================    Initialization related  ==================================
 
+void class_build_vtable(JClass *clazz) {
+    if (clazz->vtable) return;
+    if (clazz->cff.access_flags & ACC_INTERFACE) {
+        return;
+    }
+
+    JClass *superclass = clazz->superclass;
+    s32 super_vtable_len = 0;
+    if (superclass) {
+        if (!superclass->vtable) {
+            // Ensure superclass vtable is built
+            class_build_vtable(superclass);
+        }
+        super_vtable_len = superclass->vtable_length;
+    }
+
+    // Estimate max size: super vtable + own methods
+    s32 max_len = super_vtable_len + clazz->methodPool.method_used;
+    MethodInfo **new_vtable = jvm_calloc(sizeof(MethodInfo *) * max_len);
+    
+    // Copy super vtable
+    if (superclass && superclass->vtable) {
+        memcpy(new_vtable, superclass->vtable, sizeof(MethodInfo *) * super_vtable_len);
+    }
+
+    s32 current_len = super_vtable_len;
+
+    s32 i;
+    for (i = 0; i < clazz->methodPool.method_used; i++) {
+        MethodInfo *mi = &clazz->methodPool.method[i];
+        if (mi->is_static || (mi->access_flags & ACC_PRIVATE) || utf8_equals_c(mi->name, "<init>") || utf8_equals_c(mi->name, "<clinit>")) {
+            continue;
+        }
+
+        s32 override_index = -1;
+        
+        s32 j;
+        for (j = 0; j < super_vtable_len; j++) {
+            MethodInfo *super_mi = new_vtable[j];
+            if (utf8_equals(mi->name, super_mi->name) && utf8_equals(mi->descriptor, super_mi->descriptor)) {
+                override_index = j;
+                break;
+            }
+        }
+
+        if (override_index != -1) {
+            new_vtable[override_index] = mi;
+            mi->_vtable_index = override_index;
+        } else {
+            new_vtable[current_len] = mi;
+            mi->_vtable_index = current_len;
+            current_len++;
+        }
+    }
+
+    clazz->vtable = new_vtable;
+    clazz->vtable_length = current_len;
+}
+
+static s32 is_itable_method(MethodInfo *mi) {
+    if (mi->is_static) return 0;
+    if (mi->access_flags & ACC_PRIVATE) return 0;
+    if (utf8_equals_c(mi->name, "<init>")) return 0;
+    if (utf8_equals_c(mi->name, "<clinit>")) return 0;
+    return 1;
+}
+
+void class_build_itable(JClass *clazz, Runtime *runtime) {
+    if (clazz->itable) return;
+    if (clazz->cff.access_flags & ACC_INTERFACE) return;
+
+    ArrayList *interfaces = arraylist_create(0);
+    s32 i;
+    for (i = 0; i < clazz->supers->length; i++) {
+        JClass *sup = arraylist_get_value(clazz->supers, i);
+        if (!sup) continue;
+        if (!(sup->cff.access_flags & ACC_INTERFACE)) continue;
+        if (arraylist_index_of(interfaces, DEFAULT_ARRAYLIST_EQUALS_FUNC, sup) < 0) {
+            arraylist_push_back(interfaces, sup);
+        }
+    }
+
+    s32 itable_len = interfaces->length;
+    if (itable_len > 0) {
+        Itable *itable = jvm_calloc(sizeof(Itable));
+        itable->interfaces = jvm_calloc(sizeof(JClass *) * itable_len);
+        itable->entries = jvm_calloc(sizeof(ItableEntry) * itable_len);
+        
+        s32 k;
+        for (k = 0; k < itable_len; k++) {
+            JClass *ic = arraylist_get_value(interfaces, k);
+            itable->interfaces[k] = ic;
+            
+            s32 method_count = 0;
+            for (i = 0; i < ic->methodPool.method_used; i++) {
+                MethodInfo *im = &ic->methodPool.method[i];
+                if (!is_itable_method(im)) {
+                    im->_itable_index = -1;
+                    continue;
+                }
+                im->_itable_index = method_count;
+                method_count++;
+            }
+
+            itable->entries[k].method_count = method_count;
+            itable->entries[k].methods = method_count ? jvm_calloc(sizeof(MethodInfo *) * method_count) : NULL;
+
+            for (i = 0; i < ic->methodPool.method_used; i++) {
+                MethodInfo *im = &ic->methodPool.method[i];
+                if (im->_itable_index < 0) continue;
+                itable->entries[k].methods[im->_itable_index] = find_methodInfo_by_name(clazz->name, im->name, im->descriptor, clazz->jloader, runtime);
+            }
+        }
+        clazz->itable = itable;
+        clazz->itable_length = itable_len;
+    }
+    arraylist_destroy(interfaces);
+}
+
 /**
  * It is necessary to initialize the static variable area 
  * and generate instance templates after all classes are loaded into the system
@@ -116,6 +247,11 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
     find_supers(clazz, runtime);
 
     s32 i;
+    for (i = 0; i < clazz->methodPool.method_used; i++) {
+        MethodInfo *mi = &clazz->methodPool.method[i];
+        mi->_vtable_index = -1;
+        mi->_itable_index = -1;
+    }
 
 //    if (utf8_equals_c(clazz->name, "espresso/parser/JavaParser")) {
 //        int debug = 1;
@@ -299,6 +435,9 @@ s32 class_prepar(Instance *loader, JClass *clazz, Runtime *runtime) {
 
 //    jvm_printf("prepared: %s\n", utf8_cstr(clazz->name));
 
+    class_build_vtable(clazz);
+    class_build_itable(clazz, runtime);
+
     clazz->status = CLASS_STATUS_PREPARED;
     return ret;
 }
@@ -328,6 +467,13 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
          */
         for (i = 0; i < clazz->constantPool.methodRef->length; i++) {
             ConstantMethodRef *cmr = (ConstantMethodRef *) arraylist_get_value(clazz->constantPool.methodRef, i);
+            if (utf8_equals_c(cmr->name, "getClass")
+                &&
+                utf8_equals_c(cmr->clsName, "java/lang/Object")
+                    ) {
+                s32 debug = 1;
+            }
+
             cmr->methodInfo = find_methodInfo_by_methodref(clazz, cmr->item.index, runtime);
             cmr->virtual_methods = pairlist_create(0);
             //jvm_printf("%s.%s %llx\n", utf8_cstr(clazz->name), utf8_cstr(cmr->name), (s64) (intptr_t) cmr->virtual_methods);

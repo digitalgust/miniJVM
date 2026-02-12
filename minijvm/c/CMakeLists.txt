@@ -20,15 +20,16 @@ if (CMAKE_BUILD_TYPE MATCHES "Debug")
 endif ()
 
 
-include_directories(jvm/ utils/ utils/sljit/ utils/https/ utils/https/mbedtls/include)
+include_directories(jvm/ utils/ utils/sljit/ utils/https/ utils/https/mbedtls/include utils/mimalloc/include)
 
 aux_source_directory(./jvm SOURCE_JVM)
 aux_source_directory(./utils SOURCE_UTILS)
 aux_source_directory(./utils/https SOURCE_HTTPS)
 aux_source_directory(./utils/https/mbedtls/library SOURCE_TLS)
 set(SOURCE_SLJIT ./utils/sljit/sljitLir.c)
+set(SOURCE_MIMALLOC ./utils/mimalloc/src/static.c)
 
-SET(SOURCE_FILES ${SOURCE_JVM} ${SOURCE_UTILS} ${SOURCE_HTTPS} ${SOURCE_TLS} ${SOURCE_SLJIT})
+SET(SOURCE_FILES ${SOURCE_JVM} ${SOURCE_UTILS} ${SOURCE_HTTPS} ${SOURCE_TLS} ${SOURCE_SLJIT} ${SOURCE_MIMALLOC})
 
 MESSAGE(STATUS "platform: ${CMAKE_SYSTEM_NAME}")
 

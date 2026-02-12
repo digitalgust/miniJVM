@@ -5,8 +5,8 @@
 #ifndef MINI_JVM_SPINLOCK_H
 #define MINI_JVM_SPINLOCK_H
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
+
 #endif
 //======================= Spinlock =============================
 // This spinlock implementation provides basic lock and unlock functionalities
@@ -27,8 +27,14 @@ extern "C"
 struct _SpinLock {
     volatile s32 lock;
     volatile s32 count;
+    volatile s32 owner_valid;
+#if defined(_TTHREAD_WIN32_)
+    volatile DWORD owner_tid; //for win32 handle
+#else
     volatile thrd_t owner;
+#endif
 };
+
 typedef struct _SpinLock spinlock_t;
 
 // Platform specific atomic operations
@@ -54,25 +60,20 @@ typedef struct _SpinLock spinlock_t;
 #include <pthread.h>
 static pthread_mutex_t atomic_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static inline int atomic_cas(volatile s32 *ptr, s32 old_val, s32 new_val)
-{
+static inline int atomic_cas(volatile s32 *ptr, s32 old_val, s32 new_val) {
     int result;
     pthread_mutex_lock(&atomic_mutex);
-    if (*ptr == old_val)
-    {
+    if (*ptr == old_val) {
         *ptr = new_val;
         result = 1;
-    }
-    else
-    {
+    } else {
         result = 0;
     }
     pthread_mutex_unlock(&atomic_mutex);
     return result;
 }
 
-static inline s32 atomic_inc(volatile s32 *ptr)
-{
+static inline s32 atomic_inc(volatile s32 *ptr) {
     s32 result;
     pthread_mutex_lock(&atomic_mutex);
     *ptr += 1;
@@ -81,8 +82,7 @@ static inline s32 atomic_inc(volatile s32 *ptr)
     return result;
 }
 
-static inline s32 atomic_dec(volatile s32 *ptr)
-{
+static inline s32 atomic_dec(volatile s32 *ptr) {
     s32 result;
     pthread_mutex_lock(&atomic_mutex);
     *ptr -= 1;
@@ -91,8 +91,7 @@ static inline s32 atomic_dec(volatile s32 *ptr)
     return result;
 }
 
-static inline s32 atomic_add(volatile s32 *ptr, s32 val)
-{
+static inline s32 atomic_add(volatile s32 *ptr, s32 val) {
     s32 result;
     pthread_mutex_lock(&atomic_mutex);
     *ptr += val;
@@ -101,8 +100,7 @@ static inline s32 atomic_add(volatile s32 *ptr, s32 val)
     return result;
 }
 
-static inline s32 atomic_sub(volatile s32 *ptr, s32 val)
-{
+static inline s32 atomic_sub(volatile s32 *ptr, s32 val) {
     s32 result;
     pthread_mutex_lock(&atomic_mutex);
     *ptr -= val;
@@ -126,51 +124,100 @@ static inline s32 atomic_sub(volatile s32 *ptr, s32 val)
 #endif
 
 static inline int spin_init(volatile spinlock_t *lock, s32 pshared) {
+    (void) pshared;
     lock->lock = 0;
     lock->count = 0;
-    lock->owner = 0;
+    lock->owner_valid = 0;
+#if defined(_TTHREAD_WIN32_)
+    lock->owner_tid = 0;
+#else
+    lock->owner = (thrd_t) 0;
+#endif
     return 0;
 }
 
 static inline int spin_destroy(spinlock_t *lock) {
+    (void) lock;
     return 0;
 }
 
 static inline int spin_lock(volatile spinlock_t *lock) {
+    s32 spins = 0;
     for (;;) {
-        if (thrd_equal(lock->owner, thrd_current())) {
-            ATOMIC_INC(&lock->count);
-            return 0;
+        if (lock->owner_valid) {
+#if defined(_TTHREAD_WIN32_)
+            if (lock->owner_tid == GetCurrentThreadId()) {
+                ATOMIC_INC(&lock->count);
+                return 0;
+            }
+#else
+            if (thrd_equal(lock->owner, thrd_current())) {
+                ATOMIC_INC(&lock->count);
+                return 0;
+            }
+#endif
         }
         if (ATOMIC_CAS(&lock->lock, 0, 1)) {
+#if defined(_TTHREAD_WIN32_)
+            lock->owner_tid = GetCurrentThreadId();
+#else
             lock->owner = thrd_current();
+#endif
+            lock->owner_valid = 1;
             lock->count = 1;
+            MEMORY_BARRIER();
             return 0;
+        }
+        if ((++spins & (MAX_SPIN - 1)) == 0) {
+            thrd_yield();
         }
     }
 }
 
 static inline int spin_trylock(volatile spinlock_t *lock) {
-    if (thrd_equal(lock->owner, thrd_current())) {
-        ATOMIC_INC(&lock->count);
-        return 0;
+    if (lock->owner_valid) {
+#if defined(_TTHREAD_WIN32_)
+        if (lock->owner_tid == GetCurrentThreadId()) {
+            ATOMIC_INC(&lock->count);
+            return 0;
+        }
+#else
+        if (thrd_equal(lock->owner, thrd_current())) {
+            ATOMIC_INC(&lock->count);
+            return 0;
+        }
+#endif
     }
     if (ATOMIC_CAS(&lock->lock, 0, 1)) {
+#if defined(_TTHREAD_WIN32_)
+        lock->owner_tid = GetCurrentThreadId();
+#else
         lock->owner = thrd_current();
+#endif
+        lock->owner_valid = 1;
         lock->count = 1;
+        MEMORY_BARRIER();
         return 0;
     }
     return 1;
 }
 
 static inline int spin_unlock(volatile spinlock_t *lock) {
-    if (!thrd_equal(lock->owner, thrd_current())) {
-        return 1;
-    }
-    MEMORY_BARRIER();
-    ATOMIC_DEC(&lock->count);
-    if (lock->count == 0) {
-        lock->owner = 0;
+    if (!lock->owner_valid) return 1;
+#if defined(_TTHREAD_WIN32_)
+    if (lock->owner_tid != GetCurrentThreadId()) return 1;
+#else
+    if (!thrd_equal(lock->owner, thrd_current())) return 1;
+#endif
+    s32 new_count = ATOMIC_DEC(&lock->count);
+    if (new_count == 0) {
+        MEMORY_BARRIER();
+        lock->owner_valid = 0;
+#if defined(_TTHREAD_WIN32_)
+        lock->owner_tid = 0;
+#else
+        lock->owner = (thrd_t) 0;
+#endif
         ATOMIC_CAS(&lock->lock, 1, 0);
     }
     return 0;
@@ -180,12 +227,11 @@ static inline int spin_lock_adaptive(volatile spinlock_t *lock) {
     int spin = 4; // 初始自旋次数
     for (;;) {
         for (int i = 0; i < spin; i++) {
-            if (spin_trylock(lock))
-                return 0;
+            if (spin_trylock(lock) == 0) return 0;
         }
         // 自旋失败，指数退避
         spin = spin < MAX_SPIN ? spin * 2 : MAX_SPIN; // min(spin * 2, MAX_SPIN);
-        thrd_yield();                                 // 或者使用 nanosleep
+        thrd_yield(); // 或者使用 nanosleep
     }
 }
 
@@ -198,8 +244,7 @@ static inline s64 current_timestamp() {
 static inline int spin_lock_timeout(volatile spinlock_t *lock, int timeout_ms) {
     s64 start = current_timestamp();
     while ((current_timestamp() - start) < timeout_ms) {
-        if (spin_trylock(lock))
-            return 0;
+        if (spin_trylock(lock) == 0) return 0;
         thrd_yield();
     }
     return ETIMEDOUT;

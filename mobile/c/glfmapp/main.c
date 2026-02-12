@@ -30,7 +30,9 @@ static GLFMDisplay *glfm_display;
 // Main entry point
 void glfmMain(GLFMDisplay *display) {
     glfm_display=display;
-    
+    //
+    jvm_init_mem_alloc();
+
     //init refers ,the globle var
     memset(&refers, 0, sizeof(GlobeRefer));
 
@@ -86,4 +88,7 @@ void glfmMain(GLFMDisplay *display) {
 void glfmDestroy(GLFMDisplay *display){
     JNI_OnUnload_mini(refers.jvm);
     jvm_destroy(refers.jvm);
+
+    jvm_destroy_mem_alloc();
+
 }

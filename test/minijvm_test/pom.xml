@@ -16,7 +16,7 @@
         <dependency>
             <groupId>org.minijvm</groupId>
             <artifactId>minijvm_rt</artifactId>
-            <version>1.0</version>
+            <version>2.1.0</version>
             <scope>system</scope>
             <systemPath>${basedir}/../../binary/lib/minijvm_rt.jar</systemPath>
         </dependency>
@@ -39,7 +39,7 @@
                             <goal>run</goal>
                         </goals>
                         <configuration>
-                            <tasks>
+                            <target>
                                 <!--  copy to binary lib dir -->
                                 <mkdir dir="../../binary/libex"/>
                                 <copy todir="../../binary/libex/" overwrite="true">
@@ -47,7 +47,7 @@
                                         <include name="${project.artifactId}.jar"/>
                                     </fileset>
                                 </copy>
-                            </tasks>
+                            </target>
                         </configuration>
                     </execution>
                 </executions>

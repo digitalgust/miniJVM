@@ -78,6 +78,14 @@ public class GCheckBox extends GObject {
         float w = getW();
         float h = getH();
 
+        float boxSize = 18f;
+        if (h < boxSize + 2) {
+            boxSize = h - 2;
+            if (boxSize < 10f) {
+                boxSize = 10f;
+            }
+        }
+
         byte[] bg;
 
         nvgFontSize(vg, getFontSize());
@@ -85,21 +93,21 @@ public class GCheckBox extends GObject {
         nvgFillColor(vg, getColor());
 
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        nvgTextJni(vg, x + 25, y + h * 0.5f, text_arr, 0, text_arr.length);
+        nvgTextJni(vg, x + boxSize + 2f, y + h * 0.5f + 0.5f, text_arr, 0, text_arr.length);
 
-        bg = nvgBoxGradient(vg, x + 1, y + (int) (h * 0.5f) - 9 + 1, 18, 18, 3, 3, nvgRGBA(0, 0, 0, 32), nvgRGBA(0, 0, 0, 92));
+        bg = nvgBoxGradient(vg, x + 1, y + (int) (h * 0.5f) - boxSize * 0.5f + 1, boxSize, boxSize, 3, 3, nvgRGBA(0, 0, 0, 32), nvgRGBA(0, 0, 0, 92));
         nvgBeginPath(vg);
-        nvgRoundedRect(vg, x + 1, y + (int) (h * 0.5f) - 9, 18, 18, 3);
+        nvgRoundedRect(vg, x + 1, y + (int) (h * 0.5f) - boxSize * 0.5f, boxSize, boxSize, 3);
         nvgFillPaint(vg, bg);
         nvgFill(vg);
 
-        nvgFontSize(vg, getFontSize());
+        nvgFontSize(vg, boxSize);
         nvgFontFace(vg, GToolkit.getFontIcon());
         nvgFillColor(vg, getColor());
         nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 
         if (checked) {
-            nvgTextJni(vg, x + 20 * 0.5f, y + (h * 0.5f), ICON_RIGHT_BYTE, 0, ICON_RIGHT_BYTE.length);
+            nvgTextJni(vg, x + boxSize * 0.5f + 1f, y + (h * 0.5f), ICON_RIGHT_BYTE, 0, ICON_RIGHT_BYTE.length);
         }
         return true;
     }

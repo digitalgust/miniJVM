@@ -9,10 +9,7 @@ import org.mini.util.SysLog;
 
 import javax.microedition.io.Connector;
 import javax.microedition.io.HttpConnection;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,6 +32,7 @@ public class MiniHttpClient extends Thread {
     };
     CltLogger logger = DEFAULT_LOGGER;
     ProgressListener progressListener;
+    File downloadFile = null;
 
     public MiniHttpClient(final String url, CltLogger logger, final DownloadCompletedHandle handle) {
         this.url = url;
@@ -99,7 +97,6 @@ public class MiniHttpClient extends Thread {
     public void run() {
 
         DataInputStream dis = null;
-        byte[] data;
         try {
             //logger.log("[INFO]http url:" + url);
             updateProgress(5);
@@ -118,43 +115,55 @@ public class MiniHttpClient extends Thread {
             if (rescode == 200) {
                 int len = (int) c.getLength();
                 dis = c.openDataInputStream();
-                if (len > 0) {
+                downloadFile = File.createTempFile("cache", ".tmp");
+                FileOutputStream fos = null;
+                try {
+                    fos = new FileOutputStream(downloadFile);
 
-                    int part10percent = len / 100;
-                    int p = 1;
+                    if (len > 0) {
 
-                    data = new byte[len];
-                    byte[] buf = new byte[4096];
-                    int read = 0;
-                    while (read < len) {
-                        //read += dis.read(data, read, len - read);
-                        int r = dis.read(buf);
-                        if (r == -1) {
-                            break;
+                        int part10percent = len / 100;
+                        int p = 1;
+
+                        byte[] buf = new byte[4096];
+                        int read = 0;
+                        while (read < len) {
+                            //read += dis.read(data, read, len - read);
+                            int r = dis.read(buf);
+                            if (r == -1) {
+                                break;
+                            }
+                            fos.write(buf, 0, r);
+                            read += r;
+
+                            //System.out.println("read:" + read);
+                            if (read > part10percent * p) {
+                                p++;
+                                updateProgress(p);
+                            }
                         }
-                        System.arraycopy(buf, 0, data, read, r);
-                        read += r;
 
-                        //System.out.println("read:" + read);
-                        if (read > part10percent * p) {
-                            p++;
-                            updateProgress(p);
+                    } else {
+                        updateProgress(20);
+                        int ch;
+                        while ((ch = dis.read()) != -1 || exit) {
+                            fos.write(ch);
+                            updateProgress(50);
                         }
                     }
-                } else {
-                    updateProgress(20);
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    int ch;
-                    while ((ch = dis.read()) != -1 || exit) {
-                        baos.write(ch);
-                        updateProgress(50);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    logger.log("[ERROR]http error:" + e.getMessage());
+                } finally {
+                    if (fos != null) {
+                        try {
+                            fos.close();
+                        } catch (IOException e1) {
+                        }
                     }
-                    data = baos.toByteArray();
                 }
                 updateProgress(100);
-                if (handle != null) {
-                    handle.onCompleted(this, url, data);
-                }
+                doHandler();
             } else if (rescode == 301 || rescode == 302) {
                 String redirect = c.getHeaderField("Location");
                 logger.log("redirect:" + redirect);
@@ -165,16 +174,12 @@ public class MiniHttpClient extends Thread {
                 hc.start();
             } else {
                 updateProgress(100);
-                if (handle != null) {
-                    handle.onCompleted(this, url, null);
-                }
+                doHandler();
             }
         } catch (Exception e) {
             //logger.log("[ERRO]http error:" + e.getCodeStack());
             updateProgress(100);
-            if (handle != null) {
-                handle.onCompleted(this, url, null);
-            }
+            doHandler();
         } finally {
             try {
                 if (dis != null) {
@@ -196,6 +201,68 @@ public class MiniHttpClient extends Thread {
         }
     }
 
+    private void doHandler() {
+        if (handle != null) {
+            if (handle instanceof DownloadFileHandle) {
+                ((DownloadFileHandle) handle).onCompleted(this, url, downloadFile);
+            } else {
+                byte[] data = readFile(downloadFile);
+                handle.onCompleted(this, url, data);
+            }
+        }
+    }
+
+    public static byte[] readFile(File file) {
+
+        FileInputStream fis = null;
+        try {
+            fis = new FileInputStream(file);
+            int flen = (int) file.length();
+            byte[] data = new byte[flen];
+            int read = 0;
+            while ((read += fis.read(data, read, flen - read)) < flen) ;
+            return data;
+        } catch (Exception e) {
+            return null;
+        } finally {
+            try {
+                fis.close();
+            } catch (Exception e) {
+            }
+        }
+    }
+
+
+    /**
+     * 下载数据按文件处理
+     */
+    public interface DownloadFileHandle extends DownloadCompletedHandle {
+
+        /**
+         * 文件下载完成
+         *
+         * @param client
+         * @param url
+         * @param downloadFile
+         */
+
+        abstract void onCompleted(MiniHttpClient client, String url, File downloadFile);
+
+        /**
+         * 不允许继承子类处理这个方法
+         * 原因是，这个byte[] data参数，是下载数据，未知情况下不知道有多大，可能造成内存溢出
+         *
+         * @param client
+         * @param url
+         * @param data
+         */
+        default void onCompleted(MiniHttpClient client, String url, byte[] data) {
+        }
+    }
+
+    /**
+     * 下载数据直接返回
+     */
     public interface DownloadCompletedHandle {
 
         void onCompleted(MiniHttpClient client, String url, byte[] data);
