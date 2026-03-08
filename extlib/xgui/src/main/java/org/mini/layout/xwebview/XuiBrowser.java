@@ -37,6 +37,7 @@ import java.util.List;
  */
 public class XuiBrowser {
     public static final int MAX_PAGE_SIZE = 10;
+    int maxPageSize = MAX_PAGE_SIZE;
     List<XuiPage> pages = new java.util.ArrayList<>();
     private XEventHandler eventHandler;
     XmlExtAssist assist;
@@ -52,6 +53,7 @@ public class XuiBrowser {
     public XuiBrowser(XEventHandler eventHandler, XmlExtAssist assist) {
         this.eventHandler = eventHandler;
         this.assist = assist;
+        setPageCacheSize(0);
     }
 
     public void gotoPage(String homeUrl) {
@@ -90,6 +92,15 @@ public class XuiBrowser {
         }
     }
 
+    private void addPage(XuiPage page) {
+        if (page != null) {
+            pages.add(page);
+        }
+        if (pages.size() > maxPageSize) {
+            pages.remove(0);
+        }
+    }
+
     private void showPage(XuiPage page) {
         GContainer webView = assist.getXuiBrowserHolder().getWebView();
         GuiScriptLib.showProgressBar(assist.getForm(), 80);
@@ -102,7 +113,7 @@ public class XuiBrowser {
                 webView.reAlign();
                 currentPage = page;
                 if (!pages.contains(page)) {
-                    pages.add(page);
+                    addPage(page);
                 }
                 webView.flushNow();
                 GFrame frame = webView.getFrame();
@@ -116,7 +127,7 @@ public class XuiBrowser {
     }
 
     public void back() {
-        if (pages.size() > MAX_PAGE_SIZE) {
+        if (pages.size() > maxPageSize) {
             pages.remove(0);
         }
         int index = pages.indexOf(currentPage);
@@ -127,7 +138,7 @@ public class XuiBrowser {
     }
 
     public void forward() {
-        if (pages.size() > MAX_PAGE_SIZE) {
+        if (pages.size() > maxPageSize) {
             pages.remove(0);
         }
         int index = pages.indexOf(currentPage);
@@ -141,5 +152,9 @@ public class XuiBrowser {
     public GContainer getWebView() {
         GContainer webView = assist.getXuiBrowserHolder().getWebView();
         return webView;
+    }
+
+    public void setPageCacheSize(int size) {
+        maxPageSize = size + 1;//at least one
     }
 }

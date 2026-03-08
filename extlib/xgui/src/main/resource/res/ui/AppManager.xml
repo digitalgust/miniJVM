@@ -372,6 +372,7 @@
             body=getQueryPara()
             showSlot("SLOT_MGR",3)
             openPagePost(s3,body,"")
+            invokeStatic("org.mini.vm.RefNative","dumpHeap(Ljava/lang/String;I)I","dump.hprof",0)
         ret
 
         sub showAbout()

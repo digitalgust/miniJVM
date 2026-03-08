@@ -6,15 +6,16 @@
 #define MINI_JVM_JIT_H
 #ifdef __cplusplus
 extern "C" {
+
 #endif
 
 #include "jvm.h"
 #include "jvm_util.h"
 
 #if __JVM_OS_IOS__ || __JVM_OS_CYGWIN__ || __JVM_ARCH_32__
-    #define JIT_ENABLE 0
+#define JIT_ENABLE 0
 #else
-    #define JIT_ENABLE 01
+#define JIT_ENABLE 01
 #endif
 
 #define JIT_COMPILE_EXEC_COUNT 5000
@@ -30,8 +31,8 @@ enum {
     LOCAL_RUNTIME_PC,
     LOCAL_STACK,
     LOCAL_THREADINFO,
-    LOCAL_R0,//for save_ip_sp
-    LOCAL_R2,//for check_suspend
+    LOCAL_R0, //for save_ip_sp
+    LOCAL_R2, //for check_suspend
     LOCAL_COUNT,
 };
 
@@ -46,22 +47,22 @@ enum {
 typedef void (*thread_suspend_check_func)();
 
 struct _SwitchTable {
-    struct _SwitchTable  *next;
-    s32 size;//table length
+    struct _SwitchTable *next;
+    s32 size; //table length
     struct V2PTable {
         s32 value; //for value
-        s32 bc_pos;//for get label addr
+        s32 bc_pos; //for get label addr
         __refer jump_ptr;
     } *table;
 };
 
-void jit_init(CodeAttribute *ca) ;
+void jit_init(CodeAttribute *ca);
 
 void jit_destroy(Jit *jit);
 
 void construct_jit(MethodInfo *method, Runtime *runtime);
 
-void jit_set_exception_jump_addr(Runtime* runtime, CodeAttribute *ca, s32 index);
+void jit_set_exception_jump_addr(Runtime *runtime, CodeAttribute *ca, s32 index);
 
 #ifdef __cplusplus
 }

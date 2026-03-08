@@ -1,4 +1,3 @@
-
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,12 +10,11 @@
 
 
 void thread_boundle(Runtime *runtime) {
-
     JClass *thread_clazz = classes_load_get_with_clinit_c(NULL, STR_CLASS_JAVA_LANG_THREAD, runtime);
     //为主线程创建Thread实例
     Instance *t = instance_create(runtime, thread_clazz);
     instance_hold_to_thread(t, runtime);
-    runtime->thrd_info->jthread = t;//Thread.init currentThread() need this
+    runtime->thrd_info->jthread = t; //Thread.init currentThread() need this
     //runtime->clazz = thread_clazz;
     instance_init(t, runtime);
     //destroy old runtime
@@ -35,7 +33,6 @@ void thread_boundle(Runtime *runtime) {
 }
 
 void thread_unboundle(Runtime *runtime) {
-
     runtime->thrd_info->is_suspend = 1;
     Instance *t = runtime->thrd_info->jthread;
     //主线程实例被回收
@@ -70,7 +67,6 @@ void profile_put(u8 instruct_code, s64 cost_add, s64 count_add) {
     h_s_v->cost += cost_add;
     h_s_v->count += count_add;
     spin_unlock(&pro_lock);
-
 };
 
 void profile_print() {
@@ -141,7 +137,6 @@ void classloader_release_class_static_field(PeerClassLoader *class_loader) {
 
 
 void classloader_add_jar_path(PeerClassLoader *class_loader, Utf8String *jar_path) {
-
     Utf8String *libname = utf8_create();
     s32 i;
     for (i = 0;; i++) {
@@ -202,7 +197,6 @@ void classloaders_clear_all_static(MiniJVM *jvm) {
 }
 
 void classloaders_destroy_all(MiniJVM *jvm) {
-
     spin_lock(&jvm->lock_cloader);
     {
         s32 i;
@@ -255,8 +249,9 @@ void _on_jvm_sig_print(s32 no) {
 
 void _on_jvm_sig(s32 no) {
     _on_jvm_sig_print(no);
-    fflush(NULL);
-    close_log();
+    fflush(stderr);
+    fflush(stdout);
+    jvm_destroy_mem_alloc();
     exit(no);
 }
 
@@ -288,6 +283,10 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     signal(SIGPIPE, _on_jvm_sig_print); //not exit when network sigpipe
 #endif
 
+#if __JVM_PRI_ALLOC__
+    pri_alloc_set_max_size(jvm->max_heap_size);
+#endif
+
     set_jvm_state(jvm, JVM_STATUS_INITING);
 
     if (!p_classpath) {
@@ -296,8 +295,6 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     if (!jvm->startup_dir) {
         jvm->startup_dir = utf8_create_c("./");
     }
-    //
-    open_log();
 
 #if _JVM_DEBUG_PROFILE
     profile_init();
@@ -362,7 +359,7 @@ s32 jvm_init(MiniJVM *jvm, c8 *p_bootclasspath, c8 *p_classpath) {
     classes_load_get_with_clinit(NULL, clsName, runtime);
     //for interrupted thread
     utf8_clear(clsName);
-    utf8_append_c(clsName, STR_CLASS_JAVA_LANG_INTERRUPTED);//must load this class ,because it will be used when thread interrupt ,but it can not load when that thread is marked as interrupted
+    utf8_append_c(clsName, STR_CLASS_JAVA_LANG_INTERRUPTED); //must load this class ,because it will be used when thread interrupt ,but it can not load when that thread is marked as interrupted
     JClass *c2;
     c2 = classes_load_get_with_clinit(NULL, clsName, runtime);
     instance_create(runtime, c2);
@@ -409,7 +406,8 @@ void jvm_destroy(MiniJVM *jvm) {
     }
     runtime_destroy(parent);
     parent = NULL;
-    while (threadlist_count_none_daemon(jvm) > 0 && !jvm->collector->exit_flag) {//wait for other thread over ,
+    while (threadlist_count_none_daemon(jvm) > 0 && !jvm->collector->exit_flag) {
+        //wait for other thread over ,
         threadSleep(20);
     }
     set_jvm_state(jvm, JVM_STATUS_STOPED);
@@ -433,8 +431,8 @@ void jvm_destroy(MiniJVM *jvm) {
     arraylist_destroy(jvm->thread_list);
     arraylist_destroy(jvm->shutdown_hook);
     native_lib_destroy(jvm);
+
     sys_properties_dispose(jvm);
-    close_log();
 #if _JVM_DEBUG_LOG_LEVEL > 0
     jvm_printf("[INFO]jvm destoried\n");
 #endif
@@ -523,8 +521,6 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
 
         MethodInfo *m = find_methodInfo_by_name(str_mainClsName, methodName, methodType, clazz->jloader, runtime);
         if (m) {
-
-
             s64 start = currentTimeMillis();
 #if _JVM_DEBUG_LOG_LEVEL > 0
             jvm_printf("\n[INFO]main thread start\n");
@@ -532,13 +528,13 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
             //调用主方法
             if (jvm->jdwp_enable) {
 #if _JVM_DEBUG_LOG_LEVEL > 0
-                jvm_printf("[JDWP]jdwp listening (port:%s) ...\n", JDWP_TCP_PORT);
+                jvm_printf("[JDWP]jdwp listening (port:%d) ...\n", jvm->jdwp_port);
 #endif
                 if (jvm->jdwp_suspend_on_start) {
                     jvm_printf("[JDWP]suspend on start, waitting for connect... \n");
                     jthread_suspend(runtime);
                 }
-            }//jdwp 会启动调试器
+            } //jdwp 会启动调试器
 
             runtime->method = NULL;
             runtime->clazz = clazz;
@@ -554,8 +550,6 @@ s32 call_method(MiniJVM *jvm, c8 *p_classname, c8 *p_methodname, c8 *p_methoddes
 #if _JVM_DEBUG_PROFILE
             profile_print();
 #endif
-
-
         }
         utf8_destroy(methodName);
         utf8_destroy(methodType);
@@ -579,7 +573,8 @@ s32 execute_method(MethodInfo *method, Runtime *runtime) {
     // if not detect the son ,may cause jthread enter fake blocking state,
     // eg: call_bc-> call_native->(reenter) call_bc->ret_bc(fake_blocking)->ret_native->ret_bc
     // only the outer thread top call the java bytecode ,need check block state
-    if (runtime->thrd_info->top_runtime->son == NULL) {// is top call bc, not reenter bc
+    if (runtime->thrd_info->top_runtime->son == NULL) {
+        // is top call bc, not reenter bc
         jthread_block_exit(runtime);
     }
     s32 ret = execute_method_impl(method, runtime);

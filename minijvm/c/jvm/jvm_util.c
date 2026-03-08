@@ -12,23 +12,13 @@
 #include "garbage.h"
 #include "jdwp.h"
 
-#if __JVM_LTALLOC__
+#if __JVM_PRI_ALLOC__
 
 
-#endif
-
-#if __JVM_OS_ANDROID__
-
-#include <android/log.h>
-
-#define LOG_TAG "MINIJVM"
 #endif
 
 
 //==================================================================================
-
-FILE *logfile = NULL;
-static s64 last_flush = 0;
 static s64 nano_sec_start_at = 0;
 
 /**
@@ -147,6 +137,7 @@ JClass *primitive_class_create_get(Runtime *runtime, Utf8String *ustr) {
         cl->is_primitive = 1;
         cl->jloader = NULL;//system classloader
         classes_put(jvm, cl);
+        class_build_vtable(cl);
         if (jdwp_client_count(jvm->jdwpserver) && cl)event_on_class_prepare(jvm->jdwpserver, runtime, cl);
 //        gc_obj_hold(jvm->collector, cl);
         vm_share_unlock(jvm);
@@ -198,6 +189,7 @@ JClass *array_class_create_get(Runtime *runtime, Instance *jloader, Utf8String *
 
 //                gc_obj_hold(jvm->collector, clazz);
                 classes_put(jvm, clazz);
+                class_build_vtable(clazz);
                 if (jdwp_client_count(jvm->jdwpserver) && clazz)event_on_class_prepare(jvm->jdwpserver, runtime, clazz);
 #if _JVM_DEBUG_LOG_LEVEL > 2
                 jvm_printf("load class (%016llx load %016llx):  %s \n", (s64) (intptr_t) clazz->jloader, (s64) (intptr_t) clazz, utf8_cstr(clazz->name));
@@ -633,60 +625,7 @@ void sys_properties_dispose(MiniJVM *jvm) {
     hashtable_destroy(jvm->sys_prop);
 }
 
-void open_log() {
-#if _JVM_DEBUG_LOG_TO_FILE
-    if (!logfile) {
-        logfile = fopen("./jvmlog.txt", "wb+");
-    }
-#endif
-}
-
-void close_log() {
-#if _JVM_DEBUG_LOG_TO_FILE
-    if (logfile) {
-        fclose(logfile);
-        logfile = NULL;
-        last_flush = 0;
-    }
-#endif
-}
-
-s32 jvm_printf(const c8 *format, ...) {
-    va_list vp;
-    va_start(vp, format);
-    s32 result = 0;
-#if _JVM_DEBUG_LOG_TO_FILE
-    if (logfile) {
-
-        result = vfprintf(logfile, format, vp);
-        fflush(logfile);
-        if (currentTimeMillis() - last_flush > 1000) {
-            fflush(logfile);
-            last_flush = currentTimeMillis();
-        }
-    }
-#else
-#ifdef __JVM_OS_ANDROID__
-    static c8 buf[1024];
-    static u32 buf_pos = 0, buf_writable_len = sizeof(buf) - 1;
-    s32 w = vsnprintf(buf + buf_pos, sizeof(buf) - buf_pos - 1, format, vp);//maybe some bytes lost
-    buf_pos += (u32) w;
-    buf[buf_pos] = 0;
-    if ((buf_pos > 0 && memchr(buf, '\n', buf_pos) != NULL)// if '\n' in buf, print buf and clear buf
-        || buf_pos == buf_writable_len) { // or buf is full, print buf and clear buf
-        __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, "%s", buf);
-        buf_pos = 0;
-    }
-    result = strlen(buf);
-#else
-    result = vfprintf(stderr, format, vp);
-    fflush(stderr);
-#endif
-#endif
-    va_end(vp);
-    return result;
-}
-
+extern FILE *logfile; //defined in d_type.c
 void invoke_deepth(Runtime *runtime) {
     vm_share_lock(runtime->jvm);
     s32 i = 0;
@@ -744,7 +683,6 @@ s32 jthread_run(void *para) {
     jvm_printf("[INFO]thread(pthread %llx) start jthread %llx\n", (s64) (intptr_t) thrd_current(), (s64) (intptr_t) jthread);
 #endif
     s32 ret = 0;
-    runtime->thrd_info->pthread = thrd_current();
 
     Utf8String *methodName = utf8_create_c("run");
     Utf8String *methodType = utf8_create_c("()V");
@@ -790,7 +728,7 @@ s32 jthread_run(void *para) {
     s64 spent = currentTimeMillis() - startAt;
     jvm_printf("[INFO]thread over %llx , return %d , spent : %lld\n", (s64) (intptr_t) jthread, ret, spent);
 #endif
-#if __JVM_LTALLOC__
+#if __JVM_PRI_ALLOC__
 
 #endif
     thrd_exit(ret);
@@ -895,7 +833,8 @@ s32 jthread_lock(MemoryBlock *mb, Runtime *runtime) { //可能会重入，同一
     while (mtx_timedlock(&jtl->mutex_lock, &t) != thrd_success) {
         // 检查是否有被挂起的线程持有该锁（仅JDWP模式）
         if (IS_JDWP_ENABLED(runtime)) {
-            Runtime *lock_holder = mb->thread_lock->owner_thread ? mb->thread_lock->owner_thread->top_runtime : NULL;
+            JavaThreadInfo *owner_snap = mb->thread_lock->owner_thread;
+            Runtime *lock_holder = owner_snap ? owner_snap->top_runtime : NULL;
             if (lock_holder && lock_holder != runtime &&
                 lock_holder->thrd_info->suspend_count > 0) {
 
@@ -2274,9 +2213,11 @@ s32 thread_owns_lock(Runtime *runtime, MemoryBlock *lock) {
 Runtime *find_thread_holding_lock(MiniJVM *jvm, MemoryBlock *lock) {
     // 注意：这里需要遍历所有线程，实际实现中应该维护一个线程列表
     // 这里作为简化实现，直接检查锁的拥有者
-    if (lock && lock->thread_lock && lock->thread_lock->owner_thread) {
+    if (lock && lock->thread_lock) {
         JavaThreadInfo *owner_info = (JavaThreadInfo *) lock->thread_lock->owner_thread;
-        return owner_info->top_runtime;
+        if (owner_info) {
+            return owner_info->top_runtime;
+        }
     }
     return NULL;
 }

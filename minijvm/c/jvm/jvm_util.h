@@ -54,8 +54,6 @@ void instance_release_from_thread(Instance *ref, Runtime *runtime);
 
 void instance_hold_to_thread(Instance *ins, Runtime *runtime);
 
-s32 jvm_printf(const c8 *, ...);
-
 void invoke_deepth(Runtime *runtime);
 
 void printDumpOfClasses(void);

@@ -5,6 +5,7 @@
 #include "jvm.h"
 #include "garbage.h"
 #include "jvm_util.h"
+#include "heapdump_hprof.h"
 
 
 #ifdef __cplusplus
@@ -503,6 +504,19 @@ s32 org_mini_vm_RefNative_getGarbageStatus(Runtime *runtime, JClass *clazz) {
 #if _JVM_DEBUG_LOG_LEVEL > 5
     jvm_printf("org_mini_vm_RefNative_getGarbageStatus %d\n", runtime->jvm->collector->_garbage_thread_status);
 #endif
+    return 0;
+}
+
+s32 org_mini_vm_RefNative_dumpHeap(Runtime *runtime, JClass *clazz) {
+    Instance *jpath = (Instance *) localvar_getRefer(runtime->localvar, 0);
+    s32 flags = localvar_getInt(runtime->localvar, 1);
+    Utf8String *path = utf8_create();
+    if (jpath) {
+        jstring_2_utf8(jpath, path, runtime);
+    }
+    s32 ret = hprof_dump_heap(runtime, utf8_cstr(path), flags);
+    utf8_destroy(path);
+    push_int(runtime->stack, ret);
     return 0;
 }
 
@@ -1795,6 +1809,7 @@ static java_native_method METHODS_REFLECT_TABLE[] = {
         {"org/mini/vm/RefNative",          "getStackFrame",            "(Ljava/lang/Thread;)J",                                                            org_mini_vm_RefNative_getStackFrame},
         {"org/mini/vm/RefNative",          "getGarbageMarkCounter",    "()I",                                                                              org_mini_vm_RefNative_getGarbageMarkCounter},
         {"org/mini/vm/RefNative",          "getGarbageStatus",         "()I",                                                                              org_mini_vm_RefNative_getGarbageStatus},
+        {"org/mini/vm/RefNative",          "dumpHeap",                 "(Ljava/lang/String;I)I",                                                           org_mini_vm_RefNative_dumpHeap},
         {"org/mini/vm/RefNative",          "getCallerClass",           "()Ljava/lang/Class;",                                                              org_mini_vm_RefNative_getCallerClass},
         {"org/mini/vm/RefNative",          "defineClass",              "(Ljava/lang/ClassLoader;Ljava/lang/String;[BII)Ljava/lang/Class;",                 org_mini_vm_RefNative_defineClass},
         {"org/mini/vm/RefNative",          "findLoadedClass0",         "(Ljava/lang/ClassLoader;Ljava/lang/String;)Ljava/lang/Class;",                     org_mini_vm_RefNative_findLoadedClass0},

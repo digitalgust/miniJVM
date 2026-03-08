@@ -16,6 +16,8 @@ import org.mini.layout.guilib.FormHolder;
 import org.mini.layout.guilib.GuiScriptLib;
 import org.mini.http.MiniHttpClient;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -103,14 +105,14 @@ public class XuiScriptLib extends Lib {
                 href = UrlHelper.normalizeUrl(page.getUrl(), href); //fix as : http://www.abc.com/abc/c.zip
             }
 
-            MiniHttpClient hc = new MiniHttpClient(href, null, new MiniHttpClient.DownloadCompletedHandle() {
+            MiniHttpClient hc = new MiniHttpClient(href, null, new MiniHttpClient.DownloadFileHandle() {
                 @Override
-                public void onCompleted(MiniHttpClient client, String url, byte[] data) {
-                    if (data != null) {
+                public void onCompleted(MiniHttpClient client, String url, File file) {
+                    if (file != null) {
                         //多线程防止GContainer.elements死锁
                         GCmd cmd = new GCmd(
                                 () -> {
-                                    AppManager.getInstance().getDownloadCallback().onCompleted(client, url, data);
+                                    AppManager.getInstance().getDownloadCallback().onCompleted(client, url, file);
                                     GuiScriptLib.doHttpCallback(formHolder.getForm(), callback, url, 0, "");
                                 });
                         GForm.addCmd(cmd);
@@ -136,10 +138,10 @@ public class XuiScriptLib extends Lib {
             if (page != null) {// may be  href="/abc/c.xml"
                 href = UrlHelper.normalizeUrl(page.getUrl(), href); //fix as : http://www.abc.com/abc/c.zip
             }
-            MiniHttpClient hc = new MiniHttpClient(href, null, new MiniHttpClient.DownloadCompletedHandle() {
+            MiniHttpClient hc = new MiniHttpClient(href, null, new MiniHttpClient.DownloadFileHandle() {
                 @Override
-                public void onCompleted(MiniHttpClient client, String url, byte[] data) {
-                    if (data != null) {
+                public void onCompleted(MiniHttpClient client, String url, File downloadFile) {
+                    if (downloadFile != null) {
                         //多线程防止GContainer.elements死锁
                         GCmd cmd = new GCmd(
                                 () -> {
@@ -157,8 +159,14 @@ public class XuiScriptLib extends Lib {
                                         }
                                         String path = GCallBack.getInstance().getAppSaveRoot() + "/tmp/" + saveFileName;
                                         FileOutputStream fos = new FileOutputStream(path);
-                                        fos.write(data);
+                                        FileInputStream fis = new FileInputStream(downloadFile);
+                                        byte[] b = new byte[1024];
+                                        int read;
+                                        while ((read = fis.read(b)) != -1) {
+                                            fos.write(b, 0, read);
+                                        }
                                         fos.close();
+                                        fis.close();
 
                                         GuiScriptLib.doHttpCallback(formHolder.getForm(), callback, url, 0, path);
                                     } catch (IOException e) {

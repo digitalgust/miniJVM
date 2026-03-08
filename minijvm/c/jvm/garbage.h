@@ -28,6 +28,7 @@ struct _GcCollectorType {
     MemoryBlock *header, *tmp_header, *tmp_tailer;
     s64 obj_count;
     s64 obj_heap_size;
+    s64 jit_heap_size;
     s64 lastgc;//last gc at mills
     Runtime *runtime;
     //
@@ -44,6 +45,10 @@ struct _GcCollectorType {
     u8 mark_cnt;
     volatile u8 isgc;
     volatile u8 isworldstoped;
+    volatile u8 dump_flag;
+    Utf8String *dump_path;
+    s32 dump_flags;
+    s32 dump_rc;
     s16 exit_flag;
     s16 exit_code;
 };

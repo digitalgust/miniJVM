@@ -27,14 +27,13 @@ extern "C" {
 //=======================  micro define  =============================
 //_JVM_DEBUG  01=thread info, 02=garage&jit info  , 03=class load, 04=method call,  06=all bytecode
 #define _JVM_DEBUG_LOG_LEVEL 0
-#define _JVM_DEBUG_LOG_TO_FILE 0
 //_JVM_DEBUG_GARBAGE_DUMP 01=count instance , 02=print every object create/destroy
 #define _JVM_DEBUG_GARBAGE_DUMP 0
 #define _JVM_DEBUG_PROFILE 0
 #define _JVM_DEBUG_GARBAGE 0
 
 
-#define GARBAGE_OVERLOAD_DEFAULT 90  // overload of max heap size ,will active garbage collection
+#define GARBAGE_OVERLOAD_DEFAULT 80  // overload of max heap size ,will active garbage collection
 #define GARBAGE_PERIOD_MS_DEFAULT 10 * 1000
 #define MAX_HEAP_SIZE_DEFAULT  256 * 1024 * 1024
 #define MAX_STACK_SIZE_DEFAULT 4096
@@ -1054,6 +1053,9 @@ struct _MethodInfo {
     u16 descriptor_index;
     u16 attributes_count;
     //
+    s16 _vtable_index;
+    s16 _itable_index;
+    //
     u8 is_native;
     u8 is_jit;
     u8 is_sync;
@@ -1061,6 +1063,17 @@ struct _MethodInfo {
     u8 is_getter;
     u8 is_setter;
 };
+
+typedef struct _ItableEntry {
+    MethodInfo **methods;
+    s32 method_count;
+} ItableEntry;
+
+typedef struct _Itable {
+    JClass **interfaces;
+    ItableEntry *entries;
+} Itable;
+
 //============================================
 
 typedef struct _MethodPool {
@@ -1127,6 +1140,10 @@ struct _ClassType {
     u8 is_primitive;//primitive data type int/long/short/char/short/byte/float/double
     u8 is_jcloader;//is java classoader
     u8 is_weakref;//
+    MethodInfo **vtable;
+    s32 vtable_length;
+    struct _Itable *itable;
+    s32 itable_length;
 };
 
 
@@ -1157,6 +1174,8 @@ void _class_optimize(JClass *clazz);
 void class_clinit(JClass *clazz, Runtime *runtime);
 
 void class_clear_cached_virtualmethod(MiniJVM *jvm, JClass *tgt);
+
+void class_build_vtable(JClass *clazz);
 
 void printClassFileFormat(
 
@@ -1966,6 +1985,7 @@ struct _MiniJVM {
     JdwpServer *jdwpserver;
     s32 jdwp_enable;// 0:disable java debug , 1:enable java debug and disable jit
     s32 jdwp_suspend_on_start;
+    s32 jdwp_port;
     s64 max_heap_size;
     s32 heap_overload_percent;
     s64 garbage_collect_period_ms;
@@ -1976,9 +1996,6 @@ struct _MiniJVM {
 };
 
 
-void open_log(void);
-
-void close_log(void);
 
 c8 *getMajorVersionString(u16 major_number);
 

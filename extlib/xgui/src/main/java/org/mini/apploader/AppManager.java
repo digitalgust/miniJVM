@@ -316,22 +316,26 @@ public final class AppManager extends GApplication implements XuiAppHolder {
     }
 
 
-    public MiniHttpClient.DownloadCompletedHandle getDownloadCallback() {
-        return (client, url, data) -> {
-            log("Download success " + url + " ,size: " + data.length);
-            GForm.addMessage((data == null ? getString(STR_FAIL) : getString(STR_SUCCESS)) + " " + getString(STR_DOWNLOAD) + " " + url);
-            String jarName = null;
-            if (url.lastIndexOf('/') > 0) {
-                jarName = url.substring(url.lastIndexOf('/') + 1);
-                if (jarName.indexOf('?') > 0) {
-                    jarName = jarName.substring(0, jarName.indexOf('?'));
+    public MiniHttpClient.DownloadFileHandle getDownloadCallback() {
+        return new MiniHttpClient.DownloadFileHandle() {
+            @Override
+            public void onCompleted(MiniHttpClient client, String url, File downloadFile) {
+                log("Download success " + url + " ,size: " + downloadFile.length());
+                GForm.addMessage((downloadFile == null ? getString(STR_FAIL) : getString(STR_SUCCESS)) + " " + getString(STR_DOWNLOAD) + " " + url);
+                String jarName = null;
+                if (url.lastIndexOf('/') > 0) {
+                    jarName = url.substring(url.lastIndexOf('/') + 1);
+                    if (jarName.indexOf('?') > 0) {
+                        jarName = jarName.substring(0, jarName.indexOf('?'));
+                    }
                 }
+                if (jarName != null && downloadFile != null) {
+                    AppLoader.addApp(jarName, downloadFile.getAbsolutePath());
+                }
+                reloadAppList();
+                updateContentViewInfo(jarName);
             }
-            if (jarName != null && data != null) {
-                AppLoader.addApp(jarName, data);
-            }
-            reloadAppList();
-            updateContentViewInfo(jarName);
+
         };
     }
 

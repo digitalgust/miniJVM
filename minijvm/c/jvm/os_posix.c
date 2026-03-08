@@ -33,8 +33,7 @@ void safeClose(s32 *fd) {
 }
 
 s32 os_execute(Runtime *runtime, Instance *jstrArr, Instance *jlongArr, ArrayList *cstrList, const c8 *cmd) {
-
-    c8 **argv = (c8 **) cstrList->data;//
+    c8 **argv = (c8 **) cstrList->data; //
 
     s32 in[] = {-1, -1};
     s32 out[] = {-1, -1};
@@ -66,74 +65,76 @@ s32 os_execute(Runtime *runtime, Instance *jstrArr, Instance *jlongArr, ArrayLis
     }
 
 #ifdef __QNX__
-    // fork(2) doesn't work in multithreaded QNX programs.  See
-  // http://www.qnx.com/developers/docs/6.4.1/neutrino/getting_started/s1_procs.html
-  pid_t pid = vfork();
+// fork(2) doesn't work in multithreaded QNX programs.  See
+// http://www.qnx.com/developers/docs/6.4.1/neutrino/getting_started/s1_procs.html
+pid_t pid = vfork();
 #else
-    // We might be able to just use vfork on all UNIX-style systems, but
-    // the manual makes it sound dangerous due to the shared
-    // parent/child address space, so we use fork if we can.
-    pid_t pid = fork();
+// We might be able to just use vfork on all UNIX-style systems, but
+// the manual makes it sound dangerous due to the shared
+// parent/child address space, so we use fork if we can.
+pid_t pid = fork();
 #endif
-    switch (pid) {
-        case -1:  // error
-            exception_throw(JVM_EXCEPTION_IO, runtime, NULL);
-            safeClose(&in[0]);
-            safeClose(&out[1]);
-            safeClose(&err[0]);
-            safeClose(&msg[0]);
-            safeClose(&msg[1]);
-            return RUNTIME_STATUS_EXCEPTION;
-        case 0: {  // child
-            // Setup stdin, stdout and stderr
-            dup2(in[1], STDOUT_FILENO);
-            close(in[0]);
-            close(in[1]);
-            dup2(out[0], STDIN_FILENO);
-            close(out[0]);
-            close(out[1]);
-            dup2(err[1], STDERR_FILENO);
-            close(err[0]);
-            close(err[1]);
-
-            close(msg[0]);
-
-            execvp(argv[0], argv);
-
-            // Error if here
-            s32 val = errno;
-            write(msg[1], &val, sizeof(val));
-            _exit(127);  // 使用 _exit 而不是 exit 以避免刷新标准IO缓冲区
-        }
-            break;
-
-        default: {  // parent
-            jarray_set_field(jlongArr, 0, pid);
-
-            safeClose(&in[1]);
-            safeClose(&out[0]);
-            safeClose(&err[1]);
-            safeClose(&msg[1]);
-
-            s32 val;
-            s32 r = read(msg[0], &val, sizeof(val));
-            if (r == -1) {
-                exception_throw(JVM_EXCEPTION_IO, runtime, NULL);
-                return RUNTIME_STATUS_EXCEPTION;
-            } else if (r) {
-                errno = val;
-                exception_throw(JVM_EXCEPTION_IO, runtime, NULL);
-                return RUNTIME_STATUS_EXCEPTION;
-            }
-        }
-            break;
-    }
-
+switch (pid) {
+case -1: // error
+    exception_throw(JVM_EXCEPTION_IO, runtime, NULL);
+    safeClose(&in[0]);
+    safeClose(&out[1]);
+    safeClose(&err[0]);
     safeClose(&msg[0]);
+    safeClose(&msg[1]);
+    return RUNTIME_STATUS_EXCEPTION;
+case 0: {
+    // child
+    // Setup stdin, stdout and stderr
+    dup2(in[1], STDOUT_FILENO);
+    close(in[0]);
+    close(in[1]);
+    dup2(out[0], STDIN_FILENO);
+    close(out[0]);
+    close(out[1]);
+    dup2(err[1], STDERR_FILENO);
+    close(err[0]);
+    close(err[1]);
 
-    fcntl(in[0], F_SETFD, FD_CLOEXEC);
-    fcntl(out[1], F_SETFD, FD_CLOEXEC);
-    fcntl(err[0], F_SETFD, FD_CLOEXEC);
+    close(msg[0]);
+
+    execvp(argv[0], argv);
+
+    // Error if here
+    s32 val = errno;
+    write(msg[1], &val, sizeof(val));
+    _exit(127); // 使用 _exit 而不是 exit 以避免刷新标准IO缓冲区
+}
+break;
+
+default: {
+    // parent
+    jarray_set_field(jlongArr, 0, pid);
+
+    safeClose(&in[1]);
+    safeClose(&out[0]);
+    safeClose(&err[1]);
+    safeClose(&msg[1]);
+
+    s32 val;
+    s32 r = read(msg[0], &val, sizeof(val));
+    if (r == -1) {
+        exception_throw(JVM_EXCEPTION_IO, runtime, NULL);
+        return RUNTIME_STATUS_EXCEPTION;
+    } else if (r) {
+        errno = val;
+        exception_throw(JVM_EXCEPTION_IO, runtime, NULL);
+        return RUNTIME_STATUS_EXCEPTION;
+    }
+}
+break;
+}
+
+safeClose(&msg[0]);
+
+fcntl(in[0], F_SETFD, FD_CLOEXEC);
+fcntl(out[1], F_SETFD, FD_CLOEXEC);
+fcntl(err[0], F_SETFD, FD_CLOEXEC);
     return 0;
 }
 
@@ -167,7 +168,7 @@ Utf8String *os_get_tmp_dir() {
 #ifndef P_tmpdir
 #define P_tmpdir "/tmp"
 #endif
-    utf8_append_c(tmps, P_tmpdir);
+utf8_append_c(tmps, P_tmpdir);
     return tmps;
 }
 
@@ -195,11 +196,11 @@ s32 os_append_libname(Utf8String *libname, const c8 *lib) {
     utf8_replace_c(libname, "//", "/");
     utf8_append_c(libname, lib);
 #if defined(__JVM_OS_MAC__)
-    utf8_append_c(libname, ".dylib");
+utf8_append_c(libname, ".dylib");
 #else //__JVM_OS_LINUX__
-    utf8_append_c(libname, ".so");
+utf8_append_c(libname, ".so");
 #endif
-    return 0;
+return 0;
 }
 
 s32 os_load_lib_and_init(const c8 *libname, Runtime *runtime) {
@@ -221,12 +222,12 @@ s32 os_load_lib_and_init(const c8 *libname, Runtime *runtime) {
 }
 
 void os_get_lang(Utf8String *buf) {
-    char *lang = getenv("LC_ALL");//linux
+    char *lang = getenv("LC_ALL"); //linux
     if (lang == NULL) {
         lang = getenv("LANG");
     }
     if (lang == NULL) {
-        lang = getenv("LC_CTYPE");//mac os
+        lang = getenv("LC_CTYPE"); //mac os
     }
     if (lang != NULL) {
         //printf("language: %s\n", lang);
@@ -254,7 +255,7 @@ s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src) {
     // Get source string length
     s32 src_len = src->length;
     if (src_len == 0) {
-        bytebuf_expand(dst, 1);  // Allocate space for null terminator
+        bytebuf_expand(dst, 1); // Allocate space for null terminator
         dst->buf[0] = 0;
         return 0;
     }
@@ -264,7 +265,7 @@ s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src) {
 
     // Copy source string to destination buffer
     memcpy(dst->buf, src->data, src_len);
-    dst->buf[src_len] = 0;  // Add null terminator
+    dst->buf[src_len] = 0; // Add null terminator
 
     return src_len;
 }
@@ -288,7 +289,7 @@ s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
     // Copy source string to destination buffer
     memcpy(dst->data, src, src_len);
     dst->length = src_len;
-    dst->data[src_len] = 0;  // Ensure null termination
+    dst->data[src_len] = 0; // Ensure null termination
 
     return src_len;
 }
@@ -299,42 +300,42 @@ s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src) {
 
 void os_get_uuid(MiniJVM *jvm, Utf8String *buf) {
     utf8_clear(buf);
-    
+
     // Get hostname using POSIX API
     char deviceId[256] = {0};
     if (gethostname(deviceId, sizeof(deviceId)) != 0) {
         // If gethostname fails, use a default value
         strcpy(deviceId, "UNKNOWN");
     }
-    
+
     // Get absolute path of startup directory
     char absPath[PATH_MAX] = {0};
     if (realpath(utf8_cstr(jvm->startup_dir), absPath) == NULL) {
         // If realpath fails, use the original path
         strcpy(absPath, utf8_cstr(jvm->startup_dir));
     }
-    
+
     u64 hash0 = 0;
     for (int i = 0; deviceId[i] != '\0'; i++) {
         hash0 = 31 * hash0 + deviceId[i];
     }
-    
+
     // Generate hash1 using custom hash1 function
     u64 hash1 = 0;
     for (int i = 0; absPath[i] != '\0'; i++) {
         hash1 = 31 * hash1 + absPath[i];
     }
-    
+
     // Format as UUID using the hash1 value
     char uuid[37] = {0};
     snprintf(uuid, sizeof(uuid),
-            "%08llx-%04llx-%04llx-%04llx-%012llx",
-            hash0 & 0xFFFFFFFF,
-            (hash1 >> 16) & 0xFFFF,
-            (hash1 >> 32) & 0xFFFF,
-            (hash1 >> 48) & 0xFFFF,
-            hash0 ^ hash1);
-    
+             "%08llx-%04llx-%04llx-%04llx-%012llx",
+             hash0 & 0xFFFFFFFF,
+             (hash1 >> 16) & 0xFFFF,
+             (hash1 >> 32) & 0xFFFF,
+             (hash1 >> 48) & 0xFFFF,
+             hash0 ^ hash1);
+
     utf8_append_c(buf, uuid);
 }
 

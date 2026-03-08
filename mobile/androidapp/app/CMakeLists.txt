@@ -17,6 +17,7 @@ include_directories(../../c/glfm
 ../../c/gui/other
 ../../../minijvm/c/jvm
 ../../../minijvm/c/utils
+../../../minijvm/c/utils/mimalloc/include
 ../../../minijvm/c/utils/https
 ../../../minijvm/c/utils/https/mbedtls/include
 ../../../minijvm/c/utils/sljit
@@ -40,7 +41,8 @@ aux_source_directory(../../../minijvm/c/utils SOURCE_UTILS)
 aux_source_directory(../../../minijvm/c/utils/https SOURCE_HTTPS)
 aux_source_directory(../../../minijvm/c/utils/https/mbedtls/library SOURCE_TLS)
 set(SOURCE_SLJIT ../../../minijvm/c/utils/sljit/sljitLir.c)
-SET(MINI_JVM_SOURCE_FILES ${SOURCE_JVM} ${SOURCE_UTILS} ${SOURCE_HTTPS} ${SOURCE_TLS} ${SOURCE_SLJIT})
+set(SOURCE_MIMALLOC ../../../minijvm/c/utils/mimalloc/src/static.c)
+SET(MINI_JVM_SOURCE_FILES ${SOURCE_JVM} ${SOURCE_UTILS} ${SOURCE_HTTPS} ${SOURCE_TLS} ${SOURCE_SLJIT} ${SOURCE_MIMALLOC})
 
 
 if (CMAKE_SYSTEM_NAME MATCHES "Emscripten")

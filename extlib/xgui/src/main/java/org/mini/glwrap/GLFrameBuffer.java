@@ -22,6 +22,7 @@ public class GLFrameBuffer {
 
     int texture_w;
     int texture_h;
+    boolean hasDepth;
     int[] fbo = {0};        // FBO对象的句柄
     int[] depth_stencil_buffer = {0};
     int[] rendertex = {0};        // 纹理对象的句柄
@@ -34,11 +35,14 @@ public class GLFrameBuffer {
         public int[] rendertext = {0};
         int[] renderbuf1 = {0};
         int[] fboobj = {0};
+        boolean hasDepth;
 
         @Override
         public void run() {
             glDeleteTextures(rendertext.length, rendertext, 0);
-            glDeleteTextures(renderbuf1.length, renderbuf1, 0);
+            if (hasDepth) {
+                glDeleteTextures(renderbuf1.length, renderbuf1, 0);
+            }
             glDeleteFramebuffers(fboobj.length, fboobj, 0);
             SysLog.info("delete fbo success");
         }
@@ -49,34 +53,36 @@ public class GLFrameBuffer {
     }
 
     public GLFrameBuffer(int w, int h, float scale) {
-        texture_w = w * 2;
-        texture_h = h * 2;
+        this(w, h, scale, true);
+    }
+
+    public GLFrameBuffer(int w, int h, float scale, boolean createDepth) {
+        texture_w = Math.round(w * scale);
+        texture_h = Math.round(h * scale);
+        hasDepth = createDepth;
     }
 
     public void gl_init() {
         // 创建FBO对象
         glGenFramebuffers(fbo.length, fbo, 0);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo[0]);
-        // 创建纹理
+        // 创建颜色纹理
         glGenTextures(rendertex.length, rendertex, 0);
         glBindTexture(GL_TEXTURE_2D, rendertex[0]);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture_w, texture_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, null, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rendertex[0], 0);
-        // 创建深度纹理（关键修改：替换原Renderbuffer为纹理）
-        int[] depthTexture = depth_stencil_buffer;
-        glGenTextures(depthTexture.length, depthTexture, 0);
-        glBindTexture(GL_TEXTURE_2D, depthTexture[0]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, texture_w, texture_h, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, null, 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture[0], 0);
-        //创建深度缓冲区
-//        glGenRenderbuffers(depth_stencil_buffer.length, depth_stencil_buffer, 0);
-//        glBindRenderbuffer(GL_RENDERBUFFER, depth_stencil_buffer[0]);
-//        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, texture_w, texture_h);
-//        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_buffer[0]); // now actually attach it
+        // 创建深度纹理
+        if (hasDepth) {
+            int[] depthTexture = depth_stencil_buffer;
+            glGenTextures(depthTexture.length, depthTexture, 0);
+            glBindTexture(GL_TEXTURE_2D, depthTexture[0]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, texture_w, texture_h, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, null, 0);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture[0], 0);
+        }
         //
         int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE) {
@@ -98,10 +104,16 @@ public class GLFrameBuffer {
         return depth_stencil_buffer[0];
     }
 
+    public boolean hasDepthBuffer() {
+        return hasDepth;
+    }
+
     public void delete() {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDeleteTextures(rendertex.length, rendertex, 0);
-        glDeleteTextures(depth_stencil_buffer.length, depth_stencil_buffer, 0);
+        if (hasDepth) {
+            glDeleteTextures(depth_stencil_buffer.length, depth_stencil_buffer, 0);
+        }
         glDeleteFramebuffers(fbo.length, fbo, 0);
     }
 
@@ -112,6 +124,7 @@ public class GLFrameBuffer {
         attachment.rendertext[0] = rendertex[0];
         attachment.renderbuf1[0] = depth_stencil_buffer[0];
         attachment.fboobj[0] = fbo[0];
+        attachment.hasDepth = hasDepth;
         GForm.addCmd(new GCmd(attachment));
     }
 

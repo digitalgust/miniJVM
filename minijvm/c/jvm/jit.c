@@ -13,6 +13,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "garbage.h"
+
 //------------------------  note ----------------------------
 
 //   This jit implementation is dependend on SLJIT (github https://github.com/zherczeg/sljit)
@@ -193,7 +195,7 @@ static void dump_code(void *code, sljit_uw len) {
     FILE *fp = fopen("/tmp/slj_dump", "wb");
     if (!fp)
         return;
-    
+
     size_t written = fwrite(code, len, 1, fp);
     if (written != 1) {
         printf("Warning: Failed to write complete dump data\n");
@@ -1042,13 +1044,13 @@ s32 multiarray(Runtime *runtime, Utf8String *desc, s32 count) {
     // 使用固定大小数组并添加边界检查以提高安全性
     #define MAX_ARRAY_DIMENSIONS 32
     s32 dim[MAX_ARRAY_DIMENSIONS];
-    
+
     // 添加维度数量的边界检查
     if (count > MAX_ARRAY_DIMENSIONS || count <= 0) {
         // 应该抛出适当的异常
         return RUNTIME_STATUS_EXCEPTION;
     }
-    
+
     s32 i;
     for (i = 0; i < count; i++)
         dim[i] = pop_int(stack);
@@ -1077,7 +1079,26 @@ s32 invokevirtual(Runtime *runtime, s32 idx) {
         _null_throw_exception(stack, runtime);
         return RUNTIME_STATUS_EXCEPTION;
     } else {
-        MethodInfo *m = (MethodInfo *) pairlist_get(cmr->virtual_methods, ins->mb.clazz);
+        MethodInfo *m = NULL;
+        if (cmr->methodInfo && cmr->methodInfo->_vtable_index >= 0 && ins->mb.clazz->vtable) {
+            m = ins->mb.clazz->vtable[cmr->methodInfo->_vtable_index];
+        } else if (cmr->methodInfo && cmr->methodInfo->_itable_index >= 0 && ins->mb.clazz->itable) {
+            Itable *itable = ins->mb.clazz->itable;
+            JClass *interfaceClass = cmr->methodInfo->_this_class;
+            s32 i;
+            for (i = 0; i < ins->mb.clazz->itable_length; i++) {
+                if (itable->interfaces[i] == interfaceClass) {
+                    if (cmr->methodInfo->_itable_index < itable->entries[i].method_count) {
+                        m = itable->entries[i].methods[cmr->methodInfo->_itable_index];
+                    }
+                    break;
+                }
+            }
+        }
+
+        if (!m) {
+            m = (MethodInfo *) pairlist_get(cmr->virtual_methods, ins->mb.clazz);
+        }
         if (!m) {
             m = find_instance_methodInfo_by_name(ins, cmr->name, cmr->descriptor, runtime);
             spin_lock(&runtime->jvm->lock_cloader);
@@ -3328,6 +3349,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
     //Execute code
     ca->jit.func = (jit_func) genfunc;
+    runtime->jvm->collector->jit_heap_size += ca->jit.len;
 #if _JVM_DEBUG_LOG_LEVEL > 1
     jvm_printf("jit compile method %s.%s%s ,func length:%d\n", utf8_cstr(method->_this_class->name), utf8_cstr(method->name), utf8_cstr(method->descriptor), ca->jit.len);
 #endif
