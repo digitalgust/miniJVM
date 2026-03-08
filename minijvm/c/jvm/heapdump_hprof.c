@@ -183,6 +183,15 @@ static void hprof_heap_bb_write_root_unknown(ByteBuf *seg, u32 id_size, u64 obj_
     hprof_bb_write_id(seg, id_size, obj_id);
 }
 
+// ROOT_THREAD_OBJ (0x08): thread object root
+// Format: tag(1) | object ID(id_size) | thread serial(4) | stack trace serial(4)
+static void hprof_heap_bb_write_root_thread_obj(ByteBuf *seg, u32 id_size, u64 obj_id, u32 thread_serial) {
+    bytebuf_write_byte(seg, (c8) 0x08);
+    hprof_bb_write_id(seg, id_size, obj_id);
+    bytebuf_write_int(seg, (s32) thread_serial);
+    bytebuf_write_int(seg, 0); // stack trace serial
+}
+
 static void hprof_heap_bb_write_class_dump(ByteBuf *seg, Hashtable *str2id, u32 id_size, JClass *clazz) {
     bytebuf_write_byte(seg, (c8) 0x20);
     hprof_bb_write_id(seg, id_size, (u64) (uintptr_t) clazz);
@@ -268,7 +277,7 @@ static s32 hprof_instance_value_bytes(JClass *clazz, u32 id_size) {
     return total;
 }
 
-static void hprof_heap_bb_write_instance_dump(ByteBuf *seg, u32 id_size, Instance *ins) {
+static void hprof_heap_bb_write_instance_dump(ByteBuf *seg, u32 id_size, Instance *ins, u8 mark_cnt) {
     bytebuf_write_byte(seg, (c8) 0x21);
     hprof_bb_write_id(seg, id_size, (u64) (uintptr_t) ins);
     bytebuf_write_int(seg, 0);
@@ -276,6 +285,9 @@ static void hprof_heap_bb_write_instance_dump(ByteBuf *seg, u32 id_size, Instanc
 
     s32 bytes = hprof_instance_value_bytes(ins->mb.clazz, id_size);
     bytebuf_write_int(seg, bytes);
+
+    // Check if this is a WeakReference instance
+    s32 is_weak_ref = ins && GCFLAG_WEAKREFERENCE_GET(ins->mb.gcflag);
 
     JClass *chain[256];
     s32 depth = 0;
@@ -293,6 +305,14 @@ static void hprof_heap_bb_write_instance_dump(ByteBuf *seg, u32 id_size, Instanc
             u8 t = hprof_type_from_field(fi);
             if (t == 2) {
                 __refer r = ptr ? getFieldRefer(ptr) : NULL;
+                // For WeakReference.target field: if target object is not marked, write NULL
+                // This is consistent with GC behavior (GC skips marking weak reference targets)
+                if (is_weak_ref && fi->is_ref_target && r) {
+                    MemoryBlock *target_mb = (MemoryBlock *) r;
+                    if (target_mb->garbage_mark != mark_cnt) {
+                        r = NULL; // Target not marked, treat as cleared
+                    }
+                }
                 hprof_bb_write_id(seg, id_size, (u64) (uintptr_t) r);
             } else if (t == DATATYPE_BOOLEAN || t == DATATYPE_BYTE) {
                 bytebuf_write_byte(seg, ptr ? getFieldByte(ptr) : 0);
@@ -413,6 +433,7 @@ int hprof_write_heap(GcCollector *collector, const char *path) {
 
     ByteBuf *seg = bytebuf_create(1024 * 1024);
 
+    // Thread stack frame references as ROOT_UNKNOWN
     for (s32 i = 0; i < collector->runtime_refer_copy->length; i++) {
         __refer r = arraylist_get_value(collector->runtime_refer_copy, i);
         if (r) hprof_heap_bb_write_root_unknown(seg, id_size, (u64) (uintptr_t) r);
@@ -423,11 +444,36 @@ int hprof_write_heap(GcCollector *collector, const char *path) {
         HashsetKey k = hashset_iter_next_key(&hi);
         if (k) hprof_heap_bb_write_root_unknown(seg, id_size, (u64) (uintptr_t) k);
     }
+    
+    // Boot classloader classes as ROOT
     HashtableIterator hti;
     hashtable_iterate(collector->jvm->boot_classloader->classes, &hti);
     while (hashtable_iter_has_more(&hti)) {
         HashtableValue v = hashtable_iter_next_value(&hti);
         if (v) hprof_heap_bb_write_root_unknown(seg, id_size, (u64) (uintptr_t) v);
+    }
+    
+    // Custom classloader classes as ROOT
+    MiniJVM *jvm = collector->jvm;
+    for (s32 i = 0; i < jvm->classloaders->length; i++) {
+        PeerClassLoader *pcl = arraylist_get_value_unsafe(jvm->classloaders, i);
+        hashtable_iterate(pcl->classes, &hti);
+        while (hashtable_iter_has_more(&hti)) {
+            HashtableValue v = hashtable_iter_next_value(&hti);
+            if (v) hprof_heap_bb_write_root_unknown(seg, id_size, (u64) (uintptr_t) v);
+        }
+    }
+    
+    // Thread objects as ROOT_THREAD_OBJ
+    u32 thread_serial = 1;
+    MemoryBlock *mb_scan = collector->header;
+    while (mb_scan) {
+        if (mb_scan->garbage_mark == collector->mark_cnt && 
+            mb_scan->type == MEM_TYPE_INS && 
+            GCFLAG_JTHREAD_GET(mb_scan->gcflag)) {
+            hprof_heap_bb_write_root_thread_obj(seg, id_size, (u64) (uintptr_t) mb_scan, thread_serial++);
+        }
+        mb_scan = mb_scan->next;
     }
 
     hashset_iterate(classes, &ci);
@@ -444,7 +490,7 @@ int hprof_write_heap(GcCollector *collector, const char *path) {
     while (mb) {
         if (mb->garbage_mark == collector->mark_cnt) {
             if (mb->type == MEM_TYPE_INS) {
-                hprof_heap_bb_write_instance_dump(seg, id_size, (Instance *) mb);
+                hprof_heap_bb_write_instance_dump(seg, id_size, (Instance *) mb, collector->mark_cnt);
             } else if (mb->type == MEM_TYPE_ARR) {
                 Instance *arr = (Instance *) mb;
                 if (isDataReferByIndex(arr->mb.arr_type_index)) {

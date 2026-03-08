@@ -833,7 +833,8 @@ s32 jthread_lock(MemoryBlock *mb, Runtime *runtime) { //可能会重入，同一
     while (mtx_timedlock(&jtl->mutex_lock, &t) != thrd_success) {
         // 检查是否有被挂起的线程持有该锁（仅JDWP模式）
         if (IS_JDWP_ENABLED(runtime)) {
-            Runtime *lock_holder = mb->thread_lock->owner_thread ? mb->thread_lock->owner_thread->top_runtime : NULL;
+            JavaThreadInfo *owner_snap = mb->thread_lock->owner_thread;
+            Runtime *lock_holder = owner_snap ? owner_snap->top_runtime : NULL;
             if (lock_holder && lock_holder != runtime &&
                 lock_holder->thrd_info->suspend_count > 0) {
 
@@ -2212,9 +2213,11 @@ s32 thread_owns_lock(Runtime *runtime, MemoryBlock *lock) {
 Runtime *find_thread_holding_lock(MiniJVM *jvm, MemoryBlock *lock) {
     // 注意：这里需要遍历所有线程，实际实现中应该维护一个线程列表
     // 这里作为简化实现，直接检查锁的拥有者
-    if (lock && lock->thread_lock && lock->thread_lock->owner_thread) {
+    if (lock && lock->thread_lock) {
         JavaThreadInfo *owner_info = (JavaThreadInfo *) lock->thread_lock->owner_thread;
-        return owner_info->top_runtime;
+        if (owner_info) {
+            return owner_info->top_runtime;
+        }
     }
     return NULL;
 }
