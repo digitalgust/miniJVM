@@ -3007,6 +3007,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 _gen_load_sp_ip(C);
                 _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_RETURN_REG, 0, SLJIT_IMM, 0, JVM_EXCEPTION_CLASSCAST, -1);
 
+                _gen_ip_modify_imm(C, 3);
                 ip += 3;
                 break;
             }
@@ -3049,6 +3050,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 // =====================================================================
 
                 _gen_stack_pop_ref(C, SLJIT_R0, 0);
+                _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 0, JVM_EXCEPTION_NULLPOINTER, 0);
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
                 sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, P), SLJIT_IMM, SLJIT_FUNC_ADDR(jthread_lock));
 
@@ -3063,6 +3065,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
                 // =====================================================================
 
                 _gen_stack_pop_ref(C, SLJIT_R0, 0);
+                _gen_exception_check_throw_handle(C, SLJIT_EQUAL, SLJIT_R0, 0, SLJIT_IMM, 0, JVM_EXCEPTION_NULLPOINTER, 0);
                 sljit_emit_op1(C, SLJIT_MOV_P, SLJIT_R1, 0, SLJIT_MEM1(SLJIT_SP), sizeof(sljit_sw) * LOCAL_RUNTIME);
                 sljit_emit_icall(C, SLJIT_CALL, SLJIT_ARGS2(32, P, P), SLJIT_IMM, SLJIT_FUNC_ADDR(jthread_unlock));
 
@@ -3252,10 +3255,8 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
 
             case op_goto_w: {
                 s32 offset = *((s32 *) (ip + 1));
-                _gen_ip_modify_imm(C, code_idx + offset);
                 _gen_goto(C, method, code_idx, offset);
 
-                _gen_ip_modify_imm(C, 5);
                 ip += 5;
                 break;
             }
