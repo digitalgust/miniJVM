@@ -34,7 +34,7 @@ class Foo3 {
 
 
     static void t7() {
-        final int MAX = 2000000;
+        final int MAX = 5000000;
         final int PRINT_COUNT = 10000;
         Thread t = new Thread(new Runnable() {
             Vector list = new Vector(MAX);

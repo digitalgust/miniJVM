@@ -1067,10 +1067,10 @@ s32 multiarray(Runtime *runtime, Utf8String *desc, s32 count) {
 
 
 s32 invokevirtual(Runtime *runtime, s32 idx) {
-    if (utf8_equals_c(runtime->method->_this_class->name, "org/mini/json/JsonParser")
-        && utf8_equals_c(runtime->method->name, "map2obj")) {
-        s32 debug = 1;
-    }
+    // if (utf8_equals_c(runtime->method->_this_class->name, "org/mini/json/JsonParser")
+    //     && utf8_equals_c(runtime->method->name, "map2obj")) {
+    //     s32 debug = 1;
+    // }
     s32 ret = 0;
     ConstantMethodRef *cmr = class_get_constant_method_ref(runtime->clazz, idx);
     RuntimeStack *stack = runtime->stack;
