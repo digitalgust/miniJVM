@@ -117,7 +117,7 @@ void jdwp_put_client(ArrayList *clients, JdwpClient *client) {
     arraylist_push_back(clients, client);
 }
 
-inline s32 jdwp_client_count(JdwpServer *jdwpserver) {
+s32 jdwp_client_count(JdwpServer *jdwpserver) {
     if (!jdwpserver)return 0;
     return jdwpserver->clients->length;
 }

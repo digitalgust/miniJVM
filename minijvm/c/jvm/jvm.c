@@ -11,7 +11,7 @@
 
 void thread_boundle(Runtime *runtime) {
     JClass *thread_clazz = classes_load_get_with_clinit_c(NULL, STR_CLASS_JAVA_LANG_THREAD, runtime);
-    //为主线程创建Thread实例
+    //create jthread for main thread
     Instance *t = instance_create(runtime, thread_clazz);
     instance_hold_to_thread(t, runtime);
     runtime->thrd_info->jthread = t; //Thread.init currentThread() need this
@@ -35,7 +35,7 @@ void thread_boundle(Runtime *runtime) {
 void thread_unboundle(Runtime *runtime) {
     runtime->thrd_info->is_suspend = 1;
     Instance *t = runtime->thrd_info->jthread;
-    //主线程实例被回收
+    //main thread object dispose
     jthread_dispose(t, runtime);
 }
 

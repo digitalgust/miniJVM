@@ -527,7 +527,7 @@ void class_clinit(JClass *clazz, Runtime *runtime) {
                 c8 *ptr = getStaticFieldPtr(fi);
                 // check variable type to determain long/s32/f64/f32
                 s32 datatype = fi->datatype_idx;
-                //非引用类型
+                //value type
                 switch (datatype) {
                     case DATATYPE_BOOLEAN:
                     case DATATYPE_BYTE: {

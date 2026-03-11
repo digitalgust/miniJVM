@@ -19,6 +19,9 @@
     <Filter Include="头文件\https">
       <UniqueIdentifier>{93cf7e3b-1e2e-4b21-8e35-e2ed144b4938}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\mimalloc">
+      <UniqueIdentifier>{9261e27f-b94f-41bf-adca-75fe8caffdfa}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\minijvm\c\jvm\class.c">
@@ -310,6 +313,18 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\minijvm\c\jvm\jni_std.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\jvm\os_posix.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\jvm\os_win.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\utils\mimalloc\src\static.c">
+      <Filter>源文件\mimalloc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\minijvm\c\jvm\heapdump_hprof.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

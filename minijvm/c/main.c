@@ -12,12 +12,14 @@
  */
 #include <stddef.h>
 #include <stdio.h>
+#include <locale.h>
 
-#include "d_type.h"
+#include "utils/d_type.h"
 #include "jvm/jvm_util.h"
 #include "jvm/jvm.h"
 #include "jvm/garbage.h"
 
+extern s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src);
 
 /*
  *  mini_jvm  -Xmx128M -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005 -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/glfw_gui.jar;../libex/xgui.jar org.mini.glfw.GlfwMain
@@ -25,7 +27,8 @@
  *  mini_jvm  -Xdebug -bootclasspath ../lib/minijvm_rt.jar -cp ../libex/minijvm_test.jar test.HeapDumpTest
  */
 int main(int argc, char **argv) {
-    //
+    setlocale(LC_ALL, "");
+
     jvm_init_mem_alloc();
 
     c8 *bootclasspath = NULL;
@@ -42,7 +45,9 @@ int main(int argc, char **argv) {
     Utf8String *cp = utf8_create();
 
     //get startup dir
-    Utf8String *startup_dir = utf8_create_c(argv[0]);
+
+    Utf8String *startup_dir = utf8_create();
+    conv_platform_encoding_2_utf8(startup_dir, argv[0]);
 #if __JVM_OS_VS__ || __JVM_OS_MINGW__ || __JVM_OS_CYGWIN__
     utf8_replace_c(startup_dir, "\\", "/");
 #endif
@@ -162,7 +167,9 @@ int main(int argc, char **argv) {
                         maxheap = num * mb * 1024 * 1024;
                     utf8_destroy(num_u);
                     //jvm_printf("%s , %lld\n", argv[i], MAX_HEAP_SIZE);
-                } else if (argv[i][1] == 'X' && argv[i][2] == 'r' && argv[i][3] == 'u' && argv[i][4] == 'n' && argv[i][5] == 'j' && argv[i][6] == 'd' && argv[i][7] == 'w' && argv[i][8] == 'p' && argv[i][9] == ':') {
+                } else if (argv[i][1] == 'X' && argv[i][2] == 'r' && argv[i][3] == 'u' && argv[i][4] == 'n' && argv[i][
+                               5] == 'j' && argv[i][6] == 'd' && argv[i][7] == 'w' && argv[i][8] == 'p' && argv[i][9] ==
+                           ':') {
                     //-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005
                     s32 alen = strlen(argv[i]);
                     Utf8String *jdwp_u = utf8_create_part_c(argv[i], 10, alen - 10);

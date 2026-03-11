@@ -22,6 +22,8 @@
 
 #include <windows.h>
 #include <stdio.h>
+#include <string.h>
+
 
 #include <rpc.h>
 #include <rpcdce.h>
@@ -31,6 +33,10 @@
 #ifndef AI_ALL
 #define    AI_ALL        0x00000100
 #endif
+
+s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src);
+
+s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src);
 
 /*--------------------------------------------------------------------------------------
 
@@ -634,9 +640,13 @@ s32 os_waitfor_process(Runtime *runtime, s64 pid, s64 tid, s32 *pExitCode) {
 
 Utf8String *os_get_tmp_dir() {
     Utf8String *tmps = utf8_create();
-    c8 buf[1024];
-    s32 len = GetTempPath(1024, buf);
-    utf8_append_data(tmps, buf, len);
+    c8 buf[1024] = {0};
+    DWORD len = GetTempPathA((DWORD) sizeof(buf), buf);
+    if (len > 0 && len < (DWORD) sizeof(buf)) {
+        conv_platform_encoding_2_utf8(tmps, buf);
+    } else {
+        utf8_append_c(tmps, "./");
+    }
     return tmps;
 }
 
@@ -669,7 +679,13 @@ s32 os_append_libname(Utf8String *libname, const c8 *lib) {
 }
 
 s32 os_load_lib_and_init(const c8 *libname, Runtime *runtime) {
-    HINSTANCE hInstLibrary = LoadLibrary(libname);
+    //jvm_printf("lib path:%s",libname);
+    Utf8String *ulibname = utf8_create_c(libname);
+    ByteBuf *platformPath = bytebuf_create(0);
+    conv_utf8_2_platform_encoding(platformPath, ulibname);
+    HINSTANCE hInstLibrary = LoadLibraryA(platformPath->buf);
+    utf8_destroy(ulibname);
+    bytebuf_destroy(platformPath);
     if (!hInstLibrary) {
         jvm_printf(STR_JNI_LIB_NOT_FOUND, libname);
     } else {
@@ -687,9 +703,12 @@ s32 os_load_lib_and_init(const c8 *libname, Runtime *runtime) {
     return 0;
 }
 
+
+#define LOCAL_PATH_SIZE 512
+
 void os_get_lang(Utf8String *buf) {
-    const int size = 256;
-    wchar_t localeName[size];
+    const int size = LOCAL_PATH_SIZE;
+    wchar_t localeName[LOCAL_PATH_SIZE];
 
     if (GetUserDefaultLocaleName(localeName, size)) {
         //使用windows api 把 wchar_t 转 char

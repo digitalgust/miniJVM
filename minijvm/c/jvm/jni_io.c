@@ -13,6 +13,7 @@
 
 #ifdef __cplusplus
 extern "C" {
+
 #endif
 
 
@@ -88,14 +89,15 @@ typedef struct _VmSock {
     u8 non_block;
     u8 reuseaddr;
     char hostname[256]; //domain name length max 253
-    char hostport[6];  //port the max is 65535
+    char hostport[6]; //port the max is 65535
 } VmSock;
 
 //=================================  socket  ====================================
 s32 sock_option(VmSock *vmsock, s32 opType, s32 opValue, s32 opValue2) {
     s32 ret = 0;
     switch (opType) {
-        case SOCK_OP_TYPE_NON_BLOCK: {// blocking setting
+        case SOCK_OP_TYPE_NON_BLOCK: {
+            // blocking setting
             if (opValue) {
                 mbedtls_net_set_nonblock(&vmsock->contex);
                 vmsock->non_block = 1;
@@ -104,19 +106,22 @@ s32 sock_option(VmSock *vmsock, s32 opType, s32 opValue, s32 opValue2) {
             }
             break;
         }
-        case SOCK_OP_TYPE_REUSEADDR: {//
+        case SOCK_OP_TYPE_REUSEADDR: {
+            //
             s32 x = 1;
             ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_REUSEADDR, (c8 *) &x, sizeof(x));
             vmsock->reuseaddr = 1;
             break;
         }
-        case SOCK_OP_TYPE_RCVBUF: {// buffer configuration
-            s32 nVal = opValue;// set to opValue K
+        case SOCK_OP_TYPE_RCVBUF: {
+            // buffer configuration
+            s32 nVal = opValue; // set to opValue K
             ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVBUF, (const c8 *) &nVal, sizeof(nVal));
             break;
         }
-        case SOCK_OP_TYPE_SNDBUF: {// buffer configuration
-            s32 nVal = opValue;// set to opValue K
+        case SOCK_OP_TYPE_SNDBUF: {
+            // buffer configuration
+            s32 nVal = opValue; // set to opValue K
             ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_SNDBUF, (const c8 *) &nVal, sizeof(nVal));
             break;
         }
@@ -139,7 +144,7 @@ s32 sock_option(VmSock *vmsock, s32 opType, s32 opValue, s32 opValue2) {
             // (Allow lingering when closesocket() is called, but there is still data that has not been fully sent)
             // If m_sLinger.l_onoff = 0, it functions the same as in 2.)
             m_sLinger.l_onoff = opValue;
-            m_sLinger.l_linger = opValue2;// The allowed lingering time is 5 seconds
+            m_sLinger.l_linger = opValue2; // The allowed lingering time is 5 seconds
             ret = setsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVTIMEO, (const c8 *) &m_sLinger, sizeof(m_sLinger));
             break;
         }
@@ -158,7 +163,8 @@ s32 sock_get_option(VmSock *vmsock, s32 opType) {
     socklen_t len;
 
     switch (opType) {
-        case SOCK_OP_TYPE_NON_BLOCK: {// blocking configuration
+        case SOCK_OP_TYPE_NON_BLOCK: {
+            // blocking configuration
 #if __JVM_OS_MINGW__ || __JVM_OS_VS__
             u_long flags = 1;
             ret = NO_ERROR == ioctlsocket(vmsock->contex.fd, FIONBIO, &flags);
@@ -172,7 +178,8 @@ s32 sock_get_option(VmSock *vmsock, s32 opType) {
 #endif
             break;
         }
-        case SOCK_OP_TYPE_REUSEADDR: {//
+        case SOCK_OP_TYPE_REUSEADDR: {
+            //
             len = sizeof(ret);
             getsockopt(vmsock->contex.fd, SOL_SOCKET, SO_REUSEADDR, (void *) &ret, &len);
 
@@ -183,13 +190,13 @@ s32 sock_get_option(VmSock *vmsock, s32 opType) {
             getsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVBUF, (void *) &ret, &len);
             break;
         }
-        case SOCK_OP_TYPE_SNDBUF: {// buffer configuration
+        case SOCK_OP_TYPE_SNDBUF: {
+            // buffer configuration
             len = sizeof(ret);
             getsockopt(vmsock->contex.fd, SOL_SOCKET, SO_SNDBUF, (void *) &ret, &len);
             break;
         }
         case SOCK_OP_TYPE_TIMEOUT: {
-
 #if __JVM_OS_MINGW__ || __JVM_OS_VS__
             len = sizeof(ret);
             getsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVTIMEO, (void *) &ret, &len);
@@ -209,7 +216,7 @@ s32 sock_get_option(VmSock *vmsock, s32 opType) {
             // (Allow lingering when closesocket() is called, but there is still data that has not been fully sent)
             // If m_sLinger.l_onoff = 0, it behaves the same as in 2.)
             m_sLinger.l_onoff = 0;
-            m_sLinger.l_linger = 0;// The allowed lingering time is 5 seconds
+            m_sLinger.l_linger = 0; // The allowed lingering time is 5 seconds
             len = sizeof(m_sLinger);
             getsockopt(vmsock->contex.fd, SOL_SOCKET, SO_RCVTIMEO, (void *) &m_sLinger, &len);
             ret = *((s32 *) &m_sLinger);
@@ -238,7 +245,7 @@ s32 host_2_ip(c8 *hostname, c8 *buf, s32 buflen) {
 
     /* Obtain address(es) matching host/port */
     memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
+    hints.ai_family = AF_UNSPEC; /* Allow IPv4 or IPv6 */
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_CANONNAME;
     hints.ai_protocol = IPPROTO_TCP;
@@ -271,6 +278,7 @@ s32 host_2_ip(c8 *hostname, c8 *buf, s32 buflen) {
 
 
 extern s32 os_mkdir(const c8 *path);
+
 //=================================  native  ====================================
 
 
@@ -301,7 +309,7 @@ s32 org_mini_net_SocketNative_bind0(Runtime *runtime, JClass *clazz) {
         mbedtls_net_context *ctx = &vmsock->contex;
         jthread_block_enter(runtime);
         ret = mbedtls_net_bind(ctx, strlen(host->arr_body) == 0 ? NULL : host->arr_body, port->arr_body, proto);
-        if (ret >= 0)ret = mbedtls_net_set_nonblock(ctx);//set as non_block , for vm destroy
+        if (ret >= 0)ret = mbedtls_net_set_nonblock(ctx); //set as non_block , for vm destroy
         jthread_block_exit(runtime);
 #if _JVM_DEBUG_LOG_LEVEL > 5
         invoke_deepth(runtime);
@@ -324,13 +332,14 @@ s32 org_mini_net_SocketNative_accept0(Runtime *runtime, JClass *clazz) {
             jthread_block_enter(runtime);
             ret = mbedtls_net_accept(ctx, &cltsock->contex, NULL, 0, NULL);
             jthread_block_exit(runtime);
-            if (runtime->thrd_info->is_interrupt) {//vm notify thread destroy
+            if (runtime->thrd_info->is_interrupt) {
+                //vm notify thread destroy
                 ret = -1;
                 break;
             }
             if (ret == MBEDTLS_ERR_SSL_WANT_READ) {
                 thrd_yield();
-                mbedtls_net_usleep(10000);//10ms
+                mbedtls_net_usleep(10000); //10ms
                 continue;
             } else if (ret < 0) {
                 ret = -1;
@@ -368,7 +377,7 @@ s32 org_mini_net_SocketNative_connect0(Runtime *runtime, JClass *clazz) {
         if (hostlen > sizeof(vmsock->hostname)) {
             hostlen = sizeof(vmsock->hostname);
         }
-        memcpy(&vmsock->hostname, host->arr_body, hostlen);//copy with 0
+        memcpy(&vmsock->hostname, host->arr_body, hostlen); //copy with 0
         memcpy(&vmsock->hostport, port->arr_body, port->arr_length);
         jthread_block_enter(runtime);
         ret = mbedtls_net_connect(ctx, host->arr_body, port->arr_body, proto);
@@ -402,10 +411,12 @@ static s32 sock_recv(VmSock *vmsock, u8 *buf, s32 count, Runtime *runtime) {
         if (vmsock->non_block) {
             ret = mbedtls_net_recv(&vmsock->contex, buf, count);
         } else {
-            ret = mbedtls_net_recv_timeout(&vmsock->contex, buf, count, vmsock->rcv_time_out ? vmsock->rcv_time_out : 100);
+            ret = mbedtls_net_recv_timeout(&vmsock->contex, buf, count,
+                                           vmsock->rcv_time_out ? vmsock->rcv_time_out : 100);
         }
         jthread_block_exit(runtime);
-        if (runtime->thrd_info->is_interrupt) {//vm waiting for destroy
+        if (runtime->thrd_info->is_interrupt) {
+            //vm waiting for destroy
             ret = -1;
             break;
         }
@@ -416,7 +427,8 @@ static s32 sock_recv(VmSock *vmsock, u8 *buf, s32 count, Runtime *runtime) {
             }
             thrd_yield();
             continue;
-        } else if (ret == MBEDTLS_ERR_SSL_WANT_READ) {//nonblock
+        } else if (ret == MBEDTLS_ERR_SSL_WANT_READ) {
+            //nonblock
             ret = 0;
             break;
         } else if (ret <= 0) {
@@ -592,13 +604,15 @@ s32 org_mini_net_SocketNative_getSockAddr(Runtime *runtime, JClass *clazz) {
 
         struct sockaddr_in *ipv4 = NULL;
         struct sockaddr_in6 *ipv6 = NULL;
-        c8 ipAddr[INET6_ADDRSTRLEN];// save the address in dotted decimal format
+        c8 ipAddr[INET6_ADDRSTRLEN]; // save the address in dotted decimal format
         s32 port = -1;
-        if (sock.ss_family == AF_INET) {// IPv4 address
+        if (sock.ss_family == AF_INET) {
+            // IPv4 address
             ipv4 = ((struct sockaddr_in *) &sock);
             port = ipv4->sin_port;
             inet_ntop(AF_INET, &ipv4->sin_addr, ipAddr, sizeof(ipAddr));
-        } else {//IPv6 address
+        } else {
+            //IPv6 address
             ipv6 = ((struct sockaddr_in6 *) &sock);
             port = ipv6->sin6_port;
             inet_ntop(AF_INET6, &ipv6->sin6_addr, ipAddr, sizeof(ipAddr));
@@ -626,7 +640,6 @@ s32 org_mini_net_SocketNative_host2ip(Runtime *runtime, JClass *clazz) {
 
     Instance *jbyte_arr = NULL;
     if (host) {
-
         c8 buf[50];
         jthread_block_enter(runtime);
         s32 ret = host_2_ip(host->arr_body, buf, sizeof(buf));
@@ -765,18 +778,21 @@ s32 org_mini_net_SocketNative_sslc_write(Runtime *runtime, JClass *clazz) {
 //                              File
 //------------------------------------------------------------------------------------
 
-s32 isDir(Utf8String *path) {
-    struct stat buf;
-    stat(utf8_cstr(path), &buf);
-    s32 a = S_ISDIR(buf.st_mode);
-    return a;
-}
-
 extern Utf8String *os_get_tmp_dir();
 
 extern s32 conv_platform_encoding_2_utf8(Utf8String *dst, const c8 *src);
 
 extern s32 conv_utf8_2_platform_encoding(ByteBuf *dst, Utf8String *src);
+
+s32 isDir(Utf8String *path) {
+    ByteBuf *platformPath = bytebuf_create(0);
+    conv_utf8_2_platform_encoding(platformPath, path);
+    struct stat buf;
+    stat(platformPath->buf, &buf);
+    s32 a = S_ISDIR(buf.st_mode);
+    bytebuf_destroy(platformPath);
+    return a;
+}
 
 s32 org_mini_fs_InnerFile_openFile(Runtime *runtime, JClass *clazz) {
     Instance *name_arr = localvar_getRefer(runtime->localvar, 0);
@@ -1115,16 +1131,17 @@ s32 org_mini_fs_InnerFile_listDir(Runtime *runtime, JClass *clazz) {
         conv_utf8_2_platform_encoding(platformPath, filepath);
         dirp = opendir(platformPath->buf); // pointer to the opened directory
         if (dirp) {
-            while ((dp = readdir(dirp)) != NULL) { // read the directory through the directory pointer
+            while ((dp = readdir(dirp)) != NULL) {
+                // read the directory through the directory pointer
                 if (strcmp(dp->d_name, ".") == 0) {
                     continue;
                 }
                 if (strcmp(dp->d_name, "..") == 0) {
                     continue;
                 }
-//                Utf8String *ustr = utf8_create_c(dp->d_name);
+                //                Utf8String *ustr = utf8_create_c(dp->d_name);
                 Utf8String *ustr = utf8_create();
-                conv_platform_encoding_2_utf8(ustr, dp->d_name);//
+                conv_platform_encoding_2_utf8(ustr, dp->d_name); //
                 Instance *jstr = jstring_create(ustr, runtime);
                 instance_hold_to_thread(jstr, runtime);
                 utf8_destroy(ustr);
@@ -1166,8 +1183,8 @@ s32 org_mini_fs_InnerFile_listWinDrivers(Runtime *runtime, JClass *clazz) {
 #else
 
 #define MAX_PATH_BUF_LEN 120
-    DWORD mydrives = MAX_PATH_BUF_LEN;// buffer length
-    c8 lpBuffer[MAX_PATH_BUF_LEN];// buffer for drive string storage
+    DWORD mydrives = MAX_PATH_BUF_LEN; // buffer length
+    c8 lpBuffer[MAX_PATH_BUF_LEN]; // buffer for drive string storage
     DWORD fillLen = GetLogicalDriveStrings(mydrives, lpBuffer);
 
     lpBuffer[fillLen] = '\0';
@@ -1259,8 +1276,8 @@ s32 org_mini_fs_InnerFile_rename0(Runtime *runtime, JClass *clazz) {
 }
 
 s32 org_mini_fs_InnerFile_getTmpDir(Runtime *runtime, JClass *clazz) {
-    Utf8String *key = utf8_create_c("glfm.save.root");//mobile platform get the write privilege dir
-    Utf8String *val = hashtable_get(runtime->jvm->sys_prop, key);//don't destroy the val
+    Utf8String *key = utf8_create_c("glfm.save.root"); //mobile platform get the write privilege dir
+    Utf8String *val = hashtable_get(runtime->jvm->sys_prop, key); //don't destroy the val
 
     Utf8String *tdir;
     if (val) {
@@ -1366,9 +1383,7 @@ s32 org_mini_zip_ZipFile_getEntryIndex0(Runtime *runtime, JClass *clazz) {
     Instance *name_arr = localvar_getRefer(runtime->localvar, 1);
     s32 ret = -1;
     if (zip_path_arr && name_arr) {
-
         ret = zip_get_file_index(zip_path_arr->arr_body, name_arr->arr_body);
-
     }
     push_int(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1383,9 +1398,7 @@ s32 org_mini_zip_ZipFile_getEntrySize0(Runtime *runtime, JClass *clazz) {
     Instance *name_arr = localvar_getRefer(runtime->localvar, 1);
     s64 ret = -1;
     if (zip_path_arr && name_arr) {
-
         ret = zip_get_file_unzip_size(zip_path_arr->arr_body, name_arr->arr_body);
-
     }
     push_long(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1425,10 +1438,9 @@ s32 org_mini_zip_ZipFile_putEntry0(Runtime *runtime, JClass *clazz) {
     Instance *content_arr = localvar_getRefer(runtime->localvar, 2);
     s32 ret = -1;
     if (zip_path_arr && name_arr) {
-
-        zip_savefile_mem(zip_path_arr->arr_body, name_arr->arr_body, content_arr ? content_arr->arr_body : NULL, content_arr ? content_arr->arr_length : 0);
+        zip_savefile_mem(zip_path_arr->arr_body, name_arr->arr_body, content_arr ? content_arr->arr_body : NULL,
+                         content_arr ? content_arr->arr_length : 0);
         ret = 0;
-
     }
     push_int(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1443,9 +1455,7 @@ s32 org_mini_zip_ZipFile_fileCount0(Runtime *runtime, JClass *clazz) {
 
     s32 ret = 0;
     if (zip_path_arr) {
-
         ret = zip_filecount(zip_path_arr->arr_body);
-
     }
     push_int(runtime->stack, ret);
 #if _JVM_DEBUG_LOG_LEVEL > 5
@@ -1459,7 +1469,6 @@ s32 org_mini_zip_ZipFile_listFiles0(Runtime *runtime, JClass *clazz) {
     Instance *zip_path_arr = localvar_getRefer(runtime->localvar, 0);
     s32 ret = -1;
     if (zip_path_arr) {
-
         ArrayList *list = zip_get_filenames(zip_path_arr->arr_body);
         if (list) {
             Utf8String *clustr = utf8_create_c(STR_CLASS_JAVA_LANG_STRING);
@@ -1477,7 +1486,6 @@ s32 org_mini_zip_ZipFile_listFiles0(Runtime *runtime, JClass *clazz) {
             push_ref(runtime->stack, jarr);
             ret = 0;
         }
-
     }
     if (ret == -1) {
         push_ref(runtime->stack, NULL);
@@ -1494,9 +1502,7 @@ s32 org_mini_zip_ZipFile_isDirectory0(Runtime *runtime, JClass *clazz) {
     s32 index = localvar_getInt(runtime->localvar, 1);
     s32 ret = -1;
     if (zip_path_arr) {
-
         ret = zip_is_directory(zip_path_arr->arr_body, index);
-
     }
 
     push_int(runtime->stack, ret);
@@ -1643,7 +1649,6 @@ s32 org_mini_crypt_XorCrypt_decrypt(Runtime *runtime, JClass *clazz) {
                 u32 v1 = (v >> bitshift);
                 u32 v2 = (v << (8 - bitshift));
                 v = (v1 | v2);
-
             }
             jarray_set_field(r, i, v & 0xff);
         }
@@ -1655,62 +1660,62 @@ s32 org_mini_crypt_XorCrypt_decrypt(Runtime *runtime, JClass *clazz) {
 }
 
 static java_native_method METHODS_IO_TABLE[] = {
-        {"org/mini/net/SocketNative", "open0",                "()[B",                             org_mini_net_SocketNative_open0},
-        {"org/mini/net/SocketNative", "bind0",                "([B[B[BI)I",                       org_mini_net_SocketNative_bind0},
-        {"org/mini/net/SocketNative", "connect0",             "([B[B[BI)I",                       org_mini_net_SocketNative_connect0},
-        {"org/mini/net/SocketNative", "accept0",              "([B)[B",                           org_mini_net_SocketNative_accept0},
-        {"org/mini/net/SocketNative", "readBuf",              "([B[BII)I",                        org_mini_net_SocketNative_readBuf},
-        {"org/mini/net/SocketNative", "readByte",             "([B)I",                            org_mini_net_SocketNative_readByte},
-        {"org/mini/net/SocketNative", "writeBuf",             "([B[BII)I",                        org_mini_net_SocketNative_writeBuf},
-        {"org/mini/net/SocketNative", "writeByte",            "([BI)I",                           org_mini_net_SocketNative_writeByte},
-        {"org/mini/net/SocketNative", "available0",           "([B)I",                            org_mini_net_SocketNative_available0},
-        {"org/mini/net/SocketNative", "close0",               "([B)V",                            org_mini_net_SocketNative_close0},
-        {"org/mini/net/SocketNative", "setOption0",           "([BIII)I",                         org_mini_net_SocketNative_setOption0},
-        {"org/mini/net/SocketNative", "getOption0",           "([BI)I",                           org_mini_net_SocketNative_getOption0},
-        {"org/mini/net/SocketNative", "getSockAddr",          "([BI)Ljava/lang/String;",          org_mini_net_SocketNative_getSockAddr},
-        {"org/mini/net/SocketNative", "host2ip",              "([B)[B",                           org_mini_net_SocketNative_host2ip},
-        {"org/mini/net/SocketNative", "sslc_construct_entry", "()[B",                             org_mini_net_SocketNative_sslc_construct_entry},
-        {"org/mini/net/SocketNative", "sslc_init",            "([B)I",                            org_mini_net_SocketNative_sslc_init},
-        {"org/mini/net/SocketNative", "sslc_wrap",            "([B[B[B)I",                        org_mini_net_SocketNative_sslc_wrap},
-        {"org/mini/net/SocketNative", "sslc_connect",         "([B[B[B)I",                        org_mini_net_SocketNative_sslc_connect},
-        {"org/mini/net/SocketNative", "sslc_close",           "([B)I",                            org_mini_net_SocketNative_sslc_close},
-        {"org/mini/net/SocketNative", "sslc_read",            "([B[BII)I",                        org_mini_net_SocketNative_sslc_read},
-        {"org/mini/net/SocketNative", "sslc_write",           "([B[BII)I",                        org_mini_net_SocketNative_sslc_write},
-        {"org/mini/fs/InnerFile",     "openFile",             "([B[B)J",                          org_mini_fs_InnerFile_openFile},
-        {"org/mini/fs/InnerFile",     "openFD",               "(I[B)J",                           org_mini_fs_InnerFile_openFD},
-        {"org/mini/fs/InnerFile",     "fileno",               "(J)I",                             org_mini_fs_InnerFile_fileno},
-        {"org/mini/fs/InnerFile",     "closeFile",            "(J)I",                             org_mini_fs_InnerFile_closeFile},
-        {"org/mini/fs/InnerFile",     "read0",                "(J)I",                             org_mini_fs_InnerFile_read0},
-        {"org/mini/fs/InnerFile",     "write0",               "(JI)I",                            org_mini_fs_InnerFile_write0},
-        {"org/mini/fs/InnerFile",     "readbuf",              "(J[BII)I",                         org_mini_fs_InnerFile_readbuf},
-        {"org/mini/fs/InnerFile",     "writebuf",             "(J[BII)I",                         org_mini_fs_InnerFile_writebuf},
-        {"org/mini/fs/InnerFile",     "seek0",                "(JJ)I",                            org_mini_fs_InnerFile_seek0},
-        {"org/mini/fs/InnerFile",     "available0",           "(J)I",                             org_mini_fs_InnerFile_available0},
-        {"org/mini/fs/InnerFile",     "setLength0",           "(JJ)I",                            org_mini_fs_InnerFile_setLength0},
-        {"org/mini/fs/InnerFile",     "flush0",               "(J)I",                             org_mini_fs_InnerFile_flush0},
-        {"org/mini/fs/InnerFile",     "loadFS",               "([BLorg/mini/fs/InnerFileStat;)I", org_mini_fs_InnerFile_loadFS},
-        {"org/mini/fs/InnerFile",     "listDir",              "([B)[Ljava/lang/String;",          org_mini_fs_InnerFile_listDir},
-        {"org/mini/fs/InnerFile",     "getcwd",               "()Ljava/lang/String;",             org_mini_fs_InnerFile_getcwd},
-        {"org/mini/fs/InnerFile",     "chmod",                "([BI)I",                           org_mini_fs_InnerFile_chmod},
-        {"org/mini/fs/InnerFile",     "mkdir0",               "([B)I",                            org_mini_fs_InnerFile_mkdir0},
-        {"org/mini/fs/InnerFile",     "getOS",                "()I",                              org_mini_fs_InnerFile_getOS},
-        {"org/mini/fs/InnerFile",     "delete0",              "([B)I",                            org_mini_fs_InnerFile_delete0},
-        {"org/mini/fs/InnerFile",     "rename0",              "([B[B)I",                          org_mini_fs_InnerFile_rename0},
-        {"org/mini/fs/InnerFile",     "getTmpDir",            "()Ljava/lang/String;",             org_mini_fs_InnerFile_getTmpDir},
-        {"org/mini/fs/InnerFile",     "listWinDrivers",       "()Ljava/lang/String;",             org_mini_fs_InnerFile_listWinDrivers},
-        {"org/mini/zip/Zip",          "getEntry0",            "([B[B)[B",                         org_mini_zip_ZipFile_getEntry0},
-        {"org/mini/zip/Zip",          "putEntry0",            "([B[B[B)I",                        org_mini_zip_ZipFile_putEntry0},
-        {"org/mini/zip/Zip",          "getEntryIndex0",       "([B[B)I",                          org_mini_zip_ZipFile_getEntryIndex0},
-        {"org/mini/zip/Zip",          "getEntrySize0",        "([B[B)J",                          org_mini_zip_ZipFile_getEntrySize0},
-        {"org/mini/zip/Zip",          "fileCount0",           "([B)I",                            org_mini_zip_ZipFile_fileCount0},
-        {"org/mini/zip/Zip",          "listFiles0",           "([B)[Ljava/lang/String;",          org_mini_zip_ZipFile_listFiles0},
-        {"org/mini/zip/Zip",          "isDirectory0",         "([BI)I",                           org_mini_zip_ZipFile_isDirectory0},
-        {"org/mini/zip/Zip",          "extract0",             "([B)[B",                           org_mini_zip_ZipFile_extract0},
-        {"org/mini/zip/Zip",          "compress0",            "([B)[B",                           org_mini_zip_ZipFile_compress0},
-        {"org/mini/zip/Zip",          "gzipExtract0",         "([B)[B",                           org_mini_zip_ZipFile_gzipExtract0},
-        {"org/mini/zip/Zip",          "gzipCompress0",        "([B)[B",                           org_mini_zip_ZipFile_gzipCompress0},
-        {"org/mini/crypt/XorCrypt",   "encrypt",              "([B[B)[B",                         org_mini_crypt_XorCrypt_encrypt},
-        {"org/mini/crypt/XorCrypt",   "decrypt",              "([B[B)[B",                         org_mini_crypt_XorCrypt_decrypt},
+    {"org/mini/net/SocketNative", "open0", "()[B", org_mini_net_SocketNative_open0},
+    {"org/mini/net/SocketNative", "bind0", "([B[B[BI)I", org_mini_net_SocketNative_bind0},
+    {"org/mini/net/SocketNative", "connect0", "([B[B[BI)I", org_mini_net_SocketNative_connect0},
+    {"org/mini/net/SocketNative", "accept0", "([B)[B", org_mini_net_SocketNative_accept0},
+    {"org/mini/net/SocketNative", "readBuf", "([B[BII)I", org_mini_net_SocketNative_readBuf},
+    {"org/mini/net/SocketNative", "readByte", "([B)I", org_mini_net_SocketNative_readByte},
+    {"org/mini/net/SocketNative", "writeBuf", "([B[BII)I", org_mini_net_SocketNative_writeBuf},
+    {"org/mini/net/SocketNative", "writeByte", "([BI)I", org_mini_net_SocketNative_writeByte},
+    {"org/mini/net/SocketNative", "available0", "([B)I", org_mini_net_SocketNative_available0},
+    {"org/mini/net/SocketNative", "close0", "([B)V", org_mini_net_SocketNative_close0},
+    {"org/mini/net/SocketNative", "setOption0", "([BIII)I", org_mini_net_SocketNative_setOption0},
+    {"org/mini/net/SocketNative", "getOption0", "([BI)I", org_mini_net_SocketNative_getOption0},
+    {"org/mini/net/SocketNative", "getSockAddr", "([BI)Ljava/lang/String;", org_mini_net_SocketNative_getSockAddr},
+    {"org/mini/net/SocketNative", "host2ip", "([B)[B", org_mini_net_SocketNative_host2ip},
+    {"org/mini/net/SocketNative", "sslc_construct_entry", "()[B", org_mini_net_SocketNative_sslc_construct_entry},
+    {"org/mini/net/SocketNative", "sslc_init", "([B)I", org_mini_net_SocketNative_sslc_init},
+    {"org/mini/net/SocketNative", "sslc_wrap", "([B[B[B)I", org_mini_net_SocketNative_sslc_wrap},
+    {"org/mini/net/SocketNative", "sslc_connect", "([B[B[B)I", org_mini_net_SocketNative_sslc_connect},
+    {"org/mini/net/SocketNative", "sslc_close", "([B)I", org_mini_net_SocketNative_sslc_close},
+    {"org/mini/net/SocketNative", "sslc_read", "([B[BII)I", org_mini_net_SocketNative_sslc_read},
+    {"org/mini/net/SocketNative", "sslc_write", "([B[BII)I", org_mini_net_SocketNative_sslc_write},
+    {"org/mini/fs/InnerFile", "openFile", "([B[B)J", org_mini_fs_InnerFile_openFile},
+    {"org/mini/fs/InnerFile", "openFD", "(I[B)J", org_mini_fs_InnerFile_openFD},
+    {"org/mini/fs/InnerFile", "fileno", "(J)I", org_mini_fs_InnerFile_fileno},
+    {"org/mini/fs/InnerFile", "closeFile", "(J)I", org_mini_fs_InnerFile_closeFile},
+    {"org/mini/fs/InnerFile", "read0", "(J)I", org_mini_fs_InnerFile_read0},
+    {"org/mini/fs/InnerFile", "write0", "(JI)I", org_mini_fs_InnerFile_write0},
+    {"org/mini/fs/InnerFile", "readbuf", "(J[BII)I", org_mini_fs_InnerFile_readbuf},
+    {"org/mini/fs/InnerFile", "writebuf", "(J[BII)I", org_mini_fs_InnerFile_writebuf},
+    {"org/mini/fs/InnerFile", "seek0", "(JJ)I", org_mini_fs_InnerFile_seek0},
+    {"org/mini/fs/InnerFile", "available0", "(J)I", org_mini_fs_InnerFile_available0},
+    {"org/mini/fs/InnerFile", "setLength0", "(JJ)I", org_mini_fs_InnerFile_setLength0},
+    {"org/mini/fs/InnerFile", "flush0", "(J)I", org_mini_fs_InnerFile_flush0},
+    {"org/mini/fs/InnerFile", "loadFS", "([BLorg/mini/fs/InnerFileStat;)I", org_mini_fs_InnerFile_loadFS},
+    {"org/mini/fs/InnerFile", "listDir", "([B)[Ljava/lang/String;", org_mini_fs_InnerFile_listDir},
+    {"org/mini/fs/InnerFile", "getcwd", "()Ljava/lang/String;", org_mini_fs_InnerFile_getcwd},
+    {"org/mini/fs/InnerFile", "chmod", "([BI)I", org_mini_fs_InnerFile_chmod},
+    {"org/mini/fs/InnerFile", "mkdir0", "([B)I", org_mini_fs_InnerFile_mkdir0},
+    {"org/mini/fs/InnerFile", "getOS", "()I", org_mini_fs_InnerFile_getOS},
+    {"org/mini/fs/InnerFile", "delete0", "([B)I", org_mini_fs_InnerFile_delete0},
+    {"org/mini/fs/InnerFile", "rename0", "([B[B)I", org_mini_fs_InnerFile_rename0},
+    {"org/mini/fs/InnerFile", "getTmpDir", "()Ljava/lang/String;", org_mini_fs_InnerFile_getTmpDir},
+    {"org/mini/fs/InnerFile", "listWinDrivers", "()Ljava/lang/String;", org_mini_fs_InnerFile_listWinDrivers},
+    {"org/mini/zip/Zip", "getEntry0", "([B[B)[B", org_mini_zip_ZipFile_getEntry0},
+    {"org/mini/zip/Zip", "putEntry0", "([B[B[B)I", org_mini_zip_ZipFile_putEntry0},
+    {"org/mini/zip/Zip", "getEntryIndex0", "([B[B)I", org_mini_zip_ZipFile_getEntryIndex0},
+    {"org/mini/zip/Zip", "getEntrySize0", "([B[B)J", org_mini_zip_ZipFile_getEntrySize0},
+    {"org/mini/zip/Zip", "fileCount0", "([B)I", org_mini_zip_ZipFile_fileCount0},
+    {"org/mini/zip/Zip", "listFiles0", "([B)[Ljava/lang/String;", org_mini_zip_ZipFile_listFiles0},
+    {"org/mini/zip/Zip", "isDirectory0", "([BI)I", org_mini_zip_ZipFile_isDirectory0},
+    {"org/mini/zip/Zip", "extract0", "([B)[B", org_mini_zip_ZipFile_extract0},
+    {"org/mini/zip/Zip", "compress0", "([B)[B", org_mini_zip_ZipFile_compress0},
+    {"org/mini/zip/Zip", "gzipExtract0", "([B)[B", org_mini_zip_ZipFile_gzipExtract0},
+    {"org/mini/zip/Zip", "gzipCompress0", "([B)[B", org_mini_zip_ZipFile_gzipCompress0},
+    {"org/mini/crypt/XorCrypt", "encrypt", "([B[B)[B", org_mini_crypt_XorCrypt_encrypt},
+    {"org/mini/crypt/XorCrypt", "decrypt", "([B[B)[B", org_mini_crypt_XorCrypt_decrypt},
 
 };
 

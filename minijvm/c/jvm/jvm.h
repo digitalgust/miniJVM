@@ -25,7 +25,7 @@ extern "C" {
 #include "../utils/hashset.h"
 
 //=======================  micro define  =============================
-//_JVM_DEBUG  01=thread info, 02=garage&jit info  , 03=class load, 04=method call,  06=all bytecode
+//_JVM_DEBUG  01=thread info, 02=garage  , 03=class_load & jit info, 04=method call,  06=all bytecode
 #define _JVM_DEBUG_LOG_LEVEL 0
 //_JVM_DEBUG_GARBAGE_DUMP 01=count instance , 02=print every object create/destroy
 #define _JVM_DEBUG_GARBAGE_DUMP 0
@@ -570,7 +570,7 @@ enum {
 extern s32 DATA_TYPE_BYTES[DATATYPE_COUNT];
 extern c8 *DATA_TYPE_STR;
 
-//访问标志
+//access flag
 enum {
     ACC_PUBLIC = 0x0001,
     ACC_PRIVATE = 0x0002,
@@ -585,7 +585,7 @@ enum {
     ACC_ABSTRACT = 0x0400,
     ACC_STRICT = 0x0800,
 };
-//类状态
+//class status
 enum {
     CLASS_STATUS_RAW,
     CLASS_STATUS_LOADED,
@@ -594,7 +594,7 @@ enum {
     CLASS_STATUS_CLINITING,
     CLASS_STATUS_CLINITED,
 };
-//线程
+//thread status
 enum {
     THREAD_STATUS_NEW,
     THREAD_STATUS_RUNNING,
@@ -604,7 +604,7 @@ enum {
     THREAD_STATUS_ZOMBIE,
 };
 
-//指令指行返回状态
+//method execute status
 enum {
     RUNTIME_STATUS_NORMAL,
     RUNTIME_STATUS_EXCEPTION,
@@ -612,7 +612,7 @@ enum {
     RUNTIME_STATUS_INTERRUPT,
 };
 
-//指令指行返回状态
+//jvm status
 enum {
     JVM_STATUS_UNKNOW,
     JVM_STATUS_INITING,

@@ -66,9 +66,9 @@ static void FAILE(s32 cond, c8 *text) {
 static s32 CHECK(struct sljit_compiler *compiler) {
     if (sljit_get_compiler_error(compiler) != SLJIT_ERR_COMPILED) {
         printf("Compiler error: %d\n", sljit_get_compiler_error(compiler));
-        return -1; // 返回错误状态而不是直接释放
+        return -1; // return err status but not release
     }
-    return 0; // 成功
+    return 0; // sc
 }
 
 static void print_reg(s64 a, s64 b, s64 c) {
@@ -3351,7 +3351,7 @@ s32 gen_jit_bytecode_func(struct sljit_compiler *C, MethodInfo *method, Runtime 
     //Execute code
     ca->jit.func = (jit_func) genfunc;
     runtime->jvm->collector->jit_heap_size += ca->jit.len;
-#if _JVM_DEBUG_LOG_LEVEL > 1
+#if _JVM_DEBUG_LOG_LEVEL > 2
     jvm_printf("jit compile method %s.%s%s ,func length:%d\n", utf8_cstr(method->_this_class->name), utf8_cstr(method->name), utf8_cstr(method->descriptor), ca->jit.len);
 #endif
 

@@ -42,15 +42,15 @@ s32 jvm_init_mem_alloc() {
 #if __JVM_PRI_ALLOC__
     pri_alloc_init();
 #endif
+    return 0;
 }
 
 s32 jvm_destroy_mem_alloc() {
-
 #if __JVM_PRI_ALLOC__
     pri_alloc_destroy();
 #endif
     close_log();
-
+    return 0;
 }
 
 s32 jvm_printf(const c8 *format, ...) {
