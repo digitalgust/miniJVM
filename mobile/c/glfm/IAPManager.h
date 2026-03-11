@@ -29,6 +29,7 @@ typedef void (^IAPCompletionHandle)(IAPPurchType type,NSData *data);
 @interface IAPManager : NSObject
 + (instancetype)shareIAPManager;
 - (void)startPurchaseWithID:(NSString *)purchID completeHandle:(IAPCompletionHandle)handle;
+- (void)startPurchaseWithID:(NSString *)purchID appAccountToken:(NSString *)appAccountToken completeHandle:(IAPCompletionHandle)handle;
 @end
 
 NS_ASSUME_NONNULL_END

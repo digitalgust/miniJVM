@@ -274,6 +274,8 @@ public class Glfm {
 
     static native void glfmBuyAppleProductById(long display, byte[] cproductId, byte[] cbase64HandleScript);
 
+    static native void glfmBuyAppleProductByIdWithOrder(long display, byte[] cproductId, byte[] corderUUID, byte[] cbase64HandleScript);
+
     /**
      * Call this method to buy an in-app-purchase on iOS.
      * <p>
@@ -288,6 +290,13 @@ public class Glfm {
         byte[] productIdBytes = toCstyleBytes(productId);
         byte[] base64HandleScriptBytes = toCstyleBytes(base64HandleScript);
         glfmBuyAppleProductById(display, productIdBytes, base64HandleScriptBytes);
+    }
+
+    public static void glfmBuyAppleProductById(long display, String productId, String orderUUID, String base64HandleScript) {
+        byte[] productIdBytes = toCstyleBytes(productId);
+        byte[] orderUUIDBytes = toCstyleBytes(orderUUID);
+        byte[] base64HandleScriptBytes = toCstyleBytes(base64HandleScript);
+        glfmBuyAppleProductByIdWithOrder(display, productIdBytes, orderUUIDBytes, base64HandleScriptBytes);
     }
 
     // Screen Control Functions

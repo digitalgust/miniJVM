@@ -2994,6 +2994,27 @@ void buyAppleProductById(GLFMDisplay * display, const char *cproductID, const ch
     }];
 }
 
+void buyAppleProductByIdWithOrder(GLFMDisplay * display, const char *cproductID, const char *corderUUID, const char *base64HandleScript) {
+    NSString *productID = [[NSString alloc] initWithCString:cproductID encoding:NSUTF8StringEncoding];
+    NSString *orderUUID = corderUUID ? [[NSString alloc] initWithCString:corderUUID encoding:NSUTF8StringEncoding] : @"";
+    NSString *script = [[NSString alloc] initWithCString:base64HandleScript encoding:NSUTF8StringEncoding];
+    [[IAPManager shareIAPManager] startPurchaseWithID:productID appAccountToken:orderUUID completeHandle:^(IAPPurchType type,NSData *data) {
+        const char *replyMsg = NULL;
+        NSString *nssd;
+        if (data == nil) {
+            nssd = @"";
+        } else {
+            nssd = [data base64EncodedStringWithOptions:0];
+        }
+        NSString *str = [NSString stringWithFormat:@"%d:%@:%@", (int)type, nssd, script];
+        replyMsg = [str UTF8String];
+        static char *key = "glfm.ios.purchase";
+        if(display->notifyFunc){
+            display->notifyFunc(display, key, replyMsg);
+        }
+    }];
+}
+
 // MARK: - Screen Control functions
 
 void glfmSetScreenSaverEnabled(GLFMDisplay *display, bool enabled) {

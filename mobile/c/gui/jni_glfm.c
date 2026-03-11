@@ -891,6 +891,25 @@ int org_mini_glfm_Glfm_glfmBuyAppleProductById(Runtime *runtime, JClass *clazz) 
     return 0;
 }
 
+int org_mini_glfm_Glfm_glfmBuyAppleProductByIdWithOrder(Runtime *runtime, JClass *clazz) {
+    JniEnv *env = runtime->jnienv;
+    s32 pos = 0;
+    GLFMDisplay *window = (__refer) (intptr_t) env->localvar_getLong_2slot(runtime->localvar, pos);
+    pos += 2;
+    Instance *inPIDStr = env->localvar_getRefer(runtime->localvar, pos);
+    const c8 *cproductID = inPIDStr->arr_body;
+    pos += 1;
+    Instance *inOrderUUIDStr = env->localvar_getRefer(runtime->localvar, pos);
+    const c8 *corderUUID = inOrderUUIDStr->arr_body;
+    pos += 1;
+    Instance *inBase64HandleScriptStr = env->localvar_getRefer(runtime->localvar, pos);
+    const c8 *cscript = inBase64HandleScriptStr->arr_body;
+    if (window && cproductID) {
+        buyAppleProductByIdWithOrder(window, cproductID, corderUUID, cscript);
+    }
+    return 0;
+}
+
 /* ==============================   jni screen control =================================*/
 
 int org_mini_glfm_Glfm_glfmSetScreenSaverEnabled(Runtime *runtime, JClass *clazz) {
@@ -1736,6 +1755,7 @@ static java_native_method method_glfm_table[] = {
         {"org/mini/glfm/Glfm", "glfmOpenOtherApp",                     "([B[BI)I",                                 org_mini_glfm_Glfm_glfmOpenOtherApp},
         {"org/mini/glfm/Glfm", "glfmRemoteMethodCall",                 "([B)Ljava/lang/String;",                   org_mini_glfm_Glfm_glfmRemoteMethodCall},
         {"org/mini/glfm/Glfm", "glfmBuyAppleProductById",              "(J[B[B)V",                                 org_mini_glfm_Glfm_glfmBuyAppleProductById},
+        {"org/mini/glfm/Glfm", "glfmBuyAppleProductByIdWithOrder",      "(J[B[B[B)V",                               org_mini_glfm_Glfm_glfmBuyAppleProductByIdWithOrder},
         {"org/mini/glfm/Glfm", "glfmSetScreenSaverEnabled",            "(JZ)V",                                    org_mini_glfm_Glfm_glfmSetScreenSaverEnabled},
         {"org/mini/glfm/Glfm", "glfmIsScreenSaverEnabled",             "(J)Z",                                     org_mini_glfm_Glfm_glfmIsScreenSaverEnabled},
         {"org/mini/glfm/Glfm", "glfmSetScreenBrightness",              "(JF)V",                                    org_mini_glfm_Glfm_glfmSetScreenBrightness},

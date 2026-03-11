@@ -370,6 +370,10 @@ public class Glfm {
 
     }
 
+    public static void glfmBuyAppleProductById(long display, String productId, String orderUUID, String base64HandleScript) {
+
+    }
+
 
     // Screen Control Functions
 
